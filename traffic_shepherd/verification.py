@@ -62,7 +62,11 @@ def active_import_errors(root=ROOT):
 
 def documentation_errors(root=ROOT):
     root = Path(root)
-    paths = [root / "README.md", root / "AGENTS.md", *sorted((root / "docs").rglob("*.md"))]
+    paths = [root / "README.md"]
+    agents = root / "AGENTS.md"
+    if agents.is_file():
+        paths.append(agents)
+    paths.extend(sorted((root / "docs").rglob("*.md")))
     roots = deleted_roots(root)
     errors = []
     for path in paths:

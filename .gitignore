@@ -155,3 +155,13 @@ pytest-of-*/
 
 # clean-up tool outputs (generated script + manifest, reports, journal): local only
 /data_ops/cleanup_out/
+
+# Agent instructions/config stay local (owner 2026-10-10)
+/AGENTS.md
+/CLAUDE.md
+/CLAUDE.local.md
+/GEMINI.md
+/.claude/
+/.opencode/
+/.github/copilot-instructions.md
+/docs/HANDOFF_*.md
