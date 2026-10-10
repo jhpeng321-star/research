@@ -81,6 +81,9 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_rate_target": "loss.lane_rate.target",
     "select_by_long_horizon": "selection.select_by_long_horizon",
     "val_every": "selection.val_every",
+    "gate_kind": "model.gate.kind",
+    "gate_g_max_init": "model.gate.g_max_init",
+    "gate_tau_steps_init": "model.gate.tau_steps_init",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -90,6 +93,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "prop_window_s", "prop_max_gap_m", "residual_cap_neg_mps2",
     "residual_soft_bound_mps2", "residual_soft_bound_neg_mps2", "residual_mag_weight",
     "lane_rate_weight", "lane_rate_target", "select_by_long_horizon", "val_every",
+    "gate_kind", "gate_g_max_init", "gate_tau_steps_init",
 )
 
 

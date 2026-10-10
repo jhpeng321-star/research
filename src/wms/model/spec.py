@@ -44,6 +44,9 @@ class ModelSpec:
     lane_logit_cap: Optional[float] = None
     history_s: Optional[float] = None
     history_stride_s: float = 1.0
+    gate_kind: str = "cumsum"
+    gate_g_max_init: float = 0.30
+    gate_tau_steps_init: float = 50.0
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
@@ -60,6 +63,12 @@ class ModelSpec:
             raise ValueError("rollout_mode must be residual, driver_params or hybrid")
         if self.lane_head not in LANE_HEADS:
             raise ValueError("lane_head must be off or history")
+        if self.gate_kind not in ("cumsum", "saturating"):
+            raise ValueError("gate_kind must be cumsum or saturating")
+        if not 0.0 < self.gate_g_max_init < 1.0:
+            raise ValueError("gate_g_max_init must be in (0, 1)")
+        if not math.isfinite(self.gate_tau_steps_init) or self.gate_tau_steps_init <= 0.0:
+            raise ValueError("gate_tau_steps_init must be finite and positive")
         if self.lane_head == "history" and self.rollout_mode == "residual":
             raise ValueError("history lane head requires driver_params or hybrid rollout")
         if self.history_features < 0:

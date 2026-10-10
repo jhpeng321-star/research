@@ -110,6 +110,9 @@ class TrainSettings:
     lane_rate_target: float = 0.0123
     select_by_long_horizon: bool = False
     val_every: int = 200
+    gate_kind: str = "cumsum"
+    gate_g_max_init: float = 0.30
+    gate_tau_steps_init: float = 50.0
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -161,6 +164,13 @@ class TrainSettings:
                      "residual_mag/lane_rate weights must be finite and non-negative")
         _require(math.isfinite(self.lane_rate_target) and 0 <= self.lane_rate_target <= 1,
                  "lane_rate_target must be finite and in [0,1]")
+        _require(self.gate_kind in ("cumsum", "saturating"),
+                 "gate_kind must be cumsum or saturating")
+        _require(math.isfinite(self.gate_g_max_init)
+                 and 0 < self.gate_g_max_init < 1,
+                 "gate_g_max_init must be finite and in (0,1)")
+        _require(math.isfinite(self.gate_tau_steps_init) and self.gate_tau_steps_init > 0,
+                 "gate_tau_steps_init must be finite and positive")
         _require(self.val_every >= 1, "val_every must be positive")
 
     @classmethod

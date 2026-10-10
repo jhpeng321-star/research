@@ -29,6 +29,21 @@ class ProjectionConfig:
 
 
 @config_dataclass
+class GateConfig:
+    """Residual-gate parameterization and saturating-gate initialization."""
+
+    kind: Literal["cumsum", "saturating"] = "cumsum"
+    g_max_init: float = 0.30
+    tau_steps_init: float = 50.0
+
+    def __post_init__(self) -> None:
+        require(0.0 < self.g_max_init < 1.0,
+                "model.gate.g_max_init must be in (0, 1)")
+        require(is_finite(self.tau_steps_init) and self.tau_steps_init > 0.0,
+                "model.gate.tau_steps_init must be finite and positive")
+
+
+@config_dataclass
 class ModelConfig:
     """Structure of the WM-S model and its physics options."""
 
@@ -40,6 +55,7 @@ class ModelConfig:
     sumo_fidelity: bool = False
     geometry_only: bool = False
     projection: ProjectionConfig = field(default_factory=ProjectionConfig)
+    gate: GateConfig = field(default_factory=GateConfig)
     residual_cap_mps2: Optional[float] = None
     residual_cap_neg_mps2: Optional[float] = None
     residual_soft_bound_mps2: Optional[float] = None

@@ -28,6 +28,7 @@ from .settings import TrainSettings
 ALWAYS_LOGGED = ("position", "speed", "lane", "residual_mag", "lane_rate", "traffic")
 #: Step offsets at which the monotone gate curve is logged.
 GATE_PROBE_K = (0, 1, 2, 5, 10, 20, 40, 80, 160, 240)
+GATE_LOG_K = (10, 20, 60, 120, 240)
 _PROJECTION_ACTIVE_KEYS = ("gap_active", "speed_high", "speed_low", "invalid_lane")
 
 
@@ -250,6 +251,10 @@ class UnrollRunner:
             "driver_param_stats": driver_param_stats(acc.driver_encoded, targets.hdv_mask[:, 0]),
             "entrants": int(acc.entrant_count),
             "valid_hdv_slots_t0": int(targets.hdv_mask[:, 0].sum())}
+        if getattr(model, "gate_kind", "cumsum") == "saturating":
+            gate_log = model.gate(torch.tensor(GATE_LOG_K, device=self.device)).detach()
+            record["gate_g_by_k"] = {
+                str(k): float(value) for k, value in zip(GATE_LOG_K, gate_log)}
         if cfg.traffic_loss:
             record["chunks"] = int(n_chunks)
         if model.rollout_mode == "hybrid" and acc.hybrid_count > 0:

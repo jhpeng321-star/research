@@ -30,7 +30,7 @@ from . import cav as cav_motion
 from .controllers import DIRECT_ID
 from .driver_encoder import DRIVER_ENCODER_HIDDEN, PARAMETER_NAMES, DriverEncoder
 from .entries import section_ids
-from .gate import monotone_gate
+from .gate import monotone_gate, saturating_gate
 from .history import (LONG_HISTORY_F, history_spec, history_step_features,
                       initial_history, initial_lane_age, push_history)
 from .lane_head import HistoryLaneHead, lane_context
@@ -105,6 +105,9 @@ class WmSModel(nn.Module):
         self.n_controllers = int(spec.n_controllers)
         self.controller_embed_dim = int(spec.controller_embed_dim)
         self.checkpoint_residual = bool(spec.checkpoint_residual)
+        self.gate_kind = spec.gate_kind
+        self.gate_g_max_init = float(spec.gate_g_max_init)
+        self.gate_tau_steps_init = float(spec.gate_tau_steps_init)
         self._build_modules(spec)
 
     def _init_bounds(self, spec: ModelSpec) -> None:
@@ -139,8 +142,14 @@ class WmSModel(nn.Module):
             nn.Linear(history_hidden, _TEMPORAL_OUT))
         # Exact zero at k=0 by construction; positive increments make the gate
         # monotone and the small initial value keeps early steps physics-dominated.
-        self.gate_increments = nn.Parameter(
-            torch.full((self.physics.max_gap_steps,), -5.0))
+        if spec.gate_kind == "cumsum":
+            self.gate_increments = nn.Parameter(
+                torch.full((self.physics.max_gap_steps,), -5.0))
+        else:
+            g_max_logit = torch.logit(torch.tensor(spec.gate_g_max_init))
+            tau_raw = torch.log(torch.expm1(torch.tensor(spec.gate_tau_steps_init)))
+            self.gate_g_max_logit = nn.Parameter(g_max_logit)
+            self.gate_tau_raw = nn.Parameter(tau_raw)
         self.driver_encoder = DriverEncoder(self.history_features,
                                             long_history=self.long_history)
         self.lane_change_head = (HistoryLaneHead(self.driver_embed_dim)
@@ -161,6 +170,9 @@ class WmSModel(nn.Module):
 
     def gate(self, k_steps: Tensor | int) -> Tensor:
         """Learned monotone gate with exactly ``g(0) == 0``."""
+        if self.gate_kind == "saturating":
+            return saturating_gate(self.gate_g_max_logit, self.gate_tau_raw, k_steps,
+                                   self.physics.max_gap_steps)
         return monotone_gate(self.gate_increments, k_steps, self.physics.max_gap_steps)
 
     def physics_accel(self, state: dict[str, Tensor],
