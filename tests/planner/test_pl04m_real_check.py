@@ -4,7 +4,7 @@ OPT-IN: skipped unless ``PLANNER_REAL_SUMO=1``. Budget: ONE master SUMO
 run of 120 sim-s on its OWN free port, waited on ONLY through the
 harness's own Popen child (never by image name or pattern); no lookahead
 branches exist (the native-only master never reaches a decision point:
-warmup == horizon). Output goes to ``E:/rd-wt/pl35/tmp_pl04m`` (never
+warmup == horizon). Output goes to ``<repo>/tmp_pl04m`` (never
 ``runs/`` or ``output/planner_v1``).
 
 What it verifies, from the produced rows only:
@@ -27,19 +27,25 @@ from types import SimpleNamespace
 
 import pytest
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("PLANNER_REAL_SUMO") != "1",
-    reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
-)
+from tests.planner._helpers import drive_only_campaign
 
 PLANNER_ROOT = Path(__file__).resolve().parents[2]
-BASE_RUN = Path(
-    "E:/research-dense/runs/campaign_stage1_chunk3/w8568m2600p05t360__base"
-)
-NATIVE_BRANCH_PHYSICS = Path(
-    "E:/research-dense/runs/campaign_stage1_chunk3/"
-    "w8568m2600p05t360__native/run/physics_steps.jsonl"
-)
+CHUNK3 = drive_only_campaign("campaign_stage1_chunk3")
+BASE_RUN = CHUNK3 / "w8568m2600p05t360__base"
+NATIVE_BRANCH_PHYSICS = CHUNK3 / "w8568m2600p05t360__native" / "run" / "physics_steps.jsonl"
+
+pytestmark = [
+    pytest.mark.skipif(
+        os.environ.get("PLANNER_REAL_SUMO") != "1",
+        reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
+    ),
+    pytest.mark.skipif(
+        not BASE_RUN.is_dir(),
+        reason="raw campaign_stage1_chunk3 runs not on disk (Drive-only dataset "
+        "campaign_stage1_chunk3: `python -m wms fetch get campaign_stage1_chunk3`)",
+    ),
+]
+
 OUT_ROOT = PLANNER_ROOT / "tmp_pl04m"
 RUN_ID = "pl04m_real_check"
 T0_S = 360.0

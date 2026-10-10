@@ -32,7 +32,11 @@ sys.path.insert(0, str(ROOT / "output"))
 
 PLAN = ROOT / "output/campaign_stage1_v3/results_plan_chunk4/WORLD_PLAN.json"
 REG = ROOT / "output/campaign_stage1_v3/results_plan_chunk4/CHUNK4_REGISTRATION.md"
+#: chunk-4 base runs: the in-tree runs/ copy when present, else the Drive-only dataset
+#: ``campaign_stage1_chunk4`` fetched with ``python -m wms fetch get campaign_stage1_chunk4``
 BASES = ROOT / "runs/campaign_stage1_chunk4"
+if not BASES.is_dir() and (ROOT / "data_cache/campaign_stage1_chunk4").is_dir():
+    BASES = ROOT / "data_cache/campaign_stage1_chunk4"
 
 
 def digests(physics_path: Path) -> dict:
@@ -68,6 +72,10 @@ def main(argv=None) -> int:
         digest_out = ROOT / digest_out
     if out.exists() or digest_out.exists():
         print(f"REFUSING: output exists ({out} / {digest_out})", file=sys.stderr)
+        return 1
+    if not BASES.is_dir():
+        print(f"REFUSING: chunk-4 base runs not found at {BASES}; they are Drive-only: "
+              "`python -m wms fetch get campaign_stage1_chunk4`", file=sys.stderr)
         return 1
 
     from campaign_stage1_v3 import run_chunk as rc

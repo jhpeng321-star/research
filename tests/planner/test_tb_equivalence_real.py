@@ -34,10 +34,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("PLANNER_REAL_SUMO") != "1",
-    reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
-)
+from tests.planner._helpers import drive_only_campaign
 
 # the PI adapter's frozen modules (output/controller_verification_v2/v4)
 # live only in the main tree; the worktree carries a partial ``output``
@@ -47,8 +44,21 @@ if _MAIN not in sys.path:
     sys.path.append(_MAIN)
 
 PLANNER_ROOT = Path(__file__).resolve().parents[2]
-BASE_RUN = Path("E:/research-dense/runs/campaign_stage1_chunk3/w8568m2600p05t360__base")
+BASE_RUN = drive_only_campaign("campaign_stage1_chunk3") / "w8568m2600p05t360__base"
 BASE_PHYSICS = BASE_RUN / "run" / "physics_steps.jsonl"
+
+pytestmark = [
+    pytest.mark.skipif(
+        os.environ.get("PLANNER_REAL_SUMO") != "1",
+        reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
+    ),
+    pytest.mark.skipif(
+        not BASE_RUN.is_dir(),
+        reason="raw campaign_stage1_chunk3 runs not on disk (Drive-only dataset "
+        "campaign_stage1_chunk3: `python -m wms fetch get campaign_stage1_chunk3`)",
+    ),
+]
+
 OUT_ROOT = PLANNER_ROOT / "tmp_tb"
 WORLD = "w8568m2600p05t360"
 T0_S = 360.0

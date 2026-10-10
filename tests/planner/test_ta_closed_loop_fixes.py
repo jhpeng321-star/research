@@ -64,13 +64,15 @@ from traffic_shepherd.planner.recorded import (
     load_p4_delay,
     p4_delay,
 )
-from traffic_shepherd.planner.paths import rd_wt_root
-from tests.planner._helpers import RecordingProcessFactory, make_samples, plan
-
-pytestmark = pytest.mark.skipif(
-    not (rd_wt_root() / "wd01c" / "output" / "wd01").is_dir(),
-    reason="WD-01 p4 delay library absent (E:/rd-wt/wd01c/output/wd01)",
+from tests.planner._helpers import (
+    RecordingProcessFactory,
+    make_samples,
+    plan,
+    requires_p4_delay,
+    scratch_root,
 )
+
+pytestmark = requires_p4_delay
 
 
 # ----------------------------------------------------------------- fixture
@@ -587,7 +589,7 @@ def _cli_args(tmp_path, base, *extra):
             "--horizon-s", "600",
             "--walls", "off",
             "--process-start-s", "0.688",
-            "--out", "E:/rd-wt/pl38/tmp_ta/cli_out",
+            "--out", str(scratch_root() / "cli_out"),
             "--predictor", "perfect_sim",
             "--fixed-policy", "native",
             "--max-sim-s", "700",
@@ -620,7 +622,7 @@ class TestItem5FixedPolicyCli:
                 "--horizon-s", "600",
                 "--walls", "off",
                 "--process-start-s", "0.688",
-                "--out", "E:/rd-wt/pl38/tmp_ta/cli_out",
+                "--out", str(scratch_root() / "cli_out"),
                 "--predictor", "perfect_sim",
                 "--fixed-policy", "pi",
                 "--max-sim-s", "700",

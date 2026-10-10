@@ -27,9 +27,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import warnings
 from collections import Counter
 from pathlib import Path
 from typing import Iterator, Optional
+
+from ..config.presets import repo_root
+from ..core.errors import ConfigError
+from .registry import resolve as _resolve_dataset
 
 LPO_SCHEMA = "wm_s_lpo_windows/1"
 
@@ -44,9 +49,28 @@ PI_FREE_PACKS = {
 
 PACK_ORDER = {"pack_v3": 0, "pack_dspeed": 1, "pack_damping": 2}
 
-#: Relocated raw chunk1-p40 runs (superseded batch; D:/rd-staging read-only).
-CHUNK1_P40_OVERRIDE_ROOT = Path(r"D:/rd-staging/wmn1_feat/raw_chunk1_p40")
-DEFAULT_DATA_ROOTS = (Path(r"E:/research-dense"), CHUNK1_P40_OVERRIDE_ROOT)
+#: Raw campaign trees that live on Drive only; fetch one with ``python -m wms fetch get <name>``
+#: (it lands in ``data_cache/<name>``).  Dataset name == campaign directory name.
+DRIVE_ONLY_CAMPAIGNS = ("campaign_stage1_chunk3", "campaign_stage1_chunk4")
+CHUNK1_P40_DATASET = "raw_chunk1_p40"
+
+
+def drive_only_root(name: str) -> Path:
+    """Local (fetched) location of the Drive-only raw dataset ``name``.
+
+    Resolved through the data registry (``WMS_DATA_<NAME>``, ``configs/data_registry.toml``,
+    ``tools/data_registry.json``); an unregistered name falls back to ``data_cache/<name>``.
+    The path may not exist: nothing here downloads.
+    """
+    try:
+        return _resolve_dataset(name)
+    except ConfigError:
+        return repo_root() / "data_cache" / name
+
+
+#: Relocated raw chunk1-p40 runs (superseded batch; Drive-only dataset ``raw_chunk1_p40``).
+CHUNK1_P40_OVERRIDE_ROOT = drive_only_root(CHUNK1_P40_DATASET)
+DEFAULT_DATA_ROOTS = (repo_root(), CHUNK1_P40_OVERRIDE_ROOT)
 
 VAL_WORLD_MODULO = 10
 
@@ -97,6 +121,13 @@ def resolve_schedule(run: str, root_rel: Optional[str], opened_map: dict,
             if sub.is_file():
                 return sub
     campaign = Path(root_rel).name if root_rel else None
+    if campaign in DRIVE_ONLY_CAMPAIGNS:
+        # raw tree fetched from Drive (``wms fetch get <campaign>``) instead of runs/<campaign>
+        cached = drive_only_root(campaign)
+        for sub in (cached / run / "run" / "switch_schedule.json",
+                    cached / run / "switch_schedule.json"):
+            if sub.is_file():
+                return sub
     if campaign is not None:
         candidate = opened_map.get((campaign, run))
         if candidate and Path(candidate).is_file():
@@ -209,6 +240,7 @@ def build(pack_indexes: dict[str, Path], out_dir: Path, *,
     opened_map = load_opened_schedule_map(inventory_dir) if inventory_dir else {}
 
     train, val, pi_eval, pi_excluded, unverifiable = [], [], [], [], []
+    missing_drive_only: set[str] = set()
     n_by_pack = {}
     for pack, index_path in sorted(pack_indexes.items(), key=lambda kv: PACK_ORDER[kv[0]]):
         index = json.loads(Path(index_path).read_text(encoding="utf-8"))
@@ -235,6 +267,9 @@ def build(pack_indexes: dict[str, Path], out_dir: Path, *,
                 unverifiable.append(_window_record(
                     row, pack, pi_note=verdict["source"]))
                 pi_excluded.append(row["key"])
+                campaign = Path(row["root_rel"]).name if row.get("root_rel") else None
+                if campaign in DRIVE_ONLY_CAMPAIGNS and not drive_only_root(campaign).is_dir():
+                    missing_drive_only.add(campaign)
                 continue
             if verdict["pi"] is True:
                 pi_eval.append(_window_record(row, pack, pi_note=verdict["source"]))
@@ -245,6 +280,12 @@ def build(pack_indexes: dict[str, Path], out_dir: Path, *,
                 val.append(record)
             else:
                 train.append(record)
+
+    for name in sorted(missing_drive_only):
+        warnings.warn(
+            f"{name}: raw schedules not on disk, so its fixed/switching runs were excluded as "
+            f"unverifiable; fetch them first with `python -m wms fetch get {name}` "
+            f"(expected at {drive_only_root(name)})", stacklevel=2)
 
     order = lambda rec: (PACK_ORDER[rec["pack"]], rec["key"])  # noqa: E731
     train.sort(key=order)

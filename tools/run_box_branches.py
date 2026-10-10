@@ -147,6 +147,11 @@ def main(argv=None) -> int:
     env = dict(os.environ, OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")
     runs_root = _resolve(ROOT, a.runs_root)
     marker = runs_root / "LAUNCH_ROOT.json"
+    if not a.fresh_root and not a.dry_run and not runs_root.exists():
+        print(f"REFUSING: runs root {runs_root} not found. Raw campaign trees are Drive-only: "
+              f"fetch `python -m wms fetch get {runs_root.name}` (lands in data_cache/) and "
+              "pass --runs-root/--bases-root data_cache/<name>", file=sys.stderr)
+        return 2
     for i in range(1, a.instances + 1):
         out = _resolve(ROOT, f"{a.out_prefix}{i}")
         resume = out.is_dir() and any(out.iterdir())

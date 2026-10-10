@@ -32,10 +32,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable, Optional
 
+from wms.config.presets import repo_root
 from wms.data import window_lists as lpo_build  # leave-PI-out builder (schedule resolution)
 
 LPWO_SCHEMA = lpo_build.LPO_SCHEMA            # same window-list schema (trainer-compatible)
-RUNS_ROOT = Path("E:/research-dense")
+RUNS_ROOT = repo_root()
 WALL_BATCH_TOKENS = ("wall",)
 WallTimelineReader = Callable[..., dict]
 
@@ -71,7 +72,13 @@ def run_dir_of(row: dict, root: Path = RUNS_ROOT) -> Optional[Path]:
     run = row.get("run") or str(row["key"]).split("/", 1)[1]
     if Path(run).name != run:
         raise ValueError("run must be a basename")
-    return Path(root) / root_rel / run
+    in_tree = Path(root) / root_rel / run
+    if not in_tree.exists() and Path(root_rel).name in lpo_build.DRIVE_ONLY_CAMPAIGNS:
+        # Drive-only raw campaign (``python -m wms fetch get <campaign>``) lands in data_cache/
+        fetched = lpo_build.drive_only_root(Path(root_rel).name) / run
+        if fetched.exists():
+            return fetched
+    return in_tree
 
 
 def classify_window(window: dict, rows: dict[str, dict], *, root: Path,

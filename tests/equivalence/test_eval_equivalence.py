@@ -14,9 +14,11 @@ from pathlib import Path
 
 import pytest
 
+from wms.data.registry import resolve
+
 REPO = Path(__file__).resolve().parents[2]
-STATES = Path("E:/rd-wt/ws-wallc1/_out/wallc1_states_v2/wall_same.json")
-CKPT = Path("E:/research-dense/runs/active/WM-S-C1FAST-20261006/box/full_struct/wm_s.pt")
+STATES = resolve("eval_states_wall_same")     # data_cache/wallc1_states_v2/wall_same.json
+CKPT = resolve("ckpt_c1fast")                 # data_cache/ckpt_c1fast/wm_s.pt
 RECEIPT = CKPT.with_name("TRAIN_RECEIPT.json")
 CACHE = REPO / "runs" / "tmp_eq"
 HORIZONS = (10.0, 30.0, 60.0)
@@ -24,7 +26,8 @@ QUICK_60S_MEDIAN_M = 11.9576   # bisect_stages SUMMARY C1_stage120 (final ckpt ~
 
 pytestmark = pytest.mark.skipif(
     not (STATES.is_file() and CKPT.is_file() and RECEIPT.is_file()),
-    reason="C1 checkpoint / wall_same states not available")
+    reason="C1 checkpoint / wall_same states (registry names ckpt_c1fast, "
+           "eval_states_wall_same) not present in data_cache/")
 
 
 def _legacy(mode: str) -> list[dict]:

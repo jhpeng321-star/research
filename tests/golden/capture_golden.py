@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -45,19 +46,36 @@ HISTORY_S = 60.0
 ALL_PARTS = ("selection", "batches", "forward", "losses", "train", "eval")
 
 # ---- external, read-only inputs -------------------------------------------------
-LISTS = Path("E:/rd-wt/ws-r3-int/_out/lpwo_v3")
-SIDE = Path("E:/rd-wt/ws-packv3fix/_out/sidecars_packv3_v2")   # == ws-r3-int sidecars
-PACKS = ("D:/rd-staging/wmn1_feat/pack_v3",
-         "E:/rd-wt/dspeed-data/_out/pack_dspeed",
-         "E:/rd-wt/damping-snap/_out/pack_damping")
-IDENTITIES = (str(SIDE / "identities"), "E:/rd-wt/a9/_out/identities_dspeed",
-              "E:/rd-wt/damping-snap/_out/identities_damping")
-OVERLAYS = ("E:/rd-wt/dspeed-data/_out/labels_overlay_dspeed",
-            "E:/rd-wt/damping-snap/_out/labels_overlay_damping")
+# Logical dataset names resolve through configs/data_registry.toml (hot data lives in the
+# git-ignored data_cache/; WMS_DATA_<NAME> overrides a location).  The legacy ``wms`` package
+# put on sys.path above has no registry module, so the registry file is read here.
+def _registered(name: str) -> Path:
+    env = os.environ.get("WMS_DATA_" + re.sub(r"[^A-Za-z0-9]", "_", name).upper())
+    if env:
+        return Path(env)
+    text = (ROOT / "configs" / "data_registry.toml").read_text(encoding="utf-8")
+    section = None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("["):
+            section = line
+        elif section == f"[datasets.{name}]" and re.match(r"path\s*=", line):
+            path = Path(line.split("=", 1)[1].strip().strip('"'))
+            return path if path.is_absolute() else ROOT / path
+    raise SystemExit(f"dataset {name!r} is not in configs/data_registry.toml "
+                     f"(fetch with `python -m wms fetch get {name}`)")
+
+
+LISTS = _registered("lpwo_v3")
+SIDE = _registered("sidecars_packv3_v2")
+PACKS = tuple(_registered(n).as_posix() for n in ("pack_v3", "pack_dspeed", "pack_damping"))
+IDENTITIES = (str(SIDE / "identities"), _registered("identities_dspeed").as_posix(),
+              _registered("identities_damping").as_posix())
+OVERLAYS = (_registered("overlay_dspeed").as_posix(), _registered("overlay_damping").as_posix())
 OUTCOMES = str(SIDE / "outcomes")
-MERGE_PARAMS = "E:/rd-wt/ws-r3-int/_out/merge_params.json"
-C1_RUN = Path("E:/research-dense/runs/active/WM-S-C1FAST-20261006/box/full_struct")
-STATES = Path("E:/rd-wt/ws-wallc1/_out/wallc1_states_v2/wall_same.json")
+MERGE_PARAMS = _registered("merge_params").as_posix()
+C1_RUN = _registered("ckpt_c1fast").parent
+STATES = _registered("eval_states_wall_same")
 SCRATCH_OUT = ROOT / "tests" / "golden" / "_scratch_out"   # never created by the CLI
 
 

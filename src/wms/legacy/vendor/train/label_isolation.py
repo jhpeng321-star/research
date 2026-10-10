@@ -20,7 +20,8 @@ This module is the code-only isolation fix:
 * :func:`build_sidecar` then opens ONLY positive-row per-run TRAIN shard
   ``outcomes.parquet`` files selected above (shard tree layout
   ``<shards-root>/<chunk>/<world>/<arm>``, e.g.
-  ``D:/rd-staging/wmn1_feat/shards_v3``) and writes a NEW output directory
+  ``data_cache/shards_v3``, fetched with ``python -m wms fetch get shards_v3``) and
+  writes a NEW output directory
   holding the TRAIN label rows -- original shard columns, exact values and
   dtypes, each tagged with its original global row id -- plus an immutable
   receipt binding the raw manifest+INDEX shas, every TRAIN source-shard
@@ -368,7 +369,7 @@ def _shard_rel_of(run: dict, shards_root: Path) -> str:
     A recorded absolute path of the HOST's own flavor must still resolve
     inside the (already resolved) shards root exactly as recorded.  A
     relative recorded identity -- or an absolute one recorded on the OTHER
-    OS flavor (e.g. ``D:/rd-staging/...`` staged on Windows, validated
+    OS flavor (e.g. a ``D:/...`` path recorded on Windows, validated
     against a local mirror on the POSIX GPU box) -- is addressed by its
     logical identity under the local root; the recorded source itself is
     never opened or resolved.
@@ -493,7 +494,8 @@ def plan_sidecar(pack_dir, shards_root=None) -> dict:
         root = Path(shards_root).resolve()
         if not root.is_dir():
             raise LabelIsolationError(
-                f"shards root {str(shards_root)!r} is not a directory")
+                f"shards root {str(shards_root)!r} is not a directory (the raw shard tree is "
+                f"Drive-only: `python -m wms fetch get shards_v3`)")
         for run in train_runs:
             run["shard_rel"] = _shard_rel_of(run, root)
     previous_end = -1

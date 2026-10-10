@@ -4,7 +4,7 @@ OPT-IN: skipped unless ``PLANNER_REAL_SUMO=1``. Budget: TWO master SUMO
 runs of at most 120 sim-s EACH, each on its OWN free port, waited on ONLY
 through the harness's own Popen child (never by image name or pattern).
 No lookahead branches exist (reference runs never reach a decision
-point). Output goes to ``E:/rd-wt/pl38/tmp_ta`` (never ``runs/`` or
+point). Output goes to ``<repo>/tmp_ta`` (never ``runs/`` or
 ``output/planner_v1``). TRAIN world only; HOLDOUT/CALIBRATION outcomes
 are never read.
 
@@ -31,16 +31,24 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("PLANNER_REAL_SUMO") != "1",
-    reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
-)
+from tests.planner._helpers import drive_only_campaign
 
 PLANNER_ROOT = Path(__file__).resolve().parents[2]
-BASE_RUN = Path(
-    "E:/research-dense/runs/campaign_stage1_chunk3/w8568m2600p05t360__base"
-)
+BASE_RUN = drive_only_campaign("campaign_stage1_chunk3") / "w8568m2600p05t360__base"
 BASE_PHYSICS = BASE_RUN / "run" / "physics_steps.jsonl"
+
+pytestmark = [
+    pytest.mark.skipif(
+        os.environ.get("PLANNER_REAL_SUMO") != "1",
+        reason="opt-in bounded real-SUMO check (set PLANNER_REAL_SUMO=1)",
+    ),
+    pytest.mark.skipif(
+        not BASE_RUN.is_dir(),
+        reason="raw campaign_stage1_chunk3 runs not on disk (Drive-only dataset "
+        "campaign_stage1_chunk3: `python -m wms fetch get campaign_stage1_chunk3`)",
+    ),
+]
+
 OUT_ROOT = PLANNER_ROOT / "tmp_ta"
 HORIZON_S = 120.0
 T0_S = 360.0

@@ -67,7 +67,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from .interface import Prediction
-from .paths import rd_wt_root, research_dense_root
+from .paths import research_dense_root, wd01_tree
 
 __all__ = [
     "BranchOutcome",
@@ -868,9 +868,10 @@ def branch_outcome_from_dict(payload: Mapping) -> BranchOutcome:
 #: WD-01 part-4 delay library (read-only reference): the DEFAULT
 #: DelayProvider. Lazy import through a configurable search path; the
 #: built-in provider remains as the cross-check diagnostic.
-#: Search root resolved at import from paths.rd_wt_root() (env RD_WT_ROOT,
-#: E:/rd-wt default).
-P4_SEARCH_PATHS = (str(rd_wt_root() / "wd01c" / "output" / "wd01"),)
+#: Search root resolved at import by paths.wd01_tree(): the sibling worktree
+#: wd01c under paths.rd_wt_root() (env RD_WT_ROOT) when it exists, else this
+#: checkout's tracked output/wd01.
+P4_SEARCH_PATHS = (str(wd01_tree("wd01c")),)
 P4_DELAY_MODULE = "part4.delay.core"
 P4_GEOMETRY_MODULE = "part4.delay.geometry"
 

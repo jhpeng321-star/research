@@ -5,12 +5,11 @@ ownership rigs from test_closed_loop.py."""
 
 import json
 import sys
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from tests.planner._helpers import make_base_run
+from tests.planner._helpers import make_base_run, requires_p4_delay, scratch_root
 from tests.planner.test_closed_loop import (  # the established rig fakes
     _FakeBranchSensor,
     _FakeBranchVehicle,
@@ -51,7 +50,7 @@ VALIDATED_META = {
 def _cli_args(*extra):
     return make_parser().parse_args(
         [
-            "--out", "E:/rd-wt/pl16/output",
+            "--out", str(scratch_root()),
             "--run-id", "x",
             "--world", "w-ok",
             "--horizon-s", "100",
@@ -147,7 +146,7 @@ class TestPL04e2DecisionUnits:
 
     def test_projection_uses_capped_units_and_prices_no_wall(self):
         config = ClosedLoopConfig(
-            out_root=Path("E:/rd-wt/pl16/output"), run_id="p", world="w-ok",
+            out_root=scratch_root(), run_id="p", world="w-ok",
             horizon_s=60.0, decision_period_s=30.0, predictor="perfect_sim",
             lookahead_horizon_s=10.0, max_sim_s=1e9,
         )
@@ -400,6 +399,7 @@ class TestPL04e2BaseRunStartReal:
         assert harness.base_state["t0_s"] == 240.0
         harness.close()
 
+    @requires_p4_delay
     def test_branches_launch_from_the_copied_cfg(self, rig):
         harness = rig.components.make_harness(rig.context)
         harness.start()
@@ -429,6 +429,7 @@ class TestPL04e2BaseRunStartReal:
             assert cmd[cmd.index("--seed") + 1] == "8468"
         harness.close()
 
+    @requires_p4_delay
     def test_branch_control_rows_and_launch_records_are_recorded(self, rig):
         harness = rig.components.make_harness(rig.context)
         harness.start()

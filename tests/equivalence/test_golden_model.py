@@ -1,6 +1,7 @@
 """New model vs the golden artifacts of branch wms/golden (skipped when absent).
 
-Looks for ``tests/golden/data`` in this worktree, then in ``E:/rd-wt/ws-golden``.
+Reads the tracked ``tests/golden/data`` of this work tree; the merge-calibration parameters
+come from the data registry (``merge_params`` -> ``configs/merge_params.json``).
 """
 from __future__ import annotations
 
@@ -11,14 +12,14 @@ import numpy as np
 import pytest
 import torch
 
+from wms.data.registry import resolve
 from wms.model import ModelSpec, build_model, load_checkpoint
 from wms.physics import PhysicsConfig
 
 HERE = Path(__file__).resolve()
-CANDIDATES = (HERE.parents[2] / "tests" / "golden" / "data",
-              Path("E:/rd-wt/ws-golden/tests/golden/data"))
+CANDIDATES = (HERE.parents[2] / "tests" / "golden" / "data",)
 DATA = next((p for p in CANDIDATES if (p / "forward_c1.npz").is_file()), None)
-MERGE_PARAMS = Path("E:/rd-wt/ws-r3-int/_out/merge_params.json")
+MERGE_PARAMS = resolve("merge_params")
 
 pytestmark = pytest.mark.skipif(DATA is None, reason="golden data not available")
 ATOL = 1e-6

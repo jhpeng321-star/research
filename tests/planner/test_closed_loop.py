@@ -60,7 +60,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from tests.planner._helpers import make_base_run
+from tests.planner._helpers import make_base_run, requires_p4_delay, scratch_root
 from traffic_shepherd.planner import PlannerConfig, PlanCandidate, WallSpec
 from traffic_shepherd.planner.closed_loop import (
     BELOW_NORMAL_PRIORITY_CLASS,
@@ -557,7 +557,7 @@ def _cli_args(*extra):
     return make_parser().parse_args(
         [
             "--out",
-            "E:/rd-wt/pl16/output",
+            str(scratch_root()),
             "--run-id",
             "x",
             "--world",
@@ -736,7 +736,7 @@ class TestControlPathProof:
     def test_cli_end_to_end_proof_labels_receipt_rows_and_commands(self):
         # the E:-paths-only guard makes tmp_path (system temp) unusable here;
         # this test's transient run dir lives inside the workspace instead
-        with tempfile.TemporaryDirectory(dir="E:/rd-wt/pl16/output") as scratch:
+        with tempfile.TemporaryDirectory(dir=scratch_root()) as scratch:
             out = str(Path(scratch).resolve())
             code = main(
                 [
@@ -1128,14 +1128,14 @@ class TestGuards:
     def test_holdout_world_refused_without_owner_flag(self):
         with pytest.raises(SplitRefusedError, match="HOLDOUT"):
             ClosedLoopConfig(
-                out_root=Path("E:/rd-wt/pl16/output"),
+                out_root=scratch_root(),
                 run_id="j1",
                 world="chunk2_HOLDOUT",
                 max_sim_s=1e9,
             )
         with pytest.raises(SplitRefusedError, match="TEST"):
             ClosedLoopConfig(
-                out_root=Path("E:/rd-wt/pl16/output"),
+                out_root=scratch_root(),
                 run_id="j2",
                 world="w-ok",
                 split="TEST",
@@ -1144,7 +1144,7 @@ class TestGuards:
 
     def test_owner_flag_allows_holdout_construction(self):
         config = ClosedLoopConfig(
-            out_root=Path("E:/rd-wt/pl16/output"),
+            out_root=scratch_root(),
             run_id="j3",
             world="chunk2_HOLDOUT",
             allow_holdout=True,
@@ -1155,7 +1155,7 @@ class TestGuards:
     def test_decision_period_range_enforced(self):
         with pytest.raises(ValueError, match="decision_period_s"):
             ClosedLoopConfig(
-                out_root=Path("E:/rd-wt/pl16/output"),
+                out_root=scratch_root(),
                 run_id="j4",
                 world="w-ok",
                 decision_period_s=5.0,
@@ -1186,7 +1186,7 @@ class TestCli:
     def test_cli_end_to_end_with_mock_components(self):
         # the E:-paths-only guard makes tmp_path (system temp) unusable here;
         # this test's transient run dir lives inside the workspace instead
-        with tempfile.TemporaryDirectory(dir="E:/rd-wt/pl16/output") as scratch:
+        with tempfile.TemporaryDirectory(dir=scratch_root()) as scratch:
             out = str(Path(scratch).resolve())
             code = main(
                 [
@@ -1259,7 +1259,7 @@ class TestCli:
         code = main(
             [
                 "--out",
-                "E:/rd-wt/pl16/output",
+                str(scratch_root()),
                 "--run-id",
                 "x",
                 "--world",
@@ -1786,6 +1786,7 @@ class TestRealComponentsWiring:
     ZERO SUMO: subprocess.Popen and the traci module are fakes; the Popen
     fake records every launch and starts nothing."""
 
+    @requires_p4_delay
     def test_make_world_model_wires_the_real_perfect_sim_lookahead(
         self, tmp_path, monkeypatch
     ):
@@ -1808,6 +1809,7 @@ class TestRealComponentsWiring:
         assert harness.scenario_routes == [rig.cfg]
         harness.close()
 
+    @requires_p4_delay
     def test_predict_many_runs_one_fresh_fake_process_per_branch(
         self, tmp_path, monkeypatch
     ):
@@ -1833,6 +1835,7 @@ class TestRealComponentsWiring:
         assert prediction.meta["continuation"] == "native"
         harness.close()
 
+    @requires_p4_delay
     def test_master_connection_only_ever_receives_savestate(self, tmp_path, monkeypatch):
         rig = RealComponentsRig(monkeypatch, tmp_path, run_id="l3")
         harness = rig.start_harness()
@@ -1844,6 +1847,7 @@ class TestRealComponentsWiring:
         assert rig.traci.master_loads == []
         harness.close()
 
+    @requires_p4_delay
     def test_branch_command_line_matches_the_master_launch_contract(
         self, tmp_path, monkeypatch
     ):
@@ -1910,6 +1914,7 @@ class TestPL04cBranchControlWrite:
     dispatcher session and the real BranchControlWrite plumbing are all
     exercised end to end."""
 
+    @requires_p4_delay
     def test_damping_branch_steps_control_every_tick_and_issues_commands(
         self, tmp_path, monkeypatch
     ):
@@ -1943,6 +1948,7 @@ class TestPL04cBranchControlWrite:
         assert set(owner.issued) == {"c0"}  # native CAV never commanded
         harness.close()
 
+    @requires_p4_delay
     def test_valueerror_capture_becomes_a_none_frame(self, tmp_path, monkeypatch):
         rig = RealComponentsRig(monkeypatch, tmp_path, run_id="m2")
         harness = rig.start_harness()
@@ -1958,6 +1964,7 @@ class TestPL04cBranchControlWrite:
             assert step["frames"]["c0"] is not None
         harness.close()
 
+    @requires_p4_delay
     def test_native_plan_runs_the_ownership_write_and_issues_nothing(self, tmp_path, monkeypatch):
         rig = RealComponentsRig(monkeypatch, tmp_path, run_id="m3")
         harness = rig.start_harness()
@@ -1992,6 +1999,7 @@ class TestPL04cBranchControlWrite:
         assert all(s["native_ids"] == {"c0", "c1"} for o in branch_owners for s in o.steps)
         harness.close()
 
+    @requires_p4_delay
     def test_release_all_runs_even_when_the_branch_raises(self, tmp_path, monkeypatch):
         rig = RealComponentsRig(monkeypatch, tmp_path, run_id="m4")
         harness = rig.start_harness()
@@ -2011,6 +2019,7 @@ class TestPL04cBranchControlWrite:
         assert all(proc.wait_calls == 1 for proc in branch_procs)
         harness.close()
 
+    @requires_p4_delay
     def test_seed_reaches_master_snapshotter_and_every_branch_launch(
         self, tmp_path, monkeypatch
     ):
@@ -2072,7 +2081,7 @@ class TestPL04cBranchControlWrite:
         code = main(
             [
                 "--out",
-                "E:/rd-wt/pl18/output/pl04c_seed_refusal_probe",
+                str(scratch_root() / "pl04c_seed_refusal_probe"),
                 "--run-id",
                 "no-seed",
                 "--world",

@@ -15,7 +15,7 @@ machines can relocate the trees without code changes:
 import os
 from pathlib import Path
 
-__all__ = ["rd_wt_root", "research_dense_root"]
+__all__ = ["rd_wt_root", "research_dense_root", "wd01_tree"]
 
 RESEARCH_DENSE_ROOT_ENV = "RESEARCH_DENSE_ROOT"
 RD_WT_ROOT_ENV = "RD_WT_ROOT"
@@ -32,6 +32,17 @@ def research_dense_root() -> Path:
 def rd_wt_root() -> Path:
     """The sibling-worktrees root (env ``RD_WT_ROOT``)."""
     return Path(os.environ.get(RD_WT_ROOT_ENV) or DEFAULT_RD_WT_ROOT)
+
+
+def wd01_tree(variant: str) -> Path:
+    """The read-only WD-01 library tree ``output/wd01`` of sibling worktree ``variant``.
+
+    Returns ``<rd_wt_root>/<variant>/output/wd01`` when that sibling worktree exists; the
+    sibling worktrees (wd01, wd01b, wd01c) are gone on a clean checkout, and the tracked copy
+    in this checkout (``<research_dense_root>/output/wd01``) is returned instead.
+    """
+    sibling = rd_wt_root() / variant / "output" / "wd01"
+    return sibling if sibling.is_dir() else research_dense_root() / "output" / "wd01"
 
 
 def export_research_env() -> None:

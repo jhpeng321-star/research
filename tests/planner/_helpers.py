@@ -1,22 +1,67 @@
 """Shared helpers for the planner tests (no simulation imports)."""
 
+import os
+from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
 
 from traffic_shepherd.planner import MockWorldModel, PlanCandidate, WallSpec
 from traffic_shepherd.planner import plan_key  # noqa: F401  (re-exported)
+from traffic_shepherd.planner.recorded import P4_SEARCH_PATHS
 
 __all__ = [
     "MockWorldModel",
     "PlanCandidate",
     "RecordingProcessFactory",
     "WallSpec",
+    "drive_only_campaign",
     "make_samples",
     "make_world",
     "state_from_plan",
     "wall",
     "plan",
     "plan_key",
+    "requires_p4_delay",
+    "scratch_root",
 ]
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+#: The real closed-loop wiring builds the WD-01 p4 delay evaluator from a sibling worktree
+#: (``recorded.P4_SEARCH_PATHS``, env ``RD_WT_ROOT``); those worktrees no longer exist on a
+#: clean checkout, so tests that need the library skip with an explicit reason instead of failing.
+requires_p4_delay = pytest.mark.skipif(
+    not any((Path(path) / "part4").is_dir() for path in P4_SEARCH_PATHS),
+    reason=f"WD-01 p4 delay library (part4.delay.core) absent: no part4/ under {P4_SEARCH_PATHS[0]} "
+           "(sibling worktree; set RD_WT_ROOT to a tree that has wd01c/output/wd01)")
+
+
+def scratch_root() -> Path:
+    """Workspace-local scratch directory on the repo drive (git-ignored ``tmp/``).
+
+    The closed-loop CLI accepts ``--out`` only on the E: workspace drive, which rules out the
+    system temp dir; transient run dirs live here instead. Created on first use.
+    """
+    root = REPO_ROOT / "tmp" / "planner_scratch"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def drive_only_campaign(name: str) -> Path:
+    """Local directory of the Drive-only raw campaign tree ``name`` (it may not exist).
+
+    Order: env ``WMS_DATA_<NAME>``, then ``data_cache/<name>`` (fetched with
+    ``python -m wms fetch get <name>``), then a leftover in-tree ``runs/<name>``; when none
+    exists the ``data_cache`` path is returned so a skip message can name it.
+    """
+    env = os.environ.get("WMS_DATA_" + name.upper())
+    if env:
+        return Path(env)
+    fetched = REPO_ROOT / "data_cache" / name
+    legacy = REPO_ROOT / "runs" / name
+    return legacy if not fetched.is_dir() and legacy.is_dir() else fetched
 
 
 class _FakeConnection:

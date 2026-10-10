@@ -15,17 +15,22 @@ import numpy as np
 import pytest
 import torch
 
-PACKS = ("D:/rd-staging/wmn1_feat/pack_v3",
-         "E:/rd-wt/dspeed-data/_out/pack_dspeed",
-         "E:/rd-wt/damping-snap/_out/pack_damping")
-SIDE = Path("E:/rd-wt/ws-packv3fix/_out/sidecars_packv3_v2")
-IDENTITIES = (str(SIDE / "identities"), "E:/rd-wt/a9/_out/identities_dspeed",
-              "E:/rd-wt/damping-snap/_out/identities_damping")
-OVERLAYS = ("E:/rd-wt/dspeed-data/_out/labels_overlay_dspeed",
-            "E:/rd-wt/damping-snap/_out/labels_overlay_damping")
+
+def _data(name: str) -> Path:
+    """Registered location of ``name`` (git-ignored ``data_cache/``, configs/data_registry.toml)."""
+    from wms.data.registry import resolve
+
+    return resolve(name)
+
+
+PACKS = tuple(_data(n).as_posix() for n in ("pack_v3", "pack_dspeed", "pack_damping"))
+SIDE = _data("sidecars_packv3_v2")
+IDENTITIES = (str(SIDE / "identities"), _data("identities_dspeed").as_posix(),
+              _data("identities_damping").as_posix())
+OVERLAYS = (_data("overlay_dspeed").as_posix(), _data("overlay_damping").as_posix())
 OUTCOMES = str(SIDE / "outcomes")
-LISTS = Path("E:/rd-wt/ws-r3-int/_out/lpwo_v3")
-GOLDEN = Path("E:/rd-wt/ws-golden/tests/golden/data")
+LISTS = _data("lpwo_v3")
+GOLDEN = Path(__file__).resolve().parents[1] / "golden" / "data"
 
 EXPECTED_TRAIN = {"pack_v3": 294, "pack_dspeed": 444, "pack_damping": 173}
 EXPECTED_VAL = {"pack_v3": 47, "pack_dspeed": 76, "pack_damping": 28}
@@ -39,7 +44,9 @@ BATCH_TENSORS = ("states", "present", "slot_index", "loss_valid", "vehicle_ids",
 REQUIRED = [*PACKS, *IDENTITIES, *OVERLAYS, OUTCOMES, str(LISTS)]
 pytestmark = pytest.mark.skipif(
     not all(os.path.exists(p) for p in REQUIRED),
-    reason="real packs / sidecars / lpwo_v3 lists not present on this machine")
+    reason="real packs / sidecars / lpwo_v3 lists not present in data_cache/ "
+           "(registry names pack_v3, pack_dspeed, pack_damping, sidecars_packv3_v2, "
+           "identities_*, overlay_*, lpwo_v3)")
 
 
 @pytest.fixture(scope="module")

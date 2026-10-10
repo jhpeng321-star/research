@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 from tests.planner import test_pl04i_e2e_real_run as e2e_mod
+from tests.planner._helpers import requires_p4_delay, scratch_root
 from tests.planner.test_closed_loop import CAV, VALIDATED_META, Rig
 from traffic_shepherd.mixed_assignment import AssignmentPlan, MixedAssignmentSession
 from traffic_shepherd.ownership import CommandOwnership
@@ -313,6 +314,7 @@ def _ops_between(ops, start_op, stop_op, *, after=0):
 
 
 class TestMasterRestoreParity:
+    @requires_p4_delay
     def test_first_control_tick_at_t0_before_the_first_step_releases_native(
         self, tmp_path, monkeypatch
     ):
@@ -334,6 +336,7 @@ class TestMasterRestoreParity:
         assert receipt["restore_source_manifest_sha256"] == digest
         assert rig.made["harness"].restore_evidence["owned"] == 1
 
+    @requires_p4_delay
     def test_no_release_when_the_restored_owner_stays_damping(self, tmp_path, monkeypatch):
         rig = _e2e(tmp_path, monkeypatch, owned={e2e_mod.CAVS[0]: "damping"},
                    fixed_policy="damping", horizon_s=2.0, run_id="tbd")
@@ -343,6 +346,7 @@ class TestMasterRestoreParity:
         assert "vehicle.slowDown" in before_step  # commanded AT t0, not t0+1
         assert "vehicle.setSpeed" not in before_step
 
+    @requires_p4_delay
     def test_a_manifest_without_ownership_is_refused_loudly(self, tmp_path, monkeypatch):
         from traffic_shepherd.planner.closed_loop import BaseRunRefusedError
 
@@ -364,6 +368,7 @@ class TestBranchStateCarryAndTiming:
         receipt = ClosedLoopRunner(rig.config, rig.components).run()
         return rig, receipt
 
+    @requires_p4_delay
     def test_snapshot_carries_master_state_and_branches_restore_it(self, tmp_path, monkeypatch):
         rig, receipt = self._run(tmp_path, monkeypatch)
         assert receipt["exit_status"] == "complete" and receipt["decisions"] == 2
@@ -385,6 +390,7 @@ class TestBranchStateCarryAndTiming:
         model = rig.made["model"]
         assert model.branch_runner.carried_state_restores >= 4  # 2 decisions x >=2 branches
 
+    @requires_p4_delay
     def test_every_branch_runs_the_ownership_write_at_t0_before_its_first_step(
         self, tmp_path, monkeypatch
     ):
@@ -405,6 +411,7 @@ class TestBranchStateCarryAndTiming:
         # branches (the first decision's native reference at least)
         assert owned_first >= 1
 
+    @requires_p4_delay
     def test_master_applies_the_chosen_plan_at_its_control_tick_before_the_step(
         self, tmp_path, monkeypatch
     ):
@@ -419,6 +426,7 @@ class TestBranchStateCarryAndTiming:
 
 
 class TestBranchPlanFactoryOrdering:
+    @requires_p4_delay
     def test_decision_time_is_the_ticks_time(self, tmp_path, monkeypatch):
         rig = _e2e(tmp_path, monkeypatch, fixed_policy="damping", horizon_s=3.0, run_id="tbo")
         ClosedLoopRunner(rig.config, rig.components).run()
@@ -665,7 +673,7 @@ class TestLauncherArgvStillParses:
             "--components", "real", "--world", "W", "--split", "train",
             "--seed", str(resolved.seed), "--base-run", str(base),
             "--horizon-s", "600", "--walls", "off", "--process-start-s", "0.688",
-            "--out", "E:/rd-wt/pl39/tmp_tb/argv_out", "--predictor", "perfect_sim",
+            "--out", str(scratch_root() / "argv_out"), "--predictor", "perfect_sim",
         ]
         parser = make_parser()
         ref = config_from_args(parser.parse_args(

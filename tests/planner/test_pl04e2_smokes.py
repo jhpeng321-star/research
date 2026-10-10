@@ -34,7 +34,7 @@ def _load_wrapper(name, relative):
 run_confirm = _load_wrapper("pl04e2_run_confirm", "output/planner_v1/resmoke/run_confirm.py")
 run_cl_smoke = _load_wrapper("pl04e2_run_cl_smoke", "output/planner_v1/closed_loop_smoke/run_cl_smoke.py")
 
-from tests.planner._helpers import make_base_run  # noqa: E402
+from tests.planner._helpers import make_base_run, scratch_root  # noqa: E402
 
 
 # ----------------------------------------------------- run_confirm.py fakes
@@ -904,7 +904,7 @@ class TestRealSubprocessLaunchers:
 
     # -- run_cl_smoke.subprocess_launcher ----------------------------------
     def test_cl_smoke_subprocess_launcher_runs_a_real_mock_child(self):
-        with tempfile.TemporaryDirectory(dir="E:/rd-wt/pl25") as scratch:
+        with tempfile.TemporaryDirectory(dir=scratch_root()) as scratch:
             out = str(Path(scratch).resolve())
             result = run_cl_smoke.subprocess_launcher(
                 [

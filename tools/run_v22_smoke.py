@@ -105,8 +105,13 @@ DEFAULT_REGISTRATION_PATH = REPO_ROOT / "output" / "campaign_walls_v1" / "REGIST
 DEFAULT_PLAN_PATH = (PACKAGE / "results_plan" / "WORLD_PLAN.json")
 #: the write-once smoke runs root (must NOT exist)
 DEFAULT_RUNS_ROOT = REPO_ROOT / "runs" / "campaign_walls_v22_smoke"
-#: the bases root of the declared commands (chunk-4 mode-27 saved states)
-DEFAULT_BASES_ROOT = "E:/research-dense/runs/campaign_stage1_chunk4"
+#: the bases root of the declared commands (chunk-4 mode-27 saved states): the in-tree
+#: ``runs/`` copy when present, else the Drive-only dataset ``campaign_stage1_chunk4`` fetched
+#: with ``python -m wms fetch get campaign_stage1_chunk4`` into ``data_cache/``
+_CHUNK4_RUNS = REPO_ROOT / "runs" / "campaign_stage1_chunk4"
+_CHUNK4_FETCHED = REPO_ROOT / "data_cache" / "campaign_stage1_chunk4"
+DEFAULT_BASES_ROOT = (_CHUNK4_FETCHED if not _CHUNK4_RUNS.is_dir() and _CHUNK4_FETCHED.is_dir()
+                      else _CHUNK4_RUNS).as_posix()
 
 # --- the R2 RE-smoke (J4BFIX, 2026-10-01; SMOKE_V22_R2.json is authoritative)
 R2_FIXTURE_SCHEMA = "wm59_walls_v22_smoke_r2_fixture/1"
@@ -847,7 +852,8 @@ def main(argv=None) -> int:
                              "runs/campaign_walls_v22_smoke_r2 for R2)")
     parser.add_argument("--bases-root", default=DEFAULT_BASES_ROOT,
                         help="the chunk-4 bases root the branches restore "
-                             "from (default: the declared E:/ path)")
+                             "from (default: runs/campaign_stage1_chunk4, or its "
+                             "data_cache/ copy when only that exists)")
     parser.add_argument(
         "--smoke-min-free-gb", type=float, default=SMOKE_MIN_FREE_GB,
         help="SMOKE-ONLY disk-floor override (WALL22-R addendum; default "
@@ -864,6 +870,10 @@ def main(argv=None) -> int:
                              f"ONLY on an R2 PASS (default: "
                              f"{V22_SMOKE_PASS_NAME} at the repo root)")
     args = parser.parse_args(argv)
+    if not Path(args.bases_root).is_dir():
+        parser.error(f"bases root {args.bases_root!r} not found: the chunk-4 raw runs are "
+                     "Drive-only (`python -m wms fetch get campaign_stage1_chunk4`, then "
+                     "--bases-root data_cache/campaign_stage1_chunk4)")
     fixture_path = args.fixture or DEFAULT_FIXTURE_PATH
     verdict = run_v22_smoke(
         fixture_path=fixture_path, registration_path=args.registration,

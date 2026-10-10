@@ -7,8 +7,8 @@ regenerates everything (~8 min). `pytest tests/golden -q` re-captures into a tem
 `data/` (`GOLDEN_PARTS=...` restricts parts). Interpreter: `C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe`.
 Comparison helpers and the tolerance table: `golden_compare.py` (`load_npz`, `load_json`, `compare_npz`, `compare_json`).
 
-Inputs are read-only external paths listed at the top of `capture_golden.py` (packs, lpwo_v3 lists, sidecars,
-wall_same.json). The R3 configuration is built by running the real `wms.cli train` argument path (a trainer subclass
+Inputs are read-only registry datasets (`configs/data_registry.toml`, resolved at the top of `capture_golden.py`; the data
+lives in the git-ignored `data_cache/`): packs, lpwo_v3 lists, sidecars, wall_same.json. The R3 configuration is built by running the real `wms.cli train` argument path (a trainer subclass
 captures dataset/model/config instead of fitting): R3 preset, soft residual bound 4, residual-mag 0.01, lane-rate 1.0
 (target 0.0123), history 60 s stride 1, asym 2 / decel 5 @3 / propagation 1 over 3 s, merge-cal, start-shift 0.75,
 truncation 20, teacher CAVs, batch 2, device cpu.
