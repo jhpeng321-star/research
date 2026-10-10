@@ -148,3 +148,7 @@ pytest-of-*/
 /output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_3.md
 /output/wd01/wm_n1/inventory/holdout_names.json
 /output/wd01/wm_n1/preflight/reports/heldout-dryrun.json
+
+# data_ops receipts: lock files and personal (C:-drive) document receipts stay local
+/data_ops/receipts/**/locks/
+/data_ops/receipts/dataops/receipts/c__*

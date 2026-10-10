@@ -1,0 +1,81 @@
+{
+  "name": "ws-r3-int",
+  "path": "E:\\rd-wt\\ws-r3-int",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/r3-int",
+  "headBefore": "21219a1798f844209b9170d337612ff36bc6036e",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-r3-int",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-r3-int.tar.txt",
+  "uploadCount": 160,
+  "uploadBytes": 404690664,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-r3-int.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 1c244144be15f75d556ac17caa31e74d local 1c244144be15f75d556ac17caa31e74d; size 84928028/84928028; manifest md5 match size match; members=160 (tar -t 160, sha256 160); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-r3-int.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T20:27:38.020194+08:00",
+  "method": "tar.zst",
+  "readOnlyPack": true,
+  "tool": "pack_wt_ro.py (pack_wt.py without commit/update-ref)",
+  "roots": null,
+  "packStarted": "2026-10-10T20:26:08.586793+08:00",
+  "trackedDirtySensitiveSkipped": [],
+  "trackedDirtyPaths": [],
+  "headSha": "21219a1798f844209b9170d337612ff36bc6036e",
+  "headReachableFromRef": true,
+  "extraMembers": [],
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-r3-int/ws-r3-int.tar.zst",
+    "name": "ws-r3-int.tar.zst",
+    "size": 84928028,
+    "md5": "1c244144be15f75d556ac17caa31e74d",
+    "sha256": "d83cf19a8021c946ac7023ca26d857889d8fb110f37b922778d98f55021c7639",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-r3-int/ws-r3-int.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-r3-int.manifest.json",
+    "manifest_size": 26000,
+    "manifest_md5": "4fb4ca200f50b76a9618685e8dfb2de1",
+    "member_count": 160,
+    "member_bytes": 404690664,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 4.2,
+    "verify_seconds": 4.3,
+    "upload_seconds": 36.9,
+    "upload_MBps": 2.3,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 160,
+  "memberBytes": 404690664,
+  "junctionsFound": []
+}
