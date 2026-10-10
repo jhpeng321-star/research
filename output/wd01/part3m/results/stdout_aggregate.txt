@@ -1,0 +1,52 @@
+=== WD-01 part 3m: ladder aggregation + gate verdicts ===
+ZERO simulation; holdout blocked in root_arrays (never passed); validation rows only.
+FREEZE GATE ok: calibration_p3m.json sha256 968d20ba26d85520... frozen_utc=2026-09-26T20:24:17.243056+00:00
+loaded 2288 part 3l rows (L0/L4/L5, reused) + 520 part 3m rows (L6)
+L5c spread map (part 3l calibration, unchanged): {'delay_phys': {30: 1.7411, 60: 1.9097}, 'ttc3': {30: 2.0946, 60: 2.2974}}
+L6c spread map (part 3m recalibration, frozen 2026-09-26T20:24:17.243056+00:00): {'delay_phys': {30: 2.5198, 60: 2.2974}, 'ttc3': {30: 7.6387, 60: 14.5876}}
+  L4@H30: n_windows=52 ttc3_10-90_cov=0.1923 (below 0.75, above 0.0577; truth=0 ties below 6, above 0) delay_phys_10-90_cov=0.0577 delay_exposure_cov=0.25 minmax=0.0962 CRPS_phys=47.26 (s_out dp/t3 = None/None)
+  L5@H30: n_windows=52 ttc3_10-90_cov=0.1923 (below 0.7115, above 0.0962; truth=0 ties below 5, above 0) delay_phys_10-90_cov=0.5 delay_exposure_cov=0.3846 minmax=0.6154 CRPS_phys=42.6 (s_out dp/t3 = None/None)
+  L5c@H30: n_windows=52 ttc3_10-90_cov=0.5962 (below 0.3846, above 0.0192; truth=0 ties below 3, above 0) delay_phys_10-90_cov=0.8462 delay_exposure_cov=0.3846 minmax=0.9038 CRPS_phys=46.72 (s_out dp/t3 = 1.7411/2.0946)
+  L6@H30: n_windows=52 ttc3_10-90_cov=0.4038 (below 0.3269, above 0.2692; truth=0 ties below 2, above 0) delay_phys_10-90_cov=0.2885 delay_exposure_cov=0.2885 minmax=0.4423 CRPS_phys=36.4 (s_out dp/t3 = None/None)
+  L6c@H30: n_windows=52 ttc3_10-90_cov=0.9231 (below 0.0, above 0.0769; truth=0 ties below 0, above 0) delay_phys_10-90_cov=0.8077 delay_exposure_cov=0.2885 minmax=0.8846 CRPS_phys=36.33 (s_out dp/t3 = 2.5198/7.6387)
+  L0@H30: deterministic delay_phys MAE=293.39 over 52 windows
+  L4@H60: n_windows=52 ttc3_10-90_cov=0.0769 (below 0.9231, above 0.0; truth=0 ties below 3, above 0) delay_phys_10-90_cov=0.25 delay_exposure_cov=0.1923 minmax=0.25 CRPS_phys=144.37 (s_out dp/t3 = None/None)
+  L5@H60: n_windows=52 ttc3_10-90_cov=0.2692 (below 0.7115, above 0.0192; truth=0 ties below 3, above 0) delay_phys_10-90_cov=0.5385 delay_exposure_cov=0.5577 minmax=0.5577 CRPS_phys=106.94 (s_out dp/t3 = None/None)
+  L5c@H60: n_windows=52 ttc3_10-90_cov=0.5962 (below 0.3846, above 0.0192; truth=0 ties below 2, above 0) delay_phys_10-90_cov=0.7308 delay_exposure_cov=0.5577 minmax=0.8654 CRPS_phys=113.18 (s_out dp/t3 = 1.9097/2.2974)
+  L6@H60: n_windows=52 ttc3_10-90_cov=0.3462 (below 0.1538, above 0.5; truth=0 ties below 1, above 0) delay_phys_10-90_cov=0.4423 delay_exposure_cov=0.5192 minmax=0.5577 CRPS_phys=89.78 (s_out dp/t3 = None/None)
+  L6c@H60: n_windows=52 ttc3_10-90_cov=0.8846 (below 0.0, above 0.1154; truth=0 ties below 0, above 0) delay_phys_10-90_cov=0.75 delay_exposure_cov=0.5192 minmax=0.9231 CRPS_phys=93.12 (s_out dp/t3 = 2.2974/14.5876)
+  L0@H60: deterministic delay_phys MAE=738.77 over 52 windows
+
+== GATE v2 at H=30 (PRIMARY) -- (d) BINDING per-horizon form ==
+  L0: (a) coll/1000=0.0 PASS | (b) lc 0.0/12.077 (100.0%) FAIL | (c) n/a (deterministic) -> NA | (d) speed 4.1881 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc
+  L4: (a) coll/1000=0.024 PASS | (b) lc 11.669/12.077 (3.4%) PASS | (c) ttc3 0.1923 delay-phys 0.0577 crps 47.26 vs mae 293.39 -> FAIL | (d) speed 4.0141 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L5: (a) coll/1000=0.019 PASS | (b) lc 10.927/12.077 (9.5%) PASS | (c) ttc3 0.1923 delay-phys 0.5 crps 42.6 vs mae 293.39 -> FAIL | (d) speed 3.954 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L5c: (a) coll/1000=0.019 PASS | (b) lc 10.927/12.077 (9.5%) PASS | (c) ttc3 0.5962 delay-phys 0.8462 crps 46.72 vs mae 293.39 -> FAIL | (d) speed 3.954 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L6: (a) coll/1000=0.03 PASS | (b) lc 16.865/12.077 (39.6%) FAIL | (c) ttc3 0.4038 delay-phys 0.2885 crps 36.4 vs mae 293.39 -> FAIL | (d) speed 4.3438 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc,c_coverage_crps
+  L6c: (a) coll/1000=0.03 PASS | (b) lc 16.865/12.077 (39.6%) FAIL | (c) ttc3 0.9231 delay-phys 0.8077 crps 36.33 vs mae 293.39 -> PASS | (d) speed 4.3438 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc
+
+== OLD gate at H=30 ==
+  L0: speed 4.1881 < 4.97 True | coll 0.0 True | lc 100.0% False | delay minmax None False ==> FAIL
+  L4: speed 4.0141 < 4.97 True | coll 0.024 True | lc 3.4% True | delay minmax 0.0962 False ==> FAIL
+  L5: speed 3.954 < 4.97 True | coll 0.019 True | lc 9.5% True | delay minmax 0.6154 True ==> PASS
+  L5c: speed 3.954 < 4.97 True | coll 0.019 True | lc 9.5% True | delay minmax 0.9038 True ==> PASS
+  L6: speed 4.3438 < 4.97 True | coll 0.03 True | lc 39.6% False | delay minmax 0.4423 False ==> FAIL
+  L6c: speed 4.3438 < 4.97 True | coll 0.03 True | lc 39.6% False | delay minmax 0.8846 True ==> FAIL
+
+== GATE v2 at H=60 (secondary) -- (d) BINDING per-horizon form ==
+  L0: (a) coll/1000=0.0 PASS | (b) lc 0.0/23.942 (100.0%) FAIL | (c) n/a (deterministic) -> NA | (d) speed 4.9774 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc
+  L4: (a) coll/1000=0.019 PASS | (b) lc 23.85/23.942 (0.4%) PASS | (c) ttc3 0.0769 delay-phys 0.25 crps 144.37 vs mae 738.77 -> FAIL | (d) speed 5.1805 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L5: (a) coll/1000=0.015 PASS | (b) lc 21.385/23.942 (10.7%) PASS | (c) ttc3 0.2692 delay-phys 0.5385 crps 106.94 vs mae 738.77 -> FAIL | (d) speed 4.8965 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L5c: (a) coll/1000=0.015 PASS | (b) lc 21.385/23.942 (10.7%) PASS | (c) ttc3 0.5962 delay-phys 0.7308 crps 113.18 vs mae 738.77 -> FAIL | (d) speed 4.8965 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L6: (a) coll/1000=0.019 PASS | (b) lc 31.015/23.942 (29.5%) FAIL | (c) ttc3 0.3462 delay-phys 0.4423 crps 89.78 vs mae 738.77 -> FAIL | (d) speed 5.134 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc,c_coverage_crps
+  L6c: (a) coll/1000=0.019 PASS | (b) lc 31.015/23.942 (29.5%) FAIL | (c) ttc3 0.8846 delay-phys 0.75 crps 93.12 vs mae 738.77 -> FAIL | (d) speed 5.134 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: b_lc,c_coverage_crps
+
+== OLD gate at H=60 ==
+  L0: speed 4.9774 < 4.97 False | coll 0.0 True | lc 100.0% False | delay minmax None False ==> FAIL
+  L4: speed 5.1805 < 4.97 False | coll 0.019 True | lc 0.4% True | delay minmax 0.25 False ==> FAIL
+  L5: speed 4.8965 < 4.97 True | coll 0.015 True | lc 10.7% True | delay minmax 0.5577 True ==> PASS
+  L5c: speed 4.8965 < 4.97 True | coll 0.015 True | lc 10.7% True | delay minmax 0.8654 True ==> PASS
+  L6: speed 5.134 < 4.97 False | coll 0.019 True | lc 29.5% False | delay minmax 0.5577 True ==> FAIL
+  L6c: speed 5.134 < 4.97 False | coll 0.019 True | lc 29.5% False | delay minmax 0.9231 True ==> FAIL
+
+wrote D:\rd-wt\wd01k\output\wd01\part3m\results\gate_v2_p3m.json

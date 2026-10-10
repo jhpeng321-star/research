@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/SHA256SUMS",
+ "name": "SHA256SUMS",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\SHA256SUMS",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/SHA256SUMS.tar.zst",
+ "bytes": 5820819,
+ "files": 1,
+ "archive_bytes": 1638519,
+ "archive_md5": "60843efd8d120839955fa87b0108ae22",
+ "member_manifest": "manifests/members/shards_v3_SHA256SUMS.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 34.9,
+ "timestamp": "2026-10-10T01:48:54"
+}

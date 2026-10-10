@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/campaign_stage1_verify27_launch",
+ "name": "campaign_stage1_verify27_launch",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\campaign_stage1_verify27_launch",
+ "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_verify27_launch/campaign_stage1_verify27_launch.tar.zst",
+ "bytes": 27234,
+ "files": 6,
+ "archive_bytes": 4859,
+ "archive_md5": "5be7a4e456820f07049996226b0accc4",
+ "member_manifest": "manifests/members/output_campaign_stage1_verify27_launch.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 42.1,
+ "timestamp": "2026-10-10T01:30:55"
+}

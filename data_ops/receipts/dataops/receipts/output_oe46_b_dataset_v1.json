@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe46_b_dataset_v1",
+ "name": "oe46_b_dataset_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe46_b_dataset_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe46_b_dataset_v1/oe46_b_dataset_v1.tar.zst",
+ "bytes": 1411904,
+ "files": 7,
+ "archive_bytes": 174079,
+ "archive_md5": "ae827bd058239d4965874a0bf3f9bf3a",
+ "member_manifest": "manifests/members/output_oe46_b_dataset_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.4,
+ "timestamp": "2026-10-10T01:46:33"
+}

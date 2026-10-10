@@ -1,0 +1,30 @@
+{
+ "analysis_id": "WD-01-PA2G-LC2",
+ "note": "Registered a-priori variant values for WD-01-PA2G-LC2 (REGISTRATION_PA2G_LC2.md section 2). SEPARATE from params_nominal.json (which stays byte-identical, LF-sha256 079a5576...). Every variant is OFF by default; the ONE registered value per variant is never tuned, swept or selected. The engine reads the 'lc_variants' section only when a caller injects it via partA_v2g.variants.variant_params(); with the section absent (nominal params file) every flag is off.",
+ "registered_values": {
+  "va_persistence": {
+   "T_persist_s": 2.0,
+   "rule": "a discretionary change fires only if the MOBIL criterion (incentive + safety) has held continuously for T_persist_s (4 steps at dt 0.5 s)",
+   "provenance": "standard anti-flicker / decision-persistence device; value = 4 integration steps, chosen a priori, NOT fitted"
+  },
+  "vb_manoeuvre": {
+   "T_lc_s": 4.0,
+   "rule": "after any lane change the same vehicle may not start another DISCRETIONARY change for T_lc_s (the change itself stays instantaneous; mandatory merges unaffected)",
+   "provenance": "empirical lane-change durations reported around 4-5 s (Toledo & Zohar 2007, 'to verify' citation flag per registration); value chosen a priori, NOT fitted"
+  },
+  "vc_early_merge": {
+   "threshold_zero": true,
+   "b_merge_mps2": 1.0,
+   "rule": "an accel-lane vehicle applies the mandatory-merge rule from the START of the merge zone with zero incentive threshold, plus b_merge_mps2 added to its MOBIL gain toward main_right; the safety test is unchanged",
+   "provenance": "on-ramp bias convention of Treiber/Kesting-style MOBIL implementations; value chosen a priori, NOT fitted"
+  }
+ },
+ "presets": {
+  "nominal": {"va_enabled": false, "vb_enabled": false, "vc_enabled": false},
+  "va": {"va_enabled": true, "vb_enabled": false, "vc_enabled": false},
+  "vb": {"va_enabled": false, "vb_enabled": true, "vc_enabled": false},
+  "vc": {"va_enabled": false, "vb_enabled": false, "vc_enabled": true},
+  "vabc": {"va_enabled": true, "vb_enabled": true, "vc_enabled": true}
+ },
+ "default_off": {"va_enabled": false, "vb_enabled": false, "vc_enabled": false}
+}

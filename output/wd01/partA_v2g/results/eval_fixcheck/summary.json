@@ -1,0 +1,27 @@
+{
+ "analysis_id": "WD-01-PA2G-A2-fixcheck",
+ "status": "completed",
+ "purpose": "fix attribution: the FIXED engine on the PA2G-A chunk-2/3 truth with PA2G-A's CAV treatment (no is_cav flags), so the only delta vs the saved PA2G-A v2g rows is the engine fix",
+ "worlds": [
+  "w8481m2700p02t480",
+  "w8513m2600p10t300",
+  "w8546m2700p40t540",
+  "w8582m2600p10t360"
+ ],
+ "param_set_id": "ba1fd93f0a21b1ffd2cdf20693e74fb8e3fbb8e4a1c57e7f88d9a3929e3455ce",
+ "guards_on_variant": {
+  "cooldown_s": 2.0,
+  "lc_min_speed_mps": 1.0
+ },
+ "raw_rows": 560,
+ "opened_run_files": [
+  "E:\\research-dense\\output\\campaign_stage1_v2\\results_plan_chunk2\\WORLD_PLAN.json",
+  "E:\\research-dense\\output\\campaign_stage1_v3\\results_plan_chunk3\\WORLD_PLAN.json",
+  "E:\\research-dense\\runs\\campaign_stage1_chunk2\\w8481m2700p02t480__native\\run\\physics_steps.jsonl",
+  "E:\\research-dense\\runs\\campaign_stage1_chunk2\\w8513m2600p10t300__native\\run\\physics_steps.jsonl",
+  "E:\\research-dense\\runs\\campaign_stage1_chunk2\\w8546m2700p40t540__native\\run\\physics_steps.jsonl",
+  "E:\\research-dense\\runs\\campaign_stage1_chunk3\\w8582m2600p10t360__native\\run\\physics_steps.jsonl"
+ ],
+ "assert_train_only": "passed",
+ "wall_clock_s": 134.6323992999969
+}

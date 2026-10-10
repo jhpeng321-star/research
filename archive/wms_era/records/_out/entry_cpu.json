@@ -1,0 +1,1102 @@
+{
+  "checkpoint": "E:\\rd-wt\\ws-eval\\_out\\wms_ckpt\\wm_s.pt",
+  "physics": {
+    "accel_max_mps2": 3.0,
+    "accel_min_mps2": -9.0,
+    "b_safe_base_mps2": 4.0,
+    "b_safe_end_mps2": 6.0,
+    "dt_s": 0.5,
+    "free_road_gap_m": 250.0,
+    "lane_gap_m": 5.0,
+    "lane_incentive_mps": 0.4,
+    "lane_safe_gap_m": 6.0,
+    "max_gap_steps": 240,
+    "merge_lane": 2,
+    "merge_target_lane": 1,
+    "merge_zone_s0_m": 0.0,
+    "merge_zone_s1_m": 75.44,
+    "mobil_threshold_mps2": 0.1,
+    "open_road": true,
+    "speed_factor": 1.0,
+    "speed_limit_mps": 31.29,
+    "sumo_fidelity": true,
+    "sumo_idm": true
+  },
+  "n_states": 3,
+  "horizon_s": 300.0,
+  "summary": {
+    "recorded": {
+      "queue": 9.64528448841185,
+      "stopped": 1.3223352165725049,
+      "delay": 1858.3184430373958,
+      "mean_speed": 9.739467749048599,
+      "flow": 42.93333333333334
+    },
+    "off": {
+      "queue": 0.521030395825704,
+      "stopped": 0.115,
+      "delay": 132.29647415850016,
+      "mean_speed": 16.72976086219754,
+      "flow": 4.666666666666667
+    },
+    "on": {
+      "queue": 0.2971342378192478,
+      "stopped": 0.13833333333333334,
+      "delay": 225.4069615143899,
+      "mean_speed": 22.009758624109633,
+      "flow": 32.06666666666666
+    }
+  },
+  "per_state": {
+    "w8676m2700p20t360": {
+      "recorded": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 360.0,
+            "queue": 21.23704125961606,
+            "stopped": 2.0677966101694913,
+            "delay": 234.2249264283967,
+            "mean_speed": 6.832570546293638,
+            "flow": 42.0
+          },
+          {
+            "bin": 1,
+            "start_s": 390.0,
+            "queue": 25.48313969008625,
+            "stopped": 2.1666666666666665,
+            "delay": 314.07720869505096,
+            "mean_speed": 5.042198367727026,
+            "flow": 38.0
+          },
+          {
+            "bin": 2,
+            "start_s": 420.0,
+            "queue": 19.304962150016173,
+            "stopped": 2.6,
+            "delay": 262.84149496880093,
+            "mean_speed": 6.100740057127438,
+            "flow": 52.0
+          },
+          {
+            "bin": 3,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.05,
+            "delay": 159.18605680539582,
+            "mean_speed": 8.992239889256767,
+            "flow": 44.0
+          },
+          {
+            "bin": 4,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.31666666666666665,
+            "delay": 201.40458350075605,
+            "mean_speed": 7.4116021975697395,
+            "flow": 46.0
+          },
+          {
+            "bin": 5,
+            "start_s": 510.0,
+            "queue": 15.268170400690439,
+            "stopped": 2.35,
+            "delay": 308.09434445937273,
+            "mean_speed": 5.060223509105319,
+            "flow": 48.0
+          },
+          {
+            "bin": 6,
+            "start_s": 540.0,
+            "queue": 2.3454926028969436,
+            "stopped": 0.38333333333333336,
+            "delay": 178.6450497470844,
+            "mean_speed": 9.063113567441821,
+            "flow": 50.0
+          },
+          {
+            "bin": 7,
+            "start_s": 570.0,
+            "queue": 26.239590067723544,
+            "stopped": 3.1333333333333333,
+            "delay": 360.67561311271646,
+            "mean_speed": 4.661554836440696,
+            "flow": 44.0
+          },
+          {
+            "bin": 8,
+            "start_s": 600.0,
+            "queue": 23.40974843680771,
+            "stopped": 3.1166666666666667,
+            "delay": 268.23345587757814,
+            "mean_speed": 5.535253577421548,
+            "flow": 50.0
+          },
+          {
+            "bin": 9,
+            "start_s": 630.0,
+            "queue": 0.3827107493146741,
+            "stopped": 0.15,
+            "delay": 112.7953079160701,
+            "mean_speed": 12.026414235369264,
+            "flow": 48.0
+          }
+        ],
+        "agg": {
+          "queue": 13.36708553571518,
+          "stopped": 1.6334463276836158,
+          "delay": 2400.1780415112225,
+          "mean_speed": 7.072591078375327,
+          "flow": 46.2
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 630.0,
+          "queue": 0.3827107493146741,
+          "stopped": 0.15,
+          "delay": 112.7953079160701,
+          "mean_speed": 12.026414235369264,
+          "flow": 48.0
+        }
+      },
+      "off": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 360.0,
+            "queue": 2.0494378407796225,
+            "stopped": 0.6333333333333333,
+            "delay": 98.55629383972418,
+            "mean_speed": 8.593555329916851,
+            "flow": 24.0
+          },
+          {
+            "bin": 1,
+            "start_s": 390.0,
+            "queue": 11.104928747812908,
+            "stopped": 1.55,
+            "delay": 133.51054559900146,
+            "mean_speed": 5.436349635140763,
+            "flow": 4.0
+          },
+          {
+            "bin": 2,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.21666666666666667,
+            "delay": 32.72228631350936,
+            "mean_speed": 14.619490445829701,
+            "flow": 14.0
+          },
+          {
+            "bin": 3,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.1028526833453913,
+            "mean_speed": 24.44103937149048,
+            "flow": 8.0
+          },
+          {
+            "bin": 4,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.1009540791302124,
+            "mean_speed": 11.104427337646484,
+            "flow": 0.0
+          },
+          {
+            "bin": 5,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.08333333333333333,
+            "delay": 2.5,
+            "mean_speed": 0.0,
+            "flow": 0.0
+          },
+          {
+            "bin": 6,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 7,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 8,
+            "start_s": 600.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 9,
+            "start_s": 630.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          }
+        ],
+        "agg": {
+          "queue": 1.315436658859253,
+          "stopped": 0.24833333333333338,
+          "delay": 271.4929325147106,
+          "mean_speed": 10.699143686670714,
+          "flow": 5.0
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 630.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 0,
+          "mean_speed": null,
+          "flow": 0.0
+        }
+      },
+      "on": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 360.0,
+            "queue": 2.049437967936198,
+            "stopped": 0.6666666666666666,
+            "delay": 98.98755801976789,
+            "mean_speed": 8.596163238288746,
+            "flow": 24.0
+          },
+          {
+            "bin": 1,
+            "start_s": 390.0,
+            "queue": 5.6894701480865475,
+            "stopped": 1.5333333333333334,
+            "delay": 129.98238631286918,
+            "mean_speed": 6.43679506264982,
+            "flow": 8.0
+          },
+          {
+            "bin": 2,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 6.249134660196271,
+            "mean_speed": 25.42686599450754,
+            "flow": 16.0
+          },
+          {
+            "bin": 3,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.1,
+            "delay": 9.61953965865768,
+            "mean_speed": 23.401997734494756,
+            "flow": 24.0
+          },
+          {
+            "bin": 4,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 51.62676436477123,
+            "mean_speed": 13.472997943704778,
+            "flow": 24.0
+          },
+          {
+            "bin": 5,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 46.35723418293453,
+            "mean_speed": 13.889056066790268,
+            "flow": 32.0
+          },
+          {
+            "bin": 6,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.2,
+            "delay": 96.57564043715497,
+            "mean_speed": 12.811181006142027,
+            "flow": 106.0
+          },
+          {
+            "bin": 7,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 8.991398004596402,
+            "mean_speed": 18.393775337620784,
+            "flow": 14.0
+          },
+          {
+            "bin": 8,
+            "start_s": 600.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 6.921819787818464,
+            "mean_speed": 37.76461663614369,
+            "flow": 60.0
+          },
+          {
+            "bin": 9,
+            "start_s": 630.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 1.4278078673124486,
+            "mean_speed": 35.290511693273274,
+            "flow": 92.0
+          }
+        ],
+        "agg": {
+          "queue": 0.7738908116022746,
+          "stopped": 0.25000000000000006,
+          "delay": 456.739283296079,
+          "mean_speed": 19.548396071361566,
+          "flow": 40.0
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 630.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 1.4278078673124486,
+          "mean_speed": 35.290511693273274,
+          "flow": 92.0
+        }
+      },
+      "entries": {
+        "rates_veh_s": [
+          0.75,
+          0.125
+        ],
+        "p_lane1": 0.5094339622641509,
+        "cav_share_observed": 0.22727272727272727,
+        "inserted": 283,
+        "inserted_cav": 33,
+        "per_entrance": [
+          247,
+          36
+        ],
+        "deferred_steps": 216,
+        "dropped_pending": 0,
+        "no_slot": 0
+      },
+      "seconds": 89.2
+    },
+    "w8626m2700p02t300": {
+      "recorded": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 300.0,
+            "queue": 0.0,
+            "stopped": 0.13559322033898305,
+            "delay": 149.50904199433896,
+            "mean_speed": 8.964648568946362,
+            "flow": 44.0
+          },
+          {
+            "bin": 1,
+            "start_s": 330.0,
+            "queue": 0.4420059197018446,
+            "stopped": 0.4,
+            "delay": 163.01100928729218,
+            "mean_speed": 10.482868323011878,
+            "flow": 48.0
+          },
+          {
+            "bin": 2,
+            "start_s": 360.0,
+            "queue": 2.2325373797989254,
+            "stopped": 0.9166666666666666,
+            "delay": 272.8500243282809,
+            "mean_speed": 4.790610192914799,
+            "flow": 38.0
+          },
+          {
+            "bin": 3,
+            "start_s": 390.0,
+            "queue": 18.79190438811996,
+            "stopped": 2.9833333333333334,
+            "delay": 302.43994675612134,
+            "mean_speed": 4.723870085504697,
+            "flow": 38.0
+          },
+          {
+            "bin": 4,
+            "start_s": 420.0,
+            "queue": 42.63612283615832,
+            "stopped": 3.3,
+            "delay": 325.0174576228741,
+            "mean_speed": 4.158115525626033,
+            "flow": 40.0
+          },
+          {
+            "bin": 5,
+            "start_s": 450.0,
+            "queue": 11.607008057623897,
+            "stopped": 1.7166666666666666,
+            "delay": 237.13695236007067,
+            "mean_speed": 6.9640013442544015,
+            "flow": 52.0
+          },
+          {
+            "bin": 6,
+            "start_s": 480.0,
+            "queue": 21.98676572861463,
+            "stopped": 3.216666666666667,
+            "delay": 279.84986458323675,
+            "mean_speed": 5.082851357206395,
+            "flow": 38.0
+          },
+          {
+            "bin": 7,
+            "start_s": 510.0,
+            "queue": 3.5691424982245583,
+            "stopped": 0.9833333333333333,
+            "delay": 207.8494363544824,
+            "mean_speed": 7.437950989887303,
+            "flow": 48.0
+          },
+          {
+            "bin": 8,
+            "start_s": 540.0,
+            "queue": 2.6647268937654798,
+            "stopped": 0.8666666666666667,
+            "delay": 242.66591309493612,
+            "mean_speed": 6.051217726903087,
+            "flow": 48.0
+          },
+          {
+            "bin": 9,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 85.39144572596156,
+            "mean_speed": 14.431977590712513,
+            "flow": 58.0
+          }
+        ],
+        "agg": {
+          "queue": 10.393021370200762,
+          "stopped": 1.4518926553672318,
+          "delay": 2265.721092107595,
+          "mean_speed": 7.308811170496748,
+          "flow": 45.2
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 570.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 85.39144572596156,
+          "mean_speed": 14.431977590712513,
+          "flow": 58.0
+        }
+      },
+      "off": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 300.0,
+            "queue": 0.0,
+            "stopped": 0.03333333333333333,
+            "delay": 43.265416284488055,
+            "mean_speed": 17.200934178036828,
+            "flow": 24.0
+          },
+          {
+            "bin": 1,
+            "start_s": 330.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.150132343355404,
+            "mean_speed": 26.77702737891156,
+            "flow": 30.0
+          },
+          {
+            "bin": 2,
+            "start_s": 360.0,
+            "queue": 2.476545286178589,
+            "stopped": 0.9333333333333333,
+            "delay": 57.069953620036884,
+            "mean_speed": 7.422317199192264,
+            "flow": 6.0
+          },
+          {
+            "bin": 3,
+            "start_s": 390.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 14.232776372702194,
+            "mean_speed": 14.893679594110559,
+            "flow": 18.0
+          },
+          {
+            "bin": 4,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 5,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 6,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 7,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 8,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 9,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          }
+        ],
+        "agg": {
+          "queue": 0.24765452861785892,
+          "stopped": 0.09666666666666666,
+          "delay": 116.71827862058252,
+          "mean_speed": 16.573489587562804,
+          "flow": 7.8
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 570.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 0,
+          "mean_speed": null,
+          "flow": 0.0
+        }
+      },
+      "on": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 300.0,
+            "queue": 0.0,
+            "stopped": 0.03333333333333333,
+            "delay": 43.265415833912996,
+            "mean_speed": 17.200934316402385,
+            "flow": 24.0
+          },
+          {
+            "bin": 1,
+            "start_s": 330.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.0038809683616443,
+            "mean_speed": 26.76064464074594,
+            "flow": 30.0
+          },
+          {
+            "bin": 2,
+            "start_s": 360.0,
+            "queue": 0.0,
+            "stopped": 0.4,
+            "delay": 37.578190001418385,
+            "mean_speed": 14.146725528120246,
+            "flow": 14.0
+          },
+          {
+            "bin": 3,
+            "start_s": 390.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 12.917926640026513,
+            "mean_speed": 17.006948397141095,
+            "flow": 18.0
+          },
+          {
+            "bin": 4,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0.3610756464189897,
+            "mean_speed": 24.436439514160156,
+            "flow": 2.0
+          },
+          {
+            "bin": 5,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 6,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.6937035710971253,
+            "mean_speed": 35.48200270718542,
+            "flow": 82.0
+          },
+          {
+            "bin": 7,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 1.6547797829921174,
+            "mean_speed": 32.45283348709718,
+            "flow": 90.0
+          },
+          {
+            "bin": 8,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0.14008566662079153,
+            "mean_speed": 32.85509700840022,
+            "flow": 42.0
+          },
+          {
+            "bin": 9,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0.3974388581201105,
+            "mean_speed": 29.296202023824055,
+            "flow": 16.0
+          }
+        ],
+        "agg": {
+          "queue": 0.0,
+          "stopped": 0.043333333333333335,
+          "delay": 101.01249696896868,
+          "mean_speed": 25.515314180341857,
+          "flow": 31.8
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 570.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 0.3974388581201105,
+          "mean_speed": 29.296202023824055,
+          "flow": 16.0
+        }
+      },
+      "entries": {
+        "rates_veh_s": [
+          0.725,
+          0.075
+        ],
+        "p_lane1": 0.5294117647058824,
+        "cav_share_observed": 0.05825242718446602,
+        "inserted": 199,
+        "inserted_cav": 10,
+        "per_entrance": [
+          195,
+          4
+        ],
+        "deferred_steps": 571,
+        "dropped_pending": 16,
+        "no_slot": 0
+      },
+      "seconds": 74.3
+    },
+    "w8629m2000p02t420": {
+      "recorded": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 5.0481935783255105,
+            "mean_speed": 24.668524119287845,
+            "flow": 26.0
+          },
+          {
+            "bin": 1,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 3.984617830829337,
+            "mean_speed": 26.35499444031485,
+            "flow": 26.0
+          },
+          {
+            "bin": 2,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.016666666666666666,
+            "delay": 24.37455573444295,
+            "mean_speed": 18.58553213762346,
+            "flow": 32.0
+          },
+          {
+            "bin": 3,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.18333333333333332,
+            "delay": 21.392229368476045,
+            "mean_speed": 20.826567589244853,
+            "flow": 40.0
+          },
+          {
+            "bin": 4,
+            "start_s": 540.0,
+            "queue": 4.279952249717822,
+            "stopped": 1.0333333333333334,
+            "delay": 71.25723241917343,
+            "mean_speed": 13.403374917434219,
+            "flow": 42.0
+          },
+          {
+            "bin": 5,
+            "start_s": 570.0,
+            "queue": 7.36336846105323,
+            "stopped": 1.8666666666666667,
+            "delay": 88.2577172761182,
+            "mean_speed": 10.306213876906643,
+            "flow": 36.0
+          },
+          {
+            "bin": 6,
+            "start_s": 600.0,
+            "queue": 7.1563621353572255,
+            "stopped": 1.85,
+            "delay": 81.44396415065813,
+            "mean_speed": 12.311595361058066,
+            "flow": 40.0
+          },
+          {
+            "bin": 7,
+            "start_s": 630.0,
+            "queue": 5.930962620637533,
+            "stopped": 1.2833333333333334,
+            "delay": 171.0201216548396,
+            "mean_speed": 8.545915384412902,
+            "flow": 42.0
+          },
+          {
+            "bin": 8,
+            "start_s": 660.0,
+            "queue": 25.608402992225304,
+            "stopped": 1.9833333333333334,
+            "delay": 290.78494293927196,
+            "mean_speed": 4.496007638874104,
+            "flow": 44.0
+          },
+          {
+            "bin": 9,
+            "start_s": 690.0,
+            "queue": 1.4184171342049885,
+            "stopped": 0.6,
+            "delay": 151.49262054123506,
+            "mean_speed": 8.871284517580248,
+            "flow": 46.0
+          }
+        ],
+        "agg": {
+          "queue": 5.17574655931961,
+          "stopped": 0.8816666666666668,
+          "delay": 909.0561954933703,
+          "mean_speed": 14.83700099827372,
+          "flow": 37.4
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 690.0,
+          "queue": 1.4184171342049885,
+          "stopped": 0.6,
+          "delay": 151.49262054123506,
+          "mean_speed": 8.871284517580248,
+          "flow": 46.0
+        }
+      },
+      "off": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 5.3088017110776535,
+            "mean_speed": 23.008560070285093,
+            "flow": 8.0
+          },
+          {
+            "bin": 1,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 3.1561071225599573,
+            "mean_speed": 19.936569077628,
+            "flow": 2.0
+          },
+          {
+            "bin": 2,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0.21330250656973823,
+            "mean_speed": 25.804818789164226,
+            "flow": 2.0
+          },
+          {
+            "bin": 3,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 4,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 5,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 6,
+            "start_s": 600.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 7,
+            "start_s": 630.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 8,
+            "start_s": 660.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          },
+          {
+            "bin": 9,
+            "start_s": 690.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 0,
+            "mean_speed": null,
+            "flow": 0.0
+          }
+        ],
+        "agg": {
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 8.67821134020735,
+          "mean_speed": 22.91664931235911,
+          "flow": 1.2
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 690.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 0,
+          "mean_speed": null,
+          "flow": 0.0
+        }
+      },
+      "on": {
+        "bins": [
+          {
+            "bin": 0,
+            "start_s": 420.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 6.469257153908585,
+            "mean_speed": 22.8375684177434,
+            "flow": 10.0
+          },
+          {
+            "bin": 1,
+            "start_s": 450.0,
+            "queue": 0.0,
+            "stopped": 0.3,
+            "delay": 14.245292588049253,
+            "mean_speed": 8.451984429970766,
+            "flow": 0.0
+          },
+          {
+            "bin": 2,
+            "start_s": 480.0,
+            "queue": 0.0,
+            "stopped": 0.31666666666666665,
+            "delay": 26.300192161375367,
+            "mean_speed": 12.46269683510433,
+            "flow": 16.0
+          },
+          {
+            "bin": 3,
+            "start_s": 510.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 1.4302089545604908,
+            "mean_speed": 18.837692260742188,
+            "flow": 4.0
+          },
+          {
+            "bin": 4,
+            "start_s": 540.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 2.1419458547198063,
+            "mean_speed": 26.565440802738586,
+            "flow": 12.0
+          },
+          {
+            "bin": 5,
+            "start_s": 570.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 6.998356563054548,
+            "mean_speed": 20.684663375218708,
+            "flow": 16.0
+          },
+          {
+            "bin": 6,
+            "start_s": 600.0,
+            "queue": 1.1751190185546876,
+            "stopped": 0.55,
+            "delay": 25.077252036852318,
+            "mean_speed": 14.200839716580608,
+            "flow": 8.0
+          },
+          {
+            "bin": 7,
+            "start_s": 630.0,
+            "queue": 0.0,
+            "stopped": 0.05,
+            "delay": 23.2413823958178,
+            "mean_speed": 23.958999449221526,
+            "flow": 62.0
+          },
+          {
+            "bin": 8,
+            "start_s": 660.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 11.296871258081339,
+            "mean_speed": 26.977850747108455,
+            "flow": 32.0
+          },
+          {
+            "bin": 9,
+            "start_s": 690.0,
+            "queue": 0.0,
+            "stopped": 0.0,
+            "delay": 1.2683453117024563,
+            "mean_speed": 34.677920171826024,
+            "flow": 84.0
+          }
+        ],
+        "agg": {
+          "queue": 0.11751190185546875,
+          "stopped": 0.12166666666666667,
+          "delay": 118.46910427812197,
+          "mean_speed": 20.965565620625462,
+          "flow": 24.4
+        },
+        "last_bin": {
+          "bin": 9,
+          "start_s": 690.0,
+          "queue": 0.0,
+          "stopped": 0.0,
+          "delay": 1.2683453117024563,
+          "mean_speed": 34.677920171826024,
+          "flow": 84.0
+        }
+      },
+      "entries": {
+        "rates_veh_s": [
+          0.44166666666666665,
+          0.09166666666666666
+        ],
+        "p_lane1": 0.5283018867924528,
+        "cav_share_observed": 0.037037037037037035,
+        "inserted": 190,
+        "inserted_cav": 11,
+        "per_entrance": [
+          152,
+          38
+        ],
+        "deferred_steps": 62,
+        "dropped_pending": 0,
+        "no_slot": 0
+      },
+      "seconds": 37.9
+    }
+  }
+}

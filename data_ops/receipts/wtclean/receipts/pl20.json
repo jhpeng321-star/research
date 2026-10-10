@@ -1,0 +1,39 @@
+﻿{
+    "name":  "pl20",
+    "path":  "E:\\rd-wt\\pl20",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "4c4fb2ffb748063c4161b05674252a1b7176827a",
+    "headType":  "detached",
+    "dirtyBefore":  18,
+    "committed":  true,
+    "commitSha":  "e264a1d37f0035e983600d46c40dccb9e6fdebe9",
+    "preserveRef":  "refs/heads/wip-preserve/pl20",
+    "dest":  "gdrive:research-archive/worktrees/pl20",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl20.txt",
+    "uploadCount":  1104,
+    "uploadBytes":  23743312,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl20.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 07:14:56 NOTICE: Google drive root \u0027research-archive/worktrees/pl20\u0027: 0 differences found | 2026/10/10 07:14:56 NOTICE: Google drive root \u0027research-archive/worktrees/pl20\u0027: 1104 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl20.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T07:06:43.5052953+08:00"
+}

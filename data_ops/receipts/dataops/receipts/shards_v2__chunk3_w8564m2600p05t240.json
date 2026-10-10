@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v2__chunk3/w8564m2600p05t240",
+ "name": "w8564m2600p05t240",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "unverified shards_v2 part truncated on Drive; re-upload",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk3\\w8564m2600p05t240",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__chunk3/w8564m2600p05t240/w8564m2600p05t240.tar.zst",
+ "bytes": 117252533,
+ "files": 171,
+ "archive_bytes": 21191467,
+ "archive_md5": "d2c9857d859313e0b524852ac0d33beb",
+ "member_manifest": "manifests/members/shards_v2__chunk3_w8564m2600p05t240.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 1190.4,
+ "timestamp": "2026-10-10T02:05:39"
+}

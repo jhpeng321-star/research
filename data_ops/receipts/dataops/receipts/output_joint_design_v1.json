@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/joint_design_v1",
+ "name": "joint_design_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\joint_design_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/joint_design_v1/joint_design_v1.tar.zst",
+ "bytes": 34495,
+ "files": 8,
+ "archive_bytes": 14222,
+ "archive_md5": "27c14acc5e0d0ce4bf86190cc61ac16c",
+ "member_manifest": "manifests/members/output_joint_design_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 58.9,
+ "timestamp": "2026-10-10T01:31:50"
+}

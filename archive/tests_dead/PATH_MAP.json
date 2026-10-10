@@ -1,0 +1,75 @@
+{
+ "schema": "path_map/1",
+ "record": "WMS-CLEAN-F",
+ "created_utc": "2026-10-09T17:07:25+00:00",
+ "note": "Root tests whose imports/files (output.controller_verification_v6/v12-v20, wm20_common) are absent from this tree; collection failed before the move. Moved unchanged.",
+ "directories": [],
+ "files": [
+  {
+   "old": "tests/test_cv12_review.py",
+   "new": "archive/tests_dead/test_cv12_review.py",
+   "bytes": 8856,
+   "sha256": "64d6312a84b9ded48f5cfc69fb6099c8d8800aca7f38330ee5e1500051683487"
+  },
+  {
+   "old": "tests/test_cv12_runner.py",
+   "new": "archive/tests_dead/test_cv12_runner.py",
+   "bytes": 7231,
+   "sha256": "76387a663a5593cb3e627fcc462fcefa775e046a7d28929b1b951e6178eba0e5"
+  },
+  {
+   "old": "tests/test_cv13_review.py",
+   "new": "archive/tests_dead/test_cv13_review.py",
+   "bytes": 3075,
+   "sha256": "ba7d754c733b923a2912a21834367acb49c6e20ba41e7d912cc409cb82258df5"
+  },
+  {
+   "old": "tests/test_cv13_runner.py",
+   "new": "archive/tests_dead/test_cv13_runner.py",
+   "bytes": 7237,
+   "sha256": "859ef6398a63085c7e0c19441e44809ad0cb120ba39b57a21cfaa6abd7a413c4"
+  },
+  {
+   "old": "tests/test_cv15_runner.py",
+   "new": "archive/tests_dead/test_cv15_runner.py",
+   "bytes": 10255,
+   "sha256": "01ee6e984a1b56ccae564a3c1277c4ebb441524ad3a2f2c8e68709e48a7d8f53"
+  },
+  {
+   "old": "tests/test_cv17_runner.py",
+   "new": "archive/tests_dead/test_cv17_runner.py",
+   "bytes": 10421,
+   "sha256": "8f7e9ca0a5f2f3f68a82caad85545ea09a760b4c85a057759963277d5f66a3e7"
+  },
+  {
+   "old": "tests/test_cv18_runner.py",
+   "new": "archive/tests_dead/test_cv18_runner.py",
+   "bytes": 12935,
+   "sha256": "e3b8bb000b2e35181fae68eb6152902c800b814cbe55047b41a401aa8a783cb8"
+  },
+  {
+   "old": "tests/test_cv19_runner.py",
+   "new": "archive/tests_dead/test_cv19_runner.py",
+   "bytes": 12939,
+   "sha256": "f741004b156275932e22643a76712b68b42504c964dc222bd96006c2d9b3ead0"
+  },
+  {
+   "old": "tests/test_cv20_runner.py",
+   "new": "archive/tests_dead/test_cv20_runner.py",
+   "bytes": 15841,
+   "sha256": "ac7f441c741c4008913327fad021bdf844f40aeeda3c12bc169798930d4d4a4c"
+  },
+  {
+   "old": "tests/test_learned_fill_v1.py",
+   "new": "archive/tests_dead/test_learned_fill_v1.py",
+   "bytes": 8214,
+   "sha256": "3a72ea5779c27caefe8c8e721b2831f44f3e6dac3ea40508a776d5abcaf567a9"
+  },
+  {
+   "old": "tests/test_radius_penetration_v1.py",
+   "new": "archive/tests_dead/test_radius_penetration_v1.py",
+   "bytes": 15898,
+   "sha256": "62287ff06a1723e7ae8046de6862192458a7023d9fb690909abc4fbdce7bca07"
+  }
+ ]
+}

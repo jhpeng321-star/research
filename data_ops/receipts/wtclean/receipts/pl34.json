@@ -1,0 +1,43 @@
+﻿{
+    "name":  "pl34",
+    "path":  "E:\\rd-wt\\pl34",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "detached",
+    "dirtyBefore":  48,
+    "committed":  true,
+    "commitSha":  "7d58f3bf6c2ce7fce447ce85da09b6a61941ee69",
+    "preserveRef":  "refs/heads/wip-preserve/pl34",
+    "dest":  "gdrive:research-archive/worktrees/pl34",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl34.txt",
+    "uploadCount":  79,
+    "uploadBytes":  4395704,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl34.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 02:53:37 NOTICE: Google drive root \u0027research-archive/worktrees/pl34\u0027: 0 differences found | 2026/10/10 02:53:37 NOTICE: Google drive root \u0027research-archive/worktrees/pl34\u0027: 79 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl34.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  5,
+    "skippedSensitiveSample":  [
+                                   "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md",
+                                   "protocols/holdout_exclusions.json",
+                                   "tests/planner/test_holdout_guard.py",
+                                   "tools/holdout_guard.py",
+                                   "traffic_shepherd/planner/holdout.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T02:51:34.3610672+08:00"
+}

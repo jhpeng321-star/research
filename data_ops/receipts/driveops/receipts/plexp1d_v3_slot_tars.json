@@ -1,0 +1,23 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "plexp1d_v3_slot_tars",
+ "kind": "files",
+ "class": "DELETE-CANDIDATE",
+ "producer": "superseded PL-EXP1d slot archive attempts",
+ "restore": "copy to D:/rd-staging/",
+ "local": [
+  "D:/rd-staging/plexp1d_v3_slot.tar",
+  "D:/rd-staging/plexp1d_v3_slot_attempt2.tar",
+  "D:/rd-staging/plexp1d_v3_slot_attempt3.tar",
+  "D:/rd-staging/plexp1d_v3_slot_attempt4.tar",
+  "D:/rd-staging/plexp1d_v3_slot_attempt5.tar"
+ ],
+ "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots",
+ "bytes": 166318080,
+ "files": 5,
+ "md5_manifest": "receipts/md5/plexp1d_v3_slot_tars.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local MD5",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:35:54"
+}

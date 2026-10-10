@@ -1,0 +1,39 @@
+﻿{
+    "name":  "ws-merge",
+    "path":  "E:\\rd-wt\\ws-merge",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/merge",
+    "headBefore":  "f131347f870ee8f4023d3b0ee2817d1d3ece1ff7",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-merge",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-merge.txt",
+    "uploadCount":  4,
+    "uploadBytes":  5280,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-merge.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/09 23:06:53 NOTICE: Google drive root \u0027research-archive/worktrees/ws-merge\u0027: 0 differences found | 2026/10/09 23:06:53 NOTICE: Google drive root \u0027research-archive/worktrees/ws-merge\u0027: 4 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-merge.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "_out/merge_cal_fit_report.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-09T23:05:46.9137210+08:00"
+}

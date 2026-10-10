@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "c__rd_v3_baseline.txt",
+ "name": "rd_v3_baseline.txt",
+ "kind": "file",
+ "class": "ARCHIVE",
+ "producer": "C: run log",
+ "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\rd_v3_baseline.txt",
+ "drive": "gdrive:research-archive/repo-evidence/c-drive/rd_v3_baseline.txt.tar.zst",
+ "bytes": 614577,
+ "files": 1,
+ "archive_bytes": 37652,
+ "archive_md5": "4a760e9a9adae658ee6b8aada2b35585",
+ "member_manifest": "manifests/members/c__rd_v3_baseline.txt.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 11.0,
+ "timestamp": "2026-10-10T01:44:43"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/recon_impact_v1",
+ "name": "recon_impact_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\recon_impact_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/recon_impact_v1/recon_impact_v1.tar.zst",
+ "bytes": 24516018,
+ "files": 463,
+ "archive_bytes": 689751,
+ "archive_md5": "2017aff6128fc1a1282ade7f3c1e1e53",
+ "member_manifest": "manifests/members/output_recon_impact_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 42.7,
+ "timestamp": "2026-10-10T01:50:46"
+}

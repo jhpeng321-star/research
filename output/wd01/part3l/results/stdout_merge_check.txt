@@ -1,0 +1,59 @@
+priority below-normal: False
+=== WD-01 part 3l TASK A: merge rejection causes (TRAIN) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+train fit roots: ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000']; t0 (120.0, 300.0); H=60 s (K=120 steps of 0.5 s); lc_scale=0.002 (p3k fit); member_seed=1
+calibration roots (used only by calibrate_p3l.py, never here): ['cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700']
+validation roots NOT used here: ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400']; 5 holdout roots blocked
+[   0.0s] rolling main (p3k fit) over 8 windows ...
+
+  [main (p3k fit)] merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+    M2 checks=8337 accepted=44 (rate 0.005); accel->main_right merges=44
+    rejections: lead-only=171 foll-only=7575 both=547
+    follower-present checks=8314 (99.7 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [106, 22, 17, 47, 492, 7630]
+    b_req at follower-only rejections: q10/50/90/max = 3.68/9.02/63.98/1540.02
+[  56.5s] rolling tau=2.4 b=2.0 over 8 windows ...
+
+  [tau=2.4 b=2.0] merge_params={'tau_accept': 2.4, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+    M2 checks=8603 accepted=49 (rate 0.006); accel->main_right merges=49
+    rejections: lead-only=260 foll-only=7676 both=618
+    follower-present checks=8582 (99.8 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [156, 34, 32, 66, 581, 7713]
+    b_req at follower-only rejections: q10/50/90/max = 3.58/8.78/61.07/1540.02
+[ 112.2s] rolling tau=3.0 b=2.0 over 8 windows ...
+
+  [tau=3.0 b=2.0] merge_params={'tau_accept': 3.0, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+    M2 checks=8325 accepted=53 (rate 0.006); accel->main_right merges=53
+    rejections: lead-only=265 foll-only=7344 both=663
+    follower-present checks=8296 (99.7 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [141, 39, 34, 75, 517, 7490]
+    b_req at follower-only rejections: q10/50/90/max = 3.67/8.97/65.35/1540.02
+[ 167.8s] rolling tau=3.6 b=2.0 over 8 windows ...
+
+  [tau=3.6 b=2.0] merge_params={'tau_accept': 3.6, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+    M2 checks=8755 accepted=51 (rate 0.006); accel->main_right merges=51
+    rejections: lead-only=302 foll-only=7628 both=774
+    follower-present checks=8728 (99.7 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [140, 37, 50, 99, 548, 7854]
+    b_req at follower-only rejections: q10/50/90/max = 3.71/9.05/65.32/1540.02
+[ 224.3s] rolling tau=1.9 b=1.5 over 8 windows ...
+
+  [tau=1.9 b=1.5] merge_params={'tau_accept': 1.9, 'b_accept': 1.5, 'p_coop_scale': 0.0}
+    M2 checks=11966 accepted=24 (rate 0.002); accel->main_right merges=24
+    rejections: lead-only=103 foll-only=11233 both=606
+    follower-present checks=11949 (99.9 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [81, 14, 15, 89, 709, 11041]
+    b_req at follower-only rejections: q10/50/90/max = 3.58/8.70/60.96/1530.33
+[ 280.1s] rolling tau=1.9 b=3.0 over 8 windows ...
+
+  [tau=1.9 b=3.0] merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0}
+    M2 checks=3243 accepted=102 (rate 0.031); accel->main_right merges=102
+    rejections: lead-only=388 foll-only=2476 both=277
+    follower-present checks=3237 (99.8 %); b_req histogram <=0 / (0,1] / (1,1.5] / (1.5,2] / (2,3] / >3: [160, 40, 16, 61, 207, 2753]
+    b_req at follower-only rejections: q10/50/90/max = 4.61/9.95/75.34/1472.55
+
+== TASK A verdict ==
+  follower_slot: nearest main_right vehicle BEHIND the candidate in d (engine._gap_accept_merge); pinned by unit test test_follower_slot_is_nearest_behind
+  follower_rejections: 8122
+  follower_term_binds: True
+  breq_checks_above_b_grid_min: 8169
+  b_accept_flat_explained: False
+[ 334.8s] wrote D:\rd-wt\wd01f\output\wd01\part3l\results\merge_check_p3l.json
+
+DONE part 3l TASK A.

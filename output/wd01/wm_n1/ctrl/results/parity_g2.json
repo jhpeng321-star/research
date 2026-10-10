@@ -1,0 +1,566 @@
+{
+ "experiment": "WM-N1 Idea A P1 ctrl parity (gate G2)",
+ "plan": "E:\\research-dense\\output\\campaign_stage1_v3\\results_plan_chunk4\\WORLD_PLAN.json",
+ "split": "TRAIN worlds of the registered chunk-4 WORLD_PLAN only",
+ "match_tol_mps": 0.01,
+ "windows": [
+  {
+   "strategy": "native",
+   "world": "w8659m2700p10t420",
+   "arm": "native",
+   "window_s": [
+    420.0,
+    1020.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 145,
+   "compared": 6691,
+   "position_err_m": {
+    "max": 35.008901905241146,
+    "rms": 5.224985930689855,
+    "p50": 0.28217761642611094,
+    "p95": 10.995522891853398,
+    "p99": 25.0834100816478,
+    "n": 6691
+   },
+   "speed_err_mps": {
+    "max": 3.397456402311619,
+    "rms": 0.24213112092000516,
+    "p50": 0.0022310485073653297,
+    "p95": 0.3135554986803548,
+    "p99": 1.229045204766615,
+    "n": 6691
+   },
+   "command_check": {
+    "checked": 6779,
+    "matched": 6779,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1525,
+    "junction_or_exit_step": 95,
+    "junction_reanchor": 101,
+    "slot_unknown_geometry": 45,
+    "path_jump_reanchor": 4
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.357": 35.008901905241146,
+    "mainline.462": 25.938570191503004,
+    "mainline.373": 21.097606355009248,
+    "mainline.361": 19.000243472962666,
+    "mainline.310": 16.823115797732953
+   },
+   "trace": null,
+   "elapsed_s": 7.4
+  },
+  {
+   "strategy": "native",
+   "world": "w8670m2700p10t300",
+   "arm": "native",
+   "window_s": [
+    300.0,
+    900.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 132,
+   "compared": 6756,
+   "position_err_m": {
+    "max": 25.221760748631823,
+    "rms": 5.43839904552312,
+    "p50": 0.30372361267291126,
+    "p95": 11.390777691507992,
+    "p99": 24.801634271083458,
+    "n": 6756
+   },
+   "speed_err_mps": {
+    "max": 4.219722911563011,
+    "rms": 0.23094985370602117,
+    "p50": 0.004272571492262456,
+    "p95": 0.28495805097607274,
+    "p99": 1.161483361365805,
+    "n": 6756
+   },
+   "command_check": {
+    "checked": 6846,
+    "matched": 6846,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1568,
+    "junction_reanchor": 107,
+    "junction_or_exit_step": 95,
+    "slot_unknown_geometry": 42,
+    "path_jump_reanchor": 6
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.158": 25.221760748631823,
+    "mainline.487": 25.097746051607828,
+    "mainline.160": 23.876769312025317,
+    "ramp.77": 22.94298319904209,
+    "mainline.427": 16.323067660331162
+   },
+   "trace": null,
+   "elapsed_s": 7.6
+  },
+  {
+   "strategy": "native",
+   "world": "w8659m2700p10t420",
+   "arm": "native_base",
+   "window_s": [
+    420.0,
+    1020.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 145,
+   "compared": 6503,
+   "position_err_m": {
+    "max": 49.695343316715935,
+    "rms": 6.005485415394251,
+    "p50": 0.33755384369089825,
+    "p95": 13.039882896900053,
+    "p99": 27.41389346170672,
+    "n": 6503
+   },
+   "speed_err_mps": {
+    "max": 5.049444878730269,
+    "rms": 0.24652129260288072,
+    "p50": 0.004639900742031466,
+    "p95": 0.4128715572961106,
+    "p99": 1.1962177844409516,
+    "n": 6503
+   },
+   "command_check": {
+    "checked": 0,
+    "matched": 0,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "slot_unknown_geometry": 50,
+    "world_lane_change_steps": 1594,
+    "junction_reanchor": 109,
+    "junction_or_exit_step": 106,
+    "path_jump_reanchor": 6
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.268": 49.695343316715935,
+    "mainline.633": 30.565417428844285,
+    "mainline.462": 24.426211121153756,
+    "mainline.360": 18.72485838879902,
+    "mainline.237": 14.84806929528122
+   },
+   "trace": null,
+   "elapsed_s": 6.5
+  },
+  {
+   "strategy": "damping",
+   "world": "w8659m2700p10t420",
+   "arm": "base",
+   "window_s": [
+    420.0,
+    1020.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 145,
+   "compared": 6821,
+   "position_err_m": {
+    "max": 41.11722649558078,
+    "rms": 6.479998434372806,
+    "p50": 0.5892265146412683,
+    "p95": 19.469678356875647,
+    "p99": 25.54140240631341,
+    "n": 6821
+   },
+   "speed_err_mps": {
+    "max": 3.716022606251557,
+    "rms": 0.18160990355525672,
+    "p50": 1.6391277313232422e-07,
+    "p95": 0.19190628873646887,
+    "p99": 0.7826299797392267,
+    "n": 6821
+   },
+   "command_check": {
+    "checked": 4715,
+    "matched": 4715,
+    "tol_mps": 0.01,
+    "max_diff_mps": 5.960464477539062e-07,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1520,
+    "junction_or_exit_step": 88,
+    "junction_reanchor": 95,
+    "slot_unknown_geometry": 43,
+    "path_jump_reanchor": 4
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.361": 41.11722649558078,
+    "mainline.365": 35.989902397228434,
+    "mainline.511": 21.679178546775574,
+    "mainline.429": 21.049474041079066,
+    "mainline.248": 14.514533760130234
+   },
+   "trace": null,
+   "elapsed_s": 10.7
+  },
+  {
+   "strategy": "damping",
+   "world": "w8670m2700p10t300",
+   "arm": "base",
+   "window_s": [
+    300.0,
+    900.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 132,
+   "compared": 6758,
+   "position_err_m": {
+    "max": 49.32079239531595,
+    "rms": 9.68765455060636,
+    "p50": 0.47040809796740746,
+    "p95": 26.578313643837646,
+    "p99": 38.883024423095776,
+    "n": 6758
+   },
+   "speed_err_mps": {
+    "max": 4.235536143641282,
+    "rms": 0.22715159317053413,
+    "p50": 1.862645149230957e-07,
+    "p95": 0.43548453181755775,
+    "p99": 0.8293922961740492,
+    "n": 6758
+   },
+   "command_check": {
+    "checked": 4493,
+    "matched": 4493,
+    "tol_mps": 0.01,
+    "max_diff_mps": 7.152557373046875e-07,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1564,
+    "junction_reanchor": 98,
+    "junction_or_exit_step": 85,
+    "slot_unknown_geometry": 37,
+    "path_jump_reanchor": 7
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.423": 49.32079239531595,
+    "mainline.232": 45.693701471276654,
+    "mainline.306": 33.388837426196915,
+    "mainline.359": 31.809516221364902,
+    "mainline.487": 27.608322417151157
+   },
+   "trace": null,
+   "elapsed_s": 10.4
+  },
+  {
+   "strategy": "pi",
+   "world": "w8659m2700p10t420",
+   "arm": "pi",
+   "window_s": [
+    420.0,
+    1020.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 145,
+   "compared": 5874,
+   "position_err_m": {
+    "max": 41.16406260491067,
+    "rms": 9.009559107852846,
+    "p50": 0.14549969410290942,
+    "p95": 27.245460631993865,
+    "p99": 35.207813917224485,
+    "n": 5874
+   },
+   "speed_err_mps": {
+    "max": 3.7699247843661996,
+    "rms": 0.2238126998600282,
+    "p50": 0.0007668661766402352,
+    "p95": 0.4360274011663776,
+    "p99": 0.9331234616942297,
+    "n": 5874
+   },
+   "command_check": {
+    "checked": 5947,
+    "matched": 5947,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1580,
+    "junction_or_exit_step": 93,
+    "junction_reanchor": 99,
+    "slot_unknown_geometry": 33,
+    "path_jump_reanchor": 4
+   },
+   "frame_sanity": {
+    "n": 4020,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.404": 41.16406260491067,
+    "mainline.554": 35.586611927372815,
+    "mainline.361": 34.496101435894616,
+    "mainline.365": 33.69526492421619,
+    "mainline.473": 28.595907735341825
+   },
+   "trace": null,
+   "elapsed_s": 9.6
+  },
+  {
+   "strategy": "pi",
+   "world": "w8670m2700p10t300",
+   "arm": "pi",
+   "window_s": [
+    300.0,
+    900.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 132,
+   "compared": 6867,
+   "position_err_m": {
+    "max": 49.591476431588035,
+    "rms": 10.357233837749476,
+    "p50": 0.1609730416706725,
+    "p95": 25.953133050239103,
+    "p99": 48.63915624500214,
+    "n": 6867
+   },
+   "speed_err_mps": {
+    "max": 3.9013079819369842,
+    "rms": 0.20476086050311382,
+    "p50": 0.0015976543140414634,
+    "p95": 0.3744920900558846,
+    "p99": 0.8021122723017937,
+    "n": 6867
+   },
+   "command_check": {
+    "checked": 6959,
+    "matched": 6959,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1537,
+    "junction_reanchor": 105,
+    "junction_or_exit_step": 90,
+    "slot_unknown_geometry": 48,
+    "path_jump_reanchor": 7
+   },
+   "frame_sanity": {
+    "n": 4977,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.423": 49.591476431588035,
+    "mainline.232": 34.32376173153216,
+    "mainline.359": 33.32253020161261,
+    "mainline.306": 26.20637696534368,
+    "mainline.158": 21.456609397699594
+   },
+   "trace": null,
+   "elapsed_s": 10.8
+  },
+  {
+   "strategy": "wall",
+   "world": "w8659m2700p10t420",
+   "arm": "w-lo-early",
+   "window_s": [
+    420.0,
+    1020.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 145,
+   "compared": 9557,
+   "position_err_m": {
+    "max": 25.721782110264712,
+    "rms": 2.8977503395612576,
+    "p50": 0.20638928721194816,
+    "p95": 7.919951501784453,
+    "p99": 13.203794011908087,
+    "n": 9557
+   },
+   "speed_err_mps": {
+    "max": 5.924953012321016,
+    "rms": 0.15762893531619027,
+    "p50": 0.0016828278811509279,
+    "p95": 0.0934887118443406,
+    "p99": 0.7686487881698021,
+    "n": 9557
+   },
+   "command_check": {
+    "checked": 9607,
+    "matched": 9607,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1159,
+    "junction_or_exit_step": 61,
+    "junction_reanchor": 76,
+    "slot_unknown_geometry": 23,
+    "path_jump_reanchor": 4
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "ramp.107": 25.721782110264712,
+    "mainline.348": 20.22338420959113,
+    "mainline.429": 16.95573895762618,
+    "mainline.431": 15.749325373776628,
+    "ramp.89": 13.24550073729688
+   },
+   "trace": null,
+   "elapsed_s": 11.8
+  },
+  {
+   "strategy": "wall",
+   "world": "w8670m2700p10t300",
+   "arm": "w-lo-early",
+   "window_s": [
+    300.0,
+    900.0
+   ],
+   "split": "TRAIN",
+   "n_cav_roster": 132,
+   "compared": 6406,
+   "position_err_m": {
+    "max": 34.746479590565286,
+    "rms": 5.533573905362498,
+    "p50": 0.39139843850375655,
+    "p95": 7.834554849959204,
+    "p99": 34.3091672610567,
+    "n": 6406
+   },
+   "speed_err_mps": {
+    "max": 6.475028219457738,
+    "rms": 0.205438687443421,
+    "p50": 0.00242202698063565,
+    "p95": 0.2332168405771089,
+    "p99": 0.7848920962407,
+    "n": 6406
+   },
+   "command_check": {
+    "checked": 6475,
+    "matched": 6475,
+    "tol_mps": 0.01,
+    "max_diff_mps": 0.0,
+    "mismatch_examples": []
+   },
+   "structural": {
+    "world_lane_change_steps": 1479,
+    "junction_reanchor": 90,
+    "junction_or_exit_step": 78,
+    "slot_unknown_geometry": 31,
+    "path_jump_reanchor": 6
+   },
+   "frame_sanity": {
+    "n": 0,
+    "speed": 0.0,
+    "allowed": 0.0,
+    "front_cov": 0.0,
+    "rear_cov": 0.0,
+    "front_gap": 0.0,
+    "front_rel": 0.0,
+    "front_presence_flip": 0,
+    "rear_presence_flip": 0
+   },
+   "per_cav_max_pos_m_top5": {
+    "mainline.487": 34.746479590565286,
+    "mainline.158": 25.221760748631823,
+    "mainline.160": 23.876769312025317,
+    "ramp.41": 13.799423583779571,
+    "ramp.77": 13.59437148252789
+   },
+   "trace": null,
+   "elapsed_s": 8.0
+  }
+ ]
+}

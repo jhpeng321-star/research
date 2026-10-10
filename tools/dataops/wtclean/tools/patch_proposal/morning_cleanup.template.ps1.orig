@@ -1,0 +1,1739 @@
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+  MORNING_CLEANUP.ps1 - owner-run clean-up / switch-over helper.   Generated @@GENERATED@@ by gen_cleanup.py.
+  DO NOT EDIT BY HAND: re-run  python -I E:\research-dense\tmp\morning\gen_cleanup.py  to regenerate it from the
+  latest Drive-backup receipts (do this again after uploads finish).
+
+.DESCRIPTION
+  REPORT-ONLY BY DEFAULT.  Nothing is deleted or copied unless -Execute is given.
+  Every action (also report-only decisions) is appended to  E:\research-dense\tmp\morning\journal.log.
+
+  -Stage 1   Remove local items whose Drive copy is verified (see "Eligibility").  Also: finished git worktrees
+             (git worktree remove --force, only after branch + untracked-outputs checks) and three known
+             redundant items.
+  -Stage 2   Copy each keep-local hot-data item into E:\research-dense\data_cache\<name> with per-file SHA-256
+             verification (copy, never move).  With -RemoveOld (+ -Execute, typed confirmation) the OLD copy is
+             removed only if the cache copy re-verifies AND a Drive copy verifies AND no active code references it.
+  -Stage 3   Nothing destructive: read-only pre-flight for the single-work-tree switch and the exact git commands.
+
+  Stage 1 eligibility (ALL must hold; the first failing check is the reason printed):
+    * the item has a passing Drive receipt AND the Drive copy is re-checked LIVE with rclone (size + MD5 at the
+      CURRENT Drive path) against the same member manifest the local files are compared with;
+    * local files == manifest members (no extra file, same size, not modified after the backup; with -Deep or
+      -Execute also MD5 re-hashed);
+    * no junction/symlink inside the item or among its ancestors; no protected name (sealed/CAL/HOLDOUT/chunk-5/
+      INC1) inside; not in the keep-local set; not referenced by active code/config (rg literal scan);
+    * inside the git repo: no tracked file;  worktrees: branch exists, no uncommitted tracked change, every
+      untracked/ignored file is on Drive with equal MD5, no sensitive-named file left behind.
+  Literal paths only (generated from receipts); deletion uses a no-follow .NET walker; nothing is wildcard-matched;
+  Drive objects are never deleted.
+
+.PARAMETER Stage          1, 2 or 3 (default 1).
+.PARAMETER Execute        actually act (default: report only).  Stage 1/2 prompt for a typed confirmation unless -Yes.
+.PARAMETER Deep           re-hash local files (MD5) in report mode (always on with -Execute unless -NoDeep).
+.PARAMETER Only           restrict to item ids / paths / worktree names containing any of these substrings.
+.PARAMETER Skip           skip items whose id/path/name contains any of these substrings.
+.PARAMETER SkipWorktrees  Stage 1: do not evaluate worktrees.   -SkipItems: only worktrees.
+.PARAMETER AllowSensitiveDup  Stage 1: worktrees whose only unbacked files are sensitive-NAMED code/protocol files
+                          (e.g. tools\holdout_guard.py) are eligible when the same relative path exists in
+                          E:\research-dense with identical size (metadata only, contents are never opened).
+.PARAMETER ReleaseProtectedNames  Stage 1: items containing protected-NAME entries (e.g. protocols\chunk5_test_seal.json inside a mirrored bundle)
+                          are normally held; with this flag they are eligible only if EVERY such entry is verified on Drive too (same
+                          size+MD5 rule as every other file). Never applies to the item path itself.
+.PARAMETER RemoveAroundProtected  Stage 1: for items that contain protected-name entries (sealed/CAL/HOLDOUT/chunk-5/INC1) that were never uploaded,
+                          remove only the verified files and leave the protected entries (and their parent folders) untouched.
+.PARAMETER AllowProtectedWorktrees  Stage 1: also consider the worktrees that were live or integration trees when the inventory was taken
+                          (ws-main, ws-brakefix, ws-trainsetup, ws-wallc1, ws-clean*, ws-golden); by default they are never removed.
+.PARAMETER IncludeBackupOnly  Stage 1: include receipts of class KEEP-ACTIVE-backup-only (label sidecars).
+.PARAMETER ScanTrees      reference scan trees: both (default) | clean | main.
+.PARAMETER RemoveOld      Stage 2: remove old copies (separately confirmed).
+.PARAMETER SelfTest       exercise the walker/copy/delete/worktree-remove primitives on a scratch folder under tmp\morning (touches no research file).
+.EXAMPLE
+  powershell -NoProfile -ExecutionPolicy Bypass -File E:\research-dense\tmp\morning\MORNING_CLEANUP.ps1 -Stage 1
+  powershell -NoProfile -ExecutionPolicy Bypass -File E:\research-dense\tmp\morning\MORNING_CLEANUP.ps1 -Stage 1 -Execute
+#>
+[CmdletBinding()]
+param(
+    [ValidateSet(1, 2, 3)][int]$Stage = 1,
+    [switch]$Execute,
+    [switch]$Yes,
+    [switch]$Deep,
+    [switch]$NoDeep,
+    [string[]]$Only = @(),
+    [string[]]$Skip = @(),
+    [switch]$SkipWorktrees,
+    [switch]$SkipItems,
+    [switch]$SkipReferenceScan,
+    [switch]$AllowSensitiveDup,
+    [switch]$ReleaseProtectedNames,
+    [switch]$RemoveAroundProtected,
+    [switch]$AllowProtectedWorktrees,
+    [switch]$IncludeBackupOnly,
+    [ValidateSet('both', 'clean', 'main')][string]$ScanTrees = 'both',
+    [string]$IgnoreReferenceFiles = '',
+    [switch]$RemoveOld,
+    [int]$MarginGiB = 4,
+    [switch]$ShowHolds,
+    [switch]$SelfTest
+)
+
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+# -File passes "a,b,c" as ONE string: split on commas
+$Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+$Skip = @($Skip | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+
+$ManifestJson = @'
+@@MANIFEST_JSON@@
+'@
+
+# =====================================================================================================
+#  C# helpers: no-follow walker, hashing, copy with inline hashes, no-follow delete (long-path safe)
+# =====================================================================================================
+$CSharp = @'
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+public sealed class WalkResult {
+    public List<string> Rel = new List<string>();
+    public List<long> Size = new List<long>();
+    public List<long> MTicks = new List<long>();
+    public List<string> Reparse = new List<string>();
+    public List<string> Sensitive = new List<string>();
+    public List<string> Errors = new List<string>();
+    public long Bytes;
+    public int Dirs;
+}
+
+public static class MC {
+    static string[] exact = new string[0];
+    static string[] contains = new string[0];
+    public static void SetProtected(string[] ex, string[] co) { exact = ex; contains = co; }
+
+    public static string LP(string p) {
+        if (p == null) return p;
+        if (p.StartsWith(@"\\?\")) return p;
+        if (p.StartsWith(@"\\")) return @"\\?\UNC\" + p.Substring(2);
+        return @"\\?\" + p;
+    }
+    public static bool IsSensitiveName(string name) {
+        string n = name.ToLowerInvariant();
+        foreach (string e in exact) { if (n == e) return true; }
+        foreach (string c in contains) { if (n.IndexOf(c, StringComparison.Ordinal) >= 0) return true; }
+        return false;
+    }
+    static bool IsReparse(FileSystemInfo fi) { return (fi.Attributes & FileAttributes.ReparsePoint) != 0; }
+    public static bool PathIsReparse(string p) {
+        string l = LP(p);
+        if (File.Exists(l)) return IsReparse(new FileInfo(l));
+        if (Directory.Exists(l)) return IsReparse(new DirectoryInfo(l));
+        return false;
+    }
+
+    // Walk a file or directory without following reparse points. Sensitive-named entries are listed, not descended.
+    public static WalkResult Walk(string root, bool skipSensitive) {
+        WalkResult r = new WalkResult();
+        string rl = LP(root);
+        if (File.Exists(rl)) {
+            FileInfo f = new FileInfo(rl);
+            if (IsReparse(f)) { r.Reparse.Add(f.Name); return r; }
+            r.Rel.Add(f.Name); r.Size.Add(f.Length); r.MTicks.Add(f.LastWriteTimeUtc.Ticks); r.Bytes += f.Length;
+            return r;
+        }
+        DirectoryInfo rd = new DirectoryInfo(rl);
+        if (!rd.Exists) return r;
+        if (IsReparse(rd)) { r.Reparse.Add("."); return r; }
+        Stack<DirectoryInfo> dirs = new Stack<DirectoryInfo>();
+        Stack<string> prefixes = new Stack<string>();
+        dirs.Push(rd); prefixes.Push("");
+        while (dirs.Count > 0) {
+            DirectoryInfo cur = dirs.Pop();
+            string pre = prefixes.Pop();
+            r.Dirs++;
+            List<FileSystemInfo> list = new List<FileSystemInfo>();
+            try { list.AddRange(cur.EnumerateFileSystemInfos()); }
+            catch (Exception ex) { r.Errors.Add(pre + ": " + ex.Message); continue; }
+            foreach (FileSystemInfo fi in list) {
+                string rel = pre.Length == 0 ? fi.Name : pre + "/" + fi.Name;
+                try {
+                    if (IsReparse(fi)) { r.Reparse.Add(rel); continue; }
+                    if (skipSensitive && IsSensitiveName(fi.Name)) { r.Sensitive.Add(rel); continue; }
+                    DirectoryInfo di = fi as DirectoryInfo;
+                    if (di != null) { dirs.Push(di); prefixes.Push(rel); }
+                    else {
+                        FileInfo f = (FileInfo)fi;
+                        r.Rel.Add(rel); r.Size.Add(f.Length); r.MTicks.Add(f.LastWriteTimeUtc.Ticks); r.Bytes += f.Length;
+                    }
+                } catch (Exception ex) { r.Errors.Add(rel + ": " + ex.Message); }
+            }
+        }
+        return r;
+    }
+
+    static string Hex(byte[] b) { StringBuilder sb = new StringBuilder(b.Length * 2); foreach (byte x in b) sb.Append(x.ToString("x2")); return sb.ToString(); }
+
+    public static string Md5File(string path) {
+        using (FileStream fs = new FileStream(LP(path), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1 << 20, FileOptions.SequentialScan))
+        using (MD5 h = MD5.Create()) { return Hex(h.ComputeHash(fs)); }
+    }
+    public static string Sha256File(string path) {
+        using (FileStream fs = new FileStream(LP(path), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1 << 20, FileOptions.SequentialScan))
+        using (SHA256 h = SHA256.Create()) { return Hex(h.ComputeHash(fs)); }
+    }
+    // Returns rel paths whose hash differs (max 25). root may be a file (rel ignored).
+    public static string[] VerifyHashes(string root, string[] rels, string[] expected, bool sha256) {
+        List<string> bad = new List<string>();
+        bool isFile = File.Exists(LP(root));
+        for (int i = 0; i < rels.Length; i++) {
+            string p = isFile ? root : root + "\\" + rels[i].Replace('/', '\\');
+            string got;
+            try { got = sha256 ? Sha256File(p) : Md5File(p); } catch (Exception ex) { got = "ERR:" + ex.Message; }
+            if (!string.Equals(got, expected[i], StringComparison.OrdinalIgnoreCase)) { bad.Add(rels[i]); if (bad.Count >= 25) break; }
+        }
+        return bad.ToArray();
+    }
+    // Copy src to dst (created/overwritten) hashing the stream once: returns {md5, sha256, bytes}
+    public static string[] CopyHash(string src, string dst) {
+        string dl = LP(dst);
+        Directory.CreateDirectory(Path.GetDirectoryName(dl));
+        using (FileStream fi = new FileStream(LP(src), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1 << 20, FileOptions.SequentialScan))
+        using (FileStream fo = new FileStream(dl, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20, FileOptions.SequentialScan))
+        using (MD5 m = MD5.Create())
+        using (SHA256 s = SHA256.Create()) {
+            byte[] buf = new byte[8 << 20];
+            long total = 0; int n;
+            while ((n = fi.Read(buf, 0, buf.Length)) > 0) {
+                m.TransformBlock(buf, 0, n, null, 0); s.TransformBlock(buf, 0, n, null, 0);
+                fo.Write(buf, 0, n); total += n;
+            }
+            m.TransformFinalBlock(buf, 0, 0); s.TransformFinalBlock(buf, 0, 0);
+            fo.Flush(true);
+            return new string[] { Hex(m.Hash), Hex(s.Hash), total.ToString() };
+        }
+    }
+    public static void MoveFile(string a, string b) {
+        string bl = LP(b);
+        if (File.Exists(bl)) File.Delete(bl);
+        File.Move(LP(a), bl);
+    }
+    public static bool IsEmptyDir(string p) {
+        string l = LP(p);
+        if (!Directory.Exists(l)) return false;
+        foreach (string e in Directory.EnumerateFileSystemEntries(l)) { return false; }
+        return true;
+    }
+    public static void DeleteEmptyDir(string p) { Directory.Delete(LP(p), false); }
+
+    // Delete exactly the listed files (relative to root), then remove directories that became empty.
+    public static long DeleteListed(string root, string[] rels, List<string> errors) {
+        long bytes = 0;
+        HashSet<string> dirs = new HashSet<string>();
+        bool isFile = File.Exists(LP(root));
+        string rt = root.TrimEnd('\\');
+        foreach (string rel in rels) {
+            string full = isFile ? rt : rt + "\\" + rel.Replace('/', '\\');
+            try {
+                FileInfo f = new FileInfo(LP(full));
+                if (IsReparse(f)) throw new InvalidOperationException("reparse point: " + full);
+                long n = f.Length; f.Attributes = FileAttributes.Normal; f.Delete(); bytes += n;
+                string d = Path.GetDirectoryName(full);
+                while (d != null && d.Length > rt.Length) { dirs.Add(d); d = Path.GetDirectoryName(d); }
+            } catch (Exception ex) { errors.Add(full + ": " + ex.Message); }
+        }
+        List<string> dl = new List<string>(dirs);
+        dl.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+        foreach (string d in dl) {
+            try { if (Directory.Exists(LP(d)) && IsEmptyDir(d)) Directory.Delete(LP(d), false); } catch (Exception) { }
+        }
+        return bytes;
+    }
+
+    // No-follow recursive delete. Throws if a reparse point is met (nothing below it is touched).
+    public static long DeleteTree(string root, List<string> errors) {
+        string rl = LP(root);
+        if (File.Exists(rl)) {
+            FileInfo f = new FileInfo(rl);
+            if (IsReparse(f)) throw new InvalidOperationException("reparse point: " + root);
+            long n = f.Length;
+            try { f.Attributes = FileAttributes.Normal; f.Delete(); } catch (Exception ex) { errors.Add(root + ": " + ex.Message); return 0; }
+            return n;
+        }
+        DirectoryInfo d = new DirectoryInfo(rl);
+        if (!d.Exists) return 0;
+        if (IsReparse(d)) throw new InvalidOperationException("reparse point: " + root);
+        WalkResult pre = Walk(root, false);
+        if (pre.Reparse.Count > 0) throw new InvalidOperationException("reparse point inside " + root + ": " + pre.Reparse[0]);
+        return DeleteDir(d, errors);
+    }
+    static long DeleteDir(DirectoryInfo d, List<string> errors) {
+        long bytes = 0;
+        List<FileSystemInfo> list = new List<FileSystemInfo>(d.EnumerateFileSystemInfos());
+        foreach (FileSystemInfo fi in list) {
+            if (IsReparse(fi)) throw new InvalidOperationException("reparse point appeared: " + fi.FullName);
+        }
+        foreach (FileSystemInfo fi in list) {
+            DirectoryInfo di = fi as DirectoryInfo;
+            if (di != null) { bytes += DeleteDir(di, errors); continue; }
+            FileInfo f = (FileInfo)fi;
+            try { long n = f.Length; f.Attributes = FileAttributes.Normal; f.Delete(); bytes += n; }
+            catch (Exception ex) { errors.Add(f.FullName + ": " + ex.Message); }
+        }
+        try { d.Attributes = FileAttributes.Directory; d.Delete(false); } catch (Exception ex) { errors.Add(d.FullName + ": " + ex.Message); }
+        return bytes;
+    }
+}
+'@
+if (-not ('MC' -as [type])) { Add-Type -TypeDefinition $CSharp -Language CSharp }
+
+# =====================================================================================================
+#  setup
+# =====================================================================================================
+$M = $ManifestJson | ConvertFrom-Json
+$P = $M.paths
+$EXEC = [bool]$Execute
+$DEEP = if ($Deep) { $true } elseif ($NoDeep) { $false } else { $EXEC }
+$script:DeepNow = $DEEP
+[MC]::SetProtected([string[]]@($M.protected.exact), [string[]]@($M.protected.contains))
+$Rclone = [string]$P.rclone
+$MainRepo = [string]$P.main
+$CleanRepo = [string]$P.clean
+$CacheRoot = [string]$P.cache
+$OutDir = [string]$P.out
+$JournalPath = [string]$P.journal
+$RemovedMap = [string]$P.removed_map
+$RunStamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
+$script:Res = New-Object System.Collections.ArrayList
+$script:Freed = @{ C = [long]0; D = [long]0; E = [long]0; G = [long]0 }
+$script:Errs = New-Object System.Collections.ArrayList
+$script:PartialOk = $false
+$script:S2 = $null
+$script:NoReport = $false
+
+if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
+$script:JW = New-Object System.IO.StreamWriter($JournalPath, $true, (New-Object System.Text.UTF8Encoding($false)))
+$script:JW.AutoFlush = $true
+
+function Jrn([string]$Act, [string]$Target, $Bytes, [string]$Detail) {
+    $mode = if ($EXEC) { 'EXEC' } else { 'REPORT' }
+    $cols = @((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), ('S' + $Stage), $mode, $Act, $Target, [string]$Bytes, ($Detail -replace "[`r`n`t]+", ' '))
+    $script:JW.WriteLine(($cols -join "`t"))
+}
+function Say([string]$Msg, [string]$Color = 'Gray') { Write-Host $Msg -ForegroundColor $Color }
+function GB($n) { '{0:N2} GiB' -f ([double]$n / 1GB) }
+function NP([string]$p) { $p = $p -replace '/', '\'; if ($p.Length -gt 3) { $p = $p.TrimEnd('\') }; return $p }
+function K([string]$p) { return (NP $p).ToLowerInvariant() }
+function UnderP([string]$p, [string]$root) {
+    $a = K $p; $b = (K $root).TrimEnd('\')
+    return ($a -eq $b) -or $a.StartsWith($b + '\')
+}
+function DriveOf([string]$p) { if ($p.Length -ge 1) { return $p.Substring(0, 1).ToUpperInvariant() } else { return '?' } }
+function FreeBytes([string]$letter) { try { return ([System.IO.DriveInfo]($letter + ':\')).AvailableFreeSpace } catch { return [long]-1 } }
+function Add-Res($Id, $Type, $Path, $Status, $Reason, $Bytes, $Files, $Drive) {
+    $o = [pscustomobject]@{ Id = $Id; Type = $Type; Path = $Path; Drv = (DriveOf $Path); Status = $Status; Reason = $Reason; Bytes = [long]$Bytes; Files = [int]$Files; Drive = $Drive }
+    [void]$script:Res.Add($o)
+    Jrn $Status $Path $Bytes $Reason
+    return $o
+}
+
+# ---------------- rclone / git process wrappers ----------------
+function Invoke-Proc([string]$Exe, [string[]]$A, [int]$TimeoutSec = 1800, [string]$Cwd = '') {
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $Exe
+    $q = foreach ($a in $A) { if ($a -match '[\s"]' -or $a -eq '') { '"' + ($a -replace '"', '\"') + '"' } else { $a } }
+    $psi.Arguments = ($q -join ' ')
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+    $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    if ($Cwd) { $psi.WorkingDirectory = $Cwd }
+    $p = [System.Diagnostics.Process]::Start($psi)
+    $ot = $p.StandardOutput.ReadToEndAsync()
+    $et = $p.StandardError.ReadToEndAsync()
+    if (-not $p.WaitForExit($TimeoutSec * 1000)) {
+        try { $p.Kill() } catch { }
+        return @{ rc = 124; out = ''; err = "timeout after $TimeoutSec s" }
+    }
+    return @{ rc = $p.ExitCode; out = $ot.Result; err = $et.Result }
+}
+function Rcl([string[]]$A, [int]$TimeoutSec = 1800) { return Invoke-Proc $Rclone $A $TimeoutSec }
+function GitX([string]$Dir, [string[]]$A, [int]$TimeoutSec = 600) {
+    return Invoke-Proc 'git' (@('-c', 'core.quotepath=false', '-C', $Dir) + $A) $TimeoutSec
+}
+
+# ---------------- remote listing cache (rclone lsf, MD5 from Drive metadata) ----------------
+$script:RK = @{}      # key: path below gdrive:research-archive/ (lowercase) -> @{ size; md5 }
+$script:RRoots = @{}  # list roots already loaded
+$script:RFail = @{}
+function Remote-Rel([string]$full) { return ($full -replace '^gdrive:research-archive/?', '').Trim('/') }
+function List-RootFor([string]$rel) {
+    $parts = $rel.Split('/')
+    if ($parts[0] -eq 'worktrees') { return 'worktrees' }
+    if ($parts.Count -ge 2 -and $parts[0] -eq 'data' -and $parts[1] -eq 'staging') { return 'data/staging' }
+    if ($parts.Count -ge 2) { return ($parts[0] + '/' + $parts[1]) }
+    return $parts[0]
+}
+function Load-Remote([string]$root, [string]$hash = 'md5') {
+    $ck = $hash + '|' + $root
+    if ($script:RRoots.ContainsKey($ck)) { return $true }
+    $r = Rcl @('lsf', '-R', '--files-only', '--format', 'psh', '--hash', $hash, '--separator', '|', ('gdrive:research-archive/' + $root)) 3600
+    if ($r.rc -ne 0) { $script:RFail[$ck] = ($r.err -replace '\s+', ' ').Trim(); return $false }
+    $n = 0
+    foreach ($line in ($r.out -split "`n")) {
+        $line = $line.TrimEnd("`r")
+        if (-not $line) { continue }
+        $f = $line.Split('|')
+        if ($f.Count -lt 3) { continue }
+        $h = $f[$f.Count - 1]; $s = $f[$f.Count - 2]
+        $path = ($f[0..($f.Count - 3)] -join '|')
+        $key = ($root + '/' + $path).ToLowerInvariant()
+        $ent = $script:RK[$key]
+        if ($null -eq $ent) { $ent = @{ size = [long]$s } ; $script:RK[$key] = $ent }
+        $ent[$hash] = $h.ToLowerInvariant()
+        $n++
+    }
+    $script:RRoots[$ck] = $n
+    return $true
+}
+function Get-Remote([string]$fullPath, [string]$hash = 'md5') {
+    $rel = Remote-Rel $fullPath
+    $root = List-RootFor $rel
+    if (-not (Load-Remote $root $hash)) { return $null }
+    return $script:RK[$rel.ToLowerInvariant()]
+}
+function Reset-Remote { $script:RK = @{}; $script:RRoots = @{}; $script:RFail = @{} }
+function Remote-Err { if ($script:RFail.Count -gt 0) { return ' [rclone listing failed: ' + (@($script:RFail.Values)[0]) + ']' } return '' }
+
+# ---------------- manifests ----------------
+$script:ManCache = @{}
+function Read-Manifest([string]$path, [string]$expectSha, [string]$fallbackTs) {
+    $ck = (K $path)
+    if ($script:ManCache.ContainsKey($ck)) { return $script:ManCache[$ck] }
+    $res = @{ ok = $false; why = ''; map = @{}; ticks = [long]0; n = 0 }
+    if (-not (Test-Path -LiteralPath $path)) { $res.why = "manifest missing: $path"; $script:ManCache[$ck] = $res; return $res }
+    if ($expectSha) {
+        $act = [MC]::Sha256File($path)
+        if ($act -ne $expectSha) { $res.why = "manifest changed since generation (regenerate): $path"; $script:ManCache[$ck] = $res; return $res }
+    }
+    $gen = $null
+    foreach ($line in [System.IO.File]::ReadLines($path)) {
+        if ($line.StartsWith('#')) {
+            if ($line -match '^#\s*generated=(.+)$') { try { $gen = [DateTimeOffset]::Parse($Matches[1].Trim()).UtcDateTime } catch { } }
+            continue
+        }
+        if (-not $line.Trim()) { continue }
+        $c = $line.TrimEnd("`r").Split("`t")
+        if ($c.Count -ge 3) { $md5 = $c[0]; $sz = $c[1]; $rel = ($c[2..($c.Count - 1)] -join "`t") }
+        else {
+            $m = [regex]::Match($line, '^([0-9a-fA-F]{32})\s+(\d+)\s+(.*)$')
+            if (-not $m.Success) { $res.why = "unparseable manifest line in $path"; $script:ManCache[$ck] = $res; return $res }
+            $md5 = $m.Groups[1].Value; $sz = $m.Groups[2].Value; $rel = $m.Groups[3].Value.Trim()
+        }
+        $res.map[$rel.Replace('\', '/')] = @{ md5 = $md5.ToLowerInvariant(); size = [long]$sz }
+        $res.n++
+    }
+    if ($null -eq $gen -and $fallbackTs) { try { $gen = ([datetime]::Parse($fallbackTs)).ToUniversalTime() } catch { } }
+    if ($null -ne $gen) { $res.ticks = $gen.Ticks }
+    $res.ok = $true
+    $script:ManCache[$ck] = $res
+    return $res
+}
+
+# ---------------- protection / overlap / reference / process checks ----------------
+$ActiveWt = @{}
+foreach ($n in @($M.active_worktrees)) { $ActiveWt[(K ('E:\rd-wt\' + $n))] = ($n + ', excluded by wtclean') }
+if (-not $AllowProtectedWorktrees) { foreach ($n in @($M.protected_worktrees)) { $ActiveWt[(K ('E:\rd-wt\' + $n))] = ($n + ', live/integration tree') } }
+function Get-ProtectedReason([string]$path, [bool]$skipWt = $false) {
+    $p = NP $path
+    foreach ($c in ($p -split '\\')) { if ($c -and [MC]::IsSensitiveName($c)) { return "protected name component '$c' (sealed/CAL/HOLDOUT/chunk-5/INC1)" } }
+    foreach ($r in @($M.protected.roots)) { if (UnderP $p $r) { return "protected root $r" } }
+    $ok = $false
+    foreach ($r in @($M.allowed_roots)) { if (UnderP $p $r) { $ok = $true; break } }
+    if (-not $ok) { return 'outside the deletion allow-list' }
+    foreach ($r in @($M.container_roots)) { if ((K $p) -eq (K $r)) { return "container root $r" } }
+    if (-not $skipWt) { foreach ($k in $ActiveWt.Keys) { if (UnderP $p $k) { return ("protected worktree " + $ActiveWt[$k]) } } }
+    return $null
+}
+function Get-KeepOverlap([string]$path) {
+    foreach ($k in @($M.keep_local)) {
+        $s = [string]$k.source
+        if ((UnderP $path $s) -or (UnderP $s $path)) {
+            if (Test-Path -LiteralPath $s) { return [string]$k.name }
+        }
+    }
+    return $null
+}
+$script:ProcList = $null
+function Find-ProcUsing([string]$path) {
+    if ($null -eq $script:ProcList) {
+        $script:ProcList = @()
+        try { $script:ProcList = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine } | ForEach-Object { [pscustomobject]@{ Pid = $_.ProcessId; Name = $_.Name; Cmd = $_.CommandLine } }) } catch { }
+    }
+    $rx = [regex]::new([regex]::Escape((NP $path)) + '(?![A-Za-z0-9_\-])', 'IgnoreCase')
+    $rx2 = [regex]::new([regex]::Escape((NP $path).Replace('\', '/')) + '(?![A-Za-z0-9_\-])', 'IgnoreCase')
+    foreach ($p in $script:ProcList) {
+        if ($p.Pid -eq $PID) { continue }
+        if ($rx.IsMatch($p.Cmd) -or $rx2.IsMatch($p.Cmd)) { return ("pid {0} {1}" -f $p.Pid, $p.Name) }
+    }
+    return $null
+}
+
+$script:Lit = $null   # list of @{ lit; file; tree }
+function Get-RgExe {
+    $c = Get-Command rg -ErrorAction SilentlyContinue
+    if ($c) { return $c.Source }
+    foreach ($p in @('C:\Users\jpeng\.kimi-code\bin\rg.exe', 'C:\Program Files\ripgrep\rg.exe', 'C:\Users\jpeng\miniconda3\Library\bin\rg.exe')) { if (Test-Path -LiteralPath $p) { return $p } }
+    return $null
+}
+function Scan-Literals {
+    $script:Lit = New-Object System.Collections.ArrayList
+    if ($SkipReferenceScan) { return }
+    $rg = Get-RgExe
+    $trees = @()
+    if ($ScanTrees -in @('both', 'main')) { $trees += , @('main', $M.paths.main) }
+    if ($ScanTrees -in @('both', 'clean')) { $trees += , @('clean', $M.paths.clean) }
+    $re = '[A-Za-z]:[\\/][^\s"''<>|*?(){}\[\],;`]+'
+    foreach ($t in $trees) {
+        $tag = $t[0]; $root = $t[1]
+        if (-not (Test-Path -LiteralPath $root)) { continue }
+        $dirs = @($M.ref_scan.dirs.PSObject.Properties | Where-Object { (K $_.Name) -eq (K $root) } | ForEach-Object { $_.Value })
+        $targets = @()
+        foreach ($d in $dirs) { $pp = Join-Path $root $d; if (Test-Path -LiteralPath $pp) { $targets += $pp } }
+        foreach ($g in @($M.ref_scan.root_files)) {
+            foreach ($f in (Get-ChildItem -LiteralPath $root -Filter $g -File -ErrorAction SilentlyContinue)) { $targets += $f.FullName }
+        }
+        if ($targets.Count -eq 0) { continue }
+        $lines = @()
+        if ($rg) {
+            $a = @('-o', '-n', '--no-heading', '--with-filename', '--no-ignore', '--max-filesize', '5M')
+            foreach ($g in @('*.py', '*.ps1', '*.sh', '*.toml', '*.json', '*.yaml', '*.yml', '*.cfg', '*.ini', '*.bat', '*.cmd')) { $a += @('-g', $g) }
+            $a += @('-g', '!**/__pycache__/**', '-g', '!**/.git/**', '-e', $re) + $targets
+            $r = Invoke-Proc $rg $a 900
+            if ($r.rc -le 1) { $lines = @($r.out -split "`n") } else { Say "  (rg failed on $tag tree: $($r.err.Trim()))" 'Yellow' }
+        } else {
+            Say "  (rg not found: slow PowerShell reference scan of the $tag tree)" 'Yellow'
+            foreach ($t2 in $targets) {
+                $files = if ((Get-Item -LiteralPath $t2).PSIsContainer) { Get-ChildItem -LiteralPath $t2 -Recurse -File -Include *.py, *.ps1, *.sh, *.toml, *.json, *.yaml, *.yml, *.cfg, *.ini -ErrorAction SilentlyContinue } else { Get-Item -LiteralPath $t2 }
+                foreach ($f in $files) {
+                    foreach ($m in (Select-String -LiteralPath $f.FullName -Pattern $re -AllMatches -ErrorAction SilentlyContinue)) {
+                        foreach ($mm in $m.Matches) { $lines += ('{0}:{1}:{2}' -f $f.FullName, $m.LineNumber, $mm.Value) }
+                    }
+                }
+            }
+        }
+        foreach ($ln in $lines) {
+            $ln = $ln.TrimEnd("`r")
+            $m = [regex]::Match($ln, '^(.+?):(\d+):(.+)$')
+            if (-not $m.Success) { continue }
+            $file = $m.Groups[1].Value
+            if ($IgnoreReferenceFiles -and $file -match $IgnoreReferenceFiles) { continue }
+            $lit = ($m.Groups[3].Value -replace '\\\\+', '\' -replace '/', '\').TrimEnd('.', '\', ':')
+            if ($lit.Length -lt 4) { continue }
+            [void]$script:Lit.Add(@{ lit = (K $lit); file = $file; tree = $tag })
+        }
+    }
+    # de-duplicate
+    $seen = @{}; $uniq = New-Object System.Collections.ArrayList
+    foreach ($e in $script:Lit) { $k = $e.lit + '|' + $e.file; if (-not $seen.ContainsKey($k)) { $seen[$k] = 1; [void]$uniq.Add($e) } }
+    $script:Lit = $uniq
+}
+$GenericLit = @{}
+foreach ($g in @($M.generic_literals)) { $GenericLit[(K $g)] = 1 }
+function Get-Refs([string]$path, [bool]$cleanOnly = $false) {
+    $c = K $path
+    $hits = New-Object System.Collections.ArrayList
+    foreach ($e in $script:Lit) {
+        if ($cleanOnly -and $e.tree -ne 'clean') { continue }
+        $l = $e.lit
+        $isHit = $false
+        if ($l -eq $c -or $l.StartsWith($c + '\')) { $isHit = $true }
+        elseif ($c.StartsWith($l + '\') -and -not $GenericLit.ContainsKey($l)) { $isHit = $true }
+        if ($isHit) { [void]$hits.Add(("{0}:{1} -> {2}" -f $e.tree, ($e.file -replace '^.*\\', ''), $e.lit)); if ($hits.Count -ge 4) { break } }
+    }
+    return @($hits)
+}
+
+# ---------------- git-tracked check inside the main repo ----------------
+function Test-TrackedInMain([string]$path) {
+    if (-not (UnderP $path $MainRepo)) { return $null }
+    $rel = (NP $path).Substring((NP $MainRepo).Length).TrimStart('\') -replace '\\', '/'
+    if (-not $rel) { return 'is the repo root' }
+    $r = GitX $MainRepo @('ls-files', '-z', '--', $rel)
+    if ($r.rc -ne 0) { return "git ls-files failed: $($r.err.Trim())" }
+    if ($r.out.Trim("`0", "`n", "`r", ' ')) { $n = @($r.out -split "`0" | Where-Object { $_ }).Count; return "$n tracked file(s) (history keeps them; delete via git, not here)" }
+    return $null
+}
+
+# ---------------- local vs manifest comparison ----------------
+function Check-Local($w, $exp, [bool]$deep, [string]$root, [bool]$sha, [bool]$allowSens = $false) {
+    # $exp: hashtable rel -> @{ md5/sha; size; t }
+    if ($w.Reparse.Count -gt 0) { return @{ ok = $false; status = 'LINKS'; reason = ("junction/symlink inside: " + ($w.Reparse[0..([Math]::Min(2, $w.Reparse.Count - 1))] -join ', ')) } }
+    if ($w.Sensitive.Count -gt 0 -and -not $allowSens) { return @{ ok = $false; status = 'SENSITIVE_INSIDE'; reason = ("{0} protected-name entries inside (never uploaded): {1}" -f $w.Sensitive.Count, ($w.Sensitive[0..([Math]::Min(1, $w.Sensitive.Count - 1))] -join ', ')) } }
+    if ($w.Errors.Count -gt 0) { return @{ ok = $false; status = 'WALK_ERROR'; reason = $w.Errors[0] } }
+    $extra = New-Object System.Collections.ArrayList; $bad = New-Object System.Collections.ArrayList; $mod = New-Object System.Collections.ArrayList
+    $hr = New-Object System.Collections.ArrayList; $he = New-Object System.Collections.ArrayList
+    for ($i = 0; $i -lt $w.Rel.Count; $i++) {
+        $rel = $w.Rel[$i]
+        $e = $exp[$rel]
+        if ($null -eq $e) { [void]$extra.Add($rel); continue }
+        if ($e.size -ne $w.Size[$i]) { [void]$bad.Add($rel); continue }
+        if ($e.t -gt 0 -and $w.MTicks[$i] -gt ($e.t + 20000000)) { [void]$mod.Add($rel); continue }
+        if ($deep) { [void]$hr.Add($rel); [void]$he.Add([string]$e.h) }
+    }
+    if ($extra.Count) { return @{ ok = $false; status = 'LOCAL_NOT_IN_BACKUP'; reason = ("{0} local file(s) not in the backup manifest, e.g. {1}" -f $extra.Count, $extra[0]) } }
+    if ($bad.Count) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("{0} file(s) differ in size from the backup, e.g. {1}" -f $bad.Count, $bad[0]) } }
+    if ($mod.Count) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("{0} file(s) modified after the backup was taken, e.g. {1}" -f $mod.Count, $mod[0]) } }
+    if ($deep -and $hr.Count -gt 0) {
+        $mm = [MC]::VerifyHashes($root, [string[]]$hr.ToArray(), [string[]]$he.ToArray(), $sha)
+        if ($mm.Count -gt 0) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("{0}+ file(s) fail {1} re-hash, e.g. {2}" -f $mm.Count, $(if ($sha) { 'SHA-256' } else { 'MD5' }), $mm[0]) } }
+    }
+    return @{ ok = $true; status = 'OK'; reason = '' }
+}
+
+# ---------------- Stage 1: item evaluation ----------------
+function Eval-Proof($it, $pr, $w, [bool]$isFile) {
+    $path = [string]$it.path
+    switch ([string]$pr.t) {
+        'mirror' {
+            $m = Read-Manifest ([string]$pr.manifest) ([string]$pr.manifest_sha256) ([string]$pr.ts)
+            if (-not $m.ok) { return @{ ok = $false; status = 'RECEIPT_STALE'; reason = $m.why } }
+            $prefix = [string]$pr.prefix
+            $exp = @{}
+            foreach ($k in $m.map.Keys) {
+                if ($prefix -and -not $k.StartsWith($prefix)) { continue }
+                $rel = $k.Substring($prefix.Length)
+                $e = $m.map[$k]
+                $exp[$rel] = @{ size = $e.size; h = $e.md5; t = $m.ticks }
+            }
+            $lc = Check-Local $w $exp $script:DeepNow $path $false $script:PartialOk
+            if (-not $lc.ok) { return $lc }
+            # live Drive re-check: every local file must exist at <remote>/<prefix+rel> with equal size+MD5
+            $remote = ([string]$pr.remote).TrimEnd('/')
+            $bad = 0; $first = ''
+            for ($i = 0; $i -lt $w.Rel.Count; $i++) {
+                $rel = $w.Rel[$i]
+                $ent = Get-Remote ($remote + '/' + $prefix + $rel)
+                $e = $exp[$rel]
+                if ($null -eq $ent -or $ent.size -ne $e.size -or $ent.md5 -ne $e.h) { $bad++; if (-not $first) { $first = $rel } }
+            }
+            if ($bad -gt 0) { return @{ ok = $false; status = 'DRIVE_UNVERIFIED'; reason = ("{0} file(s) missing or different on Drive at {1}, e.g. {2}{3}" -f $bad, $remote, $first, (Remote-Err)) } }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = @($remote + '  (mirror, ' + $w.Rel.Count + ' files size+MD5 re-checked)') }
+        }
+        'archive' {
+            $exp = @{}
+            $drv = @()
+            foreach ($part in @($pr.parts)) {
+                $m = Read-Manifest ([string]$part.manifest) ([string]$part.manifest_sha256) ([string]$part.ts)
+                if (-not $m.ok) { return @{ ok = $false; status = 'RECEIPT_STALE'; reason = $m.why } }
+                foreach ($k in $m.map.Keys) { $e = $m.map[$k]; $exp[$k] = @{ size = $e.size; h = $e.md5; t = $m.ticks } }
+            }
+            $lc = Check-Local $w $exp $script:DeepNow $path $false $script:PartialOk
+            if (-not $lc.ok) { return $lc }
+            foreach ($part in @($pr.parts)) {
+                $ent = Get-Remote ([string]$part.remote)
+                if ($null -eq $ent) { return @{ ok = $false; status = 'DRIVE_UNVERIFIED'; reason = ("archive not found on Drive: " + $part.remote + (Remote-Err)) } }
+                if ([long]$ent.size -ne [long]$part.bytes -or $ent.md5 -ne ([string]$part.md5).ToLowerInvariant()) {
+                    return @{ ok = $false; status = 'DRIVE_UNVERIFIED'; reason = ("archive size/MD5 differs on Drive: " + $part.remote) }
+                }
+                $drv += ([string]$part.remote)
+            }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = $drv }
+        }
+        'legacy' {
+            if (-not (Test-Path -LiteralPath ([string]$pr.receipt))) { return @{ ok = $false; status = 'RECEIPT_STALE'; reason = 'legacy receipt missing' } }
+            $rj = Get-Content -LiteralPath ([string]$pr.receipt) -Raw | ConvertFrom-Json
+            $strip = [string]$pr.strip
+            $exp = @{}
+            foreach ($pp in $rj.files_sha256.PSObject.Properties) {
+                $rel = $pp.Name.Replace('\', '/'); if ($rel.StartsWith($strip)) { $rel = $rel.Substring($strip.Length) }
+                $exp[$rel] = @{ size = -1; h = ([string]$pp.Value).ToLowerInvariant(); t = [long]0 }
+            }
+            # sizes are not recorded: size check is skipped, content is verified by SHA-256 (deep) and by file-set equality
+            if ($w.Reparse.Count -gt 0) { return @{ ok = $false; status = 'LINKS'; reason = 'junction inside' } }
+            if ($w.Sensitive.Count -gt 0 -and -not $script:PartialOk) { return @{ ok = $false; status = 'SENSITIVE_INSIDE'; reason = 'protected-name entries inside' } }
+            $extra = @(); $rels = New-Object System.Collections.ArrayList; $hs = New-Object System.Collections.ArrayList
+            foreach ($rel in $w.Rel) { if (-not $exp.ContainsKey($rel)) { $extra += $rel } else { [void]$rels.Add($rel); [void]$hs.Add($exp[$rel].h) } }
+            if ($extra.Count) { return @{ ok = $false; status = 'LOCAL_NOT_IN_BACKUP'; reason = ("{0} local file(s) not in the legacy receipt, e.g. {1}" -f $extra.Count, $extra[0]) } }
+            if ($script:DeepNow) {
+                $mm = [MC]::VerifyHashes($path, [string[]]$rels.ToArray(), [string[]]$hs.ToArray(), $true)
+                if ($mm.Count) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("{0}+ file(s) fail SHA-256 vs legacy receipt, e.g. {1}" -f $mm.Count, $mm[0]) } }
+            }
+            $ent = Get-Remote ([string]$pr.remote)
+            if ($null -eq $ent -or [long]$ent.size -ne [long]$pr.bytes -or $ent.md5 -ne ([string]$pr.md5).ToLowerInvariant()) {
+                return @{ ok = $false; status = 'DRIVE_UNVERIFIED'; reason = ("legacy archive not matching on Drive: " + $pr.remote) }
+            }
+            $note = if ($script:DeepNow) { 'SHA-256 verified' } else { 'file-set equal; SHA-256 re-hash deferred to -Deep/-Execute' }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = @([string]$pr.remote + '  (legacy archive; ' + $note + ')') }
+        }
+    }
+    return @{ ok = $false; status = 'NO_PROOF'; reason = 'unknown proof type' }
+}
+
+function Eval-Special($it, $w) {
+    $sp = $it.special
+    $path = [string]$it.path
+    switch ([string]$sp.kind) {
+        'redundant_of_keeplocal' {
+            $k = @($M.keep_local) | Where-Object { $_.name -eq $sp.keep } | Select-Object -First 1
+            $cacheOk = Test-Path -LiteralPath (Join-Path (Join-Path $CacheRoot $k.cache) 'CACHE_RECEIPT.json')
+            $srcOk = $false
+            if (Test-Path -LiteralPath $k.source) {
+                $m = Read-Manifest ([string]$k.manifest) ([string]$k.manifest_sha256) ''
+                if ($m.ok) {
+                    $ws = [MC]::Walk($k.source, $true); $same = ($ws.Rel.Count -eq $m.n)
+                    if ($same) { for ($i = 0; $i -lt $ws.Rel.Count; $i++) { $e = $m.map[$ws.Rel[$i]]; if ($null -eq $e -or $e.size -ne $ws.Size[$i]) { $same = $false; break } } }
+                    $srcOk = $same
+                }
+            }
+            if (-not ($cacheOk -or $srcOk)) { return @{ ok = $false; status = 'SPECIAL_FAIL'; reason = ("superset '" + $sp.keep + "' not verified present (neither source nor verified cache copy)") } }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = @('superset ' + $sp.keep + ' present (' + $(if ($cacheOk) { 'cache receipt' } else { 'source sizes match manifest' }) + ')') }
+        }
+        'fixed_size' {
+            if ($w.Bytes -ne [long]$sp.size) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("size is now {0}, expected {1} (file is still changing?)" -f $w.Bytes, $sp.size) } }
+            $age = ((Get-Date).ToUniversalTime().Ticks - $w.MTicks[0]) / 1e7 / 60
+            if ($age -lt 15) { return @{ ok = $false; status = 'LOCAL_CHANGED'; reason = ("modified {0:N0} min ago - wait" -f $age) } }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = @('owner-designated partial/dropped copy') }
+        }
+        'git_ignored_scratch' {
+            $rel = [string]$sp.rel
+            $c = GitX ([string]$sp.repo) @('check-ignore', '-q', '--', $rel)
+            if ($c.rc -ne 0) { return @{ ok = $false; status = 'SPECIAL_FAIL'; reason = "$rel is not git-ignored in $($sp.repo)" } }
+            $l = GitX ([string]$sp.repo) @('ls-files', '-z', '--', $rel)
+            if ($l.out.Trim("`0", "`n", ' ')) { return @{ ok = $false; status = 'SPECIAL_FAIL'; reason = 'contains tracked files' } }
+            return @{ ok = $true; status = 'OK'; reason = ''; drive = @('git-ignored regenerable scratch') }
+        }
+    }
+    return @{ ok = $false; status = 'NO_PROOF'; reason = 'unknown special' }
+}
+
+function Eval-Item($it) {
+    $path = NP ([string]$it.path)
+    $id = [string]$it.id
+    if (-not (Test-Path -LiteralPath $path)) { return Add-Res $id 'item' $path 'GONE' 'not present (already removed)' 0 0 @() }
+    $skipWt = [bool]($it.special -and [string]$it.special.kind -eq 'git_ignored_scratch')   # explicit owner request: scratch inside the integration tree
+    $why = Get-ProtectedReason $path $skipWt
+    if ($why) { return Add-Res $id 'item' $path 'PROTECTED' $why 0 0 @() }
+    if ($it.backup_only -and -not $IncludeBackupOnly) { return Add-Res $id 'item' $path 'BACKUP_ONLY' 'class KEEP-ACTIVE-backup-only (live-referenced sidecar): backed up, not offered (-IncludeBackupOnly)' 0 0 @() }
+    $ko = Get-KeepOverlap $path
+    if ($ko) { return Add-Res $id 'item' $path 'KEEP_LOCAL' ("is/contains keep-local item '$ko' (Stage 2 first)") 0 0 @() }
+    if ([MC]::PathIsReparse($path)) { return Add-Res $id 'item' $path 'LINKS' 'item itself is a junction/symlink' 0 0 @() }
+    $anc = $path; $linkAnc = $null
+    while ($true) {
+        $par = Split-Path -Parent $anc
+        if (-not $par -or $par -eq $anc) { break }
+        if ([MC]::PathIsReparse($par)) { $linkAnc = $par; break }
+        $anc = $par
+    }
+    if ($linkAnc) { return Add-Res $id 'item' $path 'LINKS' "reparse ancestor $linkAnc" 0 0 @() }
+    $isFile = Test-Path -LiteralPath $path -PathType Leaf
+    $pr = Find-ProcUsing $path
+    if ($pr) { return Add-Res $id 'item' $path 'IN_USE' "referenced on a running process command line: $pr" 0 0 @() }
+    $w = [MC]::Walk($path, (-not $ReleaseProtectedNames))
+    $bytes = $w.Bytes; $files = $w.Rel.Count
+    $links = @()
+    if ($w.Reparse.Count -gt 0) {
+        $inside = $false
+        if ($it.special -and $it.special.unlink_links) {
+            $inside = $true
+            foreach ($rl in $w.Reparse) {
+                $lpth = Join-Path $path ($rl -replace '/', '\')
+                $tg = $null; try { $tg = (Get-Item -LiteralPath $lpth -Force).Target } catch { }
+                if ($tg -is [array]) { $tg = $tg[0] }
+                $tg = ([string]$tg) -replace '^\\\\\?\\', ''
+                if (-not $tg -or -not (UnderP $tg $path)) { $inside = $false; break }
+            }
+        }
+        if (-not $inside) { return Add-Res $id 'item' $path 'LINKS' ("junction/symlink inside: " + $w.Reparse[0]) $bytes $files @() }
+        $links = @($w.Reparse)
+    }
+    $script:PartialOk = $false; $left = 0
+    if ($w.Sensitive.Count -gt 0) {
+        if ($RemoveAroundProtected -and $isFile -eq $false) { $script:PartialOk = $true; $left = $w.Sensitive.Count }
+        else { return Add-Res $id 'item' $path 'SENSITIVE_INSIDE' ("{0} protected-name entries inside (never uploaded; whole-folder removal refused; -RemoveAroundProtected removes only the verified rest, -ReleaseProtectedNames if a mirror receipt covers them too), e.g. {1}" -f $w.Sensitive.Count, $w.Sensitive[0]) $bytes $files @() }
+    }
+    if (-not $SkipReferenceScan) {
+        $refs = Get-Refs $path
+        if ($refs.Count -gt 0) { return Add-Res $id 'item' $path 'REFERENCED' ("active code/config reference: " + ($refs -join ' | ')) $bytes $files @() }
+    }
+    $tr = Test-TrackedInMain $path
+    if ($tr) { return Add-Res $id 'item' $path 'TRACKED' $tr $bytes $files @() }
+    if ($it.special) {
+        $sr = Eval-Special $it $w
+        if (-not $sr.ok) { return Add-Res $id 'item' $path $sr.status $sr.reason $bytes $files @() }
+        $o = Add-Res $id 'item' $path 'ELIGIBLE' 'redundant' $bytes $files $sr.drive
+        $maxm0 = 0; if ($w.MTicks.Count) { $maxm0 = ($w.MTicks | Measure-Object -Maximum).Maximum }
+        $o | Add-Member -NotePropertyName Snap -NotePropertyValue @{ bytes = $bytes; files = $files; maxm = $maxm0; links = $links } -Force
+        $o | Add-Member -NotePropertyName Item -NotePropertyValue $it -Force
+        return $o
+    }
+    $fails = @()
+    $okp = $null
+    foreach ($pf in @($it.proofs)) {
+        $pe = Eval-Proof $it $pf $w $isFile
+        if ($pe.ok) { $okp = $pe; break } else { $fails += ("[" + $pf.t + "] " + $pe.status + ": " + $pe.reason) }
+    }
+    if ($null -eq $okp) {
+        $first = ($fails | Select-Object -First 1)
+        $st = if ($first -match '\] (\w+):') { $Matches[1] } else { 'NO_PROOF' }
+        return Add-Res $id 'item' $path $st ($fails -join ' || ') $bytes $files @()
+    }
+    $note = ''
+    if ($left -gt 0) { $note = ("PARTIAL: removes the {0} verified files; {1} protected-name entr{2} stay in place (e.g. {3})" -f $files, $left, $(if ($left -eq 1) { 'y' } else { 'ies' }), $w.Sensitive[0]) }
+    $o = Add-Res $id 'item' $path 'ELIGIBLE' $note $bytes $files $okp.drive
+    $maxm = 0; if ($w.MTicks.Count) { $maxm = ($w.MTicks | Measure-Object -Maximum).Maximum }
+    $o | Add-Member -NotePropertyName Snap -NotePropertyValue @{ bytes = $bytes; files = $files; maxm = $maxm; links = $links; partial = ($left -gt 0); left = $left; rels = @($w.Rel) } -Force
+    $o | Add-Member -NotePropertyName Item -NotePropertyValue $it -Force
+    return $o
+}
+
+# ---------------- Stage 1: worktrees ----------------
+$script:WtRegistered = $null
+function Get-RegisteredWorktrees {
+    if ($null -ne $script:WtRegistered) { return $script:WtRegistered }
+    $script:WtRegistered = @{}
+    $r = GitX $MainRepo @('worktree', 'list', '--porcelain')
+    foreach ($line in ($r.out -split "`n")) { if ($line -match '^worktree (.+)$') { $script:WtRegistered[(K $Matches[1].Trim())] = 1 } }
+    return $script:WtRegistered
+}
+function Read-ListFile([string]$path) {
+    $set = @{}
+    if (-not $path -or -not (Test-Path -LiteralPath $path)) { return $set }
+    foreach ($l in [System.IO.File]::ReadLines($path)) { $l = $l.TrimEnd("`r"); if ($l) { $set[$l] = 1 } }
+    return $set
+}
+function Eval-Worktree($w) {
+    $name = [string]$w.name; $path = NP ([string]$w.path); $id = 'wt:' + $name
+    if (-not (Test-Path -LiteralPath $path)) { return Add-Res $id 'worktree' $path 'GONE' 'not present (already removed)' 0 0 @() }
+    $why = Get-ProtectedReason $path
+    if ($why) { return Add-Res $id 'worktree' $path 'PROTECTED' $why 0 0 @() }
+    $st = [string]$w.status
+    $okRcpt = ($st -eq 'ok') -or ($st -eq 'commit_failed' -and "$($w.upload_exit)" -in @('', '0') -and "$($w.check_exit)" -in @('', '0'))
+    if (-not $okRcpt) { return Add-Res $id 'worktree' $path 'RECEIPT_NOT_PASSED' "wtclean receipt status '$st'" 0 0 @() }
+    if ($w.junctions -gt 0 -or $w.top_reparse) { return Add-Res $id 'worktree' $path 'LINKS' ("{0} junction(s) inside: manual handling" -f $w.junctions) 0 0 @() }
+    $ko = Get-KeepOverlap $path
+    if ($ko) { return Add-Res $id 'worktree' $path 'KEEP_LOCAL' ("contains keep-local item '$ko' (Stage 2 + registry switch first)") 0 0 @() }
+    $pr = Find-ProcUsing $path
+    if ($pr) { return Add-Res $id 'worktree' $path 'IN_USE' "running process: $pr" 0 0 @() }
+    if (-not $SkipReferenceScan) {
+        $refs = Get-Refs $path $true
+        if ($refs.Count -gt 0) { return Add-Res $id 'worktree' $path 'REFERENCED' ("clean-tree code/config reference: " + ($refs -join ' | ')) 0 0 @() }
+    }
+    $cls = [string]$w.cls
+    $isWt = ($cls -eq 'worktree')
+    if ($isWt -and -not (Get-RegisteredWorktrees).ContainsKey((K $path))) { return Add-Res $id 'worktree' $path 'NOT_REGISTERED' 'not in git worktree list of the main repo' 0 0 @() }
+    # --- git state ---
+    $wlk = [MC]::Walk($path, $false)
+    if ($wlk.Reparse.Count -gt 0) { return Add-Res $id 'worktree' $path 'LINKS' ("junction/symlink inside: " + $wlk.Reparse[0]) $wlk.Bytes $wlk.Rel.Count @() }
+    $head = ''
+    if ($isWt) {
+        $s = GitX $path @('status', '--porcelain=v1', '--untracked-files=no')
+        if ($s.rc -ne 0) { return Add-Res $id 'worktree' $path 'GIT_ERROR' ("git status failed: " + $s.err.Trim()) $wlk.Bytes $wlk.Rel.Count @() }
+        if ($s.out.Trim()) { $n = @($s.out -split "`n" | Where-Object { $_.Trim() }).Count; return Add-Res $id 'worktree' $path 'DIRTY_TRACKED' "$n uncommitted tracked change(s)" $wlk.Bytes $wlk.Rel.Count @() }
+        $h = GitX $path @('rev-parse', 'HEAD'); $head = $h.out.Trim()
+        $br = [string]$w.branch
+        if ($br -and $br -ne 'HEAD' -and $br -notmatch '^refs/') { $br = 'refs/heads/' + $br }
+        if ($br -and $br -ne 'HEAD') {
+            $b = GitX $MainRepo @('rev-parse', '--verify', '--quiet', $br)
+            if ($b.rc -ne 0) { return Add-Res $id 'worktree' $path 'BRANCH_MISSING' "branch $br does not exist in the main repo" $wlk.Bytes $wlk.Rel.Count @() }
+            if ($b.out.Trim() -ne $head) {
+                $anc = GitX $MainRepo @('merge-base', '--is-ancestor', $head, $br)
+                if ($anc.rc -ne 0) { return Add-Res $id 'worktree' $path 'BRANCH_MISMATCH' "HEAD $($head.Substring(0,8)) is not contained in $br" $wlk.Bytes $wlk.Rel.Count @() }
+            }
+        } else {
+            $c = GitX $MainRepo @('for-each-ref', '--contains', $head, '--count=1', '--format=%(refname)', 'refs/heads', 'refs/remotes', 'refs/tags')
+            if (-not $c.out.Trim()) { return Add-Res $id 'worktree' $path 'COMMIT_UNREACHABLE' "detached HEAD $($head.Substring(0,8)) is contained in no branch/tag" $wlk.Bytes $wlk.Rel.Count @() }
+        }
+        $o1 = GitX $path @('ls-files', '--others', '--exclude-standard', '-z')
+        $o2 = GitX $path @('ls-files', '--others', '--ignored', '--exclude-standard', '-z')
+        $cur = New-Object System.Collections.ArrayList
+        foreach ($o in @($o1.out, $o2.out)) { foreach ($f in ($o -split "`0")) { if ($f) { [void]$cur.Add($f) } } }
+    } else {
+        $cur = New-Object System.Collections.ArrayList
+        foreach ($r in $wlk.Rel) { if (-not $r.StartsWith('.git/')) { [void]$cur.Add($r) } }
+        if (Test-Path -LiteralPath (Join-Path $path '.git')) {
+            $h = GitX $path @('rev-parse', '--verify', '--quiet', 'HEAD')
+            if ($h.rc -eq 0) { return Add-Res $id 'worktree' $path 'HAS_COMMITS' 'standalone git dir with its own commits (history not backed up)' $wlk.Bytes $wlk.Rel.Count @() }
+        }
+    }
+    $list = Read-ListFile ([string]$w.list)
+    if ($w.list -and $w.list_sha256) { if (([MC]::Sha256File([string]$w.list)) -ne $w.list_sha256) { return Add-Res $id 'worktree' $path 'RECEIPT_STALE' 'upload list changed since generation (regenerate)' $wlk.Bytes $wlk.Rel.Count @() } }
+    $sensSet = @{}; foreach ($s in @($w.sens)) { $sensSet[[string]$s] = 1 }
+    $missing = New-Object System.Collections.ArrayList; $sensLeft = New-Object System.Collections.ArrayList
+    foreach ($f in $cur) {
+        if ($list.ContainsKey($f)) { continue }
+        if ($sensSet.ContainsKey($f)) { [void]$sensLeft.Add($f); continue }
+        if ($f.StartsWith('.git/')) { continue }
+        [void]$missing.Add($f)
+    }
+    if ($missing.Count -gt 0 -and [int]$w.sens_count -gt 0 -and $sensSet.Count -eq 0) {
+        return Add-Res $id 'worktree' $path 'SENSITIVE_SKIPPED' ("{0} sensitive-named file(s) were not uploaded and {1} untracked file(s) are not in the list (names not recorded: > 60): manual" -f $w.sens_count, $missing.Count) $wlk.Bytes $wlk.Rel.Count @()
+    }
+    if ($missing.Count -gt 0) { return Add-Res $id 'worktree' $path 'NEW_UNBACKED' ("{0} untracked/ignored file(s) not in the uploaded list, e.g. {1}" -f $missing.Count, $missing[0]) $wlk.Bytes $wlk.Rel.Count @() }
+    if ([int]$w.sens_count -gt 0) {
+        $dupOk = $false
+        $script:DupRelease = ''
+        if ($AllowSensitiveDup -and $sensSet.Count -eq [int]$w.sens_count) {
+            $dupOk = $true
+            foreach ($f in $sensSet.Keys) {
+                $loc = Join-Path $path $f; $mn = Join-Path $MainRepo $f
+                $ext = [System.IO.Path]::GetExtension($f).ToLowerInvariant()
+                if (-not (Test-Path -LiteralPath $loc)) { continue }
+                if ($ext -eq '.pyc' -and $f -match '(^|/)__pycache__/') { continue }   # regenerable byte-code cache
+                if ($ext -notin @('.py', '.json', '.md', '.txt', '.pyc', '.ps1', '.sh', '.toml') -or -not (Test-Path -LiteralPath $mn -PathType Leaf)) { $dupOk = $false; break }
+                if ((Get-Item -LiteralPath $loc -Force).Length -ne (Get-Item -LiteralPath $mn -Force).Length -or (Get-Item -LiteralPath $loc -Force).Length -gt 2MB) { $dupOk = $false; break }
+            }
+        }
+        if (-not $dupOk) {
+            $smp = if ($sensSet.Count) { (@($sensSet.Keys) | Select-Object -First 2) -join ', ' } else { 'names not recorded' }
+            return Add-Res $id 'worktree' $path 'SENSITIVE_SKIPPED' ("{0} sensitive-named untracked file(s) were NOT uploaded (e.g. {1}); -AllowSensitiveDup releases pure code/protocol duplicates of E:\research-dense" -f $w.sens_count, $smp) $wlk.Bytes $wlk.Rel.Count @()
+        }
+    }
+    # --- Drive: every present list file must exist under worktrees/<name>/ with equal size + MD5 ---
+    $dest = ([string]$w.dest).TrimEnd('/')
+    $present = New-Object System.Collections.ArrayList
+    foreach ($f in $cur) { if ($list.ContainsKey($f)) { [void]$present.Add($f) } }
+    if ($present.Count -gt 0) {
+        if (-not $dest) { return Add-Res $id 'worktree' $path 'DRIVE_UNVERIFIED' 'no Drive destination in receipt' $wlk.Bytes $wlk.Rel.Count @() }
+        $badR = 0; $first = ''
+        foreach ($f in $present) {
+            $lp = Join-Path $path ($f -replace '/', '\')
+            $ent = Get-Remote ($dest + '/' + $f)
+            if ($null -eq $ent) { $badR++; if (-not $first) { $first = "$f (absent)" }; continue }
+            $fi = New-Object System.IO.FileInfo ([MC]::LP($lp))
+            if ($fi.Length -ne $ent.size) { $badR++; if (-not $first) { $first = "$f (size)" }; continue }
+            if ((([MC]::Md5File($lp))) -ne $ent.md5) { $badR++; if (-not $first) { $first = "$f (md5)" } }
+        }
+        if ($badR -gt 0) { return Add-Res $id 'worktree' $path 'DRIVE_UNVERIFIED' ("{0} file(s) absent/different on Drive under {1}, e.g. {2}" -f $badR, $dest, $first) $wlk.Bytes $wlk.Rel.Count @() }
+    }
+    $relNote = ''
+    if ([int]$w.sens_count -gt 0) { $relNote = ("released by -AllowSensitiveDup: {0} sensitive-named untracked file(s) are regenerable caches or size-identical copies in E:\research-dense" -f $w.sens_count) }
+    $o = Add-Res $id 'worktree' $path 'ELIGIBLE' $relNote $wlk.Bytes $wlk.Rel.Count @(($(if ($dest) { $dest } else { '(no untracked content)' }) + "; branch " + $w.branch + " @ " + $(if ($head) { $head.Substring(0, 8) } else { '-' })))
+    $o | Add-Member -NotePropertyName Snap -NotePropertyValue @{ bytes = $wlk.Bytes; files = $wlk.Rel.Count; maxm = 0 } -Force
+    $o | Add-Member -NotePropertyName Wt -NotePropertyValue $w -Force
+    return $o
+}
+
+# ---------------- Stage 1: deletion ----------------
+function Prune-EmptyParents([string]$path) {
+    $cur = Split-Path -Parent (NP $path)
+    while ($cur) {
+        $isC = $false
+        foreach ($r in @($M.container_roots)) { if ((K $cur) -eq (K $r)) { $isC = $true; break } }
+        if ($isC) { break }
+        $ok = $false; foreach ($r in @($M.allowed_roots)) { if (UnderP $cur $r) { $ok = $true; break } }
+        if (-not $ok) { break }
+        if ([MC]::PathIsReparse($cur)) { break }
+        if (-not [MC]::IsEmptyDir($cur)) { break }
+        try { [MC]::DeleteEmptyDir($cur); Jrn 'PRUNE_EMPTY_DIR' $cur 0 'now-empty parent'; } catch { break }
+        $cur = Split-Path -Parent $cur
+    }
+}
+function Record-Removed($r, [long]$bytes) {
+    $obj = [ordered]@{ ts = (Get-Date).ToUniversalTime().ToString('o'); path = $r.Path; type = $r.Type; bytes = $bytes; files = $r.Files; drive = @($r.Drive) }
+    [System.IO.File]::AppendAllText($RemovedMap, (($obj | ConvertTo-Json -Compress -Depth 5) + "`n"), (New-Object System.Text.UTF8Encoding($false)))
+}
+function Revalidate($r) {
+    # immediately before deletion: unchanged since evaluation (count, bytes, newest mtime)
+    if (-not (Test-Path -LiteralPath $r.Path)) { return 'vanished' }
+    if ($r.Type -eq 'worktree') { return $null }
+    $w = [MC]::Walk($r.Path, (-not $ReleaseProtectedNames))
+    $nl = 0; if ($r.Snap.links) { $nl = @($r.Snap.links).Count }
+    $lf = 0; if ($r.Snap.left) { $lf = [int]$r.Snap.left }
+    if ($w.Reparse.Count -gt $nl -or $w.Sensitive.Count -ne $lf) { return 'links/protected entries appeared' }
+    $maxm = 0; if ($w.MTicks.Count) { $maxm = ($w.MTicks | Measure-Object -Maximum).Maximum }
+    if ($w.Bytes -ne $r.Snap.bytes -or $w.Rel.Count -ne $r.Snap.files -or $maxm -ne $r.Snap.maxm) { return 'changed since evaluation' }
+    $skipWt2 = [bool]($r.Item -and $r.Item.special -and [string]$r.Item.special.kind -eq 'git_ignored_scratch')
+    $why = Get-ProtectedReason $r.Path $skipWt2
+    if ($why) { return $why }
+    return $null
+}
+function Remove-Eligible($r) {
+    $bad = Revalidate $r
+    if ($bad) { Say ("  SKIP   {0}  ({1})" -f $r.Path, $bad) 'Yellow'; Jrn 'SKIP_AT_DELETE' $r.Path 0 $bad; $r.Status = 'CHANGED_AT_DELETE'; $r.Reason = $bad; return }
+    try {
+        if ($r.Type -eq 'worktree' -and [string]$r.Wt.cls -eq 'worktree') {
+            $g = GitX $MainRepo @('worktree', 'remove', '--force', $r.Path)
+            $gone = -not (Test-Path -LiteralPath $r.Path)
+            if ($g.rc -ne 0 -or -not $gone) { throw ("git worktree remove failed (rc {0}): {1}" -f $g.rc, ($g.err -replace '\s+', ' ').Trim()) }
+            $freed = [long]$r.Snap.bytes
+        } else {
+            $errs = New-Object 'System.Collections.Generic.List[string]'
+            if ($r.Snap.links) {
+                foreach ($rl in @($r.Snap.links)) {
+                    $lpth = Join-Path $r.Path ($rl -replace '/', '\')
+                    $tg = $null; try { $tg = (Get-Item -LiteralPath $lpth -Force).Target } catch { }
+                    if ($tg -is [array]) { $tg = $tg[0] }
+                    $tg = ([string]$tg) -replace '^\\\\\?\\', ''
+                    if (-not $tg -or -not (UnderP $tg $r.Path)) { throw "link $lpth points outside the item ($tg): refusing" }
+                    if (Test-Path -LiteralPath $lpth -PathType Container) { [void](Invoke-Proc 'cmd.exe' @('/c', 'rmdir', $lpth) 60) } else { [System.IO.File]::Delete([MC]::LP($lpth)) }
+                    if (Test-Path -LiteralPath $lpth) { throw "could not unlink $lpth" }
+                    Jrn 'UNLINKED' $lpth 0 ("junction inside the item removed (link only); target " + $tg)
+                }
+            }
+            if ($r.Snap.partial) { $freed = [MC]::DeleteListed($r.Path, [string[]]@($r.Snap.rels), $errs) }
+            else { $freed = [MC]::DeleteTree($r.Path, $errs) }
+            if ($r.Type -eq 'worktree') { $freed = [Math]::Max($freed, 0) }
+            if ($errs.Count -gt 0) { foreach ($e in $errs) { [void]$script:Errs.Add($e) }; Jrn 'DELETE_ERRORS' $r.Path $freed ($errs[0]) }
+        }
+        $script:Freed[$r.Drv] += $freed
+        $r.Status = 'DELETED'
+        Say ("  DELETED {0}  ({1})" -f $r.Path, (GB $freed)) 'Green'
+        Jrn 'DELETED' $r.Path $freed ((@($r.Drive) -join ' ; '))
+        Record-Removed $r $freed
+        if ($r.Type -ne 'worktree' -or $true) { Prune-EmptyParents $r.Path }
+    } catch {
+        Say ("  ERROR  {0}  {1}" -f $r.Path, $_.Exception.Message) 'Red'
+        Jrn 'ERROR' $r.Path 0 $_.Exception.Message
+        $r.Status = 'ERROR'; $r.Reason = $_.Exception.Message
+        [void]$script:Errs.Add($r.Path + ': ' + $_.Exception.Message)
+    }
+}
+
+function Test-Match($s, [string[]]$pats) { foreach ($p in $pats) { if ($p -and $s.IndexOf($p, [StringComparison]::OrdinalIgnoreCase) -ge 0) { return $true } }; return $false }
+
+function Print-Pending {
+    $pi = $M.pending_info
+    if ($null -eq $pi) { return }
+    Say '' ; Say '--- NOT YET SAFE: upload pending / failed (never deleted) ---' 'Cyan'
+    foreach ($l in @($pi.lines)) { Say ('  ' + $l) 'DarkYellow' }
+}
+
+function Print-Holds($rows) {
+    $groups = $rows | Group-Object Status | Sort-Object { - ($_.Group | Measure-Object Bytes -Sum).Sum }
+    foreach ($g in $groups) {
+        if ($g.Name -in @('ELIGIBLE', 'DELETED', 'GONE')) { continue }
+        $sum = ($g.Group | Measure-Object Bytes -Sum).Sum
+        Say ("  {0,-20} {1,4} item(s)  {2,12}" -f $g.Name, $g.Count, (GB $sum)) 'Yellow'
+        $show = if ($ShowHolds) { $g.Group } else { $g.Group | Sort-Object Bytes -Descending | Select-Object -First 3 }
+        foreach ($x in $show) { Say ("      {0}`n          {1}" -f $x.Path, ($x.Reason.Substring(0, [Math]::Min(230, $x.Reason.Length)))) 'DarkGray' }
+    }
+}
+
+function Invoke-Stage1 {
+    Say '=== STAGE 1: remove items verified on Drive ===' 'Cyan'
+    Say ("mode={0}  deep-hash={1}  reference-scan={2}  generated={3}" -f $(if ($EXEC) { 'EXECUTE' } else { 'REPORT-ONLY' }), $DEEP, $(if ($SkipReferenceScan) { 'OFF' } else { $ScanTrees }), $M.generated)
+    $freeBefore = @{}; foreach ($d in 'C', 'D', 'E', 'G') { $freeBefore[$d] = FreeBytes $d }
+    $t0 = Get-Date
+    if (-not $SkipReferenceScan) { Say 'scanning active code/config for path literals ...'; Scan-Literals; Say ("  {0} literal references found" -f $script:Lit.Count) }
+    $items = @($M.items)
+    if ($Only.Count) { $items = @($items | Where-Object { Test-Match ($_.id + ' ' + $_.path) $Only }) }
+    if ($Skip.Count) { $items = @($items | Where-Object { -not (Test-Match ($_.id + ' ' + $_.path) $Skip) }) }
+    $n = 0
+    if (-not $SkipItems) {
+        Say ("evaluating {0} backup-verified items (Drive listing is re-read live) ..." -f $items.Count)
+        foreach ($it in ($items | Sort-Object { $_.path })) {
+            $n++
+            try { [void](Eval-Item $it) } catch { [void](Add-Res ([string]$it.id) 'item' ([string]$it.path) 'ERROR' $_.Exception.Message 0 0 @()) ; [void]$script:Errs.Add([string]$it.path + ': ' + $_.Exception.Message) }
+            if ($n % 50 -eq 0) { Say ("  ... {0}/{1}  ({2:N0} s)" -f $n, $items.Count, ((Get-Date) - $t0).TotalSeconds) 'DarkGray' }
+        }
+    }
+    # an eligible item inside another eligible item is covered by the parent: count/delete it once
+    $chosenPaths = New-Object System.Collections.ArrayList
+    foreach ($r0 in (@($script:Res | Where-Object { $_.Status -eq 'ELIGIBLE' -and $_.Type -eq 'item' }) | Sort-Object { $_.Path.Length })) {
+        $par = $null
+        foreach ($c0 in $chosenPaths) { if (UnderP $r0.Path $c0) { $par = $c0; break } }
+        if ($par) { $r0.Status = 'NESTED'; $r0.Reason = "covered by eligible parent $par"; Jrn 'NESTED' $r0.Path $r0.Bytes $r0.Reason }
+        else { [void]$chosenPaths.Add($r0.Path) }
+    }
+    if (-not $SkipWorktrees) {
+        $wts = @($M.worktrees)
+        if ($Only.Count) { $wts = @($wts | Where-Object { Test-Match ($_.name + ' ' + $_.path) $Only }) }
+        if ($Skip.Count) { $wts = @($wts | Where-Object { -not (Test-Match ($_.name + ' ' + $_.path) $Skip) }) }
+        Say ("evaluating {0} worktrees with wtclean receipts ..." -f $wts.Count)
+        $n = 0
+        foreach ($w in ($wts | Sort-Object { $_.name })) {
+            $n++
+            try { [void](Eval-Worktree $w) } catch { [void](Add-Res ('wt:' + $w.name) 'worktree' ([string]$w.path) 'ERROR' $_.Exception.Message 0 0 @()); [void]$script:Errs.Add([string]$w.path + ': ' + $_.Exception.Message) }
+            if ($n % 25 -eq 0) { Say ("  ... {0}/{1}  ({2:N0} s)" -f $n, $wts.Count, ((Get-Date) - $t0).TotalSeconds) 'DarkGray' }
+        }
+    }
+    $elig = @($script:Res | Where-Object { $_.Status -eq 'ELIGIBLE' })
+    Say ''
+    Say '--- ELIGIBLE (Drive copy verified live) ---' 'Green'
+    foreach ($r in ($elig | Sort-Object Drv, @{ Expression = 'Bytes'; Descending = $true })) {
+        if ($elig.Count -gt 60 -and $r.Bytes -lt 50MB -and -not $ShowHolds) { continue }
+        Say ("  {0} {1,-9} {2,11}  {3}" -f $r.Drv, $r.Type, (GB $r.Bytes), $r.Path) 'Green'
+    }
+    if ($elig.Count -gt 60 -and -not $ShowHolds) { Say ("  (items < 50 MB not listed individually; {0} eligible items in total; -ShowHolds lists everything)" -f $elig.Count) 'DarkGray' }
+    Say ''
+    Say '--- HELD (not removed) ---' 'Yellow'
+    Print-Holds $script:Res
+    Print-Pending
+    Say ''
+    Say '--- WOULD FREE (eligible now) ---' 'Cyan'
+    foreach ($d in 'C', 'D', 'E', 'G') {
+        $sel = @($elig | Where-Object { $_.Drv -eq $d })
+        Say ("  {0}: {1,12}  in {2} item(s)   (free now {3})" -f $d, (GB (($sel | Measure-Object Bytes -Sum).Sum)), $sel.Count, (GB $freeBefore[$d])) 'Cyan'
+    }
+    if ($EXEC -and $elig.Count -gt 0) {
+        $tot = ($elig | Measure-Object Bytes -Sum).Sum
+        Say ''
+        Say ("About to DELETE {0} items ({1}) after one more live Drive re-check. Journal: {2}" -f $elig.Count, (GB $tot), $JournalPath) 'Red'
+        if (-not $Yes) { $ans = Read-Host 'Type DELETE to proceed'; if ($ans -cne 'DELETE') { Say 'aborted - nothing deleted.' 'Yellow'; Finish-Stage 1 $freeBefore; return } }
+        Say 're-reading the Drive listings (fresh) and re-verifying each item immediately before deleting ...' 'Cyan'
+        Reset-Remote
+        $script:ManCache = @{}
+        $script:DeepNow = $false   # content was hashed minutes ago in this run; the re-check re-reads Drive + size/mtime snapshot
+        foreach ($r in ($elig | Sort-Object Drv, Bytes)) {
+            if ($r.Type -eq 'item') {
+                $fresh = Eval-Item $r.Item
+                [void]$script:Res.Remove($fresh)
+                if ($fresh.Status -ne 'ELIGIBLE') { Say ("  SKIP   {0}  (re-check: {1} {2})" -f $r.Path, $fresh.Status, $fresh.Reason) 'Yellow'; $r.Status = 'CHANGED_AT_DELETE'; $r.Reason = $fresh.Status + ': ' + $fresh.Reason; continue }
+                $r.Snap = $fresh.Snap; $r.Drive = $fresh.Drive
+            } else {
+                $fresh = Eval-Worktree $r.Wt
+                [void]$script:Res.Remove($fresh)
+                if ($fresh.Status -ne 'ELIGIBLE') { Say ("  SKIP   {0}  (re-check: {1} {2})" -f $r.Path, $fresh.Status, $fresh.Reason) 'Yellow'; $r.Status = 'CHANGED_AT_DELETE'; $r.Reason = $fresh.Status + ': ' + $fresh.Reason; continue }
+                $r.Snap = $fresh.Snap
+            }
+            Remove-Eligible $r
+        }
+    }
+    if (-not $EXEC) {
+        Say ''
+        Say 'To act on the ELIGIBLE list (prompts for a typed DELETE; re-verifies Drive live right before each removal):' 'Cyan'
+        Say '  powershell -NoProfile -ExecutionPolicy Bypass -File E:\research-dense\tmp\morning\MORNING_CLEANUP.ps1 -Stage 1 -Execute -RemoveAroundProtected -AllowSensitiveDup' 'White'
+        Say '  (drop the two optional flags to skip partial removals around protected-name entries and worktrees holding only regenerable/duplicate sensitive-named files)' 'DarkGray'
+    }
+    Finish-Stage 1 $freeBefore
+}
+
+function Finish-Stage([int]$st, $freeBefore) {
+    $stamp = $RunStamp
+    $rep = [ordered]@{ stage = $st; mode = $(if ($EXEC) { 'execute' } else { 'report' }); generated = $M.generated; run = $stamp; deep = $DEEP; results = @($script:Res | ForEach-Object { [ordered]@{ id = $_.Id; type = $_.Type; path = $_.Path; drive = $_.Drv; status = $_.Status; reason = $_.Reason; bytes = $_.Bytes; files = $_.Files; drive_ref = @($_.Drive) } }); errors = @($script:Errs) }
+    $f1 = Join-Path $OutDir ("report_stage{0}_{1}.json" -f $st, $stamp)
+    if ($script:S2) { $rep['stage2'] = @($script:S2) }
+    if (-not $script:NoReport) {
+        [System.IO.File]::WriteAllText($f1, ($rep | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+        Copy-Item -LiteralPath $f1 -Destination (Join-Path $OutDir ("report_stage{0}_latest.json" -f $st)) -Force
+    }
+    Say ''
+    Say ("=== SUMMARY stage {0} ({1}) ===" -f $st, $(if ($EXEC) { 'EXECUTE' } else { 'REPORT-ONLY - nothing was changed' })) 'Cyan'
+    $c = $script:Res | Group-Object Status | Sort-Object Name
+    Say ("status counts: " + (($c | ForEach-Object { "{0}={1}" -f $_.Name, $_.Count }) -join '  '))
+    Say ("report: $f1") 'DarkGray'
+    Say ("journal: $JournalPath") 'DarkGray'
+    if ($script:Errs.Count) { Say ("{0} error(s); first: {1}" -f $script:Errs.Count, $script:Errs[0]) 'Red' }
+    $line = 'BYTES ACTUALLY FREED (measured file sizes removed by this run):'
+    foreach ($d in 'C', 'D', 'E', 'G') {
+        $now = FreeBytes $d
+        $delta = if ($freeBefore[$d] -ge 0 -and $now -ge 0) { $now - $freeBefore[$d] } else { 0 }
+        $line += ("`n   {0}: removed {1,15:N0} bytes ({2})   free-space delta {3,15:N0} bytes   free now {4}" -f $d, $script:Freed[$d], (GB $script:Freed[$d]), $delta, (GB $now))
+    }
+    Say $line 'Magenta'
+    Jrn 'RUN_END' ("stage$st") (($script:Freed.Values | Measure-Object -Sum).Sum) ("freed C={0} D={1} E={2} G={3}" -f $script:Freed.C, $script:Freed.D, $script:Freed.E, $script:Freed.G)
+}
+
+# =====================================================================================================
+#  Stage 2: keep-local -> data_cache (copy + SHA-256), then optional removal of the old copy
+# =====================================================================================================
+function Read-Sha256Sums([string]$file) {
+    $map = @{}
+    if (-not (Test-Path -LiteralPath $file)) { return $map }
+    foreach ($l in [System.IO.File]::ReadLines($file)) {
+        $m = [regex]::Match($l.TrimEnd("`r"), '^([0-9a-fA-F]{64})\s+\*?(.+)$')
+        if ($m.Success) { $map[($m.Groups[2].Value.Trim() -replace '^\./', '' -replace '\\', '/')] = $m.Groups[1].Value.ToLowerInvariant() }
+    }
+    return $map
+}
+function Get-CacheReceipt([string]$dest) {
+    $p = Join-Path $dest 'CACHE_RECEIPT.json'
+    if (Test-Path -LiteralPath $p) { try { return (Get-Content -LiteralPath $p -Raw | ConvertFrom-Json) } catch { return $null } }
+    return $null
+}
+function Test-DrivePackProof($k, $proof) {
+    # returns @{ ok; why; desc }
+    switch ([string]$proof.t) {
+        'dir_md5' {
+            if (-not $k.manifest) { return @{ ok = $false; why = 'no md5 manifest to compare'; desc = $proof.remote } }
+            $m = Read-Manifest ([string]$k.manifest) ([string]$k.manifest_sha256) ''
+            if (-not $m.ok) { return @{ ok = $false; why = $m.why; desc = $proof.remote } }
+            $r = Rcl @('lsf', '-R', '--files-only', '--format', 'psh', '--hash', 'md5', '--separator', '|', [string]$proof.remote) 1800
+            if ($r.rc -ne 0) { return @{ ok = $false; why = 'remote dir not found'; desc = $proof.remote } }
+            $rem = @{}
+            foreach ($line in ($r.out -split "`n")) { $f = $line.TrimEnd("`r").Split('|'); if ($f.Count -ge 3) { $rem[($f[0..($f.Count - 3)] -join '|')] = @{ size = [long]$f[$f.Count - 2]; md5 = $f[$f.Count - 1].ToLowerInvariant() } } }
+            $bad = 0; $first = ''
+            foreach ($rel in $m.map.Keys) { $e = $m.map[$rel]; $x = $rem[$rel]; if ($null -eq $x -or $x.size -ne $e.size -or $x.md5 -ne $e.md5) { $bad++; if (-not $first) { $first = $rel } } }
+            if ($bad) { return @{ ok = $false; why = "$bad of $($m.n) member(s) absent/different (e.g. $first)"; desc = $proof.remote } }
+            return @{ ok = $true; why = ''; desc = ("{0} ({1} files size+MD5 match)" -f $proof.remote, $m.n) }
+        }
+        'tar_parts' {
+            $base = ([string]$proof.remote).TrimEnd('/')
+            $sums = Rcl @('cat', ($base + '/' + $proof.parts_sums))
+            if ($sums.rc -ne 0) { return @{ ok = $false; why = 'SHA256SUMS not found on Drive'; desc = $base } }
+            $want = @{}
+            foreach ($l in ($sums.out -split "`n")) { $mm = [regex]::Match($l.TrimEnd("`r"), '^([0-9a-fA-F]{64})\s+\*?(.+)$'); if ($mm.Success) { $want[$mm.Groups[2].Value.Trim()] = $mm.Groups[1].Value.ToLowerInvariant() } }
+            $ls = Rcl @('lsf', '--files-only', '--format', 'psh', '--hash', 'sha256', '--separator', '|', $base)
+            if ($ls.rc -ne 0) { return @{ ok = $false; why = 'cannot list Drive parts'; desc = $base } }
+            $have = @{}; foreach ($line in ($ls.out -split "`n")) { $f = $line.TrimEnd("`r").Split('|'); if ($f.Count -ge 3) { $have[$f[0]] = $f[2].ToLowerInvariant() } }
+            foreach ($n in $want.Keys) { if ($have[$n] -ne $want[$n]) { return @{ ok = $false; why = "part $n missing or sha256 differs on Drive"; desc = $base } } }
+            $cm = Rcl @('cat', ($base + '/' + $proof.content_manifest))
+            if ($cm.rc -ne 0) { return @{ ok = $false; why = 'content manifest not found'; desc = $base } }
+            $cj = $cm.out | ConvertFrom-Json
+            $cache = Join-Path $CacheRoot $k.cache
+            $rc = Get-CacheReceipt $cache
+            $cnt = 0; $cmp = 0; $bad = 0; $first = ''
+            foreach ($pp in $cj.sha256.PSObject.Properties) {
+                $cnt++
+                $got = $null
+                if ($rc) { $e = @($rc.files) | Where-Object { $_.rel -eq $pp.Name } | Select-Object -First 1; if ($e) { $got = $e.sha256 } }
+                if (-not $got) { continue }
+                $cmp++
+                if ($got -ne ([string]$pp.Value).ToLowerInvariant()) { $bad++; if (-not $first) { $first = $pp.Name } }
+            }
+            if ($bad) { return @{ ok = $false; why = "$bad file(s) differ from the archived content (e.g. $first)"; desc = $base } }
+            if ($cmp -lt $cnt) { return @{ ok = $false; why = ("Drive parts verified (sha256 = SHA256SUMS) but the archived content ({0} files) is compared with the cache only after Stage 2 copied it ({1}/{0} compared)" -f $cnt, $cmp); desc = $base } }
+            return @{ ok = $true; why = ''; desc = ("{0} (tar.zst parts sha256 match SHA256SUMS; all {1} archived members' sha256 equal the cache copy)" -f $base, $cnt) }
+        }
+        'archive_cover' {
+            $unit = (NP ($MainRepo + '\' + ([string]$proof.unit -replace '/', '\')))
+            $it = @($M.items) | Where-Object { (K $_.path) -eq (K $unit) } | Select-Object -First 1
+            if ($null -eq $it) { return @{ ok = $false; why = "no verified Drive archive covers $unit yet (upload pending)"; desc = [string]$proof.unit } }
+            $pf = @($it.proofs) | Where-Object { $_.t -eq 'archive' } | Select-Object -First 1
+            $exp = @{}
+            foreach ($part in @($pf.parts)) { $m = Read-Manifest ([string]$part.manifest) ([string]$part.manifest_sha256) ''; if ($m.ok) { foreach ($kk in $m.map.Keys) { $exp[$kk] = $m.map[$kk] } }
+                $ent = Get-Remote ([string]$part.remote); if ($null -eq $ent -or $ent.md5 -ne ([string]$part.md5).ToLowerInvariant()) { return @{ ok = $false; why = 'archive not matching on Drive'; desc = [string]$part.remote } } }
+            $w = [MC]::Walk($k.source, $true)
+            $relBase = ((NP $k.source).Substring((NP $unit).Length).TrimStart('\') -replace '\\', '/')
+            $bad = 0; $first = ''
+            $rcv = Get-CacheReceipt (Join-Path $CacheRoot $k.cache)
+            $cm = @{}; if ($rcv) { foreach ($ce in @($rcv.files)) { $cm[[string]$ce.rel] = $ce } }
+            for ($i = 0; $i -lt $w.Rel.Count; $i++) {
+                $key = $relBase + '/' + $w.Rel[$i]
+                $e = $exp[$key]
+                if ($null -eq $e -or $e.size -ne $w.Size[$i]) { $bad++; if (-not $first) { $first = $w.Rel[$i] }; continue }
+                $c = $cm[$w.Rel[$i]]
+                if ($c -and $c.md5 -ne $e.md5) { $bad++; if (-not $first) { $first = $w.Rel[$i] } }
+            }
+            if ($bad) { return @{ ok = $false; why = "$bad file(s) not covered by the verified archive (e.g. $first)"; desc = [string]$proof.unit } }
+            return @{ ok = $true; why = ''; desc = ("covered by Drive archive of {0} ({1} files size match)" -f $proof.unit, $w.Rel.Count) }
+        }
+        'dir_listing' {
+            $r = Rcl @('lsf', '-R', '--files-only', '--format', 'psh', '--hash', 'md5', '--separator', '|', [string]$proof.remote) 900
+            if ($r.rc -ne 0) { return @{ ok = $false; why = 'remote dir not found'; desc = $proof.remote } }
+            $rem = @{}; foreach ($line in ($r.out -split "`n")) { $f = $line.TrimEnd("`r").Split('|'); if ($f.Count -ge 3) { $rem[($f[0..($f.Count - 3)] -join '|')] = @{ size = [long]$f[$f.Count - 2]; md5 = $f[$f.Count - 1].ToLowerInvariant() } } }
+            $w = [MC]::Walk($k.source, $true); $bad = 0; $first = ''
+            for ($i = 0; $i -lt $w.Rel.Count; $i++) {
+                $x = $rem[$w.Rel[$i]]
+                if ($null -eq $x -or $x.size -ne $w.Size[$i]) { $bad++; if (-not $first) { $first = $w.Rel[$i] }; continue }
+                if ($EXEC -and ([MC]::Md5File((Join-Path $k.source $w.Rel[$i]))) -ne $x.md5) { $bad++; if (-not $first) { $first = $w.Rel[$i] } }
+            }
+            if ($bad) { return @{ ok = $false; why = "$bad of $($w.Rel.Count) file(s) absent/different on Drive (e.g. $first)"; desc = $proof.remote } }
+            return @{ ok = $true; why = ''; desc = ("{0} ({1} files name+size{2} match)" -f $proof.remote, $w.Rel.Count, $(if ($EXEC) { '+MD5' } else { '' })) }
+        }
+        'git_tracked' {
+            $l = GitX ([string]$proof.repo) @('ls-files', '-z', '--', [string]$proof.rel)
+            if ($l.out.Trim("`0", "`n", ' ')) { return @{ ok = $true; why = ''; desc = ("tracked in git: " + $proof.repo + ' ' + $proof.rel) } }
+            return @{ ok = $false; why = 'not tracked in git'; desc = $proof.rel }
+        }
+    }
+    return @{ ok = $false; why = 'unknown proof'; desc = '' }
+}
+
+function Invoke-Stage2 {
+    Say '=== STAGE 2: keep-local hot data -> data_cache (copy + SHA-256; never move) ===' 'Cyan'
+    Say ("mode={0}  cache={1}  margin={2} GiB" -f $(if ($EXEC) { 'EXECUTE' } else { 'REPORT-ONLY' }), $CacheRoot, $MarginGiB)
+    $freeBefore = @{}; foreach ($d in 'C', 'D', 'E', 'G') { $freeBefore[$d] = FreeBytes $d }
+    $keeps = @($M.keep_local)
+    if ($Only.Count) { $keeps = @($keeps | Where-Object { Test-Match ($_.name + ' ' + $_.cache) $Only }) }
+    $order = @($keeps | Sort-Object { if (Test-Path -LiteralPath $_.source) { (Get-ChildItem -LiteralPath $_.source -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum } else { 0 } })
+    if (-not $SkipReferenceScan -and $RemoveOld) { Scan-Literals }
+    $cacheDrive = DriveOf $CacheRoot
+    $margin = [long]$MarginGiB * 1GB
+    $summary = New-Object System.Collections.ArrayList
+    $planned = [long]0
+    if ($EXEC -and -not $Yes) {
+        $ans = Read-Host 'Stage 2 COPIES keep-local items into data_cache (never moves/deletes anything). Type COPY to proceed'
+        if ($ans -cne 'COPY') { Say 'aborted - nothing copied.' 'Yellow'; Finish-Stage 2 $freeBefore; return }
+    }
+    foreach ($k in $order) {
+        $src = NP ([string]$k.source); $dest = NP (Join-Path $CacheRoot ([string]$k.cache))
+        Say ''
+        Say ("[{0}]  {1}  ->  {2}" -f $k.name, $src, $dest) 'White'
+        if (-not (Test-Path -LiteralPath $src)) {
+            $rc = Get-CacheReceipt $dest
+            Say ("  source gone; cache receipt: {0}" -f $(if ($rc) { 'present (already migrated)' } else { 'MISSING - nothing to copy' })) 'Yellow'
+            [void]$summary.Add([pscustomobject]@{ Name = $k.name; State = $(if ($rc) { 'ALREADY_MIGRATED' } else { 'SOURCE_MISSING' }); Bytes = 0; Note = '' })
+            continue
+        }
+        $w = [MC]::Walk($src, $true)
+        if ($w.Reparse.Count) { Say "  junction inside source: manual handling" 'Red'; [void]$summary.Add([pscustomobject]@{ Name = $k.name; State = 'LINKS'; Bytes = $w.Bytes; Note = '' }); continue }
+        $skipRel = @($w.Rel | Where-Object { $_ -like '*.part' -or $_ -like '*.tmp' })
+        $rels = @($w.Rel | Where-Object { $_ -notlike '*.part' -and $_ -notlike '*.tmp' })
+        # reference hashes
+        $refMd5 = @{}; $refSha = @{}
+        if ($k.manifest) { $m = Read-Manifest ([string]$k.manifest) ([string]$k.manifest_sha256) ''; if ($m.ok) { foreach ($kk in $m.map.Keys) { $refMd5[$kk] = $m.map[$kk] } } else { Say ("  WARNING: " + $m.why) 'Yellow' } }
+        if ($k.ref_sha256sums) {
+            foreach ($cand in @((Join-Path $src $k.ref_sha256sums), (Join-Path (Split-Path -Parent $src) $k.ref_sha256sums))) { if (Test-Path -LiteralPath $cand) { $refSha = Read-Sha256Sums $cand; break } }
+        }
+        $incomplete = $false; $notes = @()
+        if ($refMd5.Count) {
+            $missingSrc = @($refMd5.Keys | Where-Object { $rels -notcontains $_ })
+            if ($missingSrc.Count) { $incomplete = $true; $notes += ("{0} manifest member(s) missing in source" -f $missingSrc.Count) }
+            $szBad = 0; for ($i = 0; $i -lt $w.Rel.Count; $i++) { $e = $refMd5[$w.Rel[$i]]; if ($e -and $e.size -ne $w.Size[$i]) { $szBad++ } }
+            if ($szBad) { $incomplete = $true; $notes += ("{0} file(s) differ in size from the md5 manifest" -f $szBad) }
+        }
+        if ($refSha.Count -and -not $refMd5.Count) {
+            $missingSrc = @($refSha.Keys | Where-Object { $rels -notcontains $_ })
+            if ($missingSrc.Count) { $incomplete = $true; $notes += ("{0}/{1} member(s) of {2} not present yet" -f $missingSrc.Count, $refSha.Count, $k.ref_sha256sums) }
+        }
+        if ($skipRel.Count) { $incomplete = $true; $notes += ("{0} in-progress file(s) (*.part)" -f $skipRel.Count) }
+        if (-not $k.complete) { $notes += 'owner note: copy still in progress' }
+        # what is already in the cache?
+        $rc = Get-CacheReceipt $dest
+        $have = @{}; if ($rc) { foreach ($e in @($rc.files)) { $have[[string]$e.rel] = $e } }
+        $todo = New-Object System.Collections.ArrayList; $need = [long]0
+        for ($i = 0; $i -lt $w.Rel.Count; $i++) {
+            $rel = $w.Rel[$i]; if ($rel -like '*.part' -or $rel -like '*.tmp') { continue }
+            $e = $have[$rel]; $dp = Join-Path $dest ($rel -replace '/', '\')
+            if ($e -and (Test-Path -LiteralPath $dp -PathType Leaf) -and ((Get-Item -LiteralPath $dp -Force).Length -eq $w.Size[$i]) -and [long]$e.size -eq $w.Size[$i]) { continue }
+            [void]$todo.Add($i); $need += $w.Size[$i]
+        }
+        $free = (FreeBytes $cacheDrive) - $(if ($EXEC) { 0 } else { $planned })
+        Say ("  source {0} in {1} files;  to copy {2} in {3} files;  cache drive free {4} (margin {5} GiB)" -f (GB $w.Bytes), $rels.Count, (GB $need), $todo.Count, (GB $free), $MarginGiB)
+        foreach ($n in $notes) { Say ("  note: " + $n) 'Yellow' }
+        $state = 'READY'
+        if ($incomplete -and -not $k.complete) { $state = 'INCOMPLETE_SOURCE' }
+        elseif ($incomplete) { $state = 'INCOMPLETE_SOURCE' }
+        if ($todo.Count -gt 0 -and $free -lt ($need + $margin)) { $state = 'DEFER_SPACE'; Say ("  DEFER: need {0} + {1} GiB margin, have {2}{3}. Free space first (Stage 1) and re-run." -f (GB $need), $MarginGiB, (GB $free), $(if ($EXEC) { '' } else { ' (after the earlier planned copies)' })) 'Yellow' }
+        if ($state -eq 'READY') { $planned += $need }
+        if ($todo.Count -eq 0 -and $rc) { $state = 'CACHED' }
+        # Drive readiness for -RemoveOld (report: always)
+        $proofs = @(); $driveOk = $false
+        foreach ($pf in @($k.drive)) { $pe = Test-DrivePackProof $k $pf; $proofs += ("{0}: {1}" -f $(if ($pe.ok) { 'OK ' } else { 'no ' }), $(if ($pe.ok) { $pe.desc } else { "$($pe.desc) - $($pe.why)" })); if ($pe.ok) { $driveOk = $true } }
+        foreach ($l in $proofs) { Say ("  Drive: " + $l) $(if ($l.StartsWith('OK')) { 'Green' } else { 'DarkYellow' }) }
+        if ($state -in @('READY') -and $EXEC) {
+            $new = New-Object System.Collections.ArrayList
+            foreach ($e in $have.Values) { [void]$new.Add($e) }
+            $failed = $false
+            foreach ($i in $todo) {
+                $rel = $w.Rel[$i]; $sp = Join-Path $src ($rel -replace '/', '\'); $dp = Join-Path $dest ($rel -replace '/', '\'); $tp = $dp + '.part'
+                $t1 = Get-Date
+                $h = [MC]::CopyHash($sp, $tp)     # md5, sha256, bytes of the SOURCE stream
+                $badWhy = $null
+                if ([long]$h[2] -ne $w.Size[$i]) { $badWhy = "size changed while copying ($($h[2]) vs $($w.Size[$i]))" }
+                elseif ($refMd5.ContainsKey($rel) -and $refMd5[$rel].md5 -ne $h[0]) { $badWhy = 'source MD5 differs from the dataops md5 manifest' }
+                elseif ($refSha.ContainsKey($rel) -and $refSha[$rel] -ne $h[1]) { $badWhy = 'source SHA-256 differs from the published SHA256SUMS' }
+                if (-not $badWhy) { $dh = [MC]::Sha256File($tp); if ($dh -ne $h[1]) { $badWhy = 'copy SHA-256 differs from source stream SHA-256 (disk error?)' } }
+                if ($badWhy) { Say ("  FAIL {0}: {1}" -f $rel, $badWhy) 'Red'; Jrn 'COPY_FAIL' $sp 0 $badWhy; [void]$script:Errs.Add("$sp : $badWhy"); try { Remove-Item -LiteralPath $tp -Force } catch { }; $failed = $true; break }
+                [MC]::MoveFile($tp, $dp)
+                [void]$new.Add([pscustomobject]@{ rel = $rel; size = [long]$h[2]; sha256 = $h[1]; md5 = $h[0]; ref = $(if ($refSha.ContainsKey($rel)) { 'sha256sums' } elseif ($refMd5.ContainsKey($rel)) { 'md5-manifest' } else { 'copy-only' }) })
+                Jrn 'COPIED' $dp ([long]$h[2]) ("sha256=" + $h[1])
+                Say ("  ok  {0}  {1}  {2:N0}s  sha256 {3}" -f $rel, (GB ([long]$h[2])), ((Get-Date) - $t1).TotalSeconds, $h[1].Substring(0, 12)) 'Green'
+            }
+            if (-not $failed) {
+                $receipt = [ordered]@{ schema = 'cache_receipt/1'; name = $k.name; source = $src; cache = $dest; created = (Get-Date).ToUniversalTime().ToString('o'); complete = (-not $incomplete); incomplete_notes = $notes; files = @($new | Sort-Object rel); bytes = [long](($new | Measure-Object size -Sum).Sum) }
+                [System.IO.File]::WriteAllText((Join-Path $dest 'CACHE_RECEIPT.json'), ($receipt | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+                $state = if ($incomplete) { 'COPIED_PARTIAL' } else { 'COPIED' }
+            } else { $state = 'COPY_FAILED' }
+        } elseif ($state -eq 'READY') { Say ("  WOULD copy {0} files ({1}) with inline SHA-256 + re-read verification" -f $todo.Count, (GB $need)) 'Cyan' }
+        [void]$summary.Add([pscustomobject]@{ Name = $k.name; State = $state; Bytes = $need; Note = (@($notes) -join '; ') ; Old = $k.old_policy; DriveOk = $driveOk; Src = $src; K = $k })
+        Jrn ('STAGE2_' + $state) $src $need ($notes -join '; ')
+    }
+    Say ''
+    Say '--- STAGE 2 SUMMARY ---' 'Cyan'
+    foreach ($s in $summary) { Say ("  {0,-24} {1,-18} {2,12}  {3}" -f $s.Name, $s.State, (GB $s.Bytes), $s.Note) 'White' }
+    $script:S2 = @($summary | ForEach-Object { [ordered]@{ name = $_.Name; state = $_.State; bytes = $_.Bytes; note = $_.Note; old_policy = $_.Old; drive_ok = $_.DriveOk; source = $_.Src } })
+    Say ('registry snippet to apply after the copies verify: ' + (Join-Path $OutDir 'data_registry_cache.toml')) 'Cyan'
+    # ---- 2b: remove old copies (separately confirmed) ----
+    if ($RemoveOld) {
+        Say ''
+        Say '=== STAGE 2b: remove OLD copies (cache verified + Drive verified + not referenced) ===' 'Cyan'
+        foreach ($s in $summary) {
+            if ($null -eq $s.K) { continue }
+            $k = $s.K; $src = $s.Src
+            if ($k.old_policy -ne 'remove') { Say ("  [{0}] keep: old copy lives in the clean tree / is frozen evidence (old_policy={1})" -f $k.name, $k.old_policy) 'DarkGray'; continue }
+            if (-not (Test-Path -LiteralPath $src)) { Say ("  [{0}] source already gone" -f $k.name) 'DarkGray'; continue }
+            $dest = NP (Join-Path $CacheRoot ([string]$k.cache))
+            $rc = Get-CacheReceipt $dest
+            if (-not $rc -or -not $rc.complete) { Say ("  [{0}] HOLD: no complete cache receipt" -f $k.name) 'Yellow'; continue }
+            $driveOk2 = $false; $driveWhy = @()
+            foreach ($pf in @($k.drive)) { $pe = Test-DrivePackProof $k $pf; if ($pe.ok) { $driveOk2 = $true; $driveWhy += $pe.desc; break } else { $driveWhy += ("{0}: {1}" -f $pe.desc, $pe.why) } }
+            if (-not $driveOk2) { Say ("  [{0}] HOLD: no Drive copy verified yet ({1})" -f $k.name, ($driveWhy -join ' | ')) 'Yellow'; continue }
+            $refs = if ($SkipReferenceScan) { @() } else { Get-Refs $src }
+            if ($refs.Count) { Say ("  [{0}] HOLD: still referenced by active code/config: {1}  (apply data_registry_cache.toml first)" -f $k.name, ($refs -join ' | ')) 'Yellow'; continue }
+            $pr = Find-ProcUsing $src; if ($pr) { Say ("  [{0}] HOLD: in use by {1}" -f $k.name, $pr) 'Yellow'; continue }
+            # cache copy must re-verify against the receipt (size always; SHA-256 re-hash with -Execute)
+            $bad = 0
+            foreach ($e in @($rc.files)) {
+                $dp = Join-Path $dest ($e.rel -replace '/', '\'); $sp = Join-Path $src ($e.rel -replace '/', '\')
+                if (-not (Test-Path -LiteralPath $dp -PathType Leaf) -or (Get-Item -LiteralPath $dp -Force).Length -ne [long]$e.size) { $bad++; continue }
+                if (Test-Path -LiteralPath $sp -PathType Leaf) { if ((Get-Item -LiteralPath $sp -Force).Length -ne [long]$e.size) { $bad++; continue } }
+                if ($EXEC -and ([MC]::Sha256File($dp)) -ne $e.sha256) { $bad++ }
+            }
+            $wsrc = [MC]::Walk($src, $true)
+            $extra = @($wsrc.Rel | Where-Object { $rel = $_; -not (@($rc.files) | Where-Object { $_.rel -eq $rel }) })
+            if ($bad -gt 0) { Say ("  [{0}] HOLD: cache copy fails verification ({1} file(s))" -f $k.name, $bad) 'Red'; continue }
+            if ($extra.Count) { Say ("  [{0}] HOLD: {1} file(s) in the old copy are not in the cache (e.g. {2})" -f $k.name, $extra.Count, $extra[0]) 'Yellow'; continue }
+            if ($wsrc.Reparse.Count) { Say ("  [{0}] HOLD: junction inside" -f $k.name) 'Yellow'; continue }
+            $sz = $wsrc.Bytes
+            if (-not $EXEC) { Say ("  [{0}] WOULD remove old copy {1}  ({2})" -f $k.name, $src, (GB $sz)) 'Cyan'; Jrn 'WOULD_REMOVE_OLD' $src $sz ''; continue }
+            if (-not $Yes) { $ans = Read-Host ("  remove OLD copy {0} ({1})? type REMOVE-OLD" -f $src, (GB $sz)); if ($ans -cne 'REMOVE-OLD') { Say '  skipped.' 'Yellow'; continue } }
+            $errs = New-Object 'System.Collections.Generic.List[string]'
+            $freed = [MC]::DeleteTree($src, $errs)
+            $script:Freed[(DriveOf $src)] += $freed
+            Jrn 'REMOVED_OLD' $src $freed ($k.name)
+            Record-Removed ([pscustomobject]@{ Path = $src; Type = 'keep-local-old'; Files = $wsrc.Rel.Count; Drive = @("cache:$dest") }) $freed
+            Say ("  [{0}] removed old copy ({1})" -f $k.name, (GB $freed)) 'Green'
+            Prune-EmptyParents $src
+        }
+    }
+    Finish-Stage 2 $freeBefore
+}
+
+# =====================================================================================================
+#  Stage 3: read-only pre-flight + exact git commands for the single-work-tree switch
+# =====================================================================================================
+function Invoke-Stage3 {
+    Say '=== STAGE 3: single work tree switch - READ-ONLY pre-flight (nothing is changed) ===' 'Cyan'
+    $freeBefore = @{}; foreach ($d in 'C', 'D', 'E', 'G') { $freeBefore[$d] = FreeBytes $d }
+    $cur = (GitX $MainRepo @('rev-parse', '--abbrev-ref', 'HEAD')).out.Trim()
+    $headSha = (GitX $MainRepo @('rev-parse', 'HEAD')).out.Trim()
+    $cleanSha = (GitX $MainRepo @('rev-parse', 'wms/clean-int')).out.Trim()
+    $mb = (GitX $MainRepo @('merge-base', 'HEAD', 'wms/clean-int')).out.Trim()
+    $stat = (GitX $MainRepo @('status', '--porcelain=v1', '--untracked-files=no')).out -split "`n" | Where-Object { $_.Trim() }
+    $untr = @((GitX $MainRepo @('ls-files', '--others', '--exclude-standard', '-z')).out -split "`0" | Where-Object { $_ })
+    $sealedUntr = @($untr | Where-Object { $_ -match '^(sealed|CAL|HOLDOUT)(/|$)' -or $_ -match 'chunk-?5' -and $_ -notmatch '\.(py|json|md|txt)$' })
+    $addList = @($untr | Where-Object { $_ -notmatch '^(sealed)(/|$)' })
+    Say ("main tree : branch {0} @ {1}" -f $cur, $headSha.Substring(0, 9))
+    Say ("clean-int : wms/clean-int @ {0}   merge-base {1}" -f $cleanSha.Substring(0, 9), $mb.Substring(0, 9))
+    Say ("main tree dirty: {0} tracked modified/deleted, {1} untracked path entries ({2} outside sealed/)" -f $stat.Count, $untr.Count, $addList.Count)
+    if (($untr | Where-Object { $_ -match '^sealed/' }).Count) { Say "WARNING: sealed/ is UNTRACKED and NOT git-ignored in the main tree: NEVER run 'git add -A' / 'git add .' there (it would stage ~60 GB of sealed data). Use the explicit list below." 'Red' }
+    # collisions
+    $both = New-Object System.Collections.ArrayList; $coll = New-Object System.Collections.ArrayList
+    foreach ($l in $stat) { $f = $l.Substring(3).Trim(); $q = GitX $MainRepo @('diff', '--quiet', $mb, 'wms/clean-int', '--', $f); if ($q.rc -ne 0) { [void]$both.Add($f) } }
+    foreach ($f in $addList) { $q = GitX $MainRepo @('cat-file', '-e', ('wms/clean-int:' + $f)); if ($q.rc -eq 0) { [void]$coll.Add($f) } }
+    function PatchLines($txt) { (($txt -split "`n") | Where-Object { ($_.StartsWith('+') -or $_.StartsWith('-')) -and -not $_.StartsWith('+++') -and -not $_.StartsWith('---') } | ForEach-Object { $_.TrimEnd("`r") }) -join "`n" }
+    $bothSame = New-Object System.Collections.ArrayList; $bothDiff = New-Object System.Collections.ArrayList
+    foreach ($f in $both) {
+        $pa = PatchLines (GitX $MainRepo @('diff', '--ignore-cr-at-eol', '--no-color', $mb, '--', $f)).out
+        $pb = PatchLines (GitX $MainRepo @('diff', '--ignore-cr-at-eol', '--no-color', $mb, 'wms/clean-int', '--', $f)).out
+        if ($pa -eq $pb) { [void]$bothSame.Add($f) } else { [void]$bothDiff.Add($f) }
+    }
+    $collSame = New-Object System.Collections.ArrayList; $collDiff = New-Object System.Collections.ArrayList
+    $tmpb = Join-Path $OutDir '_blob_tmp.txt'
+    foreach ($f in $coll) {
+        $bl = GitX $MainRepo @('show', ('wms/clean-int:' + $f))
+        [System.IO.File]::WriteAllText($tmpb, $bl.out, (New-Object System.Text.UTF8Encoding($false)))
+        $dd = GitX $MainRepo @('diff', '--no-index', '--ignore-cr-at-eol', '--quiet', '--', $tmpb, (Join-Path $MainRepo $f))
+        if ($dd.rc -eq 0) { [void]$collSame.Add($f) } else { [void]$collDiff.Add($f) }
+    }
+    if (Test-Path -LiteralPath $tmpb) { Remove-Item -LiteralPath $tmpb -Force }
+    Say ("files modified in the dirty main tree AND changed on wms/clean-int since the merge-base: {0}  (identical edits on both sides [planner sync d795192 etc.]: {1}; DIFFERENT edits = real conflicts: {2})" -f $both.Count, $bothSame.Count, $bothDiff.Count) $(if ($bothDiff.Count) { 'Yellow' } else { 'Green' })
+    foreach ($f in $bothDiff) { Say ("     differs: " + $f) 'Yellow' }
+    Say ("untracked main-tree files that ALSO exist (tracked) on wms/clean-int: {0}  (byte-identical ignoring CR: {1}; DIFFERENT = add/add conflict: {2})" -f $coll.Count, $collSame.Count, $collDiff.Count) $(if ($collDiff.Count) { 'Yellow' } else { 'Green' })
+    foreach ($f in $collDiff) { Say ("     differs: " + $f) 'Yellow' }
+    $shared = @('docs/EXPERIMENT_HISTORY.md', 'protocols/experiment_history.json', 'docs/OPEN_QUESTIONS.md', 'docs/RESULTS_SUMMARY.md', 'docs/INDEX.md', 'docs/ROUTE.md', 'AGENTS.md', 'README.md', 'tools/experiment_history.py', 'protocols/source_verification_report.json')
+    Say 'shared records (3-way merge needed where BOTH sides changed):'
+    foreach ($f in $shared) {
+        $a = (GitX $MainRepo @('diff', '--quiet', $mb, '--', $f)).rc -ne 0
+        $b = (GitX $MainRepo @('diff', '--quiet', $mb, 'wms/clean-int', '--', $f)).rc -ne 0
+        $act = if ($a -and $b) { 'BOTH changed -> 3-way merge' } elseif ($a) { 'only main tree changed -> keep main version' } elseif ($b) { 'only clean-int changed -> keep clean version' } else { 'unchanged' }
+        Say ("   {0,-46} {1}" -f $f, $act) $(if ($a -and $b) { 'Yellow' } else { 'Gray' })
+    }
+    # git switch/checkout silently overwrites IGNORED untracked files that collide with tracked files of the target branch
+    $trk = @((GitX $MainRepo @('ls-tree', '-r', '--name-only', 'wms/clean-int')).out -split "`n" | ForEach-Object { $_.TrimEnd("`r") } | Where-Object { $_ })
+    $ignAll = @((GitX $MainRepo @('ls-files', '--others', '--ignored', '--exclude-standard', '-z') 900).out -split "`0" | Where-Object { $_ })
+    $ignSet = @{}; foreach ($f in $ignAll) { $ignSet[$f] = 1 }
+    $over = @($trk | Where-Object { $ignSet.ContainsKey($_) })
+    $overDiff = New-Object System.Collections.ArrayList
+    $tmpb2 = Join-Path $OutDir '_blob_tmp2.txt'
+    foreach ($f in $over) {
+        $bl = GitX $MainRepo @('show', ('wms/clean-int:' + $f))
+        [System.IO.File]::WriteAllText($tmpb2, $bl.out, (New-Object System.Text.UTF8Encoding($false)))
+        $dd = GitX $MainRepo @('diff', '--no-index', '--ignore-cr-at-eol', '--quiet', '--', $tmpb2, (Join-Path $MainRepo $f))
+        if ($dd.rc -ne 0) { [void]$overDiff.Add($f) }
+    }
+    if (Test-Path -LiteralPath $tmpb2) { Remove-Item -LiteralPath $tmpb2 -Force }
+    Say ("ignored local files that 'git switch' would silently OVERWRITE with the tracked version: {0}  (content differs: {1})" -f $over.Count, $overDiff.Count) $(if ($overDiff.Count) { 'Yellow' } else { 'Green' })
+    foreach ($f in ($overDiff | Select-Object -First 15)) { Say ("     would be replaced: " + $f + "   (copy it aside first if the local version is newer)") 'Yellow' }
+    $u8 = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllLines((Join-Path $OutDir 'switch_overwrite_list.txt'), [string[]]@($overDiff), $u8)
+    [System.IO.File]::WriteAllLines((Join-Path $OutDir 'switch_untracked_to_add.txt'), [string[]]@($addList), $u8)
+    [System.IO.File]::WriteAllLines((Join-Path $OutDir 'switch_conflicts.txt'), [string[]]@(@($bothDiff) + @($collDiff)), $u8)
+    Say ("lists written: switch_overwrite_list.txt ({0}), switch_untracked_to_add.txt ({1}), switch_conflicts.txt ({2}) in {3}" -f $overDiff.Count, $addList.Count, ($bothDiff.Count + $collDiff.Count), $OutDir) 'DarkGray'
+    $big = @($addList | Where-Object { (Test-Path -LiteralPath (Join-Path $MainRepo $_)) -and ((Get-Item -LiteralPath (Join-Path $MainRepo $_) -Force).Length -gt 5MB) })
+    if ($big.Count) { Say ("WARNING: {0} untracked file(s) > 5 MB would be committed by an explicit add (e.g. {1}); exclude them" -f $big.Count, $big[0]) 'Red' }
+    Say ''
+    Say 'running processes that mention E:\research-dense or E:\rd-wt (pause these before the switch):' 'Cyan'
+    $pl = @(); try { $pl = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and ($_.CommandLine -match 'research-dense|rd-wt') -and $_.ProcessId -ne $PID -and $_.Name -notin @('bash.exe', 'git.exe', 'rg.exe', 'conhost.exe', 'cmd.exe') -and $_.CommandLine -notmatch 'MORNING_CLEANUP' }) } catch { }
+    foreach ($p in ($pl | Select-Object -First 25)) { Say ("   pid {0,6} {1,-14} {2}" -f $p.ProcessId, $p.Name, $p.CommandLine.Substring(0, [Math]::Min(150, $p.CommandLine.Length))) 'DarkYellow' }
+    if (-not $pl.Count) { Say '   none' 'Green' }
+    Say ''
+    Say 'worktrees registered to the main repo that still exist (git worktree list): ' 'Cyan'
+    $wl = (GitX $MainRepo @('worktree', 'list')).out -split "`n" | Where-Object { $_.Trim() }
+    Say ("   {0} registered (run Stage 1 first to retire finished ones)" -f $wl.Count)
+    Say ''
+    $ts = Get-Date -Format 'yyyyMMdd'
+    Say 'EXACT STEPS (also in SWITCH_OVER.md). Run them yourself, one by one; this script runs none of them:' 'Cyan'
+    $steps = @(
+        "# 0. PAUSE: all agent sessions + wtclean/dataops uploaders that write under E:\research-dense or E:\rd-wt (list above).",
+        "# 0b. copy aside the ignored local files that the switch would overwrite with different content (list: switch_overwrite_list.txt):",
+        "Get-Content E:\research-dense\tmp\morning\switch_overwrite_list.txt | ForEach-Object { `$d = Split-Path (Join-Path E:\research-dense\tmp\morning\pre_switch_overwrite_backup `$_) -Parent; New-Item -ItemType Directory -Force `$d | Out-Null; Copy-Item (Join-Path E:\research-dense `$_) (Join-Path E:\research-dense\tmp\morning\pre_switch_overwrite_backup `$_) }",
+        "# 1. checkpoint the dirty main tree on a NEW branch (never reset/clean/stash):",
+        "git -C E:\research-dense switch -c checkpoint-pre-clean-20261010",
+        "git -C E:\research-dense add -u",
+        "# explicit untracked list only (NOT sealed/, NOT git add -A):",
+        "git -c core.quotepath=false -C E:\research-dense ls-files --others --exclude-standard | Where-Object { `$_ -notmatch '^sealed/' } | ForEach-Object { git -C E:\research-dense add -- `$_ }",
+        "git -C E:\research-dense status --short | Where-Object { `$_ -notmatch '^(A|M|D|R)  ' -and `$_ -ne '?? sealed/' }    # must print NOTHING",
+        "git -C E:\research-dense commit -m `"checkpoint: dirty main tree before single-work-tree switch (2026-10-10)`"",
+        "# 2. build the merged clean line in the integration worktree (main tree untouched until it is verified):",
+        "git -C E:\rd-wt\ws-clean-int status --short                       # must be empty",
+        "git -C E:\rd-wt\ws-clean-int switch -c wms/clean-final",
+        "git -C E:\rd-wt\ws-clean-int mv tools/holdout_guard.py tools/data_guard.py   # frees the planner's tools/holdout_guard.py name",
+        "#    then edit tests/unit/data/test_data_layer.py: 'import holdout_guard as hg' -> 'import data_guard as hg'; commit",
+        "git -C E:\rd-wt\ws-clean-int merge --no-ff checkpoint-pre-clean-20261010     # resolve the files listed above; keep both sides of the ledgers",
+        "#    append '/sealed/' to .gitignore (sealed data is untracked and not ignored today); commit",
+        "# 3. free the branch in the integration worktree, then switch the main tree:",
+        "git -C E:\rd-wt\ws-clean-int switch --detach",
+        "git -C E:\research-dense switch wms/clean-final",
+        "# 4. register the cache copies (Stage 2) and commit:",
+        "#    merge E:\research-dense\tmp\morning\data_registry_cache.toml into configs\data_registry.toml, then git add/commit"
+    )
+    foreach ($s in $steps) { Say ("   " + $s) 'White' }
+    Jrn 'STAGE3_PREFLIGHT' $MainRepo 0 ("dirty={0} untracked={1} both={2} bothDiff={3} collisions={4} collDiff={5}" -f $stat.Count, $untr.Count, $both.Count, $bothDiff.Count, $coll.Count, $collDiff.Count)
+    Finish-Stage 3 $freeBefore
+}
+
+
+# =====================================================================================================
+#  -SelfTest: primitives on a scratch folder (no research file is touched)
+# =====================================================================================================
+function Invoke-SelfTest {
+    $base = Join-Path $OutDir ('_selftest_' + $RunStamp)
+    if (-not $base.StartsWith($OutDir, [StringComparison]::OrdinalIgnoreCase)) { throw 'selftest path guard' }
+    $script:pass = 0; $script:fail = 0
+    function T([string]$name, [bool]$ok) { if ($ok) { $script:pass++ ; Say ("  PASS  $name") 'Green' } else { $script:fail++; Say ("  FAIL  $name") 'Red' } }
+    Say "=== SELF TEST in $base ===" 'Cyan'
+    New-Item -ItemType Directory -Path $base -Force | Out-Null
+    $tree = Join-Path $base 'tree'; $target = Join-Path $base 'outside_target'
+    New-Item -ItemType Directory -Path (Join-Path $tree 'a\b') -Force | Out-Null
+    New-Item -ItemType Directory -Path $target -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $tree 'a\f1.txt') -Value 'one'
+    Set-ItemProperty -LiteralPath (Join-Path $tree 'a\f1.txt') -Name IsReadOnly -Value $true
+    Set-Content -LiteralPath (Join-Path $tree 'a\b\f2.txt') -Value 'two'
+    Set-Content -LiteralPath (Join-Path $target 'keepme.txt') -Value 'must survive'
+    New-Item -ItemType Junction -Path (Join-Path $tree 'a\b\jl') -Target $target | Out-Null
+    $w = [MC]::Walk($tree, $true)
+    T 'walker lists regular files and reports the junction without following it' (($w.Rel.Count -eq 2) -and ($w.Reparse.Count -eq 1) -and ($w.Reparse[0] -eq 'a/b/jl'))
+    $threw = $false
+    try { $e = New-Object 'System.Collections.Generic.List[string]'; [void][MC]::DeleteTree($tree, $e) } catch { $threw = $true }
+    T 'DeleteTree refuses a tree containing a junction and deletes NOTHING' ($threw -and (Test-Path -LiteralPath (Join-Path $tree 'a\f1.txt')) -and (Test-Path -LiteralPath (Join-Path $target 'keepme.txt')))
+    [MC]::SetProtected([string[]]@('sealed'), [string[]]@('chunk5'))
+    New-Item -ItemType Directory -Path (Join-Path $tree 'sealed') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $tree 'sealed\x.txt') -Value 'x'
+    Set-Content -LiteralPath (Join-Path $tree 'my_chunk5_file.txt') -Value 'x'
+    $w2 = [MC]::Walk($tree, $true)
+    T 'protected names are reported and not descended' (($w2.Sensitive.Count -eq 2) -and (-not ($w2.Rel -contains 'sealed/x.txt')))
+    [MC]::SetProtected([string[]]@($M.protected.exact), [string[]]@($M.protected.contains))
+    cmd /c rmdir (Join-Path $tree 'a\b\jl') | Out-Null
+    Remove-Item -LiteralPath (Join-Path $tree 'sealed') -Recurse -Force
+    Remove-Item -LiteralPath (Join-Path $tree 'my_chunk5_file.txt') -Force
+    T 'junction removed without touching its target' (-not (Test-Path -LiteralPath (Join-Path $tree 'a\b\jl')) -and (Test-Path -LiteralPath (Join-Path $target 'keepme.txt')))
+    $e = New-Object 'System.Collections.Generic.List[string]'
+    $n = [MC]::DeleteTree($tree, $e)
+    T 'DeleteTree removes a clean tree incl. a read-only file and returns the byte count' ((-not (Test-Path -LiteralPath $tree)) -and $n -gt 0 -and $e.Count -eq 0)
+    # long path
+    $lp = $base; for ($i = 0; $i -lt 12; $i++) { $lp = Join-Path $lp ('segment_number_{0:00}_abcdefghij' -f $i) }
+    [System.IO.Directory]::CreateDirectory([MC]::LP($lp)) | Out-Null
+    [System.IO.File]::WriteAllText([MC]::LP((Join-Path $lp 'deep.txt')), 'deep')
+    $e2 = New-Object 'System.Collections.Generic.List[string]'
+    $n2 = [MC]::DeleteTree((Join-Path $base 'segment_number_00_abcdefghij'), $e2)
+    T ('long path (>260) walk + delete ({0} chars)' -f $lp.Length) (($lp.Length -gt 260) -and ($n2 -eq 4) -and -not (Test-Path -LiteralPath (Join-Path $base 'segment_number_00_abcdefghij')))
+    # copy + hash
+    $src = Join-Path $base 'src.bin'; $dst = Join-Path $base 'sub dir\dst.bin'
+    $buf = New-Object byte[] (20MB); (New-Object System.Random 7).NextBytes($buf); [System.IO.File]::WriteAllBytes($src, $buf)
+    $h = [MC]::CopyHash($src, $dst)
+    $fh = (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash.ToLowerInvariant(); $fm = (Get-FileHash -LiteralPath $src -Algorithm MD5).Hash.ToLowerInvariant()
+    T 'CopyHash md5+sha256 of the stream equal Get-FileHash and the bytes are identical' (($h[0] -eq $fm) -and ($h[1] -eq $fh) -and ([long]$h[2] -eq 20MB) -and (([MC]::Sha256File($dst)) -eq $fh))
+    $bad = [MC]::VerifyHashes($base, [string[]]@('src.bin', 'sub dir/dst.bin'), [string[]]@($fm, ('0' * 32)), $false)
+    T 'VerifyHashes flags only the wrong file' (($bad.Count -eq 1) -and ($bad[0] -eq 'sub dir/dst.bin'))
+    # git worktree remove with a space in the path (scratch repo)
+    $repo = Join-Path $base 'scratch_repo'; New-Item -ItemType Directory -Path $repo -Force | Out-Null
+    [void](GitX $repo @('init', '-q')); [void](GitX $repo @('config', 'user.email', 'selftest@example.invalid')); [void](GitX $repo @('config', 'user.name', 'selftest'))
+    Set-Content -LiteralPath (Join-Path $repo 'a.txt') -Value 'a'
+    [void](GitX $repo @('add', 'a.txt')); [void](GitX $repo @('commit', '-q', '-m', 'init'))
+    $wt = Join-Path $base 'wt with space'
+    [void](GitX $repo @('worktree', 'add', '-q', '-b', 'selftest-branch', $wt))
+    Set-Content -LiteralPath (Join-Path $wt 'untracked.txt') -Value 'u'
+    $old = $script:MainRepo; $script:MainRepo = $repo
+    $fake = [pscustomobject]@{ Path = $wt; Type = 'worktree'; Drv = 'E'; Drive = @('selftest'); Files = 2; Status = 'ELIGIBLE'; Reason = ''; Snap = @{ bytes = 10; files = 2; maxm = 0 }; Wt = [pscustomobject]@{ cls = 'worktree' } }
+    $script:RemovedMap = Join-Path $base 'removed_selftest.jsonl'
+    $before = $script:Freed['E']
+    Remove-Eligible $fake
+    $script:MainRepo = $old
+    T 'Remove-Eligible removes a registered worktree via git worktree remove --force (path with space)' ((-not (Test-Path -LiteralPath $wt)) -and ($fake.Status -eq 'DELETED') -and (Test-Path -LiteralPath (Join-Path $repo 'a.txt')))
+    $script:Freed['E'] = $before
+    # partial removal around a protected entry (DeleteListed) + unlinking inside-tree junctions via Remove-Eligible
+    $pt = Join-Path $base 'partial'
+    New-Item -ItemType Directory -Path (Join-Path $pt 'keepdir\sealed') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $pt 'gone\sub') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $pt 'keepdir\sealed\secret.txt') -Value 'sealed data'
+    Set-Content -LiteralPath (Join-Path $pt 'keepdir\ok.txt') -Value 'ok'
+    Set-Content -LiteralPath (Join-Path $pt 'gone\sub\a.txt') -Value 'a'
+    Set-Content -LiteralPath (Join-Path $pt 'top.txt') -Value 't'
+    [MC]::SetProtected([string[]]@('sealed'), [string[]]@('chunk5'))
+    $wp = [MC]::Walk($pt, $true)
+    $e4 = New-Object 'System.Collections.Generic.List[string]'
+    $n4 = [MC]::DeleteListed($pt, [string[]]@($wp.Rel), $e4)
+    [MC]::SetProtected([string[]]@($M.protected.exact), [string[]]@($M.protected.contains))
+    T 'DeleteListed removes only the listed files, prunes emptied dirs, leaves the protected folder untouched' ((Test-Path -LiteralPath (Join-Path $pt 'keepdir\sealed\secret.txt')) -and -not (Test-Path -LiteralPath (Join-Path $pt 'gone')) -and -not (Test-Path -LiteralPath (Join-Path $pt 'top.txt')) -and -not (Test-Path -LiteralPath (Join-Path $pt 'keepdir\ok.txt')) -and $e4.Count -eq 0 -and $n4 -gt 0)
+    $sc = Join-Path $base 'scratch_item'
+    New-Item -ItemType Directory -Path (Join-Path $sc 'real') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $sc 'real\f.txt') -Value 'f'
+    New-Item -ItemType Junction -Path (Join-Path $sc 'alias') -Target (Join-Path $sc 'real') | Out-Null
+    $saveRoots = $M.protected.roots; $saveAllowed = $M.allowed_roots
+    $M.protected.roots = @(); $M.allowed_roots = @($base)
+    $fake2 = [pscustomobject]@{ Path = $sc; Type = 'item'; Drv = 'E'; Drive = @('selftest'); Files = 1; Status = 'ELIGIBLE'; Reason = ''; Snap = @{ bytes = 4; files = 1; maxm = 0; links = @('alias') }; Wt = $null }
+    $w5 = [MC]::Walk($sc, $true)
+    $fake2.Snap.bytes = $w5.Bytes; $fake2.Snap.files = $w5.Rel.Count; $fake2.Snap.maxm = ($w5.MTicks | Measure-Object -Maximum).Maximum
+    Remove-Eligible $fake2
+    $M.protected.roots = $saveRoots; $M.allowed_roots = $saveAllowed
+    T 'Remove-Eligible unlinks an inside-tree junction (link only) and then removes the tree' ((-not (Test-Path -LiteralPath $sc)) -and ($fake2.Status -eq 'DELETED'))
+    $script:Freed['E'] = $before
+    # --- synthetic end-to-end evaluation of a mirror-backed item (the Drive listing is FAKED, rclone is not called) ---
+    $saveRoots2 = $M.protected.roots; $saveAllowed2 = $M.allowed_roots
+    $M.protected.roots = @(); $M.allowed_roots = @($base)
+    $saveSkipRef = $SkipReferenceScan; Set-Variable -Name SkipReferenceScan -Value $true -Scope Script
+    $saveDeep = $script:DeepNow; $script:DeepNow = $true
+    $saveRRoots = $script:RRoots; $saveRK = $script:RK; $script:RRoots = @{}; $script:RK = @{}
+    $script:RRoots['md5|selftest/evalitem'] = 2
+    $ev = Join-Path $base 'evalitem'
+    New-Item -ItemType Directory -Path (Join-Path $ev 'sub') -Force | Out-Null
+    [System.IO.File]::WriteAllText((Join-Path $ev 'a.txt'), 'alpha'); [System.IO.File]::WriteAllText((Join-Path $ev 'sub\b.txt'), 'bravo')
+    $ma = (Get-FileHash -LiteralPath (Join-Path $ev 'a.txt') -Algorithm MD5).Hash.ToLowerInvariant()
+    $mb2 = (Get-FileHash -LiteralPath (Join-Path $ev 'sub\b.txt') -Algorithm MD5).Hash.ToLowerInvariant()
+    $man = Join-Path $base 'evalitem.md5'
+    [System.IO.File]::WriteAllText($man, ("{0}  5  a.txt`n{1}  5  sub/b.txt`n" -f $ma, $mb2))
+    $script:RK['selftest/evalitem/a.txt'] = @{ size = 5; md5 = $ma }
+    $script:RK['selftest/evalitem/sub/b.txt'] = @{ size = 5; md5 = $mb2 }
+    function MkItem($ts) { [pscustomobject]@{ id = 'selftest'; path = $ev; backup_only = $false; special = $null; proofs = @([pscustomobject]@{ t = 'mirror'; receipt = 'selftest'; remote = 'gdrive:research-archive/selftest/evalitem'; manifest = $man; manifest_sha256 = $null; prefix = ''; ts = $ts }) } }
+    $future = (Get-Date).AddHours(1).ToString('o'); $past = (Get-Date).AddHours(-1).ToString('o')
+    $script:ManCache = @{}
+    $r1 = Eval-Item (MkItem $future)
+    T 'eval: intact local copy + matching (faked) Drive listing -> ELIGIBLE' ($r1.Status -eq 'ELIGIBLE')
+    $script:ManCache = @{}
+    $r2 = Eval-Item (MkItem $past)
+    T 'eval: files newer than the backup timestamp -> LOCAL_CHANGED (mtime guard)' ($r2.Status -eq 'LOCAL_CHANGED')
+    $script:ManCache = @{}
+    [System.IO.File]::WriteAllText((Join-Path $ev 'a.txt'), 'alpHa')
+    $r3 = Eval-Item (MkItem $future)
+    T 'eval: same-size content change is caught by the MD5 re-hash -> LOCAL_CHANGED' ($r3.Status -eq 'LOCAL_CHANGED' -and $r3.Reason -match 'MD5')
+    [System.IO.File]::WriteAllText((Join-Path $ev 'a.txt'), 'alpha')
+    $script:ManCache = @{}
+    $script:RK['selftest/evalitem/sub/b.txt'] = @{ size = 5; md5 = ('0' * 32) }
+    $r4 = Eval-Item (MkItem $future)
+    T 'eval: Drive copy with a different MD5 -> DRIVE_UNVERIFIED' ($r4.Status -eq 'DRIVE_UNVERIFIED')
+    $script:RK['selftest/evalitem/sub/b.txt'] = @{ size = 5; md5 = $mb2 }
+    $script:RK.Remove('selftest/evalitem/a.txt')
+    $script:ManCache = @{}
+    $r5 = Eval-Item (MkItem $future)
+    T 'eval: file absent on Drive -> DRIVE_UNVERIFIED' ($r5.Status -eq 'DRIVE_UNVERIFIED')
+    $script:RK['selftest/evalitem/a.txt'] = @{ size = 5; md5 = $ma }
+    [System.IO.File]::WriteAllText((Join-Path $ev 'extra.txt'), 'not in backup')
+    $script:ManCache = @{}
+    $r6 = Eval-Item (MkItem $future)
+    T 'eval: extra local file not in the backup manifest -> LOCAL_NOT_IN_BACKUP' ($r6.Status -eq 'LOCAL_NOT_IN_BACKUP')
+    Remove-Item -LiteralPath (Join-Path $ev 'extra.txt') -Force
+    New-Item -ItemType Directory -Path (Join-Path $ev 'sealed') -Force | Out-Null
+    [System.IO.File]::WriteAllText((Join-Path $ev 'sealed\x.txt'), 'x')
+    $script:ManCache = @{}
+    $r7 = Eval-Item (MkItem $future)
+    T 'eval: protected-name folder inside -> SENSITIVE_INSIDE (whole-folder removal refused)' ($r7.Status -eq 'SENSITIVE_INSIDE')
+    Set-Variable -Name RemoveAroundProtected -Value $true -Scope Script
+    $script:ManCache = @{}
+    $r8 = Eval-Item (MkItem $future)
+    T 'eval: -RemoveAroundProtected -> ELIGIBLE as PARTIAL (protected folder left alone)' ($r8.Status -eq 'ELIGIBLE' -and $r8.Snap.partial -and $r8.Snap.left -eq 1)
+    $fake3 = $r8; Remove-Eligible $fake3
+    T 'partial removal deleted only the verified files and left sealed\x.txt' ((Test-Path -LiteralPath (Join-Path $ev 'sealed\x.txt')) -and -not (Test-Path -LiteralPath (Join-Path $ev 'a.txt')) -and -not (Test-Path -LiteralPath (Join-Path $ev 'sub')))
+    Set-Variable -Name RemoveAroundProtected -Value $false -Scope Script
+    $script:RRoots = $saveRRoots; $script:RK = $saveRK; $script:DeepNow = $saveDeep
+    Set-Variable -Name SkipReferenceScan -Value $saveSkipRef -Scope Script
+    $M.protected.roots = $saveRoots2; $M.allowed_roots = $saveAllowed2
+    $script:Freed['E'] = $before
+    $script:Res.Clear()
+    # --- synthetic Stage 2: copy + SHA-256 receipt + corrupted-source detection + guarded removal of the old copy ---
+    $s2 = Join-Path $base 'stage2'
+    $srcDir = Join-Path $s2 'repo\data\pack_x'; $cacheDir = Join-Path $s2 'cache'
+    New-Item -ItemType Directory -Path $srcDir -Force | Out-Null
+    $b1 = New-Object byte[] (3MB); (New-Object System.Random 11).NextBytes($b1); [System.IO.File]::WriteAllBytes((Join-Path $srcDir 'one.npy'), $b1)
+    [System.IO.File]::WriteAllText((Join-Path $srcDir 'two.json'), '{"k": 2}')
+    $m1 = (Get-FileHash -LiteralPath (Join-Path $srcDir 'one.npy') -Algorithm MD5).Hash.ToLowerInvariant()
+    $m2 = (Get-FileHash -LiteralPath (Join-Path $srcDir 'two.json') -Algorithm MD5).Hash.ToLowerInvariant()
+    $h1 = (Get-FileHash -LiteralPath (Join-Path $srcDir 'one.npy') -Algorithm SHA256).Hash.ToLowerInvariant()
+    $s2man = Join-Path $s2 'pack_x.md5'
+    $len2 = (Get-Item -LiteralPath (Join-Path $srcDir 'two.json')).Length
+    [System.IO.File]::WriteAllText($s2man, ("# pack_manifest/1`n{0}`t{1}`tone.npy`n{2}`t{3}`ttwo.json`n" -f $m1, 3MB, $m2, $len2))
+    [System.IO.File]::WriteAllText((Join-Path $srcDir 'SHA256SUMS'), ("{0}  one.npy`n" -f $h1))
+    $repo2 = Join-Path $s2 'repo'
+    [void](GitX $repo2 @('init', '-q')); [void](GitX $repo2 @('config', 'user.email', 'selftest@example.invalid')); [void](GitX $repo2 @('config', 'user.name', 'selftest'))
+    [void](GitX $repo2 @('add', 'data')); [void](GitX $repo2 @('commit', '-q', '-m', 'x'))
+    $kfake = [pscustomobject]@{ name = 'pack_x'; source = $srcDir; cache = 'pack_x'; old_policy = 'remove'; note = ''; complete = $true; registry = 'pack_x'
+        manifest = $s2man; manifest_sha256 = $null; ref_sha256sums = 'SHA256SUMS'
+        drive = @([pscustomobject]@{ t = 'git_tracked'; repo = $repo2; rel = 'data/pack_x' }) }
+    $saveKeep = $M.keep_local; $M.keep_local = @($kfake)
+    $saveCache = $script:CacheRoot; $script:CacheRoot = $cacheDir
+    $saveExec = $script:EXEC; $script:EXEC = $true
+    $saveYes = $Yes; Set-Variable -Name Yes -Value $true -Scope Script
+    $saveMargin = $MarginGiB; Set-Variable -Name MarginGiB -Value 0 -Scope Script
+    $saveRef2 = $SkipReferenceScan; Set-Variable -Name SkipReferenceScan -Value $true -Scope Script
+    $saveOnly = $Only; Set-Variable -Name Only -Value @() -Scope Script
+    $saveSummary = $script:S2; $script:NoReport = $true
+    # (a) corrupt the source AFTER the manifest was taken: same size, different bytes -> must not be copied
+    $orig = [System.IO.File]::ReadAllBytes((Join-Path $srcDir 'one.npy')); $bad1 = $orig.Clone(); $bad1[100] = ($bad1[100] -bxor 0xFF)
+    [System.IO.File]::WriteAllBytes((Join-Path $srcDir 'one.npy'), $bad1)
+    $script:ManCache = @{}
+    $freeSave = @{}; foreach ($d in 'C', 'D', 'E', 'G') { $freeSave[$d] = 0 }
+    Invoke-Stage2 *> $null
+    T 'stage 2: source that disagrees with the md5 manifest / SHA256SUMS is refused (no final file, no receipt)' ((-not (Test-Path -LiteralPath (Join-Path $cacheDir 'pack_x\one.npy'))) -and (-not (Test-Path -LiteralPath (Join-Path $cacheDir 'pack_x\CACHE_RECEIPT.json'))) -and ($script:S2[0].state -eq 'COPY_FAILED'))
+    # (b) restore the source: copy succeeds, receipt has the sha256 of every file
+    [System.IO.File]::WriteAllBytes((Join-Path $srcDir 'one.npy'), $orig)
+    $script:ManCache = @{}
+    Invoke-Stage2 *> $null
+    $rcp = Get-Content -LiteralPath (Join-Path $cacheDir 'pack_x\CACHE_RECEIPT.json') -Raw | ConvertFrom-Json
+    $e1 = @($rcp.files) | Where-Object { $_.rel -eq 'one.npy' }
+    T 'stage 2: verified copy lands in data_cache with a receipt holding the per-file SHA-256 (source untouched)' (($script:S2[0].state -eq 'COPIED') -and ($e1.sha256 -eq $h1) -and (Test-Path -LiteralPath (Join-Path $srcDir 'one.npy')) -and (([MC]::Sha256File((Join-Path $cacheDir 'pack_x\one.npy'))) -eq $h1))
+    # (c) old-copy removal needs cache receipt + Drive proof; the git_tracked proof is satisfied in the scratch repo
+    Set-Variable -Name RemoveOld -Value $true -Scope Script
+    $script:ManCache = @{}
+    Invoke-Stage2 *> $null
+    T 'stage 2b: old copy removed only after cache + Drive proof verify (cache copy remains)' ((-not (Test-Path -LiteralPath $srcDir)) -and (Test-Path -LiteralPath (Join-Path $cacheDir 'pack_x\one.npy')))
+    Set-Variable -Name RemoveOld -Value $false -Scope Script
+    $M.keep_local = $saveKeep; $script:CacheRoot = $saveCache; $script:EXEC = $saveExec
+    Set-Variable -Name Yes -Value $saveYes -Scope Script; Set-Variable -Name MarginGiB -Value $saveMargin -Scope Script
+    Set-Variable -Name SkipReferenceScan -Value $saveRef2 -Scope Script; Set-Variable -Name Only -Value $saveOnly -Scope Script
+    $script:S2 = $saveSummary; $script:NoReport = $false
+    $script:Freed['E'] = $before
+    # cleanup
+    $e3 = New-Object 'System.Collections.Generic.List[string]'
+    try { $wl = [MC]::Walk($base, $false); foreach ($rl in $wl.Reparse) { [void](Invoke-Proc 'cmd.exe' @('/c', 'rmdir', (Join-Path $base ($rl -replace '/', '\'))) 60) } } catch { }
+    try { [void][MC]::DeleteTree($base, $e3) } catch { Say ("cleanup problem: " + $_.Exception.Message) 'Red' }
+    T 'scratch folder removed' (-not (Test-Path -LiteralPath $base))
+    Say ("SELF TEST: {0} passed, {1} failed" -f $script:pass, $script:fail) $(if ($script:fail) { 'Red' } else { 'Green' })
+}
+
+# =====================================================================================================
+#  main
+# =====================================================================================================
+try {
+    if (-not (Test-Path -LiteralPath $Rclone)) { throw "rclone not found: $Rclone" }
+    Jrn 'RUN_START' ("stage$Stage") 0 ("execute=$EXEC deep=$DEEP only=" + ($Only -join ',') + " skip=" + ($Skip -join ','))
+    Say ("MORNING_CLEANUP  generated {0}   {1}" -f $M.generated, $(if ($EXEC) { 'EXECUTE MODE' } else { 'REPORT-ONLY (no -Execute): nothing will be changed' })) $(if ($EXEC) { 'Red' } else { 'Green' })
+    if (-not $SelfTest -and ($Stage -eq 1 -or $RemoveOld)) {
+        $a = Rcl @('lsf', '--max-depth', '1', 'gdrive:research-archive/') 120
+        if ($a.rc -ne 0) { throw ("rclone cannot reach gdrive:research-archive/ : " + ($a.err -replace '\s+', ' ')) }
+    }
+    if ($SelfTest) { Invoke-SelfTest; return }
+    switch ($Stage) {
+        1 { Invoke-Stage1 }
+        2 { Invoke-Stage2 }
+        3 { Invoke-Stage3 }
+    }
+} finally {
+    if ($script:JW) { $script:JW.Dispose() }
+}

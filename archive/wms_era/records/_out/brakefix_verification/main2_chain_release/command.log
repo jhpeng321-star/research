@@ -1,0 +1,32 @@
+test_actual_monitor_refuses_contaminated_timing_and_high_rss (__main__.BashGuards) ... ok
+test_bash_syntax (__main__.BashGuards) ... ok
+test_blackboxes_refuse_enabled_braking_in_env_and_extras (__main__.BashGuards) ... ok
+test_braking_terms_follow_effective_env_and_legacy_flags (__main__.BashGuards) ... ok
+test_default_preflight_never_trains_or_creates_output (__main__.BashGuards) ... ok
+test_disk_and_cpu_refusals_before_training (__main__.BashGuards) ... ok
+test_enabled_braking_gate_wiring_with_fixture_smoke (__main__.BashGuards) ... ok
+test_existing_outputs_and_stage_destinations_preserved (__main__.BashGuards) ... ok
+test_extra_flags_also_guarded (__main__.BashGuards) ... ok
+test_extras_cannot_override_teacher_or_budget (__main__.BashGuards) ... ok
+test_failed_smoke_preserved_without_full_or_retry (__main__.BashGuards) ... ok
+test_hybrid_history_and_explicit_braking_argv (__main__.BashGuards) ... ok
+test_invalid_braking_values_refused (__main__.BashGuards) ... ok
+test_invalid_model_mode_and_head_combinations (__main__.BashGuards) ... ok
+test_missing_sidecar_refuses (__main__.BashGuards) ... ok
+test_mode_head_and_model_extra_overrides_refused (__main__.BashGuards) ... ok
+test_model_argv_defaults_and_shared_split_mix (__main__.BashGuards) ... ok
+test_nonzero_workers_refused (__main__.BashGuards) ... ok
+test_required_variable_exact_name (__main__.BashGuards) ... ok
+test_runtime_exclusion_flag_required (__main__.BashGuards) ... ok
+test_selected_model_and_braking_flags_require_exact_help (__main__.BashGuards) ... ok
+test_supported_hybrid_modes_and_optional_monitor_share_contract (__main__.BashGuards) ... ok
+test_embedded_python_syntax (__main__.ContractTests) ... ok
+test_lf_and_fixed_four_stage_budget (__main__.ContractTests) ... ok
+test_smoke_requires_enabled_braking_in_shares_and_every_step (__main__.ContractTests) ... ok
+test_smoke_requires_six_steps_per_stage_and_valid_timing (__main__.ContractTests) ... ok
+test_stage_allowlist_and_exclusions (__main__.ContractTests) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 99.764s
+
+OK

@@ -1,0 +1,21 @@
+# WM-N1 dedicated GPU-box environment spec (REGISTRATION_WM_N1_AMENDMENT_1 A3).
+# Python 3.10 / 3.11 (matches the local dev box and evalh/model).
+#
+# The GPU boxes run torch >= 2.7, < 2.13 from the CUDA 12.8 (cu128) wheel index
+# so Blackwell-class sm_120 GPUs (vGPU-48GB, driver CUDA <= 13.2) are
+# supported.  The local CPU dev box is 2.12.1+cpu.  Install the CUDA wheel with
+# the PyTorch cu128 index:
+#
+#   python -m pip install --index-url https://download.pytorch.org/whl/cu128 \
+#       "torch>=2.7,<2.13"
+#
+# The extra-index below lets `pip install -r requirements-wmn1.txt` resolve the
+# same cu128 torch wheels while numpy/pandas/pyarrow still come from PyPI.
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+# Runtime imports used by the bundle queue and the real-member timing wrapper:
+python>=3.10,<3.12
+torch>=2.7,<2.13
+numpy>=1.24
+pandas==2.3.3
+pyarrow>=14.0

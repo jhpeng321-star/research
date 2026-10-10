@@ -1,0 +1,10 @@
+{
+ "amendment": "REGISTRATION_WM_N1_AMENDMENT_4_M1_TUNING.md",
+ "amendment_lf_sha256": "d392b30030f2b04ddb5db25c681cf92bca80fe1fc4e77d234303f7bbb810822f",
+ "status": "FROZEN",
+ "owner_approved": "2026-10-01 'approve amendment 4 with the split'",
+ "correction_note": "split procedure text corrected before release (ceil(n/2) per stratum gave 21/2 because most strata hold one world); no training had started; first committed sha 00ce3020 superseded",
+ "cal_split_file": "CAL_SPLIT_A4.json",
+ "cal_split_lf_sha256": "bc4e32f2b6efcf0e0165cb175a0b3ffaec0aaa6f419076463f9242ad90820d46",
+ "fixed_before_training": true
+}

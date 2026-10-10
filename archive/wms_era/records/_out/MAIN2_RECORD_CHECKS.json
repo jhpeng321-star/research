@@ -1,0 +1,25 @@
+{
+  "schema": "wms_main2_record_checks/1",
+  "scope": [
+    "WALL-C1-PREP-20261009",
+    "WM-S-TRAINSETUP-20261009"
+  ],
+  "baseline": "ec6f948",
+  "baseline_hard_errors": 1560,
+  "current_hard_errors": 1560,
+  "new_hard_errors": [],
+  "current_warnings": 7,
+  "summary_current": true,
+  "scoped_verify_sources": {
+    "status": "not_applicable",
+    "registered_sources": 0,
+    "expected_checks": 0,
+    "performed_checks": 0,
+    "messages": [
+      "no allowed sources registered"
+    ],
+    "report": null
+  },
+  "historical_outcome_sources_opened": 0,
+  "status": "passed"
+}

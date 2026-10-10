@@ -1,0 +1,21 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "code_ship",
+ "kind": "files",
+ "class": "DRIVE-ONLY",
+ "producer": "code snapshots shipped to boxes (regenerable from git)",
+ "restore": "copy to D:/rd-staging/wmn1_feat/",
+ "local": [
+  "D:/rd-staging/wmn1_feat/code_ship_02a2d8c.tar",
+  "D:/rd-staging/wmn1_feat/code_ship_aec0d8d.tar",
+  "D:/rd-staging/wmn1_feat/code_ship_d4f716b.tar"
+ ],
+ "drive": "gdrive:research-archive/data/staging/rd-staging/code_ship",
+ "bytes": 23838720,
+ "files": 3,
+ "md5_manifest": "receipts/md5/code_ship.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local MD5",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:48:48"
+}

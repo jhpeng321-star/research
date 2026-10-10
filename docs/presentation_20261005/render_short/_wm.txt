@@ -1,0 +1,16 @@
+
+# 1b how the world model works
+s = S("How our world model works now",
+      "Physics-informed rollout every 0.5 s: CAVs run the real controller code; human drivers get IDM car-following acceleration plus a learned neural correction (and MOBIL lane changes plus a learned adjustment); kinematic update with no overlaps. A separate effect head predicts the change in total delay vs native at 30 s to 9.5 min with uncertainty, reading the snapshot plus a 120 s CAV-motion summary.",
+      ["Snapshot -> per-step loop -> physics update", "a = a_IDM + correction", "Effect head output"])
+C = dict(color="1F3A5F", bold=True, anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+tb(s, 0.3, 1.5, 2.6, 2.6, ["RSU snapshot", "CAVs + the cars they detect", "(position, speed, lane)"], size=17, fill="EEF3F7", line="1F3A5F", **C)
+tb(s, 2.95, 2.45, 0.5, 0.6, "→", size=34, **C)
+tb(s, 3.5, 1.35, 5.9, 1.25, ["CAVs: the REAL controller code", "(native / PI / damping / wall) → exact acceleration"], size=17, fill="FFF4D6", line="C77700", **C)
+tb(s, 3.5, 2.8, 5.9, 1.45, ["Human drivers:", "a = a_IDM(speed, gap, closing speed) + Δa (neural correction)", "lane change = MOBIL + learned adjustment"], size=17, fill="D5EEF0", line="0E7C86", **C)
+tb(s, 9.45, 2.45, 0.5, 0.6, "→", size=34, **C)
+tb(s, 10.0, 1.5, 3.0, 2.6, ["Physics update", "speed += a·0.5 s", "position += speed·0.5 s", "no overlaps"], size=17, fill="EEF3F7", line="1F3A5F", **C)
+tb(s, 3.5, 4.3, 5.9, 0.5, "repeat every 0.5 s → imagined future (e.g. 120 s)", size=16, color="666666", anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+tb(s, 0.3, 4.95, 12.7, 1.1, ["The network only learns the CORRECTION to IDM: how real drivers deviate from the textbook rule.",
+   "Delay output: a separate effect head predicts the change in total delay vs native (30 s to 9.5 min, with uncertainty)."], size=18, color="1F3A5F")
+takeaway(s, "IDM gives the physics; the neural network learns how human drivers deviate from it", y=6.2, h=0.75)

@@ -1,0 +1,127 @@
+{
+ "dropped_by_reason": {
+  "eval_set_world": 279
+ },
+ "eval_sets": {
+  "seen_controls": {
+   "n_keys": 217,
+   "n_worlds": 31,
+   "path": "E:\\rd-wt\\ws-wallc1\\_out\\wallc1_states_v2\\seen_controls.json",
+   "sha256": "279816236c75e2c96b7ba9c7f927dc8b6eb28e50a99d970d281172b182a1b3ec"
+  },
+  "wall_pilot": {
+   "n_keys": 53,
+   "n_worlds": 27,
+   "path": "E:\\rd-wt\\ws-wallc1\\_out\\wallc1_states_v2\\wall_pilot.json",
+   "sha256": "3ecca61c6ac1f0afb6a83699aebbe7adc8a5c9f503bd69038ad385d9eec7d7bd"
+  },
+  "wall_same": {
+   "n_keys": 67,
+   "n_worlds": 29,
+   "path": "E:\\rd-wt\\ws-wallc1\\_out\\wallc1_states_v2\\wall_same.json",
+   "sha256": "b269964e44c28d7531cb190b9d708c1d67c544c16c6451e69ad4b7e366409669"
+  }
+ },
+ "excluded_keys": 1936,
+ "holdout_exclusions": {
+  "exact_match": true,
+  "n_excluded_worlds": 13,
+  "n_kept_disclosed_worlds": 2,
+  "path": "E:\\research-dense\\protocols\\holdout_exclusions.json",
+  "sha256": "04337b7ade64f40f1e8184fbac9082aae36cb5d3862ec813d66a535a77d210e6"
+ },
+ "inputs_sha256": {
+  "BUILD_RECEIPT.json": "1df0239cf0418a86f943ed7ce87d558a204a6aa3c61ca01e5162819aa032496c",
+  "excluded_runs_PI_wall.json": "715df7dc980feee5f5d239822f80df3b50b2b330c088fd3e95f8d33d679258dd",
+  "wall_removed_windows.json": "adbc9843e741097d8c8da1aec7059870dd440a981f4b81fb391fdce09e35d2a9",
+  "windows_train_noPI_noWall.json": "dafac02013822b6c33372091c0b6722de4dfa51fa753ee04003dad68ad8951f9",
+  "windows_val_noPI_noWall.json": "cb90e66dcf4ca2010f15b8230be728e9c687ede391ed817085ed0a6680f156ab"
+ },
+ "metadata_only": true,
+ "n_dropped_holdout_eval": 279,
+ "n_train": 911,
+ "n_train_before": 1172,
+ "n_val": 151,
+ "n_val_before": 169,
+ "overlap": {
+  "train_eval": [],
+  "train_eval_by_set": {
+   "seen_controls": [],
+   "wall_pilot": [],
+   "wall_same": []
+  },
+  "train_holdout_excluded": [],
+  "train_val": [],
+  "val_eval": [],
+  "val_holdout_excluded": []
+ },
+ "removed_by_reason_lpwo_v2": {
+  "wall_engaged": 130,
+  "wall_label_not_engaged": 9,
+  "wall_owned_not_assembled": 16
+ },
+ "role_violations_non_train": 0,
+ "schema": "wm_s_lpwo_v3_receipt/1",
+ "sealed_never_read": [
+  "CAL",
+  "CAL_SPLIT_A4.json",
+  "HOLDOUT",
+  "chunk-5",
+  "J4B",
+  "INC1"
+ ],
+ "sha256": {
+  "eval_worlds.json": "f294e520207fb1d8f2a064ac6f4bef3d5d4fd6e3006235223fd6b538a359498c",
+  "excluded_runs_PI_wall_v3.json": "7c42ae2025b75ad6c0a8856d269312ddb952ae973b000b92a3293f9e476d0169",
+  "holdout_eval_dropped_windows.json": "e7b102fc1f48251f393b6e545c0fd74a6e769fa8d5b9e3248043409f7d174db8",
+  "windows_train_noPI_noWall.json": "eab66b55b1a7ae978cd2790b4f4d4179d360909129eb061efde57ed44c00ab3c",
+  "windows_val_noPI_noWall.json": "cd078ddc18dc22468055a6f508c97260a8ce0f016f2c284d761070ee38ca13cd"
+ },
+ "simulation_s": 0,
+ "source_root": "E:\\rd-wt\\ws-wallc1\\_out\\lpwo_v2",
+ "task": "PACKV3-FIX-01 LPWO v3 window lists (pack_v3 contributing)",
+ "train_counts": {
+  "by_batch": {
+   "chunk1": 78,
+   "chunk2": 234,
+   "chunk3": 264,
+   "chunk4": 252,
+   "truearms_chunk2": 39,
+   "truearms_chunk3": 44
+  },
+  "by_pack": {
+   "pack_damping": 173,
+   "pack_dspeed": 444,
+   "pack_v3": 294
+  },
+  "by_policy": {
+   "damping": 300,
+   "native": 167,
+   "trajectory": 444
+  },
+  "n_worlds": 155,
+  "total": 911
+ },
+ "val_counts": {
+  "by_batch": {
+   "chunk1": 10,
+   "chunk2": 60,
+   "chunk3": 30,
+   "chunk4": 36,
+   "truearms_chunk2": 10,
+   "truearms_chunk3": 5
+  },
+  "by_pack": {
+   "pack_damping": 28,
+   "pack_dspeed": 76,
+   "pack_v3": 47
+  },
+  "by_policy": {
+   "damping": 48,
+   "native": 27,
+   "trajectory": 76
+  },
+  "n_worlds": 24,
+  "total": 151
+ }
+}

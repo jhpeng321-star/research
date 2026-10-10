@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/fresh_validation_v1_r2",
+ "name": "fresh_validation_v1_r2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\fresh_validation_v1_r2",
+ "drive": "gdrive:research-archive/repo-evidence/runs/fresh_validation_v1_r2/fresh_validation_v1_r2.tar.zst",
+ "bytes": 92860,
+ "files": 80,
+ "archive_bytes": 3796,
+ "archive_md5": "417192416967a40c55b96aaaf97ed063",
+ "member_manifest": "manifests/members/runs_fresh_validation_v1_r2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 11.4,
+ "timestamp": "2026-10-10T03:52:39"
+}

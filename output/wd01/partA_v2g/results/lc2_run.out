@@ -1,0 +1,35 @@
+WD-01-PA2G-LC2: 32 TRAIN worlds x 5 configs, workers 3, param_set_id ba1fd93f0a21, variant cfg sha b6ed8ec8ff34
+byte-identity vs pre-change reference: 140 rows EQUAL (['w8623m2600p02t540', 'w8624m2600p02t420'])
+  [w1] [1/11] w8624m2600p02t420: 18 windows x 5 variants, 71.9s
+  [w2] [1/10] w8625m2700p02t240: 18 windows x 5 variants, 89.6s
+  [w1] [2/11] w8629m2000p02t420: 18 windows x 5 variants, 41.4s
+  [w2] [2/10] w8632m2000p02t240: 18 windows x 5 variants, 42.0s
+  [w0] [1/11] w8623m2600p02t540: 18 windows x 5 variants, 135.3s
+  [w1] [3/11] w8634m2400p02t300: 18 windows x 5 variants, 50.2s
+  [w2] [3/10] w8641m2700p05t300: 18 windows x 5 variants, 62.0s
+  [w0] [2/11] w8626m2700p02t300: 18 windows x 5 variants, 90.8s
+  [w1] [4/11] w8643m2600p05t240: 18 windows x 5 variants, 79.3s
+  [w2] [4/10] w8644m2700p05t240: 18 windows x 5 variants, 74.5s
+  [w0] [3/11] w8633m2000p02t480: 18 windows x 5 variants, 52.5s
+  [w1] [5/11] w8647m2000p05t300: 18 windows x 5 variants, 51.6s
+  [w0] [4/11] w8642m2600p05t420: 18 windows x 5 variants, 104.2s
+  [w1] [6/11] w8660m2700p10t300: 18 windows x 5 variants, 93.6s
+  [w2] [5/10] w8651m2400p05t420: 18 windows x 5 variants, 125.5s
+  [w0] [5/11] w8645m2400p05t480: 18 windows x 5 variants, 57.6s
+  [w2] [6/10] w8661m2600p10t240: 18 windows x 5 variants, 65.9s
+  [w1] [7/11] w8676m2700p20t360: 18 windows x 5 variants, 117.6s
+  [w0] [6/11] w8659m2700p10t420: 18 windows x 5 variants, 79.0s
+  [w2] [7/10] w8677m2700p20t360: 18 windows x 5 variants, 78.9s
+  [w0] [7/11] w8662m2600p10t300: 18 windows x 5 variants, 98.8s
+  [w2] [8/10] w8682m2400p20t240: 18 windows x 5 variants, 83.8s
+  [w1] [8/11] w8680m2600p20t300: 18 windows x 5 variants, 123.2s
+  [w0] [8/11] w8679m2400p20t540: 18 windows x 5 variants, 124.7s
+  [w1] [9/11] w8686m2600p20t240: 18 windows x 5 variants, 135.8s
+  [w2] [9/10] w8693m2600p40t420: 18 windows x 5 variants, 173.9s
+  [w1] [10/11] w8695m2400p40t480: 18 windows x 5 variants, 100.2s
+  [w0] [9/11] w8683m2400p20t540: 18 windows x 5 variants, 130.5s
+  [w2] [10/10] w8697m2700p40t240: 18 windows x 5 variants, 105.7s
+  [w1] [11/11] w8706m2400p40t360: 18 windows x 5 variants, 113.1s
+  [w0] [10/11] w8694m2600p40t240: 18 windows x 5 variants, 174.8s
+  [w0] [11/11] w8699m2700p40t240: 18 windows x 5 variants, 116.4s
+DONE WD-01-PA2G-LC2: 11200 rows, 12050 merge rows, wall 1228s

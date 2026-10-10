@@ -1,0 +1,16 @@
+{
+ "registration": "REGISTRATION_CHUNK5_TEST.md",
+ "registration_lf_sha256": "f8c7d760baedeb359c501cd90a3e2a599fb0ddfef390ea555cf304c38214b31e",
+ "status": "FROZEN",
+ "frozen_utc": "2026-09-30",
+ "seed_block": [
+  8707,
+  8736
+ ],
+ "seed_audit": {
+  "path": "output/campaign_stage1_v3/results_audit_chunk5/C5_SEED_AUDIT.json",
+  "sha256": "a28128572337a9cf677d5861b55d4c1103b6f70b161ccbff75aed00f7f592a67",
+  "verdict": "FRESH (reconstructor): 0 seeds.py hits (WM58 range end bound 8707 exclusive), 0 run dirs, 0 w87xx identities in 23,291 text files; HOLDOUT checked by name only"
+ },
+ "note": "Registration text not edited; freeze recorded here so the LF-sha256 is unchanged. Launch still requires owner AUTHORIZATION.json bound to this sha; outcomes sealed until the WM-N1 final test."
+}

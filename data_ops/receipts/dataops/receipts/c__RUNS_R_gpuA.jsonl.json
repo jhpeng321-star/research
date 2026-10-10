@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "c__RUNS_R_gpuA.jsonl",
+ "name": "RUNS_R_gpuA.jsonl",
+ "kind": "file",
+ "class": "ARCHIVE",
+ "producer": "C: runs manifest (gpuA)",
+ "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\RUNS_R_gpuA.jsonl",
+ "drive": "gdrive:research-archive/repo-evidence/c-drive/RUNS_R_gpuA.jsonl.tar.zst",
+ "bytes": 189948,
+ "files": 1,
+ "archive_bytes": 13025,
+ "archive_md5": "30dc3bdd490547d675fdf0347dbd0f62",
+ "member_manifest": "manifests/members/c__RUNS_R_gpuA.jsonl.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 9.2,
+ "timestamp": "2026-10-10T01:42:34"
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "wms_main2_archives/1",
+  "verified_against_head": "a5f27fe2a57c5efd4f7bf787bf6f15de206980de",
+  "code_tree": "579d753cf038183a91605120005c091e835a0af4",
+  "source": "HEAD^{tree}",
+  "fixed_mtime": "2026-10-09T00:00:00Z",
+  "archives": [
+    {
+      "path": "wm_n1_code.tar",
+      "sha256": "b465f58fa62d89df54ddadd664e05adbe4bf44ad7f3e6b858cec3eca78b46b08",
+      "bytes": 11939840,
+      "files": 762,
+      "shell_files_no_cr": [
+        "output/wd01/wm_n1/lpwo/wall_bb_chain.sh",
+        "output/wd01/wm_n1/wms/build_dense_truth.sh",
+        "output/wd01/wm_n1/wms/hybrid_chain.sh",
+        "output/wd01/wm_n1/wms/lanehead_chain.sh",
+        "output/wd01/wm_n1/wms/old_hist_chain.sh",
+        "output/wd01/wm_n1/wms/s2_chain.sh",
+        "output/wd01/wm_n1/wms/score_hetdata_recovery.sh",
+        "output/wd01/wm_n1/wms/wms_bb_chain.sh",
+        "output/wd01/wm_n1/wms/wms_chain.sh"
+      ],
+      "head_blob_identity": true
+    },
+    {
+      "path": "main2_chains.tar",
+      "sha256": "171f1668e5aeefe56ae57cba269ebb06ae393a351121be85692ef2506a790a92",
+      "bytes": 102400,
+      "files": 14,
+      "shell_files_no_cr": [
+        "_out/run2_chain.sh",
+        "_out/run3_chain.sh",
+        "_out/run_closed_loop.sh",
+        "_out/run_smoke.sh",
+        "_out/train_main_chain.sh",
+        "output/wd01/wm_n1/lpwo/wall_bb_chain.sh",
+        "output/wd01/wm_n1/wms/build_dense_truth.sh",
+        "output/wd01/wm_n1/wms/hybrid_chain.sh",
+        "output/wd01/wm_n1/wms/lanehead_chain.sh",
+        "output/wd01/wm_n1/wms/old_hist_chain.sh",
+        "output/wd01/wm_n1/wms/s2_chain.sh",
+        "output/wd01/wm_n1/wms/score_hetdata_recovery.sh",
+        "output/wd01/wm_n1/wms/wms_bb_chain.sh",
+        "output/wd01/wm_n1/wms/wms_chain.sh"
+      ],
+      "head_blob_identity": true
+    }
+  ]
+}

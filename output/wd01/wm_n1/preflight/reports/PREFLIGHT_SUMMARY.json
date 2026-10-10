@@ -1,0 +1,60 @@
+{
+ "schema": "wm_n1_preflight_summary/1",
+ "generated_utc": "2026-10-02T04:49:19Z",
+ "dry": false,
+ "n_gates": 6,
+ "n_pass": 6,
+ "n_fail": 0,
+ "all_passed": true,
+ "gates": {
+  "zero-residual": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "pos<= 0 m, speed<= 0 m/s, tol 1e-06, 1 window(s)",
+   "entry_points": [
+    "rollout2.equivalence.zero_residual_report"
+   ]
+  },
+  "ctrl-parity": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "all strategies within tolerance on >= 2 windows",
+   "entry_points": [
+    "ctrl.parity.strategy_parity_report"
+   ]
+  },
+  "label-leak": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "kinematics-only schema; output invariant to labels/flags/strategies",
+   "entry_points": [
+    "hdv.input_schema.main_config_schema",
+    "hdv.input_schema.perturbation_check"
+   ]
+  },
+  "overfit": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "final 0.023329 <= threshold 0.05 on 2 windows (cpu)",
+   "entry_points": [
+    "train.idea_a.overfit_report"
+   ]
+  },
+  "e2e-smoke": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "queue e2e stages complete on CPU; torch scan clean (version gate: ran)",
+   "entry_points": [
+    "bundle.e2e.run_e2e_smoke"
+   ]
+  },
+  "heldout-dryrun": {
+   "passed": true,
+   "verdict": "PASS",
+   "detail": "all 3 held-out splits build; excluded arms absent from train",
+   "entry_points": [
+    "train.idea_a.heldout_split_report"
+   ]
+  }
+ }
+}

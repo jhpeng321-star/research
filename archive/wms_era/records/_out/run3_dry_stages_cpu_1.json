@@ -1,0 +1,287 @@
+{
+  "gate": {
+    "dominance_limit": 100.0,
+    "failures": [
+      "position grew 14.1x from stage 10.0 to 30.0 (> 10x)"
+    ],
+    "growth_limit": 10.0,
+    "loss_share": {
+      "10.0": {
+        "conservation": 0.0,
+        "lane": 0.05857748384782562,
+        "position": 0.7738046166143634,
+        "speed": 0.16761789953781112,
+        "stability": 0.0,
+        "traffic": 0.0
+      },
+      "30.0": {
+        "conservation": 0.0,
+        "lane": 0.04180338080451846,
+        "position": 0.901350114093601,
+        "speed": 0.05684650510188048,
+        "stability": 0.0,
+        "traffic": 0.0
+      },
+      "60.0": {
+        "conservation": 0.0,
+        "lane": 0.0052089437772454734,
+        "position": 0.8992983555100043,
+        "speed": 0.09199100215759325,
+        "stability": 0.0,
+        "traffic": 0.0035016985551571023
+      },
+      "120.0": {
+        "conservation": 0.0,
+        "lane": 0.10898962549813838,
+        "position": 0.8315425632319146,
+        "speed": 0.014087112831273799,
+        "stability": 0.0,
+        "traffic": 0.04538069843867321
+      },
+      "300.0": {
+        "conservation": 0.0,
+        "lane": 0.0,
+        "position": 0.0,
+        "speed": 0.0,
+        "stability": 0.0,
+        "traffic": 1.0
+      }
+    },
+    "passed": false,
+    "per_stage": {
+      "10.0": {
+        "conservation": 0.0,
+        "lane": 0.18498097360134125,
+        "position": 8.416914939880371,
+        "speed": 0.4564742147922516,
+        "stability": 0.0,
+        "traffic": 0.0
+      },
+      "30.0": {
+        "conservation": 0.0,
+        "lane": 0.3429601788520813,
+        "position": 118.31667709350586,
+        "speed": 2.5423366725444794,
+        "stability": 0.0,
+        "traffic": 0.0
+      },
+      "60.0": {
+        "conservation": 0.0,
+        "lane": 0.2255945447832346,
+        "position": 101.52251625061035,
+        "speed": 1.2764935046434402,
+        "stability": 0.0,
+        "traffic": 0.009715250023873523
+      },
+      "120.0": {
+        "conservation": 0.0,
+        "lane": 0.5064693903550506,
+        "position": 205.3138451576233,
+        "speed": 1.8537495993077755,
+        "stability": 0.0,
+        "traffic": 0.022677323509318132
+      },
+      "300.0": {
+        "conservation": 0.0,
+        "lane": 0.889965006368584,
+        "position": 258.5440177991986,
+        "speed": 3.256429765471694,
+        "stability": 0.0,
+        "traffic": 0.1283407552788655
+      }
+    },
+    "ramp_end_s": 120.0,
+    "records": 5,
+    "stages": [
+      10.0,
+      30.0,
+      60.0,
+      120.0,
+      300.0
+    ],
+    "terms": [
+      "position",
+      "speed",
+      "lane",
+      "traffic",
+      "stability",
+      "conservation"
+    ]
+  },
+  "mean_step_seconds": 121.24888484000112,
+  "over_6gb": false,
+  "peak_rss_mb": 3797.1,
+  "per_stage_terms": {
+    "10.0": {
+      "conservation": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "lane": {
+        "finite": true,
+        "last": 0.18498097360134125,
+        "mean": 0.18498097360134125
+      },
+      "position": {
+        "finite": true,
+        "last": 8.416914939880371,
+        "mean": 8.416914939880371
+      },
+      "speed": {
+        "finite": true,
+        "last": 0.4564742147922516,
+        "mean": 0.4564742147922516
+      },
+      "stability": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "traffic": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      }
+    },
+    "120.0": {
+      "conservation": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "lane": {
+        "finite": true,
+        "last": 0.5064693903550506,
+        "mean": 0.5064693903550506
+      },
+      "position": {
+        "finite": true,
+        "last": 205.3138451576233,
+        "mean": 205.3138451576233
+      },
+      "speed": {
+        "finite": true,
+        "last": 1.8537495993077755,
+        "mean": 1.8537495993077755
+      },
+      "stability": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "traffic": {
+        "finite": true,
+        "last": 0.022677323509318132,
+        "mean": 0.022677323509318132
+      }
+    },
+    "30.0": {
+      "conservation": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "lane": {
+        "finite": true,
+        "last": 0.3429601788520813,
+        "mean": 0.3429601788520813
+      },
+      "position": {
+        "finite": true,
+        "last": 118.31667709350586,
+        "mean": 118.31667709350586
+      },
+      "speed": {
+        "finite": true,
+        "last": 2.5423366725444794,
+        "mean": 2.5423366725444794
+      },
+      "stability": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "traffic": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      }
+    },
+    "300.0": {
+      "conservation": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "lane": {
+        "finite": true,
+        "last": 0.889965006368584,
+        "mean": 0.889965006368584
+      },
+      "position": {
+        "finite": true,
+        "last": 258.5440177991986,
+        "mean": 258.5440177991986
+      },
+      "speed": {
+        "finite": true,
+        "last": 3.256429765471694,
+        "mean": 3.256429765471694
+      },
+      "stability": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "traffic": {
+        "finite": true,
+        "last": 0.1283407552788655,
+        "mean": 0.1283407552788655
+      }
+    },
+    "60.0": {
+      "conservation": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "lane": {
+        "finite": true,
+        "last": 0.2255945447832346,
+        "mean": 0.2255945447832346
+      },
+      "position": {
+        "finite": true,
+        "last": 101.52251625061035,
+        "mean": 101.52251625061035
+      },
+      "speed": {
+        "finite": true,
+        "last": 1.2764935046434402,
+        "mean": 1.2764935046434402
+      },
+      "stability": {
+        "finite": true,
+        "last": 0.0,
+        "mean": 0.0
+      },
+      "traffic": {
+        "finite": true,
+        "last": 0.009715250023873523,
+        "mean": 0.009715250023873523
+      }
+    }
+  },
+  "rc": 0,
+  "stages_present": [
+    10.0,
+    30.0,
+    60.0,
+    120.0,
+    300.0
+  ],
+  "updates": 5,
+  "valid_targets_last": 15014,
+  "wall_seconds": 1112.78
+}

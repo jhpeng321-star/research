@@ -1,0 +1,41 @@
+﻿{
+    "name":  "pl48",
+    "path":  "E:\\rd-wt\\pl48",
+    "class":  "plaindir",
+    "manual":  false,
+    "branch":  null,
+    "headBefore":  null,
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/pl48",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl48.txt",
+    "uploadCount":  405,
+    "uploadBytes":  5326985,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl48.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 03:06:57 NOTICE: Google drive root \u0027research-archive/worktrees/pl48\u0027: 0 differences found | 2026/10/10 03:06:57 NOTICE: Google drive root \u0027research-archive/worktrees/pl48\u0027: 405 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl48.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  3,
+    "skippedSensitiveSample":  [
+                                   "traffic_shepherd/planner/holdout.py",
+                                   "tests/test_holdout_exclusions.py",
+                                   "tests/planner/test_holdout_guard.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T02:59:35.8323692+08:00"
+}

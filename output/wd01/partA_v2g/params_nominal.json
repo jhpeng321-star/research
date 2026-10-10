@@ -1,0 +1,69 @@
+{
+ "param_set_name": "parta_v2g_nominal_treiber",
+ "note": "Single swappable nominal parameter set for Part A v2 general (PARTA_V2_GENERAL_DESIGN.md sections 2 and 7). Treiber textbook highway defaults, ONE set for ALL vehicles, no vType anywhere. param_set_id = sha256 of this file.",
+ "dt_s": 0.5,
+ "integrator": "ballistic_new_speed (v' = max(0, v + a*dt); s' = s + v'*dt; the project's measured SUMO integrator form, p3lib)",
+ "dynamics": {
+  "a_clip_mps2": [-9.0, 3.0]
+ },
+ "idm": {
+  "T_s": 1.5,
+  "a_max_mps2": 1.0,
+  "b_comf_mps2": 1.5,
+  "s0_m": 2.0,
+  "delta": 4,
+  "v0_source": "segment_speed_limit"
+ },
+ "mobil": {
+  "politeness_p": 0.5,
+  "b_safe_mps2": 4.0,
+  "accel_threshold_mps2": 0.1,
+  "keep_right_bias_mps2": 0.3,
+  "ego_gain_floor_mps2": 0.0,
+  "cooldown_s": 0.0,
+  "lc_min_speed_mps": 0.0,
+  "note": "OWNER FLAG (design deviation, 2026-09-30): cooldown_s (2.0), lc_min_speed_mps (1.0) and ego_gain_floor_mps2 were declared stability guards in the PA2G-A param set; they are NOT textbook IDM/MOBIL rules and are retired to 0 (OFF) in this nominal set per the owner's design-deviation rule. The PA2G-A churn was later traced to the swapped _neighbors leader/follower structure (engine.py), not to missing guards; the churn collapse needs no guard (test_engine_lc_regression pins no-ping-pong with cooldown 0). Textbook values (politeness_p, b_safe, threshold, keep-right bias) are unchanged."
+ },
+ "merge": {
+  "zone_s0_m": 378.66,
+  "zone_s1_m": 454.1,
+  "zone_len_m": 75.44,
+  "b_safe_base_mps2": 4.0,
+  "b_safe_end_mps2": 6.0,
+  "urgency_def": "u = 1 - (zone_s1 - s)/zone_len, clipped to [0,1]",
+  "incentive_rule": "MOBIL gain must exceed accel_threshold*(1-u); safety b_safe(u) = b_safe_base + (b_safe_end-b_safe_base)*u",
+  "gap_floor_m": 0.3,
+  "standing_obstacle_min_gap_m": 0.3
+ },
+ "vehicle": {
+  "length_m": 5.0,
+  "length_source": "nominal unless the recon sample provides length_m"
+ },
+ "cav_execution": {
+  "rule": "kin_idm (measured SUMO execution rule, partA_act results/exec_rule_fit.json): v' = max(0, min(clip(T, v - b_kin*dt, v + a_kin*dt), v + idm_acc_nominal*dt))",
+  "a_kin_max_mps2": 1.5,
+  "b_kin_max_mps2": 3.0,
+  "note": "kinematic clip bounds are the frozen CIRCLES adapter command bounds (partA_ctrl ACCEL_MIN/-3.0, ACCEL_MAX/1.5 mirrored positive); the IDM term uses this nominal set (no vType)"
+ },
+ "wall": {
+  "assemble_tol_mps": 1.0,
+  "pace_b_decel_mps2": 3.0,
+  "pace_a_accel_mps2": 1.5
+ },
+ "geometry": {
+  "source": "frozen WM-30 model-world geometry (p2C topology; test-anchored OFFSETS of p3lib)",
+  "lane_offsets_m": [2645.67, 2644.22, 378.66],
+  "lane_lengths_m": [3199.0, 3197.55, 454.1],
+  "lane_segment_starts_m": [[0.0, 2645.67, 2721.11], [0.0, 2644.22, 2719.66], [0.0, 378.66]],
+  "lane_segment_limits_mps": [[31.29, 31.29, 31.29], [31.29, 31.29, 31.29], [22.22, 31.29]],
+  "lane_names": ["main_left", "main_right", "accel"]
+ },
+ "rsu_zone_default": {
+  "source": "frozen recon_v6.rsu zone (MAIN_ZONE_D (0,800) on the two mainline lanes; all merge lanes 1487606179_{0,1,2}; the whole ramp 11553048#1_0; DOWN_ZONE_P (0,150) on the downstream lanes 1487606178_{0,1}), expressed per lane_phys in model-world s (half-open [min, max))",
+  "per_lane_s": [[1845.67, 2871.11], [1844.22, 2869.66], [0.0, 454.1]]
+ },
+ "free_road_flag": {
+  "rule_predictor": "a tracked vehicle with no same-lane leader in the sample is flagged when the zone downstream boundary of its lane lies short of the lane end (the missing leader may lie beyond the zone)",
+  "rule_eval_true_state": "exact: the vehicle's true same-lane leader at t (anywhere on the modelled road) is not in the zone-restricted initial state"
+ }
+}

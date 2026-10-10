@@ -1,0 +1,292 @@
+{
+  "checkpoint": "/root/autodl-tmp/wms_c1_20261006/work/full_struct/wm_s.pt",
+  "config": {
+    "batch_size": 8,
+    "black_box": false,
+    "checkpoint_residual": false,
+    "controller_embed_dim": 16,
+    "device": "cuda",
+    "epochs_per_stage": 1,
+    "exclude_window_list": [
+      "/root/autodl-tmp/wms_c1_20261006/work/lpo/pi_excluded_runs.json"
+    ],
+    "grad_clip": 1.0,
+    "history_features": 6,
+    "lane_weight": 1.0,
+    "lr": 0.001,
+    "n_controllers": 6,
+    "num_workers": 5,
+    "out_dir": "/root/autodl-tmp/wms_c1_20261006/work/full_struct",
+    "position_huber_delta_m": 5.0,
+    "position_weight": 1.0,
+    "seed": 101,
+    "speed_huber_delta_mps": 1.0,
+    "speed_weight": 1.0,
+    "stage_steps": [
+      2500,
+      2500,
+      1875,
+      1250
+    ],
+    "step_weight_decay": 0.01,
+    "steps_per_epoch": 2000,
+    "threads": 2,
+    "truncation_steps": 20,
+    "unroll_curriculum_s": [
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "val_batches": 8,
+    "val_window_list": "/root/autodl-tmp/wms_c1_20261006/work/lpo/windows_val.json",
+    "weight_decay": 0.0,
+    "window_list": "/root/autodl-tmp/wms_c1_20261006/work/lpo/windows_train_noPI.json"
+  },
+  "curriculum_s": [
+    10.0,
+    30.0,
+    60.0,
+    120.0
+  ],
+  "data": {
+    "exclude_keys_requested": 0,
+    "excluded_records": 0,
+    "horizon_steps": 240,
+    "identity_rows": 3,
+    "identity_sidecars": [
+      "/root/autodl-tmp/wms_c1_20261006/work/sidecars/identities",
+      "/root/autodl-tmp/wms_c1_20261006/work/sidecars/identities_dspeed",
+      "/root/autodl-tmp/wmn1_a10_data/identities_damping"
+    ],
+    "kept_by_pack": {
+      "pack_damping": 231,
+      "pack_dspeed": 560
+    },
+    "mode": "a11-index-window",
+    "n_corpus_windows": 3060,
+    "n_records": 791,
+    "overlays": [
+      "/root/autodl-tmp/wmn1_a9_data/labels_overlay_dspeed",
+      "/root/autodl-tmp/wmn1_a10_data/labels_overlay_damping"
+    ],
+    "packs": [
+      "/root/autodl-tmp/wmn1_m1_45c9032_20261003_A1/work/pack",
+      "/root/autodl-tmp/wmn1_a9_data/pack_dspeed",
+      "/root/autodl-tmp/wmn1_a10_data/pack_damping"
+    ],
+    "select_windows_requested": null,
+    "split": "TRAIN",
+    "start_shift_prob": 0.75,
+    "total_by_pack": {
+      "pack_damping": 231,
+      "pack_dspeed": 560
+    },
+    "window_filter": {
+      "dropped": 2269,
+      "exclude_window_list": [
+        "/root/autodl-tmp/wms_c1_20261006/work/lpo/pi_excluded_runs.json"
+      ],
+      "kept": 791,
+      "matched": 791,
+      "requested": 791,
+      "window_list": "/root/autodl-tmp/wms_c1_20261006/work/lpo/windows_train_noPI.json"
+    }
+  },
+  "device": "cuda",
+  "log": "/root/autodl-tmp/wms_c1_20261006/work/full_struct/train_log.jsonl",
+  "physics": {
+    "accel_max_mps2": 3.0,
+    "accel_min_mps2": -9.0,
+    "b_accept_base_mps2": 4.0,
+    "b_accept_end_mps2": 6.0,
+    "b_safe_base_mps2": 4.0,
+    "b_safe_end_mps2": 6.0,
+    "b_yield_max_mps2": 1.75,
+    "dt_s": 0.5,
+    "end_obstacle_range_m": 25.0,
+    "free_road_gap_m": 250.0,
+    "gap_floor_m": 0.3,
+    "lane_gap_m": 5.0,
+    "lane_incentive_mps": 0.4,
+    "lane_safe_gap_m": 6.0,
+    "max_gap_steps": 240,
+    "merge_cal": false,
+    "merge_lane": 2,
+    "merge_target_lane": 1,
+    "merge_zone_s0_m": 0.0,
+    "merge_zone_s1_m": 75.44,
+    "mobil_threshold_mps2": 0.1,
+    "open_road": true,
+    "speed_factor": 1.0,
+    "speed_limit_mps": 31.29,
+    "sumo_fidelity": true,
+    "sumo_idm": true,
+    "t_lead_base_s": 1.0,
+    "t_lead_end_s": 0.1,
+    "u_yield": 0.35,
+    "yield_lookahead_m": 120.0,
+    "yield_min_merger_speed_mps": 3.5,
+    "yield_min_speed_mps": 2.5
+  },
+  "schema": "wm_s_train_receipt/1",
+  "split": "TRAIN",
+  "steps": 8125,
+  "threads": 2,
+  "val_by_stage": [
+    {
+      "early_stop": false,
+      "mean_lane": 0.09739782686034838,
+      "mean_loss": 8.072460587819418,
+      "mean_position": 7.522812684377034,
+      "mean_speed": 0.45225000381469727,
+      "n_batches": 15,
+      "selection": false,
+      "stage_s": 10.0,
+      "step": 2500,
+      "unroll_steps": 20,
+      "valid_targets": 189914
+    },
+    {
+      "early_stop": false,
+      "mean_lane": 0.21399112269282342,
+      "mean_loss": 48.545754512151085,
+      "mean_position": 47.20573662122091,
+      "mean_speed": 1.1260266224543254,
+      "n_batches": 15,
+      "selection": false,
+      "stage_s": 30.0,
+      "step": 5000,
+      "unroll_steps": 60,
+      "valid_targets": 529831
+    },
+    {
+      "early_stop": false,
+      "mean_lane": 0.2874767723803719,
+      "mean_loss": 114.72298871676126,
+      "mean_position": 112.66911172866821,
+      "mean_speed": 1.7664001082380614,
+      "n_batches": 15,
+      "selection": false,
+      "stage_s": 60.0,
+      "step": 6875,
+      "unroll_steps": 120,
+      "valid_targets": 945990
+    },
+    {
+      "early_stop": false,
+      "mean_lane": 0.34039338768149413,
+      "mean_loss": 211.29895768165588,
+      "mean_position": 208.53926289081573,
+      "mean_speed": 2.419302153835694,
+      "n_batches": 15,
+      "selection": false,
+      "stage_s": 120.0,
+      "step": 8125,
+      "unroll_steps": 240,
+      "valid_targets": 1455593
+    }
+  ],
+  "val_monitoring": {
+    "by_stage": [
+      {
+        "early_stop": false,
+        "mean_lane": 0.09739782686034838,
+        "mean_loss": 8.072460587819418,
+        "mean_position": 7.522812684377034,
+        "mean_speed": 0.45225000381469727,
+        "n_batches": 15,
+        "selection": false,
+        "stage_s": 10.0,
+        "step": 2500,
+        "unroll_steps": 20,
+        "valid_targets": 189914
+      },
+      {
+        "early_stop": false,
+        "mean_lane": 0.21399112269282342,
+        "mean_loss": 48.545754512151085,
+        "mean_position": 47.20573662122091,
+        "mean_speed": 1.1260266224543254,
+        "n_batches": 15,
+        "selection": false,
+        "stage_s": 30.0,
+        "step": 5000,
+        "unroll_steps": 60,
+        "valid_targets": 529831
+      },
+      {
+        "early_stop": false,
+        "mean_lane": 0.2874767723803719,
+        "mean_loss": 114.72298871676126,
+        "mean_position": 112.66911172866821,
+        "mean_speed": 1.7664001082380614,
+        "n_batches": 15,
+        "selection": false,
+        "stage_s": 60.0,
+        "step": 6875,
+        "unroll_steps": 120,
+        "valid_targets": 945990
+      },
+      {
+        "early_stop": false,
+        "mean_lane": 0.34039338768149413,
+        "mean_loss": 211.29895768165588,
+        "mean_position": 208.53926289081573,
+        "mean_speed": 2.419302153835694,
+        "n_batches": 15,
+        "selection": false,
+        "stage_s": 120.0,
+        "step": 8125,
+        "unroll_steps": 240,
+        "valid_targets": 1455593
+      }
+    ],
+    "checkpoint_selection": false,
+    "data": {
+      "exclude_keys_requested": 0,
+      "excluded_records": 0,
+      "horizon_steps": 240,
+      "identity_rows": 3,
+      "identity_sidecars": [
+        "/root/autodl-tmp/wms_c1_20261006/work/sidecars/identities",
+        "/root/autodl-tmp/wms_c1_20261006/work/sidecars/identities_dspeed",
+        "/root/autodl-tmp/wmn1_a10_data/identities_damping"
+      ],
+      "kept_by_pack": {
+        "pack_damping": 32,
+        "pack_dspeed": 84
+      },
+      "mode": "a11-index-window",
+      "n_corpus_windows": 3060,
+      "n_records": 116,
+      "overlays": [
+        "/root/autodl-tmp/wmn1_a9_data/labels_overlay_dspeed",
+        "/root/autodl-tmp/wmn1_a10_data/labels_overlay_damping"
+      ],
+      "packs": [
+        "/root/autodl-tmp/wmn1_m1_45c9032_20261003_A1/work/pack",
+        "/root/autodl-tmp/wmn1_a9_data/pack_dspeed",
+        "/root/autodl-tmp/wmn1_a10_data/pack_damping"
+      ],
+      "select_windows_requested": null,
+      "split": "TRAIN",
+      "start_shift_prob": 0.0,
+      "total_by_pack": {
+        "pack_damping": 32,
+        "pack_dspeed": 84
+      },
+      "window_filter": {
+        "dropped": 2944,
+        "exclude_window_list": null,
+        "kept": 116,
+        "matched": 116,
+        "requested": 116,
+        "window_list": "/root/autodl-tmp/wms_c1_20261006/work/lpo/windows_val.json"
+      }
+    },
+    "early_stopping": false,
+    "log": "/root/autodl-tmp/wms_c1_20261006/work/full_struct/val_log.jsonl",
+    "mode": "monitor-only"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schema": "deleted_evidence/1",
+  "record": "MIG-04",
+  "date": "2026-09-24",
+  "summary": "Raw simulation evidence permanently deleted by an assistant-caused incident: `git worktree remove --force` on stale Codex worktrees followed Windows junctions into this workspace. No backup or shadow copy existed for D:, and the NVMe SSD has TRIM enabled. Reports, summaries, ledger numbers and code were preserved (192 small output files restored from the previous-work snapshot). A later owner decision, MIG-05, regenerated only the 88 worldmodel_dataset_v2 jsonl files as 602 s prefixes; those files match the original dataset hashes. Full runs, checkpoints and pre-CIRCLES results were not regenerated.",
+  "fully_deleted_roots": [
+    {
+      "path": "runs",
+      "content": "All raw run outputs (runs/active/* including controller_verification_v3..v32, OE-series, PPO, escalation pilot, budget ledgers) and the runs/eval, probe, rllib, autopsy, gate, wavelook_cache, wphys_cache junctions."
+    },
+    {
+      "path": "archive/pre_circles/results",
+      "content": "Pre-CIRCLES raw results (~20 GB), including the two saved direct-transfer trajectories used by `traffic_shepherd.verification --saved-trajectories`."
+    },
+    {
+      "path": "traffic_shepherd/analytical_candidate.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "tests/test_analytical_candidate.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "traffic_shepherd/analytical_mechanics.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "tests/test_analytical_mechanics.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "traffic_shepherd/fs_close_mechanics.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "tests/test_fs_close_mechanics.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "tests/test_fs_evaluation.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "tests/test_fs_evaluation_review.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement on 2026-09-25 (WM-38). FollowerStopper is not an action; module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/fs_removal_20260925/ (SHA256SUMS.txt)."
+    },
+    {
+      "path": "traffic_shepherd/spatial_assignment.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    },
+    {
+      "path": "traffic_shepherd/spatial_pipeline.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    },
+    {
+      "path": "traffic_shepherd/spatial_grid.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    },
+    {
+      "path": "tests/test_spatial_assignment.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    },
+    {
+      "path": "tests/test_spatial_pipeline.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    },
+    {
+      "path": "tests/test_spatial_pipeline_acceptance.py",
+      "content": "NOT MIG-04: intentional owner-directed retirement 2026-09-25 (WM-39). The per-lane/per-cell mix layer is removed from the action model (per-CAV actions + wall group remain); module/test deleted. Hashed pre-deletion copy: D:/research-dense-backups/mix_removal_20260925/."
+    }
+  ],
+  "partially_deleted_dirs": [
+    {
+      "path": "output/worldmodel_dataset_v2",
+      "content": "Original data arrays were deleted. MIG-05 restored the 88 jsonl files, hash-identical to the manifest. Whole-run aggregate JSON was kept from the snapshot and differs from the 602 s prefixes. Any other missing file under this directory remains a recorded deletion."
+    },
+    {
+      "path": "output/controller_verification_v7",
+      "content": "*.log files (not in git); code/reports restored"
+    },
+    {
+      "path": "output/worldmodel_v2_full",
+      "content": "model checkpoints (*.pt) and large arrays; code/reports restored"
+    },
+    {
+      "path": "output/worldmodel_stage2_reconstructor_v2",
+      "content": "checkpoints (*.pt) and large arrays; code/reports restored"
+    },
+    {
+      "path": "output/worldmodel_v3_planner",
+      "content": "large arrays; code/reports restored"
+    },
+    {
+      "path": "output/worldmodel_v3_recon",
+      "content": "large arrays/checkpoints; code/reports restored"
+    },
+    {
+      "path": "output/worldmodel_v3_postswitch",
+      "content": "large arrays/checkpoints; code/reports restored"
+    }
+  ],
+  "inventories": {
+    "older_raw_files_sha256": "output/raw_results_offload_v1/MANIFEST.json",
+    "restored_small_files": "output/raw_results_offload_v1/RESTORED_FROM_SNAPSHOT.json",
+    "last_source_verification_before_deletion": "output/raw_results_offload_v1/source_verification_report_before_deletion.json"
+  },
+  "consequence": "Paths under these locations are recorded deletions: ledger values stand as last verified but can no longer be re-verified from raw evidence. Missing files anywhere else remain hard errors."
+}

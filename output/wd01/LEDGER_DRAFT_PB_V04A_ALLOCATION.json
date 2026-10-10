@@ -1,0 +1,35 @@
+[
+  {
+    "id": "WD-01-PB-V04A",
+    "date": "2026-09-30",
+    "family": "WD",
+    "status": "in_progress",
+    "name": "Part B value model v0.4a on TRUE policy references (no walls): build, fit, contrast acceptance",
+    "question": "Can a deployable policy-conditioned value model V(s,tau,pi) predict remaining delay with calibrated uncertainty under true fleet policies (native, damping, PI) and switching/fixed mixes, and give skilful policy contrasts dV = V(a) - V(native) on held-out worlds with true references (Q2, untestable in v0.2-v0.3.2)?",
+    "controller": "partB_v0 gbm (variant auto) per tau, policy-conditioned, deployable_strict HEADLINE / deployable_detector SENSITIVITY; per-CAV action tokens (CAV_RAW 20); wall tokens empty",
+    "baseline_cf": "v0.3.2_strict (reference), ridge on same inputs, TRAIN climatology per tau x policy x demand, zero-contrast and TRAIN-cell-mean contrast baselines",
+    "scenario": "Saved-state continuation labels from chunk-4 base/native_base/native/pi/fixed/switching arms, chunk-2/3 J3 truearms native/pi and bases; chunks 1-3 + fix27 switching arms AUXILIARY training only",
+    "seeds_splits": "Each chunk WORLD_PLAN split. TRAIN fits and all selection/calibration (world-grouped OOB); CALIBRATION read ONCE for the acceptance report; HOLDOUT never opened (holdout_guard + holdout_exclusions applied, open list asserted)",
+    "observation_contract": "CAV self state + CAV-detected neighbours (strict); ideal-sensing premise (true lane bins) stated; no penetration/pre_fix/speed_mode/world-string inputs",
+    "privileged_info": "None as model input; matched counterfactual arms are offline labels only",
+    "changed_vars": "true-policy sources; per-CAV action inputs; policy-conditioned target; contrast acceptance (A1/A2/A3)",
+    "fixed_vars": "v0.3.2 model family, deployable_strict inputs, t0 unrecoverable, world-grouped bootstrap and early stopping, CAL guard on selection",
+    "comparators": "v0.3.2_strict; ridge; climatology; zero-contrast; TRAIN-cell-mean",
+    "matching_reuse": "Closest prior WD-01-PARTB-V032 (same family, switching-mix natives) and WD-01-PB-RESCORE1 (label audit vs true natives). Reuses v0.3.2 label/feature code; new data root by COPY.",
+    "requested_vs_delivered": "Registration output/wd01/REGISTRATION_PARTB_V04A.md, LF sha256 38a6fa406ca9d598fdaae986263f4fa81ee15dfa8c632414cc5f28dbe5bdee00; owner decision 2026-09-30 via main discussion",
+    "budget_registered": "ZERO SUMO/TraCI; CPU <=4 workers low priority; est. build 2 h, two refits 1 h, ablation+report 1 h",
+    "budget_actual": "in progress (allocation entry committed before build)",
+    "attempts": "",
+    "results": "In progress.",
+    "criteria_verdict": "Pending (ACCEPT/PARTIAL/FAIL per registration section 6)",
+    "limitations": "Ideal sensing; chunk-4 CAL is also C4L1 look set (disclosed); chunk-2/3 CAL previously read once each; no walls (v0.4b)",
+    "artifacts": [
+      "E:/rd-wt/wd01v04a/output/wd01/REGISTRATION_PARTB_V04A.md (branch zcode/wd01v04a from zcode/wd01 dbde3a7)",
+      "E:/research-dense/output/wd01_partB_v0data_v04a (new data root, copy only)",
+      "E:/research-dense/output/partB_results/v0.4a_strict",
+      "E:/research-dense/output/partB_results/v0.4a_detector",
+      "E:/research-dense-backups/wd01/partB_v0data_v04a"
+    ],
+    "review_status": "registered by the world model session; executor task in progress"
+  }
+]

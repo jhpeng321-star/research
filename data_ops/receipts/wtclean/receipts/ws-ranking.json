@@ -1,0 +1,41 @@
+﻿{
+    "name":  "ws-ranking",
+    "path":  "E:\\rd-wt\\ws-ranking",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/ranking",
+    "headBefore":  "4b5cd1bcdc3592200482c54e23c26395d21d6f86",
+    "headType":  "branch",
+    "dirtyBefore":  2,
+    "committed":  true,
+    "commitSha":  "f7f04f0705c5a09fbd612ea59dd975d5b3395b94",
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-ranking",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-ranking.txt",
+    "uploadCount":  332,
+    "uploadBytes":  57134013,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-ranking.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 07:52:37 NOTICE: Google drive root \u0027research-archive/worktrees/ws-ranking\u0027: 0 differences found | 2026/10/10 07:52:37 NOTICE: Google drive root \u0027research-archive/worktrees/ws-ranking\u0027: 332 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-ranking.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  3,
+    "skippedSensitiveSample":  [
+                                   "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+                                   "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+                                   "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T07:46:46.3276486+08:00"
+}

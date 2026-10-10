@@ -1,0 +1,110 @@
+"""Table linking the legacy flat ``WmSTrainConfig`` keys to nested ``TrainConfig`` paths.
+
+The flat dict is the format stored in checkpoints (``ckpt["config"]``) and in
+``TRAIN_RECEIPT.json``; it must stay readable and writable key for key.
+"""
+from __future__ import annotations
+
+from typing import Any, Mapping, MutableMapping
+
+#: flat key -> dotted path inside the nested config. ``black_box`` and
+#: ``exclude_window_list`` need value conversion and are handled in ``TrainConfig``.
+FLAT_TO_PATH: dict[str, str] = {
+    "unroll_curriculum_s": "curriculum.unroll_s",
+    "stage_steps": "curriculum.stage_steps",
+    "num_workers": "runtime.num_workers",
+    "epochs_per_stage": "curriculum.epochs_per_stage",
+    "steps_per_epoch": "curriculum.steps_per_epoch",
+    "batch_size": "optim.batch_size",
+    "lr": "optim.lr",
+    "weight_decay": "optim.weight_decay",
+    "grad_clip": "optim.grad_clip",
+    "position_huber_delta_m": "loss.position_huber_delta_m",
+    "speed_huber_delta_mps": "loss.speed_huber_delta_mps",
+    "lane_weight": "loss.lane_weight",
+    "position_weight": "loss.position_weight",
+    "speed_weight": "loss.speed_weight",
+    "step_weight_decay": "loss.step_weight_decay",
+    "truncation_steps": "curriculum.truncation_steps",
+    "history_features": "model.history_features",
+    "history_s": "data.history_s",
+    "history_stride_s": "data.history_stride_s",
+    "device": "runtime.device",
+    "threads": "runtime.threads",
+    "state_noise_std_m": "data.state_noise_std_m",
+    "state_noise_std_mps": "data.state_noise_std_mps",
+    "rollout_mode": "model.rollout_mode",
+    "lane_head": "model.lane_head",
+    "residual_magnitude_weight": "loss.residual.hybrid_magnitude_weight",
+    "driver_sidecar": "data.sidecars.driver_sidecar",
+    "out_dir": "runtime.out_dir",
+    "seed": "runtime.seed",
+    "black_box": "model.kind",
+    "n_controllers": "model.n_controllers",
+    "controller_embed_dim": "model.controller_embed_dim",
+    "checkpoint_residual": "model.checkpoint_residual",
+    "traffic_loss": "loss.traffic.enabled",
+    "traffic_bin_s": "loss.traffic.bin_s",
+    "traffic_weight": "loss.traffic.weight",
+    "traffic_free_speed_mps": "loss.traffic.free_speed_mps",
+    "traffic_ramp_start_s": "loss.traffic.ramp_start_s",
+    "traffic_ramp_end_s": "loss.traffic.ramp_end_s",
+    "entries_v2": "data.entries_v2",
+    "entry_pad": "data.entry_pad",
+    "window_list": "data.windows.train",
+    "exclude_window_list": "data.windows.exclude",
+    "val_window_list": "data.windows.val",
+    "val_batches": "selection.val_batches",
+    "projection_enabled": "model.projection.enabled",
+    "projection_min_gap_m": "model.projection.min_gap_m",
+    "residual_cap_mps2": "model.residual_cap_mps2",
+    "lane_logit_cap": "model.lane_logit_cap",
+    "stability_weight": "loss.stability_weight",
+    "stability_margin": "loss.stability_margin",
+    "stability_probes": "loss.stability_probes",
+    "conservation_enabled": "loss.conservation_enabled",
+    "conservation_weight": "loss.conservation_weight",
+    "loss_share_logging": "loss.loss_share_logging",
+    "switch_window_fraction": "data.switching.window_fraction",
+    "asym_speed_alpha": "loss.braking.asym_speed_alpha",
+    "decel_weight": "loss.braking.decel_weight",
+    "decel_threshold_mps2": "loss.braking.decel_threshold_mps2",
+    "propagation_weight": "loss.braking.propagation_weight",
+    "prop_window_s": "loss.braking.prop_window_s",
+    "prop_max_gap_m": "loss.braking.prop_max_gap_m",
+    "residual_cap_neg_mps2": "model.residual_cap_neg_mps2",
+    "cav_drive": "data.cav_drive",
+    "residual_soft_bound_mps2": "model.residual_soft_bound_mps2",
+    "residual_soft_bound_neg_mps2": "model.residual_soft_bound_neg_mps2",
+    "residual_mag_weight": "loss.residual.residual_mag_weight",
+    "lane_rate_weight": "loss.lane_rate.weight",
+    "lane_rate_target": "loss.lane_rate.target",
+    "select_by_long_horizon": "selection.select_by_long_horizon",
+    "val_every": "selection.val_every",
+}
+
+#: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
+#: and long-horizon fields), so old flags-off receipts stay byte-identical.
+OMIT_WHEN_DEFAULT: tuple[str, ...] = (
+    "asym_speed_alpha", "decel_weight", "decel_threshold_mps2", "propagation_weight",
+    "prop_window_s", "prop_max_gap_m", "residual_cap_neg_mps2",
+    "residual_soft_bound_mps2", "residual_soft_bound_neg_mps2", "residual_mag_weight",
+    "lane_rate_weight", "lane_rate_target", "select_by_long_horizon", "val_every",
+)
+
+
+def get_path(tree: Mapping[str, Any], dotted: str) -> Any:
+    """Read ``dotted`` ("a.b.c") from nested mappings."""
+    node: Any = tree
+    for part in dotted.split("."):
+        node = node[part]
+    return node
+
+
+def set_path(tree: MutableMapping[str, Any], dotted: str, value: Any) -> None:
+    """Write ``value`` at ``dotted``, creating intermediate tables."""
+    parts = dotted.split(".")
+    node = tree
+    for part in parts[:-1]:
+        node = node.setdefault(part, {})
+    node[parts[-1]] = value

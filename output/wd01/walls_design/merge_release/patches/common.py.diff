@@ -1,0 +1,39 @@
+diff --git a/output/campaign_walls_v1/common.py b/output/campaign_walls_v1/common.py
+index 1cf2414..995f6c8 100644
+--- a/output/campaign_walls_v1/common.py
++++ b/output/campaign_walls_v1/common.py
+@@ -98,8 +98,33 @@ UPSTREAM_EDGE_LENGTH_M = 2644.2
+ DOWNSTREAM_ROAD_M = 75.4 + 477.9            # 1487606179 + 1487606178
+ #: a request needs road_left(front member) >= v_wall x this many seconds
+ ROAD_LEFT_REQUEST_S = 80.0
+-#: in HOLD a planner release fires when road_left < v_wall x this
++#: SUPERSEDED by law v2.2 (kept only so the old road-end outcome constant
++#: still imports; the driver no longer issues a road-end release).
+ ROAD_END_RELEASE_S = 10.0
++
++# --- law v2.2 'merge-release' geometry (owner-confirmed 2026-10-01) --------
++#: cumulative road coordinate s_road runs from the mainline ENTRY edge origin
++#: (0 m) to the network end; merge START is the entry edge length.
++ENTRY_EDGE_ID = "1191554636"
++MERGE_EDGE_ID = "1487606179"
++EXIT_EDGE_ID = "1487606178"
++ENTRY_EDGE_LENGTH_M = 2644.2
++MERGE_EDGE_LENGTH_M = 75.4
++EXIT_EDGE_LENGTH_M = 477.9
++MERGE_START_S = ENTRY_EDGE_LENGTH_M                    # 2644.2 m
++MERGE_END_S = MERGE_START_S + MERGE_EDGE_LENGTH_M      # 2719.6 m
++NETWORK_END_S = MERGE_END_S + EXIT_EDGE_LENGTH_M       # 3197.5 m
++#: owner binding: release at X = 0 m BEFORE the merge edge start (exactly at
++#: the merge start).  The design note derives the general formula; the owner
++#: override is binding over any derived positive X.
++MERGE_RELEASE_X_M = 0.0
++MERGE_RELEASE_POINT_S = MERGE_START_S - MERGE_RELEASE_X_M
++#: owner binding: D_min = X + distance-to-assemble + a minimal meaningful
++#: hold.  The minimal meaningful fixed-arm hold is the smallest registered
++#: draw; the assembly distance uses the J4 MEDIAN assembly time (10 s of
++#: mechanics, no outcome) at the request's wall speed.
++MIN_MEANINGFUL_HOLD_S = 60.0
++ASSEMBLY_TIME_ASSUMED_S = 10.0
+ #: the smoke restores this p40 TRAIN world when it is in the plan: the
+ #: TRAIN-only scan (WALL_FIX_OPTIONS.md, fe6724f) found a 1.5 m pair at the
+ #: first tick with 3076 m of road left (needs 1269 m at W-mid).  Falls back

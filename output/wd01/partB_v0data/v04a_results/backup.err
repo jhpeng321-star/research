@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 180, in <module>
+    sys.exit(main())
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 175, in main
+    return {"finalize": cmd_finalize, "backup": cmd_backup,
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 128, in cmd_backup
+    n0, bad0, miss0 = verify(root, "source")
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 76, in verify
+    elif sha256_file(p) != sha:
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 42, in sha256_file
+    for chunk in iter(lambda: fh.read(block), b""):
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0data\finalize_backup_v04a.py", line 42, in <lambda>
+    for chunk in iter(lambda: fh.read(block), b""):
+MemoryError

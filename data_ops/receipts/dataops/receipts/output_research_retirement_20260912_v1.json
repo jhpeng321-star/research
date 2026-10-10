@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/research_retirement_20260912_v1",
+ "name": "research_retirement_20260912_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\research_retirement_20260912_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/research_retirement_20260912_v1/research_retirement_20260912_v1.tar.zst",
+ "bytes": 463905,
+ "files": 20,
+ "archive_bytes": 129459,
+ "archive_md5": "578d2955c5e0f417965961010f397a47",
+ "member_manifest": "manifests/members/output_research_retirement_20260912_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 20.1,
+ "timestamp": "2026-10-10T01:44:23"
+}

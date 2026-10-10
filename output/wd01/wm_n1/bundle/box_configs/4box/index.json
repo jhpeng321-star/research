@@ -1,0 +1,46 @@
+{
+ "schema": "wm_n1_box_configs_index/1",
+ "plan": "4-box",
+ "n_boxes": 4,
+ "wall_clock_hours": 41.0,
+ "generated_by": "bundle.multibox.plan_fleet",
+ "boxes": {
+  "box-1": {
+   "file": "4box/box1.json",
+   "configs": [
+    "member-1",
+    "n-member-2",
+    "n-member-5",
+    "member-5"
+   ],
+   "finish_hours": 41.0
+  },
+  "box-2": {
+   "file": "4box/box2.json",
+   "configs": [
+    "n-member-1",
+    "heldout-iii-leave-highest-wall-speed",
+    "member-2"
+   ],
+   "finish_hours": 33.5
+  },
+  "box-3": {
+   "file": "4box/box3.json",
+   "configs": [
+    "heldout-i-j4b",
+    "n-member-3",
+    "member-3"
+   ],
+   "finish_hours": 33.5
+  },
+  "box-4": {
+   "file": "4box/box4.json",
+   "configs": [
+    "heldout-ii-leave-pi",
+    "n-member-4",
+    "member-4"
+   ],
+   "finish_hours": 33.5
+  }
+ }
+}

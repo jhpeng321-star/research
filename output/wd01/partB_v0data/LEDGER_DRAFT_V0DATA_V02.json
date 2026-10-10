@@ -1,0 +1,114 @@
+{
+ "schema": "wd01_partB_v0data_ledger_draft/1",
+ "title": "WD-01 Part B V0 dataset v0.2 (chunk1 + chunk2 consolidation) - LEDGER DRAFT",
+ "generated_utc": "2026-09-28T07:05:00+00:00",
+ "zero_simulation": true,
+ "simulation_processes_started": 0,
+ "holdout_accessed": false,
+ "holdout_note": "HOLDOUT worlds of both chunks were never built nor opened; builder skips them before any run-file access and build_source refuses them by an in-code guard (tested).",
+ "worktree": {
+  "repo": "E:/rd-wt/wd01r",
+  "branch": "zcode/wd01r",
+  "base_commit": "849b199fdff3e60944dfe6658ef6fcebb492f050",
+  "code_commit": "this branch commit carrying the v0.2 build code"
+ },
+ "inputs": {
+  "chunk1_plan": "D:\\research-dense\\output\\campaign_stage1_chunk1\\results_plan_wm44\\WORLD_PLAN.json",
+  "chunk1_plan_sha256": "9c196a2c5123895fb9b3fbe8e34be6cdb0a4daecb09f5a945b72bc2510e77a80",
+  "chunk1_runs_root": "D:\\research-dense\\runs\\campaign_stage1_chunk1",
+  "chunk2_plan": "D:\\research-dense\\output\\campaign_stage1_v2\\results_plan_chunk2\\WORLD_PLAN.json",
+  "chunk2_plan_sha256": "75fefc75aecc99b121556c67f3b4e248f3c3aa3b45160b736febab00d71649bf",
+  "chunk2_runs_root": "D:\\research-dense\\runs\\campaign_stage1_chunk2",
+  "chunk2_index_cav_speed_mode": 27,
+  "chunk1_copied_from": "D:/rd-wt/wd01n/output/wd01/partB_v0data (read-only; 330 data files + 110 done markers sha256-verified before AND after the copy)"
+ },
+ "builder": {
+  "script": "output/wd01/partB_v0data/build_v0data.py",
+  "cli": "build_v0data.py --chunk chunk2 --plan <chunk2 WORLD_PLAN.json> --runs <chunk2 runs root> --default-speed-mode 27 (chunk-1 entries consolidated by copy + one resume pass --chunk chunk1, 0 rebuilt)",
+  "speed_mode_resolution": "receipt -> observed physics values -> per-chunk config default; chunk-2 receipts record null and physics rows are mixed 31/27, so all 112 chunk-2 sources resolved via the config default 27 (fallback)",
+  "chunk2_fallback_sources": 112
+ },
+ "dataset": {
+  "root": "E:/rd-wt/wd01r/output/wd01/partB_v0data",
+  "manifest_sha256": "f7fd64116b7c3f0024c5168fe829eb58988a31816cb28e14ebca30f366cc5dfc",
+  "schema": "wd01_partB_v0data/1",
+  "tau_s": [
+   30.0,
+   60.0,
+   120.0,
+   300.0,
+   570.0
+  ],
+  "commit_window_s": 30.0,
+  "counts": {
+   "chunk1": {
+    "sources": 110,
+    "worlds": 56,
+    "by_split_source": {
+     "TRAIN/base": 49,
+     "TRAIN/native": 47,
+     "CALIBRATION/base": 7,
+     "CALIBRATION/native": 7
+    },
+    "decision_times": 7796,
+    "label_rows": 28750,
+    "td_rows": 38980
+   },
+   "chunk2": {
+    "sources": 112,
+    "worlds": 56,
+    "by_split_source": {
+     "TRAIN/base": 49,
+     "TRAIN/native": 49,
+     "CALIBRATION/base": 7,
+     "CALIBRATION/native": 7
+    },
+    "decision_times": 7904,
+    "label_rows": 29104,
+    "td_rows": 39520
+   }
+  },
+  "verify": {
+   "schema": "wd01_partB_v0data_verify/1",
+   "generated": "2026-09-28T06:54:11Z",
+   "n_sources": 222,
+   "n_files_pass": 666,
+   "n_files_fail": 0,
+   "structural_issues": [],
+   "failures": [],
+   "ok": true
+  },
+  "chunk2_row_contract": {
+   "rows_checked": 68624,
+   "violations": 0,
+   "rule": "chunk_id=='chunk2', cav_speed_mode==27, pre_fix==False on every row"
+  },
+  "td_consistency": {
+   "n_sources": 222,
+   "n_tuples_checked": 42154,
+   "n_violations": 0,
+   "worst_diff": 5.820766091346741e-11
+  }
+ },
+ "known_defects_repaired": {
+  "chunk1_manifest_source_field": "the chunk-1 backfill/pre-chunk manifest carried source='base' and policy=None on the 55 native entries (parquet source/policy COLUMNS were always correct); repaired in the consolidated MANIFEST by making the builder resume path stamp identity fields from the plan unconditionally (regression test test_resume_repairs_stale_marker_identity); upstream wd01n dataset left untouched (read/copy only)"
+ },
+ "native_tau570_train": {
+  "chunk1": 141,
+  "chunk2": 147,
+  "flag": "both < 150 (FLAG raised in DATA_CARD)"
+ },
+ "backup": {
+  "path": "D:/research-dense-backups/wd01/partB_v0data_v02",
+  "files": 889,
+  "sha256sums_entries": 889,
+  "verification": "889 OK, 0 mismatches (BACKUP_VERIFY: PASS)"
+ },
+ "env": {
+  "python": "3.10.20 (conda rl_driving)",
+  "pandas": "2.3.3",
+  "numpy": "2.2.6",
+  "pyarrow": "24.0.0",
+  "os": "Windows, single process, below-normal priority attempt (ctypes ok=False; psutil absent)"
+ }
+}

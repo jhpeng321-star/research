@@ -1,0 +1,51 @@
+{
+ "schema": "wm_n1_preflight_gate/1",
+ "gate": "e2e-smoke",
+ "title": "G5 e2e-smoke (convert->timing->train->ckpt->resume->eval, CPU, torch>=2.7,<2.13)",
+ "passed": true,
+ "verdict": "PASS",
+ "detail": "queue e2e stages complete on CPU; torch scan clean (version gate: ran)",
+ "entry_points": [
+  "bundle.e2e.run_e2e_smoke"
+ ],
+ "checks": {
+  "device": "cpu",
+  "stages": [
+   "convert",
+   "timing",
+   "train",
+   "checkpoint",
+   "resume",
+   "eval"
+  ],
+  "missing_stages": [],
+  "timing_seconds": 185.1513620999758,
+  "torch": {
+   "ok": true,
+   "scan": {
+    "ok": true,
+    "n_files": 170,
+    "forbidden_hits": [],
+    "forbidden_apis": [
+     "torch.compile",
+     "torch.cuda.amp",
+     "torch._six",
+     "scaled_dot_product_attention",
+     "flex_attention",
+     "torch.export"
+    ]
+   },
+   "version_gate": {
+    "status": "ran",
+    "ok": true,
+    "torch_version": "2.12.1+cpu",
+    "expected": ">=2.7,<2.13",
+    "reason": null
+   },
+   "torch_version": "2.12.1+cpu",
+   "expected": ">=2.7,<2.13"
+  }
+ },
+ "error": null,
+ "generated_utc": "2026-10-02T04:49:19Z"
+}

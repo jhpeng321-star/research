@@ -1,0 +1,24 @@
+# Local CPU smoke of the R3 recipe on the original packs (no switching pack on this machine):
+# two optimizer steps per curriculum stage, batch 2, CPU. TRAIN windows are the full R3 lists
+# (911 windows over pack_v3 + pack_dspeed + pack_damping); validation uses the small list written by
+# `python scripts/make_smoke_lists.py` because the trainer validates on the whole list after every
+# stage (151 windows at 120 s is hours on CPU). Not a training recipe.
+schema_version = 2
+name = "WM-S-SMOKE-LOCAL"
+extends = "r3_packs_only.toml"
+
+[data.windows]
+val = "smoke_lists/windows_val_smoke.json"
+
+[curriculum]
+stage_steps = [2, 2, 2, 2]
+max_hours = 1.0
+
+[optim]
+batch_size = 2
+
+[runtime]
+device = "cpu"
+threads = 2
+num_workers = 0
+omp = 2

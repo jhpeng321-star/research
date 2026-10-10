@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_v3_vehicle",
+ "name": "worldmodel_v3_vehicle",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_v3_vehicle",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_vehicle/worldmodel_v3_vehicle.tar.zst",
+ "bytes": 42232426,
+ "files": 75,
+ "archive_bytes": 16230580,
+ "archive_md5": "300ecc5f520275bef81e2cf2a8c67303",
+ "member_manifest": "manifests/members/output_worldmodel_v3_vehicle.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 15.9,
+ "timestamp": "2026-10-10T01:51:36"
+}

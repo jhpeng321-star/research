@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe65_w2_features_v1",
+ "name": "oe65_w2_features_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe65_w2_features_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe65_w2_features_v1/oe65_w2_features_v1.tar.zst",
+ "bytes": 92383,
+ "files": 11,
+ "archive_bytes": 26366,
+ "archive_md5": "a33d31b64e6ae8910d7fbde49ad5b187",
+ "member_manifest": "manifests/members/output_oe65_w2_features_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.8,
+ "timestamp": "2026-10-10T01:37:26"
+}

@@ -1,0 +1,27 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "featurization_logs",
+ "kind": "dirs",
+ "class": "DELETE-CANDIDATE",
+ "producer": "WM-N1 featurization logs/scratch (regenerable)",
+ "restore": "copy children back to D:/rd-staging/wmn1_feat/",
+ "local": [
+  "D:/rd-staging/wmn1_feat/logs",
+  "D:/rd-staging/wmn1_feat/logs_v2",
+  "D:/rd-staging/wmn1_feat/logs_v3",
+  "D:/rd-staging/wmn1_feat/logs_v4",
+  "D:/rd-staging/wmn1_feat/logs_v5",
+  "D:/rd-staging/wmn1_feat/logs_pack_v3",
+  "D:/rd-staging/wmn1_feat/logs_v3k192",
+  "D:/rd-staging/wmn1_feat/logs_v2c",
+  "D:/rd-staging/wmn1_feat/quarantine_v2"
+ ],
+ "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs",
+ "bytes": 3655113,
+ "files": 80,
+ "md5_manifest": "receipts/md5/featurization_logs.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:59:48"
+}

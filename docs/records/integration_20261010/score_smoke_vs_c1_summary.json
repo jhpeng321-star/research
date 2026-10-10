@@ -1,0 +1,42 @@
+{
+ "config": "WM-S-SCORE-SMOKE-LOCAL",
+ "sets": [
+  "wall_same"
+ ],
+ "subsets": {
+  "wall_same": "first_per_world:20"
+ },
+ "n_states": {
+  "wall_same": 20
+ },
+ "horizons_s": [
+  10.0,
+  30.0,
+  60.0
+ ],
+ "previous_best": "ckpt_c1fast",
+ "ckpt_c1fast": {
+  "checkpoint": "ckpt_c1fast",
+  "sha256": "87ed02e0707e5e4eefdd2dbb0fd282f834c1288776f7f395b41ab4d13826aaef",
+  "median_over_states_of_wall_hdv_ds_med_60s_m": 11.957571983337402,
+  "n_arm_errors": 0
+ },
+ "smoke_local": {
+  "checkpoint": "ckpt_smoke_local",
+  "sha256": "5ef95248c464fc66f6fcf02b8f1bd41231ba26f9f2325e51405ff3562d7d440d",
+  "median_over_states_of_wall_hdv_ds_med_60s_m": 36.77433776855469,
+  "n_arm_errors": 0
+ },
+ "comparison": {
+  "verdict": "regressed",
+  "paired_new_minus_previous_60s": {
+   "hi": 48.02725386619568,
+   "lo": 9.303871154785156,
+   "n_boot": 2000,
+   "n_pairs": 20,
+   "n_worlds": 20,
+   "point": 26.587242126464844
+  },
+  "outcome_60s": "worse"
+ }
+}

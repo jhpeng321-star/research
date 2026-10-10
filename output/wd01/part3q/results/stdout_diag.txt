@@ -1,0 +1,61 @@
+priority below-normal: False
+=== WD-01 part 3q TASK A: base rows + merge diagnosis on the 17 TRAIN roots ===
+ZERO simulation; holdout blocked; NO validation look (the validation roots are never loaded here).
+device=cpu torch_threads=2
+TRAIN roots (17): ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000', 'cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700', 'cv21_7008m2700', 'cv23_7010m2700', 'cv30_7302m2000', 'cv30_7303m2000', 'cv30_7304m2700', 'cv30_7306m2700', 'seed_7301m2000', 'seed_7531m2700', 'seed_7532m2700']
+k=5 folds: {'f0': ['cv17', 'cv20_7003m2000', 'cv30_7302m2000', 'seed_7531m2700'], 'f1': ['cv19_4107', 'cv20_7004m2000', 'cv30_7303m2000', 'seed_7532m2700'], 'f2': ['cv19_4108', 'cv20_7007m2700', 'cv30_7304m2700'], 'f3': ['cv20_7001m2000', 'cv21_7008m2700', 'cv30_7306m2700'], 'f4': ['cv20_7002m2000', 'cv23_7010m2700', 'seed_7301m2000']}
+dev fit folds ('f1', 'f2', 'f3', 'f4') (13 roots); fold f0 held out of ALL parameter fitting
+base = the FROZEN p3o iter2 candidate (sha256 see sidecar), 5 members
+[   0.0s] L0: raw_p3q_L0.jsonl complete -- skipped
+[   0.0s] base member 0: complete -- skipped
+[   0.0s] base member 1: complete -- skipped
+[   0.1s] base member 2: complete -- skipped
+[   0.1s] base member 3: complete -- skipped
+[   0.1s] base member 4: complete -- skipped
+
+== MERGE DIAGNOSIS (base = p3o iter2 candidate; 17 TRAIN roots, members pooled) ==
+  H=30:
+    pooled   predM  4.94 trueM  3.14 ( +57.1%) | predD  7.76 trueD  7.76 (  +0.1%) | total 12.70/10.90 ( +16.6%)
+    f0       predM  4.97 trueM  3.50 ( +42.0%) | predD  8.11 trueD  7.29 ( +11.4%) | total 13.09/10.79 ( +21.3%)
+    f1       predM  4.45 trueM  2.89 ( +53.8%) | predD  6.86 trueD  8.79 ( -21.9%) | total 11.31/11.68 (  -3.1%)
+    f2       predM  4.69 trueM  3.52 ( +33.0%) | predD  8.54 trueD  7.67 ( +11.4%) | total 13.23/11.19 ( +18.2%)
+    f3       predM  5.29 trueM  2.43 (+118.0%) | predD  8.48 trueD  5.57 ( +52.1%) | total 13.77/ 8.00 ( +72.1%)
+    f4       predM  5.44 trueM  3.33 ( +63.2%) | predD  7.01 trueD  9.29 ( -24.5%) | total 12.45/12.62 (  -1.4%)
+  H=60:
+    pooled   predM  8.48 trueM  6.49 ( +30.7%) | predD 15.86 trueD 15.68 (  +1.1%) | total 24.34/22.17 (  +9.8%)
+    f0       predM  8.44 trueM  6.32 ( +33.6%) | predD 16.91 trueD 13.82 ( +22.3%) | total 25.35/20.14 ( +25.9%)
+    f1       predM  8.23 trueM  6.89 ( +19.4%) | predD 14.15 trueD 18.71 ( -24.4%) | total 22.38/25.61 ( -12.6%)
+    f2       predM  8.13 trueM  6.52 ( +24.7%) | predD 16.70 trueD 14.05 ( +18.9%) | total 24.84/20.57 ( +20.7%)
+    f3       predM  8.81 trueM  5.76 ( +52.9%) | predD 17.51 trueD 12.14 ( +44.2%) | total 26.32/17.91 ( +47.0%)
+    f4       predM  8.88 trueM  6.86 ( +29.4%) | predD 14.25 trueD 19.29 ( -26.1%) | total 23.12/26.14 ( -11.6%)
+
+== merge position/timing (per merge event; dist = m to the accel lane end) ==
+  H=30 pred  n=2938 rel_s mean 10.72 p10/50/90 0.5/7.5/26.0 | dist mean 30.4 p10/50/90 2.94/26.5/59.57
+  H=30 truth n= 374 rel_s mean 15.0 p10/50/90 3.0/15.0/28.0 | dist mean 27.01 p10/50/90 0.0/18.08/69.35
+  H=60 pred  n=5045 rel_s mean 25.49 p10/50/90 1.0/24.0/53.5 | dist mean 33.08 p10/50/90 3.75/31.44/63.11
+  H=60 truth n= 772 rel_s mean 31.25 p10/50/90 6.0/31.0/55.5 | dist mean 27.61 p10/50/90 0.0/21.5/68.45
+
+== M2 rejection causes (pooled over all rolls) ==
+  checks 34910 accepted 5045 rej_lead 15491 rej_foll 10309 rej_both 1657 with_foll 34670 rej_prob 2408
+
+== per-root LC by type (H=30; the val8-style caveat table) ==
+  cv17               predM  4.29 trueM  3.57 ( +20.0%) | predD  8.40 trueD  5.43 ( +54.7%) | total ( +41.0%)
+  cv19_4107          predM  3.57 trueM  2.00 ( +78.5%) | predD  6.43 trueD 10.14 ( -36.6%) | total ( -17.6%)
+  cv19_4108          predM  3.69 trueM  3.14 ( +17.3%) | predD  6.09 trueD 12.71 ( -52.1%) | total ( -38.4%)
+  cv20_7001m2000     predM  4.83 trueM  2.86 ( +69.0%) | predD  7.29 trueD  8.86 ( -17.7%) | total (  +3.4%)
+  cv20_7002m2000     predM  3.94 trueM  3.14 ( +25.4%) | predD  6.31 trueD  9.43 ( -33.0%) | total ( -18.4%)
+  cv20_7003m2000     predM  5.06 trueM  3.86 ( +31.1%) | predD  6.71 trueD  9.00 ( -25.4%) | total (  -8.5%)
+  cv20_7004m2000     predM  4.11 trueM  2.00 (+105.7%) | predD  6.14 trueD  7.57 ( -18.9%) | total (  +7.2%)
+  cv20_7007m2700     predM  5.14 trueM  4.00 ( +28.6%) | predD 10.14 trueD  5.86 ( +73.2%) | total ( +55.1%)
+  cv21_7008m2700     predM  5.23 trueM  2.00 (+161.5%) | predD  8.77 trueD  3.29 (+166.9%) | total (+164.8%)
+  cv23_7010m2700     predM  5.91 trueM  2.43 (+143.5%) | predD  8.46 trueD  6.00 ( +40.9%) | total ( +70.5%)
+  cv30_7302m2000     predM  4.91 trueM  2.43 (+102.3%) | predD  7.71 trueD  9.00 ( -14.3%) | total ( +10.5%)
+  cv30_7303m2000     predM  4.26 trueM  3.57 ( +19.2%) | predD  5.00 trueD 14.14 ( -64.6%) | total ( -47.7%)
+  cv30_7304m2700     predM  5.23 trueM  3.43 ( +52.5%) | predD  9.40 trueD  4.43 (+112.2%) | total ( +86.2%)
+  cv30_7306m2700     predM  5.83 trueM  2.43 (+140.0%) | predD  9.37 trueD  4.57 (+105.0%) | total (+117.1%)
+  seed_7301m2000     predM  6.46 trueM  4.43 ( +45.8%) | predD  6.26 trueD 12.43 ( -49.7%) | total ( -24.6%)
+  seed_7531m2700     predM  5.63 trueM  4.14 ( +35.9%) | predD  9.63 trueD  5.71 ( +68.5%) | total ( +54.8%)
+  seed_7532m2700     predM  5.86 trueM  4.00 ( +46.4%) | predD  9.89 trueD  3.29 (+200.9%) | total (+116.1%)
+[   8.9s] wrote results/diag_p3q.json
+
+DONE part 3q diagnosis.

@@ -1,0 +1,53 @@
+{
+ "note": "summary.json opened_run_files_full.json holds only the 9 worker-recorded physics logs: _worker cleared EA.OPENED_RUN_FILES, wiping the main-process screening opens (plan + 9x summary/receipt). Every listed open is unconditional on the taken code path: load_cal_worlds opened plan + summary + receipt for all 9 worlds (9/9 usable), NativeLog opened each physics log. The worker-recorded physics paths were cross-checked byte-identical against this reconstruction.",
+ "run_data": [
+  "E:/research-dense/output/campaign_stage1_v3/results_plan_chunk4/WORLD_PLAN.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8621m2700p02t240__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8621m2700p02t240__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8621m2700p02t240__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8622m2700p02t360__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8622m2700p02t360__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8622m2700p02t360__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8639m2700p05t360__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8639m2700p05t360__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8639m2700p05t360__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8640m2000p05t540__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8640m2000p05t540__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8640m2000p05t540__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8657m2700p10t300__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8657m2700p10t300__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8657m2700p10t300__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8658m2600p10t360__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8658m2600p10t360__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8658m2600p10t360__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8674m2600p20t300__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8674m2600p20t300__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8674m2600p20t300__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8675m2700p20t300__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8675m2700p20t300__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8675m2700p20t300__native_base/run/physics_steps.jsonl",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8692m2600p40t300__native_base/run/summary.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8692m2600p40t300__native_base/RUN_RECEIPT.json",
+  "E:/research-dense/runs/campaign_stage1_chunk4/w8692m2600p40t300__native_base/run/physics_steps.jsonl"
+ ],
+ "gate_inputs_opened_by_the_gates": [
+  "E:/rd-wt/wd01c4l1/output/wd01/REGISTRATION_C4L1.md",
+  "E:/rd-wt/wd01c4l1/output/wd01/partA_v2g/C4L1_FREEZE.json",
+  "E:/research-dense/protocols/holdout_exclusions.json"
+ ],
+ "assert_cal_only_on_complete_list": {
+  "opened_worlds": [
+   "w8621m2700p02t240",
+   "w8622m2700p02t360",
+   "w8639m2700p05t360",
+   "w8640m2000p05t540",
+   "w8657m2700p10t300",
+   "w8658m2600p10t360",
+   "w8674m2600p20t300",
+   "w8675m2700p20t300",
+   "w8692m2600p40t300"
+  ],
+  "cal_worlds_without_opened_run": []
+ },
+ "summary_json_list_defect": "disclosed; eval_c4l1.py left byte-frozen (freeze-pinned); patch only under a new registration if ever needed"
+}

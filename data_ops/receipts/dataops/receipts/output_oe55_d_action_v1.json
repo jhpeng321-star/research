@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe55_d_action_v1",
+ "name": "oe55_d_action_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe55_d_action_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe55_d_action_v1/oe55_d_action_v1.tar.zst",
+ "bytes": 74820,
+ "files": 8,
+ "archive_bytes": 19647,
+ "archive_md5": "c4cab2a5bd0c83938401ef684818dfc8",
+ "member_manifest": "manifests/members/output_oe55_d_action_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 19.1,
+ "timestamp": "2026-10-10T01:35:40"
+}

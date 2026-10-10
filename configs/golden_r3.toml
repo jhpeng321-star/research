@@ -1,0 +1,42 @@
+# Configuration under which tests/golden/data was captured (wms/golden, capture_golden.py):
+# R3 on the original packs with every opt-in long-horizon guard on so that all loss terms are
+# exercised: soft residual bound 4, residual-mag 0.01, lane-rate 1.0 (target 0.0123), long history
+# 60 s stride 1, braking asym 2 / decel 5 @3 / propagation 1 over 3 s, merge_cal, start-shift 0.75,
+# truncation 20, teacher CAVs, batch 2, CPU, seed 101. Unroll stage is overridden by the tests.
+schema_version = 2
+name = "WM-S-GOLDEN-R3"
+extends = "r3_packs_only.toml"
+
+[data]
+history_s = 60.0
+history_stride_s = 1.0
+
+[model]
+residual_soft_bound_mps2 = 4.0
+
+[loss]
+loss_share_logging = true
+
+[loss.residual]
+residual_mag_weight = 0.01
+
+[loss.lane_rate]
+weight = 1.0
+target = 0.0123
+
+[selection]
+select_by_long_horizon = true
+
+[curriculum]
+unroll_s = [10.0]
+stage_steps = [3]
+truncation_steps = 20
+
+[optim]
+batch_size = 2
+
+[runtime]
+device = "cpu"
+threads = 2
+num_workers = 0
+seed = 101

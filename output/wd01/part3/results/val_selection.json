@@ -1,0 +1,15 @@
+{
+ "selection_rule": "lowest val rollout speed-RSM at H=60 s across {phase1, curric10, curric40, curric120}; degradation >2% stops the curriculum and reverts",
+ "entries": [
+  {
+   "member": 0,
+   "stage": "phase1",
+   "val_speed_rmse": 10.5716
+  },
+  {
+   "member": 0,
+   "stage": "curric10",
+   "val_speed_rmse": 12.3739
+  }
+ ]
+}

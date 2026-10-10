@@ -1,0 +1,80 @@
+{
+  "name": "ws-swmodel",
+  "path": "E:\\rd-wt\\ws-swmodel",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/switch",
+  "headBefore": "bc88ebba7281688051383a2859cd2c5eb14aa709",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-swmodel",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-swmodel.tar.txt",
+  "uploadCount": 400,
+  "uploadBytes": 28345676,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-swmodel.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 c55a605eb29bc0a9730d7326da9e760c local c55a605eb29bc0a9730d7326da9e760c; size 6765961/6765961; manifest md5 match size match; members=400 (tar -t 400, sha256 400); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-swmodel.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 4,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:52:41.273484+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "bc88ebba7281688051383a2859cd2c5eb14aa709",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-swmodel/ws-swmodel.tar.zst",
+    "name": "ws-swmodel.tar.zst",
+    "size": 6765961,
+    "md5": "c55a605eb29bc0a9730d7326da9e760c",
+    "sha256": "5911b3133f6ef10f7ac00bb55b95a615605038c160bf58fa8c76fbc1e9aeae3f",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-swmodel/ws-swmodel.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-swmodel.manifest.json",
+    "manifest_size": 69184,
+    "manifest_md5": "4470564c83e478618daeaff9a91e29e4",
+    "member_count": 400,
+    "member_bytes": 28345676,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 12.6,
+    "verify_seconds": 0.7,
+    "upload_seconds": 94.8,
+    "upload_MBps": 0.07,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 400,
+  "memberBytes": 28345676,
+  "junctionsFound": []
+}

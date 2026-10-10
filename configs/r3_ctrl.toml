@@ -1,0 +1,9 @@
+# R3 control arm (R3_PRESET=R3_CTRL of the chain): identical to r3.toml with the braking losses off.
+schema_version = 2
+name = "WM-S-R3-CTRL"
+extends = "r3.toml"
+
+[loss.braking]
+asym_speed_alpha = 1.0
+decel_weight = 1.0
+propagation_weight = 0.0

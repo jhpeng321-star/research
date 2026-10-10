@@ -1,0 +1,60 @@
+{
+  "schema": "wm43b_exposure_audit/1",
+  "created_utc": "2026-09-30T01:56:35.401013+00:00",
+  "chosen_block": {
+    "A1": [
+      920249,
+      920250,
+      920251,
+      920252,
+      920253
+    ],
+    "A2": [
+      920254,
+      920255,
+      920256,
+      920257,
+      920258
+    ],
+    "A3": [
+      920259,
+      920260,
+      920261,
+      920262,
+      920263
+    ],
+    "A4": [
+      920264,
+      920265,
+      920266,
+      920267,
+      920268
+    ],
+    "A5": [
+      920269,
+      920270,
+      920271,
+      920272,
+      920273
+    ]
+  },
+  "method": "git grep -I -n --untracked --no-exclude-standard -P over each repo root (tracked + untracked + git-ignored file contents); identity-like = digits not embedded in a longer number/decimal; this fixture directory excluded",
+  "excluded_by_registration_rule": [
+    "WM43_WALL_MECHANICS_SEEDS 920244-920248 (consumed by WM-43 r7)",
+    "every SEALED_SEEDS / FINAL_TEST_SEEDS / PROSPECTIVE_EVALUATION_EXCLUDED_SEEDS member"
+  ],
+  "repos": [
+    {
+      "repo": "E:\\rd-wt\\wd01wallB",
+      "identity_like_hits": [],
+      "declared_non_use_exclusive_end_bounds": [
+        {
+          "seed": 920249,
+          "hit": "traffic_shepherd/seeds.py:233:WM43_WALL_MECHANICS_SEEDS = frozenset(range(920244, 920249))"
+        }
+      ]
+    }
+  ],
+  "verdict": "FRESH: zero identity-like occurrences in any audited repo",
+  "fresh": true
+}

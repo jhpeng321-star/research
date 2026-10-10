@@ -1,0 +1,183 @@
+"""wd01 predict contract v1 package (contract_version "wd01_predict/1").
+
+Pure numpy + stdlib; importable without torch. Spec:
+output/wd01/PREDICT_CONTRACT_v1.md (frozen 2026-09-25 — do not edit).
+
+Eager surface: contract types/constants, validators, native reference,
+Predictor protocol. Lazy surface (PEP 562): the conformance kit and the
+reference predictor, so `python -m predict.conformance` does not re-import
+them through the package.
+
+    from predict import run_conformance, ConstSpeedPredictor
+    run_conformance(ConstSpeedPredictor())   # -> ConformanceReport
+"""
+from .contract import (
+    ABORT_ASSEMBLY_TIMEOUT,
+    ABORT_NONE,
+    ABORT_REASONS,
+    ABORT_SAFETY,
+    ACTIONS,
+    ACTION_DAMPING,
+    ACTION_NATIVE,
+    ACTION_PI_EXTERNAL_U,
+    ACTION_WALL,
+    Arrival,
+    Arrivals,
+    ArrivalDraw,
+    CONTINUATION_NATIVE,
+    CONTINUATION_PLANNER,
+    CONTINUATIONS,
+    CONTRACT_VERSION,
+    CONTRACT_VERSION_V1_1,
+    CONTRACT_VERSION_V2,
+    DEFAULT_COMMIT_S,
+    SUPPORTED_CONTRACT_VERSIONS,
+    ControllerState,
+    ControllerStateEntry,
+    DEFAULT_HORIZON_S,
+    ENTRANCE_MAINLINE,
+    ENTRANCE_RAMP,
+    HiddenTrajectorySet,
+    LANE_ACCEL,
+    LANE_IDS,
+    LANE_MAIN_LEFT,
+    LANE_MAIN_RIGHT,
+    Meta,
+    PER_CAV_ACTIONS,
+    PHASES,
+    PHASE_ASSEMBLE,
+    PHASE_HOLD,
+    PHASE_RELEASE,
+    PLAN_VERSION,
+    PlanCandidate,
+    Prediction,
+    SampleMeta,
+    StateSample,
+    TRAJ_COLS,
+    WallOutcome,
+    WallSpec,
+)
+from .validate import (
+    ContractViolation,
+    PlanViolation,
+    PredictionViolation,
+    StateSamplesViolation,
+    validate_plan,
+    validate_prediction,
+    validate_state_samples,
+)
+from .native_ref import (
+    NativeReferenceError,
+    native_reference,
+    native_unlocked_reference,
+)
+from .protocol import Predictor, PredictorMixin, PredictorV2, PredictorV2Mixin
+
+__all__ = [
+    "CONTRACT_VERSION",
+    "CONTRACT_VERSION_V1_1",
+    "CONTRACT_VERSION_V2",
+    "SUPPORTED_CONTRACT_VERSIONS",
+    "PLAN_VERSION",
+    "DEFAULT_COMMIT_S",
+    "CONTINUATION_PLANNER",
+    "CONTINUATION_NATIVE",
+    "CONTINUATIONS",
+    "ACTION_NATIVE",
+    "ACTION_DAMPING",
+    "ACTION_PI_EXTERNAL_U",
+    "ACTION_WALL",
+    "ACTIONS",
+    "PER_CAV_ACTIONS",
+    "PHASE_ASSEMBLE",
+    "PHASE_HOLD",
+    "PHASE_RELEASE",
+    "PHASES",
+    "ABORT_NONE",
+    "ABORT_SAFETY",
+    "ABORT_ASSEMBLY_TIMEOUT",
+    "ABORT_REASONS",
+    "LANE_MAIN_LEFT",
+    "LANE_MAIN_RIGHT",
+    "LANE_ACCEL",
+    "LANE_IDS",
+    "ENTRANCE_MAINLINE",
+    "ENTRANCE_RAMP",
+    "DEFAULT_HORIZON_S",
+    "TRAJ_COLS",
+    "Arrival",
+    "ArrivalDraw",
+    "Arrivals",
+    "SampleMeta",
+    "StateSample",
+    "ControllerStateEntry",
+    "ControllerState",
+    "WallSpec",
+    "PlanCandidate",
+    "WallOutcome",
+    "HiddenTrajectorySet",
+    "Meta",
+    "Prediction",
+    "ContractViolation",
+    "PlanViolation",
+    "StateSamplesViolation",
+    "PredictionViolation",
+    "validate_plan",
+    "validate_state_samples",
+    "validate_prediction",
+    "NativeReferenceError",
+    "native_reference",
+    "native_unlocked_reference",
+    "Predictor",
+    "PredictorV2",
+    "PredictorV2Mixin",
+    # lazy (see __getattr__ below)
+    "ConformanceError",
+    "ConformanceReport",
+    "broken_predictors",
+    "broken_predictors_v2",
+    "build_cav_ids",
+    "build_controller_state",
+    "build_plans",
+    "build_state_samples",
+    "run_conformance",
+    "run_conformance_both_versions",
+    "run_conformance_v2",
+    "ConstSpeedPredictor",
+    "ConstSpeedPredictorV2",
+    "MODEL_ID",
+    "MODEL_ID_V2",
+    "safety_veto",
+    "safety_veto_v2",
+    "live_mode_allowed",
+]
+
+_LAZY = {
+    "ConformanceError": "conformance",
+    "ConformanceReport": "conformance",
+    "broken_predictors": "conformance",
+    "broken_predictors_v2": "conformance",
+    "build_cav_ids": "conformance",
+    "build_controller_state": "conformance",
+    "build_plans": "conformance",
+    "build_state_samples": "conformance",
+    "run_conformance": "conformance",
+    "run_conformance_both_versions": "conformance",
+    "run_conformance_v2": "conformance",
+    "ConstSpeedPredictor": "reference_const_speed",
+    "ConstSpeedPredictorV2": "reference_const_speed",
+    "MODEL_ID": "reference_const_speed",
+    "MODEL_ID_V2": "reference_const_speed",
+    "safety_veto": "safety",
+    "safety_veto_v2": "safety",
+    "live_mode_allowed": "safety",
+}
+
+
+def __getattr__(name):
+    mod = _LAZY.get(name)
+    if mod is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    import importlib
+
+    return getattr(importlib.import_module(f".{mod}", __name__), name)

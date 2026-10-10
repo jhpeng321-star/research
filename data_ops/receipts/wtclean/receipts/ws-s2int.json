@@ -1,0 +1,78 @@
+{
+  "name": "ws-s2int",
+  "path": "E:\\rd-wt\\ws-s2int",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/s2int",
+  "headBefore": "de1ca72558fbeecce4b2062e860a3a22a602fd43",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-s2int",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-s2int.tar.txt",
+  "uploadCount": 222,
+  "uploadBytes": 54617976,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-s2int.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 25d24b59dd4187895501569667cb036b local 25d24b59dd4187895501569667cb036b; size 10904016/10904016; manifest md5 match size match; members=222 (tar -t 222, sha256 222); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-s2int.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 3,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "output/wd01/wm_n1/rollout2/__pycache__/merge_cal.cpython-310.pyc",
+    "output/wd01/wm_n1/rollout2/tests/__pycache__/test_merge_cal.cpython-310-pytest-9.1.1.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:07:49.812631+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "de1ca72558fbeecce4b2062e860a3a22a602fd43",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "output/wd01/wm_n1/rollout2/__pycache__/merge_cal.cpython-310.pyc",
+    "output/wd01/wm_n1/rollout2/tests/__pycache__/test_merge_cal.cpython-310-pytest-9.1.1.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-s2int/ws-s2int.tar.zst",
+    "name": "ws-s2int.tar.zst",
+    "size": 10904016,
+    "md5": "25d24b59dd4187895501569667cb036b",
+    "sha256": "fb30eaa86d60189e958714033dcab2b06c20a02faf3e52c49f3cc0966b358a08",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-s2int/ws-s2int.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-s2int.manifest.json",
+    "manifest_size": 38055,
+    "manifest_md5": "bdc30ccea6e8933723939bf7b6004da5",
+    "member_count": 222,
+    "member_bytes": 54617976,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 8.2,
+    "verify_seconds": 1.0,
+    "upload_seconds": 48.2,
+    "upload_MBps": 0.23,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 222,
+  "memberBytes": 54617976,
+  "junctionsFound": []
+}

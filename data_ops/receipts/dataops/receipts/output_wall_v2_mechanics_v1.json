@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wall_v2_mechanics_v1",
+ "name": "wall_v2_mechanics_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wall_v2_mechanics_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_mechanics_v1/wall_v2_mechanics_v1.tar.zst",
+ "bytes": 1304213,
+ "files": 20,
+ "archive_bytes": 44772,
+ "archive_md5": "6bc34cf4d76f367b3ce1113549de35f8",
+ "member_manifest": "manifests/members/output_wall_v2_mechanics_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.2,
+ "timestamp": "2026-10-10T01:45:54"
+}

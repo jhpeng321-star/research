@@ -1,0 +1,956 @@
+{
+ "schema": "path_map/1",
+ "record": "MIG-03",
+ "created_utc": "2026-09-24T03:42:57+00:00",
+ "note": "Superseded CIRCLES-era sources relocated unchanged; old paths are provenance identifiers resolved through this map.",
+ "directories": [
+  {
+   "old": "docs/ppo_pilot_v1",
+   "new": "archive/circles_era/docs/ppo_pilot_v1"
+  }
+ ],
+ "files": [
+  {
+   "old": "traffic_shepherd/brake_hold_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/brake_hold_mechanics.py",
+   "bytes": 21816,
+   "sha256": "b87917d3e91066f48000955a99fa955d04abb7e7b8802237408bcad17204c41b"
+  },
+  {
+   "old": "traffic_shepherd/brake_hold_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/brake_hold_policy.py",
+   "bytes": 4308,
+   "sha256": "f490b099950e4ffd95487fa2a97fe9674992ab5c72bc8ba672d52dd26bba6335"
+  },
+  {
+   "old": "traffic_shepherd/brake_hold_study.py",
+   "new": "archive/circles_era/traffic_shepherd/brake_hold_study.py",
+   "bytes": 25697,
+   "sha256": "d36b12468a8de68a79821e94687bb663fdddb22c90d856c5d14f28f0afd5b9f0"
+  },
+  {
+   "old": "traffic_shepherd/candidate_availability.py",
+   "new": "archive/circles_era/traffic_shepherd/candidate_availability.py",
+   "bytes": 8928,
+   "sha256": "aaf013acc2764f54a3735f25c62a88c72cff8b04d44bf583efd9f152d4eb5a6b"
+  },
+  {
+   "old": "traffic_shepherd/cohort_campaign.py",
+   "new": "archive/circles_era/traffic_shepherd/cohort_campaign.py",
+   "bytes": 15524,
+   "sha256": "2156489bb69e37d196471388ac02f4af57d6d65493943927856c484fb524a1da"
+  },
+  {
+   "old": "traffic_shepherd/cohort_evidence.py",
+   "new": "archive/circles_era/traffic_shepherd/cohort_evidence.py",
+   "bytes": 21274,
+   "sha256": "309ed173249e0bbbd10cd164d01bac2392fa8a11d1553d85b1a0de600378b15a"
+  },
+  {
+   "old": "traffic_shepherd/cohort_study.py",
+   "new": "archive/circles_era/traffic_shepherd/cohort_study.py",
+   "bytes": 10357,
+   "sha256": "aa670646cc695d81bd5927b99fe48a24b1df535426406a3704d740b2e423af1c"
+  },
+  {
+   "old": "traffic_shepherd/continuation_dataset.py",
+   "new": "archive/circles_era/traffic_shepherd/continuation_dataset.py",
+   "bytes": 18628,
+   "sha256": "4dda035c25a9f4ffd88ef2a5a7921c8d9f6a1321a4b8b613b1d2992dd9737423"
+  },
+  {
+   "old": "traffic_shepherd/dissolution_study.py",
+   "new": "archive/circles_era/traffic_shepherd/dissolution_study.py",
+   "bytes": 10373,
+   "sha256": "567a5908b277b9280db4d96b1463c7ccb7fdb196d6b742f249333d6d399ddeda"
+  },
+  {
+   "old": "traffic_shepherd/duration_campaign.py",
+   "new": "archive/circles_era/traffic_shepherd/duration_campaign.py",
+   "bytes": 19091,
+   "sha256": "4240eb8427e2073b4dec4fca8fab9314d7c4cbaf2fa668fd1f6d1ab9ba72690f"
+  },
+  {
+   "old": "traffic_shepherd/duration_evidence.py",
+   "new": "archive/circles_era/traffic_shepherd/duration_evidence.py",
+   "bytes": 22492,
+   "sha256": "abdd29714eec13d1138e2fa0632b438236bc3f17ab0afc98011a3ea6053819a0"
+  },
+  {
+   "old": "traffic_shepherd/duration_study.py",
+   "new": "archive/circles_era/traffic_shepherd/duration_study.py",
+   "bytes": 12043,
+   "sha256": "ddd40441ef77d8199813335815bae75f3a35b675b6bcd57f273c7ce94e51e602"
+  },
+  {
+   "old": "traffic_shepherd/escalation_dataset.py",
+   "new": "archive/circles_era/traffic_shepherd/escalation_dataset.py",
+   "bytes": 19155,
+   "sha256": "1101430dcb336e8b2cdde7c96677d1426121853fa0fd49571b47710063eeefa6"
+  },
+  {
+   "old": "traffic_shepherd/escalation_evidence.py",
+   "new": "archive/circles_era/traffic_shepherd/escalation_evidence.py",
+   "bytes": 27082,
+   "sha256": "af59b4c5501f5c922d79b31609d25219e8b52d3a632146900d4b9569939660ad"
+  },
+  {
+   "old": "traffic_shepherd/escalation_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/escalation_policy.py",
+   "bytes": 25567,
+   "sha256": "62d6d467ddb15696e59dfa660ea033ccc811095496b21c3676b3b569a23ce59a"
+  },
+  {
+   "old": "traffic_shepherd/escalation_study.py",
+   "new": "archive/circles_era/traffic_shepherd/escalation_study.py",
+   "bytes": 29941,
+   "sha256": "ed38396d552a9a8b22a72b906538fff9eba3fbb70f2b65f67568a439b0e48808"
+  },
+  {
+   "old": "traffic_shepherd/formation.py",
+   "new": "archive/circles_era/traffic_shepherd/formation.py",
+   "bytes": 27335,
+   "sha256": "06673f552321b49675e12b96df2e46297c9d0e50e904ab7e19e8fbcc13e37978"
+  },
+  {
+   "old": "traffic_shepherd/formation_evidence.py",
+   "new": "archive/circles_era/traffic_shepherd/formation_evidence.py",
+   "bytes": 16919,
+   "sha256": "452812668f9a017a7393f7dfdb1dde181e8ebef156db83fc54739f7af4c8b6a2"
+  },
+  {
+   "old": "traffic_shepherd/formation_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/formation_mechanics.py",
+   "bytes": 25215,
+   "sha256": "29107eed806ef1c387c083ee4e4e26ca723caf9252efca8554dc9c90fd7c4829"
+  },
+  {
+   "old": "traffic_shepherd/gentle_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/gentle_mechanics.py",
+   "bytes": 29460,
+   "sha256": "849d4653bd2d7a61a78196c5f8ec375786830c7267dad3388737ca189176d975"
+  },
+  {
+   "old": "traffic_shepherd/gentle_study.py",
+   "new": "archive/circles_era/traffic_shepherd/gentle_study.py",
+   "bytes": 14653,
+   "sha256": "75288f4f205fbccf3b00def2ed2bcfaa0be21f317fb3c95acc3281265bd9f45a"
+  },
+  {
+   "old": "traffic_shepherd/gentle_wall.py",
+   "new": "archive/circles_era/traffic_shepherd/gentle_wall.py",
+   "bytes": 15397,
+   "sha256": "e920d94f74ae90068f5d296969f56f56d54d9ead3f1c05aea6d3977b2a080ce5"
+  },
+  {
+   "old": "traffic_shepherd/hold_extend_comparisons.py",
+   "new": "archive/circles_era/traffic_shepherd/hold_extend_comparisons.py",
+   "bytes": 22146,
+   "sha256": "b1ace07d6939ce8532d24088793c5b4e6f11d374f3e24c110267db76fe80787a"
+  },
+  {
+   "old": "traffic_shepherd/hold_extend_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/hold_extend_mechanics.py",
+   "bytes": 24694,
+   "sha256": "b504464bbedfd1fb9a8edfbfb191ca2f69672577d7c20932fb2685c355a9c8c6"
+  },
+  {
+   "old": "traffic_shepherd/hold_extend_study.py",
+   "new": "archive/circles_era/traffic_shepherd/hold_extend_study.py",
+   "bytes": 25316,
+   "sha256": "d2e1ca0c72b364b69dfde3c3cdbc60e554dba57ed8088e404d6e3cfc21f39844"
+  },
+  {
+   "old": "traffic_shepherd/hold_extend_wall.py",
+   "new": "archive/circles_era/traffic_shepherd/hold_extend_wall.py",
+   "bytes": 13447,
+   "sha256": "67ddc061199a931153262652c33ee8b50953eb6708d820973b3256b5a7b64d2e"
+  },
+  {
+   "old": "traffic_shepherd/interaction_diagnostics.py",
+   "new": "archive/circles_era/traffic_shepherd/interaction_diagnostics.py",
+   "bytes": 14131,
+   "sha256": "ca1fc218d87f5eff5d0aafab1d7d30328a52164f5f76c3ac82e11a7880276445"
+  },
+  {
+   "old": "traffic_shepherd/lifecycle_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/lifecycle_mechanics.py",
+   "bytes": 51878,
+   "sha256": "1096354877b2f8debbd2239bec9a9d40f0b86e662d6823323d3e2d75c31c1b86"
+  },
+  {
+   "old": "traffic_shepherd/lifecycle_study.py",
+   "new": "archive/circles_era/traffic_shepherd/lifecycle_study.py",
+   "bytes": 18395,
+   "sha256": "76ab8a78fd6d93b5cfe38bf97acb5fac63b5c813bef9d22cdb5ffcb256e6acb0"
+  },
+  {
+   "old": "traffic_shepherd/lifecycle_wall.py",
+   "new": "archive/circles_era/traffic_shepherd/lifecycle_wall.py",
+   "bytes": 22717,
+   "sha256": "1997638e5103be9192b4c5bf1b98bf3c00deef762457a826e9597fe7771a691f"
+  },
+  {
+   "old": "traffic_shepherd/multi_wall_probe.py",
+   "new": "archive/circles_era/traffic_shepherd/multi_wall_probe.py",
+   "bytes": 11423,
+   "sha256": "9824d2ba7ac7c0a1a1e24bb0f186fdd6d73ab4a8b27e3611386176f97b09eba1"
+  },
+  {
+   "old": "traffic_shepherd/observer_replay_evidence.py",
+   "new": "archive/circles_era/traffic_shepherd/observer_replay_evidence.py",
+   "bytes": 27372,
+   "sha256": "ef162aa4ace4f7fd9849ec4ac7c6a3d18484f1c746e6a5f9e6d6c5f2604f91f3"
+  },
+  {
+   "old": "traffic_shepherd/observer_replays.py",
+   "new": "archive/circles_era/traffic_shepherd/observer_replays.py",
+   "bytes": 8898,
+   "sha256": "184353b58533aea42dd1d124c43b6c5cf8d4b4f6920fbce3fa953ec5f7224fa4"
+  },
+  {
+   "old": "traffic_shepherd/paired_experiments.py",
+   "new": "archive/circles_era/traffic_shepherd/paired_experiments.py",
+   "bytes": 59399,
+   "sha256": "c33612fb1e35db67f558fa6b44b6cd6dd962fb550e8c2ab0ea8cd7230fb88d68"
+  },
+  {
+   "old": "traffic_shepherd/ppo_contract.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_contract.py",
+   "bytes": 13572,
+   "sha256": "991f811868f5d776cecff4590f705899e24c35050e79e5ba0b69d90a601ba78d"
+  },
+  {
+   "old": "traffic_shepherd/ppo_env.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_env.py",
+   "bytes": 21177,
+   "sha256": "b785ef8d290030b3a97bd0a169bb39d29a250259280ef40bbffca4b76cd64a77"
+  },
+  {
+   "old": "traffic_shepherd/ppo_features.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_features.py",
+   "bytes": 8167,
+   "sha256": "6f924789d53a928ea96023d2906461bb941fa5ca20a08ce224583f3377130563"
+  },
+  {
+   "old": "traffic_shepherd/ppo_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_mechanics.py",
+   "bytes": 20329,
+   "sha256": "36c6bf64843fa794cc4dd21d95a1a76ddb4785427167918dc77dea96c05ea774"
+  },
+  {
+   "old": "traffic_shepherd/ppo_net.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_net.py",
+   "bytes": 2026,
+   "sha256": "429eb0854d12a2cdaca81ea86d866ce1f2a2aa7609700bf673d83bc2c6494b3e"
+  },
+  {
+   "old": "traffic_shepherd/ppo_pilot.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_pilot.py",
+   "bytes": 37690,
+   "sha256": "14ae63a68085ea5eb0792a0d29b06670e3ead2bef13edb44ff19d21e2273632c"
+  },
+  {
+   "old": "traffic_shepherd/ppo_reward.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_reward.py",
+   "bytes": 8013,
+   "sha256": "eb228b04dad680676d57559ea99c21265bb598e6b3cf2cdfb5e02a406e6cc7d0"
+  },
+  {
+   "old": "traffic_shepherd/ppo_selector_mech.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_selector_mech.py",
+   "bytes": 25026,
+   "sha256": "6c72fef7c5e3c393826701c483db99b2d71d4b1b2faf5ec4b4ba1ff49b9f8d41"
+  },
+  {
+   "old": "traffic_shepherd/ppo_timing_analysis.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_timing_analysis.py",
+   "bytes": 10076,
+   "sha256": "2aff027d5318e11ec22c8da01cbc7faf83baf59a52f7b8677b7b42500180ab27"
+  },
+  {
+   "old": "traffic_shepherd/ppo_train.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_train.py",
+   "bytes": 12458,
+   "sha256": "bee46894b49ba7134167be23cfc8ab26284e0424f78d917be1abcd76941a0ca9"
+  },
+  {
+   "old": "traffic_shepherd/ppo_worker.py",
+   "new": "archive/circles_era/traffic_shepherd/ppo_worker.py",
+   "bytes": 6339,
+   "sha256": "03cf94a9bbffbbe24dd45d054f20f35b07b3191299d76fa640d94079f0cb56ad"
+  },
+  {
+   "old": "traffic_shepherd/proposal_features.py",
+   "new": "archive/circles_era/traffic_shepherd/proposal_features.py",
+   "bytes": 8816,
+   "sha256": "ccffc7ff4295dca8ca3b88e6a499984ca77abd71e848f64f37ddc02288fa3a58"
+  },
+  {
+   "old": "traffic_shepherd/recovery_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/recovery_mechanics.py",
+   "bytes": 8687,
+   "sha256": "d6dd0da860706479a9ace7490f35de49d99818c4cb79cd1d9853e84e19234bee"
+  },
+  {
+   "old": "traffic_shepherd/recovery_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/recovery_policy.py",
+   "bytes": 4233,
+   "sha256": "5ddc665e43f46cb032309ad651cd671d625bab95f4403ee5008a99e9625630b8"
+  },
+  {
+   "old": "traffic_shepherd/recovery_release.py",
+   "new": "archive/circles_era/traffic_shepherd/recovery_release.py",
+   "bytes": 13732,
+   "sha256": "df3e5c650fd15b849bb501d4564ac4137bb5b833bd5ee3e3b98b421255374b9c"
+  },
+  {
+   "old": "traffic_shepherd/regional_reports.py",
+   "new": "archive/circles_era/traffic_shepherd/regional_reports.py",
+   "bytes": 14630,
+   "sha256": "bf6f4ac1485e4701c09b6270ac55636dbf0ca4c5fb8056b7674df64f554f211c"
+  },
+  {
+   "old": "traffic_shepherd/report_dissolution.py",
+   "new": "archive/circles_era/traffic_shepherd/report_dissolution.py",
+   "bytes": 7447,
+   "sha256": "d3a87b82b336606c9a2639c73482f20a0bb43afd6dd35ee786e46d1828b482e8"
+  },
+  {
+   "old": "traffic_shepherd/selector_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/selector_policy.py",
+   "bytes": 5383,
+   "sha256": "aa5ed4127b4688449da6152b287231688d1f27cd2057d5d3fff4e0323d2eddea"
+  },
+  {
+   "old": "traffic_shepherd/selector_wall_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/selector_wall_policy.py",
+   "bytes": 17339,
+   "sha256": "9984351dbab45061aa154d6aad9fdd17f1d30c4eae955ded20fa8d2c5b845bd6"
+  },
+  {
+   "old": "traffic_shepherd/sensor_batch.py",
+   "new": "archive/circles_era/traffic_shepherd/sensor_batch.py",
+   "bytes": 1747,
+   "sha256": "e70ab9c9cef789331017653fa4aa263fd2e2c995dcd0239c708eb8518487d12e"
+  },
+  {
+   "old": "traffic_shepherd/sim_clock.py",
+   "new": "archive/circles_era/traffic_shepherd/sim_clock.py",
+   "bytes": 3236,
+   "sha256": "3abb8a1754ad0946ea174b520b82f75bfcf5e7b9855b7768fc0056d4d0d4c08f"
+  },
+  {
+   "old": "traffic_shepherd/target_adjust_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/target_adjust_mechanics.py",
+   "bytes": 30811,
+   "sha256": "3ad0be08f0fb95f4ffeadf721ffab31ff1c3364d83be0b739353fb4ba85654ab"
+  },
+  {
+   "old": "traffic_shepherd/target_adjust_study.py",
+   "new": "archive/circles_era/traffic_shepherd/target_adjust_study.py",
+   "bytes": 25049,
+   "sha256": "a29a3a48b88eee992536798e041f2496094c85a07eeb2f55dbc74017eb72f31c"
+  },
+  {
+   "old": "traffic_shepherd/target_adjust_wall.py",
+   "new": "archive/circles_era/traffic_shepherd/target_adjust_wall.py",
+   "bytes": 8802,
+   "sha256": "1af4619a94012e4e48b1f00a5f5414b915aa5d6a353ef4e032c15bbd5a497ed3"
+  },
+  {
+   "old": "traffic_shepherd/target_speed_mechanics.py",
+   "new": "archive/circles_era/traffic_shepherd/target_speed_mechanics.py",
+   "bytes": 28476,
+   "sha256": "1695aeb27c0d002dc2909cfba947457240ffe7c05dbe0cfba6bba621fe69e9ed"
+  },
+  {
+   "old": "traffic_shepherd/target_speed_study.py",
+   "new": "archive/circles_era/traffic_shepherd/target_speed_study.py",
+   "bytes": 20522,
+   "sha256": "3866056822b92fc3ff111989f8a93236aee4f0ac00f5d0d3d2759a0076efaf1f"
+  },
+  {
+   "old": "traffic_shepherd/target_speed_wall.py",
+   "new": "archive/circles_era/traffic_shepherd/target_speed_wall.py",
+   "bytes": 3226,
+   "sha256": "71b3dc2f1a3aca5b84c15a87b4ac27fd6d3c468a279f393e6200beea9b640939"
+  },
+  {
+   "old": "traffic_shepherd/wall.py",
+   "new": "archive/circles_era/traffic_shepherd/wall.py",
+   "bytes": 16045,
+   "sha256": "a5a2299ef02320d3b3493520acaf4b56a1dc61778a875674a028ea10dbff9900"
+  },
+  {
+   "old": "traffic_shepherd/wall_ppo_policy.py",
+   "new": "archive/circles_era/traffic_shepherd/wall_ppo_policy.py",
+   "bytes": 23124,
+   "sha256": "d496232dac7db6c3adef4d9f5597b79b2b121f11a67ec96fbe901edf5b435205"
+  },
+  {
+   "old": "tests/test_active_wall.py",
+   "new": "archive/circles_era/tests/test_active_wall.py",
+   "bytes": 10160,
+   "sha256": "2754190a96a8661840bc8e9c0a9d4b13e8b87265c5738ff9ad419100824f42fc"
+  },
+  {
+   "old": "tests/test_brake_hold_mechanics.py",
+   "new": "archive/circles_era/tests/test_brake_hold_mechanics.py",
+   "bytes": 7485,
+   "sha256": "d0ab1bcb670e99713128f97d7b807b3954fcb105783e80a8a097146cc0937e4b"
+  },
+  {
+   "old": "tests/test_brake_hold_policy.py",
+   "new": "archive/circles_era/tests/test_brake_hold_policy.py",
+   "bytes": 8173,
+   "sha256": "b74986c366309943a43847ef2b8bd84a4dd2ec5bc47c85f0508cd10350f9284e"
+  },
+  {
+   "old": "tests/test_brake_hold_study.py",
+   "new": "archive/circles_era/tests/test_brake_hold_study.py",
+   "bytes": 9793,
+   "sha256": "d71871e456c36d340de48cb7e8a782030b827dfebde9122c99e8cc09dd683e47"
+  },
+  {
+   "old": "tests/test_candidate_availability.py",
+   "new": "archive/circles_era/tests/test_candidate_availability.py",
+   "bytes": 6307,
+   "sha256": "ac3541110edb218042c9689df48c2e3a2584b78e8f90c092109104c7b5e65adc"
+  },
+  {
+   "old": "tests/test_cohort_campaign.py",
+   "new": "archive/circles_era/tests/test_cohort_campaign.py",
+   "bytes": 7004,
+   "sha256": "b378b5e00a549240bc8e2a45072474c87f88b8fc6c9d2df68b5a863eb9f7fe11"
+  },
+  {
+   "old": "tests/test_cohort_evidence.py",
+   "new": "archive/circles_era/tests/test_cohort_evidence.py",
+   "bytes": 13254,
+   "sha256": "374d5a78b3aa990c1be777a953dc5e269900a4e2c145fefd1d3f8fa179ef89d0"
+  },
+  {
+   "old": "tests/test_cohort_study.py",
+   "new": "archive/circles_era/tests/test_cohort_study.py",
+   "bytes": 5258,
+   "sha256": "b87004de742a6284daa250681733dfa60727859c0130086b4ea48e00b0c0cca9"
+  },
+  {
+   "old": "tests/test_duration_campaign.py",
+   "new": "archive/circles_era/tests/test_duration_campaign.py",
+   "bytes": 4704,
+   "sha256": "96720d3a339995bfe8749b6c941124eb8258d3675cf18ca2a04678c1d46a5505"
+  },
+  {
+   "old": "tests/test_duration_evidence.py",
+   "new": "archive/circles_era/tests/test_duration_evidence.py",
+   "bytes": 11090,
+   "sha256": "223de3abc2ceacd2d30c59c389a7c7427728cd7130304e1ce103a2d424e063db"
+  },
+  {
+   "old": "tests/test_duration_study.py",
+   "new": "archive/circles_era/tests/test_duration_study.py",
+   "bytes": 11015,
+   "sha256": "bec05bf291474e22df2ba55bede0acbfa14c492ae419efc603bfab47c9b9a319"
+  },
+  {
+   "old": "tests/test_emergency_braking_interface.py",
+   "new": "archive/circles_era/tests/test_emergency_braking_interface.py",
+   "bytes": 4975,
+   "sha256": "7267e7ebbe21a75dd39843cb9e3db612e2593ae44cf58547d756b67cedf61d5c"
+  },
+  {
+   "old": "tests/test_escalation_dataset.py",
+   "new": "archive/circles_era/tests/test_escalation_dataset.py",
+   "bytes": 2171,
+   "sha256": "50b1aa5e061832975b80d9e5dd5c6f1082f1c7f16828e4c074f90e26d79465bd"
+  },
+  {
+   "old": "tests/test_escalation_dataset_revision.py",
+   "new": "archive/circles_era/tests/test_escalation_dataset_revision.py",
+   "bytes": 18215,
+   "sha256": "0e49c6010c2b92c66d88b8643394ce4adcb6f3516a232054f26fd4f014be316f"
+  },
+  {
+   "old": "tests/test_escalation_evidence.py",
+   "new": "archive/circles_era/tests/test_escalation_evidence.py",
+   "bytes": 19205,
+   "sha256": "539bddd9f5cd045ac551a83ed2e552a59076c4dcdb5b795a878798b88b574b31"
+  },
+  {
+   "old": "tests/test_escalation_policy.py",
+   "new": "archive/circles_era/tests/test_escalation_policy.py",
+   "bytes": 17094,
+   "sha256": "d446c7ed0ab908827f2456d6db32237fcbed8f2115246078f43b2bd5d5a3579a"
+  },
+  {
+   "old": "tests/test_escalation_study.py",
+   "new": "archive/circles_era/tests/test_escalation_study.py",
+   "bytes": 7235,
+   "sha256": "cb61787212a6a375c0884ba48a8986f4fec04a67e6a2051833bc873dcf10d134"
+  },
+  {
+   "old": "tests/test_formation.py",
+   "new": "archive/circles_era/tests/test_formation.py",
+   "bytes": 15654,
+   "sha256": "283c3ffff404596572eccbd587767baf745ff61d78ae771aa457d74606f69bbe"
+  },
+  {
+   "old": "tests/test_formation_evidence.py",
+   "new": "archive/circles_era/tests/test_formation_evidence.py",
+   "bytes": 10921,
+   "sha256": "285eff3cb6f40373b009602bd24157b94dbb8627aed24da9997b5c7c1db6daa0"
+  },
+  {
+   "old": "tests/test_formation_mechanics.py",
+   "new": "archive/circles_era/tests/test_formation_mechanics.py",
+   "bytes": 5309,
+   "sha256": "663ddae6a883eed74f17acb54c6164edd6098175eb5bb48ad66ba1975c32e00e"
+  },
+  {
+   "old": "tests/test_gentle_mechanics.py",
+   "new": "archive/circles_era/tests/test_gentle_mechanics.py",
+   "bytes": 10679,
+   "sha256": "3558c7ec84da3c190469d56fa79b5b271fb55a4f2f86ea88dfb9cca87c3e7341"
+  },
+  {
+   "old": "tests/test_gentle_study.py",
+   "new": "archive/circles_era/tests/test_gentle_study.py",
+   "bytes": 2232,
+   "sha256": "f72d2d847b21368f3618a0416607005215d52738e7828cc0eae8e2a0e98190a8"
+  },
+  {
+   "old": "tests/test_gentle_wall.py",
+   "new": "archive/circles_era/tests/test_gentle_wall.py",
+   "bytes": 7339,
+   "sha256": "5285aad7ecb1ef61e164c5cb31a37d7c6397a2fcc5a64d46f25b6cdf8b0e69da"
+  },
+  {
+   "old": "tests/test_h0_exit_probe.py",
+   "new": "archive/circles_era/tests/test_h0_exit_probe.py",
+   "bytes": 9844,
+   "sha256": "3f17d6138dc8a204324bc84821eab16ac0cb23a8663b5b5e87be19deb772b1b5"
+  },
+  {
+   "old": "tests/test_hold_extend.py",
+   "new": "archive/circles_era/tests/test_hold_extend.py",
+   "bytes": 3825,
+   "sha256": "cc0428c05a5a2e62ddaeb2216ac953e5d92a26df7f639d923dfaa1b5360ab3d0"
+  },
+  {
+   "old": "tests/test_hold_extend_admission.py",
+   "new": "archive/circles_era/tests/test_hold_extend_admission.py",
+   "bytes": 16573,
+   "sha256": "91ae497a7f94a110d2bae1ca0a18cfa51bdd3f6f48819bbec1a0c3a831eba050"
+  },
+  {
+   "old": "tests/test_hold_extend_budget_integration.py",
+   "new": "archive/circles_era/tests/test_hold_extend_budget_integration.py",
+   "bytes": 9918,
+   "sha256": "0dab2139a665433c9c46f720246896c5dcae9402dce59a774d3095cf772ded4a"
+  },
+  {
+   "old": "tests/test_hold_extend_comparisons.py",
+   "new": "archive/circles_era/tests/test_hold_extend_comparisons.py",
+   "bytes": 10269,
+   "sha256": "fe7bce816cfe47c8746bd346d345a6a5f1e6cc907ee99cd34af36894548da8b9"
+  },
+  {
+   "old": "tests/test_interaction_diagnostics.py",
+   "new": "archive/circles_era/tests/test_interaction_diagnostics.py",
+   "bytes": 9702,
+   "sha256": "6159de0283fb18d4103fdadc638d520ac9923c95f66c257ed3f2732a988fed8a"
+  },
+  {
+   "old": "tests/test_lifecycle_mechanics.py",
+   "new": "archive/circles_era/tests/test_lifecycle_mechanics.py",
+   "bytes": 21178,
+   "sha256": "beddd036a9bac0ca67ab19fb936c0b302be156822657cea6aff15e80813e33ba"
+  },
+  {
+   "old": "tests/test_lifecycle_study.py",
+   "new": "archive/circles_era/tests/test_lifecycle_study.py",
+   "bytes": 8246,
+   "sha256": "4449c29405067b8dfd5fceb9c0f22787d1d01b623faf3f74175121d4528779ba"
+  },
+  {
+   "old": "tests/test_lifecycle_wall.py",
+   "new": "archive/circles_era/tests/test_lifecycle_wall.py",
+   "bytes": 15159,
+   "sha256": "de070bd3c8c19233614af4979b1f88ff3b85bc96ee443b92990ec7a77fccc45c"
+  },
+  {
+   "old": "tests/test_multi_wall_corridor_prelaunch.py",
+   "new": "archive/circles_era/tests/test_multi_wall_corridor_prelaunch.py",
+   "bytes": 1255,
+   "sha256": "b852e1b8bf021bc582af0903a5d3a379d17904af17f38c5bf77f64078dc78a43"
+  },
+  {
+   "old": "tests/test_multi_wall_probe.py",
+   "new": "archive/circles_era/tests/test_multi_wall_probe.py",
+   "bytes": 8056,
+   "sha256": "576aec72b52eeab0a947c42994c90bf0e758d586205bbe8552cbf7daf9c5db98"
+  },
+  {
+   "old": "tests/test_multi_wall_study.py",
+   "new": "archive/circles_era/tests/test_multi_wall_study.py",
+   "bytes": 3320,
+   "sha256": "220d905eb34086e959ec1bc6521ac84f73ad5405e051abbea1b76a5df15c3a27"
+  },
+  {
+   "old": "tests/test_observer_replay_evidence.py",
+   "new": "archive/circles_era/tests/test_observer_replay_evidence.py",
+   "bytes": 12498,
+   "sha256": "15634634a938045202a857223274632799437a7cefbb42a302b77d807bac2eae"
+  },
+  {
+   "old": "tests/test_observer_replays.py",
+   "new": "archive/circles_era/tests/test_observer_replays.py",
+   "bytes": 2914,
+   "sha256": "def94cbb362df27c90c94fff837a499d315e02ee71139550fef438e75ff9ab37"
+  },
+  {
+   "old": "tests/test_paired_experiments.py",
+   "new": "archive/circles_era/tests/test_paired_experiments.py",
+   "bytes": 24076,
+   "sha256": "d6388e856980bac60de36a2b3d5e7f566f7917b4439c9fdcf37c025696e49956"
+  },
+  {
+   "old": "tests/test_ppo_audit.py",
+   "new": "archive/circles_era/tests/test_ppo_audit.py",
+   "bytes": 8468,
+   "sha256": "25b582f10568e6f0b35f2b652675a937e0786b7a1e34d2c8748ffd84c170de50"
+  },
+  {
+   "old": "tests/test_ppo_credit.py",
+   "new": "archive/circles_era/tests/test_ppo_credit.py",
+   "bytes": 10226,
+   "sha256": "e5c54c9af7a0db51cdc2f7e17729c49d533f691a7302cc46a0d6f62239f6092b"
+  },
+  {
+   "old": "tests/test_ppo_duration_v2.py",
+   "new": "archive/circles_era/tests/test_ppo_duration_v2.py",
+   "bytes": 10802,
+   "sha256": "e00b7abeee043dda2c45f8103eee82ad3b142964038e3f9506f083a751d84327"
+  },
+  {
+   "old": "tests/test_ppo_env_mocked.py",
+   "new": "archive/circles_era/tests/test_ppo_env_mocked.py",
+   "bytes": 7018,
+   "sha256": "c9e01324ebb7df1d42e904c098f763e74747449f85d8773207fef664941ef4a2"
+  },
+  {
+   "old": "tests/test_ppo_mechanics_integration.py",
+   "new": "archive/circles_era/tests/test_ppo_mechanics_integration.py",
+   "bytes": 16629,
+   "sha256": "d6f2e81d61e0f327400ef4bdbe5c8bdef06051c019430e0265718ac96b8e19e0"
+  },
+  {
+   "old": "tests/test_ppo_pilot_interface.py",
+   "new": "archive/circles_era/tests/test_ppo_pilot_interface.py",
+   "bytes": 24947,
+   "sha256": "74354dec9607572c09352a49e63d41d4e8288c6f94ef68df7149ff00e1c8c5c7"
+  },
+  {
+   "old": "tests/test_ppo_selector.py",
+   "new": "archive/circles_era/tests/test_ppo_selector.py",
+   "bytes": 18674,
+   "sha256": "b82f07661a5b918363913e46377be734fd20f2b98f56ab7eab603263b31a7ecc"
+  },
+  {
+   "old": "tests/test_ppo_selector_env_populated.py",
+   "new": "archive/circles_era/tests/test_ppo_selector_env_populated.py",
+   "bytes": 22804,
+   "sha256": "f9455844088d05a64f56779177c721ee4d67dea5a7ca51c1346269a6dfe00908"
+  },
+  {
+   "old": "tests/test_ppo_selector_mech_integration.py",
+   "new": "archive/circles_era/tests/test_ppo_selector_mech_integration.py",
+   "bytes": 9815,
+   "sha256": "27e1748e98f359cba9f89e18a37b05a0628ab44813da0ca7636b348b846fc2ad"
+  },
+  {
+   "old": "tests/test_ppo_timing_v1.py",
+   "new": "archive/circles_era/tests/test_ppo_timing_v1.py",
+   "bytes": 9227,
+   "sha256": "90d87c344bd3d9801e9d4e4f3aa72001c177972f055a9d2dc4af0c8c6cbf02e3"
+  },
+  {
+   "old": "tests/test_proposal_features.py",
+   "new": "archive/circles_era/tests/test_proposal_features.py",
+   "bytes": 3288,
+   "sha256": "64eb39dd53481b69e6ec565947896c4879dd3a3315b9a694766fca93640e9038"
+  },
+  {
+   "old": "tests/test_recovery_policy.py",
+   "new": "archive/circles_era/tests/test_recovery_policy.py",
+   "bytes": 3014,
+   "sha256": "65190b5df58d928887ddd99a118b4030fadfda3be9ad753d91ebcac5549ebe61"
+  },
+  {
+   "old": "tests/test_recovery_release.py",
+   "new": "archive/circles_era/tests/test_recovery_release.py",
+   "bytes": 4731,
+   "sha256": "6ad66e84b5abde1aaad9401dd044470f1ea0e01731dc100114ee2041dd8b13eb"
+  },
+  {
+   "old": "tests/test_recovery_release_v2.py",
+   "new": "archive/circles_era/tests/test_recovery_release_v2.py",
+   "bytes": 1687,
+   "sha256": "f18aaaf6e91bd50e068043ec73c81edff05f9046986d82d3b2ec0e1cd68f8751"
+  },
+  {
+   "old": "tests/test_regional_reports.py",
+   "new": "archive/circles_era/tests/test_regional_reports.py",
+   "bytes": 9416,
+   "sha256": "7c48372e70aaaa1984514bf7d5c6a66da5c14274c7b4f119c388e5fc59a6dbe9"
+  },
+  {
+   "old": "tests/test_report_dissolution.py",
+   "new": "archive/circles_era/tests/test_report_dissolution.py",
+   "bytes": 5830,
+   "sha256": "cd4cca237dee1681ffad043a36afc210ccac2637cf70ba73d1fa1854895ed8b5"
+  },
+  {
+   "old": "tests/test_sensor_batch.py",
+   "new": "archive/circles_era/tests/test_sensor_batch.py",
+   "bytes": 1743,
+   "sha256": "def81575014571308987ff158d36d863a5c4db948ba8d37bad5a2c9681be312f"
+  },
+  {
+   "old": "tests/test_sim_clock.py",
+   "new": "archive/circles_era/tests/test_sim_clock.py",
+   "bytes": 7535,
+   "sha256": "a11b1eccf37b410691868aa19c645a68c3ee237e0b9d90846433e2c150f766e4"
+  },
+  {
+   "old": "tests/test_target_adjust.py",
+   "new": "archive/circles_era/tests/test_target_adjust.py",
+   "bytes": 5868,
+   "sha256": "b2a2d430311be11c258c644c4d3b42dac526ecde27bab4c0711f55af7968317c"
+  },
+  {
+   "old": "tests/test_target_speed.py",
+   "new": "archive/circles_era/tests/test_target_speed.py",
+   "bytes": 2584,
+   "sha256": "75b3c0fb5616302d5396824fc826021a6fa27d4add96edb0fe8cd58bd1d9fa67"
+  },
+  {
+   "old": "tests/test_ttc_diagnosis.py",
+   "new": "archive/circles_era/tests/test_ttc_diagnosis.py",
+   "bytes": 10943,
+   "sha256": "cb522218fe9449ee1e4f40065ad2cec57d0dfda717996a683ea816d7447aa981"
+  },
+  {
+   "old": "tests/test_driver_mix.py",
+   "new": "archive/circles_era/tests/test_driver_mix.py",
+   "bytes": 6778,
+   "sha256": "736bdaf34f2cbaf5b17d89fdc6e6e39383c194655bd31c98f3e533d25b1570bc"
+  },
+  {
+   "old": "tests/test_driver_mix_analysis.py",
+   "new": "archive/circles_era/tests/test_driver_mix_analysis.py",
+   "bytes": 958,
+   "sha256": "02babb5b7a3c8cfb171483317f941e2b6c16e75d73b7219acb97e211fc206c68"
+  },
+  {
+   "old": "tests/test_driver_mix_v2.py",
+   "new": "archive/circles_era/tests/test_driver_mix_v2.py",
+   "bytes": 977,
+   "sha256": "94c20fcac27e437999af34d885bcd733fc014d4f348bb09e092780606ffd5dc9"
+  },
+  {
+   "old": "tests/test_flow_effect.py",
+   "new": "archive/circles_era/tests/test_flow_effect.py",
+   "bytes": 2167,
+   "sha256": "d5ddc74a364824b07ec15a5e75b202696512d8b7d2f289bb99ec7f819bffa930"
+  },
+  {
+   "old": "tests/test_formation_harm.py",
+   "new": "archive/circles_era/tests/test_formation_harm.py",
+   "bytes": 1523,
+   "sha256": "6f697b933859de3e58bf0a952f8ceddb356ae36f960f5b6ebd6b1e7d89ea34b4"
+  },
+  {
+   "old": "tests/test_formation_interactions_v3.py",
+   "new": "archive/circles_era/tests/test_formation_interactions_v3.py",
+   "bytes": 1500,
+   "sha256": "954b866b16b9903eaead7ec3a202378f400ba39862131e0eb41a197e7283df39"
+  },
+  {
+   "old": "tests/test_h0_exit_probe_analysis.py",
+   "new": "archive/circles_era/tests/test_h0_exit_probe_analysis.py",
+   "bytes": 4992,
+   "sha256": "f80983628c1bc6641d22c8ea03ddd78f208407518993d67bd5654f02e71e9c36"
+  },
+  {
+   "old": "tests/test_multi_wall_completion.py",
+   "new": "archive/circles_era/tests/test_multi_wall_completion.py",
+   "bytes": 4650,
+   "sha256": "6b4825aae1b59e82534a87c74211324febd436e686519700b4a403a96eb67a99"
+  },
+  {
+   "old": "tests/test_multi_wall_mechanics.py",
+   "new": "archive/circles_era/tests/test_multi_wall_mechanics.py",
+   "bytes": 6757,
+   "sha256": "619430796f1d5777afc879120c6da19854c9d64057312c060accf39f8792958f"
+  },
+  {
+   "old": "tests/test_multi_wall_prefix.py",
+   "new": "archive/circles_era/tests/test_multi_wall_prefix.py",
+   "bytes": 2578,
+   "sha256": "c84f5d97f15e302835677e463cecebc63062755c3334a34967b589310ff31e02"
+  },
+  {
+   "old": "tests/test_multi_wall_prefix_v2.py",
+   "new": "archive/circles_era/tests/test_multi_wall_prefix_v2.py",
+   "bytes": 1648,
+   "sha256": "18a55fca714c5c8346b913a8d6ad2c35a7fc233505e64fb8a03a18c769097e8e"
+  },
+  {
+   "old": "tests/test_multi_wall_segments.py",
+   "new": "archive/circles_era/tests/test_multi_wall_segments.py",
+   "bytes": 3871,
+   "sha256": "e384be433955199acb2b31f4cbb3c3d7209f165027853cf6b6a0b54af4f62eb9"
+  },
+  {
+   "old": "tests/test_oe47_c_observable_timing.py",
+   "new": "archive/circles_era/tests/test_oe47_c_observable_timing.py",
+   "bytes": 8989,
+   "sha256": "55d36cebcb82abbc7007b705c8cd41fc994db20f990469cd706f226252e10c5a"
+  },
+  {
+   "old": "tests/test_paired_analysis.py",
+   "new": "archive/circles_era/tests/test_paired_analysis.py",
+   "bytes": 1835,
+   "sha256": "5949e29b84066c5e2ceb77ca828f360d03707c6e4a2c67f28ad550a40767970a"
+  },
+  {
+   "old": "tests/test_oe46_b_dataset.py",
+   "new": "archive/circles_era/tests/test_oe46_b_dataset.py",
+   "bytes": 16054,
+   "sha256": "f535edb9eba1c42ed4badcf74e04c3330ffaed6b597ffe0abb802d1173bcd71d"
+  },
+  {
+   "old": "tests/test_formation_interactions.py",
+   "new": "archive/circles_era/tests/test_formation_interactions.py",
+   "bytes": 1130,
+   "sha256": "ef307031d228a4dfac133ccd8893cf894a96b6709ae898157b2404981072ec37"
+  },
+  {
+   "old": "docs/BRAKE_HOLD_TEST.md",
+   "new": "archive/circles_era/docs/BRAKE_HOLD_TEST.md",
+   "bytes": 5545,
+   "sha256": "62e26f32d94dc2c37ea86f4eb7e227d449b6f327b9d6e7f7c432122944712506"
+  },
+  {
+   "old": "docs/COHORT_ELIGIBILITY_CHECK.md",
+   "new": "archive/circles_era/docs/COHORT_ELIGIBILITY_CHECK.md",
+   "bytes": 4103,
+   "sha256": "eed2473ff31e4def783affeb291bae3275f3d178031b40e632765a4932923c4f"
+  },
+  {
+   "old": "docs/DURATION_RELEASE_CHECK.md",
+   "new": "archive/circles_era/docs/DURATION_RELEASE_CHECK.md",
+   "bytes": 6049,
+   "sha256": "5962b0118d701d20790660708377f9d2e14051aaa74d7066a3cd3e6c3a6e75d8"
+  },
+  {
+   "old": "docs/ESCALATION_EXECUTION_STATUS.md",
+   "new": "archive/circles_era/docs/ESCALATION_EXECUTION_STATUS.md",
+   "bytes": 6971,
+   "sha256": "bf61bcd98c0b5912da38cf2de5d7cb565db7012612ae87eb1d5e5b40d0ee1395",
+   "current_bytes": 6983,
+   "current_sha256": "3126dfee1a844e46d8138e4010130bf8cfceb57d6740c50057eca60673b7c8c9",
+   "note": "Line endings normalized to CRLF by the MIG-03 link pass (original mixed CRLF/LF); text identical to the original modulo line endings; original bytes/sha256 above; not pinned by any frozen record."
+  },
+  {
+   "old": "docs/ESCALATION_TESTS.md",
+   "new": "archive/circles_era/docs/ESCALATION_TESTS.md",
+   "bytes": 13701,
+   "sha256": "a6c5827c23612fe6baf891a05484a4f78efb9235768cb2cddd1d08c330ac0e8d",
+   "current_bytes": 13705,
+   "current_sha256": "4eaf51e1b6df7a4aa181d0856c4d30740a7b90c370d85a4429bfe91e03d97c76",
+   "note": "Line endings normalized to CRLF by the MIG-03 link pass (original mixed CRLF/LF); text identical to the original modulo line endings; original bytes/sha256 above; not pinned by any frozen record."
+  },
+  {
+   "old": "docs/GENTLE_WALL_CHECK.md",
+   "new": "archive/circles_era/docs/GENTLE_WALL_CHECK.md",
+   "bytes": 4131,
+   "sha256": "ba42ae9393b09f7fc758be836b4095db8137e11f80ba68d624e205b703b48f3e"
+  },
+  {
+   "old": "docs/HOLD_EXTEND_CHECK.md",
+   "new": "archive/circles_era/docs/HOLD_EXTEND_CHECK.md",
+   "bytes": 3982,
+   "sha256": "daa54641ed671855a63a32dd01a36e3bc3023dd6c250cbf0b989059608c922b7"
+  },
+  {
+   "old": "docs/LIFECYCLE_FIXTURE_INSERTION_CHECK.md",
+   "new": "archive/circles_era/docs/LIFECYCLE_FIXTURE_INSERTION_CHECK.md",
+   "bytes": 4034,
+   "sha256": "8e7de2732e2d74b61a913fa90e12343c04947d7e537c8ada75d47376863cdffc"
+  },
+  {
+   "old": "docs/LIFECYCLE_MAINTAINABLE_CHECK.md",
+   "new": "archive/circles_era/docs/LIFECYCLE_MAINTAINABLE_CHECK.md",
+   "bytes": 4307,
+   "sha256": "047fa67ac1579d260daeff763a16f87270e0041ed185cfed3e648d0231e17060"
+  },
+  {
+   "old": "docs/LIFECYCLE_REPAIR_CHECK.md",
+   "new": "archive/circles_era/docs/LIFECYCLE_REPAIR_CHECK.md",
+   "bytes": 4887,
+   "sha256": "455c081f9d89ddea3991003816e00dc9fe0951ee8de64a8b70107c3f7946f53f"
+  },
+  {
+   "old": "docs/OBSERVER_REPLAY_EXECUTION.md",
+   "new": "archive/circles_era/docs/OBSERVER_REPLAY_EXECUTION.md",
+   "bytes": 3819,
+   "sha256": "2ec5fca47b8a247f88a8b9d7fb8e17a7217e0f995821462fc938fdb05c0c90ea"
+  },
+  {
+   "old": "docs/RSU_DISSOLUTION_CHECK.md",
+   "new": "archive/circles_era/docs/RSU_DISSOLUTION_CHECK.md",
+   "bytes": 3693,
+   "sha256": "93b4d2f7d555506ae97e83154aad0cd7be611aa335e013f3af7f18b0a5942c72"
+  },
+  {
+   "old": "docs/TARGET_ADJUST_CHECK.md",
+   "new": "archive/circles_era/docs/TARGET_ADJUST_CHECK.md",
+   "bytes": 3714,
+   "sha256": "c0f7e75eeeffb9ad5b64919c61a5c5dfc25691ccc55f04ae9f6092cc6d65ba54"
+  },
+  {
+   "old": "docs/TARGET_SPEED_CHECK.md",
+   "new": "archive/circles_era/docs/TARGET_SPEED_CHECK.md",
+   "bytes": 4300,
+   "sha256": "bff48045eabb8a407fa94665c29e3c2f5058a7406883e9a08cc57c3622c7af74"
+  },
+  {
+   "old": "docs/ppo_pilot_v1/CONTRACT.md",
+   "new": "archive/circles_era/docs/ppo_pilot_v1/CONTRACT.md",
+   "bytes": 6987,
+   "sha256": "8b8da7473da1c3357f6cf4825b4b3dfef5827e4f3f065373ab6b2a7b189b1eff"
+  },
+  {
+   "old": "tools/build_duration_reuse.py",
+   "new": "archive/circles_era/tools/build_duration_reuse.py",
+   "bytes": 2879,
+   "sha256": "416df63e9ae64da1af7723a39c089ddb735c849d9dc1a0aab82786ed02ee13f0"
+  },
+  {
+   "old": "tools/build_pair_inventory.py",
+   "new": "archive/circles_era/tools/build_pair_inventory.py",
+   "bytes": 8891,
+   "sha256": "369dfd53ba2fd967530bbb19946d02a0ea68dbef9760911bb6b4362fda3fe805"
+  },
+  {
+   "old": "tools/physical_review.py",
+   "new": "archive/circles_era/tools/physical_review.py",
+   "bytes": 5401,
+   "sha256": "1cf617daa4243a27f8f547ec73bf9242566d5693c0703404904589ab610af6f4"
+  }
+ ]
+}

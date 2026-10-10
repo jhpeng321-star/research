@@ -1,0 +1,90 @@
+{
+ "checks": {
+  "coverage": true,
+  "schema": true,
+  "shape": true
+ },
+ "coverage": {
+  "exact_match": true,
+  "non_train_positions": 0,
+  "sidecar_positions": 2153,
+  "train_manifest_positions": 2153,
+  "train_positions_covered": 2153
+ },
+ "metadata_only": true,
+ "n_vehicles": 23131,
+ "outcomes": {
+  "files": [
+   "base_train_outcomes.parquet",
+   "overlay_outcomes.parquet",
+   "TRAIN_ISOLATION_RECEIPT.json",
+   "SHA256SUMS"
+  ],
+  "n_items_train": 2153,
+  "n_rows": 71622,
+  "output_files_sha256": {
+   "SHA256SUMS": "5d7de14bbf1aca698cde47450d1cc0ba30e3052d3fc2d47e252acdca34afbcd5",
+   "TRAIN_ISOLATION_RECEIPT.json": "f418173f995d5b1815367da5e55f17f358d4cfa4dbd5ecc77674505bbf0865ca",
+   "base_train_outcomes.parquet": "1e0ec6de0e2cdfd386fd84165879cac88b21d8cf16277d71108668d2306839ef",
+   "overlay_outcomes.parquet": "705e8195d0cf523d74d2299f5fa960db5feed9a7ad68041613d0478a2def14dc"
+  },
+  "pack_manifest_sha256": "f70f94bb2fa70e286b4555b2f5577349890c915c453f372a85b29b022d116ea6",
+  "path": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\outcomes",
+  "schema": "wm_n1_train_outcomes_sidecar/3",
+  "source": "D:\\rd-staging\\wmn1_feat\\labels_cov_20261004T072826Z",
+  "source_files_sha256": {
+   "SHA256SUMS": "5d7de14bbf1aca698cde47450d1cc0ba30e3052d3fc2d47e252acdca34afbcd5",
+   "TRAIN_ISOLATION_RECEIPT.json": "f418173f995d5b1815367da5e55f17f358d4cfa4dbd5ecc77674505bbf0865ca",
+   "base_train_outcomes.parquet": "1e0ec6de0e2cdfd386fd84165879cac88b21d8cf16277d71108668d2306839ef",
+   "overlay_outcomes.parquet": "705e8195d0cf523d74d2299f5fa960db5feed9a7ad68041613d0478a2def14dc"
+  },
+  "split": "TRAIN"
+ },
+ "output": {
+  "files": [
+   "identities.npy",
+   "global_positions.npy",
+   "vehicle_map.json",
+   "TRAIN_IDENTITY_RECEIPT.json"
+  ],
+  "files_sha256": {
+   "TRAIN_IDENTITY_RECEIPT.json": "46097207587f8c55cebc3dba35a5ccc96661f00118ec51cb7490e5be68f2f3d2",
+   "global_positions.npy": "bfdaf0de3aa78305a174bf60604881552d87a0c2b7eabc04dabe1193c9c59017",
+   "identities.npy": "1ce43bae52494d856f5877375804dc46e6c3d64ec72068f8161394693532c9de",
+   "vehicle_map.json": "4c345b59caa2d70217470995e43cebf96d43af08622d4bb9b8fa1c16bc17330c"
+  },
+  "path": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\identities"
+ },
+ "pack": {
+  "k_max": 192,
+  "manifest_sha256": "f70f94bb2fa70e286b4555b2f5577349890c915c453f372a85b29b022d116ea6",
+  "n_manifest_items": 2463,
+  "path": "D:\\rd-staging\\wmn1_feat\\pack_v3"
+ },
+ "rows": 2153,
+ "schema": "wm_n1_packv3_identity_build/1",
+ "slot_width": 192,
+ "source": {
+  "TRAIN_IDENTITY_RECEIPT_sha256": "46097207587f8c55cebc3dba35a5ccc96661f00118ec51cb7490e5be68f2f3d2",
+  "files_sha256": {
+   "TRAIN_IDENTITY_RECEIPT.json": "46097207587f8c55cebc3dba35a5ccc96661f00118ec51cb7490e5be68f2f3d2",
+   "global_positions.npy": "bfdaf0de3aa78305a174bf60604881552d87a0c2b7eabc04dabe1193c9c59017",
+   "identities.npy": "1ce43bae52494d856f5877375804dc46e6c3d64ec72068f8161394693532c9de",
+   "vehicle_map.json": "4c345b59caa2d70217470995e43cebf96d43af08622d4bb9b8fa1c16bc17330c"
+  },
+  "path": "E:\\rd-wt\\ws-p2\\_ext\\identities"
+ },
+ "task": "PACKV3-FIX-01 correct pack_v3 TRAIN identity sidecar",
+ "vehicle_map_sample": [
+  [
+   "chunk1",
+   "w8411m2700p02t240",
+   "mainline.0"
+  ],
+  [
+   "chunk1",
+   "w8411m2700p02t240",
+   "mainline.100"
+  ]
+ ]
+}

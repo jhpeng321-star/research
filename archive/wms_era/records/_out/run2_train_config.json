@@ -1,0 +1,78 @@
+{
+  "schema": "wms_run2_train_config/1",
+  "purpose": "RUN 2 structured WM-S training config = run-1 defaults + junction fix (active) + merge_cal ON + entries-v2 (trainer) + traffic-level losses + 300 s curriculum; state-noise injection OFF.",
+  "comparator": "WM-S-TRAIN-20261005",
+  "curriculum_s": [10, 30, 60, 120, 300],
+  "junction_fix": "active by default (wms.presence + train loss_valid + wms_eval wms_plugin)",
+  "merge_cal": {
+    "enabled": true,
+    "cli": ["--merge-cal", "--merge-cal-params", "<run2_chain>/merge_params.json"],
+    "params_source": "E:/rd-wt/ws-merge/_out/merge_params.json",
+    "params_committed": "_out/merge_params.json",
+    "applied_via": "PhysicsConfig.from_params_file (unknown keys filtered, null values keep defaults)"
+  },
+  "entries": {
+    "enabled": true,
+    "cli": ["--entries-v2", "--entry-pad", "8"],
+    "note": "observed pre-t0 history arrivals occupy free padding slots; excluded from per-car loss"
+  },
+  "traffic_losses": {
+    "enabled": true,
+    "cli": ["--traffic-loss"],
+    "note": "final flag names confirmed against the merged wms.cli --help by run2_chain.sh"
+  },
+  "noise_injection": {
+    "enabled": false,
+    "cli": [],
+    "note": "B4 state-noise is available in the merged trainer; run 2 keeps it OFF"
+  },
+  "stability": {
+    "source_branch": "wms/stab (merged into wms/run2b)",
+    "projection": {
+      "enabled": true,
+      "cli": ["--projection", "--projection-min-gap-m", "2.0"],
+      "note": "differentiable per-step feasibility projection (min gap, speed, lane); logs projection-active fractions"
+    },
+    "residual_cap": {
+      "enabled": true,
+      "residual_cap_mps2": 1.5,
+      "lane_logit_cap": 3.0,
+      "cli": ["--residual-cap-mps2", "1.5", "--lane-logit-cap", "3.0"],
+      "note": "default caps recommended by the wms/stab branch (R2_STABILITY.md suggested usage)"
+    },
+    "contractive_regulariser": {
+      "enabled": true,
+      "stability_weight": 0.01,
+      "stability_margin": 1.0,
+      "stability_probes": 1,
+      "cli": ["--stability-weight", "0.01", "--stability-margin", "1.0", "--stability-probes", "1"],
+      "note": "small weight; relu(amplification - margin) on the residual net"
+    },
+    "conservation": {
+      "metric_enabled": true,
+      "loss_enabled": false,
+      "conservation_weight": 0.0,
+      "cli": ["--conservation-metric"],
+      "note": "vehicle-count metric on_road == initial + entered - exited is logged; loss term OFF (stab branch does not recommend enabling it)"
+    },
+    "state_noise": {"enabled": false, "cli": []}
+  },
+  "frozen_run1_defaults": {
+    "pack": "pack_v3 + pack_dspeed + pack_damping",
+    "window_list": "windows_train_noPI.json (1307 windows)",
+    "exclude_window_list": "pi_excluded_runs.json",
+    "val_window_list": "windows_val.json (monitoring only)",
+    "device": "cuda",
+    "threads": 4,
+    "num_workers": 10,
+    "batch_size": 8,
+    "sumo_fidelity": true,
+    "start_shift_prob": 0.75,
+    "truncation_steps": 20
+  },
+  "budget": {
+    "plan_budget_s": 18000,
+    "hard_cap_s": 28800,
+    "note": "plan_steps chooses per-stage optimizer steps; refuse to start above the 8 h cap"
+  }
+}

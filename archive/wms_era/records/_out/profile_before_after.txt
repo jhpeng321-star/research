@@ -1,0 +1,43 @@
+REFERENCE
+         120938 function calls (111778 primitive calls) in 33.556 seconds
+
+   Ordered by: internal time
+   List reduced from 318 to 12 due to restriction <12>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        4   19.350    4.837   19.350    4.837 {method 'run_backward' of 'torch._C._EngineBase' objects}
+     2100    3.019    0.001    3.019    0.001 {built-in method torch._C._nn.linear}
+      678    1.547    0.002    1.547    0.002 {built-in method torch._C._nn.gelu}
+       60    1.515    0.025    1.652    0.028 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\stability.py:238(_project_gaps_reference)
+      660    1.356    0.002    2.110    0.003 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\model.py:275(_neighbour)
+      186    0.958    0.005    6.900    0.037 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:120(forward)
+      186    0.684    0.004    0.865    0.005 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:109(_neighbourhood)
+      186    0.542    0.003    4.040    0.022 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:92(_pair_bias)
+      368    0.373    0.001    0.373    0.001 {built-in method torch.stack}
+     3483    0.325    0.000    0.325    0.000 {built-in method torch.where}
+      540    0.233    0.000    0.346    0.001 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\model.py:263(_idm)
+       60    0.211    0.004    0.456    0.008 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\model.py:304(_merge_cal_yield)
+
+
+
+VECTORISED
+         116755 function calls (107715 primitive calls) in 15.170 seconds
+
+   Ordered by: internal time
+   List reduced from 321 to 12 due to restriction <12>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        4    7.960    1.990    7.960    1.990 {method 'run_backward' of 'torch._C._EngineBase' objects}
+     2100    1.765    0.001    1.765    0.001 {built-in method torch._C._nn.linear}
+      678    1.043    0.002    1.043    0.002 {built-in method torch._C._nn.gelu}
+      186    0.491    0.003    3.930    0.021 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:120(forward)
+      660    0.486    0.001    0.866    0.001 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\model.py:275(_neighbour)
+      186    0.301    0.002    2.561    0.014 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:92(_pair_bias)
+      186    0.283    0.002    0.336    0.002 E:\rd-wt\ws-run3\output\wd01\wm_n1\hdv\net.py:109(_neighbourhood)
+      368    0.223    0.001    0.223    0.001 {built-in method torch.stack}
+     4221    0.194    0.000    0.194    0.000 {built-in method torch.where}
+       60    0.169    0.003    0.258    0.004 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\stability.py:168(_project_gaps)
+      540    0.155    0.000    0.233    0.000 E:\rd-wt\ws-run3\output/wd01/wm_n1\wms\model.py:263(_idm)
+     2176    0.136    0.000    0.136    0.000 {method 'to' of 'torch._C.TensorBase' objects}
+
+

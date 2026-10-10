@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_stage4_rehearsal",
+ "name": "worldmodel_stage4_rehearsal",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_stage4_rehearsal",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage4_rehearsal/worldmodel_stage4_rehearsal.tar.zst",
+ "bytes": 24563,
+ "files": 3,
+ "archive_bytes": 6633,
+ "archive_md5": "43e846c048a1176611c738547bc21bc0",
+ "member_manifest": "manifests/members/output_worldmodel_stage4_rehearsal.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 17.4,
+ "timestamp": "2026-10-10T01:30:49"
+}

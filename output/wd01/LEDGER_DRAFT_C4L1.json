@@ -1,0 +1,150 @@
+[
+  {
+    "experiment_id": "WD-01-C4L1",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "completed",
+    "execution_status": "completed",
+    "evidence_validity": "valid",
+    "scientific_verdict": "PASS (protocol deviation: restarts beyond the registered allowance, one after partial rows; no numbers seen; the implementation corrected to the registered window rule)",
+    "recorded_utc": "2026-09-30T03:15:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-C4L1 task, worktree wd01c4l1); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_C4L1.md",
+      "registered": "2026-09-30 (frozen, commit e93ffb3); LF-sha256 5e4a772137b8b427823b4860a20440eaa65abcbea735551eff681aa67b80b124 verified by the eval gate before the pass and pinned in C4L1_FREEZE.json",
+      "type": "ANALYSIS on existing logs, zero simulation; FIRST look at the 9 chunk-4 CALIBRATION worlds (nominal Part A v2 general, true-state input); ONE pass; pre-specified rule (a)+(c)+(d) at H30 binding, (b) reported only"
+    },
+    "question": "Does Part A v2 general (one-parameter-set Treiber IDM + MOBIL + merge engine, nominal params, TRUE logged zone state, native CAV path) reach the pre-specified accuracy and safety criteria at H = 30 s on the previously unopened chunk-4 CALIBRATION worlds' __native_base truth?",
+    "closest_prior_and_difference": {
+      "related_records": [
+        "WD-01-PA2G-A2 (output/wd01/REPORT_PA2G_EVAL_A2.md): same engine, same truth type, same metrics, 32 TRAIN worlds, descriptive only"
+      ],
+      "unanswered_difference": "first look at CALIBRATION worlds with a pre-specified pass/fail rule and one pass"
+    },
+    "changed_variable": "world set (TRAIN -> the 9 CALIBRATION worlds) + pre-specified decision rule; engine/params/comparators/metrics unchanged",
+    "data": {
+      "truth": "E:/research-dense/runs/campaign_stage1_chunk4/<world>__native_base/run/physics_steps.jsonl, receipt exit_status complete + coverage, CAV ids from physics-row cav_ids",
+      "worlds": "9/9 registered CALIBRATION worlds usable; refused worlds: NONE",
+      "access_control": "registration LF-sha gate + freeze gate (engine commit, params LF-sha, 6 eval-script sha256s) verified before start; HOLDOUT refused by split check + holdout_exclusions guard; exposure audit at run time PASSED (output/wd01/partA_v2g/EXPOSURE_AUDIT_C4L1.md; zero hits across 49 output roots); opened files asserted CAL-only (results/c4l1/opened_run_files_complete.json)"
+    },
+    "budget_and_charges": {
+      "registered_budget": "one eval_c4l1 pass, workers 1, low priority, zero SUMO, wall 1703 s (summary.json)",
+      "allocations": [
+        {
+          "id": "c4l1_attempt1",
+          "status": "aborted_pre_row",
+          "note": "crash BEFORE any row: params assert compared raw-bytes sha to the registered LF-sha; receipt output/wd01/partA_v2g/c4l1_run_attempt1_aborted_paramsassert.out; the registered ONE disclosed restart was used"
+        },
+        {
+          "id": "c4l1_attempt2",
+          "status": "aborted_external_kill_protocol_deviation",
+          "note": "shell-timeout kill while the laptop was saturated by an unrelated concurrent 4-worker job (untouched); 467 shard rows existed (w8621 complete, w8622 partial); NO aggregation, NO number seen; the partial exposed a mechanical window-rule deviation (A2 hs_ok scores w+H<=t_end=t0+600 vs registered s+H<=t0+540; 280 vs 256 rows/world); preserved at results/c4l1/aborted_attempt2/ (ABORTED_NOTE.md) + c4l1_run_attempt2_aborted_timeout.out; none of its data feeds the look"
+        },
+        {
+          "id": "c4l1_attempt3_final",
+          "status": "completed",
+          "note": "registered t0+540 horizon enforced, freeze refreshed and committed before the pass; ONE continuous process, 9/9 worlds, 1920 raw rows saved before aggregation; c4l1_run.out; a pre-row mkdir crash receipt (c4l1_run_attempt3_aborted_mkdir.out) preceded this launch (results dir held the attempt-2 record)"
+        }
+      ]
+    },
+    "physical_results": {
+      "verified_against": "output/wd01/partA_v2g/results/c4l1/criteria_verdict.json + summary.json",
+      "units": "delay/TTC/hard errors per-window aggregates in vehicle-seconds/pair-seconds (pred - truth); s_RMSE in m; v_RMSE in m/s",
+      "criteria_verdict_H30": {
+        "a_collisions_per_1000": 0.0105,
+        "c_delay_mae_v2g_s": 32.47,
+        "c_delay_mae_const_speed_s": 69.9,
+        "c_mean_signed_delay_err_s": -1.99,
+        "c_mean_truth_tracked_delay_s": 925.97,
+        "c_bias_limit_s": 138.9,
+        "d_v_rmse_v2g": 4.959,
+        "d_v_rmse_const_speed": 8.069,
+        "d_v_rmse_p3o_replica": 5.834,
+        "d_limit_1_05x_min": 6.125,
+        "passed": true
+      },
+      "headline": {
+        "v2g_s_rmse_mean_m": {
+          "H10": 8.44,
+          "H30": 50.26,
+          "H60": 116.18,
+          "H120": 155.12
+        },
+        "v2g_delay_err_mean_s": {
+          "H10": 4.88,
+          "H30": -1.99,
+          "H60": -154.48,
+          "H120": -709.24
+        },
+        "v2g_delay_err_mae_s": {
+          "H10": 5.85,
+          "H30": 32.47,
+          "H60": 181.06,
+          "H120": 735.23
+        },
+        "v2g_collisions_per_1000": {
+          "H10": 0.029,
+          "H30": 0.01,
+          "H60": 0.003,
+          "H120": 0.0
+        },
+        "windows_n_per_model": {
+          "H10": 153,
+          "H30": 153,
+          "H60": 144,
+          "H120": 126
+        }
+      },
+      "reported_only_b": "LC ratios (v2g): disc H10 460/90, H30 1843/241, H60 2287/300, H120 1966/303 (pred/true); merge H30 116/470 (under-produced); textbook-MOBIL residual as on TRAIN (WD-01-PA2G-LC1); REPORTED ONLY, not binding",
+      "guards_on_labelled": "every 3rd world (3 of 9): s_RMSE H30 51.1, delay_err mean H30 +8.2, coll/1000 H30 0.015 - guards move nothing material post-LC1-fix (cf. A2 TRAIN <2%)"
+    },
+    "integrity_limitations": [
+      "Three launches; two aborts disclosed above; none result-driven (no metric number was printed, read, or seen before the final pass); the final pass is ONE continuous process over all 9 worlds and is the sole evidence source.",
+      "Window-rule note: registration text says the window rule follows A2; A2's effective horizon was the log end (t0+600). The registration's explicit rule (s+H <= t0+540) is implemented and authoritative; 256 rows/world, n=153/153/144/126 per model per H.",
+      "summary.json's embedded opened-file list holds only the 9 worker-recorded physics logs (_worker cleared the shared opened-set after main recorded plan + summary/receipt opens). The complete list (plan + 27 run files) is the deterministic reconstruction, cross-checked byte-identical against the worker-recorded physics paths, and passes assert_cal_only (results/c4l1/opened_run_files_complete.json). eval_c4l1.py stays byte-frozen (freeze-pinned).",
+      "Laptop saturation by an unrelated concurrent 4-worker job during attempts 2-3 (waited rather than oversubscribed; single process throughout).",
+      "Tracked-scope limit as on TRAIN: untracked arrivals hold 27.5% of truth delay at H30 and 57.4% at H120 (missing-arrivals curve); long-H delay error is scope-dominated, not driver-model error.",
+      "PASS claim scope: 'Part A v2 general meets C4L1 at H = 30 on the true state' - does NOT extend to recon-sample inputs (C4L2, separate registered look)."
+    ],
+    "what_must_not_be_inferred": [
+      "Any parameter change or variant selection from this look (one nominal pass; guards_on is a labelled non-gate comparison).",
+      "Any claim about LC quality: (b) is reported only; the MOBIL residual stays a characterised model-structure error.",
+      "No second look on these 9 worlds; a changed model needs fresh worlds and a new registration."
+    ],
+    "answers_question": "yes - PASS at H30 under the frozen rule (a) 0.0105 <= 1 collisions/1000; (c) MAE 32.47 < 69.90 and |bias| 1.99 <= 138.9; (d) 4.959 <= 6.125",
+    "paths": {
+      "report": "output/wd01/partA_v2g/REPORT_C4L1.md",
+      "eval_script": "output/wd01/partA_v2g/eval_c4l1.py",
+      "freeze": "output/wd01/partA_v2g/C4L1_FREEZE.json",
+      "exposure_audit": "output/wd01/partA_v2g/EXPOSURE_AUDIT_C4L1.md",
+      "allocation_draft": "output/wd01/LEDGER_DRAFT_C4L1_ALLOCATION.json",
+      "raw_rows": "output/wd01/partA_v2g/results/c4l1/raw_rows.jsonl",
+      "summary": "output/wd01/partA_v2g/results/c4l1/summary.json",
+      "criteria_verdict": "output/wd01/partA_v2g/results/c4l1/criteria_verdict.json",
+      "opened_files": "output/wd01/partA_v2g/results/c4l1/opened_run_files_complete.json",
+      "run_log": "output/wd01/partA_v2g/c4l1_run.out",
+      "abort_receipts": [
+        "output/wd01/partA_v2g/c4l1_run_attempt1_aborted_paramsassert.out",
+        "output/wd01/partA_v2g/c4l1_run_attempt2_aborted_timeout.out",
+        "output/wd01/partA_v2g/results/c4l1/aborted_attempt2/ABORTED_NOTE.md",
+        "output/wd01/partA_v2g/c4l1_run_attempt3_aborted_mkdir.out"
+      ]
+    },
+    "hashes": {
+      "registration_lf_sha256": "5e4a772137b8b427823b4860a20440eaa65abcbea735551eff681aa67b80b124",
+      "params_nominal_lf_sha256": "079a55768f803b23c92af188680c1df91dc63f04acbbbac948870b46e75935f7",
+      "plan_raw_sha256": "65510b27f651f477c3de9acc663b9138916a07dfb46468718dc9932147e1ffc4",
+      "engine_commit": "0c1cb4051bf541a1af497e9e63f842366f93abf0 (freeze-recorded ancestor; worktree HEAD at the pass)",
+      "freeze_json_raw_sha256": "see summary.json freeze_sha256 (recorded by the eval at run time)",
+      "raw_rows_jsonl_sha256": "516DF37F7B002B20DB69F3D71D8EF85C4A7FF6DE2591596701C857FA6244F32E",
+      "summary_json_sha256": "03ABD7669B88728558DA4F0171307116EC0F65F49139DA484DDDC0FB2C7436A1",
+      "criteria_verdict_json_sha256": "B9CD84ECC2FB4ED093750AD352E0BE39F496736BD281C41CE7A4993D30E785CC"
+    },
+    "supersedes": "nothing (first CAL look)",
+    "ledger_updated": "NO (draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "Integrating agent appends this entry, updates OPEN_QUESTIONS/ROUTE/INDEX, regenerates RESULTS_SUMMARY and runs validate/verify-sources/summary --check; patch the eval opened-set wipe only under a new registration if ever needed; C4L2 (recon-sample coverage) is the separate future look",
+    "owner_ruling": "Owner accepted 2026-09-30 (relayed by main discussion) with the exact label above."
+  }
+]

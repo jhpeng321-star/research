@@ -1,0 +1,21 @@
+{
+ "schema": "wm_n1_preflight_gate/1",
+ "gate": "label-leak",
+ "title": "G3 label-leak (no action/strategy/CAV channel; perturbation invariant)",
+ "passed": true,
+ "verdict": "PASS",
+ "detail": "kinematics-only schema; output invariant to labels/flags/strategies",
+ "entry_points": [
+  "hdv.input_schema.main_config_schema",
+  "hdv.input_schema.perturbation_check"
+ ],
+ "checks": {
+  "n_fields": 9,
+  "forbidden_channels": [],
+  "n_perturbations": 15,
+  "max_abs_delta": 0.0,
+  "perturbation_identical": true
+ },
+ "error": null,
+ "generated_utc": "2026-10-02T04:49:19Z"
+}

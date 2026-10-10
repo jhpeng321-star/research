@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/PLAN_MAP.json",
+ "name": "PLAN_MAP.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\PLAN_MAP.json",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/PLAN_MAP.json.tar.zst",
+ "bytes": 919146,
+ "files": 1,
+ "archive_bytes": 21517,
+ "archive_md5": "40847320265203baebf9fe8294c43b63",
+ "member_manifest": "manifests/members/shards_v3_PLAN_MAP.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 10.9,
+ "timestamp": "2026-10-10T01:45:36"
+}

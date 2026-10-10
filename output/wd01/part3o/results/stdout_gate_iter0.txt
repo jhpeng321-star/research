@@ -1,0 +1,36 @@
+priority below-normal: False
+=== WD-01 part 3o: TRAIN-internal gate v2 + LC by type, iteration 0 ===
+ZERO simulation; holdout blocked; NO validation look (the validation roots are never loaded here).
+device=cpu torch_threads=2
+TRAIN-internal gate split: fold A ('cv20_7002m2000', 'cv20_7003m2000'), fold B ('cv20_7004m2000', 'cv20_7007m2700'); t0 (120, 180, 240, 300, 360, 420, 480); scored windows 28; members 5; 2-fold spread (scored fold never fits its own factors)
+
+== TRAIN-internal GATE v2 at H=30 (PRIMARY) ==
+  L6:  (a) coll/1000=0.015 PASS | (b) lc 13.664/11.214 (21.9%) FAIL | (c) ttc3 0.7857 delay-phys 0.7143 crps 34.953 vs L0 mae 242.5 -> FAIL | (d) speed 3.6896 vs 1.05xL0=3.7812 (PASS, binding) ==> v2 FAIL: b_lc,c_coverage_crps
+
+== TRAIN-internal GATE v2 at H=60 (secondary) ==
+  L6:  (a) coll/1000=0.01 PASS | (b) lc 26.143/23.179 (12.8%) PASS | (c) ttc3 0.7857 delay-phys 0.7857 crps 82.262 vs L0 mae 591.11 -> FAIL | (d) speed 4.3619 vs 1.05xL0=4.3534 (FAIL, binding) ==> v2 FAIL: c_coverage_crps,d_speed_per_horizon
+
+== LC BY TYPE (per window; calibration roots, members pooled) ==
+  H=30:
+    pooled   predM  4.68 trueM  3.25 ( +44.0%) | predD  8.91 trueD  7.96 ( +11.9%) | total 13.59/11.21 ( +21.2%)
+    fold_A   predM  4.59 trueM  3.50 ( +31.0%) | predD  7.77 trueD  9.21 ( -15.7%) | total 12.36/12.71 (  -2.8%)
+    fold_B   predM  4.77 trueM  3.00 ( +59.0%) | predD 10.06 trueD  6.71 ( +49.8%) | total 14.83/ 9.71 ( +52.7%)
+  H=60:
+    pooled   predM  8.18 trueM  6.54 ( +25.1%) | predD 17.80 trueD 16.64 (  +7.0%) | total 25.98/23.18 ( +12.1%)
+    fold_A   predM  8.06 trueM  6.50 ( +23.9%) | predD 16.06 trueD 20.14 ( -20.3%) | total 24.11/26.64 (  -9.5%)
+    fold_B   predM  8.30 trueM  6.57 ( +26.3%) | predD 19.54 trueD 13.14 ( +48.7%) | total 27.84/19.71 ( +41.2%)
+
+== p3o GOAL PACKAGE (LC by type+total +-20% at BOTH H; (a); (d); delay CRPS <= p3n iter1) ==
+  H=30: type-dev max pooled 0.440 foldA 0.310 foldB 0.590 | crps 34.953 <= ref 34.953 | speed 3.6896 <= 3.7812 | b_type_pooled:False, b_type_foldA:False, b_type_foldB:False, b_total_gate:False, a_collisions:True, d_speed:True, crps_not_worse:True, PASS:False
+  H=60: type-dev max pooled 0.251 foldA 0.239 foldB 0.487 | crps 82.262 <= ref 82.262 | speed 4.3619 <= 4.3534 | b_type_pooled:False, b_type_foldA:False, b_type_foldB:False, b_total_gate:True, a_collisions:True, d_speed:False, crps_not_worse:True, PASS:False
+  ==> GOAL PACKAGE FAIL
+
+== SHARPNESS + CLIMATOLOGY (diagnostics; TTC criterion under owner decision) ==
+   output      H   cov    med_band  truth_iqr | crps_L6  clima_crps(empirical) crps(TRAIN-mean) n_train
+   delay_phys  30  0.7143    163.55     752.70 |   34.95    189.25   246.69      28  beats climatology
+   delay_phys  60  0.7857    363.09    1549.84 |   82.26    386.56   505.55      28  beats climatology
+   ttc3        30  0.7857     13.23      10.80 |    4.03      2.63     3.50      28  DOES NOT beat climatology
+   ttc3        60  0.7857     21.45      16.90 |    8.66      5.14     6.79      28  DOES NOT beat climatology
+[   2.2s] wrote results/gate_train_internal_iter0.json
+
+DONE part 3o gate iteration 0.

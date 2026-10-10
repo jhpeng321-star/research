@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/history_route_audit",
+ "name": "history_route_audit",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\history_route_audit",
+ "drive": "gdrive:research-archive/repo-evidence/output/history_route_audit/history_route_audit.tar.zst",
+ "bytes": 92572,
+ "files": 8,
+ "archive_bytes": 31808,
+ "archive_md5": "8453d53f59fb55abea526cf682b612c0",
+ "member_manifest": "manifests/members/output_history_route_audit.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.7,
+ "timestamp": "2026-10-10T01:37:38"
+}

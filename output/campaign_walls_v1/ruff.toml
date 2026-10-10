@@ -1,0 +1,21 @@
+# Ruff configuration for the campaign_walls_v1 package (mirrors the
+# repository's [tool.ruff]; the package's script-entry modules insert
+# sys.path roots before importing, which is what E402 flags there).
+target-version = "py310"
+line-length = 100
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
+
+[lint.per-file-ignores]
+"common.py" = ["E402"]
+"run_wall_branch.py" = ["E402"]
+"plan_walls_pilot.py" = ["E402"]
+"walls_pilot_registration.py" = ["E402"]
+"smoke_walls.py" = ["E402"]
+"launch_walls.py" = ["E402"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

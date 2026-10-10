@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/repository_cleanup_v1",
+ "name": "repository_cleanup_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\repository_cleanup_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/repository_cleanup_v1/repository_cleanup_v1.tar.zst",
+ "bytes": 11876727,
+ "files": 42,
+ "archive_bytes": 2081558,
+ "archive_md5": "ffad63f9bb91ff8b284db0a1853a31f6",
+ "member_manifest": "manifests/members/output_repository_cleanup_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 55.6,
+ "timestamp": "2026-10-10T01:49:50"
+}

@@ -1,0 +1,51 @@
+{
+  "config": "WM-S-R3",
+  "data": {
+    "identities[damping]": "E:\\rd-wt\\damping-snap\\_out\\identities_damping",
+    "identities[dspeed]": "E:\\rd-wt\\a9\\_out\\identities_dspeed",
+    "identities[pack_v3]": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\identities",
+    "outcomes": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\outcomes",
+    "overlay[damping]": "E:\\rd-wt\\damping-snap\\_out\\labels_overlay_damping",
+    "overlay[dspeed]": "E:\\rd-wt\\dspeed-data\\_out\\labels_overlay_dspeed",
+    "pack[damping]": "E:\\rd-wt\\damping-snap\\_out\\pack_damping",
+    "pack[dspeed]": "E:\\rd-wt\\dspeed-data\\_out\\pack_dspeed",
+    "pack[pack_v3]": "D:\\rd-staging\\wmn1_feat\\pack_v3",
+    "physics_params": "E:\\rd-wt\\ws-clean-int\\configs\\merge_params.json",
+    "windows.exclude[0]": "E:\\rd-wt\\ws-clean-int\\_out\\lpwo_v3\\excluded_runs_PI_wall_v3.json",
+    "windows.train": "E:\\rd-wt\\ws-clean-int\\_out\\lpwo_v3\\windows_train_noPI_noWall.json",
+    "windows.val": "E:\\rd-wt\\ws-clean-int\\_out\\lpwo_v3\\windows_val_noPI_noWall.json"
+  },
+  "failures": [
+    "unresolvable data switching.pack: pack_switching_train: ConfigError: unknown dataset 'pack_switching_train': set WMS_DATA_PACK_SWITCHING_TRAIN, add it to configs/data_registry.toml, or register it in tools/data_registry.json",
+    "unresolvable data switching.identities: identities_switching_train: ConfigError: unknown dataset 'identities_switching_train': set WMS_DATA_IDENTITIES_SWITCHING_TRAIN, add it to configs/data_registry.toml, or register it in tools/data_registry.json",
+    "unresolvable data switching.driver_params: driver_params_switching_train: ConfigError: unknown dataset 'driver_params_switching_train': set WMS_DATA_DRIVER_PARAMS_SWITCHING_TRAIN, add it to configs/data_registry.toml, or register it in tools/data_registry.json",
+    "unresolvable data switching.windows_train: windows_train_hetdata: ConfigError: unknown dataset 'windows_train_hetdata': set WMS_DATA_WINDOWS_TRAIN_HETDATA, add it to configs/data_registry.toml, or register it in tools/data_registry.json",
+    "unresolvable data switching.timeline_index: action_timeline_index_train: ConfigError: unknown dataset 'action_timeline_index_train': set WMS_DATA_ACTION_TIMELINE_INDEX_TRAIN, add it to configs/data_registry.toml, or register it in tools/data_registry.json",
+    "unresolvable data switching.zero_shot_heldout: zero_shot_heldout: ConfigError: unknown dataset 'zero_shot_heldout': set WMS_DATA_ZERO_SHOT_HELDOUT, add it to configs/data_registry.toml, or register it in tools/data_registry.json"
+  ],
+  "fingerprint": "afc6b1b07576c14678d82d77396670f0fccbd1bffbcdbabd8c330c88436cf3c7",
+  "plan": {
+    "max_hours": 10.0,
+    "stage_steps": [
+      2500,
+      2500,
+      1875,
+      1250
+    ],
+    "stages_s": [
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "terms": [
+      "position",
+      "speed",
+      "lane",
+      "asym_speed",
+      "decel_weight",
+      "propagation"
+    ]
+  },
+  "status": "failed"
+}

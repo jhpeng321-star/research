@@ -1,0 +1,209 @@
+{
+ "part": "3o",
+ "iteration": 2,
+ "frozen_candidate": true,
+ "variant": "L6 kind='idm_merge' (p3o per-type LC-hazard fix; engine flags lc_scale_disc + merge_accept_prob)",
+ "engine_kind": "idm_merge",
+ "engine_flags": {
+  "lc_scale_disc": "part 3o: discretionary 0<->1 hazard scale (default: lc_scale)",
+  "merge_accept_prob": "part 3o: thinning of gap-accepted M2 merges (default 1.0 = shipped deterministic)"
+ },
+ "fitted_on": {
+  "roots": [
+   "cv17",
+   "cv19_4107",
+   "cv19_4108",
+   "cv20_7001m2000"
+  ],
+  "t0s": [
+   120,
+   180,
+   240,
+   300,
+   360,
+   420,
+   480
+  ],
+  "H": 60.0,
+  "note": "TRAIN fit roots ONLY; the calibration split (the TRAIN-internal gate) never rolled here; holdout never accessed; validation never touched"
+ },
+ "declared": {
+  "base_from": "p3o_iter1_member0",
+  "lines": [
+   [
+    "end_force_s",
+    [
+     60.0,
+     45.0,
+     30.0,
+     15.0
+    ]
+   ],
+   [
+    "tau_accept",
+    [
+     2.4,
+     3.0,
+     3.6
+    ]
+   ],
+   [
+    "b_accept",
+    [
+     2.0,
+     1.5,
+     1.0
+    ]
+   ],
+   [
+    "merge_accept_prob",
+    [
+     0.55,
+     0.7,
+     0.85
+    ]
+   ],
+   [
+    "lc_scale_disc",
+    [
+     0.0016,
+     0.0018,
+     0.002
+    ]
+   ]
+  ],
+  "member_draw_fields": [
+   "end_force_s",
+   "merge_accept_prob"
+  ],
+  "member_bases": "p3o_iter1_members_1_4"
+ },
+ "winners": {
+  "end_force_s": 60.0,
+  "tau_accept": 2.4,
+  "b_accept": 1.0,
+  "merge_accept_prob": 0.55,
+  "lc_scale_disc": 0.0016
+ },
+ "members": [
+  {
+   "seed": 1,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 2.4,
+    "b_accept": 1.0,
+    "p_coop_scale": 0.0,
+    "end_force_s": 60.0,
+    "v_merge_blend": 0.0
+   },
+   "dawdle_scale": 1.0,
+   "merge_accept_prob": 0.55,
+   "lc_scale_disc": 0.0016
+  },
+  {
+   "seed": 18,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 5.0,
+    "p_coop_scale": 0.25,
+    "end_force_s": 60.0,
+    "v_merge_blend": 0.0
+   },
+   "dawdle_scale": 1.0,
+   "resample": [
+    "cv17",
+    "cv19_4107",
+    "cv19_4108"
+   ],
+   "merge_accept_prob": 0.85,
+   "lc_scale_disc": 0.002
+  },
+  {
+   "seed": 35,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 2.4,
+    "b_accept": 3.0,
+    "p_coop_scale": 0.25,
+    "end_force_s": 60.0,
+    "v_merge_blend": 0.0
+   },
+   "dawdle_scale": 1.5,
+   "resample": [
+    "cv17",
+    "cv19_4107",
+    "cv19_4108",
+    "cv20_7001m2000"
+   ],
+   "merge_accept_prob": 0.85,
+   "lc_scale_disc": 0.0016
+  },
+  {
+   "seed": 52,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 2.4,
+    "b_accept": 5.0,
+    "p_coop_scale": 0.25,
+    "end_force_s": 60.0,
+    "v_merge_blend": 0.0
+   },
+   "dawdle_scale": 1.25,
+   "resample": [
+    "cv17",
+    "cv19_4108",
+    "cv20_7001m2000"
+   ],
+   "merge_accept_prob": 0.7,
+   "lc_scale_disc": 0.0016
+  },
+  {
+   "seed": 69,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 2.4,
+    "b_accept": 4.0,
+    "p_coop_scale": 0.0,
+    "end_force_s": 60.0,
+    "v_merge_blend": 0.0
+   },
+   "dawdle_scale": 1.25,
+   "resample": [
+    "cv19_4107",
+    "cv19_4108",
+    "cv20_7001m2000"
+   ],
+   "merge_accept_prob": 0.7,
+   "lc_scale_disc": 0.0016
+  }
+ ],
+ "provenance": {
+  "fit_json": "fit_p3o_iter2.json",
+  "gate_json": "gate_train_internal_iter2.json",
+  "p3n_iter1_reference": {
+   "30": {
+    "crps": 34.953,
+    "speed_rmse": 3.6896,
+    "lc_dev": 0.2185,
+    "delay_cov": 0.7143,
+    "ttc3_cov": 0.7857
+   },
+   "60": {
+    "crps": 82.262,
+    "speed_rmse": 4.3619,
+    "lc_dev": 0.1279,
+    "delay_cov": 0.7857,
+    "ttc3_cov": 0.7857
+   }
+  },
+  "formal_criteria_pass": true,
+  "goal_package_pass": false,
+  "known_residuals": [
+   "H30:b_type_pooled",
+   "H60:b_type_pooled",
+   "H60:crps_not_worse"
+  ],
+  "residual_note": "merge-type pooled LC band and delay-phys CRPS vs p3n iter1 where listed: evidenced as structural for the declared levers (see REPORT_P3O.md); the owner decides whether the single validation look proceeds"
+ }
+}

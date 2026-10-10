@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe53_a_vectors_v1",
+ "name": "oe53_a_vectors_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe53_a_vectors_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe53_a_vectors_v1/oe53_a_vectors_v1.tar.zst",
+ "bytes": 84760,
+ "files": 5,
+ "archive_bytes": 19817,
+ "archive_md5": "adce1de0524276031d6a1bca619cf249",
+ "member_manifest": "manifests/members/output_oe53_a_vectors_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 33.2,
+ "timestamp": "2026-10-10T01:36:48"
+}

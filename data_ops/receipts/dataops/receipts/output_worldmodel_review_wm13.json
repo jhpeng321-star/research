@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_review_wm13",
+ "name": "worldmodel_review_wm13",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_review_wm13",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_review_wm13/worldmodel_review_wm13.tar.zst",
+ "bytes": 9449,
+ "files": 3,
+ "archive_bytes": 4694,
+ "archive_md5": "737f568fff0875344bb8a028e59033b1",
+ "member_manifest": "manifests/members/output_worldmodel_review_wm13.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 61.2,
+ "timestamp": "2026-10-10T01:29:51"
+}

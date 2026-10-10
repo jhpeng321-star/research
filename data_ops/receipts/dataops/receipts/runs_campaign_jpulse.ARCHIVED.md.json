@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_jpulse.ARCHIVED.md",
+ "name": "campaign_jpulse.ARCHIVED.md",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_jpulse.ARCHIVED.md",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_jpulse.ARCHIVED.md.tar.zst",
+ "bytes": 435,
+ "files": 1,
+ "archive_bytes": 391,
+ "archive_md5": "4af5ef5f71f2fb0621cf8fc598d51d70",
+ "member_manifest": "manifests/members/runs_campaign_jpulse.ARCHIVED.md.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 8.7,
+ "timestamp": "2026-10-10T03:48:43"
+}

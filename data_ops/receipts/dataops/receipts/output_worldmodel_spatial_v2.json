@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_spatial_v2",
+ "name": "worldmodel_spatial_v2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_spatial_v2",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_spatial_v2/worldmodel_spatial_v2.tar.zst",
+ "bytes": 273245,
+ "files": 22,
+ "archive_bytes": 70684,
+ "archive_md5": "6dc96663c1a0e2e04b060149c941bb43",
+ "member_manifest": "manifests/members/output_worldmodel_spatial_v2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.8,
+ "timestamp": "2026-10-10T01:43:38"
+}

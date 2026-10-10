@@ -1,0 +1,53 @@
+{
+  "schema": "wallc1_verification/1",
+  "entry": "WALL-C1-PREP-20261009",
+  "status": "engineering_verified_real_data_pending",
+  "simulation_seconds": 0,
+  "optimizer_steps": 0,
+  "gpu_hours": 0,
+  "attempts": [
+    {
+      "command": "direct rl_driving python -B -m pytest -q -p no:cacheprovider --basetemp=_out/wallc1_test_tmp output/wd01/wm_n1/lpwo/tests",
+      "result": "134 passed before later integration additions"
+    },
+    {
+      "command": "lpwo.bounded_cpu pytest LPWO plus existing C1 regressions (initial)",
+      "result": "tool timeout at 120 s; no memory receipt emitted; progress included failures, preserved as interrupted allocation"
+    },
+    {
+      "command": "lpwo.bounded_cpu --receipt _out/WALL_C1_TEST_MEMORY_REPAIR1.json pytest LPWO plus C1 materialize/horizon/c1sets/c1",
+      "result": "175 passed, 3 failed; new scorer fake-guard tests assumed root cwd; repaired to resolve paths from actual cwd",
+      "max_sampled_process_rss_bytes": 243449856
+    },
+    {
+      "command": "lpwo.bounded_cpu --receipt _out/WALL_C1_TEST_MEMORY_FINAL.json pytest LPWO fixtures",
+      "result": "136 passed after cwd fixture repair",
+      "max_sampled_process_rss_bytes": 213884928
+    },
+    {
+      "command": "Existing C1 materialize/horizon_report/c1sets/c1 suites in the combined REPAIR1 run",
+      "result": "42 passed; no production C1 files were modified"
+    },
+    {
+      "command": "pytest tests/test_experiment_history_ledger.py -k selected workspace-local metadata checks",
+      "result": "10 passed, 1 failed, 16 deselected: historical referenced-path existence failure (CUR-02 adoption_cleanup, CUR-03 escalation_test_build and other unstaged evidence)"
+    },
+    {
+      "command": "direct rl_driving python -B -m ruff check --no-cache output/wd01/wm_n1/lpwo; git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "tools/experiment_history.py summary --write followed by summary --check",
+      "result": "passed; summary regenerated, no scientific outcome changes"
+    },
+    {
+      "command": "direct rl_driving python -B -m lpwo.closeout_check",
+      "result": "global consistency failed: 1560 existing hard errors, baseline HEAD also 1560, zero introduced, 7 warnings; task-scoped source verification has zero outcome sources and zero mismatches",
+      "hard_error_count": 1560,
+      "baseline_hard_error_count": 1560,
+      "introduced_hard_errors": 0
+    }
+  ],
+  "real_data": "not executed: external reads prohibited and canonical guard/pack metadata not staged",
+  "existing_lpwo": "preserved, superseded verification-pending; no corrected real counts claimed"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe64_integration_v1",
+ "name": "oe64_integration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe64_integration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe64_integration_v1/oe64_integration_v1.tar.zst",
+ "bytes": 25717,
+ "files": 5,
+ "archive_bytes": 9930,
+ "archive_md5": "83176b3b66d880da84f4bdd8b29c58c0",
+ "member_manifest": "manifests/members/output_oe64_integration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.3,
+ "timestamp": "2026-10-10T01:30:53"
+}

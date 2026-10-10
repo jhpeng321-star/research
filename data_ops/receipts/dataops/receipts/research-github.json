@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "research-github",
+ "name": "research-github",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "public GitHub export staging (driveops check=failed; finish it)",
+ "local": "E:\\research-github",
+ "drive": "gdrive:research-archive/code/research-github.tar.zst",
+ "bytes": 33183285,
+ "files": 5364,
+ "archive_bytes": 11853691,
+ "archive_md5": "61d9d0e99809b8d0d9be383c77ff9710",
+ "member_manifest": "manifests/members/research-github.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 44.3,
+ "timestamp": "2026-10-10T03:41:48"
+}

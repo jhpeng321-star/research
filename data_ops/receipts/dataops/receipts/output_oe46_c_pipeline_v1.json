@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe46_c_pipeline_v1",
+ "name": "oe46_c_pipeline_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe46_c_pipeline_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe46_c_pipeline_v1/oe46_c_pipeline_v1.tar.zst",
+ "bytes": 107943,
+ "files": 11,
+ "archive_bytes": 30686,
+ "archive_md5": "dbd8d87f78590b8de42b3ce97c2e7c6c",
+ "member_manifest": "manifests/members/output_oe46_c_pipeline_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.3,
+ "timestamp": "2026-10-10T01:38:43"
+}

@@ -1,0 +1,28 @@
+{
+ "schema": "wm_n1_box_configs_index/1",
+ "plan": "2-box-c_m1only",
+ "n_boxes": 2,
+ "wall_clock_hours": 13.0,
+ "co_run": false,
+ "concurrency": 1,
+ "m1_only": true,
+ "generated_by": "bundle.multibox.build_m1_only_configs",
+ "boxes": {
+  "box-A": {
+   "file": "boxA.json",
+   "configs": [
+    "member-1"
+   ],
+   "finish_hours": 13.0,
+   "stop_after": "member-1"
+  },
+  "box-B": {
+   "file": "boxB.json",
+   "configs": [
+    "heldout-i-j4b"
+   ],
+   "finish_hours": 13.0,
+   "stop_after": "heldout-i-j4b"
+  }
+ }
+}

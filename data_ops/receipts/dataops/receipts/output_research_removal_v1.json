@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/research_removal_v1",
+ "name": "research_removal_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\research_removal_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/research_removal_v1/research_removal_v1.tar.zst",
+ "bytes": 29035384,
+ "files": 33,
+ "archive_bytes": 1188031,
+ "archive_md5": "c6c03b919c67500dd2d580571a3779e5",
+ "member_manifest": "manifests/members/output_research_removal_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 51.6,
+ "timestamp": "2026-10-10T01:50:48"
+}

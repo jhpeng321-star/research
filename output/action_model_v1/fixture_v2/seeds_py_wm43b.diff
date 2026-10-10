@@ -1,0 +1,31 @@
+--- a/traffic_shepherd/seeds.py
++++ b/traffic_shepherd/seeds.py
+@@ -234,6 +234,18 @@
+ WM43_SEED_LOADING_MAP = {
+     920244: 2000, 920245: 2000, 920246: 2000, 920247: 2000, 920248: 2000,
+ }
++# 2026-09-30: WM-43B wall-closure re-validation fixture block (DRAFT, owner
++# authorization pending; consumed ONLY by the WM-43B fixture
++# preflight/runner, output/action_model_v1/fixture_v2).  25 identities
++# 920249-920273: the block right after WM43_WALL_MECHANICS_SEEDS
++# (920244-920248), 5 per arm A1..A5 in order.  Exposure audit:
++# output/action_model_v1/fixture_v2/EXPOSURE_AUDIT_WM43B.json (INTEGRATOR
++# must re-run exposure_audit_wm43b.py on the main tree before applying).
++# Each seed is accepted ONLY with its own registered fixture loading 2000
++# (registry key only: the micro-roster scenario generates no stochastic
++# demand).  Development-mechanics role; never a prospective seed.
++WM43B_WALL_CLOSURE_SEEDS = frozenset(range(920249, 920274))
++WM43B_SEED_LOADING_MAP = {seed: 2000 for seed in range(920249, 920274)}
+ 
+ 
+ # WM-44 stage-1 chunk 1 (exposure-audited fresh; see seeds_py_wm44.diff)
+@@ -328,6 +340,9 @@
+     if role == "exposed" and seed in WM43_WALL_MECHANICS_SEEDS \
+             and loading == WM43_SEED_LOADING_MAP.get(seed):
+         return
++    if role == "exposed" and seed in WM43B_WALL_CLOSURE_SEEDS \
++            and loading == WM43B_SEED_LOADING_MAP.get(seed):
++        return
+ 
+     if role == "exposed" and seed in WM44_CHUNK1_SEEDS \
+             and loading == WM44_CHUNK1_LOADING_MAP.get(seed):

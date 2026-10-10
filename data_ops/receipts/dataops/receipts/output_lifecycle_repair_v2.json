@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/lifecycle_repair_v2",
+ "name": "lifecycle_repair_v2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\lifecycle_repair_v2",
+ "drive": "gdrive:research-archive/repo-evidence/output/lifecycle_repair_v2/lifecycle_repair_v2.tar.zst",
+ "bytes": 6023993,
+ "files": 37,
+ "archive_bytes": 411090,
+ "archive_md5": "f36351c320aa2f401b1100154f464c26",
+ "member_manifest": "manifests/members/output_lifecycle_repair_v2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 41.5,
+ "timestamp": "2026-10-10T01:48:55"
+}

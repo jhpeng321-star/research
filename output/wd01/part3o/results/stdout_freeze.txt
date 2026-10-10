@@ -1,0 +1,18 @@
+=== WD-01 part 3o FREEZE (candidate + spread), iteration 2 ===
+NO validation run; holdout blocked; ZERO simulation.
+formal criteria PASS at both horizons (b total, (a) collisions, (d) speed); residuals: ['H30:b_type_pooled', 'H60:b_type_pooled', 'H60:crps_not_worse']
+  H=30: lc 11.943/11.214 (+6.5%) | by-type dev merge +40.4% disc -8.0% | crps 33.613 vs ref 34.953 | speed 3.6089 <= 3.7812 | coll 0.013
+  H=60: lc 22.793/23.179 (+1.7%) | by-type dev merge +23.8% disc -12.2% | crps 85.928 vs ref 82.262 | speed 4.2785 <= 4.3534 | coll 0.009
+
+FULL-split spread calibration: 28 windows x 5 members; L3 spread math; target 0.80
+  delay_phys@H30: raw_cov=0.3571 s_out=2.7638 cov_mean=0.8214
+  delay_phys@H60: raw_cov=0.3571 s_out=2.5198 cov_mean=0.8571
+  ttc3@H30: raw_cov=0.5 s_out=3.0314 cov_mean=0.8214
+  ttc3@H60: raw_cov=0.3214 s_out=6.3496 cov_mean=0.8214
+
+FROZEN candidate_p3o_iter2.json: sha256=458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d
+        frozen_utc=2026-09-27T05:09:19.400476+00:00
+FROZEN calibration_p3o.json: sha256=c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a
+        frozen_utc=2026-09-27T05:09:19.400476+00:00
+
+DONE part 3o freeze.  The single validation look is NOT part of part 3o.

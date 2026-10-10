@@ -1,0 +1,119 @@
+{
+  "schema": "wm59_walls_v22_smoke_fixture/1",
+  "title": "DECLARED MECHANICS SMOKE FIXTURE - wall law v2.2 'merge-release'",
+  "created_utc_source": "owner-approved laptop smoke <= 3 x 300 sim-s; the reconstructor runs it, never the proposer",
+  "law": {
+    "version": "wall-v2.2-merge-release",
+    "registration": "output/wd01/walls_design/merge_release/REGISTRATION_WALL_V22.md",
+    "design": "output/wd01/walls_design/merge_release/DESIGN_V22_MERGE_RELEASE.md",
+    "merge_release_point_s": 2644.2,
+    "dmin_formula": "D_min = X + v_wall*(t_assemble + H_min) = 0 + v_wall*(10 + 60) = 70*v_wall m"
+  },
+  "deployment": {
+    "target_repo": "E:/research-dense (READ-ONLY for the proposer; the reconstructor applies the patches)",
+    "patches": [
+      "output/wd01/walls_design/merge_release/patches/common.py.diff",
+      "output/wd01/walls_design/merge_release/patches/wall_request.py.diff",
+      "output/wd01/walls_design/merge_release/patches/wall_driver.py.diff",
+      "output/wd01/walls_design/merge_release/patches/wall_group.py.diff"
+    ],
+    "patch_targets": {
+      "common.py": "E:/research-dense/output/campaign_walls_v1/common.py",
+      "wall_request.py": "E:/research-dense/output/campaign_walls_v1/wall_request.py",
+      "wall_driver.py": "E:/research-dense/output/campaign_walls_v1/wall_driver.py",
+      "wall_group.py": "E:/research-dense/traffic_shepherd/wall_group.py"
+    },
+    "unchanged": {
+      "sensing.py": "no functional change (frames already carry lane/edge identity + lane-local position); sha recorded in PATCH_SHAS.json"
+    },
+    "preconditions": [
+      "apply the four patches to the live files (LF; never modify the network or frozen evidence)",
+      "finalize the J4B v2.2 registration at output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md (write-once; content = REGISTRATION_WALL_V22.md + the J4B draft's launch blocks) - the J4 registration file is frozen and is NOT touched",
+      "runs root runs/campaign_walls_v22_smoke must NOT exist (write-once smoke; never data)",
+      "no other campaign running in the window (same discipline as the J4 smoke)"
+    ]
+  },
+  "budget": {
+    "runs": 3,
+    "simulated_seconds_per_run": 300,
+    "simulated_seconds_total": 900,
+    "cap": "owner-approved 3 x 300 sim-s"
+  },
+  "selection": {
+    "rule": "a-priori from the J4 analysis geometry ONLY (request/assembly/hold records of TRAIN worlds; NO outcome fields): TRAIN split, registered hold draw 240 s (so the merge-start cap, not the draw, ends the hold), lead assembled far enough upstream that v2.2 D_min = 70*v_wall admits the request with positive margin AND the predicted merge-start arrival (assembled_at + (2644.2 - lead_s_road_assembled)/v_wall) fits one 300 sim-s horizon with >= 100 s slack",
+    "source": "output/wd01/walls_design/merge_release/j4_merge_analysis.json rows (TRAIN only)",
+    "worlds": [
+      {
+        "world": "w8694m2600p40t240",
+        "split": "TRAIN",
+        "penetration": 0.4,
+        "arm": "W-lo-early",
+        "run": "w8694m2600p40t240__w-lo-early",
+        "t0_s": 240.0,
+        "registered_hold_s": 240.0,
+        "j4_geometry": {
+          "wall_speed_mps": 15.87,
+          "request_rel_s": 0.0,
+          "assembled_rel_s": 4.0,
+          "lead_s_road_assembled_m": 1219.4,
+          "lead_distance_to_merge_at_request_m": 1424.8,
+          "dmin_m_a_priori": 1110.9,
+          "dmin_margin_m_a_priori": 313.9,
+          "predicted_merge_arrival_rel_s": 93.8
+        }
+      },
+      {
+        "world": "w8688m2700p20t420",
+        "split": "TRAIN",
+        "penetration": 0.2,
+        "arm": "W-mid-late",
+        "run": "w8688m2700p20t420__w-mid-late",
+        "t0_s": 420.0,
+        "registered_hold_s": 240.0,
+        "j4_geometry": {
+          "wall_speed_mps": 26.31,
+          "request_rel_s": 60.0,
+          "assembled_rel_s": 71.0,
+          "lead_s_road_assembled_m": 669.4,
+          "lead_distance_to_merge_at_request_m": 1974.8,
+          "dmin_m_a_priori": 1841.7,
+          "dmin_margin_m_a_priori": 133.1,
+          "predicted_merge_arrival_rel_s": 146.1
+        }
+      },
+      {
+        "world": "w8661m2600p10t240",
+        "split": "TRAIN",
+        "penetration": 0.1,
+        "arm": "W-mid-early",
+        "run": "w8661m2600p10t240__w-mid-early",
+        "t0_s": 240.0,
+        "registered_hold_s": 240.0,
+        "j4_geometry": {
+          "wall_speed_mps": 22.52,
+          "request_rel_s": 60.0,
+          "assembled_rel_s": 74.0,
+          "lead_s_road_assembled_m": 358.1,
+          "lead_distance_to_merge_at_request_m": 2286.1,
+          "dmin_m_a_priori": 1576.4,
+          "dmin_margin_m_a_priori": 709.7,
+          "predicted_merge_arrival_rel_s": 175.5
+        }
+      }
+    ]
+  },
+  "commands": [
+    "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8694m2600p40t240__w-lo-early --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300",
+    "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8688m2700p20t420__w-mid-late --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300",
+    "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8661m2600p10t240__w-mid-early --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300"
+  ],
+  "command_notes": "cwd = E:/research-dense; one command per run, run SEQUENTIALLY (laptop smoke); --horizon-ticks 300 caps each branch at 300 sim-s; NO --hold-override-s (the registered 240 s draws stay as drawn so the merge-start cap is what ends the hold); the child refuses an existing run dir (write-once)",
+  "checks": {
+    "MC1_assembly_upstream_of_merge": "wall_events.jsonl has an 'assembled' wall_event; every wall_member_lanes row BEFORE the merge_release tick shows both members on edge 1191554636",
+    "MC2_merge_release_at_point": "branch_record.json: outcome == 'merge_released'; exactly ONE wall_event merge_release in wall_events.jsonl with release_point_s == 2644.2; branch_record lead_s_road_at_release_m >= 2644.2 and < 2644.2 + wall_speed_mps (<= one control tick of travel past the point); NO wall_member_lanes row with a member on edge 1487606179 or 1487606178 BEFORE the release tick (no member reaches the merge edge before the release)",
+    "MC3_zero_member_left_network": "no wall_event safety_abort with reason member_left_network anywhere; no other safety_abort at all expected (a v2.2 smoke run with any safety_abort FAILS)",
+    "MC4_hold_cap_logged": "wall_events.jsonl has exactly one hold_cap row: requested_hold_s == 240.0, capped_at_merge is true, effective_hold_s == merge_release timestamp - assembled timestamp < 240.0, cap_point_s == 2644.2; branch_record hold_capped_at_merge is true and merge_release_s is set",
+    "MC5_receipt": "RUN_RECEIPT.json exit_status == 'complete', load_state_calls == 1, horizon_mode == 'smoke_cap', executed_time_s == 600 physics rows (300 sim-s x 2)"
+  },
+  "pass_rule": "ALL of MC1-MC5 for EACH of the three runs; any FAIL stops the fixture (no retry in the same runs root; a re-smoke uses a NEW runs root and is registered as such). Smoke runs are NEVER data and never read as outcomes."
+}

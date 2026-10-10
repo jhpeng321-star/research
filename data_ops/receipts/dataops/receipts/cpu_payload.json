@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "cpu_payload",
+ "name": "cpu_payload",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "WM-N1 cpu payload / rented bundle staging (D:)",
+ "local": "D:\\rd-staging\\cpu_payload",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/cpu_payload/cpu_payload.tar.zst",
+ "bytes": 1200019505,
+ "files": 3021,
+ "archive_bytes": 239330394,
+ "archive_md5": "f4781a93a7b6b80ea149779020607ca8",
+ "member_manifest": "manifests/members/cpu_payload.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 148.8,
+ "timestamp": "2026-10-10T00:28:46"
+}

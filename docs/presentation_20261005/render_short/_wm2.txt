@@ -1,0 +1,14 @@
+# 1b how the world model works
+s = S("How our world model works now",
+      "Snapshot -> step-by-step simulation (CAVs run real controller code; human drivers = IDM physics + learned correction) for 120 s -> summary of CAV motion -> effect head -> change in total delay vs native at 30 s to 9.5 min with uncertainty. Delay is predicted by the head, not counted from the simulated cars.",
+      ["5 boxes: snapshot, simulate, summary, effect head, output"])
+B = dict(color="1F3A5F", bold=True, anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+tb(s, 0.3, 1.7, 2.2, 2.2, ["Snapshot", "what the RSU sees"], size=22, fill="EEF3F7", line="1F3A5F", **B)
+tb(s, 2.5, 2.45, 0.45, 0.7, "→", size=36, **B)
+tb(s, 2.95, 1.4, 3.6, 2.8, ["Simulate 120 s", "CAVs: real controller", "Humans: IDM + learned correction"], size=21, fill="D5EEF0", line="0E7C86", **B)
+tb(s, 6.55, 2.45, 0.45, 0.7, "→", size=36, **B)
+tb(s, 7.0, 1.7, 2.0, 2.2, ["CAV motion", "summary"], size=22, fill="EEF3F7", line="1F3A5F", **B)
+tb(s, 9.0, 2.45, 0.45, 0.7, "→", size=36, **B)
+tb(s, 9.45, 1.4, 3.55, 2.8, ["Effect head", "→ Δ total delay vs native", "30 s … 9.5 min"], size=21, fill="FFF4D6", line="C77700", **B)
+tb(s, 0.3, 4.6, 12.7, 1.0, "Delay is predicted by the effect head — not counted from the simulated cars", size=22, color="C77700", bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+takeaway(s, "Physics (IDM) + learned correction simulates traffic; a learned head predicts the delay change", y=6.0, h=0.85)

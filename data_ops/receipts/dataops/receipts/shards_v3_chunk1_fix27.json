@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/chunk1_fix27",
+ "name": "chunk1_fix27",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\chunk1_fix27",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/chunk1_fix27/chunk1_fix27.tar.zst",
+ "bytes": 1743576213,
+ "files": 1764,
+ "archive_bytes": 254422358,
+ "archive_md5": "ccdf80ce546f9074c7db97992fd7f35f",
+ "member_manifest": "manifests/members/shards_v3_chunk1_fix27.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 560.7,
+ "timestamp": "2026-10-10T00:08:53"
+}

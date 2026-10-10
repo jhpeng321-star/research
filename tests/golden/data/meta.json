@@ -1,0 +1,32 @@
+{
+ "deterministic_algorithms": true,
+ "git_head": "bf7d4cb8f254069a4a379b8c112b9df23ed49382",
+ "numpy": "2.2.6",
+ "parts": [
+  "selection",
+  "batches",
+  "forward",
+  "losses",
+  "train",
+  "eval"
+ ],
+ "schema": "wms_golden/1",
+ "seeds": {
+  "batch_perm": 2026,
+  "item": 7000,
+  "loss": 900,
+  "model": 101,
+  "train": 1100
+ },
+ "source_branch": "wms/r3-int (bf7d4cb)",
+ "threads": 2,
+ "timings_s": {
+  "batches": 85.4,
+  "eval": 41.2,
+  "forward": 210.8,
+  "losses": 94.1,
+  "selection": 8.1,
+  "train": 40.3
+ },
+ "torch": "2.12.1+cpu"
+}

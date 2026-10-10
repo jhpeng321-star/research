@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "meta__plexp1d_v3_slot.tar.sha256",
+ "name": "plexp1d_v3_slot.tar.sha256",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "slot tar sha256",
+ "local": "D:\\rd-staging\\plexp1d_v3_slot.tar.sha256",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/plexp1d_v3_slot.tar.sha256.tar.zst",
+ "bytes": 65,
+ "files": 1,
+ "archive_bytes": 150,
+ "archive_md5": "c3518d4fa2e3c707620107457f8ed84d",
+ "member_manifest": "manifests/members/meta__plexp1d_v3_slot.tar.sha256.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.8,
+ "timestamp": "2026-10-10T01:14:36"
+}

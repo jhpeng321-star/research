@@ -1,0 +1,33 @@
+{
+  "schema": "circles_model_provenance/1",
+  "working_adopted": true,
+  "scientifically_accepted": false,
+  "source_repository": "https://github.com/CIRCLES-consortium/algos-stack",
+  "source_commit": "3b3ee3b91afdae93075c8b90334d65748cd9ff74",
+  "addition_commit": "b7d699fd4274ff84bc583447f230cc3e65034117",
+  "source_path": "controllers/09_04_rl_finaldecn3p0_maxacc0p25/super_resolution.onnx",
+  "source_url": "https://raw.githubusercontent.com/CIRCLES-consortium/algos-stack/3b3ee3b91afdae93075c8b90334d65748cd9ff74/controllers/09_04_rl_finaldecn3p0_maxacc0p25/super_resolution.onnx",
+  "model_sha256": "762fde0763c693c0e88f41b98b22fc0a11135a312b78c4c567e6211a3035ccee",
+  "model_bytes": 54489,
+  "license": "MIT",
+  "license_sha256": "964d95563c9b1dd57fcaf45c11c45705889199bfd780fd24053d90b699a24fd1",
+  "selection": "First RL-labelled candidate selected before physical outcomes; whole weights and embedded rule wrapper preserved.",
+  "publication_identity": "Unverified: no exact bridge to a publication's evaluated checkpoint. Related training and deployment papers establish a plausible method lineage only.",
+  "training": "Externally released neural controller; no local retraining or finetuning.",
+  "model_interface": {
+    "input": ["ego_speed_mps", "leader_speed_mps", "bumper_gap_m"],
+    "dtype": "float32",
+    "shape": [1, 3],
+    "normalization": "Embedded [40,40,100] division; adapter passes raw SI.",
+    "output": "Absolute acceleration after embedded rule wrapper, clipped [-3,1.5] m/s2.",
+    "batch_warning": "Singleton only: export broadcasts multirow input into an NxN output.",
+    "boundary_warning": "[0,0,0] produces NaN. Invalid output releases an owned override to native IDM."
+  },
+  "adapter_interface": "slowDown(vehicle, max(0,v+a*1s), 1s); a clipped only by [-3,1.5], nonnegative target and allowed speed. Require speedMode31, .5s SUMO physics, 100m same-lane sensing, current sensor frame, both coverage values positive and visible leader for damping. Native release uses setSpeed(-1).",
+  "transfer_limitations": [
+    "1s command cadence and .5s physics are this project's tested transfer assumptions, not exact reproduction of the upstream 20Hz ROS stack.",
+    "100m sensing does not reach the wrapper's 120m large-gap transition center.",
+    "Direct p20 development results are promising but mixed; cross-penetration validation remains outstanding.",
+    "A command target does not establish measured acceleration, jerk or safety."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "output/wd01/wm_n1/wms/tests",
+    "--basetemp=E:/rd-wt/ws-brakefix/_out/pytest_final_08"
+  ],
+  "returncode": 0,
+  "status": "passed",
+  "peak_sampled_rss_bytes": 865034240,
+  "peak_os_working_set_bytes": 865292288,
+  "memory_limit_bytes": 6000000000,
+  "memory_limit_exceeded": false,
+  "wall_seconds": 195.431,
+  "log": "E:\\rd-wt\\ws-brakefix\\_out\\brakefix_verification\\final_08\\command.log",
+  "device": "cpu"
+}

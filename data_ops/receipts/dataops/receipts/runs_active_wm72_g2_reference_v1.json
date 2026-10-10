@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/wm72_g2_reference_v1",
+ "name": "wm72_g2_reference_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_v1",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_v1/wm72_g2_reference_v1.tar.zst",
+ "bytes": 12445719,
+ "files": 11,
+ "archive_bytes": 1312921,
+ "archive_md5": "8f525efe15998a4372cdfb48e64faa8a",
+ "member_manifest": "manifests/members/runs_active_wm72_g2_reference_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 43.7,
+ "timestamp": "2026-10-10T04:02:55"
+}

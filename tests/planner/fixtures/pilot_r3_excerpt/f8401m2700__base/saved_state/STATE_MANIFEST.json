@@ -1,0 +1,24 @@
+{
+  "schema": "wm41_saved_state/1",
+  "seed": 8401,
+  "branch_point_t0_s": 60.0,
+  "physics_row_at_t0": {
+    "time_s": 60.0,
+    "live_ids": ["mainline.8"],
+    "departed_ids": [],
+    "arrived_ids": [],
+    "colliding_ids": [],
+    "vehicles": {
+      "mainline.8": {
+        "road_id": "1191554636",
+        "lane_id": "1191554636_0",
+        "lane_position_m": 1197.8467545536025,
+        "speed_mps": 28.149877900994554,
+        "acceleration_mps2": 0.023078431542785438,
+        "type_id": "normal_car",
+        "speed_mode": 31,
+        "lane_changed": false
+      }
+    }
+  }
+}

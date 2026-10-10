@@ -1,0 +1,39 @@
+﻿{
+    "name":  "pl21",
+    "path":  "E:\\rd-wt\\pl21",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "785096c1f5339c76b0cfd271c205abfd12a66aad",
+    "headType":  null,
+    "dirtyBefore":  21,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/pl21",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl21.txt",
+    "uploadCount":  1057,
+    "uploadBytes":  22591608,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl21.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 06:50:46 NOTICE: Google drive root \u0027research-archive/worktrees/pl21\u0027: 0 differences found | 2026/10/10 06:50:46 NOTICE: Google drive root \u0027research-archive/worktrees/pl21\u0027: 1057 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl21.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "commit_failed",
+    "error":  "commit failed: \ttraffic_shepherd/planner/closed_loop.py  nothing added to commit but untracked files present (use \"git add\" to track)",
+    "timestamp":  "2026-10-10T06:43:52.7645614+08:00"
+}

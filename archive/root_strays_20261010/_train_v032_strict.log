@@ -1,0 +1,35 @@
+partB_v0 train: data=E:\research-dense\output\wd01_partB_v0data_v032 out=E:\research-dense\output\partB_results\v0.3.2_strict value_model=gbm features=deployable_strict gbm_variant=auto
+data: verified 1680 files against MANIFEST (sha256 2c6ae4dadd49...)
+data: 336 sources selected (splits=TRAIN+CALIBRATION, chunks=all), 22 superseded skipped, 0 HOLDOUT entries present in MANIFEST (not selected, never built in V0)
+data: 23688 decision times, 87192 label rows, 118440 TD rows in memory (feature set: deployable_strict)
+gbm[auto]: tau=30 OOB delay CRPS hybrid=220.9 vs ridge=240.6 -> ships hybrid
+gbm[auto]: tau=30 fitted (20715 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 68.5 s
+gbm[auto]: tau=60 OOB delay CRPS hybrid=453.6 vs ridge=486.4 -> ships hybrid
+gbm[auto]: tau=60 fitted (19833 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 49.2 s
+gbm[auto]: tau=120 OOB delay CRPS hybrid=942.6 vs ridge=988.4 -> ships hybrid
+gbm[auto]: tau=120 fitted (18069 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 42.8 s
+gbm[auto]: tau=300 OOB delay CRPS hybrid=2570.2 vs ridge=2611.6 -> ships hybrid
+gbm[auto]: tau=300 fitted (12777 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 31.5 s
+gbm[auto]: tau=570 OOB delay CRPS hybrid=5272.0 vs ridge=5305.1 -> ships hybrid
+gbm[auto]: tau=570 fitted (4839 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 24.0 s
+gbm[auto]: total fit 216.3 s (taus=[30.0, 60.0, 120.0, 300.0, 570.0], threads=2, OOF=world-grouped)
+gbm: saved gbm_value.pkl + gbm_value.json (variant=auto, sklearn 1.7.2)
+gbm: loaded value model from E:\research-dense\output\partB_results\v0.3.2_strict\gbm_value.pkl (variant=auto, taus=[30.0, 60.0, 120.0, 300.0, 570.0], 65 quantile models, 15 ridge point models, per-tau: 30->hybrid, 60->hybrid, 120->hybrid, 300->hybrid, 570->hybrid)
+baselines: tau=30 ridge + point-GBM fitted on 20715 TRAIN rows in 11.2 s (OOF residuals)
+baselines: tau=60 ridge + point-GBM fitted on 19833 TRAIN rows in 13.3 s (OOF residuals)
+baselines: tau=120 ridge + point-GBM fitted on 18069 TRAIN rows in 11.0 s (OOF residuals)
+baselines: tau=300 ridge + point-GBM fitted on 12777 TRAIN rows in 11.2 s (OOF residuals)
+baselines: tau=570 ridge + point-GBM fitted on 4839 TRAIN rows in 8.7 s (OOF residuals)
+eval: computing TRAIN-internal world-grouped OOB HARD acceptance
+oob: tau=30 world-grouped 5-fold OOF acceptance computed (20715 TRAIN rows)
+oob: tau=60 world-grouped 5-fold OOF acceptance computed (19833 TRAIN rows)
+oob: tau=120 world-grouped 5-fold OOF acceptance computed (18069 TRAIN rows)
+oob: tau=300 world-grouped 5-fold OOF acceptance computed (12777 TRAIN rows)
+oob: tau=570 world-grouped 5-fold OOF acceptance computed (4839 TRAIN rows)
+eval: eval_report.md written
+env: python=3.10.20 torch=2.12.1+cpu cuda=False gpu=none git=c1c9bcc9ebb5
+outputs: writing OUTPUT_MANIFEST.json + results.zip (deliverables only; ckpt/ stays in OUT_DIR for resume)
+DONE ¡ª download E:\research-dense\output\partB_results\v0.3.2_strict\results.zip
+finished at 2026-09-29T20:36:54Z
+bundle: 6 deliverable files, results.zip 12.3 MiB, sha256 338badd52508793900439c9b31eb13d1383a834ad79820f81f511f986a9340cc (verified against OUTPUT_MANIFEST.json)
+verify: OK -- every OUTPUT_MANIFEST entry re-hashes correctly; results.zip contents match the manifest

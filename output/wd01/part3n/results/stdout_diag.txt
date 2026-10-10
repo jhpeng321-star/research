@@ -1,0 +1,56 @@
+priority below-normal: False
+=== WD-01 part 3n TASK A: gate-v2 (b) LC diagnosis on TRAIN (by type x member) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+TRAIN roots: fit ('cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000') + calibration ('cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700'); t0 (120, 180, 240, 300, 360, 420, 480) (56 windows); K=120 (H<=60); VALIDATION ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] NOT touched here; holdout blocked
+part 3m L6 member configs (fit_p3m.json, read-only):
+  member 0: seed=1 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.0
+  member 1: seed=18 lc_scale=0.003 merge_params={'tau_accept': 1.9, 'b_accept': 5.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.5} dawdle_scale=1.0
+  member 2: seed=35 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.5
+  member 3: seed=52 lc_scale=0.002 merge_params={'tau_accept': 2.4, 'b_accept': 5.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.5} dawdle_scale=1.25
+  member 4: seed=69 lc_scale=0.002 merge_params={'tau_accept': 2.4, 'b_accept': 4.0, 'p_coop_scale': 0.0, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.25
+[   0.0s] rolling L6(p3m) member 0 (seed 1, dawdle 1.0) over 8 TRAIN roots ...
+[ 136.7s]   member 0: done (112 metric rows, 112 lc-type rows)
+[ 136.7s] rolling L6(p3m) member 1 (seed 18, dawdle 1.0) over 8 TRAIN roots ...
+[ 442.2s]   member 1: done (224 metric rows, 224 lc-type rows)
+[ 442.2s] rolling L6(p3m) member 2 (seed 35, dawdle 1.5) over 8 TRAIN roots ...
+[ 817.0s]   member 2: done (336 metric rows, 336 lc-type rows)
+[ 817.0s] rolling L6(p3m) member 3 (seed 52, dawdle 1.25) over 8 TRAIN roots ...
+[1176.7s]   member 3: done (448 metric rows, 448 lc-type rows)
+[1176.7s] rolling L6(p3m) member 4 (seed 69, dawdle 1.25) over 8 TRAIN roots ...
+[1443.0s]   member 4: done (560 metric rows, 560 lc-type rows)
+[1443.0s] rolling L0 (idm_normal) on the same 8 TRAIN roots ...
+[1576.6s] wrote 672 raw metric rows -> raw_train_internal_p3n.jsonl; 560 lc-type rows -> raw_lc_type_p3n.jsonl
+
+== LC per window BY TYPE and BY GROUP (H=30) ==
+   fit                    predM  4.17 predD  9.53 | trueM  2.89 trueD  9.29 | 13.70/12.18 (+12.5%)
+   calibration            predM  4.76 predD  9.85 | trueM  3.25 trueD  7.96 | 14.61/11.21 (+30.3%)
+   fit member 0           predM  4.18 predD  8.11 | trueM  2.89 trueD  9.29 | 12.29/12.18 (+0.9%)
+   calibration member 0   predM  4.64 predD  7.32 | trueM  3.25 trueD  7.96 | 11.96/11.21 (+6.7%)
+   fit member 1           predM  4.18 predD 13.54 | trueM  2.89 trueD  9.29 | 17.71/12.18 (+45.4%)
+   calibration member 1   predM  4.79 predD 13.29 | trueM  3.25 trueD  7.96 | 18.07/11.21 (+61.1%)
+   fit member 2           predM  4.21 predD  8.71 | trueM  2.89 trueD  9.29 | 12.93/12.18 (+6.2%)
+   calibration member 2   predM  4.82 predD  9.21 | trueM  3.25 trueD  7.96 | 14.04/11.21 (+25.2%)
+   fit member 3           predM  4.14 predD  8.00 | trueM  2.89 trueD  9.29 | 12.14/12.18 (-0.3%)
+   calibration member 3   predM  4.86 predD  9.57 | trueM  3.25 trueD  7.96 | 14.43/11.21 (+28.7%)
+   fit member 4           predM  4.14 predD  9.29 | trueM  2.89 trueD  9.29 | 13.43/12.18 (+10.3%)
+   calibration member 4   predM  4.71 predD  9.86 | trueM  3.25 trueD  7.96 | 14.57/11.21 (+29.9%)
+
+== LC per window BY TYPE and BY GROUP (H=60) ==
+   fit                    predM  7.40 predD 18.56 | trueM  6.11 trueD 19.00 | 25.96/25.11 (+3.4%)
+   calibration            predM  8.19 predD 19.53 | trueM  6.54 trueD 16.64 | 27.71/23.18 (+19.6%)
+
+== per root, all members pooled (H=30 primary | H=60) ==
+   [fit] cv17             H30 16.20/ 9.00 (+80.0%)  [M 4.4/3.6 D 11.8/5.4]  H60 31.63/16.57 (+90.9%)
+   [fit] cv19_4107        H30 12.11/12.14 (-0.2%)  [M 3.7/2.0 D 8.5/10.1]  H60 24.06/27.43 (-12.3%)
+   [fit] cv19_4108        H30 12.06/15.86 (-24.0%)  [M 3.8/3.1 D 8.3/12.7]  H60 22.46/29.43 (-23.7%)
+   [fit] cv20_7001m2000   H30 14.43/11.71 (+23.2%)  [M 4.9/2.9 D 9.5/8.9]  H60 25.69/27.00 (-4.9%)
+   [CAL] cv20_7002m2000   H30 12.09/12.57 (-3.9%)  [M 4.0/3.1 D 8.1/9.4]  H60 23.46/28.00 (-16.2%)
+   [CAL] cv20_7003m2000   H30 14.60/12.86 (+13.6%)  [M 5.4/3.9 D 9.2/9.0]  H60 27.23/25.29 (+7.7%)
+   [CAL] cv20_7004m2000   H30 13.06/ 9.57 (+36.4%)  [M 4.3/2.0 D 8.7/7.6]  H60 24.54/23.29 (+5.4%)
+   [CAL] cv20_7007m2700   H30 18.71/ 9.86 (+89.9%)  [M 5.3/4.0 D 13.4/5.9]  H60 35.63/16.14 (+120.7%)
+
+NOTE: the TRAIN-internal gate (2-fold) for THIS model is computed from the calibration-root subset of raw_train_internal_p3n.jsonl by gate_p3n.py --iter 0 (no re-roll).
+[1576.6s] wrote results/diag_p3n.json
+
+DONE part 3n TASK A diagnosis.

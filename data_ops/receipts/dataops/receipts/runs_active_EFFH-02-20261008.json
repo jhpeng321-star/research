@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/EFFH-02-20261008",
+ "name": "EFFH-02-20261008",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\EFFH-02-20261008",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/EFFH-02-20261008/EFFH-02-20261008.tar.zst",
+ "bytes": 2213383,
+ "files": 7,
+ "archive_bytes": 344500,
+ "archive_md5": "a4a20e2fae6199bffa307fe14917bbfe",
+ "member_manifest": "manifests/members/runs_active_EFFH-02-20261008.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.3,
+ "timestamp": "2026-10-10T04:00:43"
+}

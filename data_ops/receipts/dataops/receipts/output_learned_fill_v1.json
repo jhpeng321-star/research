@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/learned_fill_v1",
+ "name": "learned_fill_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\learned_fill_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/learned_fill_v1/learned_fill_v1.tar.zst",
+ "bytes": 68574,
+ "files": 8,
+ "archive_bytes": 24339,
+ "archive_md5": "f54c0b88a096923d2901d6a23e129281",
+ "member_manifest": "manifests/members/output_learned_fill_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 59.7,
+ "timestamp": "2026-10-10T01:34:52"
+}

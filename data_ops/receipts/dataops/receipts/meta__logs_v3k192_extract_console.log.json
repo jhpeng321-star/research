@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "meta__logs_v3k192_extract_console.log",
+ "name": "logs_v3k192_extract_console.log",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "wmn1_feat extract console log",
+ "local": "D:\\rd-staging\\wmn1_feat\\logs_v3k192_extract_console.log",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/logs_v3k192_extract_console.log.tar.zst",
+ "bytes": 1014,
+ "files": 1,
+ "archive_bytes": 560,
+ "archive_md5": "24088929d54af2ffa9b9c8b0f95ddea2",
+ "member_manifest": "manifests/members/meta__logs_v3k192_extract_console.log.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 32.7,
+ "timestamp": "2026-10-10T01:15:40"
+}

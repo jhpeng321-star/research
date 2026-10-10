@@ -1,0 +1,39 @@
+﻿{
+    "name":  "wm72",
+    "path":  "E:\\rd-wt\\wm72",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wm72-arm-fix",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "branch",
+    "dirtyBefore":  103,
+    "committed":  true,
+    "commitSha":  "9a34171e6d041a3200685f0346d4c5dbe0759c36",
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/wm72",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\wm72.txt",
+    "uploadCount":  224,
+    "uploadBytes":  20311344,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\wm72.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 05:59:50 NOTICE: Google drive root \u0027research-archive/worktrees/wm72\u0027: 0 differences found | 2026/10/10 05:59:50 NOTICE: Google drive root \u0027research-archive/worktrees/wm72\u0027: 224 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\wm72.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "tests/test_holdout_exclusions.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T05:53:52.4283715+08:00"
+}

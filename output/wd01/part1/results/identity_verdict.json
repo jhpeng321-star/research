@@ -1,0 +1,26 @@
+{
+ "registered_tolerances": {
+  "one_step_rmse_tol_mps": 0.02,
+  "dv_mae_tol_mps": 0.005,
+  "one_step_rmse_logged_mps": 2.169141391262485,
+  "dv_mae_logged_mps": 0.13706144308982432,
+  "must_beat_persistence": 2.3246038706738803
+ },
+ "retrained_one_step_rmse_mps": 2.169141391262485,
+ "abs_dev_rmse_vs_logged": 0.0,
+ "rmse_within_tol": true,
+ "beats_persistence": true,
+ "retrained_dv_mae_mps": 0.13706144308982432,
+ "abs_dev_mae_vs_logged": 0.0,
+ "mae_within_tol": true,
+ "weights_max_abs_diff": 0.0,
+ "n_weights_identical": 6,
+ "n_weights_total": 6,
+ "pred_agreement": {
+  "n_pairs": 14583,
+  "mean_abs_diff": 0.0,
+  "max_abs_diff": 0.0,
+  "pearson": 1.0
+ },
+ "identity_pass": true
+}

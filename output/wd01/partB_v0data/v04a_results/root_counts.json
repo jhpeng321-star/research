@@ -1,0 +1,120 @@
+{
+ "n_sources": 1376,
+ "n_refused": 0,
+ "unknown_tokens": 0,
+ "tokens": 1573856,
+ "table": [
+  {
+   "policy": "damping_fleet",
+   "role": "aux",
+   "split": "CALIBRATION",
+   "sources": 7,
+   "decision_times": 556,
+   "label_rows": 2129
+  },
+  {
+   "policy": "damping_fleet",
+   "role": "aux",
+   "split": "TRAIN",
+   "sources": 49,
+   "decision_times": 4162,
+   "label_rows": 16253
+  },
+  {
+   "policy": "damping_fleet",
+   "role": "primary",
+   "split": "CALIBRATION",
+   "sources": 23,
+   "decision_times": 1742,
+   "label_rows": 6571
+  },
+  {
+   "policy": "damping_fleet",
+   "role": "primary",
+   "split": "TRAIN",
+   "sources": 161,
+   "decision_times": 11828,
+   "label_rows": 44167
+  },
+  {
+   "policy": "fixed_mix",
+   "role": "primary",
+   "split": "CALIBRATION",
+   "sources": 18,
+   "decision_times": 1044,
+   "label_rows": 3546
+  },
+  {
+   "policy": "fixed_mix",
+   "role": "primary",
+   "split": "TRAIN",
+   "sources": 126,
+   "decision_times": 7308,
+   "label_rows": 24822
+  },
+  {
+   "policy": "native_fleet",
+   "role": "primary",
+   "split": "CALIBRATION",
+   "sources": 32,
+   "decision_times": 1856,
+   "label_rows": 6304
+  },
+  {
+   "policy": "native_fleet",
+   "role": "primary",
+   "split": "TRAIN",
+   "sources": 224,
+   "decision_times": 12992,
+   "label_rows": 44128
+  },
+  {
+   "policy": "pi_fleet",
+   "role": "primary",
+   "split": "CALIBRATION",
+   "sources": 23,
+   "decision_times": 1334,
+   "label_rows": 4531
+  },
+  {
+   "policy": "pi_fleet",
+   "role": "primary",
+   "split": "TRAIN",
+   "sources": 161,
+   "decision_times": 9338,
+   "label_rows": 31717
+  },
+  {
+   "policy": "switching_mix",
+   "role": "aux",
+   "split": "CALIBRATION",
+   "sources": 42,
+   "decision_times": 2436,
+   "label_rows": 8274
+  },
+  {
+   "policy": "switching_mix",
+   "role": "aux",
+   "split": "TRAIN",
+   "sources": 294,
+   "decision_times": 17052,
+   "label_rows": 57918
+  },
+  {
+   "policy": "switching_mix",
+   "role": "primary",
+   "split": "CALIBRATION",
+   "sources": 27,
+   "decision_times": 1566,
+   "label_rows": 5319
+  },
+  {
+   "policy": "switching_mix",
+   "role": "primary",
+   "split": "TRAIN",
+   "sources": 189,
+   "decision_times": 10962,
+   "label_rows": 37233
+  }
+ ]
+}

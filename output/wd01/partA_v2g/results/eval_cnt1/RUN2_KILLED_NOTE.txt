@@ -1,0 +1,10 @@
+Attempt 2 (2026-09-30 14:04:48, pid 14088/cmd) was hard-killed within
+seconds of the pool spawn: cnt1_run2.out holds only the two header
+lines, cnt1_run2.err is EMPTY (no exception), no shard file was ever
+created, no OOM event in the System log.  The machine was concurrently
+running a wave of other-session processes (campaign_walls_v1
+run_wall_branch x8 launched 14:02-14:14, rg0 run, partB_v0 train).
+Cause external to this task; nothing to fix in code.  Attempt 1
+lessons (v2g-rows bug) were already fixed and re-preflighted before
+this launch.  Attempt 3 relaunched with the same code and the same
+output directory contract (fresh raw_rows; nothing overwritten).

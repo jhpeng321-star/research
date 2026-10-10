@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk2/w8496m2700p05t300__fixed2.interrupted_20260927T075813Z",
+ "name": "w8496m2700p05t300__fixed2.interrupted_20260927T075813Z",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk2\\w8496m2700p05t300__fixed2.interrupted_20260927T075813Z",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk2/w8496m2700p05t300__fixed2.interrupted_20260927T075813Z/w8496m2700p05t300__fixed2.interrupted_20260927T075813Z.tar.zst",
+ "bytes": 737387,
+ "files": 5,
+ "archive_bytes": 74130,
+ "archive_md5": "db16c24fc2b3da6bfd812c060ebfaf3a",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk2_w8496m2700p05t300__fixed2.interrupted_20260927T075813Z.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 63.7,
+ "timestamp": "2026-10-10T03:58:52"
+}

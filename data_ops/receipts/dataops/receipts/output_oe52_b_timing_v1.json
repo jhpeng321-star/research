@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe52_b_timing_v1",
+ "name": "oe52_b_timing_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe52_b_timing_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe52_b_timing_v1/oe52_b_timing_v1.tar.zst",
+ "bytes": 8922889,
+ "files": 39,
+ "archive_bytes": 8477035,
+ "archive_md5": "3b44ececc3a677ad235ace3b6a6530ab",
+ "member_manifest": "manifests/members/output_oe52_b_timing_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.9,
+ "timestamp": "2026-10-10T01:49:40"
+}

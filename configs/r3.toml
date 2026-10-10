@@ -1,0 +1,21 @@
+# ROUND-3 recipe (preset R3_FULL of _out/train_r3_chain.sh with all env defaults).
+# = r3_packs_only.toml (C1FAST schedule and optimiser, pack_v3 windows via the lpwo_v3 lists,
+# braking losses, merge_cal on, no residual cap / projection / traffic / stability / conservation,
+# jam oversampling off) plus the switching pack mixed in at 0.3.
+# Data names are logical; the chain's SW_ROOT export files are registered one by one.
+schema_version = 2
+name = "WM-S-R3"
+extends = "r3_packs_only.toml"
+
+[data.switching]
+pack = "pack_switching_train"
+identities = "identities_switching_train"
+driver_params = "driver_params_switching_train"
+windows_train = "windows_train_hetdata"
+timeline_index = "action_timeline_index_train"
+zero_shot_heldout = "zero_shot_heldout"
+heldout_family_policy = "drop"
+heldout_max_drop_frac = 0.85
+mix_ratio = 0.3
+event_oversample = 1.0
+val_frac = 0.1

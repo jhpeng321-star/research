@@ -1,0 +1,3786 @@
+{
+ "schema": "offloaded_paths/1",
+ "description": "Local paths removed by owner-run clean-ups after a live Drive size+MD5 check; bytes remain on Google Drive at \"drive\". Restore with tools/fetch_data.py (python -m wms fetch).",
+ "entries": [
+  {
+   "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\rd_v3_baseline.txt",
+   "drive": "gdrive:research-archive/repo-evidence/c-drive/rd_v3_baseline.txt.tar.zst",
+   "bytes": 614577,
+   "removed_utc": "2026-10-10T06:04:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\rd_v3_final.txt",
+   "drive": "gdrive:research-archive/repo-evidence/c-drive/rd_v3_final.txt.tar.zst",
+   "bytes": 70591,
+   "removed_utc": "2026-10-10T06:04:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\RUNS_C_box.jsonl",
+   "drive": "gdrive:research-archive/repo-evidence/c-drive/RUNS_C_box.jsonl.tar.zst",
+   "bytes": 140940,
+   "removed_utc": "2026-10-10T06:04:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\RUNS_R_gpuA.jsonl",
+   "drive": "gdrive:research-archive/repo-evidence/c-drive/RUNS_R_gpuA.jsonl.tar.zst",
+   "bytes": 189948,
+   "removed_utc": "2026-10-10T06:04:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\wm_n1_full.tar",
+   "drive": "gdrive:research-archive/repo-evidence/c-drive/wm_n1_full.tar.tar.zst",
+   "bytes": 9072640,
+   "removed_utc": "2026-10-10T06:04:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\box_push_j4b_bases",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/box_push_j4b_bases  (mirror, 80 files size+MD5 re-checked)",
+   "bytes": 8184711,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\box_push_j4b_bases.sha256",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/box_push_j4b_bases.sha256.tar.zst",
+   "bytes": 9456,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_root",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/root  (mirror, 31 files size+MD5 re-checked)",
+   "bytes": 868462,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 33269760,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot.tar.sha256",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/plexp1d_v3_slot.tar.sha256.tar.zst",
+   "bytes": 65,
+   "removed_utc": "2026-10-10T06:04:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot_attempt2.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 33259520,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot_attempt3.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 33259520,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot_attempt4.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 33259520,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\plexp1d_v3_slot_attempt5.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/slots  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 33269760,
+   "removed_utc": "2026-10-10T06:04:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wallc1_states_h60_smoke",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wallc1_states_h60_smoke/wallc1_states_h60_smoke.tar.zst",
+   "bytes": 563638038,
+   "removed_utc": "2026-10-10T06:04:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\code_ship_02a2d8c.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/code_ship  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 7946240,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\code_ship_aec0d8d.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/code_ship  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 7946240,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\code_ship_d4f716b.tar",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/code_ship  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 7946240,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\FEAT1_REPORT.json",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/FEAT1_REPORT.json.tar.zst",
+   "bytes": 14698,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 3 files size+MD5 re-checked)",
+   "bytes": 3379,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_pack_v3",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 4 files size+MD5 re-checked)",
+   "bytes": 1807,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v2",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 5 files size+MD5 re-checked)",
+   "bytes": 681,
+   "removed_utc": "2026-10-10T06:04:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v2c",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 6 files size+MD5 re-checked)",
+   "bytes": 2158742,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v3",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 8 files size+MD5 re-checked)",
+   "bytes": 109047,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v3k192",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 2 files size+MD5 re-checked)",
+   "bytes": 451441,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v3k192_extract_console.log",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/logs_v3k192_extract_console.log.tar.zst",
+   "bytes": 1014,
+   "removed_utc": "2026-10-10T06:04:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v4",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 12 files size+MD5 re-checked)",
+   "bytes": 418057,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\logs_v5",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 39 files size+MD5 re-checked)",
+   "bytes": 511041,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\pack_v2c_meta",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/pack_v2c_meta  (mirror, 3 files size+MD5 re-checked)",
+   "bytes": 3763835,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\quarantine_v2",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/featurization_logs  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 918,
+   "removed_utc": "2026-10-10T06:04:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v1  (mirror, 107 files size+MD5 re-checked)",
+   "bytes": 80612691,
+   "removed_utc": "2026-10-10T06:04:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\ALLOCATION.json",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst  (legacy archive",
+   "bytes": 2018,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk1",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk1.tar.zst  (legacy archive",
+   "bytes": 6570238182,
+   "removed_utc": "2026-10-10T06:05:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk1_fix27",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk1_fix27.tar.zst  (legacy archive",
+   "bytes": 1174914770,
+   "removed_utc": "2026-10-10T06:04:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk2",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk2.tar.zst  (legacy archive",
+   "bytes": 6739818719,
+   "removed_utc": "2026-10-10T06:05:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk3",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__chunk3/shards_v2__chunk3.tar.zst",
+   "bytes": 6733192694,
+   "removed_utc": "2026-10-10T06:05:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk4",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__chunk4/shards_v2__chunk4.tar.zst",
+   "bytes": 10232743616,
+   "removed_utc": "2026-10-10T06:05:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\INDEX.json",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst  (legacy archive",
+   "bytes": 1225582,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\opened_paths.json",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst  (legacy archive",
+   "bytes": 1440,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\PLAN_MAP.json",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst  (legacy archive",
+   "bytes": 919146,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\SHA256SUMS",
+   "drive": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst  (legacy archive",
+   "bytes": 5820819,
+   "removed_utc": "2026-10-10T06:04:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\truearms_chunk2",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__truearms_chunk2/shards_v2__truearms_chunk2.tar.zst",
+   "bytes": 1569412397,
+   "removed_utc": "2026-10-10T06:04:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\truearms_chunk3",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__truearms_chunk3/shards_v2__truearms_chunk3.tar.zst",
+   "bytes": 1569401387,
+   "removed_utc": "2026-10-10T06:04:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\walls_pilot_chunk4",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__walls_pilot_chunk4/shards_v2__walls_pilot_chunk4.tar.zst",
+   "bytes": 2447917651,
+   "removed_utc": "2026-10-10T06:04:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\upload_manifest.json",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/upload_manifest.json.tar.zst",
+   "bytes": 106604,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\upload_manifest_v2c.json",
+   "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/upload_manifest_v2c.json.tar.zst",
+   "bytes": 107607,
+   "removed_utc": "2026-10-10T06:04:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\upload_v2",
+   "drive": "gdrive:research-archive/data/packs/archived_training_packs_v2/upload_v2.tar.zst  (legacy archive",
+   "bytes": 6861792222,
+   "removed_utc": "2026-10-10T06:05:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "D:\\rd-staging\\wmn1_feat\\upload_v2c",
+   "drive": "gdrive:research-archive/data/packs/archived_training_packs_v2/upload_v2c.tar.zst  (legacy archive",
+   "bytes": 6912442062,
+   "removed_utc": "2026-10-10T06:05:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\glm",
+   "drive": "gdrive:research-archive/code/tools  (mirror, 40 files size+MD5 re-checked)",
+   "bytes": 32751,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\glm-worker",
+   "drive": "gdrive:research-archive/code/tools  (mirror, 1 files size+MD5 re-checked)",
+   "bytes": 379,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\migration_logs",
+   "drive": "gdrive:research-archive/repo-evidence/archive/migration_logs  (mirror, 22 files size+MD5 re-checked)",
+   "bytes": 398269,
+   "removed_utc": "2026-10-10T06:06:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-release",
+   "drive": "gdrive:research-archive/repo-evidence/archive/rd-release.tar.zst",
+   "bytes": 1087355546,
+   "removed_utc": "2026-10-10T06:07:32Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\a10",
+   "drive": "gdrive:research-archive/worktrees/a10",
+   "bytes": 240146123,
+   "removed_utc": "2026-10-10T06:22:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\a11",
+   "drive": "gdrive:research-archive/worktrees/a11",
+   "bytes": 258835289,
+   "removed_utc": "2026-10-10T06:22:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\a12",
+   "drive": "gdrive:research-archive/worktrees/a12",
+   "bytes": 239750217,
+   "removed_utc": "2026-10-10T06:22:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\a13",
+   "drive": "gdrive:research-archive/worktrees/a13",
+   "bytes": 239787085,
+   "removed_utc": "2026-10-10T06:22:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\blend-check",
+   "drive": "gdrive:research-archive/worktrees/blend-check",
+   "bytes": 205992947,
+   "removed_utc": "2026-10-10T06:21:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\bundle1",
+   "drive": "gdrive:research-archive/worktrees/bundle1",
+   "bytes": 27801689,
+   "removed_utc": "2026-10-10T06:19:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\bundle2",
+   "drive": "gdrive:research-archive/worktrees/bundle2",
+   "bytes": 28114106,
+   "removed_utc": "2026-10-10T06:19:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\cloudresume",
+   "drive": "gdrive:research-archive/worktrees/cloudresume",
+   "bytes": 203106396,
+   "removed_utc": "2026-10-10T06:20:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\feat1j4fix",
+   "drive": "gdrive:research-archive/worktrees/feat1j4fix",
+   "bytes": 407630316,
+   "removed_utc": "2026-10-10T06:22:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\horizon-error",
+   "drive": "gdrive:research-archive/worktrees/horizon-error",
+   "bytes": 209397760,
+   "removed_utc": "2026-10-10T06:21:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\noisefloor-ds",
+   "drive": "gdrive:research-archive/worktrees/noisefloor-ds",
+   "bytes": 204125348,
+   "removed_utc": "2026-10-10T06:20:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\percav-plan",
+   "drive": "gdrive:research-archive/worktrees/percav-plan",
+   "bytes": 236883131,
+   "removed_utc": "2026-10-10T06:21:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl01-a11",
+   "drive": "gdrive:research-archive/worktrees/pl01-a11",
+   "bytes": 386311230,
+   "removed_utc": "2026-10-10T06:22:32Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl01-walls",
+   "drive": "gdrive:research-archive/worktrees/pl01-walls",
+   "bytes": 233728018,
+   "removed_utc": "2026-10-10T06:21:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl02a_c1",
+   "drive": "gdrive:research-archive/worktrees/pl02a_c1",
+   "bytes": 9074850,
+   "removed_utc": "2026-10-10T06:18:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl02a_c2",
+   "drive": "gdrive:research-archive/worktrees/pl02a_c2",
+   "bytes": 9136274,
+   "removed_utc": "2026-10-10T06:18:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl02a_full",
+   "drive": "gdrive:research-archive/worktrees/pl02a_full",
+   "bytes": 18757747,
+   "removed_utc": "2026-10-10T06:19:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl06",
+   "drive": "gdrive:research-archive/worktrees/pl06",
+   "bytes": 8748447,
+   "removed_utc": "2026-10-10T06:18:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl07",
+   "drive": "gdrive:research-archive/worktrees/pl07",
+   "bytes": 8950612,
+   "removed_utc": "2026-10-10T06:18:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\pl30_pristine",
+   "drive": "gdrive:research-archive/worktrees/pl30_pristine",
+   "bytes": 459370,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\probe_flash_2330",
+   "drive": "gdrive:research-archive/worktrees/probe_flash_2330",
+   "bytes": 26311,
+   "removed_utc": "2026-10-10T06:18:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_architect",
+   "drive": "gdrive:research-archive/worktrees/reorg2_architect",
+   "bytes": 87004,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_reviewer",
+   "drive": "gdrive:research-archive/worktrees/reorg2_reviewer",
+   "bytes": 58782,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s1_code",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s1_code",
+   "bytes": 2163846,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s2_docs",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s2_docs",
+   "bytes": 90087093,
+   "removed_utc": "2026-10-10T06:19:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s3_runs_output",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s3_runs_output",
+   "bytes": 293010,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s4_worktrees",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s4_worktrees",
+   "bytes": 374172,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s5_tmp_scratch",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s5_tmp_scratch",
+   "bytes": 110682,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s6_D_drive",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s6_D_drive",
+   "bytes": 53399,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg2_s7_C_drive",
+   "drive": "gdrive:research-archive/worktrees/reorg2_s7_C_drive",
+   "bytes": 2043770,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg_inv_a",
+   "drive": "gdrive:research-archive/worktrees/reorg_inv_a",
+   "bytes": 741792,
+   "removed_utc": "2026-10-10T06:18:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg_inv_b",
+   "drive": "gdrive:research-archive/worktrees/reorg_inv_b",
+   "bytes": 229939,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\reorg_inv_c",
+   "drive": "gdrive:research-archive/worktrees/reorg_inv_c",
+   "bytes": 208900,
+   "removed_utc": "2026-10-10T06:18:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\rollout-entry",
+   "drive": "gdrive:research-archive/worktrees/rollout-entry",
+   "bytes": 226323965,
+   "removed_utc": "2026-10-10T06:21:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\rollout-exit",
+   "drive": "gdrive:research-archive/worktrees/rollout-exit",
+   "bytes": 205861549,
+   "removed_utc": "2026-10-10T06:21:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\scorer-a11",
+   "drive": "gdrive:research-archive/worktrees/scorer-a11",
+   "bytes": 205575994,
+   "removed_utc": "2026-10-10T06:21:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01l",
+   "drive": "gdrive:research-archive/worktrees/wd01l",
+   "bytes": 28913892,
+   "removed_utc": "2026-10-10T06:19:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01pa2",
+   "drive": "gdrive:research-archive/worktrees/wd01pa2",
+   "bytes": 52926481,
+   "removed_utc": "2026-10-10T06:19:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01v04a",
+   "drive": "gdrive:research-archive/worktrees/wd01v04a",
+   "bytes": 114282928,
+   "removed_utc": "2026-10-10T06:19:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01w2",
+   "drive": "gdrive:research-archive/worktrees/wd01w2",
+   "bytes": 52999093,
+   "removed_utc": "2026-10-10T06:19:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01w3",
+   "drive": "gdrive:research-archive/worktrees/wd01w3",
+   "bytes": 53026841,
+   "removed_utc": "2026-10-10T06:19:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wd01y",
+   "drive": "gdrive:research-archive/worktrees/wd01y",
+   "bytes": 34261806,
+   "removed_utc": "2026-10-10T06:19:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm53",
+   "drive": "gdrive:research-archive/worktrees/wm53",
+   "bytes": 29938620,
+   "removed_utc": "2026-10-10T06:19:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm54",
+   "drive": "gdrive:research-archive/worktrees/wm54",
+   "bytes": 34669203,
+   "removed_utc": "2026-10-10T06:19:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm55",
+   "drive": "gdrive:research-archive/worktrees/wm55",
+   "bytes": 41169391,
+   "removed_utc": "2026-10-10T06:19:33Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm56",
+   "drive": "gdrive:research-archive/worktrees/wm56",
+   "bytes": 36044629,
+   "removed_utc": "2026-10-10T06:19:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm57",
+   "drive": "gdrive:research-archive/worktrees/wm57",
+   "bytes": 36329013,
+   "removed_utc": "2026-10-10T06:19:26Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm58",
+   "drive": "gdrive:research-archive/worktrees/wm58",
+   "bytes": 39324701,
+   "removed_utc": "2026-10-10T06:19:31Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm59",
+   "drive": "gdrive:research-archive/worktrees/wm59",
+   "bytes": 34824490,
+   "removed_utc": "2026-10-10T06:19:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm60",
+   "drive": "gdrive:research-archive/worktrees/wm60",
+   "bytes": 89848089,
+   "removed_utc": "2026-10-10T06:19:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm61",
+   "drive": "gdrive:research-archive/worktrees/wm61",
+   "bytes": 61749142,
+   "removed_utc": "2026-10-10T06:19:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm63",
+   "drive": "gdrive:research-archive/worktrees/wm63",
+   "bytes": 50597652,
+   "removed_utc": "2026-10-10T06:19:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wm64",
+   "drive": "gdrive:research-archive/worktrees/wm64",
+   "bytes": 45688332,
+   "removed_utc": "2026-10-10T06:19:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wmapi2",
+   "drive": "gdrive:research-archive/worktrees/wmapi2",
+   "bytes": 199994786,
+   "removed_utc": "2026-10-10T06:20:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wmn1-contrast-zero",
+   "drive": "gdrive:research-archive/worktrees/wmn1-contrast-zero",
+   "bytes": 203879694,
+   "removed_utc": "2026-10-10T06:20:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\wmn1v2",
+   "drive": "gdrive:research-archive/worktrees/wmn1v2",
+   "bytes": 912,
+   "removed_utc": "2026-10-10T06:18:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-bb",
+   "drive": "gdrive:research-archive/worktrees/ws-bb",
+   "bytes": 206354952,
+   "removed_utc": "2026-10-10T06:21:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-bb2",
+   "drive": "gdrive:research-archive/worktrees/ws-bb2",
+   "bytes": 206333305,
+   "removed_utc": "2026-10-10T06:21:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-bisect-residual",
+   "drive": "gdrive:research-archive/worktrees/ws-bisect-residual",
+   "bytes": 374622171,
+   "removed_utc": "2026-10-10T06:22:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-bisect-stages",
+   "drive": "gdrive:research-archive/worktrees/ws-bisect-stages",
+   "bytes": 347077395,
+   "removed_utc": "2026-10-10T06:22:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-diag120",
+   "drive": "gdrive:research-archive/worktrees/ws-diag120",
+   "bytes": 378038383,
+   "removed_utc": "2026-10-10T06:22:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-driver",
+   "drive": "gdrive:research-archive/worktrees/ws-driver",
+   "bytes": 206919635,
+   "removed_utc": "2026-10-10T06:21:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-effh2",
+   "drive": "gdrive:research-archive/worktrees/ws-effh2",
+   "bytes": 27556228,
+   "removed_utc": "2026-10-10T06:19:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-entry",
+   "drive": "gdrive:research-archive/worktrees/ws-entry",
+   "bytes": 215404578,
+   "removed_utc": "2026-10-10T06:21:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-errdecomp",
+   "drive": "gdrive:research-archive/worktrees/ws-errdecomp",
+   "bytes": 209616710,
+   "removed_utc": "2026-10-10T06:21:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-evalshift",
+   "drive": "gdrive:research-archive/worktrees/ws-evalshift",
+   "bytes": 1022825054,
+   "removed_utc": "2026-10-10T06:22:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-integrate",
+   "drive": "gdrive:research-archive/worktrees/ws-integrate",
+   "bytes": 487958754,
+   "removed_utc": "2026-10-10T06:22:41Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-junction",
+   "drive": "gdrive:research-archive/worktrees/ws-junction",
+   "bytes": 218491020,
+   "removed_utc": "2026-10-10T06:21:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-ledger",
+   "drive": "gdrive:research-archive/worktrees/ws-ledger",
+   "bytes": 30098139,
+   "removed_utc": "2026-10-10T06:19:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-p5",
+   "drive": "gdrive:research-archive/worktrees/ws-p5",
+   "bytes": 208225533,
+   "removed_utc": "2026-10-10T06:21:33Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-review",
+   "drive": "gdrive:research-archive/worktrees/ws-review",
+   "bytes": 207109683,
+   "removed_utc": "2026-10-10T06:21:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-swpack",
+   "drive": "gdrive:research-archive/worktrees/ws-swpack",
+   "bytes": 36984564,
+   "removed_utc": "2026-10-10T06:19:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-trafloss-fix",
+   "drive": "gdrive:research-archive/worktrees/ws-trafloss-fix",
+   "bytes": 280756305,
+   "removed_utc": "2026-10-10T06:22:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-wall",
+   "drive": "gdrive:research-archive/worktrees/ws-wall",
+   "bytes": 28427520,
+   "removed_utc": "2026-10-10T06:19:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rd-wt\\ws-wallexec",
+   "drive": "gdrive:research-archive/worktrees/ws-wallexec",
+   "bytes": 281006835,
+   "removed_utc": "2026-10-10T06:22:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\rented_bundle",
+   "drive": "gdrive:research-archive/data/staging/rented_bundle  (mirror, 65 files size+MD5 re-checked)",
+   "bytes": 484239,
+   "removed_utc": "2026-10-10T06:06:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense-c-migrated",
+   "drive": "gdrive:research-archive/repo-evidence/archive/c-migrated  (mirror, 31 files size+MD5 re-checked)",
+   "bytes": 59400761,
+   "removed_utc": "2026-10-10T06:07:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\brake_hold_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/brake_hold_v1/brake_hold_v1.tar.zst",
+   "bytes": 36126015,
+   "removed_utc": "2026-10-10T06:07:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_dspeed",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_dspeed/campaign_dspeed.tar.zst",
+   "bytes": 33956,
+   "removed_utc": "2026-10-10T06:05:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_jpulse",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_jpulse/campaign_jpulse.tar.zst",
+   "bytes": 491,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_jpulse_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_jpulse_launch/campaign_jpulse_launch.tar.zst",
+   "bytes": 185033,
+   "removed_utc": "2026-10-10T06:06:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_pilot_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1/campaign_pilot_v1.tar.zst",
+   "bytes": 2161369,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_pilot_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1_launch/campaign_pilot_v1_launch.tar.zst",
+   "bytes": 2705,
+   "removed_utc": "2026-10-10T06:05:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_pilot_v1_launch_r2",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1_launch_r2/campaign_pilot_v1_launch_r2.tar.zst",
+   "bytes": 4827,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_pilot_v1_launch_r3",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1_launch_r3/campaign_pilot_v1_launch_r3.tar.zst",
+   "bytes": 11988,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_pilot_v1_launch_r4",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1_launch_r4/campaign_pilot_v1_launch_r4.tar.zst",
+   "bytes": 36852,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_rep_pilot_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_rep_pilot_v1/campaign_rep_pilot_v1.tar.zst",
+   "bytes": 252655,
+   "removed_utc": "2026-10-10T06:06:27Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_rep_pilot_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_rep_pilot_v1_launch/campaign_rep_pilot_v1_launch.tar.zst",
+   "bytes": 342743,
+   "removed_utc": "2026-10-10T06:06:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk1",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk1/campaign_stage1_chunk1.tar.zst",
+   "bytes": 2629176,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk1_fix27",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk1_fix27/campaign_stage1_chunk1_fix27.tar.zst",
+   "bytes": 910,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk1_fix27_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk1_fix27_launch/campaign_stage1_chunk1_fix27_launch.tar.zst",
+   "bytes": 88976,
+   "removed_utc": "2026-10-10T06:06:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk1_launch/campaign_stage1_chunk1_launch.tar.zst",
+   "bytes": 458523,
+   "removed_utc": "2026-10-10T06:06:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk2_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk2_launch/campaign_stage1_chunk2_launch.tar.zst",
+   "bytes": 262702,
+   "removed_utc": "2026-10-10T06:06:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk3",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk3/campaign_stage1_chunk3.tar.zst",
+   "bytes": 2924,
+   "removed_utc": "2026-10-10T06:05:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk3_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk3_launch/campaign_stage1_chunk3_launch.tar.zst",
+   "bytes": 494195,
+   "removed_utc": "2026-10-10T06:06:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk4",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk4/campaign_stage1_chunk4.tar.zst",
+   "bytes": 783,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_chunk4_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk4_launch/campaign_stage1_chunk4_launch.tar.zst",
+   "bytes": 891022,
+   "removed_utc": "2026-10-10T06:06:41Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_truearms",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_truearms/campaign_stage1_truearms.tar.zst",
+   "bytes": 1406,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_v2/campaign_stage1_v2.tar.zst",
+   "bytes": 7998866,
+   "removed_utc": "2026-10-10T06:06:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_stage1_verify27_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_verify27_launch/campaign_stage1_verify27_launch.tar.zst",
+   "bytes": 27234,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_walls_j4b",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_walls_j4b/campaign_walls_j4b.tar.zst",
+   "bytes": 773,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_walls_pilot_chunk4",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_walls_pilot_chunk4/campaign_walls_pilot_chunk4.tar.zst",
+   "bytes": 565,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\campaign_walls_pilot_chunk4_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/campaign_walls_pilot_chunk4_launch/campaign_walls_pilot_chunk4_launch.tar.zst",
+   "bytes": 203746,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\codebase_organization",
+   "drive": "gdrive:research-archive/repo-evidence/output/codebase_organization/codebase_organization.tar.zst",
+   "bytes": 19294,
+   "removed_utc": "2026-10-10T06:05:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\collapse_prevention_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/collapse_prevention_audit_v1/collapse_prevention_audit_v1.tar.zst",
+   "bytes": 458441426,
+   "removed_utc": "2026-10-10T06:07:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_use_case_research_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_use_case_research_v1/controller_use_case_research_v1.tar.zst",
+   "bytes": 220532,
+   "removed_utc": "2026-10-10T06:06:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v1/controller_verification_v1.tar.zst",
+   "bytes": 5342796,
+   "removed_utc": "2026-10-10T06:06:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v10",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v10/controller_verification_v10.tar.zst",
+   "bytes": 141463,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v11",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v11/controller_verification_v11.tar.zst",
+   "bytes": 39796,
+   "removed_utc": "2026-10-10T06:05:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v12",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v12/controller_verification_v12.tar.zst",
+   "bytes": 966009,
+   "removed_utc": "2026-10-10T06:06:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v13",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v13/controller_verification_v13.tar.zst",
+   "bytes": 892589,
+   "removed_utc": "2026-10-10T06:06:41Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v14",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v14/controller_verification_v14.tar.zst",
+   "bytes": 42744,
+   "removed_utc": "2026-10-10T06:05:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v15",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v15/controller_verification_v15.tar.zst",
+   "bytes": 569335,
+   "removed_utc": "2026-10-10T06:06:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v16",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v16/controller_verification_v16.tar.zst",
+   "bytes": 22603,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v17",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v17/controller_verification_v17.tar.zst",
+   "bytes": 537453,
+   "removed_utc": "2026-10-10T06:06:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v18",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v18/controller_verification_v18.tar.zst",
+   "bytes": 802861,
+   "removed_utc": "2026-10-10T06:06:41Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v19",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v19/controller_verification_v19.tar.zst",
+   "bytes": 938281,
+   "removed_utc": "2026-10-10T06:06:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v20",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v20/controller_verification_v20.tar.zst",
+   "bytes": 5168138,
+   "removed_utc": "2026-10-10T06:06:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v21",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v21/controller_verification_v21.tar.zst",
+   "bytes": 2338829,
+   "removed_utc": "2026-10-10T06:06:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v22",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v22/controller_verification_v22.tar.zst",
+   "bytes": 1460327,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v23",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v23/controller_verification_v23.tar.zst",
+   "bytes": 1462984,
+   "removed_utc": "2026-10-10T06:06:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v24",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v24/controller_verification_v24.tar.zst",
+   "bytes": 1014933,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v25",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v25/controller_verification_v25.tar.zst",
+   "bytes": 1008358,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v26_wall",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v26_wall/controller_verification_v26_wall.tar.zst",
+   "bytes": 2368861,
+   "removed_utc": "2026-10-10T06:06:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v27",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v27/controller_verification_v27.tar.zst",
+   "bytes": 966032,
+   "removed_utc": "2026-10-10T06:06:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v28",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v28/controller_verification_v28.tar.zst",
+   "bytes": 899874,
+   "removed_utc": "2026-10-10T06:06:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v29",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v29/controller_verification_v29.tar.zst",
+   "bytes": 2518257,
+   "removed_utc": "2026-10-10T06:06:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v3",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v3/controller_verification_v3.tar.zst",
+   "bytes": 226261,
+   "removed_utc": "2026-10-10T06:06:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v30",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v30/controller_verification_v30.tar.zst",
+   "bytes": 2691270,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v31",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v31/controller_verification_v31.tar.zst",
+   "bytes": 2842399,
+   "removed_utc": "2026-10-10T06:06:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v32",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v32/controller_verification_v32.tar.zst",
+   "bytes": 2559818,
+   "removed_utc": "2026-10-10T06:06:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v5",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v5/controller_verification_v5.tar.zst",
+   "bytes": 765435,
+   "removed_utc": "2026-10-10T06:06:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v6",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v6/controller_verification_v6.tar.zst",
+   "bytes": 972307,
+   "removed_utc": "2026-10-10T06:06:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v8",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v8/controller_verification_v8.tar.zst",
+   "bytes": 2756437,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\controller_verification_v9",
+   "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v9/controller_verification_v9.tar.zst",
+   "bytes": 669839,
+   "removed_utc": "2026-10-10T06:06:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ctm_filter_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ctm_filter_v1/ctm_filter_v1.tar.zst",
+   "bytes": 45818338,
+   "removed_utc": "2026-10-10T06:07:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\driver_mix_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/driver_mix_v1/driver_mix_v1.tar.zst",
+   "bytes": 148480,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\driver_mix_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/driver_mix_v2/driver_mix_v2.tar.zst",
+   "bytes": 31016,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\driver_mix_v3",
+   "drive": "gdrive:research-archive/repo-evidence/output/driver_mix_v3/driver_mix_v3.tar.zst",
+   "bytes": 68928,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v1/duration_selection_v1.tar.zst",
+   "bytes": 228848,
+   "removed_utc": "2026-10-10T06:06:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v10",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v10/duration_selection_v10.tar.zst",
+   "bytes": 24657,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v11",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v11/duration_selection_v11.tar.zst",
+   "bytes": 1867486,
+   "removed_utc": "2026-10-10T06:06:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v2/duration_selection_v2.tar.zst",
+   "bytes": 89857,
+   "removed_utc": "2026-10-10T06:06:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v3",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v3/duration_selection_v3.tar.zst",
+   "bytes": 125946,
+   "removed_utc": "2026-10-10T06:06:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v4",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v4/duration_selection_v4.tar.zst",
+   "bytes": 88162,
+   "removed_utc": "2026-10-10T06:06:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v5",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v5/duration_selection_v5.tar.zst",
+   "bytes": 56523,
+   "removed_utc": "2026-10-10T06:06:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v6",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v6/duration_selection_v6.tar.zst",
+   "bytes": 78181,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v7",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v7/duration_selection_v7.tar.zst",
+   "bytes": 47751,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v8",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v8/duration_selection_v8.tar.zst",
+   "bytes": 39495,
+   "removed_utc": "2026-10-10T06:05:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\duration_selection_v9",
+   "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v9/duration_selection_v9.tar.zst",
+   "bytes": 53496,
+   "removed_utc": "2026-10-10T06:06:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\emergency_braking_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/emergency_braking_v1/emergency_braking_v1.tar.zst",
+   "bytes": 452744,
+   "removed_utc": "2026-10-10T06:06:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_observability_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v1/entry_observability_v1.tar.zst",
+   "bytes": 92070,
+   "removed_utc": "2026-10-10T06:06:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_observability_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v2/entry_observability_v2.tar.zst",
+   "bytes": 87382,
+   "removed_utc": "2026-10-10T06:06:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_observability_v3",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v3/entry_observability_v3.tar.zst",
+   "bytes": 71748,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_observability_v4",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v4/entry_observability_v4.tar.zst",
+   "bytes": 53247,
+   "removed_utc": "2026-10-10T06:06:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_observability_v5",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v5/entry_observability_v5.tar.zst",
+   "bytes": 78987,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v1/entry_pairs_v1.tar.zst",
+   "bytes": 106372,
+   "removed_utc": "2026-10-10T06:06:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v2/entry_pairs_v2.tar.zst",
+   "bytes": 70679,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v3",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v3/entry_pairs_v3.tar.zst",
+   "bytes": 149793,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v4",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v4/entry_pairs_v4.tar.zst",
+   "bytes": 129628,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v5",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v5/entry_pairs_v5.tar.zst",
+   "bytes": 38630,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v6",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v6/entry_pairs_v6.tar.zst",
+   "bytes": 44930,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v7",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v7/entry_pairs_v7.tar.zst",
+   "bytes": 74489,
+   "removed_utc": "2026-10-10T06:06:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v8",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v8/entry_pairs_v8.tar.zst",
+   "bytes": 205992,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\entry_pairs_v9",
+   "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v9/entry_pairs_v9.tar.zst",
+   "bytes": 140951,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\escalation_execution",
+   "drive": "gdrive:research-archive/repo-evidence/output/escalation_execution/escalation_execution.tar.zst",
+   "bytes": 5731618,
+   "removed_utc": "2026-10-10T06:06:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\escalation_test_build",
+   "drive": "gdrive:research-archive/repo-evidence/output/escalation_test_build/escalation_test_build.tar.zst",
+   "bytes": 5121,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\batches",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/batches/batches.tar.zst",
+   "bytes": 32169,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\CLOSEOUT.md",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/CLOSEOUT.md.tar.zst",
+   "bytes": 1449,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\dataset_v2_retry1",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/dataset_v2_retry1/dataset_v2_retry1.tar.zst",
+   "bytes": 1926803085,
+   "removed_utc": "2026-10-10T06:07:33Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\DEDUP_HARDLINKS_20260927.json",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/DEDUP_HARDLINKS_20260927.json.tar.zst",
+   "bytes": 18948,
+   "removed_utc": "2026-10-10T06:05:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\PLAN.json",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/PLAN.json.tar.zst",
+   "bytes": 2581290,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\PLAN_retry1.json",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/PLAN_retry1.json.tar.zst",
+   "bytes": 2582529,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\README.md",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/README.md.tar.zst",
+   "bytes": 10361,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\regenerate.py",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/regenerate.py.tar.zst",
+   "bytes": 52767,
+   "removed_utc": "2026-10-10T06:06:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\restore_missing_jsonl.py",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/restore_missing_jsonl.py.tar.zst",
+   "bytes": 2818,
+   "removed_utc": "2026-10-10T06:05:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\restore_receipts",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/restore_receipts/restore_receipts.tar.zst",
+   "bytes": 55817,
+   "removed_utc": "2026-10-10T06:06:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\RESUME_STATE.md",
+   "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/RESUME_STATE.md.tar.zst",
+   "bytes": 222,
+   "removed_utc": "2026-10-10T06:05:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\experiment_retrospective",
+   "drive": "gdrive:research-archive/repo-evidence/output/experiment_retrospective/experiment_retrospective.tar.zst",
+   "bytes": 38308,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\flow_effect_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/flow_effect_v1/flow_effect_v1.tar.zst",
+   "bytes": 249596848,
+   "removed_utc": "2026-10-10T06:07:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\formation_harm_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/formation_harm_v1/formation_harm_v1.tar.zst",
+   "bytes": 101807042,
+   "removed_utc": "2026-10-10T06:07:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\fresh_validation_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/fresh_validation_v1/fresh_validation_v1.tar.zst",
+   "bytes": 36733056,
+   "removed_utc": "2026-10-10T06:07:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\gentle_preflight_verification.json",
+   "drive": "gdrive:research-archive/repo-evidence/output/gentle_preflight_verification.json.tar.zst",
+   "bytes": 847,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\gentle_wall_completion_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/gentle_wall_completion_v1/gentle_wall_completion_v1.tar.zst",
+   "bytes": 30442589,
+   "removed_utc": "2026-10-10T06:07:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\gentle_wall_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/gentle_wall_v1/gentle_wall_v1.tar.zst",
+   "bytes": 48684595,
+   "removed_utc": "2026-10-10T06:07:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\github_ready",
+   "drive": "gdrive:research-archive/repo-evidence/output/github_ready/github_ready.tar.zst",
+   "bytes": 59732,
+   "removed_utc": "2026-10-10T06:06:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\h0_exit_probe_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/h0_exit_probe_v1/h0_exit_probe_v1.tar.zst",
+   "bytes": 6853054,
+   "removed_utc": "2026-10-10T06:06:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\harm_causality_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/harm_causality_v1/harm_causality_v1.tar.zst",
+   "bytes": 5185070,
+   "removed_utc": "2026-10-10T06:06:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\harm_mechanism_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/harm_mechanism_v1/harm_mechanism_v1.tar.zst",
+   "bytes": 8642098,
+   "removed_utc": "2026-10-10T06:06:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\harm_mechanism_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/harm_mechanism_v2/harm_mechanism_v2.tar.zst",
+   "bytes": 3643201,
+   "removed_utc": "2026-10-10T06:06:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\history_route_audit",
+   "drive": "gdrive:research-archive/repo-evidence/output/history_route_audit/history_route_audit.tar.zst",
+   "bytes": 92572,
+   "removed_utc": "2026-10-10T06:06:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\hold_extend_patch_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/hold_extend_patch_v1/hold_extend_patch_v1.tar.zst",
+   "bytes": 59292,
+   "removed_utc": "2026-10-10T06:06:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\hold_extend_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/hold_extend_v1/hold_extend_v1.tar.zst",
+   "bytes": 31978,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\hybrid_state_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/hybrid_state_v1/hybrid_state_v1.tar.zst",
+   "bytes": 599022,
+   "removed_utc": "2026-10-10T06:06:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\joint_design_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/joint_design_v1/joint_design_v1.tar.zst",
+   "bytes": 34495,
+   "removed_utc": "2026-10-10T06:05:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\learned_fill_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/learned_fill_v1/learned_fill_v1.tar.zst",
+   "bytes": 68574,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\lifecycle_repair_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/lifecycle_repair_v1/lifecycle_repair_v1.tar.zst",
+   "bytes": 5447946,
+   "removed_utc": "2026-10-10T06:06:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\lifecycle_repair_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/lifecycle_repair_v2/lifecycle_repair_v2.tar.zst",
+   "bytes": 6023993,
+   "removed_utc": "2026-10-10T06:06:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\multi_wall_probe_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/multi_wall_probe_v1/multi_wall_probe_v1.tar.zst",
+   "bytes": 18193660,
+   "removed_utc": "2026-10-10T06:06:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\observation_decision_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/observation_decision_v1/observation_decision_v1.tar.zst",
+   "bytes": 84353,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\observation_mode27_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/observation_mode27_v1/observation_mode27_v1.tar.zst",
+   "bytes": 3121347,
+   "removed_utc": "2026-10-10T06:06:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\observation_relational_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/observation_relational_v1/observation_relational_v1.tar.zst",
+   "bytes": 6360828,
+   "removed_utc": "2026-10-10T06:06:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\observer_replay_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/observer_replay_v1/observer_replay_v1.tar.zst",
+   "bytes": 193024764,
+   "removed_utc": "2026-10-10T06:07:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe02_replication_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe02_replication_v1/oe02_replication_v1.tar.zst",
+   "bytes": 88137,
+   "removed_utc": "2026-10-10T06:06:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe37_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe37_review_v1/oe37_review_v1.tar.zst",
+   "bytes": 55550,
+   "removed_utc": "2026-10-10T06:06:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe44_a_measurement_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe44_a_measurement_v1/oe44_a_measurement_v1.tar.zst",
+   "bytes": 12233328,
+   "removed_utc": "2026-10-10T06:06:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe44_b_selection_value_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe44_b_selection_value_v1/oe44_b_selection_value_v1.tar.zst",
+   "bytes": 225255,
+   "removed_utc": "2026-10-10T06:06:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe44_c_mechanism_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe44_c_mechanism_v1/oe44_c_mechanism_v1.tar.zst",
+   "bytes": 135153,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe44_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe44_integration_v1/oe44_integration_v1.tar.zst",
+   "bytes": 20947,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe45_a_measurement_repair_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe45_a_measurement_repair_v1/oe45_a_measurement_repair_v1.tar.zst",
+   "bytes": 118515,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe45_b_entry_duration_value_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe45_b_entry_duration_value_v1/oe45_b_entry_duration_value_v1.tar.zst",
+   "bytes": 220993,
+   "removed_utc": "2026-10-10T06:06:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe45_c_observation_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe45_c_observation_audit_v1/oe45_c_observation_audit_v1.tar.zst",
+   "bytes": 64143,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe45_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe45_integration_v1/oe45_integration_v1.tar.zst",
+   "bytes": 19905,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe46_a_provenance_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe46_a_provenance_v1/oe46_a_provenance_v1.tar.zst",
+   "bytes": 80389,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe46_b_dataset_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe46_b_dataset_v1/oe46_b_dataset_v1.tar.zst",
+   "bytes": 1411904,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe46_c_pipeline_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe46_c_pipeline_v1/oe46_c_pipeline_v1.tar.zst",
+   "bytes": 107943,
+   "removed_utc": "2026-10-10T06:06:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe46_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe46_integration_v1/oe46_integration_v1.tar.zst",
+   "bytes": 10618147,
+   "removed_utc": "2026-10-10T06:06:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe47_a_timing_novelty_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe47_a_timing_novelty_v1/oe47_a_timing_novelty_v1.tar.zst",
+   "bytes": 73580,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe47_b_timing_mechanism_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe47_b_timing_mechanism_v1/oe47_b_timing_mechanism_v1.tar.zst",
+   "bytes": 179393,
+   "removed_utc": "2026-10-10T06:06:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe47_c_observable_timing_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe47_c_observable_timing_v1/oe47_c_observable_timing_v1.tar.zst",
+   "bytes": 201583,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe47_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe47_integration_v1/oe47_integration_v1.tar.zst",
+   "bytes": 24607,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe47_staging_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe47_staging_v1/oe47_staging_v1.tar.zst",
+   "bytes": 112261,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe48_a_premises_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe48_a_premises_v1/oe48_a_premises_v1.tar.zst",
+   "bytes": 81207,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe48_b_early_h5_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe48_b_early_h5_v1/oe48_b_early_h5_v1.tar.zst",
+   "bytes": 61020,
+   "removed_utc": "2026-10-10T06:06:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe48_c_registration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe48_c_registration_v1/oe48_c_registration_v1.tar.zst",
+   "bytes": 142839,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe48_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe48_integration_v1/oe48_integration_v1.tar.zst",
+   "bytes": 12141,
+   "removed_utc": "2026-10-10T06:05:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe49_a_launcher_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe49_a_launcher_v1/oe49_a_launcher_v1.tar.zst",
+   "bytes": 88545,
+   "removed_utc": "2026-10-10T06:06:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe49_b_mechanics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe49_b_mechanics_v1/oe49_b_mechanics_v1.tar.zst",
+   "bytes": 77097,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe49_c_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe49_c_analysis_v1/oe49_c_analysis_v1.tar.zst",
+   "bytes": 175953,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe49_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe49_integration_v1/oe49_integration_v1.tar.zst",
+   "bytes": 12225,
+   "removed_utc": "2026-10-10T06:05:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe50_a_evidence_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe50_a_evidence_v1/oe50_a_evidence_v1.tar.zst",
+   "bytes": 138195,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe50_b_verifier_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe50_b_verifier_v1/oe50_b_verifier_v1.tar.zst",
+   "bytes": 198476,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe50_c_e2e_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe50_c_e2e_v1/oe50_c_e2e_v1.tar.zst",
+   "bytes": 16290727,
+   "removed_utc": "2026-10-10T06:06:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe50_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe50_integration_v1/oe50_integration_v1.tar.zst",
+   "bytes": 38288,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe50_mechanics_reverification_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe50_mechanics_reverification_v1/oe50_mechanics_reverification_v1.tar.zst",
+   "bytes": 15930,
+   "removed_utc": "2026-10-10T06:05:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe51_a_launcher_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe51_a_launcher_v1/oe51_a_launcher_v1.tar.zst",
+   "bytes": 302249,
+   "removed_utc": "2026-10-10T06:06:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe51_b_verification_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe51_b_verification_v1/oe51_b_verification_v1.tar.zst",
+   "bytes": 238627,
+   "removed_utc": "2026-10-10T06:06:26Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe51_c_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe51_c_analysis_v1/oe51_c_analysis_v1.tar.zst",
+   "bytes": 289677,
+   "removed_utc": "2026-10-10T06:06:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe51_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe51_integration_v1/oe51_integration_v1.tar.zst",
+   "bytes": 51015,
+   "removed_utc": "2026-10-10T06:06:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe52_a_vectors_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe52_a_vectors_v1/oe52_a_vectors_v1.tar.zst",
+   "bytes": 96199,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe52_b_timing_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe52_b_timing_v1/oe52_b_timing_v1.tar.zst",
+   "bytes": 8922889,
+   "removed_utc": "2026-10-10T06:06:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe52_c_effort_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe52_c_effort_v1/oe52_c_effort_v1.tar.zst",
+   "bytes": 1935850,
+   "removed_utc": "2026-10-10T06:06:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe52_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe52_integration_v1/oe52_integration_v1.tar.zst",
+   "bytes": 16317,
+   "removed_utc": "2026-10-10T06:05:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_a_vectors_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_a_vectors_v1/oe53_a_vectors_v1.tar.zst",
+   "bytes": 84760,
+   "removed_utc": "2026-10-10T06:06:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_b_timing_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_b_timing_v1/oe53_b_timing_v1.tar.zst",
+   "bytes": 106702,
+   "removed_utc": "2026-10-10T06:06:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_c2_events_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_c2_events_v1/oe53_c2_events_v1.tar.zst",
+   "bytes": 59169376,
+   "removed_utc": "2026-10-10T06:07:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_c_extraction_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_c_extraction_v1/oe53_c_extraction_v1.tar.zst",
+   "bytes": 349781400,
+   "removed_utc": "2026-10-10T06:07:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_d_cycles_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_d_cycles_v1/oe53_d_cycles_v1.tar.zst",
+   "bytes": 26594386,
+   "removed_utc": "2026-10-10T06:07:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_e_spatial_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_e_spatial_v1/oe53_e_spatial_v1.tar.zst",
+   "bytes": 162473,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_f_mechanism_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_f_mechanism_v1/oe53_f_mechanism_v1.tar.zst",
+   "bytes": 291740,
+   "removed_utc": "2026-10-10T06:06:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_g_observation_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_g_observation_v1/oe53_g_observation_v1.tar.zst",
+   "bytes": 223966,
+   "removed_utc": "2026-10-10T06:06:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_h_decision_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_h_decision_v1/oe53_h_decision_v1.tar.zst",
+   "bytes": 44851,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_history_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_history_v1/oe53_history_v1.tar.zst",
+   "bytes": 80363,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_integration_v1/oe53_integration_v1.tar.zst",
+   "bytes": 44143,
+   "removed_utc": "2026-10-10T06:05:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe53_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe53_review_v1/oe53_review_v1.tar.zst",
+   "bytes": 63292,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_a_vectors_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_a_vectors_v1/oe54_a_vectors_v1.tar.zst",
+   "bytes": 104205,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_b_extraction_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_b_extraction_v1/oe54_b_extraction_v1.tar.zst",
+   "bytes": 1206134,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_c_events_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_c_events_v1/oe54_c_events_v1.tar.zst",
+   "bytes": 2223807,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_d_spatial_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_d_spatial_v1/oe54_d_spatial_v1.tar.zst",
+   "bytes": 143085,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_e_observation_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_e_observation_v1/oe54_e_observation_v1.tar.zst",
+   "bytes": 186057,
+   "removed_utc": "2026-10-10T06:06:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_integration_v1/oe54_integration_v1.tar.zst",
+   "bytes": 39451,
+   "removed_utc": "2026-10-10T06:05:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe54_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe54_review_v1/oe54_review_v1.tar.zst",
+   "bytes": 54696,
+   "removed_utc": "2026-10-10T06:06:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_a_hypothesis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_a_hypothesis_v1/oe55_a_hypothesis_v1.tar.zst",
+   "bytes": 78695,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_b_gate_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_b_gate_v1/oe55_b_gate_v1.tar.zst",
+   "bytes": 58468,
+   "removed_utc": "2026-10-10T06:06:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_c_replay_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_c_replay_v1/oe55_c_replay_v1.tar.zst",
+   "bytes": 1435357,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_d_action_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_d_action_v1/oe55_d_action_v1.tar.zst",
+   "bytes": 74820,
+   "removed_utc": "2026-10-10T06:06:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_e_design_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_e_design_v1/oe55_e_design_v1.tar.zst",
+   "bytes": 52422,
+   "removed_utc": "2026-10-10T06:06:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_f_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_f_review_v1/oe55_f_review_v1.tar.zst",
+   "bytes": 98539,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe55_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe55_integration_v1/oe55_integration_v1.tar.zst",
+   "bytes": 36193,
+   "removed_utc": "2026-10-10T06:05:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_a_semantics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_a_semantics_v1/oe56_a_semantics_v1.tar.zst",
+   "bytes": 254565,
+   "removed_utc": "2026-10-10T06:06:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_b_gate_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_b_gate_v2/oe56_b_gate_v2.tar.zst",
+   "bytes": 144126,
+   "removed_utc": "2026-10-10T06:06:18Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_c_replay_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_c_replay_v2/oe56_c_replay_v2.tar.zst",
+   "bytes": 6457047,
+   "removed_utc": "2026-10-10T06:06:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_d_action_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_d_action_v2/oe56_d_action_v2.tar.zst",
+   "bytes": 127092,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_e_protocol_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_e_protocol_v2/oe56_e_protocol_v2.tar.zst",
+   "bytes": 84150,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_f_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_f_review_v1/oe56_f_review_v1.tar.zst",
+   "bytes": 169330,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe56_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe56_integration_v1/oe56_integration_v1.tar.zst",
+   "bytes": 39955,
+   "removed_utc": "2026-10-10T06:05:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_integration_v1/oe57_integration_v1.tar.zst",
+   "bytes": 34627,
+   "removed_utc": "2026-10-10T06:05:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w1_runtime_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w1_runtime_v1/oe57_w1_runtime_v1.tar.zst",
+   "bytes": 113704,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w2_grading_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w2_grading_v1/oe57_w2_grading_v1.tar.zst",
+   "bytes": 128562,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w3_mechanics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w3_mechanics_v1/oe57_w3_mechanics_v1.tar.zst",
+   "bytes": 171730,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w4_registration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w4_registration_v1/oe57_w4_registration_v1.tar.zst",
+   "bytes": 3089118,
+   "removed_utc": "2026-10-10T06:06:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w5_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w5_analysis_v1/oe57_w5_analysis_v1.tar.zst",
+   "bytes": 171850,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe57_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe57_w6_review_v1/oe57_w6_review_v1.tar.zst",
+   "bytes": 70614,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_integration_v1/oe58_integration_v1.tar.zst",
+   "bytes": 33521,
+   "removed_utc": "2026-10-10T06:05:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w1_root_cause_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w1_root_cause_v1/oe58_w1_root_cause_v1.tar.zst",
+   "bytes": 102302,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w2_contract_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w2_contract_v1/oe58_w2_contract_v1.tar.zst",
+   "bytes": 52805,
+   "removed_utc": "2026-10-10T06:06:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w3_runtime_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w3_runtime_v1/oe58_w3_runtime_v1.tar.zst",
+   "bytes": 149171,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w4_hashes_clock_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w4_hashes_clock_v1/oe58_w4_hashes_clock_v1.tar.zst",
+   "bytes": 118648,
+   "removed_utc": "2026-10-10T06:06:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w5_mechanics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w5_mechanics_v1/oe58_w5_mechanics_v1.tar.zst",
+   "bytes": 121194,
+   "removed_utc": "2026-10-10T06:06:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe58_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe58_w6_review_v1/oe58_w6_review_v1.tar.zst",
+   "bytes": 76841,
+   "removed_utc": "2026-10-10T06:06:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_integration_v1/oe59_integration_v1.tar.zst",
+   "bytes": 28072,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_w1_runtime_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_w1_runtime_v1/oe59_w1_runtime_v1.tar.zst",
+   "bytes": 227250,
+   "removed_utc": "2026-10-10T06:06:25Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_w2_release_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_w2_release_v1/oe59_w2_release_v1.tar.zst",
+   "bytes": 135688,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_w4_fixtures_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_w4_fixtures_v1/oe59_w4_fixtures_v1.tar.zst",
+   "bytes": 96595,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_w5_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_w5_analysis_v1/oe59_w5_analysis_v1.tar.zst",
+   "bytes": 353287,
+   "removed_utc": "2026-10-10T06:06:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe59_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe59_w6_review_v1/oe59_w6_review_v1.tar.zst",
+   "bytes": 228950,
+   "removed_utc": "2026-10-10T06:06:26Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_integration_v1/oe60_integration_v1.tar.zst",
+   "bytes": 28360,
+   "removed_utc": "2026-10-10T06:05:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w1_timeline_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w1_timeline_v1/oe60_w1_timeline_v1.tar.zst",
+   "bytes": 183550,
+   "removed_utc": "2026-10-10T06:06:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w2_admission_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w2_admission_v1/oe60_w2_admission_v1.tar.zst",
+   "bytes": 190340,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w3_delivery_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w3_delivery_v1/oe60_w3_delivery_v1.tar.zst",
+   "bytes": 101111,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w4_flow_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w4_flow_v1/oe60_w4_flow_v1.tar.zst",
+   "bytes": 29040610,
+   "removed_utc": "2026-10-10T06:07:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w5_integrity_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w5_integrity_v1/oe60_w5_integrity_v1.tar.zst",
+   "bytes": 94849,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe60_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe60_w6_review_v1/oe60_w6_review_v1.tar.zst",
+   "bytes": 1947288,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_integration_v1/oe61_integration_v1.tar.zst",
+   "bytes": 28345,
+   "removed_utc": "2026-10-10T06:05:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w1_contract_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w1_contract_v1/oe61_w1_contract_v1.tar.zst",
+   "bytes": 23273,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w2_impl_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w2_impl_v1/oe61_w2_impl_v1.tar.zst",
+   "bytes": 54417,
+   "removed_utc": "2026-10-10T06:06:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w3_replay_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w3_replay_v1/oe61_w3_replay_v1.tar.zst",
+   "bytes": 6162046,
+   "removed_utc": "2026-10-10T06:06:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w4_accounting_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w4_accounting_v1/oe61_w4_accounting_v1.tar.zst",
+   "bytes": 733685,
+   "removed_utc": "2026-10-10T06:06:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w5_coverage_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w5_coverage_v1/oe61_w5_coverage_v1.tar.zst",
+   "bytes": 245146,
+   "removed_utc": "2026-10-10T06:06:27Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe61_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe61_w6_review_v1/oe61_w6_review_v1.tar.zst",
+   "bytes": 75126,
+   "removed_utc": "2026-10-10T06:06:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_integration_v1/oe62_integration_v1.tar.zst",
+   "bytes": 29459,
+   "removed_utc": "2026-10-10T06:05:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w1_integrity_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w1_integrity_v1/oe62_w1_integrity_v1.tar.zst",
+   "bytes": 146829,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w2_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w2_integration_v1/oe62_w2_integration_v1.tar.zst",
+   "bytes": 120896,
+   "removed_utc": "2026-10-10T06:06:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w3_verify_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w3_verify_v1/oe62_w3_verify_v1.tar.zst",
+   "bytes": 87439,
+   "removed_utc": "2026-10-10T06:06:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w4_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w4_analysis_v1/oe62_w4_analysis_v1.tar.zst",
+   "bytes": 177945,
+   "removed_utc": "2026-10-10T06:06:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w5_panel_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w5_panel_v1/oe62_w5_panel_v1.tar.zst",
+   "bytes": 1436405,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe62_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe62_w6_review_v1/oe62_w6_review_v1.tar.zst",
+   "bytes": 27447,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe63_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe63_integration_v1/oe63_integration_v1.tar.zst",
+   "bytes": 24982,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe63_w2_planner_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe63_w2_planner_v1/oe63_w2_planner_v1.tar.zst",
+   "bytes": 749237,
+   "removed_utc": "2026-10-10T06:06:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe63_w3_interface_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe63_w3_interface_v1/oe63_w3_interface_v1.tar.zst",
+   "bytes": 42813,
+   "removed_utc": "2026-10-10T06:05:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe63_w4_adversarial_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe63_w4_adversarial_v1/oe63_w4_adversarial_v1.tar.zst",
+   "bytes": 88724,
+   "removed_utc": "2026-10-10T06:06:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe63_w5_opportunity_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe63_w5_opportunity_v1/oe63_w5_opportunity_v1.tar.zst",
+   "bytes": 43492,
+   "removed_utc": "2026-10-10T06:05:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_integration_v1/oe64_integration_v1.tar.zst",
+   "bytes": 25717,
+   "removed_utc": "2026-10-10T06:05:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w1_contract_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w1_contract_v1/oe64_w1_contract_v1.tar.zst",
+   "bytes": 52078,
+   "removed_utc": "2026-10-10T06:06:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w2_feasibility_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w2_feasibility_v1/oe64_w2_feasibility_v1.tar.zst",
+   "bytes": 360244,
+   "removed_utc": "2026-10-10T06:06:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w3_ownership_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w3_ownership_v1/oe64_w3_ownership_v1.tar.zst",
+   "bytes": 68296,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w4_forecast_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w4_forecast_v1/oe64_w4_forecast_v1.tar.zst",
+   "bytes": 120366,
+   "removed_utc": "2026-10-10T06:06:16Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w5_recovery_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w5_recovery_v1/oe64_w5_recovery_v1.tar.zst",
+   "bytes": 1536327,
+   "removed_utc": "2026-10-10T06:06:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe64_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe64_w6_review_v1/oe64_w6_review_v1.tar.zst",
+   "bytes": 79187,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_integration_v1/oe65_integration_v1.tar.zst",
+   "bytes": 43306,
+   "removed_utc": "2026-10-10T06:05:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w1_identities_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w1_identities_v1/oe65_w1_identities_v1.tar.zst",
+   "bytes": 5189634,
+   "removed_utc": "2026-10-10T06:06:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w2_features_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w2_features_v1/oe65_w2_features_v1.tar.zst",
+   "bytes": 92383,
+   "removed_utc": "2026-10-10T06:06:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w3_grading_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w3_grading_v1/oe65_w3_grading_v1.tar.zst",
+   "bytes": 229543,
+   "removed_utc": "2026-10-10T06:06:26Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w4_learning_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w4_learning_v1/oe65_w4_learning_v1.tar.zst",
+   "bytes": 106921,
+   "removed_utc": "2026-10-10T06:06:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w5_production_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w5_production_v1/oe65_w5_production_v1.tar.zst",
+   "bytes": 102158,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe65_w6_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe65_w6_review_v1/oe65_w6_review_v1.tar.zst",
+   "bytes": 45744,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe66_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe66_integration_v1/oe66_integration_v1.tar.zst",
+   "bytes": 19298,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe66_w1_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe66_w1_audit_v1/oe66_w1_audit_v1.tar.zst",
+   "bytes": 243508,
+   "removed_utc": "2026-10-10T06:06:27Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe66_w2_launcher_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe66_w2_launcher_v1/oe66_w2_launcher_v1.tar.zst",
+   "bytes": 84500,
+   "removed_utc": "2026-10-10T06:06:09Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe66_w3_scenario_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe66_w3_scenario_v1/oe66_w3_scenario_v1.tar.zst",
+   "bytes": 47848,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe66_w4_gate_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe66_w4_gate_v1/oe66_w4_gate_v1.tar.zst",
+   "bytes": 83715,
+   "removed_utc": "2026-10-10T06:06:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe67_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe67_integration_v1/oe67_integration_v1.tar.zst",
+   "bytes": 61479,
+   "removed_utc": "2026-10-10T06:06:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe68_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe68_integration_v1/oe68_integration_v1.tar.zst",
+   "bytes": 1978,
+   "removed_utc": "2026-10-10T06:05:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe69_integration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe69_integration_v1/oe69_integration_v1.tar.zst",
+   "bytes": 8895,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe70_verification_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe70_verification_v1/oe70_verification_v1.tar.zst",
+   "bytes": 21039358,
+   "removed_utc": "2026-10-10T06:06:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\oe71_selection_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/oe71_selection_v1/oe71_selection_v1.tar.zst",
+   "bytes": 400382,
+   "removed_utc": "2026-10-10T06:06:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\partB_bundles",
+   "drive": "gdrive:research-archive/repo-evidence/output/partB_bundles  (mirror, 1925 files size+MD5 re-checked)",
+   "bytes": 563055757,
+   "removed_utc": "2026-10-10T06:07:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\partB_results",
+   "drive": "gdrive:research-archive/repo-evidence/output/partB_results/partB_results.tar.zst",
+   "bytes": 995001551,
+   "removed_utc": "2026-10-10T06:07:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\pl02a_offline_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/pl02a_offline_v1/pl02a_offline_v1.tar.zst",
+   "bytes": 294861,
+   "removed_utc": "2026-10-10T06:06:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\planner_smokes_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/planner_smokes_v1/planner_smokes_v1.tar.zst",
+   "bytes": 5520421,
+   "removed_utc": "2026-10-10T06:06:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\planner_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/planner_v1/planner_v1.tar.zst",
+   "bytes": 704155,
+   "removed_utc": "2026-10-10T06:06:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1_oracle_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1_oracle_v1_launch/plexp1_oracle_v1_launch.tar.zst",
+   "bytes": 98384,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1b_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1b_analysis_v1/plexp1b_analysis_v1.tar.zst",
+   "bytes": 209026,
+   "removed_utc": "2026-10-10T06:06:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1b_oracle_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1b_oracle_v1_launch/plexp1b_oracle_v1_launch.tar.zst",
+   "bytes": 254493,
+   "removed_utc": "2026-10-10T06:06:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1c_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1c_analysis_v1/plexp1c_analysis_v1.tar.zst",
+   "bytes": 176250,
+   "removed_utc": "2026-10-10T06:06:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1c_ingest_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1c_ingest_v1/plexp1c_ingest_v1.tar.zst",
+   "bytes": 28503,
+   "removed_utc": "2026-10-10T06:05:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1c_oracle_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1c_oracle_v1_launch/plexp1c_oracle_v1_launch.tar.zst",
+   "bytes": 416948,
+   "removed_utc": "2026-10-10T06:06:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1d_analysis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1d_analysis_v1/plexp1d_analysis_v1.tar.zst",
+   "bytes": 206506,
+   "removed_utc": "2026-10-10T06:06:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1d_ingest_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1d_ingest_v1/plexp1d_ingest_v1.tar.zst",
+   "bytes": 22598,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\plexp1d_oracle_v1_launch",
+   "drive": "gdrive:research-archive/repo-evidence/output/plexp1d_oracle_v1_launch/plexp1d_oracle_v1_launch.tar.zst",
+   "bytes": 368097,
+   "removed_utc": "2026-10-10T06:06:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_audit_v1/ppo_audit_v1.tar.zst",
+   "bytes": 31767,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_candidate_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_candidate_audit_v1/ppo_candidate_audit_v1.tar.zst",
+   "bytes": 63794,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_candidate_audit_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_candidate_audit_v2/ppo_candidate_audit_v2.tar.zst",
+   "bytes": 96098,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_duration_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_duration_v2/ppo_duration_v2.tar.zst",
+   "bytes": 323189,
+   "removed_utc": "2026-10-10T06:06:29Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_fixture_repair_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_fixture_repair_v1/ppo_fixture_repair_v1.tar.zst",
+   "bytes": 11901,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_mech_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_mech_v1/ppo_mech_v1.tar.zst",
+   "bytes": 8821,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_pilot_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_pilot_v1/ppo_pilot_v1.tar.zst",
+   "bytes": 15236,
+   "removed_utc": "2026-10-10T06:05:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_repair_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_repair_v1/ppo_repair_v1.tar.zst",
+   "bytes": 41739,
+   "removed_utc": "2026-10-10T06:05:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_run_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_run_v1/ppo_run_v1.tar.zst",
+   "bytes": 17404,
+   "removed_utc": "2026-10-10T06:05:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_selector_repair_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_selector_repair_v1/ppo_selector_repair_v1.tar.zst",
+   "bytes": 33459,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_selector_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_selector_v1/ppo_selector_v1.tar.zst",
+   "bytes": 23439,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ppo_timing_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ppo_timing_v1/ppo_timing_v1.tar.zst",
+   "bytes": 28415,
+   "removed_utc": "2026-10-10T06:05:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\prior_fusion_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/prior_fusion_v1/prior_fusion_v1.tar.zst",
+   "bytes": 17381631,
+   "removed_utc": "2026-10-10T06:06:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\radius_penetration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/radius_penetration_v1/radius_penetration_v1.tar.zst",
+   "bytes": 149311476,
+   "removed_utc": "2026-10-10T06:07:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\radius_sensor_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/radius_sensor_v1/radius_sensor_v1.tar.zst",
+   "bytes": 703887,
+   "removed_utc": "2026-10-10T06:06:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\raw_results_offload_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/raw_results_offload_v1/raw_results_offload_v1.tar.zst",
+   "bytes": 19348193,
+   "removed_utc": "2026-10-10T06:06:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\recon_impact_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/recon_impact_v1/recon_impact_v1.tar.zst",
+   "bytes": 24516018,
+   "removed_utc": "2026-10-10T06:07:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\recon_learned_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/recon_learned_v1/recon_learned_v1.tar.zst",
+   "bytes": 4231188,
+   "removed_utc": "2026-10-10T06:06:49Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\recon_v4",
+   "drive": "gdrive:research-archive/repo-evidence/output/recon_v4/recon_v4.tar.zst",
+   "bytes": 19767902,
+   "removed_utc": "2026-10-10T06:06:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\recon_v6",
+   "drive": "gdrive:research-archive/repo-evidence/output/recon_v6/recon_v6.tar.zst",
+   "bytes": 4743164,
+   "removed_utc": "2026-10-10T06:06:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\recovery_release_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/recovery_release_v1/recovery_release_v1.tar.zst",
+   "bytes": 166233,
+   "removed_utc": "2026-10-10T06:06:20Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\repository_cleanup_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/repository_cleanup_v1/repository_cleanup_v1.tar.zst",
+   "bytes": 11876727,
+   "removed_utc": "2026-10-10T06:06:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\research_dependency_migration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/research_dependency_migration_v1/research_dependency_migration_v1.tar.zst",
+   "bytes": 236169,
+   "removed_utc": "2026-10-10T06:06:26Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\research_removal_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/research_removal_v1/research_removal_v1.tar.zst",
+   "bytes": 29035384,
+   "removed_utc": "2026-10-10T06:07:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\research_retirement_20260912_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/research_retirement_20260912_v1/research_retirement_20260912_v1.tar.zst",
+   "bytes": 463905,
+   "removed_utc": "2026-10-10T06:06:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\sensing_realism_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/sensing_realism_v1/sensing_realism_v1.tar.zst",
+   "bytes": 1475002,
+   "removed_utc": "2026-10-10T06:06:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\server_pkg_chunk4",
+   "drive": "gdrive:research-archive/repo-evidence/output/server_pkg_chunk4/server_pkg_chunk4.tar.zst",
+   "bytes": 142054183,
+   "removed_utc": "2026-10-10T06:07:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\shadow_speed_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/shadow_speed_v1/shadow_speed_v1.tar.zst",
+   "bytes": 10580243,
+   "removed_utc": "2026-10-10T06:06:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\state_calibration_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/state_calibration_v1/state_calibration_v1.tar.zst",
+   "bytes": 7638672,
+   "removed_utc": "2026-10-10T06:06:53Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\state_constructor_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/state_constructor_v1/state_constructor_v1.tar.zst",
+   "bytes": 5779934,
+   "removed_utc": "2026-10-10T06:06:52Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\TEST_STATUS_KNOWN_FAILURES.md",
+   "drive": "gdrive:research-archive/repo-evidence/output/TEST_STATUS_KNOWN_FAILURES.md.tar.zst",
+   "bytes": 1993,
+   "removed_utc": "2026-10-10T06:05:45Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\ttc_diagnosis_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/ttc_diagnosis_v1/ttc_diagnosis_v1.tar.zst",
+   "bytes": 68718,
+   "removed_utc": "2026-10-10T06:06:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_harm_speed_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_harm_speed_v1/wall_harm_speed_v1.tar.zst",
+   "bytes": 28693151,
+   "removed_utc": "2026-10-10T06:07:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_literature_review_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_literature_review_v1/wall_literature_review_v1.tar.zst",
+   "bytes": 12278,
+   "removed_utc": "2026-10-10T06:05:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_corpus_replay_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_corpus_replay_v1/wall_v2_corpus_replay_v1.tar.zst",
+   "bytes": 78980,
+   "removed_utc": "2026-10-10T06:06:07Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_efficacy_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_efficacy_v1/wall_v2_efficacy_v1.tar.zst",
+   "bytes": 1424628,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_integration_design",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_integration_design/wall_v2_integration_design.tar.zst",
+   "bytes": 106707,
+   "removed_utc": "2026-10-10T06:06:14Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_mechanics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_mechanics_v1/wall_v2_mechanics_v1.tar.zst",
+   "bytes": 1304213,
+   "removed_utc": "2026-10-10T06:06:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_spanfix",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_spanfix/wall_v2_spanfix.tar.zst",
+   "bytes": 37474,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wall_v2_verification_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_verification_v1/wall_v2_verification_v1.tar.zst",
+   "bytes": 72523,
+   "removed_utc": "2026-10-10T06:06:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_partB_truearms_labels_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_truearms_labels_v1/wd01_partB_truearms_labels_v1.tar.zst",
+   "bytes": 86286815,
+   "removed_utc": "2026-10-10T06:07:04Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_partB_v0data",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_v0data/wd01_partB_v0data.tar.zst",
+   "bytes": 57672980,
+   "removed_utc": "2026-10-10T06:07:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_partB_v0data_v03",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_v0data_v03/wd01_partB_v0data_v03.tar.zst",
+   "bytes": 93184317,
+   "removed_utc": "2026-10-10T06:07:05Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_partB_v0data_v031",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_v0data_v031/wd01_partB_v0data_v031.tar.zst",
+   "bytes": 167039814,
+   "removed_utc": "2026-10-10T06:07:08Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_partB_v0data_v032",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_v0data_v032/wd01_partB_v0data_v032.tar.zst",
+   "bytes": 241149113,
+   "removed_utc": "2026-10-10T06:07:10Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\wd01_rep",
+   "drive": "gdrive:research-archive/repo-evidence/output/wd01_rep/wd01_rep.tar.zst",
+   "bytes": 14403,
+   "removed_utc": "2026-10-10T06:05:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\WM55_FROZEN_AMENDMENTS.json",
+   "drive": "gdrive:research-archive/repo-evidence/output/WM55_FROZEN_AMENDMENTS.json.tar.zst",
+   "bytes": 6379,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_audit_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_audit_v1/worldmodel_audit_v1.tar.zst",
+   "bytes": 23504448,
+   "removed_utc": "2026-10-10T06:07:00Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_dynamics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_dynamics_v1/worldmodel_dynamics_v1.tar.zst",
+   "bytes": 988933,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_planner_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_planner_v1/worldmodel_planner_v1.tar.zst",
+   "bytes": 6484,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_radius_input_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_radius_input_v1/worldmodel_radius_input_v1.tar.zst",
+   "bytes": 2173231,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_repair_staging",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_repair_staging/worldmodel_repair_staging.tar.zst",
+   "bytes": 252226,
+   "removed_utc": "2026-10-10T06:06:27Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_repair_wm14",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_repair_wm14/worldmodel_repair_wm14.tar.zst",
+   "bytes": 586872,
+   "removed_utc": "2026-10-10T06:06:38Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_review_wm13",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_review_wm13/worldmodel_review_wm13.tar.zst",
+   "bytes": 9449,
+   "removed_utc": "2026-10-10T06:05:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_spatial_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_spatial_v1/worldmodel_spatial_v1.tar.zst",
+   "bytes": 385655,
+   "removed_utc": "2026-10-10T06:06:31Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_spatial_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_spatial_v2/worldmodel_spatial_v2.tar.zst",
+   "bytes": 273245,
+   "removed_utc": "2026-10-10T06:06:28Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_stage1_corpus",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage1_corpus/worldmodel_stage1_corpus.tar.zst",
+   "bytes": 3063,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_stage2_reconstructor_v2",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage2_reconstructor_v2/worldmodel_stage2_reconstructor_v2.tar.zst",
+   "bytes": 108728,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_stage4_rehearsal",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage4_rehearsal/worldmodel_stage4_rehearsal.tar.zst",
+   "bytes": 24563,
+   "removed_utc": "2026-10-10T06:05:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v1",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v1/worldmodel_v1.tar.zst",
+   "bytes": 749691,
+   "removed_utc": "2026-10-10T06:06:40Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v2_full",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v2_full/worldmodel_v2_full.tar.zst",
+   "bytes": 108105,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_horizon",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_horizon/worldmodel_v3_horizon.tar.zst",
+   "bytes": 11007736,
+   "removed_utc": "2026-10-10T06:06:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_planner",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_planner/worldmodel_v3_planner.tar.zst",
+   "bytes": 159897,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_postswitch",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_postswitch/worldmodel_v3_postswitch.tar.zst",
+   "bytes": 211597,
+   "removed_utc": "2026-10-10T06:06:24Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_recon",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_recon/worldmodel_v3_recon.tar.zst",
+   "bytes": 100284,
+   "removed_utc": "2026-10-10T06:06:13Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_wall_assembly",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_wall_assembly/worldmodel_v3_wall_assembly.tar.zst",
+   "bytes": 882495,
+   "removed_utc": "2026-10-10T06:06:41Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\worldmodel_v3_wall_history",
+   "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_wall_history/worldmodel_v3_wall_history.tar.zst",
+   "bytes": 2242296,
+   "removed_utc": "2026-10-10T06:06:47Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\output\\zcode_bridge_check",
+   "drive": "gdrive:research-archive/repo-evidence/output/zcode_bridge_check/zcode_bridge_check.tar.zst",
+   "bytes": 4646,
+   "removed_utc": "2026-10-10T06:05:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\.repp_h1h2.lock",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/.repp_h1h2.lock.tar.zst",
+   "bytes": 1,
+   "removed_utc": "2026-10-10T06:05:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\.sumo_launch.lock",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/.sumo_launch.lock.tar.zst",
+   "bytes": 1,
+   "removed_utc": "2026-10-10T06:05:30Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\EFFH-01-REVIEW-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/EFFH-01-REVIEW-20261003/EFFH-01-REVIEW-20261003.tar.zst",
+   "bytes": 76114,
+   "removed_utc": "2026-10-10T06:06:06Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\EFFH-02-20261008",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/EFFH-02-20261008/EFFH-02-20261008.tar.zst",
+   "bytes": 2213383,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-A12-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-A12-20261005/WM-N1-A12-20261005.tar.zst",
+   "bytes": 19904335,
+   "removed_utc": "2026-10-10T06:06:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-A13-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-A13-20261005/WM-N1-A13-20261005.tar.zst",
+   "bytes": 19904784,
+   "removed_utc": "2026-10-10T06:06:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-A7-TTC15-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-A7-TTC15-20261003/WM-N1-A7-TTC15-20261003.tar.zst",
+   "bytes": 21068,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-A9-20261004_dry2.log",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-A9-20261004_dry2.log.tar.zst",
+   "bytes": 1088,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-DSPEED-20261004\\laptop",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-DSPEED-20261004/laptop/laptop.tar.zst",
+   "bytes": 1970510425,
+   "removed_utc": "2026-10-10T06:07:35Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-DSPEED-PLAN-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-DSPEED-PLAN-20261004/WM-N1-DSPEED-PLAN-20261004.tar.zst",
+   "bytes": 154809,
+   "removed_utc": "2026-10-10T06:06:19Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-DSPEED-SMOKE-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-DSPEED-SMOKE-20261004/WM-N1-DSPEED-SMOKE-20261004.tar.zst",
+   "bytes": 23335239,
+   "removed_utc": "2026-10-10T06:06:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-EVAL-BRIDGE-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-EVAL-BRIDGE-20261003/WM-N1-EVAL-BRIDGE-20261003.tar.zst",
+   "bytes": 117506,
+   "removed_utc": "2026-10-10T06:06:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-EVALSLICE-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-EVALSLICE-20261004/WM-N1-EVALSLICE-20261004.tar.zst",
+   "bytes": 2745866,
+   "removed_utc": "2026-10-10T06:06:48Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-LABEL-TIME-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABEL-TIME-20261003/WM-N1-LABEL-TIME-20261003.tar.zst",
+   "bytes": 49719,
+   "removed_utc": "2026-10-10T06:05:59Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-LABEL-TIME-DIAG-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABEL-TIME-DIAG-20261003/WM-N1-LABEL-TIME-DIAG-20261003.tar.zst",
+   "bytes": 37056,
+   "removed_utc": "2026-10-10T06:05:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-LABEL-TIME-FIX1-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABEL-TIME-FIX1-20261003/WM-N1-LABEL-TIME-FIX1-20261003.tar.zst",
+   "bytes": 14240554,
+   "removed_utc": "2026-10-10T06:06:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-LABEL-TIME-FULL-20261003",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABEL-TIME-FULL-20261003/WM-N1-LABEL-TIME-FULL-20261003.tar.zst",
+   "bytes": 62762,
+   "removed_utc": "2026-10-10T06:06:03Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-LABELCOV-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABELCOV-20261004/WM-N1-LABELCOV-20261004.tar.zst",
+   "bytes": 130665,
+   "removed_utc": "2026-10-10T06:06:17Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-REPL-CL-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-REPL-CL-20261005/WM-N1-REPL-CL-20261005.tar.zst",
+   "bytes": 7875836,
+   "removed_utc": "2026-10-10T06:06:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A10-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A10-20261005/WM-N1-SCORE-A10-20261005.tar.zst",
+   "bytes": 484721,
+   "removed_utc": "2026-10-10T06:06:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A11-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A11-20261005/WM-N1-SCORE-A11-20261005.tar.zst",
+   "bytes": 485426,
+   "removed_utc": "2026-10-10T06:06:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A12-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A12-20261005/WM-N1-SCORE-A12-20261005.tar.zst",
+   "bytes": 656190,
+   "removed_utc": "2026-10-10T06:06:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A13-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A13-20261005/WM-N1-SCORE-A13-20261005.tar.zst",
+   "bytes": 690815,
+   "removed_utc": "2026-10-10T06:06:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A8-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A8-20261004/WM-N1-SCORE-A8-20261004.tar.zst",
+   "bytes": 666669,
+   "removed_utc": "2026-10-10T06:06:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A9-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A9-20261005/WM-N1-SCORE-A9-20261005.tar.zst",
+   "bytes": 485261,
+   "removed_utc": "2026-10-10T06:06:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-CALTUNE-20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-CALTUNE-20261004/WM-N1-SCORE-CALTUNE-20261004.tar.zst",
+   "bytes": 1944378,
+   "removed_utc": "2026-10-10T06:06:46Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-N1-WMFIX-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-WMFIX-20261005/WM-N1-WMFIX-20261005.tar.zst",
+   "bytes": 1532,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-S-PREP-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-S-PREP-20261005/WM-S-PREP-20261005.tar.zst",
+   "bytes": 1355,
+   "removed_utc": "2026-10-10T06:05:44Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-S-TRAIN-20261005",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-S-TRAIN-20261005/WM-S-TRAIN-20261005.tar.zst",
+   "bytes": 29358621,
+   "removed_utc": "2026-10-10T06:07:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\WM-S2-HETDATA-20261006",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-S2-HETDATA-20261006/WM-S2-HETDATA-20261006.tar.zst",
+   "bytes": 5646976,
+   "removed_utc": "2026-10-10T06:06:51Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1/wm40_wall_mechanics_v1.tar.zst",
+   "bytes": 59027,
+   "removed_utc": "2026-10-10T06:06:02Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r2_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r2_smoke/wm40_wall_mechanics_v1_r2_smoke.tar.zst",
+   "bytes": 186925,
+   "removed_utc": "2026-10-10T06:06:22Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r3",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r3/wm40_wall_mechanics_v1_r3.tar.zst",
+   "bytes": 11790078,
+   "removed_utc": "2026-10-10T06:06:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r3_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r3_smoke/wm40_wall_mechanics_v1_r3_smoke.tar.zst",
+   "bytes": 176161,
+   "removed_utc": "2026-10-10T06:06:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r6",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r6/wm40_wall_mechanics_v1_r6.tar.zst",
+   "bytes": 11668808,
+   "removed_utc": "2026-10-10T06:06:55Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r6_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r6_smoke/wm40_wall_mechanics_v1_r6_smoke.tar.zst",
+   "bytes": 176161,
+   "removed_utc": "2026-10-10T06:06:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r7",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r7/wm40_wall_mechanics_v1_r7.tar.zst",
+   "bytes": 11749620,
+   "removed_utc": "2026-10-10T06:06:56Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r7_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r7_smoke/wm40_wall_mechanics_v1_r7_smoke.tar.zst",
+   "bytes": 176149,
+   "removed_utc": "2026-10-10T06:06:21Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm43b_wall_closure_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm43b_wall_closure_v1/wm43b_wall_closure_v1.tar.zst",
+   "bytes": 17595390,
+   "removed_utc": "2026-10-10T06:06:58Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm43b_wall_closure_v1_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm43b_wall_closure_v1_smoke/wm43b_wall_closure_v1_smoke.tar.zst",
+   "bytes": 192113,
+   "removed_utc": "2026-10-10T06:06:23Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_20261004",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_20261004/wm72_g2_reference_20261004.tar.zst",
+   "bytes": 12445731,
+   "removed_utc": "2026-10-10T06:06:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_20261004_digest.json",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_20261004_digest.json.tar.zst",
+   "bytes": 22531,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_v1/wm72_g2_reference_v1.tar.zst",
+   "bytes": 12445719,
+   "removed_utc": "2026-10-10T06:06:57Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_v1_digest.json",
+   "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_v1_digest.json.tar.zst",
+   "bytes": 22531,
+   "removed_utc": "2026-10-10T06:05:50Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_jpulse.ARCHIVED.md",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_jpulse.ARCHIVED.md.tar.zst",
+   "bytes": 435,
+   "removed_utc": "2026-10-10T06:05:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_pilot_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_pilot_v1/campaign_pilot_v1.tar.zst",
+   "bytes": 1117064,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_pilot_v1_r2",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_pilot_v1_r2/campaign_pilot_v1_r2.tar.zst",
+   "bytes": 1117110,
+   "removed_utc": "2026-10-10T06:06:43Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_stage1_chunk1_failed_branches_attempt1.tar.gz",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk1_failed_branches_attempt1.tar.gz.tar.zst",
+   "bytes": 8576972,
+   "removed_utc": "2026-10-10T06:06:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_stage1_chunk2",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk2/campaign_stage1_chunk2.tar.zst",
+   "bytes": 73167521163,
+   "removed_utc": "2026-10-10T06:07:42Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_stage1_chunk2_truearms",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk2_truearms/campaign_stage1_chunk2_truearms.tar.zst",
+   "bytes": 8533228453,
+   "removed_utc": "2026-10-10T06:07:36Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_stage1_chunk3_truearms",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk3_truearms/campaign_stage1_chunk3_truearms.tar.zst",
+   "bytes": 8565543246,
+   "removed_utc": "2026-10-10T06:07:37Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_walls_pilot_chunk4",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_walls_pilot_chunk4/campaign_walls_pilot_chunk4.tar.zst",
+   "bytes": 11827830738,
+   "removed_utc": "2026-10-10T06:07:39Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_walls_pilot_chunk4_CLAIMS",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_walls_pilot_chunk4_CLAIMS/campaign_walls_pilot_chunk4_CLAIMS.tar.zst",
+   "bytes": 30272,
+   "removed_utc": "2026-10-10T06:05:54Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\campaign_walls_v22_smoke",
+   "drive": "gdrive:research-archive/repo-evidence/runs/campaign_walls_v22_smoke/campaign_walls_v22_smoke.tar.zst",
+   "bytes": 34281233,
+   "removed_utc": "2026-10-10T06:07:01Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\fresh_validation_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/fresh_validation_v1/fresh_validation_v1.tar.zst",
+   "bytes": 89500,
+   "removed_utc": "2026-10-10T06:06:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\fresh_validation_v1_r2",
+   "drive": "gdrive:research-archive/repo-evidence/runs/fresh_validation_v1_r2/fresh_validation_v1_r2.tar.zst",
+   "bytes": 92860,
+   "removed_utc": "2026-10-10T06:06:12Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\plexp1_oracle_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/plexp1_oracle_v1/plexp1_oracle_v1.tar.zst",
+   "bytes": 441048769,
+   "removed_utc": "2026-10-10T06:07:11Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\plexp1b_oracle_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/plexp1b_oracle_v1/plexp1b_oracle_v1.tar.zst",
+   "bytes": 1891548347,
+   "removed_utc": "2026-10-10T06:07:33Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\plexp1c_oracle_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/plexp1c_oracle_v1/plexp1c_oracle_v1.tar.zst",
+   "bytes": 786180335,
+   "removed_utc": "2026-10-10T06:07:15Z",
+   "journal": "tmp/morning/journal.log"
+  },
+  {
+   "local": "E:\\research-dense\\runs\\plexp1d_oracle_v1",
+   "drive": "gdrive:research-archive/repo-evidence/runs/plexp1d_oracle_v1/plexp1d_oracle_v1.tar.zst",
+   "bytes": 653207412,
+   "removed_utc": "2026-10-10T06:07:14Z",
+   "journal": "tmp/morning/journal.log"
+  }
+ ]
+}

@@ -1,0 +1,202 @@
+{
+ "schema": "wms_eval_shift_traffic_split/1",
+ "horizon_s": 60.0,
+ "vnear_definition": "mean t0 speed of non-CAV vehicles with s_down in [-300, 300] m (fallback: all HDVs); free >20, congested 10..20, jam <10 m/s",
+ "sets": {
+  "u_same": {
+   "arm": "pi",
+   "classes": {
+    "free": {
+     "n": 29,
+     "models": {
+      "c1_struct": 18.355125427246094,
+      "blackbox_traj": 22.32326602935791,
+      "blackbox_id": 22.846023559570312,
+      "keep_speed": 37.34375,
+      "pure_physics": 40.22757598285398,
+      "oldhist": 17.906314849853516
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 3.9681406021118164,
+      "blackbox_id": 5.2951812744140625,
+      "keep_speed": 12.808929443359375,
+      "pure_physics": 23.022369769688744,
+      "oldhist": -3.6954078674316406
+     },
+     "n_paired": 29
+    },
+    "congested": {
+     "n": 85,
+     "models": {
+      "c1_struct": 16.84442138671875,
+      "blackbox_traj": 24.12183666229248,
+      "blackbox_id": 24.406539916992188,
+      "keep_speed": 80.9959716796875,
+      "pure_physics": 63.512832657003734,
+      "oldhist": 14.14276123046875
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 7.9521331787109375,
+      "blackbox_id": 8.812446594238281,
+      "keep_speed": 64.03631591796875,
+      "pure_physics": 48.15296441254986,
+      "oldhist": -1.865264892578125
+     },
+     "n_paired": 85
+    },
+    "jam": {
+     "n": 26,
+     "models": {
+      "c1_struct": 7.95357084274292,
+      "blackbox_traj": 19.850828170776367,
+      "blackbox_id": 21.649856567382812,
+      "keep_speed": 92.16357421875,
+      "pure_physics": 67.07106955322958,
+      "oldhist": 10.054534912109375
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 9.876578330993652,
+      "blackbox_id": 10.332199096679688,
+      "keep_speed": 84.43315124511719,
+      "pure_physics": 53.193765797392814,
+      "oldhist": 0.28312063217163086
+     },
+     "n_paired": 26
+    }
+   }
+  },
+  "u_new": {
+   "arm": "pi",
+   "classes": {
+    "free": {
+     "n": 6,
+     "models": {
+      "c1_struct": 18.42754364013672,
+      "blackbox_traj": 24.74430751800537,
+      "blackbox_id": 22.410079956054688,
+      "keep_speed": 31.953125,
+      "pure_physics": 33.76822014547223,
+      "oldhist": 15.09101390838623
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 3.8093185424804688,
+      "blackbox_id": 7.4547119140625,
+      "keep_speed": 16.87017822265625,
+      "pure_physics": 20.006501677945693,
+      "oldhist": 3.4706640243530273
+     },
+     "n_paired": 6
+    },
+    "congested": {
+     "n": 11,
+     "models": {
+      "c1_struct": 11.408668518066406,
+      "blackbox_traj": 22.183856964111328,
+      "blackbox_id": 31.96258544921875,
+      "keep_speed": 95.1640625,
+      "pure_physics": 70.10695285609793,
+      "oldhist": 14.348617553710938
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 3.17340087890625,
+      "blackbox_id": 6.045623779296875,
+      "keep_speed": 69.09847259521484,
+      "pure_physics": 47.888100661343515,
+      "oldhist": 0.8193130493164062
+     },
+     "n_paired": 11
+    },
+    "jam": {
+     "n": 4,
+     "models": {
+      "c1_struct": 9.904693603515625,
+      "blackbox_traj": 21.048189163208008,
+      "blackbox_id": 19.011913299560547,
+      "keep_speed": 68.654296875,
+      "pure_physics": 55.408977055237074,
+      "oldhist": 8.087472915649414
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 3.871082305908203,
+      "blackbox_id": 2.6845855712890625,
+      "keep_speed": 52.9205322265625,
+      "pure_physics": 43.75847664141814,
+      "oldhist": -4.471710205078125
+     },
+     "n_paired": 4
+    }
+   }
+  },
+  "seen": {
+   "arm": "native",
+   "classes": {
+    "free": {
+     "n": 7,
+     "models": {
+      "c1_struct": 17.97467041015625,
+      "blackbox_traj": 28.631343841552734,
+      "blackbox_id": 26.469406127929688,
+      "keep_speed": 30.0,
+      "pure_physics": 39.79645547456494,
+      "oldhist": 15.90335750579834
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 5.2709503173828125,
+      "blackbox_id": 8.791915893554688,
+      "keep_speed": 12.02532958984375,
+      "pure_physics": 19.97656343894488,
+      "oldhist": -1.7741327285766602
+     },
+     "n_paired": 7
+    },
+    "congested": {
+     "n": 14,
+     "models": {
+      "c1_struct": 11.447189331054688,
+      "blackbox_traj": 25.55158233642578,
+      "blackbox_id": 25.28185224533081,
+      "keep_speed": 79.8466796875,
+      "pure_physics": 84.05891035670402,
+      "oldhist": 15.64239501953125
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 10.38531494140625,
+      "blackbox_id": 10.202625274658203,
+      "keep_speed": 69.16918182373047,
+      "pure_physics": 66.63270131722801,
+      "oldhist": 2.6805601119995117
+     },
+     "n_paired": 14
+    },
+    "jam": {
+     "n": 5,
+     "models": {
+      "c1_struct": 8.42864990234375,
+      "blackbox_traj": 20.540651321411133,
+      "blackbox_id": 32.2679443359375,
+      "keep_speed": 74.21484375,
+      "pure_physics": 58.65440635707033,
+      "oldhist": 7.037445068359375
+     },
+     "models_diff_vs_c1_struct": {
+      "c1_struct": 0.0,
+      "blackbox_traj": 6.934669494628906,
+      "blackbox_id": 11.924545288085938,
+      "keep_speed": 65.78619384765625,
+      "pure_physics": 48.06338364086179,
+      "oldhist": 0.11783599853515625
+     },
+     "n_paired": 5
+    }
+   }
+  }
+ }
+}

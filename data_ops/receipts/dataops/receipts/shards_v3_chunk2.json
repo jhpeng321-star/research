@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/chunk2",
+ "name": "chunk2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\chunk2",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/chunk2/chunk2.tar.zst",
+ "bytes": 9999778551,
+ "files": 9576,
+ "archive_bytes": 1444536213,
+ "archive_md5": "9b9b7a39fc0e7bd63face781e47d976e",
+ "member_manifest": "manifests/members/shards_v3_chunk2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 1628.9,
+ "timestamp": "2026-10-10T03:03:54"
+}

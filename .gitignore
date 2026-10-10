@@ -1,0 +1,150 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.venv-*/
+.mlvenv/
+.rllibvenv/
+.rllib310venv/
+
+# Training / eval artifacts
+runs/
+archive/pre_circles/results/
+archive/pre_circles/reports/
+archive/pre_circles/code/runs/
+archive/pre_circles/code/docs/
+archive/pre_circles/code/scenarios/
+archive/pre_circles/code/output/
+archive/pre_circles/runs/
+archive/pre_circles/output/
+archive/pre_circles/research/
+*.pt
+*.pth
+
+# Local metric dumps (write under results/ instead)
+results/
+pure_hdv_*.json
+rule_based_*.json
+
+# Transient execution and render products
+*.log
+*.done
+tmp/
+
+# C1 materialised state sets (large, regenerable via `wms_eval materialize`)
+_out/c1_states/
+_out/c1_ckpt/
+
+# RUN2 E1/E3 evaluation artifacts (large, regenerable)
+_out/r2_states/*.jsonl
+_out/r2_runs/
+_out/r2_ckpt/
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.out
+paper/**/*.synctex.gz
+paper/**/*.pdf
+paper/**/*.zip
+output/
+pptx_cf/*.pptx
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# WD-01 part1 (output/wd01/part1): track code/tests/reports/records; ignore bulk arrays
+!output/
+output/*
+!output/wd01/
+output/wd01/*
+!output/wd01/part1/
+output/wd01/part1/results/full/
+output/wd01/part1/results/rebuilt_tracks/
+output/wd01/part1/results/states_cache/
+output/wd01/part1/results/identity_eval_surviving.json
+output/wd01/part1/results/identity_eval_retrained.json
+output/wd01/part1/identity/
+!output/wd01/part1/results/
+output/wd01/part1/recon_out/
+# WM-S Torch physics implementation and bounded reports
+!output/wd01/wm_n1/
+!output/wd01/wm_n1/wms/
+!output/wd01/wm_n1/wms/tests/
+!output/wd01/wm_n1/_out/
+_ext/
+_ref/
+.deps/
+
+# --- WP-F hygiene (2026-10-10) ---
+/data_cache/
+/_tmp/
+tmp*/
+pytest-of-*/
+.pytest_cache/
+# model/checkpoint binaries (tracked small test fixtures must be force-added or whitelisted below)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+!tests/fixtures/**/*.pt
+!tests/fixtures/**/*.pth
+
+# untracked acceptance data lives in the work tree (never commit)
+/sealed/
+
+# local Windows junctions that keep frozen old reference paths resolvable (real files are tracked under reports/ and results/)
+/archive/pre_circles/output/
+/archive/pre_circles/runs/
+
+# Other agents' tool config lives outside the research tree (C:/Users/jpeng/agent-tools/), 2026-10-10.
+/.cursor/
+/.cursorrules
+/.zcode/
+/.zcodeignore
+/.codex/
+/.opencode/
+/.kimi/
+/.windsurf/
+/.aider*
+/.claude/skills/zcode-*/
+
+# Kept on disk, not in the repo (2026-10-10): sensitive-named records, code tarballs and pickled model artefacts.
+*.pkl
+*.parquet
+/archive/wms_era/records/_out/*.tar
+/_out/lpwo_v3/holdout_eval_dropped_windows.json
+/output/wd01/inc1/INC1_R4_BLOCKER.md
+/output/wd01/inc1/INC1_R4_WALL_V22_FREEZE.json
+/output/wd01/inc1/INC1_RUNBOOK.md
+/output/wd01/inc1/INC1_SEED_AUDIT.json
+/output/wd01/inc1/results_plan_inc1/WORLD_PLAN.json
+/output/wd01/inc1/results_plan_inc1/WORLD_PLAN_SUPERSEDED_A3.json
+/output/wd01/inc1_gen/INC1_GEN.md
+/output/wd01/inc1_gen/INC1_GENERATORS.json
+/output/wd01/inc1_platform/LINUX_SUMO.md
+/output/wd01/inc1_platform/PARITY_INPUTS.json
+/output/wd01/inc1_platform/PLATFORM_AUDIT.md
+/output/wd01/part3/results/holdout_untouched.json
+/output/wd01/partA_data/HOLDOUT_BLOCK.md
+/output/wd01/walls_design/merge_release/J4B_FREEZE.json
+/output/wd01/walls_design/merge_release/REGISTRATION_J4B.md
+/output/wd01/walls_design/merge_release/REGISTRATION_J4B_DRAFT.md
+/output/wd01/walls_design/merge_release/WALL_V22_FREEZE_ADDENDUM_INC1.json
+/output/wd01/walls_design/merge_release/patches/wall_driver_inc1_hook.diff
+/output/wd01/wm_n1/CAL_SPLIT_A4.json
+/output/wd01/wm_n1/INC1_EVAL.md
+/output/wd01/wm_n1/REGISTRATION_CHUNK5_TEST.md
+/output/wd01/wm_n1/REGISTRATION_CHUNK5_TEST_DRAFT.md
+/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1.md
+/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_1.md
+/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_2.md
+/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_3.md
+/output/wd01/wm_n1/inventory/holdout_names.json
+/output/wd01/wm_n1/preflight/reports/heldout-dryrun.json

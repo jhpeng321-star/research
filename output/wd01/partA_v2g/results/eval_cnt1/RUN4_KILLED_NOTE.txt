@@ -1,0 +1,7 @@
+Attempt 4 (14:25:24, --workers 1, in-process, pid 3128) also died
+silently mid-world-1 (0-byte shard, empty stderr).  Foreground smoke
+runs of the IDENTICAL code path complete cleanly twice (exit 0, DONE,
+all four models) -> code exonerated.  Common factor of kills 2-4: the
+WMI Win32_Process.Create + cmd.exe /c detach pattern; attempt 1 (plain
+Start-Process detach) completed 32/32 worlds.  Attempt 5 relaunches
+via Start-Process with the same output contract.

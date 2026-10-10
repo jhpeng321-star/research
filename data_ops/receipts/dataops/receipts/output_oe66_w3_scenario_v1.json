@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe66_w3_scenario_v1",
+ "name": "oe66_w3_scenario_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe66_w3_scenario_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe66_w3_scenario_v1/oe66_w3_scenario_v1.tar.zst",
+ "bytes": 47848,
+ "files": 4,
+ "archive_bytes": 14370,
+ "archive_md5": "649c5be8d864234d29e1ffdfb0d1ad1b",
+ "member_manifest": "manifests/members/output_oe66_w3_scenario_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.2,
+ "timestamp": "2026-10-10T01:33:37"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe54_review_v1",
+ "name": "oe54_review_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe54_review_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe54_review_v1/oe54_review_v1.tar.zst",
+ "bytes": 54696,
+ "files": 10,
+ "archive_bytes": 20796,
+ "archive_md5": "cc4ca2210cf085d838ec059c0fc2fe12",
+ "member_manifest": "manifests/members/output_oe54_review_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 40.6,
+ "timestamp": "2026-10-10T01:33:52"
+}

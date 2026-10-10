@@ -1,0 +1,67 @@
+priority below-normal: False
+=== WD-01 part 3q TASK C: k-fold TRAIN gate v2, source base ===
+ZERO simulation; holdout blocked; NO validation look (the validation roots are never loaded here).
+device=cpu torch_threads=2
+k-fold gate split: {'f0': ['cv17', 'cv20_7003m2000', 'cv30_7302m2000', 'seed_7531m2700'], 'f1': ['cv19_4107', 'cv20_7004m2000', 'cv30_7303m2000', 'seed_7532m2700'], 'f2': ['cv19_4108', 'cv20_7007m2700', 'cv30_7304m2700'], 'f3': ['cv20_7001m2000', 'cv21_7008m2700', 'cv30_7306m2700'], 'f4': ['cv20_7002m2000', 'cv23_7010m2700', 'seed_7301m2000']}; t0 (120, 180, 240, 300, 360, 420, 480); scored windows 119; members 5; k=5 cross-fitted spread (scored fold never fits its own factors); fold f0 never entered the fit
+
+== k-fold TRAIN GATE v2 at H=30 (PRIMARY, pooled, cross-fitted) ==
+  (a) coll/1000=0.02 PASS | (b) lc 12.76/10.899 (17.1%) PASS | (c) ttc3 0.7899 delay-phys 0.8235 crps 35.789 vs L0 mae 276.05 -> FAIL | (d) speed 3.936 vs 1.05xL0=4.0181 (PASS, binding) ==> v2 FAIL: c_coverage_crps
+      delay-phys misses: below 0.1765 / in 0.8235 / above 0.0 | bias mean -33.07 (truth-centre) | band med 180.819 vs truth IQR 963.158
+      ttc3        misses: below 0.0756 / in 0.7899 / above 0.1345 | bias mean -1.76 | band med 10.583 vs truth IQR 13.5
+
+== k-fold TRAIN GATE v2 at H=60 (secondary, pooled, cross-fitted) ==
+  (a) coll/1000=0.016 PASS | (b) lc 24.454/22.168 (10.3%) PASS | (c) ttc3 0.8067 delay-phys 0.8067 crps 83.978 vs L0 mae 689.55 -> PASS | (d) speed 4.6401 vs 1.05xL0=4.827 (PASS, binding) ==> v2 PASS
+      delay-phys misses: below 0.1765 / in 0.8067 / above 0.0168 | bias mean -20.26 (truth-centre) | band med 378.855 vs truth IQR 1986.557
+      ttc3        misses: below 0.0 / in 0.8067 / above 0.1933 | bias mean -0.01 | band med 18.964 vs truth IQR 31.0
+
+== per-fold gate v2 (fold f0 = out-of-sample wrt params; f1..f4 = param-in-sample) ==
+  f0 H=30: coll 0.017 | lc 13.157/10.786 (+22.0%) | ttc3 0.7143 dphys 0.8929 crps 32.383 | speed 3.9129 vs 4.3895 | s_out dp/t3 2.7638/2.2974 ==> FAIL: b_lc,c_coverage_crps
+  f0 H=60: coll 0.017 | lc 25.471/20.143 (+26.5%) | ttc3 0.8571 dphys 0.9286 crps 80.77 | speed 4.7696 vs 5.4237 | s_out dp/t3 2.7638/3.325 ==> FAIL: b_lc
+  f1 H=30: coll 0.027 | lc 11.386/11.679 (+2.5%) | ttc3 0.6786 dphys 0.6786 crps 36.397 | speed 3.4742 vs 3.7751 | s_out dp/t3 2.7638/2.2974 ==> FAIL: c_coverage_crps
+  f1 H=60: coll 0.018 | lc 22.529/25.607 (+12.0%) | ttc3 0.6786 dphys 0.7143 crps 83.669 | speed 4.1491 vs 4.4493 | s_out dp/t3 2.5198/2.7638 ==> FAIL: c_coverage_crps
+  f2 H=30: coll 0.031 | lc 13.276/11.19 (+18.6%) | ttc3 0.9524 dphys 0.9048 crps 38.012 | speed 3.824 vs 4.5861 | s_out dp/t3 2.7638/3.0314 ==> PASS
+  f2 H=60: coll 0.021 | lc 24.924/20.571 (+21.2%) | ttc3 0.9524 dphys 0.7619 crps 97.05 | speed 4.72 vs 5.4467 | s_out dp/t3 2.5198/3.6469 ==> FAIL: b_lc,c_coverage_crps
+  f3 H=30: coll 0.021 | lc 13.838/8.0 (+73.0%) | ttc3 0.8095 dphys 0.8095 crps 35.953 | speed 4.2829 vs 4.2917 | s_out dp/t3 2.7638/2.5198 ==> FAIL: b_lc
+  f3 H=60: coll 0.022 | lc 26.467/17.905 (+47.8%) | ttc3 0.7619 dphys 0.8571 crps 88.22 | speed 5.256 vs 5.2093 | s_out dp/t3 2.7638/3.0314 ==> FAIL: b_lc,c_coverage_crps,d_speed_per_horizon
+  f4 H=30: coll 0.004 | lc 12.467/12.619 (+1.2%) | ttc3 0.8571 dphys 0.8571 crps 37.131 | speed 4.2796 vs 2.7107 | s_out dp/t3 2.7638/2.5198 ==> FAIL: d_speed_per_horizon
+  f4 H=60: coll 0.002 | lc 23.181/26.143 (+11.3%) | ttc3 0.8095 dphys 0.7619 crps 71.353 | speed 4.3377 vs 3.1004 | s_out dp/t3 2.5198/3.325 ==> FAIL: c_coverage_crps,d_speed_per_horizon
+
+== LC BY TYPE (per window; 17 TRAIN roots, members pooled) H=30 ==
+    pooled   predM  4.94 trueM  3.14 ( +57.1%) | predD  7.76 trueD  7.76 (  +0.1%) | total 12.70/10.90 ( +16.6%)
+    f0       predM  4.97 trueM  3.50 ( +42.0%) | predD  8.11 trueD  7.29 ( +11.4%) | total 13.09/10.79 ( +21.3%)
+    f1       predM  4.45 trueM  2.89 ( +53.8%) | predD  6.86 trueD  8.79 ( -21.9%) | total 11.31/11.68 (  -3.1%)
+    f2       predM  4.69 trueM  3.52 ( +33.0%) | predD  8.54 trueD  7.67 ( +11.4%) | total 13.23/11.19 ( +18.2%)
+    f3       predM  5.29 trueM  2.43 (+118.0%) | predD  8.48 trueD  5.57 ( +52.1%) | total 13.77/ 8.00 ( +72.1%)
+    f4       predM  5.44 trueM  3.33 ( +63.2%) | predD  7.01 trueD  9.29 ( -24.5%) | total 12.45/12.62 (  -1.4%)
+
+== LC BY TYPE (per window; 17 TRAIN roots, members pooled) H=60 ==
+    pooled   predM  8.48 trueM  6.49 ( +30.7%) | predD 15.86 trueD 15.68 (  +1.1%) | total 24.34/22.17 (  +9.8%)
+    f0       predM  8.44 trueM  6.32 ( +33.6%) | predD 16.91 trueD 13.82 ( +22.3%) | total 25.35/20.14 ( +25.9%)
+    f1       predM  8.23 trueM  6.89 ( +19.4%) | predD 14.15 trueD 18.71 ( -24.4%) | total 22.38/25.61 ( -12.6%)
+    f2       predM  8.13 trueM  6.52 ( +24.7%) | predD 16.70 trueD 14.05 ( +18.9%) | total 24.84/20.57 ( +20.7%)
+    f3       predM  8.81 trueM  5.76 ( +52.9%) | predD 17.51 trueD 12.14 ( +44.2%) | total 26.32/17.91 ( +47.0%)
+    f4       predM  8.88 trueM  6.86 ( +29.4%) | predD 14.25 trueD 19.29 ( -26.1%) | total 23.12/26.14 ( -11.6%)
+
+== merge position/timing (per merge event; dist = m to the accel lane end) ==
+  H=30 pred  n=2938 rel_s mean 10.72 p10/50/90 0.5/7.5/26.0 | dist mean 30.4 p10/50/90 2.94/26.5/59.57
+  H=30 truth n= 374 rel_s mean 15.0 p10/50/90 3.0/15.0/28.0 | dist mean 27.01 p10/50/90 0.0/18.08/69.35
+  H=60 pred  n=5045 rel_s mean 25.49 p10/50/90 1.0/24.0/53.5 | dist mean 33.08 p10/50/90 3.75/31.44/63.11
+  H=60 truth n= 772 rel_s mean 31.25 p10/50/90 6.0/31.0/55.5 | dist mean 27.61 p10/50/90 0.0/21.5/68.45
+
+== M2 rejection causes (pooled) ==
+  checks 34910 accepted 5045 rej_lead 15491 rej_foll 10309 rej_both 1657 rej_prob 2408 rej_prob_early 0 cd_set 0 cd_blocked 0
+
+== p3q GOAL PACKAGE (LC by type+total +-20% pooled; formal (c); (a); (d)) ==
+  H=30: type-dev pooled 0.571 (folds {'f0': 0.42, 'f1': 0.538, 'f2': 0.33, 'f3': 1.18, 'f4': 0.632}) | crps 35.789 | speed 3.936 <= 4.0181 | b_type_pooled:False, b_total_gate:True, c_gate:False, a_collisions:True, d_speed:True, PASS:False
+  H=60: type-dev pooled 0.307 (folds {'f0': 0.336, 'f1': 0.244, 'f2': 0.247, 'f3': 0.529, 'f4': 0.294}) | crps 83.978 | speed 4.6401 <= 4.827 | b_type_pooled:False, b_total_gate:True, c_gate:True, a_collisions:True, d_speed:True, PASS:False
+  ==> GOAL PACKAGE FAIL
+
+== SHARPNESS + OUT-OF-FOLD CLIMATOLOGY ==
+   output      H   cov    below/in/above      med_band  truth_iqr | crps_L6  clima_crps(emp) crps(TRAIN-mean)
+   delay_phys  30  0.8235  0.176/0.824/0.000     180.82     963.16 |   35.79    220.84   330.34  beats
+   delay_phys  60  0.8067  0.176/0.807/0.017     378.86    1986.56 |   83.98    451.75   679.08  beats
+   ttc3        30  0.7899  0.076/0.790/0.135      10.58      13.50 |    3.65      3.11     4.61  DOES NOT beat
+   ttc3        60  0.8067  0.000/0.807/0.193      18.96      31.00 |    7.12      6.36     9.31  DOES NOT beat
+[  17.9s] wrote results/gate_kfold_base.json
+
+DONE part 3q gate (base).

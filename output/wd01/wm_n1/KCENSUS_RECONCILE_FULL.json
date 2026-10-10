@@ -1,0 +1,8 @@
+{
+ "schema": "wm_n1_kcensus_reconcile_full/1",
+ "rule": "census dropped_total == shard meta n_dropped_slot_steps == SLOT_POOL_CENSUS dropped_vehicle_ticks",
+ "n_censused": 290,
+ "n_ok": 290,
+ "n_mismatch": 0,
+ "mismatches": []
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe58_w5_mechanics_v1",
+ "name": "oe58_w5_mechanics_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe58_w5_mechanics_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe58_w5_mechanics_v1/oe58_w5_mechanics_v1.tar.zst",
+ "bytes": 121194,
+ "files": 16,
+ "archive_bytes": 36389,
+ "archive_md5": "b7279589e48f13d1c021aadce281c495",
+ "member_manifest": "manifests/members/output_oe58_w5_mechanics_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.7,
+ "timestamp": "2026-10-10T01:38:57"
+}

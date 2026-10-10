@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/duration_selection_v5",
+ "name": "duration_selection_v5",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\duration_selection_v5",
+ "drive": "gdrive:research-archive/repo-evidence/output/duration_selection_v5/duration_selection_v5.tar.zst",
+ "bytes": 56523,
+ "files": 5,
+ "archive_bytes": 14508,
+ "archive_md5": "11d27c75890cc6c4a79b9b3a2f530a99",
+ "member_manifest": "manifests/members/output_duration_selection_v5.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 19.6,
+ "timestamp": "2026-10-10T01:34:35"
+}

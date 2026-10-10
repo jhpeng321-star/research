@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active",
+ "name": "active",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/active.tar.zst",
+ "bytes": 62057549178,
+ "files": 8940,
+ "archive_bytes": 9806449263,
+ "archive_md5": "dc188bba61d4a7e12b60b6c864fb3c68",
+ "member_manifest": "manifests/members/runs_active.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 6558.5,
+ "timestamp": "2026-10-10T06:48:47"
+}

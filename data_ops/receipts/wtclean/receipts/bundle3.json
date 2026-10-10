@@ -1,0 +1,50 @@
+﻿{
+    "name":  "bundle3",
+    "path":  "E:\\rd-wt\\bundle3",
+    "class":  "plaindir",
+    "manual":  false,
+    "branch":  null,
+    "headBefore":  null,
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/bundle3",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\bundle3.txt",
+    "uploadCount":  111,
+    "uploadBytes":  946421,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\bundle3.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 00:45:50 NOTICE: Google drive root \u0027research-archive/worktrees/bundle3\u0027: 0 differences found | 2026/10/10 00:45:50 NOTICE: Google drive root \u0027research-archive/worktrees/bundle3\u0027: 111 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\bundle3.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  12,
+    "skippedSensitiveSample":  [
+                                   "rented_bundle/tests/test_chunk5_walls_gate.py",
+                                   "rented_bundle/queue/_resume_c5_j4b.ps1",
+                                   "rented_bundle/push/PUSH_J-CHUNK5-WALLS.json",
+                                   "rented_bundle/push/PUSH_J-CHUNK5.json",
+                                   "rented_bundle/push/PUSH_J-CHUNK5_FLAGONLY.json",
+                                   "rented_bundle/push/PUSH_J-J4B.json",
+                                   "rented_bundle/push/PUSH_RECEIPT_J-CHUNK5-flag_20261001T054053Z.json",
+                                   "rented_bundle/push/PUSH_RECEIPT_J-CHUNK5-WALLS_20261001T070732Z.json",
+                                   "rented_bundle/push/PUSH_RECEIPT_J-J4B_20261001T070717Z.json",
+                                   "rented_bundle/push/sent_flags/READY_J-CHUNK5-WALLS.flag",
+                                   "rented_bundle/push/sent_flags/READY_J-CHUNK5.flag",
+                                   "rented_bundle/push/sent_flags/READY_J-J4B.flag"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T00:39:55.3459000+08:00"
+}

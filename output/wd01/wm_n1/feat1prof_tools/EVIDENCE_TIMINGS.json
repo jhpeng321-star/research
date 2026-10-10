@@ -1,0 +1,43 @@
+{
+  "comment": "FEAT1_PROFILE raw harness outputs (feat1prof_tools/profile_one_run.py), 1 process BELOW_NORMAL, live 12-worker run active; E: tmp output root",
+  "profiled_run_native_w8447m2700p10t240": {
+    "physics_bytes": 43054363,
+    "v1_build_s_cprofile": 10.652592200000072,
+    "json_decode_only_s": 0.6449443999736104,
+    "idea_slow_wrapper_s_unprofiled": 28.470448300009593,
+    "idea_fast_wrapper_s_unprofiled": 9.683473400014918,
+    "idea_fast_build_s": 9.107237699994585,
+    "run_total_slow_s": 48.83041180000873,
+    "run_total_fast_s": 20.4437498000334,
+    "idea_array_shas_fast": {
+      "veh_kin": "ad70c99475722d85bbb8225b4a859c5d5be327db7002297fea6e8df8d8b51970",
+      "hdv_base": "90404ab0fa0f8f125924cc24126f05de18dec4a995fc43440d68908e26faa7c9",
+      "cav_plan_ch": "00ca57a69b5cb18c4c049e9f9c3acd7264ba6ad668ad6273985178e91a0608bd",
+      "event_tok": "f299d7abd4f5996b5c3c679cbb7bff3032ffd8e8a2e16cf59abb71b1c2ddb99c",
+      "event_mask": "9c26676314804627b44bfe29c2e1c278aa385dec3f71fdb9fe50e75c2bba0cd9"
+    },
+    "idea_array_shas_slow_identical": true
+  },
+  "bench_run_switching1_w8443m2600p10t480": {
+    "physics_bytes": 36943574,
+    "idea_fast_build_s": 10.00542279999354,
+    "idea_slow_reference_s_same_process": 33.38303930000984,
+    "idea_fast_equals_slow_same_process": true,
+    "speedup_idea": 3.336,
+    "run_total_fast_s": 17.651257599965902
+  },
+  "byte_identity": {
+    "ref_root": "D:/rd-staging/wmn1_feat/shards_v2 (read-only)",
+    "runs": [
+      "chunk1/w8443m2600p10t480__switching1: 20/20 shas equal",
+      "chunk1/w8447m2700p10t240__native: 20/20 shas equal",
+      "chunk1/w8439m2700p10t300__base: 21/21 shas equal"
+    ],
+    "summary": "BYTE-IDENTITY: 3/3 runs ok, 61 sha comparisons"
+  },
+  "live_run_observation_utc": "2026-10-01T07:18-07:23 (local)",
+  "live_workers_cpu": "12 workers ~99-100% of one core each during batches; parent 32340 ~0.1%",
+  "live_worker_gate_events": 0,
+  "live_idea_a_done_lag_s": "40-54 per shard",
+  "live_throughput_last30min": "~440 runs/h (132 DONE in 30 min)"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_v3_horizon",
+ "name": "worldmodel_v3_horizon",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_v3_horizon",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v3_horizon/worldmodel_v3_horizon.tar.zst",
+ "bytes": 11007736,
+ "files": 95,
+ "archive_bytes": 3038244,
+ "archive_md5": "c0e38e20f627f5113eb12bc61db31057",
+ "member_manifest": "manifests/members/output_worldmodel_v3_horizon.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 60.3,
+ "timestamp": "2026-10-10T01:49:49"
+}

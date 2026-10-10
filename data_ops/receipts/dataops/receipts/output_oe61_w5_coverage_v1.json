@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe61_w5_coverage_v1",
+ "name": "oe61_w5_coverage_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe61_w5_coverage_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe61_w5_coverage_v1/oe61_w5_coverage_v1.tar.zst",
+ "bytes": 245146,
+ "files": 11,
+ "archive_bytes": 40199,
+ "archive_md5": "c7ca51e5ed5a453248c8ebc5946abc2d",
+ "member_manifest": "manifests/members/output_oe61_w5_coverage_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 36.2,
+ "timestamp": "2026-10-10T01:43:00"
+}

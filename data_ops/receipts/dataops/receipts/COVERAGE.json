@@ -1,0 +1,213 @@
+{
+ "schema": "dataops_coverage/1",
+ "check": "verified_covered",
+ "note": "Local trees covered by an existing gdrive:research-archive archive. verified_covered = receipt member path set, file count and total bytes equal the local tree (no re-download needed, nothing to upload). opaque = archive preserved but receipt has no member list (cannot member-verify; re-upload if the source must be provably covered). source_absent = local tree already cleaned; archive-only. mismatch = local tree differs from receipt; needs re-upload. No source file was deleted or moved by this check.",
+ "verified_covered": [
+  {
+   "receipt": "raw_chunk1_p40.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\raw_chunk1_p40",
+   "archive": "raw_chunk1_p40.tar.zst",
+   "archive_md5": "0ec9a20b2ce64bc3c804299c7575aceb",
+   "files": 294,
+   "bytes": 4888455748
+  },
+  {
+   "receipt": "upload_v2.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\upload_v2",
+   "archive": "upload_v2.tar.zst",
+   "archive_md5": "086de86e3261a204dd506e61132d2128",
+   "files": 7,
+   "bytes": 6861792222
+  },
+  {
+   "receipt": "upload_v2c.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\upload_v2c",
+   "archive": "upload_v2c.tar.zst",
+   "archive_md5": "fddb5f5d18bdf65e8687e6a9dd6ef7f1",
+   "files": 7,
+   "bytes": 6912442062
+  }
+ ],
+ "opaque_preserved": [
+  {
+   "receipt": "campaign_jpulse.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\_archives\\campaign_jpulse.tar.zst",
+   "archive": "campaign_jpulse.tar.zst",
+   "archive_md5": "15c752bdc1e5d2b0444bf58ca0c05642",
+   "files": null,
+   "bytes": null
+  },
+  {
+   "receipt": "campaign_stage1_chunk5.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\_archives\\campaign_stage1_chunk5.tar.zst",
+   "archive": "campaign_stage1_chunk5.tar.zst",
+   "archive_md5": "3212293f577efc4c9880e4b9f2c7e9c3",
+   "files": null,
+   "bytes": null
+  },
+  {
+   "receipt": "research-dense-backups.tar.zst.upload.json",
+   "source": "E:\\research-dense\\tmp\\gdrive_stage_b1\\research-dense-backups.tar.zst",
+   "archive": "research-dense-backups.tar.zst",
+   "archive_md5": null,
+   "files": null,
+   "bytes": null
+  },
+  {
+   "receipt": "shards_v2__chunk4.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk4",
+   "archive": "shards_v2__chunk4.tar.zst",
+   "archive_md5": null,
+   "files": 14256,
+   "bytes": 10232743616
+  },
+  {
+   "receipt": "shards_v2__truearms_chunk2.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\truearms_chunk2",
+   "archive": "shards_v2__truearms_chunk2.tar.zst",
+   "archive_md5": null,
+   "files": 2464,
+   "bytes": 1569412397
+  },
+  {
+   "receipt": "shards_v2__truearms_chunk3.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\truearms_chunk3",
+   "archive": "shards_v2__truearms_chunk3.tar.zst",
+   "archive_md5": null,
+   "files": 2464,
+   "bytes": 1569401387
+  },
+  {
+   "receipt": "shards_v2__walls_pilot_chunk4.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\walls_pilot_chunk4",
+   "archive": "shards_v2__walls_pilot_chunk4.tar.zst",
+   "archive_md5": null,
+   "files": 3675,
+   "bytes": 2447917651
+  }
+ ],
+ "source_absent": [
+  {
+   "receipt": "campaign_pilot_v1_r3.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_pilot_v1_r3",
+   "archive": "campaign_pilot_v1_r3.tar.zst",
+   "archive_md5": "8053045d7792b61c0e37b49106ebad4d",
+   "files": 17,
+   "bytes": 62163329
+  },
+  {
+   "receipt": "campaign_pilot_v1_r4.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_pilot_v1_r4",
+   "archive": "campaign_pilot_v1_r4.tar.zst",
+   "archive_md5": "6d0c02f89f1360d96085cc061b042959",
+   "files": 162,
+   "bytes": 822120519
+  },
+  {
+   "receipt": "campaign_rep_pilot_v1.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_rep_pilot_v1",
+   "archive": "campaign_rep_pilot_v1.tar.zst",
+   "archive_md5": "c54aa4b6adab5365e7b766afa62630d1",
+   "files": 30,
+   "bytes": 156909241
+  },
+  {
+   "receipt": "campaign_stage1_chunk1_fix27.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_stage1_chunk1_fix27",
+   "archive": "campaign_stage1_chunk1_fix27.tar.zst",
+   "archive_md5": "fd44441051071ca81b3db44964ff19f5",
+   "files": 785,
+   "bytes": 26328460040
+  },
+  {
+   "receipt": "campaign_stage1_verify27.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_stage1_verify27",
+   "archive": "campaign_stage1_verify27.tar.zst",
+   "archive_md5": "113b8f4aa04f32148c5658514069daa8",
+   "files": 197,
+   "bytes": 2661519442
+  },
+  {
+   "receipt": "fresh_validation_v1_r3.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\fresh_validation_v1_r3",
+   "archive": "fresh_validation_v1_r3.tar.zst",
+   "archive_md5": "1ea7292e3416d51dbad2bf1bd12c8f61",
+   "files": 800,
+   "bytes": 4006412985
+  },
+  {
+   "receipt": "regenerated_v1.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\regenerated_v1",
+   "archive": "regenerated_v1.tar.zst",
+   "archive_md5": "a46c5b02bb4facea06f9b28961f09920",
+   "files": 864,
+   "bytes": 3925939914
+  },
+  {
+   "receipt": "regenerated_v1_retry1.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\regenerated_v1_retry1",
+   "archive": "regenerated_v1_retry1.tar.zst",
+   "archive_md5": "89563e57ba169fba5b8cf4d6585daded",
+   "files": 80,
+   "bytes": 339012684
+  },
+  {
+   "receipt": "worldmodel_dataset_v1.tar.zst.upload.json",
+   "source": "E:\\research-dense\\output\\worldmodel_dataset_v1",
+   "archive": "worldmodel_dataset_v1.tar.zst",
+   "archive_md5": "50feb2eb5d7361b679bcf140e3c1ea37",
+   "files": 85,
+   "bytes": 6300268222
+  },
+  {
+   "receipt": "worldmodel_dataset_v2.tar.zst.upload.json",
+   "source": "E:\\research-dense\\output\\worldmodel_dataset_v2",
+   "archive": "worldmodel_dataset_v2.tar.zst",
+   "archive_md5": "080223dd66e3a9add3de776114be59ed",
+   "files": 180,
+   "bytes": 24074324179
+  }
+ ],
+ "mismatch": [
+  {
+   "receipt": "campaign_stage1_chunk1.tar.zst.upload.json",
+   "source": "E:\\research-dense\\runs\\campaign_stage1_chunk1",
+   "archive": "campaign_stage1_chunk1.tar.zst",
+   "archive_md5": "b606e14d60b533d885d9012602ea7af2",
+   "files": 1,
+   "bytes": 85614
+  },
+  {
+   "receipt": "shards_v2__chunk1.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk1",
+   "archive": "shards_v2__chunk1.tar.zst",
+   "archive_md5": "84dcd41fa2c5a7980acf0cca7cd01e44",
+   "files": 9200,
+   "bytes": 6570238182
+  },
+  {
+   "receipt": "shards_v2__chunk1_fix27.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk1_fix27",
+   "archive": "shards_v2__chunk1_fix27.tar.zst",
+   "archive_md5": "a0160c9dc9982a316dc5dc9f2f22d1d2",
+   "files": 1764,
+   "bytes": 1174914770
+  },
+  {
+   "receipt": "shards_v2__chunk2.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk2",
+   "archive": "shards_v2__chunk2.tar.zst",
+   "archive_md5": "6be1b3c4046581ff72c8bfd804791897",
+   "files": 9576,
+   "bytes": 6739818719
+  },
+  {
+   "receipt": "shards_v2__index.tar.zst.upload.json",
+   "source": "D:\\rd-staging\\wmn1_feat\\shards_v2",
+   "archive": "shards_v2__index.tar.zst",
+   "archive_md5": "92de89e4be63407177d3c5aad92b123d",
+   "files": 52980,
+   "bytes": 37045608421
+  }
+ ]
+}

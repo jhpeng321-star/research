@@ -1,0 +1,37 @@
+{
+  "schema": "lpwo_cpu_memory/1",
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-B",
+    "-m",
+    "lpwo",
+    "--lpo-dir",
+    "E:/rd-wt/ws-wallc1/_out/lpo",
+    "--out",
+    "E:/rd-wt/ws-wallc1/_out/lpwo_verified_20261009",
+    "--pack-v3-index",
+    "E:/rd-wt/ws-wallc1/_out/wallc1_inputs/pack_v3/INDEX.json",
+    "--extra-index",
+    "pack_dspeed=E:/rd-wt/ws-wallc1/_out/wallc1_inputs/pack_dspeed/INDEX.json",
+    "--extra-index",
+    "pack_damping=E:/rd-wt/ws-wallc1/_out/wallc1_inputs/pack_damping/INDEX.json",
+    "--runs-root",
+    "E:/rd-wt/ws-wallc1/_out/wallc1_inputs",
+    "--guard-spec",
+    "E:/rd-wt/ws-wallc1/_out/wallc1_inputs/canonical_exclusions.json",
+    "--guard-tool",
+    "E:/rd-wt/ws-wallc1/_out/wallc1_inputs/canonical_guard.py",
+    "--allowed-root",
+    "E:/rd-wt/ws-wallc1/_out"
+  ],
+  "status": "passed",
+  "returncode": 0,
+  "limit_bytes": 5500000000,
+  "sampling_interval_s": 0.05,
+  "peak_rss_by_pid_bytes": {
+    "23564": 32407552
+  },
+  "max_sampled_process_rss_bytes": 32407552,
+  "elapsed_s": 2.2969999999913853,
+  "caveat": "sampled RSS, not an instantaneous operating-system memory quota"
+}

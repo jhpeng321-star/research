@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/controller_verification_v26_wall",
+ "name": "controller_verification_v26_wall",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\controller_verification_v26_wall",
+ "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v26_wall/controller_verification_v26_wall.tar.zst",
+ "bytes": 2368861,
+ "files": 38,
+ "archive_bytes": 203198,
+ "archive_md5": "2cfb3d5c710cf7ef808e6a782e57549f",
+ "member_manifest": "manifests/members/output_controller_verification_v26_wall.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.5,
+ "timestamp": "2026-10-10T01:47:35"
+}

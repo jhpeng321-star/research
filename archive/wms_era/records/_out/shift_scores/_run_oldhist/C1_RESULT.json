@@ -1,0 +1,400 @@
+{
+  "schema": "wms_eval_c1v2_result/1",
+  "generated_utc": "2026-10-07T23:39:47Z",
+  "headline": {
+    "arm": "native",
+    "car": "car-level HDV |ds|/|dv| median per state, horizons 10/30/60/120 s",
+    "traffic": "|predicted-recorded| per 30 s bin; headline = merge total_delay in bin 3 (90-120 s)",
+    "ratio": "median(unseen) / median(seen), CI resampled over worlds",
+    "paired": "median(structured) - median(black-box), CI over shared worlds"
+  },
+  "sets": {
+    "u_same": {
+      "n_states": 140,
+      "n_worlds": 140
+    },
+    "u_new": {
+      "n_states": 21,
+      "n_worlds": 21
+    },
+    "seen": {
+      "n_states": 157,
+      "n_worlds": 26
+    }
+  },
+  "separation": {
+    "train_windows": 1307,
+    "problems": [],
+    "overlap": {
+      "u_same": [],
+      "u_new": [
+        "w8481m2700p02t480",
+        "w8487m2400p02t540",
+        "w8488m2400p02t300",
+        "w8495m2700p05t360",
+        "w8525m2700p20t300",
+        "w8528m2400p20t420",
+        "w8530m2600p20t420",
+        "w8538m2600p40t360",
+        "w8543m2700p40t240",
+        "w8546m2700p40t540",
+        "w8567m2700p05t300",
+        "w8568m2600p05t360",
+        "w8598m2700p20t240",
+        "w8610m2000p40t540",
+        "w8613m2700p40t300",
+        "w8625m2700p02t240",
+        "w8659m2700p10t420",
+        "w8666m2700p10t480",
+        "w8667m2700p10t420",
+        "w8669m2700p10t360",
+        "w8688m2700p20t420"
+      ]
+    },
+    "train_key_overlap": {
+      "u_same": [],
+      "u_new": []
+    },
+    "train_run_overlap": {
+      "u_same": [],
+      "u_new": []
+    },
+    "seen_u_new_world_overlap": [
+      "w8481m2700p02t480",
+      "w8487m2400p02t540",
+      "w8488m2400p02t300",
+      "w8495m2700p05t360",
+      "w8525m2700p20t300",
+      "w8528m2400p20t420",
+      "w8530m2600p20t420",
+      "w8538m2600p40t360",
+      "w8543m2700p40t240",
+      "w8546m2700p40t540",
+      "w8567m2700p05t300",
+      "w8568m2600p05t360",
+      "w8598m2700p20t240",
+      "w8610m2000p40t540",
+      "w8613m2700p40t300",
+      "w8625m2700p02t240",
+      "w8659m2700p10t420",
+      "w8666m2700p10t480",
+      "w8667m2700p10t420",
+      "w8669m2700p10t360",
+      "w8688m2700p20t420"
+    ],
+    "seen_u_same_world_overlap": [],
+    "notes": "u_new shares worlds with seen by construction: those worlds are the held-out PAIRED same-world reference for the U-new split, not training leakage (see _out/c1_states_v2/SEPARATION.json).",
+    "refused": false
+  },
+  "models": {
+    "wms": {
+      "car_ds@10": {
+        "u_same": {
+          "median": 1.823089599609375,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 1.8735885620117188,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 1.87274169921875,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "car_ds@30": {
+        "u_same": {
+          "median": 6.484947204589844,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 6.26605224609375,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 7.585693359375,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "car_ds@60": {
+        "u_same": {
+          "median": 14.088554382324219,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 16.5013427734375,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 21.88433837890625,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "car_ds@120": {
+        "u_same": {
+          "median": 230.9284210205078,
+          "n_worlds": 125,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 75.03840255737305,
+          "n_worlds": 19,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 129.56448936462402,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "car_dv@30": {
+        "u_same": {
+          "median": 0.32604265213012695,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 0.3025188446044922,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 0.3833332061767578,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "car_dv@60": {
+        "u_same": {
+          "median": 0.44292640686035156,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 0.46105003356933594,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 0.838850736618042,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "traffic_delay@120": {
+        "u_same": {
+          "median": 47.04996171782478,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 45.30799538060175,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 25.57391283555455,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      },
+      "traffic_delay@mean": {
+        "u_same": {
+          "median": 49.151144115341374,
+          "n_worlds": 140,
+          "n_states": 140
+        },
+        "u_new": {
+          "median": 38.95095927008225,
+          "n_worlds": 21,
+          "n_states": 21
+        },
+        "seen": {
+          "median": 38.82805067661193,
+          "n_worlds": 26,
+          "n_states": 157
+        }
+      }
+    }
+  },
+  "ratios": {
+    "wms": {
+      "u_same": {
+        "car_ds@10": {
+          "point": 0.9734869471694424,
+          "lo": 0.9155274451553502,
+          "hi": 1.0450661957640337,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "car_ds@30": {
+          "point": 0.8548918203469473,
+          "lo": 0.7619323462922759,
+          "hi": 0.9767527994845362,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "car_ds@60": {
+          "point": 0.6437733752053393,
+          "lo": 0.5107148821602755,
+          "hi": 0.8730150570884899,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "car_ds@120": {
+          "point": 1.7823434658135577,
+          "lo": 0.6654010685129417,
+          "hi": 3.426592682395127,
+          "n_boot": 1000,
+          "n_worlds": [
+            125,
+            26
+          ]
+        },
+        "car_dv@30": {
+          "point": 0.8505463311722237,
+          "lo": 0.698978907554329,
+          "hi": 1.0405037011623544,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "car_dv@60": {
+          "point": 0.528015757184739,
+          "lo": 0.33432434485998025,
+          "hi": 0.8654155293223773,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "traffic_delay@120": {
+          "point": 1.8397639039581302,
+          "lo": 1.0220226559364989,
+          "hi": 3.244410514223375,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        },
+        "traffic_delay@mean": {
+          "point": 1.265866899286488,
+          "lo": 0.8381350194611924,
+          "hi": 1.8032835939830618,
+          "n_boot": 1000,
+          "n_worlds": [
+            140,
+            26
+          ]
+        }
+      },
+      "u_new": {
+        "car_ds@10": {
+          "point": 1.000452204803963,
+          "lo": 0.9475342508699878,
+          "hi": 1.175129135138938,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "car_ds@30": {
+          "point": 0.8260355315245728,
+          "lo": 0.7116400546091293,
+          "hi": 1.0036059030603068,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "car_ds@60": {
+          "point": 0.754025206873182,
+          "lo": 0.44566943333628467,
+          "hi": 1.0896113628689925,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "car_ds@120": {
+          "point": 0.5791587102712833,
+          "lo": 0.1456036076691097,
+          "hi": 3.249204766877045,
+          "n_boot": 1000,
+          "n_worlds": [
+            19,
+            26
+          ]
+        },
+        "car_dv@30": {
+          "point": 0.7891798564014788,
+          "lo": 0.6394591907359747,
+          "hi": 0.9968358929132863,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "car_dv@60": {
+          "point": 0.5496210630131069,
+          "lo": 0.3178419209531897,
+          "hi": 0.9913182659822577,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "traffic_delay@120": {
+          "point": 1.7716489327206735,
+          "lo": 0.5348941868322603,
+          "hi": 2.8690371028201196,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        },
+        "traffic_delay@mean": {
+          "point": 1.0031654587683012,
+          "lo": 0.5235632133559683,
+          "hi": 1.71512258584212,
+          "n_boot": 1000,
+          "n_worlds": [
+            21,
+            26
+          ]
+        }
+      }
+    }
+  },
+  "paired": {},
+  "verdict": "C1 asks whether a physics-structured world model that runs the PI controller as known code (WM-S) predicts a controller it was never trained on (PI, removed from all training data) nearly as well as ordinary non-PI situations, while a strong black-box learned-HDV model (black-box-traj) degrades. wms unseen/seen |ds|@60 ratio: U-same 0.64 [0.51, 0.87], U-new 0.75 [0.45, 1.09]. On U-same at 60 s the structured median |ds| is 14.09 m versus black-box-traj n/a m and black-box-id n/a m; the paired structured - black-box-traj difference is n/a m at 60 s and n/a m at 30 s (negative favours structured). Verdict: C1 is NOT SUPPORTED - structured WM-S does not degrade on the unseen PI controller (U-same and U-new ratios below 1) and its 60 s HDV error on U-same is lower than the strong black-box-traj baseline with a 95% bootstrap CI excluding 0. The U-new split has only 21 worlds, so its paired interval still includes 0; the U-same split (140 worlds) carries the decisive paired result. Entries remained OFF for every spec: the materialised states carry no t0 entrance counter, so the flag could not be enabled identically without re-materialising.",
+  "paired_bb_traj": {}
+}

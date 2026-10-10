@@ -1,0 +1,361 @@
+diff --git a/output/campaign_walls_v1/wall_driver.py b/output/campaign_walls_v1/wall_driver.py
+index edec984..910f889 100644
+--- a/output/campaign_walls_v1/wall_driver.py
++++ b/output/campaign_walls_v1/wall_driver.py
+@@ -5,24 +5,33 @@ fresh SUMO process, EXACTLY ONE ``loadState``), then run [t0, t0 + 600]
+ through the frozen WM-40 dispatcher (``MixedAssignmentSession`` +
+ ``CommandOwnership``, both read-only) with:
+ 
+-- the ONLINE request rule (``campaign_walls_v1.wall_request``): the arm's
+-  target time (early t0 / late t0+60), the feasible pair evaluated from
+-  CAV report frames only, members = the pair nearest upstream of the
+-  merge (one per lane), wall speed = factor x the members' mean reported
+-  speed (floor 2.5 m/s), ``not_feasible`` if no pair appears within
+-  120 s after the target;
++- the ONLINE request rule (``campaign_walls_v1.wall_request``, law
++  v2.2 'merge-release'): the arm's target time (early t0 / late t0+60),
++  the feasible pair evaluated from CAV report frames only, members =
++  the pair nearest upstream of the merge (one per lane), wall speed =
++  factor x the members' mean reported speed (floor 2.5 m/s), the v2.2
++  proposer gate D_min (the lead member's distance to the MERGE START
++  must fit assembly + a minimal meaningful hold; refusals are logged
++  with the ``dmin_unreachable`` reason), and ``not_feasible`` if no
++  pair appears within 120 s after the target;
+ - members locked from assembly to handback (the dispatcher's wall
+-  lifecycle: ``WallGroupSession`` via ``apply_plan``/``step``); hold H
+-  (recorded, from the branch seed) counted from assembly completion, then
+-  the planner release hands members back to NATIVE; safety aborts (any
+-  phase) also hand members back to native;
++  lifecycle: ``WallGroupSession`` via ``apply_plan``/``step``); the
++  registered hold draw H is counted from assembly completion and the
++  dispatcher auto-releases at its expiry - and law v2.2 CAPS the hold
++  at the MERGE START: the wall session fires ``merge_release`` (a
++  release kind, never an abort) the moment the LEAD member's edge-aware
++  cumulative coordinate ``s_road`` reaches ``MERGE_RELEASE_POINT_S``
++  (= 2644.2 m, the merge start; owner-confirmed 2026-10-01), handing
++  the members back to NATIVE; safety aborts (any phase) also hand
++  members back to native; the driver logs the realized hold cap
++  (``hold_cap`` row + branch_record fields);
+ - non-members NATIVE for the whole branch (the owner's pairing decision:
+   the world's existing native sibling is the reference, never re-run);
+-- per branch ``wall_events.jsonl`` (request, dispatcher lifecycle events,
+-  per-tick member lane rows, handback, not_feasible) and
+-  ``branch_record.json`` wall fields with
+-  outcome in {assembled_released, aborted_in_assembly, aborted_in_hold,
+-  not_feasible};
++- per branch ``wall_events.jsonl`` (request, dispatcher lifecycle events
++  incl. ``merge_release``, per-tick member lane rows, hold cap, handback,
++  not_feasible) and ``branch_record.json`` wall fields with
++  outcome in {assembled_released, merge_released, aborted_in_assembly,
++  aborted_in_hold, not_feasible};
+ - the chunk-2 data contract files unchanged: ``physics_steps.jsonl``
+   (0.5 s rows), ``dispatcher_rows.jsonl`` (WM-42 DISPATCHER_ROW_FIELDS at
+   0.5 s - the wall fields the dispatcher emits are PRESERVED here, unlike
+@@ -30,7 +39,10 @@ through the frozen WM-40 dispatcher (``MixedAssignmentSession`` +
+ 
+ A wall still active at the horizon end (neither released nor aborted) is
+ a contract anomaly and FAILS the branch loudly - it is never recorded as
+-a release.
++a release.  The v2.1 A4 road-end release (``released_road_end``) is
++SUPERSEDED: v2.2 always hands back at the merge start, so a member never
++runs out of road while held (the wallrt eee755f road-end repair is
++subsumed by the edge-aware ``s_road`` coordinate).
+ 
+ WM-72 parity (2026-09-30, job J4): the wall branch carries the same
+ driver guarantees as ``campaign_stage1_v3.branch_driver``: every LIVE
+@@ -56,18 +68,20 @@ from campaign_stage1_v3.speed_mode27 import (
+     SpeedMode27GuardError,
+ )
+ from campaign_walls_v1.common import (
++    MERGE_RELEASE_POINT_S,
+     WALLS_WORKERS,
+     WallsPilotError,
+     arm_speed_factor,
+     arm_timing,
+     wall_id_for,
+ )
+-from campaign_walls_v1.common import ROAD_END_RELEASE_S
+ from campaign_walls_v1.wall_request import (
+     build_wall_plan,
+     choose_pair,
++    dmin_refusal,
+     edge_of_lane,
+-    road_left_m,
++    hold_cap_s,
++    s_road,
+     target_and_deadline,
+ )
+ 
+@@ -75,19 +89,21 @@ SCHEMA_BRANCH_RECORD = "wm59_wall_branch_record/1"
+ SCHEMA_OUTCOME_RECORD = "wm44_branch_outcome/1"  # unchanged chunk-2 contract
+ 
+ OUTCOME_ASSEMBLED_RELEASED = "assembled_released"
++OUTCOME_MERGE_RELEASED = "merge_released"
+ OUTCOME_ABORTED_IN_ASSEMBLY = "aborted_in_assembly"
+ OUTCOME_ABORTED_IN_HOLD = "aborted_in_hold"
+ OUTCOME_NOT_FEASIBLE = "not_feasible"
+-#: OPTION A (A4): a planned planner release in HOLD because a member ran
+-#: out of road (road_left < v_wall x 10 s).  A release, NOT a safety abort.
++#: SUPERSEDED by law v2.2 (kept only so archived J4 branch records still
++#: replay; the v2.2 driver never issues a road-end release and never
++#: records this outcome - it is deliberately OUTSIDE ``OUTCOMES``).
+ OUTCOME_RELEASED_ROAD_END = "released_road_end"
+ REASON_MEMBER_LEFT_NETWORK = "member_left_network"
+ OUTCOMES = frozenset({
+     OUTCOME_ASSEMBLED_RELEASED,
++    OUTCOME_MERGE_RELEASED,
+     OUTCOME_ABORTED_IN_ASSEMBLY,
+     OUTCOME_ABORTED_IN_HOLD,
+     OUTCOME_NOT_FEASIBLE,
+-    OUTCOME_RELEASED_ROAD_END,
+ })
+ 
+ WALL_ACTION = "wall-v2"
+@@ -248,7 +264,10 @@ class WallEpisodeTracker:
+             members = event.get("members")
+             if members:
+                 self.members = tuple(members)
+-        elif kind in ("released", "safety_abort"):
++        elif kind in ("released", "merge_release", "safety_abort"):
++            # v2.2: ``merge_release`` is a RELEASE kind (native handback at
++            # the merge start), never an abort - it finishes the wall just
++            # like a planner release does.
+             if self.finished_at is not None:
+                 raise WallDriverError(
+                     f"wall {self.wall_id} finished twice "
+@@ -269,6 +288,8 @@ class WallEpisodeTracker:
+     def outcome(self) -> str:
+         if self.finished_how == "released":
+             return OUTCOME_ASSEMBLED_RELEASED
++        if self.finished_how == "merge_release":
++            return OUTCOME_MERGE_RELEASED
+         if self.finished_how == "safety_abort":
+             return (OUTCOME_ABORTED_IN_HOLD if self.phase_at_finish == "hold"
+                     else OUTCOME_ABORTED_IN_ASSEMBLY)
+@@ -300,54 +321,71 @@ class _WallRequest:
+         self.requested_at: float | None = None
+         self.plan_id: str | None = None
+         self.pair: dict | None = None
+-        # A4: the planned road-end release (issued in HOLD only)
+-        self.road_end_release_at: float | None = None
+-        self.road_end_road_left_m: float | None = None
+-
+-    def maybe_road_end_release(self, session, frames, now_s: float,
+-                               assembled: bool, finished: bool, sink) -> None:
+-        """A4: in HOLD (assembled, not finished), when any member's road
+-        left < v_wall x 10 s, issue the PLANNER release (a plan naming the
+-        wall with phase ``release``; members go back to native).  Never in
+-        assembly (owner rule), never twice."""
+-        if (self.state != "requested" or not assembled or finished
+-                or self.road_end_release_at is not None):
++        # v2.2 merge-release bookkeeping: the lead member's LAST observed
++        # s_road while in HOLD (the frames a hold tick releases on are the
++        # same ones captured here, so on a ``merge_release`` finish this is
++        # the release s_road), the last D_min refusal seen while waiting,
++        # and the realized hold cap (written once at the finish).
++        self.last_hold_lead_s_road_m: float | None = None
++        self.last_dmin_refusal: dict | None = None
++        self.hold_cap_logged = False
++
++    def observe_hold(self, frames, assembled: bool, finished: bool) -> None:
++        """Per-tick v2.2 bookkeeping while the wall is in HOLD: record the
++        LEAD member's s_road (max over members, report frames only)."""
++        if self.state != "requested" or not assembled or finished:
+             return
+-        lefts = {}
+-        for member in self.members:
+-            frame = frames.get(member)
+-            left = road_left_m(frame) if frame is not None else None
+-            if left is not None:
+-                lefts[member] = left
+-        if not lefts:
++        roads = [s_road(frames.get(member))
++                 for member in (self.members or ())]
++        roads = [float(s) for s in roads if s is not None]
++        if roads:
++            self.last_hold_lead_s_road_m = max(roads)
++
++    def note_dmin_refusal(self, frames) -> None:
++        """While WAITING: remember the current D_min refusal (if any) so a
++        request-window ``not_feasible`` names the D_min reason when the
++        proposal was refused on the merge-start gate."""
++        if self.state != "waiting" or self.factor is None:
+             return
+-        worst = min(lefts.values())
+-        if worst >= self.wall_speed_mps * ROAD_END_RELEASE_S:
+-            return
+-        plan, _wall_id, _speed = build_wall_plan(
+-            run_name=self.run_name, cav_ids=sorted(self.cav_ids),
+-            pair=self.pair, factor=self.factor, hold_s=self.hold_s,
+-            now_s=now_s, plan_factory=self.plan_factory, phase="release",
+-            wall_speed_mps=self.wall_speed_mps)
+-        session.apply_plan(plan, now_s=now_s)
+-        self.road_end_release_at = float(now_s)
+-        self.road_end_road_left_m = float(worst)
+-        sink({
+-            "kind": "road_end_release",
++        refusal = dmin_refusal(frames, self.factor)
++        if refusal is not None:
++            self.last_dmin_refusal = refusal
++
++    def hold_cap_row(self, tracker) -> dict | None:
++        """The realized v2.2 hold cap (logged ONCE, right after the wall's
++        terminal dispatcher event): the registered draw vs the effective
++        hold, and whether the merge start capped it."""
++        if (self.state != "requested" or self.hold_cap_logged
++                or tracker.finished_at is None
++                or tracker.assembled_at is None):
++            return None
++        self.hold_cap_logged = True
++        effective = round(float(tracker.finished_at)
++                          - float(tracker.assembled_at), 6)
++        capped = tracker.finished_how == "merge_release"
++        a_priori_cap = (None if self.last_hold_lead_s_road_m is None
++                        else hold_cap_s(self.hold_s,
++                                        self.last_hold_lead_s_road_m,
++                                        self.wall_speed_mps))
++        return {
++            "kind": "hold_cap",
+             "wall_id": self.wall_id,
+-            "timestamp_s": round(float(now_s), 6),
+-            "members": list(self.members),
+-            "road_left_m": {m: round(v, 3) for m, v in sorted(lefts.items())},
+-            "min_road_left_m": round(worst, 3),
+-            "threshold_m": round(self.wall_speed_mps * ROAD_END_RELEASE_S, 3),
++            "timestamp_s": round(float(tracker.finished_at), 6),
++            "requested_hold_s": float(self.hold_s),
++            "effective_hold_s": effective,
++            "capped_at_merge": bool(capped),
++            "cap_point_s": MERGE_RELEASE_POINT_S,
++            "a_priori_effective_hold_s": a_priori_cap,
++            "lead_s_road_at_release_m": self.last_hold_lead_s_road_m,
+             "wall_speed_mps": self.wall_speed_mps,
+-            "requested_hold_s": self.hold_s,
+             "source": "cav_report_frames",
+-        })
++        }
+ 
+     def maybe_request(self, session, frames, now_s: float, sink) -> None:
+         """At/after the target time: request on the first feasible tick;
+-        record ``not_feasible`` at the first tick past the deadline."""
++        record ``not_feasible`` at the first tick past the deadline (with
++        the v2.2 D_min refusal reason when the proposal was refused on
++        the merge-start gate rather than for want of a pair)."""
+         if self.state != "waiting" or now_s < self.target_s - 1e-9:
+             return
+         pair = choose_pair(frames, self.factor, min_span_m=self.min_span_m)
+@@ -380,6 +418,9 @@ class _WallRequest:
+                 "span_m": self.span_m,
+                 "min_span_m": self.min_span_m,
+                 "road_left_m": pair["road_left_m"],
++                "lead_s_road_m": pair["lead_s_road_m"],
++                "lead_distance_to_merge_m": pair["lead_distance_to_merge_m"],
++                "dmin_m": pair["dmin_m"],
+                 "speed_factor": self.factor,
+                 "mean_member_speed_mps": round(float(mean_speed), 6),
+                 "wall_speed_mps": float(speed),
+@@ -387,9 +428,10 @@ class _WallRequest:
+                 "source": "cav_report_frames",
+             })
+             return
++        self.note_dmin_refusal(frames)
+         if now_s > self.deadline_s + 1e-9:
+             self.state = "not_feasible"
+-            sink({
++            row = {
+                 "kind": "not_feasible",
+                 "wall_id": self.wall_id,
+                 "timestamp_s": round(float(now_s), 6),
+@@ -397,7 +439,17 @@ class _WallRequest:
+                 "target_time_s": round(self.target_s, 6),
+                 "deadline_s": round(self.deadline_s, 6),
+                 "reason": "no feasible pair within the 120 s request window",
+-            })
++            }
++            refusal = self.last_dmin_refusal
++            if refusal is not None:
++                # v2.2: span-feasible pairs existed but the proposal was
++                # refused - assembly + a minimal meaningful hold cannot
++                # complete before the merge start.
++                row["reason"] = refusal["reason"]
++                row["dmin"] = {k: refusal[k] for k in (
++                    "lead_distance_to_merge_m", "dmin_m",
++                    "wall_speed_mps", "span_m")}
++            sink(row)
+ 
+ 
+ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+@@ -587,9 +639,10 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+         assignment_rows.clear()
+         request.maybe_request(
+             session, frames, now, log_event)
+-        request.maybe_road_end_release(
+-            session, frames, now, tracker.assembled_at is not None,
+-            tracker.finished_at is not None, log_event)
++        # v2.2: hold cap bookkeeping (the session's ``merge_release`` is
++        # the enforcing handback; the driver only observes and logs it)
++        request.observe_hold(frames, tracker.assembled_at is not None,
++                             tracker.finished_at is not None)
+         # Per-tick member lane logging (WM-43b): capture the members'
+         # reported lanes BEFORE the dispatcher step, so the snapshot is
+         # available to a lane_coverage_violation abort fired inside the
+@@ -727,11 +780,13 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+         outcome = OUTCOME_NOT_FEASIBLE
+     else:
+         outcome = tracker.outcome()
+-        if (outcome == OUTCOME_ASSEMBLED_RELEASED
+-                and request.road_end_release_at is not None):
+-            outcome = OUTCOME_RELEASED_ROAD_END
+     if outcome not in OUTCOMES:
+         raise WallDriverError(f"unclassified wall outcome {outcome!r}")
++    # the realized v2.2 hold cap (logged once, after the terminal
++    # dispatcher event and before the handback row)
++    hold_cap = request.hold_cap_row(tracker)
++    if hold_cap is not None:
++        log_event(hold_cap)
+     # explicit handback row after the terminal dispatcher event
+     if tracker.finished_at is not None:
+         log_event({
+@@ -739,9 +794,10 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+             "wall_id": tracker.wall_id,
+             "timestamp_s": round(float(tracker.finished_at), 6),
+             "how": tracker.finished_how,
++            "release_kind": tracker.finished_how,
+             "phase": tracker.phase_at_finish,
+             "reason": tracker.abort_reason,
+-            "road_end": outcome == OUTCOME_RELEASED_ROAD_END,
++            "capped_at_merge": bool(hold_cap and hold_cap["capped_at_merge"]),
+             "members": list(tracker.members or request.members or ()),
+             "handback": "native",
+         })
+@@ -785,12 +841,17 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+         "hold_s": hold_s,
+         "requested_hold_s": hold_s,
+         "achieved_hold_s": achieved_hold_s,
+-        "road_end_release_s": request.road_end_release_at,
+-        "road_end_min_road_left_m": request.road_end_road_left_m,
++        "merge_release_s": (tracker.finished_at
++                            if tracker.finished_how == "merge_release"
++                            else None),
++        "hold_capped_at_merge": bool(hold_cap and hold_cap["capped_at_merge"]),
++        "lead_s_road_at_release_m": request.last_hold_lead_s_road_m,
+         "request_s": request.requested_at,
+         "assembled_at_s": tracker.assembled_at,
+         "released_at_s": (tracker.finished_at
+-                          if tracker.finished_how == "released" else None),
++                          if tracker.finished_how in ("released",
++                                                      "merge_release")
++                          else None),
+         "aborted_at_s": (tracker.finished_at
+                          if tracker.finished_how == "safety_abort" else None),
+         "abort_reason": tracker.abort_reason,
+@@ -815,7 +876,8 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+         "requested_hold_s": hold_s,
+         "hold_override_s": hold_override_s,
+         "achieved_hold_s": achieved_hold_s,
+-        "road_end_release_s": request.road_end_release_at,
++        "merge_release_s": branch_record["merge_release_s"],
++        "hold_capped_at_merge": branch_record["hold_capped_at_merge"],
+         "wall_id": request.wall_id,
+         "members": list(request.members) if request.members else None,
+         "wall_speed_mps": request.wall_speed_mps,

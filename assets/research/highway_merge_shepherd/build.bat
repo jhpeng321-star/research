@@ -1,0 +1,3 @@
+@echo off
+echo Regenerating all density presets...
+call "%~dp0build_all.bat"

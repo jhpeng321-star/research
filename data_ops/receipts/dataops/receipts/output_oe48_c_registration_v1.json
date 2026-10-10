@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe48_c_registration_v1",
+ "name": "oe48_c_registration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe48_c_registration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe48_c_registration_v1/oe48_c_registration_v1.tar.zst",
+ "bytes": 142839,
+ "files": 13,
+ "archive_bytes": 36726,
+ "archive_md5": "65c7c68e27a9c765d6faf040971ed178",
+ "member_manifest": "manifests/members/output_oe48_c_registration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.6,
+ "timestamp": "2026-10-10T01:39:47"
+}

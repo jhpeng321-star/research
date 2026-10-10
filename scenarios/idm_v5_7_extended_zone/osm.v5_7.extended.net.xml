@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<net xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.20" junctionCornerDetail="5" limitTurnSpeed="5.50" avoidOverlap="0" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="-241432.74,-4390308.71" convBoundary="0.00,226.66,8977.16,2943.12" origBoundary="-78.012496,39.623709,-77.908199,39.654321" projParameter="+proj=utm +zone=18 +ellps=WGS84 +datum=WGS84 +units=m +no_defs" />
+
+    <type id="highway.motorway" priority="14" numLanes="2" speed="39.44" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" oneway="1" />
+    <type id="highway.motorway_link" priority="9" numLanes="1" speed="22.22" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" oneway="1" />
+
+    <junction id="idm_v5_7_upstream_source" type="dead_end" x="6414.04" y="2679.32" incLanes="" intLanes="" shape="" /><edge id="idm_v5_7_upstream_extension" from="idm_v5_7_upstream_source" to="470409306" priority="14" type="highway.motorway" spreadType="center" name="IDM v5.7 extended approach"><lane id="idm_v5_7_upstream_extension_0" index="0" speed="31.29" length="900.00" shape="6414.04,2677.72 7314.04,2677.72" /><lane id="idm_v5_7_upstream_extension_1" index="1" speed="31.29" length="900.00" shape="6414.04,2680.92 7314.04,2680.92" /></edge><edge id=":13638027693_0" function="internal">
+        <lane id=":13638027693_0_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="8.00" shape="8495.72,2932.39 8503.70,2931.83" />
+        <lane id=":13638027693_0_1" index="1" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="8.00" shape="8495.94,2935.58 8503.92,2935.03" />
+    </edge>
+    <edge id=":1780739017_0" function="internal">
+        <lane id=":1780739017_0_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="26.75" length="2.93" shape="8417.31,2934.69 8420.24,2934.53" />
+    </edge>
+    <edge id=":1780739017_1" function="internal">
+        <lane id=":1780739017_1_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="3.00" shape="8417.50,2937.92 8420.47,2937.72" />
+        <lane id=":1780739017_1_1" index="1" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="3.00" shape="8417.68,2941.11 8420.70,2940.91" />
+    </edge>
+
+    <edge id="11553048#1" from="11553048#1-AddedOnRampNode" to="1780739017" priority="9" type="highway.motorway_link" spreadType="center" shape="8066.47,2833.58 8081.12,2848.06 8106.22,2869.05 8128.58,2883.46 8153.01,2897.58 8180.61,2910.45 8207.57,2920.93 8231.04,2927.17 8253.63,2931.15 8286.80,2934.19 8318.77,2936.14 8355.78,2936.77 8418.75,2934.64">
+        <lane id="11553048#1_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="22.22" length="378.66" shape="8066.47,2833.58 8081.12,2848.06 8106.22,2869.05 8128.58,2883.46 8153.01,2897.58 8180.61,2910.45 8207.57,2920.93 8231.04,2927.17 8253.63,2931.15 8286.80,2934.19 8318.77,2936.14 8355.78,2936.77 8417.31,2934.69">
+            <param key="origId" value="11553048" />
+        </lane>
+    </edge>
+    <edge id="1191554636" from="470409306" to="1780739017" name="Dwight D Eisenhower Highway" priority="14" type="highway.motorway" spreadType="center" shape="7314.04,2679.32 7323.49,2683.32 7717.70,2832.23 7786.00,2856.40 7833.94,2870.91 7890.80,2887.30 7942.93,2899.49 8000.59,2911.83 8051.22,2920.52 8121.83,2930.72 8172.92,2936.30 8221.89,2939.64 8285.81,2942.84 8354.60,2943.12 8419.10,2939.43">
+        <lane id="1191554636_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="2644.22" shape="5932.93,2094.06 6025.04,2132.98 6117.16,2171.90 6209.27,2210.82 6301.39,2249.74 6393.50,2288.66 6485.62,2327.58 6577.74,2366.50 6669.85,2405.41 6761.97,2444.33 6854.08,2483.25 6946.20,2522.17 7038.31,2561.09 7130.43,2600.01 7222.54,2638.93 7314.66,2677.85 7324.08,2681.83 7718.25,2830.73 7786.50,2854.88 7834.39,2869.38 7891.20,2885.75 7943.28,2897.93 8000.89,2910.26 8051.47,2918.94 8122.03,2929.13 8173.06,2934.71 8221.98,2938.04 8285.85,2941.24 8354.56,2941.52 8417.50,2937.92">
+            <param key="origId" value="1191554636" />
+        </lane>
+        <lane id="1191554636_1" index="1" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="2645.67" shape="5931.69,2097.00 6023.80,2135.92 6115.92,2174.84 6208.03,2213.76 6300.15,2252.68 6392.26,2291.60 6484.38,2330.52 6576.50,2369.44 6668.61,2408.35 6760.73,2447.27 6852.84,2486.19 6944.96,2525.11 7037.07,2564.03 7129.19,2602.95 7221.30,2641.87 7313.42,2680.79 7322.90,2684.81 7717.15,2833.73 7785.50,2857.92 7833.49,2872.44 7890.40,2888.85 7942.58,2901.05 8000.29,2913.40 8050.97,2922.10 8121.63,2932.31 8172.78,2937.89 8221.80,2941.24 8285.77,2944.44 8354.64,2944.72 8417.68,2941.11">
+            <param key="origId" value="1191554636" />
+        </lane>
+        <param key="ref" value="I 70" />
+    </edge>
+    <edge id="1487606178" from="13638027693" to="103026905" name="Dwight D Eisenhower Highway" priority="14" type="highway.motorway" spreadType="center" shape="8499.82,2933.71 8533.36,2931.35 8592.55,2923.69 8977.16,2868.28">
+        <lane id="1487606178_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="477.89" shape="8503.70,2931.83 8533.20,2929.76 8592.33,2922.10 8976.93,2866.70">
+            <param key="origId" value="1487606178" />
+        </lane>
+        <lane id="1487606178_1" index="1" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="477.89" shape="8503.92,2935.03 8533.52,2932.94 8592.77,2925.28 8977.39,2869.86">
+            <param key="origId" value="1487606178" />
+        </lane>
+        <param key="ref" value="I 70" />
+    </edge>
+    <edge id="1487606179" from="1780739017" to="13638027693" name="Dwight D Eisenhower Highway" priority="14" type="highway.motorway" spreadType="center" shape="8418.98,2937.83 8424.91,2937.40 8499.71,2932.11">
+        <lane id="1487606179_0" index="0" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="75.44" acceleration="1" shape="8420.24,2934.53 8424.68,2934.21 8495.49,2929.20">
+            <param key="origId" value="1487606179" />
+        </lane>
+        <lane id="1487606179_1" index="1" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="75.44" shape="8420.47,2937.72 8424.91,2937.40 8495.72,2932.39">
+            <param key="origId" value="1487606179" />
+        </lane>
+        <lane id="1487606179_2" index="2" allow="private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2" speed="31.29" length="75.44" shape="8420.70,2940.91 8425.14,2940.59 8495.94,2935.58">
+            <param key="origId" value="1487606179" />
+        </lane>
+        <param key="ref" value="I 70" />
+    </edge>
+
+    <junction id="103017819" type="dead_end" x="0.00" y="226.66" incLanes="" intLanes="" shape="0.00,226.66" />
+    <junction id="103026905" type="dead_end" x="8977.16" y="2868.28" incLanes="1487606178_0 1487606178_1" intLanes="" shape="8976.70,2865.11 8977.62,2871.45" />
+    <junction id="11062925270" type="dead_end" x="6525.15" y="2348.38" incLanes="" intLanes="" shape="6525.15,2348.38" />
+    <junction id="11553048#1-AddedOnRampNode" type="dead_end" x="8066.47" y="2833.58" incLanes="" intLanes="" shape="8065.35,2834.72 8067.59,2832.44" />
+    <junction id="13638027693" type="priority" x="8499.82" y="2933.71" incLanes="1487606179_0 1487606179_1 1487606179_2" intLanes=":13638027693_0_0 :13638027693_0_1" shape="8504.04,2936.62 8503.59,2930.24 8500.50,2929.62 8498.46,2928.22 8497.18,2927.71 8495.38,2927.60 8496.06,2937.18">
+        <request index="0" response="00" foes="00" cont="0" />
+        <request index="1" response="00" foes="00" cont="0" />
+    </junction>
+    <junction id="1780739017" type="priority" x="8419.10" y="2939.43" incLanes="11553048#1_0 1191554636_0 1191554636_1" intLanes=":1780739017_0_0 :1780739017_1_0 :1780739017_1_1" shape="8420.82,2942.51 8420.12,2932.93 8417.22,2933.09 8417.77,2942.71">
+        <request index="0" response="000" foes="000" cont="0" />
+        <request index="1" response="000" foes="000" cont="0" />
+        <request index="2" response="000" foes="000" cont="0" />
+    </junction>
+    <junction id="470409306" type="dead_end" x="7314.04" y="2679.32" incLanes="" intLanes="" shape="7312.79,2682.27 7315.29,2676.37" />
+
+    <connection from="11553048#1" to="1487606179" fromLane="0" toLane="0" via=":1780739017_0_0" dir="s" state="M" />
+    <connection from="1191554636" to="1487606179" fromLane="0" toLane="1" via=":1780739017_1_0" dir="s" state="M" />
+    <connection from="1191554636" to="1487606179" fromLane="1" toLane="2" via=":1780739017_1_1" dir="s" state="M" />
+    <connection from="1487606179" to="1487606178" fromLane="1" toLane="0" via=":13638027693_0_0" dir="s" state="M" />
+    <connection from="1487606179" to="1487606178" fromLane="2" toLane="1" via=":13638027693_0_1" dir="s" state="M" />
+
+    <connection from=":13638027693_0" to="1487606178" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":13638027693_0" to="1487606178" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":1780739017_0" to="1487606179" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":1780739017_1" to="1487606179" fromLane="0" toLane="1" dir="s" state="M" />
+    <connection from=":1780739017_1" to="1487606179" fromLane="1" toLane="2" dir="s" state="M" />
+
+<connection from="idm_v5_7_upstream_extension" to="1191554636" fromLane="0" toLane="0" dir="s" state="M" /><connection from="idm_v5_7_upstream_extension" to="1191554636" fromLane="1" toLane="1" dir="s" state="M" /></net>

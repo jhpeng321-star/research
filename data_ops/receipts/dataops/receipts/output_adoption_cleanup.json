@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/adoption_cleanup",
+ "name": "adoption_cleanup",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\adoption_cleanup",
+ "drive": "gdrive:research-archive/repo-evidence/output/adoption_cleanup/adoption_cleanup.tar.zst",
+ "bytes": 11345654,
+ "files": 1483,
+ "archive_bytes": 4431434,
+ "archive_md5": "0d6be4e6afa896f4e53bfaf26d87d42b",
+ "member_manifest": "manifests/members/output_adoption_cleanup.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.2,
+ "timestamp": "2026-10-10T01:49:50"
+}

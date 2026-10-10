@@ -1,0 +1,189 @@
+{
+ "note": "re-run aggregates vs part-1 t2_summary.json verdicts. unexpected_diffs must be empty: every step-indexed aggregate (vehicle_steps, comparable_vehicle_steps, capviol, negspeed, max_speed, CONSTRAINED overlap events, RAW defective-geo reproduction) reproduces part-1 exactly. explained_diffs carry the two registered/measured exceptions: (1) part-1 RAW overlap column = defective counter output, superseded by the corrected count in overlap_addendum.json; (2) part-1 pooled its C1 event universes into dicts keyed by vehicle id (t2_run.py pt/tt_/pb/tb_ comprehensions), so its stored ttc/brake totals count distinct vehicles per window, not vehicle-seconds - the recomputed totals here are per-step vehicle-seconds.",
+ "by_variant_H": {
+  "RAW@H30": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 3976,
+     "part1": 1893
+    },
+    "ttc_pred": {
+     "recomputed": 10054,
+     "part1": 1932
+    },
+    "brake_truth": {
+     "recomputed": 3515,
+     "part1": 1178
+    },
+    "brake_pred": {
+     "recomputed": 3392,
+     "part1": 1119
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "RAW@H60": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 8016,
+     "part1": 3825
+    },
+    "ttc_pred": {
+     "recomputed": 18694,
+     "part1": 3158
+    },
+    "brake_truth": {
+     "recomputed": 6927,
+     "part1": 2300
+    },
+    "brake_pred": {
+     "recomputed": 6116,
+     "part1": 1920
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "RAW@H90": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 12589,
+     "part1": 5912
+    },
+    "ttc_pred": {
+     "recomputed": 27176,
+     "part1": 4060
+    },
+    "brake_truth": {
+     "recomputed": 11055,
+     "part1": 3567
+    },
+    "brake_pred": {
+     "recomputed": 8467,
+     "part1": 2592
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "RAW@H120": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 17091,
+     "part1": 8028
+    },
+    "ttc_pred": {
+     "recomputed": 32221,
+     "part1": 4418
+    },
+    "brake_truth": {
+     "recomputed": 14836,
+     "part1": 4809
+    },
+    "brake_pred": {
+     "recomputed": 9405,
+     "part1": 2854
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "CONSTRAINED@H30": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 3976,
+     "part1": 1893
+    },
+    "ttc_pred": {
+     "recomputed": 9267,
+     "part1": 1793
+    },
+    "brake_truth": {
+     "recomputed": 3515,
+     "part1": 1178
+    },
+    "brake_pred": {
+     "recomputed": 4568,
+     "part1": 1436
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "CONSTRAINED@H60": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 8016,
+     "part1": 3825
+    },
+    "ttc_pred": {
+     "recomputed": 16767,
+     "part1": 3124
+    },
+    "brake_truth": {
+     "recomputed": 6927,
+     "part1": 2300
+    },
+    "brake_pred": {
+     "recomputed": 8393,
+     "part1": 2640
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "CONSTRAINED@H90": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 12589,
+     "part1": 5912
+    },
+    "ttc_pred": {
+     "recomputed": 22654,
+     "part1": 4138
+    },
+    "brake_truth": {
+     "recomputed": 11055,
+     "part1": 3567
+    },
+    "brake_pred": {
+     "recomputed": 11398,
+     "part1": 3519
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  },
+  "CONSTRAINED@H120": {
+   "matches": true,
+   "unexpected_diffs": null,
+   "explained_diffs": {
+    "ttc_truth": {
+     "recomputed": 17091,
+     "part1": 8028
+    },
+    "ttc_pred": {
+     "recomputed": 25221,
+     "part1": 4503
+    },
+    "brake_truth": {
+     "recomputed": 14836,
+     "part1": 4809
+    },
+    "brake_pred": {
+     "recomputed": 12095,
+     "part1": 3727
+    }
+   },
+   "explanation": "ttc/brake pools: part-1 dict-collapse counts distinct vehicles, recomputed counts are vehicle-seconds (addendum REPORT section 4.2)"
+  }
+ }
+}

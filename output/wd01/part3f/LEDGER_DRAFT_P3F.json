@@ -1,0 +1,25 @@
+{
+ "experiment_id": "WD-01",
+ "part": "3f-structured-emulator-eval",
+ "status": "complete (validation only; holdout untouched)",
+ "generated_utc": "2026-09-26T05:34:41.986546+00:00",
+ "zero_simulation": true,
+ "holdout_accessed": false,
+ "gate": {
+  "ens_speed_rmse_h60": 4.481,
+  "B1_speed_rmse_h60": 9.2667,
+  "B2_speed_rmse_h60": 4.8959,
+  "beats_B1": true,
+  "beats_B2": true,
+  "ens_collisions_per_1000": 0.008,
+  "collisions_ok": true,
+  "PASS": true
+ },
+ "gate_verdict": "PASS",
+ "findings": {
+  "structured_emulator": "speed RMSE 4.48 m/s at H=60 beats B2 (4.90) and B1 (9.27); collisions 0.008 per 1000",
+  "dawdle": "CONFIRMED (SUMO applies one-sided uniform dawdle sigma*accel*dt per step)",
+  "lc_calibration": "lc_scale=0.002 achieves 10 LCs/window (truth ~24 at H=60 on 4 roots)"
+ },
+ "report": "REPORT_P3F.md"
+}

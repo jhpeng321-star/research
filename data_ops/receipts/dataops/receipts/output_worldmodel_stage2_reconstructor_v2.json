@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_stage2_reconstructor_v2",
+ "name": "worldmodel_stage2_reconstructor_v2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_stage2_reconstructor_v2",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage2_reconstructor_v2/worldmodel_stage2_reconstructor_v2.tar.zst",
+ "bytes": 108728,
+ "files": 18,
+ "archive_bytes": 35023,
+ "archive_md5": "426812765aa83e901618b26d1b3bc3d6",
+ "member_manifest": "manifests/members/output_worldmodel_stage2_reconstructor_v2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.8,
+ "timestamp": "2026-10-10T01:38:44"
+}

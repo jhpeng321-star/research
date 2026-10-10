@@ -1,0 +1,45 @@
+﻿{
+    "name":  "pl55",
+    "path":  "E:\\rd-wt\\pl55",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "detached",
+    "dirtyBefore":  121,
+    "committed":  true,
+    "commitSha":  "8d6170e15f8cbd0b48d15173888fa684942813e0",
+    "preserveRef":  "refs/heads/wip-preserve/pl55",
+    "dest":  "gdrive:research-archive/worktrees/pl55",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl55.txt",
+    "uploadCount":  196,
+    "uploadBytes":  3640693,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl55.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 02:32:44 NOTICE: Google drive root \u0027research-archive/worktrees/pl55\u0027: 0 differences found | 2026/10/10 02:32:44 NOTICE: Google drive root \u0027research-archive/worktrees/pl55\u0027: 196 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl55.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  7,
+    "skippedSensitiveSample":  [
+                                   "protocols/chunk5_test_seal.json",
+                                   "protocols/holdout_exclusions.json",
+                                   "tests/planner/test_holdout_guard.py",
+                                   "tests/planner/test_holdout_guard_seal.py",
+                                   "tests/test_holdout_exclusions.py",
+                                   "tools/holdout_guard.py",
+                                   "traffic_shepherd/planner/holdout.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T02:27:52.2430319+08:00"
+}

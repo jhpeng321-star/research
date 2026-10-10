@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe48_a_premises_v1",
+ "name": "oe48_a_premises_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe48_a_premises_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe48_a_premises_v1/oe48_a_premises_v1.tar.zst",
+ "bytes": 81207,
+ "files": 6,
+ "archive_bytes": 19951,
+ "archive_md5": "315da83a31cf2aa6b73183d693133ac4",
+ "member_manifest": "manifests/members/output_oe48_a_premises_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.0,
+ "timestamp": "2026-10-10T01:36:35"
+}

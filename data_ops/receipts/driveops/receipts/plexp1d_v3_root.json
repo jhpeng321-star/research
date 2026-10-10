@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "plexp1d_v3_root",
+ "kind": "dir",
+ "class": "DELETE-CANDIDATE",
+ "producer": "PL-EXP1d v3 code-slot subset; duplicated at E:/rented_bundle/code_plexp1d",
+ "restore": "copy to D:/rd-staging/plexp1d_v3_root",
+ "local": "D:/rd-staging/plexp1d_v3_root",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/plexp1d_v3/root",
+ "bytes": 868462,
+ "files": 31,
+ "md5_manifest": "receipts/md5/plexp1d_v3_root.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:30:50"
+}

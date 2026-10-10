@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe66_w1_audit_v1",
+ "name": "oe66_w1_audit_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe66_w1_audit_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe66_w1_audit_v1/oe66_w1_audit_v1.tar.zst",
+ "bytes": 243508,
+ "files": 7,
+ "archive_bytes": 26161,
+ "archive_md5": "a17d2a3a4614547626e8b892fc1fdfbd",
+ "member_manifest": "manifests/members/output_oe66_w1_audit_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 43.3,
+ "timestamp": "2026-10-10T01:43:00"
+}

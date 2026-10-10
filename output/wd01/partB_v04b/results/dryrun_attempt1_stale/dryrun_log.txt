@@ -1,0 +1,15 @@
+[    0.0s] WD-01-PB-V04B TRAIN-only dry-run (role-play of the post-ack fit); registration LF-sha256 e00cd98e...
+[    0.0s] worlds: 4 TRAIN (no CAL row anywhere); variants: deployable_strict, deployable_detector; zero SUMO
+[    0.0s] J4 plan split asserted: 39 TRAIN / 5 CAL by name; CAL worlds are named but never opened here
+[    0.0s] DISCLOSED split-name drift (registration text -> plan): {'w8662m2700p10t300': 'w8662m2600p10t300'} -- the plan is the split authority; reported in every manifest
+[    0.0s] dry-run worlds: w8659m2700p10t420, w8660m2700p10t300, w8661m2600p10t240, w8662m2600p10t300
+[   25.0s] built w8659m2700p10t420: 12 t0 rows (4 wall + 8 native/aux)
+[   55.0s] built w8660m2700p10t300: 12 t0 rows (4 wall + 8 native/aux)
+[   80.6s] built w8661m2600p10t240: 12 t0 rows (4 wall + 8 native/aux)
+[  109.1s] built w8662m2600p10t300: 12 t0 rows (4 wall + 8 native/aux)
+[  109.4s] pairs: 220 rows (5 contrasts x 5 taus); representation (wall pairs): {"le60": 3, "mid": 10, "whole": 3, "n": 16, "n_first60_only": 1}
+[  198.9s] v04b[fit]: tau=30 chosen (300, 0.1, 16, 10) pinball=0.38 n=44 (headline 16) in 89.4 s
+[  245.0s] v04b[fit]: tau=30 chosen (150, 0.05, 8, 20) pinball=0.48 n=16 (headline 16) in 46.1 s
+[  298.8s] v04b[fit]: tau=60 chosen (150, 0.05, 8, 20) pinball=13.70 n=44 (headline 16) in 53.8 s
+[  342.5s] v04b[fit]: tau=60 chosen (150, 0.05, 8, 20) pinball=15.22 n=16 (headline 16) in 43.7 s
+[  409.1s] v04b[fit]: tau=120 chosen (150, 0.05, 16, 10) pinball=172.41 n=44 (headline 16) in 66.6 s

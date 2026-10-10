@@ -1,0 +1,24 @@
+ABORTED/INVALID 2026-09-30 13:03-13:57 - WD-01-PA2G-CNT1 eval attempt 1.
+
+What happened: the panel pass itself ran to completion (32/32 worlds,
+2 workers, wall ~54 min) but the run is INVALID as the registered
+analysis and is never to be aggregated:
+
+1. COVERAGE BUG: eval_cnt1.window_rows_cnt emitted the plain v2g
+   comparator rows only in the injector-off branch (if/else), so every
+   world here has v2g_cnt / const_speed / v1_p3o_replica rows but NO
+   v2g rows -> the registered paired v2g-CNT minus v2g comparison is
+   impossible from this attempt.
+2. The parent then crashed in the meta construction
+   (AttributeError: arrivals.RAMP_EDGE; correct name RAMP_ENTRY_EDGE)
+   BEFORE run_meta.json was written; raw_rows.jsonl and
+   opened_run_files_full.json were written and are preserved verbatim.
+
+Also disclosed: the launching shell tool timed out 120 s after the
+detach and reported the kill; the detached process tree actually
+survived and finished (per-world rows/wall times in cnt1_run.out).
+
+No scientific aggregate was viewed before this decision (stdout
+contains only per-world row counts and wall times; the per-model
+summary print never executed).  Fixed code re-runs ONCE into the fresh
+results/eval_cnt1/ (attempt 2), emitting all four models.

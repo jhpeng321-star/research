@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/state_constructor_v1",
+ "name": "state_constructor_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\state_constructor_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/state_constructor_v1/state_constructor_v1.tar.zst",
+ "bytes": 5779934,
+ "files": 133,
+ "archive_bytes": 1385182,
+ "archive_md5": "d77189a6e9ed1e36135564887943678e",
+ "member_manifest": "manifests/members/output_state_constructor_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 41.3,
+ "timestamp": "2026-10-10T01:48:52"
+}

@@ -1,0 +1,398 @@
+diff --git a/output/campaign_walls_v1/wall_request.py b/output/campaign_walls_v1/wall_request.py
+index 063f65e..5851b17 100644
+--- a/output/campaign_walls_v1/wall_request.py
++++ b/output/campaign_walls_v1/wall_request.py
+@@ -1,24 +1,38 @@
+-"""WM-59 wall REQUEST rule: ONLINE feasibility from CAV report frames only.
+-
+-The wall pilot's planner side (owner rules, PLAN_DRAFT 1.2/1.3): a
+-feasible pair is >= 2 live CAVs on the upstream mainline ENTRY edge
+-1191554636 ONLY (OPTION A: the exit edge is never used for members), in
+-DIFFERENT lanes, with longitudinal span <= ``REQUEST_SPAN_CAP_M``
+-(75 m - the 2026-09-30 A2 revert to the wall_group.MAX_WALL_SPAN_M cap:
+-the tightening to the dispatcher's 6 m assembly tolerance existed only
+-because the old identical-pacing law could never close a wide gap, and
+-the v2.1-closure law assembles wide pairs), and - once the wall speed
+-is known - with road_left(front member) >= v_wall x 80 s.  Everything here is evaluated
+-from the SensorFrame-like report objects the dispatcher already consumes
+-(``traffic_shepherd.wall_group`` report-content-only contract) - never
+-from a physics snapshot, never from truth.
++"""WM-59 wall REQUEST rule v2.2 'merge-release': ONLINE feasibility from
++CAV report frames only.
++
++The wall pilot's planner side (owner spec OWNER_SPEC_V22_20261001.md,
++owner-confirmed 2026-10-01, BINDING): a feasible pair is >= 2 live CAVs
++on the upstream mainline ENTRY edge 1191554636 ONLY (OPTION A: the exit
++edge is never used for members), in DIFFERENT lanes, with longitudinal
++span <= ``REQUEST_SPAN_CAP_M`` (75 m - the 2026-09-30 A2 revert to the
++wall_group.MAX_WALL_SPAN_M cap), and - once the wall speed is known -
++with the LEAD member's distance to the MERGE START
++(``MERGE_START_S - s_road(lead)``) >= ``D_min``:
++
++    D_min = X + v_wall * (t_assemble + H_min)
++          = 0   + v_wall * (10 s        + 60 s) = 70 * v_wall   [m]
++
++(v2.2 law: the wall releases at the merge START, so the road past the
++merge is irrelevant to the request; the a-priori ``t_assemble`` is the
++J4 assembly-time MEDIAN 10 s (147-request J4 geometry, no outcomes) and
++``H_min`` is the smallest registered fixed-arm hold (60 s - one planner
++decision interval).  This SUPERSEDES the v2.1 A4 rule
++``road_left >= v_wall x 80 s`` and with it the road-end release the A4
++rule protected; it also supersedes the wallrt eee755f edge-aware
++``road_left_m`` repair, whose per-edge formula is subsumed by the
++cumulative edge-aware coordinate ``s_road``.)  Everything here is
++evaluated from the SensorFrame-like report objects the dispatcher
++already consumes (``traffic_shepherd.wall_group`` report-content-only
++contract) - never from a physics snapshot, never from truth.
+ 
+ Member choice: the feasible pair of MINIMAL span; ties broken by the
+-MOST road left (the front member's road_left), then lexicographic member
+-ids - one member per lane, ordered by lane index (the ``WallAssignment``
+-lane encoding).  road_left = (2644.2 - position on 1191554636) + 75.4 +
+-477.9, from the report position (``position_m``; the merge-distance
+-coordinate + 553.3 m when no lane position is reported).
++MOST merge distance (the lead member's), then lexicographic member ids
++- one member per lane, ordered by lane index (the ``WallAssignment``
++lane encoding).  ``s_road`` is the edge-aware cumulative road
++coordinate (entry ``position_m``; merge 2644.2 + position; exit 2719.6
+++ position; internal edges via the merge-distance coordinate), so the
++span and the D_min distance are correct across edges.
+ 
+ Wall speed: ``factor x the members' mean reported speed at request``,
+ floored at ``SPEED_FLOOR_MPS`` = 2.5 m/s (always strictly above the
+@@ -27,7 +41,9 @@ dispatcher's ``SAFE_SPEED_MIN_MPS`` = 2.0 safety floor).
+ Request timing: early = the first branch tick >= t0 with a feasible pair;
+ late = the first feasible tick >= t0 + 60.  If no feasible pair appears
+ within ``REQUEST_WINDOW_S`` (120 s) after the target time, the branch is
+-recorded ``not_feasible`` and continues native.
++recorded ``not_feasible`` and continues native (a pair that exists but
++fails D_min is refused at the proposal with the logged
++``dmin_unreachable`` reason - see ``dmin_refusal``).
+ 
+ SMOKE-ONLY wide-pair window: ``feasible_pairs``/``choose_pair`` accept an
+ optional ``min_span_m`` (the WIDE-PAIR smoke mode passes 40 m) so the
+@@ -43,12 +59,15 @@ from math import isfinite
+ from campaign_walls_v1.common import (
+     ARM_SPEED_FACTORS,
+     ARM_TIMINGS,
+-    DOWNSTREAM_ROAD_M,
++    ASSEMBLY_TIME_ASSUMED_S,
+     MEMBER_EDGES,
++    MERGE_RELEASE_POINT_S,
++    MERGE_START_S,
++    MIN_MEANINGFUL_HOLD_S,
++    MERGE_RELEASE_X_M,
++    NETWORK_END_S,
+     REQUEST_SPAN_CAP_M,
+     REQUEST_WINDOW_S,
+-    ROAD_LEFT_REQUEST_S,
+-    UPSTREAM_EDGE_LENGTH_M,
+     SPEED_FLOOR_MPS,
+     TIMING_OFFSET_S,
+     WallsPilotError,
+@@ -67,7 +86,11 @@ __all__ = [
+     "wall_speed_for",
+     "feasible_pairs",
+     "choose_pair",
++    "s_road",
+     "road_left_m",
++    "min_proposal_distance_m",
++    "hold_cap_s",
++    "dmin_refusal",
+     "build_wall_plan",
+     "FeasibilityError",
+ ]
+@@ -92,6 +115,17 @@ def edge_of_lane(lane_id) -> str | None:
+     return edge
+ 
+ 
++def s_road(frame):
++    """Edge-aware cumulative road coordinate of a report frame (single
++    source of truth: ``traffic_shepherd.wall_group.frame_s_road``, the
++    v2.2 coordinate the release point and every span comparison run on).
++    None when the frame carries neither a mainline edge position nor a
++    finite merge-distance coordinate."""
++    from traffic_shepherd.wall_group import frame_s_road  # noqa: PLC0415
++
++    return frame_s_road(frame)
++
++
+ def target_and_deadline(t0_s: float, timing: str) -> tuple[float, float]:
+     """(target_time_s, deadline_s) for the arm's request timing.
+ 
+@@ -116,44 +150,60 @@ def wall_speed_for(factor: float, member_speeds: dict) -> float:
+     return round(max(SPEED_FLOOR_MPS, factor * mean), 6)
+ 
+ 
+-def road_left_m(frame) -> float | None:
+-    """Road ahead of a member on the entry edge, from its REPORT frame:
+-    (2644.2 - position on 1191554636) + 75.4 + 477.9.  Uses the reported
+-    lane position; without one, the merge-distance coordinate (the entry
+-    edge ends at the merge) + the downstream road.  None when neither is
+-    finite (never a candidate)."""
+-    position = getattr(frame, "position_m", None)
+-    if position is not None and isfinite(float(position)):
+-        return round(UPSTREAM_EDGE_LENGTH_M - float(position)
+-                     + DOWNSTREAM_ROAD_M, 6)
+-    distance = getattr(frame, "distance_to_merge_m", None)
+-    if distance is not None and isfinite(float(distance)):
+-        return round(float(distance) + DOWNSTREAM_ROAD_M, 6)
+-    return None
+-
++def min_proposal_distance_m(wall_speed_mps: float) -> float:
++    """The v2.2 proposer minimum ``D_min`` (owner binding):
+ 
+-def feasible_pairs(frames: dict, factor: float | None = None,
+-                   min_span_m: float | None = None) -> list[dict]:
+-    """All feasible pairs from the report frames, best first.
++        D_min = X + v_wall * t_assemble + v_wall * H_min
+ 
+-    A pair: two live CAVs whose frames place them on the upstream entry
+-    edge 1191554636, in DIFFERENT lanes, with |s_a - s_b| <=
+-    REQUEST_SPAN_CAP_M (75 m; the 2026-09-30 A2 revert of the 6 m
+-    tightening - ``wall_group.downstream_position_m``'s s_m =
+-    -distance_to_merge_m coordinate).  With a wall-speed ``factor``
+-    the pair must also satisfy road_left(front member) >= v_wall x 80 s
+-    (v_wall = factor x the members' mean reported speed, floored).
+-    ``min_span_m`` (SMOKE-ONLY wide-pair window) additionally requires
+-    span >= min_span_m, so the request selects a WIDE pair instead of
+-    the minimal-span one.  Frames without a lane id on the entry edge or
+-    without a finite distance_to_merge_m / road position are never
+-    candidates (conservative: the request must be provably feasible).
+-    Order: minimal span, then most road left, then member ids.
++    with the owner override X = ``MERGE_RELEASE_X_M`` = 0.0 m, the
++    a-priori J4 assembly time ``ASSEMBLY_TIME_ASSUMED_S`` = 10 s (the
++    J4 median, mechanics-only, no outcome) and the minimal meaningful
++    hold ``MIN_MEANINGFUL_HOLD_S`` = 60 s (one 60 s planner decision
++    interval = the smallest registered fixed-arm draw).  A request whose
++    LEAD member is closer to the merge start than D_min cannot assemble
++    AND hold meaningfully before the merge -> refused at the proposal.
+     """
+-    from traffic_shepherd.wall_group import (  # noqa: PLC0415 - frozen lib
+-        downstream_position_m,
+-    )
++    speed = float(wall_speed_mps)
++    if not isfinite(speed) or speed <= 0:
++        raise FeasibilityError("wall_speed_mps must be finite and positive")
++    return round(float(MERGE_RELEASE_X_M)
++                 + speed * (ASSEMBLY_TIME_ASSUMED_S + MIN_MEANINGFUL_HOLD_S),
++                 6)
++
++
++def hold_cap_s(hold_s: float, lead_s_road_m: float,
++               wall_speed_mps: float) -> float:
++    """The v2.2 hold cap (owner binding: the hold ALWAYS ends at the
++    merge start at the latest): the registered draw ``hold_s`` capped by
++    the time the lead member needs to reach the release point at the
++    wall speed, ``(MERGE_RELEASE_POINT_S - s_road(lead)) / v_wall``.
++    Registered draws stay recorded as drawn; this is the a-priori
++    effective hold used for the cap logging (the session's
++    ``merge_release`` enforces the same cap on the live positions)."""
++    speed = float(wall_speed_mps)
++    if not isfinite(speed) or speed <= 0:
++        raise FeasibilityError("wall_speed_mps must be finite and positive")
++    to_release = max(0.0, float(MERGE_RELEASE_POINT_S)
++                     - float(lead_s_road_m))
++    return round(min(float(hold_s), to_release / speed), 6)
++
+ 
++def road_left_m(frame):
++    """Road ahead of a member up to the NETWORK END, edge-aware (v2.2):
++    ``NETWORK_END_S - s_road(frame)``.  Supersedes the v2.1 entry-edge
++    assumption AND the wallrt eee755f per-edge repair (both subsumed by
++    ``s_road``).  Kept for telemetry comparability with the J4 rows; the
++    v2.2 request rule gates on the LEAD member's distance to the MERGE
++    START, not on road_left.  None when the frame has no coordinate."""
++    s = s_road(frame)
++    if s is None:
++        return None
++    return round(float(NETWORK_END_S) - float(s), 6)
++
++
++def _candidates(frames: dict) -> dict:
++    """Entry-edge candidates keyed by (edge, lane index), from report
++    frames only (edge from the lane id, coordinate = s_road)."""
+     by_edge_lane: dict[tuple, list[dict]] = {}
+     for vehicle_id, frame in frames.items():
+         if frame is None:
+@@ -161,22 +211,28 @@ def feasible_pairs(frames: dict, factor: float | None = None,
+         edge = edge_of_lane(getattr(frame, "lane_id", None))
+         if edge is None or edge not in MEMBER_EDGES:
+             continue
+-        s_m = downstream_position_m(frame)
+-        left = road_left_m(frame)
+-        if s_m is None or left is None:
++        s = s_road(frame)
++        if s is None:
+             continue
+         lane = getattr(frame, "lane_index", None)
+         if lane is None:
+             continue
+         by_edge_lane.setdefault((edge, int(lane)), []).append({
+             "vehicle_id": str(vehicle_id),
+-            "s_m": float(s_m),
+-            "distance_to_merge_m": -float(s_m),
++            "s_road_m": float(s),
+             "speed_mps": float(getattr(frame, "speed_mps", 0.0) or 0.0),
+             "lane_index": int(lane),
+-            "road_left_m": float(left),
+         })
++    return by_edge_lane
++
++
++def _pairs_from_candidates(by_edge_lane: dict,
++                           factor: float | None) -> tuple[list[dict], dict]:
++    """All span-feasible pairs (best first) with their D_min verdict;
++    returns (pairs, refusal) where ``refusal`` describes the best pair
++    that failed ONLY the D_min gate (empty dict when none)."""
+     pairs: list[dict] = []
++    best_refusal: dict = {}
+     edges = sorted({edge for (edge, _lane) in by_edge_lane})
+     for edge in edges:
+         lane_ids = sorted(lane for (e, lane) in by_edge_lane if e == edge)
+@@ -186,40 +242,109 @@ def feasible_pairs(frames: dict, factor: float | None = None,
+             for lane_b in lane_ids[index_a + 1:]:
+                 for a in by_edge_lane[(edge, lane_a)]:
+                     for b in by_edge_lane[(edge, lane_b)]:
+-                        span = abs(a["s_m"] - b["s_m"])
++                        span = abs(a["s_road_m"] - b["s_road_m"])
+                         if span > float(REQUEST_SPAN_CAP_M) + 1e-9:
+                             continue
+-                        if (min_span_m is not None
+-                                and span < float(min_span_m) - 1e-9):
+-                            continue
+                         members = sorted([a, b], key=lambda m: m["lane_index"])
+-                        front_left = min(a["road_left_m"], b["road_left_m"])
++                        lead_s = max(a["s_road_m"], b["s_road_m"])
++                        lead_distance = float(MERGE_START_S) - lead_s
+                         speeds = {m["vehicle_id"]: m["speed_mps"]
+                                   for m in members}
+-                        if factor is not None and front_left < (
+-                                wall_speed_for(factor, speeds)
+-                                * ROAD_LEFT_REQUEST_S):
+-                            continue
+-                        pairs.append({
++                        speed = (wall_speed_for(factor, speeds)
++                                 if factor is not None else None)
++                        dmin = (min_proposal_distance_m(speed)
++                                if speed is not None else None)
++                        pair = {
+                             "edge": edge,
+                             "members": tuple(m["vehicle_id"] for m in members),
+                             "lanes": [m["lane_index"] for m in members],
+                             "span_m": round(span, 6),
+                             "mean_distance_to_merge_m": round(
+-                                (a["distance_to_merge_m"]
+-                                 + b["distance_to_merge_m"]) / 2.0, 6),
+-                            "road_left_m": front_left,
++                                float(MERGE_START_S)
++                                - (a["s_road_m"] + b["s_road_m"]) / 2.0, 6),
++                            "road_left_m": round(float(NETWORK_END_S)
++                                                 - lead_s, 6),
++                            "lead_s_road_m": round(lead_s, 6),
++                            "lead_distance_to_merge_m": round(lead_distance,
++                                                              6),
+                             "member_speeds": speeds,
+-                        })
+-    pairs.sort(key=lambda p: (p["span_m"], -p["road_left_m"], p["members"]))
++                            "wall_speed_mps": speed,
++                            "dmin_m": dmin,
++                        }
++                        if (factor is not None
++                                and lead_distance < float(dmin) - 1e-9):
++                            # v2.2 D_min refusal: assembly + a minimal
++                            # meaningful hold cannot complete before the
++                            # merge start -> refused at the proposal.
++                            if (not best_refusal
++                                    or lead_distance > best_refusal[
++                                        "lead_distance_to_merge_m"]):
++                                best_refusal = {
++                                    "reason": "dmin_unreachable",
++                                    "edge": edge,
++                                    "members": list(pair["members"]),
++                                    "span_m": pair["span_m"],
++                                    "lead_s_road_m": pair["lead_s_road_m"],
++                                    "lead_distance_to_merge_m":
++                                        pair["lead_distance_to_merge_m"],
++                                    "dmin_m": dmin,
++                                    "wall_speed_mps": speed,
++                                }
++                            continue
++                        pairs.append(pair)
++    pairs.sort(key=lambda p: (p["span_m"], -p["lead_distance_to_merge_m"],
++                              p["members"]))
++    return pairs, best_refusal
++
++
++def feasible_pairs(frames: dict, factor: float | None = None,
++                   min_span_m: float | None = None) -> list[dict]:
++    """All feasible pairs from the report frames, best first.
++
++    A pair: two live CAVs whose frames place them on the upstream entry
++    edge 1191554636, in DIFFERENT lanes, with |s_road_a - s_road_b| <=
++    REQUEST_SPAN_CAP_M (75 m; the 2026-09-30 A2 revert of the 6 m
++    tightening), and - with a wall-speed ``factor`` - the v2.2 owner
++    rule: the LEAD member's distance to the merge start
++    (MERGE_START_S - s_road(lead)) >= D_min = v_wall x
++    (ASSEMBLY_TIME_ASSUMED_S + MIN_MEANINGFUL_HOLD_S)  (assembly + a
++    minimal meaningful hold must fit before the merge; supersedes the
++    v2.1 A4 road-left rule).  ``min_span_m`` (SMOKE-ONLY wide-pair
++    window) additionally requires span >= min_span_m, so the request
++    selects a WIDE pair instead of the minimal-span one.  Frames
++    without a lane id on the entry edge or without a finite s_road
++    coordinate are never candidates (conservative: the request must be
++    provably feasible).  Order: minimal span, then most lead merge
++    distance, then member ids.
++    """
++    pairs, _refusal = _pairs_from_candidates(_candidates(frames), factor)
++    if min_span_m is not None:
++        pairs = [p for p in pairs
++                 if p["span_m"] >= float(min_span_m) - 1e-9]
+     return pairs
+ 
+ 
++def dmin_refusal(frames: dict, factor: float) -> dict | None:
++    """The v2.2 proposal refusal reason, or None.
++
++    When lane-distinct pairs within the span cap exist RIGHT NOW but
++    every one of them fails the D_min gate (the wall could not assemble
++    AND hold meaningfully before the merge start), returns the best
++    such pair's refusal record (``reason="dmin_unreachable"`` with the
++    lead merge distance, D_min and the wall speed) for the driver's
++    logged refusal.  None when there is no span-feasible pair at all
++    (the plain request-window ``not_feasible`` applies)."""
++    if factor is None:
++        return None
++    _pairs, refusal = _pairs_from_candidates(_candidates(frames), factor)
++    return refusal or None
++
++
+ def choose_pair(frames: dict, factor: float | None = None,
+                 min_span_m: float | None = None) -> dict | None:
+-    """The minimal-span feasible pair (ties: most road left), or None.
+-
+-    ``min_span_m`` restricts the search to WIDE pairs (smoke-only)."""
++    """The minimal-span feasible pair (ties: most lead merge distance),
++    or None.  ``min_span_m`` restricts the search to WIDE pairs
++    (smoke-only)."""
+     pairs = feasible_pairs(frames, factor, min_span_m=min_span_m)
+     return pairs[0] if pairs else None
+ 
+@@ -230,10 +355,13 @@ def build_wall_plan(*, run_name: str, cav_ids, pair: dict, factor: float,
+     """The strict-roster dispatcher plan that requests the wall.
+ 
+     Members are assigned ``wall-v2`` and carry the single ``WallAssignment``
+-    (phase ``assemble``, hold_s drawn from the branch seed); every other
+-    roster CAV is named ``native`` (non-members NATIVE - the owner's
+-    pairing decision).  ``plan_factory`` defaults to the frozen
+-    ``AssignmentPlan`` (injectable in tests).
++    (phase ``assemble``, hold_s drawn from the branch seed - recorded AS
++    DRAWN; the v2.2 merge-start cap is enforced at run time by the wall
++    session's ``merge_release`` and logged by the driver, never
++    pre-shrunk here); every other roster CAV is named ``native``
++    (non-members NATIVE - the owner's pairing decision).
++    ``plan_factory`` defaults to the frozen ``AssignmentPlan``
++    (injectable in tests).
+     """
+     members = tuple(str(v) for v in pair["members"])
+     if len(members) < 2 or len(set(members)) != len(members):

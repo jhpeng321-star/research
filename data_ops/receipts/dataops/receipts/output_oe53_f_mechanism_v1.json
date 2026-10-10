@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe53_f_mechanism_v1",
+ "name": "oe53_f_mechanism_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe53_f_mechanism_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe53_f_mechanism_v1/oe53_f_mechanism_v1.tar.zst",
+ "bytes": 291740,
+ "files": 11,
+ "archive_bytes": 63688,
+ "archive_md5": "a208cf74ec513a46e9ef6e927c25eb30",
+ "member_manifest": "manifests/members/output_oe53_f_mechanism_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.7,
+ "timestamp": "2026-10-10T01:43:39"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe63_w4_adversarial_v1",
+ "name": "oe63_w4_adversarial_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe63_w4_adversarial_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe63_w4_adversarial_v1/oe63_w4_adversarial_v1.tar.zst",
+ "bytes": 88724,
+ "files": 7,
+ "archive_bytes": 23705,
+ "archive_md5": "e128db5dddab500154e09472b4a84d47",
+ "member_manifest": "manifests/members/output_oe63_w4_adversarial_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.7,
+ "timestamp": "2026-10-10T01:36:58"
+}

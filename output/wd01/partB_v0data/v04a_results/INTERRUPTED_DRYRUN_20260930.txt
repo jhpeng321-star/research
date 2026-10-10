@@ -1,0 +1,7 @@
+v0.4a dry-run INTERRUPTED 2026-09-30 17:2x local (owner stop: laptop taken out).
+- Resume task 2c5182f4 cancelled by main/owner authorization; dry-run PID 6816
+  (python -m partB_v0.final_eval_v04a --dry-run, started 17:03 local) stopped cleanly (own PID only).
+- NO CAL read started: 0 CAL_READ_ONCE_v04a.json in wd01v04a, wd01v04b and
+  E:/research-dense/output/partB_results (checked after the stop).
+- Fits (strict, detector, strict_noaux) kept, verified (1ff7da3).
+- On resume: re-run the dry-run, then the ONE CAL read, report, ledger, pytest (brief 2c5182f4).

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk1_failed_branches_attempt1.tar.gz",
+ "name": "campaign_stage1_chunk1_failed_branches_attempt1.tar.gz",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk1_failed_branches_attempt1.tar.gz",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk1_failed_branches_attempt1.tar.gz.tar.zst",
+ "bytes": 8576972,
+ "files": 1,
+ "archive_bytes": 8553856,
+ "archive_md5": "cfcd0501c525fa96468a5f2683023423",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk1_failed_branches_attempt1.tar.gz.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 44.3,
+ "timestamp": "2026-10-10T04:01:54"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe63_w3_interface_v1",
+ "name": "oe63_w3_interface_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe63_w3_interface_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe63_w3_interface_v1/oe63_w3_interface_v1.tar.zst",
+ "bytes": 42813,
+ "files": 3,
+ "archive_bytes": 14143,
+ "archive_md5": "b8bcdf2a0f77c16131fdbc3929f3efe6",
+ "member_manifest": "manifests/members/output_oe63_w3_interface_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 43.9,
+ "timestamp": "2026-10-10T01:32:51"
+}

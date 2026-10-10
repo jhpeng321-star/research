@@ -1,0 +1,78 @@
+{
+  "name": "pl01",
+  "path": "E:\\rd-wt\\pl01",
+  "class": "worktree",
+  "manual": false,
+  "branch": "zcode/pl01",
+  "headBefore": "4c4fb2ffb748063c4161b05674252a1b7176827a",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/pl01",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl01.tar.txt",
+  "uploadCount": 1253,
+  "uploadBytes": 28348089,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl01.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 d10acd5b3c35d0148e6abad50943a627 local d10acd5b3c35d0148e6abad50943a627; size 1477910/1477910; manifest md5 match size match; members=1253 (tar -t 1253, sha256 1253); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl01.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 3,
+  "skippedSensitiveSample": [
+    "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md",
+    "tests/planner/test_holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:52:34.261294+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "4c4fb2ffb748063c4161b05674252a1b7176827a",
+  "skippedSensitive": [
+    "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md",
+    "tests/planner/test_holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/pl01/pl01.tar.zst",
+    "name": "pl01.tar.zst",
+    "size": 1477910,
+    "md5": "d10acd5b3c35d0148e6abad50943a627",
+    "sha256": "5ada242eac08410319281e2588e497d44bcd016cab099a2759296cb29a928ae1",
+    "manifest_remote": "gdrive:research-archive/worktrees/pl01/pl01.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\pl01.manifest.json",
+    "manifest_size": 229296,
+    "manifest_md5": "d7af144c37bbe5cc3beb445e6dd1313d",
+    "member_count": 1253,
+    "member_bytes": 28348089,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 12.0,
+    "verify_seconds": 0.7,
+    "upload_seconds": 36.0,
+    "upload_MBps": 0.04,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 1253,
+  "memberBytes": 28348089,
+  "junctionsFound": []
+}

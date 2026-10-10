@@ -1,0 +1,46 @@
+[5/49 worlds] 265s
+[10/49 worlds] 455s
+[15/49 worlds] 828s
+[20/49 worlds] 1175s
+[25/49 worlds] 1582s
+[30/49 worlds] 1992s
+[35/49 worlds] 2712s
+[40/49 worlds] 3407s
+[45/49 worlds] 4286s
+
+=== E4 per-controller match vs logged commands (TRAIN) ===
+  native: 1139689/1139689 matched (1.000000)  |diff| m/s: max 0 p50 0 p99 0
+ damping: 1164578/1164578 matched (1.000000)  |diff| m/s: max 9.53674e-07 p50 8.2e-08 p99 3.58e-07
+      pi: 1180856/1180856 matched (1.000000)  |diff| m/s: max 1.73472e-18 p50 0 p99 0
+
+--- per arm (matched/rows (rate)) ---
+     native  native: 159447/159447 (1.000000)  damping: 164206/164206 (1.000000)  pi: 159297/159297 (1.000000)
+         pi  native: 163112/163112 (1.000000)  damping: 170477/170477 (1.000000)  pi: 174469/174469 (1.000000)
+     fixed1  native: 184945/184945 (1.000000)  damping: 171627/171627 (1.000000)  pi: 188560/188560 (1.000000)
+     fixed2  native: 170654/170654 (1.000000)  damping: 188095/188095 (1.000000)  pi: 187834/187834 (1.000000)
+ switching1  native: 150734/150734 (1.000000)  damping: 150954/150954 (1.000000)  pi: 150174/150174 (1.000000)
+ switching2  native: 142774/142774 (1.000000)  damping: 146924/146924 (1.000000)  pi: 148031/148031 (1.000000)
+ switching3  native: 168023/168023 (1.000000)  damping: 172295/172295 (1.000000)  pi: 172491/172491 (1.000000)
+
+--- mismatch causes ---
+  sensing_reconstruction: 0
+        controller_logic: 0
+      fallback_ownership: 0
+                  timing: 0
+             unexplained: 0
+
+--- anomalies ---
+
+--- PI on logged evidence frames (arm 2) ---
+rows 927273  mismatches 0  clock_resets 0
+
+--- frame sanity (reconstructed vs logged evidence) ---
+     speed: max 3.46945e-18  mean 3.74e-24
+   allowed: max 0  mean 0
+ front_cov: max 0  mean 0
+  rear_cov: max 0  mean 0
+ front_gap: max 0  mean 0
+ front_rel: max 1.73472e-18  mean 5.88e-24
+front presence flips: 0 of 927273
+
+wrote D:\rd-wt\wd01j\output\wd01\partA_ctrl\results\e4_chunk1_train_validation.json

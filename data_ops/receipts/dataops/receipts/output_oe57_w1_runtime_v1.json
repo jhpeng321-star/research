@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe57_w1_runtime_v1",
+ "name": "oe57_w1_runtime_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe57_w1_runtime_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe57_w1_runtime_v1/oe57_w1_runtime_v1.tar.zst",
+ "bytes": 113704,
+ "files": 9,
+ "archive_bytes": 32808,
+ "archive_md5": "dc772f5d3b2fe4084f4ebc4aaf448d6d",
+ "member_manifest": "manifests/members/output_oe57_w1_runtime_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 47.4,
+ "timestamp": "2026-10-10T01:38:51"
+}

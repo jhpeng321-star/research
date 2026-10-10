@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe60_w6_review_v1",
+ "name": "oe60_w6_review_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe60_w6_review_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe60_w6_review_v1/oe60_w6_review_v1.tar.zst",
+ "bytes": 1947288,
+ "files": 26,
+ "archive_bytes": 51659,
+ "archive_md5": "4a6b4ce70fe4c7c73646a25f1a8dc751",
+ "member_manifest": "manifests/members/output_oe60_w6_review_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 64.0,
+ "timestamp": "2026-10-10T01:46:50"
+}

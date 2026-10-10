@@ -1,0 +1,127 @@
+{
+ "experiment_id": "WD-01",
+ "part": "partA-ctrl-A2-step1-controller-emulators",
+ "status": "complete",
+ "generated_utc": "2026-09-26T21:20:45.798215+00:00",
+ "zero_simulation": true,
+ "read_only_inputs": {
+  "reference_code": "D:/research-dense/traffic_shepherd + output.controller_verification_*",
+  "data": "D:/research-dense/runs/campaign_stage1_chunk1 (TRAIN worlds only)",
+  "holdout_accessed": false
+ },
+ "emulators": {
+  "damping": {
+   "model_sha256": "762fde0763c693c0e88f41b98b22fc0a11135a312b78c4c567e6211a3035ccee",
+   "torch_vs_ort_max_abs_accel_diff": 9.5367431640625e-07,
+   "tolerance": 1e-05,
+   "n_random_rows": 100000,
+   "decide_reason_mismatches": 0
+  },
+  "pi_external_u": {
+   "registered_u_mps": 31.29,
+   "parameters": "PISaturationParameters defaults (7/30/1/2 m)",
+   "arm2_logged_rows": 927273,
+   "arm2_mismatches": 0
+  },
+  "wall_v2": "pacing law clip((v_target-v)/dt, -3, 1.5); synthetic only (no walls in chunk 1)"
+ },
+ "e4_validation": {
+  "schema": "wd01_partA_ctrl_e4/1",
+  "split": "TRAIN",
+  "n_worlds": 49,
+  "branches_per_world": [
+   "native",
+   "pi",
+   "fixed1",
+   "fixed2",
+   "switching1",
+   "switching2",
+   "switching3"
+  ],
+  "match_tol_mps": 0.01,
+  "totals": {
+   "native": {
+    "rows": 1139689,
+    "matched": 1139689,
+    "rate": 1.0,
+    "error_max_mps": 0.0
+   },
+   "damping": {
+    "rows": 1164578,
+    "matched": 1164578,
+    "rate": 1.0,
+    "error_max_mps": 9.5367431640625e-07
+   },
+   "pi": {
+    "rows": 1180856,
+    "matched": 1180856,
+    "rate": 1.0,
+    "error_max_mps": 1.734723475976807e-18
+   }
+  },
+  "mismatch_causes": {
+   "sensing_reconstruction": 0,
+   "controller_logic": 0,
+   "fallback_ownership": 0,
+   "timing": 0,
+   "unexplained": 0
+  },
+  "arm2_pi_logged": {
+   "rows": 927273,
+   "mismatches": 0,
+   "examples": [],
+   "clock_resets": 0
+  },
+  "frame_sanity": {
+   "n": 927273,
+   "speed": {
+    "max": 3.469446951953614e-18,
+    "mean": 3.74155933792272e-24
+   },
+   "allowed": {
+    "max": 0.0,
+    "mean": 0.0
+   },
+   "front_cov": {
+    "max": 0.0,
+    "mean": 0.0
+   },
+   "rear_cov": {
+    "max": 0.0,
+    "mean": 0.0
+   },
+   "front_gap": {
+    "max": 0.0,
+    "mean": 0.0
+   },
+   "front_rel": {
+    "max": 1.734723475976807e-18,
+    "mean": 5.875417397831771e-24
+   },
+   "front_presence_flip": 0
+  },
+  "speed_mode": "all chunk-1 CAV speedMode 31 (pre-fix); irrelevant to commanded-speed emulation"
+ },
+ "tests": "18 passed in 3.12s",
+ "artifacts": {
+  "onnx2torch.py": "782e05d70a73d0a2acf6700b57b9b3e8047e2c48cb5b6cf2cfc69d8f92a810c3",
+  "emulators.py": "1c76e36eb6792663a62e65ebdc40ed494e712b82503720212af152eb5ca6db8c",
+  "refload.py": "6be12d850419cfb4a86aa4c5e82b1c63c6ddc4896c43be0deb5d3920fd7a5348",
+  "gen_e1_random.py": "45e466fa47cb9785568fcb10d02e65fe46d35b53ba6801ed6099173fada669a8",
+  "validate_chunk1.py": "1eca55267b89e69d5bc1724ef2c2b852d1a88b78cafe7d63162dbeb8e63efb4c",
+  "make_report.py": "4a611c8210f05fa917f310fc33255bbba92fd0f6ef947341e4a89b1cf1238a7e",
+  "tests/conftest.py": "a13443d772ac9fc6df6e94778c5dba4ef45c1f97820007a17846aadb282eabe8",
+  "tests/fakeapi.py": "0a4a36bf466e577100c6fe681823cea69ae8711cb0cf1f44aa4fd38acf9364a8",
+  "tests/reference_stack.py": "69d0c850c4855ae40b9c633b834bae76ee0d522d220a310cd4bbddef9dc1208e",
+  "tests/test_e1_damping.py": "9219296bfd73c806d95c901fd1e0fea539669a4ce98dacf971c65ff213cd030e",
+  "tests/test_e2_pi.py": "dd88263fe3e7ae3855b4ce5877e3f3355b41f5fff010be94b626acec9f8c8566",
+  "tests/test_e3_wall.py": "c483c18abc21a2577ab591ad74e2feb34dff8cec1fd3d80da749a34d30c17e56",
+  "tests/test_e5_api.py": "db6551baebbbb722107b400c5c9c1fcca58b117691a85cdda23b6f25e40564e8",
+  "results/e1_random_equivalence.json": "6c08a6961600f80e84b90b9938561aec2201a3df7109bfdc7ea9e27b1f2734ec",
+  "results/e4_chunk1_train_validation.json": "9784780491574146f296f39720b83e1811e788b9acc6b380c1a10c0de7bc8e7b",
+  "results/lane_table.json": "0c3ab9995449cd2c866948226e5131547494a29f722559f6fc1325c0d076faa4",
+  "results/pytest_output.txt": "dbc7128ffd7ee5b1cdfadf108bd5b85e26777523119cdd9c028f74068f2898ae",
+  "results/e4_stdout.txt": "60f0788b1a3da6fc2e1e45ba153d357f752396fd054d87afc885c04fc2c86d8c"
+ },
+ "report": "REPORT_CTRL.md"
+}

@@ -1,0 +1,81 @@
+{
+  "entrant_terms": {},
+  "mean_step_seconds": 22.164079199999833,
+  "over_6gb": true,
+  "peak_rss_mb": 7056.6,
+  "rc": 0,
+  "step_seconds": [
+    27.399703099999897,
+    16.92845529999977
+  ],
+  "terms": {
+    "epoch": {
+      "finite": true,
+      "first": 1,
+      "last": 1
+    },
+    "gate_g0": {
+      "finite": true,
+      "first": 0.0,
+      "last": 0.0
+    },
+    "gate_g_last": {
+      "finite": true,
+      "first": 0.12759162485599518,
+      "last": 0.12771880626678467
+    },
+    "lane": {
+      "finite": true,
+      "first": 0.09014461189508438,
+      "last": 0.1742706447839737
+    },
+    "loss": {
+      "finite": true,
+      "first": 12.74974536895752,
+      "last": 15.679194450378418
+    },
+    "position": {
+      "finite": true,
+      "first": 12.014901161193848,
+      "last": 14.714858055114746
+    },
+    "seconds": {
+      "finite": true,
+      "first": 27.399703099999897,
+      "last": 16.92845529999977
+    },
+    "speed": {
+      "finite": true,
+      "first": 0.6447000503540039,
+      "last": 0.790065348148346
+    },
+    "stage_s": {
+      "finite": true,
+      "first": 10.0,
+      "last": 10.0
+    },
+    "step": {
+      "finite": true,
+      "first": 1,
+      "last": 2
+    },
+    "unroll_steps": {
+      "finite": true,
+      "first": 20,
+      "last": 20
+    },
+    "valid_hdv_slots_t0": {
+      "finite": true,
+      "first": 400,
+      "last": 273
+    },
+    "valid_targets": {
+      "finite": true,
+      "first": 7809,
+      "last": 5256
+    }
+  },
+  "updates": 2,
+  "valid_targets_last": 5256,
+  "wall_seconds": 75.51
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/server_pkg_chunk4",
+ "name": "server_pkg_chunk4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\server_pkg_chunk4",
+ "drive": "gdrive:research-archive/repo-evidence/output/server_pkg_chunk4/server_pkg_chunk4.tar.zst",
+ "bytes": 142054183,
+ "files": 2406,
+ "archive_bytes": 37195542,
+ "archive_md5": "589d4d947f2b24f1905ac5387bd76406",
+ "member_manifest": "manifests/members/output_server_pkg_chunk4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 189.2,
+ "timestamp": "2026-10-10T02:51:06"
+}

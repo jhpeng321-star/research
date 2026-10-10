@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="20" time="1.940" timestamp="2026-10-09T03:02:52.755636+08:00" hostname="Jinghan"><testcase classname="tests.test_experiment_history_ledger" name="test_ledger_loads_and_schema_is_versioned" time="0.024" /><testcase classname="tests.test_experiment_history_ledger" name="test_coverage_metadata_and_evidence_vocabulary" time="0.020" /><testcase classname="tests.test_experiment_history_ledger" name="test_all_referenced_paths_exist" time="0.291"><failure message="AssertionError: [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]&#10;assert not [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]">def test_all_referenced_paths_exist():
+        d = _load()
+        tool = _tool()
+    
+        def present(p):
+            return Path(tool.resolve(p)).exists() or tool.recorded_deletion(p)
+    
+        missing = []
+        for e in d['entries']:
+            for p in e.get('paths', []) or []:
+                if not present(p.split(' (')[0]):
+                    missing.append((e['id'], p))
+            st = e.get('structured') or {}
+            for p in st.get('artifacts', []) or []:
+                if not present(p):
+                    missing.append((e['id'], p))
+            ns = st.get('numbers_source')
+            if ns and not present(ns):
+                missing.append((e['id'], ns))
+&gt;       assert not missing, missing[:10]
+E       AssertionError: [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]
+E       assert not [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]
+
+tests\test_experiment_history_ledger.py:73: AssertionError</failure></testcase><testcase classname="tests.test_experiment_history_ledger" name="test_sign_arithmetic_on_structured_outcomes" time="0.023" /><testcase classname="tests.test_experiment_history_ledger" name="test_corrected_upward_arm_signs_and_ttc_only_failure" time="0.018" /><testcase classname="tests.test_experiment_history_ledger" name="test_reused_treatment_runs_carry_zero_new_simulation" time="0.019" /><testcase classname="tests.test_experiment_history_ledger" name="test_original_execution_cost_retained_and_alias_free" time="0.017" /><testcase classname="tests.test_experiment_history_ledger" name="test_campaign_component_and_run_charges_reconcile" time="0.018" /><testcase classname="tests.test_experiment_history_ledger" name="test_entry_and_continuation_frames_are_distinct" time="0.018" /><testcase classname="tests.test_experiment_history_ledger" name="test_continuation_evidence_appears_in_speed_queries" time="0.022" /><testcase classname="tests.test_experiment_history_ledger" name="test_coverage_warnings_for_relevant_pending_evidence" time="0.019" /><testcase classname="tests.test_experiment_history_ledger" name="test_validator_reports_no_hard_errors" time="0.315"><failure message="AssertionError: ['missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json', 'missing path (CUR-02/entries.../BUILD_REPORT.md', 'missing path (CUR-03/entries.paths): output/escalation_test_build/observer_verification.json', ...]&#10;assert ['missing pat...on.json', ...] == []&#10;  &#10;  Left contains 1560 more items, first extra item: 'missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json'&#10;  Use -v to get more diff">def test_validator_reports_no_hard_errors():
+        tool = _tool()
+        errors, warnings, _, unknowns, _, _ = tool.validate(_load())
+&gt;       assert errors == [], errors[:10]
+E       AssertionError: ['missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json', 'missing path (CUR-02/entries.../BUILD_REPORT.md', 'missing path (CUR-03/entries.paths): output/escalation_test_build/observer_verification.json', ...]
+E       assert ['missing pat...on.json', ...] == []
+E         
+E         Left contains 1560 more items, first extra item: 'missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json'
+E         Use -v to get more diff
+
+tests\test_experiment_history_ledger.py:183: AssertionError</failure></testcase><testcase classname="tests.test_experiment_history_ledger" name="test_pending_update_lifecycle" time="0.019" /><testcase classname="tests.test_experiment_history_ledger" name="test_ttc_diagnosis_recorded_with_prohibitions" time="0.020" /><testcase classname="tests.test_experiment_history_ledger" name="test_artifact_review_registry_assigns_statuses_from_files" time="0.028" /><testcase classname="tests.test_experiment_history_ledger" name="test_superseded_reports_marked_in_navigation" time="0.003" /><testcase classname="tests.test_experiment_history_ledger" name="test_generated_summary_has_units_and_comparators" time="0.001" /><testcase classname="tests.test_experiment_history_ledger" name="test_generated_summary_is_current" time="0.026" /><testcase classname="tests.test_experiment_history_ledger" name="test_multi_comparison_reuse_is_informational_not_error" time="0.270" /><testcase classname="tests.test_experiment_history_ledger" name="test_double_charging_remains_an_error" time="0.307" /></testsuite></testsuites>

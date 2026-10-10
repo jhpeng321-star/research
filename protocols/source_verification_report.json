@@ -1,0 +1,609 @@
+{
+ "generated_at": "2026-10-10T06:49:37+00:00",
+ "scope": "registered allowed sources only (exposed development artifacts); sealed outcomes never traversed",
+ "convention": "cost difference = treatment - reference; negative = improvement",
+ "status_definitions": {
+  "complete": "all expected checks performed, zero mismatches",
+  "partial": "all performed checks passed; some checks intentionally excluded (reason recorded)",
+  "failure": "any mismatch, missing required source field, or non-finite value",
+  "deleted": "source recorded as permanently deleted (protocols/deleted_evidence.json); not re-verifiable"
+ },
+ "sources": [
+  {
+   "source_id": "SRC-NAT",
+   "path": "output/escalation_execution/natural_final_decision.json",
+   "sha256_registered": "d83027cc668a72bb4c05cbdd1b885bfd96f11712cd2d8bfb444bc5f0a60e227a",
+   "entries": [
+    "CUR-09"
+   ],
+   "field_map": "cases[].case_id -> effect/benefit",
+   "expected_checks": 240,
+   "performed_checks": 240,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "d83027cc668a72bb4c05cbdd1b885bfd96f11712cd2d8bfb444bc5f0a60e227a",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "SRC-CHAR",
+   "path": "output/escalation_execution/characterization.json",
+   "sha256_registered": "e51dac8a494cb5ecab9ba0d301b5233cb890321616b516ee275462e3379d4de3",
+   "entries": [
+    "CUR-04"
+   ],
+   "field_map": "paired_effects[] seed/mainline_vph -> effect",
+   "expected_checks": 100,
+   "performed_checks": 100,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "e51dac8a494cb5ecab9ba0d301b5233cb890321616b516ee275462e3379d4de3",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "SRC-DISS",
+   "path": "runs/active/report_dissolution_v1/analysis.json",
+   "sha256_registered": "3b6c4ab4a86ae3325baa6c9c9063c693d1f8029b40e28212b979f71b204ccc01",
+   "entries": [
+    "CUR-12"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-GENTLE",
+   "path": "runs/active/gentle_wall_v1_logging_repair/analysis.json",
+   "sha256_registered": "0f90568bc91a38bd6e4a64cbd25d61c58609cbec9c75e3d9c2966493b1553815",
+   "entries": [
+    "CUR-15"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-LIFB",
+   "path": "runs/active/lifecycle_repair_v2/analysis.json",
+   "sha256_registered": "9d5edbd430704d90362706357b1c2b746d682dd692119b35f82d12225f041f43",
+   "entries": [
+    "LC-05"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-COH",
+   "path": "runs/active/cohort_eligibility_v1/analysis.json",
+   "sha256_registered": "a9cbbc518129bd4ca763844ba9dbdefd154536b864da7963150fe63fd339a375",
+   "entries": [
+    "LC-07"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-DUR",
+   "path": "runs/active/duration_release_v1/analysis.json",
+   "sha256_registered": "7f0378b0444c9ba67c4a476a79c3e545c939bce838aae081d1a4b2731f18140a",
+   "entries": [
+    "LC-08"
+   ],
+   "field_map": "results[].job_id -> effect/duration_contrast/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-BH",
+   "path": "runs/active/brake_hold_v1/analysis.json",
+   "sha256_registered": "40c86b1903b116f4beeb40d1e8fa7cfcf393971896ce0f3ea6dafe38a1dcb1fb",
+   "entries": [
+    "LC-10"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-TS",
+   "path": "runs/active/target_speed_v1/analysis.json",
+   "sha256_registered": "488e451b565467e5d504a905023fb9bf7eab9c03fa3ce202e0f07d9225b16041",
+   "entries": [
+    "TH-07"
+   ],
+   "field_map": "results[].job_id -> effect/benefit/joint_non_deterioration",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-TADJ1",
+   "path": "runs/active/target_adjust_v1/analysis.json",
+   "sha256_registered": "d5b91d7c622ca16f1abff8d4a734f5f945248b7be07e1765620232d0a9e08575",
+   "entries": [
+    "TA-01"
+   ],
+   "field_map": "results[].job_id -> effect/benefit/wall_vs_wall",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-TADJ3",
+   "path": "runs/active/target_adjust_v3/analysis.json",
+   "sha256_registered": "1f79434989dfa9a7197e48a69c4f93c116d8fafffa72846ca1cc353d17ea35d0",
+   "entries": [
+    "TA-03"
+   ],
+   "field_map": "results[].job_id -> effect/benefit/wall_vs_wall",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-HE-EXT",
+   "path": "output/hold_extend_patch_v1/EXTENSION_EFFECTS_V3.json",
+   "sha256_registered": "e38ff03770e0de0a9d250b04397cc645908c0586e79675ac40a41e2d099c3821",
+   "entries": [
+    "HE-01"
+   ],
+   "field_map": "results[job_id].effect -> outcomes (costs_treatment/costs_control/improvements, population, collisions, joint_non_deterioration, benefit label); verbatim carrier of the two frozen analyses (sha256 provenance inside)",
+   "expected_checks": 62,
+   "performed_checks": 62,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "e38ff03770e0de0a9d250b04397cc645908c0586e79675ac40a41e2d099c3821",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "SRC-OE07",
+   "path": "runs/active/oe07_entry_pairs/analysis/analysis.json",
+   "sha256_registered": "cc19c2ce84c77757039ef7ae2b497b585997ad2b45a08290881161a415de1ad3",
+   "entries": [
+    "OE-07"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "SRC-OE09",
+   "path": "runs/active/oe09_entry_pairs/analysis/analysis.json",
+   "sha256_registered": "eb58f7f9d0375915bc74843ff2b99babfb6db8546a848d4d97081fbf1dde2c6e",
+   "entries": [
+    "OE-10"
+   ],
+   "field_map": "results[].job_id -> effect/benefit",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "CV06-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v6/COMPARISONS.json",
+   "sha256_registered": "c40c89f9b7e83ef7a80b0c997f6040b10eb4f1a0b8fd1db342e72f9f570d48ad",
+   "entries": [
+    "CV-06"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 100,
+   "performed_checks": 100,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "c40c89f9b7e83ef7a80b0c997f6040b10eb4f1a0b8fd1db342e72f9f570d48ad",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV12-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v12/COMPARISONS.json",
+   "sha256_registered": "80981cadd891cbfa31e4c04ed0cf0156abdf8351b4589d9733f6fca9b0b0e0fa",
+   "entries": [
+    "CV-12"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 150,
+   "performed_checks": 150,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "80981cadd891cbfa31e4c04ed0cf0156abdf8351b4589d9733f6fca9b0b0e0fa",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV13-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v13/COMPARISONS.json",
+   "sha256_registered": "cece87b9d08c7a1dec76cbaa048623ba2b2bcf54fe495569320eea3da182330d",
+   "entries": [
+    "CV-13"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 100,
+   "performed_checks": 100,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "cece87b9d08c7a1dec76cbaa048623ba2b2bcf54fe495569320eea3da182330d",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV17-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v17/COMPARISONS.json",
+   "sha256_registered": "022a123b36e953d85317aed5a6d3b9c22f1bcc56daa840bed0012c6390157a6c",
+   "entries": [
+    "CV-17"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 75,
+   "performed_checks": 75,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "022a123b36e953d85317aed5a6d3b9c22f1bcc56daa840bed0012c6390157a6c",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV19-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v19/COMPARISONS.json",
+   "sha256_registered": "e99193d16ffe55f28299f8e9bedf8259af8615ac2804db06cbe63ae5c412f402",
+   "entries": [
+    "CV-19"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 150,
+   "performed_checks": 150,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "e99193d16ffe55f28299f8e9bedf8259af8615ac2804db06cbe63ae5c412f402",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV30-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v30/COMPARISONS.json",
+   "sha256_registered": "e61c1d719c3f4cf553d1fec79764d5ff595183270e199f87ab5e8db6a48e8e4e",
+   "entries": [
+    "CV-30"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 450,
+   "performed_checks": 450,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "e61c1d719c3f4cf553d1fec79764d5ff595183270e199f87ab5e8db6a48e8e4e",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "WM08-OUTCOMES",
+   "path": "output/worldmodel_v2_full/outcomes.json",
+   "sha256_registered": "9073937dbf208c1510e7cf79088d0484aebc1edbd552a79cb47ece32b2c15f6f",
+   "entries": [
+    "WM-08"
+   ],
+   "field_map": "cell -> arm -> {sys_s_per_req, source_wait, campaign, job}; primary metric system_seconds_per_requested_vehicle from registered traffic_shepherd_outcomes/1 summaries; lower is better",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM08-REHEARSAL",
+   "path": "output/worldmodel_v2_full/rehearsal_v3.json",
+   "sha256_registered": "b02c88ee26e29996f6c23d256473e73835ff64b58d4625602f5c9f4e3264fc5d",
+   "entries": [
+    "WM-08"
+   ],
+   "field_map": "R1 reconstructor per-run metrics; R2 dynamics vs persistence; R3/R4 selector pick fractions and regrets; verdict; numbers quoted for WM-08 come from these files",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM09-REHEARSAL-V4",
+   "path": "output/worldmodel_v2_full/rehearsal_v4.json",
+   "sha256_registered": "18b76c3cc2dd701d916d6a56e81c25b0ea69f94d1a1b6e7f4002206919c70ba5",
+   "entries": [
+    "WM-09"
+   ],
+   "field_map": "v4-reconstructor closed-loop rehearsal: R1/R2/R3/R4 + verdict; numbers quoted for WM-09",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM09-DIAGNOSTICS",
+   "path": "output/worldmodel_v2_full/reconstructor_diagnostics.json",
+   "sha256_registered": "a222d5210117b8ba768a97dbb25af4620e0e2fb45df104507be98cad8764d8b2",
+   "entries": [
+    "WM-09"
+   ],
+   "field_map": "v3-vs-v4 failure-mode diagnostic: pooled occupied RMSE, bias, correlation, per-run and per-cell breakdowns, persistence/climatology baselines",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM09-CALIBRATION",
+   "path": "output/worldmodel_stage2_reconstructor_v2/calibration.json",
+   "sha256_registered": "5018ee86bd3c834df636d4cd6aee4c45bbbcf8c6bffd97622f5502b6a9853f9a",
+   "entries": [
+    "WM-09"
+   ],
+   "field_map": "v4 gate results: Gate1 PASS (hit10 1.000, hit5 0.848), Gate2 PASS (0.642), Gate3 FAIL (AUC 0.339)",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "CV31-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v31/COMPARISONS.json",
+   "sha256_registered": "92a10f4f1824d5deced5a99861baa5bca2befde97a8f5d873e29f965ceb1c0b3",
+   "entries": [
+    "CV-31"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 375,
+   "performed_checks": 375,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "92a10f4f1824d5deced5a99861baa5bca2befde97a8f5d873e29f965ceb1c0b3",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "CV32-PHYSICAL-COMPARISONS",
+   "path": "output/controller_verification_v32/COMPARISONS.json",
+   "sha256_registered": "349086656817b5db2a1537aab820c7b5d1d9d07b07d9666cae40d05ab1848de4",
+   "entries": [
+    "CV-32"
+   ],
+   "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
+   "expected_checks": 375,
+   "performed_checks": 375,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "349086656817b5db2a1537aab820c7b5d1d9d07b07d9666cae40d05ab1848de4",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "WM10-REHEARSAL",
+   "path": "output/worldmodel_v2_full/rehearsal_v4.json",
+   "sha256_registered": "18b76c3cc2dd701d916d6a56e81c25b0ea69f94d1a1b6e7f4002206919c70ba5",
+   "entries": [
+    "WM-10"
+   ],
+   "field_map": "enlarged-corpus selector rehearsal: R1-R4 + verdict + regrets; numbers quoted for WM-10",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM10-OUTCOMES",
+   "path": "output/worldmodel_v2_full/outcomes.json",
+   "sha256_registered": "9073937dbf208c1510e7cf79088d0484aebc1edbd552a79cb47ece32b2c15f6f",
+   "entries": [
+    "WM-10"
+   ],
+   "field_map": "27-cell per-arm cost table incl. CV-31 and CV-32 wall labels; primary metric system_seconds_per_requested_vehicle",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  },
+  {
+   "source_id": "WM-N1-RECOVERY-01-STOP",
+   "path": "tmp/zcode_review/WMN1_RECOVERY_STOP_RECEIPT_20261002.json",
+   "sha256_registered": "b77088ad390e82242a2643a1d69025aedf273f1c4909f7d59402d4c1eb08a86e",
+   "entries": [
+    "WM-N1-RECOVERY-01"
+   ],
+   "field_map": "identity-only stop receipt; no physical outcome numeric comparisons",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "b77088ad390e82242a2643a1d69025aedf273f1c4909f7d59402d4c1eb08a86e",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "WM-N1-RECOVERY-01-ZERO-ROW-CORRECTION",
+   "path": "tmp/zcode_review/WMN1_ZERO_ROW_CORRECTION_20261002.json",
+   "sha256_registered": "e90335a220727197f26c99690e11be6e8d523ea0819d1e86dacdfaf463a2fb88",
+   "entries": [
+    "WM-N1-RECOVERY-01"
+   ],
+   "field_map": "identity-only integrity/correction receipt; no physical outcome numeric comparisons",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "e90335a220727197f26c99690e11be6e8d523ea0819d1e86dacdfaf463a2fb88",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "WM-N1-RECOVERY-01-NUMPY-WRITER-FAILURE",
+   "path": "tmp/zcode_review/WMN1_NUMPY_WRITER_FAILURE_20261002.json",
+   "sha256_registered": "b02e64dba0601f6901136c26bab3912f0e81723f788bc75c7359c980ba04a521",
+   "entries": [
+    "WM-N1-RECOVERY-01"
+   ],
+   "field_map": "identity-only integrity failure receipt; no physical outcome numeric comparisons",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "b02e64dba0601f6901136c26bab3912f0e81723f788bc75c7359c980ba04a521",
+   "verified_at": "2026-10-10T06:49:37+00:00"
+  },
+  {
+   "source_id": "WM-N1-M1-20261003-INTEGRITY",
+   "path": "runs/active/WM-N1-M1-20261003/VERIFICATION.json",
+   "sha256_registered": "5ba021505d4c81569c189a876c33f12f0382e0b0901263d1b5d4acceb1b633c9",
+   "entries": [
+    "WM-N1-M1-20261003"
+   ],
+   "field_map": "identity-only TRAINartifactintegrityreceipt; no physicaloutcome numericcomparisons",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file deleted (MIG-04); stored values stand as last verified",
+     "count": null
+    }
+   ],
+   "mismatches": [],
+   "status": "deleted"
+  }
+ ],
+ "summary": {
+  "sources": 33,
+  "expected_checks": 2177,
+  "performed_checks": 2177,
+  "skipped_checks": 19,
+  "mismatches": 0,
+  "complete": 14,
+  "partial": 0,
+  "failure": 0,
+  "deleted": 19
+ }
+}

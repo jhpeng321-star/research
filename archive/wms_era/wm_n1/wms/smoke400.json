@@ -1,0 +1,9 @@
+{
+  "command": "python -m wms.cli train --unroll-s 10 --steps 400 --batch-size 8 --device cuda --num-workers 10 --sumo-fidelity --start-shift-prob 0.75 (packs/identities/overlays as in wms_chain.sh)",
+  "steps": 400,
+  "batch_size": 8,
+  "unroll_s": 10,
+  "required_log": "train_log.jsonl",
+  "gate": "python -m wms.check400 train_log.jsonl --expected 400 --unroll 20",
+  "gate_checks": ["records 400", "all loss terms finite", "valid HDV targets > 0", "gate_curve[0] == 0 exactly and non-decreasing (k=0,1,2,5,...,240)", "unroll_steps == 20", "cuda_peak_mb logged"]
+}

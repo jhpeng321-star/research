@@ -1,0 +1,111 @@
+{
+ "schema": "wd01_part4_ledger_draft/1",
+ "generated_utc": "2026-09-26",
+ "zero_simulation": true,
+ "simulation_calls": 0,
+ "owner": "WD-01 part 4 (world-model line)",
+ "branch": "zcode/wd01-delay",
+ "worktree": "D:/rd-wt/wd01c",
+ "inputs": {
+  "predict_contract": {
+   "path": "D:/rd-wt/wd01/output/wd01/PREDICT_CONTRACT_v1.md",
+   "sha256": "74a1de8edb52437babfda611336e46fb9653f7d1cbd43da878ac0295d5fe0280",
+   "note": "authoritative copy per brief; the wd01c local copy is stale (9861 B) and was not modified"
+  },
+  "design_parts_a_b": {
+   "path": "D:/rd-wt/wd01/output/wd01/DESIGN_PARTS_A_B.md",
+   "sha256": "35f2ab5f7b455ca84752b67af238cd114104d35acd4590c2da080494527d119e"
+  },
+  "partA_data_manifest": {
+   "path": "D:/rd-wt/wd01/output/wd01/partA_data/MANIFEST.json",
+   "sha256": "2439004d528a860c701bfb147afcda99ab3f864a29e6187be721db81cc82dd27",
+   "matches_brief": true
+  },
+  "partA_data_npz": "per-root sha256 re-verified against the MANIFEST at validation time (26/26 ok)",
+  "network_xml": "D:/research-dense/assets/research/highway_merge_shepherd_long/osm.net.xml.gz (read-only, lengths + speed limits)",
+  "schedules": "requests.rou.xml of each root's representative regenerated run via part1/results/tag_run_map.json (scheduled departures + vType speedFactor)"
+ },
+ "deliverables": {
+  "delay_library": [
+   "delay/__init__.py",
+   "delay/geometry.py",
+   "delay/core.py",
+   "delay/truth.py",
+   "delay/contract_io.py",
+   "delay/validate.py"
+  ],
+  "partB_skeleton": [
+   "partB/__init__.py",
+   "partB/featurize.py",
+   "partB/model.py",
+   "partB/losses.py",
+   "partB/ensemble.py"
+  ],
+  "tests": [
+   "tests/conftest.py",
+   "tests/test_delay_core.py",
+   "tests/test_delay_contract_io.py",
+   "tests/test_delay_truth.py",
+   "tests/test_partB.py"
+  ],
+  "report": "REPORT_PART4.md",
+  "results_generated_not_committed": [
+   "results/delay_labels.parquet",
+   "results/delay_labels_summary.csv",
+   "results/delay_labels_by_loading.csv",
+   "results/delay_validation_receipt.json"
+  ]
+ },
+ "validation": {
+  "grid": "t0 in {120..480 step 30} x H in {60,120,300,480}, t0+H<=600: 34 windows/root",
+  "n_roots": 26,
+  "n_windows": 884,
+  "n_violations": 0,
+  "component_sum_identity_max_abs_s": 0.0,
+  "min_wait_s": 0.0,
+  "n_unmatched_sched_id_total": 0,
+  "n_queued_at_horizon_total": 8163,
+  "wall_clock_s": 140,
+  "outputs": "results/delay_labels.parquet + CSV summaries + receipt"
+ },
+ "partB": {
+  "status": "skeleton only; synthetic-data tests; NO training on real branch data (none exists)",
+  "params_default": 1100836,
+  "heads": "heteroscedastic (mean, log sigma^2) for R_native and dR",
+  "checkpoint_format": "per-member state_dict, torch.load(weights_only=True)"
+ },
+ "tests": {
+  "command": "python -m pytest tests/ -q",
+  "passed": 45,
+  "failed": 0,
+  "wall_clock_s": 8
+ },
+ "commands": [
+  {
+   "cmd": "python -m pytest tests/ -q",
+   "wall_clock_s": 8,
+   "result": "45 passed, 1 warning (torch nested-tensor notice)"
+  },
+  {
+   "cmd": "python delay/validate.py --out results",
+   "wall_clock_s": 141,
+   "result": "884 windows, 0 violations"
+  }
+ ],
+ "environment": {
+  "python": "C:/Users/jpeng/Miniconda3/envs/rl_driving/python.exe",
+  "torch": "2.12.1+cpu",
+  "numpy": "2.2.6",
+  "pandas": "2.3.3",
+  "pyarrow": "24.0.0"
+ },
+ "spec_questions": [
+  "S1: stale local PREDICT_CONTRACT_v1.md copy in wd01c; authoritative wd01 copy used",
+  "S2: entrance queues (queued at t0, queued past horizon) included in the waiting sum with window truncation",
+  "S3: interval-ending 0.5 s tick convention for time on section (max 0.5 s/vehicle boundary error)",
+  "S4: junction internal length is zero in the physical coordinate (topology convention)",
+  "S5: id-less arrivals draw rows require schedule + entered_before_t0 inputs for the contract-layout adapter",
+  "S6: Part B per-entrance queue split not derivable without ids; total placed on mainline, ctx override expected",
+  "S7: heteroscedastic NLL has no variance floor in the loss; sigma clamped >= 1e-3 at prediction"
+ ]
+}

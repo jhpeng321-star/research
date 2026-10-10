@@ -1,0 +1,53 @@
+[
+  {
+    "experiment_id": "WD-01-PA2G-CNT1",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "in_progress",
+    "execution_status": "in_progress",
+    "evidence_validity": "pending",
+    "scientific_verdict": "pending",
+    "recorded_utc": "2026-09-30T12:00:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-PA2G-CNT1 task, worktree wd01cnt1); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_PA2G_CNT1.md",
+      "registered": "2026-09-30 by the world model session BEFORE execution (owner decision ~11:30 via main discussion); LF-sha256 1bfbce27c7ada42a680fc807344c21ab8303fa8b03e469c8d8705c4e1c213116 (verified at allocation time from the committed file)",
+      "type": "TRAIN-only, zero-SUMO SENSITIVITY analysis; SIDE RESULT labelled 'sensitivity; requires counter hardware; does not change the CAV-strict headline'; the CAV-strict / tracked-scope Part A v2 general, the frozen C4L1 and params_nominal.json are untouched"
+    },
+    "question": "Does injecting arrivals at the network entrances at the rate an entrance loop counter observed over the last W = 60 s (v2g-CNT) substantially reduce Part A's long-horizon all-vehicle delay error versus the tracked-only v2g, on the 32 PA2G-A2 TRAIN worlds, under the pre-registered WORTH IT / PARTIAL / NOT WORTH IT rule?",
+    "closest_prior_and_difference": {
+      "related_records": [
+        "WD-01-PA2G-A2 (output/wd01/REPORT_PA2G_EVAL_A2.md): same engine (post-LC1), same chunk-4 __native_base truth, same 32-world TRAIN panel, same windows/H/metrics code; its Table 2 quantifies the untracked share of truth delay (0.249/0.276/0.386/0.577 at H10/30/60/120) that motivates this registration",
+        "WD-01-PA2G-LC1 (output/wd01/REPORT_PA2G_LC2.md cross-references; post-LC1 counting convention and the byte-identity gate pattern reused)"
+      ],
+      "unanswered_difference": "A2/LC1 never add vehicles: the prediction is tracked-scope and its H120 delay error is dominated by untracked arrivals. CNT1 changes exactly one thing - an a-priori entrance-counter arrivals injector (counter channel: departed_ids classified by entrance edge; W=60 s carried forward; deterministic evenly spaced insertion, IDM safe-gap FIFO virtual queue) - and evaluates against the TRUE all-vehicle delay. No prior record evaluates an arrivals-injected Part A variant."
+    },
+    "changed_variable": "the added arrivals injector (v2g-CNT) evaluated on the all-vehicle delay target; comparators (v2g tracked-only, const-speed, v1 p3o replica with LOGGED arrivals = oracle-arrival reference) run unchanged on the same windows",
+    "data": {
+      "truth": "E:/research-dense/runs/campaign_stage1_chunk4/<world>__native_base/run/physics_steps.jsonl (completed runs only); counter channel = departed_ids classified by the vehicle's first physical row edge: mainline entry edge 1191554636 (2 lanes), ramp entry edge 11553048#1_0 (single lane, determined from the network and recorded); counts only from (w-60, w]; NO count after w is read (sentinel test enforces)",
+      "worlds": "the 32 PA2G-A2 TRAIN worlds (results/lc1_a2_worlds32.json), split checked from results_plan_chunk4/WORLD_PLAN.json BEFORE any file open; CALIBRATION/HOLDOUT files never opened (asserted at close-out; opened-file list recorded)",
+      "access_control": "TRAIN-only guard reuses eval_a2 load_train_worlds split reading + EA.assert_train_only, restricted to the 32-panel names; every opened run file recorded and asserted to belong to a panel TRAIN world"
+    },
+    "budget_and_charges": {
+      "registered_budget": "Zero SUMO. CPU: 1 v2g-CNT run over 32 worlds; comparators from A2/post-LC1 rows where bit-identical, otherwise re-rolled ONCE in the same pass (fresh v2g/const_speed/p3o rows paired on the same windows, then aggregate cross-checked vs the frozen eval_a2_post_lc1 summary). Execution constraints for this task: max 2 worker processes at BelowNormal priority, run detached with logs and polling, WIP committed at least every 45 min; no D: paths (WD_FORBID_D=1); one ZCode task (Flash)",
+      "allocations": [
+        {
+          "id": "cnt1_eval_pass",
+          "status": "registered",
+          "note": "output/wd01/partA_v2g/results/eval_cnt1/ (fresh dir, never overwritten; raw rows saved before aggregation); injector OFF-by-default byte-identity pre-flight vs the untouched eval_a2.window_rows harness on >= 2 panel worlds before the panel; crash before any row -> at most ONE disclosed restart; no re-run after seeing any number"
+        }
+      ]
+    },
+    "criteria_verdict": "pending (frozen rule, REGISTRATION_PA2G_CNT1.md section 5 applied verbatim at close-out: WORTH IT iff (1) all-vehicle delay MAE at H60 AND H120 each >= 25 % lower than v2g with world-bootstrap 90 % CI of the relative change excluding 0, (2) H10/H30 MAE not worse by > 5 %, (3) tracked s_RMSE at H10/H30 not worse by > 5 %, (4) collisions <= v2g + 0.1 per 1000 veh-steps; PARTIAL if (1) holds for only one of H60/H120 and (2)-(4) hold; else NOT WORTH IT)",
+    "source_hashes": {
+      "registration_lf_sha256": "1bfbce27c7ada42a680fc807344c21ab8303fa8b03e469c8d8705c4e1c213116",
+      "params_nominal_lf_sha256": "079a55768f803b23c92af188680c1df91dc63f04acbbbac948870b46e75935f7 (verified UNCHANGED pre-run; re-verified post-run)",
+      "plan_raw_sha256": "65510b27f651f477c3de9acc663b9138916a07dfb46468718dc9932147e1ffc4",
+      "branch": "zcode/wd01cnt1 at c2adc72"
+    },
+    "ledger_updated": "NO (allocation draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "implement injector + counter reader + tests; byte-identity pre-flight; single panel pass; close-out adds results + criteria_verdict to LEDGER_DRAFT_PA2G_CNT1.json"
+  }
+]

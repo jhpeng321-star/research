@@ -1,0 +1,43 @@
+﻿{
+    "name":  "rc04",
+    "path":  "E:\\rd-wt\\rc04",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "detached",
+    "dirtyBefore":  115,
+    "committed":  true,
+    "commitSha":  "6f2f40dbd6f97149a5271695e5a1007291aed8b0",
+    "preserveRef":  "refs/heads/wip-preserve/rc04",
+    "dest":  "gdrive:research-archive/worktrees/rc04",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\rc04.txt",
+    "uploadCount":  313,
+    "uploadBytes":  20670189,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc04.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 06:08:50 NOTICE: Google drive root \u0027research-archive/worktrees/rc04\u0027: 0 differences found | 2026/10/10 06:08:50 NOTICE: Google drive root \u0027research-archive/worktrees/rc04\u0027: 313 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc04.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  5,
+    "skippedSensitiveSample":  [
+                                   "output/recon_learned_v1/DEVIATION_R1_HOLDOUT.md",
+                                   "tests/planner/test_holdout_guard.py",
+                                   "tests/test_holdout_exclusions.py",
+                                   "tools/holdout_guard.py",
+                                   "traffic_shepherd/planner/holdout.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T06:00:45.3297428+08:00"
+}

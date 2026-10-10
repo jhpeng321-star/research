@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/gentle_wall_v1",
+ "name": "gentle_wall_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\gentle_wall_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/gentle_wall_v1/gentle_wall_v1.tar.zst",
+ "bytes": 48684595,
+ "files": 55,
+ "archive_bytes": 18800593,
+ "archive_md5": "9f442ac39374766d20c0d8453cc9a67f",
+ "member_manifest": "manifests/members/output_gentle_wall_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 17.0,
+ "timestamp": "2026-10-10T01:51:41"
+}

@@ -1,0 +1,104 @@
+{
+ "cand_last": {
+  "residual_cap_mps2": null,
+  "n_states": 1,
+  "hdv_steps": 9846,
+  "g_delta_mean_abs": 6.057944281777989,
+  "g_delta_p95_abs": 30.141896724700928,
+  "g_delta_mean": 3.4227730580713236,
+  "g_delta_frac_pos": 0.5043672557383709,
+  "cap_bind_rate": 0.0,
+  "lane_rate_pred": 0.04803359278984023,
+  "lane_rate_rec": 0.021025641025641025,
+  "speed_bias_mean": -1.7503418016798393,
+  "speed_bias_median_states": -1.7503418016798393,
+  "jam_free": {
+   "jam": {
+    "n_states": 1,
+    "ds_med_60": 19.799701690673828,
+    "ds_med_120": 145.63174438476562
+   },
+   "free": {
+    "n_states": 0,
+    "ds_med_60": null,
+    "ds_med_120": null
+   }
+  },
+  "slow_hdv_ds": {
+   "ds_med_60": 29.28884792327881,
+   "n_states_with_slow_60": 1,
+   "ds_med_120": 145.63174438476562,
+   "n_states_with_slow_120": 1
+  },
+  "wrong_lane_share": {
+   "60": 0.2961925727464589,
+   "60_n_lane": 6,
+   "120": 0.21747645519578868,
+   "120_n_lane": 1
+  },
+  "states": [
+   {
+    "world": "w8660m2700p10t300",
+    "t0_s": 304.5,
+    "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 31
+   }
+  ],
+  "lane_changes_pred": 469,
+  "lane_steps_pred": 9764,
+  "lane_changes_rec": 205,
+  "lane_steps_rec": 9750
+ },
+ "ref_last": {
+  "residual_cap_mps2": null,
+  "n_states": 1,
+  "hdv_steps": 9846,
+  "g_delta_mean_abs": 6.057944281777989,
+  "g_delta_p95_abs": 30.141896724700928,
+  "g_delta_mean": 3.4227730580713236,
+  "g_delta_frac_pos": 0.5043672557383709,
+  "cap_bind_rate": 0.0,
+  "lane_rate_pred": 0.04803359278984023,
+  "lane_rate_rec": 0.021025641025641025,
+  "speed_bias_mean": -1.7503418016798393,
+  "speed_bias_median_states": -1.7503418016798393,
+  "jam_free": {
+   "jam": {
+    "n_states": 1,
+    "ds_med_60": 19.799701690673828,
+    "ds_med_120": 145.63174438476562
+   },
+   "free": {
+    "n_states": 0,
+    "ds_med_60": null,
+    "ds_med_120": null
+   }
+  },
+  "slow_hdv_ds": {
+   "ds_med_60": 29.28884792327881,
+   "n_states_with_slow_60": 1,
+   "ds_med_120": 145.63174438476562,
+   "n_states_with_slow_120": 1
+  },
+  "wrong_lane_share": {
+   "60": 0.2961925727464589,
+   "60_n_lane": 6,
+   "120": 0.21747645519578868,
+   "120_n_lane": 1
+  },
+  "states": [
+   {
+    "world": "w8660m2700p10t300",
+    "t0_s": 304.5,
+    "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 31
+   }
+  ],
+  "lane_changes_pred": 469,
+  "lane_steps_pred": 9764,
+  "lane_changes_rec": 205,
+  "lane_steps_rec": 9750
+ }
+}

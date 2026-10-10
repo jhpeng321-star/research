@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/w8647m2000p05t300__switching3",
+ "name": "w8647m2000p05t300__switching3",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\w8647m2000p05t300__switching3",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/w8647m2000p05t300__switching3/w8647m2000p05t300__switching3.tar.zst",
+ "bytes": 27299946,
+ "files": 11,
+ "archive_bytes": 3536505,
+ "archive_md5": "337dbd3b3adc5aecfb38adeabbf8c48f",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_w8647m2000p05t300__switching3.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 63.5,
+ "timestamp": "2026-10-10T04:12:43"
+}

@@ -1,0 +1,333 @@
+train kept windows total 6/6 | pack_original_train 6/6
+mix   {"n": 12, "shares": [0.5, 0.5], "heldout": {"policy": "drop", "held_family": 3, "held_family_clean_in_builder": false, "builder_train_val_family_overlap": 214, "n_considered": 6, "n_kept": 6, "n_items_with_held_family_direct": 0, "n_dropped": 0, "drop_fraction": 0.0, "leave_pi_wall_out": true, "n_pi_windows_dropped": 0, "n_direct_slots_without_identity": 0, "n_held_worlds_checked": 30, "guard_source": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\ZERO_SHOT_HELDOUT.json"}, "stage_sampling": [{"stage_s": 10.0, "sources": {"original": {"share": 0.5, "n_items": 6, "n_event_items": 0, "event_fraction_uniform": 0.0, "event_fraction_sampled": 0.0}, "switching": {"share": 0.5, "n_items": 6, "n_event_items": 0, "event_fraction_uniform": 0.0, "event_fraction_sampled": 0.0}}}, {"stage_s": 30.0, "sources": {"original": {"share": 0.5, "n_items": 6, "n_event_items": 0, "event_fraction_uniform": 0.0, "event_fraction_sampled": 0.0}, "switching": {"share": 0.5, "n_items": 6, "n_event_items": 4, "event_fraction_uniform": 0.6667, "event_fraction_sampled": 0.8}}}, {"stage_s": 60.0, "sources": {"original": {"share": 0.5, "n_items": 6, "n_event_items": 0, "event_fraction_uniform": 0.0, "event_fraction_sampled": 0.0}, "switching": {"share": 0.5, "n_items": 6, "n_event_items": 4, "event_fraction_uniform": 0.6667, "event_fraction_sampled": 0.8}}}, {"stage_s": 120.0, "sources": {"original": {"share": 0.5, "n_items": 6, "n_event_items": 0, "event_fraction_uniform": 0.0, "event_fraction_sampled": 0.0}, "switching": {"share": 0.5, "n_items": 6, "n_event_items": 4, "event_fraction_uniform": 0.6667, "event_fraction_sampled": 0.8}}}]}
+E:\rd-wt\ws-trainsetup\output\wd01\wm_n1\train\idea_a.py:1338: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\utils\tensor_numpy.cpp:219.)
+  kin = torch.as_tensor(veh_kin).unsqueeze(0)
+{
+  "checkpoint": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\train\\wm_s.pt",
+  "config": {
+    "batch_size": 2,
+    "black_box": false,
+    "cav_drive": "teacher",
+    "checkpoint_residual": false,
+    "conservation_enabled": true,
+    "conservation_weight": 0.01,
+    "controller_embed_dim": 16,
+    "device": "cpu",
+    "driver_sidecar": null,
+    "entries_v2": true,
+    "entry_pad": 8,
+    "epochs_per_stage": 1,
+    "exclude_window_list": null,
+    "grad_clip": 1.0,
+    "history_features": 6,
+    "lane_logit_cap": 3.0,
+    "lane_weight": 1.0,
+    "loss_share_logging": true,
+    "lr": 0.001,
+    "n_controllers": 7,
+    "num_workers": 0,
+    "out_dir": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\train",
+    "position_huber_delta_m": 5.0,
+    "position_weight": 1.0,
+    "projection_enabled": true,
+    "projection_min_gap_m": 2.0,
+    "residual_cap_mps2": 1.5,
+    "rollout_mode": "residual",
+    "seed": 101,
+    "speed_huber_delta_mps": 1.0,
+    "speed_weight": 1.0,
+    "stability_margin": 1.0,
+    "stability_probes": 1,
+    "stability_weight": 0.01,
+    "stage_steps": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "state_noise_std_m": 0.0,
+    "state_noise_std_mps": 0.0,
+    "step_weight_decay": 0.01,
+    "steps_per_epoch": 2000,
+    "switch_window_fraction": 0.0,
+    "threads": 1,
+    "traffic_bin_s": 30.0,
+    "traffic_free_speed_mps": 13.89,
+    "traffic_loss": true,
+    "traffic_ramp_end_s": 1.0,
+    "traffic_ramp_start_s": 0.0,
+    "traffic_weight": 0.1,
+    "truncation_steps": 20,
+    "unroll_curriculum_s": [
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "val_batches": 8,
+    "val_window_list": null,
+    "weight_decay": 0.0,
+    "window_list": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\original\\windows_train_hetdata.json"
+  },
+  "curriculum_s": [
+    10.0,
+    30.0,
+    60.0,
+    120.0
+  ],
+  "data": {
+    "event_oversample": 2.0,
+    "mode": "mixed",
+    "n_records": 12,
+    "sources": [
+      {
+        "n": 6,
+        "name": "original",
+        "receipt": {
+          "exclude_keys_requested": 0,
+          "excluded_records": 0,
+          "horizon_steps": 240,
+          "identity_rows": 1,
+          "identity_sidecars": [
+            "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\original\\identities_switching_train"
+          ],
+          "item_filter": {
+            "controller_windows_dropped": 0,
+            "held_world_guard": true,
+            "leave_pi_wall_out": true,
+            "n_kept": 6
+          },
+          "kept_by_pack": {
+            "pack_original_train": 6
+          },
+          "mode": "a11-index-window",
+          "n_corpus_windows": 6,
+          "n_records": 6,
+          "overlays": [],
+          "packs": [
+            "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\original\\pack_original_train"
+          ],
+          "select_windows_requested": null,
+          "split": "TRAIN",
+          "start_shift_prob": 0.0,
+          "timeline_packs": null,
+          "total_by_pack": {
+            "pack_original_train": 6
+          },
+          "window_filter": {
+            "dropped": 0,
+            "exclude_window_list": null,
+            "kept": 6,
+            "matched": 1,
+            "requested": 1,
+            "window_list": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\original\\windows_train_hetdata.json"
+          }
+        },
+        "share": 0.5
+      },
+      {
+        "n": 6,
+        "name": "switching",
+        "receipt": {
+          "exclude_keys_requested": 0,
+          "excluded_records": 0,
+          "horizon_steps": 240,
+          "identity_rows": 1,
+          "identity_sidecars": [
+            "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\identities_switching_train"
+          ],
+          "item_filter": {
+            "builder_train_val_family_overlap": 214,
+            "drop_fraction": 0.0,
+            "guard_source": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\ZERO_SHOT_HELDOUT.json",
+            "held_family": 3,
+            "held_family_clean_in_builder": false,
+            "leave_pi_wall_out": true,
+            "n_considered": 6,
+            "n_direct_slots_without_identity": 0,
+            "n_dropped": 0,
+            "n_held_worlds_checked": 30,
+            "n_items_with_held_family_direct": 0,
+            "n_kept": 6,
+            "n_pi_windows_dropped": 0,
+            "policy": "drop"
+          },
+          "kept_by_pack": {
+            "pack_switching_train": 6
+          },
+          "mode": "a11-index-window",
+          "n_corpus_windows": 6,
+          "n_records": 6,
+          "overlays": [],
+          "packs": [
+            "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\pack_switching_train"
+          ],
+          "select_windows_requested": null,
+          "split": "TRAIN",
+          "start_shift_prob": 0.0,
+          "timeline_packs": [
+            0
+          ],
+          "total_by_pack": {
+            "pack_switching_train": 6
+          },
+          "window_filter": {
+            "dropped": 0,
+            "exclude_window_list": null,
+            "kept": 6,
+            "matched": 1,
+            "requested": 1,
+            "window_list": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\windows_train_hetdata.json"
+          }
+        },
+        "share": 0.5
+      }
+    ],
+    "stage_sampling": [
+      {
+        "sources": {
+          "original": {
+            "event_fraction_sampled": 0.0,
+            "event_fraction_uniform": 0.0,
+            "n_event_items": 0,
+            "n_items": 6,
+            "share": 0.5
+          },
+          "switching": {
+            "event_fraction_sampled": 0.0,
+            "event_fraction_uniform": 0.0,
+            "n_event_items": 0,
+            "n_items": 6,
+            "share": 0.5
+          }
+        },
+        "stage_s": 10.0
+      },
+      {
+        "sources": {
+          "original": {
+            "event_fraction_sampled": 0.0,
+            "event_fraction_uniform": 0.0,
+            "n_event_items": 0,
+            "n_items": 6,
+            "share": 0.5
+          },
+          "switching": {
+            "event_fraction_sampled": 0.8,
+            "event_fraction_uniform": 0.6667,
+            "n_event_items": 4,
+            "n_items": 6,
+            "share": 0.5
+          }
+        },
+        "stage_s": 30.0
+      },
+      {
+        "sources": {
+          "original": {
+            "event_fraction_sampled": 0.0,
+            "event_fraction_uniform": 0.0,
+            "n_event_items": 0,
+            "n_items": 6,
+            "share": 0.5
+          },
+          "switching": {
+            "event_fraction_sampled": 0.8,
+            "event_fraction_uniform": 0.6667,
+            "n_event_items": 4,
+            "n_items": 6,
+            "share": 0.5
+          }
+        },
+        "stage_s": 60.0
+      },
+      {
+        "sources": {
+          "original": {
+            "event_fraction_sampled": 0.0,
+            "event_fraction_uniform": 0.0,
+            "n_event_items": 0,
+            "n_items": 6,
+            "share": 0.5
+          },
+          "switching": {
+            "event_fraction_sampled": 0.8,
+            "event_fraction_uniform": 0.6667,
+            "n_event_items": 4,
+            "n_items": 6,
+            "share": 0.5
+          }
+        },
+        "stage_s": 120.0
+      }
+    ],
+    "switching": {
+      "heldout": {
+        "builder_train_val_family_overlap": 214,
+        "drop_fraction": 0.0,
+        "guard_source": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\ZERO_SHOT_HELDOUT.json",
+        "held_family": 3,
+        "held_family_clean_in_builder": false,
+        "leave_pi_wall_out": true,
+        "n_considered": 6,
+        "n_direct_slots_without_identity": 0,
+        "n_dropped": 0,
+        "n_held_worlds_checked": 30,
+        "n_items_with_held_family_direct": 0,
+        "n_kept": 6,
+        "n_pi_windows_dropped": 0,
+        "policy": "drop"
+      },
+      "heldout_val": null,
+      "identities": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\identities_switching_train",
+      "n_timeline_items": 6,
+      "pack": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\pack_switching_train",
+      "start_shift_prob": 0.0,
+      "timeline_index": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\ACTION_TIMELINE_INDEX_train.json",
+      "train_window_list": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\switch\\windows_train_hetdata.json",
+      "val_window_list": null
+    }
+  },
+  "device": "cpu",
+  "log": "E:\\rd-wt\\ws-trainsetup\\_out\\trainsetup_cpu_20261009_02\\train\\train_log.jsonl",
+  "physics": {
+    "accel_max_mps2": 3.0,
+    "accel_min_mps2": -9.0,
+    "b_accept_base_mps2": 4.0,
+    "b_accept_end_mps2": 6.0,
+    "b_safe_base_mps2": 4.0,
+    "b_safe_end_mps2": 6.0,
+    "b_yield_max_mps2": 1.75,
+    "dt_s": 0.5,
+    "end_obstacle_range_m": 25.0,
+    "free_road_gap_m": 250.0,
+    "gap_floor_m": 0.3,
+    "lane_gap_m": 5.0,
+    "lane_incentive_mps": 0.4,
+    "lane_safe_gap_m": 6.0,
+    "max_gap_steps": 240,
+    "merge_cal": true,
+    "merge_lane": 2,
+    "merge_target_lane": 1,
+    "merge_zone_s0_m": 0.0,
+    "merge_zone_s1_m": 75.44,
+    "mobil_threshold_mps2": 0.1,
+    "open_road": true,
+    "speed_factor": 1.0,
+    "speed_limit_mps": 31.29,
+    "sumo_fidelity": true,
+    "sumo_idm": true,
+    "t_lead_base_s": 1.0,
+    "t_lead_end_s": 0.1,
+    "u_yield": 0.35,
+    "yield_lookahead_m": 120.0,
+    "yield_min_merger_speed_mps": 3.5,
+    "yield_min_speed_mps": 2.5
+  },
+  "schema": "wm_s_train_receipt/1",
+  "split": "TRAIN",
+  "steps": 4,
+  "threads": 1,
+  "val_by_stage": [],
+  "val_monitoring": null
+}

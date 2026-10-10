@@ -1,0 +1,46 @@
+{
+ "gate": "G1 zero-residual",
+ "comparator": "partA_v2g.engine (read-only)",
+ "param_set": "partA_v2g/params_nominal.json",
+ "source": "synthetic_fallback",
+ "world": "synthetic_j4_world",
+ "note": "J4 TRAIN run data unavailable (FileNotFoundError: no usable J4 TRAIN native_base run under --data-root); deterministic synthetic J4-world scene, documented fallback - NOT a data window",
+ "status": "pass",
+ "integrator": "v2g",
+ "residual": "0",
+ "arrivals": "off",
+ "n_vehicles": 8,
+ "n_cav": 1,
+ "n_steps": 240,
+ "t0_s": 30.0,
+ "n_compared_pairs": 432,
+ "max_abs_position_err": 0.0,
+ "max_abs_speed_err": 0.0,
+ "tolerance": 1e-06,
+ "worst_vehicles": {
+  "veh000": 0.0,
+  "veh001": 0.0,
+  "veh002": 0.0,
+  "veh003": 0.0,
+  "veh004": 0.0
+ },
+ "scalar_collisions": 0,
+ "scalar_lane_changes": {
+  "merge": 2,
+  "disc_left": 2,
+  "disc_right": 0
+ },
+ "wall_s": 0.55,
+ "commanded_check": {
+  "status": "pass",
+  "max_abs_position_err": 0.0,
+  "max_abs_speed_err": 0.0,
+  "n_cav": 2
+ },
+ "integrator_difference": {
+  "rule": "s_d1 - s_v2g = 0.5*(v - v_new)*dt per step",
+  "max_single_step_abs_m": 0.29567264929755765,
+  "window_mean_abs_m": 0.4884202651374031,
+  "window_max_abs_m": 2.464803704734095
+ }
+}

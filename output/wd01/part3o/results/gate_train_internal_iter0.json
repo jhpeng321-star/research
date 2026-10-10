@@ -1,0 +1,461 @@
+{
+ "iteration": 0,
+ "part": "3o",
+ "split": {
+  "fold_A": [
+   "cv20_7002m2000",
+   "cv20_7003m2000"
+  ],
+  "fold_B": [
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "t0s": [
+   120,
+   180,
+   240,
+   300,
+   360,
+   420,
+   480
+  ],
+  "windows": 28,
+  "protocol": "2-fold: scored fold's factors fitted on the other fold only"
+ },
+ "gate_v2": {
+  "H30": {
+   "collisions_per_1000": 0.015,
+   "a_collisions_pass": true,
+   "lc_pred": 13.664,
+   "lc_true": 11.214,
+   "lc_deviation": 0.2185,
+   "b_lc_pass": false,
+   "ttc3_cov_frac": 0.7857,
+   "c_ttc3_pass": false,
+   "delay_phys_cov_frac": 0.7143,
+   "c_delay_phys_pass": false,
+   "crps_phys": 34.953,
+   "l0_delay_phys_mae": 242.5,
+   "c_crps_pass": true,
+   "c_coverage_crps_pass": false,
+   "c_not_applicable": false,
+   "speed_rmse": 3.6896,
+   "d_fixed_threshold": 5.2185,
+   "d_fixed_pass": true,
+   "d_per_horizon_threshold": 3.7812,
+   "d_per_horizon_pass": true,
+   "d_per_horizon_is_binding": true,
+   "speed_rmse_pass": true,
+   "delay_phys_bias": 29.65,
+   "delay_exposure_bias": 10.62,
+   "v2_PASS": false,
+   "v2_failing": [
+    "b_lc",
+    "c_coverage_crps"
+   ],
+   "old": {
+    "speed_rmse": 3.6896,
+    "speed_lt_B2": true,
+    "collisions_per_1000": 0.015,
+    "collisions_ok": true,
+    "lc_pred": 13.664,
+    "lc_true": 11.214,
+    "lc_deviation": 0.2185,
+    "lc_within_20pct": false,
+    "delay_phys_minmax_frac": 0.875,
+    "delay_minmax_ge_50pct": true,
+    "old_pass": false
+   },
+   "per_fold": {
+    "delay_phys": {
+     "A": {
+      "s_out": 2.2974,
+      "n_windows": 14,
+      "cov": 0.5,
+      "crps": 30.105
+     },
+     "B": {
+      "s_out": 3.0314,
+      "n_windows": 14,
+      "cov": 0.9286,
+      "crps": 39.8
+     }
+    },
+    "ttc3": {
+     "A": {
+      "s_out": 8.3784,
+      "n_windows": 14,
+      "cov": 0.9286,
+      "crps": 3.364
+     },
+     "B": {
+      "s_out": 3.0314,
+      "n_windows": 14,
+      "cov": 0.6429,
+      "crps": 4.691
+     }
+    }
+   },
+   "sharpness": {
+    "delay_phys": {
+     "median_band_width": 163.548,
+     "truth_iqr_width": 752.695
+    },
+    "ttc3": {
+     "median_band_width": 13.229,
+     "truth_iqr_width": 10.8
+    }
+   }
+  },
+  "H60": {
+   "collisions_per_1000": 0.01,
+   "a_collisions_pass": true,
+   "lc_pred": 26.143,
+   "lc_true": 23.179,
+   "lc_deviation": 0.1279,
+   "b_lc_pass": true,
+   "ttc3_cov_frac": 0.7857,
+   "c_ttc3_pass": false,
+   "delay_phys_cov_frac": 0.7857,
+   "c_delay_phys_pass": false,
+   "crps_phys": 82.262,
+   "l0_delay_phys_mae": 591.11,
+   "c_crps_pass": true,
+   "c_coverage_crps_pass": false,
+   "c_not_applicable": false,
+   "speed_rmse": 4.3619,
+   "d_fixed_threshold": 5.2185,
+   "d_fixed_pass": true,
+   "d_per_horizon_threshold": 4.3534,
+   "d_per_horizon_pass": false,
+   "d_per_horizon_is_binding": true,
+   "speed_rmse_pass": false,
+   "delay_phys_bias": 20.83,
+   "delay_exposure_bias": 5.93,
+   "v2_PASS": false,
+   "v2_failing": [
+    "c_coverage_crps",
+    "d_speed_per_horizon"
+   ],
+   "old": {
+    "speed_rmse": 4.3619,
+    "speed_lt_B2": true,
+    "collisions_per_1000": 0.01,
+    "collisions_ok": true,
+    "lc_pred": 26.143,
+    "lc_true": 23.179,
+    "lc_deviation": 0.1279,
+    "lc_within_20pct": true,
+    "delay_phys_minmax_frac": 0.875,
+    "delay_minmax_ge_50pct": true,
+    "old_pass": true
+   },
+   "per_fold": {
+    "delay_phys": {
+     "A": {
+      "s_out": 2.2974,
+      "n_windows": 14,
+      "cov": 0.6429,
+      "crps": 58.179
+     },
+     "B": {
+      "s_out": 2.7638,
+      "n_windows": 14,
+      "cov": 0.9286,
+      "crps": 106.344
+     }
+    },
+    "ttc3": {
+     "A": {
+      "s_out": 13.2998,
+      "n_windows": 14,
+      "cov": 1.0,
+      "crps": 7.44
+     },
+     "B": {
+      "s_out": 3.325,
+      "n_windows": 14,
+      "cov": 0.5714,
+      "crps": 9.874
+     }
+    }
+   },
+   "sharpness": {
+    "delay_phys": {
+     "median_band_width": 363.092,
+     "truth_iqr_width": 1549.835
+    },
+    "ttc3": {
+     "median_band_width": 21.446,
+     "truth_iqr_width": 16.9
+    }
+   }
+  }
+ },
+ "lc_by_type": {
+  "H30": {
+   "pooled": {
+    "pred_lc_merge": 4.679,
+    "pred_lc_disc": 8.914,
+    "true_lc_merge": 3.25,
+    "true_lc_disc": 7.964,
+    "pred_lc": 13.593,
+    "true_lc": 11.214,
+    "n_windows": 140,
+    "dev_total": 0.2121,
+    "dev_merge": 0.4397,
+    "dev_disc": 0.1193
+   },
+   "fold_A": {
+    "pred_lc_merge": 4.586,
+    "pred_lc_disc": 7.771,
+    "true_lc_merge": 3.5,
+    "true_lc_disc": 9.214,
+    "pred_lc": 12.357,
+    "true_lc": 12.714,
+    "n_windows": 70,
+    "dev_total": -0.0281,
+    "dev_merge": 0.3103,
+    "dev_disc": -0.1566
+   },
+   "fold_B": {
+    "pred_lc_merge": 4.771,
+    "pred_lc_disc": 10.057,
+    "true_lc_merge": 3.0,
+    "true_lc_disc": 6.714,
+    "pred_lc": 14.829,
+    "true_lc": 9.714,
+    "n_windows": 70,
+    "dev_total": 0.5266,
+    "dev_merge": 0.5903,
+    "dev_disc": 0.4979
+   }
+  },
+  "H60": {
+   "pooled": {
+    "pred_lc_merge": 8.179,
+    "pred_lc_disc": 17.8,
+    "true_lc_merge": 6.536,
+    "true_lc_disc": 16.643,
+    "pred_lc": 25.979,
+    "true_lc": 23.179,
+    "n_windows": 140,
+    "dev_total": 0.1208,
+    "dev_merge": 0.2514,
+    "dev_disc": 0.0695
+   },
+   "fold_A": {
+    "pred_lc_merge": 8.057,
+    "pred_lc_disc": 16.057,
+    "true_lc_merge": 6.5,
+    "true_lc_disc": 20.143,
+    "pred_lc": 24.114,
+    "true_lc": 26.643,
+    "n_windows": 70,
+    "dev_total": -0.0949,
+    "dev_merge": 0.2395,
+    "dev_disc": -0.2028
+   },
+   "fold_B": {
+    "pred_lc_merge": 8.3,
+    "pred_lc_disc": 19.543,
+    "true_lc_merge": 6.571,
+    "true_lc_disc": 13.143,
+    "pred_lc": 27.843,
+    "true_lc": 19.714,
+    "n_windows": 70,
+    "dev_total": 0.4123,
+    "dev_merge": 0.2631,
+    "dev_disc": 0.487
+   }
+  }
+ },
+ "goal_package": {
+  "H30": {
+   "checks": {
+    "b_type_pooled": false,
+    "b_type_foldA": false,
+    "b_type_foldB": false,
+    "b_total_gate": false,
+    "a_collisions": true,
+    "d_speed": true,
+    "crps_not_worse": true,
+    "PASS": false
+   },
+   "max_type_dev": {
+    "pooled": 0.4397,
+    "fold_A": 0.3103,
+    "fold_B": 0.5903
+   },
+   "by_type": {
+    "pooled": {
+     "pred_lc_merge": 4.679,
+     "pred_lc_disc": 8.914,
+     "true_lc_merge": 3.25,
+     "true_lc_disc": 7.964,
+     "pred_lc": 13.593,
+     "true_lc": 11.214,
+     "n_windows": 140,
+     "dev_total": 0.2121,
+     "dev_merge": 0.4397,
+     "dev_disc": 0.1193
+    },
+    "fold_A": {
+     "pred_lc_merge": 4.586,
+     "pred_lc_disc": 7.771,
+     "true_lc_merge": 3.5,
+     "true_lc_disc": 9.214,
+     "pred_lc": 12.357,
+     "true_lc": 12.714,
+     "n_windows": 70,
+     "dev_total": -0.0281,
+     "dev_merge": 0.3103,
+     "dev_disc": -0.1566
+    },
+    "fold_B": {
+     "pred_lc_merge": 4.771,
+     "pred_lc_disc": 10.057,
+     "true_lc_merge": 3.0,
+     "true_lc_disc": 6.714,
+     "pred_lc": 14.829,
+     "true_lc": 9.714,
+     "n_windows": 70,
+     "dev_total": 0.5266,
+     "dev_merge": 0.5903,
+     "dev_disc": 0.4979
+    }
+   },
+   "crps_phys": 34.953,
+   "crps_p3n_iter1": 34.953,
+   "speed_rmse": 3.6896,
+   "d_threshold": 3.7812,
+   "ttc3_cov": 0.7857,
+   "delay_phys_cov": 0.7143
+  },
+  "H60": {
+   "checks": {
+    "b_type_pooled": false,
+    "b_type_foldA": false,
+    "b_type_foldB": false,
+    "b_total_gate": true,
+    "a_collisions": true,
+    "d_speed": false,
+    "crps_not_worse": true,
+    "PASS": false
+   },
+   "max_type_dev": {
+    "pooled": 0.2514,
+    "fold_A": 0.2395,
+    "fold_B": 0.487
+   },
+   "by_type": {
+    "pooled": {
+     "pred_lc_merge": 8.179,
+     "pred_lc_disc": 17.8,
+     "true_lc_merge": 6.536,
+     "true_lc_disc": 16.643,
+     "pred_lc": 25.979,
+     "true_lc": 23.179,
+     "n_windows": 140,
+     "dev_total": 0.1208,
+     "dev_merge": 0.2514,
+     "dev_disc": 0.0695
+    },
+    "fold_A": {
+     "pred_lc_merge": 8.057,
+     "pred_lc_disc": 16.057,
+     "true_lc_merge": 6.5,
+     "true_lc_disc": 20.143,
+     "pred_lc": 24.114,
+     "true_lc": 26.643,
+     "n_windows": 70,
+     "dev_total": -0.0949,
+     "dev_merge": 0.2395,
+     "dev_disc": -0.2028
+    },
+    "fold_B": {
+     "pred_lc_merge": 8.3,
+     "pred_lc_disc": 19.543,
+     "true_lc_merge": 6.571,
+     "true_lc_disc": 13.143,
+     "pred_lc": 27.843,
+     "true_lc": 19.714,
+     "n_windows": 70,
+     "dev_total": 0.4123,
+     "dev_merge": 0.2631,
+     "dev_disc": 0.487
+    }
+   },
+   "crps_phys": 82.262,
+   "crps_p3n_iter1": 82.262,
+   "speed_rmse": 4.3619,
+   "d_threshold": 4.3534,
+   "ttc3_cov": 0.7857,
+   "delay_phys_cov": 0.7857
+  }
+ },
+ "goal_package_pass": false,
+ "p3n_iter1_reference": {
+  "30": {
+   "crps": 34.953,
+   "speed_rmse": 3.6896,
+   "lc_dev": 0.2185,
+   "delay_cov": 0.7143,
+   "ttc3_cov": 0.7857
+  },
+  "60": {
+   "crps": 82.262,
+   "speed_rmse": 4.3619,
+   "lc_dev": 0.1279,
+   "delay_cov": 0.7857,
+   "ttc3_cov": 0.7857
+  }
+ },
+ "sharpness_climatology": {
+  "delay_phys@H30": {
+   "cov": 0.7143,
+   "median_band": 163.548,
+   "truth_iqr": 752.695,
+   "crps_l6": 34.953,
+   "clima_crps_empirical": 189.251,
+   "clima_crps_meanpoint": 246.692,
+   "beats_climatology": true,
+   "informative": false
+  },
+  "delay_phys@H60": {
+   "cov": 0.7857,
+   "median_band": 363.092,
+   "truth_iqr": 1549.835,
+   "crps_l6": 82.262,
+   "clima_crps_empirical": 386.556,
+   "clima_crps_meanpoint": 505.546,
+   "beats_climatology": true,
+   "informative": false
+  },
+  "ttc3@H30": {
+   "cov": 0.7857,
+   "median_band": 13.229,
+   "truth_iqr": 10.8,
+   "crps_l6": 4.028,
+   "clima_crps_empirical": 2.629,
+   "clima_crps_meanpoint": 3.497,
+   "beats_climatology": false,
+   "informative": false
+  },
+  "ttc3@H60": {
+   "cov": 0.7857,
+   "median_band": 21.446,
+   "truth_iqr": 16.9,
+   "crps_l6": 8.657,
+   "clima_crps_empirical": 5.14,
+   "clima_crps_meanpoint": 6.795,
+   "beats_climatology": false,
+   "informative": false
+  }
+ },
+ "climatology_source": "fit-root truth sides (raw_fit_truth_m0, disjoint from the scored folds)",
+ "holdout_accessed": false,
+ "simulation": false,
+ "validation_used": false,
+ "validation_loaded": false
+}

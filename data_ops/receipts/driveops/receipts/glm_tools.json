@@ -1,0 +1,20 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "glm_tools",
+ "kind": "dirs",
+ "class": "ARCHIVE",
+ "producer": "GLM (ZCode) worker launcher/scratch",
+ "restore": "copy children back to E:/",
+ "local": [
+  "E:/glm",
+  "E:/glm-worker"
+ ],
+ "drive": "gdrive:research-archive/code/tools",
+ "bytes": 33130,
+ "files": 41,
+ "md5_manifest": "receipts/md5/glm_tools.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T14:08:40"
+}

@@ -1,0 +1,69 @@
+{
+ "experiment_id": "WD-01",
+ "part": "3c-validation-fixes",
+ "status": "complete (validation only; holdout untouched)",
+ "generated_utc": "2026-09-26T00:38:45.870935+00:00",
+ "zero_simulation": true,
+ "holdout_accessed": false,
+ "holdout_untouched_evidence": "results/holdout_untouched.json",
+ "fixes": {
+  "lc_d_continuity": "fixed+tested (defect 1)",
+  "topology_mask": "fixed+tested (defect 2)",
+  "lane_attr_refresh": "fixed+tested (defect 3)",
+  "network_speed_limits": "fixed+tested incl. per-step refresh (defect 4)",
+  "lc_calibration": "ens 22.8 vs true 24.0 LC/window at H=60 (defect 5)",
+  "logging": "build/stage logs added (defect 6)"
+ },
+ "diagnostics": {
+  "D1": "persistence exact; IDM |ds|<=1e-6 m |dv|=0.0 m/s after fixes (was 5.35/0.95)",
+  "D2": "train/serve slot skew 250.0 -> 0.0 over 1000 val steps",
+  "D3": "one-step v MAE 0.34 m/s model vs 0.69 IDM (run-1 member0, 702 val steps)",
+  "D4": "phase-2 per-step terms sane after CE removal; pre-fix explosion via masked -1e9 lane CE",
+  "D5": "scorer synthetic known-answer test passes"
+ },
+ "run3": {
+  "weights": [
+   "weights/run3/member0.pt",
+   "weights/run3/member1.pt",
+   "weights/run3/member2.pt"
+  ],
+  "residual_authority_mps2": 0.5,
+  "recipe": "phase-1 (4 epochs) + curriculum with per-member val revert",
+  "sha256": {
+   "member0.pt": "fcd4bf27c51df727c85cb8c97e198867d9bb63d2580e9b6fdce99131d47b886a",
+   "member1.pt": "932fba160737ee700dc7cd77fe24d5288705f9965fbf68f33288eea0505b44c0",
+   "member2.pt": "8fc61a73641f64f48c4671fab4c110bc5e3224786e1d77c3183fe8990d0dfc57"
+  }
+ },
+ "validation": {
+  "roots": [
+   "cv20_7005m2000",
+   "cv20_7006m2000",
+   "cv30_7305m2700",
+   "seed_7535m2400"
+  ],
+  "windows": 28,
+  "gate": {
+   "ens_speed_rmse_h60": 6.88470530607715,
+   "B1": 9.523925962032749,
+   "B2": 4.972189014046015,
+   "collisions_per_1000": 13.03155147605594,
+   "lc_pred_mean": 22.78571428571428,
+   "lc_true_mean": 24.035714285714285,
+   "beats_B1": true,
+   "beats_B2": false,
+   "collisions_ok": false,
+   "PASS": false
+  },
+  "per_H_csv": "results/val_p3c/val_per_H.csv",
+  "summary_json": "results/val_p3c/val_summary.json"
+ },
+ "gate_verdict": {
+  "beats_B1": true,
+  "beats_B2": false,
+  "collisions_ok": false,
+  "PASS": false
+ },
+ "next_step": "reviewer-gated holdout only after a stability-oriented residual closes the B2 gap (collisions <=1/1000 and speed RMSE <= B2 on validation)",
+ "report": "REPORT_P3C.md"
+}

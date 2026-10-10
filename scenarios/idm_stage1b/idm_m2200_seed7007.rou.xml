@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <vTypeDistribution id="hdv_mix">
+    <vType id="aggressive_car" probability="0.10" carFollowModel="IDM" tau="0.95" sigma="0.6" speedFactor="1.08" accel="3.0" decel="4.5" minGap="1.5" lcCooperative="0.3" lcAssertive="0.6" impatience="0.7"/>
+    <vType id="normal_car" probability="0.70" carFollowModel="IDM" tau="1.1" sigma="0.4" speedFactor="1.0" accel="2.6" decel="4.5" minGap="2.5" lcCooperative="0.6" impatience="0.3"/>
+    <vType id="cautious_car" probability="0.20" carFollowModel="IDM" tau="1.5" sigma="0.2" speedFactor="0.92" accel="2.0" decel="3.0" minGap="3.5" lcCooperative="1.0" impatience="0.0"/>
+  </vTypeDistribution>
+  <route id="mainline_route" edges="1191554636 1487606179 1487606178"/>
+  <route id="ramp_route" edges="11553048#1 1487606179 1487606178"/>
+  <flow id="mainline" type="hdv_mix" route="mainline_route" begin="0" end="900" vehsPerHour="2200" departLane="best" departSpeed="max"/>
+  <flow id="ramp" type="hdv_mix" route="ramp_route" begin="0" end="900" vehsPerHour="400" departLane="best" departSpeed="max"/>
+</routes>

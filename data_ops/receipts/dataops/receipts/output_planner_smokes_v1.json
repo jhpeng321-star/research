@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/planner_smokes_v1",
+ "name": "planner_smokes_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\planner_smokes_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/planner_smokes_v1/planner_smokes_v1.tar.zst",
+ "bytes": 5520421,
+ "files": 68,
+ "archive_bytes": 395137,
+ "archive_md5": "ed0d1e4c0c7d7ec33a0603497ee9c5ed",
+ "member_manifest": "manifests/members/output_planner_smokes_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 63.3,
+ "timestamp": "2026-10-10T01:48:48"
+}

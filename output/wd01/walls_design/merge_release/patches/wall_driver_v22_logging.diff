@@ -1,0 +1,99 @@
+diff --git a/output/campaign_walls_v1/wall_driver.py b/output/campaign_walls_v1/wall_driver.py
+index 910f889..ea55c67 100644
+--- a/output/campaign_walls_v1/wall_driver.py
++++ b/output/campaign_walls_v1/wall_driver.py
+@@ -324,12 +324,32 @@ class _WallRequest:
+         # v2.2 merge-release bookkeeping: the lead member's LAST observed
+         # s_road while in HOLD (the frames a hold tick releases on are the
+         # same ones captured here, so on a ``merge_release`` finish this is
+-        # the release s_road), the last D_min refusal seen while waiting,
+-        # and the realized hold cap (written once at the finish).
++        # the release s_road), the lead member's s_road AT ASSEMBLY (the
++        # frames the ``assembled`` event fired on - the a-priori hold-cap
++        # logging input), the last D_min refusal seen while waiting, and
++        # the realized hold cap (written once at the finish).
+         self.last_hold_lead_s_road_m: float | None = None
++        self.assembled_lead_s_road_m: float | None = None
+         self.last_dmin_refusal: dict | None = None
+         self.hold_cap_logged = False
+ 
++    def note_assembled_frames(self, frames) -> None:
++        """At the ASSEMBLY tick (called from the driver's emit path when
++        the dispatcher's ``assembled`` event passes through, with the
++        SAME report frames that tick acted on): record the lead member's
++        s_road so the ``hold_cap`` row's ``a_priori_effective_hold_s``
++        is the a-priori cap FROM THE ASSEMBLY POSITION,
++        ``min(H, (MERGE_RELEASE_POINT_S - s_lead_at_assembly) / v_wall)``
++        - never a release-time number (v2.2 logging contract, smoke R2
++        fix; report frames only, no control-path effect)."""
++        if self.assembled_lead_s_road_m is not None:
++            return
++        roads = [s_road(frames.get(member))
++                 for member in (self.members or ())]
++        roads = [float(s) for s in roads if s is not None]
++        if roads:
++            self.assembled_lead_s_road_m = max(roads)
++
+     def observe_hold(self, frames, assembled: bool, finished: bool) -> None:
+         """Per-tick v2.2 bookkeeping while the wall is in HOLD: record the
+         LEAD member's s_road (max over members, report frames only)."""
+@@ -354,7 +374,10 @@ class _WallRequest:
+     def hold_cap_row(self, tracker) -> dict | None:
+         """The realized v2.2 hold cap (logged ONCE, right after the wall's
+         terminal dispatcher event): the registered draw vs the effective
+-        hold, and whether the merge start capped it."""
++        hold, and whether the merge start capped it.  The a-priori
++        effective hold is computed AT ASSEMBLY from the assembly lead
++        position (``hold_cap_s`` of the ASSEMBLY s_road), never from the
++        release position."""
+         if (self.state != "requested" or self.hold_cap_logged
+                 or tracker.finished_at is None
+                 or tracker.assembled_at is None):
+@@ -363,9 +386,9 @@ class _WallRequest:
+         effective = round(float(tracker.finished_at)
+                           - float(tracker.assembled_at), 6)
+         capped = tracker.finished_how == "merge_release"
+-        a_priori_cap = (None if self.last_hold_lead_s_road_m is None
++        a_priori_cap = (None if self.assembled_lead_s_road_m is None
+                         else hold_cap_s(self.hold_s,
+-                                        self.last_hold_lead_s_road_m,
++                                        self.assembled_lead_s_road_m,
+                                         self.wall_speed_mps))
+         return {
+             "kind": "hold_cap",
+@@ -376,6 +399,7 @@ class _WallRequest:
+             "capped_at_merge": bool(capped),
+             "cap_point_s": MERGE_RELEASE_POINT_S,
+             "a_priori_effective_hold_s": a_priori_cap,
++            "lead_s_road_at_assembly_m": self.assembled_lead_s_road_m,
+             "lead_s_road_at_release_m": self.last_hold_lead_s_road_m,
+             "wall_speed_mps": self.wall_speed_mps,
+             "source": "cav_report_frames",
+@@ -553,10 +577,19 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+     member_last_lanes: dict = {}
+     lane_state: dict = {"pending": None, "last_snapshot": None}
+     member_lane_rows = 0
++    # the CURRENT control tick's report frames (set right before the
++    # dispatcher step): the ``assembled`` event reads them to record the
++    # lead member's ASSEMBLY s_road for the hold-cap logging (v2.2)
++    frames_holder: dict = {"frames": None}
+ 
+     def _emit(kind: str, row: dict) -> None:
+         if kind == "wall_event":
+             event = {"kind": "wall_event", **row}
++            if event.get("event") == "assembled":
++                # v2.2 logging contract: capture the lead member's s_road
++                # AT ASSEMBLY (this tick's frames - the same reports the
++                # dispatcher declared assembly on) for the hold-cap row.
++                request.note_assembled_frames(frames_holder["frames"])
+             if (event.get("event") == "safety_abort"
+                     and event.get("reason") == "member_frame_missing"
+                     and arrived_members
+@@ -660,6 +693,7 @@ def drive_wall_branch(api, world: dict, arm: dict, run_dir: Path, restore: dict,
+         # COMMAND ISSUANCE CONTRACT (WM-44, carried): the frozen
+         # CommandOwnership and the dispatcher issue every speed command
+         # THEMSELVES inside session.step; the driver only logs records.
++        frames_holder["frames"] = frames
+         records = session.step(ownership, frames, now_s=now, live_ids=live)
+         if guard is not None:
+             try:

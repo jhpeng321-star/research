@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sumoConfiguration>
+  <input>
+    <net-file value="../osm.net.xml.gz"/>
+    <route-files value="meta_dn_0.05.rou.xml"/>
+    <additional-files value="../output.dense.add.xml"/>
+  </input>
+  <output>
+    <tripinfo-output value="trip_dn_0.05.xml"/>
+    <statistic-output value="stats_dn_0.05.xml"/>
+  </output>
+  <processing><ignore-route-errors value="true"/><collision.action value="warn"/><time-to-teleport value="-1"/></processing>
+  <report><no-step-log value="true"/></report>
+</sumoConfiguration>

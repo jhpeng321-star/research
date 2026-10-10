@@ -1,0 +1,74 @@
+{
+  "name": "ws-entrieseval",
+  "path": "E:\\rd-wt\\ws-entrieseval",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/entrieseval",
+  "headBefore": "7b2144e342a9c94ac5cd831d93d723e85d4d53ad",
+  "headType": "branch",
+  "dirtyBefore": 1,
+  "committed": true,
+  "commitSha": "fc1872501f2311a21dd5465033ad00931801c2ec",
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-entrieseval",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-entrieseval.tar.txt",
+  "uploadCount": 187,
+  "uploadBytes": 79781530,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-entrieseval.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 8598e718c018c7eaf3b256ed5bfd7ef8 local 8598e718c018c7eaf3b256ed5bfd7ef8; size 49228098/49228098; manifest md5 match size match; members=187 (tar -t 187, sha256 187); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-entrieseval.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:16:32.696786+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "fc1872501f2311a21dd5465033ad00931801c2ec",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-entrieseval/ws-entrieseval.tar.zst",
+    "name": "ws-entrieseval.tar.zst",
+    "size": 49228098,
+    "md5": "8598e718c018c7eaf3b256ed5bfd7ef8",
+    "sha256": "9a3576210e3e20ff2931627b8a03d344287cb331c98279802bc233ce6c1ec27a",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-entrieseval/ws-entrieseval.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-entrieseval.manifest.json",
+    "manifest_size": 31331,
+    "manifest_md5": "220904ce0ba38a643b01a28d0ae0636c",
+    "member_count": 187,
+    "member_bytes": 79781530,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 6.4,
+    "verify_seconds": 1.7,
+    "upload_seconds": 52.8,
+    "upload_MBps": 0.93,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 187,
+  "memberBytes": 79781530,
+  "junctionsFound": []
+}

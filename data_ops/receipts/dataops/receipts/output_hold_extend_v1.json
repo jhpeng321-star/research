@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/hold_extend_v1",
+ "name": "hold_extend_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\hold_extend_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/hold_extend_v1/hold_extend_v1.tar.zst",
+ "bytes": 31978,
+ "files": 7,
+ "archive_bytes": 11955,
+ "archive_md5": "b501bb13e7d0de09acea80d2a4af4f62",
+ "member_manifest": "manifests/members/output_hold_extend_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.4,
+ "timestamp": "2026-10-10T01:31:47"
+}

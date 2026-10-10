@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/observer_replay_v1",
+ "name": "observer_replay_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\observer_replay_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/observer_replay_v1/observer_replay_v1.tar.zst",
+ "bytes": 193024764,
+ "files": 84,
+ "archive_bytes": 35137037,
+ "archive_md5": "a76d9b614d99908b61c907c0ec4ef55b",
+ "member_manifest": "manifests/members/output_observer_replay_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 188.9,
+ "timestamp": "2026-10-10T02:51:43"
+}

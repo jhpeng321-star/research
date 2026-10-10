@@ -1,0 +1,174 @@
+{
+ "schema": "wm_n1_pack_v3_subset/1",
+ "created_utc": "2026-10-09T12:39:40.253815+00:00",
+ "source_pack": "D:\\rd-staging\\wmn1_feat\\pack_v3",
+ "subset_root": "D:\\rd-staging\\pack_v3_r3_subset",
+ "source_manifest_sha256": "f70f94bb2fa70e286b4555b2f5577349890c915c453f372a85b29b022d116ea6",
+ "source_index_sha256": "b26500614107ec43451a7b8134774f87673aa4b9b833b3e1e9d181ec26359f4c",
+ "n_runs_kept": 341,
+ "n_items_kept": 341,
+ "n_train_windows": 294,
+ "n_val_windows": 47,
+ "n_ticks": 567341,
+ "n_decision": 6820,
+ "arrays": {
+  "veh_step": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    192,
+    16
+   ],
+   "bytes": 3485743104
+  },
+  "veh_mask": {
+   "dtype": "uint8",
+   "shape": [
+    567341,
+    192
+   ],
+   "bytes": 108929472
+  },
+  "plan": {
+   "dtype": "float16",
+   "shape": [
+    6820,
+    192,
+    19,
+    8
+   ],
+   "bytes": 398069760
+  },
+  "wall": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    4,
+    11
+   ],
+   "bytes": 49926008
+  },
+  "wall_mask": {
+   "dtype": "uint8",
+   "shape": [
+    567341,
+    4
+   ],
+   "bytes": 2269364
+  },
+  "counter": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    2,
+    30
+   ],
+   "bytes": 68080920
+  },
+  "accel_next": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    192
+   ],
+   "bytes": 217858944
+  },
+  "target_mask": {
+   "dtype": "uint8",
+   "shape": [
+    567341,
+    192
+   ],
+   "bytes": 108929472
+  },
+  "lane_next": {
+   "dtype": "int8",
+   "shape": [
+    567341,
+    192
+   ],
+   "bytes": 108929472
+  },
+  "arrivals": {
+   "dtype": "int16",
+   "shape": [
+    567341,
+    2
+   ],
+   "bytes": 2269364
+  },
+  "veh_kin": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    192,
+    7
+   ],
+   "bytes": 1525012608
+  },
+  "hdv_base": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    192,
+    6
+   ],
+   "bytes": 1307153664
+  },
+  "cav_plan_ch": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    192,
+    8
+   ],
+   "bytes": 1742871552
+  },
+  "event_tok": {
+   "dtype": "float16",
+   "shape": [
+    567341,
+    8,
+    8
+   ],
+   "bytes": 72619648
+  },
+  "event_mask": {
+   "dtype": "uint8",
+   "shape": [
+    567341,
+    8
+   ],
+   "bytes": 4538728
+  }
+ },
+ "outcomes_rows": 22839,
+ "total_bytes": 9204824672,
+ "free_space_before_bytes": 45921153024,
+ "free_space_initial_bytes": 36714307584,
+ "sha256": {
+  "veh_step.npy": "29649d36cee144fbf721cb3ce57ecc6e9363ccc31b7807b7ececbb9a579770ba",
+  "veh_mask.npy": "e61e04841fe9873e959a17bd1a56ae92e814043b0dc952c55dea73b5cf858bd8",
+  "plan.npy": "b33f91815b7d5757967fbfe1c8167453c8c23ca041f70d76cc03ef433af4cad7",
+  "wall.npy": "941dd502d538bfb116d29c06b835eeff8dc1cb83855a5afbf8a14959f734332c",
+  "wall_mask.npy": "eb571c2feef2818b33dd58ce1abb50247f2b445d42cba1cdbe5f64c766f405eb",
+  "counter.npy": "cad5ebfd44c2aaad1d6184b3c1de276d41225450475a2b5f4c683db80e6b8a15",
+  "accel_next.npy": "cc4d2d4aad6cc59cb7ee32f7025133742afc9e35987a3875b647ccc48382a92b",
+  "target_mask.npy": "174d3f5e5e992aa23c787e5477a660fe17c5c852a6dfac6fcda78d35f7e598d7",
+  "lane_next.npy": "9e975a33d6aa637f0a32082e34f4f837d359522495a5a2fdb12d5f4982c9cdfa",
+  "arrivals.npy": "385e93c10f073cc77de191ce893999c22d97047237cb61d01011fe6e40a32fbe",
+  "veh_kin.npy": "437841de663cd1b72d3deb6d2e3c49ef0312b67c32e27629ac7c1831736f07e8",
+  "hdv_base.npy": "42e63091424634682b19e49e4df1ea5e2c67dd86339f69b5c8b62e638235ea85",
+  "cav_plan_ch.npy": "dde29286877f7b05e2a331b4933db6d084b7fe8faf8f3e61c03cd6bdfbc6efe3",
+  "event_tok.npy": "7f371965ef76501dfc8771fd1a215527aeca8e4ed5b94edab9614abd42d1395a",
+  "event_mask.npy": "2418ea3b3629156f9e62389cb3a03cec5cdc8d76e7a7ed0aa604f4aa8774fce0",
+  "outcomes.parquet": "5b5515672d2bdf3ad6f20650c72efeac113b1673183aefbfd4f7c12ba9420778",
+  "manifest.json": "089cf2d42986196bd5851323966b568ac66bc28a897fe26d1d38f708c7b97171",
+  "INDEX.json": "e8905ac71e78958f454da268558db210c5f311685fb77e13a9bbd165d8cc67d3"
+ },
+ "identity_sidecar": "D:\\rd-staging\\pack_v3_r3_subset\\identities",
+ "filtered_window_lists": [
+  "E:\\rd-wt\\ws-r3-jam\\_out\\r3_packv3_subset\\windows_train_pack_v3.json",
+  "E:\\rd-wt\\ws-r3-jam\\_out\\r3_packv3_subset\\windows_val_pack_v3.json"
+ ]
+}

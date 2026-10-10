@@ -1,0 +1,1621 @@
+{
+ "schema": "wd01_partA_native_data/1",
+ "generated_utc": "2026-09-25T18:39:06.155293+00:00",
+ "zero_simulation": true,
+ "window_s": [
+  60.0,
+  600.0
+ ],
+ "dt_s": 0.5,
+ "checkpoint": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+ "checkpoint_sha256": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+ "physical_lanes": {
+  "0": "main_left",
+  "1": "main_right",
+  "2": "accel",
+  "-1": "junction/unmapped (in_junction=1)"
+ },
+ "d_definition": "d = OFFSET[lane] - s (merge-relative, cross-lane)",
+ "roots": {
+  "cv17": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv17.npz",
+   "sha256": "9067d8941dbf7904daa9a60c09ae9f115e3d7d967422bd061cf876134579882c",
+   "window_sha256": "d9b227ad6177dd9fb5eca443828108d71fce3bc2a90dc28a8f71cc3a261b0137",
+   "representative_tag": "cv17_native",
+   "all_tags": [
+    "cv17_native",
+    "cv17_pi-external-u",
+    "cv17_retain"
+   ],
+   "stems": [
+    "cv17"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 105481,
+   "n_vehicles": 465,
+   "n_cav_ids_observed": 111,
+   "manifest_cav_population": 271,
+   "n_lane_changes": 142,
+   "n_accel_to_main_right": 49,
+   "n_births_in_window": 419,
+   "n_births_entrance_mainline": 182,
+   "n_births_entrance_ramp": 237,
+   "n_exits_arrived": 351,
+   "n_junction_steps": 666,
+   "resid_abs_p50_p95_p99_max": [
+    0.017719674272127506,
+    0.4684612654472181,
+    0.7941897894013201,
+    8.083319270166854
+   ],
+   "resid_bridge_abs_max_m": 7.943109324226784,
+   "n_bridge_pairs": 1070,
+   "n_resid_pairs": 103804
+  },
+  "cv19_4107": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv19_4107.npz",
+   "sha256": "e2197d55f5c57e8c18195450e300ad1700249bc629398e8974ef2823afa874f9",
+   "window_sha256": "27c2cd7d4bb55fe7c50988b8da3d81cf80ef283313c317fc334d376bfead09e8",
+   "representative_tag": "cv19_4107-native",
+   "all_tags": [
+    "cv19_4107-native",
+    "cv19_4107-pi-external-u",
+    "cv19_4107-retain"
+   ],
+   "stems": [
+    "cv19_4107"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 74294,
+   "n_vehicles": 397,
+   "n_cav_ids_observed": 80,
+   "manifest_cav_population": 241,
+   "n_lane_changes": 251,
+   "n_accel_to_main_right": 56,
+   "n_births_in_window": 365,
+   "n_births_entrance_mainline": 150,
+   "n_births_entrance_ramp": 215,
+   "n_exits_arrived": 326,
+   "n_junction_steps": 342,
+   "resid_abs_p50_p95_p99_max": [
+    0.008391123604249984,
+    0.2624518009657595,
+    0.7065359753656648,
+    8.101007204275932
+   ],
+   "resid_bridge_abs_max_m": 7.968056839542216,
+   "n_bridge_pairs": 630,
+   "n_resid_pairs": 73016
+  },
+  "cv19_4108": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv19_4108.npz",
+   "sha256": "d3d074b5d2e0ceecf8dd91402b4379de87ee09e5bdf72b41dd2a63ec5720a82d",
+   "window_sha256": "9704b25460e7de811ec01148419b63d10f0e019fa1c118513609f426f5aa2f47",
+   "representative_tag": "cv19_4108-native",
+   "all_tags": [
+    "cv19_4108-native",
+    "cv19_4108-pi-external-u",
+    "cv19_4108-retain"
+   ],
+   "stems": [
+    "cv19_4108"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 65519,
+   "n_vehicles": 360,
+   "n_cav_ids_observed": 84,
+   "manifest_cav_population": 222,
+   "n_lane_changes": 244,
+   "n_accel_to_main_right": 48,
+   "n_births_in_window": 329,
+   "n_births_entrance_mainline": 135,
+   "n_births_entrance_ramp": 194,
+   "n_exits_arrived": 299,
+   "n_junction_steps": 282,
+   "resid_abs_p50_p95_p99_max": [
+    0.007356523013845262,
+    0.2197530397497672,
+    0.6879005665763411,
+    8.767874180781224
+   ],
+   "resid_bridge_abs_max_m": 7.987716634688267,
+   "n_bridge_pairs": 522,
+   "n_resid_pairs": 64393
+  },
+  "cv20_7001m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7001m2000.npz",
+   "sha256": "8cd4fd05575e630f9236951c1ad53a7241bcb5b6565b52655f86356a3d06dc17",
+   "window_sha256": "3f8f958ce4205ab5db36dfa0a4f7f598d8e9d0b6fdd22b0b53751bda550b8fd4",
+   "representative_tag": "cv20_7001m2000-native",
+   "all_tags": [
+    "cv20_7001m2000-native",
+    "cv20_7001m2000-pi-external-u",
+    "cv20_7001m2000-retain"
+   ],
+   "stems": [
+    "cv20_7001m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 77797,
+   "n_vehicles": 408,
+   "n_cav_ids_observed": 93,
+   "manifest_cav_population": 241,
+   "n_lane_changes": 226,
+   "n_accel_to_main_right": 60,
+   "n_births_in_window": 368,
+   "n_births_entrance_mainline": 148,
+   "n_births_entrance_ramp": 220,
+   "n_exits_arrived": 328,
+   "n_junction_steps": 439,
+   "resid_abs_p50_p95_p99_max": [
+    0.009831290152955141,
+    0.323662718681023,
+    0.7499999999999956,
+    8.106207385659086
+   ],
+   "resid_bridge_abs_max_m": 7.9660416318751945,
+   "n_bridge_pairs": 765,
+   "n_resid_pairs": 76398
+  },
+  "cv20_7002m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7002m2000.npz",
+   "sha256": "f1c363fc1262a193f6548d497352524c7ce3d54f65f12abe5358372e6719ce95",
+   "window_sha256": "55b2aa0f0716a19b01e878daedea439b42217677813e6a01fc72862cd11fbdd0",
+   "representative_tag": "cv20_7002m2000-native",
+   "all_tags": [
+    "cv20_7002m2000-native",
+    "cv20_7002m2000-pi-external-u",
+    "cv20_7002m2000-retain"
+   ],
+   "stems": [
+    "cv20_7002m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 70895,
+   "n_vehicles": 390,
+   "n_cav_ids_observed": 84,
+   "manifest_cav_population": 220,
+   "n_lane_changes": 233,
+   "n_accel_to_main_right": 57,
+   "n_births_in_window": 353,
+   "n_births_entrance_mainline": 140,
+   "n_births_entrance_ramp": 213,
+   "n_exits_arrived": 309,
+   "n_junction_steps": 309,
+   "resid_abs_p50_p95_p99_max": [
+    0.007044194949857641,
+    0.22925001068124765,
+    0.6420162441856458,
+    8.47723142066352
+   ],
+   "resid_bridge_abs_max_m": 8.091279614868796,
+   "n_bridge_pairs": 564,
+   "n_resid_pairs": 69708
+  },
+  "cv20_7003m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7003m2000.npz",
+   "sha256": "ef4bdd3f14700720dd1da1c8ac249276c786482dc386b9713f2d2bb3a1a22057",
+   "window_sha256": "103daf36c173d1fcf0012539663a1125fbc4c396fb28e774cdae050463a09086",
+   "representative_tag": "cv20_7003m2000-native",
+   "all_tags": [
+    "cv20_7003m2000-native",
+    "cv20_7003m2000-pi-external-u",
+    "cv20_7003m2000-retain"
+   ],
+   "stems": [
+    "cv20_7003m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 80050,
+   "n_vehicles": 416,
+   "n_cav_ids_observed": 69,
+   "manifest_cav_population": 212,
+   "n_lane_changes": 243,
+   "n_accel_to_main_right": 65,
+   "n_births_in_window": 376,
+   "n_births_entrance_mainline": 146,
+   "n_births_entrance_ramp": 230,
+   "n_exits_arrived": 340,
+   "n_junction_steps": 469,
+   "resid_abs_p50_p95_p99_max": [
+    0.00900286232788261,
+    0.3237333179397731,
+    0.7500000000000204,
+    8.140946446463307
+   ],
+   "resid_bridge_abs_max_m": 8.02246071097819,
+   "n_bridge_pairs": 816,
+   "n_resid_pairs": 78575
+  },
+  "cv20_7004m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7004m2000.npz",
+   "sha256": "16f0fc47c92edbcd0cef460a0a49c0b68e00b5c33ee624a6911ed8c52525da6e",
+   "window_sha256": "30e59c226243c638de6d44ba113a75a1f5585933bbceb95febad92594ed7d5ce",
+   "representative_tag": "cv20_7004m2000-native",
+   "all_tags": [
+    "cv20_7004m2000-native",
+    "cv20_7004m2000-pi-external-u",
+    "cv20_7004m2000-retain"
+   ],
+   "stems": [
+    "cv20_7004m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 81219,
+   "n_vehicles": 424,
+   "n_cav_ids_observed": 87,
+   "manifest_cav_population": 227,
+   "n_lane_changes": 209,
+   "n_accel_to_main_right": 50,
+   "n_births_in_window": 385,
+   "n_births_entrance_mainline": 160,
+   "n_births_entrance_ramp": 225,
+   "n_exits_arrived": 335,
+   "n_junction_steps": 410,
+   "resid_abs_p50_p95_p99_max": [
+    0.0087839995357335,
+    0.3136315119179339,
+    0.7384086413271773,
+    8.223843380001748
+   ],
+   "resid_bridge_abs_max_m": 7.985398106034475,
+   "n_bridge_pairs": 738,
+   "n_resid_pairs": 79848
+  },
+  "cv20_7005m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7005m2000.npz",
+   "sha256": "226b72449fc609a94177cad906df8b7ab86448e3c7241378dbe90af74855b198",
+   "window_sha256": "e7ff3fb5f3df69408d3896d05c15585f568cbe375f56072dd2301b953ed11551",
+   "representative_tag": "cv20_7005m2000-native",
+   "all_tags": [
+    "cv20_7005m2000-native",
+    "cv20_7005m2000-pi-external-u",
+    "cv20_7005m2000-retain"
+   ],
+   "stems": [
+    "cv20_7005m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 81216,
+   "n_vehicles": 414,
+   "n_cav_ids_observed": 96,
+   "manifest_cav_population": 231,
+   "n_lane_changes": 243,
+   "n_accel_to_main_right": 68,
+   "n_births_in_window": 374,
+   "n_births_entrance_mainline": 146,
+   "n_births_entrance_ramp": 228,
+   "n_exits_arrived": 344,
+   "n_junction_steps": 486,
+   "resid_abs_p50_p95_p99_max": [
+    0.010093425845744797,
+    0.3575166824483297,
+    0.7500000000000107,
+    8.190862305981764
+   ],
+   "resid_bridge_abs_max_m": 7.954329560168945,
+   "n_bridge_pairs": 827,
+   "n_resid_pairs": 79732
+  },
+  "cv20_7006m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7006m2000.npz",
+   "sha256": "9d0aaaed64a9fbbd137644e996adf725be5a9dd1fb93caa7a5b0af5fdde92d63",
+   "window_sha256": "aa6dbf93b117a4f58f6e29c2c53ed11ef76eed76b6ce00c9752615b4505d20b8",
+   "representative_tag": "cv20_7006m2000-native",
+   "all_tags": [
+    "cv20_7006m2000-native",
+    "cv20_7006m2000-pi-external-u",
+    "cv20_7006m2000-retain"
+   ],
+   "stems": [
+    "cv20_7006m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 68671,
+   "n_vehicles": 375,
+   "n_cav_ids_observed": 67,
+   "manifest_cav_population": 209,
+   "n_lane_changes": 354,
+   "n_accel_to_main_right": 76,
+   "n_births_in_window": 337,
+   "n_births_entrance_mainline": 119,
+   "n_births_entrance_ramp": 218,
+   "n_exits_arrived": 317,
+   "n_junction_steps": 452,
+   "resid_abs_p50_p95_p99_max": [
+    0.00953524394518368,
+    0.36567755640169075,
+    0.8189985246051976,
+    8.252394211662159
+   ],
+   "resid_bridge_abs_max_m": 8.034121159259103,
+   "n_bridge_pairs": 761,
+   "n_resid_pairs": 67181
+  },
+  "cv20_7007m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv20_7007m2700.npz",
+   "sha256": "81305d570c6fcf2d71be659eaa9440efe07562fdd1affc167e7738198a5579cd",
+   "window_sha256": "24583d1cf998bc6becdd07c5d785bdb855fcb923448180601bd5c9e063a7279d",
+   "representative_tag": "cv20_7007m2700-native",
+   "all_tags": [
+    "cv20_7007m2700-native",
+    "cv20_7007m2700-pi-external-u",
+    "cv20_7007m2700-retain"
+   ],
+   "stems": [
+    "cv20_7007m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 114808,
+   "n_vehicles": 485,
+   "n_cav_ids_observed": 103,
+   "manifest_cav_population": 281,
+   "n_lane_changes": 139,
+   "n_accel_to_main_right": 60,
+   "n_births_in_window": 445,
+   "n_births_entrance_mainline": 193,
+   "n_births_entrance_ramp": 252,
+   "n_exits_arrived": 346,
+   "n_junction_steps": 693,
+   "resid_abs_p50_p95_p99_max": [
+    0.0156717176764527,
+    0.516189918909823,
+    0.7677728725697444,
+    8.21446133408511
+   ],
+   "resid_bridge_abs_max_m": 8.55884354053517,
+   "n_bridge_pairs": 1105,
+   "n_resid_pairs": 113079
+  },
+  "cv21_7008m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv21_7008m2700.npz",
+   "sha256": "5f62602acce9477096436c4b1fff34df342f70c54a05a0b74cb022d7d5eebad6",
+   "window_sha256": "ff2585c851dafd70de38a24d8db2562da829ddea60d5a85f3520690b77a12ded",
+   "representative_tag": "cv21_7008m2700-native",
+   "all_tags": [
+    "cv21_7008m2700-native",
+    "cv21_7008m2700-pi-external-u",
+    "cv21_7008m2700-retain"
+   ],
+   "stems": [
+    "cv21_7008m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 110602,
+   "n_vehicles": 485,
+   "n_cav_ids_observed": 104,
+   "manifest_cav_population": 276,
+   "n_lane_changes": 110,
+   "n_accel_to_main_right": 45,
+   "n_births_in_window": 433,
+   "n_births_entrance_mainline": 188,
+   "n_births_entrance_ramp": 245,
+   "n_exits_arrived": 369,
+   "n_junction_steps": 780,
+   "resid_abs_p50_p95_p99_max": [
+    0.014175148658861048,
+    0.5136532421647899,
+    0.7809013184992394,
+    8.134063091772235
+   ],
+   "resid_bridge_abs_max_m": 8.0006254185892,
+   "n_bridge_pairs": 1193,
+   "n_resid_pairs": 108814
+  },
+  "cv23_7010m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv23_7010m2700.npz",
+   "sha256": "ab2ea7bf377c37a99f3d64db00cbd83cb7e881f9292fae720683a6d68aa93ecb",
+   "window_sha256": "c48143f85a7795c4970c61463cf39d2667d490648526e2792e7c97eca1683ac8",
+   "representative_tag": "cv23_7010m2700-native",
+   "all_tags": [
+    "cv23_7010m2700-native",
+    "cv23_7010m2700-pi-external-u",
+    "cv23_7010m2700-retain"
+   ],
+   "stems": [
+    "cv23_7010m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 103627,
+   "n_vehicles": 492,
+   "n_cav_ids_observed": 95,
+   "manifest_cav_population": 289,
+   "n_lane_changes": 163,
+   "n_accel_to_main_right": 54,
+   "n_births_in_window": 443,
+   "n_births_entrance_mainline": 189,
+   "n_births_entrance_ramp": 254,
+   "n_exits_arrived": 382,
+   "n_junction_steps": 483,
+   "resid_abs_p50_p95_p99_max": [
+    0.015061712824083529,
+    0.4940362971249048,
+    0.6962128835130339,
+    8.640929587740487
+   ],
+   "resid_bridge_abs_max_m": 8.025101497867464,
+   "n_bridge_pairs": 861,
+   "n_resid_pairs": 102111
+  },
+  "seed_7012m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7012m2700.npz",
+   "sha256": "ecc28159661409f17b0e03c5749af179e0404c37cb0f7e41b3473cd97fa0d3e7",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative_tag": "cv23_7012m2700-retain",
+   "all_tags": [
+    "cv23_7012m2700-retain",
+    "cv25_7012m2700-retain",
+    "cv26_7012m2700-wall",
+    "cv27_7012m2700-native",
+    "cv27_7012m2700-pi-external-u",
+    "cv27_7012m2700-retain"
+   ],
+   "stems": [
+    "cv23_7012m2700",
+    "cv25_7012m2700",
+    "cv26_7012m2700",
+    "cv27_7012m2700"
+   ],
+   "split": "holdout",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 124005,
+   "n_vehicles": 504,
+   "n_cav_ids_observed": 104,
+   "manifest_cav_population": 282,
+   "n_lane_changes": 161,
+   "n_accel_to_main_right": 69,
+   "n_births_in_window": 459,
+   "n_births_entrance_mainline": 196,
+   "n_births_entrance_ramp": 263,
+   "n_exits_arrived": 354,
+   "n_junction_steps": 791,
+   "resid_abs_p50_p95_p99_max": [
+    0.017359871826871043,
+    0.4990525379849121,
+    0.7812660468145537,
+    8.020315868570846
+   ],
+   "resid_bridge_abs_max_m": 7.974257313048508,
+   "n_bridge_pairs": 1223,
+   "n_resid_pairs": 122117
+  },
+  "seed_7011m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7011m2700.npz",
+   "sha256": "e7afdb3a4057ee9be45570a2dd0d5391c31e9357f199a2602fc534641409f128",
+   "window_sha256": "27d750a450bbe9f9fedd0237532f529a14fb8a701808669d376bc0504e1a0eba",
+   "representative_tag": "cv24_7011m2700-retain",
+   "all_tags": [
+    "cv24_7011m2700-retain",
+    "cv25_7011m2700-native",
+    "cv25_7011m2700-pi-external-u",
+    "cv25_7011m2700-retain"
+   ],
+   "stems": [
+    "cv24_7011m2700",
+    "cv25_7011m2700"
+   ],
+   "split": "holdout",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 113047,
+   "n_vehicles": 485,
+   "n_cav_ids_observed": 91,
+   "manifest_cav_population": 265,
+   "n_lane_changes": 125,
+   "n_accel_to_main_right": 53,
+   "n_births_in_window": 444,
+   "n_births_entrance_mainline": 192,
+   "n_births_entrance_ramp": 252,
+   "n_exits_arrived": 354,
+   "n_junction_steps": 683,
+   "resid_abs_p50_p95_p99_max": [
+    0.015657243942590604,
+    0.5405918566785747,
+    0.8102631256996848,
+    8.123703518292176
+   ],
+   "resid_bridge_abs_max_m": 7.978187884525809,
+   "n_bridge_pairs": 1087,
+   "n_resid_pairs": 111350
+  },
+  "cv28_7101m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv28_7101m2000.npz",
+   "sha256": "64dd31f22896030573b59e6eecfae0585f8e68521ba33db797708db6bc2d5a5a",
+   "window_sha256": "a6b1ee6251cb09d4d6016565fb38448f9245b92840d0e261b374ff8d51678c9e",
+   "representative_tag": "cv28_7101m2000-native",
+   "all_tags": [
+    "cv28_7101m2000-native",
+    "cv28_7101m2000-pi-external-u",
+    "cv28_7101m2000-retain"
+   ],
+   "stems": [
+    "cv28_7101m2000"
+   ],
+   "split": "holdout",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 68721,
+   "n_vehicles": 369,
+   "n_cav_ids_observed": 83,
+   "manifest_cav_population": 229,
+   "n_lane_changes": 229,
+   "n_accel_to_main_right": 46,
+   "n_births_in_window": 341,
+   "n_births_entrance_mainline": 140,
+   "n_births_entrance_ramp": 201,
+   "n_exits_arrived": 296,
+   "n_junction_steps": 317,
+   "resid_abs_p50_p95_p99_max": [
+    0.00938802449876519,
+    0.24119391686952577,
+    0.6462233324458629,
+    8.13959426225086
+   ],
+   "resid_bridge_abs_max_m": 7.913584569375553,
+   "n_bridge_pairs": 574,
+   "n_resid_pairs": 67549
+  },
+  "seed_7301m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7301m2000.npz",
+   "sha256": "2a2c3fe913acb8573ada23533cd8b9154914cc6b465f1a90ada3bb484afb8bbd",
+   "window_sha256": "2275eabf2e9eea6f17259862d81397355c059d6527539a2b5956e75ccb41a00c",
+   "representative_tag": "cv29_7301m2000-retain",
+   "all_tags": [
+    "cv29_7301m2000-retain",
+    "cv30_7301m2000-native",
+    "cv30_7301m2000-pi-external-u",
+    "cv30_7301m2000-retain"
+   ],
+   "stems": [
+    "cv29_7301m2000",
+    "cv30_7301m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 71727,
+   "n_vehicles": 388,
+   "n_cav_ids_observed": 80,
+   "manifest_cav_population": 227,
+   "n_lane_changes": 269,
+   "n_accel_to_main_right": 67,
+   "n_births_in_window": 343,
+   "n_births_entrance_mainline": 131,
+   "n_births_entrance_ramp": 212,
+   "n_exits_arrived": 327,
+   "n_junction_steps": 382,
+   "resid_abs_p50_p95_p99_max": [
+    0.007043988967691206,
+    0.3242534089994004,
+    0.7499999999999861,
+    8.293442928232219
+   ],
+   "resid_bridge_abs_max_m": 7.990314745210309,
+   "n_bridge_pairs": 685,
+   "n_resid_pairs": 70385
+  },
+  "cv30_7302m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv30_7302m2000.npz",
+   "sha256": "942ff3396a6924a2563613546342d6989de9d0e68371a7f5dcc8068c30f6ce68",
+   "window_sha256": "ce4252bc48fd40bff2806df8fa13dd9f5bf39ff9e2c37bbaf59eb42fb7f5c2e4",
+   "representative_tag": "cv30_7302m2000-native",
+   "all_tags": [
+    "cv30_7302m2000-native",
+    "cv30_7302m2000-pi-external-u",
+    "cv30_7302m2000-retain"
+   ],
+   "stems": [
+    "cv30_7302m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 81837,
+   "n_vehicles": 422,
+   "n_cav_ids_observed": 89,
+   "manifest_cav_population": 223,
+   "n_lane_changes": 203,
+   "n_accel_to_main_right": 52,
+   "n_births_in_window": 385,
+   "n_births_entrance_mainline": 154,
+   "n_births_entrance_ramp": 231,
+   "n_exits_arrived": 336,
+   "n_junction_steps": 451,
+   "resid_abs_p50_p95_p99_max": [
+    0.009303311817307147,
+    0.3742175400258427,
+    0.7505542590867483,
+    8.210231969317375
+   ],
+   "resid_bridge_abs_max_m": 7.961491992112988,
+   "n_bridge_pairs": 795,
+   "n_resid_pairs": 80417
+  },
+  "cv30_7303m2000": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv30_7303m2000.npz",
+   "sha256": "0b8e82f6f9bf7e0aa080401615e5fc46f53debc9fe9735b9008fe9adccd3c811",
+   "window_sha256": "d1f1b59e65190094e9b975ec320991805e631d8ea61b5fd95fe2970402041a1c",
+   "representative_tag": "cv30_7303m2000-native",
+   "all_tags": [
+    "cv30_7303m2000-native",
+    "cv30_7303m2000-pi-external-u",
+    "cv30_7303m2000-retain"
+   ],
+   "stems": [
+    "cv30_7303m2000"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 66555,
+   "n_vehicles": 387,
+   "n_cav_ids_observed": 76,
+   "manifest_cav_population": 216,
+   "n_lane_changes": 301,
+   "n_accel_to_main_right": 71,
+   "n_births_in_window": 353,
+   "n_births_entrance_mainline": 135,
+   "n_births_entrance_ramp": 218,
+   "n_exits_arrived": 308,
+   "n_junction_steps": 330,
+   "resid_abs_p50_p95_p99_max": [
+    0.007975192278133036,
+    0.2875639770823888,
+    0.6962470231334542,
+    8.177862982285818
+   ],
+   "resid_bridge_abs_max_m": 8.0287067223257,
+   "n_bridge_pairs": 604,
+   "n_resid_pairs": 65263
+  },
+  "cv30_7304m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv30_7304m2700.npz",
+   "sha256": "4b9008786f188482ad3b378a2362c21fae65991bb0a5f151ca86381263a66eec",
+   "window_sha256": "d2d1aa59a0ca1e386dcfe60689b1aa71648d11635703d0858b0684279b785db8",
+   "representative_tag": "cv30_7304m2700-native",
+   "all_tags": [
+    "cv30_7304m2700-native",
+    "cv30_7304m2700-pi-external-u",
+    "cv30_7304m2700-retain"
+   ],
+   "stems": [
+    "cv30_7304m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 112657,
+   "n_vehicles": 503,
+   "n_cav_ids_observed": 95,
+   "manifest_cav_population": 263,
+   "n_lane_changes": 138,
+   "n_accel_to_main_right": 60,
+   "n_births_in_window": 446,
+   "n_births_entrance_mainline": 191,
+   "n_births_entrance_ramp": 255,
+   "n_exits_arrived": 374,
+   "n_junction_steps": 684,
+   "resid_abs_p50_p95_p99_max": [
+    0.016616989143306782,
+    0.5310386755620846,
+    0.7763352180462398,
+    8.240379325872828
+   ],
+   "resid_bridge_abs_max_m": 7.963718668108349,
+   "n_bridge_pairs": 1117,
+   "n_resid_pairs": 110899
+  },
+  "cv30_7305m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv30_7305m2700.npz",
+   "sha256": "045d06a26c3acd195f68ac66fc0657803bb4fa2ea770c8964076719b1823c7de",
+   "window_sha256": "3894ff91868b8cba40246f0738cb8f42a15f16746dfb393f137110cf36a34c9e",
+   "representative_tag": "cv30_7305m2700-native",
+   "all_tags": [
+    "cv30_7305m2700-native",
+    "cv30_7305m2700-pi-external-u",
+    "cv30_7305m2700-retain"
+   ],
+   "stems": [
+    "cv30_7305m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 114133,
+   "n_vehicles": 476,
+   "n_cav_ids_observed": 102,
+   "manifest_cav_population": 309,
+   "n_lane_changes": 143,
+   "n_accel_to_main_right": 54,
+   "n_births_in_window": 431,
+   "n_births_entrance_mainline": 190,
+   "n_births_entrance_ramp": 241,
+   "n_exits_arrived": 346,
+   "n_junction_steps": 645,
+   "resid_abs_p50_p95_p99_max": [
+    0.017238002270633324,
+    0.4982401192865713,
+    0.7635465027403192,
+    8.080428097647873
+   ],
+   "resid_bridge_abs_max_m": 7.9802938253108895,
+   "n_bridge_pairs": 1043,
+   "n_resid_pairs": 112471
+  },
+  "cv30_7306m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_cv30_7306m2700.npz",
+   "sha256": "4fc91c6e2f5e4df2d82d79cee2daba0646068d215e02cbd1de86bc3d687d1c0b",
+   "window_sha256": "ddb9f6ae37eba0cae22199e7d408a8505175a918e0db6757c37cdba2a40464f4",
+   "representative_tag": "cv30_7306m2700-native",
+   "all_tags": [
+    "cv30_7306m2700-native",
+    "cv30_7306m2700-pi-external-u",
+    "cv30_7306m2700-retain"
+   ],
+   "stems": [
+    "cv30_7306m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 110953,
+   "n_vehicles": 505,
+   "n_cav_ids_observed": 98,
+   "manifest_cav_population": 278,
+   "n_lane_changes": 127,
+   "n_accel_to_main_right": 50,
+   "n_births_in_window": 458,
+   "n_births_entrance_mainline": 196,
+   "n_births_entrance_ramp": 262,
+   "n_exits_arrived": 401,
+   "n_junction_steps": 664,
+   "resid_abs_p50_p95_p99_max": [
+    0.012018160076939677,
+    0.41805187159824214,
+    0.7834849267291425,
+    8.322379998952254
+   ],
+   "resid_bridge_abs_max_m": 7.92089599034202,
+   "n_bridge_pairs": 1083,
+   "n_resid_pairs": 109238
+  },
+  "seed_7531m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7531m2700.npz",
+   "sha256": "68608b170e42ac4eab72942691c6593e6b2a10372a7714a8d71f887061b305ea",
+   "window_sha256": "af40641779de45e32c25f69298f727f3e818362c06a944e33558248500ae1771",
+   "representative_tag": "cv31_7531m2700-native",
+   "all_tags": [
+    "cv31_7531m2700-native",
+    "cv31_7531m2700-pi-external-u",
+    "cv31_7531m2700-retain",
+    "cv32_7531m2700-wall"
+   ],
+   "stems": [
+    "cv31_7531m2700",
+    "cv32_7531m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 118466,
+   "n_vehicles": 493,
+   "n_cav_ids_observed": 110,
+   "manifest_cav_population": 294,
+   "n_lane_changes": 143,
+   "n_accel_to_main_right": 63,
+   "n_births_in_window": 445,
+   "n_births_entrance_mainline": 192,
+   "n_births_entrance_ramp": 253,
+   "n_exits_arrived": 369,
+   "n_junction_steps": 745,
+   "resid_abs_p50_p95_p99_max": [
+    0.016359377116144103,
+    0.44238513337076407,
+    0.7852270992485489,
+    8.028058583451791
+   ],
+   "resid_bridge_abs_max_m": 7.979526824311677,
+   "n_bridge_pairs": 1155,
+   "n_resid_pairs": 116675
+  },
+  "seed_7532m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7532m2700.npz",
+   "sha256": "568fe79c1c7aea8e23a943fe2701caff3407470d3486f0d5352d8e71ebc997fe",
+   "window_sha256": "a2448abf21cb578a19885618bb03d017a73bc6658fc7e20cd502d3c8d353b32e",
+   "representative_tag": "cv31_7532m2700-native",
+   "all_tags": [
+    "cv31_7532m2700-native",
+    "cv31_7532m2700-pi-external-u",
+    "cv31_7532m2700-retain",
+    "cv32_7532m2700-wall"
+   ],
+   "stems": [
+    "cv31_7532m2700",
+    "cv32_7532m2700"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 119709,
+   "n_vehicles": 499,
+   "n_cav_ids_observed": 108,
+   "manifest_cav_population": 276,
+   "n_lane_changes": 132,
+   "n_accel_to_main_right": 62,
+   "n_births_in_window": 448,
+   "n_births_entrance_mainline": 192,
+   "n_births_entrance_ramp": 256,
+   "n_exits_arrived": 378,
+   "n_junction_steps": 783,
+   "resid_abs_p50_p95_p99_max": [
+    0.02128960036941871,
+    0.5295047564009963,
+    0.8075434046429812,
+    8.180937038159449
+   ],
+   "resid_bridge_abs_max_m": 7.975564796024919,
+   "n_bridge_pairs": 1227,
+   "n_resid_pairs": 117851
+  },
+  "seed_7534m2700": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7534m2700.npz",
+   "sha256": "adf9d5ab2691e9f34407f4dd7483fffe99f7033fb2baad8ba4f1c1008cf8caec",
+   "window_sha256": "ed2b335c64bc5578798fa7d153a234807fe73f087ba5b403fe096d8dc86e3b9a",
+   "representative_tag": "cv31_7534m2700-native",
+   "all_tags": [
+    "cv31_7534m2700-native",
+    "cv31_7534m2700-pi-external-u",
+    "cv31_7534m2700-retain",
+    "cv32_7534m2700-wall"
+   ],
+   "stems": [
+    "cv31_7534m2700",
+    "cv32_7534m2700"
+   ],
+   "split": "holdout",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 131073,
+   "n_vehicles": 514,
+   "n_cav_ids_observed": 105,
+   "manifest_cav_population": 281,
+   "n_lane_changes": 133,
+   "n_accel_to_main_right": 65,
+   "n_births_in_window": 465,
+   "n_births_entrance_mainline": 200,
+   "n_births_entrance_ramp": 265,
+   "n_exits_arrived": 367,
+   "n_junction_steps": 800,
+   "resid_abs_p50_p95_p99_max": [
+    0.016800995528974044,
+    0.4897192619685772,
+    0.7788109388335045,
+    8.086339953167604
+   ],
+   "resid_bridge_abs_max_m": 9.067987060739155,
+   "n_bridge_pairs": 1176,
+   "n_resid_pairs": 129250
+  },
+  "seed_7535m2400": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7535m2400.npz",
+   "sha256": "b9436366773c60c85c339fca036c1a1416654c4ca5c5c4314f167612d3e00003",
+   "window_sha256": "c5822bbbacec2353d1c30cfc2a3462bde72adb5f51ac1ace691bc6b1ebe377e8",
+   "representative_tag": "cv31_7535m2400-native",
+   "all_tags": [
+    "cv31_7535m2400-native",
+    "cv31_7535m2400-pi-external-u",
+    "cv31_7535m2400-retain",
+    "cv32_7535m2400-wall"
+   ],
+   "stems": [
+    "cv31_7535m2400",
+    "cv32_7535m2400"
+   ],
+   "split": "train",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 103839,
+   "n_vehicles": 476,
+   "n_cav_ids_observed": 76,
+   "manifest_cav_population": 210,
+   "n_lane_changes": 146,
+   "n_accel_to_main_right": 50,
+   "n_births_in_window": 433,
+   "n_births_entrance_mainline": 191,
+   "n_births_entrance_ramp": 242,
+   "n_exits_arrived": 360,
+   "n_junction_steps": 569,
+   "resid_abs_p50_p95_p99_max": [
+    0.011991060674835907,
+    0.5127266369525177,
+    0.7692240081492885,
+    8.181618169032799
+   ],
+   "resid_bridge_abs_max_m": 7.982840960297834,
+   "n_bridge_pairs": 947,
+   "n_resid_pairs": 102270
+  },
+  "seed_7536m2400": {
+   "file": "D:\\rd-wt\\wd01\\output\\wd01\\partA_data\\data\\root_seed_7536m2400.npz",
+   "sha256": "90b0eadfd25002e0885914d9db2cc5aacc758274b8064c06e966271c822dce3a",
+   "window_sha256": "71f44318fb0d4b237c6950848860114a35fc3297ca5b7ff31f6eae6b71018079",
+   "representative_tag": "cv31_7536m2400-native",
+   "all_tags": [
+    "cv31_7536m2400-native",
+    "cv31_7536m2400-pi-external-u",
+    "cv31_7536m2400-retain",
+    "cv32_7536m2400-wall"
+   ],
+   "stems": [
+    "cv31_7536m2400",
+    "cv32_7536m2400"
+   ],
+   "split": "holdout",
+   "n_ticks_present": 1081,
+   "missing_ticks": 0,
+   "n_vehicle_steps": 102521,
+   "n_vehicles": 472,
+   "n_cav_ids_observed": 100,
+   "manifest_cav_population": 257,
+   "n_lane_changes": 167,
+   "n_accel_to_main_right": 50,
+   "n_births_in_window": 426,
+   "n_births_entrance_mainline": 179,
+   "n_births_entrance_ramp": 247,
+   "n_exits_arrived": 360,
+   "n_junction_steps": 604,
+   "resid_abs_p50_p95_p99_max": [
+    0.01315854331085653,
+    0.43083713941024687,
+    0.7930995682965156,
+    8.129558518972711
+   ],
+   "resid_bridge_abs_max_m": 7.94203946438083,
+   "n_bridge_pairs": 1009,
+   "n_resid_pairs": 100873
+  }
+ },
+ "dedup_table": [
+  {
+   "tag": "cv17_native",
+   "root": "cv17",
+   "split": "train",
+   "window_sha256": "d9b227ad6177dd9fb5eca443828108d71fce3bc2a90dc28a8f71cc3a261b0137",
+   "representative": true
+  },
+  {
+   "tag": "cv17_pi-external-u",
+   "root": "cv17",
+   "split": "train",
+   "window_sha256": "d9b227ad6177dd9fb5eca443828108d71fce3bc2a90dc28a8f71cc3a261b0137",
+   "representative": false
+  },
+  {
+   "tag": "cv17_retain",
+   "root": "cv17",
+   "split": "train",
+   "window_sha256": "d9b227ad6177dd9fb5eca443828108d71fce3bc2a90dc28a8f71cc3a261b0137",
+   "representative": false
+  },
+  {
+   "tag": "cv19_4107-native",
+   "root": "cv19_4107",
+   "split": "train",
+   "window_sha256": "27c2cd7d4bb55fe7c50988b8da3d81cf80ef283313c317fc334d376bfead09e8",
+   "representative": true
+  },
+  {
+   "tag": "cv19_4107-pi-external-u",
+   "root": "cv19_4107",
+   "split": "train",
+   "window_sha256": "27c2cd7d4bb55fe7c50988b8da3d81cf80ef283313c317fc334d376bfead09e8",
+   "representative": false
+  },
+  {
+   "tag": "cv19_4107-retain",
+   "root": "cv19_4107",
+   "split": "train",
+   "window_sha256": "27c2cd7d4bb55fe7c50988b8da3d81cf80ef283313c317fc334d376bfead09e8",
+   "representative": false
+  },
+  {
+   "tag": "cv19_4108-native",
+   "root": "cv19_4108",
+   "split": "train",
+   "window_sha256": "9704b25460e7de811ec01148419b63d10f0e019fa1c118513609f426f5aa2f47",
+   "representative": true
+  },
+  {
+   "tag": "cv19_4108-pi-external-u",
+   "root": "cv19_4108",
+   "split": "train",
+   "window_sha256": "9704b25460e7de811ec01148419b63d10f0e019fa1c118513609f426f5aa2f47",
+   "representative": false
+  },
+  {
+   "tag": "cv19_4108-retain",
+   "root": "cv19_4108",
+   "split": "train",
+   "window_sha256": "9704b25460e7de811ec01148419b63d10f0e019fa1c118513609f426f5aa2f47",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7001m2000-native",
+   "root": "cv20_7001m2000",
+   "split": "train",
+   "window_sha256": "3f8f958ce4205ab5db36dfa0a4f7f598d8e9d0b6fdd22b0b53751bda550b8fd4",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7001m2000-pi-external-u",
+   "root": "cv20_7001m2000",
+   "split": "train",
+   "window_sha256": "3f8f958ce4205ab5db36dfa0a4f7f598d8e9d0b6fdd22b0b53751bda550b8fd4",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7001m2000-retain",
+   "root": "cv20_7001m2000",
+   "split": "train",
+   "window_sha256": "3f8f958ce4205ab5db36dfa0a4f7f598d8e9d0b6fdd22b0b53751bda550b8fd4",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7002m2000-native",
+   "root": "cv20_7002m2000",
+   "split": "train",
+   "window_sha256": "55b2aa0f0716a19b01e878daedea439b42217677813e6a01fc72862cd11fbdd0",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7002m2000-pi-external-u",
+   "root": "cv20_7002m2000",
+   "split": "train",
+   "window_sha256": "55b2aa0f0716a19b01e878daedea439b42217677813e6a01fc72862cd11fbdd0",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7002m2000-retain",
+   "root": "cv20_7002m2000",
+   "split": "train",
+   "window_sha256": "55b2aa0f0716a19b01e878daedea439b42217677813e6a01fc72862cd11fbdd0",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7003m2000-native",
+   "root": "cv20_7003m2000",
+   "split": "train",
+   "window_sha256": "103daf36c173d1fcf0012539663a1125fbc4c396fb28e774cdae050463a09086",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7003m2000-pi-external-u",
+   "root": "cv20_7003m2000",
+   "split": "train",
+   "window_sha256": "103daf36c173d1fcf0012539663a1125fbc4c396fb28e774cdae050463a09086",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7003m2000-retain",
+   "root": "cv20_7003m2000",
+   "split": "train",
+   "window_sha256": "103daf36c173d1fcf0012539663a1125fbc4c396fb28e774cdae050463a09086",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7004m2000-native",
+   "root": "cv20_7004m2000",
+   "split": "train",
+   "window_sha256": "30e59c226243c638de6d44ba113a75a1f5585933bbceb95febad92594ed7d5ce",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7004m2000-pi-external-u",
+   "root": "cv20_7004m2000",
+   "split": "train",
+   "window_sha256": "30e59c226243c638de6d44ba113a75a1f5585933bbceb95febad92594ed7d5ce",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7004m2000-retain",
+   "root": "cv20_7004m2000",
+   "split": "train",
+   "window_sha256": "30e59c226243c638de6d44ba113a75a1f5585933bbceb95febad92594ed7d5ce",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7005m2000-native",
+   "root": "cv20_7005m2000",
+   "split": "train",
+   "window_sha256": "e7ff3fb5f3df69408d3896d05c15585f568cbe375f56072dd2301b953ed11551",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7005m2000-pi-external-u",
+   "root": "cv20_7005m2000",
+   "split": "train",
+   "window_sha256": "e7ff3fb5f3df69408d3896d05c15585f568cbe375f56072dd2301b953ed11551",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7005m2000-retain",
+   "root": "cv20_7005m2000",
+   "split": "train",
+   "window_sha256": "e7ff3fb5f3df69408d3896d05c15585f568cbe375f56072dd2301b953ed11551",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7006m2000-native",
+   "root": "cv20_7006m2000",
+   "split": "train",
+   "window_sha256": "aa6dbf93b117a4f58f6e29c2c53ed11ef76eed76b6ce00c9752615b4505d20b8",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7006m2000-pi-external-u",
+   "root": "cv20_7006m2000",
+   "split": "train",
+   "window_sha256": "aa6dbf93b117a4f58f6e29c2c53ed11ef76eed76b6ce00c9752615b4505d20b8",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7006m2000-retain",
+   "root": "cv20_7006m2000",
+   "split": "train",
+   "window_sha256": "aa6dbf93b117a4f58f6e29c2c53ed11ef76eed76b6ce00c9752615b4505d20b8",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7007m2700-native",
+   "root": "cv20_7007m2700",
+   "split": "train",
+   "window_sha256": "24583d1cf998bc6becdd07c5d785bdb855fcb923448180601bd5c9e063a7279d",
+   "representative": true
+  },
+  {
+   "tag": "cv20_7007m2700-pi-external-u",
+   "root": "cv20_7007m2700",
+   "split": "train",
+   "window_sha256": "24583d1cf998bc6becdd07c5d785bdb855fcb923448180601bd5c9e063a7279d",
+   "representative": false
+  },
+  {
+   "tag": "cv20_7007m2700-retain",
+   "root": "cv20_7007m2700",
+   "split": "train",
+   "window_sha256": "24583d1cf998bc6becdd07c5d785bdb855fcb923448180601bd5c9e063a7279d",
+   "representative": false
+  },
+  {
+   "tag": "cv21_7008m2700-native",
+   "root": "cv21_7008m2700",
+   "split": "train",
+   "window_sha256": "ff2585c851dafd70de38a24d8db2562da829ddea60d5a85f3520690b77a12ded",
+   "representative": true
+  },
+  {
+   "tag": "cv21_7008m2700-pi-external-u",
+   "root": "cv21_7008m2700",
+   "split": "train",
+   "window_sha256": "ff2585c851dafd70de38a24d8db2562da829ddea60d5a85f3520690b77a12ded",
+   "representative": false
+  },
+  {
+   "tag": "cv21_7008m2700-retain",
+   "root": "cv21_7008m2700",
+   "split": "train",
+   "window_sha256": "ff2585c851dafd70de38a24d8db2562da829ddea60d5a85f3520690b77a12ded",
+   "representative": false
+  },
+  {
+   "tag": "cv23_7010m2700-native",
+   "root": "cv23_7010m2700",
+   "split": "train",
+   "window_sha256": "c48143f85a7795c4970c61463cf39d2667d490648526e2792e7c97eca1683ac8",
+   "representative": true
+  },
+  {
+   "tag": "cv23_7010m2700-pi-external-u",
+   "root": "cv23_7010m2700",
+   "split": "train",
+   "window_sha256": "c48143f85a7795c4970c61463cf39d2667d490648526e2792e7c97eca1683ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv23_7010m2700-retain",
+   "root": "cv23_7010m2700",
+   "split": "train",
+   "window_sha256": "c48143f85a7795c4970c61463cf39d2667d490648526e2792e7c97eca1683ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv23_7012m2700-retain",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": true
+  },
+  {
+   "tag": "cv25_7012m2700-retain",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv26_7012m2700-wall",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv27_7012m2700-native",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv27_7012m2700-pi-external-u",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv27_7012m2700-retain",
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "window_sha256": "c40ef70d5155e990321e34762e3b9a3d6ba7a8f1dfc296d646c8e0aadecb0ac8",
+   "representative": false
+  },
+  {
+   "tag": "cv24_7011m2700-retain",
+   "root": "seed_7011m2700",
+   "split": "holdout",
+   "window_sha256": "27d750a450bbe9f9fedd0237532f529a14fb8a701808669d376bc0504e1a0eba",
+   "representative": true
+  },
+  {
+   "tag": "cv25_7011m2700-native",
+   "root": "seed_7011m2700",
+   "split": "holdout",
+   "window_sha256": "27d750a450bbe9f9fedd0237532f529a14fb8a701808669d376bc0504e1a0eba",
+   "representative": false
+  },
+  {
+   "tag": "cv25_7011m2700-pi-external-u",
+   "root": "seed_7011m2700",
+   "split": "holdout",
+   "window_sha256": "27d750a450bbe9f9fedd0237532f529a14fb8a701808669d376bc0504e1a0eba",
+   "representative": false
+  },
+  {
+   "tag": "cv25_7011m2700-retain",
+   "root": "seed_7011m2700",
+   "split": "holdout",
+   "window_sha256": "27d750a450bbe9f9fedd0237532f529a14fb8a701808669d376bc0504e1a0eba",
+   "representative": false
+  },
+  {
+   "tag": "cv28_7101m2000-native",
+   "root": "cv28_7101m2000",
+   "split": "holdout",
+   "window_sha256": "a6b1ee6251cb09d4d6016565fb38448f9245b92840d0e261b374ff8d51678c9e",
+   "representative": true
+  },
+  {
+   "tag": "cv28_7101m2000-pi-external-u",
+   "root": "cv28_7101m2000",
+   "split": "holdout",
+   "window_sha256": "a6b1ee6251cb09d4d6016565fb38448f9245b92840d0e261b374ff8d51678c9e",
+   "representative": false
+  },
+  {
+   "tag": "cv28_7101m2000-retain",
+   "root": "cv28_7101m2000",
+   "split": "holdout",
+   "window_sha256": "a6b1ee6251cb09d4d6016565fb38448f9245b92840d0e261b374ff8d51678c9e",
+   "representative": false
+  },
+  {
+   "tag": "cv29_7301m2000-retain",
+   "root": "seed_7301m2000",
+   "split": "train",
+   "window_sha256": "2275eabf2e9eea6f17259862d81397355c059d6527539a2b5956e75ccb41a00c",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7301m2000-native",
+   "root": "seed_7301m2000",
+   "split": "train",
+   "window_sha256": "2275eabf2e9eea6f17259862d81397355c059d6527539a2b5956e75ccb41a00c",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7301m2000-pi-external-u",
+   "root": "seed_7301m2000",
+   "split": "train",
+   "window_sha256": "2275eabf2e9eea6f17259862d81397355c059d6527539a2b5956e75ccb41a00c",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7301m2000-retain",
+   "root": "seed_7301m2000",
+   "split": "train",
+   "window_sha256": "2275eabf2e9eea6f17259862d81397355c059d6527539a2b5956e75ccb41a00c",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7302m2000-native",
+   "root": "cv30_7302m2000",
+   "split": "train",
+   "window_sha256": "ce4252bc48fd40bff2806df8fa13dd9f5bf39ff9e2c37bbaf59eb42fb7f5c2e4",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7302m2000-pi-external-u",
+   "root": "cv30_7302m2000",
+   "split": "train",
+   "window_sha256": "ce4252bc48fd40bff2806df8fa13dd9f5bf39ff9e2c37bbaf59eb42fb7f5c2e4",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7302m2000-retain",
+   "root": "cv30_7302m2000",
+   "split": "train",
+   "window_sha256": "ce4252bc48fd40bff2806df8fa13dd9f5bf39ff9e2c37bbaf59eb42fb7f5c2e4",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7303m2000-native",
+   "root": "cv30_7303m2000",
+   "split": "train",
+   "window_sha256": "d1f1b59e65190094e9b975ec320991805e631d8ea61b5fd95fe2970402041a1c",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7303m2000-pi-external-u",
+   "root": "cv30_7303m2000",
+   "split": "train",
+   "window_sha256": "d1f1b59e65190094e9b975ec320991805e631d8ea61b5fd95fe2970402041a1c",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7303m2000-retain",
+   "root": "cv30_7303m2000",
+   "split": "train",
+   "window_sha256": "d1f1b59e65190094e9b975ec320991805e631d8ea61b5fd95fe2970402041a1c",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7304m2700-native",
+   "root": "cv30_7304m2700",
+   "split": "train",
+   "window_sha256": "d2d1aa59a0ca1e386dcfe60689b1aa71648d11635703d0858b0684279b785db8",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7304m2700-pi-external-u",
+   "root": "cv30_7304m2700",
+   "split": "train",
+   "window_sha256": "d2d1aa59a0ca1e386dcfe60689b1aa71648d11635703d0858b0684279b785db8",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7304m2700-retain",
+   "root": "cv30_7304m2700",
+   "split": "train",
+   "window_sha256": "d2d1aa59a0ca1e386dcfe60689b1aa71648d11635703d0858b0684279b785db8",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7305m2700-native",
+   "root": "cv30_7305m2700",
+   "split": "train",
+   "window_sha256": "3894ff91868b8cba40246f0738cb8f42a15f16746dfb393f137110cf36a34c9e",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7305m2700-pi-external-u",
+   "root": "cv30_7305m2700",
+   "split": "train",
+   "window_sha256": "3894ff91868b8cba40246f0738cb8f42a15f16746dfb393f137110cf36a34c9e",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7305m2700-retain",
+   "root": "cv30_7305m2700",
+   "split": "train",
+   "window_sha256": "3894ff91868b8cba40246f0738cb8f42a15f16746dfb393f137110cf36a34c9e",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7306m2700-native",
+   "root": "cv30_7306m2700",
+   "split": "train",
+   "window_sha256": "ddb9f6ae37eba0cae22199e7d408a8505175a918e0db6757c37cdba2a40464f4",
+   "representative": true
+  },
+  {
+   "tag": "cv30_7306m2700-pi-external-u",
+   "root": "cv30_7306m2700",
+   "split": "train",
+   "window_sha256": "ddb9f6ae37eba0cae22199e7d408a8505175a918e0db6757c37cdba2a40464f4",
+   "representative": false
+  },
+  {
+   "tag": "cv30_7306m2700-retain",
+   "root": "cv30_7306m2700",
+   "split": "train",
+   "window_sha256": "ddb9f6ae37eba0cae22199e7d408a8505175a918e0db6757c37cdba2a40464f4",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7531m2700-native",
+   "root": "seed_7531m2700",
+   "split": "train",
+   "window_sha256": "af40641779de45e32c25f69298f727f3e818362c06a944e33558248500ae1771",
+   "representative": true
+  },
+  {
+   "tag": "cv31_7531m2700-pi-external-u",
+   "root": "seed_7531m2700",
+   "split": "train",
+   "window_sha256": "af40641779de45e32c25f69298f727f3e818362c06a944e33558248500ae1771",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7531m2700-retain",
+   "root": "seed_7531m2700",
+   "split": "train",
+   "window_sha256": "af40641779de45e32c25f69298f727f3e818362c06a944e33558248500ae1771",
+   "representative": false
+  },
+  {
+   "tag": "cv32_7531m2700-wall",
+   "root": "seed_7531m2700",
+   "split": "train",
+   "window_sha256": "af40641779de45e32c25f69298f727f3e818362c06a944e33558248500ae1771",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7532m2700-native",
+   "root": "seed_7532m2700",
+   "split": "train",
+   "window_sha256": "a2448abf21cb578a19885618bb03d017a73bc6658fc7e20cd502d3c8d353b32e",
+   "representative": true
+  },
+  {
+   "tag": "cv31_7532m2700-pi-external-u",
+   "root": "seed_7532m2700",
+   "split": "train",
+   "window_sha256": "a2448abf21cb578a19885618bb03d017a73bc6658fc7e20cd502d3c8d353b32e",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7532m2700-retain",
+   "root": "seed_7532m2700",
+   "split": "train",
+   "window_sha256": "a2448abf21cb578a19885618bb03d017a73bc6658fc7e20cd502d3c8d353b32e",
+   "representative": false
+  },
+  {
+   "tag": "cv32_7532m2700-wall",
+   "root": "seed_7532m2700",
+   "split": "train",
+   "window_sha256": "a2448abf21cb578a19885618bb03d017a73bc6658fc7e20cd502d3c8d353b32e",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7534m2700-native",
+   "root": "seed_7534m2700",
+   "split": "holdout",
+   "window_sha256": "ed2b335c64bc5578798fa7d153a234807fe73f087ba5b403fe096d8dc86e3b9a",
+   "representative": true
+  },
+  {
+   "tag": "cv31_7534m2700-pi-external-u",
+   "root": "seed_7534m2700",
+   "split": "holdout",
+   "window_sha256": "ed2b335c64bc5578798fa7d153a234807fe73f087ba5b403fe096d8dc86e3b9a",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7534m2700-retain",
+   "root": "seed_7534m2700",
+   "split": "holdout",
+   "window_sha256": "ed2b335c64bc5578798fa7d153a234807fe73f087ba5b403fe096d8dc86e3b9a",
+   "representative": false
+  },
+  {
+   "tag": "cv32_7534m2700-wall",
+   "root": "seed_7534m2700",
+   "split": "holdout",
+   "window_sha256": "ed2b335c64bc5578798fa7d153a234807fe73f087ba5b403fe096d8dc86e3b9a",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7535m2400-native",
+   "root": "seed_7535m2400",
+   "split": "train",
+   "window_sha256": "c5822bbbacec2353d1c30cfc2a3462bde72adb5f51ac1ace691bc6b1ebe377e8",
+   "representative": true
+  },
+  {
+   "tag": "cv31_7535m2400-pi-external-u",
+   "root": "seed_7535m2400",
+   "split": "train",
+   "window_sha256": "c5822bbbacec2353d1c30cfc2a3462bde72adb5f51ac1ace691bc6b1ebe377e8",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7535m2400-retain",
+   "root": "seed_7535m2400",
+   "split": "train",
+   "window_sha256": "c5822bbbacec2353d1c30cfc2a3462bde72adb5f51ac1ace691bc6b1ebe377e8",
+   "representative": false
+  },
+  {
+   "tag": "cv32_7535m2400-wall",
+   "root": "seed_7535m2400",
+   "split": "train",
+   "window_sha256": "c5822bbbacec2353d1c30cfc2a3462bde72adb5f51ac1ace691bc6b1ebe377e8",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7536m2400-native",
+   "root": "seed_7536m2400",
+   "split": "holdout",
+   "window_sha256": "71f44318fb0d4b237c6950848860114a35fc3297ca5b7ff31f6eae6b71018079",
+   "representative": true
+  },
+  {
+   "tag": "cv31_7536m2400-pi-external-u",
+   "root": "seed_7536m2400",
+   "split": "holdout",
+   "window_sha256": "71f44318fb0d4b237c6950848860114a35fc3297ca5b7ff31f6eae6b71018079",
+   "representative": false
+  },
+  {
+   "tag": "cv31_7536m2400-retain",
+   "root": "seed_7536m2400",
+   "split": "holdout",
+   "window_sha256": "71f44318fb0d4b237c6950848860114a35fc3297ca5b7ff31f6eae6b71018079",
+   "representative": false
+  },
+  {
+   "tag": "cv32_7536m2400-wall",
+   "root": "seed_7536m2400",
+   "split": "holdout",
+   "window_sha256": "71f44318fb0d4b237c6950848860114a35fc3297ca5b7ff31f6eae6b71018079",
+   "representative": false
+  }
+ ]
+}

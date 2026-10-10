@@ -1,0 +1,34 @@
+# INC1 sha-gated TEXT files only.
+#
+# INC1's launcher gates hash text with the repository's LF-normalised
+# ``lf_sha256`` convention (recorded values are LF shas).  The code already
+# normalises CRLF before hashing, so a Windows ``core.autocrlf=true`` checkout
+# verifies correctly; these attributes additionally pin the on-disk checkout to
+# LF so fresh clones are byte-identical to the recorded shas.
+#
+# Scoped deliberately: only files whose former CRLF bytes are hashed by an INC1
+# gate (the frozen v2.2 copies, the INC1 hook patch, the shared R5/R6 generator
+# package, and the INC1 registrations).  Do NOT add a repository-wide rule.
+
+output/wd01/walls_design/merge_release/copies/**/*.py text eol=lf
+output/wd01/walls_design/merge_release/patches/*.diff text eol=lf
+output/wd01/inc1_gen/**/*.py text eol=lf
+output/wd01/inc1_gen/**/*.md text eol=lf
+output/wd01/wm_n1/REGISTRATION_WM_N1_INC1*.md text eol=lf
+output/wd01/inc1/INC1_MODEL_LOCK.json text eol=lf
+output/wd01/inc1/AUTHORIZATION_INC1.json text eol=lf
+
+# HETDATA t0-shift box script + runbook: keep LF on Windows checkouts so the
+# exact commands in the runbook are byte-stable.
+output/wd01/wm_n1/wms_eval/hetdata_shift.py text eol=lf
+_out/HETDATA_SHIFT.md text eol=lf
+# Prepared WM-S Linux launch chain must survive Windows checkout with LF bytes.
+_out/train_main_chain.sh text eol=lf
+*.sh text eol=lf
+
+# LPWO GPU comparator chain must stay runnable on Linux hosts.
+output/wd01/wm_n1/lpwo/wall_bb_chain.sh text eol=lf
+
+# Preserve exact machine-generated failure receipts, including traceback spaces.
+_out/MAIN2*.xml -whitespace
+_out/brakefix_verification/main2*/command.log -whitespace

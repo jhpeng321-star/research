@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/prior_fusion_v1",
+ "name": "prior_fusion_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\prior_fusion_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/prior_fusion_v1/prior_fusion_v1.tar.zst",
+ "bytes": 17381631,
+ "files": 79,
+ "archive_bytes": 533707,
+ "archive_md5": "e047d7119f0134a11ed6df20a6ab452d",
+ "member_manifest": "manifests/members/output_prior_fusion_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 51.5,
+ "timestamp": "2026-10-10T01:49:54"
+}

@@ -1,0 +1,80 @@
+{
+  "name": "ws-lanehead",
+  "path": "E:\\rd-wt\\ws-lanehead",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/lanehead",
+  "headBefore": "7e8c844716dbe4b6fa0761f2ea6fd361d48f3890",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-lanehead",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-lanehead.tar.txt",
+  "uploadCount": 341,
+  "uploadBytes": 47572830,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-lanehead.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 2da32b1d369519f1123865f5e177fcc0 local 2da32b1d369519f1123865f5e177fcc0; size 17936178/17936178; manifest md5 match size match; members=341 (tar -t 341, sha256 341); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-lanehead.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 4,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:02:53.219892+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "7e8c844716dbe4b6fa0761f2ea6fd361d48f3890",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-lanehead/ws-lanehead.tar.zst",
+    "name": "ws-lanehead.tar.zst",
+    "size": 17936178,
+    "md5": "2da32b1d369519f1123865f5e177fcc0",
+    "sha256": "a45b026a2846cb95da8b280387af7b83804a23953db9f8ce199f71eb1d7731c3",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-lanehead/ws-lanehead.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-lanehead.manifest.json",
+    "manifest_size": 58654,
+    "manifest_md5": "acbc4e1ea80bc5d79d8126d9a2a4afab",
+    "member_count": 341,
+    "member_bytes": 47572830,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 13.0,
+    "verify_seconds": 1.0,
+    "upload_seconds": 39.4,
+    "upload_MBps": 0.46,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 341,
+  "memberBytes": 47572830,
+  "junctionsFound": []
+}

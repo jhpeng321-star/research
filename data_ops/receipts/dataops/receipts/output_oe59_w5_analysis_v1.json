@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe59_w5_analysis_v1",
+ "name": "oe59_w5_analysis_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe59_w5_analysis_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe59_w5_analysis_v1/oe59_w5_analysis_v1.tar.zst",
+ "bytes": 353287,
+ "files": 36,
+ "archive_bytes": 71463,
+ "archive_md5": "63a626795baeb0fbb8a33b6656209368",
+ "member_manifest": "manifests/members/output_oe59_w5_analysis_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.7,
+ "timestamp": "2026-10-10T01:43:50"
+}

@@ -1,0 +1,8 @@
+{
+  "status": "failed",
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe tools/main2_archive.py --out _out/main2_archives",
+  "source_head": "a5f27fe",
+  "error": "archive differs from HEAD blob: output/wd01/wm_n1/A4_FREEZE.json",
+  "cause": "Git archive applied the Windows core.autocrlf conversion to non-LF-attributed files.",
+  "correction": "Use per-command core.autocrlf=false; preserve this failed allocation and create _out/main2_archives_release."
+}

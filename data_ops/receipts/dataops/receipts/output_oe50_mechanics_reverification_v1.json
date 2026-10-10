@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe50_mechanics_reverification_v1",
+ "name": "oe50_mechanics_reverification_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe50_mechanics_reverification_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe50_mechanics_reverification_v1/oe50_mechanics_reverification_v1.tar.zst",
+ "bytes": 15930,
+ "files": 3,
+ "archive_bytes": 6768,
+ "archive_md5": "6dc712939f344c56d31c1ce3b4a2769c",
+ "member_manifest": "manifests/members/output_oe50_mechanics_reverification_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 9.4,
+ "timestamp": "2026-10-10T01:30:34"
+}

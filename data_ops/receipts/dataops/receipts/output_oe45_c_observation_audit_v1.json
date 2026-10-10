@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe45_c_observation_audit_v1",
+ "name": "oe45_c_observation_audit_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe45_c_observation_audit_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe45_c_observation_audit_v1/oe45_c_observation_audit_v1.tar.zst",
+ "bytes": 64143,
+ "files": 4,
+ "archive_bytes": 23689,
+ "archive_md5": "47a9e6482214b33d28fb16c42a5f52eb",
+ "member_manifest": "manifests/members/output_oe45_c_observation_audit_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 52.0,
+ "timestamp": "2026-10-10T01:34:49"
+}

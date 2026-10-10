@@ -1,0 +1,1294 @@
+"""Offline mixed-assignment dispatcher checks: real CommandOwnership, mocked physics.
+
+Mirrors the repo mocking style (tests/test_command_ownership.py,
+tests/test_cv14_switch.py): a recording VehicleAPI, a fixed damping
+controller, and a fake PI session that reproduces the PIOwnerAdapter driver
+contract (identity checks, contiguous one-second ticks, subset classification,
+single ownership write with per-vehicle callbacks). No SUMO, no model load.
+
+Covers the mixed_assignment/3 contract (WM-40): native-default plans with
+optional strict_roster, configurable dwell (default 0), the WM-14 repair-A
+switch clocks, and planner-driven wall groups (subset rosters, lifecycle
+assembly -> hold -> handback to NATIVE, safety aborts in every phase,
+multiple disjoint walls with locked membership, per-tick telemetry).
+"""
+from types import SimpleNamespace
+
+import pytest
+
+from traffic_shepherd.config import load_config
+from traffic_shepherd.damping import DampingDecision
+from traffic_shepherd.mixed_assignment import (
+    DEFAULT_COMMIT_HORIZON_S,
+    AssignmentPlan,
+    MixedAssignmentSession,
+    WallAssignment,
+)
+from traffic_shepherd.ownership import CommandOwnership, CommandRecord
+from traffic_shepherd.wall_group import (
+    SAFE_SPEED_MIN_MPS,
+    WallGroupSession,
+    WallRequestError,
+    validate_wall_request,
+)
+
+ROSTER = frozenset({"a", "b", "c"})
+ROSTER4 = frozenset({"a", "b", "c", "d"})
+
+
+class VehicleAPI:
+    def __init__(self):
+        self.calls = []
+        self.mode = 31
+
+    def getSpeedMode(self, vehicle):
+        return self.mode
+
+    def slowDown(self, *args):
+        self.calls.append(("slowDown", *args))
+
+    def setSpeed(self, *args):
+        self.calls.append(("setSpeed", *args))
+
+
+class CountingDampingController:
+    """The ownership-default damping instance, counting its decide calls."""
+
+    config = load_config()
+
+    def __init__(self):
+        self.decided = []
+
+    def decide(self, frame, *, now_s):
+        if frame is None:
+            self.decided.append(None)
+            return DampingDecision(fallback_reason="missing_observation")
+        self.decided.append(frame.vehicle_id)
+        return DampingDecision(-2.0, -2.0, frame.speed_mps - 2.0,
+                               actor_input_si=(15.0, 15.0, 30.0))
+
+
+class FakePIAdapter:
+    """Reproduces the PIOwnerAdapter driver contract the proxy must satisfy.
+
+    Like the real adapter it requires itself as the owner controller and the
+    full roster identity, classifies only its live_ids subset, invalidates
+    lifecycle each tick, performs exactly one ownership write with a record
+    callback for every subset vehicle, verifies callback identity through
+    ``owner._last``, and demands contiguous one-second ticks.  Dispatcher-
+    staged wall commands are forwarded verbatim and must be disjoint from
+    the PI subset (the adapter may not add its own).
+    """
+
+    def __init__(self, cav_ids, script=None):
+        self.cav_ids = frozenset(cav_ids)
+        self.script = dict(script or {})
+        self.steps = []
+        self.invalidations = []
+        self.decided = []
+        self._tick = None
+        self._in_call = False
+
+    def invalidate(self, *, live_ids, departed_ids=(), id_reuse_ids=()):
+        self.invalidations.append((frozenset(live_ids), frozenset(departed_ids),
+                                   frozenset(id_reuse_ids)))
+
+    def decide(self, frame, *, now_s):
+        if not self._in_call:
+            raise AssertionError("PI decide is only valid inside an owner tick")
+        if frame is None:
+            return DampingDecision(fallback_reason="missing_observation")
+        self.decided.append(frame.vehicle_id)
+        return self.script[frame.vehicle_id]
+
+    def step(self, owner, frames, *, now_s, live_ids, native_ids=(), wall_commands=None,
+             departed_ids=(), id_reuse_ids=()):
+        assert owner.controller is self, "adapter must be the (proxy) owner controller"
+        assert owner.cav_ids == self.cav_ids, "adapter must see the full roster"
+        assert owner.cav_speed_mode == 31
+        assert not native_ids, "mixed routing must not carry a native mask"
+        wall = dict(wall_commands or {})
+        live = set(live_ids) & self.cav_ids
+        assert not set(wall) & live, "wall commands must be disjoint from the PI subset"
+        if self._tick is not None:
+            assert now_s == self._tick + 1.0, "adapter ticks must be contiguous"
+        assert set(frames) <= live, "adapter frames must lie inside its subset"
+        self.invalidate(live_ids=live, departed_ids=departed_ids, id_reuse_ids=id_reuse_ids)
+        self.steps.append(dict(now_s=now_s, live=frozenset(live),
+                               departed=frozenset(departed_ids),
+                               reuse=frozenset(id_reuse_ids)))
+        expected = set(live)
+        self._in_call = True
+        seen = set()
+
+        def callback(record):
+            assert record.vehicle_id in expected, "callback from outside the PI subset"
+            assert getattr(owner, "_last", {}).get(record.vehicle_id) is record, \
+                "callback must be the persisted owner record"
+            seen.add(record.vehicle_id)
+
+        try:
+            records = owner.step(frames, now_s=now_s, live_ids=live, native_ids=(),
+                                 wall_commands=wall, record_callback=callback)
+        finally:
+            self._in_call = False
+        assert seen == expected, "owner must acknowledge every subset vehicle"
+        self._tick = now_s
+        return records
+
+
+class FakePISession:
+    def __init__(self, cav_ids, script=None):
+        self.cav_ids = frozenset(cav_ids)
+        self.adapter = FakePIAdapter(cav_ids, script)
+
+    def step(self, *args, **kwargs):
+        return self.adapter.step(*args, **kwargs)
+
+
+def frame(vehicle, now=0.0, speed=15.0, position_m=None, lane_index=None):
+    return SimpleNamespace(vehicle_id=vehicle, timestamp_s=now, speed_mps=speed,
+                           allowed_speed_mps=30.0, front_coverage_m=100.0,
+                           rear_coverage_m=100.0, front=None, rear=None,
+                           position_m=position_m, lane_index=lane_index)
+
+
+def frames(now=0.0):
+    return {v: frame(v, now) for v in sorted(ROSTER)}
+
+
+def wall_frames(now, members, others=()):
+    """Frames for a wall tick: ``members`` maps id -> (speed, position, lane);
+    ``others`` adds non-member frames from the same triple form."""
+    out = {}
+    for v, (speed, pos, lane) in {**members, **dict(others)}.items():
+        out[v] = frame(v, now, speed=speed, position_m=pos, lane_index=lane)
+    return out
+
+
+PI_DECISION = DampingDecision(command_acceleration_mps2=-0.5, target_speed_mps=14.5)
+
+
+def build(script=None, *, cav_ids=ROSTER, with_pi=True):
+    damping = CountingDampingController()
+    pi = FakePISession(cav_ids, script) if with_pi else None
+    api = VehicleAPI()
+    owner = CommandOwnership(SimpleNamespace(vehicle=api), cav_ids, damping)
+    session = MixedAssignmentSession(circles_controller=damping, pi_session=pi, cav_ids=cav_ids)
+    return session, owner, damping, pi, api
+
+
+def slow_downs(api):
+    return [call for call in api.calls if call[0] == "slowDown"]
+
+
+def wall_plan(wall_id, members, speed, *, phase="assemble", hold_s=None,
+              release_at_s=None, extras=None, pid="pw"):
+    """Full-map plan with one wall; ``extras`` adds {cav: mode} non-members."""
+    assignments = {v: "wall-v2" for v in members}
+    assignments.update(extras or {})
+    if release_at_s is not None:
+        terms = {"release_at_s": release_at_s}
+    else:
+        terms = {"hold_s": WALL_HOLD if hold_s is None else hold_s}
+    return AssignmentPlan(assignments, pid,
+                          walls=(WallAssignment(wall_id, tuple(members), speed,
+                                                phase=phase, **terms),))
+
+
+def test_three_modes_exactly_one_writer_path_per_tick():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "native", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    records = session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER | {"hdv"})
+    by_id = {record.vehicle_id: record for record in records}
+    assert set(by_id) == set(ROSTER)
+    # PI path: written as damping with the scripted PI proposal values.
+    assert by_id["a"].owner == "damping" and by_id["a"].issued_target_speed_mps == 14.5
+    assert by_id["a"].issued_acceleration_mps2 == -0.5
+    # Native path: release override, no command written.
+    assert by_id["b"].owner == "native" and by_id["b"].fallback_reason == "selected_native"
+    # Damping path: ownership default with the damping instance's values.
+    assert by_id["c"].owner == "damping" and by_id["c"].issued_target_speed_mps == 13.0
+    # Exactly one writer path per CAV: one PI decide, one damping decide, one
+    # native fallback, one real ownership write, and only the PI/damping CAVs
+    # commanded.
+    assert pi.adapter.decided == ["a"]
+    assert damping.decided == ["c"]
+    assert pi.adapter.steps[0]["live"] == {"a"}
+    assert slow_downs(api) == [("slowDown", "a", 14.5, 1.0), ("slowDown", "c", 13.0, 1.0)]
+    assert not any(call[0] == "setSpeed" for call in api.calls)
+
+
+def test_native_is_the_default_everywhere():
+    """mixed_assignment/3: a CAV absent from a lenient plan targets native,
+    and the initial placement of the whole roster is native."""
+    assert DEFAULT_COMMIT_HORIZON_S == 0.0
+    session, owner, damping, pi, api = build()
+    # Before any plan the committed placement is native for the whole roster.
+    records = session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    assert {r.vehicle_id: r.owner for r in records} == {"a": "native", "b": "native",
+                                                        "c": "native"}
+    assert session._committed == {v: "native" for v in sorted(ROSTER)}
+    # First plan: named CAVs place immediately; absent CAVs target native.
+    session.apply_plan(AssignmentPlan({"a": "damping"}, "p1"), now_s=1.0)
+    session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+    assert session._committed["a"] == "damping"
+    assert session._committed["b"] == "native" and session._committed["c"] == "native"
+    # A later lenient plan that omits them retires them to native again.
+    session.apply_plan(AssignmentPlan({}, "p2"), now_s=2.0)
+    session.step(owner, frames(2.0), now_s=2.0, live_ids=ROSTER)
+    assert session._committed == {v: "native" for v in sorted(ROSTER)}
+
+
+def test_plain_damping_ticks_never_touch_the_pi_session():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"}, "p1"),
+                       now_s=0.0)
+    records = session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert by_id["a"].owner == "damping" and by_id["c"].owner == "damping"
+    assert by_id["b"].owner == "native"
+    assert pi.adapter.steps == [] and pi.adapter.decided == []
+    assert sorted(damping.decided) == ["a", "c"]
+
+
+def test_plan_change_mid_horizon_is_deferred_then_applied_once():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=0.0)
+    for now in range(0, 5):
+        session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+    # Update arriving at t=4 defers the change to t=14.
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p2", commit_horizon_s=10.0), now_s=4.0)
+    assert session._commit_until["a"] == 14.0
+    for now in range(5, 14):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        by_id = {record.vehicle_id: record for record in records}
+        assert by_id["a"].owner == "damping" and by_id["a"].issued_target_speed_mps == 14.5
+        assert pi.adapter.steps[-1]["live"] == {"a"}
+    records = session.step(owner, frames(14.0), now_s=14.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert by_id["a"].owner == "native"
+    assert session._commit_until["a"] == 24.0  # applied switch re-locks for one horizon
+    for now in range(15, 21):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "native"
+    # A further change proposed at t=20 waits past the lock: no second switch
+    # within the horizon of the t=14 switch.
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p3", commit_horizon_s=10.0), now_s=20.0)
+    assert session._commit_until["a"] == 30.0
+    for now in range(21, 30):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "native"
+    records = session.step(owner, frames(30.0), now_s=30.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+    # The PI adapter was ticked on every tick after engagement, empty subset
+    # included, keeping its contiguous clock.
+    assert [step["now_s"] for step in pi.adapter.steps] == [float(t) for t in range(0, 31)]
+    assert pi.adapter.steps[-1]["live"] == frozenset()
+
+
+def test_removed_cav_absent_from_plan_targets_native():
+    """mixed_assignment/3: dropping a CAV from the plan retires it to NATIVE
+    (under the planner default dwell of 0, at the next tick)."""
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+    by1 = {r["vehicle_id"]: r for r in session.assignment_records
+           if r["timestamp_s"] == 1.0}
+    assert by1["a"]["action"] == "pi-external-u"
+    # p2 drops every CAV: all target native, executed at the next tick (dwell 0).
+    session.apply_plan(AssignmentPlan({}, "p2"), now_s=2.0)
+    records = session.step(owner, frames(2.0), now_s=2.0, live_ids=ROSTER)
+    by2 = {record.vehicle_id: record for record in records}
+    assert {v: by2[v].owner for v in sorted(ROSTER)} == {"a": "native", "b": "native",
+                                                         "c": "native"}
+    assert by2["a"].released_to_native and ("setSpeed", "a", -1) in api.calls
+    assert session._committed == {v: "native" for v in sorted(ROSTER)}
+    assert pi.adapter.steps[-1]["live"] == frozenset()  # adapter subset emptied
+    assert damping.decided == ["b", "c", "b", "c"]  # a retired to native: damping never re-decides it
+
+
+def test_departure_and_reappearance_routing():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "native", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    # a (PI) and c (damping) depart after t=0; b (native) remains.
+    records = session.step(owner, frames(1.0), now_s=1.0, live_ids={"b"},
+                           disappeared_ids={"a", "c"})
+    assert [record.vehicle_id for record in records] == ["b"]
+    assert pi.adapter.steps[-1]["departed"] == {"a", "c"}
+    assert pi.adapter.invalidations[-1] == (frozenset(), frozenset({"a", "c"}), frozenset())
+    assert session._commit_until["a"] == 0.0  # default horizon: no dwell lock
+    # a reappears at t=2: re-enters under its plan assignment as an id reuse.
+    records = session.step(owner, frames(2.0), now_s=2.0, live_ids=ROSTER,
+                           reappeared_ids={"a"})
+    by_id = {record.vehicle_id: record for record in records}
+    assert set(by_id) == set(ROSTER)
+    assert by_id["a"].owner == "damping" and by_id["a"].issued_target_speed_mps == 14.5
+    assert pi.adapter.steps[-1]["reuse"] == {"a"}
+    assert pi.adapter.steps[-1]["live"] == {"a"}
+    assert by_id["b"].owner == "native"
+
+
+def test_double_write_guard_fires_on_duplicated_records():
+    session, owner, damping, pi, api = build()
+    real_step = owner.step
+
+    def duplicated(frames_arg, **kwargs):
+        records = real_step(frames_arg, **kwargs)
+        return list(records) + [records[0]]
+
+    owner.step = duplicated
+    with pytest.raises(RuntimeError, match="exactly one controller path"):
+        session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    with pytest.raises(RuntimeError, match="stopped"):
+        session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+
+
+def test_double_write_guard_fires_on_missing_coverage():
+    session, owner, damping, pi, api = build()
+    real_step = owner.step
+
+    def dropping(frames_arg, **kwargs):
+        return real_step(frames_arg, **kwargs)[:-1]
+
+    owner.step = dropping
+    with pytest.raises(RuntimeError, match="exactly one controller path"):
+        session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+
+
+def test_double_write_guard_fires_on_foreign_record():
+    session, owner, damping, pi, api = build()
+    real_step = owner.step
+
+    def extra(frames_arg, **kwargs):
+        records = real_step(frames_arg, **kwargs)
+        foreign = CommandRecord("hdv", 0.0, "damping", None, None, None, None, None, False)
+        return list(records) + [foreign]
+
+    owner.step = extra
+    with pytest.raises(RuntimeError, match="exactly one controller path"):
+        session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+
+
+def test_telemetry_rows_emitted_per_tick():
+    emitted = []
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.bind_emit(lambda kind, payload: emitted.append((kind, payload)))
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "native", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    session.step(owner, frames(1.0), now_s=1.0, live_ids={"a", "c"}, disappeared_ids={"b"})
+    assert len(emitted) == len(session.assignment_records) == 5  # 3 + 2 live CAVs
+    assert all(kind == "mixed_assignment" for kind, _ in emitted)
+    first = session.assignment_records[0]
+    assert first["vehicle_id"] == "a" and first["action"] == "pi-external-u"
+    assert first["plan_id"] == "p1" and first["committed_until_s"] == 0.0
+    assert first["timestamp_s"] == 0.0
+    assert first["wall_id"] is None and first["locked"] is False
+    per_tick = {}
+    for row in session.assignment_records:
+        per_tick.setdefault(row["timestamp_s"], []).append(row["vehicle_id"])
+    assert per_tick[0.0] == ["a", "b", "c"] and per_tick[1.0] == ["a", "c"]
+    payload = emitted[0][1]
+    assert "kind" not in payload and payload["vehicle_id"] == "a"
+    with pytest.raises(RuntimeError, match="before the first tick"):
+        session.bind_emit(lambda kind, payload: None)
+
+
+def test_plan_and_wall_schema_validation():
+    session, owner, damping, pi, api = build()
+    with pytest.raises(ValueError, match="outside the roster"):
+        session.apply_plan(AssignmentPlan({"zz": "native"}, "p"), now_s=0.0)
+    with pytest.raises(ValueError, match="modes must be"):
+        session.apply_plan(AssignmentPlan({"a": "bad"}, "p"), now_s=0.0)
+    with pytest.raises(ValueError, match="horizon"):
+        AssignmentPlan({}, "p", commit_horizon_s=-1.0)
+    # 0 is now the planner default and explicitly valid.
+    assert AssignmentPlan({}, "p", commit_horizon_s=0.0).commit_horizon_s == 0.0
+    # wall-v2 assignments and the wall member union must coincide.
+    with pytest.raises(ValueError, match="coincide"):
+        AssignmentPlan({"a": "wall-v2"}, "p")
+    with pytest.raises(ValueError, match="coincide"):
+        AssignmentPlan({"a": "native"}, "p",
+                       walls=(WallAssignment("w", ("a", "b"), 8.0, hold_s=1.0),))
+    with pytest.raises(ValueError, match="unique"):
+        AssignmentPlan({"a": "wall-v2", "b": "wall-v2"}, "p",
+                       walls=(WallAssignment("w1", ("a", "b"), 8.0, hold_s=1.0),
+                              WallAssignment("w1", ("a", "b"), 8.0, hold_s=1.0)))
+    with pytest.raises(ValueError, match="two walls"):
+        AssignmentPlan({"a": "wall-v2", "b": "wall-v2"}, "p",
+                       walls=(WallAssignment("w1", ("a", "b"), 8.0, hold_s=1.0),
+                              WallAssignment("w2", ("a", "b"), 8.0, hold_s=1.0)))
+    # WallAssignment intrinsic validation.
+    with pytest.raises(ValueError, match="wall id"):
+        WallAssignment("", ("a", "b"), 8.0, hold_s=1.0)
+    with pytest.raises(ValueError, match="at least two"):
+        WallAssignment("w", ("a",), 8.0, hold_s=1.0)
+    with pytest.raises(ValueError, match="distinct"):
+        WallAssignment("w", ("a", "a"), 8.0, hold_s=1.0)
+    with pytest.raises(ValueError, match="positive"):
+        WallAssignment("w", ("a", "b"), 0.0, hold_s=1.0)
+    with pytest.raises(ValueError, match="exactly one"):
+        WallAssignment("w", ("a", "b"), 8.0)
+    with pytest.raises(ValueError, match="exactly one"):
+        WallAssignment("w", ("a", "b"), 8.0, hold_s=1.0, release_at_s=5.0)
+    with pytest.raises(ValueError, match="phase"):
+        WallAssignment("w", ("a", "b"), 8.0, phase="rearm", hold_s=1.0)
+    with pytest.raises(ValueError, match="strict_roster must"):
+        AssignmentPlan({}, "p", strict_roster="yes")
+    # strict_roster plans must name the full roster (checked by the session).
+    with pytest.raises(ValueError, match="strict_roster plan is missing"):
+        session.apply_plan(AssignmentPlan({"a": "native"}, "p", strict_roster=True),
+                           now_s=0.0)
+    # The safety floor is enforced when the wall is staged (not a trigger).
+    with pytest.raises(ValueError, match="floor"):
+        session.apply_plan(wall_plan("w", ("a", "b"), SAFE_SPEED_MIN_MPS), now_s=0.0)
+    assert session._walls == {} and not session._first_plan_applied
+
+
+def test_pi_plan_requires_bound_pi_session():
+    damping = CountingDampingController()
+    session = MixedAssignmentSession(circles_controller=damping, pi_session=None,
+                                     cav_ids=ROSTER)
+    with pytest.raises(ValueError, match="no PI session"):
+        session.apply_plan(AssignmentPlan({"a": "pi-external-u"}, "p"), now_s=0.0)
+    with pytest.raises(ValueError, match="roster must equal"):
+        MixedAssignmentSession(circles_controller=damping,
+                               pi_session=FakePISession(frozenset({"a", "b"})),
+                               cav_ids=ROSTER)
+
+
+def test_owner_roster_and_clock_guards():
+    # Roster mismatch is rejected before the session binds its owner.
+    session, owner, damping, pi, api = build()
+    stranger_roster = CommandOwnership(SimpleNamespace(vehicle=VehicleAPI()),
+                                       frozenset({"a", "b"}), damping)
+    with pytest.raises(ValueError, match="roster differs"):
+        session.step(stranger_roster, frames(0.0), now_s=0.0, live_ids=ROSTER)
+
+    # The ownership default controller must be the registered damping instance.
+    session, owner, damping, pi, api = build()
+    other_controller = CommandOwnership(SimpleNamespace(vehicle=VehicleAPI()), ROSTER,
+                                        CountingDampingController())
+    with pytest.raises(ValueError, match="not the registered damping"):
+        session.step(other_controller, frames(0.0), now_s=0.0, live_ids=ROSTER)
+
+    # The session cannot be handed a second CommandOwnership instance.
+    session, owner, damping, pi, api = build()
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    replacement = CommandOwnership(SimpleNamespace(vehicle=VehicleAPI()), ROSTER,
+                                   CountingDampingController())
+    with pytest.raises(ValueError, match="replace its CommandOwnership"):
+        session.step(replacement, frames(1.0), now_s=1.0, live_ids=ROSTER)
+
+    # Off-grid and gapped ticks are rejected; any step failure stops the session.
+    session, owner, damping, pi, api = build()
+    with pytest.raises(ValueError, match="one-second grid"):
+        session.step(owner, frames(1.5), now_s=1.5, live_ids=ROSTER)
+    session, owner, damping, pi, api = build()
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    with pytest.raises(ValueError, match="every one-second control tick"):
+        session.step(owner, frames(3.0), now_s=3.0, live_ids=ROSTER)
+    with pytest.raises(RuntimeError, match="stopped"):
+        session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+
+
+def test_missing_observation_routing_inside_pi_tick():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    # a's observation is unavailable at t=1: released to native, damping CAVs
+    # unaffected, and the tick still writes every live CAV exactly once.
+    partial = frames(1.0)
+    del partial["a"]
+    damping.decided.clear()
+    api.calls.clear()
+    records = session.step(owner, partial, now_s=1.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert set(by_id) == set(ROSTER)
+    assert by_id["a"].owner == "native" and by_id["a"].released_to_native
+    assert by_id["c"].owner == "damping" and damping.decided == [None, "b", "c"]
+    assert api.calls == [("setSpeed", "a", -1), ("slowDown", "b", 13.0, 1.0),
+                         ("slowDown", "c", 13.0, 1.0)]
+
+
+# ---------------------------------------------------------------------------
+# WM-14 repair A acceptance fixtures: stable-request convergence and the
+# pending-target stability / execution-dwell clock contract (mixed_assignment/2,
+# re-verified unchanged under /3).  Contract: repeating an unchanged differing
+# request no longer refreshes the switch deadline (that rule let a 1 Hz
+# replanner starve its own request forever, WM-13 finding 3); a pending
+# switch executes once the previous execution's dwell and the pending
+# target's stability clocks both hold.
+# ---------------------------------------------------------------------------
+
+
+def test_repeated_stable_request_executes_after_one_horizon():
+    """WM-13 starvation reproduction in strict interleaved 1 Hz order: the
+    plan for tick t is submitted immediately before tick t is stepped.
+    Native at 0, damping re-requested EVERY tick 1..30 with H=10 must execute
+    at 11 (not starve at deadline 40), with no switch before 11, and no
+    re-request may ever move the pending or dwell deadlines."""
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    for now in range(1, 31):
+        session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                          f"p{now}", commit_horizon_s=10.0),
+                           now_s=float(now))
+        # REGRESSION ASSERT (WM-14 repair A): the unchanged re-request does
+        # not reset the stability clock and does not push commit_until.
+        if 2 <= now <= 10:
+            assert session._pending["a"] == "damping"
+            assert session._pending_since["a"] == 1.0
+            assert session._pending_horizon["a"] == 10.0
+            assert session._commit_until["a"] == 11.0
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        by_id = {record.vehicle_id: record for record in records}
+        if now < 11:
+            assert by_id["a"].owner == "native"
+            assert by_id["a"].fallback_reason == "selected_native"
+            assert not any(call[0] == "slowDown" and call[1] == "a" for call in api.calls)
+        else:
+            assert by_id["a"].owner == "damping"
+            assert by_id["a"].issued_target_speed_mps == 13.0
+    assert session._pending["a"] is None and session._last_exec["a"] == 11.0
+    assert session._commit_until["a"] == 21.0
+
+
+def test_chattering_different_targets_restart_stability_and_do_not_execute():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    modes = ("native", "pi-external-u")
+    for now in range(1, 26):  # a different target every second: stability restarts
+        want = modes[now % 2]
+        session.apply_plan(AssignmentPlan({"a": want, "b": "damping", "c": "damping"},
+                                          f"p{now}", commit_horizon_s=10.0),
+                           now_s=float(now))
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+        assert session._pending_since["a"] == float(now)
+        assert session._pending_horizon["a"] == 10.0
+    # Hold the last target: it must execute exactly stability-horizon after
+    # it started (t=25 + 10), the dwell lock (25 + 10) coinciding here.
+    for now in range(26, 35):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+    records = session.step(owner, frames(35.0), now_s=35.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    # Held target from t=25 was pi: executed at exactly 25+10 and routed
+    # through the PI adapter (records carry the damping writer identity with
+    # the PI proposal values).
+    assert by_id["a"].owner == "damping" and by_id["a"].issued_target_speed_mps == 14.5
+    assert pi.adapter.steps[-1]["live"] == {"a"}
+    assert session._committed["a"] == "pi-external-u"
+    assert session._last_exec["a"] == 35.0 and session._exec_horizon["a"] == 10.0
+
+
+def test_horizon_only_change_does_not_postpone_pending_switch():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    # Strict interleaved order: each plan is submitted in its own tick right
+    # before that tick is stepped (the horizon change at t=5 comes AFTER the
+    # t=1..4 steps, never pre-applied).
+    for now in range(1, 11):
+        if now == 1:
+            session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                              "p1", commit_horizon_s=10.0), now_s=1.0)
+        if now == 5:
+            # Same pending target under a much longer horizon: the stability
+            # deadline stays frozen at 1 + 10; only a real target change moves it.
+            session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                              "p2", commit_horizon_s=100.0), now_s=5.0)
+            assert session._pending_since["a"] == 1.0 and session._pending_horizon["a"] == 10.0
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+    records = session.step(owner, frames(11.0), now_s=11.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in records}["a"].owner == "native"
+
+
+def test_returning_to_committed_cancels_pending_switch():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=1.0)
+    assert session._pending["a"] == "native"
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p2", commit_horizon_s=10.0), now_s=2.0)
+    assert session._pending["a"] is None and session._pending_since["a"] is None
+    for now in range(2, 15):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+        assert session._pending["a"] is None
+
+
+def test_independent_cavs_do_not_share_clocks():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=5.0), now_s=0.0)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p1", commit_horizon_s=5.0), now_s=1.0)
+    for now in range(1, 6):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        owners = {r.vehicle_id: r.owner for r in records}
+        assert owners["b"] == "damping" and owners["c"] == "damping"
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "native"},
+                                      "p2", commit_horizon_s=5.0), now_s=6.0)
+    records = session.step(owner, frames(6.0), now_s=6.0, live_ids=ROSTER)
+    owners = {r.vehicle_id: r.owner for r in records}
+    assert owners["b"] == "native"      # b: stability 1+5, dwell 0+5 -> due now
+    assert owners["c"] == "damping"     # c: stability only at 6+5=11
+    for now in range(7, 11):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        owners = {r.vehicle_id: r.owner for r in records}
+        assert owners["b"] == "native" and owners["c"] == "damping"
+    records = session.step(owner, frames(11.0), now_s=11.0, live_ids=ROSTER)
+    owners = {r.vehicle_id: r.owner for r in records}
+    assert owners["b"] == "native" and owners["c"] == "native"
+
+
+def test_plan_times_must_be_monotonic_but_same_tick_plans_remain_valid():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=5.0)
+    with pytest.raises(ValueError, match="monotonic"):
+        session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                          "p2", commit_horizon_s=10.0), now_s=4.999)
+    # Same-tick plans keep the existing plan-before-step order: the second
+    # plan at t=5 supersedes the first before the tick steps (here it
+    # cancels b's still-pending native request entirely).
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p3", commit_horizon_s=10.0), now_s=5.0)
+    records = session.step(owner, frames(5.0), now_s=5.0, live_ids=ROSTER)
+    assert session._plan_id == "p3"
+    assert session._pending["b"] is None
+    assert {record.vehicle_id: record for record in records}["b"].owner == "damping"
+
+
+def test_dwell_defaults_to_zero_and_stays_configurable():
+    """Requirement 1: the dispatcher dwell is configurable; the default of 0
+    gives planner-driven switching without dwell; H>0 keeps the rule for
+    non-planner use."""
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"}, "p0"),
+                       now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    # Default horizon 0: the switch requested at t=1 executes at t=1 itself.
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"}, "p1"),
+                       now_s=1.0)
+    assert session._pending_since["a"] == 1.0 and session._pending_horizon["a"] == 0.0
+    records = session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+
+    # A nonzero horizon still locks: H=3 defers the next switch to 1+3.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=3.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=3.0), now_s=1.0)
+    for now in (1, 2, 3):
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        assert {record.vehicle_id: record for record in records}["a"].owner == "native"
+    records = session.step(owner, frames(4.0), now_s=4.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in records}["a"].owner == "damping"
+
+
+def test_native_release_and_return_reuse_the_same_damping_instance():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=5.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    assert owner.controller is damping  # native path: plain ownership write
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p2", commit_horizon_s=5.0), now_s=1.0)
+    for now in range(1, 10):
+        session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+    damping.decided.clear()
+    session.step(owner, frames(10.0), now_s=10.0, live_ids=ROSTER)
+    assert "a" in damping.decided  # decided by the identical damping instance again
+    assert owner.controller is damping
+
+
+def test_pi_committed_exit_and_reentry_reset_recurrence():
+    session, owner, damping, pi, api = build(script={"a": PI_DECISION})
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=5.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    assert pi.adapter.steps[-1]["live"] == {"a"}
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p2", commit_horizon_s=5.0), now_s=1.0)
+    for now in range(1, 6):
+        session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+    records = session.step(owner, frames(6.0), now_s=6.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in records}["a"].owner == "native"
+    lives = [step["live"] for step in pi.adapter.steps]
+    assert lives[-1] == frozenset()  # adapter subset emptied on the executed exit
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p3", commit_horizon_s=5.0), now_s=7.0)
+    for now in range(7, 12):
+        session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+    records = session.step(owner, frames(12.0), now_s=12.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert by_id["a"].owner == "damping" and by_id["a"].issued_target_speed_mps == 14.5
+    assert pi.adapter.steps[-1]["live"] == {"a"}  # re-entered with fresh recurrence
+
+
+def test_pending_switch_keeps_missing_observation_and_single_write_contract():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=1.0)
+    partial = frames(1.0)
+    del partial["a"]  # a's observation unavailable while b's switch is pending
+    api.calls.clear()
+    records = session.step(owner, partial, now_s=1.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert set(by_id) == set(ROSTER)
+    assert by_id["a"].owner == "native" and by_id["a"].released_to_native
+    assert by_id["b"].owner == "damping"  # pending switch has NOT executed early
+    assert session._pending["b"] == "native"
+    assert api.calls == [("setSpeed", "a", -1), ("slowDown", "b", 13.0, 1.0),
+                         ("slowDown", "c", 13.0, 1.0)]
+
+
+def test_telemetry_records_pending_and_committed_clock_state():
+    emitted = []
+    session, owner, damping, pi, api = build()
+    session.bind_emit(lambda kind, payload: emitted.append((kind, payload)))
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p2", commit_horizon_s=10.0), now_s=1.0)
+    session.step(owner, frames(1.0), now_s=1.0, live_ids=ROSTER)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "native"},
+                                      "p3", commit_horizon_s=10.0), now_s=2.0)
+    session.step(owner, frames(2.0), now_s=2.0, live_ids=ROSTER)
+    rows = {r["vehicle_id"]: r for r in session.assignment_records if r["timestamp_s"] == 2.0}
+    assert rows["b"]["pending_target"] == "native"
+    assert rows["b"]["pending_since_s"] == 1.0  # repeated target: clock NOT restarted
+    assert rows["b"]["stability_deadline_s"] == 11.0
+    assert rows["b"]["last_execution_s"] == 0.0 and rows["b"]["dwell_deadline_s"] == 10.0
+    assert rows["b"]["committed_until_s"] == 11.0
+    assert rows["c"]["pending_target"] == "native" and rows["c"]["pending_since_s"] == 2.0
+    assert rows["a"]["pending_target"] is None and rows["a"]["last_execution_s"] == 0.0
+    assert all(kind == "mixed_assignment" for kind, _ in emitted)
+
+
+# ---------------------------------------------------------------------------
+# WM-14 dispatcher review acceptance: step/plan time order, real native
+# release handback, and the REAL PIOwnerAdapter lifecycle through the proxy.
+# ---------------------------------------------------------------------------
+
+
+def test_step_rejects_time_before_last_plan_allows_same_tick_plan_before_step():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=0.0)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=5.0)
+    # A plan submitted at t=5 is authoritative from t=5: stepping t=4 must be
+    # rejected, and the failed tick stops the session.
+    with pytest.raises(ValueError, match="precedes the last submitted plan"):
+        session.step(owner, frames(4.0), now_s=4.0, live_ids=ROSTER)
+    with pytest.raises(RuntimeError, match="stopped"):
+        session.step(owner, frames(5.0), now_s=5.0, live_ids=ROSTER)
+    # Fresh session: two plans in the SAME tick keep the plan-before-step
+    # order (last plan wins) and stepping that tick is allowed.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=10.0), now_s=5.0)
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "native", "c": "damping"},
+                                      "p1", commit_horizon_s=10.0), now_s=5.0)
+    records = session.step(owner, frames(5.0), now_s=5.0, live_ids=ROSTER)
+    assert session._plan_id == "p1"
+    assert session._pending["b"] == "native"  # staged; dwell holds execution
+    assert {record.vehicle_id: record for record in records}["b"].owner == "damping"
+
+
+def test_native_switch_releases_previously_owned_cav_with_set_speed_minus_one():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                      "p0", commit_horizon_s=5.0), now_s=0.0)
+    session.step(owner, frames(0.0), now_s=0.0, live_ids=ROSTER)
+    assert any(call[0] == "slowDown" and call[1] == "a" for call in api.calls)
+    # Native requested at t=1 with H=5: stability 1+5, dwell 0+5 -> executes at 6.
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=5.0), now_s=1.0)
+    for now in range(1, 7):
+        api.calls.clear()
+        records = session.step(owner, frames(float(now)), now_s=float(now), live_ids=ROSTER)
+        by_id = {record.vehicle_id: record for record in records}
+        assert (by_id["a"].owner == "native") == (now == 6)
+    by_id = {record.vehicle_id: record for record in records}
+    # The executed switch hands the previously owned CAV back: explicit
+    # released_to_native receipt plus the setSpeed(a, -1) release command.
+    assert by_id["a"].owner == "native"
+    assert by_id["a"].released_to_native is True
+    assert by_id["a"].fallback_reason == "selected_native"
+    assert ("setSpeed", "a", -1) in api.calls
+    assert not any(call[0] == "slowDown" and call[1] == "a" for call in api.calls)
+    # A natively-assigned CAV that was never owned is a no-write row.
+    api.calls.clear()
+    records = session.step(owner, frames(7.0), now_s=7.0, live_ids=ROSTER)
+    assert {r.vehicle_id: r for r in records}["a"].released_to_native is False
+    assert not any(call[1] == "a" for call in api.calls)
+
+
+def real_build(cav_ids=ROSTER):
+    """Real CommandOwnership + real PISession/PIOwnerAdapter, fake TraCI only."""
+    from output.controller_verification_v7.pi_owner_adapter import REGISTERED_U_MPS
+    from traffic_shepherd.pi_session import PISession
+
+    damping = CountingDampingController()
+    pi = PISession(config=load_config(), cav_ids=set(cav_ids),
+                   desired_speed_mps=REGISTERED_U_MPS)
+    api = VehicleAPI()
+    owner = CommandOwnership(SimpleNamespace(vehicle=api), cav_ids, damping)
+    session = MixedAssignmentSession(circles_controller=damping, pi_session=pi,
+                                     cav_ids=cav_ids)
+    return session, owner, damping, pi, api
+
+
+def observed_frame(vehicle, now, speed=15.0, gap=20.0):
+    from traffic_shepherd.sensing import NeighborMeasurement, SensorFrame
+
+    return SensorFrame(vehicle, now, speed, 0.0, 30.0, 0,
+                       front=NeighborMeasurement(gap, -2.0),
+                       rear=NeighborMeasurement(10.0, 0.0),
+                       front_coverage_m=100.0, rear_coverage_m=100.0)
+
+
+def test_real_pi_adapter_records_owner_damping_with_pi_target_and_subset():
+    session, owner, damping, pi, api = real_build()
+    adapter = pi.adapter
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1"), now_s=0.0)
+    fr = {v: observed_frame(v, 0.0, speed=15.0 + i) for i, v in enumerate(sorted(ROSTER))}
+    records = session.step(owner, fr, now_s=0.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    # Successful PI command: written by the damping owner with the adapter's
+    # prepared bridge values, and the PI subset was exactly {"a"}.
+    assert by_id["a"].owner == "damping"
+    written = [r for r in adapter.receipts if r.status == "written_owner_receipt"]
+    assert [r.vehicle_id for r in written] == ["a"]
+    assert by_id["a"].issued_target_speed_mps == written[0].issued_target_speed_mps
+    ev_full = [e for e in adapter.evidence if e["vehicle_id"] == "a"][-1]
+    assert by_id["a"].issued_acceleration_mps2 == ev_full["issued_acceleration_mps2"]
+    assert any(call[0] == "slowDown" and call[1] == "a" and call[2] ==
+               by_id["a"].issued_target_speed_mps for call in api.calls)
+    assert damping.decided == ["b", "c"]  # PI CAV decided by the adapter only
+    # Recurrence state was reset from the measured ego speed at engagement.
+    assert adapter._initialized == {"a"}
+    assert ev_full["previous_raw_command_mps"] == pytest.approx(15.0)
+    assert ev_full["owner_record"]["owner"] == "damping"
+
+
+def test_real_pi_adapter_exit_reentry_departure_and_missing_report_reset():
+    session, owner, damping, pi, api = real_build()
+    adapter = pi.adapter
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p1", commit_horizon_s=5.0), now_s=0.0)
+    session.step(owner, {v: observed_frame(v, 0.0, speed=15.0) for v in sorted(ROSTER)},
+                 now_s=0.0, live_ids=ROSTER)
+    assert adapter._initialized == {"a"} and "a" in adapter.pi._state
+    # Departure at t=1: the departed id reaches the adapter; state is dropped.
+    session.step(owner, {v: observed_frame(v, 1.0) for v in ("b", "c")}, now_s=1.0,
+                 live_ids={"b", "c"}, disappeared_ids={"a"})
+    assert "a" not in adapter.pi._state and adapter._initialized == set()
+    # Reappearance at t=2 re-enters under the still-committed PI plan with a
+    # fresh recurrence reset from the NEW measured speed (id reuse).
+    session.step(owner, {v: observed_frame(v, 2.0, speed=12.0) for v in sorted(ROSTER)},
+                 now_s=2.0, live_ids=ROSTER, reappeared_ids={"a"})
+    assert "a" in adapter.pi._state and adapter._initialized == {"a"}
+    ev = [e for e in adapter.evidence if e["vehicle_id"] == "a"][-1]
+    assert ev["previous_raw_command_mps"] == pytest.approx(12.0)
+    # Missing report at t=3: released to native that tick, recurrence dropped.
+    api.calls.clear()
+    records = session.step(owner, {v: observed_frame(v, 3.0) for v in ("b", "c")},
+                           now_s=3.0, live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert by_id["a"].owner == "native" and by_id["a"].released_to_native
+    assert ("setSpeed", "a", -1) in api.calls
+    assert "a" not in adapter.pi._state and adapter._initialized == set()
+    # Next valid report re-initializes again from the measured speed.
+    session.step(owner, {v: observed_frame(v, 4.0, speed=17.0) for v in sorted(ROSTER)},
+                 now_s=4.0, live_ids=ROSTER)
+    ev = [e for e in adapter.evidence if e["vehicle_id"] == "a"][-1]
+    assert ev["previous_raw_command_mps"] == pytest.approx(17.0)
+    assert adapter._initialized == {"a"}
+    # Committed exit to native (requested at 5, H=5: stability 10, dwell 9 ->
+    # executes at 10): the subset empties and recurrence drops with it.
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "damping", "c": "damping"},
+                                      "p2", commit_horizon_s=5.0), now_s=5.0)
+    for now in range(5, 11):
+        records = session.step(owner, {v: observed_frame(v, float(now), speed=15.0)
+                                       for v in sorted(ROSTER)}, now_s=float(now),
+                               live_ids=ROSTER)
+    assert {r.vehicle_id: r for r in records}["a"].owner == "native"
+    assert adapter._initialized == set()
+    # Re-entry under a later PI plan (requested at 11, H=5: stability 16,
+    # dwell 10+5 -> executes at 16) resets from the new measured speed again.
+    session.apply_plan(AssignmentPlan({"a": "pi-external-u", "b": "damping", "c": "damping"},
+                                      "p3", commit_horizon_s=5.0), now_s=11.0)
+    for now in range(11, 17):
+        records = session.step(owner, {v: observed_frame(v, float(now), speed=21.5)
+                                       for v in sorted(ROSTER)}, now_s=float(now),
+                               live_ids=ROSTER)
+    by_id = {record.vehicle_id: record for record in records}
+    assert by_id["a"].owner == "damping"  # routed through the adapter again
+    ev = [e for e in adapter.evidence if e["vehicle_id"] == "a"][-1]
+    assert ev["previous_raw_command_mps"] == pytest.approx(21.5)
+    assert adapter._initialized == {"a"}
+
+
+# ---------------------------------------------------------------------------
+# WM-40 wall groups: planner-driven subset walls with locked membership,
+# assembly -> hold -> handback-to-NATIVE lifecycle, safety aborts in every
+# phase, multiple disjoint walls, and per-tick wall telemetry.
+# ---------------------------------------------------------------------------
+
+
+WALL_HOLD = 100.0  # long hold: these tests release explicitly
+
+
+def test_wall_lifecycle_assembly_hold_and_planner_release():
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    assert session._committed["a"] == "wall-v2" and session._committed["b"] == "wall-v2"
+    # t=0: assembly pacing, bounded deceleration (15 m/s toward 8: clip -3).
+    rec0 = session.step(owner, wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 103.0, 1)},
+                                           others={"c": (9.0, 40.0, 2)}),
+                        now_s=0.0, live_ids=ROSTER)
+    by0 = {record.vehicle_id: record for record in rec0}
+    assert by0["a"].owner == "wall" and by0["b"].owner == "wall"
+    assert by0["a"].issued_target_speed_mps == 12.0  # 15 + 1.0 * (-3)
+    assert by0["c"].owner == "damping" and by0["c"].issued_target_speed_mps == 7.0
+    assert [e["event"] for e in session.wall_records] == ["assembly_start"]
+    # The planner cannot cancel assembly (release phase refused) ...
+    with pytest.raises(ValueError, match="cannot cancel"):
+        session.apply_plan(wall_plan("w", ("a", "b"), 8.0, phase="release", hold_s=WALL_HOLD,
+                                     extras={"c": "damping"}), now_s=1.0)
+    # ... and cannot drop the wall while it assembles ...
+    with pytest.raises(ValueError, match="cannot be dropped"):
+        session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                          "p_drop"), now_s=1.0)
+    # ... but the plan re-affirming the wall is accepted (speed updates allowed).
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=1.0)
+    # t=1: members aligned in speed and span -> assembled.
+    rec1 = session.step(owner, wall_frames(1.0, {"a": (8.0, 101.0, 0), "b": (8.0, 104.0, 1)},
+                                           others={"c": (9.0, 40.0, 2)}),
+                        now_s=1.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in rec1}["a"].owner == "wall"
+    assert [e["event"] for e in session.wall_records] == ["assembly_start", "assembled"]
+    assert session._walls["w"].phase == "hold"
+    # Member lock: re-listing the active wall with a different member set is
+    # rejected even when the plan itself is self-consistent ({a, c} here).
+    with pytest.raises(ValueError, match="locked"):
+        session.apply_plan(AssignmentPlan({"a": "wall-v2", "b": "native",
+                                           "c": "wall-v2"},
+                                          "p_re",
+                                          walls=(WallAssignment("w", ("a", "c"), 8.0,
+                                                                hold_s=WALL_HOLD),)),
+                           now_s=2.0)
+    # t=2: hold commands pin exactly the wall speed.
+    rec2 = session.step(owner, wall_frames(2.0, {"a": (8.0, 101.0, 0), "b": (8.0, 104.0, 1)},
+                                           others={"c": (9.0, 40.0, 2)}),
+                        now_s=2.0, live_ids=ROSTER)
+    by2 = {record.vehicle_id: record for record in rec2}
+    assert by2["a"].owner == "wall" and by2["a"].issued_target_speed_mps == 8.0
+    assert by2["a"].wall_request_mps2 == 0.0  # already at the wall speed
+    # Explicit planner release AFTER assembly: handback to native in one tick.
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, phase="release", hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=3.0)
+    rec3 = session.step(owner, wall_frames(3.0, {"a": (8.0, 101.0, 0), "b": (8.0, 104.0, 1)},
+                                           others={"c": (9.0, 40.0, 2)}),
+                        now_s=3.0, live_ids=ROSTER)
+    by3 = {record.vehicle_id: record for record in rec3}
+    assert by3["a"].owner == "native" and by3["a"].released_to_native
+    assert by3["b"].owner == "native" and by3["b"].released_to_native
+    assert ("setSpeed", "a", -1) in api.calls and ("setSpeed", "b", -1) in api.calls
+    assert session._committed["a"] == "native" and session._committed["b"] == "native"
+    assert session._walls == {}
+    assert [e["event"] for e in session.wall_records][-1] == "released"
+
+
+def test_wall_hold_terms_auto_release_and_absence_after_hold():
+    # hold_s: release fires on the first tick at/after assembled_at + hold_s.
+    # The base frames are already speed/span aligned, so the wall assembles
+    # during the t=0 tick itself.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=3.0,
+                                 extras={"c": "damping"}), now_s=0.0)
+    base = {"a": (8.0, 100.0, 0), "b": (8.0, 103.0, 1)}
+    other = {"c": (9.0, 40.0, 2)}
+    session.step(owner, wall_frames(0.0, base, others=other), now_s=0.0, live_ids=ROSTER)
+    assert [e["event"] for e in session.wall_records][-1] == "assembled"
+    rec1 = session.step(owner, wall_frames(1.0, base, others=other), now_s=1.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in rec1}["a"].owner == "wall"
+    rec2 = session.step(owner, wall_frames(2.0, base, others=other), now_s=2.0, live_ids=ROSTER)
+    assert {record.vehicle_id: record for record in rec2}["a"].owner == "wall"  # 0+3=3 not due
+    rec3 = session.step(owner, wall_frames(3.0, base, others=other), now_s=3.0, live_ids=ROSTER)
+    by3 = {record.vehicle_id: record for record in rec3}
+    assert by3["a"].owner == "native" and session._walls == {}
+    assert [e["event"] for e in session.wall_records][-1] == "released"
+
+    # release_at_s: absolute release time.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, release_at_s=2.0,
+                                 extras={"c": "damping"}), now_s=0.0)
+    session.step(owner, wall_frames(0.0, base, others=other), now_s=0.0, live_ids=ROSTER)
+    session.step(owner, wall_frames(1.0, base, others=other), now_s=1.0, live_ids=ROSTER)
+    rec2 = session.step(owner, wall_frames(2.0, base, others=other), now_s=2.0, live_ids=ROSTER)
+    by2 = {record.vehicle_id: record for record in rec2}
+    assert by2["a"].owner == "native" and by2["b"].owner == "native"
+
+    # Absence from a plan after hold is a release; during assembly it is not.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    with pytest.raises(ValueError, match="cannot be dropped"):
+        session.apply_plan(AssignmentPlan({"a": "damping", "b": "damping", "c": "damping"},
+                                          "p_x"), now_s=1.0)
+    session.step(owner, wall_frames(0.0, base, others=other), now_s=0.0, live_ids=ROSTER)
+    session.step(owner, wall_frames(1.0, base, others=other), now_s=1.0, live_ids=ROSTER)
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "native", "c": "damping"},
+                                      "p_rel"), now_s=2.0)  # wall absent: release
+    rec2 = session.step(owner, wall_frames(2.0, base, others=other), now_s=2.0, live_ids=ROSTER)
+    by2 = {record.vehicle_id: record for record in rec2}
+    assert by2["a"].owner == "native" and by2["b"].owner == "native"
+    assert by2["c"].owner == "damping"  # non-member untouched by the handback
+
+
+def test_wall_safety_abort_hands_members_back_native_in_every_phase():
+    def assembled_session():
+        session, owner, damping, pi, api = build()
+        session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                     extras={"c": "damping"}), now_s=0.0)
+        base = {"a": (8.0, 100.0, 0), "b": (8.0, 103.0, 1)}
+        session.step(owner, wall_frames(0.0, base, others={"c": (9.0, 40.0, 2)}),
+                     now_s=0.0, live_ids=ROSTER)
+        session.step(owner, wall_frames(1.0, base, others={"c": (9.0, 40.0, 2)}),
+                     now_s=1.0, live_ids=ROSTER)
+        assert session._walls["w"].phase == "hold"
+        return session, owner, api
+
+    # ASSEMBLY phase, abort 1: member span beyond the abort cap.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    rec = session.step(owner, wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 260.0, 1)},
+                                          others={"c": (9.0, 40.0, 2)}),
+                       now_s=0.0, live_ids=ROSTER)
+    by = {record.vehicle_id: record for record in rec}
+    assert by["a"].owner == "native" and by["b"].owner == "native"
+    assert session._committed["a"] == "native" and session._walls == {}
+    aborts = [e for e in session.wall_records if e["event"] == "safety_abort"]
+    assert len(aborts) == 1 and aborts[0]["reason"] == "member_span_exceeded"
+    assert aborts[0]["handback"] == "native"
+    assert [e["event"] for e in session.wall_records] == ["safety_abort"]
+
+    # ASSEMBLY phase, abort 2: missing member frame.
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    rec = session.step(owner, {"a": frame("a", 0.0, position_m=100.0, lane_index=0),
+                               "c": frame("c", 0.0, speed=9.0, position_m=40.0, lane_index=2)},
+                       now_s=0.0, live_ids=ROSTER)
+    aborts = [e for e in session.wall_records if e["event"] == "safety_abort"]
+    assert aborts[0]["reason"] == "member_frame_missing"
+    assert session._walls == {}
+
+    # ASSEMBLY phase, abort 3: two members on one lane (no lane coverage).
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    rec = session.step(owner, wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 103.0, 0)},
+                                          others={"c": (9.0, 40.0, 2)}),
+                       now_s=0.0, live_ids=ROSTER)
+    aborts = [e for e in session.wall_records if e["event"] == "safety_abort"]
+    assert aborts[0]["reason"] == "lane_coverage_violation"
+    assert session._walls == {}
+
+    # HOLD phase: a fast non-member inside the rear surveillance gap.
+    session, owner, api = assembled_session()
+    rec = session.step(owner, wall_frames(2.0, {"a": (8.0, 100.0, 0), "b": (8.0, 103.0, 1)},
+                                          others={"c": (15.0, 95.0, 2)}),
+                       now_s=2.0, live_ids=ROSTER)
+    by = {record.vehicle_id: record for record in rec}
+    assert by["a"].owner == "native" and by["b"].owner == "native"
+    assert session._walls == {}
+    aborts = [e for e in session.wall_records if e["event"] == "safety_abort"]
+    assert aborts[-1]["reason"] == "non_member_rear_end_risk:c"
+    # A slow non-member in the same gap is NOT an abort (fresh wall).
+    session, owner, damping, pi, api = build()
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    base = {"a": (8.0, 100.0, 0), "b": (8.0, 103.0, 1)}
+    session.step(owner, wall_frames(0.0, base, others={"c": (9.0, 95.0, 2)}),
+                 now_s=0.0, live_ids=ROSTER)
+    session.step(owner, wall_frames(1.0, base, others={"c": (9.0, 95.0, 2)}),
+                 now_s=1.0, live_ids=ROSTER)
+    assert session._walls.get("w") is not None and session._walls["w"].phase == "hold"
+
+
+def test_multiple_walls_disjoint_members_and_exclusive_ownership():
+    session, owner, damping, pi, api = build(cav_ids=ROSTER4)
+    plan = AssignmentPlan({"a": "wall-v2", "b": "wall-v2", "c": "wall-v2", "d": "wall-v2"},
+                          "pw",
+                          walls=(WallAssignment("w1", ("a", "b"), 8.0, hold_s=WALL_HOLD),
+                                 WallAssignment("w2", ("c", "d"), 6.0, hold_s=WALL_HOLD)))
+    session.apply_plan(plan, now_s=0.0)
+    fr = wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 103.0, 1),
+                           "c": (15.0, 200.0, 2), "d": (15.0, 203.0, 3)})
+    rec = session.step(owner, fr, now_s=0.0, live_ids=ROSTER4)
+    by = {record.vehicle_id: record for record in rec}
+    assert {v: by[v].owner for v in sorted(ROSTER4)} == {v: "wall" for v in sorted(ROSTER4)}
+    assert by["a"].issued_target_speed_mps == 12.0 and by["c"].issued_target_speed_mps == 12.0
+    assert [e["event"] for e in session.wall_records] == ["assembly_start", "assembly_start"]
+    assert sorted(session._walls) == ["w1", "w2"]
+    # Overlapping walls inside ONE plan are refused at plan construction.
+    with pytest.raises(ValueError, match="two walls"):
+        AssignmentPlan({v: "wall-v2" for v in sorted(ROSTER4)}, "p_ov1",
+                       walls=(WallAssignment("w1", ("a", "b"), 8.0, hold_s=WALL_HOLD),
+                              WallAssignment("w3", ("b", "c"), 7.0, hold_s=WALL_HOLD)))
+    # Same-tick step proceeds; both walls assemble on aligned frames.
+    aligned = {"a": (8.0, 101.0, 0), "b": (8.0, 104.0, 1),
+               "c": (6.0, 201.0, 2), "d": (6.0, 204.0, 3)}
+    session.step(owner, wall_frames(1.0, aligned), now_s=1.0, live_ids=ROSTER4)
+    assert [e["event"] for e in session.wall_records].count("assembled") == 2
+    # A new wall overlapping an ACTIVE wall is refused at apply time even
+    # when the same plan would release that wall by absence: members stay
+    # locked until the handback actually executes.
+    with pytest.raises(ValueError, match="already belong"):
+        session.apply_plan(AssignmentPlan({"a": "wall-v2", "c": "wall-v2",
+                                           "b": "native", "d": "native"}, "p_ov2",
+                                          walls=(WallAssignment("w3", ("a", "c"), 7.0,
+                                                                hold_s=WALL_HOLD),)),
+                           now_s=2.0)
+    # Release w1 by absence (it holds); w2 continues.  The union rule forces
+    # a, b off wall-v2 in the same plan.
+    session.apply_plan(AssignmentPlan({"a": "native", "b": "native",
+                                       "c": "wall-v2", "d": "wall-v2"}, "p_r1",
+                                      walls=(WallAssignment("w2", ("c", "d"), 6.0,
+                                                            hold_s=WALL_HOLD),)),
+                       now_s=2.0)
+    rec2 = session.step(owner, wall_frames(2.0, aligned), now_s=2.0, live_ids=ROSTER4)
+    by2 = {record.vehicle_id: record for record in rec2}
+    assert by2["a"].owner == "native" and by2["b"].owner == "native"
+    assert by2["c"].owner == "wall" and by2["d"].owner == "wall"
+    assert sorted(session._walls) == ["w2"]
+    # A released member may join a NEW wall later (at most one wall at a time).
+    session.apply_plan(AssignmentPlan({v: "wall-v2" for v in ("a", "b", "c", "d")}, "p_w1b",
+                                      walls=(WallAssignment("w1b", ("a", "b"), 8.0,
+                                                            hold_s=WALL_HOLD),
+                                             WallAssignment("w2", ("c", "d"), 6.0,
+                                                            hold_s=WALL_HOLD))), now_s=3.0)
+    assert sorted(session._walls) == ["w1b", "w2"]
+    assert session._wall_of("a") == "w1b" and session._wall_of("d") == "w2"
+
+
+def test_wall_and_pi_coexist_through_single_ownership_write():
+    session, owner, damping, pi, api = build(script={"c": PI_DECISION})
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "pi-external-u"}), now_s=0.0)
+    rec = session.step(owner, wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 103.0, 1)},
+                                          others={"c": (15.0, 40.0, 2)}),
+                        now_s=0.0, live_ids=ROSTER)
+    by = {record.vehicle_id: record for record in rec}
+    assert by["a"].owner == "wall" and by["b"].owner == "wall"
+    assert by["c"].owner == "damping" and by["c"].issued_target_speed_mps == 14.5
+    assert pi.adapter.decided == ["c"]
+    assert pi.adapter.steps[0]["live"] == {"c"}
+    assert sorted(slow_downs(api), key=lambda c: c[1]) == [
+        ("slowDown", "a", 12.0, 1.0), ("slowDown", "b", 12.0, 1.0),
+        ("slowDown", "c", 14.5, 1.0)]
+    # Telemetry: wall fields on members, none on the PI CAV.
+    rows = {r["vehicle_id"]: r for r in session.assignment_records if r["timestamp_s"] == 0.0}
+    assert rows["a"]["wall_id"] == "w" and rows["a"]["locked"] is True
+    assert rows["a"]["wall_phase"] == "assembly" and rows["a"]["wall_speed_mps"] == 8.0
+    assert rows["a"]["time_in_phase_s"] == 0.0
+    assert rows["c"]["wall_id"] is None and rows["c"]["locked"] is False
+    # The PI CAV approaching the wall from behind at wall+3 m/s is a rear-end
+    # risk: the wall aborts and every member hands back to native.
+    rec1 = session.step(owner, wall_frames(1.0, {"a": (8.0, 101.0, 0), "b": (8.0, 104.0, 1)},
+                                           others={"c": (15.0, 95.0, 2)}),
+                        now_s=1.0, live_ids=ROSTER)
+    by1 = {record.vehicle_id: record for record in rec1}
+    assert by1["a"].owner == "native" and by1["b"].owner == "native"
+    aborts = [e for e in session.wall_records if e["event"] == "safety_abort"]
+    assert aborts[-1]["reason"] == "non_member_rear_end_risk:c"
+
+
+def test_wall_telemetry_events_and_controller_state_hooks():
+    emitted = []
+    session, owner, damping, pi, api = build(script={"c": PI_DECISION})
+    session.bind_emit(lambda kind, payload: emitted.append((kind, payload)))
+    session.apply_plan(wall_plan("w", ("a", "b"), 8.0, hold_s=WALL_HOLD,
+                                 extras={"c": "damping"}), now_s=0.0)
+    session.step(owner, wall_frames(0.0, {"a": (15.0, 100.0, 0), "b": (15.0, 103.0, 1)},
+                                    others={"c": (9.0, 40.0, 2)}),
+                 now_s=0.0, live_ids=ROSTER)
+    kinds = [kind for kind, _ in emitted]
+    assert kinds.count("mixed_assignment") == 3 and kinds.count("wall_event") == 1
+    wall_payloads = [payload for kind, payload in emitted if kind == "wall_event"]
+    assert wall_payloads[0] == {"wall_id": "w", "event": "assembly_start",
+                                "timestamp_s": 0.0, "wall_speed_mps": 8.0}
+    assert len(session.wall_records) == 1
+    rows = {r["vehicle_id"]: r for r in session.assignment_records if r["timestamp_s"] == 0.0}
+    # Per-CAV action and wall fields (requirement 12 / planner schema).
+    assert rows["a"]["action"] == "wall-v2" and rows["a"]["plan_id"] == "pw"
+    assert rows["b"]["wall_id"] == "w" and rows["b"]["locked"] is True
+    # Controller internal state exposure for the world model.
+    assert rows["c"]["controller_state"]["damping_target_speed_mps"] == 7.0
+    assert rows["a"]["controller_state"] == {"damping_target_speed_mps": None,
+                                             "pi_running_target_mps": None}
+
+
+def test_wall_group_session_unit_contract():
+    s = WallGroupSession("w", members=frozenset({"a", "b"}), wall_speed_mps=8.0)
+    assert s.phase == "assembly" and s.active
+    # The planner cannot cancel assembly at the session level either.
+    assert s.release(0.0) is False and s.active
+    s.abort("unit_abort", 1.0)
+    assert not s.active and s.abort_reason == "unit_abort"
+    assert s.phase == "handback"
+    assert [e["event"] for e in s.events] == ["safety_abort"]
+    # Aborted ticks command nothing.
+    assert s.tick({"a": frame("a", 2.0), "b": frame("b", 2.0)}, 2.0) == {}
+
+
+def test_validate_wall_request_refusals():
+    active = {"w": WallGroupSession("w", members=frozenset({"a", "b"}), wall_speed_mps=8.0)}
+    with pytest.raises(WallRequestError, match="at least two"):
+        validate_wall_request({"a"}, 8.0, {})
+    with pytest.raises(WallRequestError, match="already belong"):
+        validate_wall_request({"a", "c"}, 8.0, active)
+    with pytest.raises(WallRequestError, match="floor"):
+        validate_wall_request({"c", "d"}, SAFE_SPEED_MIN_MPS, {})
+    with pytest.raises(WallRequestError, match="finite"):
+        validate_wall_request({"c", "d"}, float("nan"), {})
+    assert validate_wall_request({"c", "d"}, SAFE_SPEED_MIN_MPS + 0.5, {}) == frozenset(
+        {"c", "d"})

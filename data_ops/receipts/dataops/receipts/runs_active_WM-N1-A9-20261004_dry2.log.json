@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-A9-20261004_dry2.log",
+ "name": "WM-N1-A9-20261004_dry2.log",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-A9-20261004_dry2.log",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-A9-20261004_dry2.log.tar.zst",
+ "bytes": 1088,
+ "files": 1,
+ "archive_bytes": 607,
+ "archive_md5": "9ab12f6773a31a66adea9918f8789463",
+ "member_manifest": "manifests/members/runs_active_WM-N1-A9-20261004_dry2.log.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 44.3,
+ "timestamp": "2026-10-10T03:48:52"
+}

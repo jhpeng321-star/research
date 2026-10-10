@@ -1,0 +1,333 @@
+........................................................................ [ 11%]
+..............................F................ss....................... [ 23%]
+........................................................................ [ 35%]
+....................F...sss...s......................................... [ 46%]
+.................FFFF................................................... [ 58%]
+........................................................................ [ 70%]
+.........................................
+[hdv] parameter_count full=749151 one-layer=351191
+............................... [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+================================== FAILURES ===================================
+_____ test_fit_uses_per_stage_sampling_weights_and_mixed_batches_collate ______
+
+tmp_path = WindowsPath('E:/rd-wt/ws-main2/_out/pytest_main2_full_01/test_fit_uses_per_stage_sampli0')
+
+    def test_fit_uses_per_stage_sampling_weights_and_mixed_batches_collate(tmp_path):
+        orig = TrajectoryDataset.from_arrays(_tiny_arrays(3, False))
+>       sw = TrajectoryDataset.from_arrays(_tiny_arrays(3, True))
+
+output\wd01\wm_n1\wms\tests\test_mixdata.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+output\wd01\wm_n1\wms\train.py:474: in from_arrays
+    timeline_ids = _timeline_controller_ids(timeline_ids, arrays)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ids = array([[[0, 0],
+        [1, 0]],
+
+       [[0, 0],
+        [1, 0]],
+
+       [[0, 0],
+        [1, 0]]])
+arrays = {'states': array([[[[ 0.,  1.,  0.,  0., 10.,  0.,  0.],
+         [ 0.,  1.,  0.,  0., 10.,  0.,  0.]],
+
+        [[ 5....],
+        [0., 0.]],
+
+       [[0., 0.],
+        [0., 0.]],
+
+       [[0., 0.],
+        [0., 0.]]], dtype=float32), ...}
+
+    def _timeline_controller_ids(ids: np.ndarray, arrays: dict) -> np.ndarray:
+        """Normalize documented compact/legacy ids without guessing overlapping labels.
+    
+        ``wms_action_timeline/1`` declares the compact action vocabulary. An explicit
+        ``controller_vocab`` array can also declare either vocabulary (including the
+        six-label legacy vocabulary before ``direct`` was added). Unmarked legacy
+        arrays with ids >= 4 retain the historical adapter; ids 0 and 2 have identical
+        meanings after normalization. Unmarked ids 1/3 are ambiguous and are refused.
+        """
+        schema = arrays.get("controller_timeline_schema")
+        if schema is None and "schema" in arrays:
+            candidate = np.asarray(arrays["schema"])
+            if candidate.size == 1 and str(candidate.item()).startswith("wms_action_timeline/"):
+                schema = str(candidate.item())
+        if schema is not None:
+            schema_array = np.asarray(schema)
+            if schema_array.size != 1 or str(schema_array.item()) != SCHEMA:
+                raise ValueError("unsupported controller_timeline_schema")
+        vocab = arrays.get("controller_vocab")
+        legacy = None
+        if vocab is not None:
+            vocabulary = tuple(np.asarray(vocab).reshape(-1).tolist())
+            if vocabulary == CONTROLLERS:
+                legacy = False
+            elif vocabulary in (CONTROLLER_VOCAB, CONTROLLER_VOCAB[:-1]):
+                legacy = True
+            else:
+                raise ValueError("unknown controller_vocab for controller_timeline")
+            if schema is not None and legacy:
+                raise ValueError("controller_vocab conflicts with action timeline schema")
+        if ids.dtype.kind in "US":
+            if legacy:
+                raise ValueError("legacy controller_timeline must use numeric ids")
+            return np.asarray([CONTROLLERS.index(label) for label in ids.reshape(-1)],
+                              dtype=np.int64).reshape(ids.shape)
+        if ids.dtype.kind not in "iu" or np.any(ids < 0):
+            raise ValueError("controller_timeline must contain non-negative integer ids")
+        if legacy is None:
+            if schema is not None:
+                legacy = False
+            elif np.any(ids >= len(CONTROLLERS)):
+                legacy = True
+            elif np.any((ids == 1) | (ids == 3)):
+>               raise ValueError("ambiguous controller_timeline ids; declare "
+                                 "wms_action_timeline/1 schema or controller_vocab")
+E               ValueError: ambiguous controller_timeline ids; declare wms_action_timeline/1 schema or controller_vocab
+
+output\wd01\wm_n1\wms\train.py:400: ValueError
+__ test_trainer_persists_callback_across_chunks_and_logs_six_gradient_shares __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002467930CCD0>
+tmp_path = WindowsPath('E:/rd-wt/ws-main2/_out/pytest_main2_full_01/test_trainer_persists_callback0')
+
+    def test_trainer_persists_callback_across_chunks_and_logs_six_gradient_shares(
+            monkeypatch, tmp_path):
+        model = _model(monkeypatch)
+        current = _current()
+        states = np.repeat(current["veh_kin"].numpy()[:, None], 5, axis=1)
+        states[..., 0] += np.arange(5, dtype=np.float32)[None, :, None] * 6.
+>       dataset = TrajectoryDataset.from_arrays({
+            "states": states,
+            "present": np.repeat(current["present"].numpy()[:, None], 5, axis=1),
+            "is_cav": np.repeat(current["is_cav"].numpy()[:, None], 5, axis=1),
+            "controller_timeline": np.array([[[1, 0, 0, 0]] * 2]),
+        })
+
+output\wd01\wm_n1\wms\tests\test_trainsetup_contracts.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+output\wd01\wm_n1\wms\train.py:474: in from_arrays
+    timeline_ids = _timeline_controller_ids(timeline_ids, arrays)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ids = array([[[1, 0, 0, 0],
+        [1, 0, 0, 0]]])
+arrays = {'states': array([[[[  0.,   1.,   0.,   0.,  12.,   0.,   5.],
+         [ 30.,   1.,   0.,   0.,  12.,   0.,   5.],
+ ... False],
+        [ True, False, False, False]]]), 'controller_timeline': array([[[1, 0, 0, 0],
+        [1, 0, 0, 0]]])}
+
+    def _timeline_controller_ids(ids: np.ndarray, arrays: dict) -> np.ndarray:
+        """Normalize documented compact/legacy ids without guessing overlapping labels.
+    
+        ``wms_action_timeline/1`` declares the compact action vocabulary. An explicit
+        ``controller_vocab`` array can also declare either vocabulary (including the
+        six-label legacy vocabulary before ``direct`` was added). Unmarked legacy
+        arrays with ids >= 4 retain the historical adapter; ids 0 and 2 have identical
+        meanings after normalization. Unmarked ids 1/3 are ambiguous and are refused.
+        """
+        schema = arrays.get("controller_timeline_schema")
+        if schema is None and "schema" in arrays:
+            candidate = np.asarray(arrays["schema"])
+            if candidate.size == 1 and str(candidate.item()).startswith("wms_action_timeline/"):
+                schema = str(candidate.item())
+        if schema is not None:
+            schema_array = np.asarray(schema)
+            if schema_array.size != 1 or str(schema_array.item()) != SCHEMA:
+                raise ValueError("unsupported controller_timeline_schema")
+        vocab = arrays.get("controller_vocab")
+        legacy = None
+        if vocab is not None:
+            vocabulary = tuple(np.asarray(vocab).reshape(-1).tolist())
+            if vocabulary == CONTROLLERS:
+                legacy = False
+            elif vocabulary in (CONTROLLER_VOCAB, CONTROLLER_VOCAB[:-1]):
+                legacy = True
+            else:
+                raise ValueError("unknown controller_vocab for controller_timeline")
+            if schema is not None and legacy:
+                raise ValueError("controller_vocab conflicts with action timeline schema")
+        if ids.dtype.kind in "US":
+            if legacy:
+                raise ValueError("legacy controller_timeline must use numeric ids")
+            return np.asarray([CONTROLLERS.index(label) for label in ids.reshape(-1)],
+                              dtype=np.int64).reshape(ids.shape)
+        if ids.dtype.kind not in "iu" or np.any(ids < 0):
+            raise ValueError("controller_timeline must contain non-negative integer ids")
+        if legacy is None:
+            if schema is not None:
+                legacy = False
+            elif np.any(ids >= len(CONTROLLERS)):
+                legacy = True
+            elif np.any((ids == 1) | (ids == 3)):
+>               raise ValueError("ambiguous controller_timeline ids; declare "
+                                 "wms_action_timeline/1 schema or controller_vocab")
+E               ValueError: ambiguous controller_timeline ids; declare wms_action_timeline/1 schema or controller_vocab
+
+output\wd01\wm_n1\wms\train.py:400: ValueError
+_________________ test_eval_plugin_replays_the_asymmetric_cap _________________
+
+tmp_path = WindowsPath('E:/rd-wt/ws-main2/_out/pytest_main2_full_01/test_eval_plugin_replays_the_a0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000246790DD2A0>
+
+    def test_eval_plugin_replays_the_asymmetric_cap(tmp_path, monkeypatch):
+        pkg = Path(__file__).resolve().parents[2]            # output/wd01/wm_n1
+        monkeypatch.syspath_prepend(str(pkg))
+        from wms_eval.wms_plugin import WmsCheckpointModel
+    
+        model = WmSModel(physics=PhysicsConfig(), history_features=6)
+        ckpt = tmp_path / "wm_s.pt"
+        torch.save({"format": "wm_s/1", "model": model.state_dict(),
+                    "config": {"history_features": 6, "residual_cap_mps2": 1.5,
+                               "residual_cap_neg_mps2": 3.0}}, ckpt)
+        loaded = WmsCheckpointModel(ckpt)._load()
+        assert loaded.residual_cap_mps2 == 1.5 and loaded.residual_cap_neg_mps2 == 3.0
+        plain = tmp_path / "plain.pt"
+        torch.save({"format": "wm_s/1", "model": model.state_dict(),
+                    "config": {"history_features": 6, "residual_cap_mps2": 1.5}}, plain)
+        old = WmsCheckpointModel(plain)._load()
+>       assert old.residual_cap_neg_mps2 is None and old.residual_cap_mps2 is None
+E       AssertionError: assert (None is None and 1.5 is None)
+E        +  where None = WmSModel(\n  (residual_net): HdvResidualNet(\n    (norm): LayerNorm((7,), eps=1e-05, elementwise_affine=True, bias=True)...ias=True)\n      (1): GELU(approximate='none')\n      (2): Linear(in_features=48, out_features=18, bias=True)\n    )\n  )\n).residual_cap_neg_mps2
+E        +  and   1.5 = WmSModel(\n  (residual_net): HdvResidualNet(\n    (norm): LayerNorm((7,), eps=1e-05, elementwise_affine=True, bias=True)...ias=True)\n      (1): GELU(approximate='none')\n      (2): Linear(in_features=48, out_features=18, bias=True)\n    )\n  )\n).residual_cap_mps2
+
+output\wd01\wm_n1\wms\tests\test_wms_brakefix.py:610: AssertionError
+___________ test_flags_off_matches_pre_fix_source_exactly[residual] ___________
+
+mode = 'residual'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024679493820>
+
+    @pytest.mark.parametrize("mode", ["residual", "driver_params", "hybrid"])
+    def test_flags_off_matches_pre_fix_source_exactly(mode, monkeypatch):
+        """Compare loss, deterministic log fields and gradients to the actual base commit."""
+        pkg = "output.wd01.wm_n1.wms"
+        root = Path(__file__).resolve().parents[5]
+        source = subprocess.check_output(
+            ["git", "show", "6ebcf95:output/wd01/wm_n1/wms/train.py"], cwd=root,
+            text=True, encoding="utf-8")
+        module = types.ModuleType(pkg + "._brakefix_base_train")
+        module.__file__ = str(Path(__file__).resolve().parents[1] / "train.py")
+        module.__package__ = pkg
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        exec(compile(source, module.__file__, "exec"), module.__dict__)
+        kwargs = dict(device="cpu", threads=1, batch_size=2, unroll_curriculum_s=(10.0,),
+                      truncation_steps=5, rollout_mode=mode, traffic_loss=True,
+                      traffic_ramp_start_s=0.0, traffic_ramp_end_s=1.0,
+                      residual_cap_mps2=1.5, loss_share_logging=True)
+        torch.manual_seed(23)
+        current = WmSTrainer(_small_model(rollout_mode=mode), WmSTrainConfig(**kwargs))
+        torch.manual_seed(23)
+        before = module.WmSTrainer(_small_model(rollout_mode=mode), module.WmSTrainConfig(**kwargs))
+>       assert current.config.to_dict() == before.config.to_dict()
+E       AssertionError: assert {'unroll_curr...tage': 1, ...} == {'unroll_curr...tage': 1, ...}
+E         
+E         Omitting 53 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'switch_window_fraction': 0.0}
+E         Use -v to get more diff
+
+output\wd01\wm_n1\wms\tests\test_wms_brakefix.py:634: AssertionError
+________ test_flags_off_matches_pre_fix_source_exactly[driver_params] _________
+
+mode = 'driver_params'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002467945B130>
+
+    @pytest.mark.parametrize("mode", ["residual", "driver_params", "hybrid"])
+    def test_flags_off_matches_pre_fix_source_exactly(mode, monkeypatch):
+        """Compare loss, deterministic log fields and gradients to the actual base commit."""
+        pkg = "output.wd01.wm_n1.wms"
+        root = Path(__file__).resolve().parents[5]
+        source = subprocess.check_output(
+            ["git", "show", "6ebcf95:output/wd01/wm_n1/wms/train.py"], cwd=root,
+            text=True, encoding="utf-8")
+        module = types.ModuleType(pkg + "._brakefix_base_train")
+        module.__file__ = str(Path(__file__).resolve().parents[1] / "train.py")
+        module.__package__ = pkg
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        exec(compile(source, module.__file__, "exec"), module.__dict__)
+        kwargs = dict(device="cpu", threads=1, batch_size=2, unroll_curriculum_s=(10.0,),
+                      truncation_steps=5, rollout_mode=mode, traffic_loss=True,
+                      traffic_ramp_start_s=0.0, traffic_ramp_end_s=1.0,
+                      residual_cap_mps2=1.5, loss_share_logging=True)
+        torch.manual_seed(23)
+        current = WmSTrainer(_small_model(rollout_mode=mode), WmSTrainConfig(**kwargs))
+        torch.manual_seed(23)
+        before = module.WmSTrainer(_small_model(rollout_mode=mode), module.WmSTrainConfig(**kwargs))
+>       assert current.config.to_dict() == before.config.to_dict()
+E       AssertionError: assert {'unroll_curr...tage': 1, ...} == {'unroll_curr...tage': 1, ...}
+E         
+E         Omitting 53 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'switch_window_fraction': 0.0}
+E         Use -v to get more diff
+
+output\wd01\wm_n1\wms\tests\test_wms_brakefix.py:634: AssertionError
+____________ test_flags_off_matches_pre_fix_source_exactly[hybrid] ____________
+
+mode = 'hybrid'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002467945B220>
+
+    @pytest.mark.parametrize("mode", ["residual", "driver_params", "hybrid"])
+    def test_flags_off_matches_pre_fix_source_exactly(mode, monkeypatch):
+        """Compare loss, deterministic log fields and gradients to the actual base commit."""
+        pkg = "output.wd01.wm_n1.wms"
+        root = Path(__file__).resolve().parents[5]
+        source = subprocess.check_output(
+            ["git", "show", "6ebcf95:output/wd01/wm_n1/wms/train.py"], cwd=root,
+            text=True, encoding="utf-8")
+        module = types.ModuleType(pkg + "._brakefix_base_train")
+        module.__file__ = str(Path(__file__).resolve().parents[1] / "train.py")
+        module.__package__ = pkg
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+        exec(compile(source, module.__file__, "exec"), module.__dict__)
+        kwargs = dict(device="cpu", threads=1, batch_size=2, unroll_curriculum_s=(10.0,),
+                      truncation_steps=5, rollout_mode=mode, traffic_loss=True,
+                      traffic_ramp_start_s=0.0, traffic_ramp_end_s=1.0,
+                      residual_cap_mps2=1.5, loss_share_logging=True)
+        torch.manual_seed(23)
+        current = WmSTrainer(_small_model(rollout_mode=mode), WmSTrainConfig(**kwargs))
+        torch.manual_seed(23)
+        before = module.WmSTrainer(_small_model(rollout_mode=mode), module.WmSTrainConfig(**kwargs))
+>       assert current.config.to_dict() == before.config.to_dict()
+E       AssertionError: assert {'unroll_curr...tage': 1, ...} == {'unroll_curr...tage': 1, ...}
+E         
+E         Omitting 53 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'switch_window_fraction': 0.0}
+E         Use -v to get more diff
+
+output\wd01\wm_n1\wms\tests\test_wms_brakefix.py:634: AssertionError
+============================== warnings summary ===============================
+output/wd01/wm_n1/wms/tests/test_mixdata.py::test_real_pack_binding_heldout_drop_and_batching
+  E:\rd-wt\ws-main2\output\wd01\wm_n1\train\idea_a.py:1338: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\utils\tensor_numpy.cpp:219.)
+    kin = torch.as_tensor(veh_kin).unsqueeze(0)
+
+output/wd01/wm_n1/wms/tests/test_wms_hist.py::test_prior_history_reads_pack_kinematics_and_pads_run_start
+  E:\rd-wt\ws-main2\output\wd01\forbid_d_hook.py:1: DeprecationWarning: invalid escape sequence '\D'
+    """Forbid-D audit hook: fail hard on any filesystem access under drive D:.
+
+output/wd01/wm_n1/wms/tests/test_wms_hist.py::test_prior_history_reads_pack_kinematics_and_pads_run_start
+  E:\rd-wt\ws-main2\output\wd01\forbid_d_hook.py:48: DeprecationWarning: invalid escape sequence '\ '
+    """Strip the \\?\ extended-length prefix, if present."""
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+SKIPPED [1] output\wd01\wm_n1\wms\tests\test_rollout2_parity.py:29: TRAIN chunk-4 state w8676m2700p20t360 is not available
+SKIPPED [1] output\wd01\wm_n1\wms\tests\test_rollout2_parity.py:29: TRAIN chunk-4 state w8677m2700p20t360 is not available
+SKIPPED [3] output\wd01\wm_n1\wms\tests\test_wall_exec.py:63: staged wall-session reference source is absent
+SKIPPED [1] output\wd01\wm_n1\wms\tests\test_wall_exec.py:157: staged wall-session reference source is absent
+FAILED output/wd01/wm_n1/wms/tests/test_mixdata.py::test_fit_uses_per_stage_sampling_weights_and_mixed_batches_collate
+FAILED output/wd01/wm_n1/wms/tests/test_trainsetup_contracts.py::test_trainer_persists_callback_across_chunks_and_logs_six_gradient_shares
+FAILED output/wd01/wm_n1/wms/tests/test_wms_brakefix.py::test_eval_plugin_replays_the_asymmetric_cap
+FAILED output/wd01/wm_n1/wms/tests/test_wms_brakefix.py::test_flags_off_matches_pre_fix_source_exactly[residual]
+FAILED output/wd01/wm_n1/wms/tests/test_wms_brakefix.py::test_flags_off_matches_pre_fix_source_exactly[driver_params]
+FAILED output/wd01/wm_n1/wms/tests/test_wms_brakefix.py::test_flags_off_matches_pre_fix_source_exactly[hybrid]
+6 failed, 602 passed, 6 skipped, 3 warnings in 371.81s (0:06:11)
+Peak process working set bytes: 892272640

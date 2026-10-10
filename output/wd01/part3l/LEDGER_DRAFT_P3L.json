@@ -1,0 +1,389 @@
+{
+ "part": "3l",
+ "date": "2026-09-26",
+ "title": "Merge-aware emulator gap close: TASK A follower-slot fix, extended-grid refit with LC@H30, TRAIN-calibrated spread, gate v2 re-run",
+ "holdout_accessed": false,
+ "holdout_note": "no holdout root loaded, no registration hash created or passed; holdout_block authoritative",
+ "simulation": false,
+ "engine_change": "part3/engine.py: (1) TASK A fix -- _gap_accept_merge follower slot argmax->argmin (nearest main_right follower; p3k argmax selected the farthest-behind vehicle, which made b_req tiny and the fit flat in b_accept); (2) merge_stats rejection-cause counters (diagnostics); (3) merge_acceptance return_parts kwarg (default unchanged); (4) optional dawdle_scale kwarg (default 1.0, draw-identical).  idm_sampled untouched (stale-llen defect recorded, not fixed).",
+ "data_root": "runs used WD01_DATA_ROOT=D:/rd-wt/wd01/output/wd01 read-only; default (unset) in-repo layout unchanged",
+ "task_a": {
+  "train_windows": 8,
+  "verdict": {
+   "follower_slot": "nearest main_right vehicle BEHIND the candidate in d (engine._gap_accept_merge); pinned by unit test test_follower_slot_is_nearest_behind",
+   "follower_rejections": 8122,
+   "follower_term_binds": true,
+   "breq_checks_above_b_grid_min": 8169,
+   "b_accept_flat_explained": false
+  },
+  "main_stats": {
+   "checks": 8337,
+   "accepted": 44,
+   "rej_lead": 171,
+   "rej_foll": 7575,
+   "rej_both": 547,
+   "with_foll": 8314,
+   "merges": 44
+  }
+ },
+ "fit": {
+  "train_roots": [
+   "cv17",
+   "cv19_4107",
+   "cv19_4108",
+   "cv20_7001m2000"
+  ],
+  "selected": {
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 3.0,
+    "p_coop_scale": 0.0
+   },
+   "lc_scale": 0.00075,
+   "stage1_loss": 1.107505288478874,
+   "stage2_loss": 1.2282696218331604,
+   "joint_loss": 2.3357749103120344
+  },
+  "losses": {
+   "stage1_before": {
+    "occ": 0.4024443788069275,
+    "prof": 0.7967072320468978,
+    "merge": 4.0
+   },
+   "stage2_before": {
+    "mr": 2.002148363156379,
+    "delay": 1.599810555207017,
+    "lc30": 0.21521079043273644,
+    "lc60": 1.4857264081115922
+   },
+   "stage1_after": {
+    "occ": 1.0299149542658987,
+    "prof": 0.288453904302041,
+    "merge": 0.04153359617522007
+   },
+   "stage2_after": {
+    "mr": 0.27373282658194953,
+    "delay": 0.5927296270059751,
+    "lc30": 0.28534786788337924,
+    "lc60": 0.15291860072371294
+   }
+  },
+  "grids": {
+   "tau_accept": [
+    1.9,
+    2.4,
+    3.0,
+    3.6
+   ],
+   "b_accept": [
+    1.5,
+    2.0,
+    3.0
+   ],
+   "lc_scale": [
+    0.0005,
+    0.00075,
+    0.001,
+    0.0015,
+    0.002,
+    0.003
+   ],
+   "p_coop_scale": [
+    0.0,
+    0.25
+   ],
+   "dawdle_scale": [
+    0.8,
+    1.0,
+    1.25,
+    1.5
+   ],
+   "softmax_T": 0.15
+  },
+  "members": [
+   {
+    "seed": 1,
+    "lc_scale": 0.00075,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.0
+    },
+    "dawdle_scale": 1.0
+   },
+   {
+    "seed": 18,
+    "lc_scale": 0.003,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.25
+    },
+    "dawdle_scale": 1.25,
+    "resample": [
+     "cv17",
+     "cv19_4107",
+     "cv19_4108"
+    ]
+   },
+   {
+    "seed": 35,
+    "lc_scale": 0.0005,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.25
+    },
+    "dawdle_scale": 1.5,
+    "resample": [
+     "cv17",
+     "cv19_4107",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   },
+   {
+    "seed": 52,
+    "lc_scale": 0.0015,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.0
+    },
+    "dawdle_scale": 0.8,
+    "resample": [
+     "cv17",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   },
+   {
+    "seed": 69,
+    "lc_scale": 0.001,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.25
+    },
+    "dawdle_scale": 1.5,
+    "resample": [
+     "cv19_4107",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   }
+  ],
+  "lc_target": "LC count per window at H=30 (primary), H=60 half weight"
+ },
+ "calibration": {
+  "roots": [
+   "cv20_7002m2000",
+   "cv20_7003m2000",
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "windows": 28,
+  "members": 5,
+  "s_out": {
+   "delay_phys": {
+    "30": 1.7411,
+    "60": 1.9097,
+    "90": 2.2974,
+    "120": 2.5198
+   },
+   "ttc3": {
+    "30": 2.0946,
+    "60": 2.2974,
+    "90": 2.5198,
+    "120": 2.5198
+   }
+  },
+  "coverage": {
+   "delay_phys@H30": {
+    "raw_coverage": 0.4286,
+    "s_out": 1.7411,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "coverage_median_centred": 0.9286,
+    "crps_raw_mean": 39.657,
+    "crps_widened_mean": 43.03,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 32.556
+   },
+   "delay_phys@H60": {
+    "raw_coverage": 0.25,
+    "s_out": 1.9097,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8571,
+    "coverage_median_centred": 0.8571,
+    "crps_raw_mean": 95.315,
+    "crps_widened_mean": 96.024,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 84.473
+   },
+   "delay_phys@H90": {
+    "raw_coverage": 0.2857,
+    "s_out": 2.2974,
+    "target": 0.8,
+    "coverage_mean_centred": 0.9286,
+    "coverage_median_centred": 0.8571,
+    "crps_raw_mean": 173.014,
+    "crps_widened_mean": 167.942,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 180.632
+   },
+   "delay_phys@H120": {
+    "raw_coverage": 0.3214,
+    "s_out": 2.5198,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8929,
+    "coverage_median_centred": 0.7857,
+    "crps_raw_mean": 286.288,
+    "crps_widened_mean": 264.424,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 268.921
+   },
+   "ttc3@H30": {
+    "raw_coverage": 0.4643,
+    "s_out": 2.0946,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "coverage_median_centred": 0.8214,
+    "crps_raw_mean": 4.236,
+    "crps_widened_mean": 4.265,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 3.065
+   },
+   "ttc3@H60": {
+    "raw_coverage": 0.2857,
+    "s_out": 2.2974,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "coverage_median_centred": 0.8214,
+    "crps_raw_mean": 9.59,
+    "crps_widened_mean": 9.863,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 9.212
+   },
+   "ttc3@H90": {
+    "raw_coverage": 0.2857,
+    "s_out": 2.5198,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "coverage_median_centred": 0.8929,
+    "crps_raw_mean": 14.59,
+    "crps_widened_mean": 15.008,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 33.284
+   },
+   "ttc3@H120": {
+    "raw_coverage": 0.3571,
+    "s_out": 2.5198,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "coverage_median_centred": 0.8929,
+    "crps_raw_mean": 20.882,
+    "crps_widened_mean": 21.553,
+    "mean_shift_max": 0.0,
+    "mean_shift_median_centred_max": 59.272
+   }
+  },
+  "mean_invariance": "mechanism A widens around the ensemble mean (mean exactly invariant); median-centred variant reported as a check"
+ },
+ "ladder": {
+  "validation_roots": 4,
+  "windows_per_member": 52,
+  "t0_grid": "120:30:480",
+  "H": [
+   30,
+   60,
+   90,
+   120
+  ],
+  "members": 5,
+  "rungs": "L0, L4 (p3k parameters on the FIXED engine -- NOT the p3k published behaviour; the slot fix is engine-global), L5 (part 3l refit), L5c (L5 + spread calibration, derived)",
+  "raw_rows": "results/raw/raw_metrics.jsonl"
+ },
+ "gate_v2": {
+  "primary_H": 30,
+  "d_binding": "per-horizon 1.05 x L0@same-H (reviewer clarification); fixed 5.2185 reported alongside",
+  "H30": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ]
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   },
+   "L5": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   },
+   "L5c": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   }
+  },
+  "H60": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ]
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   },
+   "L5": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   },
+   "L5c": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ]
+   }
+  },
+  "c_metric": "contract physics delay dt - ds/limit (p3j model); exposure-based coverage alongside"
+ },
+ "old_gate": {
+  "H30": {
+   "L0": false,
+   "L4": false,
+   "L5": true,
+   "L5c": true
+  },
+  "H60": {
+   "L0": false,
+   "L4": false,
+   "L5": true,
+   "L5c": true
+  }
+ },
+ "deviations": [
+  "idm_merge behaviour changed ONLY by the TASK A follower-slot fix (bug, documented, unit-tested); p3k's L4 rung kept on the p3k behaviour as the reference",
+  "idm_sampled stale-llen/vcap after merge recorded, NOT fixed (would change published L3 numbers)",
+  "member ensemble uses wider draws (bootstrap resample x softmax lines x dawdle width), not a full per-member refit (cost)",
+  "optional M2 for 0<->1 not implemented (brief: optional)"
+ ],
+ "not_done": [
+  "merge-zone occupancy/queueing residual (stopped-merge urgency term not modelled; p3k item carried)",
+  "spread calibration widens bands only; horizon-dependent bias not calibrated",
+  "holdout evaluation (blocked until owner opens it)"
+ ]
+}

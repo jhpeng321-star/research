@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/wm43b_wall_closure_v1",
+ "name": "wm43b_wall_closure_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\wm43b_wall_closure_v1",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/wm43b_wall_closure_v1/wm43b_wall_closure_v1.tar.zst",
+ "bytes": 17595390,
+ "files": 178,
+ "archive_bytes": 516879,
+ "archive_md5": "ace415c59acf24c279815ef1a51514f1",
+ "member_manifest": "manifests/members/runs_active_wm43b_wall_closure_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 47.2,
+ "timestamp": "2026-10-10T04:03:55"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk2/w8540m2700p40t300__switching3.interrupted_20260927T075814Z",
+ "name": "w8540m2700p40t300__switching3.interrupted_20260927T075814Z",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk2\\w8540m2700p40t300__switching3.interrupted_20260927T075814Z",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk2/w8540m2700p40t300__switching3.interrupted_20260927T075814Z/w8540m2700p40t300__switching3.interrupted_20260927T075814Z.tar.zst",
+ "bytes": 0,
+ "files": 1,
+ "archive_bytes": 100,
+ "archive_md5": "e2b4a876647c17e4e0b79e7e4e2565cc",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk2_w8540m2700p40t300__switching3.interrupted_20260927T075814Z.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.9,
+ "timestamp": "2026-10-10T03:44:42"
+}

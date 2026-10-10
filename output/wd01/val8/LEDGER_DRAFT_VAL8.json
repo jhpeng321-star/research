@@ -1,0 +1,99 @@
+{
+ "part": "val8",
+ "date": "2026-09-27",
+ "title": "WD-01 VALIDATION LOOK #8 (single, final for this candidate): frozen p3o candidate on the 4 native Part A validation roots under gate v2 as registered (primary H=30, AMENDMENT_1)",
+ "status": "completed (validation look #8 spent; verdict: FAIL at H=30 primary on criterion (c) delay-phys coverage 0.7692 < 0.80; PASS at H=60 secondary)",
+ "holdout_accessed": false,
+ "holdout_note": "no holdout root loaded, no registration hash created or passed; holdout never passed to root_arrays (asserted in eval_val8.py); holdout_block authoritative",
+ "simulation": false,
+ "simulation_note": "ZERO simulation: no SUMO/TraCI anywhere; the only dynamics is the pure-torch part-3 rollout engine",
+ "one_look_policy": "exactly ONE validation evaluation pass with the frozen settings; raw rows saved before aggregation; aggregate re-reads rows only; no refit, no tuning, no re-run with changed settings regardless of verdict",
+ "provenance": "the candidate came from 3 TRAIN-internal selection iterations on the calibration roots (p3o iter0-2) after 7 prior validation looks (WD-01-DEV-2 ledger); this is look #8",
+ "data_root": "WD01_DATA_ROOT=D:/rd-wt/wd01/output/wd01 used READ-ONLY",
+ "hash_verification": {
+  "convention": "sha256 over LF-normalised text (part 3m convention)",
+  "candidate_p3o_iter2.json": "458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d",
+  "calibration_p3o.json": "c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a",
+  "VALIDATION_GATE_V2.md": "84b8a23df1ff654f8d602e1fd75119517c4bd7cb458dfb2191d2d088452da47f",
+  "VALIDATION_GATE_V2_AMENDMENT_1.md": "27aeddab51a899dd1e7a7e24f073fbfe4d29efbe6c2cd3db7e992663d39d79d4",
+  "frozen_utc": "2026-09-27T05:09:19.400476+00:00",
+  "sidecars_checked": true,
+  "result": "HASH GATE PASSED before the roll (eval) and again at aggregation"
+ },
+ "evaluation": {
+  "script": "output/wd01/val8/eval_val8.py",
+  "val_roots": ["cv20_7005m2000", "cv20_7006m2000", "cv30_7305m2700", "seed_7535m2400"],
+  "t0s": "every 30 s in [120, 480] (13 t0 x 4 roots = 52 windows)",
+  "members": 5,
+  "horizons": [30, 60],
+  "L0": "deterministic IDM-normal rolled in the same run on the same 52 windows ((c) MAE and (d) per-horizon reference)",
+  "raw_rows": {"L6": 520, "L0": 104, "saved_before_aggregation": true},
+  "frozen_spread_map": {"delay_phys": {"30": 2.7638, "60": 2.5198}, "ttc3": {"30": 3.0314, "60": 6.3496}},
+  "engine": "part-3 idm_merge with the p3o flags lc_scale_disc + merge_accept_prob, member params verbatim from the frozen candidate"
+ },
+ "gate_v2": {
+  "primary": "H=30 (VALIDATION_GATE_V2_AMENDMENT_1; same thresholds)",
+  "H30_PRIMARY": {
+   "L6c_frozen_candidate": {
+    "a_collisions_per_1000": 0.022, "a": "PASS",
+    "b_lc_pred_vs_true": "13.904/12.077 (+15.1%)", "b": "PASS",
+    "c": "FAIL (ttc3 cov 0.8077 PASS; delay-phys cov 0.7692 < 0.80 FAIL; CRPS 37.49 < L0 MAE 293.39 PASS)",
+    "d_speed": "4.2393 <= 1.05xL0@H30 4.3975 (PASS, binding); fixed 5.2185 PASS",
+    "verdict": "FAIL: c_coverage_crps"
+   },
+   "L6_raw_alongside": "(a) PASS 0.022 | (b) PASS +15.1% | (c) FAIL (ttc3 0.4231, delay-phys 0.2115, crps 39.59 < 293.39) | (d) PASS",
+   "overall": "FAIL: c_coverage_crps"
+  },
+  "H60_secondary": {
+   "L6c_frozen_candidate": {
+    "a_collisions_per_1000": 0.018, "a": "PASS",
+    "b_lc_pred_vs_true": "25.712/23.942 (+7.4%)", "b": "PASS",
+    "c": "PASS (ttc3 cov 0.9038; delay-phys cov 0.8462; CRPS 94.31 < L0 MAE 738.77)",
+    "d_speed": "5.0152 <= 1.05xL0@H60 5.2263 (PASS, binding); fixed 5.2185 PASS",
+    "verdict": "PASS"
+   },
+   "L6_raw_alongside": "(a) PASS 0.018 | (b) PASS +7.4% | (c) FAIL (ttc3 0.4423, delay-phys 0.3654, crps 89.84 < 738.77) | (d) PASS",
+   "overall": "PASS (L6c)"
+  },
+  "reading": "(c) fails at the primary horizon by 2 windows (40/52 delay-phys coverage vs 0.80 needed); TRAIN-internal 2-fold had 0.857/0.821 -> genuine transfer shortfall; raw-ensemble coverage shows the frozen widening is what carries the candidate"
+ },
+ "old_gate": {
+  "H30": {"L6c": "PASS (speed 4.2393 < 4.97, coll 0.022, lc +15.1%, delay minmax 0.8462)", "L6": "FAIL (minmax 0.3462)"},
+  "H60": {"L6c": "FAIL (speed 5.0152 >= 4.97)", "L6": "FAIL (speed 5.0152 >= 4.97)"}
+ },
+ "caveats": {
+  "lc_by_type_pooled": {
+   "H30": {"pred_merge": 5.64, "true_merge": 3.54, "dev_merge": 0.594, "pred_disc": 8.18, "true_disc": 8.54, "dev_disc": -0.042, "dev_total": 0.144},
+   "H60": {"pred_merge": 9.15, "true_merge": 7.08, "dev_merge": 0.292, "pred_disc": 16.40, "true_disc": 16.86, "dev_disc": -0.028, "dev_total": 0.067},
+   "note": "merge-type over-count on validation (+59.4%/+29.2%) larger than the declared TRAIN residual (+40.4%/+23.8%); disc near-zero; per-root totals heterogeneous (-41% to +89%): the pooled total pass hides cancelling root-level errors",
+   "per_root": "see results/stdout/stdout_aggregate_val8.txt and results/gate_v2_val8.json (lc_by_type.per_root)"
+  },
+  "ttc_coverage_breakdown": {
+   "L6c@H30": "in 0.8077, below 0.0577 (truth=0 ties: 0), above 0.1346 (truth=0 ties: 0)",
+   "L6c@H60": "in 0.9038, below 0.0 (0), above 0.0962 (0)",
+   "L6@H30": "in 0.4231, below 0.3462 (3 truth=0 ties), above 0.2308 (0)",
+   "L6@H60": "in 0.4423, below 0.1923 (1 truth=0 tie), above 0.3654 (0)"
+  },
+  "crps_vs_climatology": {
+   "climatology_source": "TRAIN roots ONLY: 4 fit roots (raw_fit_truth_m0.jsonl) + 4 calibration roots (raw_train_internal_iter2_m0.jsonl) truth sides, 56 samples per (output, H)",
+   "L6c_delay_phys": "BEATS both baselines at both H (37.48 vs 223.46 emp / 258.95 mean @H30; 94.31 vs 464.29 / 541.39 @H60); informative=True @H60, False @H30 (coverage 0.7692)",
+   "L6c_ttc3": "does NOT beat climatology (4.27 vs 4.27 emp @H30, tie at printed precision; 11.89 vs 7.44 @H60) -> coverage passes but UNINFORMATIVE; consistent with the TRAIN-internal owner-pending finding, now confirmed on validation"
+  }
+ },
+ "verdict": "gate v2 FAIL at the PRIMARY horizon H=30 (criterion c: delay-phys widened coverage 0.7692 < 0.80); gate v2 PASS at H=60; old gate PASS@H30 / FAIL@H60; per the one-look policy the candidate is NOT validated at the operational horizon and any further work goes back to TRAIN-only diagnosis",
+ "artifacts": [
+  "output/wd01/val8/eval_val8.py",
+  "output/wd01/val8/aggregate_val8.py",
+  "output/wd01/val8/results/raw/raw_val8_m0.jsonl",
+  "output/wd01/val8/results/raw/raw_val8_m1.jsonl",
+  "output/wd01/val8/results/raw/raw_val8_m2.jsonl",
+  "output/wd01/val8/results/raw/raw_val8_m3.jsonl",
+  "output/wd01/val8/results/raw/raw_val8_m4.jsonl",
+  "output/wd01/val8/results/raw/raw_val8_L0.jsonl",
+  "output/wd01/val8/results/stdout/stdout_eval_val8.txt",
+  "output/wd01/val8/results/stdout/stdout_aggregate_val8.txt",
+  "output/wd01/val8/results/gate_v2_val8.json",
+  "output/wd01/val8/REPORT_VAL8.md",
+  "output/wd01/val8/LEDGER_DRAFT_VAL8.json"
+ ]
+}

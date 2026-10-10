@@ -1,0 +1,21 @@
+{
+  "ok": false,
+  "ticks_compared": 6,
+  "first_divergence": null,
+  "divergence_count": 0,
+  "field_divergence_counts": {},
+  "divergence_examples": [],
+  "missing_in_verify": [60.0],
+  "extra_in_verify": [],
+  "fields": [
+    "road_id",
+    "lane_id",
+    "lane_position_m",
+    "speed_mps",
+    "acceleration_mps2",
+    "type_id",
+    "speed_mode",
+    "lane_changed"
+  ],
+  "reason": "window incomplete: 1 base tick(s) missing in the verify run"
+}

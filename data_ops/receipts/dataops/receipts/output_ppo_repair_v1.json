@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/ppo_repair_v1",
+ "name": "ppo_repair_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\ppo_repair_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/ppo_repair_v1/ppo_repair_v1.tar.zst",
+ "bytes": 41739,
+ "files": 9,
+ "archive_bytes": 15098,
+ "archive_md5": "11f3a6b278115ae23316c13d3a120e11",
+ "member_manifest": "manifests/members/output_ppo_repair_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.9,
+ "timestamp": "2026-10-10T01:32:50"
+}

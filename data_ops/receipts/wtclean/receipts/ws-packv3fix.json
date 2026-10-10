@@ -1,0 +1,74 @@
+{
+  "name": "ws-packv3fix",
+  "path": "E:\\rd-wt\\ws-packv3fix",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/packv3fix",
+  "headBefore": "bf298cf16efef0b3a85e0fe9ffea59b44f2122b4",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-packv3fix",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-packv3fix.tar.txt",
+  "uploadCount": 166,
+  "uploadBytes": 23182802,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-packv3fix.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 b6062baffa9e6a20be6069f678f79296 local b6062baffa9e6a20be6069f678f79296; size 8851237/8851237; manifest md5 match size match; members=166 (tar -t 166, sha256 166); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-packv3fix.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:39:33.940352+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "bf298cf16efef0b3a85e0fe9ffea59b44f2122b4",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-packv3fix/ws-packv3fix.tar.zst",
+    "name": "ws-packv3fix.tar.zst",
+    "size": 8851237,
+    "md5": "b6062baffa9e6a20be6069f678f79296",
+    "sha256": "6e1c0d9fa33f7e0d6fecfa460dc324a8812a1779cf75b38d2f124d0bc2a204e4",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-packv3fix/ws-packv3fix.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-packv3fix.manifest.json",
+    "manifest_size": 28954,
+    "manifest_md5": "3d34c7d79e08bc6802ceda16931ded04",
+    "member_count": 166,
+    "member_bytes": 23182802,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 11.2,
+    "verify_seconds": 0.6,
+    "upload_seconds": 23.2,
+    "upload_MBps": 0.38,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 166,
+  "memberBytes": 23182802,
+  "junctionsFound": []
+}

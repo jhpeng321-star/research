@@ -1,0 +1,24 @@
+{
+  "task_id": "WM-S-TRAINSETUP-20261009",
+  "python": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe",
+  "tests": [
+    {"command": "-m pytest -q output/wd01/wm_n1/wms/tests --basetemp=_out/pytest_trainsetup_full01", "status": "passed", "detail": "276 passed, 2 skipped, 1 warning; 80.24 s"},
+    {"command": "-m pytest -q output/wd01/wm_n1/wms/tests/test_mixdata.py output/wd01/wm_n1/wms/tests/test_trainsetup_contracts.py output/wd01/wm_n1/wms/tests/test_wms.py output/wd01/wm_n1/wms/tests/test_wms_lpo.py --basetemp=_out/pytest_trainsetup_final01", "status": "passed", "detail": "128 passed, 1 warning; 27.85 s"},
+    {"command": "-m pytest -q output/wd01/wm_n1/wms/tests/test_mixdata.py output/wd01/wm_n1/wms/tests/test_trainsetup_contracts.py --basetemp=_out/pytest_trainsetup_accept01", "status": "passed", "detail": "99 passed, 1 warning; 12.98 s"},
+    {"command": "-m pytest -q output/wd01/wm_n1/wms/tests/test_mixdata.py --basetemp=_out/pytest_trainsetup_accept02", "status": "passed", "detail": "Final portable fixture boundary check: 23 passed, 1 warning; 23.20 s"},
+    {"command": "-B _out/test_train_main_chain.py", "status": "passed", "detail": "16 tests passed; 19.259 s"},
+    {"command": "C:/Program Files/Git/bin/bash.exe -n _out/train_main_chain.sh", "status": "passed", "detail": "exit 0"},
+    {"command": "-m ruff check output/wd01/wm_n1/wms _out/trainsetup_cpu.py _out/test_train_main_chain.py", "status": "passed", "detail": "All checks passed"},
+    {"command": "_out/trainsetup_cpu.py --out _out/trainsetup_cpu_20261009_02", "status": "passed", "detail": "Real wms.cli train argv on synthetic 8-slot slice + real TRAIN identities; 4 steps, finite, sampled child RSS 439238656 bytes"},
+    {"command": "-m wms.mixdata check-receipt _out/trainsetup_cpu_20261009_02/train/TRAIN_RECEIPT.json", "status": "passed", "detail": "12 records; source shares .5/.5; held-world/family guard and stage sampling recorded"},
+    {"command": "-m wms.gate_stages _out/trainsetup_cpu_20261009_02/train/train_log.jsonl --stages 10,30,60,120 --require-terms position,speed,lane,traffic,stability,conservation --ramp-end-s 1", "status": "failed", "detail": "Synthetic fixture traffic grew 215x from 10 to 30 s; guard preserved, no launch"},
+    {"command": "tools/experiment_history.py summary --check", "status": "passed", "detail": "matches ledger b05cf8acfa33"},
+    {"command": "tools/experiment_history.py validate", "status": "failed", "detail": "1560 historical missing-artifact hard errors, baseline also1560; 0 introduced errors; 7 warnings"},
+    {"command": "-m pytest -q tests/test_experiment_history_ledger.py --basetemp=_out/pytest_trainsetup_ledger01", "status": "failed", "detail": "4 failed,18 passed,5 skipped; unavailable historical paths and zero available source checks"},
+    {"command": "tools/experiment_history.py verify-sources", "status": "not_run", "detail": "Full historical outcomes outside task scope; ledger test's available-source check performed0. Copied TRAIN identity hashes independently verified."},
+    {"command": "git diff --check", "status": "passed", "detail": "no whitespace errors"}
+  ],
+  "failures_preserved": ["_out/trainsetup_cpu_20261009_01/INTERRUPTED.json", "initial partial-loader tests fixed before acceptance", "worker contract tests exposed double callback and invalid median inputs, repaired"],
+  "real_data_gpu_training": "not_launched",
+  "review_status": "engineering prepared; coordinator real-data guard census, split lists and GPU gates pending"
+}

@@ -1,0 +1,128 @@
+{
+ "variant": "L4 kind='idm_merge'",
+ "fitted_on": {
+  "roots": [
+   "cv17",
+   "cv19_4107",
+   "cv19_4108",
+   "cv20_7001m2000"
+  ],
+  "t0s": [
+   120.0,
+   300.0
+  ],
+  "H": 60.0,
+  "note": "TRAIN only; holdout never accessed"
+ },
+ "selected": {
+  "merge_params": {
+   "tau_accept": 1.9,
+   "b_accept": 2.0,
+   "p_coop_scale": 0.0
+  },
+  "lc_scale": 0.002,
+  "stage1_loss": 0.7575137308230644,
+  "stage2_loss": 1.4496673621028926,
+  "before": {
+   "l3_stage1": 4.5020327828127895,
+   "l3_stage2": 5.087685326474988,
+   "detail1": {
+    "occ": 0.4024443788069275,
+    "prof": 0.7967072320468978,
+    "merge": 4.0
+   },
+   "detail2": {
+    "mr": 2.002148363156379,
+    "delay": 1.599810555207017,
+    "lc": 1.4857264081115922
+   }
+  },
+  "after": {
+   "stage1": 0.7823267005844063,
+   "stage2": 1.4496673621028926,
+   "detail1": {
+    "occ": 0.6826002087869991,
+    "prof": 0.4403275251858006,
+    "merge": 0.04468555114918211
+   },
+   "detail2": {
+    "mr": 0.2358170234918528,
+    "delay": 0.27975242321859367,
+    "lc": 0.9340979153924461
+   }
+  }
+ },
+ "members": [
+  {
+   "seed": 1,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0
+   }
+  },
+  {
+   "seed": 18,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0
+   }
+  },
+  {
+   "seed": 35,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0
+   }
+  },
+  {
+   "seed": 52,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.25
+   }
+  },
+  {
+   "seed": 69,
+   "lc_scale": 0.002,
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0
+   }
+  }
+ ],
+ "grids": {
+  "tau_accept": [
+   0.7,
+   1.0,
+   1.4,
+   1.9
+  ],
+  "b_accept": [
+   2.0,
+   3.0,
+   4.5,
+   6.5
+  ],
+  "p_coop_scale": [
+   0.0,
+   0.25,
+   0.5,
+   0.75,
+   1.1
+  ],
+  "lc_scale": [
+   0.002,
+   0.003,
+   0.005
+  ]
+ }
+}

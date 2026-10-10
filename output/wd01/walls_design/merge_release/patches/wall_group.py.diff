@@ -1,0 +1,170 @@
+diff --git a/traffic_shepherd/wall_group.py b/traffic_shepherd/wall_group.py
+index 0a43814..b632580 100644
+--- a/traffic_shepherd/wall_group.py
++++ b/traffic_shepherd/wall_group.py
+@@ -65,12 +65,72 @@ ASSEMBLY_CLOSE_MAX_DELTA_MPS = 2.0
+ ASSEMBLY_CLOSE_GAIN_PER_S = 0.1
+ #: Safety abort when assembly has not completed this long after assembly_start.
+ ASSEMBLY_TIMEOUT_S = 60.0
+-WALL_LAW_VERSION = "wall-v2.1-closure"
++#: law v2.2 'merge-release': the wall meters inflow UPSTREAM of the merge and
++#: hands back to native at the merge START (owner-confirmed 2026-10-01).
++WALL_LAW_VERSION = "wall-v2.2-merge-release"
+ 
+ PHASE_ASSEMBLY = "assembly"
+ PHASE_HOLD = "hold"
+ PHASE_HANDBACK = "handback"
+ 
++# --- merge-release geometry (cumulative s_road from the entry edge origin) --
++ENTRY_EDGE_ID = "1191554636"
++MERGE_EDGE_ID = "1487606179"
++EXIT_EDGE_ID = "1487606178"
++ENTRY_EDGE_LENGTH_M = 2644.2
++MERGE_EDGE_LENGTH_M = 75.4
++EXIT_EDGE_LENGTH_M = 477.9
++MERGE_START_S = ENTRY_EDGE_LENGTH_M                    # 2644.2 m
++MERGE_END_S = MERGE_START_S + MERGE_EDGE_LENGTH_M      # 2719.6 m
++NETWORK_END_S = MERGE_END_S + EXIT_EDGE_LENGTH_M       # 3197.5 m
++#: owner binding: release X = 0 m before the merge edge start.
++MERGE_RELEASE_X_M = 0.0
++MERGE_RELEASE_POINT_S = MERGE_START_S - MERGE_RELEASE_X_M
++#: defensive abort: assembly must never carry the lead member to the release
++#: point (the proposer refuses such requests; this guarantees it even if the
++#: reports drift between proposal and assembly).
++REASON_ASSEMBLY_PAST_RELEASE = "assembly_past_release"
++
++
++def edge_of_lane(lane_id) -> str | None:
++    """SUMO edge id encoded in a lane id ("1191554636_0" -> "1191554636");
++    None for internal (junction) lanes and lane-less frames."""
++    if not isinstance(lane_id, str) or not lane_id:
++        return None
++    if lane_id.startswith(":"):
++        return None
++    edge, sep, index = lane_id.rpartition("_")
++    if not sep or not index.isdigit():
++        return None
++    return edge
++
++
++def frame_s_road(frame) -> float | None:
++    """Edge-aware cumulative road coordinate s_road of a report frame.
++
++    Uses the frame's CURRENT edge (``edge_id`` property or the edge parsed
++    from ``lane_id``) and its lane position; falls back to the registered
++    ``distance_to_merge_m`` coordinate for internal/unknown edges.  This is
++    the v2.2 replacement for the edge-blind ``position_m`` assumption: a
++    member on the merge or exit edge is located correctly instead of being
++    read as if it were still on the 2644.2 m entry edge.
++    """
++    edge = getattr(frame, "edge_id", None)
++    if edge is None:
++        edge = edge_of_lane(getattr(frame, "lane_id", None))
++    position = getattr(frame, "position_m", None)
++    if position is not None and isfinite(float(position)):
++        if edge == ENTRY_EDGE_ID:
++            return float(position)
++        if edge == MERGE_EDGE_ID:
++            return MERGE_START_S + float(position)
++        if edge == EXIT_EDGE_ID:
++            return MERGE_END_S + float(position)
++    distance = getattr(frame, "distance_to_merge_m", None)
++    if distance is not None and isfinite(float(distance)):
++        return MERGE_START_S - float(distance)
++    return None
++
+ 
+ class WallRequestError(ValueError):
+     """An infeasible wall request; the message carries the reason."""
+@@ -151,6 +211,12 @@ class WallGroupSession:
+                 self.abort("lane_coverage_violation", now_s)
+                 return commands
+             front_pos = max(positions.values())
++            # v2.2 defensive rule: assembly must never carry the lead member
++            # to the merge release point - abort (the proposer already
++            # refuses such requests, this is the hard guarantee).
++            if front_pos >= MERGE_RELEASE_POINT_S - 1e-9:
++                self.abort(REASON_ASSEMBLY_PAST_RELEASE, now_s)
++                return commands
+             for v, speed in speeds.items():
+                 # wall_v2 pacing: a = clip((v_target - v)/dt, -3, +1.5) toward
+                 # the closure target (front: v_wall; rear: v_wall + Delta)
+@@ -166,10 +232,32 @@ class WallGroupSession:
+                                     "wall_speed_mps": self.wall_speed_mps,
+                                     "law_version": WALL_LAW_VERSION})
+         elif self.phase == PHASE_HOLD:
++            # v2.2 MERGE RELEASE: in HOLD only, fire exactly once when the
++            # LEAD member (max s_road) reaches the release point, and hand
++            # the members back to native at the merge start.  This is the
++            # hard cap on the hold (owner binding).
++            if max(positions.values()) >= MERGE_RELEASE_POINT_S - 1e-9:
++                self.merge_release(now_s)
++                return commands
+             for v, speed in speeds.items():
+                 commands[v] = _pace(self.wall_speed_mps, speed, control_dt_s)
+         return commands
+ 
++    def merge_release(self, now_s: float) -> bool:
++        """v2.2 MERGE-RELEASE: a distinct HOLD-only handback at the merge
++        release point.  Never valid in assembly (that is the declared
++        ``assembly_past_release`` abort); fires once."""
++        if self.phase != PHASE_HOLD:
++            return False
++        self.phase = PHASE_HANDBACK
++        self.events.append({"kind": "wall_event", "wall_id": self.wall_id,
++                            "event": "merge_release", "timestamp_s": now_s,
++                            "release_kind": "merge_release",
++                            "release_point_s": MERGE_RELEASE_POINT_S,
++                            "merge_start_s": MERGE_START_S,
++                            "handback": "native"})
++        return True
++
+     def release(self, now_s: float) -> bool:
+         """Planner handback; refused during assembly (the planner cannot
+         cancel assembly; SAFETY aborts remain available in every phase).
+@@ -196,17 +284,18 @@ class WallGroupSession:
+ 
+     # -------------------------------------------------------------- helpers
+     def _member_positions(self, frames: Mapping):
+-        """Member s_m positions (downstream-increasing; see
+-        downstream_position_m).  Returns (positions, None) or
+-        (None, "member_position_unavailable"): a member without a finite
+-        coordinate aborts the wall LOUDLY - there is deliberately NO
+-        fallback to the lane-local position_m (not comparable across
+-        edges; r3 false member_span_exceeded) or to any odometer.
+-        """
++        """Member s_road positions (edge-aware cumulative coordinate; see
++        frame_s_road).  Returns (positions, None) or (None,
++        "member_position_unavailable"): a member without a finite
++        coordinate aborts the wall LOUDLY.  v2.2 uses the edge-aware
++        coordinate, so the span and the merge-release point are correct
++        across the entry/merge/exit edges (the old edge-blind
++        ``position_m`` read a member on the exit edge as if it were still
++        on the entry edge)."""
+         positions = {}
+         for v in self.members:
+             frame = frames.get(v)
+-            s = downstream_position_m(frame)
++            s = frame_s_road(frame)
+             if s is None:
+                 return None, "member_position_unavailable"
+             positions[v] = s
+@@ -241,15 +330,15 @@ class WallGroupSession:
+         span = max(positions.values()) - min(positions.values())
+         if span > ABORT_SPAN_M:
+             return "member_span_exceeded"
+-        # s_m increases DOWNSTREAM: the rear (most upstream) member is
+-        # min(s_m) and "directly behind the wall" is the s_m window
++        # s_road increases DOWNSTREAM: the rear (most upstream) member is
++        # min(s_road) and "directly behind the wall" is the s_road window
+         # [rear - REAR_GAP_M, rear] (r5 sign defect: with the raw
+         # distance_to_merge_m these comparisons silently looked AHEAD).
+         rear = min(positions.values())
+         for v, frame in frames.items():
+             if v in self.members:
+                 continue
+-            pos = downstream_position_m(frame)
++            pos = frame_s_road(frame)
+             speed = getattr(frame, "speed_mps", None)
+             if pos is None or speed is None or not isfinite(float(speed)):
+                 continue  # unplaced non-member: surveillance skips it

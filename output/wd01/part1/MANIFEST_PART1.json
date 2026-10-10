@@ -1,0 +1,174 @@
+{
+ "manifest": "WD-01_part1",
+ "generated_utc": "2026-09-25T16:55:35.858151+00:00",
+ "files": [
+  {
+   "path": "REGISTRATION.md",
+   "sha256": "484ee7857be11f6b4cb73f8344ff4233766481075dac502072de302005d665c5",
+   "bytes": 7641,
+   "note": "frozen T2 protocol, hashed pre-scoring"
+  },
+  {
+   "path": "wd1lib.py",
+   "sha256": "2d52a3cf47b9e675445d1848b099ed4a00f73d5af484ed7bca0b57c9b206c609",
+   "bytes": 10949,
+   "note": "shared library"
+  },
+  {
+   "path": "build_tag_map.py",
+   "sha256": "f7ceee62ee9c3195b04f3e7c7165cf81ec052ebcc80dfcf3cab5a80cd9412e24",
+   "bytes": 5404,
+   "note": "tag map builder"
+  },
+  {
+   "path": "rebuild_tracks.py",
+   "sha256": "e503f55d62c4cc240765cab2e9ff7c05a01d3b003784509b487b8a93dbe27836",
+   "bytes": 5617,
+   "note": "T1a rebuild + compare"
+  },
+  {
+   "path": "identity_eval.py",
+   "sha256": "d88332eb60e144a71344ec40f97d41baa24500ca6e8e8673feee7e7e3d566d13",
+   "bytes": 12654,
+   "note": "T1b/T1c evaluation protocol"
+  },
+  {
+   "path": "retrain.py",
+   "sha256": "d25d4d5f739947b5c0d157286f8b5679e62895930a157309fed7004b0524a77b",
+   "bytes": 7747,
+   "note": "T1c retrain pipeline"
+  },
+  {
+   "path": "t2_run.py",
+   "sha256": "244e68b9ab3271c593cd41704cfbeb39edd467e6a4a6481814839d091f60a719",
+   "bytes": 20458,
+   "note": "T2 rollout drift"
+  },
+  {
+   "path": "slim_results.py",
+   "sha256": "1b3170070370870f34cfdc48c890564cad3613ad7c711f4eaca2d3ce18c00c1c",
+   "bytes": 1207,
+   "note": "slim + CSV post-processing"
+  },
+  {
+   "path": "backup.py",
+   "sha256": "82331544814faaed8ed9dda1a32b17ec163cea24e82ad0947db13eaedbe5dfc6",
+   "bytes": 2490,
+   "note": "backup + SHA256SUMS receipt"
+  },
+  {
+   "path": "report_gen.py",
+   "sha256": "94f0c632c26b24beb62387e76bbeb60ba9756e1be199e0de95d4c3a7562013b7",
+   "bytes": 20856,
+   "note": "this generator"
+  },
+  {
+   "path": "REPORT_PART1.md",
+   "sha256": "8f578faeb63fe09f764a75e08a1b0d8cfd5822593f4310c440fbbe8640cc854d",
+   "bytes": 16769,
+   "note": "this report"
+  },
+  {
+   "path": "LEDGER_DRAFT_PART1.json",
+   "sha256": "b856f452999ca4fa46361544a678968d5069919f8a9ae92febf2020dd7088853",
+   "bytes": 9521,
+   "note": "ledger draft"
+  },
+  {
+   "path": "results/tag_run_map.json",
+   "sha256": "4555b7270a6b1b72a7cc12a72221f6734542d97521a239be05931afbcec675dc",
+   "bytes": 65138,
+   "note": "88-tag run map with hashes"
+  },
+  {
+   "path": "results/rebuild_compare.json",
+   "sha256": "d4c55fe82be8632b913b1926bb949475f267e996788fab11023236bfa915e91a",
+   "bytes": 103513,
+   "note": "T1a 88-run comparison"
+  },
+  {
+   "path": "results/identity_eval_surviving_slim.json",
+   "sha256": "59e7e709d7a86975b701071ebaa6f506ec7dac09136505d23e89e81e2cf3f68c",
+   "bytes": 54728,
+   "note": "T1b evaluation"
+  },
+  {
+   "path": "results/identity_eval_retrained_slim.json",
+   "sha256": "f6958c6ff61d56872f8aa6fc1704273931123dc85f1367987584f711e687a833",
+   "bytes": 36646,
+   "note": "T1c retrained evaluation"
+  },
+  {
+   "path": "results/dv_pairs_surviving.csv",
+   "sha256": "8e7100fe382d0c7302f2a70032644a3ac73940194d11d89c8545a26567f3f52b",
+   "bytes": 1981586,
+   "note": "surviving dv predictions, 14,583 pairs"
+  },
+  {
+   "path": "results/dv_pairs_retrained.csv",
+   "sha256": "8e7100fe382d0c7302f2a70032644a3ac73940194d11d89c8545a26567f3f52b",
+   "bytes": 1981586,
+   "note": "retrained dv predictions"
+  },
+  {
+   "path": "results/identity_verdict.json",
+   "sha256": "9c11457ffd81a08ff82330570f393178081107441fbb5de5e477b97ba2700abd",
+   "bytes": 710,
+   "note": "T1 verdict + tolerances"
+  },
+  {
+   "path": "results/retrain_run.json",
+   "sha256": "4bd439fde97658fb9dc42b0a30580406f57c197b8ce657446dbaa43515b8ea5b",
+   "bytes": 10727,
+   "note": "T1c run record"
+  },
+  {
+   "path": "results/registration_record.json",
+   "sha256": "f8e216275a1433a78b0520de2ad176d4bd64069611981a26b017aa362e599084",
+   "bytes": 268,
+   "note": "pre-scoring hash record"
+  },
+  {
+   "path": "results/t2_summary.json",
+   "sha256": "1870a5647a2c551385dad900a13c64dd1539f49f99eddd185b265bdf68da76e0",
+   "bytes": 9089,
+   "note": "T2 verdicts + recommendation"
+  },
+  {
+   "path": "results/t2_per_horizon.csv",
+   "sha256": "8d7d4c0006f965da561e5c4f5fc6a2f74c83c66f23720e0c6c942776548f1c75",
+   "bytes": 2256,
+   "note": "T2 H x variant table"
+  },
+  {
+   "path": "results/t2_per_run.csv",
+   "sha256": "9ae12f0766b00e808cd05ff498bffd7817ceefd73009b855881415abb5a6ea68",
+   "bytes": 5231652,
+   "note": "T2 per-run breakdown"
+  },
+  {
+   "path": "results/t2_per_step.csv",
+   "sha256": "6301bc72bf5fb30033832a2daa2959be5d5e54d09e75c3de789ed0c4cafc9eaf",
+   "bytes": 31305,
+   "note": "T2 metrics vs step"
+  },
+  {
+   "path": "identity/retrained/vehicle_dynamics_v3_retrained.pt",
+   "sha256": "b5836346d0d615f1c0433bcfa87d6b33f48d98e8d729c0117ca44e7669042db1",
+   "bytes": 86173,
+   "note": "modern retrained checkpoint"
+  },
+  {
+   "path": "tests/test_integrator_events.py",
+   "sha256": "d1507efd83472b93c60f97315dfe65eb54f07bd01aa1666a02a3ffb33c59a1a5",
+   "bytes": 4603,
+   "note": "pytest suite"
+  },
+  {
+   "path": "tests/test_lib_and_ckpt.py",
+   "sha256": "478276a14d2788ab2f5f43aae64086fbda35248ef0b3f2e150374937264a351b",
+   "bytes": 3779,
+   "note": "pytest suite"
+  }
+ ]
+}

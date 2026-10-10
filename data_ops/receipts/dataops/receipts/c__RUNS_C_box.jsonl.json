@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "c__RUNS_C_box.jsonl",
+ "name": "RUNS_C_box.jsonl",
+ "kind": "file",
+ "class": "ARCHIVE",
+ "producer": "C: runs manifest",
+ "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\RUNS_C_box.jsonl",
+ "drive": "gdrive:research-archive/repo-evidence/c-drive/RUNS_C_box.jsonl.tar.zst",
+ "bytes": 140940,
+ "files": 1,
+ "archive_bytes": 6951,
+ "archive_md5": "19eefac4e2f6153ae5f0b91ff459e8da",
+ "member_manifest": "manifests/members/c__RUNS_C_box.jsonl.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 8.7,
+ "timestamp": "2026-10-10T01:39:43"
+}

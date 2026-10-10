@@ -1,0 +1,26 @@
+priority below-normal: False
+=== WD-01 part 3o TASK A': base rows (L0 + iter0 p3n members TYPED + fit-truth) ===
+ZERO simulation; holdout blocked; validation roots NEVER loaded here.
+device=cpu torch_threads=2
+calibration roots (gate split): ['cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700']
+fit roots (climatology truth sides): ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000']
+validation ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] NOT touched; holdout blocked
+iter 0 members = p3n iter1 members (part3n/results/fit_p3n.json, read-only): 5
+[   0.0s] L0: raw_base_L0.jsonl complete -- skipped
+[   0.0s] iter0 member 0: raw_train_internal_iter0_m0.jsonl complete -- skipped
+[   0.0s] iter0 member 1: raw_train_internal_iter0_m1.jsonl complete -- skipped
+[   0.0s] iter0 member 2: raw_train_internal_iter0_m2.jsonl complete -- skipped
+[   0.0s] iter0 member 3: raw_train_internal_iter0_m3.jsonl complete -- skipped
+[   0.0s] iter0 member 4: raw_train_internal_iter0_m4.jsonl complete -- skipped
+[   0.0s] fit truth: raw_fit_truth_m0.jsonl complete -- skipped
+
+== iter0 (p3n iter1 members) LC by type, calibration roots, all members pooled ==
+  H=30: predM 4.68 trueM 3.25 (+44.0%) | predD 8.91 trueD 7.96 (+11.9%) | total 13.59/11.21 (+21.2%)
+  H=60: predM 8.18 trueM 6.54 (+25.1%) | predD 17.80 trueD 16.64 (+7.0%) | total 25.98/23.18 (+12.1%)
+
+== no-op regression vs the committed p3n iter1 gate (tolerance 0.25 lc/window ~ 2 %) ==
+  H=30: pooled pred_lc 13.593 vs committed 13.664 (diff 0.071) OK
+  H=60: pooled pred_lc 25.979 vs committed 26.143 (diff 0.164) OK
+REGRESSION OK -- defaults are no-ops within cross-platform float jitter
+
+DONE part 3o base rows.

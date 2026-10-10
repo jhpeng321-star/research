@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wd01_partB_truearms_labels_v1",
+ "name": "wd01_partB_truearms_labels_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wd01_partB_truearms_labels_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/wd01_partB_truearms_labels_v1/wd01_partB_truearms_labels_v1.tar.zst",
+ "bytes": 86286815,
+ "files": 1794,
+ "archive_bytes": 62733068,
+ "archive_md5": "a2bc876afb23ccd5ea019cdb8f1dc764",
+ "member_manifest": "manifests/members/output_wd01_partB_truearms_labels_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 1715.8,
+ "timestamp": "2026-10-10T01:51:51"
+}

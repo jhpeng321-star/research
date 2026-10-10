@@ -1,0 +1,25 @@
+priority below-normal: False
+=== WD-01 part 3o TASK B': per-type LC-hazard refit, iteration 1 (declared: {'base_from': 'p3n_iter1_member0', 'lines': (('merge_accept_prob', (1.0, 0.85, 0.7, 0.55)), ('lc_scale_disc', (0.002, 0.0016, 0.0012)), ('tau_accept', (1.9, 2.4))), 'member_draw_fields': ('merge_accept_prob', 'lc_scale_disc'), 'member_bases': 'p3n_iter1_members_1_4'}) ===
+ZERO simulation; fit roots ONLY; calibration split not rolled here; validation never touched; holdout blocked.
+device=cpu torch_threads=2
+base (p3n member 0): lc 0.002 disc None mprob 1.0 tau 1.9 b 2.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.0
+[   0.0s] computing truth targets for 28 fit windows ...
+TRAIN truth LC by type per fit window (pooled means): lcM30 2.89 lcD30 9.29 | lcM60 6.11 lcD60 19.00
+resuming: fit_lines_iter1.json present
+
+== line tables (fit windows) ==
+  merge_accept_prob  0.55:2.6773  0.7:3.0708  0.85:2.7229  1.0:2.7739  -> winner 0.55
+  lc_scale_disc      0.0012:2.7475  0.0016:2.4426  0.002:2.7739  -> winner 0.0016
+  tau_accept         1.9:2.7739  2.4:2.7713  -> winner 2.4
+  base loss (each line at its base value): {'merge_accept_prob': 2.7738543910460143, 'lc_scale_disc': 2.7738543910460143, 'tau_accept': 2.7738543910460143}
+[   5.4s] AFTER: rolling the combined candidate on 28 fit windows ...
+
+AFTER (combined {'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0016, 'tau_accept': 2.4}): joint=2.2664 (s1 0.3448 s2 1.9216) detail2={'mr': 0.4744937375260747, 'delay': 0.30020681733040405, 'ttc3': 0.5861060876904879, 'lcM30': 0.1052777777777778, 'lcD30': 0.2606745330916249, 'lcM60': 0.053605875220458565, 'lcD60': 0.33616625913173565}
+BEFORE (base): joint=2.7739
+[  66.3s] member 1: base p3n member 1 + draws {'merge_accept_prob': 0.85, 'lc_scale_disc': 0.002} -> lc 0.002 disc 0.002 mprob 0.85 tau 1.9 b 5.0 force 200.0 blend 0.0 pcoop 0.25 dawdle 1.0
+[  66.3s] member 2: base p3n member 2 + draws {'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0016} -> lc 0.002 disc 0.0016 mprob 0.55 tau 2.4 b 3.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.5
+[  66.3s] member 3: base p3n member 3 + draws {'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0016} -> lc 0.002 disc 0.0016 mprob 0.55 tau 2.4 b 5.0 force 200.0 blend 0.0 pcoop 0.25 dawdle 1.25
+[  66.3s] member 4: base p3n member 4 + draws {'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0016} -> lc 0.002 disc 0.0016 mprob 0.55 tau 2.4 b 4.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.25
+[  66.3s] wrote D:\rd-wt\wd01o\output\wd01\part3o\results\fit_p3o_iter1.json
+
+DONE part 3o fit iteration 1.

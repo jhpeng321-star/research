@@ -1,0 +1,122 @@
+{
+ "s_out": {
+  "delay_phys": {
+   "30": 1.7411,
+   "60": 1.9097,
+   "90": 2.2974,
+   "120": 2.5198
+  },
+  "ttc3": {
+   "30": 2.0946,
+   "60": 2.2974,
+   "90": 2.5198,
+   "120": 2.5198
+  }
+ },
+ "coverage": {
+  "delay_phys@H30": {
+   "raw_coverage": 0.4286,
+   "s_out": 1.7411,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "coverage_median_centred": 0.9286,
+   "crps_raw_mean": 39.657,
+   "crps_widened_mean": 43.03,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 32.556
+  },
+  "delay_phys@H60": {
+   "raw_coverage": 0.25,
+   "s_out": 1.9097,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8571,
+   "coverage_median_centred": 0.8571,
+   "crps_raw_mean": 95.315,
+   "crps_widened_mean": 96.024,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 84.473
+  },
+  "delay_phys@H90": {
+   "raw_coverage": 0.2857,
+   "s_out": 2.2974,
+   "target": 0.8,
+   "coverage_mean_centred": 0.9286,
+   "coverage_median_centred": 0.8571,
+   "crps_raw_mean": 173.014,
+   "crps_widened_mean": 167.942,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 180.632
+  },
+  "delay_phys@H120": {
+   "raw_coverage": 0.3214,
+   "s_out": 2.5198,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8929,
+   "coverage_median_centred": 0.7857,
+   "crps_raw_mean": 286.288,
+   "crps_widened_mean": 264.424,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 268.921
+  },
+  "ttc3@H30": {
+   "raw_coverage": 0.4643,
+   "s_out": 2.0946,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "coverage_median_centred": 0.8214,
+   "crps_raw_mean": 4.236,
+   "crps_widened_mean": 4.265,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 3.065
+  },
+  "ttc3@H60": {
+   "raw_coverage": 0.2857,
+   "s_out": 2.2974,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "coverage_median_centred": 0.8214,
+   "crps_raw_mean": 9.59,
+   "crps_widened_mean": 9.863,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 9.212
+  },
+  "ttc3@H90": {
+   "raw_coverage": 0.2857,
+   "s_out": 2.5198,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "coverage_median_centred": 0.8929,
+   "crps_raw_mean": 14.59,
+   "crps_widened_mean": 15.008,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 33.284
+  },
+  "ttc3@H120": {
+   "raw_coverage": 0.3571,
+   "s_out": 2.5198,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "coverage_median_centred": 0.8929,
+   "crps_raw_mean": 20.882,
+   "crps_widened_mean": 21.553,
+   "mean_shift_max": 0.0,
+   "mean_shift_median_centred_max": 59.272
+  }
+ },
+ "crps": {},
+ "meta": {
+  "part": "3l",
+  "task": "C",
+  "calibration_roots": [
+   "cv20_7002m2000",
+   "cv20_7003m2000",
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "windows": 28,
+  "members": 5,
+  "holdout_accessed": false,
+  "simulation": false,
+  "note": "mechanism A = mean-centred widening (mean exactly invariant); median-centred variant reported as a check; mechanism B = the wider L5 member draws themselves"
+ }
+}

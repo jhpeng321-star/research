@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-LABEL-TIME-20261003",
+ "name": "WM-N1-LABEL-TIME-20261003",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-LABEL-TIME-20261003",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABEL-TIME-20261003/WM-N1-LABEL-TIME-20261003.tar.zst",
+ "bytes": 49719,
+ "files": 24,
+ "archive_bytes": 15295,
+ "archive_md5": "4eb0ace7775fa3492c0fc9861afd01fc",
+ "member_manifest": "manifests/members/runs_active_WM-N1-LABEL-TIME-20261003.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 60.4,
+ "timestamp": "2026-10-10T03:50:58"
+}

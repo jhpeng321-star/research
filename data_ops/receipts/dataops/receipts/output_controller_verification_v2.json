@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/controller_verification_v2",
+ "name": "controller_verification_v2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\controller_verification_v2",
+ "drive": "gdrive:research-archive/repo-evidence/output/controller_verification_v2/controller_verification_v2.tar.zst",
+ "bytes": 1396735,
+ "files": 16,
+ "archive_bytes": 1080507,
+ "archive_md5": "6b66bc557cb9dfcd406dd414c3ed1db4",
+ "member_manifest": "manifests/members/output_controller_verification_v2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 43.9,
+ "timestamp": "2026-10-10T01:45:55"
+}

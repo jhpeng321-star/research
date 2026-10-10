@@ -1,0 +1,15 @@
+# 3
+s = S("Next fix: blend physics and learning",
+      "Today the delay change comes only from the learned head reading a coarse CAV summary; the simulated driver reactions are unused. Blend: physics-measured delay change from the open-road rollout (all cars, IDM+correction, real CAV controllers) for short horizons, learned head for long horizons; weight w(tau) fitted on training data with leave-one-world-out CV. Status: closed-road physics nearly blind (predicted spread 0.7 s vs true 25 s); open-road version being tested now; needs realistic queues/speeds.",
+      ["Today vs blend", "Formula", "How (4 steps)", "Status"])
+tb(s, 0.4, 1.3, 12.5, 0.9, ["Today: the delay change comes only from the learned head, which reads a coarse CAV summary.",
+   "The simulated reactions of each human driver are NOT used for the delay."], size=19, color="1F3A5F")
+tb(s, 0.9, 2.25, 11.5, 0.8, "Δdelay(τ) = w(τ) · Δdelay_physics(τ) + (1 − w(τ)) · Δdelay_learned(τ)", size=24, color="0E7C86", bold=True, fill="EEF3F7", line="0E7C86", anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+tb(s, 0.4, 3.2, 12.5, 2.8, [
+   "1. For each candidate plan, simulate ALL cars on an open road (IDM + correction; CAVs run their real controllers)",
+   "2. Count the total delay of every simulated car for the plan and for native → physics effect at 30 / 60 / 120 s",
+   "3. The learned head gives its effect (with uncertainty) at all horizons",
+   "4. Weight w(τ): high at short horizons (physics reliable), low at long horizons (simulation drifts), fitted on training data",
+   "Status: closed-road physics saw almost no effect (spread 0.7 s vs true 25 s); open-road version being tested now"], size=18)
+takeaway(s, "Use simulated driver reactions directly where physics is reliable; learning where it is not", y=6.2, h=0.75)
+

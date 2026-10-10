@@ -1,0 +1,103 @@
+[
+  {
+    "experiment_id": "WD-01-PA2G-A2",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "completed",
+    "execution_status": "completed",
+    "evidence_validity": "valid",
+    "scientific_verdict": "churn_bug_fixed_model_error_now_honest_short_h_scope_limited_long_h",
+    "recorded_utc": "2026-09-30T00:00:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-PA2G-A2 task); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_PA2G_EVAL_A2.md",
+      "registered": "2026-09-30 before the run",
+      "type": "ANALYSIS on existing logs, zero simulation, TRAIN only; reuses REGISTRATION_PA2G_EVAL_A.md with the truth source changed (as REPORT_PA2G_EVAL_A.md's next step specified)"
+    },
+    "question": "After the correctness fix of the discretionary LC churn (swapped _neighbors leader/follower structure + unclipped decision accelerations; nominal stability guards retired to OFF per the design-deviation rule), how large is the Part A v2 general model error against the chunk-4 TRUE fleet-native truth with the CAV path wired (is_cav + native command path)?",
+    "closest_prior_and_difference": {
+      "related_records": [
+        "WD-01-PA2G-A (output/wd01/REPORT_PA2G_EVAL_A.md): the same registered analysis on chunk-2/3 switching-mix truth with the PRE-FIX engine and no CAV path; its own next step was this re-run",
+        "WD-01-PA2G-A2-fixcheck (labelled sub-run): the fixed engine on the PA2G-A chunk-2/3 truth with PA2G-A's CAV treatment, isolating the fix effect on identical windows"
+      ],
+      "unanswered_difference": "PA2G-A's headline was confounded (truth CAVs ran switching schedules; CAV path never engaged; engine churn bug). A2 answers the same question with the bug fixed on fleet-native truth; the fix-attribution sub-run separates fix effect from truth effect."
+    },
+    "changed_variable": "engine correctness fix (no textbook parameter changed) + truth source (chunk-4 __native_base fleet-native) + CAV path wired + guards retired to OFF (labelled); comparator and metric definitions unchanged",
+    "data": {
+      "truth": "E:/research-dense/runs/campaign_stage1_chunk4/<world>__native_base/run/physics_steps.jsonl (TRAIN worlds of results_plan_chunk4/WORLD_PLAN.json; usable = summary.json + receipt exit_status complete + physics coverage; CAV ids from the physics rows' cav_ids only; assert_train_only passed; CAL/VALIDATION/HOLDOUT never opened; opened files listed in results/eval_a2/summary.json)",
+      "worlds": "32 of 61-63 usable TRAIN runs, deterministic round-robin over 16 (demand, penetration) cells, 2 per cell; 576 windows per model per H (512 at H120)",
+      "params": "param_set_id BA1FD93F0A21B1FFD2CDF20693E74FB8E3FBB8E4A1C57E7F88D9A3929E3455CE (textbook values identical to PA2G-A's 6359f5...; guards cooldown_s/lc_min_speed_mps/ego_gain_floor retired to 0 = OFF, owner-flagged design deviation, labelled guards_on variant run)"
+    },
+    "budget_and_charges": {
+      "registered_budget": "one eval_a2 pass over the stratified 32-world panel, workers<=4, plus the labelled guards_on variant (every 4th world) and the 4-world fixcheck pass; wall clock 1377 s (summary.json); fixcheck 135 s; no SUMO simulation charged (replay of saved logs + model rollouts)",
+      "allocations": [
+        {
+          "id": "eval_a2_full",
+          "status": "completed",
+          "note": "2026-09-30, eval_a2_run.out: 32/32 worlds, DONE wall 1377s, 8432 raw rows"
+        },
+        {
+          "id": "eval_a2_aborted_2window",
+          "status": "aborted_superseded",
+          "note": "first launch had a window-cap bug (2 windows/world, 960 rows); preserved at results/eval_a2_aborted_2window/ with ABORTED_NOTE.txt, then relaunched correctly (no silent retry)"
+        },
+        {
+          "id": "eval_fixcheck",
+          "status": "completed",
+          "note": "labelled fix-attribution pass, 4 PA2G-A worlds, 560 rows"
+        }
+      ]
+    },
+    "physical_results": {
+      "verified_against": "output/wd01/partA_v2g/results/eval_a2/tables.json",
+      "units": "delay/TTC/hard errors are per-window aggregates in vehicle-seconds/pair-seconds/vehicle-seconds (pred - truth); s_RMSE in m on the shared downstream-d axis; v_RMSE in m/s",
+      "headline": {
+        "v2g_s_rmse_mean_m": {"H10": 10.1, "H30": 51.6, "H60": 106.8, "H120": 136.7},
+        "v2g_delay_err_mean_s": {"H10": 4.5, "H30": 2.8, "H60": -114.4, "H120": -551.3},
+        "v2g_delay_err_mae_s": {"H10": 6.1, "H30": 30.3, "H60": 149.8, "H120": 581.7},
+        "v2g_disc_lc_pred_vs_true": {"H10": [2044, 443], "H120": [7323, 1393]},
+        "v2g_collisions_per_1000": {"H10": 0.12, "H120": 0.03},
+        "fix_effect_same_windows": {"disc_lc_H10": [10921, 389], "collisions_H10": [1470, 14], "s_rmse_H10": [27.7, 8.5]},
+        "untracked_delay_share": {"H10": 0.249, "H60": 0.386, "H120": 0.577}
+      },
+      "residual_model_error": "disc LC over-production 4.6-6.0x vs truth (textbook MOBIL + keep-right bias at 0.5 s ballistic integration; not tuned away, owner question flagged); negative delay bias growing with H (tracked scope: untracked arrivals hold 58% of truth delay at H120); TTC<3/hard-brake under-predicted",
+      "guards_on_labelled": "post-fix the retired guards change the disc-LC rate by <2% (3.60 vs 3.55 per window) - the churn collapse needs no guard (no-ping-pong test-pinned with cooldown 0)",
+      "sweep_descriptive_only": "T/a sweep at H60 on 8 worlds: s_RMSE 92-112 m; signed delay error -253.2 (a1.5) to +113.7 (T2.0,a0.7); no parameter selected (registration rule)"
+    },
+    "integrity_limitations": [
+      "Two runs' summary/receipt files materialized during the task via a concurrent file restoration (receipts dated 2026-09-29); every selected run passed the completion + coverage checks at run time; w8706m2400p40t360 (latecomer) is in the panel.",
+      "Tracked-scope limit: Part A v2 general cannot see untracked arrivals; its long-H delay error is dominated by scope (Table 2), not the driver model.",
+      "The fixcheck sub-run covers 4 worlds (3 cells) - its absolute values are more congested than the panel average; only the paired deltas are quoted as the fix effect."
+    ],
+    "what_must_not_be_inferred": [
+      "That MOBIL's residual disc-LC rate is 'wrong' - it is model error to be characterized or separately registered, not tuned away.",
+      "Any parameter choice from the descriptive T/a sweep.",
+      "Any wall/control efficacy claim: this analysis characterizes a predictor only."
+    ],
+    "answers_question": "yes (churn fixed and quantified; clean model error on fleet-native truth; residual error honestly attributed)",
+    "paths": {
+      "report": "output/wd01/REPORT_PA2G_EVAL_A2.md",
+      "diagnosis": "output/wd01/partA_v2g/DIAGNOSIS.md",
+      "aggregation_script": "output/wd01/partA_v2g/aggregate_eval_a2.py",
+      "eval_script": "output/wd01/partA_v2g/eval_a2.py",
+      "fixcheck_script": "output/wd01/partA_v2g/eval_fixcheck.py",
+      "raw_rows": "output/wd01/partA_v2g/results/eval_a2/raw_rows.jsonl",
+      "summary": "output/wd01/partA_v2g/results/eval_a2/summary.json",
+      "tables": "output/wd01/partA_v2g/results/eval_a2/tables.json",
+      "fixcheck_rows": "output/wd01/partA_v2g/results/eval_fixcheck/raw_rows.jsonl",
+      "run_log": "output/wd01/partA_v2g/eval_a2_run.out"
+    },
+    "hashes": {
+      "raw_rows_jsonl": "79E2BCD94D2604985386EA1A436A4C1D9284C2A9B865CCB7DDE51CE47068E92B",
+      "summary_json": "DBE1E40EA4210F53E289BFA4DB5C726707E0039067AAEA971873121325F58CF3",
+      "tables_json": "A838EE3CCFEE18BE189F604EC2BE00BE576CE371412632C6121DC06FA91CC8DC",
+      "fixcheck_raw_rows_jsonl": "1C4B1F8BA33CFE22D8456A8767EC8D1E83C603600D9097F1E4B6E84ED584785F",
+      "params_nominal_json": "BA1FD93F0A21B1FFD2CDF20693E74FB8E3FBB8E4A1C57E7F88D9A3929E3455CE"
+    },
+    "supersedes": "WD-01-PA2G-A headline numbers (kept as evidence; PA2G-A remains the fix-effect reference via its saved rows)",
+    "ledger_updated": "NO (draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task; owner flags in the report)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "Owner decisions: accept/decline the guard retirement; whether to register a bounded investigation of the residual MOBIL disc-LC over-production; tracked-scope H ceiling is a Part-B/horizon question."
+  }
+]

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="bottleneck.net.xml"/>
+        <route-files value="osm.demand.dense.rou.xml"/>
+        <additional-files value="bottleneck.add.xml"/>
+    </input>
+    <processing>
+        <time-to-teleport value="-1"/>
+        <collision.action value="warn"/>
+    </processing>
+</sumoConfiguration>

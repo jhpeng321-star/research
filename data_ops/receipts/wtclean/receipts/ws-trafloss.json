@@ -1,0 +1,74 @@
+{
+  "name": "ws-trafloss",
+  "path": "E:\\rd-wt\\ws-trafloss",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/trafloss",
+  "headBefore": "e09b3659f8be0dac3d507691571adc77bcf261ba",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-trafloss",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-trafloss.tar.txt",
+  "uploadCount": 109,
+  "uploadBytes": 7315958,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-trafloss.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 cf7c564ec9e59c12eb482c964038e2e5 local cf7c564ec9e59c12eb482c964038e2e5; size 3245459/3245459; manifest md5 match size match; members=109 (tar -t 109, sha256 109); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-trafloss.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:31:54.293911+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "e09b3659f8be0dac3d507691571adc77bcf261ba",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-trafloss/ws-trafloss.tar.zst",
+    "name": "ws-trafloss.tar.zst",
+    "size": 3245459,
+    "md5": "cf7c564ec9e59c12eb482c964038e2e5",
+    "sha256": "9a3f22aff9add2622b06f348eb23997f86c7faf5bac7c9805132de4741bccc55",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-trafloss/ws-trafloss.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-trafloss.manifest.json",
+    "manifest_size": 18369,
+    "manifest_md5": "9b24efd26caf41b4e401bfae133ba50f",
+    "member_count": 109,
+    "member_bytes": 7315958,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 3.0,
+    "verify_seconds": 0.4,
+    "upload_seconds": 27.1,
+    "upload_MBps": 0.12,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 109,
+  "memberBytes": 7315958,
+  "junctionsFound": []
+}

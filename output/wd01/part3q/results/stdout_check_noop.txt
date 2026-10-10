@@ -1,0 +1,29 @@
+priority below-normal: False
+=== WD-01 part 3q TASK 0: no-op regression vs the committed p3o iter2 gate rolls ===
+ZERO simulation; holdout blocked; validation roots NEVER loaded here.
+p3o iter2 members 5, calibration roots ('cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700'), t0 (120, 180, 240, 300, 360, 420, 480)
+[  70.5s] member 0: compared 56 rows so far; worst 0
+[ 134.4s] member 1: compared 112 rows so far; worst 0
+[ 203.7s] member 2: compared 168 rows so far; worst 0
+[ 275.4s] member 3: compared 224 rows so far; worst 0
+[ 348.6s] member 4: compared 280 rows so far; worst 0
+
+== worst abs diff per field vs the committed p3o rows ==
+  speed_rmse               0  OK
+  pos_rmse                 0  OK
+  collisions_per_1000      0  OK
+  pred_lc                  0  OK
+  true_lc                  0  OK
+  delay_phys_pred          0  OK
+  delay_phys_true          0  OK
+  pred_ttc3_exposure       0  OK
+  true_ttc3_exposure       0  OK
+  pred_lc_merge            0  OK
+  pred_lc_disc             0  OK
+  true_lc_merge            0  OK
+  true_lc_disc             0  OK
+
+compared 280 (window, H) rows over 5 members
+NO-OP REGRESSION OK -- the p3q engine defaults are byte-identical to the p3o engine
+
+DONE part 3q check-noop.

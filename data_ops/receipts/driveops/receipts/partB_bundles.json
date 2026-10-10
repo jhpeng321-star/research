@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "partB_bundles",
+ "kind": "dir",
+ "class": "DELETE-CANDIDATE",
+ "producer": "partB pre-staging bundles; superseded, shipped zips+sha256 kept",
+ "restore": "copy to E:/research-dense/output/",
+ "local": "E:/research-dense/output/partB_bundles",
+ "drive": "gdrive:research-archive/repo-evidence/output/partB_bundles",
+ "bytes": 563055757,
+ "files": 1925,
+ "md5_manifest": "receipts/md5/partB_bundles.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T07:19:39"
+}
