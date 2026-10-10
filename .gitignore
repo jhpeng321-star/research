@@ -152,3 +152,6 @@ pytest-of-*/
 # data_ops receipts: lock files and personal (C:-drive) document receipts stay local
 /data_ops/receipts/**/locks/
 /data_ops/receipts/dataops/receipts/c__*
+
+# clean-up tool outputs (generated script + manifest, reports, journal): local only
+/data_ops/cleanup_out/
