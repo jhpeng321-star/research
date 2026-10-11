@@ -1,0 +1,266 @@
+{
+  "R4": {
+    "baseline": {
+      "10": {
+        "n": 40,
+        "median": 2.73114013671875
+      },
+      "30": {
+        "n": 40,
+        "median": 6.726104736328125
+      },
+      "60": {
+        "n": 40,
+        "median": 17.416767120361328
+      },
+      "120": {
+        "n": 39,
+        "median": 155.60347366333008
+      },
+      "blowups": {
+        "n": 7,
+        "denominator": 39,
+        "rule": "HDV median |ds| >50m at 60s AND >100m at 120s"
+      },
+      "errors": 0,
+      "wrong_lane": {
+        "10": {
+          "wrong": 129,
+          "n": 2699
+        },
+        "30": {
+          "wrong": 274,
+          "n": 2293
+        },
+        "60": {
+          "wrong": 361,
+          "n": 1729
+        },
+        "120": {
+          "wrong": 241,
+          "n": 714
+        }
+      },
+      "lane_changes": {
+        "0-60": {
+          "changes": 14942,
+          "hdv_steps": 277656,
+          "per_hdv_per_10s": 1.076295848099807
+        },
+        "60-120": {
+          "changes": 25362,
+          "hdv_steps": 144214,
+          "per_hdv_per_10s": 3.5172729416006767
+        }
+      },
+      "survivors": {
+        "n": 719,
+        "signed_ds_sum": -9872.820787727833,
+        "signed_dv_sum": -1205.0268667042255,
+        "signed_ds_mean": -13.731322375143021,
+        "signed_dv_mean": -1.6759761706595626
+      }
+    },
+    "eligible_count": 2,
+    "selected": "both_s120_l40",
+    "selected_schedule": [
+      "both",
+      120,
+      40
+    ],
+    "selected_screen": {
+      "10": {
+        "n": 40,
+        "median": 2.73114013671875
+      },
+      "30": {
+        "n": 40,
+        "median": 6.726104736328125
+      },
+      "60": {
+        "n": 40,
+        "median": 17.416767120361328
+      },
+      "120": {
+        "n": 39,
+        "median": 165.77270889282227
+      },
+      "blowups": {
+        "n": 6,
+        "denominator": 39,
+        "rule": "HDV median |ds| >50m at 60s AND >100m at 120s"
+      },
+      "errors": 0,
+      "wrong_lane": {
+        "10": {
+          "wrong": 129,
+          "n": 2699
+        },
+        "30": {
+          "wrong": 274,
+          "n": 2293
+        },
+        "60": {
+          "wrong": 361,
+          "n": 1729
+        },
+        "120": {
+          "wrong": 282,
+          "n": 714
+        }
+      },
+      "lane_changes": {
+        "0-60": {
+          "changes": 14942,
+          "hdv_steps": 277656,
+          "per_hdv_per_10s": 1.076295848099807
+        },
+        "60-120": {
+          "changes": 2983,
+          "hdv_steps": 144214,
+          "per_hdv_per_10s": 0.41369076511295716
+        }
+      },
+      "survivors": {
+        "n": 719,
+        "signed_ds_sum": 143086.41250103712,
+        "signed_dv_sum": 3214.6249564606696,
+        "signed_ds_mean": 199.00752781785414,
+        "signed_dv_mean": 4.470966559750583
+      }
+    },
+    "rule": "min screen median 120s subject to 60s <= baseline+0.5m and blowups <= baseline"
+  },
+  "C1": {
+    "baseline": {
+      "10": {
+        "n": 40,
+        "median": 2.3895721435546875
+      },
+      "30": {
+        "n": 40,
+        "median": 6.476325988769531
+      },
+      "60": {
+        "n": 40,
+        "median": 25.423980712890625
+      },
+      "120": {
+        "n": 39,
+        "median": 207.05181121826172
+      },
+      "blowups": {
+        "n": 13,
+        "denominator": 39,
+        "rule": "HDV median |ds| >50m at 60s AND >100m at 120s"
+      },
+      "errors": 0,
+      "wrong_lane": {
+        "10": {
+          "wrong": 166,
+          "n": 2699
+        },
+        "30": {
+          "wrong": 343,
+          "n": 2293
+        },
+        "60": {
+          "wrong": 430,
+          "n": 1729
+        },
+        "120": {
+          "wrong": 297,
+          "n": 714
+        }
+      },
+      "lane_changes": {
+        "0-60": {
+          "changes": 7640,
+          "hdv_steps": 277656,
+          "per_hdv_per_10s": 0.5503212608407526
+        },
+        "60-120": {
+          "changes": 41019,
+          "hdv_steps": 144214,
+          "per_hdv_per_10s": 5.688629397978005
+        }
+      },
+      "survivors": {
+        "n": 719,
+        "signed_ds_sum": 47898.62528991699,
+        "signed_dv_sum": -4118.896192014217,
+        "signed_ds_mean": 66.61839400544784,
+        "signed_dv_mean": -5.728645607808369
+      }
+    },
+    "eligible_count": 14,
+    "selected": "lane_s160_l40",
+    "selected_schedule": [
+      "lane",
+      160,
+      40
+    ],
+    "selected_screen": {
+      "10": {
+        "n": 40,
+        "median": 2.3895721435546875
+      },
+      "30": {
+        "n": 40,
+        "median": 6.476325988769531
+      },
+      "60": {
+        "n": 40,
+        "median": 25.423980712890625
+      },
+      "120": {
+        "n": 39,
+        "median": 179.77561950683594
+      },
+      "blowups": {
+        "n": 13,
+        "denominator": 39,
+        "rule": "HDV median |ds| >50m at 60s AND >100m at 120s"
+      },
+      "errors": 0,
+      "wrong_lane": {
+        "10": {
+          "wrong": 166,
+          "n": 2699
+        },
+        "30": {
+          "wrong": 343,
+          "n": 2293
+        },
+        "60": {
+          "wrong": 430,
+          "n": 1729
+        },
+        "120": {
+          "wrong": 356,
+          "n": 714
+        }
+      },
+      "lane_changes": {
+        "0-60": {
+          "changes": 7640,
+          "hdv_steps": 277656,
+          "per_hdv_per_10s": 0.5503212608407526
+        },
+        "60-120": {
+          "changes": 13518,
+          "hdv_steps": 144214,
+          "per_hdv_per_10s": 1.8747139667438668
+        }
+      },
+      "survivors": {
+        "n": 719,
+        "signed_ds_sum": 67922.31482052803,
+        "signed_dv_sum": -3888.378207474947,
+        "signed_ds_mean": 94.46775357514329,
+        "signed_dv_mean": -5.408036449895615
+      }
+    },
+    "rule": "min screen median 120s subject to 60s <= baseline+0.5m and blowups <= baseline"
+  }
+}
