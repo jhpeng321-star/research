@@ -18,3 +18,8 @@
   determine what is going on and continue fixing".
 - Data/safety: no sealed/CAL/HOLDOUT/chunk-5/INC1/J4B data; the switching pack is not used unless R3's receipt shows
   it was (then identical use); never launch in retry loops; LF scripts only; outputs under /root/autodl-tmp/wms_train_r4/.
+
+## Finish (2026-10-11)
+- Training finished ~09:00 local: 8125/8125 steps, loss finite throughout (PID 2927, started ~01:58).
+- Results fetched to runs/active/WM-S-R4-20261011/box/gpuA/r4_main_a1/ (tar tmp/r4_box/r4_main_a1_results.tar.gz); sha256 equal to the box: wm_s.pt 3d73f4ac..., wm_s_best.pt 6e935700..., TRAIN_RECEIPT.json cbb0c9ec....
+- gpuA shut down after the fetch (ssh no longer serves the box). Next: CPU scoring vs C1.
