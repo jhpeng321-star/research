@@ -113,7 +113,8 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
         terms.append("conservation")
     if long_horizon:
         terms.extend(name for name, weight in (("residual_mag", settings.residual_mag_weight),
-                                               ("lane_rate", settings.lane_rate_weight))
+                                               ("lane_rate", settings.lane_rate_weight),
+                                               ("flip_rate", settings.flip_rate_weight))
                      if weight > 0.0)
     return tuple(dict.fromkeys(terms))
 

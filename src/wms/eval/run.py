@@ -36,16 +36,27 @@ class CheckpointPredictorFactory:
     path: str
     entries: bool = False
     entries_v2: bool = False
+    diag: tuple[str, ...] = ()
 
     def __call__(self):
-        flags = RolloutFlags(entries=self.entries, entries_v2=self.entries_v2)
+        diag = set(self.diag)
+        flags = RolloutFlags(
+            entries=self.entries, entries_v2=self.entries_v2,
+            **{name: name in diag for name in DIAG_SWITCHES})
         return WmsPredictor.from_checkpoint(self.path, flags).predict_states
+
+
+#: Round-5 inference-time attribution switches (config ``eval.flags.diag_*``).
+DIAG_SWITCHES = ("diag_lane_gate_shared", "diag_lane_cap_off", "diag_encoder_population",
+                 "diag_recorded_lanes")
 
 
 def rollout_flags(config: Any) -> dict[str, bool]:
     """Predictor switches from ``EvalConfig.flags`` (projection / merge_cal come from the checkpoint)."""
     flags = getattr(config, "flags", None)
-    return {"entries": bool(getattr(flags, "entries", False)), "entries_v2": False}
+    out = {"entries": bool(getattr(flags, "entries", False)), "entries_v2": False}
+    out.update({name: bool(getattr(flags, name, False)) for name in DIAG_SWITCHES})
+    return out
 
 
 def sha256_of(path: Path) -> str:
@@ -57,9 +68,11 @@ def sha256_of(path: Path) -> str:
 
 
 def score_model(checkpoint: Path, set_records: Mapping[str, Sequence[dict]], spec: ScoreSpec, *,
-                entries: bool = False, workers: int = 1) -> dict[str, list[dict]]:
+                entries: bool = False, workers: int = 1,
+                diag: Sequence[str] = ()) -> dict[str, list[dict]]:
     """Per-state results of one checkpoint on every set (state order preserved)."""
-    factory = CheckpointPredictorFactory(str(checkpoint), entries=entries)
+    factory = CheckpointPredictorFactory(str(checkpoint), entries=entries,
+                                         diag=tuple(diag))
     return {name: score_states(records, factory, spec, workers=workers)
             for name, records in set_records.items()}
 
@@ -99,8 +112,9 @@ def build_result(models: Mapping[str, str], sets: Sequence[str], *, config: Any)
     scored: dict[str, dict] = {}
     for name, logical in models.items():
         path = Path(require_present(logical))
+        diag = tuple(name for name in DIAG_SWITCHES if flags[name])
         states = score_model(path, records, spec, entries=flags["entries"],
-                             workers=int(config.workers))
+                             workers=int(config.workers), diag=diag)
         scored[name] = {"checkpoint": logical, "path": str(path), "sha256": sha256_of(path),
                         "states_by_set": states}
     result: dict[str, Any] = {

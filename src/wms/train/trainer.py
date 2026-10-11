@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import random
 import shutil
+import sys
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -20,7 +21,7 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from wms.core.errors import WmsError
 from wms.data.collate import collate
-from wms.model.checkpoint import save_checkpoint
+from wms.model.checkpoint import save_checkpoint, sha256_file
 from wms.physics.projection import FeasibilityProjection, ProjectionConfig
 
 from .curriculum import StagePlan, stage_plan
@@ -37,6 +38,10 @@ STAGE_SNAPSHOT_ENV = "WM_S_STAGE_CKPT_COPY_DIR"
 
 class HardCapRefused(WmsError, ValueError):
     """A hard residual clamp was configured for a new run (REJECTED, change-log #3)."""
+
+
+class CheckpointInitError(WmsError, RuntimeError):
+    """``model.init_from`` did not point at a loadable ``wm_s/1`` checkpoint."""
 
 
 @dataclass
@@ -103,6 +108,7 @@ class WmSTrainer:
                                           weight_decay=s.weight_decay)
         self.dataset, self.val_dataset = dataset, val_dataset
         self.out_dir = Path(out_dir)
+        self.init_report = self._init_from_checkpoint(s.init_from)
         self.history: list[dict] = []
         self.stages: list[StagePlan] = stage_plan(s, float(self.model.physics.dt_s))
         self.capture_loss_shares = False
@@ -123,18 +129,62 @@ class WmSTrainer:
         validate_bounds(model.residual_soft_bound_mps2, model.residual_soft_bound_neg_mps2,
                         model.residual_cap_mps2, model.residual_cap_neg_mps2)
 
+    def _init_from_checkpoint(self, name: Optional[str]) -> Optional[dict]:
+        """Initialise matching weights from a ``wm_s/1`` checkpoint (``model.init_from``).
+
+        Only same-name/same-shape tensors are copied (strict=False); the report lists
+        what transferred, what was new in this model and what the checkpoint had that
+        this model lacks.  The name resolves through the data registry (an absolute
+        path is taken as already resolved), so restricted material is refused.
+        """
+        if name is None:
+            return None
+        import torch as _torch
+
+        from ..data.registry import resolve
+
+        path = Path(str(resolve(name)))
+        if not path.is_file():
+            raise FileNotFoundError(f"model.init_from: {name!r} resolves to {path}, not a file")
+        payload = _torch.load(path, map_location="cpu", weights_only=True)
+        if not isinstance(payload, dict) or payload.get("format") != "wm_s/1":
+            raise CheckpointInitError(f"model.init_from: {path} is not a wm_s/1 checkpoint")
+        own = self.model.state_dict()
+        source = payload.get("model") or {}
+        matched = {key: value for key, value in source.items()
+                   if key in own and own[key].shape == value.shape}
+        self.model.load_state_dict(matched, strict=False)
+        report = {
+            "source": str(path), "sha256": sha256_file(path),
+            "loaded": sorted(matched),
+            "new_in_model": sorted(set(own) - set(source)),
+            "shape_mismatch": sorted(key for key in set(source) & set(own)
+                                     if own[key].shape != source[key].shape),
+            "unused_from_checkpoint": sorted(set(source) - set(own)),
+        }
+        print(f"init_from {path.name}: loaded {len(report['loaded'])} tensors, "
+              f"new {len(report['new_in_model'])}, shape-mismatch "
+              f"{len(report['shape_mismatch'])}, unused {len(report['unused_from_checkpoint'])}",
+              file=sys.stderr)
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        write_json(self.out_dir / "INIT_FROM.json", report)
+        return report
+
     # ------------------------------------------------------------------ steps
     def forward_backward(self, batch: dict, *, unroll_steps: int, backward: bool = True,
-                         share: bool = False) -> dict:
+                         share: bool = False, truncation_steps: Optional[int] = None) -> dict:
         """One unroll pass (see :meth:`UnrollRunner.run`)."""
         return self.runner.run(batch, unroll_steps=unroll_steps, backward=backward, share=share,
-                               capture_shares=self.capture_loss_shares)
+                               capture_shares=self.capture_loss_shares,
+                               truncation_steps=truncation_steps)
 
-    def train_batch(self, batch: dict, *, unroll_steps: int) -> dict:
+    def train_batch(self, batch: dict, *, unroll_steps: int,
+                    truncation_steps: Optional[int] = None) -> dict:
         """One optimizer step; fails closed on non-finite gradients or parameters."""
         started = time.perf_counter()
         self.optimizer.zero_grad(set_to_none=True)
-        parts = self.forward_backward(batch, unroll_steps=unroll_steps)
+        parts = self.forward_backward(batch, unroll_steps=unroll_steps,
+                                      truncation_steps=truncation_steps)
         if any(p.grad is not None and not bool(torch.isfinite(p.grad).all())
                for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S gradient")
@@ -159,7 +209,8 @@ class WmSTrainer:
         was_training = self.model.training
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
-        optional = ("traffic", "residual_mag", "lane_rate", *self.composer.braking.log_terms)
+        optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
+                    *self.composer.braking.log_terms)
         total.update({name: 0.0 for name in self.composer.names if name in optional})
         total.update({name: 0.0 for name in MONITORS})
         n_batches = valid_targets = available_steps = 0
@@ -286,7 +337,9 @@ class WmSTrainer:
                     # controllers are not replayed a second time.
                     self.capture_loss_shares = (s.loss_share_logging
                                                 and s.cav_drive == "closed_loop" and done == 0)
-                    record = self.train_batch(batch, unroll_steps=plan.unroll_steps)
+                    record = self.train_batch(batch, unroll_steps=plan.unroll_steps,
+                                              truncation_steps=plan.truncation_steps
+                                              or None)
                     global_step += 1
                     record.update(stage_s=float(stage_s), epoch=stage_i + 1, step=global_step)
                     self.history.append(record)

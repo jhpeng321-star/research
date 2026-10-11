@@ -47,6 +47,10 @@ class ModelSpec:
     gate_kind: str = "cumsum"
     gate_g_max_init: float = 0.30
     gate_tau_steps_init: float = 50.0
+    lane_gate_kind: str = "shared"
+    lane_gate_g_max_init: float = 0.16
+    lane_gate_tau_steps_init: float = 30.0
+    checkpoint_step: bool = False
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
@@ -69,6 +73,12 @@ class ModelSpec:
             raise ValueError("gate_g_max_init must be in (0, 1)")
         if not math.isfinite(self.gate_tau_steps_init) or self.gate_tau_steps_init <= 0.0:
             raise ValueError("gate_tau_steps_init must be finite and positive")
+        if self.lane_gate_kind not in ("shared", "saturating"):
+            raise ValueError("lane_gate_kind must be shared or saturating")
+        if not 0.0 < self.lane_gate_g_max_init < 1.0:
+            raise ValueError("lane_gate_g_max_init must be in (0, 1)")
+        if not math.isfinite(self.lane_gate_tau_steps_init) or self.lane_gate_tau_steps_init <= 0.0:
+            raise ValueError("lane_gate_tau_steps_init must be finite and positive")
         if self.lane_head == "history" and self.rollout_mode == "residual":
             raise ValueError("history lane head requires driver_params or hybrid rollout")
         if self.history_features < 0:

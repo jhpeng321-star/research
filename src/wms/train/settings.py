@@ -55,6 +55,8 @@ class TrainSettings:
     speed_weight: float = 1.0
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
+    truncation_steps_per_stage: Optional[tuple[int, ...]] = None
+    driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
     history_stride_s: float = 1.0
@@ -113,6 +115,13 @@ class TrainSettings:
     gate_kind: str = "cumsum"
     gate_g_max_init: float = 0.30
     gate_tau_steps_init: float = 50.0
+    lane_gate_kind: str = "shared"
+    lane_gate_g_max_init: float = 0.16
+    lane_gate_tau_steps_init: float = 30.0
+    checkpoint_step: bool = False
+    init_from: Optional[str] = None
+    flip_rate_weight: float = 0.0
+    flip_rate_allowance: float = 0.00124327163
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -171,6 +180,23 @@ class TrainSettings:
                  "gate_g_max_init must be finite and in (0,1)")
         _require(math.isfinite(self.gate_tau_steps_init) and self.gate_tau_steps_init > 0,
                  "gate_tau_steps_init must be finite and positive")
+        _require(self.lane_gate_kind in ("shared", "saturating"),
+                 "lane_gate_kind must be shared or saturating")
+        _require(math.isfinite(self.lane_gate_g_max_init)
+                 and 0 < self.lane_gate_g_max_init < 1,
+                 "lane_gate_g_max_init must be finite and in (0,1)")
+        _require(math.isfinite(self.lane_gate_tau_steps_init)
+                 and self.lane_gate_tau_steps_init > 0,
+                 "lane_gate_tau_steps_init must be finite and positive")
+        _require(self.truncation_steps_per_stage is None or (
+            len(self.truncation_steps_per_stage) == len(self.unroll_curriculum_s)
+            and all(int(x) >= 1 for x in self.truncation_steps_per_stage)),
+            "truncation_steps_per_stage must give one positive truncation per stage")
+        _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
+                 "flip_rate_weight must be finite and non-negative")
+        _require(math.isfinite(self.flip_rate_allowance)
+                 and 0 <= self.flip_rate_allowance <= 1,
+                 "flip_rate_allowance must be finite and in [0,1]")
         _require(self.val_every >= 1, "val_every must be positive")
 
     @classmethod
@@ -184,6 +210,9 @@ class TrainSettings:
             values["unroll_curriculum_s"] = tuple(float(x) for x in values["unroll_curriculum_s"])
         if values.get("stage_steps") is not None:
             values["stage_steps"] = tuple(int(x) for x in values["stage_steps"])
+        if values.get("truncation_steps_per_stage") is not None:
+            values["truncation_steps_per_stage"] = tuple(
+                int(x) for x in values["truncation_steps_per_stage"])
         return cls(**values)
 
     @classmethod
@@ -200,4 +229,5 @@ class TrainSettings:
     def long_horizon_on(self) -> bool:
         """Any of the opt-in long-horizon guards (soft bound / penalties / selection)."""
         return bool(self.residual_soft_bound_mps2 or self.residual_mag_weight
-                    or self.lane_rate_weight or self.select_by_long_horizon)
+                    or self.lane_rate_weight or self.flip_rate_weight
+                    or self.select_by_long_horizon)

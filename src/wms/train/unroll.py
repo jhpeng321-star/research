@@ -9,6 +9,7 @@ a per-chunk mean, is logged as the mean over chunks.
 """
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Optional
 
@@ -25,7 +26,8 @@ from .losses.compose import LossComposer, hybrid_residual_weight
 from .settings import TrainSettings
 
 #: Chunk-term names that always appear in the log record (zero until first added).
-ALWAYS_LOGGED = ("position", "speed", "lane", "residual_mag", "lane_rate", "traffic")
+ALWAYS_LOGGED = ("position", "speed", "lane", "residual_mag", "lane_rate", "flip_rate",
+                 "traffic")
 #: Step offsets at which the monotone gate curve is logged.
 GATE_PROBE_K = (0, 1, 2, 5, 10, 20, 40, 80, 160, 240)
 GATE_LOG_K = (10, 20, 60, 120, 240)
@@ -52,6 +54,63 @@ class _Accumulators:
         self.sums[name] = value if name not in self.sums else self.sums[name] + value
 
 
+@dataclass
+class _DriverGradLeaves:
+    """FIX 1 bookkeeping: the one t0 encoder graph plus detached leaf tensors.
+
+    Every chunk consumes the leaves; because ``backward`` accumulates into leaf
+    ``.grad``, the sum of all chunk gradients w.r.t. the encoding is available after
+    the last chunk and pushed through the single encoder graph exactly once.
+    """
+
+    values: Optional[Tensor]
+    embedding: Optional[Tensor]
+    values_leaf: Optional[Tensor] = None
+    embedding_leaf: Optional[Tensor] = None
+
+    @classmethod
+    def encode_once(cls, model: Any, inp: UnrollInputs) -> Optional["_DriverGradLeaves"]:
+        """Encode at t0 exactly as inference does; build leaves when grad is on."""
+        encoded, embedding, _ = model.encode_drivers(
+            inp.initial, driver_history=inp.observed_hist,
+            driver_history_mask=inp.observed_hist_mask)
+        if encoded is None:
+            return None
+        values = encoded["values"]
+        leaves = cls(values=values, embedding=embedding)
+        if torch.is_grad_enabled() and values.requires_grad:
+            leaves.values_leaf = values.detach().requires_grad_(True)
+            if embedding is not None and embedding.requires_grad:
+                leaves.embedding_leaf = embedding.detach().requires_grad_(True)
+        return leaves
+
+    def chunk_inputs(self) -> tuple[Optional[dict[str, Tensor]], Optional[Tensor]]:
+        """``(driver_params, driver_embedding)`` every chunk receives (leaves if grad)."""
+        values = self.values_leaf if self.values_leaf is not None else self.values.detach()
+        params = {name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)}
+        embedding = (self.embedding_leaf if self.embedding_leaf is not None
+                     else (None if self.embedding is None else self.embedding.detach()))
+        return params, embedding
+
+    @property
+    def leaf_parameters(self) -> list[Tensor]:
+        return [leaf for leaf in (self.values_leaf, self.embedding_leaf)
+                if leaf is not None]
+
+    def backward_through_encoder(self) -> None:
+        """Push the accumulated leaf gradients through the t0 encoder graph."""
+        graphs: list[Tensor] = []
+        grads: list[Tensor] = []
+        for graph, leaf in ((self.values, self.values_leaf),
+                            (self.embedding, self.embedding_leaf)):
+            if leaf is None or leaf.grad is None:
+                continue
+            graphs.append(graph)
+            grads.append(leaf.grad)
+        if graphs:
+            torch.autograd.backward(graphs, grads)
+
+
 class UnrollRunner:
     """Run ``model.rollout`` over a batch and evaluate the composed loss."""
 
@@ -62,12 +121,14 @@ class UnrollRunner:
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,
+            truncation_steps: Optional[int] = None,
             _rate_probe: bool = False) -> dict:
         """One pass; returns the log record (``loss`` plus every logged term and monitor).
 
         ``share`` (forward-only diagnostic) adds ``loss_share``: each term's share of the
         gradient norm on a single probe chunk.  ``capture_shares`` (with ``backward``)
-        measures the shares during the real backward pass instead.
+        measures the shares during the real backward pass instead.  ``truncation_steps``
+        overrides the configured chunk length (per-stage truncation, round 5).
         """
         if share and backward:
             raise ValueError("loss-share logging is a forward-only diagnostic (backward=False)")
@@ -87,6 +148,15 @@ class UnrollRunner:
         targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device)
         self.composer.prepare(targets)
         parameters = [p for p in model.parameters() if p.requires_grad]
+        # Round 5 (FIX 1): encode the driver settings ONCE from the observed pre-t0
+        # history at t0 -- exactly where inference encodes them -- and hand every
+        # chunk detached leaf tensors (no per-chunk re-encode, no chunk-start
+        # interaction drift); the accumulated leaf gradients go through the single
+        # encoder graph after the last chunk (exact gradient, one encoder pass).
+        driver_leaves = (_DriverGradLeaves.encode_once(model, inp)
+                         if cfg.driver_grad_across_chunks else None)
+        if driver_leaves is not None:
+            parameters = parameters + driver_leaves.leaf_parameters
         measure = capture_shares and backward
         shares = GradientShares(parameters) if (measure or share) else None
         conservation = (ConservationTracker(inp.present[:, 0], ConservationConfig(enabled=True))
@@ -96,69 +166,86 @@ class UnrollRunner:
             if name in self.composer.names:
                 acc.sums[name] = torch.zeros((), dtype=torch.float64, device=self.device)
         noisy = backward or _rate_probe
-        chunk = max(1, int(cfg.truncation_steps))
+        chunk = max(1, int(truncation_steps if truncation_steps else cfg.truncation_steps))
         n_chunks = max(1, (targets.n_steps + chunk - 1) // chunk)
         probe_chunk = self._share_probe_chunk(targets.n_steps, chunk)
         current = inp.initial
         hist, hist_mask = inp.hist, inp.hist_mask
         driver_params = driver_embedding = None
+        if driver_leaves is not None:
+            acc.driver_encoded = driver_leaves.values.detach()
+            driver_params, driver_embedding = driver_leaves.chunk_inputs()
+        carry_driver = not bool(cfg.driver_grad_across_chunks)
         for c0 in range(0, targets.n_steps, chunk):
             c1 = min(targets.n_steps, c0 + chunk)
-            roll = model.rollout(
-                current, n_steps=c1 - c0, k0=c0,
-                cav_teacher=None if inp.teacher is None else inp.teacher[:, c0:c1 + 1],
-                present_seq=inp.present_seq[:, c0:c1 + 1], is_cav_seq=inp.is_cav[:, c0:c1 + 1],
-                history=hist, history_mask=hist_mask, controller_id=inp.controller_id,
-                action_timeline=inp.action_timeline, cav_controller=inp.cav_controller,
-                state_noise_std_m=float(cfg.state_noise_std_m) if noisy else 0.0,
-                state_noise_std_mps=float(cfg.state_noise_std_mps) if noisy else 0.0,
-                projection=self.projection, entries=inp.entries,
-                driver_history=inp.observed_hist, driver_history_mask=inp.observed_hist_mask,
-                driver_params=driver_params, driver_embedding=driver_embedding)
-            self._collect_rollout(roll, acc, conservation, inp, c0, c1)
-            if driver_params is None and "driver_parameters" in roll:
-                acc.driver_encoded = roll["driver_parameters"].detach()
-                driver_params = {name: acc.driver_encoded[..., i]
-                                 for i, name in enumerate(PARAMETER_NAMES)}
-            if driver_embedding is None and "driver_embedding" in roll:
-                driver_embedding = roll["driver_embedding"].detach()
-            ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
+            # Forward-only share diagnostic: only the probe chunk needs its graph;
+            # every other chunk runs without one (round-5 memory fix).
+            grad_off = share and c0 != probe_chunk
+            with torch.no_grad() if grad_off else contextlib.nullcontext():
+                roll = model.rollout(
+                    current, n_steps=c1 - c0, k0=c0,
+                    cav_teacher=None if inp.teacher is None else inp.teacher[:, c0:c1 + 1],
+                    present_seq=inp.present_seq[:, c0:c1 + 1],
+                    is_cav_seq=inp.is_cav[:, c0:c1 + 1],
+                    history=hist, history_mask=hist_mask, controller_id=inp.controller_id,
+                    action_timeline=inp.action_timeline, cav_controller=inp.cav_controller,
+                    state_noise_std_m=float(cfg.state_noise_std_m) if noisy else 0.0,
+                    state_noise_std_mps=float(cfg.state_noise_std_mps) if noisy else 0.0,
+                    projection=self.projection, entries=inp.entries,
+                    driver_history=inp.observed_hist,
+                    driver_history_mask=inp.observed_hist_mask,
+                    driver_params=driver_params, driver_embedding=driver_embedding)
+                self._collect_rollout(roll, acc, conservation, inp, c0, c1)
+                if acc.driver_encoded is None and "driver_parameters" in roll:
+                    acc.driver_encoded = roll["driver_parameters"].detach()
+                if carry_driver:
+                    if driver_params is None and "driver_parameters" in roll:
+                        driver_params = {name: acc.driver_encoded[..., i]
+                                         for i, name in enumerate(PARAMETER_NAMES)}
+                    if driver_embedding is None and "driver_embedding" in roll:
+                        driver_embedding = roll["driver_embedding"].detach()
+                ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
+                                  rate_reference=rate_reference)
+                breakdown = self.composer(ctx)
+                raw = ctx.raw_residual
+                raw = torch.zeros_like(roll["speeds"]) if raw is None else raw
+                acc.raw_samples.append(raw.detach().masked_select(ctx.valid_aux).abs())
+                acc.rate_samples.append(
+                    ctx.change_probabilities.detach().masked_select(ctx.valid_aux))
+                shareable = self.composer.shareable_chunk(breakdown)
+                if measure:
+                    for name, tensor in shareable.items():
+                        shares.capture(name, tensor)
+                if not bool(torch.isfinite(breakdown.total)):
+                    raise RuntimeError("non-finite WM-S loss")
+                if backward:
+                    breakdown.total.backward()
+                for name, term_value in breakdown.terms.items():
+                    acc.add(name, term_value.logged)
+                if share and c0 == probe_chunk:
+                    for name, tensor in shareable.items():
+                        shares.probe(name, tensor)
+                acc.total += float(breakdown.total.detach())
+                current = {key: (value.detach() if torch.is_tensor(value) else value)
+                           for key, value in roll["state"].items()}
+                if inp.entries is None:
+                    current["is_cav"] = inp.is_cav[:, c1]
+                    current["length_m"] = inp.initial["length_m"]
+                else:
+                    # Recorded overrides own original slots only; the entry process owns
+                    # newcomer type/length, including across BPTT boundaries.
+                    newcomers = current["entrant"].bool()
+                    current["is_cav"] = torch.where(newcomers, current["is_cav"],
+                                                    inp.is_cav[:, c1])
+                    current["length_m"] = torch.where(newcomers, current["length_m"],
+                                                      inp.initial["length_m"])
+                hist, hist_mask = roll["history"].detach(), roll["history_mask"]
+        record = self._finish(inp, targets, acc, conservation, shares, n_chunks,
+                              backward=backward, share=share, measure=measure,
                               rate_reference=rate_reference)
-            breakdown = self.composer(ctx)
-            raw = ctx.raw_residual
-            raw = torch.zeros_like(roll["speeds"]) if raw is None else raw
-            acc.raw_samples.append(raw.detach().masked_select(ctx.valid_aux).abs())
-            acc.rate_samples.append(ctx.change_probabilities.detach().masked_select(ctx.valid_aux))
-            shareable = self.composer.shareable_chunk(breakdown)
-            if measure:
-                for name, tensor in shareable.items():
-                    shares.capture(name, tensor)
-            if not bool(torch.isfinite(breakdown.total)):
-                raise RuntimeError("non-finite WM-S loss")
-            if backward:
-                breakdown.total.backward()
-            for name, term_value in breakdown.terms.items():
-                acc.add(name, term_value.logged)
-            if share and c0 == probe_chunk:
-                for name, tensor in shareable.items():
-                    shares.probe(name, tensor)
-            acc.total += float(breakdown.total.detach())
-            current = {key: (value.detach() if torch.is_tensor(value) else value)
-                       for key, value in roll["state"].items()}
-            if inp.entries is None:
-                current["is_cav"] = inp.is_cav[:, c1]
-                current["length_m"] = inp.initial["length_m"]
-            else:
-                # Recorded overrides own original slots only; the entry process owns
-                # newcomer type/length, including across BPTT boundaries.
-                newcomers = current["entrant"].bool()
-                current["is_cav"] = torch.where(newcomers, current["is_cav"], inp.is_cav[:, c1])
-                current["length_m"] = torch.where(newcomers, current["length_m"],
-                                                  inp.initial["length_m"])
-            hist, hist_mask = roll["history"].detach(), roll["history_mask"]
-        return self._finish(inp, targets, acc, conservation, shares, n_chunks,
-                            backward=backward, share=share, measure=measure,
-                            rate_reference=rate_reference)
+        if backward and driver_leaves is not None:
+            driver_leaves.backward_through_encoder()
+        return record
 
     def _share_probe_chunk(self, n_steps: int, chunk: int) -> int:
         """First chunk at/after the traffic ramp saturates (every term live), else the last."""
@@ -183,8 +270,15 @@ class UnrollRunner:
             conservation.track_rollout(roll["masks"], entrant_seq=seq)
         if self.model.rollout_mode == "hybrid" and roll.get("residual_magnitude") is not None:
             res, phys = roll["residual_magnitude"], roll["physics_accel_magnitude"]
-            acc.hybrid_residual = res if acc.hybrid_residual is None else acc.hybrid_residual + res
-            acc.hybrid_physics = phys if acc.hybrid_physics is None else acc.hybrid_physics + phys
+            # Accumulate detached values only: these are diagnostics, and keeping
+            # every chunk's graph alive through a whole stage (the forward-only
+            # share pass runs no backward) was the ~20 GB retention found in the
+            # round-5 review.  The chunk-local graph still carries the
+            # ResidualPenalty term, which reads the roll tensors directly.
+            acc.hybrid_residual = (res.detach() if acc.hybrid_residual is None
+                                   else acc.hybrid_residual + res.detach())
+            acc.hybrid_physics = (phys.detach() if acc.hybrid_physics is None
+                                  else acc.hybrid_physics + phys.detach())
             acc.hybrid_count += int(roll.get("residual_count", 0))
 
     def _finish(self, inp: UnrollInputs, targets: UnrollTargets, acc: _Accumulators,
@@ -255,6 +349,11 @@ class UnrollRunner:
             gate_log = model.gate(torch.tensor(GATE_LOG_K, device=self.device)).detach()
             record["gate_g_by_k"] = {
                 str(k): float(value) for k, value in zip(GATE_LOG_K, gate_log)}
+        if getattr(model, "lane_gate_kind", "shared") == "saturating":
+            lane_gate_log = model.lane_gate(torch.tensor(GATE_LOG_K, device=self.device)
+                                            ).detach()
+            record["lane_gate_g_by_k"] = {
+                str(k): float(value) for k, value in zip(GATE_LOG_K, lane_gate_log)}
         if cfg.traffic_loss:
             record["chunks"] = int(n_chunks)
         if model.rollout_mode == "hybrid" and acc.hybrid_count > 0:

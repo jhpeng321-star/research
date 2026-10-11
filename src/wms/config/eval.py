@@ -12,12 +12,20 @@ RANKED_SETS = ("wall_same", "wall_pilot", "seen_controls")
 
 @config_dataclass
 class RolloutFlags:
-    """How a checkpoint is rolled out when scored."""
+    """How a checkpoint is rolled out when scored.
+
+    The ``diag_*`` switches are round-5 inference-time attribution diagnostics
+    (default OFF; scoring is unchanged when they are off).
+    """
 
     entries: bool = False
     projection: bool = False
     merge_cal: bool = True
     rollout_mode: str = "residual"
+    diag_lane_gate_shared: bool = False
+    diag_lane_cap_off: bool = False
+    diag_encoder_population: bool = False
+    diag_recorded_lanes: bool = False
 
     def __post_init__(self) -> None:
         require(self.rollout_mode in ("residual", "hybrid"),

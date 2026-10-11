@@ -32,10 +32,19 @@ FORBIDDEN_ROLLOUT_MODE = "driver_params"
 
 @dataclass(frozen=True)
 class RolloutFlags:
-    """Rollout switches that are not part of the checkpoint (both default OFF)."""
+    """Rollout switches that are not part of the checkpoint (all default OFF).
+
+    The ``diag_*`` switches are round-5 post-run attribution diagnostics: they
+    neutralise one learned component at a time at inference time and are never
+    active in training or scoring by default.
+    """
 
     entries: bool = False
     entries_v2: bool = False
+    diag_lane_gate_shared: bool = False
+    diag_lane_cap_off: bool = False
+    diag_encoder_population: bool = False
+    diag_recorded_lanes: bool = False
 
     def __post_init__(self) -> None:
         if self.entries_v2 and not self.entries:
@@ -71,6 +80,16 @@ class WmsPredictor:
         self.model = backend.model
         self._history = HistoryInputs(backend)
         self.entries_summary: Mapping[str, Any] | None = None
+        self._apply_diag_flags(flags)
+
+    def _apply_diag_flags(self, flags: RolloutFlags) -> None:
+        """Round-5 attribution switches: runtime model attributes, default no-op."""
+        if flags.diag_lane_gate_shared:
+            self.model.lane_gate_kind = "shared"
+        if flags.diag_lane_cap_off:
+            self.model.lane_logit_cap = None
+        if flags.diag_encoder_population:
+            self.model.diag_encoder_population = True
 
     @classmethod
     def from_checkpoint(cls, path: str | Path, flags: RolloutFlags = RolloutFlags(), *,
@@ -130,6 +149,12 @@ class WmsPredictor:
                 driver_history_mask = torch.cat((driver_history_mask, torch.zeros(
                     1, n_pad, driver_history_mask.shape[2], dtype=torch.bool)), dim=1)
         with torch.no_grad():
+            lane_teacher = None
+            if self.flags.diag_recorded_lanes:
+                if teacher is None:
+                    raise PredictorError(
+                        "diag_recorded_lanes requires the state's recorded arm")
+                lane_teacher = teacher[..., 1].long()
             if teacher is None:
                 roll = self.model.rollout(
                     initial, n_steps=n_steps, k0=0,
@@ -138,7 +163,7 @@ class WmsPredictor:
                     present_seq=present_seq, entries=proc,
                     driver_history=driver_history, driver_history_mask=driver_history_mask,
                     action_timeline=action_timeline, controller_id=None,
-                    projection=self.backend.projection)
+                    projection=self.backend.projection, lane_teacher=lane_teacher)
             else:
                 roll = self.model.rollout(
                     initial, n_steps=n_steps, k0=0, cav_teacher=teacher,
@@ -146,7 +171,8 @@ class WmsPredictor:
                     cav_controller=self.model.hold_teacher if entries_on else None,
                     entries=proc, driver_history=driver_history,
                     driver_history_mask=driver_history_mask, controller_id=None,
-                    action_timeline=action_timeline, projection=self.backend.projection)
+                    action_timeline=action_timeline, projection=self.backend.projection,
+                    lane_teacher=lane_teacher)
         if proc is not None:
             self.entries_summary = proc.summary()
         return _frames_from_rollout(roll, t0_s, ids, kin, is_cav, n_pad, n_steps)

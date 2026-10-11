@@ -1,0 +1,27 @@
+# ROUND-5 FIX 3 (WM-S-R5-F3): r5_base + lanes.
+# (a) lane_logit_cap 1.5: bounded learned lane delta (R4-DIAG-LANE: the learned delta
+#     drives ~3/4 of early lane changes); (b) separate saturating lane gate with its own
+#     g_max/tau instead of sharing the acceleration gate (LANECAL: the ever-growing gate
+#     moved both); (c) flip-rate loss replaces the ineffective lane-rate loss
+#     (R4-DIAG-LANE: it constrained mean softmax mass with <=0.7% gradient share) —
+#     a hinge above the TRUE training rate 0.00124327163/HDV-step (LANECAL, junction -1
+#     excluded by the shared supervision mask), weight calibrated to ~5-10% gradient
+#     share on the real data path (see PREP_REPORT.md).
+schema_version = 2
+name = "WM-S-R5-F3"
+extends = "r5_base.toml"
+
+[model]
+lane_logit_cap = 1.5 # (a) bounded lane-logit correction.
+
+[model.lane_gate]
+kind = "saturating" # (b) own saturating lane gate, independent of the accel gate.
+g_max_init = 0.16
+tau_steps_init = 30.0
+
+[loss.lane_rate]
+weight = 0.0 # (c) lane-rate loss OFF; replaced by the flip-rate loss below.
+
+[loss.flip_rate]
+weight = 1.0 # calibrated in prep smoke to a 5-10% gradient share.
+allowance = 0.00124327163 # TRUE training rate (LANECAL).

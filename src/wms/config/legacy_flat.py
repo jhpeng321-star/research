@@ -84,6 +84,15 @@ FLAT_TO_PATH: dict[str, str] = {
     "gate_kind": "model.gate.kind",
     "gate_g_max_init": "model.gate.g_max_init",
     "gate_tau_steps_init": "model.gate.tau_steps_init",
+    "lane_gate_kind": "model.lane_gate.kind",
+    "lane_gate_g_max_init": "model.lane_gate.g_max_init",
+    "lane_gate_tau_steps_init": "model.lane_gate.tau_steps_init",
+    "checkpoint_step": "model.checkpoint_step",
+    "init_from": "model.init_from",
+    "truncation_steps_per_stage": "curriculum.truncation_steps_per_stage",
+    "driver_grad_across_chunks": "curriculum.driver_grad_across_chunks",
+    "flip_rate_weight": "loss.flip_rate.weight",
+    "flip_rate_allowance": "loss.flip_rate.allowance",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -94,6 +103,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "residual_soft_bound_mps2", "residual_soft_bound_neg_mps2", "residual_mag_weight",
     "lane_rate_weight", "lane_rate_target", "select_by_long_horizon", "val_every",
     "gate_kind", "gate_g_max_init", "gate_tau_steps_init",
+    "lane_gate_kind", "lane_gate_g_max_init", "lane_gate_tau_steps_init",
+    "checkpoint_step", "init_from", "truncation_steps_per_stage",
+    "driver_grad_across_chunks", "flip_rate_weight", "flip_rate_allowance",
 )
 
 

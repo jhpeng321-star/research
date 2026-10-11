@@ -17,6 +17,7 @@ from ..settings import TrainSettings
 from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContext, UnrollTargets,
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
+from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_rate import LaneRateLoss
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
@@ -112,6 +113,8 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         chunk.append(ResidualMagnitudeLoss(settings.residual_mag_weight))
     if settings.lane_rate_weight:
         chunk.append(LaneRateLoss(settings.lane_rate_weight, settings.lane_rate_target))
+    if settings.flip_rate_weight:
+        chunk.append(FlipRateLoss(settings.flip_rate_weight, settings.flip_rate_allowance))
     brake_kwargs = {"position_weight": settings.position_weight,
                     "speed_weight": settings.speed_weight}
     if braking.asym_on:

@@ -44,6 +44,21 @@ class GateConfig:
 
 
 @config_dataclass
+class LaneGateConfig:
+    """Lane-correction gate parameterization (shared with acceleration by default)."""
+
+    kind: Literal["shared", "saturating"] = "shared"
+    g_max_init: float = 0.16
+    tau_steps_init: float = 30.0
+
+    def __post_init__(self) -> None:
+        require(0.0 < self.g_max_init < 1.0,
+                "model.lane_gate.g_max_init must be in (0, 1)")
+        require(is_finite(self.tau_steps_init) and self.tau_steps_init > 0.0,
+                "model.lane_gate.tau_steps_init must be finite and positive")
+
+
+@config_dataclass
 class ModelConfig:
     """Structure of the WM-S model and its physics options."""
 
@@ -56,6 +71,7 @@ class ModelConfig:
     geometry_only: bool = False
     projection: ProjectionConfig = field(default_factory=ProjectionConfig)
     gate: GateConfig = field(default_factory=GateConfig)
+    lane_gate: LaneGateConfig = field(default_factory=LaneGateConfig)
     residual_cap_mps2: Optional[float] = None
     residual_cap_neg_mps2: Optional[float] = None
     residual_soft_bound_mps2: Optional[float] = None
@@ -65,6 +81,8 @@ class ModelConfig:
     controller_embed_dim: int = 16
     history_features: int = 6
     checkpoint_residual: bool = False
+    checkpoint_step: bool = False
+    init_from: Optional[str] = None
     allow_rejected_hard_cap: bool = False
 
     def __post_init__(self) -> None:
@@ -158,6 +176,25 @@ class LaneRateConfig:
 
 
 @config_dataclass
+class FlipRateConfig:
+    """Flip-rate lane guard: hinge on the per-step leave-lane probability.
+
+    ``allowance`` is the free per-HDV-step probability of leaving the current lane;
+    the default is the TRUE training rate 0.00124327163 (LANECAL, junction lane -1
+    excluded by the shared supervision mask).
+    """
+
+    weight: float = 0.0
+    allowance: float = 0.00124327163
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.flip_rate.weight must be finite and non-negative")
+        require(is_finite(self.allowance) and 0.0 <= self.allowance <= 1.0,
+                "loss.flip_rate.allowance must be in [0,1]")
+
+
+@config_dataclass
 class TrafficLossConfig:
     """Legacy differentiable traffic-level loss (off in R3)."""
 
@@ -188,6 +225,7 @@ class LossConfig:
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
+    flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
@@ -209,6 +247,8 @@ class CurriculumConfig:
     unroll_s: tuple[float, ...] = (10.0, 30.0, 60.0, 120.0)
     stage_steps: Optional[tuple[int, ...]] = None
     truncation_steps: int = 20
+    truncation_steps_per_stage: Optional[tuple[int, ...]] = None
+    driver_grad_across_chunks: bool = False
     epochs_per_stage: int = 1
     steps_per_epoch: int = 2000
     max_hours: Optional[float] = None
@@ -222,6 +262,11 @@ class CurriculumConfig:
         if self.stage_steps is not None:
             require(len(self.stage_steps) == len(self.unroll_s) and all(s >= 1 for s in self.stage_steps),
                     "curriculum.stage_steps needs one positive count per curriculum stage")
+        if self.truncation_steps_per_stage is not None:
+            require(len(self.truncation_steps_per_stage) == len(self.unroll_s)
+                    and all(s >= 1 for s in self.truncation_steps_per_stage),
+                    "curriculum.truncation_steps_per_stage needs one positive "
+                    "truncation per curriculum stage")
         require(self.max_hours is None or (is_finite(self.max_hours) and self.max_hours > 0),
                 "curriculum.max_hours must be finite and positive when set")
 

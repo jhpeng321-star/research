@@ -30,15 +30,25 @@ class StagePlan:
     stage_s: float
     unroll_steps: int
     steps: int
+    truncation_steps: int = 0
+    """BPTT chunk length of the stage (0 = the global ``truncation_steps``)."""
 
 
 def stage_plan(settings: TrainSettings, dt_s: float) -> list[StagePlan]:
-    """Explicit per-stage plan of ``settings`` at physics step ``dt_s``."""
+    """Explicit per-stage plan of ``settings`` at physics step ``dt_s``.
+
+    A stage may carry its own truncation length (``truncation_steps_per_stage``,
+    round 5) so the long-horizon stages back-propagate through more of the rollout;
+    stages without an entry keep the global ``truncation_steps``.
+    """
     default_steps = settings.steps_per_epoch * settings.epochs_per_stage
+    per_stage = settings.truncation_steps_per_stage or ()
     plans = []
     for i, stage_s in enumerate(settings.unroll_curriculum_s):
         steps = settings.stage_steps[i] if settings.stage_steps else default_steps
-        plans.append(StagePlan(float(stage_s), max(1, round(float(stage_s) / dt_s)), int(steps)))
+        trunc = int(per_stage[i]) if i < len(per_stage) else 0
+        plans.append(StagePlan(float(stage_s), max(1, round(float(stage_s) / dt_s)),
+                               int(steps), trunc or int(settings.truncation_steps)))
     return plans
 
 

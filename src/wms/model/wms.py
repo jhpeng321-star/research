@@ -13,6 +13,7 @@ format and must not change; they are also created in this order.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from functools import partial
 from typing import Callable, Mapping, Optional
 
 import torch
@@ -108,6 +109,11 @@ class WmSModel(nn.Module):
         self.gate_kind = spec.gate_kind
         self.gate_g_max_init = float(spec.gate_g_max_init)
         self.gate_tau_steps_init = float(spec.gate_tau_steps_init)
+        self.lane_gate_kind = spec.lane_gate_kind
+        self.checkpoint_step = bool(spec.checkpoint_step)
+        # Inference-time diagnostic switches (round 5, default OFF; set by the scorer,
+        # never part of a checkpoint): population-default driver settings.
+        self.diag_encoder_population = False
         self._build_modules(spec)
 
     def _init_bounds(self, spec: ModelSpec) -> None:
@@ -150,6 +156,13 @@ class WmSModel(nn.Module):
             tau_raw = torch.log(torch.expm1(torch.tensor(spec.gate_tau_steps_init)))
             self.gate_g_max_logit = nn.Parameter(g_max_logit)
             self.gate_tau_raw = nn.Parameter(tau_raw)
+        # Separate saturating lane gate (round 5): created after the acceleration
+        # gate so checkpoint key order of every earlier model is unchanged.
+        if spec.lane_gate_kind == "saturating":
+            lane_g_max_logit = torch.logit(torch.tensor(spec.lane_gate_g_max_init))
+            lane_tau_raw = torch.log(torch.expm1(torch.tensor(spec.lane_gate_tau_steps_init)))
+            self.lane_gate_g_max_logit = nn.Parameter(lane_g_max_logit)
+            self.lane_gate_tau_raw = nn.Parameter(lane_tau_raw)
         self.driver_encoder = DriverEncoder(self.history_features,
                                             long_history=self.long_history)
         self.lane_change_head = (HistoryLaneHead(self.driver_embed_dim)
@@ -174,6 +187,18 @@ class WmSModel(nn.Module):
             return saturating_gate(self.gate_g_max_logit, self.gate_tau_raw, k_steps,
                                    self.physics.max_gap_steps)
         return monotone_gate(self.gate_increments, k_steps, self.physics.max_gap_steps)
+
+    def lane_gate(self, k_steps: Tensor | int, shared: Optional[Tensor] = None) -> Tensor:
+        """Gate on the learned lane-logit correction (own saturating gate when configured).
+
+        With ``lane_gate_kind == "shared"`` (default) the lane correction uses the
+        acceleration gate unchanged — the returned tensor is the provided ``shared``
+        value (or a fresh ``self.gate`` evaluation), so default models are bit-identical.
+        """
+        if self.lane_gate_kind != "saturating":
+            return shared if shared is not None else self.gate(k_steps)
+        return saturating_gate(self.lane_gate_g_max_logit, self.lane_gate_tau_raw, k_steps,
+                               self.physics.max_gap_steps)
 
     def physics_accel(self, state: dict[str, Tensor],
                       driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
@@ -289,6 +314,24 @@ class WmSModel(nn.Module):
                                    0.2, p.mobil_threshold_mps2, p.lane_safe_gap_m, 1.0))
         return defaults.view(1, 1, -1).expand(b, slots, -1)
 
+    def encode_drivers(self, state: dict[str, Tensor], *,
+                       driver_history: Optional[Tensor] = None,
+                       driver_history_mask: Optional[Tensor] = None,
+                       history: Optional[Tensor] = None,
+                       history_mask: Optional[Tensor] = None,
+                       driver_defaults: Optional[Tensor] = None):
+        """Encode driver parameters/embedding once from a state (round-5 FIX 1).
+
+        Performs exactly the encoding :meth:`rollout` performs at its first step
+        with the same inputs, so training (encode once at t0, reuse across
+        truncated-BPTT chunks) and inference (encode once at t0) agree.
+        Returns ``(encoder outputs or None, embedding or None, params dict or None)``.
+        """
+        kin = state_kin(state).float()
+        present = state_present(state, kin)
+        return self._encode_drivers(kin, present, driver_history, driver_history_mask,
+                                    history, history_mask, driver_defaults, None, None)
+
     def _encode_drivers(self, kin: Tensor, present: Tensor,
                         driver_history: Optional[Tensor],
                         driver_history_mask: Optional[Tensor],
@@ -319,6 +362,11 @@ class WmSModel(nn.Module):
                                    device=kin.device, dtype=kin.dtype)
             observed_mask = torch.zeros((b, slots, self.history_len),
                                         device=kin.device, dtype=torch.bool)
+        if getattr(self, "diag_encoder_population", False):
+            # Inference-time diagnostic (round 5): treat every driver as unobserved.
+            # The encoder then returns exactly the population-default parameters
+            # (zero shrinkage) and an interaction-only embedding.
+            observed_mask = torch.zeros_like(observed_mask)
         if driver_defaults is None:
             driver_defaults = self._default_driver_parameters(kin, b, slots)
         if self.long_history and (observed.shape != (
@@ -412,7 +460,9 @@ class WmSModel(nn.Module):
         if self.long_history and self.rollout_mode == "driver_params":
             # Inferred style conditions the lane correction as well as IDM/MOBIL.
             lane_delta = base["lane_logit_delta"]
-        lane_correction = bounded_value(gate.unsqueeze(-1) * lane_delta, self.lane_logit_cap)
+        lane_correction = bounded_value(
+            self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
+            self.lane_logit_cap)
         lane_logits = lane_base + lane_correction
         lane_probabilities = None
         if self.lane_change_head is not None:
@@ -603,6 +653,7 @@ class WmSModel(nn.Module):
                 driver_embedding: Optional[Tensor] = None,
                 cav_controller: Optional[Callable[[dict[str, Tensor]], Tensor]] = None,
                 truncation_steps: Optional[int] = None,
+                lane_teacher: Optional[Tensor] = None,
                 controller_id: Optional[Tensor] = None,
                 action_timeline: Optional[dict[str, Tensor]] = None,
                 entries: Optional[object] = None,
@@ -624,6 +675,10 @@ class WmSModel(nn.Module):
         override is skipped.  ``state_noise_std_m``/``state_noise_std_mps`` add
         zero-mean Gaussian noise to the predicted HDV position/speed (regulariser);
         zero draws nothing.
+
+        ``lane_teacher`` (``[B, T+1, K]`` recorded lanes; diagnostic, round 5) forces
+        every step's lane decision to the recorded lane where the entry is ``>= 0``
+        (post-step, so CAV teacher overrides stay in charge of CAV slots).
 
         Beyond the per-step ``positions``/``speeds``/``lanes``/``masks``/``accel``/
         ``lane_logits`` the result carries ``entrant_seq [B, T, K]`` (per-step entrant
@@ -652,6 +707,11 @@ class WmSModel(nn.Module):
             "raw_residuals", "change_probabilities", "lane_probabilities", "entrant")}
         projection_totals: dict[str, float] = {}
         share = _ShareAccumulator()
+        # Per-step activation checkpointing (round 5): only in training with gradients
+        # and never with a stateful CAV controller, whose callback must not be replayed
+        # a second time during recomputation.
+        step_checkpoint = (self.checkpoint_step and self.training
+                           and torch.is_grad_enabled() and cav_controller is None)
         fixed_driver_params = driver_params
         fixed_driver_embedding = driver_embedding
         encoded_parameters = None
@@ -672,9 +732,9 @@ class WmSModel(nn.Module):
                 action_id, action_command = cav_motion.timeline_controls(
                     action_timeline, k0 + step_i, self.physics.dt_s, timeline_dt, pres0,
                     current["v_mps"].dtype)
-            out = self.step(
-                current, k_steps=k0 + step_i, history=history, history_mask=history_mask,
-                cav_teacher=teacher,
+            step_fn = partial(
+                self.step, k_steps=k0 + step_i, history=history,
+                history_mask=history_mask, cav_teacher=teacher,
                 driver_history=driver_history if step_i == 0 else None,
                 driver_history_mask=driver_history_mask if step_i == 0 else None,
                 driver_defaults=driver_defaults if step_i == 0 else None,
@@ -682,8 +742,14 @@ class WmSModel(nn.Module):
                 lane_age=lane_age, cav_controller=cav_controller,
                 controller_id=controller_id, action_id=action_id,
                 action_command=action_command, projection=projection)
+            out = checkpoint(step_fn, current, use_reentrant=False) if step_checkpoint \
+                else step_fn(current)
             for key, value in (out.get("projection_active") or {}).items():
                 projection_totals[key] = projection_totals.get(key, 0.0) + float(value)
+            if lane_teacher is not None:
+                recorded_lane = lane_teacher[:, step_i + 1].long()
+                out["next_lane"] = torch.where(recorded_lane >= 0, recorded_lane,
+                                               out["next_lane"])
             if self.rollout_mode in ("driver_params", "hybrid") \
                     and fixed_driver_params is None:
                 # The same driver identity/parameters persist through the rollout.

@@ -1,0 +1,21 @@
+# ROUND-5 FIX 2+3 (WM-S-R5-F23): both independent switches on top of the r5 base.
+# FIX 2 (long-horizon truncation + per-step activation checkpointing) from r5_f2,
+# FIX 3 (bounded lane delta, separate saturating lane gate, flip-rate loss) as in r5_f3.
+schema_version = 2
+name = "WM-S-R5-F23"
+extends = "r5_f2.toml"
+
+[model]
+lane_logit_cap = 1.5
+
+[model.lane_gate]
+kind = "saturating"
+g_max_init = 0.16
+tau_steps_init = 30.0
+
+[loss.lane_rate]
+weight = 0.0
+
+[loss.flip_rate]
+weight = 1.0
+allowance = 0.00124327163
