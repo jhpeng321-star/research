@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 import numpy as np
 import torch
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
 from .contract import PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
 from .counterfactual import (CounterfactualConfig, baseline_index, build_variants, decompose,
@@ -50,6 +51,10 @@ class DreamerConfig:
     validation_every: int = 100
     lane_pg_weight: float = 1.0          # REINFORCE term of the categorical lane head
     lane_entropy_weight: float = 3e-4    # DreamerV3 discrete-action entropy bonus (lane head)
+    # Memory (CFMEM_NOTES.md): recompute the pure per-step pieces of imagination (WM forward,
+    # policy / group encoder / safety / native / reward / target-critic calls) during backward
+    # instead of storing their activations.  Values and gradients are unchanged; ~1 extra forward.
+    checkpoint_imagination: bool = True
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -67,6 +72,8 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
+        if not isinstance(self.checkpoint_imagination, bool):
+            raise ValueError("checkpoint_imagination must be a boolean")
 
 
 def lambda_returns(rewards: Tensor, values: Tensor, gamma=0.99, lambda_=0.95) -> Tensor:
@@ -126,6 +133,23 @@ def _masked_mean(values, mask):
 def _detach(state):
     return {key: value.detach() if torch.is_tensor(value) else value
             for key, value in state.items()}
+
+
+class _Recompute:
+    """Call ``fn`` under non-reentrant activation checkpointing while gradients are enabled.
+
+    Only for PURE calls (output a function of the arguments; the stateful bridge controller is
+    never wrapped, so nothing with side effects is replayed).  ``preserve_rng`` restores the
+    RNG state at recomputation for calls that sample internally."""
+
+    def __init__(self, fn, enabled, preserve_rng=False):
+        self.fn, self.enabled, self.preserve_rng = fn, bool(enabled), bool(preserve_rng)
+
+    def __call__(self, *args, **kwargs):
+        if self.enabled and torch.is_grad_enabled():
+            return activation_checkpoint(self.fn, *args, use_reentrant=False,
+                                         preserve_rng_state=self.preserve_rng, **kwargs)
+        return self.fn(*args, **kwargs)
 
 
 def _model_identity(model):
@@ -215,7 +239,15 @@ class DreamerTrainer:
             raise ValueError("lane decisions require the bridge controller factory")
         need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
-        native = native_fn(self.counterfactual.native_cav)
+        recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
+        native = _Recompute(native_fn(self.counterfactual.native_cav), recompute)
+        # Policy samples internally only without explicit (CRN) noise and when stochastic.
+        policy_call = _Recompute(self.policy, recompute, preserve_rng=not (crn or deterministic))
+        group_call = _Recompute(self.group_encoder, recompute)
+        safety_call = _Recompute(self.safety, recompute)
+        reward_call = _Recompute(self.reward_fn, recompute)
+        observe_call = _Recompute(self.observation_builder, recompute)
+        value_call = _Recompute(self.target_critic, recompute)
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         rng = _rng_state(self.device)
@@ -236,7 +268,7 @@ class DreamerTrainer:
                         noise = draw_policy_noise((n_base, obs.cav_mask.shape[-1]), device=self.device)
                         kwargs["noise"] = PolicyNoise(noise.accel.index_select(0, index),
                                                       noise.lane_gumbel.index_select(0, index))
-                    held_out = self.policy(obs, signal, deterministic=deterministic, **kwargs)
+                    held_out = policy_call(obs, signal, deterministic=deterministic, **kwargs)
                     acting = obs.cav_mask if act_mask is None else obs.cav_mask & act_mask
                     log_prob = getattr(held_out, "log_prob_accel", None)
                     log_prob = held_out[1] if log_prob is None else log_prob
@@ -263,11 +295,11 @@ class DreamerTrainer:
                 if act_mask is not None:
                     extra.update(act_mask=act_mask, native=native)
                 external_callback = self.controller_factory(
-                    policy_proxy, self.group_encoder, self.safety,
+                    policy_proxy, group_call, safety_call,
                     lane_record if self.use_lanes else None, **extra)
             elif self.controller_factory is not None:
-                external_callback = self.controller_factory(policy_proxy, self.group_encoder,
-                                                            self.safety, None)
+                external_callback = self.controller_factory(policy_proxy, group_call,
+                                                            safety_call, None)
 
             def controller(state):
                 nonlocal step
@@ -283,13 +315,13 @@ class DreamerTrainer:
                     step += 1
                     return command
                 if step % STEPS_PER_CONTROL == 0:
-                    obs = self.observation_builder(state)
-                    signal = self.group_encoder(obs, state)
+                    obs = observe_call(state)
+                    signal = group_call(obs, state)
                     policy_proxy(obs, signal)
                 command = held_out[0]
                 if act_mask is not None:       # counterfactual rows: non-acting CAVs native
                     command = torch.where(act_mask, command, native(state))
-                accel = self.safety(state, command)
+                accel = safety_call(state, command)
                 cav = state["present"].bool() & state["is_cav"].bool()
                 accel = torch.where(cav, accel, torch.zeros_like(accel))
                 if step % STEPS_PER_CONTROL == 0:
@@ -305,9 +337,17 @@ class DreamerTrainer:
 
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
-            roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
-                                 cav_controller=controller, cav_teacher=None,
-                                 truncation_steps=None, **rollout_kwargs)
+            switch = hasattr(model, "checkpoint_forward")
+            previous_switch = getattr(model, "checkpoint_forward", False)
+            if switch:
+                model.checkpoint_forward = recompute
+            try:
+                roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
+                                     cav_controller=controller, cav_teacher=None,
+                                     truncation_steps=None, **rollout_kwargs)
+            finally:
+                if switch:
+                    model.checkpoint_forward = previous_switch
             if step != cfg.horizon * STEPS_PER_CONTROL:
                 raise RuntimeError("WM must invoke the CAV callback once per physics step")
             if advanced_rng is None:
@@ -324,8 +364,8 @@ class DreamerTrainer:
             physics_states[-1] = roll["state"]
             parts = []
             for t in range(step):
-                parts.append(self.reward_fn(physics_states[t], physics_states[t + 1],
-                                            roll["accel"][:, t], self.reward_weights))
+                parts.append(reward_call(physics_states[t], physics_states[t + 1],
+                                         roll["accel"][:, t], self.reward_weights))
             keys = set(parts[0])
             if not {"reward", "cost_ttc"}.issubset(keys):
                 raise ValueError("team_reward must provide reward and cost_ttc")
@@ -349,7 +389,7 @@ class DreamerTrainer:
         for e, states in enumerate(member_states):
             # Freeze critic weights, not state derivatives: the terminal bootstrap
             # must provide analytic actor credit through the imagined WM trajectory.
-            values = torch.stack([self.target_critic(state) for state in states])
+            values = torch.stack([value_call(state) for state in states])
             member_values.append(values)
             returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
         masks = torch.stack([torch.stack([state["present"] & state["is_cav"]

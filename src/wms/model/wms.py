@@ -133,6 +133,12 @@ class WmSModel(nn.Module):
         # Inference-time diagnostic switches (round 5, default OFF; set by the scorer,
         # never part of a checkpoint): population-default driver settings.
         self.diag_encoder_population = False
+        # Runtime memory switch (C4 imagination, never part of a checkpoint): with gradients
+        # enabled, recompute the pure per-step ``forward`` (encoders, physics, residual net)
+        # during backward instead of storing its activations.  Unlike ``checkpoint_step`` this
+        # never replays the CAV controller callback (it runs outside ``forward``), so it is
+        # safe with stateful controllers and leaves values and gradients unchanged.
+        self.checkpoint_forward = False
         self._build_modules(spec)
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
@@ -574,7 +580,11 @@ class WmSModel(nn.Module):
             forward_kwargs["driver_embedding"] = driver_embedding
         if self.lane_change_head is not None:
             forward_kwargs["lane_age"] = lane_age
-        out = self.forward(state, **forward_kwargs)
+        if self.checkpoint_forward and torch.is_grad_enabled():
+            out = checkpoint(partial(self.forward, **forward_kwargs), state,
+                             use_reentrant=False, preserve_rng_state=self.training)
+        else:
+            out = self.forward(state, **forward_kwargs)
 
         s, v = state["s_m"], state["v_mps"]
         present = state_present(state, state_kin(state))

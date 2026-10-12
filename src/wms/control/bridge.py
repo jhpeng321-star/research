@@ -15,10 +15,13 @@ from .rsu_field import build_rsu_field
 
 
 def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
-    """Merge downstream-first, counting earlier accepted CAVs in target gaps."""
+    """Merge downstream-first, counting earlier accepted CAVs in target gaps.
+
+    The result is a discrete lane index (no gradient), so the geometry is read detached:
+    identical values, and autograd keeps none of the K-iteration loop's temporaries."""
     lane, present = state["lane"], state["present"].bool()
-    s = torch.where(present, state["s_m"], torch.zeros_like(state["s_m"]))
-    length = state.get("length_m", torch.full_like(s, DEFAULT_LENGTH_M))
+    s = torch.where(present, state["s_m"], torch.zeros_like(state["s_m"])).detach()
+    length = state.get("length_m", torch.full_like(s, DEFAULT_LENGTH_M)).detach()
     length = torch.where(present, length, torch.zeros_like(length))
     candidates = cav_mask & (lane == 2) & (s >= MERGE_S0_M) & (s <= MERGE_S1_M)
     rank = torch.where(candidates, s, torch.full_like(s, -float("inf")))

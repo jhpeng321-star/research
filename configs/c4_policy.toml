@@ -32,6 +32,10 @@ checkpoint_every = 100 # 0 disables periodic snapshots; latest is always saved b
 validation_every = 100 # Separate TRAIN-derived VAL windows; best checkpoint by lambda-return.
 lane_pg_weight = 1.0 # REINFORCE weight of the lane head: -mean(log pi(lane) * advantage), advantage / return scale.
 lane_entropy_weight = 3e-4 # DreamerV3-style entropy bonus of the categorical lane head (masked feasible choices).
+# Memory (CFMEM_NOTES.md): recompute the pure per-step pieces of imagination in backward (WM forward,
+# policy / RSU encoder / safety / native / reward / target critic) instead of storing activations.
+# Identical objective and gradients; ~17x lower peak at batch 8 / H 15 (CPU-measured); ~+40 % time.
+checkpoint_imagination = true
 
 # Per-CAV lane decisions (owner 2026-10-12 late): the policy outputs accel AND stay/left/right.
 # No designed controller anywhere: the head starts uniform over the feasible choices.

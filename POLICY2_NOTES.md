@@ -91,6 +91,8 @@ policy (same seed, 60 s): time gap 0.5 s -> 182 issued / 45 completed; 1.0 s -> 
 vs 73 vehicle-s, so 513 is kept.
 
 ## GPU sizing (ESTIMATE, not measured)
+Memory: see CFMEM_NOTES.md (`trainer.checkpoint_imagination`, default on: B16/H20/max_starts 6 =
+6.3 GB CPU-measured peak vs ~126 GB without; same objective and gradients, ~+40 % time).
 CPU cost is ~linear in rows x physics steps (~0.1 s per row-step incl. backward, 1 thread). On a
 4090 the WM-S step is launch-latency bound (estimate 30-60 ms forward+backward per physics step,
 nearly flat up to a few hundred rows; the bridge's per-slot merge loop adds ~K small ops per step).
