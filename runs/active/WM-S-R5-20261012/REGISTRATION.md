@@ -33,3 +33,12 @@
   learned settings that track the true types.
 - Data/safety: no sealed/CAL/HOLDOUT/chunk-5/INC1/J4B data; same packs/lists as R4 (911 train / 151 val windows); never
   launch in retry loops; LF scripts only; outputs under /root/autodl-tmp/wms_train_r5/.
+
+## Amendment before launch (2026-10-12 09:35, owner decision "option 1")
+- To finish by 18:00 the run uses `configs/r5_f23_half.toml` = r5_f23 with stage_steps [1250, 1250, 940, 625]
+  (about half of R4's 2500/2500/1875/1250). Justification: R5 is initialised from the R4 checkpoint (fine-tune).
+  Everything else unchanged. Local preflight passed (stage_steps resolved [1250,1250,940,625]).
+- Interpretation caveat (pre-registered): a win over R4 with half the steps is meaningful; a tie/loss does not separate
+  "fixes don't help" from "not enough training" (FIX 2's 120 s stage gets 625 steps instead of 1250) -> a full-length
+  run would then be the follow-up.
+- Expected: training ~5 h after launch (~11:00 -> ~16:00), headline scores ~17:30, full diagnosis in the evening.
