@@ -22,3 +22,12 @@
 - Evaluation: same as R5 (score_round5.py + diagnose_round5.py; comparators C1, R4) — also score R5's own best/stage-60
   checkpoints for the R5 vs R5b comparison. Interpretation caveat: R5b changes several things at once relative to R5
   (batch, lr, damping) on top of R5's fixes; attribution within R5b by the logged gradient norms and diagnostics only.
+
+## Owner decision 2026-10-12 16:55: stop R5b at 18:00 (owner meeting their professor)
+- Scheduled on the box itself (laptop offline during the meeting): background job PID 14821 sleeps until 18:00 CST, then
+  `kill -TERM 10363` if it is still the r5b run; logs to /root/autodl-tmp/wms_train_r5b/scheduled_stop.log.
+- Expected state at stop: ~step 1250-1260 of 1565 (120 s stage ~310 of 625 steps); wm_s_stage60.pt (16:27, scored) and
+  wm_s_best.pt (long-horizon-selected; last updated 16:45, likely again at the step-1200 validation ~17:40) are kept.
+  No wm_s.pt / stage-120 checkpoint / RUN_SUMMARY will be written (killed mid-stage). The R5b result = wm_s_best.pt.
+- After the meeting: fetch, verify hashes, score wm_s_best.pt (score_round5.py) + diagnosis; the owner stops the AutoDL
+  instance after the fetch is verified.
