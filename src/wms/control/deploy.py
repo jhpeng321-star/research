@@ -8,19 +8,21 @@ Controllers:
 
 * ``native | damping | pi | wall`` - the frozen baselines of :class:`traffic_shepherd.c4.env.CavSumoEnv`
   (identical to ``python -m traffic_shepherd.c4.collect --policy <name>``).
-* ``policy`` - ``wms.control.policy.load_policy_fn(ckpt)`` every 1 s (``collect --policy <ckpt>`` path).
-* ``policy_check`` - design 2.6 Option B: every ``decision_period_s`` the RSU imagines each candidate
-  ``{policy, policy_group_0, native, damping, pi}`` in the frozen WM-S ensemble
-  (:class:`wms.control.rsu_check.RsuChecker`, paired driver samples) from either the env's true WM-frame
-  state + rolling history (``--state oracle``, privileged upper bound) or an RSU belief
-  (``--state belief``: :class:`wms.control.belief.BeliefTracker` fed every control step with the CAV self
-  reports + their front/rear sensor detections and the RSU zone detections, WM-S step propagator), then
-  executes the chosen candidate in SUMO until the next decision.  Execution: ``policy*`` -> the learned
-  policy's direct accelerations (zero group signal for ``policy_group_0``); ``native`` -> CAVs released to
-  SUMO native; ``damping`` / ``pi`` -> the env's per-tick ``fallback="damping"`` (frozen CIRCLES) /
-  ``fallback="pi"`` (a fresh frozen PI external-U session each time PI is selected; PI state does not
-  survive a switch away).  In imagination ``native`` is the WM-S hold-speed teacher (RsuChecker default);
-  damping/PI run the published controller code through ``wms.train.cav_drive.TimelineControllers``.
+* ``policy`` - ``wms.control.policy.load_policy_fn(ckpt)`` every 1 s (``collect --policy <ckpt>`` path):
+  per-CAV direct accelerations AND lane commands (``CavSumoEnv.step(accel, lanes=...)``).
+* ``policy_check`` - design 2.6 Option B with DIRECT-OUTPUT candidates only (owner 2026-10-12 late; no
+  designed controller is a check candidate or executed in this mode): every ``decision_period_s`` the RSU
+  imagines each candidate ``{policy, policy_group_0, policy_group_1, policy_sample_0, policy_sample_1,
+  hold_speed}`` in the frozen WM-S ensemble (:class:`wms.control.rsu_check.RsuChecker`, paired driver
+  samples) from either the env's true WM-frame state + rolling history (``--state oracle``, privileged upper
+  bound) or an RSU belief (``--state belief``: :class:`wms.control.belief.BeliefTracker` fed every control
+  step with the CAV self reports + their front/rear sensor detections and the RSU zone detections, WM-S
+  step propagator), then executes the chosen candidate in SUMO until the next decision.  ``policy`` =
+  deterministic accel + lane; ``policy_group_0`` / ``policy_group_1`` = zero / perturbed group signal;
+  ``policy_sample_k`` = the stochastic policy with a reproducible noise stream (the same draws in every WM
+  member, driver sample and in SUMO execution); ``hold_speed`` = direct command a = 0, stay in lane
+  (safety-filtered fallback).  ALL are executed as direct accelerations (+ lane commands) through the
+  policy path; native / damping / pi remain only as whole-episode baselines (``--controller``).
 
 Outputs in ``--out`` (a new directory): ``episode/`` (the collector's episode format, incl. ``summary.json``),
 ``decisions.jsonl`` (one record per decision: time, candidates, imagined returns mean/std/paired diffs/LCB,
@@ -51,7 +53,9 @@ _RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re
 BASELINES = ("native", "damping", "pi", "wall")
 CONTROLLERS = (*BASELINES, "policy", "policy_check")
 ALIASES = {"c4_policy": "policy", "c4_policy_rsu_check": "policy_check"}
-CANDIDATES = ("policy", "policy_group_0", "native", "damping", "pi")
+#: Check candidates (owner 2026-10-12 late): direct-output only, all executed through the policy path.
+CANDIDATES = ("policy", "policy_group_0", "policy_group_1", "policy_sample_0", "policy_sample_1",
+              "hold_speed")
 
 
 def _now() -> str:
@@ -125,93 +129,50 @@ def long_history(raw: Mapping[str, Any], present_now, *, history_s, history_stri
 
 
 # ------------------------------------------------------------------ candidates
-class TimelineCandidate:
-    """Fresh-per-imagination damping/PI callback: a constant action timeline replayed through
-    ``wms.train.cav_drive.TimelineControllers`` (built lazily at the first call's [B,K])."""
-
-    def __init__(self, model, controller: str, n_control: int, dependencies: tuple):
-        self.model, self.controller = model, controller
-        self.n_control, self.dependencies = int(n_control), dependencies
-        self.inner = None
-
-    def __call__(self, state):
-        if self.inner is None:
-            from wms.data.action_timeline import CONTROLLERS as TIMELINE
-            from wms.train.cav_drive import TimelineControllers
-
-            b, k = state["s_m"].shape
-            ids = torch.full((b, self.n_control, k), TIMELINE.index(self.controller), dtype=torch.long)
-            zeros = torch.zeros(b, self.n_control, k)
-            self.inner = TimelineControllers(
-                self.model, {"controller": ids, "acceleration_mps2": zeros,
-                             "target_speed_mps": zeros}, dependencies=self.dependencies)
-        return self.inner(state)
-
-
-def classic_dependencies() -> tuple:
-    """Frozen controller sources with ONE shared (stateless) CIRCLES ONNX session."""
-    from wms.train.cav_drive import load_controller_dependencies
-
-    deps = list(load_controller_dependencies(np.array([1, 2])))
-    shared = deps[1](deps[0])
-    deps[1] = lambda _config, _shared=shared: _shared
-    return tuple(deps)
-
-
-def build_candidates(model, policy, encoder, *, horizon_s: float, classic: bool = True,
-                     log: Optional[list] = None) -> dict:
-    """``{policy, policy_group_0, native[, damping, pi]}`` zero-argument factories."""
+def build_candidates(model, policy, encoder, *, horizon_s: float = None, lane_rules=None,
+                     sample_streams=(), perturbation: float = 0.1, log: Optional[list] = None) -> dict:
+    """Direct-output check candidates (``CANDIDATES`` order with two sample streams)."""
+    del horizon_s, log
     from .bridge import make_cav_controller
     from .rsu_check import default_candidates
     from .safety import safe_accel
 
-    n_control = int(math.ceil(horizon_s)) + 2
-    damping = pi = None
-    if classic:
-        try:
-            deps = classic_dependencies()
-
-            def damping():
-                return TimelineCandidate(model, "damping", n_control, deps)
-
-            def pi():
-                return TimelineCandidate(model, "pi-external-u", n_control, deps)
-        except Exception as exc:  # noqa: BLE001 - recorded; candidates dropped, not faked
-            if log is not None:
-                log.append(f"classic imagination unavailable: {exc!r}")
-    cands = default_candidates(model, policy=policy, group_encoder=encoder, safety=safe_accel,
-                               bridge=make_cav_controller, damping=damping or (lambda: None),
-                               pi=pi or (lambda: None), perturbation=0.0)
-    if damping is None:
-        cands.pop("damping")
-        cands.pop("pi")
-    return cands
+    if lane_rules is None and getattr(policy, "has_lane_head", False):
+        from .lanes import LaneRules
+        lane_rules = LaneRules()
+    return default_candidates(model, policy=policy, group_encoder=encoder, safety=safe_accel,
+                              bridge=make_cav_controller, lane_rules=lane_rules,
+                              perturbation=perturbation, sample_streams=sample_streams)
 
 
-def make_exec_fn(policy, encoder_fn, *, device="cpu") -> Callable:
-    """SUMO execution callable ``state -> accel [1,K]`` (NaN on non-CAV slots), as load_policy_fn."""
-    from .obs import build_observations
-    from .rsu_field import build_rsu_field
-    from .safety import safe_accel
+def make_exec_fn(policy, encoder_fn, *, device="cpu", lane_rules=None, deterministic=True,
+                 noise_fn=None, hold=False, dwell=None, memory=None):
+    """SUMO execution :class:`wms.control.policy.PolicyExecutor`: ``exe(state)`` -> accel [1,K]
+    (NaN on non-CAV slots); ``exe(state, with_lanes=True, dwell_age=...)`` -> (accel, lanes)."""
+    from .policy import PolicyExecutor
 
-    def act(state):
-        with torch.no_grad():
-            state = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in state.items()}
-            obs = build_observations(state)
-            signal = encoder_fn(obs, state["s_m"], build_rsu_field(state))
-            accel, _ = policy(obs, signal, deterministic=True)
-            accel = safe_accel(state, accel)
-        out = accel.detach().cpu().numpy().astype(np.float64)
-        out[~obs.cav_mask.cpu().numpy()] = np.nan
-        return out
-
-    return act
+    return PolicyExecutor(policy, encoder_fn, lane_rules=lane_rules, deterministic=deterministic,
+                          noise_fn=noise_fn, hold=hold, dwell=dwell, memory=memory, device=device)
 
 
 def zero_signal(encoder):
-    def encode(*args, **kwargs):
-        return torch.zeros_like(encoder(*args, **kwargs))
-    return encode
+    from .rsu_check import zero_group
+    return zero_group(encoder)
+
+
+class StreamNoise:
+    """SUMO-side replay of a check sample stream: control tick j after the decision."""
+
+    def __init__(self, stream):
+        self.stream, self.step = stream, 0
+
+    def begin(self) -> None:
+        self.step = 0
+
+    def __call__(self, shape):
+        out = self.stream.noise(self.step, shape, slot_ids=torch.arange(shape[1]))
+        self.step += 1
+        return out
 
 
 # ------------------------------------------------------------------ RSU state sources
@@ -368,17 +329,40 @@ def run(args) -> dict:
     device = args.device
     notes: list[str] = []
     started = time.monotonic()
-    policy_fn = models = checker = source = None
+    policy_fn = models = checker = source = dwell = None
     exec_fns: dict[str, Callable] = {}
+    streams, stream_noise = [], {}
     if controller in ("policy", "policy_check"):
         if not args.policy:
             raise SystemExit("--policy <checkpoint> is required for policy controllers")
+        from .contract import CONTROL_DT_S
+        from .lanes import LaneDwell
         from .policy import load_policy_fn
+        from .rsu_check import NoiseStream, perturbed_group, zero_group
 
         policy_fn = load_policy_fn(str(checked(args.policy)), device=device)
+        rules = policy_fn.lane_rules
+        # One dwell clock and one command memory (last commanded accel / lane intent relayed in
+        # the CAV reports) per episode, shared by every executed candidate (same CAVs).
+        dwell = LaneDwell(rules.dwell_s, CONTROL_DT_S)
+        memory = policy_fn.memory
         exec_fns["policy"] = policy_fn
-        exec_fns["policy_group_0"] = make_exec_fn(policy_fn.policy, zero_signal(policy_fn.group_encoder),
-                                                  device=device)
+        if controller == "policy_check":
+            enc = policy_fn.group_encoder
+            exec_fns["policy_group_0"] = make_exec_fn(policy_fn.policy, zero_group(enc), device=device,
+                                                      lane_rules=rules, memory=memory)
+            exec_fns["policy_group_1"] = make_exec_fn(policy_fn.policy,
+                                                      perturbed_group(enc, args.group_perturbation),
+                                                      device=device, lane_rules=rules, memory=memory)
+            streams = [NoiseStream(args.checker_seed, k, k_full=args.k)
+                       for k in range(args.n_policy_samples)]
+            for k, stream in enumerate(streams):
+                stream_noise[f"policy_sample_{k}"] = StreamNoise(stream)
+                exec_fns[f"policy_sample_{k}"] = make_exec_fn(
+                    policy_fn.policy, enc, device=device, lane_rules=rules, deterministic=False,
+                    noise_fn=stream_noise[f"policy_sample_{k}"], memory=memory)
+            exec_fns["hold_speed"] = make_exec_fn(None, None, device=device, lane_rules=rules, hold=True,
+                                                  memory=memory)
     if controller == "policy_check":
         from .contract import RewardWeights
         from .reward import team_reward
@@ -388,8 +372,8 @@ def run(args) -> dict:
             raise SystemExit("--wm-ckpt is required for policy_check")
         models = _load_world_models(args.wm_ckpt, device)
         candidates = build_candidates(models[0], policy_fn.policy, policy_fn.group_encoder,
-                                      horizon_s=args.imagine_horizon,
-                                      classic=not args.no_classic_imagination, log=notes)
+                                      lane_rules=policy_fn.lane_rules, sample_streams=streams,
+                                      perturbation=args.group_perturbation)
         checker = RsuChecker(models, candidates, team_reward, RewardWeights(),
                              horizon_s=args.imagine_horizon, decision_period_s=args.decision_period,
                              n_driver_samples=args.n_driver_samples, margin=args.margin,
@@ -411,7 +395,7 @@ def run(args) -> dict:
                 policy_ckpt=args.policy, wm_ckpt=list(args.wm_ckpt or []), deploy="wms.control.deploy")
     decisions = (out / "decisions.jsonl").open("w", encoding="utf-8")
     segments = (out / "segments.jsonl").open("w", encoding="utf-8")
-    choice_counts, executed_ticks = Counter(), Counter()
+    choice_counts, executed_ticks, lane_commands = Counter(), Counter(), Counter()
     decision_wall, decision_ms, rollout_ms = [], [], []
     summary = None
     status, error = "failed", None
@@ -422,18 +406,29 @@ def run(args) -> dict:
         choice, next_decision, segment = "policy", -math.inf, None
         while True:
             now = env.now
+            ages = dwell.step(state) if dwell is not None else None
             if checker is not None and now >= next_decision - 1e-9:
                 if segment is not None:
                     _dump(segments, segment)
                 t0 = time.perf_counter()
                 raw, src_info = source.inputs(env)
+                if isinstance(source, OracleSource) and ages is not None:
+                    # Same env slots: the true dwell clocks and the last commands / lane intents.
+                    raw["state"]["lane_dwell_s"] = ages.clone()
+                    reported = policy_fn.memory.augment(raw["state"])
+                    raw["state"]["cmd_accel_mps2"] = reported["cmd_accel_mps2"]
+                    raw["state"]["lane_intent"] = reported["lane_intent"]
                 built = time.perf_counter() - t0
                 inputs, keep = compact_inputs(raw) if not args.no_compact else (raw, None)
                 inputs = {k: ({kk: vv.to(device) for kk, vv in v.items()} if isinstance(v, dict)
                               else v.to(device) if torch.is_tensor(v) else v)
                           for k, v in inputs.items()}
                 st = inputs.pop("state")
+                for stream in streams:
+                    stream.begin(len(checker.decision_log), slot_ids=keep)
                 choice, evidence = checker.decide(st, now_s=now, **inputs)
+                if choice in stream_noise:
+                    stream_noise[choice].begin()
                 wall = time.perf_counter() - t0
                 record = dict(checker.decision_log[-1])
                 executed = choice
@@ -452,25 +447,26 @@ def run(args) -> dict:
                       f"coverage={src_info.get('coverage')}", flush=True)
                 segment = {"decision": record["decision"], "start_s": now, "choice": choice,
                            "executed": executed, "ticks": 0, "interval": Counter(),
-                           "sumo_cav_actions": Counter()}
+                           "sumo_cav_actions": Counter(), "lane_commands": Counter()}
                 next_decision = now + args.decision_period
-            fallback, accel = "native", None
+            accel = lanes = None
             if controller == "policy":
-                accel, executed = policy_fn(state), "policy"
+                executed = "policy"
             elif checker is not None:
                 executed = choice
-                if executed in exec_fns:
-                    accel = exec_fns[executed](state)
-                elif executed in ("damping", "pi"):
-                    fallback = executed
             else:
                 executed = controller
-            state, info = env.step(accel, fallback=fallback)
+            if executed in exec_fns:
+                # Every policy-path candidate: direct accelerations + lane commands.
+                accel, lanes = exec_fns[executed](state, with_lanes=True, dwell_age=ages)
+            state, info = env.step(accel, lanes=lanes)
             executed_ticks[executed] += 1
+            lane_commands.update(info.get("lane_commands", {}))
             if segment is not None:
                 segment["ticks"] += 1
                 segment["interval"].update(info["interval"])
                 segment["sumo_cav_actions"].update(info["actions"].values())
+                segment["lane_commands"].update(info.get("lane_commands", {}))
                 segment["end_s"] = info["time_s"]
             if info["done"]:
                 summary = info["summary"]
@@ -508,9 +504,10 @@ def run(args) -> dict:
             "ensemble_members": len(models), "margin": args.margin, "confidence_z": args.confidence_z,
             "compact_slots": not args.no_compact, "belief_lead_s": args.belief_lead,
             "belief_propagator": args.belief_propagator if args.state == "belief" else None,
-            "native_imagination": "wm_hold_teacher"},
+            "candidate_kind": "direct_output_only", "group_perturbation": args.group_perturbation,
+            "n_policy_samples": args.n_policy_samples},
         "decisions": sum(choice_counts.values()), "choice_counts": dict(choice_counts),
-        "executed_control_ticks": dict(executed_ticks),
+        "executed_control_ticks": dict(executed_ticks), "lane_commands": dict(lane_commands),
         "decision_wall_clock_s": stats(decision_wall), "decision_checker_ms": stats(decision_ms),
         "decision_rollout_ms": stats(rollout_ms),
         "belief_update_s": (stats(source.update_seconds) if isinstance(source, BeliefSource) else None),
@@ -549,8 +546,10 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--confidence-z", type=float, default=1.96)
     ap.add_argument("--checker-seed", type=int, default=0)
     ap.add_argument("--no-compact", action="store_true", help="imagine all K slots (slower)")
-    ap.add_argument("--no-classic-imagination", action="store_true",
-                    help="drop the damping/pi candidates")
+    ap.add_argument("--group-perturbation", type=float, default=0.1,
+                    help="offset scale of the policy_group_1 candidate's group signal")
+    ap.add_argument("--n-policy-samples", type=int, default=2,
+                    help="stochastic policy_sample_k candidates (common random numbers)")
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     ap.add_argument("--threads", type=int, default=None)
     ap.add_argument("--k", type=int, default=192)
@@ -565,7 +564,7 @@ def main(argv=None) -> int:
         raise SystemExit("--belief-lead must lie in [0, warmup]")
     result = run(args)
     brief = {k: result[k] for k in ("status", "error", "controller", "state_source", "decisions",
-                                    "choice_counts", "collisions", "teleports",
+                                    "choice_counts", "collisions", "teleports", "lane_commands",
                                     "wall_seconds")}
     brief["decision_wall_clock_s"] = result["decision_wall_clock_s"]
     print(json.dumps(_jsonable(brief)), flush=True)

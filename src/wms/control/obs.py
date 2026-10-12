@@ -24,12 +24,45 @@ FEATURE_NORMALIZATION = {
     "rear_dv_mps": SPEED_LIMIT_MPS, "rear_present": 1.0, "in_merge_zone": 1.0,
     "ds_m": REPORT_RANGE_M, "dlane": float(N_LANES - 1), "age_s": CONTROL_DT_S,
     "length_m": DEFAULT_LENGTH_M, "is_cav": 1.0,
+    "cmd_accel_mps2": abs(ACCEL_MIN_MPS2), "lane_intent": 1.0,
 }
 
 
 def normalize_features(values: Tensor, features: tuple[str, ...]) -> Tensor:
     """Scale features without clipping or detaching their gradients."""
     return values / values.new_tensor([FEATURE_NORMALIZATION[name] for name in features])
+
+
+class CommandMemory:
+    """Per-slot last commanded acceleration and lane intent that CAVs report to the RSU.
+
+    ``augment(state)`` adds ``cmd_accel_mps2`` / ``lane_intent`` [B,K] (zeros for slots that are
+    new, absent or not yet commanded); ``record(state, accel, intent)`` stores this tick's
+    commands.  One memory per episode (deployment: shared by every executed candidate)."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self) -> None:
+        self.accel = self.intent = self.present = None
+
+    def augment(self, state: Mapping[str, Tensor]) -> dict:
+        present = state["present"].bool()
+        if self.accel is None or self.accel.shape != present.shape:
+            zeros = torch.zeros(present.shape, dtype=state["s_m"].dtype, device=present.device)
+            return {**state, "cmd_accel_mps2": zeros, "lane_intent": zeros.clone()}
+        keep = present & self.present
+        return {**state, "cmd_accel_mps2": torch.where(keep, self.accel, torch.zeros_like(self.accel)),
+                "lane_intent": torch.where(keep, self.intent, torch.zeros_like(self.intent))}
+
+    def record(self, state: Mapping[str, Tensor], accel: Tensor, intent: Tensor) -> None:
+        present = state["present"].bool()
+        accel = torch.nan_to_num(torch.as_tensor(accel, dtype=state["s_m"].dtype,
+                                                 device=present.device), nan=0.0)
+        self.accel = torch.where(present, accel, torch.zeros_like(accel)).detach()
+        self.intent = torch.where(present, torch.as_tensor(intent, device=present.device).to(
+            self.accel.dtype), torch.zeros_like(self.accel)).detach()
+        self.present = present
 
 
 def build_observations(state: Mapping[str, Tensor], report_age_s: Optional[Tensor] = None
@@ -41,6 +74,8 @@ def build_observations(state: Mapping[str, Tensor], report_age_s: Optional[Tenso
     mean neighbour speed minus ego speed. Reports are sorted by |ds|, ties by
     slot index. Age can be scalar, [B,K] source ages, or [B,K,K] recipient/source
     ages. Only presence, CAV identity and geometry affect discrete membership.
+    Optional ``state["cmd_accel_mps2"]`` / ``state["lane_intent"]`` [B,K] (the reporting CAV's
+    previous command, see :class:`CommandMemory`) fill the last two report features (else 0).
     """
     present = state["present"].bool()
     lane = state["lane"].long()
@@ -98,6 +133,12 @@ def build_observations(state: Mapping[str, Tensor], report_age_s: Optional[Tenso
         report_age = age.gather(-1, index)
     else:
         report_age = source(torch.broadcast_to(age, (b, k)))
+    command = state.get("cmd_accel_mps2")
+    intent = state.get("lane_intent")
+    command = torch.zeros_like(s) if command is None else torch.where(cav, command.to(s.dtype),
+                                                                      torch.zeros_like(s))
+    intent = torch.zeros_like(s) if intent is None else torch.where(cav, intent.to(s.dtype),
+                                                                    torch.zeros_like(s))
     report_lane = source(lane)
     report_onehot = F.one_hot(report_lane.clamp(0, N_LANES - 1), N_LANES).to(s.dtype)
     reports = torch.cat((ds.gather(-1, index)[..., None],
@@ -105,7 +146,8 @@ def build_observations(state: Mapping[str, Tensor], report_age_s: Optional[Tenso
                          (report_lane - lane[..., None]).to(s.dtype)[..., None],
                          report_onehot, source(v)[..., None], source(front_gap)[..., None],
                          source(front_dv)[..., None], source(front_has).to(s.dtype)[..., None],
-                         report_age[..., None]), -1)
+                         report_age[..., None], source(command)[..., None],
+                         source(intent)[..., None]), -1)
     reports = torch.where(mask[..., None], reports, torch.zeros_like(reports))
     reports = F.pad(reports, (0, 0, 0, MAX_REPORTS - n))
     mask = F.pad(mask, (0, MAX_REPORTS - n), value=False)

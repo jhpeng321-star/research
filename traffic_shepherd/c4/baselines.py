@@ -36,9 +36,16 @@ def run_policy_episode(env, policy, *, seed: int, demand_vph: int, penetration: 
     state = env.reset(seed=seed, demand_vph=demand_vph, penetration=penetration,
                       warmup_s=warmup_s, horizon_s=horizon_s, controller=controller,
                       episode_dir=episode_dir, meta=meta)
+    # Learned policies with a lane head (wms.control.policy.PolicyExecutor) also return per-CAV
+    # lane targets, executed by the env as lane commands; accel-only callables are unchanged.
+    with_lanes = bool(getattr(policy_fn, "has_lane_head", False))
     while True:
-        accel = None if policy_fn is None else policy_fn(state)
-        state, info = env.step(accel)
+        if with_lanes:
+            accel, lanes = policy_fn(state, with_lanes=True)
+            state, info = env.step(accel, lanes=lanes)
+        else:
+            accel = None if policy_fn is None else policy_fn(state)
+            state, info = env.step(accel)
         if on_step is not None:
             on_step(state, info)
         if info["done"]:

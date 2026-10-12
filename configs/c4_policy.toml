@@ -30,6 +30,49 @@ target_tau = 0.02 # Target critic EMA: target <- (1-tau)*target + tau*critic.
 return_ema = 0.99 # EMA of 5th/95th percentiles; scale=max(1, high-low), DreamerV3-style.
 checkpoint_every = 100 # 0 disables periodic snapshots; latest is always saved by fit.
 validation_every = 100 # Separate TRAIN-derived VAL windows; best checkpoint by lambda-return.
+lane_pg_weight = 1.0 # REINFORCE weight of the lane head: -mean(log pi(lane) * advantage), advantage / return scale.
+lane_entropy_weight = 3e-4 # DreamerV3-style entropy bonus of the categorical lane head (masked feasible choices).
+
+# Per-CAV lane decisions (owner 2026-10-12 late): the policy outputs accel AND stay/left/right.
+# No designed controller anywhere: the head starts uniform over the feasible choices.
+[lanes]
+enabled = true # false = accel-only actor training (legacy c4_dreamer/1 behaviour).
+gap_base_m = 6.0 # Target-lane bumper gap (front and rear) >= gap_base_m + gap_time_s*v_behind + closing_time_s*closing speed.
+gap_time_s = 1.0 # 0.5 s: SUMO (laneChangeMode 513, respects gaps) refused 75 % of requests in the smoke; 1.0 s: 52 %.
+closing_time_s = 1.0
+dwell_s = 3.0 # Minimum time between two lane changes of one CAV.
+edge_guard_m = 10.0 # Mainline: no change within v*1 s + this of a SUMO edge boundary (s = 0 and 75.44 m).
+
+# Cooperation as the main training signal (owner 2026-10-12 late; wms.control.counterfactual).
+# Per selected start, common random numbers (same start, WM members, policy noise per start/step/slot):
+#   B = all CAVs native; D_i = J(only i) - B; D_G = J(group G) - B; D_G\i = J(G without i) - B (flip-one);
+#   D_all = J(all) - B; C_G = D_G - sum_{i in G} D_i; M_i = D_G - D_G\i; I_i = M_i - D_i.
+# Actor objective = w_all*D_all + w_group*D_G + w_individual*sum D_i + w_coop*C_G + w_team*sum M_i
+# (differentiable lambda-return differences through the WM; lane head by REINFORCE with the same row weights).
+# ANTI-GAMING GUARD (validated): w_coop <= w_individual at every knot, groups of one start are disjoint and
+# the team term applies to groups of >= 3 (for pairs G\i is a solo CAV), so every D_i keeps weight >= 0.
+[counterfactual]
+enabled = true
+n_individual = 2 # Individual rows per start (members of the sampled groups are always added).
+n_group = 2 # Disjoint group rows per start.
+n_flip = 2 # Flip-one rows (G without i) per group; pairs reuse the other member's individual row.
+group_radius_m = 150.0 # CAVs chained within this |ds| (lanes ignored) form a connected component.
+group_min_size = 2
+group_max_size = 6 # Contiguous window of at most this many members of a sampled component.
+cover_group_members = true # Individual rows for every group member (required when w_coop > 0).
+max_starts = 8 # Counterfactual rows only for the first max_starts starts (that have CAVs) of a batch.
+native_cav = "idm" # Native CAV reference: "idm" (simple IDM CAV) or "hold" (a = 0); both safety-filtered, stay in lane.
+group_state_fraction = 0.6 # Share of each batch drawn group-rich: >= 2 CAVs within the radius in group_zone_s_m
+group_zone_s_m = [-800.0, 75.44] # ... (near/upstream of the merge) AND an RSU-field queue cell or occupied
+congestion_speed_mps = 15.0 # ... cell with mean speed below this.
+max_group_tries = 20 # Sampler draws per group-rich slot before falling back to the last draw.
+# Curriculum (piecewise linear in the update count, held after the last knot; mid-training = 1500 of 3000).
+curriculum_updates = [0, 1500]
+w_individual = [1.0, 0.5]
+w_group = [0.5, 1.0]
+w_coop = [0.0, 0.5]
+w_team = [0.0, 0.5]
+w_all = [0.25, 1.0]
 
 [data]
 wm_config = "configs/c4_wm.toml" # start windows = the C4 WM TRAIN lists (native + dspeed), all shipped in the bundle

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Mapping, Optional
+from typing import Mapping, NamedTuple, Optional
 
 import torch
 import torch.nn.functional as F
@@ -12,6 +12,7 @@ from torch.distributions import Normal
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, F_OWN, F_REPORT, GROUP_SIGNAL_DIM,
                        MERGE_S0_M, MERGE_S1_M, OWN_FEATURES, REPORT_FEATURES, Observation)
 from .contract import F_RSU_CELL
+from .lanes import LANE_DELTA, N_LANE_CHOICES
 from .obs import FEATURE_NORMALIZATION, normalize_features
 from .rsu_field import FIELD_SCALE, cell_geometry
 
@@ -26,10 +27,46 @@ def _masked_attention(attention: nn.MultiheadAttention, query: Tensor, keys: Ten
     return torch.where(empty[..., None], torch.zeros_like(out), out)
 
 
-class CavPolicy(nn.Module):
-    """Shared actor: (Observation, group [B,K,8]) -> (accel, log_prob) [B,K]."""
+class PolicyNoise(NamedTuple):
+    """Explicit exploration noise (common random numbers across counterfactual rows / WM members)."""
+    accel: Tensor          # [B,K] standard normal for the acceleration latent
+    lane_gumbel: Tensor    # [B,K,3] standard Gumbel for the lane choice
 
-    def __init__(self, hidden_dim: int = 64, n_heads: int = 4) -> None:
+
+def draw_policy_noise(shape, *, generator=None, device=None, dtype=torch.float32) -> PolicyNoise:
+    """Standard-normal accel noise and standard-Gumbel lane noise of ``shape`` = (B, K)."""
+    eps = torch.randn(*shape, generator=generator, dtype=dtype)
+    u = torch.rand(*shape, N_LANE_CHOICES, generator=generator, dtype=dtype)
+    gumbel = -torch.log(-torch.log(u.clamp(1e-20, 1.0 - 1e-7)))
+    return PolicyNoise(eps.to(device) if device is not None else eps,
+                       gumbel.to(device) if device is not None else gumbel)
+
+
+class PolicyOutput(NamedTuple):
+    """Per-CAV actions and their statistics, all [B,K] (zeros on non-CAV slots)."""
+    accel: Tensor              # direct acceleration in [ACCEL_MIN, ACCEL_MAX] (before safety)
+    lane_choice: Tensor        # long: LANE_STAY / LANE_LEFT / LANE_RIGHT (feasible by the mask)
+    log_prob_accel: Tensor
+    log_prob_lane: Tensor      # log pi(choice | masked logits); 0 when only "stay" is feasible
+    entropy_accel: Tensor      # single-sample estimate -log_prob_accel
+    entropy_lane: Tensor       # exact categorical entropy over the feasible choices
+    lane_options: Tensor       # number of feasible choices (1..3)
+
+
+class CavPolicy(nn.Module):
+    """Shared actor: (Observation, group [B,K,8]) -> per-CAV acceleration and lane choice.
+
+    ``forward(obs, group)`` keeps the legacy contract ``(accel, log_prob)``.  With
+    ``lane_mask`` ([B,K,3] feasible stay/left/right from :func:`wms.control.lanes.
+    lane_feasibility`) it returns a :class:`PolicyOutput` including the categorical lane
+    head (masked logits; ``stay`` always feasible).  ``noise`` (:class:`PolicyNoise`)
+    replaces the internal draws (common random numbers).  ``lane_head=False`` builds the
+    pre-2026-10-12 accel-only actor (``c4_dreamer/1`` checkpoints): it always stays.
+    """
+
+    supports_noise = True
+
+    def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True) -> None:
         super().__init__()
         self.own_encoder = nn.Sequential(nn.Linear(F_OWN, hidden_dim), nn.SiLU(),
                                          nn.Linear(hidden_dim, hidden_dim), nn.SiLU())
@@ -37,9 +74,17 @@ class CavPolicy(nn.Module):
         self.attention = nn.MultiheadAttention(hidden_dim, n_heads, batch_first=True)
         self.head = nn.Sequential(nn.Linear(2 * hidden_dim + GROUP_SIGNAL_DIM, hidden_dim),
                                   nn.SiLU(), nn.Linear(hidden_dim, 2))
+        self.has_lane_head = bool(lane_head)
+        if self.has_lane_head:
+            self.lane_head = nn.Sequential(
+                nn.Linear(2 * hidden_dim + GROUP_SIGNAL_DIM + N_LANE_CHOICES, hidden_dim),
+                nn.SiLU(), nn.Linear(hidden_dim, N_LANE_CHOICES))
+            # Uniform start over the feasible choices: no designed lane preference.
+            nn.init.zeros_(self.lane_head[-1].weight)
+            nn.init.zeros_(self.lane_head[-1].bias)
 
-    def forward(self, obs: Observation, group_signal: Tensor, *, deterministic: bool = False
-                ) -> tuple[Tensor, Tensor]:
+    def forward(self, obs: Observation, group_signal: Tensor, *, deterministic: bool = False,
+                lane_mask: Optional[Tensor] = None, noise: Optional[PolicyNoise] = None):
         b, k, _ = obs.own.shape
         own = self.own_encoder(normalize_features(obs.own, OWN_FEATURES))
         reports = torch.where(obs.report_mask[..., None], obs.reports,
@@ -49,17 +94,50 @@ class CavPolicy(nn.Module):
                                     reports.reshape(b * k, reports.shape[2], -1),
                                     obs.report_mask.reshape(b * k, -1)).reshape(b, k, -1)
         signal = torch.where(obs.cav_mask[..., None], group_signal, torch.zeros_like(group_signal))
-        mean, log_std = self.head(torch.cat((own, context, signal), -1)).unbind(-1)
-        distribution = Normal(mean, log_std.clamp(-5.0, 1.0).exp())
-        latent = mean if deterministic else distribution.rsample()
+        features = torch.cat((own, context, signal), -1)
+        mean, log_std = self.head(features).unbind(-1)
+        std = log_std.clamp(-5.0, 1.0).exp()
+        distribution = Normal(mean, std)
+        if deterministic:
+            latent = mean
+        else:
+            eps = (noise.accel.to(mean) if noise is not None else torch.randn_like(mean))
+            latent = mean + std * eps          # reparameterised (rsample)
         scale = (ACCEL_MAX_MPS2 - ACCEL_MIN_MPS2) / 2.0
         midpoint = (ACCEL_MAX_MPS2 + ACCEL_MIN_MPS2) / 2.0
         accel = midpoint + scale * torch.tanh(latent)
         # Stable log(1-tanh(z)^2), including saturated latent values.
         log_jacobian = math.log(scale) + 2.0 * (math.log(2.0) - latent - F.softplus(-2.0 * latent))
         log_prob = distribution.log_prob(latent) - log_jacobian
-        return (torch.where(obs.cav_mask, accel, torch.zeros_like(accel)),
-                torch.where(obs.cav_mask, log_prob, torch.zeros_like(log_prob)))
+        cav = obs.cav_mask
+        accel = torch.where(cav, accel, torch.zeros_like(accel))
+        log_prob = torch.where(cav, log_prob, torch.zeros_like(log_prob))
+        if lane_mask is None:
+            return accel, log_prob
+        feasible = lane_mask.bool() & cav[..., None]
+        feasible = torch.cat((torch.ones_like(feasible[..., :1]), feasible[..., 1:]), -1)
+        options = feasible.sum(-1)
+        zeros = torch.zeros_like(log_prob)
+        if self.has_lane_head:
+            logits = self.lane_head(torch.cat((features, feasible.to(features.dtype)), -1))
+            logits = torch.where(feasible, logits, torch.full_like(logits, -1e9))
+            log_p = torch.log_softmax(logits, -1)
+            if deterministic:
+                choice = logits.argmax(-1)
+            else:
+                gumbel = (noise.lane_gumbel.to(logits) if noise is not None else
+                          -torch.log(-torch.log(torch.rand_like(logits).clamp(1e-20, 1.0 - 1e-7))))
+                choice = (logits + gumbel).argmax(-1)
+            log_prob_lane = log_p.gather(-1, choice[..., None]).squeeze(-1)
+            entropy_lane = -torch.where(feasible, log_p.exp() * log_p, torch.zeros_like(log_p)).sum(-1)
+            choice = torch.where(cav, choice, torch.zeros_like(choice))
+            log_prob_lane = torch.where(cav & (options > 1), log_prob_lane, zeros)
+            entropy_lane = torch.where(cav, entropy_lane, zeros)
+        else:
+            choice = torch.zeros_like(options)
+            log_prob_lane = entropy_lane = zeros
+        return PolicyOutput(accel, choice, log_prob, log_prob_lane, -log_prob, entropy_lane,
+                            torch.where(cav, options, torch.ones_like(options)))
 
 
 class _SetBlock(nn.Module):
@@ -157,36 +235,136 @@ class TeamCritic(nn.Module):
         return torch.where(mask.any(1), value, torch.zeros_like(value))
 
 
-def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
-    """Deployment callable ``state -> accel [1,K]`` (numpy, NaN on non-CAV slots) from a C4
-    trainer checkpoint (format ``c4_dreamer/1``); used by the SUMO runner.  Inputs are exactly
-    the deployment ones: CAV observations + RSU-relayed reports + the RSU sensor field."""
-    import numpy as np
+CHECKPOINT_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", "c4_dreamer/3")
 
-    from .obs import build_observations
-    from .rsu_field import build_rsu_field
-    from .safety import safe_accel
+
+def upgrade_policy_state(state: dict) -> dict:
+    """Zero-pad the report encoder of pre-/3 actors (11 report features) to the current
+    ``F_REPORT``: the new command/intent report features get zero weights, so the upgraded actor
+    computes exactly what the old one did."""
+    from .contract import LEGACY_F_REPORT
+
+    key = "report_encoder.0.weight"
+    weight = state.get(key)
+    if weight is not None and weight.shape[-1] == LEGACY_F_REPORT < F_REPORT:
+        state = dict(state)
+        state[key] = torch.cat((weight, weight.new_zeros(weight.shape[0], F_REPORT - LEGACY_F_REPORT)), -1)
+    return state
+
+
+class PolicyExecutor:
+    """Deployment callable ``state [1,K] -> accel`` (numpy, NaN on non-CAV slots).
+
+    ``exe(state, with_lanes=True)`` also returns the lane targets ``[1,K]`` (int64, WM lane
+    0/1/2 for a CAV the policy moves this tick, -1 = stay / not a CAV) for
+    ``CavSumoEnv.step(accel, lanes=...)``.  Accel-only callers (``with_lanes=False``) get the
+    acceleration computed for the CURRENT lanes (no lane change is executed).  Inputs are
+    exactly the deployment ones: CAV observations + RSU-relayed reports + the RSU field; the
+    lane mask additionally uses the target-lane gaps (same state the safety layer uses).
+    ``hold=True`` is the direct-output fallback ``a = 0, stay`` (safety-filtered).
+    ``noise_fn(shape) -> PolicyNoise`` makes a stochastic executor reproducible (CRN).
+    One executor = one dwell clock (``reset()`` per episode) unless ``dwell`` is shared;
+    with ``dwell_age=`` the caller supplies the ages (and owns the clock).
+    """
+
+    def __init__(self, policy=None, group_fn=None, *, lane_rules=None, deterministic: bool = True,
+                 noise_fn=None, hold: bool = False, dwell=None, memory=None, device: str = "cpu"):
+        from .contract import CONTROL_DT_S
+        from .lanes import LaneDwell, LaneRules
+        from .obs import CommandMemory
+
+        if not hold and (policy is None or group_fn is None):
+            raise ValueError("a policy and a group-signal function are required unless hold=True")
+        self.policy, self.group_encoder = policy, group_fn
+        self.lane_rules = lane_rules if lane_rules is not None else LaneRules()
+        self.has_lane_head = bool(hold or getattr(policy, "has_lane_head", False))
+        self.deterministic, self.noise_fn, self.hold, self.device = deterministic, noise_fn, hold, device
+        self.dwell = dwell if dwell is not None else LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)
+        # Last commanded accel / lane intent of every CAV, relayed in the other CAVs' reports.
+        self.memory = memory if memory is not None else CommandMemory()
+        self.last_lanes = None
+
+    def reset(self) -> None:
+        self.dwell.reset()
+        self.memory.reset()
+        self.last_lanes = None
+
+    def act_with_lane(self, state, *, dwell_age=None):
+        """``(accel [1,K] float64 NaN off-CAV, lane [1,K] int64: -1 = no change, 0/1/2 = target)``."""
+        return self(state, with_lanes=True, dwell_age=dwell_age)
+
+    def __call__(self, state, *, with_lanes: bool = False, dwell_age=None):
+        import numpy as np
+
+        from .lanes import apply_lane_choices, lane_feasibility
+        from .obs import build_observations
+        from .rsu_field import build_rsu_field
+        from .safety import safe_accel
+
+        with torch.no_grad():
+            state = {k: (v.to(self.device) if torch.is_tensor(v) else v) for k, v in state.items()}
+            ages = dwell_age if dwell_age is not None else self.dwell.step(state)
+            obs = build_observations(self.memory.augment(state))
+            lane = state["lane"].long()
+            new_lane, changed = lane, torch.zeros_like(obs.cav_mask)
+            intent = torch.zeros_like(state["s_m"])
+            if self.hold:
+                accel = torch.zeros_like(state["s_m"])
+            else:
+                signal = self.group_encoder(obs, state["s_m"], build_rsu_field(state))
+                noise = None if self.noise_fn is None else self.noise_fn(tuple(obs.cav_mask.shape))
+                kwargs = {} if noise is None else {"noise": noise}
+                if with_lanes and self.has_lane_head:
+                    mask = lane_feasibility(state, ages, self.lane_rules)
+                    out = self.policy(obs, signal, deterministic=self.deterministic,
+                                      lane_mask=mask, **kwargs)
+                    accel = out.accel
+                    new_lane, changed = apply_lane_choices(state, out.lane_choice, mask,
+                                                           self.lane_rules, obs.cav_mask)
+                    intent = torch.tensor(LANE_DELTA, device=accel.device)[out.lane_choice].to(accel.dtype)
+                else:
+                    accel, _ = self.policy(obs, signal, deterministic=self.deterministic, **kwargs)
+            accel = accel.float()
+            safe = safe_accel(state, accel)
+            if bool(changed.any()):
+                # SUMO executes the change during the next physics step (and may refuse it):
+                # be safe for BOTH the current and the target-lane leader.
+                safe = torch.minimum(safe, safe_accel({**state, "lane": new_lane}, accel))
+            self.memory.record(state, torch.where(obs.cav_mask, safe, torch.zeros_like(safe)),
+                               torch.where(obs.cav_mask, intent, torch.zeros_like(intent)))
+        out = safe.detach().cpu().numpy().astype(np.float64)
+        cav = obs.cav_mask.cpu().numpy()
+        out[~cav] = np.nan
+        lanes = torch.where(changed, new_lane, torch.full_like(new_lane, -1)).cpu().numpy().astype(np.int64)
+        self.last_lanes = lanes
+        return (out, lanes) if with_lanes else out
+
+
+def load_policy_components(path, *, device: str = "cpu"):
+    """``(policy, group_encoder, lane_rules, payload)`` from a ``c4_dreamer/1|2`` checkpoint.
+
+    ``c4_dreamer/1`` (accel-only actor) loads as ``CavPolicy(lane_head=False)``: it stays in lane."""
+    from .lanes import LaneRules
 
     payload = torch.load(path, map_location=device, weights_only=True)
-    if payload.get("format") != "c4_dreamer/1":
-        raise ValueError("expected a c4_dreamer/1 checkpoint")
-    policy, encoder = CavPolicy(), RsuGroupEncoder()
-    policy.load_state_dict(payload["policy"])
+    if payload.get("format") not in CHECKPOINT_FORMATS:
+        raise ValueError(f"expected a {' or '.join(CHECKPOINT_FORMATS)} checkpoint")
+    state = upgrade_policy_state(payload["policy"])
+    lane_head = any(key.startswith("lane_head.") for key in state)
+    policy, encoder = CavPolicy(lane_head=lane_head), RsuGroupEncoder()
+    policy.load_state_dict(state)
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
              for k, v in payload["group_encoder"].items()}
     encoder.load_state_dict(group)
     policy.eval()
     encoder.eval()
+    return policy.to(device), encoder.to(device), LaneRules.from_mapping(payload.get("lane_rules")), payload
 
-    def act(state):
-        with torch.no_grad():
-            obs = build_observations(state)
-            signal = encoder(obs, state["s_m"], build_rsu_field(state))
-            accel, _ = policy(obs, signal, deterministic=deterministic)
-            accel = safe_accel(state, accel)
-        out = accel.detach().cpu().numpy().astype(np.float64)
-        out[~obs.cav_mask.cpu().numpy()] = np.nan
-        return out
 
-    act.policy, act.group_encoder = policy, encoder
-    return act
+def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
+    """Deployment :class:`PolicyExecutor` from a C4 trainer checkpoint (``c4_dreamer/1`` or
+    ``/2``); used by the SUMO runner (``exe(state)`` -> accel, ``exe(state, with_lanes=True)``
+    -> (accel, lane targets)).  ``exe.policy`` / ``exe.group_encoder`` expose the networks."""
+    policy, encoder, rules, _ = load_policy_components(path, device=device)
+    return PolicyExecutor(policy, encoder, lane_rules=rules, deterministic=deterministic,
+                          device=device)

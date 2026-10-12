@@ -22,6 +22,22 @@ longitudinal writer; HDVs are never commanded.  Episode controllers:
 
 The warmup (``warmup_s``) always runs native; native -> damping/pi uses the frozen
 ``FleetSwitchSession`` one-boundary switch at ``t = warmup_s``.
+
+Lane commands (owner 2026-10-12 late, ``direct`` only): ``step(accel, lanes=...)`` with ``lanes``
+``[1,K]`` (-1 = stay / none, 0/1/2 = target WM lane) puts every CAV with a finite direct command
+this tick under policy lane control: SUMO's own discretionary lane changing is disabled for it with
+``laneChangeMode`` = ``LC_MODE_POLICY`` = 513, i.e. bits 0-1 = 01 (strategic changes required by
+the route - lane ends, the on-ramp merge - stay ON unless they conflict with a TraCI request), bits
+2-3 = 00 (no cooperative changes), bits 4-5 = 00 (no speed-gain changes), bits 6-7 = 00 (no
+keep-right changes), bits 8-9 = 10 (TraCI-requested changes respect the speed/brake gaps of other
+drivers, adapting speed), bits 10-11 = 00 (no sublane model).  The vehicle's previous mode is
+restored when the CAV leaves policy lane control (released / no lanes passed).  A target lane is
+issued as ``traci.vehicle.changeLane(vid, sumo_index, 1.0)`` with the SUMO index of the target WM
+lane on the CAV's CURRENT edge (``geometry.LANE_TABLE``); requests that would straddle an edge end
+within the 1 s request (SUMO indices differ across edges) are deferred, junction transits refused.
+HDVs and non-policy controllers are never touched.  Outcomes are counted per tick in
+``info["lane_commands"]`` (issued / completed / not_completed / deferred_edge_end / refused_*),
+written to the action timeline (``lane_command``) and to ``episode.npz`` ``lane_command_target``.
 """
 from __future__ import annotations
 
@@ -39,6 +55,7 @@ from traffic_shepherd.metrics import RequestLedger, braking_effort, closing_ttc,
 from traffic_shepherd.scenarios import build_scenario, observation_map
 
 from . import ROOT
+from .geometry import LANE_TABLE, is_junction_lane, lane_and_s
 from .recorder import EpisodeRecorder
 from .seeds import check_case
 from .state import (FrameBuilder, HistoryBuffer, ReferenceFrame, frame_cell_counts,
@@ -48,6 +65,10 @@ from .sumo_io import (VehicleReader, action_entry, boundary_edges, build_physics
                       crossings_between)
 
 CONTROLLERS = ("direct", "native", "damping", "pi", "wall")
+#: laneChangeMode of CAVs under policy lane control (see the module docstring for the bits).
+LC_MODE_POLICY = 0b0010_0000_0001
+LANE_REQUEST_S = 1.0               # changeLane duration = one control interval
+LANE_EDGE_GUARD_M = 10.0           # same margin as wms.control.lanes.LaneRules.edge_guard_m
 CAV_SPEED_MODE = 27
 SPEED_LIMIT_MPS = 31.29
 PI_U_MPS = 31.29
@@ -173,6 +194,10 @@ class CavSumoEnv:
         self.dropped_cav_steps = 0
         self.max_present = 0
         self._last_actions: dict = {}
+        self._lc_original: dict = {}       # vid -> laneChangeMode before policy lane control
+        self._lane_lengths: dict = {}
+        self.lane_command_counts = Counter()
+        self._last_lane_counts: dict = {}
         if self.recorder is not None:
             self.recorder.start(dict(
                 seed=self.seed, demand_vph=self.demand, penetration=self.penetration,
@@ -266,11 +291,78 @@ class CavSumoEnv:
             out[vid] = float(acc[slot])
         return out
 
-    def _control_tick(self, accel_by_slot, fallback: str = "native") -> dict:
+    def _lanes_by_vehicle(self, lanes) -> dict:
+        """``[1,K]`` WM target lanes -> {vid: lane} for present CAV slots (-1 / non-finite dropped)."""
+        try:
+            import torch
+            if torch.is_tensor(lanes):
+                lanes = lanes.detach().cpu().numpy()
+        except ImportError:  # pragma: no cover
+            pass
+        arr = np.asarray(lanes, dtype=np.float64).reshape(-1)
+        if arr.shape[0] != self.k:
+            raise ValueError(f"lanes must have K={self.k} entries (shape [1,K])")
+        out = {}
+        f = self.frame
+        for slot in np.flatnonzero(f.present & f.is_cav).tolist():
+            value = arr[slot]
+            if math.isfinite(value) and value >= 0:
+                out[self.builder.vehicle_ids[int(f.vid_index[slot])]] = int(value)
+        return out
+
+    def _lane_control(self, policy_cavs: set, live: set) -> None:
+        """Policy lane control on/off (laneChangeMode); HDVs are never touched."""
+        api = self.api
+        for vid in sorted(policy_cavs - set(self._lc_original)):
+            self._lc_original[vid] = int(api.vehicle.getLaneChangeMode(vid))
+            api.vehicle.setLaneChangeMode(vid, LC_MODE_POLICY)
+        for vid in sorted(set(self._lc_original) - policy_cavs):
+            original = self._lc_original.pop(vid)
+            if vid in live:
+                api.vehicle.setLaneChangeMode(vid, original)
+
+    def _issue_lane_commands(self, targets: dict, policy_cavs: set) -> tuple[dict, Counter]:
+        """``changeLane`` for each policy CAV whose target differs from its current WM lane."""
+        api = self.api
+        issued, counts = {}, Counter()
+        for vid, target in sorted(targets.items()):
+            if vid not in policy_cavs:
+                counts["refused_not_policy"] += 1
+                continue
+            row = self._table.get(vid)
+            if row is None or is_junction_lane(row["lane_id"]):
+                counts["refused_junction"] += 1
+                continue
+            current, _ = lane_and_s(row["lane_id"], row["lane_position_m"])
+            if target == current:
+                counts["noop"] += 1
+                continue
+            if target not in (0, 1, 2) or abs(target - current) != 1 or target == 2:
+                counts["refused_not_allowed"] += 1     # never into the ramp lane, adjacent only
+                continue
+            edge = row["road_id"]
+            index = next((i for (e, i), (lane, _) in LANE_TABLE.items()
+                          if e == edge and lane == target), None)
+            if index is None:
+                counts["refused_no_lane"] += 1
+                continue
+            length = self._lane_lengths.get(row["lane_id"])
+            if length is None:
+                length = self._lane_lengths[row["lane_id"]] = float(api.lane.getLength(row["lane_id"]))
+            if length - row["lane_position_m"] <= row["speed_mps"] * LANE_REQUEST_S + LANE_EDGE_GUARD_M:
+                counts["deferred_edge_end"] += 1
+                continue
+            api.vehicle.changeLane(vid, int(index), LANE_REQUEST_S)
+            issued[vid] = (target, int(index))
+            counts["issued"] += 1
+        return issued, counts
+
+    def _control_tick(self, accel_by_slot, fallback: str = "native", lanes=None) -> dict:
         api = self.api
         now = self.now
         if abs(now - round(now)) > 1e-6:
             raise CavEnvError(f"SUMO time {now} is off the 1 s control grid")
+        lane_issued, lane_counts = {}, Counter()
         live = set(api.vehicle.getIDList())
         cav_ids = self.cav_ids
         disappeared = (self._previous_live - live) & cav_ids
@@ -297,6 +389,8 @@ class CavSumoEnv:
         in_window = now >= self.warmup_s - 1e-9
         mode = self.mode if in_window else "native"
         requested = {}
+        if mode != "direct" and self._lc_original:
+            self._lane_control(set(), live)
         if self.fleet is not None:
             records = self.fleet.step(self.ownership, frames, now_s=now, live_ids=live,
                                       disappeared_ids=disappeared, reappeared_ids=reappeared)
@@ -334,6 +428,12 @@ class CavSumoEnv:
                 native = live_cavs - set(wall) if fallback == "native" else frozenset()
                 records = self.ownership.step(frames, now_s=now, live_ids=live,
                                               wall_commands=wall, native_ids=native)
+            # Policy lane control: only CAVs with a finite direct command AND a lanes tensor.
+            policy_cavs = set(wall) if lanes is not None else set()
+            self._lane_control(policy_cavs, live)
+            if lanes is not None:
+                lane_issued, lane_counts = self._issue_lane_commands(
+                    self._lanes_by_vehicle(lanes), policy_cavs)
         elif mode == "wall":
             wall = self.wall_law.commands(self.frame, self.builder, now_s=now,
                                           live_cavs=live_cavs)
@@ -362,7 +462,14 @@ class CavSumoEnv:
                 decisions[slot] = (name, r.issued_acceleration_mps2, r.issued_target_speed_mps,
                                    requested.get(r.vehicle_id))
         if self.recorder is not None:
-            self.recorder.on_control(now, self.frame, decisions, self.builder.vehicle_ids)
+            lane_rows = {}
+            for vid, (target, index) in lane_issued.items():
+                slot = self.builder.pool.slot_of(vid)
+                if slot is not None and self.frame.present[slot]:
+                    lane_rows[slot] = {"target_lane": target, "sumo_lane_index": index,
+                                       "duration_s": LANE_REQUEST_S}
+            self.recorder.on_control(now, self.frame, decisions, self.builder.vehicle_ids,
+                                     lane_commands=lane_rows)
         self._last_actions = actions
         commanded = {r.vehicle_id for r in records}
         info_interval = Counter()
@@ -373,6 +480,13 @@ class CavSumoEnv:
                 raise CavEnvError("SUMO physics time grid mismatch")
             info_interval.update(self._after_physics(after, actions, now, commanded))
         self._previous_live = set(api.vehicle.getIDList())
+        for vid, (target, _) in lane_issued.items():
+            slot = self.builder.pool.slot_of(vid)
+            done = (slot is not None and bool(self.frame.present[slot])
+                    and int(self.frame.lane[slot]) == target)
+            lane_counts["completed" if done else "not_completed"] += 1
+        self.lane_command_counts.update(lane_counts)
+        self._last_lane_counts = dict(lane_counts)
         self.totals.update(info_interval)
         if in_window:
             self.window_totals.update(info_interval)
@@ -459,7 +573,7 @@ class CavSumoEnv:
             self.recorder.on_frame(frame, row)
         return interval
 
-    def step(self, accel_by_slot=None, *, fallback: str = "native"):
+    def step(self, accel_by_slot=None, *, fallback: str = "native", lanes=None, lane=None):
         """Apply one 1 s control interval; returns ``(state, info)``.
 
         ``accel_by_slot`` ``[1, K]`` (torch or numpy) absolute CAV accelerations, used by the
@@ -467,16 +581,23 @@ class CavSumoEnv:
         (``direct`` only): controller of CAVs without a finite command this tick, ``native``
         (release to SUMO IDM, default), ``damping`` (frozen CIRCLES) or ``pi`` (frozen PI
         external-U, a fresh session each time PI is (re)selected); per-tick mixing used by the
-        C4 deployment check, ``wms.control.deploy``."""
+        C4 deployment check, ``wms.control.deploy``.  ``lanes`` (``direct`` only, optional) ``[1,K]``
+        WM target lanes (-1 = stay / none) puts the commanded CAVs under policy lane control (module
+        docstring); ``None`` keeps SUMO's own lane changing for every vehicle (accel-only callers)."""
         if fallback not in ("native", "damping", "pi"):
             raise ValueError("fallback must be 'native', 'damping' or 'pi'")
+        if lane is not None:                      # alias (``lane=`` [1,K], -1 = no change)
+            if lanes is not None:
+                raise ValueError("pass either lanes= or lane=, not both")
+            lanes = lane
         if self.done:
             raise CavEnvError("episode is done; call reset()")
         t = self.now
-        interval = self._control_tick(accel_by_slot, fallback)
+        interval = self._control_tick(accel_by_slot, fallback, lanes)
         done = self.now >= self.end_s - 1e-9
         info = {"time_s": self.now, "decision_time_s": t, "interval": interval,
                 "actions": {v: a["action"] for v, a in self._last_actions.items()},
+                "lane_commands": dict(getattr(self, "_last_lane_counts", {})),
                 "rsu_detections": rsu_detections(self.frame, self.builder.vehicle_ids),
                 "dropped_vehicles": list(self.frame.dropped), "done": done}
         if done:
@@ -519,6 +640,7 @@ class CavSumoEnv:
             window=window, minimum_closing_ttc_s=self.minimum_ttc,
             command_counts=dict(self.command_counts),
             fallback_counts=dict(self.fallback_counts),
+            lane_commands=dict(self.lane_command_counts), lane_change_mode_policy=LC_MODE_POLICY,
             collisions=int(self.totals.get("collision_involvements", 0)),
             teleports=int(self.totals.get("starting_teleports", 0)),
             max_present_vehicles=self.max_present,

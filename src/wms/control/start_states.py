@@ -95,38 +95,39 @@ class StartStateSampler:
         if not self.penetrations:
             raise ValueError("no eligible TRAIN start windows remain")
 
-    def sample(self, batch_size, device="cpu"):
-        states, histories, metadata = [], [], []
-        for _ in range(batch_size):
-            group = self.groups[self.penetrations[int(torch.randint(
-                len(self.penetrations), (), generator=self.generator))]]
-            index = group[int(torch.randint(len(group), (), generator=self.generator))]
-            record = self.dataset[index]
-            meta = record.get("meta", self.metadata[index])
-            if not _eligible(meta):
-                raise ValueError("window loader returned non-TRAIN/restricted provenance")
-            kin = torch.as_tensor(record["states"][0]).float()
-            present = torch.as_tensor(record["present"][0]).bool()
-            cav = torch.as_tensor(record["is_cav"][0]).bool().clone() & present
-            if self.relabel:
-                slots = torch.where(present)[0]
-                count = int(round(len(slots) * self.target_penetration))
-                shuffled = slots[torch.randperm(len(slots), generator=self.generator)]
-                cav.zero_()
-                cav[shuffled[:count]] = True
-            lane = kin[:, 1:4].argmax(-1)
-            lane = torch.where(present & (kin[:, 1:4].sum(-1) > 0), lane, -1)
-            states.append({"s_m": kin[:, 0], "v_mps": kin[:, 4], "a_mps2": kin[:, 5],
-                           "length_m": kin[:, 6], "lane": lane,
-                           "present": present, "is_cav": cav})
-            hist = {}
-            for source, target in (("hist", "history"), ("hist_mask", "history_mask"),
-                                   ("driver_hist", "driver_history"),
-                                   ("driver_hist_mask", "driver_history_mask")):
-                if source in record:
-                    hist[target] = torch.as_tensor(record[source])
-            histories.append(hist)
-            metadata.append(dict(meta))
+    def _draw_index(self):
+        group = self.groups[self.penetrations[int(torch.randint(
+            len(self.penetrations), (), generator=self.generator))]]
+        return group[int(torch.randint(len(group), (), generator=self.generator))]
+
+    def _load(self, index):
+        record = self.dataset[index]
+        meta = record.get("meta", self.metadata[index])
+        if not _eligible(meta):
+            raise ValueError("window loader returned non-TRAIN/restricted provenance")
+        kin = torch.as_tensor(record["states"][0]).float()
+        present = torch.as_tensor(record["present"][0]).bool()
+        cav = torch.as_tensor(record["is_cav"][0]).bool().clone() & present
+        if self.relabel:
+            slots = torch.where(present)[0]
+            count = int(round(len(slots) * self.target_penetration))
+            shuffled = slots[torch.randperm(len(slots), generator=self.generator)]
+            cav.zero_()
+            cav[shuffled[:count]] = True
+        lane = kin[:, 1:4].argmax(-1)
+        lane = torch.where(present & (kin[:, 1:4].sum(-1) > 0), lane, -1)
+        state = {"s_m": kin[:, 0], "v_mps": kin[:, 4], "a_mps2": kin[:, 5],
+                 "length_m": kin[:, 6], "lane": lane, "present": present, "is_cav": cav}
+        hist = {}
+        for source, target in (("hist", "history"), ("hist_mask", "history_mask"),
+                               ("driver_hist", "driver_history"),
+                               ("driver_hist_mask", "driver_history_mask")):
+            if source in record:
+                hist[target] = torch.as_tensor(record[source])
+        return state, hist, dict(meta)
+
+    def _batch(self, loaded, device):
+        states, histories, metadata = zip(*loaded) if loaded else ((), (), ())
         if any(hist.keys() != histories[0].keys() for hist in histories):
             raise ValueError("all sampled windows must carry the same history fields")
         if "driver_history" not in histories[0] and "history" in histories[0]:
@@ -136,7 +137,34 @@ class StartStateSampler:
         return StartBatch({key: torch.stack([s[key] for s in states]).to(device)
                            for key in states[0]},
                           {key: torch.stack([h[key] for h in histories]).to(device)
-                           for key in histories[0]}, metadata)
+                           for key in histories[0]}, list(metadata))
+
+    def sample(self, batch_size, device="cpu"):
+        return self._batch([self._load(self._draw_index()) for _ in range(batch_size)], device)
+
+    def sample_where(self, batch_size, device="cpu", *, predicate, fraction=0.6, max_tries=20):
+        """Like :meth:`sample`, but the first ``round(fraction * batch_size)`` starts satisfy
+        ``predicate(state [1,K] dict)`` (up to ``max_tries`` draws each, then the last draw is
+        kept).  ``metadata[i]["group_rich"]`` records the outcome.  Predicate results are cached
+        per window when CAV labels are not re-drawn (relabel off)."""
+        cache = self.__dict__.setdefault("_predicate_cache", {})
+        wanted = int(round(float(fraction) * batch_size))
+        loaded = []
+        for slot in range(batch_size):
+            tries = max(1, int(max_tries)) if slot < wanted else 1
+            for attempt in range(tries):
+                index = self._draw_index()
+                if slot < wanted and not self.relabel and cache.get(index) is False                         and attempt < tries - 1:
+                    continue
+                state, hist, meta = self._load(index)
+                ok = bool(predicate({k: v[None] for k, v in state.items()}))
+                if not self.relabel:
+                    cache[index] = ok
+                if ok or slot >= wanted:
+                    break
+            meta["group_rich"] = ok
+            loaded.append((state, hist, meta))
+        return self._batch(loaded, device)
 
     def state_dict(self):
         return {"rng": self.generator.get_state(), "groups": self.groups,

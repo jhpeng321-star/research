@@ -1,5 +1,9 @@
 # C4 Dreamer trainer
 
+> 2026-10-13: lane head, REINFORCE, counterfactual cooperation objective, report features and
+> checkpoint format `c4_dreamer/3` are described in [POLICY2_NOTES.md](POLICY2_NOTES.md); the API below still
+> holds (new keyword arguments `lane_rules=`, `counterfactual=`; config sections `[lanes]`, `[counterfactual]`).
+
 ## API and timing
 
 `wms.control.dreamer.DreamerTrainer(world_models, policy, group_encoder, critic,

@@ -46,11 +46,16 @@ OWN_FEATURES = (
 )
 F_OWN = len(OWN_FEATURES)
 
-#: Per-report features of another CAV, relative to the ego CAV.
+#: Per-report features of another CAV, relative to the ego CAV.  The last two (owner 2026-10-12
+#: late) are the reporting CAV's last commanded acceleration and lane intent (-1 left, 0 stay,
+#: +1 right) from its previous decision, so CAVs can react to each other's plans.
 REPORT_FEATURES = (
     "ds_m", "dv_mps", "dlane", "lane_0", "lane_1", "lane_2", "v_mps",
     "front_gap_m", "front_dv_mps", "front_present", "age_s",
+    "cmd_accel_mps2", "lane_intent",
 )
+#: Report features of the pre-2026-10-13 actors (c4_dreamer/1, /2); their weights are zero-padded.
+LEGACY_F_REPORT = 11
 F_REPORT = len(REPORT_FEATURES)
 GROUP_SIGNAL_DIM = 8        # learned RSU broadcast vector
 

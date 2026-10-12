@@ -148,6 +148,9 @@ def fake_build_observations(
     present = state["present"].bool()
     is_cav = state["is_cav"].bool()
     batch, k = s.shape
+    # Reporting CAV's last command / lane intent (contract REPORT_FEATURES; zeros if unknown).
+    command = state.get("cmd_accel_mps2", torch.zeros(batch, k)).float()
+    intent = state.get("lane_intent", torch.zeros(batch, k)).float()
     own = torch.zeros(batch, k, F_OWN)
     reports = torch.zeros(batch, k, MAX_REPORTS, F_REPORT)
     report_mask = torch.zeros(batch, k, MAX_REPORTS, dtype=torch.bool)
@@ -197,6 +200,8 @@ def fake_build_observations(
                             frj[1],
                             frj[2],
                             age,
+                            float(command[b, j]),
+                            float(intent[b, j]),
                         ]
                     )
                     report_mask[b, i, r] = True
