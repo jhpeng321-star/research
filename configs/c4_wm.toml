@@ -102,14 +102,14 @@ allowance = 0.00124327163  # TRUE rate per HDV-step (LANECAL)
 
 [curriculum]
 unroll_s = [10.0, 30.0, 60.0]            # C4: 120 s skipped (C4 imagines <= 30 s)
-stage_steps = [2500, 2500, 1500]         # from scratch (R4-like budget for 10/30 s; 60 s stage shorter), ~4 h at batch 8
+stage_steps = [1500, 1500, 600]          # gpuW (4080S vGPU) is CPU-bound (~1.7 s/step at 10 s, GPU 10-25 % busy): batch 16 at ~same step time, fewer steps; ~5 h
 truncation_steps = 20                    # r4
 truncation_steps_per_stage = [20, 60, 60] # C4 imagines <= 30 s: BPTT window 30 s in the 60 s stage (stability, time)
 driver_grad_across_chunks = true         # r5_base FIX 1: encode drivers once at t0
-max_hours = 6.0                          # C4 budget cap (from scratch)
+max_hours = 6.5                          # C4 budget cap (from scratch, gpuW)
 
 [optim]
-batch_size = 8        # from scratch: R4/R5 timing basis (0.9/2.8 s per step at 20/60-step unrolls on the 4090 D)
+batch_size = 16       # gpuW: GPU under-used at batch 8 (CPU-bound loop), so batch 16 costs ~no extra wall time
 lr = 0.001            # r4/c1fast
 lr_per_stage = [1.0e-3, 3.0e-4, 1.0e-4] # from scratch: c1fast lr for 10 s, then r5b-stable 3e-4/1e-4 with damping
 
