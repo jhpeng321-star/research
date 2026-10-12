@@ -65,7 +65,8 @@ class CavSumoEnv:
                  scenario_root=None, check_parity: bool = False,
                  history_ticks: int = 241, use_subscriptions: bool = True,
                  ttc: bool = True, sumo_binary=None, device="cpu",
-                 sensor_check_every_s: int = 10, physics_log: bool = True):
+                 sensor_check_every_s: int = 10, physics_log: bool = True,
+                 extra_sumo_cli=None):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -80,6 +81,9 @@ class CavSumoEnv:
         self.use_subscriptions = bool(use_subscriptions)
         self.device = device
         self.history = HistoryBuffer(history_ticks)
+        # extra SUMO launch arguments, e.g. ``--save-state.precision 17 --save-state.rng true``
+        # for saved-state branching (traffic_shepherd.c4.branching)
+        self.extra_sumo_cli = [str(a) for a in (extra_sumo_cli or ())]
         self.binary = sumo_binary or shutil.which("sumo")
         if self.binary is None:
             raise CavEnvError("SUMO binary not found on PATH")
@@ -136,8 +140,9 @@ class CavSumoEnv:
         if traci.isLoaded():
             raise CavEnvError("a TraCI connection is already active in this process")
         command = []
+        self.scene = scene              # relaunch target (saved-state branching)
         start_sumo(self.binary, scene, seed=self.seed, config=self.config, api=traci,
-                   command_record=command)
+                   command_record=command, extra_cli=self.extra_sumo_cli or None)
         self.api = traci
         self.done = False
         if self._circles is None:
@@ -266,7 +271,8 @@ class CavSumoEnv:
             out[vid] = float(acc[slot])
         return out
 
-    def _control_tick(self, accel_by_slot, fallback: str = "native") -> dict:
+    def _control_tick(self, accel_by_slot, fallback: str = "native",
+                      fallback_ids=None) -> dict:
         api = self.api
         now = self.now
         if abs(now - round(now)) > 1e-6:
@@ -317,6 +323,10 @@ class CavSumoEnv:
             # fallback="pi": a FRESH frozen PI session (registered U) owns them from this tick
             # while PI stays selected (the session requires every-tick continuity); leaving PI
             # hands the owner back to the identical CIRCLES instance.
+            # fallback_ids (optional): only these CAVs may use the fallback controller; other
+            # live CAVs without a finite direct command are released to native.
+            restricted = (frozenset() if fallback_ids is None
+                          else (live_cavs - set(wall)) - frozenset(fallback_ids))
             if fallback == "pi":
                 if not self._direct_pi:
                     from traffic_shepherd.controller_factory import create_pi_session
@@ -325,13 +335,13 @@ class CavSumoEnv:
                     self.ownership.controller = self.pi_session.adapter
                     self._direct_pi = True
                 records = self.pi_session.step(self.ownership, frames, now_s=now, live_ids=live,
-                                               native_ids=(), wall_commands=wall,
+                                               native_ids=restricted, wall_commands=wall,
                                                departed_ids=disappeared, id_reuse_ids=reappeared)
             else:
                 if self._direct_pi:
                     self.ownership.controller = self._circles
                     self.pi_session, self._direct_pi = None, False
-                native = live_cavs - set(wall) if fallback == "native" else frozenset()
+                native = live_cavs - set(wall) if fallback == "native" else restricted
                 records = self.ownership.step(frames, now_s=now, live_ids=live,
                                               wall_commands=wall, native_ids=native)
         elif mode == "wall":
@@ -459,7 +469,7 @@ class CavSumoEnv:
             self.recorder.on_frame(frame, row)
         return interval
 
-    def step(self, accel_by_slot=None, *, fallback: str = "native"):
+    def step(self, accel_by_slot=None, *, fallback: str = "native", fallback_ids=None):
         """Apply one 1 s control interval; returns ``(state, info)``.
 
         ``accel_by_slot`` ``[1, K]`` (torch or numpy) absolute CAV accelerations, used by the
@@ -467,13 +477,16 @@ class CavSumoEnv:
         (``direct`` only): controller of CAVs without a finite command this tick, ``native``
         (release to SUMO IDM, default), ``damping`` (frozen CIRCLES) or ``pi`` (frozen PI
         external-U, a fresh session each time PI is (re)selected); per-tick mixing used by the
-        C4 deployment check, ``wms.control.deploy``."""
+        C4 deployment check, ``wms.control.deploy``.  ``fallback_ids`` (``direct`` only,
+        optional): vehicle ids allowed to use the fallback controller; every other live CAV
+        without a finite command is released to native (subset arms of
+        :mod:`traffic_shepherd.c4.branching`)."""
         if fallback not in ("native", "damping", "pi"):
             raise ValueError("fallback must be 'native', 'damping' or 'pi'")
         if self.done:
             raise CavEnvError("episode is done; call reset()")
         t = self.now
-        interval = self._control_tick(accel_by_slot, fallback)
+        interval = self._control_tick(accel_by_slot, fallback, fallback_ids)
         done = self.now >= self.end_s - 1e-9
         info = {"time_s": self.now, "decision_time_s": t, "interval": interval,
                 "actions": {v: a["action"] for v, a in self._last_actions.items()},

@@ -6,7 +6,10 @@ Only optional C4 adapters live here and every import is lazy:
 * :func:`driver_history_tensors` - the trainer's history featurisers
   (``wms.data.history.long_history_features``, ``wms.model.history.history_step_features``);
 * :func:`contract` - ``wms.control.contract`` (RSU zones, group-signal width);
-* :func:`trajectory_dataset` - ``TrajectoryDataset.from_pack`` (smoke load check).
+* :func:`trajectory_dataset` - ``TrajectoryDataset.from_pack`` (smoke load check);
+* :func:`team_reward_terms` - ``wms.control.reward.team_reward`` on one SUMO physics step
+  (saved-state branching metrics, :mod:`traffic_shepherd.c4.branching`);
+* :func:`imagined_cooperation` - ``wms.control.coop_imagine`` (WM-vs-SUMO branch check).
 
 The SUMO environment itself (env, conversion, recorder, collector) does not depend on
 ``wms``.  ``src`` is added to ``sys.path`` when ``PYTHONPATH=src`` was not set.
@@ -91,3 +94,37 @@ def driver_history_tensors(raw: dict, *, history_s, history_stride_s: float = 1.
     out[:, history_len - use:] = feat[-use:].transpose(0, 1)
     out_mask[:, history_len - use:] = valid[-use:].transpose(0, 1)
     return out[None], out_mask[None]
+
+
+def team_reward_terms(state: dict, next_state: dict, accel, weights=None) -> dict:
+    """``wms.control.reward.team_reward`` (default ``RewardWeights``) on numpy ``[K]`` arrays.
+
+    ``state`` / ``next_state``: ``s_m``, ``v_mps``, ``lane`` (int, -1 invalid), ``present``
+    (bool), ``length_m``; slot identity must be preserved (exits carried in ``next_state``).
+    Returns the seven contract metrics as Python floats.
+    """
+    ensure_wms_importable()
+    import numpy as np
+    import torch
+    from wms.control.contract import RewardWeights
+    from wms.control.reward import team_reward
+
+    def tensors(d):
+        return {"s_m": torch.as_tensor(np.asarray(d["s_m"], np.float32)[None]),
+                "v_mps": torch.as_tensor(np.asarray(d["v_mps"], np.float32)[None]),
+                "lane": torch.as_tensor(np.asarray(d["lane"], np.int64)[None]),
+                "present": torch.as_tensor(np.asarray(d["present"], bool)[None]),
+                "length_m": torch.as_tensor(np.asarray(d["length_m"], np.float32)[None])}
+
+    with torch.no_grad():
+        out = team_reward(tensors(state), tensors(next_state),
+                          torch.as_tensor(np.asarray(accel, np.float32)[None]),
+                          weights if weights is not None else RewardWeights())
+    return {key: float(value[0]) for key, value in out.items()}
+
+
+def imagined_cooperation(*args, **kwargs):
+    """``wms.control.coop_imagine.imagined_cooperation`` (lazy)."""
+    ensure_wms_importable()
+    from wms.control.coop_imagine import imagined_cooperation as fn
+    return fn(*args, **kwargs)
