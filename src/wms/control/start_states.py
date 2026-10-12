@@ -1,6 +1,8 @@
 """TRAIN-only start windows, penetration-balanced sampling and optional re-labelling."""
 from __future__ import annotations
 
+import os
+
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -10,7 +12,7 @@ from torch import Tensor
 
 
 _RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
-_PENETRATION = re.compile(r"p(02|05|10|20|40)$", re.I)
+_PENETRATION = re.compile(r"m\d+p(02|05|10|20|40)(?!\d)", re.I)  # e.g. w8411m2700p02t240
 
 
 def checked_path(path, *, workspace=None) -> Path:
@@ -22,7 +24,9 @@ def checked_path(path, *, workspace=None) -> Path:
     if _RESTRICTED.search(str(resolved)):
         raise ValueError(f"restricted resolved path: {value}")
     root = Path(workspace).resolve() if workspace else Path(__file__).resolve().parents[3]
-    if not resolved.is_relative_to(root):
+    # Extra read roots (e.g. the data directory on the GPU box), os.pathsep-separated.
+    extra = [Path(p).resolve() for p in os.environ.get("C4_ALLOWED_ROOTS", "").split(os.pathsep) if p]
+    if not any(resolved.is_relative_to(r) for r in (root, *extra)):
         raise ValueError(f"path is outside workspace: {value}")
     return resolved
 

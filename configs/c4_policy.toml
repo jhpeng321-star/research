@@ -15,7 +15,7 @@ checkpoints = [] # Required, e.g. ["runs/active/local_r5b/wm_s_best.pt"]. Defaul
 
 [trainer]
 batch_size = 16
-horizon = 60 # CONTROL steps. Contract: 1 s/control, 0.5 s/physics, so H=60 means 60 s.
+horizon = 30 # CONTROL steps (1 s each): 30 s imagination, where WM-S is accurate (design 2.4).
 gamma = 0.99 # Per CONTROL step, not per physics step.
 lambda_ = 0.95
 actor_lr = 5e-5 # Recommended range: 3e-5 .. 1e-4; includes the RSU group encoder.

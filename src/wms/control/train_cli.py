@@ -35,6 +35,22 @@ def _read_config(path, seen=()):
     return deep_merge(_read_config(path.parent / parent, (*seen, path)), raw) if parent else raw
 
 
+class GroupSignal(torch.nn.Module):
+    """Adapter: the trainer calls ``group_encoder(obs, state)``; the RSU encoder also needs the
+    CAV positions and the RSU own-sensor field computed from the same state."""
+
+    def __init__(self, encoder):
+        super().__init__()
+        self.encoder = encoder
+
+    def forward(self, obs, state_or_positions, rsu_field=None):
+        from .rsu_field import build_rsu_field
+        if isinstance(state_or_positions, dict):       # trainer's internal path
+            state = state_or_positions
+            return self.encoder(obs, state["s_m"], build_rsu_field(state))
+        return self.encoder(obs, state_or_positions, rsu_field)   # bridge path
+
+
 def _load_components():
     names = {"obs": "build_observations", "reward": "team_reward", "policy": "CavPolicy",
              "safety": "safe_accel"}
@@ -43,7 +59,8 @@ def _load_components():
     controller_factory = importlib.import_module("wms.control.bridge").make_cav_controller
     return {"observation_builder": modules["obs"].build_observations,
             "reward_fn": modules["reward"].team_reward, "safety": modules["safety"].safe_accel,
-            "policy": policy_module.CavPolicy(), "group_encoder": policy_module.RsuGroupEncoder(),
+            "policy": policy_module.CavPolicy(),
+            "group_encoder": GroupSignal(policy_module.RsuGroupEncoder()),
             "critic": policy_module.TeamCritic(), "controller_factory": controller_factory}
 
 
@@ -119,8 +136,6 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
-    # TEMP/TMP are execution settings, not directories created by the trainer.
-    os.environ["TEMP"] = os.environ["TMP"] = "E:/agent-work/tmp"
     started = time.perf_counter()
     output = None
     summary = {"status": "failed", "updates": 0}
