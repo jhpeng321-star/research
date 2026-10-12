@@ -68,9 +68,23 @@ Centralised, training-only (privileged full WM state is allowed for the critic, 
 Every few seconds the RSU imagines 10–30 s for a few candidates and acts on the best:
 the policy's plan, policy with alternative group signals, native, CIRCLES, PI, wall law — each under several HDV
 driver-setting guesses. Keep the policy's plan unless an alternative wins clearly (paired margin).
-- **Open issue:** the RSU only sees CAV reports, but imagination needs the full state. The
-  reconstructor work (ensemble state reconstruction from sparse CAV observations) is the intended source;
-  until it is ready the check runs on the true SUMO state and is labelled **oracle check**.
+- **State for the check (owner question 2026-10-12).** The RSU only has CAV reports; imagination needs a state.
+  Three levels, all reported:
+  1. **Oracle check** — true SUMO state (upper bound, labelled as such).
+  2. **Belief state (main)** — Dreamer-like state built from observations only: tracks of every vehicle a CAV has
+     detected, associated by position/lane/speed (no HDV ids), propagated by WM-S between sightings with growing
+     uncertainty, plus histories for the driver encoder (`wms.control.belief`). Vehicles never detected do not exist.
+  3. **Sensed-only** — CAVs + currently detected HDVs (ablation).
+  Expected: the check's value grows with penetration (more coverage) — reported per penetration.
+
+### 2.6b What each method sees (policy vs MAPPO)
+| | Actor at deployment | Critic / training signal | State needed |
+|---|---|---|---|
+| C4 policy alone | CAV own sensing + RSU-relayed CAV reports + group signal | privileged imagined state (training only) | recorded full states only as training starts |
+| C4 policy + check | same actor | — | belief state built from CAV reports (2.6) |
+| MAPPO (main) | identical actor class and inputs | centralised critic on privileged SUMO state (CTDE, strongest baseline) | none at deployment |
+| MAPPO (previous style) | identical | centralised critic on joint CAV + RSU observations only | none |
+At deployment both policies see exactly the same inputs; only the world-model check adds a belief state.
 
 ### 2.7 SUMO loop
 - Learned policy runs in SUMO through `CommandOwnership` (`wall_commands={vid: accel}` → direct target,
