@@ -1,15 +1,17 @@
 """Rollout storage, GAE and return normalisation for the C4 MAPPO baseline.
 
-Team-level credit: one shared team-reward stream and one centralised value per
-episode (per-CAV rewards = team reward, shared), so the per-CAV advantage at a
-control step is the team advantage broadcast to every acting CAV slot.  CAV
-slots entering/leaving the episode are handled by the ``cav_mask``, not by
-episode dones; an episode only ends at its fixed horizon (time-limit
-truncation, bootstrapped) or on a reported termination (no bootstrap).
+Team-level credit: one shared team-reward stream and one centralised value per episode
+(per-CAV reward = team reward), so the per-CAV advantage at a control step is the team
+advantage broadcast to every acting CAV slot.  CAV slots entering/leaving are handled by
+``cav_mask``, not by dones; an episode ends at its fixed horizon (time-limit truncation,
+bootstrapped) or on a reported termination (no bootstrap).
+
+Per frame the buffer stores exactly what the PPO re-evaluation needs (decision-time state
+incl. the CAVs' relayed last command / lane intent, lane feasibility mask, pre-tanh latent,
+lane choice, old log-probs); observations and the RSU field are rebuilt from the state.
 
 GAE recursion ported from ``archive/circles_era/traffic_shepherd/ppo_train.py``
-(``compute_gae``); the Welford running-statistics pattern is ported from
-``ppo_features.RunningNormalizer`` and applied to returns (value normalisation).
+(``compute_gae``); the Welford running statistics from ``ppo_features.RunningNormalizer``.
 """
 
 from __future__ import annotations
@@ -22,49 +24,48 @@ from torch import Tensor
 
 from wms.control.contract import CONTROL_DT_S
 
+#: Per-step [T, K(,3)] tensors of an episode (besides ``states``).
+STEP_KEYS = ("lane_mask", "cav_mask", "latent", "lane_choice", "logp_accel", "logp_lane")
+
 
 @dataclass
 class EpisodeData:
-    """One team episode on the CavEnv 1 s control grid.
+    """One team episode on the 1 s control grid.
 
-    ``states`` holds T+1 WM-frame state dicts (batch dim 1): s_0..s_T, where
-    s_T is the state after the last step (kept for the truncation bootstrap).
-    ``actions``/``logp`` are the PRE-safety-layer policy action and its
-    log-probability (the safety layer is part of the environment from the
-    learner's point of view).
+    ``states[key]`` is ``[T+1, K]``: decision states s_0..s_{T-1} and the final state s_T
+    (truncation bootstrap).  ``steps[key]`` are the per-decision tensors of ``STEP_KEYS``.
+    ``rewards`` / ``costs`` [T] are the team reward and ``cost_ttc`` summed over the two
+    physics steps of each control step (as the C4 imagination loop accumulates them).
     """
 
-    states: list[Mapping[str, Tensor]]
-    actions: Tensor  # [T, K]
-    logp: Tensor  # [T, K]
-    cav_mask: Tensor  # [T, K] bool: slots that acted at t
-    rewards: Tensor  # [T] team reward
-    costs: Tensor  # [T] team cost_ttc exposure (>= 0)
+    states: dict[str, Tensor]
+    steps: dict[str, Tensor]
+    rewards: Tensor
+    costs: Tensor
     terminated: bool
+    components: dict[str, Tensor] = field(default_factory=dict)
     meta: dict = field(default_factory=dict)
 
     @property
-    def steps(self) -> int:
+    def n_steps(self) -> int:
         return int(self.rewards.shape[0])
 
     @property
     def sumo_seconds(self) -> float:
-        return self.steps * CONTROL_DT_S
+        return self.n_steps * CONTROL_DT_S
 
 
 @dataclass
 class FlatBatch:
     """Episodes of one iteration flattened frame-first, keeping segment info."""
 
-    states: dict[str, Tensor]  # [N, K] per state key (T frames per episode)
-    final_states: dict[str, Tensor]  # [E, K] one bootstrap state per episode
-    actions: Tensor  # [N, K]
-    logp: Tensor  # [N, K]
-    cav_mask: Tensor  # [N, K]
-    rewards: Tensor  # [N]
-    costs: Tensor  # [N]
-    terminated: Tensor  # [E] bool
-    lengths: list[int]  # frames per episode
+    states: dict[str, Tensor]        # [N, K] decision states
+    final_states: dict[str, Tensor]  # [E, K] bootstrap states
+    steps: dict[str, Tensor]         # [N, K(,3)]
+    rewards: Tensor                  # [N]
+    costs: Tensor                    # [N]
+    terminated: Tensor               # [E] bool
+    lengths: list[int]
 
     @property
     def n_frames(self) -> int:
@@ -76,24 +77,18 @@ class FlatBatch:
 
 
 def flatten_episodes(episodes: Iterable[EpisodeData]) -> FlatBatch:
-    episodes = list(episodes)
+    episodes = [ep for ep in episodes if ep.n_steps > 0]
     if not episodes:
-        raise ValueError("flatten_episodes needs at least one episode")
-    keys = sorted(set().union(*[set(ep.states[0]) for ep in episodes]))
-    frames = [frame for ep in episodes for frame in ep.states[: ep.steps]]
+        raise ValueError("flatten_episodes needs at least one non-empty episode")
+    keys = sorted(set.intersection(*[set(ep.states) for ep in episodes]))
     return FlatBatch(
-        states={k: torch.cat([f[k].detach().clone() for f in frames], dim=0) for k in keys},
-        final_states={
-            k: torch.cat([ep.states[-1][k].detach().clone() for ep in episodes], dim=0)
-            for k in keys
-        },
-        actions=torch.cat([ep.actions for ep in episodes], dim=0),
-        logp=torch.cat([ep.logp for ep in episodes], dim=0),
-        cav_mask=torch.cat([ep.cav_mask for ep in episodes], dim=0),
-        rewards=torch.cat([ep.rewards for ep in episodes], dim=0),
-        costs=torch.cat([ep.costs for ep in episodes], dim=0),
+        states={k: torch.cat([ep.states[k][: ep.n_steps] for ep in episodes]) for k in keys},
+        final_states={k: torch.stack([ep.states[k][ep.n_steps] for ep in episodes]) for k in keys},
+        steps={k: torch.cat([ep.steps[k] for ep in episodes]) for k in STEP_KEYS},
+        rewards=torch.cat([ep.rewards for ep in episodes]).float(),
+        costs=torch.cat([ep.costs for ep in episodes]).float(),
         terminated=torch.tensor([ep.terminated for ep in episodes], dtype=torch.bool),
-        lengths=[ep.steps for ep in episodes],
+        lengths=[ep.n_steps for ep in episodes],
     )
 
 
@@ -102,8 +97,8 @@ def compute_gae(
 ) -> tuple[Tensor, Tensor]:
     """GAE over one episode segment; ``values`` = V(s_0)..V(s_{T-1}).
 
-    ``bootstrap_value`` is V(s_T) for time-limit truncation and 0 for
-    termination.  Returns (advantages [T], returns [T] = advantages + values).
+    ``bootstrap_value`` is V(s_T) for time-limit truncation and 0 for termination.
+    Returns (advantages [T], returns [T] = advantages + values).
     """
     rewards = rewards.detach().float()
     values = values.detach().float()
@@ -134,24 +129,19 @@ def discounted_returns(rewards: Tensor, gamma: float, bootstrap: Tensor | float 
 def episode_gae(
     batch: FlatBatch, values_raw: Tensor, finals_raw: Tensor, *, gamma: float, lam: float
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Per-iteration GAE over all segments of ``batch``.
+    """Per-iteration GAE over all segments; RAW (unscaled) values of the N frames and E finals.
 
-    ``values_raw``/``finals_raw`` are RAW (unscaled) centralised values of the
-    T frames and the E terminal states.  Returns (advantages [N], returns [N],
-    cost_returns [N]); the cost stream gets no truncation bootstrap
-    (conservative: unseen future TTC exposure is not credited away).
+    Returns (advantages [N], returns [N], cost_returns [N]); the cost stream gets no
+    truncation bootstrap (unseen future TTC exposure is not credited away).
     """
     n = batch.n_frames
-    adv = torch.zeros(n)
-    ret = torch.zeros(n)
-    cost = torch.zeros(n)
+    adv, ret, cost = torch.zeros(n), torch.zeros(n), torch.zeros(n)
     start = 0
     for e, length in enumerate(batch.lengths):
         sl = slice(start, start + length)
         boot = torch.zeros(()) if bool(batch.terminated[e]) else finals_raw[e]
-        a, r = compute_gae(
-            batch.rewards[sl], values_raw[sl], gamma=gamma, lam=lam, bootstrap_value=boot
-        )
+        a, r = compute_gae(batch.rewards[sl], values_raw[sl], gamma=gamma, lam=lam,
+                           bootstrap_value=boot)
         adv[sl], ret[sl] = a, r
         cost[sl] = discounted_returns(batch.costs[sl], gamma)
         start += length
@@ -161,10 +151,8 @@ def episode_gae(
 class ReturnScaler:
     """Welford running mean/std of returns; the critic predicts scaled returns.
 
-    ``scale``/``unscale`` are identity until at least two returns were seen.
-    Stats are frozen while an iteration's PPO update runs and refreshed with
-    that iteration's returns afterwards, so rollout values and update targets
-    always agree on one scaler state.
+    ``scale``/``unscale`` are identity until two returns were seen.  Frozen during an
+    iteration's update and refreshed with that iteration's returns afterwards.
     """
 
     def __init__(self, min_count: int = 2, eps: float = 1e-4):
@@ -205,13 +193,8 @@ class ReturnScaler:
         return x * self.std + self.mean
 
     def state_dict(self) -> dict:
-        return {
-            "count": self.count,
-            "mean": self.mean,
-            "m2": self.m2,
-            "min_count": self.min_count,
-            "eps": self.eps,
-        }
+        return {"count": self.count, "mean": self.mean, "m2": self.m2,
+                "min_count": self.min_count, "eps": self.eps}
 
     @classmethod
     def from_state(cls, state: Mapping) -> "ReturnScaler":
