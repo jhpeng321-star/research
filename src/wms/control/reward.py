@@ -96,8 +96,8 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     over that cohort, except fairness_delay (soft 90% CVaR in vehicle-seconds).
     Throughput is the positive increment in sigmoid((s-MERGE_S1)/1 metre).
     Smooth/hard_brake are sum(a**2) and sum(relu(-a-3)**2), for HDVs and CAVs.
-    The complete weighted objective, including the scalar fairness penalty, is
-    divided by max(present_count, 1). TTC is a separate, nonnegative constraint,
+    The additive weighted terms are divided by max(present_count, 1); the fairness
+    penalty (already a per-vehicle tail delay) is subtracted undivided. TTC is a separate, nonnegative constraint,
     evaluated on next-state occupants, never folded into the reward.
     """
     if weights.ttc_limit_s <= 0.0:
@@ -120,9 +120,12 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     hard_brake = F.relu(-a - 3.0).square().sum(-1)
     fairness = _soft_cvar(delay_by_vehicle, present)
     count = present.sum(-1).clamp_min(1).to(delay.dtype)
-    reward = (-weights.delay * delay + weights.throughput * throughput
-              - weights.smooth * smooth - weights.hard_brake * hard_brake
-              - weights.fairness * fairness) / count
+    # Additive terms are per-vehicle means; fairness is already a per-vehicle tail delay
+    # (CVaR of vehicle delays), so it is NOT divided by the count again - otherwise it would
+    # be ~count-times weaker than the mean delay (integration review 2026-10-12).
+    reward = ((-weights.delay * delay + weights.throughput * throughput
+               - weights.smooth * smooth - weights.hard_brake * hard_brake) / count
+              - weights.fairness * fairness)
     return {"reward": reward, "cost_ttc": _ttc_cost(next_state, weights.ttc_limit_s),
             "delay": delay, "throughput": throughput, "smooth": smooth,
             "hard_brake": hard_brake, "fairness_delay": fairness}

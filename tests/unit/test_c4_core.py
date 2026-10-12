@@ -224,8 +224,8 @@ def test_reward_numeric_components_normalization_and_empty_batch():
     torch.testing.assert_close(metrics["hard_brake"], torch.tensor([1.0]))
     expected_crossing = torch.sigmoid(torch.tensor(1.0)) - torch.sigmoid(torch.tensor(-1.0))
     torch.testing.assert_close(metrics["throughput"], expected_crossing[None])
-    expected = (-metrics["delay"] + 0.5 * metrics["throughput"] - 0.05 * metrics["smooth"]
-                - metrics["hard_brake"] - metrics["fairness_delay"]) / 2
+    expected = ((-metrics["delay"] + 0.5 * metrics["throughput"] - 0.05 * metrics["smooth"]
+                 - metrics["hard_brake"]) / 2 - metrics["fairness_delay"])
     torch.testing.assert_close(metrics["reward"], expected)
     x["present"][:] = False
     empty = team_reward(x, {**nxt, "present": x["present"]}, accel, weights)
