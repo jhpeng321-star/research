@@ -1,4 +1,27 @@
-# WM-S-C4-20261013 — learned multi-CAV control inside the world model (REGISTRATION DRAFT)
+# WM-S-C4-20261013 — learned multi-CAV control inside the world model (REGISTRATION)
+
+**STATUS: APPROVED by the owner 2026-10-12/13 (chat): train tonight — world model from scratch on the previous data
+(switching held-out family released), policy in imagination, universal MAPPO on the 48-core box.** The amendments
+below supersede the draft text that follows wherever they conflict.
+
+## Amendments (integrator, 2026-10-13 01:15, from owner decisions in chat)
+- World model: `configs/c4_wm.toml` at code commit 518eae1+: trained FROM SCRATCH (no init_from), lane_rule
+  `learned_discretionary` (physics proposes only the forced ramp merge; safe discretionary changes learned; prior -6,
+  lane cap 8), data = pack_v3 native/native_base + pack_dspeed + switching direct-mix with
+  `heldout_family_policy = "release"` (owner released the switching zero-shot held-out family for training; the
+  guard file is not opened). No designed controller in WM training data. Stages 10/30/60 s, 2500/2500/1500 steps,
+  batch 8, lr 1e-3/3e-4/1e-4, damping 0.90, cap 6 h.
+- Policy: `configs/c4_policy.toml`: shared per-CAV actor with direct acceleration + lane change (stay/left/right,
+  SUMO-calibrated lane mask), CAV-to-CAV attention incl. other CAVs' last command + lane intent, RSU group signal
+  from CAV reports + RSU own-sensor field; cooperation-centred objective (individual / group / flip-one
+  counterfactuals, guard w_coop <= w_ind). First run dreams in frozen R5b, then the C4 WM (Dreamer loop).
+- Deployment check: direct-output candidates only (policy, group-signal variants, policy samples, hold speed).
+- Comparators: native, CIRCLES damping, PI external-U (whole-episode); universal MAPPO (penetration U{5,10,20,40}%,
+  same actor/inputs/actions/reward, model-free in SUMO) trained on the Tencent 48-core spot box.
+- Machines: gpuW = AutoDL RTX 4080 SUPER 32 GB (day rent); cpuT = Tencent 48-core 92 GB Ubuntu 22.04 (spot).
+- Evaluation seeds: a fresh registered block is still to be chosen (owner) before the final comparison.
+
+---
 
 **STATUS: DRAFT — owner approval pending. Nothing in this file authorises training, SUMO, GPU use or any machine
 start.** Prepared 2026-10-12 by the C4 ops worker (branch `c4/ops`) from `docs/WM_C4_DESIGN.md` and
