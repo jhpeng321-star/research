@@ -55,7 +55,7 @@ class SwitchingConfig:
     windows_val: Optional[str] = None
     timeline_index: Optional[str] = None
     zero_shot_heldout: Optional[str] = None
-    heldout_family_policy: Literal["drop", "refuse"] = "drop"
+    heldout_family_policy: Literal["drop", "refuse", "release"] = "drop"
     heldout_max_drop_frac: float = 0.85
     mix_ratio: float = 0.5
     event_oversample: float = 2.0
@@ -71,7 +71,8 @@ class SwitchingConfig:
     def __post_init__(self) -> None:
         needed = {"identities": self.identities, "windows_train": self.windows_train,
                   "timeline_index": self.timeline_index,
-                  "zero_shot_heldout": self.zero_shot_heldout}
+                  "zero_shot_heldout": (self.zero_shot_heldout
+                                        if self.heldout_family_policy != "release" else "")}
         if self.pack is None:
             stray = sorted(k for k, v in needed.items() if v is not None)
             require(not stray, f"data.switching.{stray} given without data.switching.pack")

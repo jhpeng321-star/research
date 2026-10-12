@@ -78,6 +78,8 @@ def declared_data_names(cfg: TrainConfig) -> dict[str, str]:
     if sw.enabled:
         for label in ("pack", "identities", "driver_params", "windows_train", "windows_val",
                       "timeline_index", "zero_shot_heldout"):
+            if label == "zero_shot_heldout" and sw.heldout_family_policy == "release":
+                continue
             name = getattr(sw, label)
             if name:
                 names[f"switching.{label}"] = name
@@ -181,7 +183,9 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
 
     sw = data.switching
     horizon = _horizon_steps(cfg)
-    heldout = mixdata.HeldOutGuard.load(path(sw.zero_shot_heldout)) if sw.enabled else None
+    released = sw.enabled and sw.heldout_family_policy == "release"
+    heldout = (mixdata.HeldOutGuard.load(path(sw.zero_shot_heldout))
+               if sw.enabled and not released else None)
     leave_out = bool(data.windows.leave_pi_wall_out)
     guard = (ControllerExclusion(horizon_steps=horizon, heldout=heldout, leave_pi_wall_out=leave_out)
              if heldout or leave_out else None)
@@ -206,7 +210,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         switch = mixdata.build_switch_datasets(
             pack=path(sw.pack), identities=path(sw.identities),
             window_list=path(sw.windows_train), index_path=path(sw.timeline_index),
-            heldout_path=path(sw.zero_shot_heldout), horizon_steps=horizon,
+            heldout_path=(None if released else path(sw.zero_shot_heldout)),
+            horizon_steps=horizon,
             entries_v2=bool(data.entries_v2), family_policy=sw.heldout_family_policy,
             max_drop_frac=float(sw.heldout_max_drop_frac), val_holdout_frac=float(sw.val_frac),
             val_holdout_seed=int(sw.val_seed),

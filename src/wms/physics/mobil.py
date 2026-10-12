@@ -14,10 +14,11 @@ from .neighbours import lane_neighbour, lane_of, lead_neighbour
 #: Logit of a forbidden lane change.
 MASKED_LOGIT = -8.0
 #: ``learned_discretionary``: logit of a safe adjacent change before the learned correction.
-#: Below 'stay' (0) so physics alone never changes lane; with lane_logit_cap 1.5 the learned
-#: correction can lift it to +0.25 > 0 (only near the cap: R5b's MOBIL-era lane deltas gave a
-#: 16x too-high change rate at -1.0 in the C4 smoke).
-LEARNED_PRIOR_LOGIT = -1.25
+#: Matched to the BASE RATE of discretionary changes (softmax ~e^-6 ~ 0.25 % per open lane per
+#: step, cf. the recorded 0.124 %/HDV-step), so the soft flip-rate hinge and the lane loss agree;
+#: physics alone never changes lane (prior < stay = 0).  The learned correction needs a lane
+#: logit cap above 6 to trigger a change (configs/c4_wm.toml: lane_logit_cap = 8).
+LEARNED_PRIOR_LOGIT = -6.0
 _DEFAULT_POLITENESS = 0.2
 
 

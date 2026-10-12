@@ -238,7 +238,7 @@ def test_refresh_config_and_knob_validation():
     assert cfg.curriculum.stage_steps == (300, 300, 300)
     assert cfg.curriculum.unroll_s == base.curriculum.unroll_s
     assert cfg.data.switching == base.data.switching and cfg.data.packs == base.data.packs
-    assert cfg.model.lane_rule == base.model.lane_rule == "forced_merge_only"
+    assert cfg.model.lane_rule == base.model.lane_rule == "learned_discretionary"
     assert not base.data.c4_episodes.enabled
     names = assemble.declared_data_names(cfg)
     assert names["c4_episodes"] == "c4_episodes" and "c4_episodes" not in \

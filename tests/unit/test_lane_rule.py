@@ -143,11 +143,11 @@ def test_forced_merge_only_fuzz_only_forced_changes_survive():
 
 
 # ---------------------------------------------------------------------- model
-def _biased_model(lane_rule: str) -> WmSModel:
+def _biased_model(lane_rule: str, lane_logit_cap: float = 1.5) -> WmSModel:
     """Hybrid model whose temporal head pushes every lane logit up hard."""
     torch.manual_seed(2)
     spec = ModelSpec(rollout_mode="hybrid", history_s=2.0, gate_kind="saturating",
-                     lane_gate_kind="saturating", lane_logit_cap=1.5)
+                     lane_gate_kind="saturating", lane_logit_cap=lane_logit_cap)
     model = WmSModel(spec, physics=PhysicsConfig(lane_rule=lane_rule))
     with torch.no_grad():
         model.temporal[-1].bias.fill_(6.0)   # large positive lane-logit deltas
@@ -308,10 +308,10 @@ def test_learned_discretionary_physics_alone_never_changes_lane_but_opens_safe_c
 
 
 def test_learned_discretionary_residual_can_trigger_a_safe_change():
-    model = _biased_model("learned_discretionary")
+    model = _biased_model("learned_discretionary", lane_logit_cap=8.0)  # c4_wm cap
     with torch.no_grad():                      # push only the 'move to lane 0' logit
         model.temporal[-1].bias.zero_()
-        model.temporal[-1].bias[1] = 40.0
+        model.temporal[-1].bias[1] = 80.0   # lane gate ~0.14 at k=60: 0.14*80 > 6
     state, kwargs = _model_state()
     out = model(state, k_steps=60, **kwargs)
     base = model.mobil_merge_logits(state)

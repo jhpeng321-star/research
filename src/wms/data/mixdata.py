@@ -58,7 +58,7 @@ TIMELINE_ARRAYS = ("controller_timeline", "issued_acceleration_mps2",
                    "issued_target_speed_mps")
 NATIVE = CONTROLLERS.index("native")
 DIRECT = CONTROLLERS.index("direct")
-FAMILY_POLICIES = ("drop", "refuse")
+FAMILY_POLICIES = ("drop", "refuse", "release")
 _WORLD_RE = re.compile(r"^w(\d+)m")
 
 
@@ -147,6 +147,25 @@ class HeldOutGuard:
     def is_held_family(self, world: str, vehicle_id: str) -> bool:
         return direct_family(world_seed(world), vehicle_id,
                              n_families=self.n_families) == self.held_family
+
+
+class ReleasedGuard:
+    """Owner decision 2026-10-13 (C4): the switching pack's zero-shot held-out family is
+    RELEASED for training.  No guard file is required or opened; nothing is refused or
+    dropped.  (The held-out WORLDS live outside the TRAIN pack and are still never read.)"""
+
+    held_worlds = frozenset()
+    held_family = -1
+    n_families = 0
+    family_clean = True
+    family_train_val_overlap = 0
+    source = "released (owner 2026-10-13, C4)"
+
+    def refuse_worlds(self, worlds, *, where: str) -> None:
+        return None
+
+    def is_held_family(self, world: str, vehicle_id: str) -> bool:
+        return False
 
 
 class IdentityBook:
@@ -575,7 +594,8 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
     Returns ``{"train": TrajectoryDataset, "train_events": [n,2] array,
     "val": TrajectoryDataset | None, "receipt": dict}``.
     """
-    guard = HeldOutGuard.load(heldout_path)
+    guard = (ReleasedGuard() if family_policy == "release"
+             else HeldOutGuard.load(heldout_path))
     timelines = SwitchTimelines(pack, index_path)
     guard.refuse_worlds(timelines.worlds, where="the switching pack timeline index")
     book = IdentityBook(identities)
@@ -745,7 +765,8 @@ def check_receipt(path: str | Path) -> dict:
         raise MixDataRefusal(f"receipt lacks both non-empty sources: {sorted(sources)}")
     switching = data.get("switching") or {}
     guard = switching.get("heldout") or {}
-    if int(guard.get("n_held_worlds_checked", 0)) < 1 or int(guard.get("n_kept", 0)) < 1:
+    released = guard.get("policy") == "release"
+    if (not released and int(guard.get("n_held_worlds_checked", 0)) < 1)             or int(guard.get("n_kept", 0)) < 1:
         raise MixDataRefusal("receipt lacks the held-out guard census")
     if not data.get("stage_sampling"):
         raise MixDataRefusal("receipt lacks per-stage sampling statistics")

@@ -134,6 +134,8 @@ class WmSModel(nn.Module):
         # never part of a checkpoint): population-default driver settings.
         self.diag_encoder_population = False
         self._build_modules(spec)
+        if self.physics.lane_rule == "learned_discretionary":
+            self._zero_lane_outputs()
 
     def _init_bounds(self, spec: ModelSpec) -> None:
         """Residual and lane-logit bounds (plain attributes; the trainer may reset them)."""
@@ -188,6 +190,19 @@ class WmSModel(nn.Module):
                                  if spec.lane_head == "history" else None)
 
     # ------------------------------------------------------------------ physics
+    def _zero_lane_outputs(self) -> None:
+        """learned_discretionary: a freshly built model starts with ZERO learned lane deltas,
+        so discretionary changes (prior below 'stay') begin at none and are learned from data
+        (random init otherwise flips lanes ~60x the recorded rate).  Loading a checkpoint
+        (init_from) overwrites these weights as usual."""
+        with torch.no_grad():
+            last = self.residual_net.lane[-1] if isinstance(self.residual_net.lane, nn.Sequential)                 else self.residual_net.lane
+            last.weight.zero_()
+            if last.bias is not None:
+                last.bias.zero_()
+            self.temporal[-1].weight[1:].zero_()
+            self.temporal[-1].bias[1:].zero_()
+
     def load_a11_state_dict(self, state_dict: dict[str, Tensor], *, strict: bool = False):
         """Initialise the reusable residual core from an A11 state dict."""
         own = self.residual_net.state_dict()
