@@ -142,7 +142,8 @@ if (( FAILS > 0 )); then say "== environment has $FAILS failure(s); not unpackin
 # ---------------------------------------------------------------- unpack
 say "-- unpack"
 ONLY=""
-if [[ "$ROLE" == cpu ]]; then ONLY="--only c4_code,c4_ckpt,c4_data_lists,c4_data_lpwo_v3,c4_data_sidecars"; fi
+# CPU box = SUMO collection/evaluation: code, policy-loader checkpoints, window lists only
+if [[ "$ROLE" == cpu ]]; then ONLY="--only c4_code,c4_ckpt,c4_data_c4_wm_lists"; fi
 REPO=$C4_HOME/rd
 UNPACK_OPTS=()
 [[ "$VERIFY" == 1 ]] || UNPACK_OPTS+=(--no-verify-tars)
@@ -178,8 +179,10 @@ if [[ "$SKIP_TESTS" == 0 ]]; then
   fi
   ( cd "$REPO" && PYTHONPATH="$REPO/src:$REPO" "$PY" -m traffic_shepherd inspect >/dev/null 2>&1 ) && ok "traffic_shepherd inspect" || warn "traffic_shepherd inspect failed"
   if [[ "$ROLE" != cpu && -f "$REPO/configs/c4_wm.toml" ]]; then
-    ( cd "$REPO" && PYTHONPATH="$REPO/src:$REPO" "$PY" -m wms preflight --config configs/c4_wm.toml --out "$C4_HOME/runs/preflight_setup_$(date +%s)" 2>&1 | tail -25 ) | tee -a "$REPORT"
-    [[ ${PIPESTATUS[0]} -eq 0 ]] && ok "wms preflight configs/c4_wm.toml" || warn "wms preflight did not pass"
+    # preflight needs the R5b init checkpoint (WMS_DATA_CKPT_R5B_BEST) and the zero-shot guard file; the guard is NOT in the
+    # bundle (restricted-token name), so until the owner places it this check is expected to fail (OPS_NOTES section 11).
+    ( cd "$REPO" && WMS_DATA_CKPT_R5B_BEST="${WMS_DATA_CKPT_R5B_BEST:-$REPO/data_cache/ckpt_r5b/wm_s_best.pt}" PYTHONPATH="$REPO/src:$REPO" "$PY" -m wms preflight --config configs/c4_wm.toml --out "$C4_HOME/runs/preflight_setup_$(date +%s)" 2>&1 | tail -25 ) | tee -a "$REPORT"
+    [[ ${PIPESTATUS[0]} -eq 0 ]] && ok "wms preflight configs/c4_wm.toml" || warn "wms preflight did not pass (expected until the zero-shot guard file is placed; see OPS_NOTES section 11)"
   fi
 fi
 

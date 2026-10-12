@@ -202,6 +202,21 @@ def load_json(path: Path):
         return json.load(f)
 
 
+EXTERNAL_ROOTS: dict[str, Path] = {}
+
+
+def resolve_src(data_root: Path, rel: str) -> Path:
+    """``rel`` under ``data_root``; ``@name/...`` resolves under EXTERNAL_ROOTS[name] (manifest
+    ``external_roots`` or ``--external-root name=PATH``), for inputs that live outside data_cache
+    (e.g. the generated C4 window lists in the git-ignored runs/ tree)."""
+    if rel.startswith("@"):
+        name, _, rest = rel[1:].partition("/")
+        if name not in EXTERNAL_ROOTS:
+            raise SystemExit(f"unknown external root @{name}; known: {sorted(EXTERNAL_ROOTS)}")
+        return EXTERNAL_ROOTS[name] / rest if rest else EXTERNAL_ROOTS[name]
+    return data_root / rel
+
+
 def window_ok(w: dict, flt: str | None, policies: set[str]) -> bool:
     if flt is None:
         return True
@@ -217,7 +232,7 @@ def select_runs(group: dict, data_root: Path, policies: set[str]) -> tuple[list[
     keys: list[str] = []
     stats = {"windows_total": 0, "windows_kept": 0}
     for rel in group["lists"]:
-        doc = load_json(data_root / rel)
+        doc = load_json(resolve_src(data_root, rel))
         for w in doc["windows"]:
             if w.get("pack") not in (None, group["pack_name"]):
                 continue
@@ -260,7 +275,7 @@ def npy_info(path: Path) -> dict:
 # ----------------------------------------------------------------------------- group builders
 def build_pack(name: str, group: dict, data_root: Path, out: Path, dry: bool, policies: set[str],
                dropped: Dropped, report: dict) -> Bundle:
-    src_dir = data_root / group["src"]
+    src_dir = resolve_src(data_root, group["src"])
     dest = group["dest"]
     index = load_json(src_dir / "INDEX.json")
     runs = {r["key"]: r for r in index["runs"]}
@@ -322,7 +337,7 @@ def build_pack(name: str, group: dict, data_root: Path, out: Path, dry: bool, po
 def build_plain(name: str, group: dict, data_root: Path, out: Path, dry: bool,
                 dropped: Dropped, report: dict) -> Bundle:
     bundle = Bundle(out / f"c4_data_{name}.tar", dry, dropped)
-    base = data_root / group["src"]
+    base = resolve_src(data_root, group["src"])
     dest = group["dest"]
     for rel in group.get("files", []):
         bundle.add_file(f"{dest}/{rel}".replace("//", "/"), base / rel)
@@ -340,7 +355,7 @@ def build_lists(name: str, group: dict, data_root: Path, out: Path, dry: bool, p
     bundle = Bundle(out / f"c4_data_{name}.tar", dry, dropped)
     info = {}
     for out_name, spec in group["sources"].items():
-        doc = load_json(data_root / spec["from"])
+        doc = load_json(resolve_src(data_root, spec["from"]))
         kept = [w for w in doc["windows"] if window_ok(w, spec["filter"], policies)]
         new = dict(doc)
         new["windows"] = kept
@@ -410,6 +425,9 @@ def build_ckpts(manifest: dict, data_root: Path, out: Path, dry: bool, dropped: 
         if not src.is_absolute():
             src = data_root / src
         if not src.is_file():
+            if ck.get("optional"):
+                print(f"note: optional checkpoint companion missing, skipped: {src}", file=sys.stderr)
+                continue
             raise SystemExit(f"checkpoint missing: {src}")
         bundle.add_file(ck["dest"], src)
         if ck.get("expect_sha256_prefix") and not dry:
@@ -459,8 +477,10 @@ def main(argv=None) -> int:
     ap.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     ap.add_argument("--manifest", type=Path, default=HERE / "bundle_manifest.json")
     ap.add_argument("--groups", default="all",
-                    help="comma list: code,ckpt,lists,lpwo_v3,pack_v3,pack_dspeed,pack_damping,"
-                         "pack_switching_train,sidecars,eval_states (default all but eval_states)")
+                    help="comma list of manifest groups: code,ckpt,c4_wm_lists,lpwo_v3,pack_v3,"
+                         "pack_dspeed,pack_switching_train,sidecars,eval_states (default all but eval_states)")
+    ap.add_argument("--external-root", action="append", default=[], metavar="NAME=PATH",
+                    help="override/add an @NAME root used by manifest paths (default: manifest external_roots)")
     ap.add_argument("--policies", default=None,
                     help="window policies to keep for lpwo packs (default from the manifest)")
     ap.add_argument("--dry-run", action="store_true",
@@ -470,6 +490,13 @@ def main(argv=None) -> int:
 
     manifest = load_json(args.manifest)
     policies = set((args.policies or ",".join(manifest["default_policies"])).split(","))
+    for name, path in manifest.get("external_roots", {}).items():
+        EXTERNAL_ROOTS[name] = Path(path)
+    for item in args.external_root:
+        name, _, path = item.partition("=")
+        if not name or not path:
+            raise SystemExit(f"--external-root expects NAME=PATH, got {item!r}")
+        EXTERNAL_ROOTS[name] = Path(path)
     all_groups = ["code", "ckpt", *manifest["groups"].keys()]
     wanted = all_groups if args.groups == "all" else args.groups.split(",")
     for g in wanted:

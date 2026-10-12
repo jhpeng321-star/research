@@ -67,14 +67,20 @@ OMP=${OMP:-4}
 
 # ---- environment for wms / traffic_shepherd -------------------------------------------------
 c4_export_env() {
+  local sep=:   # os.pathsep of the interpreter (Linux box); ';' only when testing from Git Bash on Windows
+  case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) sep=';' ;; esac
   export C4_HOME C4_REPO C4_RUNS
-  export PYTHONPATH="$C4_REPO/src:$C4_REPO${PYTHONPATH:+:$PYTHONPATH}"
+  export PYTHONPATH="$C4_REPO/src${sep}$C4_REPO${PYTHONPATH:+$sep$PYTHONPATH}"
   export OMP_NUM_THREADS="$OMP" MKL_NUM_THREADS="$OMP"
   export PYTHONUNBUFFERED=1
-  # logical dataset names that are not in configs/data_registry.toml (already-set variables win)
-  : "${WMS_DATA_CKPT_R5B:=$C4_REPO/data_cache/ckpt_r5b/wm_s_best.pt}"
-  : "${WMS_DATA_C4_LISTS:=$C4_REPO/data_cache/c4_lists}"
-  export WMS_DATA_CKPT_R5B WMS_DATA_C4_LISTS
+  # logical dataset names that are not in configs/data_registry.toml (already-set variables win):
+  # configs/c4_wm.toml model.init_from = "ckpt_r5b_best" resolves through WMS_DATA_CKPT_R5B_BEST.
+  : "${WMS_DATA_CKPT_R5B_BEST:=$C4_REPO/data_cache/ckpt_r5b/wm_s_best.pt}"
+  export WMS_DATA_CKPT_R5B_BEST
+  # wms.control.train_cli refuses any config/checkpoint/data/output path outside the repo root unless it is
+  # listed here (os.pathsep-separated).  The run directories live under $C4_RUNS, outside the repo.
+  : "${C4_ALLOWED_ROOTS:=$C4_RUNS${sep}$C4_HOME}"
+  export C4_ALLOWED_ROOTS
   if [[ -n "${SUMO_HOME:-}" ]]; then export SUMO_HOME PATH="$SUMO_HOME/bin:$PATH"; fi
 }
 
@@ -82,6 +88,14 @@ c4_require_repo() {
   [[ -d "$C4_REPO/src/wms" ]] || c4_die "repo not unpacked at $C4_REPO (run box_setup.sh)"
   [[ -n "${PY:-}" ]] || c4_die "no python interpreter found (set PY=...)"
   [[ -f "$C4_HOME/UNPACK_OK" ]] || c4_die "$C4_HOME/UNPACK_OK missing: box_setup.sh has not completed successfully"
+}
+
+# The switching pack's zero-shot guard (registry dataset zero_shot_heldout) is REQUIRED by configs/c4_wm.toml
+# (data.switching).  Its name contains a restricted token, so the bundle never ships it; the owner places the
+# one file on the box by hand (or sets WMS_DATA_ZERO_SHOT_HELDOUT).  Fail closed with a clear message.
+c4_require_zero_shot_guard() {
+  local p=${WMS_DATA_ZERO_SHOT_HELDOUT:-$C4_REPO/data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json}
+  [[ -f "$p" ]] || c4_die "zero-shot guard file missing: $p. configs/c4_wm.toml (data.switching) needs it and the bundle does not ship it (restricted-token name). Owner decision pending: place it by hand (scp of the single original file) or train without the switching direct-mix source. See OPS_NOTES.md section 11."
 }
 
 # ---- resource guards ----------------------------------------------------------------------------
