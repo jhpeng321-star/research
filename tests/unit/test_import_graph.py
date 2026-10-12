@@ -20,6 +20,8 @@ ALLOWED = {
     "sim_bridge": {"core", "config"},
     "legacy": {"core", "config", "physics", "model", "data", "sim_bridge"},
     "cli": {"core", "config", "physics", "model", "data", "train", "eval", "sim_bridge", "legacy"},
+    # C4 learned control (2026-10-12): policy/trainer/RSU check on top of the world model.
+    "control": {"core", "config", "physics", "model", "data", "train", "eval", "sim_bridge"},
     "root": {"core", "config", "cli"},  # wms/__init__.py and wms/__main__.py
 }
 # Only these layers may import `legacy` (the eval/cli model factories).

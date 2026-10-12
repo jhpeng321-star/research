@@ -155,3 +155,38 @@ class TeamCritic(nn.Module):
         pooled = x.sum(1) / mask.sum(1).clamp_min(1)[..., None]
         value = self.head(pooled).squeeze(-1)
         return torch.where(mask.any(1), value, torch.zeros_like(value))
+
+
+def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
+    """Deployment callable ``state -> accel [1,K]`` (numpy, NaN on non-CAV slots) from a C4
+    trainer checkpoint (format ``c4_dreamer/1``); used by the SUMO runner.  Inputs are exactly
+    the deployment ones: CAV observations + RSU-relayed reports + the RSU sensor field."""
+    import numpy as np
+
+    from .obs import build_observations
+    from .rsu_field import build_rsu_field
+    from .safety import safe_accel
+
+    payload = torch.load(path, map_location=device, weights_only=True)
+    if payload.get("format") != "c4_dreamer/1":
+        raise ValueError("expected a c4_dreamer/1 checkpoint")
+    policy, encoder = CavPolicy(), RsuGroupEncoder()
+    policy.load_state_dict(payload["policy"])
+    group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
+             for k, v in payload["group_encoder"].items()}
+    encoder.load_state_dict(group)
+    policy.eval()
+    encoder.eval()
+
+    def act(state):
+        with torch.no_grad():
+            obs = build_observations(state)
+            signal = encoder(obs, state["s_m"], build_rsu_field(state))
+            accel, _ = policy(obs, signal, deterministic=deterministic)
+            accel = safe_accel(state, accel)
+        out = accel.detach().cpu().numpy().astype(np.float64)
+        out[~obs.cav_mask.cpu().numpy()] = np.nan
+        return out
+
+    act.policy, act.group_encoder = policy, encoder
+    return act
