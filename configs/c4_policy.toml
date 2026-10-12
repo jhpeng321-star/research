@@ -37,9 +37,16 @@ lane_entropy_weight = 3e-4 # DreamerV3-style entropy bonus of the categorical la
 # No designed controller anywhere: the head starts uniform over the feasible choices.
 [lanes]
 enabled = true # false = accel-only actor training (legacy c4_dreamer/1 behaviour).
-gap_base_m = 6.0 # Target-lane bumper gap (front and rear) >= gap_base_m + gap_time_s*v_behind + closing_time_s*closing speed.
-gap_time_s = 1.0 # 0.5 s: SUMO (laneChangeMode 513, respects gaps) refused 75 % of requests in the smoke; 1.0 s: 52 %.
-closing_time_s = 1.0
+# Gap rule calibrated on SUMO acceptance of changeLane (laneChangeMode 513, 1 s), see LANECAL_NOTES.md:
+# front gap >= gap_base_m + gap_time_s*v_ego + closing_time_s*max(0, v_ego - v_front);
+# rear  gap >= rear_gap_base_m + rear_gap_time_s*v_rear + rear_closing_time_s*max(0, v_rear - v_ego).
+# (Old symmetric 6 m / 1.0 s / 1.0 s: only 68 % of the requests it passed were executed by SUMO; now ~95 % held out.)
+gap_base_m = 1.0
+gap_time_s = 1.2
+closing_time_s = 4.5
+rear_gap_base_m = 3.0
+rear_gap_time_s = 1.25
+rear_closing_time_s = 6.0
 dwell_s = 3.0 # Minimum time between two lane changes of one CAV.
 edge_guard_m = 10.0 # Mainline: no change within v*1 s + this of a SUMO edge boundary (s = 0 and 75.44 m).
 
