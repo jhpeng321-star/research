@@ -108,9 +108,9 @@ and there is no wall action or wall bonus. Any coordinated formation that appear
   pick)? If the WM cannot rank actions, the method fails — check before building the policy.
 - **Final comparison (fresh SUMO development seeds, demands 2400/2600/2700 veh/h):**
   - Trained penetrations 5/10/20/40 %; **unseen** 15/30/60 % (and 2 %).
-  - Controllers: native, CIRCLES damping, PI, wall law v2.x (classic references); **MAPPO trained model-free in SUMO on
-    the same mixed penetrations at an equal SUMO-interaction budget (required, main RL comparator; plus a larger-budget
-    MAPPO to show the sample-efficiency gap)**; learned policy alone; learned policy + WM check.
+  - Controllers (owner 2026-10-12 late: MAPPO training deferred): native, CIRCLES damping, PI (comparators); wall law
+    optional; learned policy alone; learned policy + WM check (oracle and belief state). MAPPO code is kept ready
+    (same actor/inputs/reward) but not trained for the Friday showcase.
   - Metrics: delay incl. ramp/source waiting, throughput, braking, worst-group delay (fairness), TTC exposure,
     collisions, teleports.
 - **Coordination evidence:** CAV formation metrics (side-by-side across lanes, synchronised slowdowns before the merge,
