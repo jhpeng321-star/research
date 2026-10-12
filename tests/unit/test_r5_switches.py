@@ -634,3 +634,21 @@ def test_r5b_lr_per_stage_and_grad_logging_config():
     with pytest.raises(Exception):
         TrainSettings.from_config(load_train_config("configs/r5b.toml",
                                                     ["optim.lr_per_stage=[0.001]"]))
+
+
+def test_r5b_grad_scale_is_forward_exact_and_damps_backward():
+    import torch
+    from wms.model.wms import _scale_grad
+
+    x = torch.tensor([1.5, -2.0], requires_grad=True)
+    y = _scale_grad(x, 0.9)
+    assert torch.equal(y.detach(), x.detach())
+    (y * torch.tensor([2.0, 3.0])).sum().backward()
+    assert torch.allclose(x.grad, torch.tensor([1.8, 2.7]))
+
+
+def test_r5b_grad_decay_default_off():
+    from wms.config.load import load_train_config
+    from wms.train.settings import TrainSettings
+
+    assert TrainSettings.from_config(load_train_config("configs/r4.toml")).grad_decay_per_step == 1.0

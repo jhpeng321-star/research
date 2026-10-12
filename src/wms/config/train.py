@@ -82,10 +82,14 @@ class ModelConfig:
     history_features: int = 6
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
+    grad_decay_per_step: float = 1.0
+    """Round 5b: backward-only gradient damping per rollout step through the carried state (1.0 = off)."""
     init_from: Optional[str] = None
     allow_rejected_hard_cap: bool = False
 
     def __post_init__(self) -> None:
+        require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
+                "model.grad_decay_per_step must be in (0, 1]")
         if self.lane_head == "history":
             require(self.rollout_mode in ("driver_params", "hybrid"),
                     "model.lane_head='history' requires rollout_mode driver_params or hybrid")

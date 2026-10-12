@@ -51,6 +51,7 @@ class ModelSpec:
     lane_gate_g_max_init: float = 0.16
     lane_gate_tau_steps_init: float = 30.0
     checkpoint_step: bool = False
+    grad_decay_per_step: float = 1.0
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:

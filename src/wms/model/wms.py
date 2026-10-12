@@ -44,6 +44,24 @@ _TEMPORAL_OUT = 4
 
 
 @dataclass
+
+class _GradScale(torch.autograd.Function):
+    """Identity in the forward pass; multiplies the incoming gradient by ``factor``."""
+
+    @staticmethod
+    def forward(ctx, x: Tensor, factor: float) -> Tensor:  # type: ignore[override]
+        ctx.factor = float(factor)
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad: Tensor):  # type: ignore[override]
+        return grad * ctx.factor, None
+
+
+def _scale_grad(x: Tensor, factor: float) -> Tensor:
+    """Forward-exact gradient damping (round 5b ``grad_decay_per_step``)."""
+    return _GradScale.apply(x, factor)
+
 class _ShareAccumulator:
     """Physics vs learned-residual acceleration magnitude on learned slots (hybrid)."""
 
@@ -111,6 +129,7 @@ class WmSModel(nn.Module):
         self.gate_tau_steps_init = float(spec.gate_tau_steps_init)
         self.lane_gate_kind = spec.lane_gate_kind
         self.checkpoint_step = bool(spec.checkpoint_step)
+        self.grad_decay_per_step = float(getattr(spec, "grad_decay_per_step", 1.0))
         # Inference-time diagnostic switches (round 5, default OFF; set by the scorer,
         # never part of a checkpoint): population-default driver settings.
         self.diag_encoder_population = False
@@ -783,6 +802,16 @@ class WmSModel(nn.Module):
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)
+            if self.grad_decay_per_step < 1.0 and torch.is_grad_enabled():
+                # Round 5b: damp gradients flowing back through the carried state by a
+                # constant factor per step (forward values unchanged), so credit from far
+                # in the future fades instead of exploding through chaotic dynamics.
+                g = self.grad_decay_per_step
+                current = {key: (_scale_grad(value, g)
+                                 if torch.is_tensor(value) and value.requires_grad else value)
+                           for key, value in current.items()}
+                if history.requires_grad:
+                    history = _scale_grad(history, g)
             if truncation_steps and (step_i + 1) % int(truncation_steps) == 0:
                 current = {key: (value.detach() if torch.is_tensor(value) else value)
                            for key, value in current.items()}
