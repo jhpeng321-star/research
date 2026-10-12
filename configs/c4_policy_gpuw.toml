@@ -1,5 +1,6 @@
-# gpuW run of the C4 policy (overnight 2026-10-13): GPU, 20 s imagination, bounded counterfactual rows.
-# First phase dreams in frozen R5b; switch --wm-ckpt to the C4 WM when it finishes (Dreamer loop).
+# gpuW run of the C4 policy (overnight 2026-10-13): GPU, 20 s imagination, cooperation rows.
+# Memory: trainer.checkpoint_imagination (default on) keeps this ~8-9 GB; shared with the WM run
+# via C4_GPU_MEM_FRACTION. Phase 1 dreams in frozen R5b; phase 2 in the C4 WM (Dreamer loop).
 extends = "c4_policy.toml"
 
 [run]
@@ -8,11 +9,9 @@ updates = 4000
 threads = 4
 
 [trainer]
-batch_size = 8
-horizon = 15
+batch_size = 16
+horizon = 20
 checkpoint_every = 50
 
 [counterfactual]
-max_starts = 2   # 32 GB vGPU shared with WM training: counterfactual rows dominate memory
-n_group = 1
-n_flip = 1
+max_starts = 6
