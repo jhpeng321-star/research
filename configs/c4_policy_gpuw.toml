@@ -9,6 +9,7 @@ updates = 4000
 threads = 4
 
 [trainer]
+entropy_weight = 1.0e-3 # phase 2 (overnight decision): phase-1 accel entropy collapsed 1.43 -> 0.29 in 400 updates
 batch_size = 16
 horizon = 20
 checkpoint_every = 50
