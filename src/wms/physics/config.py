@@ -13,7 +13,7 @@ _SUMO_IDM = (2.49, 4.2, 1.135, 2.6, 4)
 #: Default IDM parameters.
 _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
 #: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
-LANE_RULES = ("mobil", "forced_merge_only")
+LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 
 
 @dataclass
@@ -29,7 +29,11 @@ class PhysicsConfig:
     ``lane_rule`` selects the lane-change policy (owner decision 2026-10-12):
     ``mobil`` (default, unchanged legacy behaviour) or ``forced_merge_only``,
     which drops every discretionary MOBIL change and keeps only the mandatory
-    ramp merge (lane 2 -> 1 inside the merge zone, gap safety + urgency intact).
+    ramp merge (lane 2 -> 1 inside the merge zone, gap safety + urgency intact),
+    or ``learned_discretionary`` (owner 2026-10-12, late): the physics still proposes
+    only the forced merge, but every SAFE adjacent discretionary change gets a neutral
+    prior logit (below 'stay') that the learned lane correction may raise above 'stay'
+    - lane changes are learned, not MOBIL; unsafe changes stay masked.
     """
 
     dt_s: float = 0.5

@@ -483,7 +483,7 @@ class WmSModel(nn.Module):
             self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
             self.lane_logit_cap)
         lane_logits = lane_base + lane_correction
-        if self.physics.lane_rule == "forced_merge_only":
+        if self.physics.lane_rule in ("forced_merge_only", "learned_discretionary"):
             # The learned residual lane delta can never unmask a forbidden change:
             # entries the physics masked stay masked after the correction and cap
             # (C4; in the default 'mobil' mode this branch is skipped, so outputs

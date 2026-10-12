@@ -11,7 +11,7 @@ from .residual_bound import validate_bounds
 
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 LANE_HEADS = ("off", "history")
-LANE_RULES = ("mobil", "forced_merge_only")
+LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 
 
 @dataclass(frozen=True)

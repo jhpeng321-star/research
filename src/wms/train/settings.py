@@ -15,7 +15,7 @@ from typing import Any, Mapping, Optional
 
 CAV_DRIVE_MODES = ("teacher", "closed_loop")
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
-LANE_RULES = ("mobil", "forced_merge_only")
+LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 HARD_CAP_FIELDS = ("residual_cap_mps2", "residual_cap_neg_mps2")
 
 

@@ -290,3 +290,34 @@ def test_lane_rule_field_not_in_model_state_dict():
     keys = list(WmSModel(ModelSpec(lane_rule="forced_merge_only"),
                          physics=PhysicsConfig(lane_rule="forced_merge_only")).state_dict())
     assert not [key for key in keys if "lane_rule" in key]
+
+
+# ------------------------------------------------ learned_discretionary (owner 10-12 late)
+def test_learned_discretionary_physics_alone_never_changes_lane_but_opens_safe_changes():
+    from wms.physics.mobil import LEARNED_PRIOR_LOGIT
+    learned, forced = _logits("learned_discretionary"), _logits("forced_merge_only")
+    # The forced merge is the same as forced_merge_only; physics argmax never picks a
+    # discretionary change (prior < stay = 0).
+    torch.testing.assert_close(learned[0, 2], forced[0, 2])
+    choice = learned.argmax(-1)[0].tolist()
+    assert choice[0] == 1 and choice[3] == 0
+    # Slot 0 (lane 1) can move to lane 0 safely: opened at the neutral prior.
+    assert learned[0, 0, 0] == LEARNED_PRIOR_LOGIT
+    # Never into the ramp lane.
+    assert learned[0, 0, 2] == MASKED_LOGIT
+
+
+def test_learned_discretionary_residual_can_trigger_a_safe_change():
+    model = _biased_model("learned_discretionary")
+    with torch.no_grad():                      # push only the 'move to lane 0' logit
+        model.temporal[-1].bias.zero_()
+        model.temporal[-1].bias[1] = 40.0
+    state, kwargs = _model_state()
+    out = model(state, k_steps=60, **kwargs)
+    base = model.mobil_merge_logits(state)
+    forbidden = base <= MASKED_LOGIT
+    torch.testing.assert_close(out["lane_logits"][forbidden],
+                               torch.full_like(out["lane_logits"][forbidden], MASKED_LOGIT))
+    choice = out["lane_logits"].argmax(-1)[0].tolist()
+    assert choice[0] == 0          # learned correction lifts the safe change above 'stay'
+    assert not bool(forbidden.gather(-1, out["lane_logits"].argmax(-1).unsqueeze(-1)).any())

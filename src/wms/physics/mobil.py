@@ -13,6 +13,10 @@ from .neighbours import lane_neighbour, lane_of, lead_neighbour
 
 #: Logit of a forbidden lane change.
 MASKED_LOGIT = -8.0
+#: ``learned_discretionary``: logit of a safe adjacent change before the learned correction.
+#: Below 'stay' (0) so physics alone never changes lane; with lane_logit_cap 1.5 the learned
+#: correction can lift it to +0.5 > 0.
+LEARNED_PRIOR_LOGIT = -1.0
 _DEFAULT_POLITENESS = 0.2
 
 
@@ -97,8 +101,9 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
         safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
         allowed = adjacent & ramp_ok & no_to_ramp & safe
-        if p.lane_rule == "forced_merge_only":
-            # No discretionary changes: the mandatory merge alone stays possible
+        discretionary = allowed & ~forced
+        if p.lane_rule in ("forced_merge_only", "learned_discretionary"):
+            # No physics-proposed discretionary changes: the mandatory merge alone
             # (ramp_ok already confines it to the in-zone lane 2 -> 1 change).
             allowed = allowed & forced
         u = urgency * forced.to(kin.dtype)
@@ -108,6 +113,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
             score = (a_new - a_cur) + politeness * follower_gain - threshold * (1.0 - u)
         move = 3.0 * torch.tanh(score / 4.0) - 2.5 + 6.0 * u * u
         logits[..., target] = torch.where(allowed, move, logits[..., target])
+        if p.lane_rule == "learned_discretionary":
+            # Safe adjacent changes stay open (neutral prior) for the learned correction.
+            logits[..., target] = torch.where(
+                discretionary, torch.full_like(move, LEARNED_PRIOR_LOGIT), logits[..., target])
     if p.merge_cal:
         logits = merge_cal_target_logit(logits, kin, present, p, urgency, in_zone)
     logits = logits.scatter(-1, lane.unsqueeze(-1), torch.zeros_like(s).unsqueeze(-1))

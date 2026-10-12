@@ -65,7 +65,7 @@ val_frac = 0.0                 # the TRAIN-scoped world split is provided explic
 
 [model]
 rollout_mode = "hybrid"     # r5_base FIX 1: encoder settings drive the physics, residual stays on
-lane_rule = "forced_merge_only" # C4: no discretionary MOBIL changes (LANECHECK owner decision)
+lane_rule = "learned_discretionary" # C4 (owner 10-12 late): no MOBIL; forced merges in physics, discretionary changes learned by the residual
 init_from = "ckpt_r5b_best" # C4: R5b best (sha256 6f000331...); WMS_DATA_CKPT_R5B_BEST resolves it
 sumo_fidelity = true        # r4
 n_controllers = 7           # r4
