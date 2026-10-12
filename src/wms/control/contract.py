@@ -54,6 +54,23 @@ REPORT_FEATURES = (
 F_REPORT = len(REPORT_FEATURES)
 GROUP_SIGNAL_DIM = 8        # learned RSU broadcast vector
 
+# ---------------------------------------------------------------- RSU own sensors (owner 2026-10-12)
+# The RSU directly observes every vehicle in these WM-frame zones (in addition to CAV reports).
+# Its group signal is computed from CAV reports AND this RSU field; the same field feeds MAPPO.
+RSU_MAINLINE_S_M = (-800.0, 225.44)   # lanes 0 and 1: 800 m upstream .. ~150 m downstream of the merge end
+RSU_RAMP_S_M = (-378.66, 75.44)       # lane 2: whole on-ramp + acceleration lane
+RSU_CELL_M = 50.0
+RSU_FIELD_FEATURES = (
+    "density_veh_per_km",    # vehicles in the cell / cell length
+    "mean_speed_mps",        # SPEED_LIMIT_MPS when empty
+    "speed_std_mps",
+    "queue",                 # 1 if mean speed < 5 m/s and occupied
+    "occupied",
+    "cav_share",             # CAVs / vehicles in the cell (observable: CAVs identify themselves)
+)
+F_RSU_CELL = len(RSU_FIELD_FEATURES)
+# Cells: lane 0 and lane 1 over RSU_MAINLINE_S_M, then lane 2 over RSU_RAMP_S_M (ceil(length / RSU_CELL_M) each).
+
 
 @dataclass
 class Observation:
@@ -78,6 +95,18 @@ class RewardWeights:
 class ObservationBuilder(Protocol):
     def __call__(self, state: Mapping[str, Tensor], report_age_s: Optional[Tensor] = None
                  ) -> Observation: ...
+
+
+class RsuFieldBuilder(Protocol):
+    def __call__(self, state: Mapping[str, Tensor]) -> Tensor:
+        """RSU sensor field [B, N_RSU_CELLS, F_RSU_CELL] from the vehicles inside the RSU zones only
+        (same function in imagination and in SUMO)."""
+
+
+class GroupEncoder(Protocol):
+    def __call__(self, obs: Observation, state_positions: Tensor, rsu_field: Tensor) -> Tensor:
+        """Per-CAV group signal [B, K, GROUP_SIGNAL_DIM] from all CAV reports + the RSU field, conditioned on
+        each CAV's position zone.  ``state_positions`` = CAV s_m [B, K] (CAVs report it)."""
 
 
 class TeamReward(Protocol):
