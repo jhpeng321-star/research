@@ -11,6 +11,7 @@ from wms.core.constants import DEFAULT_LENGTH_M
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, MERGE_S0_M, MERGE_S1_M,
                        PHYSICS_DT_S, STEPS_PER_CONTROL, CavController, Policy, SafetyLayer)
 from .obs import build_observations
+from .rsu_field import build_rsu_field
 
 
 def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
@@ -77,7 +78,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         log_entry = None
         if decision:
             obs = build_observations(state)
-            signal = group_encoder(obs, state["s_m"])
+            signal = group_encoder(obs, state["s_m"], build_rsu_field(state))
             held, log_probs = policy(obs, signal)
             log_entry = {"physics_step_index": index, "obs": obs, "actions": held,
                          "log_probs": log_probs, "group_signal": signal}

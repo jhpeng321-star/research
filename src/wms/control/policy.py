@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Mapping
+from typing import Mapping, Optional
 
 import torch
 import torch.nn.functional as F
@@ -11,7 +11,9 @@ from torch.distributions import Normal
 
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, F_OWN, F_REPORT, GROUP_SIGNAL_DIM,
                        MERGE_S0_M, MERGE_S1_M, OWN_FEATURES, REPORT_FEATURES, Observation)
+from .contract import F_RSU_CELL
 from .obs import FEATURE_NORMALIZATION, normalize_features
+from .rsu_field import FIELD_SCALE, cell_geometry
 
 
 def _masked_attention(attention: nn.MultiheadAttention, query: Tensor, keys: Tensor,
@@ -76,20 +78,36 @@ class _SetBlock(nn.Module):
 
 
 class RsuGroupEncoder(nn.Module):
-    """CAV-only set encoder: (obs, positions [B,K]) -> per-CAV signals [B,K,8].
+    """RSU encoder: (obs, positions [B,K], rsu_field [B,N,F] | None) -> per-CAV signals [B,K,8].
 
-    Smooth upstream/merge/downstream zone memberships condition a shared pooled
-    set context. There is no vehicle-count, density or penetration input.
+    CAV reports (set attention + pooling) plus the RSU own-sensor field (each CAV attends
+    over the RSU cells); smooth upstream/merge/downstream zone memberships condition the
+    output.  No true penetration or global input; the field is what the RSU sensors see.
     """
 
     def __init__(self, hidden_dim: int = 64, n_heads: int = 4) -> None:
         super().__init__()
         self.input = nn.Linear(F_OWN + 1, hidden_dim)
         self.set_block = _SetBlock(hidden_dim, n_heads)
-        self.head = nn.Sequential(nn.Linear(2 * hidden_dim + 4, hidden_dim), nn.SiLU(),
+        # RSU own-sensor field (owner 2026-10-12): each CAV attends over the RSU cells.
+        self.field_input = nn.Sequential(nn.Linear(F_RSU_CELL + 4, hidden_dim), nn.SiLU(),
+                                         nn.Linear(hidden_dim, hidden_dim))
+        self.field_attention = nn.MultiheadAttention(hidden_dim, n_heads, batch_first=True)
+        self.head = nn.Sequential(nn.Linear(3 * hidden_dim + 4, hidden_dim), nn.SiLU(),
                                   nn.Linear(hidden_dim, GROUP_SIGNAL_DIM), nn.Tanh())
 
-    def forward(self, obs: Observation, positions: Tensor) -> Tensor:
+    def _field_context(self, x: Tensor, rsu_field: Optional[Tensor]) -> Tensor:
+        if rsu_field is None:
+            return torch.zeros_like(x)
+        b, k, h = x.shape
+        scale = rsu_field.new_tensor(FIELD_SCALE)
+        geometry = cell_geometry(rsu_field.device, rsu_field.dtype).expand(b, -1, -1)
+        tokens = self.field_input(torch.cat((rsu_field / scale, geometry), -1))
+        out, _ = self.field_attention(x, tokens, tokens, need_weights=False)
+        return out
+
+    def forward(self, obs: Observation, positions: Tensor,
+                rsu_field: Optional[Tensor] = None) -> Tensor:
         mask = obs.cav_mask
         s = torch.where(mask, positions, torch.zeros_like(positions))
         position = normalize_features(s[..., None], ("s_m",))
@@ -99,7 +117,8 @@ class RsuGroupEncoder(nn.Module):
         upstream = torch.sigmoid((MERGE_S0_M - s) / 10.0)
         downstream = torch.sigmoid((s - MERGE_S1_M) / 10.0)
         zones = torch.stack((upstream, 1.0 - upstream - downstream, downstream), -1)
-        signal = self.head(torch.cat((x, pooled.expand_as(x), position, zones), -1))
+        field = self._field_context(x, rsu_field)
+        signal = self.head(torch.cat((x, pooled.expand_as(x), field, position, zones), -1))
         return torch.where(mask[..., None], signal, torch.zeros_like(signal))
 
 
