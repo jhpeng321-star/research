@@ -167,6 +167,11 @@ def main(argv=None):
         if threads < 1:
             raise ValueError("threads must be positive")
         torch.set_num_threads(threads)
+        # Shared-GPU guard: cap this process's CUDA memory so it OOMs itself before starving a
+        # co-located world-model training run (env C4_GPU_MEM_FRACTION, e.g. 0.4).
+        frac = os.environ.get("C4_GPU_MEM_FRACTION")
+        if frac and str(device).startswith("cuda") and torch.cuda.is_available():
+            torch.cuda.set_per_process_memory_fraction(float(frac))
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
