@@ -26,7 +26,9 @@ Why it can hold:
   lane/position/distance-to-merge, same-lane front/rear gap and relative speed within 100 m (`SumoLocalSensor`), plus
   reports from other CAVs relayed by the RSU (with receipt age / missingness).
 - **CAV-to-CAV attention** over those reports (same mechanism as the HDV residual transformer).
-- **RSU group signal:** a short learned vector computed by the RSU from CAV reports and broadcast to every CAV in a zone.
+- **RSU group signal:** a short learned vector computed by the RSU from CAV reports **and its own sensor field**
+  (50 m cells over the on-ramp, merge, 800 m upstream, 150 m downstream: density, speed, queue, CAV share; owner
+  2026-10-12) and broadcast to every CAV in a zone. The same RSU field feeds MAPPO if it is trained later.
   Lets synchronised moves (a wall = upstream CAVs across lanes slow together) be expressed without hand-coding them.
 - **Physics safety layer:** clamp to an IDM-style safe-deceleration / safe-gap bound before execution (also in SUMO).
 - No true density, penetration or driver type as input.
