@@ -172,7 +172,55 @@ means ~45 min setup and a parity check (AMD vs laptop Intel) before trusting num
 | **OPEN: sizing.** `policy_check` with defaults (5 candidates x 4 driver samples, 20 s imagination, 5 s period, 1 R5b member) measured ~12.7 s/decision with 4 torch threads (laptop; the campaign sets OMP_NUM_THREADS=1, so pass `--threads N` in `C4_DEPLOY_ARGS` and size workers accordingly); 1 thread ~21 s/decision -> 120 decisions ~ 25 min (4 threads) to ~45 min (1 thread) per 600 s episode (+ SUMO); `MIN_PER_EP=6` underestimates these jobs (set `--minutes-per-episode` accordingly or use a cheaper `C4_DEPLOY_ARGS`) | integrator |
 | policy checkpoint named `policy_best.pt` / `policy.pt`, WM `wm_s_best.pt` / `wm_s.pt` (`*_CKPT_NAMES` env) | policy / WM workers |
 
-## 11. Pitfall checklist (every launch)
+## 11. Reconciled 2026-10-12 (scripts/c4 vs the real interfaces on c4/int)
+
+Scope: `run_wm.sh`, `run_policy.sh`, `run_loop.sh`, `c4_env.sh`, `box_setup.sh`, `pack_bundle.py`, `bundle_manifest.json`.
+Evaluation (`run_eval.sh`, `eval_campaign.py`) and the evaluation rows of section 10 belong to the evaluation worker and were not touched.
+Rows of section 10 that this section supersedes: WM config, policy CLI, collect, checkpoint names (to_pack is still open, see below).
+
+**World model (stage a).** Real CLI: `python -m wms preflight|train --config configs/c4_wm.toml [--mode run] --out DIR --set a.b=c`; no device
+flag, the config says `runtime.device = "cuda"` (`DEVICE=cpu` in `run_wm.sh` adds `--set runtime.device="cpu"`). Config has THREE stages
+(10/30/60 s; 600/800/600 steps; batch 16; lr 3e-4/1e-4/1e-4; max_hours 5; ~2.5 h on a 4090 D is an estimate) so the smoke default is
+`curriculum.stage_steps=[4,4,3]` (was `[5,5,3,3]`). New mode `bash run_wm.sh cpu-smoke` runs `tools/c4_smoke.py` (CPU, no GPU).
+`model.init_from = "ckpt_r5b_best"` resolves via `WMS_DATA_CKPT_R5B_BEST` (set by `c4_env.sh` to `data_cache/ckpt_r5b/wm_s_best.pt`, sha prefix 6f000331);
+the lists are the registry dataset `c4_wm_lists` = `runs/active/c4_wm_lists` (bundle group `c4_wm_lists`, 6 files, 0.25 MB). Old `WMS_DATA_CKPT_R5B` /
+`WMS_DATA_C4_LISTS` / `data_cache/c4_lists` are gone.
+
+**Bundle.** Dry run: code 5.8 MB, ckpt 8.4 MB (wm_s_best.pt + `physics.json`, which `load_backend` needs next to every WM checkpoint), c4_wm_lists 0.25 MB,
+lpwo_v3 0.08 MB (only `excluded_runs_PI_wall_v3.json`), sidecars 87 MB, pack_v3 3.3 GB (162 windows), pack_dspeed 9.6 GB (520), pack_switching_train 3.5 GB (90 direct-mix
+windows): **16.6 GB**. Pack row selection now follows the c4_wm_lists (not the lpwo lists); pack_damping, identities_damping, overlay_damping and the old derived `c4_lists`
+group are dropped; `windows_train_hetdata.json` is no longer shipped. `pack_bundle.py` gained `external_roots` (`@runs_active/...` paths; override with
+`--external-root runs_active=PATH`) because the lists live in the git-ignored runs tree, and `"optional": true` checkpoint companions. Tar names changed:
+`c4_data_c4_wm_lists.tar` replaces `c4_data_lists.tar`; the CPU role unpacks `c4_code,c4_ckpt,c4_data_c4_wm_lists` only (it needs no packs). `selftest_bundle.py` passes.
+
+**Policy (stage b).** Real CLI: `python -m wms.control.train_cli --config C --wm-ckpt CKPT... --device cuda --output-dir DIR [--max-updates N] [--init-policy P] [--resume P] [--smoke]`
+(no `--set`, no `--out`). Outputs `policy_best.pt`, `policy_latest.pt`, `updates.jsonl`, `RUN_SUMMARY.json`; the `*_CKPT_NAMES` defaults are now `policy_best.pt policy_latest.pt` / `wm_s_best.pt wm_s.pt`.
+`run_policy.sh check|smoke|run [N]` with `WM_CKPT` (space-separated ensemble, each needs `physics.json` next to it), `POLICY_INIT`, `POLICY_RESUME`, `DEVICE`.
+Path rule: train_cli refuses paths outside the repo root, so `c4_env.sh` exports `C4_ALLOWED_ROOTS=$C4_RUNS:$C4_HOME` (run dirs are outside the repo).
+**Data caveat found:** `c4_policy.toml` takes its TRAIN start windows from `configs/r5b.toml`, whose lists include CIRCLES-damping and pack_damping runs. The bundle ships no rows
+for them (native + random actions only), so the trainer would silently read zero rows. The scripts therefore write `<run>/policy_box.toml` (`extends` the policy config, `data.wm_config`
+= `configs/c4_wm.toml`; `POLICY_DATA_CONFIG=none` disables) so start states come from the 583 native/dspeed windows of c4_wm_lists (524 train / 59 val in the local smoke).
+The worker who owns `c4_policy.toml` may instead change `data.wm_config` there; the override is then redundant but harmless.
+Local check: the CLI `--smoke` completes with both the r5b data section (819 train windows) and the c4_wm data section; `run_policy.sh smoke` completes through the wrapper.
+
+**Collection (loop stage 1).** Real CLI: `python -m traffic_shepherd.c4.collect --policy <ckpt|native|damping|pi|random> --penetrations --demands --seeds 4107-4148 --warmup 300 --horizon 600 --workers N --out DIR`
+(writes `episodes/<tag>/<job>/`, resumable, refuses any seed outside the exposed development seeds 4107-4148). `run_loop.sh` uses it (`COLLECT_SEEDS`, `COLLECT_SEEDS_<K>`, `COLLECT_ARGS`);
+`--seeds-file/--iteration/--policy-ckpt` were assumptions and are removed. Evaluation seeds (920xxx) are disjoint; the loop checks this against `eval_seeds.json` when it exists.
+
+**Loop WM refresh (waits for branch c4/loop).** No converter exists on c4/int (`traffic_shepherd.c4.to_pack` is still an assumption). The step is parameterised:
+`LOOP_CONVERT_CMD` (convert stage; empty = skipped), `LOOP_DATA_ARGS` (words appended to the `wms train` command, e.g. `--set data.<source>.path=@CONVERT@`), `LOOP_DATA_ENV`
+(`WMS_DATA_<NAME>=@CONVERT@` pairs); placeholders `@ITER@ @EPISODES@ @CONVERT@ @WM_PREV@`. With `LOOP_DATA_ARGS` empty the wm stage refuses (`LOOP_ALLOW_NO_DATA=1` overrides). `run_loop.sh plan`
+prints the resolved commands. Once c4/loop lands, set the two variables from its README and drop this paragraph.
+
+**DECISION FOR THE OWNER (fails closed until decided): the switching zero-shot guard file.** `configs/c4_wm.toml` has `data.switching` (direct-mix arm) and the loader
+(`mixdata.HeldOutGuard.load`) requires the registry dataset `zero_shot_heldout` (`data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json`) for BOTH `heldout_family_policy` values,
+so no config override can skip it. The file lists worlds/a vehicle family to EXCLUDE from training (it is not held-out data), but its name carries a restricted token, so the bundle
+hard filter drops it and agents must not open it. Options: (A) the owner copies that single file to the box by hand
+(`scp` to `$C4_HOME/rd/data_cache/wmn1_switching_train/`, or set `WMS_DATA_ZERO_SHOT_HELDOUT`) and everything works unchanged; (B) train without the switching source (needs a config variant
+without `[data.switching]`; loses the direct-mix windows). `run_wm.sh`, `run_loop.sh` (wm stage) refuse with a message while the file is missing; `box_setup.sh` preflight warns.
+Nothing was renamed or copied around the filter.
+
+## 12. Pitfall checklist (every launch)
 
 1. LF endings: scripts refuse CRLF; do not hand-edit them on Windows without LF.
 2. ssh drops: launch once, verify with `cat runs/<id>/STATE` and `ps -eo pid,lstart,args | grep -E 'wms|traffic_shepherd'`; never loop a launch.
