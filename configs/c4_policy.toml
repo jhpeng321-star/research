@@ -32,7 +32,7 @@ checkpoint_every = 100 # 0 disables periodic snapshots; latest is always saved b
 validation_every = 100 # Separate TRAIN-derived VAL windows; best checkpoint by lambda-return.
 
 [data]
-wm_config = "configs/r5b.toml" # Inherited R5b ORIGINAL data section; switching packs are excluded.
+wm_config = "configs/c4_wm.toml" # start windows = the C4 WM TRAIN lists (native + dspeed), all shipped in the bundle
 val_fraction = 0.1 # Stratified disjoint development VAL windows from the TRAIN corpus.
 excluded_penetrations = [] # e.g. [0.02, 0.4]; metadata suffixes p02/p05/p10/p20/p40.
 relabel_cavs = false # Optional random HDV/CAV reassignment at load, default OFF.
