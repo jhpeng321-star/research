@@ -1,0 +1,47 @@
+# C4 analytic Dreamer defaults. No simulator or WM fitting occurs here.
+# Checkpoint and data paths must resolve INSIDE this workspace. Supply a local
+# R5b checkpoint via --wm-ckpt; each listed checkpoint is one frozen member.
+
+[run]
+output_dir = "runs/active/C4-DREAMER"
+device = "cpu" # CLI accepts --device cuda; --smoke always forces CPU.
+updates = 3000
+seed = 0
+threads = 1
+validation_batches = 2
+
+[world_model]
+checkpoints = [] # Required, e.g. ["runs/active/local_r5b/wm_s_best.pt"]. Default ensemble size: 1.
+
+[trainer]
+batch_size = 16
+horizon = 60 # CONTROL steps. Contract: 1 s/control, 0.5 s/physics, so H=60 means 60 s.
+gamma = 0.99 # Per CONTROL step, not per physics step.
+lambda_ = 0.95
+actor_lr = 5e-5 # Recommended range: 3e-5 .. 1e-4; includes the RSU group encoder.
+critic_lr = 1e-4
+entropy_weight = 3e-4
+uncertainty_weight = 0.1 # Population std of team reward across members; zero for one member.
+ttc_budget = 0.01 # Mean SUM of per-physics-step cost_ttc within each control step.
+dual_lr = 0.01 # Projected dual ascent: max(0, mu + lr * (mean_cost - budget)).
+lagrange_init = 0.0
+grad_clip = 100.0 # Separate pre-clip actor/critic norms are logged.
+target_tau = 0.02 # Target critic EMA: target <- (1-tau)*target + tau*critic.
+return_ema = 0.99 # EMA of 5th/95th percentiles; scale=max(1, high-low), DreamerV3-style.
+checkpoint_every = 100 # 0 disables periodic snapshots; latest is always saved by fit.
+validation_every = 100 # Separate TRAIN-derived VAL windows; best checkpoint by lambda-return.
+
+[data]
+wm_config = "configs/r5b.toml" # Inherited R5b ORIGINAL data section; switching packs are excluded.
+val_fraction = 0.1 # Stratified disjoint development VAL windows from the TRAIN corpus.
+excluded_penetrations = [] # e.g. [0.02, 0.4]; metadata suffixes p02/p05/p10/p20/p40.
+relabel_cavs = false # Optional random HDV/CAV reassignment at load, default OFF.
+target_penetration = 0.2 # With relabel enabled: one of 0.05/0.1/0.2/0.4; count rounded to slots.
+
+[reward] # contract.RewardWeights, evaluated once per physics transition then SUMMED.
+delay = 1.0
+throughput = 0.5
+smooth = 0.05
+hard_brake = 1.0
+fairness = 1.0
+ttc_limit_s = 3.0
