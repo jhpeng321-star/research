@@ -1,4 +1,5 @@
-"""Data-side configuration: packs, sidecars, window lists, switching mix, history, jam."""
+"""Data-side configuration: packs, sidecars, window lists, switching mix, history, jam,
+collected C4 episodes."""
 from __future__ import annotations
 
 import math
@@ -101,6 +102,37 @@ class JamConfig:
                 "data.jam.speed_mps must be positive")
 
 
+@config_dataclass
+class C4EpisodesConfig:
+    """Collected C4 SUMO episodes (Dreamer data loop) mixed into the training data.
+
+    ``path`` is a logical data name (or absolute path) of a source directory written by
+    ``python -m wms.data.c4_episodes``; ``mix_ratio`` is the sampling share of its windows
+    (the other sources keep their relative shares).  Windows start every
+    ``window_stride_s`` seconds from ``start_s`` (default: each episode's warmup end).
+    ``use_val`` appends the source's validation episodes to the monitoring set.
+    """
+
+    path: Optional[str] = None
+    mix_ratio: float = 0.3
+    window_stride_s: float = 10.0
+    start_s: Optional[float] = None
+    use_val: bool = True
+
+    @property
+    def enabled(self) -> bool:
+        """True when a collected-episode source is configured."""
+        return self.path is not None
+
+    def __post_init__(self) -> None:
+        require(0.0 < self.mix_ratio < 1.0, "data.c4_episodes.mix_ratio must be in (0,1)")
+        stride = self.window_stride_s
+        require(is_finite(stride) and stride >= 1.0 and abs(stride - round(stride)) < 1e-9,
+                "data.c4_episodes.window_stride_s must be a whole number of seconds >= 1")
+        require(self.start_s is None or (is_finite(self.start_s) and self.start_s >= 0.0),
+                "data.c4_episodes.start_s must be non-negative")
+
+
 def history_spec(history_s: Optional[float], history_stride_s: float = 1.0,
                  dt_s: float = SIM_DT_S) -> tuple[int, int, int]:
     """Native window ticks, stride ticks and sampled ticks (same arithmetic as the legacy code)."""
@@ -131,6 +163,7 @@ class DataConfig:
     state_noise_std_m: float = 0.0
     state_noise_std_mps: float = 0.0
     jam: JamConfig = field(default_factory=JamConfig)
+    c4_episodes: C4EpisodesConfig = field(default_factory=C4EpisodesConfig)
     entries_v2: bool = False
     entry_pad: int = 8
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"

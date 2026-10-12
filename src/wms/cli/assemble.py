@@ -12,6 +12,8 @@ objects of the data and model layers (WP-I).  It reproduces the assembly of the 
   filter when configured;
 * an optional switching/direct-output pack is mixed in (``mixdata``) or, without it, jam
   windows are over-sampled (``jam``);
+* optional collected C4 SUMO episodes (``[data.c4_episodes]``, :mod:`wms.data.c4_episodes`)
+  are mixed in last with their own sampling share (the Dreamer data loop);
 * the physics config and the model are built from the same flags the legacy ``_build_model``
   used (``ModelSpec.from_mapping(config.to_legacy_flat())``).
 """
@@ -79,6 +81,8 @@ def declared_data_names(cfg: TrainConfig) -> dict[str, str]:
             name = getattr(sw, label)
             if name:
                 names[f"switching.{label}"] = name
+    if data.c4_episodes.enabled:
+        names["c4_episodes"] = data.c4_episodes.path
     return names
 
 
@@ -190,6 +194,7 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             history_s=data.history_s, history_stride_s=data.history_stride_s)
 
     train = original(train_list, float(data.effective_start_shift_prob))
+    pack_k = getattr(getattr(getattr(train, "_loader", None), "corpus", None), "k_slots", None)
     print("train " + _kept_summary(train.receipt), file=sys.stderr)
     val = None
     if val_list:
@@ -225,6 +230,25 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         train = jam.JamOversampledDataset(train, report["flags"],
                                           oversample=float(data.jam.oversample), report=report)
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
+    c4 = data.c4_episodes
+    if c4.enabled:
+        # Dreamer data loop: collected C4 SUMO episodes (python -m wms.data.c4_episodes)
+        # become one more TRAIN source with sampling share ``mix_ratio``.
+        from ..data.c4_episodes import add_c4_source, build_c4_datasets
+
+        source = build_c4_datasets(
+            path(c4.path), horizon_steps=horizon, history_s=data.history_s,
+            history_stride_s=data.history_stride_s, entries_v2=bool(data.entries_v2),
+            stride_s=float(c4.window_stride_s), start_s=c4.start_s, k_slots=pack_k,
+            heldout=heldout)
+        if not c4.use_val:
+            source["val"] = None
+        train, val = add_c4_source(train, val, source, mix_ratio=float(c4.mix_ratio),
+                                   jam_speed_mps=float(data.jam.speed_mps))
+        train.receipt["stage_sampling"] = train.describe_stages(curriculum)
+        print(f"c4_episodes train {len(source['train'])} windows, val "
+              f"{0 if source['val'] is None else len(source['val'])} windows, "
+              f"mix_ratio {float(c4.mix_ratio)}", file=sys.stderr)
     return train, val, resolved
 
 

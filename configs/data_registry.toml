@@ -92,3 +92,9 @@ path = "data_cache/wmn1_switching_train/ACTION_TIMELINE_INDEX_train.json"
 
 [datasets.zero_shot_heldout]
 path = "data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json"
+
+# C4 Dreamer data loop: collected SUMO episodes converted by `python -m wms.data.c4_episodes`
+# (configs/c4_wm_refresh.toml). Each loop iteration writes a new directory; point
+# WMS_DATA_C4_EPISODES at it (this default is only the local convention).
+[datasets.c4_episodes]
+path = "runs/active/c4_episodes"
