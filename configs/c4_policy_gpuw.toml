@@ -1,0 +1,16 @@
+# gpuW run of the C4 policy (overnight 2026-10-13): GPU, 20 s imagination, bounded counterfactual rows.
+# First phase dreams in frozen R5b; switch --wm-ckpt to the C4 WM when it finishes (Dreamer loop).
+extends = "c4_policy.toml"
+
+[run]
+device = "cuda"
+updates = 4000
+threads = 4
+
+[trainer]
+batch_size = 16
+horizon = 20
+checkpoint_every = 50
+
+[counterfactual]
+max_starts = 6
