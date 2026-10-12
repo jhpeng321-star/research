@@ -71,7 +71,11 @@ driver-setting guesses. Keep the policy's plan unless an alternative wins clearl
 - **State for the check (owner question 2026-10-12).** The RSU only has CAV reports; imagination needs a state.
   Three levels, all reported:
   1. **Oracle check** — true SUMO state (upper bound, labelled as such).
-  2. **Belief state (main)** — Dreamer-like state built from observations only: tracks of every vehicle a CAV has
+  RSU sensing (owner 2026-10-12): the RSU has its own sensors (on-ramp, merge area, ~800 m upstream, ~150 m
+  downstream, as in the earlier reconstructor setup) in addition to CAV reports. The old learned reconstructor is not
+  reused directly (checkpoints lost in MIG-04, cell-field output, failed fresh-world queue detection); its sensing
+  zones and its metric (WM forecast gap from reconstructed vs true state) are reused.
+  2. **Belief state (main)** — Dreamer-like state built from RSU sensors + CAV observations only: tracks of every vehicle a CAV has
      detected, associated by position/lane/speed (no HDV ids), propagated by WM-S between sightings with growing
      uncertainty, plus histories for the driver encoder (`wms.control.belief`). Vehicles never detected do not exist.
   3. **Sensed-only** — CAVs + currently detected HDVs (ablation).
