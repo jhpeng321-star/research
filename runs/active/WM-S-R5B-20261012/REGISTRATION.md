@@ -31,3 +31,7 @@
   No wm_s.pt / stage-120 checkpoint / RUN_SUMMARY will be written (killed mid-stage). The R5b result = wm_s_best.pt.
 - After the meeting: fetch, verify hashes, score wm_s_best.pt (score_round5.py) + diagnosis; the owner stops the AutoDL
   instance after the fetch is verified.
+- UPDATE 17:02 (owner: stop before 18:00 and switch the box off): training stopped manually at step 1058 (120 s stage,
+  118 of 625 steps); scheduled-stop job cancelled. Fetched to runs/active/WM-S-R5B-20261012/box/gpuA/ (tar
+  tmp/r5b_box/r5b_results.tar.gz): wm_s_best.pt sha256 6f000331... (16:45), wm_s_stage60.pt 1c836de3... — both equal to the
+  box. gpuA shut down via `shutdown -h now` at ~17:07 (ssh no longer serves it); owner to confirm "stopped" in AutoDL.
