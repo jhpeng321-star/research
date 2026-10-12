@@ -1,0 +1,163 @@
+"""TRAIN-only start windows, penetration-balanced sampling and optional re-labelling."""
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+
+import torch
+from torch import Tensor
+
+
+_RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
+_PENETRATION = re.compile(r"p(02|05|10|20|40)$", re.I)
+
+
+def checked_path(path, *, workspace=None) -> Path:
+    """Refuse restricted tokens and symlink escapes before any file access."""
+    value = Path(path)
+    if _RESTRICTED.search(str(value)):
+        raise ValueError(f"restricted source/output path: {value}")
+    resolved = value.resolve()
+    if _RESTRICTED.search(str(resolved)):
+        raise ValueError(f"restricted resolved path: {value}")
+    root = Path(workspace).resolve() if workspace else Path(__file__).resolve().parents[3]
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"path is outside workspace: {value}")
+    return resolved
+
+
+@dataclass
+class StartBatch:
+    state: dict[str, Tensor]
+    rollout_kwargs: dict = field(default_factory=dict)
+    metadata: list[dict] = field(default_factory=list)
+
+
+def penetration_of(meta):
+    world = str(meta.get("world_id", meta.get("world", "")))
+    match = _PENETRATION.search(world)
+    if match is None:
+        raise ValueError(f"world id needs a p02/p05/p10/p20/p40 suffix: {world}")
+    return int(match.group(1)) / 100
+
+
+def _metadata(dataset, index):
+    loader = getattr(dataset, "_loader", None)
+    if loader is not None and hasattr(loader, "corpus"):
+        return dict(loader.corpus.meta(loader.kept_orig[index]))
+    record = dataset.records[index] if hasattr(dataset, "records") else dataset[index]
+    return dict(record.get("meta", {}))
+
+
+def _eligible(meta):
+    if _RESTRICTED.search(str(meta)):
+        return False
+    # PackCorpus is a TRAIN view; reject any explicit contrary provenance.
+    if str(meta.get("split", "TRAIN")).upper() != "TRAIN":
+        return False
+    return True
+
+
+class StartStateSampler:
+    """Uniform penetration then uniform window. Own CPU RNG is checkpointable.
+
+    VAL is a disjoint development subset of eligible TRAIN windows, never an
+    external evaluation split. Filtering is metadata-only before window loading.
+    """
+
+    def __init__(self, dataset, *, indices=None, excluded_penetrations=(), relabel=False,
+                 target_penetration=0.2, seed=0):
+        self.dataset = dataset
+        self.relabel = bool(relabel)
+        self.target_penetration = float(target_penetration)
+        if self.relabel and self.target_penetration not in (0.05, 0.1, 0.2, 0.4):
+            raise ValueError("relabel target must be one of .05/.1/.2/.4")
+        self.generator = torch.Generator().manual_seed(seed)
+        self.groups = {}
+        self.metadata = {}
+        if str(getattr(dataset, "receipt", {}).get("split", "TRAIN")).upper() != "TRAIN":
+            raise ValueError("only TRAIN source windows are allowed")
+        for index in range(len(dataset)) if indices is None else indices:
+            meta = _metadata(dataset, index)
+            if not _eligible(meta):
+                continue
+            penetration = penetration_of(meta)
+            if penetration in excluded_penetrations:
+                continue
+            self.groups.setdefault(penetration, []).append(index)
+            self.metadata[index] = meta
+        self.penetrations = sorted(self.groups)
+        if not self.penetrations:
+            raise ValueError("no eligible TRAIN start windows remain")
+
+    def sample(self, batch_size, device="cpu"):
+        states, histories, metadata = [], [], []
+        for _ in range(batch_size):
+            group = self.groups[self.penetrations[int(torch.randint(
+                len(self.penetrations), (), generator=self.generator))]]
+            index = group[int(torch.randint(len(group), (), generator=self.generator))]
+            record = self.dataset[index]
+            meta = record.get("meta", self.metadata[index])
+            if not _eligible(meta):
+                raise ValueError("window loader returned non-TRAIN/restricted provenance")
+            kin = torch.as_tensor(record["states"][0]).float()
+            present = torch.as_tensor(record["present"][0]).bool()
+            cav = torch.as_tensor(record["is_cav"][0]).bool().clone() & present
+            if self.relabel:
+                slots = torch.where(present)[0]
+                count = int(round(len(slots) * self.target_penetration))
+                shuffled = slots[torch.randperm(len(slots), generator=self.generator)]
+                cav.zero_()
+                cav[shuffled[:count]] = True
+            lane = kin[:, 1:4].argmax(-1)
+            lane = torch.where(present & (kin[:, 1:4].sum(-1) > 0), lane, -1)
+            states.append({"s_m": kin[:, 0], "v_mps": kin[:, 4], "a_mps2": kin[:, 5],
+                           "length_m": kin[:, 6], "lane": lane,
+                           "present": present, "is_cav": cav})
+            hist = {}
+            for source, target in (("hist", "history"), ("hist_mask", "history_mask"),
+                                   ("driver_hist", "driver_history"),
+                                   ("driver_hist_mask", "driver_history_mask")):
+                if source in record:
+                    hist[target] = torch.as_tensor(record[source])
+            histories.append(hist)
+            metadata.append(dict(meta))
+        if any(hist.keys() != histories[0].keys() for hist in histories):
+            raise ValueError("all sampled windows must carry the same history fields")
+        if "driver_history" not in histories[0] and "history" in histories[0]:
+            for hist in histories:
+                hist["driver_history"] = hist["history"]
+                hist["driver_history_mask"] = hist["history_mask"]
+        return StartBatch({key: torch.stack([s[key] for s in states]).to(device)
+                           for key in states[0]},
+                          {key: torch.stack([h[key] for h in histories]).to(device)
+                           for key in histories[0]}, metadata)
+
+    def state_dict(self):
+        return {"rng": self.generator.get_state(), "groups": self.groups,
+                "relabel": self.relabel, "target_penetration": self.target_penetration}
+
+    def load_state_dict(self, state):
+        if (state["groups"] != self.groups or state["relabel"] != self.relabel or
+                state["target_penetration"] != self.target_penetration):
+            raise ValueError("resume start-state selection differs from saved run")
+        self.generator.set_state(state["rng"].cpu())
+
+
+def split_start_states(dataset, *, val_fraction=0.1, seed=0, **kwargs):
+    """Stratified disjoint development VAL windows from the TRAIN-only corpus."""
+    if not 0 < val_fraction < 1:
+        raise ValueError("val_fraction must lie strictly between zero and one")
+    eligible = StartStateSampler(dataset, seed=seed, **kwargs)
+    generator = torch.Generator().manual_seed(seed)
+    train, val = [], []
+    for group in eligible.groups.values():
+        if len(group) < 2:
+            raise ValueError("each penetration needs at least two windows for TRAIN/VAL")
+        order = torch.randperm(len(group), generator=generator).tolist()
+        n_val = min(len(group) - 1, max(1, round(len(group) * val_fraction)))
+        val.extend(group[i] for i in order[:n_val])
+        train.extend(group[i] for i in order[n_val:])
+    return (StartStateSampler(dataset, indices=train, seed=seed + 1, **kwargs),
+            StartStateSampler(dataset, indices=val, seed=seed + 2, **kwargs))
