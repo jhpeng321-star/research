@@ -592,7 +592,7 @@ def test_restricted_paths_and_nontraining_metadata_refused_before_loading():
         with pytest.raises(ValueError, match="restricted"):
             checked_path(f"{token}/never-open.pt")
     with pytest.raises(ValueError, match="outside workspace"):
-        checked_path("E:/research-dense/never-open.pt")
+        checked_path(Path(__file__).resolve().parents[3] / "never-open.pt")  # parent of the repo root
     dataset = _dataset()
     dataset.receipt["split"] = "VAL"
     with pytest.raises(ValueError, match="TRAIN"):
