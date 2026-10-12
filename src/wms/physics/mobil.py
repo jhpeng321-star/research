@@ -15,8 +15,9 @@ from .neighbours import lane_neighbour, lane_of, lead_neighbour
 MASKED_LOGIT = -8.0
 #: ``learned_discretionary``: logit of a safe adjacent change before the learned correction.
 #: Below 'stay' (0) so physics alone never changes lane; with lane_logit_cap 1.5 the learned
-#: correction can lift it to +0.5 > 0.
-LEARNED_PRIOR_LOGIT = -1.0
+#: correction can lift it to +0.25 > 0 (only near the cap: R5b's MOBIL-era lane deltas gave a
+#: 16x too-high change rate at -1.0 in the C4 smoke).
+LEARNED_PRIOR_LOGIT = -1.25
 _DEFAULT_POLITENESS = 0.2
 
 

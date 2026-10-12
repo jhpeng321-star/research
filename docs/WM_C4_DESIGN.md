@@ -149,3 +149,20 @@ SUMO compute. Archived PPO/MAPPO code: `archive/circles_era/traffic_shepherd/ppo
 - Policy exploitation of WM errors on unusual CAV behaviour → uncertainty penalty + SUMO loop.
 - The original switching/direct-mix generator code lived on the box, not in this repo.
 - No training without owner discussion; box off when not training.
+
+## 6. Owner updates 2026-10-12 late (supersede earlier text where they conflict)
+- **HDV lanes:** `lane_rule = "learned_discretionary"` — physics proposes only the forced ramp merge; safe adjacent
+  discretionary changes are open at a neutral prior for the learned lane correction (MOBIL removed).
+- **Policy actions:** per CAV, direct acceleration + lane change (stay/left/right, safety-masked); no designed controller
+  anywhere in learning; the RSU check uses only direct-output candidates (policy, group-signal variants, policy samples,
+  hold-speed). CIRCLES/PI/native are whole-run baselines only.
+- **Dreamer loop:** world model and policy learn together in short cycles (collect with the current policy -> WM refresh
+  -> policy updates in imagination); the first WM training is the warm-up.
+- **Cooperation as the main training signal:** per start state (common random numbers) B = all native, D_i (only CAV i
+  acts), D_G (close group acts), D_{G\i} (flip-one), D_all. Cooperation gain C_G = D_G - sum D_i; marginal-in-team
+  M_i = D_G - D_{G\i}. Actor objective w_all D_all + w_group D_G + w_ind sum D_i + w_coop C_G + w_team sum M_i with the
+  anti-gaming guard w_coop <= w_ind (C_G alone would reward sabotaging solo behaviour); curriculum shifts from individual
+  to group/cooperation weight; group-rich start-state sampling; reports carry other CAVs' last command + lane intent.
+- **Paper focus (novelty check vs Liu et al. 2026 and Vinitsky et al.):** cooperation gain and emergent coordination,
+  run-time verification, extrapolation beyond the trained penetration range (60 %), sample efficiency vs a
+  penetration-randomised ("universal") MAPPO at equal SUMO budget (needed for the paper, not for Friday).
