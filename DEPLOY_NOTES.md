@@ -28,13 +28,23 @@ slots (no entries are imagined, so free padding is inert), call `RsuChecker.deci
 per ensemble member, paired driver samples, keep `policy` unless paired mean > margin and LCB > 0), then
 execute the choice in SUMO until the next decision:
 
+**Owner 2026-10-12 late: direct-output candidates only** (no designed controller is a check candidate or
+executed in `policy_check`; native / damping / pi remain whole-episode baselines via `--controller`).
+Every candidate is executed through the policy path: direct accelerations + lane commands
+(`CavSumoEnv.step(accel, lanes=...)`, see POLICY2_NOTES.md); one dwell clock and one command memory are
+shared by all executors of the episode.
+
 | candidate | imagination (WM-S) | SUMO execution |
 |---|---|---|
-| `policy` | `bridge.make_cav_controller` (deterministic actor, RSU encoder with `build_rsu_field(state)`, `safe_accel`) | `load_policy_fn` accelerations (direct) |
+| `policy` | `bridge.make_cav_controller` (deterministic actor + lane head, RSU encoder with `build_rsu_field(state)`, `safe_accel`) | `load_policy_fn` executor: accel + lanes |
 | `policy_group_0` | same, zero group signal | same actor, zero group signal |
-| `native` | WM-S `hold_teacher` (hold speed; RsuChecker default) | CAVs released to SUMO native |
-| `damping` | `wms.train.cav_drive.TimelineControllers` (published CIRCLES, one shared ONNX session) | env `step(fallback="damping")` (frozen CIRCLES via CommandOwnership) |
-| `pi` | `TimelineControllers` (published PI external-U, U = 31.29) | env `step(fallback="pi")`: a FRESH frozen PI session each time PI is selected |
+| `policy_group_1` | same, perturbed group signal (`--group-perturbation`, default 0.1) | same actor, perturbed signal |
+| `policy_sample_0/1` | stochastic actor, `rsu_check.NoiseStream` (same draws in every WM member / driver sample) | same stream replayed per tick after the decision |
+| `hold_speed` | direct a = 0, stay in lane (forced ramp merge kept), safety-filtered | same (direct, lanes -1) |
+
+The oracle state also carries the true per-CAV dwell clocks (`lane_dwell_s`) and the last commanded
+accel / lane intent (`cmd_accel_mps2`, `lane_intent`) so imagination starts from the executed history.
+The smoke table below predates this change (it used native/damping/pi candidates).
 
 State sources: `oracle` = env true WM-frame state + its rolling history (short 10-tick `history` and the
 60 s long `driver_history`, trainer featurisers) - privileged upper bound. `belief` =

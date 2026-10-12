@@ -68,8 +68,11 @@ Centralised, training-only (privileged full WM state is allowed for the critic, 
 
 ### 2.6 Deployment — Option B (owner choice): policy + world-model check
 Every few seconds the RSU imagines 10–30 s for a few candidates and acts on the best:
-the policy's plan, policy with alternative group signals, native, CIRCLES, PI, wall law — each under several HDV
-driver-setting guesses. Keep the policy's plan unless an alternative wins clearly (paired margin).
+the policy's plan, policy with alternative group signals, stochastic policy samples and a hold-speed direct
+fallback (owner 2026-10-12 late: direct-output candidates only; native, CIRCLES, PI and the wall law are
+whole-episode baselines, never check candidates) — each under several HDV driver-setting guesses. Keep the
+policy's plan unless an alternative wins clearly (paired margin). The policy outputs per-CAV acceleration AND
+a stay/left/right lane decision and is trained on cooperative difference rewards (POLICY2_NOTES.md).
 - **State for the check (owner question 2026-10-12).** The RSU only has CAV reports; imagination needs a state.
   Three levels, all reported:
   1. **Oracle check** — true SUMO state (upper bound, labelled as such).
