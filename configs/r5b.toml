@@ -14,7 +14,7 @@ extends = "r5_f23_half.toml"
 
 [model]
 init_from = "ckpt_r5_stage30"
-grad_decay_per_step = 0.93 # set from the box smoke (target: pre-clip grad norm O(1-100) in both stages)
+grad_decay_per_step = 0.90 # box smoke: pre-clip grad norm 10-27 at 60 s, 35-111 at 120 s (0.93: 20-46 / 2.3e3-5.1e3; none: 6e2-4e3 / 1e8-4e8)
 
 [curriculum]
 unroll_s = [60.0, 120.0]
