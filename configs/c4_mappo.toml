@@ -21,7 +21,7 @@ lane_entropy_coef = 0.01                 # lane head (masked categorical entropy
 value_coef = 0.5
 max_grad_norm = 0.5
 target_kl = 0.03                         # 0 = disabled
-cost_limit_per_step = 0.01               # = C4 ttc_budget: mean SUM of the 2 physics-step cost_ttc per control step
+cost_limit_per_step = 3.6                # = C4 ttc_budget (calibrated on recorded traffic 2026-10-13; 0.01 was unreachable)
 lagrange_lr = 0.01                       # = C4 dual_lr
 lagrange_max = 50.0
 return_norm = true

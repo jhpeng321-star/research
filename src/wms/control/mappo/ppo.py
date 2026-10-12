@@ -54,7 +54,7 @@ class PPOConfig:
     value_coef: float = 0.5
     max_grad_norm: float = 0.5
     target_kl: float | None = 0.03
-    cost_limit_per_step: float = 0.01  # = C4 trainer ttc_budget (sum of 2 physics-step costs)
+    cost_limit_per_step: float = 3.6  # = C4 trainer ttc_budget (sum of 2 physics-step costs)
     lagrange_lr: float = 0.01          # = C4 trainer dual_lr
     lagrange_max: float = 50.0
     return_norm: bool = True

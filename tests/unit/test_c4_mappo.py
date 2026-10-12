@@ -434,7 +434,7 @@ def test_config_toml_defaults_and_smoke_merge(tmp_path):
     cfg = loads(CONFIG_PATH.read_text(encoding="utf-8"))
     parsed = config_from_dict(cfg)
     assert parsed.ppo.gamma == 0.99 and parsed.ppo.gae_lambda == 0.95
-    assert parsed.ppo.cost_limit_per_step == 0.01 and parsed.ppo.lagrange_lr == 0.01
+    assert parsed.ppo.cost_limit_per_step == 3.6 and parsed.ppo.lagrange_lr == 0.01
     assert parsed.rollout.penetrations == (0.05, 0.1, 0.2, 0.4)
     assert parsed.rollout.demands_vph == (2400, 2600, 2700)
     assert parsed.rollout.seeds == "4107-4148" and parsed.rollout.max_env_steps is None

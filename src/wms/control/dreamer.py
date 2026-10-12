@@ -41,7 +41,7 @@ class DreamerConfig:
     critic_lr: float = 1e-4
     entropy_weight: float = 3e-4
     uncertainty_weight: float = 0.1
-    ttc_budget: float = 0.01
+    ttc_budget: float = 3.6
     dual_lr: float = 0.01
     lagrange_init: float = 0.0
     grad_clip: float = 100.0

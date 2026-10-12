@@ -22,7 +22,7 @@ actor_lr = 5e-5 # Recommended range: 3e-5 .. 1e-4; includes the RSU group encode
 critic_lr = 1e-4
 entropy_weight = 3e-4
 uncertainty_weight = 0.1 # Population std of team reward across members; zero for one member.
-ttc_budget = 0.01 # Mean SUM of per-physics-step cost_ttc within each control step.
+ttc_budget = 3.6 # Mean SUM of per-physics-step cost_ttc per control step. Calibrated 2026-10-13: recorded TRAIN traffic has 3.64 (0.01 was unreachable -> unbounded multiplier). Constraint = no more close calls than recorded traffic.
 dual_lr = 0.01 # Projected dual ascent: max(0, mu + lr * (mean_cost - budget)).
 lagrange_init = 0.0
 grad_clip = 100.0 # Separate pre-clip actor/critic norms are logged.
