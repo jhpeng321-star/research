@@ -110,6 +110,12 @@ def dry_run(cfg: Any, model: Any, dataset: Dataset, *, out_dir: Path) -> dict:
 
     flat = dict(cfg.to_legacy_flat())
     flat.update(device="cpu", steps_per_epoch=2, stage_steps=None, unroll_curriculum_s=[10.0])
+    # The single 10 s dry-run stage keeps only its own per-stage settings (round-5
+    # configs carry per-stage truncation / learning rates; the full lists would not
+    # validate against the collapsed one-stage curriculum).
+    for per_stage in ("truncation_steps_per_stage", "lr_per_stage"):
+        if flat.get(per_stage) is not None:
+            flat[per_stage] = list(flat[per_stage])[:1]
     trainer = WmSTrainer(type(cfg).from_legacy_flat(flat), model, dataset, out_dir=out_dir)
     loader = DataLoader(dataset, batch_size=min(4, len(dataset)), shuffle=False,
                         collate_fn=collate, num_workers=0)

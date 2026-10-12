@@ -12,6 +12,8 @@ from .idm import IDMParams
 _SUMO_IDM = (2.49, 4.2, 1.135, 2.6, 4)
 #: Default IDM parameters.
 _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
+#: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
+LANE_RULES = ("mobil", "forced_merge_only")
 
 
 @dataclass
@@ -23,6 +25,11 @@ class PhysicsConfig:
     enables the calibrated SUMO-like mandatory-merge gap acceptance and the
     cooperative mainline yielding; it defaults to off, in which case the legacy
     MOBIL-merge baseline is reproduced exactly.
+
+    ``lane_rule`` selects the lane-change policy (owner decision 2026-10-12):
+    ``mobil`` (default, unchanged legacy behaviour) or ``forced_merge_only``,
+    which drops every discretionary MOBIL change and keeps only the mandatory
+    ramp merge (lane 2 -> 1 inside the merge zone, gap safety + urgency intact).
     """
 
     dt_s: float = 0.5
@@ -57,6 +64,11 @@ class PhysicsConfig:
     yield_min_speed_mps: float = 2.5
     yield_min_merger_speed_mps: float = 3.5
     end_obstacle_range_m: float = 25.0
+    lane_rule: str = "mobil"
+
+    def __post_init__(self) -> None:
+        if self.lane_rule not in LANE_RULES:
+            raise ValueError(f"lane_rule must be one of {LANE_RULES}: {self.lane_rule!r}")
 
     def idm(self) -> tuple[float, float, float, float, int]:
         """``(a_max, b_comf, time_headway, s0, delta)`` of the default driver."""
@@ -80,14 +92,14 @@ class PhysicsConfig:
     def from_params_file(cls, path: str | Path, **overrides) -> "PhysicsConfig":
         """Build a config from a fitted merge-cal params JSON (unknown keys ignored).
 
-        ``merge_cal`` is never read from the file; the caller enables it
-        explicitly.  ``overrides`` win over the file.
+        ``merge_cal`` and ``lane_rule`` are never read from the file; the caller
+        enables them explicitly.  ``overrides`` win over the file.
         """
         known = set(cls.__dataclass_fields__)
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError(f"merge-cal params must be a JSON object: {path}")
         data = {k: v for k, v in raw.items()
-                if k in known and k != "merge_cal" and v is not None}
+                if k in known and k not in ("merge_cal", "lane_rule") and v is not None}
         data.update(overrides)
         return cls(**data)

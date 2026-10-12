@@ -11,6 +11,7 @@ from .residual_bound import validate_bounds
 
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 LANE_HEADS = ("off", "history")
+LANE_RULES = ("mobil", "forced_merge_only")
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,9 @@ class ModelSpec:
     none; ``driver_params``: inferred IDM/MOBIL parameters without residual;
     ``hybrid``: inferred parameters plus gated residual conditioned on the driver
     embedding).  ``history_s`` (seconds, optional) enables the long driver history.
+    ``lane_rule`` records the C4 lane-change policy of the training config; the
+    runtime switch itself lives on :class:`~wms.physics.config.PhysicsConfig`
+    (like ``merge_cal`` / ``sumo_fidelity``), which is what the model consults.
 
     The residual bounds are mutually exclusive: either the legacy tanh caps
     (``residual_cap_*``) or the soft bound (``residual_soft_bound_*``).
@@ -30,6 +34,7 @@ class ModelSpec:
     black_box: bool = False
     rollout_mode: str = "residual"
     lane_head: str = "off"
+    lane_rule: str = "mobil"
     history_features: int = HISTORY_F
     history_len: int = HISTORY_H
     history_hidden: int = 64
@@ -68,6 +73,8 @@ class ModelSpec:
             raise ValueError("rollout_mode must be residual, driver_params or hybrid")
         if self.lane_head not in LANE_HEADS:
             raise ValueError("lane_head must be off or history")
+        if self.lane_rule not in LANE_RULES:
+            raise ValueError(f"lane_rule must be one of {LANE_RULES}")
         if self.gate_kind not in ("cumsum", "saturating"):
             raise ValueError("gate_kind must be cumsum or saturating")
         if not 0.0 < self.gate_g_max_init < 1.0:

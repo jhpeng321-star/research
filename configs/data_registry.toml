@@ -78,6 +78,11 @@ path = "data_cache/wallc1_states_h60"
 [datasets.eval_states_h60_real]
 path = "data_cache/wallc1_states_h60_real"
 
+# C4 world-model window lists (generated into the local runs/ tree by
+# tools/make_c4_lists.py from the read-only lpwo_v3 / wmn1_switching_train lists).
+[datasets.c4_wm_lists]
+path = "runs/active/c4_wm_lists"
+
 # Switching-pack window list, action-timeline index and zero-shot held-out controller list (configs/r3.toml).
 [datasets.windows_train_hetdata]
 path = "data_cache/wmn1_switching_train/windows_train_hetdata.json"

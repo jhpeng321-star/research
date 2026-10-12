@@ -22,7 +22,7 @@ from torch.utils.checkpoint import checkpoint
 
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
-from wms.physics.mobil import mobil_merge_logits
+from wms.physics.mobil import MASKED_LOGIT, mobil_merge_logits
 from wms.physics.neighbours import lane_neighbour, lane_of, lead_neighbour
 from wms.physics.projection import FeasibilityProjection
 from wms.physics.state import KIN_F, state_kin, state_present
@@ -483,6 +483,12 @@ class WmSModel(nn.Module):
             self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
             self.lane_logit_cap)
         lane_logits = lane_base + lane_correction
+        if self.physics.lane_rule == "forced_merge_only":
+            # The learned residual lane delta can never unmask a forbidden change:
+            # entries the physics masked stay masked after the correction and cap
+            # (C4; in the default 'mobil' mode this branch is skipped, so outputs
+            # are bit-identical to the pre-lane_rule model).
+            lane_logits = torch.where(lane_base <= MASKED_LOGIT, lane_base, lane_logits)
         lane_probabilities = None
         if self.lane_change_head is not None:
             if driver_embedding is None:

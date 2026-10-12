@@ -65,6 +65,7 @@ class ModelConfig:
     kind: Literal["structured", "blackbox_traj", "blackbox_id"] = "structured"
     rollout_mode: Literal["residual", "driver_params", "hybrid"] = "residual"
     lane_head: Literal["off", "history"] = "off"
+    lane_rule: Literal["mobil", "forced_merge_only"] = "mobil"
     physics_params: Optional[str] = None
     merge_cal: bool = False
     sumo_fidelity: bool = False

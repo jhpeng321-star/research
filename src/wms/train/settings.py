@@ -15,6 +15,7 @@ from typing import Any, Mapping, Optional
 
 CAV_DRIVE_MODES = ("teacher", "closed_loop")
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
+LANE_RULES = ("mobil", "forced_merge_only")
 HARD_CAP_FIELDS = ("residual_cap_mps2", "residual_cap_neg_mps2")
 
 
@@ -67,6 +68,7 @@ class TrainSettings:
     state_noise_std_mps: float = 0.0
     rollout_mode: str = "residual"
     lane_head: str = "off"
+    lane_rule: str = "mobil"
     residual_magnitude_weight: Optional[float] = None
     driver_sidecar: Optional[str] = None
     out_dir: str = "runs/wms"
@@ -148,6 +150,8 @@ class TrainSettings:
         _require(self.history_s is None or not self.black_box,
                  "long history requires structured WM-S")
         _require(self.lane_head in ("off", "history"), "lane_head must be off or history")
+        _require(self.lane_rule in LANE_RULES,
+                 f"lane_rule must be one of {LANE_RULES}")
         _require(self.lane_head != "history" or self.rollout_mode in ("driver_params", "hybrid"),
                  "history lane head requires rollout_mode=driver_params or hybrid")
         _require(self.residual_magnitude_weight is None

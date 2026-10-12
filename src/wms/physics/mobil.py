@@ -57,6 +57,11 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     ``3 tanh((incentive - threshold (1 - u)) / 4) - 2.5 (+ 6 u^2 on the accel lane)``
     and is masked (-8) unless the leader/follower gaps and the follower braking in
     the target lane are safe (the braking limit grows with merge urgency ``u``).
+
+    With ``physics.lane_rule == 'forced_merge_only'`` every discretionary change
+    is masked as well: only the mandatory ramp merge (lane ``merge_lane`` ->
+    ``merge_target_lane`` inside the merge zone, with the same gap safety and
+    urgency) can keep a non-masked logit (C4; owner decision 2026-10-12).
     """
     p = physics
     s, v = kin[..., 0], kin[..., 4]
@@ -92,6 +97,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
         safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
         allowed = adjacent & ramp_ok & no_to_ramp & safe
+        if p.lane_rule == "forced_merge_only":
+            # No discretionary changes: the mandatory merge alone stays possible
+            # (ramp_ok already confines it to the in-zone lane 2 -> 1 change).
+            allowed = allowed & forced
         u = urgency * forced.to(kin.dtype)
         if driver_params is None:
             score = (a_new - a_cur) - p.mobil_threshold_mps2 * (1.0 - u)
