@@ -17,11 +17,17 @@ deleted).  Children run in their own process group and are killed by group id on
 
 Controller commands:
   native, damping, pi : python -m traffic_shepherd evaluate ...   (existing CLI; role gate
-                        traffic_shepherd.seeds.require_development_case)
+                        traffic_shepherd.seeds.require_development_case), or with
+                        --classic-harness deploy the C4 runner below (same SUMO harness/summary
+                        as the C4 controllers: CavSumoEnv, warmup + window)
   wall, c4_policy, c4_policy_rsu_check_oracle, c4_policy_rsu_check_belief :
-                        python -m $C4_EVAL_MODULE (default traffic_shepherd.c4.evaluate) --controller ...
-  The belief variant needs --belief-ckpt (the reconstructor); without it those jobs are reported as
-  'pending_belief' and not run.  MAPPO is deferred (owner decision 2026-10-12).
+                        python -m $C4_EVAL_MODULE (default wms.control.deploy) --controller
+                        {wall,c4_policy,c4_policy_rsu_check} --seed --loading --penetration --role
+                        --output [--policy-ckpt --wm-ckpt --rsu-state oracle|belief] + --deploy-args
+  The belief variant uses the RSU BeliefTracker (no separate checkpoint); --belief-ckpt is passed
+  through if given and ignored by the runner.  The C4 runner's seed gate
+  (traffic_shepherd.c4.seeds.check_case) only admits 4107-4148: see OPS_NOTES section 10.
+  MAPPO is deferred (owner decision 2026-10-12).
 """
 from __future__ import annotations
 
@@ -30,6 +36,7 @@ import hashlib
 import json
 import os
 import platform
+import shlex
 import signal
 import subprocess
 import sys
@@ -63,11 +70,14 @@ def build_jobs(args) -> list[dict]:
                     common = ["--seed", str(entry["seed"]), "--loading", str(demand),
                               "--penetration", f"{pen:g}", "--role", entry["role"], "--output", str(jdir)]
                     status = "pending"
-                    if ctrl in CLASSIC:
+                    extra = shlex.split(args.deploy_args or "")
+                    if ctrl in CLASSIC and args.classic_harness == "deploy":
+                        cmd = [py, "-m", args.c4_module, "--controller", ctrl, *common, *extra]
+                    elif ctrl in CLASSIC:
                         cmd = [py, "-m", "traffic_shepherd", "evaluate", *common, *CLASSIC[ctrl]]
                     else:
                         base = "c4_policy_rsu_check" if ctrl.startswith("c4_policy_rsu_check") else ctrl
-                        cmd = [py, "-m", args.c4_module, "--controller", base, *common]
+                        cmd = [py, "-m", args.c4_module, "--controller", base, *common, *extra]
                         if base in ("c4_policy", "c4_policy_rsu_check"):
                             if not args.policy_ckpt:
                                 raise SystemExit(f"--policy-ckpt is required for {ctrl}")
@@ -77,11 +87,8 @@ def build_jobs(args) -> list[dict]:
                                 raise SystemExit(f"--wm-ckpt is required for {ctrl}")
                             cmd += ["--wm-ckpt", args.wm_ckpt,
                                     "--rsu-state", "oracle" if ctrl.endswith("oracle") else "belief"]
-                            if ctrl.endswith("belief"):
-                                if args.belief_ckpt:
-                                    cmd += ["--belief-ckpt", args.belief_ckpt]
-                                else:
-                                    status = "pending_belief"
+                            if ctrl.endswith("belief") and args.belief_ckpt:
+                                cmd += ["--belief-ckpt", args.belief_ckpt]
                     jobs.append({"controller": ctrl, "demand": demand, "penetration": pen,
                                  "seed": entry["seed"], "role": entry["role"], "dir": str(jdir),
                                  "cmd": cmd, "status0": status,
@@ -203,7 +210,13 @@ def main(argv=None) -> int:
     ap.add_argument("--timeout", type=float, default=7200.0, help="seconds per episode")
     ap.add_argument("--minutes-per-episode", type=float, default=6.0, help="only used by the sizing line")
     ap.add_argument("--python", default=sys.executable)
-    ap.add_argument("--c4-module", default=os.environ.get("C4_EVAL_MODULE", "traffic_shepherd.c4.evaluate"))
+    ap.add_argument("--c4-module", default=os.environ.get("C4_EVAL_MODULE", "wms.control.deploy"))
+    ap.add_argument("--classic-harness", choices=("evaluate", "deploy"),
+                    default=os.environ.get("C4_CLASSIC_HARNESS", "evaluate"),
+                    help="native/damping/pi via 'traffic_shepherd evaluate' or the C4 runner")
+    ap.add_argument("--deploy-args", default=os.environ.get("C4_DEPLOY_ARGS", ""),
+                    help="extra arguments for the C4 runner, e.g. '--warmup 300 --horizon 600 "
+                         "--decision-period 5 --imagine-horizon 20 --n-driver-samples 4 --margin 2'")
     ap.add_argument("--policy-ckpt", default=os.environ.get("POLICY_CKPT"))
     ap.add_argument("--wm-ckpt", default=os.environ.get("WM_CKPT"))
     ap.add_argument("--belief-ckpt", default=os.environ.get("BELIEF_CKPT"))
@@ -230,7 +243,9 @@ def main(argv=None) -> int:
     seeds_sha = hashlib.sha256(Path(args.seeds).read_bytes()).hexdigest()
     ident = {"controllers": args.controllers, "penetrations": args.penetrations, "demands": args.demands,
              "per_demand": args.per_demand, "seeds_file": str(args.seeds), "seeds_sha256": seeds_sha,
-             "policy_ckpt": args.policy_ckpt, "wm_ckpt": args.wm_ckpt, "belief_ckpt": args.belief_ckpt}
+             "policy_ckpt": args.policy_ckpt, "wm_ckpt": args.wm_ckpt, "belief_ckpt": args.belief_ckpt,
+             "c4_module": args.c4_module, "classic_harness": args.classic_harness,
+             "deploy_args": args.deploy_args}
     ident_sha = hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()
 
     if args.action in ("plan", "status"):

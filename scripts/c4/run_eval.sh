@@ -9,9 +9,13 @@
 # Controllers: native, damping, pi, c4_policy, c4_policy_rsu_check_oracle, c4_policy_rsu_check_belief
 # (+ wall with INCLUDE_WALL=1).  MAPPO is deferred.  Penetrations 0.02..0.60, demands 2400/2600/2700,
 # development seeds from eval_seeds.json (make_eval_seeds.py), paired across controllers.
-# Env: SEEDS, POLICY_CKPT, WM_CKPT, BELIEF_CKPT (belief jobs stay pending without it), WORKERS (default
-#      usable cores - 2), PER_DEMAND=8, CONTROLLERS, PENETRATIONS, DEMANDS, TIMEOUT_S=7200, MIN_PER_EP=6,
-#      C4_EVAL_MODULE (default traffic_shepherd.c4.evaluate), RUN_ID, RESUME=1, FOREGROUND=1.
+# Env: SEEDS, POLICY_CKPT, WM_CKPT, BELIEF_CKPT (optional, ignored: the belief variant uses the RSU
+#      BeliefTracker), WORKERS (default usable cores - 2), PER_DEMAND=8, CONTROLLERS, PENETRATIONS, DEMANDS,
+#      TIMEOUT_S=7200, MIN_PER_EP=6 (policy_check at default settings needs ~25 (4 threads) to ~45 (1 thread) min/episode on CPU,
+#      DEPLOY_NOTES.md), C4_EVAL_MODULE (default wms.control.deploy), C4_CLASSIC_HARNESS=evaluate|deploy,
+#      C4_DEPLOY_ARGS (extra runner args, e.g. "--horizon 600 --margin 2"), RUN_ID, RESUME=1, FOREGROUND=1.
+# NOTE: the C4 runner only admits seeds 4107-4148 (traffic_shepherd.c4.seeds); eval_seeds.json currently
+#      lists WM28 fresh-validation seeds, which it refuses (OPS_NOTES section 10).
 if LC_ALL=C grep -q $'\r' "${BASH_SOURCE[0]}"; then echo 'REFUSED: CRLF bytes in script' >&2; exit 2; fi
 set -Eeuo pipefail
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)

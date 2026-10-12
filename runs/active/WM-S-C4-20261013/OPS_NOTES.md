@@ -115,11 +115,12 @@ POLICY_CKPT=... WM_CKPT=... [BELIEF_CKPT=...] [INCLUDE_WALL=1] WORKERS=44 bash r
 RUN_ID=<eval id> bash run_eval.sh status ; RUN_ID=<id> RESUME=1 bash run_eval.sh run     # continue after a stop
 ```
 Layout: `out/<controller>/m<demand>/p<pen>/s<seed>` (+ `.log`, `.DONE` / `.FAILED`). Native/damping/PI call the existing
-`python -m traffic_shepherd evaluate` (new output dir per job, role gate `require_development_case`). Controllers
-`wall`, `c4_policy`, `c4_policy_rsu_check_{oracle,belief}` call `python -m traffic_shepherd.c4.evaluate --controller X
---seed --loading --penetration --role --output [--policy-ckpt --wm-ckpt --rsu-state oracle|belief --belief-ckpt]`
-(**interface assumed**). Belief jobs stay `pending_belief` until `BELIEF_CKPT` exists. Failed jobs are not retried;
-`RERUN_FAILED=1` renames them aside and reruns once.
+`python -m traffic_shepherd evaluate` (new output dir per job, role gate `require_development_case`), or the C4
+runner with `C4_CLASSIC_HARNESS=deploy` (recommended for paired comparisons: same harness/summary). Controllers
+`wall`, `c4_policy`, `c4_policy_rsu_check_{oracle,belief}` call `python -m wms.control.deploy --controller X
+--seed --loading --penetration --role --output [--policy-ckpt --wm-ckpt --rsu-state oracle|belief] $C4_DEPLOY_ARGS`
+(implemented; DEPLOY_NOTES.md at the repo root). The belief variant runs now (RSU BeliefTracker, no checkpoint;
+`BELIEF_CKPT` is optional and ignored). Failed jobs are not retried; `RERUN_FAILED=1` renames them aside and reruns once.
 
 ## 8. Fetch results (laptop)
 
@@ -166,7 +167,9 @@ means ~45 min setup and a parity check (AMD vs laptop Intel) before trusting num
 | `python -m wms.control.train_cli --config --out --set` | policy worker |
 | `python -m traffic_shepherd.c4.collect --policy-ckpt --penetrations --demands --seeds-file --iteration --workers --out` (writes `episodes/`) | SUMO worker |
 | `python -m traffic_shepherd.c4.to_pack --episodes --out --iteration` (writes `pack/`, `identities/`) | SUMO/data worker |
-| `python -m traffic_shepherd.c4.evaluate --controller {wall,c4_policy,c4_policy_rsu_check} ...` | SUMO worker |
+| ~~`traffic_shepherd.c4.evaluate`~~ RESOLVED 2026-10-12: `python -m wms.control.deploy --controller {native,damping,pi,wall,policy\|c4_policy,policy_check\|c4_policy_rsu_check} --state\|--rsu-state oracle\|belief ...` (campaign argument names accepted; outputs `episode/` (collector format), `decisions.jsonl`, `segments.jsonl`, `DEPLOY_SUMMARY.json`); `eval_campaign.py` default `--c4-module wms.control.deploy`, `--classic-harness`, `--deploy-args` | deploy worker (c4/deploy) |
+| **OPEN (blocker): seeds.** `eval_seeds.json` lists WM28_FRESH_VALIDATION_SEEDS (92xxxx); the C4 env gate `traffic_shepherd.c4.seeds.check_case` admits only 4107-4148 and explicitly blocks WM28 fresh-validation seeds, so every C4-runner job fails at reset (`SeedRefusal`, verified) while `traffic_shepherd evaluate` would accept them (unpaired). Owner decision needed: a registered, exposure-audited block admitted by both gates | owner / integrator |
+| **OPEN: sizing.** `policy_check` with defaults (5 candidates x 4 driver samples, 20 s imagination, 5 s period, 1 R5b member) measured ~12.7 s/decision with 4 torch threads (laptop; the campaign sets OMP_NUM_THREADS=1, so pass `--threads N` in `C4_DEPLOY_ARGS` and size workers accordingly); 1 thread ~21 s/decision -> 120 decisions ~ 25 min (4 threads) to ~45 min (1 thread) per 600 s episode (+ SUMO); `MIN_PER_EP=6` underestimates these jobs (set `--minutes-per-episode` accordingly or use a cheaper `C4_DEPLOY_ARGS`) | integrator |
 | policy checkpoint named `policy_best.pt` / `policy.pt`, WM `wm_s_best.pt` / `wm_s.pt` (`*_CKPT_NAMES` env) | policy / WM workers |
 
 ## 11. Pitfall checklist (every launch)
