@@ -1,0 +1,513 @@
+"""CavSumoEnv: ``wms.control.contract.CavEnv`` on the preserved merge network.
+
+One environment = one TraCI connection in this process (run one per worker process).
+Scenario: ``traffic_shepherd.scenarios.build_scenario`` (exogenous Poisson demand, driver
+types, nested CAV identity draws at ``penetration``), 0.5 s physics, 1 s control,
+CAV speedMode 27 (the campaign mode, ``CommandOwnership(cav_speed_mode=27)``), CAV
+acceleration bounds [-3, 1.5] m/s^2 from the adapter config.
+
+Every CAV command goes through :class:`traffic_shepherd.ownership.CommandOwnership`
+(``wall_commands={vid: accel}`` -> ``direct_target`` -> ``slowDown``), the sole
+longitudinal writer; HDVs are never commanded.  Episode controllers:
+
+* ``direct``  - per-CAV absolute accelerations from ``step(accel_by_slot)``
+  (non-finite / missing entries release that CAV to native for the tick);
+* ``native``  - every CAV released to SUMO IDM;
+* ``damping`` - frozen CIRCLES ONNX controller;
+* ``pi``      - frozen PI external-U (registered U = 31.29 m/s);
+* ``wall``    - wall law v2.2 shape (``wms.physics.wall_exec``) on one CAV pair per
+  mainline lane, other CAVs damping (see :mod:`traffic_shepherd.c4.baselines`).
+
+The warmup (``warmup_s``) always runs native; native -> damping/pi uses the frozen
+``FleetSwitchSession`` one-boundary switch at ``t = warmup_s``.
+"""
+from __future__ import annotations
+
+import math
+import shutil
+import tempfile
+import time
+from collections import Counter
+from pathlib import Path
+
+import numpy as np
+
+from traffic_shepherd.config import load_config
+from traffic_shepherd.metrics import RequestLedger, braking_effort, closing_ttc, service_summary
+from traffic_shepherd.scenarios import build_scenario, observation_map
+
+from . import ROOT
+from .recorder import EpisodeRecorder
+from .seeds import check_case
+from .state import (FrameBuilder, HistoryBuffer, ReferenceFrame, frame_cell_counts,
+                    frame_to_state, rsu_detections)
+from .sensing import TableSensor
+from .sumo_io import (VehicleReader, action_entry, boundary_edges, build_physics_row,
+                      crossings_between)
+
+CONTROLLERS = ("direct", "native", "damping", "pi", "wall")
+CAV_SPEED_MODE = 27
+SPEED_LIMIT_MPS = 31.29
+PI_U_MPS = 31.29
+DEFAULT_K = 192
+
+
+class CavEnvError(RuntimeError):
+    pass
+
+
+class CavSumoEnv:
+    """SUMO episode environment with a WM-frame slot state (batch 1)."""
+
+    def __init__(self, *, k_slots: int = DEFAULT_K, controller: str = "direct",
+                 scenario_root=None, check_parity: bool = False,
+                 history_ticks: int = 241, use_subscriptions: bool = True,
+                 ttc: bool = True, sumo_binary=None, device="cpu",
+                 sensor_check_every_s: int = 10, physics_log: bool = True):
+        if controller not in CONTROLLERS:
+            raise ValueError(f"controller must be one of {CONTROLLERS}")
+        self.config = load_config()
+        self.k = int(k_slots)
+        self.controller = controller
+        self.scenario_root = (Path(scenario_root) if scenario_root is not None
+                              else ROOT / "runs" / "active" / "c4_tmp")
+        self.check_parity = bool(check_parity)
+        self.sensor_check_every_s = max(1, int(sensor_check_every_s))
+        self.physics_log = bool(physics_log)
+        self.ttc = bool(ttc)
+        self.use_subscriptions = bool(use_subscriptions)
+        self.device = device
+        self.history = HistoryBuffer(history_ticks)
+        self.binary = sumo_binary or shutil.which("sumo")
+        if self.binary is None:
+            raise CavEnvError("SUMO binary not found on PATH")
+        self._circles = None
+        self.api = None
+        self.recorder = None
+        self.done = True
+
+    # ------------------------------------------------------------------ lifecycle
+    def reset(self, *, seed: int, demand_vph: int, penetration: float, warmup_s: float,
+              horizon_s: float, controller: str | None = None, episode_dir=None,
+              meta: dict | None = None):
+        """Start a fresh SUMO episode, run the native warmup, return the t = warmup state."""
+        import traci
+
+        from traffic_shepherd.damping import CirclesController
+        from traffic_shepherd.ownership import CommandOwnership
+        from traffic_shepherd.sensing import SumoLocalSensor
+        from traffic_shepherd.simulation import start_sumo
+
+        self.close()
+        mode = self.controller if controller is None else controller
+        if mode not in CONTROLLERS:
+            raise ValueError(f"controller must be one of {CONTROLLERS}")
+        check_case(seed, demand_vph)
+        warmup, horizon = float(warmup_s), float(horizon_s)
+        if (warmup < 0 or horizon < 1 or warmup != int(warmup) or horizon != int(horizon)
+                or warmup + horizon > self.config.episode_seconds):
+            raise ValueError("warmup/horizon must be whole seconds within the 2400 s fixture")
+        if not 0.0 <= float(penetration) <= 1.0:
+            raise ValueError("penetration must be in [0, 1]")
+        self.mode, self.seed, self.demand = mode, int(seed), int(demand_vph)
+        self.penetration = float(penetration)
+        self.warmup_s, self.horizon_s = warmup, horizon
+        self.end_s = warmup + horizon
+        self._wall_started = time.monotonic()
+        out = episode_dir if episode_dir is not None else None
+        if out is not None:
+            self.recorder = EpisodeRecorder(out, k=self.k, physics_log=self.physics_log)
+            scene_root = self.recorder.scenario_dir
+        else:
+            self.scenario_root.mkdir(parents=True, exist_ok=True)
+            scene_root = Path(tempfile.mkdtemp(prefix=f"s{seed}_m{demand_vph}_",
+                                               dir=self.scenario_root))
+        scene, requests, scenario_manifest = build_scenario(
+            scene_root, self.seed, self.demand, penetration=self.penetration, role="exposed",
+            config=self.config)
+        self.requests = requests
+        self.cav_ids = frozenset(r.vehicle_id for r in requests if r.is_cav)
+        self.scenario_manifest = scenario_manifest
+        if traci.isLoaded():
+            raise CavEnvError("a TraCI connection is already active in this process")
+        command = []
+        start_sumo(self.binary, scene, seed=self.seed, config=self.config, api=traci,
+                   command_record=command)
+        self.api = traci
+        self.done = False
+        if self._circles is None:
+            self._circles = CirclesController(self.config)
+        self.ownership = CommandOwnership(traci, self.cav_ids, self._circles,
+                                          cav_speed_mode=CAV_SPEED_MODE)
+        lane_map = observation_map(traci, self.config)
+        self.sensor = TableSensor(traci, self.config, lane_map)
+        self.slow_sensor = (SumoLocalSensor(traci, self.config, lane_map)
+                            if self.check_parity else None)
+        self._table: dict = {}
+        self.sensor_mismatches = 0
+        self.sensor_checks = 0
+        self.reader = VehicleReader(traci, cav_ids=self.cav_ids,
+                                    use_subscriptions=self.use_subscriptions)
+        self.builder = FrameBuilder(self.k, self.cav_ids)
+        self.reference = ReferenceFrame(traci, self.config) if self.check_parity else None
+        self.edges = boundary_edges(self.config)
+        self.ledger = RequestLedger(requests)
+        self.history.clear()
+        self._setup_controllers(mode)
+        self._previous_row = None
+        self._previous_live: set = set()
+        self._previous_live_sub: set = set()
+        self._retired_cavs: set = set()
+        self._collision_previous: set = set()
+        self.totals = Counter()
+        self.window_totals = Counter()
+        self.minimum_ttc = None
+        self.command_counts = Counter()
+        self.fallback_counts = Counter()
+        self.parity_failures = 0
+        self.dropped_cav_steps = 0
+        self.max_present = 0
+        self._last_actions: dict = {}
+        if self.recorder is not None:
+            self.recorder.start(dict(
+                seed=self.seed, demand_vph=self.demand, penetration=self.penetration,
+                warmup_s=warmup, horizon_s=horizon, controller=mode, k_slots=self.k,
+                cav_speed_mode=CAV_SPEED_MODE, scenario=scenario_manifest,
+                launch_command=[str(c) for c in command[0]] if command else None,
+                sumo_version=list(traci.getVersion()), **(meta or {})))
+        # t = 0 state (empty network) so state index i <-> time 0.5 i
+        self.frame = self.builder.build(0.0, {})
+        self.history.append(self.frame)
+        if self.recorder is not None:
+            self.recorder.on_frame(self.frame, None)
+        while self.now < warmup - 1e-9:
+            self._control_tick(None)
+        self.window_totals = Counter()
+        self._window_wall_started = time.monotonic()
+        self._window_ledger0 = (self.ledger.system_vehicle_seconds,
+                                self.ledger.source_vehicle_seconds, len(self.ledger.arrived))
+        return self.state()
+
+    def close(self) -> None:
+        if self.api is not None:
+            try:
+                if self.api.isLoaded():
+                    try:
+                        self.ownership.release_all(live_ids=set(self.api.vehicle.getIDList()))
+                    finally:
+                        self.api.close()
+            finally:
+                self.api = None
+        if self.recorder is not None and not self.done:
+            self.recorder.fail("closed before the horizon")
+        self.recorder = None
+        self.done = True
+
+    # -------------------------------------------------------------------- control
+    def _setup_controllers(self, mode: str) -> None:
+        from traffic_shepherd.controller_factory import create_pi_session
+        from traffic_shepherd.fleet_switch import FleetSwitchSession, SingleSwitchSpec
+
+        self.pi_session = None
+        self.fleet = None
+        self.wall_law = None
+        if mode == "pi":
+            if not self.cav_ids:
+                raise CavEnvError("pi requires a nonempty CAV roster")
+            self.pi_session = create_pi_session(self.config, self.cav_ids,
+                                                desired_speed_mps=PI_U_MPS)
+        if mode in ("damping", "pi"):
+            suffix = "pi-external-u" if mode == "pi" else "damping"
+            if self.warmup_s > 0:
+                self.fleet = FleetSwitchSession(
+                    SingleSwitchSpec("native", suffix, self.warmup_s),
+                    circles_controller=self._circles, pi_session=self.pi_session,
+                    cav_ids=self.cav_ids)
+            elif mode == "pi":
+                self.ownership.controller = self.pi_session.adapter
+        if mode == "wall":
+            from .baselines import WallLaw
+            self.wall_law = WallLaw(self.k)
+
+    @property
+    def now(self) -> float:
+        return float(self.api.simulation.getTime())
+
+    def state(self) -> dict:
+        return frame_to_state(self.frame, device=self.device)
+
+    def slot_vehicle_ids(self) -> list:
+        return self.builder.slot_vehicle_ids(self.frame)
+
+    def _accel_by_vehicle(self, accel_by_slot) -> dict:
+        if accel_by_slot is None:
+            return {}
+        try:
+            import torch
+            if torch.is_tensor(accel_by_slot):
+                accel_by_slot = accel_by_slot.detach().cpu().numpy()
+        except ImportError:  # pragma: no cover
+            pass
+        acc = np.asarray(accel_by_slot, dtype=np.float64).reshape(-1)
+        if acc.shape[0] != self.k:
+            raise ValueError(f"accel_by_slot must have K={self.k} entries (shape [1,K])")
+        out = {}
+        f = self.frame
+        for slot in np.flatnonzero(f.present & f.is_cav).tolist():
+            vid = self.builder.vehicle_ids[int(f.vid_index[slot])]
+            out[vid] = float(acc[slot])
+        return out
+
+    def _control_tick(self, accel_by_slot) -> dict:
+        api = self.api
+        now = self.now
+        if abs(now - round(now)) > 1e-6:
+            raise CavEnvError(f"SUMO time {now} is off the 1 s control grid")
+        live = set(api.vehicle.getIDList())
+        cav_ids = self.cav_ids
+        disappeared = (self._previous_live - live) & cav_ids
+        arrivals = set(api.simulation.getArrivedIDList()) & cav_ids
+        self._retired_cavs.update(disappeared | arrivals)
+        reappeared = self._retired_cavs & live
+        self._retired_cavs.difference_update(reappeared)
+        live_cavs = live & cav_ids
+        frames = {}
+        self.sensor.bind(self._table)
+        for cav in sorted(live_cavs):
+            try:
+                frames[cav] = self.sensor.capture(cav, now_s=now)
+            except (ValueError, KeyError):
+                frames.pop(cav, None)
+            if self.slow_sensor is not None and int(round(now)) % self.sensor_check_every_s == 0:
+                self.sensor_checks += 1
+                try:
+                    reference = self.slow_sensor.capture(cav, now_s=now)
+                except ValueError:
+                    reference = None
+                if reference != frames.get(cav):
+                    self.sensor_mismatches += 1
+        in_window = now >= self.warmup_s - 1e-9
+        mode = self.mode if in_window else "native"
+        requested = {}
+        if self.fleet is not None:
+            records = self.fleet.step(self.ownership, frames, now_s=now, live_ids=live,
+                                      disappeared_ids=disappeared, reappeared_ids=reappeared)
+        elif mode == "pi":
+            records = self.pi_session.step(self.ownership, frames, now_s=now, live_ids=live,
+                                           native_ids=(), departed_ids=disappeared,
+                                           id_reuse_ids=reappeared)
+        elif mode == "native":
+            records = self.ownership.step(frames, now_s=now, live_ids=live, native_ids=live_cavs)
+        elif mode == "damping":
+            records = self.ownership.step(frames, now_s=now, live_ids=live)
+        elif mode == "direct":
+            requested = self._accel_by_vehicle(accel_by_slot)
+            wall = {v: a for v, a in requested.items()
+                    if v in live_cavs and math.isfinite(a)}
+            records = self.ownership.step(frames, now_s=now, live_ids=live,
+                                          wall_commands=wall, native_ids=live_cavs - set(wall))
+        elif mode == "wall":
+            wall = self.wall_law.commands(self.frame, self.builder, now_s=now,
+                                          live_cavs=live_cavs)
+            requested = dict(wall)
+            records = self.ownership.step(frames, now_s=now, live_ids=live, wall_commands=wall)
+        else:  # pragma: no cover
+            raise CavEnvError(mode)
+        if self.pi_session is not None:
+            self.pi_session.commit_evidence()       # PI evidence is not persisted here
+        actions, decisions = {}, {}
+        for r in records:
+            self.command_counts[r.owner] += 1
+            if r.fallback_reason:
+                self.fallback_counts[r.fallback_reason] += 1
+            if r.owner == "native":
+                name = "native"
+            elif mode == "pi":
+                name = "pi-external-u"
+            elif r.owner == "wall":
+                name = "direct"
+            else:
+                name = "damping"
+            actions[r.vehicle_id] = action_entry(r.owner, name, r.issued_target_speed_mps)
+            slot = self.builder.pool.slot_of(r.vehicle_id)
+            if slot is not None and self.frame.present[slot]:
+                decisions[slot] = (name, r.issued_acceleration_mps2, r.issued_target_speed_mps,
+                                   requested.get(r.vehicle_id))
+        if self.recorder is not None:
+            self.recorder.on_control(now, self.frame, decisions, self.builder.vehicle_ids)
+        self._last_actions = actions
+        commanded = {r.vehicle_id for r in records}
+        info_interval = Counter()
+        for substep in range(2):
+            api.simulationStep()
+            after = self.now
+            if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
+                raise CavEnvError("SUMO physics time grid mismatch")
+            info_interval.update(self._after_physics(after, actions, now, commanded))
+        self._previous_live = set(api.vehicle.getIDList())
+        self.totals.update(info_interval)
+        if in_window:
+            self.window_totals.update(info_interval)
+        return dict(info_interval)
+
+    def _after_physics(self, after: float, actions: dict, command_time: float,
+                       commanded: set) -> Counter:
+        api = self.api
+        sim = api.simulation
+        departed = list(sim.getDepartedIDList())
+        arrived = list(sim.getArrivedIDList())
+        colliding = set(sim.getCollidingVehiclesIDList())
+        starting = list(sim.getStartingTeleportIDList())
+        ending = list(sim.getEndingTeleportIDList())
+        table = self.reader.read()
+        self._table = table
+        if self.pi_session is not None and (self.mode == "pi" and after > self.warmup_s):
+            live_after = set(table)
+            prev = self._previous_live_sub
+            disappeared = (prev - live_after) & self.cav_ids
+            arrived_cav = set(arrived) & self.cav_ids
+            self._retired_cavs.update(disappeared | arrived_cav)
+            reappeared = self._retired_cavs & live_after
+            self._retired_cavs.difference_update(reappeared)
+            self.pi_session.observe_lifecycle(live_ids=live_after, disappeared_ids=disappeared,
+                                              id_reuse_ids=reappeared)
+        self._previous_live_sub = set(table)
+        frame = self.builder.build(after, table)
+        self.frame = frame
+        self.history.append(frame)
+        self.max_present = max(self.max_present, int(frame.present.sum()))
+        if frame.dropped:
+            self.dropped_cav_steps += sum(1 for v in frame.dropped if v in self.cav_ids)
+        interval = Counter()
+        interval["dropped_vehicle_steps"] += len(frame.dropped)
+        speeds = {v: t["speed_mps"] for v, t in table.items()}
+        accelerations = [t["acceleration_mps2"] for t in table.values()]
+        interval.update(braking_effort(accelerations, 0.5))
+        interval["speed_deficit_vehicle_seconds"] += 0.5 * sum(
+            max(0.0, 1.0 - s / SPEED_LIMIT_MPS) for s in speeds.values())
+        interval["vehicle_seconds_on_road"] += 0.5 * len(table)
+        if self.ttc:
+            exposure = 0.0
+            for vid, t in table.items():
+                leader = t["leader"]
+                if leader is None or leader[0] not in speeds:
+                    continue
+                ttc = closing_ttc(leader[1] + t["min_gap_m"], speeds[vid], speeds[leader[0]])
+                if ttc is not None:
+                    self.minimum_ttc = ttc if self.minimum_ttc is None else min(
+                        self.minimum_ttc, ttc)
+                    exposure += 0.5 if ttc < 3.0 else 0.0
+            interval["ttc_below_3_vehicle_seconds"] += exposure
+        before = (self.ledger.system_vehicle_seconds, self.ledger.source_vehicle_seconds)
+        interval["requested_not_arrived_vehicle_seconds"] += self.ledger.advance(
+            after, departed, arrived)
+        interval["source_wait_vehicle_seconds"] += self.ledger.source_vehicle_seconds - before[1]
+        interval["arrivals"] += len(arrived)
+        interval["departures"] += len(departed)
+        interval["collision_involvements"] += len(colliding - self._collision_previous)
+        self._collision_previous = colliding
+        interval["starting_teleports"] += len(starting)
+        row = None
+        if self.recorder is not None and self.physics_log:
+            row = build_physics_row(after, table, previous_row=self._previous_row,
+                                    cav_ids=self.cav_ids, cav_actions=actions, edges=self.edges,
+                                    departed=departed, arrived=arrived, colliding=colliding,
+                                    starting_teleports=starting, ending_teleports=ending)
+            crossings = row["boundary_crossings"]
+        else:
+            crossings = crossings_between((self._previous_row or {}).get("vehicles", {}),
+                                          table, self.edges)
+        for key, value in crossings.items():
+            interval[f"{key}_crossings"] += value
+        self._previous_row = {"vehicles": table}
+        if self.check_parity:
+            ref = self.reference.cell_counts(table)
+            mine = frame_cell_counts(frame)
+            if not np.array_equal(ref, mine):
+                self.parity_failures += 1
+                interval["rsu_parity_failures"] += 1
+        if self.recorder is not None:
+            self.recorder.on_frame(frame, row)
+        return interval
+
+    def step(self, accel_by_slot=None):
+        """Apply one 1 s control interval; returns ``(state, info)``.
+
+        ``accel_by_slot`` ``[1, K]`` (torch or numpy) absolute CAV accelerations, used by the
+        ``direct`` controller only (ignored otherwise; non-CAV slots ignored)."""
+        if self.done:
+            raise CavEnvError("episode is done; call reset()")
+        t = self.now
+        interval = self._control_tick(accel_by_slot)
+        done = self.now >= self.end_s - 1e-9
+        info = {"time_s": self.now, "decision_time_s": t, "interval": interval,
+                "actions": {v: a["action"] for v, a in self._last_actions.items()},
+                "rsu_detections": rsu_detections(self.frame, self.builder.vehicle_ids),
+                "dropped_vehicles": list(self.frame.dropped), "done": done}
+        if done:
+            info["summary"] = self.summary()
+            if self.recorder is not None:
+                self.recorder.finish(info["summary"], vehicle_ids=self.builder.vehicle_ids,
+                                     cav_ids=self.cav_ids, meta=self._meta())
+            self.done = True
+            self.recorder = None
+            self._close_sumo()
+        return self.state(), info
+
+    def _close_sumo(self) -> None:
+        if self.api is not None and self.api.isLoaded():
+            try:
+                self.ownership.release_all(live_ids=set(self.api.vehicle.getIDList()))
+            finally:
+                self.api.close()
+        self.api = None
+
+    def _meta(self) -> dict:
+        return dict(seed=self.seed, demand_vph=self.demand, penetration=self.penetration,
+                    warmup_s=self.warmup_s, horizon_s=self.horizon_s, controller=self.mode,
+                    k_slots=self.k, cav_speed_mode=CAV_SPEED_MODE, dt_s=0.5, control_dt_s=1.0)
+
+    def summary(self) -> dict:
+        now = self.now
+        wall = time.monotonic() - self._wall_started
+        window_wall = time.monotonic() - self._window_wall_started
+        sys0, src0, arr0 = self._window_ledger0
+        window = dict(self.window_totals)
+        window.update(
+            system_vehicle_seconds=self.ledger.system_vehicle_seconds - sys0,
+            source_wait_vehicle_seconds=self.ledger.source_vehicle_seconds - src0,
+            arrivals=len(self.ledger.arrived) - arr0)
+        return dict(
+            schema="c4_sumo_episode_summary/1", **self._meta(), sim_end_s=now,
+            designated_cavs=len(self.cav_ids), population=len(self.requests),
+            episode=dict(**service_summary(self.ledger, now), totals=dict(self.totals)),
+            window=window, minimum_closing_ttc_s=self.minimum_ttc,
+            command_counts=dict(self.command_counts),
+            fallback_counts=dict(self.fallback_counts),
+            collisions=int(self.totals.get("collision_involvements", 0)),
+            teleports=int(self.totals.get("starting_teleports", 0)),
+            max_present_vehicles=self.max_present,
+            dropped_vehicle_steps=int(self.totals.get("dropped_vehicle_steps", 0)),
+            dropped_cav_steps=self.dropped_cav_steps,
+            rsu_parity_checked=self.check_parity, rsu_parity_failures=self.parity_failures,
+            sensor_parity_checks=self.sensor_checks,
+            sensor_parity_mismatches=self.sensor_mismatches,
+            wall_events=(None if self.wall_law is None else dict(
+                formed=self.wall_law.n_walls,
+                counts=dict(Counter(e["event"] for e in self.wall_law.events)),
+                abort_reasons=dict(Counter(e.get("reason") for e in self.wall_law.events
+                                           if e.get("reason"))))),
+            wall_seconds=wall, sim_seconds=now,
+            sim_s_per_wall_s=(now / wall if wall > 0 else None),
+            window_wall_seconds=window_wall,
+            window_sim_s_per_wall_s=((now - self.warmup_s) / window_wall
+                                     if window_wall > 0 else None))
+
+    # --------------------------------------------------------------- WM inputs
+    def history_state(self, history_s=None, history_stride_s: float = 1.0) -> dict:
+        """``state["history"]`` (wms.eval slot-indexed schema) at the current time."""
+        return self.history.history(history_s, history_stride_s)
+
+    def driver_history(self, history_s=None, history_stride_s: float = 1.0,
+                       history_len: int = 10):
+        return self.history.driver_history(history_s, history_stride_s, history_len)

@@ -89,12 +89,20 @@ def test_exceptions_are_still_needed():
         assert set(layers) <= found, f"{rel}: exception for {sorted(set(layers) - found)} is stale"
 
 
+# The one sanctioned sim -> wms edge: C4 SUMO runner glue (lazy, optional adapters only:
+# wall executor, trainer history featurisers, contract constants); the C4 environment,
+# conversion, recorder and collector themselves never import wms.
+SIM_TO_WMS_EXCEPTIONS = {"c4/wms_glue.py"}
+
+
 def test_eval_never_imports_train_and_sim_layer_never_imports_wms():
     eval_modules = [p for p in MODULES if layer_of(p.relative_to(SRC).parts) == "eval"]
     assert all("train" not in imported_layers(p) for p in eval_modules)
     shepherd = SRC.parents[1] / "traffic_shepherd"
     if shepherd.is_dir():
         for path in shepherd.rglob("*.py"):
+            if path.relative_to(shepherd).as_posix() in SIM_TO_WMS_EXCEPTIONS:
+                continue
             text = path.read_text(encoding="utf-8")
             assert "import wms" not in text and "from wms" not in text, path
 

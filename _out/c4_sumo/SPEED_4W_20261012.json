@@ -1,0 +1,19 @@
+{
+ "schema": "c4_collect_summary/1",
+ "policy": "random",
+ "workers": 4,
+ "warmup_s": 120,
+ "horizon_s": 180,
+ "episodes_run": 4,
+ "episodes_complete": 4,
+ "episodes_failed": 0,
+ "wall_seconds": 71.18700000003446,
+ "simulated_seconds": 1200.0,
+ "aggregate_sim_s_per_wall_s": 16.85701040919577,
+ "per_worker_episode_sim_s_per_wall_s_mean": 5.4438403336114485,
+ "per_worker_window_sim_s_per_wall_s_mean": 4.093710785271852,
+ "collisions": 0,
+ "teleports": 0,
+ "host_cpus": 22,
+ "finished_utc": "2026-10-12T13:17:39.386402+00:00"
+}
