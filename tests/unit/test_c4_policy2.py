@@ -46,6 +46,23 @@ def test_lane_mask_geometry_never_ramp_and_never_outside_mainline():
     assert mask[3].tolist() == [True, True, False]       # ramp lane inside the zone: merge now
 
 
+def test_lane_rules_front_rear_parameters_and_legacy_mapping():
+    r = LaneRules()
+    assert r.rear == (r.rear_gap_base_m, r.rear_gap_time_s, r.rear_closing_time_s)
+    assert (r.gap_base_m, r.gap_time_s, r.closing_time_s) == (1.0, 1.2, 4.5)
+    # A mapping without rear_* keys is a legacy (symmetric) payload; with them it is taken as given.
+    old = LaneRules.from_mapping({"gap_base_m": 6.0, "gap_time_s": 1.0, "closing_time_s": 1.0})
+    assert old.rear == (6.0, 1.0, 1.0)
+    new = LaneRules.from_mapping({"gap_base_m": 2.0, "rear_gap_base_m": 4.0, "rear_gap_time_s": 1.5,
+                                  "rear_closing_time_s": 2.0})
+    assert new.rear == (4.0, 1.5, 2.0) and new.gap_base_m == 2.0
+    assert LaneRules.from_mapping(None).rear == r.rear
+    import dataclasses
+    assert LaneRules.from_mapping(dataclasses.asdict(old)).rear == (6.0, 1.0, 1.0)   # checkpoint round trip
+    with pytest.raises(ValueError):
+        LaneRules(rear_gap_time_s=-1.0)
+
+
 def test_lane_mask_gaps_speed_term_dwell_edge_guard_and_hdv():
     rules = LaneRules()
     v = 20.0
@@ -54,13 +71,20 @@ def test_lane_mask_gaps_speed_term_dwell_edge_guard_and_hdv():
     for extra, ok in ((-0.5, False), (0.5, True)):
         x = state([-500.0, -500.0 + 5.0 + need_front + extra], [0, 1], cav=[True, False])
         assert bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT]) is ok
-    # Rear vehicle faster than the ego: closing term.
-    half = LaneRules(gap_time_s=0.5)
-    x = state([-500.0, -500.0 - 5.0 - 16.5], [0, 1], v=[20.0, 25.0], cav=[True, False])
-    assert not bool(lane_feasibility(x, None, half)[0, 0, LANE_RIGHT])     # needs 6+12.5+5 = 23.5
-    x["s_m"][0, 1] = -500.0 - 5.0 - 24.0
-    assert bool(lane_feasibility(x, None, half)[0, 0, LANE_RIGHT])
-    assert not bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT])    # default: 6+25+5 = 36
+    # Rear vehicle faster than the ego: closing term (calibrated defaults: 3 + 1.25*25 + 6*5 = 64.25 m).
+    x = state([-500.0, -500.0 - 5.0 - 60.0], [0, 1], v=[20.0, 25.0], cav=[True, False])
+    assert not bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT])
+    x["s_m"][0, 1] = -500.0 - 5.0 - 68.0
+    assert bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT])
+    # Legacy symmetric rule (rear_* = None): 6 + 25 + 5 = 36 m.
+    legacy = LaneRules(gap_base_m=6.0, gap_time_s=1.0, closing_time_s=1.0, rear_gap_base_m=None,
+                       rear_gap_time_s=None, rear_closing_time_s=None)
+    assert legacy.rear == (6.0, 1.0, 1.0)
+    x["s_m"][0, 1] = -500.0 - 5.0 - 30.0
+    assert not bool(lane_feasibility(x, None, legacy)[0, 0, LANE_RIGHT])
+    x["s_m"][0, 1] = -500.0 - 5.0 - 40.0
+    assert bool(lane_feasibility(x, None, legacy)[0, 0, LANE_RIGHT])
+    assert not bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT])    # new default is stricter behind
     # Alongside (overlapping) vehicle blocks.
     x = state([-500.0, -501.0], [0, 1], cav=[True, False])
     assert not bool(lane_feasibility(x, None, rules)[0, 0, LANE_RIGHT])

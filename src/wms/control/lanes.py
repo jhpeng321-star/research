@@ -17,8 +17,10 @@ Feasibility (``lane_feasibility``), all from the state the safety layer already 
   merge zone ``[MERGE_S0_M, MERGE_S1_M]``.  The bridge's existing forced-merge rule is
   applied afterwards and is never blocked by the head.
 * Target-lane bumper gaps: front ``>= gap_base_m + gap_time_s * v_ego + closing_time_s *
-  max(0, v_ego - v_front)``, rear ``>= gap_base_m + gap_time_s * v_rear + closing_time_s *
-  max(0, v_rear - v_ego)``; an overlapping (alongside) vehicle blocks the change.
+  max(0, v_ego - v_front)``, rear ``>= rear_gap_base_m + rear_gap_time_s * v_rear +
+  rear_closing_time_s * max(0, v_rear - v_ego)`` (the ``rear_*`` parameters default to the front
+  ones when ``None``); an overlapping (alongside) vehicle blocks the change.  The defaults were
+  calibrated against SUMO's acceptance of ``changeLane`` requests (``LANECAL_NOTES.md``).
 * Dwell: at least ``dwell_s`` since this CAV's previous lane change.
 * Edge guard (mainline only): no discretionary change when the CAV would reach a SUMO
   edge boundary (``EDGE_BOUNDARIES_S_M``) within ``CONTROL_DT_S`` plus ``edge_guard_m``.
@@ -49,16 +51,29 @@ EDGE_BOUNDARIES_S_M = (MERGE_S0_M, MERGE_S1_M)
 
 @dataclass(frozen=True)
 class LaneRules:
-    gap_base_m: float = 6.0       # minimum bumper gap in the target lane (front and rear)
-    gap_time_s: float = 1.0       # + this time gap x speed of the vehicle behind the gap
-    closing_time_s: float = 1.0   # + closing speed x this time
+    gap_base_m: float = 1.0       # FRONT: minimum bumper gap to the target-lane leader
+    gap_time_s: float = 1.2       # + this time gap x ego speed
+    closing_time_s: float = 4.5   # + closing speed (ego faster than the leader) x this time
     dwell_s: float = 3.0          # minimum time between two lane changes of one CAV
     edge_guard_m: float = 10.0    # mainline: no change within v*CONTROL_DT_S + this of an edge end
+    # REAR (target-lane follower); None = same as the front parameter (legacy symmetric rule).
+    rear_gap_base_m: Optional[float] = 3.0
+    rear_gap_time_s: Optional[float] = 1.25   # x speed of the follower
+    rear_closing_time_s: Optional[float] = 6.0  # x closing speed (follower faster than ego)
 
     def __post_init__(self):
         for name, value in asdict(self).items():
+            if value is None and name.startswith("rear_"):
+                continue
             if isinstance(value, bool) or not math.isfinite(float(value)) or float(value) < 0:
                 raise ValueError(f"lane rule {name} must be finite and nonnegative")
+
+    @property
+    def rear(self) -> tuple[float, float, float]:
+        """(base, time gap, closing time) of the rear check, falling back to the front values."""
+        return (self.gap_base_m if self.rear_gap_base_m is None else self.rear_gap_base_m,
+                self.gap_time_s if self.rear_gap_time_s is None else self.rear_gap_time_s,
+                self.closing_time_s if self.rear_closing_time_s is None else self.rear_closing_time_s)
 
     @classmethod
     def from_mapping(cls, raw: Optional[Mapping]) -> "LaneRules":
@@ -66,7 +81,10 @@ class LaneRules:
         unknown = set(raw) - set(cls.__dataclass_fields__)
         if unknown:
             raise ValueError(f"unknown lane rule keys: {sorted(unknown)}")
-        return cls(**{k: float(v) for k, v in raw.items()})
+        if raw and not any(k.startswith("rear_") for k in raw):
+            # legacy payload (before LANECAL, symmetric rule): keep the symmetric semantics
+            raw.update(rear_gap_base_m=None, rear_gap_time_s=None, rear_closing_time_s=None)
+        return cls(**{k: (None if v is None else float(v)) for k, v in raw.items()})
 
 
 def _kinematics(state: Mapping[str, Tensor]):
@@ -95,8 +113,8 @@ def _target_gap_ok(s, v, length, valid, other_lane, target, rules: LaneRules) ->
     v_rear = v.gather(-1, rear_idx)
     need_front = (rules.gap_base_m + rules.gap_time_s * v
                   + rules.closing_time_s * (v - v_front).clamp_min(0.0))
-    need_rear = (rules.gap_base_m + rules.gap_time_s * v_rear
-                 + rules.closing_time_s * (v_rear - v).clamp_min(0.0))
+    rear_base, rear_time, rear_closing = rules.rear
+    need_rear = rear_base + rear_time * v_rear + rear_closing * (v_rear - v).clamp_min(0.0)
     front_ok = torch.isinf(front_gap) | (front_gap >= need_front)
     rear_ok = torch.isinf(rear_gap) | (rear_gap >= need_rear)
     return front_ok & rear_ok
