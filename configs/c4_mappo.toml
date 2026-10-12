@@ -49,9 +49,12 @@ keep_every = 10                          # permanently kept checkpoints + policy
 update_threads = 16                      # torch threads for the PPO update (0 = torch default; >16 gave no gain)
 
 [lanes]                                  # = configs/c4_policy.toml [lanes] (wms.control.lanes.LaneRules)
-gap_base_m = 6.0
-gap_time_s = 1.0
-closing_time_s = 1.0
+gap_base_m = 1.0          # SUMO-calibrated (LANECAL_NOTES.md), identical to configs/c4_policy.toml
+gap_time_s = 1.2
+closing_time_s = 4.5
+rear_gap_base_m = 3.0
+rear_gap_time_s = 1.25
+rear_closing_time_s = 6.0
 dwell_s = 3.0
 edge_guard_m = 10.0
 

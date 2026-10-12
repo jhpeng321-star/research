@@ -8,9 +8,11 @@ updates = 4000
 threads = 4
 
 [trainer]
-batch_size = 16
-horizon = 20
+batch_size = 8
+horizon = 15
 checkpoint_every = 50
 
 [counterfactual]
-max_starts = 6
+max_starts = 2   # 32 GB vGPU shared with WM training: counterfactual rows dominate memory
+n_group = 1
+n_flip = 1
