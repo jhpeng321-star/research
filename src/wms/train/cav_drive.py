@@ -67,7 +67,9 @@ class TimelineControllers:
 
     def _invalidate(self, vid: str) -> None:
         if vid in self.pi_active:
-            self.pi.invalidate(vehicle_ids=[vid], native_ids=[vid])
+            # PIExternalU.invalidate keeps only the state of ``vehicle_ids`` (the live set):
+            # pass every active PI vehicle so dropping one does not erase the others.
+            self.pi.invalidate(vehicle_ids=set(self.pi_active), native_ids=[vid])
             self.pi_active.discard(vid)
 
     def _new_command(self, action: str, vid: str, b: int, k: int, control: int,

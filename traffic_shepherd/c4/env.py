@@ -11,7 +11,9 @@ Every CAV command goes through :class:`traffic_shepherd.ownership.CommandOwnersh
 longitudinal writer; HDVs are never commanded.  Episode controllers:
 
 * ``direct``  - per-CAV absolute accelerations from ``step(accel_by_slot)``
-  (non-finite / missing entries release that CAV to native for the tick);
+  (non-finite / missing entries release that CAV to native for the tick, or hand it to
+  the frozen CIRCLES damping / a fresh frozen PI external-U session with
+  ``step(..., fallback="damping" | "pi")``);
 * ``native``  - every CAV released to SUMO IDM;
 * ``damping`` - frozen CIRCLES ONNX controller;
 * ``pi``      - frozen PI external-U (registered U = 31.29 m/s);
@@ -89,8 +91,11 @@ class CavSumoEnv:
     # ------------------------------------------------------------------ lifecycle
     def reset(self, *, seed: int, demand_vph: int, penetration: float, warmup_s: float,
               horizon_s: float, controller: str | None = None, episode_dir=None,
-              meta: dict | None = None):
-        """Start a fresh SUMO episode, run the native warmup, return the t = warmup state."""
+              meta: dict | None = None, warmup_hook=None):
+        """Start a fresh SUMO episode, run the native warmup, return the t = warmup state.
+
+        ``warmup_hook(env)`` (optional) is called after every native warmup control tick
+        (e.g. to feed an RSU belief tracker before the evaluation window starts)."""
         import traci
 
         from traffic_shepherd.damping import CirclesController
@@ -182,6 +187,8 @@ class CavSumoEnv:
             self.recorder.on_frame(self.frame, None)
         while self.now < warmup - 1e-9:
             self._control_tick(None)
+            if warmup_hook is not None:
+                warmup_hook(self)
         self.window_totals = Counter()
         self._window_wall_started = time.monotonic()
         self._window_ledger0 = (self.ledger.system_vehicle_seconds,
@@ -209,6 +216,7 @@ class CavSumoEnv:
         from traffic_shepherd.fleet_switch import FleetSwitchSession, SingleSwitchSpec
 
         self.pi_session = None
+        self._direct_pi = False         # a per-tick PI session inside a direct episode
         self.fleet = None
         self.wall_law = None
         if mode == "pi":
@@ -258,7 +266,7 @@ class CavSumoEnv:
             out[vid] = float(acc[slot])
         return out
 
-    def _control_tick(self, accel_by_slot) -> dict:
+    def _control_tick(self, accel_by_slot, fallback: str = "native") -> dict:
         api = self.api
         now = self.now
         if abs(now - round(now)) > 1e-6:
@@ -304,8 +312,28 @@ class CavSumoEnv:
             requested = self._accel_by_vehicle(accel_by_slot)
             wall = {v: a for v, a in requested.items()
                     if v in live_cavs and math.isfinite(a)}
-            records = self.ownership.step(frames, now_s=now, live_ids=live,
-                                          wall_commands=wall, native_ids=live_cavs - set(wall))
+            # CAVs without a finite direct command: SUMO native (default) or the frozen
+            # CIRCLES damping instance of CommandOwnership (fallback="damping").
+            # fallback="pi": a FRESH frozen PI session (registered U) owns them from this tick
+            # while PI stays selected (the session requires every-tick continuity); leaving PI
+            # hands the owner back to the identical CIRCLES instance.
+            if fallback == "pi":
+                if not self._direct_pi:
+                    from traffic_shepherd.controller_factory import create_pi_session
+                    self.pi_session = create_pi_session(self.config, self.cav_ids,
+                                                        desired_speed_mps=PI_U_MPS)
+                    self.ownership.controller = self.pi_session.adapter
+                    self._direct_pi = True
+                records = self.pi_session.step(self.ownership, frames, now_s=now, live_ids=live,
+                                               native_ids=(), wall_commands=wall,
+                                               departed_ids=disappeared, id_reuse_ids=reappeared)
+            else:
+                if self._direct_pi:
+                    self.ownership.controller = self._circles
+                    self.pi_session, self._direct_pi = None, False
+                native = live_cavs - set(wall) if fallback == "native" else frozenset()
+                records = self.ownership.step(frames, now_s=now, live_ids=live,
+                                              wall_commands=wall, native_ids=native)
         elif mode == "wall":
             wall = self.wall_law.commands(self.frame, self.builder, now_s=now,
                                           live_cavs=live_cavs)
@@ -322,7 +350,7 @@ class CavSumoEnv:
                 self.fallback_counts[r.fallback_reason] += 1
             if r.owner == "native":
                 name = "native"
-            elif mode == "pi":
+            elif mode == "pi" or (self._direct_pi and r.owner != "wall"):
                 name = "pi-external-u"
             elif r.owner == "wall":
                 name = "direct"
@@ -361,7 +389,8 @@ class CavSumoEnv:
         ending = list(sim.getEndingTeleportIDList())
         table = self.reader.read()
         self._table = table
-        if self.pi_session is not None and (self.mode == "pi" and after > self.warmup_s):
+        if self.pi_session is not None and ((self.mode == "pi" and after > self.warmup_s)
+                                            or self._direct_pi):
             live_after = set(table)
             prev = self._previous_live_sub
             disappeared = (prev - live_after) & self.cav_ids
@@ -430,15 +459,21 @@ class CavSumoEnv:
             self.recorder.on_frame(frame, row)
         return interval
 
-    def step(self, accel_by_slot=None):
+    def step(self, accel_by_slot=None, *, fallback: str = "native"):
         """Apply one 1 s control interval; returns ``(state, info)``.
 
         ``accel_by_slot`` ``[1, K]`` (torch or numpy) absolute CAV accelerations, used by the
-        ``direct`` controller only (ignored otherwise; non-CAV slots ignored)."""
+        ``direct`` controller only (ignored otherwise; non-CAV slots ignored).  ``fallback``
+        (``direct`` only): controller of CAVs without a finite command this tick, ``native``
+        (release to SUMO IDM, default), ``damping`` (frozen CIRCLES) or ``pi`` (frozen PI
+        external-U, a fresh session each time PI is (re)selected); per-tick mixing used by the
+        C4 deployment check, ``wms.control.deploy``."""
+        if fallback not in ("native", "damping", "pi"):
+            raise ValueError("fallback must be 'native', 'damping' or 'pi'")
         if self.done:
             raise CavEnvError("episode is done; call reset()")
         t = self.now
-        interval = self._control_tick(accel_by_slot)
+        interval = self._control_tick(accel_by_slot, fallback)
         done = self.now >= self.end_s - 1e-9
         info = {"time_s": self.now, "decision_time_s": t, "interval": interval,
                 "actions": {v: a["action"] for v, a in self._last_actions.items()},
