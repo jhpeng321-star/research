@@ -188,12 +188,19 @@ class WmSTrainer:
         if any(p.grad is not None and not bool(torch.isfinite(p.grad).all())
                for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S gradient")
+        grad_norm = None
         if self.settings.grad_clip:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.settings.grad_clip)
+            grad_norm = float(torch.nn.utils.clip_grad_norm_(self.model.parameters(),
+                                                             self.settings.grad_clip))
         self.optimizer.step()
         if any(not bool(torch.isfinite(p).all()) for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S parameter")
         record = {**parts, "seconds": time.perf_counter() - started, "finite": True}
+        if grad_norm is not None:
+            # pre-clip global gradient norm and whether the clip was active (round 5b logging)
+            record["grad_norm"] = grad_norm
+            record["grad_clipped"] = bool(grad_norm > float(self.settings.grad_clip))
+        record["lr"] = float(self.optimizer.param_groups[0]["lr"])
         if self.device.type == "cuda":
             record["cuda_peak_mb"] = torch.cuda.max_memory_allocated(self.device) / 2 ** 20
         return record
@@ -322,6 +329,9 @@ class WmSTrainer:
 
         for stage_i, plan in enumerate(self.stages):
             stage_s = plan.stage_s
+            if s.lr_per_stage is not None:
+                for group in self.optimizer.param_groups:
+                    group["lr"] = float(s.lr_per_stage[stage_i])
             done = 0
             steps_before = global_step
             last_validation = None

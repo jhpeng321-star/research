@@ -56,6 +56,7 @@ class TrainSettings:
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
+    lr_per_stage: Optional[tuple[float, ...]] = None
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
@@ -192,6 +193,10 @@ class TrainSettings:
             len(self.truncation_steps_per_stage) == len(self.unroll_curriculum_s)
             and all(int(x) >= 1 for x in self.truncation_steps_per_stage)),
             "truncation_steps_per_stage must give one positive truncation per stage")
+        _require(self.lr_per_stage is None or (
+            len(self.lr_per_stage) == len(self.unroll_curriculum_s)
+            and all(math.isfinite(float(x)) and float(x) > 0 for x in self.lr_per_stage)),
+            "lr_per_stage must give one positive learning rate per stage")
         _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
                  "flip_rate_weight must be finite and non-negative")
         _require(math.isfinite(self.flip_rate_allowance)
@@ -213,6 +218,8 @@ class TrainSettings:
         if values.get("truncation_steps_per_stage") is not None:
             values["truncation_steps_per_stage"] = tuple(
                 int(x) for x in values["truncation_steps_per_stage"])
+        if values.get("lr_per_stage") is not None:
+            values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
         return cls(**values)
 
     @classmethod

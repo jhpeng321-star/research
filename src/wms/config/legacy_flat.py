@@ -90,6 +90,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "checkpoint_step": "model.checkpoint_step",
     "init_from": "model.init_from",
     "truncation_steps_per_stage": "curriculum.truncation_steps_per_stage",
+    "lr_per_stage": "optim.lr_per_stage",
     "driver_grad_across_chunks": "curriculum.driver_grad_across_chunks",
     "flip_rate_weight": "loss.flip_rate.weight",
     "flip_rate_allowance": "loss.flip_rate.allowance",
@@ -104,7 +105,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "lane_rate_weight", "lane_rate_target", "select_by_long_horizon", "val_every",
     "gate_kind", "gate_g_max_init", "gate_tau_steps_init",
     "lane_gate_kind", "lane_gate_g_max_init", "lane_gate_tau_steps_init",
-    "checkpoint_step", "init_from", "truncation_steps_per_stage",
+    "checkpoint_step", "init_from", "truncation_steps_per_stage", "lr_per_stage",
     "driver_grad_across_chunks", "flip_rate_weight", "flip_rate_allowance",
 )
 

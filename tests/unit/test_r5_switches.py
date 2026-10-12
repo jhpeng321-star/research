@@ -619,3 +619,18 @@ def test_diag_flags_map_to_predictor_and_config():
     assert all(flags[name] is False for name in DIAG_SWITCHES)
     cfg = load_eval_config("eval_unseen", ["flags.diag_recorded_lanes=true"])
     assert rollout_flags(cfg)["diag_recorded_lanes"] is True
+
+
+def test_r5b_lr_per_stage_and_grad_logging_config():
+    """Round 5b: per-stage learning rate parses, defaults off, and must match the stage count."""
+    from wms.config.load import load_train_config
+    from wms.train.settings import TrainSettings
+
+    s = TrainSettings.from_config(load_train_config("configs/r5b.toml"))
+    assert s.lr_per_stage == (3.0e-4, 1.0e-4)
+    assert s.unroll_curriculum_s == (60.0, 120.0) and s.batch_size == 32
+    assert TrainSettings.from_config(load_train_config("configs/r4.toml")).lr_per_stage is None
+    import pytest
+    with pytest.raises(Exception):
+        TrainSettings.from_config(load_train_config("configs/r5b.toml",
+                                                    ["optim.lr_per_stage=[0.001]"]))

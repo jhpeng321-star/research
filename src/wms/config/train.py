@@ -279,11 +279,17 @@ class OptimConfig:
     lr: float = 1.0e-3
     weight_decay: float = 0.0
     grad_clip: float = 1.0
+    lr_per_stage: Optional[tuple[float, ...]] = None
+    """Optional learning rate per curriculum stage (round 5b); None = ``lr`` throughout."""
 
     def __post_init__(self) -> None:
         require(self.batch_size >= 1, "optim.batch_size must be positive")
         require(self.lr > 0.0 and self.weight_decay >= 0.0 and self.grad_clip > 0.0,
                 "optim.lr/grad_clip must be positive and weight_decay non-negative")
+        if self.lr_per_stage is not None:
+            require(len(self.lr_per_stage) >= 1
+                    and all(is_finite(x) and x > 0.0 for x in self.lr_per_stage),
+                    "optim.lr_per_stage needs positive finite learning rates")
 
 
 @config_dataclass
