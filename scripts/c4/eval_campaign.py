@@ -226,7 +226,8 @@ def main(argv=None) -> int:
     if args.include_wall and "wall" not in args.controllers:
         args.controllers.append("wall")
     if "mappo" in args.controllers:
-        raise SystemExit("MAPPO is deferred (owner decision 2026-10-12); it is not part of this campaign")
+        raise SystemExit("evaluate MAPPO as controller 'policy' with --policy-ckpt <mappo run>/policy_latest.pt "
+                         "(c4_dreamer/3 payload, trainer=mappo) in its own --out; see MAPPO_NOTES.md")
     unknown = [c for c in args.controllers if c not in CLASSIC and c not in C4_CONTROLLERS]
     if unknown:
         raise SystemExit(f"unknown controllers {unknown}")
