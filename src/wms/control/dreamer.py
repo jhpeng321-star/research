@@ -20,7 +20,14 @@ import torch
 from torch import Tensor, nn
 
 from .contract import PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
+from .counterfactual import (CounterfactualConfig, baseline_index, build_variants, decompose,
+                             expand_rows, group_rich, mean_or_none, native_fn, row_coefficients)
 from .start_states import StartBatch, checked_path
+
+# /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
+# last commanded acceleration and lane intent (older actors load with zero weights on them).
+CHECKPOINT_FORMAT = "c4_dreamer/3"
+READABLE_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", CHECKPOINT_FORMAT)
 
 
 @dataclass
@@ -41,6 +48,8 @@ class DreamerConfig:
     return_ema: float = 0.99
     checkpoint_every: int = 100
     validation_every: int = 100
+    lane_pg_weight: float = 1.0          # REINFORCE term of the categorical lane head
+    lane_entropy_weight: float = 3e-4    # DreamerV3 discrete-action entropy bonus (lane head)
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -103,6 +112,17 @@ def _restore_rng(state, device):
         torch.cuda.set_rng_state(state["cuda"].cpu(), device)
 
 
+def _rows(state, stop, total):
+    """First ``stop`` rows of every [total, ...] tensor in a state dict."""
+    return {key: (value[:stop] if torch.is_tensor(value) and value.ndim and value.shape[0] == total
+                  else value) for key, value in state.items()}
+
+
+def _masked_mean(values, mask):
+    mask = mask.to(values.dtype)
+    return (values * mask).sum() / mask.sum().clamp_min(1.0)
+
+
 def _detach(state):
     return {key: value.detach() if torch.is_tensor(value) else value
             for key, value in state.items()}
@@ -128,8 +148,14 @@ class DreamerTrainer:
 
     def __init__(self, world_models, policy, group_encoder, critic, start_states, *,
                  observation_builder, reward_fn, safety, controller_factory=None, config=None,
-                 reward_weights=None, device="cpu", output_dir=None):
+                 reward_weights=None, device="cpu", output_dir=None, lane_rules=None,
+                 counterfactual=None):
         self.config = config or DreamerConfig()
+        # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
+        # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
+        self.lane_rules = lane_rules
+        self.use_lanes = lane_rules is not None and bool(getattr(policy, "has_lane_head", False))
+        self.counterfactual = counterfactual or CounterfactualConfig()
         self.device = torch.device(device)
         if not world_models:
             raise ValueError("at least one world model is required")
@@ -157,18 +183,41 @@ class DreamerTrainer:
         self.return_low = self.return_high = None
         self.update_count = 0
         self.best_validation = -math.inf
+        self.best_coop_validation = -math.inf
         self.validation_states = None
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
 
-    def imagine(self, batch: StartBatch, deterministic=False):
+    def imagine(self, batch: StartBatch, deterministic=False, variants=None):
+        """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
+
+        With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
+        replays start ``variants.row_start[r]``; only the CAVs in ``variants.act_mask[r]``
+        follow the policy, the others the native CAV behaviour.  Rows 0..B-1 are the normal
+        all-CAV rollouts.  Policy noise is drawn per (start, control step, slot) and shared by
+        all rows of a start (common random numbers) when the policy accepts ``noise``.
+        """
         cfg = self.config
         forbidden = {"cav_teacher", "lane_teacher", "action_timeline", "present_seq", "is_cav_seq",
                      "junction_seq", "truncation_steps", "cav_controller"}
         if forbidden.intersection(batch.rollout_kwargs):
             raise ValueError("imagination inputs must not contain teachers or recorded controls")
-        member_states, member_rewards, member_costs = [], [], []
-        member_entropy, member_actions, member_components = [], [], []
+        n_base = batch.state["s_m"].shape[0]
+        if variants is not None:
+            index = variants.row_start.to(self.device)
+            start_state = {key: expand_rows(value, index, n_base) for key, value in batch.state.items()}
+            rollout_kwargs = {key: expand_rows(value, index, n_base)
+                              for key, value in batch.rollout_kwargs.items()}
+            act_mask = variants.act_mask.to(self.device)
+        else:
+            index, start_state, rollout_kwargs, act_mask = None, batch.state, batch.rollout_kwargs, None
+        if self.use_lanes and self.controller_factory is None:
+            raise ValueError("lane decisions require the bridge controller factory")
+        need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
+        crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
+        native = native_fn(self.counterfactual.native_cav)
+        member_states, member_rewards, member_costs, member_values = [], [], [], []
+        member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         rng = _rng_state(self.device)
         advanced_rng = None
         # Common random numbers: disagreement must measure WM differences, not action noise.
@@ -176,26 +225,52 @@ class DreamerTrainer:
             _restore_rng(rng, self.device)
             records = []
             step = 0
-            held_accel = None
-            held_log_prob = None
+            held_out = None
             last_decision_step = -1
 
             def policy_proxy(obs, signal, **kwargs):
-                nonlocal held_accel, held_log_prob, last_decision_step
+                nonlocal held_out, last_decision_step
                 if step % STEPS_PER_CONTROL == 0 and last_decision_step != step:
-                    held_accel, held_log_prob = self.policy(obs, signal, deterministic=deterministic)
-                    mask = obs.cav_mask
-                    records[-1]["entropy"] = -(held_log_prob * mask).sum(-1) / mask.sum(-1).clamp_min(1)
+                    if crn:
+                        from .policy import PolicyNoise, draw_policy_noise
+                        noise = draw_policy_noise((n_base, obs.cav_mask.shape[-1]), device=self.device)
+                        kwargs["noise"] = PolicyNoise(noise.accel.index_select(0, index),
+                                                      noise.lane_gumbel.index_select(0, index))
+                    held_out = self.policy(obs, signal, deterministic=deterministic, **kwargs)
+                    acting = obs.cav_mask if act_mask is None else obs.cav_mask & act_mask
+                    log_prob = getattr(held_out, "log_prob_accel", None)
+                    log_prob = held_out[1] if log_prob is None else log_prob
+                    record = records[-1]
+                    record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
+                    if hasattr(held_out, "log_prob_lane"):
+                        record["lane_log_prob"] = held_out.log_prob_lane
+                        record["lane_entropy"] = held_out.entropy_lane
+                        record["lane_active"] = acting & (held_out.lane_options > 1)
+                        record["lane_acting"] = acting
                     last_decision_step = step
-                if held_accel is None:
+                if held_out is None:
                     raise RuntimeError("controller factory did not sample an initial policy command")
-                return held_accel, held_log_prob
+                return held_out
 
-            external_callback = (self.controller_factory(policy_proxy, self.group_encoder, self.safety, None)
-                                 if self.controller_factory is not None else None)
+            def lane_record(entry):
+                records[-1]["lane_changed"] = entry["lane_changed"].detach()
+
+            external_callback = None
+            if need_bridge:
+                extra = {}
+                if self.use_lanes:
+                    extra["lane_rules"] = self.lane_rules
+                if act_mask is not None:
+                    extra.update(act_mask=act_mask, native=native)
+                external_callback = self.controller_factory(
+                    policy_proxy, self.group_encoder, self.safety,
+                    lane_record if self.use_lanes else None, **extra)
+            elif self.controller_factory is not None:
+                external_callback = self.controller_factory(policy_proxy, self.group_encoder,
+                                                            self.safety, None)
 
             def controller(state):
-                nonlocal step, held_accel
+                nonlocal step
                 mask = state["present"].bool() & state["is_cav"].bool()
                 if step % STEPS_PER_CONTROL == 0:
                     records.append({"mask": mask})
@@ -211,8 +286,12 @@ class DreamerTrainer:
                     obs = self.observation_builder(state)
                     signal = self.group_encoder(obs, state)
                     policy_proxy(obs, signal)
-                accel = self.safety(state, held_accel)
-                accel = torch.where(mask, accel, torch.zeros_like(accel))
+                command = held_out[0]
+                if act_mask is not None:       # counterfactual rows: non-acting CAVs native
+                    command = torch.where(act_mask, command, native(state))
+                accel = self.safety(state, command)
+                cav = state["present"].bool() & state["is_cav"].bool()
+                accel = torch.where(cav, accel, torch.zeros_like(accel))
                 if step % STEPS_PER_CONTROL == 0:
                     records[-1]["action"] = accel
                 # SUMO's ballistic position integration, including a stop inside this step.
@@ -225,10 +304,10 @@ class DreamerTrainer:
                 return torch.stack((position, state["lane"].to(speed.dtype), speed, accel), -1)
 
             initial = {key: value.clone() if torch.is_tensor(value) else value
-                       for key, value in batch.state.items()}
+                       for key, value in start_state.items()}
             roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
                                  cav_controller=controller, cav_teacher=None,
-                                 truncation_steps=None, **batch.rollout_kwargs)
+                                 truncation_steps=None, **rollout_kwargs)
             if step != cfg.horizon * STEPS_PER_CONTROL:
                 raise RuntimeError("WM must invoke the CAV callback once per physics step")
             if advanced_rng is None:
@@ -258,6 +337,10 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
+            if self.use_lanes:
+                member_lanes.append({name: torch.stack([record[name] for record in records])
+                                     for name in ("lane_log_prob", "lane_entropy", "lane_active",
+                                                  "lane_acting", "lane_changed")})
         _restore_rng(advanced_rng, self.device)
         rewards, costs = torch.stack(member_rewards), torch.stack(member_costs)
         disagreement = ensemble_penalty(rewards, 1.0)
@@ -267,14 +350,22 @@ class DreamerTrainer:
             # Freeze critic weights, not state derivatives: the terminal bootstrap
             # must provide analytic actor credit through the imagined WM trajectory.
             values = torch.stack([self.target_critic(state) for state in states])
+            member_values.append(values)
             returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
         masks = torch.stack([torch.stack([state["present"] & state["is_cav"]
                                          for state in states[:-1]]) for states in member_states])
+        if act_mask is not None:
+            masks = masks & act_mask
+        lanes = None
+        if member_lanes:
+            lanes = {name: torch.stack([m[name] for m in member_lanes]) for name in member_lanes[0]}
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                "values": torch.stack(member_values),
                 "disagreement": disagreement, "states": member_states,
                 "entropy": torch.stack(member_entropy), "actions": torch.stack(member_actions),
-                "action_mask": masks, "components": {key: torch.stack([c[key] for c in member_components])
-                                                       for key in member_components[0]}}
+                "action_mask": masks, "lanes": lanes, "variants": variants, "n_base": n_base,
+                "components": {key: torch.stack([c[key] for c in member_components])
+                               for key in member_components[0]}}
 
     def update_lagrange(self, mean_cost):
         value = float(mean_cost)
@@ -296,25 +387,136 @@ class DreamerTrainer:
             self.return_high = decay * self.return_high + (1 - decay) * high
         return max(1.0, self.return_high - self.return_low)
 
+    def actor_objective(self, imagined, scale, weights):
+        """Actor objective to MINIMISE (without the accel entropy / Lagrangian terms).
+
+        The maximised objective is ``sum_r c_r * mean_{E,H}(R_r - B_r) / scale`` with the row
+        coefficients ``c`` of :func:`wms.control.counterfactual.row_coefficients` (``w_all *
+        D_all + w_group * D_G + w_ind * D_i + w_coop * C_G + w_team * M_i`` averaged over starts;
+        ``B_r`` = the base return of row r's start, constant w.r.t. the actor).  Accelerations get
+        analytic gradients through the WM.  Lane head: REINFORCE with the same coefficients,
+        ``-sum_r c_r * mean_{E,H}[A_r(t) * sum_k log pi(lane_k)]`` over acting CAV decisions with
+        > 1 feasible choice, ``A = (R - V)/scale`` on all-CAV rows (critic baseline) and ``(R -
+        B)/scale`` on counterfactual rows (common random numbers), plus ``lane_entropy_weight`` x
+        the masked categorical entropy.  Without lanes / counterfactual rows this reduces exactly
+        to the original ``-mean(R)/scale``.
+        """
+        n_base = imagined["n_base"]
+        returns = imagined["returns"]                     # [E,H,N]
+        n_rows = returns.shape[-1]
+        variants = imagined.get("variants")
+        coefficients = row_coefficients(variants, weights, n_rows, n_base, device=returns.device,
+                                        dtype=returns.dtype)
+        base = baseline_index(variants, n_rows, device=returns.device)
+        has_base = base != torch.arange(n_rows, device=returns.device)
+        # R_r - B_r for rows whose start has a base row (B constant w.r.t. the actor), else R_r.
+        difference = returns - torch.where(has_base, returns[..., base].detach(), torch.zeros_like(returns))
+        loss = -(difference.mean((0, 1)) * coefficients).sum() / scale
+        extra = {}
+        if variants is not None and variants.base_row:
+            extra = DreamerTrainer._cooperation_metrics(imagined, variants, weights)
+        lanes = imagined.get("lanes")
+        if lanes is not None:
+            advantage = difference.detach() / scale
+            values = imagined.get("values")
+            if values is not None:
+                advantage[..., :n_base] = (returns[..., :n_base] - values[:, :-1, :n_base]).detach() / scale
+            active = lanes["lane_active"]                 # [E,H,N,K]
+            joint = (lanes["lane_log_prob"] * active.to(returns.dtype)).sum(-1)   # [E,H,N]
+            pg_loss = -((joint * advantage).mean((0, 1)) * coefficients).sum()
+            lane_entropy = _masked_mean(lanes["lane_entropy"], active)
+            loss = (loss + self.config.lane_pg_weight * pg_loss
+                    - self.config.lane_entropy_weight * lane_entropy)
+            acting = lanes["lane_acting"][..., :n_base, :]
+            changed = lanes["lane_changed"][..., :n_base, :] & acting
+            extra.update({"lane_pg_loss": float(pg_loss.detach()),
+                          "lane_entropy": float(lane_entropy.detach()),
+                          "lane_change_rate": float(changed.sum() / acting.sum().clamp_min(1)),
+                          "lane_decisions_with_options": int(active[..., :n_base, :].sum())})
+        return loss, extra
+
+    @staticmethod
+    def _cooperation_metrics(imagined, variants, weights):
+        """B, D_i, D_G, D_all, C_G, M_i, I_i (start-of-rollout lambda-returns, ensemble mean), the
+        fraction of groups with C_G > 0, by group size and by penetration bucket."""
+        parts = decompose(imagined["returns"][:, 0].detach().mean(0), variants)
+        out = {"cf_rows": variants.n_rows - variants.n_starts, "cf_weights": dict(weights)}
+        for name in ("B", "D_all", "D_i", "D_G", "C_G", "M_i", "I_i"):
+            out[name] = mean_or_none(parts[name])
+        out["coop_positive_fraction"] = mean_or_none(float(c > 0) for c in parts["C_G"])
+        out["n_groups"] = len(parts["D_G"])
+        out["n_C_G"] = len(parts["C_G"])
+        out["mean_group_size"] = mean_or_none(g["size"] for g in parts["groups"])
+        buckets = imagined.get("penetration_buckets") or {}
+        for key, label in (("by_group_size", lambda g: str(g["size"])),
+                           ("by_penetration", lambda g: buckets.get(g["start"], "unknown"))):
+            table = {}
+            for group in parts["groups"]:
+                table.setdefault(label(group), []).append(group)
+            out[key] = {name: {"n": len(rows), "D_G": mean_or_none(g["D_G"] for g in rows),
+                               "C_G": mean_or_none(g["C_G"] for g in rows if g["C_G"] is not None),
+                               "coop_positive_fraction": mean_or_none(
+                                   float(g["C_G"] > 0) for g in rows if g["C_G"] is not None)}
+                        for name, rows in sorted(table.items())}
+        return out
+
+    def _sample_starts(self, sampler):
+        """Group-rich oversampling (``group_state_fraction`` of the batch satisfies
+        :func:`wms.control.counterfactual.group_rich`) when the sampler supports it."""
+        cf = self.counterfactual
+        if cf.enabled and cf.group_state_fraction > 0 and hasattr(sampler, "sample_where"):
+            return sampler.sample_where(self.config.batch_size, device=self.device,
+                                        predicate=lambda state: group_rich(state, cf),
+                                        fraction=cf.group_state_fraction, max_tries=cf.max_group_tries)
+        return sampler.sample(self.config.batch_size, device=self.device)
+
+    @staticmethod
+    def _penetration_buckets(batch):
+        """Logging label per start: world-id penetration (p02..p40), else the observed CAV share."""
+        from .start_states import penetration_of
+
+        out = {}
+        present = batch.state["present"].bool()
+        share = ((present & batch.state["is_cav"].bool()).sum(-1).float()
+                 / present.sum(-1).clamp_min(1).float())
+        for index in range(present.shape[0]):
+            meta = batch.metadata[index] if index < len(batch.metadata) else {}
+            try:
+                value = penetration_of(meta)
+                out[index] = f"p{round(value * 100):02d}"
+            except (ValueError, TypeError):
+                nearest = min((0.02, 0.05, 0.1, 0.2, 0.4), key=lambda p: abs(p - float(share[index])))
+                out[index] = f"share~p{round(nearest * 100):02d}"
+        return out
+
     def update(self):
         started = time.perf_counter()
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
-        batch = self.start_states.sample(self.config.batch_size, device=self.device)
-        imagined = self.imagine(batch)
-        returns = imagined["returns"]
+        batch = self._sample_starts(self.start_states)
+        variants = (build_variants(batch.state, self.counterfactual)
+                    if self.counterfactual.enabled else None)
+        imagined = self.imagine(batch, variants=variants)
+        imagined["penetration_buckets"] = self._penetration_buckets(batch)
+        n_base, n_rows = imagined["n_base"], imagined["returns"].shape[-1]
+        all_returns = imagined["returns"]
+        returns = all_returns[..., :n_base]
         scale = self._return_scale(returns)
-        entropy = imagined["entropy"].mean()
-        mean_cost = imagined["costs"].mean()
-        actor_loss = (-returns.mean() / scale - self.config.entropy_weight * entropy +
+        weights = self.counterfactual.weights(self.update_count)
+        entropy = imagined["entropy"][..., :n_base].mean()
+        mean_cost = imagined["costs"][..., :n_base].mean()
+        objective, extra = self.actor_objective(imagined, scale, weights)
+        actor_loss = (objective - self.config.entropy_weight * entropy +
                       self.lagrange_multiplier * mean_cost)
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
         actor_norm = nn.utils.clip_grad_norm_(self.actor_parameters, self.config.grad_clip,
                                              error_if_nonfinite=True)
         self.actor_optimizer.step()
-        predictions = torch.stack([torch.stack([self.critic(_detach(state)) for state in states[:-1]])
+        # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
+        predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
+                                                for state in states[:-1]])
                                    for states in imagined["states"]])
         critic_loss = ((predictions - returns.detach()) / scale).square().mean()
         self.critic_optimizer.zero_grad(set_to_none=True)
@@ -332,23 +534,27 @@ class DreamerTrainer:
                     target.copy_(source)
         self.update_lagrange(mean_cost.detach())
         self.update_count += 1
-        selected = imagined["actions"].detach()[imagined["action_mask"]]
+        selected = imagined["actions"][..., :n_base, :].detach()[imagined["action_mask"][..., :n_base, :]]
         action_stats = {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
         if selected.numel():
             action_stats = {"mean": float(selected.mean()), "std": float(selected.std(unbiased=False)),
                             "min": float(selected.min()), "max": float(selected.max())}
+        flags = [m.get("group_rich") for m in batch.metadata if isinstance(m, dict)]
+        if any(flag is not None for flag in flags):
+            extra["group_rich_fraction"] = mean_or_none(float(bool(f)) for f in flags)
         metrics = {"update": self.update_count, "returns": float(returns.detach().mean()),
-                   "reward": float(imagined["rewards"].detach().mean()),
+                   "reward": float(imagined["rewards"][..., :n_base].detach().mean()),
+                   **extra,
                    "actor_loss": float(actor_loss.detach()), "critic_loss": float(critic_loss.detach()),
                    "lagrange_multiplier": self.lagrange_multiplier, "entropy": float(entropy.detach()),
                    "actor_grad_norm": float(actor_norm), "critic_grad_norm": float(critic_norm),
-                   "ensemble_disagreement": float(imagined["disagreement"].detach().mean()),
+                   "ensemble_disagreement": float(imagined["disagreement"][..., :n_base].detach().mean()),
                    "return_scale": scale, "action_stats": action_stats,
                    "wall_time_s": time.perf_counter() - started}
         for name in ("delay", "throughput", "smooth", "hard_brake", "fairness_delay", "cost_ttc"):
             value = imagined["components"].get(name)
             metrics["fairness" if name == "fairness_delay" else name] = (
-                float(value.detach().mean()) if value is not None else 0.0)
+                float(value[..., :n_base].detach().mean()) if value is not None else 0.0)
         if self.output_dir is not None:
             self.output_dir.mkdir(parents=True, exist_ok=True)
             with (self.output_dir / "updates.jsonl").open("a", encoding="utf-8") as stream:
@@ -358,28 +564,54 @@ class DreamerTrainer:
         return metrics
 
     def validate(self, sampler, batches=1):
-        """Deterministic imagined lambda-return on separate VAL windows; no update."""
+        """Selection score on separate VAL windows (deterministic policy, no update): mean D_all
+        (all-CAV minus all-native lambda-return, start-of-rollout) when counterfactuals are on,
+        else the mean imagined lambda-return.  See :meth:`validate_detail`."""
+        return self.validate_detail(sampler, batches)["score"]
+
+    def validate_detail(self, sampler, batches=1):
+        """``{"score", "returns", "D_all", "coop_gain_val", "n_groups"}`` on VAL windows.
+
+        With counterfactuals the VAL starts are sampled group-rich like training and every start
+        gets base / individual / group / flip rows (a fixed generator, so the variant choice is
+        reproducible); ``coop_gain_val`` = mean C_G.  Training RNG, sampler state and module
+        modes are restored."""
         if batches < 1:
             raise ValueError("validation requires at least one batch")
         rng = _rng_state(self.device)
         modes = (self.policy.training, self.group_encoder.training)
         self.policy.eval()
         self.group_encoder.eval()
+        cf = self.counterfactual
+        returns, d_all, coop, n_groups = [], [], [], 0
         try:
             with torch.no_grad():
-                results = [float(self.imagine(sampler.sample(self.config.batch_size, device=self.device),
-                                             deterministic=True)["returns"].mean())
-                           for _ in range(batches)]
-            score = sum(results) / len(results)
-            if not math.isfinite(score):
+                generator = torch.Generator().manual_seed(12345)
+                for _ in range(batches):
+                    batch = self._sample_starts(sampler)
+                    variants = build_variants(batch.state, cf, generator) if cf.enabled else None
+                    imagined = self.imagine(batch, deterministic=True, variants=variants)
+                    returns.append(float(imagined["returns"][..., :imagined["n_base"]].mean()))
+                    if variants is not None and variants.base_row:
+                        parts = decompose(imagined["returns"][:, 0].mean(0), variants)
+                        d_all.extend(parts["D_all"])
+                        coop.extend(parts["C_G"])
+                        n_groups += len(parts["D_G"])
+            mean_return = sum(returns) / len(returns)
+            out = {"returns": mean_return, "D_all": mean_or_none(d_all),
+                   "coop_gain_val": mean_or_none(coop), "n_groups": n_groups}
+            out["score"] = out["D_all"] if out["D_all"] is not None else mean_return
+            if not math.isfinite(out["score"]):
                 raise ValueError("nonfinite validation return")
-            return score
+            return out
         finally:
             _restore_rng(rng, self.device)
             self.policy.train(modes[0])
             self.group_encoder.train(modes[1])
 
     def fit(self, max_updates, *, validation_states=None, validation_batches=1):
+        """Train; best checkpoint ``policy_best.pt`` by the VAL score (D_all with counterfactuals)
+        and ``policy_best_coop.pt`` by the VAL cooperation gain ``coop_gain_val``."""
         self.validation_states = validation_states
         if self._pending_validation_state is not None and validation_states is not None:
             validation_states.load_state_dict(self._pending_validation_state)
@@ -389,14 +621,21 @@ class DreamerTrainer:
             last = self.update()
             if (validation_states is not None and self.config.validation_every and
                     self.update_count % self.config.validation_every == 0):
-                score = self.validate(validation_states, validation_batches)
+                detail = self.validate_detail(validation_states, validation_batches)
+                score = detail["score"]
                 if self.output_dir is not None:
                     with (self.output_dir / "validation.jsonl").open("a", encoding="utf-8") as stream:
-                        stream.write(json.dumps({"update": self.update_count, "returns": score}) + "\n")
+                        stream.write(json.dumps({"update": self.update_count, **detail},
+                                                allow_nan=False) + "\n")
                 if score > self.best_validation:
                     self.best_validation = score
                     if self.output_dir is not None:
                         self.save_checkpoint(self.output_dir / "policy_best.pt")
+                coop = detail["coop_gain_val"]
+                if coop is not None and coop > self.best_coop_validation:
+                    self.best_coop_validation = coop
+                    if self.output_dir is not None:
+                        self.save_checkpoint(self.output_dir / "policy_best_coop.pt")
         if self.output_dir is not None:
             self.save_checkpoint(self.output_dir / "policy_latest.pt")
         return last
@@ -404,7 +643,9 @@ class DreamerTrainer:
     def save_checkpoint(self, path):
         path = checked_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"format": "c4_dreamer/1", "config": asdict(self.config),
+        payload = {"format": CHECKPOINT_FORMAT, "config": asdict(self.config),
+                   "lane_rules": asdict(self.lane_rules) if self.lane_rules is not None else None,
+                   "lane_head": self.use_lanes, "counterfactual": self.counterfactual.as_dict(),
                    "reward_weights": asdict(self.reward_weights),
                    "policy": self.policy.state_dict(), "group_encoder": self.group_encoder.state_dict(),
                    "critic": self.critic.state_dict(), "target_critic": self.target_critic.state_dict(),
@@ -413,6 +654,7 @@ class DreamerTrainer:
                    "update_count": self.update_count, "lagrange_multiplier": self.lagrange_multiplier,
                    "return_low": self.return_low, "return_high": self.return_high,
                    "best_validation": self.best_validation, "rng": _rng_state(self.device),
+                   "best_coop_validation": self.best_coop_validation,
                    "ensemble_size": len(self.world_models),
                    "world_model_ids": self.world_model_ids,
                    "validation_sampler": (self.validation_states.state_dict()
@@ -422,12 +664,19 @@ class DreamerTrainer:
 
     def load_checkpoint(self, path, *, policy_only=False):
         payload = torch.load(checked_path(path), map_location=self.device, weights_only=True)
-        if payload.get("format") != "c4_dreamer/1":
-            raise ValueError("expected c4_dreamer/1 checkpoint")
+        if payload.get("format") not in READABLE_FORMATS:
+            raise ValueError(f"expected a {' or '.join(READABLE_FORMATS)} checkpoint")
+        if not policy_only and payload["format"] != CHECKPOINT_FORMAT:
+            raise ValueError(f"full resume requires a {CHECKPOINT_FORMAT} checkpoint (use policy_only)")
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
                                 payload["world_model_ids"] != self.world_model_ids):
             raise ValueError("resume requires the same frozen world-model ensemble")
-        self.policy.load_state_dict(payload["policy"])
+        from .policy import upgrade_policy_state
+        missing, unexpected = self.policy.load_state_dict(upgrade_policy_state(payload["policy"]),
+                                                          strict=False)
+        if unexpected or any(not key.startswith("lane_head.") for key in missing):
+            raise ValueError(f"policy weights do not match: missing={missing} unexpected={unexpected}")
+        # A c4_dreamer/1 actor has no lane head: the head keeps its uniform initialisation.
         self.group_encoder.load_state_dict(payload["group_encoder"])
         if policy_only:
             return
@@ -437,6 +686,7 @@ class DreamerTrainer:
             getattr(self, name).load_state_dict(payload[name])
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
+        self.best_coop_validation = payload.get("best_coop_validation", -math.inf)
         if payload["sampler"] is not None:
             self.start_states.load_state_dict(payload["sampler"])
         self._pending_validation_state = payload.get("validation_sampler")

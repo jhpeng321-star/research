@@ -62,6 +62,7 @@ class EpisodeRecorder:
         self.k = int(k)
         self.frames: list = []
         self.controls: list = []
+        self.lane_controls: list = []
         self._physics = (gzip.open(self.out / "run" / "physics_steps.jsonl.gz", "xt",
                                    encoding="utf-8", compresslevel=3) if physics_log else None)
         self._actions = gzip.open(self.out / "run" / "action_timeline.jsonl.gz", "xt",
@@ -81,9 +82,15 @@ class EpisodeRecorder:
         if row is not None and self._physics is not None:
             self._physics.write(dumps_row(row))
 
-    def on_control(self, time_s: float, frame, decisions: dict, vehicle_ids: list) -> None:
-        """``decisions``: slot -> (controller name, issued accel, issued target, requested)."""
+    def on_control(self, time_s: float, frame, decisions: dict, vehicle_ids: list,
+                   lane_commands: dict | None = None) -> None:
+        """``decisions``: slot -> (controller name, issued accel, issued target, requested);
+        ``lane_commands``: slot -> {target_lane, sumo_lane_index, duration_s} (issued changeLane)."""
         k = self.k
+        lane_commands = lane_commands or {}
+        lane_target = np.full(k, -1, np.int8)
+        for slot, command in lane_commands.items():
+            lane_target[slot] = int(command["target_lane"])
         ctrl = np.zeros(k, np.int8)
         acc = np.zeros(k, np.float32)
         tgt = np.zeros(k, np.float32)
@@ -95,9 +102,10 @@ class EpisodeRecorder:
             if requested is not None and math.isfinite(requested):
                 req[slot] = requested
             vid = vehicle_ids[int(frame.vid_index[slot])]
+            extra = ({"lane_command": dict(lane_commands[slot])} if slot in lane_commands else {})
             self._actions.write(json.dumps({
                 "schema": ACTION_LOG_SCHEMA, "timestamp_s": int(round(time_s)),
-                "vehicle_id": vid, "slot": int(slot), "owner": name,
+                "vehicle_id": vid, "slot": int(slot), "owner": name, **extra,
                 "issued_command": None if a is None else float(a),
                 "issued_target_speed_mps": None if target is None else float(target),
                 "requested_acceleration_mps2": (None if requested is None
@@ -105,6 +113,7 @@ class EpisodeRecorder:
                                                 else float(requested)),
                 "measured_speed_mps": float(frame.v[slot])}, allow_nan=False) + "\n")
         self.controls.append((float(time_s), ctrl, acc, tgt, req))
+        self.lane_controls.append(lane_target)
 
     def _close_streams(self) -> None:
         for stream in (self._physics, self._actions):
@@ -135,6 +144,9 @@ class EpisodeRecorder:
             if self.controls else np.zeros((0, self.k), np.float32),
             "requested_acceleration_mps2": np.stack([c[4] for c in self.controls])
             if self.controls else np.zeros((0, self.k), np.float32),
+            # WM target lane of an issued lane command per control tick, -1 = none.
+            "lane_command_target": np.stack(self.lane_controls)
+            if self.lane_controls else np.zeros((0, self.k), np.int8),
             "controller_vocab": np.asarray(CONTROLLERS, dtype=str),
             "meta_json": np.asarray(json.dumps({"schema": EPISODE_SCHEMA, **meta},
                                                allow_nan=False)),

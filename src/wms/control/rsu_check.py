@@ -2,11 +2,13 @@
 
 Controller factories take no arguments and return fresh contract CavControllers.
 Factories must isolate mutable controller state and be deterministic; the learned
-bridge can be supplied through :func:`default_candidates`. No simulation imports,
+bridge can be supplied through :func:`default_candidates`, which builds direct-output
+candidates only (owner 2026-10-12 late: no designed controller is a check candidate). No simulation imports,
 checkpoint loading, or training are performed here.
 """
 from __future__ import annotations
 
+import hashlib
 import math
 from time import perf_counter
 from typing import Callable, Mapping, Optional
@@ -19,42 +21,115 @@ from .contract import CONTROL_DT_S, PHYSICS_DT_S, CavController, RewardWeights
 ControllerFactory = Callable[[], CavController]
 
 
-def default_candidates(model, *, policy, group_encoder, safety, bridge,
-                       damping: ControllerFactory, pi: ControllerFactory,
-                       alternative_group_encoders=(), perturbation: float = 0.1):
-    """Build policy, policy_group_k, native, damping and pi factories.
+def _seed_of(*parts) -> int:
+    digest = hashlib.sha256(":".join(map(str, parts)).encode()).hexdigest()
+    return int(digest[:15], 16)
 
-    ``bridge(policy, group_encoder, safety)`` is injected (make_cav_controller).
-    The learned actor is forced deterministic. Group alternatives include zero,
-    a fixed perturbation (unless perturbation=0), and injected encoders from other
-    zones. Frozen classic controller adapters are injected as fresh factories.
-    """
-    if not math.isfinite(perturbation) or perturbation < 0:
-        raise ValueError("perturbation must be finite and nonnegative")
 
-    def actor(obs, signal, **kwargs):
-        return policy(obs, signal, **{**kwargs, "deterministic": True})
+class NoiseStream:
+    """Reproducible policy noise of one stochastic candidate ``policy_sample_<index>``.
 
-    def factory(encoder):
-        return lambda: bridge(actor, encoder, safety)
+    The noise of control step ``j`` after decision ``d`` is a function of
+    ``(seed, index, d, j, full slot id)`` only, so every WM member and every driver sample
+    of the check sees the SAME draws (common random numbers), and SUMO execution of the
+    chosen sample replays the same per-slot stream.  ``begin(d, slot_ids)`` is called by
+    the runner before each decision; ``slot_ids`` maps compacted imagination slots back to
+    the full ``k_full`` slot pool (None = identity)."""
 
-    def zero(*args, **kwargs):
+    def __init__(self, seed: int, index: int, *, k_full: Optional[int] = None):
+        self.seed, self.index, self.k_full = int(seed), int(index), k_full
+        self.decision, self.slot_ids = 0, None
+
+    def begin(self, decision: int, slot_ids=None) -> None:
+        self.decision = int(decision)
+        self.slot_ids = None if slot_ids is None else torch.as_tensor(slot_ids).long().cpu()
+
+    def noise(self, step: int, shape, *, slot_ids=None, device=None):
+        from .policy import PolicyNoise, draw_policy_noise
+
+        rows, k = shape
+        ids = self.slot_ids if slot_ids is None else torch.as_tensor(slot_ids).long().cpu()
+        ids = torch.arange(k) if ids is None else ids
+        if ids.numel() != k:
+            raise ValueError("slot ids do not match the imagined slot count")
+        full = max(int(self.k_full or 0), int(ids.max()) + 1 if ids.numel() else 0, k)
+        generator = torch.Generator().manual_seed(_seed_of(self.seed, self.index, self.decision, step))
+        draw = draw_policy_noise((1, full), generator=generator)
+        accel = draw.accel[:, ids].expand(rows, k)
+        gumbel = draw.lane_gumbel[:, ids].expand(rows, k, draw.lane_gumbel.shape[-1])
+        return PolicyNoise(accel.to(device) if device is not None else accel,
+                           gumbel.to(device) if device is not None else gumbel)
+
+
+def zero_group(group_encoder):
+    def encode(*args, **kwargs):
         return torch.zeros_like(group_encoder(*args, **kwargs))
+    return encode
 
-    def perturbed(*args, **kwargs):
+
+def perturbed_group(group_encoder, perturbation: float):
+    """Fixed deterministic offset of the group signal (cos ramp x perturbation)."""
+    def encode(*args, **kwargs):
         signal = group_encoder(*args, **kwargs)
         offset = torch.arange(signal.shape[-1], device=signal.device,
                               dtype=signal.dtype).cos() * perturbation
         return signal + offset
+    return encode
 
-    encoders = [zero]
-    if perturbation:
-        encoders.append(perturbed)
+
+def hold_actor(obs, signal, *, lane_mask=None, **kwargs):
+    """Direct-output safe fallback: a = 0 (then safety-filtered), stay in lane."""
+    del signal, kwargs
+    zero = torch.zeros(obs.cav_mask.shape, dtype=obs.own.dtype, device=obs.own.device)
+    if lane_mask is None:
+        return zero, zero
+    from .policy import PolicyOutput
+    return PolicyOutput(zero, torch.zeros_like(zero, dtype=torch.long), zero, zero, zero, zero,
+                        torch.ones_like(zero, dtype=torch.long))
+
+
+def default_candidates(model=None, *, policy, group_encoder, safety, bridge, lane_rules=None,
+                       perturbation: float = 0.1, sample_streams=(),
+                       alternative_group_encoders=()):
+    """Direct-output candidates ONLY (owner 2026-10-12 late; no designed controllers):
+
+    ``policy`` (deterministic accel + lane), ``policy_group_0`` (zero group signal),
+    ``policy_group_1`` (perturbed group signal), ``policy_group_<2+>`` (injected
+    alternative encoders), ``policy_sample_<k>`` (stochastic policy with the reproducible
+    noise of ``sample_streams[k]``, common random numbers across WM members / driver
+    samples) and ``hold_speed`` (direct command a = 0, stay in lane, safety-filtered).
+    ``bridge(actor, group_encoder, safety[, lane_rules=...])`` is injected
+    (make_cav_controller); with ``lane_rules`` the lane head is used.  ``model`` is unused
+    (kept for call compatibility).
+    """
+    del model
+    if not math.isfinite(perturbation) or perturbation <= 0:
+        raise ValueError("perturbation must be finite and positive")
+    lane_kwargs = {} if lane_rules is None else {"lane_rules": lane_rules}
+
+    def actor(obs, signal, **kwargs):
+        return policy(obs, signal, **{**kwargs, "deterministic": True})
+
+    def factory(encoder, act=actor):
+        return lambda: bridge(act, encoder, safety, **lane_kwargs)
+
+    def sampler(stream):
+        def make():
+            counter = [0]
+
+            def act(obs, signal, **kwargs):
+                noise = stream.noise(counter[0], tuple(obs.cav_mask.shape), device=obs.own.device)
+                counter[0] += 1
+                return policy(obs, signal, **{**kwargs, "deterministic": False, "noise": noise})
+            return bridge(act, group_encoder, safety, **lane_kwargs)
+        return make
+
+    encoders = [zero_group(group_encoder), perturbed_group(group_encoder, perturbation)]
     encoders.extend(alternative_group_encoders)
     result = {"policy": factory(group_encoder)}
-    result.update({f"policy_group_{k}": factory(encoder)
-                   for k, encoder in enumerate(encoders)})
-    result.update(native=lambda: model.hold_teacher, damping=damping, pi=pi)
+    result.update({f"policy_group_{k}": factory(encoder) for k, encoder in enumerate(encoders)})
+    result.update({f"policy_sample_{k}": sampler(stream) for k, stream in enumerate(sample_streams)})
+    result["hold_speed"] = factory(group_encoder, hold_actor)
     return result
 
 

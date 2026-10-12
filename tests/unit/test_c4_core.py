@@ -53,7 +53,8 @@ def test_observation_shapes_feature_order_and_local_sensing():
     torch.testing.assert_close(obs.own[0, 0], expected)
     assert not obs.own[:, 1].any()  # HDV neighbour is sensed but never an actor.
     # Closest CAV report is rear slot 2; its front neighbour is ego slot 0.
-    expected_report = torch.tensor([-20, -2, 0, 0, 1, 0, 8, 15, 2, 1, 0], dtype=torch.float32)
+    expected_report = torch.tensor([-20, -2, 0, 0, 1, 0, 8, 15, 2, 1, 0, 0, 0],  # cmd, intent = 0
+                                   dtype=torch.float32)
     torch.testing.assert_close(obs.reports[0, 0, 0], expected_report)
     assert obs.report_mask[0, 0].sum() == 2
 
@@ -86,7 +87,7 @@ def test_sensor_range_inclusive_and_report_source_age():
                                torch.tensor([0.2, 0.3, 0.4]))
     recipient_ages = age[:, None, :].expand(1, 4, 4) + 1
     obs2 = build_observations(x, recipient_ages)
-    torch.testing.assert_close(obs2.reports[0, 0, :3, -1], torch.tensor([1.2, 1.3, 1.4]))
+    torch.testing.assert_close(obs2.reports[0, 0, :3, REPORT_FEATURES.index("age_s")], torch.tensor([1.2, 1.3, 1.4]))
 
 
 def test_equal_position_overlap_is_sensed_and_charged_for_closing_pair():
@@ -358,7 +359,7 @@ def test_reward_of_ten_step_wms_rollout_reaches_actor_and_group_parameters():
     torch.manual_seed(2026)
     x = state(s=(-100, -40, -140, 0), v=(12, 15, 10, 13),
               lane=(1, 1, 1, 0), cav=(True, False, True, False))
-    actor, rsu = CavPolicy(hidden_dim=32), RsuGroupEncoder(hidden_dim=32)
+    actor, rsu = CavPolicy(hidden_dim=32, lane_head=False), RsuGroupEncoder(hidden_dim=32)  # accel-only bridge path
     records = []
     controller = make_cav_controller(actor, rsu, safe_accel, records)
     model = WmSModel(ModelSpec(history_hidden=16, k_hidden=8),

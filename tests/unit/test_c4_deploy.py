@@ -83,7 +83,14 @@ def test_pi_invalidate_keeps_other_vehicles():
     """Regression: dropping one PI vehicle must not erase the other vehicles' PI state."""
     from wms.train.cav_drive import TimelineControllers
 
-    deps = deploy.classic_dependencies()
+    from wms.train.cav_drive import load_controller_dependencies
+
+    # Frozen controller sources with ONE shared (stateless) CIRCLES ONNX session (the former
+    # deploy.classic_dependencies; damping/PI are no longer check candidates, owner 2026-10-12 late).
+    deps = list(load_controller_dependencies(np.array([1, 2])))
+    shared = deps[1](deps[0])
+    deps[1] = lambda _config, _shared=shared: _shared
+    deps = tuple(deps)
     ids = torch.full((1, 3, 2), 2, dtype=torch.long)
     zeros = torch.zeros(1, 3, 2)
     tc = TimelineControllers(None, {"controller": ids, "acceleration_mps2": zeros,
@@ -104,9 +111,13 @@ def test_candidates_and_checker_on_random_wm():
 
     torch.manual_seed(2)
     model = WmSModel(ModelSpec(rollout_mode="hybrid")).eval()
+    from wms.control.rsu_check import NoiseStream
+
+    streams = [NoiseStream(0, k, k_full=8) for k in range(2)]
     cands = deploy.build_candidates(model, CavPolicy().eval(), RsuGroupEncoder().eval(),
-                                    horizon_s=10)
+                                    horizon_s=10, sample_streams=streams)
     assert tuple(cands) == deploy.CANDIDATES
+    assert not {"native", "damping", "pi"} & set(cands)     # direct-output candidates only
     log = []
     checker = RsuChecker([model], cands, team_reward, RewardWeights(), horizon_s=10,
                          decision_period_s=5, n_driver_samples=2, log_fn=log.append)
@@ -115,6 +126,8 @@ def test_candidates_and_checker_on_random_wm():
     inputs, _ = deploy.compact_inputs({"state": st, "history": hist,
                                        "history_mask": torch.ones(1, 8, model.history_len,
                                                                   dtype=torch.bool)})
+    for stream in streams:
+        stream.begin(0, slot_ids=torch.arange(8))
     choice, evidence = checker.decide(inputs.pop("state"), now_s=300.0, **inputs)
     assert choice in cands and set(evidence) == set(cands)
     assert all(math.isfinite(e["mean"]) for e in evidence.values())
@@ -163,6 +176,7 @@ def test_deploy_policy_episode(tmp_path):
     assert code == 0 and summary["status"] == "complete"
     assert (out / "episode" / "summary.json").is_file()
     assert summary["executed_control_ticks"] == {"policy": 5}
+    assert summary["episode_summary"]["lane_change_mode_policy"] == 513
 
 
 @pytest.mark.skipif(not HAS_SUMO or not R5B.is_file(), reason="SUMO or R5b WM checkpoint missing")

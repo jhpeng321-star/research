@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Mapping
+from typing import Callable, Mapping, Optional
 
 import torch
 from torch import Tensor
@@ -41,7 +41,9 @@ def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
     return assigned
 
 
-def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, record=None
+def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, record=None, *,
+                        lane_rules=None, act_mask: Optional[Tensor] = None,
+                        native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None
                         ) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
@@ -53,16 +55,34 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     list or callable receiving graph-connected decision dictionaries containing
     obs, actions (pre-safety), safe_actions, group_signal and log_probs. Logging
     callers can detach these if they do not need the imagination graph.
+
+    ``lane_rules`` (:class:`wms.control.lanes.LaneRules`) enables the policy's lane head:
+    at each decision the policy receives ``lane_mask`` (feasible stay/left/right, with the
+    per-CAV dwell clock) and returns a ``PolicyOutput``; the chosen, conflict-checked lane
+    is applied at that decision tick (discrete, held until the next decision).  The
+    existing forced merge of ramp-lane CAVs runs afterwards on every tick and is never
+    blocked by the head.  ``act_mask`` [B,K] (counterfactual rows): only these CAVs follow
+    the policy; the other CAVs follow ``native(state) -> accel [B,K]`` (re-evaluated each
+    physics step) and stay in lane (forced merge still applies).
     """
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
     direct_command_motion = import_module("wms.model.cav").direct_command_motion
+    if act_mask is not None and native is None:
+        raise ValueError("act_mask requires a native CAV behaviour")
+    dwell = None
+    if lane_rules is not None:
+        from .lanes import LaneDwell
+        dwell = LaneDwell(lane_rules.dwell_s, PHYSICS_DT_S)
     held = None
     previous_mask = None
     internal_index = 0
+    # Reported to the other CAVs (owner 2026-10-12 late): each CAV's last commanded (safe)
+    # acceleration and lane intent; seeded from state["cmd_accel_mps2"/"lane_intent"] if given.
+    last_command = last_intent = None
 
     def controller(state: Mapping[str, Tensor]) -> Tensor:
-        nonlocal held, previous_mask, internal_index
+        nonlocal held, previous_mask, internal_index, last_command, last_intent
         index = state.get("physics_step_index", internal_index)
         if torch.is_tensor(index):
             if index.numel() == 0 or not (index == index.reshape(-1)[0]).all():
@@ -71,17 +91,45 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         index = int(index)
         internal_index = index + 1
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
+        acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
         if index == 0 or (held is not None and held.shape != state["s_m"].shape):
             held = None
             previous_mask = None
+            if dwell is not None:
+                dwell.reset()
+            zeros = torch.zeros_like(state["s_m"])
+            last_command = state.get("cmd_accel_mps2", zeros).to(zeros.dtype)
+            last_intent = state.get("lane_intent", zeros).to(zeros.dtype)
+        ages = dwell.step(state) if dwell is not None else None
         decision = index % STEPS_PER_CONTROL == 0
         log_entry = None
+        lane_now = state["lane"]
+        intent = torch.zeros_like(state["s_m"])
         if decision:
-            obs = build_observations(state)
+            known = mask if previous_mask is None else mask & previous_mask
+            if last_command is None or last_command.shape != state["s_m"].shape:
+                last_command = last_intent = torch.zeros_like(state["s_m"])
+            obs = build_observations({
+                **state, "cmd_accel_mps2": torch.where(known, last_command, torch.zeros_like(last_command)),
+                "lane_intent": torch.where(known, last_intent, torch.zeros_like(last_intent))})
             signal = group_encoder(obs, state["s_m"], build_rsu_field(state))
-            held, log_probs = policy(obs, signal)
-            log_entry = {"physics_step_index": index, "obs": obs, "actions": held,
-                         "log_probs": log_probs, "group_signal": signal}
+            if lane_rules is not None:
+                from .lanes import apply_lane_choices, lane_feasibility
+                lane_mask = lane_feasibility(state, ages, lane_rules)
+                out = policy(obs, signal, lane_mask=lane_mask)
+                held, log_probs = out.accel, out.log_prob_accel
+                lane_now, changed = apply_lane_choices(state, out.lane_choice, lane_mask,
+                                                       lane_rules, acting)
+                from .lanes import LANE_DELTA
+                intent = torch.where(acting, torch.tensor(LANE_DELTA, device=lane_now.device)[
+                    out.lane_choice].to(held.dtype), torch.zeros_like(held))
+                log_entry = {"lane_choice": out.lane_choice, "lane_mask": lane_mask,
+                             "lane_changed": changed, "acting": acting}
+            else:
+                held, log_probs = policy(obs, signal)
+                log_entry = {}
+            log_entry.update({"physics_step_index": index, "obs": obs, "actions": held,
+                              "log_probs": log_probs, "group_signal": signal})
         elif held is None:
             held = torch.zeros_like(state["s_m"])
         # A newly present slot waits until the next decision, never inheriting an
@@ -90,8 +138,15 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             held = torch.where(mask & previous_mask, held, torch.zeros_like(held))
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
-        lane = _merge_lane(state, mask)
-        executed = safety({**state, "lane": lane}, held)
+        lane = _merge_lane({**state, "lane": lane_now}, mask)
+        command_accel = held
+        if act_mask is not None:
+            command_accel = torch.where(acting, held, native({**state, "lane": lane}))
+            command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
+        executed = safety({**state, "lane": lane}, command_accel)
+        if decision:
+            last_command = torch.where(mask, executed, torch.zeros_like(executed))
+            last_intent = intent
         if log_entry is not None and record is not None:
             log_entry["safe_actions"] = executed
             record(log_entry) if callable(record) else record.append(log_entry)

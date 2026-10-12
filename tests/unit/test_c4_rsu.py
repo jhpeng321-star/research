@@ -238,13 +238,13 @@ def test_default_candidates_force_deterministic_and_group_alternatives():
             return factory(0)()(current)
         return run
 
-    model = SimpleNamespace(hold_teacher=factory(0)())
-    candidates = default_candidates(model, policy=actor,
+    candidates = default_candidates(None, policy=actor,
                                     group_encoder=lambda s: torch.ones(1, 8), safety=lambda s, a: a,
-                                    bridge=bridge, damping=factory(0), pi=factory(0),
+                                    bridge=bridge,
                                     alternative_group_encoders=[lambda s: torch.full((1, 8), 3.)])
+    # Owner 2026-10-12 late: direct-output candidates only (no native / damping / pi).
     assert list(candidates) == ["policy", "policy_group_0", "policy_group_1", "policy_group_2",
-                                "native", "damping", "pi"]
+                                "hold_speed"]
     with torch.no_grad():
         for name in list(candidates)[:4]:
             candidates[name]()(state())
@@ -252,6 +252,42 @@ def test_default_candidates_force_deterministic_and_group_alternatives():
     assert torch.equal(seen[1], torch.zeros(1, 8))
     assert not torch.equal(seen[2], seen[0])
     assert torch.equal(seen[3], torch.full((1, 8), 3.))
+
+
+def test_policy_sample_candidates_share_noise_across_members_and_replay_in_execution():
+    """policy_sample_k: same draws for every fresh controller (WM member) and for SUMO replay."""
+    from wms.control.rsu_check import NoiseStream
+
+    draws = []
+
+    def policy(obs, signal, *, deterministic=False, noise=None):
+        assert not deterministic and noise is not None
+        draws.append(noise.accel.clone())
+        return noise.accel, noise.accel
+
+    def bridge(actor, encoder, safety):
+        def run(current):
+            actor(SimpleNamespace(cav_mask=torch.ones(2, 3, dtype=torch.bool),
+                                  own=torch.zeros(2, 3, 1)), encoder(current))
+            return factory(0)()(current)
+        return run
+
+    stream = NoiseStream(7, 0, k_full=10)
+    stream.begin(3, slot_ids=torch.tensor([0, 4, 9]))
+    candidates = default_candidates(None, policy=policy, group_encoder=lambda s: torch.ones(1, 8),
+                                    safety=lambda s, a: a, bridge=bridge, sample_streams=[stream])
+    assert "policy_sample_0" in candidates and candidates["hold_speed"]
+    with torch.no_grad():
+        for _ in range(2):                         # two WM members: fresh controllers
+            run = candidates["policy_sample_0"]()
+            run(state())
+            run(state())
+    torch.testing.assert_close(draws[0], draws[2])  # member 1 step 0 == member 2 step 0
+    torch.testing.assert_close(draws[1], draws[3])
+    assert not torch.equal(draws[0], draws[1])      # steps differ
+    torch.testing.assert_close(draws[0][0], draws[0][1])   # same plan for every driver sample
+    full = stream.noise(0, (1, 10), slot_ids=torch.arange(10))   # SUMO replay over all slots
+    torch.testing.assert_close(full.accel[0, [0, 4, 9]], draws[0][0])
 
 
 @pytest.mark.parametrize("kwargs", [{"world_models": []}, {"candidates": {"native": factory(0)}},

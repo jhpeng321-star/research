@@ -8,7 +8,6 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
-import os
 import random
 import sys
 import time
@@ -141,13 +140,19 @@ def main(argv=None):
     summary = {"status": "failed", "updates": 0}
     try:
         raw = _read_config(args.config)
-        allowed = {"trainer", "run", "data", "world_model", "reward"}
+        allowed = {"trainer", "run", "data", "world_model", "reward", "lanes", "counterfactual"}
         if set(raw) - allowed:
             raise ValueError(f"unknown C4 config sections: {sorted(set(raw) - allowed)}")
         run = raw.get("run", {})
         output = checked_path(args.output_dir or run.get("output_dir", "runs/active/C4-DREAMER"))
         output.mkdir(parents=True, exist_ok=True)
         cfg = DreamerConfig(**raw.get("trainer", {}))
+        from .counterfactual import CounterfactualConfig
+        from .lanes import LaneRules
+        lane_section = dict(raw.get("lanes", {}))
+        use_lanes = bool(lane_section.pop("enabled", True))
+        lane_rules = LaneRules.from_mapping(lane_section) if use_lanes else None
+        counterfactual = CounterfactualConfig(**raw.get("counterfactual", {}))
         device = args.device or run.get("device", "cpu")
         max_updates = args.max_updates if args.max_updates is not None else int(run.get("updates", 3000))
         if args.smoke:
@@ -175,7 +180,8 @@ def main(argv=None):
         trainer = DreamerTrainer(models, components.pop("policy"), components.pop("group_encoder"),
                                  components.pop("critic"), train, **components, config=cfg,
                                  reward_weights=RewardWeights(**raw.get("reward", {})),
-                                 device=device, output_dir=output)
+                                 device=device, output_dir=output, lane_rules=lane_rules,
+                                 counterfactual=counterfactual)
         if args.init_policy:
             trainer.load_checkpoint(args.init_policy, policy_only=True)
         if args.resume:
@@ -188,13 +194,18 @@ def main(argv=None):
                            validation_batches=int(run.get("validation_batches", 1)))
         summary.update(status="completed", updates=trainer.update_count, device=device,
                        smoke=args.smoke, ensemble_checkpoints=paths, config=asdict(trainer.config),
+                       lane_head=trainer.use_lanes,
+                       lane_rules=asdict(lane_rules) if lane_rules is not None else None,
+                       counterfactual=counterfactual.as_dict(),
                        physics_steps_per_control=STEPS_PER_CONTROL,
                        imagined_horizon_s=trainer.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
                        train_windows=sum(map(len, train.groups.values())),
                        val_windows=sum(map(len, val.groups.values())),
                        penetrations=train.penetrations, last_update=last,
                        best_validation_return=(trainer.best_validation if
-                                               np.isfinite(trainer.best_validation) else None))
+                                               np.isfinite(trainer.best_validation) else None),
+                       best_coop_gain_val=(trainer.best_coop_validation if
+                                           np.isfinite(trainer.best_coop_validation) else None))
         code = 0
     except (ImportError, OSError, ValueError, RuntimeError, KeyError) as exc:
         summary["error"] = f"{type(exc).__name__}: {exc}"
