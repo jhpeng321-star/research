@@ -87,6 +87,10 @@ class DreamerConfig:
     # (which must be built with ``entry_backlog=True``) so the bootstrap prices queues beyond H.
     source_wait_grad: bool = False
     critic_entry_backlog: bool = False
+    # ENTRYFIX (ENTRYFIX_NOTES.md, default "v2" = bit-identical): insertion rule of the imagined
+    # entry process; "sumo_like" = SUMO departSpeed="max"/departLane="best" insertion (the v2
+    # sampled required gap over-blocks: imagined source wait far above SUMO's).
+    entry_insert_rule: str = "v2"
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -94,6 +98,8 @@ class DreamerConfig:
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
         for name, value in asdict(self).items():
+            if name == "entry_insert_rule":     # ENTRYFIX: the only string field
+                continue
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
         for name in ("gamma", "lambda_", "target_tau", "return_ema"):
@@ -108,6 +114,8 @@ class DreamerConfig:
                      "source_wait_grad", "critic_entry_backlog"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
+        if self.entry_insert_rule not in ("v2", "sumo_like"):
+            raise ValueError("entry_insert_rule must be 'v2' or 'sumo_like'")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
                 or self.entry_pad_max < 1:
             raise ValueError("entry_pad_max must be a positive integer")
@@ -278,7 +286,7 @@ def _queue_surrogate_fn(state, new_mask, pending_before, hist, entry_s, entry_cf
     return queue_surrogate(state, present, pending_before, hist, entry_s, entry_cfg, PHYSICS_DT_S)[0]
 
 
-def _entry_process(spec, rows, n_slots):
+def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
     from wms.model.entries import EntryConfig, TorchEntryProcessV2
 
     pool = np.zeros((len(rows), n_slots), dtype=bool)
@@ -286,7 +294,8 @@ def _entry_process(spec, rows, n_slots):
     # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).
     return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
                                dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
-                               cfg=EntryConfig(max_pending=10 ** 9), pool=pool,
+                               cfg=EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule),
+                               pool=pool,
                                row_seeds=[spec["seeds"][r] for r in rows])
 
 
@@ -526,7 +535,8 @@ class DreamerTrainer:
                 member_kwargs["lane_uniform"] = lane_uniform
             if entry_spec is not None:
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
-                                                         initial["s_m"].shape[1]))
+                                                         initial["s_m"].shape[1],
+                                                         cfg.entry_insert_rule))
                 member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)

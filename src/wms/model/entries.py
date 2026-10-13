@@ -62,6 +62,19 @@ DEFAULT_GAP_M = 10.0
 DEFAULT_GAP_STD_M = 5.0
 DEFAULT_CAV_SHARE = 0.0
 DEFAULT_LANE_P1 = 0.5
+#: Insertion rules of :class:`TorchEntryProcessV2` (``EntryConfig.insert_rule``).
+INSERT_RULES = ("v2", "sumo_like")
+#: SUMO lane speed limits (m/s) of the entrance edges per model lane (network bytes,
+#: ``1191554636_{0,1}`` and ``11553048#1_0``); the ``sumo_like`` departSpeed="max" cap.
+SUMO_LANE_SPEED_MPS = (31.29, 31.29, 22.22)
+#: SUMO vType parameters per ``VTYPES`` entry (scenarios.py route template; truck = SUMO
+#: defaults): speedFactor, minGap (m), tau (s), decel (m/s^2).
+VTYPE_SPEED_FACTOR = (1.0, 0.92, 1.08, 1.0)
+VTYPE_MIN_GAP_M = (2.5, 3.5, 1.5, 2.5)
+VTYPE_TAU_S = (1.1, 1.5, 0.95, 1.0)
+VTYPE_DECEL_MPS2 = (4.5, 3.0, 4.5, 4.0)
+#: SUMO ``departPos="base"`` puts the FRONT at ``lane start + length + POSITION_EPS``.
+SUMO_POSITION_EPS_M = 0.1
 _ENTRANCE_NAMES = {"mainline": 0, "ramp": 1}
 _FEATURE_KEYS = ("rate", "trend", "headway_mean", "headway_cv", "speed_mean",
                  "speed_std", "gap_mean", "gap_std", "cav_share", "n_obs")
@@ -105,6 +118,27 @@ class EntryConfig:
     default_speed_mps: float = 20.0
     cav_share: Optional[float] = None   # None -> observed in the t0 snapshot
     rate_scale: float = 1.0
+    # Insertion rule of TorchEntryProcessV2 (ENTRYFIX_NOTES.md).  "v2" (default) = the
+    # original rule, bit-identical.  "sumo_like" = SUMO's departSpeed="max" /
+    # departLane="best" / departPos="base" insertion: the entrant's speed is lowered to
+    # the safe insertion speed behind the lane's rearmost vehicle (no sampled required
+    # gap, no fixed speed ratio), any entrance lane that admits the vehicle may be used, the
+    # front is placed at lane start + length, and FIFO arrivals keep inserting in one step
+    # while a lane admits them (an entrance stops at its first refusal, as in SUMO).
+    insert_rule: str = "v2"
+    #: sumo_like lane choice: "any" (default; try every entrance lane, largest gap first --
+    #: admits 99% of SUMO's recorded insertions, ENTRYFIX_NOTES.md) or "best_free" (only the
+    #: least-occupied entrance lane by vehicle-length sum; admits 65-96%).
+    sumo_lane_mode: str = "any"
+    #: sumo_like: refuse when the safe insertion speed is below this (SUMO "max": 0).
+    sumo_min_speed_mps: float = 0.0
+    sumo_lane_speed_mps: tuple = SUMO_LANE_SPEED_MPS
+
+    def __post_init__(self) -> None:
+        if self.insert_rule not in INSERT_RULES:
+            raise ValueError(f"insert_rule must be one of {INSERT_RULES}, got {self.insert_rule!r}")
+        if self.sumo_lane_mode not in ("best_free", "any"):
+            raise ValueError("sumo_lane_mode must be 'best_free' or 'any'")
 
 
 @dataclass
@@ -132,6 +166,31 @@ def safe_to_insert(gap_m: float, v_new: float, v_lead: float, cfg: EntryConfig) 
     """SUMO-like safe-gap test: min gap + headway * v + closing brake."""
     brake = max(0.0, v_new - v_lead) ** 2 / (2.0 * cfg.decel_mps2)
     return gap_m >= cfg.min_gap_m + cfg.headway_s * v_new + brake
+
+
+def sumo_safe_insert_speed(gap_m: float, v_lead: float, tau_s: float, decel_mps2: float,
+                           min_gap_m: float) -> float:
+    """SUMO insertion safe speed (``maximumSafeFollowSpeed``, Euler, equal decelerations).
+
+    The largest ``v`` with ``tau * v + v^2 / (2 b) <= g + v_lead^2 / (2 b)``,
+    ``g = gap - minGap``; ``-1`` when ``g < 0`` (SUMO refuses an insertion inside minGap).
+    """
+    g = float(gap_m) - float(min_gap_m)
+    if g < 0.0:
+        return -1.0
+    b = max(float(decel_mps2), 1.0e-6)
+    tb = float(tau_s) * b
+    vl = max(0.0, float(v_lead))
+    return float(-tb + np.sqrt(tb * tb + vl * vl + 2.0 * b * g))
+
+
+def sumo_insert_ok(gap_m: float, v_new: float, v_lead: float, tau_s: float,
+                   decel_mps2: float, min_gap_m: float) -> bool:
+    """SUMO insertion safety at ``v_new``: ``gap >= minGap + max(0, tau v + (v^2 - v_lead^2)/(2b))``."""
+    b = max(float(decel_mps2), 1.0e-6)
+    vl = max(0.0, float(v_lead))
+    need = float(tau_s) * v_new + (v_new * v_new - vl * vl) / (2.0 * b)
+    return float(gap_m) >= float(min_gap_m) + max(0.0, need) - 1.0e-6
 
 
 class _Working:
@@ -766,8 +825,14 @@ class TorchEntryProcessV2(_EntryProcessBase):
             else:
                 lanes_try = [2]
             cav = bool(u_cav < float(hist.cav_share[e]))
-            if not any(self._try_lane(work, b, e, ln, cav, u_sr, u_gap, vt)
-                       for ln in lanes_try):
+            if self.cfg.insert_rule == "sumo_like":
+                # Same random draws as v2 (common random numbers across rules); the
+                # speed ratio and the sampled required gap are not used.
+                placed = self._insert_sumo_like(work, b, e, lanes_try, cav, vt)
+            else:
+                placed = any(self._try_lane(work, b, e, ln, cav, u_sr, u_gap, vt)
+                             for ln in lanes_try)
+            if not placed:
                 self.stats[b].deferred_steps += 1
                 break
             done += 1
@@ -789,6 +854,55 @@ class TorchEntryProcessV2(_EntryProcessBase):
         if gap < max(0.0, required_gap):
             return False
         return self._place(work, b, e, ln, cav, v_new, float(VTYPE_LENGTH_M[vtype]))
+
+    # -- sumo_like insertion (EntryConfig.insert_rule == "sumo_like") ------------------
+    def _entrance_gap(self, work: _Working, b: int, ln: int, length_new: float):
+        """``(bumper gap, leader speed)`` for a SUMO departPos="base" entrant on ``ln``."""
+        rear = self._lane_rear(work, b, ln)
+        if rear is None:
+            return _NO_GAP, _NO_GAP
+        s_r, l_r, v_lead, _ = rear
+        front = self.entry_s[ln] + float(length_new) + SUMO_POSITION_EPS_M
+        return s_r - l_r - front, v_lead
+
+    def _lane_occupancy(self, work: _Working, b: int, ln: int) -> float:
+        """Vehicle-length sum on the entrance edge of ``ln`` (SUMO departLane="best" key)."""
+        sel = (work.present[b] & (work.lane[b] == ln) & (work.s[b] >= self.entry_s[ln])
+               & (work.s[b] - work.length[b] <= SECTION_MERGE_START_M))
+        return float(work.length[b, sel].sum())
+
+    def _insert_sumo_like(self, work: _Working, b: int, e: int, lanes_try: list,
+                          cav: bool, vtype: int) -> bool:
+        length_new = float(VTYPE_LENGTH_M[vtype])
+        if len(lanes_try) > 1:
+            if self.cfg.sumo_lane_mode == "best_free":
+                # Least-occupied entrance lane only; ties keep the sampled order.
+                occ = [self._lane_occupancy(work, b, ln) for ln in lanes_try]
+                lanes_try = [lanes_try[int(np.argmin(occ))]]
+            else:
+                gaps = [self._entrance_gap(work, b, ln, length_new)[0] for ln in lanes_try]
+                lanes_try = [lanes_try[i] for i in np.argsort(-np.asarray(gaps), kind="stable")]
+        return any(self._try_lane_sumo(work, b, e, ln, cav, vtype) for ln in lanes_try)
+
+    def _try_lane_sumo(self, work: _Working, b: int, e: int, ln: int, cav: bool,
+                       vtype: int) -> bool:
+        length_new = float(VTYPE_LENGTH_M[vtype])
+        gap, v_lead = self._entrance_gap(work, b, ln, length_new)
+        lane_speeds = tuple(self.cfg.sumo_lane_speed_mps)
+        v_cap = float(lane_speeds[min(ln, len(lane_speeds) - 1)]) * VTYPE_SPEED_FACTOR[vtype]
+        if gap >= _NO_GAP:
+            v_new = v_cap
+        else:
+            v_safe = sumo_safe_insert_speed(gap, v_lead, VTYPE_TAU_S[vtype],
+                                            VTYPE_DECEL_MPS2[vtype], VTYPE_MIN_GAP_M[vtype])
+            if v_safe < max(0.0, float(self.cfg.sumo_min_speed_mps)):
+                return False
+            v_new = min(v_cap, v_safe)
+        if not self._place(work, b, e, ln, cav, v_new, length_new):
+            return False
+        k = work.inserted[-1][1]
+        work.s[b, k] = self.entry_s[ln] + length_new + SUMO_POSITION_EPS_M
+        return True
 
     def summary(self, b: int = 0) -> dict:
         hist = self._hist(b)

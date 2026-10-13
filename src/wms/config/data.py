@@ -173,6 +173,10 @@ class DataConfig:
     #: C4 imagination does (``wms.control.dreamer.with_entry_slots``).  Off = legacy fixed pad.
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
+    #: ENTRYFIX (ENTRYFIX_NOTES.md): insertion rule of the entries-v2 process
+    #: (``wms.model.entries.EntryConfig.insert_rule``).  "v2" = legacy, bit-identical;
+    #: "sumo_like" = SUMO departSpeed="max"/departLane="best"/departPos="base" insertion.
+    entry_insert_rule: Literal["v2", "sumo_like"] = "v2"
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
     #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation
