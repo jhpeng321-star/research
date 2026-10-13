@@ -16,6 +16,14 @@ measured SUMO speed (simulated seconds per wall second, per worker and aggregate
 """
 from __future__ import annotations
 
+import os as _os
+
+# One SUMO + one policy per worker process: keep BLAS/OpenMP single-threaded, otherwise every worker
+# spawns one thread per visible core (127 on the AutoDL vGPU box with a 16-core quota) and the box
+# thrashes (2026-10-13: >18 min/episode instead of ~25 s).
+for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+    _os.environ.setdefault(_var, "1")
+
 import argparse
 import json
 import multiprocessing as mp
