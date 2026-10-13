@@ -1,0 +1,12 @@
+# Sampled futures (FUTURES_NOTES.md, goal D): every start is imagined under N stochastic worlds instead of one
+# deterministic WM rollout. Default config (c4_policy.toml) is unchanged: future_samples = 1.
+extends = "c4_policy.toml"
+
+[trainer]
+future_samples = 2 # N futures per start; pseudo-members = ensemble members x N (cost ~ N x one rollout).
+future_driver_scale = 1.0 # driver params perturbed by this x encoder uncertainty (capped at +/-50 %); 0 = off.
+future_embedding_std = 0.05
+future_accel_noise = false # true: + per-step HDV accel noise N(0, min(exp(log_sigma), sigma_max)^2) (see notes: head untrained?).
+future_accel_scale = 1.0
+future_accel_sigma_max = 1.0
+future_seed = 0
