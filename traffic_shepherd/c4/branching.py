@@ -681,7 +681,7 @@ def measure_episode(env, controller: BranchController, *, seed: int, demand_vph:
             "determinism_B_vs_B_repeat": (trajectory_diff(trajs["B"], trajs["B_repeat"])
                                           if "B_repeat" in trajs else None),
             "metrics_B_equal_B_repeat": (metrics["B"] == metrics.get("B_repeat")),
-            "fidelity_ALL_vs_live": (None if live is None
+            "fidelity_ALL_vs_live": (None if live is None or "ALL" not in trajs
                                      else trajectory_diff(live["trajectory"], trajs["ALL"])),
             "metrics_live": None if live is None else live["metrics"],
             "speed_mode_restored": sum(n["speed_mode_restored"] for n in notes.values()),

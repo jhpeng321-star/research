@@ -20,11 +20,11 @@ among random CAV subsets, random lane intents) is the only shaping.
   gives independent CAVs; no position, lane or traffic state enters the selection.
 * ``mode="speed"`` (DEFAULT, integrator 2026-10-14, keeps states realistic while staying
   undirected): each hold draws a random TARGET SPEED instead of a target acceleration -
-  70 % U[0.5, 1.1] x the local-flow speed, 20 % U[0, 0.5] x it, 10 % "free" (command +2.6,
-  SUMO caps it at the allowed speed) - with an acceleration limit U[0.5, 2.6] and a
-  deceleration limit U[1, 3] m/s^2; the command is (v_target - v) / 1 s clipped to the limits,
-  approached at the segment jerk.  Local-flow speed = mean speed of the vehicles ahead in the
-  CAV's lane within 200 m (any type; the speed limit 31.29 m/s when none) at the draw.  A
+  65 % U[0.8, 1.15] x the speed limit (31.29 m/s), 25 % U[0.3, 0.8] x it, 10 % "free"
+  (command +2.6; SUMO caps it at the allowed speed) - with an acceleration limit U[0.5, 2.6]
+  and a deceleration limit U[1, 3] m/s^2; the command is (v_target - v) / 1 s clipped to the
+  limits, approached at the segment jerk.  Targets scale with the speed LIMIT, not the local
+  flow (a local-flow reference compounded: CAVs at 0.4x native speed in the first smoke).  A
   CAV below 1 m/s for more than 20 s ends its hold early (new draw).  Latents carry a speed
   factor (the non-free part of the mixture), mixed as above.  ``mode="accel"`` is the
   original target-acceleration process above (``--gr-mode accel``).
@@ -62,8 +62,8 @@ LANE_RATE = (1.0 / 600.0, 1.0 / 20.0)
 LANE_HOLD_S = (1.0, 10.0)
 MODES = ("speed", "accel")
 SPEED_LIMIT_MPS = 31.29
-LOCAL_FLOW_M = 200.0
-SPEED_MIX = (0.7, 0.2, 0.1)              # scaled U[0.5,1.1] / slow U[0,0.5] / free
+SPEED_MIX = (0.65, 0.25, 0.1)            # cruise U[0.8,1.15] / slow U[0.3,0.8] / free
+CRUISE_FACTOR, SLOW_FACTOR = (0.8, 1.15), (0.3, 0.8)
 ACCEL_LIMIT = (0.5, 2.6)
 DECEL_LIMIT = (1.0, 3.0)
 STUCK_SPEED_MPS, STUCK_S = 1.0, 20
@@ -98,9 +98,10 @@ def episode_policy_seed(seed: int, demand: int, penetration: float) -> int:
 
 
 def arm_seed(policy_seed: int, t_s: int, j: int) -> int:
-    """Seed of re-seeded branch arm ``SEED:j`` at decision time ``t_s``."""
-    return int(np.random.SeedSequence([int(policy_seed), int(t_s), int(j), 0xB4A2]
-                                      ).generate_state(1)[0])
+    """Seed of re-seeded branch arm ``SEED:j`` at decision time ``t_s``
+    (:func:`traffic_shepherd.c4.branching.seed_for_arm`)."""
+    from .branching import seed_for_arm
+    return seed_for_arm(policy_seed, t_s, j)
 
 
 class GenericRandomPolicy:
@@ -141,7 +142,8 @@ class GenericRandomPolicy:
                 "accel_range_mps2": [self.low, self.high], "hold_s": list(self.hold_s),
                 "jerk_mps3": list(self.jerk_range), "lane_hold_s": list(self.lane_hold_s),
                 **({"speed_mix": list(SPEED_MIX), "accel_limit_mps2": list(ACCEL_LIMIT),
-                    "decel_limit_mps2": list(DECEL_LIMIT), "local_flow_m": LOCAL_FLOW_M,
+                    "decel_limit_mps2": list(DECEL_LIMIT), "speed_ref": "limit",
+                    "cruise_factor": list(CRUISE_FACTOR), "slow_factor": list(SLOW_FACTOR),
                     "stuck": [STUCK_SPEED_MPS, STUCK_S]} if self.mode == "speed" else {})}
 
     def reset(self) -> None:
@@ -170,21 +172,20 @@ class GenericRandomPolicy:
         return {"value": value, "left": _hold_ticks(self.rng, *self.hold_s)}
 
     def _speed_factor(self, free_ok: bool = True) -> tuple:
-        """(factor of the local-flow speed, free) from the speed-mode mixture."""
+        """(factor of the speed limit, free) from the speed-mode mixture."""
         u = float(self.rng.uniform(0.0, 1.0))
         p_scaled, p_slow, _ = SPEED_MIX
         if not free_ok:
             u *= p_scaled + p_slow
         if u < p_scaled:
-            return float(self.rng.uniform(0.5, 1.1)), False
+            return float(self.rng.uniform(*CRUISE_FACTOR)), False
         if u < p_scaled + p_slow:
-            return float(self.rng.uniform(0.0, 0.5)), False
+            return float(self.rng.uniform(*SLOW_FACTOR)), False
         return 1.0, True
 
-    def _speed_segment(self, track: dict, factor: float, free: bool, v_flow: float,
-                       hold: int) -> None:
+    def _speed_segment(self, track: dict, factor: float, free: bool, hold: int) -> None:
         track["free"] = bool(free)
-        track["v_target"] = SPEED_LIMIT_MPS if free else float(factor) * float(v_flow)
+        track["v_target"] = SPEED_LIMIT_MPS * (1.0 if free else float(factor))
         track["alim"] = float(self.rng.uniform(*ACCEL_LIMIT))
         track["dlim"] = float(self.rng.uniform(*DECEL_LIMIT))
         track["slow"] = 0
@@ -206,8 +207,6 @@ class GenericRandomPolicy:
         speed_mode = self.mode == "speed"
         if speed_mode:
             v_now = np.asarray(_np(state["v_mps"])[0], np.float64)
-            s_now = np.asarray(_np(state["s_m"])[0], np.float64)
-            present = np.asarray(_np(state["present"])[0], bool)
         slots = np.flatnonzero(cav).tolist()
         # Track key: vehicle id (exact) or slot (a slot that was empty at the previous call
         # starts a new track; same-tick slot reuse is only detectable with vehicle ids).
@@ -248,7 +247,6 @@ class GenericRandomPolicy:
                 if speed_mode:
                     own, _ = self._speed_factor(free_ok=False)
                     self._speed_segment(track, w * value + (1.0 - w) * own, False,
-                                        _local_flow(s, s_now, v_now, lane_now, present),
                                         max(1, hold))
                 else:
                     own = float(rng.uniform(self.low, self.high))
@@ -257,9 +255,7 @@ class GenericRandomPolicy:
             elif track["left"] <= 0:
                 if speed_mode:
                     factor, free = self._speed_factor()
-                    self._speed_segment(track, factor, free,
-                                        _local_flow(s, s_now, v_now, lane_now, present),
-                                        _hold_ticks(rng, *self.hold_s))
+                    self._speed_segment(track, factor, free, _hold_ticks(rng, *self.hold_s))
                 else:
                     self._new_segment(track, float(rng.uniform(self.low, self.high)),
                                       _hold_ticks(rng, *self.hold_s))
@@ -292,18 +288,6 @@ class GenericRandomPolicy:
         if with_lanes:
             return out[None], lanes[None]
         return out[None]
-
-
-def _local_flow(slot: int, s_now, v_now, lane_now, present) -> float:
-    """Mean speed of the vehicles ahead in ``slot``'s lane within ``LOCAL_FLOW_M`` (any type),
-    the speed limit when there are none (free road) or the lane is unknown (junction)."""
-    lane = int(lane_now[slot])
-    if lane < 0:
-        return SPEED_LIMIT_MPS
-    ds = s_now - s_now[slot]
-    ahead = present & (lane_now == lane) & (ds > 0.0) & (ds <= LOCAL_FLOW_M)
-    ahead[slot] = False
-    return float(v_now[ahead].mean()) if ahead.any() else SPEED_LIMIT_MPS
 
 
 # ====================================================================== branch episodes
@@ -422,7 +406,8 @@ def run_genrand_job(env, *, seed: int, demand_vph: int, penetration: float, warm
     ``branching.SAVE_STATE_CLI``.  ``repeat_check`` > 0 re-runs arm ``SEED:0`` of the first
     ``repeat_check`` decision points and records whether it reproduced exactly (determinism /
     common-random-number check).  Returns the base summary plus a ``branches`` block."""
-    from .branching import load_state, prepare_branch_mode, save_state, trajectory_diff
+    from .branching import (load_state, plan_seed_arms, prepare_branch_mode, reseeded,
+                            save_state, trajectory_diff)
 
     episode_dir, policy_seed = Path(episode_dir), episode_policy_seed(seed, demand_vph, penetration)
     policy = GenericRandomPolicy(policy_seed, mode=mode)
@@ -453,11 +438,9 @@ def run_genrand_job(env, *, seed: int, demand_vph: int, penetration: float, warm
     t_branch = time.monotonic()
     for p_i, point in enumerate(saved):
         t_k = point["t_s"]
-        arms = [{"name": f"SEED:{j}", "kind": "SEED", "j": j} for j in range(n_arms)]
-        if native_arm:
-            arms.append({"name": "NATIVE", "kind": "NATIVE", "j": None})
+        arms = plan_seed_arms(n_arms, native=native_arm)   # SEED:j ... + B (all native)
         if p_i < repeat_check and n_arms > 0:
-            arms.append({"name": "SEED:0", "kind": "SEED", "j": 0, "repeat": True})
+            arms.append(dict(arms[0], repeat=True))
         trajs = {}
         for arm in arms:
             load_state(env, point["path"], point["snap"])
@@ -466,7 +449,7 @@ def run_genrand_job(env, *, seed: int, demand_vph: int, penetration: float, warm
             rec = MemoryRecorder(env.k)
             env.recorder = rec
             if arm["kind"] == "SEED":
-                fn = copy.deepcopy(point["policy"]).reseed(arm_seed(policy_seed, t_k, arm["j"]))
+                fn = reseeded(point["policy"], arm_seed(policy_seed, t_k, arm["j"]))
             else:
                 fn = None
             st = env.state()
@@ -492,7 +475,7 @@ def run_genrand_job(env, *, seed: int, demand_vph: int, penetration: float, warm
                 checks.append({"t_s": t_k, **trajectory_diff(trajs["SEED:0"], traj)})
                 continue
             trajs[arm["name"]] = traj
-            tag = "native" if arm["kind"] == "NATIVE" else f"seed{arm['j']}"
+            tag = "native" if arm["kind"] == "B" else f"seed{arm['j']}"
             arm_tag = f"{POLICY_TAG}_b{t_k:04d}_{tag}"
             world = _world(seed, demand_vph, penetration, warmup_s)
             pair_key = f"{world}@t{t_k}"

@@ -230,23 +230,22 @@ def test_speed_mode_is_default_and_draws_mixture_limits_and_targets():
     segs = []
     orig = p._speed_segment
 
-    def spy(track, factor, free, v_flow, hold):
-        orig(track, factor, free, v_flow, hold)
-        segs.append((factor, free, v_flow, hold, track["v_target"], track["alim"], track["dlim"]))
+    def spy(track, factor, free, hold):
+        orig(track, factor, free, hold)
+        segs.append((factor, free, None, hold, track["v_target"], track["alim"], track["dlim"]))
     p._speed_segment = spy
     acc, _ = roll(p, 3000)
     a = acc[:, :12]
     free = np.array([x[1] for x in segs])
     fac = np.array([x[0] for x in segs])[~free]
     assert 0.06 < free.mean() < 0.14
-    slow = (fac < 0.5).mean()
-    assert 0.15 < slow / (1 - free.mean()) * 0.9 < 0.3       # ~20 % of all draws
-    assert fac.min() >= 0.0 and fac.max() <= 1.1
-    # local flow = mean speed ahead (synthetic: everybody at 15 m/s; last CAVs have leaders)
-    flows = {round(x[2], 6) for x in segs}
-    assert flows <= {15.0, G.SPEED_LIMIT_MPS}
+    slow = (fac < 0.8).mean() * (1 - free.mean())
+    assert 0.19 < slow < 0.31                                  # ~25 % of all draws
+    assert fac.min() >= 0.3 and fac.max() <= 1.15
+    # targets scale with the speed limit (not the local flow)
     vt = np.array([x[4] for x in segs])
-    assert vt.min() >= 0.0 and vt.max() <= max(1.1 * 15.0, G.SPEED_LIMIT_MPS) + 1e-9
+    assert np.allclose(vt[~free], fac * G.SPEED_LIMIT_MPS)
+    assert vt.min() >= 0.3 * G.SPEED_LIMIT_MPS - 1e-9 and vt.max() <= 1.15 * G.SPEED_LIMIT_MPS + 1e-9
     alim, dlim = np.array([x[5] for x in segs]), np.array([x[6] for x in segs])
     assert alim.min() >= 0.5 and alim.max() <= 2.6 and dlim.min() >= 1.0 and dlim.max() <= 3.0
     holds = [x[3] for x in segs]
@@ -283,18 +282,6 @@ def test_speed_mode_stuck_cav_redraws_after_20s():
     for _ in range(100):
         q(make_state(12, v=5.0), vehicle_ids=ids)
     assert q.events.get("stuck_redraws", 0) == 0
-
-
-def test_local_flow_uses_same_lane_vehicles_ahead_within_200m():
-    s = np.array([0.0, 50.0, 150.0, 250.0, 30.0, -20.0])
-    v = np.array([20.0, 10.0, 14.0, 30.0, 5.0, 1.0])
-    lane = np.array([0, 0, 0, 0, 1, 0])
-    pres = np.ones(6, bool)
-    assert G._local_flow(0, s, v, lane, pres) == pytest.approx(12.0)
-    assert G._local_flow(3, s, v, lane, pres) == pytest.approx(G.SPEED_LIMIT_MPS)
-    lane2 = lane.copy()
-    lane2[0] = -1
-    assert G._local_flow(0, s, v, lane2, pres) == pytest.approx(G.SPEED_LIMIT_MPS)
 
 
 def test_speed_mode_shared_latent_correlation():
