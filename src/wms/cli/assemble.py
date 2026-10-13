@@ -143,9 +143,16 @@ def _kept_summary(receipt: dict) -> str:
 
 
 def _junction_kwargs(data: Any) -> dict:
-    """``junction_fix`` keyword for the pack datasets; empty when off (calls unchanged)."""
+    """``junction_fix`` / ``controller_hygiene`` keywords for the pack datasets; empty when
+    off (calls unchanged)."""
+    out = {}
     mode = getattr(data, "junction_fix", "off")
-    return {} if mode == "off" else {"junction_fix": mode}
+    if mode != "off":
+        out["junction_fix"] = mode
+    hygiene = getattr(data, "controller_hygiene", "off")
+    if hygiene != "off":
+        out["controller_hygiene"] = hygiene
+    return out
 
 
 def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver] = None
@@ -227,13 +234,21 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             work_dir=out_dir, leave_pi_wall_out=leave_out,
             history_s=data.history_s, history_stride_s=data.history_stride_s,
             **_junction_kwargs(data))
+    mixed = False
+    if sw.enabled and switch["train"] is None:
+        # DATAHYG strict removed (almost) every direct-mix item: train without the source.
+        print("switching source DISABLED by data.controller_hygiene: "
+              + json.dumps(switch["receipt"].get("controller_hygiene")), file=sys.stderr)
+        train.receipt["switching_disabled_by_controller_hygiene"] = switch["receipt"]
+    elif sw.enabled:
         train, val = mixdata.mix_datasets(
             train, switch, switch_ratio=float(sw.mix_ratio),
             event_oversample=float(sw.event_oversample), orig_val=val,
             jam_oversample=float(data.jam.oversample), jam_speed_mps=float(data.jam.speed_mps),
             jam_cache_dir=(data.jam.cache_dir or out_dir))
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
-    elif float(data.jam.oversample) > 1.0:
+        mixed = True
+    if not mixed and float(data.jam.oversample) > 1.0:
         from ..data import jam
 
         report = jam.compute_jam_flags(

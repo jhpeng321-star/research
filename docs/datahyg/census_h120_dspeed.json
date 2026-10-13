@@ -1,0 +1,71 @@
+{
+ "horizon_ticks": 120,
+ "dspeed": {
+  "train": {
+   "n_items": 444,
+   "items_dropped_no_allowed_start": 0,
+   "unshifted_window_refused": 403,
+   "mean_allowed_start_fraction": 0.827,
+   "items_with_designed_segments": 411,
+   "cav_hours": 1117.693,
+   "old_label_direct_cav_hours": 1117.693,
+   "directed_cav_hours_before": 57.339,
+   "directed_cav_hours_outside_designed_ticks": 7.265,
+   "per_window_draw_cav_rows_before_after": {
+    "cav": [
+     1831.4,
+     1837.8
+    ],
+    "directed": [
+     73.2,
+     1.4
+    ],
+    "directed_in_designed": [
+     63.5,
+     0.0
+    ]
+   },
+   "directed_share_of_cav_rows_before_after": [
+    0.04,
+    0.0008
+   ],
+   "random_directed_share_before_after": [
+    0.0053,
+    0.0008
+   ]
+  },
+  "val": {
+   "n_items": 76,
+   "items_dropped_no_allowed_start": 0,
+   "unshifted_window_refused": 71,
+   "mean_allowed_start_fraction": 0.8093,
+   "items_with_designed_segments": 72,
+   "cav_hours": 270.229,
+   "old_label_direct_cav_hours": 270.229,
+   "directed_cav_hours_before": 13.768,
+   "directed_cav_hours_outside_designed_ticks": 0.938,
+   "per_window_draw_cav_rows_before_after": {
+    "cav": [
+     2594.1,
+     2611.1
+    ],
+    "directed": [
+     101.5,
+     1.0
+    ],
+    "directed_in_designed": [
+     93.6,
+     0.0
+    ]
+   },
+   "directed_share_of_cav_rows_before_after": [
+    0.0391,
+    0.0004
+   ],
+   "random_directed_share_before_after": [
+    0.003,
+    0.0004
+   ]
+  }
+ }
+}

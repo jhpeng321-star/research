@@ -18,6 +18,7 @@ ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 LANE_GAP_RULES = ("fixed", "speed")
 JUNCTION_FIX_MODES = ("off", "ffill")
+CONTROLLER_HYGIENE_MODES = ("off", "strict")
 HARD_CAP_FIELDS = ("residual_cap_mps2", "residual_cap_neg_mps2")
 
 
@@ -154,6 +155,7 @@ class TrainSettings:
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
+    controller_hygiene: str = "off"  # DATAHYG: data-side only (wms.data.controller_hygiene)
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -256,6 +258,8 @@ class TrainSettings:
         _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
         _require(self.junction_fix in JUNCTION_FIX_MODES,
                  f"junction_fix must be one of {JUNCTION_FIX_MODES}")
+        _require(self.controller_hygiene in CONTROLLER_HYGIENE_MODES,
+                 f"controller_hygiene must be one of {CONTROLLER_HYGIENE_MODES}")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":

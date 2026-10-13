@@ -45,6 +45,7 @@ from torch.utils.data import Dataset
 
 from wms.core.errors import TrainDataRefusal
 from wms.data.action_timeline import CONTROLLERS, ActionTimeline
+from wms.data import controller_hygiene as hygiene
 from wms.data import jam as jamdata
 from wms.data.dataset import TrajectoryDataset
 from wms.data.sidecars import read_identity_rows
@@ -437,6 +438,98 @@ def scan_held_family(timelines: SwitchTimelines, book: Optional[IdentityBook],
             "n_direct_slots_without_identity": unknown}
 
 
+# ------------------------------------------------------------ DATAHYG strict --
+#: strict hygiene disables the switching source when it would drop more than this fraction of
+#: its items (owner rule: drop unless > 60 % is removed; then the integrator decides).
+HYGIENE_MAX_DROP_FRAC = 0.6
+
+
+class HygieneSourceExhausted(MixDataRefusal):
+    """Strict hygiene removed too much of the switching source; it is left out of the mix."""
+
+    def __init__(self, receipt: dict):
+        super().__init__(f"controller hygiene left {receipt['n_kept']}/{receipt['n_considered']} "
+                         "switching items")
+        self.receipt = receipt
+
+
+class DirectMixHygiene:
+    """``data.controller_hygiene = "strict"`` filter of the switching (direct-mix) items.
+
+    An item is dropped when its window ``[t0, t0 + horizon_steps]`` (= its CAV-teacher span)
+    holds a ``damping`` control step of ANY CAV on the road
+    (:func:`wms.data.controller_hygiene.directmix_damping_ticks`: recorded t0-cohort labels
+    united with the generator's deterministic per-vehicle schedule; post-t0 entrants named by
+    the run's next snapshot item; unresolved CAVs count as damping).  Metadata + mmap slices.
+    """
+
+    def __init__(self, timelines: SwitchTimelines, book: IdentityBook, *, horizon_steps: int,
+                 max_drop_frac: float = HYGIENE_MAX_DROP_FRAC):
+        self.timelines, self.book = timelines, book
+        self.horizon = int(horizon_steps)
+        self.max_drop_frac = float(max_drop_frac)
+        self._slots: dict[int, dict[int, str]] = {}
+        self.runs: dict[tuple[str, str], list[tuple[int, int]]] = {}
+        for item in timelines.items:
+            self.runs.setdefault((str(item["world"]), str(item["arm"])), []).append(
+                (int(item["tick"]), int(item["position"])))
+        self.receipt: dict = {}
+
+    def slots(self, position: int) -> dict[int, str]:
+        if position not in self._slots:
+            row = self.book.row_of.get(int(position))
+            ids = {} if row is None else {
+                int(k): str(self.book.vehicle_map[int(v)][2])
+                for k, v in enumerate(np.asarray(self.book.ids[row])) if v >= 0}
+            self._slots[position] = ids
+        return self._slots[position]
+
+    def check(self, corpus, i: int) -> dict:
+        """Damping census of dataset position ``i`` (single switching pack = pack 0)."""
+        meta = corpus.meta(i)
+        gpos = corpus.manifest_position(i)
+        world, arm = str(meta["world"]), str(meta["arm"])
+        tick = int(meta["tick"])
+        start, end = corpus.run_bounds(tick)
+        hi = min(end, tick + self.horizon + 121)
+        vm = np.asarray(corpus.array("veh_mask")[tick:hi]).astype(bool)
+        tm = np.asarray(corpus.array("target_mask")[tick:hi]).astype(bool)
+        cav = (np.asarray(corpus.array("veh_step")[tick:hi, :, 7], np.float32) > 0.5) & vm
+        snaps = [(t, self.slots(p)) for t, p in sorted(self.runs[(world, arm)])]
+        cohort = {k: v for k, v in self.slots(gpos).items() if cav[0, k]}
+        return hygiene.directmix_damping_ticks(
+            world, tick, self.horizon, veh_mask=vm, target_mask=tm, is_cav=cav,
+            cohort_vid=cohort, recorded_ctrl=self.timelines.controller(gpos),
+            snapshots=snaps, run_start_tick=start)
+
+    def __call__(self, corpus, kept_orig: list[int]):
+        if corpus.tick_offsets() is not None:
+            raise MixDataRefusal("the direct-mix hygiene filter needs a single switching pack")
+        kept, n_damping, n_unknown, stats = [], 0, 0, {}
+        for i in kept_orig:
+            res = self.check(corpus, i)
+            for key, value in res["stats"].items():
+                stats[key] = stats.get(key, 0) + int(value)
+            if res["damping"].any():
+                n_damping += 1
+            elif res["unknown"].any():
+                n_unknown += 1
+            else:
+                kept.append(i)
+        n = len(kept_orig)
+        frac = 1.0 - len(kept) / max(1, n)
+        self.receipt = {
+            "mode": "strict", "rule": "drop items whose horizon holds a damping CAV step",
+            "horizon_steps": self.horizon, "n_considered": n, "n_kept": len(kept),
+            "n_dropped_damping": n_damping, "n_dropped_unresolved_cav": n_unknown,
+            "drop_fraction": round(frac, 4), "max_drop_frac": self.max_drop_frac,
+            "identity_and_schedule_check": stats,
+            "source_disabled": bool(frac > self.max_drop_frac or not kept)}
+        if self.receipt["source_disabled"]:
+            raise HygieneSourceExhausted(self.receipt)
+        return kept, self.receipt
+
+
 # ------------------------------------------------------------------- mixing --
 class MixSource:
     """One source of a :class:`MixedTrajectoryDataset`."""
@@ -589,12 +682,18 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
                           val_holdout_seed: int = 0, val_window_list: Optional[str] = None,
                            work_dir: str | Path = ".", leave_pi_wall_out: bool = False,
                            history_s=None, history_stride_s=1.0,
-                           junction_fix: str = "off") -> dict:
+                           junction_fix: str = "off", controller_hygiene: str = "off") -> dict:
     """Switching-pack TRAIN (and TRAIN-scoped monitoring) datasets + events.
 
     Returns ``{"train": TrajectoryDataset, "train_events": [n,2] array,
     "val": TrajectoryDataset | None, "receipt": dict}``.
+
+    ``controller_hygiene = "strict"`` (DATAHYG) drops items whose horizon holds a damping CAV
+    (:class:`DirectMixHygiene`); when that removes more than ``HYGIENE_MAX_DROP_FRAC`` of the
+    items the source is left out: ``train`` (and ``val``) are ``None`` and the receipt says so.
     """
+    if controller_hygiene not in hygiene.HYGIENE_MODES:
+        raise MixDataRefusal(f"controller_hygiene must be one of {hygiene.HYGIENE_MODES}")
     guard = (ReleasedGuard() if family_policy == "release"
              else HeldOutGuard.load(heldout_path))
     timelines = SwitchTimelines(pack, index_path)
@@ -623,6 +722,9 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
     def one(listfile: str):
         flt = SwitchItemFilter(timelines, guard, book, policy=family_policy,
                                max_drop_frac=max_drop_frac, leave_pi_wall_out=leave_pi_wall_out)
+        hyg = (DirectMixHygiene(timelines, book, horizon_steps=int(horizon_steps))
+               if controller_hygiene == "strict" else None)
+
         def filtered(corpus, positions):
             packed_guard = None
             if leave_pi_wall_out:
@@ -630,7 +732,17 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
                     heldout=guard, leave_pi_wall_out=True)(corpus, positions)
             kept, receipt = flt(corpus, positions)
             receipt["packed_controller_guard"] = packed_guard
+            if hyg is not None:
+                kept, receipt["controller_hygiene"] = hyg(corpus, kept)
             return kept, receipt
+        if hyg is None:
+            return one_dataset(listfile, filtered, flt)
+        try:
+            return one_dataset(listfile, filtered, flt)
+        except HygieneSourceExhausted as exc:
+            return None, None, {**flt.receipt, "controller_hygiene": exc.receipt}
+
+    def one_dataset(listfile, filtered, flt):
         ds = TrajectoryDataset.from_real_packs(
             [pack], identity_dirs=[identities], horizon_steps=int(horizon_steps),
             start_shift_prob=0.0, window_list=listfile, entries_v2=bool(entries_v2),
@@ -648,11 +760,18 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
     val = val_receipt = None
     if val_list:
         val, _ev, val_receipt = one(val_list)
+    if train is None:
+        val = None                       # strict hygiene left the whole source out
     receipt = {"pack": str(pack), "identities": str(identities),
                "timeline_index": str(index_path), "train_window_list": train_list,
                "val_window_list": val_list, "heldout": train_receipt,
                "heldout_val": val_receipt, "start_shift_prob": 0.0,
                "n_timeline_items": len(timelines)}
+    if controller_hygiene != "off":
+        receipt["controller_hygiene"] = {
+            "mode": controller_hygiene, "source_disabled": train is None,
+            "train": train_receipt.get("controller_hygiene"),
+            "val": None if val_receipt is None else val_receipt.get("controller_hygiene")}
     return {"train": train, "train_events": train_events, "val": val, "receipt": receipt}
 
 

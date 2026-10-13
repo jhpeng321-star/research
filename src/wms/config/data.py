@@ -178,6 +178,10 @@ class DataConfig:
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation
     #: convention (previous lane kept, s interpolated, still loss-excluded).
     junction_fix: Literal["off", "ffill"] = "off"
+    #: DATAHYG (DATAHYG_NOTES.md, :mod:`wms.data.controller_hygiene`): no designed controllers in
+    #: the training windows.  "off" = legacy; "strict" = drop direct-mix windows with a damping
+    #: CAV, refuse dspeed windows over merge_aimed / gap_opening segments, relabel dspeed CAVs.
+    controller_hygiene: Literal["off", "strict"] = "off"
 
     @property
     def effective_start_shift_prob(self) -> float:

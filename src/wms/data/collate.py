@@ -48,6 +48,11 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
             key: (torch.as_tensor(np.stack([r["action_timeline"][key] for r in records]))
                   if key != "control_dt_s" else float(records[0]["action_timeline"][key]))
             for key in ACTION_TIMELINE_KEYS}
+        if all("command_known" in r["action_timeline"] for r in records):
+            # DATAHYG strict: the issued command channels are recorded only where True.
+            out["action_timeline"]["command_known"] = torch.as_tensor(
+                np.stack([r["action_timeline"]["command_known"] for r in records]),
+                dtype=torch.bool)
     for key in ("road_present", "road_continue", "road_valid"):
         # entries-v2 windows: recorded on-road presence for the C4 aggregate loss
         if all(key in r for r in records):
