@@ -1,0 +1,61 @@
+{
+ "states": "E:/research-dense/data_cache/wallc1_states_h60/wall_same.json",
+ "limit": null,
+ "models": {
+  "H0_hazard_zero_init": {
+   "checkpoint": "_wmlane_tmp/diag_H0/wm_s.pt",
+   "sha256": "49f8630086d225fe7ade5c8f50143bf53856959aacaf15983aa8c4f89bbea004",
+   "lane_model": "hazard",
+   "windows": 67,
+   "hdv_decisions": 680987,
+   "wanted_step_rate": 0.0002922229058704498,
+   "categories": {
+    "merge": {
+     "recorded": 160,
+     "recorded_physics_masked": 145,
+     "exact_tp_recall": 6,
+     "tol_recall": 14,
+     "wanted_episodes": 76,
+     "exact_tp_precision": 6,
+     "tol_precision": 16,
+     "exact_recall": 0.0375,
+     "exact_precision": 0.07894736842105263,
+     "tol2s_recall": 0.0875,
+     "tol2s_precision": 0.21052631578947367,
+     "auc": 0.5286550829198224
+    },
+    "overtake": {
+     "recorded": 621,
+     "recorded_physics_masked": 384,
+     "exact_tp_recall": 0,
+     "tol_recall": 0,
+     "exact_recall": 0.0,
+     "exact_precision": null,
+     "tol2s_recall": 0.0,
+     "tol2s_precision": null,
+     "auc": 0.5648031985772062
+    },
+    "return": {
+     "recorded": 171,
+     "recorded_physics_masked": 29,
+     "exact_tp_recall": 0,
+     "tol_recall": 0,
+     "exact_recall": 0.0,
+     "exact_precision": null,
+     "tol2s_recall": 0.0,
+     "tol2s_precision": null,
+     "auc": 0.6863525291900575
+    }
+   },
+   "all": {
+    "recorded": 952,
+    "wanted_episodes": 76,
+    "exact_recall": 0.0063025210084033615,
+    "exact_precision": 0.07894736842105263,
+    "tol2s_recall": 0.014705882352941176,
+    "tol2s_precision": 0.21052631578947367,
+    "recorded_physics_masked": 558
+   }
+  }
+ }
+}

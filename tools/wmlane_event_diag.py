@@ -298,13 +298,18 @@ def _one_step(model, record):
 
 
 def _auc(pos, neg):
+    """Mann-Whitney AUC with average ranks for ties (constant scores give 0.5)."""
     if not pos or not neg:
         return None
-    pos, neg = np.asarray(pos), np.asarray(neg)
-    order = np.argsort(np.concatenate([pos, neg]), kind="mergesort")
-    ranks = np.empty(len(order))
-    ranks[order] = np.arange(1, len(order) + 1)
-    return float((ranks[:len(pos)].sum() - len(pos) * (len(pos) + 1) / 2) / (len(pos) * len(neg)))
+    values = np.concatenate([np.asarray(pos, float), np.asarray(neg, float)])
+    order = np.argsort(values, kind="mergesort")
+    ranks = np.empty(len(values))
+    ranks[order] = np.arange(1, len(values) + 1)
+    uniq, inverse, counts = np.unique(values, return_inverse=True, return_counts=True)
+    sums = np.bincount(inverse, weights=ranks)
+    ranks = (sums / counts)[inverse]
+    n_pos, n_neg = len(pos), len(neg)
+    return float((ranks[:n_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
 def evaluate(model, path, limit=None):

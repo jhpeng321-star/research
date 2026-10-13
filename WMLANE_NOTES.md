@@ -99,3 +99,52 @@ after every existing module (key order / RNG stream of old models unchanged).
 
   Timing profiles are meaningless today: the host was saturated by other workers (22
   logical CPUs at 100 %), a 10 s fwd+bwd took 965-2587 s for every variant.
+
+* Unit suite (`tests/unit`, OMP 2 threads, after the feature commit): **896 passed, 2 failed,
+  1 skipped**. Both failures are unrelated: `data/test_drive_registry.py::test_committed_registry_matches_the_generator_output`
+  fails on the untouched tree too (seen in the pre-change run), `test_c4_mappo.py::test_worker_pool_spawn_survives_worker_death`
+  is load-flaky (passes in isolation). `tests/unit/test_wmlane.py`: 14 passed (1 and 2 threads).
+  Switch-off HEAD-vs-branch replay (`golden_c4` unroll at equal thread count): identical JSON.
+
+## Diagnostic: one-step lane-event agreement on wall_same (CPU, diagnostic only)
+
+`tools/wmlane_event_diag.py eval` (lanecheck.py method: 67 wall_same windows, 952 recorded
+HDV changes, every recorded 0.5 s state fed once, argmax decision, episodes collapsed;
+exact = same tick+direction, tol = +-2 s; AUC = ranking of p(target lane) at event ticks vs
+non-event ticks of the same origin lane, average ranks). Models:
+
+* **R** = current residual-lane C4 WM (`WM-S-C4-20261013/fetched/gpuW/c4_wm_main/wm_s_best.pt`,
+  full GPU training; residual lane gate at k = step index).
+* **H0** = R's weights + zero-init hazard (= physics prior; reference).
+* **H** = H0 + 300 teacher-forced CPU steps of the hazard head ONLY (`train-event`: frozen
+  encoder/physics, lane_event loss, batch 8, lr 1e-3, all recorded steps of c4 TRAIN windows,
+  ~40 min). A full-recipe CPU training of either model was infeasible today (a 10 s
+  fwd+bwd took 16-43 min on the saturated host), so H is NOT a trained-to-convergence
+  hazard model.
+
+| model | step want-rate | overtake 1->0 (621): wanted / exact P,R / tol P,R / AUC | return 0->1 (171) | merge 2->1 (160) |
+|---|---|---|---|---|
+| R  | 0.026 % | 0 / -,0 / -,0 / 0.75 | 0 wanted, AUC 0.84 | 65 / .05,.02 / .20,.07 / 0.70 |
+| H0 | 0.029 % | 0 / -,0 / -,0 / 0.57 | 0 wanted, AUC 0.69 | 76 / .08,.04 / .21,.09 / 0.53 |
+| H  | 0.44 %  | 175 / .006,.002 / .03,.02 / 0.58 | 0 wanted, AUC 0.82 | 89 / .07,.04 / .20,.10 / 0.53 |
+
+(recorded rate 0.14 %/HDV-step.) Reading: no model times discretionary changes yet; R
+ranks them above chance but never fires; 300 head-only steps lift return ranking
+(0.69 -> 0.82) and start firing overtakes, mostly at wrong ticks. Not efficacy evidence.
+
+**Main finding - the hard physics feasibility mask vetoes 59 % of the recorded changes**
+(558-572 / 952; `tools/wmlane_mask_reasons.py`, default params): overtakes 386/621 masked
+(lead gap < 6 m: 230, follower braking > 6 m/s2: 153; median lead gap 1.8 m at 2.4 m/s),
+merges 152/160 (median gaps ~4 m at 0 m/s), returns 29/171. SUMO LC2013 changes lanes in
+jams with gaps far below the fixed 6 m `lane_safe_gap_m` / `merge_gap`, so neither the
+residual path nor the hazard can ever produce these events (and their event-loss rows are
+dropped as infeasible). Recommended next step before judging A: a speed-dependent gap
+acceptance in the learned_discretionary mask (e.g. min gap ~ s0 + small headway x v at jam
+speed) behind its own switch, then re-run this diagnostic and a full GPU training.
+
+Driver-history coverage (80 sampled C4 TRAIN windows, ~8.9k cars,
+`docs/wmlane/driver_history_coverage.json`): history_s=60 -> mean observed 46 s, 57 % of
+cars have the full 60 s; history_s=120 -> mean 66 s, 25 % have >= 110 s (the rest are
+limited by run start / entry). 120 s is supported but adds history for ~half the cars only.
+
+Result files: `docs/wmlane/*.json`; local artefacts (not committed) in `_wmlane_tmp/`.
