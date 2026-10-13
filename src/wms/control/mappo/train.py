@@ -4,7 +4,7 @@
         [--max-sumo-seconds X] [--iterations N] [--episodes-per-iteration E]
         [--horizon-s H] [--warmup-s W] [--seed S] [--update-threads T]
         [--set KEY=VALUE ...] [--resume] [--smoke]
-        [--init-from CKPT [--init-lagrange {carry,reset}]]
+        [--init-from CKPT [--init-lagrange {carry,reset}] [--init-accel-max MPS2]]
 
 Re-running with the same ``--out`` resumes automatically from the newest valid checkpoint
 (``DIR/checkpoints/LATEST`` pointer, sha256-checked; truncated files skipped); ``--resume``
@@ -57,6 +57,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--init-lagrange", choices=("carry", "reset"), default="carry",
                         help="with --init-from: carry the checkpoint's Lagrange multiplier "
                              "(default) or reset it to the configured initial value")
+    parser.add_argument("--init-accel-max", type=float, default=None, metavar="MPS2",
+                        help="with --init-from: explicitly RE-DECODE the loaded actor with this accel cap "
+                             "(e.g. 2.6; the checkpoint's own bound otherwise wins). Same weights, new action "
+                             "mapping -- recorded in init_from (owner 2026-10-13: MAPPO fine-tune at 2.6)")
     return parser.parse_args(argv)
 
 
@@ -87,6 +91,12 @@ def main(argv: list[str] | None = None) -> int:
                   file=sys.stderr)
             return 2
         record = trainer.init_from_checkpoint(args.init_from, args.init_lagrange)
+        if args.init_accel_max is not None:
+            before = float(trainer.policy.accel_max)
+            trainer.policy.set_accel_bounds(float(trainer.policy.accel_min), float(args.init_accel_max))
+            record["accel_redecode"] = {"accel_max_checkpoint": before,
+                                        "accel_max_used": float(trainer.policy.accel_max)}
+            trainer.meta["init_from"] = record
         print(json.dumps({"init_from": record}, default=float))
     if args.resume and not trainer._checkpoints():
         print(f"--resume: no checkpoint under {trainer.ckpt_dir}", file=sys.stderr)
