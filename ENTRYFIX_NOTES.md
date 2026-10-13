@@ -136,7 +136,26 @@ What the replay shows:
 
 ### C. The decision-check point (s4125 p0.2 t360, V2best checkpoint, entries on, 120 s)
 
-See the addendum below (CPU imagination with `scripts/imagine_points.py` and the rule switch).
+CPU re-run of `E:/agent-work/tmp/decision_check/scripts/imagine_points.py`. The only edit is
+`EntryConfig(..., insert_rule=$ENTRY_INSERT_RULE)`, in the scratch copy
+`E:/agent-work/tmp/entryfix/imagine_points_rule.py`, run against this worktree's src. Imagined
+source wait in veh-s (the SUMO value is from the decision check):
+
+| rule | h = 60 s (B / ALL / GROUP) | h = 120 s (B / ALL / GROUP) | entrants inserted (all rows) | SUMO 120 s |
+|---|---|---|---|---|
+| v2, original decision-check file | 356 / 278 / 342 | **1552** / 1182 / 1530 | 395 | 172 |
+| v2, this worktree (reproduces exactly) | 356 / 278 / 342 | **1552** / 1182 / 1530 | 395 | 172 |
+| sumo_like | 0.5 / 0.5 / 0.5 | **12.5** / 12.5 / 12.5 | 552 | 172 |
+
+(Controller "random"; damping and mappo give the same B values. Under v2 their per-arm values range
+from 904 to 2145, and those differences are blocking artifacts. Under sumo_like every arm gives
+12.5.)
+
+The error falls from +1380 veh-s (9x) to -160 veh-s, and the source-wait term no longer differs
+across arms because of insertion artifacts. Roughly 40 veh-s of SUMO's 172 is step accounting:
+SUMO's ledger charges the wait from the request time to the next 0.5 s insertion step, about
+0.72 veh/s x 0.5 s x 120 s. The rest is SUMO's pre-t0 queue, demand above capacity and entrance
+blocking from the road dynamics, none of which is RSU-visible to the arrival process (see B).
 
 ## Verification
 
