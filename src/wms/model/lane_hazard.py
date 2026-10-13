@@ -199,7 +199,17 @@ def initial_lane_blocked(present: Tensor, dtype: torch.dtype,
         return torch.where(present.bool(), run * float(stride_steps), zeros)
 
 
-def lane_ahead_stats(kin: Tensor, present: Tensor, query_lane: Tensor, v0: Tensor) -> Tensor:
+def _ahead_context(kin: Tensor, present: Tensor) -> dict:
+    """Pairwise tensors shared by the per-lane :func:`lane_ahead_stats` calls."""
+    s = kin[..., 0]
+    ds = s.unsqueeze(-2) - s.unsqueeze(-1)          # [B,i,j] = s_j - s_i
+    return {"ds": ds, "ahead": present.unsqueeze(-2) & (ds > 0),
+            "lane": lane_of(kin).unsqueeze(-2), "within": [ds <= r for r in DENSITY_RANGES_M],
+            "look": ds <= LOOKAHEAD_SPEED_M}
+
+
+def lane_ahead_stats(kin: Tensor, present: Tensor, query_lane: Tensor, v0: Tensor,
+                     context: Optional[dict] = None) -> Tensor:
     """Per-lane ranking features ``[B, K, 4]`` of the traffic ahead in ``query_lane``.
 
     (mean speed of the cars within :data:`LOOKAHEAD_SPEED_M` ahead, capped at v0, minus v0)
@@ -207,23 +217,20 @@ def lane_ahead_stats(kin: Tensor, present: Tensor, query_lane: Tensor, v0: Tenso
     one) and the number of cars within each :data:`DENSITY_RANGES_M` ahead times
     :data:`JAM_SPACING_M` / range (~1 at jam density).  Current state only.
     """
-    s, v, a = kin[..., 0], kin[..., 4], kin[..., 5]
-    lane = lane_of(kin)
-    ds = s.unsqueeze(-2) - s.unsqueeze(-1)          # [B,i,j] = s_j - s_i
-    ahead = (present.unsqueeze(-2) & (lane.unsqueeze(-2) == query_lane.unsqueeze(-1))
-             & (ds > 0))
-    dist = torch.where(ahead, ds, torch.full_like(ds, float("inf")))
-    nearest, index = dist.min(-1)
+    ctx = context if context is not None else _ahead_context(kin, present)
+    v, a = kin[..., 4], kin[..., 5]
+    ds = ctx["ds"]
+    ahead = ctx["ahead"] & (ctx["lane"] == query_lane.unsqueeze(-1))
+    nearest, index = torch.where(ahead, ds, torch.full_like(ds, float("inf"))).min(-1)
     lead_a = torch.where(torch.isfinite(nearest), torch.gather(a, -1, index),
                          torch.zeros_like(a))
-    window = ahead & (ds <= LOOKAHEAD_SPEED_M)
+    window = ahead & ctx["look"]
     count = window.sum(-1)
-    wf = window.to(v.dtype)
-    mean_v = (wf * v.unsqueeze(-2)).sum(-1) / count.clamp_min(1).to(v.dtype)
-    mean_v = torch.where(count > 0, mean_v, v0)
+    speed_sum = torch.matmul(window.to(v.dtype), v.unsqueeze(-1)).squeeze(-1)
+    mean_v = torch.where(count > 0, speed_sum / count.clamp_min(1).to(v.dtype), v0)
     out = [(torch.minimum(mean_v, v0) - v0) / 10.0, lead_a / 3.0]
-    for rng in DENSITY_RANGES_M:
-        n = (ahead & (ds <= rng)).sum(-1).to(v.dtype)
+    for rng, within in zip(DENSITY_RANGES_M, ctx["within"]):
+        n = (ahead & within).sum(-1).to(v.dtype)
         out.append(n * JAM_SPACING_M / rng)
     return torch.stack(out, -1)
 
@@ -240,12 +247,13 @@ def hazard_features_v2_extra(kin: Tensor, present: Tensor, physics: PhysicsConfi
     v = kin[..., 4]
     v0 = _driver_v0(v, physics, driver_params)
     lane = lane_of(kin)
+    context = _ahead_context(kin, present)
     chunks = []
     for offset in DIRECTIONS:
         target = lane + offset
         valid = ((target >= 0) & (target <= 2)).to(kin.dtype).unsqueeze(-1)
-        chunks.append(valid * lane_ahead_stats(kin, present, target.clamp(0, 2), v0))
-    chunks.append(lane_ahead_stats(kin, present, lane, v0))
+        chunks.append(valid * lane_ahead_stats(kin, present, target.clamp(0, 2), v0, context))
+    chunks.append(lane_ahead_stats(kin, present, lane, v0, context))
     blocked = torch.zeros_like(v) if lane_blocked is None else lane_blocked.to(v.dtype)
     blocked_s = (blocked * physics.dt_s).clamp(0.0, BLOCKED_CAP_S) / 10.0
     chunks.append(torch.stack((blocked_s, (blocked > 0).to(v.dtype)), -1))
