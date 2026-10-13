@@ -79,6 +79,10 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
     pool = np.zeros((b_n, k_n + pad), dtype=bool)
     pool[:, k_n:] = True
     cfg = EntryConfig(max_pending=10 ** 9) if settings.entry_pad_auto else None
+    rule = str(getattr(settings, "entry_insert_rule", "v2"))
+    if rule != "v2":                    # ENTRYFIX; "v2" keeps the legacy construction
+        cfg = EntryConfig(**({"max_pending": 10 ** 9} if settings.entry_pad_auto else {}),
+                          insert_rule=rule)
     process = TorchEntryProcessV2(histories=histories, dt_s=dt_s,
                                   seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg)
     process.train_pad = pad
