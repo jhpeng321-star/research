@@ -25,6 +25,8 @@ gamma = 0.0
 max_weight = 1.0
 
 [curriculum]
+# Pinned to what the first gpuB run used (c4_wm_v2_loss later moved to 140 at 120 s) so v3 = v2 + gap rule only.
+stage_steps = [1200, 900, 400, 160]
 max_hours = 7.0
 
 [runtime]
