@@ -19,7 +19,9 @@ Three chunk terms appended LAST to the composer (pre-existing summation order un
   indicator hard (lanes are discrete decisions). The hard limit equals `build_rsu_field` (unit test).
 * Fields are averaged over `bin_s` (5 s) bins by absolute step index, so chunked BPTT and the
   single-chunk value agree when bins align (unit test); `every_steps` subsamples field steps.
-* Horizon ramp `horizon_start_s` -> `horizon_full_s` (config: 5 -> 30 s).
+* Horizon ramp `horizon_start_s` -> `horizon_full_s` (config: 5 -> 30 s). Because each component
+  is normalised by the unroll's total ramp weight, the ramp shapes WHERE in a window the aggregate
+  counts (late steps, where per-car identity matching thins out), not the term's overall size.
 * Each component is a weighted mean over all (row, bin) of the whole unroll (`prepare` computes the
   unroll-wide weight), so chunk contributions sum to one horizon-invariant mean.
 * Masked where the recorded future is unavailable (`road_valid`: window padding past the run end).
@@ -53,14 +55,21 @@ Three chunk terms appended LAST to the composer (pre-existing summation order un
 ## Config `configs/c4_wm_v2_loss.toml` (extends c4_wm.toml)
 
 entries_v2 + entry_pad_auto; loss.aggregate weight 20 (field 1, reward 1, flow 0.5, 5 s bins,
-ramp 5 -> 30 s); stages 10/30/60/120 s, stage_steps [1200, 900, 400, 160], truncation
+ramp 5 -> 30 s); stages 10/30/60/120 s, stage_steps [1200, 900, 400, 140], truncation
 [20, 60, 120, 120], lr [1e-3, 3e-4, 1e-4, 1e-4], max_hours 6.5; out_dir runs/active/c4_wm_v2_loss.
+Data windows become 240 steps (the loader horizon = the longest stage).
 
 Budget (gpuW, batch 16, measured c4_wm step times 1.7 / 5 / 12 s at 20 / 60 / 120-step unrolls =
-0.085 / 0.083 / 0.100 s per simulated step). 240-step estimate without the new terms:
-~0.105 s x 240 = ~25 s per step. With entries + aggregate (factor 1.25, see smoke): 2.1 / 6.3 /
-15 / 31 s per step -> 2520 + 5670 + 6000 + 4960 s = 5.3 h + validation ~0.4 h = ~5.7 h.
-If the first 120 s steps exceed ~35 s, cut stage_steps[3].
+0.085 / 0.083 / 0.100 s per simulated step). 240-step estimate WITHOUT the new terms:
+~0.105 s x 240 = ~25 s per step. Overhead of the new terms: entrant slots grow with the horizon
+(smoke: 15 entrants in 10 s over 4 rows ~ 0.375 veh/s per row -> pad ~22 / 33 / 50 / 84 on top of
+192 recorded slots), the aggregate terms (~5 %) and the per-step entry process (host sync when an
+arrival is due). Assumed factors 1.20 / 1.25 / 1.30 / 1.45 -> 2.0 / 6.25 / 15.6 / 36 s per step
+-> 2450 + 5625 + 6240 + 5040 s = 5.4 h + validation ~0.4 h = ~5.8 h (<= max_hours 6.5).
+UNMEASURED on a GPU: the CPU A/B on the shared dev box was CPU-starved (100 % load from other
+agents; 4 windows took 298 s to load and a 20-step forward/backward 454 s, all inside existing
+model / history code), so the factors are estimates. If the first 120 s steps on gpuW exceed
+~40 s, cut stage_steps[3].
 
 ## Tests (`tests/unit/test_wmloss.py`)
 
@@ -74,4 +83,16 @@ collate, the v2 config reaching settings / composer / required log terms.
 
 ## Smoke / results
 
-See the final section (filled after the CPU smoke).
+* Real-data probe (configs/c4_wm_v2_loss.toml, pack_v3 + dspeed windows, CPU, batch 4):
+  batch keys include `entry_feat`, `road_present [4,241,192]`, `road_continue [4,240,192]`,
+  `road_valid [4,241]`; 4-step unroll: aggregate 0 (ramp starts at 5 s), entrants 1;
+  20-step unroll: loss 13.32, position 11.52, agg_field 0.368, agg_reward 0.219, agg_flow 0.448,
+  aggregate_value_share 0.078, entrants 15 (finite).
+* `tools/c4_smoke.py runs/active/c4_wm_v2_loss_smoke configs/c4_wm_v2_loss.toml` (full C4 data mix
+  incl. the switching direct-mix arm: 2041 train / 261 val windows; CPU, batch 4, 10 s):
+  status passed, 2 optimizer steps, finite; loss 19.09 -> 18.00; position 15.29 -> 14.08;
+  agg_field 0.278 / 0.274, agg_reward 1.97 / 2.22, agg_flow 0.622 / 0.569; aggregate value share
+  0.150 / 0.170; entrants 18 / 15; pre-clip grad norm 10.1 / 4.4. CPU profiles (starved box):
+  10 s 73.7 s, 30 s 292 s per forward/backward - not representative of gpuW.
+* Weight 20 thus puts the aggregate at ~8-17 % of the loss value on an untrained model; read the
+  gradient shares (`loss_share.jsonl`) in the first gpuW stage before trusting it at 60/120 s.

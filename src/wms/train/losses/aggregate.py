@@ -277,7 +277,7 @@ class AggregateLoss:
             rf = soft_cell_fields(rs_all[:, 1:], rv_all[:, 1:], rl_all[:, 1:], rm, cfg=cfg)
             rcont = road.cont[:, c0:c1]
         bins = _bin_matrix(idx, cfg.bin_steps, ps.dtype)                      # [T, J]
-        zero = ps.sum() * 0.0
+        zero = ps.sum() * 0.0 + 0.0          # graph-connected +0.0 (never -0.0 in logs)
         out = {name: zero for name in TERM_NAMES}
         # ---- fields: bin means over valid (subsampled) steps, per-cell normalised error
         if cfg.field_weight > 0.0 and totals["w_field"] > 0.0:

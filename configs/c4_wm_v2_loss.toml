@@ -13,13 +13,15 @@
 #
 # BUDGET (~6 h on gpuW, RTX 4080 SUPER-class vGPU, CPU-bound loop). Measured c4_wm gpuW step
 # times at batch 16: 1.7 / 5 / 12 s at 20 / 60 / 120-step unrolls (0.085 / 0.083 / 0.100 s per
-# simulated step; the per-step cost grows slowly with the unroll). 240-step estimate without the
-# new terms: ~0.105 s x 240 = ~25 s. Entries + aggregate overhead: the CPU A/B in WMLOSS_NOTES.md
-# (same batch, c4_wm vs this config) is applied as a factor 1.25 on every stage:
-#   10 s: 1200 x 2.1 s = 2520 s | 30 s: 900 x 6.3 s = 5670 s | 60 s: 400 x 15 s = 6000 s
-#   120 s: 160 x 31 s = 4960 s   => 19150 s = 5.3 h training + validation (val_every 200,
-#   8 batches; 60 s + 120 s horizons in the 120 s stage) ~0.4 h => ~5.7 h <= max_hours 6.5.
-# If the first 120 s steps on gpuW exceed ~35 s, cut stage_steps[3] (the 10/30/60 s stages keep
+# simulated step; the per-step cost grows slowly with the unroll). 240-step estimate WITHOUT the
+# new terms: ~0.105 s x 240 = ~25 s. New-term overhead (WMLOSS_NOTES.md): entrant slots grow with
+# the horizon (observed ~0.375 veh/s per row -> pad ~22 / 33 / 50 / 84 on top of 192 slots at
+# 10 / 30 / 60 / 120 s) plus the aggregate terms (~5 %) and the per-step entry process; assumed
+# factors 1.20 / 1.25 / 1.30 / 1.45 (the CPU A/B on the shared dev box was CPU-starved, not usable):
+#   10 s: 1200 x 2.0 s = 2450 s | 30 s: 900 x 6.25 s = 5625 s | 60 s: 400 x 15.6 s = 6240 s
+#   120 s: 140 x 36 s = 5040 s   => 19355 s = 5.4 h training + validation (val_every 200,
+#   8 batches; 60 s + 120 s horizons in the 120 s stage) ~0.4 h => ~5.8 h <= max_hours 6.5.
+# If the first 120 s steps on gpuW exceed ~40 s, cut stage_steps[3] (the 10/30/60 s stages keep
 # the C4 imagination horizon covered).
 schema_version = 2
 name = "WM-S-C4-V2LOSS"
@@ -32,7 +34,7 @@ entry_pad_auto = true  # pad = 1.5 x observed rate x unroll horizon + 16 (<= ent
 entry_pad_max = 256    # = c4_policy imagination cap
 
 [loss.aggregate]
-weight = 20.0          # B: overall weight (calibrated on the CPU smoke: aggregate ~5-15 % of the loss value; check loss_share on gpuW)
+weight = 20.0          # B: overall weight (CPU smoke, untrained model, 10 s unroll: aggregate = 7.8 % of the loss value; check loss_share on gpuW)
 field_weight = 1.0     # RSU cell fields (density / mean speed / queue)
 reward_weight = 1.0    # delay (road + RSU zone) + throughput past MERGE_S1
 flow_weight = 0.5      # cell-boundary flux consistency (macroscopic conservation)
@@ -44,7 +46,7 @@ cell_temp_m = 5.0
 
 [curriculum]
 unroll_s = [10.0, 30.0, 60.0, 120.0]           # E: 120 s stage back
-stage_steps = [1200, 900, 400, 160]            # see BUDGET above
+stage_steps = [1200, 900, 400, 140]            # see BUDGET above
 truncation_steps_per_stage = [20, 60, 120, 120] # 120 s stage: 60 s BPTT chunks (0.90^120 ~ 3e-6: longer chunks add cost, not gradient)
 max_hours = 6.5
 
