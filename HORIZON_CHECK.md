@@ -1,7 +1,7 @@
 # HORIZON-CHECK (2026-10-13): how far ahead can the C4 world model be trusted for decisions?
 
 Branch `c4/horizon` (from `c4/int` 95b92fe). Scripts: `scripts/horizon_check/`. Small results:
-`scripts/horizon_check/results/` (`A_agg_results.json`, `B_analysis.json`,
+`scripts/horizon_check/horizon_results/` (`A_agg_results.json`, `B_analysis.json`,
 `B_analysis_sampling_vs_point_8pts.json`). Raw outputs (not committed, ~0.1-0.2 MB per episode):
 `runs/active/C4-HORIZON-20261013/{A,B}` in this worktree.
 
