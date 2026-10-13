@@ -4,6 +4,7 @@ Synthetic (no SUMO): the policy on hand-built states, the converter on hand-buil
 """
 from __future__ import annotations
 
+import functools
 import json
 import math
 import sys
@@ -27,14 +28,20 @@ K = 24
 DIRECT = CONTROLLERS.index("direct")
 
 
-def make_state(n_cav=12, k=K, lane=None, a=None):
+A = functools.partial(G.GenericRandomPolicy, mode="accel")
+
+
+def make_state(n_cav=12, k=K, lane=None, a=None, v=None):
     present = np.zeros((1, k), bool)
     present[0, :n_cav + 4] = True
     is_cav = np.zeros((1, k), bool)
     is_cav[0, :n_cav] = True
     ln = np.zeros((1, k), np.int64) if lane is None else np.asarray(lane, np.int64)[None]
     acc = np.zeros((1, k)) if a is None else np.asarray(a, np.float64)[None]
-    return {"is_cav": is_cav, "present": present, "a_mps2": acc, "lane": ln}
+    vel = np.full((1, k), 15.0) if v is None else np.broadcast_to(np.asarray(v, float), (k,))[None]
+    s_m = (-2000.0 + 7.0 * np.arange(k))[None]      # all within 200 m of each other
+    return {"is_cav": is_cav, "present": present, "a_mps2": acc, "lane": ln, "v_mps": vel,
+            "s_m": s_m}
 
 
 def roll(policy, n_ticks, n_cav=12, lane_fn=None, vids=True):
@@ -52,13 +59,14 @@ def roll(policy, n_ticks, n_cav=12, lane_fn=None, vids=True):
 
 
 # ------------------------------------------------------------------ policy
-def test_determinism_per_seed_and_difference_across_seeds():
-    a1, l1 = roll(G.GenericRandomPolicy(123), 200)
-    a2, l2 = roll(G.GenericRandomPolicy(123), 200)
-    a3, _ = roll(G.GenericRandomPolicy(124), 200)
+@pytest.mark.parametrize("mode", ["speed", "accel"])
+def test_determinism_per_seed_and_difference_across_seeds(mode):
+    a1, l1 = roll(G.GenericRandomPolicy(123, mode=mode), 200)
+    a2, l2 = roll(G.GenericRandomPolicy(123, mode=mode), 200)
+    a3, _ = roll(G.GenericRandomPolicy(124, mode=mode), 200)
     assert np.array_equal(a1, a2, equal_nan=True) and np.array_equal(l1, l2)
     assert not np.allclose(a1[:, :12], a3[:, :12])
-    p = G.GenericRandomPolicy(123)
+    p = G.GenericRandomPolicy(123, mode=mode)
     roll(p, 50)
     p.reset()
     a4, _ = roll(p, 200)
@@ -68,7 +76,7 @@ def test_determinism_per_seed_and_difference_across_seeds():
 
 
 def test_ranges_holds_and_jerk_and_not_preclipped():
-    p = G.GenericRandomPolicy(7, rho=0.0)
+    p = A(7, rho=0.0)
     targets, holds, jerks = [], [], []
     orig = p._new_segment
 
@@ -93,7 +101,7 @@ def test_ranges_holds_and_jerk_and_not_preclipped():
 
 
 def test_new_cav_starts_from_measured_acceleration():
-    p = G.GenericRandomPolicy(5, rho=0.0)
+    p = A(5, rho=0.0)
     st = make_state(2, a=np.r_[1.2, -0.7, np.zeros(K - 2)])
     out = p(st, vehicle_ids=["a", "b"] + [None] * (K - 2))
     first_targets = [p.tracks["a"]["target"], p.tracks["b"]["target"]]
@@ -111,12 +119,12 @@ def _mean_pair_corr(acc):
 
 
 def test_shared_latent_correlation_present_only_when_rho_positive():
-    a0, _ = roll(G.GenericRandomPolicy(11, rho=0.0, n_latent=1), 4000)
-    a1, _ = roll(G.GenericRandomPolicy(11, rho=1.0, n_latent=1), 4000)
+    a0, _ = roll(A(11, rho=0.0, n_latent=1), 4000)
+    a1, _ = roll(A(11, rho=1.0, n_latent=1), 4000)
     c0, c1 = _mean_pair_corr(a0[:, :12]), _mean_pair_corr(a1[:, :12])
     assert abs(c0) < 0.03
     assert c1 > 0.15
-    p = G.GenericRandomPolicy(11, rho=0.0)
+    p = A(11, rho=0.0)
     roll(p, 500)
     assert p.events["latent_joins"] == 0
 
@@ -124,7 +132,7 @@ def test_shared_latent_correlation_present_only_when_rho_positive():
 def test_episode_parameters_drawn_in_registered_ranges():
     rhos, nlat, rates = [], [], []
     for s in range(300):
-        p = G.GenericRandomPolicy(s)
+        p = A(s)
         rhos.append(p.rho)
         nlat.append(p.n_latent)
         rates.append(p.lane_rate)
@@ -137,13 +145,11 @@ def test_episode_parameters_drawn_in_registered_ranges():
 
 def test_lane_intent_rate_and_direction():
     rate = 1 / 30
-    p = G.GenericRandomPolicy(3, lane_rate_per_s=rate, rho=0.0)
+    p = A(3, lane_rate_per_s=rate, rho=0.0)
 
-    def mover(cur, req):                  # never executes: intents persist until expiry
-        return cur
     n_ticks, n_cav = 6000, 12
     lanes0 = np.ones(K, np.int64)          # all on lane 1: left and right both on-road
-    acc, lanes = [], []
+    lanes = []
     ids = [f"c{i}" if i < n_cav else None for i in range(K)]
     for _ in range(n_ticks):
         st = make_state(n_cav, lane=lanes0)
@@ -171,7 +177,7 @@ def test_lane_intent_rate_and_direction():
 
 
 def test_lane_intent_clears_when_reached():
-    p = G.GenericRandomPolicy(9, lane_rate_per_s=1 / 20, rho=0.0)
+    p = A(9, lane_rate_per_s=1 / 20, rho=0.0)
     ids = ["c0"] + [None] * (K - 1)
     cur = np.zeros(K, np.int64)
     seen_reach = False
@@ -187,7 +193,7 @@ def test_lane_intent_clears_when_reached():
 
 
 def test_reseed_branches_differ_but_keep_levels_and_episode_params():
-    p = G.GenericRandomPolicy(42)
+    p = A(42)
     roll(p, 100)
     import copy
     levels = {k: t["cmd"] for k, t in p.tracks.items()}
@@ -207,13 +213,95 @@ def test_reseed_branches_differ_but_keep_levels_and_episode_params():
 
 
 def test_slot_keyed_fallback_restarts_reused_slots():
-    p = G.GenericRandomPolicy(1, rho=0.0)
+    p = A(1, rho=0.0)
     st = make_state(2)
     p(st)
     assert set(p.tracks) == {0, 1}
     st2 = make_state(1)                    # slot 1 empties
     p(st2)
     assert set(p.tracks) == {0}
+
+
+
+# ------------------------------------------------------------- speed mode (default)
+def test_speed_mode_is_default_and_draws_mixture_limits_and_targets():
+    p = G.GenericRandomPolicy(21, rho=0.0)
+    assert p.mode == "speed" and p.params()["mode"] == "speed"
+    segs = []
+    orig = p._speed_segment
+
+    def spy(track, factor, free, v_flow, hold):
+        orig(track, factor, free, v_flow, hold)
+        segs.append((factor, free, v_flow, hold, track["v_target"], track["alim"], track["dlim"]))
+    p._speed_segment = spy
+    acc, _ = roll(p, 3000)
+    a = acc[:, :12]
+    free = np.array([x[1] for x in segs])
+    fac = np.array([x[0] for x in segs])[~free]
+    assert 0.06 < free.mean() < 0.14
+    slow = (fac < 0.5).mean()
+    assert 0.15 < slow / (1 - free.mean()) * 0.9 < 0.3       # ~20 % of all draws
+    assert fac.min() >= 0.0 and fac.max() <= 1.1
+    # local flow = mean speed ahead (synthetic: everybody at 15 m/s; last CAVs have leaders)
+    flows = {round(x[2], 6) for x in segs}
+    assert flows <= {15.0, G.SPEED_LIMIT_MPS}
+    vt = np.array([x[4] for x in segs])
+    assert vt.min() >= 0.0 and vt.max() <= max(1.1 * 15.0, G.SPEED_LIMIT_MPS) + 1e-9
+    alim, dlim = np.array([x[5] for x in segs]), np.array([x[6] for x in segs])
+    assert alim.min() >= 0.5 and alim.max() <= 2.6 and dlim.min() >= 1.0 and dlim.max() <= 3.0
+    holds = [x[3] for x in segs]
+    assert min(holds) >= 2 and max(holds) <= 60
+    # commands inside [-3, 2.6]; at v = 15 m/s both braking and accelerating occur
+    assert a.min() >= -3.0 - 1e-9 and a.max() <= 2.6 + 1e-9
+    assert a.min() < -1.0 and a.max() > 1.0
+    assert np.abs(np.diff(a, axis=0)).max() <= 3.0 + 1e-9
+
+
+def test_speed_mode_command_tracks_target_within_limits():
+    p = G.GenericRandomPolicy(4, rho=0.0)
+    ids = ["c0"] + [None] * (K - 1)
+    st = make_state(1, v=10.0)
+    for _ in range(40):
+        out = p(st, vehicle_ids=ids)
+        t = p.tracks["c0"]
+        if not t["free"]:
+            want = np.clip(t["v_target"] - 10.0, -t["dlim"], t["alim"])
+            assert t["target"] == pytest.approx(want)
+        else:
+            assert t["target"] == pytest.approx(2.6)
+        assert -3.0 <= out[0, 0] <= 2.6
+
+
+def test_speed_mode_stuck_cav_redraws_after_20s():
+    p = G.GenericRandomPolicy(8, rho=0.0)
+    ids = [f"c{i}" for i in range(12)] + [None] * (K - 12)
+    for _ in range(25):
+        p(make_state(12, v=0.0), vehicle_ids=ids)
+    assert p.events.get("stuck_redraws", 0) >= 1
+    # no stuck redraws while moving
+    q = G.GenericRandomPolicy(8, rho=0.0)
+    for _ in range(100):
+        q(make_state(12, v=5.0), vehicle_ids=ids)
+    assert q.events.get("stuck_redraws", 0) == 0
+
+
+def test_local_flow_uses_same_lane_vehicles_ahead_within_200m():
+    s = np.array([0.0, 50.0, 150.0, 250.0, 30.0, -20.0])
+    v = np.array([20.0, 10.0, 14.0, 30.0, 5.0, 1.0])
+    lane = np.array([0, 0, 0, 0, 1, 0])
+    pres = np.ones(6, bool)
+    assert G._local_flow(0, s, v, lane, pres) == pytest.approx(12.0)
+    assert G._local_flow(3, s, v, lane, pres) == pytest.approx(G.SPEED_LIMIT_MPS)
+    lane2 = lane.copy()
+    lane2[0] = -1
+    assert G._local_flow(0, s, v, lane2, pres) == pytest.approx(G.SPEED_LIMIT_MPS)
+
+
+def test_speed_mode_shared_latent_correlation():
+    a0, _ = roll(G.GenericRandomPolicy(13, rho=0.0, n_latent=1), 3000)
+    a1, _ = roll(G.GenericRandomPolicy(13, rho=1.0, n_latent=1), 3000)
+    c0, c1 = _mean_pair_corr(a0[:, :12]), _mean_pair_corr(a1[:, :12])
+    assert abs(c0) < 0.03 and c1 > 0.1
 
 
 # ----------------------------------------------------- channels and conversion

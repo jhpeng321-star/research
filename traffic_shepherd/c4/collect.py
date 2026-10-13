@@ -114,7 +114,8 @@ def run_job(job: dict) -> dict:
                 branch_root=branch_root, cadence_s=opts.get("branch_cadence", 0),
                 n_arms=opts.get("branch_arms", 4), branch_h=opts.get("branch_horizon", 60),
                 native_arm=not opts.get("no_branch_native", False),
-                repeat_check=opts.get("branch_repeat_check", 0), meta=meta)
+                repeat_check=opts.get("branch_repeat_check", 0), meta=meta,
+                mode=opts.get("gr_mode", "speed"))
             summary = result["summary"]
             b = result["branches"]
             record.update(genrand=b["policy"], policy_events=b["policy_events"],
@@ -159,7 +160,8 @@ def plan_jobs(args) -> list[dict]:
                 branch_arms=getattr(args, "branch_arms", 4),
                 branch_horizon=getattr(args, "branch_horizon", 60),
                 no_branch_native=getattr(args, "no_branch_native", False),
-                branch_repeat_check=getattr(args, "branch_repeat_check", 0))
+                branch_repeat_check=getattr(args, "branch_repeat_check", 0),
+                gr_mode=getattr(args, "gr_mode", "speed"))
     if opts["branch_cadence"] and args.policy != "generic_random":
         raise SystemExit("--branch-cadence is only supported with --policy generic_random")
     jobs = []
@@ -256,6 +258,9 @@ def main(argv=None) -> int:
                     help="product = seeds x demands x penetrations; weighted-cycle = one case "
                          "per seed (penetrations cycled by --pen-weights, then demands)")
     ap.add_argument("--pen-weights", default=None, help="e.g. 1,1,2,2 (weighted-cycle)")
+    ap.add_argument("--gr-mode", choices=("speed", "accel"), default="speed",
+                    help="generic_random process: speed (random target speeds, default) or "
+                         "accel (random target accelerations)")
     ap.add_argument("--branch-cadence", type=int, default=0,
                     help="generic_random only: paired branches every N s after warmup (0 = off)")
     ap.add_argument("--branch-arms", type=int, default=4, help="re-seeded random arms SEED:j")
@@ -323,6 +328,7 @@ def main(argv=None) -> int:
                "branch_collisions": sum(r.get("branch_collisions", 0) for r in ok),
                "branch_teleports": sum(r.get("branch_teleports", 0) for r in ok),
                "case_plan": args.case_plan, "pen_weights": args.pen_weights,
+               "gr_mode": args.gr_mode if args.policy == "generic_random" else None,
                "branch_cadence_s": args.branch_cadence,
                "host_cpus": os.cpu_count(), "finished_utc": _now()}
     (out / "COLLECT_SUMMARY.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")

@@ -153,6 +153,30 @@ def select_group(s_by_vid: dict, *, link_m: float = GROUP_LINK_M, min_size: int 
     return list(best)
 
 
+def plan_seed_arms(n_arms: int, *, native: bool = True) -> list[dict]:
+    """Re-seeded random arms for undirected data (traffic_shepherd.c4.genrand): ``SEED:j``
+    (every CAV runs the controller re-seeded with ``j``; the controller must offer
+    ``reseed(seed)``) for j < ``n_arms``, plus the all-native reference ``B`` (``native``)."""
+    arms = [{"name": f"SEED:{j}", "kind": "SEED", "members": None, "i": None, "j": j}
+            for j in range(int(n_arms))]
+    if native:
+        arms.append({"name": "B", "kind": "B", "members": frozenset(), "i": None, "j": None})
+    return arms
+
+
+def reseeded(fn_snap, seed: int):
+    """Deep copy of a snapshotted stateful controller, re-seeded (``SEED:j`` arms)."""
+    if fn_snap is None or not hasattr(fn_snap, "reseed"):
+        raise TypeError("SEED arms need a controller with reseed(seed)")
+    return copy.deepcopy(fn_snap).reseed(int(seed))
+
+
+def seed_for_arm(base_seed: int, t_s: int, j: int) -> int:
+    """Deterministic seed of arm ``SEED:j`` at decision time ``t_s`` (same for every run)."""
+    return int(np.random.SeedSequence([int(base_seed), int(t_s), int(j), 0xB4A2]
+                                      ).generate_state(1)[0])
+
+
 def plan_arms(cavs: list, group: Optional[list], *, rng, extra_solo: int = 0,
               n_flip: int = 2, repeat_reference: bool = True) -> list[dict]:
     """Branch arms for one decision point: ``{"name", "kind", "members" (None = all), "i"}``."""
@@ -570,7 +594,8 @@ def measure_episode(env, controller: BranchController, *, seed: int, demand_vph:
                     workdir: Path, rng, extra_solo: int = 0, n_flip: int = 2,
                     link_m: float = GROUP_LINK_M, branch_sink: Optional[Callable] = None,
                     imagine: Optional[Callable] = None,
-                    base_controller: Optional[BranchController] = None) -> list[dict]:
+                    base_controller: Optional[BranchController] = None,
+                    seed_arms: int = 0, seed_base: int = 0) -> list[dict]:
     """Run one base episode and branch at every decision time; returns per-point records.
 
     ``base_controller`` (optional) drives the base episode instead of ``controller`` so two
@@ -604,7 +629,11 @@ def measure_episode(env, controller: BranchController, *, seed: int, demand_vph:
         fn_snap = controller.snapshot()
         cavs = cav_positions(env)
         group = select_group(cavs, link_m=link_m)
-        arms = plan_arms(sorted(cavs), group, rng=rng, extra_solo=extra_solo, n_flip=n_flip)
+        if seed_arms > 0:            # undirected re-seeded arms (no group / cooperation algebra)
+            arms = plan_seed_arms(seed_arms) + [{"name": "B_repeat", "kind": "B_repeat",
+                                                 "members": frozenset(), "i": None, "j": None}]
+        else:
+            arms = plan_arms(sorted(cavs), group, rng=rng, extra_solo=extra_solo, n_flip=n_flip)
         imagined = None
         if imagine is not None:
             imagined = imagine(env, arms, controller, fn_snap, horizon_s)
@@ -623,8 +652,11 @@ def measure_episode(env, controller: BranchController, *, seed: int, demand_vph:
             t_arm = time.monotonic()
             note = load_state(env, path, snap)
             prepare_branch_mode(env)
-            m, traj = run_branch(env, controller, arm["members"], horizon_s,
-                                 None if fn_snap is None else copy.deepcopy(fn_snap))
+            if arm["kind"] == "SEED":
+                arm_fn = reseeded(fn_snap, seed_for_arm(seed_base, t_k, arm["j"]))
+            else:
+                arm_fn = None if fn_snap is None else copy.deepcopy(fn_snap)
+            m, traj = run_branch(env, controller, arm["members"], horizon_s, arm_fn)
             metrics[arm["name"]], trajs[arm["name"]] = m, traj
             notes[arm["name"]] = dict(note, wall_s=time.monotonic() - t_arm)
             if branch_sink is not None:
