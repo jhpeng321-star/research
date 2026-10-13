@@ -74,6 +74,11 @@ DIRECT = CONTROLLERS.index("direct")
 DESIGNED = tuple(CONTROLLERS.index(n) for n in ("damping", "pi-external-u"))
 ARRAYS = ("veh_kin", "veh_mask", "target_mask", "counter", "vid", "is_cav", "time_s",
           "control_time_s", "controller", "issued_acceleration_mps2", "issued_target_speed_mps")
+#: Optional per-control-tick channels copied when the episode has them (stored for later use;
+#: the window loader does not read them): the policy's REQUESTED acceleration (before the env's
+#: speed-bound clip; ``issued_acceleration_mps2`` is the clipped command, the REALIZED
+#: acceleration is ``veh_kin[..., 5]``), and the issued / requested WM lane targets (-1 none).
+EXTRA_ARRAYS = ("requested_acceleration_mps2", "lane_command_target", "lane_request_target")
 
 
 class C4EpisodeRefusal(TrainDataRefusal):
@@ -128,16 +133,25 @@ def find_episodes(roots: Sequence[str | Path]) -> list[Path]:
 
 
 def episode_counter(time_s: np.ndarray, vid: np.ndarray, present: np.ndarray,
-                    lane_carry: np.ndarray) -> np.ndarray:
+                    lane_carry: np.ndarray, first_seen_s: Optional[np.ndarray] = None,
+                    first_entrance: Optional[np.ndarray] = None) -> np.ndarray:
     """Pack ``counter [T,2,30]``: entries per entrance in 10 s bins over the last 300 s.
 
     An entry is a vehicle's first occupied tick (every vehicle on the network is converted,
     so this is its insertion); entrance 1 = ramp lane at that tick, else mainline.  Bin
     ``b`` holds entries with age ``t - t_entry`` in ``[10 b, 10 (b+1))`` (0 = newest),
-    exactly ``DepartureLog.counter_at`` of the WM-N1 featurizer.
+    exactly ``DepartureLog.counter_at`` of the WM-N1 featurizer.  ``first_seen_s`` /
+    ``first_entrance`` ``[V]`` (optional; NaN / -1 = unknown) give entry times recorded
+    over a longer run than these arrays (a branch episode that starts with a truncated
+    pre-history); vehicles they cover are not re-detected from the arrays.
     """
     t_count, _k = vid.shape
     first: dict[int, tuple[float, int]] = {}
+    if first_seen_s is not None:
+        for v, (ts, ent) in enumerate(zip(np.asarray(first_seen_s, np.float64).tolist(),
+                                          np.asarray(first_entrance).tolist())):
+            if math.isfinite(ts) and ent >= 0:
+                first[v] = (float(ts), int(ent))
     for t in range(t_count):
         ids = vid[t][present[t]]
         lanes = lane_carry[t][present[t]]
@@ -172,10 +186,17 @@ def episode_arrays(ep: dict) -> dict[str, np.ndarray]:
     target = np.zeros_like(present)
     target[:-1] = present[:-1] & present[1:] & (vid[:-1] == vid[1:]) & (vid[:-1] >= 0)
     lane_carry = np.asarray(ep.get("lane_carry", lane), np.int64)
-    return {
+    extra = {name: np.asarray(ep[name]) for name in EXTRA_ARRAYS if name in ep}
+    if "requested_acceleration_mps2" in extra:
+        extra["requested_acceleration_mps2"] = extra["requested_acceleration_mps2"].astype(np.float32)
+    for name in ("lane_command_target", "lane_request_target"):
+        if name in extra:
+            extra[name] = extra[name].astype(np.int8)
+    return {**extra,
         "veh_kin": kin, "veh_mask": present.astype(np.uint8),
         "target_mask": target.astype(np.uint8),
-        "counter": episode_counter(np.asarray(ep["time_s"]), vid, present, lane_carry),
+        "counter": episode_counter(np.asarray(ep["time_s"]), vid, present, lane_carry,
+                                   ep.get("entry_first_seen_s"), ep.get("entry_first_entrance")),
         "vid": vid, "is_cav": np.asarray(ep["is_cav"], bool).astype(np.uint8),
         "time_s": np.asarray(ep["time_s"], np.float64),
         "control_time_s": np.asarray(ep["control_time_s"], np.float64),
@@ -202,7 +223,8 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     """Convert one complete episode directory; returns its manifest entry."""
     manifest = json.loads((src / "manifest.json").read_text(encoding="utf-8"))
     ep = _load_episode_npz(src / "episode.npz")
-    meta = {**ep["meta"], **{k: manifest[k] for k in ("policy", "collector_job")
+    meta = {**ep["meta"], **{k: manifest[k] for k in ("policy", "collector_job", "genrand",
+                                                         "arm", "branch", "world_t0_s")
                              if k in manifest}}
     for key in ("seed", "demand_vph", "penetration", "warmup_s"):
         if key not in meta:
@@ -213,8 +235,11 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
         raise C4EpisodeRefusal(
             f"{src}: designed controllers {used} in the action timeline; WM training takes "
             "native + direct actions only (pass --allow-designed to override)")
-    world = world_id(meta["seed"], meta["demand_vph"], meta["penetration"], meta["warmup_s"])
-    arm = _arm_tag(meta.get("policy") or meta.get("controller"))
+    # Branch episodes (traffic_shepherd.c4.genrand) start their windows at the branch time
+    # (``warmup_s``) but keep the base world (``world_t0_s``) and carry a unique ``arm``.
+    world = world_id(meta["seed"], meta["demand_vph"], meta["penetration"],
+                     meta.get("world_t0_s", meta["warmup_s"]))
+    arm = _arm_tag(meta.get("arm") or meta.get("policy") or meta.get("controller"))
     name = f"{world}__{arm}"
     out = dst_root / "episodes" / name
     if out.exists():
@@ -236,7 +261,14 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
         "direct_cav_steps": int((ctrl == DIRECT).sum()),
         "max_present": int(present.sum(1).max()), "cav_rows": int(cav.sum()),
         "source": str(src), "source_sha256": _sha256(src / "episode.npz"),
+        "t_start_s": float(arrays["time_s"][0]),
+        "extra_arrays": sorted(n for n in EXTRA_ARRAYS if n in arrays),
     }
+    if isinstance(meta.get("branch"), dict):        # paired-branch group (genrand)
+        entry["branch"] = meta["branch"]
+        entry["pair_key"] = meta["branch"].get("pair_key")
+    if isinstance(meta.get("genrand"), dict):
+        entry["genrand"] = meta["genrand"]
     (out / "episode.json").write_text(json.dumps(entry, indent=1, sort_keys=True),
                                       encoding="utf-8")
     return entry
@@ -334,8 +366,8 @@ def episode_window_ticks(ep: EpisodeArrays, *, horizon_steps: int, stride_s: flo
     present = ep.array("veh_mask")
     n_control = _n_control_steps(horizon_steps + 1)
     start = float(warmup_s if start_s is None else start_s)
-    i0 = int(round(start / DT_S))
-    i0 += i0 % 2
+    i0 = int(np.searchsorted(times, start - 1e-6))   # == start / DT_S when times[0] == 0
+    i0 += int(round(float(times[min(i0, len(times) - 1)]) / DT_S)) % 2
     ticks = []
     while i0 + horizon_steps < len(times):
         t0 = float(times[i0])
@@ -427,7 +459,8 @@ class C4WindowLoader:
             "cav_teacher": teacher,
             "meta": {"source": "c4_episodes", "world": entry["world"], "arm": entry["arm"],
                      "policy": entry.get("policy"), "episode": entry["episode"],
-                     "tick": int(tick), "t0_s": float(ep.array("time_s")[tick])},
+                     "tick": int(tick), "t0_s": float(ep.array("time_s")[tick]),
+                     "pair_key": entry.get("pair_key")},
             "action_timeline": self.timeline(ep, tick, alive),
         }
         if self.entries_v2:

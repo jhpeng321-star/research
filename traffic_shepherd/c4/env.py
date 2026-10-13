@@ -42,7 +42,8 @@ lane on the CAV's CURRENT edge (``geometry.LANE_TABLE``); requests that would st
 within the 1 s request (SUMO indices differ across edges) are deferred, junction transits refused.
 HDVs and non-policy controllers are never touched.  Outcomes are counted per tick in
 ``info["lane_commands"]`` (issued / completed / not_completed / deferred_edge_end / refused_*),
-written to the action timeline (``lane_command``) and to ``episode.npz`` ``lane_command_target``.
+written to the action timeline (``lane_command``) and to ``episode.npz`` ``lane_command_target``;
+the requested targets (before this safety mask) go to ``lane_request_target``.
 """
 from __future__ import annotations
 
@@ -397,6 +398,7 @@ class CavSumoEnv:
         if abs(now - round(now)) > 1e-6:
             raise CavEnvError(f"SUMO time {now} is off the 1 s control grid")
         lane_issued, lane_counts = {}, Counter()
+        lane_requested: dict = {}
         live = set(api.vehicle.getIDList())
         cav_ids = self.cav_ids
         disappeared = (self._previous_live - live) & cav_ids
@@ -474,8 +476,8 @@ class CavSumoEnv:
             policy_cavs = set(wall) if lanes is not None else set()
             self._lane_control(policy_cavs, live)
             if lanes is not None:
-                lane_issued, lane_counts = self._issue_lane_commands(
-                    self._lanes_by_vehicle(lanes), policy_cavs)
+                lane_requested = self._lanes_by_vehicle(lanes)
+                lane_issued, lane_counts = self._issue_lane_commands(lane_requested, policy_cavs)
         elif mode == "wall":
             wall = self.wall_law.commands(self.frame, self.builder, now_s=now,
                                           live_cavs=live_cavs)
@@ -510,8 +512,13 @@ class CavSumoEnv:
                 if slot is not None and self.frame.present[slot]:
                     lane_rows[slot] = {"target_lane": target, "sumo_lane_index": index,
                                        "duration_s": LANE_REQUEST_S}
+            request_rows = {}
+            for vid, target in lane_requested.items():
+                slot = self.builder.pool.slot_of(vid)
+                if slot is not None and self.frame.present[slot]:
+                    request_rows[slot] = int(target)
             self.recorder.on_control(now, self.frame, decisions, self.builder.vehicle_ids,
-                                     lane_commands=lane_rows)
+                                     lane_commands=lane_rows, lane_requests=request_rows)
         self._last_actions = actions
         commanded = {r.vehicle_id for r in records}
         info_interval = Counter()

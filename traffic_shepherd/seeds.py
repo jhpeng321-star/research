@@ -295,6 +295,11 @@ WM_N1_REPL_SEED_LOADING_MAP = {
 # PL-WM1 fresh block (planner; exposure audit PLWM1_SEED_AUDIT.json, worlds PLWM1_WORLDS.json 3a88485c; see seeds_py_plwm1.diff)
 PLWM1_SEEDS = frozenset(range(9801, 9821))
 PLWM1_LOADING_MAP = {9801: 2700, 9802: 2600, 9803: 2700, 9804: 2700, 9805: 2700, 9806: 2600, 9807: 2600, 9808: 2400, 9809: 2700, 9810: 2700, 9811: 2700, 9812: 2600, 9813: 2600, 9814: 2400, 9815: 2700, 9816: 2700, 9817: 2700, 9818: 2600, 9819: 2600, 9820: 2400}
+# C4 GENRAND undirected random-action WM TRAINING data block (2026-10-14, draft registration
+# GENRAND_REGISTRATION.md; the integrator registers the range and runs the holdout-guard
+# membership check before collection).  TRAINING only: never evaluation, CAL or HOLDOUT.
+C4_GENRAND_SEEDS = frozenset(range(961000, 962000))
+C4_GENRAND_LOADINGS = (2400, 2700)
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.
@@ -376,6 +381,9 @@ def require_development_case(seed, loading, role):
         return
     if role == "exposed" and seed in WM43B_WALL_CLOSURE_SEEDS \
             and loading == WM43B_SEED_LOADING_MAP.get(seed):
+        return
+
+    if role == "exposed" and seed in C4_GENRAND_SEEDS and loading in C4_GENRAND_LOADINGS:
         return
 
     if role == "exposed" and seed in WM44_CHUNK1_SEEDS \

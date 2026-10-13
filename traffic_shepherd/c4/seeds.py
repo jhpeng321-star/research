@@ -13,11 +13,15 @@ from __future__ import annotations
 
 from traffic_shepherd import seeds as S
 
-ALLOWED_SEEDS = frozenset(S.EXPOSED_CONTROLLER_SEEDS)
+#: + the C4 GENRAND undirected random-action TRAINING block (961000-961999, loadings 2400/2700;
+#: GENRAND_REGISTRATION.md) - WM training data only.
+GENRAND_SEEDS = frozenset(S.C4_GENRAND_SEEDS)
+ALLOWED_SEEDS = frozenset(S.EXPOSED_CONTROLLER_SEEDS) | GENRAND_SEEDS
 BLOCKED_SEEDS = frozenset(
     set(S.SEALED_SEEDS) | set(S.FINAL_TEST_SEEDS) | set(S.WM58_CHUNK5_SEEDS)
     | set(S.WM_N1_REPL_SEEDS) | set(S.PLWM1_SEEDS) | set(S.CV28_VALIDATION_HOLDOUT_SEEDS)
     | set(S.WM28_FRESH_VALIDATION_SEEDS) | set(S.WM34_FRESH_RETEST_SEEDS))
+assert not (GENRAND_SEEDS & BLOCKED_SEEDS), "GENRAND seeds overlap a sealed/test block"
 
 
 class SeedRefusal(ValueError):
@@ -31,7 +35,7 @@ def check_case(seed: int, demand_vph: int) -> None:
         raise SeedRefusal(f"seed {seed} is sealed/test/holdout; refused")
     if seed not in ALLOWED_SEEDS:
         raise SeedRefusal(f"seed {seed} is not an exposed C4 development seed "
-                          f"({min(ALLOWED_SEEDS)}-{max(ALLOWED_SEEDS)})")
+                          "(4107-4148) nor a C4 GENRAND training seed (961000-961999)")
     S.require_development_case(seed, demand_vph, "exposed")
 
 

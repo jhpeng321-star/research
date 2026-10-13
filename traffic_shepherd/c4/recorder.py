@@ -17,7 +17,8 @@ Per episode directory (write-once)::
 ``control_time_s [C]``, ``controller [C,K] i8`` (``wms.data.action_timeline.CONTROLLERS``
 ids: native 0, damping 1, pi-external-u 2, direct 3), ``issued_acceleration_mps2 [C,K]``,
 ``issued_target_speed_mps [C,K]`` (0 where unused), ``requested_acceleration_mps2 [C,K]``
-(policy output before SUMO-side clipping; NaN where none), ``meta_json``.
+(policy output before SUMO-side clipping; NaN where none), ``lane_command_target`` /
+``lane_request_target [C,K] i8`` (issued / requested WM target lane, -1 none), ``meta_json``.
 Control row c is decided on state index ``2c`` (time c s) and holds for states 2c+1, 2c+2.
 
 :func:`episode_windows` cuts an episode into the ``TrajectoryDataset.from_arrays``
@@ -63,6 +64,7 @@ class EpisodeRecorder:
         self.frames: list = []
         self.controls: list = []
         self.lane_controls: list = []
+        self.lane_requests: list = []
         self._physics = (gzip.open(self.out / "run" / "physics_steps.jsonl.gz", "xt",
                                    encoding="utf-8", compresslevel=3) if physics_log else None)
         self._actions = gzip.open(self.out / "run" / "action_timeline.jsonl.gz", "xt",
@@ -83,26 +85,19 @@ class EpisodeRecorder:
             self._physics.write(dumps_row(row))
 
     def on_control(self, time_s: float, frame, decisions: dict, vehicle_ids: list,
-                   lane_commands: dict | None = None) -> None:
+                   lane_commands: dict | None = None, lane_requests: dict | None = None) -> None:
         """``decisions``: slot -> (controller name, issued accel, issued target, requested);
-        ``lane_commands``: slot -> {target_lane, sumo_lane_index, duration_s} (issued changeLane)."""
-        k = self.k
+        ``lane_commands``: slot -> {target_lane, sumo_lane_index, duration_s} (issued changeLane);
+        ``lane_requests``: slot -> requested WM target lane (the policy's lane output, before
+        the env's safety mask; only slots with a request)."""
         lane_commands = lane_commands or {}
-        lane_target = np.full(k, -1, np.int8)
-        for slot, command in lane_commands.items():
-            lane_target[slot] = int(command["target_lane"])
-        ctrl = np.zeros(k, np.int8)
-        acc = np.zeros(k, np.float32)
-        tgt = np.zeros(k, np.float32)
-        req = np.full(k, np.nan, np.float32)
+        ctrl, acc, tgt, req, lane_target, lane_req = control_row(
+            self.k, decisions, lane_commands, lane_requests)
         for slot, (name, a, target, requested) in decisions.items():
-            ctrl[slot] = CONTROLLERS.index(name)
-            acc[slot] = 0.0 if a is None else a
-            tgt[slot] = 0.0 if target is None else target
-            if requested is not None and math.isfinite(requested):
-                req[slot] = requested
             vid = vehicle_ids[int(frame.vid_index[slot])]
             extra = ({"lane_command": dict(lane_commands[slot])} if slot in lane_commands else {})
+            if lane_requests and slot in lane_requests:
+                extra["lane_request"] = int(lane_requests[slot])
             self._actions.write(json.dumps({
                 "schema": ACTION_LOG_SCHEMA, "timestamp_s": int(round(time_s)),
                 "vehicle_id": vid, "slot": int(slot), "owner": name, **extra,
@@ -114,6 +109,7 @@ class EpisodeRecorder:
                 "measured_speed_mps": float(frame.v[slot])}, allow_nan=False) + "\n")
         self.controls.append((float(time_s), ctrl, acc, tgt, req))
         self.lane_controls.append(lane_target)
+        self.lane_requests.append(lane_req)
 
     def _close_streams(self) -> None:
         for stream in (self._physics, self._actions):
@@ -122,35 +118,9 @@ class EpisodeRecorder:
 
     def finish(self, summary: dict, *, vehicle_ids: list, cav_ids, meta: dict) -> dict:
         self._close_streams()
-        f = self.frames
-        arrays = {
-            "time_s": np.asarray([x.time_s for x in f], np.float64),
-            "s_m": np.stack([x.s for x in f]), "lane": np.stack([x.lane for x in f]),
-            "lane_carry": np.stack([x.lane_carry for x in f]),
-            "v_mps": np.stack([x.v for x in f]), "a_mps2": np.stack([x.a for x in f]),
-            "length_true_m": np.stack([x.length_true for x in f]),
-            "present": np.stack([x.present for x in f]),
-            "is_cav": np.stack([x.is_cav for x in f]),
-            "junction": np.stack([x.junction for x in f]),
-            "vid_index": np.stack([x.vid_index for x in f]),
-            "vehicle_ids": np.asarray(vehicle_ids if vehicle_ids else [""], dtype=str),
-            "cav_vehicle_ids": np.asarray(sorted(cav_ids) or [""], dtype=str),
-            "control_time_s": np.asarray([c[0] for c in self.controls], np.float64),
-            "controller": np.stack([c[1] for c in self.controls]) if self.controls
-            else np.zeros((0, self.k), np.int8),
-            "issued_acceleration_mps2": np.stack([c[2] for c in self.controls])
-            if self.controls else np.zeros((0, self.k), np.float32),
-            "issued_target_speed_mps": np.stack([c[3] for c in self.controls])
-            if self.controls else np.zeros((0, self.k), np.float32),
-            "requested_acceleration_mps2": np.stack([c[4] for c in self.controls])
-            if self.controls else np.zeros((0, self.k), np.float32),
-            # WM target lane of an issued lane command per control tick, -1 = none.
-            "lane_command_target": np.stack(self.lane_controls)
-            if self.lane_controls else np.zeros((0, self.k), np.int8),
-            "controller_vocab": np.asarray(CONTROLLERS, dtype=str),
-            "meta_json": np.asarray(json.dumps({"schema": EPISODE_SCHEMA, **meta},
-                                               allow_nan=False)),
-        }
+        arrays = build_episode_arrays(self.frames, self.controls, self.lane_controls,
+                                      self.lane_requests, k=self.k, vehicle_ids=vehicle_ids,
+                                      cav_ids=cav_ids, meta=meta)
         np.savez_compressed(self.out / "episode.npz", **arrays)
         write_json(self.out / "summary.json", summary)
         self.manifest.update(status="complete")
@@ -161,6 +131,63 @@ class EpisodeRecorder:
         self._close_streams()
         self.manifest.update(status="failed", error=error)
         write_json(self.out / "manifest.json", self.manifest)
+
+
+def control_row(k: int, decisions: dict, lane_commands: dict | None = None,
+                lane_requests: dict | None = None) -> tuple:
+    """One control tick -> ``(controller, issued accel, issued target speed, requested accel,
+    issued lane target, requested lane target)`` rows of length ``k``."""
+    lane_target = np.full(k, -1, np.int8)
+    for slot, command in (lane_commands or {}).items():
+        lane_target[slot] = int(command["target_lane"])
+    lane_req = np.full(k, -1, np.int8)
+    for slot, target in (lane_requests or {}).items():
+        lane_req[slot] = int(target)
+    ctrl = np.zeros(k, np.int8)
+    acc = np.zeros(k, np.float32)
+    tgt = np.zeros(k, np.float32)
+    req = np.full(k, np.nan, np.float32)
+    for slot, (name, a, target, requested) in decisions.items():
+        ctrl[slot] = CONTROLLERS.index(name)
+        acc[slot] = 0.0 if a is None else a
+        tgt[slot] = 0.0 if target is None else target
+        if requested is not None and math.isfinite(requested):
+            req[slot] = requested
+    return ctrl, acc, tgt, req, lane_target, lane_req
+
+
+def build_episode_arrays(frames: list, controls: list, lane_controls: list, lane_requests: list,
+                         *, k: int, vehicle_ids: list, cav_ids, meta: dict) -> dict:
+    """``episode.npz`` arrays (schema ``c4_sumo_episode/1``) from recorded frames / controls."""
+    f = frames
+
+    def stack(rows, dtype):
+        return np.stack(rows) if rows else np.zeros((0, k), dtype)
+    return {
+        "time_s": np.asarray([x.time_s for x in f], np.float64),
+        "s_m": np.stack([x.s for x in f]), "lane": np.stack([x.lane for x in f]),
+        "lane_carry": np.stack([x.lane_carry for x in f]),
+        "v_mps": np.stack([x.v for x in f]), "a_mps2": np.stack([x.a for x in f]),
+        "length_true_m": np.stack([x.length_true for x in f]),
+        "present": np.stack([x.present for x in f]),
+        "is_cav": np.stack([x.is_cav for x in f]),
+        "junction": np.stack([x.junction for x in f]),
+        "vid_index": np.stack([x.vid_index for x in f]),
+        "vehicle_ids": np.asarray(vehicle_ids if vehicle_ids else [""], dtype=str),
+        "cav_vehicle_ids": np.asarray(sorted(cav_ids) or [""], dtype=str),
+        "control_time_s": np.asarray([c[0] for c in controls], np.float64),
+        "controller": stack([c[1] for c in controls], np.int8),
+        "issued_acceleration_mps2": stack([c[2] for c in controls], np.float32),
+        "issued_target_speed_mps": stack([c[3] for c in controls], np.float32),
+        "requested_acceleration_mps2": stack([c[4] for c in controls], np.float32),
+        # WM target lane of an issued lane command per control tick, -1 = none.
+        "lane_command_target": stack(lane_controls, np.int8),
+        # WM target lane REQUESTED by the policy (before the env's safety mask), -1 = none.
+        "lane_request_target": stack(lane_requests, np.int8),
+        "controller_vocab": np.asarray(CONTROLLERS, dtype=str),
+        "meta_json": np.asarray(json.dumps({"schema": EPISODE_SCHEMA, **meta},
+                                           allow_nan=False)),
+    }
 
 
 # ---------------------------------------------------------------- WM-S windows

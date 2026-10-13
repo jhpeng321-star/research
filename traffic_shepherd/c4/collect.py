@@ -5,7 +5,9 @@
         --warmup 300 --horizon 600 --workers 6 --out runs/active/C4-COLLECT-x
 
 ``--policy``: ``native|damping|pi|wall`` (frozen baselines), ``random`` (seeded smooth
-random direct accelerations), ``zero``, ``module:factory`` or a checkpoint path loaded with
+random direct accelerations), ``generic_random`` (undirected random per-CAV commands + lane
+intents, :mod:`traffic_shepherd.c4.genrand`; optional paired branches with ``--branch-cadence``),
+``zero``, ``module:factory`` or a checkpoint path loaded with
 ``--policy-loader`` (default ``wms.control.policy:load_policy_fn``).  One SUMO per worker
 process (spawn); every episode writes its own directory
 ``<out>/episodes/<policy_tag>/<job>/`` (see :mod:`traffic_shepherd.c4.recorder`).
@@ -68,8 +70,13 @@ def _worker_env(opts: dict):
     global _ENV
     if _ENV is None:
         from traffic_shepherd.c4.env import CavSumoEnv
+        extra = None
+        if opts["policy"] == "generic_random":
+            from traffic_shepherd.c4.branching import SAVE_STATE_CLI
+            extra = SAVE_STATE_CLI          # same launch command with and without branches
         _ENV = CavSumoEnv(k_slots=opts["k"], check_parity=opts["check_parity"],
-                          ttc=not opts["no_ttc"], physics_log=not opts["no_physics_log"])
+                          ttc=not opts["no_ttc"], physics_log=not opts["no_physics_log"],
+                          extra_sumo_cli=extra)
     return _ENV
 
 
@@ -96,13 +103,31 @@ def run_job(job: dict) -> dict:
     try:
         from traffic_shepherd.c4.baselines import run_policy_episode
         env = _worker_env(opts)
-        policy = _policy_for(opts, job["seed"], job["demand"], job["penetration"])
-        summary = run_policy_episode(
-            env, policy, seed=job["seed"], demand_vph=job["demand"],
-            penetration=job["penetration"], warmup_s=opts["warmup"], horizon_s=opts["horizon"],
-            episode_dir=out, meta=dict(policy=opts["policy"], collector_job=job["job_id"],
-                                       attempt=job["attempt"]))
-        record.update(status="complete", sim_seconds=summary["sim_seconds"],
+        meta = dict(policy=opts["policy"], collector_job=job["job_id"], attempt=job["attempt"])
+        if opts["policy"] == "generic_random":
+            from traffic_shepherd.c4.genrand import run_genrand_job
+            branch_root = (Path(job["branch_dir"]) if opts.get("branch_cadence", 0) > 0
+                           else None)
+            result = run_genrand_job(
+                env, seed=job["seed"], demand_vph=job["demand"], penetration=job["penetration"],
+                warmup_s=opts["warmup"], horizon_s=opts["horizon"], episode_dir=out,
+                branch_root=branch_root, cadence_s=opts.get("branch_cadence", 0),
+                n_arms=opts.get("branch_arms", 4), branch_h=opts.get("branch_horizon", 60),
+                native_arm=not opts.get("no_branch_native", False),
+                repeat_check=opts.get("branch_repeat_check", 0), meta=meta)
+            summary = result["summary"]
+            b = result["branches"]
+            record.update(genrand=b["policy"], policy_events=b["policy_events"],
+                          n_branches=b["n_branches"], branch_collisions=b["collisions"],
+                          branch_teleports=b["teleports"], branch_wall_s=b["branch_wall_s"],
+                          base_wall_s=b["base_wall_s"], repeat_checks=b["repeat_checks"])
+        else:
+            policy = _policy_for(opts, job["seed"], job["demand"], job["penetration"])
+            summary = run_policy_episode(
+                env, policy, seed=job["seed"], demand_vph=job["demand"],
+                penetration=job["penetration"], warmup_s=opts["warmup"],
+                horizon_s=opts["horizon"], episode_dir=out, meta=meta)
+        record.update(status="complete", lane_commands=summary.get("lane_commands"), sim_seconds=summary["sim_seconds"],
                       wall_seconds=time.monotonic() - started,
                       episode_sim_s_per_wall_s=summary["sim_s_per_wall_s"],
                       window_sim_s_per_wall_s=summary["window_sim_s_per_wall_s"],
@@ -129,16 +154,66 @@ def plan_jobs(args) -> list[dict]:
     pens = [float(x) for x in args.penetrations.split(",") if x.strip()]
     opts = dict(policy=args.policy, policy_loader=args.policy_loader, k=args.k,
                 warmup=args.warmup, horizon=args.horizon, check_parity=args.check_parity,
-                no_ttc=args.no_ttc, no_physics_log=args.no_physics_log)
+                no_ttc=args.no_ttc, no_physics_log=args.no_physics_log,
+                branch_cadence=getattr(args, "branch_cadence", 0),
+                branch_arms=getattr(args, "branch_arms", 4),
+                branch_horizon=getattr(args, "branch_horizon", 60),
+                no_branch_native=getattr(args, "no_branch_native", False),
+                branch_repeat_check=getattr(args, "branch_repeat_check", 0))
+    if opts["branch_cadence"] and args.policy != "generic_random":
+        raise SystemExit("--branch-cadence is only supported with --policy generic_random")
     jobs = []
-    for seed in seeds:
-        for demand in demands:
-            check_case(seed, demand)              # fail before any SUMO
-            for pen in pens:
-                jid = job_id(seed, demand, pen)
-                jobs.append(dict(job_id=jid, seed=seed, demand=demand, penetration=pen,
-                                 episode_dir=str(root / jid), opts=opts, attempt=1))
+    for seed, demand, pen in plan_cases(seeds, demands, pens,
+                                        getattr(args, "case_plan", "product"),
+                                        getattr(args, "pen_weights", None)):
+        check_case(seed, demand)                  # fail before any SUMO
+        jid = job_id(seed, demand, pen)
+        job = dict(job_id=jid, seed=seed, demand=demand, penetration=pen,
+                   episode_dir=str(root / jid), opts=opts, attempt=1)
+        if opts["branch_cadence"]:
+            job["branch_dir"] = str(out / "branches" / policy_tag(args.policy) / jid)
+        jobs.append(job)
     return jobs
+
+
+def plan_cases(seeds, demands, pens, plan: str = "product", pen_weights=None) -> list[tuple]:
+    """``(seed, demand, penetration)`` cases.
+
+    * ``product``: every seed x demand x penetration;
+    * ``weighted-cycle``: ONE case per seed (one world per seed): the penetrations repeated by
+      their integer weights (``--pen-weights 1,1,2,2``) are cycled seed by seed, the demand
+      advances after every full penetration cycle (every combination within
+      ``sum(weights) * len(demands)`` consecutive seeds)."""
+    if plan == "product":
+        return [(s, d, p) for s in seeds for d in demands for p in pens]
+    if plan != "weighted-cycle":
+        raise SystemExit(f"unknown --case-plan {plan!r}")
+    weights = ([1] * len(pens) if not pen_weights
+               else [int(w) for w in str(pen_weights).split(",")])
+    if len(weights) != len(pens) or min(weights) < 1:
+        raise SystemExit("--pen-weights needs one positive integer per penetration")
+    cycle = [p for p, w in zip(pens, weights) for _ in range(w)]
+    return [(s, demands[(i // len(cycle)) % len(demands)], cycle[i % len(cycle)])
+            for i, s in enumerate(seeds)]
+
+
+def _job_complete(job: dict) -> bool:
+    if not _episode_complete(Path(job["episode_dir"])):
+        return False
+    if job.get("branch_dir"):
+        return (Path(job["branch_dir"]) / "BRANCHES_COMPLETE.json").is_file()
+    return True
+
+
+def _preserve(path: Path) -> int:
+    """Rename an incomplete directory to ``<name>.incomplete-<n>``; returns n (0 = absent)."""
+    if not path.exists():
+        return 0
+    n = 1
+    while path.with_name(f"{path.name}.incomplete-{n}").exists():
+        n += 1
+    path.rename(path.with_name(f"{path.name}.incomplete-{n}"))
+    return n
 
 
 def prepare(jobs: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -146,14 +221,13 @@ def prepare(jobs: list[dict]) -> tuple[list[dict], list[dict]]:
     todo, done = [], []
     for job in jobs:
         path = Path(job["episode_dir"])
-        if path.exists():
-            if _episode_complete(path):
-                done.append(job)
-                continue
-            n = 1
-            while path.with_name(f"{path.name}.incomplete-{n}").exists():
-                n += 1
-            path.rename(path.with_name(f"{path.name}.incomplete-{n}"))
+        if _job_complete(job):
+            done.append(job)
+            continue
+        n = _preserve(path)
+        if job.get("branch_dir"):
+            n = max(n, _preserve(Path(job["branch_dir"])))
+        if n:
             job["attempt"] = n + 1
         path.parent.mkdir(parents=True, exist_ok=True)
         todo.append(job)
@@ -178,6 +252,18 @@ def main(argv=None) -> int:
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--no-physics-log", action="store_true",
                     help="skip run/physics_steps.jsonl.gz (episode.npz is always written)")
+    ap.add_argument("--case-plan", choices=("product", "weighted-cycle"), default="product",
+                    help="product = seeds x demands x penetrations; weighted-cycle = one case "
+                         "per seed (penetrations cycled by --pen-weights, then demands)")
+    ap.add_argument("--pen-weights", default=None, help="e.g. 1,1,2,2 (weighted-cycle)")
+    ap.add_argument("--branch-cadence", type=int, default=0,
+                    help="generic_random only: paired branches every N s after warmup (0 = off)")
+    ap.add_argument("--branch-arms", type=int, default=4, help="re-seeded random arms SEED:j")
+    ap.add_argument("--branch-horizon", type=int, default=60)
+    ap.add_argument("--no-branch-native", action="store_true",
+                    help="omit the all-native reference arm")
+    ap.add_argument("--branch-repeat-check", type=int, default=0,
+                    help="re-run SEED:0 at the first N points (determinism check)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     if any(tok in str(args.out).lower() for tok in FORBIDDEN):
@@ -233,6 +319,11 @@ def main(argv=None) -> int:
                    sum(r["window_sim_s_per_wall_s"] for r in ok) / len(ok) if ok else None),
                "collisions": sum(r["collisions"] for r in ok),
                "teleports": sum(r["teleports"] for r in ok),
+               "branches": sum(r.get("n_branches", 0) for r in ok),
+               "branch_collisions": sum(r.get("branch_collisions", 0) for r in ok),
+               "branch_teleports": sum(r.get("branch_teleports", 0) for r in ok),
+               "case_plan": args.case_plan, "pen_weights": args.pen_weights,
+               "branch_cadence_s": args.branch_cadence,
                "host_cpus": os.cpu_count(), "finished_utc": _now()}
     (out / "COLLECT_SUMMARY.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     print(json.dumps(summary, indent=1), flush=True)
