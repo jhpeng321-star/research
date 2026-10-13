@@ -1,0 +1,80 @@
+{
+ "overtake": {
+  "recorded": 621,
+  "recorded_dangerous": 52,
+  "masked": 49,
+  "lead_gap<req": 49,
+  "overlap": 5,
+  "median_lead_gap_m": 0.75,
+  "median_follow_gap_m": 62.0234375,
+  "median_speed_mps": 15.375
+ },
+ "return": {
+  "recorded": 171,
+  "recorded_dangerous": 27,
+  "masked": 35,
+  "masked_t_and_t1": 20,
+  "follow_gap<req": 25,
+  "lead_gap<req": 10,
+  "median_lead_gap_m": 99.0,
+  "median_follow_gap_m": 1.25,
+  "median_speed_mps": 27.90625
+ },
+ "merge": {
+  "recorded": 160,
+  "recorded_dangerous": 44,
+  "masked": 44,
+  "overlap": 44,
+  "lead_gap<req": 44,
+  "masked_t_and_t1": 9,
+  "median_lead_gap_m": 16.9375,
+  "median_follow_gap_m": 4.875,
+  "median_speed_mps": 0.0
+ },
+ "total": {
+  "recorded": 952,
+  "masked": 128,
+  "masked_frac": 0.13445378151260504,
+  "masked_t_and_t1": 29,
+  "masked_t_and_t1_frac": 0.03046218487394958
+ },
+ "false_feasible_nonchange": {
+  "merge": {
+   "nonchange_states": 7658,
+   "feasible": 1213,
+   "dangerous": 6043,
+   "feasible_and_dangerous": 20,
+   "feasible_frac": 0.1583964481587882,
+   "feasible_and_dangerous_frac": 0.0026116479498563593,
+   "feasible_given_dangerous": 0.0033096144299189145
+  },
+  "overtake": {
+   "nonchange_states": 370927,
+   "feasible": 102929,
+   "dangerous": 217875,
+   "feasible_and_dangerous": 5186,
+   "feasible_frac": 0.277491258387769,
+   "feasible_and_dangerous_frac": 0.013981187673046179,
+   "feasible_given_dangerous": 0.023802639127940332
+  },
+  "return": {
+   "nonchange_states": 297347,
+   "feasible": 111968,
+   "dangerous": 131526,
+   "feasible_and_dangerous": 1566,
+   "feasible_frac": 0.37655668293273514,
+   "feasible_and_dangerous_frac": 0.005266574070025929,
+   "feasible_given_dangerous": 0.011906391131791432
+  },
+  "all": {
+   "nonchange_states": 675932,
+   "feasible": 216110,
+   "dangerous": 355444,
+   "feasible_and_dangerous": 6772,
+   "feasible_frac": 0.3197215104477965,
+   "feasible_and_dangerous_frac": 0.01001875928347822,
+   "feasible_given_dangerous": 0.019052227636420928
+  }
+ },
+ "gap_rule": "speed"
+}

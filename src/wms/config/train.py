@@ -66,6 +66,9 @@ class ModelConfig:
     rollout_mode: Literal["residual", "driver_params", "hybrid"] = "residual"
     lane_head: Literal["off", "history"] = "off"
     lane_rule: Literal["mobil", "forced_merge_only", "learned_discretionary"] = "mobil"
+    lane_gap_rule: Literal["fixed", "speed"] = "fixed"
+    """GAPRULE: gap acceptance of the lane-change feasibility mask ('fixed' = legacy 6 m /
+    merge_gap + IDM follower braking; 'speed' = speed-dependent SUMO-like secure gaps)."""
     physics_params: Optional[str] = None
     merge_cal: bool = False
     sumo_fidelity: bool = False

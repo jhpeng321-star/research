@@ -96,6 +96,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "flip_rate_weight": "loss.flip_rate.weight",
     "flip_rate_allowance": "loss.flip_rate.allowance",
     "lane_rule": "model.lane_rule",
+    "lane_gap_rule": "model.lane_gap_rule",  # GAPRULE
     # WMLANE (A hazard lane model + event loss, C driver-setting update)
     "lane_model": "model.lane_model",
     "lane_hazard_hidden": "model.lane_hazard_hidden",
@@ -132,7 +133,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "checkpoint_step", "grad_decay_per_step", "init_from", "truncation_steps_per_stage",
     "lr_per_stage",
     "driver_grad_across_chunks", "flip_rate_weight", "flip_rate_allowance",
-    "lane_rule",
+    "lane_rule", "lane_gap_rule",
     "lane_model", "lane_hazard_hidden", "lane_hazard_cap", "driver_update",
     "driver_update_rate", "driver_reveal_prob", "driver_reveal_max_s",
     "lane_event_weight", "lane_event_gamma", "lane_event_max_weight",
