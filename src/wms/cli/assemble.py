@@ -14,6 +14,10 @@ objects of the data and model layers (WP-I).  It reproduces the assembly of the 
   windows are over-sampled (``jam``);
 * optional collected C4 SUMO episodes (``[data.c4_episodes]``, :mod:`wms.data.c4_episodes`)
   are mixed in last with their own sampling share (the Dreamer data loop);
+* optional further C4 sources (``[[data.c4_sources]]``, PAIRLOSS: GENRAND plain / paired
+  branches, :mod:`wms.data.c4_pairs`) with one split side per world across all C4 sources;
+  with ``loss.paired_diff`` on, the TRAIN dataset is wrapped so a fraction of the batches are
+  paired-branch batches;
 * the physics config and the model are built from the same flags the legacy ``_build_model``
   used (``ModelSpec.from_mapping(config.to_legacy_flat())``).
 """
@@ -85,6 +89,8 @@ def declared_data_names(cfg: TrainConfig) -> dict[str, str]:
                 names[f"switching.{label}"] = name
     if data.c4_episodes.enabled:
         names["c4_episodes"] = data.c4_episodes.path
+    for src in data.c4_sources:
+        names[f"c4_sources[{src.name}]"] = src.path
     return names
 
 
@@ -280,7 +286,68 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         print(f"c4_episodes train {len(source['train'])} windows, val "
               f"{0 if source['val'] is None else len(source['val'])} windows, "
               f"mix_ratio {float(c4.mix_ratio)}", file=sys.stderr)
+    if data.c4_sources:
+        train, val = _add_c4_sources(cfg, train, val, path, horizon=horizon, pack_k=pack_k,
+                                     heldout=heldout, curriculum=curriculum)
     return train, val, resolved
+
+
+def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str], str], *,
+                    horizon: int, pack_k: Optional[int], heldout: Any, curriculum: tuple
+                    ) -> tuple[Any, Any]:
+    """PAIRLOSS: mix ``data.c4_sources`` and (``loss.paired_diff`` on) wrap paired batches."""
+    from ..data.c4_episodes import build_c4_datasets, read_source_manifest
+    from ..data.c4_pairs import PairedBatchDataset, PairedBranchSource, add_c4_sources, world_roles
+
+    data = cfg.data
+    roots = {src.name: path(src.path) for src in data.c4_sources}
+    docs = [read_source_manifest(r) for r in roots.values()]
+    if data.c4_episodes.enabled:
+        docs.append(read_source_manifest(path(data.c4_episodes.path)))
+    roles, overridden = world_roles(docs)
+    common = dict(horizon_steps=horizon, history_s=data.history_s,
+                  history_stride_s=data.history_stride_s, entries_v2=bool(data.entries_v2),
+                  k_slots=pack_k, heldout=heldout, role_of=roles,
+                  junction_fix=getattr(data, "junction_fix", "off"),
+                  command_known=getattr(data, "controller_hygiene", "off") == "strict")
+    mixed = []
+    for src in data.c4_sources:
+        if src.mix_ratio <= 0.0:
+            continue
+        built = build_c4_datasets(roots[src.name], stride_s=float(src.window_stride_s),
+                                  start_s=src.start_s, allow_empty=src.paired, **common)
+        if not src.use_val:
+            built["val"] = None
+        if built["train"] is None:
+            print(f"c4_sources[{src.name}]: no TRAIN window with the full {horizon} steps "
+                  "(ordinary mix skipped)", file=sys.stderr)
+            continue
+        mixed.append((src.name, built, float(src.mix_ratio)))
+        print(f"c4_sources[{src.name}] train {len(built['train'])} windows, val "
+              f"{0 if built['val'] is None else len(built['val'])} windows, "
+              f"mix_ratio {float(src.mix_ratio)}", file=sys.stderr)
+    train, val = add_c4_sources(train, val, mixed, jam_speed_mps=float(data.jam.speed_mps))
+    if hasattr(train, "describe_stages"):
+        train.receipt["stage_sampling"] = train.describe_stages(curriculum)
+    train.receipt["c4_world_split"] = {"n_worlds": len(roles),
+                                       "n_val_worlds": sum(r == "val" for r in roles.values()),
+                                       "overridden_to_val": overridden}
+    pair = cfg.loss.paired_diff
+    paired = [src for src in data.c4_sources if src.paired]
+    if pair.enabled and paired:
+        if len(paired) > 1:
+            raise ConfigError("loss.paired_diff supports one paired c4 source")
+        src = paired[0]
+        source = PairedBranchSource(
+            roots[src.name], name=src.name, **{k: v for k, v in common.items()})
+        train = PairedBatchDataset(train, source, fraction=float(pair.fraction),
+                                   groups=int(pair.groups), max_arms=int(pair.max_arms),
+                                   batch_size=int(cfg.optim.batch_size),
+                                   seed=int(cfg.runtime.seed))
+        print(f"paired batches: {source.receipt['n_groups']} groups / "
+              f"{source.receipt['n_windows']} windows from c4_sources[{src.name}], horizon "
+              f"{source.horizon} steps, fraction {float(pair.fraction)}", file=sys.stderr)
+    return train, val
 
 
 def assemble(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver] = None
@@ -296,8 +363,13 @@ def window_counts(inputs: TrainingInputs) -> dict[str, dict[str, Any]]:
     """Kept windows per pack for the train and validation datasets (from their receipts)."""
     def counts(dataset: Any) -> dict[str, Any]:
         receipt = getattr(dataset, "receipt", {}) or {}
-        return {"n": len(dataset) if dataset is not None else 0,
-                "kept_by_pack": dict(receipt.get("kept_by_pack", {}))}
+        out = {"n": len(dataset) if dataset is not None else 0,
+               "kept_by_pack": dict(receipt.get("kept_by_pack", {}))}
+        if "c4_sources" in receipt or "paired_batches" in receipt:
+            # PAIRLOSS: windows and sampling share per mixed source
+            out["by_source"] = {s["name"]: {"n": s["n"], "share": s["share"]}
+                                for s in receipt.get("sources", [])}
+        return out
     return {"train": counts(inputs.train), "val": counts(inputs.val)}
 
 

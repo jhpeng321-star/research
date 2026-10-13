@@ -22,6 +22,7 @@ from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
+from .paired_diff import PairedDiffConfig, paired_diff_terms
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
 from .traffic import TrafficLoss, TrafficLossConfig
@@ -147,6 +148,18 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             every_steps=int(settings.aggregate_every_steps),
             horizon_start_s=float(settings.aggregate_horizon_start_s),
             horizon_full_s=float(settings.aggregate_horizon_full_s),
+            cell_temp_m=float(settings.aggregate_cell_temp_m))))
+    if getattr(settings, "paired_diff_weight", 0.0) > 0.0:
+        # PAIRLOSS paired-difference terms go after every existing term (flag off: never
+        # built, bit-identical); they are zero on batches without pair groups.
+        chunk.extend(paired_diff_terms(PairedDiffConfig(
+            dt_s=dt_s, weight=float(settings.paired_diff_weight),
+            position_weight=float(settings.paired_diff_position_weight),
+            speed_weight=float(settings.paired_diff_speed_weight),
+            aggregate_weight=float(settings.paired_diff_aggregate_weight),
+            position_delta_m=float(settings.position_huber_delta_m),
+            speed_delta_mps=float(settings.speed_huber_delta_mps),
+            bin_s=float(settings.aggregate_bin_s),
             cell_temp_m=float(settings.aggregate_cell_temp_m))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:

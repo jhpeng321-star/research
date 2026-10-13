@@ -128,6 +128,14 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_hazard_zone": "model.merge_hazard_zone",
     "gap_stopped_relax": "model.gap_stopped_relax",
     "lane_hazard_decouple": "loss.lane_hazard_decouple",
+    # PAIRLOSS (paired-difference loss on paired SUMO branches)
+    "paired_diff_weight": "loss.paired_diff.weight",
+    "paired_diff_fraction": "loss.paired_diff.fraction",
+    "paired_diff_groups": "loss.paired_diff.groups",
+    "paired_diff_max_arms": "loss.paired_diff.max_arms",
+    "paired_diff_position_weight": "loss.paired_diff.position_weight",
+    "paired_diff_speed_weight": "loss.paired_diff.speed_weight",
+    "paired_diff_aggregate_weight": "loss.paired_diff.aggregate_weight",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -152,6 +160,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "entry_pad_auto", "entry_pad_max", "junction_fix", "controller_hygiene",
     "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
     "gap_stopped_relax", "lane_hazard_decouple",
+    "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
+    "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
 )
 
 
