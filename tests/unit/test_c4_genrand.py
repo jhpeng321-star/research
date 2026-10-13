@@ -284,11 +284,26 @@ def test_speed_mode_stuck_cav_redraws_after_20s():
     assert q.events.get("stuck_redraws", 0) == 0
 
 
+def roll_kinematic(policy, n_ticks, n_cav=12):
+    """Point-mass speeds driven by the commands (v += a * 1 s, clipped to [0, 35])."""
+    ids = [f"c{i}" if i < n_cav else None for i in range(K)]
+    v = np.full(K, 20.0)
+    out = []
+    for _ in range(n_ticks):
+        a = policy(make_state(n_cav, v=v), vehicle_ids=ids)[0]
+        v = np.clip(v + np.nan_to_num(a), 0.0, 35.0)
+        out.append(v[:n_cav].copy())
+    return np.asarray(out)
+
+
 def test_speed_mode_shared_latent_correlation():
-    a0, _ = roll(G.GenericRandomPolicy(13, rho=0.0, n_latent=1), 3000)
-    a1, _ = roll(G.GenericRandomPolicy(13, rho=1.0, n_latent=1), 3000)
-    c0, c1 = _mean_pair_corr(a0[:, :12]), _mean_pair_corr(a1[:, :12])
-    assert abs(c0) < 0.03 and c1 > 0.1
+    v0 = roll_kinematic(G.GenericRandomPolicy(13, rho=0.0, n_latent=1), 3000)
+    v1 = roll_kinematic(G.GenericRandomPolicy(13, rho=1.0, n_latent=1), 3000)
+
+    def corr(v):                     # cross-CAV correlation of speeds
+        c = np.corrcoef(v.T)
+        return float(np.nanmean(c[np.triu_indices(c.shape[0], 1)]))
+    assert abs(corr(v0)) < 0.1 and corr(v1) > 0.3
 
 
 # ----------------------------------------------------- channels and conversion
