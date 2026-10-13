@@ -10,5 +10,8 @@ extends = "c4_policy_gpuw_p4.toml"
 output_dir = "runs/active/C4-POLICY-FINAL"
 
 [trainer]
+# Longer foresight (owner discussion 2026-10-13 ~18:00): 0.99 per 1 s control step = ~100 s effective horizon; cooperative
+# payoffs (gap opening for merges, walls) build over 2-5 min -> 0.995 (~200 s). The critic carries it beyond imagination.
+gamma = 0.995
 source_wait_grad = true
 critic_entry_backlog = true
