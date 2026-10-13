@@ -34,7 +34,8 @@ E:/agent-work/tmp/actiondata (summary_full2.txt, table.txt).
    schedules over (native, damping, direct), holds log-uniform 1-60 s, seed = world seed. The
    pack `veh_step` ownership channel says damping for every CAV (useless); the per-item timeline
    labels only the t0 slots. Re-implemented bit-identically (golden test); on the real TRAIN
-   items every one of the 306,801 recorded damping steps is a scheduled damping second
+   items every one of the 306,801 recorded damping control steps (summed over the overlapping
+   120 s item windows) is a scheduled damping second
    (0 mismatches; 128,858 scheduled-damping steps were recorded native/direct = safety
    fallbacks). Post-t0 entrants (1.17 M CAV rows of 3.84 M in the 120 s windows) are named by
    following their slot's same-vehicle chain to the run's next snapshot item.
@@ -116,3 +117,12 @@ earlier designed segments / damping (input only, never a target).
   304 passed; tests/unit/config + data + train + test_r5_switches + test_c4_loop 302 passed,
   1 failed (`test_drive_registry::test_committed_registry_matches_the_generator_output`, the
   known unrelated local data_ops mismatch also reported by JUNCTIONFIX). ruff clean.
+* CPU smoke `tools/c4_smoke.py E:/agent-work/tmp/datahyg/smoke_v4_hygiene_r2
+  configs/c4_wm_v4_hygiene.toml` (data via `wmlane_smoke.point_data(E:/research-dense)`):
+  **passed**, 2 optimizer steps, finite, loss 11.00 -> 9.57, 583 TRAIN / 99 val windows
+  (switching source disabled), TRAIN_RECEIPT records `controller_hygiene` (dspeed receipt) and
+  `junction_fix = "ffill"`. (The first attempt hit my 40 min timeout: the host was at 100 % CPU
+  from other jobs; profiles 174 s / 392 s for 10 s / 30 s are load-inflated.) The smoke batch is
+  pack_v3 windows only, so one extra `train_batch` (10 s, entries on) on two strict dspeed
+  records + one pack_v3 record was run: finite, loss 11.59 (`command_known` collated and
+  padded for entries).
