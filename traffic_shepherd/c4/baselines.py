@@ -146,7 +146,15 @@ class ContractPolicyAdapter:
                 group = torch.zeros(b, k, contract().GROUP_SIGNAL_DIM)
             accel, _ = self.policy(obs, group, deterministic=self.deterministic)
             if self.safety is not None:
-                accel = self.safety(state, accel)
+                # Bound by the policy's own stored cap when both sides support it (ACCELCAP_NOTES.md).
+                bound = getattr(self.policy, "accel_max", None)
+                from .wms_glue import ensure_wms_importable
+                ensure_wms_importable()
+                accepts_accel_max = importlib.import_module("wms.control.safety").accepts_accel_max
+                if bound is not None and accepts_accel_max(self.safety):
+                    accel = self.safety(state, accel, accel_max=float(bound))
+                else:
+                    accel = self.safety(state, accel)
         out = accel.detach().cpu().numpy().astype(np.float64)
         out[~obs.cav_mask.cpu().numpy()] = np.nan
         return out

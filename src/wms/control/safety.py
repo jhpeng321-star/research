@@ -1,7 +1,9 @@
 """Conservative same-lane stopping-distance filter for CAV accelerations."""
 from __future__ import annotations
 
+import inspect
 from collections.abc import Mapping
+from typing import Union
 
 import torch
 from torch import Tensor
@@ -15,8 +17,45 @@ _MIN_BUMPER_GAP_M = 2.0
 _SOFTMIN_TEMPERATURE_MPS2 = 0.05
 
 
-def safe_accel(state: Mapping[str, Tensor], accel: Tensor) -> Tensor:
+Ceiling = Union[float, Tensor]
+
+
+def _upper(x: Tensor, ceiling: Ceiling, lower: float = None) -> Tensor:
+    """``x.clamp(lower, ceiling)`` for a float ceiling (the exact legacy op) or a [B,K] tensor."""
+    if not torch.is_tensor(ceiling):
+        return x.clamp(lower, ceiling) if lower is not None else x.clamp(max=ceiling)
+    x = x.clamp(min=lower) if lower is not None else x
+    return torch.minimum(x, ceiling.to(device=x.device, dtype=x.dtype))
+
+
+def accepts_accel_max(fn) -> bool:
+    """True when the safety callable takes an ``accel_max`` keyword (or ``**kwargs``)."""
+    try:
+        params = inspect.signature(fn).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(p.name == "accel_max" or p.kind is p.VAR_KEYWORD for p in params)
+
+
+def with_accel_max(fn):
+    """``fn`` if it accepts ``accel_max``; else a wrapper that ignores it (custom safety layers)."""
+    if accepts_accel_max(fn):
+        return fn
+
+    def call(state, accel, *, accel_max=None):
+        del accel_max
+        return fn(state, accel)
+
+    return call
+
+
+def safe_accel(state: Mapping[str, Tensor], accel: Tensor, *,
+               accel_max: Ceiling = ACCEL_MAX_MPS2) -> Tensor:
     """Filter [B,K] actions, preserving HDVs and zeroing absent/invalid CAVs.
+
+    ``accel_max`` is the upper actuation ceiling: a float (default: the LEGACY 1.5 cap) or a
+    [B,K] tensor (per-slot: policy CAVs vs counterfactual native CAVs).  Callers bounding a
+    policy's commands pass the policy's stored ``accel_max`` (ACCELCAP_NOTES.md).
 
     A nearest same-lane leader may immediately brake at b=3 m/s². Reserve a
     2 m bumper gap, then require follower stopping distance <= gap-2+v_lead²/2b.
@@ -54,8 +93,8 @@ def safe_accel(state: Mapping[str, Tensor], accel: Tensor) -> Tensor:
     v = torch.where(valid, state["v_mps"], torch.zeros_like(state["v_mps"])).clamp_min(0.0)
     length = state.get("length_m", torch.full_like(s, DEFAULT_LENGTH_M))
     length = torch.where(valid, length, torch.zeros_like(length))
-    proposal = torch.where(active_cav, accel, torch.zeros_like(accel)).clamp(
-        ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+    proposal = _upper(torch.where(active_cav, accel, torch.zeros_like(accel)), accel_max,
+                      ACCEL_MIN_MPS2)
     if accel.shape[-1] == 0:
         return accel.clone()
 
@@ -82,10 +121,10 @@ def safe_accel(state: Mapping[str, Tensor], accel: Tensor) -> Tensor:
     # positive v deliberately produces an infeasible bound, then saturates.
     stopping_bound = -v.square() / (2.0 * budget.clamp_min(torch.finfo(v.dtype).eps))
     bound = torch.where(budget >= 0.5 * t * v, rolling_bound, stopping_bound)
-    bound = bound.clamp(max=ACCEL_MAX_MPS2)
+    bound = _upper(bound, accel_max)
     tau = _SOFTMIN_TEMPERATURE_MPS2
     filtered = -tau * torch.logsumexp(torch.stack((-proposal / tau, -bound / tau)), dim=0)
-    filtered = filtered.clamp(ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+    filtered = _upper(filtered, accel_max, ACCEL_MIN_MPS2)
     # With no leader, return the bounded proposal exactly (no phantom braking).
     filtered = torch.where(has_leader, filtered, proposal)
     cav_result = torch.where(active_cav, filtered, torch.zeros_like(filtered))

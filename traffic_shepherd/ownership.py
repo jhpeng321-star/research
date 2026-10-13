@@ -53,6 +53,9 @@ class CommandOwnership:
         self._owned: dict[str, str] = {}
         self._last: dict[str, CommandRecord] = {}
         self._time: float | None = None
+        # Upper bound of wall/direct requests; None = the adopted config bound (1.5).  Set only by
+        # CavSumoEnv for C4 DIRECT-output ticks (ACCELCAP_NOTES.md).
+        self.wall_accel_max_mps2: float | None = None
 
     def step(self, frames: Mapping, *, now_s: float, live_ids,
              wall_commands: Mapping[str, float] | None = None, native_ids=(),
@@ -115,7 +118,8 @@ class CommandOwnership:
                 owner = "native"
             elif v in wall:
                 reason = frame_problem(frame, now_s, self.controller.config)
-                a, target = (None, None) if reason else direct_target(frame, wall[v], self.controller.config)
+                a, target = (None, None) if reason else direct_target(
+                    frame, wall[v], self.controller.config, self.wall_accel_max_mps2)
                 decision = DampingDecision(command_acceleration_mps2=a, target_speed_mps=target,
                                            fallback_reason=reason or ("infeasible_speed_bounds" if a is None else None))
                 owner = "wall"

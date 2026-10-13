@@ -51,6 +51,25 @@ class GroupSignal(torch.nn.Module):
         return self.encoder(obs, state_or_positions, rsu_field)   # bridge path
 
 
+def policy_settings(raw) -> dict:
+    """``[policy]`` section -> CavPolicy keyword arguments (ACCELCAP_NOTES.md).
+
+    ``accel_max_mps2`` = the actor's action cap; absent -> the fresh-actor default
+    ``POLICY_ACCEL_MAX_MPS2`` (2.6).  A checkpoint loaded with --init-policy / --resume keeps its
+    own stored bound (legacy 1.5 when it has none) and the trainer warns about the override."""
+    from .contract import DIRECT_ACCEL_MAX_MPS2, POLICY_ACCEL_MAX_MPS2
+
+    section = dict(raw.get("policy", {}))
+    unknown = set(section) - {"accel_max_mps2"}
+    if unknown:
+        raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
+    accel_max = float(section.get("accel_max_mps2", POLICY_ACCEL_MAX_MPS2))
+    if not 0.0 < accel_max <= DIRECT_ACCEL_MAX_MPS2:
+        raise ValueError(f"[policy] accel_max_mps2 must be in (0, {DIRECT_ACCEL_MAX_MPS2}] "
+                         "(the SUMO env's direct-command ceiling)")
+    return {"accel_max": accel_max}
+
+
 def _load_components():
     names = {"obs": "build_observations", "reward": "team_reward", "policy": "CavPolicy",
              "safety": "safe_accel"}
@@ -143,7 +162,7 @@ def main(argv=None):
     summary = {"status": "failed", "updates": 0}
     try:
         raw = _read_config(args.config)
-        allowed = {"trainer", "run", "data", "world_model", "reward", "lanes", "counterfactual"}
+        allowed = {"trainer", "run", "data", "world_model", "reward", "lanes", "counterfactual", "policy"}
         if set(raw) - allowed:
             raise ValueError(f"unknown C4 config sections: {sorted(set(raw) - allowed)}")
         run = raw.get("run", {})
@@ -182,7 +201,11 @@ def main(argv=None):
         if not paths:
             raise ValueError("supply at least one local frozen WM checkpoint via --wm-ckpt")
         paths = [str(checked_path(path)) for path in paths]
+        policy_kwargs = policy_settings(raw)
         components = _load_components()
+        if hasattr(components["policy"], "set_accel_bounds"):      # fresh actor: configured cap
+            components["policy"].set_accel_bounds(components["policy"].accel_min,
+                                                  policy_kwargs["accel_max"])
         if cfg.critic_entry_backlog:     # SRCGRAD_NOTES.md: per-entrance backlog critic input
             components["critic"] = importlib.import_module("wms.control.policy").TeamCritic(
                 entry_backlog=True)
@@ -209,6 +232,8 @@ def main(argv=None):
                        lane_head=trainer.use_lanes, imagine_entries=trainer.config.imagine_entries,
                        lane_rules=asdict(lane_rules) if lane_rules is not None else None,
                        counterfactual=counterfactual.as_dict(),
+                       policy_accel_bounds=[getattr(trainer.policy, "accel_min", None),
+                                            getattr(trainer.policy, "accel_max", None)],
                        physics_steps_per_control=STEPS_PER_CONTROL,
                        imagined_horizon_s=trainer.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
                        train_windows=sum(map(len, train.groups.values())),

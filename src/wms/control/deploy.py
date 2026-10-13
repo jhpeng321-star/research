@@ -361,8 +361,10 @@ def run(args) -> dict:
                 exec_fns[f"policy_sample_{k}"] = make_exec_fn(
                     policy_fn.policy, enc, device=device, lane_rules=rules, deterministic=False,
                     noise_fn=stream_noise[f"policy_sample_{k}"], memory=memory)
-            exec_fns["hold_speed"] = make_exec_fn(None, None, device=device, lane_rules=rules, hold=True,
-                                                  memory=memory)
+            # hold: a = 0 (never calls the policy); the policy is passed only for its stored accel
+            # bound (safety ceiling, same as the imagined hold candidate; ACCELCAP_NOTES.md).
+            exec_fns["hold_speed"] = make_exec_fn(policy_fn.policy, None, device=device, lane_rules=rules,
+                                                  hold=True, memory=memory)
     if controller == "policy_check":
         from .contract import RewardWeights
         from .reward import team_reward

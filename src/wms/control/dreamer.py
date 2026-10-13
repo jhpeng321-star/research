@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import inspect
 import json
 import math
 import random
+import sys
 import time
 from dataclasses import asdict, dataclass
 
@@ -20,7 +22,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
-from .contract import PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
+from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
                              row_coefficients)
@@ -173,6 +175,14 @@ def _masked_mean(values, mask):
 def _detach(state):
     return {key: value.detach() if torch.is_tensor(value) else value
             for key, value in state.items()}
+
+
+def _accepts(fn, name: str) -> bool:
+    try:
+        params = inspect.signature(fn).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(p.name == name or p.kind is p.VAR_KEYWORD for p in params)
 
 
 class _Recompute:
@@ -377,11 +387,18 @@ class DreamerTrainer:
         need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
-        native = _Recompute(native_fn(self.counterfactual.native_cav), recompute)
+        native = _Recompute(native_fn(self.counterfactual.native_cav,
+                                      a_max=self.counterfactual.native_accel_max_mps2), recompute)
+        # Action bounds (ACCELCAP_NOTES.md): the policy's stored cap bounds its commands; native
+        # counterfactual CAVs use the native (SUMO CAV) accel; safety layers without an
+        # ``accel_max`` keyword are called unchanged.
+        policy_max = float(getattr(self.policy, "accel_max", ACCEL_MAX_MPS2))
+        native_max = float(self.counterfactual.native_accel_max_mps2)
         # Policy samples internally only without explicit (CRN) noise and when stochastic.
         policy_call = _Recompute(self.policy, recompute, preserve_rng=not (crn or deterministic))
         group_call = _Recompute(self.group_encoder, recompute)
-        safety_call = _Recompute(self.safety, recompute)
+        from .safety import with_accel_max
+        safety_call = _Recompute(with_accel_max(self.safety), recompute)
         reward_call = _Recompute(self.reward_fn, recompute)
         observe_call = _Recompute(self.observation_builder, recompute)
         value_call = _Recompute(self.target_critic, recompute)
@@ -435,6 +452,7 @@ class DreamerTrainer:
                 if held_out is None:
                     raise RuntimeError("controller factory did not sample an initial policy command")
                 return held_out
+            policy_proxy.accel_max = policy_max
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()
@@ -446,6 +464,8 @@ class DreamerTrainer:
                     extra["lane_rules"] = self.lane_rules
                 if act_mask is not None:
                     extra.update(act_mask=act_mask, native=native)
+                    if _accepts(self.controller_factory, "native_accel_max"):
+                        extra["native_accel_max"] = native_max
                 external_callback = self.controller_factory(
                     policy_proxy, group_call, safety_call,
                     lane_record if self.use_lanes else None, **extra)
@@ -471,9 +491,12 @@ class DreamerTrainer:
                     signal = group_call(obs, state)
                     policy_proxy(obs, signal)
                 command = held_out[0]
+                ceiling = policy_max
                 if act_mask is not None:       # counterfactual rows: non-acting CAVs native
                     command = torch.where(act_mask, command, native(state))
-                accel = safety_call(state, command)
+                    ceiling = torch.where(act_mask, torch.full_like(command, policy_max),
+                                          torch.full_like(command, native_max))
+                accel = safety_call(state, command, accel_max=ceiling)
                 cav = state["present"].bool() & state["is_cav"].bool()
                 accel = torch.where(cav, accel, torch.zeros_like(accel))
                 if step % STEPS_PER_CONTROL == 0:
@@ -920,12 +943,14 @@ class DreamerTrainer:
 
     def save_checkpoint(self, path):
         path = checked_path(path)
+        from .policy import accel_bounds_payload
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {"format": CHECKPOINT_FORMAT, "config": asdict(self.config),
                    "lane_rules": asdict(self.lane_rules) if self.lane_rules is not None else None,
                    "lane_head": self.use_lanes, "counterfactual": self.counterfactual.as_dict(),
                    "reward_weights": asdict(self.reward_weights),
                    "policy": self.policy.state_dict(), "group_encoder": self.group_encoder.state_dict(),
+                   **accel_bounds_payload(self.policy),
                    "critic": self.critic.state_dict(), "target_critic": self.target_critic.state_dict(),
                    "actor_optimizer": self.actor_optimizer.state_dict(),
                    "critic_optimizer": self.critic_optimizer.state_dict(),
@@ -949,11 +974,19 @@ class DreamerTrainer:
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
                                 payload["world_model_ids"] != self.world_model_ids):
             raise ValueError("resume requires the same frozen world-model ensemble")
-        from .policy import upgrade_policy_state
+        from .policy import check_payload_accel_bounds, upgrade_policy_state
+        configured = (getattr(self.policy, "accel_min", None), getattr(self.policy, "accel_max", None))
         missing, unexpected = self.policy.load_state_dict(upgrade_policy_state(payload["policy"]),
                                                           strict=False)
         if unexpected or any(not key.startswith("lane_head.") for key in missing):
             raise ValueError(f"policy weights do not match: missing={missing} unexpected={unexpected}")
+        check_payload_accel_bounds(self.policy, payload)
+        loaded = (getattr(self.policy, "accel_min", None), getattr(self.policy, "accel_max", None))
+        if loaded != configured:
+            # The checkpoint's stored bound wins (legacy [-3, 1.5] when it has none): the same
+            # weights must decode the same actions.  Re-decoding needs policy.set_accel_bounds.
+            print(f"WARNING: {path}: policy accel bounds {list(loaded)} from the checkpoint override "
+                  f"the configured {list(configured)} (ACCELCAP_NOTES.md)", file=sys.stderr, flush=True)
         # A c4_dreamer/1 actor has no lane head: the head keeps its uniform initialisation.
         self.group_encoder.load_state_dict(payload["group_encoder"])
         if policy_only:

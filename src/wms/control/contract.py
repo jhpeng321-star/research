@@ -25,7 +25,24 @@ CONTROL_DT_S = 1.0          # one policy decision per CAV per second (traffic_sh
 PHYSICS_DT_S = 0.5          # WM-S / SUMO step
 STEPS_PER_CONTROL = 2
 ACCEL_MIN_MPS2 = -3.0       # CAV actuation bounds (traffic_shepherd/config.py:43-44)
+#: LEGACY policy acceleration cap (ACCELCAP_NOTES.md).  Actors now store their own bounds
+#: (``CavPolicy.accel_min`` / ``accel_max``, persisted in the state dict and the checkpoint
+#: payload); a checkpoint WITHOUT stored bounds decodes with this value, so every pre-2026-10-13
+#: checkpoint (phase 1-4, policy_check, MAPPO) behaves exactly as before.  Safety / bridge helpers
+#: keep it as their default ceiling; callers bounding a POLICY's commands pass the policy's bound.
 ACCEL_MAX_MPS2 = 1.5
+LEGACY_ACCEL_MAX_MPS2 = ACCEL_MAX_MPS2
+#: Default cap of freshly constructed C4 actors (owner 2026-10-13): the ``normal_car`` driver
+#: accel of scenarios/idm/driver_routes.rou.xml (aggressive 3.0, cautious 2.0).  Trainers select it
+#: explicitly via config (``[policy] accel_max_mps2``).
+POLICY_ACCEL_MAX_MPS2 = 2.6
+#: SUMO-native CAV acceleration used by the counterfactual 'native' IDM rows.  CAVs have no
+#: CAV-only vType: each CAV keeps its driver vType (aggressive 3.0 / normal 2.6 / cautious 2.0,
+#: p = 0.1 / 0.7 / 0.2; the type is hidden from the controller), so the dominant normal_car value.
+NATIVE_CAV_ACCEL_MAX_MPS2 = 2.6
+#: Env-level ceiling of ``CavSumoEnv`` DIRECT commands (largest SUMO driver accel).  The policy's
+#: own bound (and, under speedMode 27, the CAV's SUMO vType accel) bind first.
+DIRECT_ACCEL_MAX_MPS2 = 3.0
 SPEED_LIMIT_MPS = 31.29
 
 # ---------------------------------------------------------------- sensing / comms

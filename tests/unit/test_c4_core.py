@@ -142,7 +142,7 @@ def test_network_shapes_masking_finiteness_and_parameter_budget(all_absent):
         assert torch.isfinite(tensor).all()
     assert not signal[~obs.cav_mask].any()
     assert not accel[~obs.cav_mask].any() and not log_prob[~obs.cav_mask].any()
-    assert (accel >= ACCEL_MIN_MPS2).all() and (accel <= ACCEL_MAX_MPS2).all()
+    assert (accel >= ACCEL_MIN_MPS2).all() and (accel <= actor.accel_max).all()
     if all_absent:
         assert not value.any()
     for module in (actor, rsu, critic):
@@ -153,7 +153,7 @@ def test_seed_determinism_and_tanh_log_density():
     x = state()
     obs = build_observations(x)
     torch.manual_seed(77)
-    actor, rsu = CavPolicy(), RsuGroupEncoder()
+    actor, rsu = CavPolicy(accel_max=ACCEL_MAX_MPS2), RsuGroupEncoder()   # legacy [-3, 1.5] formula
     group = rsu(obs, x["s_m"])
     torch.manual_seed(9)
     first = actor(obs, group)

@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from wms.control.contract import PHYSICS_DT_S, RewardWeights
+from wms.control.contract import ACCEL_MAX_MPS2, NATIVE_CAV_ACCEL_MAX_MPS2, PHYSICS_DT_S, RewardWeights
 from wms.control.counterfactual import (KIND_ALL, KIND_BASE, KIND_FLIP, KIND_INDIVIDUAL,
                                         CounterfactualConfig, build_variants, close_groups,
                                         decompose, group_rich, idm_native_accel, row_coefficients)
@@ -375,7 +375,8 @@ class Starts:
         return StartBatch({k: v.expand(batch_size, -1).clone() for k, v in self.x.items()}, {})
 
 
-def _real_trainer(lanes=True, counterfactual=True, hidden=16, **cfg):
+def _real_trainer(lanes=True, counterfactual=True, hidden=16, accel_max=ACCEL_MAX_MPS2, **cfg):
+    # accel_max: the scenario was tuned with the legacy 1.5 actor cap (ACCELCAP_NOTES.md).
     from wms.control.bridge import make_cav_controller
     from wms.control.obs import build_observations
     from wms.control.reward import team_reward
@@ -388,7 +389,7 @@ def _real_trainer(lanes=True, counterfactual=True, hidden=16, **cfg):
                     actor_lr=1e-3, critic_lr=1e-3)
     settings.update(cfg)
     return DreamerTrainer(
-        [LaneWorldModel()], CavPolicy(hidden_dim=hidden), GroupSignal(RsuGroupEncoder(hidden_dim=hidden)),
+        [LaneWorldModel()], CavPolicy(hidden_dim=hidden, accel_max=accel_max), GroupSignal(RsuGroupEncoder(hidden_dim=hidden)),
         TeamCritic(hidden_dim=hidden), Starts(x), observation_builder=build_observations,
         reward_fn=team_reward, safety=safe_accel, controller_factory=make_cav_controller,
         config=DreamerConfig(**settings), reward_weights=RewardWeights(),
@@ -416,7 +417,8 @@ def test_counterfactual_and_flip_one_rows_use_common_random_numbers():
     for start, row in variants.base_row.items():
         native = idm_native_accel({k: v[start:start + 1] for k, v in batch.state.items()})
         from wms.control.safety import safe_accel
-        expected = safe_accel({k: v[start:start + 1] for k, v in batch.state.items()}, native)[0]
+        expected = safe_accel({k: v[start:start + 1] for k, v in batch.state.items()}, native,
+                              accel_max=NATIVE_CAV_ACCEL_MAX_MPS2)[0]   # native CAV ceiling
         cav = batch.state["is_cav"][start]
         torch.testing.assert_close(imagined["actions"][0, 0, row][cav], expected[cav])
 

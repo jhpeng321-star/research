@@ -107,9 +107,18 @@ def default_candidates(model=None, *, policy, group_encoder, safety, bridge, lan
     if not math.isfinite(perturbation) or perturbation <= 0:
         raise ValueError("perturbation must be finite and positive")
     lane_kwargs = {} if lane_rules is None else {"lane_rules": lane_rules}
+    # The bridge bounds commands by ``actor.accel_max`` (ACCELCAP_NOTES.md): every candidate wrapper
+    # exposes the policy's stored bound, so a 2.6 actor is not clipped and a legacy one stays at 1.5.
+    from .policy import policy_accel_bounds
+    bound = policy_accel_bounds(policy)[1]
 
     def actor(obs, signal, **kwargs):
         return policy(obs, signal, **{**kwargs, "deterministic": True})
+    actor.accel_max = bound
+
+    def hold(obs, signal, **kwargs):
+        return hold_actor(obs, signal, **kwargs)
+    hold.accel_max = bound
 
     def factory(encoder, act=actor):
         return lambda: bridge(act, encoder, safety, **lane_kwargs)
@@ -122,6 +131,7 @@ def default_candidates(model=None, *, policy, group_encoder, safety, bridge, lan
                 noise = stream.noise(counter[0], tuple(obs.cav_mask.shape), device=obs.own.device)
                 counter[0] += 1
                 return policy(obs, signal, **{**kwargs, "deterministic": False, "noise": noise})
+            act.accel_max = bound
             return bridge(act, group_encoder, safety, **lane_kwargs)
         return make
 
@@ -130,7 +140,7 @@ def default_candidates(model=None, *, policy, group_encoder, safety, bridge, lan
     result = {"policy": factory(group_encoder)}
     result.update({f"policy_group_{k}": factory(encoder) for k, encoder in enumerate(encoders)})
     result.update({f"policy_sample_{k}": sampler(stream) for k, stream in enumerate(sample_streams)})
-    result["hold_speed"] = factory(group_encoder, hold_actor)
+    result["hold_speed"] = factory(group_encoder, hold)
     return result
 
 

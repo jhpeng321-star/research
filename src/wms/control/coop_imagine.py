@@ -44,6 +44,16 @@ def _model(ckpt, device="cpu"):
     return _MODELS[key]
 
 
+def callable_accel_max(fn) -> float:
+    """Policy bound of a SUMO callable: ``fn.accel_max`` (PolicyExecutor) or ``fn.policy.accel_max``,
+    else the legacy ``ACCEL_MAX_MPS2``."""
+    for obj in (fn, getattr(fn, "policy", None)):
+        value = getattr(obj, "accel_max", None)
+        if value is not None:
+            return float(value)
+    return float(ACCEL_MAX_MPS2)
+
+
 class CallableCavController:
     """Generic ``state -> accel [1,K]`` SUMO callable as a WM-S ``CavController`` [B,K,4].
 
@@ -53,8 +63,13 @@ class CallableCavController:
     interval (2 physics steps) and executed with ``direct_command_motion``.
     """
 
-    def __init__(self, fns: list, keep: torch.Tensor, k_full: int, cav_full: torch.Tensor):
+    def __init__(self, fns: list, keep: torch.Tensor, k_full: int, cav_full: torch.Tensor, *,
+                 accel_max: Optional[float] = None):
         self.fns, self.keep, self.k_full = fns, keep, int(k_full)
+        # Upper clamp = the controller's own stored policy bound (ACCELCAP_NOTES.md), legacy 1.5
+        # for callables without one (baselines / older executors).
+        self.accel_max = float(accel_max) if accel_max is not None else callable_accel_max(
+            fns[0] if fns else None)
         self.cav_full = cav_full          # [B, K_compact] original CAV mask
         self.held = None
         self.index = 0
@@ -99,14 +114,14 @@ class CallableCavController:
                 held[b] = torch.nan_to_num(row, nan=0.0)
             self.held = held
         self.index += 1
-        held = torch.where(mask, self.held.clamp(ACCEL_MIN_MPS2, ACCEL_MAX_MPS2),
+        held = torch.where(mask, self.held.clamp(ACCEL_MIN_MPS2, self.accel_max),
                            torch.zeros_like(self.held))
         lane = _merge_lane(state, mask)
         vv = torch.where(present, v, torch.zeros_like(v))
         ss = torch.where(present, s, torch.zeros_like(s))
-        command = torch.stack((held, vv + ACCEL_MAX_MPS2 * PHYSICS_DT_S), -1)
+        command = torch.stack((held, vv + self.accel_max * PHYSICS_DT_S), -1)
         next_s, next_v, applied, _ = direct_command_motion(ss, vv, command, PHYSICS_DT_S,
-                                                           ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+                                                           ACCEL_MIN_MPS2, self.accel_max)
         return torch.stack((next_s, lane.to(next_s.dtype), next_v, applied), -1)
 
 

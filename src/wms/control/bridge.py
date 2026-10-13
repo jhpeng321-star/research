@@ -9,7 +9,8 @@ from torch import Tensor
 
 from wms.core.constants import DEFAULT_LENGTH_M
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, MERGE_S0_M, MERGE_S1_M,
-                       PHYSICS_DT_S, STEPS_PER_CONTROL, CavController, Policy, SafetyLayer)
+                       NATIVE_CAV_ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, CavController,
+                       Policy, SafetyLayer)
 from .obs import build_observations
 from .rsu_field import build_rsu_field
 
@@ -46,8 +47,9 @@ def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
 
 def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, record=None, *,
                         lane_rules=None, act_mask: Optional[Tensor] = None,
-                        native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None
-                        ) -> CavController:
+                        native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
+                        accel_max: Optional[float] = None,
+                        native_accel_max: Optional[float] = None) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -67,12 +69,26 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     blocked by the head.  ``act_mask`` [B,K] (counterfactual rows): only these CAVs follow
     the policy; the other CAVs follow ``native(state) -> accel [B,K]`` (re-evaluated each
     physics step) and stay in lane (forced merge still applies).
+
+    ``accel_max`` (ACCELCAP_NOTES.md): the upper bound of the POLICY's commands, used as the
+    safety ceiling and the motion clamp of policy-driven CAVs; default ``policy.accel_max``
+    (a wrapper function may expose it as an attribute), else the legacy 1.5.  Native CAVs of
+    counterfactual rows use ``native_accel_max`` (default ``NATIVE_CAV_ACCEL_MAX_MPS2``).  A
+    safety layer without an ``accel_max`` keyword is called unchanged.
     """
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
     direct_command_motion = import_module("wms.model.cav").direct_command_motion
     if act_mask is not None and native is None:
         raise ValueError("act_mask requires a native CAV behaviour")
+    from .safety import with_accel_max
+    safety = with_accel_max(safety)
+    policy_max = float(accel_max if accel_max is not None
+                       else getattr(policy, "accel_max", ACCEL_MAX_MPS2))
+    native_max = float(native_accel_max if native_accel_max is not None
+                       else NATIVE_CAV_ACCEL_MAX_MPS2)
+    # Motion clamp (float): the largest ceiling in use; per-slot ceilings go through target_v.
+    motion_max = policy_max if act_mask is None else max(policy_max, native_max)
     dwell = None
     if lane_rules is not None:
         from .lanes import LaneDwell
@@ -143,10 +159,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         previous_mask = mask
         lane = _merge_lane({**state, "lane": lane_now}, mask)
         command_accel = held
+        ceiling = policy_max
         if act_mask is not None:
             command_accel = torch.where(acting, held, native({**state, "lane": lane}))
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
-        executed = safety({**state, "lane": lane}, command_accel)
+            ceiling = torch.where(acting, torch.full_like(held, policy_max),
+                                  torch.full_like(held, native_max))
+        executed = safety({**state, "lane": lane}, command_accel, accel_max=ceiling)
         if decision:
             last_command = torch.where(mask, executed, torch.zeros_like(executed))
             last_intent = intent
@@ -157,11 +176,11 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         present = state["present"].bool()
         s = torch.where(present, state["s_m"], torch.zeros_like(state["s_m"]))
         v = torch.where(present, state["v_mps"], torch.zeros_like(state["v_mps"]))
-        target_v = v + ACCEL_MAX_MPS2 * PHYSICS_DT_S
+        target_v = v + ceiling * PHYSICS_DT_S
         command = torch.stack((executed, target_v), -1)
         next_s, next_v, applied, _ = direct_command_motion(
             s, v, command, PHYSICS_DT_S,
-            ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+            ACCEL_MIN_MPS2, motion_max)
         return torch.stack((next_s, lane.to(next_s.dtype), next_v, applied), -1)
 
     return controller

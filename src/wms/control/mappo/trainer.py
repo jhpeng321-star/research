@@ -37,6 +37,7 @@ import json
 import os
 import random
 import re
+import sys
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -145,6 +146,14 @@ class Budget:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+def _warn_accel_override(path, configured, loaded) -> None:
+    """The checkpoint's stored actor bound wins (legacy 1.5 when it has none; ACCELCAP_NOTES.md)."""
+    if configured is not None and loaded is not None and abs(configured - loaded) > 1e-9:
+        print(f"WARNING: {path}: actor accel_max {loaded} from the checkpoint overrides the configured "
+              f"{configured} (re-decoding needs an explicit policy.set_accel_bounds)",
+              file=sys.stderr, flush=True)
 
 
 def _torch_load(path: Path) -> dict:
@@ -349,7 +358,9 @@ class MappoTrainer:
         self.episode_index = state["episode_index"]
         self.episodes_done = state["episodes_done"]
         self.failures = state.get("failures", 0)
+        configured = getattr(self.policy, "accel_max", None)
         self.policy.load_state_dict(state["policy"])
+        _warn_accel_override(path, configured, getattr(self.policy, "accel_max", None))
         self.group_encoder.load_state_dict(state["group_encoder"])
         self.critic.load_state_dict(state["critic"])
         self.updater.actor_opt.load_state_dict(state["actor_opt"])
@@ -388,7 +399,9 @@ class MappoTrainer:
         if not isinstance(state, dict) or "policy" not in state or "group_encoder" not in state:
             raise ValueError(f"{path}: neither a trainer checkpoint nor an exported actor")
         is_trainer = state.get("format") == CHECKPOINT_FORMAT and "critic" in state
+        configured = getattr(self.policy, "accel_max", None)
         self.policy.load_state_dict(state["policy"], strict=True)
+        _warn_accel_override(path, configured, getattr(self.policy, "accel_max", None))
         self.group_encoder.load_state_dict(state["group_encoder"], strict=True)
         if is_trainer:
             self.critic.load_state_dict(state["critic"], strict=True)

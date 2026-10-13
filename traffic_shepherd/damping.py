@@ -94,11 +94,15 @@ def frame_problem(frame, now_s: float, config: AdapterConfig) -> str | None:
     return None
 
 
-def direct_target(frame, acceleration: float, config: AdapterConfig):
-    """Preserve the tested speed-bound clip; no IDM addition or jerk/gap projection."""
+def direct_target(frame, acceleration: float, config: AdapterConfig, accel_max: float | None = None):
+    """Preserve the tested speed-bound clip; no IDM addition or jerk/gap projection.
+
+    ``accel_max`` (optional) replaces the adopted 1.5 upper bound for C4 DIRECT-output commands
+    only (``CavSumoEnv`` direct mode, ACCELCAP_NOTES.md); damping / wall / PI keep the config."""
     dt = config.control_dt_s
+    upper = config.acceleration_max_mps2 if accel_max is None else float(accel_max)
     lo = max(config.acceleration_min_mps2, -frame.speed_mps / dt)
-    hi = min(config.acceleration_max_mps2, (frame.allowed_speed_mps - frame.speed_mps) / dt)
+    hi = min(upper, (frame.allowed_speed_mps - frame.speed_mps) / dt)
     if not isfinite(acceleration) or lo > hi:
         return None, None
     command = float(np.clip(acceleration, lo, hi))

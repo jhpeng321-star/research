@@ -37,7 +37,8 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
-from wms.control.contract import ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, CONTROL_DT_S, Observation
+from wms.control.contract import (ACCEL_MIN_MPS2, CONTROL_DT_S, LEGACY_ACCEL_MAX_MPS2,
+                                  Observation)
 from wms.control.lanes import (
     LANE_DELTA,
     LaneDwell,
@@ -54,14 +55,26 @@ from wms.control.safety import safe_accel
 STATE_KEYS = ("s_m", "v_mps", "a_mps2", "lane", "present", "is_cav", "length_m",
               "cmd_accel_mps2", "lane_intent")
 EXPORT_FORMAT = "c4_dreamer/3"     # payload schema read by wms.control.policy.load_policy_fn
-_SCALE = (ACCEL_MAX_MPS2 - ACCEL_MIN_MPS2) / 2.0
-_MID = (ACCEL_MAX_MPS2 + ACCEL_MIN_MPS2) / 2.0
+#: Legacy tanh scale / midpoint (1.5 cap); actors carry their own bounds (ACCELCAP_NOTES.md).
+_SCALE = (LEGACY_ACCEL_MAX_MPS2 - ACCEL_MIN_MPS2) / 2.0
+_MID = (LEGACY_ACCEL_MAX_MPS2 + ACCEL_MIN_MPS2) / 2.0
 _HALF_LOG_2PI_E = 0.5 * (1.0 + math.log(2.0 * math.pi))
 
 
-def build_networks() -> tuple[CavPolicy, RsuGroupEncoder, TeamCritic]:
-    """The C4 networks at their default sizes (the only sizes ``load_policy_fn`` rebuilds)."""
-    return CavPolicy(lane_head=True), RsuGroupEncoder(), TeamCritic()
+def build_networks(accel_max: float = LEGACY_ACCEL_MAX_MPS2) -> tuple[CavPolicy, RsuGroupEncoder,
+                                                                      TeamCritic]:
+    """The C4 networks at their default sizes (the only sizes ``load_policy_fn`` rebuilds).
+
+    ``accel_max``: the actor's action cap.  MAPPO keeps the LEGACY 1.5 unless the config sets
+    ``[policy] accel_max_mps2`` (ACCELCAP_NOTES.md); a loaded state dict brings its own bound."""
+    return CavPolicy(lane_head=True, accel_max=accel_max), RsuGroupEncoder(), TeamCritic()
+
+
+def policy_scale(policy) -> float:
+    """tanh scale of ``policy`` (legacy 1.5-cap scale for objects without stored bounds)."""
+    lo = float(getattr(policy, "accel_min", ACCEL_MIN_MPS2))
+    hi = float(getattr(policy, "accel_max", LEGACY_ACCEL_MAX_MPS2))
+    return (hi - lo) / 2.0
 
 
 @contextmanager
@@ -79,10 +92,11 @@ def capture_heads(policy: CavPolicy):
             handle.remove()
 
 
-def latent_log_prob(mean: Tensor, log_std: Tensor, latent: Tensor) -> Tensor:
-    """log pi(accel) of the tanh-squashed Gaussian at pre-tanh ``latent`` (CavPolicy formula)."""
+def latent_log_prob(mean: Tensor, log_std: Tensor, latent: Tensor, scale: float = _SCALE) -> Tensor:
+    """log pi(accel) of the tanh-squashed Gaussian at pre-tanh ``latent`` (CavPolicy formula);
+    ``scale`` = the actor's tanh scale (:func:`policy_scale`)."""
     std = log_std.clamp(-5.0, 1.0).exp()
-    log_jacobian = math.log(_SCALE) + 2.0 * (math.log(2.0) - latent - F.softplus(-2.0 * latent))
+    log_jacobian = math.log(scale) + 2.0 * (math.log(2.0) - latent - F.softplus(-2.0 * latent))
     return torch.distributions.Normal(mean, std).log_prob(latent) - log_jacobian
 
 
@@ -126,9 +140,10 @@ class ActorStep:
         new_lane, changed = apply_lane_choices(state, out.lane_choice, mask, rules, cav)
         intent = torch.tensor(LANE_DELTA, device=accel.device)[out.lane_choice].to(accel.dtype)
         accel = accel.float()
-        safe = safe_accel(state, accel)
+        bound = float(getattr(self.policy, "accel_max", LEGACY_ACCEL_MAX_MPS2))
+        safe = safe_accel(state, accel, accel_max=bound)
         if bool(changed.any()):
-            safe = torch.minimum(safe, safe_accel({**state, "lane": new_lane}, accel))
+            safe = torch.minimum(safe, safe_accel({**state, "lane": new_lane}, accel, accel_max=bound))
         self.memory.record(state, torch.where(cav, safe, torch.zeros_like(safe)),
                            torch.where(cav, intent, torch.zeros_like(intent)))
         command = torch.where(cav, safe, torch.full_like(safe, float("nan")))
@@ -192,7 +207,8 @@ def evaluate_actions(policy: CavPolicy, group_encoder: RsuGroupEncoder,
         policy(obs_c, signal, deterministic=True, lane_mask=mask_c)
     mean, log_std = heads["head"].unbind(-1)
     u = latent.gather(1, index)
-    logp_accel = torch.where(cav, latent_log_prob(mean, log_std, u), torch.zeros_like(mean))
+    logp_accel = torch.where(cav, latent_log_prob(mean, log_std, u, policy_scale(policy)),
+                             torch.zeros_like(mean))
     entropy_accel = torch.where(cav, _HALF_LOG_2PI_E + log_std.clamp(-5.0, 1.0),
                                 torch.zeros_like(mean))
     feasible = _feasible(mask_c, cav)
@@ -212,8 +228,9 @@ def export_payload(policy: CavPolicy, group_encoder: RsuGroupEncoder, lane_rules
                    **extra) -> dict:
     """Deploy actor in the ``c4_dreamer/3`` payload schema (policy, group_encoder, lane_rules),
     tagged ``trainer = "mappo"``; loads with ``wms.control.policy.load_policy_fn`` unchanged."""
+    from wms.control.policy import accel_bounds_payload
     payload = {"format": EXPORT_FORMAT, "trainer": "mappo", "lane_head": True,
-               "lane_rules": asdict(lane_rules),
+               "lane_rules": asdict(lane_rules), **accel_bounds_payload(policy),
                "policy": {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()},
                "group_encoder": {k: v.detach().cpu().clone()
                                  for k, v in group_encoder.state_dict().items()}}

@@ -11,7 +11,7 @@ import dataclasses
 from pathlib import Path
 from typing import Mapping
 
-from wms.control.contract import RewardWeights
+from wms.control.contract import LEGACY_ACCEL_MAX_MPS2, RewardWeights
 from wms.control.lanes import LaneRules
 
 from .agent import build_networks
@@ -79,10 +79,18 @@ def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_pat
                 "cleanup_scenarios": bool(env_section.get("cleanup_scenarios", True))}
     if env_name != "fake":
         env_spec["scenario_root"] = str((out_dir / "scenarios").resolve())
-    policy, encoder, critic = build_networks()
+    # Actor action cap (ACCELCAP_NOTES.md): LEGACY 1.5 unless ``[policy] accel_max_mps2`` is set
+    # (a resumed / --init-from checkpoint brings its own stored bound).
+    policy_section = dict(cfg.get("policy", {}))
+    unknown = set(policy_section) - {"accel_max_mps2"}
+    if unknown:
+        raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
+    accel_max = float(policy_section.get("accel_max_mps2", LEGACY_ACCEL_MAX_MPS2))
+    policy, encoder, critic = build_networks(accel_max=accel_max)
     meta = {"env": env_spec, "reward_weights": dataclasses.asdict(weights),
             "config_path": config_path, "smoke": smoke,
-            "actor": "wms.control.policy.CavPolicy(lane_head=True)",
+            "actor": f"wms.control.policy.CavPolicy(lane_head=True, accel_max={accel_max})",
+            "accel_max_mps2": accel_max,
             "group_encoder": "wms.control.policy.RsuGroupEncoder",
             "critic": "wms.control.policy.TeamCritic",
             "reward": "wms.control.reward.team_reward (per physics step, summed per control step)"}

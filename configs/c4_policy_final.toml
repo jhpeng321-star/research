@@ -15,3 +15,13 @@ output_dir = "runs/active/C4-POLICY-FINAL"
 gamma = 0.995
 source_wait_grad = true
 critic_entry_backlog = true
+
+[policy]
+# ACCELCAP_NOTES.md (owner-approved 2026-10-13 evening): actor action cap raised from the legacy 1.5 to the normal_car
+# human accel 2.6 m/s^2 (scenarios/idm/driver_routes.rou.xml; aggressive 3.0, cautious 2.0). Stored in the checkpoint;
+# older checkpoints keep decoding with 1.5.
+accel_max_mps2 = 2.6
+
+[counterfactual]
+# 'native' counterfactual CAV rows = SUMO-native CAV behaviour (CAVs keep their driver vType; normal_car accel 2.6).
+native_accel_max_mps2 = 2.6

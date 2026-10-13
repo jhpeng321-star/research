@@ -4,7 +4,12 @@ One environment = one TraCI connection in this process (run one per worker proce
 Scenario: ``traffic_shepherd.scenarios.build_scenario`` (exogenous Poisson demand, driver
 types, nested CAV identity draws at ``penetration``), 0.5 s physics, 1 s control,
 CAV speedMode 27 (the campaign mode, ``CommandOwnership(cav_speed_mode=27)``), CAV
-acceleration bounds [-3, 1.5] m/s^2 from the adapter config.
+acceleration bounds [-3, 1.5] m/s^2 from the adapter config for damping / PI / wall; ``direct``
+commands use the upper bound ``direct_accel_max_mps2`` (default 3.0 = the largest SUMO driver
+accel; ACCELCAP_NOTES.md) so a policy's own stored cap (legacy 1.5, new 2.6) is what binds.
+CAVs keep their driver vType (no CAV-only vType), so under speedMode 27 (bit 1 = respect the
+vType max acceleration) SUMO itself caps a CAV at its type's accel (cautious 2.0, normal 2.6,
+aggressive 3.0).
 
 Every CAV command goes through :class:`traffic_shepherd.ownership.CommandOwnership`
 (``wall_commands={vid: accel}`` -> ``direct_target`` -> ``slowDown``), the sole
@@ -73,6 +78,8 @@ CAV_SPEED_MODE = 27
 SPEED_LIMIT_MPS = 31.29
 PI_U_MPS = 31.29
 DEFAULT_K = 192
+#: Upper bound of DIRECT commands (wms.control.contract.DIRECT_ACCEL_MAX_MPS2; ACCELCAP_NOTES.md).
+DIRECT_ACCEL_MAX_MPS2 = 3.0
 
 
 class CavEnvError(RuntimeError):
@@ -87,7 +94,8 @@ class CavSumoEnv:
                  history_ticks: int = 241, use_subscriptions: bool = True,
                  ttc: bool = True, sumo_binary=None, device="cpu",
                  sensor_check_every_s: int = 10, physics_log: bool = True,
-                 extra_sumo_cli=None, entry_queue_in_state: bool = False):
+                 extra_sumo_cli=None, entry_queue_in_state: bool = False,
+                 direct_accel_max_mps2: float = DIRECT_ACCEL_MAX_MPS2):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -108,6 +116,10 @@ class CavSumoEnv:
         # opt-in ``state["entry_queue"]`` [1] (see :meth:`state`); off by default because
         # deploy / rsu_check / coop_imagine repeat or gather every state key.
         self.entry_queue_in_state = bool(entry_queue_in_state)
+        # Direct-output upper bound (the policy's stored cap binds first; damping/PI/wall keep 1.5).
+        self.direct_accel_max_mps2 = float(direct_accel_max_mps2)
+        if not 0.0 < self.direct_accel_max_mps2 <= DIRECT_ACCEL_MAX_MPS2:
+            raise ValueError(f"direct_accel_max_mps2 must be in (0, {DIRECT_ACCEL_MAX_MPS2}]")
         self.last_entry_queue_steps: list = []
         self.last_source_wait_steps: list = []
         self.binary = sumo_binary or shutil.which("sumo")
@@ -410,6 +422,9 @@ class CavSumoEnv:
                     self.sensor_mismatches += 1
         in_window = now >= self.warmup_s - 1e-9
         mode = self.mode if in_window else "native"
+        # Direct-mode ticks raise the wall/direct request ceiling; every other tick (wall law,
+        # damping, PI, native) keeps the adopted config bound.
+        self.ownership.wall_accel_max_mps2 = None
         requested = {}
         if mode != "direct" and self._lc_original:
             self._lane_control(set(), live)
@@ -425,6 +440,7 @@ class CavSumoEnv:
         elif mode == "damping":
             records = self.ownership.step(frames, now_s=now, live_ids=live)
         elif mode == "direct":
+            self.ownership.wall_accel_max_mps2 = self.direct_accel_max_mps2
             requested = self._accel_by_vehicle(accel_by_slot)
             wall = {v: a for v, a in requested.items()
                     if v in live_cavs and math.isfinite(a)}

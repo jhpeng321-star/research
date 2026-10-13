@@ -43,7 +43,7 @@ from torch import Tensor
 
 from wms.core.constants import DEFAULT_LENGTH_M
 
-from .contract import ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, MERGE_S1_M, SPEED_LIMIT_MPS
+from .contract import ACCEL_MIN_MPS2, MERGE_S1_M, NATIVE_CAV_ACCEL_MAX_MPS2, SPEED_LIMIT_MPS
 
 KIND_ALL, KIND_BASE, KIND_INDIVIDUAL, KIND_GROUP, KIND_FLIP = 0, 1, 2, 3, 4
 KIND_NAMES = ("all", "base", "individual", "group", "flip")
@@ -56,6 +56,9 @@ class CounterfactualConfig:
     n_individual: int = 2            # individual rows per start (at least; group members are added)
     n_group: int = 2                 # disjoint group rows per start
     n_flip: int = 2                  # flip-one rows (G without i) per group
+    # IDM a_max of the 'native' CAV rows = SUMO-native CAV accel (ACCELCAP_NOTES.md; was the
+    # policy cap 1.5 before 2026-10-13 - set 1.5 to reproduce older runs).  Not the policy cap.
+    native_accel_max_mps2: float = NATIVE_CAV_ACCEL_MAX_MPS2
     group_radius_m: float = 150.0    # |ds| chaining radius (lanes ignored: walls span lanes)
     group_min_size: int = 2
     group_max_size: int = 6
@@ -136,10 +139,12 @@ class CounterfactualConfig:
 
 # ------------------------------------------------------------------ native CAV
 def idm_native_accel(state: Mapping[str, Tensor], *, v0: float = SPEED_LIMIT_MPS,
-                     a_max: float = ACCEL_MAX_MPS2, b: float = 2.0, s0: float = 2.0,
+                     a_max: float = NATIVE_CAV_ACCEL_MAX_MPS2, b: float = 2.0, s0: float = 2.0,
                      time_headway_s: float = 1.2, delta: float = 4.0) -> Tensor:
-    """Simple IDM CAV acceleration [B,K] (same-lane nearest leader), clamped to the CAV bounds.
-    A designed baseline used ONLY as the counterfactual 'native' reference, never as an action."""
+    """Simple IDM CAV acceleration [B,K] (same-lane nearest leader), clamped to [-3, a_max].
+    A designed baseline used ONLY as the counterfactual 'native' reference, never as an action.
+    ``a_max`` models SUMO-native CAV behaviour (CAVs keep their driver vType; default the
+    normal_car accel 2.6), NOT the policy's action cap."""
     present = state["present"].bool()
     lane = state["lane"].long()
     valid = present & (lane >= 0)
@@ -159,7 +164,7 @@ def idm_native_accel(state: Mapping[str, Tensor], *, v0: float = SPEED_LIMIT_MPS
     s_star = s0 + (v * time_headway_s + v * dv / (2.0 * math.sqrt(a_max * b))).clamp_min(0.0)
     free = 1.0 - (v / v0).pow(delta)
     accel = a_max * (free - torch.where(has, (s_star / gap).square(), torch.zeros_like(gap)))
-    accel = accel.clamp(ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+    accel = accel.clamp(ACCEL_MIN_MPS2, a_max)
     return torch.where(valid, accel, torch.zeros_like(accel))
 
 
@@ -167,8 +172,16 @@ def hold_native_accel(state: Mapping[str, Tensor]) -> Tensor:
     return torch.zeros_like(state["s_m"])
 
 
-def native_fn(name: str):
-    return idm_native_accel if name == "idm" else hold_native_accel
+def native_fn(name: str, a_max: float = None):
+    if name != "idm":
+        return hold_native_accel
+    if a_max is None:
+        return idm_native_accel
+    a_max = float(a_max)
+
+    def idm(state):
+        return idm_native_accel(state, a_max=a_max)
+    return idm
 
 
 # ------------------------------------------------------------------ groups / start selection

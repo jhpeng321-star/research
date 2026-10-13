@@ -17,7 +17,7 @@ import os
 import torch
 from torch import Tensor
 
-from wms.control.contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, CONTROL_DT_S, MERGE_S1_M,
+from wms.control.contract import (ACCEL_MIN_MPS2, CONTROL_DT_S, DIRECT_ACCEL_MAX_MPS2, MERGE_S1_M,
                                   N_LANES, SPEED_LIMIT_MPS)
 
 VEHICLE_LENGTH_M = 5.0
@@ -82,7 +82,8 @@ class FakeCavEnv:
             raise RuntimeError("episode is done; call reset()")
         dt = CONTROL_DT_S
         cmd = torch.as_tensor(accel_by_slot, dtype=torch.float32).reshape(-1)
-        cmd = torch.nan_to_num(cmd, nan=0.0).clamp(ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
+        # Same env-level DIRECT ceiling as CavSumoEnv (ACCELCAP_NOTES.md); the actor's bound binds first.
+        cmd = torch.nan_to_num(cmd, nan=0.0).clamp(ACCEL_MIN_MPS2, DIRECT_ACCEL_MAX_MPS2)
         cav = self._is_cav & self._present
         hdv = self._rand(self.k_slots, lo=-0.5, hi=0.5)
         self._a = torch.where(cav, cmd, hdv)

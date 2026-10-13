@@ -9,8 +9,9 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.distributions import Normal
 
-from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, F_OWN, F_REPORT, GROUP_SIGNAL_DIM,
-                       MERGE_S0_M, MERGE_S1_M, OWN_FEATURES, REPORT_FEATURES, Observation)
+from .contract import (ACCEL_MIN_MPS2, F_OWN, F_REPORT, GROUP_SIGNAL_DIM, LEGACY_ACCEL_MAX_MPS2,
+                       MERGE_S0_M, MERGE_S1_M, OWN_FEATURES, POLICY_ACCEL_MAX_MPS2,
+                       REPORT_FEATURES, Observation)
 from .contract import F_RSU_CELL
 from .lanes import LANE_DELTA, N_LANE_CHOICES
 from .obs import FEATURE_NORMALIZATION, normalize_features
@@ -44,7 +45,7 @@ def draw_policy_noise(shape, *, generator=None, device=None, dtype=torch.float32
 
 class PolicyOutput(NamedTuple):
     """Per-CAV actions and their statistics, all [B,K] (zeros on non-CAV slots)."""
-    accel: Tensor              # direct acceleration in [ACCEL_MIN, ACCEL_MAX] (before safety)
+    accel: Tensor              # direct acceleration in [policy.accel_min, policy.accel_max] (before safety)
     lane_choice: Tensor        # long: LANE_STAY / LANE_LEFT / LANE_RIGHT (feasible by the mask)
     log_prob_accel: Tensor
     log_prob_lane: Tensor      # log pi(choice | masked logits); 0 when only "stay" is feasible
@@ -62,12 +63,22 @@ class CavPolicy(nn.Module):
     head (masked logits; ``stay`` always feasible).  ``noise`` (:class:`PolicyNoise`)
     replaces the internal draws (common random numbers).  ``lane_head=False`` builds the
     pre-2026-10-12 accel-only actor (``c4_dreamer/1`` checkpoints): it always stays.
+
+    Action bounds (ACCELCAP_NOTES.md): ``tanh`` is mapped to ``[accel_min, accel_max]``.  The
+    bounds are a stored property of the actor: the persistent buffer ``accel_bounds`` (float64,
+    in ``state_dict``) carries them through every checkpoint, and a state dict WITHOUT it (every
+    pre-2026-10-13 checkpoint) loads with the legacy bound ``[-3, 1.5]``, whatever the constructor
+    default was, so old checkpoints decode bit-identically.  Fresh actors default to
+    ``POLICY_ACCEL_MAX_MPS2`` (2.6); trainers pass the configured value explicitly.
     """
 
     supports_noise = True
 
-    def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True) -> None:
+    def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True, *,
+                 accel_min: float = ACCEL_MIN_MPS2, accel_max: float = POLICY_ACCEL_MAX_MPS2) -> None:
         super().__init__()
+        self.register_buffer("accel_bounds", torch.zeros(2, dtype=torch.float64))
+        self.set_accel_bounds(accel_min, accel_max)
         self.own_encoder = nn.Sequential(nn.Linear(F_OWN, hidden_dim), nn.SiLU(),
                                          nn.Linear(hidden_dim, hidden_dim), nn.SiLU())
         self.report_encoder = nn.Sequential(nn.Linear(F_REPORT, hidden_dim), nn.SiLU())
@@ -82,6 +93,35 @@ class CavPolicy(nn.Module):
             # Uniform start over the feasible choices: no designed lane preference.
             nn.init.zeros_(self.lane_head[-1].weight)
             nn.init.zeros_(self.lane_head[-1].bias)
+
+    def set_accel_bounds(self, accel_min: float, accel_max: float) -> None:
+        """Set the action bounds.  This changes how the SAME weights decode actions: use it only
+        for fresh actors or an explicit, documented re-decode of a loaded checkpoint."""
+        accel_min, accel_max = float(accel_min), float(accel_max)
+        if not (accel_min < 0.0 < accel_max):
+            raise ValueError(f"accel bounds must satisfy accel_min < 0 < accel_max, got "
+                             f"[{accel_min}, {accel_max}]")
+        self.accel_min, self.accel_max = accel_min, accel_max
+        with torch.no_grad():
+            self.accel_bounds.data = torch.tensor((accel_min, accel_max), dtype=torch.float64,
+                                                  device=self.accel_bounds.device)
+
+    def _sync_accel_bounds(self) -> None:
+        # Rounded: a float32 cast of the module (``.float()``) must not perturb 2.6 -> 2.5999999.
+        lo, hi = (round(float(x), 6) for x in self.accel_bounds.detach().cpu().double())
+        self.accel_min, self.accel_max = lo, hi
+
+    def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict, missing_keys,
+                              unexpected_keys, error_msgs):
+        key = prefix + "accel_bounds"
+        if key not in state_dict:       # pre-2026-10-13 checkpoint: legacy bound, decoded as before
+            state_dict[key] = torch.tensor((ACCEL_MIN_MPS2, LEGACY_ACCEL_MAX_MPS2), dtype=torch.float64)
+        else:                           # keep the exact float64 value whatever the module dtype
+            state_dict[key] = state_dict[key].to(torch.float64)
+        self.accel_bounds.data = self.accel_bounds.data.to(torch.float64)
+        super()._load_from_state_dict(state_dict, prefix, local_metadata, strict, missing_keys,
+                                      unexpected_keys, error_msgs)
+        self._sync_accel_bounds()
 
     def forward(self, obs: Observation, group_signal: Tensor, *, deterministic: bool = False,
                 lane_mask: Optional[Tensor] = None, noise: Optional[PolicyNoise] = None):
@@ -103,8 +143,8 @@ class CavPolicy(nn.Module):
         else:
             eps = (noise.accel.to(mean) if noise is not None else torch.randn_like(mean))
             latent = mean + std * eps          # reparameterised (rsample)
-        scale = (ACCEL_MAX_MPS2 - ACCEL_MIN_MPS2) / 2.0
-        midpoint = (ACCEL_MAX_MPS2 + ACCEL_MIN_MPS2) / 2.0
+        scale = (self.accel_max - self.accel_min) / 2.0
+        midpoint = (self.accel_max + self.accel_min) / 2.0
         accel = midpoint + scale * torch.tanh(latent)
         # Stable log(1-tanh(z)^2), including saturated latent values.
         log_jacobian = math.log(scale) + 2.0 * (math.log(2.0) - latent - F.softplus(-2.0 * latent))
@@ -252,6 +292,38 @@ class TeamCritic(nn.Module):
 CHECKPOINT_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", "c4_dreamer/3")
 
 
+def policy_accel_bounds(policy) -> tuple[float, float]:
+    """``(accel_min, accel_max)`` of a policy (or a wrapper exposing ``accel_max``); the legacy
+    ``[-3, 1.5]`` for objects without stored bounds (e.g. ``None`` / hold)."""
+    return (float(getattr(policy, "accel_min", ACCEL_MIN_MPS2)),
+            float(getattr(policy, "accel_max", LEGACY_ACCEL_MAX_MPS2)))
+
+
+def accel_bounds_payload(policy) -> dict:
+    """Checkpoint payload fields recording the actor's action bounds (readable without torch
+    state-dict inspection; the authoritative copy is the ``accel_bounds`` buffer)."""
+    if getattr(policy, "accel_max", None) is None:      # custom actors without stored bounds
+        return {}
+    lo, hi = policy_accel_bounds(policy)
+    return {"accel_min_mps2": lo, "accel_max_mps2": hi}
+
+
+def check_payload_accel_bounds(policy, payload) -> None:
+    """Payload without bound fields: whatever the state dict says (legacy when absent).  With
+    fields: they must agree with the loaded actor (a state dict lacking the buffer but a payload
+    carrying the fields adopts the payload's bounds)."""
+    if "accel_max_mps2" not in payload or not hasattr(policy, "set_accel_bounds"):
+        return
+    lo = float(payload.get("accel_min_mps2", ACCEL_MIN_MPS2))
+    hi = float(payload["accel_max_mps2"])
+    state = payload.get("policy") or {}
+    if not any(str(key).endswith("accel_bounds") for key in state):
+        policy.set_accel_bounds(lo, hi)
+    elif (abs(policy.accel_min - lo) > 1e-6) or (abs(policy.accel_max - hi) > 1e-6):
+        raise ValueError(f"checkpoint accel bounds disagree: payload [{lo}, {hi}] vs state dict "
+                         f"[{policy.accel_min}, {policy.accel_max}]")
+
+
 def upgrade_policy_state(state: dict) -> dict:
     """Zero-pad the report encoder of pre-/3 actors (11 report features) to the current
     ``F_REPORT``: the new command/intent report features get zero weights, so the upgraded actor
@@ -291,6 +363,8 @@ class PolicyExecutor:
         if not hold and (policy is None or group_fn is None):
             raise ValueError("a policy and a group-signal function are required unless hold=True")
         self.policy, self.group_encoder = policy, group_fn
+        # The policy's own stored action bounds bound its commands (legacy when no policy / hold).
+        self.accel_min, self.accel_max = policy_accel_bounds(policy)
         self.lane_rules = lane_rules if lane_rules is not None else LaneRules()
         self.has_lane_head = bool(hold or getattr(policy, "has_lane_head", False))
         self.deterministic, self.noise_fn, self.hold, self.device = deterministic, noise_fn, hold, device
@@ -343,14 +417,14 @@ class PolicyExecutor:
                     accel, _ = self.policy(obs, signal, deterministic=self.deterministic, **kwargs)
             accel = accel.float()
             if self.extra_accel_noise > 0.0 and not self.hold:
-                from .contract import ACCEL_MAX_MPS2, ACCEL_MIN_MPS2
                 accel = (accel + self.extra_accel_noise * torch.randn_like(accel)).clamp(
-                    ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
-            safe = safe_accel(state, accel)
+                    self.accel_min, self.accel_max)
+            safe = safe_accel(state, accel, accel_max=self.accel_max)
             if bool(changed.any()):
                 # SUMO executes the change during the next physics step (and may refuse it):
                 # be safe for BOTH the current and the target-lane leader.
-                safe = torch.minimum(safe, safe_accel({**state, "lane": new_lane}, accel))
+                safe = torch.minimum(safe, safe_accel({**state, "lane": new_lane}, accel,
+                                                      accel_max=self.accel_max))
             self.memory.record(state, torch.where(obs.cav_mask, safe, torch.zeros_like(safe)),
                                torch.where(obs.cav_mask, intent, torch.zeros_like(intent)))
         out = safe.detach().cpu().numpy().astype(np.float64)
@@ -373,7 +447,8 @@ def load_policy_components(path, *, device: str = "cpu"):
     state = upgrade_policy_state(payload["policy"])
     lane_head = any(key.startswith("lane_head.") for key in state)
     policy, encoder = CavPolicy(lane_head=lane_head), RsuGroupEncoder()
-    policy.load_state_dict(state)
+    policy.load_state_dict(state)          # bounds: stored buffer, else legacy [-3, 1.5]
+    check_payload_accel_bounds(policy, payload)
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
              for k, v in payload["group_encoder"].items()}
     encoder.load_state_dict(group)
