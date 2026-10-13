@@ -120,6 +120,8 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     enter during this transition.  ``source_wait = dt * entry_queue`` is charged with
     ``weights.delay``, the normalisation count becomes ``present + entry_queue`` and the
     CVaR includes the queued vehicles at delay ``dt`` each.  ``source_wait`` is zero without it.
+    A queue that requires grad (straight-through surrogate, SRCGRAD_NOTES.md) passes its gradient
+    to ``source_wait`` only; values are unchanged.
     """
     if weights.ttc_limit_s <= 0.0:
         raise ValueError("ttc_limit_s must be positive")
@@ -146,9 +148,15 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
         fairness = _soft_cvar(delay_by_vehicle, present)
         count = present.sum(-1).clamp_min(1).to(delay.dtype)
     else:
-        queue = torch.as_tensor(entry_queue, dtype=delay.dtype, device=delay.device)
-        queue = queue.reshape(-1).expand(delay.shape[0]).detach().clamp_min(0.0)
+        raw = torch.as_tensor(entry_queue, dtype=delay.dtype, device=delay.device)
+        raw = raw.reshape(-1).expand(delay.shape[0])
+        queue = raw.detach().clamp_min(0.0)
         source_wait = PHYSICS_DT_S * queue
+        if raw.requires_grad:
+            # Straight-through queue (SRCGRAD_NOTES.md): exact value, surrogate gradient, used in
+            # source_wait only; the normalisation count and the CVaR weight stay detached (a
+            # blocked vehicle moves between road and queue, it does not change their number).
+            source_wait = source_wait + PHYSICS_DT_S * (raw - raw.detach())
         # Queued vehicles = one extra CVaR column of weight `queue` at delay dt (max possible).
         fairness = _soft_cvar(
             torch.cat((delay_by_vehicle, torch.full_like(delay[:, None], PHYSICS_DT_S)), -1),

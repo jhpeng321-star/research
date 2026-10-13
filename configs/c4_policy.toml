@@ -41,6 +41,10 @@ checkpoint_imagination = true
 # by team_reward as source waiting (same weight as on-road delay). false = old on-road-only imagination.
 imagine_entries = true
 entry_pad_max = 256 # cap on the empty entrant slots appended per batch (1.5 x expected arrivals + 16)
+# Entry-queue gradient (SRCGRAD_NOTES.md): exact backlog value + straight-through insertion-blocking surrogate
+# gradient, and the per-entrance backlog as a critic input. Off here (bit-identical); on in c4_policy_final.toml.
+source_wait_grad = false
+critic_entry_backlog = false
 
 # Per-CAV lane decisions (owner 2026-10-12 late): the policy outputs accel AND stay/left/right.
 # No designed controller anywhere: the head starts uniform over the feasible choices.
