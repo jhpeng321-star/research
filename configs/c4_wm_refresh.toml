@@ -24,7 +24,7 @@ use_val = true         # collected validation worlds join the monitoring set
 init_from = "ckpt_c4_wm" # the C4 WM checkpoint (WMS_DATA_CKPT_C4_WM); fails closed if unset
 
 [curriculum]
-stage_steps = [300, 300, 300] # refresh budget: ~0.5 h at the c4_wm step timings (batch 16)
+stage_steps = [200, 400, 150] # refresh budget ~1.2 h on gpuW (1.7/5/12 s per step); extra 30 s steps (C4 WM weakest at 30 s)
 max_hours = 1.5
 
 [optim]
