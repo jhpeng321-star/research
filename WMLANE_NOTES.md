@@ -88,4 +88,14 @@ after every existing module (key order / RNG stream of old models unchanged).
   rollout observation updates v0 while open loop is a no-op, reveal mask = HDV prefix,
   end-to-end unroll with all switches on (finite, gradients reach hazard and update rates).
 * CPU smokes (`tools/wmlane_smoke.py`, the c4_smoke two-update dry run with config +
-  overrides and `--data-root E:/research-dense`): see results below.
+  overrides and `--data-root E:/research-dense`; 2041 TRAIN / 261 val windows, batch 4,
+  10 s unroll, all PASSED, every update finite):
+
+  | smoke | switches | loss update 1 -> 2 | lane_event (logged) |
+  |---|---|---|---|
+  | A  | c4_wm + lane_model=hazard + lane_event 1.0 | 13.296 -> 12.546 | 0.0607 / 0.0607 |
+  | C  | c4_wm + driver_update=ema + reveal 0.3      | 10.435 -> 10.700 | - |
+  | AC | configs/c4_wm_v2_lane.toml                  | 10.243 -> 10.659 | 0.0614 / 0.0613 |
+
+  Timing profiles are meaningless today: the host was saturated by other workers (22
+  logical CPUs at 100 %), a 10 s fwd+bwd took 965-2587 s for every variant.
