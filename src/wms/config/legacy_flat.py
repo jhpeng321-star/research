@@ -96,6 +96,17 @@ FLAT_TO_PATH: dict[str, str] = {
     "flip_rate_weight": "loss.flip_rate.weight",
     "flip_rate_allowance": "loss.flip_rate.allowance",
     "lane_rule": "model.lane_rule",
+    # WMLANE (A hazard lane model + event loss, C driver-setting update)
+    "lane_model": "model.lane_model",
+    "lane_hazard_hidden": "model.lane_hazard_hidden",
+    "lane_hazard_cap": "model.lane_hazard_cap",
+    "driver_update": "model.driver_update",
+    "driver_update_rate": "model.driver_update_rate",
+    "driver_reveal_prob": "model.driver_reveal_prob",
+    "driver_reveal_max_s": "model.driver_reveal_max_s",
+    "lane_event_weight": "loss.lane_event.weight",
+    "lane_event_gamma": "loss.lane_event.gamma",
+    "lane_event_max_weight": "loss.lane_event.max_weight",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -111,6 +122,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "lr_per_stage",
     "driver_grad_across_chunks", "flip_rate_weight", "flip_rate_allowance",
     "lane_rule",
+    "lane_model", "lane_hazard_hidden", "lane_hazard_cap", "driver_update",
+    "driver_update_rate", "driver_reveal_prob", "driver_reveal_max_s",
+    "lane_event_weight", "lane_event_gamma", "lane_event_max_weight",
 )
 
 

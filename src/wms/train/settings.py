@@ -126,6 +126,17 @@ class TrainSettings:
     init_from: Optional[str] = None
     flip_rate_weight: float = 0.0
     flip_rate_allowance: float = 0.00124327163
+    # WMLANE (default OFF)
+    lane_model: str = "residual"
+    lane_hazard_hidden: int = 64
+    lane_hazard_cap: float = 10.0
+    driver_update: str = "off"
+    driver_update_rate: float = 0.3
+    driver_reveal_prob: float = 0.0
+    driver_reveal_max_s: float = 10.0
+    lane_event_weight: float = 0.0
+    lane_event_gamma: float = 2.0
+    lane_event_max_weight: float = 20.0
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -208,6 +219,13 @@ class TrainSettings:
                  and 0 <= self.flip_rate_allowance <= 1,
                  "flip_rate_allowance must be finite and in [0,1]")
         _require(self.val_every >= 1, "val_every must be positive")
+        _require(self.lane_model in ("residual", "hazard"), "lane_model must be residual or hazard")
+        _require(self.driver_update in ("off", "ema"), "driver_update must be off or ema")
+        _require(0.0 <= self.driver_reveal_prob <= 1.0 and self.driver_reveal_max_s > 0.0,
+                 "driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
+        _require(math.isfinite(self.lane_event_weight) and self.lane_event_weight >= 0.0
+                 and self.lane_event_gamma >= 0.0 and self.lane_event_max_weight >= 1.0,
+                 "lane_event weight/gamma must be non-negative and max_weight >= 1")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":

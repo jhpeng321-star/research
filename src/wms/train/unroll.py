@@ -157,6 +157,12 @@ class UnrollRunner:
                          if cfg.driver_grad_across_chunks else None)
         if driver_leaves is not None:
             parameters = parameters + driver_leaves.leaf_parameters
+        if "lane_event" in self.composer.names:
+            targets.prepared["lane_event"] = self._lane_event_inputs(inp, driver_leaves)
+        # WMLANE C (training only): teacher-observed prefixes train the driver update.
+        reveal = (self._reveal_mask(inp) if backward
+                  and float(getattr(cfg, "driver_reveal_prob", 0.0)) > 0.0 else None)
+        param_offset = embedding_offset = None
         measure = capture_shares and backward
         shares = GradientShares(parameters) if (measure or share) else None
         conservation = (ConservationTracker(inp.present[:, 0], ConservationConfig(enabled=True))
@@ -181,6 +187,16 @@ class UnrollRunner:
             # Forward-only share diagnostic: only the probe chunk needs its graph;
             # every other chunk runs without one (round-5 memory fix).
             grad_off = share and c0 != probe_chunk
+            chunk_params, chunk_embedding = driver_params, driver_embedding
+            observe_kwargs = {}
+            if reveal is not None:
+                observe_kwargs = {"observe_states": inp.states[:, c0:c1 + 1],
+                                  "observe_mask": reveal[:, c0:c1 + 1]}
+                if param_offset is not None and chunk_params is not None:
+                    chunk_params = {name: chunk_params[name] + param_offset[..., i]
+                                    for i, name in enumerate(PARAMETER_NAMES)}
+                if embedding_offset is not None and chunk_embedding is not None:
+                    chunk_embedding = chunk_embedding + embedding_offset
             with torch.no_grad() if grad_off else contextlib.nullcontext():
                 roll = model.rollout(
                     current, n_steps=c1 - c0, k0=c0,
@@ -194,8 +210,12 @@ class UnrollRunner:
                     projection=self.projection, entries=inp.entries,
                     driver_history=inp.observed_hist,
                     driver_history_mask=inp.observed_hist_mask,
-                    driver_params=driver_params, driver_embedding=driver_embedding)
+                    driver_params=chunk_params, driver_embedding=chunk_embedding,
+                    **observe_kwargs)
                 self._collect_rollout(roll, acc, conservation, inp, c0, c1)
+                if "driver_parameters_updated" in roll:
+                    param_offset, embedding_offset = self._update_offsets(
+                        roll, chunk_params, chunk_embedding, param_offset, embedding_offset)
                 if acc.driver_encoded is None and "driver_parameters" in roll:
                     acc.driver_encoded = roll["driver_parameters"].detach()
                 if carry_driver:
@@ -246,6 +266,61 @@ class UnrollRunner:
         if backward and driver_leaves is not None:
             driver_leaves.backward_through_encoder()
         return record
+
+    def _lane_event_inputs(self, inp: UnrollInputs,
+                           driver_leaves: Optional[_DriverGradLeaves]) -> dict:
+        """Driver inputs of the teacher-forced lane-event loss (the t0 encoding)."""
+        model = self.model
+        if driver_leaves is not None:
+            params, embedding = driver_leaves.chunk_inputs()
+        else:
+            _, embedding, params = model.encode_drivers(
+                inp.initial, driver_history=inp.observed_hist,
+                driver_history_mask=inp.observed_hist_mask)
+        kin0 = inp.states[:, 0]
+        lane_age0 = model._initial_lane_age({}, inp.present[:, 0], kin0, inp.observed_hist,
+                                            inp.observed_hist_mask)
+        if lane_age0 is None:
+            lane_age0 = torch.full(inp.present[:, 0].shape, 999.0, device=kin0.device,
+                                   dtype=kin0.dtype)
+        return {"driver_params": params, "driver_embedding": embedding,
+                "lane_age0": lane_age0}
+
+    def _reveal_mask(self, inp: UnrollInputs) -> Tensor:
+        """Random teacher-observed prefixes ``[B, T+1, K]`` (WMLANE C training mode).
+
+        Each t0 HDV is revealed with probability ``driver_reveal_prob`` for the first
+        ``R ~ U{1..driver_reveal_max_s/dt}`` steps (never at index 0, never on CAVs
+        or off-road/junction ticks).
+        """
+        cfg = self.settings
+        b, t1, k = inp.states.shape[:3]
+        device = inp.states.device
+        dt = float(self.model.physics.dt_s)
+        max_steps = max(1, int(round(float(cfg.driver_reveal_max_s) / dt)))
+        hdv0 = inp.present[:, 0] & ~inp.is_cav[:, 0]
+        pick = (torch.rand(b, k, device=device) < float(cfg.driver_reveal_prob)) & hdv0
+        length = torch.randint(1, max_steps + 1, (b, k), device=device)
+        steps = torch.arange(t1, device=device).view(1, t1, 1)
+        mask = (steps >= 1) & (steps <= length.unsqueeze(1)) & pick.unsqueeze(1)
+        return mask & inp.loss_valid[:, :t1] & ~inp.is_cav[:, :t1]
+
+    @staticmethod
+    def _update_offsets(roll: Mapping[str, Any], chunk_params, chunk_embedding,
+                        param_offset, embedding_offset):
+        """Carry in-rollout driver updates to the next BPTT chunk as detached offsets."""
+        base = (torch.stack([chunk_params[name] for name in PARAMETER_NAMES], -1)
+                if chunk_params is not None else roll["driver_parameters"])
+        step = (roll["driver_parameters_updated"] - base).detach()
+        param_offset = step if param_offset is None else param_offset + step
+        if "driver_embedding_updated" in roll:
+            base_e = chunk_embedding if chunk_embedding is not None \
+                else roll.get("driver_embedding")
+            if base_e is not None:
+                step_e = (roll["driver_embedding_updated"] - base_e).detach()
+                embedding_offset = step_e if embedding_offset is None \
+                    else embedding_offset + step_e
+        return param_offset, embedding_offset
 
     def _share_probe_chunk(self, n_steps: int, chunk: int) -> int:
         """First chunk at/after the traffic ramp saturates (every term live), else the last."""

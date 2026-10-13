@@ -19,6 +19,7 @@ from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContex
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
 from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
+from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
@@ -136,6 +137,11 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))
+    if getattr(settings, "lane_event_weight", 0.0):
+        # WMLANE A: teacher-forced lane-change event loss of the hazard lane model.
+        unroll.append(LaneEventLoss(settings.lane_event_weight,
+                                    gamma=settings.lane_event_gamma,
+                                    max_weight=settings.lane_event_max_weight))
     if settings.stability_weight:
         unroll.append(StabilityLoss(settings.stability_weight, margin=settings.stability_margin,
                                     probes=settings.stability_probes))
