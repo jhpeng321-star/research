@@ -78,7 +78,7 @@ def _load_world_models(paths, device):
     return models
 
 
-def _load_starts(data, models, seed):
+def _load_starts(data, models, seed, entries=False):
     from wms.config.train import TrainConfig
     from wms.config.schema import from_mapping
     TrajectoryDataset = importlib.import_module("wms.data.dataset").TrajectoryDataset
@@ -112,7 +112,9 @@ def _load_starts(data, models, seed):
         packs, identity_dirs=identities, overlays=overlays, horizon_steps=1,
         window_list=windows, exclude_window_list=exclude, start_shift_prob=0.0,
         history_s=history_s, history_stride_s=history_stride_s,
-        identity_env_dir=identities[0])
+        identity_env_dir=identities[0],
+        # Observed pre-t0 entry history per window (t <= t0 only) for imagined entries.
+        entries_v2=bool(entries))
     train, val = split_start_states(
         dataset, val_fraction=float(data.get("val_fraction", 0.1)), seed=seed,
         excluded_penetrations=tuple(data.get("excluded_penetrations", [])),
@@ -182,7 +184,8 @@ def main(argv=None):
         paths = [str(checked_path(path)) for path in paths]
         components = _load_components()
         models = _load_world_models(paths, device)
-        train, val = _load_starts(raw.get("data", {}), models, seed)
+        train, val = _load_starts(raw.get("data", {}), models, seed,
+                                  entries=cfg.imagine_entries)
         trainer = DreamerTrainer(models, components.pop("policy"), components.pop("group_encoder"),
                                  components.pop("critic"), train, **components, config=cfg,
                                  reward_weights=RewardWeights(**raw.get("reward", {})),
@@ -200,7 +203,7 @@ def main(argv=None):
                            validation_batches=int(run.get("validation_batches", 1)))
         summary.update(status="completed", updates=trainer.update_count, device=device,
                        smoke=args.smoke, ensemble_checkpoints=paths, config=asdict(trainer.config),
-                       lane_head=trainer.use_lanes,
+                       lane_head=trainer.use_lanes, imagine_entries=trainer.config.imagine_entries,
                        lane_rules=asdict(lane_rules) if lane_rules is not None else None,
                        counterfactual=counterfactual.as_dict(),
                        physics_steps_per_control=STEPS_PER_CONTROL,

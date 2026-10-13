@@ -113,7 +113,7 @@ def test_step_pair_feeds_wms_team_reward():
     from traffic_shepherd.c4.wms_glue import team_reward_terms
     terms = team_reward_terms(state, nxt, accel)
     assert set(terms) == {"reward", "cost_ttc", "delay", "throughput", "smooth", "hard_brake",
-                          "fairness_delay"}
+                          "fairness_delay", "source_wait"}
     assert terms["delay"] == pytest.approx(2 * 0.5 * (1 - 10.0 / 31.29), rel=1e-5)
 
 

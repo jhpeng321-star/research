@@ -36,6 +36,11 @@ class StartBatch:
     state: dict[str, Tensor]
     rollout_kwargs: dict = field(default_factory=dict)
     metadata: list[dict] = field(default_factory=list)
+    #: [B, F] observed pre-t0 entry-history features (``wms.data.pack_history.entry_features``,
+    #: RSU-observable t <= t0 only) when the dataset was built with ``entries_v2``; else None.
+    entry_feat: Tensor | None = None
+    #: Set by ``wms.control.dreamer.with_entry_slots`` (entry histories, seeds, padding).
+    entry_spec: dict | None = None
 
 
 def penetration_of(meta):
@@ -124,7 +129,10 @@ class StartStateSampler:
                                ("driver_hist_mask", "driver_history_mask")):
             if source in record:
                 hist[target] = torch.as_tensor(record[source])
-        return state, hist, dict(meta)
+        meta = dict(meta)
+        if "entry_feat" in record:       # kept out of the JSON-able metadata by _batch
+            meta["_entry_feat"] = torch.as_tensor(record["entry_feat"]).float()
+        return state, hist, meta
 
     def _batch(self, loaded, device):
         states, histories, metadata = zip(*loaded) if loaded else ((), (), ())
@@ -134,10 +142,13 @@ class StartStateSampler:
             for hist in histories:
                 hist["driver_history"] = hist["history"]
                 hist["driver_history_mask"] = hist["history_mask"]
+        feats = [m.pop("_entry_feat", None) for m in metadata]
+        entry_feat = (torch.stack(feats) if feats and all(f is not None for f in feats)
+                      else None)
         return StartBatch({key: torch.stack([s[key] for s in states]).to(device)
                            for key in states[0]},
                           {key: torch.stack([h[key] for h in histories]).to(device)
-                           for key in histories[0]}, list(metadata))
+                           for key in histories[0]}, list(metadata), entry_feat)
 
     def sample(self, batch_size, device="cpu"):
         return self._batch([self._load(self._draw_index()) for _ in range(batch_size)], device)

@@ -4,12 +4,21 @@
         [--max-sumo-seconds X] [--iterations N] [--episodes-per-iteration E]
         [--horizon-s H] [--warmup-s W] [--seed S] [--update-threads T]
         [--set KEY=VALUE ...] [--resume] [--smoke]
+        [--init-from CKPT [--init-lagrange {carry,reset}]]
 
 Re-running with the same ``--out`` resumes automatically from the newest valid checkpoint
 (``DIR/checkpoints/LATEST`` pointer, sha256-checked; truncated files skipped); ``--resume``
 additionally REQUIRES one.  A ``DIR/STOP_REQUESTED`` file (spot termination watcher) stops the
 run cleanly at the next episode / minibatch boundary: exit code 3, status
 ``stopped_by_request``; the last per-iteration checkpoint is the resume point.
+``--init-from CKPT`` warm-starts a FRESH run directory from a trainer checkpoint
+(``checkpoints/ckpt_XXXXX.pt``: policy + group_encoder + critic) or an exported actor
+(``policy_*.pt``: policy + group_encoder, critic stays fresh); strict load; optimisers, iteration
+counter, budget, RNG and return scaler are fresh.  ``--init-lagrange carry`` (default) keeps the
+checkpoint's Lagrange multiplier (an exported actor has none: fresh), ``reset`` starts from the
+configured initial one.  Refused if ``--out`` already has checkpoints or together with
+``--resume``; recorded as ``init_from`` (path, sha256, lagrange choice) in the log's config row,
+``RUN_SUMMARY.json`` and ``status.json``.
 ``--smoke`` merges the config's ``[smoke]`` table (CPU fake env, tiny budget).  Workers are
 ``spawn`` processes (Windows and Linux), one SUMO each.
 """
@@ -42,6 +51,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--resume", action="store_true",
                         help="require an existing valid checkpoint in --out (resume is automatic)")
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--init-from", default=None, metavar="CKPT",
+                        help="warm start a fresh --out from a MAPPO trainer checkpoint or exported "
+                             "actor (see module docstring); incompatible with --resume")
+    parser.add_argument("--init-lagrange", choices=("carry", "reset"), default="carry",
+                        help="with --init-from: carry the checkpoint's Lagrange multiplier "
+                             "(default) or reset it to the configured initial value")
     return parser.parse_args(argv)
 
 
@@ -63,6 +78,16 @@ def main(argv: list[str] | None = None) -> int:
     cfg = merge_override(cfg, overrides)
     trainer = build_trainer(cfg, workers=args.workers, out_dir=args.out,
                             config_path=str(args.config), smoke=bool(args.smoke))
+    if args.init_from:
+        if args.resume:
+            print("--init-from cannot be combined with --resume", file=sys.stderr)
+            return 2
+        if trainer._checkpoints():
+            print(f"--init-from needs a fresh --out; {trainer.ckpt_dir} has checkpoints",
+                  file=sys.stderr)
+            return 2
+        record = trainer.init_from_checkpoint(args.init_from, args.init_lagrange)
+        print(json.dumps({"init_from": record}, default=float))
     if args.resume and not trainer._checkpoints():
         print(f"--resume: no checkpoint under {trainer.ckpt_dir}", file=sys.stderr)
         return 2

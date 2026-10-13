@@ -292,6 +292,7 @@ class MappoTrainer:
                "sumo_seconds_simulated": self.budget.simulated_seconds,
                "env_steps": self.budget.used_env_steps, "wall_s_total": self.wall_s_total,
                "last_checkpoint": self.last_checkpoint, "files": files,
+               "init_from": self.meta.get("init_from"),
                "mean_episode_return": self.last_diag.get("mean_episode_return"),
                "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
         row.update(extra or {})
@@ -365,6 +366,51 @@ class MappoTrainer:
         self.resume_info = {"checkpoint": path.name, "skipped": skipped,
                             "log": self._truncate_log(int(state.get("log_offset", 0)))}
         return True
+
+    def init_from_checkpoint(self, path: Path | str, lagrange: str = "carry") -> dict:
+        """Warm start a FRESH run from existing weights (``--init-from``).
+
+        ``path`` is a trainer checkpoint (``checkpoints/ckpt_XXXXX.pt``: policy, group_encoder
+        and critic are loaded) or an exported actor (``policy_*.pt``: policy / group_encoder
+        only, the critic stays freshly initialised).  Weights are loaded strictly.  Optimisers,
+        iteration / episode counters, budget, RNG and the return scaler stay fresh.  The Lagrange
+        multiplier: ``carry`` takes the checkpoint's ``lagrange_alpha`` (an exported actor has
+        none -> fresh), ``reset`` keeps the freshly initialised one.  Refuses a run directory
+        that already has checkpoints.  The record goes into ``self.meta["init_from"]`` (config
+        log row, RUN_SUMMARY, checkpoints) and is returned."""
+        if lagrange not in ("carry", "reset"):
+            raise ValueError("lagrange must be 'carry' or 'reset'")
+        if self._checkpoints() or (self.ckpt_dir / "LATEST").exists():
+            raise RuntimeError(f"--init-from needs a fresh run directory; {self.ckpt_dir} "
+                               "already has checkpoints")
+        path = Path(path)
+        state = _torch_load(path)
+        if not isinstance(state, dict) or "policy" not in state or "group_encoder" not in state:
+            raise ValueError(f"{path}: neither a trainer checkpoint nor an exported actor")
+        is_trainer = state.get("format") == CHECKPOINT_FORMAT and "critic" in state
+        self.policy.load_state_dict(state["policy"], strict=True)
+        self.group_encoder.load_state_dict(state["group_encoder"], strict=True)
+        if is_trainer:
+            self.critic.load_state_dict(state["critic"], strict=True)
+        alpha_before = float(self.updater.alpha)
+        if lagrange == "carry" and is_trainer and "lagrange_alpha" in state:
+            self.updater.alpha = float(state["lagrange_alpha"])
+            alpha_note = "carried from checkpoint"
+        elif lagrange == "carry":
+            alpha_note = "exported actor has no multiplier: fresh"
+        else:
+            alpha_note = "reset to fresh"
+        record = {"path": str(path), "sha256": sha256_file(path),
+                  "kind": "trainer_checkpoint" if is_trainer else "exported_actor",
+                  "source_iteration": state.get("iteration"),
+                  "critic": "loaded" if is_trainer else "fresh",
+                  "optimizers": "fresh", "return_scaler": "fresh", "iteration_counter": 0,
+                  "lagrange": lagrange, "lagrange_alpha_fresh": alpha_before,
+                  "lagrange_alpha_source": (float(state["lagrange_alpha"])
+                                            if is_trainer and "lagrange_alpha" in state else None),
+                  "lagrange_alpha_used": float(self.updater.alpha), "lagrange_note": alpha_note}
+        self.meta["init_from"] = record
+        return record
 
     def _log_line(self, row: dict) -> None:
         with self.log_path.open("a", encoding="utf-8") as fh:

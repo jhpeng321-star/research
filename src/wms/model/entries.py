@@ -207,6 +207,13 @@ class _EntryProcessBase:
         work.inserted.append((b, k))
         return True
 
+    def backlog(self) -> np.ndarray:
+        """Per-row entry queue ``[B]``: due arrivals not yet inserted (pending, both entrances).
+
+        Arrivals dropped beyond ``cfg.max_pending`` are NOT included; callers that need the
+        full queue (the C4 imagination, SRCWAIT_NOTES.md) use a large ``max_pending``."""
+        return self.pending.sum(-1).astype(np.float64)
+
     def _carry_over(self, b: int, e: int, total: int, done: int) -> None:
         """Keep unplaced arrivals pending, dropping beyond ``max_pending``."""
         left = total - done
@@ -644,7 +651,8 @@ class TorchEntryProcessV2(_EntryProcessBase):
                  histories: Optional[list] = None, dt_s: float = 0.5, seed: int = 0,
                  batch: int = 1, cfg: Optional[EntryConfig] = None,
                  entry_s_m=ENTRY_S_M, pool=None,
-                 defaults: Optional[EntranceHistory] = None) -> None:
+                 defaults: Optional[EntranceHistory] = None,
+                 row_seeds: Optional[list] = None) -> None:
         if histories is None:
             if history is None:
                 history = build_entrance_history(counter=counter, defaults=defaults)
@@ -652,6 +660,11 @@ class TorchEntryProcessV2(_EntryProcessBase):
         super().__init__(cfg, dt_s, entry_s_m, max(int(batch), len(histories)), pool)
         self.histories = list(histories)
         self.rng = np.random.default_rng(int(seed))
+        # Optional per-row generators (``row_seeds``): rows with the same seed and history draw
+        # the same arrival stream as long as their traffic (blocking) agrees - common random
+        # numbers for counterfactual rows of one start (C4 imagination).  None: one shared rng.
+        self.row_rngs = (None if row_seeds is None
+                         else [np.random.default_rng(int(x)) for x in row_seeds])
         self.now = np.zeros(self.batch)
         self.t_next = np.full((self.batch, N_ENTRANCES), np.inf)
         self._started = np.zeros(self.batch, bool)
@@ -659,13 +672,18 @@ class TorchEntryProcessV2(_EntryProcessBase):
     def _hist(self, b: int) -> EntranceHistory:
         return self.histories[b] if b < len(self.histories) else self.histories[-1]
 
+    def _rng(self, b: int):
+        if self.row_rngs is None:
+            return self.rng
+        return self.row_rngs[b] if b < len(self.row_rngs) else self.row_rngs[-1]
+
     def _headway(self, b: int, e: int) -> float:
         h = self._hist(b)
         rate = max(float(h.rate[e]), 1.0e-9)
         cv = float(np.clip(h.headway_cv[e], 0.2, 5.0))
         k = 1.0 / (cv * cv)
         scale = (1.0 / rate) / k
-        draw = float(self.rng.gamma(k, scale))
+        draw = float(self._rng(b).gamma(k, scale))
         return max(draw, 0.05)
 
     def _observe(self, state: dict) -> None:
@@ -733,14 +751,15 @@ class TorchEntryProcessV2(_EntryProcessBase):
         if total == 0:
             return
         done = 0
+        rng = self._rng(b)
         for _ in range(total):
-            u_cav = float(self.rng.random())
-            u_lane = float(self.rng.random())
-            u_sr = float(self.rng.normal(hist.speed_mean[e],
-                                         max(hist.speed_std[e], 1.0e-3)))
-            u_gap = float(self.rng.normal(hist.gap_mean[e],
-                                          max(hist.gap_std[e], 1.0e-3)))
-            vt = (int(self.rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
+            u_cav = float(rng.random())
+            u_lane = float(rng.random())
+            u_sr = float(rng.normal(hist.speed_mean[e],
+                                    max(hist.speed_std[e], 1.0e-3)))
+            u_gap = float(rng.normal(hist.gap_mean[e],
+                                     max(hist.gap_std[e], 1.0e-3)))
+            vt = (int(rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
                   if hist.vtype_share[e].sum() > 0 else 0)
             if e == 0:
                 lanes_try = [1, 0] if u_lane < hist.lane_p1 else [0, 1]
