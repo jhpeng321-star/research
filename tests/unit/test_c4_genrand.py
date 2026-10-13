@@ -403,3 +403,147 @@ def test_command_requested_realized_and_lane_channels_distinct_after_conversion(
     assert not np.allclose(np.asarray(rec["states"])[1:, :2, 3][::2][:10],
                            np.asarray(tl["acceleration_mps2"])[:, :2])
     assert rec["meta"]["pair_key"] is None
+
+
+# ----------------------------------------------------------- paired branch episodes
+ENTRANTS = ((10, 20.0, False), (11, 70.0, True), (12, 130.0, False), (13, 150.0, True))
+
+
+def _base_recorder(t_end=200.0):
+    frames = synth_frames(t_end, entrants=ENTRANTS)
+    controls, lc, lr = synth_controls(0.0, t_end)
+    return SimpleNamespace(frames=frames, controls=controls, lane_controls=lc, lane_requests=lr)
+
+
+def _branch_episode(tmp_path, base, t_k=100, arm="seed0", h=60):
+    rec = G.MemoryRecorder(8)
+    i_k = int(t_k / 0.5)
+    rec.frames = list(base.frames[i_k + 1:i_k + 1 + 2 * h])
+    keep = [c for c, row in enumerate(base.controls) if t_k <= row[0] < t_k + h]
+    rec.controls = [base.controls[c] for c in keep]
+    rec.lane_controls = [base.lane_controls[c] for c in keep]
+    rec.lane_requests = [base.lane_requests[c] for c in keep]
+    env = SimpleNamespace(builder=SimpleNamespace(vehicle_ids=[f"v{i}" for i in range(16)]),
+                          cav_ids={"v0", "v1"})
+    world = "w961000m2700p20t10"
+    meta = dict(BASE_META, warmup_s=float(t_k), horizon_s=float(h), world_t0_s=10.0,
+                arm=f"generic_random_b{t_k:04d}_{arm}", policy=f"generic_random_b{t_k:04d}_{arm}",
+                branch={"pair_key": f"{world}@t{t_k}", "base_world": world, "branch_t_s": t_k,
+                        "arm": arm, "kind": "SEED"})
+    return G.write_branch_episode(tmp_path / "col" / "branches" / f"t{t_k:04d}_{arm}",
+                                  base_recorder=base, i_k=i_k, branch=rec, env=env, meta=meta,
+                                  summary={}), meta
+
+
+def test_branch_episode_has_prehistory_pair_key_and_exact_entry_counter(tmp_path):
+    base = _base_recorder()
+    write_ep(tmp_path / "col" / "base", base.frames, base.controls, base.lane_controls,
+             base.lane_requests, dict(BASE_META, horizon_s=190.0), {"policy": "generic_random"})
+    out, _ = _branch_episode(tmp_path, base, arm="seed0")
+    _branch_episode(tmp_path, base, arm="native")
+    assert out["n_states"] == 120 + 1 + 120 and out["n_control"] == 60 + 60
+    ep = np.load(Path(out["dir"]) / "episode.npz")
+    assert ep["time_s"][0] == 40.0 and ep["time_s"][-1] == 160.0
+    assert ep["control_time_s"][0] == 40.0 and ep["control_time_s"][-1] == 159.0
+    # entry times come from the FULL base run (v10 entered at t=20, before the pre-history)
+    assert ep["entry_first_seen_s"][10] == 20.0 and ep["entry_first_entrance"][11] == 1
+    doc = C4.convert([tmp_path / "col"], tmp_path / "src", val_frac=0.0)
+    by = {e["arm"]: e for e in doc["episodes"]}
+    assert set(by) == {"generic_random", "generic_random_b0100_seed0",
+                       "generic_random_b0100_native"}
+    assert len({e["world"] for e in doc["episodes"]}) == 1          # same world -> same split
+    br = by["generic_random_b0100_seed0"]
+    assert br["pair_key"] == "w961000m2700p20t10@t100"
+    assert by["generic_random_b0100_native"]["pair_key"] == br["pair_key"]
+    assert br["warmup_s"] == 100.0 and br["t_start_s"] == 40.0
+    assert "pair_key" not in by["generic_random"]
+    cb = np.load(tmp_path / "src" / br["dir"] / "counter.npy")
+    cf = np.load(tmp_path / "src" / by["generic_random"]["dir"] / "counter.npy")
+    # branch tick j <-> base tick 80 + j (t = 40 + 0.5 j); the branch counter is exact
+    assert np.array_equal(cb, cf[80:80 + cb.shape[0]])
+    # without the recorded entry times the truncated history would be miscounted
+    ep_d = dict(np.load(Path(out["dir"]) / "episode.npz"))
+    naive = C4.episode_counter(ep_d["time_s"], ep_d["vid_index"], ep_d["present"],
+                               ep_d["lane_carry"])
+    assert not np.array_equal(naive, cb)
+    # windows of the branch start at the branch time; all arms share t0
+    for h in (20, 120):
+        ds = C4.build_c4_datasets(tmp_path / "src", horizon_steps=h, stride_s=10.0)
+        rec = [ds["train"][i] for i in range(len(ds["train"]))]
+        t0s = {(r["meta"]["arm"], r["meta"]["t0_s"]) for r in rec if r["meta"]["pair_key"]}
+        assert min(t for _, t in t0s) == 100.0
+        assert ({t for a, t in t0s if a.endswith("seed0")}
+                == {t for a, t in t0s if a.endswith("native")})
+    assert len([r for r in rec if r["meta"]["pair_key"]]) == 2        # one 60 s window per arm
+
+
+def test_branch_times_and_plan_seed_arms():
+    from traffic_shepherd.c4 import branching as br
+    assert G.branch_times(300, 900, 60, 60) == list(range(360, 1141, 60))
+    assert G.branch_times(300, 120, 60, 60) == [360]
+    assert G.branch_times(300, 900, 0, 60) == []
+    arms = br.plan_seed_arms(4)
+    assert [a["name"] for a in arms] == ["SEED:0", "SEED:1", "SEED:2", "SEED:3", "B"]
+    assert arms[0]["members"] is None and arms[-1]["members"] == frozenset()
+    assert [a["name"] for a in br.plan_seed_arms(2, native=False)] == ["SEED:0", "SEED:1"]
+    p = G.GenericRandomPolicy(3)
+    roll(p, 30)
+    a = br.reseeded(p, br.seed_for_arm(3, 360, 0))
+    b = br.reseeded(p, br.seed_for_arm(3, 360, 0))
+    assert a is not p and a.reseeded_with == b.reseeded_with
+    assert G.arm_seed(3, 360, 1) == br.seed_for_arm(3, 360, 1)
+    with pytest.raises(TypeError):
+        br.reseeded(None, 1)
+
+
+# ------------------------------------------------------------------ collector
+def _args(tmp_path, **kw):
+    from traffic_shepherd.c4 import collect
+    base = dict(policy="generic_random", policy_loader="x:y", k=192, warmup=300, horizon=900,
+                check_parity=False, no_ttc=False, no_physics_log=False, out=str(tmp_path / "o"),
+                seeds="961000-961011", demands="2400,2700", penetrations="0.05,0.1,0.2,0.4",
+                case_plan="weighted-cycle", pen_weights="1,1,2,2", branch_cadence=0,
+                branch_arms=4, branch_horizon=60, no_branch_native=False,
+                branch_repeat_check=0, gr_mode="speed")
+    base.update(kw)
+    return collect, collect.argparse.Namespace(**base)
+
+
+def test_weighted_cycle_one_world_per_seed_and_genrand_seed_guard(tmp_path):
+    from collections import Counter
+
+    from traffic_shepherd.c4.seeds import SeedRefusal, check_case
+    collect, args = _args(tmp_path)
+    jobs = collect.plan_jobs(args)
+    assert len(jobs) == 12 and len({j["seed"] for j in jobs}) == 12
+    c = Counter((j["demand"], j["penetration"]) for j in jobs)
+    assert c[(2400, 0.2)] == c[(2400, 0.4)] == c[(2700, 0.2)] == c[(2700, 0.4)] == 2
+    assert c[(2400, 0.05)] == c[(2700, 0.1)] == 1
+    assert all(j["opts"]["gr_mode"] == "speed" for j in jobs)
+    check_case(961000, 2400)
+    check_case(961999, 2700)
+    for seed, demand in ((961000, 2600), (962000, 2700), (960999, 2700)):
+        with pytest.raises((SeedRefusal, ValueError)):
+            check_case(seed, demand)
+    with pytest.raises(SystemExit):
+        collect.plan_jobs(_args(tmp_path, policy="random", branch_cadence=60)[1])
+
+
+def test_collector_resume_requires_branches_complete(tmp_path):
+    collect, args = _args(tmp_path, seeds="961000-961001", branch_cadence=60)
+    jobs = collect.plan_jobs(args)
+    assert all("branch_dir" in j for j in jobs)
+    done, partial = jobs
+    for j in (done, partial):
+        ep = Path(j["episode_dir"])
+        ep.mkdir(parents=True)
+        (ep / "manifest.json").write_text(json.dumps({"status": "complete"}))
+        (ep / "summary.json").write_text("{}")
+        Path(j["branch_dir"]).mkdir(parents=True)
+    (Path(done["branch_dir"]) / "BRANCHES_COMPLETE.json").write_text("{}")
+    todo, complete = collect.prepare(collect.plan_jobs(args))
+    assert [j["job_id"] for j in complete] == [done["job_id"]]
+    assert [j["job_id"] for j in todo] == [partial["job_id"]] and todo[0]["attempt"] == 2
+    # the partial base episode and its branches are preserved, not deleted
+    assert Path(partial["episode_dir"] + ".incomplete-1").is_dir()
+    assert Path(partial["branch_dir"] + ".incomplete-1").is_dir()

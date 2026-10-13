@@ -32,3 +32,6 @@ output/wd01/wm_n1/lpwo/wall_bb_chain.sh text eol=lf
 # Preserve exact machine-generated failure receipts, including traceback spaces.
 _out/MAIN2*.xml -whitespace
 _out/brakefix_verification/main2*/command.log -whitespace
+
+# GENRAND box driver: LF on every checkout (bash on Linux)
+scripts/genrand/*.sh text eol=lf

@@ -436,6 +436,9 @@ def run_genrand_job(env, *, seed: int, demand_vph: int, penetration: float, warm
     world_meta = {k: meta[k] for k in meta if k not in ("genrand",)}
     branches, checks = [], []
     t_branch = time.monotonic()
+    if saved and env.api is None:          # the finished base episode closed TraCI
+        import traci
+        env.api = traci
     for p_i, point in enumerate(saved):
         t_k = point["t_s"]
         arms = plan_seed_arms(n_arms, native=native_arm)   # SEED:j ... + B (all native)
