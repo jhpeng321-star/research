@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional
@@ -84,6 +85,11 @@ def _physics_config(path: Path, config: Mapping[str, Any],
         if receipt.is_file():
             raw = json.loads(receipt.read_text(encoding="utf-8")).get("physics")
     if not raw:
+        # A checkpoint copied without its run's physics.json / TRAIN_RECEIPT.json silently scored with
+        # default physics (MOBIL lanes, no SUMO fidelity) on 2026-10-13; make the fallback loud.
+        warnings.warn(f"{path}: no physics block, physics.json or TRAIN_RECEIPT.json found; using "
+                      "default PhysicsConfig() (lane_rule=mobil). Copy the run's physics.json next to "
+                      "the checkpoint.", RuntimeWarning, stacklevel=2)
         return PhysicsConfig()
     allowed = set(PhysicsConfig.__dataclass_fields__)
     return PhysicsConfig(**{key: value for key, value in raw.items() if key in allowed})
