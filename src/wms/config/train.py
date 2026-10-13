@@ -369,8 +369,36 @@ class CurriculumConfig:
     epochs_per_stage: int = 1
     steps_per_epoch: int = 2000
     max_hours: Optional[float] = None
+    # SCHED (2026-10-14, SCHED_NOTES.md; all default OFF = unchanged loop): validate every
+    # horizon <= the stage, multi-horizon checkpoint selection, short mixed-horizon batches.
+    val_all_horizons: bool = False
+    selection: Literal["long_horizon", "multi_horizon"] = "long_horizon"
+    selection_horizons_s: tuple[float, ...] = (10.0, 30.0, 60.0, 120.0)
+    selection_reference: tuple[float, ...] = (7.0356, 49.4889, 128.7179, 0.0)
+    """Per-horizon reference ``mean_position`` (C4 main WM best val at 10/30/60 s); a value
+    <= 0 normalises by this run's own first validation at that horizon (120 s: none in C4)."""
+    selection_min_stage_s: float = 30.0
+    selection_agg_reward_weight: float = 0.0
+    mixed_horizon_frac: float = 0.0
+    mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
+    mixed_horizon_min_stage_s: float = 30.0
 
     def __post_init__(self) -> None:
+        require(len(self.selection_horizons_s) >= 1
+                and all(is_finite(x) and x > 0 for x in self.selection_horizons_s)
+                and len(self.selection_reference) == len(self.selection_horizons_s)
+                and all(is_finite(x) for x in self.selection_reference),
+                "curriculum.selection_horizons_s must be positive and selection_reference "
+                "one finite value per horizon")
+        require(is_finite(self.selection_agg_reward_weight)
+                and self.selection_agg_reward_weight >= 0.0
+                and is_finite(self.selection_min_stage_s),
+                "curriculum.selection_agg_reward_weight must be finite and non-negative")
+        require(is_finite(self.mixed_horizon_frac) and 0.0 <= self.mixed_horizon_frac <= 1.0
+                and len(self.mixed_horizon_s) >= 1
+                and all(is_finite(x) and x > 0 for x in self.mixed_horizon_s)
+                and is_finite(self.mixed_horizon_min_stage_s),
+                "curriculum.mixed_horizon_frac must be in [0,1] and mixed_horizon_s positive")
         require(bool(self.unroll_s) and all(x > 0 for x in self.unroll_s),
                 "curriculum.unroll_s must be a non-empty list of positive horizons")
         require(self.epochs_per_stage >= 1 and self.steps_per_epoch >= 1,

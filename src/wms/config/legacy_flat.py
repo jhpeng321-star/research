@@ -128,6 +128,16 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_hazard_zone": "model.merge_hazard_zone",
     "gap_stopped_relax": "model.gap_stopped_relax",
     "lane_hazard_decouple": "loss.lane_hazard_decouple",
+    # SCHED (validation horizons, multi-horizon selection, mixed-horizon batches)
+    "val_all_horizons": "curriculum.val_all_horizons",
+    "selection_mode": "curriculum.selection",
+    "selection_horizons_s": "curriculum.selection_horizons_s",
+    "selection_reference": "curriculum.selection_reference",
+    "selection_min_stage_s": "curriculum.selection_min_stage_s",
+    "selection_agg_reward_weight": "curriculum.selection_agg_reward_weight",
+    "mixed_horizon_frac": "curriculum.mixed_horizon_frac",
+    "mixed_horizon_s": "curriculum.mixed_horizon_s",
+    "mixed_horizon_min_stage_s": "curriculum.mixed_horizon_min_stage_s",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -152,6 +162,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "entry_pad_auto", "entry_pad_max", "junction_fix", "controller_hygiene",
     "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
     "gap_stopped_relax", "lane_hazard_decouple",
+    # SCHED
+    "val_all_horizons", "selection_mode", "selection_horizons_s", "selection_reference",
+    "selection_min_stage_s", "selection_agg_reward_weight", "mixed_horizon_frac",
+    "mixed_horizon_s", "mixed_horizon_min_stage_s",
 )
 
 
