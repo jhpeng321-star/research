@@ -283,8 +283,13 @@ class UnrollRunner:
         if lane_age0 is None:
             lane_age0 = torch.full(inp.present[:, 0].shape, 999.0, device=kin0.device,
                                    dtype=kin0.dtype)
-        return {"driver_params": params, "driver_embedding": embedding,
+        prep = {"driver_params": params, "driver_embedding": embedding,
                 "lane_age0": lane_age0}
+        if getattr(model, "_tracks_lane_blocked", False):
+            # LANEFIX v2 features: pre-t0 blocked time from the same observed history.
+            prep["lane_blocked0"] = model.initial_lane_blocked(
+                inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask, params)
+        return prep
 
     def _reveal_mask(self, inp: UnrollInputs) -> Tensor:
         """Random teacher-observed prefixes ``[B, T+1, K]`` (WMLANE C training mode).

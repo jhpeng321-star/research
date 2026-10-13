@@ -117,6 +117,9 @@ class WmSTrainer:
         """Mirror the flag-gated model bounds onto the model (no-ops when unset)."""
         s, model = self.settings, self.model
         model.apply_direct_commands = False  # recorded teacher or the full dispatcher owns CAVs
+        if getattr(s, "lane_hazard_decouple", False):
+            # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
+            model.lane_hazard_detach = True
         if s.residual_cap_mps2 is not None:
             model.residual_cap_mps2 = float(s.residual_cap_mps2)
         if s.lane_logit_cap is not None:
@@ -212,7 +215,23 @@ class WmSTrainer:
     @torch.no_grad()
     def evaluate(self, val_dataset: Dataset, *, unroll_steps: int,
                  require_full_horizon: bool = False) -> dict:
-        """Forward-only batch means; strict horizons cannot silently truncate."""
+        """Forward-only batch means; strict horizons cannot silently truncate.
+
+        LANEFIX: with sampled lane decisions every evaluation replays the same lane draws (a
+        forked, fixed-seed RNG), so validation/selection is reproducible and the training RNG
+        stream is untouched.  Argmax models take the unchanged path.
+        """
+        if not getattr(self.model, "_samples_lanes", False):
+            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                  require_full_horizon=require_full_horizon)
+        devices = [self.device.index or 0] if self.device.type == "cuda" else []
+        with torch.random.fork_rng(devices=devices):
+            torch.manual_seed(int(self.settings.seed) + 7919)
+            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                  require_full_horizon=require_full_horizon)
+
+    def _evaluate(self, val_dataset: Dataset, *, unroll_steps: int,
+                  require_full_horizon: bool = False) -> dict:
         was_training = self.model.training
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}

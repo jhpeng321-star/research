@@ -140,6 +140,22 @@ def sample_driver_encodings(model, state: Mapping, history_args: Mapping, n_samp
     return sampled
 
 
+def lane_uniform_draws(models, n_starts: int, n_steps: int, n_slots: int, seed,
+                       device=None) -> Optional[Tensor]:
+    """LANEFIX: per-start lane-decision uniforms ``[B, T, K]`` for world models that sample
+    their HDV lane decisions (``lane_decision='sample'``), else ``None``.
+
+    Drawn once per START from a private generator seeded by ``seed`` (the global RNG is not
+    touched); the caller shares them across ensemble members and expands them to the
+    counterfactual rows of a start (common random numbers, like the acceleration noise).
+    """
+    if not any(getattr(model, "_samples_lanes", False) for model in models):
+        return None
+    generator = torch.Generator(device="cpu").manual_seed(seed_of("lanes", seed))
+    draws = torch.rand(int(n_starts), int(n_steps), int(n_slots), generator=generator)
+    return draws.to(device) if device is not None else draws
+
+
 def draw_accel_noise(n_samples: int, shape, generator: torch.Generator, *, scale: float = 1.0,
                      device=None) -> Tensor:
     """Standard-normal HDV acceleration draws ``[n_samples, B, T, K]`` (``shape`` = (B, T, K))."""

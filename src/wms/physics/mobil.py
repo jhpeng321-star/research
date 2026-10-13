@@ -122,6 +122,26 @@ def speed_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
     return (gap_l >= req_l) & (gap_f >= req_f) & clear
 
 
+def stopped_merge_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
+                           physics: PhysicsConfig) -> Tensor:
+    """LANEFIX ``gap_stopped_relax``: relaxed secure gaps of a (near-)stopped merger ``[B, K]``.
+
+    Judged on the CURRENT configuration (a stopped car does not move during the step; the
+    anticipated configuration would move a creeping follower onto it): leader bumper gap
+    ``>= gap_stopped_min_m``, follower gap ``>= gap_stopped_min_m + max(0, v_f^2 - v^2) /
+    (2 gap_b_follow)`` (the follower can still stop behind the merger) and no target-lane
+    vehicle overlapping the ego's footprint widened by ``gap_stopped_min_m``.  The caller
+    applies it only to stopped ramp mergers, OR-ed with :func:`speed_gap_safe`.
+    """
+    p = physics
+    gap_l, _ = lane_neighbour(kin, present, target_lane, p, ahead=True)
+    gap_f, fv_f = lane_neighbour(kin, present, target_lane, p, ahead=False)
+    v = kin[..., 4]
+    req_f = p.gap_stopped_min_m + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+    clear = ~target_overlap(kin, present, target_lane, p.gap_stopped_min_m)
+    return (gap_l >= p.gap_stopped_min_m) & (gap_f >= req_f) & clear
+
+
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                        driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
     """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``.
@@ -174,6 +194,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
         if p.lane_gap_rule == "speed":
             safe = speed_gap_safe(kin, present, target_lane, p)
+            if p.gap_stopped_relax and target == p.merge_target_lane:
+                # LANEFIX: jam merges of (near-)stopped ramp cars at the lane end.
+                stopped = forced & (v < p.gap_stopped_speed_mps)
+                safe = safe | (stopped & stopped_merge_gap_safe(kin, present, target_lane, p))
         else:
             safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
         allowed = adjacent & ramp_ok & no_to_ramp & safe

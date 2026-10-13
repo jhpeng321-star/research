@@ -26,7 +26,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
-from wms.model.lane_hazard import relative_logits
+from wms.model.lane_hazard import blocked_indicator, relative_logits
 from wms.physics.mobil import MASKED_LOGIT
 
 from .base import TermValue, UnrollContext, UnrollTerm
@@ -97,23 +97,51 @@ def recorded_lane_age(lanes: Tensor, valid: Tensor, age0: Tensor, n_steps: int) 
     return torch.stack(ages, 1)
 
 
+def _expand_params(driver_params: Optional[Mapping[str, Tensor]], b: int, n: int, k: int):
+    if driver_params is None:
+        return None
+    return {name: value.unsqueeze(1).expand(b, n, k).reshape(b * n, k)
+            for name, value in driver_params.items()}
+
+
+def recorded_lane_blocked(physics: Any, states: Tensor, present: Tensor,
+                          driver_params: Optional[Mapping[str, Tensor]],
+                          blocked0: Tensor) -> Tensor:
+    """LANEFIX v2: consecutive blocked-step counts ``[B, n, K]`` (including step t) on the
+    recorded states ``[B, n, K, 7]``, starting from the pre-t0 count ``blocked0 [B, K]``.
+
+    Same indicator as the rollout (:func:`wms.model.lane_hazard.blocked_indicator`); a car
+    that is absent (or not blocked) at step t restarts at 0.
+    """
+    b, n, k = states.shape[:3]
+    with torch.no_grad():
+        blocked = blocked_indicator(states.reshape(b * n, k, -1).float(),
+                                    present.reshape(b * n, k).bool(), physics,
+                                    _expand_params(driver_params, b, n, k)).reshape(b, n, k)
+        counts = []
+        count = blocked0.to(states.dtype)
+        for t in range(n):
+            count = torch.where(blocked[:, t], count + 1.0, torch.zeros_like(count))
+            counts.append(count)
+        return torch.stack(counts, 1)
+
+
 def recorded_event_logits(model: Any, states: Tensor, present: Tensor, is_cav: Tensor,
                           driver_params: Optional[Mapping[str, Tensor]],
-                          driver_embedding: Optional[Tensor], lane_age: Tensor) -> Tensor:
+                          driver_embedding: Optional[Tensor], lane_age: Tensor,
+                          lane_blocked: Optional[Tensor] = None) -> Tensor:
     """Hazard lane logits ``[B, n, K, 3]`` on recorded states ``[B, n, K, 7]`` (one step each)."""
     b, n, k = states.shape[:3]
     flat = lambda x: x.reshape(b * n, *x.shape[2:])  # noqa: E731
-    params = None
-    if driver_params is not None:
-        params = {name: value.unsqueeze(1).expand(b, n, k).reshape(b * n, k)
-                  for name, value in driver_params.items()}
+    params = _expand_params(driver_params, b, n, k)
     embedding = None
     if driver_embedding is not None:
         embedding = driver_embedding.unsqueeze(1).expand(b, n, k, -1).reshape(b * n, k, -1)
     state = {"veh_kin": flat(states).float(), "present": flat(present).bool(),
              "is_cav": flat(is_cav).bool()}
+    extra = {} if lane_blocked is None else {"lane_blocked": flat(lane_blocked)}
     logits = model.lane_event_logits(state, driver_params=params, driver_embedding=embedding,
-                                     lane_age=flat(lane_age))
+                                     lane_age=flat(lane_age), **extra)
     return logits.reshape(b, n, k, 3)
 
 
@@ -142,9 +170,13 @@ class LaneEventLoss(UnrollTerm):
         valid = present & ~is_cav
         action, category, mask = lane_event_targets(lanes, valid, n)
         age = recorded_lane_age(lanes, valid, prep["lane_age0"].to(states.dtype), n)
+        blocked = None
+        if "lane_blocked0" in prep:
+            blocked = recorded_lane_blocked(ctx.model.physics, states[:, :n], present[:, :n],
+                                            prep.get("driver_params"), prep["lane_blocked0"])
         logits = recorded_event_logits(ctx.model, states[:, :n], present[:, :n], is_cav[:, :n],
                                        prep.get("driver_params"), prep.get("driver_embedding"),
-                                       age)
+                                       age, blocked)
         rel = relative_logits(logits, lanes[:, :n])
         comp, stats = lane_event_loss(rel[mask], action[mask], category[mask],
                                       gamma=self.gamma, max_weight=self.max_weight)

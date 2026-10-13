@@ -154,6 +154,14 @@ class TrainSettings:
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
+    # LANEFIX (2026-10-14, default OFF): model switches mirrored for validation; the
+    # decouple flag is applied to the model by the trainer.
+    lane_decision: str = "argmax"
+    lane_logit_offsets: tuple[float, ...] = (0.0, 0.0, 0.0)
+    lane_hazard_features: str = "v1"
+    merge_hazard_zone: str = "forced_late"
+    gap_stopped_relax: bool = False
+    lane_hazard_decouple: bool = False
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -256,6 +264,21 @@ class TrainSettings:
         _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
         _require(self.junction_fix in JUNCTION_FIX_MODES,
                  f"junction_fix must be one of {JUNCTION_FIX_MODES}")
+        _require(self.lane_decision in ("argmax", "sample"), "lane_decision must be argmax or sample")
+        _require(len(self.lane_logit_offsets) == 3
+                 and all(math.isfinite(float(x)) for x in self.lane_logit_offsets),
+                 "lane_logit_offsets must be three finite values")
+        _require(self.lane_hazard_features in ("v1", "v2"), "lane_hazard_features must be v1 or v2")
+        _require(self.merge_hazard_zone in ("forced_late", "full"),
+                 "merge_hazard_zone must be forced_late or full")
+        _require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
+                 "gap_stopped_relax requires lane_gap_rule='speed'")
+        lanefix_on = (self.lane_decision != "argmax"
+                      or any(float(x) for x in self.lane_logit_offsets)
+                      or self.lane_hazard_features != "v1"
+                      or self.merge_hazard_zone != "forced_late" or self.lane_hazard_decouple)
+        _require(not lanefix_on or self.lane_model == "hazard",
+                 "LANEFIX lane switches require lane_model='hazard'")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -273,6 +296,8 @@ class TrainSettings:
                 int(x) for x in values["truncation_steps_per_stage"])
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
+        if values.get("lane_logit_offsets") is not None:
+            values["lane_logit_offsets"] = tuple(float(x) for x in values["lane_logit_offsets"])
         return cls(**values)
 
     @classmethod

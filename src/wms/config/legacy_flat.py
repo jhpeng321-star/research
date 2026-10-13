@@ -120,6 +120,13 @@ FLAT_TO_PATH: dict[str, str] = {
     "entry_pad_auto": "data.entry_pad_auto",
     "entry_pad_max": "data.entry_pad_max",
     "junction_fix": "data.junction_fix",  # JUNCTIONFIX
+    # LANEFIX (hazard decisions, ranking features, merge ownership, stopped-merger gaps)
+    "lane_decision": "model.lane_decision",
+    "lane_logit_offsets": "model.lane_logit_offsets",
+    "lane_hazard_features": "model.lane_hazard_features",
+    "merge_hazard_zone": "model.merge_hazard_zone",
+    "gap_stopped_relax": "model.gap_stopped_relax",
+    "lane_hazard_decouple": "loss.lane_hazard_decouple",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -142,6 +149,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
     "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
     "entry_pad_auto", "entry_pad_max", "junction_fix",
+    "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
+    "gap_stopped_relax", "lane_hazard_decouple",
 )
 
 

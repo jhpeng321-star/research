@@ -102,6 +102,17 @@ class ModelConfig:
     """C training: probability that an HDV gets a teacher-observed prefix in a training unroll."""
     driver_reveal_max_s: float = 10.0
     """C training: the revealed prefix length is drawn uniformly from (0, driver_reveal_max_s]."""
+    # --- LANEFIX switches (2026-10-14, LANEFIX_NOTES.md; default OFF = bit-identical) -------
+    lane_decision: Literal["argmax", "sample"] = "argmax"
+    """Hazard mode: rollout lane decision = argmax, or a seeded draw from the masked categorical."""
+    lane_logit_offsets: tuple[float, ...] = (0.0, 0.0, 0.0)
+    """Hazard mode: constant logit offsets (overtake 1->0, return 0->1, merge 2->1), calibration."""
+    lane_hazard_features: Literal["v1", "v2"] = "v1"
+    """Hazard input: 'v2' adds lookahead speed vs v0, leader trend, density ahead, blocked time."""
+    merge_hazard_zone: Literal["forced_late", "full"] = "forced_late"
+    """'full': the hazard owns ramp merges from the zone start; physics forces only the last 5 m."""
+    gap_stopped_relax: bool = False
+    """lane_gap_rule='speed': relaxed gaps (0.5 m, no anticipation) for stopped ramp mergers."""
 
     def __post_init__(self) -> None:
         require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
@@ -117,6 +128,16 @@ class ModelConfig:
                     "driver_params or hybrid model")
         if self.lane_model == "hazard":
             require(self.lane_head == "off", "model.lane_model='hazard' requires lane_head='off'")
+        require(len(self.lane_logit_offsets) == 3
+                and all(is_finite(x) for x in self.lane_logit_offsets),
+                "model.lane_logit_offsets must be three finite values (overtake, return, merge)")
+        if (self.lane_decision != "argmax" or any(float(x) for x in self.lane_logit_offsets)
+                or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
+            require(self.lane_model == "hazard",
+                    "model.lane_decision / lane_logit_offsets / lane_hazard_features / "
+                    "merge_hazard_zone need model.lane_model='hazard'")
+        require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
+                "model.gap_stopped_relax requires model.lane_gap_rule='speed'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
                 "model.grad_decay_per_step must be in (0, 1]")
         if self.lane_head == "history":
@@ -325,6 +346,10 @@ class LossConfig:
     conservation_enabled: bool = False
     conservation_weight: float = 0.0
     loss_share_logging: bool = False
+    lane_hazard_decouple: bool = False
+    """LANEFIX: in hazard mode the rollout lane CE and the flip-rate guard do not reach the
+    hazard parameters (its delta enters the rollout logits detached); loss.lane_event is the
+    hazard's only objective."""
 
     def __post_init__(self) -> None:
         require(self.stability_weight >= 0.0 and self.conservation_weight >= 0.0,
@@ -434,6 +459,8 @@ class TrainConfig:
         if self.model.kind != "structured":
             require(not self.loss.braking.any_on and self.model.residual_cap_neg_mps2 is None,
                     "enabled braking terms require model.kind='structured'")
+        require(not self.loss.lane_hazard_decouple or self.model.lane_model == "hazard",
+                "loss.lane_hazard_decouple requires model.lane_model='hazard'")
 
     # -- training-time (stricter than construction) ---------------------
     def validate_for_training(self) -> None:

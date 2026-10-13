@@ -45,6 +45,10 @@ class RolloutFlags:
     diag_lane_cap_off: bool = False
     diag_encoder_population: bool = False
     diag_recorded_lanes: bool = False
+    #: LANEFIX: seed of the lane draws when the model samples its lane decisions
+    #: (``lane_decision='sample'``; ignored for argmax models) - every state is scored with
+    #: the same, reproducible draws.
+    lane_seed: int = 0
 
     def __post_init__(self) -> None:
         if self.entries_v2 and not self.entries:
@@ -148,6 +152,8 @@ class WmsPredictor:
                     dtype=driver_history.dtype)), dim=1)
                 driver_history_mask = torch.cat((driver_history_mask, torch.zeros(
                     1, n_pad, driver_history_mask.shape[2], dtype=torch.bool)), dim=1)
+        lane_kwargs = ({"lane_seed": int(self.flags.lane_seed)}
+                       if getattr(self.model, "_samples_lanes", False) else {})
         with torch.no_grad():
             lane_teacher = None
             if self.flags.diag_recorded_lanes:
@@ -163,7 +169,8 @@ class WmsPredictor:
                     present_seq=present_seq, entries=proc,
                     driver_history=driver_history, driver_history_mask=driver_history_mask,
                     action_timeline=action_timeline, controller_id=None,
-                    projection=self.backend.projection, lane_teacher=lane_teacher)
+                    projection=self.backend.projection, lane_teacher=lane_teacher,
+                    **lane_kwargs)
             else:
                 roll = self.model.rollout(
                     initial, n_steps=n_steps, k0=0, cav_teacher=teacher,
@@ -172,7 +179,7 @@ class WmsPredictor:
                     entries=proc, driver_history=driver_history,
                     driver_history_mask=driver_history_mask, controller_id=None,
                     action_timeline=action_timeline, projection=self.backend.projection,
-                    lane_teacher=lane_teacher)
+                    lane_teacher=lane_teacher, **lane_kwargs)
         if proc is not None:
             self.entries_summary = proc.summary()
         return _frames_from_rollout(roll, t0_s, ids, kin, is_cav, n_pad, n_steps)

@@ -21,6 +21,12 @@ GAP_B_FOLLOW_MPS2 = 6.0
 GAP_OVERLAP_MARGIN_M = 0.5
 #: The speed rule judges the gaps this far ahead (one 0.5 s WM step; SUMO moves, then changes).
 GAP_ANTICIPATION_S = 0.5
+#: LANEFIX ``gap_stopped_relax``: a ramp merger slower than this counts as stopped (jam merge
+#: at the lane end) ...
+GAP_STOPPED_SPEED_MPS = 1.0
+#: ... and needs only this physical bumper clearance to its target-lane leader/follower
+#: (no headway terms, no anticipation; the follower's kinematic stopping term is kept).
+GAP_STOPPED_MIN_M = 0.5
 #: Default IDM parameters.
 _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
 #: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
@@ -62,6 +68,13 @@ class PhysicsConfig:
     lanes, and the WM applies a change together with that step's motion).  It applies to
     discretionary changes and to the ramp merge alike.  The ``gap_*`` constants were chosen on the C4 TRAIN windows only
     (tools/gaprule_fit.py, GAPRULE_NOTES.md) and are unused in ``fixed`` mode.
+
+    ``gap_stopped_relax`` (LANEFIX, 2026-10-14; ``speed`` rule only, default off): a ramp
+    merger (lane 2 -> 1) slower than ``gap_stopped_speed_mps`` is judged on the CURRENT
+    configuration (no anticipation) with only ``gap_stopped_min_m`` of bumper clearance to
+    the target-lane leader and follower plus the follower's kinematic stopping term
+    ``max(0, v_f^2 - v^2) / (2 gap_b_follow)`` and the same no-overlap test with margin
+    ``gap_stopped_min_m`` (jam merges at the lane end).  It only ever adds admissions.
     """
 
     dt_s: float = 0.5
@@ -106,6 +119,9 @@ class PhysicsConfig:
     gap_b_follow_mps2: float = GAP_B_FOLLOW_MPS2
     gap_overlap_margin_m: float = GAP_OVERLAP_MARGIN_M
     gap_anticipation_s: float = GAP_ANTICIPATION_S
+    gap_stopped_relax: bool = False
+    gap_stopped_speed_mps: float = GAP_STOPPED_SPEED_MPS
+    gap_stopped_min_m: float = GAP_STOPPED_MIN_M
 
     def __post_init__(self) -> None:
         if self.lane_rule not in LANE_RULES:
@@ -119,6 +135,10 @@ class PhysicsConfig:
                 and self.gap_overlap_margin_m >= 0.0 and self.gap_anticipation_s >= 0.0):
             raise ValueError("gap_s0_* and gap_b_* must be > 0, gap_t_*, "
                              "gap_overlap_margin_m and gap_anticipation_s >= 0")
+        if self.gap_stopped_relax and self.lane_gap_rule != "speed":
+            raise ValueError("gap_stopped_relax requires lane_gap_rule='speed'")
+        if not (self.gap_stopped_speed_mps > 0.0 and self.gap_stopped_min_m > 0.0):
+            raise ValueError("gap_stopped_speed_mps and gap_stopped_min_m must be > 0")
 
     def idm(self) -> tuple[float, float, float, float, int]:
         """``(a_max, b_comf, time_headway, s0, delta)`` of the default driver."""
@@ -142,15 +162,16 @@ class PhysicsConfig:
     def from_params_file(cls, path: str | Path, **overrides) -> "PhysicsConfig":
         """Build a config from a fitted merge-cal params JSON (unknown keys ignored).
 
-        ``merge_cal``, ``lane_rule`` and ``lane_gap_rule`` are never read from the file;
-        the caller enables them explicitly.  ``overrides`` win over the file.
+        ``merge_cal``, ``lane_rule``, ``lane_gap_rule`` and ``gap_stopped_relax`` are never
+        read from the file; the caller enables them explicitly.  ``overrides`` win over the file.
         """
         known = set(cls.__dataclass_fields__)
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError(f"merge-cal params must be a JSON object: {path}")
         data = {k: v for k, v in raw.items()
-                if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule")
+                if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule",
+                                            "gap_stopped_relax")
                 and v is not None}
         data.update(overrides)
         return cls(**data)
