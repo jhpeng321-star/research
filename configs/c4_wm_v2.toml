@@ -18,9 +18,11 @@ driver_reveal_prob = 0.3
 driver_reveal_max_s = 10.0
 
 [loss.lane_event]
+# Plain (proper) CE: the default focal gamma 2 + category balancing (max_weight 20) drove the teacher-forced
+# hazard to ~12x the true change rate in the first gpuB attempt (0.015 vs 0.0012 per step, steps 40-160).
 weight = 1.0
-gamma = 2.0
-max_weight = 20.0
+gamma = 0.0
+max_weight = 1.0
 
 [curriculum]
 max_hours = 7.0
