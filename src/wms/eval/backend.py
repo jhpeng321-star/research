@@ -81,19 +81,30 @@ def feasibility_projection(config: Mapping[str, Any]) -> Any | None:
 
 
 def load_backend(checkpoint: str | Path, *, device: str = "cpu",
-                 physics: Mapping[str, Any] | None = None) -> WmsBackend:
+                 physics: Mapping[str, Any] | None = None,
+                 cav_exec_cap: str | None = None) -> WmsBackend:
     """Load a ``wm_s/1`` checkpoint through ``wms.model.checkpoint`` (strict).
 
     The stored flat config is parsed with ``TrainConfig.from_legacy_flat`` (so a checkpoint
     whose config the schema cannot read is refused here, not mid-rollout) and kept verbatim
     as ``WmsBackend.config``.  ``physics`` overrides the physics switches normally read from
     ``physics.json`` / ``TRAIN_RECEIPT.json`` next to the checkpoint.
+
+    ``cav_exec_cap`` sets the model's runtime execution-cap switch (EXECCAP_NOTES.md); ``None``
+    reads the process default from the ``WMS_CAV_EXEC_CAP`` environment variable ("off" if unset),
+    so every imagination tool that loads its WM here follows one flag.
     """
+    import os
+
     from wms.config.train import TrainConfig
+    from wms.model.cav import EXEC_CAP_ENV, check_exec_cap_mode, set_exec_cap
     from wms.model.checkpoint import load_checkpoint
 
+    mode = check_exec_cap_mode(cav_exec_cap if cav_exec_cap is not None
+                               else os.environ.get(EXEC_CAP_ENV, "off"))
     loaded = load_checkpoint(checkpoint, device=device, strict=True, physics=physics,
                              config_factory=TrainConfig.from_legacy_flat)
+    set_exec_cap(loaded.model, mode)
     config = dict(loaded.legacy_config)
     return WmsBackend(model=loaded.model.eval(), config=config, tools=default_tools(),
                       projection=loaded.projection or feasibility_projection(config))

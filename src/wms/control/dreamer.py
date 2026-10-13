@@ -87,13 +87,21 @@ class DreamerConfig:
     # (which must be built with ``entry_backlog=True``) so the bootstrap prices queues beyond H.
     source_wait_grad: bool = False
     critic_entry_backlog: bool = False
+    # SUMO-consistent execution of commanded CAVs (EXECCAP_NOTES.md, default "off" = bit-identical):
+    # "idm" -> each 0.5 s step a policy CAV realises min(safe command, its own physics-core IDM accel
+    # with the WM-inferred driver settings, (v0-v)/dt, accel setting), as SUMO speedMode 27 does.
+    cav_exec_cap: str = "off"
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
+        from wms.model.cav import check_exec_cap_mode
+        self.cav_exec_cap = check_exec_cap_mode(self.cav_exec_cap)
         for name, value in asdict(self).items():
+            if name == "cav_exec_cap":
+                continue
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
         for name in ("gamma", "lambda_", "target_tau", "return_ema"):
@@ -387,6 +395,7 @@ class DreamerTrainer:
         need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
+        from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
                                       a_max=self.counterfactual.native_accel_max_mps2), recompute)
         # Action bounds (ACCELCAP_NOTES.md): the policy's stored cap bounds its commands; native
@@ -507,6 +516,8 @@ class DreamerTrainer:
                 accel = safety_call(state, command, accel_max=ceiling)
                 cav = state["present"].bool() & state["is_cav"].bool()
                 accel = torch.where(cav, accel, torch.zeros_like(accel))
+                # EXECCAP_NOTES.md: policy CAVs only (identity unless the WM's cav_exec_cap is on).
+                accel = apply_exec_cap(state, accel, cav if act_mask is None else cav & act_mask)
                 if step % STEPS_PER_CONTROL == 0:
                     records[-1]["action"] = accel
                 # SUMO's ballistic position integration, including a stop inside this step.
@@ -532,6 +543,12 @@ class DreamerTrainer:
             previous_switch = getattr(model, "checkpoint_forward", False)
             if switch:
                 model.checkpoint_forward = recompute
+            cap_switch = hasattr(model, "cav_exec_cap")
+            previous_cap = getattr(model, "cav_exec_cap", "off")
+            if cap_switch:
+                model.cav_exec_cap = cfg.cav_exec_cap
+            elif cfg.cav_exec_cap != "off":
+                raise ValueError("cav_exec_cap requires world models with the execution-cap switch")
             try:
                 roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
                                      cav_controller=controller, cav_teacher=None,
@@ -539,6 +556,8 @@ class DreamerTrainer:
             finally:
                 if switch:
                     model.checkpoint_forward = previous_switch
+                if cap_switch:
+                    model.cav_exec_cap = previous_cap
             if step != cfg.horizon * STEPS_PER_CONTROL:
                 raise RuntimeError("WM must invoke the CAV callback once per physics step")
             if advanced_rng is None:

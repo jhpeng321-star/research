@@ -94,7 +94,7 @@ class CallableCavController:
         return out
 
     def __call__(self, state):
-        from wms.model.cav import direct_command_motion
+        from wms.model.cav import apply_exec_cap, direct_command_motion
 
         from .bridge import _merge_lane
         s, v = state["s_m"], state["v_mps"]
@@ -116,6 +116,7 @@ class CallableCavController:
         self.index += 1
         held = torch.where(mask, self.held.clamp(ACCEL_MIN_MPS2, self.accel_max),
                            torch.zeros_like(self.held))
+        held = apply_exec_cap(state, held, mask)      # EXECCAP_NOTES.md (identity when off)
         lane = _merge_lane(state, mask)
         vv = torch.where(present, v, torch.zeros_like(v))
         ss = torch.where(present, s, torch.zeros_like(s))
