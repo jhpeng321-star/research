@@ -15,6 +15,13 @@ identity across each physics step is checked by vehicle index, and a vehicle tha
 the network (or whose slot is re-used) is carried for the reward at constant speed (the
 reward contract requires identity-preserving transitions).  Envs without a history (the
 fake) use the 1 s transition once.
+
+Entry queue (SRCWAIT): an env whose ``step`` info carries ``entry_queue_steps`` = [q1, q2]
+(time-averaged number of requested-but-not-inserted vehicles during each 0.5 s physics step,
+``CavSumoEnv``) passes q_i as ``entry_queue`` to ``team_reward`` for physics transition i,
+so ``source_wait`` = 0.5 * q_i is charged with the delay weight.  Single-transition fallback
+(no history): ``entry_queue = q1 + q2`` so the 1 s transition's source wait equals
+w1 + w2 (the sum over the two steps).  Envs without the field: old behaviour, exactly.
 """
 
 from __future__ import annotations
@@ -46,7 +53,8 @@ STOP_POLL_S = 1.0
 
 class StopRequested(Exception):
     """A stop file appeared (spot termination notice): abandon the in-flight iteration."""
-COMPONENTS = ("delay", "throughput", "smooth", "hard_brake", "fairness_delay")
+COMPONENTS = ("delay", "throughput", "smooth", "hard_brake", "fairness_delay", "source_wait",
+              "total_wait")
 
 
 def resolve_name(name: str):
@@ -96,24 +104,50 @@ def _carried(before: Mapping[str, Tensor], after: Mapping[str, Tensor], same: Te
     return patched, lost & after["present"].bool()
 
 
-def control_step_reward(env, state, next_state, weights: RewardWeights) -> dict[str, float]:
-    """Team reward components of one 1 s control step (sum over its physics steps)."""
+def _entry_queue_steps(env, info) -> list[float] | None:
+    """[q1, q2] time-averaged entry queue of the control step's two physics steps, or None."""
+    steps = None
+    if isinstance(info, Mapping):
+        steps = info.get("entry_queue_steps")
+    if steps is None:
+        steps = getattr(env, "last_entry_queue_steps", None)
+    if steps is None or len(steps) == 0:
+        return None
+    return [float(q) for q in steps]
+
+
+def control_step_reward(env, state, next_state, weights: RewardWeights,
+                        info: Mapping | None = None) -> dict[str, float]:
+    """Team reward components of one 1 s control step (sum over its physics steps).
+
+    ``info`` (the env.step info) supplies ``entry_queue_steps`` (module docstring); without it
+    (or from an env that has none) the reward is the old on-road-only one."""
     mid = _mid_state(env, state, next_state)
+    queues = _entry_queue_steps(env, info)
     if mid is None:
         transitions = [(state, next_state, torch.ones_like(state["present"]).bool())]
+        if queues is not None:
+            queues = [sum(queues)]            # one 1 s transition charged w1 + w2
     else:
         mid_state, same = mid
         transitions = [(state, mid_state, same[0][None]), (mid_state, next_state, same[1][None])]
+        if queues is not None and len(queues) == 1:
+            queues = [queues[0], queues[0]]
+    if queues is not None and len(queues) != len(transitions):
+        queues = None
     total: dict[str, float] = {}
-    for before, after, same in transitions:
+    for index, (before, after, same) in enumerate(transitions):
         patched, reused = _carried(before, after, same)
         accel = torch.where(before["present"].bool(), patched["a_mps2"],
                             torch.zeros_like(patched["a_mps2"]))
-        out = team_reward(before, patched, accel, weights)
+        queue = None if queues is None else torch.tensor(
+            [queues[index]], dtype=before["s_m"].dtype, device=before["s_m"].device)
+        out = team_reward(before, patched, accel, weights, entry_queue=queue)
         if bool(reused.any()):          # TTC exposure of the ACTUAL next occupants
             out["cost_ttc"] = team_reward(after, after, torch.zeros_like(accel), weights)["cost_ttc"]
         for key, value in out.items():
             total[key] = total.get(key, 0.0) + float(value.detach()[0])
+    total["total_wait"] = total.get("delay", 0.0) + total.get("source_wait", 0.0)
     return total
 
 
@@ -148,7 +182,7 @@ def collect_episode(env, actor: ActorStep, *, weights: RewardWeights, seed: int,
             steps[key].append(out[key][0].detach().clone())
         next_state, info = env.step(out["command"], lanes=out["lanes"])
         tick = time.monotonic()
-        row = control_step_reward(env, state, next_state, weights)
+        row = control_step_reward(env, state, next_state, weights, info)
         policy_wall += time.monotonic() - tick
         rewards.append(row["reward"])
         costs.append(row["cost_ttc"])

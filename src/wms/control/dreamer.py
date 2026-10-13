@@ -21,8 +21,9 @@ from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
 from .contract import PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
-from .counterfactual import (CounterfactualConfig, baseline_index, build_variants, decompose,
-                             expand_rows, group_rich, mean_or_none, native_fn, row_coefficients)
+from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
+                             decompose, expand_rows, group_rich, mean_or_none, native_fn,
+                             row_coefficients)
 from .start_states import StartBatch, checked_path
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
@@ -55,6 +56,13 @@ class DreamerConfig:
     # policy / group encoder / safety / native / reward / target-critic calls) during backward
     # instead of storing their activations.  Values and gradients are unchanged; ~1 extra forward.
     checkpoint_imagination: bool = True
+    # Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from the
+    # observed pre-t0 entry history of each start window (TorchEntryProcessV2); arrivals that find
+    # no safe gap at the entrance queue (uncapped backlog) and are charged as source waiting by
+    # team_reward.  Needs start windows with ``entry_feat`` (train_cli builds them); without them
+    # imagination runs without entries, exactly as before.
+    imagine_entries: bool = True
+    entry_pad_max: int = 256            # cap on the empty entrant slots appended per batch
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -72,8 +80,12 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
-        if not isinstance(self.checkpoint_imagination, bool):
-            raise ValueError("checkpoint_imagination must be a boolean")
+        for name in ("checkpoint_imagination", "imagine_entries"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
+        if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
+                or self.entry_pad_max < 1:
+            raise ValueError("entry_pad_max must be a positive integer")
 
 
 def lambda_returns(rewards: Tensor, values: Tensor, gamma=0.99, lambda_=0.95) -> Tensor:
@@ -162,6 +174,68 @@ def _model_identity(model):
     return digest.hexdigest()
 
 
+_ENTRY_PAD_SAFETY = 1.5
+_ENTRY_PAD_MARGIN = 16
+_PAD_FILL = {"lane": -1, "length_m": 5.0}
+
+
+def _pad_slots(value, k, pad, fill=0):
+    """Append ``pad`` slots along dim 1 of a [B, K, ...] tensor (other values unchanged)."""
+    if not (torch.is_tensor(value) and value.ndim >= 2 and value.shape[1] == k):
+        return value
+    shape = (value.shape[0], pad, *value.shape[2:])
+    return torch.cat((value, torch.full(shape, fill, dtype=value.dtype, device=value.device)), 1)
+
+
+def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generator=None):
+    """Start batch with empty entrant slots appended and its entry spec (``batch.entry_spec``).
+
+    The pad holds 1.5x the expected arrivals (observed entry-history rate x horizon) + 16, the
+    batch maximum, capped at ``pad_max``; one process seed per start (rows of a start share it).
+    Returns ``batch`` unchanged when it has no ``entry_feat``."""
+    if batch.entry_feat is None:
+        return batch
+    from wms.model.entries import EntranceHistory
+
+    feats = batch.entry_feat.detach().cpu().numpy()
+    histories = [EntranceHistory.from_features(row) for row in feats]
+    k = batch.state["s_m"].shape[1]
+    pad = max(int(math.ceil(float(np.sum(h.rate)) * horizon_s * _ENTRY_PAD_SAFETY))
+              + _ENTRY_PAD_MARGIN for h in histories)
+    pad = max(1, min(int(pad_max), pad))
+    seeds = torch.randint(0, 2 ** 31 - 1, (len(histories),), generator=generator).tolist()
+    state = {key: _pad_slots(value, k, pad, _PAD_FILL.get(key, 0))
+             for key, value in batch.state.items()}
+    kwargs = {key: _pad_slots(value, k, pad) for key, value in batch.rollout_kwargs.items()}
+    return StartBatch(state, kwargs, batch.metadata, batch.entry_feat,
+                      {"histories": histories, "seeds": seeds, "k0": k, "pad": pad})
+
+
+class _EntryRecorder:
+    """Entry process wrapper: records the post-insertion state and the backlog of every step."""
+
+    def __init__(self, process):
+        self.process, self.states, self.backlog = process, [], []
+
+    def insert(self, state):
+        mask = self.process.insert(state)
+        self.states.append(state)
+        self.backlog.append(self.process.backlog())
+        return mask
+
+
+def _entry_process(spec, rows, n_slots):
+    from wms.model.entries import EntryConfig, TorchEntryProcessV2
+
+    pool = np.zeros((len(rows), n_slots), dtype=bool)
+    pool[:, spec["k0"]:] = True
+    # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).
+    return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
+                               dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
+                               cfg=EntryConfig(max_pending=10 ** 9), pool=pool,
+                               row_seeds=[spec["seeds"][r] for r in rows])
+
+
 class DreamerTrainer:
     """Owns actor/group encoder, critic, EMA target, dual and sampler state.
 
@@ -235,6 +309,14 @@ class DreamerTrainer:
             act_mask = variants.act_mask.to(self.device)
         else:
             index, start_state, rollout_kwargs, act_mask = None, batch.state, batch.rollout_kwargs, None
+        entry_spec = getattr(batch, "entry_spec", None) if cfg.imagine_entries else None
+        entry_rows = None
+        if entry_spec is not None:
+            entry_rows = index.tolist() if index is not None else list(range(n_base))
+            if act_mask is not None:
+                # Entrant CAVs follow the policy on all-CAV rows, the native behaviour elsewhere.
+                act_mask = act_mask.clone()
+                act_mask[variants.row_kind.to(self.device) == KIND_ALL, entry_spec["k0"]:] = True
         if self.use_lanes and self.controller_factory is None:
             raise ValueError("lane decisions require the bridge controller factory")
         need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
@@ -337,6 +419,12 @@ class DreamerTrainer:
 
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
+            recorder = None
+            member_kwargs = rollout_kwargs
+            if entry_spec is not None:
+                recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
+                                                         initial["s_m"].shape[1]))
+                member_kwargs = {**rollout_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
             if switch:
@@ -344,7 +432,7 @@ class DreamerTrainer:
             try:
                 roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
                                      cav_controller=controller, cav_teacher=None,
-                                     truncation_steps=None, **rollout_kwargs)
+                                     truncation_steps=None, **member_kwargs)
             finally:
                 if switch:
                     model.checkpoint_forward = previous_switch
@@ -352,14 +440,31 @@ class DreamerTrainer:
                 raise RuntimeError("WM must invoke the CAV callback once per physics step")
             if advanced_rng is None:
                 advanced_rng = _rng_state(self.device)
-            physics_states = [initial]
-            for t in range(step):
-                nxt = {**initial, "s_m": roll["positions"][:, t], "v_mps": roll["speeds"][:, t],
-                       "lane": roll["lanes"][:, t], "present": roll["masks"][:, t],
-                       "a_mps2": roll["accel"][:, t]}
-                if "entrant_seq" in roll:
-                    nxt["entrant"] = roll["entrant_seq"][:, t]
-                physics_states.append(nxt)
+            if recorder is not None:
+                # State of transition t = the WM input after this step's insertions (entrants
+                # are charged from their first physics step); entry_queue = the backlog waiting
+                # during transition t (team_reward: source_wait = dt * entry_queue).
+                if len(recorder.states) != step:
+                    raise RuntimeError("entry process must be called once per physics step")
+                physics_states = []
+                for t, current in enumerate(recorder.states):
+                    physics_states.append({
+                        **initial, **{key: current[key] for key in (
+                            "s_m", "v_mps", "lane", "present", "a_mps2", "is_cav", "length_m",
+                            "entrant") if key in current},
+                        "entry_queue": torch.as_tensor(recorder.backlog[t],
+                                                       dtype=initial["s_m"].dtype,
+                                                       device=self.device)})
+                physics_states.append(None)
+            else:
+                physics_states = [initial]
+                for t in range(step):
+                    nxt = {**initial, "s_m": roll["positions"][:, t], "v_mps": roll["speeds"][:, t],
+                           "lane": roll["lanes"][:, t], "present": roll["masks"][:, t],
+                           "a_mps2": roll["accel"][:, t]}
+                    if "entrant_seq" in roll:
+                        nxt["entrant"] = roll["entrant_seq"][:, t]
+                    physics_states.append(nxt)
             # Preserve WM-specific state fields at the terminal boundary.
             physics_states[-1] = roll["state"]
             parts = []
@@ -529,12 +634,40 @@ class DreamerTrainer:
                 out[index] = f"share~p{round(nearest * 100):02d}"
         return out
 
+    def _entry_slots(self, batch, generator=None):
+        if not self.config.imagine_entries:
+            return batch
+        horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+        return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator)
+
+    @staticmethod
+    def _wait_metrics(imagined):
+        """Per-control-step on-road delay, source wait and total wait (ensemble/horizon/all-CAV
+        row means) and, with counterfactual base rows, total wait all-CAV minus all-native
+        (summed over the horizon, mean over starts; negative = less waiting than native)."""
+        comps, n_base = imagined["components"], imagined["n_base"]
+        delay = comps["delay"]
+        source = comps.get("source_wait", torch.zeros_like(delay))
+        total = delay + source
+        out = {"delay": float(delay[..., :n_base].mean()),
+               "source_wait": float(source[..., :n_base].mean()),
+               "total_wait": float(total[..., :n_base].mean())}
+        variants = imagined.get("variants")
+        if variants is not None and variants.base_row:
+            per_row = total.sum(1).mean(0)                         # [N]
+            diffs = [float(per_row[s] - per_row[r]) for s, r in variants.base_row.items()]
+            out["total_wait_vs_native"] = sum(diffs) / len(diffs)
+        return out
+
     def update(self):
         started = time.perf_counter()
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
-        batch = self._sample_starts(self.start_states)
+        # Entry seeds from a per-update generator: enabling entries leaves the global RNG stream
+        # (variant choice, policy noise) unchanged, and a resumed run draws the same seeds.
+        batch = self._entry_slots(self._sample_starts(self.start_states),
+                                  torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
         variants = (build_variants(batch.state, self.counterfactual)
                     if self.counterfactual.enabled else None)
         imagined = self.imagine(batch, variants=variants)
@@ -591,10 +724,15 @@ class DreamerTrainer:
                    "ensemble_disagreement": float(imagined["disagreement"][..., :n_base].detach().mean()),
                    "return_scale": scale, "action_stats": action_stats,
                    "wall_time_s": time.perf_counter() - started}
-        for name in ("delay", "throughput", "smooth", "hard_brake", "fairness_delay", "cost_ttc"):
+        for name in ("delay", "throughput", "smooth", "hard_brake", "fairness_delay", "cost_ttc",
+                     "source_wait"):
             value = imagined["components"].get(name)
             metrics["fairness" if name == "fairness_delay" else name] = (
                 float(value[..., :n_base].detach().mean()) if value is not None else 0.0)
+        # Total wait per control step = on-road speed-deficit delay + entry (source) waiting.
+        metrics["total_wait"] = metrics["delay"] + metrics["source_wait"]
+        metrics["entries"] = bool(getattr(batch, "entry_spec", None) is not None
+                                  and self.config.imagine_entries)
         if self.output_dir is not None:
             self.output_dir.mkdir(parents=True, exist_ok=True)
             with (self.output_dir / "updates.jsonl").open("a", encoding="utf-8") as stream:
@@ -623,15 +761,17 @@ class DreamerTrainer:
         self.policy.eval()
         self.group_encoder.eval()
         cf = self.counterfactual
-        returns, d_all, coop, n_groups = [], [], [], 0
+        returns, d_all, coop, n_groups, waits = [], [], [], 0, []
         try:
             with torch.no_grad():
                 generator = torch.Generator().manual_seed(12345)
+                entry_generator = torch.Generator().manual_seed(54321)
                 for _ in range(batches):
-                    batch = self._sample_starts(sampler)
+                    batch = self._entry_slots(self._sample_starts(sampler), entry_generator)
                     variants = build_variants(batch.state, cf, generator) if cf.enabled else None
                     imagined = self.imagine(batch, deterministic=True, variants=variants)
                     returns.append(float(imagined["returns"][..., :imagined["n_base"]].mean()))
+                    waits.append(self._wait_metrics(imagined))
                     if variants is not None and variants.base_row:
                         parts = decompose(imagined["returns"][:, 0].mean(0), variants)
                         d_all.extend(parts["D_all"])
@@ -640,6 +780,8 @@ class DreamerTrainer:
             mean_return = sum(returns) / len(returns)
             out = {"returns": mean_return, "D_all": mean_or_none(d_all),
                    "coop_gain_val": mean_or_none(coop), "n_groups": n_groups}
+            for key in ("delay", "source_wait", "total_wait", "total_wait_vs_native"):
+                out[key] = mean_or_none(w[key] for w in waits if key in w)
             out["score"] = out["D_all"] if out["D_all"] is not None else mean_return
             if not math.isfinite(out["score"]):
                 raise ValueError("nonfinite validation return")

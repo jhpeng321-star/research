@@ -4,7 +4,10 @@ Random WM-frame states on three lanes (deterministic given the reset seed), simp
 kinematics, CAV accelerations applied, lane targets (``step(accel, lanes=...)``, -1 = stay)
 executed.  Everything else (observations, RSU field, actor, safety, lanes, reward) is the
 REAL ``wms.control`` code.  ``fail_seeds`` raise in ``reset`` (worker retry tests) and
-``exit_seeds`` terminate the process (worker-death tests).
+``exit_seeds`` terminate the process (worker-death tests).  ``entry_queue`` (optional float)
+makes ``step`` emit ``info["entry_queue_steps"]`` / ``["source_wait_steps"]`` like the real env:
+a deterministic counter pattern ``entry_queue + (step index % 3)`` (no RNG use, so the random
+stream of existing tests is unchanged); ``None`` (default) emits nothing.
 """
 
 from __future__ import annotations
@@ -24,12 +27,14 @@ class FakeCavEnv:
     """``CavEnv`` protocol on random states; ``step(accel [1,K], lanes=[1,K] | None)``."""
 
     def __init__(self, k_slots: int = 24, min_vehicles: int = 12, churn_prob: float = 0.1,
-                 fail_seeds=(), exit_seeds=()):
+                 fail_seeds=(), exit_seeds=(), entry_queue: float | None = None):
         self.k_slots = int(k_slots)
         self.min_vehicles = int(min_vehicles)
         self.churn_prob = float(churn_prob)
         self.fail_seeds = {int(s) for s in fail_seeds}
         self.exit_seeds = {int(s) for s in exit_seeds}
+        self.entry_queue = None if entry_queue is None else float(entry_queue)
+        self._queue_tick = 0
         self._gen: torch.Generator | None = None
         self.done = True
         self.lane_counts = {"issued": 0, "completed": 0}
@@ -100,6 +105,11 @@ class FakeCavEnv:
         done = self._steps_left <= 0
         info = {"terminated": False, "done": done,
                 "lane_commands": {"issued": issued, "completed": issued}}
+        if self.entry_queue is not None:
+            queue = self.entry_queue + float(self._queue_tick % 3)
+            self._queue_tick += 1
+            info["entry_queue_steps"] = [queue, queue]
+            info["source_wait_steps"] = [0.5 * queue, 0.5 * queue]
         if done:
             self.done = True
             info["summary"] = {"collisions": 0, "teleports": 0,

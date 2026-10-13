@@ -611,7 +611,7 @@ def test_cli_cpu_smoke_logging_best_checkpoints_summary_and_resume(monkeypatch):
         "policy": FakePolicy(), "group_encoder": FakeGroupEncoder(), "critic": FakeCritic(),
         "observation_builder": observations, "reward_fn": speed_reward, "safety": safety})
     monkeypatch.setattr(train_cli, "_load_world_models", lambda paths, device: [FakeWorldModel()])
-    monkeypatch.setattr(train_cli, "_load_starts", lambda data, models, seed:
+    monkeypatch.setattr(train_cli, "_load_starts", lambda data, models, seed, entries=False:
                         split_start_states(_dataset(), seed=seed))
     with tempfile.TemporaryDirectory(prefix="c4-cli-", dir=Path(__file__).parent) as tmp:
         output = Path(tmp)

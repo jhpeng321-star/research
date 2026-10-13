@@ -36,6 +36,11 @@ lane_entropy_weight = 3e-4 # DreamerV3-style entropy bonus of the categorical la
 # policy / RSU encoder / safety / native / reward / target critic) instead of storing activations.
 # Identical objective and gradients; ~17x lower peak at batch 8 / H 15 (CPU-measured); ~+40 % time.
 checkpoint_imagination = true
+# Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from each start window's
+# observed pre-t0 entry history (entries v2); arrivals that cannot be inserted queue (uncapped) and are charged
+# by team_reward as source waiting (same weight as on-road delay). false = old on-road-only imagination.
+imagine_entries = true
+entry_pad_max = 256 # cap on the empty entrant slots appended per batch (1.5 x expected arrivals + 16)
 
 # Per-CAV lane decisions (owner 2026-10-12 late): the policy outputs accel AND stay/left/right.
 # No designed controller anywhere: the head starts uniform over the feasible choices.

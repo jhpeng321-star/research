@@ -218,7 +218,7 @@ def test_reward_numeric_components_normalization_and_empty_batch():
     weights = RewardWeights()
     metrics = team_reward(x, nxt, accel, weights)
     assert set(metrics) == {"reward", "cost_ttc", "delay", "throughput", "smooth",
-                            "hard_brake", "fairness_delay"}
+                            "hard_brake", "fairness_delay", "source_wait"}
     assert all(t.shape == (1,) and torch.isfinite(t).all() for t in metrics.values())
     torch.testing.assert_close(metrics["delay"], torch.tensor([0.5]))
     torch.testing.assert_close(metrics["smooth"], torch.tensor([20.0]))

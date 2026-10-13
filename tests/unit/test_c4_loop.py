@@ -235,7 +235,7 @@ def test_refresh_config_and_knob_validation():
     c4 = cfg.data.c4_episodes
     assert c4.enabled and c4.path == "c4_episodes" and c4.mix_ratio == 0.3 and c4.use_val
     assert cfg.model.init_from == "ckpt_c4_wm"
-    assert cfg.curriculum.stage_steps == (300, 300, 300)
+    assert cfg.curriculum.stage_steps == (200, 400, 150)     # cfc1bbc
     assert cfg.curriculum.unroll_s == base.curriculum.unroll_s
     assert cfg.data.switching == base.data.switching and cfg.data.packs == base.data.packs
     assert cfg.model.lane_rule == base.model.lane_rule == "learned_discretionary"

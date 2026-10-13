@@ -87,7 +87,7 @@ class CavSumoEnv:
                  history_ticks: int = 241, use_subscriptions: bool = True,
                  ttc: bool = True, sumo_binary=None, device="cpu",
                  sensor_check_every_s: int = 10, physics_log: bool = True,
-                 extra_sumo_cli=None):
+                 extra_sumo_cli=None, entry_queue_in_state: bool = False):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -105,6 +105,11 @@ class CavSumoEnv:
         # extra SUMO launch arguments, e.g. ``--save-state.precision 17 --save-state.rng true``
         # for saved-state branching (traffic_shepherd.c4.branching)
         self.extra_sumo_cli = [str(a) for a in (extra_sumo_cli or ())]
+        # opt-in ``state["entry_queue"]`` [1] (see :meth:`state`); off by default because
+        # deploy / rsu_check / coop_imagine repeat or gather every state key.
+        self.entry_queue_in_state = bool(entry_queue_in_state)
+        self.last_entry_queue_steps: list = []
+        self.last_source_wait_steps: list = []
         self.binary = sumo_binary or shutil.which("sumo")
         if self.binary is None:
             raise CavEnvError("SUMO binary not found on PATH")
@@ -184,6 +189,7 @@ class CavSumoEnv:
         self.edges = boundary_edges(self.config)
         self.ledger = RequestLedger(requests)
         self.history.clear()
+        self.last_entry_queue_steps, self.last_source_wait_steps = [], []
         self._setup_controllers(mode)
         self._previous_row = None
         self._previous_live: set = set()
@@ -272,7 +278,17 @@ class CavSumoEnv:
         return float(self.api.simulation.getTime())
 
     def state(self) -> dict:
-        return frame_to_state(self.frame, device=self.device)
+        state = frame_to_state(self.frame, device=self.device)
+        if self.entry_queue_in_state:
+            import torch
+            queue = self.last_entry_queue_steps[-1] if self.last_entry_queue_steps else 0.0
+            state["entry_queue"] = torch.tensor([float(queue)], dtype=torch.float32,
+                                                device=self.device)
+        return state
+
+    def entry_queue_now(self) -> int:
+        """Vehicles requested (``ledger.due(now)``) but not yet inserted, at the current time."""
+        return int(self.ledger.due(self.now) - len(self.ledger.inserted))
 
     def slot_vehicle_ids(self) -> list:
         return self.builder.slot_vehicle_ids(self.frame)
@@ -483,12 +499,18 @@ class CavSumoEnv:
         self._last_actions = actions
         commanded = {r.vehicle_id for r in records}
         info_interval = Counter()
+        source_wait_steps = []
         for substep in range(2):
             api.simulationStep()
             after = self.now
             if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
                 raise CavEnvError("SUMO physics time grid mismatch")
-            info_interval.update(self._after_physics(after, actions, now, commanded))
+            sub = self._after_physics(after, actions, now, commanded)
+            source_wait_steps.append(float(sub.get("source_wait_vehicle_seconds", 0.0)))
+            info_interval.update(sub)
+        # per-physics-step source wait (vehicle-seconds) and its time-averaged queue (/ 0.5 s)
+        self.last_source_wait_steps = source_wait_steps
+        self.last_entry_queue_steps = [w / 0.5 for w in source_wait_steps]
         self._previous_live = set(api.vehicle.getIDList())
         for vid, (target, _) in lane_issued.items():
             slot = self.builder.pool.slot_of(vid)
@@ -613,7 +635,9 @@ class CavSumoEnv:
                 "actions": {v: a["action"] for v, a in self._last_actions.items()},
                 "lane_commands": dict(getattr(self, "_last_lane_counts", {})),
                 "rsu_detections": rsu_detections(self.frame, self.builder.vehicle_ids),
-                "dropped_vehicles": list(self.frame.dropped), "done": done}
+                "dropped_vehicles": list(self.frame.dropped), "done": done,
+                "source_wait_steps": list(self.last_source_wait_steps),
+                "entry_queue_steps": list(self.last_entry_queue_steps)}
         if done:
             info["summary"] = self.summary()
             if self.recorder is not None:
