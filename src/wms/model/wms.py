@@ -441,13 +441,20 @@ class WmSModel(nn.Module):
                 lane_age: Optional[Tensor] = None,
                 baseline_lane_logits: Optional[Tensor] = None,
                 controller_id: Optional[Tensor] = None,
-                action_command: Optional[Tensor] = None) -> dict[str, Tensor]:
+                action_command: Optional[Tensor] = None,
+                accel_noise: Optional[Tensor] = None,
+                accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
         """Predict acceleration and lane logits for every slot.
 
         ``k_steps`` is the number of steps since the last real observation (scalar or
         ``[B, K]``).  Returns the physics and final accelerations, the residual terms,
         lane logits, the gate and the learned-slot mask (``hdv_mask``), plus driver
         parameters/embedding and lane probabilities when those components are active.
+
+        ``accel_noise`` (optional ``[B, K]`` standard-normal draws, default None = deterministic,
+        bit-identical) adds aleatoric noise ``accel_noise * exp(residual log-sigma)`` (sigma capped
+        at ``accel_noise_sigma_max`` when given) to the acceleration of learned (HDV) slots
+        before the plant clamp; used by ``wms.control.futures`` for sampled futures.
         """
         kin = state_kin(state).float()
         present = state_present(state, kin)
@@ -490,7 +497,14 @@ class WmSModel(nn.Module):
             gate * accel_delta, soft_bound_pos=self.residual_soft_bound_mps2,
             soft_bound_neg=self.residual_soft_bound_neg_mps2,
             cap_pos=self.residual_cap_mps2, cap_neg=self.residual_cap_neg_mps2)
-        accel = torch.where(learned, physics + correction, physics)
+        if accel_noise is None:
+            accel = torch.where(learned, physics + correction, physics)
+        else:
+            sigma = base["accel_log_sigma"].exp()
+            if accel_noise_sigma_max is not None:
+                sigma = sigma.clamp_max(float(accel_noise_sigma_max))
+            accel = torch.where(learned, physics + correction + accel_noise.to(sigma.dtype) * sigma,
+                                physics)
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -561,7 +575,9 @@ class WmSModel(nn.Module):
              controller_id: Optional[Tensor] = None,
              action_id: Optional[Tensor] = None,
              action_command: Optional[Tensor] = None,
-             projection: Optional[FeasibilityProjection] = None) -> dict[str, Tensor]:
+             projection: Optional[FeasibilityProjection] = None,
+             accel_noise: Optional[Tensor] = None,
+             accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
         """Advance one 0.5 s step; CAVs are never learned movers in structured mode.
 
         With entries enabled the state carries an ``entrant`` mask: t0 CAVs keep the
@@ -580,6 +596,8 @@ class WmSModel(nn.Module):
             forward_kwargs["driver_embedding"] = driver_embedding
         if self.lane_change_head is not None:
             forward_kwargs["lane_age"] = lane_age
+        if accel_noise is not None:
+            forward_kwargs.update(accel_noise=accel_noise, accel_noise_sigma_max=accel_noise_sigma_max)
         if self.checkpoint_forward and torch.is_grad_enabled():
             out = checkpoint(partial(self.forward, **forward_kwargs), state,
                              use_reentrant=False, preserve_rng_state=self.training)
@@ -709,7 +727,9 @@ class WmSModel(nn.Module):
                 entries: Optional[object] = None,
                 state_noise_std_m: float = 0.0,
                 state_noise_std_mps: float = 0.0,
-                projection: Optional[FeasibilityProjection] = None) -> dict[str, Tensor]:
+                projection: Optional[FeasibilityProjection] = None,
+                accel_noise: Optional[Tensor] = None,
+                accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
         ``cav_teacher[:, i+1]`` is the CAV state after step ``i`` and ``present_seq
@@ -725,6 +745,10 @@ class WmSModel(nn.Module):
         override is skipped.  ``state_noise_std_m``/``state_noise_std_mps`` add
         zero-mean Gaussian noise to the predicted HDV position/speed (regulariser);
         zero draws nothing.
+
+        ``accel_noise`` (``[B, n_steps, K]`` standard-normal draws, default None) samples the
+        HDV acceleration aleatorically with the residual head's predicted sigma (see
+        :meth:`forward`); the draws are an input so callers control common random numbers.
 
         ``lane_teacher`` (``[B, T+1, K]`` recorded lanes; diagnostic, round 5) forces
         every step's lane decision to the recorded lane where the entry is ``>= 0``
@@ -791,7 +815,10 @@ class WmSModel(nn.Module):
                 driver_params=fixed_driver_params, driver_embedding=fixed_driver_embedding,
                 lane_age=lane_age, cav_controller=cav_controller,
                 controller_id=controller_id, action_id=action_id,
-                action_command=action_command, projection=projection)
+                action_command=action_command, projection=projection,
+                **({} if accel_noise is None else {
+                    "accel_noise": accel_noise[:, step_i],
+                    "accel_noise_sigma_max": accel_noise_sigma_max}))
             out = checkpoint(step_fn, current, use_reentrant=False) if step_checkpoint \
                 else step_fn(current)
             for key, value in (out.get("projection_active") or {}).items():

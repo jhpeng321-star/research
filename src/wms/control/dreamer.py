@@ -24,6 +24,7 @@ from .contract import PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
                              row_coefficients)
+from .futures import FuturesConfig, SampledFutures
 from .start_states import StartBatch, checked_path
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
@@ -63,6 +64,20 @@ class DreamerConfig:
     # imagination runs without entries, exactly as before.
     imagine_entries: bool = True
     entry_pad_max: int = 256            # cap on the empty entrant slots appended per batch
+    # Sampled futures (FUTURES_NOTES.md; default 1 = the single deterministic rollout, bit-identical):
+    # every start is imagined under ``future_samples`` stochastic worlds -- HDV driver parameters
+    # perturbed within the encoder uncertainty (``future_driver_scale`` x uncertainty; 0 = off,
+    # embedding std ``future_embedding_std``) and, with ``future_accel_noise``, per-step HDV
+    # acceleration noise N(0, (scale * min(exp(log_sigma), sigma_max))^2).  Returns are averaged
+    # over members x samples and the disagreement penalty is the std over members x samples;
+    # counterfactual rows, members and (via ``future_seed`` + update) candidates share the draws.
+    future_samples: int = 1
+    future_driver_scale: float = 1.0
+    future_embedding_std: float = 0.05
+    future_accel_noise: bool = False
+    future_accel_scale: float = 1.0
+    future_accel_sigma_max: float = 1.0
+    future_seed: int = 0
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -80,12 +95,17 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
-        for name in ("checkpoint_imagination", "imagine_entries"):
+        for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
                 or self.entry_pad_max < 1:
             raise ValueError("entry_pad_max must be a positive integer")
+        for name in ("future_samples", "future_seed"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError(f"{name} must be an integer")
+        FuturesConfig.from_trainer(self)           # validates the sampling fields
 
 
 def lambda_returns(rewards: Tensor, values: Tensor, gamma=0.99, lambda_=0.95) -> Tensor:
@@ -286,7 +306,7 @@ class DreamerTrainer:
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
 
-    def imagine(self, batch: StartBatch, deterministic=False, variants=None):
+    def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -294,6 +314,14 @@ class DreamerTrainer:
         follow the policy, the others the native CAV behaviour.  Rows 0..B-1 are the normal
         all-CAV rollouts.  Policy noise is drawn per (start, control step, slot) and shared by
         all rows of a start (common random numbers) when the policy accepts ``noise``.
+
+        Sampled futures (``config.future_samples`` > 1 or ``future_accel_noise``): every ensemble
+        member is rolled out once per sampled future, and the member x sample pairs act as the
+        "ensemble" axis ``E' = E * S`` of all outputs (member-major: index ``e * S + s``).  A future
+        is one draw of the HDV driver parameters (within the encoder uncertainty) and, optionally,
+        of the per-step HDV acceleration noise; both are drawn once per START and shared by all
+        members and all counterfactual rows of that start.  ``future_seed`` fixes the draws
+        (default: from the config seed and the update count).  Off: nothing changes.
         """
         cfg = self.config
         forbidden = {"cav_teacher", "lane_teacher", "action_timeline", "present_seq", "is_cav_seq",
@@ -330,12 +358,26 @@ class DreamerTrainer:
         reward_call = _Recompute(self.reward_fn, recompute)
         observe_call = _Recompute(self.observation_builder, recompute)
         value_call = _Recompute(self.target_critic, recompute)
+        futures_cfg = FuturesConfig.from_trainer(cfg)
+        future_extras = None
+        if futures_cfg.active:
+            seed = self.update_count if future_seed is None else future_seed
+            future_extras = SampledFutures(futures_cfg, seed).plan(
+                self.world_models, batch.state, batch.rollout_kwargs,
+                cfg.horizon * STEPS_PER_CONTROL)
+            if index is not None:       # rows of one start share its sample
+                future_extras = [[expand_rows(extra, index, n_base) for extra in per_sample]
+                                 for per_sample in future_extras]
+        n_futures = futures_cfg.n_samples if futures_cfg.active else 1
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         rng = _rng_state(self.device)
         advanced_rng = None
         # Common random numbers: disagreement must measure WM differences, not action noise.
-        for model in self.world_models:
+        for model_index, sample_index in [(e, s) for e in range(len(self.world_models))
+                                          for s in range(n_futures)]:
+            model = self.world_models[model_index]
+            future = {} if future_extras is None else future_extras[model_index][sample_index]
             _restore_rng(rng, self.device)
             records = []
             step = 0
@@ -420,11 +462,11 @@ class DreamerTrainer:
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
             recorder = None
-            member_kwargs = rollout_kwargs
+            member_kwargs = {**rollout_kwargs, **future}
             if entry_spec is not None:
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
                                                          initial["s_m"].shape[1]))
-                member_kwargs = {**rollout_kwargs, "entries": recorder}
+                member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
             if switch:
@@ -509,6 +551,7 @@ class DreamerTrainer:
                 "disagreement": disagreement, "states": member_states,
                 "entropy": torch.stack(member_entropy), "actions": torch.stack(member_actions),
                 "action_mask": masks, "lanes": lanes, "variants": variants, "n_base": n_base,
+                "n_members": len(self.world_models), "n_futures": n_futures,
                 "components": {key: torch.stack([c[key] for c in member_components])
                                for key in member_components[0]}}
 
@@ -723,6 +766,8 @@ class DreamerTrainer:
                    "actor_grad_norm": float(actor_norm), "critic_grad_norm": float(critic_norm),
                    "ensemble_disagreement": float(imagined["disagreement"][..., :n_base].detach().mean()),
                    "return_scale": scale, "action_stats": action_stats,
+                   **({"future_samples": imagined["n_futures"]} if imagined["n_futures"] > 1
+                      or self.config.future_accel_noise else {}),
                    "wall_time_s": time.perf_counter() - started}
         for name in ("delay", "throughput", "smooth", "hard_brake", "fairness_delay", "cost_ttc",
                      "source_wait"):
@@ -766,10 +811,12 @@ class DreamerTrainer:
             with torch.no_grad():
                 generator = torch.Generator().manual_seed(12345)
                 entry_generator = torch.Generator().manual_seed(54321)
-                for _ in range(batches):
+                for batch_index in range(batches):
                     batch = self._entry_slots(self._sample_starts(sampler), entry_generator)
                     variants = build_variants(batch.state, cf, generator) if cf.enabled else None
-                    imagined = self.imagine(batch, deterministic=True, variants=variants)
+                    # Fixed sampled futures (same worlds at every validation) when enabled.
+                    imagined = self.imagine(batch, deterministic=True, variants=variants,
+                                            future_seed=f"val{batch_index}")
                     returns.append(float(imagined["returns"][..., :imagined["n_base"]].mean()))
                     waits.append(self._wait_metrics(imagined))
                     if variants is not None and variants.base_row:
