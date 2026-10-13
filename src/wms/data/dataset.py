@@ -26,6 +26,8 @@ from wms.core.io import run_key
 from wms.data.action_timeline import CONTROLLERS, SCHEMA, ActionTimeline
 from wms.data.corpus import PackCorpus
 from wms.data.history import history_spec, long_history_features
+from wms.data.junction_fix import (JUNCTION_FIX_MODES, fill_junction_rows, pre_t0_rows,
+                                   run_prefix)
 from wms.data.pack_history import entry_features, prior_history
 from wms.data.presence import junction_carry_presence, junction_mask_from_lane
 from wms.data.sidecars import read_identity_rows
@@ -340,7 +342,8 @@ class TrajectoryDataset(Dataset):
                         timelines: Optional[dict] = None,
                         item_filter: Optional[Callable] = None,
                         identity_env_dir: Optional[str | Path] = None,
-                        history_s=None, history_stride_s=1.0) -> "TrajectoryDataset":
+                        history_s=None, history_stride_s=1.0,
+                        junction_fix: str = "off") -> "TrajectoryDataset":
         """Build a lazy TRAIN view over A11 packs and verified identity windows.
 
         ``PackCorpus`` performs the authoritative split and INDEX range checks.  The
@@ -366,7 +369,13 @@ class TrajectoryDataset(Dataset):
         ``window_list`` keeps only listed ``(batch, world, arm, t0_s)`` windows (the
         leave-one-controller-out TRAIN set); ``exclude_window_list`` drops a bare key list.
         Both are metadata-only and fail closed on an unmatched keep key.
+
+        ``junction_fix`` (``data.junction_fix``, :mod:`wms.data.junction_fix`): ``"off"``
+        (default, unchanged windows) or ``"ffill"`` (junction-transit rows keep the vehicle's
+        previous lane and an interpolated ``s``, the evaluation convention).
         """
+        if junction_fix not in JUNCTION_FIX_MODES:
+            raise ValueError(f"junction_fix must be one of {JUNCTION_FIX_MODES}")
         if not paths:
             raise ValueError("at least one trajectory pack is required")
         history_spec(history_s, history_stride_s)
@@ -433,7 +442,7 @@ class TrajectoryDataset(Dataset):
         loader = _PackWindowLoader(
             corpus, kept_orig, positions, identity_rows, horizon_steps=int(horizon_steps),
             start_shift_prob=start_shift_prob, timelines=timelines, entries_v2=entries_v2,
-            history_s=history_s, history_stride_s=history_stride_s)
+            history_s=history_s, history_stride_s=history_stride_s, junction_fix=junction_fix)
         receipt = {
             "mode": "a11-index-window",
             "split": "TRAIN",
@@ -459,6 +468,8 @@ class TrajectoryDataset(Dataset):
             receipt["driver_history"] = {
                 "history_s": history_s, "history_stride_s": history_stride_s,
                 "short_history_policy": "front-pad and mask; no windows dropped"}
+        if junction_fix != "off":
+            receipt["junction_fix"] = junction_fix
         dataset = cls([{} for _ in range(len(kept_orig))], loader=loader, receipt=receipt)
         dataset.positions = list(positions)      # [(pack, original manifest position)]
         return dataset
@@ -547,7 +558,8 @@ class _PackWindowLoader:
 
     def __init__(self, corpus: PackCorpus, kept_orig: list[int], positions: list[tuple],
                  identity_rows: list[dict], *, horizon_steps: int, start_shift_prob: float,
-                 timelines: Optional[dict], entries_v2: bool, history_s, history_stride_s):
+                 timelines: Optional[dict], entries_v2: bool, history_s, history_stride_s,
+                 junction_fix: str = "off"):
         self.corpus = corpus
         self.kept_orig = kept_orig
         self.positions = positions
@@ -558,6 +570,7 @@ class _PackWindowLoader:
         self.entries_v2 = entries_v2
         self.history_s = history_s
         self.history_stride_s = history_stride_s
+        self.junction_fix = junction_fix
 
     def __call__(self, index: int) -> dict:
         corpus = self.corpus
@@ -574,10 +587,13 @@ class _PackWindowLoader:
         teacher = teacher[:, 0].numpy().astype(np.float32)
         horizon = teacher.shape[0]
         on_road = teacher[..., 1].astype(np.int64) >= 0
-        states = _states_from_teacher(teacher, window["length0"][0].numpy())
         present = np.concatenate(
             (window["present0"][0].numpy().astype(bool)[None],
              window["rollout_mask"][:, 0].numpy().astype(bool)), axis=0)
+        road = None
+        if self.junction_fix != "off":
+            teacher, present, road = self._fix_junctions(int(item["tick"]), teacher, present)
+        states = _states_from_teacher(teacher, window["length0"][0].numpy())
         # A junction internal-lane step still carries the vehicle (the pack ``target_mask``
         # already keeps it), but its lane target is undefined, so exclude only that step
         # from the loss.
@@ -585,7 +601,8 @@ class _PackWindowLoader:
         pack, position = self.positions[index]
         ids = self.identity_rows[pack][position]
         policy = (window.get("meta") or [{}])[0].get("policy")
-        present0 = window["present0"][0].numpy().astype(bool)
+        present0 = (window["present0"][0].numpy().astype(bool) if road is None
+                    else present[0].copy())
         hist, hist_mask = prior_history(corpus, int(item["tick"]), present0)
         result = {
             "hist": hist, "hist_mask": hist_mask,
@@ -614,13 +631,34 @@ class _PackWindowLoader:
             result["action_timeline"] = self._snapshot_timeline(item, horizon, states.shape[1])
         if self.entries_v2:
             result["entry_feat"] = entry_features(corpus, item)
-            result.update(road_presence(corpus, int(item["tick"]), horizon - 1))
+            result.update(road if road is not None
+                          else road_presence(corpus, int(item["tick"]), horizon - 1))
         if self.history_s is not None:
             dh, dm = prior_history(corpus, int(item["tick"]), present0,
                                    history_s=self.history_s,
                                    history_stride_s=self.history_stride_s)
             result["driver_hist"], result["driver_hist_mask"] = dh, dm
         return result
+
+    def _fix_junctions(self, tick: int, teacher: np.ndarray, present: np.ndarray):
+        """``junction_fix = "ffill"``: fill junction rows; returns (teacher, present, road).
+
+        ``road`` is the window's recorded road presence (:func:`road_presence`) with a dropped
+        t0 vehicle removed for as long as it stays in its slot.
+        """
+        road = road_presence(self.corpus, tick, teacher.shape[0] - 1)
+        lane = np.rint(teacher[..., 1]).astype(np.int64)
+        need = road["road_present"][0] & (lane[0] < 0)
+        pre_lane, pre_s, pre_age = pre_t0_rows(self.corpus, tick, need)
+        teacher, _filled, unfilled = fill_junction_rows(
+            teacher, road["road_present"], road["road_continue"], pre_lane, pre_s, pre_age)
+        drop = present[0] & unfilled[0]
+        if drop.any():
+            present = present & ~drop[None]
+            gone = run_prefix(road["road_present"], road["road_continue"], drop)
+            road["road_present"] = road["road_present"] & ~gone
+            road["road_continue"] = road["road_continue"] & ~gone[:-1]
+        return teacher, present, road
 
     def _draw_start_shift(self, item: dict) -> int:
         """Random later start tick (global torch RNG: ``rand`` then ``randint``)."""

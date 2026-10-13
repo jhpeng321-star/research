@@ -17,6 +17,7 @@ CAV_DRIVE_MODES = ("teacher", "closed_loop")
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 LANE_GAP_RULES = ("fixed", "speed")
+JUNCTION_FIX_MODES = ("off", "ffill")
 HARD_CAP_FIELDS = ("residual_cap_mps2", "residual_cap_neg_mps2")
 
 
@@ -152,6 +153,7 @@ class TrainSettings:
     aggregate_cell_temp_m: float = 5.0
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
+    junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -252,6 +254,8 @@ class TrainSettings:
                  and int(self.aggregate_every_steps) >= 1,
                  "aggregate_bin_s/cell_temp_m must be positive and every_steps >= 1")
         _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
+        _require(self.junction_fix in JUNCTION_FIX_MODES,
+                 f"junction_fix must be one of {JUNCTION_FIX_MODES}")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":

@@ -588,7 +588,8 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
                           max_drop_frac: float = 0.85, val_holdout_frac: float = 0.1,
                           val_holdout_seed: int = 0, val_window_list: Optional[str] = None,
                            work_dir: str | Path = ".", leave_pi_wall_out: bool = False,
-                           history_s=None, history_stride_s=1.0) -> dict:
+                           history_s=None, history_stride_s=1.0,
+                           junction_fix: str = "off") -> dict:
     """Switching-pack TRAIN (and TRAIN-scoped monitoring) datasets + events.
 
     Returns ``{"train": TrajectoryDataset, "train_events": [n,2] array,
@@ -638,7 +639,8 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
             # (18 busy ticks per run) switching sidecar; ``""`` disables it for
             # THIS corpus only.  The trainer still reads + hash-verifies the
             # sidecar itself (``wms.data.sidecars.read_identity_rows``) for ``vehicle_ids``.
-            identity_env_dir="", history_s=history_s, history_stride_s=history_stride_s)
+            identity_env_dir="", history_s=history_s, history_stride_s=history_stride_s,
+            **({} if junction_fix == "off" else {"junction_fix": junction_fix}))
         ev = np.asarray([flt.events[int(gpos)] for _p, gpos in ds.positions], np.int64)
         return ds, ev, flt.receipt
 
