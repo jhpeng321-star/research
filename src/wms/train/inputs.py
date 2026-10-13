@@ -182,6 +182,7 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
     if controller_id is not None:
         controller_id = controller_id.to(device)
     timeline = _device_timeline(batch.get("action_timeline"), device, entries)
+    _refuse_unknown_commands(timeline, settings)
     cav_controller = None
     if settings.cav_drive == "closed_loop":
         if settings.black_box:
@@ -215,6 +216,21 @@ def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_
     initial["veh_kin"] = kin
 
 
+def _refuse_unknown_commands(timeline: Optional[Mapping[str, Any]],
+                             settings: TrainSettings) -> None:
+    """DATAHYG: a ``direct`` step whose command is unknown may not drive a CAV or a controller
+    embedding (closed-loop CAVs or the black box); teacher-driven structured WM-S is fine."""
+    if timeline is None or "command_known" not in timeline:
+        return
+    if settings.cav_drive != "closed_loop" and not settings.black_box:
+        return
+    direct = timeline["controller"] == CONTROLLERS.index("direct")
+    if bool((direct & ~timeline["command_known"].bool()).any()):
+        raise ValueError("direct timeline steps with unknown issued commands (controller "
+                         "hygiene relabelled dspeed windows) cannot drive closed-loop CAVs or "
+                         "the black-box controller embedding")
+
+
 def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device,
                      entries: Optional[Any]) -> Optional[dict]:
     """Action timeline on ``device``; entrant columns default to the documented native plan."""
@@ -223,7 +239,9 @@ def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device
     out = {key: (value.to(device) if torch.is_tensor(value) else value)
            for key, value in timeline.items()}
     if entries is not None:
-        for key in ("controller", "acceleration_mps2", "target_speed_mps"):
+        for key in ("controller", "acceleration_mps2", "target_speed_mps", "command_known"):
+            if key not in out:
+                continue
             value = out[key]
             fill = CONTROLLERS.index("native") if key == "controller" else 0
             padding = value.new_full((*value.shape[:2], int(entries.train_pad)), fill)

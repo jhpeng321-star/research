@@ -120,6 +120,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "entry_pad_auto": "data.entry_pad_auto",
     "entry_pad_max": "data.entry_pad_max",
     "junction_fix": "data.junction_fix",  # JUNCTIONFIX
+    "controller_hygiene": "data.controller_hygiene",  # DATAHYG
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -141,7 +142,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "aggregate_weight", "aggregate_field_weight", "aggregate_reward_weight",
     "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
     "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
-    "entry_pad_auto", "entry_pad_max", "junction_fix",
+    "entry_pad_auto", "entry_pad_max", "junction_fix", "controller_hygiene",
 )
 
 

@@ -24,6 +24,7 @@ from wms.core.constants import CONTROLLER_VOCAB, controller_index
 from wms.core.errors import TrainDataRefusal
 from wms.core.io import run_key
 from wms.data.action_timeline import CONTROLLERS, SCHEMA, ActionTimeline
+from wms.data.controller_hygiene import HYGIENE_MODES, DspeedRun
 from wms.data.corpus import PackCorpus
 from wms.data.history import history_spec, long_history_features
 from wms.data.junction_fix import (JUNCTION_FIX_MODES, fill_junction_rows, pre_t0_rows,
@@ -343,7 +344,8 @@ class TrajectoryDataset(Dataset):
                         item_filter: Optional[Callable] = None,
                         identity_env_dir: Optional[str | Path] = None,
                         history_s=None, history_stride_s=1.0,
-                        junction_fix: str = "off") -> "TrajectoryDataset":
+                        junction_fix: str = "off",
+                        controller_hygiene: str = "off") -> "TrajectoryDataset":
         """Build a lazy TRAIN view over A11 packs and verified identity windows.
 
         ``PackCorpus`` performs the authoritative split and INDEX range checks.  The
@@ -373,9 +375,18 @@ class TrajectoryDataset(Dataset):
         ``junction_fix`` (``data.junction_fix``, :mod:`wms.data.junction_fix`): ``"off"``
         (default, unchanged windows) or ``"ffill"`` (junction-transit rows keep the vehicle's
         previous lane and an interpolated ``s``, the evaluation convention).
+
+        ``controller_hygiene`` (``data.controller_hygiene``, :mod:`wms.data.controller_hygiene`):
+        ``"off"`` (default, unchanged) or ``"strict"``: dspeed (trajectory-arm) windows may not
+        overlap a ``merge_aimed`` / ``gap_opening`` segment of a directed CAV (items without an
+        allowed start are dropped; a refused draw moves to an allowed start), their timelines
+        mark only the directed CAVs ``direct`` (commands unknown: ``command_known = False``) and
+        every pack timeline carries ``command_known``.
         """
         if junction_fix not in JUNCTION_FIX_MODES:
             raise ValueError(f"junction_fix must be one of {JUNCTION_FIX_MODES}")
+        if controller_hygiene not in HYGIENE_MODES:
+            raise ValueError(f"controller_hygiene must be one of {HYGIENE_MODES}")
         if not paths:
             raise ValueError("at least one trajectory pack is required")
         history_spec(history_s, history_stride_s)
@@ -438,11 +449,17 @@ class TrajectoryDataset(Dataset):
                     f"identity sidecar {identity_dirs[pack]} lacks TRAIN manifest "
                     f"position {position}")
             positions.append((pack, position))
+        hygiene_runs = hygiene_receipt = None
+        if controller_hygiene == "strict":
+            kept_orig, positions, hygiene_runs, hygiene_receipt = _dspeed_hygiene(
+                corpus, kept_orig, positions, identity_rows, identity_dirs,
+                int(horizon_steps), timelines)
 
         loader = _PackWindowLoader(
             corpus, kept_orig, positions, identity_rows, horizon_steps=int(horizon_steps),
             start_shift_prob=start_shift_prob, timelines=timelines, entries_v2=entries_v2,
-            history_s=history_s, history_stride_s=history_stride_s, junction_fix=junction_fix)
+            history_s=history_s, history_stride_s=history_stride_s, junction_fix=junction_fix,
+            hygiene_runs=hygiene_runs)
         receipt = {
             "mode": "a11-index-window",
             "split": "TRAIN",
@@ -470,9 +487,76 @@ class TrajectoryDataset(Dataset):
                 "short_history_policy": "front-pad and mask; no windows dropped"}
         if junction_fix != "off":
             receipt["junction_fix"] = junction_fix
+        if hygiene_receipt is not None:
+            receipt["controller_hygiene"] = hygiene_receipt
         dataset = cls([{} for _ in range(len(kept_orig))], loader=loader, receipt=receipt)
         dataset.positions = list(positions)      # [(pack, original manifest position)]
         return dataset
+
+
+def _fixed_action(meta: dict) -> str:
+    """Timeline controller name of a fixed-controller pack item (policy/arm aliases)."""
+    name = str(meta.get("policy") or meta.get("arm") or "").lower()
+    return _FIXED_ACTION_ALIASES.get(name, name)
+
+
+def _dspeed_hygiene(corpus: PackCorpus, kept_orig: list[int], positions: list[tuple],
+                    identity_rows: list[dict], identity_dirs: list, horizon: int,
+                    timelines: Optional[dict]):
+    """DATAHYG strict for the dspeed (trajectory-arm) items: per-item :class:`DspeedRun`.
+
+    Returns the kept ``(kept_orig, positions)``, ``{kept index: DspeedRun}`` and a receipt.
+    An item is dropped only when NO start (unshifted or start-shifted) avoids every designed
+    segment; the loader moves a refused draw to an allowed start.
+    """
+    vehicle_maps: dict[int, list] = {}
+    runs: dict[int, DspeedRun] = {}
+    out_kept, out_pos = [], []
+    n_dspeed = n_drop = n_unshifted_refused = n_selected = n_designed = 0
+    allowed_frac = []
+    for i, (pack, position) in zip(kept_orig, positions):
+        meta = corpus.meta(i)
+        if _fixed_action(meta) != "direct" or (timelines and pack in timelines):
+            out_kept.append(i)
+            out_pos.append((pack, position))
+            continue
+        n_dspeed += 1
+        if pack not in vehicle_maps:
+            vehicle_maps[pack] = json.loads(
+                (Path(identity_dirs[pack]) / "vehicle_map.json").read_text(encoding="utf-8"))
+        vmap = vehicle_maps[pack]
+        tick = int(meta["tick"])
+        end = int(corpus.run_end(tick))
+        vm = np.asarray(corpus.array("veh_mask")[tick:end]).astype(bool)
+        tm = np.asarray(corpus.array("target_mask")[tick:end]).astype(bool)
+        cav0 = (np.asarray(corpus.array("veh_step")[tick, :, 7], np.float32) > 0.5) & vm[0]
+        ids = identity_rows[pack][position]
+        slot_vid = {int(k): str(vmap[int(v)][2]) for k, v in enumerate(ids) if v >= 0}
+        run = DspeedRun(str(meta["world"]), str(meta["arm"]), slot_vid, vm, tm, cav0)
+        room = len(vm) - 1 - int(horizon)
+        allowed = run.allowed_starts(int(horizon))[:max(1, room + 1)]
+        n_selected += len(run.selected_slots)
+        n_designed += run.n_designed_segments
+        allowed_frac.append(float(allowed.mean()))
+        n_unshifted_refused += int(not allowed[0])
+        if not allowed.any():
+            n_drop += 1
+            continue
+        run.allowed_rows = np.flatnonzero(allowed)
+        runs[len(out_kept)] = run
+        out_kept.append(i)
+        out_pos.append((pack, position))
+    if not out_kept:
+        raise TrainDataRefusal("controller hygiene left no TRAIN windows")
+    receipt = {"mode": "strict", "dspeed_items": n_dspeed,
+               "dspeed_items_dropped_no_allowed_start": n_drop,
+               "dspeed_unshifted_window_refused": n_unshifted_refused,
+               "dspeed_mean_allowed_start_fraction": (round(float(np.mean(allowed_frac)), 4)
+                                                      if allowed_frac else None),
+               "dspeed_directed_cavs": n_selected,
+               "dspeed_designed_segments": n_designed,
+               "horizon_steps": int(horizon)}
+    return out_kept, out_pos, runs, receipt
 
 
 class _KeptWindows:
@@ -559,7 +643,7 @@ class _PackWindowLoader:
     def __init__(self, corpus: PackCorpus, kept_orig: list[int], positions: list[tuple],
                  identity_rows: list[dict], *, horizon_steps: int, start_shift_prob: float,
                  timelines: Optional[dict], entries_v2: bool, history_s, history_stride_s,
-                 junction_fix: str = "off"):
+                 junction_fix: str = "off", hygiene_runs: Optional[dict] = None):
         self.corpus = corpus
         self.kept_orig = kept_orig
         self.positions = positions
@@ -571,11 +655,16 @@ class _PackWindowLoader:
         self.history_s = history_s
         self.history_stride_s = history_stride_s
         self.junction_fix = junction_fix
+        #: DATAHYG strict: ``{index: DspeedRun}`` of the dspeed items (None = hygiene off)
+        self.hygiene_runs = hygiene_runs
 
     def __call__(self, index: int) -> dict:
         corpus = self.corpus
         item = corpus.item(self.kept_orig[index])
         shift = self._draw_start_shift(item)
+        run = None if self.hygiene_runs is None else self.hygiene_runs.get(index)
+        if run is not None:
+            shift = self._hygiene_shift(run, shift)
         if shift:
             item = corpus.shifted_item(item, int(item["tick"]) + shift)
             window = corpus.window(item, identities=False)
@@ -622,13 +711,24 @@ class _PackWindowLoader:
         action_name = str(policy or window.get("arm") or "").lower()
         action_name = _FIXED_ACTION_ALIASES.get(action_name, action_name)
         provider = None if self.timelines is None else self.timelines.get(pack)
-        if action_name in ("native", "damping", "direct", "pi-external-u"):
+        if run is not None:
+            result["action_timeline"] = self._dspeed_timeline(run, shift, horizon,
+                                                              states.shape[1])
+        elif action_name in ("native", "damping", "direct", "pi-external-u"):
             result["action_timeline"] = self._fixed_timeline(action_name, item, horizon,
                                                              states.shape[1])
         if provider is not None:
             result["action_timeline"] = provider.timeline(position, _n_control_steps(horizon))
         elif "action_timeline" not in result:
             result["action_timeline"] = self._snapshot_timeline(item, horizon, states.shape[1])
+        if self.hygiene_runs is not None and "command_known" not in result["action_timeline"]:
+            # strict: a recorded issued command exists only on direct steps of a timeline
+            # that recorded one (switching direct-mix); fixed/snapshot timelines carry none.
+            timeline = result["action_timeline"]
+            known = (np.asarray(timeline["controller"]) == CONTROLLERS.index("direct"))
+            if provider is None:
+                known = np.zeros_like(known)
+            result["action_timeline"] = {**timeline, "command_known": known}
         if self.entries_v2:
             result["entry_feat"] = entry_features(corpus, item)
             result.update(road if road is not None
@@ -659,6 +759,34 @@ class _PackWindowLoader:
             road["road_present"] = road["road_present"] & ~gone
             road["road_continue"] = road["road_continue"] & ~gone[:-1]
         return teacher, present, road
+
+    def _hygiene_shift(self, run: DspeedRun, shift: int) -> int:
+        """Move a refused dspeed start to an allowed one (DATAHYG strict).
+
+        The usual draw is kept when its window avoids every designed segment; otherwise the
+        start is drawn uniformly among the allowed starts (global torch RNG), or the earliest
+        allowed start when the dataset does not start-shift (validation).
+        """
+        rows = run.allowed_rows
+        if int(shift) in set(rows.tolist()):
+            return int(shift)
+        if self.start_shift_prob > 0.0:
+            return int(rows[int(torch.randint(0, len(rows), ()))])
+        return int(rows[0])
+
+    def _dspeed_timeline(self, run: DspeedRun, shift: int, horizon: int, k: int) -> dict:
+        """Strict dspeed timeline: directed CAVs ``direct`` (command unknown), rest native."""
+        n_control = _n_control_steps(horizon)
+        rows = int(shift) + 2 * np.arange(n_control)
+        ok = rows < run.directed.shape[0]
+        directed = np.zeros((n_control, k), bool)
+        directed[ok] = run.directed[rows[ok], :k]
+        controller = np.where(directed, CONTROLLERS.index("direct"),
+                              CONTROLLERS.index("native")).astype(np.int64)
+        zeros = np.zeros((n_control, k), np.float32)
+        return {"controller": controller, "acceleration_mps2": zeros,
+                "target_speed_mps": zeros.copy(), "control_dt_s": 1.0,
+                "command_known": np.zeros((n_control, k), bool)}
 
     def _draw_start_shift(self, item: dict) -> int:
         """Random later start tick (global torch RNG: ``rand`` then ``randint``)."""
