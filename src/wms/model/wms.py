@@ -35,7 +35,9 @@ from .entries import section_ids
 from .gate import monotone_gate, saturating_gate
 from .history import (LONG_HISTORY_F, history_spec, history_step_features,
                       initial_history, initial_lane_age, push_history)
-from .lane_hazard import HazardLaneModel, hazard_lane_logits
+from .lane_hazard import (HAZARD_F, HAZARD_F_V2, HazardLaneModel, blocked_indicator,
+                          hazard_feasible, hazard_lane_logits, initial_lane_blocked,
+                          sample_lane_choice, update_blocked)
 from .lane_head import HistoryLaneHead, lane_context
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet
@@ -94,6 +96,10 @@ class WmSModel(nn.Module):
     """
 
     apply_direct_commands: bool = True
+    #: LANEFIX runtime switch (``loss.lane_hazard_decouple``; set by the trainer, never part
+    #: of a checkpoint): the hazard's learned delta enters the rollout lane logits detached,
+    #: so the rollout lane CE / flip-rate guard do not train the hazard (forward unchanged).
+    lane_hazard_detach: bool = False
 
     def __init__(self, spec: Optional[ModelSpec] = None, *,
                  physics: Optional[PhysicsConfig] = None, hdv: Optional[HdvConfig] = None,
@@ -109,6 +115,12 @@ class WmSModel(nn.Module):
         self.rollout_mode = spec.rollout_mode
         self.lane_head_mode = spec.lane_head
         self.lane_model = getattr(spec, "lane_model", "residual")
+        # LANEFIX (hazard mode only; defaults = WMLANE A behaviour).  ``lane_decision`` and
+        # ``lane_logit_offsets`` are plain attributes an evaluator may override.
+        self.lane_decision = getattr(spec, "lane_decision", "argmax")
+        self.lane_logit_offsets = tuple(getattr(spec, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+        self.lane_hazard_features = getattr(spec, "lane_hazard_features", "v1")
+        self.merge_hazard_zone = getattr(spec, "merge_hazard_zone", "forced_late")
         self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
@@ -200,8 +212,10 @@ class WmSModel(nn.Module):
                                  if spec.lane_head == "history" else None)
         # WMLANE switches (default OFF): created last so the key order and the RNG
         # stream of every earlier model are unchanged.
+        n_hazard = (HAZARD_F_V2 if getattr(spec, "lane_hazard_features", "v1") == "v2"
+                    else HAZARD_F)
         self.lane_hazard = (HazardLaneModel(self.driver_embed_dim, spec.lane_hazard_hidden,
-                                            spec.lane_hazard_cap)
+                                            spec.lane_hazard_cap, n_features=n_hazard)
                             if getattr(spec, "lane_model", "residual") == "hazard" else None)
         self.driver_updater = (EmaDriverUpdater(self.driver_embed_dim, spec.driver_update_rate)
                                if getattr(spec, "driver_update", "off") == "ema" else None)
@@ -454,7 +468,8 @@ class WmSModel(nn.Module):
                 controller_id: Optional[Tensor] = None,
                 action_command: Optional[Tensor] = None,
                 accel_noise: Optional[Tensor] = None,
-                accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
+                accel_noise_sigma_max: Optional[float] = None,
+                lane_blocked: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Predict acceleration and lane logits for every slot.
 
         ``k_steps`` is the number of steps since the last real observation (scalar or
@@ -466,6 +481,11 @@ class WmSModel(nn.Module):
         bit-identical) adds aleatoric noise ``accel_noise * exp(residual log-sigma)`` (sigma capped
         at ``accel_noise_sigma_max`` when given) to the acceleration of learned (HDV) slots
         before the plant clamp; used by ``wms.control.futures`` for sampled futures.
+
+        LANEFIX: ``lane_blocked`` (v2 hazard features) is the blocked-step count carried from
+        the previous step (``None`` at a rollout start: from the long driver history); the
+        updated count is returned as ``lane_blocked``.  With ``lane_decision='sample'`` the
+        physics feasibility mask is returned as ``lane_feasible [B, K, 3]``.
         """
         kin = state_kin(state).float()
         present = state_present(state, kin)
@@ -520,12 +540,20 @@ class WmSModel(nn.Module):
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
+        blocked_now = None
         if self.lane_hazard is not None:
             # WMLANE A: the dedicated hazard model replaces the residual lane delta;
             # physics-masked targets stay masked (hard feasibility).
+            if self.lane_hazard_features == "v2":
+                if lane_blocked is None:
+                    lane_blocked = self.initial_lane_blocked(
+                        present, kin, driver_history, driver_history_mask, driver_params)
+                blocked_now = update_blocked(
+                    lane_blocked, blocked_indicator(kin, present, self.physics, driver_params))
             lane_logits, _ = hazard_lane_logits(
                 self.lane_hazard, kin, present, learned, lane_base, self.physics,
-                driver_params, driver_embedding, lane_age)
+                driver_params, driver_embedding, lane_age,
+                **self._hazard_switches(blocked_now, rollout=True))
         else:
             lane_logits = self._residual_lane_logits(lane_base, base, temporal, k, gate)
         lane_probabilities = None
@@ -552,6 +580,10 @@ class WmSModel(nn.Module):
             result["driver_embedding"] = driver_embedding
         if lane_probabilities is not None:
             result["lane_probabilities"] = lane_probabilities
+        if blocked_now is not None:
+            result["lane_blocked"] = blocked_now
+        if self._samples_lanes:
+            result["lane_feasible"] = hazard_feasible(lane_base, kin)
         return result
 
     def _residual_lane_logits(self, lane_base: Tensor, base: dict, temporal: Tensor,
@@ -585,14 +617,54 @@ class WmSModel(nn.Module):
     def _tracks_lane_age(self) -> bool:
         return self.lane_change_head is not None or getattr(self, "lane_hazard", None) is not None
 
+    # ------------------------------------------------------------------ LANEFIX
+    @property
+    def _samples_lanes(self) -> bool:
+        """Hazard lane decisions are sampled from the masked categorical (not argmax)."""
+        return (getattr(self, "lane_hazard", None) is not None
+                and getattr(self, "lane_decision", "argmax") == "sample")
+
+    @property
+    def _tracks_lane_blocked(self) -> bool:
+        return (getattr(self, "lane_hazard", None) is not None
+                and getattr(self, "lane_hazard_features", "v1") == "v2")
+
+    def _hazard_switches(self, lane_blocked: Optional[Tensor], *, rollout: bool) -> dict:
+        """Keyword switches of :func:`hazard_lane_logits` (empty = WMLANE A defaults)."""
+        kwargs: dict = {}
+        if getattr(self, "lane_hazard_features", "v1") != "v1":
+            kwargs.update(features=self.lane_hazard_features, lane_blocked=lane_blocked)
+        if getattr(self, "merge_hazard_zone", "forced_late") != "forced_late":
+            kwargs["merge_zone"] = self.merge_hazard_zone
+        offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+        if any(float(x) != 0.0 for x in offsets):
+            kwargs["offsets"] = offsets
+        if rollout and self.lane_hazard_detach:
+            kwargs["detach_delta"] = True
+        return kwargs
+
+    def initial_lane_blocked(self, present: Tensor, kin: Tensor,
+                             driver_history: Optional[Tensor],
+                             driver_history_mask: Optional[Tensor],
+                             driver_params: Optional[Mapping[str, Tensor]]) -> Tensor:
+        """Blocked-step count before t0 (v2 hazard features) from the long driver history."""
+        v0 = (torch.full_like(kin[..., 4], float(self.physics.v0_mps)) if driver_params is None
+              else driver_params["v0"]).clamp_min(1.0)
+        stride = (round(self.history_stride_s / self.physics.dt_s) if self.long_history else 1)
+        return initial_lane_blocked(present, kin.dtype, driver_history, driver_history_mask,
+                                    v0, stride)
+
     def lane_event_logits(self, state: dict[str, Tensor], *,
                           driver_params: Optional[dict[str, Tensor]] = None,
                           driver_embedding: Optional[Tensor] = None,
-                          lane_age: Optional[Tensor] = None) -> Tensor:
+                          lane_age: Optional[Tensor] = None,
+                          lane_blocked: Optional[Tensor] = None) -> Tensor:
         """One-step absolute lane logits ``[B, K, 3]`` of the hazard model on ``state``.
 
         Teacher-forced (recorded-state) evaluation used by the lane-event loss and the
-        one-step event diagnostics; requires ``lane_model='hazard'``.
+        one-step event diagnostics; requires ``lane_model='hazard'``.  ``lane_blocked`` (v2
+        features) is the blocked-step count INCLUDING this state (``None``: 1 if blocked now).
+        The rollout-only decouple detach never applies here.
         """
         if self.lane_hazard is None:
             raise ValueError("lane_event_logits requires model.lane_model='hazard'")
@@ -606,9 +678,14 @@ class WmSModel(nn.Module):
                 lane_base = self.mobil_merge_logits({**state, "veh_kin": kin}, driver_params)
             else:
                 _, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params)
+        if self._tracks_lane_blocked and lane_blocked is None:
+            lane_blocked = update_blocked(torch.zeros_like(kin[..., 0]),
+                                          blocked_indicator(kin, present, self.physics,
+                                                            driver_params))
         logits, _ = hazard_lane_logits(self.lane_hazard, kin, present, present & ~is_cav,
                                        lane_base, self.physics, driver_params,
-                                       driver_embedding, lane_age)
+                                       driver_embedding, lane_age,
+                                       **self._hazard_switches(lane_blocked, rollout=False))
         return logits
 
     def update_drivers(self, driver_params: dict[str, Tensor],
@@ -675,13 +752,18 @@ class WmSModel(nn.Module):
              action_command: Optional[Tensor] = None,
              projection: Optional[FeasibilityProjection] = None,
              accel_noise: Optional[Tensor] = None,
-             accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
+             accel_noise_sigma_max: Optional[float] = None,
+             lane_blocked: Optional[Tensor] = None,
+             lane_uniform: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Advance one 0.5 s step; CAVs are never learned movers in structured mode.
 
         With entries enabled the state carries an ``entrant`` mask: t0 CAVs keep the
         recorded teacher, while entrant CAVs (which have no recorded plan) run the
         supplied ``cav_controller`` or native hold-speed motion.  ``projection``
         (optional) projects the next state onto the feasible set.
+
+        LANEFIX ``lane_decision='sample'``: learned slots draw their lane from the masked
+        categorical with ``lane_uniform [B, K]`` (``None``: from the global torch RNG).
         """
         forward_kwargs = dict(
             k_steps=k_steps, history=history, history_mask=history_mask,
@@ -696,6 +778,8 @@ class WmSModel(nn.Module):
             forward_kwargs["lane_age"] = lane_age
         if accel_noise is not None:
             forward_kwargs.update(accel_noise=accel_noise, accel_noise_sigma_max=accel_noise_sigma_max)
+        if self._tracks_lane_blocked:
+            forward_kwargs["lane_blocked"] = lane_blocked
         if self.checkpoint_forward and torch.is_grad_enabled():
             out = checkpoint(partial(self.forward, **forward_kwargs), state,
                              use_reentrant=False, preserve_rng_state=self.training)
@@ -708,7 +792,13 @@ class WmSModel(nn.Module):
         dt = self.physics.dt_s
         next_v = (v + out["accel_mps2"] * dt).clamp_min(0.0)
         next_s = s + 0.5 * (v + next_v) * dt
-        choice = out["lane_logits"].argmax(-1)
+        if self._samples_lanes:
+            if lane_uniform is None:
+                lane_uniform = torch.rand(present.shape, device=present.device)
+            choice = sample_lane_choice(out["lane_logits"], out["lane_feasible"],
+                                        out["hdv_mask"], lane_uniform)
+        else:
+            choice = out["lane_logits"].argmax(-1)
         if self.lane_change_head is None:
             next_lane = choice
         else:
@@ -829,7 +919,10 @@ class WmSModel(nn.Module):
                 observe_states: Optional[Tensor] = None,
                 observe_mask: Optional[Tensor] = None,
                 accel_noise: Optional[Tensor] = None,
-                accel_noise_sigma_max: Optional[float] = None) -> dict[str, Tensor]:
+                accel_noise_sigma_max: Optional[float] = None,
+                lane_uniform: Optional[Tensor] = None,
+                lane_seed: Optional[int] = None,
+                lane_crn: bool = False) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
         ``cav_teacher[:, i+1]`` is the CAV state after step ``i`` and ``present_seq
@@ -865,6 +958,12 @@ class WmSModel(nn.Module):
         observation and, with ``driver_update='ema'``, the car's driver settings and
         embedding are refined (returned as ``driver_parameters_updated`` /
         ``driver_embedding_updated``).  ``None`` (default) leaves the rollout unchanged.
+
+        LANEFIX (``lane_decision='sample'`` only; ignored otherwise): ``lane_uniform``
+        (``[B or 1, T, K]`` uniforms in [0, 1), the caller's draws: expand them to
+        counterfactual rows like ``accel_noise`` for common random numbers), else
+        ``lane_seed`` (a private generator: deterministic given the seed), else the global
+        torch RNG; ``lane_crn`` shares one draw per (step, slot) across all batch rows.
         """
         current = dict(state)
         if controller_id is None:
@@ -882,6 +981,9 @@ class WmSModel(nn.Module):
                 history_step_features(kin0, gap0), pres0, self.history_len)
         lane_age = self._initial_lane_age(current, pres0, kin0, driver_history,
                                           driver_history_mask)
+        lane_blocked = current.get("lane_blocked") if self._tracks_lane_blocked else None
+        lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
+                     if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
 
         log = {name: [] for name in (
@@ -927,7 +1029,9 @@ class WmSModel(nn.Module):
                 action_command=action_command, projection=projection,
                 **({} if accel_noise is None else {
                     "accel_noise": accel_noise[:, step_i],
-                    "accel_noise_sigma_max": accel_noise_sigma_max}))
+                    "accel_noise_sigma_max": accel_noise_sigma_max}),
+                **({} if not self._tracks_lane_blocked else {"lane_blocked": lane_blocked}),
+                **({} if lane_draw is None else {"lane_uniform": lane_draw(step_i)}))
             out = checkpoint(step_fn, current, use_reentrant=False) if step_checkpoint \
                 else step_fn(current)
             for key, value in (out.get("projection_active") or {}).items():
@@ -972,6 +1076,9 @@ class WmSModel(nn.Module):
                        "present": nxt_present}
             if self._tracks_lane_age:
                 current["lane_age"] = lane_age
+            if self._tracks_lane_blocked:
+                lane_blocked = out["lane_blocked"]
+                current["lane_blocked"] = lane_blocked
             current.pop("veh_kin", None)
             kin = state_kin(current)
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
@@ -1001,6 +1108,23 @@ class WmSModel(nn.Module):
             if fixed_driver_embedding is not None:
                 result["driver_embedding_updated"] = fixed_driver_embedding
         return result
+
+    @staticmethod
+    def _lane_draws(lane_uniform: Optional[Tensor], lane_seed: Optional[int], crn: bool,
+                    present: Tensor) -> Callable[[int], Tensor]:
+        """Per-step lane uniforms ``[B, K]`` for sampled lane decisions (see :meth:`rollout`)."""
+        b, k = present.shape
+        device = present.device
+        if lane_uniform is not None:
+            draws = torch.as_tensor(lane_uniform, device=device)
+            if draws.ndim != 3 or draws.shape[0] not in (1, b) or draws.shape[2] != k:
+                raise ValueError("lane_uniform must be [B or 1, T, K]")
+            return lambda i: draws[:, i].expand(b, k)
+        rows = 1 if crn else b
+        if lane_seed is not None:
+            gen = torch.Generator(device="cpu").manual_seed(int(lane_seed))
+            return lambda i: torch.rand((rows, k), generator=gen).to(device).expand(b, k)
+        return lambda i: torch.rand((rows, k), device=device).expand(b, k)
 
     def _initial_lane_age(self, current: dict, present: Tensor, kin: Tensor,
                           driver_history: Optional[Tensor],

@@ -17,7 +17,7 @@ import torch
 from torch import Tensor
 
 from .contract import CONTROL_DT_S, PHYSICS_DT_S, CavController, RewardWeights
-from .futures import DRIVER_SAMPLE_MAX_REL_DEV, sample_driver_encodings
+from .futures import DRIVER_SAMPLE_MAX_REL_DEV, arm_major_lane_uniform, sample_driver_encodings
 
 ControllerFactory = Callable[[], CavController]
 
@@ -320,8 +320,13 @@ class RsuChecker:
                 if self.synchronize:
                     self.synchronize()
                 rollout_start = perf_counter()
+                # LANEFIX: sampled lane decisions share fixed draws across candidates.
+                lanes = arm_major_lane_uniform([model], count, samples, steps,
+                                               batched_state["s_m"].shape[1],
+                                               torch.Generator().manual_seed(0))
                 rollout = model.rollout(dict(batched_state), n_steps=steps, cav_teacher=None,
-                                        cav_controller=dispatch, **batched_history, **drivers)
+                                        cav_controller=dispatch, **batched_history, **drivers,
+                                        **lanes)
                 if self.synchronize:
                     self.synchronize()
                 rollout_seconds += perf_counter() - rollout_start

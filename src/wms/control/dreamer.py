@@ -26,7 +26,7 @@ from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWei
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
                              row_coefficients)
-from .futures import FuturesConfig, SampledFutures
+from .futures import FuturesConfig, SampledFutures, lane_uniform_draws
 from .start_states import StartBatch, checked_path
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
@@ -414,6 +414,14 @@ class DreamerTrainer:
                 future_extras = [[expand_rows(extra, index, n_base) for extra in per_sample]
                                  for per_sample in future_extras]
         n_futures = futures_cfg.n_samples if futures_cfg.active else 1
+        # LANEFIX: WMs with sampled lane decisions get per-start draws shared by every member
+        # and every counterfactual row of the start (None for argmax WMs: nothing changes).
+        lane_uniform = lane_uniform_draws(
+            self.world_models, n_base, cfg.horizon * STEPS_PER_CONTROL,
+            batch.state["s_m"].shape[1],
+            self.update_count if future_seed is None else future_seed, device=self.device)
+        if lane_uniform is not None and index is not None:
+            lane_uniform = expand_rows(lane_uniform, index, n_base)
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         rng = _rng_state(self.device)
@@ -514,6 +522,8 @@ class DreamerTrainer:
                        for key, value in start_state.items()}
             recorder = None
             member_kwargs = {**rollout_kwargs, **future}
+            if lane_uniform is not None:
+                member_kwargs["lane_uniform"] = lane_uniform
             if entry_spec is not None:
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
                                                          initial["s_m"].shape[1]))

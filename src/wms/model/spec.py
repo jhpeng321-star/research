@@ -17,6 +17,10 @@ LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 LANE_MODELS = ("residual", "hazard")
 #: In-rollout driver-setting update from observed motion (WMLANE C).
 DRIVER_UPDATES = ("off", "ema")
+#: LANEFIX (hazard mode only): rollout lane decision, hazard feature set, merge ownership.
+LANE_DECISIONS = ("argmax", "sample")
+LANE_HAZARD_FEATURES = ("v1", "v2")
+MERGE_HAZARD_ZONES = ("forced_late", "full")
 
 
 @dataclass(frozen=True)
@@ -69,6 +73,11 @@ class ModelSpec:
     lane_hazard_cap: float = 10.0
     driver_update: str = "off"
     driver_update_rate: float = 0.3
+    # LANEFIX (default OFF; hazard mode only; the v2 features widen the hazard input layer).
+    lane_decision: str = "argmax"
+    lane_logit_offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    lane_hazard_features: str = "v1"
+    merge_hazard_zone: str = "forced_late"
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
@@ -115,6 +124,21 @@ class ModelSpec:
             raise ValueError("lane_hazard_hidden must be >= 1 and lane_hazard_cap > 0")
         if not 0.0 < self.driver_update_rate < 1.0:
             raise ValueError("driver_update_rate must be in (0, 1)")
+        offsets = tuple(float(x) for x in self.lane_logit_offsets)
+        object.__setattr__(self, "lane_logit_offsets", offsets)
+        if len(offsets) != 3 or not all(math.isfinite(x) for x in offsets):
+            raise ValueError("lane_logit_offsets must be three finite (overtake, return, merge)")
+        if self.lane_decision not in LANE_DECISIONS:
+            raise ValueError(f"lane_decision must be one of {LANE_DECISIONS}")
+        if self.lane_hazard_features not in LANE_HAZARD_FEATURES:
+            raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
+        if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:
+            raise ValueError(f"merge_hazard_zone must be one of {MERGE_HAZARD_ZONES}")
+        if self.lane_model != "hazard" and (
+                self.lane_decision != "argmax" or any(offsets)
+                or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
+            raise ValueError("lane_decision / lane_logit_offsets / lane_hazard_features / "
+                             "merge_hazard_zone need lane_model='hazard'")
         if self.history_features < 0:
             raise ValueError("history_features must be >= 0")
         if self.long_history and (self.black_box or self.history_features != HISTORY_F):

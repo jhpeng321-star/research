@@ -57,6 +57,7 @@ def main() -> int:
                     "train_receipt": trim(inputs.train.receipt)},
         "physics": {"lane_rule": inputs.physics.lane_rule,
                     "lane_gap_rule": inputs.physics.lane_gap_rule,
+                    "gap_stopped_relax": getattr(inputs.physics, "gap_stopped_relax", False),
                     "sumo_fidelity": inputs.physics.sumo_fidelity,
                     "merge_cal": inputs.physics.merge_cal},
         "resolved": inputs.resolved,
