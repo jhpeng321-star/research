@@ -120,4 +120,37 @@ without a `paired = true` source.
 
 ## 5. Smoke results
 
-(filled in below)
+Final config (weight 0.5, aggregate sub-weight 10). Output:
+`runs/active/PAIRLOSS-SMOKE-20261014-final/` (git-ignored). Status: **passed**.
+
+**Windows.**
+- TRAIN 603: original packs 583 (pack_dspeed 444 + pack_v3 139; the switching source is
+  disabled by hygiene strict, as in v4_hygiene), genrand_plain 19, genrand_branch 1 (the base
+  episode in the smoke branch dir).
+- Sampling shares: 0.65 / 0.30 / 0.05.
+- VAL: 99.
+- Paired source: 1 group / 3 windows (native reference + 2 seed arms), horizon 120 steps,
+  0 dropped groups.
+
+**Dry run (2 updates, 10 s, batch 4).** This was an ordinary batch: loss 12.02 -> 11.91,
+finite, pair terms 0, aggregate share 5.5-8.6 %.
+
+**Paired batch (2 updates, 10 s, 3 rows / 2 arms).**
+
+| update | loss | position | pair_pos | pair_speed | pair_agg | agg_reward | paired share | aggregate share |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 12.87 | 10.09 | 0.98 | 0.27 | 0.069 | 0.28 | **10.3 %** | 5.5 % |
+| 2 | 11.55 | 9.37 | 0.69 | 0.20 | 0.028 | 0.21 | **8.0 %** | 4.8 % |
+
+**Calibration.**
+- At weight 2 (first smoke) the paired share was 26-31 %, so the weight was set to 0.5.
+- At aggregate sub-weight 1, `pair_agg` was about 1 % of the paired loss, so the sub-weight was
+  set to 10.
+- These are untrained-model, 10 s numbers. Check `paired_value_share` on gpuW at 30/60 s:
+  differences grow with horizon.
+
+**Caveats.**
+- The smoke used the laptop smoke outputs: 1 world, 1 branch point.
+- Production data (36 x 14 groups x 5 arms) was not loaded locally.
+- If the production branch dir holds only branch episodes (no base), the genrand_branch
+  ordinary windows are skipped (logged) and only paired batches use it.
