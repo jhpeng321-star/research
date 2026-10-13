@@ -30,10 +30,12 @@ from wms.physics.state import KIN_F, state_kin, state_present
 from . import cav as cav_motion
 from .controllers import DIRECT_ID
 from .driver_encoder import DRIVER_ENCODER_HIDDEN, PARAMETER_NAMES, DriverEncoder
+from .driver_update import EmaDriverUpdater
 from .entries import section_ids
 from .gate import monotone_gate, saturating_gate
 from .history import (LONG_HISTORY_F, history_spec, history_step_features,
                       initial_history, initial_lane_age, push_history)
+from .lane_hazard import HazardLaneModel, hazard_lane_logits
 from .lane_head import HistoryLaneHead, lane_context
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet
@@ -106,6 +108,8 @@ class WmSModel(nn.Module):
         self._init_bounds(spec)
         self.rollout_mode = spec.rollout_mode
         self.lane_head_mode = spec.lane_head
+        self.lane_model = getattr(spec, "lane_model", "residual")
+        self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
         self.history_s = spec.history_s
@@ -194,6 +198,13 @@ class WmSModel(nn.Module):
                                             long_history=self.long_history)
         self.lane_change_head = (HistoryLaneHead(self.driver_embed_dim)
                                  if spec.lane_head == "history" else None)
+        # WMLANE switches (default OFF): created last so the key order and the RNG
+        # stream of every earlier model are unchanged.
+        self.lane_hazard = (HazardLaneModel(self.driver_embed_dim, spec.lane_hazard_hidden,
+                                            spec.lane_hazard_cap)
+                            if getattr(spec, "lane_model", "residual") == "hazard" else None)
+        self.driver_updater = (EmaDriverUpdater(self.driver_embed_dim, spec.driver_update_rate)
+                               if getattr(spec, "driver_update", "off") == "ema" else None)
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -390,8 +401,8 @@ class WmSModel(nn.Module):
         observed = driver_history if driver_history is not None else history
         observed_mask = (driver_history_mask if driver_history_mask is not None
                          else history_mask)
-        embedding_needed = (self.rollout_mode == "hybrid" or self.long_history) \
-            and driver_embedding is None
+        embedding_needed = (self.rollout_mode == "hybrid" or self.long_history
+                            or self._wmlane_embedding) and driver_embedding is None
         params_needed = self.rollout_mode != "residual" and driver_params is None
         if not (params_needed or embedding_needed):
             return None, driver_embedding, driver_params
@@ -495,21 +506,14 @@ class WmSModel(nn.Module):
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
-        lane_delta = (torch.zeros_like(lane_base) if self.rollout_mode == "driver_params"
-                      else base["lane_logit_delta"] + temporal[..., 1:])
-        if self.long_history and self.rollout_mode == "driver_params":
-            # Inferred style conditions the lane correction as well as IDM/MOBIL.
-            lane_delta = base["lane_logit_delta"]
-        lane_correction = bounded_value(
-            self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
-            self.lane_logit_cap)
-        lane_logits = lane_base + lane_correction
-        if self.physics.lane_rule in ("forced_merge_only", "learned_discretionary"):
-            # The learned residual lane delta can never unmask a forbidden change:
-            # entries the physics masked stay masked after the correction and cap
-            # (C4; in the default 'mobil' mode this branch is skipped, so outputs
-            # are bit-identical to the pre-lane_rule model).
-            lane_logits = torch.where(lane_base <= MASKED_LOGIT, lane_base, lane_logits)
+        if self.lane_hazard is not None:
+            # WMLANE A: the dedicated hazard model replaces the residual lane delta;
+            # physics-masked targets stay masked (hard feasibility).
+            lane_logits, _ = hazard_lane_logits(
+                self.lane_hazard, kin, present, learned, lane_base, self.physics,
+                driver_params, driver_embedding, lane_age)
+        else:
+            lane_logits = self._residual_lane_logits(lane_base, base, temporal, k, gate)
         lane_probabilities = None
         if self.lane_change_head is not None:
             if driver_embedding is None:
@@ -530,11 +534,105 @@ class WmSModel(nn.Module):
                            "driver_shrinkage": encoded["shrinkage"]})
         if driver_embedding is not None and (self.lane_change_head is not None
                                              or self.rollout_mode == "hybrid"
-                                             or self.long_history):
+                                             or self.long_history or self._wmlane_embedding):
             result["driver_embedding"] = driver_embedding
         if lane_probabilities is not None:
             result["lane_probabilities"] = lane_probabilities
         return result
+
+    def _residual_lane_logits(self, lane_base: Tensor, base: dict, temporal: Tensor,
+                              k: Tensor, gate: Tensor) -> Tensor:
+        """Physics lane logits plus the gated, capped residual lane delta (default path)."""
+        lane_delta = (torch.zeros_like(lane_base) if self.rollout_mode == "driver_params"
+                      else base["lane_logit_delta"] + temporal[..., 1:])
+        if self.long_history and self.rollout_mode == "driver_params":
+            # Inferred style conditions the lane correction as well as IDM/MOBIL.
+            lane_delta = base["lane_logit_delta"]
+        lane_correction = bounded_value(
+            self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
+            self.lane_logit_cap)
+        lane_logits = lane_base + lane_correction
+        if self.physics.lane_rule in ("forced_merge_only", "learned_discretionary"):
+            # The learned residual lane delta can never unmask a forbidden change:
+            # entries the physics masked stay masked after the correction and cap
+            # (C4; in the default 'mobil' mode this branch is skipped, so outputs
+            # are bit-identical to the pre-lane_rule model).
+            lane_logits = torch.where(lane_base <= MASKED_LOGIT, lane_base, lane_logits)
+        return lane_logits
+
+    # ------------------------------------------------------------ WMLANE A / C
+    @property
+    def _wmlane_embedding(self) -> bool:
+        """The hazard lane model / driver updater consume the driver embedding."""
+        return (getattr(self, "lane_hazard", None) is not None
+                or getattr(self, "driver_updater", None) is not None)
+
+    @property
+    def _tracks_lane_age(self) -> bool:
+        return self.lane_change_head is not None or getattr(self, "lane_hazard", None) is not None
+
+    def lane_event_logits(self, state: dict[str, Tensor], *,
+                          driver_params: Optional[dict[str, Tensor]] = None,
+                          driver_embedding: Optional[Tensor] = None,
+                          lane_age: Optional[Tensor] = None) -> Tensor:
+        """One-step absolute lane logits ``[B, K, 3]`` of the hazard model on ``state``.
+
+        Teacher-forced (recorded-state) evaluation used by the lane-event loss and the
+        one-step event diagnostics; requires ``lane_model='hazard'``.
+        """
+        if self.lane_hazard is None:
+            raise ValueError("lane_event_logits requires model.lane_model='hazard'")
+        kin = state_kin(state).float()
+        present = state_present(state, kin)
+        is_cav = state.get("is_cav", torch.zeros_like(present)).bool()
+        with torch.no_grad():
+            # The physics prior is a fixed input of the event model here (memory: the
+            # loss runs over every recorded step of the unroll at once).
+            if self.physics_step is None:
+                lane_base = self.mobil_merge_logits({**state, "veh_kin": kin}, driver_params)
+            else:
+                _, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params)
+        logits, _ = hazard_lane_logits(self.lane_hazard, kin, present, present & ~is_cav,
+                                       lane_base, self.physics, driver_params,
+                                       driver_embedding, lane_age)
+        return logits
+
+    def update_drivers(self, driver_params: dict[str, Tensor],
+                       driver_embedding: Optional[Tensor], state: dict[str, Tensor],
+                       observed: Tensor, *, predicted_v: Optional[Tensor] = None,
+                       predicted_accel: Optional[Tensor] = None):
+        """WMLANE C: refine driver settings of the ``observed`` slots of a TRUE state.
+
+        Deployment entry point for belief/RSU updates (``rollout`` calls it through
+        ``observe_states``/``observe_mask``).  Identity when ``driver_update='off'``.
+        """
+        if self.driver_updater is None:
+            return driver_params, driver_embedding
+        kin = state_kin(state).float()
+        present = state_present(state, kin)
+        return self.driver_updater(driver_params, driver_embedding, kin, present, observed,
+                                   self.physics, predicted_v=predicted_v,
+                                   predicted_accel=predicted_accel)
+
+    def _observe_step(self, current: dict, out: dict, nxt_present: Tensor, obs_kin: Tensor,
+                      obs_mask: Tensor, params, embedding):
+        """Reset observed HDV slots to their true state and update their driver settings."""
+        is_cav = current.get("is_cav")
+        hdv = nxt_present.bool() if is_cav is None else nxt_present.bool() & ~is_cav.bool()
+        obs = obs_mask.bool() & hdv & (obs_kin[..., 1:4].sum(-1) > 0)
+        s = torch.where(obs, obs_kin[..., 0].to(out["next_s_m"].dtype), out["next_s_m"])
+        v = torch.where(obs, obs_kin[..., 4].to(out["next_v_mps"].dtype), out["next_v_mps"])
+        a = torch.where(obs, obs_kin[..., 5].to(out["accel_mps2"].dtype), out["accel_mps2"])
+        lane = torch.where(obs, obs_kin[..., 1:4].argmax(-1).to(out["next_lane"].dtype),
+                           out["next_lane"])
+        if self.driver_updater is not None and params is not None:
+            post = {key: value for key, value in current.items() if key != "veh_kin"}
+            post.update({"s_m": s, "v_mps": v, "a_mps2": a, "lane": lane,
+                         "present": nxt_present})
+            params, embedding = self.update_drivers(
+                params, embedding, post, obs, predicted_v=out["next_v_mps"],
+                predicted_accel=out["accel_mps2"])
+        return s, v, a, lane, params, embedding
 
     # ------------------------------------------------------------------- step
     def hold_teacher(self, state: dict[str, Tensor]) -> Tensor:
@@ -545,7 +643,7 @@ class WmSModel(nn.Module):
     @property
     def _uses_driver_embedding(self) -> bool:
         return (self.rollout_mode == "hybrid" or self.lane_change_head is not None
-                or self.long_history)
+                or self.long_history or self._wmlane_embedding)
 
     def step(self, state: dict[str, Tensor], *, k_steps: Tensor | int = 0,
              history: Optional[Tensor] = None, history_mask: Optional[Tensor] = None,
@@ -578,7 +676,7 @@ class WmSModel(nn.Module):
             action_command=action_command)
         if self._uses_driver_embedding:
             forward_kwargs["driver_embedding"] = driver_embedding
-        if self.lane_change_head is not None:
+        if self._tracks_lane_age:
             forward_kwargs["lane_age"] = lane_age
         if self.checkpoint_forward and torch.is_grad_enabled():
             out = checkpoint(partial(self.forward, **forward_kwargs), state,
@@ -709,7 +807,9 @@ class WmSModel(nn.Module):
                 entries: Optional[object] = None,
                 state_noise_std_m: float = 0.0,
                 state_noise_std_mps: float = 0.0,
-                projection: Optional[FeasibilityProjection] = None) -> dict[str, Tensor]:
+                projection: Optional[FeasibilityProjection] = None,
+                observe_states: Optional[Tensor] = None,
+                observe_mask: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
         ``cav_teacher[:, i+1]`` is the CAV state after step ``i`` and ``present_seq
@@ -733,6 +833,14 @@ class WmSModel(nn.Module):
         Beyond the per-step ``positions``/``speeds``/``lanes``/``masks``/``accel``/
         ``lane_logits`` the result carries ``entrant_seq [B, T, K]`` (per-step entrant
         membership) and ``sections [B, T, K]`` (model-frame section id, -1 if absent).
+
+        WMLANE C: ``observe_states [B, T+1, K, 7]`` + ``observe_mask [B, T+1, K]`` (index
+        ``i+1`` = after step ``i``) reveal TRUE HDV states during the rollout (deployment:
+        belief/RSU updates; training: a teacher-observed prefix).  The logged prediction
+        of an observed step is the model's own; the carried state is reset to the
+        observation and, with ``driver_update='ema'``, the car's driver settings and
+        embedding are refined (returned as ``driver_parameters_updated`` /
+        ``driver_embedding_updated``).  ``None`` (default) leaves the rollout unchanged.
         """
         current = dict(state)
         if controller_id is None:
@@ -764,6 +872,7 @@ class WmSModel(nn.Module):
                            and torch.is_grad_enabled() and cav_controller is None)
         fixed_driver_params = driver_params
         fixed_driver_embedding = driver_embedding
+        initial_driver_embedding = driver_embedding
         encoded_parameters = None
         noise_on = float(state_noise_std_m) > 0.0 or float(state_noise_std_mps) > 0.0
 
@@ -808,6 +917,7 @@ class WmSModel(nn.Module):
                 encoded_parameters = out["driver_parameters"]
             if fixed_driver_embedding is None and "driver_embedding" in out:
                 fixed_driver_embedding = out["driver_embedding"]
+                initial_driver_embedding = fixed_driver_embedding
             if self.rollout_mode == "hybrid":
                 share.add(out)
             nxt_present = out["next_present"]
@@ -820,13 +930,20 @@ class WmSModel(nn.Module):
                 self._add_state_noise(out, current, state_noise_std_m, state_noise_std_mps)
             self._record_step(log, out, current)
             log["masks"].append(nxt_present)
-            if self.lane_change_head is not None:
-                changed = out["next_lane"] != current["lane"]
+            nxt_s, nxt_v, nxt_a, nxt_lane = (out["next_s_m"], out["next_v_mps"],
+                                             out["accel_mps2"], out["next_lane"])
+            if observe_mask is not None:
+                nxt_s, nxt_v, nxt_a, nxt_lane, fixed_driver_params, fixed_driver_embedding = \
+                    self._observe_step(current, out, nxt_present, observe_states[:, step_i + 1],
+                                       observe_mask[:, step_i + 1], fixed_driver_params,
+                                       fixed_driver_embedding)
+            if self._tracks_lane_age:
+                changed = nxt_lane != current["lane"]
                 lane_age = torch.where(changed, torch.zeros_like(lane_age), lane_age + 1)
-            current = {**current, "s_m": out["next_s_m"], "v_mps": out["next_v_mps"],
-                       "a_mps2": out["accel_mps2"], "lane": out["next_lane"],
+            current = {**current, "s_m": nxt_s, "v_mps": nxt_v,
+                       "a_mps2": nxt_a, "lane": nxt_lane,
                        "present": nxt_present}
-            if self.lane_change_head is not None:
+            if self._tracks_lane_age:
                 current["lane_age"] = lane_age
             current.pop("veh_kin", None)
             kin = state_kin(current)
@@ -848,15 +965,21 @@ class WmSModel(nn.Module):
                            for key, value in current.items()}
                 history = history.detach()
 
-        return self._rollout_result(
+        result = self._rollout_result(
             log, current, history, history_mask, entrant, pres0, kin0, projection,
-            projection_totals, encoded_parameters, fixed_driver_embedding, share)
+            projection_totals, encoded_parameters, initial_driver_embedding, share)
+        if observe_mask is not None and fixed_driver_params is not None:
+            result["driver_parameters_updated"] = torch.stack(
+                [fixed_driver_params[name] for name in PARAMETER_NAMES], -1)
+            if fixed_driver_embedding is not None:
+                result["driver_embedding_updated"] = fixed_driver_embedding
+        return result
 
     def _initial_lane_age(self, current: dict, present: Tensor, kin: Tensor,
                           driver_history: Optional[Tensor],
                           driver_history_mask: Optional[Tensor]) -> Optional[Tensor]:
-        """Steps since each slot's last lane change (lane-head models only)."""
-        if self.lane_change_head is None:
+        """Steps since each slot's last lane change (lane-head / hazard models only)."""
+        if not self._tracks_lane_age:
             return None
         lane_age = current.get("lane_age")
         if lane_age is not None:

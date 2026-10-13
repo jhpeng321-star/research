@@ -1,0 +1,34 @@
+# WM-S-C4 v2 LANE (WMLANE, 2026-10-13): configs/c4_wm.toml plus
+#   A. model.lane_model = "hazard": dedicated per-HDV stay/left/right lane-change event model
+#      (interpretable target-lane gap/speed features + speed advantage + lane age + merge-end
+#      distance + the car's learned driver embedding, small MLP) replacing the residual lane
+#      delta; physics feasibility mask stays hard.  Trained by the teacher-forced event loss
+#      loss.lane_event (focal, category-balanced CE on recorded 0.5 s lane-change events:
+#      overtake 1->0 / return 0->1 / ramp merge 2->1) plus the existing flip-rate guard.
+#   C. model.driver_update = "ema": in-rollout driver-setting refinement (v0 free-flow IDM
+#      inversion, T steady following, embedding innovation) whenever a car's true state is
+#      observed; open-loop imagination is unchanged.  Trained by revealing a teacher-observed
+#      prefix (model.driver_reveal_prob / driver_reveal_max_s) in training unrolls.
+# Everything else (data, curriculum, optimiser, runtime) is inherited from c4_wm.toml.
+# Longer driver history: data.history_s = 120.0 is supported by the packs (front-masked where
+# a run started < 120 s before t0); kept at c4_wm's 60 s here - opt in with
+# --set data.history_s=120.0 (see WMLANE_NOTES.md).
+extends = "c4_wm.toml"
+name = "WM-S-C4-V2-LANE"
+
+[model]
+lane_model = "hazard"
+lane_hazard_hidden = 64
+lane_hazard_cap = 10.0
+driver_update = "ema"
+driver_update_rate = 0.3
+driver_reveal_prob = 0.3
+driver_reveal_max_s = 10.0
+
+[loss.lane_event]
+weight = 1.0
+gamma = 2.0
+max_weight = 20.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v2_lane"

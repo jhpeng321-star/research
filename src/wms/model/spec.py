@@ -12,6 +12,11 @@ from .residual_bound import validate_bounds
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 LANE_HEADS = ("off", "history")
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
+#: Lane-decision model (WMLANE A): the gated residual lane delta (default) or the
+#: dedicated per-HDV lane-change hazard model (``wms.model.lane_hazard``).
+LANE_MODELS = ("residual", "hazard")
+#: In-rollout driver-setting update from observed motion (WMLANE C).
+DRIVER_UPDATES = ("off", "ema")
 
 
 @dataclass(frozen=True)
@@ -57,6 +62,13 @@ class ModelSpec:
     lane_gate_tau_steps_init: float = 30.0
     checkpoint_step: bool = False
     grad_decay_per_step: float = 1.0
+    # WMLANE (default OFF; created modules are appended after every existing one so
+    # older checkpoints keep their key order and load unchanged).
+    lane_model: str = "residual"
+    lane_hazard_hidden: int = 64
+    lane_hazard_cap: float = 10.0
+    driver_update: str = "off"
+    driver_update_rate: float = 0.3
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
@@ -89,6 +101,20 @@ class ModelSpec:
             raise ValueError("lane_gate_tau_steps_init must be finite and positive")
         if self.lane_head == "history" and self.rollout_mode == "residual":
             raise ValueError("history lane head requires driver_params or hybrid rollout")
+        if self.lane_model not in LANE_MODELS:
+            raise ValueError(f"lane_model must be one of {LANE_MODELS}")
+        if self.driver_update not in DRIVER_UPDATES:
+            raise ValueError(f"driver_update must be one of {DRIVER_UPDATES}")
+        if (self.lane_model == "hazard" or self.driver_update != "off")                 and (self.rollout_mode == "residual" or self.black_box):
+            raise ValueError("lane_model='hazard' / driver_update need the structured "
+                             "driver_params or hybrid rollout (driver embedding/settings)")
+        if self.lane_model == "hazard" and self.lane_head != "off":
+            raise ValueError("lane_model='hazard' and the history lane head are exclusive")
+        if self.lane_hazard_hidden < 1 or not (math.isfinite(self.lane_hazard_cap)
+                                               and self.lane_hazard_cap > 0.0):
+            raise ValueError("lane_hazard_hidden must be >= 1 and lane_hazard_cap > 0")
+        if not 0.0 < self.driver_update_rate < 1.0:
+            raise ValueError("driver_update_rate must be in (0, 1)")
         if self.history_features < 0:
             raise ValueError("history_features must be >= 0")
         if self.long_history and (self.black_box or self.history_features != HISTORY_F):

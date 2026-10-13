@@ -87,8 +87,33 @@ class ModelConfig:
     """Round 5b: backward-only gradient damping per rollout step through the carried state (1.0 = off)."""
     init_from: Optional[str] = None
     allow_rejected_hard_cap: bool = False
+    # --- WMLANE switches (default OFF = bit-identical legacy model) ---------------
+    lane_model: Literal["residual", "hazard"] = "residual"
+    """A: 'hazard' = dedicated per-HDV stay/left/right event model (replaces the residual lane delta)."""
+    lane_hazard_hidden: int = 64
+    lane_hazard_cap: float = 10.0
+    driver_update: Literal["off", "ema"] = "off"
+    """C: refine a car's driver settings/embedding from its observed motion inside a rollout."""
+    driver_update_rate: float = 0.3
+    driver_reveal_prob: float = 0.0
+    """C training: probability that an HDV gets a teacher-observed prefix in a training unroll."""
+    driver_reveal_max_s: float = 10.0
+    """C training: the revealed prefix length is drawn uniformly from (0, driver_reveal_max_s]."""
 
     def __post_init__(self) -> None:
+        require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
+                and self.lane_hazard_cap > 0.0,
+                "model.lane_hazard_hidden must be >= 1 and lane_hazard_cap > 0")
+        require(0.0 < self.driver_update_rate < 1.0, "model.driver_update_rate must be in (0, 1)")
+        require(0.0 <= self.driver_reveal_prob <= 1.0 and is_finite(self.driver_reveal_max_s)
+                and self.driver_reveal_max_s > 0.0,
+                "model.driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
+        if self.lane_model == "hazard" or self.driver_update != "off":
+            require(self.rollout_mode in ("driver_params", "hybrid") and self.kind == "structured",
+                    "model.lane_model='hazard' / driver_update need a structured "
+                    "driver_params or hybrid model")
+        if self.lane_model == "hazard":
+            require(self.lane_head == "off", "model.lane_model='hazard' requires lane_head='off'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
                 "model.grad_decay_per_step must be in (0, 1]")
         if self.lane_head == "history":
@@ -200,6 +225,29 @@ class FlipRateConfig:
 
 
 @config_dataclass
+class LaneEventConfig:
+    """WMLANE A: teacher-forced one-step lane-change event loss (off by default).
+
+    Focal, category-balanced cross entropy of the stay/left/right decision on the
+    RECORDED state of every HDV-step (0.5 s); event categories (overtake 1->0,
+    return 0->1, ramp merge 2->1) are balanced against each other and against
+    'stay', each event weight capped at ``max_weight``.
+    """
+
+    weight: float = 0.0
+    gamma: float = 2.0
+    max_weight: float = 20.0
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.lane_event.weight must be finite and non-negative")
+        require(is_finite(self.gamma) and self.gamma >= 0.0,
+                "loss.lane_event.gamma must be finite and non-negative")
+        require(is_finite(self.max_weight) and self.max_weight >= 1.0,
+                "loss.lane_event.max_weight must be >= 1")
+
+
+@config_dataclass
 class TrafficLossConfig:
     """Legacy differentiable traffic-level loss (off in R3)."""
 
@@ -231,6 +279,7 @@ class LossConfig:
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
+    lane_event: LaneEventConfig = field(default_factory=LaneEventConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
