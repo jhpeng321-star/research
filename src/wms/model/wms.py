@@ -143,6 +143,10 @@ class WmSModel(nn.Module):
         # never replays the CAV controller callback (it runs outside ``forward``), so it is
         # safe with stateful controllers and leaves values and gradients unchanged.
         self.checkpoint_forward = False
+        # Runtime execution-cap switch (EXECCAP_NOTES.md, never part of a checkpoint): "off"
+        # (default, bit-identical) or "idm" -- every COMMAND-driven CAV realises at most the
+        # SUMO-consistent ceiling min(own physics-core IDM accel, (v0-v)/dt, accel param).
+        self.cav_exec_cap = "off"
         self._build_modules(spec)
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
@@ -718,13 +722,15 @@ class WmSModel(nn.Module):
         direct = (torch.zeros_like(cav)
                   if action_id is None or not self.apply_direct_commands else
                   (action_id == DIRECT_ID) & cav)
+        exec_cap = (self._exec_cap(out, state, driver_params)
+                    if cav.any() and getattr(self, "cav_exec_cap", "off") != "off" else None)
         if direct.any():
             direct, next_s, next_v = self._apply_direct_commands(
-                out, direct, s, v, next_s, next_v, action_command)
+                out, direct, s, v, next_s, next_v, action_command, exec_cap=exec_cap)
         if cav.any() and not self.black_box:
             next_s, next_v, next_lane = self._apply_cav_overrides(
                 out, state, cav, direct, present, k_steps, action_id, action_command,
-                cav_teacher, cav_controller, next_s, next_v, next_lane)
+                cav_teacher, cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
 
         next_present = present.clone()
         exit_s = state.get("exit_s_m")
@@ -740,17 +746,45 @@ class WmSModel(nn.Module):
                     "next_lane": next_lane, "next_present": next_present})
         return out
 
+    def _exec_cap(self, out: dict, state: dict,
+                  driver_params: Optional[dict[str, Tensor]]) -> Tensor:
+        """SUMO-consistent ceiling ``[B, K]`` of commanded CAVs (EXECCAP_NOTES.md).
+
+        ``out["physics_accel_mps2"]`` is the physics-core IDM acceleration of every present
+        slot (CAV slots included) with the driver settings of this step; the settings are
+        the supplied ``driver_params``, else those encoded in this forward, else defaults.
+        """
+        mode = cav_motion.check_exec_cap_mode(self.cav_exec_cap)
+        if mode != "idm":
+            raise ValueError(f"unsupported cav_exec_cap {mode!r}")
+        params = driver_params
+        if params is None and "driver_parameters" in out:
+            params = {name: out["driver_parameters"][..., i]
+                      for i, name in enumerate(PARAMETER_NAMES)}
+        physics = out["physics_accel_mps2"]
+        if params is None:
+            v0, accel_limit = self.physics.v0_mps, self.physics.idm()[0]
+        else:
+            v0, accel_limit = params["v0"], params["accel"]
+        return cav_motion.exec_accel_cap(physics, state["v_mps"].to(physics.dtype),
+                                         self.physics.dt_s, v0, accel_limit)
+
     def _apply_direct_commands(self, out: dict, direct: Tensor, s: Tensor, v: Tensor,
                                next_s: Tensor, next_v: Tensor,
-                               action_command: Optional[Tensor]
+                               action_command: Optional[Tensor],
+                               exec_cap: Optional[Tensor] = None
                                ) -> tuple[Tensor, Tensor, Tensor]:
         """Drive ``direct`` CAVs from their issued command.
 
         Updates ``out["accel_mps2"]`` and returns ``(applied mask, next_s, next_v)``.
+        ``exec_cap`` (``cav_exec_cap="idm"``) bounds the issued acceleration from above.
         """
         if action_command is None:
             raise ValueError("direct timeline action requires acceleration and target speed")
         command = torch.as_tensor(action_command, dtype=v.dtype, device=v.device)
+        if exec_cap is not None:
+            command = torch.stack((torch.minimum(command[..., 0], exec_cap.to(command.dtype)),
+                                   command[..., 1]), -1)
         direct_s, direct_v, accel, feasible = cav_motion.direct_command_motion(
             s, v, command, float(self.physics.dt_s), self.physics.accel_min_mps2,
             self.physics.accel_max_mps2)
@@ -760,15 +794,20 @@ class WmSModel(nn.Module):
 
     def _apply_cav_overrides(self, out: dict, state: dict, cav: Tensor, direct: Tensor,
                              present: Tensor, k_steps, action_id, action_command,
-                             cav_teacher, cav_controller, next_s, next_v, next_lane):
+                             cav_teacher, cav_controller, next_s, next_v, next_lane,
+                             exec_cap: Optional[Tensor] = None):
         """Replace the learned motion of CAV slots by teacher/controller motion.
 
         The controller callback runs once per physics tick (also on direct-only ticks)
         because the dispatcher owns episode-persistent controller lifecycle state.
+        With ``exec_cap`` the callback state carries it under ``cav.EXEC_CAP_KEY``; command
+        executors apply it to their commanded slots (``cav.apply_exec_cap``), teachers ignore it.
         """
         callback_teacher = None
         if cav_controller is not None:
             callback_state = {**state, "physics_step_index": k_steps}
+            if exec_cap is not None:
+                callback_state[cav_motion.EXEC_CAP_KEY] = exec_cap
             if action_id is not None:
                 callback_state = {**callback_state, "action_id": action_id,
                                   "action_command": action_command}

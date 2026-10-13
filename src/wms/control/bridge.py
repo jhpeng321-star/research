@@ -78,7 +78,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     """
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
-    direct_command_motion = import_module("wms.model.cav").direct_command_motion
+    cav_module = import_module("wms.model.cav")
+    direct_command_motion = cav_module.direct_command_motion
+    apply_exec_cap = cav_module.apply_exec_cap
     if act_mask is not None and native is None:
         raise ValueError("act_mask requires a native CAV behaviour")
     from .safety import with_accel_max
@@ -177,6 +179,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         s = torch.where(present, state["s_m"], torch.zeros_like(state["s_m"]))
         v = torch.where(present, state["v_mps"], torch.zeros_like(state["v_mps"]))
         target_v = v + ceiling * PHYSICS_DT_S
+        # EXECCAP_NOTES.md: with the WM's cav_exec_cap on, policy-driven CAVs realise at most the
+        # SUMO-consistent ceiling (identity when off; native counterfactual CAVs are not capped).
+        executed = apply_exec_cap(state, executed, acting)
         command = torch.stack((executed, target_v), -1)
         next_s, next_v, applied, _ = direct_command_motion(
             s, v, command, PHYSICS_DT_S,

@@ -309,10 +309,11 @@ class BeliefSource:
 
 
 # ------------------------------------------------------------------ episode
-def _load_world_models(paths, device):
+def _load_world_models(paths, device, cav_exec_cap=None):
     from wms.eval.backend import load_backend
 
-    return [load_backend(checked(p), device=device).model for p in paths]
+    return [load_backend(checked(p), device=device, cav_exec_cap=cav_exec_cap).model
+            for p in paths]
 
 
 def run(args) -> dict:
@@ -372,7 +373,7 @@ def run(args) -> dict:
 
         if not args.wm_ckpt:
             raise SystemExit("--wm-ckpt is required for policy_check")
-        models = _load_world_models(args.wm_ckpt, device)
+        models = _load_world_models(args.wm_ckpt, device, getattr(args, "cav_exec_cap", None))
         candidates = build_candidates(models[0], policy_fn.policy, policy_fn.group_encoder,
                                       lane_rules=policy_fn.lane_rules, sample_streams=streams,
                                       perturbation=args.group_perturbation)
@@ -501,6 +502,8 @@ def run(args) -> dict:
         "seed": args.seed, "demand_vph": args.demand, "penetration": args.penetration,
         "warmup_s": args.warmup, "horizon_s": args.horizon, "device": device,
         "threads": torch.get_num_threads(), "policy_ckpt": args.policy, "wm_ckpt": list(args.wm_ckpt or []),
+        "cav_exec_cap": (getattr(args, "cav_exec_cap", None)
+                         or __import__("os").environ.get("WMS_CAV_EXEC_CAP", "off")),
         "belief_ckpt_ignored": args.belief_ckpt,
         "check": None if checker is None else {
             "candidates": list(checker.candidates), "decision_period_s": args.decision_period,
@@ -565,6 +568,9 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--k", type=int, default=192)
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--no-physics-log", action="store_true")
+    ap.add_argument("--cav-exec-cap", choices=("off", "idm"), default=None,
+                    help="WM imagination execution cap of commanded CAVs (EXECCAP_NOTES.md); "
+                         "default: env WMS_CAV_EXEC_CAP, else off")
     return ap
 
 

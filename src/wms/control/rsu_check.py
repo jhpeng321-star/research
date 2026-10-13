@@ -184,7 +184,8 @@ class RsuChecker:
                  driver_noise_scale: float = 0.0, embedding_noise_std: float = 0.0,
                  driver_max_rel_dev: float = DRIVER_SAMPLE_MAX_REL_DEV,
                  seed: int = 0, log_fn: Optional[Callable] = None,
-                 synchronize: Optional[Callable[[], None]] = None):
+                 synchronize: Optional[Callable[[], None]] = None,
+                 cav_exec_cap: Optional[str] = None):
         if not world_models:
             raise ValueError("world_models must not be empty")
         if "policy" not in candidates or not all(callable(f) for f in candidates.values()):
@@ -204,6 +205,12 @@ class RsuChecker:
             raise ValueError("driver samples are identical without driver noise; use n_driver_samples=1 "
                              "(the paired LCB then runs over the WM ensemble members)")
         self.world_models = list(world_models)
+        # EXECCAP_NOTES.md: None keeps each model's own runtime switch (load_backend: env
+        # WMS_CAV_EXEC_CAP); "off"/"idm" forces it for this checker's rollouts.
+        if cav_exec_cap is not None:
+            from wms.model.cav import check_exec_cap_mode
+            cav_exec_cap = check_exec_cap_mode(cav_exec_cap)
+        self.cav_exec_cap = cav_exec_cap
         self.candidates = dict(candidates)
         self.reward_fn, self.weights = reward_fn, weights
         self.horizon_s, self.decision_period_s = horizon_s, decision_period_s
@@ -313,7 +320,13 @@ class RsuChecker:
             # Preserve the caller's train/eval lifecycle, including mixed submodule modes.
             modes = [(module, module.training) for module in model.modules()] \
                 if isinstance(model, torch.nn.Module) else []
+            previous_cap = getattr(model, "cav_exec_cap", None)
             try:
+                if self.cav_exec_cap is not None:
+                    if previous_cap is None and self.cav_exec_cap != "off":
+                        raise ValueError("cav_exec_cap requires world models with the switch")
+                    if previous_cap is not None:
+                        model.cav_exec_cap = self.cav_exec_cap
                 if modes:
                     model.eval()
                 drivers = self._sample_drivers(model, state, history_args, count, noise)
@@ -329,6 +342,8 @@ class RsuChecker:
             finally:
                 for module, training in modes:
                     module.training = training
+                if previous_cap is not None:
+                    model.cav_exec_cap = previous_cap
         returns = torch.stack(member_returns).double().cpu()  # [ensemble,candidate,sample]
         paired = returns - returns[:, names.index("policy"):names.index("policy") + 1]
         evidence = {}

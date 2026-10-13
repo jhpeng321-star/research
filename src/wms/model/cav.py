@@ -81,3 +81,60 @@ def hold_speed_teacher(s: Tensor, lane: Tensor, v: Tensor, dt_s: float) -> Tenso
 def check_teacher(teacher: Tensor, reference: Tensor) -> None:
     if teacher.shape[-1] != 4 or teacher.shape[:2] != reference.shape:
         raise ValueError("CAV teacher must be [B,K,4] = s,lane,v,a")
+
+
+# ---------------------------------------------------------------- execution cap (EXECCAP_NOTES.md)
+#: Allowed values of ``WmSModel.cav_exec_cap``: ``"off"`` (default, bit-identical legacy
+#: behaviour) or ``"idm"`` (SUMO speedMode-27 consistent execution of commanded CAVs).
+EXEC_CAP_MODES = ("off", "idm")
+#: Process-wide default read by :func:`wms.eval.backend.load_backend` (and nothing else).
+EXEC_CAP_ENV = "WMS_CAV_EXEC_CAP"
+#: Key under which the model hands the per-slot ceiling ``[B, K]`` to its CAV callback.
+EXEC_CAP_KEY = "cav_exec_cap_mps2"
+
+
+def check_exec_cap_mode(mode) -> str:
+    mode = "off" if mode is None else str(mode).strip().lower()
+    if mode not in EXEC_CAP_MODES:
+        raise ValueError(f"cav_exec_cap must be one of {EXEC_CAP_MODES}, got {mode!r}")
+    return mode
+
+
+def set_exec_cap(model, mode) -> str:
+    """Set the runtime execution-cap switch on ``model`` (no-op for models without it)."""
+    mode = check_exec_cap_mode(mode)
+    if hasattr(model, "cav_exec_cap"):
+        model.cav_exec_cap = mode
+    return mode
+
+
+def exec_accel_cap(physics_accel: Tensor, v: Tensor, dt_s: float, v0, accel_limit) -> Tensor:
+    """Ceiling ``[B, K]`` of the acceleration a commanded CAV can realise in SUMO.
+
+    In SUMO (speedMode 27, safe speed regarded) a commanded CAV realises
+    ``min(command, own vType car-following acceleration)``; the car-following term is the
+    WM physics core's IDM acceleration of the slot with its inferred driver settings
+    (incl. the accel-lane-end obstacle), further bounded by the approach to the slot's
+    desired speed ``(v0 - v) / dt`` and its vType-like ``accel`` limit.
+    """
+    cap = torch.minimum(physics_accel, (torch.as_tensor(v0, dtype=v.dtype, device=v.device) - v)
+                        / float(dt_s))
+    return torch.minimum(cap, torch.as_tensor(accel_limit, dtype=v.dtype, device=v.device)
+                         .expand_as(cap))
+
+
+def apply_exec_cap(state: Mapping[str, Tensor], accel: Tensor,
+                   mask: Optional[Tensor] = None) -> Tensor:
+    """``min(accel, state[EXEC_CAP_KEY])`` on ``mask`` (all slots if None); identity without a cap.
+
+    Used by every COMMAND-driven CAV executor (bridge, coop-imagine callable, trainer) on its
+    post-safety command; recorded teachers never pass through it.  Gradient: ``torch.minimum``
+    routes the gradient to the binding argument -- a braking (non-binding) command keeps its
+    full gradient; where the SUMO ceiling binds, d a_exec / d command = 0 (a larger command
+    changes nothing physically) and the gradient flows through the ceiling to the state.
+    """
+    cap = state.get(EXEC_CAP_KEY) if hasattr(state, "get") else None
+    if cap is None:
+        return accel
+    capped = torch.minimum(accel, cap.to(dtype=accel.dtype, device=accel.device))
+    return capped if mask is None else torch.where(mask.bool(), capped, accel)
