@@ -124,10 +124,15 @@ def _member_slots(env, members, keep) -> torch.Tensor:
 
 @torch.no_grad()
 def imagined_cooperation(ckpt, env, arms: list, controller, fn_snap, horizon_s: int, *,
-                         n_samples: int = 4, seed: int = 0, device: str = "cpu",
-                         reward_fn: Optional[Callable] = None) -> dict:
-    """Imagined ``{"metrics": {arm: {metric: mean}}, "D": {arm: {metric: D}}}`` (paired)."""
-    from .deploy import OracleSource, TimelineCandidate, classic_dependencies, compact_inputs
+                         n_samples: int = 1, seed: int = 0, device: str = "cpu",
+                         reward_fn: Optional[Callable] = None, driver_noise_scale: float = 0.0,
+                         embedding_noise_std: float = 0.0) -> dict:
+    """Imagined ``{"metrics": {arm: {metric: mean}}, "D": {arm: {metric: D}}}`` (paired).
+
+    Drivers use the point estimate by default; ``driver_noise_scale`` > 0 samples the UNCALIBRATED
+    encoder uncertainty (opt-in, see :data:`wms.control.futures.DRIVER_SAMPLE_MAX_REL_DEV`).
+    """
+    from .deploy import OracleSource, compact_inputs
     from .reward import team_reward
 
     started = time.monotonic()
@@ -154,18 +159,17 @@ def imagined_cooperation(ckpt, env, arms: list, controller, fn_snap, horizon_s: 
     encoded, embedding, params = model.encode_drivers(enc_state, **hist)
     gen = torch.Generator().manual_seed(int(seed))
     drivers = {}
-    if params is not None:
-        pn = tuple(params)
-        values = torch.stack([params[p] for p in pn], -1)
-        draws = torch.randn((n, *values.shape[1:]), generator=gen).to(values)
-        scale = encoded["uncertainty"] if encoded is not None else values.abs() * 0.1
-        samples = values + draws * scale
-        samples = torch.maximum(torch.minimum(samples, values * 1.5), values * 0.5)
-        samples = samples.repeat(n_arm, 1, 1)
-        drivers["driver_params"] = {p: samples[..., i] for i, p in enumerate(pn)}
-    if embedding is not None:
-        draws = torch.randn((n, *embedding.shape[1:]), generator=gen).to(embedding)
-        drivers["driver_embedding"] = (embedding + 0.05 * draws).repeat(n_arm, 1, 1)
+    if encoded is not None or params is not None or embedding is not None:
+        from .futures import sample_driver_encodings
+        sampled = sample_driver_encodings(
+            model, enc_state, hist, n,
+            lambda shape, reference, key: torch.randn(tuple(shape), generator=gen).to(reference),
+            driver_noise_scale=driver_noise_scale, embedding_noise_std=embedding_noise_std)
+        if "driver_params" in sampled:  # [n, 1, K] -> [arms*n, K], arm-major / sample-minor
+            drivers["driver_params"] = {p: v[:, 0].repeat(n_arm, 1)
+                                        for p, v in sampled["driver_params"].items()}
+        if "driver_embedding" in sampled:
+            drivers["driver_embedding"] = sampled["driver_embedding"][:, 0].repeat(n_arm, 1, 1)
 
     def rep(x):
         return x.repeat(batch, *([1] * (x.ndim - 1))) if torch.is_tensor(x) and x.ndim else x
@@ -185,6 +189,13 @@ def imagined_cooperation(ckpt, env, arms: list, controller, fn_snap, horizon_s: 
         def dispatch(predicted):
             return model.hold_teacher(predicted)
     else:
+        # Damping/PI in imagination are diagnostics only (no controllers in the deployed check, owner
+        # 2026-10-12); TimelineCandidate left deploy.py with that change (1ea2409).
+        try:
+            from .deploy import TimelineCandidate, classic_dependencies
+        except ImportError as exc:
+            raise NotImplementedError("damping/PI imagination needs deploy.TimelineCandidate, removed "
+                                      "with the direct-output-only check") from exc
         deps = classic_dependencies()
         name = "damping" if controller.named == "damping" else "pi-external-u"
         cand = TimelineCandidate(model, name, int(np.ceil(horizon_s)) + 2, deps)

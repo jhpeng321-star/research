@@ -17,7 +17,7 @@ import torch
 from torch import Tensor
 
 from .contract import CONTROL_DT_S, PHYSICS_DT_S, CavController, RewardWeights
-from .futures import sample_driver_encodings
+from .futures import DRIVER_SAMPLE_MAX_REL_DEV, sample_driver_encodings
 
 ControllerFactory = Callable[[], CavController]
 
@@ -161,13 +161,18 @@ class RsuChecker:
     reused for all candidates and ensemble members; member-specific encodings
     and uncertainty scales remain distinct. The LCB is mean - confidence_z*SEM
     over the ensemble x driver-sample paired differences (not unpaired returns).
+    Default: point-estimate drivers (one sample), so the spread is WM-ensemble disagreement;
+    with a single WM and one sample the LCB is undefined and the policy is always kept.
+    Driver sampling (``driver_noise_scale`` > 0) uses the UNCALIBRATED encoder uncertainty
+    (see :data:`wms.control.futures.DRIVER_SAMPLE_MAX_REL_DEV`) and is opt-in only.
     """
 
     def __init__(self, world_models: list, candidates: Mapping[str, ControllerFactory],
                  reward_fn, weights: RewardWeights, horizon_s: float = 20,
-                 decision_period_s: float = 5, n_driver_samples: int = 4,
+                 decision_period_s: float = 5, n_driver_samples: int = 1,
                  margin: float = 0.0, *, confidence_z: float = 1.96,
-                 driver_noise_scale: float = 1.0, embedding_noise_std: float = 0.05,
+                 driver_noise_scale: float = 0.0, embedding_noise_std: float = 0.0,
+                 driver_max_rel_dev: float = DRIVER_SAMPLE_MAX_REL_DEV,
                  seed: int = 0, log_fn: Optional[Callable] = None,
                  synchronize: Optional[Callable[[], None]] = None):
         if not world_models:
@@ -185,6 +190,9 @@ class RsuChecker:
                             ("embedding_noise_std", embedding_noise_std)):
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
+        if n_driver_samples > 1 and driver_noise_scale == 0 and embedding_noise_std == 0:
+            raise ValueError("driver samples are identical without driver noise; use n_driver_samples=1 "
+                             "(the paired LCB then runs over the WM ensemble members)")
         self.world_models = list(world_models)
         self.candidates = dict(candidates)
         self.reward_fn, self.weights = reward_fn, weights
@@ -192,6 +200,7 @@ class RsuChecker:
         self.n_driver_samples, self.margin = n_driver_samples, margin
         self.confidence_z = confidence_z
         self.driver_noise_scale, self.embedding_noise_std = driver_noise_scale, embedding_noise_std
+        self.driver_max_rel_dev = driver_max_rel_dev
         self.generator = torch.Generator(device="cpu").manual_seed(seed)
         self.log_fn, self.synchronize = log_fn, synchronize
         self.decision_log: list[dict] = []
@@ -218,7 +227,7 @@ class RsuChecker:
             model, state, history_args, self.n_driver_samples,
             lambda shape, reference, key: self._normal(shape, reference, noise, key),
             driver_noise_scale=self.driver_noise_scale,
-            embedding_noise_std=self.embedding_noise_std)
+            embedding_noise_std=self.embedding_noise_std, max_rel_dev=self.driver_max_rel_dev)
         out = {}
         if "driver_params" in sampled:
             out["driver_params"] = {name: value[:, 0].repeat(count, 1)

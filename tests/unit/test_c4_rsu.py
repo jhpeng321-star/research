@@ -71,6 +71,11 @@ class FakeWM(torch.nn.Module):
 
 
 def checker(models=None, candidates=None, **kwargs):
+    # sampling-mechanics tests: the pre-2026-10-13 sampled-driver setup (deploy default is now the
+    # point estimate, n_driver_samples=1; see test_c4_futures)
+    if kwargs.get("n_driver_samples", 4) > 1 and "driver_noise_scale" not in kwargs:
+        kwargs.setdefault("n_driver_samples", 4)
+        kwargs.update(driver_noise_scale=1.0, embedding_noise_std=kwargs.get("embedding_noise_std", 0.05))
     return RsuChecker(models or [FakeWM()], candidates or {"policy": factory(0), "native": factory(1)},
                       reward, RewardWeights(), **kwargs)
 
@@ -78,8 +83,9 @@ def checker(models=None, candidates=None, **kwargs):
 @pytest.mark.parametrize("gain,margin,choice", [(1, 39, "native"), (1, 40, "policy"),
                                                 (1, 41, "policy"), (0, 0, "policy"), (-1, 0, "policy")])
 def test_paired_margin(gain, margin, choice):
-    c = checker(candidates={"policy": factory(0), "native": factory(gain)}, margin=margin,
-                driver_noise_scale=0)
+    # point-estimate drivers; the paired spread comes from a two-member WM ensemble
+    c = checker(models=[FakeWM(), FakeWM()], candidates={"policy": factory(0), "native": factory(gain)},
+                margin=margin, n_driver_samples=1)
     chosen, stats = c.decide(state())
     assert chosen == choice
     assert stats["native"]["paired_mean"] == pytest.approx(40 * gain, abs=1e-4)

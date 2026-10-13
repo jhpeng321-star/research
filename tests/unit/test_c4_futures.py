@@ -134,19 +134,21 @@ def test_driver_samples_are_shared_across_members_and_start_level():
     models = [SamplingWM(base_gain=0.25), SamplingWM(base_gain=0.5)]
     state = D._state(2)
     draws = NormalDraws(torch.Generator().manual_seed(0))
-    kw = dict(driver_noise_scale=0.3)            # small enough that the +/-50 % cap never binds
+    kw = dict(driver_noise_scale=0.1)            # small enough that the +/-15 % cap never binds
     first = sample_driver_encodings(models[0], state, {}, 4, draws, **kw)["driver_params"]["gain"]
     second = sample_driver_encodings(models[1], state, {}, 4, draws, **kw)["driver_params"]["gain"]
     assert first.shape == second.shape == (4, 2, 3)
-    # same standard-normal draws, member-specific values (uncertainty 0.1 x scale 0.3)
-    z1 = (first - 0.25) / 0.03
-    z2 = (second - 0.5) / 0.03
+    # same standard-normal draws, member-specific values (uncertainty 0.1 x scale 0.1)
+    z1 = (first - 0.25) / 0.01
+    z2 = (second - 0.5) / 0.01
     torch.testing.assert_close(z1, z2, atol=1e-5, rtol=0)
     assert not torch.equal(first[0], first[1])
     wide = sample_driver_encodings(models[0], state, {}, 64, NormalDraws(torch.Generator().manual_seed(1)),
                                    driver_noise_scale=10.0)["driver_params"]["gain"]
-    assert (wide >= 0.25 * 0.5 - 1e-7).all() and (wide <= 0.25 * 1.5 + 1e-7).all()   # +/-50 % cap
-    assert (wide == 0.25 * 1.5).any() and (wide == 0.25 * 0.5).any()
+    assert (wide >= 0.25 * 0.85 - 1e-7).all() and (wide <= 0.25 * 1.15 + 1e-7).all()  # +/-15 % cap
+    assert torch.isclose(wide, torch.tensor(0.25 * 1.15)).any()         and torch.isclose(wide, torch.tensor(0.25 * 0.85)).any()
+    with pytest.raises(ValueError):
+        sample_driver_encodings(models[0], state, {}, 2, draws, max_rel_dev=1.0)
     off = sample_driver_encodings(models[0], state, {}, 3, NormalDraws(torch.Generator().manual_seed(0)),
                                   driver_noise_scale=0.0)["driver_params"]["gain"]
     assert torch.equal(off, torch.full((3, 2, 3), 0.25))
@@ -334,7 +336,8 @@ def test_rsu_driver_samples_unchanged_by_factoring():
     history = {"history": torch.ones(1, 5, model.history_len, model.history_features)}
     history["history_mask"] = torch.ones_like(history["history"][..., 0], dtype=torch.bool)
     checker = RsuChecker([model], {"policy": lambda: None}, lambda *a: None, RewardWeights(),
-                         n_driver_samples=4, driver_noise_scale=0.7, embedding_noise_std=0.05, seed=3)
+                         n_driver_samples=4, driver_noise_scale=0.7, embedding_noise_std=0.05, seed=3,
+                         driver_max_rel_dev=0.5)   # the pre-2026-10-13 cap, for the golden
     got = checker._sample_drivers(model, x, history, 2, {})
 
     generator = torch.Generator().manual_seed(3)             # the original inline code
@@ -357,3 +360,21 @@ def test_rsu_driver_samples_unchanged_by_factoring():
 def test_physics_constants_assumed_by_the_tests():
     assert STEPS_PER_CONTROL == 2 and SimpleNamespace  # horizon 3 -> 6 physics steps
     assert futures.seed_of("a", 1) == futures.seed_of("a", 1) != futures.seed_of("a", 2)
+
+
+def test_rsu_checker_defaults_to_point_estimate_drivers():
+    """HORIZON_CHECK 2026-10-13: the encoder uncertainty is untrained, so the deployed check imagines
+    with the point-estimate drivers (one sample); duplicate noiseless samples are refused."""
+    import inspect
+    from wms.control.contract import RewardWeights
+    from wms.control.rsu_check import RsuChecker
+    sig = inspect.signature(RsuChecker.__init__).parameters
+    assert sig["n_driver_samples"].default == 1
+    assert sig["driver_noise_scale"].default == 0.0 and sig["embedding_noise_std"].default == 0.0
+    with pytest.raises(ValueError, match="identical"):
+        RsuChecker([SamplingWM(base_gain=0.25)], {"policy": lambda: None}, lambda *a: None,
+                   RewardWeights(), n_driver_samples=4)
+    model = SamplingWM(base_gain=0.25)
+    checker = RsuChecker([model], {"policy": lambda: None}, lambda *a: None, RewardWeights())
+    drivers = checker._sample_drivers(model, D._state(1), {}, 3, {})
+    assert torch.equal(drivers["driver_params"]["gain"], torch.full((3, 3), 0.25))

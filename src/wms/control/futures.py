@@ -91,19 +91,33 @@ class NormalDraws:
         return self.cache[key].to(reference)
 
 
+#: The driver encoder's ``uncertainty`` output is NOT trained by any WM loss (driver settings are
+#: learned from prediction error only, with no likelihood on the parameters), so it sits near its
+#: initial value, ~0.7 x the parameter's full deviation bound.  Sampling from it at scale 1 with a
+#: +/-50 % cap slowed free-flow traffic systematically (one halved-v0 car blocks its followers) and
+#: raised the 30 s HDV median |ds| from 5.3 m to 27.8 m (HORIZON_CHECK.md, 2026-10-13).  Callers
+#: therefore default to the POINT estimate (noise 0); sampling is an explicit, uncalibrated opt-in.
+DRIVER_SAMPLE_MAX_REL_DEV = 0.15
+
+
 def sample_driver_encodings(model, state: Mapping, history_args: Mapping, n_samples: int,
                             normal: Callable, *, driver_noise_scale: float = 1.0,
-                            embedding_noise_std: float = 0.05) -> dict:
+                            embedding_noise_std: float = 0.05,
+                            max_rel_dev: float = DRIVER_SAMPLE_MAX_REL_DEV) -> dict:
     """``n_samples`` perturbed driver encodings of ``model`` for a start state ``[B, K]``.
 
     Returns ``{"driver_params": {name: [n, B, K]}, "driver_embedding": [n, B, K, D]}`` (keys only
     when the WM exposes them) for ``rollout(driver_params=..., driver_embedding=...)``.  Draws come
     from ``normal(shape, reference, key)`` so ensemble members share them (CRN); each member keeps
     its own encoded values and uncertainty.  Parameters are perturbed in physical units by the
-    encoder uncertainty and capped to +/-50 % of the encoded value so positive IDM parameters stay
-    positive; the embedding by ``embedding_noise_std`` (hybrid residuals and history lane heads
-    condition on it).  Call under ``torch.no_grad()``; samples are constants.
+    encoder uncertainty and capped to +/-``max_rel_dev`` of the encoded value so positive IDM
+    parameters stay positive; the embedding by ``embedding_noise_std`` (hybrid residuals and history
+    lane heads condition on it).  ``driver_noise_scale = embedding_noise_std = 0`` returns the point
+    estimate exactly.  The encoder uncertainty is uncalibrated (see DRIVER_SAMPLE_MAX_REL_DEV).
+    Call under ``torch.no_grad()``; samples are constants.
     """
+    if not (0.0 <= float(max_rel_dev) < 1.0):
+        raise ValueError("max_rel_dev must be in [0, 1)")
     if not hasattr(model, "encode_drivers"):
         raise ValueError("driver sampling needs a world model with encode_drivers")
     encoded, embedding, params = model.encode_drivers(dict(state), **history_args)
@@ -112,10 +126,11 @@ def sample_driver_encodings(model, state: Mapping, history_args: Mapping, n_samp
         names = tuple(params)
         values = torch.stack([params[name] for name in names], -1)          # [B, K, P]
         draws = normal((n_samples, *values.shape), values, ("parameters", names))
-        # Physical-unit encoder uncertainty; cap excursions to +/-50% of the valid encoded value.
+        # Physical-unit encoder uncertainty; cap excursions to +/-max_rel_dev of the encoded value.
         scale = encoded["uncertainty"] if encoded is not None else values.abs() * 0.1
         samples = values + draws * scale * driver_noise_scale
-        samples = torch.maximum(torch.minimum(samples, values * 1.5), values * 0.5)
+        samples = torch.maximum(torch.minimum(samples, values * (1.0 + max_rel_dev)),
+                                values * (1.0 - max_rel_dev))
         sampled["driver_params"] = {name: samples[..., k] for k, name in enumerate(names)}
     if embedding is not None:
         draws = normal((n_samples, *embedding.shape), embedding, "embedding")

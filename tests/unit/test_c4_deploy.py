@@ -120,7 +120,8 @@ def test_candidates_and_checker_on_random_wm():
     assert not {"native", "damping", "pi"} & set(cands)     # direct-output candidates only
     log = []
     checker = RsuChecker([model], cands, team_reward, RewardWeights(), horizon_s=10,
-                         decision_period_s=5, n_driver_samples=2, log_fn=log.append)
+                         decision_period_s=5, n_driver_samples=2, driver_noise_scale=1.0,
+                         embedding_noise_std=0.05, log_fn=log.append)
     st = _state(8, cav=(1, 3, 6), absent=())
     hist = torch.zeros(1, 8, model.history_len, model.history_features)
     inputs, _ = deploy.compact_inputs({"state": st, "history": hist,
@@ -188,7 +189,7 @@ def test_deploy_policy_check_episode(tmp_path, source):
     code = deploy.main(["--controller", "policy_check", "--state", source, "--seed", "4107",
                         "--demand", "2700", "--penetration", "0.2", "--warmup", "60",
                         "--horizon", "6", "--decision-period", "5", "--imagine-horizon", "10",
-                        "--n-driver-samples", "2", "--margin", "1e9", "--belief-lead", "30",
+                        "--n-driver-samples", "2", "--driver-noise-scale", "1.0", "--margin", "1e9", "--belief-lead", "30",
                         "--policy", str(ckpt), "--wm-ckpt", str(R5B), "--out", str(out),
                         "--no-physics-log"])
     summary = json.loads((out / "DEPLOY_SUMMARY.json").read_text(encoding="utf-8"))

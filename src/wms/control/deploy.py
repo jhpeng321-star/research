@@ -377,7 +377,9 @@ def run(args) -> dict:
         checker = RsuChecker(models, candidates, team_reward, RewardWeights(),
                              horizon_s=args.imagine_horizon, decision_period_s=args.decision_period,
                              n_driver_samples=args.n_driver_samples, margin=args.margin,
-                             confidence_z=args.confidence_z, seed=args.checker_seed)
+                             confidence_z=args.confidence_z, seed=args.checker_seed,
+                             driver_noise_scale=args.driver_noise_scale,
+                             embedding_noise_std=args.embedding_noise_std)
         source = (OracleSource(models[0]) if args.state == "oracle"
                   else BeliefSource(models[0], propagator=args.belief_propagator))
 
@@ -501,6 +503,7 @@ def run(args) -> dict:
         "check": None if checker is None else {
             "candidates": list(checker.candidates), "decision_period_s": args.decision_period,
             "imagine_horizon_s": args.imagine_horizon, "n_driver_samples": args.n_driver_samples,
+            "driver_noise_scale": args.driver_noise_scale, "embedding_noise_std": args.embedding_noise_std,
             "ensemble_members": len(models), "margin": args.margin, "confidence_z": args.confidence_z,
             "compact_slots": not args.no_compact, "belief_lead_s": args.belief_lead,
             "belief_propagator": args.belief_propagator if args.state == "belief" else None,
@@ -541,7 +544,12 @@ def parser() -> argparse.ArgumentParser:
                     help="seconds of warmup fed to the belief tracker (driver history needs 60 s)")
     ap.add_argument("--decision-period", type=float, default=5.0)
     ap.add_argument("--imagine-horizon", type=float, default=20.0)
-    ap.add_argument("--n-driver-samples", type=int, default=4)
+    ap.add_argument("--n-driver-samples", type=int, default=1,
+                    help="driver-setting samples per WM; >1 needs --driver-noise-scale > 0 "
+                         "(uncalibrated encoder uncertainty, opt-in). Default: point estimate; "
+                         "pass >=2 --wm-ckpt so the check has an ensemble spread")
+    ap.add_argument("--driver-noise-scale", type=float, default=0.0)
+    ap.add_argument("--embedding-noise-std", type=float, default=0.0)
     ap.add_argument("--margin", type=float, default=0.0, help="summed team-return units")
     ap.add_argument("--confidence-z", type=float, default=1.96)
     ap.add_argument("--checker-seed", type=int, default=0)

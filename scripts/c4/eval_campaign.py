@@ -216,7 +216,7 @@ def main(argv=None) -> int:
                     help="native/damping/pi via 'traffic_shepherd evaluate' or the C4 runner")
     ap.add_argument("--deploy-args", default=os.environ.get("C4_DEPLOY_ARGS", ""),
                     help="extra arguments for the C4 runner, e.g. '--warmup 300 --horizon 600 "
-                         "--decision-period 5 --imagine-horizon 20 --n-driver-samples 4 --margin 2'")
+                         "--decision-period 5 --imagine-horizon 20 --margin 2' (drivers: point estimate)")
     ap.add_argument("--policy-ckpt", default=os.environ.get("POLICY_CKPT"))
     ap.add_argument("--wm-ckpt", default=os.environ.get("WM_CKPT"))
     ap.add_argument("--belief-ckpt", default=os.environ.get("BELIEF_CKPT"))

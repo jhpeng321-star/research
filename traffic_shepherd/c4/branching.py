@@ -764,7 +764,7 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--k-slots", type=int, default=192)
     ap.add_argument("--rng-seed", type=int, default=0, help="arm sampling / random policy seed")
     ap.add_argument("--wm-ckpt", default=None, help="optional WM-S checkpoint: imagined D's too")
-    ap.add_argument("--wm-samples", type=int, default=4)
+    ap.add_argument("--wm-samples", type=int, default=1)
     return ap
 
 
