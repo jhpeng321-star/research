@@ -17,6 +17,7 @@ import torch
 from torch import Tensor
 
 from .contract import CONTROL_DT_S, PHYSICS_DT_S, CavController, RewardWeights
+from .futures import sample_driver_encodings
 
 ControllerFactory = Callable[[], CavController]
 
@@ -211,30 +212,20 @@ class RsuChecker:
         return cache[key].to(reference)
 
     def _sample_drivers(self, model, state, history_args, count, noise):
-        encoded, embedding, params = model.encode_drivers(dict(state), **history_args)
-        sampled = {}
-        if params is not None:
-            names = tuple(params)
-            values = torch.stack([params[name] for name in names], -1)
-            draws = self._normal((self.n_driver_samples, *values.shape[1:]),
-                                 values, noise, ("parameters", names))
-            # Physical-unit encoder uncertainty; cap excursions to +/-50% of the
-            # valid encoded value so positive IDM parameters stay positive.
-            scale = encoded["uncertainty"] if encoded is not None else values.abs() * 0.1
-            samples = values + draws * scale * self.driver_noise_scale
-            samples = torch.maximum(torch.minimum(samples, values * 1.5), values * 0.5)
-            samples = samples.repeat(count, 1, 1)
-            sampled["driver_params"] = {name: samples[..., k] for k, name in enumerate(names)}
-        if embedding is not None:
-            # Perturb the embedding as well: hybrid residuals and history lane
-            # heads condition on it, whereas residual-only WMs ignore parameters.
-            draws = self._normal((self.n_driver_samples, *embedding.shape[1:]),
-                                 embedding, noise, "embedding")
-            samples = embedding + draws * self.embedding_noise_std * self.driver_noise_scale
-            sampled["driver_embedding"] = samples.repeat(count, 1, 1)
-        if not sampled:
-            raise ValueError("world model must expose driver parameters or embedding")
-        return sampled
+        """Driver samples via the shared :func:`wms.control.futures.sample_driver_encodings`
+        (batch size 1), tiled candidate-major / sample-minor over ``count`` candidates."""
+        sampled = sample_driver_encodings(
+            model, state, history_args, self.n_driver_samples,
+            lambda shape, reference, key: self._normal(shape, reference, noise, key),
+            driver_noise_scale=self.driver_noise_scale,
+            embedding_noise_std=self.embedding_noise_std)
+        out = {}
+        if "driver_params" in sampled:
+            out["driver_params"] = {name: value[:, 0].repeat(count, 1)
+                                    for name, value in sampled["driver_params"].items()}
+        if "driver_embedding" in sampled:
+            out["driver_embedding"] = sampled["driver_embedding"][:, 0].repeat(count, 1, 1)
+        return out
 
     def _returns(self, state, rollout, n_steps):
         current = dict(state)
