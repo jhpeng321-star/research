@@ -268,7 +268,8 @@ class PolicyExecutor:
     """
 
     def __init__(self, policy=None, group_fn=None, *, lane_rules=None, deterministic: bool = True,
-                 noise_fn=None, hold: bool = False, dwell=None, memory=None, device: str = "cpu"):
+                 noise_fn=None, hold: bool = False, dwell=None, memory=None, device: str = "cpu",
+                 extra_accel_noise: float = 0.0):
         from .contract import CONTROL_DT_S
         from .lanes import LaneDwell, LaneRules
         from .obs import CommandMemory
@@ -279,6 +280,8 @@ class PolicyExecutor:
         self.lane_rules = lane_rules if lane_rules is not None else LaneRules()
         self.has_lane_head = bool(hold or getattr(policy, "has_lane_head", False))
         self.deterministic, self.noise_fn, self.hold, self.device = deterministic, noise_fn, hold, device
+        # Data-collection exploration (Dreamer loop): extra N(0, sigma) on the commanded accel before safety.
+        self.extra_accel_noise = float(extra_accel_noise)
         self.dwell = dwell if dwell is not None else LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)
         # Last commanded accel / lane intent of every CAV, relayed in the other CAVs' reports.
         self.memory = memory if memory is not None else CommandMemory()
@@ -325,6 +328,10 @@ class PolicyExecutor:
                 else:
                     accel, _ = self.policy(obs, signal, deterministic=self.deterministic, **kwargs)
             accel = accel.float()
+            if self.extra_accel_noise > 0.0 and not self.hold:
+                from .contract import ACCEL_MAX_MPS2, ACCEL_MIN_MPS2
+                accel = (accel + self.extra_accel_noise * torch.randn_like(accel)).clamp(
+                    ACCEL_MIN_MPS2, ACCEL_MAX_MPS2)
             safe = safe_accel(state, accel)
             if bool(changed.any()):
                 # SUMO executes the change during the next physics step (and may refuse it):
@@ -365,6 +372,13 @@ def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
     """Deployment :class:`PolicyExecutor` from a C4 trainer checkpoint (``c4_dreamer/1`` or
     ``/2``); used by the SUMO runner (``exe(state)`` -> accel, ``exe(state, with_lanes=True)``
     -> (accel, lane targets)).  ``exe.policy`` / ``exe.group_encoder`` expose the networks."""
+    import os
+
     policy, encoder, rules, _ = load_policy_components(path, device=device)
+    # Dreamer-loop data collection (exploration): C4_POLICY_STOCHASTIC=1 samples from the policy instead of
+    # its mean; C4_POLICY_ACCEL_NOISE=<sigma> adds extra Gaussian accel noise (m/s^2). Deployment default: off.
+    if os.environ.get("C4_POLICY_STOCHASTIC") == "1":
+        deterministic = False
+    noise = float(os.environ.get("C4_POLICY_ACCEL_NOISE", "0") or 0)
     return PolicyExecutor(policy, encoder, lane_rules=rules, deterministic=deterministic,
-                          device=device)
+                          device=device, extra_accel_noise=noise)
