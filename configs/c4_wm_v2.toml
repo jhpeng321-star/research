@@ -1,0 +1,29 @@
+# WM-S-C4 v2 COMBINED (2026-10-13, owner-approved A-E): one run with all world-model improvements on.
+#   A + C: configs/c4_wm_v2_lane.toml (hazard lane-change event model + event loss; in-rollout driver update)
+#   B + E: configs/c4_wm_v2_loss.toml (aggregate-consistency loss; 120 s stage with vehicle entries)
+#   D (sampled futures) is policy-side (configs/c4_policy_futures.toml), not part of WM training.
+# Budget: c4_wm_v2_loss estimate ~5.7 h on gpuW; gpuB (RTX 4090 48 GB, 20 cores) is expected to be
+# faster per step; A+C add a small MLP and a teacher-revealed prefix. max_hours caps the run.
+schema_version = 2
+name = "WM-S-C4-V2"
+extends = "c4_wm_v2_loss.toml"
+
+[model]
+lane_model = "hazard"
+lane_hazard_hidden = 64
+lane_hazard_cap = 10.0
+driver_update = "ema"
+driver_update_rate = 0.3
+driver_reveal_prob = 0.3
+driver_reveal_max_s = 10.0
+
+[loss.lane_event]
+weight = 1.0
+gamma = 2.0
+max_weight = 20.0
+
+[curriculum]
+max_hours = 7.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v2"
