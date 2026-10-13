@@ -183,6 +183,9 @@ def main(argv=None):
             raise ValueError("supply at least one local frozen WM checkpoint via --wm-ckpt")
         paths = [str(checked_path(path)) for path in paths]
         components = _load_components()
+        if cfg.critic_entry_backlog:     # SRCGRAD_NOTES.md: per-entrance backlog critic input
+            components["critic"] = importlib.import_module("wms.control.policy").TeamCritic(
+                entry_backlog=True)
         models = _load_world_models(paths, device)
         train, val = _load_starts(raw.get("data", {}), models, seed,
                                   entries=cfg.imagine_entries)

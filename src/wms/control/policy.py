@@ -201,14 +201,23 @@ class RsuGroupEncoder(nn.Module):
 
 
 class TeamCritic(nn.Module):
-    """Privileged all-present-vehicle set transformer: state -> value [B]."""
+    """Privileged all-present-vehicle set transformer: state -> value [B].
 
-    def __init__(self, hidden_dim: int = 64, n_heads: int = 4, n_layers: int = 2) -> None:
+    ``entry_backlog=True`` (SRCGRAD_NOTES.md) also feeds the per-entrance entry queue
+    ``state["entry_backlog"]`` [B, 2] (mainline, ramp; vehicles / ``BACKLOG_SCALE``; zeros when
+    absent) to the value head, so the bootstrap can price queues beyond the imagined horizon.
+    Its head has 2 more inputs: older critic weights fail to load (size mismatch)."""
+
+    BACKLOG_SCALE = 10.0
+
+    def __init__(self, hidden_dim: int = 64, n_heads: int = 4, n_layers: int = 2,
+                 entry_backlog: bool = False) -> None:
         super().__init__()
+        self.entry_backlog = bool(entry_backlog)
         self.input = nn.Linear(8, hidden_dim)
         self.blocks = nn.ModuleList([_SetBlock(hidden_dim, n_heads) for _ in range(n_layers)])
-        self.head = nn.Sequential(nn.Linear(hidden_dim, hidden_dim), nn.SiLU(),
-                                  nn.Linear(hidden_dim, 1))
+        self.head = nn.Sequential(nn.Linear(hidden_dim + (2 if self.entry_backlog else 0), hidden_dim),
+                                  nn.SiLU(), nn.Linear(hidden_dim, 1))
 
     def forward(self, state: Mapping[str, Tensor]) -> Tensor:
         mask = state["present"].bool()
@@ -231,6 +240,11 @@ class TeamCritic(nn.Module):
         for block in self.blocks:
             x = block(x, mask)
         pooled = x.sum(1) / mask.sum(1).clamp_min(1)[..., None]
+        if self.entry_backlog:
+            backlog = state.get("entry_backlog")
+            backlog = (torch.zeros(pooled.shape[0], 2, dtype=pooled.dtype, device=pooled.device)
+                       if backlog is None else backlog.to(pooled.dtype).reshape(pooled.shape[0], 2))
+            pooled = torch.cat((pooled, backlog / self.BACKLOG_SCALE), -1)
         value = self.head(pooled).squeeze(-1)
         return torch.where(mask.any(1), value, torch.zeros_like(value))
 

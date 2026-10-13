@@ -78,6 +78,13 @@ class DreamerConfig:
     future_accel_scale: float = 1.0
     future_accel_sigma_max: float = 1.0
     future_seed: int = 0
+    # Entry-queue gradient (SRCGRAD_NOTES.md, 2026-10-13; default off = bit-identical): the reward
+    # keeps the exact imagined backlog as its value but gets the gradient of a differentiable
+    # insertion-blocking surrogate (wms.control.srcgrad), so blocking an entrance is no longer free
+    # for the actor.  ``critic_entry_backlog`` feeds the per-entrance backlog to the TeamCritic
+    # (which must be built with ``entry_backlog=True``) so the bootstrap prices queues beyond H.
+    source_wait_grad: bool = False
+    critic_entry_backlog: bool = False
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -95,7 +102,8 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
-        for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise"):
+        for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
+                     "source_wait_grad", "critic_entry_backlog"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
@@ -232,16 +240,32 @@ def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generato
 
 
 class _EntryRecorder:
-    """Entry process wrapper: records the post-insertion state and the backlog of every step."""
+    """Entry process wrapper: records the post-insertion state and the backlog of every step,
+    plus (for the source-wait gradient) the per-entrance pending counts before / after the
+    insertion and the mask of the slots inserted on that step."""
 
     def __init__(self, process):
         self.process, self.states, self.backlog = process, [], []
+        self.pending_before, self.pending_after, self.new_masks = [], [], []
 
     def insert(self, state):
+        before = self.process.pending.copy()
         mask = self.process.insert(state)
         self.states.append(state)
         self.backlog.append(self.process.backlog())
+        self.pending_before.append(before)
+        self.pending_after.append(self.process.pending.copy())
+        self.new_masks.append(mask)
         return mask
+
+
+def _queue_surrogate_fn(state, new_mask, pending_before, hist, entry_s, entry_cfg):
+    """Straight-through-ready surrogate queue [B] from the PRE-insertion state of a step (the
+    post-insertion state with this step's entrants masked out; insertion only writes free slots)."""
+    from .srcgrad import queue_surrogate
+
+    present = state["present"].bool() & ~new_mask.bool()
+    return queue_surrogate(state, present, pending_before, hist, entry_s, entry_cfg, PHYSICS_DT_S)[0]
 
 
 def _entry_process(spec, rows, n_slots):
@@ -288,6 +312,9 @@ class DreamerTrainer:
         self.policy = policy.to(self.device)
         self.group_encoder = group_encoder.to(self.device)
         self.critic = critic.to(self.device)
+        if self.config.critic_entry_backlog != bool(getattr(critic, "entry_backlog", False)):
+            raise ValueError("critic_entry_backlog requires (and only works with) a TeamCritic "
+                             "built with entry_backlog=True")
         self.target_critic = copy.deepcopy(critic).to(self.device).eval().requires_grad_(False)
         self.start_states = start_states
         self.observation_builder, self.reward_fn, self.safety = observation_builder, reward_fn, safety
@@ -358,6 +385,7 @@ class DreamerTrainer:
         reward_call = _Recompute(self.reward_fn, recompute)
         observe_call = _Recompute(self.observation_builder, recompute)
         value_call = _Recompute(self.target_critic, recompute)
+        surrogate_call = _Recompute(_queue_surrogate_fn, recompute)
         futures_cfg = FuturesConfig.from_trainer(cfg)
         future_extras = None
         if futures_cfg.active:
@@ -489,14 +517,32 @@ class DreamerTrainer:
                 if len(recorder.states) != step:
                     raise RuntimeError("entry process must be called once per physics step")
                 physics_states = []
+                dtype = initial["s_m"].dtype
+                hist = None
+                if cfg.source_wait_grad:
+                    from .srcgrad import history_tensors
+                    hist = history_tensors(recorder.process, initial["s_m"].shape[0],
+                                           self.device, dtype)
                 for t, current in enumerate(recorder.states):
+                    queue = torch.as_tensor(recorder.backlog[t], dtype=dtype, device=self.device)
+                    if hist is not None:
+                        # SRCGRAD: exact backlog value, insertion-blocking surrogate gradient.
+                        surrogate = surrogate_call(
+                            {key: current[key] for key in ("s_m", "v_mps", "lane", "present",
+                                                           "length_m") if key in current},
+                            recorder.new_masks[t],
+                            torch.as_tensor(recorder.pending_before[t], dtype=dtype,
+                                            device=self.device),
+                            hist, recorder.process.entry_s, recorder.process.cfg)
+                        queue = queue + (surrogate - surrogate.detach())
                     physics_states.append({
                         **initial, **{key: current[key] for key in (
                             "s_m", "v_mps", "lane", "present", "a_mps2", "is_cav", "length_m",
                             "entrant") if key in current},
-                        "entry_queue": torch.as_tensor(recorder.backlog[t],
-                                                       dtype=initial["s_m"].dtype,
-                                                       device=self.device)})
+                        "entry_queue": queue})
+                    if cfg.critic_entry_backlog:
+                        physics_states[-1]["entry_backlog"] = torch.as_tensor(
+                            recorder.pending_after[t], dtype=dtype, device=self.device)
                 physics_states.append(None)
             else:
                 physics_states = [initial]
@@ -509,6 +555,9 @@ class DreamerTrainer:
                     physics_states.append(nxt)
             # Preserve WM-specific state fields at the terminal boundary.
             physics_states[-1] = roll["state"]
+            if recorder is not None and cfg.critic_entry_backlog:
+                physics_states[-1] = {**roll["state"], "entry_backlog": torch.as_tensor(
+                    recorder.pending_after[-1], dtype=initial["s_m"].dtype, device=self.device)}
             parts = []
             for t in range(step):
                 parts.append(reward_call(physics_states[t], physics_states[t + 1],

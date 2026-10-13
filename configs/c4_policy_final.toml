@@ -1,0 +1,14 @@
+# Final C4 policy run (2026-10-13 evening), FROM SCRATCH (no --init-policy / --resume): phase 4 settings plus the
+# entry-queue gradient fix (SRCGRAD_NOTES.md). The phase-4 SUMO head-to-head showed the policy cutting on-road delay
+# by keeping vehicles out of the network (source wait 10.7k vs native 5.4k veh-s): the imagined backlog was a
+# constant without gradient and the critic could not see it.
+#  - source_wait_grad: reward value = exact imagined backlog, gradient = differentiable insertion-blocking surrogate;
+#  - critic_entry_backlog: the TeamCritic sees the per-entrance backlog (fresh critic; old critics do not load).
+extends = "c4_policy_gpuw_p4.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-FINAL"
+
+[trainer]
+source_wait_grad = true
+critic_entry_backlog = true
