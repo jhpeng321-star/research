@@ -217,8 +217,10 @@ def imagined_cooperation(ckpt, env, arms: list, controller, fn_snap, horizon_s: 
 
         def dispatch(predicted):
             return cand(predicted)
+    from .futures import arm_major_lane_uniform
+    lanes = arm_major_lane_uniform([model], n_arm, n, steps, bstate["s_m"].shape[1], gen)
     rollout = model.rollout(dict(bstate), n_steps=steps, cav_teacher=None,
-                            cav_controller=dispatch, **bhist, **drivers)
+                            cav_controller=dispatch, **bhist, **drivers, **lanes)
     weights = RewardWeights()
     sums = {key: torch.zeros(batch, dtype=torch.float64) for key in METRIC_MAP}
     current = dict(bstate)

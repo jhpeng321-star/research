@@ -156,6 +156,17 @@ def lane_uniform_draws(models, n_starts: int, n_steps: int, n_slots: int, seed,
     return draws.to(device) if device is not None else draws
 
 
+def arm_major_lane_uniform(models, n_arms: int, n_samples: int, n_steps: int, n_slots: int,
+                           generator: torch.Generator) -> dict:
+    """LANEFIX: ``{"lane_uniform": [n_arms * n_samples, T, K]}`` for arm-major / sample-minor
+    candidate batches (every arm sees the same draws per sample index: common random numbers)
+    when a world model samples its lane decisions, else ``{}`` (no generator draw)."""
+    if not any(getattr(model, "_samples_lanes", False) for model in models):
+        return {}
+    draws = torch.rand(int(n_samples), int(n_steps), int(n_slots), generator=generator)
+    return {"lane_uniform": draws.repeat(int(n_arms), 1, 1)}
+
+
 def draw_accel_noise(n_samples: int, shape, generator: torch.Generator, *, scale: float = 1.0,
                      device=None) -> Tensor:
     """Standard-normal HDV acceleration draws ``[n_samples, B, T, K]`` (``shape`` = (B, T, K))."""

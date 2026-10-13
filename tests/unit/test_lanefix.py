@@ -383,7 +383,7 @@ def test_full_merge_zone_never_unmasks_an_unsafe_merge():
     base = mobil_merge_logits(kin, present, model.physics)
     logits, _ = hazard_lane_logits(model.lane_hazard, kin, present, present, base, model.physics,
                                    None, None, None, merge_zone="full")
-    assert float(logits[0, 0, 1]) <= MASKED_LOGIT
+    assert float(logits.detach()[0, 0, 1]) <= MASKED_LOGIT
 
 
 def test_stopped_relax_allows_a_jam_merge_but_not_overlap():
@@ -507,3 +507,15 @@ def test_calibration_tool_rows_and_summary():
     assert out["pooled_feasible"]["logloss_constant"] <= out["pooled_feasible"]["logloss"] + 1e-12 \
         or out["pooled_feasible"]["rate"] == pytest.approx(0.1)
     assert tool.auc(np.array([0.1, 0.9, 0.5]), np.array([0, 1, 0])) == 1.0
+
+
+def test_candidate_batches_share_lane_draws_across_arms():
+    from wms.control.futures import arm_major_lane_uniform
+    argmax = build_model(ModelSpec(rollout_mode="hybrid", lane_model="hazard"), _phys())
+    gen = torch.Generator().manual_seed(0)
+    assert arm_major_lane_uniform([argmax], 3, 2, 4, 5, gen) == {}
+    assert torch.equal(gen.get_state(), torch.Generator().manual_seed(0).get_state())  # no draw
+    u = arm_major_lane_uniform([_sampling_model()], 3, 2, 4, 5, gen)["lane_uniform"]
+    assert u.shape == (6, 4, 5)
+    assert torch.equal(u[0:2], u[2:4]) and torch.equal(u[0:2], u[4:6])   # arm-major CRN
+    assert not torch.equal(u[0], u[1])
