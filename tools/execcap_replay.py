@@ -345,11 +345,61 @@ def run_exec(model, rec, ep_meta, max_s=120.0):
     return out
 
 
+def analyze(files) -> str:
+    """Markdown summary of exec / closed jsonl files (sign: excess = TEACHER - row total delay,
+    veh-s; + = the row looks better than what SUMO realised under the same policy)."""
+    import glob
+    recs = [json.loads(x) for pat in files for f in sorted(glob.glob(pat))
+            for x in open(f) if x.strip()]
+    lines = []
+    for tag in sorted({r["tag"] for r in recs}):
+        ex = [r for r in recs if r["tag"] == tag and r["mode"] == "exec"]
+        if ex:
+            lines.append(f"\n## {tag} exec gate (teacher-forced 1 s, recorded issued commands), windows={len(ex)}")
+            lines.append("| executor | n | MAE m/s^2 | bias | median |a err| | frac |err|<0.15 |")
+            lines.append("|---|---|---|---|---|---|")
+            for mode, label in (("off", "switch off"), ("idm", "switch on (WM-inferred settings)"),
+                                ("idm_truep", "switch on, CAV settings = true vType (diagnostic)"),
+                                ("true", "reference min(., simple IDM true vType)")):
+                n = sum(r[mode]["n"] for r in ex)
+                sa = sum(r[mode]["sum_abs"] for r in ex)
+                bias = sum(r[mode]["bias"] * r[mode]["n"] for r in ex if r[mode]["n"]) / max(n, 1)
+                med = float(np.median([r[mode]["median_abs"] for r in ex if r[mode]["n"]]))
+                frac = sum(r[mode]["frac_abs_lt_0.15"] * r[mode]["n"] for r in ex if r[mode]["n"]) / max(n, 1)
+                lines.append(f"| {label} | {n} | {sa / max(n, 1):.3f} | {bias:+.3f} | {med:.3f} (window median) | {frac:.2f} |")
+        cl = [r for r in recs if r["tag"] == tag and r["mode"] == "closed"]
+        if cl:
+            kind = ("closed loop (MAPPO policy on the imagined state)" if cl[0]["cmd"] == "policy"
+                    else "open loop (recorded issued commands)")
+            lines.append(f"\n## {tag} {kind}, windows={len(cl)}, CAVs/window "
+                         f"{np.mean([r['n_cav'] for r in cl]):.1f}, cap_missing_steps="
+                         f"{sum(r['cap_missing_steps'] for r in cl)}")
+            lines.append("| h | excess CMD (off) | excess CMD_CAP (on) | excess CMD_CAPT (true IDM) | "
+                         "CAV |ds| CMD/CAP/CAPT (m) | HDV med |ds| TEACHER/CMD/CAP (m) | HDV delay SUMO/T/CMD/CAP |")
+            lines.append("|---|---|---|---|---|---|---|")
+            for h in ("30", "60", "120"):
+                def g(row, key):
+                    return np.array([np.nan if r["h"][h][row][key] is None else r["h"][h][row][key]
+                                     for r in cl], float)
+                tot = {row: g(row, "hdv_delay") + g(row, "cav_delay") for row in ROWS}
+                exc = {row: tot["TEACHER"] - tot[row] for row in ROWS}
+                def ms(x):
+                    return f"{np.mean(x):+.1f} (med {np.median(x):+.1f})"
+                cav = "/".join(f"{np.nanmean(g(r_, 'cav_abs_ds_mean')):.1f}" for r_ in ("CMD", "CMD_CAP", "CMD_CAPT"))
+                hdv = "/".join(f"{np.nanmean(g(r_, 'hdv_abs_ds_med')):.1f}" for r_ in ("TEACHER", "CMD", "CMD_CAP"))
+                dl = "/".join([f"{np.mean([r['h'][h]['hdv_delay_true'] for r in cl]):.0f}"]
+                              + [f"{np.mean(g(r_, 'hdv_delay')):.0f}" for r_ in ("TEACHER", "CMD", "CMD_CAP")])
+                lines.append(f"| {h} | {ms(exc['CMD'])} | {ms(exc['CMD_CAP'])} | {ms(exc['CMD_CAPT'])} | "
+                             f"{cav} | {hdv} | {dl} |")
+    return "\n".join(lines)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ckpt", required=True)
-    ap.add_argument("--tag", required=True)
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--ckpt")
+    ap.add_argument("--tag")
+    ap.add_argument("--out")
+    ap.add_argument("--analyze", nargs="+", help="summarise jsonl globs and exit")
     ap.add_argument("--mode", choices=("closed", "exec"), default="closed")
     ap.add_argument("--cmd", choices=("policy", "issued"), default="policy")
     ap.add_argument("--t0", type=float, nargs="+", default=[480])
@@ -359,6 +409,11 @@ def main():
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--dump", default=None, help="exec mode: npz of per-sample gate rows")
     args = ap.parse_args()
+    if args.analyze:
+        print(analyze(args.analyze))
+        return
+    if not (args.ckpt and args.tag and args.out):
+        ap.error("--ckpt, --tag and --out are required")
     global DUMP
     if args.dump:
         DUMP = {}
