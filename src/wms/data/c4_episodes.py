@@ -58,7 +58,8 @@ from wms.core.constants import controller_index
 from wms.core.errors import TrainDataRefusal
 from wms.core.guard import refuse_restricted
 from wms.data.action_timeline import CONTROLLERS, ActionTimeline
-from wms.data.dataset import TrajectoryDataset, _n_control_steps, _states_from_teacher
+from wms.data.dataset import (TrajectoryDataset, _n_control_steps, _states_from_teacher,
+                              road_presence)
 from wms.data.sources import validate_train_source
 
 SOURCE_SCHEMA = "wms_c4_episode_source/1"
@@ -431,6 +432,7 @@ class C4WindowLoader:
         }
         if self.entries_v2:
             record["entry_feat"] = entry_features(ep, {"tick": int(tick)})
+            record.update(road_presence(ep, int(tick), h))
         if self.history_s is not None:
             record["driver_hist"], record["driver_hist_mask"] = prior_history(
                 ep, tick, present0, history_s=self.history_s,

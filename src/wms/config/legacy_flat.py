@@ -96,6 +96,17 @@ FLAT_TO_PATH: dict[str, str] = {
     "flip_rate_weight": "loss.flip_rate.weight",
     "flip_rate_allowance": "loss.flip_rate.allowance",
     "lane_rule": "model.lane_rule",
+    "aggregate_weight": "loss.aggregate.weight",
+    "aggregate_field_weight": "loss.aggregate.field_weight",
+    "aggregate_reward_weight": "loss.aggregate.reward_weight",
+    "aggregate_flow_weight": "loss.aggregate.flow_weight",
+    "aggregate_bin_s": "loss.aggregate.bin_s",
+    "aggregate_every_steps": "loss.aggregate.every_steps",
+    "aggregate_horizon_start_s": "loss.aggregate.horizon_start_s",
+    "aggregate_horizon_full_s": "loss.aggregate.horizon_full_s",
+    "aggregate_cell_temp_m": "loss.aggregate.cell_temp_m",
+    "entry_pad_auto": "data.entry_pad_auto",
+    "entry_pad_max": "data.entry_pad_max",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -111,6 +122,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "lr_per_stage",
     "driver_grad_across_chunks", "flip_rate_weight", "flip_rate_allowance",
     "lane_rule",
+    "aggregate_weight", "aggregate_field_weight", "aggregate_reward_weight",
+    "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
+    "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
+    "entry_pad_auto", "entry_pad_max",
 )
 
 

@@ -30,32 +30,59 @@ def step_weights(steps: int, dtype: torch.dtype, device: torch.device, decay: fl
     return w / w.sum().clamp_min(1.0e-8)
 
 
+#: Adaptive entry pad (``entry_pad_auto``): 1.5x the expected arrivals + 16, as the C4
+#: imagination's ``wms.control.dreamer.with_entry_slots``.
+ENTRY_PAD_SAFETY = 1.5
+ENTRY_PAD_MARGIN = 16
+
+
+def entry_pad_for(settings: TrainSettings, histories: list, horizon_s: float) -> int:
+    """Entrant padding slots of one batch: fixed ``entry_pad`` or the adaptive size."""
+    import numpy as np
+
+    pad = int(settings.entry_pad)
+    if not settings.entry_pad_auto:
+        return pad
+    need = max(int(np.ceil(float(np.sum(h.rate)) * float(horizon_s) * ENTRY_PAD_SAFETY))
+               + ENTRY_PAD_MARGIN for h in histories)
+    return max(1, min(int(settings.entry_pad_max), max(pad, need)))
+
+
 def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], present: Tensor,
-                       model: Any, device: torch.device) -> Optional[Any]:
+                       model: Any, device: torch.device,
+                       unroll_steps: Optional[int] = None) -> Optional[Any]:
     """Seeded entries-v2 process over the free padding slots, or ``None``.
 
-    Padding slots are the last ``entry_pad`` columns (empty at t0); entrants occupy
+    Padding slots are the last ``pad`` columns (empty at t0); entrants occupy
     them and move by the model physics, but have no recorded target so ``loss_valid``
     excludes them from the per-car loss.  The fixed process seed makes a run
     deterministic; the per-window observed-history features keep the arrival
-    process data-driven.
+    process data-driven.  ``pad`` is ``entry_pad``, or with ``entry_pad_auto`` the
+    rate x horizon size of :func:`entry_pad_for` (then blocked arrivals also stay pending
+    without a cap, as in the C4 imagination); the process carries it as ``train_pad``.
     """
     if not settings.entries_v2 or "entry_feat" not in batch or int(settings.entry_pad) <= 0:
         return None
     import numpy as np
 
-    from wms.model.entries import EntranceHistory, TorchEntryProcessV2
+    from wms.model.entries import EntranceHistory, EntryConfig, TorchEntryProcessV2
 
     b_n, k_n = int(present.shape[0]), int(present.shape[2])
-    pad = int(settings.entry_pad)
     feat = batch["entry_feat"].to(device).cpu().numpy()
     if feat.shape[1] != EntranceHistory.defaults().to_features().size:
         raise ValueError("entry_feat has an unexpected width")
     histories = [EntranceHistory.from_features(feat[b]) for b in range(b_n)]
+    dt_s = float(model.physics.dt_s)
+    steps = int(present.shape[1]) - 1 if unroll_steps is None else min(
+        int(unroll_steps), int(present.shape[1]) - 1)
+    pad = entry_pad_for(settings, histories, max(steps, 1) * dt_s)
     pool = np.zeros((b_n, k_n + pad), dtype=bool)
     pool[:, k_n:] = True
-    return TorchEntryProcessV2(histories=histories, dt_s=float(model.physics.dt_s),
-                               seed=int(settings.seed), batch=b_n, pool=pool)
+    cfg = EntryConfig(max_pending=10 ** 9) if settings.entry_pad_auto else None
+    process = TorchEntryProcessV2(histories=histories, dt_s=dt_s,
+                                  seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg)
+    process.train_pad = pad
+    return process
 
 
 def extend_for_entries(states: Tensor, present: Tensor, is_cav: Tensor,
@@ -135,10 +162,10 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         raise ValueError("long-history trainer requires pre-t0 driver_hist")
     loss_valid = batch.get("loss_valid")
     loss_valid = present if loss_valid is None else loss_valid.to(device).bool()
-    entries = make_entry_process(settings, batch, present, model, device)
+    entries = make_entry_process(settings, batch, present, model, device, unroll_steps)
     present_seq = present
     if entries is not None:
-        pad = int(settings.entry_pad)
+        pad = int(entries.train_pad)
         (states, present, present_seq, is_cav, teacher, hist, hist_mask,
          loss_valid) = extend_for_entries(states, present, is_cav, teacher, hist, hist_mask,
                                           loss_valid, pad)
@@ -154,7 +181,7 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
     controller_id = batch.get("controller_id")
     if controller_id is not None:
         controller_id = controller_id.to(device)
-    timeline = _device_timeline(batch.get("action_timeline"), device, entries, settings)
+    timeline = _device_timeline(batch.get("action_timeline"), device, entries)
     cav_controller = None
     if settings.cav_drive == "closed_loop":
         if settings.black_box:
@@ -189,7 +216,7 @@ def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_
 
 
 def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device,
-                     entries: Optional[Any], settings: TrainSettings) -> Optional[dict]:
+                     entries: Optional[Any]) -> Optional[dict]:
     """Action timeline on ``device``; entrant columns default to the documented native plan."""
     if timeline is None:
         return None
@@ -199,7 +226,7 @@ def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device
         for key in ("controller", "acceleration_mps2", "target_speed_mps"):
             value = out[key]
             fill = CONTROLLERS.index("native") if key == "controller" else 0
-            padding = value.new_full((*value.shape[:2], int(settings.entry_pad)), fill)
+            padding = value.new_full((*value.shape[:2], int(entries.train_pad)), fill)
             out[key] = torch.cat((value, padding), dim=2)
     return out
 
@@ -220,10 +247,18 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
         hdv_mask = hdv_mask & ~entrant
     aux_mask = hdv_mask & ~inputs.is_cav[:, 1:n + 1] & inputs.present[:, :n]
     denom = (weights * hdv_mask.to(weights.dtype)).sum().clamp_min(1.0)
+    road = None
+    if settings.aggregate_weight > 0.0:
+        # Aggregate loss (C4): recorded on-road presence -- the full road (incl. arrivals)
+        # when the entry process runs and the windows carry it, else the t0 cohort.
+        from .losses.aggregate import road_targets
+
+        road = road_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
+                            entries_on=inputs.entries is not None, device=device)
     return UnrollTargets(
         states=states, n_steps=n, weights=weights, hdv_mask=hdv_mask, aux_mask=aux_mask,
         aux_count=int(aux_mask.sum()), denom=denom,
         lane_target=states[:, 1:n + 1, :, 1:4].argmax(-1), loss_valid=inputs.loss_valid,
         is_cav=inputs.is_cav, dt_s=float(dt_s), position_delta_m=settings.position_huber_delta_m,
         speed_delta_mps=settings.speed_huber_delta_mps,
-        history_lane_head=settings.lane_head == "history")
+        history_lane_head=settings.lane_head == "history", road=road)
