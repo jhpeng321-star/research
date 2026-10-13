@@ -113,12 +113,13 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
     sumo_idm = not model.geometry_only
     if model.merge_cal:
         overrides = {"sumo_fidelity": bool(model.sumo_fidelity), "sumo_idm": sumo_idm,
-                     "merge_cal": True, "lane_rule": model.lane_rule}
+                     "merge_cal": True, "lane_rule": model.lane_rule,
+                     "lane_gap_rule": model.lane_gap_rule}
         if model.physics_params:
             return PhysicsConfig.from_params_file(resolver(model.physics_params), **overrides)
         return PhysicsConfig(**overrides)
     return PhysicsConfig(sumo_fidelity=bool(model.sumo_fidelity), sumo_idm=sumo_idm,
-                         lane_rule=model.lane_rule)
+                         lane_rule=model.lane_rule, lane_gap_rule=model.lane_gap_rule)
 
 
 def build_model(cfg: TrainConfig, physics: Any):

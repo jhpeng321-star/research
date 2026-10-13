@@ -56,6 +56,7 @@ def main() -> int:
                     "n_val": 0 if inputs.val is None else len(inputs.val),
                     "train_receipt": trim(inputs.train.receipt)},
         "physics": {"lane_rule": inputs.physics.lane_rule,
+                    "lane_gap_rule": inputs.physics.lane_gap_rule,
                     "sumo_fidelity": inputs.physics.sumo_fidelity,
                     "merge_cal": inputs.physics.merge_cal},
         "resolved": inputs.resolved,

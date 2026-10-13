@@ -55,6 +55,73 @@ def _follower_gain(kin: Tensor, present: Tensor, lane: Tensor, target_lane: Tens
     return a_follow, gain
 
 
+def target_overlap(kin: Tensor, present: Tensor, target_lane: Tensor,
+                   margin_m: float) -> Tensor:
+    """``[B, K]``: some present vehicle in ``target_lane`` overlaps the ego's footprint.
+
+    Vehicle ``j`` occupies ``[s_j - L_j, s_j]``; it blocks ego ``i`` when the two intervals,
+    each widened by ``margin_m``, intersect (side by side, including ``s_j == s_i``, which
+    the ahead/behind neighbour search never sees).
+    """
+    s, length = kin[..., 0], kin[..., 6]
+    lane = lane_of(kin)
+    front_i, rear_i = s.unsqueeze(-1), (s - length).unsqueeze(-1)       # [B, i, 1]
+    front_j, rear_j = s.unsqueeze(-2), (s - length).unsqueeze(-2)       # [B, 1, j]
+    other = present.unsqueeze(-2) & (lane.unsqueeze(-2) == target_lane.unsqueeze(-1))
+    eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+    hit = other & ~eye & (rear_j < front_i + margin_m) & (front_j > rear_i - margin_m)
+    return hit.any(-1)
+
+
+def anticipated_kin(kin: Tensor, horizon_s: float) -> Tensor:
+    """``kin`` with every vehicle moved ``horizon_s`` ahead at its current acceleration.
+
+    Constant-acceleration extrapolation of ``s`` and ``v`` (a braking car stops at
+    ``v^2 / (2|a|)``, no reversing); lanes, accelerations and lengths are unchanged.
+    """
+    if horizon_s <= 0.0:
+        return kin
+    h = float(horizon_s)
+    v, a = kin[..., 4], kin[..., 5]
+    v_next = (v + a * h).clamp_min(0.0)
+    stop = a.clamp_max(-1.0e-6).abs()
+    dist = torch.where(v + a * h >= 0.0, v * h + 0.5 * a * h * h, v * v / (2.0 * stop))
+    out = kin.clone()
+    out[..., 0] = kin[..., 0] + dist.clamp_min(0.0)
+    out[..., 4] = v_next
+    return out
+
+
+def speed_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
+                   physics: PhysicsConfig) -> Tensor:
+    """GAPRULE ``lane_gap_rule='speed'``: SUMO-LC2013-like secure gaps (``[B, K]`` bool).
+
+    Judged on the configuration one ``gap_anticipation_s`` ahead (every car extrapolated at
+    its current acceleration; :func:`anticipated_kin`): SUMO moves all cars before it
+    changes lanes, and the WM applies the change together with the same step's motion, so
+    the gap that matters is the one AFTER the step (a car passing side by side now is
+    ahead then).  On that configuration:
+
+    lead:   ``gap_l >= s0_lead + T_lead v + max(0, v^2 - v_lead^2) / (2 b_lead)``
+    follow: ``gap_f >= s0_follow + T_follow v_f + max(0, v_f^2 - v^2) / (2 b_follow)``
+    and no target-lane vehicle overlapping the ego (length-aware, ``gap_overlap_margin_m``).
+    The kinematic term is the follower-braking limit: the follower must not need more than
+    ``b_follow`` (beyond its headway margin) to stay behind the changing car.  Missing
+    neighbours carry the free-road gap and the ego's speed, so they never block.
+    """
+    p = physics
+    kin_a = anticipated_kin(kin, p.gap_anticipation_s)
+    gap_l, lv_l = lane_neighbour(kin_a, present, target_lane, p, ahead=True)
+    gap_f, fv_f = lane_neighbour(kin_a, present, target_lane, p, ahead=False)
+    v = kin_a[..., 4]
+    req_l = p.gap_s0_lead_m + p.gap_t_lead_s * v \
+        + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
+    req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fv_f \
+        + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+    clear = ~target_overlap(kin_a, present, target_lane, p.gap_overlap_margin_m)
+    return (gap_l >= req_l) & (gap_f >= req_f) & clear
+
+
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                        driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
     """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``.
@@ -63,6 +130,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     ``3 tanh((incentive - threshold (1 - u)) / 4) - 2.5 (+ 6 u^2 on the accel lane)``
     and is masked (-8) unless the leader/follower gaps and the follower braking in
     the target lane are safe (the braking limit grows with merge urgency ``u``).
+    With ``physics.lane_gap_rule == 'speed'`` that safety test is :func:`speed_gap_safe`
+    instead (speed-dependent secure gaps, kinematic follower braking, no overlap, judged on
+    the one-step-anticipated configuration) for discretionary changes and the ramp merge
+    alike; the default ``'fixed'`` is unchanged.
 
     With ``physics.lane_rule == 'forced_merge_only'`` every discretionary change
     is masked as well: only the mandatory ramp merge (lane ``merge_lane`` ->
@@ -101,7 +172,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                                             else torch.zeros_like(in_zone))
         no_to_ramp = torch.full_like(lane, target) != p.merge_lane
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
-        safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
+        if p.lane_gap_rule == "speed":
+            safe = speed_gap_safe(kin, present, target_lane, p)
+        else:
+            safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
         allowed = adjacent & ramp_ok & no_to_ramp & safe
         discretionary = allowed & ~forced
         if p.lane_rule in ("forced_merge_only", "learned_discretionary"):
