@@ -142,6 +142,12 @@ def _kept_summary(receipt: dict) -> str:
             f"{receipt.get('n_corpus_windows')} | {parts}")
 
 
+def _junction_kwargs(data: Any) -> dict:
+    """``junction_fix`` keyword for the pack datasets; empty when off (calls unchanged)."""
+    mode = getattr(data, "junction_fix", "off")
+    return {} if mode == "off" else {"junction_fix": mode}
+
+
 def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver] = None
                    ) -> tuple[Any, Optional[Any], dict[str, str]]:
     """TRAIN dataset, validation dataset (or ``None``) and the resolved data paths."""
@@ -196,7 +202,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             packs, identity_dirs=identities, overlays=overlays, horizon_steps=horizon,
             start_shift_prob=start_shift, window_list=window_list,
             exclude_window_list=exclude, entries_v2=bool(data.entries_v2), item_filter=guard,
-            history_s=data.history_s, history_stride_s=data.history_stride_s)
+            history_s=data.history_s, history_stride_s=data.history_stride_s,
+            **_junction_kwargs(data))
 
     train = original(train_list, float(data.effective_start_shift_prob))
     pack_k = getattr(getattr(getattr(train, "_loader", None), "corpus", None), "k_slots", None)
@@ -218,7 +225,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             val_holdout_seed=int(sw.val_seed),
             val_window_list=path(sw.windows_val) if sw.windows_val else None,
             work_dir=out_dir, leave_pi_wall_out=leave_out,
-            history_s=data.history_s, history_stride_s=data.history_stride_s)
+            history_s=data.history_s, history_stride_s=data.history_stride_s,
+            **_junction_kwargs(data))
         train, val = mixdata.mix_datasets(
             train, switch, switch_ratio=float(sw.mix_ratio),
             event_oversample=float(sw.event_oversample), orig_val=val,

@@ -174,6 +174,10 @@ class DataConfig:
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
+    #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
+    #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation
+    #: convention (previous lane kept, s interpolated, still loss-excluded).
+    junction_fix: Literal["off", "ffill"] = "off"
 
     @property
     def effective_start_shift_prob(self) -> float:
