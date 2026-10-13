@@ -2,7 +2,9 @@
 existing two-update dry run (wms.train.preflight.dry_run) on it.
 
 Usage (env as in the preflight; workspace root as CWD):
-    python tools/c4_smoke.py [out_dir]
+    python tools/c4_smoke.py [out_dir] [config]
+
+``config`` defaults to configs/c4_wm.toml (e.g. configs/c4_wm_v2_loss.toml for the v2 loss).
 
 Writes the dry-run TRAIN_RECEIPT plus a trimmed assemble receipt (kept windows
 per pack / switching filter census) into the output directory.
@@ -21,13 +23,14 @@ os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
 
 def main() -> int:
     out_dir = Path(sys.argv[1] if len(sys.argv) > 1 else "runs/active/c4_wm_smoke")
+    config = sys.argv[2] if len(sys.argv) > 2 else "configs/c4_wm.toml"
     if out_dir.exists() and any(out_dir.iterdir()):
         raise SystemExit(f"output directory {out_dir} is not empty")
     from wms.cli.assemble import assemble
     from wms.config.load import load_train_config
     from wms.train.preflight import dry_run
 
-    cfg = load_train_config("configs/c4_wm.toml",
+    cfg = load_train_config(config,
                             [f"runtime.out_dir={out_dir.as_posix()}", "runtime.device=cpu",
                              "runtime.threads=4"])
     inputs = assemble(cfg, out_dir)
@@ -41,7 +44,8 @@ def main() -> int:
         return node
 
     summary = {
-        "smoke": {"status": receipt.get("status"), "optimizer_steps": receipt.get("optimizer_steps"),
+        "smoke": {"config": config, "status": receipt.get("status"),
+                  "optimizer_steps": receipt.get("optimizer_steps"),
                   "unroll_s": receipt.get("unroll_s"),
                   "batch_size": receipt.get("batch_size"),
                   "loss_first": receipt["updates"][0].get("loss"),

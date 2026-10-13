@@ -107,6 +107,17 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_event_weight": "loss.lane_event.weight",
     "lane_event_gamma": "loss.lane_event.gamma",
     "lane_event_max_weight": "loss.lane_event.max_weight",
+    "aggregate_weight": "loss.aggregate.weight",
+    "aggregate_field_weight": "loss.aggregate.field_weight",
+    "aggregate_reward_weight": "loss.aggregate.reward_weight",
+    "aggregate_flow_weight": "loss.aggregate.flow_weight",
+    "aggregate_bin_s": "loss.aggregate.bin_s",
+    "aggregate_every_steps": "loss.aggregate.every_steps",
+    "aggregate_horizon_start_s": "loss.aggregate.horizon_start_s",
+    "aggregate_horizon_full_s": "loss.aggregate.horizon_full_s",
+    "aggregate_cell_temp_m": "loss.aggregate.cell_temp_m",
+    "entry_pad_auto": "data.entry_pad_auto",
+    "entry_pad_max": "data.entry_pad_max",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -125,6 +136,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "lane_model", "lane_hazard_hidden", "lane_hazard_cap", "driver_update",
     "driver_update_rate", "driver_reveal_prob", "driver_reveal_max_s",
     "lane_event_weight", "lane_event_gamma", "lane_event_max_weight",
+    "aggregate_weight", "aggregate_field_weight", "aggregate_reward_weight",
+    "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
+    "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
+    "entry_pad_auto", "entry_pad_max",
 )
 
 

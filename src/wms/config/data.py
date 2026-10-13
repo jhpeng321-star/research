@@ -167,6 +167,12 @@ class DataConfig:
     c4_episodes: C4EpisodesConfig = field(default_factory=C4EpisodesConfig)
     entries_v2: bool = False
     entry_pad: int = 8
+    #: C4 WM v2 (WMLOSS_NOTES.md): size the entrant padding per batch from the observed
+    #: entry rate x unroll horizon (1.5x + 16, at least ``entry_pad``, at most
+    #: ``entry_pad_max``) and keep every blocked arrival pending (uncapped backlog), as the
+    #: C4 imagination does (``wms.control.dreamer.with_entry_slots``).  Off = legacy fixed pad.
+    entry_pad_auto: bool = False
+    entry_pad_max: int = 256
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
 
     @property
@@ -180,6 +186,7 @@ class DataConfig:
         require(self.state_noise_std_m >= 0.0 and self.state_noise_std_mps >= 0.0,
                 "state noise stds must be non-negative")
         require(self.entry_pad >= 0, "data.entry_pad must be non-negative")
+        require(self.entry_pad_max >= 1, "data.entry_pad_max must be positive")
         extra = sorted(set(self.sidecars.identities) - set(self.packs))
         require(not extra, f"data.sidecars.identities for unknown pack roles {extra}")
         extra = sorted(set(self.sidecars.overlays) - set(self.packs))

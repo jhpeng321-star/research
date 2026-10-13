@@ -116,6 +116,11 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
                                                ("lane_rate", settings.lane_rate_weight),
                                                ("flip_rate", settings.flip_rate_weight))
                      if weight > 0.0)
+    if settings.aggregate_weight > 0.0:
+        terms.extend(name for name, weight in (("agg_field", settings.aggregate_field_weight),
+                                               ("agg_reward", settings.aggregate_reward_weight),
+                                               ("agg_flow", settings.aggregate_flow_weight))
+                     if weight > 0.0)
     return tuple(dict.fromkeys(terms))
 
 

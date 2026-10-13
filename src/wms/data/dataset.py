@@ -519,6 +519,29 @@ def _filter_run_keys(corpus: PackCorpus, pack_names: list[str], lpo_keep: Option
     return kept
 
 
+def road_presence(source, tick: int, horizon_max: int) -> dict:
+    """Recorded on-road presence of an entries-v2 window (C4 aggregate loss targets).
+
+    ``road_present [H+1, K]`` = every vehicle on the road at ``tick+t`` (``veh_mask``,
+    INCLUDING vehicles that arrive after t0), ``road_continue [H, K]`` = the same vehicle
+    is still in the slot at the next tick (``target_mask``) and ``road_valid [H+1]`` marks
+    the ticks inside the run (window padding False).  The slot kinematics at every tick
+    are already in ``states`` (read from ``veh_kin``); these TRAIN-window labels are only
+    consumed by the aggregate loss, never as model inputs.
+    """
+    n_ticks = int(source.array("veh_kin").shape[0])
+    end = min(int(source.run_end(tick)), n_ticks) if hasattr(source, "run_end") else n_ticks
+    h = max(0, min(int(horizon_max), end - tick - 1))
+    k = int(source.array("veh_mask").shape[1])
+    present = np.zeros((horizon_max + 1, k), dtype=bool)
+    cont = np.zeros((horizon_max, k), dtype=bool)
+    valid = np.zeros(horizon_max + 1, dtype=bool)
+    present[:h + 1] = np.asarray(source.array("veh_mask")[tick:tick + h + 1]).astype(bool)
+    cont[:h] = np.asarray(source.array("target_mask")[tick:tick + h]).astype(bool)
+    valid[:h + 1] = True
+    return {"road_present": present, "road_continue": cont, "road_valid": valid}
+
+
 class _PackWindowLoader:
     """Decode one pack window per call (the lazy loader of the pack-backed dataset)."""
 
@@ -591,6 +614,7 @@ class _PackWindowLoader:
             result["action_timeline"] = self._snapshot_timeline(item, horizon, states.shape[1])
         if self.entries_v2:
             result["entry_feat"] = entry_features(corpus, item)
+            result.update(road_presence(corpus, int(item["tick"]), horizon - 1))
         if self.history_s is not None:
             dh, dm = prior_history(corpus, int(item["tick"]), present0,
                                    history_s=self.history_s,

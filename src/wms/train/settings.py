@@ -137,6 +137,19 @@ class TrainSettings:
     lane_event_weight: float = 0.0
     lane_event_gamma: float = 2.0
     lane_event_max_weight: float = 20.0
+    # C4 WM v2 loss (2026-10-13, WMLOSS_NOTES.md): aggregate-consistency loss (0 = off) and
+    # the adaptive entry pad / uncapped backlog of the training entry process.
+    aggregate_weight: float = 0.0
+    aggregate_field_weight: float = 1.0
+    aggregate_reward_weight: float = 1.0
+    aggregate_flow_weight: float = 0.0
+    aggregate_bin_s: float = 5.0
+    aggregate_every_steps: int = 1
+    aggregate_horizon_start_s: float = 0.0
+    aggregate_horizon_full_s: float = 0.0
+    aggregate_cell_temp_m: float = 5.0
+    entry_pad_auto: bool = False
+    entry_pad_max: int = 256
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -226,6 +239,15 @@ class TrainSettings:
         _require(math.isfinite(self.lane_event_weight) and self.lane_event_weight >= 0.0
                  and self.lane_event_gamma >= 0.0 and self.lane_event_max_weight >= 1.0,
                  "lane_event weight/gamma must be non-negative and max_weight >= 1")
+        for value in (self.aggregate_weight, self.aggregate_field_weight,
+                      self.aggregate_reward_weight, self.aggregate_flow_weight,
+                      self.aggregate_horizon_start_s, self.aggregate_horizon_full_s):
+            _require(math.isfinite(value) and value >= 0,
+                     "aggregate weights/horizons must be finite and non-negative")
+        _require(float(self.aggregate_bin_s) > 0 and float(self.aggregate_cell_temp_m) > 0
+                 and int(self.aggregate_every_steps) >= 1,
+                 "aggregate_bin_s/cell_temp_m must be positive and every_steps >= 1")
+        _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":

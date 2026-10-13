@@ -54,6 +54,7 @@ class UnrollTargets:
     speed_delta_mps: float
     history_lane_head: bool
     prepared: dict[str, Any] = field(default_factory=dict)
+    road: Any = None               # aggregate loss only: losses.aggregate.RoadTargets
 
 
 @dataclass

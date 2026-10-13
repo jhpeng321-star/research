@@ -431,6 +431,13 @@ class UnrollRunner:
                 str(k): float(value) for k, value in zip(GATE_LOG_K, lane_gate_log)}
         if cfg.traffic_loss:
             record["chunks"] = int(n_chunks)
+        agg_names = [n for n in ("agg_field", "agg_reward", "agg_flow") if n in logged]
+        if agg_names:
+            # C4 aggregate loss: its share of the logged loss value (gradient shares are in
+            # ``loss_share`` when loss-share logging is on).
+            agg_total = sum(float(logged[n]) for n in agg_names)
+            record["aggregate_value_share"] = (agg_total / loss_logged
+                                               if loss_logged > 0.0 else 0.0)
         if model.rollout_mode == "hybrid" and acc.hybrid_count > 0:
             physics_mag, residual_mag = (float(acc.hybrid_physics.detach()),
                                          float(acc.hybrid_residual.detach()))

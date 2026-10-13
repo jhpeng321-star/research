@@ -266,6 +266,40 @@ class TrafficLossConfig:
 
 
 @config_dataclass
+class AggregateLossConfig:
+    """C4 aggregate-consistency loss (``wms.train.losses.aggregate``; weight 0 = off).
+
+    Compares soft RSU cell fields (density / mean speed / queue per 50 m cell per lane),
+    reward components (on-road delay, throughput past the merge end) and, with
+    ``flow_weight`` > 0, every cell-boundary flux between rollout and record, per
+    ``bin_s`` bin, weighted by a horizon ramp from ``horizon_start_s`` to
+    ``horizon_full_s`` (equal values: a step at ``horizon_start_s``).
+    """
+
+    weight: float = 0.0
+    field_weight: float = 1.0
+    reward_weight: float = 1.0
+    flow_weight: float = 0.0
+    bin_s: float = 5.0
+    every_steps: int = 1
+    horizon_start_s: float = 0.0
+    horizon_full_s: float = 0.0
+    cell_temp_m: float = 5.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(x) and x >= 0.0 for x in (
+            self.weight, self.field_weight, self.reward_weight, self.flow_weight,
+            self.horizon_start_s, self.horizon_full_s)),
+            "loss.aggregate weights/horizons must be finite and non-negative")
+        require(self.bin_s > 0.0 and self.cell_temp_m > 0.0 and self.every_steps >= 1,
+                "loss.aggregate.bin_s/cell_temp_m must be positive and every_steps >= 1")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0
+
+
+@config_dataclass
 class LossConfig:
     """All loss terms and diagnostics."""
 
@@ -281,6 +315,7 @@ class LossConfig:
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
     lane_event: LaneEventConfig = field(default_factory=LaneEventConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
+    aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -444,6 +479,11 @@ class TrainConfig:
                               ("conservation", self.loss.conservation_weight > 0.0)):
             if enabled:
                 terms.append(name)
+        agg = self.loss.aggregate
+        if agg.enabled:
+            terms.extend(name for name, w in (("agg_field", agg.field_weight),
+                                              ("agg_reward", agg.reward_weight),
+                                              ("agg_flow", agg.flow_weight)) if w > 0.0)
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------

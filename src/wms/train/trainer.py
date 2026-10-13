@@ -217,7 +217,7 @@ class WmSTrainer:
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
         optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
-                    *self.composer.braking.log_terms)
+                    *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow")
         total.update({name: 0.0 for name in self.composer.names if name in optional})
         total.update({name: 0.0 for name in MONITORS})
         n_batches = valid_targets = available_steps = 0

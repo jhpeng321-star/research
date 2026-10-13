@@ -2,7 +2,7 @@
 
 The optimised chunk loss is accumulated in exactly the order position, speed,
 lane, residual_mag, lane_rate, asym_speed, decel_weight, propagation, traffic,
-residual_penalty, so the autograd graph (and therefore every gradient bit) is the
+residual_penalty (then the opt-in C4 aggregate terms agg_field/agg_reward/agg_flow), so the autograd graph (and therefore every gradient bit) is the
 one of the pre-refactor trainer.  Terms are enabled by the same flags as before;
 with all optional weights at their defaults only position/speed/lane run.
 """
@@ -14,6 +14,7 @@ import torch
 from torch import Tensor
 
 from ..settings import TrainSettings
+from .aggregate import AggregateLossConfig, aggregate_terms
 from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContext, UnrollTargets,
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
@@ -134,6 +135,19 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
     residual_weight = hybrid_residual_weight(settings)
     if settings.rollout_mode == "hybrid" and residual_weight > 0.0:
         chunk.append(ResidualPenalty(residual_weight))
+    if settings.aggregate_weight > 0.0:
+        # C4 aggregate-consistency terms go LAST so every pre-existing term keeps its
+        # summation position (flag off: never built, bit-identical).
+        chunk.extend(aggregate_terms(AggregateLossConfig(
+            dt_s=dt_s, weight=float(settings.aggregate_weight),
+            field_weight=float(settings.aggregate_field_weight),
+            reward_weight=float(settings.aggregate_reward_weight),
+            flow_weight=float(settings.aggregate_flow_weight),
+            bin_s=float(settings.aggregate_bin_s),
+            every_steps=int(settings.aggregate_every_steps),
+            horizon_start_s=float(settings.aggregate_horizon_start_s),
+            horizon_full_s=float(settings.aggregate_horizon_full_s),
+            cell_temp_m=float(settings.aggregate_cell_temp_m))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))
