@@ -98,3 +98,13 @@ path = "data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json"
 # WMS_DATA_C4_EPISODES at it (this default is only the local convention).
 [datasets.c4_episodes]
 path = "runs/active/c4_episodes"
+
+# PAIRLOSS (configs/c4_wm_v4_data.toml): C4-GENRAND-20261014 converted sources on the training
+# box. Point WMS_DATA_GENRAND_PLAIN / WMS_DATA_GENRAND_BRANCH at the c4_episodes dirs (gpuW:
+# /root/autodl-tmp/c4/data_genrand/C4-GENRAND-20261014/{,branches/}c4_episodes); these
+# defaults are only the local convention.
+[datasets.genrand_plain]
+path = "runs/active/C4-GENRAND-20261014/c4_episodes"
+
+[datasets.genrand_branch]
+path = "runs/active/C4-GENRAND-20261014/branches/c4_episodes"

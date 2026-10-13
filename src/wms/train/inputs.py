@@ -277,10 +277,20 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
 
         road = road_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
                             entries_on=inputs.entries is not None, device=device)
-    return UnrollTargets(
+    pair = None
+    if getattr(settings, "paired_diff_weight", 0.0) > 0.0 and "pair_ref" in batch:
+        # PAIRLOSS: paired batch (pair groups of GENRAND branches) -> t0-cohort pair targets.
+        from .losses.paired_diff import pair_targets
+
+        pair = pair_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
+                            device=device)
+    targets = UnrollTargets(
         states=states, n_steps=n, weights=weights, hdv_mask=hdv_mask, aux_mask=aux_mask,
         aux_count=int(aux_mask.sum()), denom=denom,
         lane_target=states[:, 1:n + 1, :, 1:4].argmax(-1), loss_valid=inputs.loss_valid,
         is_cav=inputs.is_cav, dt_s=float(dt_s), position_delta_m=settings.position_huber_delta_m,
         speed_delta_mps=settings.speed_huber_delta_mps,
         history_lane_head=settings.lane_head == "history", road=road)
+    if pair is not None:
+        targets.pair = pair
+    return targets

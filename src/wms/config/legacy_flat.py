@@ -139,6 +139,14 @@ FLAT_TO_PATH: dict[str, str] = {
     "mixed_horizon_frac": "curriculum.mixed_horizon_frac",
     "mixed_horizon_s": "curriculum.mixed_horizon_s",
     "mixed_horizon_min_stage_s": "curriculum.mixed_horizon_min_stage_s",
+    # PAIRLOSS (paired-difference loss on paired SUMO branches)
+    "paired_diff_weight": "loss.paired_diff.weight",
+    "paired_diff_fraction": "loss.paired_diff.fraction",
+    "paired_diff_groups": "loss.paired_diff.groups",
+    "paired_diff_max_arms": "loss.paired_diff.max_arms",
+    "paired_diff_position_weight": "loss.paired_diff.position_weight",
+    "paired_diff_speed_weight": "loss.paired_diff.speed_weight",
+    "paired_diff_aggregate_weight": "loss.paired_diff.aggregate_weight",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -167,6 +175,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "val_all_horizons", "selection_mode", "selection_horizons_s", "selection_reference",
     "selection_min_stage_s", "selection_agg_reward_weight", "mixed_horizon_frac",
     "mixed_horizon_s", "mixed_horizon_min_stage_s",
+    "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
+    "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
 )
 
 

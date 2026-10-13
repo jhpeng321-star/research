@@ -175,6 +175,14 @@ class TrainSettings:
     mixed_horizon_frac: float = 0.0
     mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
     mixed_horizon_min_stage_s: float = 30.0
+    # PAIRLOSS (2026-10-14, default OFF): paired-difference loss on paired SUMO branches.
+    paired_diff_weight: float = 0.0
+    paired_diff_fraction: float = 0.25
+    paired_diff_groups: int = 2
+    paired_diff_max_arms: int = 5
+    paired_diff_position_weight: float = 1.0
+    paired_diff_speed_weight: float = 1.0
+    paired_diff_aggregate_weight: float = 1.0
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -288,6 +296,14 @@ class TrainSettings:
                  "merge_hazard_zone must be forced_late or full")
         _require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
                  "gap_stopped_relax requires lane_gap_rule='speed'")
+        for value in (self.paired_diff_weight, self.paired_diff_position_weight,
+                      self.paired_diff_speed_weight, self.paired_diff_aggregate_weight):
+            _require(math.isfinite(float(value)) and float(value) >= 0,
+                     "paired_diff weights must be finite and non-negative")
+        _require(0.0 <= float(self.paired_diff_fraction) <= 1.0,
+                 "paired_diff_fraction must be in [0,1]")
+        _require(int(self.paired_diff_groups) >= 1 and int(self.paired_diff_max_arms) >= 2,
+                 "paired_diff_groups must be >= 1 and paired_diff_max_arms >= 2")
         lanefix_on = (self.lane_decision != "argmax"
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"

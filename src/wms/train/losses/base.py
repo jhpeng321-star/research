@@ -55,6 +55,7 @@ class UnrollTargets:
     history_lane_head: bool
     prepared: dict[str, Any] = field(default_factory=dict)
     road: Any = None               # aggregate loss only: losses.aggregate.RoadTargets
+    pair: Any = None               # paired_diff loss only: losses.paired_diff.PairTargets
 
 
 @dataclass

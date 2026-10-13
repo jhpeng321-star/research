@@ -443,6 +443,15 @@ class UnrollRunner:
             agg_total = sum(float(logged[n]) for n in agg_names)
             record["aggregate_value_share"] = (agg_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
+        pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg") if n in logged]
+        if pair_names:
+            # PAIRLOSS: share of the logged loss value and whether this was a paired batch.
+            pair_total = sum(float(logged[n]) for n in pair_names)
+            record["paired_value_share"] = (pair_total / loss_logged
+                                            if loss_logged > 0.0 else 0.0)
+            record["paired_batch"] = targets.pair is not None
+            if targets.pair is not None:
+                record["paired_arms"] = int(targets.pair.arm.sum())
         if model.rollout_mode == "hybrid" and acc.hybrid_count > 0:
             physics_mag, residual_mag = (float(acc.hybrid_physics.detach()),
                                          float(acc.hybrid_residual.detach()))

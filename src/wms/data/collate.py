@@ -60,5 +60,11 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
     if all("entrant" in r for r in records):
         out["entrant"] = torch.as_tensor(
             np.stack([r["entrant"] for r in records]), dtype=torch.bool)
+    if all("pair_group" in r for r in records):
+        # PAIRLOSS paired batch: pair group id and the batch row of the group's reference arm
+        out["pair_group"] = torch.as_tensor([int(r["pair_group"]) for r in records],
+                                            dtype=torch.long)
+        out["pair_ref"] = torch.as_tensor([int(r["pair_ref"]) for r in records],
+                                          dtype=torch.long)
     out["identities"] = [r.get("identities") for r in records]
     return out

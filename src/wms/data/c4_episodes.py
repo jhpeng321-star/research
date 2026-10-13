@@ -383,7 +383,8 @@ class C4WindowLoader:
     """Decode one C4 episode window into the pack window-record contract."""
 
     def __init__(self, root: Path, entries: list[dict], index: list[tuple[int, int]], *,
-                 horizon_steps: int, history_s, history_stride_s: float, entries_v2: bool):
+                 horizon_steps: int, history_s, history_stride_s: float, entries_v2: bool,
+                 junction_fix: str = "off", command_known: bool = False):
         self.root = Path(root)
         self.entries = entries
         self.index = index
@@ -391,6 +392,10 @@ class C4WindowLoader:
         self.history_s = history_s
         self.history_stride_s = float(history_stride_s)
         self.entries_v2 = bool(entries_v2)
+        # PAIRLOSS: JUNCTIONFIX convention on these windows ("ffill") and DATAHYG strict
+        # ``command_known`` (every issued command of a C4 episode is recorded).
+        self.junction_fix = str(junction_fix)
+        self.command_known = bool(command_known)
 
     def episode(self, e: int) -> EpisodeArrays:
         return _open_episode(str(self.root / self.entries[e]["dir"]))
@@ -413,9 +418,31 @@ class C4WindowLoader:
         acc = np.where(held, np.asarray(ep.array("issued_acceleration_mps2")[sl]), 0.0)
         tgt = np.where(held, np.asarray(ep.array("issued_target_speed_mps")[sl]), 0.0)
         timeline = ActionTimeline(ctrl, acc.astype(np.float32), tgt.astype(np.float32))
-        return {"controller": timeline.controller, "acceleration_mps2": timeline.acceleration_mps2,
-                "target_speed_mps": timeline.target_speed_mps,
-                "control_dt_s": timeline.control_dt_s}
+        out = {"controller": timeline.controller, "acceleration_mps2": timeline.acceleration_mps2,
+               "target_speed_mps": timeline.target_speed_mps,
+               "control_dt_s": timeline.control_dt_s}
+        if self.command_known:
+            out["command_known"] = np.ones(np.shape(timeline.controller), bool)
+        return out
+
+    def _fix_junctions(self, ep: EpisodeArrays, tick: int, teacher: np.ndarray,
+                       alive: np.ndarray):
+        """JUNCTIONFIX "ffill" on a C4 window (same convention as the pack loader)."""
+        from wms.data.junction_fix import fill_junction_rows, pre_t0_rows, run_prefix
+
+        road = road_presence(ep, tick, teacher.shape[0] - 1)
+        lane = np.rint(teacher[..., 1]).astype(np.int64)
+        need = road["road_present"][0] & (lane[0] < 0)
+        pre_lane, pre_s, pre_age = pre_t0_rows(ep, tick, need)
+        teacher, _filled, unfilled = fill_junction_rows(
+            teacher, road["road_present"], road["road_continue"], pre_lane, pre_s, pre_age)
+        drop = alive[0] & unfilled[0]
+        if drop.any():
+            alive = alive & ~drop[None]
+            gone = run_prefix(road["road_present"], road["road_continue"], drop)
+            road["road_present"] = road["road_present"] & ~gone
+            road["road_continue"] = road["road_continue"] & ~gone[:-1]
+        return teacher, alive, road
 
     def events(self, e: int, tick: int) -> tuple[int, int]:
         """``(first_switch_step, first_direct_step)`` of the window's timeline."""
@@ -439,15 +466,19 @@ class C4WindowLoader:
         lane_hot = kin[..., 1:4]
         lane = np.where(lane_hot.sum(-1) > 0, lane_hot.argmax(-1), -1).astype(np.float32)
         teacher = np.stack((kin[..., 0], lane, kin[..., 4], kin[..., 5]), -1).astype(np.float32)
-        states = _states_from_teacher(teacher, kin[0, :, 6])
         alive = self.alive(ep, tick)
+        road = None
+        on_road = lane >= 0
+        if self.junction_fix != "off":
+            teacher, alive, road = self._fix_junctions(ep, int(tick), teacher, alive)
+        states = _states_from_teacher(teacher, kin[0, :, 6])
         present0 = alive[0]
         vid0 = np.asarray(ep.array("vid"), np.int64)[tick]
         entry = self.entries[e]
         hist, hist_mask = prior_history(ep, tick, present0)
         record = {
             "hist": hist, "hist_mask": hist_mask,
-            "states": states, "present": alive, "loss_valid": alive & (lane >= 0),
+            "states": states, "present": alive, "loss_valid": alive & on_road,
             "slot_index": np.broadcast_to(np.arange(states.shape[1], dtype=np.int64),
                                           alive.shape).copy(),
             # episode-local ids made unique across the source (never pack sidecar ids)
@@ -465,7 +496,7 @@ class C4WindowLoader:
         }
         if self.entries_v2:
             record["entry_feat"] = entry_features(ep, {"tick": int(tick)})
-            record.update(road_presence(ep, int(tick), h))
+            record.update(road if road is not None else road_presence(ep, int(tick), h))
         if self.history_s is not None:
             record["driver_hist"], record["driver_hist_mask"] = prior_history(
                 ep, tick, present0, history_s=self.history_s,
@@ -475,8 +506,12 @@ class C4WindowLoader:
 
 def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_s,
                history_stride_s: float, entries_v2: bool, stride_s: float,
-               start_s: Optional[float], refuse_worlds=None):
-    entries = [e for e in doc["episodes"] if e.get("split_role") == role]
+               start_s: Optional[float], refuse_worlds=None, role_of=None,
+               junction_fix: str = "off", command_known: bool = False,
+               allow_empty: bool = False):
+    roles = role_of or {}
+    entries = [e for e in doc["episodes"]
+               if roles.get(e["world"], e.get("split_role")) == role]
     if not entries:
         return None, None
     if refuse_worlds is not None:
@@ -489,13 +524,16 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
                                      start_s=start_s, warmup_s=float(entry["warmup_s"]))
         index.extend((i, t) for t in ticks)
         per_episode[entry["episode"]] = len(ticks)
+    if not index and allow_empty:
+        return None, None
     if not index:
         raise C4EpisodeRefusal(
             f"c4 episodes ({role}): no window with a full {horizon_steps * DT_S:.0f} s horizon "
             "after the warmup; collect longer episodes or shorten the curriculum")
     loader = C4WindowLoader(root, entries, index, horizon_steps=horizon_steps,
                             history_s=history_s, history_stride_s=history_stride_s,
-                            entries_v2=entries_v2)
+                            entries_v2=entries_v2, junction_fix=junction_fix,
+                            command_known=command_known)
     events = np.asarray([loader.events(e, t) for e, t in index], np.int64)
     receipt = {
         "mode": "c4-episodes", "split": "TRAIN", "role": role, "source": str(root),
@@ -518,11 +556,17 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
 def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
                       history_stride_s: float = 1.0, entries_v2: bool = False,
                       stride_s: float = 10.0, start_s: Optional[float] = None,
-                      k_slots: Optional[int] = None, heldout=None) -> dict:
+                      k_slots: Optional[int] = None, heldout=None, role_of=None,
+                      junction_fix: str = "off", command_known: bool = False,
+                      allow_empty: bool = False) -> dict:
     """``{"train", "train_events", "val", "receipt"}`` of a converted episode source.
 
     ``heldout`` (a :class:`wms.data.mixdata.HeldOutGuard`) refuses held-out worlds;
     ``k_slots`` must match the packs it is mixed with (collation stacks slots).
+    PAIRLOSS options (defaults = unchanged): ``role_of`` ``{world: "train"|"val"}`` overrides
+    the manifest split (one side per world across sources), ``junction_fix`` / ``command_known``
+    as :class:`C4WindowLoader`, ``allow_empty`` returns ``train = None`` instead of refusing
+    when no TRAIN window has the full horizon.
     """
     root = Path(root)
     doc = read_source_manifest(root)
@@ -537,7 +581,17 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
                   history_stride_s=float(history_stride_s), entries_v2=bool(entries_v2),
                   stride_s=float(stride_s), start_s=start_s,
                   refuse_worlds=None if heldout is None else heldout.refuse_worlds)
+    if role_of is not None or junction_fix != "off" or command_known or allow_empty:
+        common.update(role_of=role_of, junction_fix=junction_fix, command_known=command_known,
+                      allow_empty=allow_empty)
     train, events = _one_split(root, doc, "train", **common)
+    if train is None and allow_empty:
+        val, _ = _one_split(root, doc, "val", **common)
+        return {"train": None, "train_events": None, "val": val,
+                "receipt": {"source": str(root), "n_episodes": doc["n_episodes"],
+                            "n_train_windows": 0,
+                            "n_val_windows": 0 if val is None else len(val),
+                            "train": None, "val": None if val is None else val.receipt}}
     if train is None:
         raise C4EpisodeRefusal(f"{root}: no TRAIN episodes")
     val, _ = _one_split(root, doc, "val", **common)

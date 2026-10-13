@@ -134,6 +134,42 @@ class C4EpisodesConfig:
                 "data.c4_episodes.start_s must be non-negative")
 
 
+@config_dataclass
+class C4SourceConfig:
+    """One more converted C4 episode source (PAIRLOSS, PAIRLOSS_NOTES.md), e.g. GENRAND.
+
+    ``name`` labels the source in the mix receipt; ``path`` is a logical data name (env
+    ``WMS_DATA_<NAME>``, e.g. ``genrand_plain`` -> ``WMS_DATA_GENRAND_PLAIN``) or an absolute
+    path written by ``python -m wms.data.c4_episodes``.  ``mix_ratio`` is the sampling share of
+    its ordinary windows (0 = none; allowed for a ``paired`` source only).  ``paired`` marks a
+    paired-branch source: its ``pair_key`` groups feed the paired batches of
+    ``loss.paired_diff`` (one window per arm at the branch time).  Worlds keep ONE split side
+    across every C4 source (validation wins on disagreement).
+    """
+
+    name: str = ""
+    path: Optional[str] = None
+    mix_ratio: float = 0.0
+    window_stride_s: float = 10.0
+    start_s: Optional[float] = None
+    use_val: bool = True
+    paired: bool = False
+
+    def __post_init__(self) -> None:
+        require(bool(self.name) and self.name.replace("_", "").isalnum(),
+                "data.c4_sources[].name must be a non-empty identifier")
+        require(self.path is not None, f"data.c4_sources[{self.name}].path is required")
+        require(is_finite(self.mix_ratio) and 0.0 <= self.mix_ratio < 1.0,
+                f"data.c4_sources[{self.name}].mix_ratio must be in [0,1)")
+        require(self.mix_ratio > 0.0 or self.paired,
+                f"data.c4_sources[{self.name}].mix_ratio must be > 0 for a non-paired source")
+        stride = self.window_stride_s
+        require(is_finite(stride) and stride >= 1.0 and abs(stride - round(stride)) < 1e-9,
+                f"data.c4_sources[{self.name}].window_stride_s must be whole seconds >= 1")
+        require(self.start_s is None or (is_finite(self.start_s) and self.start_s >= 0.0),
+                f"data.c4_sources[{self.name}].start_s must be non-negative")
+
+
 def history_spec(history_s: Optional[float], history_stride_s: float = 1.0,
                  dt_s: float = SIM_DT_S) -> tuple[int, int, int]:
     """Native window ticks, stride ticks and sampled ticks (same arithmetic as the legacy code)."""
@@ -165,6 +201,9 @@ class DataConfig:
     state_noise_std_mps: float = 0.0
     jam: JamConfig = field(default_factory=JamConfig)
     c4_episodes: C4EpisodesConfig = field(default_factory=C4EpisodesConfig)
+    #: PAIRLOSS: further converted C4 episode sources (GENRAND plain / paired branches), mixed
+    #: in after ``c4_episodes`` with their own sampling shares (empty = off, unchanged).
+    c4_sources: tuple[C4SourceConfig, ...] = ()
     entries_v2: bool = False
     entry_pad: int = 8
     #: C4 WM v2 (WMLOSS_NOTES.md): size the entrant padding per batch from the observed
@@ -203,6 +242,12 @@ class DataConfig:
         require(not extra, f"data.sidecars.identities for unknown pack roles {extra}")
         extra = sorted(set(self.sidecars.overlays) - set(self.packs))
         require(not extra, f"data.sidecars.overlays for unknown pack roles {extra}")
+        names = [src.name for src in self.c4_sources]
+        require(len(set(names)) == len(names) and "c4_episodes" not in names,
+                f"data.c4_sources names must be unique and not 'c4_episodes' (got {names})")
+        total = sum(src.mix_ratio for src in self.c4_sources) + (
+            self.c4_episodes.mix_ratio if self.c4_episodes.enabled else 0.0)
+        require(total < 1.0, "the C4 source mix ratios must sum to < 1")
         if self.packs:
             missing = sorted(set(self.packs) - set(self.sidecars.identities))
             require(not missing, f"data.sidecars.identities missing for pack roles {missing}")

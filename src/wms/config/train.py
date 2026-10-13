@@ -324,6 +324,41 @@ class AggregateLossConfig:
 
 
 @config_dataclass
+class PairedDiffLossConfig:
+    """PAIRLOSS paired-difference loss (``wms.train.losses.paired_diff``; weight 0 = off).
+
+    With ``weight`` > 0 and a ``paired`` C4 source, a ``fraction`` of the TRAIN batches are
+    PAIRED batches: ``groups`` pair groups (same branch state, arms differ only in the CAV
+    actions after t0) with up to ``max_arms`` arms each (reference = the all-native arm, else
+    arm 0).  Per group the predicted arm-minus-reference differences of the t0 HDV positions /
+    speeds (``position_weight`` / ``speed_weight``) and of the per-bin cohort aggregates
+    (road / RSU-zone delay, throughput past the merge end; ``aggregate_weight``) are matched
+    to the recorded differences (Huber, normalised).
+    """
+
+    weight: float = 0.0
+    fraction: float = 0.25
+    groups: int = 2
+    max_arms: int = 5
+    position_weight: float = 1.0
+    speed_weight: float = 1.0
+    aggregate_weight: float = 1.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(x) and x >= 0.0 for x in (
+            self.weight, self.position_weight, self.speed_weight, self.aggregate_weight)),
+            "loss.paired_diff weights must be finite and non-negative")
+        require(is_finite(self.fraction) and 0.0 <= self.fraction <= 1.0,
+                "loss.paired_diff.fraction must be in [0,1]")
+        require(self.groups >= 1 and self.max_arms >= 2,
+                "loss.paired_diff.groups must be >= 1 and max_arms >= 2")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0
+
+
+@config_dataclass
 class LossConfig:
     """All loss terms and diagnostics."""
 
@@ -340,6 +375,7 @@ class LossConfig:
     lane_event: LaneEventConfig = field(default_factory=LaneEventConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
+    paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -498,6 +534,9 @@ class TrainConfig:
         require(not self.model.has_hard_cap or self.model.allow_rejected_hard_cap,
                 "hard residual caps were REJECTED (change-log #3); "
                 "set model.allow_rejected_hard_cap only to re-score old runs")
+        if self.loss.paired_diff.enabled:
+            require(any(src.paired for src in self.data.c4_sources),
+                    "loss.paired_diff.weight > 0 requires a data.c4_sources entry with paired = true")
         if self.selection.select_by_long_horizon:
             require(self.data.windows.val is not None or self.data.windows.val_holdout_frac > 0.0,
                     "selection.select_by_long_horizon requires a validation window list")
@@ -542,6 +581,11 @@ class TrainConfig:
             terms.extend(name for name, w in (("agg_field", agg.field_weight),
                                               ("agg_reward", agg.reward_weight),
                                               ("agg_flow", agg.flow_weight)) if w > 0.0)
+        pair = self.loss.paired_diff
+        if pair.enabled:
+            terms.extend(name for name, w in (("pair_pos", pair.position_weight),
+                                              ("pair_speed", pair.speed_weight),
+                                              ("pair_agg", pair.aggregate_weight)) if w > 0.0)
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------
