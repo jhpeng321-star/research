@@ -164,6 +164,16 @@ class TrainSettings:
     merge_hazard_zone: str = "forced_late"
     gap_stopped_relax: bool = False
     lane_hazard_decouple: bool = False
+    # SCHED (2026-10-14, default OFF): validation horizons, selection, mixed-horizon batches.
+    val_all_horizons: bool = False
+    selection_mode: str = "long_horizon"
+    selection_horizons_s: tuple[float, ...] = (10.0, 30.0, 60.0, 120.0)
+    selection_reference: tuple[float, ...] = (7.0356, 49.4889, 128.7179, 0.0)
+    selection_min_stage_s: float = 30.0
+    selection_agg_reward_weight: float = 0.0
+    mixed_horizon_frac: float = 0.0
+    mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
+    mixed_horizon_min_stage_s: float = 30.0
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -283,6 +293,25 @@ class TrainSettings:
                       or self.merge_hazard_zone != "forced_late" or self.lane_hazard_decouple)
         _require(not lanefix_on or self.lane_model == "hazard",
                  "LANEFIX lane switches require lane_model='hazard'")
+        _require(self.selection_mode in ("long_horizon", "multi_horizon"),
+                 "selection_mode must be long_horizon or multi_horizon")
+        _require((not self.val_all_horizons and self.selection_mode == "long_horizon")
+                 or self.select_by_long_horizon,
+                 "val_all_horizons / multi_horizon selection require select_by_long_horizon "
+                 "(the validation schedule)")
+        _require(len(self.selection_horizons_s) >= 1
+                 and len(self.selection_reference) == len(self.selection_horizons_s)
+                 and all(math.isfinite(float(x)) and float(x) > 0
+                         for x in self.selection_horizons_s)
+                 and all(math.isfinite(float(x)) for x in self.selection_reference),
+                 "selection_reference needs one finite value per selection horizon")
+        _require(math.isfinite(self.selection_agg_reward_weight)
+                 and self.selection_agg_reward_weight >= 0.0,
+                 "selection_agg_reward_weight must be finite and non-negative")
+        _require(math.isfinite(self.mixed_horizon_frac) and 0.0 <= self.mixed_horizon_frac <= 1.0
+                 and len(self.mixed_horizon_s) >= 1
+                 and all(math.isfinite(float(x)) and float(x) > 0 for x in self.mixed_horizon_s),
+                 "mixed_horizon_frac must be in [0,1] and mixed_horizon_s positive")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -300,6 +329,9 @@ class TrainSettings:
                 int(x) for x in values["truncation_steps_per_stage"])
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
+        for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s"):
+            if values.get(key) is not None:
+                values[key] = tuple(float(x) for x in values[key])
         if values.get("lane_logit_offsets") is not None:
             values["lane_logit_offsets"] = tuple(float(x) for x in values["lane_logit_offsets"])
         return cls(**values)

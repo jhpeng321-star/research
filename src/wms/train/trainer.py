@@ -28,7 +28,8 @@ from .curriculum import StagePlan, stage_plan
 from .logging import JsonlLog, write_json
 from .losses.compose import build_loss
 from .receipt import write_train_receipt
-from .selection import MONITORS, LongHorizonSelection, validation_horizons
+from .selection import (MONITORS, LongHorizonSelection, MixedHorizonSchedule,
+                        MultiHorizonSelection, eligible_stage_s, validation_horizons)
 from .settings import TrainSettings, validate_bounds
 from .unroll import UnrollRunner
 
@@ -52,6 +53,8 @@ class TrainResult:
     checkpoint: Path
     history: list[dict]
     val_by_stage: list[dict]
+    selection: Optional[dict] = None
+    """SCHED multi-horizon selection table (None for the default long-horizon policy)."""
 
 
 def switch_window_sampler(dataset: Dataset, fraction: float) -> WeightedRandomSampler:
@@ -318,13 +321,25 @@ class WmSTrainer:
         stage_weights = getattr(self.dataset, "stage_weights", None)
         loader = self._make_loader(sampler) if stage_weights is None else None
         selector = LongHorizonSelection()
+        # SCHED (default off): multi-horizon selection and short mixed-horizon batches.
+        multi = (MultiHorizonSelection(
+            horizons=s.selection_horizons_s, references=s.selection_reference,
+            eligible_stage_s=eligible_stage_s([p.stage_s for p in self.stages],
+                                              s.selection_min_stage_s),
+            agg_reward_weight=s.selection_agg_reward_weight)
+            if s.selection_mode == "multi_horizon" else None)
+        mixer = (MixedHorizonSchedule(s.mixed_horizon_frac, s.mixed_horizon_s,
+                                      s.mixed_horizon_min_stage_s, s.seed)
+                 if s.mixed_horizon_frac > 0.0 else None)
+        dt_s = float(self.model.physics.dt_s)
         val_by_stage: list[dict] = []
         global_step = 0
         last_batch = None
 
         def validate_long(stage_s: float) -> dict:
             rows: list[dict] = []
-            for horizon_s in validation_horizons(stage_s):
+            for horizon_s in validation_horizons(stage_s, all_horizons=s.val_all_horizons,
+                                                 horizons=s.selection_horizons_s):
                 horizon_steps = max(1, round(horizon_s / self.model.physics.dt_s))
                 row = self.evaluate(self.val_dataset, unroll_steps=horizon_steps,
                                     require_full_horizon=True)
@@ -337,13 +352,25 @@ class WmSTrainer:
                     continue
                 row.update(stage_s=float(stage_s), step=global_step, horizon_s=horizon_s,
                            selection=False, early_stop=False)
-                row["selection"] = selector.consider(row)
-                if row["selection"]:
-                    self._save(out / "wm_s_best.pt", stage_s=float(stage_s), step=global_step,
-                               val=row)
+                if multi is None:
+                    row["selection"] = selector.consider(row)
+                    if row["selection"]:
+                        self._save(out / "wm_s_best.pt", stage_s=float(stage_s),
+                                   step=global_step, val=row)
                 val_by_stage.append(row)
                 rows.append(row)
-                val_log.append(row)
+                if multi is None:
+                    val_log.append(row)
+            if multi is not None:
+                # One decision per validation event (all horizons), then log the rows.
+                chosen = multi.consider_event(rows, stage_s=float(stage_s), step=global_step)
+                score = multi.table[-1]["score"]
+                for row in rows:
+                    row.update(selection=chosen, selection_score=score)
+                    val_log.append(row)
+                if chosen:
+                    self._save(out / "wm_s_best.pt", stage_s=float(stage_s), step=global_step,
+                               val=rows[-1], selection=multi.table[-1])
             return rows[-1]
 
         for stage_i, plan in enumerate(self.stages):
@@ -366,11 +393,19 @@ class WmSTrainer:
                     # controllers are not replayed a second time.
                     self.capture_loss_shares = (s.loss_share_logging
                                                 and s.cav_drive == "closed_loop" and done == 0)
-                    record = self.train_batch(batch, unroll_steps=plan.unroll_steps,
+                    short_s = None if mixer is None else mixer.draw(stage_s)
+                    # A mixed (short) batch reuses the stage's loss composer, lr and BPTT
+                    # chunk length; a chunk longer than the unroll is one chunk, and the
+                    # aggregate ramp/normalisers are computed over the unrolled steps.
+                    unroll_steps = (plan.unroll_steps if short_s is None
+                                    else max(1, min(plan.unroll_steps, round(short_s / dt_s))))
+                    record = self.train_batch(batch, unroll_steps=unroll_steps,
                                               truncation_steps=plan.truncation_steps
                                               or None)
                     global_step += 1
                     record.update(stage_s=float(stage_s), epoch=stage_i + 1, step=global_step)
+                    if short_s is not None:
+                        record["mixed_horizon_s"] = float(short_s)
                     self.history.append(record)
                     train_log.append(record)
                     if "loss_share" in record:
@@ -417,9 +452,14 @@ class WmSTrainer:
             steps=len(self.history), val_by_stage=val_by_stage, val_log_path=val_log.path,
             has_val=self.val_dataset is not None,
             data_receipt=getattr(self.dataset, "receipt", {}),
-            val_data_receipt=getattr(self.val_dataset, "receipt", {}), selection=selector,
+            val_data_receipt=getattr(self.val_dataset, "receipt", {}),
+            selection=selector if multi is None else multi,
             best_checkpoint=out / "wm_s_best.pt", config_fingerprint=self._fingerprint())
-        return TrainResult(receipt, checkpoint, self.history, val_by_stage)
+        if multi is None:
+            return TrainResult(receipt, checkpoint, self.history, val_by_stage)
+        table = {**multi.summary(),
+                 "checkpoint": str(out / "wm_s_best.pt") if multi.best else None}
+        return TrainResult(receipt, checkpoint, self.history, val_by_stage, selection=table)
 
     def _fingerprint(self) -> Optional[str]:
         fingerprint = getattr(self.cfg, "fingerprint", None)

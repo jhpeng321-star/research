@@ -94,6 +94,8 @@ def _train(cfg: TrainConfig) -> int:
     result = WmSTrainer(cfg, inputs.model, inputs.train, val_dataset=inputs.val,
                         out_dir=out).fit()
     summary = dataclasses.asdict(result) if dataclasses.is_dataclass(result) else result
+    if isinstance(summary, dict) and summary.get("selection", 0) is None:
+        summary.pop("selection")  # SCHED off: RUN_SUMMARY keys unchanged
     # The full summary goes to a file; printing it would block any pipe-fed caller
     # once the text exceeds the OS pipe buffer (round-5 exit hang).
     (out / "RUN_SUMMARY.json").write_text(
