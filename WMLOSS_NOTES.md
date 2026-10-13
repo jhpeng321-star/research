@@ -96,3 +96,11 @@ collate, the v2 config reaching settings / composer / required log terms.
   10 s 73.7 s, 30 s 292 s per forward/backward - not representative of gpuW.
 * Weight 20 thus puts the aggregate at ~8-17 % of the loss value on an untrained model; read the
   gradient shares (`loss_share.jsonl`) in the first gpuW stage before trusting it at 60/120 s.
+
+## Unit suite (tests/unit, full)
+
+896 passed, 2 failed, 1 skipped (49 min on the loaded dev box). Failures not caused by this
+branch: `data/test_drive_registry.py::test_committed_registry_matches_the_generator_output` also
+fails on the base commit; `test_c4_mappo.py::test_worker_pool_spawn_survives_worker_death` passes
+when re-run alone (15 s; timing-sensitive under the 100 % CPU load). New tests: 16 in
+`tests/unit/test_wmloss.py`, all pass; ruff clean on the changed files.
