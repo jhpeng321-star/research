@@ -309,7 +309,7 @@ C4_WALLREGEN_EVAL_SEEDS = frozenset(range(962000, 962200))
 # loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an owner choice; the
 # textbook population saturates near 1930 veh/h)
 C4_WALLREGEN_EVAL_LOADINGS = tuple(range(1000, 2801, 50))
-# C4 V5 blocks (2026-10-14, integrator; PENDING owner approval before any run): textbook-population
+# C4 V5 blocks (2026-10-14, owner-approved): textbook-population
 # v5 WM/policy TRAINING data (native + generic_random + paired branches + MAPPO fine-tune) and the
 # final v5 policy EVALUATION worlds.  Scan of the seed tables and the ledger: no overlap.
 C4_V5_TRAIN_SEEDS = frozenset(range(963000, 964000))
