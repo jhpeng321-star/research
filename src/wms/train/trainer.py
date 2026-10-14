@@ -29,7 +29,8 @@ from .logging import JsonlLog, write_json
 from .losses.compose import build_loss
 from .receipt import write_train_receipt
 from .selection import (MONITORS, LongHorizonSelection, MixedHorizonSchedule,
-                        MultiHorizonSelection, eligible_stage_s, validation_horizons)
+                        MultiHorizonSelection, SameHorizonSelection, eligible_stage_s,
+                        validation_horizons)
 from .settings import TrainSettings, validate_bounds
 from .unroll import UnrollRunner
 
@@ -54,7 +55,7 @@ class TrainResult:
     history: list[dict]
     val_by_stage: list[dict]
     selection: Optional[dict] = None
-    """SCHED multi-horizon selection table (None for the default long-horizon policy)."""
+    """SCHED / INFRAV5 selection table (None for the default long-horizon policy)."""
 
 
 def switch_window_sampler(dataset: Dataset, fraction: float) -> WeightedRandomSampler:
@@ -123,6 +124,11 @@ class WmSTrainer:
         if getattr(s, "lane_hazard_decouple", False):
             # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
             model.lane_hazard_detach = True
+        if getattr(s, "lane_v5_pretrain", None):
+            # LANEV5: offline pre-fit of the lane network (init_from, if any, overrides it).
+            from wms.model.lane_v5 import load_pretrain
+
+            model.lane_v5_pretrain_report = load_pretrain(model.lane_v5, s.lane_v5_pretrain)
         if s.residual_cap_mps2 is not None:
             model.residual_cap_mps2 = float(s.residual_cap_mps2)
         if s.lane_logit_cap is not None:
@@ -333,6 +339,13 @@ class WmSTrainer:
                                               s.selection_min_stage_s),
             agg_reward_weight=s.selection_agg_reward_weight)
             if s.selection_mode == "multi_horizon" else None)
+        # INFRAV5 (default off): same-horizon selection + end-of-run candidate comparison.
+        same = (SameHorizonSelection(
+            horizons=s.selection_horizons_s, references=s.selection_reference,
+            eligible_stage_s=eligible_stage_s([p.stage_s for p in self.stages],
+                                              s.selection_min_stage_s))
+            if s.selection_mode == "multi_horizon_v2" else None)
+        snapshots: dict[int, dict] = {}   # step -> CPU weights of the v2 candidates
         mixer = (MixedHorizonSchedule(s.mixed_horizon_frac, s.mixed_horizon_s,
                                       s.mixed_horizon_min_stage_s, s.seed)
                  if s.mixed_horizon_frac > 0.0 else None)
@@ -341,22 +354,30 @@ class WmSTrainer:
         global_step = 0
         last_batch = None
 
-        def validate_long(stage_s: float) -> dict:
+        def evaluate_horizon(horizon_s: float) -> tuple[dict, float]:
+            horizon_steps = max(1, round(horizon_s / self.model.physics.dt_s))
+            row = self.evaluate(self.val_dataset, unroll_steps=horizon_steps,
+                                require_full_horizon=True)
+            if row["n_batches"] == 0 and row.get("available_steps", 0) > 0:
+                horizon_steps = row["available_steps"]
+                horizon_s = horizon_steps * self.model.physics.dt_s
+                row = self.evaluate(self.val_dataset, unroll_steps=horizon_steps,
+                                    require_full_horizon=True)
+            return row, horizon_s
+
+        def validate_long(stage_s: float, stage_end: bool = False) -> dict:
             rows: list[dict] = []
             for horizon_s in validation_horizons(stage_s, all_horizons=s.val_all_horizons,
                                                  horizons=s.selection_horizons_s):
-                horizon_steps = max(1, round(horizon_s / self.model.physics.dt_s))
-                row = self.evaluate(self.val_dataset, unroll_steps=horizon_steps,
-                                    require_full_horizon=True)
-                if row["n_batches"] == 0 and row.get("available_steps", 0) > 0:
-                    horizon_steps = row["available_steps"]
-                    horizon_s = horizon_steps * self.model.physics.dt_s
-                    row = self.evaluate(self.val_dataset, unroll_steps=horizon_steps,
-                                        require_full_horizon=True)
+                row, horizon_s = evaluate_horizon(horizon_s)
                 if any(r["horizon_s"] == horizon_s for r in rows):
                     continue
                 row.update(stage_s=float(stage_s), step=global_step, horizon_s=horizon_s,
                            selection=False, early_stop=False)
+                if same is not None:
+                    val_by_stage.append(row)
+                    rows.append(row)
+                    continue
                 if multi is None:
                     row["selection"] = selector.consider(row)
                     if row["selection"]:
@@ -376,7 +397,36 @@ class WmSTrainer:
                 if chosen:
                     self._save(out / "wm_s_best.pt", stage_s=float(stage_s), step=global_step,
                                val=rows[-1], selection=multi.table[-1])
+            if same is not None:
+                flags = same.consider_event(rows, stage_s=float(stage_s), step=global_step,
+                                            stage_end=stage_end)
+                score = same.table[-1]["score"]
+                for row in rows:
+                    row.update(selection=flags["global_best"], selection_score=score)
+                    val_log.append(row)
+                if flags["stage_best"] or flags["stage_last"]:
+                    snapshots[global_step] = self._cpu_weights()
+                    keep = {c["step"] for c in same.candidates()}
+                    for step in [k for k in snapshots if k not in keep]:
+                        del snapshots[step]
+                if flags["global_best"]:
+                    # provisional best (overwritten by the end-of-run comparison)
+                    self._save(out / "wm_s_best.pt", stage_s=float(stage_s), step=global_step,
+                               val=rows[-1], selection=same.table[-1], provisional=True)
             return rows[-1]
+
+        def revalidate(step: int, horizons: list) -> list[dict]:
+            """INFRAV5: missing horizons of a v2 candidate, on the same fixed val subset."""
+            self.model.load_state_dict(snapshots[step])
+            stage = next(c["stage_s"] for c in same.candidates() if c["step"] == step)
+            rows: list[dict] = []
+            for horizon_s in horizons:
+                row, horizon_s = evaluate_horizon(float(horizon_s))
+                row.update(stage_s=float(stage), step=int(step), horizon_s=horizon_s,
+                           selection=False, early_stop=False, revalidated=True)
+                rows.append(row)
+                val_log.append(row)
+            return rows
 
         for stage_i, plan in enumerate(self.stages):
             stage_s = plan.stage_s
@@ -419,7 +469,8 @@ class WmSTrainer:
                     done += 1
                     if s.select_by_long_horizon and (
                             global_step % s.val_every == 0 or done >= plan.steps):
-                        last_validation = validate_long(stage_s)
+                        last_validation = (validate_long(stage_s) if same is None else
+                                           validate_long(stage_s, stage_end=done >= plan.steps))
                     if done >= plan.steps:
                         break
             if global_step == steps_before:
@@ -451,6 +502,8 @@ class WmSTrainer:
         checkpoint = out / "wm_s.pt"
         save_checkpoint(checkpoint, self.model, self.cfg, history=self.history,
                         val_by_stage=val_by_stage)
+        if same is not None:
+            self._final_same_horizon(same, snapshots, revalidate, out)
         receipt = write_train_receipt(
             out, settings=s, flat_config=flat, physics=self.model.physics,
             device=str(self.device), checkpoint=checkpoint, log_path=train_log.path,
@@ -458,13 +511,34 @@ class WmSTrainer:
             has_val=self.val_dataset is not None,
             data_receipt=getattr(self.dataset, "receipt", {}),
             val_data_receipt=getattr(self.val_dataset, "receipt", {}),
-            selection=selector if multi is None else multi,
+            selection=selector if multi is None and same is None else (multi or same),
             best_checkpoint=out / "wm_s_best.pt", config_fingerprint=self._fingerprint())
-        if multi is None:
+        if multi is None and same is None:
             return TrainResult(receipt, checkpoint, self.history, val_by_stage)
-        table = {**multi.summary(),
-                 "checkpoint": str(out / "wm_s_best.pt") if multi.best else None}
+        chosen = multi or same
+        table = {**chosen.summary(),
+                 "checkpoint": str(out / "wm_s_best.pt") if chosen.best else None}
         return TrainResult(receipt, checkpoint, self.history, val_by_stage, selection=table)
+
+    def _cpu_weights(self) -> dict:
+        return {k: v.detach().to("cpu", copy=True) for k, v in self.model.state_dict().items()}
+
+    def _final_same_horizon(self, same: SameHorizonSelection, snapshots: dict, revalidate,
+                            out: Path) -> None:
+        """INFRAV5: complete every candidate on the full horizon set, pick, write wm_s_best.pt.
+
+        The model is restored to its final (last-optimizer-step) weights afterwards."""
+        final_weights = self._cpu_weights()
+        try:
+            final = same.finalize(revalidate)
+            if final is not None and same.best is not None:
+                row = next(r for r in final["table"] if r["selected"])
+                self.model.load_state_dict(snapshots[same.best["step"]])
+                self._save(out / "wm_s_best.pt", stage_s=float(same.best["stage_s"]),
+                           step=int(same.best["step"]), val=same.best["rows"][-1],
+                           selection=row, final_comparison=final)
+        finally:
+            self.model.load_state_dict(final_weights)
 
     def _fingerprint(self) -> Optional[str]:
         fingerprint = getattr(self.cfg, "fingerprint", None)

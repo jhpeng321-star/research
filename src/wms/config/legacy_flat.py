@@ -130,6 +130,10 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_hazard_zone": "model.merge_hazard_zone",
     "gap_stopped_relax": "model.gap_stopped_relax",
     "lane_hazard_decouple": "loss.lane_hazard_decouple",
+    # LANEV5 (per-transition lane network)
+    "lane_v5_gates": "model.lane_v5_gates",
+    "lane_v5_head_ap": "model.lane_v5_head_ap",
+    "lane_v5_pretrain": "model.lane_v5_pretrain",
     # SCHED (validation horizons, multi-horizon selection, mixed-horizon batches)
     "val_all_horizons": "curriculum.val_all_horizons",
     "selection_mode": "curriculum.selection",
@@ -148,6 +152,14 @@ FLAT_TO_PATH: dict[str, str] = {
     "paired_diff_position_weight": "loss.paired_diff.position_weight",
     "paired_diff_speed_weight": "loss.paired_diff.speed_weight",
     "paired_diff_aggregate_weight": "loss.paired_diff.aggregate_weight",
+    # INFRAV5 (optional driver-estimate prior on the batch-mean encoded settings)
+    "driver_prior_weight": "loss.driver_prior.weight",
+    "driver_prior_target": "loss.driver_prior.target",
+    "driver_prior_accel": "loss.driver_prior.accel",
+    "driver_prior_time_headway": "loss.driver_prior.time_headway",
+    "driver_prior_decel": "loss.driver_prior.decel",
+    "driver_prior_min_gap": "loss.driver_prior.min_gap",
+    "driver_prior_v0_ratio": "loss.driver_prior.v0_ratio",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -173,12 +185,16 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "val_max_windows",
     "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
     "gap_stopped_relax", "lane_hazard_decouple",
+    "lane_v5_gates", "lane_v5_head_ap", "lane_v5_pretrain",
     # SCHED
     "val_all_horizons", "selection_mode", "selection_horizons_s", "selection_reference",
     "selection_min_stage_s", "selection_agg_reward_weight", "mixed_horizon_frac",
     "mixed_horizon_s", "mixed_horizon_min_stage_s",
     "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
     "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
+    # INFRAV5
+    "driver_prior_weight", "driver_prior_target", "driver_prior_accel", "driver_prior_time_headway",
+    "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
 )
 
 

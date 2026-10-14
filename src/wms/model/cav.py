@@ -85,8 +85,26 @@ def check_teacher(teacher: Tensor, reference: Tensor) -> None:
 
 # ---------------------------------------------------------------- execution cap (EXECCAP_NOTES.md)
 #: Allowed values of ``WmSModel.cav_exec_cap``: ``"off"`` (default, bit-identical legacy
-#: behaviour) or ``"idm"`` (SUMO speedMode-27 consistent execution of commanded CAVs).
-EXEC_CAP_MODES = ("off", "idm")
+#: behaviour), ``"idm"`` (SUMO speedMode-27 consistent execution of commanded CAVs with the
+#: WM-inferred settings of the slot) or ``"idm_normal[:<table>]"`` (INFRAV5: the same ceiling
+#: with the fixed, operator-known CAV vType settings of :data:`CAV_SETTINGS_TABLES`; the CAV
+#: type is known to the operator -- owner rule 2026-10-14: every CAV has one vType).
+#: ``"idm_normal"`` alone = :data:`DEFAULT_CAV_SETTINGS_TABLE`.
+#: SUMO ``normal_car`` vType (scenarios/idm/driver_routes.rou.xml; generated scenarios use
+#: speedDev 0, so v0 = speedFactor x speed limit): the legacy population's CAV type.
+NORMAL_CAR_SETTINGS = {"accel": 2.6, "decel": 4.5, "time_headway": 1.1, "min_gap": 2.5,
+                       "speed_factor": 1.0}
+#: Textbook population CAV type ``cav_typical`` (c4/popfix, 2026-10-14).
+#: TODO(c4/popfix): import ``TEXTBOOK_CAV_PARAMS`` from ``traffic_shepherd/c4/population.py``
+#: once merged (keys there: speed_factor, tau_s, min_gap_m, accel_mps2, decel_mps2); the values
+#: below are a copy and tests/unit/test_infrav5.py checks them against it when importable.
+TEXTBOOK_CAV_SETTINGS = {"accel": 1.2, "decel": 2.0, "time_headway": 1.2, "min_gap": 2.0,
+                         "speed_factor": 1.0}
+#: CAV settings tables of the ``idm_normal`` execution cap (name -> settings).
+CAV_SETTINGS_TABLES = {"textbook": TEXTBOOK_CAV_SETTINGS, "legacy": NORMAL_CAR_SETTINGS}
+DEFAULT_CAV_SETTINGS_TABLE = "textbook"
+EXEC_CAP_MODES = ("off", "idm", "idm_normal",
+                  *(f"idm_normal:{name}" for name in CAV_SETTINGS_TABLES))
 #: Process-wide default read by :func:`wms.eval.backend.load_backend` (and nothing else).
 EXEC_CAP_ENV = "WMS_CAV_EXEC_CAP"
 #: Key under which the model hands the per-slot ceiling ``[B, K]`` to its CAV callback.
@@ -98,6 +116,15 @@ def check_exec_cap_mode(mode) -> str:
     if mode not in EXEC_CAP_MODES:
         raise ValueError(f"cav_exec_cap must be one of {EXEC_CAP_MODES}, got {mode!r}")
     return mode
+
+
+def exec_cap_settings(mode) -> dict:
+    """Fixed CAV settings of an ``idm_normal[:<table>]`` mode."""
+    mode = check_exec_cap_mode(mode)
+    if not mode.startswith("idm_normal"):
+        raise ValueError(f"{mode!r} has no fixed CAV settings table")
+    table = mode.partition(":")[2] or DEFAULT_CAV_SETTINGS_TABLE
+    return dict(CAV_SETTINGS_TABLES[table])
 
 
 def set_exec_cap(model, mode) -> str:

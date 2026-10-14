@@ -650,7 +650,26 @@ class MixedTrajectoryDataset(Dataset):
                     n_jam = int(s.jam.sum())
                     entry["n_jam_items"] = n_jam
                     entry["jam_fraction_uniform"] = round(n_jam / max(1, n), 4)
+                    # INFRAV5: expected jam share of this source's draws at this stage
+                    # without / with the jam factor (event weights included).
+                    w_event = np.where(mask, self.event_oversample, 1.0)
+                    w_jam = w_event * np.where(s.jam, self.jam_oversample, 1.0)
+                    entry["jam_fraction_sampled_before"] = round(
+                        float(w_event[s.jam].sum() / w_event.sum()), 4)
+                    entry["jam_fraction_sampled"] = round(
+                        float(w_jam[s.jam].sum() / w_jam.sum()), 4)
                 row["sources"][s.name] = entry
+            if all(s.jam is not None for s in self.sources):
+                # INFRAV5: share of ALL ordinary draws that are jam windows (paired batches,
+                # drawn separately, are not part of this sampler).
+                srcs = row["sources"]
+                row["jam_share_total"] = {
+                    "before": round(sum(self.shares[k] * srcs[s.name]
+                                        ["jam_fraction_sampled_before"]
+                                        for k, s in enumerate(self.sources)), 4),
+                    "after": round(sum(self.shares[k] * srcs[s.name]["jam_fraction_sampled"]
+                                       for k, s in enumerate(self.sources)), 4),
+                    "jam_oversample": self.jam_oversample}
             rows.append(row)
         return rows
 
@@ -778,7 +797,8 @@ def build_switch_datasets(*, pack: str, identities: str, window_list: str,
 def mix_datasets(orig: Dataset, switch: dict, *, switch_ratio: float,
                  event_oversample: float, orig_val: Optional[Dataset] = None,
                  jam_oversample: float = 1.0, jam_speed_mps: float = 5.0,
-                 jam_cache_dir: Optional[str | Path] = None) -> tuple:
+                 jam_cache_dir: Optional[str | Path] = None,
+                 jam_min_fraction: float = 0.0) -> tuple:
     """``(train, val)`` mixed datasets from the original and switching datasets.
 
     ``jam_oversample > 1`` marks each source's jam windows (recorded HDV speed
@@ -794,11 +814,12 @@ def mix_datasets(orig: Dataset, switch: dict, *, switch_ratio: float,
         orig_jam = jamdata.compute_jam_flags(
             orig, speed_mps=float(jam_speed_mps),
             cache_path=None if cache is None else cache / "jam_original.json",
-            source_key=jamdata.dataset_source_key(orig))
+            source_key=jamdata.dataset_source_key(orig), min_fraction=jam_min_fraction)
         switch_jam = jamdata.compute_jam_flags(
             switch["train"], speed_mps=float(jam_speed_mps),
             cache_path=None if cache is None else cache / "jam_switching.json",
-            source_key=jamdata.dataset_source_key(switch["train"]))
+            source_key=jamdata.dataset_source_key(switch["train"]),
+            min_fraction=jam_min_fraction)
         jam_block = {
             "schema": jamdata.JAM_SCHEMA, "oversample": float(jam_oversample),
             "speed_mps": float(jam_speed_mps),

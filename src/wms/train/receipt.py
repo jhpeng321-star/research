@@ -51,5 +51,14 @@ def write_train_receipt(out_dir: Path, *, settings: TrainSettings, flat_config: 
                 val_all_horizons=bool(settings.val_all_horizons),
                 multi_horizon=selection.summary())
             receipt["val_monitoring"].update(mode="multi-horizon-selection")
+        elif getattr(settings, "selection_mode", "long_horizon") == "multi_horizon_v2":
+            # INFRAV5: online same-horizon score + end-of-run same-horizon comparison.
+            receipt["long_horizon_selection"].update(
+                metric="mean_position/normaliser (mean over ONE common horizon set)",
+                minimum_stage_s=selection.eligible_stage_s,
+                policy="same-horizon-final-comparison-of-stage-candidates",
+                val_all_horizons=bool(settings.val_all_horizons),
+                multi_horizon_v2=selection.summary())
+            receipt["val_monitoring"].update(mode="same-horizon-selection")
     write_json(Path(out_dir) / RECEIPT_NAME, receipt)
     return receipt

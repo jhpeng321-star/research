@@ -12,6 +12,7 @@ format and must not change; they are also created in this order.
 """
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, replace
 from functools import partial
 from typing import Callable, Mapping, Optional
@@ -39,6 +40,7 @@ from .lane_hazard import (HAZARD_F, HAZARD_F_V2, HazardLaneModel, blocked_indica
                           hazard_feasible, hazard_lane_logits, initial_lane_blocked,
                           sample_lane_choice, update_blocked)
 from .lane_head import HistoryLaneHead, lane_context
+from . import lane_v5 as lv5
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet
 from .spec import ModelSpec
@@ -121,6 +123,10 @@ class WmSModel(nn.Module):
         self.lane_logit_offsets = tuple(getattr(spec, "lane_logit_offsets", (0.0, 0.0, 0.0)))
         self.lane_hazard_features = getattr(spec, "lane_hazard_features", "v1")
         self.merge_hazard_zone = getattr(spec, "merge_hazard_zone", "forced_late")
+        # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and the configured
+        # per-head TRAIN-val AP (negative = use the AP stored in the lane network's buffer).
+        self.lane_v5_gates = tuple(getattr(spec, "lane_v5_gates", lv5.DEFAULT_GATES))
+        self.lane_v5_head_ap = tuple(getattr(spec, "lane_v5_head_ap", (lv5.UNKNOWN_AP,) * 3))
         self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
@@ -223,6 +229,9 @@ class WmSModel(nn.Module):
                             if getattr(spec, "lane_model", "residual") == "hazard" else None)
         self.driver_updater = (EmaDriverUpdater(self.driver_embed_dim, spec.driver_update_rate)
                                if getattr(spec, "driver_update", "off") == "ema" else None)
+        # LANEV5 (default OFF): created last; absent (no parameters, no RNG draw) otherwise.
+        if getattr(spec, "lane_model", "residual") == "hazard_v5":
+            self.lane_v5 = lv5.LaneV5Net(spec.lane_hazard_hidden, spec.lane_hazard_cap)
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -473,7 +482,8 @@ class WmSModel(nn.Module):
                 action_command: Optional[Tensor] = None,
                 accel_noise: Optional[Tensor] = None,
                 accel_noise_sigma_max: Optional[float] = None,
-                lane_blocked: Optional[Tensor] = None) -> dict[str, Tensor]:
+                lane_blocked: Optional[Tensor] = None,
+                lane_v5_acc: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Predict acceleration and lane logits for every slot.
 
         ``k_steps`` is the number of steps since the last real observation (scalar or
@@ -490,6 +500,11 @@ class WmSModel(nn.Module):
         the previous step (``None`` at a rollout start: from the long driver history); the
         updated count is returned as ``lane_blocked``.  With ``lane_decision='sample'`` the
         physics feasibility mask is returned as ``lane_feasible [B, K, 3]``.
+
+        LANEV5: ``lane_v5_acc`` (``lane_model='hazard_v5'``) are the lane network's recurrent
+        accumulators after the previous step (``None`` at a rollout start: from the long
+        driver history); the updated ones are returned as ``lane_v5_acc``, and with sampled /
+        gated decisions the slots that draw as ``lane_sample [B, K]``.
         """
         kin = state_kin(state).float()
         present = state_present(state, kin)
@@ -544,8 +559,12 @@ class WmSModel(nn.Module):
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
-        blocked_now = None
-        if self.lane_hazard is not None:
+        blocked_now = v5_acc = v5_sample = None
+        if getattr(self, "lane_v5", None) is not None:
+            lane_logits, v5_acc, v5_sample = self._lane_v5_forward(
+                kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
+                driver_history_mask)
+        elif self.lane_hazard is not None:
             # WMLANE A: the dedicated hazard model replaces the residual lane delta;
             # physics-masked targets stay masked (hard feasibility).
             if self.lane_hazard_features == "v2":
@@ -586,8 +605,12 @@ class WmSModel(nn.Module):
             result["lane_probabilities"] = lane_probabilities
         if blocked_now is not None:
             result["lane_blocked"] = blocked_now
+        if v5_acc is not None:
+            result["lane_v5_acc"] = v5_acc
         if self._samples_lanes:
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
+            if v5_sample is not None:
+                result["lane_sample"] = v5_sample
         return result
 
     def _residual_lane_logits(self, lane_base: Tensor, base: dict, temporal: Tensor,
@@ -619,12 +642,15 @@ class WmSModel(nn.Module):
 
     @property
     def _tracks_lane_age(self) -> bool:
-        return self.lane_change_head is not None or getattr(self, "lane_hazard", None) is not None
+        return (self.lane_change_head is not None or getattr(self, "lane_hazard", None) is not None
+                or getattr(self, "lane_v5", None) is not None)
 
     # ------------------------------------------------------------------ LANEFIX
     @property
     def _samples_lanes(self) -> bool:
         """Hazard lane decisions are sampled from the masked categorical (not argmax)."""
+        if getattr(self, "lane_v5", None) is not None:
+            return getattr(self, "lane_decision", "argmax") in ("sample", "gated")
         return (getattr(self, "lane_hazard", None) is not None
                 and getattr(self, "lane_decision", "argmax") == "sample")
 
@@ -646,6 +672,70 @@ class WmSModel(nn.Module):
         if rollout and self.lane_hazard_detach:
             kwargs["detach_delta"] = True
         return kwargs
+
+    # ------------------------------------------------------------------ LANEV5
+    @property
+    def _tracks_lane_v5(self) -> bool:
+        return getattr(self, "lane_v5", None) is not None
+
+    def _history_stride_steps(self) -> int:
+        return round(self.history_stride_s / self.physics.dt_s) if self.long_history else 1
+
+    def initial_lane_v5_acc(self, present: Tensor, kin: Tensor,
+                            driver_history: Optional[Tensor],
+                            driver_history_mask: Optional[Tensor]) -> Tensor:
+        """Lane-v5 accumulators before t0 from the observed pre-t0 long driver history."""
+        return lv5.initial_acc(present, kin, self.physics,
+                               driver_history if self.long_history else None,
+                               driver_history_mask if self.long_history else None,
+                               self._history_stride_steps())
+
+    def lane_v5_base(self, kin: Tensor, present: Tensor) -> Tensor:
+        """Physics lane logits (feasibility mask) of the teacher-forced lane-v5 rows.
+
+        Population-default driver settings: under ``lane_gap_rule='speed'`` the mask does not
+        depend on the driver settings, so the offline pre-fit and the training loss agree.
+        """
+        state = {"veh_kin": kin.float(), "present": present.bool()}
+        if self.physics_step is None:
+            return self.mobil_merge_logits(state, None)
+        return self._physics_step(state, None)[1]
+
+    def lane_v5_mask_fn(self):
+        """Feasibility source of the teacher-forced lane-v5 rows: ``None`` = read it from the
+        lane features (in-module physics with the speed gap rule; identical, tested), else
+        :meth:`lane_v5_base`."""
+        if self.physics_step is None and lv5.fast_mask_applies(self.physics):
+            return None
+        return self.lane_v5_base
+
+    def lane_v5_head_ap_effective(self) -> tuple[float, float, float]:
+        """Per-head TRAIN-val AP used by ``lane_decision='gated'`` (config value where >= 0,
+        else the AP stored in the lane network by the pre-fit / calibration tool)."""
+        stored = self.lane_v5.head_ap.tolist()
+        return tuple(float(c) if float(c) >= 0.0 else float(s)
+                     for c, s in zip(self.lane_v5_head_ap, stored))  # type: ignore[return-value]
+
+    def _lane_v5_forward(self, kin: Tensor, present: Tensor, learned: Tensor, lane_base: Tensor,
+                         lane_age: Optional[Tensor], acc: Optional[Tensor],
+                         driver_history: Optional[Tensor],
+                         driver_history_mask: Optional[Tensor]):
+        """Lane logits, updated accumulators and the drawing slots of the lane-v5 model."""
+        if acc is None:
+            acc = self.initial_lane_v5_acc(present, kin, driver_history, driver_history_mask)
+        raw, acc, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
+        offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+        with torch.no_grad() if self.lane_hazard_detach else contextlib.nullcontext():
+            logits, _, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
+                                              self.physics, offsets)
+        sample = None
+        if self._samples_lanes:
+            if self.lane_decision == "gated":
+                sample = lv5.sample_mask(inst["lane"], learned, lv5.gate_open(
+                    self.lane_v5_head_ap_effective(), self.lane_v5_gates))
+            else:
+                sample = learned
+        return logits, acc, sample
 
     def initial_lane_blocked(self, present: Tensor, kin: Tensor,
                              driver_history: Optional[Tensor],
@@ -670,6 +760,21 @@ class WmSModel(nn.Module):
         features) is the blocked-step count INCLUDING this state (``None``: 1 if blocked now).
         The rollout-only decouple detach never applies here.
         """
+        if getattr(self, "lane_v5", None) is not None:
+            kin = state_kin(state).float()
+            present = state_present(state, kin)
+            is_cav = state.get("is_cav", torch.zeros_like(present)).bool()
+            acc = state.get("lane_v5_acc")
+            if acc is None:
+                acc = lv5.initial_acc(present, kin, self.physics, None, None, 1)
+            raw, _, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
+            with torch.no_grad():
+                lane_base = self.lane_v5_base(kin, present)
+            logits, _, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, present & ~is_cav,
+                                              lane_base, self.physics,
+                                              tuple(getattr(self, "lane_logit_offsets",
+                                                            (0.0, 0.0, 0.0))))
+            return logits
         if self.lane_hazard is None:
             raise ValueError("lane_event_logits requires model.lane_model='hazard'")
         kin = state_kin(state).float()
@@ -758,7 +863,8 @@ class WmSModel(nn.Module):
              accel_noise: Optional[Tensor] = None,
              accel_noise_sigma_max: Optional[float] = None,
              lane_blocked: Optional[Tensor] = None,
-             lane_uniform: Optional[Tensor] = None) -> dict[str, Tensor]:
+             lane_uniform: Optional[Tensor] = None,
+             lane_v5_acc: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Advance one 0.5 s step; CAVs are never learned movers in structured mode.
 
         With entries enabled the state carries an ``entrant`` mask: t0 CAVs keep the
@@ -784,6 +890,8 @@ class WmSModel(nn.Module):
             forward_kwargs.update(accel_noise=accel_noise, accel_noise_sigma_max=accel_noise_sigma_max)
         if self._tracks_lane_blocked:
             forward_kwargs["lane_blocked"] = lane_blocked
+        if self._tracks_lane_v5:
+            forward_kwargs["lane_v5_acc"] = lane_v5_acc
         if self.checkpoint_forward and torch.is_grad_enabled():
             out = checkpoint(partial(self.forward, **forward_kwargs), state,
                              use_reentrant=False, preserve_rng_state=self.training)
@@ -800,7 +908,7 @@ class WmSModel(nn.Module):
             if lane_uniform is None:
                 lane_uniform = torch.rand(present.shape, device=present.device)
             choice = sample_lane_choice(out["lane_logits"], out["lane_feasible"],
-                                        out["hdv_mask"], lane_uniform)
+                                        out.get("lane_sample", out["hdv_mask"]), lane_uniform)
         else:
             choice = out["lane_logits"].argmax(-1)
         if self.lane_change_head is None:
@@ -845,6 +953,8 @@ class WmSModel(nn.Module):
         the supplied ``driver_params``, else those encoded in this forward, else defaults.
         """
         mode = cav_motion.check_exec_cap_mode(self.cav_exec_cap)
+        if mode.startswith("idm_normal"):
+            return self._exec_cap_normal(state, cav_motion.exec_cap_settings(mode))
         if mode != "idm":
             raise ValueError(f"unsupported cav_exec_cap {mode!r}")
         params = driver_params
@@ -858,6 +968,28 @@ class WmSModel(nn.Module):
             v0, accel_limit = params["v0"], params["accel"]
         return cav_motion.exec_accel_cap(physics, state["v_mps"].to(physics.dtype),
                                          self.physics.dt_s, v0, accel_limit)
+
+    def _exec_cap_normal(self, state: dict, normal: Mapping[str, float]) -> Tensor:
+        """INFRAV5 ``cav_exec_cap="idm_normal[:<table>]"``: the EXECCAP ceiling with fixed,
+        operator-known CAV settings ``normal`` (``cav.CAV_SETTINGS_TABLES``: textbook
+        ``cav_typical`` a 1.2 / b 2.0 / tau 1.2 / s0 2.0, or legacy ``normal_car`` a 2.6 / b 4.5 /
+        tau 1.1 / s0 2.5; v0 = speedFactor x speed limit) on every slot instead of the
+        WM-inferred ones (only commanded CAV slots ever use it).  Same physics-core IDM
+        (leader search, accel-lane-end obstacle, plant bounds)."""
+        if self.physics_step is not None:
+            raise ValueError("cav_exec_cap='idm_normal' needs the in-module physics core")
+        kin = state_kin(state).float()
+        b, slots = kin.shape[:2]
+        values = self._default_driver_parameters(kin, b, slots)
+        params = {name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)}
+        v0 = float(self.physics.speed_limit_mps) * float(normal["speed_factor"])
+        for name, value in (("v0", v0), ("time_headway", normal["time_headway"]),
+                            ("min_gap", normal["min_gap"]), ("accel", normal["accel"]),
+                            ("decel", normal["decel"])):
+            params[name] = torch.full_like(params[name], float(value))
+        physics = self.physics_accel({**state, "veh_kin": kin}, params)
+        return cav_motion.exec_accel_cap(physics, state["v_mps"].to(physics.dtype),
+                                         self.physics.dt_s, v0, float(normal["accel"]))
 
     def _apply_direct_commands(self, out: dict, direct: Tensor, s: Tensor, v: Tensor,
                                next_s: Tensor, next_v: Tensor,
@@ -1021,6 +1153,7 @@ class WmSModel(nn.Module):
         lane_age = self._initial_lane_age(current, pres0, kin0, driver_history,
                                           driver_history_mask)
         lane_blocked = current.get("lane_blocked") if self._tracks_lane_blocked else None
+        lane_v5_acc = current.get("lane_v5_acc") if self._tracks_lane_v5 else None
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
                      if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
@@ -1070,6 +1203,7 @@ class WmSModel(nn.Module):
                     "accel_noise": accel_noise[:, step_i],
                     "accel_noise_sigma_max": accel_noise_sigma_max}),
                 **({} if not self._tracks_lane_blocked else {"lane_blocked": lane_blocked}),
+                **({} if not self._tracks_lane_v5 else {"lane_v5_acc": lane_v5_acc}),
                 **({} if lane_draw is None else {"lane_uniform": lane_draw(step_i)}))
             out = checkpoint(step_fn, current, use_reentrant=False) if step_checkpoint \
                 else step_fn(current)
@@ -1118,6 +1252,9 @@ class WmSModel(nn.Module):
             if self._tracks_lane_blocked:
                 lane_blocked = out["lane_blocked"]
                 current["lane_blocked"] = lane_blocked
+            if self._tracks_lane_v5:
+                lane_v5_acc = out["lane_v5_acc"]
+                current["lane_v5_acc"] = lane_v5_acc
             current.pop("veh_kin", None)
             kin = state_kin(current)
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)

@@ -20,6 +20,15 @@ Usage (workspace root as CWD, data via ``--data-root`` as in the smokes)::
         [--out result.json]
 
 The checkpoint's ``physics.json`` must sit next to it (the loader warns otherwise).
+
+LANEV5 checkpoints (``model.lane_model='hazard_v5'``): the per-head model is scored on the
+teacher-forced rows of ``loss.lane_event`` (every recorded step; feasible rows of each car's
+own road transition outside the forced window) of the config's TRAIN-scoped validation windows
+(``--split val``, default for v5; ``--split train`` = TRAIN windows): per head (overtake /
+return / merge) rows, events, p/obs, AUC, AP (vs the constant's), log-loss vs the best
+constant and a reliability table, with the model's ``lane_logit_offsets`` applied.
+``--write-ap OUT.pt`` writes a copy of the checkpoint whose lane network stores these per-head
+APs (``head_ap``, read by ``model.lane_decision='gated'``) and copies ``physics.json``.
 """
 from __future__ import annotations
 
@@ -187,6 +196,76 @@ def collect(model, dataset, *, batches: int, batch_size: int, seed: int, setting
     return np.concatenate(out, 0) if out else np.zeros((0, 4))
 
 
+def summarize_v5(prob: np.ndarray, label: np.ndarray, head: np.ndarray) -> dict:
+    """LANEV5 per-head calibration / ranking summary (+ reliability per head)."""
+    from lanev5_pretrain import TRANSITIONS, head_metrics
+
+    w = np.ones_like(label, dtype=np.float64)
+    out = {"rows": int(len(label)), "events": int(label.sum()),
+           "heads": head_metrics(prob, label, w, head), "reliability": {}}
+    edges = [0, 1e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3, 0.5, 1.0001]
+    for h, name in enumerate(TRANSITIONS):
+        table = []
+        for lo, hi in zip(edges[:-1], edges[1:]):
+            b = (head == h) & (prob >= lo) & (prob < hi)
+            if b.any():
+                table.append({"bin": [lo, hi], "n": int(b.sum()), "mean_p": float(prob[b].mean()),
+                              "obs": float(label[b].mean())})
+        out["reliability"][name] = table
+    return out
+
+
+def main_v5(args, model, cfg, settings, work: Path, started: float) -> int:
+    """LANEV5 branch of :func:`main`."""
+    import shutil
+
+    import torch
+
+    from lanev5_pretrain import TRANSITIONS, collect
+    from wms.cli.assemble import build_datasets
+
+    train, val, _ = build_datasets(cfg, work)
+    dataset = val if args.split == "val" else train
+    if dataset is None:
+        raise SystemExit("the config has no TRAIN-scoped validation windows (data.windows.val)")
+    rows = collect(model, dataset, settings, batches=args.batches, batch_size=args.batch_size,
+                   seed=args.seed, stay_keep=1.0)
+    offsets = np.asarray(getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)), np.float32)
+    with torch.no_grad():
+        logits = []
+        for i in range(0, len(rows["head"]), 65536):
+            x = torch.as_tensor(rows["features"][i:i + 65536])
+            h = torch.as_tensor(rows["head"][i:i + 65536])
+            logits.append(model.lane_v5(x).gather(-1, h.unsqueeze(-1)).squeeze(-1).numpy())
+    logit = (np.concatenate(logits) if logits else np.zeros(0)) + offsets[rows["head"]]
+    prob = 1.0 / (1.0 + np.exp(-logit))
+    summary = summarize_v5(prob, rows["label"], rows["head"])
+    result = {"checkpoint": str(args.checkpoint), "config": args.config,
+              "split": "TRAIN-val" if args.split == "val" else "TRAIN",
+              "batches": args.batches, "batch_size": args.batch_size, "seed": args.seed,
+              "lane_model": "hazard_v5", "lane_logit_offsets": offsets.tolist(),
+              "head_ap_stored": model.lane_v5.head_ap.tolist(), "row_stats": rows["stats"],
+              "seconds": round(time.time() - started, 1), **summary}
+    if args.write_ap:
+        ap = [summary["heads"][n].get("ap", float("nan")) for n in TRANSITIONS]
+        payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+        payload["model"]["lane_v5.head_ap"] = torch.tensor(
+            [a if math.isfinite(a) else -1.0 for a in ap], dtype=torch.float32)
+        payload["lanev5_head_ap_source"] = {"split": result["split"], "batches": args.batches,
+                                            "seed": args.seed, "ap": ap}
+        target = Path(args.write_ap)
+        torch.save(payload, target)
+        physics = Path(args.checkpoint).parent / "physics.json"
+        if physics.is_file() and not (target.parent / "physics.json").exists():
+            shutil.copy2(physics, target.parent / "physics.json")
+        result["wrote_ap"] = {"path": str(target), "ap": ap}
+    text = json.dumps(result, indent=1, allow_nan=True)
+    if args.out:
+        Path(args.out).write_text(text, encoding="utf-8")
+    print(text)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("checkpoint")
@@ -200,10 +279,14 @@ def main() -> int:
     parser.add_argument("--work-dir", default=None,
                         help="scratch directory of the dataset assembly (default: next to --out)")
     parser.add_argument("--out", default=None)
+    parser.add_argument("--split", choices=("val", "train"), default=None,
+                        help="hazard_v5 only: TRAIN-val (default) or TRAIN windows")
+    parser.add_argument("--write-ap", default=None,
+                        help="hazard_v5 only: write a checkpoint copy storing the per-head AP")
     args = parser.parse_args()
 
     from wms.core.guard import find_restricted_token
-    for text in (args.checkpoint, args.config, args.out or ""):
+    for text in (args.checkpoint, args.config, args.out or "", args.write_ap or ""):
         token = find_restricted_token(str(text))
         if token is not None:
             raise SystemExit(f"refused: {text!r} contains restricted token {token!r}")
@@ -220,6 +303,15 @@ def main() -> int:
     torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "2")))
     model = load_checkpoint(args.checkpoint).model
     model.eval()
+    if getattr(model, "lane_v5", None) is not None:
+        cfg = load_train_config(args.config, ["runtime.device=cpu"])
+        work = Path(args.work_dir or (Path(args.out).parent / "calib_work" if args.out
+                                      else "runs/active/lanehazard_calib_work"))
+        work.mkdir(parents=True, exist_ok=True)
+        args.split = args.split or "val"
+        return main_v5(args, model, cfg, TrainSettings.from_config(cfg), work, time.time())
+    if args.split == "val" or args.write_ap:
+        raise SystemExit("--split val / --write-ap need a hazard_v5 checkpoint")
     if getattr(model, "lane_hazard", None) is None:
         raise SystemExit("the checkpoint has no hazard lane model (model.lane_model='hazard')")
     cfg = load_train_config(args.config, ["runtime.device=cpu"])

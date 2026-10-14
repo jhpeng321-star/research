@@ -14,11 +14,11 @@ LANE_HEADS = ("off", "history")
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 #: Lane-decision model (WMLANE A): the gated residual lane delta (default) or the
 #: dedicated per-HDV lane-change hazard model (``wms.model.lane_hazard``).
-LANE_MODELS = ("residual", "hazard")
+LANE_MODELS = ("residual", "hazard", "hazard_v5")
 #: In-rollout driver-setting update from observed motion (WMLANE C).
 DRIVER_UPDATES = ("off", "ema")
 #: LANEFIX (hazard mode only): rollout lane decision, hazard feature set, merge ownership.
-LANE_DECISIONS = ("argmax", "sample")
+LANE_DECISIONS = ("argmax", "sample", "gated")
 LANE_HAZARD_FEATURES = ("v1", "v2")
 MERGE_HAZARD_ZONES = ("forced_late", "full")
 
@@ -78,6 +78,9 @@ class ModelSpec:
     lane_logit_offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
     lane_hazard_features: str = "v1"
     merge_hazard_zone: str = "forced_late"
+    # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
+    lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
+    lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
@@ -114,10 +117,10 @@ class ModelSpec:
             raise ValueError(f"lane_model must be one of {LANE_MODELS}")
         if self.driver_update not in DRIVER_UPDATES:
             raise ValueError(f"driver_update must be one of {DRIVER_UPDATES}")
-        if (self.lane_model == "hazard" or self.driver_update != "off")                 and (self.rollout_mode == "residual" or self.black_box):
+        if (self.lane_model in ("hazard", "hazard_v5") or self.driver_update != "off")                 and (self.rollout_mode == "residual" or self.black_box):
             raise ValueError("lane_model='hazard' / driver_update need the structured "
                              "driver_params or hybrid rollout (driver embedding/settings)")
-        if self.lane_model == "hazard" and self.lane_head != "off":
+        if self.lane_model in ("hazard", "hazard_v5") and self.lane_head != "off":
             raise ValueError("lane_model='hazard' and the history lane head are exclusive")
         if self.lane_hazard_hidden < 1 or not (math.isfinite(self.lane_hazard_cap)
                                                and self.lane_hazard_cap > 0.0):
@@ -134,7 +137,18 @@ class ModelSpec:
             raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
         if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:
             raise ValueError(f"merge_hazard_zone must be one of {MERGE_HAZARD_ZONES}")
-        if self.lane_model != "hazard" and (
+        gates = tuple(float(x) for x in self.lane_v5_gates)
+        head_ap = tuple(float(x) for x in self.lane_v5_head_ap)
+        object.__setattr__(self, "lane_v5_gates", gates)
+        object.__setattr__(self, "lane_v5_head_ap", head_ap)
+        if len(gates) != 3 or len(head_ap) != 3 \
+                or not all(math.isfinite(x) for x in (*gates, *head_ap)):
+            raise ValueError("lane_v5_gates / lane_v5_head_ap must be three finite values")
+        if self.lane_model != "hazard_v5" and (
+                self.lane_decision == "gated" or gates != (0.25, 0.10, 0.5)
+                or head_ap != (-1.0, -1.0, -1.0)):
+            raise ValueError("lane_decision='gated' / lane_v5_* need lane_model='hazard_v5'")
+        if self.lane_model not in ("hazard", "hazard_v5") and (
                 self.lane_decision != "argmax" or any(offsets)
                 or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
             raise ValueError("lane_decision / lane_logit_offsets / lane_hazard_features / "

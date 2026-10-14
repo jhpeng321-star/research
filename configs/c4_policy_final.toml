@@ -18,7 +18,7 @@ critic_entry_backlog = true
 # EXECCAP_NOTES.md (2026-10-14): SUMO-consistent execution of commanded CAVs in imagination. In SUMO (speedMode 27) a
 # commanded CAV realises ~min(command, its own vType IDM accel) (MAE 0.086 m/s^2); without the cap imagined CAVs
 # accelerate where SUMO's cannot, which produced most of MAPPO's over-credit in the decision check.
-cav_exec_cap = "idm"
+cav_exec_cap = "idm_normal:textbook" # INFRAV5: fixed CAV vType settings in the cap (textbook cav_typical; "idm_normal:legacy" = normal_car for the legacy SUMO population)
 
 [policy]
 # ACCELCAP_NOTES.md (owner-approved 2026-10-13 evening): actor action cap raised from the legacy 1.5 to the normal_car

@@ -91,7 +91,7 @@ class ModelConfig:
     init_from: Optional[str] = None
     allow_rejected_hard_cap: bool = False
     # --- WMLANE switches (default OFF = bit-identical legacy model) ---------------
-    lane_model: Literal["residual", "hazard"] = "residual"
+    lane_model: Literal["residual", "hazard", "hazard_v5"] = "residual"
     """A: 'hazard' = dedicated per-HDV stay/left/right event model (replaces the residual lane delta)."""
     lane_hazard_hidden: int = 64
     lane_hazard_cap: float = 10.0
@@ -103,8 +103,9 @@ class ModelConfig:
     driver_reveal_max_s: float = 10.0
     """C training: the revealed prefix length is drawn uniformly from (0, driver_reveal_max_s]."""
     # --- LANEFIX switches (2026-10-14, LANEFIX_NOTES.md; default OFF = bit-identical) -------
-    lane_decision: Literal["argmax", "sample"] = "argmax"
-    """Hazard mode: rollout lane decision = argmax, or a seeded draw from the masked categorical."""
+    lane_decision: Literal["argmax", "sample", "gated"] = "argmax"
+    """Hazard mode: rollout lane decision = argmax, or a seeded draw from the masked categorical
+    ('gated', hazard_v5 only: a head samples only if its TRAIN-val AP reaches its gate)."""
     lane_logit_offsets: tuple[float, ...] = (0.0, 0.0, 0.0)
     """Hazard mode: constant logit offsets (overtake 1->0, return 0->1, merge 2->1), calibration."""
     lane_hazard_features: Literal["v1", "v2"] = "v1"
@@ -113,6 +114,13 @@ class ModelConfig:
     """'full': the hazard owns ramp merges from the zone start; physics forces only the last 5 m."""
     gap_stopped_relax: bool = False
     """lane_gap_rule='speed': relaxed gaps (0.5 m, no anticipation) for stopped ramp mergers."""
+    # --- LANEV5 (2026-10-14, LANEV5_NOTES.md; lane_model='hazard_v5' only) -------------------
+    lane_v5_gates: tuple[float, ...] = (0.25, 0.10, 0.5)
+    """lane_decision='gated': minimum TRAIN-val AP per head (overtake, return, merge) to sample."""
+    lane_v5_head_ap: tuple[float, ...] = (-1.0, -1.0, -1.0)
+    """Per-head TRAIN-val AP for the gate (negative = the AP stored in the lane network)."""
+    lane_v5_pretrain: Optional[str] = None
+    """Initialise the lane network from a tools/lanev5_pretrain.py file before training."""
 
     def __post_init__(self) -> None:
         require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
@@ -122,20 +130,28 @@ class ModelConfig:
         require(0.0 <= self.driver_reveal_prob <= 1.0 and is_finite(self.driver_reveal_max_s)
                 and self.driver_reveal_max_s > 0.0,
                 "model.driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
-        if self.lane_model == "hazard" or self.driver_update != "off":
+        if self.lane_model in ("hazard", "hazard_v5") or self.driver_update != "off":
             require(self.rollout_mode in ("driver_params", "hybrid") and self.kind == "structured",
                     "model.lane_model='hazard' / driver_update need a structured "
                     "driver_params or hybrid model")
-        if self.lane_model == "hazard":
+        if self.lane_model in ("hazard", "hazard_v5"):
             require(self.lane_head == "off", "model.lane_model='hazard' requires lane_head='off'")
         require(len(self.lane_logit_offsets) == 3
                 and all(is_finite(x) for x in self.lane_logit_offsets),
                 "model.lane_logit_offsets must be three finite values (overtake, return, merge)")
         if (self.lane_decision != "argmax" or any(float(x) for x in self.lane_logit_offsets)
                 or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
-            require(self.lane_model == "hazard",
+            require(self.lane_model in ("hazard", "hazard_v5"),
                     "model.lane_decision / lane_logit_offsets / lane_hazard_features / "
                     "merge_hazard_zone need model.lane_model='hazard'")
+        require(len(self.lane_v5_gates) == 3 and len(self.lane_v5_head_ap) == 3
+                and all(is_finite(x) for x in (*self.lane_v5_gates, *self.lane_v5_head_ap)),
+                "model.lane_v5_gates / lane_v5_head_ap must be three finite values")
+        if (self.lane_decision == "gated" or self.lane_v5_pretrain is not None
+                or tuple(self.lane_v5_gates) != (0.25, 0.10, 0.5)
+                or tuple(self.lane_v5_head_ap) != (-1.0, -1.0, -1.0)):
+            require(self.lane_model == "hazard_v5",
+                    "model.lane_decision='gated' / lane_v5_* need model.lane_model='hazard_v5'")
         require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
                 "model.gap_stopped_relax requires model.lane_gap_rule='speed'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
@@ -359,6 +375,43 @@ class PairedDiffLossConfig:
 
 
 @config_dataclass
+class DriverPriorConfig:
+    """INFRAV5 optional driver-estimate prior (weight 0 = off; owner decision pending).
+
+    A weak L2 pull of the POPULATION MEAN of the encoded driver settings (mean over the
+    valid t0 HDV slots of the batch) toward population targets; per-driver identification
+    stays free (individual deviations from the batch mean are not penalised).  Targets
+    default to the medians of the SUMO driver population (scenarios/idm/driver_routes.rou.xml:
+    normal_car 70 % / aggressive 10 % / cautious 20 % -> every median = the normal_car value):
+    accel 2.6, time headway 1.1 s, decel 4.5, minGap 2.5 m, v0 / speed limit = speedFactor 1.0.
+    Each term is relative: ``((mean - target) / target) ** 2``.  Needs
+    ``curriculum.driver_grad_across_chunks`` (the single t0 encoding).
+    ``target``: "explicit" (default) uses the five values below; "legacy" / "textbook" use
+    the medians of the legacy SUMO population (= the defaults below) / of the c4/popfix
+    textbook population (a 1.2, T 1.2, b 2.0, s0 2.0, speedFactor 1.0) and ignore them.
+    """
+
+    weight: float = 0.0
+    target: Literal["explicit", "legacy", "textbook"] = "explicit"
+    accel: float = 2.6
+    time_headway: float = 1.1
+    decel: float = 4.5
+    min_gap: float = 2.5
+    v0_ratio: float = 1.0
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.driver_prior.weight must be finite and non-negative")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.accel, self.time_headway, self.decel, self.min_gap, self.v0_ratio)),
+            "loss.driver_prior targets must be finite and positive")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0
+
+
+@config_dataclass
 class LossConfig:
     """All loss terms and diagnostics."""
 
@@ -376,6 +429,7 @@ class LossConfig:
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
+    driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -408,11 +462,13 @@ class CurriculumConfig:
     # SCHED (2026-10-14, SCHED_NOTES.md; all default OFF = unchanged loop): validate every
     # horizon <= the stage, multi-horizon checkpoint selection, short mixed-horizon batches.
     val_all_horizons: bool = False
-    selection: Literal["long_horizon", "multi_horizon"] = "long_horizon"
+    selection: Literal["long_horizon", "multi_horizon", "multi_horizon_v2"] = "long_horizon"
     selection_horizons_s: tuple[float, ...] = (10.0, 30.0, 60.0, 120.0)
     selection_reference: tuple[float, ...] = (7.0356, 49.4889, 128.7179, 0.0)
     """Per-horizon reference ``mean_position`` (C4 main WM best val at 10/30/60 s); a value
-    <= 0 normalises by this run's own first validation at that horizon (120 s: none in C4)."""
+    <= 0 normalises by this run's own first validation at that horizon (120 s: none in C4).
+    INFRAV5 ``selection = "multi_horizon_v2"``: a value <= 0 normalises by the best candidate
+    of the final same-horizon comparison instead (never by the run's own first validation)."""
     selection_min_stage_s: float = 30.0
     selection_agg_reward_weight: float = 0.0
     mixed_horizon_frac: float = 0.0
@@ -528,7 +584,8 @@ class TrainConfig:
         if self.model.kind != "structured":
             require(not self.loss.braking.any_on and self.model.residual_cap_neg_mps2 is None,
                     "enabled braking terms require model.kind='structured'")
-        require(not self.loss.lane_hazard_decouple or self.model.lane_model == "hazard",
+        require(not self.loss.lane_hazard_decouple
+                or self.model.lane_model in ("hazard", "hazard_v5"),
                 "loss.lane_hazard_decouple requires model.lane_model='hazard'")
 
     # -- training-time (stricter than construction) ---------------------
@@ -539,6 +596,11 @@ class TrainConfig:
         require(not self.model.has_hard_cap or self.model.allow_rejected_hard_cap,
                 "hard residual caps were REJECTED (change-log #3); "
                 "set model.allow_rejected_hard_cap only to re-score old runs")
+        if self.loss.driver_prior.enabled:
+            require(self.curriculum.driver_grad_across_chunks
+                    and self.model.rollout_mode != "residual",
+                    "loss.driver_prior.weight > 0 requires curriculum.driver_grad_across_chunks "
+                    "and an encoder-driven rollout_mode (driver_params / hybrid)")
         if self.loss.paired_diff.enabled:
             require(any(src.paired for src in self.data.c4_sources),
                     "loss.paired_diff.weight > 0 requires a data.c4_sources entry with paired = true")

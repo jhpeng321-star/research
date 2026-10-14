@@ -61,6 +61,18 @@ def record_hdv_min_speed(record: dict) -> tuple[float, int]:
     return float(speed[valid].min()), n
 
 
+def record_hdv_jam_fraction(record: dict, speed_mps: float) -> float:
+    """INFRAV5: fraction of the recorded HDV observations of a window below ``speed_mps``."""
+    states = np.asarray(record["states"])
+    present = np.asarray(record["present"], dtype=bool)
+    is_cav = record.get("is_cav")
+    hdv = present if is_cav is None else (present & ~np.asarray(is_cav, dtype=bool))
+    speed = states[..., SPEED_FEATURE_INDEX].astype(np.float64)
+    valid = hdv & np.isfinite(speed)
+    n = int(valid.sum())
+    return float((speed[valid] < float(speed_mps)).sum() / n) if n else 0.0
+
+
 def dataset_source_key(dataset: Dataset) -> str:
     """Stable content key of a dataset's window provenance (for the cache)."""
     receipt = getattr(dataset, "receipt", None) or {}
@@ -87,15 +99,20 @@ def _cache_document(speed_mps: float, source_key: str, flags: np.ndarray,
 
 def compute_jam_flags(dataset: Dataset, *, speed_mps: float,
                       cache_path: Optional[str | Path] = None,
-                      source_key: Optional[str] = None) -> dict:
+                      source_key: Optional[str] = None, min_fraction: float = 0.0) -> dict:
     """Per-window jam flags + counts, cached in a sidecar JSON when requested.
 
     Reads one window at a time through the dataset loader (the A11 packs stay
     memory-mapped); a matching cache sidecar is reused without rescanning.
+    ``min_fraction`` (INFRAV5, 0 = legacy any-observation rule) flags a window only when
+    more than that fraction of its HDV observations are below ``speed_mps``.
     """
     speed = float(speed_mps)
     if not math.isfinite(speed) or speed <= 0.0:
         raise JamRefusal("--jam-speed-mps must be finite and positive")
+    min_fraction = float(min_fraction)
+    if not (math.isfinite(min_fraction) and 0.0 <= min_fraction < 1.0):
+        raise JamRefusal("jam min_fraction must be in [0, 1)")
     key = str(source_key) if source_key is not None else dataset_source_key(dataset)
     n = len(dataset)
     cache_file = None if cache_path is None else Path(cache_path)
@@ -104,6 +121,7 @@ def compute_jam_flags(dataset: Dataset, *, speed_mps: float,
         cached = json.loads(cache_file.read_text(encoding="utf-8"))
         if (cached.get("schema") == JAM_SCHEMA
                 and float(cached.get("speed_mps", -1.0)) == speed
+                and float(cached.get("min_fraction", 0.0)) == min_fraction
                 and str(cached.get("source_key")) == key
                 and int(cached.get("n_windows", -1)) == n
                 and len(cached.get("flags") or []) == n):
@@ -121,19 +139,23 @@ def compute_jam_flags(dataset: Dataset, *, speed_mps: float,
         n_hdv_windows = n_hdv_scanned = 0
         min_speed = None
         for i in range(n):
-            window_min, n_hdv = record_hdv_min_speed(dataset[i])
+            record = dataset[i]
+            window_min, n_hdv = record_hdv_min_speed(record)
             n_hdv_windows += int(n_hdv > 0)
             n_hdv_scanned += n_hdv
             if not math.isfinite(window_min):
                 continue
             if min_speed is None or window_min < min_speed:
                 min_speed = window_min
-            if window_min < speed:
+            if window_min < speed and (min_fraction <= 0.0 or record_hdv_jam_fraction(
+                    record, speed) > min_fraction):
                 flags[i] = True
         if cache_file is not None:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             document = _cache_document(speed, key, flags, n_hdv_windows,
                                        n_hdv_scanned, min_speed)
+            if min_fraction > 0.0:
+                document["min_fraction"] = min_fraction
             cache_file.write_text(json.dumps(document, indent=1) + "\n",
                                   encoding="utf-8")
     return {"flags": flags, "n_windows": n, "n_jam": int(flags.sum()),

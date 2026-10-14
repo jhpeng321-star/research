@@ -568,7 +568,8 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--k", type=int, default=192)
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--no-physics-log", action="store_true")
-    ap.add_argument("--cav-exec-cap", choices=("off", "idm"), default=None,
+    ap.add_argument("--cav-exec-cap", choices=("off", "idm", "idm_normal", "idm_normal:textbook",
+                             "idm_normal:legacy"), default=None,
                     help="WM imagination execution cap of commanded CAVs (EXECCAP_NOTES.md); "
                          "default: env WMS_CAV_EXEC_CAP, else off")
     return ap

@@ -402,7 +402,8 @@ def test_final_policy_config_enables_the_cap_and_others_do_not():
     from wms.control.train_cli import _read_config
     repo = Path(__file__).resolve().parents[2]
     final = _read_config(repo / "configs" / "c4_policy_final.toml")
-    assert DreamerConfig(**final["trainer"]).cav_exec_cap == "idm"
+    # INFRAV5: the final policy uses fixed CAV vType settings ("idm_normal:textbook")
+    assert DreamerConfig(**final["trainer"]).cav_exec_cap == "idm_normal:textbook"
     for name in ("c4_policy.toml", "c4_policy_gpuw_p4.toml"):
         path = repo / "configs" / name
         if path.exists():

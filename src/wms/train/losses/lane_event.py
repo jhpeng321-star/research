@@ -17,6 +17,13 @@ Because the recorded state is used (no rollout drift), the loss measures decisio
 TIMING; the rollout lane loss and the flip-rate guard keep acting on the rollout.
 The driver inputs come from ``targets.prepared['lane_event']`` (filled by the unroll
 runner from the same t0 encoding the rollout uses).
+
+LANEV5 (``model.lane_model='hazard_v5'``): the per-transition lane network is scored on EVERY
+recorded step of each window (not only the unroll), with a plain binary cross entropy per
+head (overtake / return / merge) on the rows whose own transition the physics allows outside
+the forced end-of-lane window, summed over the heads (``wms.model.lane_v5.recorded_rows`` /
+``head_bce``; ``gamma`` / ``max_weight`` do not apply).  The accumulators start from the
+pre-t0 history value the rollout uses (``prepared['lane_event']['lane_v5_acc0']``).
 """
 from __future__ import annotations
 
@@ -159,6 +166,8 @@ class LaneEventLoss(UnrollTerm):
 
     def __call__(self, ctx: UnrollContext) -> Optional[TermValue]:
         prep = ctx.targets.prepared.get("lane_event")
+        if prep is not None and getattr(ctx.model, "lane_v5", None) is not None:
+            return self._lane_v5(ctx, prep)
         if prep is None or getattr(ctx.model, "lane_hazard", None) is None:
             return None
         t = ctx.targets
@@ -182,3 +191,56 @@ class LaneEventLoss(UnrollTerm):
                                       gamma=self.gamma, max_weight=self.max_weight)
         self.last_stats = stats
         return TermValue(self.weight * comp, log=comp)
+
+    def _lane_v5(self, ctx: UnrollContext, prep: Mapping[str, Any]) -> TermValue:
+        """LANEV5: per-head plain CE on every recorded step of the batch windows."""
+        from wms.model import lane_v5 as lv5
+
+        model = ctx.model
+        t = ctx.targets
+        states = t.states
+        n_all = int(states.shape[1]) - 1
+        valid = t.loss_valid[:, :n_all + 1].bool()
+        is_cav = t.is_cav[:, :n_all + 1].bool()
+        lanes = states[..., 1:4].argmax(-1)
+        age = recorded_lane_age(lanes, valid, prep["lane_age0"].to(states.dtype), n_all)
+        rows = lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
+                                 age, prep["lane_v5_acc0"])
+        logits = model.lane_v5(rows["features"]).gather(
+            -1, rows["head"].unsqueeze(-1)).squeeze(-1)
+        offsets = tuple(getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+        if any(float(x) != 0.0 for x in offsets):
+            logits = logits + torch.tensor(offsets, dtype=logits.dtype,
+                                           device=logits.device)[rows["head"]]
+        comp, head_stats = lv5.head_bce(logits, rows["head"], rows["label"])
+        self.last_stats = {**rows["stats"], **head_stats, "steps": n_all}
+        return TermValue(self.weight * comp, log=comp)
+
+
+def lane_v5_batch_rows(model: Any, batch: Mapping[str, Any], settings: Any,
+                       device: Optional[torch.device] = None) -> dict:
+    """LANEV5: the teacher-forced rows of one collated batch (every recorded step).
+
+    Exactly the rows / features :class:`LaneEventLoss` scores (same inputs preparation, same
+    pre-t0 initial lane age and accumulators); used by ``tools/lanev5_pretrain.py`` and
+    ``tools/lanehazard_calib.py``.  Returns ``wms.model.lane_v5.recorded_rows`` output.
+    """
+    from wms.model import lane_v5 as lv5
+    from wms.train.inputs import prepare_inputs
+
+    device = device or torch.device("cpu")
+    n_all = int(batch["states"].shape[1]) - 1
+    with torch.no_grad():
+        inp = prepare_inputs(batch, model, settings, device, n_all)
+        kin0 = inp.states[:, 0]
+        age0 = model._initial_lane_age({}, inp.present[:, 0], kin0, inp.observed_hist,
+                                       inp.observed_hist_mask)
+        acc0 = model.initial_lane_v5_acc(inp.present[:, 0], kin0, inp.observed_hist,
+                                         inp.observed_hist_mask)
+        states = inp.states[:, :n_all + 1]
+        valid = inp.loss_valid[:, :n_all + 1].bool()
+        is_cav = inp.is_cav[:, :n_all + 1].bool()
+        lanes = states[..., 1:4].argmax(-1)
+        age = recorded_lane_age(lanes, valid, age0.to(states.dtype), n_all)
+        return lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
+                                 age, acc0)
