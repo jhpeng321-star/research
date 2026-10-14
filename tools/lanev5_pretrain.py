@@ -29,7 +29,9 @@ Over-fit control (all default OFF = the behaviour above):
   GENRAND episodes; every window of an episode goes to the same side, deterministic in
   ``--seed``) is carved out of the TRAIN windows as the early-stopping set (``--es-batches``
   batches, never subsampled); the fit uses the remaining TRAIN windows only.  After every epoch
-  the summed per-head mean log-loss on that set is computed; training stops after
+  the early-stopping loss on that set is computed (``--es-criterion normalised``, default:
+  sum over heads of log-loss / the head's constant-rate log-loss on the same rows, so every
+  head counts equally; ``raw``: the plain summed per-head log-loss); training stops after
   ``--patience`` epochs without improvement (``--min-delta``) and the best epoch's weights are
   restored.  The VAL / CAL / held-out sets are never used; the reported TRAIN-val metrics stay
   on the config's TRAIN-scoped validation windows.
@@ -176,20 +178,34 @@ def set_scaling(net, features: np.ndarray, weight: np.ndarray) -> None:
         net.feature_sd.copy_(torch.as_tensor(sd, dtype=net.feature_sd.dtype))
 
 
-def summed_head_logloss(net, data: dict) -> float:
-    """Sum over heads of the per-head (weighted) mean binary log-loss of ``data``."""
+ES_CRITERIA = ("normalised", "raw")
+
+
+def summed_head_logloss(net, data: dict, criterion: str = "raw") -> float:
+    """Sum over heads of the per-head (weighted) mean binary log-loss of ``data``.
+
+    ``criterion='normalised'``: each head's log-loss is divided by the log-loss of its best
+    constant (its event rate) on the same rows, so every head counts equally (1 = constant)."""
+    if criterion not in ES_CRITERIA:
+        raise ValueError(f"criterion must be one of {ES_CRITERIA}")
     p = predict(net, data["features"], data["head"])
     total = 0.0
     for h in range(len(TRANSITIONS)):
         m = data["head"] == h
         if m.any():
-            total += log_loss(p[m], data["label"][m], data["weight"][m])
+            y, w = data["label"][m], data["weight"][m]
+            value = log_loss(p[m], y, w)
+            if criterion == "normalised":
+                rate = float((w * y).sum() / max(w.sum(), 1e-12))
+                value /= max(log_loss(np.full(int(m.sum()), rate), y, w), 1e-12)
+            total += value
     return float(total)
 
 
 def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 4096,
         log=print, weight_decay: float = 0.0, dropout: float = 0.0,
         early: Optional[dict] = None, patience: int = 3, min_delta: float = 0.0,
+        es_criterion: str = "normalised",
         deadline: Optional[float] = None, report: Optional[dict] = None) -> list[float]:
     """Adam (AdamW when ``weight_decay`` > 0) on the per-head weighted mean binary CE (summed
     over heads), minibatches.  ``early`` (rows) enables early stopping on its summed per-head
@@ -210,7 +226,8 @@ def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 
     n = len(y)
     history = []
     report = report if report is not None else {}
-    report.update({"stop_epoch": 0, "best_epoch": None, "stopped_by": "epochs",
+    report.update({"es_criterion": es_criterion if early is not None else None,
+                   "stop_epoch": 0, "best_epoch": None, "stopped_by": "epochs",
                    "es_logloss": [], "optimizer": "AdamW" if weight_decay > 0.0 else "Adam",
                    "weight_decay": float(weight_decay), "dropout": float(dropout)})
     best_loss, best_state, bad = float("inf"), None, 0
@@ -238,7 +255,7 @@ def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 
         msg = f"  epoch {epoch + 1}/{epochs}: loss {history[-1]:.5f}"
         if early is not None:
             net.eval()
-            es = summed_head_logloss(net, early)
+            es = summed_head_logloss(net, early, es_criterion)
             net.train()
             report["es_logloss"].append(es)
             msg += f" | early-stop log-loss {es:.5f}"
@@ -352,6 +369,9 @@ def main(argv=None) -> int:
     parser.add_argument("--es-batches", type=int, default=10)
     parser.add_argument("--patience", type=int, default=3)
     parser.add_argument("--min-delta", type=float, default=0.0)
+    parser.add_argument("--es-criterion", choices=ES_CRITERIA, default="normalised",
+                        help="early-stopping loss: per-head log-loss / its constant's, summed "
+                             "(normalised, default) or the plain summed log-loss (raw)")
     parser.add_argument("--weight-decay", type=float, default=0.0, help="> 0: AdamW")
     parser.add_argument("--dropout", type=float, default=0.0, help="> 0: trunk dropout")
     parser.add_argument("--max-minutes", type=float, default=0.0, help="> 0: wall budget")
@@ -423,6 +443,7 @@ def main(argv=None) -> int:
     history = fit(net, train, epochs=args.epochs, lr=args.lr, seed=args.seed,
                   weight_decay=args.weight_decay, dropout=args.dropout, early=early,
                   patience=args.patience, min_delta=args.min_delta, deadline=phase(1.0),
+                  es_criterion=args.es_criterion,
                   report=fit_report)
     metrics = {"train_fit": head_metrics(predict(net, train["features"], train["head"]),
                                          train["label"], train["weight"], train["head"]),

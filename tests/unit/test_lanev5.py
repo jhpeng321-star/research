@@ -498,7 +498,9 @@ def test_early_stopping_restores_best_and_budget_stops():
     assert rep["optimizer"] == "Adam" and rep["best_epoch"] <= rep["stop_epoch"]
     if rep["stopped_by"] == "early_stopping":
         assert rep["stop_epoch"] - rep["best_epoch"] == 2
-    assert tool.summed_head_logloss(net, early) == pytest.approx(rep["best_es_logloss"], rel=1e-6)
+    assert rep["es_criterion"] == "normalised"
+    assert tool.summed_head_logloss(net, early, "normalised") == pytest.approx(
+        rep["best_es_logloss"], rel=1e-6)
     assert min(rep["es_logloss"]) == pytest.approx(rep["best_es_logloss"])
     assert net.dropout == 0.0 and not net.training
     rep2 = {}
@@ -506,3 +508,20 @@ def test_early_stopping_restores_best_and_budget_stops():
              deadline=_time.time() - 1, log=lambda *_: None, report=rep2)
     assert rep2["stop_epoch"] == 1 and rep2["stopped_by"] == "max_minutes"
     assert rep2["optimizer"] == "AdamW" and rep2["best_epoch"] is None
+
+
+def test_normalised_criterion_counts_heads_equally():
+    import numpy as np
+    tool = _tool()
+    data = _toy_rows(n=600, seed=2)
+    net = lv5.LaneV5Net()
+    with torch.no_grad():
+        net.heads.weight.zero_()
+    # constant predictor at each head's own rate -> every head scores exactly 1
+    rates = [float(data["label"][data["head"] == h].mean()) for h in range(3)]
+    with torch.no_grad():
+        net.heads.bias.copy_(torch.tensor([float(np.log(r / (1 - r))) for r in rates]))
+    assert tool.summed_head_logloss(net, data, "normalised") == pytest.approx(3.0, rel=1e-3)
+    assert tool.summed_head_logloss(net, data, "raw") != pytest.approx(3.0, rel=1e-3)
+    with pytest.raises(ValueError):
+        tool.summed_head_logloss(net, data, "bogus")
