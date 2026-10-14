@@ -271,6 +271,14 @@ class UnrollRunner:
                            driver_leaves: Optional[_DriverGradLeaves]) -> dict:
         """Driver inputs of the teacher-forced lane-event loss (the t0 encoding)."""
         model = self.model
+        if getattr(model, "lane_v5", None) is not None:
+            # LANEV5: no driver inputs; the pre-t0 lane age and accumulators only.
+            kin0 = inp.states[:, 0]
+            lane_age0 = model._initial_lane_age({}, inp.present[:, 0], kin0, inp.observed_hist,
+                                                inp.observed_hist_mask)
+            return {"lane_age0": lane_age0,
+                    "lane_v5_acc0": model.initial_lane_v5_acc(
+                        inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask)}
         if driver_leaves is not None:
             params, embedding = driver_leaves.chunk_inputs()
         else:

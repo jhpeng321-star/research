@@ -91,7 +91,7 @@ class ModelConfig:
     init_from: Optional[str] = None
     allow_rejected_hard_cap: bool = False
     # --- WMLANE switches (default OFF = bit-identical legacy model) ---------------
-    lane_model: Literal["residual", "hazard"] = "residual"
+    lane_model: Literal["residual", "hazard", "hazard_v5"] = "residual"
     """A: 'hazard' = dedicated per-HDV stay/left/right event model (replaces the residual lane delta)."""
     lane_hazard_hidden: int = 64
     lane_hazard_cap: float = 10.0
@@ -103,8 +103,9 @@ class ModelConfig:
     driver_reveal_max_s: float = 10.0
     """C training: the revealed prefix length is drawn uniformly from (0, driver_reveal_max_s]."""
     # --- LANEFIX switches (2026-10-14, LANEFIX_NOTES.md; default OFF = bit-identical) -------
-    lane_decision: Literal["argmax", "sample"] = "argmax"
-    """Hazard mode: rollout lane decision = argmax, or a seeded draw from the masked categorical."""
+    lane_decision: Literal["argmax", "sample", "gated"] = "argmax"
+    """Hazard mode: rollout lane decision = argmax, or a seeded draw from the masked categorical
+    ('gated', hazard_v5 only: a head samples only if its TRAIN-val AP reaches its gate)."""
     lane_logit_offsets: tuple[float, ...] = (0.0, 0.0, 0.0)
     """Hazard mode: constant logit offsets (overtake 1->0, return 0->1, merge 2->1), calibration."""
     lane_hazard_features: Literal["v1", "v2"] = "v1"
@@ -113,6 +114,13 @@ class ModelConfig:
     """'full': the hazard owns ramp merges from the zone start; physics forces only the last 5 m."""
     gap_stopped_relax: bool = False
     """lane_gap_rule='speed': relaxed gaps (0.5 m, no anticipation) for stopped ramp mergers."""
+    # --- LANEV5 (2026-10-14, LANEV5_NOTES.md; lane_model='hazard_v5' only) -------------------
+    lane_v5_gates: tuple[float, ...] = (0.25, 0.10, 0.5)
+    """lane_decision='gated': minimum TRAIN-val AP per head (overtake, return, merge) to sample."""
+    lane_v5_head_ap: tuple[float, ...] = (-1.0, -1.0, -1.0)
+    """Per-head TRAIN-val AP for the gate (negative = the AP stored in the lane network)."""
+    lane_v5_pretrain: Optional[str] = None
+    """Initialise the lane network from a tools/lanev5_pretrain.py file before training."""
 
     def __post_init__(self) -> None:
         require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
@@ -122,20 +130,28 @@ class ModelConfig:
         require(0.0 <= self.driver_reveal_prob <= 1.0 and is_finite(self.driver_reveal_max_s)
                 and self.driver_reveal_max_s > 0.0,
                 "model.driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
-        if self.lane_model == "hazard" or self.driver_update != "off":
+        if self.lane_model in ("hazard", "hazard_v5") or self.driver_update != "off":
             require(self.rollout_mode in ("driver_params", "hybrid") and self.kind == "structured",
                     "model.lane_model='hazard' / driver_update need a structured "
                     "driver_params or hybrid model")
-        if self.lane_model == "hazard":
+        if self.lane_model in ("hazard", "hazard_v5"):
             require(self.lane_head == "off", "model.lane_model='hazard' requires lane_head='off'")
         require(len(self.lane_logit_offsets) == 3
                 and all(is_finite(x) for x in self.lane_logit_offsets),
                 "model.lane_logit_offsets must be three finite values (overtake, return, merge)")
         if (self.lane_decision != "argmax" or any(float(x) for x in self.lane_logit_offsets)
                 or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
-            require(self.lane_model == "hazard",
+            require(self.lane_model in ("hazard", "hazard_v5"),
                     "model.lane_decision / lane_logit_offsets / lane_hazard_features / "
                     "merge_hazard_zone need model.lane_model='hazard'")
+        require(len(self.lane_v5_gates) == 3 and len(self.lane_v5_head_ap) == 3
+                and all(is_finite(x) for x in (*self.lane_v5_gates, *self.lane_v5_head_ap)),
+                "model.lane_v5_gates / lane_v5_head_ap must be three finite values")
+        if (self.lane_decision == "gated" or self.lane_v5_pretrain is not None
+                or tuple(self.lane_v5_gates) != (0.25, 0.10, 0.5)
+                or tuple(self.lane_v5_head_ap) != (-1.0, -1.0, -1.0)):
+            require(self.lane_model == "hazard_v5",
+                    "model.lane_decision='gated' / lane_v5_* need model.lane_model='hazard_v5'")
         require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
                 "model.gap_stopped_relax requires model.lane_gap_rule='speed'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
@@ -528,7 +544,8 @@ class TrainConfig:
         if self.model.kind != "structured":
             require(not self.loss.braking.any_on and self.model.residual_cap_neg_mps2 is None,
                     "enabled braking terms require model.kind='structured'")
-        require(not self.loss.lane_hazard_decouple or self.model.lane_model == "hazard",
+        require(not self.loss.lane_hazard_decouple
+                or self.model.lane_model in ("hazard", "hazard_v5"),
                 "loss.lane_hazard_decouple requires model.lane_model='hazard'")
 
     # -- training-time (stricter than construction) ---------------------
