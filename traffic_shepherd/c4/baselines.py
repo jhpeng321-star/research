@@ -96,13 +96,20 @@ class RandomAccelPolicy:
 
 
 class ConstantAccelPolicy:
-    def __init__(self, value: float = 0.0):
-        self.value = float(value)
+    """Constant direct command to every live CAV.  ``lane_mode_513=True`` adds a lane head that
+    always answers -1 ("no change"), which puts the CAVs in laneChangeMode 513 exactly like a
+    learned lane-head policy (MAPPO audit 2026-10-14: the trivial "max accel + LC513" arm)."""
 
-    def __call__(self, state):
+    def __init__(self, value: float = 0.0, lane_mode_513: bool = False):
+        self.value = float(value)
+        self.has_lane_head = bool(lane_mode_513)
+
+    def __call__(self, state, with_lanes=False):
         cav = _np(state["is_cav"])[0].astype(bool) & _np(state["present"])[0].astype(bool)
         out = np.full(cav.shape[0], np.nan)
         out[cav] = self.value
+        if with_lanes:
+            return out[None], np.full((1, cav.shape[0]), -1)
         return out[None]
 
 
@@ -176,6 +183,10 @@ def make_policy(spec: str, *, seed: int = 0, loader: str = "wms.control.policy:l
         return RandomAccelPolicy(seed)
     if spec == "zero":
         return ConstantAccelPolicy(0.0)
+    if spec in ("maxaccel_lc513", "maxaccel_sumolc"):
+        # trivial reference arms: ask every CAV for the 2.6 m/s^2 cap (SUMO limits it to normal
+        # driving), with SUMO lane changing off (LC513, as under a lane-head policy) or on.
+        return ConstantAccelPolicy(2.6, lane_mode_513=spec == "maxaccel_lc513")
     from .wms_glue import ensure_wms_importable
     ensure_wms_importable()
     if ":" in spec and not _looks_like_path(spec):
