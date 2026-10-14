@@ -24,7 +24,10 @@ class TripRequest:
     is_cav: bool
 
 
-def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed") -> list[TripRequest]:
+def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed",
+                     cav_vtype: str | None = None) -> list[TripRequest]:
+    """``cav_vtype`` (owner 2026-10-14): CAVs use this single vType (e.g. "normal_car") instead of the
+    driver-type draw; HDV draws are unchanged.  None = legacy (CAVs keep their drawn driver type)."""
     require_development_case(seed, mainline_vph, role)
     if not 1900 <= mainline_vph <= 2800:
         raise ValueError("loading outside declared development family")
@@ -66,18 +69,22 @@ def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: 
                     else "cautious_car"
                 )
                 cav = random.Random(f"damping_cav_v1:{seed}:{identity}").random() < penetration
+                if cav and cav_vtype is not None:
+                    driver = cav_vtype
                 requests.append(TripRequest(identity, round(t, 6), stream + "_route", driver, cav))
                 ordinal += 1
     return sorted(requests, key=lambda r: (r.depart_s, r.vehicle_id))
 
 
 def build_scenario(
-    root: Path, seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed", config=None
+    root: Path, seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed", config=None,
+    cav_vtype: str | None = None,
 ) -> tuple[Path, list[TripRequest], dict]:
     config = config if config is not None else load_config()
     if (config.episode_seconds, config.demand_end_seconds, config.ramp_vph) != (2400, 1800, 400):
         raise ValueError("configuration differs from the tested explicit demand fixture")
-    requests = request_schedule(seed, mainline_vph, role=role, penetration=penetration)
+    requests = request_schedule(seed, mainline_vph, role=role, penetration=penetration,
+                                cav_vtype=cav_vtype)
     template = config.scenario_template_path
     original = ET.parse(template).getroot()
     route = ET.Element("routes")
@@ -136,6 +143,7 @@ def build_scenario(
             json.dumps([asdict(r) for r in requests], sort_keys=True).encode()
         ).hexdigest(),
         "assignment": "fixed_explicit_driver_type_and_cav_identity_no_runtime_type_change",
+        "cav_vtype": cav_vtype,
     }
     return scene_path, requests, manifest
 

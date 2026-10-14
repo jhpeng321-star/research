@@ -7,9 +7,10 @@ CAV speedMode 27 (the campaign mode, ``CommandOwnership(cav_speed_mode=27)``), C
 acceleration bounds [-3, 1.5] m/s^2 from the adapter config for damping / PI / wall; ``direct``
 commands use the upper bound ``direct_accel_max_mps2`` (default 3.0 = the largest SUMO driver
 accel; ACCELCAP_NOTES.md) so a policy's own stored cap (legacy 1.5, new 2.6) is what binds.
-CAVs keep their driver vType (no CAV-only vType), so under speedMode 27 (bit 1 = respect the
-vType max acceleration) SUMO itself caps a CAV at its type's accel (cautious 2.0, normal 2.6,
-aggressive 3.0).
+Owner 2026-10-14: every CAV uses the single "normal_car" vType (``cav_vtype``, default
+CAV_VTYPE; also when released to native) -- a CAV has no driver personality.  Under speedMode 27
+(bit 1 = respect the vType max acceleration) SUMO caps a CAV at that type's accel (2.6).
+``cav_vtype=None`` restores the legacy behaviour (CAVs keep their drawn driver type).
 
 Every CAV command goes through :class:`traffic_shepherd.ownership.CommandOwnership`
 (``wall_commands={vid: accel}`` -> ``direct_target`` -> ``slowDown``), the sole
@@ -81,6 +82,9 @@ PI_U_MPS = 31.29
 DEFAULT_K = 192
 #: Upper bound of DIRECT commands (wms.control.contract.DIRECT_ACCEL_MAX_MPS2; ACCELCAP_NOTES.md).
 DIRECT_ACCEL_MAX_MPS2 = 3.0
+#: Owner 2026-10-14: a CAV has no driver personality -- every CAV uses the "normal_car" vType (also
+#: when released to native).  None = legacy (CAVs keep their drawn aggressive/normal/cautious type).
+CAV_VTYPE = "normal_car"
 
 
 class CavEnvError(RuntimeError):
@@ -96,7 +100,8 @@ class CavSumoEnv:
                  ttc: bool = True, sumo_binary=None, device="cpu",
                  sensor_check_every_s: int = 10, physics_log: bool = True,
                  extra_sumo_cli=None, entry_queue_in_state: bool = False,
-                 direct_accel_max_mps2: float = DIRECT_ACCEL_MAX_MPS2):
+                 direct_accel_max_mps2: float = DIRECT_ACCEL_MAX_MPS2,
+                 cav_vtype: str | None = CAV_VTYPE):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -119,6 +124,9 @@ class CavSumoEnv:
         self.entry_queue_in_state = bool(entry_queue_in_state)
         # Direct-output upper bound (the policy's stored cap binds first; damping/PI/wall keep 1.5).
         self.direct_accel_max_mps2 = float(direct_accel_max_mps2)
+        if cav_vtype not in (None, "normal_car", "aggressive_car", "cautious_car"):
+            raise ValueError(f"cav_vtype must be None or a scenario vType, got {cav_vtype!r}")
+        self.cav_vtype = cav_vtype
         if not 0.0 < self.direct_accel_max_mps2 <= DIRECT_ACCEL_MAX_MPS2:
             raise ValueError(f"direct_accel_max_mps2 must be in (0, {DIRECT_ACCEL_MAX_MPS2}]")
         self.last_entry_queue_steps: list = []
@@ -172,7 +180,7 @@ class CavSumoEnv:
                                                dir=self.scenario_root))
         scene, requests, scenario_manifest = build_scenario(
             scene_root, self.seed, self.demand, penetration=self.penetration, role="exposed",
-            config=self.config)
+            config=self.config, cav_vtype=self.cav_vtype)
         self.requests = requests
         self.cav_ids = frozenset(r.vehicle_id for r in requests if r.is_cav)
         self.scenario_manifest = scenario_manifest

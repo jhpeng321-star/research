@@ -76,7 +76,9 @@ def _worker_env(opts: dict):
             extra = SAVE_STATE_CLI          # same launch command with and without branches
         _ENV = CavSumoEnv(k_slots=opts["k"], check_parity=opts["check_parity"],
                           ttc=not opts["no_ttc"], physics_log=not opts["no_physics_log"],
-                          extra_sumo_cli=extra)
+                          extra_sumo_cli=extra,
+                          cav_vtype=None if opts.get("cav_vtype", "normal_car") == "legacy"
+                          else opts.get("cav_vtype", "normal_car"))
     return _ENV
 
 
@@ -161,7 +163,8 @@ def plan_jobs(args) -> list[dict]:
                 branch_horizon=getattr(args, "branch_horizon", 60),
                 no_branch_native=getattr(args, "no_branch_native", False),
                 branch_repeat_check=getattr(args, "branch_repeat_check", 0),
-                gr_mode=getattr(args, "gr_mode", "speed"))
+                gr_mode=getattr(args, "gr_mode", "speed"),
+                cav_vtype=getattr(args, "cav_vtype", "normal_car"))
     if opts["branch_cadence"] and args.policy != "generic_random":
         raise SystemExit("--branch-cadence is only supported with --policy generic_random")
     jobs = []
@@ -252,6 +255,8 @@ def main(argv=None) -> int:
     ap.add_argument("--check-parity", action="store_true",
                     help="per-step RSU-cell and sensor parity checks (slower)")
     ap.add_argument("--no-ttc", action="store_true")
+    ap.add_argument("--cav-vtype", default="normal_car",
+                    help="vType of every CAV (owner 2026-10-14: normal_car); 'legacy' = drawn driver type")
     ap.add_argument("--no-physics-log", action="store_true",
                     help="skip run/physics_steps.jsonl.gz (episode.npz is always written)")
     ap.add_argument("--case-plan", choices=("product", "weighted-cycle"), default="product",
