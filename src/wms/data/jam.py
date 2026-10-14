@@ -102,7 +102,9 @@ _SCAN_STATE: dict = {}
 
 def _scan_one(i: int) -> tuple[float, int, float]:
     dataset, speed, min_fraction = _SCAN_STATE["args"]
-    record = dataset[i]
+    loader = getattr(dataset, "_loader", None)
+    fast = getattr(loader, "jam_view", None)
+    record = fast(i) if callable(fast) else dataset[i]
     window_min, n_hdv = record_hdv_min_speed(record)
     frac = 0.0
     if math.isfinite(window_min) and window_min < speed and min_fraction > 0.0:

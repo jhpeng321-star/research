@@ -454,6 +454,20 @@ class C4WindowLoader:
         held = alive[0:2 * ctrl.shape[0]:2]
         return event_steps(ctrl, held[1:] & held[:-1])
 
+    def jam_view(self, index: int) -> dict:
+        """Cheap ``{states, present, is_cav}`` for the jam scan (``wms.data.jam``): the recorded
+        speeds ``veh_kin[..., 4]`` at state index 4 and the alive mask, without the history,
+        timeline or junction rows of :meth:`__call__` (junction-fix rows may differ slightly)."""
+        e, tick = self.index[index]
+        ep = self.episode(e)
+        h = self.horizon
+        kin = np.asarray(ep.array("veh_kin")[tick:tick + h + 1], np.float32)
+        alive = self.alive(ep, tick)
+        states = np.zeros(kin.shape[:2] + (5,), np.float32)
+        states[..., 4] = kin[..., 4]
+        is_cav = np.broadcast_to(np.asarray(ep.array("is_cav")[tick], bool), alive.shape) & alive
+        return {"states": states, "present": alive, "is_cav": is_cav}
+
     def __call__(self, index: int) -> dict:
         from wms.data.pack_history import entry_features, prior_history
 
