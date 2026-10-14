@@ -359,6 +359,43 @@ class PairedDiffLossConfig:
 
 
 @config_dataclass
+class DriverPriorConfig:
+    """INFRAV5 optional driver-estimate prior (weight 0 = off; owner decision pending).
+
+    A weak L2 pull of the POPULATION MEAN of the encoded driver settings (mean over the
+    valid t0 HDV slots of the batch) toward population targets; per-driver identification
+    stays free (individual deviations from the batch mean are not penalised).  Targets
+    default to the medians of the SUMO driver population (scenarios/idm/driver_routes.rou.xml:
+    normal_car 70 % / aggressive 10 % / cautious 20 % -> every median = the normal_car value):
+    accel 2.6, time headway 1.1 s, decel 4.5, minGap 2.5 m, v0 / speed limit = speedFactor 1.0.
+    Each term is relative: ``((mean - target) / target) ** 2``.  Needs
+    ``curriculum.driver_grad_across_chunks`` (the single t0 encoding).
+    ``target``: "explicit" (default) uses the five values below; "legacy" / "textbook" use
+    the medians of the legacy SUMO population (= the defaults below) / of the c4/popfix
+    textbook population (a 1.2, T 1.2, b 2.0, s0 2.0, speedFactor 1.0) and ignore them.
+    """
+
+    weight: float = 0.0
+    target: Literal["explicit", "legacy", "textbook"] = "explicit"
+    accel: float = 2.6
+    time_headway: float = 1.1
+    decel: float = 4.5
+    min_gap: float = 2.5
+    v0_ratio: float = 1.0
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.driver_prior.weight must be finite and non-negative")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.accel, self.time_headway, self.decel, self.min_gap, self.v0_ratio)),
+            "loss.driver_prior targets must be finite and positive")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0
+
+
+@config_dataclass
 class LossConfig:
     """All loss terms and diagnostics."""
 
@@ -376,6 +413,7 @@ class LossConfig:
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
+    driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -408,11 +446,13 @@ class CurriculumConfig:
     # SCHED (2026-10-14, SCHED_NOTES.md; all default OFF = unchanged loop): validate every
     # horizon <= the stage, multi-horizon checkpoint selection, short mixed-horizon batches.
     val_all_horizons: bool = False
-    selection: Literal["long_horizon", "multi_horizon"] = "long_horizon"
+    selection: Literal["long_horizon", "multi_horizon", "multi_horizon_v2"] = "long_horizon"
     selection_horizons_s: tuple[float, ...] = (10.0, 30.0, 60.0, 120.0)
     selection_reference: tuple[float, ...] = (7.0356, 49.4889, 128.7179, 0.0)
     """Per-horizon reference ``mean_position`` (C4 main WM best val at 10/30/60 s); a value
-    <= 0 normalises by this run's own first validation at that horizon (120 s: none in C4)."""
+    <= 0 normalises by this run's own first validation at that horizon (120 s: none in C4).
+    INFRAV5 ``selection = "multi_horizon_v2"``: a value <= 0 normalises by the best candidate
+    of the final same-horizon comparison instead (never by the run's own first validation)."""
     selection_min_stage_s: float = 30.0
     selection_agg_reward_weight: float = 0.0
     mixed_horizon_frac: float = 0.0
@@ -539,6 +579,11 @@ class TrainConfig:
         require(not self.model.has_hard_cap or self.model.allow_rejected_hard_cap,
                 "hard residual caps were REJECTED (change-log #3); "
                 "set model.allow_rejected_hard_cap only to re-score old runs")
+        if self.loss.driver_prior.enabled:
+            require(self.curriculum.driver_grad_across_chunks
+                    and self.model.rollout_mode != "residual",
+                    "loss.driver_prior.weight > 0 requires curriculum.driver_grad_across_chunks "
+                    "and an encoder-driven rollout_mode (driver_params / hybrid)")
         if self.loss.paired_diff.enabled:
             require(any(src.paired for src in self.data.c4_sources),
                     "loss.paired_diff.weight > 0 requires a data.c4_sources entry with paired = true")

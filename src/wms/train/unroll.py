@@ -23,6 +23,7 @@ from .diagnostics import GradientShares, driver_param_stats
 from .inputs import UnrollInputs, build_targets, prepare_inputs
 from .losses.base import LossContext, TermValue, UnrollContext, UnrollTargets
 from .losses.compose import LossComposer, hybrid_residual_weight
+from .losses.driver_prior import driver_prior_loss, prior_mask, prior_targets
 from .settings import TrainSettings
 
 #: Chunk-term names that always appear in the log record (zero until first added).
@@ -159,6 +160,10 @@ class UnrollRunner:
             parameters = parameters + driver_leaves.leaf_parameters
         if "lane_event" in self.composer.names:
             targets.prepared["lane_event"] = self._lane_event_inputs(inp, driver_leaves)
+        # INFRAV5 (weight 0 = never evaluated): population-mean driver-settings prior.
+        prior = (self._driver_prior(inp, driver_leaves, backward=backward)
+                 if float(getattr(cfg, "driver_prior_weight", 0.0)) > 0.0
+                 and driver_leaves is not None else None)
         # WMLANE C (training only): teacher-observed prefixes train the driver update.
         reveal = (self._reveal_mask(inp) if backward
                   and float(getattr(cfg, "driver_reveal_prob", 0.0)) > 0.0 else None)
@@ -263,9 +268,46 @@ class UnrollRunner:
         record = self._finish(inp, targets, acc, conservation, shares, n_chunks,
                               backward=backward, share=share, measure=measure,
                               rate_reference=rate_reference)
+        if prior is not None:
+            self._apply_driver_prior(prior, driver_leaves, record)
         if backward and driver_leaves is not None:
             driver_leaves.backward_through_encoder()
         return record
+
+    def _driver_prior(self, inp: UnrollInputs, leaves: "_DriverGradLeaves", *,
+                      backward: bool) -> dict:
+        """INFRAV5 prior on the t0 encoding: value, batch means and (training) its leaf grad.
+
+        The gradient is taken w.r.t. the encoder-output leaf and added to the chunk gradients
+        before the single push through the encoder graph, so it reaches only the encoder."""
+        cfg = self.settings
+        leaf = leaves.values_leaf
+        values = leaf if leaf is not None else leaves.values.detach()
+        mask = prior_mask(inp.present[:, 0], inp.is_cav[:, 0], inp.observed_hist_mask)
+        value, means = driver_prior_loss(
+            values, mask, prior_targets(cfg), weight=float(cfg.driver_prior_weight),
+            speed_limit_mps=float(self.model.physics.speed_limit_mps))
+        grad = None
+        if backward and leaf is not None and value.requires_grad:
+            (grad,) = torch.autograd.grad(value, leaf)
+        return {"value": float(value.detach()), "means": means, "grad": grad}
+
+    @staticmethod
+    def _apply_driver_prior(prior: dict, leaves: "_DriverGradLeaves", record: dict) -> None:
+        """Log the prior (added to ``loss``) and accumulate its gradient into the leaf."""
+        record["driver_prior"] = prior["value"]
+        record["driver_prior_means"] = prior["means"]
+        record["loss"] = float(record["loss"]) + prior["value"]
+        grad = prior["grad"]
+        if grad is None:
+            return
+        leaf = leaves.values_leaf
+        total = grad if leaf.grad is None else leaf.grad + grad
+        total_norm = float(total.norm())
+        # share of the prior in the gradient arriving at the encoder output (t0 settings)
+        record["driver_prior_grad_share"] = (float(grad.norm()) / total_norm
+                                             if total_norm > 0.0 else 0.0)
+        leaf.grad = total
 
     def _lane_event_inputs(self, inp: UnrollInputs,
                            driver_leaves: Optional[_DriverGradLeaves]) -> dict:

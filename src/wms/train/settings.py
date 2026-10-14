@@ -19,6 +19,8 @@ LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 LANE_GAP_RULES = ("fixed", "speed")
 JUNCTION_FIX_MODES = ("off", "ffill")
 CONTROLLER_HYGIENE_MODES = ("off", "strict")
+#: Checkpoint-selection policies (SCHED multi_horizon; INFRAV5 multi_horizon_v2).
+SELECTION_MODES = ("long_horizon", "multi_horizon", "multi_horizon_v2")
 HARD_CAP_FIELDS = ("residual_cap_mps2", "residual_cap_neg_mps2")
 
 
@@ -184,6 +186,16 @@ class TrainSettings:
     paired_diff_position_weight: float = 1.0
     paired_diff_speed_weight: float = 1.0
     paired_diff_aggregate_weight: float = 1.0
+    # INFRAV5 (2026-10-14, default OFF): driver-estimate prior on the batch-mean encoded
+    # settings (loss.driver_prior; 0 = off) and the same-horizon checkpoint selection
+    # (selection_mode "multi_horizon_v2").
+    driver_prior_weight: float = 0.0
+    driver_prior_target: str = "explicit"
+    driver_prior_accel: float = 2.6
+    driver_prior_time_headway: float = 1.1
+    driver_prior_decel: float = 4.5
+    driver_prior_min_gap: float = 2.5
+    driver_prior_v0_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         _require(bool(self.unroll_curriculum_s)
@@ -311,8 +323,24 @@ class TrainSettings:
                       or self.merge_hazard_zone != "forced_late" or self.lane_hazard_decouple)
         _require(not lanefix_on or self.lane_model == "hazard",
                  "LANEFIX lane switches require lane_model='hazard'")
-        _require(self.selection_mode in ("long_horizon", "multi_horizon"),
-                 "selection_mode must be long_horizon or multi_horizon")
+        _require(self.selection_mode in SELECTION_MODES,
+                 f"selection_mode must be one of {SELECTION_MODES}")
+        _require(self.selection_mode != "multi_horizon_v2" or self.val_all_horizons,
+                 "selection_mode multi_horizon_v2 requires val_all_horizons (every candidate "
+                 "is compared on the same horizon set)")
+        _require(math.isfinite(float(self.driver_prior_weight))
+                 and float(self.driver_prior_weight) >= 0.0
+                 and all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+                     self.driver_prior_accel, self.driver_prior_time_headway,
+                     self.driver_prior_decel, self.driver_prior_min_gap,
+                     self.driver_prior_v0_ratio)),
+                 "driver_prior weight must be >= 0 and its targets positive")
+        _require(self.driver_prior_target in ("explicit", "legacy", "textbook"),
+                 "driver_prior_target must be explicit, legacy or textbook")
+        _require(not float(self.driver_prior_weight) or (
+            self.driver_grad_across_chunks and self.rollout_mode != "residual"),
+            "driver_prior_weight > 0 requires driver_grad_across_chunks and an "
+            "encoder-driven rollout_mode")
         _require((not self.val_all_horizons and self.selection_mode == "long_horizon")
                  or self.select_by_long_horizon,
                  "val_all_horizons / multi_horizon selection require select_by_long_horizon "

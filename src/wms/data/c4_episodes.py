@@ -602,7 +602,8 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
     return {"train": train, "train_events": events, "val": val, "receipt": receipt}
 
 
-def add_c4_source(train, val, c4: dict, *, mix_ratio: float, jam_speed_mps: float = 5.0):
+def add_c4_source(train, val, c4: dict, *, mix_ratio: float, jam_speed_mps: float = 5.0,
+                  jam_min_fraction: float = 0.0):
     """Mix the C4 source into the assembled ``(train, val)`` datasets.
 
     The C4 source gets the sampling share ``mix_ratio``; the existing sources keep their
@@ -633,7 +634,8 @@ def add_c4_source(train, val, c4: dict, *, mix_ratio: float, jam_speed_mps: floa
         event_oversample, jam_oversample = 1.0, 1.0
     c4_jam = None
     if jam_oversample > 1.0:
-        c4_jam = jamdata.compute_jam_flags(c4["train"], speed_mps=float(jam_speed_mps))["flags"]
+        c4_jam = jamdata.compute_jam_flags(c4["train"], speed_mps=float(jam_speed_mps),
+                                           min_fraction=float(jam_min_fraction))["flags"]
     mixed = MixedTrajectoryDataset(
         base + [MixSource("c4_episodes", c4["train"], share=ratio, events=c4["train_events"],
                           jam=c4_jam)],
