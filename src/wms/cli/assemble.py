@@ -253,7 +253,7 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             train, switch, switch_ratio=float(sw.mix_ratio),
             event_oversample=float(sw.event_oversample), orig_val=val,
             jam_oversample=float(data.jam.oversample), jam_speed_mps=float(data.jam.speed_mps),
-            jam_cache_dir=(data.jam.cache_dir or out_dir))
+            jam_cache_dir=(data.jam.cache_dir or out_dir), **_jam_min(data))
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
         mixed = True
     if not mixed and float(data.jam.oversample) > 1.0:
@@ -262,7 +262,7 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         report = jam.compute_jam_flags(
             train, speed_mps=float(data.jam.speed_mps),
             cache_path=os.path.join(data.jam.cache_dir or out_dir, "jam_original.json"),
-            source_key=jam.dataset_source_key(train))
+            source_key=jam.dataset_source_key(train), **_jam_min(data, key="min_fraction"))
         report["oversample"] = float(data.jam.oversample)
         train = jam.JamOversampledDataset(train, report["flags"],
                                           oversample=float(data.jam.oversample), report=report)
@@ -281,7 +281,7 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         if not c4.use_val:
             source["val"] = None
         train, val = add_c4_source(train, val, source, mix_ratio=float(c4.mix_ratio),
-                                   jam_speed_mps=float(data.jam.speed_mps))
+                                   jam_speed_mps=float(data.jam.speed_mps), **_jam_min(data))
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
         print(f"c4_episodes train {len(source['train'])} windows, val "
               f"{0 if source['val'] is None else len(source['val'])} windows, "
@@ -290,6 +290,12 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         train, val = _add_c4_sources(cfg, train, val, path, horizon=horizon, pack_k=pack_k,
                                      heldout=heldout, curriculum=curriculum)
     return train, val, resolved
+
+
+def _jam_min(data: Any, key: str = "jam_min_fraction") -> dict:
+    """INFRAV5 ``data.jam.min_fraction`` kwarg, omitted at its legacy value 0 (unchanged calls)."""
+    value = float(getattr(data.jam, "min_fraction", 0.0))
+    return {key: value} if value > 0.0 else {}
 
 
 def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str], str], *,
@@ -326,7 +332,8 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
         print(f"c4_sources[{src.name}] train {len(built['train'])} windows, val "
               f"{0 if built['val'] is None else len(built['val'])} windows, "
               f"mix_ratio {float(src.mix_ratio)}", file=sys.stderr)
-    train, val = add_c4_sources(train, val, mixed, jam_speed_mps=float(data.jam.speed_mps))
+    train, val = add_c4_sources(train, val, mixed, jam_speed_mps=float(data.jam.speed_mps),
+                                **_jam_min(data))
     if hasattr(train, "describe_stages"):
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
     train.receipt["c4_world_split"] = {"n_worlds": len(roles),

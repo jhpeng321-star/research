@@ -234,7 +234,7 @@ class PairedBatchDataset(Dataset):
 
 
 def add_c4_sources(train, val, sources: Sequence[tuple[str, dict, float]], *,
-                   jam_speed_mps: float = 5.0):
+                   jam_speed_mps: float = 5.0, jam_min_fraction: float = 0.0):
     """Mix several C4 sources ``(name, build_c4_datasets(...), mix_ratio)`` into ``(train, val)``.
 
     Each source gets its sampling share ``mix_ratio``; the existing sources keep their relative
@@ -271,7 +271,8 @@ def add_c4_sources(train, val, sources: Sequence[tuple[str, dict, float]], *,
     for name, src, ratio in sources:
         jam = None
         if jam_oversample > 1.0:
-            jam = jamdata.compute_jam_flags(src["train"], speed_mps=float(jam_speed_mps))["flags"]
+            jam = jamdata.compute_jam_flags(src["train"], speed_mps=float(jam_speed_mps),
+                                            min_fraction=float(jam_min_fraction))["flags"]
         added.append(MixSource(name, src["train"], share=ratio, events=src["train_events"],
                                jam=jam))
     mixed = MixedTrajectoryDataset(base + added, event_oversample=event_oversample,

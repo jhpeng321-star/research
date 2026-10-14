@@ -95,10 +95,17 @@ class JamConfig:
     oversample: float = 1.0
     speed_mps: float = 5.0
     cache_dir: Optional[str] = None
+    #: INFRAV5: a window is a jam window when MORE than this fraction of its recorded HDV
+    #: observations are below ``speed_mps``.  0 (default) = legacy rule: any single HDV
+    #: observation below ``speed_mps`` (flags ~97 % of the native pack windows -- ramp
+    #: mergers stopping at the end of the acceleration lane -- so oversampling is ~a no-op).
+    min_fraction: float = 0.0
 
     def __post_init__(self) -> None:
         require(is_finite(self.oversample) and self.oversample >= 1.0,
                 "data.jam.oversample must be >= 1")
+        require(is_finite(self.min_fraction) and 0.0 <= self.min_fraction < 1.0,
+                "data.jam.min_fraction must be in [0, 1)")
         require(is_finite(self.speed_mps) and self.speed_mps > 0.0,
                 "data.jam.speed_mps must be positive")
 

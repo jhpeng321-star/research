@@ -845,6 +845,8 @@ class WmSModel(nn.Module):
         the supplied ``driver_params``, else those encoded in this forward, else defaults.
         """
         mode = cav_motion.check_exec_cap_mode(self.cav_exec_cap)
+        if mode.startswith("idm_normal"):
+            return self._exec_cap_normal(state, cav_motion.exec_cap_settings(mode))
         if mode != "idm":
             raise ValueError(f"unsupported cav_exec_cap {mode!r}")
         params = driver_params
@@ -858,6 +860,28 @@ class WmSModel(nn.Module):
             v0, accel_limit = params["v0"], params["accel"]
         return cav_motion.exec_accel_cap(physics, state["v_mps"].to(physics.dtype),
                                          self.physics.dt_s, v0, accel_limit)
+
+    def _exec_cap_normal(self, state: dict, normal: Mapping[str, float]) -> Tensor:
+        """INFRAV5 ``cav_exec_cap="idm_normal[:<table>]"``: the EXECCAP ceiling with fixed,
+        operator-known CAV settings ``normal`` (``cav.CAV_SETTINGS_TABLES``: textbook
+        ``cav_typical`` a 1.2 / b 2.0 / tau 1.2 / s0 2.0, or legacy ``normal_car`` a 2.6 / b 4.5 /
+        tau 1.1 / s0 2.5; v0 = speedFactor x speed limit) on every slot instead of the
+        WM-inferred ones (only commanded CAV slots ever use it).  Same physics-core IDM
+        (leader search, accel-lane-end obstacle, plant bounds)."""
+        if self.physics_step is not None:
+            raise ValueError("cav_exec_cap='idm_normal' needs the in-module physics core")
+        kin = state_kin(state).float()
+        b, slots = kin.shape[:2]
+        values = self._default_driver_parameters(kin, b, slots)
+        params = {name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)}
+        v0 = float(self.physics.speed_limit_mps) * float(normal["speed_factor"])
+        for name, value in (("v0", v0), ("time_headway", normal["time_headway"]),
+                            ("min_gap", normal["min_gap"]), ("accel", normal["accel"]),
+                            ("decel", normal["decel"])):
+            params[name] = torch.full_like(params[name], float(value))
+        physics = self.physics_accel({**state, "veh_kin": kin}, params)
+        return cav_motion.exec_accel_cap(physics, state["v_mps"].to(physics.dtype),
+                                         self.physics.dt_s, v0, float(normal["accel"]))
 
     def _apply_direct_commands(self, out: dict, direct: Tensor, s: Tensor, v: Tensor,
                                next_s: Tensor, next_v: Tensor,

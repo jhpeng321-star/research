@@ -206,7 +206,7 @@ class RsuChecker:
                              "(the paired LCB then runs over the WM ensemble members)")
         self.world_models = list(world_models)
         # EXECCAP_NOTES.md: None keeps each model's own runtime switch (load_backend: env
-        # WMS_CAV_EXEC_CAP); "off"/"idm" forces it for this checker's rollouts.
+        # WMS_CAV_EXEC_CAP); "off"/"idm"/"idm_normal" forces it for this checker's rollouts.
         if cav_exec_cap is not None:
             from wms.model.cav import check_exec_cap_mode
             cav_exec_cap = check_exec_cap_mode(cav_exec_cap)

@@ -148,6 +148,14 @@ FLAT_TO_PATH: dict[str, str] = {
     "paired_diff_position_weight": "loss.paired_diff.position_weight",
     "paired_diff_speed_weight": "loss.paired_diff.speed_weight",
     "paired_diff_aggregate_weight": "loss.paired_diff.aggregate_weight",
+    # INFRAV5 (optional driver-estimate prior on the batch-mean encoded settings)
+    "driver_prior_weight": "loss.driver_prior.weight",
+    "driver_prior_target": "loss.driver_prior.target",
+    "driver_prior_accel": "loss.driver_prior.accel",
+    "driver_prior_time_headway": "loss.driver_prior.time_headway",
+    "driver_prior_decel": "loss.driver_prior.decel",
+    "driver_prior_min_gap": "loss.driver_prior.min_gap",
+    "driver_prior_v0_ratio": "loss.driver_prior.v0_ratio",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -179,6 +187,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "mixed_horizon_s", "mixed_horizon_min_stage_s",
     "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
     "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
+    # INFRAV5
+    "driver_prior_weight", "driver_prior_target", "driver_prior_accel", "driver_prior_time_headway",
+    "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
 )
 
 
