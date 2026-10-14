@@ -1,0 +1,22 @@
+# WM-S-C4 v4 continuation (2026-10-14): v4 hit max_hours 8.5 inside its 60 s stage (gpuW slower than the
+# 5.9 h estimate: ~6.7 s/step in the 30 s stage). Finish the planned schedule from v4's last checkpoint:
+# model.init_from = ckpt_v4 (WMS_DATA_CKPT_V4 -> the v4 run's wm_s.pt), remaining 60 s steps + the 120 s
+# stage, same recipe/data/selection; the 10/30 s stages are not repeated. One run, not a new recipe.
+schema_version = 2
+name = "WM-S-C4-V4-CONT"
+extends = "c4_wm_v4.toml"
+
+[model]
+init_from = "ckpt_v4"
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [400, 160]
+truncation_steps_per_stage = [120, 120]
+max_hours = 4.0
+
+[optim]
+lr_per_stage = [1.0e-4, 1.0e-4]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v4_cont"
