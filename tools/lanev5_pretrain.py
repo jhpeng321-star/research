@@ -29,7 +29,7 @@ Over-fit control (all default OFF = the behaviour above):
   GENRAND episodes; every window of an episode goes to the same side, deterministic in
   ``--seed``) is carved out of the TRAIN windows as the early-stopping set (``--es-batches``
   batches, never subsampled); the fit uses the remaining TRAIN windows only.  After every epoch
-  the early-stopping loss on that set is computed (``--es-criterion normalised``, default:
+  the early-stopping loss on that set is computed (``--es-criterion normalised``, CLI default raw since 2026-10-14 integrator:
   sum over heads of log-loss / the head's constant-rate log-loss on the same rows, so every
   head counts equally; ``raw``: the plain summed per-head log-loss); training stops after
   ``--patience`` epochs without improvement (``--min-delta``) and the best epoch's weights are
@@ -369,7 +369,7 @@ def main(argv=None) -> int:
     parser.add_argument("--es-batches", type=int, default=10)
     parser.add_argument("--patience", type=int, default=3)
     parser.add_argument("--min-delta", type=float, default=0.0)
-    parser.add_argument("--es-criterion", choices=ES_CRITERIA, default="normalised",
+    parser.add_argument("--es-criterion", choices=ES_CRITERIA, default="raw",
                         help="early-stopping loss: per-head log-loss / its constant's, summed "
                              "(normalised, default) or the plain summed log-loss (raw)")
     parser.add_argument("--weight-decay", type=float, default=0.0, help="> 0: AdamW")
