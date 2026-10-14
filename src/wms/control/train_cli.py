@@ -28,7 +28,8 @@ def _read_config(path, seen=()):
     from wms.config.schema import deep_merge
 
     path = checked_path(path)
-    if path in seen or len(seen) >= 8:
+    # Same depth cap as wms.config.load (16).  POLICYV5: was 8, which refused c4_wm_v5.toml (9 levels).
+    if path in seen or len(seen) >= 16:
         raise ValueError("configuration inheritance cycle/depth exceeded")
     raw = load(path)
     parent = raw.pop("extends", None)
@@ -111,6 +112,28 @@ def _load_starts(data, models, seed, entries=False):
     def path(name):
         return str(checked_path(resolve(name)))
 
+    history_specs = {(getattr(model, "history_s", None), getattr(model, "history_stride_s", 1.0))
+                     for model in models}
+    if len(history_specs) != 1:
+        raise ValueError("ensemble members must use the same observed-history specification")
+    history_s, history_stride_s = history_specs.pop()
+    split_kwargs = dict(
+        val_fraction=float(data.get("val_fraction", 0.1)), seed=seed,
+        excluded_penetrations=tuple(data.get("excluded_penetrations", [])),
+        relabel=bool(data.get("relabel_cavs", False)),
+        target_penetration=float(data.get("target_penetration", 0.2)))
+    if getattr(spec, "c4_base", None) is not None:
+        # POLICYV5 (V5DATA WM config): TRAIN-world windows of the C4 sources, no packs, no jam
+        # scan (wms.control.c4_starts).  Legacy configs (c4_base unset) take the pack path below.
+        from .c4_starts import build_c4_start_windows
+        sources = data.get("start_sources")
+        dataset = build_c4_start_windows(
+            spec, path, history_s=history_s, history_stride_s=history_stride_s,
+            entries=bool(entries), sources=None if sources is None else list(sources))
+        return split_start_states(dataset, **split_kwargs)
+    if data.get("start_sources") is not None:
+        raise ValueError("[data] start_sources needs a WM config with data.c4_base")
+
     roles = list(spec.packs)
     packs = [path(spec.packs[role]) for role in roles]
     identities = [path(spec.sidecars.identities[role]) for role in roles]
@@ -122,11 +145,6 @@ def _load_starts(data, models, seed, entries=False):
     exclude = [path(name) for name in spec.windows.exclude] or None
     configure_train_sidecars(outcomes=path(spec.sidecars.outcomes) if spec.sidecars.outcomes else None,
                             identities=identities[0])
-    history_specs = {(getattr(model, "history_s", None), getattr(model, "history_stride_s", 1.0))
-                     for model in models}
-    if len(history_specs) != 1:
-        raise ValueError("ensemble members must use the same observed-history specification")
-    history_s, history_stride_s = history_specs.pop()
     dataset = TrajectoryDataset.from_real_packs(
         packs, identity_dirs=identities, overlays=overlays, horizon_steps=1,
         window_list=windows, exclude_window_list=exclude, start_shift_prob=0.0,
@@ -134,12 +152,17 @@ def _load_starts(data, models, seed, entries=False):
         identity_env_dir=identities[0],
         # Observed pre-t0 entry history per window (t <= t0 only) for imagined entries.
         entries_v2=bool(entries))
-    train, val = split_start_states(
-        dataset, val_fraction=float(data.get("val_fraction", 0.1)), seed=seed,
-        excluded_penetrations=tuple(data.get("excluded_penetrations", [])),
-        relabel=bool(data.get("relabel_cavs", False)),
-        target_penetration=float(data.get("target_penetration", 0.2)))
+    train, val = split_start_states(dataset, **split_kwargs)
     return train, val
+
+
+def _windows_by_source(sampler) -> dict:
+    counts = {}
+    for group in sampler.groups.values():
+        for index in group:
+            name = sampler.metadata[index]["start_source"]
+            counts[name] = counts.get(name, 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def parser():
@@ -243,6 +266,10 @@ def main(argv=None):
                                                np.isfinite(trainer.best_validation) else None),
                        best_coop_gain_val=(trainer.best_coop_validation if
                                            np.isfinite(trainer.best_coop_validation) else None))
+        if hasattr(train.dataset, "start_meta"):     # POLICYV5: windows per C4 start source
+            summary["start_windows_by_source"] = {
+                role: _windows_by_source(sampler) for role, sampler in (("train", train),
+                                                                        ("val", val))}
         code = 0
     except (ImportError, OSError, ValueError, RuntimeError, KeyError) as exc:
         summary["error"] = f"{type(exc).__name__}: {exc}"

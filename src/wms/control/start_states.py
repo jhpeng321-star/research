@@ -52,6 +52,8 @@ def penetration_of(meta):
 
 
 def _metadata(dataset, index):
+    if hasattr(dataset, "start_meta"):       # POLICYV5 C4 start windows (metadata-only lookup)
+        return dict(dataset.start_meta(index))
     loader = getattr(dataset, "_loader", None)
     if loader is not None and hasattr(loader, "corpus"):
         return dict(loader.corpus.meta(loader.kept_orig[index]))
