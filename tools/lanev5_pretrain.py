@@ -22,6 +22,25 @@ Usage (workspace root as CWD; a git worktree points its data at a checkout via -
 
 Writes OUT.pt (``lanev5_pretrain/1``) and OUT.json (row counts, per-head TRAIN-fit and
 TRAIN-val metrics: AUC, AP, log-loss vs constant, p/obs).
+
+Over-fit control (all default OFF = the behaviour above):
+
+* ``--es-frac F`` (> 0): early stopping.  A fraction F of the TRAIN *episodes* (runs /
+  GENRAND episodes; every window of an episode goes to the same side, deterministic in
+  ``--seed``) is carved out of the TRAIN windows as the early-stopping set (``--es-batches``
+  batches, never subsampled); the fit uses the remaining TRAIN windows only.  After every epoch
+  the summed per-head mean log-loss on that set is computed; training stops after
+  ``--patience`` epochs without improvement (``--min-delta``) and the best epoch's weights are
+  restored.  The VAL / CAL / held-out sets are never used; the reported TRAIN-val metrics stay
+  on the config's TRAIN-scoped validation windows.
+* ``--weight-decay W`` (> 0): AdamW with decoupled weight decay W instead of Adam.
+* ``--dropout P`` (> 0): dropout P after each trunk activation during the fit (reset to 0
+  before saving; the world model never uses it).
+* ``--max-minutes M``: wall-clock budget; TRAIN / early-stopping / TRAIN-val collection stop
+  at 55 / 70 / 85 % of it and the fit at 100 % (the JSON records what was cut).
+
+OUT.json records ``stop_epoch`` / ``best_epoch`` and the per-head TRAIN-val AP
+(``head_ap_train_val``, also stored in the network).
 """
 from __future__ import annotations
 
@@ -32,6 +51,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -95,7 +115,7 @@ def head_metrics(p: np.ndarray, y: np.ndarray, w: np.ndarray, head: np.ndarray) 
 
 # ------------------------------------------------------------------ rows
 def collect(model, dataset, settings, *, batches: int, batch_size: int, seed: int,
-            stay_keep: float = 1.0) -> dict:
+            stay_keep: float = 1.0, deadline: Optional[float] = None) -> dict:
     """Teacher-forced rows of ``batches`` shuffled batches: features [N,F], head, label, weight."""
     import torch
     from torch.utils.data import DataLoader
@@ -108,9 +128,12 @@ def collect(model, dataset, settings, *, batches: int, batch_size: int, seed: in
     rng = np.random.default_rng(seed + 17)
     parts = {"features": [], "head": [], "label": [], "weight": []}
     stats = {"batches": 0, "windows": 0, "steps": 0, "rows_all": 0, "events": 0,
-             "infeasible_events": 0, "forced_window_events": 0}
+             "infeasible_events": 0, "forced_window_events": 0, "cut_by_budget": False}
     for index, batch in enumerate(loader):
         if index >= batches:
+            break
+        if deadline is not None and time.time() > deadline and stats["batches"] > 0:
+            stats["cut_by_budget"] = True
             break
         rows = lane_v5_batch_rows(model, batch, settings)
         feats = rows["features"].numpy().astype(np.float32)
@@ -153,9 +176,27 @@ def set_scaling(net, features: np.ndarray, weight: np.ndarray) -> None:
         net.feature_sd.copy_(torch.as_tensor(sd, dtype=net.feature_sd.dtype))
 
 
+def summed_head_logloss(net, data: dict) -> float:
+    """Sum over heads of the per-head (weighted) mean binary log-loss of ``data``."""
+    p = predict(net, data["features"], data["head"])
+    total = 0.0
+    for h in range(len(TRANSITIONS)):
+        m = data["head"] == h
+        if m.any():
+            total += log_loss(p[m], data["label"][m], data["weight"][m])
+    return float(total)
+
+
 def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 4096,
-        log=print) -> list[float]:
-    """Adam on the per-head weighted mean binary CE (summed over heads), minibatches."""
+        log=print, weight_decay: float = 0.0, dropout: float = 0.0,
+        early: Optional[dict] = None, patience: int = 3, min_delta: float = 0.0,
+        deadline: Optional[float] = None, report: Optional[dict] = None) -> list[float]:
+    """Adam (AdamW when ``weight_decay`` > 0) on the per-head weighted mean binary CE (summed
+    over heads), minibatches.  ``early`` (rows) enables early stopping on its summed per-head
+    log-loss with ``patience`` and best-weights restore; ``deadline`` stops after the current
+    epoch.  ``report`` receives stop/best epoch and the early-stopping curve."""
+    import copy
+
     import torch
 
     torch.manual_seed(seed)
@@ -163,9 +204,16 @@ def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 
     head = torch.as_tensor(data["head"])
     y = torch.as_tensor(data["label"])
     w = torch.as_tensor(data["weight"])
-    opt = torch.optim.Adam(net.parameters(), lr=lr)
+    opt = (torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=float(weight_decay))
+           if weight_decay > 0.0 else torch.optim.Adam(net.parameters(), lr=lr))
+    net.dropout = float(dropout)
     n = len(y)
     history = []
+    report = report if report is not None else {}
+    report.update({"stop_epoch": 0, "best_epoch": None, "stopped_by": "epochs",
+                   "es_logloss": [], "optimizer": "AdamW" if weight_decay > 0.0 else "Adam",
+                   "weight_decay": float(weight_decay), "dropout": float(dropout)})
+    best_loss, best_state, bad = float("inf"), None, 0
     net.train()
     for epoch in range(int(epochs)):
         perm = torch.randperm(n)
@@ -186,9 +234,92 @@ def fit(net, data: dict, *, epochs: int, lr: float, seed: int, minibatch: int = 
             total += float(loss.detach())
             count += 1
         history.append(total / max(count, 1))
-        log(f"  epoch {epoch + 1}/{epochs}: loss {history[-1]:.5f}")
+        report["stop_epoch"] = epoch + 1
+        msg = f"  epoch {epoch + 1}/{epochs}: loss {history[-1]:.5f}"
+        if early is not None:
+            net.eval()
+            es = summed_head_logloss(net, early)
+            net.train()
+            report["es_logloss"].append(es)
+            msg += f" | early-stop log-loss {es:.5f}"
+            if es < best_loss - float(min_delta):
+                best_loss, bad = es, 0
+                best_state = copy.deepcopy(net.state_dict())
+                report["best_epoch"] = epoch + 1
+            else:
+                bad += 1
+        log(msg)
+        if early is not None and bad >= int(patience):
+            report["stopped_by"] = "early_stopping"
+            break
+        if deadline is not None and time.time() > deadline:
+            report["stopped_by"] = "max_minutes"
+            break
+    if best_state is not None:
+        net.load_state_dict(best_state)
+        report["best_es_logloss"] = best_loss
+    net.dropout = 0.0
     net.eval()
     return history
+
+
+def episode_keys(dataset) -> list:
+    """Episode key of every TRAIN window, without decoding any window.
+
+    Pack windows: the simulated WORLD of the window (``corpus.meta``; the arms / t0 branches of
+    one world share their pre-t0 traffic, so they stay together); GENRAND windows: the
+    episode's world (else its directory).  A window whose episode cannot be resolved is its own
+    episode."""
+    inner = getattr(dataset, "inner", dataset)
+    sources = getattr(inner, "sources", None)
+    if sources is None:
+        return [("window", i) for i in range(len(inner))]
+    keys = []
+    for index in range(len(inner)):
+        k, local = inner.locate(index)
+        source = sources[k]
+        loader = getattr(source.dataset, "_loader", None)
+        key = None
+        corpus, kept = getattr(loader, "corpus", None), getattr(loader, "kept_orig", None)
+        if corpus is not None and kept is not None and hasattr(corpus, "meta"):
+            meta = corpus.meta(int(kept[local]))
+            world = meta.get("world") or meta.get("pair_key")
+            if world:
+                key = ("world", str(world))
+        entries, idx = getattr(loader, "entries", None), getattr(loader, "index", None)
+        if key is None and entries is not None and idx is not None:
+            entry = entries[int(idx[local][0])]
+            world = entry.get("world") if isinstance(entry, dict) else None
+            key = ("world", str(world)) if world else (source.name, str(entry.get("dir")))
+        keys.append(key if key is not None else (source.name, "window", local))
+    return keys
+
+
+def split_by_episode(keys: list, frac: float, seed: int) -> tuple[list[int], list[int]]:
+    """``(fit_indices, early_stop_indices)``: a deterministic ``frac`` of the episodes (hash of
+    the key and ``seed``) goes to the early-stopping side, with all its windows."""
+    import hashlib
+
+    fit_idx, es_idx = [], []
+    for index, key in enumerate(keys):
+        digest = hashlib.sha256(f"{seed}|{key!r}".encode()).digest()
+        u = int.from_bytes(digest[:8], "big") / 2.0 ** 64
+        (es_idx if u < frac else fit_idx).append(index)
+    return fit_idx, es_idx
+
+
+class IndexedWindows:
+    """Plain TRAIN-window subset (``__getitem__`` only, so no paired-batch substitution)."""
+
+    def __init__(self, dataset, indices: list[int]) -> None:
+        self.inner = getattr(dataset, "inner", dataset)
+        self.indices = list(indices)
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, i: int) -> dict:
+        return self.inner[self.indices[i]]
 
 
 def predict(net, features: np.ndarray, head: np.ndarray) -> np.ndarray:
@@ -216,7 +347,18 @@ def main(argv=None) -> int:
     parser.add_argument("--stay-keep", type=float, default=0.25)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--work-dir", default=None)
+    parser.add_argument("--es-frac", type=float, default=0.0,
+                        help="fraction of TRAIN episodes held out for early stopping (0 = off)")
+    parser.add_argument("--es-batches", type=int, default=10)
+    parser.add_argument("--patience", type=int, default=3)
+    parser.add_argument("--min-delta", type=float, default=0.0)
+    parser.add_argument("--weight-decay", type=float, default=0.0, help="> 0: AdamW")
+    parser.add_argument("--dropout", type=float, default=0.0, help="> 0: trunk dropout")
+    parser.add_argument("--max-minutes", type=float, default=0.0, help="> 0: wall budget")
     args = parser.parse_args(argv)
+    if not (0.0 <= args.es_frac < 1.0 and 0.0 <= args.dropout < 1.0 and args.weight_decay >= 0.0
+            and args.patience >= 1 and args.max_minutes >= 0.0):
+        raise SystemExit("bad --es-frac / --dropout / --weight-decay / --patience / --max-minutes")
 
     from wms.core.guard import find_restricted_token
     for text in (args.out, args.config, args.work_dir or ""):
@@ -243,21 +385,45 @@ def main(argv=None) -> int:
     work = Path(args.work_dir or out.with_suffix("").as_posix() + "_work")
     work.mkdir(parents=True, exist_ok=True)
     started = time.time()
+    budget = args.max_minutes * 60.0 if args.max_minutes > 0 else None
+    phase = (lambda f: None) if budget is None else (lambda f: started + f * budget)  # noqa: E731
     inputs = assemble(cfg, work)
     model = inputs.model
     model.eval()
     if inputs.val is None:
         raise SystemExit("the config has no TRAIN-scoped validation windows (data.windows.val)")
+    fit_source, early, split = inputs.train, None, None
+    if args.es_frac > 0.0:
+        keys = episode_keys(inputs.train)
+        fit_idx, es_idx = split_by_episode(keys, args.es_frac, args.seed)
+        if not fit_idx or not es_idx:
+            raise SystemExit("the episode split left one side empty; change --es-frac / --seed")
+        split = {"episodes": len(set(keys)), "es_episodes": len({keys[i] for i in es_idx}),
+                 "fit_windows": len(fit_idx), "es_windows": len(es_idx), "frac": args.es_frac}
+        print(f"early-stopping split by episode: {split}", flush=True)
+        fit_source = IndexedWindows(inputs.train, fit_idx)
     print(f"collect TRAIN rows ({args.train_batches} x {args.batch_size} windows)", flush=True)
-    train = collect(model, inputs.train, settings, batches=args.train_batches,
-                    batch_size=args.batch_size, seed=args.seed, stay_keep=args.stay_keep)
+    train = collect(model, fit_source, settings, batches=args.train_batches,
+                    batch_size=args.batch_size, seed=args.seed, stay_keep=args.stay_keep,
+                    deadline=phase(0.55))
+    if split is not None:
+        print(f"collect early-stopping rows ({args.es_batches} x {args.batch_size} TRAIN "
+              "windows)", flush=True)
+        early = collect(model, IndexedWindows(inputs.train, es_idx), settings,
+                        batches=args.es_batches, batch_size=args.batch_size, seed=args.seed + 2,
+                        stay_keep=1.0, deadline=phase(0.70))
     print(f"collect TRAIN-val rows ({args.val_batches} x {args.batch_size} windows)", flush=True)
     val = collect(model, inputs.val, settings, batches=args.val_batches,
-                  batch_size=args.batch_size, seed=args.seed + 1, stay_keep=1.0)
+                  batch_size=args.batch_size, seed=args.seed + 1, stay_keep=1.0,
+                  deadline=phase(0.85))
     collected = time.time()
     net = model.lane_v5
     set_scaling(net, train["features"], train["weight"])
-    history = fit(net, train, epochs=args.epochs, lr=args.lr, seed=args.seed)
+    fit_report: dict = {}
+    history = fit(net, train, epochs=args.epochs, lr=args.lr, seed=args.seed,
+                  weight_decay=args.weight_decay, dropout=args.dropout, early=early,
+                  patience=args.patience, min_delta=args.min_delta, deadline=phase(1.0),
+                  report=fit_report)
     metrics = {"train_fit": head_metrics(predict(net, train["features"], train["head"]),
                                          train["label"], train["weight"], train["head"]),
                "train_val": head_metrics(predict(net, val["features"], val["head"]),
@@ -270,8 +436,15 @@ def main(argv=None) -> int:
             "windows": {"train": train["stats"]["windows"], "val": val["stats"]["windows"]},
             "train_stats": train["stats"], "val_stats": val["stats"], "loss_history": history,
             "metrics": metrics, "head_ap_train_val": ap,
+            "stop_epoch": fit_report["stop_epoch"], "best_epoch": fit_report["best_epoch"],
+            "fit": fit_report, "early_stopping_split": split,
+            "early_stopping_stats": None if early is None else early["stats"],
+            "max_minutes": args.max_minutes or None,
             "seconds": {"collect": round(collected - started, 1),
                         "total": round(time.time() - started, 1)}}
+    if early is not None:
+        metrics["early_stop_set"] = head_metrics(predict(net, early["features"], early["head"]),
+                                                 early["label"], early["weight"], early["head"])
     save_pretrain(net, out, meta)
     out.with_suffix(".json").write_text(json.dumps(meta, indent=1, allow_nan=True),
                                         encoding="utf-8")
