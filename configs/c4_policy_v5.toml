@@ -7,6 +7,7 @@ extends = "c4_policy_final.toml"
 
 [run]
 output_dir = "runs/active/C4-POLICY-V5"
+threads = 12   # integrator: gpuW alone after the WM finishes (16-core quota)
 
 [data]
 # Start windows from the v5 WM's C4 sources (data.c4_base; wms.control.c4_starts): TRAIN-world windows only
