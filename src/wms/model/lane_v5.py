@@ -449,6 +449,9 @@ class LaneV5Net(nn.Module):
     def __init__(self, hidden: int = 64, cap: float = 10.0) -> None:
         super().__init__()
         self.cap = float(cap)
+        #: Trunk dropout (plain attribute, never saved; 0 = off). Only the offline pre-fit
+        #: (tools/lanev5_pretrain.py --dropout) sets it, and resets it before saving.
+        self.dropout = 0.0
         self.trunk = nn.Sequential(nn.Linear(N_FEATURES, hidden), nn.GELU(),
                                    nn.Linear(hidden, hidden), nn.GELU())
         self.heads = nn.Linear(hidden, len(TRANSITIONS))
@@ -466,7 +469,16 @@ class LaneV5Net(nn.Module):
         """Head logits ``[..., 3]`` (overtake, return, merge) from raw features ``[..., F]``."""
         if raw.shape[-1] != N_FEATURES:
             raise ValueError(f"lane v5 features must end in {N_FEATURES}")
-        out = self.heads(self.trunk(self.scale(raw.to(self.feature_mu.dtype))))
+        x = self.scale(raw.to(self.feature_mu.dtype))
+        p = float(getattr(self, "dropout", 0.0))
+        if p > 0.0 and self.training:
+            for layer in self.trunk:
+                x = layer(x)
+                if isinstance(layer, nn.GELU):
+                    x = nn.functional.dropout(x, p, training=True)
+        else:
+            x = self.trunk(x)
+        out = self.heads(x)
         return self.cap * torch.tanh(out / self.cap)
 
     def head_logit(self, raw: Tensor, lane: Tensor) -> Tensor:

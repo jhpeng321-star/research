@@ -437,3 +437,91 @@ def test_recorded_rows_fast_and_physics_mask_paths_agree():
     assert fast["stats"] == slow["stats"]
     assert torch.equal(fast["features"], slow["features"])
     assert torch.equal(fast["label"], slow["label"]) and torch.equal(fast["head"], slow["head"])
+
+
+def _tool():
+    import importlib.util
+    import pathlib
+    spec = importlib.util.spec_from_file_location(
+        "lanev5_pretrain", pathlib.Path(__file__).resolve().parents[2] / "tools" /
+        "lanev5_pretrain.py")
+    tool = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tool)
+    return tool
+
+
+def _toy_rows(n=3000, seed=0):
+    import numpy as np
+    g = np.random.default_rng(seed)
+    x = g.normal(size=(n, lv5.N_FEATURES)).astype(np.float32)
+    head = g.integers(0, 3, n)
+    y = (g.random(n) < 1 / (1 + np.exp(-(x[:, 0] * 2 - 3)))).astype(np.float32)
+    return {"features": x, "head": head, "label": y, "weight": np.ones(n, np.float32)}
+
+
+def test_dropout_default_off_and_keys_unchanged():
+    net = lv5.LaneV5Net()
+    keys = list(net.state_dict())
+    x = torch.randn(64, lv5.N_FEATURES)
+    net.train()
+    ref = net(x)
+    with torch.no_grad():
+        net.heads.weight.normal_()
+    ref = net(x)
+    assert net.dropout == 0.0 and torch.equal(net(x), ref)        # off: deterministic
+    net.dropout = 0.5
+    assert not torch.equal(net(x), ref)                           # train mode: dropped
+    net.eval()
+    assert torch.equal(net(x), ref)                               # eval: never dropped
+    assert list(net.state_dict()) == keys
+
+
+def test_episode_split_keeps_episodes_together():
+    tool = _tool()
+    keys = [("world", f"w{i // 4}") for i in range(200)]
+    fit_idx, es_idx = tool.split_by_episode(keys, 0.2, 0)
+    assert sorted(fit_idx + es_idx) == list(range(200)) and fit_idx and es_idx
+    assert not {keys[i] for i in fit_idx} & {keys[i] for i in es_idx}
+    assert tool.split_by_episode(keys, 0.2, 0) == (fit_idx, es_idx)
+    assert tool.split_by_episode(keys, 0.2, 1) != (fit_idx, es_idx)
+
+
+def test_early_stopping_restores_best_and_budget_stops():
+    import time as _time
+    tool = _tool()
+    data, early = _toy_rows(seed=0), _toy_rows(n=800, seed=1)
+    net = lv5.LaneV5Net()
+    tool.set_scaling(net, data["features"], data["weight"])
+    rep = {}
+    tool.fit(net, data, epochs=30, lr=3e-2, seed=0, early=early, patience=2, minibatch=256,
+             log=lambda *_: None, report=rep)
+    assert rep["optimizer"] == "Adam" and rep["best_epoch"] <= rep["stop_epoch"]
+    if rep["stopped_by"] == "early_stopping":
+        assert rep["stop_epoch"] - rep["best_epoch"] == 2
+    assert rep["es_criterion"] == "normalised"
+    assert tool.summed_head_logloss(net, early, "normalised") == pytest.approx(
+        rep["best_es_logloss"], rel=1e-6)
+    assert min(rep["es_logloss"]) == pytest.approx(rep["best_es_logloss"])
+    assert net.dropout == 0.0 and not net.training
+    rep2 = {}
+    tool.fit(lv5.LaneV5Net(), data, epochs=5, lr=1e-2, seed=0, weight_decay=0.01, dropout=0.2,
+             deadline=_time.time() - 1, log=lambda *_: None, report=rep2)
+    assert rep2["stop_epoch"] == 1 and rep2["stopped_by"] == "max_minutes"
+    assert rep2["optimizer"] == "AdamW" and rep2["best_epoch"] is None
+
+
+def test_normalised_criterion_counts_heads_equally():
+    import numpy as np
+    tool = _tool()
+    data = _toy_rows(n=600, seed=2)
+    net = lv5.LaneV5Net()
+    with torch.no_grad():
+        net.heads.weight.zero_()
+    # constant predictor at each head's own rate -> every head scores exactly 1
+    rates = [float(data["label"][data["head"] == h].mean()) for h in range(3)]
+    with torch.no_grad():
+        net.heads.bias.copy_(torch.tensor([float(np.log(r / (1 - r))) for r in rates]))
+    assert tool.summed_head_logloss(net, data, "normalised") == pytest.approx(3.0, rel=1e-3)
+    assert tool.summed_head_logloss(net, data, "raw") != pytest.approx(3.0, rel=1e-3)
+    with pytest.raises(ValueError):
+        tool.summed_head_logloss(net, data, "bogus")

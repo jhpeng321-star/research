@@ -144,6 +144,39 @@ the default gates (0.25 / 0.10 / 0.5) only the merge head would sample with this
 larger pre-fit sample (all TRAIN windows, GPU) and/or early stopping on TRAIN-val are the obvious
 next steps; nothing was tuned on any evaluation set.
 
+**Over-fit control (follow-up, commit e5f028f)**: `tools/lanev5_pretrain.py` gained
+`--es-frac` (early stopping on the summed per-head log-loss of an early-stopping set carved
+from TRAIN windows by WORLD, i.e. all arms/branches of a world on one side; patience
+`--patience`, best-weights restore), `--weight-decay` (AdamW), `--dropout` (trunk, fit only),
+`--max-minutes`; all default off (unchanged). JSON records `stop_epoch`, `best_epoch`, the
+early-stopping curve and per-head AP. Re-run (same 60 TRAIN-val windows, `--es-frac 0.15
+--patience 3 --epochs 40 --max-minutes 32`; 112 worlds -> 25 early-stopping worlds / 149
+windows; fit on 240 of the other 454 windows; 16 min; `E:/agent-work/tmp/lanev5/pretrain_es/`):
+stopped at epoch 13, best epoch 10.
+
+| head | TRAIN-val AUC / AP, before | with early stopping | TRAIN-fit AP, before -> now |
+|---|---|---|---|
+| overtake | 0.952 / 0.113 | 0.953 / 0.153 | 0.40 -> 0.23 |
+| return | 0.892 / 0.035 | 0.825 / 0.013 | 0.31 -> 0.06 |
+| merge | 0.926 / 0.608 | 0.939 / 0.648 | 0.87 -> 0.73 |
+
+The train/val gap shrinks, overtake and merge improve, return gets worse: the summed log-loss is
+dominated by the merge head (~0.16 vs ~0.03), so the stop epoch suits merge, and the
+early-stopping worlds have a much higher return rate than TRAIN-val (log-loss above the constant
+there). Per-head stopping (or per-head best weights) is the obvious refinement.
+
+**Normalised criterion (commit 0bc18d9, default with `--es-frac`; `--es-criterion raw` =
+the run above)**: sum over heads of log-loss / the head's constant log-loss on the stopping set.
+Same re-run (`E:/agent-work/tmp/lanev5/pretrain_esn/`, 19 min): the criterion was 2.50 / 2.51 /
+3.21 / 3.36 at epochs 1-4, so it stopped at epoch 4 and restored epoch 1. TRAIN-val AUC / AP:
+overtake 0.892 / 0.054, return 0.757 / 0.004, merge 0.791 / 0.175, worse than both earlier runs
+(0.952/0.113, 0.892/0.035, 0.926/0.608 without early stopping; 0.953/0.153, 0.825/0.013,
+0.939/0.648 raw). Cause: the 25 early-stopping worlds have much higher overtake/return rates
+than TRAIN (epoch-1 p/obs there 0.74 / 0.39), so the normalised overtake/return terms rise as soon
+as the net learns the TRAIN rates; normalising gives those shifted heads equal weight. On this
+sample the raw criterion (or a larger / rate-matched stopping set, or a minimum epoch count) is
+preferable.
+
 **Calibration tool** on a checkpoint built from this pre-fit (3 x 2 TRAIN-val windows, seed 3,
 `E:/agent-work/tmp/lanev5/ckpt/calib.json`): AP .082 / .025 / .496; `--write-ap` wrote
 `ckpt/ap/wm_s_ap.pt`, which loads with `head_ap` = those values and `lane_decision='gated'`.
