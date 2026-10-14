@@ -168,6 +168,10 @@ class TrainSettings:
     merge_hazard_zone: str = "forced_late"
     gap_stopped_relax: bool = False
     lane_hazard_decouple: bool = False
+    # LANEV5 (2026-10-14, default OFF; lane_model='hazard_v5' only).
+    lane_v5_gates: tuple[float, ...] = (0.25, 0.10, 0.5)
+    lane_v5_head_ap: tuple[float, ...] = (-1.0, -1.0, -1.0)
+    lane_v5_pretrain: Optional[str] = None
     # SCHED (2026-10-14, default OFF): validation horizons, selection, mixed-horizon batches.
     val_all_horizons: bool = False
     selection_mode: str = "long_horizon"
@@ -280,7 +284,8 @@ class TrainSettings:
                  and 0 <= self.flip_rate_allowance <= 1,
                  "flip_rate_allowance must be finite and in [0,1]")
         _require(self.val_every >= 1, "val_every must be positive")
-        _require(self.lane_model in ("residual", "hazard"), "lane_model must be residual or hazard")
+        _require(self.lane_model in ("residual", "hazard", "hazard_v5"),
+                 "lane_model must be residual, hazard or hazard_v5")
         _require(self.driver_update in ("off", "ema"), "driver_update must be off or ema")
         _require(0.0 <= self.driver_reveal_prob <= 1.0 and self.driver_reveal_max_s > 0.0,
                  "driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
@@ -300,7 +305,17 @@ class TrainSettings:
                  f"junction_fix must be one of {JUNCTION_FIX_MODES}")
         _require(self.controller_hygiene in CONTROLLER_HYGIENE_MODES,
                  f"controller_hygiene must be one of {CONTROLLER_HYGIENE_MODES}")
-        _require(self.lane_decision in ("argmax", "sample"), "lane_decision must be argmax or sample")
+        _require(self.lane_decision in ("argmax", "sample", "gated"),
+                 "lane_decision must be argmax, sample or gated")
+        _require(len(self.lane_v5_gates) == 3 and len(self.lane_v5_head_ap) == 3
+                 and all(math.isfinite(float(x))
+                         for x in (*self.lane_v5_gates, *self.lane_v5_head_ap)),
+                 "lane_v5_gates / lane_v5_head_ap must be three finite values")
+        v5_on = (self.lane_decision == "gated" or self.lane_v5_pretrain is not None
+                 or tuple(self.lane_v5_gates) != (0.25, 0.10, 0.5)
+                 or tuple(self.lane_v5_head_ap) != (-1.0, -1.0, -1.0))
+        _require(not v5_on or self.lane_model == "hazard_v5",
+                 "lane_decision='gated' / lane_v5_* require lane_model='hazard_v5'")
         _require(len(self.lane_logit_offsets) == 3
                  and all(math.isfinite(float(x)) for x in self.lane_logit_offsets),
                  "lane_logit_offsets must be three finite values")
@@ -321,7 +336,7 @@ class TrainSettings:
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"
                       or self.merge_hazard_zone != "forced_late" or self.lane_hazard_decouple)
-        _require(not lanefix_on or self.lane_model == "hazard",
+        _require(not lanefix_on or self.lane_model in ("hazard", "hazard_v5"),
                  "LANEFIX lane switches require lane_model='hazard'")
         _require(self.selection_mode in SELECTION_MODES,
                  f"selection_mode must be one of {SELECTION_MODES}")
@@ -378,8 +393,9 @@ class TrainSettings:
         for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
-        if values.get("lane_logit_offsets") is not None:
-            values["lane_logit_offsets"] = tuple(float(x) for x in values["lane_logit_offsets"])
+        for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap"):
+            if values.get(key) is not None:
+                values[key] = tuple(float(x) for x in values[key])
         return cls(**values)
 
     @classmethod

@@ -130,6 +130,10 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_hazard_zone": "model.merge_hazard_zone",
     "gap_stopped_relax": "model.gap_stopped_relax",
     "lane_hazard_decouple": "loss.lane_hazard_decouple",
+    # LANEV5 (per-transition lane network)
+    "lane_v5_gates": "model.lane_v5_gates",
+    "lane_v5_head_ap": "model.lane_v5_head_ap",
+    "lane_v5_pretrain": "model.lane_v5_pretrain",
     # SCHED (validation horizons, multi-horizon selection, mixed-horizon batches)
     "val_all_horizons": "curriculum.val_all_horizons",
     "selection_mode": "curriculum.selection",
@@ -181,6 +185,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "val_max_windows",
     "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
     "gap_stopped_relax", "lane_hazard_decouple",
+    "lane_v5_gates", "lane_v5_head_ap", "lane_v5_pretrain",
     # SCHED
     "val_all_horizons", "selection_mode", "selection_horizons_s", "selection_reference",
     "selection_min_stage_s", "selection_agg_reward_weight", "mixed_horizon_frac",

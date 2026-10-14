@@ -124,6 +124,11 @@ class WmSTrainer:
         if getattr(s, "lane_hazard_decouple", False):
             # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
             model.lane_hazard_detach = True
+        if getattr(s, "lane_v5_pretrain", None):
+            # LANEV5: offline pre-fit of the lane network (init_from, if any, overrides it).
+            from wms.model.lane_v5 import load_pretrain
+
+            model.lane_v5_pretrain_report = load_pretrain(model.lane_v5, s.lane_v5_pretrain)
         if s.residual_cap_mps2 is not None:
             model.residual_cap_mps2 = float(s.residual_cap_mps2)
         if s.lane_logit_cap is not None:
