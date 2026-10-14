@@ -23,7 +23,8 @@ from urllib.request import Request, urlopen
 
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 RUNTIME_PATHS = ("traffic_shepherd", "src", "configs", "scripts", "baselines", "scenarios",
-                 "assets", "pyproject.toml", "requirements.txt")
+                 "assets", "tools", "output/controller_verification_v7/pi_owner_adapter.py",
+                 "pyproject.toml", "requirements.txt")
 
 
 def safe(path: str | Path) -> Path:

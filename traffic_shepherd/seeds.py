@@ -309,6 +309,12 @@ C4_WALLREGEN_EVAL_SEEDS = frozenset(range(962000, 962200))
 # loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an owner choice; the
 # textbook population saturates near 1930 veh/h)
 C4_WALLREGEN_EVAL_LOADINGS = tuple(range(1000, 2801, 50))
+# C4 V5 blocks (2026-10-14, integrator; PENDING owner approval before any run): textbook-population
+# v5 WM/policy TRAINING data (native + generic_random + paired branches + MAPPO fine-tune) and the
+# final v5 policy EVALUATION worlds.  Scan of the seed tables and the ledger: no overlap.
+C4_V5_TRAIN_SEEDS = frozenset(range(963000, 964000))
+C4_V5_EVAL_SEEDS = frozenset(range(964000, 964200))
+C4_V5_LOADINGS = tuple(range(1900, 2801, 50))
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.
@@ -396,6 +402,9 @@ def require_development_case(seed, loading, role):
         return
 
     if role == "exposed" and seed in C4_WALLREGEN_EVAL_SEEDS and loading in C4_WALLREGEN_EVAL_LOADINGS:
+        return
+
+    if role == "exposed" and seed in (C4_V5_TRAIN_SEEDS | C4_V5_EVAL_SEEDS) and loading in C4_V5_LOADINGS:
         return
 
     if role == "exposed" and seed in WM44_CHUNK1_SEEDS \
