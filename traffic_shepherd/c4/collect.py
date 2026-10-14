@@ -78,7 +78,8 @@ def _worker_env(opts: dict):
                           ttc=not opts["no_ttc"], physics_log=not opts["no_physics_log"],
                           extra_sumo_cli=extra,
                           cav_vtype=None if opts.get("cav_vtype", "normal_car") == "legacy"
-                          else opts.get("cav_vtype", "normal_car"))
+                          else opts.get("cav_vtype", "normal_car"),
+                          population=opts.get("population", "legacy3"))
     return _ENV
 
 
@@ -164,7 +165,8 @@ def plan_jobs(args) -> list[dict]:
                 no_branch_native=getattr(args, "no_branch_native", False),
                 branch_repeat_check=getattr(args, "branch_repeat_check", 0),
                 gr_mode=getattr(args, "gr_mode", "speed"),
-                cav_vtype=getattr(args, "cav_vtype", "normal_car"))
+                cav_vtype=getattr(args, "cav_vtype", "normal_car"),
+                population=getattr(args, "population", "legacy3"))
     if opts["branch_cadence"] and args.policy != "generic_random":
         raise SystemExit("--branch-cadence is only supported with --policy generic_random")
     jobs = []
@@ -257,6 +259,10 @@ def main(argv=None) -> int:
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--cav-vtype", default="normal_car",
                     help="vType of every CAV (owner 2026-10-14: normal_car); 'legacy' = drawn driver type")
+    ap.add_argument("--population", choices=("legacy3", "textbook"), default="legacy3",
+                    help="HDV driver population (owner 2026-10-14): legacy3 = 3 discrete vTypes; "
+                         "textbook = continuous per-vehicle IDM/LC2013 params, CAVs on cav_typical "
+                         "(--cav-vtype is then ignored); see traffic_shepherd/c4/population.py")
     ap.add_argument("--no-physics-log", action="store_true",
                     help="skip run/physics_steps.jsonl.gz (episode.npz is always written)")
     ap.add_argument("--case-plan", choices=("product", "weighted-cycle"), default="product",
@@ -333,6 +339,7 @@ def main(argv=None) -> int:
                "branch_collisions": sum(r.get("branch_collisions", 0) for r in ok),
                "branch_teleports": sum(r.get("branch_teleports", 0) for r in ok),
                "case_plan": args.case_plan, "pen_weights": args.pen_weights,
+               "population": getattr(args, "population", "legacy3"),
                "gr_mode": args.gr_mode if args.policy == "generic_random" else None,
                "branch_cadence_s": args.branch_cadence,
                "host_cpus": os.cpu_count(), "finished_utc": _now()}
