@@ -63,6 +63,7 @@ case "$MODE" in
 import inspect, json
 from traffic_shepherd.c4 import wallregen as W, wallregen_states  # noqa: F401
 from traffic_shepherd.c4.env import CavSumoEnv
+import traffic_shepherd.controller_factory  # noqa: F401  (needs output/controller_verification_v7)
 has = 'population' in inspect.signature(CavSumoEnv.__init__).parameters
 assert has or '$POPULATION' in ('legacy', 'legacy3'), 'CavSumoEnv has no population argument (c4/popfix missing)'
 p = W.make_plan(seeds=W.parse_seeds('$SEEDS'), penetrations=W.DEFAULT_PENETRATIONS, demands=W.DEFAULT_DEMANDS,
