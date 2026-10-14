@@ -232,6 +232,13 @@ class DataConfig:
     #: the training windows.  "off" = legacy; "strict" = drop direct-mix windows with a damping
     #: CAV, refuse dspeed windows over merge_aimed / gap_opening segments, relabel dspeed CAVs.
     controller_hygiene: Literal["off", "strict"] = "off"
+    #: V5DATA: name of the ``c4_sources`` entry that REPLACES the legacy pack data as the base
+    #: TRAIN / validation source (e.g. ``"native_v5"``).  None (default) = legacy assembly,
+    #: unchanged.  When set, the inherited ``packs`` / ``sidecars`` / ``windows`` /
+    #: ``switching`` tables are cleared (an ``extends`` child cannot delete inherited keys) and
+    #: every window comes from ``c4_sources``: the base source's ``mix_ratio`` must equal
+    #: 1 - the other sources' ratios, and validation is the sources' held-out world split.
+    c4_base: Optional[str] = None
 
     @property
     def effective_start_shift_prob(self) -> float:
@@ -252,9 +259,27 @@ class DataConfig:
         names = [src.name for src in self.c4_sources]
         require(len(set(names)) == len(names) and "c4_episodes" not in names,
                 f"data.c4_sources names must be unique and not 'c4_episodes' (got {names})")
-        total = sum(src.mix_ratio for src in self.c4_sources) + (
+        if self.c4_base is not None:
+            self._clear_legacy_data(names)
+        total = sum(src.mix_ratio for src in self.c4_sources if src.name != self.c4_base) + (
             self.c4_episodes.mix_ratio if self.c4_episodes.enabled else 0.0)
         require(total < 1.0, "the C4 source mix ratios must sum to < 1")
         if self.packs:
             missing = sorted(set(self.packs) - set(self.sidecars.identities))
             require(not missing, f"data.sidecars.identities missing for pack roles {missing}")
+
+    def _clear_legacy_data(self, names: list[str]) -> None:
+        """V5DATA ``c4_base``: check the base source and drop the inherited legacy pack data."""
+        base = self.c4_base
+        require(base in names, f"data.c4_base {base!r} must name a data.c4_sources entry ({names})")
+        src = self.c4_sources[names.index(base)]
+        require(not src.paired, f"data.c4_base {base!r} must not be a paired source")
+        require(src.use_val, f"data.c4_base {base!r} must keep use_val = true (validation split)")
+        require(not self.c4_episodes.enabled, "data.c4_base and data.c4_episodes are exclusive")
+        others = sum(s.mix_ratio for s in self.c4_sources if s.name != base)
+        require(abs(src.mix_ratio + others - 1.0) < 1e-6,
+                f"data.c4_base {base!r}: mix_ratio {src.mix_ratio} must equal 1 - {others:g} "
+                "(the other c4_sources' ratios)")
+        for name, value in (("packs", {}), ("sidecars", SidecarConfig()),
+                            ("windows", WindowConfig()), ("switching", SwitchingConfig())):
+            object.__setattr__(self, name, value)

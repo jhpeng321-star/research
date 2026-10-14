@@ -605,7 +605,8 @@ class TrainConfig:
             require(any(src.paired for src in self.data.c4_sources),
                     "loss.paired_diff.weight > 0 requires a data.c4_sources entry with paired = true")
         if self.selection.select_by_long_horizon:
-            require(self.data.windows.val is not None or self.data.windows.val_holdout_frac > 0.0,
+            require(self.data.windows.val is not None or self.data.windows.val_holdout_frac > 0.0
+                    or self.data.c4_base is not None,   # V5DATA: c4 sources' world split
                     "selection.select_by_long_horizon requires a validation window list")
         for text in self._path_strings():
             token = find_restricted_token(text)
