@@ -18,6 +18,8 @@ objects of the data and model layers (WP-I).  It reproduces the assembly of the 
   branches, :mod:`wms.data.c4_pairs`) with one split side per world across all C4 sources;
   with ``loss.paired_diff`` on, the TRAIN dataset is wrapped so a fraction of the batches are
   paired-branch batches;
+* V5DATA ``data.c4_base``: no packs at all - the named C4 source is the base (share = 1 - the
+  other sources' ratios) and validation is the C4 sources' held-out world split;
 * the physics config and the model are built from the same flags the legacy ``_build_model``
   used (``ModelSpec.from_mapping(config.to_legacy_flat())``).
 """
@@ -180,6 +182,14 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
         resolved[name] = found
         return found
 
+    if data.c4_base is not None:
+        # V5DATA: no packs / sidecars / window lists / switching pack; every TRAIN and
+        # validation window comes from data.c4_sources (base source = data.c4_base).
+        train, val = _add_c4_sources(cfg, None, None, path, horizon=_horizon_steps(cfg),
+                                     pack_k=None, heldout=None,
+                                     curriculum=tuple(cfg.curriculum.unroll_s))
+        return train, val, resolved
+
     roles = list(data.packs)
     if not roles:
         raise ConfigError("data.packs is empty: at least one pack is required")
@@ -303,7 +313,8 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                     ) -> tuple[Any, Any]:
     """PAIRLOSS: mix ``data.c4_sources`` and (``loss.paired_diff`` on) wrap paired batches."""
     from ..data.c4_episodes import build_c4_datasets, read_source_manifest
-    from ..data.c4_pairs import PairedBatchDataset, PairedBranchSource, add_c4_sources, world_roles
+    from ..data.c4_pairs import (PairedBatchDataset, PairedBranchSource, add_c4_sources,
+                                 mix_c4_sources, world_roles)
 
     data = cfg.data
     roots = {src.name: path(src.path) for src in data.c4_sources}
@@ -311,13 +322,18 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
     if data.c4_episodes.enabled:
         docs.append(read_source_manifest(path(data.c4_episodes.path)))
     roles, overridden = world_roles(docs)
+    base = data.c4_base
+    if base is not None:
+        # V5DATA: every C4 source must stack with the base source (collation stacks slots).
+        pack_k = int(read_source_manifest(roots[base])["k_slots"])
     common = dict(horizon_steps=horizon, history_s=data.history_s,
                   history_stride_s=data.history_stride_s, entries_v2=bool(data.entries_v2),
                   k_slots=pack_k, heldout=heldout, role_of=roles,
                   junction_fix=getattr(data, "junction_fix", "off"),
                   command_known=getattr(data, "controller_hygiene", "off") == "strict")
     mixed = []
-    for src in data.c4_sources:
+    order = sorted(data.c4_sources, key=lambda src: src.name != base)   # base first (V5DATA)
+    for src in order:
         if src.mix_ratio <= 0.0:
             continue
         built = build_c4_datasets(roots[src.name], stride_s=float(src.window_stride_s),
@@ -332,8 +348,15 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
         print(f"c4_sources[{src.name}] train {len(built['train'])} windows, val "
               f"{0 if built['val'] is None else len(built['val'])} windows, "
               f"mix_ratio {float(src.mix_ratio)}", file=sys.stderr)
-    train, val = add_c4_sources(train, val, mixed, jam_speed_mps=float(data.jam.speed_mps),
-                                **_jam_min(data))
+    if base is not None:
+        if not mixed or mixed[0][0] != base:
+            raise ConfigError(f"data.c4_base {base!r}: the base source has no TRAIN window")
+        train, val = mix_c4_sources(mixed, jam_oversample=float(data.jam.oversample),
+                                    jam_speed_mps=float(data.jam.speed_mps), **_jam_min(data))
+        train.receipt["c4_base"] = base
+    else:
+        train, val = add_c4_sources(train, val, mixed, jam_speed_mps=float(data.jam.speed_mps),
+                                    **_jam_min(data))
     if hasattr(train, "describe_stages"):
         train.receipt["stage_sampling"] = train.describe_stages(curriculum)
     train.receipt["c4_world_split"] = {"n_worlds": len(roles),

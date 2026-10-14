@@ -290,3 +290,35 @@ def add_c4_sources(train, val, sources: Sequence[tuple[str, dict, float]], *,
         val = MixedTrajectoryDataset(vsources + [MixSource(f"{name}_val", v, share=1.0)
                                                  for name, v in vals])
     return mixed, val
+
+
+def mix_c4_sources(sources: Sequence[tuple[str, dict, float]], *, jam_oversample: float = 1.0,
+                   jam_speed_mps: float = 5.0, jam_min_fraction: float = 0.0):
+    """V5DATA (``data.c4_base``): ``(train, val)`` mixed from C4 sources ONLY (no pack base).
+
+    ``sources`` are ``(name, build_c4_datasets(...), mix_ratio)`` with the base source first;
+    each source is drawn with share ``mix_ratio`` (the ratios sum to 1, checked by the config)
+    and, with ``jam_oversample`` > 1, its jam windows (``data.jam`` rule) are up-weighted inside
+    the source exactly as :func:`add_c4_sources` does for the sources it adds.  Validation is
+    every source's held-out-world windows as ``<name>_val`` (``None`` when there are none).
+    """
+    from wms.data import jam as jamdata
+    from wms.data.mixdata import MixDataRefusal, MixedTrajectoryDataset, MixSource
+
+    sources = [(n, s, float(r)) for n, s, r in sources if s.get("train") is not None and r > 0.0]
+    if not sources:
+        raise MixDataRefusal("no C4 source with TRAIN windows")
+    added = []
+    for name, src, ratio in sources:
+        jam = None
+        if float(jam_oversample) > 1.0:
+            jam = jamdata.compute_jam_flags(src["train"], speed_mps=float(jam_speed_mps),
+                                            min_fraction=float(jam_min_fraction))["flags"]
+        added.append(MixSource(name, src["train"], share=ratio, events=src["train_events"],
+                               jam=jam))
+    mixed = MixedTrajectoryDataset(added, event_oversample=1.0,
+                                   jam_oversample=float(jam_oversample))
+    mixed.receipt["c4_sources"] = {name: src["receipt"] for name, src, _ in sources}
+    vals = [MixSource(f"{name}_val", src["val"], share=1.0)
+            for name, src, _ in sources if src.get("val") is not None]
+    return mixed, (MixedTrajectoryDataset(vals) if vals else None)
