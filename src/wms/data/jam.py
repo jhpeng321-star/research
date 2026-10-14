@@ -97,6 +97,40 @@ def _cache_document(speed_mps: float, source_key: str, flags: np.ndarray,
             "flags": [bool(x) for x in flags]}
 
 
+_SCAN_STATE: dict = {}
+
+
+def _scan_one(i: int) -> tuple[float, int, float]:
+    dataset, speed, min_fraction = _SCAN_STATE["args"]
+    record = dataset[i]
+    window_min, n_hdv = record_hdv_min_speed(record)
+    frac = 0.0
+    if math.isfinite(window_min) and window_min < speed and min_fraction > 0.0:
+        frac = record_hdv_jam_fraction(record, speed)
+    return window_min, n_hdv, frac
+
+
+def _scan_windows(dataset: Dataset, speed: float, min_fraction: float):
+    """Per-window ``(min HDV speed, n HDV obs, slow fraction)`` in index order.
+
+    ``WMS_JAM_WORKERS`` > 1 (POSIX fork only) scans in that many forked processes; the
+    per-window values and their order are identical to the serial scan."""
+    import os
+    workers = int(os.environ.get("WMS_JAM_WORKERS", "1") or 1)
+    n = len(dataset)
+    _SCAN_STATE["args"] = (dataset, speed, min_fraction)
+    try:
+        if workers > 1 and n > 1000 and os.name == "posix":
+            import multiprocessing as mp
+            with mp.get_context("fork").Pool(workers) as pool:
+                yield from pool.imap(_scan_one, range(n), chunksize=64)
+        else:
+            for i in range(n):
+                yield _scan_one(i)
+    finally:
+        _SCAN_STATE.pop("args", None)
+
+
 def compute_jam_flags(dataset: Dataset, *, speed_mps: float,
                       cache_path: Optional[str | Path] = None,
                       source_key: Optional[str] = None, min_fraction: float = 0.0) -> dict:
@@ -138,17 +172,14 @@ def compute_jam_flags(dataset: Dataset, *, speed_mps: float,
         flags = np.zeros(n, dtype=bool)
         n_hdv_windows = n_hdv_scanned = 0
         min_speed = None
-        for i in range(n):
-            record = dataset[i]
-            window_min, n_hdv = record_hdv_min_speed(record)
+        for i, (window_min, n_hdv, frac) in enumerate(_scan_windows(dataset, speed, min_fraction)):
             n_hdv_windows += int(n_hdv > 0)
             n_hdv_scanned += n_hdv
             if not math.isfinite(window_min):
                 continue
             if min_speed is None or window_min < min_speed:
                 min_speed = window_min
-            if window_min < speed and (min_fraction <= 0.0 or record_hdv_jam_fraction(
-                    record, speed) > min_fraction):
+            if window_min < speed and (min_fraction <= 0.0 or frac > min_fraction):
                 flags[i] = True
         if cache_file is not None:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
