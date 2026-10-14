@@ -54,7 +54,7 @@ oversample = 2.0
 # 96.8 % -> 98.4 % (local packs + GENRAND smoke).  INTEGRATOR DECISION: min_fraction = 0.3 (jam =
 # > 30 % of the window's HDV observations below 5 m/s; 53.5 % of native windows -> 69.7 % of
 # native draws, all ordinary draws 57.8 % -> 70.8 % on the local data) makes it act.
-# min_fraction = 0.3
+min_fraction = 0.3          # integrator 2026-10-14: ON
 
 [[data.c4_sources]]
 name = "genrand_plain"
@@ -79,11 +79,13 @@ weight = 0.0               # OWNER DECISION: e.g. 0.05 turns the population anch
 target = "legacy"          # medians of the legacy SUMO population (= the v5 training data)
 
 [loss.paired_diff]
-weight = 2.0
+# integrator 2026-10-14: premise corrected (v4 was ~9 % on paired batches, ranking still failed);
+# 1.0 ~ doubles it (~15-18 % on paired batches) without letting it dominate per-step accuracy.
+weight = 1.0
 fraction = 0.25
 
 [curriculum]
-stage_steps = [1200, 900, 800, 250]
+stage_steps = [1200, 900, 650, 250]   # integrator: 60 s 800 -> 650 (wall time)
 selection = "multi_horizon_v2"
 mixed_horizon_frac = 0.0
 max_hours = 10.5
@@ -93,6 +95,7 @@ lr_per_stage = [1.0e-3, 3.0e-4, 3.0e-4, 1.0e-4]
 
 [selection]
 val_max_windows = 512
+val_every = 400            # integrator: 200 -> 400 (wall time, ~8.8 h total)
 
 [runtime]
 out_dir = "runs/active/c4_wm_v5_base"

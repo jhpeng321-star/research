@@ -427,7 +427,9 @@ def test_v5_config_jam_and_sources():
     assert cfg.data.jam.oversample == 2.0
     assert {s.name: (s.mix_ratio, s.paired) for s in cfg.data.c4_sources} == {
         "genrand_plain": (0.15, False), "genrand_branch": (0.05, True)}
-    assert cfg.loss.paired_diff.weight == 2.0 and cfg.loss.paired_diff.fraction == 0.25
+    assert cfg.loss.paired_diff.weight == 1.0 and cfg.loss.paired_diff.fraction == 0.25
+    assert cfg.data.jam.min_fraction == 0.3
+    assert cfg.curriculum.stage_steps == [1200, 900, 650, 250] and cfg.selection.val_every == 400
     assert cfg.loss.driver_prior.weight == 0.0 and cfg.loss.driver_prior.target == "legacy"
 
 
