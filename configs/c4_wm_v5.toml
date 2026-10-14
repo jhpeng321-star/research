@@ -1,0 +1,27 @@
+# WM-S-C4 v5 FINAL CANDIDATE (2026-10-14).  NOT trained yet; launch needs owner approval.
+#   = c4_wm_v5_base.toml (non-lane fixes, INFRAV5_NOTES.md)
+#   + the hazard_v5 lane model of c4_wm_v5_lane.toml (LANEV5_NOTES.md)
+#   + the population anchor on the encoded driver settings, textbook target (owner option a):
+#     the v5 data come from the c4/popfix continuous textbook population.
+# Launch: pretrain the lane network on the v5 TRAIN windows first (tools/lanev5_pretrain.py),
+# then pass it with --set model.lane_v5_pretrain=<path>.  After training, rerun
+# tools/lanehazard_calib.py --write-ap on the selected checkpoint so "gated" uses its own AP.
+schema_version = 2
+name = "WM-S-C4-V5"
+extends = "c4_wm_v5_base.toml"
+
+[model]
+lane_model = "hazard_v5"
+lane_decision = "gated"
+lane_hazard_features = "v1"
+merge_hazard_zone = "forced_late"
+
+[loss.lane_event]
+weight = 10.0
+
+[loss.driver_prior]
+weight = 0.05
+target = "textbook"
+
+[runtime]
+out_dir = "runs/active/c4_wm_v5"
