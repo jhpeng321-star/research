@@ -300,6 +300,15 @@ PLWM1_LOADING_MAP = {9801: 2700, 9802: 2600, 9803: 2700, 9804: 2700, 9805: 2700,
 # membership check before collection).  TRAINING only: never evaluation, CAL or HOLDOUT.
 C4_GENRAND_SEEDS = frozenset(range(961000, 962000))
 C4_GENRAND_LOADINGS = (2400, 2700)
+# C4 WALLREGEN unseen-wall EVALUATION block (2026-10-14, WALLREGEN_NOTES.md): fresh worlds for the
+# regenerated unseen-wall world-model evaluation sets (new driver population).  EVALUATION only:
+# never WM/policy training, never CAL/HOLDOUT/TEST.  Proposed by the wallregen worker after a scan of
+# the seed tables, protocols/experiment_history.json and runs/active/**/eval_seeds.json (no hit); the
+# integrator registers the block and runs the holdout-guard membership check before collection.
+C4_WALLREGEN_EVAL_SEEDS = frozenset(range(962000, 962200))
+# loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an owner choice; the
+# textbook population saturates near 1930 veh/h)
+C4_WALLREGEN_EVAL_LOADINGS = tuple(range(1000, 2801, 50))
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.
@@ -384,6 +393,9 @@ def require_development_case(seed, loading, role):
         return
 
     if role == "exposed" and seed in C4_GENRAND_SEEDS and loading in C4_GENRAND_LOADINGS:
+        return
+
+    if role == "exposed" and seed in C4_WALLREGEN_EVAL_SEEDS and loading in C4_WALLREGEN_EVAL_LOADINGS:
         return
 
     if role == "exposed" and seed in WM44_CHUNK1_SEEDS \

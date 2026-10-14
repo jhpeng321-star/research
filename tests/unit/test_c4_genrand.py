@@ -522,7 +522,8 @@ def test_weighted_cycle_one_world_per_seed_and_genrand_seed_guard(tmp_path):
     assert all(j["opts"]["gr_mode"] == "speed" for j in jobs)
     check_case(961000, 2400)
     check_case(961999, 2700)
-    for seed, demand in ((961000, 2600), (962000, 2700), (960999, 2700)):
+    # 962000-962199 is the WALLREGEN evaluation block (admitted); 962200 is outside every block
+    for seed, demand in ((961000, 2600), (962200, 2700), (960999, 2700)):
         with pytest.raises((SeedRefusal, ValueError)):
             check_case(seed, demand)
     with pytest.raises(SystemExit):
