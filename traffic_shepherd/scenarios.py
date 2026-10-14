@@ -6,7 +6,9 @@ which unchanged IDM vehicles receive commands. Piecewise demand definition is
 versioned scenario logic, not an actor input or an alternative control config.
 """
 from dataclasses import asdict, dataclass
+import csv
 import hashlib
+import io
 import json
 from pathlib import Path
 import random
@@ -25,9 +27,20 @@ class TripRequest:
 
 
 def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed",
-                     cav_vtype: str | None = None) -> list[TripRequest]:
+                     cav_vtype: str | None = None, population: str = "legacy3") -> list[TripRequest]:
     """``cav_vtype`` (owner 2026-10-14): CAVs use this single vType (e.g. "normal_car") instead of the
-    driver-type draw; HDV draws are unchanged.  None = legacy (CAVs keep their drawn driver type)."""
+    driver-type draw; HDV draws are unchanged.  None = legacy (CAVs keep their drawn driver type).
+
+    ``population`` (owner 2026-10-14): "legacy3" (default) = the three discrete vTypes above;
+    "textbook" = one continuous-parameter vType per HDV (``tb.<vehicle_id>``, parameters from
+    :func:`traffic_shepherd.c4.population.sample_driver`) and every CAV on ``cav_typical``.
+    Departures and CAV identities do not depend on ``population``."""
+    from traffic_shepherd.c4.population import (TEXTBOOK_CAV_VTYPE, check_population,
+                                                hdv_vtype_id)
+    check_population(population)
+    textbook = population == "textbook"
+    if textbook and cav_vtype not in (None, TEXTBOOK_CAV_VTYPE):
+        raise ValueError(f"textbook population: CAVs use {TEXTBOOK_CAV_VTYPE!r}, got {cav_vtype!r}")
     require_development_case(seed, mainline_vph, role)
     if not 1900 <= mainline_vph <= 2800:
         raise ValueError("loading outside declared development family")
@@ -71,6 +84,8 @@ def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: 
                 cav = random.Random(f"damping_cav_v1:{seed}:{identity}").random() < penetration
                 if cav and cav_vtype is not None:
                     driver = cav_vtype
+                if textbook:
+                    driver = TEXTBOOK_CAV_VTYPE if cav else hdv_vtype_id(identity)
                 requests.append(TripRequest(identity, round(t, 6), stream + "_route", driver, cav))
                 ordinal += 1
     return sorted(requests, key=lambda r: (r.depart_s, r.vehicle_id))
@@ -78,22 +93,41 @@ def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: 
 
 def build_scenario(
     root: Path, seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed", config=None,
-    cav_vtype: str | None = None,
+    cav_vtype: str | None = None, population: str = "legacy3",
 ) -> tuple[Path, list[TripRequest], dict]:
     config = config if config is not None else load_config()
     if (config.episode_seconds, config.demand_end_seconds, config.ramp_vph) != (2400, 1800, 400):
         raise ValueError("configuration differs from the tested explicit demand fixture")
     requests = request_schedule(seed, mainline_vph, role=role, penetration=penetration,
-                                cav_vtype=cav_vtype)
+                                cav_vtype=cav_vtype, population=population)
+    textbook = population == "textbook"
     template = config.scenario_template_path
     original = ET.parse(template).getroot()
     route = ET.Element("routes")
-    for vtype in original.findall("./vTypeDistribution/vType"):
-        attrs = {k: v for k, v in vtype.attrib.items() if k != "probability"}
-        # Freeze exact speed factors, avoiding extra random speed-factor draws
-        # when policy-dependent insertion order changes.
-        attrs["speedDev"] = "0"
-        ET.SubElement(route, "vType", attrs)
+    truth_text = None
+    if textbook:
+        from traffic_shepherd.c4 import population as pop
+        cav_params = dict(pop.TEXTBOOK_CAV_PARAMS)
+        ET.SubElement(route, "vType", pop.vtype_attrs(pop.TEXTBOOK_CAV_VTYPE, cav_params))
+        buffer = io.StringIO(newline="")
+        writer = csv.writer(buffer, lineterminator=chr(10))
+        writer.writerow(["vehicle_id", "driver_class", "vtype_id", "is_cav", *pop.PARAM_ORDER])
+        for request in requests:
+            if request.is_cav:
+                params, cls = cav_params, pop.TEXTBOOK_CAV_VTYPE
+            else:
+                params, cls = pop.sample_driver(seed, request.vehicle_id), "textbook"
+                ET.SubElement(route, "vType", pop.vtype_attrs(request.driver_type, params))
+            writer.writerow([request.vehicle_id, cls, request.driver_type, int(request.is_cav),
+                             *(repr(float(params[k])) for k in pop.PARAM_ORDER)])
+        truth_text = buffer.getvalue()
+    else:
+        for vtype in original.findall("./vTypeDistribution/vType"):
+            attrs = {k: v for k, v in vtype.attrib.items() if k != "probability"}
+            # Freeze exact speed factors, avoiding extra random speed-factor draws
+            # when policy-dependent insertion order changes.
+            attrs["speedDev"] = "0"
+            ET.SubElement(route, "vType", attrs)
     for element in original.findall("route"):
         ET.SubElement(route, "route", element.attrib)
     for request in requests:
@@ -124,7 +158,11 @@ def build_scenario(
     ET.SubElement(processing, "collision.action", value="warn")
     ET.indent(scene)
     scene_text = ET.tostring(scene, encoding="unicode")
-    for path, value in ((route_path, text), (scene_path, scene_text)):
+    writes = [(route_path, text), (scene_path, scene_text)]
+    if truth_text is not None:
+        # EVALUATION-ONLY driver truth (wms.data.driver_truth hetdata_truth.csv format).
+        writes.append((root / "hetdata_truth.csv", truth_text))
+    for path, value in writes:
         if path.exists() and path.read_text(encoding="utf-8") != value:
             raise ValueError("refusing to change an existing scenario")
         path.write_text(value, encoding="utf-8")
@@ -145,6 +183,16 @@ def build_scenario(
         "assignment": "fixed_explicit_driver_type_and_cav_identity_no_runtime_type_change",
         "cav_vtype": cav_vtype,
     }
+    if textbook:   # legacy3 manifests stay byte-identical to the pre-population code
+        from traffic_shepherd.c4 import population as pop
+        manifest.update({
+            "cav_vtype": pop.TEXTBOOK_CAV_VTYPE,
+            "driver_population": "textbook",
+            "driver_population_version": pop.POPULATION_VERSION,
+            "driver_truth_file": "hetdata_truth.csv",
+            "driver_truth_sha256": hashlib.sha256(truth_text.encode()).hexdigest(),
+            "driver_truth_note": "evaluation-only per-vehicle parameters; never a model input",
+        })
     return scene_path, requests, manifest
 
 

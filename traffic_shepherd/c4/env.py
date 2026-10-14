@@ -11,6 +11,11 @@ Owner 2026-10-14: every CAV uses the single "normal_car" vType (``cav_vtype``, d
 CAV_VTYPE; also when released to native) -- a CAV has no driver personality.  Under speedMode 27
 (bit 1 = respect the vType max acceleration) SUMO caps a CAV at that type's accel (2.6).
 ``cav_vtype=None`` restores the legacy behaviour (CAVs keep their drawn driver type).
+Owner 2026-10-14 (late): ``population="textbook"`` replaces the three discrete HDV types by a
+continuous per-vehicle IDM/LC2013 population centred on the textbook highway values and puts every
+CAV on the ``cav_typical`` vType (population medians, accel 1.2, decel 2.0; see
+:mod:`traffic_shepherd.c4.population`); ``cav_vtype`` is then ignored.  Default "legacy3" keeps
+every existing run reproducible.
 
 Every CAV command goes through :class:`traffic_shepherd.ownership.CommandOwnership`
 (``wall_commands={vid: accel}`` -> ``direct_target`` -> ``slowDown``), the sole
@@ -101,7 +106,7 @@ class CavSumoEnv:
                  sensor_check_every_s: int = 10, physics_log: bool = True,
                  extra_sumo_cli=None, entry_queue_in_state: bool = False,
                  direct_accel_max_mps2: float = DIRECT_ACCEL_MAX_MPS2,
-                 cav_vtype: str | None = CAV_VTYPE):
+                 cav_vtype: str | None = CAV_VTYPE, population: str = "legacy3"):
         if controller not in CONTROLLERS:
             raise ValueError(f"controller must be one of {CONTROLLERS}")
         self.config = load_config()
@@ -124,7 +129,11 @@ class CavSumoEnv:
         self.entry_queue_in_state = bool(entry_queue_in_state)
         # Direct-output upper bound (the policy's stored cap binds first; damping/PI/wall keep 1.5).
         self.direct_accel_max_mps2 = float(direct_accel_max_mps2)
-        if cav_vtype not in (None, "normal_car", "aggressive_car", "cautious_car"):
+        from .population import TEXTBOOK_CAV_VTYPE, check_population
+        self.population = check_population(population)
+        if self.population == "textbook":
+            cav_vtype = TEXTBOOK_CAV_VTYPE          # owner rule: CAVs have no driver type
+        elif cav_vtype not in (None, "normal_car", "aggressive_car", "cautious_car"):
             raise ValueError(f"cav_vtype must be None or a scenario vType, got {cav_vtype!r}")
         self.cav_vtype = cav_vtype
         if not 0.0 < self.direct_accel_max_mps2 <= DIRECT_ACCEL_MAX_MPS2:
@@ -180,7 +189,7 @@ class CavSumoEnv:
                                                dir=self.scenario_root))
         scene, requests, scenario_manifest = build_scenario(
             scene_root, self.seed, self.demand, penetration=self.penetration, role="exposed",
-            config=self.config, cav_vtype=self.cav_vtype)
+            config=self.config, cav_vtype=self.cav_vtype, population=self.population)
         self.requests = requests
         self.cav_ids = frozenset(r.vehicle_id for r in requests if r.is_cav)
         self.scenario_manifest = scenario_manifest
