@@ -93,6 +93,7 @@ class TrainSettings:
     exclude_window_list: Optional[str] = None
     val_window_list: Optional[str] = None
     val_batches: int = 8
+    val_max_windows: int = 0
     projection_enabled: bool = False
     projection_min_gap_m: float = 2.0
     residual_cap_mps2: Optional[float] = None

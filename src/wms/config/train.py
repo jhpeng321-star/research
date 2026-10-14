@@ -480,10 +480,15 @@ class SelectionConfig:
     select_by_long_horizon: bool = False
     val_every: int = 200
     val_batches: int = 8
+    # 2026-10-14: cap on validation windows per evaluation (0 = all, unchanged). The evaluator ran
+    # the WHOLE validation set; with the GENRAND sources (~8,300 val windows) one 60 s validation took
+    # >1 h. A fixed, evenly spaced subset keeps validation/selection comparable across steps.
+    val_max_windows: int = 0
 
     def __post_init__(self) -> None:
         require(self.val_every >= 1 and self.val_batches >= 1,
                 "selection.val_every and val_batches must be positive")
+        require(self.val_max_windows >= 0, "selection.val_max_windows must be >= 0")
 
 
 @config_dataclass

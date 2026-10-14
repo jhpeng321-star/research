@@ -55,6 +55,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "exclude_window_list": "data.windows.exclude",
     "val_window_list": "data.windows.val",
     "val_batches": "selection.val_batches",
+    "val_max_windows": "selection.val_max_windows",
     "projection_enabled": "model.projection.enabled",
     "projection_min_gap_m": "model.projection.min_gap_m",
     "residual_cap_mps2": "model.residual_cap_mps2",
@@ -169,6 +170,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
     "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
     "entry_pad_auto", "entry_pad_max", "entry_insert_rule", "junction_fix", "controller_hygiene",
+    "val_max_windows",
     "lane_decision", "lane_logit_offsets", "lane_hazard_features", "merge_hazard_zone",
     "gap_stopped_relax", "lane_hazard_decouple",
     # SCHED

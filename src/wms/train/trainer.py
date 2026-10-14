@@ -212,6 +212,11 @@ class WmSTrainer:
         return record
 
     def _eval_loader(self, dataset: Dataset) -> DataLoader:
+        cap = int(getattr(self.settings, "val_max_windows", 0) or 0)
+        if cap and len(dataset) > cap:
+            from torch.utils.data import Subset
+            step = len(dataset) / cap      # fixed, evenly spaced subset (same windows every time)
+            dataset = Subset(dataset, sorted({int(i * step) for i in range(cap)}))
         return DataLoader(dataset, batch_size=self.settings.batch_size, shuffle=False,
                           collate_fn=collate, num_workers=0, drop_last=False)
 
