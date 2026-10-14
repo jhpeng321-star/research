@@ -74,5 +74,10 @@ weight = 10.0
 weight = 0.05
 target = "textbook"
 
+[curriculum]
+# integrator 2026-10-14: the v4 references were measured on the legacy validation set; 0 = online
+# raw mean position over the common horizons, final selection normalised by the best candidate.
+selection_reference = [0.0, 0.0, 0.0, 0.0]
+
 [runtime]
 out_dir = "runs/active/c4_wm_v5"
