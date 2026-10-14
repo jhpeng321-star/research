@@ -71,6 +71,14 @@ from pathlib import Path  # noqa: E402
 
 import numpy as np  # noqa: E402
 
+# ============================================================ DEMAND LEVELS (owner decision)
+#: Mainline demand levels (veh/h) of the regenerated worlds; the ONE variable to set.  None =
+#: undecided: ``plan`` refuses unless ``--demands`` (or ``DEMANDS=`` in run_wallregen.sh) is
+#: given.  The old sets used 2400/2600/2700 (legacy 3-type population); the textbook population
+#: saturates at ~1930 veh/h mainline (coordinator 2026-10-14), so those levels give unbounded
+#: source queues there.  Any multiple of 50 in [1000, 2800] passes the seed guard.
+DEMANDS_VPH: tuple | None = None
+
 SCHEMA_PLAN = "c4_wallregen_plan/1"
 SCHEMA_WORLD = "c4_wallregen_world/1"
 FORBIDDEN = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
@@ -96,7 +104,6 @@ WALL_ACCEL_CEILING_MPS2 = 1.5
 # --------------------------------------------------------------------------- plan defaults
 DEFAULT_SEEDS = "962000-962035"
 DEFAULT_PENETRATIONS = (0.1, 0.2, 0.4)
-DEFAULT_DEMANDS = (2400, 2600, 2700)
 DEFAULT_T_CHOICES = (240, 300, 360, 420, 480, 540)
 DEFAULT_PLAN_SEED = 20261015
 DEFAULT_BRANCH_S = 600                       # = the WM-59 pilot BRANCH_LENGTH_S
@@ -778,7 +785,9 @@ def main(argv=None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--seeds", default=DEFAULT_SEEDS)
     p.add_argument("--penetrations", default=",".join(str(x) for x in DEFAULT_PENETRATIONS))
-    p.add_argument("--demands", default=",".join(str(x) for x in DEFAULT_DEMANDS))
+    p.add_argument("--demands", default=(",".join(str(x) for x in DEMANDS_VPH)
+                                         if DEMANDS_VPH else None),
+                   help="comma-separated veh/h (default: DEMANDS_VPH at the top of this file)")
     p.add_argument("--t-choices", default=",".join(str(x) for x in DEFAULT_T_CHOICES))
     p.add_argument("--plan-seed", type=int, default=DEFAULT_PLAN_SEED)
     p.add_argument("--branch-s", type=int, default=DEFAULT_BRANCH_S)
@@ -804,6 +813,8 @@ def main(argv=None) -> int:
         bad = [x for x in arms if x not in ARMS]
         if bad:
             raise SystemExit(f"unknown arms {bad}")
+        if not a.demands:
+            raise SystemExit("demand levels undecided: pass --demands (or set DEMANDS_VPH)")
         plan = make_plan(seeds=parse_seeds(a.seeds),
                          penetrations=[float(x) for x in a.penetrations.split(",")],
                          demands=[int(x) for x in a.demands.split(",")],

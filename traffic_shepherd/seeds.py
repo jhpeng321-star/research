@@ -306,7 +306,9 @@ C4_GENRAND_LOADINGS = (2400, 2700)
 # the seed tables, protocols/experiment_history.json and runs/active/**/eval_seeds.json (no hit); the
 # integrator registers the block and runs the holdout-guard membership check before collection.
 C4_WALLREGEN_EVAL_SEEDS = frozenset(range(962000, 962200))
-C4_WALLREGEN_EVAL_LOADINGS = (2400, 2600, 2700)
+# loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an owner choice; the
+# textbook population saturates near 1930 veh/h)
+C4_WALLREGEN_EVAL_LOADINGS = tuple(range(1000, 2801, 50))
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.

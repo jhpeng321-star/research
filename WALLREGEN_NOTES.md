@@ -80,10 +80,19 @@ disjoint from the blocked sets and GENRAND 961000-961999). Scan: no integer in 9
 any `traffic_shepherd.seeds` table (unit test), `protocols/experiment_history.json` or
 `runs/active/**/eval_seeds.json` (word-boundary regex; the only textual hit is GENRAND's
 exclusive `range(..., 962000)` end). Guard files with restricted names were NOT opened.
-Default plan uses 962000-962035 (36 worlds = 4 per (p, demand) cell of p 0.1/0.2/0.4 x demand
-2400/2600/2700, t_w drawn from 240..540 by plan seed 20261015); 962036-962199 stay in reserve.
+Default plan uses 962000-962035 (36 worlds; penetration cycles 0.1/0.2/0.4, demand cycles over
+the chosen levels, t_w drawn from 240..540 by plan seed 20261015); 962036-962199 stay in reserve.
+Loadings admitted for the block: any multiple of 50 veh/h in [1000, 2800].
 `tests/unit/test_c4_genrand.py` boundary case moved from 962000 to 962200 (962000 is now
 admitted by the new block).
+
+## Demand levels (OWNER DECISION PENDING)
+
+The textbook population saturates at ~1930 veh/h mainline (coordinator 2026-10-14), so the old
+sets' 2400/2600/2700 give unbounded source queues. Demands are ONE variable,
+`DEMANDS_VPH` at the top of `traffic_shepherd/c4/wallregen.py` (default `None` = undecided:
+`plan` refuses), or `--demands a,b,c` / `DEMANDS=a,b,c` for `run_wallregen.sh run` (required).
+Levels cycle per penetration triple (36 worlds / k levels; k = 2, 3 or 4 keeps cells balanced).
 
 ## Size and cost
 
@@ -98,13 +107,20 @@ Scoring (CPU): ~30 s per state per worker for one checkpoint (C4 wm_s_best, lapt
 x 8 workers ~ 9 min per set per checkpoint; `--benefit` adds 2 rollouts per wall state.
 Textbook population may change congestion and hence SUMO speed; plan for 2x.
 
+Per-set budget of the default plan (36 worlds, any demand levels): SUMO 124,680 sim-s
+(warmups 14,280 s + 184 branches x 600 s), ~2-3.5 CPU-h, one wave on 46 workers (~5-10 min
+wall); every variant (h60 / real / req) is converted from the SAME tapes: wall_same <= 144
+states, wall_pilot = assembled subset, wall_native <= 36 (h60/real only), req <= 144 minus
+not_feasible arms.
+
 ## Box commands (Linux, C4 bundle layout; code at $C4_HOME/rd incl. this branch + popfix)
 
 ```bash
 cd $C4_HOME/rd/scripts/c4
 bash run_wallregen.sh check                       # imports, population arg present, plan dry run
 bash run_wallregen.sh smoke                       # 1 world (962199), 182 s branches, ~3 min, foreground
-POPULATION=textbook bash run_wallregen.sh run     # detached; WORKERS defaults to cores-2
+DEMANDS=<owner levels, e.g. 1500,1700,1900> POPULATION=textbook bash run_wallregen.sh run
+                                                  # detached; WORKERS defaults to cores-2
 cat $C4_HOME/runs/wallregen_*/STATE; tail -f $C4_HOME/runs/wallregen_*/launch.log
 RESUME=1 RUN_ID=<id> bash run_wallregen.sh run    # after an interruption (complete worlds skipped)
 ```
@@ -116,7 +132,7 @@ dirs into one `sim/` before converting, or just run both halves and convert each
 Without the c4 helpers (plain checkout, PYTHONPATH=src:.):
 
 ```bash
-python -m traffic_shepherd.c4.wallregen plan --out W/plan.json --population textbook
+python -m traffic_shepherd.c4.wallregen plan --out W/plan.json --population textbook --demands <levels>
 python -m traffic_shepherd.c4.wallregen run --plan W/plan.json --out W/sim --workers 46
 for v in h60 real req; do python -m traffic_shepherd.c4.wallregen_states --run W/sim --variant $v --out W/states_$v; done
 python -m traffic_shepherd.c4.wallregen status --out W/sim
@@ -159,9 +175,23 @@ entries-ON variant; `--limit N` for a quick subset.)
   5 / 6 / 11 s (h60 / real / req, 8 states each; 40 / 51 / 68 MB); C4 scored the real set
   (4 states) without errors (60 s 5.34 m) and the unpaired benefit pass ran.
 
+* Textbook (after merging c4/int b538acd = popfix): w962199m1900p20t300, 182 s branches,
+  88 s wall; population_manifest textbook_v1 / cav_typical; native vs native_repeat max |ds|
+  0.0; outcomes aborted_in_hold x2, in_hold_at_end x2; 0 collisions/teleports; h60/real/req
+  4 states each; C4 req-set scoring: no errors (60 s HDV |ds| 45.2 m, 1/4 blow-ups; smoke only).
+
+## BLOCKER for demand levels below 1900
+
+`traffic_shepherd/scenarios.py::request_schedule` refuses loadings outside [1900, 2800]
+("loading outside declared development family"); 1800 failed in the smoke. Levels below the
+textbook saturation (~1930) other than 1900 need that family guard widened (shared code, owner/
+integrator decision; not changed here). The WALLREGEN seed guard already admits 1000-2800.
+
 ## Pending (integrator)
 
 * Register the seed block (ledger/registration) and run the holdout guard on 962000-962199.
-* After popfix merges: rebase/merge, re-run `run_wallregen.sh check` + smoke with
-  `POPULATION=textbook` (the driver refuses textbook until `CavSumoEnv` has `population`).
+* Owner: choose `DEMANDS` (textbook saturation ~1930 veh/h), then launch the run.
+* Bundle: `scripts/c4/bundle_manifest.json` now ships
+  `output/controller_verification_v7/pi_owner_adapter.py` (CavSumoEnv.reset imports it through
+  `controller_factory` -> `pi_session`); rebuild the bundle before the box run.
 * Ledger entry for the box run (new simulation) per AGENTS.md close-out.

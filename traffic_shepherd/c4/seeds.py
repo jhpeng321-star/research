@@ -16,7 +16,7 @@ from traffic_shepherd import seeds as S
 #: + the C4 GENRAND undirected random-action TRAINING block (961000-961999, loadings 2400/2700;
 #: GENRAND_REGISTRATION.md) - WM training data only.
 GENRAND_SEEDS = frozenset(S.C4_GENRAND_SEEDS)
-#: + the C4 WALLREGEN unseen-wall EVALUATION block (962000-962199, loadings 2400/2600/2700;
+#: + the C4 WALLREGEN unseen-wall EVALUATION block (962000-962199, loadings 1000-2800 step 50;
 #: WALLREGEN_NOTES.md) - regenerated wall evaluation states only, never training.
 WALLREGEN_SEEDS = frozenset(S.C4_WALLREGEN_EVAL_SEEDS)
 ALLOWED_SEEDS = frozenset(S.EXPOSED_CONTROLLER_SEEDS) | GENRAND_SEEDS | WALLREGEN_SEEDS

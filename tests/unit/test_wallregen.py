@@ -50,8 +50,9 @@ def test_seed_guard_admits_block_only_with_registered_loadings():
     from traffic_shepherd.c4.seeds import SeedRefusal, check_case
     check_case(962000, 2700)
     check_case(962199, 2600)
+    check_case(962100, 1800)
     with pytest.raises(ValueError):
-        check_case(962000, 2000)
+        check_case(962000, 1025)
     with pytest.raises(SeedRefusal):
         check_case(962200, 2700)
 
