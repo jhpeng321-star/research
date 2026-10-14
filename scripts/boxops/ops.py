@@ -24,6 +24,8 @@ from urllib.request import Request, urlopen
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 RUNTIME_PATHS = ("traffic_shepherd", "src", "configs", "scripts", "baselines", "scenarios",
                  "assets", "tools", "output/controller_verification_v7/pi_owner_adapter.py",
+                 "output/controller_verification_v2/pi_saturation_v1.py",
+                 "output/controller_verification_v4/pi_external_u.py",
                  "pyproject.toml", "requirements.txt")
 
 
