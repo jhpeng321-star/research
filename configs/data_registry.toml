@@ -113,3 +113,8 @@ path = "runs/active/C4-GENRAND-20261014/branches/c4_episodes"
 # set WMS_DATA_V6_LONGPAIR to the converted long-branch c4_episodes directory.
 [datasets.v6_longpair]
 path = "runs/active/v6_longpair/c4_episodes"
+
+# C4 Dreamer loop (2026-10-16): SUMO episodes collected with the learned v6 policy (training seeds
+# 965184+ of the C4_V6_LONGPAIR training block). Placeholder: set WMS_DATA_V6_POLICY.
+[datasets.v6_policy]
+path = "runs/active/v6_policy/c4_episodes"
