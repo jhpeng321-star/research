@@ -79,10 +79,34 @@ and counterfactual rows. The model's original 0.9 decay was restored after each 
 {"update":2,"returns":-3.463257312774658,"actor_grad_norm":0.11380411684513092,"credit_profile":{"norms":{"1":0.07854137569665909,"4":0.008392426185309887},"active_actions":5}}
 ```
 
-**Outstanding acceptance check:** the requested trained-checkpoint/data smoke was
-not run. Its checkpoint/physics and data/run-smoke inputs are outside the provided
-workspace, while the execution policy explicitly forbids outside reads. The
-synthetic integration above is not a replacement for that check. Stage those inputs
-inside this worktree, point the existing data environment variables at the local
-copies, then run `wms.control.train_cli --config configs/c4_policy_v6.toml --smoke`
-with the local checkpoint and inspect both finite updates and their credit profiles.
+## Trained-checkpoint acceptance smoke (2026-10-15)
+
+The outstanding acceptance check was completed with real inputs staged inside this worktree:
+checkpoint `_ref/ckpt/wm_s_best.pt` (with its `physics.json`/`TRAIN_RECEIPT.json`) and the
+textbook C4 smoke sources `_ref/conv_native`, `_ref/conv_generic_random`, `_ref/conv_branch`
+(exposed as `WMS_DATA_V5_NATIVE`, `WMS_DATA_GENRAND_PLAIN`, `WMS_DATA_GENRAND_BRANCH`).
+CPU-only, `OMP/MKL/OPENBLAS_NUM_THREADS=2` (`--smoke` also caps torch at two threads).
+
+```text
+_out/v6-venv/Scripts/python.exe -m wms.control.train_cli
+  --config configs/c4_policy_v6.toml --smoke --wm-ckpt _ref/ckpt/wm_s_best.pt
+```
+
+Both variants ran two complete updates (RUN_SUMMARY `status: completed, updates: 2`;
+162 train / 18 val windows from native_v5 + genrand_plain; every metric finite). The
+default-decay control used an untracked scratch config (`_out/c4_policy_v6_wm090.toml` =
+the V6 setup without `imagination_grad_decay`, credit profiling kept on) written to
+`runs/active/C4-POLICY-V6-WM090`. dR/d(policy accel at step 0), L2 norms:
+
+| update | window | decay 0.98 (V6) | WM default 0.9 | ratio |
+|--------|--------|-----------------|----------------|-------|
+| 1 | w1 | 0.02528 | 0.02479 | 1.02 |
+| 1 | w4 | 0.006325 | 0.003532 | 1.79 |
+| 2 | w1 | 0.02071 | 0.02043 | 1.01 |
+| 2 | w4 | 0.004312 | 0.002458 | 1.75 |
+
+Window-1 credit is nearly identical (two physics steps of damping barely differ), while
+the terminal window retains ~1.75x more credit under 0.98 — the intended longer-horizon
+gradient signature. Update-1 returns are bit-identical across variants (damping is
+gradient-only); update-2 returns and grad norms diverge slightly after the first actor
+update (0.98: -3.00358 / actor_grad_norm 0.5811; 0.9: -3.00359 / 0.5774).
