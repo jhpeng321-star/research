@@ -23,6 +23,7 @@ from torch.utils.checkpoint import checkpoint
 
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
+from wms.physics.lane_conflict import resolve_lane_conflicts
 from wms.physics.mobil import MASKED_LOGIT, mobil_merge_logits
 from wms.physics.neighbours import lane_neighbour, lane_of, lead_neighbour
 from wms.physics.projection import FeasibilityProjection
@@ -117,6 +118,7 @@ class WmSModel(nn.Module):
         self.rollout_mode = spec.rollout_mode
         self.lane_head_mode = spec.lane_head
         self.lane_model = getattr(spec, "lane_model", "residual")
+        self.lane_conflict_resolve = getattr(spec, "lane_conflict_resolve", False)
         # LANEFIX (hazard mode only; defaults = WMLANE A behaviour).  ``lane_decision`` and
         # ``lane_logit_offsets`` are plain attributes an evaluator may override.
         self.lane_decision = getattr(spec, "lane_decision", "argmax")
@@ -907,6 +909,11 @@ class WmSModel(nn.Module):
         dt = self.physics.dt_s
         next_v = (v + out["accel_mps2"] * dt).clamp_min(0.0)
         next_s = s + 0.5 * (v + next_v) * dt
+        if self.physics.stop_time_integration:
+            accel = out["accel_mps2"]
+            decel = torch.where(accel < 0.0, -accel, torch.ones_like(accel))
+            stopping_distance = v.square() / (2.0 * decel)
+            next_s = torch.where(v + accel * dt < 0.0, s + stopping_distance, next_s)
         if self._samples_lanes:
             if lane_uniform is None:
                 lane_uniform = torch.rand(present.shape, device=present.device)
@@ -937,6 +944,10 @@ class WmSModel(nn.Module):
         exit_s = state.get("exit_s_m")
         if exit_s is not None:
             next_present = next_present & (next_s <= exit_s)
+        if self.lane_conflict_resolve:
+            next_lane = resolve_lane_conflicts(
+                next_s, state_kin(state)[..., 6], state["lane"].long(), next_lane,
+                next_present, out["hdv_mask"], self.physics.gap_overlap_margin_m)
         if projection is not None:
             length = state.get("length_m", torch.full_like(s, 5.0))
             proj = projection(next_s, next_v, next_lane, next_present, length,

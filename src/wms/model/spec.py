@@ -84,6 +84,8 @@ class ModelSpec:
     # V6: default values preserve the legacy encoder and algebraic EMA updates.
     driver_param_mode: str = "legacy"
     driver_ema_update: bool = True
+    # V6INTEG: opt-in resolution of simultaneous lane-change conflicts.
+    lane_conflict_resolve: bool = False
 
     def __post_init__(self) -> None:
         if self.driver_param_mode not in ("legacy", "physical"):

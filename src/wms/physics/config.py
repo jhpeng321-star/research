@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -122,8 +123,17 @@ class PhysicsConfig:
     gap_stopped_relax: bool = False
     gap_stopped_speed_mps: float = GAP_STOPPED_SPEED_MPS
     gap_stopped_min_m: float = GAP_STOPPED_MIN_M
+    # V6 integration: absent from old physics.json files = legacy execution.
+    stop_time_integration: bool = False
+    emergency_decel_mps2: float | None = None
 
     def __post_init__(self) -> None:
+        emergency = self.emergency_decel_mps2
+        if emergency is not None and (
+                isinstance(emergency, bool) or not isinstance(emergency, (int, float))
+                or not math.isfinite(emergency) or not 0.0 < emergency <= -self.accel_min_mps2):
+            raise ValueError("emergency_decel_mps2 must be finite, positive and no greater "
+                             "than -accel_min_mps2")
         if self.lane_rule not in LANE_RULES:
             raise ValueError(f"lane_rule must be one of {LANE_RULES}: {self.lane_rule!r}")
         if self.lane_gap_rule not in LANE_GAP_RULES:
@@ -162,7 +172,8 @@ class PhysicsConfig:
     def from_params_file(cls, path: str | Path, **overrides) -> "PhysicsConfig":
         """Build a config from a fitted merge-cal params JSON (unknown keys ignored).
 
-        ``merge_cal``, ``lane_rule``, ``lane_gap_rule`` and ``gap_stopped_relax`` are never
+        ``merge_cal``, ``lane_rule``, ``lane_gap_rule``, ``gap_stopped_relax`` and the V6
+        integration switches are never
         read from the file; the caller enables them explicitly.  ``overrides`` win over the file.
         """
         known = set(cls.__dataclass_fields__)
@@ -171,7 +182,8 @@ class PhysicsConfig:
             raise ValueError(f"merge-cal params must be a JSON object: {path}")
         data = {k: v for k, v in raw.items()
                 if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule",
-                                            "gap_stopped_relax")
+                                            "gap_stopped_relax", "stop_time_integration",
+                                            "emergency_decel_mps2")
                 and v is not None}
         data.update(overrides)
         return cls(**data)

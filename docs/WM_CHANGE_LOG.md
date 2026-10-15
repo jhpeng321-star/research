@@ -14,6 +14,35 @@ Owner rules (2026-10-09): compare new models only with the previous best (no
 retrained black boxes); judge on unseen controllers (walls, PI) at 60/120 s plus
 blow-up rate; prefer one change per run, or pair runs that isolate the risky change.
 
+## V6 P4 execution invariants (2026-10-15)
+
+Opt-in plant/geometry fixes, configured by `configs/c4_wm_v6_integ.toml` (extends v5).
+Synthetic invariant fixtures are in `tests/unit/test_v6integ.py`; no training result is claimed.
+
+- `physics.stop_time_integration` (default `false`): when braking stops a vehicle inside
+  the step, use `v² / (2 |a|)` instead of the full-step trapezoid. The 2 m/s, -8 m/s²,
+  0.5 s fixture moves 0.25 m; switch off still moves 0.5 m. Teacher/controller CAV motion
+  retains its own execution contract.
+- `physics.emergency_decel_mps2` (default `None`): allow the physics baseline to exceed
+  comfortable braking only if `max(v - v_leader, 0)² / (2 (gap - s0)) > b` (clearance is
+  floored for already unsafe states). Emergency IDM supplies at least this required braking,
+  capped at the configured positive limit and validated against the global plant limit.
+  This assumes a constant-speed leader; stopped leaders and the lane-end obstacle have zero
+  speed. The switch changes the baseline, not the learned residual. It cannot repair an
+  initially unavoidable collision or guarantee safety against arbitrary learned corrections.
+- `model.lane_conflict_resolve` (default `false`): arbitrate proposed changes using final
+  bumper intervals with `physics.gap_overlap_margin_m`. Frontmost proposals win (slot order
+  breaks ties); rejected changes reserve their source lanes. Teacher CAV destinations are
+  fixed, and absent/exited vehicles do not block. Logits and longitudinal motion are untouched.
+- Existing `model.projection.enabled` remains off by default. Its unequal-length prefix now
+  uses the **leader's** length: fronts `[20, 14]`, lengths `[10, 5]`, gap 2 project to `[20, 8]`
+  rather than `[20, 13]`. This intentionally changes unequal-length output in this optional
+  mode; equal-length equivalence is retained. The integration snippet enables projection.
+
+Old `physics.json` files and checkpoints load with the new switches off. Default-valued
+switches are omitted from legacy flat receipts; nested config serialization includes the
+new fields. Existing physics/model equivalence and golden tests remain unchanged.
+
 ## Changes
 
 | # | change | where tried | result | status | evidence |

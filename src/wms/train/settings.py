@@ -202,8 +202,17 @@ class TrainSettings:
     driver_prior_decel: float = 4.5
     driver_prior_min_gap: float = 2.5
     driver_prior_v0_ratio: float = 1.0
+    # V6INTEG: retained in flat checkpoint configs; absent in older checkpoints.
+    stop_time_integration: bool = False
+    emergency_decel_mps2: Optional[float] = None
+    lane_conflict_resolve: bool = False
 
     def __post_init__(self) -> None:
+        _require(self.emergency_decel_mps2 is None or (
+            not isinstance(self.emergency_decel_mps2, bool)
+            and math.isfinite(float(self.emergency_decel_mps2))
+            and 0.0 < float(self.emergency_decel_mps2) <= 9.0),
+            "emergency_decel_mps2 must be finite and in (0, 9] when set")
         _require(bool(self.unroll_curriculum_s)
                  and all(float(x) > 0 for x in self.unroll_curriculum_s),
                  "unroll_curriculum_s must be positive")
