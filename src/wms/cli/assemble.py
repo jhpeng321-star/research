@@ -368,8 +368,13 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
         if len(paired) > 1:
             raise ConfigError("loss.paired_diff supports one paired c4 source")
         src = paired[0]
+        # Stage mode retains the full curriculum horizon for eligibility/window switching;
+        # fixed mode keeps the original constructor call and branch-length cap.
+        pair_kwargs = dict(common)
+        if pair.horizon_mode == "stage":
+            pair_kwargs.update(horizon_mode="stage", horizon_steps=_horizon_steps(cfg))
         source = PairedBranchSource(
-            roots[src.name], name=src.name, **{k: v for k, v in common.items()})
+            roots[src.name], name=src.name, **pair_kwargs)
         train = PairedBatchDataset(train, source, fraction=float(pair.fraction),
                                    groups=int(pair.groups), max_arms=int(pair.max_arms),
                                    batch_size=int(cfg.optim.batch_size),

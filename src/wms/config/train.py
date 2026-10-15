@@ -349,7 +349,9 @@ class PairedDiffLossConfig:
     arm 0).  Per group the predicted arm-minus-reference differences of the t0 HDV positions /
     speeds (``position_weight`` / ``speed_weight``) and of the per-bin cohort aggregates
     (road / RSU-zone delay, throughput past the merge end; ``aggregate_weight``) are matched
-    to the recorded differences (Huber, normalised).
+    to the recorded differences (Huber, normalised).  ``horizon_mode = "fixed"`` keeps the
+    legacy branch-length cap; ``"stage"`` selects eligible groups and windows for each
+    curriculum stage's unroll horizon.
     """
 
     weight: float = 0.0
@@ -359,6 +361,7 @@ class PairedDiffLossConfig:
     position_weight: float = 1.0
     speed_weight: float = 1.0
     aggregate_weight: float = 1.0
+    horizon_mode: Literal["fixed", "stage"] = "fixed"
 
     def __post_init__(self) -> None:
         require(all(is_finite(x) and x >= 0.0 for x in (
@@ -368,6 +371,8 @@ class PairedDiffLossConfig:
                 "loss.paired_diff.fraction must be in [0,1]")
         require(self.groups >= 1 and self.max_arms >= 2,
                 "loss.paired_diff.groups must be >= 1 and max_arms >= 2")
+        require(self.horizon_mode in ("fixed", "stage"),
+                "loss.paired_diff.horizon_mode must be fixed or stage")
 
     @property
     def enabled(self) -> bool:

@@ -68,7 +68,11 @@ class PairedBranchSource:
                  history_stride_s: float = 1.0, entries_v2: bool = False,
                  k_slots: Optional[int] = None, heldout=None,
                  role_of: Optional[dict] = None, role: str = "train",
-                 junction_fix: str = "off", command_known: bool = False, name: str = "paired"):
+                  junction_fix: str = "off", command_known: bool = False, name: str = "paired",
+                  horizon_mode: str = "fixed"):
+        if horizon_mode not in ("fixed", "stage"):
+            raise ValueError("paired horizon_mode must be fixed or stage")
+        self.horizon_mode = horizon_mode
         root = Path(root)
         doc = read_source_manifest(root)
         if k_slots is not None and int(doc["k_slots"]) != int(k_slots):
@@ -95,7 +99,13 @@ class PairedBranchSource:
             spans.append(len(times) - 1 - i0)
         if not entries:
             raise C4EpisodeRefusal(f"{root}: no {role} paired-branch episodes (pair_key)")
+        available = {}
+        for e, span in zip(entries, spans):
+            key = str(e["pair_key"])
+            available[key] = min(available.get(key, int(horizon_steps)), span)
         self.horizon = int(min(int(horizon_steps), min(spans)))
+        if horizon_mode == "stage":
+            self.horizon = max(available.values())
         if self.horizon < 2:
             raise C4EpisodeRefusal(f"{root}: paired branches shorter than one control step")
         index: list[tuple[int, int]] = []
@@ -103,7 +113,11 @@ class PairedBranchSource:
         tick_of: list[int] = []
         for e, i0 in zip(entries, starts):
             ep = _open_episode(str(root / e["dir"]))
-            ticks = episode_window_ticks(ep, horizon_steps=self.horizon, stride_s=1.0e6,
+            horizon = (available[str(e["pair_key"])] if horizon_mode == "stage"
+                       else self.horizon)
+            if horizon < 2:
+                continue
+            ticks = episode_window_ticks(ep, horizon_steps=horizon, stride_s=1.0e6,
                                          start_s=float(e["warmup_s"]), warmup_s=float(e["warmup_s"]))
             if not ticks or ticks[0] != i0:
                 continue
@@ -137,6 +151,8 @@ class PairedBranchSource:
             rows = [ref] + [m for m in members if m != ref]
             self.groups.append({"pair_key": key, "rows": rows,
                                 "has_native_ref": _is_reference(keep[ref])})
+            if horizon_mode == "stage":
+                self.groups[-1]["horizon_steps"] = available[key]
         if not self.groups:
             raise C4EpisodeRefusal(f"{root}: no usable pair group (>= 2 arms, identical t0)")
         used = sorted({r for g in self.groups for r in g["rows"]})
@@ -145,10 +161,16 @@ class PairedBranchSource:
             g["rows"] = [remap[r] for r in g["rows"]]
         entries_used = [keep[i] for i in used]
         index = [(j, tick_of[i]) for j, i in enumerate(used)]
-        loader = C4WindowLoader(root, entries_used, index, horizon_steps=self.horizon,
-                                history_s=history_s, history_stride_s=history_stride_s,
-                                entries_v2=entries_v2, junction_fix=junction_fix,
-                                command_known=command_known)
+        loader_args = dict(history_s=history_s, history_stride_s=history_stride_s,
+                           entries_v2=entries_v2, junction_fix=junction_fix,
+                           command_known=command_known)
+        if horizon_mode == "stage":
+            loader = _HorizonWindowLoader(root, entries_used, index,
+                                         [available[str(e["pair_key"])] for e in entries_used],
+                                         loader_args)
+        else:
+            loader = C4WindowLoader(root, entries_used, index, horizon_steps=self.horizon,
+                                    **loader_args)
         self.receipt = {
             "mode": "c4-paired-branches", "split": "TRAIN", "role": role, "source": str(root),
             "name": name, "horizon_steps": self.horizon, "n_groups": len(self.groups),
@@ -161,20 +183,49 @@ class PairedBranchSource:
         }
         self.dataset = TrajectoryDataset([{} for _ in index], loader=loader, receipt=self.receipt)
         self.dataset.positions = list(index)
+        if horizon_mode == "stage":
+            self.horizon = max(g["horizon_steps"] for g in self.groups)
+            self.receipt.update(horizon_mode="stage", horizon_steps=self.horizon,
+                                horizon_buckets={str(h): sum(g["horizon_steps"] == h
+                                                            for g in self.groups)
+                                                 for h in sorted({g["horizon_steps"]
+                                                                  for g in self.groups})})
 
     def __len__(self) -> int:
         return len(self.dataset)
 
-    def group_records(self, group: int, rows: Sequence[int], *, base_row: int) -> list[dict]:
+    def group_records(self, group: int, rows: Sequence[int], *, base_row: int,
+                      horizon_steps: Optional[int] = None) -> list[dict]:
         """Records of ``rows`` (dataset rows of ``group``; the first is the reference)."""
         out = []
         for r in rows:
-            rec = dict(self.dataset[int(r)])
+            rec = dict(self.dataset[int(r)] if horizon_steps is None else
+                       self.dataset._loader.load(int(r), horizon_steps))
             rec["pair_group"] = int(group)
             rec["pair_ref"] = int(base_row)
             rec["mix_source"] = self.name
             out.append(rec)
         return out
+
+
+class _HorizonWindowLoader:
+    """Lazy loaders per requested horizon; no episode arrays are copied or padded."""
+
+    def __init__(self, root, entries, index, horizons, kwargs):
+        self.root, self.entries, self.index = root, entries, index
+        self.horizons, self.kwargs = horizons, kwargs
+        self.loaders = {}
+
+    def __call__(self, index):
+        return self.load(index, self.horizons[index])
+
+    def load(self, index, horizon):
+        if horizon > self.horizons[index]:
+            raise ValueError("paired window exceeds available group horizon")
+        if horizon not in self.loaders:
+            self.loaders[horizon] = C4WindowLoader(
+                self.root, self.entries, self.index, horizon_steps=horizon, **self.kwargs)
+        return self.loaders[horizon](index)
 
 
 class PairedBatchDataset(Dataset):
@@ -191,6 +242,10 @@ class PairedBatchDataset(Dataset):
         self.max_arms = int(max_arms)
         self.batch_size = int(batch_size)
         self.seed = int(seed)
+        self.paired_horizon = None
+        self.eligible_groups = None
+        if getattr(pairs, "horizon_mode", "fixed") == "stage":
+            self.set_paired_horizon(pairs.horizon)
         receipt = getattr(inner, "receipt", None)
         if isinstance(receipt, dict):
             receipt["paired_batches"] = {
@@ -209,6 +264,20 @@ class PairedBatchDataset(Dataset):
     def __getitem__(self, index: int) -> dict:
         return self.inner[index]
 
+    def set_paired_horizon(self, horizon_steps: int) -> None:
+        """Prefer all groups covering the stage; otherwise use the longest available bucket.
+
+        A batch always uses one common horizon so collate cannot pad shorter targets into
+        apparently valid supervision. Call before constructing the stage's worker loader.
+        """
+        if getattr(self.pairs, "horizon_mode", "fixed") != "stage":
+            return
+        if int(horizon_steps) < 1:
+            raise ValueError("paired stage horizon must be positive")
+        horizons = [g["horizon_steps"] for g in self.pairs.groups]
+        self.paired_horizon = min(int(horizon_steps), max(horizons))
+        self.eligible_groups = [i for i, h in enumerate(horizons) if h >= self.paired_horizon]
+
     def __getitems__(self, indices: Sequence[int]) -> list[dict]:
         idx = [int(i) for i in indices]
         rng = np.random.default_rng([self.seed, len(idx), *[i % (2 ** 32) for i in idx]])
@@ -220,16 +289,20 @@ class PairedBatchDataset(Dataset):
         """One paired batch: ``groups`` groups, reference arm + random other arms each."""
         n_rows = int(n_rows or self.batch_size)
         groups = self.pairs.groups
-        k = max(1, min(self.n_groups, len(groups), max(1, n_rows // 2)))
+        eligible = self.eligible_groups
+        n_groups = len(groups) if eligible is None else len(eligible)
+        k = max(1, min(self.n_groups, n_groups, max(1, n_rows // 2)))
         arms = max(2, min(self.max_arms, n_rows // k))
-        chosen = rng.choice(len(groups), size=k, replace=False)
+        chosen = rng.choice(len(groups) if eligible is None else eligible, size=k, replace=False)
         out: list[dict] = []
         for gi in sorted(int(g) for g in chosen):
             rows = groups[gi]["rows"]
             others = rows[1:]
             pick = rng.choice(len(others), size=min(arms - 1, len(others)), replace=False)
             take = [rows[0]] + [others[int(j)] for j in sorted(pick)]
-            out.extend(self.pairs.group_records(gi, take, base_row=len(out)))
+            horizon_kw = ({} if self.paired_horizon is None else
+                          {"horizon_steps": self.paired_horizon})
+            out.extend(self.pairs.group_records(gi, take, base_row=len(out), **horizon_kw))
         return out
 
 

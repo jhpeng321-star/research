@@ -152,6 +152,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "paired_diff_position_weight": "loss.paired_diff.position_weight",
     "paired_diff_speed_weight": "loss.paired_diff.speed_weight",
     "paired_diff_aggregate_weight": "loss.paired_diff.aggregate_weight",
+    "paired_diff_horizon_mode": "loss.paired_diff.horizon_mode",
     # INFRAV5 (optional driver-estimate prior on the batch-mean encoded settings)
     "driver_prior_weight": "loss.driver_prior.weight",
     "driver_prior_target": "loss.driver_prior.target",
@@ -192,6 +193,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "mixed_horizon_s", "mixed_horizon_min_stage_s",
     "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
     "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
+    "paired_diff_horizon_mode",
     # INFRAV5
     "driver_prior_weight", "driver_prior_target", "driver_prior_accel", "driver_prior_time_headway",
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",

@@ -84,6 +84,8 @@ def collect_cmd(args, seeds: str, out: Path, workers: int, branch: bool) -> list
            "--horizon", str(args.horizon), "--workers", str(workers), "--out", str(out)]
     if args.no_physics_log:
         cmd.append("--no-physics-log")
+    if getattr(args, "population", None) is not None:
+        cmd += ["--population", args.population]
     if branch:
         cmd += ["--branch-cadence", str(args.branch_cadence), "--branch-arms",
                 str(args.branch_arms), "--branch-horizon", str(args.branch_horizon),
@@ -112,6 +114,8 @@ def main(argv=None) -> int:
     ap.add_argument("--warmup", type=int, default=300)
     ap.add_argument("--horizon", type=int, default=900)
     ap.add_argument("--gr-mode", choices=("speed", "accel"), default="speed")
+    ap.add_argument("--population", choices=("legacy3", "textbook"), default=None,
+                    help="forward the HDV population to both collectors (omitted: collector default)")
     ap.add_argument("--branch-cadence", type=int, default=60)
     ap.add_argument("--branch-arms", type=int, default=4)
     ap.add_argument("--branch-horizon", type=int, default=60)
