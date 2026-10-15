@@ -318,6 +318,9 @@ C4_V5_LOADINGS = tuple(range(1900, 2801, 50))
 # C4 V6 long-branch TRAINING block (owner-approved 2026-10-15 ~14:55): 120-300 s paired SUMO branches
 # (undirected random arms + native) for the v6 WM. TRAINING only. Scan of seed tables + ledger: no overlap.
 C4_V6_LONGPAIR_SEEDS = frozenset(range(965000, 966000))
+# C4 Dreamer-loop TRAINING block (owner-approved 2026-10-16 ~04:00): SUMO episodes collected with the learned
+# policy for continuous WM refresh. TRAINING only. Scan of seed tables + ledger: no overlap.
+C4_LOOP_TRAIN_SEEDS = frozenset(range(966000, 970000))
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.
@@ -411,6 +414,9 @@ def require_development_case(seed, loading, role):
         return
 
     if role == "exposed" and seed in C4_V6_LONGPAIR_SEEDS and loading in C4_V5_LOADINGS:
+        return
+
+    if role == "exposed" and seed in C4_LOOP_TRAIN_SEEDS and loading in C4_V5_LOADINGS:
         return
 
     if role == "exposed" and seed in WM44_CHUNK1_SEEDS \
