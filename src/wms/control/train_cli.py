@@ -202,7 +202,8 @@ def main(argv=None):
         max_updates = args.max_updates if args.max_updates is not None else int(run.get("updates", 3000))
         if args.smoke:
             device, max_updates = "cpu", 2
-            cfg = replace(cfg, batch_size=2, horizon=4, checkpoint_every=1, validation_every=1)
+            cfg = replace(cfg, batch_size=2, horizon=4, checkpoint_every=1, validation_every=1,
+                          credit_profile_every=1 if cfg.credit_profile_every else cfg.credit_profile_every)
         if max_updates < 1:
             raise ValueError("max-updates must be positive")
         if args.init_policy and args.resume:
@@ -211,6 +212,8 @@ def main(argv=None):
         threads = int(run.get("threads", 1))
         if threads < 1:
             raise ValueError("threads must be positive")
+        if args.smoke:
+            threads = min(threads, 2)
         torch.set_num_threads(threads)
         # Shared-GPU guard: cap this process's CUDA memory so it OOMs itself before starving a
         # co-located world-model training run (env C4_GPU_MEM_FRACTION, e.g. 0.4).
@@ -246,7 +249,9 @@ def main(argv=None):
             trainer.load_checkpoint(args.resume)
             if args.smoke:
                 trainer.config = replace(trainer.config, batch_size=2, horizon=4,
-                                         checkpoint_every=1, validation_every=1)
+                                         checkpoint_every=1, validation_every=1,
+                                         credit_profile_every=(1 if trainer.config.credit_profile_every
+                                                               else trainer.config.credit_profile_every))
                 max_updates = trainer.update_count + 2
         last = trainer.fit(max_updates, validation_states=val,
                            validation_batches=int(run.get("validation_batches", 1)))

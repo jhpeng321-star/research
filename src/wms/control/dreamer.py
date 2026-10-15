@@ -95,6 +95,12 @@ class DreamerConfig:
     # entry process; "sumo_like" = SUMO departSpeed="max"/departLane="best" insertion (the v2
     # sampled required gap over-blocks: imagined source wait far above SUMO's).
     entry_insert_rule: str = "v2"
+    # V6: None preserves the WM's training-time damping, including the exact default graph.
+    # Overrides apply only while imagining; the frozen member's setting is always restored.
+    imagination_grad_decay: float | None = None
+    # Reward-window credit to the first continuous policy action (one start/member/future).
+    # Zero disables all diagnostic autograd work; otherwise sample every N updates.
+    credit_profile_every: int = 0
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -103,8 +109,15 @@ class DreamerConfig:
                 raise ValueError(f"{name} must be a positive integer")
         from wms.model.cav import check_exec_cap_mode
         self.cav_exec_cap = check_exec_cap_mode(self.cav_exec_cap)
+        decay = self.imagination_grad_decay
+        if decay is not None and (isinstance(decay, bool) or not isinstance(decay, (int, float))
+                                  or not math.isfinite(decay) or not 0 < decay <= 1):
+            raise ValueError("imagination_grad_decay must be None or in (0, 1]")
+        if (isinstance(self.credit_profile_every, bool)
+                or not isinstance(self.credit_profile_every, int) or self.credit_profile_every < 0):
+            raise ValueError("credit_profile_every must be a nonnegative integer")
         for name, value in asdict(self).items():
-            if name in ("cav_exec_cap", "entry_insert_rule"):   # the string fields
+            if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay"):
                 continue
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
@@ -216,14 +229,39 @@ class _Recompute:
         return self.fn(*args, **kwargs)
 
 
-def _model_identity(model):
+def _model_identity(model, imagination_grad_decay=None):
     digest = hashlib.sha256(type(model).__qualname__.encode())
     for key, value in model.state_dict().items():
         digest.update(key.encode())
         digest.update(str((value.shape, value.dtype)).encode())
         digest.update(value.detach().cpu().contiguous().reshape(-1).view(torch.uint8).numpy().tobytes())
     digest.update(str(getattr(model, "grad_decay_per_step", 1.0)).encode())
+    if imagination_grad_decay is not None:
+        digest.update(f":imagination_grad_decay={float(imagination_grad_decay)}".encode())
     return digest.hexdigest()
+
+
+def _credit_profile(rewards, action, mask):
+    """L2 norm of d R[k-1, row=0] / d a[0, row=0] for one member/future.
+
+    R[k-1] sums the physics rewards in the kth (one-based) control window, NOT the
+    cumulative prefix or a bootstrapped return. Action is the original policy acceleration
+    tensor, before safety/execution caps (not the post-rollout stacked logging tensor).
+    Include the terminal window for tiny horizons; disconnected/absent CAVs have zero credit.
+    autograd.grad leaves parameter .grad buffers alone and retains the training graph.
+    """
+    horizon = rewards.shape[0]
+    steps = sorted({k for k in (1, 5, 10, 20, 30, horizon) if k <= horizon})
+    norms = {}
+    for k in steps:
+        reward = rewards[k - 1, 0]
+        grad = None
+        if action.requires_grad and reward.requires_grad:
+            grad, = torch.autograd.grad(reward, action, retain_graph=True, allow_unused=True)
+        norms[str(k)] = (float((grad[0] * mask[0]).norm().detach()) if grad is not None else 0.0)
+    return {"norms": norms, "sample_size": 1, "start_row": 0, "member": 0, "future": 0,
+            "window_control_steps": 1, "action": "policy_acceleration",
+            "active_actions": int(mask[0].sum())}
 
 
 _ENTRY_PAD_SAFETY = 1.5
@@ -333,7 +371,8 @@ class DreamerTrainer:
             dt = getattr(getattr(model, "physics", None), "dt_s", PHYSICS_DT_S)
             if not math.isclose(dt, PHYSICS_DT_S):
                 raise ValueError("WM physics dt does not match the shared control contract")
-        self.world_model_ids = [_model_identity(model) for model in self.world_models]
+        self.world_model_ids = [_model_identity(model, self.config.imagination_grad_decay)
+                                for model in self.world_models]
         self.policy = policy.to(self.device)
         self.group_encoder = group_encoder.to(self.device)
         self.critic = critic.to(self.device)
@@ -358,7 +397,8 @@ class DreamerTrainer:
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
 
-    def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None):
+    def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
+                credit_profile=False):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -440,6 +480,7 @@ class DreamerTrainer:
             lane_uniform = expand_rows(lane_uniform, index, n_base)
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
+        profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
         # Common random numbers: disagreement must measure WM differences, not action noise.
@@ -466,6 +507,9 @@ class DreamerTrainer:
                     log_prob = getattr(held_out, "log_prob_accel", None)
                     log_prob = held_out[1] if log_prob is None else log_prob
                     record = records[-1]
+                    if credit_profile and model_index == 0 and sample_index == 0 and step == 0:
+                        record["credit_action"] = held_out[0]
+                        record["credit_mask"] = acting
                     record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
                     if hasattr(held_out, "log_prob_lane"):
                         record["lane_log_prob"] = held_out.log_prob_lane
@@ -549,15 +593,21 @@ class DreamerTrainer:
                 member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
-            if switch:
-                model.checkpoint_forward = recompute
             cap_switch = hasattr(model, "cav_exec_cap")
             previous_cap = getattr(model, "cav_exec_cap", "off")
-            if cap_switch:
-                model.cav_exec_cap = cfg.cav_exec_cap
-            elif cfg.cav_exec_cap != "off":
+            if not cap_switch and cfg.cav_exec_cap != "off":
                 raise ValueError("cav_exec_cap requires world models with the execution-cap switch")
+            decay_switch = cfg.imagination_grad_decay is not None
+            if decay_switch and not hasattr(model, "grad_decay_per_step"):
+                raise ValueError("imagination_grad_decay requires world models with grad_decay_per_step")
+            previous_decay = getattr(model, "grad_decay_per_step", None)
             try:
+                if switch:
+                    model.checkpoint_forward = recompute
+                if cap_switch:
+                    model.cav_exec_cap = cfg.cav_exec_cap
+                if decay_switch:
+                    model.grad_decay_per_step = cfg.imagination_grad_decay
                 roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
                                      cav_controller=controller, cav_teacher=None,
                                      truncation_steps=None, **member_kwargs)
@@ -566,6 +616,8 @@ class DreamerTrainer:
                     model.checkpoint_forward = previous_switch
                 if cap_switch:
                     model.cav_exec_cap = previous_cap
+                if decay_switch:
+                    model.grad_decay_per_step = previous_decay
             if step != cfg.horizon * STEPS_PER_CONTROL:
                 raise RuntimeError("WM must invoke the CAV callback once per physics step")
             if advanced_rng is None:
@@ -627,6 +679,9 @@ class DreamerTrainer:
                 raise ValueError("team_reward must provide reward and cost_ttc")
             components = {key: torch.stack([part[key] for part in parts]).reshape(
                 cfg.horizon, STEPS_PER_CONTROL, -1).sum(1) for key in keys}
+            if credit_profile and model_index == 0 and sample_index == 0:
+                profile = _credit_profile(components["reward"], records[0]["credit_action"],
+                                          records[0]["credit_mask"])
             member_components.append(components)
             member_rewards.append(components["reward"])
             member_costs.append(components["cost_ttc"])
@@ -656,6 +711,7 @@ class DreamerTrainer:
         if member_lanes:
             lanes = {name: torch.stack([m[name] for m in member_lanes]) for name in member_lanes[0]}
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                **({"credit_profile": profile} if profile is not None else {}),
                 "values": torch.stack(member_values),
                 "disagreement": disagreement, "states": member_states,
                 "entropy": torch.stack(member_entropy), "actions": torch.stack(member_actions),
@@ -822,7 +878,10 @@ class DreamerTrainer:
                                   torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
         variants = (build_variants(batch.state, self.counterfactual)
                     if self.counterfactual.enabled else None)
-        imagined = self.imagine(batch, variants=variants)
+        profile_due = (self.config.credit_profile_every > 0
+                       and (self.update_count + 1) % self.config.credit_profile_every == 0)
+        imagined = self.imagine(batch, variants=variants, **({"credit_profile": True}
+                                                            if profile_due else {}))
         imagined["penetration_buckets"] = self._penetration_buckets(batch)
         n_base, n_rows = imagined["n_base"], imagined["returns"].shape[-1]
         all_returns = imagined["returns"]
@@ -836,6 +895,8 @@ class DreamerTrainer:
                       self.lagrange_multiplier * mean_cost)
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
+        # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
+        # raises the imagination decay above the WM value. Keep the existing clip only.
         actor_norm = nn.utils.clip_grad_norm_(self.actor_parameters, self.config.grad_clip,
                                              error_if_nonfinite=True)
         self.actor_optimizer.step()
@@ -868,6 +929,7 @@ class DreamerTrainer:
         if any(flag is not None for flag in flags):
             extra["group_rich_fraction"] = mean_or_none(float(bool(f)) for f in flags)
         metrics = {"update": self.update_count, "returns": float(returns.detach().mean()),
+                   **({"credit_profile": imagined["credit_profile"]} if profile_due else {}),
                    "reward": float(imagined["rewards"][..., :n_base].detach().mean()),
                    **extra,
                    "actor_loss": float(actor_loss.detach()), "critic_loss": float(critic_loss.detach()),
