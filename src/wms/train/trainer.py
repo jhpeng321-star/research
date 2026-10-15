@@ -483,6 +483,11 @@ class WmSTrainer:
                             global_step % s.val_every == 0 or done >= plan.steps):
                         last_validation = (validate_long(stage_s) if same is None else
                                            validate_long(stage_s, stage_end=done >= plan.steps))
+                    latest_every = int(os.environ.get("WMS_LATEST_EVERY", "0") or 0)
+                    if latest_every and global_step % latest_every == 0:
+                        # crash insurance: weights only, overwritten in place (2026-10-16)
+                        self._save(out / "wm_s_latest.pt", stage_s=float(stage_s), step=global_step,
+                                   val=None)
                     if done >= plan.steps:
                         break
             if global_step == steps_before:

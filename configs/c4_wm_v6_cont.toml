@@ -14,7 +14,7 @@ lane_conflict_resolve = false
 
 [curriculum]
 unroll_s = [30.0, 60.0, 120.0]
-stage_steps = [700, 550, 220]
+stage_steps = [600, 450, 200]   # 2026-10-16 01:05 restart after gpuW went down: shortened again
 truncation_steps_per_stage = [60, 120, 120]
 max_hours = 8.0
 
