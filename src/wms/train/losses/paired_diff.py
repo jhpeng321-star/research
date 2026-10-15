@@ -21,12 +21,17 @@ all-native arm, else the first arm):
   exactly the ``agg_reward`` error of arm ``a``.  The t0 cohort is used (not the full road):
   entrants are drawn per row by the entry process, so their noise would not cancel in the
   difference.
+* Opt-in ``pair_return`` / ``pair_rank`` fit the full-horizon t0-HDV negative-delay
+  return difference, using a common t0 HDV count times commonly observed duration as
+  the scale. Return regression is Huber; ranking uses a veh-s margin and ignores
+  recorded effects at or below that margin. See :class:`PairedDiffLoss` for replay.
 
 Batches without pair groups contribute a graph-connected zero (keys stay in the log).  With
 ``loss.paired_diff.weight = 0`` the composer never builds these terms (bit-identical).
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
@@ -34,12 +39,14 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
-from .aggregate import (CROSSING_WIDTH_M, MERGE_S1_M, AggregateLossConfig, RoadTargets,
+from .aggregate import (CROSSING_WIDTH_M, MERGE_S1_M, SPEED_LIMIT_MPS, AggregateLossConfig, RoadTargets,
                         _bin_matrix, _huber, _recorded_kin, road_targets, soft_cell_fields,
                         soft_crossings)
 from .base import LossContext, LossTerm, TermValue, UnrollTargets
 
+# Public legacy contract: callers/tests use this tuple for the default paired terms.
 TERM_NAMES = ("pair_pos", "pair_speed", "pair_agg")
+RETURN_TERM_NAMES = ("pair_return", "pair_rank")
 
 
 @dataclass(frozen=True)
@@ -55,11 +62,18 @@ class PairedDiffConfig:
     speed_delta_mps: float = 1.0
     bin_s: float = 5.0
     cell_temp_m: float = 5.0
+    return_weight: float = 0.0
+    rank_weight: float = 0.0
+    rank_margin_veh_s: float = 5.0
 
     def __post_init__(self) -> None:
         if min(self.weight, self.position_weight, self.speed_weight,
                self.aggregate_weight) < 0.0:
             raise ValueError("paired_diff weights must be non-negative")
+        if any(not math.isfinite(w) or w < 0.0 for w in (self.return_weight, self.rank_weight)):
+            raise ValueError("paired_diff return/rank weights must be finite and non-negative")
+        if not math.isfinite(self.rank_margin_veh_s) or self.rank_margin_veh_s < 0.0:
+            raise ValueError("paired_diff rank margin must be finite and non-negative")
         if self.position_delta_m <= 0.0 or self.speed_delta_mps <= 0.0 or self.dt_s <= 0.0:
             raise ValueError("paired_diff deltas / dt must be positive")
 
@@ -75,6 +89,7 @@ class PairTargets:
     ref: Tensor          # [B] long: batch row of the row's group reference (itself for refs)
     arm: Tensor          # [B] bool: a non-reference arm of a pair group
     road: RoadTargets    # recorded t0-cohort presence (aggregate conventions, cohort mode)
+    observed_valid: Optional[Tensor] = None  # explicit observed ticks, including empty-road ticks
 
 
 def pair_targets(batch: Mapping[str, Any], states: Tensor, present: Tensor, n_k: int, *,
@@ -87,15 +102,44 @@ def pair_targets(batch: Mapping[str, Any], states: Tensor, present: Tensor, n_k:
     if bool((ref < 0).any()) or bool((ref >= ref.shape[0]).any()):
         raise ValueError("pair_ref out of range")
     road = road_targets(batch, states, present, int(n_k), entries_on=False, device=device)
-    return PairTargets(ref=ref, arm=ref != rows, road=road)
+    observed = batch.get("road_valid")
+    return PairTargets(ref=ref, arm=ref != rows, road=road,
+                       observed_valid=None if observed is None else observed.to(device).bool())
 
 
 class PairedDiffLoss:
-    """Shared per-chunk computation of the three paired terms (cached on ``ctx``)."""
+    """Shared paired terms, including optional whole-horizon negative-delay objectives.
+
+    Runner replay API (all differences are arm minus reference, shape ``[B]``, veh-s):
+
+    * After ``prepare``, sum ``predicted_return_difference(ctx)`` over a no-grad probe's
+      chunks. This helper caches each chunk at ``ctx.cache['paired_return_difference']``;
+      it does not accumulate implicitly, so repeated term evaluation cannot double count.
+    * Set ``targets.prepared['paired_return_reference'] = probe_sum.detach()`` before
+      gradient replay. Every chunk uses that WHOLE-horizon prediction with only its local
+      gradient attached. Replay must reproduce the probe trajectory / randomness.
+    * ``return_losses(targets, probe_sum)`` gives weighted whole-horizon losses for probe
+      or evaluation logging. ``recorded_return_difference(targets, c0, c1)`` exposes the
+      matching recorded chunk sum (omitting bounds gives the full horizon).
+
+    Without a reference, a full single chunk evaluates directly. No-grad partial chunks
+    expose their differences but return zero return/rank terms; the runner must sum the
+    differences and call ``return_losses``. Gradient-enabled partial chunks require replay.
+    TermValue logs the replay objective only at c0 == 0; every chunk retains gradients.
+    """
 
     def __init__(self, cfg: PairedDiffConfig) -> None:
         self.cfg = cfg
         self.agg = cfg.aggregate()
+
+    @property
+    def return_enabled(self) -> bool:
+        return self.cfg.weight > 0.0 and (self.cfg.return_weight > 0.0 or self.cfg.rank_weight > 0.0)
+
+    @property
+    def return_names(self) -> tuple[str, ...]:
+        return tuple(name for name, weight in zip(
+            RETURN_TERM_NAMES, (self.cfg.return_weight, self.cfg.rank_weight)) if weight > 0.0)
 
     @staticmethod
     def _pair_mask(targets: UnrollTargets, pair: PairTargets) -> Tensor:
@@ -111,12 +155,140 @@ class PairedDiffLoss:
         pair: Optional[PairTargets] = getattr(targets, "pair", None)
         if pair is None:
             targets.prepared["paired_diff"] = None
+            if self.return_enabled:
+                targets.prepared["paired_return"] = None
             return
         m = self._pair_mask(targets, pair).to(targets.weights.dtype)
         valid = self._valid_pair(targets, pair, 0, targets.n_steps)
         targets.prepared["paired_diff"] = {
             "mask": m, "w_car": float((targets.weights * m).sum()),
             "w_agg": float(valid.sum()), "n_arms": int(pair.arm.sum())}
+        if self.return_enabled:
+            self._prepare_return(targets)
+
+    @torch.no_grad()
+    def _prepare_return(self, targets: UnrollTargets) -> None:
+        pair: PairTargets = targets.pair
+        k = pair.road.k
+        hdv0 = pair.road.present[:, 0, :k] & ~targets.is_cav[:, 0, :k].bool()
+        # The paired roster is identical at t0. Intersection also makes the scale symmetric
+        # for imperfect inputs; neither arm's later occupancy enters the denominator.
+        cohort = hdv0 & hdv0[pair.ref]
+        observed = pair.road.valid if pair.observed_valid is None else pair.observed_valid
+        observed = observed[:, 1:targets.n_steps + 1]
+        common = observed & observed[pair.ref]
+        count = cohort.sum(-1)
+        horizon_s = common.sum(-1).to(targets.states.dtype) * float(self.cfg.dt_s)
+        scale = count.to(horizon_s.dtype) * horizon_s
+        active = pair.arm & (scale > 0.0)
+        prep = {"cohort": cohort, "valid": common, "scale": scale.clamp_min(1e-6),
+                "active": active, "hdv_count": count, "horizon_s": horizon_s}
+        targets.prepared["paired_return"] = prep
+        recorded = self.recorded_return_difference(targets)
+        prep["recorded_difference"] = recorded
+        prep["rank_active"] = active & (recorded.abs() > self.cfg.rank_margin_veh_s)
+
+    def _return_step_difference(self, targets: UnrollTargets, speeds: Tensor, present: Tensor,
+                                c0: int, c1: int) -> Tensor:
+        pair: PairTargets = targets.pair
+        prep = targets.prepared["paired_return"]
+        # Use the same t0 HDVs for both arms of EACH comparison, even when a reference is
+        # shared by several arms. Entrant slots and CAVs never contribute.
+        cohort = prep["cohort"].unsqueeze(1)
+        delay = float(self.cfg.dt_s) * F.relu(1.0 - speeds / SPEED_LIMIT_MPS)
+        own = (delay * (present.bool() & cohort).to(delay.dtype)).sum(-1)
+        ref = (delay[pair.ref] * (present[pair.ref].bool() & cohort).to(delay.dtype)).sum(-1)
+        valid = prep["valid"][:, c0:c1] & pair.arm.unsqueeze(-1)
+        return (ref - own) * valid.to(delay.dtype)  # negative delay: higher is better
+
+    @torch.no_grad()
+    def recorded_return_difference(self, targets: UnrollTargets, c0: int = 0,
+                                   c1: Optional[int] = None) -> Tensor:
+        """Recorded cumulative return difference in veh-s; bounds use chunk indices."""
+        c1 = targets.n_steps if c1 is None else c1
+        if targets.prepared.get("paired_return") is None:
+            return targets.states.new_zeros(targets.states.shape[0])
+        road = targets.pair.road
+        speed = targets.states[:, c0 + 1:c1 + 1, :road.k, 4]
+        present = road.present[:, c0 + 1:c1 + 1]
+        return self._return_step_difference(targets, speed, present, c0, c1).sum(-1)
+
+    def predicted_return_difference(self, ctx: LossContext) -> Tensor:
+        """Differentiable chunk return difference ``[B]`` in veh-s, cached for the runner."""
+        if "paired_return_difference" not in ctx.cache:
+            t = ctx.targets
+            speed = ctx.pred["speeds"]
+            if t.prepared.get("paired_return") is None:
+                difference = speed.sum(dim=(1, 2)) * 0.0
+            else:
+                k = t.pair.road.k
+                difference = self._return_step_difference(
+                    t, speed[..., :k], ctx.pred["masks"][..., :k], ctx.c0, ctx.c1).sum(-1)
+            ctx.cache["paired_return_difference"] = difference
+        return ctx.cache["paired_return_difference"]
+
+    def return_losses(self, targets: UnrollTargets, difference: Tensor) -> dict[str, Tensor]:
+        """Weighted WHOLE-horizon losses from raw predicted differences in veh-s.
+
+        Return regression is unit-delta Huber of the common-scale-normalised error.
+        Ranking is ``relu(margin - sign(recorded) * predicted) / scale`` only for
+        ``abs(recorded) > margin``. Both reductions average over observed nonempty pairs;
+        ties / sub-margin pairs contribute exactly zero to ranking.
+        """
+        zero = difference.sum() * 0.0
+        out = {name: zero for name in self.return_names}
+        prep = targets.prepared.get("paired_return")
+        if prep is None:
+            return out
+        if difference.shape != prep["scale"].shape:
+            raise ValueError("paired return difference must have shape [B] in veh-s")
+        scale = prep["scale"].to(difference)
+        recorded = prep["recorded_difference"].to(difference)
+        active = prep["active"]
+        denom = active.sum().clamp_min(1).to(difference.dtype)
+        if self.cfg.return_weight > 0.0:
+            error = _huber((difference - recorded) / scale, 1.0)
+            out["pair_return"] = (self.cfg.weight * self.cfg.return_weight
+                                  * torch.where(active, error, 0.0).sum() / denom)
+        if self.cfg.rank_weight > 0.0:
+            hinge = F.relu(self.cfg.rank_margin_veh_s - recorded.sign() * difference) / scale
+            out["pair_rank"] = (self.cfg.weight * self.cfg.rank_weight
+                                * torch.where(prep["rank_active"], hinge, 0.0).sum() / denom)
+        return out
+
+    @torch.no_grad()
+    def recorded_effect_bins(self, targets: UnrollTargets) -> dict[str, Tensor]:
+        """Full-horizon logging metadata, independent of TBPTT chunk boundaries.
+
+        ``effect_bin`` is -1 / 0 / +1 for negative / within-margin / positive recorded
+        effects. Filter by ``active`` to exclude references and unobserved/empty pairs.
+        """
+        prep = targets.prepared.get("paired_return")
+        if prep is None:
+            return {}
+        recorded = prep["recorded_difference"]
+        effect_bin = torch.where(prep["rank_active"], recorded.sign(), 0.0).long()
+        return {"difference_veh_s": recorded, "effect_bin": effect_bin,
+                "active": prep["active"], "rank_active": prep["rank_active"],
+                "scale_veh_s": prep["scale"], "hdv_count": prep["hdv_count"],
+                "horizon_s": prep["horizon_s"]}
+
+    def _return_components(self, ctx: LossContext) -> dict[str, Tensor]:
+        chunk = self.predicted_return_difference(ctx)
+        reference = ctx.targets.prepared.get("paired_return_reference")
+        if reference is not None:
+            if reference.shape != chunk.shape or reference.requires_grad:
+                raise ValueError("paired_return_reference must be a detached whole-horizon [B] tensor")
+            whole = reference.to(chunk) + (chunk - chunk.detach())
+        elif ctx.c0 == 0 and ctx.c1 == ctx.targets.n_steps:
+            whole = chunk
+        elif not torch.is_grad_enabled():
+            # A probe cannot evaluate a nonlinear horizon objective before the final chunk.
+            return {name: chunk.sum() * 0.0 for name in self.return_names}
+        else:
+            raise ValueError("paired return/rank TBPTT requires paired_return_reference from a "
+                             "no-grad whole-horizon probe; sum predicted_return_difference(ctx)")
+        return self.return_losses(ctx.targets, whole)
 
     def components(self, ctx: LossContext) -> dict[str, Tensor]:
         cached = ctx.cache.get("paired_diff")
@@ -126,6 +298,8 @@ class PairedDiffLoss:
         pred = ctx.pred
         zero = pred["positions"].sum() * 0.0 + 0.0
         out = {name: zero for name in TERM_NAMES}
+        if self.return_enabled:
+            out.update({name: zero for name in self.return_names})
         prep = t.prepared.get("paired_diff")
         if prep is None or prep["n_arms"] == 0:
             ctx.cache["paired_diff"] = out
@@ -149,6 +323,8 @@ class PairedDiffLoss:
         # ---- cohort aggregate differences per bin (aggregate-loss soft fields)
         if cfg.aggregate_weight > 0.0 and prep["w_agg"] > 0.0:
             out["pair_agg"] = cfg.weight * cfg.aggregate_weight * self._aggregate(ctx, prep)
+        if self.return_enabled:
+            out.update(self._return_components(ctx))
         ctx.cache["paired_diff"] = out
         return out
 
@@ -194,10 +370,10 @@ class PairedDiffLoss:
 
 
 class PairedDiffTerm(LossTerm):
-    """One component (``pair_pos`` / ``pair_speed`` / ``pair_agg``) of :class:`PairedDiffLoss`."""
+    """One legacy or opt-in whole-horizon component of :class:`PairedDiffLoss`."""
 
     def __init__(self, name: str, shared: PairedDiffLoss, *, owner: bool) -> None:
-        if name not in TERM_NAMES:
+        if name not in TERM_NAMES + RETURN_TERM_NAMES:
             raise ValueError(f"unknown paired_diff term {name!r}")
         self.name = name
         self.shared = shared
@@ -208,7 +384,10 @@ class PairedDiffTerm(LossTerm):
             self.shared.prepare(targets)
 
     def __call__(self, ctx: LossContext) -> Optional[TermValue]:
-        return TermValue(self.shared.components(ctx)[self.name])
+        value = self.shared.components(ctx)[self.name]
+        if self.name in RETURN_TERM_NAMES:
+            return TermValue(value, log=value.detach() if ctx.c0 == 0 else value.detach() * 0.0)
+        return TermValue(value)
 
 
 def paired_diff_terms(cfg: PairedDiffConfig) -> list[PairedDiffTerm]:
@@ -217,5 +396,6 @@ def paired_diff_terms(cfg: PairedDiffConfig) -> list[PairedDiffTerm]:
         return []
     shared = PairedDiffLoss(cfg)
     names = [name for name, w in zip(TERM_NAMES, (cfg.position_weight, cfg.speed_weight,
-                                                  cfg.aggregate_weight)) if w > 0.0]
+                                                   cfg.aggregate_weight)) if w > 0.0]
+    names.extend(shared.return_names)
     return [PairedDiffTerm(name, shared, owner=(i == 0)) for i, name in enumerate(names)]

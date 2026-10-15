@@ -123,7 +123,8 @@ class UnrollRunner:
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,
             truncation_steps: Optional[int] = None,
-            _rate_probe: bool = False) -> dict:
+            _rate_probe: bool = False, _pair_probe: bool = False,
+            _probe_training: bool = False) -> dict:
         """One pass; returns the log record (``loss`` plus every logged term and monitor).
 
         ``share`` (forward-only diagnostic) adds ``loss_share``: each term's share of the
@@ -134,8 +135,20 @@ class UnrollRunner:
         if share and backward:
             raise ValueError("loss-share logging is a forward-only diagnostic (backward=False)")
         cfg = self.settings
+        pair_loss = self.composer.paired_diff
+        return_on = (pair_loss is not None and pair_loss.return_enabled and "pair_ref" in batch)
+        pair_reference = None
+        if return_on and torch.is_grad_enabled() and not _pair_probe:
+            # The derivative of Huber/ranking is evaluated at the WHOLE return, while
+            # replay retains only one TBPTT chunk's graph. Restore RNG for exact replay.
+            devices = [self.device.index or 0] if self.device.type == "cuda" else []
+            with torch.random.fork_rng(devices=devices), torch.no_grad():
+                probe = self.run(batch, unroll_steps=unroll_steps, backward=False,
+                                 truncation_steps=truncation_steps, _pair_probe=True,
+                                 _probe_training=backward or _rate_probe)
+            pair_reference = probe["_paired_return_difference"]
         rate_reference = None
-        if cfg.lane_rate_weight and (backward or share) and not _rate_probe:
+        if cfg.lane_rate_weight and (backward or share) and not _rate_probe and not _pair_probe:
             # Replay identical RNG draws (dropout/state noise) without retaining a
             # whole-horizon graph: each BPTT chunk then receives the derivative of
             # the single whole-batch rate loss, not a mean of chunkwise squares.
@@ -148,7 +161,10 @@ class UnrollRunner:
         inp = prepare_inputs(batch, model, cfg, self.device, unroll_steps)
         targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device)
         self.composer.prepare(targets)
+        if pair_reference is not None:
+            targets.prepared["paired_return_reference"] = pair_reference
         parameters = [p for p in model.parameters() if p.requires_grad]
+        n_model_parameters = len(parameters)
         # Round 5 (FIX 1): encode the driver settings ONCE from the observed pre-t0
         # history at t0 -- exactly where inference encodes them -- and hand every
         # chunk detached leaf tensors (no per-chunk re-encode, no chunk-start
@@ -165,18 +181,23 @@ class UnrollRunner:
                  if float(getattr(cfg, "driver_prior_weight", 0.0)) > 0.0
                  and driver_leaves is not None else None)
         # WMLANE C (training only): teacher-observed prefixes train the driver update.
-        reveal = (self._reveal_mask(inp) if backward
+        reveal_training = backward or _probe_training or (return_on and _rate_probe)
+        reveal = (self._reveal_mask(inp) if reveal_training
                   and float(getattr(cfg, "driver_reveal_prob", 0.0)) > 0.0 else None)
         param_offset = embedding_offset = None
         measure = capture_shares and backward
         shares = GradientShares(parameters) if (measure or share) else None
+        pair_grads = ([None] * len(parameters) if backward and targets.pair is not None
+                      and pair_loss is not None else None)
+        pair_difference = None
+        return_total = 0.0
         conservation = (ConservationTracker(inp.present[:, 0], ConservationConfig(enabled=True))
                         if (cfg.conservation_enabled or cfg.conservation_weight) else None)
         acc = _Accumulators()
         for name in ALWAYS_LOGGED:
             if name in self.composer.names:
                 acc.sums[name] = torch.zeros((), dtype=torch.float64, device=self.device)
-        noisy = backward or _rate_probe
+        noisy = backward or _rate_probe or _probe_training
         chunk = max(1, int(truncation_steps if truncation_steps else cfg.truncation_steps))
         n_chunks = max(1, (targets.n_steps + chunk - 1) // chunk)
         probe_chunk = self._share_probe_chunk(targets.n_steps, chunk)
@@ -194,9 +215,17 @@ class UnrollRunner:
             grad_off = share and c0 != probe_chunk
             chunk_params, chunk_embedding = driver_params, driver_embedding
             observe_kwargs = {}
+            if inp.paired_random is not None:
+                pr = inp.paired_random
+                times = range(c0, c1)
+                if getattr(model, "_samples_lanes", False):
+                    observe_kwargs["lane_uniform"] = pr.uniform("lane", times)
+                if noisy and (cfg.state_noise_std_m or cfg.state_noise_std_mps):
+                    observe_kwargs["state_noise"] = torch.stack(
+                        (pr.normal("state_s", times), pr.normal("state_v", times)), -1)
             if reveal is not None:
-                observe_kwargs = {"observe_states": inp.states[:, c0:c1 + 1],
-                                  "observe_mask": reveal[:, c0:c1 + 1]}
+                observe_kwargs.update(observe_states=inp.states[:, c0:c1 + 1],
+                                      observe_mask=reveal[:, c0:c1 + 1])
                 if param_offset is not None and chunk_params is not None:
                     chunk_params = {name: chunk_params[name] + param_offset[..., i]
                                     for i, name in enumerate(PARAMETER_NAMES)}
@@ -232,6 +261,12 @@ class UnrollRunner:
                 ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
                                   rate_reference=rate_reference)
                 breakdown = self.composer(ctx)
+                if return_on:
+                    difference = pair_loss.predicted_return_difference(ctx).detach()
+                    pair_difference = (difference if pair_difference is None
+                                       else pair_difference + difference)
+                    return_total += sum(float(breakdown.terms[n].value.detach())
+                                        for n in pair_loss.return_names)
                 raw = ctx.raw_residual
                 raw = torch.zeros_like(roll["speeds"]) if raw is None else raw
                 acc.raw_samples.append(raw.detach().masked_select(ctx.valid_aux).abs())
@@ -243,6 +278,16 @@ class UnrollRunner:
                         shares.capture(name, tensor)
                 if not bool(torch.isfinite(breakdown.total)):
                     raise RuntimeError("non-finite WM-S loss")
+                if pair_grads is not None:
+                    paired = sum(v.value for n, v in breakdown.terms.items()
+                                 if n.startswith("pair_"))
+                    if torch.is_tensor(paired) and paired.requires_grad:
+                        grads = torch.autograd.grad(paired, parameters, retain_graph=True,
+                                                    allow_unused=True)
+                        for i, g in enumerate(grads):
+                            if g is not None:
+                                pair_grads[i] = (g.detach() if pair_grads[i] is None
+                                                 else pair_grads[i] + g.detach())
                 if backward:
                     breakdown.total.backward()
                 for name, term_value in breakdown.terms.items():
@@ -265,14 +310,61 @@ class UnrollRunner:
                     current["length_m"] = torch.where(newcomers, current["length_m"],
                                                       inp.initial["length_m"])
                 hist, hist_mask = roll["history"].detach(), roll["history_mask"]
+        if return_on:
+            values = pair_loss.return_losses(targets, pair_difference)
+            acc.total -= return_total
+            for name, value in values.items():
+                acc.sums[name] = value.detach().double()
+                acc.total += float(value.detach())
         record = self._finish(inp, targets, acc, conservation, shares, n_chunks,
                               backward=backward, share=share, measure=measure,
                               rate_reference=rate_reference)
+        if targets.pair is not None and pair_loss is not None:
+            self._pair_diagnostics(record, batch, targets, pair_loss)
+            record["paired_grad_norm"] = (self._paired_grad_norm(
+                pair_grads, parameters[:n_model_parameters], driver_leaves)
+                if pair_grads is not None else None)
+        if _pair_probe:
+            record["_paired_return_difference"] = pair_difference
         if prior is not None:
             self._apply_driver_prior(prior, driver_leaves, record)
         if backward and driver_leaves is not None:
             driver_leaves.backward_through_encoder()
         return record
+
+    @staticmethod
+    def _paired_grad_norm(grads, parameters, leaves) -> float:
+        """Norm of the summed paired gradient on MODEL parameters (including the encoder)."""
+        n = len(parameters)
+        if leaves is not None and leaves.leaf_parameters:
+            graphs, upstream = [], []
+            for graph, leaf in ((leaves.values, leaves.values_leaf),
+                                (leaves.embedding, leaves.embedding_leaf)):
+                if leaf is not None:
+                    g = grads[n + len(upstream)]
+                    graphs.append(graph)
+                    upstream.append(torch.zeros_like(leaf) if g is None else g)
+            extra = torch.autograd.grad(graphs, parameters, grad_outputs=upstream,
+                                        retain_graph=True, allow_unused=True)
+            for i, g in enumerate(extra):
+                if g is not None:
+                    grads[i] = g.detach() if grads[i] is None else grads[i] + g.detach()
+        return sum(float(g.double().square().sum()) for g in grads[:n] if g is not None) ** 0.5
+
+    @staticmethod
+    def _pair_diagnostics(record, batch, targets, pair_loss) -> None:
+        """Metadata only: no RNG draws or loss/gradient changes on the legacy paired path."""
+        worlds = batch.get("pair_world")
+        record["paired_unique_worlds"] = len(set(worlds)) if worlds is not None else None
+        record["paired_groups"] = int(torch.unique(targets.pair.ref).numel())
+        if targets.prepared.get("paired_return") is None:
+            pair_loss._prepare_return(targets)
+        effects = pair_loss.recorded_effect_bins(targets)
+        bins = effects["effect_bin"][effects["active"]]
+        record["paired_effect_bins"] = {
+            "negative": int((bins < 0).sum()), "within_margin": int((bins == 0).sum()),
+            "positive": int((bins > 0).sum())}
+        record["paired_effect_margin_veh_s"] = pair_loss.cfg.rank_margin_veh_s
 
     def _driver_prior(self, inp: UnrollInputs, leaves: "_DriverGradLeaves", *,
                       backward: bool) -> dict:
@@ -354,8 +446,14 @@ class UnrollRunner:
         dt = float(self.model.physics.dt_s)
         max_steps = max(1, int(round(float(cfg.driver_reveal_max_s) / dt)))
         hdv0 = inp.present[:, 0] & ~inp.is_cav[:, 0]
-        pick = (torch.rand(b, k, device=device) < float(cfg.driver_reveal_prob)) & hdv0
-        length = torch.randint(1, max_steps + 1, (b, k), device=device)
+        if inp.paired_random is None:
+            pick = (torch.rand(b, k, device=device) < float(cfg.driver_reveal_prob)) & hdv0
+            length = torch.randint(1, max_steps + 1, (b, k), device=device)
+        else:
+            pick = (inp.paired_random.uniform("reveal_pick", [0])[:, 0]
+                    < float(cfg.driver_reveal_prob)) & hdv0
+            length = 1 + (inp.paired_random.uniform("reveal_length", [0])[:, 0]
+                          * max_steps).long()
         steps = torch.arange(t1, device=device).view(1, t1, 1)
         mask = (steps >= 1) & (steps <= length.unsqueeze(1)) & pick.unsqueeze(1)
         return mask & inp.loss_valid[:, :t1] & ~inp.is_cav[:, :t1]
@@ -493,7 +591,8 @@ class UnrollRunner:
             agg_total = sum(float(logged[n]) for n in agg_names)
             record["aggregate_value_share"] = (agg_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
-        pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg") if n in logged]
+        pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg", "pair_return", "pair_rank")
+                      if n in logged]
         if pair_names:
             # PAIRLOSS: share of the logged loss value and whether this was a paired batch.
             pair_total = sum(float(logged[n]) for n in pair_names)

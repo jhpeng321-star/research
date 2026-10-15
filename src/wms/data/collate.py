@@ -66,5 +66,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
                                             dtype=torch.long)
         out["pair_ref"] = torch.as_tensor([int(r["pair_ref"]) for r in records],
                                           dtype=torch.long)
+        if all(r.get("meta", {}).get("world") is not None for r in records):
+            out["pair_world"] = [r["meta"]["world"] for r in records]
+        if all(r.get("meta", {}).get("pair_key") is not None for r in records):
+            out["pair_key"] = [r["meta"]["pair_key"] for r in records]
     out["identities"] = [r.get("identities") for r in records]
     return out

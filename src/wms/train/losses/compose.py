@@ -22,7 +22,7 @@ from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
-from .paired_diff import PairedDiffConfig, paired_diff_terms
+from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
 from .traffic import TrafficLoss, TrafficLossConfig
@@ -41,6 +41,8 @@ class LossComposer:
         self.unroll_terms = tuple(unroll_terms)
         self.braking = braking
         self.lane_rate = next((t for t in chunk_terms if isinstance(t, LaneRateLoss)), None)
+        # Shared helpers for the runner's no-grad whole-horizon probe and gradient replay.
+        self.paired_diff = next((t.shared for t in chunk_terms if isinstance(t, PairedDiffTerm)), None)
 
     @property
     def names(self) -> tuple[str, ...]:
@@ -157,6 +159,9 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             position_weight=float(settings.paired_diff_position_weight),
             speed_weight=float(settings.paired_diff_speed_weight),
             aggregate_weight=float(settings.paired_diff_aggregate_weight),
+            return_weight=float(getattr(settings, "paired_diff_return_weight", 0.0)),
+            rank_weight=float(getattr(settings, "paired_diff_rank_weight", 0.0)),
+            rank_margin_veh_s=float(getattr(settings, "paired_diff_rank_margin_veh_s", 5.0)),
             position_delta_m=float(settings.position_huber_delta_m),
             speed_delta_mps=float(settings.speed_huber_delta_mps),
             bin_s=float(settings.aggregate_bin_s),

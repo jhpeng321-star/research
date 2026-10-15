@@ -372,7 +372,10 @@ class PairedDiffLossConfig:
     arm 0).  Per group the predicted arm-minus-reference differences of the t0 HDV positions /
     speeds (``position_weight`` / ``speed_weight``) and of the per-bin cohort aggregates
     (road / RSU-zone delay, throughput past the merge end; ``aggregate_weight``) are matched
-    to the recorded differences (Huber, normalised).
+    to the recorded differences (Huber, normalised).  Optional return-difference and
+    ranking terms use ``return_weight`` / ``rank_weight``; ``rank_margin_veh_s`` is
+    the ranking margin in vehicle-seconds.  ``couple_randomness`` shares stochastic
+    draws across arms of a pair group to reduce noise in their differences.
     """
 
     weight: float = 0.0
@@ -382,11 +385,20 @@ class PairedDiffLossConfig:
     position_weight: float = 1.0
     speed_weight: float = 1.0
     aggregate_weight: float = 1.0
+    couple_randomness: bool = False
+    return_weight: float = 0.0
+    rank_weight: float = 0.0
+    rank_margin_veh_s: float = 5.0
 
     def __post_init__(self) -> None:
         require(all(is_finite(x) and x >= 0.0 for x in (
-            self.weight, self.position_weight, self.speed_weight, self.aggregate_weight)),
+            self.weight, self.position_weight, self.speed_weight, self.aggregate_weight,
+            self.return_weight, self.rank_weight)),
             "loss.paired_diff weights must be finite and non-negative")
+        require(isinstance(self.couple_randomness, bool),
+                "loss.paired_diff.couple_randomness must be a bool")
+        require(is_finite(self.rank_margin_veh_s) and self.rank_margin_veh_s >= 0.0,
+                "loss.paired_diff.rank_margin_veh_s must be finite and non-negative")
         require(is_finite(self.fraction) and 0.0 <= self.fraction <= 1.0,
                 "loss.paired_diff.fraction must be in [0,1]")
         require(self.groups >= 1 and self.max_arms >= 2,
@@ -677,7 +689,9 @@ class TrainConfig:
         if pair.enabled:
             terms.extend(name for name, w in (("pair_pos", pair.position_weight),
                                               ("pair_speed", pair.speed_weight),
-                                              ("pair_agg", pair.aggregate_weight)) if w > 0.0)
+                                              ("pair_agg", pair.aggregate_weight),
+                                              ("pair_return", pair.return_weight),
+                                              ("pair_rank", pair.rank_weight)) if w > 0.0)
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------
