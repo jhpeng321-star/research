@@ -601,6 +601,10 @@ class UnrollRunner:
             record["paired_batch"] = targets.pair is not None
             if targets.pair is not None:
                 record["paired_arms"] = int(targets.pair.arm.sum())
+        if cfg.paired_diff_horizon_mode == "stage" and targets.pair is not None:
+            # Use the actual horizon, including fallback to a shorter available bucket.
+            record["paired_horizon_steps"] = int(targets.n_steps)
+            record["paired_horizon_s"] = float(targets.n_steps * targets.dt_s)
         if model.rollout_mode == "hybrid" and acc.hybrid_count > 0:
             physics_mag, residual_mag = (float(acc.hybrid_physics.detach()),
                                          float(acc.hybrid_residual.detach()))

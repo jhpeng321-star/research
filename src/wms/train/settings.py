@@ -196,6 +196,7 @@ class TrainSettings:
     paired_diff_return_weight: float = 0.0
     paired_diff_rank_weight: float = 0.0
     paired_diff_rank_margin_veh_s: float = 5.0
+    paired_diff_horizon_mode: str = "fixed"
     # INFRAV5 (2026-10-14, default OFF): driver-estimate prior on the batch-mean encoded
     # settings (loss.driver_prior; 0 = off) and the same-horizon checkpoint selection
     # (selection_mode "multi_horizon_v2").
@@ -357,6 +358,8 @@ class TrainSettings:
                  "paired_diff_fraction must be in [0,1]")
         _require(int(self.paired_diff_groups) >= 1 and int(self.paired_diff_max_arms) >= 2,
                  "paired_diff_groups must be >= 1 and paired_diff_max_arms >= 2")
+        _require(self.paired_diff_horizon_mode in ("fixed", "stage"),
+                 "paired_diff_horizon_mode must be fixed or stage")
         lanefix_on = (self.lane_decision != "argmax"
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"

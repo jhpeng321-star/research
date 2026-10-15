@@ -108,3 +108,8 @@ path = "runs/active/C4-GENRAND-20261014/c4_episodes"
 
 [datasets.genrand_branch]
 path = "runs/active/C4-GENRAND-20261014/branches/c4_episodes"
+
+# V6 long paired branches (configs/c4_wm_v6_longpair.toml). Placeholder only:
+# set WMS_DATA_V6_LONGPAIR to the converted long-branch c4_episodes directory.
+[datasets.v6_longpair]
+path = "runs/active/v6_longpair/c4_episodes"

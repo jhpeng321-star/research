@@ -330,7 +330,10 @@ class WmSTrainer:
         # A mixed dataset supplies per-stage sampling weights (source mix ratio and
         # over-sampling of switch/direct windows visible at that stage's horizon).
         stage_weights = getattr(self.dataset, "stage_weights", None)
-        loader = self._make_loader(sampler) if stage_weights is None else None
+        set_paired_horizon = (getattr(self.dataset, "set_paired_horizon", None)
+                              if s.paired_diff_horizon_mode == "stage" else None)
+        loader = (self._make_loader(sampler)
+                  if stage_weights is None and set_paired_horizon is None else None)
         selector = LongHorizonSelection()
         # SCHED (default off): multi-horizon selection and short mixed-horizon batches.
         multi = (MultiHorizonSelection(
@@ -436,11 +439,18 @@ class WmSTrainer:
             done = 0
             steps_before = global_step
             last_validation = None
+            if set_paired_horizon is not None:
+                # Retire persistent workers before changing the parent dataset. Each stage's
+                # new loader must copy the updated eligible groups and window horizon.
+                loader = None
+                set_paired_horizon(plan.unroll_steps)
             if stage_weights is not None:
                 gen = torch.Generator().manual_seed(int(s.seed) + 1000 * stage_i)
                 loader = self._make_loader(WeightedRandomSampler(
                     torch.as_tensor(stage_weights(float(stage_s)), dtype=torch.double),
                     num_samples=len(self.dataset), replacement=True, generator=gen))
+            elif set_paired_horizon is not None:
+                loader = self._make_loader(sampler)
             while done < plan.steps:
                 for batch in loader:
                     last_batch = batch
@@ -448,7 +458,9 @@ class WmSTrainer:
                     # controllers are not replayed a second time.
                     self.capture_loss_shares = (s.loss_share_logging
                                                 and s.cav_drive == "closed_loop" and done == 0)
-                    short_s = None if mixer is None else mixer.draw(stage_s)
+                    stage_pair = (s.paired_diff_horizon_mode == "stage"
+                                  and s.paired_diff_weight > 0.0 and "pair_ref" in batch)
+                    short_s = None if mixer is None or stage_pair else mixer.draw(stage_s)
                     # A mixed (short) batch reuses the stage's loss composer, lr and BPTT
                     # chunk length; a chunk longer than the unroll is one chunk, and the
                     # aggregate ramp/normalisers are computed over the unrolled steps.
