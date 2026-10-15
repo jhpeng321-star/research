@@ -332,11 +332,11 @@ class Backend:
         parent = os.path.dirname(dst.rstrip("/"))
         if dst_host.get("ssh"):
             self.run(dst_host, f"mkdir -p {q(parent)}", check=True)
-            argv = ["rsync", "-a", "--partial", "--timeout=180", "--exclude", "*.incomplete-*", "-e", ssh,
+            argv = ["rsync", "-az", "--partial", "--timeout=180", "--exclude", "*.incomplete-*", "-e", ssh,
                     src, f"{target}:{dst}"]
         else:
             os.makedirs(parent, exist_ok=True)
-            argv = ["rsync", "-a", "--partial", "--timeout=180", "--exclude", "*.incomplete-*", "-e", ssh,
+            argv = ["rsync", "-az", "--partial", "--timeout=180", "--exclude", "*.incomplete-*", "-e", ssh,
                     f"{target}:{src}", dst]
         for attempt in range(1, self.retries + 2):
             proc = subprocess.run(argv, capture_output=True, text=True, stdin=subprocess.DEVNULL)

@@ -96,11 +96,11 @@ push_run() {
     # End metadata must reach the relay too, before success is marked locally.
     "$PYTHON" "$BOXOPS_DIR/ops.py" end "$OUT" "${RUN_RC:-0}"
     retry_transfer "${SSH[@]}" "$RELAY_HOST" "mkdir -p '$remote'" >>"$OUT/logs/push.log" 2>&1
-    retry_transfer rsync -a --partial --timeout=120 -e "$RSYNC_SSH" \
+    retry_transfer rsync -az --partial --timeout=120 -e "$RSYNC_SSH" \
         --exclude='.boxops.lock' --exclude='PUSHED' --exclude='scenarios/' \
         "$OUT/" "$RELAY_HOST:$remote/" >>"$OUT/logs/push.log" 2>&1
     touch "$OUT/PUSHED"
-    retry_transfer rsync -a --partial --timeout=120 -e "$RSYNC_SSH" \
+    retry_transfer rsync -az --partial --timeout=120 -e "$RSYNC_SSH" \
         "$OUT/PUSHED" "$RELAY_HOST:$remote/PUSHED" >>"$OUT/logs/push.log" 2>&1 || {
         mv "$OUT/PUSHED" "$OUT/PUSH_PENDING"; return 1;
     }

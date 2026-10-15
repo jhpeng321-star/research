@@ -40,13 +40,13 @@ REMOTE=$RELAY_DATA/$RUN_ID/eval
 if [[ ! -f $OUT/PUSHED ]]; then
     retry_transfer "${SSH[@]}" "$RELAY_HOST" "mkdir -p '$REMOTE'" >>"$OUT/logs/push.log" 2>&1
     # Whitelist: no episode arrays, simulation files, or arbitrary checkpoint files.
-    retry_transfer rsync -a --partial --timeout=120 -e "$RSYNC_SSH" \
+    retry_transfer rsync -az --partial --timeout=120 -e "$RSYNC_SSH" \
         --exclude='*.incomplete-*/' --include='*/' --include='summary.json' \
         --include='COLLECT_SUMMARY*' --include='INDEX.json' --include='CODE_ID.txt' \
         --include='RUN_SPEC.json' --include='*.DONE' --exclude='*' \
         "$OUT/" "$RELAY_HOST:$REMOTE/" >>"$OUT/logs/push.log" 2>&1
     touch "$OUT/PUSHED"
-    retry_transfer rsync -a --partial --timeout=120 -e "$RSYNC_SSH" "$OUT/PUSHED" \
+    retry_transfer rsync -az --partial --timeout=120 -e "$RSYNC_SSH" "$OUT/PUSHED" \
         "$RELAY_HOST:$REMOTE/PUSHED" >>"$OUT/logs/push.log" 2>&1 || {
         mv "$OUT/PUSHED" "$OUT/PUSH_PENDING"; exit 1;
     }
