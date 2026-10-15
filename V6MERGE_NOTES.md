@@ -95,6 +95,18 @@ Relevant suites, on HEAD vs this branch:
 The 11 files are physics (tests/unit/physics, equivalence, gaprule), lane (lane_rule, lanefix),
 v6integ, v6enc, infrav5, lanev5, wmlane and golden_new.
 
+Full `tests/unit + tests/golden + tests/equivalence`:
+
+| Run | Passed | Failed | Errors | Skipped |
+|---|---|---|---|---|
+| HEAD | 1441 | 6 | 13 | 31 |
+| this branch | 1483 | 6 | 13 | 31 |
+
+The failed and errored tests are identical on HEAD and this branch, so they predate this change.
+They come from the laptop environment: the drive registry, data packs not present, a pytest tmp
+path outside the workspace, and the mappo worker-pool test, which also leaves pytest hanging at
+exit.
+
 The skips are the same on HEAD: 10 golden tests need local packs that are not registered on this
 laptop. No frozen golden test fails on HEAD here.
 
