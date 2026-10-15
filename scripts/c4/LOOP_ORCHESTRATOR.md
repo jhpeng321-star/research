@@ -113,20 +113,43 @@ The watcher `autopolicy_v6.sh` starts the v6 policy in `/root/autodl-tmp/c4/v5/r
 (`pid` file inside). It runs on the lane-calibrated `lanecal_v6/wm_s_best_ap.pt`, or on
 `c4_wm_v6_cont/wm_s_best.pt` if calibration failed. Check `autopolicy_v6.log` to see which.
 
+**Code root.** Use the deployed loop2 root `repo_<sha>` named in the report. It is c4/int up to `1e464ba`
+(merge-zone fix 73951bf + `c4_wm_v6m_refresh.toml`) merged with the loop2 changes. `repo_73951bf` alone is
+**not** enough for loop restarts. It lacks three things:
+* the trainer STOP file;
+* `start_source_weights` (it would be silently ignored);
+* the loop-resume sampler tolerance. Without it, a `--resume` with the extra v6_policy start windows raises
+  "resume start-state selection differs".
+
+**Base WM choice (decide around 10:45):**
+
+| base | loop config (sets `wm.config`) | `BASE` (refresh init + reference val log) |
+|---|---|---|
+| v6 | `configs/c4_dreamer_loop_gpuw.json` (`c4_wm_v6_refresh.toml`) | `/root/autodl-tmp/c4/v5/runs/c4_wm_v6_cont` |
+| v6m | `configs/c4_dreamer_loop_gpuw_v6m.json` (`c4_wm_v6m_refresh.toml`: + merge_end_wait, mainline_merge_yield) | `/root/autodl-tmp/c4/v5/runs/c4_wm_v6m` |
+
+The policy's imagined physics comes from the `physics.json` next to each WM checkpoint, so it follows the
+base automatically. The policy's start-window config `c4_policy_v6_loop.toml` uses the same data sources
+for both bases.
+
 ```bash
-SHA=<deployed loop2 commit, e.g. the one in the report>
+SHA=<deployed loop2 commit from the report>
+CFG=configs/c4_dreamer_loop_gpuw.json          # or configs/c4_dreamer_loop_gpuw_v6m.json
+BASE=/root/autodl-tmp/c4/v5/runs/c4_wm_v6_cont # or /root/autodl-tmp/c4/v5/runs/c4_wm_v6m
 cd /root/autodl-tmp/c4/v5/repo_$SHA
-sed "s/REPO_SHA/$SHA/g" configs/c4_dreamer_loop_gpuw.json > /root/autodl-tmp/c4/v5/loop.json
+sed "s/REPO_SHA/$SHA/g" $CFG > /root/autodl-tmp/c4/v5/loop.json
 P=/root/autodl-tmp/c4/v5/runs/c4_policy_v6_full
 PWM=$(grep -o 'wm_ckpt=[^ ]*' $P/LAUNCH.txt | cut -d= -f2)      # the WM the running policy uses
 /root/miniconda3/bin/python scripts/c4/dreamer_loop.py dry-run --config /root/autodl-tmp/c4/v5/loop.json \
-  --init-wm /root/autodl-tmp/c4/v5/runs/c4_wm_v6_cont/wm_s_best.pt --init-policy-run-dir $P --adopt-policy-pid $(cat $P/pid)
+  --init-wm $BASE/wm_s_best.pt --init-policy-run-dir $P --adopt-policy-pid $(cat $P/pid)
 setsid nohup /root/miniconda3/bin/python scripts/c4/dreamer_loop.py run --config /root/autodl-tmp/c4/v5/loop.json \
-  --init-wm /root/autodl-tmp/c4/v5/runs/c4_wm_v6_cont/wm_s_best.pt \
-  --init-wm-val-log /root/autodl-tmp/c4/v5/runs/c4_wm_v6_cont/val_log.jsonl \
+  --init-wm $BASE/wm_s_best.pt --init-wm-val-log $BASE/val_log.jsonl \
   --init-policy-wm "$PWM" --init-policy-run-dir $P --adopt-policy-pid $(cat $P/pid) \
   > /root/autodl-tmp/c4/v5/loop.nohup.log 2>&1 < /dev/null &
 ```
+
+If the base is v6m but the running policy was trained on v6, the first switch moves it onto the first
+accepted v6m refresh.
 
 Prerequisites:
 
@@ -214,15 +237,30 @@ needs an owner-approved new seed block (`traffic_shepherd/c4/seeds.py` + `seeds.
 
 * Unit tests: `tests/unit/test_dreamer_loop.py` (fake backend; both modes, resume, STOP, rejection, disk
   pause, seeds, PID safety) and `tests/unit/test_c4_loop_starts.py` (weighted start sources).
-* The live test on gpuW + CPU box is reported in the integrator's report. It used
-  `configs/c4_dreamer_loop_livetest.json`, seeds 965990–965993, outputs under
-  `/root/autodl-tmp/c4/v5/loop_test/` and `~/c4/loop_test/`.
+* Live test, pipelined mode on gpuW + CPU box (`configs/c4_dreamer_loop_livetest.json`):
+  * Seeds used: **965990–965993**.
+  * Outputs: logs kept under `/root/autodl-tmp/c4/v5/loop_test/` and `~/c4/loop_test/`; checkpoints and
+    episode arrays deleted.
+
+| attempt | result |
+|---|---|
+| loop_root `loop` (code 2202015) | Collection failed instantly: `SUMO binary not found on PATH` (non-interactive ssh). The two seeds **965990–965991** were burned with zero simulation. Fixed: the collector exports the venv's SUMO (`SUMO_HOME` + PATH). That attempt also showed a remote batch dir reused by a later loop; fixed with per-loop remote dirs. |
+| loop_root `loop2` (code 4dd6dee, then resumed with c7bf57c) | b0001 (seed 965992): pushed, collected (1 episode, 60 s warmup + 120 s, 16 s), pulled, pooled. Refresh r001 (CPU, stages [2,1], init `c4_wm_v6_full/wm_s_stage10.pt`, 4 min) was **rejected** by the sanity check (val 10 s 1.301x > 1.30), so the WM was kept and the policy left alone: the failure path works. Resumed the same state with `max_refreshes 2` and tolerance 1.0: b0002 (seed 965993) was collected while r002 trained; r002 was accepted. Policy lane: "adopted" stop of a non-running seed policy, then `WMS_LOOP_REFRESH=1 --resume ... --smoke` on the r002 WM with `c4_policy_v6_loop.toml`. Its train.log shows `[loop-refresh] resuming on new WM`, `start windows changed; sampler state not restored`, `validation windows changed`. RUN_SUMMARY: completed, start windows `v6_policy` 10 train / 2 val next to native_v5 / genrand_plain. |
+| STOP file | A non-smoke `train_cli --resume` started with `<out>/STOP` present printed `[stop-file] STOP found at update 4`, wrote `policy_latest.pt` and exited with status completed. |
+
+  * Sequential mode: unit tests only, not run live. It uses the same primitives (launch / poll / rsync /
+    convert / refresh / start).
 
 ## Known risks
 
 * **Disk on gpuW** (about 9 GB free) limits each converted pool to about 70–140 recent episodes. "All
   episodes" needs about 21 MB × pool, so expand `/root/autodl-tmp` or lower `min_free_gb`.
-* **GPU sharing.** WM refresh and policy on one 4080S slow each other down. Set `hosts.policy` to the PRO
+* **GPU memory.** gpuW's GPU reports 32 GB, and the running v6 WM training alone holds about 21 GB. A
+  refresh (60 s / 120 s unrolls) plus the policy on the same GPU may not fit. If the policy OOMs, it is
+  restarted at most `max_restarts` times and then left stopped. If a refresh OOMs, it is rejected. Watch
+  the first cycle, and consider `policy.env.C4_GPU_MEM_FRACTION` (the policy then OOMs itself, not the WM)
+  or a separate policy host.
+* **GPU sharing.** WM refresh and policy on one GPU slow each other down. Set `hosts.policy` to the PRO
   6000 box when it is available. That box then needs:
   * `v5_native` and `genrand_plain` synced once;
   * a `v6_longpair` dir holding only `C4_EPISODES_MANIFEST.json` (start windows read only its manifest);
