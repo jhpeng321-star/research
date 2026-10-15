@@ -46,7 +46,8 @@ import torch
 from torch import Tensor, nn
 
 from wms.physics.config import PhysicsConfig
-from wms.physics.mobil import MASKED_LOGIT, anticipated_kin, merge_end_blocked, target_overlap
+from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, merge_end_waiting, secure_gaps,
+                               target_overlap)
 from wms.physics.neighbours import MIN_GAP_M, lane_neighbour, lane_of
 
 #: Road transitions (head index): overtake 1->0, return 0->1, merge 2->1.
@@ -215,8 +216,12 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                      & ~target_overlap(kin, present, tq, p.gap_stopped_min_m))
             safe = safe | relax
         if p.merge_end_wait:
-            # V6MERGE: the same final veto as mobil_merge_logits (lane-end mergers only).
-            safe = safe & ~merge_end_blocked(kin, present, p)
+            # V6MERGE: the same final veto as mobil_merge_logits (merge_end_blocked), from the
+            # target-lane neighbours above (current: tlg/tlv/tfg/tfv; anticipated: gap_*/aov).
+            secure = (secure_gaps(v, tlg, tlv, tfg, tfv, p)
+                      & ~target_overlap(kin, present, tq, p.gap_overlap_margin_m)
+                      & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p) & ~aov)
+            safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
         in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
         allowed = (~is_ramp | in_zone) & safe
         if p.lane_rule == "forced_merge_only":

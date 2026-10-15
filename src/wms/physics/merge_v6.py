@@ -18,7 +18,8 @@ from .neighbours import lane_of
 
 
 def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: PhysicsConfig,
-                         params: IDMParams, driver_decel: Optional[Tensor] = None) -> Tensor:
+                         params: IDMParams, driver_decel: Optional[Tensor] = None,
+                         blocked: Optional[Tensor] = None) -> Tensor:
     """``accel`` with each blocked merger acting as a virtual leader of its lane-1 follower.
 
     Merger ``j`` (:func:`wms.physics.mobil.merge_end_blocked`) is seen by the NEAREST present
@@ -28,10 +29,12 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     own IDM (``params``, per-driver when learned) to the virtual leader (gap, merger speed),
     never accelerating because of it and braking by at most ``mainline_merge_yield_decel_mps2``
     (and its own ``driver_decel``).  Vehicles further back react through ordinary IDM.
+    ``blocked``: a precomputed :func:`merge_end_blocked` (computed here when ``None``).
     """
     p = physics
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
-    blocked = merge_end_blocked(kin, present, p)                      # mergers j  [B, K]
+    if blocked is None:
+        blocked = merge_end_blocked(kin, present, p)                  # mergers j  [B, K]
     follower = present & (lane_of(kin) == p.merge_target_lane)        # followers i [B, K]
     ds = s.unsqueeze(-2) - s.unsqueeze(-1)                            # [B, i, j] = s_j - s_i
     gap = ds - length.unsqueeze(-2)                                   # i front -> j rear

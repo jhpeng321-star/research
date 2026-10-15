@@ -24,7 +24,7 @@ from torch.utils.checkpoint import checkpoint
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
-from wms.physics.mobil import MASKED_LOGIT, mobil_merge_logits
+from wms.physics.mobil import MASKED_LOGIT, merge_end_blocked, mobil_merge_logits
 from wms.physics.neighbours import lane_neighbour, lane_of, lead_neighbour
 from wms.physics.projection import FeasibilityProjection
 from wms.physics.state import KIN_F, state_kin, state_present
@@ -300,6 +300,15 @@ class WmSModel(nn.Module):
                       ) -> tuple[Tensor, Tensor]:
         """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
         if self.physics_step is None:
+            if self.physics.merge_end_wait or self.physics.mainline_merge_yield:
+                # V6MERGE: one blocked-merger mask per step, shared by accel and lane logits.
+                kin = state_kin(state)
+                present = state_present(state, kin)
+                blocked = merge_end_blocked(kin, present, self.physics)
+                return (baseline_accel(kin, present, self.physics, driver_params,
+                                       merge_blocked=blocked),
+                        mobil_merge_logits(kin, present, self.physics, driver_params,
+                                           merge_blocked=blocked))
             return (self.physics_accel(state, driver_params),
                     self.mobil_merge_logits(state, driver_params))
         result = self.physics_step(state)

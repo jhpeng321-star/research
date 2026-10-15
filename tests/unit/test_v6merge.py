@@ -235,6 +235,15 @@ GOLDEN = Path(__file__).resolve().parents[1] / "fixtures" / "v6merge_off_golden.
 
 
 def _off_outputs(physics):
+    threads = torch.get_num_threads()
+    torch.set_num_threads(1)          # the captured fixture is single-threaded (bitwise)
+    try:
+        return _off_outputs_1t(physics)
+    finally:
+        torch.set_num_threads(threads)
+
+
+def _off_outputs_1t(physics):
     state = _fixed_batch()
     kin, present = _kin(state)
     out = {"logits": mobil_merge_logits(kin, present, physics),
@@ -258,7 +267,7 @@ def _off_outputs(physics):
 
 
 def test_off_path_bit_identical():
-    """OFF outputs equal the ones captured on unmodified HEAD 916559d (fixture), bit for bit:
+    """OFF outputs equal the ones captured on unmodified HEAD 916559d (fixture, 1 thread), bit for bit:
     physics logits/accel, the lane-v5 fast mask and a full v5-config model step."""
     assert not PhysicsConfig().merge_end_wait and not PhysicsConfig().mainline_merge_yield
     physics = PhysicsConfig(**V5)
