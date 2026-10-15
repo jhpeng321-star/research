@@ -217,7 +217,9 @@ class WmSModel(nn.Module):
             self.lane_gate_g_max_logit = nn.Parameter(lane_g_max_logit)
             self.lane_gate_tau_raw = nn.Parameter(lane_tau_raw)
         self.driver_encoder = DriverEncoder(self.history_features,
-                                            long_history=self.long_history)
+                                            long_history=self.long_history,
+                                            driver_param_mode=spec.driver_param_mode,
+                                            physics=self.physics)
         self.lane_change_head = (HistoryLaneHead(self.driver_embed_dim)
                                  if spec.lane_head == "history" else None)
         # WMLANE switches (default OFF): created last so the key order and the RNG
@@ -227,7 +229,8 @@ class WmSModel(nn.Module):
         self.lane_hazard = (HazardLaneModel(self.driver_embed_dim, spec.lane_hazard_hidden,
                                             spec.lane_hazard_cap, n_features=n_hazard)
                             if getattr(spec, "lane_model", "residual") == "hazard" else None)
-        self.driver_updater = (EmaDriverUpdater(self.driver_embed_dim, spec.driver_update_rate)
+        self.driver_updater = (EmaDriverUpdater(self.driver_embed_dim, spec.driver_update_rate,
+                                               driver_ema_update=spec.driver_ema_update)
                                if getattr(spec, "driver_update", "off") == "ema" else None)
         # LANEV5 (default OFF): created last; absent (no parameters, no RNG draw) otherwise.
         if getattr(spec, "lane_model", "residual") == "hazard_v5":

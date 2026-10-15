@@ -172,6 +172,14 @@ def save_checkpoint(path: str | Path, model: WmSModel, cfg: Any, *,
         flat = cfg.to_legacy_flat()
     else:
         flat = cfg.to_dict()
+    # Persist the actual encoder/update semantics even with a minimal caller config.
+    # Default keys stay absent, preserving the legacy checkpoint config layout.
+    for key, default in (("driver_param_mode", "legacy"), ("driver_ema_update", True)):
+        value = getattr(getattr(model, "spec", None), key, default)
+        if value != default:
+            flat[key] = value
+        else:
+            flat.pop(key, None)
     payload: dict[str, Any] = {"format": CHECKPOINT_FORMAT, "model": model.state_dict(),
                                "config": flat}
     if history is not None:

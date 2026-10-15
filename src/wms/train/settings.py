@@ -138,6 +138,8 @@ class TrainSettings:
     lane_hazard_hidden: int = 64
     lane_hazard_cap: float = 10.0
     driver_update: str = "off"
+    driver_param_mode: str = "legacy"
+    driver_ema_update: bool = True
     driver_update_rate: float = 0.3
     driver_reveal_prob: float = 0.0
     driver_reveal_max_s: float = 10.0
@@ -287,6 +289,10 @@ class TrainSettings:
         _require(self.lane_model in ("residual", "hazard", "hazard_v5"),
                  "lane_model must be residual, hazard or hazard_v5")
         _require(self.driver_update in ("off", "ema"), "driver_update must be off or ema")
+        _require(self.driver_param_mode in ("legacy", "physical"),
+                 "driver_param_mode must be legacy or physical")
+        _require(isinstance(self.driver_ema_update, bool),
+                 "driver_ema_update must be a boolean")
         _require(0.0 <= self.driver_reveal_prob <= 1.0 and self.driver_reveal_max_s > 0.0,
                  "driver_reveal_prob must be in [0,1] and driver_reveal_max_s > 0")
         _require(math.isfinite(self.lane_event_weight) and self.lane_event_weight >= 0.0

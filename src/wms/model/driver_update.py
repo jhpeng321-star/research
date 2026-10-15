@@ -72,8 +72,12 @@ def driver_observation_estimates(kin: Tensor, present: Tensor, physics: PhysicsC
 class EmaDriverUpdater(nn.Module):
     """Learnable-rate EMA refinement of (v0, T) plus an innovation embedding update."""
 
-    def __init__(self, embed_dim: int, rate_init: float = 0.3) -> None:
+    def __init__(self, embed_dim: int, rate_init: float = 0.3,
+                 driver_ema_update: bool = True) -> None:
         super().__init__()
+        if not isinstance(driver_ema_update, bool):
+            raise ValueError("driver_ema_update must be a boolean")
+        self.driver_ema_update = driver_ema_update
         logit = float(torch.logit(torch.tensor(float(rate_init))))
         self.rate_logits = nn.Parameter(torch.full((3,), logit))  # v0, T, embedding
         self.embed_proj = nn.Linear(INNOVATION_F, int(embed_dim))
@@ -102,11 +106,14 @@ class EmaDriverUpdater(nn.Module):
         w_v0 = rates[0] * est["w_free"]
         w_t = rates[1] * est["w_follow"]
         new_params = dict(params)
-        new_params["v0"] = torch.where(obs, params["v0"] + w_v0 * (est["v0_hat"] - params["v0"]),
-                                       params["v0"])
-        new_params["time_headway"] = torch.where(
-            obs, params["time_headway"] + w_t * (est["t_hat"] - params["time_headway"]),
-            params["time_headway"])
+        # V6: disable only the algebraic parameter updates; observation-driven
+        # embedding refinement remains available and trained by prediction error.
+        if self.driver_ema_update:
+            new_params["v0"] = torch.where(
+                obs, params["v0"] + w_v0 * (est["v0_hat"] - params["v0"]), params["v0"])
+            new_params["time_headway"] = torch.where(
+                obs, params["time_headway"] + w_t * (est["t_hat"] - params["time_headway"]),
+                params["time_headway"])
         if embedding is None:
             return new_params, None
         v, a = obs_kin[..., 4], obs_kin[..., 5]
