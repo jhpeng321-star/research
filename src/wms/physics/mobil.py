@@ -188,8 +188,12 @@ def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> 
 
 
 def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
-    """V6MERGE: lane-end mergers whose lane-1 gaps are not secure ``[B, K]``."""
-    return merge_end_waiting(kin, present, physics) & ~merge_end_gap_safe(kin, present, physics)
+    """V6MERGE: lane-end mergers whose lane-1 gaps are not secure ``[B, K]`` (a discrete
+    mask: computed without an autograd graph)."""
+    with torch.no_grad():
+        kin = kin.detach()
+        return merge_end_waiting(kin, present, physics) & ~merge_end_gap_safe(kin, present,
+                                                                               physics)
 
 
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,

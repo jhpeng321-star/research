@@ -218,10 +218,11 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         if p.merge_end_wait:
             # V6MERGE: the same final veto as mobil_merge_logits (merge_end_blocked), from the
             # target-lane neighbours above (current: tlg/tlv/tfg/tfv; anticipated: gap_*/aov).
-            secure = (secure_gaps(v, tlg, tlv, tfg, tfv, p)
-                      & ~target_overlap(kin, present, tq, p.gap_overlap_margin_m)
-                      & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p) & ~aov)
-            safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
+            with torch.no_grad():
+                secure = (secure_gaps(v, tlg, tlv, tfg, tfv, p)
+                          & ~target_overlap(kin, present, tq, p.gap_overlap_margin_m)
+                          & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p) & ~aov)
+                safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
         in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
         allowed = (~is_ramp | in_zone) & safe
         if p.lane_rule == "forced_merge_only":

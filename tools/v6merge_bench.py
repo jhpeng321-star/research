@@ -83,19 +83,35 @@ def main() -> None:
                 total.backward()
         return (time.perf_counter() - t) / a.steps * 1000.0
 
-    res = {}
-    for grad in (False, True):
+    kin = torch.cat([state0["s_m"].unsqueeze(-1), F.one_hot(state0["lane"], 3).float(),
+                     state0["v_mps"].unsqueeze(-1), state0["a_mps2"].unsqueeze(-1),
+                     state0["length_m"].unsqueeze(-1)], -1)
+
+    def physics_only() -> float:
+        t = time.perf_counter()
+        with torch.no_grad():
+            for _ in range(a.steps):
+                model._physics_step({**state0, "veh_kin": kin})
+        return (time.perf_counter() - t) / a.steps * 1000.0
+
+    for label, fn in (("physics core only (no-grad)", physics_only),
+                      ("no-grad rollout", lambda: unroll(False)),
+                      ("train (fwd+bwd)", lambda: unroll(True))):
         times = {"OFF": [], "ON": []}
-        unroll(grad)                                  # warm-up
-        for _ in range(a.repeats):
-            for name, phys in (("OFF", off), ("ON", on)):
+        fn()                                          # warm-up
+        for i in range(a.repeats):
+            # Alternate the order so drift/thermal effects do not favour either mode.
+            order = (("OFF", off), ("ON", on)) if i % 2 == 0 else (("ON", on), ("OFF", off))
+            for name, phys in order:
                 model.physics = phys
-                times[name].append(unroll(grad))
-        res[grad] = {n: statistics.median(x) for n, x in times.items()}
-        label = "train (fwd+bwd)" if grad else "no-grad rollout"
-        print(f"{label}: B={b} K={k} steps={a.steps}: OFF {res[grad]['OFF']:.1f} ms/step, "
-              f"ON {res[grad]['ON']:.1f} ms/step, ratio {res[grad]['ON'] / res[grad]['OFF']:.3f}",
-              flush=True)
+                times[name].append(fn())
+        ratios = [x / y for x, y in zip(times["ON"], times["OFF"])]
+        print(f"{label}: B={b} K={k} steps={a.steps} x{a.repeats}: OFF median "
+              f"{statistics.median(times['OFF']):.1f} / min {min(times['OFF']):.1f} ms/step, ON median "
+              f"{statistics.median(times['ON']):.1f} / min {min(times['ON']):.1f} ms/step; ratio of "
+              f"medians {statistics.median(times['ON']) / statistics.median(times['OFF']):.3f}, of mins "
+              f"{min(times['ON']) / min(times['OFF']):.3f}, median pair ratio "
+              f"{statistics.median(ratios):.3f}", flush=True)
 
 
 if __name__ == "__main__":

@@ -36,19 +36,24 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
     if blocked is None:
         blocked = merge_end_blocked(kin, present, p)                  # mergers j  [B, K]
-    follower = present & (lane_of(kin) == p.merge_target_lane)        # followers i [B, K]
-    ds = s.unsqueeze(-2) - s.unsqueeze(-1)                            # [B, i, j] = s_j - s_i
-    gap = ds - length.unsqueeze(-2)                                   # i front -> j rear
-    eligible = (follower.unsqueeze(-1) & blocked.unsqueeze(-2) & (gap > 0.0)
-                & (ds <= p.mainline_merge_yield_distance_m))
-    inf = torch.full_like(ds, float("inf"))
-    dist = torch.where(eligible, gap, inf)
-    # Only the immediate follower of each merger yields ...
-    nearest = dist == dist.min(dim=-2, keepdim=True).values
-    dist = torch.where(eligible & nearest, dist, inf)
-    # ... and a follower facing several mergers reacts to its closest one.
-    best, index = dist.min(dim=-1)
-    has = torch.isfinite(best)
+    with torch.no_grad():
+        # Pair selection is discrete: no autograd graph over the [B, K, K] pair tensors.
+        sd, ld = s.detach(), length.detach()
+        follower = present & (lane_of(kin) == p.merge_target_lane)    # followers i [B, K]
+        ds = sd.unsqueeze(-2) - sd.unsqueeze(-1)                      # [B, i, j] = s_j - s_i
+        gap = ds - ld.unsqueeze(-2)                                   # i front -> j rear
+        eligible = (follower.unsqueeze(-1) & blocked.unsqueeze(-2) & (gap > 0.0)
+                    & (ds <= p.mainline_merge_yield_distance_m))
+        inf = torch.full_like(ds, float("inf"))
+        dist = torch.where(eligible, gap, inf)
+        # Only the immediate follower of each merger yields ...
+        nearest = dist == dist.min(dim=-2, keepdim=True).values
+        dist = torch.where(eligible & nearest, dist, inf)
+        # ... and a follower facing several mergers reacts to its closest one.
+        best, index = dist.min(dim=-1)
+        has = torch.isfinite(best)
+    # Differentiable [B, K] gap to the selected merger (follower front -> merger rear).
+    best = s.gather(-1, index) - length.gather(-1, index) - s
     # The virtual leader stands the road's minimum gap s0 behind the merger's rear: a follower
     # that stops for it leaves the merger's standstill secure follower gap (s0 + T*0 + 0), so
     # yielding can never itself block the merge (deadlock when the driver's own s0 < road s0).
