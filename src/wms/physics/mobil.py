@@ -9,7 +9,7 @@ from torch import Tensor
 from .config import PhysicsConfig
 from .idm import IDMParams, idm_accel
 from .merge_cal import merge_cal_target_logit, merge_urgency
-from .neighbours import lane_neighbour, lane_of, lead_neighbour
+from .neighbours import _CLOSED_ROAD_FREE_GAP_M, MIN_GAP_M, lane_neighbour, lane_of, lead_neighbour
 
 #: Logit of a forbidden lane change.
 MASKED_LOGIT = -8.0
@@ -181,10 +181,29 @@ def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> 
     projected to drive through the standing merger; the anticipated one protects the step.
     No stopped-vehicle relaxation.
     """
-    target = torch.full_like(lane_of(kin), physics.merge_target_lane)
-    return (_secure_gaps_now(kin, present, target, physics)
-            & _secure_gaps_now(anticipated_kin(kin, physics.gap_anticipation_s), present,
-                               target, physics))
+    p = physics
+    # Fused, op-count-lean equivalent of _secure_gaps_now(kin) & _secure_gaps_now(kin_a) for
+    # target lane merge_target_lane (identical values; both configurations in one pass).
+    both = torch.stack((kin, anticipated_kin(kin, p.gap_anticipation_s)))     # [2, B, K, F]
+    s, v, length = both[..., 0], both[..., 4], both[..., 6]
+    lane_j = (present & (lane_of(kin) == p.merge_target_lane)).unsqueeze(-2)  # [B, 1, j]
+    ds = s.unsqueeze(-2) - s.unsqueeze(-1)                                    # [2, B, i, j]
+    inf = float("inf")
+    free = p.free_road_gap_m if p.open_road else _CLOSED_ROAD_FREE_GAP_M
+    gap_l, i_l = torch.where(lane_j & (ds > 0), ds - length.unsqueeze(-2), inf).min(-1)
+    gap_f, i_f = torch.where(lane_j & (ds < 0), -ds - length.unsqueeze(-1), inf).min(-1)
+    has_l, has_f = torch.isfinite(gap_l), torch.isfinite(gap_f)
+    gap_l = torch.where(has_l, gap_l.clamp_min(MIN_GAP_M), free)
+    gap_f = torch.where(has_f, gap_f.clamp_min(MIN_GAP_M), free)
+    lv_l = torch.where(has_l, v.gather(-1, i_l), v)
+    fv_f = torch.where(has_f, v.gather(-1, i_f), v)
+    rear = s - length
+    m = p.gap_overlap_margin_m
+    eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+    hit = (lane_j & ~eye & (rear.unsqueeze(-2) < s.unsqueeze(-1) + m)
+           & (s.unsqueeze(-2) > rear.unsqueeze(-1) - m))
+    ok = secure_gaps(v, gap_l, lv_l, gap_f, fv_f, p) & ~hit.any(-1)
+    return ok[0] & ok[1]
 
 
 def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:

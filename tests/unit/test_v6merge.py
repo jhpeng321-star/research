@@ -374,3 +374,24 @@ def test_yield_never_deadlocks_the_merge():
     wait_only = first_merge(_physics(wait=True))
     with_yield = first_merge(_physics(wait=True, yield_=True))
     assert with_yield is not None and (wait_only is None or with_yield < wait_only)
+
+
+def test_fused_gap_check_equals_reference():
+    from wms.physics.mobil import _secure_gaps_now, anticipated_kin
+    physics = _physics(wait=True)
+    for seed in range(50):
+        g = torch.Generator().manual_seed(seed)
+        b, k = 3, 30
+        s = torch.rand(b, k, generator=g) * 200 - 60
+        v = torch.where(torch.rand(b, k, generator=g) < 0.4, torch.zeros(b, k),
+                        torch.rand(b, k, generator=g) * 15)
+        state = dict(s_m=s, v_mps=v, a_mps2=torch.randn(b, k, generator=g) * 2,
+                     lane=torch.randint(0, 3, (b, k), generator=g),
+                     length_m=4 + torch.rand(b, k, generator=g) * 4,
+                     present=torch.rand(b, k, generator=g) < 0.9)
+        kin, present = _kin(state)
+        target = torch.ones(b, k, dtype=torch.long)
+        ref = (_secure_gaps_now(kin, present, target, physics)
+               & _secure_gaps_now(anticipated_kin(kin, physics.gap_anticipation_s), present,
+                                  target, physics))
+        assert torch.equal(ref, merge_end_gap_safe(kin, present, physics))
