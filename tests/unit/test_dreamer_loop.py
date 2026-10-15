@@ -558,3 +558,15 @@ def test_mode_flag_and_state_mismatch(tmp_path, capsys):
     path.write_text(json.dumps(raw))
     assert DL.main(["dry-run", "--config", str(path), "--sequential"]) == 1     # state is pipelined
     assert "use another loop_root" in capsys.readouterr().out
+
+
+def test_pipelined_one_batch_per_policy_checkpoint(tmp_path):
+    cfg, fake, loop, pid = _pipe(tmp_path, collect={"batch_size": 2})
+    fake.procs[pid]["next"] = 1e18                       # the policy writes no further checkpoint
+    loop.run(max_steps=30)
+    assert len(loop.state["batches"]) == 1               # the second host waits for a new checkpoint
+    (tmp_path / "b").mkdir()
+    cfg2, fake2, loop2, pid2 = _pipe(tmp_path / "b", collect={"batch_size": 2, "require_new_policy_ckpt": False})
+    fake2.procs[pid2]["next"] = 1e18
+    loop2.run(max_steps=30)
+    assert len(loop2.state["batches"]) > 2

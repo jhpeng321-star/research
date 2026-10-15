@@ -73,7 +73,7 @@ DEFAULTS = {
                 "case_plan": "weighted-cycle", "penetrations": "0.05,0.1,0.2,0.4",
                 "pen_weights": "1,1,2,2", "demands": "1900,2100,2400,2700", "timeout_s": 7200,
                 "max_attempts": 3, "min_complete_fraction": 0.5, "wait_for_absent": [],
-                "hosts": ["cpu"], "batch_size": 50,
+                "hosts": ["cpu"], "batch_size": 50, "require_new_policy_ckpt": True, "min_interval_s": 0,
                 "nice": 0},
     "convert": {"prefix": "v6_policy_iter", "max_episodes": 0, "mb_per_episode": 21.0,
                 "timeout_s": 3600, "nice": 10, "min_window": 50},
@@ -644,7 +644,7 @@ class Loop:
         argv = [host["python"], "-m", "wms.control.train_cli", "--config", config, "--wm-ckpt", wm_ckpt,
                 "--resume", resume_ckpt, "--device", cfg["device"], "--max-updates", str(cfg["max_updates"]),
                 "--output-dir", out, *cfg["extra_args"]]
-        cmd = " ".join(q(a) for a in argv)
+        cmd = (f"nice -n {int(cfg['nice'])} " if cfg.get("nice") else "") + " ".join(q(a) for a in argv)
         self.b.run(host, f"mkdir -p {q(out)}", check=True)
         launch_txt = (f"started_utc={utcnow()}\nrepo={host['code_root']}\nresume={resume_ckpt}\nwm_ckpt={wm_ckpt}\n"
                       f"env={json.dumps(env, sort_keys=True)}\ncmd={cmd}\n")
@@ -1191,9 +1191,12 @@ class PipeLoop(Loop):
         pooled = sum(b.get("episodes", 0) for b in self.state["batches"].values() if b["status"] == "pooled")
         last = self.state["refreshes"].get(str(self.state["refresh_n"]), {})
         refreshed_all = last.get("pool_episodes", -1) >= pooled
-        return ((exhausted and idle and wm_idle and refreshed_all and self.state["policy_lane"]["pending"] is None
-                 and self.state["policy_lane"]["stop"] is None)
-                or self.state["refresh_n"] >= self.cfg["wm"]["max_refreshes"] and wm_idle)
+        all_idle = (idle and wm_idle and self.state["policy_lane"]["pending"] is None
+                    and self.state["policy_lane"]["stop"] is None)
+        return all_idle and ((exhausted and refreshed_all) or self.refreshes_done())
+
+    def refreshes_done(self) -> bool:
+        return self.state["refresh_n"] >= self.cfg["wm"]["max_refreshes"]
 
     # -- disk
     def disk_ok(self, what: str) -> bool:
@@ -1221,7 +1224,7 @@ class PipeLoop(Loop):
         col = self.state["collectors"][host_name]
         if col["batch"] is not None:
             return self.poll_batch(host_name, self.state["batches"][col["batch"]])
-        if col.get("done"):
+        if col.get("done") or self.refreshes_done():
             return
         host, c = self.hosts[host_name], self.cfg["collect"]
         for pattern in c["wait_for_absent"]:
@@ -1236,6 +1239,13 @@ class PipeLoop(Loop):
             return
         found = self.newest_ckpt(settle_s=30.0)
         if not found:
+            return
+        # Seed budget: a SUMO batch takes only minutes, so by default each batch needs a policy checkpoint
+        # no earlier batch used (periodic policy_<n>.pt or a new generation) and min_interval_s since the last.
+        last = self.state.get("last_batch") or {}
+        if c["require_new_policy_ckpt"] and [found[1], found[0]] == last.get("ckpt"):
+            return
+        if self.b.now() - last.get("ts", -1e18) < c["min_interval_s"]:
             return
         seeds = self.next_seeds(c["batch_size"])
         if not seeds:
@@ -1258,6 +1268,7 @@ class PipeLoop(Loop):
                                                   "policy_run_dir": self.state["policy"]["run_dir"]},
                  "wm_at_start": self.state["wm"]["ckpt"], "created": utcnow()}
         self.state["batches"][bid] = batch
+        self.state["last_batch"] = {"ckpt": [found[1], found[0]], "ts": self.b.now(), "batch": bid}
         col["batch"] = bid
         self.save()
         with (self.root / "seed_ledger.jsonl").open("a", encoding="utf-8") as stream:
