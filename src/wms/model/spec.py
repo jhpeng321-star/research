@@ -81,6 +81,8 @@ class ModelSpec:
     # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
     lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
     lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
+    # V6INTEG: opt-in resolution of simultaneous lane-change conflicts.
+    lane_conflict_resolve: bool = False
 
     def __post_init__(self) -> None:
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:

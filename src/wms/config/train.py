@@ -17,6 +17,19 @@ ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
 
 
 @config_dataclass
+class PhysicsOptions:
+    """Opt-in integration settings; the default global plant braking limit is 9 m/s²."""
+
+    stop_time_integration: bool = False
+    emergency_decel_mps2: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        require(self.emergency_decel_mps2 is None or (
+            is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
+            "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
+
+
+@config_dataclass
 class ProjectionConfig:
     """Differentiable minimum-gap projection during rollout (off by default)."""
 
@@ -121,6 +134,8 @@ class ModelConfig:
     """Per-head TRAIN-val AP for the gate (negative = the AP stored in the lane network)."""
     lane_v5_pretrain: Optional[str] = None
     """Initialise the lane network from a tools/lanev5_pretrain.py file before training."""
+    lane_conflict_resolve: bool = False
+    """V6INTEG: resolve simultaneous lane-change conflicts during rollout."""
 
     def __post_init__(self) -> None:
         require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
@@ -576,6 +591,7 @@ class TrainConfig:
     optim: OptimConfig = field(default_factory=OptimConfig)
     selection: SelectionConfig = field(default_factory=SelectionConfig)
     runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
+    physics: PhysicsOptions = field(default_factory=PhysicsOptions)
 
     def __post_init__(self) -> None:
         require(self.schema_version == 2, f"unsupported schema_version {self.schema_version}")

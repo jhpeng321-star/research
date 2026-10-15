@@ -125,8 +125,9 @@ def project_gaps(s: Tensor, length: Tensor, lane: Tensor, present: Tensor,
 
         y[j] = min_{i in [anchor(j)..j]} (x[i] + S[i]) - S[j]
 
-    with ``S`` the prefix sum of ``L + min_gap``.  The result is built with gathers
-    so every position keeps its autograd history.
+    with ``S[0] = 0`` and ``S[j] = sum(L[:j] + min_gap)``: each offset
+    uses the preceding leader's length.  The result is built with gathers so every
+    position keeps its autograd history.
 
     Returns ``(projected_s, gap_violations_before, n_clamped)``.
     """
@@ -155,7 +156,7 @@ def _project_lane(x: Tensor, length: Tensor, projectable: Tensor, min_gap: float
     m = int(x.numel())
     device, dtype = x.device, x.dtype
     prefix = torch.zeros(m, dtype=dtype, device=device)
-    prefix[1:] = torch.cumsum(length[1:] + min_gap, dim=0)
+    prefix[1:] = torch.cumsum(length[:-1] + min_gap, dim=0)
     shifted = x + prefix
     anchor = ~projectable
     anchor[0] = True                                  # the front vehicle leads

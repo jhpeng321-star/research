@@ -160,6 +160,10 @@ FLAT_TO_PATH: dict[str, str] = {
     "driver_prior_decel": "loss.driver_prior.decel",
     "driver_prior_min_gap": "loss.driver_prior.min_gap",
     "driver_prior_v0_ratio": "loss.driver_prior.v0_ratio",
+    # V6INTEG (opt-in integration and simultaneous lane-conflict resolution)
+    "stop_time_integration": "physics.stop_time_integration",
+    "emergency_decel_mps2": "physics.emergency_decel_mps2",
+    "lane_conflict_resolve": "model.lane_conflict_resolve",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -195,6 +199,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # INFRAV5
     "driver_prior_weight", "driver_prior_target", "driver_prior_accel", "driver_prior_time_headway",
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
+    "stop_time_integration", "emergency_decel_mps2", "lane_conflict_resolve",
 )
 
 
