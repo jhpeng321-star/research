@@ -54,7 +54,7 @@ WALL_ERR_60H = {
     "old C4": ([3.99, 17.2, 47.2, 169.0], None),
     "v4": ([6.27, 25.7, 58.0, 157.0], None),
 }
-BLOWUP_DEF = "blow-up = a state whose median 60 s error exceeds 50 m"
+BLOWUP_DEF = "blow-up = a state whose median HDV error exceeds 50 m at 60 s and 100 m at 120 s"
 
 # (b) Wall-benefit prediction (v5).
 WALL_BENEFIT = {
@@ -132,7 +132,7 @@ FINAL_EVAL_GRID = {
     "pen_seen_pct": [5, 10, 20, 40],
     "pen_unseen_pct": [15, 30, 60],
     "seeds": 42,
-    "light_demands": [1900, 2100],  # definition used for the "light" column
+    "light_demands": [1900],  # light = near capacity; the road saturates ~1,930 veh/h mainline
     "heavy_demands": [2400, 2700],
 }
 FINAL_SUMO_COLUMNS = ["All", "Seen pen.", "Unseen pen.", "Light", "Heavy"]
