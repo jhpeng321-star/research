@@ -711,7 +711,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
                  batch: int = 1, cfg: Optional[EntryConfig] = None,
                  entry_s_m=ENTRY_S_M, pool=None,
                  defaults: Optional[EntranceHistory] = None,
-                 row_seeds: Optional[list] = None) -> None:
+                 row_seeds: Optional[list] = None, couple_draws: bool = False) -> None:
         if histories is None:
             if history is None:
                 history = build_entrance_history(counter=counter, defaults=defaults)
@@ -727,6 +727,15 @@ class TorchEntryProcessV2(_EntryProcessBase):
         self.now = np.zeros(self.batch)
         self.t_next = np.full((self.batch, N_ENTRANCES), np.inf)
         self._started = np.zeros(self.batch, bool)
+        # Paired training: separate renewal and candidate-identity streams. Merely
+        # sharing a row seed loses CRN as soon as one arm defers an insertion.
+        self.couple_draws = bool(couple_draws)
+        if self.couple_draws:
+            if row_seeds is None or len(row_seeds) != self.batch:
+                raise ValueError("coupled entry draws require one row seed per batch row")
+            self._pair_seeds = list(row_seeds)
+            self._headway_index = np.zeros((self.batch, N_ENTRANCES), dtype=np.int64)
+            self._candidate_index = np.zeros((self.batch, N_ENTRANCES), dtype=np.int64)
 
     def _hist(self, b: int) -> EntranceHistory:
         return self.histories[b] if b < len(self.histories) else self.histories[-1]
@@ -742,7 +751,13 @@ class TorchEntryProcessV2(_EntryProcessBase):
         cv = float(np.clip(h.headway_cv[e], 0.2, 5.0))
         k = 1.0 / (cv * cv)
         scale = (1.0 / rate) / k
-        draw = float(self._rng(b).gamma(k, scale))
+        if self.couple_draws:
+            rng = np.random.default_rng([self._pair_seeds[b], e, 0,
+                                         int(self._headway_index[b, e])])
+            self._headway_index[b, e] += 1
+        else:
+            rng = self._rng(b)
+        draw = float(rng.gamma(k, scale))
         return max(draw, 0.05)
 
     def _observe(self, state: dict) -> None:
@@ -811,7 +826,10 @@ class TorchEntryProcessV2(_EntryProcessBase):
             return
         done = 0
         rng = self._rng(b)
-        for _ in range(total):
+        for attempt in range(total):
+            if self.couple_draws:
+                rng = np.random.default_rng([self._pair_seeds[b], e, 1,
+                                             int(self._candidate_index[b, e]) + attempt])
             u_cav = float(rng.random())
             u_lane = float(rng.random())
             u_sr = float(rng.normal(hist.speed_mean[e],
@@ -836,7 +854,10 @@ class TorchEntryProcessV2(_EntryProcessBase):
                 self.stats[b].deferred_steps += 1
                 break
             done += 1
+        dropped = self.stats[b].dropped_pending
         self._carry_over(b, e, total, done)
+        if self.couple_draws:
+            self._candidate_index[b, e] += done + self.stats[b].dropped_pending - dropped
 
     def _try_lane(self, work: _Working, b: int, e: int, ln: int, cav: bool,
                   speed_ratio: float, required_gap: float, vtype: int) -> bool:

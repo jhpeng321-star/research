@@ -1093,7 +1093,8 @@ class WmSModel(nn.Module):
                 accel_noise_sigma_max: Optional[float] = None,
                 lane_uniform: Optional[Tensor] = None,
                 lane_seed: Optional[int] = None,
-                lane_crn: bool = False) -> dict[str, Tensor]:
+                lane_crn: bool = False,
+                state_noise: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
         ``cav_teacher[:, i+1]`` is the CAV state after step ``i`` and ``present_seq
@@ -1108,7 +1109,10 @@ class WmSModel(nn.Module):
         held a post-t0 newcomer.  With entries active the per-step ``is_cav_seq``
         override is skipped.  ``state_noise_std_m``/``state_noise_std_mps`` add
         zero-mean Gaussian noise to the predicted HDV position/speed (regulariser);
-        zero draws nothing.
+        zero draws nothing. ``state_noise [B, n_steps, K, 2]`` optionally supplies
+        standard-normal draws (last axis: position, speed), scaled by those stds.
+        It is chunk-local, just like ``lane_uniform``; callers key its generation
+        by absolute steps. None preserves the global torch RNG path exactly.
 
         ``accel_noise`` (``[B, n_steps, K]`` standard-normal draws, default None) samples the
         HDV acceleration aleatorically with the residual head's predicted sigma (see
@@ -1142,6 +1146,10 @@ class WmSModel(nn.Module):
         current.pop("controller_id", None)
         kin0 = state_kin(current)
         pres0 = state_present(current, kin0)
+        if state_noise is not None:
+            state_noise = torch.as_tensor(state_noise, device=kin0.device, dtype=kin0.dtype)
+            if state_noise.shape != (*pres0.shape[:1], int(n_steps), pres0.shape[1], 2):
+                raise ValueError("state_noise must be [B, n_steps, K, 2] (position, speed)")
         # Entrant membership is carried across truncated-BPTT chunks.
         entrant = current.get("entrant")
         entrant = (entrant.clone().bool() if torch.is_tensor(entrant)
@@ -1231,7 +1239,9 @@ class WmSModel(nn.Module):
                 # A junction transit is not a departure: carry the slot through it.
                 nxt_present = nxt_present | junction_seq[:, step_i + 1].bool()
             if noise_on:
-                self._add_state_noise(out, current, state_noise_std_m, state_noise_std_mps)
+                self._add_state_noise(
+                    out, current, state_noise_std_m, state_noise_std_mps,
+                    **({} if state_noise is None else {"state_noise": state_noise[:, step_i]}))
             self._record_step(log, out, current)
             log["masks"].append(nxt_present)
             nxt_s, nxt_v, nxt_a, nxt_lane = (out["next_s_m"], out["next_v_mps"],
@@ -1317,7 +1327,7 @@ class WmSModel(nn.Module):
                                 long_history=self.long_history, stride_steps=stride_steps)
 
     def _add_state_noise(self, out: dict, current: dict, std_m: float,
-                         std_mps: float) -> None:
+                         std_mps: float, state_noise: Optional[Tensor] = None) -> None:
         """Perturb the predicted position/speed of learned (non-CAV) movers."""
         present = current.get("present")
         if present is None:
@@ -1326,11 +1336,14 @@ class WmSModel(nn.Module):
         learned = present.bool() if cav is None else (present.bool() & ~cav.bool())
         learned = learned.to(out["next_s_m"].dtype)
         if float(std_m) > 0.0:
-            out["next_s_m"] = out["next_s_m"] + torch.randn_like(
-                out["next_s_m"]) * float(std_m) * learned
+            noise = (torch.randn_like(out["next_s_m"]) if state_noise is None
+                     else state_noise[..., 0])
+            out["next_s_m"] = out["next_s_m"] + noise * float(std_m) * learned
         if float(std_mps) > 0.0:
-            out["next_v_mps"] = (out["next_v_mps"] + torch.randn_like(
-                out["next_v_mps"]) * float(std_mps) * learned).clamp_min(0.0)
+            noise = (torch.randn_like(out["next_v_mps"]) if state_noise is None
+                     else state_noise[..., 1])
+            out["next_v_mps"] = (out["next_v_mps"]
+                                  + noise * float(std_mps) * learned).clamp_min(0.0)
 
     def _record_step(self, log: dict, out: dict, current: dict) -> None:
         log["positions"].append(out["next_s_m"])

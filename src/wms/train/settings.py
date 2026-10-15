@@ -190,6 +190,10 @@ class TrainSettings:
     paired_diff_position_weight: float = 1.0
     paired_diff_speed_weight: float = 1.0
     paired_diff_aggregate_weight: float = 1.0
+    paired_diff_couple_randomness: bool = False
+    paired_diff_return_weight: float = 0.0
+    paired_diff_rank_weight: float = 0.0
+    paired_diff_rank_margin_veh_s: float = 5.0
     # INFRAV5 (2026-10-14, default OFF): driver-estimate prior on the batch-mean encoded
     # settings (loss.driver_prior; 0 = off) and the same-horizon checkpoint selection
     # (selection_mode "multi_horizon_v2").
@@ -325,9 +329,15 @@ class TrainSettings:
         _require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
                  "gap_stopped_relax requires lane_gap_rule='speed'")
         for value in (self.paired_diff_weight, self.paired_diff_position_weight,
-                      self.paired_diff_speed_weight, self.paired_diff_aggregate_weight):
+                      self.paired_diff_speed_weight, self.paired_diff_aggregate_weight,
+                      self.paired_diff_return_weight, self.paired_diff_rank_weight):
             _require(math.isfinite(float(value)) and float(value) >= 0,
                      "paired_diff weights must be finite and non-negative")
+        _require(isinstance(self.paired_diff_couple_randomness, bool),
+                 "paired_diff_couple_randomness must be a bool")
+        _require(math.isfinite(float(self.paired_diff_rank_margin_veh_s))
+                 and float(self.paired_diff_rank_margin_veh_s) >= 0.0,
+                 "paired_diff_rank_margin_veh_s must be finite and non-negative")
         _require(0.0 <= float(self.paired_diff_fraction) <= 1.0,
                  "paired_diff_fraction must be in [0,1]")
         _require(int(self.paired_diff_groups) >= 1 and int(self.paired_diff_max_arms) >= 2,

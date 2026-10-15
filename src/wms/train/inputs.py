@@ -13,6 +13,7 @@ from wms.data.action_timeline import CONTROLLERS
 from .cav_drive import TimelineControllers
 from .losses.base import UnrollTargets
 from .losses.traffic import entrant_steps
+from .paired_random import PairedRandom
 from .settings import TrainSettings
 
 
@@ -50,7 +51,8 @@ def entry_pad_for(settings: TrainSettings, histories: list, horizon_s: float) ->
 
 def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], present: Tensor,
                        model: Any, device: torch.device,
-                       unroll_steps: Optional[int] = None) -> Optional[Any]:
+                       unroll_steps: Optional[int] = None,
+                       paired_random: Optional[PairedRandom] = None) -> Optional[Any]:
     """Seeded entries-v2 process over the free padding slots, or ``None``.
 
     Padding slots are the last ``pad`` columns (empty at t0); entrants occupy
@@ -84,7 +86,10 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
         cfg = EntryConfig(**({"max_pending": 10 ** 9} if settings.entry_pad_auto else {}),
                           insert_rule=rule)
     process = TorchEntryProcessV2(histories=histories, dt_s=dt_s,
-                                  seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg)
+                                  seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg,
+                                   **({} if paired_random is None else
+                                      {"row_seeds": paired_random.row_seeds,
+                                       "couple_draws": True}))
     process.train_pad = pad
     return process
 
@@ -142,6 +147,7 @@ class UnrollInputs:
     entrant_seq: Optional[Tensor]
     n_steps: int
     initial: dict[str, Tensor]
+    paired_random: Optional[PairedRandom] = None
 
 
 def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings,
@@ -166,10 +172,18 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         raise ValueError("long-history trainer requires pre-t0 driver_hist")
     loss_valid = batch.get("loss_valid")
     loss_valid = present if loss_valid is None else loss_valid.to(device).bool()
-    entries = make_entry_process(settings, batch, present, model, device, unroll_steps)
+    coupled = bool(getattr(settings, "paired_diff_couple_randomness", False)) \
+        and "pair_ref" in batch
+    paired_random = (PairedRandom.from_batch(batch, seed=int(settings.seed), device=device,
+                                            dtype=states.dtype) if coupled else None)
+    entries = make_entry_process(settings, batch, present, model, device, unroll_steps,
+                                 paired_random=paired_random)
     present_seq = present
     if entries is not None:
         pad = int(entries.train_pad)
+        if paired_random is not None:
+            paired_random = PairedRandom.from_batch(
+                batch, seed=int(settings.seed), device=device, dtype=states.dtype, pad=pad)
         (states, present, present_seq, is_cav, teacher, hist, hist_mask,
          loss_valid) = extend_for_entries(states, present, is_cav, teacher, hist, hist_mask,
                                           loss_valid, pad)
@@ -181,7 +195,7 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         raise ValueError("batch does not contain requested unroll")
     initial = state_from_kin(states[:, 0], present[:, 0])
     initial["is_cav"] = is_cav[:, 0]
-    _perturb_t0(initial, states, present, is_cav, model, settings)
+    _perturb_t0(initial, states, present, is_cav, model, settings, paired_random)
     controller_id = batch.get("controller_id")
     if controller_id is not None:
         controller_id = controller_id.to(device)
@@ -200,19 +214,24 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         entrant_seq = entrant_seq.to(device).bool()
     return UnrollInputs(states, present, present_seq, is_cav, teacher, hist, hist_mask,
                         observed_hist, observed_hist_mask, loss_valid, entries, controller_id,
-                        timeline, cav_controller, entrant_seq, n_steps, initial)
+                        timeline, cav_controller, entrant_seq, n_steps, initial, paired_random)
 
 
 def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_cav: Tensor,
-                model: Any, settings: TrainSettings) -> None:
+                model: Any, settings: TrainSettings,
+                paired_random: Optional[PairedRandom] = None) -> None:
     """WM-S2 t0 state noise (driver_params mode): perturb only t0 HDV slots, in place."""
     if not (model.rollout_mode == "driver_params"
             and (settings.state_noise_std_m or settings.state_noise_std_mps)):
         return
     hdv0 = present[:, 0] & ~is_cav[:, 0]
-    initial["s_m"] = (initial["s_m"] + torch.randn_like(initial["s_m"])
-                      * settings.state_noise_std_m * hdv0)
-    initial["v_mps"] = (initial["v_mps"] + torch.randn_like(initial["v_mps"])
+    noise_s = (torch.randn_like(initial["s_m"]) if paired_random is None
+               else paired_random.normal("t0_s", [0])[:, 0])
+    initial["s_m"] = (initial["s_m"] + noise_s
+                       * settings.state_noise_std_m * hdv0)
+    noise_v = (torch.randn_like(initial["v_mps"]) if paired_random is None
+               else paired_random.normal("t0_v", [0])[:, 0])
+    initial["v_mps"] = (initial["v_mps"] + noise_v
                         * settings.state_noise_std_mps * hdv0).clamp_min(0)
     kin = state_from_kin(states[:, 0], present[:, 0])["veh_kin"].clone()
     kin[..., 0] = initial["s_m"]
