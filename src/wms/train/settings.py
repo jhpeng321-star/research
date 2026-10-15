@@ -159,7 +159,7 @@ class TrainSettings:
     aggregate_cell_temp_m: float = 5.0
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
-    entry_insert_rule: str = "v2"  # ENTRYFIX: "v2" (legacy) | "sumo_like"
+    entry_insert_rule: str = "v2"  # ENTRYFIX/V6ENTRY: "v2" | "sumo_like" | "sumo_like_v2"
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
     controller_hygiene: str = "off"  # DATAHYG: data-side only (wms.data.controller_hygiene)
     # LANEFIX (2026-10-14, default OFF): model switches mirrored for validation; the

@@ -40,6 +40,10 @@ class mix, as the process draws ``vt``):
 
 (``eps`` = SUMO's departPos="base" offset; ``v_min = 0`` gives ``req = minGap``.)  Mainline arrivals
 try both lanes ("any" lane mode, largest gap first), so they are refused only when both lanes are.
+
+V6ENTRY ``insert_rule = "sumo_like_v2"``: the soft test moves to the END of the insertion step
+(``bumper' = bumper + relu(v_lead) dt``, the rearmost vehicle's within-step movement) and drops the
+leader's speed credit entirely (stop-speed departure), mirroring the hard rule's v2 branch.
 """
 from __future__ import annotations
 
@@ -102,11 +106,18 @@ def lane_block_probability(state, present: Tensor, lane_index: int, entry_s: flo
 
 
 def sumo_lane_block_probability(state, present: Tensor, lane_index: int, entry_s: float,
-                                vtype: int, cfg) -> Tensor:
+                                vtype: int, cfg, dt_s: float = 0.5) -> Tensor:
     """``sumo_like`` rule: soft probability ``[B]`` that a class-``vtype`` arrival is refused on
-    ``lane_index`` (bumper gap behind the lane's rearmost vehicle inside the SUMO requirement)."""
-    from wms.model.entries import (SUMO_POSITION_EPS_M, VTYPE_DECEL_MPS2, VTYPE_LENGTH_M,
+    ``lane_index`` (bumper gap behind the lane's rearmost vehicle inside the SUMO requirement).
+
+    ``sumo_like_v2`` (V6ENTRY): the soft test of the end-of-step gap ``bumper + relu(v_lead)
+    dt_s`` against the textbook vType minGap alone (the entrant departs at the stop speed; the
+    leader gets no speed credit), mirroring ``TorchEntryProcessV2._try_lane_sumo``'s v2 branch."""
+    from wms.model.entries import (SUMO_POSITION_EPS_M, SUMO_V2_DECEL_MPS2, SUMO_V2_MIN_GAP_M,
+                                   SUMO_V2_TAU_S, VTYPE_DECEL_MPS2, VTYPE_LENGTH_M,
                                    VTYPE_MIN_GAP_M, VTYPE_TAU_S)
+
+    rule_v2 = str(getattr(cfg, "insert_rule", "v2")) == "sumo_like_v2"
 
     s, v = state["s_m"], state["v_mps"]
     length = state.get("length_m")
@@ -122,15 +133,20 @@ def sumo_lane_block_probability(state, present: Tensor, lane_index: int, entry_s
     v_lead = (weight * torch.where(in_lane, v, torch.zeros_like(v))).sum(-1)
     bumper = soft_gap - float(VTYPE_LENGTH_M[vtype]) - SUMO_POSITION_EPS_M
     v_min = max(0.0, float(getattr(cfg, "sumo_min_speed_mps", 0.0)))
-    decel = max(float(VTYPE_DECEL_MPS2[vtype]), 1.0e-6)
-    required = float(VTYPE_MIN_GAP_M[vtype]) + torch.relu(
-        float(VTYPE_TAU_S[vtype]) * v_min + (v_min ** 2 - v_lead.square()) / (2.0 * decel))
+    if rule_v2:
+        bumper = bumper + torch.relu(v_lead) * float(dt_s)
+        v_lead = torch.zeros_like(v_lead)
+    tau_vt = float(SUMO_V2_TAU_S[vtype] if rule_v2 else VTYPE_TAU_S[vtype])
+    decel = max(float(SUMO_V2_DECEL_MPS2[vtype] if rule_v2 else VTYPE_DECEL_MPS2[vtype]), 1.0e-6)
+    min_gap_vt = float(SUMO_V2_MIN_GAP_M[vtype] if rule_v2 else VTYPE_MIN_GAP_M[vtype])
+    required = min_gap_vt + torch.relu(
+        tau_vt * v_min + (v_min ** 2 - v_lead.square()) / (2.0 * decel))
     blocked = 1.0 - torch.sigmoid((bumper - required) / BLOCK_TAU_M)
     return torch.where(any_vehicle, blocked, torch.zeros_like(blocked))
 
 
 def _sumo_entrance_block_probability(state, present: Tensor, hist: dict[str, Tensor],
-                                     entry_s, cfg) -> Tensor:
+                                     entry_s, cfg, dt_s: float = 0.5) -> Tensor:
     from wms.model.entries import N_VTYPES
 
     if getattr(cfg, "sumo_lane_mode", "any") != "any":
@@ -152,7 +168,8 @@ def _sumo_entrance_block_probability(state, present: Tensor, hist: dict[str, Ten
         for vt in range(share.shape[-1]):
             p = None
             for ln in lanes:
-                lane_p = sumo_lane_block_probability(state, present, ln, float(entry_s[ln]), vt, cfg)
+                lane_p = sumo_lane_block_probability(state, present, ln, float(entry_s[ln]),
+                                                     vt, cfg, dt_s)
                 p = lane_p if p is None else p * lane_p
             term = share[:, e, vt] * p
             p_e = term if p_e is None else p_e + term
@@ -160,10 +177,11 @@ def _sumo_entrance_block_probability(state, present: Tensor, hist: dict[str, Ten
     return torch.stack(out, -1)
 
 
-def entrance_block_probability(state, present: Tensor, hist: dict[str, Tensor], entry_s, cfg) -> Tensor:
+def entrance_block_probability(state, present: Tensor, hist: dict[str, Tensor], entry_s, cfg,
+                               dt_s: float = 0.5) -> Tensor:
     """``p_block`` ``[B, 2]`` (mainline, ramp) from the pre-insertion state."""
-    if getattr(cfg, "insert_rule", "v2") == "sumo_like":
-        return _sumo_entrance_block_probability(state, present, hist, entry_s, cfg)
+    if getattr(cfg, "insert_rule", "v2") in ("sumo_like", "sumo_like_v2"):
+        return _sumo_entrance_block_probability(state, present, hist, entry_s, cfg, dt_s)
     out = []
     for e, lanes in enumerate(ENTRANCE_LANES):
         p = None
@@ -179,7 +197,7 @@ def entrance_block_probability(state, present: Tensor, hist: dict[str, Tensor], 
 def queue_surrogate(state, present: Tensor, pending_before: Tensor, hist: dict[str, Tensor],
                     entry_s, cfg, dt: float) -> tuple[Tensor, Tensor]:
     """``(q_sur [B], p_block [B, 2])``; ``q_sur = sum_e (pending_e + rate_e * dt) * p_block_e``."""
-    p_block = entrance_block_probability(state, present, hist, entry_s, cfg)
+    p_block = entrance_block_probability(state, present, hist, entry_s, cfg, dt)
     demand = pending_before.to(p_block.dtype) + hist["rate"] * dt
     return (demand * p_block).sum(-1), p_block
 
