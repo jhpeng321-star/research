@@ -139,8 +139,18 @@ def _load_starts(data, models, seed, entries=False):
         dataset = build_c4_start_windows(
             spec, path, history_s=history_s, history_stride_s=history_stride_s,
             entries=bool(entries), sources=None if sources is None else list(sources))
+        weights = data.get("start_source_weights")
+        if weights is not None:
+            # C4 Dreamer loop: e.g. {v6_policy = 0.5, native_v5 = 0.25, genrand_plain = 0.25} so the
+            # policy dreams from the states it actually visits in SUMO (default: uniform windows).
+            selected = set(dataset.receipt["sources"])
+            weights = {str(k): float(v) for k, v in dict(weights).items()}
+            if set(weights) != selected or sum(weights.values()) <= 0.0:
+                raise ValueError(f"[data] start_source_weights {sorted(weights)} must give one "
+                                 f"weight per start source {sorted(selected)} (positive total)")
+            split_kwargs["source_weights"] = weights
         return split_start_states(dataset, **split_kwargs)
-    if data.get("start_sources") is not None:
+    if data.get("start_sources") is not None or data.get("start_source_weights") is not None:
         raise ValueError("[data] start_sources needs a WM config with data.c4_base")
 
     roles = list(spec.packs)

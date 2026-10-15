@@ -78,8 +78,15 @@ class StartStateSampler:
     """
 
     def __init__(self, dataset, *, indices=None, excluded_penetrations=(), relabel=False,
-                 target_penetration=0.2, seed=0):
+                 target_penetration=0.2, seed=0, source_weights=None):
         self.dataset = dataset
+        # C4 Dreamer loop (policy ``[data] start_source_weights``): within the drawn penetration,
+        # pick the start source by these weights (renormalised over the sources present at that
+        # penetration), then a uniform window of it.  None = the uniform-window default.
+        self.source_weights = ({str(k): float(v) for k, v in source_weights.items()}
+                               if source_weights else None)
+        if self.source_weights and any(not w >= 0.0 for w in self.source_weights.values()):
+            raise ValueError("start_source_weights must be nonnegative numbers")
         self.relabel = bool(relabel)
         self.target_penetration = float(target_penetration)
         if self.relabel and self.target_penetration not in (0.05, 0.1, 0.2, 0.4):
@@ -101,10 +108,29 @@ class StartStateSampler:
         self.penetrations = sorted(self.groups)
         if not self.penetrations:
             raise ValueError("no eligible TRAIN start windows remain")
+        self.source_groups = None
+        if self.source_weights:
+            self.source_groups = {}
+            for penetration, group in self.groups.items():
+                by_source = {}
+                for index in group:
+                    name = self.metadata[index].get("start_source")
+                    if name not in self.source_weights:
+                        raise ValueError(f"start window source {name!r} has no start_source_weights entry")
+                    by_source.setdefault(name, []).append(index)
+                self.source_groups[penetration] = sorted(by_source.items())
 
     def _draw_index(self):
-        group = self.groups[self.penetrations[int(torch.randint(
-            len(self.penetrations), (), generator=self.generator))]]
+        penetration = self.penetrations[int(torch.randint(
+            len(self.penetrations), (), generator=self.generator))]
+        group = self.groups[penetration]
+        if self.source_groups is not None:
+            parts = [(name, idx) for name, idx in self.source_groups[penetration]
+                     if self.source_weights[name] > 0.0]
+            if parts:
+                weights = torch.tensor([self.source_weights[name] for name, _ in parts],
+                                       dtype=torch.double)
+                group = parts[int(torch.multinomial(weights, 1, generator=self.generator))][1]
         return group[int(torch.randint(len(group), (), generator=self.generator))]
 
     def _load(self, index):
