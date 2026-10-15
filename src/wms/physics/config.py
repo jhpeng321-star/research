@@ -28,6 +28,15 @@ GAP_STOPPED_SPEED_MPS = 1.0
 #: ... and needs only this physical bumper clearance to its target-lane leader/follower
 #: (no headway terms, no anticipation; the follower's kinematic stopping term is kept).
 GAP_STOPPED_MIN_M = 0.5
+#: V6MERGE ``merge_end_wait``: ramp vehicles at most this far before the accel-lane end ...
+MERGE_END_WAIT_DISTANCE_M = 25.0
+#: ... and no faster than this are lane-end mergers (strict two-sided secure gaps, no relaxation).
+MERGE_END_WAIT_SPEED_MPS = 2.0
+#: V6MERGE ``mainline_merge_yield``: lane-1 followers this far (front to front) behind a blocked
+#: lane-end merger treat it as a virtual leader ...
+MAINLINE_MERGE_YIELD_DISTANCE_M = 60.0
+#: ... braking for it no harder than this (cooperative slowing, SUMO-LC2013-like).
+MAINLINE_MERGE_YIELD_DECEL_MPS2 = 2.0
 #: Default IDM parameters.
 _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
 #: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
@@ -76,6 +85,17 @@ class PhysicsConfig:
     the target-lane leader and follower plus the follower's kinematic stopping term
     ``max(0, v_f^2 - v^2) / (2 gap_b_follow)`` and the same no-overlap test with margin
     ``gap_stopped_min_m`` (jam merges at the lane end).  It only ever adds admissions.
+
+    ``merge_end_wait`` (V6MERGE, 2026-10-16, default off): a ramp vehicle within
+    ``merge_end_wait_distance_m`` of the accel-lane end and no faster than
+    ``merge_end_wait_speed_mps`` may enter lane 1 only if BOTH lane-1 gaps are SUMO-secure with
+    the road's IDM constants (``s0 + T v + max(0, dv^2) / (2 b)``) on the current AND the
+    one-step-anticipated configuration; the stopped-merger relaxation never applies to it and
+    no lane head (forced-late window included) can override the veto.  A lane-2 vehicle never
+    moves past the lane end (it stops there).  ``mainline_merge_yield`` (V6MERGE, default off):
+    the nearest lane-1 follower within ``mainline_merge_yield_distance_m`` behind such a blocked
+    merger (merger's rear ahead of the follower's front) brakes for it as a virtual leader with
+    its own IDM, by at most ``mainline_merge_yield_decel_mps2``.
     """
 
     dt_s: float = 0.5
@@ -126,8 +146,21 @@ class PhysicsConfig:
     # V6 integration: absent from old physics.json files = legacy execution.
     stop_time_integration: bool = False
     emergency_decel_mps2: float | None = None
+    # V6MERGE (2026-10-16): opt-in lane-end interaction rules; absent = legacy execution.
+    merge_end_wait: bool = False
+    merge_end_wait_distance_m: float = MERGE_END_WAIT_DISTANCE_M
+    merge_end_wait_speed_mps: float = MERGE_END_WAIT_SPEED_MPS
+    mainline_merge_yield: bool = False
+    mainline_merge_yield_distance_m: float = MAINLINE_MERGE_YIELD_DISTANCE_M
+    mainline_merge_yield_decel_mps2: float = MAINLINE_MERGE_YIELD_DECEL_MPS2
 
     def __post_init__(self) -> None:
+        for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
+                     "mainline_merge_yield_distance_m", "mainline_merge_yield_decel_mps2"):
+            value = getattr(self, name)
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value <= 0.0):
+                raise ValueError(f"{name} must be finite and > 0")
         emergency = self.emergency_decel_mps2
         if emergency is not None and (
                 isinstance(emergency, bool) or not isinstance(emergency, (int, float))
@@ -183,7 +216,8 @@ class PhysicsConfig:
         data = {k: v for k, v in raw.items()
                 if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule",
                                             "gap_stopped_relax", "stop_time_integration",
-                                            "emergency_decel_mps2")
+                                            "emergency_decel_mps2", "merge_end_wait",
+                                            "mainline_merge_yield")
                 and v is not None}
         data.update(overrides)
         return cls(**data)

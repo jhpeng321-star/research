@@ -1,0 +1,3 @@
+physics core only (no-grad): B=16 K=96 steps=10 x8: OFF median 24.5 / min 24.0 ms/step, ON median 31.3 / min 29.7 ms/step; ratio of medians 1.281, of mins 1.235, median pair ratio 1.275
+no-grad rollout: B=16 K=96 steps=10 x8: OFF median 212.4 / min 211.7 ms/step, ON median 219.2 / min 218.6 ms/step; ratio of medians 1.032, of mins 1.033, median pair ratio 1.029
+train (fwd+bwd): B=16 K=96 steps=10 x8: OFF median 438.6 / min 424.0 ms/step, ON median 432.6 / min 428.2 ms/step; ratio of medians 0.986, of mins 1.010, median pair ratio 1.004

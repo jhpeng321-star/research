@@ -22,6 +22,10 @@ class PhysicsOptions:
 
     stop_time_integration: bool = False
     emergency_decel_mps2: Optional[float] = None
+    merge_end_wait: bool = False
+    """V6MERGE: lane-end mergers need both lane-1 gaps SUMO-secure and never pass the end."""
+    mainline_merge_yield: bool = False
+    """V6MERGE: the nearest lane-1 follower brakes (own IDM) for a blocked lane-end merger."""
 
     def __post_init__(self) -> None:
         require(self.emergency_decel_mps2 is None or (
