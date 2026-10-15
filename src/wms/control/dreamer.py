@@ -16,6 +16,7 @@ import random
 import sys
 import time
 from dataclasses import asdict, dataclass
+from typing import Optional
 
 import numpy as np
 import torch
@@ -55,6 +56,19 @@ class DreamerConfig:
     validation_every: int = 100
     lane_pg_weight: float = 1.0          # REINFORCE term of the categorical lane head
     lane_entropy_weight: float = 3e-4    # DreamerV3 discrete-action entropy bonus (lane head)
+    # Entropy temperature (V6EXPLORE, 2026-10-15; default None = off = bit-identical): with
+    # ``entropy_target`` set (nats per action dim) the fixed ``entropy_weight`` bonus is
+    # replaced by ``alpha * entropy`` with a learned SAC-style dual ``log_alpha`` (Adam,
+    # ``alpha_lr``) minimising ``-(log_alpha * (entropy_target - entropy))``: alpha rises while
+    # the actor's mean entropy is below the target and falls above it.  Evidence: the v5 run
+    # (fixed 3e-3 weight) let the per-action entropy fall 1.39 -> -0.35 nats over 517 updates
+    # while D_all plateaued and C_G decayed to ~0.  log_alpha starts at log(entropy_weight)
+    # (alpha = the fixed weight the run would otherwise use; 0 when the weight is 0), and the
+    # same machinery applies to the categorical lane head via ``lane_entropy_target`` (requires
+    # the lane rules + a policy lane head).
+    entropy_target: Optional[float] = None
+    lane_entropy_target: Optional[float] = None
+    alpha_lr: float = 3e-4
     # Memory (CFMEM_NOTES.md): recompute the pure per-step pieces of imagination (WM forward,
     # policy / group encoder / safety / native / reward / target-critic calls) during backward
     # instead of storing their activations.  Values and gradients are unchanged; ~1 extra forward.
@@ -117,14 +131,20 @@ class DreamerConfig:
                 or not isinstance(self.credit_profile_every, int) or self.credit_profile_every < 0):
             raise ValueError("credit_profile_every must be a nonnegative integer")
         for name, value in asdict(self).items():
-            if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay"):
-                continue
+            if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
+                        "entropy_target", "lane_entropy_target") or value is None:
+                continue   # the string fields; the optional decay / entropy targets
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
+        for name in ("entropy_target", "lane_entropy_target"):
+            value = getattr(self, name)
+            if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                      or not math.isfinite(value)):
+                raise ValueError(f"{name} must be None or a finite number")
         for name in ("gamma", "lambda_", "target_tau", "return_ema"):
             if getattr(self, name) > 1:
                 raise ValueError(f"{name} must be in [0, 1]")
-        if min(self.actor_lr, self.critic_lr, self.grad_clip) <= 0:
+        if min(self.actor_lr, self.critic_lr, self.alpha_lr, self.grad_clip) <= 0:
             raise ValueError("learning rates and grad_clip must be positive")
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
@@ -388,6 +408,10 @@ class DreamerTrainer:
             list(self.policy.parameters()) + list(self.group_encoder.parameters())))
         self.actor_optimizer = torch.optim.Adam(self.actor_parameters, lr=self.config.actor_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.config.critic_lr)
+        # V6EXPLORE entropy temperatures (default off: None targets keep the fixed weights).
+        self.log_alpha = self.alpha_optimizer = None
+        self.log_lane_alpha = self.lane_alpha_optimizer = None
+        self._init_entropy_temperature()
         self.lagrange_multiplier = self.config.lagrange_init
         self.return_low = self.return_high = None
         self.update_count = 0
@@ -396,6 +420,52 @@ class DreamerTrainer:
         self.validation_states = None
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
+
+    def _init_entropy_temperature(self):
+        """(Re)create the learned entropy-temperature parameters for the configured targets.
+
+        ``log_alpha`` starts at ``log(entropy_weight)`` (0 when the weight is 0), so enabling a
+        target continues from the fixed bonus the run would otherwise use.  Called again after
+        a checkpoint replaces ``self.config``, so resumed temperatures match the saved config.
+        """
+        if self.config.entropy_target is not None and self.log_alpha is None:
+            start = math.log(self.config.entropy_weight) if self.config.entropy_weight > 0 else 0.0
+            self.log_alpha = torch.tensor(start, device=self.device, requires_grad=True)
+            self.alpha_optimizer = torch.optim.Adam([self.log_alpha], lr=self.config.alpha_lr)
+        if self.config.lane_entropy_target is not None:
+            if not self.use_lanes:
+                raise ValueError("lane_entropy_target requires lane rules and a policy lane head")
+            if self.log_lane_alpha is None:
+                start = (math.log(self.config.lane_entropy_weight)
+                         if self.config.lane_entropy_weight > 0 else 0.0)
+                self.log_lane_alpha = torch.tensor(start, device=self.device, requires_grad=True)
+                self.lane_alpha_optimizer = torch.optim.Adam([self.log_lane_alpha],
+                                                             lr=self.config.alpha_lr)
+
+    def _alpha_update(self, imagined, entropy):
+        """V6EXPLORE dual steps on the entropy temperatures; extra metrics for ``update``.
+
+        ``-(log_alpha * (target - entropy))``: gradient descent raises log_alpha while the mean
+        entropy is below the target (more exploration) and lowers it above."""
+        out = {}
+        if self.log_alpha is not None:
+            alpha_loss = -(self.log_alpha * (self.config.entropy_target - entropy.detach()))
+            self.alpha_optimizer.zero_grad(set_to_none=True)
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
+            out.update({"alpha": float(self.log_alpha.detach().exp()),
+                        "entropy_target": float(self.config.entropy_target)})
+        lanes = imagined.get("lanes")
+        if self.log_lane_alpha is not None and lanes is not None:
+            lane_entropy = _masked_mean(lanes["lane_entropy"].detach(), lanes["lane_active"])
+            lane_alpha_loss = -(self.log_lane_alpha *
+                                (self.config.lane_entropy_target - lane_entropy))
+            self.lane_alpha_optimizer.zero_grad(set_to_none=True)
+            lane_alpha_loss.backward()
+            self.lane_alpha_optimizer.step()
+            out.update({"lane_alpha": float(self.log_lane_alpha.detach().exp()),
+                        "lane_entropy_target": float(self.config.lane_entropy_target)})
+        return out
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False):
@@ -778,8 +848,11 @@ class DreamerTrainer:
             joint = (lanes["lane_log_prob"] * active.to(returns.dtype)).sum(-1)   # [E,H,N]
             pg_loss = -((joint * advantage).mean((0, 1)) * coefficients).sum()
             lane_entropy = _masked_mean(lanes["lane_entropy"], active)
-            loss = (loss + self.config.lane_pg_weight * pg_loss
-                    - self.config.lane_entropy_weight * lane_entropy)
+            # V6EXPLORE: a learned lane temperature replaces the fixed weight when a target is set.
+            lane_weight = (self.log_lane_alpha.detach().exp()
+                           if getattr(self, "log_lane_alpha", None) is not None
+                           else self.config.lane_entropy_weight)
+            loss = loss + self.config.lane_pg_weight * pg_loss - lane_weight * lane_entropy
             acting = lanes["lane_acting"][..., :n_base, :]
             changed = lanes["lane_changed"][..., :n_base, :] & acting
             extra.update({"lane_pg_loss": float(pg_loss.detach()),
@@ -891,7 +964,10 @@ class DreamerTrainer:
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
         objective, extra = self.actor_objective(imagined, scale, weights)
-        actor_loss = (objective - self.config.entropy_weight * entropy +
+        # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set.
+        entropy_weight = (self.log_alpha.detach().exp() if self.log_alpha is not None
+                          else self.config.entropy_weight)
+        actor_loss = (objective - entropy_weight * entropy +
                       self.lagrange_multiplier * mean_cost)
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
@@ -900,6 +976,8 @@ class DreamerTrainer:
         actor_norm = nn.utils.clip_grad_norm_(self.actor_parameters, self.config.grad_clip,
                                              error_if_nonfinite=True)
         self.actor_optimizer.step()
+        # V6EXPLORE: dual steps on the entropy temperature(s), logged with the entropy above.
+        extra.update(self._alpha_update(imagined, entropy))
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
         predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
                                                 for state in states[:-1]])
@@ -1053,6 +1131,12 @@ class DreamerTrainer:
                    "critic": self.critic.state_dict(), "target_critic": self.target_critic.state_dict(),
                    "actor_optimizer": self.actor_optimizer.state_dict(),
                    "critic_optimizer": self.critic_optimizer.state_dict(),
+                   **({"log_alpha": self.log_alpha.detach().cpu(),
+                       "alpha_optimizer": self.alpha_optimizer.state_dict()}
+                      if self.log_alpha is not None else {}),
+                   **({"log_lane_alpha": self.log_lane_alpha.detach().cpu(),
+                       "lane_alpha_optimizer": self.lane_alpha_optimizer.state_dict()}
+                      if self.log_lane_alpha is not None else {}),
                    "update_count": self.update_count, "lagrange_multiplier": self.lagrange_multiplier,
                    "return_low": self.return_low, "return_high": self.return_high,
                    "best_validation": self.best_validation, "rng": _rng_state(self.device),
@@ -1092,8 +1176,23 @@ class DreamerTrainer:
             return
         self.config = DreamerConfig(**payload["config"])
         self.reward_weights = RewardWeights(**payload["reward_weights"])
+        # V6EXPLORE: the loaded config may activate targets the run config did not have.
+        self._init_entropy_temperature()
         for name in ("critic", "target_critic", "actor_optimizer", "critic_optimizer"):
             getattr(self, name).load_state_dict(payload[name])
+        for key, parameter, optimizer_name, label in (
+                ("log_alpha", self.log_alpha, "alpha_optimizer", "entropy"),
+                ("log_lane_alpha", self.log_lane_alpha, "lane_alpha_optimizer", "lane entropy")):
+            if key not in payload:
+                if parameter is not None:
+                    print(f"WARNING: checkpoint predates the {label} temperature; "
+                          f"{key} restarts at log(weight) (V6EXPLORE)", file=sys.stderr, flush=True)
+                continue
+            if parameter is None:
+                raise ValueError(f"checkpoint carries {key} but the loaded config sets no target")
+            with torch.no_grad():
+                parameter.copy_(payload[key].to(parameter.device))
+            getattr(self, optimizer_name).load_state_dict(payload[optimizer_name])
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)
