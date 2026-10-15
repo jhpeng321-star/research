@@ -120,7 +120,9 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
     model = cfg.model
     sumo_idm = not model.geometry_only
     integration = {"stop_time_integration": cfg.physics.stop_time_integration,
-                   "emergency_decel_mps2": cfg.physics.emergency_decel_mps2}
+                   "emergency_decel_mps2": cfg.physics.emergency_decel_mps2,
+                   "merge_end_wait": bool(cfg.physics.merge_end_wait),
+                   "mainline_merge_yield": bool(cfg.physics.mainline_merge_yield)}
     if model.merge_cal:
         overrides = {"sumo_fidelity": bool(model.sumo_fidelity), "sumo_idm": sumo_idm,
                      "merge_cal": True, "lane_rule": model.lane_rule,

@@ -142,6 +142,51 @@ def stopped_merge_gap_safe(kin: Tensor, present: Tensor, target_lane: Tensor,
     return (gap_l >= p.gap_stopped_min_m) & (gap_f >= req_f) & clear
 
 
+def merge_end_waiting(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V6MERGE: lane-end mergers ``[B, K]`` - present ramp vehicles within
+    ``merge_end_wait_distance_m`` of the accel-lane end, no faster than
+    ``merge_end_wait_speed_mps`` (computed regardless of the switches)."""
+    p = physics
+    s = kin[..., 0]
+    start = max(p.merge_zone_s0_m, p.merge_zone_s1_m - p.merge_end_wait_distance_m)
+    return (present & (lane_of(kin) == p.merge_lane) & (s >= start)
+            & (s <= p.merge_zone_s1_m) & (kin[..., 4] <= p.merge_end_wait_speed_mps))
+
+
+def _secure_gaps_now(kin: Tensor, present: Tensor, target_lane: Tensor,
+                     physics: PhysicsConfig) -> Tensor:
+    """SUMO-LC2013-like secure gaps on THIS configuration with the road's IDM constants:
+    leader ``>= s0 + T v + max(0, v^2 - v_l^2) / (2 b)``, follower
+    ``>= s0 + T v_f + max(0, v_f^2 - v^2) / (2 b)`` and no footprint overlap ``[B, K]``."""
+    p = physics
+    _, b_comf, time_headway, s0, _ = p.idm()
+    gap_l, lv_l = lane_neighbour(kin, present, target_lane, p, ahead=True)
+    gap_f, fv_f = lane_neighbour(kin, present, target_lane, p, ahead=False)
+    v = kin[..., 4]
+    req_l = s0 + time_headway * v + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * b_comf)
+    req_f = s0 + time_headway * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * b_comf)
+    clear = ~target_overlap(kin, present, target_lane, p.gap_overlap_margin_m)
+    return (gap_l >= req_l) & (gap_f >= req_f) & clear
+
+
+def merge_end_gap_safe(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V6MERGE: both lane-1 gaps secure now AND one ``gap_anticipation_s`` ahead ``[B, K]``.
+
+    The current check stops anticipation from accepting a gap only because a follower is
+    projected to drive through the standing merger; the anticipated one protects the step.
+    No stopped-vehicle relaxation.
+    """
+    target = torch.full_like(lane_of(kin), physics.merge_target_lane)
+    return (_secure_gaps_now(kin, present, target, physics)
+            & _secure_gaps_now(anticipated_kin(kin, physics.gap_anticipation_s), present,
+                               target, physics))
+
+
+def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V6MERGE: lane-end mergers whose lane-1 gaps are not secure ``[B, K]``."""
+    return merge_end_waiting(kin, present, physics) & ~merge_end_gap_safe(kin, present, physics)
+
+
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                        driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
     """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``.
@@ -219,5 +264,11 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                 discretionary, torch.full_like(move, LEARNED_PRIOR_LOGIT), logits[..., target])
     if p.merge_cal:
         logits = merge_cal_target_logit(logits, kin, present, p, urgency, in_zone)
+    if p.merge_end_wait:
+        # Final veto (after the stopped relaxation and merge_cal): a masked prior keeps every
+        # lane head, the forced-late window included, from merging into an insecure gap.
+        logits[..., p.merge_target_lane] = torch.where(
+            merge_end_blocked(kin, present, p), torch.full_like(s, MASKED_LOGIT),
+            logits[..., p.merge_target_lane])
     logits = logits.scatter(-1, lane.unsqueeze(-1), torch.zeros_like(s).unsqueeze(-1))
     return logits * present.unsqueeze(-1).to(kin.dtype)

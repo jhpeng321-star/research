@@ -9,6 +9,7 @@ from torch import Tensor
 from .config import PhysicsConfig
 from .idm import IDMParams, idm_accel
 from .merge_cal import merge_cal_yield
+from .merge_v6 import mainline_merge_yield
 from .neighbours import lead_neighbour
 
 
@@ -49,6 +50,9 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                             torch.maximum(accel, -comfortable)).clamp_min(-limit)
     if physics.merge_cal:
         accel = merge_cal_yield(kin, present, accel, physics)
+    if physics.mainline_merge_yield:
+        accel = mainline_merge_yield(kin, present, accel, physics, params,
+                                     None if driver_params is None else driver_params["decel"])
     if physics.emergency_decel_mps2 is not None:
         accel = accel.clamp_min(-physics.emergency_decel_mps2)
     return torch.where(present, accel, torch.zeros_like(accel))
