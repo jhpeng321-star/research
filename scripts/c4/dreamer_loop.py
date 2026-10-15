@@ -52,7 +52,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 #: Owner-approved policy-rollout seeds (unused part of the C4_V6_LONGPAIR training block).
-SEED_BLOCK = (965184, 965999)
+SEED_BLOCK = (965184, 969999)  # C4_V6_LONGPAIR rest (965184-965999) + C4_LOOP_TRAIN (966000-969999), contiguous; both owner-approved
 #: C4 v5 evaluation seeds: never used for training.
 EVAL_SEEDS = (964000, 964199)
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
@@ -703,7 +703,7 @@ class Loop:
         self.state["seeds_used"] = ranges(sorted(expand(self.state["seeds_used"]) | set(seeds)))
         self.save()
         with (self.root / "seed_ledger.jsonl").open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps({"t": utcnow(), "iteration": self.state["iteration"], "block": "C4_V6_LONGPAIR",
+            stream.write(json.dumps({"t": utcnow(), "iteration": self.state["iteration"], "block": ("C4_V6_LONGPAIR" if max(seeds) <= 965999 else "C4_V6_LONGPAIR+C4_LOOP_TRAIN" if min(seeds) <= 965999 else "C4_LOOP_TRAIN"),
                                      "use": "policy-rollout WM training data", "seeds": seed_spec(seeds),
                                      "n": len(seeds)}) + "\n")
         self.log("seeds_allocated", seeds=seed_spec(seeds), n=len(seeds))
@@ -1299,7 +1299,7 @@ class PipeLoop(Loop):
         col["batch"] = bid
         self.save()
         with (self.root / "seed_ledger.jsonl").open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps({"t": utcnow(), "batch": bid, "host": host_name, "block": "C4_V6_LONGPAIR",
+            stream.write(json.dumps({"t": utcnow(), "batch": bid, "host": host_name, "block": ("C4_V6_LONGPAIR" if max(seeds) <= 965999 else "C4_V6_LONGPAIR+C4_LOOP_TRAIN" if min(seeds) <= 965999 else "C4_LOOP_TRAIN"),
                                      "use": "policy-rollout WM training data", "seeds": seed_spec(seeds),
                                      "n": len(seeds)}) + "\n")
         self.log("seeds_allocated", batch=bid, host=host_name, seeds=seed_spec(seeds), n=len(seeds))

@@ -15,7 +15,7 @@
             "code_root": "/home/ubuntu/c4/repo-REPO_SHA", "python": "/home/ubuntu/c4env/bin/python",
             "work_root": "/home/ubuntu/c4/loop"}
   },
-  "seeds": {"block": [965184, 965999], "exclude": [[965990, 965993]]},
+  "seeds": {"block": [965184, 969999], "exclude": [[965990, 965993]]},
   "collect": {"hosts": ["cpu"], "batch_size": 50, "require_new_policy_ckpt": true, "min_interval_s": 0,
               "workers": 46, "warmup": 300, "horizon": 900, "population": "textbook", "case_plan": "weighted-cycle",
               "penetrations": "0.05,0.1,0.2,0.4", "pen_weights": "1,1,2,2", "demands": "1900,2100,2400,2700",
