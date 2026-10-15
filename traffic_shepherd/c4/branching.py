@@ -797,6 +797,8 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--rng-seed", type=int, default=0, help="arm sampling / random policy seed")
     ap.add_argument("--wm-ckpt", default=None, help="optional WM-S checkpoint: imagined D's too")
     ap.add_argument("--wm-samples", type=int, default=1)
+    ap.add_argument("--population", default="legacy3", choices=("legacy3", "textbook"),
+                    help="SUMO driver population (default legacy3 = unchanged)")
     return ap
 
 
@@ -823,8 +825,9 @@ def main(argv=None) -> int:
     manifest = {"schema": "c4_branching/1", "created": _now(), "args": vars(args),
                 "decision_times_s": times, "save_state_cli": list(SAVE_STATE_CLI)}
     (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    env_kw = {} if args.population == "legacy3" else {"population": args.population}
     env = CavSumoEnv(k_slots=args.k_slots, controller="direct", extra_sumo_cli=SAVE_STATE_CLI,
-                     scenario_root=out / "scenarios", physics_log=False)
+                     scenario_root=out / "scenarios", physics_log=False, **env_kw)
     rng = np.random.default_rng(args.rng_seed)
     all_points = []
     t_start = time.monotonic()
