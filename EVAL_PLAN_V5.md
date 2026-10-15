@@ -1,24 +1,20 @@
 # C4 v5 evaluation plan — 2026-10-15
 
-## Readiness: partial; SUMO smoke still required
+## Readiness: smoke complete; full grid unlocked
 
-Branch: `c4/evalv5`. No simulator episodes were started during this execution
-(0 of the maximum 6 consumed). No collision result, observed SUMO acceleration
-range, lane-command count, or episode wall-time measurement is claimed.
+Branch: `c4/evalv5`. The bounded laptop smoke finished on 2026-10-15: all 6
+episodes completed with **0 collisions, 0 teleports, 0 dropped-CAV steps**.
+Both earlier scope blockers were resolved: `mappo_ft26_it106.pt` was copied to
+the worktree root, and `runs/active/evalv5_smoke/` was approved as the
+in-worktree output root. The capacity calculation below now uses **measured**
+per-episode wall times instead of conditional estimates.
 
-Two scope blockers prevent the requested smoke:
-
-1. The specified `mappo_ft26_it106.pt` is outside this worktree; the execution
-   policy forbids reading outside it. No in-worktree copy was found. Copy it to
-   the worktree, preferably `mappo_ft26_it106.pt` at the root.
-2. The required output root `E:/agent-work/tmp/evalv5_smoke/` is outside the
-   workspace. Authorize that specific output exception, or approve an in-worktree
-   output root such as `runs/active/evalv5_smoke/` instead. The report CLI currently
-   accepts only in-worktree paths, so external results would need an authorized
-   copy into the worktree for analysis.
-
-The missing measurements mean the capacity calculation below is **conditional**,
-not a measured prediction that the full grid will finish in eight hours.
+Execution record: the previous session started native (2/2 complete) and the
+Dreamer block, whose p0.4 episode completed while p0.2 was interrupted
+(`manifest.status=running`, no summary); the leftover attempt was moved to
+`s964199_m2400_p0200.incomplete-1` by the collector and re-run as attempt 2.
+Total episode starts consumed: 7 (including the failed attempt); completed
+episodes: 6, exactly the approved grid. No other simulations were run.
 
 ## Verified offline
 
@@ -33,12 +29,16 @@ not a measured prediction that the full grid will finish in eight hours.
 - MAPPO deployment exports use the same `c4_dreamer/3` schema, tagged
   `trainer="mappo"`; they do not require filename-based dispatch. Synthetic
   Dreamer and MAPPO exports load with their own bounds and lane heads using
-  the default loader. The actual MAPPO file's format is still unverified.
+  the default loader.
 - A full `c4_mappo_trainer/2` checkpoint is different: the existing opt-in
-  `--policy-loader wms.control.mappo.eval_bridge:load_policy_fn` accepts it.
-  `eval_v5.sh` does not expose that option. For the mixed-controller launcher,
-  use the trainer's `policy_latest.pt`/`policy_XXXXX.pt` deployment export.
-  Do not rename a full trainer checkpoint and assume it becomes an export.
+   `--policy-loader wms.control.mappo.eval_bridge:load_policy_fn` accepts it.
+   `eval_v5.sh` does not expose that option. For the mixed-controller launcher,
+   use the trainer's `policy_latest.pt`/`policy_XXXXX.pt` deployment export.
+   Do not rename a full trainer checkpoint and assume it becomes an export.
+- The actual `mappo_ft26_it106.pt` was verified this session: format
+   `c4_dreamer/3`, `trainer="mappo"`, stored acceleration bounds
+   **[-3.0, 2.6] m/s²**, lane head enabled; it loads through the default
+   `make_policy` dispatch (`PolicyExecutor`). No filename-based dispatch needed.
 - Existing textbook env selection forces CAVs to `cav_typical`. Direct command
   mapping filters present CAVs; there is no position/control-zone filter.
   Lane-head execution uses laneChangeMode **513** and restores the original
@@ -47,14 +47,74 @@ not a measured prediction that the full grid will finish in eight hours.
   blocker justified a behavior change.
 
 Local Python 3.14, Python 3.13, and base Conda lacked torch. A workspace-local
-CPU environment was prepared at `runs/active/evalv5_venv/`; torch is available
-there. Its Python executable on Windows is
-`runs/active/evalv5_venv/Scripts/python.exe`. Install the repo's SUMO runtime
-dependencies in that environment before the eventual smoke (in particular TraCI).
+CPU environment was prepared at `runs/active/evalv5_venv/`; torch, numpy and
+TraCI (via `SUMO_HOME=C:\Program Files (x86)\Eclipse\Sumo\`) are available
+there and were used for the smoke. Its Python executable on Windows is
+`runs/active/evalv5_venv/Scripts/python.exe`.
 
-## Remaining bounded laptop smoke
+## Smoke executed (2026-10-15)
 
-Once both path blockers are resolved, run exactly the product of:
+Three sequential collector invocations under
+`runs/active/evalv5_venv/Scripts/python.exe`, each with `--workers 2`:
+
+```text
+python -m traffic_shepherd.c4.collect --policy <controller> --population textbook --seeds 964199 --demands 2400 --penetrations 0.2,0.4 --warmup 60 --horizon 120 --workers 2 --no-physics-log --out runs/active/evalv5_smoke/<label>
+```
+
+with `<controller>`/`<label>` = `native`/`native`, `./_policy_v5_u50.pt`/`dreamer`
+(prior session) plus the `.\_policy_v5_u50.pt` re-run, and
+`.\mappo_ft26_it106.pt`/`mappo`.
+
+All six episodes report `manifest.status=complete`,
+`manifest.scenario.driver_population=textbook`, `summary.lane_change_mode_policy=513`,
+`collisions=0`, `teleports=0`, `dropped_cav_steps=0`. TTC evaluation stayed on.
+
+### Measured per-episode wall times (summary.wall_seconds)
+
+| Controller | p=0.2 (s) | p=0.4 (s) | max (s) |
+|---|---:|---:|---:|
+| native | 61.09 | 61.61 | 61.61 |
+| `_policy_v5_u50.pt` (Dreamer) | 34.28 | 27.58 | 34.28 |
+| `mappo_ft26_it106.pt` (legacy MAPPO) | 21.21 | 23.77 | 23.77 |
+
+Collector per-job `INDEX.json.run_records[].wall_seconds` (includes loading and
+recording overhead; the Dreamer p0.4 value comes from `collect_log.jsonl`
+because the interrupted session never rewrote `INDEX.json` for that block):
+
+- native: 68.91 / 69.43 s
+- Dreamer: 41.37 (p0.2, attempt 2) / 34.78 (p0.4)
+- MAPPO: 28.76 / 31.51 s
+
+### Controller diagnostics from `episode.npz` (control times >= 60 s, present CAVs)
+
+Decoded executor commands (after policy safety, before SUMO clipping);
+HDV slots verified clean (no finite requested acceleration, no nonnegative
+lane request) in all four policy episodes:
+
+- Dreamer p0.2: accel **[-1.4368, -0.5239]** m/s² (n=1589); lane commands
+  {issued 146, completed 128, not_completed 18}.
+- Dreamer p0.4: accel **[-0.6340, -0.5324]** m/s² (n=2973); lane commands
+  {issued 374, completed 349, not_completed 25}.
+- MAPPO p0.2: accel **[-2.7424, 2.5546]** m/s² (n=1498); lane commands
+  {issued 9, completed 9, deferred_edge_end 1}.
+- MAPPO p0.4: accel **[-0.5989, 2.5499]** m/s² (n=3384); lane commands
+  {issued 20, completed 16, not_completed 4, deferred_edge_end 2}.
+
+Both stay inside their stored decoding bounds (Dreamer [-3.0, 1.2];
+MAPPO [-3.0, 2.6]).
+
+### Smoke report
+
+`scripts/boxops/eval_v5_report.py runs/active/evalv5_smoke/native runs/active/evalv5_smoke/dreamer runs/active/evalv5_smoke/mappo --out runs/active/evalv5_smoke/comparison`
+accepted 6 episodes (0 duplicates; the `.incomplete-1` leftover was pruned).
+Note: the interrupted first session recorded Dreamer p0.4's policy as
+`./_policy_v5_u50.pt` and the re-run used `.\_policy_v5_u50.pt`, so the report
+splits Dreamer into two identity tags for the same checkpoint. For future
+invocations pass the identical path string on every box to keep one identity.
+
+## Bounded laptop smoke specification (executed; do not repeat)
+
+The approved product grid, fully consumed on 2026-10-15:
 
 - Controllers: `native`, `./_policy_v5_u50.pt`, `./mappo_ft26_it106.pt`.
 - Seed **964199 only**, demand **2400**, penetrations **0.2, 0.4**.
@@ -64,7 +124,7 @@ Once both path blockers are resolved, run exactly the product of:
 - Retain normal TTC evaluation. Use `--no-physics-log` to match the launcher;
   `episode.npz` and action timelines are still written.
 
-Template for each invocation (substitute approved paths; not run here):
+Template for each invocation (as executed; see the smoke record above):
 
 ```text
 python -m traffic_shepherd.c4.collect --policy <controller> --population textbook --seeds 964199 --demands 2400 --penetrations 0.2,0.4 --warmup 60 --horizon 120 --workers 2 --no-physics-log --out <approved-smoke-root>/<controller-label>
@@ -129,30 +189,43 @@ Total: **7 × 4 × 7 × 42 = 8,232 episodes**, or 4,116 per box.
 Per controller per box: 588 episodes / 46 workers = **13 scheduling waves**.
 The seven sequential controller blocks require **91 waves per box**.
 
-### Capacity calculation to populate from smoke
+### Capacity calculation populated from the smoke (measured)
 
 The smoke schedule (60+120) scales both phases by five to the full schedule
-(300+600). Let `t_c` be the slower of the two collector wall times for controller
-`c`; initially use `5 * t_c` as its full-episode estimate. This is deliberately
-conservative for one-time loading cost, but can still understate congested
-late-window traffic and 46-worker contention. The smoke measures only native,
-Dreamer and legacy MAPPO at one demand; baseline costs and box throughput remain
-unmeasured.
+(300+600). Using the slower collector wall time per controller
+(`full_episode_seconds[c] = 5 * max(smoke_collector_wall_seconds[c])`):
 
-Use a contention/traffic allowance `f >= 1` and evaluate:
+```text
+native            5 * 69.43 = 347.15 s
+dreamer (u50)     5 * 41.37 = 206.85 s
+mappo (legacy)    5 * 31.51 = 157.55 s
+```
+
+The smoke measured only native, Dreamer and legacy MAPPO at one demand, with
+2 workers on 22 laptop CPUs; baseline costs (damping/PI/constant), congested
+late-window traffic and 46-worker box contention remain unmeasured, so keep a
+contention/traffic allowance `f >= 1` and evaluate:
 
 ```text
 box_seconds ≈ 13 * sum(full_episode_seconds[c] for c in seven_controllers) * f
-full_episode_seconds[c] ≈ 5 * max(smoke_collector_wall_seconds[c])
 ```
 
-For unmeasured damping/PI/constant controllers, use the slower measured learned
-controller as a provisional estimate, then replace it with box telemetry.
+For the four unmeasured controllers (damping, PI, both maxaccel), use the
+slower measured learned controller (Dreamer, 206.85 s) provisionally:
+`sum = 347.15 + 206.85 + 157.55 + 4*206.85 = 1538.95 s`, so
+`box_seconds ≈ 13 * 1538.95 * f = 20006 * f`.
 Reserve **20% of eight hours** for startup, tail jobs, report generation and
-transfer: usable compute is 23,040 s. A uniform effective full-episode time
-must therefore be **<=253.19 s** (23,040/91); equivalently, a fivefold-scaled
-smoke time must satisfy **t × f <=50.64 s**. Without reserve the threshold is
-316.48 s/full episode. These are budget thresholds, not measurements.
+transfer: usable compute is 23,040 s. The measured projection therefore fits
+the reserve-adjusted eight-hour window for **f <= 1.15** (f <= 1.44 without
+reserve). The uniform per-controller threshold of 253.19 s (23,040/91) is met
+by Dreamer/MAPPO estimates but exceeded by native's 347.15 s: the sum-based
+projection above is the operative check, and native's slower waves are offset
+by faster policy waves. Replace provisional estimates with box telemetry as
+soon as the first controller blocks report.
+
+Budget thresholds for reference (not measurements): a uniform effective
+full-episode time of 253.19 s (23,040/91) with reserve, 316.48 s without;
+equivalently `t × f <= 50.64 s` on a fivefold-scaled smoke collector time.
 
 If initial box throughput cannot meet the reserve-adjusted threshold, prioritize
 the same seven controllers and all 28 demand/penetration cells with **20 seeds**:
@@ -198,6 +271,10 @@ and driver populations are rejected.
 - Ruff passed on all three new Python files.
 - Actual Dreamer checkpoint loaded and evaluated on one synthetic observation.
 - Synthetic CLI generation produced both Markdown and strict JSON reports.
-- Real SUMO smoke/report-on-smoke and measured throughput remain blocked as above.
+- Real SUMO smoke executed this session: 6/6 episodes complete, 0 collisions,
+  0 teleports, 0 dropped-CAV steps; per-episode wall times, acceleration ranges
+  and lane-command counts recorded above.
+- Smoke comparison report generated at
+  `runs/active/evalv5_smoke/comparison/report.md` (6 accepted episodes).
 
 Record the delivery commit with `git log -1 --oneline` after committing this plan.
