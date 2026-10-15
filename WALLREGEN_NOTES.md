@@ -55,15 +55,24 @@ fresh, registered seed block.
    Resumable (`world.json complete` skipped; partial dirs renamed `.incomplete-<n>`), parallel
    (spawn pool, one fresh process per world, never kills anything).
 2. `traffic_shepherd/c4/wallregen_states.py` (converter, no SUMO) -> `wms_eval_states/1`
-   files exactly as `score_c4.py` / `wms.eval.score` read them (same record keys as the old
-   sets + `population`, `variant`, `sumo_seed`, `t0_origin_s`): variants
-   * `h60`  t0 = t_w + 4.5 s, 5 s history (shape-identical to `wallc1_states_h60`);
-   * `real` t0 = t_w + 60.5 s, 60 s history (like `wallc1_states_h60_real`);
-   * `req`  NEW: t0 = each arm's wall-request tick, 60 s history, wall AND native futures from
-     the bit-identical t0 state (`paired` true) - the clean wall-BENEFIT set.
-   Each dir: `wall_same.json`, `wall_pilot.json` (walls that assembled), `wall_native.json`
-   (native arm at the same (world, t0) for unpaired wall states), `BUILD_RECEIPT.json`,
-   `REJECTIONS.jsonl`, `SHA256SUMS.json`.
+    files exactly as `score_c4.py` / `wms.eval.score` read them (same record keys as the old
+    sets + `population`, `variant`, `sumo_seed`, `t0_origin_s`): variants
+    * `h60`  t0 = t_w + 4.5 s, 5 s history (shape-identical to `wallc1_states_h60`);
+    * `real` t0 = t_w + 60.5 s, 60 s history (like `wallc1_states_h60_real`);
+    * `req`  NEW: t0 = each arm's wall-request tick, 60 s history, wall AND native futures from
+      the bit-identical t0 state (`paired` true) - the clean wall-BENEFIT set.
+    * `h60full` / `reqfull` NEW (branch `c4/wallhist`): the h60 / req decision times with a
+      FULL 60 s driver history: 121 native rows = base-tape rows before t_w + branch rows up
+      to t0, remapped BY VEHICLE ID into the t0 slot layout (registry ids survive the
+      saveState restore; slot columns need not). Vehicles present at t0 keep their t0 slot;
+      base-only traffic fills `__history_context_slot<k>` columns (anonymous context, never
+      rollout identities; extra columns are appended if the t0 roster fills all K slots).
+      Declared `history_s` 60 / stride 1 / `run_start_limited` false (only a base tape
+      shorter than ~56 s before t_w can limit it; the recorded bases are 120 s). Existing
+      h60/real/req outputs are byte-identical (the align path is gated on the variant).
+    Each dir: `wall_same.json`, `wall_pilot.json` (walls that assembled), `wall_native.json`
+    (native arm at the same (world, t0) for unpaired wall states), `BUILD_RECEIPT.json`,
+    `REJECTIONS.jsonl`, `SHA256SUMS.json`.
 3. `tools/wallregen_score.py` (scorer copy, CPU): same per-state scorer as score_c4.py
    (`score_states`, teacher-forced CAVs, |ds|/|dv| at 10/30/60/120 s, blow-ups), any number of
    `--ckpt TAG=path` (paired world-bootstrap differences vs the first), cached per checkpoint
@@ -134,12 +143,41 @@ Without the c4 helpers (plain checkout, PYTHONPATH=src:.):
 ```bash
 python -m traffic_shepherd.c4.wallregen plan --out W/plan.json --population textbook --demands <levels>
 python -m traffic_shepherd.c4.wallregen run --plan W/plan.json --out W/sim --workers 46
-for v in h60 real req; do python -m traffic_shepherd.c4.wallregen_states --run W/sim --variant $v --out W/states_$v; done
+for v in h60 real req h60full reqfull; do python -m traffic_shepherd.c4.wallregen_states --run W/sim --variant $v --out W/states_$v; done
 python -m traffic_shepherd.c4.wallregen status --out W/sim
 ```
 
-Fetch `out/states_{h60,real,req}` to the laptop as `data_cache/wallc1t_states_h60`,
-`data_cache/wallc1t_states_h60_real`, `data_cache/wallc1t_states_req` (keep the raw `sim/` tapes
+Full-history variant verification commands as run on the laptop sample (`_ref/sim`, 3
+worlds, population textbook; any output dir must be empty/nonexistent):
+
+```bash
+git show HEAD:traffic_shepherd/c4/wallregen_states.py > /tmp/head_states.py   # old converter
+for v in h60 real req; do
+  python /tmp/head_states.py --run _ref/sim --variant $v --out /tmp/head_$v \
+    --worlds w962000m1900p10t300,w962006m2400p10t240,w962009m2700p10t480
+  python -m traffic_shepherd.c4.wallregen_states --run _ref/sim --variant $v --out /tmp/wt_$v \
+    --worlds w962000m1900p10t300,w962006m2400p10t240,w962009m2700p10t480
+done   # sha256 of wall_same/wall_pilot/wall_native/REJECTIONS identical old vs new (h60/real/req)
+for v in h60full reqfull; do
+  python -m traffic_shepherd.c4.wallregen_states --run _ref/sim --variant $v --out /tmp/wt_$v \
+    --worlds w962000m1900p10t300,w962006m2400p10t240,w962009m2700p10t480
+done
+python -m pytest tests/unit/test_wallhist.py -q   # encodes all of the below
+```
+
+Measured on the 3 sample worlds (36-world plan subset): h60full 25 records (wall_same 12 /
+wall_pilot 11 / wall_native 2), reqfull 22 (11 / 11 / 0) - every state `history_steps`
+exactly 121, `run_start_limited` false, history row at t0 equal to the t0 snapshot (junction
+rows: empty lane one-hot == lane -1), and identity-continuous columns continuous across the
+t_w seam: |ds| <= v*dt + 1.5 m on ordinary transitions; junction transits (lane -1 on either
+side) re-zero the s-coordinate and add up to ~10.4 m beyond v*dt *within a single tape*
+(measured on the base runs), so the seam test allows v*dt + 12 m there and v*dt + 2 m
+elsewhere. Vehicle-id remapping verified against the raw `base.npz` (positions equal per
+registry id at probe rows) and by `tests/unit/test_wallhist.py`.
+
+Fetch `out/states_{h60,real,req,h60full,reqfull}` to the laptop as `data_cache/wallc1t_states_h60`,
+`data_cache/wallc1t_states_h60_real`, `data_cache/wallc1t_states_req`,
+`data_cache/wallc1t_states_h60full`, `data_cache/wallc1t_states_reqfull` (keep the raw `sim/` tapes
 with the run evidence). Score (laptop or box, CPU):
 
 ```bash
@@ -159,6 +197,12 @@ entries-ON variant; `--limit N` for a quick subset.)
   pilot constants, pair rule, arm runner request/assembly/hold/release/not_feasible, plan
   determinism, converter history/counter/matching); `test_c4_genrand.py` 19 passed;
   ruff clean on the new files.
+* Full-history variants (branch `c4/wallhist`, `_ref/sim` samples):
+  `tests/unit/test_wallhist.py` 6 passed - variant table pins, synthetic id-remap
+  (permuted seam, base-only context columns, appended columns, identity breaks),
+  h60 byte-identity vs the committed converter on a sample world, 121-step + remap +
+  seam-continuity + scorer-loader checks on all sample states; `test_wallregen.py` +
+  `test_import_graph.py` 204 passed; ruff check clean.
 * Smoke 1: w962000m2700p40t240, 182 s branches, 6 arms, 132 s wall: outcomes
   aborted_in_hold x2 (member_left_network), in_hold_at_end, assembled_released; native vs
   native_repeat max |ds| = 0.0, identical vehicle ids (CRN determinism); 0 collisions/teleports.

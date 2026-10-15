@@ -22,6 +22,9 @@ Variants (t0 relative to the branch start t_w, the old sets' rules):
 * ``req``  t0 = the wall REQUEST tick of each arm (not_feasible arms have none); 60 s history;
   the wall and native arms are bit-identical at t0 (common random numbers, no command yet), so
   every record carries both recorded futures (``paired`` true): the clean wall-benefit set.
+* ``h60full`` / ``reqfull`` keep the corresponding h60 / req decision times, but use 121
+  native history rows from base times < t_w followed by branch times <= t0. History is
+  remapped by vehicle id to the t0 slots; only a short base tape limits the 60 s span.
 
 Record content follows ``wms.eval.states.build_state``: t0 snapshot (all present vehicles,
 junction rows with lane -1), recorded futures of the t0 roster only (a vehicle drops out at its
@@ -54,7 +57,10 @@ VARIANTS = {
     "h60": ("tw+4.5", 11, 60.0, True),
     "real": ("tw+60.5", 121, 60.0, False),
     "req": ("request", 121, 60.0, False),
+    "h60full": ("tw+4.5", 121, 60.0, False),
+    "reqfull": ("request", 121, 60.0, False),
 }
+FULL_HISTORY_VARIANTS = frozenset(("h60full", "reqfull"))
 PILOT_EXCLUDED = ("not_feasible", "aborted_in_assembly", "waiting_at_end", "in_assembly_at_end")
 WALL_ARMS = ("w-lo-early", "w-lo-late", "w-mid-early", "w-mid-late")
 
@@ -149,16 +155,53 @@ class Timeline:
                            "vehicles": [self.row(j, v, pres[v]) for v in roster if v in alive]})
         return frames
 
-    def history(self, j0: int, rows: int, declared_s: float, force_limited: bool) -> dict:
+    def _align_history(self, j0: int, kin: np.ndarray, mask: np.ndarray,
+                       vid: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Pin t0 vehicles to their t0 slots, retaining all other observed traffic as context.
+
+        Registry indices survive the saved-state restore (each arm inherits the base
+        registry prefix), but slot columns need not. Work backwards so historical context
+        keeps its column over adjacent ticks, with identity changes breaking target_mask.
+        Empty t0 columns are anonymous context, never rollout identities. If reserving the
+        t0 roster exhausts K, append anonymous columns rather than dropping neighbours.
+        """
+        roster = self.present(j0)
+        present = [np.flatnonzero(m & (v >= 0)) for m, v in zip(mask, vid)]
+        context_counts = [sum(int(v[s]) not in roster for s in slots)
+                          for v, slots in zip(vid, present)]
+        k = max(self.k, len(roster) + max(context_counts, default=0))
+        context_slots = set(range(k)) - set(roster.values())
+        out_kin = np.zeros((len(kin), k, 7), np.float32)
+        out_mask = np.zeros((len(kin), k), bool)
+        out_vid = np.full((len(kin), k), -1, vid.dtype)
+        context = {}
+        for j in range(len(kin) - 1, -1, -1):
+            source = {int(vid[j, s]): int(s) for s in present[j]}
+            context = {v: s for v, s in context.items() if v in source}
+            free = iter(sorted(context_slots - set(context.values())))
+            for v in source:
+                if v not in roster and v not in context:
+                    context[v] = next(free)
+            for v, src in source.items():
+                dst = roster[v] if v in roster else context[v]
+                out_kin[j, dst] = kin[j, src]
+                out_mask[j, dst] = True
+                out_vid[j, dst] = v
+        return out_kin, out_mask, out_vid
+
+    def history(self, j0: int, rows: int, declared_s: float, force_limited: bool, *,
+                align_ids: bool = False) -> dict:
         lo = max(0, j0 - rows + 1)
         c = self.cols
         kin = np.stack([self.kin(j) for j in range(lo, j0 + 1)])
         mask = c["mask"][lo:j0 + 1].astype(bool)
         vid = c["vid"][lo:j0 + 1]
+        if align_ids:
+            kin, mask, vid = self._align_history(j0, kin, mask, vid)
         target = (vid[:-1] == vid[1:]) & (vid[:-1] >= 0)
         pres0 = c["mask"][j0] & (c["vid"][j0] >= 0)
-        ids = [self.registry[int(c["vid"][j0][k])] if pres0[k] else f"__history_context_slot{k}"
-               for k in range(self.k)]
+        ids = [self.registry[int(c["vid"][j0][k])] if k < self.k and pres0[k]
+               else f"__history_context_slot{k}" for k in range(kin.shape[1])]
         t = kin.shape[0]
         return {"ids": ids, "history_steps": int(t),
                 "kin": np.round(kin, 4).tolist(), "mask": mask.tolist(),
@@ -272,7 +315,9 @@ def _record(*, rec: dict, arm: str, tl: Timeline, t0: float, variant: str, set_n
         "arms": sorted(recorded),
         "paired": paired,
         "initial_state": initial,
-        "history": tl.history(j0, rows, declared_s, force_limited),
+        "history": (tl.history(j0, rows, declared_s, force_limited, align_ids=True)
+                    if variant in FULL_HISTORY_VARIANTS
+                    else tl.history(j0, rows, declared_s, force_limited)),
         "recorded": recorded,
         "recorded_horizon_steps": {k: len(v) - 1 for k, v in recorded.items()},
         "source_set": set_name,
@@ -390,7 +435,7 @@ def convert(run: Path, out: Path, variant: str, *, worlds=None) -> dict:
                 rejections.append({"world": w["world"], "arm": arm,
                                    "reason": "short_future", "steps": r["recorded_horizon_steps"]})
                 continue
-            if variant == "req" and not r["paired"]:
+            if rule == "request" and not r["paired"]:
                 rejections.append({"world": w["world"], "arm": arm,
                                    "reason": "req_state_not_matched (determinism defect)"})
             writers["wall_same"].add(r)
