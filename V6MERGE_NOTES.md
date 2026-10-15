@@ -140,7 +140,19 @@ loop (2.7× slowdown) is not used.
 | v6 full stage10 | OFF | 26/69 | 51.2 / 89.8 / 83.8 | 111.1 | 3.2 s | 23.0 s |
 | v6 full stage10 | ON | 24/69 | 48.2 / 84.0 / 79.8 | 111.8 | 16.5 s | 32.0 s |
 
-Paired per state, ON − OFF |ds|:
+Full wall_same set (all 144 states, 139 with a verdict; final code, OFF vs ON; `docs/v6merge/*_all.*`):
+
+| Checkpoint | Mode | Blow-ups | \|ds\| 30/60/120 s | Mean of state medians @60 | Stopped wait (SUMO 41.0 s) | All lane-2 wait (SUMO 32.8 s) | Paired @60 s better / worse, mean diff | Mean diff @120 s |
+|---|---|---|---|---|---|---|---|---|
+| v5 best | OFF | 25/139 | 12.9 / 27.9 / 92.2 | 34.7 | 3.2 s | 17.0 s | | |
+| v5 best | **ON** | **7/139** | 12.1 / 28.2 / **84.1** | **31.9** | 11.0 s | 29.5 s | 0.45 / 0.19, −2.9 m | −93 m |
+| v6 cont (step 436) | OFF | 44/139 | 14.8 / 39.6 / 132.4 | 46.1 | 3.2 s | 20.5 s | | |
+| v6 cont | **ON** | **35/139** | 15.0 / **38.1 / 101.8** | **43.4** | 14.2 s | 28.0 s | 0.35 / 0.17, −2.7 m | −73 m |
+
+The diagnosis reports 22/139 for v5. It used the older history set and its own probe; here OFF is
+25/139 on states_h60full.
+
+Paired per state on the every-2nd subset, ON − OFF |ds|:
 
 | Checkpoint | Better / worse @60 s (share of states) | Mean diff @60 s | Mean diff @120 s |
 |---|---|---|---|
