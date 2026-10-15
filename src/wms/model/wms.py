@@ -24,7 +24,7 @@ from torch.utils.checkpoint import checkpoint
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
-from wms.physics.mobil import MASKED_LOGIT, mobil_merge_logits
+from wms.physics.mobil import MASKED_LOGIT, merge_end_blocked, mobil_merge_logits
 from wms.physics.neighbours import lane_neighbour, lane_of, lead_neighbour
 from wms.physics.projection import FeasibilityProjection
 from wms.physics.state import KIN_F, state_kin, state_present
@@ -300,6 +300,15 @@ class WmSModel(nn.Module):
                       ) -> tuple[Tensor, Tensor]:
         """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
         if self.physics_step is None:
+            if self.physics.merge_end_wait or self.physics.mainline_merge_yield:
+                # V6MERGE: one blocked-merger mask per step, shared by accel and lane logits.
+                kin = state_kin(state)
+                present = state_present(state, kin)
+                blocked = merge_end_blocked(kin, present, self.physics)
+                return (baseline_accel(kin, present, self.physics, driver_params,
+                                       merge_blocked=blocked),
+                        mobil_merge_logits(kin, present, self.physics, driver_params,
+                                           merge_blocked=blocked))
             return (self.physics_accel(state, driver_params),
                     self.mobil_merge_logits(state, driver_params))
         result = self.physics_step(state)
@@ -630,7 +639,8 @@ class WmSModel(nn.Module):
             self.lane_gate(k, shared=gate).to(lane_delta.dtype).unsqueeze(-1) * lane_delta,
             self.lane_logit_cap)
         lane_logits = lane_base + lane_correction
-        if self.physics.lane_rule in ("forced_merge_only", "learned_discretionary"):
+        if (self.physics.lane_rule in ("forced_merge_only", "learned_discretionary")
+                or self.physics.merge_end_wait):
             # The learned residual lane delta can never unmask a forbidden change:
             # entries the physics masked stay masked after the correction and cap
             # (C4; in the default 'mobil' mode this branch is skipped, so outputs
@@ -940,6 +950,13 @@ class WmSModel(nn.Module):
                 out, state, cav, direct, present, k_steps, action_id, action_command,
                 cav_teacher, cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
 
+        if self.physics.merge_end_wait:
+            # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there.
+            end = self.physics.merge_zone_s1_m
+            overrun = (present & (next_lane == self.physics.merge_lane) & (s <= end)
+                       & (next_s > end))
+            next_s = torch.where(overrun, torch.full_like(next_s, end), next_s)
+            next_v = torch.where(overrun, torch.zeros_like(next_v), next_v)
         next_present = present.clone()
         exit_s = state.get("exit_s_m")
         if exit_s is not None:

@@ -1,0 +1,30 @@
+# WM-S-C4 v6 MERGE FINE-TUNE (2026-10-16, V6MERGE_NOTES.md). Warm-starts from the final v6 checkpoint
+# (c4_wm_v6_cont) with the two V6MERGE lane-end interaction rules ON:
+#   physics.merge_end_wait       - a ramp vehicle within 25 m of the accel-lane end and <= 2 m/s enters lane 1
+#                                  only when both lane-1 gaps are SUMO-secure (no stopped relaxation, no
+#                                  forced-late override); a lane-2 vehicle never passes the lane end.
+#   physics.mainline_merge_yield - the nearest lane-1 follower within 60 m behind such a blocked merger brakes
+#                                  for it as a virtual leader with its own IDM (<= 2 m/s^2).
+# Both are vectorised physics rules (no new parameters); everything else = c4_wm_v6_cont.toml.
+schema_version = 2
+name = "WM-S-C4-V6-MERGE-FT"
+extends = "c4_wm_v6_cont.toml"
+
+[physics]
+merge_end_wait = true
+mainline_merge_yield = true
+
+[model]
+init_from = "ckpt_v6_final"   # launch: --set model.init_from=<abs path to c4_wm_v6_cont final checkpoint>
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [200, 120]
+truncation_steps_per_stage = [120, 120]
+max_hours = 3.5
+
+[optim]
+lr_per_stage = [1.0e-4, 5.0e-5]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6_merge_ft"

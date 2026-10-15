@@ -211,6 +211,9 @@ class TrainSettings:
     stop_time_integration: bool = False
     emergency_decel_mps2: Optional[float] = None
     lane_conflict_resolve: bool = False
+    # V6MERGE: retained in flat checkpoint configs; absent in older checkpoints.
+    merge_end_wait: bool = False
+    mainline_merge_yield: bool = False
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
