@@ -1,0 +1,9 @@
+# C4 v6 FINAL POLICY (2026-10-15, owner: start right after the v6 WM finishes). From scratch on the v6 WM.
+#   = c4_policy_v6.toml (V6IMAG: imagination_grad_decay 0.98, credit profile every 25 updates)
+#     -> c4_policy_v5.toml (sumo_like entries + matching srcgrad surrogate, accel cap 1.2, idm_normal:textbook
+#        execution cap, textbook native counterfactual, c4_base start windows from the v5 textbook data)
+#   + V6EXPLORE / V6ENTRY settings appended below when those branches pass their tests (see commit log).
+extends = "c4_policy_v6.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6-FULL"
