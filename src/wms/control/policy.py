@@ -63,6 +63,9 @@ class CavPolicy(nn.Module):
     head (masked logits; ``stay`` always feasible).  ``noise`` (:class:`PolicyNoise`)
     replaces the internal draws (common random numbers).  ``lane_head=False`` builds the
     pre-2026-10-12 accel-only actor (``c4_dreamer/1`` checkpoints): it always stays.
+    ``init_zero_accel=True`` (V6EXPLORE, default False = unchanged random start) zeroes the
+    acceleration MEAN row of the head and biases it so the initial decoded mean acceleration
+    is 0 m/s^2 for every input (see :meth:`init_zero_mean_accel`).
 
     Action bounds (ACCELCAP_NOTES.md): ``tanh`` is mapped to ``[accel_min, accel_max]``.  The
     bounds are a stored property of the actor: the persistent buffer ``accel_bounds`` (float64,
@@ -75,9 +78,11 @@ class CavPolicy(nn.Module):
     supports_noise = True
 
     def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True, *,
-                 accel_min: float = ACCEL_MIN_MPS2, accel_max: float = POLICY_ACCEL_MAX_MPS2) -> None:
+                 accel_min: float = ACCEL_MIN_MPS2, accel_max: float = POLICY_ACCEL_MAX_MPS2,
+                 init_zero_accel: bool = False) -> None:
         super().__init__()
         self.register_buffer("accel_bounds", torch.zeros(2, dtype=torch.float64))
+        self.init_zero_accel = bool(init_zero_accel)
         self.set_accel_bounds(accel_min, accel_max)
         self.own_encoder = nn.Sequential(nn.Linear(F_OWN, hidden_dim), nn.SiLU(),
                                          nn.Linear(hidden_dim, hidden_dim), nn.SiLU())
@@ -93,6 +98,32 @@ class CavPolicy(nn.Module):
             # Uniform start over the feasible choices: no designed lane preference.
             nn.init.zeros_(self.lane_head[-1].weight)
             nn.init.zeros_(self.lane_head[-1].bias)
+        if self.init_zero_accel:
+            self.init_zero_mean_accel()
+
+    def init_zero_mean_accel(self) -> None:
+        """V6EXPLORE: neutral zero-mean initial acceleration (call on a FRESH actor only).
+
+        The tanh decode maps a zero pre-activation to the range MIDPOINT (-0.9 m/s^2 for the
+        [-3, 1.2] bounds), so a random start mostly brakes (the v5 run opened at a -0.67 mean
+        command).  This zeroes the acceleration MEAN row of the head and biases it so the
+        decoded mean is 0 m/s^2 on any input; the log-std row and every other weight keep
+        their random defaults, so it is an initialisation, not a designed controller (owner
+        rule: no imitation / hand-designed behaviour).  ``set_accel_bounds`` re-centres the
+        bias while the flag is set, so fresh actors stay zero-mean under a configured cap;
+        loading a state dict overwrites the bias as usual.
+        """
+        with torch.no_grad():
+            nn.init.zeros_(self.head[-1].weight[0])
+        self.init_zero_accel = True
+        self._centre_mean_bias()
+
+    def _centre_mean_bias(self) -> None:
+        # tanh(b) = -midpoint/scale, so the decoded mean midpoint + scale * tanh(b) = 0.
+        scale = (self.accel_max - self.accel_min) / 2.0
+        midpoint = (self.accel_max + self.accel_min) / 2.0
+        with torch.no_grad():
+            self.head[-1].bias[0] = math.atanh(-midpoint / scale)
 
     def set_accel_bounds(self, accel_min: float, accel_max: float) -> None:
         """Set the action bounds.  This changes how the SAME weights decode actions: use it only
@@ -105,6 +136,8 @@ class CavPolicy(nn.Module):
         with torch.no_grad():
             self.accel_bounds.data = torch.tensor((accel_min, accel_max), dtype=torch.float64,
                                                   device=self.accel_bounds.device)
+        if getattr(self, "init_zero_accel", False) and hasattr(self, "head"):
+            self._centre_mean_bias()
 
     def _sync_accel_bounds(self) -> None:
         # Rounded: a float32 cast of the module (``.float()``) must not perturb 2.6 -> 2.5999999.

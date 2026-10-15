@@ -53,22 +53,31 @@ class GroupSignal(torch.nn.Module):
 
 
 def policy_settings(raw) -> dict:
-    """``[policy]`` section -> CavPolicy keyword arguments (ACCELCAP_NOTES.md).
+    """``[policy]`` section -> CavPolicy keyword arguments (ACCELCAP_NOTES.md, V6EXPLORE).
 
     ``accel_max_mps2`` = the actor's action cap; absent -> the fresh-actor default
     ``POLICY_ACCEL_MAX_MPS2`` (2.6).  A checkpoint loaded with --init-policy / --resume keeps its
-    own stored bound (legacy 1.5 when it has none) and the trainer warns about the override."""
+    own stored bound (legacy 1.5 when it has none) and the trainer warns about the override.
+    ``init_zero_accel`` (V6EXPLORE, default off) applies the neutral zero-mean acceleration
+    start to the fresh actor; the key is returned only when enabled so existing digests of
+    default configs stay unchanged."""
     from .contract import DIRECT_ACCEL_MAX_MPS2, POLICY_ACCEL_MAX_MPS2
 
     section = dict(raw.get("policy", {}))
-    unknown = set(section) - {"accel_max_mps2"}
+    unknown = set(section) - {"accel_max_mps2", "init_zero_accel"}
     if unknown:
         raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
     accel_max = float(section.get("accel_max_mps2", POLICY_ACCEL_MAX_MPS2))
     if not 0.0 < accel_max <= DIRECT_ACCEL_MAX_MPS2:
         raise ValueError(f"[policy] accel_max_mps2 must be in (0, {DIRECT_ACCEL_MAX_MPS2}] "
                          "(the SUMO env's direct-command ceiling)")
-    return {"accel_max": accel_max}
+    out = {"accel_max": accel_max}
+    zero = section.get("init_zero_accel", False)
+    if not isinstance(zero, bool):
+        raise ValueError("[policy] init_zero_accel must be a boolean")
+    if zero:
+        out["init_zero_accel"] = True
+    return out
 
 
 def _load_components():
@@ -229,6 +238,10 @@ def main(argv=None):
         if hasattr(components["policy"], "set_accel_bounds"):      # fresh actor: configured cap
             components["policy"].set_accel_bounds(components["policy"].accel_min,
                                                   policy_kwargs["accel_max"])
+        if policy_kwargs.get("init_zero_accel", False):            # V6EXPLORE neutral start
+            if not hasattr(components["policy"], "init_zero_mean_accel"):
+                raise ValueError("[policy] init_zero_accel requires a CavPolicy actor")
+            components["policy"].init_zero_mean_accel()
         if cfg.critic_entry_backlog:     # SRCGRAD_NOTES.md: per-entrance backlog critic input
             components["critic"] = importlib.import_module("wms.control.policy").TeamCritic(
                 entry_backlog=True)
@@ -257,6 +270,8 @@ def main(argv=None):
                        counterfactual=counterfactual.as_dict(),
                        policy_accel_bounds=[getattr(trainer.policy, "accel_min", None),
                                             getattr(trainer.policy, "accel_max", None)],
+                       policy_init_zero_accel=bool(getattr(trainer.policy, "init_zero_accel",
+                                                          False)),
                        physics_steps_per_control=STEPS_PER_CONTROL,
                        imagined_horizon_s=trainer.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
                        train_windows=sum(map(len, train.groups.values())),
