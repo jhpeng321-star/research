@@ -81,8 +81,15 @@ class ModelSpec:
     # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
     lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
     lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
+    # V6: default values preserve the legacy encoder and algebraic EMA updates.
+    driver_param_mode: str = "legacy"
+    driver_ema_update: bool = True
 
     def __post_init__(self) -> None:
+        if self.driver_param_mode not in ("legacy", "physical"):
+            raise ValueError("driver_param_mode must be legacy or physical")
+        if not isinstance(self.driver_ema_update, bool):
+            raise ValueError("driver_ema_update must be a boolean")
         if self.residual_cap_mps2 is not None and float(self.residual_cap_mps2) <= 0.0:
             raise ValueError("residual_cap_mps2 must be > 0 when set")
         if self.lane_logit_cap is not None and float(self.lane_logit_cap) <= 0.0:

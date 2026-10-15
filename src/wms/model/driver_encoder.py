@@ -1,8 +1,9 @@
 """Causal per-driver parameter inference.
 
 The encoder consumes only the explicitly supplied pre-t0 observation history.
-Parameter deltas are bounded and reliability-shrunk toward the vType defaults;
-the uncertainties describe the unshrunk estimate scale in physical units.
+Legacy deltas are bounded and reliability-shrunk toward the physics defaults;
+physical mode shrinks logit deviations toward a learned shared centre instead.
+The uncertainties describe the unshrunk estimate scale in physical units.
 """
 from __future__ import annotations
 
@@ -10,13 +11,19 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
+from wms.physics.config import PhysicsConfig
+
 PARAMETER_NAMES = ("v0", "time_headway", "min_gap", "accel", "decel",
                    "politeness", "mobil_threshold", "merge_gap", "merge_urgency")
 #: Maximum deviation of each parameter from its default (tanh-bounded delta).
 PARAMETER_BOUNDS = (5.0, 0.8, 2.0, 0.8, 1.5, 0.35, 0.2, 8.0, 0.4)
-#: Physical range every inferred parameter is clipped to.
+#: Legacy physical clipping ranges (also used by the observation updater).
 PARAMETER_LOWER = (5.0, 0.2, 0.5, 0.3, 0.5, 0.0, 0.0, 2.0, 0.1)
 PARAMETER_UPPER = (60.0, 4.0, 10.0, 5.0, 10.0, 1.0, 2.0, 30.0, 2.0)
+#: Physical-mode longitudinal ranges in PARAMETER_NAMES order; v0 is a ratio
+#: of the road speed limit. Lane parameters retain their legacy mapping.
+PHYSICAL_LOWER = (0.6, 0.4, 0.5, 0.3, 0.8)
+PHYSICAL_UPPER = (1.4, 3.0, 5.0, 4.0, 6.0)
 
 #: Hidden width of the shared encoder trunk.  The fused embedding handed to the
 #: residual net / lane head has width ``2 * DRIVER_ENCODER_HIDDEN + F`` (pooled
@@ -32,8 +39,12 @@ class DriverEncoder(nn.Module):
     """Attention-pool observed ``[B, K, H, F]`` motion plus neighbour interaction cues."""
 
     def __init__(self, history_features: int = 6, hidden: int = DRIVER_ENCODER_HIDDEN,
-                 shrink_prior_steps: float = 8.0, long_history: bool = False):
+                 shrink_prior_steps: float = 8.0, long_history: bool = False,
+                 driver_param_mode: str = "legacy", physics: PhysicsConfig | None = None):
         super().__init__()
+        if driver_param_mode not in ("legacy", "physical"):
+            raise ValueError("driver_param_mode must be legacy or physical")
+        self.driver_param_mode = driver_param_mode
         self.history_features = int(history_features)
         self.shrink_prior_steps = float(shrink_prior_steps)
         self.history_proj = nn.Sequential(nn.Linear(history_features, hidden), nn.Tanh())
@@ -46,6 +57,31 @@ class DriverEncoder(nn.Module):
         if self.long_history:
             # Created only for long history so legacy RNG/weights stay identical.
             self.history_gru = nn.GRUCell(_LONG_HISTORY_WIDTH, hidden)
+        if self.driver_param_mode == "physical":
+            # No new parameters/buffers or RNG draws on the legacy path. Initialise
+            # from the same physics defaults as WmSModel, never per-driver labels.
+            p = physics or PhysicsConfig()
+            lower = torch.tensor(PHYSICAL_LOWER)
+            upper = torch.tensor(PHYSICAL_UPPER)
+            lower[0] *= p.speed_limit_mps
+            upper[0] *= p.speed_limit_mps
+            a, b, t, s0, _ = p.idm()
+            initial = torch.tensor((p.v0_mps, t, s0, a, b))
+            fraction = ((initial - lower) / (upper - lower)).clamp(1.0e-6, 1.0 - 1.0e-6)
+            self.centre_logits = nn.Parameter(torch.logit(fraction))
+            self.register_buffer("physical_lower", lower)
+            self.register_buffer("physical_upper", upper)
+
+    def _physical_values(self, raw: Tensor, shrink: Tensor) -> Tensor:
+        """Smooth full-range map; reliability shrinks in logit space.
+
+        At n=0 all drivers equal the learned centre. For any n>0 the full open
+        interval remains reachable (unlike shrinking bounded physical deltas,
+        which would reintroduce observation-dependent floors). The centre is
+        trained through the same prediction-error graph as the encoder head.
+        """
+        lower, upper = self.physical_lower.to(raw), self.physical_upper.to(raw)
+        return lower + (upper - lower) * torch.sigmoid(self.centre_logits + shrink * raw)
 
     def _encode_long(self, history: Tensor, mask: Tensor) -> Tensor:
         """Masked GRU over the long history; returns ``[B, K, H, hidden]``."""
@@ -98,5 +134,8 @@ class DriverEncoder(nn.Module):
         lower = values.new_tensor(PARAMETER_LOWER)
         upper = values.new_tensor(PARAMETER_UPPER)
         values = torch.maximum(torch.minimum(values, upper), lower)
+        if self.driver_param_mode == "physical":
+            values = torch.cat((self._physical_values(raw[..., 0, :5], shrink),
+                                values[..., 5:]), -1)
         return {"values": values, "uncertainty": uncertainty, "shrinkage": shrink.squeeze(-1),
                 "attention": attention, "embedding": fused}

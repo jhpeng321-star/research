@@ -97,6 +97,10 @@ class ModelConfig:
     lane_hazard_cap: float = 10.0
     driver_update: Literal["off", "ema"] = "off"
     """C: refine a car's driver settings/embedding from its observed motion inside a rollout."""
+    driver_param_mode: Literal["legacy", "physical"] = "legacy"
+    """V6: physical driver parameters learned from prediction error with a learned shared centre."""
+    driver_ema_update: bool = True
+    """Enable the EMA driver-parameter update (legacy behaviour)."""
     driver_update_rate: float = 0.3
     driver_reveal_prob: float = 0.0
     """C training: probability that an HDV gets a teacher-observed prefix in a training unroll."""
@@ -123,6 +127,10 @@ class ModelConfig:
     """Initialise the lane network from a tools/lanev5_pretrain.py file before training."""
 
     def __post_init__(self) -> None:
+        require(self.driver_param_mode in ("legacy", "physical"),
+                "model.driver_param_mode must be legacy or physical")
+        require(isinstance(self.driver_ema_update, bool),
+                "model.driver_ema_update must be a boolean")
         require(self.lane_hazard_hidden >= 1 and is_finite(self.lane_hazard_cap)
                 and self.lane_hazard_cap > 0.0,
                 "model.lane_hazard_hidden must be >= 1 and lane_hazard_cap > 0")
