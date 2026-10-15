@@ -473,7 +473,9 @@ class Loop:
             policy["proc"] = {"pid": int(adopt_pid), "start": info["start"]}
             policy["adopted"] = True
         self.root.mkdir(parents=True, exist_ok=True)
-        self.state = {"version": 1, "created": utcnow(), "iteration": 1, "step": "snapshot",
+        created = utcnow()
+        self.state = {"version": 1, "created": created, "iteration": 1, "step": "snapshot",
+                      "loop_id": "loop_" + created.replace("-", "").replace(":", ""),
                       "status": "running", "config_snapshot": self.cfg,
                       "wm": {"ckpt": str(init_wm), "policy_ckpt": policy_wm,
                              "val_log": init_wm_val_log or None, "history": []},
@@ -481,6 +483,10 @@ class Loop:
                       "iters": {}}
         self.save()
         self.log("init", wm=init_wm, policy_run_dir=policy_run_dir, adopted_pid=adopt_pid)
+
+    def remote_root(self, host: dict) -> str:
+        """Per-loop directory on a collector host (a new loop never reuses an old loop's dirs)."""
+        return f"{host['work_root'].rstrip('/')}/{self.state.get('loop_id', 'loop')}"
 
     # -- guards
     def check_stop(self) -> None:
@@ -734,8 +740,10 @@ class Loop:
             return
         it = self.it()
         k = self.state["iteration"]
-        rdir = f"{host['work_root'].rstrip('/')}/iter_{k:03d}"
+        rdir = f"{self.remote_root(host)}/iter_{k:03d}"
         policy_path = f"{rdir}/policy_snapshot.pt"
+        if not it.get("collect_pushed") and self.b.exists(host, rdir):
+            raise RuntimeError(f"{host['name']}:{rdir} exists; never reuse a collection directory")
         if not it.get("collect_pushed"):
             self.b.copy(self.hosts["wm"], it["snapshot"]["path"], host, policy_path)
             it["collect_pushed"] = True
@@ -822,7 +830,7 @@ class Loop:
         # Superseded converted dirs (their WM refresh has finished) go first; the running policy's stays.
         self.delete_converted(keep={self.state["policy"].get("data_dir")})
         free = self.b.free_gb(dest.parent)
-        fit = int(max(0.0, free - self.cfg["min_free_gb"]) * 1e3 / cv["mb_per_episode"])
+        fit = self.window_fit(free)
         if fit < len(episodes):
             if fit < max(1, min(len(episodes), cv.get("min_window", 50))):
                 if self.state.get("status") != "paused_disk":
@@ -852,6 +860,16 @@ class Loop:
         it["converted"] = {"dir": str(dest), "episodes": len(episodes), "seconds": round(self.b.now() - started)}
         self.save()
         self.goto("wm_launch", converted=str(dest), episodes=len(episodes))
+
+    def window_fit(self, free_gb: float) -> int:
+        """Episodes the next converted pool may hold.  A pool the running policy (or a queued switch)
+        still reads cannot be deleted before the next one exists, so in steady state two pools coexist:
+        each gets at most half of the space above ``min_free_gb`` (else the WM lane would stall)."""
+        cv = self.cfg["convert"]
+        kept = sum(dir_size_gb(d) for d in self.state["converted_dirs"] if Path(d).exists())
+        room = max(0.0, free_gb - self.cfg["min_free_gb"])
+        half = max(0.0, (free_gb + kept - self.cfg["min_free_gb"]) / 2.0)
+        return int(min(room, half) * 1e3 / cv["mb_per_episode"])
 
     def delete_converted(self, keep) -> None:
         """Delete converted dirs THIS loop created (recorded in the state) except ``keep``; raw stays.
@@ -1201,7 +1219,9 @@ class PipeLoop(Loop):
         return all_idle and ((exhausted and refreshed_all) or self.refreshes_done())
 
     def refreshes_done(self) -> bool:
-        return self.state["refresh_n"] >= self.cfg["wm"]["max_refreshes"]
+        """``wm.max_refreshes`` refreshes started AND the last one finished (collection continues meanwhile)."""
+        return (self.state["refresh_n"] >= self.cfg["wm"]["max_refreshes"]
+                and self.state["wm_lane"]["refresh"] is None)
 
     # -- disk
     def disk_ok(self, what: str) -> bool:
@@ -1264,10 +1284,12 @@ class PipeLoop(Loop):
         bdir.mkdir(parents=True, exist_ok=True)
         snap = bdir / "policy_snapshot.pt"
         self.b.copy(self.hosts["policy"], found[1], self.hosts["wm"], str(snap))
+        rdir = f"{self.remote_root(host)}/{bid}"
+        if self.b.exists(host, rdir):
+            raise RuntimeError(f"{host['name']}:{rdir} exists; never reuse a collection directory")
         # allocation is recorded BEFORE anything runs
         self.state["next_batch"] += 1
         self.state["seeds_used"] = ranges(sorted(expand(self.state["seeds_used"]) | set(seeds)))
-        rdir = f"{host['work_root'].rstrip('/')}/{bid}"
         batch = {"id": bid, "host": host_name, "seeds": seeds, "status": "launching", "attempts": 0,
                  "remote_dir": rdir, "snapshot": {"source": found[1], "path": str(snap), "sha256": sha256(snap),
                                                   "policy_run_dir": self.state["policy"]["run_dir"]},
@@ -1392,7 +1414,7 @@ class PipeLoop(Loop):
         if cv["max_episodes"] and len(episodes) > cv["max_episodes"]:
             episodes = episodes[-cv["max_episodes"]:]
         free = self.b.free_gb(dest.parent)
-        fit = int(max(0.0, free - self.cfg["min_free_gb"]) * 1e3 / cv["mb_per_episode"])
+        fit = self.window_fit(free)
         if fit < len(episodes):
             if fit < max(1, min(len(episodes), cv.get("min_window", 50))):
                 if self.state.get("status") != "paused_disk":
@@ -1622,6 +1644,17 @@ def _update_of(path: str) -> int | None:
     if name.startswith("policy_") and name.endswith(".pt") and name[7:-3].isdigit():
         return int(name[7:-3])
     return None
+
+
+def dir_size_gb(path) -> float:
+    total = 0
+    for root, _, files in os.walk(path):
+        for name in files:
+            try:
+                total += os.path.getsize(os.path.join(root, name))
+            except OSError:
+                pass
+    return total / 1e9
 
 
 def convert_cmd(python: str, list_file, dest) -> str:

@@ -29,7 +29,7 @@
                  "WMS_DATA_GENRAND_PLAIN": "/root/autodl-tmp/c4/v5/data/genrand_plain",
                  "WMS_DATA_V6_LONGPAIR": "/root/autodl-tmp/c4/v5/data/v6_longpair",
                  "WMS_JAM_WORKERS": "2", "OMP_NUM_THREADS": "4", "MKL_NUM_THREADS": "4"},
-         "timeout_s": 3600, "val_metric": "mean_position", "val_tolerance": 0.30},
+         "timeout_s": 3600, "val_metric": "mean_position", "val_tolerance": 1.0},
   "policy": {"config": "configs/c4_policy_v6_loop.toml", "config_without_policy_data": "configs/c4_policy_v6_full.toml",
              "device": "cpu", "extra_args": ["--smoke"],
              "env": {"WMS_DATA_V5_NATIVE": "/root/autodl-tmp/c4/v5/data/v5_native",

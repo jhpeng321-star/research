@@ -570,3 +570,17 @@ def test_pipelined_one_batch_per_policy_checkpoint(tmp_path):
     fake2.procs[pid2]["next"] = 1e18
     loop2.run(max_steps=30)
     assert len(loop2.state["batches"]) > 2
+
+
+def test_collection_dirs_are_per_loop_and_never_reused(tmp_path):
+    cfg, fake, loop, _ = _pipe(tmp_path, hosts=["cpu"])
+    loop.run(max_steps=1)
+    batch = loop.state["batches"]["b0001"]
+    assert batch["remote_dir"] == f"{tmp_path / 'box'}/{loop.state['loop_id']}/b0001"
+    # a second loop whose next batch dir already exists refuses to reuse it
+    cfg2, fake2, loop2, _ = _pipe(tmp_path / "x", hosts=["cpu"]) if (tmp_path / "x").mkdir() is None else (None,) * 4
+    Path(f"{tmp_path / 'x' / 'box'}/{loop2.state['loop_id']}/b0001").mkdir(parents=True)
+    loop2.run(max_steps=1)
+    assert not loop2.state["batches"] and not loop2.state["seeds_used"]
+    events = [json.loads(x) for x in (tmp_path / "x" / "loop" / "loop_log.jsonl").read_text().splitlines()]
+    assert any(e["event"] == "lane_error" and "never reuse" in e["error"] for e in events)
