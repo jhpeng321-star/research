@@ -366,6 +366,14 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
                                row_seeds=[spec["seeds"][r] for r in rows])
 
 
+def _same_groups(sampler, state):
+    """True when a saved sampler ``state`` matches ``sampler``'s window groups (resume check)."""
+    if sampler is None or not hasattr(sampler, "groups") or state is None:
+        return False
+    return (state.get("groups") == sampler.groups and state.get("relabel") == sampler.relabel
+            and state.get("target_penetration") == sampler.target_penetration)
+
+
 class DreamerTrainer:
     """Owns actor/group encoder, critic, EMA target, dual and sampler state.
 
@@ -1095,10 +1103,20 @@ class DreamerTrainer:
         and ``policy_best_coop.pt`` by the VAL cooperation gain ``coop_gain_val``."""
         self.validation_states = validation_states
         if self._pending_validation_state is not None and validation_states is not None:
-            validation_states.load_state_dict(self._pending_validation_state)
+            if (getattr(self, "_loop_refresh_resume", False)
+                    and not _same_groups(validation_states, self._pending_validation_state)):
+                print("[loop-refresh] validation windows changed; sampler state not restored", flush=True)
+            else:
+                validation_states.load_state_dict(self._pending_validation_state)
             self._pending_validation_state = None
         last = None
         while self.update_count < max_updates:
+            if self.output_dir is not None and (self.output_dir / "STOP").exists():
+                # C4 Dreamer loop (scripts/c4/dreamer_loop.py): a STOP file in the output directory ends
+                # training cleanly after the current update; policy_latest.pt is written below.
+                print(f"[stop-file] STOP found at update {self.update_count}; saving policy_latest.pt",
+                      flush=True)
+                break
             last = self.update()
             if (validation_states is not None and self.config.validation_every and
                     self.update_count % self.config.validation_every == 0):
@@ -1206,7 +1224,17 @@ class DreamerTrainer:
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)
+        if loop_refresh and payload["world_model_ids"] != self.world_model_ids:
+            # Validation scores on a refreshed WM are not comparable with the old WM's: the new run
+            # directory keeps its own policy_best*.pt (selected on this WM only).
+            self.best_validation = self.best_coop_validation = -math.inf
+        self._loop_refresh_resume = loop_refresh
         if payload["sampler"] is not None:
-            self.start_states.load_state_dict(payload["sampler"])
+            if loop_refresh and not _same_groups(self.start_states, payload["sampler"]):
+                # Loop iterations add the policy's own SUMO episodes to the start windows: the window
+                # set changed, so the sampler continues with this run's fresh RNG.
+                print("[loop-refresh] start windows changed; sampler state not restored", flush=True)
+            else:
+                self.start_states.load_state_dict(payload["sampler"])
         self._pending_validation_state = payload.get("validation_sampler")
         _restore_rng(payload["rng"], self.device)
