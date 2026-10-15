@@ -346,3 +346,31 @@ def test_on_step_backward_finite():
     out["next_s_m"].sum().backward()
     grads = [p.grad for p in model.parameters() if p.grad is not None]
     assert grads and all(torch.isfinite(g).all() for g in grads)
+
+
+def test_yield_never_deadlocks_the_merge():
+    """A yielding follower whose own s0 (1 m) is below the road s0 (2.6 m) stops leaving the
+    merger's standstill secure gap, so the blocked merger gets in (and sooner than without
+    yielding) in a crawling lane-1 queue."""
+    def scenario():
+        s = [73.0] + [90.0 - 7.0 * i for i in range(1, 30)]
+        return _state(s, [0.0] + [1.0] * 29, [2] + [1] * 29)
+
+    def first_merge(physics):
+        model = _physics_model(physics)
+        state = scenario()
+        with torch.no_grad():
+            for i in range(200):
+                params = _driver_params(state)
+                params["min_gap"] = torch.full_like(state["s_m"], 1.0)
+                out = model.step(state, driver_params=params)
+                if int(out["next_lane"][0, 0]) == 1:
+                    return i
+                accel = (out["next_v_mps"] - state["v_mps"]) / physics.dt_s
+                state = dict(state, s_m=out["next_s_m"], v_mps=out["next_v_mps"],
+                             lane=out["next_lane"], a_mps2=accel)
+        return None
+
+    wait_only = first_merge(_physics(wait=True))
+    with_yield = first_merge(_physics(wait=True, yield_=True))
+    assert with_yield is not None and (wait_only is None or with_yield < wait_only)

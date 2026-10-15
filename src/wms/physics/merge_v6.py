@@ -26,7 +26,8 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     lane-1 vehicle ``i`` whose front is behind the merger's rear (``gap = s_j - L_j - s_i > 0``,
     so the merger is ahead of it; no phantom braking for a merger behind or already overlapped)
     and within ``mainline_merge_yield_distance_m`` (front to front).  The follower applies its
-    own IDM (``params``, per-driver when learned) to the virtual leader (gap, merger speed),
+    own IDM (``params``, per-driver when learned) to a virtual leader at the merger's speed
+    standing the road's ``s0`` behind the merger's rear (room for the merger's secure gap),
     never accelerating because of it and braking by at most ``mainline_merge_yield_decel_mps2``
     (and its own ``driver_decel``).  Vehicles further back react through ordinary IDM.
     ``blocked``: a precomputed :func:`merge_end_blocked` (computed here when ``None``).
@@ -48,7 +49,11 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     # ... and a follower facing several mergers reacts to its closest one.
     best, index = dist.min(dim=-1)
     has = torch.isfinite(best)
-    virtual_gap = torch.where(has, best, torch.full_like(best, p.free_road_gap_m))
+    # The virtual leader stands the road's minimum gap s0 behind the merger's rear: a follower
+    # that stops for it leaves the merger's standstill secure follower gap (s0 + T*0 + 0), so
+    # yielding can never itself block the merge (deadlock when the driver's own s0 < road s0).
+    s0_road = p.idm()[3]
+    virtual_gap = torch.where(has, best - s0_road, torch.full_like(best, p.free_road_gap_m))
     virtual_v = torch.where(has, v.gather(-1, index), v)
     virtual = idm_accel(v, virtual_v, virtual_gap, params,
                         accel_min=p.accel_min_mps2, accel_max=p.accel_max_mps2)
