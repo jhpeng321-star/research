@@ -93,7 +93,9 @@ class DreamerConfig:
     cav_exec_cap: str = "off"
     # ENTRYFIX (ENTRYFIX_NOTES.md, default "v2" = bit-identical): insertion rule of the imagined
     # entry process; "sumo_like" = SUMO departSpeed="max"/departLane="best" insertion (the v2
-    # sampled required gap over-blocks: imagined source wait far above SUMO's).
+    # sampled required gap over-blocks: imagined source wait far above SUMO's);
+    # "sumo_like_v2" = V6ENTRY saturated-entrance semantics (end-of-step gap test, stop-speed
+    # departure; ENTRY_DIAG.md) -- the rule that reproduces SUMO's queued mainline service.
     entry_insert_rule: str = "v2"
 
     def __post_init__(self):
@@ -120,8 +122,8 @@ class DreamerConfig:
                      "source_wait_grad", "critic_entry_backlog"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
-        if self.entry_insert_rule not in ("v2", "sumo_like"):
-            raise ValueError("entry_insert_rule must be 'v2' or 'sumo_like'")
+        if self.entry_insert_rule not in ("v2", "sumo_like", "sumo_like_v2"):
+            raise ValueError("entry_insert_rule must be 'v2', 'sumo_like' or 'sumo_like_v2'")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
                 or self.entry_pad_max < 1:
             raise ValueError("entry_pad_max must be a positive integer")

@@ -221,8 +221,11 @@ class DataConfig:
     entry_pad_max: int = 256
     #: ENTRYFIX (ENTRYFIX_NOTES.md): insertion rule of the entries-v2 process
     #: (``wms.model.entries.EntryConfig.insert_rule``).  "v2" = legacy, bit-identical;
-    #: "sumo_like" = SUMO departSpeed="max"/departLane="best"/departPos="base" insertion.
-    entry_insert_rule: Literal["v2", "sumo_like"] = "v2"
+    #: "sumo_like" = SUMO departSpeed="max"/departLane="best"/departPos="base" insertion;
+    #: "sumo_like_v2" = V6ENTRY: additionally SUMO's saturated-entrance semantics (test at
+    #: the end of the insertion step, depart at the stop speed behind the lane's rearmost
+    #: vehicle; ENTRY_DIAG.md).  Default "v2" keeps every existing run bit-identical.
+    entry_insert_rule: Literal["v2", "sumo_like", "sumo_like_v2"] = "v2"
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
     #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation

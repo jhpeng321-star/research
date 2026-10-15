@@ -63,7 +63,7 @@ DEFAULT_GAP_STD_M = 5.0
 DEFAULT_CAV_SHARE = 0.0
 DEFAULT_LANE_P1 = 0.5
 #: Insertion rules of :class:`TorchEntryProcessV2` (``EntryConfig.insert_rule``).
-INSERT_RULES = ("v2", "sumo_like")
+INSERT_RULES = ("v2", "sumo_like", "sumo_like_v2")
 #: SUMO lane speed limits (m/s) of the entrance edges per model lane (network bytes,
 #: ``1191554636_{0,1}`` and ``11553048#1_0``); the ``sumo_like`` departSpeed="max" cap.
 SUMO_LANE_SPEED_MPS = (31.29, 31.29, 22.22)
@@ -75,6 +75,15 @@ VTYPE_TAU_S = (1.1, 1.5, 0.95, 1.0)
 VTYPE_DECEL_MPS2 = (4.5, 3.0, 4.5, 4.0)
 #: SUMO ``departPos="base"`` puts the FRONT at ``lane start + length + POSITION_EPS``.
 SUMO_POSITION_EPS_M = 0.1
+#: sumo_like_v2 (V6ENTRY): vType (tau s, decel m/s^2, minGap m) of the v5 "textbook"
+#: population medians (``traffic_shepherd/c4/population.py``; CAVs ``cav_typical``:
+#: tau 1.2, decel 2.0, minGap 2.0) used for the admission test and the stop-speed
+#: departure.  On the saturated v5 recordings SUMO's admission boundary is the
+#: end-of-step bumper gap against these minGaps (measured true accept 0.83 / false
+#: accept 0.004; the legacy :data:`VTYPE_MIN_GAP_M` 2.5 admits only 0.58), ENTRY_DIAG.md.
+SUMO_V2_TAU_S = (1.2, 1.2, 1.2, 1.0)
+SUMO_V2_DECEL_MPS2 = (2.0, 2.0, 2.0, 4.0)
+SUMO_V2_MIN_GAP_M = (2.0, 2.0, 2.0, 2.5)
 _ENTRANCE_NAMES = {"mainline": 0, "ramp": 1}
 _FEATURE_KEYS = ("rate", "trend", "headway_mean", "headway_cv", "speed_mean",
                  "speed_std", "gap_mean", "gap_std", "cav_share", "n_obs")
@@ -125,6 +134,19 @@ class EntryConfig:
     # gap, no fixed speed ratio), any entrance lane that admits the vehicle may be used, the
     # front is placed at lane start + length, and FIFO arrivals keep inserting in one step
     # while a lane admits them (an entrance stops at its first refusal, as in SUMO).
+    #
+    # "sumo_like_v2" (V6ENTRY, default off) additionally reproduces SUMO 1.27's *saturated*
+    # entrance behaviour measured on the v5 textbook recordings (ENTRY_DIAG.md): the
+    # departure test runs at the END of the insertion step (the lane's rearmost vehicle
+    # moves ``v_lead * dt`` while the entrant, departing near the stop-speed, does not),
+    # and the entrant's speed is the STOP speed behind that end-of-step rear position
+    # (the leader is treated as stationary; SUMO inserts queued mainline entrants at a
+    # median 0.16 m/s although the rearmost vehicle already moves at ~3.4 m/s).  Admission
+    # stays "end-of-step bumper gap >= vType minGap"; "sumo_like" instead tests the
+    # pre-step gap (refusing most of a saturated queue's actual insertions) and credits
+    # the leader's speed in the safe-speed formula (entering 1.7-2.5 m/s instead of
+    # ~0.15), so its entrance service runs ~30 % faster than SUMO's and the imagination
+    # never grows an entry queue.
     insert_rule: str = "v2"
     #: sumo_like lane choice: "any" (default; try every entrance lane, largest gap first --
     #: admits 99% of SUMO's recorded insertions, ENTRYFIX_NOTES.md) or "best_free" (only the
@@ -843,7 +865,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
             else:
                 lanes_try = [2]
             cav = bool(u_cav < float(hist.cav_share[e]))
-            if self.cfg.insert_rule == "sumo_like":
+            if self.cfg.insert_rule != "v2":
                 # Same random draws as v2 (common random numbers across rules); the
                 # speed ratio and the sampled required gap are not used.
                 placed = self._insert_sumo_like(work, b, e, lanes_try, cav, vt)
@@ -876,7 +898,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
             return False
         return self._place(work, b, e, ln, cav, v_new, float(VTYPE_LENGTH_M[vtype]))
 
-    # -- sumo_like insertion (EntryConfig.insert_rule == "sumo_like") ------------------
+    # -- sumo_like / sumo_like_v2 insertion (EntryConfig.insert_rule) -----------------
     def _entrance_gap(self, work: _Working, b: int, ln: int, length_new: float):
         """``(bumper gap, leader speed)`` for a SUMO departPos="base" entrant on ``ln``."""
         rear = self._lane_rear(work, b, ln)
@@ -885,6 +907,9 @@ class TorchEntryProcessV2(_EntryProcessBase):
         s_r, l_r, v_lead, _ = rear
         front = self.entry_s[ln] + float(length_new) + SUMO_POSITION_EPS_M
         return s_r - l_r - front, v_lead
+
+    def _sumo_v2(self) -> bool:
+        return self.cfg.insert_rule == "sumo_like_v2"
 
     def _lane_occupancy(self, work: _Working, b: int, ln: int) -> float:
         """Vehicle-length sum on the entrance edge of ``ln`` (SUMO departLane="best" key)."""
@@ -914,8 +939,23 @@ class TorchEntryProcessV2(_EntryProcessBase):
         if gap >= _NO_GAP:
             v_new = v_cap
         else:
-            v_safe = sumo_safe_insert_speed(gap, v_lead, VTYPE_TAU_S[vtype],
-                                            VTYPE_DECEL_MPS2[vtype], VTYPE_MIN_GAP_M[vtype])
+            if self._sumo_v2():
+                # SUMO 1.27 tests the departure at the END of the insertion step (the
+                # lane's rearmost vehicle keeps moving) and departs at the STOP speed
+                # behind that end-of-step rear position (the leader gets no speed
+                # credit), with the v5 textbook vType settings; measured on the
+                # saturated-entrance recordings, see ENTRY_DIAG.md.  Admission stays
+                # "bumper gap >= vType minGap".
+                gap = gap + max(0.0, float(v_lead)) * self.dt
+                v_lead = 0.0
+                tau_vt = SUMO_V2_TAU_S[vtype]
+                decel_vt = SUMO_V2_DECEL_MPS2[vtype]
+                min_gap_vt = SUMO_V2_MIN_GAP_M[vtype]
+            else:
+                tau_vt = VTYPE_TAU_S[vtype]
+                decel_vt = VTYPE_DECEL_MPS2[vtype]
+                min_gap_vt = VTYPE_MIN_GAP_M[vtype]
+            v_safe = sumo_safe_insert_speed(gap, v_lead, tau_vt, decel_vt, min_gap_vt)
             if v_safe < max(0.0, float(self.cfg.sumo_min_speed_mps)):
                 return False
             v_new = min(v_cap, v_safe)
