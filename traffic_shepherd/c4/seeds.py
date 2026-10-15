@@ -22,8 +22,10 @@ WALLREGEN_SEEDS = frozenset(S.C4_WALLREGEN_EVAL_SEEDS)
 #: + the C4 V5 textbook-population TRAINING (963000-963999) and EVALUATION (964000-964199) blocks.
 V5_TRAIN_SEEDS = frozenset(S.C4_V5_TRAIN_SEEDS)
 V5_EVAL_SEEDS = frozenset(S.C4_V5_EVAL_SEEDS)
+#: + the C4 V6 long-branch TRAINING block (965000-965999).
+V6_LONGPAIR_SEEDS = frozenset(S.C4_V6_LONGPAIR_SEEDS)
 ALLOWED_SEEDS = (frozenset(S.EXPOSED_CONTROLLER_SEEDS) | GENRAND_SEEDS | WALLREGEN_SEEDS
-                 | V5_TRAIN_SEEDS | V5_EVAL_SEEDS)
+                 | V5_TRAIN_SEEDS | V5_EVAL_SEEDS | V6_LONGPAIR_SEEDS)
 BLOCKED_SEEDS = frozenset(
     set(S.SEALED_SEEDS) | set(S.FINAL_TEST_SEEDS) | set(S.WM58_CHUNK5_SEEDS)
     | set(S.WM_N1_REPL_SEEDS) | set(S.PLWM1_SEEDS) | set(S.CV28_VALIDATION_HOLDOUT_SEEDS)
@@ -33,6 +35,7 @@ assert not (WALLREGEN_SEEDS & BLOCKED_SEEDS), "WALLREGEN seeds overlap a sealed/
 assert not (WALLREGEN_SEEDS & GENRAND_SEEDS), "WALLREGEN eval seeds overlap the GENRAND training block"
 assert not ((V5_TRAIN_SEEDS | V5_EVAL_SEEDS) & (BLOCKED_SEEDS | GENRAND_SEEDS | WALLREGEN_SEEDS))
 assert not (V5_TRAIN_SEEDS & V5_EVAL_SEEDS)
+assert not (V6_LONGPAIR_SEEDS & (BLOCKED_SEEDS | GENRAND_SEEDS | WALLREGEN_SEEDS | V5_TRAIN_SEEDS | V5_EVAL_SEEDS))
 
 
 class SeedRefusal(ValueError):
@@ -47,7 +50,7 @@ def check_case(seed: int, demand_vph: int) -> None:
     if seed not in ALLOWED_SEEDS:
         raise SeedRefusal(f"seed {seed} is not an exposed C4 development seed "
                           "(4107-4148), a C4 GENRAND training seed (961000-961999) nor a C4 "
-                          "WALLREGEN evaluation seed (962000-962199) nor a C4 V5 seed (963000-964199)")
+                          "WALLREGEN evaluation seed (962000-962199) nor a C4 V5/V6 seed (963000-964199, 965000-965999)")
     S.require_development_case(seed, demand_vph, "exposed")
 
 
