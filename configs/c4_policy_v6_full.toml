@@ -15,7 +15,7 @@ output_dir = "runs/active/C4-POLICY-V6-FULL"
 
 [trainer]
 entropy_target = 0.5
-alpha_lr = 3e-4
+alpha_lr = 1e-2           # integrator: 3e-4 moves log(alpha) only ~0.15 over 500 updates (Adam step ~lr); 1e-2 can react within ~100 updates
 entry_insert_rule = "sumo_like_v2"
 
 [policy]
