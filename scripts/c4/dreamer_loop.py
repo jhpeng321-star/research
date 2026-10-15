@@ -404,13 +404,13 @@ class StopRequested(Exception):
 
 
 class Loop:
-    def __init__(self, cfg: dict, backend: Backend | None = None, out=print):
+    def __init__(self, cfg: dict, backend: Backend | None = None, out=None):
         self.cfg = cfg
         self.root = Path(cfg["loop_root"])
         self.state_path = self.root / "state.json"
         self.log_path = self.root / "loop_log.jsonl"
         self.stop_path = self.root / "STOP"
-        self.out = out
+        self.out = out or (lambda text: print(text, flush=True))
         self.b = backend or Backend(cfg["ssh_retries"], log=self.log)
         if backend is not None and getattr(backend, "log", None) is None:
             backend.log = self.log
@@ -711,7 +711,12 @@ class Loop:
                 "--demands", c["demands"], "--warmup", str(c["warmup"]), "--horizon", str(c["horizon"]),
                 "--workers", str(c["workers"]), "--no-physics-log", "--out", out]
         prefix = f"nice -n {int(c['nice'])} " if c.get("nice") else ""
-        return prefix + " ".join(q(a) for a in argv)
+        # SUMO from the venv's eclipse-sumo package (as scripts/boxops/common.sh activate_box): a
+        # non-interactive ssh shell has neither the venv bin dir nor SUMO_HOME on PATH.
+        py = host["python"]
+        sumo = (f'SUMO_HOME="$({q(py)} -c {q("import sumo; print(sumo.SUMO_HOME)")} 2>/dev/null)"; '
+                f'export SUMO_HOME; export PATH={q(os.path.dirname(py))}:"$SUMO_HOME/bin:$PATH"; ')
+        return sumo + prefix + " ".join(q(a) for a in argv)
 
     def step_collect_launch(self) -> None:
         host, c = self.hosts["cpu"], self.cfg["collect"]
