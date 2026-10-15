@@ -12,6 +12,7 @@ import hashlib
 import inspect
 import json
 import math
+import os
 import random
 import sys
 import time
@@ -1156,9 +1157,16 @@ class DreamerTrainer:
             raise ValueError(f"expected a {' or '.join(READABLE_FORMATS)} checkpoint")
         if not policy_only and payload["format"] != CHECKPOINT_FORMAT:
             raise ValueError(f"full resume requires a {CHECKPOINT_FORMAT} checkpoint (use policy_only)")
+        loop_refresh = os.environ.get("WMS_LOOP_REFRESH", "") == "1"
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
-                                payload["world_model_ids"] != self.world_model_ids):
+                                (payload["world_model_ids"] != self.world_model_ids
+                                 and not loop_refresh)):
             raise ValueError("resume requires the same frozen world-model ensemble")
+        if not policy_only and loop_refresh and payload["world_model_ids"] != self.world_model_ids:
+            # C4 Dreamer loop (2026-10-16): continue the full trainer (policy, critic, optimisers, duals)
+            # on a REFRESHED world model of the same ensemble size; recorded in the run's log.
+            print(f"[loop-refresh] resuming on new WM ids {self.world_model_ids} "
+                  f"(was {payload['world_model_ids']})", flush=True)
         from .policy import check_payload_accel_bounds, upgrade_policy_state
         configured = (getattr(self.policy, "accel_min", None), getattr(self.policy, "accel_max", None))
         missing, unexpected = self.policy.load_state_dict(upgrade_policy_state(payload["policy"]),
