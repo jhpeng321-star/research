@@ -218,3 +218,74 @@ def test_sumo_branching_is_deterministic(tmp_path):
     # base episode (damping via the per-tick fallback path, no reload) == ALL arm (reloaded
     # into a fresh SUMO process)
     assert p["fidelity_ALL_vs_live"]["identical"]
+
+
+
+# ------------------------------------------------------------------ save right after a load
+class _FakeSim:
+    """SUMO 1.27.1 quirk: a state saved right after ``loadState`` lacks ``loaderTime``."""
+
+    def __init__(self):
+        self.t, self.saved = 0.0, []
+
+    def getTime(self):
+        return self.t
+
+    def loadState(self, path):
+        self.t = float(open(path, encoding="utf-8").read().split('time="')[1].split('"')[0])
+
+    def saveState(self, path):
+        self.saved.append(path)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(f'<snapshot time="{self.t}">\n<delay number="1"/>\n')
+
+
+class _LoadedEnv(types.SimpleNamespace):
+    __hash__ = object.__hash__
+    now = property(lambda self: self.api.simulation.getTime())
+
+
+def test_save_right_after_load_copies_the_loaded_file(tmp_path):
+    conn = object()                                # one TraCI connection = one SUMO process
+    api = types.SimpleNamespace(getConnection=lambda: conn, simulation=_FakeSim(),
+                                vehicle=types.SimpleNamespace(getIDList=lambda: []))
+    env = _LoadedEnv(api=api, _circles=None, recorder=None,
+                     reader=types.SimpleNamespace(_subscribed=set()),
+                     ownership=types.SimpleNamespace(_mode_configured=set()))
+    src = tmp_path / "t900_mid.xml"
+    src.write_text('<snapshot time="900.0">\n<delay number="1" loaderTime="1007181"/>\n',
+                   encoding="utf-8")
+    snap = {"frame": types.SimpleNamespace(time_s=900.0)}
+    br.load_state(env, src, snap, fresh=False)
+    assert env.now == 900.0
+    out = tmp_path / "t900.xml"
+    br.save_state(env, out)                        # no step since the load: byte copy
+    assert out.read_bytes() == src.read_bytes() and api.simulation.saved == []
+    api.simulation.t = 900.5                       # after a step SUMO saves itself; a file
+    bad = tmp_path / "t900_5.xml"                  # without loaderTime is refused both ways
+    with pytest.raises(RuntimeError, match="loaderTime"):
+        br.save_state(env, bad)
+    with pytest.raises(RuntimeError, match="loaderTime"):
+        br.load_state(env, bad, snap, fresh=False)
+
+
+@pytest.mark.skipif(shutil.which("sumo") is None, reason="SUMO not installed")
+def test_sumo_branching_spacing_equal_to_horizon(tmp_path):
+    """Regression (COOP-MAPPO-H300): with spacing == horizon the base episode resumes from the
+    live-continuation state exactly at the next decision point and saves it again with no step
+    in between; that file used to lack loaderTime and its loads re-inserted arrived vehicles
+    ("unknown or duplicate lifecycle event")."""
+    from traffic_shepherd.c4.env import CavSumoEnv
+
+    env = CavSumoEnv(controller="direct", extra_sumo_cli=br.SAVE_STATE_CLI, physics_log=False,
+                     scenario_root=tmp_path / "sc")
+    pts = br.measure_episode(env, br.BranchController("damping"), seed=4107, demand_vph=2700,
+                             penetration=0.2, warmup_s=60, decision_times=[200, 204],
+                             horizon_s=4, workdir=tmp_path / "states",
+                             rng=np.random.default_rng(0), n_flip=0)
+    assert [p["t_s"] for p in pts] == [200, 204]
+    assert env.ledger.arrived                      # vehicles had arrived before t = 204
+    for p in pts:
+        assert p["determinism_B_vs_B_repeat"]["identical"] and p["metrics_B_equal_B_repeat"]
+    assert (tmp_path / "states" / "s4107_t204.xml").read_bytes() == (
+        tmp_path / "states" / "s4107_t200_mid.xml").read_bytes()

@@ -103,6 +103,11 @@ drivers; investigate before using it as a cooperation validator for named contro
 - `loadState` into the running SUMO is NOT clean: pre-load simulator state leaks into the
   first steps (observed B != B_repeat, 2 spurious junction collisions). Every load therefore
   goes into a FRESH SUMO process (same launch command) - fixed and verified.
+- A state saved right after a `loadState` (no step in between) lacks `<delay loaderTime>` in
+  SUMO 1.27.1; loading it re-inserts every already-arrived vehicle (RequestLedger "unknown or
+  duplicate lifecycle event"; hit whenever `spacing == horizon`, e.g. COOP-MAPPO-H300).
+  `save_state` now copies the just-loaded file byte for byte in that case, and both
+  `save_state` and `load_state` refuse a state file without `loaderTime` (fix 2026-10-16).
 - speedMode is not stored in the state file (all CAVs revert to 31); re-asserted to 27 for
   every CAV the ownership had configured (counted in `speed_mode_restored`).
 - Save/load fidelity (`ALL` after a reload vs the uninterrupted base continuation): exact for

@@ -60,6 +60,7 @@ import inspect
 import json
 import math
 import re
+import shutil
 import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -518,8 +519,47 @@ def restore_env(env, snap: dict) -> None:
     env.__dict__.update(copy.deepcopy(snap, _shared(env)))
 
 
+#: id(env) -> (TraCI connection, SUMO time, state file) of the last ``loadState`` into the
+#: env's current SUMO process (the connection object identifies the process)
+_LOADED: dict = {}
+_LOADER_TIME = re.compile(rb"<delay [^>]* loaderTime=")
+
+
+def _connection(env):
+    try:
+        return env.api.getConnection()
+    except Exception:  # noqa: BLE001 - no live connection / non-traci api
+        return None
+
+
 def save_state(env, path: Path) -> None:
-    env.api.simulation.saveState(str(path))
+    """``saveState`` to ``path``; the written file must carry the route loader's ``loaderTime``.
+
+    SUMO 1.27.1 only writes ``<delay loaderTime=...>`` once the route loader rebuilt by
+    ``loadState`` has loaded routes again, i.e. after the first ``simulationStep``.  A state
+    saved right after a ``loadState`` (no step in between) therefore lacks it, and loading that
+    file rewinds the route file without skipping already-handled requests: every vehicle that
+    had already arrived is inserted a second time (seen as a duplicate departure in the
+    RequestLedger, e.g. ``mainline.0`` re-departing at t = 902.5 s).  This happened whenever the
+    live continuation ended exactly on the next decision point (``spacing == horizon``).  The
+    process state is then by definition the loaded file, so that file is copied byte for byte."""
+    marker = _LOADED.get(id(env))
+    conn = _connection(env)
+    if (marker is not None and conn is not None and marker[0] is conn
+            and abs(env.now - marker[1]) < 1e-9):
+        if Path(marker[2]).resolve() != Path(path).resolve():
+            shutil.copyfile(marker[2], path)
+    else:
+        env.api.simulation.saveState(str(path))
+    check_state_file(path)
+
+
+def check_state_file(path: Path) -> None:
+    """Refuse a state file without ``loaderTime`` (its load would re-insert arrived vehicles)."""
+    with open(path, "rb") as fh:
+        if not _LOADER_TIME.search(fh.read()):
+            raise RuntimeError(f"state file {path} has no <delay loaderTime>: loading it would "
+                               "re-insert already-arrived vehicles (SUMO route-loader rewind)")
 
 
 def relaunch(env) -> None:
@@ -541,10 +581,14 @@ def relaunch(env) -> None:
 def load_state(env, path: Path, snap: dict, *, fresh: bool = True) -> dict:
     """SUMO ``loadState`` (into a fresh SUMO process by default) + Python state restore;
     re-subscribe every vehicle and re-assert speedMode 27 (not stored in the state file)."""
+    check_state_file(path)
     if fresh:
         relaunch(env)
     env.api.simulation.loadState(str(path))
     restore_env(env, snap)
+    conn = _connection(env)
+    if conn is not None:
+        _LOADED[id(env)] = (conn, float(env.now), Path(path))
     env.reader._subscribed = set()
     if abs(env.now - snap["frame"].time_s) > 1e-6:
         raise RuntimeError(f"loadState landed at {env.now}, expected {snap['frame'].time_s}")
