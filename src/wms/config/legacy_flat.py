@@ -174,6 +174,16 @@ FLAT_TO_PATH: dict[str, str] = {
     # V6MERGE (opt-in lane-end interaction rules)
     "merge_end_wait": "physics.merge_end_wait",
     "mainline_merge_yield": "physics.mainline_merge_yield",
+    # V7FT (merge-zone calibration loss)
+    "merge_loss_speed_weight": "loss.merge.speed_weight",
+    "merge_loss_discharge_weight": "loss.merge.discharge_weight",
+    "merge_loss_cell_edges_m": "loss.merge.cell_edges_m",
+    "merge_loss_line_m": "loss.merge.line_m",
+    "merge_loss_bin_s": "loss.merge.bin_s",
+    "merge_loss_cell_temp_m": "loss.merge.cell_temp_m",
+    "merge_loss_cross_temp_m": "loss.merge.cross_temp_m",
+    "merge_loss_speed_scale_mps": "loss.merge.speed_scale_mps",
+    "merge_loss_discharge_scale_veh": "loss.merge.discharge_scale_veh",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -215,6 +225,16 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
     "stop_time_integration", "emergency_decel_mps2", "lane_conflict_resolve",
     "merge_end_wait", "mainline_merge_yield",
+    # V7FT
+    "merge_loss_speed_weight",
+    "merge_loss_discharge_weight",
+    "merge_loss_cell_edges_m",
+    "merge_loss_line_m",
+    "merge_loss_bin_s",
+    "merge_loss_cell_temp_m",
+    "merge_loss_cross_temp_m",
+    "merge_loss_speed_scale_mps",
+    "merge_loss_discharge_scale_veh",
 )
 
 

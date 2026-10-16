@@ -591,6 +591,16 @@ class UnrollRunner:
             agg_total = sum(float(logged[n]) for n in agg_names)
             record["aggregate_value_share"] = (agg_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
+        merge_prep = targets.prepared.get("merge")
+        if merge_prep is not None:
+            # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.
+            from .losses.merge import merge_metrics
+
+            record.update(merge_metrics(merge_prep, targets.n_steps))
+            merge_total = sum(float(logged[n]) for n in ("merge_speed", "merge_discharge")
+                              if n in logged)
+            record["merge_value_share"] = (merge_total / loss_logged
+                                           if loss_logged > 0.0 else 0.0)
         pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg", "pair_return", "pair_rank")
                       if n in logged]
         if pair_names:

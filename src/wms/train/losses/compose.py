@@ -22,6 +22,7 @@ from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
+from .merge import MergeLossConfig, merge_terms
 from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
@@ -166,6 +167,18 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             speed_delta_mps=float(settings.speed_huber_delta_mps),
             bin_s=float(settings.aggregate_bin_s),
             cell_temp_m=float(settings.aggregate_cell_temp_m))))
+    if getattr(settings, "merge_loss_on", False):
+        # V7FT merge-zone calibration terms go after every existing term (flag off: never
+        # built, bit-identical).
+        chunk.extend(merge_terms(MergeLossConfig(
+            dt_s=dt_s, speed_weight=float(settings.merge_loss_speed_weight),
+            discharge_weight=float(settings.merge_loss_discharge_weight),
+            cell_edges_m=tuple(float(x) for x in settings.merge_loss_cell_edges_m),
+            line_m=float(settings.merge_loss_line_m), bin_s=float(settings.merge_loss_bin_s),
+            cell_temp_m=float(settings.merge_loss_cell_temp_m),
+            cross_temp_m=float(settings.merge_loss_cross_temp_m),
+            speed_scale_mps=float(settings.merge_loss_speed_scale_mps),
+            discharge_scale_veh=float(settings.merge_loss_discharge_scale_veh))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))

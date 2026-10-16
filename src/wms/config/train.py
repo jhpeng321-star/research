@@ -367,6 +367,46 @@ class AggregateLossConfig:
 
 
 @config_dataclass
+class MergeLossConfig:
+    """V7FT merge-zone calibration loss (``wms.train.losses.merge``; both weights 0 = off).
+
+    ``speed_weight``: HDV mean speed per cross-section cell (edges ``cell_edges_m``, s = 0 =
+    merge start) of the rollout vs the record, pooled over ``bin_s`` bins (Huber of the error
+    in units of ``speed_scale_mps``).  ``discharge_weight``: cumulative soft count of HDVs
+    crossing ``line_m`` since t0 (sigmoid width ``cross_temp_m``) vs the record (Huber in
+    units of ``discharge_scale_veh``).  CAVs are teacher-forced and excluded.
+    """
+
+    speed_weight: float = 0.0
+    discharge_weight: float = 0.0
+    cell_edges_m: tuple[float, ...] = (-100.0, 0.0, 75.44, 300.0)
+    line_m: float = 75.44
+    bin_s: float = 5.0
+    cell_temp_m: float = 2.0
+    cross_temp_m: float = 5.0
+    speed_scale_mps: float = 1.0
+    discharge_scale_veh: float = 2.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(x) and x >= 0.0 for x in (self.speed_weight,
+                                                        self.discharge_weight)),
+                "loss.merge weights must be finite and non-negative")
+        edges = [float(x) for x in self.cell_edges_m]
+        require(len(edges) >= 2 and all(is_finite(x) for x in edges)
+                and all(b > a for a, b in zip(edges[:-1], edges[1:])),
+                "loss.merge.cell_edges_m must be >= 2 finite increasing values")
+        require(is_finite(self.line_m), "loss.merge.line_m must be finite")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.bin_s, self.cell_temp_m, self.cross_temp_m, self.speed_scale_mps,
+            self.discharge_scale_veh)),
+            "loss.merge bin/temperatures/scales must be finite and positive")
+
+    @property
+    def enabled(self) -> bool:
+        return self.speed_weight > 0.0 or self.discharge_weight > 0.0
+
+
+@config_dataclass
 class PairedDiffLossConfig:
     """PAIRLOSS paired-difference loss (``wms.train.losses.paired_diff``; weight 0 = off).
 
@@ -474,6 +514,7 @@ class LossConfig:
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
+    merge: MergeLossConfig = field(default_factory=MergeLossConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -701,6 +742,11 @@ class TrainConfig:
                                               ("pair_agg", pair.aggregate_weight),
                                               ("pair_return", pair.return_weight),
                                               ("pair_rank", pair.rank_weight)) if w > 0.0)
+        merge = self.loss.merge
+        if merge.enabled:
+            terms.extend(name for name, w in (("merge_speed", merge.speed_weight),
+                                              ("merge_discharge", merge.discharge_weight))
+                         if w > 0.0)
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------

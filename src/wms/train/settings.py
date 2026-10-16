@@ -214,6 +214,16 @@ class TrainSettings:
     # V6MERGE: retained in flat checkpoint configs; absent in older checkpoints.
     merge_end_wait: bool = False
     mainline_merge_yield: bool = False
+    # V7FT (2026-10-17, default OFF): merge-zone calibration loss (wms.train.losses.merge).
+    merge_loss_speed_weight: float = 0.0
+    merge_loss_discharge_weight: float = 0.0
+    merge_loss_cell_edges_m: tuple[float, ...] = (-100.0, 0.0, 75.44, 300.0)
+    merge_loss_line_m: float = 75.44
+    merge_loss_bin_s: float = 5.0
+    merge_loss_cell_temp_m: float = 2.0
+    merge_loss_cross_temp_m: float = 5.0
+    merge_loss_speed_scale_mps: float = 1.0
+    merge_loss_discharge_scale_veh: float = 2.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -421,7 +431,8 @@ class TrainSettings:
                 int(x) for x in values["truncation_steps_per_stage"])
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
-        for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s"):
+        for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s",
+                    "merge_loss_cell_edges_m"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
         for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap"):
@@ -438,6 +449,12 @@ class TrainSettings:
     def uses_hard_cap(self) -> bool:
         """True when a legacy hard residual clamp is configured (REJECTED, #3)."""
         return any(getattr(self, name) is not None for name in HARD_CAP_FIELDS)
+
+    @property
+    def merge_loss_on(self) -> bool:
+        """V7FT merge-zone calibration loss enabled (either weight > 0)."""
+        return (float(self.merge_loss_speed_weight) > 0.0
+                or float(self.merge_loss_discharge_weight) > 0.0)
 
     @property
     def long_horizon_on(self) -> bool:

@@ -289,8 +289,8 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
     aux_mask = hdv_mask & ~inputs.is_cav[:, 1:n + 1] & inputs.present[:, :n]
     denom = (weights * hdv_mask.to(weights.dtype)).sum().clamp_min(1.0)
     road = None
-    if settings.aggregate_weight > 0.0:
-        # Aggregate loss (C4): recorded on-road presence -- the full road (incl. arrivals)
+    if settings.aggregate_weight > 0.0 or getattr(settings, "merge_loss_on", False):
+        # Aggregate loss (C4) / merge loss (V7FT): recorded on-road presence -- the full road (incl. arrivals)
         # when the entry process runs and the windows carry it, else the t0 cohort.
         from .losses.aggregate import road_targets
 

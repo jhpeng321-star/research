@@ -28,6 +28,7 @@ from .curriculum import StagePlan, stage_plan
 from .logging import JsonlLog, write_json
 from .losses.compose import build_loss
 from .receipt import write_train_receipt
+from .losses.merge import METRIC_NAMES as MERGE_METRIC_NAMES
 from .selection import (MONITORS, LongHorizonSelection, MixedHorizonSchedule,
                         MultiHorizonSelection, SameHorizonSelection, eligible_stage_s,
                         validation_horizons)
@@ -250,8 +251,12 @@ class WmSTrainer:
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
         optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
-                    *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow")
+                    *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow",
+                    "merge_speed", "merge_discharge")
         total.update({name: 0.0 for name in self.composer.names if name in optional})
+        if any(name.startswith("merge_") for name in self.composer.names):
+            # V7FT merge-zone calibration metrics (whole-unroll, per batch; mean over batches)
+            total.update({name: 0.0 for name in MERGE_METRIC_NAMES})
         total.update({name: 0.0 for name in MONITORS})
         n_batches = valid_targets = available_steps = 0
         reached_steps = None
@@ -262,6 +267,12 @@ class WmSTrainer:
             parts = self.forward_backward(batch, unroll_steps=int(unroll_steps), backward=False)
             reached_steps = (parts["unroll_steps"] if reached_steps is None
                              else min(reached_steps, parts["unroll_steps"]))
+            if n_batches == 0 and MERGE_METRIC_NAMES[0] in total:
+                # per-cell merge metrics (their number follows loss.merge.cell_edges_m)
+                total.update({key: 0.0 for key, value in parts.items()
+                              if key.startswith("merge_") and key not in total
+                              and isinstance(value, (int, float))
+                              and not isinstance(value, bool)})
             for key in total:
                 total[key] += float(parts.get(key, 0.0))
             valid_targets += int(parts["valid_targets"])

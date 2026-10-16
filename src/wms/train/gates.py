@@ -121,6 +121,10 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
                                                ("agg_reward", settings.aggregate_reward_weight),
                                                ("agg_flow", settings.aggregate_flow_weight))
                      if weight > 0.0)
+    if getattr(settings, "merge_loss_on", False):
+        terms.extend(name for name, weight in (
+            ("merge_speed", settings.merge_loss_speed_weight),
+            ("merge_discharge", settings.merge_loss_discharge_weight)) if weight > 0.0)
     return tuple(dict.fromkeys(terms))
 
 
