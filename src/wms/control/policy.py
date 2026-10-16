@@ -399,7 +399,13 @@ class PolicyExecutor:
         # The policy's own stored action bounds bound its commands (legacy when no policy / hold).
         self.accel_min, self.accel_max = policy_accel_bounds(policy)
         self.lane_rules = lane_rules if lane_rules is not None else LaneRules()
-        self.has_lane_head = bool(hold or getattr(policy, "has_lane_head", False))
+        # V7POL lane_control="native" (checkpoint key ``lane_control``, set on the actor by
+        # load_policy_components / train_cli): the executor issues NO lane commands; with_lanes=True
+        # returns ``lanes=None``, so CavSumoEnv never puts these CAVs under policy lane control
+        # (laneChangeMode 513) and SUMO's own lane-change model keeps deciding their lanes.
+        self.native_lanes = getattr(policy, "lane_control", "learned") == "native"
+        self.has_lane_head = (not self.native_lanes
+                              and bool(hold or getattr(policy, "has_lane_head", False)))
         self.deterministic, self.noise_fn, self.hold, self.device = deterministic, noise_fn, hold, device
         # Data-collection exploration (Dreamer loop): extra N(0, sigma) on the commanded accel before safety.
         self.extra_accel_noise = float(extra_accel_noise)
@@ -465,6 +471,8 @@ class PolicyExecutor:
         out[~cav] = np.nan
         lanes = torch.where(changed, new_lane, torch.full_like(new_lane, -1)).cpu().numpy().astype(np.int64)
         self.last_lanes = lanes
+        if with_lanes and self.native_lanes:
+            return out, None            # V7POL: no lane commands at all (SUMO keeps lane control)
         return (out, lanes) if with_lanes else out
 
 
@@ -480,6 +488,10 @@ def load_policy_components(path, *, device: str = "cpu"):
     state = upgrade_policy_state(payload["policy"])
     lane_head = any(key.startswith("lane_head.") for key in state)
     policy, encoder = CavPolicy(lane_head=lane_head), RsuGroupEncoder()
+    if payload.get("lane_control") == "native":
+        if lane_head:
+            raise ValueError("lane_control='native' checkpoint must not carry a lane head")
+        policy.lane_control = "native"     # V7POL: PolicyExecutor issues no lane commands
     policy.load_state_dict(state)          # bounds: stored buffer, else legacy [-3, 1.5]
     check_payload_accel_bounds(policy, payload)
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v

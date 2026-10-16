@@ -118,6 +118,19 @@ class DreamerConfig:
     # Reward-window credit to the first continuous policy action (one start/member/future).
     # Zero disables all diagnostic autograd work; otherwise sample every N updates.
     credit_profile_every: int = 0
+    # V7POL (owner 2026-10-17; defaults = bit-identical).
+    # Safety budget: "absolute" = mean all-CAV-row TTC cost vs ``ttc_budget`` (as before);
+    # "native_relative" = per start, the policy row's cost vs its counterfactual all-native base
+    # row (+ ``ttc_native_margin``), absolute ``ttc_budget`` for starts without a base row; the
+    # actor penalty is lambda * mean_s relu(excess_s) (no credit for being safer than native) and
+    # the dual ascends on mean_s excess_s over the native-referenced starts (all starts if none).
+    ttc_budget_mode: str = "absolute"
+    ttc_native_margin: float = 0.0
+    # Divide the Lagrangian actor term by the same return scale as the objective.
+    lagrange_scaled: bool = False
+    # Entropy floor: alpha = exp(log_alpha) (and the lane temperature) never below this value;
+    # log_alpha itself is clamped after every dual step, so recovery starts from the floor.
+    alpha_min: float = 0.0
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -135,7 +148,7 @@ class DreamerConfig:
             raise ValueError("credit_profile_every must be a nonnegative integer")
         for name, value in asdict(self).items():
             if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
-                        "entropy_target", "lane_entropy_target") or value is None:
+                        "entropy_target", "lane_entropy_target", "ttc_budget_mode") or value is None:
                 continue   # the string fields; the optional decay / entropy targets
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
@@ -152,8 +165,10 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
+        if self.ttc_budget_mode not in ("absolute", "native_relative"):
+            raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
-                     "source_wait_grad", "critic_entry_backlog"):
+                     "source_wait_grad", "critic_entry_backlog", "lagrange_scaled"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if self.entry_insert_rule not in ("v2", "sumo_like", "sumo_like_v2"):
@@ -287,6 +302,16 @@ def _credit_profile(rewards, action, mask):
             "active_actions": int(mask[0].sum())}
 
 
+def _entropy_temperature(parameter, fixed, config):
+    """V6EXPLORE/V7POL entropy weight: ``exp(log_alpha)`` floored at ``config.alpha_min`` (when > 0),
+    or the fixed weight when no temperature is learned."""
+    if parameter is None:
+        return fixed
+    alpha = parameter.detach().exp()
+    floor = float(getattr(config, "alpha_min", 0.0))
+    return alpha.clamp_min(floor) if floor > 0.0 else alpha
+
+
 _ENTRY_PAD_SAFETY = 1.5
 _ENTRY_PAD_MARGIN = 16
 _PAD_FILL = {"lane": -1, "length_m": 5.0}
@@ -391,6 +416,16 @@ class DreamerTrainer:
         # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
         self.lane_rules = lane_rules
         self.use_lanes = lane_rules is not None and bool(getattr(policy, "has_lane_head", False))
+        # V7POL ``[policy] lane_control = "native"``: an actor WITHOUT a lane head (attribute set by
+        # train_cli); imagination keeps CAVs in lane (bridge forced ramp merge only) and the
+        # checkpoint records it so the SUMO executor leaves CAV lane changes to SUMO.
+        self.lane_control = getattr(policy, "lane_control", "learned")
+        if self.lane_control not in ("learned", "native"):
+            raise ValueError("lane_control must be 'learned' or 'native'")
+        if self.lane_control == "native" and (self.use_lanes
+                                              or getattr(policy, "has_lane_head", False)):
+            raise ValueError("lane_control='native' requires a policy without a lane head "
+                             "and no lane rules")
         self.counterfactual = counterfactual or CounterfactualConfig()
         self.device = torch.device(device)
         if not world_models:
@@ -453,6 +488,17 @@ class DreamerTrainer:
                 self.lane_alpha_optimizer = torch.optim.Adam([self.log_lane_alpha],
                                                              lr=self.config.alpha_lr)
 
+    def _clamp_log_alpha(self, parameter):
+        """V7POL entropy floor: keep exp(log_alpha) >= ``alpha_min`` (no-op when 0)."""
+        floor = float(getattr(self.config, "alpha_min", 0.0))
+        if parameter is not None and floor > 0.0:
+            with torch.no_grad():
+                parameter.clamp_(min=math.log(floor))
+
+    def _temperature(self, parameter, fixed):
+        """Entropy weight in use: exp(log_alpha) floored at ``alpha_min``, else the fixed weight."""
+        return _entropy_temperature(parameter, fixed, self.config)
+
     def _alpha_update(self, imagined, entropy):
         """V6EXPLORE dual steps on the entropy temperatures; extra metrics for ``update``.
 
@@ -464,6 +510,7 @@ class DreamerTrainer:
             self.alpha_optimizer.zero_grad(set_to_none=True)
             alpha_loss.backward()
             self.alpha_optimizer.step()
+            self._clamp_log_alpha(self.log_alpha)
             out.update({"alpha": float(self.log_alpha.detach().exp()),
                         "entropy_target": float(self.config.entropy_target)})
         lanes = imagined.get("lanes")
@@ -474,6 +521,7 @@ class DreamerTrainer:
             self.lane_alpha_optimizer.zero_grad(set_to_none=True)
             lane_alpha_loss.backward()
             self.lane_alpha_optimizer.step()
+            self._clamp_log_alpha(self.log_lane_alpha)
             out.update({"lane_alpha": float(self.log_lane_alpha.detach().exp()),
                         "lane_entropy_target": float(self.config.lane_entropy_target)})
         return out
@@ -801,13 +849,50 @@ class DreamerTrainer:
                 "components": {key: torch.stack([c[key] for c in member_components])
                                for key in member_components[0]}}
 
-    def update_lagrange(self, mean_cost):
+    def update_lagrange(self, mean_cost, budget=None):
+        """Dual ascent ``lambda += dual_lr * (mean_cost - budget)`` (budget default ``ttc_budget``;
+        native_relative passes the mean excess over native with budget 0)."""
         value = float(mean_cost)
         if not math.isfinite(value):
             raise ValueError("nonfinite safety cost")
+        budget = self.config.ttc_budget if budget is None else float(budget)
         self.lagrange_multiplier = max(0.0, self.lagrange_multiplier + self.config.dual_lr *
-                                      (value - self.config.ttc_budget))
+                                      (value - budget))
         return self.lagrange_multiplier
+
+    def _safety_terms(self, imagined, mean_cost):
+        """``(actor penalty, dual value, dual budget, log metrics)`` of the TTC constraint.
+
+        absolute (default): ``(mean_cost, mean_cost, None -> ttc_budget, {})`` = the original terms.
+        native_relative (V7POL): per all-CAV row s, ``c_s`` = mean over members/futures/horizon of
+        its per-control-step cost and ``ref_s`` = the same mean of its start's all-native base row
+        (detached) + ``ttc_native_margin``, or ``ttc_budget`` when the start has no base row.
+        Penalty ``mean_s relu(c_s - ref_s)``; the dual ascends on ``mean_s (c_s - ref_s)`` over the
+        native-referenced starts (over the absolute ones only when no start has a base row)."""
+        cfg = self.config
+        if cfg.ttc_budget_mode == "absolute":
+            return mean_cost, mean_cost.detach(), None, {}
+        n_base = imagined["n_base"]
+        per_row = imagined["costs"].mean((0, 1))                 # [N]
+        policy_cost = per_row[:n_base]
+        reference = torch.full_like(policy_cost, float(cfg.ttc_budget))
+        native = torch.zeros(n_base, dtype=torch.bool, device=policy_cost.device)
+        variants = imagined.get("variants")
+        if variants is not None:
+            for start, row in variants.base_row.items():
+                reference[start] = per_row[row].detach() + float(cfg.ttc_native_margin)
+                native[start] = True
+        excess = policy_cost - reference
+        penalty = torch.relu(excess).mean()
+        chosen = native if bool(native.any()) else ~native
+        dual_value = excess.detach()[chosen].mean()
+        extra = {"ttc_budget_mode": "native_relative", "ttc_native_starts": int(native.sum()),
+                 "ttc_excess": float(dual_value),
+                 "ttc_penalty": float(penalty.detach())}
+        if bool(native.any()):
+            extra["ttc_native_cost"] = float((reference[native] - float(cfg.ttc_native_margin)).mean())
+            extra["ttc_policy_cost_native_starts"] = float(policy_cost.detach()[native].mean())
+        return penalty, dual_value, 0.0, extra
 
     def _return_scale(self, returns):
         quantiles = torch.quantile(returns.detach().float().flatten(),
@@ -860,9 +945,8 @@ class DreamerTrainer:
             pg_loss = -((joint * advantage).mean((0, 1)) * coefficients).sum()
             lane_entropy = _masked_mean(lanes["lane_entropy"], active)
             # V6EXPLORE: a learned lane temperature replaces the fixed weight when a target is set.
-            lane_weight = (self.log_lane_alpha.detach().exp()
-                           if getattr(self, "log_lane_alpha", None) is not None
-                           else self.config.lane_entropy_weight)
+            lane_weight = _entropy_temperature(getattr(self, "log_lane_alpha", None),
+                                               self.config.lane_entropy_weight, self.config)
             loss = loss + self.config.lane_pg_weight * pg_loss - lane_weight * lane_entropy
             acting = lanes["lane_acting"][..., :n_base, :]
             changed = lanes["lane_changed"][..., :n_base, :] & acting
@@ -975,11 +1059,16 @@ class DreamerTrainer:
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
         objective, extra = self.actor_objective(imagined, scale, weights)
-        # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set.
-        entropy_weight = (self.log_alpha.detach().exp() if self.log_alpha is not None
-                          else self.config.entropy_weight)
-        actor_loss = (objective - entropy_weight * entropy +
-                      self.lagrange_multiplier * mean_cost)
+        # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
+        # (V7POL: floored at alpha_min).
+        entropy_weight = self._temperature(self.log_alpha, self.config.entropy_weight)
+        # V7POL safety terms (absolute + unscaled = the original lambda * mean_cost exactly).
+        penalty, dual_value, dual_budget, safety_extra = self._safety_terms(imagined, mean_cost)
+        extra.update(safety_extra)
+        lagrange_term = self.lagrange_multiplier * penalty
+        if self.config.lagrange_scaled:
+            lagrange_term = lagrange_term / scale
+        actor_loss = (objective - entropy_weight * entropy + lagrange_term)
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
         # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
@@ -1007,7 +1096,7 @@ class DreamerTrainer:
                     target.lerp_(source, self.config.target_tau)
                 else:
                     target.copy_(source)
-        self.update_lagrange(mean_cost.detach())
+        self.update_lagrange(dual_value, dual_budget)
         self.update_count += 1
         selected = imagined["actions"][..., :n_base, :].detach()[imagined["action_mask"][..., :n_base, :]]
         action_stats = {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
@@ -1146,6 +1235,7 @@ class DreamerTrainer:
         payload = {"format": CHECKPOINT_FORMAT, "config": asdict(self.config),
                    "lane_rules": asdict(self.lane_rules) if self.lane_rules is not None else None,
                    "lane_head": self.use_lanes, "counterfactual": self.counterfactual.as_dict(),
+                   **({"lane_control": "native"} if self.lane_control == "native" else {}),
                    "reward_weights": asdict(self.reward_weights),
                    "policy": self.policy.state_dict(), "group_encoder": self.group_encoder.state_dict(),
                    **accel_bounds_payload(self.policy),
