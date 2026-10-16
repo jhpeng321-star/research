@@ -1,0 +1,5 @@
+# Dreamer-loop policy config for 24 GB GPUs: c4_policy_v6_loop.toml with halved counterfactual starts (see lowmem).
+extends = "c4_policy_v6_loop.toml"
+
+[counterfactual]
+max_starts = 3
