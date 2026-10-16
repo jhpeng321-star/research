@@ -1,0 +1,10 @@
+# v6 policy for 24 GB GPUs (RTX 4090): c4_policy_v6_full.toml OOMed on a 24 GB GPU after 24 updates (2026-10-16 08:44,
+# 20 GiB allocated at max_starts 6). Halve the counterfactual starts.
+extends = "c4_policy_v6_full.toml"
+
+[counterfactual]
+max_starts = 3
+
+[trainer]
+# credit profiling every 25 updates doubled peak memory: both OOMs on the 24 GB GPU (08:44, 14:35) hit at update 25
+credit_profile_every = 0

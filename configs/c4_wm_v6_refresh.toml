@@ -1,0 +1,55 @@
+# WM-S-C4 v6 DREAMER-LOOP REFRESH (2026-10-16).
+# Loop iteration 1: the v6 policy (trained in imagination) is run in SUMO; its own episodes are added to the WM data
+# and the WM is fine-tuned from its final checkpoint, so the model learns what the policy's actions really do
+# (the v5 policy exploited an entry-queue blind spot that its own rollouts would have exposed). Then the policy
+# continues (--resume) on the refreshed WM.  If v6m (merge fix) is selected, launch with
+# --set physics.merge_end_wait=true --set physics.mainline_merge_yield=true and init_from = the v6m checkpoint.
+#   sources  native_v5 0.45 | genrand_plain 0.25 | v6_policy 0.25 (NEW, the policy's own SUMO episodes) | long-pair
+#            branches 0.05 + paired batches 0.25 (unchanged)
+schema_version = 2
+name = "WM-S-C4-V6-REFRESH"
+extends = "c4_wm_v6_cont.toml"
+
+[model]
+init_from = "ckpt_v6_final"   # launch: --set model.init_from=<abs path to the selected v6 / v6m checkpoint>
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"
+mix_ratio = 0.45
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "v6_policy"
+path = "v6_policy"          # WMS_DATA_V6_POLICY
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "v6_longpair"        # WMS_DATA_V6_LONGPAIR
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [150, 100]
+truncation_steps_per_stage = [120, 120]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [1.0e-4, 5.0e-5]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6_refresh"

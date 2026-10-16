@@ -1,0 +1,18 @@
+# the GPU host run of the C4 policy (overnight 2026-10-13): GPU, 20 s imagination, cooperation rows.
+# Memory: trainer.checkpoint_imagination (default on) keeps this ~8-9 GB; shared with the WM run
+# via C4_GPU_MEM_FRACTION. Phase 1 dreams in frozen R5b; phase 2 in the C4 WM (Dreamer loop).
+extends = "c4_policy.toml"
+
+[run]
+device = "cuda"
+updates = 4000
+threads = 4
+
+[trainer]
+entropy_weight = 3.0e-3 # phase 3 (overnight): entropy kept collapsing at 1e-3 (0.07 after 280 phase-2 updates)
+batch_size = 16
+horizon = 20
+checkpoint_every = 50
+
+[counterfactual]
+max_starts = 6

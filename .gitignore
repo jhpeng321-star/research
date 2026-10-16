@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Data, run outputs and checkpoints (data is never committed; see docs/DATA_FORMAT.md).
+# Directory patterns are anchored at the repo root: src/wms/data/ is code.
+/runs/
+/data/
+/data_cache/
+/results/
+/_out/
+/tmp/
+*.log
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.npy
+*.parquet
+*.tar
+*.tar.*
+*.zst
+# small reviewed test fixtures are versioned
+!/tests/fixtures/*.pt
+
+# SUMO outputs
+*.sumocfg.bak
+tripinfo*.xml
+fcd*.xml
+
+# Generated figures/decks
+docs/presentation/figs/
+docs/presentation/*.pdf
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,13 @@
+# Dreamer-loop policy config for 24 GB GPUs: c4_policy_v6_loop.toml with halved counterfactual starts (see lowmem).
+extends = "c4_policy_v6_loop.toml"
+
+[counterfactual]
+max_starts = 3
+
+[trainer]
+# credit profiling every 25 updates doubled peak memory: both OOMs on the 24 GB GPU (08:44, 14:35) hit at update 25
+credit_profile_every = 0
+
+[data]
+# v5m loop base: the v6 refresh config needs v6_longpair data, which is not on the policy GPU (16:19 g001 failure)
+wm_config = "configs/c4_wm_v5m_refresh.toml"

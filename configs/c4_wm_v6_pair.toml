@@ -1,0 +1,21 @@
+# WM-S-C4 v6 paired-return candidate (2026-10-15).
+# Shared random draws across paired arms reduce stochastic noise in action effects.
+# Add return-difference supervision at unit weight and a weaker ranking term (0.1)
+# with a 5 vehicle-second margin, so ranking supplements trajectory/aggregate fit.
+# Retain v5's paired weight 1.0 and batch fraction 0.25: improve the paired signal
+# before increasing its share. These are starting values, not tuned results.
+schema_version = 2
+name = "WM-S-C4-V6-PAIR"
+extends = "c4_wm_v5.toml"
+
+[loss.paired_diff]
+couple_randomness = true
+return_weight = 1.0
+rank_weight = 0.1
+rank_margin_veh_s = 5.0
+
+[runtime]
+device = "cpu"
+threads = 2
+omp = 2
+out_dir = "runs/active/c4_wm_v6_pair"

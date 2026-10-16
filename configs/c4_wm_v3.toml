@@ -1,0 +1,17 @@
+# WM-S-C4 v3 (2026-10-13): configs/c4_wm_v2.toml + the GAPRULE speed-dependent gap acceptance.
+#   model.lane_gap_rule = "speed": the physics lane-change feasibility mask (discretionary
+#   changes AND the ramp merge 2 -> 1) uses SUMO-LC2013-like secure gaps
+#   s0 + T v + kinematic braking term (+ no overlap) instead of the fixed 6 m / merge_gap +
+#   IDM follower-braking check, so jam overtakes and jam merges (4 m at 0 m/s) are feasible
+#   before the last 25 m.  Constants chosen on TRAIN windows only (tools/gaprule_fit.py,
+#   GAPRULE_NOTES.md); the wall_same check is a diagnostic (docs/gaprule/).
+# Everything else is v2 unchanged (one change at a time).
+schema_version = 2
+name = "WM-S-C4-V3"
+extends = "c4_wm_v2.toml"
+
+[model]
+lane_gap_rule = "speed"
+
+[runtime]
+out_dir = "runs/active/c4_wm_v3"

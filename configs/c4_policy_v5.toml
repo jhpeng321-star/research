@@ -1,0 +1,43 @@
+# C4 final policy for the v5 world model (POLICYV5, 2026-10-15), FROM SCRATCH (no --init-policy / --resume).
+# = c4_policy_final.toml (phase-4 cooperation weights, 30 s imagination, gamma 0.995, entry queue + SRCGRAD,
+#   backlog critic) adapted to the v5 textbook population (every CAV cav_typical: a 1.2, b 2.0, T 1.2, s0 2.0;
+#   SUMO speedMode 27 caps CAV acceleration at 1.2; demand 1900-2700 against ~1930 veh/h mainline capacity).
+# Launch: scripts/c4/launch_policy_v5.sh WM_CKPT OUT (the GPU host).
+extends = "c4_policy_final.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V5"
+threads = 12   # the GPU host alone after the WM finishes (16-core quota)
+
+[data]
+# Start windows from the v5 WM's C4 sources (data.c4_base; wms.control.c4_starts): TRAIN-world windows only
+# (the converter's world split across all three sources), t0 state + pre-t0 history + entry features.
+# No legacy packs, and no data.jam scan (the start sampler is penetration-uniform, never jam-weighted).
+wm_config = "configs/c4_wm_v5.toml"
+# native_v5 = deployment-like traffic; genrand_plain = random target-speed CAV arms (the analogue of the legacy
+# pack_dspeed arms the old start windows included).  genrand_branch (paired branches at a few base states, mostly
+# duplicates of their reference arm) is left out.  Omit the key to use every non-paired c4 source.
+start_sources = ["native_v5", "genrand_plain"]
+
+[trainer]
+# SUMO-consistent execution of commanded CAVs with the textbook cav_typical vType (inherited; restated).
+cav_exec_cap = "idm_normal:textbook"
+# ENTRYFIX: the v4/v5 WMs train with data.entry_insert_rule = "sumo_like"; the imagined entry process must
+# use the same rule (c4_policy_final.toml left the trainer at the default "v2", whose sampled required gap
+# over-blocks: ~9x SUMO's source wait at the decision-check point, ENTRYFIX_NOTES.md).
+entry_insert_rule = "sumo_like"
+# Inherited true.  POLICYV5: wms.control.srcgrad now has the soft sumo_like test (bumper gap vs the vType
+# minGap, class-mix weighted); before this change its gradient shape followed the v2 rule.
+source_wait_grad = true
+
+[policy]
+# POLICYV5: 2.6 -> 1.2.  With cav_exec_cap the executed accel is min(command, ceiling) and the ceiling is
+# <= 1.2 (cav_typical accel; IDM / desired-speed terms lower it further).  torch.minimum routes no gradient
+# to a command above the ceiling (wms.model.cav.apply_exec_cap), so with 2.6 the action range (1.2, 2.6] -- 25 %
+# of [-3, 2.6] -- is a dead zone: zero value gradient, only the entropy bonus acts there, and the actor can sit
+# in it at no cost.  SUMO cannot realise more than 1.2 for these CAVs either.  Braking range unchanged (-3).
+accel_max_mps2 = 1.2
+
+[counterfactual]
+# 'native' counterfactual CAV rows = SUMO-native cav_typical behaviour (accel 1.2, not normal_car's 2.6).
+native_accel_max_mps2 = 1.2

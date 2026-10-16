@@ -1,0 +1,84 @@
+# MAPPO baseline for WM-S C4 (docs/WM_C4_DESIGN.md section 3, step 4b) - FAIR universal MAPPO.
+#
+# Same actor (CavPolicy with the lane head + RsuGroupEncoder on CAV reports and the RSU field),
+# observations, lane feasibility/dwell rules, safety layer, team reward (incl. fairness CVaR) and
+# TTC Lagrangian budget as the C4 policy; these are fixed in code, not configurable.  Trained
+# directly in SUMO; every episode samples penetration and demand (universal policy).
+#   python -m wms.control.mappo.train --config configs/c4_mappo.toml --workers N --out DIR
+# Re-running with the same --out resumes.  See MAPPO_NOTES.md.
+
+[mappo]                                  # PPO hyperparameters
+gamma = 0.99                             # per 1 s control step (= C4 trainer gamma)
+gae_lambda = 0.95
+clip_eps = 0.2
+clip_value_eps = 0.2
+epochs = 4
+minibatch_frames = 1024                  # minibatch = this many FRAMES (all acting CAVs in them)
+lr_actor = 3.0e-4                        # policy + RSU group encoder
+lr_critic = 1.0e-3
+entropy_coef = 0.01                      # acceleration head (pre-tanh Gaussian entropy)
+lane_entropy_coef = 0.01                 # lane head (masked categorical entropy)
+value_coef = 0.5
+max_grad_norm = 0.5
+target_kl = 0.03                         # 0 = disabled
+cost_limit_per_step = 3.6                # = C4 ttc_budget (calibrated on recorded traffic 2026-10-13; 0.01 was unreachable)
+lagrange_lr = 0.01                       # = C4 dual_lr
+lagrange_max = 50.0
+return_norm = true
+grad_noise_every = 5                     # policy-gradient variance diagnostic every N iterations (0 = off; +1 pass)
+eval_chunk_frames = 512
+
+[rollout]
+seed = 1
+iterations = 100000                      # upper bound; the SUMO budget stops the run
+episodes_per_iteration = 46              # = workers on the 48-core box (one episode per worker per iteration)
+horizon_s = 600.0                        # controlled seconds per episode (warmup + horizon <= 2400 s fixture)
+warmup_s = 300.0                         # native warmup (uncharged unless charge_warmup)
+warmup_choices_s = []                    # e.g. [300.0, 600.0, 900.0]: sampled per episode (overrides warmup_s)
+penetrations = [0.05, 0.1, 0.2, 0.4]     # training mix (unseen eval: 15/30/60/2 %)
+penetration_mode = "discrete"            # "discrete" = uniform over the set; "uniform" = U(min, max)
+demands_vph = [2400, 2600, 2700]
+seeds = "4107-4148"                      # exposed C4 development seeds ONLY (CavSumoEnv re-checks)
+max_sumo_seconds = 1.0e6                 # charged SUMO-seconds; match to the C4 method's budget
+max_env_steps = 0                        # 0 = no env-step cap
+charge_warmup = false
+retries = 1                              # a failed episode is re-run once with a new seed
+episode_timeout_s = 3600.0               # wall deadline per episode wave (worker hang -> pool rebuilt)
+keep_last = 3                            # rolling full checkpoints (one per iteration; spot-safe)
+keep_every = 10                          # permanently kept checkpoints + policy_XXXXX.pt exports
+update_threads = 16                      # torch threads for the PPO update (0 = torch default; >16 gave no gain)
+
+[lanes]                                  # = configs/c4_policy.toml [lanes] (wms.control.lanes.LaneRules)
+gap_base_m = 1.0          # SUMO-calibrated (LANECAL_NOTES.md), identical to configs/c4_policy.toml
+gap_time_s = 1.2
+closing_time_s = 4.5
+rear_gap_base_m = 3.0
+rear_gap_time_s = 1.25
+rear_closing_time_s = 6.0
+dwell_s = 3.0
+edge_guard_m = 10.0
+
+[env]
+name = "traffic_shepherd.c4.env.CavSumoEnv"  # contract.CavEnv implementation
+cleanup_scenarios = true                 # delete each worker's own per-episode scenario dirs
+kwargs = { ttc = false, physics_log = false }   # training needs neither the SUMO TTC scan nor the physics log
+
+[reward_weights]                         # wms.control.contract.RewardWeights (defaults = C4)
+delay = 1.0
+throughput = 0.5
+smooth = 0.05
+hard_brake = 1.0
+fairness = 1.0
+ttc_limit_s = 3.0
+
+[smoke]                                  # --smoke overrides: CPU fake env, no SUMO
+env_name = "fake"
+env_kwargs = {}
+iterations = 2
+episodes_per_iteration = 2
+horizon_s = 6.0
+warmup_s = 0.0
+max_sumo_seconds = 64.0
+epochs = 2
+minibatch_frames = 4
+target_kl = 0.0

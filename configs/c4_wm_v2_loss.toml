@@ -1,0 +1,57 @@
+# C4 WORLD MODEL v2 LOSS (WMLOSS_NOTES.md, 2026-10-13): c4_wm.toml plus
+#   B. the aggregate-consistency loss [loss.aggregate]: soft RSU cell fields (density per 50 m
+#      cell per lane, mean speed, queue), reward components (on-road delay road+zone,
+#      throughput past the merge end) and cell-boundary fluxes, rollout vs record, per 5 s bin,
+#      ramped in over 5..30 s of horizon (the C4 reward/decisions read these aggregates; the
+#      per-car loss alone does not train them);
+#   E. a usable 120 s stage: the R5b stabilisers already in c4_wm.toml (grad_decay_per_step 0.90,
+#      per-step activation checkpointing, per-stage truncation and lr) + vehicle ENTRIES during
+#      training (entries-v2 process over adaptive padding, uncapped backlog, as in the C4
+#      imagination) so long windows include arrivals; the entries-v2 windows also carry the
+#      recorded on-road presence, so the aggregate targets are the FULL road (arrivals counted).
+# Inherits everything else from c4_wm.toml (from scratch, data mix, lane rule, batch 16).
+#
+# BUDGET (~6 h on the GPU host, RTX 4080 SUPER-class vGPU, CPU-bound loop). Measured c4_wm step on the GPU host
+# times at batch 16: 1.7 / 5 / 12 s at 20 / 60 / 120-step unrolls (0.085 / 0.083 / 0.100 s per
+# simulated step; the per-step cost grows slowly with the unroll). 240-step estimate WITHOUT the
+# new terms: ~0.105 s x 240 = ~25 s. New-term overhead (WMLOSS_NOTES.md): entrant slots grow with
+# the horizon (observed ~0.375 veh/s per row -> pad ~22 / 33 / 50 / 84 on top of 192 slots at
+# 10 / 30 / 60 / 120 s) plus the aggregate terms (~5 %) and the per-step entry process; assumed
+# factors 1.20 / 1.25 / 1.30 / 1.45 (the CPU A/B on the shared dev box was CPU-starved, not usable):
+#   10 s: 1200 x 2.0 s = 2450 s | 30 s: 900 x 6.25 s = 5625 s | 60 s: 400 x 15.6 s = 6240 s
+#   120 s: 140 x 36 s = 5040 s   => 19355 s = 5.4 h training + validation (val_every 200,
+#   8 batches; 60 s + 120 s horizons in the 120 s stage) ~0.4 h => ~5.8 h <= max_hours 6.5.
+# If the first 120 s steps on the GPU host exceed ~40 s, cut stage_steps[3] (the 10/30/60 s stages keep
+# the C4 imagination horizon covered).
+schema_version = 2
+name = "WM-S-C4-V2LOSS"
+extends = "c4_wm.toml"
+
+[data]
+entries_v2 = true      # E: entries-v2 arrival process in training (observed pre-t0 entry history only)
+entry_pad = 16         # minimum padding (entry_pad_auto sizes it per batch)
+entry_pad_auto = true  # pad = 1.5 x observed rate x unroll horizon + 16 (<= entry_pad_max); uncapped backlog
+entry_pad_max = 256    # = c4_policy imagination cap
+
+[loss.aggregate]
+weight = 20.0          # B: overall weight (CPU smoke, untrained model, 10 s unroll: aggregate = 7.8 % of the loss value; check loss_share on the GPU host)
+field_weight = 1.0     # RSU cell fields (density / mean speed / queue)
+reward_weight = 1.0    # delay (road + RSU zone) + throughput past MERGE_S1
+flow_weight = 0.5      # cell-boundary flux consistency (macroscopic conservation)
+bin_s = 5.0
+every_steps = 1
+horizon_start_s = 5.0  # ramp: 0 before 5 s of horizon ...
+horizon_full_s = 30.0  # ... full weight from 30 s
+cell_temp_m = 5.0
+
+[curriculum]
+unroll_s = [10.0, 30.0, 60.0, 120.0]           # E: 120 s stage back
+stage_steps = [1200, 900, 400, 140]            # see BUDGET above
+truncation_steps_per_stage = [20, 60, 120, 120] # 120 s stage: 60 s BPTT chunks (0.90^120 ~ 3e-6: longer chunks add cost, not gradient)
+max_hours = 6.5
+
+[optim]
+lr_per_stage = [1.0e-3, 3.0e-4, 1.0e-4, 1.0e-4] # r5b-stable long-stage rates
+
+[runtime]
+out_dir = "runs/active/c4_wm_v2_loss"

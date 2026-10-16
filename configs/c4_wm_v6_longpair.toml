@@ -1,0 +1,35 @@
+# V6 long paired branches: v5 training recipe with curriculum-stage paired horizons.
+# Point WMS_DATA_V6_LONGPAIR at the converted long-branch c4_episodes directory.
+# The registry path is a placeholder; no data collection or training is implied.
+schema_version = 2
+name = "WM-S-C4-V6-LONGPAIR"
+extends = "c4_wm_v5.toml"
+
+# Arrays replace inherited arrays, so repeat the v5 ordinary-source shares here.
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"
+mix_ratio = 0.65
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"
+mix_ratio = 0.30
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "v6_longpair"        # WMS_DATA_V6_LONGPAIR (converted long branches)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[loss.paired_diff]
+horizon_mode = "stage"
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6_longpair"

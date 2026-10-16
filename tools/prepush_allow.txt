@@ -1,0 +1,5 @@
+# Reviewed false positives and reviewed exceptions for tools/prepush_check.py (one per line).
+# Format: <path-or-glob>[:LINE]  <RULE-ID>  # mandatory reason (what was reviewed and why it is safe)
+# Rule ids: python tools/prepush_check.py --list-rules.  SIZE-HARD (>100 MiB) cannot be allowed.
+# Entries that match nothing are reported as stale; a missing reason or unknown rule exits 2.
+tests/fixtures/v6merge_off_golden.pt PATH-BINARY-EXT  # reviewed: 8 KB golden tensor fixture of tests/unit/test_v6merge.py (merge rules OFF must reproduce it)

@@ -1,0 +1,24 @@
+{
+  "schema": "circles_direct_adapter/1",
+  "working_adopted": true,
+  "scientifically_accepted": false,
+  "model_path": "model.onnx",
+  "model_sha256": "762fde0763c693c0e88f41b98b22fc0a11135a312b78c4c567e6211a3035ccee",
+  "control_dt_s": 1.0,
+  "physics_dt_s": 0.5,
+  "sensor_range_m": 100.0,
+  "acceleration_min_mps2": -3.0,
+  "acceleration_max_mps2": 1.5,
+  "speed_mode": 31,
+  "network_path": "assets/research/highway_merge_shepherd_long/osm.net.xml.gz",
+  "scenario_template_path": "scenarios/idm/driver_routes.rou.xml",
+  "episode_seconds": 2400,
+  "demand_end_seconds": 1800,
+  "ramp_vph": 400,
+  "edge_ids": {
+    "pre_merge": "1191554636",
+    "merge": "1487606179",
+    "downstream": "1487606178",
+    "ramp": "11553048#1"
+  }
+}

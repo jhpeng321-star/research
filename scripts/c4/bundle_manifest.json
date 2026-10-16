@@ -1,0 +1,167 @@
+{
+  "schema": "c4_bundle_manifest/1",
+  "note": "Declarative content of the C4 transfer bundle (built by scripts/c4/pack_bundle.py). Paths under data_root are relative to the data cache (default data_cache); '@name/...' paths resolve under external_roots (inputs outside data_cache). Data lands at <C4_HOME>/rd/data_cache/<dest> so configs/data_registry.toml resolves unchanged. Hard filter: any path containing a restricted token (holdout, heldout, cal, calibration, cal_split, sealed, chunk5, j4b, inc1) is dropped and the build aborts if one survives in a tar. Reconciled 2026-10-12 against configs/c4_wm.toml + configs/c4_policy.toml (OPS_NOTES section 11).",
+  "default_policies": [
+    "native",
+    "trajectory"
+  ],
+  "policy_note": "C4 world-model data = native driving + random direct-output CAV actions only (WM_C4_DESIGN 2.5): window policy 'damping' (CIRCLES) is excluded by default; pass --policies to override. The selection lists are the registered c4_wm_lists (tools/make_c4_lists.py), shipped at runs/active/c4_wm_lists (registry dataset c4_wm_lists).",
+  "code_allowlist": [
+    "src/wms/physics/merge_cal.py"
+  ],
+  "code_allowlist_note": "Code-only exceptions to the token filter: merge_cal.py is the merge-zone physics calibration module imported by wms.physics (no calibration-split data). Everything else matching a restricted token is dropped and listed in BUNDLE_MANIFEST.json.",
+  "code": {
+    "root_files": [
+      "pyproject.toml",
+      "requirements.txt",
+      "requirements-dev.txt"
+    ],
+    "dirs": [
+      "src",
+      "traffic_shepherd",
+      "tools",
+      "configs",
+      "baselines/circles",
+      "assets/research/highway_merge_shepherd_long",
+      "scenarios/idm",
+      "scripts/c4",
+      "scripts/box",
+      "tests",
+      "runs/active/WM-S-C4-20261013"
+    ],
+    "files": [
+      "assets/research/migration_manifest.json",
+      "docs/WM_C4_DESIGN.md",
+      "docs/EXPERIMENT_RECORD_TEMPLATE.md",
+      "output/controller_verification_v7/pi_owner_adapter.py"
+    ],
+    "exclude_globs": [
+      "**/__pycache__/**",
+      "**/*.pyc",
+      "**/*.bak",
+      "**/*.log",
+      "**/*.pt",
+      "**/*.pth",
+      "**/.pytest_cache/**",
+      "**/.ruff_cache/**",
+      "tests/golden/**",
+      "tests/planner/**",
+      "tests/equivalence/**",
+      "runs/active/WM-S-C4-20261013/bundle/**",
+      "runs/active/WM-S-C4-20261013/fetched/**"
+    ],
+    "text_lf_suffixes": [
+      ".sh"
+    ]
+  },
+  "groups": {
+    "c4_wm_lists": {
+      "kind": "plain",
+      "dest": "runs/active",
+      "src": "@runs_active",
+      "dirs": [
+        "c4_wm_lists"
+      ],
+      "note": "The registered C4 WM window lists (registry dataset c4_wm_lists -> runs/active/c4_wm_lists); also the TRAIN start-state source of the policy trainer (see run_policy.sh)."
+    },
+    "lpwo_v3": {
+      "kind": "plain",
+      "dest": "data_cache/lpwo_v3",
+      "src": "lpwo_v3",
+      "files": [
+        "excluded_runs_PI_wall_v3.json"
+      ],
+      "note": "Only the registered eval-world exclusion list (data.windows.exclude); the lpwo window lists are not used by c4_wm.toml."
+    },
+    "pack_v3": {
+      "kind": "pack",
+      "src": "pack_v3",
+      "dest": "data_cache/pack_v3",
+      "pack_name": "pack_v3",
+      "lists": [
+        "@runs_active/c4_wm_lists/windows_train_native_c4.json",
+        "@runs_active/c4_wm_lists/windows_val_native_c4.json"
+      ],
+      "filter": "policy"
+    },
+    "pack_dspeed": {
+      "kind": "pack",
+      "src": "pack_dspeed",
+      "dest": "data_cache/pack_dspeed",
+      "pack_name": "pack_dspeed",
+      "lists": [
+        "@runs_active/c4_wm_lists/windows_train_native_c4.json",
+        "@runs_active/c4_wm_lists/windows_val_native_c4.json"
+      ],
+      "filter": "policy"
+    },
+    "pack_switching_train": {
+      "kind": "pack",
+      "src": "wmn1_switching_train/pack_switching_train",
+      "dest": "data_cache/wmn1_switching_train/pack_switching_train",
+      "pack_name": "pack_switching_train",
+      "lists": [
+        "@runs_active/c4_wm_lists/windows_train_directmix_trainpart.json",
+        "@runs_active/c4_wm_lists/windows_val_directmix.json"
+      ],
+      "filter": "arm:direct-mix"
+    },
+    "sidecars": {
+      "kind": "plain",
+      "dest": "data_cache",
+      "src": ".",
+      "dirs": [
+        "sidecars_packv3_v2",
+        "identities_dspeed",
+        "overlay_dspeed",
+        "wmn1_switching_train/identities_switching_train",
+        "wmn1_switching_train/driver_params_switching_train"
+      ],
+      "files": [
+        "wmn1_switching_train/ACTION_TIMELINE_INDEX_train.json"
+      ],
+      "note": "No damping sidecars/pack (pack_damping, identities_damping, overlay_damping are not used by c4_wm.toml). The switching zero-shot guard file is NOT shipped (name contains a restricted token): see OPS_NOTES section 11."
+    }
+  },
+  "checkpoints": [
+    {
+      "name": "ckpt_r5b",
+      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/wm_s_best.pt",
+      "dest": "data_cache/ckpt_r5b/wm_s_best.pt",
+      "expect_sha256_prefix": "6f000331"
+    },
+    {
+      "name": "ckpt_r5b_physics",
+      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/physics.json",
+      "dest": "data_cache/ckpt_r5b/physics.json"
+    },
+    {
+      "name": "ckpt_r5b_receipt",
+      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/TRAIN_RECEIPT.json",
+      "dest": "data_cache/ckpt_r5b/TRAIN_RECEIPT.json",
+      "optional": true
+    },
+    {
+      "name": "ckpt_c1fast",
+      "src": "ckpt_c1fast/wm_s.pt",
+      "dest": "data_cache/ckpt_c1fast/wm_s.pt"
+    }
+  ],
+  "optional_groups": {
+    "eval_states": {
+      "kind": "plain",
+      "dest": "data_cache",
+      "src": ".",
+      "dirs": [
+        "wallc1_states_v2"
+      ],
+      "note": "Gate 1 (action fidelity) state sets, ~0.5 GB; off by default (--groups ...,eval_states)."
+    },
+    "pack_damping_designed": {
+      "note": "To ship CIRCLES-damping windows (evaluation of designed controllers only), rerun with --policies native,trajectory,damping."
+    }
+  },
+  "external_roots": {
+    "runs_active": "runs/active"
+  }
+}

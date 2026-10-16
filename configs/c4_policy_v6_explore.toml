@@ -1,0 +1,29 @@
+# V6EXPLORE (2026-10-15): stop the Dreamer actor's premature entropy collapse.  FROM SCRATCH
+# (no --init-policy / --resume).
+# Evidence from the running v5 policy (= c4_policy_v5.toml, fixed entropy_weight 3e-3 inherited
+# from c4_policy_base.toml): over 517 updates the per-action entropy of the squashed-Gaussian
+# accel head fell 1.39 -> -0.35 nats, the imagined gain vs all-native (D_all) rose -4.4 -> ~-0.2
+# and plateaued from update ~300, and the group-cooperation gain C_G fell 0.83 -> ~0: the policy
+# converged to near-native behaviour without exploring.  An older c4_policy_base.toml comment
+# records the same collapse at weight 1e-3.  Also, the tanh decode maps a zero pre-activation to
+# the [-3, 1.2] midpoint (-0.9 m/s^2), so the random initial policy mostly brakes (initial
+# action mean -0.67).
+# Changes (both default-off switches, V6EXPLORE_NOTES.md):
+# - trainer.entropy_target = -1.0 nats per action dim: SAC-style learned log_alpha (Adam,
+#   trainer.alpha_lr, here 3e-4) keeps the mean entropy near the target; the actor bonus becomes
+#   alpha * entropy, REPLACING the fixed entropy_weight (3e-3, still the log_alpha start).
+#   alpha and entropy are logged each update; log_alpha + its optimiser are checkpointed.
+# - policy.init_zero_accel = true: neutral zero-mean initial acceleration (initialisation only,
+#   no imitation / designed controller; every other weight keeps its random default).
+# Launch: scripts/c4/launch_policy_v5.sh WM_CKPT OUT (the GPU host), same as v5.
+extends = "c4_policy_v5.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6-EXPLORE"
+
+[trainer]
+entropy_target = -1.0
+alpha_lr = 3e-4
+
+[policy]
+init_zero_accel = true

@@ -1,0 +1,26 @@
+# C4 v6 policy trainer with the V6ENTRY insertion rule (2026-10-15), FROM SCRATCH.
+# = c4_policy_v5.toml with the imagined entry process on the saturated-entrance SUMO rule.
+#
+# Why: the v5 policy raised SUMO source wait by +597+-128 veh-s/episode vs native (worst at
+# demand 2400: +900..+1300; all of it at the mainline entrance, ENTRY_DIAG.md) while its own
+# imagination reported ~0.07 veh-s/step: the "sumo_like" entry rule credits the rearmost
+# vehicle's speed in the safe-speed formula (entering ~2 m/s where SUMO enters at ~0.15) and
+# tests the pre-step gap, so the imagined mainline entrance serves ~30 % faster than SUMO's
+# and never queues at the counter-based arrival rate.  "sumo_like_v2" reproduces SUMO 1.27's
+# queued-entrance semantics (test at the end of the insertion step, depart at the stop speed):
+# measured on the v5 recordings it matches SUMO's per-entrance insertions and entry speeds, and
+# the imagination grows an entry queue under the recorded policy accelerations.
+#
+# One change at a time (the V6ENTRY change).
+# The WM side of the switch is data.entry_insert_rule (configs/c4_wm_v6*.toml); use the SAME
+# rule for a WM trained with entries on and its policy.
+extends = "c4_policy_v5.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6-ENTRY"
+
+[trainer]
+# V6ENTRY: SUMO-consistent saturated-entrance insertion (default "v2" would stay bit-identical;
+# "sumo_like" is the v5 rule whose entrance service is ~30 % too fast).
+entry_insert_rule = "sumo_like_v2"
+# source_wait_grad (inherited true) now follows the same rule in its soft test.

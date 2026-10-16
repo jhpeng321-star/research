@@ -1,0 +1,34 @@
+# C4 WM REFRESH (Dreamer data loop, docs/WM_C4_DESIGN.md 2.4/2.7): fine-tune the C4 world
+# model on its original data mix PLUS SUMO episodes collected with the learned policy
+# (python -m traffic_shepherd.c4.collect -> python -m wms.data.c4_episodes; LOOP_NOTES.md).
+# Everything of c4_wm.toml is inherited (recipe, lane rule, packs, switching direct-mix arm,
+# curriculum 10/30/60 s); only these change:
+#   1. model.init_from = the C4 WM checkpoint (registry name ckpt_c4_wm; resolves via
+#      WMS_DATA_CKPT_C4_WM, fails closed if unset - same pattern as ckpt_r5b_best).
+#   2. [data.c4_episodes]: the converted episode source (registry name c4_episodes; default
+#      runs/active/c4_episodes, override with WMS_DATA_C4_EPISODES per loop iteration)
+#      drawn with a 30% sampling share (original 0.49 / switching 0.21 / collected 0.30).
+#   3. short budget: 300 steps per stage at lr 1e-4 (a refresh, not a retrain).
+# The 60 s stage needs collected episodes with >= 60 s after the warmup.
+schema_version = 2
+name = "WM-S-C4-REFRESH"
+extends = "c4_wm.toml"
+
+[data.c4_episodes]
+path = "c4_episodes"   # converted source dir (WMS_DATA_C4_EPISODES)
+mix_ratio = 0.3        # sampling share of collected windows
+window_stride_s = 10.0 # window t0 every 10 s after each episode's warmup
+use_val = true         # collected validation worlds join the monitoring set
+
+[model]
+init_from = "ckpt_c4_wm" # the C4 WM checkpoint (WMS_DATA_CKPT_C4_WM); fails closed if unset
+
+[curriculum]
+stage_steps = [200, 400, 150] # refresh budget ~1.2 h on the GPU host (1.7/5/12 s per step); extra 30 s steps (C4 WM weakest at 30 s)
+max_hours = 1.5
+
+[optim]
+lr_per_stage = [1.0e-4, 1.0e-4, 1.0e-4] # fine-tuning an already fine-tuned model
+
+[runtime]
+out_dir = "runs/active/c4_wm_refresh"

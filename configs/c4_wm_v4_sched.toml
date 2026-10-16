@@ -1,0 +1,47 @@
+# WM-S-C4 v4 SCHED (2026-10-14; SCHED_NOTES.md): configs/c4_wm_v3.toml +
+# training-schedule changes only (model, data and loss are v3 unchanged):
+#   1. curriculum.val_all_horizons: every validation evaluates every horizon in {10,30,60,120 s}
+#      up to the stage's unroll (+ the stage horizon), so a 10 s transient in a later stage shows.
+#   2. curriculum.selection = "multi_horizon": wm_s_best.pt = lowest mean over the validated
+#      horizons of (val mean_position / reference) among validations from the 30 s stage on
+#      (the first stage >= the 30 s C4 imagination horizon). References = the C4 main WM's best
+#      val mean_position at 10/30/60 s (7.0356 / 49.4889 / 128.7179, fetched/c4_wm_main/
+#      val_log.jsonl); 120 s (not validated by C4 main) = this run's own first 120 s validation.
+#      Per-stage checkpoints unchanged; the selection table goes to the receipt and RUN_SUMMARY.
+#   3. curriculum.mixed_horizon_frac = 0.3: in stages >= 30 s, 30 % of batches unroll 10 or 20 s
+#      (same loss composer / lr / BPTT chunk) so the shared gate keeps the short-horizon fit.
+#   4. 30 s stage lengthened 900 -> 1500 steps (the 60 s gap vs C4 main opened in the 30 s stage).
+#
+# WALL-TIME ESTIMATE, the GPU host (RTX 4080S vGPU, 16-core quota, CPU-bound loop), batch 16.
+#   Measured c4_wm step times 1.7 / 5 / 12 s at 20 / 60 / 120-step unrolls; v2/v3 entries +
+#   aggregate factors as in c4_wm_v2_loss.toml -> 2.0 / 6.25 / 15.6 / 36 s per step at
+#   10 / 30 / 60 / 120 s (4090 measured v3: 2.2 / 7.6 / 10.5 / 27.7 s). Mixed batches
+#   (10 or 20 s, mean ~3.1 s) replace 30 % of the long-unroll steps:
+#     10 s : 1200 x 2.0              =  2400 s
+#     30 s : 1500 x (0.7 x 6.25 + 0.3 x 3.1) = 1500 x 5.3  =  7950 s
+#     60 s :  400 x (0.7 x 15.6 + 0.3 x 3.1) =  400 x 11.85 = 4740 s
+#     120 s:  160 x (0.7 x 36   + 0.3 x 3.1) =  160 x 26.1  = 4180 s
+#     training ~19270 s = 5.35 h
+#   Validation: val_every 200 + each stage end, 17 val batches per horizon (the evaluator runs
+#   the whole val list; val_batches is not a cap), forward-only ~0.4 x a train step:
+#     per event 10 s 14 s | 30 s +43 s | 60 s +106 s | 120 s +245 s
+#     events 6 (10 s stage) / 8 (30 s) / 3 (60 s) / 2 (120 s) -> 82 + 449 + 486 + 814 = ~1830 s
+#     = 0.5 h (v3 schedule: ~0.35 h)
+#   TOTAL ~5.9 h <= 8 h target and <= max_hours 7.0 (inherited). If the GPU host is slower than assumed
+#   (> 7 h projected after the 30 s stage), cut in this order: val_every 200 -> 300 (-0.15 h),
+#   stage_steps[3] 160 -> 120 (-0.3 h), stage_steps[1] 1500 -> 1200 (-0.45 h).
+schema_version = 2
+name = "WM-S-C4-V4SCHED"
+extends = "c4_wm_v3.toml"
+
+[curriculum]
+stage_steps = [1200, 1500, 400, 160]
+val_all_horizons = true
+selection = "multi_horizon"
+selection_horizons_s = [10.0, 30.0, 60.0, 120.0]          # = default (explicit)
+selection_reference = [7.0356, 49.4889, 128.7179, 0.0]    # = default (explicit); 0 = own first
+mixed_horizon_frac = 0.3
+mixed_horizon_s = [10.0, 20.0]                            # = default (explicit)
+
+[runtime]
+out_dir = "runs/active/c4_wm_v4_sched"

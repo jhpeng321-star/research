@@ -1,0 +1,18 @@
+# C4 DREAMER LOOP POLICY (2026-10-16).
+# = c4_policy_v6_full.toml, but the imagination start windows ALSO come from the policy's own SUMO episodes:
+#   wm_config -> the loop's WM refresh config (its c4_sources include v6_policy = WMS_DATA_V6_POLICY, set by
+#   scripts/c4/dreamer_loop.py to the converted dir of the current iteration), and about half of the starts
+#   are drawn from v6_policy (per penetration: source by weight, then a uniform window of that source).
+#   native_v5 / genrand_plain keep the other half for coverage.  Used only for loop restarts (--resume with
+#   WMS_LOOP_REFRESH=1); the trainer then skips the old sampler state because the window set changed.
+# Needs env WMS_DATA_V5_NATIVE, WMS_DATA_GENRAND_PLAIN, WMS_DATA_V6_LONGPAIR (manifest only: world split) and
+# WMS_DATA_V6_POLICY.
+extends = "c4_policy_v6_full.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6-LOOP"
+
+[data]
+wm_config = "configs/c4_wm_v6_refresh.toml"
+start_sources = ["native_v5", "genrand_plain", "v6_policy"]
+start_source_weights = { native_v5 = 0.25, genrand_plain = 0.25, v6_policy = 0.5 }

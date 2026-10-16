@@ -1,0 +1,33 @@
+# WM-S-C4 v2 COMBINED (2026-10-13): one run with all world-model improvements on.
+#   A + C: configs/c4_wm_v2_lane.toml (hazard lane-change event model + event loss; in-rollout driver update)
+#   B + E: configs/c4_wm_v2_loss.toml (aggregate-consistency loss; 120 s stage with vehicle entries)
+#   D (sampled futures) is policy-side (configs/c4_policy_futures.toml), not part of WM training.
+# Budget: c4_wm_v2_loss estimate ~5.7 h on the GPU host; a 4090 host (RTX 4090 48 GB, 20 cores) is expected to be
+# faster per step; A+C add a small MLP and a teacher-revealed prefix. max_hours caps the run.
+schema_version = 2
+name = "WM-S-C4-V2"
+extends = "c4_wm_v2_loss.toml"
+
+[model]
+lane_model = "hazard"
+lane_hazard_hidden = 64
+lane_hazard_cap = 10.0
+driver_update = "ema"
+driver_update_rate = 0.3
+driver_reveal_prob = 0.3
+driver_reveal_max_s = 10.0
+
+[loss.lane_event]
+# Plain (proper) CE: the default focal gamma 2 + category balancing (max_weight 20) drove the teacher-forced
+# hazard to ~12x the true change rate in the first 4090 attempt (0.015 vs 0.0012 per step, steps 40-160).
+weight = 1.0
+gamma = 0.0
+max_weight = 1.0
+
+[curriculum]
+# Pinned to what the first 4090 run used (c4_wm_v2_loss later moved to 140 at 120 s) so v3 = v2 + gap rule only.
+stage_steps = [1200, 900, 400, 160]
+max_hours = 7.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v2"

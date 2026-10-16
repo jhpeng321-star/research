@@ -1,0 +1,120 @@
+# Logical dataset name -> local path, consulted by wms.data.registry after the
+# WMS_DATA_<NAME> environment variable and before tools/data_registry.json.
+# Relative paths are relative to the repository root. The data owner registers the
+# large datasets (packs, sidecars, window lists, checkpoints) in tools/data_registry.json.
+[datasets.merge_params]
+path = "configs/merge_params.json"
+
+# ---------------------------------------------------------------------------------------
+# Local development box (this Windows machine). Since 2026-10-10 the hot data lives in the
+# git-ignored data_cache/ (Stage 2 copies, sha256-verified; master copies on Drive). A different machine overrides any of
+# these with WMS_DATA_<NAME> (see scripts/box/launch.sh); nothing here is read by code paths
+# that do not name the dataset. The switching/direct-output pack is listed at the end.
+# ---------------------------------------------------------------------------------------
+[datasets.pack_v3]
+path = "data_cache/pack_v3"
+
+[datasets.pack_dspeed]
+path = "data_cache/pack_dspeed"
+
+[datasets.pack_damping]
+path = "data_cache/pack_damping"
+
+[datasets.sidecars_packv3_v2]
+path = "data_cache/sidecars_packv3_v2"
+
+[datasets.identities_dspeed]
+path = "data_cache/identities_dspeed"
+
+[datasets.identities_damping]
+path = "data_cache/identities_damping"
+
+[datasets.overlay_dspeed]
+path = "data_cache/overlay_dspeed"
+
+[datasets.overlay_damping]
+path = "data_cache/overlay_damping"
+
+# Leave-PI/wall-out window lists (pack_v3 294/47, dspeed 444/76, damping 173/28 -> 911/151).
+[datasets.lpwo_v3]
+path = "data_cache/lpwo_v3"
+
+# Evaluation: the C1FAST checkpoint (previous best) and the three scored state sets.
+[datasets.ckpt_c1fast]
+path = "data_cache/ckpt_c1fast/wm_s.pt"
+
+[datasets.eval_states_wall_same]
+path = "data_cache/wallc1_states_v2/wall_same.json"
+
+[datasets.eval_states_wall_pilot]
+path = "data_cache/wallc1_states_v2/wall_pilot.json"
+
+[datasets.eval_states_seen_controls]
+path = "data_cache/wallc1_states_v2/seen_controls.json"
+
+# Output of scripts/make_smoke_lists.py (small validation list of the local CPU smoke).
+[datasets.smoke_lists]
+path = "runs/active/smoke_lists"
+
+# The checkpoint written by the local CPU smoke (`wms train --config configs/smoke_local.toml
+# --out runs/active/int_smoke_local2`); only for `configs/score_smoke_local.toml`.
+[datasets.ckpt_smoke_local]
+path = "runs/active/int_smoke_local2/wm_s.pt"
+
+# Switching/direct-output pack (copied from the GPU box, 39/39 files sha256-verified against BOX_SHA256SUMS.txt).
+[datasets.pack_switching_train]
+path = "data_cache/wmn1_switching_train/pack_switching_train"
+
+[datasets.identities_switching_train]
+path = "data_cache/wmn1_switching_train/identities_switching_train"
+
+[datasets.driver_params_switching_train]
+path = "data_cache/wmn1_switching_train/driver_params_switching_train"
+
+# Evaluation state sets with ~5 s history (h60) and with real 60 s history (h60_real), used by the round-3 scoring.
+[datasets.eval_states_h60]
+path = "data_cache/wallc1_states_h60"
+
+[datasets.eval_states_h60_real]
+path = "data_cache/wallc1_states_h60_real"
+
+# C4 world-model window lists (generated into the local runs/ tree by
+# tools/make_c4_lists.py from the read-only lpwo_v3 / wmn1_switching_train lists).
+[datasets.c4_wm_lists]
+path = "runs/active/c4_wm_lists"
+
+# Switching-pack window list, action-timeline index and zero-shot held-out controller list (configs/r3.toml).
+[datasets.windows_train_hetdata]
+path = "data_cache/wmn1_switching_train/windows_train_hetdata.json"
+
+[datasets.action_timeline_index_train]
+path = "data_cache/wmn1_switching_train/ACTION_TIMELINE_INDEX_train.json"
+
+[datasets.zero_shot_heldout]
+path = "data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json"
+
+# C4 Dreamer data loop: collected SUMO episodes converted by `python -m wms.data.c4_episodes`
+# (configs/c4_wm_refresh.toml). Each loop iteration writes a new directory; point
+# WMS_DATA_C4_EPISODES at it (this default is only the local convention).
+[datasets.c4_episodes]
+path = "runs/active/c4_episodes"
+
+# PAIRLOSS (configs/c4_wm_v4_data.toml): C4-GENRAND-20261014 converted sources on the training
+# box. Point WMS_DATA_GENRAND_PLAIN / WMS_DATA_GENRAND_BRANCH at the c4_episodes dirs (the GPU host:
+# /workspace/c4/data_genrand/C4-GENRAND-20261014/{,branches/}c4_episodes); these
+# defaults are only the local convention.
+[datasets.genrand_plain]
+path = "runs/active/C4-GENRAND-20261014/c4_episodes"
+
+[datasets.genrand_branch]
+path = "runs/active/C4-GENRAND-20261014/branches/c4_episodes"
+
+# V6 long paired branches (configs/c4_wm_v6_longpair.toml). Placeholder only:
+# set WMS_DATA_V6_LONGPAIR to the converted long-branch c4_episodes directory.
+[datasets.v6_longpair]
+path = "runs/active/v6_longpair/c4_episodes"
+
+# C4 Dreamer loop (2026-10-16): SUMO episodes collected with the learned v6 policy (training seeds
+# 965184+ of the C4_V6_LONGPAIR training block). Placeholder: set WMS_DATA_V6_POLICY.
+[datasets.v6_policy]
+path = "runs/active/v6_policy/c4_episodes"

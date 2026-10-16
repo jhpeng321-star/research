@@ -1,0 +1,55 @@
+# WM-S-C4 v6 FULL (2026-10-15): c4_wm_v6.toml (V6ENC) + V6INTEG + V6PAIR
+# + V6LONGPAIR (+ V6MERGE when merged). From scratch: the v5 residual is NOT reused (it co-adapted to the
+# unreachable driver settings; V5_DIAGNOSIS.md Q3).
+#   enc       driver_param_mode "physical" (a 0.3-4.0, b 0.8-6.0, T 0.4-3.0, s0 0.5-5.0, v0 0.6-1.4 x limit,
+#             learned shared centre), driver_ema_update off, textbook driver prior OFF (prediction error only).
+#   integ     stop-time-aware integration; emergency physics braking down to -9 m/s^2 (SUMO emergencyDecel;
+#             diagnosis: the -b floor cost 25-30 % at 60 s); simultaneous lane-change conflicts resolved.
+#             Projection stays OFF (as in v5; not part of the v6 plan).
+#   pair      common random numbers within a pair group; cumulative HDV-delay return-difference target
+#             (weight 1.0); margin ranking term (0.1, margin 5 veh-s) for clear-cut effects only.
+#   longpair  the paired source is the 120 s long-branch collection (C4_V6_LONGPAIR seeds 965000-965183,
+#             cadence 120 s, 4 random arms + native); paired unrolls follow the stage horizon (horizon_mode
+#             "stage") instead of the old fixed 60 s.
+schema_version = 2
+name = "WM-S-C4-V6-FULL"
+extends = "c4_wm_v6.toml"
+
+[physics]
+stop_time_integration = true
+emergency_decel_mps2 = 9.0
+
+[model]
+lane_conflict_resolve = true
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"          # WMS_DATA_V5_NATIVE
+mix_ratio = 0.65
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"      # WMS_DATA_GENRAND_PLAIN
+mix_ratio = 0.30
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "v6_longpair"        # WMS_DATA_V6_LONGPAIR (converted 120 s long branches)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[loss.paired_diff]
+couple_randomness = true
+return_weight = 1.0
+rank_weight = 0.1
+rank_margin_veh_s = 5.0
+horizon_mode = "stage"
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6_full"

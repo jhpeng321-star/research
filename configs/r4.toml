@@ -1,0 +1,77 @@
+# ROUND-4 recipe: R3's actual 911-window TRAIN split, C1 structured model and schedule.
+# Each decision is tied to the governing change-log finding; see docs/WM_CHANGE_LOG.md.
+schema_version = 2 # R3 receipt schema; preserves existing clean-package config parsing (R3 row).
+name = "WM-S-R4" # New output identity; this is a recipe only, not authorization to train (Round 4 plan).
+extends = "c1fast.toml" # C1 structured architecture/data base; R3 receipt confirms 7 controller labels (R3 row).
+
+[data]
+start_shift_prob = 0.75 # Retain the verified C1 start-shift probability (change-log #2).
+history_s = 60.0 # Retain R3's 60 s driver history; R3-DIAG found it neutral, not harmful (R3-DIAG).
+history_stride_s = 1.0 # Match R3 TRAIN_RECEIPT history sampling (R3 row).
+
+[data.sidecars]
+outcomes = "sidecars_packv3_v2/outcomes" # Use the repaired pack_v3 outcome sidecar bundle (change-log #12).
+
+[data.sidecars.identities]
+pack_v3 = "sidecars_packv3_v2/identities" # R3's receipt-confirmed pack_v3 identities (#12).
+dspeed = "identities_dspeed" # Preserve R3's dspeed identity sidecar (R3 row).
+damping = "identities_damping" # Preserve R3's damping identity sidecar (R3 row).
+
+[data.windows]
+train = "lpwo_v3/windows_train_noPI_noWall.json" # Exact 911-window TRAIN list in R3 receipt (#13, R3 row).
+val = "lpwo_v3/windows_val_noPI_noWall.json" # Preserve R3's leave-PI-and-wall-out validation list (#13).
+exclude = ["lpwo_v3/excluded_runs_PI_wall_v3.json"] # Preserve registered eval-world exclusions (#13).
+
+[model]
+sumo_fidelity = true # Match R3 physics fidelity (R3 receipt).
+n_controllers = 7 # Match actual R3 TRAIN_RECEIPT vocabulary (R3 receipt; C1FAST's earlier value was 6).
+merge_cal = false # Restore C1's actual setting; R3-DIAG found its toggle non-causal for R3 (R3-DIAG).
+residual_soft_bound_mps2 = 4.0 # Keep R3's smooth, gradient-carrying bound; never use rejected hard cap (#3, R3 final).
+
+[model.gate]
+kind = "saturating" # New learned ceiling motivated by LANECAL's gate-growth finding (LANECAL, Round 4 plan).
+g_max_init = 0.30 # Initialize the learned ceiling at the agreed value (Round 4 plan).
+tau_steps_init = 50.0 # Initialize the learned time constant to 25 s at 0.5 s/step (Round 4 plan).
+
+[loss]
+loss_share_logging = true # Retain R3's term-level training diagnostics (R3 receipt).
+
+[loss.braking]
+asym_speed_alpha = 1.0 # OFF: remove the over-braking loss implicated by R3-DIAG (R3 final, R3-DIAG).
+decel_weight = 1.0 # OFF: neutral deceleration multiplier; R3-DIAG found no braking recall gain (R3-DIAG).
+decel_threshold_mps2 = 3.0 # Keep the inactive threshold unchanged; decel_weight=1 makes the term OFF (R3-DIAG).
+propagation_weight = 0.0 # OFF: remove R3's propagation braking loss (R3 final, R3-DIAG).
+prop_window_s = 3.0 # Retain the inactive R3 window setting, with propagation disabled (R3 receipt).
+
+[loss.residual]
+residual_mag_weight = 0.01 # Retain the R3 residual-size penalty, which tamed long-horizon residuals (R3 final).
+
+[loss.lane_rate]
+weight = 1.0 # Retain R3 lane-rate loss weight (R3 receipt; LANECAL).
+# TRUE target: (66,294 left + 26,579 right) / 74,700,490 valid alive HDV target steps
+# = 0.001243271630 lane changes per HDV-step for R3's exact 911-window list;
+# LANECAL used six loader start draws/window (75% shifted, 25% t0), 240 target steps, HDV-only,
+# forward-filled the prior valid lane across junction lane=-1 observations, and divided true
+# lane transitions by valid alive HDV target steps. Junction (-1) toggles are excluded (LANECAL).
+target = 0.00124327163 # Correct the ~10x-high 0.0123 raw-toggle target (LANECAL; R3-DIAG).
+
+[curriculum]
+unroll_s = [10.0, 30.0, 60.0, 120.0] # Keep C1/R3 horizons (Round 4 plan).
+stage_steps = [2500, 2500, 1875, 1250] # Keep C1/R3 optimizer-step budget (R3 receipt).
+truncation_steps = 20 # Match R3's actual config (R3 receipt).
+max_hours = 10.0 # Keep the registered single-run training estimate/cap (R3 registration).
+
+[optim]
+batch_size = 8 # Match R3 actual receipt (R3 receipt).
+lr = 0.001 # Match C1FAST / R3 receipt (R3 receipt).
+
+[selection]
+select_by_long_horizon = true # Preserve R3 best-long-horizon checkpoint selection (#48, R3 receipt).
+val_batches = 8 # Match C1FAST/R3 actual receipt (R3 receipt).
+
+[runtime]
+device = "cuda" # Intended GPU recipe only; no GPU launch is part of this implementation task.
+threads = 2 # Match R3 receipt (R3 receipt).
+num_workers = 0 # Required clean trainer contract; also the R3 actual value.
+seed = 101 # Match C1/R3 reproducibility setting (R3 receipt).
+omp = 2 # Keep the R3 pack preset's CPU thread setting.

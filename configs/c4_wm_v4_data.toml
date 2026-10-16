@@ -1,0 +1,50 @@
+# WM-S-C4 v4-data (2026-10-14, PAIRLOSS_NOTES.md): configs/c4_wm_v4_lane.toml + the data-side
+# switches + the undirected GENRAND data (C4-GENRAND-20261014) + the paired-difference loss.
+#   1. data.controller_hygiene = "strict" (DATAHYG) and data.junction_fix = "ffill" (JUNCTIONFIX);
+#      both also apply to the C4 windows (GENRAND is undirected: hygiene keeps it, every issued
+#      command recorded -> command_known; junction rows forward-filled as in the packs).
+#   2. [[data.c4_sources]] genrand_plain (WMS_DATA_GENRAND_PLAIN; 480 plain episodes, world split
+#      384/96 by the converter) with sampling share 0.30 of the ordinary TRAIN windows (0.35 with
+#      the branch source; with 25 % paired batches ~51 % of all sampled windows are GENRAND).
+#   3. [[data.c4_sources]] genrand_branch (WMS_DATA_GENRAND_BRANCH; 36 base worlds x 14 branch
+#      points x (4 random-seed arms + all-native)), paired = true: its pair groups feed the
+#      PAIRED batches (loss.paired_diff.fraction of the TRAIN batches, horizon capped at the 60 s
+#      branch); mix_ratio 0.05 = its ordinary full-horizon windows (base episodes, if converted
+#      into the same dir; skipped when none have the horizon).  One split side per world across
+#      every C4 source.
+#   4. [loss.paired_diff] weight 0.5: arm-minus-reference differences of t0 HDV positions/speeds
+#      and per-5 s cohort delay (road, RSU zone) / merge throughput, predicted vs recorded.
+#      Weight chosen on the CPU smoke for a ~5-15 % share of a paired batch's loss value.
+# NOT trained yet.
+schema_version = 2
+name = "WM-S-C4-V4DATA"
+extends = "c4_wm_v4_lane.toml"
+
+[data]
+junction_fix = "ffill"
+controller_hygiene = "strict"
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"     # WMS_DATA_GENRAND_PLAIN
+mix_ratio = 0.30
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"    # WMS_DATA_GENRAND_BRANCH
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[loss.paired_diff]
+weight = 0.5
+fraction = 0.25
+groups = 3
+max_arms = 5
+aggregate_weight = 10.0 # pair_agg ~1 % of the paired loss at sub-weight 1 on the 10 s smoke; x10 -> ~ agg_reward size
+
+[runtime]
+out_dir = "runs/active/c4_wm_v4_data"

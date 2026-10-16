@@ -1,0 +1,135 @@
+{
+ "schema_version": 1,
+ "description": "Export copy: filtered to the 9 of 688 entries that are training packs or dataset exports, without local provenance fields; the data objects themselves are private and not part of this repository.",
+ "datasets": {
+  "pack_v3": {
+   "drive_path": "gdrive:research-archive/data/packs/training_pack_v3_k192",
+   "size_bytes": 7472989316,
+   "local_path": "data_cache/pack_v3",
+   "md5_manifest": {
+    "PARTS.json": "4484f944a0cb6d0cf3ab290b2b15596c",
+    "SHA256SUMS": "9bd6fc15ba4b2a35f741cbecae432365",
+    "UNPACK.md": "4866497f6d4ed8029aaf879331051e66",
+    "pack_v3.tar.zst.part000": "d54c846f62228556a438e10efd22ebc8",
+    "pack_v3.tar.zst.part001": "fd5ba83e0f2bffa41e71b4af9cf5751d",
+    "pack_v3.tar.zst.part002": "0222e1bcdb0ac4fa46c82fea52fcea76",
+    "pack_v3.tar.zst.part003": "2530747a5e44c7d9b86b87b255ec8a13",
+    "upload_manifest_v3.json": "633d9ae036b429338183099a2e8f8ae0"
+   },
+   "format": "tar.zst.parts",
+   "parts": [
+    "pack_v3.tar.zst.part000",
+    "pack_v3.tar.zst.part001",
+    "pack_v3.tar.zst.part002",
+    "pack_v3.tar.zst.part003"
+   ],
+   "unpack": "cat the .partNNN files in order | zstd -dc | tar -x; see UNPACK.md and SHA256SUMS in the fetched directory",
+   "class": "KEEP-ACTIVE",
+   "kind": "dir"
+  },
+  "shards_v2__chunk1": {
+   "drive_path": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk1.tar.zst",
+   "size_bytes": 1248877236,
+   "local_path": "data_cache/shards_v2__chunk1",
+   "md5_manifest": {
+    "shards_v2__chunk1.tar.zst": "84dcd41fa2c5a7980acf0cca7cd01e44"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 6570238182,
+   "unpacked_files": 9200,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "shards_v2__chunk1_fix27": {
+   "drive_path": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk1_fix27.tar.zst",
+   "size_bytes": 227353339,
+   "local_path": "data_cache/shards_v2__chunk1_fix27",
+   "md5_manifest": {
+    "shards_v2__chunk1_fix27.tar.zst": "a0160c9dc9982a316dc5dc9f2f22d1d2"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 1174914770,
+   "unpacked_files": 1764,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "shards_v2__chunk2": {
+   "drive_path": "gdrive:research-archive/data/packs/derived_shards_v2/Chunks/shards_v2__chunk2.tar.zst",
+   "size_bytes": 1294650964,
+   "local_path": "data_cache/shards_v2__chunk2",
+   "md5_manifest": {
+    "shards_v2__chunk2.tar.zst": "6be1b3c4046581ff72c8bfd804791897"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 6739818719,
+   "unpacked_files": 9576,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "shards_v2__index": {
+   "drive_path": "gdrive:research-archive/data/packs/derived_shards_v2/Index/shards_v2__index.tar.zst",
+   "size_bytes": 1807572,
+   "local_path": "data_cache/shards_v2__index",
+   "md5_manifest": {
+    "shards_v2__index.tar.zst": "92de89e4be63407177d3c5aad92b123d"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 7969005,
+   "unpacked_files": 5,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "upload_v2": {
+   "drive_path": "gdrive:research-archive/data/packs/archived_training_packs_v2/upload_v2.tar.zst",
+   "size_bytes": 6861296150,
+   "local_path": "data_cache/upload_v2",
+   "md5_manifest": {
+    "upload_v2.tar.zst": "086de86e3261a204dd506e61132d2128"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 6861792222,
+   "unpacked_files": 7,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "upload_v2c": {
+   "drive_path": "gdrive:research-archive/data/packs/archived_training_packs_v2/upload_v2c.tar.zst",
+   "size_bytes": 6912006074,
+   "local_path": "data_cache/upload_v2c",
+   "md5_manifest": {
+    "upload_v2c.tar.zst": "fddb5f5d18bdf65e8687e6a9dd6ef7f1"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 6912442062,
+   "unpacked_files": 7,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "worldmodel_dataset_v1": {
+   "drive_path": "gdrive:research-archive/datasets/exports/worldmodel_dataset_v1.tar.zst",
+   "size_bytes": 126582513,
+   "local_path": "data_cache/worldmodel_dataset_v1",
+   "md5_manifest": {
+    "worldmodel_dataset_v1.tar.zst": "50feb2eb5d7361b679bcf140e3c1ea37"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 6300268222,
+   "unpacked_files": 85,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  },
+  "worldmodel_dataset_v2": {
+   "drive_path": "gdrive:research-archive/datasets/exports/worldmodel_dataset_v2.tar.zst",
+   "size_bytes": 467378157,
+   "local_path": "data_cache/worldmodel_dataset_v2",
+   "md5_manifest": {
+    "worldmodel_dataset_v2.tar.zst": "080223dd66e3a9add3de776114be59ed"
+   },
+   "format": "tar.zst",
+   "unpacked_bytes": 24074324179,
+   "unpacked_files": 180,
+   "class": "ARCHIVE",
+   "kind": "dir"
+  }
+ }
+}

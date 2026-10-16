@@ -1,0 +1,75 @@
+{
+  "config": {
+    "batch_size": 8,
+    "black_box": false,
+    "checkpoint_residual": false,
+    "controller_embed_dim": 16,
+    "device": "cuda",
+    "epochs_per_stage": 1,
+    "exclude_window_list": [
+      "/workspace/wms_c1_20261006/work/lpo/pi_excluded_runs.json"
+    ],
+    "grad_clip": 1.0,
+    "history_features": 6,
+    "lane_weight": 1.0,
+    "lr": 0.001,
+    "n_controllers": 6,
+    "num_workers": 5,
+    "out_dir": "/workspace/wms_c1_20261006/work/full_struct",
+    "position_huber_delta_m": 5.0,
+    "position_weight": 1.0,
+    "seed": 101,
+    "speed_huber_delta_mps": 1.0,
+    "speed_weight": 1.0,
+    "stage_steps": [
+      2500,
+      2500,
+      1875,
+      1250
+    ],
+    "step_weight_decay": 0.01,
+    "steps_per_epoch": 2000,
+    "threads": 2,
+    "truncation_steps": 20,
+    "unroll_curriculum_s": [
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "val_batches": 8,
+    "val_window_list": "/workspace/wms_c1_20261006/work/lpo/windows_val.json",
+    "weight_decay": 0.0,
+    "window_list": "/workspace/wms_c1_20261006/work/lpo/windows_train_noPI.json"
+  },
+  "curriculum_s": [
+    10.0,
+    30.0,
+    60.0,
+    120.0
+  ],
+  "data": {
+    "identity_sidecars": [
+      "/workspace/wms_c1_20261006/work/sidecars/identities",
+      "/workspace/wms_c1_20261006/work/sidecars/identities_dspeed",
+      "/workspace/wmn1_a10_data/identities_damping"
+    ],
+    "overlays": [
+      "/workspace/wmn1_a9_data/labels_overlay_dspeed",
+      "/workspace/wmn1_a10_data/labels_overlay_damping"
+    ],
+    "packs": [
+      "/workspace/wmn1_m1_45c9032_20261003_A1/work/pack",
+      "/workspace/wmn1_a9_data/pack_dspeed",
+      "/workspace/wmn1_a10_data/pack_damping"
+    ],
+    "start_shift_prob": 0.75
+  },
+  "physics": {
+    "merge_cal": false,
+    "sumo_fidelity": true,
+    "sumo_idm": true
+  },
+  "source": "runs/active/WM-S-C1FAST-20261006/box/full_struct/TRAIN_RECEIPT.json",
+  "source_sha256": "82170b31bd98886af71663fa1b23ef569e572e11524ec7f3f2e11ed31b30b713"
+}

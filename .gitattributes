@@ -1,0 +1,5 @@
+# bash entry points must survive Windows checkouts with LF bytes
+*.sh text eol=lf
+*.gz binary
+*.onnx binary
+*.pt binary

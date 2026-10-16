@@ -1,0 +1,16 @@
+# WM-S-C4 v6: driver parameters learn from prediction error with a learned shared centre.
+# Physical parameterization replaces the legacy driver encoding; EMA updates are disabled.
+# No population target is used for learning: the inherited driver-prior loss is disabled.
+schema_version = 2
+name = "WM-S-C4-V6"
+extends = "c4_wm_v5.toml"
+
+[model]
+driver_param_mode = "physical"
+driver_ema_update = false
+
+[loss.driver_prior]
+weight = 0.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6"

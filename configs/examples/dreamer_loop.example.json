@@ -1,0 +1,124 @@
+{
+ "_comment": "Example configuration of scripts/c4/dreamer_loop.py (see docs/DREAMER_LOOP.md). All hosts, users, keys and paths are placeholders: replace them with your own. The orchestrator runs on the WM host (local, no ssh); the policy host and the CPU collector hosts are reached over ssh. Keys not given here take the DEFAULTS of scripts/c4/dreamer_loop.py. Replace REPO_SHA with the deployed code revision.",
+ "mode": "pipelined",
+ "max_iterations": 8,
+ "loop_root": "/workspace/c4/loop",
+ "data_root": "/workspace/c4/data",
+ "wm_runs_root": "/workspace/c4/runs",
+ "disk_paths": [
+  "/workspace"
+ ],
+ "min_free_gb": 5.0,
+ "poll_s": 60,
+ "hosts": {
+  "wm": {
+   "code_root": "/workspace/c4/repo_REPO_SHA",
+   "python": "/opt/conda/bin/python"
+  },
+  "policy": {
+   "ssh": [
+    "-i",
+    "~/.ssh/loop_key",
+    "-p",
+    "22",
+    "user@policy-host.example.com"
+   ],
+   "code_root": "/workspace/c4/repo_REPO_SHA",
+   "python": "/opt/conda/bin/python",
+   "work_root": "/workspace/c4/loop"
+  },
+  "cpu": {
+   "ssh": [
+    "-i",
+    "~/.ssh/loop_key",
+    "user@cpu-host-1.example.com"
+   ],
+   "code_root": "/home/user/c4/repo_REPO_SHA",
+   "python": "/home/user/c4env/bin/python",
+   "work_root": "/home/user/c4/loop"
+  },
+  "cpu2": {
+   "ssh": [
+    "-i",
+    "~/.ssh/loop_key",
+    "user@cpu-host-2.example.com"
+   ],
+   "code_root": "/home/user/c4/repo_REPO_SHA",
+   "python": "/home/user/c4env/bin/python",
+   "work_root": "/home/user/c4/loop"
+  }
+ },
+ "seeds": {
+  "block": [
+   966000,
+   969999
+  ],
+  "exclude": []
+ },
+ "collect": {
+  "hosts": [
+   "cpu",
+   "cpu2"
+  ],
+  "batch_size": 50,
+  "require_new_policy_ckpt": true,
+  "min_interval_s": 0,
+  "workers": 46,
+  "warmup": 300,
+  "horizon": 900,
+  "population": "textbook",
+  "case_plan": "weighted-cycle",
+  "penetrations": "0.05,0.1,0.2,0.4",
+  "pen_weights": "1,1,2,2",
+  "demands": "1900,2100,2400,2700",
+  "timeout_s": 5400,
+  "max_attempts": 3
+ },
+ "convert": {
+  "prefix": "policy_iter",
+  "max_episodes": 0,
+  "mb_per_episode": 21.0,
+  "min_window": 50
+ },
+ "wm": {
+  "config": "configs/c4_wm_v6_refresh.toml",
+  "stage_steps": [
+   60,
+   40
+  ],
+  "extra_set": [],
+  "env": {
+   "WMS_DATA_V5_NATIVE": "/workspace/c4/data/v5_native",
+   "WMS_DATA_GENRAND_PLAIN": "/workspace/c4/data/genrand_plain",
+   "WMS_DATA_GENRAND_BRANCH": "/workspace/c4/data/genrand_branch",
+   "WMS_DATA_V6_LONGPAIR": "/workspace/c4/data/v6_longpair",
+   "OMP_NUM_THREADS": "12"
+  },
+  "timeout_s": 10800,
+  "val_metric": "mean_position",
+  "val_tolerance": 0.3,
+  "min_new_episodes": 0,
+  "lane_calib": false
+ },
+ "policy": {
+  "config": "configs/c4_policy_v6_loop.toml",
+  "config_without_policy_data": "configs/c4_policy_v6_full.toml",
+  "device": "cuda",
+  "max_updates": 100000,
+  "extra_args": [],
+  "env": {
+   "WMS_DATA_V5_NATIVE": "/workspace/c4/data/v5_native",
+   "WMS_DATA_GENRAND_PLAIN": "/workspace/c4/data/genrand_plain",
+   "WMS_DATA_GENRAND_BRANCH": "/workspace/c4/data/genrand_branch",
+   "WMS_DATA_V6_LONGPAIR": "/workspace/c4/data/v6_longpair",
+   "OMP_NUM_THREADS": "12"
+  },
+  "allowed_roots": [
+   "/workspace/c4"
+  ],
+  "stop_timeout_s": 1800,
+  "adopted_wait_max_s": 3600,
+  "start_check_s": 90,
+  "max_restarts": 2
+ }
+}

@@ -1,0 +1,9 @@
+# ROUND-5 combined run, HALF length.
+# Identical to r5_f23 (FIX 1 + FIX 2 + FIX 3, initialised from the R4 checkpoint) except that every
+# curriculum stage gets about half of R4's optimizer steps (2500/2500/1875/1250 -> 1250/1250/940/625).
+schema_version = 2
+name = "WM-S-R5-F23-HALF"
+extends = "r5_f23.toml"
+
+[curriculum]
+stage_steps = [1250, 1250, 940, 625] # half of R4's budget per stage (R5 fine-tunes from R4)

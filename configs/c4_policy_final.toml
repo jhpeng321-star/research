@@ -1,0 +1,31 @@
+# Final C4 policy run (2026-10-13 evening), FROM SCRATCH (no --init-policy / --resume): phase 4 settings plus the
+# entry-queue gradient fix (SRCGRAD_NOTES.md). The phase-4 SUMO head-to-head showed the policy cutting on-road delay
+# by keeping vehicles out of the network (source wait 10.7k vs native 5.4k veh-s): the imagined backlog was a
+# constant without gradient and the critic could not see it.
+#  - source_wait_grad: reward value = exact imagined backlog, gradient = differentiable insertion-blocking surrogate;
+#  - critic_entry_backlog: the TeamCritic sees the per-entrance backlog (fresh critic; old critics do not load).
+extends = "c4_policy_base_p4.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-FINAL"
+
+[trainer]
+# Longer foresight: 0.99 per 1 s control step = ~100 s effective horizon; cooperative
+# payoffs (gap opening for merges, walls) build over 2-5 min -> 0.995 (~200 s). The critic carries it beyond imagination.
+gamma = 0.995
+source_wait_grad = true
+critic_entry_backlog = true
+# EXECCAP_NOTES.md (2026-10-14): SUMO-consistent execution of commanded CAVs in imagination. In SUMO (speedMode 27) a
+# commanded CAV realises ~min(command, its own vType IDM accel) (MAE 0.086 m/s^2); without the cap imagined CAVs
+# accelerate where SUMO's cannot, which produced most of MAPPO's over-credit in the decision check.
+cav_exec_cap = "idm_normal:textbook" # INFRAV5: fixed CAV vType settings in the cap (textbook cav_typical; "idm_normal:legacy" = normal_car for the legacy SUMO population)
+
+[policy]
+# ACCELCAP_NOTES.md: actor action cap raised from the legacy 1.5 to the normal_car
+# human accel 2.6 m/s^2 (scenarios/idm/driver_routes.rou.xml; aggressive 3.0, cautious 2.0). Stored in the checkpoint;
+# older checkpoints keep decoding with 1.5.
+accel_max_mps2 = 2.6
+
+[counterfactual]
+# 'native' counterfactual CAV rows = SUMO-native CAV behaviour (CAVs keep their driver vType; normal_car accel 2.6).
+native_accel_max_mps2 = 2.6

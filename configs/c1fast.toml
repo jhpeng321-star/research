@@ -1,0 +1,54 @@
+# C1FAST (WM-S-C1FAST-20261006, structured model): faithful record of
+# runs/active/WM-S-C1FAST-20261006/box/full_struct/TRAIN_RECEIPT.json.
+#
+# Notes taken from the receipt, not from the registration text:
+#  * physics.merge_cal was false (the R3 chain comment says "merge_cal as C1"; the receipt does not).
+#  * n_controllers was 6 (vocabulary before the "direct" label); num_workers was 5.
+#    num_workers != 0 is refused by `wms train`; override with --set runtime.num_workers=0 to re-run.
+# Data names are logical (see tools/data_registry.json / configs/data_registry.toml).
+schema_version = 2
+name = "WM-S-C1FAST"
+
+[data]
+start_shift_prob = 0.75
+
+[data.packs]
+pack_v3 = "pack_v3"
+dspeed = "pack_dspeed"
+damping = "pack_damping"
+
+[data.sidecars.identities]
+pack_v3 = "identities_pack_v3"
+dspeed = "identities_dspeed"
+damping = "identities_damping"
+
+[data.sidecars.overlays]
+dspeed = "overlay_dspeed"
+damping = "overlay_damping"
+
+[data.windows]
+train = "lpo_c1/windows_train_noPI.json"
+val = "lpo_c1/windows_val.json"
+exclude = ["lpo_c1/pi_excluded_runs.json"]
+
+[model]
+sumo_fidelity = true
+n_controllers = 6
+
+[curriculum]
+unroll_s = [10.0, 30.0, 60.0, 120.0]
+stage_steps = [2500, 2500, 1875, 1250]
+truncation_steps = 20
+
+[optim]
+batch_size = 8
+lr = 0.001
+
+[selection]
+val_batches = 8
+
+[runtime]
+device = "cuda"
+threads = 2
+num_workers = 5
+seed = 101

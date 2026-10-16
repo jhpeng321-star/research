@@ -1,0 +1,34 @@
+# WM-S-C4 v5 lane model (LANEV5; LANEV5_NOTES.md).
+# = c4_wm_v4.toml with the v4 hazard replaced by the per-transition lane network:
+#   model.lane_model = "hazard_v5"   one shared trunk over scaled situation features + road
+#                                    context, one head per ROAD transition (overtake 1->0,
+#                                    return 0->1, ramp merge 2->1); no driver embedding / types
+#   model.lane_decision = "gated"    a head samples only if its TRAIN-val teacher-forced AP
+#                                    reaches its gate (0.25 / 0.10 / 0.5), else argmax; the APs
+#                                    come from the pre-fit file (or model.lane_v5_head_ap)
+#   loss.lane_event                  per-head plain CE on EVERY recorded step of each window
+#                                    (decoupled from loss.lane / flip_rate as in v4); weight 10:
+#                                    smoke batch lane-net grad norm 1.06 vs 2.37 for the rest
+#                                    (17 % of the squared norm; weight 3 gave 0.04 % on another
+#                                    batch). The lane network's parameters are disjoint from every
+#                                    other term, so with Adam the weight mostly sets visibility.
+#   lane_hazard_features / merge_hazard_zone are v4-hazard options: reset to their defaults
+#   (the v5 network has its own features and always owns merges, forced in the last 5 m).
+# Optional offline pre-fit (tools/lanev5_pretrain.py, TRAIN windows only):
+#   model.lane_v5_pretrain = "<path to the pre-fit .pt>"
+# Code + CPU smoke only on c4/lanev5; combined with the other v5 changes in c4_wm_v5.toml.
+schema_version = 2
+name = "WM-S-C4-V5LANE"
+extends = "c4_wm_v4.toml"
+
+[model]
+lane_model = "hazard_v5"
+lane_decision = "gated"
+lane_hazard_features = "v1"
+merge_hazard_zone = "forced_late"
+
+[loss.lane_event]
+weight = 10.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v5_lane"

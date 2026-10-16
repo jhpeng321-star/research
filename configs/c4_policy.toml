@@ -1,0 +1,110 @@
+# C4 analytic Dreamer defaults. No simulator or WM fitting occurs here.
+# Checkpoint and data paths must resolve INSIDE this workspace. Supply a local
+# R5b checkpoint via --wm-ckpt; each listed checkpoint is one frozen member.
+
+[run]
+output_dir = "runs/active/C4-DREAMER"
+device = "cpu" # CLI accepts --device cuda; --smoke always forces CPU.
+updates = 3000
+seed = 0
+threads = 1
+validation_batches = 2
+
+[world_model]
+checkpoints = [] # Required, e.g. ["runs/active/local_r5b/wm_s_best.pt"]. Default ensemble size: 1.
+
+[trainer]
+batch_size = 16
+horizon = 30 # CONTROL steps (1 s each): 30 s imagination, where WM-S is accurate (design 2.4).
+gamma = 0.99 # Per CONTROL step, not per physics step.
+lambda_ = 0.95
+actor_lr = 5e-5 # Recommended range: 3e-5 .. 1e-4; includes the RSU group encoder.
+critic_lr = 1e-4
+entropy_weight = 3e-4
+uncertainty_weight = 0.1 # Population std of team reward across members; zero for one member.
+ttc_budget = 3.6 # Mean SUM of per-physics-step cost_ttc per control step. Calibrated 2026-10-13: recorded TRAIN traffic has 3.64 (0.01 was unreachable -> unbounded multiplier). Constraint = no more close calls than recorded traffic.
+dual_lr = 0.01 # Projected dual ascent: max(0, mu + lr * (mean_cost - budget)).
+lagrange_init = 0.0
+grad_clip = 100.0 # Separate pre-clip actor/critic norms are logged.
+target_tau = 0.02 # Target critic EMA: target <- (1-tau)*target + tau*critic.
+return_ema = 0.99 # EMA of 5th/95th percentiles; scale=max(1, high-low), DreamerV3-style.
+checkpoint_every = 100 # 0 disables periodic snapshots; latest is always saved by fit.
+validation_every = 100 # Separate TRAIN-derived VAL windows; best checkpoint by lambda-return.
+lane_pg_weight = 1.0 # REINFORCE weight of the lane head: -mean(log pi(lane) * advantage), advantage / return scale.
+lane_entropy_weight = 3e-4 # DreamerV3-style entropy bonus of the categorical lane head (masked feasible choices).
+# Memory (CFMEM_NOTES.md): recompute the pure per-step pieces of imagination in backward (WM forward,
+# policy / RSU encoder / safety / native / reward / target critic) instead of storing activations.
+# Identical objective and gradients; ~17x lower peak at batch 8 / H 15 (CPU-measured); ~+40 % time.
+checkpoint_imagination = true
+# Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from each start window's
+# observed pre-t0 entry history (entries v2); arrivals that cannot be inserted queue (uncapped) and are charged
+# by team_reward as source waiting (same weight as on-road delay). false = old on-road-only imagination.
+imagine_entries = true
+entry_pad_max = 256 # cap on the empty entrant slots appended per batch (1.5 x expected arrivals + 16)
+# Entry-queue gradient (SRCGRAD_NOTES.md): exact backlog value + straight-through insertion-blocking surrogate
+# gradient, and the per-entrance backlog as a critic input. Off here (bit-identical); on in c4_policy_final.toml.
+source_wait_grad = false
+critic_entry_backlog = false
+
+# Per-CAV lane decisions: the policy outputs accel AND stay/left/right.
+# No designed controller anywhere: the head starts uniform over the feasible choices.
+[lanes]
+enabled = true # false = accel-only actor training (legacy c4_dreamer/1 behaviour).
+# Gap rule calibrated on SUMO acceptance of changeLane (laneChangeMode 513, 1 s), see LANECAL_NOTES.md:
+# front gap >= gap_base_m + gap_time_s*v_ego + closing_time_s*max(0, v_ego - v_front);
+# rear  gap >= rear_gap_base_m + rear_gap_time_s*v_rear + rear_closing_time_s*max(0, v_rear - v_ego).
+# (Old symmetric 6 m / 1.0 s / 1.0 s: only 68 % of the requests it passed were executed by SUMO; now ~95 % held out.)
+gap_base_m = 1.0
+gap_time_s = 1.2
+closing_time_s = 4.5
+rear_gap_base_m = 3.0
+rear_gap_time_s = 1.25
+rear_closing_time_s = 6.0
+dwell_s = 3.0 # Minimum time between two lane changes of one CAV.
+edge_guard_m = 10.0 # Mainline: no change within v*1 s + this of a SUMO edge boundary (s = 0 and 75.44 m).
+
+# Cooperation as the main training signal (wms.control.counterfactual).
+# Per selected start, common random numbers (same start, WM members, policy noise per start/step/slot):
+#   B = all CAVs native; D_i = J(only i) - B; D_G = J(group G) - B; D_G\i = J(G without i) - B (flip-one);
+#   D_all = J(all) - B; C_G = D_G - sum_{i in G} D_i; M_i = D_G - D_G\i; I_i = M_i - D_i.
+# Actor objective = w_all*D_all + w_group*D_G + w_individual*sum D_i + w_coop*C_G + w_team*sum M_i
+# (differentiable lambda-return differences through the WM; lane head by REINFORCE with the same row weights).
+# ANTI-GAMING GUARD (validated): w_coop <= w_individual at every knot, groups of one start are disjoint and
+# the team term applies to groups of >= 3 (for pairs G\i is a solo CAV), so every D_i keeps weight >= 0.
+[counterfactual]
+enabled = true
+n_individual = 2 # Individual rows per start (members of the sampled groups are always added).
+n_group = 2 # Disjoint group rows per start.
+n_flip = 2 # Flip-one rows (G without i) per group; pairs reuse the other member's individual row.
+group_radius_m = 150.0 # CAVs chained within this |ds| (lanes ignored) form a connected component.
+group_min_size = 2
+group_max_size = 6 # Contiguous window of at most this many members of a sampled component.
+cover_group_members = true # Individual rows for every group member (required when w_coop > 0).
+max_starts = 8 # Counterfactual rows only for the first max_starts starts (that have CAVs) of a batch.
+native_cav = "idm" # Native CAV reference: "idm" (simple IDM CAV) or "hold" (a = 0); both safety-filtered, stay in lane.
+group_state_fraction = 0.6 # Share of each batch drawn group-rich: >= 2 CAVs within the radius in group_zone_s_m
+group_zone_s_m = [-800.0, 75.44] # ... (near/upstream of the merge) AND an RSU-field queue cell or occupied
+congestion_speed_mps = 15.0 # ... cell with mean speed below this.
+max_group_tries = 20 # Sampler draws per group-rich slot before falling back to the last draw.
+# Curriculum (piecewise linear in the update count, held after the last knot; mid-training = 1500 of 3000).
+curriculum_updates = [0, 1500]
+w_individual = [1.0, 0.5]
+w_group = [0.5, 1.0]
+w_coop = [0.0, 0.5]
+w_team = [0.0, 0.5]
+w_all = [0.25, 1.0]
+
+[data]
+wm_config = "configs/c4_wm.toml" # start windows = the C4 WM TRAIN lists (native + dspeed), all shipped in the bundle
+val_fraction = 0.1 # Stratified disjoint development VAL windows from the TRAIN corpus.
+excluded_penetrations = [] # e.g. [0.02, 0.4]; metadata suffixes p02/p05/p10/p20/p40.
+relabel_cavs = false # Optional random HDV/CAV reassignment at load, default OFF.
+target_penetration = 0.2 # With relabel enabled: one of 0.05/0.1/0.2/0.4; count rounded to slots.
+
+[reward] # contract.RewardWeights, evaluated once per physics transition then SUMMED.
+delay = 1.0
+throughput = 0.5
+smooth = 0.05
+hard_brake = 1.0
+fairness = 1.0
+ttc_limit_s = 3.0

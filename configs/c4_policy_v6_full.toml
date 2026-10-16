@@ -1,0 +1,22 @@
+# C4 v6 FINAL POLICY (2026-10-15). From scratch on the v6 WM.
+#   = c4_policy_v6.toml (V6IMAG: imagination_grad_decay 0.98, credit profile every 25 updates)
+#     -> c4_policy_v5.toml (sumo_like entries + matching srcgrad surrogate, accel cap 1.2, idm_normal:textbook
+#        execution cap, textbook native counterfactual, c4_base start windows from the v5 textbook data)
+#   + V6EXPLORE: learned entropy temperature with target 0.5 nats per accel action (the V6EXPLORE default
+#     -1.0 is BELOW where v5 collapsed to (-0.35 at update 517), so it would not prevent the collapse; v5 still
+#     learned at ~0.4-1.2), and a zero-centred initial acceleration (the default start braked at -0.67 m/s^2).
+#   + V6ENTRY: entry_insert_rule 'sumo_like_v2' (SUMO admits at the end-of-step gap vs minGap and inserts at stop
+#     speed; the old rule refused 99-100 % of SUMO's real insertions, so imagination never grew the entry queue that
+#     the v5 policy inflated by +597 veh-s in SUMO; ENTRY_DIAG.md). The srcgrad surrogate follows the same rule.
+extends = "c4_policy_v6.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6-FULL"
+
+[trainer]
+entropy_target = 0.5
+alpha_lr = 1e-2           # 3e-4 moves log(alpha) only ~0.15 over 500 updates (Adam step ~lr); 1e-2 can react within ~100 updates
+entry_insert_rule = "sumo_like_v2"
+
+[policy]
+init_zero_accel = true

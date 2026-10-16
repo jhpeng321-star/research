@@ -1,0 +1,83 @@
+# WM-S-C4 v5 FINAL CANDIDATE (2026-10-14).  NOT trained yet.
+#   = c4_wm_v5_base.toml (non-lane fixes, INFRAV5_NOTES.md)
+#   + the hazard_v5 lane model of c4_wm_v5_lane.toml (LANEV5_NOTES.md)
+#   + the population anchor on the encoded driver settings, textbook target:
+#     the v5 data come from the c4/popfix continuous textbook population.
+# Launch: pretrain the lane network on the v5 TRAIN windows first (tools/lanev5_pretrain.py),
+# then pass it with --set model.lane_v5_pretrain=<path>.  After training, rerun
+# tools/lanehazard_calib.py --write-ap on the selected checkpoint so "gated" uses its own AP.
+#
+# DATA (V5DATA, 2026-10-14; the v5 textbook data REPLACE the legacy data; a 50 GB GPU disk
+# cannot hold pack_v3 anyway).  data.c4_base = "native_v5" clears every inherited legacy table
+# (data.packs pack_v3 + pack_dspeed, their sidecars and window lists, the data.switching
+# direct-mix pack) - see wms.config.data.DataConfig.c4_base - so ALL training and validation
+# windows come from the three converted scripts/boxops/collect_v5.sh outputs
+# (python -m wms.data.c4_episodes, --population textbook, every CAV cav_typical):
+#   source          registry name / env var                     content                 mix
+#   native_v5       v5_native      WMS_DATA_V5_NATIVE         native/          (480 eps)  0.65
+#   genrand_plain   genrand_plain  WMS_DATA_GENRAND_PLAIN     generic_random/  (480 eps)  0.30
+#   genrand_branch  genrand_branch WMS_DATA_GENRAND_BRANCH    paired/branch    (36 base)  0.05
+#                   + paired batches: loss.paired_diff.fraction 0.25 (unchanged from v5_base)
+# Why: v5_base nominally drew 0.80 legacy (packs 0.56 + switching direct-mix 0.24), 0.15
+# genrand_plain, 0.05 branch windows.  In practice DATAHYG strict DISABLED the direct-mix source
+# (INFRAV5 smoke: 5/1458 items kept), and pack_dspeed's random target-speed CAV arms were 444/583
+# of the pack TRAIN windows, so most v5_base draws already had non-native CAV actions.  v5 has
+# neither pack: generic_random (--gr-mode speed, random target speeds = the dspeed analogue) is
+# the only random-action source, so it gets the top of the 0.15-0.30 band (0.15 -> 0.30), while
+# native - the deployment-like traffic carrying most of the driver-identification signal - stays
+# the majority (0.65; random-action windows 0.35 incl. the 0.05 branch windows).  The paired
+# branches keep their v5_base role: paired batches (25 % of batches) + 0.05 ordinary windows.
+# VALIDATION: the converter's world-grouped split (default --val-frac 0.2, split seed 0; one
+# side per world across all three sources, validation wins), use_val = true everywhere; the
+# fixed val_max_windows 512 subset is evenly spaced over native_v5_val + genrand_plain_val +
+# genrand_branch_val (~proportional to their sizes).  No pack / VAL / CAL / holdout file is read.
+# JAM: data.jam oversample 2.0, min_fraction 0.3 (v5_base) is applied inside every source.
+schema_version = 2
+name = "WM-S-C4-V5"
+extends = "c4_wm_v5_base.toml"
+
+[data]
+c4_base = "native_v5"      # V5DATA: no legacy packs / sidecars / window lists / switching
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"         # WMS_DATA_V5_NATIVE (converted native/)
+mix_ratio = 0.65           # = 1 - 0.30 - 0.05 (checked)
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"     # WMS_DATA_GENRAND_PLAIN (converted v5 generic_random/)
+mix_ratio = 0.30
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"    # WMS_DATA_GENRAND_BRANCH (converted v5 paired/branch)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[model]
+lane_model = "hazard_v5"
+lane_decision = "gated"
+lane_hazard_features = "v1"
+merge_hazard_zone = "forced_late"
+
+[loss.lane_event]
+weight = 10.0
+
+[loss.driver_prior]
+weight = 0.05
+target = "textbook"
+
+[curriculum]
+# the v4 references were measured on the legacy validation set; 0 = online
+# raw mean position over the common horizons, final selection normalised by the best candidate.
+selection_reference = [0.0, 0.0, 0.0, 0.0]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v5"

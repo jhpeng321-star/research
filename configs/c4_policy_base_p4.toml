@@ -1,0 +1,17 @@
+# Policy phase 4:
+#  - entry-queue term in the reward + vehicle entries in imagination (c4/srcwait fix),
+#  - cooperation weights at FULL strength from update 0 (phase restarts had reset the curriculum, so w_coop never
+#    exceeded ~0.26 of 0.5 in phases 1-3),
+#  - 30 s imagination (activation checkpointing makes it fit), entropy bonus 3e-3 kept.
+extends = "c4_policy_base.toml"
+
+[trainer]
+horizon = 30
+
+[counterfactual]
+curriculum_updates = [0, 1]
+w_individual = [0.5, 0.5]
+w_group = [1.0, 1.0]
+w_coop = [0.5, 0.5]
+w_team = [0.5, 0.5]
+w_all = [1.0, 1.0]

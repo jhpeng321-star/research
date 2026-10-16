@@ -1,0 +1,26 @@
+# ROUND 5b: continue round 5 from its own 30 s-stage checkpoint with the
+# stabilising fixes for the long stages, where R5's 60 s stage drifted upward (train position median 97 -> 165,
+# val 60 s 125 -> 160):
+#   (a) batch 32 instead of 8 (4x less gradient noise; GPU memory was 1.5 of 49 GB),
+#   (b) smaller learning rate in the long stages (3e-4 at 60 s, 1e-4 at 120 s),
+#   (d) gradient-norm / clip logging (trainer records grad_norm, grad_clipped, lr every step),
+#   (e) backward-only gradient damping through the rollout state (model.grad_decay_per_step): the R5b GPU smoke showed
+#       pre-clip gradient norms of 6e2-4e3 at 60 s and 1e8-4e8 at 120 s (exploding BPTT through chaotic dynamics).
+# Same FIX 1 + FIX 2 (full 120 s back-propagation) + FIX 3 as r5_f23. Only the 60 s and 120 s stages are run.
+# init_from must resolve to R5's wm_s_stage30.pt via WMS_DATA_CKPT_R5_STAGE30 (fails closed if unset).
+schema_version = 2
+name = "WM-S-R5B"
+extends = "r5_f23_half.toml"
+
+[model]
+init_from = "ckpt_r5_stage30"
+grad_decay_per_step = 0.90 # box smoke: pre-clip grad norm 10-27 at 60 s, 35-111 at 120 s (0.93: 20-46 / 2.3e3-5.1e3; none: 6e2-4e3 / 1e8-4e8)
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [940, 625]
+truncation_steps_per_stage = [120, 240]
+
+[optim]
+batch_size = 32
+lr_per_stage = [3.0e-4, 1.0e-4]

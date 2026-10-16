@@ -1,0 +1,42 @@
+# WM-S-C4 v4 (2026-10-14): the first world model built on the
+# 2026-10-13/14 diagnoses (runs/scratch/MORNING_WM_DIAG_NOTES.md).  From scratch.
+#   base   c4_wm_v3 (speed gap rule, hazard lane model, aggregate loss, entries_v2, 120 s stage)
+#   lanes  c4_wm_v4_lane: sampled lane decisions, hazard decoupled from loss.lane/flip_rate,
+#          v2 ranking features, hazard-owned merges (forced last 5 m), stopped-merger gaps,
+#          lane_event weight 3
+#   data   c4_wm_v4_data: controller_hygiene strict (no damping / scripted segments),
+#          junction_fix ffill, GENRAND undirected random-action data (C4-GENRAND-20261014:
+#          480 plain episodes + 2,520 paired branches), loss.paired_diff
+#   entry  data.entry_insert_rule = "sumo_like" (imagined/training entrance queues ~9x too big
+#          with v2; ENTRYFIX_NOTES.md)
+#   sched  validate all horizons, multi-horizon checkpoint selection (only 60 s / 120 s stage
+#          validations compete, so every candidate is scored on 10/30/60 s and 120 s when
+#          available), 30 % short (10/20 s) batches in stages >= 30 s, 30 s stage 900 -> 1500.
+#   NOT included: driver-estimate prior.  CAV execution cap is an imagination-time switch
+#   (policy/decision paths), not a WM training change.
+# Paired batches: fraction 0.20 (GENRAND ~44 % of sampled windows incl. paired batches).
+# Budget on the GPU host (RTX 4080S, 16-core quota): c4_wm_v4_sched estimate 5.9 h + lane v2 features
+# + paired batches -> ~7-8 h; max_hours 8.5.
+schema_version = 2
+name = "WM-S-C4-V4"
+extends = "c4_wm_v4_data.toml"
+
+[data]
+entry_insert_rule = "sumo_like"
+
+[loss.paired_diff]
+fraction = 0.20
+
+[curriculum]
+stage_steps = [1200, 1500, 400, 160]
+val_all_horizons = true
+selection = "multi_horizon"
+selection_horizons_s = [10.0, 30.0, 60.0, 120.0]
+selection_reference = [7.0356, 49.4889, 128.7179, 0.0]
+selection_min_stage_s = 60.0
+mixed_horizon_frac = 0.3
+mixed_horizon_s = [10.0, 20.0]
+max_hours = 8.5
+
+[runtime]
+out_dir = "runs/active/c4_wm_v4"
