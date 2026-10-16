@@ -54,8 +54,8 @@ def stats(pos, vel, msk, hdv) -> dict:
     return out
 
 
-def init(ckpts, device, threads):
-    G["models"] = {name: C.load_predictor(path, mode, device, threads)
+def init(ckpts, device, threads, hdv_exits="sumo"):
+    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits)
                    for name, path, mode in ckpts}
 
 
@@ -134,6 +134,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--threads", type=int, default=1, help="torch threads per worker")
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--hdv-exits", choices=("sumo", "none"), default="sumo",
+                    help="sumo = recorded SUMO exits end HDV slots too (predictor default); "
+                         "none = only CAV slots follow recorded presence")
     ap.add_argument("--bootstrap", type=int, default=2000)
     ap.add_argument("--json", default=None, help="write per-state results + summary here")
     a = ap.parse_args(argv)
@@ -148,10 +151,10 @@ def main(argv=None):
     print(f"[merge_check] {len(recs)} states, models {ckpts}, device {a.device}", flush=True)
     t = time.time()
     if a.workers <= 1:
-        init(ckpts, a.device, a.threads)
+        init(ckpts, a.device, a.threads, a.hdv_exits)
         results = [work(x) for x in recs]
     else:
-        with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads)) as pool:
+        with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits)) as pool:
             results = list(pool.imap(work, recs, chunksize=1))
     print(f"[merge_check] rollouts done in {time.time() - t:.0f} s", flush=True)
     summ = summarize(results, names, arms, a.bootstrap)

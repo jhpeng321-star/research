@@ -8,9 +8,13 @@ holds the t0 roster only; WM and SUMO metrics are both computed on the HDVs of t
 (SUMO all-HDV values including post-t0 entrants are reported for context, ``sumo_full``).
 
 HDV metrics (t0-roster HDVs, steps 1..H/0.5):
-* ``delay``  - delay proxy [veh-s] = sum over present HDV-steps of 0.5 * max(0, 1 - v / 31.29)
-  (the collector's speed-deficit definition, speed limit 31.29 m/s); presence = SUMO presence
-  (exits are exogenous in the WM rollout), so WM and SUMO share the exposure;
+* ``delay``  - delay proxy [veh-s] = sum over present HDV-steps upstream of s = 300 m of
+  0.5 * max(0, 1 - v / 31.29) (the collector's speed-deficit definition, speed limit 31.29 m/s).
+  Presence is exogenous in the WM rollout (SUMO exits at s ~ 539-553 m end a WM vehicle); the
+  300 m cut keeps those exits from setting the WM's exposure - each model's own positions decide
+  how long a vehicle counts.  ``exit_leaks`` (WM only) counts HDVs a SUMO exit removed while the
+  WM still had them upstream of the cut (should be ~0); ``delay_500`` / ``exit_leaks_500`` = the
+  same with a 500 m cut (v5m lags SUMO downstream, so ~20 leaks per state at 120 s: biased);
 * ``discharge`` - HDVs first seen upstream of s = 75.44 m (merge-zone end) that cross it within H;
 * ``ds_speed`` - vehicle-step mean HDV speed in [75.44, 600) m (downstream of the merge);
 * ``us_speed`` - same in [-400, 0) m (approach), for context.
@@ -43,7 +47,9 @@ import c4_episode_states as E  # noqa: E402
 import wm_eval_common as C  # noqa: E402
 
 DEFAULT_ROOT = "E:/research-dense/runs/active/C4-DIAG-20261016/ranking"
-METRICS = ("delay", "discharge", "ds_speed", "us_speed")
+METRICS = ("delay", "delay_500", "discharge", "ds_speed", "us_speed")
+LEAK_KEY = {"delay": "exit_leaks", "delay_500": "exit_leaks_500"}
+DELAY_END_M = 300.0       # primary delay corridor end (exposure-clean, see the docstring)
 G: dict = {}
 
 
@@ -52,14 +58,15 @@ def hkey(h: float) -> str:
 
 
 def hdv_metrics(pos, vel, msk, hdv, h: float) -> dict:
-    return {"delay": C.delay_proxy(vel, msk, hdv, h),
+    return {"delay": C.delay_proxy(vel, msk, hdv, h, pos=pos, end=DELAY_END_M),
+            "delay_500": C.delay_proxy(vel, msk, hdv, h, pos=pos, end=500.0),
             "discharge": C.discharge(pos, msk, hdv, h),
             "ds_speed": C.region_speed(pos, vel, msk, hdv, h, C.MERGE_END_M, 600.0),
             "us_speed": C.region_speed(pos, vel, msk, hdv, h, -400.0, 0.0)}
 
 
-def init(ckpts, device, threads):
-    G["models"] = {name: C.load_predictor(path, mode, device, threads)
+def init(ckpts, device, threads, hdv_exits="sumo"):
+    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits)
                    for name, path, mode in ckpts}
 
 
@@ -91,7 +98,11 @@ def work(payload):
             res.setdefault("sumo", {hkey(h): hdv_metrics(r["rec_pos"], r["rec_vel"],
                                                              r["rec_msk"], hdv, h)
                                     for h in horizons})
-            res[name] = {hkey(h): hdv_metrics(r["wm_pos"], r["wm_vel"], r["wm_msk"], hdv, h)
+            res[name] = {hkey(h): {**hdv_metrics(r["wm_pos"], r["wm_vel"], r["wm_msk"], hdv, h),
+                                   "exit_leaks": C.exit_leaks(r["wm_pos"], r["rec_msk"], hdv, h,
+                                                              end=DELAY_END_M),
+                                   "exit_leaks_500": C.exit_leaks(r["wm_pos"], r["rec_msk"], hdv,
+                                                                  h, end=500.0)}
                          for h in horizons}
             res.setdefault("sec", {})[name] = time.time() - t
         out["ctrls"][ctrl] = res
@@ -143,7 +154,7 @@ def summarize(results, ctrls, names, ref, horizons, n_boot=2000):
             hb = {}
             for metric in METRICS:
                 su = _table(rs, ctrls, "sumo", h, metric)
-                sf = _table(rs, ctrls, "sumo_full", h, metric) if metric in ("delay", "discharge") else None
+                sf = _table(rs, ctrls, "sumo_full", h, metric) if metric == "discharge" else None
                 jr = ctrls.index(ref)
                 mb = {"sumo_mean": dict(zip(ctrls, np.nanmean(su, 0).tolist())),
                       "sumo_delta": {c: C.bootstrap_mean(su[:, j] - su[:, jr], n_boot, groups=groups)
@@ -177,6 +188,9 @@ def summarize(results, ctrls, names, ref, horizons, n_boot=2000):
                         "spearman": _boot_spearman(wm, su, groups, n_boot),
                         "spearman_per_state_mean": float(np.nanmean(
                             [C.spearman(wm[i], su[i]) for i in range(len(rs))])),
+                        "exit_leaks_per_state": (dict(zip(ctrls, np.nanmean(
+                            _table(rs, ctrls, name, h, LEAK_KEY[metric]), 0).tolist()))
+                            if metric in LEAK_KEY else None),
                     }
                 mb["pairs"] = {}
                 for na, nb in itertools.combinations(names, 2):
@@ -207,7 +221,7 @@ def summarize(results, ctrls, names, ref, horizons, n_boot=2000):
     return out
 
 
-UNITS = {"delay": "veh-s", "discharge": "veh", "ds_speed": "m/s", "us_speed": "m/s"}
+UNITS = {"delay": "veh-s", "delay_500": "veh-s", "discharge": "veh", "ds_speed": "m/s", "us_speed": "m/s"}
 
 
 def markdown(summ, ctrls, names, ref, horizons) -> str:
@@ -242,6 +256,10 @@ def markdown(summ, ctrls, names, ref, horizons) -> str:
                              f"[{sp[1]:+.2f}, {sp[2]:+.2f}]; per-state mean "
                              f"{m['spearman_per_state_mean']:+.2f}; mean |Δ error| over "
                              f"non-{ref} controllers {C.fmt_ci(m['mean_abs_delta_err'])}")
+                    if metric in LEAK_KEY:
+                        L.append(f"\n{n}: HDVs removed by a SUMO exit while the WM had them "
+                                 "upstream of the delay end, per state: " + ", ".join(
+                                     f"{c} {m['exit_leaks_per_state'][c]:.2f}" for c in ctrls))
                 for pair, d in mb["pairs"].items():
                     L.append(f"\npaired {pair}: mean |Δ error| A-B "
                              f"{C.fmt_ci(d['mean_abs_delta_err_diff'])} (neg = A better); "
@@ -305,6 +323,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--threads", type=int, default=1)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--hdv-exits", choices=("sumo", "none"), default="sumo",
+                    help="sumo = recorded SUMO exits end HDV slots too (predictor default); "
+                         "none = only CAV slots follow recorded presence")
     ap.add_argument("--bootstrap", type=int, default=2000)
     ap.add_argument("--json", default=None)
     ap.add_argument("--md", default=None, help="write the markdown tables here")
@@ -343,10 +364,10 @@ def main(argv=None):
         print(f"[ranking] controllers {counts}; {len(payloads)} jobs; models {ckpts}", flush=True)
         t = time.time()
         if a.workers <= 1:
-            init(ckpts, a.device, a.threads)
+            init(ckpts, a.device, a.threads, a.hdv_exits)
             results = [work(x) for x in payloads]
         else:
-            with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads)) as pool:
+            with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits)) as pool:
                 results = list(pool.imap_unordered(work, payloads, chunksize=1))
         results.sort(key=lambda r: r["job"])
         print(f"[ranking] rollouts done in {time.time() - t:.0f} s", flush=True)
