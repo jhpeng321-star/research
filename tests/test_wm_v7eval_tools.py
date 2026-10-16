@@ -129,6 +129,17 @@ def test_metric_functions():
     assert C.discharge(pos, msk2, hdv, 2.0) == 0
     # delay: vehicle 0 at 8 m/s for 4 steps, vehicle 1 at the limit (0 deficit)
     assert C.delay_proxy(vel, msk, hdv, 2.0) == pytest.approx(4 * 0.5 * (1 - 8 / 31.29))
+    # the s < end cut: vehicle 0 is at 76/78/80 m in rows 2-4 -> only row 1 (74 m) counts
+    assert C.delay_proxy(vel, msk, hdv, 2.0, pos=pos, end=75.0) == pytest.approx(
+        0.5 * (1 - 8 / 31.29))
+    # exit leaks: vehicle 0's SUMO record ends after row 2 while the WM had it at 76 m < 500 m;
+    # vehicle 1 (WM at 30 m) exits after row 3
+    rec_msk = msk.copy()
+    rec_msk[3:, 0] = False
+    rec_msk[4:, 1] = False
+    assert C.exit_leaks(pos, rec_msk, hdv, 2.0) == 2
+    assert C.exit_leaks(pos, rec_msk, hdv, 2.0, end=25.0) == 0
+    assert C.exit_leaks(pos, rec_msk, hdv, 2.0, end=50.0) == 1
     assert C.region_speed(pos, vel, msk, hdv, 2.0, 75.44, 600.0) == pytest.approx(8.0)
     assert np.isnan(C.region_speed(pos, vel, msk, hdv, 2.0, 500.0, 600.0))
     assert C.snapshot_speed(pos, vel, msk, hdv, 0.0, 0.0, 75.44) == pytest.approx((8 + 31.29) / 2)

@@ -24,6 +24,9 @@ FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1
 DT_S = 0.5
 MERGE_END_M = 75.44               # merge-zone end (s = 0 is the merge start)
 SPEED_LIMIT_MPS = 31.29           # the collector's speed-deficit reference (traffic_shepherd.c4.env)
+DELAY_END_M = 500.0               # delay is counted upstream of this line only (road end ~553 m):
+                                  # SUMO exits (exogenous presence in the WM rollout) then do not
+                                  # set the WM's exposure
 MODES = {"OFF": (False, False), "ON": (True, True), "WAIT": (True, False), "YIELD": (False, True)}
 MODE_FIELDS = ("merge_end_wait", "mainline_merge_yield")
 
@@ -104,18 +107,31 @@ def _to(obj, device):
     return obj
 
 
-def load_predictor(path: str, mode: str, device: str = "cpu", threads: int = 1):
-    """-> (predictor, capture dict); ``capture['last']`` holds the last raw rollout (CPU)."""
+def load_predictor(path: str, mode: str, device: str = "cpu", threads: int = 1,
+                   hdv_exits: str = "sumo"):
+    """-> (predictor, capture dict); ``capture['last']`` holds the last raw rollout (CPU).
+
+    ``hdv_exits``: ``sumo`` = the predictor's standard semantics (recorded SUMO presence ends
+    every slot, HDVs included, so a SUMO exit can remove a vehicle the WM still has queued
+    upstream); ``none`` = recorded exits end CAV slots only, HDVs stay until the model itself
+    drops them (no SUMO outcome leaks into the predicted HDV state)."""
+    if hdv_exits not in ("sumo", "none"):
+        raise SystemExit(f"hdv_exits must be sumo or none, not {hdv_exits!r}")
     import torch
     from wms.eval.predictor import RolloutFlags, WmsPredictor
     torch.set_num_threads(threads)
     p = WmsPredictor.from_checkpoint(guard(path), RolloutFlags(entries=False, entries_v2=False),
                                      device=device)
     info = set_mode(p.model, mode)
-    cap = {"mode_info": info}
+    cap = {"mode_info": info, "hdv_exits": hdv_exits}
     orig = p.model.rollout
 
     def rollout(state, **kw):
+        if hdv_exits == "none" and kw.get("present_seq") is not None:
+            ps = kw["present_seq"].clone()
+            hdv = ~state["is_cav"].bool()                       # [B, N] slots at t0
+            ps[:, :, :hdv.shape[1]] |= hdv[:, None, :] & state["present"].bool()[:, None, :]
+            kw["present_seq"] = ps
         if device != "cpu":
             state, kw = _to(state, device), _to(kw, device)
         out = orig(state, **kw)
@@ -173,12 +189,28 @@ def discharge(pos, msk, sel, horizon_s: float, end: float = MERGE_END_M) -> int:
     return n
 
 
-def delay_proxy(vel, msk, sel, horizon_s: float, v_ref: float = SPEED_LIMIT_MPS) -> float:
+def delay_proxy(vel, msk, sel, horizon_s: float, v_ref: float = SPEED_LIMIT_MPS, pos=None,
+                end: float = DELAY_END_M) -> float:
     """HDV delay proxy [veh-s]: sum over steps 1..H/dt and vehicles in ``sel`` present at the step
-    of ``dt * max(0, 1 - v / v_ref)`` (the collector's speed-deficit definition, t0 roster only)."""
+    (and, when ``pos`` is given, with ``s < end``) of ``dt * max(0, 1 - v / v_ref)`` (the
+    collector's speed-deficit definition, t0 roster only)."""
     rows = int(round(horizon_s / DT_S)) + 1
     v, m = vel[1:rows], msk[1:rows] & sel[None, :]
+    if pos is not None:
+        m = m & (pos[1:rows] < end)
     return float(DT_S * np.clip(1.0 - v / v_ref, 0.0, None)[m].sum())
+
+
+def exit_leaks(wm_pos, rec_msk, sel, horizon_s: float, end: float = DELAY_END_M) -> int:
+    """Vehicles in ``sel`` whose recorded SUMO exit (presence is exogenous in the WM rollout)
+    removed them from the WM while the WM still had them upstream of ``end``."""
+    rows = int(round(horizon_s / DT_S)) + 1
+    n = 0
+    for k in np.flatnonzero(sel):
+        gone = np.flatnonzero(~rec_msk[1:rows, k])
+        if gone.size and wm_pos[gone[0], k] < end:     # WM position one row before the exit
+            n += 1
+    return n
 
 
 def region_speed(pos, vel, msk, sel, horizon_s: float, lo: float, hi: float) -> float:
@@ -212,14 +244,12 @@ def bootstrap_mean(values, n_boot: int = 2000, seed: int = 0, groups=None):
     x = x[ok]
     if x.size == 0:
         return float("nan"), float("nan"), float("nan")
-    labels = np.unique(g)
-    members = [np.flatnonzero(g == lab) for lab in labels]
+    labels, inv = np.unique(g, return_inverse=True)
+    sums = np.bincount(inv, weights=x, minlength=labels.size)
+    counts = np.bincount(inv, minlength=labels.size).astype(float)
     rng = np.random.default_rng(seed)
-    bs = np.empty(n_boot)
-    for b in range(n_boot):
-        pick = rng.integers(0, len(labels), size=len(labels))
-        idx = np.concatenate([members[i] for i in pick])
-        bs[b] = x[idx].mean()
+    pick = rng.integers(0, labels.size, size=(n_boot, labels.size))
+    bs = sums[pick].sum(1) / counts[pick].sum(1)
     return float(x.mean()), float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
 
 
