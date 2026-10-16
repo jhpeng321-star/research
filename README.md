@@ -6,8 +6,9 @@ connected automated vehicles (CAVs) among human-driven vehicles (HDVs), simulate
 The repository has two parts.
 
 - **WM-S**, a per-vehicle, per-step (0.5 s) world model of mixed CAV/HDV traffic. Each HDV moves
-  by an **IDM car-following + MOBIL lane-change physics core** whose **per-driver settings**
-  (desired speed, time headway, gaps, politeness, ...) are inferred from each vehicle's observed
+  by an **IDM car-following physics core** with **learned lane-change decisions** (overtake / return /
+  ramp-merge heads; physics only masks unsafe changes with a SUMO-style safe-gap check; legacy configs
+  can still select MOBIL) whose **per-driver settings** (desired speed, time headway, gaps, ...) are inferred from each vehicle's observed
   motion and learned from prediction error only (no driver-type labels), plus a **gated, bounded
   learned residual**. CAVs are exogenous inputs: the model is told what they do. As a result, a
   controller that never appeared in the training data can be evaluated zero-shot.
@@ -31,7 +32,7 @@ Design documents:
 
 ```
 src/wms/                 world model and C4 control (Python package `wms`)
-  physics/               differentiable IDM/MOBIL core, merge-zone rules
+  physics/               differentiable IDM core, lane safety mask (+ legacy MOBIL), merge-zone rules
   model/                 WmSModel, driver encoder, gated residual, lane models, entries, checkpoints
   data/                  data registry, C4 episode conversion, packs, windows, datasets
   train/                 trainer, unroll/curriculum, losses, selection, preflight

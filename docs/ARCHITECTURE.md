@@ -23,8 +23,10 @@ queues, flow) are computed from predicted states; there is no separate delay hea
   callback (`src/wms/model/cav.py`). This is what lets controllers that were never in the training
   data be evaluated zero-shot: the same physics and learned HDV behaviour respond to whatever the
   CAVs do.
-- **HDVs are physics plus learned corrections.** Each human-driven vehicle moves by an IDM/MOBIL
-  physics core whose parameters are inferred per driver, plus a gated, bounded learned residual.
+- **HDVs are physics plus learned corrections.** Each human-driven vehicle moves by an IDM
+  car-following core whose parameters are inferred per driver, with learned lane-change decisions
+  (`lane_rule = learned_discretionary`, `lane_model = hazard_v5`; physics only masks unsafe changes;
+  `lane_rule = mobil` remains for legacy configs), plus a gated, bounded learned residual.
 
 ## 2. One model step (`WmSModel.forward` / `step`, `src/wms/model/wms.py`)
 
@@ -150,7 +152,7 @@ and the coordinated wall group (`traffic_shepherd/wall_group.py`). A single comm
 |---|---|
 | `core` | constants (controller vocabulary, `KIN_F`), errors, IO, seeds, restricted-path guard, TOML reader |
 | `config` | typed config dataclasses (`train.py`, `data.py`, `eval.py`), preset loader, legacy flag map |
-| `physics` | differentiable IDM/MOBIL core and merge rules (section 2) |
+| `physics` | differentiable IDM core, lane safety mask (+ legacy MOBIL) and merge rules (section 2) |
 | `model` | `WmSModel`, driver encoder, residual net, gates, lane models, entries, checkpoint IO |
 | `data` | data registry, converted C4 episode sources, packs, windows, datasets, collation, hygiene |
 | `train` | trainer, unroll, curriculum, losses, selection, gates, preflight |
