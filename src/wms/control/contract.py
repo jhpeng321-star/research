@@ -111,6 +111,14 @@ class RewardWeights:
     hard_brake: float = 1.0     # relu(-a - 3)^2
     fairness: float = 1.0       # CVaR(90%) of per-vehicle delay
     ttc_limit_s: float = 3.0    # safety constraint threshold (Lagrangian, not a weight)
+    # V7POL (owner 2026-10-17; defaults = the previous reward, bit-identical):
+    # "all" = TTC cost over every directed closing same-lane pair; "cav" = only pairs whose
+    # follower OR leader is a CAV (state["is_cav"]).
+    ttc_pairs: str = "all"
+    # +weight per vehicle crossing the merge end MERGE_S1_M in a physics step (the same soft
+    # sigmoid crossing count as ``throughput``), added to the reward WITHOUT the per-vehicle
+    # normalisation that ``throughput`` gets (so it is ~count-times stronger per unit weight).
+    merge_discharge: float = 0.0
 
 
 # ---------------------------------------------------------------- signatures

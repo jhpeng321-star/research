@@ -77,13 +77,20 @@ def _soft_cvar(delay: Tensor, present: Tensor, weight: Tensor | None = None) -> 
     return torch.where(present.any(-1), cvar.clamp_min(0.0), torch.zeros_like(cvar))
 
 
-def _ttc_cost(state: Mapping[str, Tensor], limit_s: float) -> Tensor:
+TTC_PAIRS = ("all", "cav")
+
+
+def _ttc_cost(state: Mapping[str, Tensor], limit_s: float, pairs: str = "all") -> Tensor:
     """Soft relu(limit - TTC), summed over directed closing same-lane pairs.
 
     A softplus smooths the positive part in seconds. A small denominator floor
     avoids division by zero; non-closing pairs contribute exactly zero.
     Pair membership/order is discrete; positions/speeds within it have gradients.
+    ``pairs="cav"`` (V7POL) keeps only pairs whose follower or leader is a CAV
+    (``state["is_cav"]``); human-human pairs then cost nothing.
     """
+    if pairs not in TTC_PAIRS:
+        raise ValueError(f"ttc_pairs must be one of {TTC_PAIRS}")
     present = state["present"].bool()
     s = torch.where(present, state["s_m"], torch.zeros_like(state["s_m"]))
     v = torch.where(present, state["v_mps"], torch.zeros_like(state["v_mps"]))
@@ -95,6 +102,11 @@ def _ttc_cost(state: Mapping[str, Tensor], limit_s: float) -> Tensor:
              & (lane[:, :, None] == lane[:, None, :])
              & (lane[:, :, None] >= 0) & (ds >= 0.0)
              & ~torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)[None])
+    if pairs == "cav":
+        if "is_cav" not in state:
+            raise ValueError("ttc_pairs='cav' needs state['is_cav']")
+        cav = state["is_cav"].bool() & present
+        pair = pair & (cav[:, :, None] | cav[:, None, :])     # follower i or leader j is a CAV
     gap = ds - length[:, None, :]
     closing = F.relu(v[:, :, None] - v[:, None, :])
     ttc = gap.clamp_min(0.0) / closing.clamp_min(_CLOSING_EPS_MPS)
@@ -122,6 +134,11 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     CVaR includes the queued vehicles at delay ``dt`` each.  ``source_wait`` is zero without it.
     A queue that requires grad (straight-through surrogate, SRCGRAD_NOTES.md) passes its gradient
     to ``source_wait`` only; values are unchanged.
+
+    V7POL (defaults off): ``weights.merge_discharge`` adds ``merge_discharge * throughput`` to the
+    reward without the count normalisation (``throughput`` already IS the soft crossing count of
+    the merge end MERGE_S1_M); ``weights.ttc_pairs = "cav"`` restricts the TTC cost to pairs with a
+    CAV follower or leader.
     """
     if weights.ttc_limit_s <= 0.0:
         raise ValueError("ttc_limit_s must be positive")
@@ -169,7 +186,12 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     reward = ((-weights.delay * (delay + source_wait) + weights.throughput * throughput
                - weights.smooth * smooth - weights.hard_brake * hard_brake) / count
               - weights.fairness * fairness)
-    return {"reward": reward, "cost_ttc": _ttc_cost(next_state, weights.ttc_limit_s),
+    discharge_weight = float(getattr(weights, "merge_discharge", 0.0))
+    if discharge_weight != 0.0:
+        # V7POL: un-normalised merge-end discharge (vehicles crossing MERGE_S1_M this step).
+        reward = reward + discharge_weight * throughput
+    pairs = getattr(weights, "ttc_pairs", "all")
+    return {"reward": reward, "cost_ttc": _ttc_cost(next_state, weights.ttc_limit_s, pairs),
             "delay": delay, "throughput": throughput, "smooth": smooth,
             "hard_brake": hard_brake, "fairness_delay": fairness, "source_wait": source_wait}
 
