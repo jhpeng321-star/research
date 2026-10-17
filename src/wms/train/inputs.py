@@ -1,6 +1,7 @@
 """Batch -> unroll inputs: device placement, entries-v2 padding, t0 noise, recorded targets."""
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
@@ -86,7 +87,10 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
                              "converted with V9ENTRY queue arrays)")
         if not settings.entry_pad_auto:
             raise ValueError("entry_queue_state needs entry_pad_auto (uncapped backlog)")
-        queues = [EntranceQueue.from_vector(row)
+        # The entrant CAV share is NOT applied in WM training: teacher-forced training rollouts
+        # have no CAV controller, and an entrant CAV would run the native hold-speed motion
+        # (WMS.step: ``hold_teacher``) - a stop-speed entrant would then block the entrance.
+        queues = [dataclasses.replace(EntranceQueue.from_vector(row), cav_share=None)
                   for row in batch["entry_queue"].detach().cpu().numpy()]
         queue_kw = {"queues": queues}
         horizon_s = max(steps, 1) * dt_s

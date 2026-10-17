@@ -179,8 +179,10 @@ class EntryStats:
     per_entrance: list = field(default_factory=lambda: [0, 0])
 
 
-#: Length of the entrance-queue vector (:class:`EntranceQueue`): backlog main/ramp, demand main/ramp.
+#: Length of the entrance-queue vector (:class:`EntranceQueue`): backlog main/ramp, demand main/ramp
+#: (+ optionally the entrant CAV share main/ramp: 6 values).
 QUEUE_FEATURE_LEN = 4
+QUEUE_FEATURE_LEN_CAV = 6
 
 
 @dataclass
@@ -190,40 +192,52 @@ class EntranceQueue:
 
     ``backlog`` [2] = requested-but-not-yet-inserted vehicles per entrance (mainline, ramp) at
     t0; ``demand_rate`` [2] = the arrival (request) rate in veh/s, NOT the insertion-counter rate
-    (on a saturated entrance the counter only measures the service capacity).  Training starts
-    take both from the recorded SUMO request ledger (``wms.data.c4_episodes`` queue arrays); a
-    deployed RSU would have to estimate them from upstream detectors (queue length / occupancy
-    upstream of the entrance, arrival counts at an upstream loop).  Arrivals are Poisson by
-    default (``demand_cv`` = 1, SUMO's request process).
+    (on a saturated entrance the counter only measures the service capacity).  ``cav_share`` [2]
+    (optional) = the CAV share of the recently INSERTED vehicles per entrance (CAVs identify
+    themselves to the RSU); the entry-history features carry no CAV share (``entry_features`` passes
+    no ``is_cav``), so without it every imagined entrant is an HDV and the policy never drives an
+    entrant.  Training starts take all three from the recorded episode (``wms.data.c4_episodes``
+    queue arrays); a deployed RSU would have to estimate the backlog and demand from upstream
+    detectors (queue length / occupancy upstream of the entrance, arrival counts at an upstream
+    loop).  Arrivals are Poisson by default (``demand_cv`` = 1, SUMO's request process).
     """
 
     backlog: np.ndarray
     demand_rate: np.ndarray
     demand_cv: float = 1.0
+    cav_share: Optional[np.ndarray] = None
 
     @classmethod
     def from_vector(cls, vec, demand_cv: float = 1.0) -> "EntranceQueue":
         v = np.asarray(vec, np.float64).reshape(-1)
-        if v.size != QUEUE_FEATURE_LEN or not np.all(np.isfinite(v)):
-            raise ValueError(f"entrance-queue vector must hold {QUEUE_FEATURE_LEN} finite "
-                             f"values, got {v}")
-        return cls(backlog=np.clip(np.rint(v[:N_ENTRANCES]), 0.0, None),
-                   demand_rate=np.clip(v[N_ENTRANCES:], 0.0, None), demand_cv=float(demand_cv))
+        if v.size not in (QUEUE_FEATURE_LEN, QUEUE_FEATURE_LEN_CAV) or not np.all(np.isfinite(v)):
+            raise ValueError(f"entrance-queue vector must hold {QUEUE_FEATURE_LEN} or "
+                             f"{QUEUE_FEATURE_LEN_CAV} finite values, got {v}")
+        n = N_ENTRANCES
+        return cls(backlog=np.clip(np.rint(v[:n]), 0.0, None),
+                   demand_rate=np.clip(v[n:2 * n], 0.0, None), demand_cv=float(demand_cv),
+                   cav_share=(np.clip(v[2 * n:3 * n], 0.0, 1.0) if v.size == QUEUE_FEATURE_LEN_CAV
+                              else None))
 
     def to_vector(self) -> np.ndarray:
-        return np.concatenate([np.asarray(self.backlog, np.float64),
-                               np.asarray(self.demand_rate, np.float64)])
+        parts = [np.asarray(self.backlog, np.float64), np.asarray(self.demand_rate, np.float64)]
+        if self.cav_share is not None:
+            parts.append(np.asarray(self.cav_share, np.float64))
+        return np.concatenate(parts)
 
 
 def with_queue_demand(history: "EntranceHistory", queue: EntranceQueue) -> "EntranceHistory":
-    """``history`` with its arrival rate / headway CV replaced by the queue's demand (V9ENTRY);
-    every other observed entry statistic (class mix, lane share, speeds, gaps) is kept."""
+    """``history`` with its arrival rate / headway CV (and, when the queue has one, the entrant
+    CAV share) replaced by the queue's values (V9ENTRY); every other observed entry statistic
+    (vehicle-type mix, lane share, speeds, gaps) is kept."""
     import dataclasses
 
+    extra = {} if queue.cav_share is None else {
+        "cav_share": np.asarray(queue.cav_share, np.float64).copy()}
     return dataclasses.replace(
         history, rate=np.asarray(queue.demand_rate, np.float64).copy(),
         headway_cv=np.full(N_ENTRANCES, float(queue.demand_cv)),
-        trend=np.ones(N_ENTRANCES))
+        trend=np.ones(N_ENTRANCES), **extra)
 
 
 def observed_rates(counter, window_bins: int = 12) -> np.ndarray:

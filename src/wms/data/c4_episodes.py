@@ -85,8 +85,10 @@ EXTRA_ARRAYS = ("requested_acceleration_mps2", "lane_command_target", "lane_requ
 #:                                  (SUMO ledger ``due(now) - inserted``; 0 mainline, 1 ramp)
 #:   request_counter  f32 [T,2,30]  10 s REQUEST (demand) counts over the last 300 s, binned as
 #:                                  ``counter`` (which counts insertions, i.e. service)
+#:   entry_cav_counter f32 [T,2,30] 10 s CAV INSERTION counts (the CAV part of ``counter``; CAVs
+#:                                  identify themselves, so the entrant CAV share is RSU-observable)
 #: The window loader turns them into ``record["entry_queue"]`` (:func:`queue_features`).
-QUEUE_ARRAYS = ("entry_backlog", "request_counter")
+QUEUE_ARRAYS = ("entry_backlog", "request_counter", "entry_cav_counter")
 REQUESTS_FILE = "scenario/requests.rou.xml"
 
 
@@ -284,16 +286,41 @@ def episode_queue_arrays(time_s: np.ndarray, vid: np.ndarray, present: np.ndarra
     return {"entry_backlog": backlog, "request_counter": counter}, stats
 
 
+def cav_entry_counter(time_s, vid, present, is_cav, lane_carry, first_seen_s=None,
+                      first_entrance=None) -> np.ndarray:
+    """``[T,2,30]`` CAV insertion counts, binned exactly as :func:`episode_counter` (whose CAV
+    part it is): the counter restricted to vehicles that are CAVs."""
+    vid = np.asarray(vid)
+    cav_ids = np.unique(vid[np.asarray(present, bool) & np.asarray(is_cav, bool) & (vid >= 0)])
+    keep = np.isin(vid, cav_ids) & np.asarray(present, bool)
+    fs = fe = None
+    if first_seen_s is not None and first_entrance is not None:
+        fs = np.asarray(first_seen_s, np.float64).copy()
+        fe = np.asarray(first_entrance).copy()
+        not_cav = ~np.isin(np.arange(fs.size), cav_ids)
+        fs[not_cav] = np.nan
+        fe[not_cav] = -1
+    return episode_counter(np.asarray(time_s), vid, keep, lane_carry, fs, fe)
+
+
 def queue_features(ep, tick: int) -> np.ndarray:
-    """``[backlog main, backlog ramp, demand main, demand ramp]`` (vehicles, veh/s) at ``tick``.
+    """``[backlog main, backlog ramp, demand main, demand ramp(, CAV share main, CAV share ramp)]``
+    (vehicles, veh/s, fraction) at ``tick``.
 
     The demand rate is the mean request rate over the fully observed 10 s bins of the last
-    300 s (an upstream arrival count); the backlog is the recorded SUMO entrance queue."""
+    300 s (an upstream arrival count); the backlog is the recorded SUMO entrance queue; the CAV
+    share (when ``entry_cav_counter`` exists) is the CAV fraction of the insertions in the same
+    bins (0 when there were none)."""
     backlog = np.asarray(ep.array("entry_backlog")[tick], np.float64)
     counter = np.asarray(ep.array("request_counter")[tick], np.float64)
     n = max(1, min(COUNTER_BINS, int(float(ep.array("time_s")[tick]) // COUNTER_BIN_S)))
     demand = counter[:, :n].sum(1) / (n * COUNTER_BIN_S)
-    return np.concatenate([backlog, demand]).astype(np.float32)
+    parts = [backlog, demand]
+    if ep.has("entry_cav_counter"):
+        ins = np.asarray(ep.array("counter")[tick], np.float64)[:, :n].sum(1)
+        cav = np.asarray(ep.array("entry_cav_counter")[tick], np.float64)[:, :n].sum(1)
+        parts.append(np.where(ins > 0, cav / np.maximum(ins, 1.0), 0.0))
+    return np.concatenate(parts).astype(np.float32)
 
 
 def _load_episode_npz(path: Path) -> dict:
@@ -347,6 +374,10 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
             ep.get("entry_first_seen_s"))
         for key, value in queue.items():
             np.save(out / f"{key}.npy", value, allow_pickle=False)
+        np.save(out / "entry_cav_counter.npy", cav_entry_counter(
+            arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+            arrays["is_cav"].astype(bool), np.asarray(ep.get("lane_carry", ep["lane"]), np.int64),
+            ep.get("entry_first_seen_s"), ep.get("entry_first_entrance")), allow_pickle=False)
     present = arrays["veh_mask"].astype(bool)
     cav = present & arrays["is_cav"].astype(bool)
     entry = {

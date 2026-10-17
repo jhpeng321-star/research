@@ -75,11 +75,18 @@ def test_queue_vector_round_trip_and_validation():
     with pytest.raises(ValueError):
         EntranceQueue.from_vector([1.0, 2.0, 3.0])
     with pytest.raises(ValueError):
+        EntranceQueue.from_vector([1.0, 2.0, 3.0, 4.0, 0.5])
+    with pytest.raises(ValueError):
         EntranceQueue.from_vector([1.0, np.nan, 0.5, 0.1])
     h = with_queue_demand(_hist(), q)
     np.testing.assert_allclose(h.rate, [0.66, 0.11])
     np.testing.assert_allclose(h.headway_cv, [1.0, 1.0])
     np.testing.assert_allclose(h.vtype_share, _hist().vtype_share)     # class mix kept
+    np.testing.assert_allclose(h.cav_share, _hist().cav_share)         # no CAV share: kept
+    q6 = EntranceQueue.from_vector([5, 1, 0.7, 0.1, 0.4, 1.3])
+    np.testing.assert_allclose(q6.cav_share, [0.4, 1.0])              # clipped to [0, 1]
+    np.testing.assert_allclose(q6.to_vector(), [5, 1, 0.7, 0.1, 0.4, 1.0])
+    np.testing.assert_allclose(with_queue_demand(_hist(), q6).cav_share, [0.4, 1.0])
     assert EntryConfig().fresh_no_credit is False
 
 
@@ -207,6 +214,13 @@ def test_dreamer_config_switch_and_slots():
     proc = _entry_process(on.entry_spec, [0, 0, 1], on.state["s_m"].shape[1], "sumo_like_v2")
     assert proc.cfg.fresh_no_credit is True and proc.cfg.insert_rule == "sumo_like_v2"
     np.testing.assert_array_equal(proc.pending, [[40, 0], [40, 0], [5, 1]])
+    six = _start_batch()
+    six.entry_queue = torch.cat((six.entry_queue, torch.tensor([[0.4, 0.0], [0.3, 0.1]])), 1)
+    on6 = with_entry_slots(six, 30.0, 256, torch.Generator().manual_seed(0), queue_state=True)
+    p6 = _entry_process(on6.entry_spec, [0, 1], on6.state["s_m"].shape[1], "sumo_like_v2")
+    np.testing.assert_allclose(p6._hist(0).cav_share, [0.4, 0.0], rtol=1e-6)
+    np.testing.assert_allclose(p6._hist(1).cav_share, [0.3, 0.1], rtol=1e-6)
+    np.testing.assert_allclose(proc._hist(0).cav_share, _hist().cav_share)   # 4-vector: kept
     legacy = _entry_process(off.entry_spec, [0, 1], off.state["s_m"].shape[1], "sumo_like_v2")
     assert legacy.queues is None and not legacy.pending.any() and not legacy.cfg.fresh_no_credit
 
@@ -251,6 +265,25 @@ def test_queue_arrays_follow_the_sumo_ledger(tmp_path):
     np.testing.assert_array_equal(got[2], entrance)
 
 
+def test_cav_entry_counter_is_the_cav_part_of_the_counter():
+    from wms.data import c4_episodes as C4
+
+    t_n = 41
+    time_s = np.arange(t_n) * 0.5
+    vid = np.full((t_n, 3), -1, np.int32)
+    present = np.zeros((t_n, 3), bool)
+    is_cav = np.zeros((t_n, 3), bool)
+    lane = np.zeros((t_n, 3), np.int64)
+    vid[4:, 0], present[4:, 0], is_cav[4:, 0] = 0, True, True     # CAV enters at 2 s (mainline)
+    vid[10:, 1], present[10:, 1] = 1, True                        # HDV enters at 5 s
+    vid[20:, 2], present[20:, 2], is_cav[20:, 2], lane[20:, 2] = 2, True, True, 2   # CAV, ramp, 10 s
+    full = C4.episode_counter(time_s, vid, present, lane)
+    cav = C4.cav_entry_counter(time_s, vid, present, is_cav, lane)
+    assert (cav <= full).all()
+    np.testing.assert_array_equal(full[-1].sum(1), [2, 1])
+    np.testing.assert_array_equal(cav[-1].sum(1), [1, 1])
+
+
 def test_converter_and_loader_carry_entry_queue(tmp_path):
     from wms.data import c4_episodes as C4
 
@@ -274,16 +307,18 @@ def test_converter_and_loader_carry_entry_queue(tmp_path):
     with_q = [r for r in recs if "entry_queue" in r]
     assert with_q and all(r["meta"]["world"].startswith("w4107") for r in with_q)
     r20 = next(r for r in with_q if r["meta"]["t0_s"] == 20.0)
-    # t0 = 20 s: due requests 0..16 s; v4 (ramp) inserted at 17 s -> ramp backlog 1 at 20 s? no:
-    # v4 requested at 16.0 s and inserted at 17.0 s, so at 20 s only the 3 late mainline remain.
+    # t0 = 20 s: every episode vehicle was inserted 1 s after its request (v4, ramp: 16 -> 17 s), so
+    # only the 3 never-inserted mainline requests are waiting.
+    assert r20["entry_queue"].shape == (6,)
     np.testing.assert_allclose(r20["entry_queue"][:2], [3.0, 0.0])
-    np.testing.assert_allclose(r20["entry_queue"][2:], [3 / 20.0, 2 / 20.0])   # ages < 20 s (2 bins)
+    np.testing.assert_allclose(r20["entry_queue"][4:], [0.0, 0.0])        # only HDVs entered
+    np.testing.assert_allclose(r20["entry_queue"][2:4], [3 / 20.0, 2 / 20.0])  # ages < 20 s (2 bins)
     plain = C4.build_c4_datasets(out, horizon_steps=20, entries_v2=False, stride_s=10.0)["train"][0]
     assert "entry_queue" not in plain
 
     sampler = StartStateSampler(_ListDataset(with_q), seed=0)
     batch = sampler._batch([sampler._load(i) for i in range(len(with_q))], "cpu")
-    assert batch.entry_queue is not None and batch.entry_queue.shape == (len(with_q), 4)
+    assert batch.entry_queue is not None and batch.entry_queue.shape == (len(with_q), 6)
     assert all("_entry_queue" not in m for m in batch.metadata)
     json.dumps(batch.metadata)
 
@@ -322,6 +357,12 @@ def test_wm_training_entry_process_switch():
                             {"entry_feat": feat, "entry_queue": queue}, present, _M,
                             torch.device("cpu"))
     np.testing.assert_array_equal(on.pending, [[40, 0], [5, 1]])
+    six = torch.cat((queue, torch.tensor([[0.9, 0.9], [0.9, 0.9]])), 1)
+    on6 = make_entry_process(TrainSettings(**base, entry_queue_state=True),
+                             {"entry_feat": feat, "entry_queue": six}, present, _M,
+                             torch.device("cpu"))
+    assert all(q.cav_share is None for q in on6.queues)       # no CAV entrants in WM training
+    np.testing.assert_allclose(on6._hist(0).cav_share, _hist().cav_share)
     assert on.cfg.fresh_no_credit and on.train_pad > off.train_pad
     with pytest.raises(ValueError, match="entry_queue"):
         make_entry_process(TrainSettings(**base, entry_queue_state=True), {"entry_feat": feat},
