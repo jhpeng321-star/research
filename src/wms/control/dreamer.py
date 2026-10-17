@@ -428,7 +428,11 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
     pool = np.zeros((len(rows), n_slots), dtype=bool)
     pool[:, spec["k0"]:] = True
     queues = spec.get("queues")         # V9ENTRY (absent = unchanged)
-    extra = {} if queues is None else {"queues": [queues[r] for r in rows]}
+    # V9ENTRY: coupled draws = common random numbers across the counterfactual rows of a start
+    # (arrival times and candidate identities keyed by (row seed, entrance, index), as in WM paired
+    # training).  A shared row seed alone loses CRN as soon as one row defers an insertion; with a
+    # standing backlog every arrival-count difference becomes a queue (source-wait) difference.
+    extra = {} if queues is None else {"queues": [queues[r] for r in rows], "couple_draws": True}
     cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule) if queues is None else
            EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True))
     # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).

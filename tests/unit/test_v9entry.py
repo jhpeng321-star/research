@@ -386,3 +386,32 @@ def test_config_key_round_trip():
     assert TrainSettings.from_config(cfg).entry_queue_state is True
     assert TrainConfig.from_legacy_flat(cfg.to_legacy_flat()).data.entry_queue_state is True
     assert TrainSettings.from_config(TrainConfig()).entry_queue_state is False
+
+
+def test_queue_mode_keeps_common_arrivals_across_rows_of_a_start():
+    """Rows of one start (policy row / native twin) must see the SAME arrival stream even when
+    their blocking differs; otherwise arrival noise becomes a source-wait difference."""
+    batch = _start_batch(b=1)
+    spec = with_entry_slots(batch, 60.0, 256, torch.Generator().manual_seed(3),
+                            queue_state=True).entry_spec
+    blocked, _ = _state(_blocked_cars(), n_pad=0)
+    free, _ = _state([], n_pad=0)
+    k = 80
+    state = {key: torch.cat((_pad_to(blocked[key], k), _pad_to(free[key], k)), 0) for key in blocked}
+    proc = _entry_process(spec, [0, 0], k, "sumo_like_v2")
+    assert proc.couple_draws
+    arrived = np.zeros(2)
+    for _ in range(120):
+        before = proc.pending.sum(1).copy()
+        new = proc.insert(state)
+        arrived += proc.pending.sum(1) - before + new.sum(1).numpy()
+        with torch.no_grad():
+            state["s_m"] += state["v_mps"] * DT * state["present"]
+    assert arrived[0] == arrived[1] > 0
+    assert proc.pending[0].sum() > proc.pending[1].sum()        # only the blocking differs
+
+
+def _pad_to(x, k):
+    pad = k - x.shape[1]
+    fill = -1 if x.dtype == torch.long else 0
+    return torch.cat((x, torch.full((x.shape[0], pad), fill, dtype=x.dtype)), 1)
