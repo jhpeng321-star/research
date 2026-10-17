@@ -275,6 +275,20 @@ def test_v8lane_precheck_config_differs_from_v8ft_short2_only_in_the_lane_keys()
     assert "lane_flow" in build_loss(s).names and s.lane_model == "hazard_v5"
 
 
+
+def test_v8lane3_configs_differ_from_v8ft3_only_in_the_lane_keys():
+    # V8INT: the lane fix on top of the V8WM3 merge-zone rules (merge_impatience etc. kept).
+    for base, name in (("c4_wm_v8ft3", "c4_wm_v8lane3"),
+                       ("c4_wm_v8ft_short3", "c4_wm_v8lane_short3")):
+        a = load_train_config(f"configs/{base}.toml", []).to_legacy_flat()
+        b = load_train_config(f"configs/{name}.toml", []).to_legacy_flat()
+        diff = {k: b.get(k) for k in set(a) | set(b) if a.get(k) != b.get(k)}
+        assert diff == {"lane_v5_mainline": "budget", "lane_flow_weight": 1.0,
+                        "lane_flow_balance": 0.5, "out_dir": f"runs/active/{name}"}
+        s = TrainSettings.from_flat(b)
+        assert {"lane_flow", "merge_timing"} <= set(build_loss(s).names)
+        assert s.lane_model == "hazard_v5"
+
 def test_budget_training_unroll_with_lane_flow_is_finite():
     model, rec, grad = _flow_grads(['model.lane_v5_mainline="budget"',
                                     "loss.lane_flow.weight=1.0"])

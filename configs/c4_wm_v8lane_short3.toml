@@ -1,0 +1,18 @@
+# V8LANE3 lane pre-check (~1 h on a 24 GB GPU): c4_wm_v8ft_short3.toml (stage_steps [80, 60]) +
+# the V8LANE mainline lane fix (budget mainline decisions + on-policy lane-flow loss, no logit
+# offsets); full twin c4_wm_v8lane3.toml.
+# Launch: --set model.init_from=<abs path of the full v8 checkpoint or the v5m checkpoint>
+#         --set loss.loss_share_logging=false
+schema_version = 2
+name = "WM-S-C4-V8LANE-SHORT3"
+extends = "c4_wm_v8ft_short3.toml"
+
+[model]
+lane_v5_mainline = "budget"
+
+[loss.lane_flow]
+weight = 1.0
+balance = 0.5
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8lane_short3"
