@@ -1,0 +1,18 @@
+# V8FT pre-check 7 (overnight autonomous WM iteration, 2026-10-18): pre-check 1 recipe (c4_wm_v8ft_short2) with ONE change:
+# forced-window merge-hazard floor 0.02 -> 0.05 per 0.5 s step (training and inference). Targets the late ramp
+# departures (pre-check 1 + inference impatience: median +6.5 s late). Impatience is an inference-only setting here.
+schema_version = 2
+name = "WM-S-C4-V8FT-SHORT7"
+extends = "c4_wm_v8ft_short2.toml"
+
+[physics.overrides]
+forced_window_min_hazard = 0.05
+
+[loss]
+loss_share_logging = false
+
+[loss.merge_timing]
+weight = 6.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft_short7"
