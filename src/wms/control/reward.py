@@ -32,6 +32,7 @@ _CVAR_TEMPERATURE_S = 0.01
 _CROSSING_WIDTH_M = 1.0
 _TTC_TEMPERATURE_S = 0.05
 _CLOSING_EPS_MPS = 0.01
+_FREE_SPEED_FLOOR_MPS = 10.0      # V8POL: time-gap speed floor of the free-road test
 
 
 def _soft_cvar(delay: Tensor, present: Tensor, weight: Tensor | None = None) -> Tensor:
@@ -77,7 +78,7 @@ def _soft_cvar(delay: Tensor, present: Tensor, weight: Tensor | None = None) -> 
     return torch.where(present.any(-1), cvar.clamp_min(0.0), torch.zeros_like(cvar))
 
 
-TTC_PAIRS = ("all", "cav")
+TTC_PAIRS = ("all", "cav", "cav_follower")
 
 
 def _ttc_cost(state: Mapping[str, Tensor], limit_s: float, pairs: str = "all") -> Tensor:
@@ -88,6 +89,10 @@ def _ttc_cost(state: Mapping[str, Tensor], limit_s: float, pairs: str = "all") -
     Pair membership/order is discrete; positions/speeds within it have gradients.
     ``pairs="cav"`` (V7POL) keeps only pairs whose follower or leader is a CAV
     (``state["is_cav"]``); human-human pairs then cost nothing.
+    ``pairs="cav_follower"`` (V8POL) keeps only pairs whose FOLLOWER (the closing vehicle) is a CAV:
+    a human closing on a slow CAV leader costs nothing (the CAV cannot fix that by braking).
+    Index convention: entry [b, i, j] has ``ds = s_j - s_i >= 0`` (j at or ahead of i) and
+    ``closing = relu(v_i - v_j)``, so i (dim -2) is the follower and j (dim -1) the leader.
     """
     if pairs not in TTC_PAIRS:
         raise ValueError(f"ttc_pairs must be one of {TTC_PAIRS}")
@@ -102,16 +107,55 @@ def _ttc_cost(state: Mapping[str, Tensor], limit_s: float, pairs: str = "all") -
              & (lane[:, :, None] == lane[:, None, :])
              & (lane[:, :, None] >= 0) & (ds >= 0.0)
              & ~torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)[None])
-    if pairs == "cav":
+    if pairs in ("cav", "cav_follower"):
         if "is_cav" not in state:
-            raise ValueError("ttc_pairs='cav' needs state['is_cav']")
+            raise ValueError(f"ttc_pairs={pairs!r} needs state['is_cav']")
         cav = state["is_cav"].bool() & present
-        pair = pair & (cav[:, :, None] | cav[:, None, :])     # follower i or leader j is a CAV
+        if pairs == "cav":
+            pair = pair & (cav[:, :, None] | cav[:, None, :])  # follower i or leader j is a CAV
+        else:
+            pair = pair & cav[:, :, None]                      # follower i is a CAV
     gap = ds - length[:, None, :]
     closing = F.relu(v[:, :, None] - v[:, None, :])
     ttc = gap.clamp_min(0.0) / closing.clamp_min(_CLOSING_EPS_MPS)
     exposure = _TTC_TEMPERATURE_S * F.softplus((limit_s - ttc) / _TTC_TEMPERATURE_S)
     return torch.where(pair & (closing > 0), exposure, torch.zeros_like(exposure)).sum((-2, -1))
+
+
+def _free_speed_shortfall(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
+                          time_gap_s: float, range_m: float) -> Tensor:
+    """V8POL free-road speed shortfall [B]: ``dt * sum_free relu(1 - v/SPEED_LIMIT) / n_cav``.
+
+    A REWARD INCENTIVE, not a controller: it only adds a (differentiable) penalty for a CAV
+    driving below the road speed limit SPEED_LIMIT_MPS (the same reference as the ``delay`` term,
+    same ``dt * relu(1 - v/limit)`` form) while its own road ahead is free; it never sets or
+    bounds an action.  CAV i (``state["is_cav"]``, present in ``state``) is "free" when, in
+    ``next_state``, it has no same-lane leader within ``range_m`` metres (bumper gap) OR its time
+    gap ``gap / max(v_i, _FREE_SPEED_FLOOR_MPS)`` exceeds ``time_gap_s``.  The speed floor stops a
+    near-stopped CAV in a queue from counting as free.  The free mask is detached (discrete); the
+    gradient flows only through the free CAVs' next speeds -- HDVs get no term and no gradient.
+    Normalised by the number of present CAVs (0 without CAVs).
+    """
+    if "is_cav" not in state:
+        raise ValueError("free_speed needs state['is_cav']")
+    present = state["present"].bool()
+    cav = state["is_cav"].bool() & present
+    zero = torch.zeros_like(next_state["v_mps"])
+    v = torch.where(present, next_state["v_mps"], zero)
+    with torch.no_grad():
+        s = torch.where(present, next_state["s_m"], zero).detach()
+        lane = next_state["lane"]
+        length = next_state.get("length_m", torch.full_like(s, DEFAULT_LENGTH_M))
+        ds = s[:, None, :] - s[:, :, None]               # [b, i, j] = s_j - s_i (j ahead of i)
+        ahead = (present[:, :, None] & present[:, None, :]
+                 & (lane[:, :, None] == lane[:, None, :]) & (ds >= 0.0)
+                 & ~torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)[None])
+        gap = torch.where(ahead, ds - length.to(s.dtype)[:, None, :],
+                          torch.full_like(ds, float("inf"))).amin(-1)      # [b, i] leader gap
+        headway = gap / v.detach().clamp_min(_FREE_SPEED_FLOOR_MPS)
+        free = cav & (lane >= 0) & ((gap > range_m) | (headway > time_gap_s))
+    shortfall = torch.where(free, PHYSICS_DT_S * F.relu(1.0 - v / SPEED_LIMIT_MPS), zero)
+    return shortfall.sum(-1) / cav.sum(-1).clamp_min(1).to(shortfall.dtype)
 
 
 def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
@@ -139,6 +183,12 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     reward without the count normalisation (``throughput`` already IS the soft crossing count of
     the merge end MERGE_S1_M); ``weights.ttc_pairs = "cav"`` restricts the TTC cost to pairs with a
     CAV follower or leader.
+
+    V8POL (defaults off): ``weights.ttc_pairs = "cav_follower"`` restricts the TTC cost to pairs whose
+    follower (closing vehicle) is a CAV; ``weights.free_speed`` subtracts ``free_speed *
+    free_speed_shortfall`` (``_free_speed_shortfall``: mean over CAVs of the free-road speed
+    shortfall, a reward incentive, not a controller; no count normalisation) and then also returns
+    the ``free_speed_shortfall`` component.
     """
     if weights.ttc_limit_s <= 0.0:
         raise ValueError("ttc_limit_s must be positive")
@@ -190,10 +240,20 @@ def team_reward(state: Mapping[str, Tensor], next_state: Mapping[str, Tensor],
     if discharge_weight != 0.0:
         # V7POL: un-normalised merge-end discharge (vehicles crossing MERGE_S1_M this step).
         reward = reward + discharge_weight * throughput
+    free_weight = float(getattr(weights, "free_speed", 0.0))
+    extra = {}
+    if free_weight != 0.0:
+        # V8POL: free-road CAV speed incentive (reward term only, never an action rule).
+        shortfall = _free_speed_shortfall(state, next_state,
+                                          float(getattr(weights, "free_speed_time_gap_s", 3.0)),
+                                          float(getattr(weights, "free_speed_range_m", 100.0)))
+        reward = reward - free_weight * shortfall
+        extra["free_speed_shortfall"] = shortfall
     pairs = getattr(weights, "ttc_pairs", "all")
     return {"reward": reward, "cost_ttc": _ttc_cost(next_state, weights.ttc_limit_s, pairs),
             "delay": delay, "throughput": throughput, "smooth": smooth,
-            "hard_brake": hard_brake, "fairness_delay": fairness, "source_wait": source_wait}
+            "hard_brake": hard_brake, "fairness_delay": fairness, "source_wait": source_wait,
+            **extra}
 
 
 def episode_summary(steps: Sequence[Mapping[str, Tensor]]) -> dict[str, float]:

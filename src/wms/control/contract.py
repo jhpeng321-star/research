@@ -119,6 +119,15 @@ class RewardWeights:
     # sigmoid crossing count as ``throughput``), added to the reward WITHOUT the per-vehicle
     # normalisation that ``throughput`` gets (so it is ~count-times stronger per unit weight).
     merge_discharge: float = 0.0
+    # V8POL (2026-10-17; defaults = the previous reward, bit-identical): ttc_pairs may also be
+    # "cav_follower" = only pairs whose FOLLOWER (closing vehicle) is a CAV.  ``free_speed`` > 0
+    # subtracts free_speed * dt * mean over CAVs of relu(1 - v/SPEED_LIMIT_MPS) for CAVs whose own
+    # road ahead is free (no same-lane leader within ``free_speed_range_m`` m, or time gap above
+    # ``free_speed_time_gap_s``) -- a reward incentive (wms.control.reward._free_speed_shortfall),
+    # not a controller; HDVs get no term.
+    free_speed: float = 0.0
+    free_speed_time_gap_s: float = 3.0
+    free_speed_range_m: float = 100.0
 
 
 # ---------------------------------------------------------------- signatures

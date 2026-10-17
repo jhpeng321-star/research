@@ -131,6 +131,12 @@ class DreamerConfig:
     # Entropy floor: alpha = exp(log_alpha) (and the lane temperature) never below this value;
     # log_alpha itself is clamped after every dual step, so recovery starts from the floor.
     alpha_min: float = 0.0
+    # V8POL (2026-10-17; defaults = bit-identical). ``lagrange_max``: cap on the TTC multiplier
+    # (None = uncapped); with a cap the update log gets ``lagrange_capped`` and
+    # ``lagrange_pre_cap`` (this step's value before the cap).
+    # ``lagrange_decay``: lambda <- (1 - decay) * lambda before each dual ascent step (0 = off).
+    lagrange_max: Optional[float] = None
+    lagrange_decay: float = 0.0
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -148,7 +154,8 @@ class DreamerConfig:
             raise ValueError("credit_profile_every must be a nonnegative integer")
         for name, value in asdict(self).items():
             if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
-                        "entropy_target", "lane_entropy_target", "ttc_budget_mode") or value is None:
+                        "entropy_target", "lane_entropy_target", "ttc_budget_mode",
+                        "lagrange_max") or value is None:
                 continue   # the string fields; the optional decay / entropy targets
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
@@ -165,6 +172,12 @@ class DreamerConfig:
         for name in ("checkpoint_every", "validation_every"):
             if not isinstance(getattr(self, name), int):
                 raise ValueError(f"{name} must be an integer")
+        if self.lagrange_max is not None and (
+                isinstance(self.lagrange_max, bool) or not isinstance(self.lagrange_max, (int, float))
+                or not math.isfinite(self.lagrange_max) or self.lagrange_max < 0):
+            raise ValueError("lagrange_max must be None or a finite nonnegative number")
+        if self.lagrange_decay >= 1:
+            raise ValueError("lagrange_decay must be in [0, 1)")
         if self.ttc_budget_mode not in ("absolute", "native_relative"):
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
@@ -856,8 +869,20 @@ class DreamerTrainer:
         if not math.isfinite(value):
             raise ValueError("nonfinite safety cost")
         budget = self.config.ttc_budget if budget is None else float(budget)
-        self.lagrange_multiplier = max(0.0, self.lagrange_multiplier + self.config.dual_lr *
-                                      (value - budget))
+        current = self.lagrange_multiplier
+        decay = float(getattr(self.config, "lagrange_decay", 0.0))
+        if decay > 0.0:                                   # V8POL: leaky dual
+            current = (1.0 - decay) * current
+        self.lagrange_multiplier = max(0.0, current + self.config.dual_lr * (value - budget))
+        cap = getattr(self.config, "lagrange_max", None)
+        if cap is not None:                               # V8POL: capped dual
+            was_capped = getattr(self, "_lagrange_capped", False)
+            self._lagrange_pre_cap = self.lagrange_multiplier
+            self._lagrange_capped = self.lagrange_multiplier > float(cap)
+            if self._lagrange_capped and not was_capped:
+                print(f"[lagrange-cap] update {self.update_count + 1}: lambda "
+                      f"{self._lagrange_pre_cap:.4g} capped at lagrange_max={float(cap):.4g}", flush=True)
+            self.lagrange_multiplier = min(self.lagrange_multiplier, float(cap))
         return self.lagrange_multiplier
 
     def _safety_terms(self, imagined, mean_cost):
@@ -1125,6 +1150,12 @@ class DreamerTrainer:
                 float(value[..., :n_base].detach().mean()) if value is not None else 0.0)
         # Total wait per control step = on-road speed-deficit delay + entry (source) waiting.
         metrics["total_wait"] = metrics["delay"] + metrics["source_wait"]
+        free = imagined["components"].get("free_speed_shortfall")
+        if free is not None:                              # V8POL free-road CAV speed shortfall
+            metrics["free_speed_shortfall"] = float(free[..., :n_base].detach().mean())
+        if self.config.lagrange_max is not None:          # V8POL: log when the cap binds
+            metrics["lagrange_capped"] = bool(self._lagrange_capped)
+            metrics["lagrange_pre_cap"] = float(self._lagrange_pre_cap)
         metrics["entries"] = bool(getattr(batch, "entry_spec", None) is not None
                                   and self.config.imagine_entries)
         if self.output_dir is not None:
