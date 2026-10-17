@@ -136,6 +136,9 @@ class WmSModel(nn.Module):
         # per-head TRAIN-val AP (negative = use the AP stored in the lane network's buffer).
         self.lane_v5_gates = tuple(getattr(spec, "lane_v5_gates", lv5.DEFAULT_GATES))
         self.lane_v5_head_ap = tuple(getattr(spec, "lane_v5_head_ap", (lv5.UNKNOWN_AP,) * 3))
+        # V8LANE (default 'default' = the lane_decision rule; plain attribute an evaluator may
+        # override): mainline overtake / return decision rule (lv5.MAINLINE_MODES).
+        self.lane_v5_mainline = getattr(spec, "lane_v5_mainline", "default")
         self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
@@ -679,9 +682,17 @@ class WmSModel(nn.Module):
         if getattr(self, "lane_v5", None) is not None:
             # V8WM2 forced_window_mode='hazard': forced-window rows always draw.
             return (getattr(self, "lane_decision", "argmax") in ("sample", "gated")
-                    or lv5.forced_window_hazard(self.physics))
+                    or lv5.forced_window_hazard(self.physics)
+                    or self._mainline_mode != "default")
         return (getattr(self, "lane_hazard", None) is not None
                 and getattr(self, "lane_decision", "argmax") == "sample")
+
+    @property
+    def _mainline_mode(self) -> str:
+        """V8LANE mainline decision rule of the hazard_v5 network ('default' otherwise)."""
+        if getattr(self, "lane_v5", None) is None:
+            return "default"
+        return getattr(self, "lane_v5_mainline", "default")
 
     @property
     def _tracks_lane_blocked(self) -> bool:
@@ -774,6 +785,12 @@ class WmSModel(nn.Module):
                 sample = learned
             else:
                 sample = torch.zeros_like(learned, dtype=torch.bool)
+            mainline = self._mainline_mode
+            if mainline != "default":
+                # V8LANE: overtake / return rows draw (sample) or are decided by the
+                # population budget in step() (budget*: they do not draw here).
+                main = lv5.mainline_rows(inst["lane"], learned)
+                sample = (sample.bool() | main) if mainline == "sample"                     else (sample.bool() & ~main)
             if lv5.forced_window_hazard(self.physics):
                 # V8WM2: the forced window's merge is a hazard draw whatever the decision rule
                 # (a closed gate / argmax would otherwise never merge at P < 0.5).
@@ -959,6 +976,12 @@ class WmSModel(nn.Module):
                 lane_uniform = torch.rand(present.shape, device=present.device)
             choice = sample_lane_choice(out["lane_logits"], out["lane_feasible"],
                                         out.get("lane_sample", out["hdv_mask"]), lane_uniform)
+            if self._mainline_mode in ("budget", "budget_prop"):
+                # V8LANE population-matched overtake / return decisions (lv5.budget_choice).
+                choice, out["lane_v5_budget"] = lv5.budget_choice(
+                    choice, out["lane_logits"], out["lane_feasible"], state["lane"].long(),
+                    out["hdv_mask"], state.get("lane_v5_budget"), lane_uniform,
+                    self._mainline_mode)
         else:
             choice = out["lane_logits"].argmax(-1)
         if self.lane_change_head is None:
@@ -1328,6 +1351,8 @@ class WmSModel(nn.Module):
             if self._tracks_lane_v5:
                 lane_v5_acc = out["lane_v5_acc"]
                 current["lane_v5_acc"] = lane_v5_acc
+            if "lane_v5_budget" in out:
+                current["lane_v5_budget"] = out["lane_v5_budget"]
             current.pop("veh_kin", None)
             kin = state_kin(current)
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)

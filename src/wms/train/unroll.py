@@ -119,8 +119,9 @@ class UnrollRunner:
                  projection: Optional[Any], device: torch.device) -> None:
         self.model, self.settings, self.composer = model, settings, composer
         self.projection, self.device = projection, device
-        if "merge_timing" in composer.names:
-            # V8WM: the merge-timing term needs the hazard_v5 own-head logit with gradient.
+        if "merge_timing" in composer.names or "lane_flow" in composer.names:
+            # V8WM / V8LANE: the merge-timing and lane-flow terms need the hazard_v5 own-head
+            # logit with gradient.
             model.emit_merge_hazard = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
@@ -613,6 +614,12 @@ class UnrollRunner:
             if "merge_timing" in logged:
                 record["merge_timing_value_share"] = (float(logged["merge_timing"]) / loss_logged
                                                       if loss_logged > 0.0 else 0.0)
+        flow_prep = targets.prepared.get("lane_flow")
+        if flow_prep is not None:
+            # V8LANE lane-flow: expected vs recorded mainline counts.
+            from .losses.lane_flow import lane_flow_metrics
+
+            record.update(lane_flow_metrics(flow_prep))
         pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg", "pair_return", "pair_rank")
                       if n in logged]
         if pair_names:

@@ -194,6 +194,10 @@ FLAT_TO_PATH: dict[str, str] = {
     "physics_inference": "physics.inference",
     "selection_ramp_weight": "curriculum.selection_ramp_weight",
     "selection_stuck_weight": "curriculum.selection_stuck_weight",
+    # V8LANE (mainline overtake / return decision rule, on-policy lane-flow loss)
+    "lane_v5_mainline": "model.lane_v5_mainline",
+    "lane_flow_weight": "loss.lane_flow.weight",
+    "lane_flow_balance": "loss.lane_flow.balance",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -249,6 +253,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_loss_speed_cells", "merge_loss_max_share", "merge_timing_weight",
     "merge_timing_metrics", "physics_overrides", "physics_inference",
     "selection_ramp_weight", "selection_stuck_weight",
+    # V8LANE
+    "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
 )
 
 

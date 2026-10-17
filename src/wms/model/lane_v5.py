@@ -38,7 +38,9 @@ raw inputs, the driver embedding as input) by:
   v4); ``gated``: a head samples only if its teacher-forced feasible-row AP on TRAIN-val
   (buffer :attr:`LaneV5Net.head_ap`, written by the pre-fit / calibration tool, or the config
   ``model.lane_v5_head_ap``) reaches its gate (overtake 0.25, return 0.10, merge 0.5), else
-  argmax.  ``lane_logit_offsets`` = per-head logit offsets (calibration).
+  argmax.  ``lane_logit_offsets`` = per-head logit offsets (calibration).  V8LANE
+  ``lane_v5_mainline`` overrides the rule for the overtake / return heads only
+  (:data:`MAINLINE_MODES`; merges keep ``lane_decision``).
 """
 from __future__ import annotations
 
@@ -547,6 +549,66 @@ def forced_window_floor_logit(physics: PhysicsConfig) -> float:
     """V8WM2 ``hazard`` mode: logit of ``forced_window_min_hazard`` (vs stay = 0)."""
     h = float(physics.forced_window_min_hazard)
     return math.log(h / (1.0 - h))
+
+
+#: V8LANE (2026-10-17) mainline (overtake / return) decision rule, ``model.lane_v5_mainline``:
+#: ``default`` = the ``lane_decision`` rule (gated: argmax unless the head's AP passes its gate);
+#: ``sample`` = lane-0/1 cars always draw their own transition (Bernoulli of the calibrated
+#: hazard); ``budget`` / ``budget_prop`` = population-matched ("rank-matched") decisions: per
+#: batch row and head an accumulator adds the expected count ``sum P`` of the step and, each time
+#: it passes 1, fires the highest-hazard feasible car (``budget``) or a car drawn in proportion
+#: to its hazard (``budget_prop``, Gumbel top-k on the lane draws).  The expected count of a
+#: rollout equals that of independent sampling, with (nearly) no count noise.
+MAINLINE_MODES = ("default", "sample", "budget", "budget_prop")
+#: Mainline heads (overtake: lane 1 cars, return: lane 0 cars) and their source lanes.
+MAINLINE_SOURCE_LANES = (1, 0)
+
+
+def mainline_rows(lane: Tensor, learned: Tensor) -> Tensor:
+    """``[B, K]`` learned slots on the mainline (lanes 0 / 1), whose head is overtake / return."""
+    return learned.bool() & (lane <= 1)
+
+
+def budget_choice(choice: Tensor, logits: Tensor, feasible: Tensor, lane: Tensor,
+                  learned: Tensor, budget: Optional[Tensor], uniform: Tensor,
+                  mode: str) -> tuple[Tensor, Tensor]:
+    """V8LANE population-matched mainline decisions (see :data:`MAINLINE_MODES`).
+
+    ``choice [B, K]`` = the lane choice of the ordinary rule (kept for every non-mainline slot);
+    ``logits [B, K, 3]`` / ``feasible [B, K, 3]`` as in
+    :func:`wms.model.lane_hazard.sample_lane_choice`; ``budget [B, 2]`` the carried
+    accumulators (``None`` at a rollout start: initialised from the row's first lane draw, a
+    random systematic-sampling offset in [0, 1), so the expected count is unbiased); ``uniform
+    [B, K]`` the step's lane draws.  Returns the new choice and the updated accumulators.
+    """
+    masked = torch.where(feasible, logits, torch.full_like(logits, float("-inf")))
+    probs = torch.softmax(masked.detach().float(), -1)
+    target = _lookup(TARGET_OF_LANE, lane)
+    p = probs.gather(-1, target.unsqueeze(-1)).squeeze(-1)
+    p = torch.nan_to_num(p, nan=0.0)
+    main = mainline_rows(lane, learned)
+    u = uniform.float().clamp(1.0e-12, 1.0 - 1.0e-7)
+    if budget is None:
+        budget = u[:, :1].expand(-1, len(MAINLINE_SOURCE_LANES)).clone()
+    budget = budget.float()
+    fire = torch.zeros_like(main)
+    new_budget = []
+    for h, src in enumerate(MAINLINE_SOURCE_LANES):
+        rows = main & (lane == src) & (p > 0.0)
+        ph = torch.where(rows, p, torch.zeros_like(p))
+        acc = budget[:, h] + ph.sum(-1)
+        n = torch.minimum(acc.floor(), rows.sum(-1).to(acc.dtype))
+        if mode == "budget_prop":
+            key = torch.log(ph.clamp_min(1.0e-30)) - torch.log(-torch.log(u))
+        else:
+            key = ph
+        key = torch.where(rows, key, torch.full_like(key, float("-inf")))
+        rank = key.argsort(-1, descending=True).argsort(-1)
+        fh = rows & (rank < n.unsqueeze(-1).long())
+        fire = fire | fh
+        new_budget.append((acc - fh.sum(-1).to(acc.dtype)).clamp(0.0, 1.0))
+    stay_or_go = torch.where(fire, target, lane)
+    return torch.where(main, stay_or_go, choice), torch.stack(new_budget, -1)
 
 
 def gate_open(head_ap: Sequence[float], gates: Sequence[float]) -> tuple[bool, bool, bool]:

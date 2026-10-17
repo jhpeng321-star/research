@@ -233,6 +233,11 @@ class TrainSettings:
     physics_inference: Optional[Mapping[str, Any]] = None
     selection_ramp_weight: float = 0.0
     selection_stuck_weight: float = 0.0
+    # V8LANE (2026-10-17, default OFF): mainline decision rule (model switch, mirrored for
+    # validation) and the on-policy lane-flow loss.
+    lane_v5_mainline: str = "default"
+    lane_flow_weight: float = 0.0
+    lane_flow_balance: float = 0.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -382,6 +387,14 @@ class TrainSettings:
                  "paired_diff_groups must be >= 1 and paired_diff_max_arms >= 2")
         _require(self.paired_diff_horizon_mode in ("fixed", "stage"),
                  "paired_diff_horizon_mode must be fixed or stage")
+        _require(self.lane_v5_mainline in ("default", "sample", "budget", "budget_prop"),
+                 "lane_v5_mainline must be default, sample, budget or budget_prop")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0
+                     for x in (self.lane_flow_weight, self.lane_flow_balance)),
+                 "lane_flow_weight / lane_flow_balance must be finite and non-negative")
+        _require((self.lane_v5_mainline == "default" and float(self.lane_flow_weight) == 0.0)
+                 or self.lane_model == "hazard_v5",
+                 "lane_v5_mainline / lane_flow_weight require lane_model='hazard_v5'")
         lanefix_on = (self.lane_decision != "argmax"
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"
