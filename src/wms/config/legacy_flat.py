@@ -184,6 +184,16 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_loss_cross_temp_m": "loss.merge.cross_temp_m",
     "merge_loss_speed_scale_mps": "loss.merge.speed_scale_mps",
     "merge_loss_discharge_scale_veh": "loss.merge.discharge_scale_veh",
+    # V8WM (merge-loss cell selection / share cap, merge-timing loss, physics overrides,
+    # inference physics, ramp-aware selection)
+    "merge_loss_speed_cells": "loss.merge.speed_cells",
+    "merge_loss_max_share": "loss.merge.max_share",
+    "merge_timing_weight": "loss.merge_timing.weight",
+    "merge_timing_metrics": "loss.merge_timing.metrics",
+    "physics_overrides": "physics.overrides",
+    "physics_inference": "physics.inference",
+    "selection_ramp_weight": "curriculum.selection_ramp_weight",
+    "selection_stuck_weight": "curriculum.selection_stuck_weight",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -235,6 +245,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_loss_cross_temp_m",
     "merge_loss_speed_scale_mps",
     "merge_loss_discharge_scale_veh",
+    # V8WM
+    "merge_loss_speed_cells", "merge_loss_max_share", "merge_timing_weight",
+    "merge_timing_metrics", "physics_overrides", "physics_inference",
+    "selection_ramp_weight", "selection_stuck_weight",
 )
 
 

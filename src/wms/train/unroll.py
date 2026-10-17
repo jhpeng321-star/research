@@ -119,6 +119,9 @@ class UnrollRunner:
                  projection: Optional[Any], device: torch.device) -> None:
         self.model, self.settings, self.composer = model, settings, composer
         self.projection, self.device = projection, device
+        if "merge_timing" in composer.names:
+            # V8WM: the merge-timing term needs the hazard_v5 own-head logit with gradient.
+            model.emit_merge_hazard = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,
@@ -601,6 +604,15 @@ class UnrollRunner:
                               if n in logged)
             record["merge_value_share"] = (merge_total / loss_logged
                                            if loss_logged > 0.0 else 0.0)
+        timing_prep = targets.prepared.get("merge_timing")
+        if timing_prep is not None:
+            # V8WM merge-timing: ramp / stuck / merge-time metrics and value share.
+            from .losses.merge_timing import merge_timing_metrics
+
+            record.update(merge_timing_metrics(timing_prep))
+            if "merge_timing" in logged:
+                record["merge_timing_value_share"] = (float(logged["merge_timing"]) / loss_logged
+                                                      if loss_logged > 0.0 else 0.0)
         pair_names = [n for n in ("pair_pos", "pair_speed", "pair_agg", "pair_return", "pair_rank")
                       if n in logged]
         if pair_names:

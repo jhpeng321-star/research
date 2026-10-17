@@ -20,7 +20,8 @@ def write_train_receipt(out_dir: Path, *, settings: TrainSettings, flat_config: 
                         val_data_receipt: Mapping[str, Any],
                         selection: Optional[Union[LongHorizonSelection, MultiHorizonSelection]] = None,
                         best_checkpoint: Optional[Path] = None,
-                        config_fingerprint: Optional[str] = None) -> dict:
+                        config_fingerprint: Optional[str] = None,
+                        physics_train: Any = None) -> dict:
     """Write and return the training receipt of a finished run."""
     receipt: dict[str, Any] = {
         "schema": RECEIPT_SCHEMA, "split": "TRAIN", "device": device,
@@ -33,6 +34,9 @@ def write_train_receipt(out_dir: Path, *, settings: TrainSettings, flat_config: 
         "data": dict(data_receipt)}
     if config_fingerprint is not None:
         receipt["config_fingerprint"] = config_fingerprint
+    if physics_train is not None:
+        # V8WM: ``physics`` = inference physics (= physics.json); trained with these.
+        receipt["physics_train"] = asdict(physics_train)
     if settings.select_by_long_horizon:
         receipt["long_horizon_selection"] = {
             "enabled": True, "metric": "mean_position", "minimum_stage_s": 60.0,

@@ -34,6 +34,16 @@ vehicle-step weighted mean |pred - rec| over the bins and cells), ``merge_speed_
 (sum pred - sum rec) / sum rec of the HDV crossings over the unroll (signed; negative = the
 WM discharges fewer) and ``merge_discharge_abs_err_frac`` = sum |pred - rec| / sum rec.
 
+V8WM (2026-10-17, both default off = v7 behaviour): ``speed_cells`` restricts the optimised
+speed error to the listed cells (v8: only the downstream cell [75.44, 300) m; the recorded
+vehicle-step normaliser covers the active cells only; the validation metrics still report every
+cell), and ``max_share`` caps the merge terms' share of each chunk's loss value
+(:func:`cap_merge_share`, applied by the composer).  The cap is on the loss VALUE, not on the
+gradient norm: a gradient-norm cap needs two extra backward passes through every chunk (about
+2-3x the step time); the realised gradient shares stay visible in ``loss_share.jsonl``
+(``loss.loss_share_logging``).  The WM-DIAG-v7 logs had gradient shares of ~1.5-2.3x the value
+shares of these terms.
+
 Flag-gated: with both weights 0 the composer never builds these terms (bit-identical).
 """
 from __future__ import annotations
@@ -69,6 +79,8 @@ class MergeLossConfig:
     discharge_scale_veh: float = 2.0
     speed_prior_count: float = 1.0
     huber_delta: float = 1.0
+    speed_cells: Optional[tuple[int, ...]] = None
+    max_share: Optional[float] = None
 
     def __post_init__(self) -> None:
         edges = tuple(float(x) for x in self.cell_edges_m)
@@ -85,6 +97,14 @@ class MergeLossConfig:
                       self.huber_delta):
             if not (math.isfinite(value) and value > 0.0):
                 raise ValueError("merge loss temperatures/scales must be finite and positive")
+        if self.speed_cells is not None:
+            cells = tuple(int(c) for c in self.speed_cells)
+            if (not cells or len(set(cells)) != len(cells)
+                    or any(not 0 <= c < len(edges) - 1 for c in cells)):
+                raise ValueError("merge loss speed_cells must be distinct valid cell indices")
+        if self.max_share is not None and not (math.isfinite(self.max_share)
+                                               and 0.0 < self.max_share < 1.0):
+            raise ValueError("merge loss max_share must be in (0, 1)")
 
     @property
     def enabled(self) -> bool:
@@ -149,9 +169,12 @@ class MergeLoss:
         zeros = rs.new_zeros(rs.shape[0])
         # The per-chunk recorded sums are recomputed in ``components`` with exactly the
         # predicted side's operations, so identical trajectories give an exact zero.
+        weighted = count * valid.unsqueeze(-1)
+        if cfg.speed_cells is not None:
+            weighted = weighted[..., list(cfg.speed_cells)]
         targets.prepared["merge"] = {
             "rec_s": rs, "rec_v": rv, "rec_hdv": hdv, "rec_cont": cont, "valid": valid,
-            "w_speed": float((count * valid.unsqueeze(-1)).sum()),
+            "w_speed": float(weighted.sum()), "cap_scale": {},
             "w_discharge": float(valid.sum()),
             "carry": {0: zeros}, "pred_total": {0: zeros}, "rec_total": {0: zeros},
             "speed_stats": {}, "n_cells": len(cfg.cell_edges_m) - 1}
@@ -196,9 +219,18 @@ class MergeLoss:
         prior = float(cfg.speed_prior_count)
         err = (p_ * nr - r_ * np_) / (nr.clamp_min(1e-6) * (np_ + prior))
         if cfg.speed_weight > 0.0 and prep["w_speed"] > 0.0:
-            out["merge_speed"] = (cfg.speed_weight
-                                  * (nr * _huber(err / float(cfg.speed_scale_mps),
-                                                 cfg.huber_delta)).sum() / prep["w_speed"])
+            if cfg.speed_cells is None:
+                out["merge_speed"] = (cfg.speed_weight
+                                      * (nr * _huber(err / float(cfg.speed_scale_mps),
+                                                     cfg.huber_delta)).sum() / prep["w_speed"])
+            else:
+                # V8WM: only the selected cells are optimised.
+                sel = list(cfg.speed_cells)
+                out["merge_speed"] = (cfg.speed_weight
+                                      * (nr[..., sel] * _huber(err[..., sel]
+                                                               / float(cfg.speed_scale_mps),
+                                                               cfg.huber_delta)).sum()
+                                      / prep["w_speed"])
         with torch.no_grad():
             prep["speed_stats"][c0] = (
                 (nr * err.abs()).sum((0, 1)).detach(), (nr * err).sum((0, 1)).detach(),
@@ -248,7 +280,40 @@ def merge_metrics(prep: Optional[dict], n_steps: int) -> dict[str, float]:
                                            if rec_sum > 0 else 0.0)
     out["merge_discharge_pred_veh"] = float(pred.sum())
     out["merge_discharge_rec_veh"] = rec_sum
+    scales = list(prep.get("cap_scale", {}).values())
+    if scales:
+        # V8WM max_share: mean / min factor applied to the merge terms over the chunks.
+        out["merge_cap_scale_mean"] = sum(scales) / len(scales)
+        out["merge_cap_scale_min"] = min(scales)
     return out
+
+
+def cap_merge_share(terms: dict, cap: float, prepared: Optional[dict], c0: int) -> bool:
+    """V8WM ``max_share``: scale ``merge_speed``/``merge_discharge`` in ``terms`` in place.
+
+    ``share = M / (M + O)`` with M the merge terms' value and O every other chunk term of the
+    chunk; when ``share > cap`` both merge terms are multiplied by the detached factor
+    ``cap / (1 - cap) * O / M`` (share becomes exactly ``cap``; ``O <= 0`` gives 0).  The factor
+    is recorded in ``prepared["cap_scale"][c0]`` (1.0 when not active).  Returns True when the
+    terms were scaled.
+    """
+    names = [n for n in TERM_NAMES if n in terms]
+    if not names:
+        return False
+    merge_value = sum(float(terms[n].value.detach()) for n in names)
+    other = sum(float(v.value.detach()) for n, v in terms.items() if n not in names)
+    scale = 1.0
+    if merge_value > 0.0 and merge_value / max(merge_value + other, 1e-30) > cap:
+        scale = max(0.0, cap / (1.0 - cap) * other / merge_value)
+    if prepared is not None:
+        prepared.setdefault("cap_scale", {})[c0] = scale
+    if scale == 1.0:
+        return False
+    for n in names:
+        old = terms[n]
+        terms[n] = TermValue(old.value * scale, valid_count=old.valid_count,
+                             log=None if old.log is None else old.log * scale)
+    return True
 
 
 class MergeTerm(LossTerm):
@@ -280,4 +345,4 @@ def merge_terms(cfg: MergeLossConfig) -> list[MergeTerm]:
 
 
 __all__ = ["MergeLossConfig", "MergeLoss", "MergeTerm", "merge_terms", "merge_metrics",
-           "cell_sums", "TERM_NAMES", "METRIC_NAMES"]
+           "cap_merge_share", "cell_sums", "TERM_NAMES", "METRIC_NAMES"]

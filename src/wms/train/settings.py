@@ -224,6 +224,15 @@ class TrainSettings:
     merge_loss_cross_temp_m: float = 5.0
     merge_loss_speed_scale_mps: float = 1.0
     merge_loss_discharge_scale_veh: float = 2.0
+    # V8WM (2026-10-17, all default OFF / unchanged).
+    merge_loss_speed_cells: Optional[tuple[int, ...]] = None
+    merge_loss_max_share: Optional[float] = None
+    merge_timing_weight: float = 0.0
+    merge_timing_metrics: bool = False
+    physics_overrides: Optional[Mapping[str, float]] = None
+    physics_inference: Optional[Mapping[str, Any]] = None
+    selection_ramp_weight: float = 0.0
+    selection_stuck_weight: float = 0.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -407,6 +416,17 @@ class TrainSettings:
                          for x in self.selection_horizons_s)
                  and all(math.isfinite(float(x)) for x in self.selection_reference),
                  "selection_reference needs one finite value per selection horizon")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_timing_weight, self.selection_ramp_weight, self.selection_stuck_weight)),
+            "merge_timing_weight / selection_ramp_weight / selection_stuck_weight must be >= 0")
+        _require(self.merge_loss_max_share is None
+                 or 0.0 < float(self.merge_loss_max_share) < 1.0,
+                 "merge_loss_max_share must be in (0, 1) when set")
+        _require(not (self.selection_ramp_weight or self.selection_stuck_weight)
+                 or (self.selection_mode == "multi_horizon_v2" and self.merge_timing_on),
+                 "selection_ramp_weight / selection_stuck_weight need selection_mode "
+                 "multi_horizon_v2 and the merge-timing metrics (merge_timing_weight > 0 or "
+                 "merge_timing_metrics)")
         _require(math.isfinite(self.selection_agg_reward_weight)
                  and self.selection_agg_reward_weight >= 0.0,
                  "selection_agg_reward_weight must be finite and non-negative")
@@ -435,6 +455,8 @@ class TrainSettings:
                     "merge_loss_cell_edges_m"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
+        if values.get("merge_loss_speed_cells") is not None:
+            values["merge_loss_speed_cells"] = tuple(int(x) for x in values["merge_loss_speed_cells"])
         for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
@@ -455,6 +477,11 @@ class TrainSettings:
         """V7FT merge-zone calibration loss enabled (either weight > 0)."""
         return (float(self.merge_loss_speed_weight) > 0.0
                 or float(self.merge_loss_discharge_weight) > 0.0)
+
+    @property
+    def merge_timing_on(self) -> bool:
+        """V8WM merge-timing term built (loss weight > 0 or metrics-only)."""
+        return float(self.merge_timing_weight) > 0.0 or bool(self.merge_timing_metrics)
 
     @property
     def long_horizon_on(self) -> bool:

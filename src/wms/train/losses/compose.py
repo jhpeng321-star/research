@@ -22,7 +22,8 @@ from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
-from .merge import MergeLossConfig, merge_terms
+from .merge import MergeLossConfig, cap_merge_share, merge_terms
+from .merge_timing import MergeTimingConfig, merge_timing_terms
 from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
@@ -34,13 +35,15 @@ class LossComposer:
     """Ordered chunk terms plus once-per-unroll terms."""
 
     def __init__(self, chunk_terms: Sequence[LossTerm], unroll_terms: Sequence[UnrollTerm] = (),
-                 *, braking: BrakingParams) -> None:
+                 *, braking: BrakingParams, merge_share_cap: Optional[float] = None) -> None:
         names = [t.name for t in (*chunk_terms, *unroll_terms)]
         if len(set(names)) != len(names):
             raise ValueError(f"duplicate loss term names: {names}")
         self.chunk_terms = tuple(chunk_terms)
         self.unroll_terms = tuple(unroll_terms)
         self.braking = braking
+        #: V8WM ``loss.merge.max_share`` (None = off: the chunk total is the plain sum).
+        self.merge_share_cap = merge_share_cap
         self.lane_rate = next((t for t in chunk_terms if isinstance(t, LaneRateLoss)), None)
         # Shared helpers for the runner's no-grad whole-horizon probe and gradient replay.
         self.paired_diff = next((t.shared for t in chunk_terms if isinstance(t, PairedDiffTerm)), None)
@@ -64,6 +67,12 @@ class LossComposer:
                 continue
             terms[term.name] = value
             total = total + value.value
+        if self.merge_share_cap is not None and cap_merge_share(
+                terms, float(self.merge_share_cap), ctx.targets.prepared.get("merge"), ctx.c0):
+            # V8WM: merge terms scaled to the share cap; re-sum in the same term order.
+            total = 0.0
+            for value in terms.values():
+                total = total + value.value
         return LossBreakdown(total=total, terms=terms)
 
     def evaluate_unroll(self, ctx: UnrollContext) -> dict[str, TermValue]:
@@ -178,7 +187,18 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             cell_temp_m=float(settings.merge_loss_cell_temp_m),
             cross_temp_m=float(settings.merge_loss_cross_temp_m),
             speed_scale_mps=float(settings.merge_loss_speed_scale_mps),
-            discharge_scale_veh=float(settings.merge_loss_discharge_scale_veh))))
+            discharge_scale_veh=float(settings.merge_loss_discharge_scale_veh),
+            speed_cells=(None if getattr(settings, "merge_loss_speed_cells", None) is None
+                         else tuple(int(c) for c in settings.merge_loss_speed_cells)))))
+    merge_cap = (getattr(settings, "merge_loss_max_share", None)
+                 if getattr(settings, "merge_loss_on", False) else None)
+    if getattr(settings, "merge_timing_on", False):
+        # V8WM per-vehicle merge-timing (survival) term, last chunk term (off: never built).
+        chunk.extend(merge_timing_terms(MergeTimingConfig(
+            weight=float(settings.merge_timing_weight),
+            metrics=bool(settings.merge_timing_metrics),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))
@@ -190,4 +210,5 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
     if settings.stability_weight:
         unroll.append(StabilityLoss(settings.stability_weight, margin=settings.stability_margin,
                                     probes=settings.stability_probes))
-    return LossComposer(chunk, unroll, braking=braking)
+    return LossComposer(chunk, unroll, braking=braking,
+                        merge_share_cap=None if merge_cap is None else float(merge_cap))

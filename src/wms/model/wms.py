@@ -103,6 +103,12 @@ class WmSModel(nn.Module):
     #: of a checkpoint): the hazard's learned delta enters the rollout lane logits detached,
     #: so the rollout lane CE / flip-rate guard do not train the hazard (forward unchanged).
     lane_hazard_detach: bool = False
+    #: V8WM runtime switch (``loss.merge_timing``; set by the unroll runner, never part of a
+    #: checkpoint): with ``lane_model='hazard_v5'`` every step also returns the row's own head
+    #: logit WITH gradient (``lane_v5_head_logit``, recomputed outside the decouple detach) and
+    #: the acting-row mask (``lane_v5_acts``: learned, physics-feasible, outside the forced
+    #: window).  Forward values and decisions are unchanged.
+    emit_merge_hazard: bool = False
 
     def __init__(self, spec: Optional[ModelSpec] = None, *,
                  physics: Optional[PhysicsConfig] = None, hdv: Optional[HdvConfig] = None,
@@ -573,9 +579,9 @@ class WmSModel(nn.Module):
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
-        blocked_now = v5_acc = v5_sample = None
+        blocked_now = v5_acc = v5_sample = v5_hazard = None
         if getattr(self, "lane_v5", None) is not None:
-            lane_logits, v5_acc, v5_sample = self._lane_v5_forward(
+            lane_logits, v5_acc, v5_sample, v5_hazard = self._lane_v5_forward(
                 kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask)
         elif self.lane_hazard is not None:
@@ -621,6 +627,8 @@ class WmSModel(nn.Module):
             result["lane_blocked"] = blocked_now
         if v5_acc is not None:
             result["lane_v5_acc"] = v5_acc
+        if v5_hazard is not None:
+            result["lane_v5_head_logit"], result["lane_v5_acts"] = v5_hazard
         if self._samples_lanes:
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
             if v5_sample is not None:
@@ -735,14 +743,22 @@ class WmSModel(nn.Module):
                          lane_age: Optional[Tensor], acc: Optional[Tensor],
                          driver_history: Optional[Tensor],
                          driver_history_mask: Optional[Tensor]):
-        """Lane logits, updated accumulators and the drawing slots of the lane-v5 model."""
+        """Lane logits, updated accumulators, the drawing slots and (V8WM emit_merge_hazard) the
+        own-head logit with gradient + acting rows of the lane-v5 model."""
         if acc is None:
             acc = self.initial_lane_v5_acc(present, kin, driver_history, driver_history_mask)
         raw, acc, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
         offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
         with torch.no_grad() if self.lane_hazard_detach else contextlib.nullcontext():
-            logits, _, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
-                                              self.physics, offsets)
+            logits, head, acts = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
+                                                    self.physics, offsets)
+        hazard = None
+        if getattr(self, "emit_merge_hazard", False):
+            # V8WM merge-timing loss: the own-head logit with gradient on the rollout state.
+            if self.lane_hazard_detach and torch.is_grad_enabled():
+                _, head, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
+                                                self.physics, offsets)
+            hazard = (head, acts)
         sample = None
         if self._samples_lanes:
             if self.lane_decision == "gated":
@@ -750,7 +766,7 @@ class WmSModel(nn.Module):
                     self.lane_v5_head_ap_effective(), self.lane_v5_gates))
             else:
                 sample = learned
-        return logits, acc, sample
+        return logits, acc, sample, hazard
 
     def initial_lane_blocked(self, present: Tensor, kin: Tensor,
                              driver_history: Optional[Tensor],
@@ -1382,6 +1398,10 @@ class WmSModel(nn.Module):
         log["lanes"].append(out["next_lane"])
         log["accel"].append(out["accel_mps2"])
         log["lane_logits"].append(out["lane_logits"])
+        if "lane_v5_head_logit" in out:
+            # V8WM (emit_merge_hazard): per-step own-head logit (with gradient) + acting rows.
+            log.setdefault("lane_v5_head_logit", []).append(out["lane_v5_head_logit"])
+            log.setdefault("lane_v5_acts", []).append(out["lane_v5_acts"])
         # Monitoring uses the raw gate * delta_a before any residual/plant bound.
         log["raw_residuals"].append(
             out.get("raw_residual_mps2", torch.zeros_like(out["accel_mps2"])))
@@ -1430,5 +1450,8 @@ class WmSModel(nn.Module):
             result["residual_count"] = int(share.count)
         if log["lane_probabilities"]:
             result["lane_probabilities"] = torch.stack(log["lane_probabilities"], 1)
+        if log.get("lane_v5_head_logit"):
+            result["lane_v5_head_logit"] = torch.stack(log["lane_v5_head_logit"], 1)
+            result["lane_v5_acts"] = torch.stack(log["lane_v5_acts"], 1)
         return result
 

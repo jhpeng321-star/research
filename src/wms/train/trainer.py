@@ -11,7 +11,7 @@ import random
 import shutil
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Optional
 
@@ -252,12 +252,18 @@ class WmSTrainer:
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
         optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
                     *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow",
-                    "merge_speed", "merge_discharge")
+                    "merge_speed", "merge_discharge", "merge_timing")
         total.update({name: 0.0 for name in self.composer.names if name in optional})
-        if any(name.startswith("merge_") for name in self.composer.names):
+        if any(name in ("merge_speed", "merge_discharge") for name in self.composer.names):
             # V7FT merge-zone calibration metrics (whole-unroll, per batch; mean over batches)
             total.update({name: 0.0 for name in MERGE_METRIC_NAMES})
         total.update({name: 0.0 for name in MONITORS})
+        timing = "merge_timing" in self.composer.names
+        if timing:
+            # V8WM merge-timing metrics: pooled sums (ratios recomputed after the loop).
+            from .losses.merge_timing import ERRORS_KEY, SUM_KEYS, pooled_metrics
+            total.update({name: 0.0 for name in SUM_KEYS})
+        timing_errors: list = []
         n_batches = valid_targets = available_steps = 0
         reached_steps = None
         for batch in self._eval_loader(val_dataset):
@@ -275,6 +281,8 @@ class WmSTrainer:
                               and not isinstance(value, bool)})
             for key in total:
                 total[key] += float(parts.get(key, 0.0))
+            if timing:
+                timing_errors.extend(parts.get(ERRORS_KEY, []))
             valid_targets += int(parts["valid_targets"])
             n_batches += 1
         if was_training:
@@ -283,8 +291,12 @@ class WmSTrainer:
                 for key, value in total.items()}
         reached = ({"reached_steps": reached_steps, "available_steps": available_steps}
                    if require_full_horizon else {})
-        return {"n_batches": n_batches, "valid_targets": valid_targets, **reached,
-                "unroll_steps": int(unroll_steps), **{f"mean_{k}": v for k, v in mean.items()}}
+        result = {"n_batches": n_batches, "valid_targets": valid_targets, **reached,
+                  "unroll_steps": int(unroll_steps), **{f"mean_{k}": v for k, v in mean.items()}}
+        if timing and n_batches:
+            # pooled over all validation vehicles (ramp |ds|, stuck fractions, merge-time error)
+            result.update(pooled_metrics(result, timing_errors))
+        return result
 
     @torch.no_grad()
     def monitor(self, dataset: Dataset, *, unroll_steps: int,
@@ -324,7 +336,12 @@ class WmSTrainer:
         out.mkdir(parents=True, exist_ok=True)
         # Checkpoints do not embed the physics switches (merge_cal, sumo_fidelity ...); the loader
         # (`wms.model.checkpoint`) finds them here, so a mid-run stage checkpoint is scoreable.
-        write_json(out / "physics.json", asdict(self.model.physics))
+        inference_physics = self.inference_physics()
+        write_json(out / "physics.json", asdict(inference_physics))
+        if inference_physics != self.model.physics:
+            # V8WM: trained with these physics; physics.json (what every loader reads) has the
+            # physics.inference values applied.
+            write_json(out / "physics_train.json", asdict(self.model.physics))
         if s.long_horizon_on:
             write_json(out / "train_config.json", flat)
         if self.composer.braking.any_on:
@@ -357,7 +374,9 @@ class WmSTrainer:
         same = (SameHorizonSelection(
             horizons=s.selection_horizons_s, references=s.selection_reference,
             eligible_stage_s=eligible_stage_s([p.stage_s for p in self.stages],
-                                              s.selection_min_stage_s))
+                                              s.selection_min_stage_s),
+            ramp_weight=float(getattr(s, "selection_ramp_weight", 0.0)),
+            stuck_weight=float(getattr(s, "selection_stuck_weight", 0.0)))
             if s.selection_mode == "multi_horizon_v2" else None)
         snapshots: dict[int, dict] = {}   # step -> CPU weights of the v2 candidates
         mixer = (MixedHorizonSchedule(s.mixed_horizon_frac, s.mixed_horizon_s,
@@ -533,7 +552,9 @@ class WmSTrainer:
         if same is not None:
             self._final_same_horizon(same, snapshots, revalidate, out)
         receipt = write_train_receipt(
-            out, settings=s, flat_config=flat, physics=self.model.physics,
+            out, settings=s, flat_config=flat, physics=inference_physics,
+            physics_train=(None if inference_physics == self.model.physics
+                           else self.model.physics),
             device=str(self.device), checkpoint=checkpoint, log_path=train_log.path,
             steps=len(self.history), val_by_stage=val_by_stage, val_log_path=val_log.path,
             has_val=self.val_dataset is not None,
@@ -547,6 +568,13 @@ class WmSTrainer:
         table = {**chosen.summary(),
                  "checkpoint": str(out / "wm_s_best.pt") if chosen.best else None}
         return TrainResult(receipt, checkpoint, self.history, val_by_stage, selection=table)
+
+    def inference_physics(self):
+        """V8WM: the physics written to ``physics.json`` (training physics + physics.inference)."""
+        overrides = dict(getattr(self.settings, "physics_inference", None) or {})
+        if not overrides:
+            return self.model.physics
+        return replace(self.model.physics, **overrides)
 
     def _cpu_weights(self) -> dict:
         return {k: v.detach().to("cpu", copy=True) for k, v in self.model.state_dict().items()}

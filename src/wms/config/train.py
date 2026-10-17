@@ -14,6 +14,17 @@ from .schema import (config_dataclass, fingerprint, from_mapping, is_finite, req
                      to_mapping)
 
 ROLLOUT_MODES = ("residual", "driver_params", "hybrid")
+#: V8WM ``physics.overrides``: numeric PhysicsConfig parameters a config may set (gap rule).
+PHYSICS_OVERRIDE_KEYS = (
+    "gap_s0_lead_m", "gap_t_lead_s", "gap_b_lead_mps2", "gap_s0_follow_m", "gap_t_follow_s",
+    "gap_b_follow_mps2", "gap_overlap_margin_m", "gap_anticipation_s",
+    "gap_stopped_speed_mps", "gap_stopped_min_m",
+    "merge_end_wait_distance_m", "merge_end_wait_speed_mps",
+    "mainline_merge_yield_distance_m", "mainline_merge_yield_decel_mps2")
+#: V8WM ``physics.inference``: boolean switches that may differ at inference ...
+PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax")
+#: ... plus the numeric override keys.
+PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS
 
 
 @config_dataclass
@@ -26,11 +37,37 @@ class PhysicsOptions:
     """V6MERGE: lane-end mergers need both lane-1 gaps SUMO-secure and never pass the end."""
     mainline_merge_yield: bool = False
     """V6MERGE: the nearest lane-1 follower brakes (own IDM) for a blocked lane-end merger."""
+    overrides: dict[str, float] = field(default_factory=dict)
+    """V8WM (2026-10-17, default empty = unchanged): numeric gap-rule / lane-end parameters of
+    ``wms.physics.config.PhysicsConfig`` (keys :data:`PHYSICS_OVERRIDE_KEYS`: the speed-rule
+    secure-gap constants ``gap_*``, the stopped-merger relaxation ``gap_stopped_*`` and the
+    ``merge_end_wait_*`` / ``mainline_merge_yield_*`` thresholds), applied to the TRAINING
+    physics (and therefore also to the saved inference physics)."""
+    inference: dict[str, Any] = field(default_factory=dict)
+    """V8WM (default empty = physics.json equals the training physics): PhysicsConfig fields
+    (keys :data:`PHYSICS_INFERENCE_KEYS`: ``merge_end_wait``, ``mainline_merge_yield``,
+    ``gap_stopped_relax`` and any :data:`PHYSICS_OVERRIDE_KEYS`) that differ at INFERENCE.  The
+    trainer trains with the physics above and writes ``physics.json`` (read by every checkpoint
+    loader: evaluators, the Dreamer policy trainer) with these values applied; the training
+    physics is kept as ``physics_train.json``."""
 
     def __post_init__(self) -> None:
         require(self.emergency_decel_mps2 is None or (
             is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
             "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
+        bad = sorted(set(self.overrides) - set(PHYSICS_OVERRIDE_KEYS))
+        require(not bad, f"physics.overrides: unknown keys {bad}; valid: "
+                         f"{list(PHYSICS_OVERRIDE_KEYS)}")
+        require(all(is_finite(v) for v in self.overrides.values()),
+                "physics.overrides values must be finite numbers")
+        bad = sorted(set(self.inference) - set(PHYSICS_INFERENCE_KEYS))
+        require(not bad, f"physics.inference: unknown keys {bad}; valid: "
+                         f"{list(PHYSICS_INFERENCE_KEYS)}")
+        for key, value in self.inference.items():
+            if key in PHYSICS_INFERENCE_SWITCHES:
+                require(isinstance(value, bool), f"physics.inference.{key} must be a boolean")
+            else:
+                require(is_finite(value), f"physics.inference.{key} must be a finite number")
 
 
 @config_dataclass
@@ -386,11 +423,28 @@ class MergeLossConfig:
     cross_temp_m: float = 5.0
     speed_scale_mps: float = 1.0
     discharge_scale_veh: float = 2.0
+    speed_cells: Optional[tuple[int, ...]] = None
+    """V8WM: indices of the cells (``cell_edges_m`` intervals) whose speed error is
+    optimised; ``None`` (default) = every cell (v7 behaviour).  v8: ``[2]`` = only the
+    downstream cell [75.44, 300) m.  Validation metrics still report every cell."""
+    max_share: Optional[float] = None
+    """V8WM: cap on the merge terms' (speed + discharge) share of each chunk's loss VALUE
+    (all chunk terms; once-per-unroll terms such as loss.lane_event are not counted).  When
+    exceeded both terms are scaled by one detached factor so the share equals the cap
+    (``wms.train.losses.merge.cap_merge_share``).  ``None`` (default) = no cap."""
 
     def __post_init__(self) -> None:
         require(all(is_finite(x) and x >= 0.0 for x in (self.speed_weight,
                                                         self.discharge_weight)),
                 "loss.merge weights must be finite and non-negative")
+        n_cells = len(self.cell_edges_m) - 1
+        require(self.speed_cells is None or (
+            len(self.speed_cells) >= 1 and len(set(self.speed_cells)) == len(self.speed_cells)
+            and all(0 <= int(c) < n_cells for c in self.speed_cells)),
+            "loss.merge.speed_cells must be distinct cell indices in [0, len(cell_edges_m) - 1)")
+        require(self.max_share is None or (is_finite(self.max_share)
+                                           and 0.0 < self.max_share < 1.0),
+                "loss.merge.max_share must be in (0, 1) when set")
         edges = [float(x) for x in self.cell_edges_m]
         require(len(edges) >= 2 and all(is_finite(x) for x in edges)
                 and all(b > a for a, b in zip(edges[:-1], edges[1:])),
@@ -404,6 +458,30 @@ class MergeLossConfig:
     @property
     def enabled(self) -> bool:
         return self.speed_weight > 0.0 or self.discharge_weight > 0.0
+
+
+@config_dataclass
+class MergeTimingConfig:
+    """V8WM per-vehicle merge-timing (survival) loss (``wms.train.losses.merge_timing``).
+
+    ``weight`` (0 = off): for every recorded HDV-step in the ramp lane the discrete-time
+    survival NLL of the recorded lane-2 departure under the model's own per-step merge hazard
+    on its free-running rollout state (physics-masked and forced-window steps excluded);
+    normalised per recorded ramp vehicle.  ``metrics`` = compute the ramp / merge-timing
+    validation metrics (stuck fraction, merge-time error, ramp-HDV |ds|) without the loss
+    (needed by ``curriculum.selection_ramp_weight`` / ``selection_stuck_weight``).
+    """
+
+    weight: float = 0.0
+    metrics: bool = False
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.merge_timing.weight must be finite and non-negative")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or bool(self.metrics)
 
 
 @config_dataclass
@@ -515,6 +593,7 @@ class LossConfig:
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
+    merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -556,6 +635,14 @@ class CurriculumConfig:
     of the final same-horizon comparison instead (never by the run's own first validation)."""
     selection_min_stage_s: float = 30.0
     selection_agg_reward_weight: float = 0.0
+    selection_ramp_weight: float = 0.0
+    """V8WM (``selection = "multi_horizon_v2"`` only; 0 = off): add
+    ``w * mean_h(ramp |ds|_h / norm_h)`` over the validated horizons >= 60 s to the selection
+    score (ramp-HDV position error, ``loss.merge_timing`` metrics; norm = the run's first value
+    online, the best candidate in the final comparison)."""
+    selection_stuck_weight: float = 0.0
+    """V8WM (``multi_horizon_v2`` only; 0 = off): add ``w * mean_h |stuck_pred - stuck_rec|``
+    (fraction of t0 ramp HDVs never leaving lane 2) over the validated horizons >= 60 s."""
     mixed_horizon_frac: float = 0.0
     mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
     mixed_horizon_min_stage_s: float = 30.0
@@ -571,6 +658,9 @@ class CurriculumConfig:
                 and self.selection_agg_reward_weight >= 0.0
                 and is_finite(self.selection_min_stage_s),
                 "curriculum.selection_agg_reward_weight must be finite and non-negative")
+        require(all(is_finite(x) and x >= 0.0 for x in (self.selection_ramp_weight,
+                                                        self.selection_stuck_weight)),
+                "curriculum.selection_ramp_weight / selection_stuck_weight must be >= 0")
         require(is_finite(self.mixed_horizon_frac) and 0.0 <= self.mixed_horizon_frac <= 1.0
                 and len(self.mixed_horizon_s) >= 1
                 and all(is_finite(x) and x > 0 for x in self.mixed_horizon_s)
@@ -690,6 +780,12 @@ class TrainConfig:
         if self.loss.paired_diff.enabled:
             require(any(src.paired for src in self.data.c4_sources),
                     "loss.paired_diff.weight > 0 requires a data.c4_sources entry with paired = true")
+        if self.curriculum.selection_ramp_weight > 0.0 or self.curriculum.selection_stuck_weight > 0.0:
+            require(self.curriculum.selection == "multi_horizon_v2"
+                    and self.loss.merge_timing.enabled,
+                    "curriculum.selection_ramp_weight / selection_stuck_weight need "
+                    "curriculum.selection = 'multi_horizon_v2' and loss.merge_timing "
+                    "(weight > 0 or metrics = true)")
         if self.selection.select_by_long_horizon:
             require(self.data.windows.val is not None or self.data.windows.val_holdout_frac > 0.0
                     or self.data.c4_base is not None,   # V5DATA: c4 sources' world split
@@ -747,6 +843,8 @@ class TrainConfig:
             terms.extend(name for name, w in (("merge_speed", merge.speed_weight),
                                               ("merge_discharge", merge.discharge_weight))
                          if w > 0.0)
+        if self.loss.merge_timing.weight > 0.0:
+            terms.append("merge_timing")
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------
