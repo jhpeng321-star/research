@@ -295,8 +295,9 @@ def main():
         with Pool(a.workers, initializer=init, initargs=(specs, a.seeds)) as pool:
             for j, rr in enumerate(pool.imap_unordered(work, tasks, chunksize=1)):
                 res.extend(rr)
-                if (j + 1) % 6 == 0:
-                    print(f"{j+1}/{len(tasks)} {time.time()-t0:.0f}s", flush=True)
+                print(f"{j+1}/{len(tasks)} {time.time()-t0:.0f}s", flush=True)
+                with open(a.out + ".partial", "wb") as fh:      # survives an interruption
+                    pickle.dump({"specs": specs, "results": res}, fh)
     with open(a.out, "wb") as fh:
         pickle.dump({"specs": specs, "results": res}, fh)
     print(f"done {time.time()-t0:.0f}s errors {sum(1 for r in res if r.get('error'))}", flush=True)

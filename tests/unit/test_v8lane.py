@@ -263,3 +263,20 @@ def test_plumbing_and_validation():
         _c4([*V5, 'model.lane_v5_mainline="often"'])
     with pytest.raises(ValueError):
         ModelSpec(lane_v5_mainline="sample")
+
+
+def test_v8lane_precheck_config_differs_from_v8ft_short2_only_in_the_lane_keys():
+    a = load_train_config("configs/c4_wm_v8ft_short2.toml", []).to_legacy_flat()
+    b = load_train_config("configs/c4_wm_v8lane_short2.toml", []).to_legacy_flat()
+    diff = {k: b.get(k) for k in set(a) | set(b) if a.get(k) != b.get(k)}
+    assert diff == {"lane_v5_mainline": "budget", "lane_flow_weight": 1.0,
+                    "lane_flow_balance": 0.5, "out_dir": "runs/active/c4_wm_v8lane_short2"}
+    s = TrainSettings.from_flat(b)
+    assert "lane_flow" in build_loss(s).names and s.lane_model == "hazard_v5"
+
+
+def test_budget_training_unroll_with_lane_flow_is_finite():
+    model, rec, grad = _flow_grads(['model.lane_v5_mainline="budget"',
+                                    "loss.lane_flow.weight=1.0"])
+    assert model._mainline_mode == "budget"
+    assert math.isfinite(rec["lane_flow"]) and bool(torch.isfinite(grad).all())
