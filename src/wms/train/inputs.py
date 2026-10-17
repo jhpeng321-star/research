@@ -77,19 +77,39 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
     dt_s = float(model.physics.dt_s)
     steps = int(present.shape[1]) - 1 if unroll_steps is None else min(
         int(unroll_steps), int(present.shape[1]) - 1)
-    pad = entry_pad_for(settings, histories, max(steps, 1) * dt_s)
+    queue_kw: dict = {}
+    if bool(getattr(settings, "entry_queue_state", False)):        # V9ENTRY
+        from wms.model.entries import EntranceQueue, with_queue_demand
+
+        if "entry_queue" not in batch:
+            raise ValueError("entry_queue_state needs windows with entry_queue (C4 sources "
+                             "converted with V9ENTRY queue arrays)")
+        if not settings.entry_pad_auto:
+            raise ValueError("entry_queue_state needs entry_pad_auto (uncapped backlog)")
+        queues = [EntranceQueue.from_vector(row)
+                  for row in batch["entry_queue"].detach().cpu().numpy()]
+        queue_kw = {"queues": queues}
+        horizon_s = max(steps, 1) * dt_s
+        pad = entry_pad_for(settings, [with_queue_demand(h, q) for h, q in zip(histories, queues)],
+                            horizon_s)
+        if settings.entry_pad_auto:
+            extra = max(int(np.ceil(min(float(np.sum(q.backlog)), 0.5 * horizon_s)
+                                    * ENTRY_PAD_SAFETY)) for q in queues)
+            pad = max(1, min(int(settings.entry_pad_max), pad + extra))
+    else:
+        pad = entry_pad_for(settings, histories, max(steps, 1) * dt_s)
     pool = np.zeros((b_n, k_n + pad), dtype=bool)
     pool[:, k_n:] = True
     cfg = EntryConfig(max_pending=10 ** 9) if settings.entry_pad_auto else None
     rule = str(getattr(settings, "entry_insert_rule", "v2"))
-    if rule != "v2":                    # ENTRYFIX; "v2" keeps the legacy construction
+    if rule != "v2" or queue_kw:        # ENTRYFIX; "v2" keeps the legacy construction
         cfg = EntryConfig(**({"max_pending": 10 ** 9} if settings.entry_pad_auto else {}),
-                          insert_rule=rule)
+                          insert_rule=rule, fresh_no_credit=bool(queue_kw))
     process = TorchEntryProcessV2(histories=histories, dt_s=dt_s,
                                   seed=int(settings.seed), batch=b_n, pool=pool, cfg=cfg,
                                    **({} if paired_random is None else
                                       {"row_seeds": paired_random.row_seeds,
-                                       "couple_draws": True}))
+                                       "couple_draws": True}), **queue_kw)
     process.train_pad = pad
     return process
 

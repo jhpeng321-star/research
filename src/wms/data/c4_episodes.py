@@ -79,6 +79,15 @@ ARRAYS = ("veh_kin", "veh_mask", "target_mask", "counter", "vid", "is_cav", "tim
 #: speed-bound clip; ``issued_acceleration_mps2`` is the clipped command, the REALIZED
 #: acceleration is ``veh_kin[..., 5]``), and the issued / requested WM lane targets (-1 none).
 EXTRA_ARRAYS = ("requested_acceleration_mps2", "lane_command_target", "lane_request_target")
+#: V9ENTRY optional entrance-queue arrays, written when the episode directory carries its SUMO
+#: request file (``scenario/requests.rou.xml``, written by the C4 recorder):
+#:   entry_backlog    f32 [T,2]     requested-but-not-inserted vehicles per entrance at each tick
+#:                                  (SUMO ledger ``due(now) - inserted``; 0 mainline, 1 ramp)
+#:   request_counter  f32 [T,2,30]  10 s REQUEST (demand) counts over the last 300 s, binned as
+#:                                  ``counter`` (which counts insertions, i.e. service)
+#: The window loader turns them into ``record["entry_queue"]`` (:func:`queue_features`).
+QUEUE_ARRAYS = ("entry_backlog", "request_counter")
+REQUESTS_FILE = "scenario/requests.rou.xml"
 
 
 class C4EpisodeRefusal(TrainDataRefusal):
@@ -206,6 +215,87 @@ def episode_arrays(ep: dict) -> dict[str, np.ndarray]:
     }
 
 
+def read_requests(path: Path) -> tuple[list[str], np.ndarray, np.ndarray]:
+    """``(vehicle ids, depart s, entrance)`` of a SUMO request file (entrance 1 = a route whose
+    id contains "ramp", else 0 mainline; ``traffic_shepherd.scenarios`` uses
+    ``mainline_route`` / ``ramp_route``)."""
+    import xml.etree.ElementTree as ET
+
+    names, depart, entrance = [], [], []
+    for _event, el in ET.iterparse(str(path), events=("end",)):
+        if el.tag == "vehicle":
+            names.append(str(el.get("id")))
+            depart.append(float(el.get("depart")))
+            entrance.append(1 if "ramp" in str(el.get("route", "")).lower() else 0)
+            el.clear()
+    return names, np.asarray(depart, np.float64), np.asarray(entrance, np.int64)
+
+
+def episode_queue_arrays(time_s: np.ndarray, vid: np.ndarray, present: np.ndarray,
+                         vehicle_ids: Sequence[str], req_names: Sequence[str],
+                         req_depart: np.ndarray, req_entrance: np.ndarray,
+                         first_seen_s: Optional[np.ndarray] = None) -> tuple[dict, dict]:
+    """V9ENTRY ``entry_backlog [T,2]`` / ``request_counter [T,2,30]`` (see :data:`QUEUE_ARRAYS`).
+
+    A request's insertion time is its vehicle's first occupied tick (or ``first_seen_s`` of a
+    branch episode, recorded over the longer base run).  A request never seen on the road is still
+    waiting when the arrays start at t = 0; when they start later (branch episodes) and the
+    request is older than the start it is counted as ``unknown`` and treated as inserted, so the
+    backlog is then a lower bound.  Returns ``(arrays, stats)``."""
+    time_s = np.asarray(time_s, np.float64)
+    first = {}
+    if first_seen_s is not None:
+        for v, ts in enumerate(np.asarray(first_seen_s, np.float64).tolist()):
+            if math.isfinite(ts):
+                first[v] = float(ts)
+    for t in range(vid.shape[0]):
+        for v in vid[t][present[t]].tolist():
+            if v >= 0 and v not in first:
+                first[v] = float(time_s[t])
+    by_name = {str(n): first[v] for v, n in enumerate(vehicle_ids) if v in first}
+    t_start = float(time_s[0])
+    ins = np.empty(len(req_names), np.float64)
+    unknown = 0
+    for j, (name, dep) in enumerate(zip(req_names, np.asarray(req_depart).tolist())):
+        if name in by_name:
+            ins[j] = by_name[name]
+        elif t_start > 0.0 and dep < t_start:
+            ins[j] = -np.inf
+            unknown += 1
+        else:
+            ins[j] = np.inf
+    dep = np.asarray(req_depart, np.float64)
+    ent = np.asarray(req_entrance, np.int64)
+    t_count = len(time_s)
+    backlog = np.zeros((t_count, N_ENTRANCES), np.float32)
+    counter = np.zeros((t_count, N_ENTRANCES, COUNTER_BINS), np.float32)
+    for t in range(t_count):
+        now = float(time_s[t])
+        due = dep <= now + 1e-9
+        for e in range(N_ENTRANCES):
+            backlog[t, e] = float((due & (ins > now + 1e-9) & (ent == e)).sum())
+        age = now - dep
+        keep = due & (age < COUNTER_BINS * COUNTER_BIN_S)
+        if keep.any():
+            np.add.at(counter[t], (ent[keep], np.floor(np.clip(age[keep], 0.0, None)
+                                                        / COUNTER_BIN_S).astype(np.int64)), 1.0)
+    stats = {"n_requests": int(len(req_names)), "queue_unknown": int(unknown),
+             "not_inserted_by_end": int(np.isposinf(ins).sum())}
+    return {"entry_backlog": backlog, "request_counter": counter}, stats
+
+
+def queue_features(ep, tick: int) -> np.ndarray:
+    """``[backlog main, backlog ramp, demand main, demand ramp]`` (vehicles, veh/s) at ``tick``.
+
+    The demand rate is the mean request rate over the fully observed 10 s bins of the last
+    300 s (an upstream arrival count); the backlog is the recorded SUMO entrance queue."""
+    backlog = np.asarray(ep.array("entry_backlog")[tick], np.float64)
+    counter = np.asarray(ep.array("request_counter")[tick], np.float64)
+    n = max(1, min(COUNTER_BINS, int(float(ep.array("time_s")[tick]) // COUNTER_BIN_S)))
+    demand = counter[:, :n].sum(1) / (n * COUNTER_BIN_S)
+    return np.concatenate([backlog, demand]).astype(np.float32)
+
+
 def _load_episode_npz(path: Path) -> dict:
     with np.load(path, allow_pickle=False) as data:
         out = {k: data[k] for k in data.files}
@@ -248,6 +338,15 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     arrays = episode_arrays(ep)
     for key, value in arrays.items():
         np.save(out / f"{key}.npy", value, allow_pickle=False)
+    queue_stats = None
+    if (src / REQUESTS_FILE).is_file() and "vehicle_ids" in ep:      # V9ENTRY
+        names, depart, entrance = read_requests(src / REQUESTS_FILE)
+        queue, queue_stats = episode_queue_arrays(
+            arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+            [str(x) for x in ep["vehicle_ids"]], names, depart, entrance,
+            ep.get("entry_first_seen_s"))
+        for key, value in queue.items():
+            np.save(out / f"{key}.npy", value, allow_pickle=False)
     present = arrays["veh_mask"].astype(bool)
     cav = present & arrays["is_cav"].astype(bool)
     entry = {
@@ -264,6 +363,8 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
         "t_start_s": float(arrays["time_s"][0]),
         "extra_arrays": sorted(n for n in EXTRA_ARRAYS if n in arrays),
     }
+    if queue_stats is not None:
+        entry["queue_arrays"] = {"source": REQUESTS_FILE, **queue_stats}
     if isinstance(meta.get("branch"), dict):        # paired-branch group (genrand)
         entry["branch"] = meta["branch"]
         entry["pair_key"] = meta["branch"].get("pair_key")
@@ -341,9 +442,16 @@ class EpisodeArrays:
         self.root = Path(root)
         self._arrays = {name: np.load(self.root / f"{name}.npy", mmap_mode="r",
                                       allow_pickle=False) for name in ARRAYS}
+        for name in QUEUE_ARRAYS:            # V9ENTRY, optional
+            if (self.root / f"{name}.npy").is_file():
+                self._arrays[name] = np.load(self.root / f"{name}.npy", mmap_mode="r",
+                                             allow_pickle=False)
 
     def array(self, name: str) -> np.ndarray:
         return self._arrays[name]
+
+    def has(self, name: str) -> bool:
+        return name in self._arrays
 
     @staticmethod
     def run_start(_tick: int) -> int:
@@ -510,6 +618,8 @@ class C4WindowLoader:
         }
         if self.entries_v2:
             record["entry_feat"] = entry_features(ep, {"tick": int(tick)})
+            if ep.has("entry_backlog") and ep.has("request_counter"):     # V9ENTRY
+                record["entry_queue"] = queue_features(ep, int(tick))
             record.update(road if road is not None else road_presence(ep, int(tick), h))
         if self.history_s is not None:
             record["driver_hist"], record["driver_hist_mask"] = prior_history(

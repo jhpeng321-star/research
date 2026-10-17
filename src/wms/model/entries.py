@@ -155,6 +155,12 @@ class EntryConfig:
     #: sumo_like: refuse when the safe insertion speed is below this (SUMO "max": 0).
     sumo_min_speed_mps: float = 0.0
     sumo_lane_speed_mps: tuple = SUMO_LANE_SPEED_MPS
+    #: V9ENTRY (default off = bit-identical): in ``sumo_like_v2`` a lane's rearmost vehicle that
+    #: was itself inserted in THIS step gets no end-of-step movement credit.  SUMO never inserts
+    #: two vehicles into one lane in one step (the first entrant does not move before the next
+    #: step); without this a free lane admits a second entrant at the same position (overlap)
+    #: whenever an entrance has a backlog.  Set together with the entrance-queue state.
+    fresh_no_credit: bool = False
 
     def __post_init__(self) -> None:
         if self.insert_rule not in INSERT_RULES:
@@ -171,6 +177,53 @@ class EntryStats:
     dropped_pending: int = 0
     no_slot: int = 0
     per_entrance: list = field(default_factory=lambda: [0, 0])
+
+
+#: Length of the entrance-queue vector (:class:`EntranceQueue`): backlog main/ramp, demand main/ramp.
+QUEUE_FEATURE_LEN = 4
+
+
+@dataclass
+class EntranceQueue:
+    """V9ENTRY entrance (source) queue state of a start: what the observed-insertion history
+    cannot see.
+
+    ``backlog`` [2] = requested-but-not-yet-inserted vehicles per entrance (mainline, ramp) at
+    t0; ``demand_rate`` [2] = the arrival (request) rate in veh/s, NOT the insertion-counter rate
+    (on a saturated entrance the counter only measures the service capacity).  Training starts
+    take both from the recorded SUMO request ledger (``wms.data.c4_episodes`` queue arrays); a
+    deployed RSU would have to estimate them from upstream detectors (queue length / occupancy
+    upstream of the entrance, arrival counts at an upstream loop).  Arrivals are Poisson by
+    default (``demand_cv`` = 1, SUMO's request process).
+    """
+
+    backlog: np.ndarray
+    demand_rate: np.ndarray
+    demand_cv: float = 1.0
+
+    @classmethod
+    def from_vector(cls, vec, demand_cv: float = 1.0) -> "EntranceQueue":
+        v = np.asarray(vec, np.float64).reshape(-1)
+        if v.size != QUEUE_FEATURE_LEN or not np.all(np.isfinite(v)):
+            raise ValueError(f"entrance-queue vector must hold {QUEUE_FEATURE_LEN} finite "
+                             f"values, got {v}")
+        return cls(backlog=np.clip(np.rint(v[:N_ENTRANCES]), 0.0, None),
+                   demand_rate=np.clip(v[N_ENTRANCES:], 0.0, None), demand_cv=float(demand_cv))
+
+    def to_vector(self) -> np.ndarray:
+        return np.concatenate([np.asarray(self.backlog, np.float64),
+                               np.asarray(self.demand_rate, np.float64)])
+
+
+def with_queue_demand(history: "EntranceHistory", queue: EntranceQueue) -> "EntranceHistory":
+    """``history`` with its arrival rate / headway CV replaced by the queue's demand (V9ENTRY);
+    every other observed entry statistic (class mix, lane share, speeds, gaps) is kept."""
+    import dataclasses
+
+    return dataclasses.replace(
+        history, rate=np.asarray(queue.demand_rate, np.float64).copy(),
+        headway_cv=np.full(N_ENTRANCES, float(queue.demand_cv)),
+        trend=np.ones(N_ENTRANCES))
 
 
 def observed_rates(counter, window_bins: int = 12) -> np.ndarray:
@@ -733,13 +786,23 @@ class TorchEntryProcessV2(_EntryProcessBase):
                  batch: int = 1, cfg: Optional[EntryConfig] = None,
                  entry_s_m=ENTRY_S_M, pool=None,
                  defaults: Optional[EntranceHistory] = None,
-                 row_seeds: Optional[list] = None, couple_draws: bool = False) -> None:
+                 row_seeds: Optional[list] = None, couple_draws: bool = False,
+                 queues: Optional[list] = None) -> None:
         if histories is None:
             if history is None:
                 history = build_entrance_history(counter=counter, defaults=defaults)
             histories = [history]
         super().__init__(cfg, dt_s, entry_s_m, max(int(batch), len(histories)), pool)
         self.histories = list(histories)
+        # V9ENTRY entrance-queue state (``queues``: one EntranceQueue per history row; default
+        # None = unchanged): the t0 backlog starts pending and arrivals follow the demand rate.
+        self.queues = None
+        if queues is not None:
+            if len(queues) != len(self.histories):
+                raise ValueError("queues needs one EntranceQueue per history row")
+            self.queues = list(queues)
+            self.histories = [with_queue_demand(h, q) for h, q in zip(self.histories, self.queues)]
+            self._seed_backlog()
         self.rng = np.random.default_rng(int(seed))
         # Optional per-row generators (``row_seeds``): rows with the same seed and history draw
         # the same arrival stream as long as their traffic (blocking) agrees - common random
@@ -761,6 +824,14 @@ class TorchEntryProcessV2(_EntryProcessBase):
 
     def _hist(self, b: int) -> EntranceHistory:
         return self.histories[b] if b < len(self.histories) else self.histories[-1]
+
+    def _seed_backlog(self) -> None:
+        """Pending arrivals at t0 = the queue backlog of each row (V9ENTRY)."""
+        if self.queues is None:
+            return
+        for b in range(self.batch):
+            q = self.queues[b] if b < len(self.queues) else self.queues[-1]
+            self.pending[b] = np.rint(np.asarray(q.backlog, np.float64)).astype(np.int64)
 
     def _rng(self, b: int):
         if self.row_rngs is None:
@@ -794,6 +865,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
             self.now = np.zeros(b_n)
             self.t_next = np.full((b_n, N_ENTRANCES), np.inf)
             self._started = np.zeros(b_n, bool)
+            self._seed_backlog()
         self.virgin = ~present.copy()
         self._cav_slots = np.zeros_like(present)
 
@@ -911,6 +983,15 @@ class TorchEntryProcessV2(_EntryProcessBase):
     def _sumo_v2(self) -> bool:
         return self.cfg.insert_rule == "sumo_like_v2"
 
+    @staticmethod
+    def _rear_is_fresh(work: _Working, b: int, ln: int) -> bool:
+        """True when ``ln``'s rearmost vehicle was inserted in the current step."""
+        fresh = [k for bb, k in work.inserted if bb == b and work.lane[b, k] == ln]
+        if not fresh:
+            return False
+        rows = np.flatnonzero(work.present[b] & (work.lane[b] == ln))
+        return int(rows[np.argmin(work.s[b, rows])]) in fresh
+
     def _lane_occupancy(self, work: _Working, b: int, ln: int) -> float:
         """Vehicle-length sum on the entrance edge of ``ln`` (SUMO departLane="best" key)."""
         sel = (work.present[b] & (work.lane[b] == ln) & (work.s[b] >= self.entry_s[ln])
@@ -946,7 +1027,8 @@ class TorchEntryProcessV2(_EntryProcessBase):
                 # credit), with the v5 textbook vType settings; measured on the
                 # saturated-entrance recordings, see ENTRY_DIAG.md.  Admission stays
                 # "bumper gap >= vType minGap".
-                gap = gap + max(0.0, float(v_lead)) * self.dt
+                if not (self.cfg.fresh_no_credit and self._rear_is_fresh(work, b, ln)):
+                    gap = gap + max(0.0, float(v_lead)) * self.dt
                 v_lead = 0.0
                 tau_vt = SUMO_V2_TAU_S[vtype]
                 decel_vt = SUMO_V2_DECEL_MPS2[vtype]
@@ -981,4 +1063,8 @@ class TorchEntryProcessV2(_EntryProcessBase):
                 "inserted": stt.inserted, "inserted_cav": stt.inserted_cav,
                 "per_entrance": list(stt.per_entrance),
                 "deferred_steps": stt.deferred_steps,
-                "dropped_pending": stt.dropped_pending, "no_slot": stt.no_slot}
+                "dropped_pending": stt.dropped_pending, "no_slot": stt.no_slot,
+                **({} if self.queues is None else {
+                    "queue_backlog0": [float(x) for x in
+                                       self.queues[min(b, len(self.queues) - 1)].backlog],
+                    "pending": [int(x) for x in self.pending[b]]})}

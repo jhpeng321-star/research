@@ -198,6 +198,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_v5_mainline": "model.lane_v5_mainline",
     "lane_flow_weight": "loss.lane_flow.weight",
     "lane_flow_balance": "loss.lane_flow.balance",
+    # V9ENTRY (entrance-queue state of the training entry process)
+    "entry_queue_state": "data.entry_queue_state",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
@@ -255,6 +257,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "selection_ramp_weight", "selection_stuck_weight",
     # V8LANE
     "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
+    # V9ENTRY
+    "entry_queue_state",
 )
 
 

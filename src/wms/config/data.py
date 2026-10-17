@@ -226,6 +226,11 @@ class DataConfig:
     #: the end of the insertion step, depart at the stop speed behind the lane's rearmost
     #: vehicle; ENTRY_DIAG.md).  Default "v2" keeps every existing run bit-identical.
     entry_insert_rule: Literal["v2", "sumo_like", "sumo_like_v2"] = "v2"
+    #: V9ENTRY: the entries-v2 process starts from the recorded SUMO entrance backlog and
+    #: draws arrivals at the recorded demand (request) rate, with no end-of-step credit for a
+    #: same-step entrant (``wms.model.entries.EntranceQueue``).  Needs windows with
+    #: ``entry_queue`` (C4 sources converted with V9ENTRY queue arrays).  Default off.
+    entry_queue_state: bool = False
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
     #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation

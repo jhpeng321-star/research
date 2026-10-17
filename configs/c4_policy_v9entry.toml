@@ -1,0 +1,16 @@
+# V9ENTRY policy imagination (2026-10-18; PREPARED, NOT LAUNCHED): = c4_policy_v8.toml with the imagined entrance
+# queue started from the recorded SUMO backlog and fed at the recorded demand rate (trainer.entry_queue_state;
+# runs/active/C4-V7FT-20261017/entry_fix/ENTRY_FIX.md).  The start windows come from [data] wm_config's sources, so
+# that WM config must point at sources re-converted with queue arrays (configs/c4_wm_v9entry_short.toml does);
+# batches without entry_queue raise.  The critic's entry_backlog input (/10) now sees the real backlog (tens of
+# vehicles instead of ~0-2), so do not resume an old critic: train from scratch as v8.
+extends = "c4_policy_v8.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V9ENTRY"
+
+[data]
+wm_config = "configs/c4_wm_v9entry_short.toml"
+
+[trainer]
+entry_queue_state = true

@@ -137,6 +137,12 @@ class DreamerConfig:
     # ``lagrange_decay``: lambda <- (1 - decay) * lambda before each dual ascent step (0 = off).
     lagrange_max: Optional[float] = None
     lagrange_decay: float = 0.0
+    # V9ENTRY (2026-10-18; default off = bit-identical): the imagined entrance (source) queue
+    # starts from the recorded SUMO backlog at t0 and arrivals follow the demand (request) rate
+    # instead of the observed insertion rate; a lane's same-step entrant gets no end-of-step
+    # credit (EntryConfig.fresh_no_credit).  Needs start windows with ``entry_queue``
+    # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
+    entry_queue_state: bool = False
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -181,7 +187,8 @@ class DreamerConfig:
         if self.ttc_budget_mode not in ("absolute", "native_relative"):
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
-                     "source_wait_grad", "critic_entry_backlog", "lagrange_scaled"):
+                     "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
+                     "entry_queue_state"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if self.entry_insert_rule not in ("v2", "sumo_like", "sumo_like_v2"):
@@ -338,28 +345,52 @@ def _pad_slots(value, k, pad, fill=0):
     return torch.cat((value, torch.full(shape, fill, dtype=value.dtype, device=value.device)), 1)
 
 
-def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generator=None):
+#: V9ENTRY: extra entrant slots for a t0 backlog, at most this many veh/s beyond the demand.
+_ENTRY_PAD_BACKLOG_RATE = 0.5
+
+
+def with_entry_slots(batch: StartBatch, horizon_s: float, pad_max: int, generator=None,
+                     queue_state: bool = False):
     """Start batch with empty entrant slots appended and its entry spec (``batch.entry_spec``).
 
     The pad holds 1.5x the expected arrivals (observed entry-history rate x horizon) + 16, the
     batch maximum, capped at ``pad_max``; one process seed per start (rows of a start share it).
-    Returns ``batch`` unchanged when it has no ``entry_feat``."""
+    Returns ``batch`` unchanged when it has no ``entry_feat``.
+
+    ``queue_state`` (V9ENTRY): the spec also carries one ``EntranceQueue`` per start (t0 backlog,
+    demand rate) from ``batch.entry_queue`` (required), and the pad is sized from the demand
+    plus the backlog (at most ``_ENTRY_PAD_BACKLOG_RATE`` veh/s of extra service)."""
     if batch.entry_feat is None:
         return batch
-    from wms.model.entries import EntranceHistory
+    from wms.model.entries import EntranceHistory, EntranceQueue
 
     feats = batch.entry_feat.detach().cpu().numpy()
     histories = [EntranceHistory.from_features(row) for row in feats]
     k = batch.state["s_m"].shape[1]
-    pad = max(int(math.ceil(float(np.sum(h.rate)) * horizon_s * _ENTRY_PAD_SAFETY))
-              + _ENTRY_PAD_MARGIN for h in histories)
+    queues = None
+    if queue_state:
+        if batch.entry_queue is None:
+            raise ValueError("entry_queue_state needs start windows with entry_queue "
+                             "(a converted source with V9ENTRY queue arrays)")
+        queues = [EntranceQueue.from_vector(row) for row in
+                  batch.entry_queue.detach().cpu().numpy()]
+        pad = max(int(math.ceil((float(np.sum(q.demand_rate)) * horizon_s
+                                 + min(float(np.sum(q.backlog)),
+                                       _ENTRY_PAD_BACKLOG_RATE * horizon_s))
+                                * _ENTRY_PAD_SAFETY)) + _ENTRY_PAD_MARGIN for q in queues)
+    else:
+        pad = max(int(math.ceil(float(np.sum(h.rate)) * horizon_s * _ENTRY_PAD_SAFETY))
+                  + _ENTRY_PAD_MARGIN for h in histories)
     pad = max(1, min(int(pad_max), pad))
     seeds = torch.randint(0, 2 ** 31 - 1, (len(histories),), generator=generator).tolist()
     state = {key: _pad_slots(value, k, pad, _PAD_FILL.get(key, 0))
              for key, value in batch.state.items()}
     kwargs = {key: _pad_slots(value, k, pad) for key, value in batch.rollout_kwargs.items()}
-    return StartBatch(state, kwargs, batch.metadata, batch.entry_feat,
-                      {"histories": histories, "seeds": seeds, "k0": k, "pad": pad})
+    spec = {"histories": histories, "seeds": seeds, "k0": k, "pad": pad}
+    if queues is not None:
+        spec["queues"] = queues
+    return StartBatch(state, kwargs, batch.metadata, batch.entry_feat, spec,
+                      entry_queue=batch.entry_queue)
 
 
 class _EntryRecorder:
@@ -396,12 +427,15 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
 
     pool = np.zeros((len(rows), n_slots), dtype=bool)
     pool[:, spec["k0"]:] = True
+    queues = spec.get("queues")         # V9ENTRY (absent = unchanged)
+    extra = {} if queues is None else {"queues": [queues[r] for r in rows]}
+    cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule) if queues is None else
+           EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True))
     # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).
     return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
                                dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
-                               cfg=EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule),
-                               pool=pool,
-                               row_seeds=[spec["seeds"][r] for r in rows])
+                               cfg=cfg, pool=pool,
+                               row_seeds=[spec["seeds"][r] for r in rows], **extra)
 
 
 def _same_groups(sampler, state):
@@ -1039,6 +1073,9 @@ class DreamerTrainer:
         if not self.config.imagine_entries:
             return batch
         horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+        if self.config.entry_queue_state:
+            return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator,
+                                    queue_state=True)
         return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator)
 
     @staticmethod
