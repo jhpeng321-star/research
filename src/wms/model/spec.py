@@ -19,6 +19,8 @@ LANE_MODELS = ("residual", "hazard", "hazard_v5")
 DRIVER_UPDATES = ("off", "ema")
 #: LANEFIX (hazard mode only): rollout lane decision, hazard feature set, merge ownership.
 LANE_DECISIONS = ("argmax", "sample", "gated")
+#: V8LANE mainline decision rules (= wms.model.lane_v5.MAINLINE_MODES).
+LANE_V5_MAINLINE = ("default", "sample", "budget", "budget_prop")
 LANE_HAZARD_FEATURES = ("v1", "v2")
 MERGE_HAZARD_ZONES = ("forced_late", "full")
 
@@ -81,6 +83,8 @@ class ModelSpec:
     # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
     lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
     lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
+    # V8LANE (default 'default' = lane_decision): mainline overtake / return decision rule.
+    lane_v5_mainline: str = "default"
     # V6: default values preserve the legacy encoder and algebraic EMA updates.
     driver_param_mode: str = "legacy"
     driver_ema_update: bool = True
@@ -162,6 +166,10 @@ class ModelSpec:
                 or self.lane_hazard_features != "v1" or self.merge_hazard_zone != "forced_late"):
             raise ValueError("lane_decision / lane_logit_offsets / lane_hazard_features / "
                              "merge_hazard_zone need lane_model='hazard'")
+        if self.lane_v5_mainline not in LANE_V5_MAINLINE:
+            raise ValueError(f"lane_v5_mainline must be one of {LANE_V5_MAINLINE}")
+        if self.lane_v5_mainline != "default" and self.lane_model != "hazard_v5":
+            raise ValueError("lane_v5_mainline needs lane_model='hazard_v5'")
         if self.history_features < 0:
             raise ValueError("history_features must be >= 0")
         if self.long_history and (self.black_box or self.history_features != HISTORY_F):

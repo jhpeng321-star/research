@@ -23,6 +23,7 @@ from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
 from .merge import MergeLossConfig, cap_merge_share, merge_terms
+from .lane_flow import LaneFlowConfig, lane_flow_terms
 from .merge_timing import MergeTimingConfig, merge_timing_terms
 from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
 from .residual import ResidualMagnitudeLoss, ResidualPenalty
@@ -201,6 +202,11 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m),
             forced_window_hazard=(physics is not None and getattr(
                 physics, "forced_window_mode", "deterministic") == "hazard"))))
+    if float(getattr(settings, "lane_flow_weight", 0.0)) > 0.0:
+        # V8LANE on-policy lane-flow term, after every existing term (off: never built).
+        chunk.extend(lane_flow_terms(LaneFlowConfig(
+            weight=float(settings.lane_flow_weight),
+            balance=float(getattr(settings, "lane_flow_balance", 0.0)))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))

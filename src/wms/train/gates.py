@@ -127,6 +127,8 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
             ("merge_discharge", settings.merge_loss_discharge_weight)) if weight > 0.0)
     if float(getattr(settings, "merge_timing_weight", 0.0)) > 0.0:
         terms.append("merge_timing")
+    if float(getattr(settings, "lane_flow_weight", 0.0)) > 0.0:
+        terms.append("lane_flow")
     return tuple(dict.fromkeys(terms))
 
 

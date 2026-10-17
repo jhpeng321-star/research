@@ -209,6 +209,10 @@ class ModelConfig:
     """Per-head TRAIN-val AP for the gate (negative = the AP stored in the lane network)."""
     lane_v5_pretrain: Optional[str] = None
     """Initialise the lane network from a tools/lanev5_pretrain.py file before training."""
+    lane_v5_mainline: Literal["default", "sample", "budget", "budget_prop"] = "default"
+    """V8LANE: overtake / return decision rule ('default' = lane_decision; 'sample' = always draw
+    the calibrated hazard; 'budget' / 'budget_prop' = population-matched count, top-hazard /
+    hazard-proportional car).  Merges keep lane_decision."""
     lane_conflict_resolve: bool = False
     """V6INTEG: resolve simultaneous lane-change conflicts during rollout."""
 
@@ -248,6 +252,11 @@ class ModelConfig:
                     "model.lane_decision='gated' / lane_v5_* need model.lane_model='hazard_v5'")
         require(not self.gap_stopped_relax or self.lane_gap_rule == "speed",
                 "model.gap_stopped_relax requires model.lane_gap_rule='speed'")
+        require(self.lane_v5_mainline in ("default", "sample", "budget", "budget_prop"),
+                "model.lane_v5_mainline must be default, sample, budget or budget_prop")
+        if self.lane_v5_mainline != "default":
+            require(self.lane_model == "hazard_v5",
+                    "model.lane_v5_mainline needs model.lane_model='hazard_v5'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
                 "model.grad_decay_per_step must be in (0, 1]")
         if self.lane_head == "history":
@@ -515,6 +524,26 @@ class MergeTimingConfig:
 
 
 @config_dataclass
+class LaneFlowConfig:
+    """V8LANE on-policy mainline lane-flow loss (``wms.train.losses.lane_flow``; 0 = off).
+
+    ``weight``: pooled Poisson NLL of the expected overtake / return counts (sum of the
+    hazard_v5 head probabilities over the rollout's own feasible rows) against the recorded
+    counts of the same chunk, per window.  ``balance`` (0 = off): the lane-0 occupancy excess of
+    the rollout over the record at the chunk start (HDV count) is added to the return target
+    (deficit: to the overtake target) with this gain.
+    """
+
+    weight: float = 0.0
+    balance: float = 0.0
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0
+                and is_finite(self.balance) and self.balance >= 0.0,
+                "loss.lane_flow.weight / balance must be finite and non-negative")
+
+
+@config_dataclass
 class PairedDiffLossConfig:
     """PAIRLOSS paired-difference loss (``wms.train.losses.paired_diff``; weight 0 = off).
 
@@ -624,6 +653,7 @@ class LossConfig:
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
     merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
+    lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -875,6 +905,8 @@ class TrainConfig:
                          if w > 0.0)
         if self.loss.merge_timing.weight > 0.0:
             terms.append("merge_timing")
+        if self.loss.lane_flow.weight > 0.0:
+            terms.append("lane_flow")
         return tuple(terms)
 
     # -- legacy flat checkpoint/receipt format --------------------------
