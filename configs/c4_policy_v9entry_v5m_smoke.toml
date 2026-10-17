@@ -1,0 +1,15 @@
+# GPU smoke of c4_policy_v9entry_v5m.toml (2026-10-18): same settings, small batch, 3 updates, no checkpoints.
+extends = "c4_policy_v9entry_v5m.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V9ENTRY-V5M-SMOKE"
+updates = 3
+validation_batches = 1
+
+[trainer]
+batch_size = 4
+checkpoint_every = 1000
+validation_every = 1000
+
+[counterfactual]
+max_starts = 2
