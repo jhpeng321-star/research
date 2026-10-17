@@ -124,7 +124,7 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
                    "merge_end_wait": bool(cfg.physics.merge_end_wait),
                    "mainline_merge_yield": bool(cfg.physics.mainline_merge_yield)}
     # V8WM: config-level gap-rule / lane-end parameter overrides (empty = unchanged).
-    integration.update({key: value if isinstance(value, str) else float(value)
+    integration.update({key: value if isinstance(value, (str, bool)) else float(value)
                         for key, value in cfg.physics.overrides.items()})
     if model.merge_cal:
         overrides = {"sumo_fidelity": bool(model.sumo_fidelity), "sumo_idm": sumo_idm,

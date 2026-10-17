@@ -13,7 +13,8 @@ from torch import Tensor
 
 from .config import PhysicsConfig
 from .idm import IDMParams, idm_accel
-from .mobil import anticipated_kin, merge_end_blocked, merge_end_waiting, secure_gaps
+from .mobil import (anticipated_kin, impatient_margins, merge_end_blocked, merge_end_waiting,
+                    secure_gaps)
 from .neighbours import _CLOSED_ROAD_FREE_GAP_M, MIN_GAP_M, lane_of
 
 
@@ -41,12 +42,14 @@ def _pair_overlap(s: Tensor, length: Tensor, cand: Tensor, margin: float) -> Ten
 
 
 def merge_feasible_among(kin: Tensor, present: Tensor, physics: PhysicsConfig,
-                         cand: Tensor) -> Tensor:
+                         cand: Tensor, impatience: Optional[Tensor] = None) -> Tensor:
     """``[B, j]``: the speed-rule merge feasibility (lane ``merge_lane`` -> ``merge_target_lane``,
     in the merge zone) of every ego ``j`` judged against the lane-1 vehicles ``cand [B, j, k]``
     only.  With ``cand`` = every present lane-1 vehicle it equals the physics mask of
     ``mobil_merge_logits`` (speed gap rule on the anticipated configuration, the stopped-merger
-    relaxation, the ``merge_end_wait`` veto; tested).  Discrete: no autograd graph."""
+    relaxation, the ``merge_end_wait`` veto; tested).  Discrete: no autograd graph.
+    V8WM3 ``impatience`` (level ``[B, j]``, ``None`` = legacy): the relaxed margins of
+    :func:`wms.physics.mobil.speed_gap_safe` / :func:`wms.physics.mobil.secure_gaps`."""
     p = physics
     with torch.no_grad():
         kin = kin.detach()
@@ -55,10 +58,17 @@ def merge_feasible_among(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         kin_a = anticipated_kin(kin, p.gap_anticipation_s)
         sa, va = kin_a[..., 0], kin_a[..., 4]
         gl, lvl, gf, fvf = _pair_neighbours(sa, va, length, cand, free)
-        req_l = p.gap_s0_lead_m + p.gap_t_lead_s * va \
-            + (va * va - lvl * lvl).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
-        req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fvf \
-            + (fvf * fvf - va * va).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+        if impatience is None:
+            req_l = p.gap_s0_lead_m + p.gap_t_lead_s * va \
+                + (va * va - lvl * lvl).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
+            req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fvf \
+                + (fvf * fvf - va * va).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+        else:
+            s0l, tl, s0f, tf = impatient_margins(p, impatience)
+            req_l = s0l + tl * va + (va * va - lvl * lvl).clamp_min(0.0) / (
+                2.0 * p.gap_b_lead_mps2)
+            req_f = s0f + tf * fvf + (fvf * fvf - va * va).clamp_min(0.0) / (
+                2.0 * p.gap_b_follow_mps2)
         ov_a = _pair_overlap(sa, length, cand, p.gap_overlap_margin_m)
         safe = (gl >= req_l) & (gf >= req_f) & ~ov_a
         if p.gap_stopped_relax or p.merge_end_wait:
@@ -70,16 +80,17 @@ def merge_feasible_among(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                            & (gfc >= req_fs)
                            & ~_pair_overlap(s, length, cand, p.gap_stopped_min_m))
         if p.merge_end_wait:
-            secure = (secure_gaps(v, glc, lvc, gfc, fvc, p)
+            secure = (secure_gaps(v, glc, lvc, gfc, fvc, p, impatience)
                       & ~_pair_overlap(s, length, cand, p.gap_overlap_margin_m)
-                      & secure_gaps(va, gl, lvl, gf, fvf, p) & ~ov_a)
+                      & secure_gaps(va, gl, lvl, gf, fvf, p, impatience) & ~ov_a)
             safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
         ramp = (present & (lane_of(kin) == p.merge_lane) & (s >= p.merge_zone_s0_m)
                 & (s <= p.merge_zone_s1_m))
         return ramp & safe
 
 
-def zone_mergers(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+def zone_mergers(kin: Tensor, present: Tensor, physics: PhysicsConfig,
+                 impatience: Optional[Tensor] = None) -> Tensor:
     """V8WM2 ``mainline_merge_yield_scope='zone'``: in-zone ramp vehicles ``j`` ``[B, K]`` whose
     merge the physics mask blocks ONLY from behind / beside: blocked against every lane-1
     vehicle, but feasible once the lane-1 vehicles whose front is at or behind ``j``'s front
@@ -94,14 +105,15 @@ def zone_mergers(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor
         cand = lane1.unsqueeze(-2).expand(*lane1.shape[:-1], lane1.shape[-1], lane1.shape[-1])
         ds = s.unsqueeze(-2) - s.unsqueeze(-1)                                # s_k - s_j
         behind = (ds <= 0.0) & (-ds <= p.mainline_merge_yield_distance_m)
-        blocked = ~merge_feasible_among(kin, present, p, cand)
-        free_ahead = merge_feasible_among(kin, present, p, cand & ~behind)
+        blocked = ~merge_feasible_among(kin, present, p, cand, impatience)
+        free_ahead = merge_feasible_among(kin, present, p, cand & ~behind, impatience)
         return blocked & free_ahead
 
 
 def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: PhysicsConfig,
                          params: IDMParams, driver_decel: Optional[Tensor] = None,
-                         blocked: Optional[Tensor] = None) -> Tensor:
+                         blocked: Optional[Tensor] = None,
+                         impatience: Optional[Tensor] = None) -> Tensor:
     """``accel`` with each blocked merger acting as a virtual leader of its lane-1 follower.
 
     Merger ``j`` (:func:`wms.physics.mobil.merge_end_blocked`) is seen by the NEAREST present
@@ -128,14 +140,17 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
        only prolong the overlap: no deadlock).  A follower facing several pulls takes the
        strongest.  Neither rule ever raises an acceleration, so no follower is pushed through a
        merger.
+
+    V8WM3 ``impatience`` (level ``[B, K]``, ``None`` = legacy): the merger masks use the
+    impatience-relaxed merge feasibility (the same as the lane-change mask).
     """
     p = physics
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
     if blocked is None:
-        blocked = merge_end_blocked(kin, present, p)                  # mergers j  [B, K]
+        blocked = merge_end_blocked(kin, present, p, impatience)      # mergers j  [B, K]
     zone = getattr(p, "mainline_merge_yield_scope", "lane_end") == "zone"
     if zone:
-        in_zone = zone_mergers(kin, present, p)
+        in_zone = zone_mergers(kin, present, p, impatience)
         blocked = blocked | in_zone
     with torch.no_grad():
         # Pair selection is discrete: no autograd graph over the [B, K, K] pair tensors.

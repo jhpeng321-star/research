@@ -413,9 +413,14 @@ class UnrollRunner:
             kin0 = inp.states[:, 0]
             lane_age0 = model._initial_lane_age({}, inp.present[:, 0], kin0, inp.observed_hist,
                                                 inp.observed_hist_mask)
-            return {"lane_age0": lane_age0,
+            prep = {"lane_age0": lane_age0,
                     "lane_v5_acc0": model.initial_lane_v5_acc(
                         inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask)}
+            if getattr(model, "_tracks_merge_wait", False):
+                # V8WM3: pre-t0 lane-end waiting time of the teacher-forced feasibility mask.
+                prep["merge_wait0"] = model.initial_merge_wait(
+                    inp.present[:, 0], kin0, inp.observed_hist, inp.observed_hist_mask)
+            return prep
         if driver_leaves is not None:
             params, embedding = driver_leaves.chunk_inputs()
         else:

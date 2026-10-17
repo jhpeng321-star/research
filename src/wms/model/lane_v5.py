@@ -49,8 +49,9 @@ import torch
 from torch import Tensor, nn
 
 from wms.physics.config import PhysicsConfig
-from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, merge_end_waiting, secure_gaps,
-                               target_overlap)
+from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, impatient_margins,
+                               merge_end_waiting, merge_impatience_floor, merge_impatience_level,
+                               secure_gaps, target_overlap)
 from wms.physics.neighbours import MIN_GAP_M, lane_neighbour, lane_of
 
 #: Road transitions (head index): overtake 1->0, return 0->1, merge 2->1.
@@ -133,12 +134,17 @@ def _free_gap(physics: PhysicsConfig) -> float:
 
 # --------------------------------------------------------------------- stage A
 def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
-                     lane_age: Optional[Tensor]) -> dict[str, Tensor]:
+                     lane_age: Optional[Tensor],
+                     impatience: Optional[Tensor] = None) -> dict[str, Tensor]:
     """Instantaneous (accumulator-free, v0-free) quantities of every slot ``[N, K]``.
 
     Per lane leader/follower, mean speed and densities ahead, the speed-gap-rule margins of
     the target lane (anticipated configuration, exactly :func:`wms.physics.mobil.speed_gap_safe`),
     the IDM incentive, the imposed follower deceleration and neighbours' recent changes.
+
+    V8WM3 ``impatience`` (``merge_impatience`` level ``[N, K]``, ``None`` = legacy) relaxes
+    only the ramp rows of the ``target_feasible`` mask (as the physics mask); the margin
+    FEATURES ``ml`` / ``mf`` keep the unrelaxed rule.
     """
     kin = kin.float()
     present = present.bool()
@@ -209,8 +215,18 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         # The physics feasibility of the car's own transition, from the quantities above
         # (identical to wms.physics.mobil.mobil_merge_logits > MASKED_LOGIT for this target;
         # tested): ramp-zone rule, speed gap rule, stopped-merger relaxation.
-        safe = (gap_l >= req_l) & (gap_f >= req_f) & ~aov
         is_ramp = lane == p.merge_lane
+        if impatience is None:
+            safe = (gap_l >= req_l) & (gap_f >= req_f) & ~aov
+        else:
+            # V8WM3: the ramp merge's relaxed margins (wms.physics.mobil.speed_gap_safe).
+            s0l, tl, s0f, tf = impatient_margins(p, impatience)
+            req_li = s0l + tl * va + (va * va - lv_l * lv_l).clamp_min(0.0) / (
+                2.0 * p.gap_b_lead_mps2)
+            req_fi = s0f + tf * fv_f + (fv_f * fv_f - va * va).clamp_min(0.0) / (
+                2.0 * p.gap_b_follow_mps2)
+            safe = torch.where(is_ramp, (gap_l >= req_li) & (gap_f >= req_fi),
+                               (gap_l >= req_l) & (gap_f >= req_f)) & ~aov
         if p.gap_stopped_relax:
             stopped = is_ramp & (v < p.gap_stopped_speed_mps)
             req_fs = p.gap_stopped_min_m + (tfv * tfv - v * v).clamp_min(0.0) / (
@@ -222,9 +238,9 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
             # V6MERGE: the same final veto as mobil_merge_logits (merge_end_blocked), from the
             # target-lane neighbours above (current: tlg/tlv/tfg/tfv; anticipated: gap_*/aov).
             with torch.no_grad():
-                secure = (secure_gaps(v, tlg, tlv, tfg, tfv, p)
+                secure = (secure_gaps(v, tlg, tlv, tfg, tfv, p, impatience)
                           & ~target_overlap(kin, present, tq, p.gap_overlap_margin_m)
-                          & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p) & ~aov)
+                          & secure_gaps(va, gap_l, lv_l, gap_f, fv_f, p, impatience) & ~aov)
                 safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
         in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
         allowed = (~is_ramp | in_zone) & safe
@@ -255,14 +271,16 @@ def fast_mask_applies(physics: PhysicsConfig) -> bool:
 
 
 def instant_features_chunked(kin: Tensor, present: Tensor, physics: PhysicsConfig,
-                             lane_age: Optional[Tensor]) -> dict[str, Tensor]:
+                             lane_age: Optional[Tensor],
+                             impatience: Optional[Tensor] = None) -> dict[str, Tensor]:
     """:func:`instant_features` over many rows ``[N, K]`` in memory-bounded chunks."""
     n, k = present.shape
     step = max(1, _PAIR_BUDGET // max(1, k * k))
     if n <= step:
-        return instant_features(kin, present, physics, lane_age)
+        return instant_features(kin, present, physics, lane_age, impatience)
     parts = [instant_features(kin[i:i + step], present[i:i + step], physics,
-                              None if lane_age is None else lane_age[i:i + step])
+                              None if lane_age is None else lane_age[i:i + step],
+                              None if impatience is None else impatience[i:i + step])
              for i in range(0, n, step)]
     return {key: torch.cat([part[key] for part in parts], 0) for key in parts[0]}
 
@@ -432,14 +450,17 @@ def step_features(acc_prev: Tensor, kin: Tensor, present: Tensor, physics: Physi
 
 
 def sequence_features(states: Tensor, present: Tensor, physics: PhysicsConfig,
-                      lane_age: Tensor, acc0: Tensor, *, return_instant: bool = False):
+                      lane_age: Tensor, acc0: Tensor, *, return_instant: bool = False,
+                      impatience: Optional[Tensor] = None):
     """Teacher-forced: raw features ``[B, T, K, F]`` and accumulators ``[B, T, K, ACC_F]`` on
     recorded states ``[B, T, K, 7]`` (accumulators run causally from ``acc0``)."""
     b, t, k = states.shape[:3]
     with torch.no_grad():
         inst = instant_features_chunked(states.reshape(b * t, k, -1).float(),
                                         present.reshape(b * t, k).bool(), physics,
-                                        lane_age.reshape(b * t, k))
+                                        lane_age.reshape(b * t, k),
+                                        None if impatience is None
+                                        else impatience.reshape(b * t, k))
         inst = {key: value.reshape(b, t, *value.shape[1:]) for key, value in inst.items()}
         accs = []
         acc = acc0
@@ -500,7 +521,8 @@ class LaneV5Net(nn.Module):
 
 def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned: Tensor,
                    lane_base: Tensor, physics: PhysicsConfig,
-                   offsets: Optional[Sequence[float]] = None) -> tuple[Tensor, Tensor, Tensor]:
+                   offsets: Optional[Sequence[float]] = None,
+                   merge_wait: Optional[Tensor] = None) -> tuple[Tensor, Tensor, Tensor]:
     """Absolute lane logits ``[B, K, 3]``, the per-row head logit and the 'acts' mask.
 
     The learned transition's entry is the head logit (+ offset) on learned slots whose target
@@ -510,6 +532,9 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
 
     V8WM2 ``forced_window_mode='hazard'``: feasible forced-window rows act too (in ``acts``),
     with value and returned head logit ``max(head, logit(forced_window_min_hazard))``.
+    V8WM3 ``physics.merge_impatience`` with a carried ``merge_wait`` ``[B, K]`` (s): the floor is
+    per car, ``logit(min(1, h0 + (1 - h0) w / tau))`` capped at :data:`FORCED_MERGE_LOGIT`
+    (:func:`wms.physics.mobil.merge_impatience_floor`).
     """
     lane, tq, s = inst["lane"], inst["tq"], inst["s"]
     head = _lookup(HEAD_OF_LANE, lane)
@@ -521,7 +546,13 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
     forced = forced_window(lane, s, physics)
     if forced_window_hazard(physics):
         # V8WM2: the learned hazard (floored) decides inside the window as well.
-        logit = torch.where(forced, logit.clamp_min(forced_window_floor_logit(physics)), logit)
+        if merge_wait is not None and getattr(physics, "merge_impatience", False):
+            h = merge_impatience_floor(merge_wait, physics).clamp_max(1.0 - 1.0e-6)
+            floor = torch.log(h / (1.0 - h)).clamp_max(FORCED_MERGE_LOGIT).to(logit.dtype)
+            logit = torch.where(forced, torch.maximum(logit, floor), logit)
+        else:
+            logit = torch.where(forced, logit.clamp_min(forced_window_floor_logit(physics)),
+                                logit)
         acts = feasible
         value = torch.where(acts, logit.to(lane_base.dtype), prior)
     else:
@@ -564,7 +595,7 @@ def sample_mask(lane: Tensor, learned: Tensor, open_heads: Sequence[bool]) -> Te
 # --------------------------------------------------------------------- teacher-forced rows
 def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: PhysicsConfig,
                   lane_base_fn: Optional[Callable[[Tensor, Tensor], Tensor]], lane_age: Tensor,
-                  acc0: Tensor) -> dict[str, Tensor]:
+                  acc0: Tensor, merge_wait0: Optional[Tensor] = None) -> dict[str, Tensor]:
     """Teacher-forced rows of every recorded step of the windows.
 
     ``states [B, T+1, K, 7]`` / ``valid [B, T+1, K]`` (on-road, supervised) / ``is_cav``;
@@ -575,13 +606,22 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
     ``lane_base_fn(kin, present) -> [N, K, 3]`` gives the physics lane logits; ``None`` reads the feasibility from :func:`instant_features` (speed gap rule,
     :func:`fast_mask_applies`; identical, tested).  Returns raw features ``[R, F]``, head ``[R]``, label ``[R]``
     (1 = the car made its transition) plus counts (events, infeasible events).
+
+    V8WM3 ``physics.merge_impatience`` with ``merge_wait0`` (``[B, K]``,
+    :func:`wms.model.merge_wait.initial_merge_wait`): the fast feasibility mask uses the
+    recorded waiting time (:func:`wms.model.merge_wait.recorded_merge_wait`), as the rollout.
     """
     b, t1, k = states.shape[:3]
     t = t1 - 1
     lanes = states[..., 1:4].argmax(-1)
     present = valid[:, :t].bool()
+    impatience = None
+    if merge_wait0 is not None and getattr(physics, "merge_impatience", False):
+        from wms.model.merge_wait import recorded_merge_wait
+        impatience = merge_impatience_level(
+            recorded_merge_wait(states[:, :t], present, physics, merge_wait0), physics)
     feats, _, inst = sequence_features(states[:, :t], present, physics, lane_age, acc0,
-                                       return_instant=True)
+                                       return_instant=True, impatience=impatience)
     with torch.no_grad():
         prev, nxt = lanes[:, :t], lanes[:, 1:]
         hdv = present & ~is_cav[:, :t].bool()

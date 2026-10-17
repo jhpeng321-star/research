@@ -22,13 +22,19 @@ PHYSICS_OVERRIDE_KEYS = (
     "merge_end_wait_distance_m", "merge_end_wait_speed_mps",
     "mainline_merge_yield_distance_m", "mainline_merge_yield_decel_mps2",
     # V8WM2 (2026-10-17): lane-end hazard floor, merge_end_wait follower constants.
-    "forced_window_min_hazard", "merge_end_wait_s0_follow_m", "merge_end_wait_t_follow_s")
+    "forced_window_min_hazard", "merge_end_wait_s0_follow_m", "merge_end_wait_t_follow_s",
+    # V8WM3 (2026-10-17): lane-end waiting-time impatience parameters.
+    "merge_impatience_distance_m", "merge_impatience_speed_mps", "merge_impatience_hazard_tau_s",
+    "merge_impatience_gap_tau_s", "merge_impatience_s0_min_m", "merge_impatience_t_min_s")
+#: V8WM3: boolean PhysicsConfig switches ``physics.overrides`` may set (training AND inference).
+PHYSICS_BOOL_OVERRIDE_KEYS = ("merge_impatience",)
 #: V8WM2: string-valued PhysicsConfig modes ``physics.overrides`` / ``physics.inference`` may set
 #: (key -> allowed values).
 PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
                      "mainline_merge_yield_scope": ("lane_end", "zone")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
-PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax")
+PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
+                              "merge_impatience")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -69,13 +75,16 @@ class PhysicsOptions:
         require(self.emergency_decel_mps2 is None or (
             is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
             "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
-        valid = list(PHYSICS_OVERRIDE_KEYS) + list(PHYSICS_MODE_KEYS)
+        valid = (list(PHYSICS_OVERRIDE_KEYS) + list(PHYSICS_MODE_KEYS)
+                 + list(PHYSICS_BOOL_OVERRIDE_KEYS))
         bad = sorted(set(self.overrides) - set(valid))
         require(not bad, f"physics.overrides: unknown keys {bad}; valid: {valid}")
         for key, value in self.overrides.items():
             if key in PHYSICS_MODE_KEYS:
                 require(_mode_ok(key, value), f"physics.overrides.{key} must be one of "
                                               f"{PHYSICS_MODE_KEYS[key]}")
+            elif key in PHYSICS_BOOL_OVERRIDE_KEYS:
+                require(isinstance(value, bool), f"physics.overrides.{key} must be a boolean")
             else:
                 require(is_finite(value), "physics.overrides values must be finite numbers")
         bad = sorted(set(self.inference) - set(PHYSICS_INFERENCE_KEYS))

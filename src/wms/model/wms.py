@@ -24,7 +24,8 @@ from torch.utils.checkpoint import checkpoint
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
-from wms.physics.mobil import MASKED_LOGIT, merge_end_blocked, mobil_merge_logits
+from wms.physics.mobil import (MASKED_LOGIT, merge_end_blocked, merge_impatience_level,
+                               mobil_merge_logits, update_merge_wait)
 from wms.physics.neighbours import lane_neighbour, lane_of, lead_neighbour
 from wms.physics.projection import FeasibilityProjection
 from wms.physics.state import KIN_F, state_kin, state_present
@@ -310,15 +311,30 @@ class WmSModel(nn.Module):
                       ) -> tuple[Tensor, Tensor]:
         """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
         if self.physics_step is None:
+            # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
+            impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
             if self.physics.merge_end_wait or self.physics.mainline_merge_yield:
                 # V6MERGE: one blocked-merger mask per step, shared by accel and lane logits.
                 kin = state_kin(state)
                 present = state_present(state, kin)
-                blocked = merge_end_blocked(kin, present, self.physics)
+                if impatience is None:
+                    blocked = merge_end_blocked(kin, present, self.physics)
+                    return (baseline_accel(kin, present, self.physics, driver_params,
+                                           merge_blocked=blocked),
+                            mobil_merge_logits(kin, present, self.physics, driver_params,
+                                               merge_blocked=blocked))
+                blocked = merge_end_blocked(kin, present, self.physics, impatience)
                 return (baseline_accel(kin, present, self.physics, driver_params,
-                                       merge_blocked=blocked),
+                                       merge_blocked=blocked, impatience=impatience),
                         mobil_merge_logits(kin, present, self.physics, driver_params,
-                                           merge_blocked=blocked))
+                                           merge_blocked=blocked, impatience=impatience))
+            if impatience is not None:
+                kin = state_kin(state)
+                present = state_present(state, kin)
+                return (baseline_accel(kin, present, self.physics, driver_params,
+                                       impatience=impatience),
+                        mobil_merge_logits(kin, present, self.physics, driver_params,
+                                           impatience=impatience))
             return (self.physics_accel(state, driver_params),
                     self.mobil_merge_logits(state, driver_params))
         result = self.physics_step(state)
@@ -587,7 +603,7 @@ class WmSModel(nn.Module):
         if getattr(self, "lane_v5", None) is not None:
             lane_logits, v5_acc, v5_sample, v5_hazard = self._lane_v5_forward(
                 kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
-                driver_history_mask)
+                driver_history_mask, merge_wait=state.get("merge_wait_s"))
         elif self.lane_hazard is not None:
             # WMLANE A: the dedicated hazard model replaces the residual lane delta;
             # physics-masked targets stay masked (hard feasibility).
@@ -719,6 +735,21 @@ class WmSModel(nn.Module):
                                driver_history_mask if self.long_history else None,
                                self._history_stride_steps())
 
+    @property
+    def _tracks_merge_wait(self) -> bool:
+        """V8WM3: the rollout carries the lane-end waiting time ``state['merge_wait_s']``."""
+        return bool(getattr(self.physics, "merge_impatience", False))
+
+    def initial_merge_wait(self, present: Tensor, kin: Tensor,
+                           driver_history: Optional[Tensor],
+                           driver_history_mask: Optional[Tensor]) -> Tensor:
+        """V8WM3: lane-end waiting time at t0 (incl. t0) from the observed pre-t0 long history."""
+        from wms.model.merge_wait import initial_merge_wait
+        return initial_merge_wait(present, kin, self.physics,
+                                  driver_history if self.long_history else None,
+                                  driver_history_mask if self.long_history else None,
+                                  self._history_stride_steps())
+
     def lane_v5_base(self, kin: Tensor, present: Tensor) -> Tensor:
         """Physics lane logits (feasibility mask) of the teacher-forced lane-v5 rows.
 
@@ -748,22 +779,24 @@ class WmSModel(nn.Module):
     def _lane_v5_forward(self, kin: Tensor, present: Tensor, learned: Tensor, lane_base: Tensor,
                          lane_age: Optional[Tensor], acc: Optional[Tensor],
                          driver_history: Optional[Tensor],
-                         driver_history_mask: Optional[Tensor]):
+                         driver_history_mask: Optional[Tensor],
+                         merge_wait: Optional[Tensor] = None):
         """Lane logits, updated accumulators, the drawing slots and (V8WM emit_merge_hazard) the
-        own-head logit with gradient + acting rows of the lane-v5 model."""
+        own-head logit with gradient + acting rows of the lane-v5 model.  ``merge_wait``: V8WM3
+        lane-end waiting time (per-car forced-window hazard floor; ``None`` = constant floor)."""
         if acc is None:
             acc = self.initial_lane_v5_acc(present, kin, driver_history, driver_history_mask)
         raw, acc, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
         offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
         with torch.no_grad() if self.lane_hazard_detach else contextlib.nullcontext():
             logits, head, acts = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
-                                                    self.physics, offsets)
+                                                    self.physics, offsets, merge_wait)
         hazard = None
         if getattr(self, "emit_merge_hazard", False):
             # V8WM merge-timing loss: the own-head logit with gradient on the rollout state.
             if self.lane_hazard_detach and torch.is_grad_enabled():
                 _, head, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
-                                                self.physics, offsets)
+                                                self.physics, offsets, merge_wait)
             hazard = (head, acts)
         sample = None
         if self._samples_lanes:
@@ -1225,6 +1258,10 @@ class WmSModel(nn.Module):
                                           driver_history_mask)
         lane_blocked = current.get("lane_blocked") if self._tracks_lane_blocked else None
         lane_v5_acc = current.get("lane_v5_acc") if self._tracks_lane_v5 else None
+        if self._tracks_merge_wait and current.get("merge_wait_s") is None:
+            # V8WM3: carried across truncated-BPTT chunks in the returned state.
+            current["merge_wait_s"] = self.initial_merge_wait(pres0, kin0, driver_history,
+                                                              driver_history_mask)
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
                      if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
@@ -1330,6 +1367,9 @@ class WmSModel(nn.Module):
                 current["lane_v5_acc"] = lane_v5_acc
             current.pop("veh_kin", None)
             kin = state_kin(current)
+            if self._tracks_merge_wait:
+                current["merge_wait_s"] = update_merge_wait(current.get("merge_wait_s"), kin,
+                                                            nxt_present, self.physics)
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)

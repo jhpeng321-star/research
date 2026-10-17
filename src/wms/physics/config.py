@@ -53,6 +53,18 @@ FORCED_WINDOW_MIN_HAZARD = 0.02
 #: V8WM2 ``mainline_merge_yield_scope``: blocked lane-end mergers only (legacy) or every
 #: in-zone merger blocked only from behind / beside (zipper).
 MAINLINE_MERGE_YIELD_SCOPES = ("lane_end", "zone")
+#: V8WM3 ``merge_impatience``: a ramp car waits while within this distance of the accel-lane
+#: end and no faster than ``MERGE_IMPATIENCE_SPEED_MPS`` ...
+MERGE_IMPATIENCE_DISTANCE_M = 25.0
+MERGE_IMPATIENCE_SPEED_MPS = 1.0
+#: ... its forced-window hazard floor rises linearly from ``forced_window_min_hazard`` to 1 over
+#: this waiting time ...
+MERGE_IMPATIENCE_HAZARD_TAU_S = 25.0
+#: ... and its merge secure-gap margins (``s0`` / ``T``) shrink linearly to the minima below over
+#: this waiting time (the kinematic braking terms and the no-overlap check are never relaxed).
+MERGE_IMPATIENCE_GAP_TAU_S = 25.0
+MERGE_IMPATIENCE_S0_MIN_M = 0.5
+MERGE_IMPATIENCE_T_MIN_S = 0.1
 
 
 @dataclass
@@ -118,6 +130,24 @@ class PhysicsConfig:
       ``s0`` / ``T``): the follower constants of the ``merge_end_wait`` secure-gap test.
     * ``mainline_merge_yield_scope``: ``lane_end`` (default) or ``zone`` (see
       :func:`wms.physics.merge_v6.mainline_merge_yield`; requires ``lane_gap_rule='speed'``).
+
+    V8WM3 ``merge_impatience`` (2026-10-17, default off = legacy, bit-identical): LC2013-like
+    impatience of lane-end mergers.  Every ramp vehicle carries a waiting time ``w``
+    (``state['merge_wait_s']``, carried by the rollout across truncated-BPTT chunks, initialised
+    from the observed pre-t0 long history; :func:`wms.physics.mobil.update_merge_wait`): it grows
+    by ``dt`` per step while the car is in the accel lane within ``merge_impatience_distance_m``
+    of its end and no faster than ``merge_impatience_speed_mps``, is held while the car stays in
+    the accel lane, and resets to 0 off it.  (a) The forced-window hazard floor
+    (``forced_window_mode='hazard'``) is ``min(1, h0 + (1 - h0) w / merge_impatience_hazard_tau_s)``
+    with ``h0 = forced_window_min_hazard`` (logit capped at the forced-merge logit 8).
+    (b) With level ``q = min(1, w / merge_impatience_gap_tau_s)`` every ``s0`` / ``T`` margin of the
+    merge feasibility (speed gap rule leader/follower, the ``merge_end_wait`` secure-gap leader
+    and follower constants) shrinks linearly towards ``merge_impatience_s0_min_m`` /
+    ``merge_impatience_t_min_s`` (never raised): ``c(q) = c - q max(0, c - c_min)``.  The kinematic
+    braking terms and the hard no-overlap footprint check are never relaxed.  Approximates SUMO
+    LC2013's ``lcImpatience`` / ``lcTimeToImpatience`` (impatience grows while a lane change is
+    blocked and scales ``lcAssertive``, i.e. divides the required secure gaps); here the
+    relaxation is on the margins only, so the follower can still always stop within ``b``.
     """
 
     dt_s: float = 0.5
@@ -181,6 +211,14 @@ class PhysicsConfig:
     mainline_merge_yield_scope: str = "lane_end"
     merge_end_wait_s0_follow_m: float | None = None
     merge_end_wait_t_follow_s: float | None = None
+    # V8WM3 (2026-10-17): opt-in waiting-time impatience of lane-end mergers.
+    merge_impatience: bool = False
+    merge_impatience_distance_m: float = MERGE_IMPATIENCE_DISTANCE_M
+    merge_impatience_speed_mps: float = MERGE_IMPATIENCE_SPEED_MPS
+    merge_impatience_hazard_tau_s: float = MERGE_IMPATIENCE_HAZARD_TAU_S
+    merge_impatience_gap_tau_s: float = MERGE_IMPATIENCE_GAP_TAU_S
+    merge_impatience_s0_min_m: float = MERGE_IMPATIENCE_S0_MIN_M
+    merge_impatience_t_min_s: float = MERGE_IMPATIENCE_T_MIN_S
 
     def __post_init__(self) -> None:
         for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
@@ -229,6 +267,17 @@ class PhysicsConfig:
                                       or not isinstance(value, (int, float))
                                       or not math.isfinite(value) or value < 0.0):
                 raise ValueError(f"{name} must be None or finite and >= 0")
+        for name in ("merge_impatience_distance_m", "merge_impatience_speed_mps",
+                     "merge_impatience_hazard_tau_s", "merge_impatience_gap_tau_s",
+                     "merge_impatience_s0_min_m", "merge_impatience_t_min_s"):
+            value = getattr(self, name)
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value < 0.0
+                    or (value == 0.0 and not name.endswith("_min_m")
+                        and not name.endswith("_min_s"))):
+                raise ValueError(f"{name} must be finite and > 0 (minima >= 0)")
+        if self.merge_impatience and (self.lane_gap_rule != "speed" or self.merge_cal):
+            raise ValueError("merge_impatience requires lane_gap_rule='speed' and merge_cal off")
 
     def merge_end_follow_constants(self) -> tuple[float, float]:
         """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""
@@ -273,7 +322,7 @@ class PhysicsConfig:
                                             "gap_stopped_relax", "stop_time_integration",
                                             "emergency_decel_mps2", "merge_end_wait",
                                             "mainline_merge_yield", "forced_window_mode",
-                                            "mainline_merge_yield_scope")
+                                            "mainline_merge_yield_scope", "merge_impatience")
                 and v is not None}
         data.update(overrides)
         return cls(**data)

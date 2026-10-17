@@ -15,7 +15,8 @@ from .neighbours import lead_neighbour
 
 def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                    driver_params: Optional[Mapping[str, Tensor]] = None, *,
-                   merge_blocked: Optional[Tensor] = None) -> Tensor:
+                   merge_blocked: Optional[Tensor] = None,
+                   impatience: Optional[Tensor] = None) -> Tensor:
     """IDM acceleration ``[B, K]`` of every present vehicle (zero when absent).
 
     With ``driver_params`` the per-driver IDM parameters replace the defaults and
@@ -54,7 +55,7 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     if physics.mainline_merge_yield:
         accel = mainline_merge_yield(kin, present, accel, physics, params,
                                      None if driver_params is None else driver_params["decel"],
-                                     merge_blocked)
+                                     merge_blocked, impatience)
     if physics.emergency_decel_mps2 is not None:
         accel = accel.clamp_min(-physics.emergency_decel_mps2)
     return torch.where(present, accel, torch.zeros_like(accel))
