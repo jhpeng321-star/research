@@ -198,7 +198,9 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             weight=float(settings.merge_timing_weight),
             metrics=bool(settings.merge_timing_metrics),
             merge_lane=2 if physics is None else int(physics.merge_lane),
-            zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m))))
+            zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m),
+            forced_window_hazard=(physics is not None and getattr(
+                physics, "forced_window_mode", "deterministic") == "hazard"))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))

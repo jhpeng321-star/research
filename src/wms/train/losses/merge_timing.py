@@ -13,7 +13,9 @@ rolled-out state, returned WITH gradient by the model (``emit_merge_hazard``; re
 outside the ``lane_hazard_decouple`` detach), ``stay_t`` the (detached) logit of the current
 lane.  Steps where the physics forbids the merge (mask), the forced last-5 m window and CAV /
 entrant slots are not at risk: ``h_t`` is 0 there (or 1 in the forced window), with no
-learnable parameter, and they are left out of the likelihood.  Models without the hazard_v5
+learnable parameter, and they are left out of the likelihood.  V8WM2
+``physics.forced_window_mode='hazard'``: the window's feasible steps are at risk too (the
+model's ``lane_v5_acts`` include them; ``h_t`` uses the floored head logit).  Models without the hazard_v5
 network use ``softmax(lane_logits)`` of the rollout (target lane 1; masked = logit <=
 ``MASKED_LOGIT``).  The lane features are computed without gradient (``lane_v5.step_features``),
 so the gradient reaches the merge head only (not the motion state).
@@ -77,6 +79,8 @@ class MergeTimingConfig:
     target_lane: int = 1
     zone_end_m: float = 75.44
     force_window_m: float = FORCE_WINDOW_M
+    #: V8WM2: the forced window keeps the learned hazard (its steps are at risk).
+    forced_window_hazard: bool = False
 
     def __post_init__(self) -> None:
         if not (math.isfinite(float(self.weight)) and self.weight >= 0.0):
@@ -162,8 +166,10 @@ class MergeTimingTerm(LossTerm):
             others = lsm.clone()
             others[..., cfg.target_lane] = float("-inf")
             log_1mh = torch.logsumexp(others, -1)
-            forced = (s_dec >= cfg.zone_end_m - cfg.force_window_m) & (s_dec <= cfg.zone_end_m)
-            acts = (logits[..., cfg.target_lane] > MASKED_LOGIT + 1e-6) & ~forced
+            acts = logits[..., cfg.target_lane] > MASKED_LOGIT + 1e-6
+            if not cfg.forced_window_hazard:
+                forced = (s_dec >= cfg.zone_end_m - cfg.force_window_m) & (s_dec <= cfg.zone_end_m)
+                acts = acts & ~forced
         at_risk = in_lane & acts
         surv = prep["survive"][:, c0:c1] & at_risk
         evt = prep["event"][:, c0:c1] & at_risk

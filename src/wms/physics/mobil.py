@@ -157,10 +157,13 @@ def secure_gaps(v: Tensor, gap_l: Tensor, lv_l: Tensor, gap_f: Tensor, fv_f: Ten
                 physics: PhysicsConfig) -> Tensor:
     """SUMO-LC2013-like secure gaps with the road's IDM constants ``[B, K]``: leader
     ``>= s0 + T v + max(0, v^2 - v_l^2) / (2 b)``, follower
-    ``>= s0 + T v_f + max(0, v_f^2 - v^2) / (2 b)`` (no footprint test)."""
+    ``>= s0 + T v_f + max(0, v_f^2 - v^2) / (2 b)`` (no footprint test).  V8WM2: the
+    follower ``s0`` / ``T`` are :meth:`PhysicsConfig.merge_end_follow_constants` (default: the
+    road IDM values)."""
     _, b_comf, time_headway, s0, _ = physics.idm()
+    s0_f, t_f = physics.merge_end_follow_constants()
     req_l = s0 + time_headway * v + (v * v - lv_l * lv_l).clamp_min(0.0) / (2.0 * b_comf)
-    req_f = s0 + time_headway * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * b_comf)
+    req_f = s0_f + t_f * fv_f + (fv_f * fv_f - v * v).clamp_min(0.0) / (2.0 * b_comf)
     return (gap_l >= req_l) & (gap_f >= req_f)
 
 

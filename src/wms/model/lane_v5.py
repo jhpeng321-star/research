@@ -30,7 +30,10 @@ raw inputs, the driver embedding as input) by:
   the recorded states from the same initial value.  No future information.
 * **Merges.**  The physics mask decides feasibility everywhere (never unmasked).  Inside the
   merge zone the merge head is a learned gap acceptance on feasible rows; in the last
-  :data:`FORCE_WINDOW_M` a feasible merge is forced (logit ``max(physics, 8)``).
+  :data:`FORCE_WINDOW_M` a feasible merge is forced (logit ``max(physics, 8)``).  V8WM2
+  ``physics.forced_window_mode = 'hazard'``: the merge head acts in that window too, its logit
+  floored at ``logit(physics.forced_window_min_hazard)``; the window's rows are then ordinary
+  learnable rows (``recorded_rows``, the merge-timing loss) and always draw their lane.
 * **Decisions** (``lane_decision``): ``argmax``; ``sample`` (seeded masked categorical, as
   v4); ``gated``: a head samples only if its teacher-forced feasible-row AP on TRAIN-val
   (buffer :attr:`LaneV5Net.head_ap`, written by the pre-fit / calibration tool, or the config
@@ -504,6 +507,9 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
     the physics allows (``lane_base > MASKED_LOGIT``) outside the forced window; a feasible
     merge in the last :data:`FORCE_WINDOW_M` gets ``max(physics, 8)``; everything else keeps
     the physics logit (masked targets stay masked; the current lane is 'stay' = 0).
+
+    V8WM2 ``forced_window_mode='hazard'``: feasible forced-window rows act too (in ``acts``),
+    with value and returned head logit ``max(head, logit(forced_window_min_hazard))``.
     """
     lane, tq, s = inst["lane"], inst["tq"], inst["s"]
     head = _lookup(HEAD_OF_LANE, lane)
@@ -512,14 +518,35 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
         logit = logit + _lookup(tuple(float(x) for x in offsets), head, dtype=logit.dtype)
     prior = lane_base.gather(-1, tq.unsqueeze(-1)).squeeze(-1)
     feasible = learned.bool() & (prior > MASKED_LOGIT)
-    is_merge = lane == physics.merge_lane
-    forced = is_merge & (s >= physics.merge_zone_s1_m - FORCE_WINDOW_M) \
-        & (s <= physics.merge_zone_s1_m)
-    acts = feasible & ~forced
-    value = torch.where(acts, logit.to(lane_base.dtype), prior)
-    value = torch.where(feasible & forced, prior.clamp_min(FORCED_MERGE_LOGIT), value)
+    forced = forced_window(lane, s, physics)
+    if forced_window_hazard(physics):
+        # V8WM2: the learned hazard (floored) decides inside the window as well.
+        logit = torch.where(forced, logit.clamp_min(forced_window_floor_logit(physics)), logit)
+        acts = feasible
+        value = torch.where(acts, logit.to(lane_base.dtype), prior)
+    else:
+        acts = feasible & ~forced
+        value = torch.where(acts, logit.to(lane_base.dtype), prior)
+        value = torch.where(feasible & forced, prior.clamp_min(FORCED_MERGE_LOGIT), value)
     logits = lane_base.scatter(-1, tq.unsqueeze(-1), value.unsqueeze(-1))
     return logits, logit, acts
+
+
+def forced_window(lane: Tensor, s: Tensor, physics: PhysicsConfig) -> Tensor:
+    """``[B, K]``: ramp-lane rows inside the last :data:`FORCE_WINDOW_M` of the accel lane."""
+    return (lane == physics.merge_lane) & (s >= physics.merge_zone_s1_m - FORCE_WINDOW_M) \
+        & (s <= physics.merge_zone_s1_m)
+
+
+def forced_window_hazard(physics: PhysicsConfig) -> bool:
+    """V8WM2: the forced window keeps the learned merge hazard (``forced_window_mode``)."""
+    return getattr(physics, "forced_window_mode", "deterministic") == "hazard"
+
+
+def forced_window_floor_logit(physics: PhysicsConfig) -> float:
+    """V8WM2 ``hazard`` mode: logit of ``forced_window_min_hazard`` (vs stay = 0)."""
+    h = float(physics.forced_window_min_hazard)
+    return math.log(h / (1.0 - h))
 
 
 def gate_open(head_ap: Sequence[float], gates: Sequence[float]) -> tuple[bool, bool, bool]:
@@ -544,8 +571,8 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
     ``lane_age [B, T, K]`` recorded steps since the last change; ``acc0`` pre-t0
     accumulators.  A row = an HDV-step t whose transition t -> t+1 is valid (both ends valid,
     at most one lane), whose own transition target the physics allows at t and that lies
-    outside the forced window.  ``lane_base_fn(kin, present) -> [N, K, 3]`` gives the physics
-    lane logits; ``None`` reads the feasibility from :func:`instant_features` (speed gap rule,
+    outside the forced window (V8WM2 ``forced_window_mode='hazard'``: inside it too).
+    ``lane_base_fn(kin, present) -> [N, K, 3]`` gives the physics lane logits; ``None`` reads the feasibility from :func:`instant_features` (speed gap rule,
     :func:`fast_mask_applies`; identical, tested).  Returns raw features ``[R, F]``, head ``[R]``, label ``[R]``
     (1 = the car made its transition) plus counts (events, infeasible events).
     """
@@ -572,11 +599,12 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
             prior = lane_base.gather(-1, tq.unsqueeze(-1)).squeeze(-1)
             feasible = prior > MASKED_LOGIT
         s = states[:, :t, :, 0]
-        forced = (prev == physics.merge_lane) & (s >= physics.merge_zone_s1_m - FORCE_WINDOW_M) \
-            & (s <= physics.merge_zone_s1_m)
+        forced = forced_window(prev, s, physics)
         label = nxt == tq
         own = (nxt == prev) | label
-        rows = ok & own & feasible & ~forced
+        rows = ok & own & feasible
+        if not forced_window_hazard(physics):
+            rows = rows & ~forced       # V8WM2 hazard mode: the window's rows are learnable
         head = _lookup(HEAD_OF_LANE, prev)
         events = ok & label
         stats = {"rows": int(rows.sum()), "events": int((rows & label).sum()),

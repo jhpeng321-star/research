@@ -21,7 +21,8 @@ runner from the same t0 encoding the rollout uses).
 LANEV5 (``model.lane_model='hazard_v5'``): the per-transition lane network is scored on EVERY
 recorded step of each window (not only the unroll), with a plain binary cross entropy per
 head (overtake / return / merge) on the rows whose own transition the physics allows outside
-the forced end-of-lane window, summed over the heads (``wms.model.lane_v5.recorded_rows`` /
+the forced end-of-lane window (V8WM2 ``physics.forced_window_mode='hazard'``: inside it too),
+summed over the heads (``wms.model.lane_v5.recorded_rows`` /
 ``head_bce``; ``gamma`` / ``max_weight`` do not apply).  The accumulators start from the
 pre-t0 history value the rollout uses (``prepared['lane_event']['lane_v5_acc0']``).
 """

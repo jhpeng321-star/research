@@ -107,7 +107,8 @@ class WmSModel(nn.Module):
     #: checkpoint): with ``lane_model='hazard_v5'`` every step also returns the row's own head
     #: logit WITH gradient (``lane_v5_head_logit``, recomputed outside the decouple detach) and
     #: the acting-row mask (``lane_v5_acts``: learned, physics-feasible, outside the forced
-    #: window).  Forward values and decisions are unchanged.
+    #: window unless ``physics.forced_window_mode='hazard'``).  Forward values and decisions
+    #: are unchanged.
     emit_merge_hazard: bool = False
 
     def __init__(self, spec: Optional[ModelSpec] = None, *,
@@ -243,6 +244,9 @@ class WmSModel(nn.Module):
         # LANEV5 (default OFF): created last; absent (no parameters, no RNG draw) otherwise.
         if getattr(spec, "lane_model", "residual") == "hazard_v5":
             self.lane_v5 = lv5.LaneV5Net(spec.lane_hazard_hidden, spec.lane_hazard_cap)
+        elif lv5.forced_window_hazard(self.physics):
+            raise ValueError("physics.forced_window_mode='hazard' requires "
+                             "model.lane_model='hazard_v5'")
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -673,7 +677,9 @@ class WmSModel(nn.Module):
     def _samples_lanes(self) -> bool:
         """Hazard lane decisions are sampled from the masked categorical (not argmax)."""
         if getattr(self, "lane_v5", None) is not None:
-            return getattr(self, "lane_decision", "argmax") in ("sample", "gated")
+            # V8WM2 forced_window_mode='hazard': forced-window rows always draw.
+            return (getattr(self, "lane_decision", "argmax") in ("sample", "gated")
+                    or lv5.forced_window_hazard(self.physics))
         return (getattr(self, "lane_hazard", None) is not None
                 and getattr(self, "lane_decision", "argmax") == "sample")
 
@@ -764,8 +770,16 @@ class WmSModel(nn.Module):
             if self.lane_decision == "gated":
                 sample = lv5.sample_mask(inst["lane"], learned, lv5.gate_open(
                     self.lane_v5_head_ap_effective(), self.lane_v5_gates))
-            else:
+            elif self.lane_decision == "sample":
                 sample = learned
+            else:
+                sample = torch.zeros_like(learned, dtype=torch.bool)
+            if lv5.forced_window_hazard(self.physics):
+                # V8WM2: the forced window's merge is a hazard draw whatever the decision rule
+                # (a closed gate / argmax would otherwise never merge at P < 0.5).
+                sample = sample.bool() | (learned.bool()
+                                          & lv5.forced_window(inst["lane"], inst["s"],
+                                                              self.physics))
         return logits, acc, sample, hazard
 
     def initial_lane_blocked(self, present: Tensor, kin: Tensor,
@@ -966,8 +980,10 @@ class WmSModel(nn.Module):
                 out, state, cav, direct, present, k_steps, action_id, action_command,
                 cav_teacher, cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
 
-        if self.physics.merge_end_wait:
-            # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there.
+        if self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics):
+            # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there
+            # (V8WM2 hazard window: a feasible car may now wait in the window, so it must not
+            # creep past the end, where no merge is ever allowed).
             end = self.physics.merge_zone_s1_m
             overrun = (present & (next_lane == self.physics.merge_lane) & (s <= end)
                        & (next_s > end))

@@ -13,8 +13,90 @@ from torch import Tensor
 
 from .config import PhysicsConfig
 from .idm import IDMParams, idm_accel
-from .mobil import merge_end_blocked
-from .neighbours import lane_of
+from .mobil import anticipated_kin, merge_end_blocked, merge_end_waiting, secure_gaps
+from .neighbours import _CLOSED_ROAD_FREE_GAP_M, MIN_GAP_M, lane_of
+
+
+def _pair_neighbours(s: Tensor, v: Tensor, length: Tensor, cand: Tensor, free: float
+                     ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+    """Target-lane leader/follower bumper gaps and speeds of every ego ``j`` among its own
+    candidate set ``cand [B, j, k]`` (same convention as ``lane_neighbour``)."""
+    ds = s.unsqueeze(-2) - s.unsqueeze(-1)                                    # s_k - s_j
+    inf = float("inf")
+    gap_l, i_l = torch.where(cand & (ds > 0), ds - length.unsqueeze(-2), inf).min(-1)
+    gap_f, i_f = torch.where(cand & (ds < 0), -ds - length.unsqueeze(-1), inf).min(-1)
+    has_l, has_f = torch.isfinite(gap_l), torch.isfinite(gap_f)
+    return (torch.where(has_l, gap_l.clamp_min(MIN_GAP_M), torch.full_like(gap_l, free)),
+            torch.where(has_l, v.gather(-1, i_l), v),
+            torch.where(has_f, gap_f.clamp_min(MIN_GAP_M), torch.full_like(gap_f, free)),
+            torch.where(has_f, v.gather(-1, i_f), v))
+
+
+def _pair_overlap(s: Tensor, length: Tensor, cand: Tensor, margin: float) -> Tensor:
+    """``[B, j]``: some candidate ``k`` overlaps ego ``j``'s footprint (``target_overlap``)."""
+    rear = s - length
+    eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+    return (cand & ~eye & (rear.unsqueeze(-2) < s.unsqueeze(-1) + margin)
+            & (s.unsqueeze(-2) > rear.unsqueeze(-1) - margin)).any(-1)
+
+
+def merge_feasible_among(kin: Tensor, present: Tensor, physics: PhysicsConfig,
+                         cand: Tensor) -> Tensor:
+    """``[B, j]``: the speed-rule merge feasibility (lane ``merge_lane`` -> ``merge_target_lane``,
+    in the merge zone) of every ego ``j`` judged against the lane-1 vehicles ``cand [B, j, k]``
+    only.  With ``cand`` = every present lane-1 vehicle it equals the physics mask of
+    ``mobil_merge_logits`` (speed gap rule on the anticipated configuration, the stopped-merger
+    relaxation, the ``merge_end_wait`` veto; tested).  Discrete: no autograd graph."""
+    p = physics
+    with torch.no_grad():
+        kin = kin.detach()
+        s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
+        free = p.free_road_gap_m if p.open_road else _CLOSED_ROAD_FREE_GAP_M
+        kin_a = anticipated_kin(kin, p.gap_anticipation_s)
+        sa, va = kin_a[..., 0], kin_a[..., 4]
+        gl, lvl, gf, fvf = _pair_neighbours(sa, va, length, cand, free)
+        req_l = p.gap_s0_lead_m + p.gap_t_lead_s * va \
+            + (va * va - lvl * lvl).clamp_min(0.0) / (2.0 * p.gap_b_lead_mps2)
+        req_f = p.gap_s0_follow_m + p.gap_t_follow_s * fvf \
+            + (fvf * fvf - va * va).clamp_min(0.0) / (2.0 * p.gap_b_follow_mps2)
+        ov_a = _pair_overlap(sa, length, cand, p.gap_overlap_margin_m)
+        safe = (gl >= req_l) & (gf >= req_f) & ~ov_a
+        if p.gap_stopped_relax or p.merge_end_wait:
+            glc, lvc, gfc, fvc = _pair_neighbours(s, v, length, cand, free)
+        if p.gap_stopped_relax:
+            req_fs = p.gap_stopped_min_m + (fvc * fvc - v * v).clamp_min(0.0) / (
+                2.0 * p.gap_b_follow_mps2)
+            safe = safe | ((v < p.gap_stopped_speed_mps) & (glc >= p.gap_stopped_min_m)
+                           & (gfc >= req_fs)
+                           & ~_pair_overlap(s, length, cand, p.gap_stopped_min_m))
+        if p.merge_end_wait:
+            secure = (secure_gaps(v, glc, lvc, gfc, fvc, p)
+                      & ~_pair_overlap(s, length, cand, p.gap_overlap_margin_m)
+                      & secure_gaps(va, gl, lvl, gf, fvf, p) & ~ov_a)
+            safe = safe & ~(merge_end_waiting(kin, present, p) & ~secure)
+        ramp = (present & (lane_of(kin) == p.merge_lane) & (s >= p.merge_zone_s0_m)
+                & (s <= p.merge_zone_s1_m))
+        return ramp & safe
+
+
+def zone_mergers(kin: Tensor, present: Tensor, physics: PhysicsConfig) -> Tensor:
+    """V8WM2 ``mainline_merge_yield_scope='zone'``: in-zone ramp vehicles ``j`` ``[B, K]`` whose
+    merge the physics mask blocks ONLY from behind / beside: blocked against every lane-1
+    vehicle, but feasible once the lane-1 vehicles whose front is at or behind ``j``'s front
+    and within ``mainline_merge_yield_distance_m`` are ignored (i.e. the leader side and the
+    cars ahead of ``j`` already admit the merge; what blocks it is an overlapping car or the
+    follower gap - the cars a zipper can open)."""
+    p = physics
+    with torch.no_grad():
+        kin = kin.detach()
+        s = kin[..., 0]
+        lane1 = present & (lane_of(kin) == p.merge_target_lane)
+        cand = lane1.unsqueeze(-2).expand(*lane1.shape[:-1], lane1.shape[-1], lane1.shape[-1])
+        ds = s.unsqueeze(-2) - s.unsqueeze(-1)                                # s_k - s_j
+        behind = (ds <= 0.0) & (-ds <= p.mainline_merge_yield_distance_m)
+        blocked = ~merge_feasible_among(kin, present, p, cand)
+        free_ahead = merge_feasible_among(kin, present, p, cand & ~behind)
+        return blocked & free_ahead
 
 
 def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: PhysicsConfig,
@@ -31,11 +113,30 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     never accelerating because of it and braking by at most ``mainline_merge_yield_decel_mps2``
     (and its own ``driver_decel``).  Vehicles further back react through ordinary IDM.
     ``blocked``: a precomputed :func:`merge_end_blocked` (computed here when ``None``).
+
+    V8WM2 ``physics.mainline_merge_yield_scope = 'zone'`` (zipper; ``'lane_end'`` = the rule
+    above, unchanged).  The mergers are the lane-end set above PLUS every in-zone ramp vehicle
+    whose merge is blocked only from behind / beside (:func:`zone_mergers`), and:
+
+    1. follower yield: exactly the rule above for that merger set (the nearest lane-1 vehicle
+       whose front is behind the merger's rear, within the distance, virtual leader ``s0``
+       behind the merger's rear, never accelerating, at most the decel bound);
+    2. overlap yield (zone mergers only): a lane-1 vehicle overlapping the merger's footprint
+       (``gap_overlap_margin_m``) with its front at or behind the merger's front brakes by the
+       decel bound (and its own ``driver_decel``) only while the merger is FASTER than it, so
+       the merger pulls ahead; a slower or stopped merger is passed (braking beside it would
+       only prolong the overlap: no deadlock).  A follower facing several pulls takes the
+       strongest.  Neither rule ever raises an acceleration, so no follower is pushed through a
+       merger.
     """
     p = physics
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
     if blocked is None:
         blocked = merge_end_blocked(kin, present, p)                  # mergers j  [B, K]
+    zone = getattr(p, "mainline_merge_yield_scope", "lane_end") == "zone"
+    if zone:
+        in_zone = zone_mergers(kin, present, p)
+        blocked = blocked | in_zone
     with torch.no_grad():
         # Pair selection is discrete: no autograd graph over the [B, K, K] pair tensors.
         sd, ld = s.detach(), length.detach()
@@ -65,4 +166,19 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
     virtual = virtual.clamp(-p.mainline_merge_yield_decel_mps2, 0.0)
     if driver_decel is not None:
         virtual = torch.maximum(virtual, -driver_decel)
-    return torch.where(has, torch.minimum(accel, virtual), accel)
+    out = torch.where(has, torch.minimum(accel, virtual), accel)
+    if zone:
+        with torch.no_grad():
+            sd, ld, vd = s.detach(), length.detach(), v.detach()
+            m = p.gap_overlap_margin_m
+            rear = sd - ld
+            ds = sd.unsqueeze(-2) - sd.unsqueeze(-1)                  # [B, i, j] = s_j - s_i
+            overlap = ((rear.unsqueeze(-1) < sd.unsqueeze(-2) + m)    # i's rear < j's front
+                       & (sd.unsqueeze(-1) > rear.unsqueeze(-2) - m))  # i's front > j's rear
+            pull = (follower.unsqueeze(-1) & in_zone.unsqueeze(-2) & overlap & (ds >= 0.0)
+                    & (vd.unsqueeze(-2) > vd.unsqueeze(-1))).any(-1)
+        brake = torch.full_like(accel, -p.mainline_merge_yield_decel_mps2)
+        if driver_decel is not None:
+            brake = torch.maximum(brake, -driver_decel)
+        out = torch.where(pull, torch.minimum(out, brake), out)
+    return out

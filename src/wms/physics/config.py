@@ -45,6 +45,14 @@ LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 #: ``lane_safe_gap_m`` / ``merge_gap`` + IDM follower-braking check, or the speed-dependent
 #: SUMO-LC2013-like secure-gap rule (see :func:`wms.physics.mobil.speed_gap_safe`).
 LANE_GAP_RULES = ("fixed", "speed")
+#: V8WM2 ``forced_window_mode``: the last ``FORCE_WINDOW_M`` of the accel lane forces a feasible
+#: merge (``deterministic``, legacy) or keeps the learned merge hazard with a floor (``hazard``).
+FORCED_WINDOW_MODES = ("deterministic", "hazard")
+#: V8WM2 ``hazard`` mode: minimum per-step merge probability of a feasible forced-window row.
+FORCED_WINDOW_MIN_HAZARD = 0.02
+#: V8WM2 ``mainline_merge_yield_scope``: blocked lane-end mergers only (legacy) or every
+#: in-zone merger blocked only from behind / beside (zipper).
+MAINLINE_MERGE_YIELD_SCOPES = ("lane_end", "zone")
 
 
 @dataclass
@@ -96,6 +104,20 @@ class PhysicsConfig:
     the nearest lane-1 follower within ``mainline_merge_yield_distance_m`` behind such a blocked
     merger (merger's rear ahead of the follower's front) brakes for it as a virtual leader with
     its own IDM, by at most ``mainline_merge_yield_decel_mps2``.
+
+    V8WM2 (2026-10-17, all defaults = legacy):
+
+    * ``forced_window_mode``: ``deterministic`` (default) forces a feasible merge in the last
+      ``wms.model.lane_v5.FORCE_WINDOW_M`` (logit ``max(prior, 8)``); ``hazard`` lets the
+      learned merge head act there too, with the logit floored at
+      ``logit(forced_window_min_hazard)`` (a feasible car eventually leaves); the feasibility
+      mask is unchanged, forced-window rows count as learnable rows (lane-v5 rows / AP, merge
+      timing loss) and they always draw their lane (sampled, whatever ``lane_decision``).
+      Requires ``model.lane_model = 'hazard_v5'``.
+    * ``merge_end_wait_s0_follow_m`` / ``merge_end_wait_t_follow_s`` (``None`` = road IDM
+      ``s0`` / ``T``): the follower constants of the ``merge_end_wait`` secure-gap test.
+    * ``mainline_merge_yield_scope``: ``lane_end`` (default) or ``zone`` (see
+      :func:`wms.physics.merge_v6.mainline_merge_yield`; requires ``lane_gap_rule='speed'``).
     """
 
     dt_s: float = 0.5
@@ -153,6 +175,12 @@ class PhysicsConfig:
     mainline_merge_yield: bool = False
     mainline_merge_yield_distance_m: float = MAINLINE_MERGE_YIELD_DISTANCE_M
     mainline_merge_yield_decel_mps2: float = MAINLINE_MERGE_YIELD_DECEL_MPS2
+    # V8WM2 (2026-10-17): opt-in lane-end hazard / zipper yield / merge_end_wait follower.
+    forced_window_mode: str = "deterministic"
+    forced_window_min_hazard: float = FORCED_WINDOW_MIN_HAZARD
+    mainline_merge_yield_scope: str = "lane_end"
+    merge_end_wait_s0_follow_m: float | None = None
+    merge_end_wait_t_follow_s: float | None = None
 
     def __post_init__(self) -> None:
         for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
@@ -182,6 +210,33 @@ class PhysicsConfig:
             raise ValueError("gap_stopped_relax requires lane_gap_rule='speed'")
         if not (self.gap_stopped_speed_mps > 0.0 and self.gap_stopped_min_m > 0.0):
             raise ValueError("gap_stopped_speed_mps and gap_stopped_min_m must be > 0")
+        if self.forced_window_mode not in FORCED_WINDOW_MODES:
+            raise ValueError(f"forced_window_mode must be one of {FORCED_WINDOW_MODES}: "
+                             f"{self.forced_window_mode!r}")
+        if not (isinstance(self.forced_window_min_hazard, (int, float))
+                and 0.0 < float(self.forced_window_min_hazard) < 1.0):
+            raise ValueError("forced_window_min_hazard must be in (0, 1)")
+        if self.mainline_merge_yield_scope not in MAINLINE_MERGE_YIELD_SCOPES:
+            raise ValueError(f"mainline_merge_yield_scope must be one of "
+                             f"{MAINLINE_MERGE_YIELD_SCOPES}: {self.mainline_merge_yield_scope!r}")
+        if (self.mainline_merge_yield and self.mainline_merge_yield_scope == "zone"
+                and (self.lane_gap_rule != "speed" or self.merge_cal)):
+            raise ValueError("mainline_merge_yield_scope='zone' requires lane_gap_rule='speed' "
+                             "and merge_cal off")
+        for name in ("merge_end_wait_s0_follow_m", "merge_end_wait_t_follow_s"):
+            value = getattr(self, name)
+            if value is not None and (isinstance(value, bool)
+                                      or not isinstance(value, (int, float))
+                                      or not math.isfinite(value) or value < 0.0):
+                raise ValueError(f"{name} must be None or finite and >= 0")
+
+    def merge_end_follow_constants(self) -> tuple[float, float]:
+        """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""
+        _, _, time_headway, s0, _ = self.idm()
+        return (s0 if self.merge_end_wait_s0_follow_m is None
+                else float(self.merge_end_wait_s0_follow_m),
+                time_headway if self.merge_end_wait_t_follow_s is None
+                else float(self.merge_end_wait_t_follow_s))
 
     def idm(self) -> tuple[float, float, float, float, int]:
         """``(a_max, b_comf, time_headway, s0, delta)`` of the default driver."""
@@ -217,7 +272,8 @@ class PhysicsConfig:
                 if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule",
                                             "gap_stopped_relax", "stop_time_integration",
                                             "emergency_decel_mps2", "merge_end_wait",
-                                            "mainline_merge_yield")
+                                            "mainline_merge_yield", "forced_window_mode",
+                                            "mainline_merge_yield_scope")
                 and v is not None}
         data.update(overrides)
         return cls(**data)
