@@ -12,6 +12,12 @@ V8WM2 PhysicsConfig fields set at inference per variant:
   scope=zone         mainline_merge_yield_scope
   mew_s0 / mew_T     merge_end_wait_s0_follow_m / merge_end_wait_t_follow_s
 
+MERGECAL / V9ENTRY additions (defaults unchanged):
+  gm=<g>             inference-time merge-head gate (lane_v5_gates[2]; STUCK_DIAG "gate 0.4")
+  --entries queue    entries ON seeded with the recorded SUMO entrance backlog and demand
+                     (wms.eval.entry_queue; HDV entrants, sumo_like_v2 insertion); default off.
+                     Entrants occupy slots after the t0 roster; all metrics stay on the t0 roster.
+
 Run from the c4/v8wm2 worktree (the code under test):
   cd E:/agent-work/c4-v8wm2; PYTHONPATH="src;.;tools" python <this> --var "base=<ckpt>" ...
 """
@@ -43,12 +49,12 @@ def parse_var(spec):
     return name, path, o
 
 
-def init(var_specs):
+def init(var_specs, entries="off"):
     import torch
     torch.set_num_threads(1)
     G["p"] = {}
     for name, path, o in var_specs:
-        p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo")
+        p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo", entries=entries)
         m = p.model
         ch = {}
         if "fw" in o:
@@ -75,12 +81,22 @@ def init(var_specs):
             new = dataclasses.replace(m.physics, **ch)
             for owner, attr in wc._physics_holders(m):
                 setattr(owner, attr, new)
+        if "gm" in o:            # merge-head gate threshold (inference-time lane_v5_gates[2])
+            g = tuple(m.lane_v5_gates)
+            m.lane_v5_gates = (g[0], g[1], float(o["gm"]))
         G["p"][name] = (p, cap, o)
 
 
 def first_off2(lane, msk, k):
     idx = np.flatnonzero(msk[:, k] & (lane[:, k] != 2))
     return float(idx[0] * DT) if idx.size else np.inf
+
+
+def off2_dist(pos, lane, msk, k, end=75.44):
+    """MERGECAL: distance to the lane end (m) at the last ramp-lane row before the first row off
+    lane 2 (NaN when the car never leaves it or leaves at t0)."""
+    idx = np.flatnonzero(msk[:, k] & (lane[:, k] != 2))
+    return float(end - pos[idx[0] - 1, k]) if idx.size and idx[0] > 0 else np.nan
 
 
 def work(payload):
@@ -108,7 +124,9 @@ def work(payload):
             ramp = [k for k in range(n) if hdv[k] and int(tr[0, k, 1]) == 2]
             res = {"idx": idx, "var": name, "error": None,
                    "t_wm": np.array([first_off2(lan, msk, k) for k in ramp]),
-                   "t_rec": np.array([first_off2(tr[:, :, 1], rp, k) for k in ramp])}
+                   "t_rec": np.array([first_off2(tr[:, :, 1], rp, k) for k in ramp]),
+                   "d_wm": np.array([off2_dist(pos, lan, msk, k) for k in ramp]),
+                   "d_rec": np.array([off2_dist(tr[:, :, 0], tr[:, :, 1], rp, k) for k in ramp])}
             for ts in (30, 60, 120):
                 i = int(ts / DT)
                 both = msk[i] & rp[i] & hdv
@@ -169,6 +187,9 @@ def main():
     ap.add_argument("--every", type=int, default=2)
     ap.add_argument("--out", required=True)
     ap.add_argument("--summarize", action="store_true")
+    ap.add_argument("--entries", choices=("off", "queue"), default="off",
+                    help="off (frozen default) / queue = V9ENTRY entries ON with the recorded "
+                         "SUMO entrance queue")
     a = ap.parse_args()
     if a.summarize:
         print(summarize(a.out))
@@ -182,18 +203,18 @@ def main():
     t0 = time.time()
     res = []
     if a.workers <= 1:
-        init(specs)
+        init(specs, a.entries)
         for t in tasks:
             res.extend(work(t))
     else:
         from multiprocessing import Pool
-        with Pool(a.workers, initializer=init, initargs=(specs,)) as pool:
+        with Pool(a.workers, initializer=init, initargs=(specs, a.entries)) as pool:
             for j, rr in enumerate(pool.imap_unordered(work, tasks, chunksize=1)):
                 res.extend(rr)
                 if (j + 1) % 8 == 0:
                     print(f"{j+1}/{len(tasks)} {time.time()-t0:.0f}s", flush=True)
     with open(a.out, "wb") as fh:
-        pickle.dump({"specs": specs, "results": res}, fh)
+        pickle.dump({"specs": specs, "results": res, "entries": a.entries}, fh)
     print(f"done {time.time()-t0:.0f}s errors {sum(1 for r in res if r.get('error'))}", flush=True)
     for r in [r for r in res if r.get("error")][:3]:
         print(r)

@@ -65,8 +65,8 @@ def hdv_metrics(pos, vel, msk, hdv, h: float) -> dict:
             "us_speed": C.region_speed(pos, vel, msk, hdv, h, -400.0, 0.0)}
 
 
-def init(ckpts, device, threads, hdv_exits="sumo"):
-    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits)
+def init(ckpts, device, threads, hdv_exits="sumo", entries="off"):
+    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits, entries)
                    for name, path, mode in ckpts}
 
 
@@ -323,6 +323,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--threads", type=int, default=1)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--entries", choices=tuple(C.ENTRY_MODES), default="off",
+                    help="vehicles entering after t0: off (frozen default) / queue = V9ENTRY entries "
+                         "ON seeded with the recorded SUMO entrance backlog + demand")
     ap.add_argument("--hdv-exits", choices=("sumo", "none"), default="sumo",
                     help="sumo = recorded SUMO exits end HDV slots too (predictor default); "
                          "none = only CAV slots follow recorded presence")
@@ -364,10 +367,10 @@ def main(argv=None):
         print(f"[ranking] controllers {counts}; {len(payloads)} jobs; models {ckpts}", flush=True)
         t = time.time()
         if a.workers <= 1:
-            init(ckpts, a.device, a.threads, a.hdv_exits)
+            init(ckpts, a.device, a.threads, a.hdv_exits, a.entries)
             results = [work(x) for x in payloads]
         else:
-            with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits)) as pool:
+            with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits, a.entries)) as pool:
                 results = list(pool.imap_unordered(work, payloads, chunksize=1))
         results.sort(key=lambda r: r["job"])
         print(f"[ranking] rollouts done in {time.time() - t:.0f} s", flush=True)
@@ -389,6 +392,7 @@ def main(argv=None):
         with open(C.guard(a.json), "w", encoding="utf-8") as fh:
             json.dump({"schema": "wm_controller_ranking/1", "root": str(root), "t0_s": a.t0,
                        "horizons": horizons, "reference": a.reference, "controllers": ctrls,
+                       "entries": a.entries,
                        "episode_counts": counts,
                        "ckpts": [{"name": n, "path": p, "mode": m} for n, p, m in ckpts],
                        "t0_identity_failures": not_identical, "errors": errors,

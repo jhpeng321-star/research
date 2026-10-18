@@ -37,11 +37,14 @@ class CheckpointPredictorFactory:
     entries: bool = False
     entries_v2: bool = False
     diag: tuple[str, ...] = ()
+    #: V9ENTRY queue mode (``RolloutFlags.entry_queue_state``; needs entries + entries_v2).
+    entry_queue_state: bool = False
 
     def __call__(self):
         diag = set(self.diag)
         flags = RolloutFlags(
             entries=self.entries, entries_v2=self.entries_v2,
+            **({"entry_queue_state": True} if self.entry_queue_state else {}),
             **{name: name in diag for name in DIAG_SWITCHES})
         return WmsPredictor.from_checkpoint(self.path, flags).predict_states
 

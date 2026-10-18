@@ -123,3 +123,33 @@ def entry_process_v2(state: Mapping[str, Any], t0_s: float, horizon_s: float, se
     proc = mod.TorchEntryProcessV2(history=history, dt_s=DT_S, seed=int(seed), batch=1,
                                    cfg=cfg, pool=_pool(int(kin.shape[0]), n_pad))
     return proc, n_pad
+
+
+def entry_process_queue(state: Mapping[str, Any], t0_s: float, horizon_s: float, seed: int,
+                        kin: np.ndarray, tools: RolloutTools):
+    """V9ENTRY queue mode: the observed-history process (:func:`entry_process_v2`) seeded with the
+    recorded SUMO entrance backlog and driven at the recorded demand
+    (:mod:`wms.eval.entry_queue`), inserted by SUMO's saturated-entrance rule (``sumo_like_v2``,
+    one entrant per lane and step: ``fresh_no_credit``), uncapped pending queue - the C4
+    imagination's entry process (``wms.control.dreamer._entry_process``).
+
+    Entrants are HDVs: the entrant CAV share is NOT applied, because evaluation rollouts have no
+    controller for an entrant CAV (it would hold its insertion speed, ``hold_teacher``; the same
+    rule as WM training).  Returns ``(process, n_pad, queue info)``."""
+    import dataclasses
+
+    from .entry_queue import state_entry_queue
+
+    mod = _entries(tools)
+    vec, source = state_entry_queue(state, t0_s)
+    queue = dataclasses.replace(mod.EntranceQueue.from_vector(vec), cav_share=None)
+    history = _entry_history(state, t0_s, kin, tools)
+    demand = mod.with_queue_demand(history, queue)
+    expected = float(np.sum(demand.rate)) * float(horizon_s) \
+        + min(float(np.sum(queue.backlog)), 0.5 * float(horizon_s))
+    n_pad = max(1, min(MAX_PAD_SLOTS, int(np.ceil(expected * PAD_SAFETY_FACTOR)) + PAD_MARGIN))
+    cfg = mod.EntryConfig(max_pending=10 ** 9, insert_rule="sumo_like_v2", fresh_no_credit=True)
+    proc = mod.TorchEntryProcessV2(history=history, dt_s=DT_S, seed=int(seed), batch=1, cfg=cfg,
+                                   pool=_pool(int(kin.shape[0]), n_pad), queues=[queue])
+    info = {"source": source, "vector": [float(x) for x in vec], "n_pad": int(n_pad)}
+    return proc, n_pad, info

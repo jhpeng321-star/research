@@ -29,6 +29,11 @@ DELAY_END_M = 500.0               # delay is counted upstream of this line only 
                                   # set the WM's exposure
 MODES = {"OFF": (False, False), "ON": (True, True), "WAIT": (True, False), "YIELD": (False, True)}
 MODE_FIELDS = ("merge_end_wait", "mainline_merge_yield")
+#: V9ENTRY entry modes of :func:`load_predictor` (``off`` = the frozen default): ``queue`` = entries
+#: v2 seeded with the recorded SUMO entrance backlog and demand (``wms.eval.entry_queue``).
+ENTRY_MODES = {"off": {}, "v1": {"entries": True},
+               "v2": {"entries": True, "entries_v2": True},
+               "queue": {"entries": True, "entries_v2": True, "entry_queue_state": True}}
 
 
 def guard(path):
@@ -108,22 +113,28 @@ def _to(obj, device):
 
 
 def load_predictor(path: str, mode: str, device: str = "cpu", threads: int = 1,
-                   hdv_exits: str = "sumo"):
+                   hdv_exits: str = "sumo", entries: str = "off"):
     """-> (predictor, capture dict); ``capture['last']`` holds the last raw rollout (CPU).
 
     ``hdv_exits``: ``sumo`` = the predictor's standard semantics (recorded SUMO presence ends
     every slot, HDVs included, so a SUMO exit can remove a vehicle the WM still has queued
     upstream); ``none`` = recorded exits end CAV slots only, HDVs stay until the model itself
-    drops them (no SUMO outcome leaks into the predicted HDV state)."""
+    drops them (no SUMO outcome leaks into the predicted HDV state).
+
+    ``entries`` (:data:`ENTRY_MODES`, default ``off``): vehicles entering after t0; ``queue`` =
+    V9ENTRY entries ON with the recorded entrance queue (HDV entrants, sumo_like_v2 insertion).
+    Entrants occupy slots after the t0 roster, so :func:`roll` (``[:n]``) is unchanged."""
     if hdv_exits not in ("sumo", "none"):
         raise SystemExit(f"hdv_exits must be sumo or none, not {hdv_exits!r}")
+    if entries not in ENTRY_MODES:
+        raise SystemExit(f"entries must be one of {sorted(ENTRY_MODES)}, not {entries!r}")
     import torch
     from wms.eval.predictor import RolloutFlags, WmsPredictor
     torch.set_num_threads(threads)
-    p = WmsPredictor.from_checkpoint(guard(path), RolloutFlags(entries=False, entries_v2=False),
+    p = WmsPredictor.from_checkpoint(guard(path), RolloutFlags(**ENTRY_MODES[entries]),
                                      device=device)
     info = set_mode(p.model, mode)
-    cap = {"mode_info": info, "hdv_exits": hdv_exits}
+    cap = {"mode_info": info, "hdv_exits": hdv_exits, "entries": entries}
     orig = p.model.rollout
 
     def rollout(state, **kw):

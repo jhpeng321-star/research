@@ -3,7 +3,8 @@ runs/active/C4-DIAG-20261016/wm_discharge.py).
 
 Rolls every checkpoint 120 s from the recorded unseen-wall states (default
 E:/agent-work/c4-v6merge/_ref/states_h60/wall_same.json; arms native and wall; CAVs teacher-forced
-from the recorded arm; entries OFF) and compares, for HDVs of the t0 roster:
+from the recorded arm; entries OFF, or with ``--entries queue`` V9ENTRY entries ON seeded with the
+recorded SUMO entrance backlog and demand) and compares, for HDVs of the t0 roster:
 
 * merge-zone HDV mean speed (snapshot) in cells [-400,0), [0,75.44), [75.44,300), [300,600) m at
   30 / 60 / 120 s;
@@ -54,8 +55,8 @@ def stats(pos, vel, msk, hdv) -> dict:
     return out
 
 
-def init(ckpts, device, threads, hdv_exits="sumo"):
-    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits)
+def init(ckpts, device, threads, hdv_exits="sumo", entries="off"):
+    G["models"] = {name: C.load_predictor(path, mode, device, threads, hdv_exits, entries)
                    for name, path, mode in ckpts}
 
 
@@ -134,6 +135,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--threads", type=int, default=1, help="torch threads per worker")
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--entries", choices=tuple(C.ENTRY_MODES), default="off",
+                    help="vehicles entering after t0: off (frozen default) / queue = V9ENTRY entries "
+                         "ON seeded with the recorded SUMO entrance backlog + demand")
     ap.add_argument("--hdv-exits", choices=("sumo", "none"), default="sumo",
                     help="sumo = recorded SUMO exits end HDV slots too (predictor default); "
                          "none = only CAV slots follow recorded presence")
@@ -151,10 +155,10 @@ def main(argv=None):
     print(f"[merge_check] {len(recs)} states, models {ckpts}, device {a.device}", flush=True)
     t = time.time()
     if a.workers <= 1:
-        init(ckpts, a.device, a.threads, a.hdv_exits)
+        init(ckpts, a.device, a.threads, a.hdv_exits, a.entries)
         results = [work(x) for x in recs]
     else:
-        with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits)) as pool:
+        with Pool(a.workers, initializer=init, initargs=(ckpts, a.device, a.threads, a.hdv_exits, a.entries)) as pool:
             results = list(pool.imap(work, recs, chunksize=1))
     print(f"[merge_check] rollouts done in {time.time() - t:.0f} s", flush=True)
     summ = summarize(results, names, arms, a.bootstrap)
@@ -163,6 +167,7 @@ def main(argv=None):
         Path(a.json).parent.mkdir(parents=True, exist_ok=True)
         with open(C.guard(a.json), "w", encoding="utf-8") as fh:
             json.dump({"schema": "wm_merge_check/1", "set": a.set, "every": a.every,
+                       "entries": a.entries,
                        "ckpts": [{"name": n, "path": p, "mode": m} for n, p, m in ckpts],
                        "summary": summ, "states": results}, fh, indent=1)
     return 0
