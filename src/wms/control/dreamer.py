@@ -16,7 +16,7 @@ import os
 import random
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field, replace
 from typing import Optional
 
 import numpy as np
@@ -143,6 +143,13 @@ class DreamerConfig:
     # credit (EntryConfig.fresh_no_credit).  Needs start windows with ``entry_queue``
     # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
     entry_queue_state: bool = False
+    # V9NOYIELD (2026-10-18; default empty = bit-identical): PhysicsConfig field -> value
+    # overrides applied to EVERY PhysicsConfig holder of each frozen WM member right after it is
+    # loaded (same holder-walk as tools/wm_eval_common.py / coop_cl_noyield.py), so the imagined
+    # rollouts run with the override without touching the checkpoint.  The intended use is
+    # ``{mainline_merge_yield = false}``: the WM's mainline yield rule deadlocks the merge zone and
+    # penalises any CAV that deviates from its native CAV (ONROAD_DIAG.md).
+    wm_physics_overrides: dict = field(default_factory=dict)
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -161,8 +168,8 @@ class DreamerConfig:
         for name, value in asdict(self).items():
             if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
                         "entropy_target", "lane_entropy_target", "ttc_budget_mode",
-                        "lagrange_max") or value is None:
-                continue   # the string fields; the optional decay / entropy targets
+                        "lagrange_max", "wm_physics_overrides") or value is None:
+                continue   # the string fields; the optional decay / entropy targets; the overrides
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
         for name in ("entropy_target", "lane_entropy_target"):
@@ -191,6 +198,9 @@ class DreamerConfig:
                      "entry_queue_state"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
+        if not isinstance(self.wm_physics_overrides, dict):
+            raise ValueError("wm_physics_overrides must be a mapping of PhysicsConfig field "
+                             "names to values")
         if self.entry_insert_rule not in ("v2", "sumo_like", "sumo_like_v2"):
             raise ValueError("entry_insert_rule must be 'v2', 'sumo_like' or 'sumo_like_v2'")
         if isinstance(self.entry_pad_max, bool) or not isinstance(self.entry_pad_max, int) \
@@ -285,6 +295,62 @@ class _Recompute:
             return activation_checkpoint(self.fn, *args, use_reentrant=False,
                                          preserve_rng_state=self.preserve_rng, **kwargs)
         return self.fn(*args, **kwargs)
+
+
+def _physics_holders(model):
+    """Every ``(owner, attr)`` in the model graph that holds a PhysicsConfig instance.
+
+    Same walk as ``tools/wm_eval_common.py`` / ``coop_cl_noyield.py``: an override must replace
+    every reference (``model.physics`` and any submodule attribute), not just the top-level one.
+    """
+    from wms.physics.config import PhysicsConfig
+    found, seen = [], set()
+
+    def visit(obj):
+        if id(obj) in seen:
+            return
+        seen.add(id(obj))
+        for name, value in list(vars(obj).items()):
+            if isinstance(value, PhysicsConfig):
+                found.append((obj, name))
+        for sub in getattr(obj, "_modules", {}).values():
+            if sub is not None:
+                visit(sub)
+
+    visit(model)
+    return found
+
+
+def apply_wm_physics_overrides(model, overrides):
+    """Swap every PhysicsConfig holder of ``model`` for a copy with ``overrides`` applied.
+
+    V9NOYIELD: ``{"mainline_merge_yield": False}`` turns the WM's mainline yield rule off inside
+    imagination.  An empty mapping is a no-op (default path stays bit-identical) and the frozen
+    member's loaded physics fields are remembered in a plain dict so repeated applications always
+    start from the checkpoint's configuration.
+    Returns the applied overrides and how many holders were replaced.
+    """
+    from wms.physics.config import PhysicsConfig
+    changes = dict(overrides or {})
+    holders = _physics_holders(model)
+    if not changes:
+        return {"overrides": {}, "holders": len(holders)}
+    unknown = sorted(set(changes) - set(PhysicsConfig.__dataclass_fields__))
+    if unknown:
+        raise ValueError(f"unknown WM physics override fields {unknown}")
+    if not holders:
+        raise ValueError("no PhysicsConfig reference found on the model")
+    # Remember the loaded fields as a plain dict (NOT a PhysicsConfig instance) so the walk above
+    # never picks it up and repeated applications always start from the checkpoint's physics.
+    base_fields = getattr(model, "_wm_physics_base_fields", None)
+    if base_fields is None:
+        base_fields = {name: getattr(model.physics, name)
+                       for name in PhysicsConfig.__dataclass_fields__}
+        model._wm_physics_base_fields = base_fields
+    new = replace(PhysicsConfig(**base_fields), **changes)
+    for owner, name in holders:
+        setattr(owner, name, new)
+    return {"overrides": {key: getattr(new, key) for key in changes}, "holders": len(holders)}
 
 
 def _model_identity(model, imagination_grad_decay=None):
@@ -482,12 +548,22 @@ class DreamerTrainer:
         if not world_models:
             raise ValueError("at least one world model is required")
         self.world_models = [model.to(self.device).eval() for model in world_models]
+        self.wm_physics_overrides = []
         for model in self.world_models:
             model.requires_grad_(False)
             model.zero_grad(set_to_none=True)
             dt = getattr(getattr(model, "physics", None), "dt_s", PHYSICS_DT_S)
             if not math.isclose(dt, PHYSICS_DT_S):
                 raise ValueError("WM physics dt does not match the shared control contract")
+            # V9NOYIELD: apply the configured physics switch to EVERY PhysicsConfig holder of
+            # this member before its identity is fixed (empty overrides = bit-identical).
+            applied = apply_wm_physics_overrides(model, self.config.wm_physics_overrides)
+            self.wm_physics_overrides.append(applied)
+            if applied["overrides"]:
+                print(f"[wm-physics] member {len(self.wm_physics_overrides) - 1}: "
+                      f"{applied['overrides']} applied to {applied['holders']} PhysicsConfig "
+                      f"holder(s); effective mainline_merge_yield="
+                      f"{model.physics.mainline_merge_yield}", flush=True)
         self.world_model_ids = [_model_identity(model, self.config.imagination_grad_decay)
                                 for model in self.world_models]
         self.policy = policy.to(self.device)
