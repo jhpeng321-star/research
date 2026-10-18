@@ -140,6 +140,9 @@ class WmSModel(nn.Module):
         # V8LANE (default 'default' = the lane_decision rule; plain attribute an evaluator may
         # override): mainline overtake / return decision rule (lv5.MAINLINE_MODES).
         self.lane_v5_mainline = getattr(spec, "lane_v5_mainline", "default")
+        # MERGECAL (None = off): per-position merge-head offsets ``(edges_m, offsets)``, set by
+        # ``load_checkpoint`` from the payload key ``lv5.MERGE_CALIB_KEY`` (plain attribute).
+        self.lane_v5_merge_calib = None
         self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
@@ -801,13 +804,15 @@ class WmSModel(nn.Module):
         offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
         with torch.no_grad() if self.lane_hazard_detach else contextlib.nullcontext():
             logits, head, acts = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
-                                                    self.physics, offsets, merge_wait)
+                                                    self.physics, offsets, merge_wait,
+                                                    self.lane_v5_merge_calib)
         hazard = None
         if getattr(self, "emit_merge_hazard", False):
             # V8WM merge-timing loss: the own-head logit with gradient on the rollout state.
             if self.lane_hazard_detach and torch.is_grad_enabled():
                 _, head, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
-                                                self.physics, offsets, merge_wait)
+                                                self.physics, offsets, merge_wait,
+                                                self.lane_v5_merge_calib)
             hazard = (head, acts)
         sample = None
         if self._samples_lanes:
@@ -869,7 +874,9 @@ class WmSModel(nn.Module):
             logits, _, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, present & ~is_cav,
                                               lane_base, self.physics,
                                               tuple(getattr(self, "lane_logit_offsets",
-                                                            (0.0, 0.0, 0.0))))
+                                                            (0.0, 0.0, 0.0))),
+                                              merge_calib=getattr(self, "lane_v5_merge_calib",
+                                                                  None))
             return logits
         if self.lane_hazard is None:
             raise ValueError("lane_event_logits requires model.lane_model='hazard'")

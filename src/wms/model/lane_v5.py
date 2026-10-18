@@ -521,10 +521,44 @@ class LaneV5Net(nn.Module):
         return self(raw).gather(-1, _lookup(HEAD_OF_LANE, lane).unsqueeze(-1)).squeeze(-1)
 
 
+#: MERGECAL (2026-10-18): per-position merge-head calibration ``(edges_m, offsets)``: ``edges_m``
+#: ascending distances to the acceleration-lane end (``merge_zone_s1_m - s``), ``offsets`` one
+#: logit offset per bin ``[edges_m[i], edges_m[i+1])``.  Written by ``tools/merge_calib.py`` into a
+#: checkpoint copy (payload key :data:`MERGE_CALIB_KEY`, applied by ``load_checkpoint``); ``None``
+#: (default) = off, bit-identical.
+MERGE_CALIB_KEY = "lane_v5_merge_calib"
+
+
+def check_merge_calib(calib) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Validate and normalise a merge-position calibration ``(edges_m, offsets)``."""
+    edges = tuple(float(x) for x in calib[0])
+    offs = tuple(float(x) for x in calib[1])
+    if len(edges) < 2 or len(offs) != len(edges) - 1:
+        raise ValueError("merge calibration needs n+1 bin edges and n offsets")
+    if any(math.isnan(x) for x in edges) or any(b <= a for a, b in zip(edges[:-1], edges[1:])):
+        raise ValueError("merge calibration edges must be strictly ascending")
+    if not all(math.isfinite(x) for x in offs):
+        raise ValueError("merge calibration offsets must be finite")
+    return edges, offs
+
+
+def merge_position_offset(lane: Tensor, s: Tensor, physics: PhysicsConfig, calib) -> Tensor:
+    """``[B, K]`` per-row merge-head logit offset of a :data:`MERGE_CALIB_KEY` calibration
+    (0 off the ramp lane and outside the calibrated distance range)."""
+    edges, offs = check_merge_calib(calib)
+    d = (float(physics.merge_zone_s1_m) - s).to(torch.float32)
+    e = torch.tensor(edges, dtype=torch.float32, device=s.device)
+    idx = torch.bucketize(d, e, right=True) - 1          # bin i: edges[i] <= d < edges[i+1]
+    inside = (idx >= 0) & (idx < len(offs)) & (lane == physics.merge_lane)
+    table = torch.tensor(offs, dtype=torch.float32, device=s.device)
+    return torch.where(inside, table[idx.clamp(0, len(offs) - 1)], torch.zeros_like(d))
+
+
 def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned: Tensor,
                    lane_base: Tensor, physics: PhysicsConfig,
                    offsets: Optional[Sequence[float]] = None,
-                   merge_wait: Optional[Tensor] = None) -> tuple[Tensor, Tensor, Tensor]:
+                   merge_wait: Optional[Tensor] = None,
+                   merge_calib=None) -> tuple[Tensor, Tensor, Tensor]:
     """Absolute lane logits ``[B, K, 3]``, the per-row head logit and the 'acts' mask.
 
     The learned transition's entry is the head logit (+ offset) on learned slots whose target
@@ -537,12 +571,16 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
     V8WM3 ``physics.merge_impatience`` with a carried ``merge_wait`` ``[B, K]`` (s): the floor is
     per car, ``logit(min(1, h0 + (1 - h0) w / tau))`` capped at :data:`FORCED_MERGE_LOGIT`
     (:func:`wms.physics.mobil.merge_impatience_floor`).
+    MERGECAL ``merge_calib = (edges_m, offsets)``: per-position merge-head logit offset
+    (:func:`merge_position_offset`), added before the forced-window floor.
     """
     lane, tq, s = inst["lane"], inst["tq"], inst["s"]
     head = _lookup(HEAD_OF_LANE, lane)
     logit = net(raw).gather(-1, head.unsqueeze(-1)).squeeze(-1)
     if offsets is not None and any(float(x) != 0.0 for x in offsets):
         logit = logit + _lookup(tuple(float(x) for x in offsets), head, dtype=logit.dtype)
+    if merge_calib is not None:
+        logit = logit + merge_position_offset(lane, s, physics, merge_calib).to(logit.dtype)
     prior = lane_base.gather(-1, tq.unsqueeze(-1)).squeeze(-1)
     feasible = learned.bool() & (prior > MASKED_LOGIT)
     forced = forced_window(lane, s, physics)

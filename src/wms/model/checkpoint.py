@@ -145,6 +145,14 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
                         kind=model_kind,
                         action_conditioned="controller_embed.weight" in weights)
     _check_keys(model.load_state_dict(weights, strict=False), config, strict)
+    calib = payload.get("lane_v5_merge_calib")
+    if calib is not None:
+        # MERGECAL (tools/merge_calib.py): per-position merge-head offsets of a calibrated copy.
+        from . import lane_v5 as lv5
+        if getattr(model, "lane_v5", None) is None:
+            raise CheckpointError("lane_v5_merge_calib needs a hazard_v5 lane model")
+        model.lane_v5_merge_calib = lv5.check_merge_calib(
+            (calib["edges_m"], calib["offsets"]))
     model.to(device)
     model.eval()
     projection = None
