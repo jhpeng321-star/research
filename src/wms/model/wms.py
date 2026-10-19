@@ -143,6 +143,10 @@ class WmSModel(nn.Module):
         # MERGECAL (None = off): per-position merge-head offsets ``(edges_m, offsets)``, set by
         # ``load_checkpoint`` from the payload key ``lv5.MERGE_CALIB_KEY`` (plain attribute).
         self.lane_v5_merge_calib = None
+        # LANERATECAL (None = off): closed-loop per-head rate calibration read by
+        # ``load_checkpoint`` from ``lane_calib.json`` next to the checkpoint (plain attribute;
+        # the additive offsets are already folded into ``lane_logit_offsets``).
+        self.lane_rate_calib = None
         self.driver_update = getattr(spec, "driver_update", "off")
         self.history_features = int(spec.history_features)
         self.history_len = int(spec.history_len)
