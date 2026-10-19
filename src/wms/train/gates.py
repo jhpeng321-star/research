@@ -107,6 +107,10 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
     terms.extend(BrakingParams(
         asym_alpha=settings.asym_speed_alpha, decel_weight=settings.decel_weight,
         prop_weight=settings.propagation_weight).log_terms)
+    if float(getattr(settings, "brake_persist_weight", 0.0)) > 0.0:
+        terms.append("brake_persist")
+    if float(getattr(settings, "brake_persist_quantile_weight", 0.0)) > 0.0:
+        terms.append("brake_persist_quantile")
     if settings.stability_weight > 0:
         terms.append("stability")
     if settings.conservation_weight > 0:

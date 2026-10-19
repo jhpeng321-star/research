@@ -252,7 +252,8 @@ class WmSTrainer:
         self.model.eval()
         total = {"loss": 0.0, "position": 0.0, "speed": 0.0, "lane": 0.0}
         optional = ("traffic", "residual_mag", "lane_rate", "flip_rate",
-                    *self.composer.braking.log_terms, "agg_field", "agg_reward", "agg_flow",
+                    *self.composer.braking.log_terms, "brake_persist",
+                    "brake_persist_quantile", "agg_field", "agg_reward", "agg_flow",
                     "merge_speed", "merge_discharge", "merge_timing")
         total.update({name: 0.0 for name in self.composer.names if name in optional})
         if any(name in ("merge_speed", "merge_discharge") for name in self.composer.names):

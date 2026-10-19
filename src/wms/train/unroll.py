@@ -622,6 +622,11 @@ class UnrollRunner:
         if brake_prep is not None:
             record["brake_follow_steps"] = int(brake_prep["count"])
             record["brake_follow_weight"] = float(cfg.brake_follow_weight)
+        persist_prep = targets.prepared.get("brake_persist")
+        if persist_prep is not None:
+            record["brake_persist_onsets"] = int(persist_prep["count"])
+            record["brake_persist_cells"] = int(persist_prep["n_cells"])
+            record["brake_persist_window_steps"] = int(persist_prep["window_steps"])
         merge_prep = targets.prepared.get("merge")
         if merge_prep is not None:
             # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.

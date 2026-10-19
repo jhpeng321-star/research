@@ -64,6 +64,12 @@ class TrainSettings:
     # V10BRAKEWAVE (default 1 = OFF, bit-identical): per-step position/speed multiplier on
     # followers whose same-lane recorded leader (<= 40 m) is decelerating below -1 m/s^2.
     brake_follow_weight: float = 1.0
+    # BRAKE_DIAG V10PERSIST (default 0 = OFF, bit-identical): multi-step onset persistence,
+    # onset quantiles and optional inverse-frequency event balancing.
+    brake_persist_weight: float = 0.0
+    brake_persist_quantile_weight: float = 0.0
+    brake_persist_event_balance: float = 0.0
+    brake_persist_window_s: float = 4.0
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -537,6 +543,14 @@ class TrainSettings:
                  and int(self.replay_probe_windows) >= 0 and int(self.replay_refresh_every) >= 0,
                  "replay_* multipliers must be >= 1, error_decay in [0,1), "
                  "probe_windows/refresh_every >= 0")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.brake_persist_weight, self.brake_persist_quantile_weight))
+            and math.isfinite(float(self.brake_persist_event_balance))
+            and 0.0 <= float(self.brake_persist_event_balance) <= 4.0
+            and math.isfinite(float(self.brake_persist_window_s))
+            and 3.0 <= float(self.brake_persist_window_s) <= 5.0,
+            "brake_persist weights must be >= 0, event_balance in [0,4], "
+            "window_s in [3,5]")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -577,6 +591,12 @@ class TrainSettings:
     def uses_hard_cap(self) -> bool:
         """True when a legacy hard residual clamp is configured (REJECTED, #3)."""
         return any(getattr(self, name) is not None for name in HARD_CAP_FIELDS)
+
+    @property
+    def brake_persist_on(self) -> bool:
+        """BRAKE_DIAG persistence terms enabled (either weight > 0)."""
+        return (float(self.brake_persist_weight) > 0.0
+                or float(self.brake_persist_quantile_weight) > 0.0)
 
     @property
     def merge_loss_on(self) -> bool:
