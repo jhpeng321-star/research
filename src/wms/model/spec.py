@@ -90,6 +90,9 @@ class ModelSpec:
     driver_ema_update: bool = True
     # V6INTEG: opt-in resolution of simultaneous lane-change conflicts.
     lane_conflict_resolve: bool = False
+    # V10COURTESY (default OFF): ramp-car distance-to-end / speed / waiting time and
+    # the merge head's current probability as extra residual inputs.
+    courtesy_inputs: bool = False
 
     def __post_init__(self) -> None:
         if self.driver_param_mode not in ("legacy", "physical"):
@@ -146,6 +149,8 @@ class ModelSpec:
             raise ValueError("lane_logit_offsets must be three finite (overtake, return, merge)")
         if self.lane_decision not in LANE_DECISIONS:
             raise ValueError(f"lane_decision must be one of {LANE_DECISIONS}")
+        if not isinstance(self.courtesy_inputs, bool):
+            raise ValueError("courtesy_inputs must be a boolean")
         if self.lane_hazard_features not in LANE_HAZARD_FEATURES:
             raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
         if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:

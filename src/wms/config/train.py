@@ -234,6 +234,11 @@ class ModelConfig:
     hazard-proportional car).  Merges keep lane_decision."""
     lane_conflict_resolve: bool = False
     """V6INTEG: resolve simultaneous lane-change conflicts during rollout."""
+    courtesy_inputs: bool = False
+    """V10COURTESY: add the ramp car's distance-to-lane-end, speed / slow / waiting
+    time and the merge head's current probability to the residual inputs.  Default
+    OFF: the residual sees kinematics only and old checkpoints load unchanged.  The
+    new adapters are zero-initialised, so enabling it is an exact no-op until trained."""
 
     def __post_init__(self) -> None:
         require(self.driver_param_mode in ("legacy", "physical"),
@@ -278,6 +283,8 @@ class ModelConfig:
                     "model.lane_v5_mainline needs model.lane_model='hazard_v5'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
                 "model.grad_decay_per_step must be in (0, 1]")
+        require(isinstance(self.courtesy_inputs, bool),
+                "model.courtesy_inputs must be a boolean")
         if self.lane_head == "history":
             require(self.rollout_mode in ("driver_params", "hybrid"),
                     "model.lane_head='history' requires rollout_mode driver_params or hybrid")
@@ -731,6 +738,10 @@ class LossConfig:
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
     merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
     lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
+    courtesy_weight: float = 1.0
+    """V10COURTESY: per-step loss multiplier for lane-1 followers within 40 m behind a
+    lane-2 car with distance-to-lane-end < 40 m.  1.0 (default) = off, bit-identical;
+    values > 1 boost the courtesy events in the ordinary position/speed Huber terms."""
     stability_weight: float = 0.0
     stability_margin: float = 1.0
     stability_probes: int = 1
@@ -745,6 +756,8 @@ class LossConfig:
     def __post_init__(self) -> None:
         require(self.stability_weight >= 0.0 and self.conservation_weight >= 0.0,
                 "stability/conservation weights must be non-negative")
+        require(is_finite(self.courtesy_weight) and float(self.courtesy_weight) >= 1.0,
+                "loss.courtesy_weight must be finite and >= 1 (1 = off)")
         require(self.stability_probes >= 1, "loss.stability_probes must be positive")
 
 

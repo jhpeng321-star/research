@@ -16,7 +16,9 @@ class _HuberTerm(LossTerm):
         raise NotImplementedError
 
     def __call__(self, ctx: LossContext) -> Optional[TermValue]:
-        comp = (self._huber(ctx) * ctx.w * ctx.m).sum() / ctx.targets.denom
+        boost = ctx.courtesy_boost
+        m = ctx.m if boost is None else ctx.m * boost.to(ctx.m.dtype)
+        comp = (self._huber(ctx) * ctx.w * m).sum() / ctx.targets.denom
         return TermValue(self.weight * comp, log=comp)
 
 

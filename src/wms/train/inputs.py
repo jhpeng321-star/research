@@ -297,8 +297,14 @@ def _device_timeline(timeline: Optional[Mapping[str, Any]], device: torch.device
 
 
 def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: TrainSettings,
-                  dt_s: float, device: torch.device) -> UnrollTargets:
+                  dt_s: float, device: torch.device, physics: Any = None) -> UnrollTargets:
     """Recorded per-unroll targets, masks and the global valid-count normaliser."""
+    from .courtesy import courtesy_follower_boost
+
+    if physics is None:
+        from wms.physics.config import PhysicsConfig
+
+        physics = PhysicsConfig()
     n = inputs.n_steps
     states = inputs.states
     weights = step_weights(n, states.dtype, device, settings.step_weight_decay).view(1, n, 1)
@@ -332,13 +338,17 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
 
         pair = pair_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
                             device=device)
+    courtesy_boost = courtesy_follower_boost(
+        states[:, :n], inputs.present[:, :n], physics,
+        float(getattr(settings, "courtesy_weight", 1.0)))
     targets = UnrollTargets(
         states=states, n_steps=n, weights=weights, hdv_mask=hdv_mask, aux_mask=aux_mask,
         aux_count=int(aux_mask.sum()), denom=denom,
         lane_target=states[:, 1:n + 1, :, 1:4].argmax(-1), loss_valid=inputs.loss_valid,
         is_cav=inputs.is_cav, dt_s=float(dt_s), position_delta_m=settings.position_huber_delta_m,
         speed_delta_mps=settings.speed_huber_delta_mps,
-        history_lane_head=settings.lane_head == "history", road=road)
+        history_lane_head=settings.lane_head == "history", road=road,
+        courtesy_boost=courtesy_boost)
     if pair is not None:
         targets.pair = pair
     return targets

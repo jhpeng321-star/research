@@ -229,6 +229,9 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_v5_mainline": "model.lane_v5_mainline",
     "lane_flow_weight": "loss.lane_flow.weight",
     "lane_flow_balance": "loss.lane_flow.balance",
+    # V10COURTESY (learned courtesy inputs + event weight boost)
+    "courtesy_inputs": "model.courtesy_inputs",
+    "courtesy_weight": "loss.courtesy_weight",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -308,6 +311,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "selection_ramp_weight", "selection_stuck_weight",
     # V8LANE
     "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
+    "courtesy_inputs", "courtesy_weight",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON

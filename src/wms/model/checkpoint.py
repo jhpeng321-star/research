@@ -25,7 +25,10 @@ from .wms import WmSModel
 
 CHECKPOINT_FORMAT = "wm_s/1"
 #: Weights that checkpoints written before the corresponding feature legitimately lack.
-_OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.")
+_OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.",
+                      "residual_net.courtesy_proj.")
+#: V10COURTESY: per-block attention bias keys (``residual_net.blocks.N.attn.``).
+_OPTIONAL_CONTAINS = (".courtesy_bias.",)
 #: LANERATECAL: closed-loop per-head rate calibration stored next to a checkpoint
 #: (``tools/lane_rate_calib.py``).  Absent file = no-op (bit-identical load).
 LANE_CALIB_FILE = "lane_calib.json"
@@ -177,7 +180,9 @@ def _check_keys(result, config: Mapping[str, Any], strict: bool) -> None:
                     or config.get("history_s") is not None)
     optional = tuple(p for p in _OPTIONAL_PREFIXES
                      if not (uses_encoder and p == "driver_encoder."))
-    missing = [key for key in result.missing_keys if not key.startswith(optional)]
+    missing = [key for key in result.missing_keys
+               if not key.startswith(optional)
+               and not any(part in key for part in _OPTIONAL_CONTAINS)]
     if missing:
         raise CheckpointError(f"checkpoint is missing network weights: {missing[:5]}")
     if strict and result.unexpected_keys:

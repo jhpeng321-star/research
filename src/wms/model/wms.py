@@ -44,7 +44,7 @@ from .lane_hazard import (HAZARD_F, HAZARD_F_V2, HazardLaneModel, blocked_indica
 from .lane_head import HistoryLaneHead, lane_context
 from . import lane_v5 as lv5
 from .residual_bound import bounded_accel_correction, bounded_value
-from .residual_net import HdvConfig, HdvResidualNet
+from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
 from .spec import ModelSpec
 
 #: Output width of the temporal MLP: one acceleration delta plus three lane logits.
@@ -162,6 +162,10 @@ class WmSModel(nn.Module):
         if (spec.rollout_mode == "hybrid" or self.long_history) \
                 and int(self.hdv.conditioning_dim) == 0:
             self.hdv = replace(self.hdv, conditioning_dim=self.driver_embed_dim)
+        if bool(getattr(spec, "courtesy_inputs", False)) and not self.hdv.courtesy_inputs:
+            # V10COURTESY: the checkpoint/config switch exists independently of the
+            # explicit HdvConfig override so loading a config enables the channels.
+            self.hdv = replace(self.hdv, courtesy_inputs=True)
         self.black_box = bool(spec.black_box)
         self.n_controllers = int(spec.n_controllers)
         self.controller_embed_dim = int(spec.controller_embed_dim)
@@ -513,11 +517,28 @@ class WmSModel(nn.Module):
         return encoded, driver_embedding, driver_params
 
     def _residual_prediction(self, kin: Tensor, present: Tensor,
-                             conditioning: Optional[Tensor]) -> dict[str, Tensor]:
+                             conditioning: Optional[Tensor],
+                             courtesy: Optional[Tensor] = None) -> dict[str, Tensor]:
         if self.checkpoint_residual and self.training and conditioning is None:
-            return checkpoint(self.residual_net, kin, present,
+            return checkpoint(self.residual_net, kin, present, courtesy=courtesy,
                               use_reentrant=False, preserve_rng_state=False)
-        return self.residual_net(kin, present, conditioning=conditioning)
+        return self.residual_net(kin, present, conditioning=conditioning,
+                                 courtesy=courtesy)
+
+    def set_courtesy_inputs(self, enabled: bool = True) -> None:
+        """Enable/disable the V10COURTESY input adapter without losing weights.
+
+        Old (7-channel kinematics) checkpoints have no courtesy tensors; the rebuilt
+        adapter is zero-initialised, so enabling it is an exact no-op until trained
+        and every existing weight is copied by name/shape.
+        """
+        enabled = bool(enabled)
+        if bool(self.hdv.courtesy_inputs) == enabled:
+            return
+        old = self.residual_net.state_dict()
+        self.hdv = replace(self.hdv, courtesy_inputs=enabled)
+        self.residual_net = HdvResidualNet(self.hdv)
+        self.residual_net.load_state_dict(old, strict=False)
 
     # ---------------------------------------------------------------- forward
     def forward(self, state: dict[str, Tensor], *, k_steps: Tensor | int = 0,
@@ -584,7 +605,26 @@ class WmSModel(nn.Module):
 
         conditioning = (driver_embedding
                         if self.rollout_mode == "hybrid" or self.long_history else None)
-        base = self._residual_prediction(kin, present, conditioning)
+        lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
+        blocked_now = v5_acc = v5_sample = v5_hazard = None
+        v5_precomputed = None
+        merge_prob = None
+        if getattr(self, "lane_v5", None) is not None and bool(self.hdv.courtesy_inputs):
+            # V10COURTESY: the residual consumes the merge head's current probability,
+            # so the lane-v5 pass runs first (forward values are unchanged; frozen
+            # dropout / deterministic features make the reorder exact).
+            v5_precomputed = self._lane_v5_forward(
+                kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
+                driver_history_mask, merge_wait=state.get("merge_wait_s"))
+            with torch.no_grad():
+                p_merge = torch.softmax(v5_precomputed[0].float(), dim=-1)[..., 1]
+                merge_prob = torch.nan_to_num(p_merge, nan=0.0).to(kin.dtype)
+        courtesy = None
+        if bool(self.hdv.courtesy_inputs):
+            courtesy = courtesy_features(
+                kin, present, self.physics, lane_age=lane_age,
+                merge_wait_s=state.get("merge_wait_s"), merge_prob=merge_prob)
+        base = self._residual_prediction(kin, present, conditioning, courtesy)
         controller_emb = self._controller_embedding(
             controller_id, is_cav, (b, slots), kin.dtype, kin.device,
             action_command=action_command)
@@ -610,9 +650,9 @@ class WmSModel(nn.Module):
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
-        lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
-        blocked_now = v5_acc = v5_sample = v5_hazard = None
-        if getattr(self, "lane_v5", None) is not None:
+        if v5_precomputed is not None:
+            lane_logits, v5_acc, v5_sample, v5_hazard = v5_precomputed
+        elif getattr(self, "lane_v5", None) is not None:
             lane_logits, v5_acc, v5_sample, v5_hazard = self._lane_v5_forward(
                 kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask, merge_wait=state.get("merge_wait_s"))
