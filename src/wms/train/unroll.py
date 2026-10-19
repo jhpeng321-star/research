@@ -165,7 +165,8 @@ class UnrollRunner:
             rate_reference = probe["predicted_lane_change_rate"]
         model = self.model
         inp = prepare_inputs(batch, model, cfg, self.device, unroll_steps)
-        targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device)
+        targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device,
+                                physics=model.physics)
         self.composer.prepare(targets)
         if pair_reference is not None:
             targets.prepared["paired_return_reference"] = pair_reference

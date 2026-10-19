@@ -79,10 +79,12 @@ class _HuberTerm(LossTerm):
 
     def __call__(self, ctx: LossContext) -> Optional[TermValue]:
         huber = self._huber(ctx)
-        mult = self._step_multiplier(ctx)
+        mult = self._step_multiplier(ctx)          # V10BRAKEWAVE follower-chain weight
         if mult is not None:
             huber = huber * mult
-        comp = (huber * ctx.w * ctx.m).sum() / ctx.targets.denom
+        boost = ctx.courtesy_boost                 # V10COURTESY yield-event weight
+        m = ctx.m if boost is None else ctx.m * boost.to(ctx.m.dtype)
+        comp = (huber * ctx.w * m).sum() / ctx.targets.denom
         return TermValue(self.weight * comp, log=comp)
 
 

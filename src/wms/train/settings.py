@@ -287,6 +287,10 @@ class TrainSettings:
     lane_v5_mainline: str = "default"
     lane_flow_weight: float = 0.0
     lane_flow_balance: float = 0.0
+    # V10COURTESY (2026-10-19, default OFF): learned courtesy inputs and the
+    # position/speed event boost for lane-1 followers near a merging ramp car.
+    courtesy_inputs: bool = False
+    courtesy_weight: float = 1.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -525,6 +529,11 @@ class TrainSettings:
                  "plateau_patience/min_steps must be >= 1 and plateau_max_steps >= 0")
         _require(math.isfinite(float(self.plateau_min_delta)) and float(self.plateau_min_delta) >= 0.0,
                  "plateau_min_delta must be finite and non-negative")
+        _require(isinstance(self.courtesy_inputs, bool),
+                 "courtesy_inputs must be a boolean")
+        _require(math.isfinite(float(self.courtesy_weight))
+                 and float(self.courtesy_weight) >= 1.0,
+                 "courtesy_weight must be finite and >= 1 (1 = off)")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
