@@ -154,7 +154,12 @@
       "data.replay.probe_windows=64",
       "model.checkpoint_step=true"
     ],
-    "pass_through_note": "Verbatim --set items. lane_learnable is the physics key physics.lane_learnable (c4/v10unblock, merged); the c4/v10horizon curriculum + mixed-prioritised-replay keys are NOT merged yet and stay in wm.extra_set_horizon (empty until that branch lands). The loop never parses or renames them.",
+    "extra_set_laneflow": [
+      "loss.lane_flow.weight=1.0",
+      "loss.lane_flow.balance=0.5"
+    ],
+    "laneflow_note": "FIX 2 (LANEFLOW.md): the on-policy count-matching lane-change loss (loss.lane_flow, V8LANE) under physics.lane_learnable. wm.extra_set_laneflow is merged into every iteration >= 1 WM fine-tune (never iteration 0). weight 1.0 / balance 0.5 match the trained V8LANE checkpoint (configs/c4_wm_v8lane_short3.toml); the term needs lane_model='hazard_v5' (v5m refresh) and no longer needs model.lane_v5_mainline='budget'.",
+    "pass_through_note": "Verbatim --set items. lane_learnable is the physics key physics.lane_learnable (c4/v10unblock, merged); the c4/v10horizon curriculum + mixed-prioritised-replay keys are NOT merged yet and stay in wm.extra_set_horizon (empty until that branch lands). wm.extra_set_laneflow holds the FIX 2 loss.lane_flow keys merged for iterations >= 1. The loop never parses or renames them.",
     "timeout_s": 10800,
     "val_metric": "mean_position",
     "val_tolerance": 0.3

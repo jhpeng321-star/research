@@ -11,6 +11,8 @@ import sys
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location("loop_v10", REPO / "scripts" / "c4" / "loop_v10.py")
 LV = importlib.util.module_from_spec(_spec)
@@ -99,6 +101,28 @@ def test_pass_through_keys_are_verbatim(tmp_path):
     iter0 = LV.plan_iteration0(cfg_train, LV._paths(tmp_path, 0, cfg_train), 200)
     cmd0 = next(s for s in iter0 if s["name"] == "wm_finetune_iter0")["cmd"]
     assert "physics.lane_learnable=true" in cmd0
+
+
+def test_laneflow_keys_merge_only_for_iterations_ge_1(tmp_path):
+    keys = CFG["wm"]["extra_set_laneflow"]
+    assert keys == ["loss.lane_flow.weight=1.0", "loss.lane_flow.balance=0.5"]
+    assert LV.wm_laneflow_keys(CFG) == keys
+    stages = LV.plan_iteration(CFG, 1, _paths(tmp_path), LV.allocate_seeds(CFG, n=2), 200)
+    wm = next(s for s in stages if s["name"] == "wm_finetune")
+    for key in keys:
+        assert key in wm["cmd"], key
+    # iteration 0 (train mode) never takes the FIX 2 keys
+    cfg_train = json.loads(json.dumps(CFG))
+    cfg_train["wm"]["iter0_mode"] = "train"
+    iter0 = LV.plan_iteration0(cfg_train, LV._paths(tmp_path, 0, cfg_train), 200)
+    cmd0 = next(s for s in iter0 if s["name"] == "wm_finetune_iter0")["cmd"]
+    for key in keys:
+        assert key not in cmd0, key
+    # validation: the list must be a list of strings
+    bad = json.loads(json.dumps(CFG))
+    bad["wm"]["extra_set_laneflow"] = "loss.lane_flow.weight=1.0"
+    with pytest.raises(ValueError):
+        LV.validate_config(bad)
 
 
 def test_policy_config_is_entrance_zone_native():

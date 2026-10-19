@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 import torch
@@ -249,6 +250,39 @@ def test_lane_flow_on_hazard_v5_rollout_reaches_mainline_heads_only():
     for key in ("position", "speed", "lane_event"):
         if key in off_rec:
             assert rec[key] == off_rec[key], key
+
+
+def _flow_grads_learnable(extra):
+    """V10UNBLOCK: the same hazard_v5 unroll as ``_flow_grads`` with ``lane_learnable`` on
+    (every head samples, every present HDV step is an at-risk row)."""
+    model, settings = _v5_model(["loss.lane_event.weight=0.0", *extra])
+    model.physics = replace(model.physics, lane_learnable=True)
+    model.lane_hazard_detach = True
+    model.train()
+    runner = UnrollRunner(model, settings, build_loss(settings, physics=model.physics),
+                          projection=None, device=torch.device("cpu"))
+    rec = runner.run(_ramp_batch(), unroll_steps=12, backward=True, truncation_steps=5)
+    return model, rec, model.lane_v5.heads.weight.grad
+
+
+def test_lane_flow_counts_and_gradient_under_lane_learnable():
+    # all heads sample and every present HDV row is at risk; lane_event is off so the only
+    # mainline-head objective is the count-matching lane_flow term.
+    off_model, off_rec, off = _flow_grads_learnable(["loss.lane_flow.weight=0.0"])
+    model, rec, on = _flow_grads_learnable(["loss.lane_flow.weight=1.0",
+                                            "loss.lane_flow.balance=0.5"])
+    assert model.physics.lane_learnable and model._samples_lanes
+    assert off_model._samples_lanes and "lane_flow" not in off_rec
+    assert model.emit_merge_hazard and math.isfinite(rec["lane_flow"])
+    # per-step P over the at-risk mainline rows: lane-1 cars can overtake, none can return
+    assert rec["lane_flow_overtake_expected"] > 0.0
+    assert rec["lane_flow_overtake_recorded"] == 0.0
+    assert rec["lane_flow_return_recorded"] == 0.0 and rec["lane_flow_return_expected"] >= 0.0
+    # the count term trains the overtake head (row 0) and leaves the merge head (row 2) alone;
+    # with lane_event off the count term is the ONLY objective on the mainline heads
+    off_g = torch.zeros_like(on) if off is None else off
+    assert float(on[0].abs().sum()) > 0.0 and float(off_g[0].abs().sum()) == 0.0
+    torch.testing.assert_close(on[2], off_g[2])
 
 
 def test_plumbing_and_validation():
