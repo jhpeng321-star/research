@@ -177,6 +177,21 @@
     "entrance_zone_main_m": 25.0,
     "entrance_zone_ramp_m": 25.0
   },
+  "lane_mode_curriculum": {
+    "_note": "V10LANEOPT (c4/v10laneopt): staged mainline lane changes. Iterations in courtesy_iterations run physics.mainline_lane_mode='courtesy' (merges fully learned + only the learned lane-1 -> lane-0 overtakes of HDVs in the approach zone upstream of the merge). Later iterations switch to 'free' only when the lane_calib JSON of the WM being fine-tuned (written by the c4/v10lanecal stage next to that WM's checkpoint) is within tolerance on the gating heads; a missing/malformed lane_calib keeps 'courtesy'.",
+    "enabled": true,
+    "courtesy_iterations": [
+      1,
+      2
+    ],
+    "tolerance": 0.2,
+    "gating_heads": [
+      "overtake",
+      "return"
+    ],
+    "calib_file": "lane_calib.json",
+    "iter0_mode": "free"
+  },
   "check": {
     "seeds": [
       969824,

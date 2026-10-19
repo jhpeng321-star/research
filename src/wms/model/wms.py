@@ -810,6 +810,12 @@ class WmSModel(nn.Module):
             logits, head, acts = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
                                                     self.physics, offsets, merge_wait,
                                                     self.lane_v5_merge_calib)
+            if getattr(self.physics, "lane_learnable", False):
+                # V10LANEOPT: in 'courtesy' the rollout decision of the mainline heads is frozen
+                # outside the learned lane-1 -> lane-0 approach-zone overtake; the merge head and
+                # the teacher-forced lane loss are untouched.
+                logits = lv5.restrict_courtesy_logits(logits, inst["lane"], inst["s"], learned,
+                                                      self.physics)
         hazard = None
         if getattr(self, "emit_merge_hazard", False):
             # V8WM merge-timing loss: the own-head logit with gradient on the rollout state.
@@ -823,7 +829,10 @@ class WmSModel(nn.Module):
             if getattr(self.physics, "lane_learnable", False):
                 # V10UNBLOCK: all three heads sample their own calibrated probability,
                 # independent of the lane_decision AP gate and of the mainline rule.
-                sample = learned.bool().clone()
+                # V10LANEOPT mainline_lane_mode='courtesy': only the merge head and the
+                # lane-1 -> lane-0 approach-zone overtake draw (rest of the mainline frozen).
+                sample = lv5.courtesy_sample_mask(learned.bool().clone(), inst["lane"], inst["s"],
+                                                  learned, self.physics)
             elif self.lane_decision == "gated":
                 sample = lv5.sample_mask(inst["lane"], learned, lv5.gate_open(
                     self.lane_v5_head_ap_effective(), self.lane_v5_gates))

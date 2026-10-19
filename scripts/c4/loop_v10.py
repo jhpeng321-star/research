@@ -62,6 +62,17 @@ ITER_STAGES = ("collect", "convert", "wm_finetune", "wm_check", "policy_update",
                "rollback")
 SHIP_STAGES = ("ship_cpuN",)
 PAIR_ROWS = ("total", "source_wait", "on_road")
+#: V10LANEOPT (2026-10-19): staged mainline lane-change modes of ``physics.mainline_lane_mode``.
+LANE_MODES = ("free", "courtesy")
+#: V10LANEOPT: own top-level config key ``lane_mode_curriculum`` (disabled = always 'free').
+LANE_MODE_CURRICULUM_DEFAULTS = {
+    "enabled": False,
+    "courtesy_iterations": [1, 2],
+    "tolerance": 0.2,
+    "gating_heads": ["overtake", "return"],
+    "calib_file": "lane_calib.json",
+    "iter0_mode": "free",
+}
 
 
 def utcnow() -> str:
@@ -143,11 +154,116 @@ def validate_config(cfg: dict) -> None:
         raise ValueError("wm.stage_steps must be a non-empty list")
     if not os.path.isdir(cfg["hosts"]["wm"]["code_root"]) and "REPO_SHA" not in cfg["hosts"]["wm"]["code_root"]:
         raise ValueError(f"hosts.wm.code_root does not exist: {cfg['hosts']['wm']['code_root']}")
+    cur = cfg.get("lane_mode_curriculum")
+    if cur is not None and not isinstance(cur, dict):
+        raise ValueError("lane_mode_curriculum must be a table")
+    if isinstance(cur, dict):
+        if "enabled" in cur and not isinstance(cur["enabled"], bool):
+            raise ValueError("lane_mode_curriculum.enabled must be a boolean")
+        if "courtesy_iterations" in cur and not isinstance(cur["courtesy_iterations"], list):
+            raise ValueError("lane_mode_curriculum.courtesy_iterations must be a list")
+        if "gating_heads" in cur and not all(isinstance(h, str) for h in cur["gating_heads"]):
+            raise ValueError("lane_mode_curriculum.gating_heads must be a list of head names")
+        if "iter0_mode" in cur and cur["iter0_mode"] not in LANE_MODES:
+            raise ValueError(f"lane_mode_curriculum.iter0_mode must be one of {LANE_MODES}")
+        if "tolerance" in cur and not (isinstance(cur["tolerance"], (int, float))
+                                       and math.isfinite(float(cur["tolerance"]))
+                                       and float(cur["tolerance"]) >= 0.0):
+            raise ValueError("lane_mode_curriculum.tolerance must be finite and >= 0")
     guard = cfg.get("execute_guard", {})
     if guard.get("require_owner_approval") and "owner_approved" not in guard:
         raise ValueError("execute_guard.require_owner_approval needs execute_guard.owner_approved")
     for text in _all_strings(cfg):
         refuse_restricted(text)
+
+
+# --------------------------------------------------------------------------- lane-mode curriculum
+def lane_mode_curriculum(cfg: dict) -> dict:
+    """The ``lane_mode_curriculum`` key merged over :data:`LANE_MODE_CURRICULUM_DEFAULTS`."""
+    cur = dict(LANE_MODE_CURRICULUM_DEFAULTS)
+    cur.update(cfg.get("lane_mode_curriculum", {}) or {})
+    return cur
+
+
+def lane_calib_path(paths: dict, cfg: dict) -> Path:
+    """Path of the lane_calib JSON (written by the c4/v10lanecal stage) of the WM in use.
+
+    The calibration that gates the switch concerns the WM the next iteration fine-tunes from,
+    so it sits next to that WM's checkpoint (``paths['wm_ckpt']``).
+    """
+    return Path(str(paths["wm_ckpt"])).parent / str(lane_mode_curriculum(cfg)["calib_file"])
+
+
+def read_lane_calib(path) -> dict | None:
+    """Read the lane_calib JSON, or ``None`` when absent/unreadable/malformed (robust)."""
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return raw if isinstance(raw, dict) else None
+
+
+def _head_rel_error(record) -> float | None:
+    """Signed WM-vs-SUMO relative error of one lane_calib head (any of the documented fields)."""
+    if not isinstance(record, dict):
+        return None
+    rel = record.get("rel_error")
+    if isinstance(rel, (int, float)) and math.isfinite(float(rel)):
+        return float(rel)
+    ratio = record.get("ratio")
+    if isinstance(ratio, (int, float)) and math.isfinite(float(ratio)):
+        return float(ratio) - 1.0
+    wm, sumo = record.get("wm"), record.get("sumo")
+    if (isinstance(wm, (int, float)) and isinstance(sumo, (int, float))
+            and math.isfinite(float(wm)) and math.isfinite(float(sumo)) and float(sumo) != 0.0):
+        return float(wm) / float(sumo) - 1.0
+    return None
+
+
+def lane_calib_verdict(calib, curriculum: dict) -> dict:
+    """Within tolerance on every gating head?  Missing/malformed calibration -> False."""
+    tol = float(curriculum["tolerance"])
+    heads = list(curriculum["gating_heads"])
+    if not isinstance(calib, dict):
+        return {"calibrated": False, "tolerance": tol, "heads": {}, "reason": "lane_calib missing"}
+    table = calib.get("heads")
+    if not isinstance(table, dict):
+        flag = calib.get("within_tolerance")
+        calibrated = flag is True
+        return {"calibrated": calibrated, "tolerance": tol, "heads": {},
+                "reason": ("top-level within_tolerance" if isinstance(flag, bool)
+                           else "lane_calib has no heads")}
+    per, ok = {}, True
+    for head in heads:
+        rel = _head_rel_error(table.get(head))
+        within = rel is not None and abs(rel) <= tol + 1e-9
+        ok = ok and within
+        per[head] = {"rel_error": rel, "within": within}
+    return {"calibrated": ok, "tolerance": tol, "heads": per,
+            "reason": "within tolerance" if ok else "outside tolerance or missing heads"}
+
+
+def lane_mode_for_iteration(cfg: dict, k: int, calib=None) -> dict:
+    """``physics.mainline_lane_mode`` of iteration ``k`` (courtesy stage, then calibrated free).
+
+    Iterations in ``courtesy_iterations`` are forced to 'courtesy'; later iterations switch to
+    'free' only when ``calib`` (the lane_calib JSON of the WM being fine-tuned) is within
+    tolerance on the gating heads.  A missing/malformed calibration keeps 'courtesy' (robust).
+    """
+    cur = lane_mode_curriculum(cfg)
+    if not cur["enabled"]:
+        return {"iteration": k, "mode": "free", "reason": "curriculum disabled", "calib": None,
+                "curriculum": cur}
+    if k == 0:
+        mode = cur["iter0_mode"] if cur["iter0_mode"] in LANE_MODES else "free"
+        return {"iteration": k, "mode": mode, "reason": "iteration 0", "calib": None,
+                "curriculum": cur}
+    if k in [int(x) for x in cur["courtesy_iterations"]]:
+        return {"iteration": k, "mode": "courtesy", "reason": f"courtesy iteration {k}",
+                "calib": None, "curriculum": cur}
+    verdict = lane_calib_verdict(calib, cur)
+    return {"iteration": k, "mode": "free" if verdict["calibrated"] else "courtesy",
+            "reason": f"post-courtesy: {verdict['reason']}", "calib": verdict, "curriculum": cur}
 
 
 # --------------------------------------------------------------------------- seeds
@@ -356,15 +472,18 @@ def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
                      f"{paths['wm_out']} (wm.iter0_mode='existing'; WM stage skipped)"),
         }]
     wm_out = paths["wm_out"]
+    mode0 = lane_mode_for_iteration(cfg, 0)["mode"]
     stages = [{
         "name": "wm_finetune_iter0",
         "host": "wm",
         "cwd": cfg["hosts"]["wm"]["code_root"],
         "cmd": _wm_cmd(cfg, wm_out, paths["wm_ckpt"], cfg["wm"]["config_iter0"],
-                       cfg["wm"].get("extra_set_iter0", [])),
+                       [*cfg["wm"].get("extra_set_iter0", []),
+                        f"physics.mainline_lane_mode={mode0}"]),
         "env": _wm_env(cfg, None),
         "out": wm_out,
-        "note": "WM v5m_ref fine-tuned with physics.lane_learnable on native/random TRAIN data only",
+        "note": ("WM v5m_ref fine-tuned with physics.lane_learnable on native/random TRAIN data "
+                 f"only (mainline_lane_mode={mode0})"),
     }, {
         "name": "wm_check_iter0",
         "host": "wm",
@@ -408,6 +527,9 @@ def _policy_cmd(cfg: dict, out: str, wm_ckpt: str, resume: str | None, updates: 
 
 def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) -> list:
     c = cfg["collect"]
+    lane_mode = lane_mode_for_iteration(cfg, k, read_lane_calib(lane_calib_path(paths, cfg)))
+    wm_extra = [*cfg["wm"].get("extra_set", []), *cfg["wm"].get("extra_set_horizon", []),
+                f"physics.mainline_lane_mode={lane_mode['mode']}"]
     stages = []
     if c.get("ship_commands"):
         stages.append({
@@ -446,12 +568,12 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
         "name": "wm_finetune",
         "host": "wm",
         "cwd": cfg["hosts"]["wm"]["code_root"],
-        "cmd": _wm_cmd(cfg, paths["wm_out"], paths["wm_ckpt"], cfg["wm"]["config"],
-                       cfg["wm"].get("extra_set", []) + cfg["wm"].get("extra_set_horizon", [])),
+        "cmd": _wm_cmd(cfg, paths["wm_out"], paths["wm_ckpt"], cfg["wm"]["config"], wm_extra),
         "env": _wm_env(cfg, paths["converted"]),
         "out": paths["wm_out"],
         "note": ("physics.lane_learnable passed through verbatim; c4/v10horizon keys in "
-                 "extra_set_horizon are appended only once that branch lands (empty by default)"),
+                 "extra_set_horizon are appended only once that branch lands (empty by default); "
+                 f"physics.mainline_lane_mode={lane_mode['mode']} ({lane_mode['reason']})"),
     }, {
         "name": "wm_check",
         "host": "wm",
@@ -729,6 +851,12 @@ def plan_text(cfg: dict) -> str:
                "policy_update -> sumo_check -> rollback")
     out.append(f"  WM pass-through : {cfg['wm'].get('extra_set', [])} "
                f"(horizon, disabled until c4/v10horizon lands: {cfg['wm'].get('extra_set_horizon', [])})")
+    cur = lane_mode_curriculum(cfg)
+    out.append(f"  lane_mode       : enabled={cur['enabled']} courtesy_iterations={cur['courtesy_iterations']} "
+               f"tolerance={cur['tolerance']} gating_heads={cur['gating_heads']} "
+               f"calib_file={cur['calib_file']} (iteration k mode: "
+               + ", ".join(f"{k}={lane_mode_for_iteration(cfg, k)['mode']}"
+                           for k in range(int(cfg["iterations"]) + 1)) + ")")
     out.append(f"  policy config   : {cfg['policy']['config']} (entrance_zone_native=true)")
     out.append(f"  SUMO check      : seeds {CHECK_SEEDS[0]}-{CHECK_SEEDS[1]} vs {cfg['check']['native_ref']} "
                f"(demands {cfg['check'].get('demands')}, penetrations {cfg['check'].get('penetrations')})")

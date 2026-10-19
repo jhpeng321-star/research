@@ -648,6 +648,62 @@ def mainline_rows(lane: Tensor, learned: Tensor) -> Tensor:
     return learned.bool() & (lane <= 1)
 
 
+#: V10LANEOPT (2026-10-19) ``physics.mainline_lane_mode`` (``lane_learnable`` only):
+#: ``free`` = every learned head draws its own calibrated probability (current behaviour);
+#: ``courtesy`` = merges stay fully learned while the mainline heads only decide the learned
+#: lane-1 -> lane-0 overtake of HDVs inside the courtesy approach zone upstream of the merge
+#: (returns 0 -> 1 and overtakes elsewhere are frozen at the physics prior).  The lane-head LOSS
+#: (``recorded_rows``) is identical in both modes, so the free stage starts calibrated.
+MAINLINE_LANE_MODES = ("free", "courtesy")
+
+
+def courtesy_zone_rows(lane: Tensor, s: Tensor, learned: Tensor,
+                       physics: PhysicsConfig) -> Tensor:
+    """``[B, K]`` mainline rows allowed to draw under ``mainline_lane_mode='courtesy'``.
+
+    Only lane-1 learned (HDV) slots at ``s`` inside the approach zone
+    ``[merge_zone_s1_m - mainline_courtesy_zone_m, merge_zone_s1_m]`` (model frame, acceleration
+    lane end = ``merge_zone_s1_m``) qualify; lane-0 returns never do.  Ramp merges are not
+    mainline rows and are unaffected (see :func:`courtesy_sample_mask`).
+    """
+    end = physics.merge_zone_s1_m
+    zone = float(getattr(physics, "mainline_courtesy_zone_m", 0.0))
+    return (mainline_rows(lane, learned) & (lane == 1)
+            & (s >= end - zone) & (s <= end))
+
+
+def courtesy_sample_mask(sample: Tensor, lane: Tensor, s: Tensor, learned: Tensor,
+                         physics: PhysicsConfig) -> Tensor:
+    """Restrict a lane-v5 draw mask to the ``courtesy`` mainline moves (rollout only).
+
+    The merge head keeps every learned draw; the mainline heads keep only the courtesy overtakes
+    of :func:`courtesy_zone_rows`.  Bit-identical to ``sample`` when
+    ``physics.mainline_lane_mode`` is ``'free'``.
+    """
+    if getattr(physics, "mainline_lane_mode", "free") != "courtesy":
+        return sample
+    allowed = ~mainline_rows(lane, learned) | courtesy_zone_rows(lane, s, learned, physics)
+    return sample.bool() & allowed
+
+
+def restrict_courtesy_logits(logits: Tensor, lane: Tensor, s: Tensor, learned: Tensor,
+                             physics: PhysicsConfig) -> Tensor:
+    """Mask the target-lane logits of the mainline moves ``courtesy`` disables.
+
+    Applies on the rollout decision only (the teacher-forced lane-head loss is unaffected): a
+    blocked mainline row's transition entry becomes :data:`MASKED_LOGIT`, so both the sampled
+    draw and the argmax fallback stay in the current lane.  Bit-identical to ``logits`` when
+    ``physics.mainline_lane_mode`` is ``'free'``.
+    """
+    if getattr(physics, "mainline_lane_mode", "free") != "courtesy":
+        return logits
+    main = mainline_rows(lane, learned)
+    block = main & ~courtesy_zone_rows(lane, s, learned, physics)
+    target = _lookup(TARGET_OF_LANE, lane)
+    value = logits.gather(-1, target.unsqueeze(-1)).squeeze(-1)
+    value = torch.where(block, torch.full_like(value, MASKED_LOGIT), value)
+    return logits.scatter(-1, target.unsqueeze(-1), value.unsqueeze(-1))
+
 def budget_choice(choice: Tensor, logits: Tensor, feasible: Tensor, lane: Tensor,
                   learned: Tensor, budget: Optional[Tensor], uniform: Tensor,
                   mode: str) -> tuple[Tensor, Tensor]:

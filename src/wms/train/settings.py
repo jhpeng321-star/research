@@ -236,6 +236,10 @@ class TrainSettings:
     # V10UNBLOCK (2026-10-19, default OFF = bit-identical): physical envelope + all-risk lane
     # learning (wms.physics.config.PhysicsConfig.lane_learnable).
     lane_learnable: bool = False
+    # V10LANEOPT (2026-10-19, default 'free' = current behaviour): staged mainline lane changes
+    # (wms.physics.config.PhysicsConfig.mainline_lane_mode).
+    mainline_lane_mode: str = "free"
+    mainline_courtesy_zone_m: float = 300.0
     # V7FT (2026-10-17, default OFF): merge-zone calibration loss (wms.train.losses.merge).
     merge_loss_speed_weight: float = 0.0
     merge_loss_discharge_weight: float = 0.0
