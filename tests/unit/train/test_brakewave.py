@@ -15,7 +15,8 @@ from wms.config.train import LossConfig, TrainConfig
 from wms.data.replay_flags import BRAKE_EVENT_ACCEL_MPS2, window_brake_event
 from wms.train.losses.base import LossContext, UnrollTargets
 from wms.train.losses.trajectory import (
-    PositionLoss, SpeedLoss, brake_follow_mask, brake_follow_step_weights)
+    PositionLoss, SpeedLoss, brake_follow_cav_step_weights, brake_follow_mask,
+    brake_follow_step_weights)
 from wms.train.replay import PriorityReplayDataset, ReplayRefusal
 from wms.train.settings import TrainSettings
 
@@ -33,8 +34,10 @@ def _window(b=1, steps=4, k=2):
     return {"states": states, "present": present, "is_cav": is_cav}
 
 
-def _targets(steps=4, k=2):
+def _targets(steps=4, k=2, cav_leader=False):
     rec = _window(steps=steps, k=k)
+    if cav_leader:
+        rec["is_cav"][:, 1:, 0] = True
     states = torch.from_numpy(rec["states"])
     valid = torch.ones(1, steps + 1, k, dtype=torch.bool)
     weights = torch.ones(1, steps, 1)
@@ -43,7 +46,7 @@ def _targets(steps=4, k=2):
         states=states, n_steps=steps, weights=weights, hdv_mask=hdv,
         aux_mask=hdv, aux_count=int(hdv.sum()), denom=(weights * hdv).sum(),
         lane_target=states[:, 1:, :, 1:4].argmax(-1), loss_valid=valid,
-        is_cav=torch.zeros_like(valid), dt_s=0.5, position_delta_m=5.0,
+        is_cav=torch.from_numpy(rec["is_cav"]), dt_s=0.5, position_delta_m=5.0,
         speed_delta_mps=1.0, history_lane_head=False)
 
 
@@ -115,6 +118,35 @@ def test_brake_follow_mask_selects_hdv_followers_only():
     assert float(multiplier[0, 0, 0]) == pytest.approx(1.0)
 
 
+def test_brake_follow_cav_mask_flags_followers_of_braking_cav_leader():
+    targets = _targets(cav_leader=True)
+    mask = brake_follow_mask(targets, leader_is_cav=True)
+    assert bool(mask[0, :, 1].all())       # HDV follower behind the braking CAV leader
+    assert not bool(mask[0, :, 0].any())   # the CAV leader has no same-lane leader ahead
+    assert "brake_follow_cav" in targets.prepared
+    assert "brake_follow" not in targets.prepared
+    multiplier = brake_follow_cav_step_weights(targets, 2.0)
+    assert float(multiplier[0, 0, 1]) == pytest.approx(3.0)
+    assert float(multiplier[0, 0, 0]) == pytest.approx(1.0)
+    hdv_targets = _targets()
+    assert not bool(brake_follow_mask(hdv_targets, leader_is_cav=True).any())
+    assert brake_follow_cav_step_weights(hdv_targets, 0.0) is None
+
+
+def test_brake_follow_cav_weight_emphasises_cav_led_followers_and_defaults_off():
+    targets = _targets(cav_leader=True)
+    plain = PositionLoss(1.0)(_ctx(targets))
+    weighted = PositionLoss(1.0, brake_follow_cav_weight=2.0)(_ctx(targets))
+    assert float(weighted.value) > float(plain.value)
+    speed_plain = SpeedLoss(1.0)(_ctx(targets))
+    speed_weighted = SpeedLoss(1.0, brake_follow_cav_weight=2.0)(_ctx(targets))
+    assert float(speed_weighted.value) >= float(speed_plain.value)
+    off_targets = _targets(cav_leader=True)
+    off = PositionLoss(1.0, brake_follow_cav_weight=0.0)(_ctx(off_targets))
+    assert torch.equal(off.value, plain.value)
+    assert "brake_follow_cav" not in off_targets.prepared
+
+
 def test_brake_follow_weight_emphasises_followers_and_can_be_off():
     targets = _targets()
     plain = PositionLoss(1.0)(_ctx(targets))
@@ -133,18 +165,26 @@ def test_config_keys_default_off_and_roundtrip():
     cfg = TrainConfig()
     flat = cfg.to_legacy_flat()
     assert "brake_follow_weight" not in flat
+    assert "brake_follow_cav_weight" not in flat
     assert "replay_brake_oversample" not in flat
     assert "brake_follow_weight" in OMIT_WHEN_DEFAULT
+    assert "brake_follow_cav_weight" in OMIT_WHEN_DEFAULT
     assert "replay_brake_oversample" in OMIT_WHEN_DEFAULT
     assert FLAT_TO_PATH["brake_follow_weight"] == "loss.brake_follow_weight"
+    assert FLAT_TO_PATH["brake_follow_cav_weight"] == "loss.brake_follow_cav_weight"
     assert FLAT_TO_PATH["replay_brake_oversample"] == "data.replay.brake_oversample"
-    on = TrainConfig(loss=LossConfig(brake_follow_weight=3.0),
+    on = TrainConfig(loss=LossConfig(brake_follow_weight=3.0, brake_follow_cav_weight=2.0),
                      data=DataConfig(replay=ReplayConfig(enabled=True,
                                                          brake_oversample=5.0)))
     settings = TrainSettings.from_config(on)
     assert settings.brake_follow_weight == pytest.approx(3.0)
+    assert settings.brake_follow_cav_weight == pytest.approx(2.0)
     assert settings.replay_brake_oversample == pytest.approx(5.0)
     with pytest.raises(ValueError):
         TrainSettings(brake_follow_weight=0.5)
+    with pytest.raises(ValueError):
+        TrainSettings(brake_follow_cav_weight=-0.5)
+    with pytest.raises(ValueError):
+        LossConfig(brake_follow_cav_weight=-0.5)
     with pytest.raises(ValueError):
         ReplayConfig(brake_oversample=0.5)

@@ -64,6 +64,9 @@ class TrainSettings:
     # V10BRAKEWAVE (default 1 = OFF, bit-identical): per-step position/speed multiplier on
     # followers whose same-lane recorded leader (<= 40 m) is decelerating below -1 m/s^2.
     brake_follow_weight: float = 1.0
+    # V10CAVFOLLOW (default 0 = OFF, bit-identical): extra per-step position/speed multiplier
+    # on HDV followers of a recorded same-lane CAV leader (<= 40 m) braking below -1 m/s^2.
+    brake_follow_cav_weight: float = 0.0
     # BRAKE_DIAG V10PERSIST (default 0 = OFF, bit-identical): multi-step onset persistence,
     # onset quantiles and optional inverse-frequency event balancing.
     brake_persist_weight: float = 0.0
@@ -547,11 +550,13 @@ class TrainSettings:
                      self.replay_error_max_boost, self.replay_error_alpha))
                  and math.isfinite(float(self.brake_follow_weight))
                  and float(self.brake_follow_weight) >= 1.0
+                 and math.isfinite(float(self.brake_follow_cav_weight))
+                 and float(self.brake_follow_cav_weight) >= 0.0
                  and math.isfinite(float(self.replay_error_decay))
                  and 0.0 <= float(self.replay_error_decay) < 1.0
                  and int(self.replay_probe_windows) >= 0 and int(self.replay_refresh_every) >= 0,
-                 "replay_* multipliers must be >= 1, error_decay in [0,1), "
-                 "probe_windows/refresh_every >= 0")
+                 "replay_* multipliers must be >= 1, brake_follow_cav_weight >= 0, "
+                 "error_decay in [0,1), probe_windows/refresh_every >= 0")
         _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
             self.brake_persist_weight, self.brake_persist_quantile_weight))
             and math.isfinite(float(self.brake_persist_event_balance))
