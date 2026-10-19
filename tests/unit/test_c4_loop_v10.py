@@ -196,6 +196,21 @@ def test_sumo_check_commands_match_the_native_reference():
     assert "wm_fidelity_v10.py" in checks[3] and "--horizons 10,30,60,120" in checks[3]
 
 
+def test_delay_check_stage_runs_on_the_cpu_box(tmp_path):
+    stages = LV.plan_iteration(CFG, 1, LV._paths(tmp_path, 1, CFG),
+                               LV.allocate_seeds(CFG, n=2), 200)
+    dc = next(s for s in stages if s["name"] == "delay_check")
+    assert dc["host"] == CFG["delay_check"]["host"] == "cpuN"
+    assert "wm_delay_check.py" in dc["cmd"]
+    assert "--horizons 60,120,300" in dc["cmd"] and "--k 8" in dc["cmd"]
+    assert "--entries queue" in dc["cmd"] and "--device cpu" in dc["cmd"]
+    assert "--save-selection" in dc["cmd"] and "--save-pairs-selection" in dc["cmd"]
+    assert CFG["delay_check"]["wm"] in dc["cmd"]
+    rb = next(s for s in stages if s["name"] == "rollback")
+    assert "delay_check.json" in rb["cmd"] and "--config" in rb["cmd"]
+    assert "decide-rollback" in rb["cmd"]
+
+
 def test_parse_pair_lines_computes_policy_minus_native():
     text = "total native=10.0 policy=12.5\nsource_wait: 3.0 1.0\non_road 4\n"
     parsed = LV.parse_pair_lines(text, native="N", policy="P")
@@ -207,15 +222,35 @@ def test_parse_pair_lines_computes_policy_minus_native():
 
 def test_rollback_rule_keeps_and_halves():
     rule = CFG["rollback"]
-    prev = {"sumo_total_D_delta": 0.0, "wm60_hdv_abs_ds": 10.0}
+    prev = {"sumo_total_D_delta": 0.0, "pair_sign_agreement": 0.70,
+            "delay_level_log_ratio": 0.10, "near_cav_abs_ds_10": 3.0}
     keep = LV.decide_rollback(prev, dict(prev), rule, 200)
     assert keep["action"] == "keep" and keep["next_policy_updates"] == 200
-    bad = {"sumo_total_D_delta": 0.05, "wm60_hdv_abs_ds": 11.5}
+    bad = {"sumo_total_D_delta": 0.05, "pair_sign_agreement": 0.50,
+           "delay_level_log_ratio": 0.30, "near_cav_abs_ds_10": 3.5}
     reverted = LV.decide_rollback(prev, bad, rule, 200)
     assert reverted["action"] == "revert" and reverted["next_policy_updates"] == 100
-    assert len(reverted["reasons"]) == 2
-    floored = LV.decide_rollback(prev, {"sumo_total_D_delta": 1.0, "wm60_hdv_abs_ds": 99.0}, rule, 60)
+    assert len(reverted["reasons"]) == 3
+    assert "non-gating" in reverted["reported"]["note"]
+    # each A6 term reverts on its own
+    sign_only = LV.decide_rollback(prev, {**prev, "pair_sign_agreement": 0.60}, rule, 200)
+    assert sign_only["action"] == "revert" and "sign agreement" in sign_only["reasons"][0]
+    ratio_only = LV.decide_rollback(prev, {**prev, "delay_level_log_ratio": 0.25}, rule, 200)
+    assert ratio_only["action"] == "revert" and "log ratio" in ratio_only["reasons"][0]
+    floored = LV.decide_rollback(prev, {**bad, "sumo_total_D_delta": 1.0}, rule, 60)
     assert floored["next_policy_updates"] == rule["min_policy_updates"]
+
+
+def test_rollback_reads_the_delay_check_rollback_block():
+    rule = CFG["rollback"]
+    prev = {"rollback": {"pair_sign_agreement": 0.8, "delay_level_log_ratio": 0.05,
+                         "sumo_total_D_delta": 0.0}}
+    cur = {"rollback": {"pair_sign_agreement": 0.76, "delay_level_log_ratio": 0.07,
+                        "sumo_total_D_delta": 0.0}}
+    assert LV.decide_rollback(prev, cur, rule, 200)["action"] == "keep"
+    worse = {"rollback": {"pair_sign_agreement": 0.6, "delay_level_log_ratio": 0.2,
+                          "sumo_total_D_delta": 0.0}}
+    assert LV.decide_rollback(prev, worse, rule, 200)["action"] == "revert"
 
 
 def test_sample_counter_tracks_mappo_fairness():
