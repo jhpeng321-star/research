@@ -51,6 +51,8 @@ class TrainSettings:
     epochs_per_stage: int = 1
     steps_per_epoch: int = 2000
     batch_size: int = 8
+    #: V10HORIZON: optional per-curriculum-stage batch size (memory control at long horizons).
+    batch_size_per_stage: Optional[tuple[int, ...]] = None
     lr: float = 1.0e-3
     weight_decay: float = 0.0
     grad_clip: float = 1.0
@@ -185,6 +187,22 @@ class TrainSettings:
     mixed_horizon_frac: float = 0.0
     mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
     mixed_horizon_min_stage_s: float = 30.0
+    # V10HORIZON (2026-10-19, default OFF): advance each curriculum stage when the
+    # stage-horizon validation error plateaus instead of after a fixed step budget.
+    plateau_advance: bool = False
+    plateau_patience: int = 3
+    plateau_min_delta: float = 0.01
+    plateau_min_steps: int = 2
+    plateau_max_steps: int = 0
+    # V10HORIZON prioritised mixed replay (default OFF; all multipliers 1 = unchanged).
+    replay_enabled: bool = False
+    replay_merge_oversample: float = 1.0
+    replay_cav_follower_oversample: float = 1.0
+    replay_error_max_boost: float = 8.0
+    replay_error_alpha: float = 1.0
+    replay_error_decay: float = 0.9
+    replay_probe_windows: int = 0
+    replay_refresh_every: int = 0
     # PAIRLOSS (2026-10-14, default OFF): paired-difference loss on paired SUMO branches.
     paired_diff_weight: float = 0.0
     paired_diff_fraction: float = 0.25
@@ -257,6 +275,10 @@ class TrainSettings:
             len(self.stage_steps) == len(self.unroll_curriculum_s)
             and all(int(x) >= 1 for x in self.stage_steps)),
             "stage_steps must give one positive count per curriculum stage")
+        _require(self.batch_size_per_stage is None or (
+            len(self.batch_size_per_stage) == len(self.unroll_curriculum_s)
+            and all(int(x) >= 1 for x in self.batch_size_per_stage)),
+            "batch_size_per_stage must give one positive batch size per curriculum stage")
         _require(float(self.traffic_bin_s) > 0.0 and float(self.traffic_weight) >= 0.0,
                  "traffic_bin_s must be positive and traffic_weight non-negative")
         _require(float(self.traffic_ramp_end_s) > float(self.traffic_ramp_start_s),
@@ -448,6 +470,21 @@ class TrainSettings:
                  and len(self.mixed_horizon_s) >= 1
                  and all(math.isfinite(float(x)) and float(x) > 0 for x in self.mixed_horizon_s),
                  "mixed_horizon_frac must be in [0,1] and mixed_horizon_s positive")
+        _require(isinstance(self.plateau_advance, bool), "plateau_advance must be a boolean")
+        _require(int(self.plateau_patience) >= 1 and int(self.plateau_min_steps) >= 1
+                 and int(self.plateau_max_steps) >= 0,
+                 "plateau_patience/min_steps must be >= 1 and plateau_max_steps >= 0")
+        _require(math.isfinite(float(self.plateau_min_delta)) and float(self.plateau_min_delta) >= 0.0,
+                 "plateau_min_delta must be finite and non-negative")
+        _require(isinstance(self.replay_enabled, bool)
+                 and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
+                     self.replay_merge_oversample, self.replay_cav_follower_oversample,
+                     self.replay_error_max_boost, self.replay_error_alpha))
+                 and math.isfinite(float(self.replay_error_decay))
+                 and 0.0 <= float(self.replay_error_decay) < 1.0
+                 and int(self.replay_probe_windows) >= 0 and int(self.replay_refresh_every) >= 0,
+                 "replay_* multipliers must be >= 1, error_decay in [0,1), "
+                 "probe_windows/refresh_every >= 0")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -460,6 +497,9 @@ class TrainSettings:
             values["unroll_curriculum_s"] = tuple(float(x) for x in values["unroll_curriculum_s"])
         if values.get("stage_steps") is not None:
             values["stage_steps"] = tuple(int(x) for x in values["stage_steps"])
+        if values.get("batch_size_per_stage") is not None:
+            values["batch_size_per_stage"] = tuple(int(x)
+                                                   for x in values["batch_size_per_stage"])
         if values.get("truncation_steps_per_stage") is not None:
             values["truncation_steps_per_stage"] = tuple(
                 int(x) for x in values["truncation_steps_per_stage"])

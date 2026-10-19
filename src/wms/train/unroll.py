@@ -49,6 +49,8 @@ class _Accumulators:
     hybrid_residual: Optional[Tensor] = None
     hybrid_physics: Optional[Tensor] = None
     hybrid_count: int = 0
+    window_err_sum: Optional[Tensor] = None
+    window_valid: Optional[Tensor] = None
 
     def add(self, name: str, value: Tensor) -> None:
         value = value.detach().double()
@@ -128,7 +130,7 @@ class UnrollRunner:
             share: bool = False, capture_shares: bool = False,
             truncation_steps: Optional[int] = None,
             _rate_probe: bool = False, _pair_probe: bool = False,
-            _probe_training: bool = False) -> dict:
+            _probe_training: bool = False, _window_probe: bool = False) -> dict:
         """One pass; returns the log record (``loss`` plus every logged term and monitor).
 
         ``share`` (forward-only diagnostic) adds ``loss_share``: each term's share of the
@@ -265,6 +267,15 @@ class UnrollRunner:
                 ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
                                   rate_reference=rate_reference)
                 breakdown = self.composer(ctx)
+                if _window_probe:
+                    # V10HORIZON: per-window mean positional (Huber) error for priority replay.
+                    masked = ctx.pos_huber.detach() * ctx.m
+                    num = masked.sum(dim=(1, 2))
+                    den = ctx.m.sum(dim=(1, 2))
+                    acc.window_err_sum = (num if acc.window_err_sum is None
+                                          else acc.window_err_sum + num)
+                    acc.window_valid = (den if acc.window_valid is None
+                                        else acc.window_valid + den)
                 if return_on:
                     difference = pair_loss.predicted_return_difference(ctx).detach()
                     pair_difference = (difference if pair_difference is None
@@ -652,7 +663,18 @@ class UnrollRunner:
         if measure:
             shares_by_term, norms = shares.accumulated()
             record.update(loss_share=shares_by_term, loss_grad_norm=norms)
+        if acc.window_err_sum is not None:
+            valid = acc.window_valid.clamp_min(1.0)
+            record["window_position_error"] = (acc.window_err_sum / valid).tolist()
         return record
+
+    @torch.no_grad()
+    def window_errors(self, batch: Mapping[str, Any], *, unroll_steps: int,
+                      truncation_steps: Optional[int] = None) -> list[float]:
+        """V10HORIZON: forward-only mean positional Huber error per window of a batch."""
+        record = self.run(batch, unroll_steps=unroll_steps, backward=False,
+                          truncation_steps=truncation_steps, _window_probe=True)
+        return record["window_position_error"]
 
     def _host_scalars(self, acc: _Accumulators, targets: UnrollTargets,
                       unroll_values: Mapping[str, TermValue]) -> dict:

@@ -6,6 +6,7 @@ chunked unroll live in ``wms.train.losses`` / ``wms.train.unroll``.
 """
 from __future__ import annotations
 
+import math
 import os
 import random
 import shutil
@@ -24,7 +25,7 @@ from wms.data.collate import collate
 from wms.model.checkpoint import save_checkpoint, sha256_file
 from wms.physics.projection import FeasibilityProjection, ProjectionConfig
 
-from .curriculum import StagePlan, stage_plan
+from .curriculum import PlateauRule, StagePlan, stage_plan
 from .logging import JsonlLog, write_json
 from .losses.compose import build_loss
 from .receipt import write_train_receipt
@@ -314,11 +315,31 @@ class WmSTrainer:
             self.model.train()
         return float(np.mean(losses)) if losses else None
 
+    @torch.no_grad()
+    def _replay_probe(self, replay: Any, *, unroll_steps: int) -> Optional[dict]:
+        """V10HORIZON: forward-probe per-window error and update replay high-error priorities.
+
+        Probes an evenly spaced subset of ``replay_probe_windows`` training windows at the
+        stage horizon; returns the priority snapshot (or None when probing is off/empty).
+        """
+        k = int(self.settings.replay_probe_windows)
+        n = len(replay)
+        if k <= 0 or n <= 0:
+            return None
+        indices = (list(range(n)) if k >= n
+                   else sorted({int(i * (n / k)) for i in range(k)}))
+        batch = collate([replay[i] for i in indices])
+        errors = self.runner.window_errors(batch, unroll_steps=int(unroll_steps))
+        replay.update_errors(indices, errors, decay=float(self.settings.replay_error_decay))
+        return replay.error_snapshot()
+
     # -------------------------------------------------------------------- fit
-    def _make_loader(self, sampler: Optional[WeightedRandomSampler]) -> DataLoader:
+    def _make_loader(self, sampler: Optional[WeightedRandomSampler], *,
+                     batch_size: Optional[int] = None) -> DataLoader:
         s = self.settings
         workers = int(s.num_workers)
-        return DataLoader(self.dataset, batch_size=s.batch_size, shuffle=sampler is None,
+        return DataLoader(self.dataset, batch_size=int(batch_size or s.batch_size),
+                          shuffle=sampler is None,
                           sampler=sampler, collate_fn=collate, num_workers=workers,
                           persistent_workers=workers > 0, prefetch_factor=4 if workers > 0 else None,
                           drop_last=False)
@@ -331,6 +352,9 @@ class WmSTrainer:
         s = self.settings
         if s.select_by_long_horizon and self.val_dataset is None:
             raise ValueError("select-by-long-horizon requires a validation dataset")
+        if s.plateau_advance and self.val_dataset is None:
+            raise ValueError("plateau curriculum advancement requires a validation dataset "
+                             "(set selection.select_by_long_horizon or provide val windows)")
         flat = self.cfg.to_legacy_flat()
         out = self.out_dir
         out.mkdir(parents=True, exist_ok=True)
@@ -358,9 +382,14 @@ class WmSTrainer:
         # A mixed dataset supplies per-stage sampling weights (source mix ratio and
         # over-sampling of switch/direct windows visible at that stage's horizon).
         stage_weights = getattr(self.dataset, "stage_weights", None)
+        # V10HORIZON: the priority-replay wrapper, when the assembly built one.
+        replay = (self.dataset if (s.replay_enabled and hasattr(self.dataset, "update_errors")
+                                   and hasattr(self.dataset, "error_snapshot")) else None)
         set_paired_horizon = (getattr(self.dataset, "set_paired_horizon", None)
                               if s.paired_diff_horizon_mode == "stage" else None)
-        loader = (self._make_loader(sampler)
+        per_stage_batch = self.settings.batch_size_per_stage
+        first_batch = per_stage_batch[0] if per_stage_batch else None
+        loader = (self._make_loader(sampler, batch_size=first_batch)
                   if stage_weights is None and set_paired_horizon is None else None)
         selector = LongHorizonSelection()
         # SCHED (default off): multi-horizon selection and short mixed-horizon batches.
@@ -469,6 +498,17 @@ class WmSTrainer:
             done = 0
             steps_before = global_step
             last_validation = None
+            # V10HORIZON (default off): advance the stage when its own-horizon validation
+            # error plateaus; the rule reads only validation values (no numerics change).
+            plateau = (PlateauRule(patience=s.plateau_patience, min_delta=s.plateau_min_delta,
+                                   min_steps=s.plateau_min_steps, max_steps=s.plateau_max_steps)
+                       if s.plateau_advance else None)
+            advanced = False
+            # V10HORIZON: forward-probe the per-window error at the stage horizon and refresh
+            # the replay priorities before this stage's loader is built.
+            replay_snapshot = (self._replay_probe(replay, unroll_steps=plan.unroll_steps)
+                               if replay is not None else None)
+            stage_bs = per_stage_batch[stage_i] if per_stage_batch else None
             if set_paired_horizon is not None:
                 # Retire persistent workers before changing the parent dataset. Each stage's
                 # new loader must copy the updated eligible groups and window horizon.
@@ -478,10 +518,26 @@ class WmSTrainer:
                 gen = torch.Generator().manual_seed(int(s.seed) + 1000 * stage_i)
                 loader = self._make_loader(WeightedRandomSampler(
                     torch.as_tensor(stage_weights(float(stage_s)), dtype=torch.double),
-                    num_samples=len(self.dataset), replacement=True, generator=gen))
+                    num_samples=len(self.dataset), replacement=True, generator=gen),
+                    batch_size=stage_bs)
             elif set_paired_horizon is not None:
-                loader = self._make_loader(sampler)
-            while done < plan.steps:
+                loader = self._make_loader(sampler, batch_size=stage_bs)
+            elif per_stage_batch is not None:
+                # V10HORIZON: per-horizon batch size (long-horizon memory control).
+                loader = self._make_loader(sampler, batch_size=stage_bs)
+            while done < plan.steps and not advanced:
+                if (replay is not None and s.replay_refresh_every > 0 and done > 0
+                        and done % s.replay_refresh_every == 0 and stage_weights is not None):
+                    # V10HORIZON online refresh: re-probe and rebuild the loader so the updated
+                    # high-error priorities take effect without waiting for the next stage.
+                    refreshed = self._replay_probe(replay, unroll_steps=plan.unroll_steps)
+                    if refreshed is not None:
+                        replay_snapshot = refreshed
+                    gen = torch.Generator().manual_seed(int(s.seed) + 1000 * stage_i + done)
+                    loader = self._make_loader(WeightedRandomSampler(
+                        torch.as_tensor(stage_weights(float(stage_s)), dtype=torch.double),
+                        num_samples=len(self.dataset), replacement=True, generator=gen),
+                        batch_size=stage_bs)
                 for batch in loader:
                     last_batch = batch
                     # Closed-loop shares are measured in the real pass so stateful
@@ -513,6 +569,25 @@ class WmSTrainer:
                             global_step % s.val_every == 0 or done >= plan.steps):
                         last_validation = (validate_long(stage_s) if same is None else
                                            validate_long(stage_s, stage_end=done >= plan.steps))
+                    if plateau is not None and (
+                            global_step % s.val_every == 0 or done >= plan.steps):
+                        # V10HORIZON: validate the stage's own (shorter) horizon and advance
+                        # the curriculum once its error plateaus.  Forward-only, no grad.
+                        prow, p_horizon = evaluate_horizon(stage_s)
+                        advanced = plateau.observe(global_step, prow["mean_position"])
+                        prow.update(stage_s=float(stage_s), step=global_step, horizon_s=p_horizon,
+                                    selection=False, early_stop=False,
+                                    plateau_best=(None if not math.isfinite(plateau.best)
+                                                  else float(plateau.best)),
+                                    plateau_stale=int(plateau.stale),
+                                    plateau_observations=int(plateau.observations),
+                                    plateau_advanced=bool(advanced),
+                                    plateau_reason=(plateau.reason or None))
+                        val_by_stage.append(prow)
+                        val_log.append(prow)
+                        if advanced:
+                            last_validation = prow
+                            break
                     latest_every = int(os.environ.get("WMS_LATEST_EVERY", "0") or 0)
                     if latest_every and global_step % latest_every == 0:
                         # crash insurance: weights only, overwritten in place (2026-10-16)
@@ -540,6 +615,22 @@ class WmSTrainer:
                 share_log.append(share_record)
                 if stage_record is not None:
                     stage_record["loss_share"] = share_record["loss_share"]
+            if replay is not None and replay_snapshot is not None:
+                # V10HORIZON: priority-replay bookkeeping of the stage (error/boost stats).
+                if stage_record is not None:
+                    stage_record["replay"] = dict(replay_snapshot)
+                val_log.append({"stage_s": float(stage_s), "step": global_step,
+                                "replay": dict(replay_snapshot)})
+            if plateau is not None:
+                # V10HORIZON: the stage's plateau decision (best/stale/advanced/reason/history).
+                summary = plateau.summary()
+                if stage_record is not None:
+                    stage_record["plateau"] = dict(summary)
+                    stage_record["curriculum_advance"] = bool(plateau.advanced)
+                val_log.append({"stage_s": float(stage_s), "step": global_step,
+                                "plateau": summary,
+                                "curriculum_advance": bool(plateau.advanced),
+                                "curriculum_advance_reason": plateau.reason or None})
             if stage_record is not None and not s.select_by_long_horizon:
                 val_by_stage.append(stage_record)
                 val_log.append(stage_record)

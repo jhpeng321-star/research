@@ -111,6 +111,42 @@ class JamConfig:
 
 
 @config_dataclass
+class ReplayConfig:
+    """V10HORIZON prioritised mixed replay (all terms default 1 = OFF, unchanged).
+
+    Wraps the assembled mixed TRAIN dataset (loop + original native/random sources) so
+    merge-zone windows, CAV-follower windows and high-error windows are drawn more often
+    while the source mix ratios are preserved.  ``probe_windows`` (0 = static only)
+    forward-probes that many evenly spaced windows per stage (and every ``refresh_every``
+    optimizer steps) to update the high-error priorities; ``error_max_boost`` caps the
+    per-window oversampling multiple.
+    """
+
+    enabled: bool = False
+    merge_oversample: float = 1.0
+    cav_follower_oversample: float = 1.0
+    error_max_boost: float = 8.0
+    error_alpha: float = 1.0
+    error_decay: float = 0.9
+    probe_windows: int = 0
+    refresh_every: int = 0
+
+    def __post_init__(self) -> None:
+        for name in ("merge_oversample", "cav_follower_oversample", "error_max_boost",
+                     "error_alpha"):
+            value = getattr(self, name)
+            require(is_finite(value) and value >= 1.0,
+                    f"data.replay.{name} must be finite and >= 1")
+        require(is_finite(self.error_decay) and 0.0 <= self.error_decay < 1.0,
+                "data.replay.error_decay must be in [0, 1)")
+        require(int(self.probe_windows) >= 0, "data.replay.probe_windows must be >= 0")
+        require(int(self.refresh_every) >= 0, "data.replay.refresh_every must be >= 0")
+        if self.enabled and self.refresh_every > 0:
+            require(self.probe_windows > 0,
+                    "data.replay.refresh_every needs probe_windows > 0")
+
+
+@config_dataclass
 class C4EpisodesConfig:
     """Collected C4 SUMO episodes (Dreamer data loop) mixed into the training data.
 
@@ -207,6 +243,8 @@ class DataConfig:
     state_noise_std_m: float = 0.0
     state_noise_std_mps: float = 0.0
     jam: JamConfig = field(default_factory=JamConfig)
+    #: V10HORIZON: prioritised mixed replay (merge-zone / CAV-follower / high-error windows).
+    replay: ReplayConfig = field(default_factory=ReplayConfig)
     c4_episodes: C4EpisodesConfig = field(default_factory=C4EpisodesConfig)
     #: PAIRLOSS: further converted C4 episode sources (GENRAND plain / paired branches), mixed
     #: in after ``c4_episodes`` with their own sampling shares (empty = off, unchanged).
