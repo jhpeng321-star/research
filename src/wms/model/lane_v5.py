@@ -754,7 +754,7 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
         if getattr(physics, "lane_learnable", False):
             # V10UNBLOCK all-risk rows: EVERY HDV step present at t is at risk (stay is a
             # survival negative; a recorded non-own transition is a negative too).  Rows whose
-            # endpoint at t+1 is missing are censored (counted, labelled negative).  The
+            # endpoint at t+1 is missing are censored (counted, excluded from the loss).  The
             # envelope-infeasible rows are excluded and counted.  Forced-window rows are
             # included (the window is no longer special).
             endpoint = valid[:, 1:].bool()
