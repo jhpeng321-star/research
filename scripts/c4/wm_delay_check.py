@@ -565,7 +565,8 @@ def _map(items, worker, wm, args, workers: int) -> list:
     from concurrent.futures import ProcessPoolExecutor
     with ProcessPoolExecutor(max_workers=workers, initializer=_init_worker,
                              initargs=(str(wm), args.device, args.entries)) as pool:
-        return [f.result() for f in (pool.submit(worker, None, item) for item in items)]
+        futures = [pool.submit(worker, None, item) for item in items]   # submit all first (was serial)
+        return [f.result() for f in futures]
 
 
 def _work_start(predictor, payload):
