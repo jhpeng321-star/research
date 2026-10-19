@@ -74,7 +74,7 @@
       "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
       "python": "/root/miniconda3/bin/python",
       "work_root": "/root/autodl-tmp/c4/v5/loop_v10",
-      "workers": 160,
+      "workers": 24,
       "entrance_mask_root": "/root/autodl-tmp/c4/v5/entrance_mask"
     },
     "cpuN": {
@@ -84,7 +84,7 @@
       "code_root": "~/c4/repo_REPO_SHA",
       "python": "~/miniconda3/bin/python",
       "work_root": "~/c4/loop_v10",
-      "workers": 44,
+      "workers": 46,
       "sumo_home": "~/miniconda3/lib/python3.10/site-packages/sumo",
       "entrance_mask_root": "~/c4/entrance_mask"
     }
@@ -95,8 +95,8 @@
       "cpuN"
     ],
     "batch_size": {
-      "gpuR": 140,
-      "cpuN": 60
+      "gpuR": 60,
+      "cpuN": 140
     },
     "population": "textbook",
     "case_plan": "weighted-cycle",
@@ -120,7 +120,7 @@
       "echo 'compare the gpuR and cpuN md5 lines above; they must be identical before collection'"
     ],
     "ship_note": "gpuR builds repo_<sha>.tgz, scp's it to cpuN:~/c4/, unpacks it and prints both md5 lines; the entrance-mask loader dir ships alongside. Verified manually from the dry-run output before run --execute.",
-    "_note_hosts": "10-19: gpuR->cpuN SSH added (key ~/.ssh/id_ed25519_cpun on gpuR, Host cpuN in gpuR ~/.ssh/config); collection split gpuR 140 / cpuN 60."
+    "_note_hosts": "10-19: gpuR container quota is 25 CPUs (cpuN 48 dedicated) -> cpuN 140 / gpuR 60."
   },
   "convert": {
     "prefix": "v10_policy_iter",
@@ -128,16 +128,17 @@
     "min_window": 50
   },
   "wm": {
-    "config": "configs/c4_wm_v5m_refresh.toml",
+    "config": "configs/c4_wm_v10loop_k.toml",
     "config_iter0": "configs/c4_wm_v10loop_iter0.toml",
     "init_wm": "/root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt",
     "init_wm_md5": "d736db86",
     "iter0_mode": "existing",
-    "iter0_wm_out": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter000",
+    "iter0_wm_out": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter0_sel",
     "iter0_wm_note": "Iteration-0 WM training is already running on gpuR (manual launch: --set physics.lane_learnable=true --set curriculum.stage_steps=[200,150] --set curriculum.max_hours=4.0, init /root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt md5 d736db86). With iter0_mode='existing' the loop skips the iteration-0 WM stage and trains the policy from scratch on iter0_wm_out/wm_s_best.pt. Set iter0_mode='train' to re-run the WM bootstrap instead.",
     "stage_steps": [
-      100,
-      80
+      60,
+      40,
+      30
     ],
     "extra_set_iter0": [
       "physics.lane_learnable=true",

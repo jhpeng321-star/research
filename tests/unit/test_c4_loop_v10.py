@@ -272,7 +272,7 @@ def test_budget_is_positive_and_iteration0_has_no_collection():
     assert b1["check_episodes"] == 12
     assert b1["sim_s"] == 200 * (300 + 900)
     assert b1["check_sim_s"] == 12 * (300 + 600)
-    assert b1["wm_steps"] == 100 + 80
+    assert b1["wm_steps"] == sum(CFG["wm"]["stage_steps"])
     assert sum(CFG["collect"]["batch_size"].values()) == 200
     assert b1["gpu_hours_total"] > b0["gpu_hours_total"]
 
