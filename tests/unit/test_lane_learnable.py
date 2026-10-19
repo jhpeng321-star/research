@@ -31,8 +31,9 @@ from wms.config.train import TrainConfig
 from wms.model import lane_v5 as lv5
 from wms.physics.accel import baseline_accel
 from wms.physics.config import PhysicsConfig
-from wms.physics.mobil import (MASKED_LOGIT, mobil_merge_logits,
-                               physical_merge_envelope, physical_target_lane)
+from wms.physics.mobil import (MASKED_LOGIT, body_overlap, mid_change_exempt,
+                               mobil_merge_logits, physical_merge_envelope,
+                               physical_target_lane)
 from wms.train.losses.lane_event import lane_v5_batch_rows
 from wms.train.settings import TrainSettings
 
@@ -96,6 +97,56 @@ def test_envelope_removes_the_behavioural_follower_gap_veto():
     on = mobil_merge_logits(kin, present, p_on)
     assert float(off[0, 0, 1]) <= MASKED_LOGIT + 1e-6      # legacy: merge masked
     assert float(on[0, 0, 1]) > MASKED_LOGIT + 1e-6        # envelope: merge allowed
+
+
+# --------------------------------------------------------------- simultaneous change (V10ENVFIX)
+def test_body_overlap_mid_change_exemption():
+    # ramp ego and a lane-1 car at the same s: overlapping bodies.
+    kin = _kin([(30.0, 2, 10.0), (30.0, 1, 10.0)])
+    present = torch.ones(1, 2, dtype=torch.bool)
+    tq = physical_target_lane(kin[..., 1:4].argmax(-1))
+    assert bool(body_overlap(kin, present, tq, 0.0)[0, 0])
+    # the target-lane car is mid-change: it does not block ...
+    exempt = torch.tensor([[False, True]])
+    assert not bool(body_overlap(kin, present, tq, 0.0, exempt)[0, 0])
+    # ... but exempting only the EGO must never reopen the row.
+    assert bool(body_overlap(kin, present, tq, 0.0, torch.tensor([[True, False]]))[0, 0])
+
+
+def test_envelope_mid_change_exemption_behind_lane_learnable_only():
+    kin = _kin([(30.0, 2, 10.0), (30.0, 1, 10.0)])
+    present = torch.ones(1, 2, dtype=torch.bool)
+    exempt = torch.tensor([[False, True]])          # the lane-1 car is mid-change
+    # switch OFF: the mask is ignored, the overlap still vetoes (bit-identical default).
+    off = physical_merge_envelope(kin, present, _phys(), mid_change=exempt)
+    assert not bool(off["admissible"][0, 0])
+    assert mid_change_exempt(_phys(), exempt) is None
+    # switch ON: the exemption admits the row the strict envelope vetoed.
+    on = _learnable()
+    assert not bool(physical_merge_envelope(kin, present, on)["admissible"][0, 0])
+    assert bool(physical_merge_envelope(kin, present, on, mid_change=exempt)["admissible"][0, 0])
+    # lane_age == 0 (changed in the last step) derives the same exemption; the 999 sentinel
+    # (never changed) and the ego itself do not.
+    assert bool(physical_merge_envelope(
+        kin, present, on, lane_age=torch.tensor([[999.0, 0.0]]))["admissible"][0, 0])
+    assert not bool(physical_merge_envelope(
+        kin, present, on, lane_age=torch.tensor([[0.0, 999.0]]))["admissible"][0, 0])
+    assert not bool(physical_merge_envelope(
+        kin, present, on, lane_age=torch.tensor([[999.0, 999.0]]))["admissible"][0, 0])
+
+
+def test_mobil_logits_forward_mid_change():
+    kin = _kin([(30.0, 2, 10.0), (30.0, 1, 10.0)])
+    present = torch.ones(1, 2, dtype=torch.bool)
+    exempt = torch.tensor([[False, True]])
+    on = _learnable()
+    base = mobil_merge_logits(kin, present, on)
+    relaxed = mobil_merge_logits(kin, present, on, mid_change=exempt)
+    assert float(base[0, 0, 1]) <= MASKED_LOGIT + 1e-6
+    assert float(relaxed[0, 0, 1]) > MASKED_LOGIT + 1e-6
+    # switch OFF: forwarding the mask changes nothing.
+    off = mobil_merge_logits(kin, present, _phys(), mid_change=exempt)
+    assert float(off[0, 0, 1]) <= MASKED_LOGIT + 1e-6
 
 
 def test_envelope_ignores_merge_end_wait_and_impatience():
