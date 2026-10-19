@@ -203,6 +203,7 @@ FLAT_TO_PATH: dict[str, str] = {
     # V6INTEG (opt-in integration and simultaneous lane-conflict resolution)
     "stop_time_integration": "physics.stop_time_integration",
     "emergency_decel_mps2": "physics.emergency_decel_mps2",
+    "exit_at_road_end": "physics.exit_at_road_end",
     "lane_conflict_resolve": "model.lane_conflict_resolve",
     # V6MERGE (opt-in lane-end interaction rules)
     "merge_end_wait": "physics.merge_end_wait",
@@ -305,7 +306,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # INFRAV5
     "driver_prior_weight", "driver_prior_target", "driver_prior_accel", "driver_prior_time_headway",
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
-    "stop_time_integration", "emergency_decel_mps2", "lane_conflict_resolve",
+    "stop_time_integration", "emergency_decel_mps2", "exit_at_road_end",
+    "lane_conflict_resolve",
     "merge_end_wait", "mainline_merge_yield", "lane_learnable",
     "mainline_lane_mode", "mainline_courtesy_zone_m",
     # V7FT

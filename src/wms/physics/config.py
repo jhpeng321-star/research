@@ -198,6 +198,11 @@ class PhysicsConfig:
 
     dt_s: float = 0.5
     open_road: bool = True
+    #: Remove a vehicle once its predicted position passes the mainline road end
+    #: (model frame 553.33 m; ``wms.physics.batched.MODEL_FRAME_ROAD_END_M``).  Plain-bug
+    #: fix: every rollout (evaluation predictor, policy imagination, WM training unroll)
+    #: supplies ``exit_s_m``.  ``False`` reproduces pre-fix results bit-identically.
+    exit_at_road_end: bool = True
     sumo_fidelity: bool = False
     sumo_idm: bool = True
     speed_factor: float = 1.0
@@ -273,6 +278,8 @@ class PhysicsConfig:
     mainline_courtesy_zone_m: float = MAINLINE_COURTESY_ZONE_M
 
     def __post_init__(self) -> None:
+        if not isinstance(self.exit_at_road_end, bool):
+            raise ValueError("exit_at_road_end must be a boolean")
         for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
                      "mainline_merge_yield_distance_m", "mainline_merge_yield_decel_mps2"):
             value = getattr(self, name)

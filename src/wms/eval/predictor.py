@@ -25,6 +25,7 @@ from .history_inputs import HistoryInputs
 from .normalize import DT_S
 from .rollout_inputs import (DEFAULT_LENGTH_M, action_timeline_inputs, recorded_teacher,
                              t0_vehicles)
+from wms.physics.batched import road_end_exit_bound
 
 CAV_MODES = ("teacher",)
 FORBIDDEN_ROLLOUT_MODE = "driver_params"
@@ -66,7 +67,7 @@ def _pad_slots(initial: dict, n_pad: int) -> dict:
         extra = torch.full((1, n_pad), value, dtype=dtype)
         return torch.cat((initial[name], extra), dim=1)
 
-    return {
+    out = {
         "s_m": pad("s_m", 0.0, torch.float32),
         "v_mps": pad("v_mps", 0.0, torch.float32),
         "a_mps2": pad("a_mps2", 0.0, torch.float32),
@@ -75,6 +76,9 @@ def _pad_slots(initial: dict, n_pad: int) -> dict:
         "present": pad("present", False, torch.bool),
         "is_cav": pad("is_cav", False, torch.bool),
     }
+    if "exit_s_m" in initial:
+        out["exit_s_m"] = pad("exit_s_m", float(initial["exit_s_m"][0, 0]), torch.float32)
+    return out
 
 
 class WmsPredictor:
@@ -139,6 +143,11 @@ class WmsPredictor:
             "present": torch.ones((1, len(ids)), dtype=torch.bool),
             "is_cav": torch.as_tensor(is_cav[None]),
         }
+        # Plain-bug fix: the model's exit gate needs the road end, otherwise a predicted
+        # vehicle that passes 553.33 m stays present for the whole horizon.
+        exit_s = road_end_exit_bound(getattr(self.model, "physics", None))
+        if exit_s is not None:
+            initial["exit_s_m"] = torch.full((1, len(ids)), float(exit_s))
         teacher, present_seq, junction_seq = recorded_teacher(
             state, t0_s, ids, kin, n_steps, arm, tools)
         if entries_on:

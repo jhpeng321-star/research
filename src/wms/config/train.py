@@ -53,6 +53,9 @@ class PhysicsOptions:
 
     stop_time_integration: bool = False
     emergency_decel_mps2: Optional[float] = None
+    exit_at_road_end: bool = True
+    """Plain-bug fix (default true): rollouts remove vehicles past 553.33 m.  False reproduces
+    pre-fix results bit-identically (``wms.physics.config.PhysicsConfig.exit_at_road_end``)."""
     merge_end_wait: bool = False
     """V6MERGE: lane-end mergers need both lane-1 gaps SUMO-secure and never pass the end."""
     mainline_merge_yield: bool = False
@@ -89,6 +92,8 @@ class PhysicsOptions:
         require(self.emergency_decel_mps2 is None or (
             is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
             "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
+        require(isinstance(self.exit_at_road_end, bool),
+                "physics.exit_at_road_end must be a boolean")
         require(_mode_ok("mainline_lane_mode", self.mainline_lane_mode),
                 f"physics.mainline_lane_mode must be one of "
                 f"{PHYSICS_MODE_KEYS['mainline_lane_mode']}")

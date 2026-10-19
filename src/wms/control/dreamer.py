@@ -24,6 +24,8 @@ import torch
 from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
+from wms.physics.batched import road_end_exit_bound
+
 from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
@@ -873,6 +875,14 @@ class DreamerTrainer:
 
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
+            # Plain-bug fix: imagined vehicles leave at the road end (same gate as evaluation
+            # and training); physics.exit_at_road_end=false keeps old replays bit-identical.
+            exit_s = road_end_exit_bound(getattr(model, "physics", None))
+            if exit_s is None:
+                initial.pop("exit_s_m", None)
+            else:
+                initial.setdefault("exit_s_m", torch.full_like(
+                    initial["s_m"], float(exit_s)))
             recorder = None
             member_kwargs = {**rollout_kwargs, **future}
             if lane_uniform is not None:

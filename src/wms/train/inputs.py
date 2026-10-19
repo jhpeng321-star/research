@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from wms.data.action_timeline import CONTROLLERS
+from wms.physics.batched import road_end_exit_bound
 
 from .cav_drive import TimelineControllers
 from .losses.base import UnrollTargets
@@ -219,6 +220,12 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         raise ValueError("batch does not contain requested unroll")
     initial = state_from_kin(states[:, 0], present[:, 0])
     initial["is_cav"] = is_cav[:, 0]
+    # Plain-bug fix: vehicles predicted beyond the road end leave the unroll.  Recorded SUMO
+    # exits still end slots through ``present_seq`` (the two masks AND in the model step).
+    exit_s = road_end_exit_bound(getattr(model, "physics", None))
+    if exit_s is not None:
+        initial["exit_s_m"] = torch.full(present[:, 0].shape, float(exit_s),
+                                         dtype=states.dtype, device=device)
     _perturb_t0(initial, states, present, is_cav, model, settings, paired_random)
     controller_id = batch.get("controller_id")
     if controller_id is not None:
