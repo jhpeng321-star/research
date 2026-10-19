@@ -28,6 +28,7 @@ from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWei
 from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, build_variants,
                              decompose, expand_rows, group_rich, mean_or_none, native_fn,
                              row_coefficients)
+from .entrance import DEFAULT_ENTRANCE_ZONE_M, make_entrance_zone_fn
 from .futures import FuturesConfig, SampledFutures, lane_uniform_draws
 from .start_states import StartBatch, checked_path
 
@@ -150,6 +151,15 @@ class DreamerConfig:
     # ``{mainline_merge_yield = false}``: the WM's mainline yield rule deadlocks the merge zone and
     # penalises any CAV that deviates from its native CAV (ONROAD_DIAG.md).
     wm_physics_overrides: dict = field(default_factory=dict)
+    # V10ENTZONE (2026-10-19; default off = bit-identical): a CAV inside an entrance zone (the
+    # first ``entrance_zone_main_m`` metres downstream of the lane-0/1 insertion points and
+    # ``entrance_zone_ramp_m`` for the ramp) drives native inside imagination -- its policy action
+    # is replaced by the native/IDM twin command and the step is excluded from the actor loss.
+    # Same zones as the SUMO autocheck (entrance_mask/entrance_mask_loader.py); the policy must
+    # learn under the restriction it is evaluated with so it cannot win by metering entrances.
+    entrance_zone_native: bool = False
+    entrance_zone_main_m: float = DEFAULT_ENTRANCE_ZONE_M
+    entrance_zone_ramp_m: float = DEFAULT_ENTRANCE_ZONE_M
 
     def __post_init__(self):
         for name in ("batch_size", "horizon"):
@@ -195,9 +205,14 @@ class DreamerConfig:
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
                      "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
-                     "entry_queue_state"):
+                     "entry_queue_state", "entrance_zone_native"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
+        if self.entrance_zone_native and not (
+                math.isfinite(self.entrance_zone_main_m) and self.entrance_zone_main_m > 0.0
+                and math.isfinite(self.entrance_zone_ramp_m) and self.entrance_zone_ramp_m > 0.0):
+            raise ValueError("entrance_zone_native needs positive entrance_zone_main_m / "
+                             "entrance_zone_ramp_m")
         if not isinstance(self.wm_physics_overrides, dict):
             raise ValueError("wm_physics_overrides must be a mapping of PhysicsConfig field "
                              "names to values")
@@ -695,7 +710,11 @@ class DreamerTrainer:
                 act_mask[variants.row_kind.to(self.device) == KIND_ALL, entry_spec["k0"]:] = True
         if self.use_lanes and self.controller_factory is None:
             raise ValueError("lane decisions require the bridge controller factory")
-        need_bridge = self.controller_factory is not None and (self.use_lanes or act_mask is not None)
+        # V10ENTZONE: dynamic per-tick predicate; None keeps the default path bit-identical.
+        zone_fn = (make_entrance_zone_fn(cfg.entrance_zone_main_m, cfg.entrance_zone_ramp_m)
+                   if cfg.entrance_zone_native else None)
+        need_bridge = self.controller_factory is not None and (
+            self.use_lanes or act_mask is not None or zone_fn is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
         from wms.model.cav import apply_exec_cap
@@ -736,6 +755,7 @@ class DreamerTrainer:
             lane_uniform = expand_rows(lane_uniform, index, n_base)
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
+        member_zone = []
         profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
@@ -749,6 +769,7 @@ class DreamerTrainer:
             step = 0
             held_out = None
             last_decision_step = -1
+            zone_now = None
 
             def policy_proxy(obs, signal, **kwargs):
                 nonlocal held_out, last_decision_step
@@ -760,6 +781,8 @@ class DreamerTrainer:
                                                       noise.lane_gumbel.index_select(0, index))
                     held_out = policy_call(obs, signal, deterministic=deterministic, **kwargs)
                     acting = obs.cav_mask if act_mask is None else obs.cav_mask & act_mask
+                    if zone_now is not None:      # V10ENTZONE: zone CAVs excluded from the actor loss
+                        acting = acting & ~zone_now
                     log_prob = getattr(held_out, "log_prob_accel", None)
                     log_prob = held_out[1] if log_prob is None else log_prob
                     record = records[-1]
@@ -786,10 +809,14 @@ class DreamerTrainer:
                 extra = {}
                 if self.use_lanes:
                     extra["lane_rules"] = self.lane_rules
-                if act_mask is not None:
-                    extra.update(act_mask=act_mask, native=native)
+                if act_mask is not None or zone_fn is not None:
+                    extra["native"] = native
                     if _accepts(self.controller_factory, "native_accel_max"):
                         extra["native_accel_max"] = native_max
+                if act_mask is not None:
+                    extra["act_mask"] = act_mask
+                if zone_fn is not None:
+                    extra["zone"] = zone_fn
                 external_callback = self.controller_factory(
                     policy_proxy, group_call, safety_call,
                     lane_record if self.use_lanes else None, **extra)
@@ -798,10 +825,13 @@ class DreamerTrainer:
                                                             safety_call, None)
 
             def controller(state):
-                nonlocal step
+                nonlocal step, zone_now
                 mask = state["present"].bool() & state["is_cav"].bool()
                 if step % STEPS_PER_CONTROL == 0:
                     records.append({"mask": mask})
+                    if zone_fn is not None:
+                        zone_now = zone_fn(state)
+                        records[-1]["entrance_zone"] = zone_now
                 if external_callback is not None:
                     command = external_callback(state)
                     if step % STEPS_PER_CONTROL == 0:
@@ -816,15 +846,20 @@ class DreamerTrainer:
                     policy_proxy(obs, signal)
                 command = held_out[0]
                 ceiling = policy_max
-                if act_mask is not None:       # counterfactual rows: non-acting CAVs native
-                    command = torch.where(act_mask, command, native(state))
-                    ceiling = torch.where(act_mask, torch.full_like(command, policy_max),
+                acting = None if act_mask is None else act_mask
+                if zone_fn is not None:      # V10ENTZONE: zone CAVs released to the native twin
+                    acting = (torch.ones_like(command, dtype=torch.bool)
+                              if acting is None else acting)
+                    acting = acting & ~zone_now
+                if acting is not None:       # counterfactual rows / entrance zones: native CAVs
+                    command = torch.where(acting, command, native(state))
+                    ceiling = torch.where(acting, torch.full_like(command, policy_max),
                                           torch.full_like(command, native_max))
                 accel = safety_call(state, command, accel_max=ceiling)
                 cav = state["present"].bool() & state["is_cav"].bool()
                 accel = torch.where(cav, accel, torch.zeros_like(accel))
                 # EXECCAP_NOTES.md: policy CAVs only (identity unless the WM's cav_exec_cap is on).
-                accel = apply_exec_cap(state, accel, cav if act_mask is None else cav & act_mask)
+                accel = apply_exec_cap(state, accel, cav if acting is None else cav & acting)
                 if step % STEPS_PER_CONTROL == 0:
                     records[-1]["action"] = accel
                 # SUMO's ballistic position integration, including a stop inside this step.
@@ -944,6 +979,8 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
+            if zone_fn is not None:
+                member_zone.append(torch.stack([record["entrance_zone"] for record in records]))
             if self.use_lanes:
                 member_lanes.append({name: torch.stack([record[name] for record in records])
                                      for name in ("lane_log_prob", "lane_entropy", "lane_active",
@@ -963,15 +1000,29 @@ class DreamerTrainer:
                                          for state in states[:-1]]) for states in member_states])
         if act_mask is not None:
             masks = masks & act_mask
+        zone_masks = None
+        if member_zone:
+            zone_masks = torch.stack(member_zone)
+            masks = masks & ~zone_masks
         lanes = None
         if member_lanes:
             lanes = {name: torch.stack([m[name] for m in member_lanes]) for name in member_lanes[0]}
+        # V10ENTZONE: fraction of all-CAV-row CAV-steps released to native inside an entrance zone
+        # (the imagination analogue of the SUMO autocheck's masked fraction).
+        zone_fraction = None
+        if zone_masks is not None:
+            cav = torch.stack([torch.stack([state["present"] & state["is_cav"]
+                                            for state in states[:-1]]) for states in member_states])
+            cav = cav[..., :n_base, :]
+            zone_base = zone_masks[..., :n_base, :]
+            zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
                 **({"credit_profile": profile} if profile is not None else {}),
                 "values": torch.stack(member_values),
                 "disagreement": disagreement, "states": member_states,
                 "entropy": torch.stack(member_entropy), "actions": torch.stack(member_actions),
                 "action_mask": masks, "lanes": lanes, "variants": variants, "n_base": n_base,
+                "entrance_zone": zone_masks, "entrance_zone_fraction": zone_fraction,
                 "n_members": len(self.world_models), "n_futures": n_futures,
                 "components": {key: torch.stack([c[key] for c in member_components])
                                for key in member_components[0]}}
@@ -1275,6 +1326,8 @@ class DreamerTrainer:
             metrics["lagrange_pre_cap"] = float(self._lagrange_pre_cap)
         metrics["entries"] = bool(getattr(batch, "entry_spec", None) is not None
                                   and self.config.imagine_entries)
+        if imagined.get("entrance_zone_fraction") is not None:   # V10ENTZONE masked fraction
+            metrics["entrance_zone_fraction"] = float(imagined["entrance_zone_fraction"])
         if self.output_dir is not None:
             self.output_dir.mkdir(parents=True, exist_ok=True)
             with (self.output_dir / "updates.jsonl").open("a", encoding="utf-8") as stream:

@@ -49,7 +49,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         lane_rules=None, act_mask: Optional[Tensor] = None,
                         native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
                         accel_max: Optional[float] = None,
-                        native_accel_max: Optional[float] = None) -> CavController:
+                        native_accel_max: Optional[float] = None,
+                        zone: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -68,7 +69,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     existing forced merge of ramp-lane CAVs runs afterwards on every tick and is never
     blocked by the head.  ``act_mask`` [B,K] (counterfactual rows): only these CAVs follow
     the policy; the other CAVs follow ``native(state) -> accel [B,K]`` (re-evaluated each
-    physics step) and stay in lane (forced merge still applies).
+    physics step) and stay in lane (forced merge still applies).  ``zone(state) -> [B,K] bool``
+    (V10ENTZONE, optional) additionally releases the CAVs it marks to ``native`` on every tick
+    (their policy command and lane choice are dropped), whether or not ``act_mask`` is given; it
+    is re-evaluated each tick so a CAV entering/leaving the zone switches behaviour immediately.
 
     ``accel_max`` (ACCELCAP_NOTES.md): the upper bound of the POLICY's commands, used as the
     safety ceiling and the motion clamp of policy-driven CAVs; default ``policy.accel_max``
@@ -81,16 +85,17 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     cav_module = import_module("wms.model.cav")
     direct_command_motion = cav_module.direct_command_motion
     apply_exec_cap = cav_module.apply_exec_cap
-    if act_mask is not None and native is None:
-        raise ValueError("act_mask requires a native CAV behaviour")
+    if (act_mask is not None or zone is not None) and native is None:
+        raise ValueError("act_mask / zone requires a native CAV behaviour")
     from .safety import with_accel_max
     safety = with_accel_max(safety)
     policy_max = float(accel_max if accel_max is not None
                        else getattr(policy, "accel_max", ACCEL_MAX_MPS2))
     native_max = float(native_accel_max if native_accel_max is not None
                        else NATIVE_CAV_ACCEL_MAX_MPS2)
+    native_in_use = act_mask is not None or zone is not None
     # Motion clamp (float): the largest ceiling in use; per-slot ceilings go through target_v.
-    motion_max = policy_max if act_mask is None else max(policy_max, native_max)
+    motion_max = policy_max if not native_in_use else max(policy_max, native_max)
     dwell = None
     if lane_rules is not None:
         from .lanes import LaneDwell
@@ -113,6 +118,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         internal_index = index + 1
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
+        if zone is not None:                       # V10ENTZONE: in-zone CAVs released to native
+            acting = acting & ~zone(state).to(mask.device).bool()
         if index == 0 or (held is not None and held.shape != state["s_m"].shape):
             held = None
             previous_mask = None
@@ -162,7 +169,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         lane = _merge_lane({**state, "lane": lane_now}, mask)
         command_accel = held
         ceiling = policy_max
-        if act_mask is not None:
+        if native_in_use:
             command_accel = torch.where(acting, held, native({**state, "lane": lane}))
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
