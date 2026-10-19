@@ -170,12 +170,12 @@
       "max_step": 1.0,
       "max_offset": 6.0,
       "heads": [
-        "overtake",
-        "return"
+        "merge"
       ],
       "lane_learnable": true,
       "out": "lane_calib.json",
-      "_note": "LANERATECAL: fits one additive logit offset per fitted lane head so the WM free-rollout lane-change counts match SUMO on TRAIN-val starts; writes <wm_out>/lane_calib.json, which load_checkpoint reads when the policy stage loads the same checkpoint. Run after wm_check and before policy_update on a many-core CPU host (gpuR)."
+      "_note": "LANERATECAL: fits one additive logit offset per fitted lane head so the WM free-rollout lane-change counts match SUMO on TRAIN-val starts; writes <wm_out>/lane_calib.json, which load_checkpoint reads when the policy stage loads the same checkpoint. Run after wm_check and before policy_update on a many-core CPU host (gpuR).",
+      "_note_heads": "10-20 owner: merge-rate calibration every iteration; overtake/return are frozen in courtesy mode, add them back when the lane-mode curriculum switches to free."
     },
     "extra_set_laneflow": [
       "loss.lane_flow.weight=1.0",

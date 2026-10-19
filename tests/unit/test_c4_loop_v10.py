@@ -76,7 +76,7 @@ def test_lane_calib_stage_runs_after_wm_check_and_before_policy():
     assert "--out-dir" in stage["cmd"] and paths["wm_out"] in stage["cmd"]
     assert "--lane-learnable" in stage["cmd"]
     assert "--n-native 24" in stage["cmd"] and "--n-genrand 24" in stage["cmd"]
-    assert "--heads overtake,return" in stage["cmd"]
+    assert "--heads " + ",".join(CFG["wm"]["lane_calib"]["heads"]) in stage["cmd"]
     policy = stages[names.index("policy_update")]
     assert paths["wm_best"] in policy["cmd"]
     assert "lane_calib.json" in policy["note"]
