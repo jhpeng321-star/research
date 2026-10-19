@@ -1,0 +1,171 @@
+{
+  "_comment": "CLOSED Dreamer loop v10loop (2026-10-19; PREPARED, NOT LAUNCHED). Replace REPO_SHA before starting. Closed iteration: collect -> convert -> WM fine-tune -> policy update in the new WM -> SUMO check vs native -> rollback/log. Iteration 0 bootstraps the WM on native/random TRAIN data and starts the policy from scratch. Exact lane_learnable / horizon-curriculum / mixed-prioritised-replay dotted keys are owned by c4/v10unblock and c4/v10horizon and are passed through verbatim.",
+  "mode": "closed",
+  "loop_root": "/root/autodl-tmp/c4/v5/loop_v10",
+  "data_root": "/root/autodl-tmp/c4/v5/data_v10",
+  "wm_runs_root": "/root/autodl-tmp/c4/v5/runs",
+  "v7ft_run": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017",
+  "disk_paths": [
+    "/root/autodl-tmp"
+  ],
+  "min_free_gb": 5.0,
+  "iterations": 4,
+  "seed": {
+    "block": [
+      969000,
+      969199
+    ],
+    "exclude": [
+      [
+        965990,
+        965993
+      ],
+      [
+        969824,
+        969835
+      ]
+    ],
+    "eval": [
+      964000,
+      964199
+    ],
+    "check": [
+      969824,
+      969835
+    ],
+    "approved_blocks": [
+      [
+        965184,
+        965999
+      ],
+      [
+        966000,
+        969999
+      ]
+    ],
+    "used_ledger_globs": [
+      "/root/autodl-tmp/c4/v5/loop*/seed_ledger.jsonl",
+      "/root/autodl-tmp/c4/v5/loop*/iterations.jsonl",
+      "~/c4/loop*/seed_ledger.jsonl",
+      "~/c4/loop*/iterations.jsonl"
+    ]
+  },
+  "hosts": {
+    "wm": {
+      "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
+      "python": "/root/miniconda3/bin/python"
+    },
+    "gpuR": {
+      "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
+      "python": "/root/miniconda3/bin/python",
+      "work_root": "/root/autodl-tmp/c4/v5/loop_v10",
+      "workers": 160
+    },
+    "cpuN": {
+      "ssh": [
+        "cpuN"
+      ],
+      "code_root": "~/c4/repo_REPO_SHA",
+      "python": "~/c4env/bin/python",
+      "work_root": "~/c4/loop_v10",
+      "workers": 40
+    }
+  },
+  "collect": {
+    "hosts": [
+      "gpuR",
+      "cpuN"
+    ],
+    "batch_size": {
+      "gpuR": 25,
+      "cpuN": 25
+    },
+    "population": "textbook",
+    "case_plan": "weighted-cycle",
+    "penetrations": "0.05,0.1,0.2,0.4",
+    "pen_weights": "1,1,2,2",
+    "demands": "1900,2100,2400,2700",
+    "warmup": 300,
+    "horizon": 900,
+    "timeout_s": 7200,
+    "nice": 5,
+    "policy_config": "configs/c4_policy_v10entzone_v5m.toml",
+    "entrance_zone_native": true
+  },
+  "convert": {
+    "prefix": "v10_policy_iter",
+    "mb_per_episode": 21.0,
+    "min_window": 50
+  },
+  "wm": {
+    "config": "configs/c4_wm_v5m_refresh.toml",
+    "config_iter0": "configs/c4_wm_v10loop_iter0.toml",
+    "init_wm": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017/v5m_ref/wm_s_best_ap.pt",
+    "stage_steps": [
+      60,
+      40
+    ],
+    "extra_set_iter0": [
+      "model.lane_learnable=true"
+    ],
+    "extra_set": [
+      "model.lane_learnable=true",
+      "curriculum.horizon_curriculum=true",
+      "curriculum.unroll_s=[60.0,120.0,180.0]",
+      "data.mixed_replay.prioritised=true",
+      "data.mixed_replay.priority_alpha=0.6"
+    ],
+    "pass_through_note": "Verbatim --set items. Exact dotted keys are owned by c4/v10unblock (lane_learnable) and c4/v10horizon (horizon curriculum + mixed prioritised replay); the loop never parses or renames them.",
+    "timeout_s": 10800,
+    "val_metric": "mean_position",
+    "val_tolerance": 0.3
+  },
+  "policy": {
+    "config": "configs/c4_policy_v10entzone_v5m.toml",
+    "config_iter0": "configs/c4_policy_v10entzone_v5m.toml",
+    "device": "cuda",
+    "updates": 200,
+    "max_updates": 100000,
+    "env": {
+      "WMS_DATA_V5_NATIVE": "/root/autodl-tmp/c4/v5/data/v5_native",
+      "WMS_DATA_GENRAND_PLAIN": "/root/autodl-tmp/c4/v5/data/genrand_plain",
+      "WMS_DATA_GENRAND_BRANCH": "/root/autodl-tmp/c4/v5/data/genrand_branch",
+      "OMP_NUM_THREADS": "12",
+      "MKL_NUM_THREADS": "12"
+    }
+  },
+  "check": {
+    "seeds": [
+      969824,
+      969835
+    ],
+    "native_ref": "/root/autodl-tmp/c4/v5/runs/sumo_check_v8pol_u600/native",
+    "fixed_val_states": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017/v10loop/fixed_train_val_states.json",
+    "commands": [
+      "cd {gpuR_code_root} && {gpuR_python} -m traffic_shepherd.c4.collect --policy {policy_ckpt} --population textbook --seeds 969824-969835 --case-plan weighted-cycle --penetrations 0.05,0.1,0.2,0.4 --pen-weights 1,1,2,2 --demands 1900,2100,2400,2700 --warmup 300 --horizon 900 --workers 64 --no-physics-log --out {check_dir}/policy",
+      "{gpuR_python} {v7ft_run}/pair_check.py --policy {check_dir}/policy --native {native_ref} --out {check_dir}/pairs.json",
+      "{gpuR_python} {v7ft_run}/coop_metrics.py --pairs {check_dir}/pairs.json --out {check_dir}/coop.json",
+      "{gpuR_python} {v7ft_run}/wm_fidelity.py --wm {new_wm} --states {fixed_val_states} --horizons 10,30,60,120 --out {check_dir}/wm_fidelity.json"
+    ],
+    "metrics": {
+      "sumo_total_D_key": "total_D.policy_minus_native",
+      "wm60_key": "hdv.abs_ds.60"
+    }
+  },
+  "rollback": {
+    "sumo_total_D_max_worsen": 0.0,
+    "wm60_rel_tolerance": 0.1,
+    "halve_factor": 0.5,
+    "min_policy_updates": 50
+  },
+  "budget": {
+    "gpu_hours_per_wm_step": 0.012,
+    "gpu_hours_per_policy_update": 0.008,
+    "gpu_hours_per_check_episode": 0.0005,
+    "mappo_control_dt_s": 0.5
+  },
+  "execute_guard": {
+    "allow": false,
+    "require_owner_approval": true
+  }
+}
