@@ -92,7 +92,7 @@ def test_pass_through_keys_are_verbatim(tmp_path):
     assert "WMS_DATA_V6_POLICY" in wm["env"]
     for key in CFG["wm"].get("extra_set_horizon", []):
         assert key in wm["cmd"]
-    assert CFG["wm"].get("extra_set_horizon") == [], "horizon keys land only with c4/v10horizon"
+    assert any(k.startswith("data.replay.enabled") for k in CFG["wm"].get("extra_set_horizon", [])), "c4/v10horizon keys are enabled after the merge"
     # iteration 0 trains the WM only in 'train' mode; the launch uses 'existing'
     cfg_train = json.loads(json.dumps(CFG))
     cfg_train["wm"]["iter0_mode"] = "train"
