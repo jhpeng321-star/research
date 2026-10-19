@@ -319,8 +319,10 @@ class WmSModel(nn.Module):
         if self.physics_step is None:
             # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
             impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
-            if self.physics.merge_end_wait or self.physics.mainline_merge_yield:
+            if (self.physics.merge_end_wait or self.physics.mainline_merge_yield) \
+                    and not getattr(self.physics, "lane_learnable", False):
                 # V6MERGE: one blocked-merger mask per step, shared by accel and lane logits.
+                # V10UNBLOCK lane_learnable: the physical envelope replaces this coupling.
                 kin = state_kin(state)
                 present = state_present(state, kin)
                 if impatience is None:
@@ -700,8 +702,10 @@ class WmSModel(nn.Module):
         """Hazard lane decisions are sampled from the masked categorical (not argmax)."""
         if getattr(self, "lane_v5", None) is not None:
             # V8WM2 forced_window_mode='hazard': forced-window rows always draw.
+            # V10UNBLOCK lane_learnable: every learned slot always draws its own head.
             return (getattr(self, "lane_decision", "argmax") in ("sample", "gated")
                     or lv5.forced_window_hazard(self.physics)
+                    or bool(getattr(self.physics, "lane_learnable", False))
                     or self._mainline_mode != "default")
         return (getattr(self, "lane_hazard", None) is not None
                 and getattr(self, "lane_decision", "argmax") == "sample")
@@ -816,7 +820,11 @@ class WmSModel(nn.Module):
             hazard = (head, acts)
         sample = None
         if self._samples_lanes:
-            if self.lane_decision == "gated":
+            if getattr(self.physics, "lane_learnable", False):
+                # V10UNBLOCK: all three heads sample their own calibrated probability,
+                # independent of the lane_decision AP gate and of the mainline rule.
+                sample = learned.bool().clone()
+            elif self.lane_decision == "gated":
                 sample = lv5.sample_mask(inst["lane"], learned, lv5.gate_open(
                     self.lane_v5_head_ap_effective(), self.lane_v5_gates))
             elif self.lane_decision == "sample":
@@ -824,6 +832,8 @@ class WmSModel(nn.Module):
             else:
                 sample = torch.zeros_like(learned, dtype=torch.bool)
             mainline = self._mainline_mode
+            if getattr(self.physics, "lane_learnable", False):
+                mainline = "default"
             if mainline != "default":
                 # V8LANE: overtake / return rows draw (sample) or are decided by the
                 # population budget in step() (budget*: they do not draw here).
@@ -1044,10 +1054,12 @@ class WmSModel(nn.Module):
                 out, state, cav, direct, present, k_steps, action_id, action_command,
                 cav_teacher, cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
 
-        if self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics):
+        if (self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics)
+                or getattr(self.physics, "lane_learnable", False)):
             # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there
             # (V8WM2 hazard window: a feasible car may now wait in the window, so it must not
-            # creep past the end, where no merge is ever allowed).
+            # creep past the end, where no merge is ever allowed).  V10UNBLOCK lane_learnable:
+            # lane-end stopping is kept even though every behavioural veto is removed.
             end = self.physics.merge_zone_s1_m
             overrun = (present & (next_lane == self.physics.merge_lane) & (s <= end)
                        & (next_s > end))
@@ -1348,7 +1360,8 @@ class WmSModel(nn.Module):
                 else step_fn(current)
             for key, value in (out.get("projection_active") or {}).items():
                 projection_totals[key] = projection_totals.get(key, 0.0) + float(value)
-            if lane_teacher is not None:
+            if lane_teacher is not None and not getattr(self.physics, "lane_learnable", False):
+                # V10UNBLOCK: never let a lane teacher overwrite a free (learned) rollout.
                 recorded_lane = lane_teacher[:, step_i + 1].long()
                 out["next_lane"] = torch.where(recorded_lane >= 0, recorded_lane,
                                                out["next_lane"])

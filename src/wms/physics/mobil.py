@@ -73,6 +73,62 @@ def target_overlap(kin: Tensor, present: Tensor, target_lane: Tensor,
     return hit.any(-1)
 
 
+#: V10UNBLOCK: target lane of each source lane for the only road-legal transitions.
+PHYSICAL_TARGET_OF_LANE = (1, 0, 1)
+
+
+def physical_target_lane(lane: Tensor) -> Tensor:
+    """Target lane of each source lane (0 -> 1, 1 -> 0, 2 -> 1; lane 2 is never a target)."""
+    table = torch.tensor(PHYSICAL_TARGET_OF_LANE, device=lane.device, dtype=lane.dtype)
+    return table[lane.clamp(0, 2)]
+
+
+def body_overlap(kin: Tensor, present: Tensor, target_lane: Tensor, margin_m: float) -> Tensor:
+    """``[B, K]``: ego body ``[s - L, s]`` intersects a present body in ``target_lane``.
+
+    Same length/position convention as :func:`target_overlap` (``s`` = front bumper, body
+    extends backwards by ``length_m``), judged on the supplied configuration.
+    """
+    s, length = kin[..., 0], kin[..., 6]
+    lane = lane_of(kin)
+    rear, front = s - length, s
+    rear_i, front_i = rear.unsqueeze(-1), front.unsqueeze(-1)
+    rear_j, front_j = rear.unsqueeze(-2), front.unsqueeze(-2)
+    other = present.unsqueeze(-2) & (lane.unsqueeze(-2) == target_lane.unsqueeze(-1))
+    eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
+    hit = other & ~eye & (rear_j < front_i + margin_m) & (front_j > rear_i - margin_m)
+    return hit.any(-1)
+
+
+def physical_merge_envelope(kin: Tensor, present: Tensor,
+                            physics: PhysicsConfig) -> dict[str, Tensor]:
+    """V10UNBLOCK: the strictly physical lane-change envelope ``[B, K]``.
+
+    ``legal``: the road's only transitions (lane 1 -> 0, 0 -> 1, and the ramp merge 2 -> 1
+    inside the merge zone; no transition into lane 2).  ``clear``: the ego's body after one
+    step (``anticipated_kin``, constant acceleration) does not intersect any present body of
+    the target lane with ``lane_physical_margin_m`` clearance.  No headway / standstill /
+    impatience / ``merge_end_wait`` margin enters.  ``clear_now`` (current configuration) and
+    the overlaps are diagnostics; ``admissible`` = envelope + presence.
+    """
+    p = physics
+    present = present.bool()
+    lane = lane_of(kin)
+    tq = physical_target_lane(lane)
+    s = kin[..., 0]
+    in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
+    is_ramp = lane == p.merge_lane
+    legal = ((~is_ramp) | in_zone) & (tq != p.merge_lane) & (lane >= 0)
+    margin = float(getattr(p, "lane_physical_margin_m", 0.0))
+    kin_a = anticipated_kin(kin, float(p.dt_s))
+    overlap_next = body_overlap(kin_a, present, tq, margin)
+    overlap_now = body_overlap(kin, present, tq, margin)
+    clear = ~overlap_next
+    return {"legal": legal, "clear": clear, "clear_now": ~overlap_now,
+            "overlap_next": overlap_next, "overlap_now": overlap_now,
+            "admissible": legal & clear & present, "target_lane": tq}
+
+
 def anticipated_kin(kin: Tensor, horizon_s: float) -> Tensor:
     """``kin`` with every vehicle moved ``horizon_s`` ahead at its current acceleration.
 
@@ -360,6 +416,12 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                 safe = safe | (stopped & stopped_merge_gap_safe(kin, present, target_lane, p))
         else:
             safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
+        if getattr(p, "lane_learnable", False):
+            # V10UNBLOCK: the physics lane logits use the strictly physical envelope instead of
+            # every behavioural veto above (speed-gap margins, stopped relax, impatience).
+            kin_a = anticipated_kin(kin, float(p.dt_s))
+            safe = ~body_overlap(kin_a, present, target_lane,
+                                 float(getattr(p, "lane_physical_margin_m", 0.0)))
         allowed = adjacent & ramp_ok & no_to_ramp & safe
         discretionary = allowed & ~forced
         if p.lane_rule in ("forced_merge_only", "learned_discretionary"):
@@ -379,9 +441,10 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                 discretionary, torch.full_like(move, LEARNED_PRIOR_LOGIT), logits[..., target])
     if p.merge_cal:
         logits = merge_cal_target_logit(logits, kin, present, p, urgency, in_zone)
-    if p.merge_end_wait:
+    if p.merge_end_wait and not getattr(p, "lane_learnable", False):
         # Final veto (after the stopped relaxation and merge_cal): a masked prior keeps every
         # lane head, the forced-late window included, from merging into an insecure gap.
+        # V10UNBLOCK lane_learnable: the physical envelope replaces this behavioural veto.
         logits[..., p.merge_target_lane] = torch.where(
             merge_end_blocked(kin, present, p, impatience) if merge_blocked is None
             else merge_blocked,

@@ -53,7 +53,7 @@ from torch import Tensor, nn
 from wms.physics.config import PhysicsConfig
 from wms.physics.mobil import (MASKED_LOGIT, anticipated_kin, impatient_margins,
                                merge_end_waiting, merge_impatience_floor, merge_impatience_level,
-                               secure_gaps, target_overlap)
+                               physical_merge_envelope, secure_gaps, target_overlap)
 from wms.physics.neighbours import MIN_GAP_M, lane_neighbour, lane_of
 
 #: Road transitions (head index): overtake 1->0, return 0->1, merge 2->1.
@@ -213,7 +213,10 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     aov = target_overlap(kin_a, present, tq, p.gap_overlap_margin_m)
     fr = free - 1.0e-3
     target_feasible = None
-    if fast_mask_applies(p):
+    if getattr(p, "lane_learnable", False):
+        # V10UNBLOCK: the strictly physical envelope replaces every behavioural veto.
+        target_feasible = physical_merge_envelope(kin, present, p)["admissible"]
+    elif fast_mask_applies(p):
         # The physics feasibility of the car's own transition, from the quantities above
         # (identical to wms.physics.mobil.mobil_merge_logits > MASKED_LOGIT for this target;
         # tested): ramp-zone rule, speed gap rule, stopped-merger relaxation.
@@ -583,6 +586,13 @@ def lane_logits_v5(net: LaneV5Net, raw: Tensor, inst: dict[str, Tensor], learned
         logit = logit + merge_position_offset(lane, s, physics, merge_calib).to(logit.dtype)
     prior = lane_base.gather(-1, tq.unsqueeze(-1)).squeeze(-1)
     feasible = learned.bool() & (prior > MASKED_LOGIT)
+    if getattr(physics, "lane_learnable", False):
+        # V10UNBLOCK: every envelope-feasible row acts with the head's own logit; no forced
+        # last-5 m replacement, no impatience / hazard floor, no AP gate.
+        acts = feasible
+        value = torch.where(acts, logit.to(lane_base.dtype), prior)
+        logits = lane_base.scatter(-1, tq.unsqueeze(-1), value.unsqueeze(-1))
+        return logits, logit, acts
     forced = forced_window(lane, s, physics)
     if forced_window_hazard(physics):
         # V8WM2: the learned hazard (floored) decides inside the window as well.
@@ -740,12 +750,33 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
             feasible = prior > MASKED_LOGIT
         s = states[:, :t, :, 0]
         forced = forced_window(prev, s, physics)
+        head = _lookup(HEAD_OF_LANE, prev)
+        if getattr(physics, "lane_learnable", False):
+            # V10UNBLOCK all-risk rows: EVERY HDV step present at t is at risk (stay is a
+            # survival negative; a recorded non-own transition is a negative too).  Rows whose
+            # endpoint at t+1 is missing are censored (counted, labelled negative).  The
+            # envelope-infeasible rows are excluded and counted.  Forced-window rows are
+            # included (the window is no longer special).
+            endpoint = valid[:, 1:].bool()
+            label = (nxt == tq) & endpoint
+            rows = hdv & feasible
+            stats = {"rows": int(rows.sum()), "events": int((rows & label).sum()),
+                     "infeasible_rows": int((hdv & ~feasible).sum()),
+                     "infeasible_events": int(((nxt == tq) & endpoint & ~feasible).sum()),
+                     "censored": int((hdv & ~endpoint).sum()),
+                     "forced_window_rows": int((rows & forced).sum()),
+                     "forced_window_events": int((rows & label & forced).sum())}
+            for h, name in enumerate(TRANSITIONS):
+                sel = rows & (head == h)
+                stats[f"{name}_rows"] = int(sel.sum())
+                stats[f"{name}_events"] = int((sel & label).sum())
+            return {"features": feats[rows], "head": head[rows],
+                    "label": label[rows].float(), "stats": stats}
         label = nxt == tq
         own = (nxt == prev) | label
         rows = ok & own & feasible
         if not forced_window_hazard(physics):
             rows = rows & ~forced       # V8WM2 hazard mode: the window's rows are learnable
-        head = _lookup(HEAD_OF_LANE, prev)
         events = ok & label
         stats = {"rows": int(rows.sum()), "events": int((rows & label).sum()),
                  "infeasible_events": int((events & ~feasible).sum()),

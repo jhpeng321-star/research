@@ -215,6 +215,9 @@ class TrainSettings:
     # V6MERGE: retained in flat checkpoint configs; absent in older checkpoints.
     merge_end_wait: bool = False
     mainline_merge_yield: bool = False
+    # V10UNBLOCK (2026-10-19, default OFF = bit-identical): physical envelope + all-risk lane
+    # learning (wms.physics.config.PhysicsConfig.lane_learnable).
+    lane_learnable: bool = False
     # V7FT (2026-10-17, default OFF): merge-zone calibration loss (wms.train.losses.merge).
     merge_loss_speed_weight: float = 0.0
     merge_loss_discharge_weight: float = 0.0

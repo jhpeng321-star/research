@@ -65,6 +65,14 @@ MERGE_IMPATIENCE_HAZARD_TAU_S = 25.0
 MERGE_IMPATIENCE_GAP_TAU_S = 25.0
 MERGE_IMPATIENCE_S0_MIN_M = 0.5
 MERGE_IMPATIENCE_T_MIN_S = 0.1
+#: V10UNBLOCK ``lane_learnable`` (2026-10-19): the physical lane-change envelope.  Bodies are
+#: ``[s - L, s]`` (``s`` = front bumper, ``L`` = ``length_m``), judged on the configuration one
+#: large step ahead (constant-acceleration ``anticipated_kin``).  A transition is inside the
+#: envelope when the maneuver is road-legal (lane 2 only merges to lane 1 inside the merge zone,
+#: no lane ever moves to lane 2) AND the ego's body after the step does not intersect any body of
+#: the target lane.  This margin is the only clearance used (0 m: actual body non-intersection);
+#: no headway / standstill / impatience / ``merge_end_wait`` margins enter it.
+LANE_PHYSICAL_MARGIN_M = 0.0
 
 
 @dataclass
@@ -148,6 +156,25 @@ class PhysicsConfig:
     LC2013's ``lcImpatience`` / ``lcTimeToImpatience`` (impatience grows while a lane change is
     blocked and scales ``lcAssertive``, i.e. divides the required secure gaps); here the
     relaxation is on the margins only, so the follower can still always stop within ``b``.
+
+    V10UNBLOCK ``lane_learnable`` (2026-10-19, default off = bit-identical): replaces every
+    BEHAVIOURAL lane-change veto by learned acceptance over a strictly PHYSICAL envelope, so a
+    closed Dreamer loop can learn merges / lane changes / yield from data.  With it on:
+
+    * ``wms.physics.mobil.physical_merge_envelope`` is the only feasibility test of the lane
+      heads and of the physics lane logits: road-legal transitions (lane 2 -> 1 only inside the
+      merge zone; no transition into lane 2) AND actual body non-intersection of the ego's body
+      ``[s - L, s]`` with the target lane one step ahead (``lane_physical_margin_m`` clearance).
+      The speed-gap headway margins, the ``gap_stopped_relax`` exception, the ``merge_impatience``
+      relaxation and the ``merge_end_wait`` ``merge_end_waiting & ~secure`` veto no longer mask
+      anything here.
+    * The lane heads of ``model.lane_model='hazard_v5'`` always sample their own calibrated
+      probability (no ``lane_decision='gated'`` AP gate, no forced last-5 m window, no
+      impatience / hazard floor); the ``history`` lane head and a ``lane_teacher`` never overwrite
+      a free rollout.
+    * ``mainline_merge_yield`` braking is not applied (courtesy must be learned instead).
+    * Training rows of ``wms.model.lane_v5.recorded_rows`` cover ALL at-risk HDV steps (stay is a
+      survival negative), the envelope-infeasible rows are excluded and counted.
     """
 
     dt_s: float = 0.5
@@ -219,6 +246,9 @@ class PhysicsConfig:
     merge_impatience_gap_tau_s: float = MERGE_IMPATIENCE_GAP_TAU_S
     merge_impatience_s0_min_m: float = MERGE_IMPATIENCE_S0_MIN_M
     merge_impatience_t_min_s: float = MERGE_IMPATIENCE_T_MIN_S
+    # V10UNBLOCK (2026-10-19): learn merge / lane-change / yield from data (default off).
+    lane_learnable: bool = False
+    lane_physical_margin_m: float = LANE_PHYSICAL_MARGIN_M
 
     def __post_init__(self) -> None:
         for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
@@ -278,6 +308,13 @@ class PhysicsConfig:
                 raise ValueError(f"{name} must be finite and > 0 (minima >= 0)")
         if self.merge_impatience and (self.lane_gap_rule != "speed" or self.merge_cal):
             raise ValueError("merge_impatience requires lane_gap_rule='speed' and merge_cal off")
+        if not isinstance(self.lane_learnable, bool):
+            raise ValueError("lane_learnable must be a boolean")
+        if (isinstance(self.lane_physical_margin_m, bool)
+                or not isinstance(self.lane_physical_margin_m, (int, float))
+                or not math.isfinite(self.lane_physical_margin_m)
+                or self.lane_physical_margin_m < 0.0):
+            raise ValueError("lane_physical_margin_m must be finite and >= 0")
 
     def merge_end_follow_constants(self) -> tuple[float, float]:
         """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""
@@ -322,7 +359,8 @@ class PhysicsConfig:
                                             "gap_stopped_relax", "stop_time_integration",
                                             "emergency_decel_mps2", "merge_end_wait",
                                             "mainline_merge_yield", "forced_window_mode",
-                                            "mainline_merge_yield_scope", "merge_impatience")
+                                            "mainline_merge_yield_scope", "merge_impatience",
+                                            "lane_learnable")
                 and v is not None}
         data.update(overrides)
         return cls(**data)

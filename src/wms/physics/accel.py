@@ -52,7 +52,8 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                             torch.maximum(accel, -comfortable)).clamp_min(-limit)
     if physics.merge_cal:
         accel = merge_cal_yield(kin, present, accel, physics)
-    if physics.mainline_merge_yield:
+    if physics.mainline_merge_yield and not getattr(physics, "lane_learnable", False):
+        # V10UNBLOCK lane_learnable: no hard courtesy rule; the residual must learn it.
         accel = mainline_merge_yield(kin, present, accel, physics, params,
                                      None if driver_params is None else driver_params["decel"],
                                      merge_blocked, impatience)

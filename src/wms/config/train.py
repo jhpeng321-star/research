@@ -34,7 +34,7 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
                      "mainline_merge_yield_scope": ("lane_end", "zone")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
-                              "merge_impatience")
+                              "merge_impatience", "lane_learnable")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -54,6 +54,10 @@ class PhysicsOptions:
     """V6MERGE: lane-end mergers need both lane-1 gaps SUMO-secure and never pass the end."""
     mainline_merge_yield: bool = False
     """V6MERGE: the nearest lane-1 follower brakes (own IDM) for a blocked lane-end merger."""
+    lane_learnable: bool = False
+    """V10UNBLOCK (2026-10-19, default false = bit-identical): replace behavioural lane-change
+    vetoes by the physical envelope and learn merge / lane-change / yield from data
+    (``wms.physics.config.PhysicsConfig.lane_learnable``)."""
     overrides: dict[str, Any] = field(default_factory=dict)
     """V8WM (2026-10-17, default empty = unchanged): numeric gap-rule / lane-end parameters of
     ``wms.physics.config.PhysicsConfig`` (keys :data:`PHYSICS_OVERRIDE_KEYS`: the speed-rule
