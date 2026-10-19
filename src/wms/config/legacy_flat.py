@@ -16,6 +16,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "epochs_per_stage": "curriculum.epochs_per_stage",
     "steps_per_epoch": "curriculum.steps_per_epoch",
     "batch_size": "optim.batch_size",
+    "batch_size_per_stage": "optim.batch_size_per_stage",
     "lr": "optim.lr",
     "weight_decay": "optim.weight_decay",
     "grad_clip": "optim.grad_clip",
@@ -146,6 +147,12 @@ FLAT_TO_PATH: dict[str, str] = {
     "mixed_horizon_frac": "curriculum.mixed_horizon_frac",
     "mixed_horizon_s": "curriculum.mixed_horizon_s",
     "mixed_horizon_min_stage_s": "curriculum.mixed_horizon_min_stage_s",
+    # V10HORIZON (plateau-driven curriculum advancement)
+    "plateau_advance": "curriculum.plateau_advance",
+    "plateau_patience": "curriculum.plateau_patience",
+    "plateau_min_delta": "curriculum.plateau_min_delta",
+    "plateau_min_steps": "curriculum.plateau_min_steps",
+    "plateau_max_steps": "curriculum.plateau_max_steps",
     # PAIRLOSS (paired-difference loss on paired SUMO branches)
     "paired_diff_weight": "loss.paired_diff.weight",
     "paired_diff_fraction": "loss.paired_diff.fraction",
@@ -202,11 +209,21 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_flow_balance": "loss.lane_flow.balance",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
+    # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
+    "replay_enabled": "data.replay.enabled",
+    "replay_merge_oversample": "data.replay.merge_oversample",
+    "replay_cav_follower_oversample": "data.replay.cav_follower_oversample",
+    "replay_error_max_boost": "data.replay.error_max_boost",
+    "replay_error_alpha": "data.replay.error_alpha",
+    "replay_error_decay": "data.replay.error_decay",
+    "replay_probe_windows": "data.replay.probe_windows",
+    "replay_refresh_every": "data.replay.refresh_every",
 }
 
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
 #: and long-horizon fields), so old flags-off receipts stay byte-identical.
 OMIT_WHEN_DEFAULT: tuple[str, ...] = (
+    "batch_size_per_stage",
     "asym_speed_alpha", "decel_weight", "decel_threshold_mps2", "propagation_weight",
     "prop_window_s", "prop_max_gap_m", "residual_cap_neg_mps2",
     "residual_soft_bound_mps2", "residual_soft_bound_neg_mps2", "residual_mag_weight",
@@ -233,6 +250,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "val_all_horizons", "selection_mode", "selection_horizons_s", "selection_reference",
     "selection_min_stage_s", "selection_agg_reward_weight", "mixed_horizon_frac",
     "mixed_horizon_s", "mixed_horizon_min_stage_s",
+    "plateau_advance", "plateau_patience", "plateau_min_delta", "plateau_min_steps",
+    "plateau_max_steps",
     "paired_diff_weight", "paired_diff_fraction", "paired_diff_groups", "paired_diff_max_arms",
     "paired_diff_position_weight", "paired_diff_speed_weight", "paired_diff_aggregate_weight",
     "paired_diff_couple_randomness", "paired_diff_return_weight", "paired_diff_rank_weight",
@@ -261,6 +280,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
     # V9ENTRY
     "entry_queue_state",
+    # V10HORIZON
+    "replay_enabled", "replay_merge_oversample", "replay_cav_follower_oversample",
+    "replay_error_max_boost", "replay_error_alpha", "replay_error_decay",
+    "replay_probe_windows", "replay_refresh_every",
 )
 
 

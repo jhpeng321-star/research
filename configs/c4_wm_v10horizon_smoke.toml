@@ -1,0 +1,42 @@
+# V10HORIZON CPU smoke recipe (2026-10-19): tiny curriculum budgets so the plateau
+# advancement and the priority-replay probe run in a few minutes on a few TRAIN-val
+# episodes.  Not a production recipe -- the full one is configs/c4_wm_v10horizon.toml.
+# The checked-in smoke evidence uses the same switches on the TRAIN-val episodes via
+# tools/v10horizon_smoke.py (see HORIZON.md); this TOML is the config-level record.
+# (It extends c4_wm_v8ft_short4 directly: the extends chain has a depth cap.)
+schema_version = 2
+name = "WM-S-C4-V10HORIZON-SMOKE"
+extends = "c4_wm_v8ft_short4.toml"
+
+[model]
+init_from = "ckpt_v5m"
+
+[curriculum]
+unroll_s = [10.0, 30.0, 60.0, 120.0]
+stage_steps = [6, 6, 6, 6]
+plateau_advance = true
+plateau_patience = 1
+plateau_min_steps = 1
+plateau_min_delta = 1.0          # any non-improvement counts: advance at the 2nd validation
+truncation_steps = 8
+truncation_steps_per_stage = [8, 8, 8, 8]
+
+[optim]
+lr_per_stage = [1.0e-4, 1.0e-4, 5.0e-5, 5.0e-5]
+
+[selection]
+val_every = 1
+val_max_windows = 8
+
+[data.replay]
+enabled = true
+merge_oversample = 4.0
+cav_follower_oversample = 3.0
+error_max_boost = 8.0
+error_alpha = 1.0
+error_decay = 0.9
+probe_windows = 8
+refresh_every = 3
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10horizon_smoke"

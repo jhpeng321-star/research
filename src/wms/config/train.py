@@ -710,6 +710,19 @@ class CurriculumConfig:
     mixed_horizon_frac: float = 0.0
     mixed_horizon_s: tuple[float, ...] = (10.0, 20.0)
     mixed_horizon_min_stage_s: float = 30.0
+    # V10HORIZON (2026-10-19, default OFF = fixed step budget, bit-identical): advance a
+    # curriculum stage when its own-horizon validation error plateaus (the shorter horizon
+    # stops improving) instead of after the fixed ``stage_steps`` budget.  Needs a validation
+    # dataset; ``val_every`` sets the observation cadence and ``stage_steps`` stays the cap.
+    plateau_advance: bool = False
+    plateau_patience: int = 3
+    """Number of consecutive non-improving validations before the stage advances."""
+    plateau_min_delta: float = 0.01
+    """Relative improvement of the best validation value that resets the patience counter."""
+    plateau_min_steps: int = 2
+    """Minimum number of validations observed before a plateau can advance the stage."""
+    plateau_max_steps: int = 0
+    """Observation cap forcing an advance (0 = none; the stage's step budget is the cap)."""
 
     def __post_init__(self) -> None:
         require(len(self.selection_horizons_s) >= 1
@@ -730,6 +743,12 @@ class CurriculumConfig:
                 and all(is_finite(x) and x > 0 for x in self.mixed_horizon_s)
                 and is_finite(self.mixed_horizon_min_stage_s),
                 "curriculum.mixed_horizon_frac must be in [0,1] and mixed_horizon_s positive")
+        require(isinstance(self.plateau_advance, bool)
+                and self.plateau_patience >= 1 and self.plateau_min_steps >= 1
+                and self.plateau_max_steps >= 0
+                and is_finite(self.plateau_min_delta) and self.plateau_min_delta >= 0.0,
+                "curriculum.plateau_* must be a bool plus positive patience/min_steps "
+                "(max_steps >= 0) and a non-negative min_delta")
         require(bool(self.unroll_s) and all(x > 0 for x in self.unroll_s),
                 "curriculum.unroll_s must be a non-empty list of positive horizons")
         require(self.epochs_per_stage >= 1 and self.steps_per_epoch >= 1,
@@ -752,6 +771,9 @@ class OptimConfig:
     """Optimiser settings."""
 
     batch_size: int = 8
+    batch_size_per_stage: Optional[tuple[int, ...]] = None
+    """V10HORIZON: optional per-curriculum-stage batch size (long-horizon memory control);
+    None (default) = every stage uses ``batch_size``."""
     lr: float = 1.0e-3
     weight_decay: float = 0.0
     grad_clip: float = 1.0
@@ -766,6 +788,10 @@ class OptimConfig:
             require(len(self.lr_per_stage) >= 1
                     and all(is_finite(x) and x > 0.0 for x in self.lr_per_stage),
                     "optim.lr_per_stage needs positive finite learning rates")
+        if self.batch_size_per_stage is not None:
+            require(len(self.batch_size_per_stage) >= 1
+                    and all(int(x) >= 1 for x in self.batch_size_per_stage),
+                    "optim.batch_size_per_stage needs positive batch sizes")
 
 
 @config_dataclass

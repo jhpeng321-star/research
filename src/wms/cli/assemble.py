@@ -307,7 +307,30 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
     if data.c4_sources:
         train, val = _add_c4_sources(cfg, train, val, path, horizon=horizon, pack_k=pack_k,
                                      heldout=heldout, curriculum=curriculum)
+    if getattr(data, "replay", None) is not None and data.replay.enabled:
+        train = _wrap_replay(train, data.replay, curriculum)
     return train, val, resolved
+
+
+def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
+    """V10HORIZON: wrap the assembled TRAIN dataset in prioritised replay."""
+    from ..data.replay_flags import compute_replay_flags
+    from ..train.replay import PriorityReplayDataset
+
+    flags = compute_replay_flags(train)
+    replay = PriorityReplayDataset(
+        train, merge_zone=flags["merge_zone"], cav_follower=flags["cav_follower"],
+        merge_oversample=float(replay_cfg.merge_oversample),
+        cav_oversample=float(replay_cfg.cav_follower_oversample),
+        error_alpha=float(replay_cfg.error_alpha),
+        error_decay=float(replay_cfg.error_decay),
+        error_max_boost=float(replay_cfg.error_max_boost))
+    replay.receipt["replay"]["scan"] = {k: flags[k] for k in
+                                        ("n_windows", "n_merge_zone", "n_cav_follower", "n_both")}
+    replay.receipt["replay"]["stage_sampling"] = replay.describe_stages(curriculum)
+    print(f"priority replay: {flags['n_merge_zone']} merge-zone / "
+          f"{flags['n_cav_follower']} CAV-follower of {flags['n_windows']} windows", file=sys.stderr)
+    return replay
 
 
 def _jam_min(data: Any, key: str = "jam_min_fraction") -> dict:
