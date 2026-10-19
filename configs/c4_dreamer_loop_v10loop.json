@@ -74,7 +74,7 @@
       "code_root": "/root/autodl-tmp/c4/v5/repo_REPO_SHA",
       "python": "/root/miniconda3/bin/python",
       "work_root": "/root/autodl-tmp/c4/v5/loop_v10",
-      "workers": 160,
+      "workers": 200,
       "entrance_mask_root": "/root/autodl-tmp/c4/v5/entrance_mask"
     },
     "cpuN": {
@@ -91,12 +91,10 @@
   },
   "collect": {
     "hosts": [
-      "gpuR",
-      "cpuN"
+      "gpuR"
     ],
     "batch_size": {
-      "gpuR": 140,
-      "cpuN": 60
+      "gpuR": 200
     },
     "population": "textbook",
     "case_plan": "weighted-cycle",
@@ -119,7 +117,8 @@
       "scp -r {gpuR_entrance_mask_root} cpuN:~/c4/entrance_mask && ssh cpuN 'md5sum ~/c4/entrance_mask/*'",
       "echo 'compare the gpuR and cpuN md5 lines above; they must be identical before collection'"
     ],
-    "ship_note": "gpuR builds repo_<sha>.tgz, scp's it to cpuN:~/c4/, unpacks it and prints both md5 lines; the entrance-mask loader dir ships alongside. Verified manually from the dry-run output before run --execute."
+    "ship_note": "gpuR builds repo_<sha>.tgz, scp's it to cpuN:~/c4/, unpacks it and prints both md5 lines; the entrance-mask loader dir ships alongside. Verified manually from the dry-run output before run --execute.",
+    "_note_hosts": "10-19: gpuR has no SSH route to cpuN (only cpuN->gpuR), so collection runs on gpuR alone (224 CPUs); cpuN is used for per-iteration health checks pulled from gpuR."
   },
   "convert": {
     "prefix": "v10_policy_iter",

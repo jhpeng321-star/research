@@ -121,8 +121,9 @@ def test_collect_uses_entrance_mask_loader_and_zone_env():
     assert gpur["env"]["ENTRANCE_NATIVE_MAIN_M"] == "25"
     assert gpur["env"]["ENTRANCE_NATIVE_RAMP_M"] == "25"
     assert CFG["hosts"]["gpuR"]["entrance_mask_root"] in gpur["env"]["PYTHONPATH"]
-    assert CFG["hosts"]["cpuN"]["entrance_mask_root"] in next(
-        s for s in stages if s["name"] == "collect" and s["host"] == "cpuN")["env"]["PYTHONPATH"]
+    if "cpuN" in CFG["collect"]["hosts"]:
+        assert CFG["hosts"]["cpuN"]["entrance_mask_root"] in next(
+            s for s in stages if s["name"] == "collect" and s["host"] == "cpuN")["env"]["PYTHONPATH"]
 
 
 def test_ship_stage_carries_repo_and_entrance_mask_to_cpun():
@@ -189,8 +190,7 @@ def test_budget_is_positive_and_iteration0_has_no_collection():
     assert b1["sim_s"] == 200 * (300 + 900)
     assert b1["check_sim_s"] == 12 * (300 + 600)
     assert b1["wm_steps"] == 100 + 80
-    assert CFG["collect"]["batch_size"]["gpuR"] == 140
-    assert CFG["collect"]["batch_size"]["cpuN"] == 60
+    assert sum(CFG["collect"]["batch_size"].values()) == 200
     assert b1["gpu_hours_total"] > b0["gpu_hours_total"]
 
 
