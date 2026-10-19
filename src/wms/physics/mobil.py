@@ -83,11 +83,17 @@ def physical_target_lane(lane: Tensor) -> Tensor:
     return table[lane.clamp(0, 2)]
 
 
-def body_overlap(kin: Tensor, present: Tensor, target_lane: Tensor, margin_m: float) -> Tensor:
+def body_overlap(kin: Tensor, present: Tensor, target_lane: Tensor, margin_m: float,
+                 exempt: Optional[Tensor] = None) -> Tensor:
     """``[B, K]``: ego body ``[s - L, s]`` intersects a present body in ``target_lane``.
 
     Same length/position convention as :func:`target_overlap` (``s`` = front bumper, body
     extends backwards by ``length_m``), judged on the supplied configuration.
+
+    V10ENVFIX ``exempt`` (optional bool ``[B, K]``, default ``None`` = bit-identical): a body
+    marked here does not block -- the audit's simultaneous-lane-change rule, where a
+    target-lane vehicle that is itself mid-lane-change is not an intersection.  The mask only
+    ever removes obstacles; it never adds one.
     """
     s, length = kin[..., 0], kin[..., 6]
     lane = lane_of(kin)
@@ -95,13 +101,34 @@ def body_overlap(kin: Tensor, present: Tensor, target_lane: Tensor, margin_m: fl
     rear_i, front_i = rear.unsqueeze(-1), front.unsqueeze(-1)
     rear_j, front_j = rear.unsqueeze(-2), front.unsqueeze(-2)
     other = present.unsqueeze(-2) & (lane.unsqueeze(-2) == target_lane.unsqueeze(-1))
+    if exempt is not None:
+        other = other & ~exempt.bool().unsqueeze(-2)
     eye = torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)
     hit = other & ~eye & (rear_j < front_i + margin_m) & (front_j > rear_i - margin_m)
     return hit.any(-1)
 
 
-def physical_merge_envelope(kin: Tensor, present: Tensor,
-                            physics: PhysicsConfig) -> dict[str, Tensor]:
+def mid_change_exempt(physics: PhysicsConfig, mid_change: Optional[Tensor] = None,
+                      lane_age: Optional[Tensor] = None) -> Optional[Tensor]:
+    """V10ENVFIX: target-lane bodies exempted as being themselves mid-lane-change.
+
+    Returns a bool ``[B, K]`` mask (or ``None`` = no exemption), and only when
+    ``physics.lane_learnable`` is on -- the default path stays bit-identical.  ``mid_change``
+    is the explicit per-body mask (the census / audit passes the recorded
+    ``lane[t] != lane[t + 1]``).  When it is absent, ``lane_age`` (steps since the body's last
+    lane change; ``0`` = changed in the last step) derives it: ``lane_age <= 0``.  The
+    sentinel ``AGE_SENTINEL`` (999, never changed) is never exempt.
+    """
+    if not getattr(physics, "lane_learnable", False):
+        return None
+    if mid_change is None and lane_age is not None:
+        mid_change = lane_age.float() <= 0.0
+    return None if mid_change is None else mid_change.bool()
+
+
+def physical_merge_envelope(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
+                            mid_change: Optional[Tensor] = None,
+                            lane_age: Optional[Tensor] = None) -> dict[str, Tensor]:
     """V10UNBLOCK: the strictly physical lane-change envelope ``[B, K]``.
 
     ``legal``: the road's only transitions (lane 1 -> 0, 0 -> 1, and the ramp merge 2 -> 1
@@ -110,6 +137,10 @@ def physical_merge_envelope(kin: Tensor, present: Tensor,
     the target lane with ``lane_physical_margin_m`` clearance.  No headway / standstill /
     impatience / ``merge_end_wait`` margin enters.  ``clear_now`` (current configuration) and
     the overlaps are diagnostics; ``admissible`` = envelope + presence.
+
+    V10ENVFIX ``mid_change`` / ``lane_age`` (optional, ``None`` = bit-identical): a target-lane
+    body that is itself mid-lane-change does not block (the audit's simultaneous-change rule),
+    see :func:`mid_change_exempt`.  The exemption is applied only under ``physics.lane_learnable``.
     """
     p = physics
     present = present.bool()
@@ -120,9 +151,10 @@ def physical_merge_envelope(kin: Tensor, present: Tensor,
     is_ramp = lane == p.merge_lane
     legal = ((~is_ramp) | in_zone) & (tq != p.merge_lane) & (lane >= 0)
     margin = float(getattr(p, "lane_physical_margin_m", 0.0))
+    exempt = mid_change_exempt(p, mid_change, lane_age)
     kin_a = anticipated_kin(kin, float(p.dt_s))
-    overlap_next = body_overlap(kin_a, present, tq, margin)
-    overlap_now = body_overlap(kin, present, tq, margin)
+    overlap_next = body_overlap(kin_a, present, tq, margin, exempt)
+    overlap_now = body_overlap(kin, present, tq, margin, exempt)
     clear = ~overlap_next
     return {"legal": legal, "clear": clear, "clear_now": ~overlap_now,
             "overlap_next": overlap_next, "overlap_now": overlap_now,
@@ -345,7 +377,9 @@ def merge_end_blocked(kin: Tensor, present: Tensor, physics: PhysicsConfig,
 def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                        driver_params: Optional[Mapping[str, Tensor]] = None, *,
                        merge_blocked: Optional[Tensor] = None,
-                       impatience: Optional[Tensor] = None) -> Tensor:
+                       impatience: Optional[Tensor] = None,
+                       mid_change: Optional[Tensor] = None,
+                       lane_age: Optional[Tensor] = None) -> Tensor:
     """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``.
 
     ``stay`` has logit 0; a change to an adjacent lane has
@@ -419,9 +453,11 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         if getattr(p, "lane_learnable", False):
             # V10UNBLOCK: the physics lane logits use the strictly physical envelope instead of
             # every behavioural veto above (speed-gap margins, stopped relax, impatience).
+            # V10ENVFIX: a target-lane body that is itself mid-lane-change does not block.
             kin_a = anticipated_kin(kin, float(p.dt_s))
+            exempt = mid_change_exempt(p, mid_change, lane_age)
             safe = ~body_overlap(kin_a, present, target_lane,
-                                 float(getattr(p, "lane_physical_margin_m", 0.0)))
+                                 float(getattr(p, "lane_physical_margin_m", 0.0)), exempt)
         allowed = adjacent & ramp_ok & no_to_ramp & safe
         discretionary = allowed & ~forced
         if p.lane_rule in ("forced_merge_only", "learned_discretionary"):
