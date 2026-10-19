@@ -9,6 +9,7 @@ extends = "c4_wm_v5m_refresh.toml"
 
 [model]
 checkpoint_step = true
+courtesy_inputs = true   # 10-20 learned courtesy (zero-init)
 
 [curriculum]
 unroll_s = [60.0, 120.0, 240.0]
@@ -22,6 +23,11 @@ batch_size_per_stage = [8, 4, 2]
 
 [loss]
 loss_share_logging = false
+courtesy_weight = 3.0
+brake_follow_weight = 2.0
+
+[data.replay]
+brake_oversample = 2.0
 
 [runtime]
 out_dir = "runs/active/c4_wm_v10loop_k"
