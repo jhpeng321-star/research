@@ -618,6 +618,10 @@ class UnrollRunner:
             delay_total = sum(float(logged[n]) for n in delay_names)
             record["agg_delay_value_share"] = (delay_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
+        brake_prep = targets.prepared.get("brake_follow")
+        if brake_prep is not None:
+            record["brake_follow_steps"] = int(brake_prep["count"])
+            record["brake_follow_weight"] = float(cfg.brake_follow_weight)
         merge_prep = targets.prepared.get("merge")
         if merge_prep is not None:
             # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.

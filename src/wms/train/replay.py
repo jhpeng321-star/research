@@ -1,15 +1,17 @@
-"""Prioritised mixed replay (V10HORIZON): merge-zone / CAV-follower / high-error windows.
+"""Prioritised mixed replay (V10HORIZON): merge-zone / CAV-follower / brake-event / high-error.
 
 ``PriorityReplayDataset`` wraps whatever mixed TRAIN dataset the assembly built (loop data
 + original native/random sources, already combined by :mod:`wms.data.mixdata` /
 :mod:`wms.data.c4_episodes`) and supplies the per-stage sampling weights the trainer already
 honours.  Every window gets a multiplier
 
-    base_source_weight(stage) x merge-zone_mult x cav-follower_mult x high-error_mult
+    base_source_weight(stage) x merge-zone_mult x cav-follower_mult
+        x brake-event_mult x high-error_mult
 
-so the source mix ratios are preserved and the priority terms compose on top.  ``merge-zone``
-and ``cav-follower`` are static per-window flags (:mod:`wms.data.replay_flags`); the
-``high-error`` multiplier is updated online from the forward-only per-window positional error
+so the source mix ratios are preserved and the priority terms compose on top.  ``merge-zone``,
+``cav-follower`` and ``brake-event`` are static per-window flags
+(:mod:`wms.data.replay_flags`); the ``high-error`` multiplier is updated online from the
+forward-only per-window positional error
 (:meth:`wms.train.unroll.UnrollRunner.window_errors`), so windows the model predicts poorly
 are drawn more often.  All terms default to 1 (OFF = the weights the base dataset already
 produced, bit-for-bit).
@@ -36,16 +38,20 @@ class PriorityReplayDataset(Dataset):
     """Priority-weighted view of a training dataset (default OFF = unchanged weights)."""
 
     def __init__(self, dataset: Dataset, *, merge_zone, cav_follower,
-                 merge_oversample: float = 1.0, cav_oversample: float = 1.0,
+                 brake_event=None, merge_oversample: float = 1.0,
+                 cav_oversample: float = 1.0, brake_oversample: float = 1.0,
                  error_alpha: float = 1.0, error_decay: float = 0.9,
                  error_max_boost: float = 8.0) -> None:
         n = len(dataset)
         merge = np.asarray(merge_zone, dtype=bool)
         follower = np.asarray(cav_follower, dtype=bool)
-        if merge.shape != (n,) or follower.shape != (n,):
+        brake = (np.zeros(n, dtype=bool) if brake_event is None
+                 else np.asarray(brake_event, dtype=bool))
+        if merge.shape != (n,) or follower.shape != (n,) or brake.shape != (n,):
             raise ReplayRefusal("replay flags must give one bool per window")
         for name, value in (("merge_oversample", merge_oversample),
                             ("cav_oversample", cav_oversample),
+                            ("brake_oversample", brake_oversample),
                             ("error_alpha", error_alpha),
                             ("error_max_boost", error_max_boost)):
             if not math.isfinite(float(value)) or float(value) < 1.0:
@@ -53,9 +59,10 @@ class PriorityReplayDataset(Dataset):
         if not (0.0 <= float(error_decay) < 1.0):
             raise ReplayRefusal("replay error_decay must be in [0, 1)")
         self.dataset = dataset
-        self.merge_zone, self.cav_follower = merge, follower
+        self.merge_zone, self.cav_follower, self.brake_event = merge, follower, brake
         self.merge_oversample = float(merge_oversample)
         self.cav_oversample = float(cav_oversample)
+        self.brake_oversample = float(brake_oversample)
         self.error_alpha = float(error_alpha)
         self.error_decay = float(error_decay)
         self.error_max_boost = float(error_max_boost)
@@ -66,9 +73,10 @@ class PriorityReplayDataset(Dataset):
         self.receipt["replay"] = {
             "schema": REPLAY_RECEIPT_SCHEMA, "n_windows": n,
             "n_merge_zone": int(merge.sum()), "n_cav_follower": int(follower.sum()),
-            "n_both": int((merge & follower).sum()),
+            "n_brake_event": int(brake.sum()), "n_both": int((merge & follower).sum()),
             "merge_oversample": self.merge_oversample,
             "cav_oversample": self.cav_oversample,
+            "brake_oversample": self.brake_oversample,
             "error_alpha": self.error_alpha, "error_decay": self.error_decay,
             "error_max_boost": self.error_max_boost,
             "error_weighted_windows": 0}
@@ -96,6 +104,8 @@ class PriorityReplayDataset(Dataset):
             mult = mult * np.where(self.merge_zone, self.merge_oversample, 1.0)
         if self.cav_oversample > 1.0:
             mult = mult * np.where(self.cav_follower, self.cav_oversample, 1.0)
+        if self.brake_oversample > 1.0:
+            mult = mult * np.where(self.brake_event, self.brake_oversample, 1.0)
         return mult
 
     def error_multiplier(self) -> np.ndarray:
@@ -164,6 +174,8 @@ class PriorityReplayDataset(Dataset):
                              float((static[self.merge_zone]).sum() / static.sum()), 4),
                          "cav_follower_draw_fraction": round(
                              float((static[self.cav_follower]).sum() / static.sum()), 4),
+                         "brake_event_draw_fraction": round(
+                             float((static[self.brake_event]).sum() / static.sum()), 4),
                          "error_weighted_windows": int(self._error_seen.sum())})
         return rows
 

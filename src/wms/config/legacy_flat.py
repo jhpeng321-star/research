@@ -25,6 +25,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_weight": "loss.lane_weight",
     "position_weight": "loss.position_weight",
     "speed_weight": "loss.speed_weight",
+    "brake_follow_weight": "loss.brake_follow_weight",
     "step_weight_decay": "loss.step_weight_decay",
     "truncation_steps": "curriculum.truncation_steps",
     "history_features": "model.history_features",
@@ -235,6 +236,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "replay_enabled": "data.replay.enabled",
     "replay_merge_oversample": "data.replay.merge_oversample",
     "replay_cav_follower_oversample": "data.replay.cav_follower_oversample",
+    "replay_brake_oversample": "data.replay.brake_oversample",
     "replay_error_max_boost": "data.replay.error_max_boost",
     "replay_error_alpha": "data.replay.error_alpha",
     "replay_error_decay": "data.replay.error_decay",
@@ -246,6 +248,7 @@ FLAT_TO_PATH: dict[str, str] = {
 #: and long-horizon fields), so old flags-off receipts stay byte-identical.
 OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "batch_size_per_stage",
+    "brake_follow_weight",
     "asym_speed_alpha", "decel_weight", "decel_threshold_mps2", "propagation_weight",
     "prop_window_s", "prop_max_gap_m", "residual_cap_neg_mps2",
     "residual_soft_bound_mps2", "residual_soft_bound_neg_mps2", "residual_mag_weight",
@@ -312,6 +315,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "entry_queue_state",
     # V10HORIZON
     "replay_enabled", "replay_merge_oversample", "replay_cav_follower_oversample",
+    "replay_brake_oversample",
     "replay_error_max_boost", "replay_error_alpha", "replay_error_decay",
     "replay_probe_windows", "replay_refresh_every",
 )

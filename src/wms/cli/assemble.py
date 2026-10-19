@@ -322,16 +322,20 @@ def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
     flags = compute_replay_flags(train)
     replay = PriorityReplayDataset(
         train, merge_zone=flags["merge_zone"], cav_follower=flags["cav_follower"],
+        brake_event=flags["brake_event"],
         merge_oversample=float(replay_cfg.merge_oversample),
         cav_oversample=float(replay_cfg.cav_follower_oversample),
+        brake_oversample=float(replay_cfg.brake_oversample),
         error_alpha=float(replay_cfg.error_alpha),
         error_decay=float(replay_cfg.error_decay),
         error_max_boost=float(replay_cfg.error_max_boost))
     replay.receipt["replay"]["scan"] = {k: flags[k] for k in
-                                        ("n_windows", "n_merge_zone", "n_cav_follower", "n_both")}
+                                        ("n_windows", "n_merge_zone", "n_cav_follower",
+                                         "n_brake_event", "n_both")}
     replay.receipt["replay"]["stage_sampling"] = replay.describe_stages(curriculum)
     print(f"priority replay: {flags['n_merge_zone']} merge-zone / "
-          f"{flags['n_cav_follower']} CAV-follower of {flags['n_windows']} windows", file=sys.stderr)
+          f"{flags['n_cav_follower']} CAV-follower / {flags['n_brake_event']} brake-event "
+          f"of {flags['n_windows']} windows", file=sys.stderr)
     return replay
 
 

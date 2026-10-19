@@ -115,8 +115,8 @@ class ReplayConfig:
     """V10HORIZON prioritised mixed replay (all terms default 1 = OFF, unchanged).
 
     Wraps the assembled mixed TRAIN dataset (loop + original native/random sources) so
-    merge-zone windows, CAV-follower windows and high-error windows are drawn more often
-    while the source mix ratios are preserved.  ``probe_windows`` (0 = static only)
+    merge-zone windows, CAV-follower windows, HDV-led brake-event windows and high-error
+    windows are drawn more often while the source mix ratios are preserved.  ``probe_windows`` (0 = static only)
     forward-probes that many evenly spaced windows per stage (and every ``refresh_every``
     optimizer steps) to update the high-error priorities; ``error_max_boost`` caps the
     per-window oversampling multiple.
@@ -125,6 +125,7 @@ class ReplayConfig:
     enabled: bool = False
     merge_oversample: float = 1.0
     cav_follower_oversample: float = 1.0
+    brake_oversample: float = 1.0
     error_max_boost: float = 8.0
     error_alpha: float = 1.0
     error_decay: float = 0.9
@@ -132,8 +133,8 @@ class ReplayConfig:
     refresh_every: int = 0
 
     def __post_init__(self) -> None:
-        for name in ("merge_oversample", "cav_follower_oversample", "error_max_boost",
-                     "error_alpha"):
+        for name in ("merge_oversample", "cav_follower_oversample", "brake_oversample",
+                     "error_max_boost", "error_alpha"):
             value = getattr(self, name)
             require(is_finite(value) and value >= 1.0,
                     f"data.replay.{name} must be finite and >= 1")

@@ -61,6 +61,9 @@ class TrainSettings:
     lane_weight: float = 1.0
     position_weight: float = 1.0
     speed_weight: float = 1.0
+    # V10BRAKEWAVE (default 1 = OFF, bit-identical): per-step position/speed multiplier on
+    # followers whose same-lane recorded leader (<= 40 m) is decelerating below -1 m/s^2.
+    brake_follow_weight: float = 1.0
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -217,6 +220,7 @@ class TrainSettings:
     replay_enabled: bool = False
     replay_merge_oversample: float = 1.0
     replay_cav_follower_oversample: float = 1.0
+    replay_brake_oversample: float = 1.0
     replay_error_max_boost: float = 8.0
     replay_error_alpha: float = 1.0
     replay_error_decay: float = 0.9
@@ -524,7 +528,10 @@ class TrainSettings:
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
+                     self.replay_brake_oversample,
                      self.replay_error_max_boost, self.replay_error_alpha))
+                 and math.isfinite(float(self.brake_follow_weight))
+                 and float(self.brake_follow_weight) >= 1.0
                  and math.isfinite(float(self.replay_error_decay))
                  and 0.0 <= float(self.replay_error_decay) < 1.0
                  and int(self.replay_probe_windows) >= 0 and int(self.replay_refresh_every) >= 0,
