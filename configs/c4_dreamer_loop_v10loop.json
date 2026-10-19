@@ -144,7 +144,15 @@
     "extra_set": [
       "physics.lane_learnable=true"
     ],
-    "extra_set_horizon": [],
+    "extra_set_horizon": [
+      "curriculum.plateau_advance=true",
+      "curriculum.plateau_patience=3",
+      "data.replay.enabled=true",
+      "data.replay.merge_oversample=2.0",
+      "data.replay.cav_follower_oversample=2.0",
+      "data.replay.probe_windows=64",
+      "model.checkpoint_step=true"
+    ],
     "pass_through_note": "Verbatim --set items. lane_learnable is the physics key physics.lane_learnable (c4/v10unblock, merged); the c4/v10horizon curriculum + mixed-prioritised-replay keys are NOT merged yet and stay in wm.extra_set_horizon (empty until that branch lands). The loop never parses or renames them.",
     "timeout_s": 10800,
     "val_metric": "mean_position",
