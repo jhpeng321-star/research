@@ -136,7 +136,8 @@ def validate_config(cfg: dict) -> None:
         raise ValueError("wm.iter0_mode='existing' needs wm.iter0_wm_out")
     for key, value in (("extra_set", cfg["wm"].get("extra_set", [])),
                        ("extra_set_iter0", cfg["wm"].get("extra_set_iter0", [])),
-                       ("extra_set_horizon", cfg["wm"].get("extra_set_horizon", []))):
+                       ("extra_set_horizon", cfg["wm"].get("extra_set_horizon", [])),
+                       ("extra_set_laneflow", cfg["wm"].get("extra_set_laneflow", []))):
         if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
             raise ValueError(f"wm.{key} must be a list of '--set' strings")
     if not isinstance(cfg["wm"].get("stage_steps"), list) or len(cfg["wm"]["stage_steps"]) < 1:
@@ -294,6 +295,15 @@ def _wm_env(cfg: dict, converted: str | None) -> dict:
     if converted:
         env["WMS_DATA_V6_POLICY"] = converted
     return env
+
+
+def wm_laneflow_keys(cfg: dict) -> list:
+    """FIX 2 (LANEFLOW.md): ``loss.lane_flow`` keys merged into every iteration >= 1 WM run.
+
+    Kept in its own JSON key and helper so the LANEFLOW merge stays separate from the
+    c4/v10horizon ``extra_set_horizon`` list; iteration 0 never uses it.
+    """
+    return list(cfg["wm"].get("extra_set_laneflow", []))
 
 
 def _wm_cmd(cfg: dict, out: str, init_from: str, config: str, extra: list) -> str:
@@ -522,11 +532,13 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
         "host": "wm",
         "cwd": cfg["hosts"]["wm"]["code_root"],
         "cmd": _wm_cmd(cfg, paths["wm_out"], paths["wm_ckpt"], cfg["wm"]["config"],
-                       cfg["wm"].get("extra_set", []) + cfg["wm"].get("extra_set_horizon", [])),
+                       cfg["wm"].get("extra_set", [])
+                       + cfg["wm"].get("extra_set_horizon", []) + wm_laneflow_keys(cfg)),
         "env": _wm_env(cfg, paths["converted"]),
         "out": paths["wm_out"],
         "note": ("physics.lane_learnable passed through verbatim; c4/v10horizon keys in "
-                 "extra_set_horizon are appended only once that branch lands (empty by default)"),
+                 "extra_set_horizon are appended only once that branch lands (empty by default); "
+                 "FIX 2 loss.lane_flow keys in extra_set_laneflow (iterations >= 1)"),
     }, {
         "name": "wm_check",
         "host": "wm",
@@ -808,7 +820,8 @@ def plan_text(cfg: dict) -> str:
     out.append("  iteration k>=1  : ship -> collect -> convert -> wm_finetune -> wm_check -> "
                "policy_update -> sumo_check -> rollback")
     out.append(f"  WM pass-through : {cfg['wm'].get('extra_set', [])} "
-               f"(horizon, disabled until c4/v10horizon lands: {cfg['wm'].get('extra_set_horizon', [])})")
+               f"(horizon, disabled until c4/v10horizon lands: {cfg['wm'].get('extra_set_horizon', [])}) "
+               f"(laneflow, FIX 2 iterations >= 1: {cfg['wm'].get('extra_set_laneflow', [])})")
     out.append(f"  policy config   : {cfg['policy']['config']} (entrance_zone_native=true)")
     out.append(f"  SUMO check      : seeds {CHECK_SEEDS[0]}-{CHECK_SEEDS[1]} vs {cfg['check']['native_ref']} "
                f"(demands {cfg['check'].get('demands')}, penetrations {cfg['check'].get('penetrations')})")

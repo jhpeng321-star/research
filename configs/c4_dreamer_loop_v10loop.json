@@ -159,7 +159,7 @@
       "n_starts": 48,
       "n_native": 24,
       "n_genrand": 24,
-      "workers": 48,
+      "workers": 24,
       "rounds": 6,
       "horizon_s": 120.0,
       "tol": 0.1,
@@ -174,7 +174,12 @@
       "out": "lane_calib.json",
       "_note": "LANERATECAL: fits one additive logit offset per fitted lane head so the WM free-rollout lane-change counts match SUMO on TRAIN-val starts; writes <wm_out>/lane_calib.json, which load_checkpoint reads when the policy stage loads the same checkpoint. Run after wm_check and before policy_update on a many-core CPU host (gpuR)."
     },
-    "pass_through_note": "Verbatim --set items. lane_learnable is the physics key physics.lane_learnable (c4/v10unblock, merged); the c4/v10horizon curriculum + mixed-prioritised-replay keys are NOT merged yet and stay in wm.extra_set_horizon (empty until that branch lands). The loop never parses or renames them.",
+    "extra_set_laneflow": [
+      "loss.lane_flow.weight=1.0",
+      "loss.lane_flow.balance=0.5"
+    ],
+    "laneflow_note": "FIX 2 (LANEFLOW.md): the on-policy count-matching lane-change loss (loss.lane_flow, V8LANE) under physics.lane_learnable. wm.extra_set_laneflow is merged into every iteration >= 1 WM fine-tune (never iteration 0). weight 1.0 / balance 0.5 match the trained V8LANE checkpoint (configs/c4_wm_v8lane_short3.toml); the term needs lane_model='hazard_v5' (v5m refresh) and no longer needs model.lane_v5_mainline='budget'.",
+    "pass_through_note": "Verbatim --set items: physics.lane_learnable (c4/v10unblock), wm.extra_set_horizon (c4/v10horizon, merged), wm.extra_set_laneflow (loss.lane_flow, iterations >= 1). The loop never parses or renames them.",
     "timeout_s": 10800,
     "val_metric": "mean_position",
     "val_tolerance": 0.3
@@ -202,8 +207,8 @@
       969824,
       969835
     ],
-    "native_ref": "/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017/v10loop/native_969824_969835",
-    "native_ref_note": "The native reference MUST be collected with exactly the policy-check flags (--demands 2400 --penetrations 0.4 --case-plan product --warmup 300 --horizon 600 --cav-vtype normal_car --population textbook --no-physics-log) or the D = policy - native comparison is invalid.",
+    "native_ref": "/root/autodl-tmp/c4/v5/runs/sumo_check_v8pol_u600/native",
+    "native_ref_note": "sumo_check_v8pol_u600/native was collected with the policy-check flags (2400 vph, 0.4, product, warmup 300, horizon 600, normal_car, textbook) - same as all v9/v10 autochecks.",
     "warmup": 300,
     "horizon": 600,
     "demands": 2400,
