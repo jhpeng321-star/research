@@ -1,0 +1,731 @@
+#!/usr/bin/env python3
+"""Closed Dreamer loop ``v10loop`` (prepared 2026-10-19; owner approval required before launch).
+
+One closed iteration:
+
+  1. collect      current policy (configs/c4_policy_v10entzone_v5m.toml,
+                  trainer.entrance_zone_native = true) drives SUMO on gpuR CPUs + cpuN from a
+                  fresh training seed block;
+  2. convert      raw episodes -> WMS data dir (``wms.data.c4_episodes``);
+  3. wm_finetune  continue the previous WM on gpuR with the lane_learnable (c4/v10unblock) and
+                  horizon-curriculum + mixed-prioritised-replay (c4/v10horizon) keys passed
+                  through VERBATIM; this script never parses or renames them;
+  4. wm_check     finite training losses + validation sanity (same rule as dreamer_loop.py);
+  5. policy_update  continue the previous policy inside the new WM
+                  (``WMS_LOOP_REFRESH=1 train_cli --resume ... --wm-ckpt <new WM>``);
+  6. sumo_check   seeds 969824-969835 vs the fixed native reference
+                  ``runs/sumo_check_v8pol_u600/native`` with the v7ft pair/coop/WM-fidelity tools;
+  7. rollback     if SUMO total D (policy - native) or WM 60 s HDV |ds| worsens beyond tolerance,
+                  restore the previous WM/policy and halve the next policy-update count.
+                  Every iteration is appended to ``<loop_root>/iterations.jsonl``.
+
+Iteration 0 bootstraps the WM on native/random TRAIN data only
+(``configs/c4_wm_v10loop_iter0.toml``) and starts the policy from scratch.
+
+Modes (stdlib only):
+  python scripts/c4/loop_v10.py plan     --config configs/c4_dreamer_loop_v10loop.json
+  python scripts/c4/loop_v10.py dry-run  --config ... [--out-dir DIR]
+  python scripts/c4/loop_v10.py status   --config ...
+  python scripts/c4/loop_v10.py check-wm --run DIR [--ref-val-log LOG] [--tolerance 0.30]
+  python scripts/c4/loop_v10.py run      --config ... --execute   (blocked by execute_guard)
+
+Safety: never uses evaluation seeds 964000-964199; the SUMO-check seeds 969824-969835 are never
+allocated for training; refuses sealed/holdout/heldout/cal_split/chunk5/j4b/inc1 paths; dry-run
+executes no external command.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import shlex
+import subprocess
+import sys
+from copy import deepcopy
+from datetime import datetime, timezone
+from pathlib import Path
+
+EVAL_SEEDS = (964000, 964199)
+CHECK_SEEDS = (969824, 969835)
+APPROVED_BLOCKS = ((965184, 965999), (966000, 969999))
+FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
+ITER0_STAGES = ("wm_finetune_iter0", "wm_check_iter0", "policy_update_iter0")
+ITER_STAGES = ("collect", "convert", "wm_finetune", "wm_check", "policy_update", "sumo_check", "rollback")
+
+
+def utcnow() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def q(value) -> str:
+    return shlex.quote(str(value))
+
+
+def refuse_restricted(path) -> str:
+    text = str(path)
+    if any(token in text.lower() for token in FORBIDDEN):
+        raise ValueError(f"restricted path refused: {text}")
+    return text
+
+
+def deep_merge(base: dict, over: dict) -> dict:
+    out = dict(base)
+    for key, value in over.items():
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = deep_merge(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
+def load_config(path) -> dict:
+    cfg = json.loads(Path(path).read_text(encoding="utf-8"))
+    validate_config(cfg)
+    return cfg
+
+
+def _all_strings(obj):
+    if isinstance(obj, str):
+        yield obj
+    elif isinstance(obj, dict):
+        for value in obj.values():
+            yield from _all_strings(value)
+    elif isinstance(obj, (list, tuple)):
+        for value in obj:
+            yield from _all_strings(value)
+
+
+def validate_config(cfg: dict) -> None:
+    for key in ("loop_root", "data_root", "wm_runs_root", "seed", "hosts", "collect", "wm", "policy",
+                "check", "rollback", "budget"):
+        if key not in cfg:
+            raise ValueError(f"config needs {key}")
+    if cfg.get("mode") != "closed":
+        raise ValueError("v10loop mode must be 'closed'")
+    for name in ("wm", "gpuR", "cpuN"):
+        if name not in cfg["hosts"]:
+            raise ValueError(f"config needs hosts.{name}")
+        for key in ("code_root", "python"):
+            if not cfg["hosts"][name].get(key):
+                raise ValueError(f"hosts.{name} needs {key}")
+    block = cfg["seed"]["block"]
+    if len(block) != 2 or int(block[0]) > int(block[1]):
+        raise ValueError(f"bad seed block {block!r}")
+    lo, hi = int(block[0]), int(block[1])
+    if not any(a <= lo and hi <= b for a, b in APPROVED_BLOCKS):
+        raise ValueError(f"seed block {lo}-{hi} is not inside an approved training block {APPROVED_BLOCKS}")
+    if lo <= EVAL_SEEDS[1] and hi >= EVAL_SEEDS[0]:
+        raise ValueError(f"seed block {lo}-{hi} overlaps evaluation seeds {EVAL_SEEDS}")
+    if lo <= CHECK_SEEDS[1] and hi >= CHECK_SEEDS[0]:
+        raise ValueError(f"seed block {lo}-{hi} overlaps SUMO-check seeds {CHECK_SEEDS}")
+    if not os.path.isdir(cfg["hosts"]["wm"]["code_root"]) and "REPO_SHA" not in cfg["hosts"]["wm"]["code_root"]:
+        raise ValueError(f"hosts.wm.code_root does not exist: {cfg['hosts']['wm']['code_root']}")
+    for text in _all_strings(cfg):
+        refuse_restricted(text)
+
+
+# --------------------------------------------------------------------------- seeds
+def ranges(seeds):
+    out = []
+    for seed in sorted(seeds):
+        if out and seed == out[-1][1] + 1:
+            out[-1][1] = seed
+        else:
+            out.append([seed, seed])
+    return out
+
+
+def seed_spec(seeds) -> str:
+    return ",".join(f"{a}-{b}" if a != b else str(a) for a, b in ranges(seeds))
+
+
+def expand(rs) -> set:
+    return {s for a, b in rs for s in range(int(a), int(b) + 1)}
+
+
+def check_seed(seed: int) -> None:
+    if type(seed) is not int:
+        raise ValueError(f"seed {seed!r} is not an integer")
+    if EVAL_SEEDS[0] <= seed <= EVAL_SEEDS[1]:
+        raise ValueError(f"seed {seed} is an evaluation seed")
+    if CHECK_SEEDS[0] <= seed <= CHECK_SEEDS[1]:
+        raise ValueError(f"seed {seed} is reserved for the SUMO check")
+    if not any(a <= seed <= b for a, b in APPROVED_BLOCKS):
+        raise ValueError(f"seed {seed} is outside the approved training blocks")
+
+
+def allocate_seeds(cfg: dict, used=(), n: int = 1) -> list:
+    lo, hi = (int(x) for x in cfg["seed"]["block"])
+    blocked = expand(cfg["seed"].get("exclude", [])) | set(used)
+    blocked |= set(range(EVAL_SEEDS[0], EVAL_SEEDS[1] + 1))
+    blocked |= set(range(CHECK_SEEDS[0], CHECK_SEEDS[1] + 1))
+    seeds = [s for s in range(lo, hi + 1) if s not in blocked][:n]
+    if len(seeds) < n:
+        raise ValueError(f"seed block {lo}-{hi} has only {len(seeds)} free seeds, need {n}")
+    for seed in seeds:
+        check_seed(seed)
+    return seeds
+
+
+# --------------------------------------------------------------------------- budgets / counters
+def budget(cfg: dict, iteration: int) -> dict:
+    collect = cfg["collect"]
+    if iteration == 0:
+        episodes = 0
+        sim_s = 0.0
+        policy_sim_s = 0.0
+        check_episodes = 0
+    else:
+        episodes = sum(int(collect["batch_size"][h]) for h in collect["hosts"])
+        sim_s = float(episodes * (int(collect["warmup"]) + int(collect["horizon"])))
+        policy_sim_s = float(episodes * int(collect["horizon"]))
+        check_episodes = CHECK_SEEDS[1] - CHECK_SEEDS[0] + 1
+    wm_steps = sum(int(x) for x in cfg["wm"]["stage_steps"])
+    b = cfg["budget"]
+    wm_gpu_h = wm_steps * float(b["gpu_hours_per_wm_step"])
+    policy_gpu_h = int(cfg["policy"]["updates"]) * float(b["gpu_hours_per_policy_update"])
+    check_gpu_h = check_episodes * float(b["gpu_hours_per_check_episode"])
+    return {
+        "collect_episodes": episodes,
+        "check_episodes": check_episodes,
+        "sim_s": sim_s,
+        "policy_sim_s": policy_sim_s,
+        "check_sim_s": float(check_episodes * (int(collect["warmup"]) + int(collect["horizon"]))),
+        "wm_steps": wm_steps,
+        "policy_updates": int(cfg["policy"]["updates"]),
+        "gpu_hours_wm": round(wm_gpu_h, 3),
+        "gpu_hours_policy": round(policy_gpu_h, 3),
+        "gpu_hours_check": round(check_gpu_h, 4),
+        "gpu_hours_total": round(wm_gpu_h + policy_gpu_h + check_gpu_h, 3),
+    }
+
+
+def sample_counter(records) -> dict:
+    episodes = sum(int(r.get("collect", {}).get("episodes", 0)) for r in records)
+    check_episodes = sum(int(r.get("check", {}).get("episodes", 0)) for r in records)
+    sim_s = sum(float(r.get("collect", {}).get("sim_s", 0.0)) for r in records)
+    dt = 0.5
+    for row in records:
+        dt = float(row.get("budget", {}).get("mappo_control_dt_s", dt))
+    return {
+        "train_episodes": episodes,
+        "check_episodes": check_episodes,
+        "policy_sim_s": round(sim_s, 1),
+        "control_samples": int(round(sim_s / dt)) if dt else 0,
+        "mappo_control_dt_s": dt,
+        "note": ("MAPPO fairness counter: control_samples is the number of policy control steps "
+                 "seen in SUMO; train MAPPO on the same cumulative count."),
+    }
+
+
+def decide_rollback(prev: dict, cur: dict, rule: dict, policy_updates: int) -> dict:
+    reasons = []
+    worsen = float(cur.get("sumo_total_D_delta", 0.0))
+    if worsen > float(rule["sumo_total_D_max_worsen"]):
+        reasons.append(f"SUMO total D (policy - native) worsened by {worsen:+.4f}")
+    prev_wm = float(prev.get("wm60_hdv_abs_ds", 0.0))
+    cur_wm = float(cur.get("wm60_hdv_abs_ds", 0.0))
+    if prev_wm > 0:
+        ratio = cur_wm / prev_wm
+        if ratio > 1.0 + float(rule["wm60_rel_tolerance"]):
+            reasons.append(f"WM 60 s HDV |ds| worse by {ratio:.3f}x "
+                           f"(> {1.0 + float(rule['wm60_rel_tolerance']):.2f})")
+    action = "revert" if reasons else "keep"
+    next_updates = policy_updates
+    if action == "revert":
+        next_updates = max(int(rule["min_policy_updates"]),
+                           int(policy_updates * float(rule["halve_factor"])))
+    return {"action": action, "reasons": reasons, "next_policy_updates": next_updates,
+            "prev": prev, "cur": cur}
+
+
+# --------------------------------------------------------------------------- stage planning
+def _wm_env(cfg: dict, converted: str | None) -> dict:
+    env = {
+        "PYTHONPATH": "src:.",
+        "OMP_NUM_THREADS": "12",
+        "WMS_JAM_WORKERS": "14",
+        "WMS_LATEST_EVERY": "100",
+    }
+    for key in ("WMS_DATA_V5_NATIVE", "WMS_DATA_GENRAND_PLAIN", "WMS_DATA_GENRAND_BRANCH"):
+        if key in cfg["policy"].get("env", {}):
+            env[key] = cfg["policy"]["env"][key]
+    if converted:
+        env["WMS_DATA_V6_POLICY"] = converted
+    return env
+
+
+def _wm_cmd(cfg: dict, out: str, init_from: str, config: str, extra: list) -> str:
+    stages = "[" + ",".join(str(int(s)) for s in cfg["wm"]["stage_steps"]) + "]"
+    argv = [cfg["hosts"]["wm"]["python"], "-m", "wms", "train", "--config", config, "--mode", "run",
+            "--out", out, "--set", f"model.init_from={init_from}", "--set",
+            f"curriculum.stage_steps={stages}"]
+    for item in extra:
+        argv += ["--set", item]
+    return " ".join(q(a) for a in argv)
+
+
+def _collect_cmd(cfg: dict, host: str, policy_ckpt: str, seeds: list, out: str) -> str:
+    c = cfg["collect"]
+    h = cfg["hosts"][host]
+    argv = [h["python"], "-m", "traffic_shepherd.c4.collect", "--policy", policy_ckpt,
+            "--population", c["population"], "--seeds", seed_spec(seeds), "--case-plan", c["case_plan"],
+            "--penetrations", c["penetrations"], "--pen-weights", c["pen_weights"],
+            "--demands", c["demands"], "--warmup", str(c["warmup"]), "--horizon", str(c["horizon"]),
+            "--workers", str(h.get("workers", 46)), "--no-physics-log", "--out", out]
+    return " ".join(q(a) for a in argv)
+
+
+def _convert_cmd(cfg: dict, list_file: str, dest: str) -> str:
+    code = ("import sys; from wms.data.c4_episodes import main; "
+            "sys.exit(main(['--episodes', *open(sys.argv[1]).read().split(), '--out', sys.argv[2]]))")
+    return " ".join(q(a) for a in [cfg["hosts"]["wm"]["python"], "-B", "-c", code, list_file, dest])
+
+
+def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
+    wm_out = paths["wm_out"]
+    stages = [{
+        "name": "wm_finetune_iter0",
+        "host": "wm",
+        "cwd": cfg["hosts"]["wm"]["code_root"],
+        "cmd": _wm_cmd(cfg, wm_out, paths["wm_ckpt"], cfg["wm"]["config_iter0"],
+                       cfg["wm"].get("extra_set_iter0", [])),
+        "env": _wm_env(cfg, None),
+        "out": wm_out,
+        "note": "WM v5m_ref fine-tuned with lane_learnable on native/random TRAIN data only",
+    }, {
+        "name": "wm_check_iter0",
+        "host": "wm",
+        "cwd": cfg["hosts"]["wm"]["code_root"],
+        "cmd": " ".join(q(a) for a in [cfg["hosts"]["wm"]["python"], "scripts/c4/loop_v10.py",
+                                       "check-wm", "--run", wm_out, "--tolerance",
+                                       str(cfg["wm"]["val_tolerance"])]),
+        "env": {},
+        "out": wm_out,
+        "note": "finite losses; no reference val log for the first WM",
+    }, {
+        "name": "policy_update_iter0",
+        "host": "gpuR",
+        "cwd": cfg["hosts"]["gpuR"]["code_root"],
+        "cmd": _policy_cmd(cfg, paths["policy_out"], paths["wm_out"] + "/wm_s_best.pt", None, updates,
+                           iter0=True),
+        "env": _policy_env(cfg, None, paths["policy_out"]),
+        "out": paths["policy_out"],
+        "note": "policy from scratch inside the iteration-0 WM",
+    }]
+    return stages
+
+
+def _policy_env(cfg: dict, converted: str | None, out: str) -> dict:
+    env = {"PYTHONPATH": "src:.", "WMS_LOOP_REFRESH": "1", **cfg["policy"].get("env", {})}
+    if converted:
+        env["WMS_DATA_V6_POLICY"] = converted
+    return env
+
+
+def _policy_cmd(cfg: dict, out: str, wm_ckpt: str, resume: str | None, updates: int,
+                iter0: bool = False) -> str:
+    argv = [cfg["hosts"]["gpuR"]["python"], "-m", "wms.control.train_cli",
+            "--config", cfg["policy"]["config_iter0" if iter0 else "config"],
+            "--wm-ckpt", wm_ckpt, "--device", cfg["policy"]["device"],
+            "--max-updates", str(updates), "--output-dir", out]
+    if resume:
+        argv += ["--resume", resume]
+    return " ".join(q(a) for a in argv)
+
+
+def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) -> list:
+    c = cfg["collect"]
+    stages = []
+    for host in c["hosts"]:
+        n = int(c["batch_size"][host])
+        part = seeds[:n]
+        seeds = seeds[n:]
+        out = f"{paths['iter_dir']}/collect/{host}"
+        stages.append({
+            "name": "collect",
+            "host": host,
+            "cwd": cfg["hosts"][host]["code_root"],
+            "cmd": _collect_cmd(cfg, host, paths["policy_ckpt"], part, out),
+            "env": {"PYTHONPATH": f"{cfg['hosts'][host]['code_root']}/src:{cfg['hosts'][host]['code_root']}",
+                    "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"},
+            "out": out,
+            "note": f"batch {len(part)} episodes, seeds {seed_spec(part)}, policy entrance_zone_native=true",
+        })
+    stages += [{
+        "name": "convert",
+        "host": "wm",
+        "cwd": cfg["hosts"]["wm"]["code_root"],
+        "cmd": _convert_cmd(cfg, f"{paths['iter_dir']}/convert_episodes.txt", paths["converted"]),
+        "env": {"PYTHONPATH": "src:.", "OMP_NUM_THREADS": "4"},
+        "out": paths["converted"],
+        "note": "all complete raw episodes so far -> WMS data dir",
+    }, {
+        "name": "wm_finetune",
+        "host": "wm",
+        "cwd": cfg["hosts"]["wm"]["code_root"],
+        "cmd": _wm_cmd(cfg, paths["wm_out"], paths["wm_ckpt"], cfg["wm"]["config"],
+                       cfg["wm"]["extra_set"]),
+        "env": _wm_env(cfg, paths["converted"]),
+        "out": paths["wm_out"],
+        "note": "lane_learnable + horizon curriculum + mixed prioritised replay passed through verbatim",
+    }, {
+        "name": "wm_check",
+        "host": "wm",
+        "cwd": cfg["hosts"]["wm"]["code_root"],
+        "cmd": " ".join(q(a) for a in [cfg["hosts"]["wm"]["python"], "scripts/c4/loop_v10.py",
+                                       "check-wm", "--run", paths["wm_out"],
+                                       "--ref-val-log", paths["wm_val_log"], "--tolerance",
+                                       str(cfg["wm"]["val_tolerance"])]),
+        "env": {},
+        "out": paths["wm_out"],
+        "note": "finite losses; val mean_position within (1 + tolerance) x previous WM",
+    }, {
+        "name": "policy_update",
+        "host": "gpuR",
+        "cwd": cfg["hosts"]["gpuR"]["code_root"],
+        "cmd": _policy_cmd(cfg, paths["policy_out"], paths["wm_out"] + "/wm_s_best.pt",
+                           paths["policy_ckpt"], updates),
+        "env": _policy_env(cfg, paths["converted"], paths["policy_out"]),
+        "out": paths["policy_out"],
+        "note": "continue previous policy inside the new WM",
+    }]
+    for template in cfg["check"]["commands"]:
+        stages.append({
+            "name": "sumo_check",
+            "host": "gpuR",
+            "cwd": cfg["hosts"]["gpuR"]["code_root"],
+            "cmd": _fill(template, cfg, paths),
+            "env": {},
+            "out": paths["check_dir"],
+            "note": "seeds 969824-969835 vs runs/sumo_check_v8pol_u600/native; pair/coop/WM fidelity",
+        })
+    stages.append({
+        "name": "rollback",
+        "host": "local",
+        "cwd": cfg["hosts"]["gpuR"]["code_root"],
+        "cmd": "python scripts/c4/loop_v10.py decide-rollback --prev <metrics[k-1]> --cur "
+               f"{paths['check_dir']}/coop.json --rule rollback --json-out {paths['check_dir']}/rollback.json",
+        "env": {},
+        "out": paths["check_dir"],
+        "note": "revert to previous WM/policy and halve next policy updates on regression",
+    })
+    return stages
+
+
+def _fill(template: str, cfg: dict, paths: dict) -> str:
+    values = {
+        "gpuR_code_root": cfg["hosts"]["gpuR"]["code_root"],
+        "gpuR_python": cfg["hosts"]["gpuR"]["python"],
+        "policy_ckpt": paths["policy_ckpt"],
+        "new_wm": paths["wm_out"] + "/wm_s_best.pt",
+        "check_dir": paths["check_dir"],
+        "native_ref": cfg["check"]["native_ref"],
+        "v7ft_run": cfg["v7ft_run"],
+        "fixed_val_states": cfg["check"]["fixed_val_states"],
+    }
+    return template.format(**values)
+
+
+# --------------------------------------------------------------------------- WM sanity
+def read_jsonl(path) -> list:
+    rows = []
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return rows
+    for line in text.splitlines():
+        line = line.strip()
+        if line:
+            try:
+                rows.append(json.loads(line))
+            except ValueError:
+                pass
+    return rows
+
+
+def last_val_event(rows) -> dict:
+    rows = [r for r in rows if not r.get("revalidated") and "step" in r and "horizon_s" in r]
+    if not rows:
+        return {}
+    last = max(r["step"] for r in rows)
+    return {float(r["horizon_s"]): r for r in rows if r["step"] == last}
+
+
+def wm_sanity(run_dir, ref_val_log=None, metric="mean_position", tolerance=0.30) -> dict:
+    out = {"ok": True, "reasons": [], "compare": {}}
+    run = Path(run_dir)
+    train = read_jsonl(run / "train_log.jsonl")
+    if not train:
+        out["reasons"].append("empty train_log")
+    for row in train:
+        value = row.get("loss")
+        if not isinstance(value, (int, float)) or not math.isfinite(value):
+            out["reasons"].append(f"nonfinite loss at step {row.get('step')}")
+            break
+    new = last_val_event(read_jsonl(run / "val_log.jsonl"))
+    if not new:
+        out["reasons"].append("no validation rows")
+    for h, row in new.items():
+        value = row.get(metric)
+        if not isinstance(value, (int, float)) or not math.isfinite(value):
+            out["reasons"].append(f"nonfinite val {metric} at {h:g}s")
+    ref = last_val_event(read_jsonl(ref_val_log)) if ref_val_log else {}
+    if not ref:
+        out["note"] = "no reference validation; finiteness checks only"
+    for h in sorted(set(new) & set(ref)):
+        a, b = new[h].get(metric), ref[h].get(metric)
+        if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in (a, b)) or b <= 0:
+            continue
+        ratio = a / b
+        out["compare"][f"{h:g}"] = {"new": a, "ref": b, "ratio": ratio}
+        if ratio > 1.0 + tolerance:
+            out["reasons"].append(f"val {metric} at {h:g}s worse by {ratio:.3f}x "
+                                  f"(> {1.0 + tolerance:.2f})")
+    out["ok"] = not out["reasons"]
+    return out
+
+
+# --------------------------------------------------------------------------- dry run
+def _tiny(cfg: dict) -> dict:
+    tiny = deepcopy(cfg)
+    for host in tiny["collect"]["hosts"]:
+        tiny["collect"]["batch_size"][host] = 1
+    tiny["collect"]["warmup"] = 5
+    tiny["collect"]["horizon"] = 10
+    tiny["wm"]["stage_steps"] = [1, 1]
+    tiny["policy"]["updates"] = 2
+    tiny["iterations"] = 1
+    return tiny
+
+
+def _paths(out_dir: Path, k: int, cfg: dict) -> dict:
+    it = out_dir / f"iter_{k:03d}"
+    wm_out = str(it / "wm" / "out")
+    return {
+        "iter_dir": str(it),
+        "wm_out": wm_out,
+        "wm_ckpt": cfg["wm"]["init_wm"] if k == 0 else str(out_dir / f"iter_{k-1:03d}" / "wm" / "out" / "wm_s_best.pt"),
+        "wm_val_log": cfg["wm"]["init_wm"].replace("wm_s_best_ap.pt", "val_log.jsonl") if k == 0
+        else str(out_dir / f"iter_{k-1:03d}" / "wm" / "out" / "val_log.jsonl"),
+        "converted": str(it / "convert" / "out"),
+        "policy_out": str(it / "policy" / "out"),
+        "policy_ckpt": str(out_dir / f"iter_{k-1:03d}" / "policy" / "out" / "policy_best.pt")
+        if k > 0 else "<previous_policy_checkpoint>",
+        "check_dir": str(it / "check"),
+    }
+
+
+def render_stage(stage: dict) -> str:
+    env = " ".join(f"{k}={q(v)}" for k, v in sorted(stage.get("env", {}).items()))
+    prefix = (env + " ") if env else ""
+    where = "" if stage["host"] == "local" else f"[{stage['host']}] "
+    return f"{where}cd {q(stage['cwd'])} && {prefix}{stage['cmd']}"
+
+
+def dry_run(cfg: dict, out_dir) -> dict:
+    root = Path(out_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    tiny = _tiny(cfg)
+    records = []
+    for k in (0, 1):
+        paths = _paths(root, k, tiny)
+        if k == 0:
+            stages = plan_iteration0(tiny, paths, tiny["policy"]["updates"])
+        else:
+            seeds = allocate_seeds(tiny, used=[], n=sum(int(tiny["collect"]["batch_size"][h])
+                                                      for h in tiny["collect"]["hosts"]))
+            stages = plan_iteration(tiny, k, paths, seeds, tiny["policy"]["updates"])
+        for stage in stages:
+            records.append({"iteration": k, "stage": stage["name"], "host": stage["host"],
+                            "cmd": render_stage(stage), "out": stage["out"], "note": stage["note"]})
+    prev = {"sumo_total_D_delta": 0.0, "wm60_hdv_abs_ds": 10.0}
+    cur = {"sumo_total_D_delta": 0.05, "wm60_hdv_abs_ds": 11.5}
+    decision = decide_rollback(prev, cur, tiny["rollback"], tiny["policy"]["updates"])
+    samples = sample_counter([{
+        "collect": {"episodes": 2, "sim_s": 2.0 * (tiny["collect"]["warmup"] + tiny["collect"]["horizon"]),
+                    "horizon_s": tiny["collect"]["horizon"]},
+        "budget": {"mappo_control_dt_s": tiny["budget"]["mappo_control_dt_s"]},
+    }])
+    summary = {
+        "mode": "dry-run",
+        "created": utcnow(),
+        "wire_root": str(root),
+        "seed_block": tiny["seed"]["block"],
+        "seeds_iteration1": seed_spec(allocate_seeds(tiny, used=[], n=2)),
+        "budget_iteration0": budget(tiny, 0),
+        "budget_iteration1": budget(tiny, 1),
+        "sample_counter": samples,
+        "rollback_self_test": decision,
+        "stages": [r["stage"] for r in records],
+        "stage_count": len(records),
+        "executed_external_commands": 0,
+    }
+    (root / "dry_run.jsonl").write_text(
+        "".join(json.dumps(r, sort_keys=True) + "\n" for r in records), encoding="utf-8")
+    (root / "dry_run_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True),
+                                               encoding="utf-8")
+    return {"records": records, "summary": summary}
+
+
+# --------------------------------------------------------------------------- plan / status
+def plan_text(cfg: dict) -> str:
+    out = []
+    out.append("V10LOOP (closed Dreamer loop) - PREPARED, NOT LAUNCHED")
+    out.append(f"  seed block      : {cfg['seed']['block'][0]}-{cfg['seed']['block'][1]} "
+               f"(exclude {cfg['seed']['exclude']}; eval {cfg['seed']['eval']}; check {cfg['seed']['check']})")
+    out.append(f"  iteration 0     : WM {cfg['wm']['config_iter0']} on native/random TRAIN data, "
+               "then policy from scratch")
+    out.append("  iteration k>=1  : collect -> convert -> wm_finetune -> wm_check -> policy_update "
+               "-> sumo_check -> rollback")
+    out.append(f"  WM pass-through : {cfg['wm']['extra_set']}")
+    out.append(f"  policy config   : {cfg['policy']['config']} (entrance_zone_native=true)")
+    out.append(f"  SUMO check      : seeds {CHECK_SEEDS[0]}-{CHECK_SEEDS[1]} vs {cfg['check']['native_ref']}")
+    out.append(f"  rollback        : {cfg['rollback']}")
+    for k in range(int(cfg["iterations"]) + 1):
+        paths = _paths(Path("<wire_root>"), k, cfg)
+        if k == 0:
+            stages = plan_iteration0(cfg, paths, int(cfg["policy"]["updates"]))
+        else:
+            n = sum(int(cfg["collect"]["batch_size"][h]) for h in cfg["collect"]["hosts"])
+            seeds = allocate_seeds(cfg, used=[], n=n)
+            stages = plan_iteration(cfg, k, paths, seeds, int(cfg["policy"]["updates"]))
+        out.append(f"iteration {k}: " + ", ".join(s["name"] + (":" + s["host"] if s["host"] != "local" else "")
+                                                   for s in stages))
+    return "\n".join(out)
+
+
+def status(cfg: dict) -> int:
+    root = Path(cfg["loop_root"])
+    state = root / "state.json"
+    log = root / "iterations.jsonl"
+    if not state.exists() and not log.exists():
+        print(f"no v10loop state at {root} (prepared, not launched)")
+        return 1
+    if state.exists():
+        print(json.dumps(json.loads(state.read_text(encoding="utf-8")), indent=2, sort_keys=True))
+    rows = read_jsonl(log)
+    if rows:
+        print(f"iterations logged: {len(rows)}")
+        print(json.dumps(sample_counter(rows), indent=2, sort_keys=True))
+    return 0
+
+
+# --------------------------------------------------------------------------- execution (guarded)
+def execute(cfg: dict, runner=None) -> int:
+    guard = cfg.get("execute_guard", {})
+    if not guard.get("allow"):
+        print("REFUSED: execute_guard.allow is false. This worktree is DRY-RUN ONLY; "
+              "set it true on gpuR after owner approval and merge of c4/v10unblock + c4/v10horizon.")
+        return 3
+    runner = runner or _run_stage
+    root = Path(cfg["loop_root"])
+    root.mkdir(parents=True, exist_ok=True)
+    state_path = root / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {
+        "created": utcnow(), "iteration": 0, "wm_ckpt": cfg["wm"]["init_wm"],
+        "wm_val_log": cfg["wm"]["init_wm"].replace("wm_s_best_ap.pt", "val_log.jsonl"),
+        "policy_ckpt": None, "policy_updates": int(cfg["policy"]["updates"]),
+        "seeds_used": [], "metrics": {},
+    }
+    for k in range(int(cfg["iterations"]) + 1):
+        paths = _paths(root, k, cfg)
+        if k == 0:
+            stages = plan_iteration0(cfg, paths, int(state["policy_updates"]))
+        else:
+            n = sum(int(cfg["collect"]["batch_size"][h]) for h in cfg["collect"]["hosts"])
+            seeds = allocate_seeds(cfg, used=state.get("seeds_used", []), n=n)
+            state["seeds_used"] = sorted(set(state.get("seeds_used", [])) | set(seeds))
+            stages = plan_iteration(cfg, k, paths, seeds, int(state["policy_updates"]))
+        statuses = []
+        for stage in stages:
+            rc = runner(stage, cfg)
+            statuses.append({"stage": stage["name"], "host": stage["host"], "rc": rc})
+            if rc != 0:
+                print(f"stage {stage['name']} failed rc={rc}; stopping")
+                return 2
+        state["iteration"] = k + 1
+        state["wm_ckpt"] = paths["wm_out"] + "/wm_s_best.pt"
+        state["wm_val_log"] = paths["wm_out"] + "/val_log.jsonl"
+        state["policy_ckpt"] = paths["policy_out"] + "/policy_best.pt"
+        row = {"t": utcnow(), "iteration": k, "status": "done", "stages": statuses,
+               "budget": budget(cfg, k), "seed_block": cfg["seed"]["block"]}
+        with (root / "iterations.jsonl").open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(row, sort_keys=True) + "\n")
+        state_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    return 0
+
+
+def _run_stage(stage: dict, cfg: dict) -> int:
+    env = dict(os.environ, **stage.get("env", {}))
+    cwd = stage["cwd"]
+    if stage["host"] == "local":
+        return subprocess.run(stage["cmd"], shell=True, cwd=cwd, env=env).returncode
+    ssh = cfg["hosts"][stage["host"]].get("ssh", [stage["host"]])
+    prefix = " ".join(f"{k}={q(v)}" for k, v in sorted(stage.get("env", {}).items()))
+    remote = f"cd {q(cwd)} && {prefix + ' ' if prefix else ''}{stage['cmd']}"
+    return subprocess.run(["ssh", "-o", "BatchMode=yes", *ssh, remote]).returncode
+
+
+# --------------------------------------------------------------------------- CLI
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("action", choices=("plan", "dry-run", "status", "run", "check-wm", "decide-rollback"))
+    ap.add_argument("--config")
+    ap.add_argument("--out-dir")
+    ap.add_argument("--execute", action="store_true")
+    ap.add_argument("--run")
+    ap.add_argument("--ref-val-log")
+    ap.add_argument("--tolerance", type=float, default=0.30)
+    ap.add_argument("--prev")
+    ap.add_argument("--cur")
+    ap.add_argument("--json-out")
+    args = ap.parse_args(argv)
+
+    if args.action == "check-wm":
+        verdict = wm_sanity(args.run, args.ref_val_log, tolerance=args.tolerance)
+        text = json.dumps(verdict, indent=2, sort_keys=True)
+        print(text)
+        if args.json_out:
+            Path(args.json_out).write_text(text, encoding="utf-8")
+        return 0 if verdict["ok"] else 2
+    if args.action == "decide-rollback":
+        if not (args.prev and args.cur):
+            raise SystemExit("decide-rollback needs --prev and --cur JSON files")
+        prev = json.loads(Path(args.prev).read_text(encoding="utf-8"))
+        cur = json.loads(Path(args.cur).read_text(encoding="utf-8"))
+        decision = decide_rollback(prev, cur, {"sumo_total_D_max_worsen": 0.0, "wm60_rel_tolerance": 0.1,
+                                               "halve_factor": 0.5, "min_policy_updates": 50},
+                                   int(cur.get("policy_updates", 200)))
+        text = json.dumps(decision, indent=2, sort_keys=True)
+        print(text)
+        if args.json_out:
+            Path(args.json_out).write_text(text, encoding="utf-8")
+        return 0
+    if not args.config:
+        raise SystemExit(f"{args.action} needs --config")
+    cfg = load_config(args.config)
+    if args.action == "plan":
+        print(plan_text(cfg))
+        return 0
+    if args.action == "dry-run":
+        out = args.out_dir or str(Path(cfg["loop_root"]) / "dry_run")
+        result = dry_run(cfg, out)
+        print(json.dumps(result["summary"], indent=2, sort_keys=True))
+        print("--- stage commands ---")
+        for row in result["records"]:
+            print(f"[iter {row['iteration']}] {row['stage']}: {row['cmd']}")
+        return 0
+    if args.action == "status":
+        return status(cfg)
+    if args.action == "run":
+        if not args.execute:
+            print("refused: pass --execute (and set execute_guard.allow=true after approval)")
+            return 3
+        return execute(cfg)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
