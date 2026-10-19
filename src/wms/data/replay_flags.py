@@ -80,15 +80,15 @@ def window_brake_event(record: dict, *, accel_mps2: float = BRAKE_EVENT_ACCEL_MP
     a = states[..., A_FEATURE].astype(np.float64)
     leader_ok = present & on_road & ~cav & (a < float(accel_mps2))
     for t in range(present.shape[0]):
-        p, ldr = present[t] & on_road[t], leader_ok[t]
+        ldr, p = leader_ok[t], present[t] & on_road[t]
         if not ldr.any():
             continue
         s_t, lane_t = s[t], lane[t]
-        for lead in np.flatnonzero(ldr):
-            gap = s_t[lead] - s_t
-            behind = p & (lane_t == lane_t[lead]) & (gap > 0.0) & (gap <= float(max_gap_m))
-            if behind.any():
-                return True
+        gap = s_t[:, None] - s_t[None, :]
+        ahead = (p[None, :] & (lane_t[:, None] == lane_t[None, :])
+                 & (gap > 0.0) & (gap <= float(max_gap_m)))
+        if (ldr[:, None] & ahead).any():
+            return True
     return False
 
 
