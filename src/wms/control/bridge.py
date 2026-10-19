@@ -175,6 +175,16 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
                                   torch.full_like(held, native_max))
         executed = safety({**state, "lane": lane}, command_accel, accel_max=ceiling)
+        # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
+        # physics step (and may be refused), so the command must be safe in BOTH the lane the
+        # CAV is leaving and the target lane.  Without this, imagination credited a change
+        # with an acceleration only the target lane allowed (the old-lane leader was ignored
+        # for one tick), over-crediting CAV lane changes.  Only changed slots are affected.
+        changed_now = log_entry.get("lane_changed") if log_entry is not None else None
+        if changed_now is not None and bool(changed_now.any()):
+            old_lane_safe = safety({**state, "lane": state["lane"]}, command_accel,
+                                   accel_max=ceiling)
+            executed = torch.where(changed_now, torch.minimum(executed, old_lane_safe), executed)
         if decision:
             last_command = torch.where(mask, executed, torch.zeros_like(executed))
             last_intent = intent
