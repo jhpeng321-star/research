@@ -55,10 +55,29 @@ def test_iter0_existing_skips_the_wm_stage():
     assert LV.iter0_existing(CFG) is True
     stages = LV.plan_iteration0(CFG, LV._paths(Path("."), 0, CFG), 200)
     names = [s["name"] for s in stages]
-    assert names == ["policy_update_iter0"]
-    policy = stages[0]
+    assert names == ["lane_calib", "policy_update_iter0"]
+    policy = stages[-1]
     assert CFG["wm"]["iter0_wm_out"] + "/wm_s_best.pt" in policy["cmd"]
     assert "physics.lane_learnable" in CFG["wm"]["extra_set"][0]
+
+
+def test_lane_calib_stage_runs_after_wm_check_and_before_policy():
+    paths = LV._paths(Path("."), 1, CFG)
+    stages = LV.plan_iteration(CFG, 1, paths, LV.allocate_seeds(CFG, n=2), 200)
+    names = [s["name"] for s in stages]
+    assert names.index("lane_calib") == names.index("wm_check") + 1
+    assert names.index("policy_update") == names.index("lane_calib") + 1
+    stage = stages[names.index("lane_calib")]
+    assert stage["host"] == "gpuR"
+    assert "tools/lane_rate_calib.py fit" in stage["cmd"]
+    assert paths["wm_best"] in stage["cmd"]
+    assert "--out-dir" in stage["cmd"] and paths["wm_out"] in stage["cmd"]
+    assert "--lane-learnable" in stage["cmd"]
+    assert "--n-native 24" in stage["cmd"] and "--n-genrand 24" in stage["cmd"]
+    assert "--heads overtake,return" in stage["cmd"]
+    policy = stages[names.index("policy_update")]
+    assert paths["wm_best"] in policy["cmd"]
+    assert "lane_calib.json" in policy["note"]
 
 
 def test_plan_covers_every_stage():

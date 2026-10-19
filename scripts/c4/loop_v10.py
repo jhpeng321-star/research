@@ -55,11 +55,11 @@ EVAL_SEEDS = (964000, 964199)
 CHECK_SEEDS = (969824, 969835)
 APPROVED_BLOCKS = ((965184, 965999), (966000, 969999))
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
-ITER0_TRAIN_STAGES = ("wm_finetune_iter0", "wm_check_iter0", "policy_update_iter0")
-ITER0_EXISTING_STAGES = ("policy_update_iter0",)
+ITER0_TRAIN_STAGES = ("wm_finetune_iter0", "wm_check_iter0", "lane_calib", "policy_update_iter0")
+ITER0_EXISTING_STAGES = ("lane_calib", "policy_update_iter0")
 ITER0_STAGES = ITER0_TRAIN_STAGES           # canonical (full) iteration-0 stage set
-ITER_STAGES = ("collect", "convert", "wm_finetune", "wm_check", "policy_update", "sumo_check",
-               "rollback")
+ITER_STAGES = ("collect", "convert", "wm_finetune", "wm_check", "lane_calib", "policy_update",
+               "sumo_check", "rollback")
 SHIP_STAGES = ("ship_cpuN",)
 PAIR_ROWS = ("total", "source_wait", "on_road")
 
@@ -141,6 +141,16 @@ def validate_config(cfg: dict) -> None:
             raise ValueError(f"wm.{key} must be a list of '--set' strings")
     if not isinstance(cfg["wm"].get("stage_steps"), list) or len(cfg["wm"]["stage_steps"]) < 1:
         raise ValueError("wm.stage_steps must be a non-empty list")
+    lane_calib = cfg["wm"].get("lane_calib")
+    if lane_calib is not None:
+        if not isinstance(lane_calib, dict):
+            raise ValueError("wm.lane_calib must be an object")
+        for key in ("n_starts", "workers", "rounds"):
+            if key in lane_calib and int(lane_calib[key]) < 1:
+                raise ValueError(f"wm.lane_calib.{key} must be >= 1")
+        for key in ("n_native", "n_genrand"):
+            if key in lane_calib and int(lane_calib[key]) < 0:
+                raise ValueError(f"wm.lane_calib.{key} must be >= 0")
     if not os.path.isdir(cfg["hosts"]["wm"]["code_root"]) and "REPO_SHA" not in cfg["hosts"]["wm"]["code_root"]:
         raise ValueError(f"hosts.wm.code_root does not exist: {cfg['hosts']['wm']['code_root']}")
     guard = cfg.get("execute_guard", {})
@@ -342,9 +352,67 @@ def _convert_cmd(cfg: dict, list_file: str, dest: str) -> str:
     return " ".join(q(a) for a in [cfg["hosts"]["wm"]["python"], "-B", "-c", code, list_file, dest])
 
 
+def _lane_calib_settings(cfg: dict) -> dict:
+    lc = dict(cfg["wm"].get("lane_calib") or {})
+    n_starts = int(lc.get("n_starts", 48))
+    n_native = int(lc.get("n_native", n_starts // 2))
+    n_genrand = int(lc.get("n_genrand", n_starts - n_native))
+    env = cfg["policy"].get("env", {})
+    native = lc.get("native_dir") or env.get("WMS_DATA_V5_NATIVE") \
+        or f"{cfg['data_root']}/v5_native"
+    genrand = lc.get("genrand_dir") or env.get("WMS_DATA_GENRAND_PLAIN") \
+        or f"{cfg['data_root']}/genrand_plain"
+    return {"enabled": bool(lc.get("enabled", True)), "n_starts": n_starts,
+            "n_native": n_native, "n_genrand": n_genrand,
+            "workers": int(lc.get("workers", 48)), "rounds": int(lc.get("rounds", 6)),
+            "horizon_s": float(lc.get("horizon_s", 120.0)),
+            "tol": float(lc.get("tol", 0.10)), "damping": float(lc.get("damping", 0.7)),
+            "max_step": float(lc.get("max_step", 1.0)),
+            "max_offset": float(lc.get("max_offset", 6.0)),
+            "heads": ",".join(lc.get("heads", ["overtake", "return"])),
+            "offset": int(lc.get("offset", 0)), "t0": float(lc.get("t0", 420.0)),
+            "native_dir": native, "genrand_dir": genrand,
+            "lane_learnable": bool(lc.get("lane_learnable", True)),
+            "out": lc.get("out", "lane_calib.json")}
+
+
+def lane_calib_stage(cfg: dict, wm_out: str) -> dict | None:
+    """LANERATECAL stage: fit the per-head rate offsets in the checkpoint's own directory.
+
+    The policy stage then loads the SAME checkpoint path, so ``load_checkpoint`` picks the
+    ``lane_calib.json`` up automatically.  Disabled by ``wm.lane_calib.enabled = false``.
+    """
+    lc = _lane_calib_settings(cfg)
+    if not lc["enabled"]:
+        return None
+    argv = [cfg["hosts"]["gpuR"]["python"], "tools/lane_rate_calib.py", "fit",
+            f"{wm_out}/wm_s_best.pt", "--native-dir", lc["native_dir"],
+            "--genrand-dir", lc["genrand_dir"], "--n-native", str(lc["n_native"]),
+            "--n-genrand", str(lc["n_genrand"]), "--n-starts", str(lc["n_starts"]),
+            "--offset", str(lc["offset"]), "--t0", str(lc["t0"]),
+            "--horizon-s", str(lc["horizon_s"]), "--workers", str(lc["workers"]),
+            "--device", "cpu", "--rounds", str(lc["rounds"]), "--tol", str(lc["tol"]),
+            "--damping", str(lc["damping"]), "--max-step", str(lc["max_step"]),
+            "--max-offset", str(lc["max_offset"]), "--heads", lc["heads"],
+            "--out-dir", wm_out]
+    if lc["lane_learnable"]:
+        argv.append("--lane-learnable")
+    return {
+        "name": "lane_calib",
+        "host": "gpuR",
+        "cwd": cfg["hosts"]["gpuR"]["code_root"],
+        "cmd": " ".join(q(a) for a in argv),
+        "env": {"PYTHONPATH": "src:.", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+        "out": f"{wm_out}/{lc['out']}",
+        "note": ("closed-loop per-head lane-rate offsets on TRAIN-val starts; writes "
+                 "lane_calib.json next to wm_s_best.pt, which the policy stage then loads"),
+    }
+
+
 def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
     if iter0_existing(cfg):
-        return [{
+        stages = [stage for stage in [lane_calib_stage(cfg, paths["wm_out"])] if stage]
+        stages.append({
             "name": "policy_update_iter0",
             "host": "gpuR",
             "cwd": cfg["hosts"]["gpuR"]["code_root"],
@@ -353,8 +421,10 @@ def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
             "env": _policy_env(cfg, None, paths["policy_out"]),
             "out": paths["policy_out"],
             "note": ("policy from scratch inside the EXISTING iteration-0 WM at "
-                     f"{paths['wm_out']} (wm.iter0_mode='existing'; WM stage skipped)"),
-        }]
+                     f"{paths['wm_out']} (wm.iter0_mode='existing'; WM stage skipped; loads "
+                     "lane_calib.json when the calibration stage ran)"),
+        })
+        return stages
     wm_out = paths["wm_out"]
     stages = [{
         "name": "wm_finetune_iter0",
@@ -375,7 +445,11 @@ def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
         "env": {},
         "out": wm_out,
         "note": "finite losses; no reference val log for the first WM",
-    }, {
+    }]
+    calib = lane_calib_stage(cfg, wm_out)
+    if calib:
+        stages.append(calib)
+    stages.append({
         "name": "policy_update_iter0",
         "host": "gpuR",
         "cwd": cfg["hosts"]["gpuR"]["code_root"],
@@ -383,8 +457,9 @@ def plan_iteration0(cfg: dict, paths: dict, updates: int) -> list:
                            iter0=True),
         "env": _policy_env(cfg, None, paths["policy_out"]),
         "out": paths["policy_out"],
-        "note": "policy from scratch inside the newly trained iteration-0 WM",
-    }]
+        "note": ("policy from scratch inside the newly trained iteration-0 WM; the WM "
+                 "checkpoint carries lane_calib.json from the calibration stage"),
+    })
     return stages
 
 
@@ -463,7 +538,11 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
         "env": {},
         "out": paths["wm_out"],
         "note": "finite losses; val mean_position within (1 + tolerance) x previous WM",
-    }, {
+    }]
+    calib = lane_calib_stage(cfg, paths["wm_out"])
+    if calib:
+        stages.append(calib)
+    stages.append({
         "name": "policy_update",
         "host": "gpuR",
         "cwd": cfg["hosts"]["gpuR"]["code_root"],
@@ -471,8 +550,9 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
                            paths["policy_ckpt"], updates),
         "env": _policy_env(cfg, paths["converted"], paths["policy_out"]),
         "out": paths["policy_out"],
-        "note": "continue previous policy inside the new WM (physics.json lane_learnable=true)",
-    }]
+        "note": ("continue previous policy inside the new WM (physics.json lane_learnable=true); "
+                 "load_checkpoint applies lane_calib.json from the new WM directory"),
+    })
     for template in cfg["check"]["commands"]:
         stages.append({
             "name": "sumo_check",

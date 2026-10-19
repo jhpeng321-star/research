@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,6 +26,11 @@ from .wms import WmSModel
 CHECKPOINT_FORMAT = "wm_s/1"
 #: Weights that checkpoints written before the corresponding feature legitimately lack.
 _OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.")
+#: LANERATECAL: closed-loop per-head rate calibration stored next to a checkpoint
+#: (``tools/lane_rate_calib.py``).  Absent file = no-op (bit-identical load).
+LANE_CALIB_FILE = "lane_calib.json"
+LANE_CALIB_FORMAT = "lane_rate_calib/1"
+LANE_CALIB_HEADS = ("overtake", "return", "merge")
 
 
 class CheckpointError(RuntimeError):
@@ -109,6 +115,62 @@ def _model_spec(config: Mapping[str, Any], kind: str) -> ModelSpec:
     return ModelSpec(**{**spec.__dict__, "black_box": False})
 
 
+def read_lane_rate_calib(path: str | Path) -> tuple[dict, tuple[float, float, float]]:
+    """Read and validate a ``lane_calib.json`` (format :data:`LANE_CALIB_FORMAT`).
+
+    ``offsets`` may be a length-3 list (overtake, return, merge) or a mapping by head; the
+    canonical three-value vector is returned with the document.
+    """
+    path = Path(path)
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise CheckpointError(f"{path}: unreadable lane calibration: {exc}") from exc
+    if not isinstance(doc, dict) or doc.get("format") != LANE_CALIB_FORMAT:
+        raise CheckpointError(f"{path}: not a {LANE_CALIB_FORMAT} file")
+    raw = doc.get("offset_vector")
+    if raw is None:
+        raw = doc.get("offsets")
+        if isinstance(raw, Mapping):
+            raw = [raw.get(name, 0.0) for name in LANE_CALIB_HEADS]
+    if not isinstance(raw, (list, tuple)) or len(raw) != len(LANE_CALIB_HEADS):
+        raise CheckpointError(f"{path}: calibration needs {len(LANE_CALIB_HEADS)} offsets")
+    try:
+        vector = tuple(float(x) for x in raw)
+    except (TypeError, ValueError) as exc:
+        raise CheckpointError(f"{path}: non-numeric calibration offset") from exc
+    if not all(math.isfinite(x) for x in vector):
+        raise CheckpointError(f"{path}: calibration offsets must be finite")
+    return doc, vector  # type: ignore[return-value]
+
+
+def apply_lane_rate_calib(model: WmSModel, path: str | Path,
+                          sha256: str | None = None) -> dict | None:
+    """Apply ``lane_calib.json`` next to ``path`` (no file = no-op, returns ``None``).
+
+    The calibrated offsets are additive on top of the config's ``lane_logit_offsets``.  A
+    stored ``checkpoint_sha256`` is enforced so a calibration never transfers to another
+    checkpoint that happens to share the directory (LANE_REDESIGN: calibrate per checkpoint).
+    """
+    calib_path = Path(path).with_name(LANE_CALIB_FILE)
+    if not calib_path.is_file():
+        return None
+    doc, vector = read_lane_rate_calib(calib_path)
+    expected = doc.get("checkpoint_sha256")
+    if expected:
+        digest = sha256 or sha256_file(path)
+        if str(expected).lower() != digest.lower():
+            raise CheckpointError(
+                f"{calib_path} was fitted for checkpoint sha256 {expected}, not {digest}")
+    base = tuple(float(x) for x in getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)))
+    if len(base) != len(vector):
+        base = (0.0,) * len(vector)
+    model.lane_logit_offsets = tuple(a + b for a, b in zip(base, vector))
+    model.lane_rate_calib = {**doc, "path": str(calib_path),
+                             "offset_vector": list(vector)}
+    return model.lane_rate_calib
+
+
 def _check_keys(result, config: Mapping[str, Any], strict: bool) -> None:
     uses_encoder = (str(config.get("rollout_mode", "residual")) != "residual"
                     or str(config.get("lane_head", "off")) != "off"
@@ -153,6 +215,12 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
             raise CheckpointError("lane_v5_merge_calib needs a hazard_v5 lane model")
         model.lane_v5_merge_calib = lv5.check_merge_calib(
             (calib["edges_m"], calib["offsets"]))
+    digest = None
+    if path.with_name(LANE_CALIB_FILE).is_file():
+        # LANERATECAL (tools/lane_rate_calib.py): closed-loop per-head rate offsets.  This is
+        # a no-op when the file is absent; the calibrated checkpoint is the same .pt file.
+        digest = sha256_file(path)
+        apply_lane_rate_calib(model, path, digest)
     model.to(device)
     model.eval()
     projection = None
@@ -162,8 +230,8 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     meta = {key: value for key, value in payload.items() if key not in ("model", "config")}
     return LoadedWms(model=model,
                      train_cfg=None if config_factory is None else config_factory(config),
-                     payload_meta=meta, sha256=sha256_file(path), legacy_config=config,
-                     projection=projection)
+                     payload_meta=meta, sha256=digest or sha256_file(path),
+                     legacy_config=config, projection=projection)
 
 
 def save_checkpoint(path: str | Path, model: WmSModel, cfg: Any, *,
