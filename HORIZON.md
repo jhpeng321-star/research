@@ -48,8 +48,10 @@ reads validation values; it never changes loss, gradients or RNG.
 weight = base_stage_weight(stage) x merge_zone_mult x cav_follower_mult x high_error_mult
 ```
 
-* **merge-zone**: a present recorded HDV in the ramp/merge lane (lane index 2 of the
-  `states[..., 1:4]` one-hot) at any step;
+* **merge-zone** (V10ROUND1): at some step a present recorded HDV in the ramp/merge lane
+  (lane index 2 of the `states[..., 1:4]` one-hot) is within `data.replay.merge_zone_end_m`
+  (default 40 m) of the acceleration-lane end `physics.merge_zone_s1_m` (75.44 m); the old
+  rule flagged any lane-2 HDV upstream, i.e. ~every window;
 * **CAV-follower**: at some step a present HDV is the nearest predecessor of a present CAV in
   the same lane (`states[..., 0]` ordering);
 * **high-error**: the trainer forward-probes an evenly spaced subset of
@@ -99,6 +101,7 @@ conservative.
 | `model.checkpoint_residual` | `false` | residual-net activation checkpointing |
 | `data.replay.enabled` | `false` | build the priority-replay wrapper |
 | `data.replay.merge_oversample` | `1.0` | multiplier for merge-zone windows |
+| `data.replay.merge_zone_end_m` | `40.0` | lane-2 HDV distance-to-end band (m) of a merge-zone window |
 | `data.replay.cav_follower_oversample` | `1.0` | multiplier for CAV-follower windows |
 | `data.replay.error_max_boost` | `8.0` | cap of the high-error multiplier |
 | `data.replay.error_alpha` | `1.0` | exponent of the error ratio |

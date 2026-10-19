@@ -124,6 +124,9 @@ class ReplayConfig:
 
     enabled: bool = False
     merge_oversample: float = 1.0
+    #: V10ROUND1: a merge-zone window needs a present HDV in lane 2 within this many metres
+    #: of the acceleration-lane end (``physics.merge_zone_s1_m``; default 40 m).
+    merge_zone_end_m: float = 40.0
     cav_follower_oversample: float = 1.0
     brake_oversample: float = 1.0
     error_max_boost: float = 8.0
@@ -138,6 +141,8 @@ class ReplayConfig:
             value = getattr(self, name)
             require(is_finite(value) and value >= 1.0,
                     f"data.replay.{name} must be finite and >= 1")
+        require(is_finite(self.merge_zone_end_m) and self.merge_zone_end_m > 0.0,
+                "data.replay.merge_zone_end_m must be finite and positive")
         require(is_finite(self.error_decay) and 0.0 <= self.error_decay < 1.0,
                 "data.replay.error_decay must be in [0, 1)")
         require(int(self.probe_windows) >= 0, "data.replay.probe_windows must be >= 0")

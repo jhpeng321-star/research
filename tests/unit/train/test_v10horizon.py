@@ -107,18 +107,42 @@ def _flags(n=3, steps=24, k=6):
     return arrays
 
 
-def test_replay_flags_detect_lane2_and_cav_follower():
+def test_replay_flags_detect_lane2_near_end_and_cav_follower():
     base = make_arrays(n=1)
     rec = {key: base[key][0].copy() for key in base}
     rec["states"][:, 3, 1:4] = np.array([0.0, 0.0, 1.0], np.float32)  # a ramp slot in lane 2
+    rec["states"][:, 3, 0] = 50.0          # 25.44 m before the 75.44 m lane end
     is_cav = np.zeros(rec["present"].shape, dtype=bool)
     is_cav[:, 0] = True                    # the front vehicle is a CAV with an HDV behind it
     rec["is_cav"] = is_cav
     flags = replay_flags([rec])
     assert flags["merge_zone"].shape == (1,)
     assert flags["cav_follower"].shape == (1,)
-    assert bool(flags["merge_zone"][0]), "a lane-2 ramp slot should flag the window"
+    assert bool(flags["merge_zone"][0]), "a lane-2 HDV near the end should flag the window"
     assert bool(flags["cav_follower"][0]), "an HDV behind the middle CAV should flag it"
+
+
+def test_replay_flags_merge_zone_needs_hdv_within_end_band():
+    base = make_arrays(n=1)
+    rec = {key: base[key][0].copy() for key in base}
+    rec["states"][:, 3, 1:4] = np.array([0.0, 0.0, 1.0], np.float32)
+    rec["states"][:, 3, 0] = 50.0
+    rec["is_cav"] = np.zeros(rec["present"].shape, dtype=bool)
+
+    far = {key: value.copy() for key, value in rec.items()}
+    far["states"][:, 3, 0] = -200.0        # lane-2 HDV only upstream: not a merge-zone window
+    assert not bool(replay_flags([far])["merge_zone"][0])
+
+    cav = {key: value.copy() for key, value in rec.items()}
+    cav["is_cav"] = cav["is_cav"].copy()
+    cav["is_cav"][:, 3] = True             # the near-end vehicle is a CAV, not an HDV
+    assert not bool(replay_flags([cav])["merge_zone"][0])
+
+    near = {key: value.copy() for key, value in rec.items()}
+    near["states"][:, 3, 0] = 75.44 - 39.9
+    assert bool(replay_flags([near])["merge_zone"][0])
+    near["states"][:, 3, 0] = 75.44 - 40.0
+    assert not bool(replay_flags([near])["merge_zone"][0])
 
 
 def test_replay_flags_plain_single_lane_has_no_merge_zone():

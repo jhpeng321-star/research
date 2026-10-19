@@ -1,7 +1,10 @@
 """Per-window replay flags: merge-zone, CAV-follower and HDV brake-event windows.
 
-A *merge-zone window* has at least one present recorded HDV in the ramp / merge lane
-(lane index 2 of the one-hot lane block ``states[..., 1:4]``).  A *CAV-follower window*
+A *merge-zone window* has, at some step, a present recorded HDV in the ramp / merge lane
+(lane index 2 of the one-hot lane block ``states[..., 1:4]``) whose distance to the
+acceleration-lane end is below ``MERGE_ZONE_END_M`` metres (V10ROUND1: distance to
+``physics.merge_zone_s1_m`` in the model frame, default 40 m).  Merely containing a
+lane-2 HDV upstream is not enough (that flagged ~every window).  A *CAV-follower window*
 has, at some step, a recorded HDV directly behind a present CAV in the same lane
 (``states[..., 0]`` = longitudinal position gets the nearest predecessor).  A
 *brake-event window* (V10BRAKEWAVE) has, at some step, a present recorded HDV leader
@@ -32,6 +35,11 @@ A_FEATURE = 5
 BRAKE_EVENT_ACCEL_MPS2 = -1.5
 #: V10BRAKEWAVE: maximum same-lane leader-follower gap of a brake-event pair.
 BRAKE_EVENT_MAX_GAP_M = 40.0
+#: V10ROUND1: distance-to-end band (m) that makes a lane-2 HDV a merge-zone vehicle
+#: (``data.replay.merge_zone_end_m``; the end itself is ``physics.merge_zone_s1_m``).
+MERGE_ZONE_END_M = 40.0
+#: Default model-frame acceleration-lane end (= ``PhysicsConfig.merge_zone_s1_m``).
+MERGE_ZONE_S1_M = 75.44
 
 
 class ReplayRefusal(TrainDataRefusal):
@@ -92,8 +100,22 @@ def window_brake_event(record: dict, *, accel_mps2: float = BRAKE_EVENT_ACCEL_MP
     return False
 
 
-def window_replay_flags(record: dict) -> tuple[bool, bool]:
-    """``(merge_zone, cav_follower)`` of one window record."""
+def _merge_zone(present: np.ndarray, lane: np.ndarray, s: np.ndarray,
+                hdv: np.ndarray, *, merge_end_m: float,
+                merge_zone_s1_m: float) -> bool:
+    """True when a present HDV in the ramp lane sits in the last ``merge_end_m`` metres."""
+    near_end = (merge_zone_s1_m - s)
+    hit = present & hdv & (lane == RAMP_LANE) & (near_end >= 0.0) & (near_end < float(merge_end_m))
+    return bool(hit.any())
+
+
+def window_replay_flags(record: dict, *, merge_end_m: float = MERGE_ZONE_END_M,
+                        merge_zone_s1_m: float = MERGE_ZONE_S1_M) -> tuple[bool, bool]:
+    """``(merge_zone, cav_follower)`` of one window record.
+
+    ``merge_zone`` requires a present HDV (not CAV) in lane 2 within ``merge_end_m`` metres
+    of ``merge_zone_s1_m`` at some step (V10ROUND1 definition).
+    """
     states = np.asarray(record["states"])
     if states.ndim != 3 or states.shape[-1] <= 4:
         raise ReplayRefusal("replay flags need states [T, K, F>=5]")
@@ -101,21 +123,29 @@ def window_replay_flags(record: dict) -> tuple[bool, bool]:
     if present.shape != states.shape[:2]:
         raise ReplayRefusal("replay flags: present shape differs from states")
     is_cav = record.get("is_cav")
-    cav = present if is_cav is None else (present & np.asarray(is_cav, dtype=bool))
+    if is_cav is None:
+        cav = present                  # legacy follower semantics without CAV labels
+        hdv = present                  # ... and every present vehicle counts as an HDV
+    else:
+        cav = present & np.asarray(is_cav, dtype=bool)
+        hdv = present & ~np.asarray(is_cav, dtype=bool)
     if cav.shape != present.shape:
         raise ReplayRefusal("replay flags: is_cav shape differs from present")
     lane = _lane_index(states)
     s = states[..., S_FEATURE].astype(np.float64)
-    merge_zone = bool((present & (lane == RAMP_LANE)).any())
+    merge_zone = _merge_zone(present, lane, s, hdv, merge_end_m=float(merge_end_m),
+                             merge_zone_s1_m=float(merge_zone_s1_m))
     cav_follower = _has_cav_follower(present, cav, lane, s)
     return merge_zone, cav_follower
 
 
-def replay_flags(records: Iterable[dict]) -> dict:
+def replay_flags(records: Iterable[dict], *, merge_end_m: float = MERGE_ZONE_END_M,
+                 merge_zone_s1_m: float = MERGE_ZONE_S1_M) -> dict:
     """``(merge_zone, cav_follower, brake_event)`` bool arrays over an iterable of records."""
     merge, follower, brake = [], [], []
     for record in records:
-        m, f = window_replay_flags(record)
+        m, f = window_replay_flags(record, merge_end_m=merge_end_m,
+                                   merge_zone_s1_m=merge_zone_s1_m)
         merge.append(m)
         follower.append(f)
         brake.append(window_brake_event(record))
@@ -124,7 +154,9 @@ def replay_flags(records: Iterable[dict]) -> dict:
             "brake_event": np.asarray(brake, dtype=bool)}
 
 
-def compute_replay_flags(dataset, *, progress: Optional[int] = None) -> dict:
+def compute_replay_flags(dataset, *, progress: Optional[int] = None,
+                         merge_end_m: float = MERGE_ZONE_END_M,
+                         merge_zone_s1_m: float = MERGE_ZONE_S1_M) -> dict:
     """Scan a dataset window by window and return the flag arrays + counts.
 
     ``progress`` (windows) prints a stderr line every that many windows (0/None = quiet).
@@ -135,15 +167,18 @@ def compute_replay_flags(dataset, *, progress: Optional[int] = None) -> dict:
     brake = np.zeros(n, dtype=bool)
     for i in range(n):
         record = dataset[i]
-        m, f = window_replay_flags(record)
+        m, f = window_replay_flags(record, merge_end_m=merge_end_m,
+                                   merge_zone_s1_m=merge_zone_s1_m)
         merge[i], follower[i] = m, f
         brake[i] = window_brake_event(record)
     return {"merge_zone": merge, "cav_follower": follower, "brake_event": brake,
+            "merge_end_m": float(merge_end_m), "merge_zone_s1_m": float(merge_zone_s1_m),
             "n_windows": n, "n_merge_zone": int(merge.sum()),
             "n_cav_follower": int(follower.sum()), "n_brake_event": int(brake.sum()),
             "n_both": int((merge & follower).sum())}
 
 
 __all__ = ["REPLAY_SCHEMA", "RAMP_LANE", "BRAKE_EVENT_ACCEL_MPS2",
-           "BRAKE_EVENT_MAX_GAP_M", "ReplayRefusal", "window_replay_flags",
-           "window_brake_event", "replay_flags", "compute_replay_flags"]
+           "BRAKE_EVENT_MAX_GAP_M", "MERGE_ZONE_END_M", "MERGE_ZONE_S1_M", "ReplayRefusal",
+           "window_replay_flags", "window_brake_event", "replay_flags",
+           "compute_replay_flags"]

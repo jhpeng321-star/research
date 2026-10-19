@@ -319,7 +319,7 @@ def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
     from ..data.replay_flags import compute_replay_flags
     from ..train.replay import PriorityReplayDataset
 
-    flags = compute_replay_flags(train)
+    flags = compute_replay_flags(train, merge_end_m=float(replay_cfg.merge_zone_end_m))
     replay = PriorityReplayDataset(
         train, merge_zone=flags["merge_zone"], cav_follower=flags["cav_follower"],
         brake_event=flags["brake_event"],
@@ -331,7 +331,8 @@ def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
         error_max_boost=float(replay_cfg.error_max_boost))
     replay.receipt["replay"]["scan"] = {k: flags[k] for k in
                                         ("n_windows", "n_merge_zone", "n_cav_follower",
-                                         "n_brake_event", "n_both")}
+                                         "n_brake_event", "n_both", "merge_end_m",
+                                         "merge_zone_s1_m")}
     replay.receipt["replay"]["stage_sampling"] = replay.describe_stages(curriculum)
     print(f"priority replay: {flags['n_merge_zone']} merge-zone / "
           f"{flags['n_cav_follower']} CAV-follower / {flags['n_brake_event']} brake-event "
