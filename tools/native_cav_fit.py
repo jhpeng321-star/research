@@ -461,9 +461,12 @@ def write_report(path: Path, result: dict) -> None:
         "## What changed",
         "",
         "The legacy native twin is a fixed IDM (`v0=31.29, b=2.0, s0=2.0, T=1.2, delta=4`, "
-        "`a_min=-3`) whose same-lane leader term over-brakes.  The learned head predicts the "
-        "recorded native-CAV acceleration from the same inputs (own speed, leader bumper gap, "
-        "speed difference, lane, merge-frame position, leader presence).  The switch is "
+        "`a_min=-3`) whose same-lane leader term over-brakes.  SUMO native CAVs keep their "
+        "driver vType (normal_car accel 2.6, cautious 2.0; the v5 evaluation uses cav_typical "
+        "accel 1.2 with speedMode 27), so recorded CAV acceleration is bounded at 1.2.  The "
+        "learned head predicts the recorded native-CAV acceleration from the same inputs (own "
+        "speed, leader bumper gap, speed difference, lane, merge-frame position, leader "
+        "presence) and is clamped to that vType bound.  The switch is "
         "`counterfactual.native_cav = \"head\"`; the default stays `\"idm\"`, so existing "
         "checkpoints/runs are bit-identical.",
         "",
