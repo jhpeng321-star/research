@@ -759,7 +759,7 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
             # included (the window is no longer special).
             endpoint = valid[:, 1:].bool()
             label = (nxt == tq) & endpoint
-            rows = hdv & feasible
+            rows = hdv & feasible & endpoint   # astra bug 5: censored (missing t+1) rows carry no loss
             stats = {"rows": int(rows.sum()), "events": int((rows & label).sum()),
                      "infeasible_rows": int((hdv & ~feasible).sum()),
                      "infeasible_events": int(((nxt == tq) & endpoint & ~feasible).sum()),
