@@ -179,7 +179,17 @@
       "loss.lane_flow.balance=0.5"
     ],
     "laneflow_note": "FIX 2 (LANEFLOW.md): the on-policy count-matching lane-change loss (loss.lane_flow, V8LANE) under physics.lane_learnable. wm.extra_set_laneflow is merged into every iteration >= 1 WM fine-tune (never iteration 0). weight 1.0 / balance 0.5 match the trained V8LANE checkpoint (configs/c4_wm_v8lane_short3.toml); the term needs lane_model='hazard_v5' (v5m refresh) and no longer needs model.lane_v5_mainline='budget'.",
-    "pass_through_note": "Verbatim --set items: physics.lane_learnable (c4/v10unblock), wm.extra_set_horizon (c4/v10horizon, merged), wm.extra_set_laneflow (loss.lane_flow, iterations >= 1). The loop never parses or renames them.",
+    "extra_set_agg": [
+      "loss.agg_delay.weight=0.1",
+      "loss.agg_delay.start_s=120.0",
+      "loss.agg_delay.horizon_s=300.0",
+      "loss.agg_delay.paired_weight=0.1",
+      "loss.agg_delay.bin_s=10.0",
+      "loss.agg_delay.queue_scale_veh=4.0",
+      "loss.agg_delay.throughput_scale_veh=4.0"
+    ],
+    "extra_set_agg_note": "A5 long-horizon aggregate delay loss (c4/v10aggloss): matches WM-rollout team delay per region, queue and throughput to the recorded SUMO over the 120-300 s window, plus the paired branch difference; appended by loop_v10.py for iterations >= 1 (never iteration 0). The loss is active on whatever long window the stage unrolls to; to actually reach 300 s add a long curriculum stage to wm.config (curriculum.unroll_s / curriculum.stage_steps / curriculum.truncation_steps_per_stage, e.g. truncation 240-300 steps) -- wm.stage_steps and the budget must stay in sync, so that is a config change, not an extra_set_agg item.",
+    "pass_through_note": "Verbatim --set items: physics.lane_learnable, extra_set_horizon, extra_set_laneflow (k>=1), extra_set_agg (A5), physics.mainline_lane_mode from the lane-mode curriculum.",
     "timeout_s": 10800,
     "val_metric": "mean_position",
     "val_tolerance": 0.3

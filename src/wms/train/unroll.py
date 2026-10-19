@@ -611,6 +611,13 @@ class UnrollRunner:
             agg_total = sum(float(logged[n]) for n in agg_names)
             record["aggregate_value_share"] = (agg_total / loss_logged
                                                if loss_logged > 0.0 else 0.0)
+        delay_names = [n for n in ("agg_delay_region", "agg_queue", "agg_throughput", "agg_pair")
+                       if n in logged]
+        if delay_names:
+            # A5 long-horizon aggregate delay loss: share of the logged loss value.
+            delay_total = sum(float(logged[n]) for n in delay_names)
+            record["agg_delay_value_share"] = (delay_total / loss_logged
+                                               if loss_logged > 0.0 else 0.0)
         merge_prep = targets.prepared.get("merge")
         if merge_prep is not None:
             # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.

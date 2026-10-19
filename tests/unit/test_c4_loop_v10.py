@@ -114,12 +114,17 @@ def test_pass_through_keys_are_verbatim(tmp_path):
     for key in CFG["wm"].get("extra_set_horizon", []):
         assert key in wm["cmd"]
     assert any(k.startswith("data.replay.enabled") for k in CFG["wm"].get("extra_set_horizon", [])), "c4/v10horizon keys are enabled after the merge"
+    # A5 agg-delay keys (my own key) ride along on iterations >= 1 only
+    for key in CFG["wm"].get("extra_set_agg", []):
+        assert key in wm["cmd"], key
+    assert any(k.startswith("loss.agg_delay.weight") for k in CFG["wm"].get("extra_set_agg", []))
     # iteration 0 trains the WM only in 'train' mode; the launch uses 'existing'
     cfg_train = json.loads(json.dumps(CFG))
     cfg_train["wm"]["iter0_mode"] = "train"
     iter0 = LV.plan_iteration0(cfg_train, LV._paths(tmp_path, 0, cfg_train), 200)
     cmd0 = next(s for s in iter0 if s["name"] == "wm_finetune_iter0")["cmd"]
     assert "physics.lane_learnable=true" in cmd0
+    assert not any(k in cmd0 for k in CFG["wm"].get("extra_set_agg", [])), "agg keys are k>=1 only"
 
 
 def test_laneflow_keys_merge_only_for_iterations_ge_1(tmp_path):

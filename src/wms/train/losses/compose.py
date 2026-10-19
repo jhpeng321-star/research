@@ -15,6 +15,7 @@ from torch import Tensor
 
 from ..settings import TrainSettings
 from .aggregate import AggregateLossConfig, aggregate_terms
+from .agg_horizon import AggHorizonConfig, agg_horizon_terms
 from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContext, UnrollTargets,
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
@@ -207,6 +208,27 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         chunk.extend(lane_flow_terms(LaneFlowConfig(
             weight=float(settings.lane_flow_weight),
             balance=float(getattr(settings, "lane_flow_balance", 0.0)))))
+    if getattr(settings, "agg_delay_on", False):
+        # A5 long-horizon aggregate delay terms go LAST (off: never built, bit-identical).
+        chunk.extend(agg_horizon_terms(AggHorizonConfig(
+            dt_s=dt_s, weight=float(settings.agg_delay_weight),
+            paired_weight=float(settings.agg_delay_paired_weight),
+            start_s=float(settings.agg_delay_start_s),
+            horizon_s=float(settings.agg_delay_horizon_s),
+            fade_s=float(settings.agg_delay_fade_s),
+            bin_s=float(settings.agg_delay_bin_s),
+            merge_s0_m=(0.0 if physics is None else float(physics.merge_zone_s0_m)),
+            merge_s1_m=(75.44 if physics is None else float(physics.merge_zone_s1_m)),
+            merge_lane=(2 if physics is None else int(physics.merge_lane)),
+            road_end_m=float(settings.agg_delay_road_end_m),
+            sections_m=tuple(float(x) for x in settings.agg_delay_sections_m),
+            queue_speed_mps=float(settings.agg_delay_queue_speed_mps),
+            region_temp_m=float(settings.agg_delay_region_temp_m),
+            queue_temp_mps=float(settings.agg_delay_queue_temp_mps),
+            delay_scale_veh_s=float(settings.agg_delay_delay_scale_veh_s),
+            queue_scale_veh=float(settings.agg_delay_queue_scale_veh),
+            throughput_scale_veh=float(settings.agg_delay_throughput_scale_veh),
+            huber_delta=float(settings.agg_delay_huber_delta))))
     unroll: list[UnrollTerm] = []
     if settings.conservation_weight:
         unroll.append(ConservationLoss(settings.conservation_weight))
