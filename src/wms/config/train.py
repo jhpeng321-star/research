@@ -346,6 +346,31 @@ class BrakingConfig:
 
 
 @config_dataclass
+class BrakePersistConfig:
+    """BRAKE_DIAG multi-step braking persistence terms (all default OFF)."""
+
+    weight: float = 0.0
+    quantile_weight: float = 0.0
+    event_balance: float = 0.0
+    window_s: float = 4.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(getattr(self, name)) for name in (
+            "weight", "quantile_weight", "event_balance", "window_s")),
+            "loss.brake_persist values must be finite")
+        require(self.weight >= 0.0 and self.quantile_weight >= 0.0,
+                "loss.brake_persist weights must be >= 0 (0 = off)")
+        require(0.0 <= self.event_balance <= 4.0,
+                "loss.brake_persist.event_balance must be in [0, 4] (0 = off)")
+        require(3.0 <= self.window_s <= 5.0,
+                "loss.brake_persist.window_s must be in [3, 5] seconds")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or self.quantile_weight > 0.0
+
+
+@config_dataclass
 class ResidualLossConfig:
     """Penalties on the learned residual magnitude."""
 
@@ -729,6 +754,7 @@ class LossConfig:
     recorded leader (<= 40 m) decelerates below -1 m/s^2 (1 = off, bit-identical)."""
     step_weight_decay: float = 0.01
     braking: BrakingConfig = field(default_factory=BrakingConfig)
+    brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
@@ -1003,6 +1029,9 @@ class TrainConfig:
         for name, enabled in (("asym_speed", braking.asym_speed_alpha > 1.0),
                               ("decel_weight", braking.decel_weight > 1.0),
                               ("propagation", braking.propagation_weight > 0.0),
+                              ("brake_persist", self.loss.brake_persist.weight > 0.0),
+                              ("brake_persist_quantile",
+                               self.loss.brake_persist.quantile_weight > 0.0),
                               ("stability", self.loss.stability_weight > 0.0),
                               ("conservation", self.loss.conservation_weight > 0.0)):
             if enabled:

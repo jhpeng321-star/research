@@ -19,6 +19,7 @@ from .agg_horizon import AggHorizonConfig, agg_horizon_terms
 from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContext, UnrollTargets,
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
+from .brake_persist import BrakePersistConfig, brake_persist_terms
 from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
@@ -143,6 +144,14 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         chunk.append(DecelWeightLoss(braking, **brake_kwargs))
     if braking.prop_on:
         chunk.append(PropagationLoss(braking, **brake_kwargs))
+    if settings.brake_persist_on:
+        # BRAKE_DIAG persistence terms after the one-step braking terms (off: never built,
+        # bit-identical).
+        chunk.extend(brake_persist_terms(BrakePersistConfig(
+            weight=float(settings.brake_persist_weight),
+            quantile_weight=float(settings.brake_persist_quantile_weight),
+            event_balance=float(settings.brake_persist_event_balance),
+            window_s=float(settings.brake_persist_window_s))))
     if settings.traffic_loss:
         chunk.append(TrafficLoss(TrafficLossConfig(
             dt_s=dt_s, bin_s=float(settings.traffic_bin_s),
