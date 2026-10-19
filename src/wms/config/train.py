@@ -752,6 +752,10 @@ class LossConfig:
     brake_follow_weight: float = 1.0
     """V10BRAKEWAVE: per-step position/speed multiplier for a follower whose same-lane
     recorded leader (<= 40 m) decelerates below -1 m/s^2 (1 = off, bit-identical)."""
+    brake_follow_cav_weight: float = 0.0
+    """V10CAVFOLLOW: extra per-step position/speed multiplier for an HDV follower whose
+    same-lane recorded CAV leader (<= 40 m) decelerates below -1 m/s^2; the multiplier is
+    ``1 + brake_follow_cav_weight`` on flagged steps (0 = off, bit-identical)."""
     step_weight_decay: float = 0.01
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
@@ -790,6 +794,9 @@ class LossConfig:
         require(self.stability_probes >= 1, "loss.stability_probes must be positive")
         require(is_finite(self.brake_follow_weight) and self.brake_follow_weight >= 1.0,
                 "loss.brake_follow_weight must be finite and >= 1 (1 = off)")
+        require(is_finite(self.brake_follow_cav_weight)
+                and self.brake_follow_cav_weight >= 0.0,
+                "loss.brake_follow_cav_weight must be finite and >= 0 (0 = off)")
 
 
 @config_dataclass

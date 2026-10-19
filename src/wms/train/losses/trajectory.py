@@ -13,14 +13,18 @@ BRAKE_FOLLOW_LEADER_DECEL_MPS2 = -1.0
 
 
 def brake_follow_mask(targets: UnrollTargets, *, max_gap_m: float = BRAKE_FOLLOW_MAX_GAP_M,
-                      leader_decel_mps2: float = BRAKE_FOLLOW_LEADER_DECEL_MPS2) -> torch.Tensor:
+                      leader_decel_mps2: float = BRAKE_FOLLOW_LEADER_DECEL_MPS2,
+                      leader_is_cav: bool = False) -> torch.Tensor:
     """[B, n_steps, K] followers whose nearest same-lane recorded leader brakes hard.
 
     The leader is the nearest vehicle ahead in the same recorded lane within ``max_gap_m``;
     the follower is flagged when that leader's recorded acceleration at the target step is
-    below ``leader_decel_mps2``.  Computed once per unroll and cached on the targets.
+    below ``leader_decel_mps2``.  ``leader_is_cav`` selects CAV-led events (the leader must be
+    a recorded CAV) instead of the default HDV-led events.  Computed once per unroll and
+    cached on the targets.
     """
-    cached = targets.prepared.get("brake_follow")
+    key = "brake_follow_cav" if leader_is_cav else "brake_follow"
+    cached = targets.prepared.get(key)
     if cached is not None and float(cached["max_gap_m"]) == float(max_gap_m) \
             and float(cached["leader_decel_mps2"]) == float(leader_decel_mps2):
         return cached["mask"]
@@ -32,7 +36,9 @@ def brake_follow_mask(targets: UnrollTargets, *, max_gap_m: float = BRAKE_FOLLOW
     lane = lane_onehot.argmax(dim=-1)
     on_road = lane_onehot.sum(dim=-1) > 0
     valid = targets.loss_valid[:, 1:n + 1] & on_road
-    leader = valid & ~targets.is_cav[:, 1:n + 1] & (accel < float(leader_decel_mps2))
+    leader_cav = targets.is_cav[:, 1:n + 1]
+    leader = valid & (leader_cav if leader_is_cav else ~leader_cav) \
+        & (accel < float(leader_decel_mps2))
     mask = torch.zeros(valid.shape, dtype=torch.bool, device=valid.device)
     for t in range(n):
         s_t, lane_t, valid_t, leader_t = s[:, t, :], lane[:, t, :], valid[:, t, :], leader[:, t, :]
@@ -45,7 +51,7 @@ def brake_follow_mask(targets: UnrollTargets, *, max_gap_m: float = BRAKE_FOLLOW
         has_leader = torch.isfinite(nearest_gap.min(dim=-1).values)
         mask[:, t] = has_leader & leader_t.gather(1, nearest)
     mask = mask & targets.hdv_mask
-    targets.prepared["brake_follow"] = {
+    targets.prepared[key] = {
         "mask": mask, "count": int(mask.sum()),
         "max_gap_m": float(max_gap_m),
         "leader_decel_mps2": float(leader_decel_mps2)}
@@ -61,21 +67,44 @@ def brake_follow_step_weights(targets: UnrollTargets, weight: float) -> Optional
     return 1.0 + (weight - 1.0) * mask
 
 
+def brake_follow_cav_step_weights(targets: UnrollTargets,
+                                  weight: float) -> Optional[torch.Tensor]:
+    """[B, n_steps, K] extra multiplier (``1 + weight`` on CAV-led steps) or None if off.
+
+    V10CAVFOLLOW: the default ``0`` leaves the loss untouched; positive values add
+    emphasis on HDV followers of a recorded CAV leader braking below -1 m/s^2.
+    """
+    weight = float(weight)
+    if weight <= 0.0:
+        return None
+    mask = brake_follow_mask(targets, leader_is_cav=True).to(targets.states.dtype)
+    return 1.0 + weight * mask
+
+
 class _HuberTerm(LossTerm):
     """Step-weighted, valid-count-normalised Huber term logged without its weight."""
 
-    def __init__(self, weight: float, brake_follow_weight: float = 1.0) -> None:
+    def __init__(self, weight: float, brake_follow_weight: float = 1.0,
+                 brake_follow_cav_weight: float = 0.0) -> None:
         self.weight = float(weight)
         self.brake_follow_weight = float(brake_follow_weight)
+        self.brake_follow_cav_weight = float(brake_follow_cav_weight)
 
     def _huber(self, ctx: LossContext):
         raise NotImplementedError
 
     def _step_multiplier(self, ctx: LossContext):
-        if self.brake_follow_weight <= 1.0:
-            return None
-        mult = brake_follow_step_weights(ctx.targets, self.brake_follow_weight)
-        return None if mult is None else mult[:, ctx.c0:ctx.c1]
+        mult = None
+        if self.brake_follow_weight > 1.0:
+            mult = brake_follow_step_weights(ctx.targets, self.brake_follow_weight)
+            if mult is not None:
+                mult = mult[:, ctx.c0:ctx.c1]
+        if self.brake_follow_cav_weight > 0.0:
+            cav = brake_follow_cav_step_weights(ctx.targets, self.brake_follow_cav_weight)
+            if cav is not None:
+                cav = cav[:, ctx.c0:ctx.c1]
+                mult = cav if mult is None else mult * cav
+        return mult
 
     def __call__(self, ctx: LossContext) -> Optional[TermValue]:
         huber = self._huber(ctx)

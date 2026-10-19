@@ -26,6 +26,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "position_weight": "loss.position_weight",
     "speed_weight": "loss.speed_weight",
     "brake_follow_weight": "loss.brake_follow_weight",
+    "brake_follow_cav_weight": "loss.brake_follow_cav_weight",
     "step_weight_decay": "loss.step_weight_decay",
     "truncation_steps": "curriculum.truncation_steps",
     "history_features": "model.history_features",
@@ -257,6 +258,7 @@ FLAT_TO_PATH: dict[str, str] = {
 OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "batch_size_per_stage",
     "brake_follow_weight",
+    "brake_follow_cav_weight",
     "asym_speed_alpha", "decel_weight", "decel_threshold_mps2", "propagation_weight",
     "prop_window_s", "prop_max_gap_m",
     "brake_persist_weight", "brake_persist_quantile_weight",

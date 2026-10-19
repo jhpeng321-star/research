@@ -126,9 +126,13 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         dt_s=dt_s)
     chunk: list[LossTerm] = [
         PositionLoss(settings.position_weight,
-                     brake_follow_weight=getattr(settings, "brake_follow_weight", 1.0)),
+                     brake_follow_weight=getattr(settings, "brake_follow_weight", 1.0),
+                     brake_follow_cav_weight=getattr(
+                         settings, "brake_follow_cav_weight", 0.0)),
         SpeedLoss(settings.speed_weight,
-                  brake_follow_weight=getattr(settings, "brake_follow_weight", 1.0)),
+                  brake_follow_weight=getattr(settings, "brake_follow_weight", 1.0),
+                  brake_follow_cav_weight=getattr(
+                      settings, "brake_follow_cav_weight", 0.0)),
         LaneLoss(settings.lane_weight, history_head=settings.lane_head == "history")]
     if settings.residual_mag_weight:
         chunk.append(ResidualMagnitudeLoss(settings.residual_mag_weight))
