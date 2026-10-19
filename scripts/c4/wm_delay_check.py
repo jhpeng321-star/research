@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import math
 import sys
 from pathlib import Path
@@ -137,8 +138,14 @@ def _frame_at(frames, t: float) -> dict | None:
     return best
 
 
+#: 10-20: score the WM on the same vehicles the recorded SUMO stream contains (the t0 roster).
+#: The exported records carry no post-t0 entrants, so WM entrants (entries on/queue) would add
+#: delay SUMO never counts (v5m 300 s ratio 4.9x was this artefact).
+ROSTER_ONLY = os.environ.get("WM_DELAY_ROSTER_ONLY", "1") == "1"
+
+
 def frame_delay(frames, t0_s: float, horizons,
-                free_speed_mps: float = FREE_SPEED_MPS) -> dict:
+                free_speed_mps: float = FREE_SPEED_MPS, ids=None) -> dict:
     """Normalised on-road delay per region + ramp/source queue for each horizon.
 
     ``delay = sum over the 1 s grid of relu(1 - v/free_speed)`` for every present vehicle,
@@ -158,6 +165,8 @@ def frame_delay(frames, t0_s: float, horizons,
             for row in frame.get("vehicles", []):
                 if not row.get("present", True):
                     continue
+                if ids is not None and str(row.get("id", "")) not in ids:
+                    continue      # 10-20: recorded SUMO streams track the t0 roster only
                 s, v = float(row.get("s", 0.0)), float(row.get("v", 0.0))
                 region = region_of(s, row.get("lane", -1))
                 if region is not None:
@@ -399,7 +408,9 @@ def predict_arm(predictor, record, arm, horizons, k, predict_horizon_s, t0_frame
                            sample)
         if first_frames is None:
             first_frames = frames
-        block = frame_delay(frames, float(record["t0_s"]), horizons)
+        roster = ({str(v.get("id", "")) for v in t0_frame.get("vehicles", [])}
+                  if ROSTER_ONLY and t0_frame else None)
+        block = frame_delay(frames, float(record["t0_s"]), horizons, ids=roster)
         for hz in horizons:
             label = _h(hz)
             for region in REGIONS:
