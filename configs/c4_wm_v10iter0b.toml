@@ -44,3 +44,6 @@ cav_follower_oversample = 2.0
 
 [runtime]
 out_dir = "runs/active/c4_wm_v10_iter0b"
+
+[loss]
+loss_share_logging = false   # 10-19: the per-term gradient probe OOMed the 24 GB GPU at the 120 s stage

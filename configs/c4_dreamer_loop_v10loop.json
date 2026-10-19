@@ -140,10 +140,12 @@
       80
     ],
     "extra_set_iter0": [
-      "physics.lane_learnable=true"
+      "physics.lane_learnable=true",
+      "loss.loss_share_logging=false"
     ],
     "extra_set": [
-      "physics.lane_learnable=true"
+      "physics.lane_learnable=true",
+      "loss.loss_share_logging=false"
     ],
     "extra_set_horizon": [
       "curriculum.plateau_advance=true",
