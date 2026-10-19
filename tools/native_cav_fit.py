@@ -417,8 +417,8 @@ def write_report(path: Path, result: dict) -> None:
         f"early-stop RMSE {result['head']['best_stop_rmse']:.4f}",
         f"* weights: committed at `configs/native_cav_head_v5.json` "
         f"(fit copy `{result['head']['path']}`)",
-        f"* switch: `counterfactual.native_cav = \"head\"` in "
-        f"`configs/c4_policy_v10nativecav_v5m.toml`; default is `\"idm\"`",
+        "* switch: `counterfactual.native_cav = \"head\"` in "
+        "`configs/c4_policy_v10nativecav_v5m.toml`; default is `\"idm\"`",
         f"* evaluation events: {m['recorded']['recorded']['n']:,} CAV steps, "
         f"{m['recorded']['headway']['recorded_hard_brake_n']:,} recorded hard-brake events, "
         f"{m['head']['rollout']['n_rollouts']:,} teacher-forced 10 s rollouts",

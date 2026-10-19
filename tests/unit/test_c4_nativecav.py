@@ -113,9 +113,14 @@ def test_bridge_uses_the_head_for_non_acting_cavs():
     state = _state()
     state["physics_step_index"] = 0
     native = native_fn("head")
-    policy = lambda obs, signal, **kwargs: (torch.zeros(1, 5), torch.zeros(1, 5))
-    encoder = lambda obs, positions, field=None: torch.zeros(1, 5, 8)
-    safety = lambda st, accel, **kwargs: accel
+    def policy(obs, signal, **kwargs):
+        return torch.zeros(1, 5), torch.zeros(1, 5)
+
+    def encoder(obs, positions, field=None):
+        return torch.zeros(1, 5, 8)
+
+    def safety(st, accel, **kwargs):
+        return accel
     controller = make_cav_controller(policy, encoder, safety, act_mask=torch.zeros(1, 5, dtype=torch.bool),
                                      native=native, accel_max=1.2, native_accel_max=1.2)
     with torch.no_grad():
