@@ -26,11 +26,13 @@ def _paths(tmp_path, k=1):
 
 def test_config_seed_block_is_disjoint_and_approved():
     lo, hi = CFG["seed"]["block"]
-    assert lo == 969000 and hi == 969199
+    assert lo == 966000 and hi == 966999
     assert not (lo <= LV.EVAL_SEEDS[1] and hi >= LV.EVAL_SEEDS[0])
     assert not (lo <= LV.CHECK_SEEDS[1] and hi >= LV.CHECK_SEEDS[0])
     assert any(a <= lo and hi <= b for a, b in LV.APPROVED_BLOCKS)
     assert [LV.CHECK_SEEDS[0], LV.CHECK_SEEDS[1]] in [list(x) for x in CFG["seed"]["exclude"]]
+    for a, b in CFG["seed"]["used_elsewhere"]:
+        assert b < lo or a > hi, (a, b)
 
 
 def test_reserved_seeds_are_refused():
@@ -40,26 +42,37 @@ def test_reserved_seeds_are_refused():
         except ValueError:
             continue
         raise AssertionError(f"seed {seed} should be refused")
-    LV.check_seed(969000)
+    LV.check_seed(967000)
 
 
 def test_allocate_skips_used_and_reserved():
-    seeds = LV.allocate_seeds(CFG, used=[969000, 969001], n=3)
-    assert seeds == [969002, 969003, 969004]
-    assert not (set(seeds) & {LV.EVAL_SEEDS[0], LV.CHECK_SEEDS[0], 969000, 969001})
+    seeds = LV.allocate_seeds(CFG, used=[966000, 966001], n=3)
+    assert seeds == [966002, 966003, 966004]
+    assert not (set(seeds) & {LV.EVAL_SEEDS[0], LV.CHECK_SEEDS[0], 966000, 966001})
+
+
+def test_iter0_existing_skips_the_wm_stage():
+    assert LV.iter0_existing(CFG) is True
+    stages = LV.plan_iteration0(CFG, LV._paths(Path("."), 0, CFG), 200)
+    names = [s["name"] for s in stages]
+    assert names == ["policy_update_iter0"]
+    policy = stages[0]
+    assert CFG["wm"]["iter0_wm_out"] + "/wm_s_best.pt" in policy["cmd"]
+    assert "physics.lane_learnable" in CFG["wm"]["extra_set"][0]
 
 
 def test_plan_covers_every_stage():
     text = LV.plan_text(CFG)
-    for name in (*LV.ITER0_STAGES, *LV.ITER_STAGES):
+    for name in (*LV.ITER0_EXISTING_STAGES, *LV.ITER_STAGES, *LV.SHIP_STAGES):
         assert name in text, name
 
 
 def test_dry_run_exercises_all_stages_without_executing(tmp_path):
     result = LV.dry_run(CFG, tmp_path)
     names = {row["stage"] for row in result["records"]}
-    assert set(LV.ITER0_STAGES) <= names
+    assert set(LV.ITER0_EXISTING_STAGES) <= names
     assert set(LV.ITER_STAGES) <= names
+    assert set(LV.SHIP_STAGES) <= names
     assert result["summary"]["executed_external_commands"] == 0
     assert result["summary"]["stage_count"] == len(result["records"])
     rows = [json.loads(line) for line in (tmp_path / "dry_run.jsonl").read_text().splitlines()]
@@ -74,11 +87,18 @@ def test_pass_through_keys_are_verbatim(tmp_path):
     wm = next(s for s in stages if s["name"] == "wm_finetune")
     for key in CFG["wm"]["extra_set"]:
         assert key in wm["cmd"], key
+    assert "physics.lane_learnable=true" in wm["cmd"]
+    assert "model.lane_learnable" not in wm["cmd"]
     assert "WMS_DATA_V6_POLICY" in wm["env"]
-    iter0 = LV.plan_iteration0(CFG, LV._paths(tmp_path, 0, CFG), 200)
+    for key in CFG["wm"].get("extra_set_horizon", []):
+        assert key in wm["cmd"]
+    assert CFG["wm"].get("extra_set_horizon") == [], "horizon keys land only with c4/v10horizon"
+    # iteration 0 trains the WM only in 'train' mode; the launch uses 'existing'
+    cfg_train = json.loads(json.dumps(CFG))
+    cfg_train["wm"]["iter0_mode"] = "train"
+    iter0 = LV.plan_iteration0(cfg_train, LV._paths(tmp_path, 0, cfg_train), 200)
     cmd0 = next(s for s in iter0 if s["name"] == "wm_finetune_iter0")["cmd"]
-    assert "model.lane_learnable=true" in cmd0
-    assert "data.mixed_replay.prioritised=true" not in cmd0
+    assert "physics.lane_learnable=true" in cmd0
 
 
 def test_policy_config_is_entrance_zone_native():
@@ -90,6 +110,50 @@ def test_policy_config_is_entrance_zone_native():
     stages = LV.plan_iteration(CFG, 1, LV._paths(Path("."), 1, CFG), LV.allocate_seeds(CFG, n=2), 200)
     policy = next(s for s in stages if s["name"] == "policy_update")
     assert "--resume" in policy["cmd"]
+
+
+def test_collect_uses_entrance_mask_loader_and_zone_env():
+    stages = LV.plan_iteration(CFG, 1, LV._paths(Path("."), 1, CFG),
+                               LV.allocate_seeds(CFG, n=2), 200)
+    gpur = next(s for s in stages if s["name"] == "collect" and s["host"] == "gpuR")
+    assert "--policy-loader entrance_mask_loader:load_entrance_mask_policy" in gpur["cmd"]
+    assert "--cav-vtype normal_car" in gpur["cmd"]
+    assert gpur["env"]["ENTRANCE_NATIVE_MAIN_M"] == "25"
+    assert gpur["env"]["ENTRANCE_NATIVE_RAMP_M"] == "25"
+    assert CFG["hosts"]["gpuR"]["entrance_mask_root"] in gpur["env"]["PYTHONPATH"]
+    assert CFG["hosts"]["cpuN"]["entrance_mask_root"] in next(
+        s for s in stages if s["name"] == "collect" and s["host"] == "cpuN")["env"]["PYTHONPATH"]
+
+
+def test_ship_stage_carries_repo_and_entrance_mask_to_cpun():
+    stages = LV.plan_iteration(CFG, 1, LV._paths(Path("."), 1, CFG),
+                               LV.allocate_seeds(CFG, n=2), 200)
+    ship = next(s for s in stages if s["name"] == "ship_cpuN")
+    assert ship["host"] == "gpuR"
+    assert "scp" in ship["cmd"] and "cpuN" in ship["cmd"] and "md5sum" in ship["cmd"]
+
+
+def test_sumo_check_commands_match_the_native_reference():
+    stages = LV.plan_iteration(CFG, 1, LV._paths(Path("."), 1, CFG),
+                               LV.allocate_seeds(CFG, n=2), 200)
+    checks = [s["cmd"] for s in stages if s["name"] == "sumo_check"]
+    assert len(checks) == 4
+    assert "--seeds 969824-969835" in checks[0]
+    assert "--demands 2400" in checks[0] and "--penetrations 0.4" in checks[0]
+    assert "--case-plan product" in checks[0] and "--horizon 600" in checks[0]
+    assert "--population textbook" in checks[0] and "--cav-vtype normal_car" in checks[0]
+    assert "pair_check.py" in checks[1] and "parse-pair" in checks[1]
+    assert "--arm native=" in checks[2] and "--reference native" in checks[2]
+    assert "wm_fidelity_v10.py" in checks[3] and "--horizons 10,30,60,120" in checks[3]
+
+
+def test_parse_pair_lines_computes_policy_minus_native():
+    text = "total native=10.0 policy=12.5\nsource_wait: 3.0 1.0\non_road 4\n"
+    parsed = LV.parse_pair_lines(text, native="N", policy="P")
+    assert parsed["rows"]["total"]["policy_minus_native"] == 2.5
+    assert parsed["rows"]["source_wait"]["policy_minus_native"] == -2.0
+    assert parsed["rows"]["on_road"]["policy_minus_native"] == 4.0
+    assert parsed["total_D"]["policy_minus_native"] == 2.5
 
 
 def test_rollback_rule_keeps_and_halves():
@@ -120,9 +184,13 @@ def test_budget_is_positive_and_iteration0_has_no_collection():
     b1 = LV.budget(CFG, 1)
     assert b0["collect_episodes"] == 0 and b0["check_episodes"] == 0
     assert b0["gpu_hours_total"] > 0
-    assert b1["collect_episodes"] == 50
+    assert b1["collect_episodes"] == 200
     assert b1["check_episodes"] == 12
-    assert b1["sim_s"] == 50 * (300 + 900)
+    assert b1["sim_s"] == 200 * (300 + 900)
+    assert b1["check_sim_s"] == 12 * (300 + 600)
+    assert b1["wm_steps"] == 100 + 80
+    assert CFG["collect"]["batch_size"]["gpuR"] == 140
+    assert CFG["collect"]["batch_size"]["cpuN"] == 60
     assert b1["gpu_hours_total"] > b0["gpu_hours_total"]
 
 
@@ -145,9 +213,22 @@ def test_execute_refused_without_guard():
     assert LV.execute(CFG) == 3
 
 
+def test_execute_refused_without_owner_approval(tmp_path):
+    cfg = deepcopy(CFG)
+    cfg["execute_guard"]["allow"] = True
+    cfg["iterations"] = 0
+    cfg["loop_root"] = str(tmp_path / "loop")
+    assert cfg["execute_guard"]["require_owner_approval"] is True
+    assert cfg["execute_guard"]["owner_approved"] is False
+    assert LV.execute(cfg) == 3
+    cfg["execute_guard"]["owner_approved"] = True
+    assert LV.execute(cfg, runner=lambda stage, config: 0) == 0
+
+
 def test_execute_logs_iteration_with_injected_runner(tmp_path):
     cfg = deepcopy(CFG)
     cfg["execute_guard"]["allow"] = True
+    cfg["execute_guard"]["owner_approved"] = True
     cfg["iterations"] = 0
     cfg["loop_root"] = str(tmp_path / "loop")
     seen = []
@@ -157,14 +238,21 @@ def test_execute_logs_iteration_with_injected_runner(tmp_path):
         return 0
 
     assert LV.execute(cfg, runner=runner) == 0
-    assert set(LV.ITER0_STAGES) <= set(seen)
+    assert set(LV.ITER0_EXISTING_STAGES) <= set(seen)
     row = json.loads((tmp_path / "loop" / "iterations.jsonl").read_text().splitlines()[0])
     assert row["iteration"] == 0 and row["seed_block"] == cfg["seed"]["block"]
+
+
+def test_wm_fidelity_tool_exists():
+    tool = REPO / "scripts" / "c4" / "wm_fidelity_v10.py"
+    assert tool.exists(), "scripts/c4/wm_fidelity_v10.py must exist"
+    assert CFG["check"]["wm_fidelity"] == "scripts/c4/wm_fidelity_v10.py"
 
 
 def test_plan_document_has_required_sections():
     doc = REPO / "docs" / "C4_V10LOOP_PLAN.md"
     assert doc.exists(), "docs/C4_V10LOOP_PLAN.md must exist"
     text = doc.read_text(encoding="utf-8")
-    for heading in ("Seed block", "Stages and commands", "Budget", "Rollback", "Dry-run"):
+    for heading in ("Fixes 10-19 for launch", "Seed block", "Stages and commands", "Budget",
+                    "Rollback", "Dry-run"):
         assert heading.lower() in text.lower(), heading

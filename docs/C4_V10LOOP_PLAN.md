@@ -4,6 +4,86 @@ Branch `c4/v10loop` (from `c4/v10entzone` `b75475ad`). Status: **prepared only**
 launched, no GPU used, no evaluation seed touched. Execution requires owner approval, the merge of
 `c4/v10unblock` and `c4/v10horizon`, and `execute_guard.allow = true` on gpuR.
 
+## Fixes 10-19 for launch (integration branch `c4/v10int`, 2026-10-19)
+
+Iteration 0 is already running on gpuR (manual launch, `/root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter000`,
+`--set physics.lane_learnable=true --set curriculum.stage_steps=[200,150] --set curriculum.max_hours=4.0`,
+init `/root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt` md5 `d736db86`).  This section records the
+closed-loop config/orchestrator fixes applied for iteration 1+ on `c4/v10int`
+(= `c4/v10unblock` `cb216041` + `c4/v10loop` `327645d8` merged as `bfe75571`).
+
+1. **Lane key.** The lane envelope key is the physical-envelope key **`physics.lane_learnable`**
+   (`c4/v10unblock`), not `model.lane_learnable`.  `wm.extra_set_iter0` and `wm.extra_set` now carry
+   `physics.lane_learnable=true`.
+2. **Horizon keys held separately.** The `c4/v10horizon` curriculum / mixed-prioritised-replay keys
+   are **not merged yet**, so they live in a separate list `wm.extra_set_horizon` (default `[]`) that
+   is appended to the k ≥ 1 WM fine-tune only once that branch lands.  The loop never parses or
+   renames any `--set` item.
+3. **Start from the existing iteration-0 WM.** `wm.init_wm =
+   /root/autodl-tmp/c4/v5/wm_v5m/wm_s_best_ap.pt` (md5 `d736db86`).  `wm.iter0_mode = "existing"`
+   with `wm.iter0_wm_out = /root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter000` makes iteration 0 skip the
+   WM stages and go straight to the **policy from scratch** inside that WM.  (Set
+   `wm.iter0_mode = "train"`, or omit it, to re-run the WM bootstrap instead.)  All k ≥ 1 WM
+   fine-tunes use `wm.stage_steps = [100, 80]`.
+4. **Seed block.** `[966000, 966999]`, verified unused on gpuR/cpuN 2026-10-19; the ranges already
+   consumed elsewhere inside `966000-969999` (`969700-969703`, `969800-969835`, `969960-969995`) lie
+   outside this block and are recorded in `seed.used_elsewhere`.  Re-grep the remote ledgers
+   (`seed.used_ledger_globs`) before a real launch.
+5. **Collection.** 200 episodes per iteration: gpuR 140 episodes / 160 workers, cpuN 60 episodes /
+   44 workers (cpuN python `~/miniconda3/bin/python`, SUMO_HOME
+   `~/miniconda3/lib/python3.10/site-packages/sumo`).  The policy runs with the **entrance-zone
+   native mask** in SUMO: `--policy-loader entrance_mask_loader:load_entrance_mask_policy` with the
+   loader dir on `PYTHONPATH` and `ENTRANCE_NATIVE_MAIN_M=25`, `ENTRANCE_NATIVE_RAMP_M=25`
+   (gpuR `/root/autodl-tmp/c4/v5/entrance_mask`, cpuN `~/c4/entrance_mask`).  A `ship_cpuN` stage
+   (host gpuR) builds `repo_<sha>.tgz`, `scp`s it plus the loader dir to cpuN, unpacks it and prints
+   both `md5sum` lines for comparison before collection.
+6. **SUMO check matches the native reference.** Exact flags: `--seeds 969824-969835 --demands 2400
+   --penetrations 0.4 --case-plan product --warmup 300 --horizon 600 --cav-vtype normal_car
+   --population textbook --no-physics-log`, with the entrance-mask loader.  Then
+   `python /root/autodl-tmp/c4/v5/pair_check.py NATIVE_DIR POLICY_DIR` (positional; its
+   `total/source_wait/on_road` lines are parsed into JSON by `loop_v10.py parse-pair`, `D =
+   policy - native`), and
+   `python /root/autodl-tmp/c4/v5/coop_metrics/coop_metrics.py --arm native=NATIVE --arm pol=POLICY
+   --reference native --out-json X --out-md Y`.  `check.native_ref_note` states that the native
+   reference must be collected with these exact flags.
+7. **WM fidelity tool.** `scripts/c4/wm_fidelity_v10.py` (the old `wm_fidelity.py` never existed)
+   scores a WM checkpoint on a **fixed set of 48 TRAIN-val states** from the `data/v5_native` val
+   windows: deterministic selection saved once via `--select 48 --save-selection <fixed JSON>`,
+   reusing the wallregen scorer (`wms.eval.score.score_states` + `ScoreSpec(10/30/60/120 s)`).
+   Output carries `hdv.abs_ds.<h>` (the rollback key `hdv.abs_ds.60`) and the blow-up count
+   (HDV median |ds| > 50 m at 60 s **and** > 100 m at 120 s).  `--device cpu|cuda`.
+8. **Policy physics.** The iteration-0 policy starts **from scratch** with
+   `configs/c4_policy_v10entzone_v5m.toml` (`trainer.entrance_zone_native = true`,
+   `entrance_zone_main_m = 25`, `entrance_zone_ramp_m = 25`), 200 updates/iteration.
+   `train_cli` loads the `--wm-ckpt` through `wms.eval.backend` and imagines with that checkpoint's
+   `physics.json`; a WM trained with `physics.lane_learnable=true` writes `lane_learnable=true`
+   there, so the policy imagines inside the physical lane envelope.  Verify before the iter-0 policy
+   update: `python -c "import json;print(json.load(open('<iter0_wm_out>/physics.json'))['lane_learnable'])"`
+   must print `True` (see `policy.physics_note`).
+9. **Execute guard.** `run --execute` now needs **both** `execute_guard.allow = true` **and**
+   (when `execute_guard.require_owner_approval`) `execute_guard.owner_approved = true` /
+   `--owner-approved`.
+
+**Exact command to start the loop from the existing iteration-0 WM** (on gpuR, after
+`sed "s/REPO_SHA/<sha>/g"`, the remote-ledger grep and owner approval):
+
+```bash
+cd /root/autodl-tmp/c4/v5/repo_<sha> && \
+  python scripts/c4/loop_v10.py run --config configs/c4_dreamer_loop_v10loop.json \
+    --execute --owner-approved
+# equivalent, forcing the existing iteration-0 WM explicitly:
+cd /root/autodl-tmp/c4/v5/repo_<sha> && \
+  python scripts/c4/loop_v10.py run --config configs/c4_dreamer_loop_v10loop.json \
+    --execute --owner-approved --iter0-wm /root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter000
+```
+
+Dry-run first (renders every command, executes nothing):
+
+```bash
+python scripts/c4/loop_v10.py dry-run --config configs/c4_dreamer_loop_v10loop.json \
+  --out-dir /tmp/v10loop_dryrun
+```
+
 Machines in scope (only these): **gpuR** (1 GPU, 224 CPUs, base `/root/autodl-tmp/c4/v5`) and
 **cpuN** (48 CPUs, `~/c4`, reachable from gpuR as ssh host `cpuN`).
 
@@ -30,9 +110,12 @@ Artifacts:
 
 ## Seed block
 
-* Proposed fresh training block: **`969000–969199`** (inside the owner-approved Dreamer-loop training
-  block `C4_LOOP_TRAIN = 966000–969999`, `traffic_shepherd/seeds.py:323`).
+* Fresh training block (Fixes 10-19): **`966000–966999`** (inside the owner-approved Dreamer-loop
+  training block `C4_LOOP_TRAIN = 966000–969999`, `traffic_shepherd/seeds.py:323`); verified unused
+  on gpuR/cpuN 2026-10-19.  (The earlier draft used `969000–969199`; superseded.)
 * Excluded: live-test seeds `965990–965993` and SUMO-check seeds `969824–969835`.
+* Consumed elsewhere inside `966000–969999` (outside the block): `969700–969703`, `969800–969835`,
+  `969960–969995` (`seed.used_elsewhere`).
 * Evaluation block `964000–964199` is refused by `check_seed`; the SUMO-check block is never
   allocated for training.
 * Runtime guard: `allocate_seeds` skips `seed.exclude`, the eval range and the check range, and the
@@ -83,13 +166,13 @@ cd /root/autodl-tmp/c4/v5/repo_SHA && \
   /root/miniconda3/bin/python -m wms train --config configs/c4_wm_v10loop_iter0.toml --mode run \
     --out /root/autodl-tmp/c4/v5/runs/c4_wm_v10_iter000 \
     --set model.init_from=/root/autodl-tmp/c4/v5/runs/active/C4-V7FT-20261017/v5m_ref/wm_s_best_ap.pt \
-    --set curriculum.stage_steps=[60,40] --set model.lane_learnable=true
+    --set curriculum.stage_steps=[60,40] --set physics.lane_learnable=true
 
 # iteration k>=1 - WM fine-tune with all three parallel key groups (verbatim pass-through)
   ... -m wms train --config configs/c4_wm_v5m_refresh.toml --mode run \
     --out /root/autodl-tmp/c4/v5/runs/c4_wm_v10_iterNNN \
     --set model.init_from=<previous WM wm_s_best.pt> --set curriculum.stage_steps=[60,40] \
-    --set model.lane_learnable=true --set curriculum.horizon_curriculum=true \
+    --set physics.lane_learnable=true --set curriculum.horizon_curriculum=true \
     --set 'curriculum.unroll_s=[60.0,120.0,180.0]' \
     --set data.mixed_replay.prioritised=true --set data.mixed_replay.priority_alpha=0.6
   # WMS_DATA_V6_POLICY=<converted pool of this iteration>
@@ -143,11 +226,11 @@ there without touching the orchestrator.
 
 | branch | key(s) currently wired |
 |---|---|
-| `c4/v10unblock` | `model.lane_learnable=true` |
-| `c4/v10horizon` | `curriculum.horizon_curriculum=true`, `curriculum.unroll_s=[60.0,120.0,180.0]`, `data.mixed_replay.prioritised=true`, `data.mixed_replay.priority_alpha=0.6` |
+| `c4/v10unblock` (merged) | `physics.lane_learnable=true` |
+| `c4/v10horizon` (NOT merged) | held in `wm.extra_set_horizon` (empty): `curriculum.horizon_curriculum=true`, `curriculum.unroll_s=[60.0,120.0,180.0]`, `data.mixed_replay.prioritised=true`, `data.mixed_replay.priority_alpha=0.6` |
 
 If the branches finalise a different dotted spelling, edit only that JSON list. `wm.extra_set_iter0`
-holds the iteration-0 subset (`model.lane_learnable=true` only).
+holds the iteration-0 subset (`physics.lane_learnable=true` only).
 
 ## Rollback rule
 
@@ -219,7 +302,7 @@ Representative rendered commands (iteration 1):
 [iter 1] wm_finetune: [wm] cd /root/autodl-tmp/c4/v5/repo_REPO_SHA && ... python -m wms train \
   --config configs/c4_wm_v5m_refresh.toml --mode run --out <...>/iter_001/wm/out \
   --set model.init_from=<...>/iter_000/wm/out/wm_s_best.pt --set curriculum.stage_steps=[1,1] \
-  --set model.lane_learnable=true --set curriculum.horizon_curriculum=true \
+  --set physics.lane_learnable=true --set curriculum.horizon_curriculum=true \
   --set 'curriculum.unroll_s=[60.0,120.0,180.0]' --set data.mixed_replay.prioritised=true \
   --set data.mixed_replay.priority_alpha=0.6
 [iter 1] policy_update: [gpuR] ... train_cli --config configs/c4_policy_v10entzone_v5m.toml \
