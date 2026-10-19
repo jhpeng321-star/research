@@ -136,7 +136,8 @@ def validate_config(cfg: dict) -> None:
         raise ValueError("wm.iter0_mode='existing' needs wm.iter0_wm_out")
     for key, value in (("extra_set", cfg["wm"].get("extra_set", [])),
                        ("extra_set_iter0", cfg["wm"].get("extra_set_iter0", [])),
-                       ("extra_set_horizon", cfg["wm"].get("extra_set_horizon", []))):
+                       ("extra_set_horizon", cfg["wm"].get("extra_set_horizon", [])),
+                       ("extra_set_agg", cfg["wm"].get("extra_set_agg", []))):
         if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
             raise ValueError(f"wm.{key} must be a list of '--set' strings")
     if not isinstance(cfg["wm"].get("stage_steps"), list) or len(cfg["wm"]["stage_steps"]) < 1:
@@ -447,11 +448,13 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
         "host": "wm",
         "cwd": cfg["hosts"]["wm"]["code_root"],
         "cmd": _wm_cmd(cfg, paths["wm_out"], paths["wm_ckpt"], cfg["wm"]["config"],
-                       cfg["wm"].get("extra_set", []) + cfg["wm"].get("extra_set_horizon", [])),
+                       cfg["wm"].get("extra_set", []) + cfg["wm"].get("extra_set_horizon", [])
+                       + cfg["wm"].get("extra_set_agg", [])),
         "env": _wm_env(cfg, paths["converted"]),
         "out": paths["wm_out"],
         "note": ("physics.lane_learnable passed through verbatim; c4/v10horizon keys in "
-                 "extra_set_horizon are appended only once that branch lands (empty by default)"),
+                 "extra_set_horizon and A5 agg-delay keys in extra_set_agg are appended only "
+                 "once those branches land (empty by default)"),
     }, {
         "name": "wm_check",
         "host": "wm",
@@ -728,7 +731,8 @@ def plan_text(cfg: dict) -> str:
     out.append("  iteration k>=1  : ship -> collect -> convert -> wm_finetune -> wm_check -> "
                "policy_update -> sumo_check -> rollback")
     out.append(f"  WM pass-through : {cfg['wm'].get('extra_set', [])} "
-               f"(horizon, disabled until c4/v10horizon lands: {cfg['wm'].get('extra_set_horizon', [])})")
+               f"(horizon: {cfg['wm'].get('extra_set_horizon', [])}; "
+               f"agg-delay: {cfg['wm'].get('extra_set_agg', [])})")
     out.append(f"  policy config   : {cfg['policy']['config']} (entrance_zone_native=true)")
     out.append(f"  SUMO check      : seeds {CHECK_SEEDS[0]}-{CHECK_SEEDS[1]} vs {cfg['check']['native_ref']} "
                f"(demands {cfg['check'].get('demands')}, penetrations {cfg['check'].get('penetrations')})")

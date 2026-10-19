@@ -313,16 +313,21 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
     aux_mask = hdv_mask & ~inputs.is_cav[:, 1:n + 1] & inputs.present[:, :n]
     denom = (weights * hdv_mask.to(weights.dtype)).sum().clamp_min(1.0)
     road = None
-    if settings.aggregate_weight > 0.0 or getattr(settings, "merge_loss_on", False):
-        # Aggregate loss (C4) / merge loss (V7FT): recorded on-road presence -- the full road (incl. arrivals)
-        # when the entry process runs and the windows carry it, else the t0 cohort.
+    if (settings.aggregate_weight > 0.0 or getattr(settings, "merge_loss_on", False)
+            or getattr(settings, "agg_delay_on", False)):
+        # Aggregate loss (C4) / merge loss (V7FT) / agg-delay loss (A5): recorded on-road
+        # presence -- the full road (incl. arrivals) when the entry process runs and the windows
+        # carry it, else the t0 cohort.
         from .losses.aggregate import road_targets
 
         road = road_targets(batch, states, inputs.present, int(batch["states"].shape[2]),
                             entries_on=inputs.entries is not None, device=device)
     pair = None
-    if getattr(settings, "paired_diff_weight", 0.0) > 0.0 and "pair_ref" in batch:
-        # PAIRLOSS: paired batch (pair groups of GENRAND branches) -> t0-cohort pair targets.
+    if ((getattr(settings, "paired_diff_weight", 0.0) > 0.0
+         or getattr(settings, "agg_delay_paired_weight", 0.0) > 0.0)
+            and "pair_ref" in batch):
+        # PAIRLOSS / A5 paired: paired batch (pair groups of GENRAND branches) -> t0-cohort
+        # pair targets.
         from .losses.paired_diff import pair_targets
 
         pair = pair_targets(batch, states, inputs.present, int(batch["states"].shape[2]),

@@ -447,6 +447,63 @@ class AggregateLossConfig:
 
 
 @config_dataclass
+class AggDelayConfig:
+    """A5 long-horizon aggregate delay loss (``wms.train.losses.agg_horizon``; 0 = off).
+
+    Matches WM-rollout aggregates to the recorded SUMO over the long window
+    ``[start_s, horizon_s]`` (default 120-300 s, where ONROAD_DIAG localises 91 % of the
+    native delay excess): the on-road team delay ``dt * relu(1 - v / 31.29)`` split by region
+    (upstream / merge zone / ramp / downstream; bounds ``merge_s0_m`` / ``merge_s1_m`` /
+    ``merge_lane``), the per-region queue length (region 2 = the ramp queue; ``queue_speed_mps``)
+    and soft throughput crossings of the fixed ``sections_m`` plus the ramp merge count.
+    ``paired_weight`` adds the paired DIFFERENCE of those aggregates on paired branch batches.
+    Scales are ``delay_scale_veh_s`` (an extra coefficient), ``queue_scale_veh`` and
+    ``throughput_scale_veh``; ``bin_s`` / ``region_temp_m`` / ``queue_temp_mps`` shape the bins
+    and the soft memberships.
+    """
+
+    weight: float = 0.0
+    paired_weight: float = 0.0
+    start_s: float = 120.0
+    horizon_s: float = 300.0
+    fade_s: float = 0.0
+    bin_s: float = 5.0
+    merge_s0_m: float = 0.0
+    merge_s1_m: float = 75.44
+    merge_lane: int = 2
+    road_end_m: float = 553.33
+    sections_m: tuple[float, ...] = (-400.0, 0.0, 75.44, 400.0)
+    queue_speed_mps: float = 5.0
+    region_temp_m: float = 5.0
+    queue_temp_mps: float = 1.0
+    delay_scale_veh_s: float = 1.0
+    queue_scale_veh: float = 1.0
+    throughput_scale_veh: float = 1.0
+    huber_delta: float = 1.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(x) and x >= 0.0 for x in (
+            self.weight, self.paired_weight, self.start_s, self.horizon_s, self.fade_s)),
+            "loss.agg_delay weights/window must be finite and non-negative")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.bin_s, self.region_temp_m, self.queue_temp_mps, self.delay_scale_veh_s,
+            self.queue_scale_veh, self.throughput_scale_veh, self.huber_delta)),
+            "loss.agg_delay bin/temperatures/scales must be finite and positive")
+        require(is_finite(self.merge_s0_m) and is_finite(self.merge_s1_m)
+                and self.merge_s1_m > self.merge_s0_m,
+                "loss.agg_delay merge_s1_m must be finite and exceed merge_s0_m")
+        require(self.merge_lane >= 1, "loss.agg_delay merge_lane must be >= 1")
+        require(is_finite(self.road_end_m) and self.road_end_m > 0.0,
+                "loss.agg_delay road_end_m must be finite and positive")
+        require(len(self.sections_m) >= 1 and all(is_finite(float(x)) for x in self.sections_m),
+                "loss.agg_delay sections_m must be non-empty finite positions")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or self.paired_weight > 0.0
+
+
+@config_dataclass
 class MergeLossConfig:
     """V7FT merge-zone calibration loss (``wms.train.losses.merge``; both weights 0 = off).
 
@@ -653,6 +710,7 @@ class LossConfig:
     lane_event: LaneEventConfig = field(default_factory=LaneEventConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
+    agg_delay: AggDelayConfig = field(default_factory=AggDelayConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
@@ -921,6 +979,11 @@ class TrainConfig:
             terms.extend(name for name, w in (("agg_field", agg.field_weight),
                                               ("agg_reward", agg.reward_weight),
                                               ("agg_flow", agg.flow_weight)) if w > 0.0)
+        delay = self.loss.agg_delay
+        if delay.weight > 0.0:
+            terms.extend(("agg_delay_region", "agg_queue", "agg_throughput"))
+        if delay.paired_weight > 0.0:
+            terms.append("agg_pair")
         pair = self.loss.paired_diff
         if pair.enabled:
             terms.extend(name for name, w in (("pair_pos", pair.position_weight),

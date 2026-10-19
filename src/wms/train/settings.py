@@ -159,6 +159,25 @@ class TrainSettings:
     aggregate_horizon_start_s: float = 0.0
     aggregate_horizon_full_s: float = 0.0
     aggregate_cell_temp_m: float = 5.0
+    # A5 (2026-10-19, default OFF = bit-identical): long-horizon aggregate delay loss.
+    agg_delay_weight: float = 0.0
+    agg_delay_paired_weight: float = 0.0
+    agg_delay_start_s: float = 120.0
+    agg_delay_horizon_s: float = 300.0
+    agg_delay_fade_s: float = 0.0
+    agg_delay_bin_s: float = 5.0
+    agg_delay_merge_s0_m: float = 0.0
+    agg_delay_merge_s1_m: float = 75.44
+    agg_delay_merge_lane: int = 2
+    agg_delay_road_end_m: float = 553.33
+    agg_delay_sections_m: tuple[float, ...] = (-400.0, 0.0, 75.44, 400.0)
+    agg_delay_queue_speed_mps: float = 5.0
+    agg_delay_region_temp_m: float = 5.0
+    agg_delay_queue_temp_mps: float = 1.0
+    agg_delay_delay_scale_veh_s: float = 1.0
+    agg_delay_queue_scale_veh: float = 1.0
+    agg_delay_throughput_scale_veh: float = 1.0
+    agg_delay_huber_delta: float = 1.0
     entry_pad_auto: bool = False
     entry_pad_max: int = 256
     entry_insert_rule: str = "v2"  # ENTRYFIX/V6ENTRY: "v2" | "sumo_like" | "sumo_like_v2"
@@ -373,6 +392,25 @@ class TrainSettings:
         _require(float(self.aggregate_bin_s) > 0 and float(self.aggregate_cell_temp_m) > 0
                  and int(self.aggregate_every_steps) >= 1,
                  "aggregate_bin_s/cell_temp_m must be positive and every_steps >= 1")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.agg_delay_weight, self.agg_delay_paired_weight, self.agg_delay_start_s,
+            self.agg_delay_horizon_s, self.agg_delay_fade_s)),
+            "agg_delay weights/window must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.agg_delay_bin_s, self.agg_delay_region_temp_m, self.agg_delay_queue_temp_mps,
+            self.agg_delay_delay_scale_veh_s, self.agg_delay_queue_scale_veh,
+            self.agg_delay_throughput_scale_veh, self.agg_delay_huber_delta)),
+            "agg_delay bin/temperatures/scales must be finite and positive")
+        _require(math.isfinite(float(self.agg_delay_merge_s1_m))
+                 and float(self.agg_delay_merge_s1_m) > float(self.agg_delay_merge_s0_m)
+                 and int(self.agg_delay_merge_lane) >= 1
+                 and math.isfinite(float(self.agg_delay_road_end_m))
+                 and float(self.agg_delay_road_end_m) > 0.0,
+                 "agg_delay merge geometry must be finite with merge_s1_m > merge_s0_m, "
+                 "merge_lane >= 1 and road_end_m > 0")
+        _require(len(self.agg_delay_sections_m) >= 1
+                 and all(math.isfinite(float(x)) for x in self.agg_delay_sections_m),
+                 "agg_delay_sections_m must be non-empty finite positions")
         _require(int(self.entry_pad_max) >= 1, "entry_pad_max must be positive")
         _require(self.junction_fix in JUNCTION_FIX_MODES,
                  f"junction_fix must be one of {JUNCTION_FIX_MODES}")
@@ -509,7 +547,7 @@ class TrainSettings:
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
         for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s",
-                    "merge_loss_cell_edges_m"):
+                    "merge_loss_cell_edges_m", "agg_delay_sections_m"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
         if values.get("merge_loss_speed_cells") is not None:
@@ -534,6 +572,11 @@ class TrainSettings:
         """V7FT merge-zone calibration loss enabled (either weight > 0)."""
         return (float(self.merge_loss_speed_weight) > 0.0
                 or float(self.merge_loss_discharge_weight) > 0.0)
+
+    @property
+    def agg_delay_on(self) -> bool:
+        """A5 long-horizon aggregate delay loss enabled (either weight > 0)."""
+        return float(self.agg_delay_weight) > 0.0 or float(self.agg_delay_paired_weight) > 0.0
 
     @property
     def merge_timing_on(self) -> bool:
