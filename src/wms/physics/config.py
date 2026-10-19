@@ -73,6 +73,16 @@ MERGE_IMPATIENCE_T_MIN_S = 0.1
 #: the target lane.  This margin is the only clearance used (0 m: actual body non-intersection);
 #: no headway / standstill / impatience / ``merge_end_wait`` margins enter it.
 LANE_PHYSICAL_MARGIN_M = 0.0
+#: V10LANEOPT ``mainline_lane_mode`` (2026-10-19): staged mainline lane changes under
+#: ``lane_learnable``.  ``free`` = current behaviour (every learned head draws its own
+#: calibrated probability); ``courtesy`` = merges stay fully learned while the ONLY mainline
+#: moves allowed are the learned lane-1 -> lane-0 courtesy overtakes of HDVs inside the approach
+#: zone upstream of the merge (no lane-0 -> 1 returns, no overtake elsewhere, no CAV change).
+MAINLINE_LANE_MODES = ("free", "courtesy")
+#: V10LANEOPT ``courtesy`` zone: this many metres upstream of the acceleration-lane end
+#: (``merge_zone_s1_m``, model frame) where a lane-1 HDV overtake (1 -> 0) is still a learned
+#: decision.  Default 0-300 m before the merge end; 0 disables the courtesy draw (merges only).
+MAINLINE_COURTESY_ZONE_M = 300.0
 
 
 @dataclass
@@ -175,6 +185,15 @@ class PhysicsConfig:
     * ``mainline_merge_yield`` braking is not applied (courtesy must be learned instead).
     * Training rows of ``wms.model.lane_v5.recorded_rows`` cover ALL at-risk HDV steps (stay is a
       survival negative), the envelope-infeasible rows are excluded and counted.
+
+    V10LANEOPT ``mainline_lane_mode`` (2026-10-19, ``lane_learnable`` only, default ``free`` =
+    bit-identical): ``free`` samples every learned head (the current V10UNBLOCK behaviour);
+    ``courtesy`` keeps the merge head fully learned but restricts the ROLLOUT decision of the
+    mainline heads to the lane-1 -> lane-0 overtake of HDVs inside the ``courtesy`` approach zone
+    ``[merge_zone_s1_m - mainline_courtesy_zone_m, merge_zone_s1_m]`` (returns 0 -> 1 and any
+    overtake outside the zone stay at the physics prior, i.e. no lane change).  The lane-head LOSS
+    still trains all heads on all at-risk rows in both modes, so the free stage starts calibrated;
+    only the decision is restricted.
     """
 
     dt_s: float = 0.5
@@ -249,6 +268,9 @@ class PhysicsConfig:
     # V10UNBLOCK (2026-10-19): learn merge / lane-change / yield from data (default off).
     lane_learnable: bool = False
     lane_physical_margin_m: float = LANE_PHYSICAL_MARGIN_M
+    # V10LANEOPT (2026-10-19): staged mainline lane changes (default 'free' = current behaviour).
+    mainline_lane_mode: str = "free"
+    mainline_courtesy_zone_m: float = MAINLINE_COURTESY_ZONE_M
 
     def __post_init__(self) -> None:
         for name in ("merge_end_wait_distance_m", "merge_end_wait_speed_mps",
@@ -315,6 +337,14 @@ class PhysicsConfig:
                 or not math.isfinite(self.lane_physical_margin_m)
                 or self.lane_physical_margin_m < 0.0):
             raise ValueError("lane_physical_margin_m must be finite and >= 0")
+        if self.mainline_lane_mode not in MAINLINE_LANE_MODES:
+            raise ValueError(f"mainline_lane_mode must be one of {MAINLINE_LANE_MODES}: "
+                             f"{self.mainline_lane_mode!r}")
+        if (isinstance(self.mainline_courtesy_zone_m, bool)
+                or not isinstance(self.mainline_courtesy_zone_m, (int, float))
+                or not math.isfinite(self.mainline_courtesy_zone_m)
+                or self.mainline_courtesy_zone_m < 0.0):
+            raise ValueError("mainline_courtesy_zone_m must be finite and >= 0")
 
     def merge_end_follow_constants(self) -> tuple[float, float]:
         """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""

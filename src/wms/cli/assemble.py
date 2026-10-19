@@ -123,7 +123,9 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
                    "emergency_decel_mps2": cfg.physics.emergency_decel_mps2,
                    "merge_end_wait": bool(cfg.physics.merge_end_wait),
                    "mainline_merge_yield": bool(cfg.physics.mainline_merge_yield),
-                   "lane_learnable": bool(cfg.physics.lane_learnable)}
+                   "lane_learnable": bool(cfg.physics.lane_learnable),
+                   "mainline_lane_mode": str(cfg.physics.mainline_lane_mode),
+                   "mainline_courtesy_zone_m": float(cfg.physics.mainline_courtesy_zone_m)}
     # V8WM: config-level gap-rule / lane-end parameter overrides (empty = unchanged).
     integration.update({key: value if isinstance(value, (str, bool)) else float(value)
                         for key, value in cfg.physics.overrides.items()})

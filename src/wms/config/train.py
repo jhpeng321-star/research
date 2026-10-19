@@ -25,13 +25,16 @@ PHYSICS_OVERRIDE_KEYS = (
     "forced_window_min_hazard", "merge_end_wait_s0_follow_m", "merge_end_wait_t_follow_s",
     # V8WM3 (2026-10-17): lane-end waiting-time impatience parameters.
     "merge_impatience_distance_m", "merge_impatience_speed_mps", "merge_impatience_hazard_tau_s",
-    "merge_impatience_gap_tau_s", "merge_impatience_s0_min_m", "merge_impatience_t_min_s")
+    "merge_impatience_gap_tau_s", "merge_impatience_s0_min_m", "merge_impatience_t_min_s",
+    # V10LANEOPT (2026-10-19): courtesy approach-zone length upstream of the merge end.
+    "mainline_courtesy_zone_m")
 #: V8WM3: boolean PhysicsConfig switches ``physics.overrides`` may set (training AND inference).
 PHYSICS_BOOL_OVERRIDE_KEYS = ("merge_impatience",)
 #: V8WM2: string-valued PhysicsConfig modes ``physics.overrides`` / ``physics.inference`` may set
 #: (key -> allowed values).
 PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
-                     "mainline_merge_yield_scope": ("lane_end", "zone")}
+                     "mainline_merge_yield_scope": ("lane_end", "zone"),
+                     "mainline_lane_mode": ("free", "courtesy")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
                               "merge_impatience", "lane_learnable")
@@ -58,6 +61,13 @@ class PhysicsOptions:
     """V10UNBLOCK (2026-10-19, default false = bit-identical): replace behavioural lane-change
     vetoes by the physical envelope and learn merge / lane-change / yield from data
     (``wms.physics.config.PhysicsConfig.lane_learnable``)."""
+    mainline_lane_mode: str = "free"
+    """V10LANEOPT (2026-10-19, default 'free' = current behaviour, ``lane_learnable`` only):
+    staged mainline lane changes.  'courtesy' keeps merges fully learned and allows only the
+    learned lane-1 -> lane-0 overtakes of HDVs inside the approach zone upstream of the merge
+    (``wms.physics.config.PhysicsConfig.mainline_lane_mode``)."""
+    mainline_courtesy_zone_m: float = 300.0
+    """V10LANEOPT: length (m) of that approach zone upstream of the acceleration-lane end."""
     overrides: dict[str, Any] = field(default_factory=dict)
     """V8WM (2026-10-17, default empty = unchanged): numeric gap-rule / lane-end parameters of
     ``wms.physics.config.PhysicsConfig`` (keys :data:`PHYSICS_OVERRIDE_KEYS`: the speed-rule
@@ -79,6 +89,11 @@ class PhysicsOptions:
         require(self.emergency_decel_mps2 is None or (
             is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
             "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
+        require(_mode_ok("mainline_lane_mode", self.mainline_lane_mode),
+                f"physics.mainline_lane_mode must be one of "
+                f"{PHYSICS_MODE_KEYS['mainline_lane_mode']}")
+        require(is_finite(self.mainline_courtesy_zone_m) and self.mainline_courtesy_zone_m >= 0.0,
+                "physics.mainline_courtesy_zone_m must be finite and >= 0")
         valid = (list(PHYSICS_OVERRIDE_KEYS) + list(PHYSICS_MODE_KEYS)
                  + list(PHYSICS_BOOL_OVERRIDE_KEYS))
         bad = sorted(set(self.overrides) - set(valid))

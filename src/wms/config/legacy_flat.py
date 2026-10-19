@@ -183,6 +183,9 @@ FLAT_TO_PATH: dict[str, str] = {
     "mainline_merge_yield": "physics.mainline_merge_yield",
     # V10UNBLOCK (physical envelope + all-risk lane learning)
     "lane_learnable": "physics.lane_learnable",
+    # V10LANEOPT (staged mainline lane changes under lane_learnable)
+    "mainline_lane_mode": "physics.mainline_lane_mode",
+    "mainline_courtesy_zone_m": "physics.mainline_courtesy_zone_m",
     # V7FT (merge-zone calibration loss)
     "merge_loss_speed_weight": "loss.merge.speed_weight",
     "merge_loss_discharge_weight": "loss.merge.discharge_weight",
@@ -262,6 +265,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
     "stop_time_integration", "emergency_decel_mps2", "lane_conflict_resolve",
     "merge_end_wait", "mainline_merge_yield", "lane_learnable",
+    "mainline_lane_mode", "mainline_courtesy_zone_m",
     # V7FT
     "merge_loss_speed_weight",
     "merge_loss_discharge_weight",
