@@ -58,6 +58,13 @@ class DreamerConfig:
     validation_every: int = 100
     lane_pg_weight: float = 1.0          # REINFORCE term of the categorical lane head
     lane_entropy_weight: float = 3e-4    # DreamerV3 discrete-action entropy bonus (lane head)
+    # CAVLANE (2026-10-19; default True = current behaviour): allow the POLICY to issue CAV lane
+    # actions in imagination.  The lane path is active only when this is True AND lane rules are
+    # supplied AND the policy has a lane head (the existing condition).  Setting it False keeps
+    # CAVs in lane (the bridge's forced ramp merge still runs), which is what
+    # ``[policy] lane_control = "native"`` already does for the v7..v10 policy chain; the switch
+    # lets the training loop disable policy lane actions independently of the actor/config.
+    policy_lane_actions: bool = True
     # Entropy temperature (V6EXPLORE, 2026-10-15; default None = off = bit-identical): with
     # ``entropy_target`` set (nats per action dim) the fixed ``entropy_weight`` bonus is
     # replaced by ``alpha * entropy`` with a learned SAC-style dual ``log_alpha`` (Adam,
@@ -205,7 +212,7 @@ class DreamerConfig:
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
                      "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
-                     "entry_queue_state", "entrance_zone_native"):
+                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if self.entrance_zone_native and not (
@@ -547,7 +554,10 @@ class DreamerTrainer:
         # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
         # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
         self.lane_rules = lane_rules
-        self.use_lanes = lane_rules is not None and bool(getattr(policy, "has_lane_head", False))
+        # CAVLANE switch: False disables the policy lane path (CAVs stay in lane; forced ramp merge
+        # still applies) without changing the actor or the rest of the trainer.
+        self.use_lanes = (bool(self.config.policy_lane_actions) and lane_rules is not None
+                          and bool(getattr(policy, "has_lane_head", False)))
         # V7POL ``[policy] lane_control = "native"``: an actor WITHOUT a lane head (attribute set by
         # train_cli); imagination keeps CAVs in lane (bridge forced ramp merge only) and the
         # checkpoint records it so the SUMO executor leaves CAV lane changes to SUMO.
