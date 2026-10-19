@@ -15,8 +15,13 @@ One closed iteration:
                   (``WMS_LOOP_REFRESH=1 train_cli --resume ... --wm-ckpt <new WM>``);
   6. sumo_check   seeds 969824-969835 vs the fixed native reference
                   ``runs/sumo_check_v8pol_u600/native`` with the v7ft pair/coop/WM-fidelity tools;
-  7. rollback     if SUMO total D (policy - native) or WM 60 s HDV |ds| worsens beyond tolerance,
-                  restore the previous WM/policy and halve the next policy-update count.
+  7. delay_check  A6: 48 fixed TRAIN-val starts (WM vs SUMO delay level by region at 60/120/300 s)
+                  + 48 paired ``genrand_branch`` pairs (WM vs SUMO arm-delta sign agreement,
+                  Spearman, MAE, k-sample averaged) on the 48-core CPU box (no GPU);
+  8. rollback     if SUMO total D (policy - native) regresses, the paired-delta sign agreement
+                  drops > 0.05, or the 120 s delay-level |log ratio| worsens > 0.1 vs the previous
+                  iteration, restore the previous WM/policy and halve the next policy-update count
+                  (the near-CAV 10/30 s |ds| is reported, non-gating).
                   Every iteration is appended to ``<loop_root>/iterations.jsonl``.
 
 Iteration 0 bootstraps the WM on native/random TRAIN data only
@@ -59,7 +64,7 @@ ITER0_TRAIN_STAGES = ("wm_finetune_iter0", "wm_check_iter0", "policy_update_iter
 ITER0_EXISTING_STAGES = ("policy_update_iter0",)
 ITER0_STAGES = ITER0_TRAIN_STAGES           # canonical (full) iteration-0 stage set
 ITER_STAGES = ("collect", "convert", "wm_finetune", "wm_check", "policy_update", "sumo_check",
-               "rollback")
+               "delay_check", "rollback")
 SHIP_STAGES = ("ship_cpuN",)
 PAIR_ROWS = ("total", "source_wait", "on_road")
 
@@ -108,7 +113,7 @@ def _all_strings(obj):
 
 def validate_config(cfg: dict) -> None:
     for key in ("loop_root", "data_root", "wm_runs_root", "seed", "hosts", "collect", "wm", "policy",
-                "check", "rollback", "budget"):
+                "check", "delay_check", "rollback", "budget"):
         if key not in cfg:
             raise ValueError(f"config needs {key}")
     if cfg.get("mode") != "closed":
@@ -141,6 +146,16 @@ def validate_config(cfg: dict) -> None:
             raise ValueError(f"wm.{key} must be a list of '--set' strings")
     if not isinstance(cfg["wm"].get("stage_steps"), list) or len(cfg["wm"]["stage_steps"]) < 1:
         raise ValueError("wm.stage_steps must be a non-empty list")
+    dc = cfg["delay_check"]
+    dc_host = dc.get("host", "cpuN")
+    if dc_host not in cfg["hosts"]:
+        raise ValueError(f"delay_check.host {dc_host!r} is not a configured host")
+    if not isinstance(dc.get("horizons", "60,120,300"), (str, list, tuple)):
+        raise ValueError("delay_check.horizons must be a string or list")
+    for key in ("sumo_total_D_max_worsen", "pair_sign_drop_max", "delay_log_ratio_worsen_max",
+                "halve_factor", "min_policy_updates"):
+        if key not in cfg["rollback"]:
+            raise ValueError(f"rollback needs {key}")
     if not os.path.isdir(cfg["hosts"]["wm"]["code_root"]) and "REPO_SHA" not in cfg["hosts"]["wm"]["code_root"]:
         raise ValueError(f"hosts.wm.code_root does not exist: {cfg['hosts']['wm']['code_root']}")
     guard = cfg.get("execute_guard", {})
@@ -249,25 +264,47 @@ def sample_counter(records) -> dict:
     }
 
 
+def _rollback_metrics(doc: dict) -> dict:
+    """The delay-check JSON carries its rollback metrics under ``rollback``; legacy dicts are flat."""
+    block = doc.get("rollback") if isinstance(doc, dict) else None
+    return block if isinstance(block, dict) else (doc or {})
+
+
 def decide_rollback(prev: dict, cur: dict, rule: dict, policy_updates: int) -> dict:
+    """Revert on a SUMO D regression, a paired-delta sign-agreement drop or a 120 s delay-level
+    ``|log ratio|`` worsening (A6).  The near-CAV 10/30 s |ds| is carried in the decision for
+    reporting only, never gating.
+    """
+    prev, cur = _rollback_metrics(prev), _rollback_metrics(cur)
     reasons = []
-    worsen = float(cur.get("sumo_total_D_delta", 0.0))
+    worsen = float(cur.get("sumo_total_D_delta", 0.0) or 0.0)
     if worsen > float(rule["sumo_total_D_max_worsen"]):
         reasons.append(f"SUMO total D (policy - native) worsened by {worsen:+.4f}")
-    prev_wm = float(prev.get("wm60_hdv_abs_ds", 0.0))
-    cur_wm = float(cur.get("wm60_hdv_abs_ds", 0.0))
-    if prev_wm > 0:
-        ratio = cur_wm / prev_wm
-        if ratio > 1.0 + float(rule["wm60_rel_tolerance"]):
-            reasons.append(f"WM 60 s HDV |ds| worse by {ratio:.3f}x "
-                           f"(> {1.0 + float(rule['wm60_rel_tolerance']):.2f})")
+    prev_sign, cur_sign = prev.get("pair_sign_agreement"), cur.get("pair_sign_agreement")
+    drop = float(rule["pair_sign_drop_max"])
+    if _is_number(prev_sign) and _is_number(cur_sign) and float(cur_sign) < float(prev_sign) - drop:
+        reasons.append(f"paired-delta sign agreement dropped to {float(cur_sign):.3f} "
+                       f"(from {float(prev_sign):.3f}; > {drop:.2f})")
+    prev_ratio, cur_ratio = prev.get("delay_level_log_ratio"), cur.get("delay_level_log_ratio")
+    tol = float(rule["delay_log_ratio_worsen_max"])
+    if (_is_number(prev_ratio) and _is_number(cur_ratio)
+            and abs(float(cur_ratio)) > abs(float(prev_ratio)) + tol):
+        reasons.append(f"120 s delay-level |log ratio| worsened to {abs(float(cur_ratio)):.3f} "
+                       f"(from {abs(float(prev_ratio)):.3f}; > {tol:.2f})")
     action = "revert" if reasons else "keep"
     next_updates = policy_updates
     if action == "revert":
         next_updates = max(int(rule["min_policy_updates"]),
                            int(policy_updates * float(rule["halve_factor"])))
     return {"action": action, "reasons": reasons, "next_policy_updates": next_updates,
+            "reported": {"near_cav_abs_ds_10": cur.get("near_cav_abs_ds_10"),
+                         "near_cav_abs_ds_30": cur.get("near_cav_abs_ds_30"),
+                         "note": "near-CAV per-vehicle |ds| is reported, non-gating (A6)"},
             "prev": prev, "cur": cur}
+
+
+def _is_number(value) -> bool:
+    return isinstance(value, (int, float)) and math.isfinite(float(value))
 
 
 # --------------------------------------------------------------------------- stage planning
@@ -483,17 +520,57 @@ def plan_iteration(cfg: dict, k: int, paths: dict, seeds: list, updates: int) ->
             "out": paths["check_dir"],
             "note": "seeds 969824-969835 vs the native reference; pair_check + coop_metrics + WM fidelity",
         })
+    stages.append(_delay_check_stage(cfg, paths))
     stages.append({
         "name": "rollback",
         "host": "local",
         "cwd": cfg["hosts"]["gpuR"]["code_root"],
-        "cmd": "python scripts/c4/loop_v10.py decide-rollback --prev <metrics[k-1]> --cur "
-               f"{paths['check_dir']}/coop.json --rule rollback --json-out {paths['check_dir']}/rollback.json",
+        "cmd": ("python scripts/c4/loop_v10.py decide-rollback --config "
+                f"configs/c4_dreamer_loop_v10loop.json --prev {paths['prev_check']} --cur "
+                f"{paths['check_dir']}/delay_check.json --json-out {paths['check_dir']}/rollback.json"),
         "env": {},
         "out": paths["check_dir"],
-        "note": "revert to previous WM/policy and halve next policy updates on regression",
+        "note": ("A6 rollback: revert if the paired-delta sign agreement drops > 0.05 or the "
+                 "120 s delay-level |log ratio| worsens > 0.1 (near-CAV |ds| reported only)"),
     })
     return stages
+
+
+def _delay_check_stage(cfg: dict, paths: dict) -> dict:
+    """A6 delay-accuracy stage: WM vs SUMO delay level + paired delta on the CPU box."""
+    dc = cfg["delay_check"]
+    host = dc.get("host", "cpuN")
+    check = cfg["check"]
+    selection = dc.get("selection", f"{paths['check_dir']}/delay_states_selection.json")
+    pairs_selection = dc.get("pairs_selection",
+                             f"{paths['check_dir']}/delay_pairs_selection.json")
+    argv = [cfg["hosts"][host]["python"], dc.get("tool", "scripts/c4/wm_delay_check.py"),
+            "--wm", dc.get("wm") or paths["wm_best"],
+            "--states", dc.get("states", check["fixed_val_states"]),
+            "--selection", selection, "--save-selection", selection,
+            "--pairs-selection", pairs_selection, "--save-pairs-selection", pairs_selection,
+            "--horizons", str(dc.get("horizons", "60,120,300")), "--k", str(int(dc.get("k", 8))),
+            "--device", str(dc.get("device", "cpu")),
+            "--workers", str(int(dc.get("workers", cfg["hosts"][host].get("workers", 44)))),
+            "--entries", str(dc.get("entries", "queue")),
+            "--sumo-pairs", f"{paths['check_dir']}/pairs.json",
+            "--out", f"{paths['check_dir']}/delay_check.json",
+            "--md", f"{paths['check_dir']}/delay_check.md"]
+    if dc.get("pairs"):
+        argv += ["--pairs", dc["pairs"]]
+    return {
+        "name": "delay_check",
+        "host": host,
+        "cwd": cfg["hosts"][host]["code_root"],
+        "cmd": " ".join(q(a) for a in argv),
+        "env": {"PYTHONPATH": "src:.", "OMP_NUM_THREADS": "1"},
+        "out": f"{paths['check_dir']}/delay_check.json",
+        "note": ("A6: 48 fixed TRAIN-val starts (delay level by region at 60/120/300 s) + 48 "
+                 "paired genrand_branch pairs (WM vs SUMO arm delta: sign agreement, Spearman, "
+                 "MAE, k-sample averaged); entries=queue uses the recorded entrance backlog. "
+                 "The WM checkpoint must already be on this CPU box (delay_check.wm overrides "
+                 "paths.wm_best)."),
+    }
 
 
 def _check_env(cfg: dict) -> dict:
@@ -658,6 +735,12 @@ def _paths(out_dir: Path, k: int, cfg: dict) -> dict:
         "policy_ckpt": str(out_dir / f"iter_{k-1:03d}" / "policy" / "out" / "policy_best.pt")
         if k > 0 else "<previous_policy_checkpoint>",
         "check_dir": str(it / "check"),
+        # A6 rollback compares this iteration's delay_check.json with the previous iteration's.
+        # Iteration 0 runs no delay_check (it is skipped in the existing-WM launch), so the
+        # first comparison uses a placeholder the coordinator replaces with the baseline.
+        "prev_check": (f"<iter0_delay_check.json>"
+                       if k <= 1 else str(out_dir / f"iter_{k-1:03d}" / "check"
+                                          / "delay_check.json")),
     }
 
 
@@ -684,8 +767,10 @@ def dry_run(cfg: dict, out_dir) -> dict:
         for stage in stages:
             records.append({"iteration": k, "stage": stage["name"], "host": stage["host"],
                             "cmd": render_stage(stage), "out": stage["out"], "note": stage["note"]})
-    prev = {"sumo_total_D_delta": 0.0, "wm60_hdv_abs_ds": 10.0}
-    cur = {"sumo_total_D_delta": 0.05, "wm60_hdv_abs_ds": 11.5}
+    prev = {"sumo_total_D_delta": 0.0, "pair_sign_agreement": 0.70,
+            "delay_level_log_ratio": 0.10, "near_cav_abs_ds_10": 3.0}
+    cur = {"sumo_total_D_delta": 0.05, "pair_sign_agreement": 0.50,
+           "delay_level_log_ratio": 0.30, "near_cav_abs_ds_10": 3.5}
     decision = decide_rollback(prev, cur, tiny["rollback"], tiny["policy"]["updates"])
     samples = sample_counter([{
         "collect": {"episodes": 2, "sim_s": 2.0 * (tiny["collect"]["warmup"] + tiny["collect"]["horizon"]),
@@ -726,12 +811,16 @@ def plan_text(cfg: dict) -> str:
         out.append(f"  iteration 0     : WM {cfg['wm']['config_iter0']} on native/random TRAIN data, "
                    "then policy from scratch")
     out.append("  iteration k>=1  : ship -> collect -> convert -> wm_finetune -> wm_check -> "
-               "policy_update -> sumo_check -> rollback")
+               "policy_update -> sumo_check -> delay_check -> rollback")
     out.append(f"  WM pass-through : {cfg['wm'].get('extra_set', [])} "
                f"(horizon, disabled until c4/v10horizon lands: {cfg['wm'].get('extra_set_horizon', [])})")
     out.append(f"  policy config   : {cfg['policy']['config']} (entrance_zone_native=true)")
     out.append(f"  SUMO check      : seeds {CHECK_SEEDS[0]}-{CHECK_SEEDS[1]} vs {cfg['check']['native_ref']} "
                f"(demands {cfg['check'].get('demands')}, penetrations {cfg['check'].get('penetrations')})")
+    dc = cfg["delay_check"]
+    out.append(f"  delay check     : {dc.get('tool', 'scripts/c4/wm_delay_check.py')} on "
+               f"{dc.get('host', 'cpuN')} (starts {dc.get('states', '<fixed_val_states>')}, "
+               f"pairs {dc.get('pairs', '<none>')}, k={dc.get('k', 8)})")
     out.append(f"  rollback        : {cfg['rollback']}")
     for k in range(int(cfg["iterations"]) + 1):
         paths = _paths(Path("<wire_root>"), k, cfg)
@@ -867,9 +956,13 @@ def main(argv=None) -> int:
             raise SystemExit("decide-rollback needs --prev and --cur JSON files")
         prev = json.loads(Path(args.prev).read_text(encoding="utf-8"))
         cur = json.loads(Path(args.cur).read_text(encoding="utf-8"))
-        decision = decide_rollback(prev, cur, {"sumo_total_D_max_worsen": 0.0, "wm60_rel_tolerance": 0.1,
-                                               "halve_factor": 0.5, "min_policy_updates": 50},
-                                   int(cur.get("policy_updates", 200)))
+        rule = {"sumo_total_D_max_worsen": 0.0, "pair_sign_drop_max": 0.05,
+                "delay_log_ratio_worsen_max": 0.1, "halve_factor": 0.5,
+                "min_policy_updates": 50}
+        if args.config:
+            rule = dict(load_config(args.config)["rollback"])
+        updates = int(_rollback_metrics(cur).get("policy_updates", 200))
+        decision = decide_rollback(prev, cur, rule, updates)
         text = json.dumps(decision, indent=2, sort_keys=True)
         print(text)
         if args.json_out:

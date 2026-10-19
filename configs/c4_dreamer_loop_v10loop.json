@@ -209,11 +209,34 @@
       "wm60_key": "hdv.abs_ds.60"
     }
   },
+  "delay_check": {
+    "tool": "scripts/c4/wm_delay_check.py",
+    "host": "cpuN",
+    "wm": "~/c4/delay_check/wm_s_best.pt",
+    "wm_note": "The iteration WM checkpoint synced to the CPU box (or v5m for the baseline run). The 48-core CPU box runs the check with NO GPU; it reads only TRAIN-val starts and the recorded genrand_branch pairs. Sync once before the stage, e.g. from gpuR: scp <new_wm> cpuN:~/c4/delay_check/wm_s_best.pt.",
+    "states": "~/c4/delay_check/fixed_train_val_states.json",
+    "states_note": "The same 48 deterministic TRAIN-val starts as scripts/c4/wm_fidelity_v10.py --select 48 --save-selection (copied to the CPU box).",
+    "pairs": "~/c4/delay_check/genrand_branch_states.json",
+    "pairs_note": "Paired-branch state records from the converted genrand_branch source (per-arm records carrying pair_key + recorded frames; base/native arm vs action arm, same t0). Copied to the CPU box.",
+    "selection": "~/c4/delay_check/delay_states_selection.json",
+    "pairs_selection": "~/c4/delay_check/delay_pairs_selection.json",
+    "selection_note": "Deterministic 48-start / 48-pair selection written once by the tool (--save-selection / --save-pairs-selection) and reused on every iteration.",
+    "horizons": "60,120,300",
+    "k": 8,
+    "workers": 44,
+    "device": "cpu",
+    "entries": "queue",
+    "entry_note": "entries=queue seeds entrants with the recorded entrance backlog (v9entry entry_queue_state), so the ramp/source queue is carried through the WM rollout.",
+    "wm_md5_reference": "d736db86",
+    "pair_source": "/root/autodl-tmp/c4/v5/data/genrand_branch"
+  },
   "rollback": {
     "sumo_total_D_max_worsen": 0.0,
-    "wm60_rel_tolerance": 0.1,
+    "pair_sign_drop_max": 0.05,
+    "delay_log_ratio_worsen_max": 0.1,
     "halve_factor": 0.5,
-    "min_policy_updates": 50
+    "min_policy_updates": 50,
+    "rule_note": "A6: revert if the paired-delta sign agreement drops > 0.05 or the 120 s delay-level |log(WM/SUMO)| worsens > 0.1 vs the previous iteration (plus the SUMO total-D term). The near-CAV 10/30 s |ds| is reported, non-gating."
   },
   "budget": {
     "gpu_hours_per_wm_step": 0.012,
