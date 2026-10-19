@@ -155,10 +155,15 @@ class MergeTimingTerm(LossTerm):
 
         # ---- hazard on the model's own state: log h and log(1 - h), learnable rows
         head = pred.get("lane_v5_head_logit")
+        neg_delta = pred.get("merge_negotiation_merge_delta")
         if torch.is_tensor(head):
             acts = cut(pred["lane_v5_acts"]).bool()
             stay = logits.gather(-1, lane_dec.clamp(0, 2).unsqueeze(-1)).squeeze(-1).detach()
-            x = cut(head).to(stay.dtype) - stay
+            x = cut(head).to(stay.dtype)
+            if torch.is_tensor(neg_delta):
+                # V10NEGOT: the survival likelihood trains the negotiated merge logit.
+                x = x + cut(neg_delta).to(x.dtype)
+            x = x - stay
             log_h, log_1mh = F.logsigmoid(x), F.logsigmoid(-x)
         else:
             lsm = torch.log_softmax(logits, -1)

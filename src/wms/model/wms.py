@@ -43,6 +43,8 @@ from .lane_hazard import (HAZARD_F, HAZARD_F_V2, HazardLaneModel, blocked_indica
                           sample_lane_choice, update_blocked)
 from .lane_head import HistoryLaneHead, lane_context
 from . import lane_v5 as lv5
+from .merge_negotiation import (MergeNegotiationNet, pair_features,
+                              scatter_follower_accel)
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
 from .spec import ModelSpec
@@ -262,6 +264,10 @@ class WmSModel(nn.Module):
         elif lv5.forced_window_hazard(self.physics):
             raise ValueError("physics.forced_window_mode='hazard' requires "
                              "model.lane_model='hazard_v5'")
+        # V10NEGOT (default OFF): learned ramp/follower merge negotiation, created last so
+        # old checkpoints keep their key order and load unchanged.  Zero-initialised.
+        self.merge_negotiation = (MergeNegotiationNet()
+                                  if bool(getattr(spec, "merge_negotiation", False)) else None)
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -300,7 +306,7 @@ class WmSModel(nn.Module):
         """Gate on the learned lane-logit correction (own saturating gate when configured).
 
         With ``lane_gate_kind == "shared"`` (default) the lane correction uses the
-        acceleration gate unchanged — the returned tensor is the provided ``shared``
+        acceleration gate unchanged —the returned tensor is the provided ``shared``
         value (or a fresh ``self.gate`` evaluation), so default models are bit-identical.
         """
         if self.lane_gate_kind != "saturating":
@@ -540,6 +546,26 @@ class WmSModel(nn.Module):
         self.residual_net = HdvResidualNet(self.hdv)
         self.residual_net.load_state_dict(old, strict=False)
 
+    def set_merge_negotiation(self, enabled: bool = True) -> None:
+        """Enable/disable the V10NEGOT merge-negotiation block on a loaded checkpoint.
+
+        The block is created zero-initialised; enabling it on an older checkpoint is an
+        exact no-op until fine-tuning and every existing weight is preserved.
+        """
+        enabled = bool(enabled)
+        if (self.merge_negotiation is not None) == enabled:
+            return
+        if not enabled:
+            self.merge_negotiation = None
+            return
+        module = MergeNegotiationNet().to(self.device_of_parameters())
+        self.merge_negotiation = module
+
+    def device_of_parameters(self):
+        """Device of the first parameter (``cpu`` for a parameterless model)."""
+        return next(self.parameters()).device if any(True for _ in self.parameters()) \
+            else torch.device("cpu")
+
     # ---------------------------------------------------------------- forward
     def forward(self, state: dict[str, Tensor], *, k_steps: Tensor | int = 0,
                 history: Optional[Tensor] = None,
@@ -609,16 +635,26 @@ class WmSModel(nn.Module):
         blocked_now = v5_acc = v5_sample = v5_hazard = None
         v5_precomputed = None
         merge_prob = None
-        if getattr(self, "lane_v5", None) is not None and bool(self.hdv.courtesy_inputs):
-            # V10COURTESY: the residual consumes the merge head's current probability,
-            # so the lane-v5 pass runs first (forward values are unchanged; frozen
-            # dropout / deterministic features make the reorder exact).
+        if getattr(self, "lane_v5", None) is not None and (
+                bool(self.hdv.courtesy_inputs) or self.merge_negotiation is not None):
+            # V10COURTESY / V10NEGOT: the residual / negotiation consumes the merge
+            # head's current probability, so the lane-v5 pass runs first (forward values
+            # are unchanged; frozen dropout / deterministic features make the reorder exact).
             v5_precomputed = self._lane_v5_forward(
                 kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask, merge_wait=state.get("merge_wait_s"))
             with torch.no_grad():
                 p_merge = torch.softmax(v5_precomputed[0].float(), dim=-1)[..., 1]
                 merge_prob = torch.nan_to_num(p_merge, nan=0.0).to(kin.dtype)
+        negotiation = None
+        if self.merge_negotiation is not None:
+            pair = pair_features(
+                kin, present, self.physics, merge_prob=merge_prob,
+                wait_s=state.get("merge_wait_s"),
+                accel_ema=state.get("merge_neg_accel_ema"))
+            negotiation = self.merge_negotiation(
+                pair["features"], follower_index=pair["follower_index"],
+                valid_pair=pair["valid_pair"], ramp=pair["ramp"])
         courtesy = None
         if bool(self.hdv.courtesy_inputs):
             courtesy = courtesy_features(
@@ -647,6 +683,17 @@ class WmSModel(nn.Module):
                 sigma = sigma.clamp_max(float(accel_noise_sigma_max))
             accel = torch.where(learned, physics + correction + accel_noise.to(sigma.dtype) * sigma,
                                 physics)
+        ema = None
+        if negotiation is not None:
+            # (a) learned yield: the ramp car's paired lane-1 follower decelerates.
+            yield_delta = scatter_follower_accel(
+                negotiation["yield_accel"], negotiation["follower_index"],
+                negotiation["valid_pair"], slots) * learned.to(kin.dtype)
+            accel = accel + yield_delta
+            # Follower-acceleration history carried across steps (detached: a discrete EMA).
+            prev = state.get("merge_neg_accel_ema")
+            prev = (torch.zeros_like(kin[..., 5]) if prev is None else prev.detach().float())
+            ema = 0.7 * prev + 0.3 * kin[..., 5].detach().float()
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -671,6 +718,16 @@ class WmSModel(nn.Module):
                 **self._hazard_switches(blocked_now, rollout=True))
         else:
             lane_logits = self._residual_lane_logits(lane_base, base, temporal, k, gate)
+        if negotiation is not None and self.lane_change_head is None:
+            # (b) learned gap acceptance: additive correction on the ramp merge logit.
+            target = int(getattr(self.physics, "merge_target_lane", 1))
+            ramp = present & (torch.argmax(kin[..., 1:4], -1) == int(self.physics.merge_lane))
+            value = lane_logits.gather(-1, torch.full_like(ramp, target, dtype=torch.long)
+                                       .unsqueeze(-1)).squeeze(-1)
+            value = torch.where(ramp, value + negotiation["merge_logit_delta"], value)
+            lane_logits = lane_logits.scatter(
+                -1, torch.full_like(ramp, target, dtype=torch.long).unsqueeze(-1),
+                value.unsqueeze(-1))
         lane_probabilities = None
         if self.lane_change_head is not None:
             if driver_embedding is None:
@@ -701,6 +758,12 @@ class WmSModel(nn.Module):
             result["lane_v5_acc"] = v5_acc
         if v5_hazard is not None:
             result["lane_v5_head_logit"], result["lane_v5_acts"] = v5_hazard
+        if negotiation is not None:
+            result["merge_negotiation_yield_logit"] = negotiation["yield_logit"]
+            result["merge_negotiation_merge_delta"] = negotiation["merge_logit_delta"]
+            result["merge_negotiation_follower"] = negotiation["follower_index"]
+            result["merge_negotiation_valid"] = negotiation["valid_pair"]
+            result["merge_neg_accel_ema"] = ema
         if self._samples_lanes:
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
             if v5_sample is not None:
@@ -1273,6 +1336,8 @@ class WmSModel(nn.Module):
                 cav_controller: Optional[Callable[[dict[str, Tensor]], Tensor]] = None,
                 truncation_steps: Optional[int] = None,
                 lane_teacher: Optional[Tensor] = None,
+                merge_lane_teacher: Optional[Tensor] = None,
+                merge_teacher_frac: float = 0.0,
                 controller_id: Optional[Tensor] = None,
                 action_timeline: Optional[dict[str, Tensor]] = None,
                 entries: Optional[object] = None,
@@ -1418,6 +1483,16 @@ class WmSModel(nn.Module):
                 recorded_lane = lane_teacher[:, step_i + 1].long()
                 out["next_lane"] = torch.where(recorded_lane >= 0, recorded_lane,
                                                out["next_lane"])
+            if (merge_lane_teacher is not None and float(merge_teacher_frac) > 0.0
+                    and step_i < int(round(float(merge_teacher_frac) * int(n_steps)))):
+                # V10NEGOT curriculum: only the RAMP cars follow the recorded lane for the
+                # first fraction of each window (the merge decision is teacher-forced while
+                # the free-running state still comes from the model).
+                rec_lane = merge_lane_teacher[:, step_i + 1].long()
+                ramp_now = ((current["lane"].long() == int(self.physics.merge_lane))
+                            & current["present"].bool())
+                use = ramp_now & (rec_lane >= 0)
+                out["next_lane"] = torch.where(use, rec_lane, out["next_lane"])
             if self.rollout_mode in ("driver_params", "hybrid") \
                     and fixed_driver_params is None:
                 # The same driver identity/parameters persist through the rollout.
@@ -1462,6 +1537,8 @@ class WmSModel(nn.Module):
             if self._tracks_lane_v5:
                 lane_v5_acc = out["lane_v5_acc"]
                 current["lane_v5_acc"] = lane_v5_acc
+            if "merge_neg_accel_ema" in out:
+                current["merge_neg_accel_ema"] = out["merge_neg_accel_ema"].detach()
             if "lane_v5_budget" in out:
                 current["lane_v5_budget"] = out["lane_v5_budget"]
             current.pop("veh_kin", None)
@@ -1609,4 +1686,3 @@ class WmSModel(nn.Module):
             result["lane_v5_head_logit"] = torch.stack(log["lane_v5_head_logit"], 1)
             result["lane_v5_acts"] = torch.stack(log["lane_v5_acts"], 1)
         return result
-

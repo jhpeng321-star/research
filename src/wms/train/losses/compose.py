@@ -25,6 +25,7 @@ from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
 from .merge import MergeLossConfig, cap_merge_share, merge_terms
+from .merge_negotiation import MergeNegotiationLossConfig, merge_negotiation_terms
 from .lane_flow import LaneFlowConfig, lane_flow_terms
 from .merge_timing import MergeTimingConfig, merge_timing_terms
 from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
@@ -208,13 +209,22 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
                  if getattr(settings, "merge_loss_on", False) else None)
     if getattr(settings, "merge_timing_on", False):
         # V8WM per-vehicle merge-timing (survival) term, last chunk term (off: never built).
+        survival_weight = float(getattr(settings, "merge_survival_weight", 0.0))
         chunk.extend(merge_timing_terms(MergeTimingConfig(
-            weight=float(settings.merge_timing_weight),
-            metrics=bool(settings.merge_timing_metrics),
+            weight=(survival_weight if survival_weight > 0.0
+                    else float(settings.merge_timing_weight)),
+            metrics=(bool(settings.merge_timing_metrics)
+                     or bool(getattr(settings, "merge_survival_metrics", False))),
             merge_lane=2 if physics is None else int(physics.merge_lane),
             zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m),
             forced_window_hazard=(physics is not None and getattr(
                 physics, "forced_window_mode", "deterministic") == "hazard"))))
+    if getattr(settings, "merge_negotiation_on", False):
+        # V10NEGOT matched non-yield negatives (after the survival term; off: never built).
+        chunk.extend(merge_negotiation_terms(MergeNegotiationLossConfig(
+            weight=float(settings.merge_survival_negative_weight),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane))))
     if float(getattr(settings, "lane_flow_weight", 0.0)) > 0.0:
         # V8LANE on-policy lane-flow term, after every existing term (off: never built).
         chunk.extend(lane_flow_terms(LaneFlowConfig(
