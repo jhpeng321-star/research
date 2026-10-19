@@ -1,0 +1,21 @@
+# V10NATIVECAV policy on WM v5m (2026-10-20; PREPARED, NOT LAUNCHED - owner approval required).
+# = configs/c4_policy_v10entzone_v5m.toml with exactly ONE change: the native counterfactual
+# twin / entrance-zone CAV is the learned head fitted to TRAIN-val native CAV accelerations
+# (NATIVECAV.md; configs/native_cav_head_v5.json) instead of the fixed IDM.
+#
+# Why: the fixed IDM hard-brakes (a < -2.5 m/s^2) on 1.4 % of native CAV steps (1.2 m/s^2 cap:
+# 0.9 %) against 0.21 % in the recorded SUMO native CAV, and it brakes at a 1.25-1.38 s median
+# headway instead of 1.80 s.  Since every policy is compared with this twin (base rows and
+# entrance-zone CAVs), the too-harsh twin flatters the policy.  The head matches the recorded
+# hard-brake share (0.21 %), the one-step acceleration RMSE (0.22 vs 0.38) and the 10 s
+# teacher-forced rollout (speed RMSE 0.92 vs 1.48).  The legacy twin is the default; set
+# native_cav = "idm" to reproduce every earlier run bit-identically.
+extends = "c4_policy_v10entzone_v5m.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V10NATIVECAV-V5M"
+
+[counterfactual]
+native_cav = "head"
+# Optional override; the default is configs/native_cav_head_v5.json in this worktree.
+# native_cav_head_path = "configs/native_cav_head_v5.json"

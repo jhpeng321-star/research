@@ -731,7 +731,8 @@ class DreamerTrainer:
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
         from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
-                                      a_max=self.counterfactual.native_accel_max_mps2), recompute)
+                                      a_max=self.counterfactual.native_accel_max_mps2,
+                                      head_path=self.counterfactual.native_cav_head_path), recompute)
         # Action bounds (ACCELCAP_NOTES.md): the policy's stored cap bounds its commands; native
         # counterfactual CAVs use the native (SUMO CAV) accel; safety layers without an
         # ``accel_max`` keyword are called unchanged.
