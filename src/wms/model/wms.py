@@ -49,6 +49,7 @@ from .merge_threshold import MergeThresholdNet, update_threshold_state
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
 from .spec import ModelSpec
+from .temporal_slow import inverse_softplus, slow_residual_step, softplus_positive
 
 #: Output width of the temporal MLP: one acceleration delta plus three lane logits.
 _TEMPORAL_OUT = 4
@@ -211,6 +212,13 @@ class WmSModel(nn.Module):
         self.diag_residual_bound_mps2 = None
         self.diag_temporal_tau_s = None
         self._diag_temporal_lp = None
+        # SLOWRES (default 'direct' = bit-identical): the learned low-pass temporal state.
+        # Created as plain attributes here; the parameters themselves are appended after
+        # the temporal MLP in ``_build_modules`` only in slow mode.
+        self.temporal_residual_mode = str(getattr(spec, "temporal_residual_mode", "direct"))
+        self.temporal_tau_init_s = float(getattr(spec, "temporal_tau_init_s", 0.05))
+        self.temporal_tau_conditioned = bool(getattr(spec, "temporal_tau_conditioned", False))
+        self.temporal_slew_init_mps2 = getattr(spec, "temporal_slew_init_mps2", None)
         # Runtime execution-cap switch (EXECCAP_NOTES.md, never part of a checkpoint): "off"
         # (default, bit-identical) or "idm" -- every COMMAND-driven CAV realises at most the
         # SUMO-consistent ceiling min(own physics-core IDM accel, (v0-v)/dt, accel param).
@@ -249,6 +257,27 @@ class WmSModel(nn.Module):
         self.temporal = nn.Sequential(
             nn.Linear(temporal_in, history_hidden), nn.GELU(),
             nn.Linear(history_hidden, _TEMPORAL_OUT))
+        # SLOWRES: the learned positive time constant and optional slew-rate scale.  Created
+        # only in slow mode, after the temporal MLP, so the default model keeps its exact
+        # parameter set and RNG stream.
+        self.temporal_tau_raw = None
+        self.temporal_tau_head = None
+        self.temporal_slew_raw = None
+        if self.temporal_residual_mode == "slow":
+            tau_raw = inverse_softplus(max(float(self.temporal_tau_init_s), 1.0e-4))
+            self.temporal_tau_raw = nn.Parameter(torch.tensor(tau_raw, dtype=torch.float32))
+            if self.temporal_tau_conditioned:
+                hidden = max(8, min(32, int(history_hidden)))
+                self.temporal_tau_head = nn.Sequential(
+                    nn.Linear(3, hidden), nn.Tanh(), nn.Linear(hidden, 1))
+                last = self.temporal_tau_head[-1]
+                with torch.no_grad():
+                    last.weight.zero_()
+                    last.bias.zero_()
+            if self.temporal_slew_init_mps2 is not None:
+                slew_raw = inverse_softplus(float(self.temporal_slew_init_mps2))
+                self.temporal_slew_raw = nn.Parameter(
+                    torch.tensor(slew_raw, dtype=torch.float32))
         # Exact zero at k=0 by construction; positive increments make the gate
         # monotone and the small initial value keeps early steps physics-dominated.
         if spec.gate_kind == "cumsum":
@@ -446,6 +475,47 @@ class WmSModel(nn.Module):
                                              dtype=dtype, device=device)
             parts.append(controller_emb.to(dtype))
         return self.temporal(torch.cat(parts, dim=-1))
+
+    def _slow_temporal_accel(self, target: Tensor, state: dict[str, Tensor],
+                             kin: Tensor, present: Tensor,
+                             physics_accel: Tensor) -> Tensor:
+        """SLOWRES: one step of the learned low-pass temporal residual.
+
+        ``target`` is the existing temporal-path acceleration; the returned value is the
+        carried state ``r_t``.  A slot that was absent at the previous step is a new car:
+        its state starts at zero.  ``tau`` is the softplus time constant (optionally
+        conditioned on the IDM acceleration, gap and closing speed) and the optional
+        slew-rate cap is a learned positive scale.
+        """
+        zeros = torch.zeros_like(target)
+        previous = state.get("temporal_residual_mps2")
+        if previous is None or tuple(previous.shape) != tuple(target.shape):
+            previous = zeros
+        else:
+            previous = previous.to(dtype=target.dtype, device=target.device)
+        prev_present = state.get("temporal_residual_present")
+        if prev_present is None or tuple(prev_present.shape) != tuple(present.shape):
+            prev_present = present
+        else:
+            prev_present = prev_present.to(device=present.device).bool()
+        reset = present.bool() & ~prev_present
+        previous = torch.where(reset, zeros, previous)
+
+        tau = softplus_positive(self.temporal_tau_raw).to(target.dtype)
+        if self.temporal_tau_head is not None:
+            gap, lead_v = lead_neighbour(kin, present, self.physics)
+            closing = kin[..., 4] - lead_v
+            features = torch.stack((
+                (physics_accel / 5.0).clamp(-2.0, 2.0),
+                (gap.clamp(0.0, 200.0) / 50.0),
+                (closing.clamp(-20.0, 20.0) / 10.0)), dim=-1)
+            modulation = torch.tanh(self.temporal_tau_head(features)).squeeze(-1)
+            tau = tau * torch.exp(0.5 * modulation)
+        slew = (None if self.temporal_slew_raw is None
+                else softplus_positive(self.temporal_slew_raw).to(target.dtype))
+        residual = slow_residual_step(target, previous, tau, self.physics.dt_s,
+                                      slew_max_mps2=slew)
+        return torch.where(present.bool(), residual, zeros)
 
     def _controller_embedding(self, controller_id: Optional[Tensor], is_cav: Tensor,
                               shape: tuple[int, int], dtype, device,
@@ -713,10 +783,16 @@ class WmSModel(nn.Module):
         temporal = self._temporal_delta(history, history_mask, k, (b, slots),
                                         kin.dtype, kin.device, controller_emb=controller_emb)
         temporal_accel = temporal[..., 0]
+        temporal_residual_state = None
         if self.diag_zero_temporal:
             # V10BRKPROBE (a): remove only the temporal acceleration emission; the
             # attention head, driver adaptation and the temporal lane path stay intact.
             temporal_accel = torch.zeros_like(temporal_accel)
+        if self.temporal_residual_mode == "slow":
+            # SLOWRES: replace the direct temporal emission by the carried low-pass state.
+            temporal_accel = self._slow_temporal_accel(
+                temporal_accel, state, kin, present, physics)
+            temporal_residual_state = temporal_accel
         if self.diag_temporal_tau_s is not None:
             # V10BRKPROBE (c): causal first-order low-pass on the temporal output.  The
             # state is cleared by ``reset_diag_state`` at every new rollout.
@@ -814,6 +890,9 @@ class WmSModel(nn.Module):
                   "accel_delta_mps2": accel - physics, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
+        if temporal_residual_state is not None:
+            result["temporal_residual_mps2"] = temporal_residual_state
+            result["temporal_residual_present"] = present
         if self.merge_threshold is not None:
             # R5THR: per-driver threshold location [B, K] (with gradient for the first-passage
             # loss; the rollout decision uses a detached sample).
@@ -1684,6 +1763,10 @@ class WmSModel(nn.Module):
                 current["merge_neg_accel_ema"] = out["merge_neg_accel_ema"].detach()
             if "merge_neg_intent_logit" in out:
                 current["merge_neg_intent_logit"] = out["merge_neg_intent_logit"].detach()
+            if "temporal_residual_mps2" in out:
+                # SLOWRES: carried across steps (and detached at truncated-BPTT chunks).
+                current["temporal_residual_mps2"] = out["temporal_residual_mps2"]
+                current["temporal_residual_present"] = out["temporal_residual_present"]
             if "lane_v5_budget" in out:
                 current["lane_v5_budget"] = out["lane_v5_budget"]
             current.pop("veh_kin", None)

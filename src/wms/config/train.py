@@ -264,6 +264,20 @@ class ModelConfig:
     """R5THR (default 'hazard' = bit-identical): 'threshold' replaces the per-step Bernoulli
     merge draw by one persistent learned gap-acceptance threshold per ramp car and a
     first-passage decision on the merge-head logit.  Needs ``model.lane_model='hazard_v5'``."""
+    temporal_residual_mode: Literal["direct", "slow"] = "direct"
+    """SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's direct
+    per-step acceleration with a learned low-pass residual state r_t carried in the rollout
+    state across steps and truncated-BPTT chunks (reset for new cars).  The time constant is
+    learned (softplus) and optionally conditioned on IDM acceleration / gap / closing speed."""
+    temporal_tau_init_s: float = 0.1
+    """Initial softplus time constant (s) of the slow temporal state.  A small value makes the
+    first fine-tune start close to the direct behaviour (0.1 s -> alpha=0.833 at dt=0.5 s)."""
+    temporal_tau_conditioned: bool = False
+    """Condition tau on IDM acceleration (sign included), gap and closing speed via a tiny
+    zero-initialised head (identity at load)."""
+    temporal_slew_init_mps2: Optional[float] = None
+    """Optional learned slew-rate cap |r_t - r_{t-1}| <= softplus(raw) * dt.  None = off;
+    a value initialises the positive scale (m/s^2) of the learnable bound."""
 
     def __post_init__(self) -> None:
         require(self.driver_param_mode in ("legacy", "physical"),
@@ -327,6 +341,18 @@ class ModelConfig:
         if self.merge_decision != "hazard":
             require(self.lane_model == "hazard_v5",
                     "model.merge_decision='threshold' requires model.lane_model='hazard_v5'")
+        require(self.temporal_residual_mode in ("direct", "slow"),
+                "model.temporal_residual_mode must be 'direct' or 'slow'")
+        require(is_finite(self.temporal_tau_init_s) and self.temporal_tau_init_s > 0.0,
+                "model.temporal_tau_init_s must be finite and positive")
+        require(isinstance(self.temporal_tau_conditioned, bool),
+                "model.temporal_tau_conditioned must be a boolean")
+        require(self.temporal_slew_init_mps2 is None
+                or (is_finite(self.temporal_slew_init_mps2)
+                    and self.temporal_slew_init_mps2 > 0.0),
+                "model.temporal_slew_init_mps2 must be finite and positive when set")
+        require(self.temporal_residual_mode == "direct" or self.kind == "structured",
+                "model.temporal_residual_mode='slow' needs the structured model")
         if self.lane_head == "history":
             require(self.rollout_mode in ("driver_params", "hybrid"),
                     "model.lane_head='history' requires rollout_mode driver_params or hybrid")
@@ -440,6 +466,30 @@ class BrakeWaveConfig:
     def enabled(self) -> bool:
         return (self.weight > 0.0 or self.residual_weight > 0.0
                 or self.spurious_weight > 0.0)
+
+
+@config_dataclass
+class OnsetStatsConfig:
+    """SLOWRES/astra #3 free-rollout onset-statistics auxiliary (default OFF)."""
+
+    weight: float = 0.0
+    onset_decel_mps2: float = 1.5
+    temperature_mps2: float = 0.25
+    max_duration_s: float = 10.0
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(getattr(self, name)) for name in (
+            "weight", "onset_decel_mps2", "temperature_mps2", "max_duration_s")),
+            "loss.onset_stats values must be finite")
+        require(self.weight >= 0.0, "loss.onset_stats.weight must be >= 0 (0 = off)")
+        require(self.onset_decel_mps2 > 0.0 and self.temperature_mps2 > 0.0,
+                "loss.onset_stats onset_decel_mps2 / temperature_mps2 must be positive")
+        require(2.0 <= self.max_duration_s <= 20.0,
+                "loss.onset_stats.max_duration_s must be in [2, 20] seconds")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0
 
 
 @config_dataclass
@@ -983,6 +1033,7 @@ class LossConfig:
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
     brake_wave: BrakeWaveConfig = field(default_factory=BrakeWaveConfig)
+    onset_stats: OnsetStatsConfig = field(default_factory=OnsetStatsConfig)
     post_merge: PostMergeConfig = field(default_factory=PostMergeConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
@@ -1294,6 +1345,7 @@ class TrainConfig:
                                self.loss.brake_wave.residual_weight > 0.0),
                               ("brake_wave_spurious",
                                self.loss.brake_wave.spurious_weight > 0.0),
+                              ("onset_stats", self.loss.onset_stats.weight > 0.0),
                               ("post_merge", self.loss.post_merge.weight > 0.0),
                               ("post_merge_residual",
                                self.loss.post_merge.residual_weight > 0.0),

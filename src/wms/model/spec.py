@@ -26,6 +26,8 @@ MERGE_HAZARD_ZONES = ("forced_late", "full")
 #: R5THR merge decision: per-step Bernoulli hazard (default) or persistent gap-acceptance
 #: threshold + first passage.
 MERGE_DECISIONS = ("hazard", "threshold")
+#: SLOWRES: direct per-step temporal acceleration or a learned low-pass state.
+TEMPORAL_RESIDUAL_MODES = ("direct", "slow")
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,14 @@ class ModelSpec:
     # R5THR (default 'hazard' = the per-step Bernoulli merge draw): 'threshold' replaces the
     # merge decision by a persistent learned gap-acceptance threshold (first passage).
     merge_decision: str = "hazard"
+    # SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's
+    # direct per-step acceleration with a learned low-pass residual state r_t carried in
+    # the rollout state (see wms.model.temporal_slow).  New parameters are created only in
+    # slow mode; a direct model has exactly the pre-SLOWRES key set.
+    temporal_residual_mode: str = "direct"
+    temporal_tau_init_s: float = 0.1
+    temporal_tau_conditioned: bool = False
+    temporal_slew_init_mps2: Optional[float] = None
 
     def __post_init__(self) -> None:
         if self.driver_param_mode not in ("legacy", "physical"):
@@ -169,6 +179,19 @@ class ModelSpec:
             raise ValueError("residual_head_rescale must be a boolean")
         if not isinstance(self.merge_negotiation, bool):
             raise ValueError("merge_negotiation must be a boolean")
+        if self.temporal_residual_mode not in TEMPORAL_RESIDUAL_MODES:
+            raise ValueError(f"temporal_residual_mode must be one of {TEMPORAL_RESIDUAL_MODES}")
+        if not math.isfinite(float(self.temporal_tau_init_s)) \
+                or float(self.temporal_tau_init_s) <= 0.0:
+            raise ValueError("temporal_tau_init_s must be finite and positive")
+        if not isinstance(self.temporal_tau_conditioned, bool):
+            raise ValueError("temporal_tau_conditioned must be a boolean")
+        if self.temporal_slew_init_mps2 is not None and (
+                not math.isfinite(float(self.temporal_slew_init_mps2))
+                or float(self.temporal_slew_init_mps2) <= 0.0):
+            raise ValueError("temporal_slew_init_mps2 must be finite and positive when set")
+        if self.temporal_residual_mode == "slow" and self.black_box:
+            raise ValueError("temporal_residual_mode='slow' needs the structured model")
         if self.merge_negotiation and self.lane_model != "hazard_v5":
             raise ValueError("merge_negotiation needs lane_model='hazard_v5'")
         if self.merge_decision not in MERGE_DECISIONS:

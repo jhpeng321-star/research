@@ -81,6 +81,11 @@ class TrainSettings:
     brake_wave_window_s: float = 4.0
     brake_wave_onset_decel_mps2: float = 1.0
     brake_wave_spurious_decel_mps2: float = 1.5
+    # SLOWRES / astra #3 (default 0 = OFF, bit-identical): free-rollout onset statistics.
+    onset_stats_weight: float = 0.0
+    onset_stats_onset_decel_mps2: float = 1.5
+    onset_stats_temperature_mps2: float = 0.25
+    onset_stats_max_duration_s: float = 10.0
     # R5MERGE (default 0 = OFF, bit-identical): acceleration consistency of recorded
     # HDVs that changed lane 2->1 within the last window_s seconds.
     post_merge_weight: float = 0.0
@@ -324,6 +329,11 @@ class TrainSettings:
     courtesy_weight: float = 1.0
     # R5MERGE (default OFF): exact-identity-at-load output rescale of the residual head.
     residual_head_rescale: bool = False
+    # SLOWRES (default 'direct' = bit-identical): learned low-pass temporal residual state.
+    temporal_residual_mode: str = "direct"
+    temporal_tau_init_s: float = 0.1
+    temporal_tau_conditioned: bool = False
+    temporal_slew_init_mps2: Optional[float] = None
     # V10NEGOT (default OFF): learned merge-negotiation block, censored merge-survival loss
     # and the ramp-only merge teacher-forcing schedule.
     merge_negotiation: bool = False
@@ -689,6 +699,16 @@ class TrainSettings:
             and math.isfinite(float(self.brake_wave_window_s))
             and 3.0 <= float(self.brake_wave_window_s) <= 5.0,
             "brake_wave weights must be >= 0, thresholds > 0, window_s in [3,5]")
+        _require(math.isfinite(float(self.onset_stats_weight))
+                 and float(self.onset_stats_weight) >= 0.0
+                 and math.isfinite(float(self.onset_stats_onset_decel_mps2))
+                 and float(self.onset_stats_onset_decel_mps2) > 0.0
+                 and math.isfinite(float(self.onset_stats_temperature_mps2))
+                 and float(self.onset_stats_temperature_mps2) > 0.0
+                 and math.isfinite(float(self.onset_stats_max_duration_s))
+                 and 2.0 <= float(self.onset_stats_max_duration_s) <= 20.0,
+                 "onset_stats weight must be >= 0, thresholds/temperature > 0, "
+                 "max_duration_s in [2,20]")
         _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
             self.post_merge_weight, self.post_merge_residual_weight))
             and math.isfinite(float(self.post_merge_window_s))
@@ -698,6 +718,17 @@ class TrainSettings:
             "post_merge weights must be >= 0, window_s in [2,20], huber delta > 0")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
+        _require(self.temporal_residual_mode in ("direct", "slow"),
+                 "temporal_residual_mode must be 'direct' or 'slow'")
+        _require(math.isfinite(float(self.temporal_tau_init_s))
+                 and float(self.temporal_tau_init_s) > 0.0,
+                 "temporal_tau_init_s must be finite and positive")
+        _require(isinstance(self.temporal_tau_conditioned, bool),
+                 "temporal_tau_conditioned must be a boolean")
+        _require(self.temporal_slew_init_mps2 is None
+                 or (math.isfinite(float(self.temporal_slew_init_mps2))
+                     and float(self.temporal_slew_init_mps2) > 0.0),
+                 "temporal_slew_init_mps2 must be finite and positive when set")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -756,6 +787,11 @@ class TrainSettings:
         return (float(self.brake_wave_weight) > 0.0
                 or float(self.brake_wave_residual_weight) > 0.0
                 or float(self.brake_wave_spurious_weight) > 0.0)
+
+    @property
+    def onset_stats_on(self) -> bool:
+        """SLOWRES free-rollout onset-statistics auxiliary enabled."""
+        return float(self.onset_stats_weight) > 0.0
 
     @property
     def post_merge_on(self) -> bool:

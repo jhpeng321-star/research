@@ -21,6 +21,7 @@ from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContex
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
 from .brake_persist import BrakePersistConfig, brake_persist_terms
 from .brake_wave import BrakeWaveConfig, brake_wave_terms
+from .onset_stats import OnsetStatsConfig, onset_stats_terms
 from .post_merge import PostMergeAccelConfig, post_merge_terms
 from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
@@ -171,6 +172,13 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             window_s=float(settings.brake_wave_window_s),
             onset_decel_mps2=float(settings.brake_wave_onset_decel_mps2),
             spurious_decel_mps2=float(settings.brake_wave_spurious_decel_mps2))))
+    if settings.onset_stats_on:
+        # SLOWRES / astra #3 free-rollout onset statistics (default 0: never built).
+        chunk.extend(onset_stats_terms(OnsetStatsConfig(
+            weight=float(settings.onset_stats_weight),
+            onset_decel_mps2=float(settings.onset_stats_onset_decel_mps2),
+            temperature_mps2=float(settings.onset_stats_temperature_mps2),
+            max_duration_s=float(settings.onset_stats_max_duration_s))))
     if settings.post_merge_on:
         # R5MERGE post-merge acceleration consistency (default off: never built).
         chunk.extend(post_merge_terms(PostMergeAccelConfig(

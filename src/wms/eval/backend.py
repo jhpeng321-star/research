@@ -82,7 +82,8 @@ def feasibility_projection(config: Mapping[str, Any]) -> Any | None:
 
 def load_backend(checkpoint: str | Path, *, device: str = "cpu",
                  physics: Mapping[str, Any] | None = None,
-                 cav_exec_cap: str | None = None) -> WmsBackend:
+                 cav_exec_cap: str | None = None,
+                 model_config: Mapping[str, Any] | None = None) -> WmsBackend:
     """Load a ``wm_s/1`` checkpoint through ``wms.model.checkpoint`` (strict).
 
     The stored flat config is parsed with ``TrainConfig.from_legacy_flat`` (so a checkpoint
@@ -103,6 +104,7 @@ def load_backend(checkpoint: str | Path, *, device: str = "cpu",
     mode = check_exec_cap_mode(cav_exec_cap if cav_exec_cap is not None
                                else os.environ.get(EXEC_CAP_ENV, "off"))
     loaded = load_checkpoint(checkpoint, device=device, strict=True, physics=physics,
+                             model_config=model_config,
                              config_factory=TrainConfig.from_legacy_flat)
     set_exec_cap(loaded.model, mode)
     config = dict(loaded.legacy_config)

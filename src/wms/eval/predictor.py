@@ -140,8 +140,10 @@ class WmsPredictor:
     @classmethod
     def from_checkpoint(cls, path: str | Path, flags: RolloutFlags = RolloutFlags(), *,
                         device: str = "cpu",
-                        physics: Mapping[str, Any] | None = None) -> "WmsPredictor":
-        return cls(load_backend(path, device=device, physics=physics), flags)
+                        physics: Mapping[str, Any] | None = None,
+                        model_config: Mapping[str, Any] | None = None) -> "WmsPredictor":
+        return cls(load_backend(path, device=device, physics=physics,
+                                model_config=model_config), flags)
 
     # ------------------------------------------------------------------ rollout
     def predict_states(self, state: dict, plan_or_controllers: Mapping[str, Any] | None,
