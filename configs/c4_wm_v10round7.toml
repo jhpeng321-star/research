@@ -35,9 +35,9 @@ max_hours = 2.5
 [optim]
 lr_per_stage = [5.0e-5, 3.0e-5]
 batch_size_per_stage = [4, 2]
-freeze_prefixes = ["lane_v5"]
 
 [optim.lr_scale]
+"lane_v5" = 0.05            # near-frozen mainline lane head (freezing breaks the unroll-level lane-flow term: no grad)
 "driver_encoder" = 0.3
 "driver_updater" = 0.3
 "residual_net" = 0.5
