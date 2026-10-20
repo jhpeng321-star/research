@@ -362,10 +362,13 @@ class YieldHuberTerm(LossTerm):
         pred = ctx.pred.get("merge_negotiation_yield_accel")
         if prep.get("empty") or pred is None or physics is None:
             return None
-        c0, c1 = ctx.c0, ctx.c1
+        c0, c1, k = ctx.c0, ctx.c1, prep["f_idx"].shape[-1]
+        # ``ctx.pred`` holds only this truncated-BPTT chunk while ``prep`` targets are on
+        # the absolute unroll clock: index the targets, never the chunk-local prediction.
         idx = prep["f_idx"][:, c0:c1]
+        physics = physics[:, :, :k]
         target = prep["f_acc_next"][:, c0:c1] - physics.gather(-1, idx)
-        error = F.huber_loss(pred[:, c0:c1], target,
+        error = F.huber_loss(pred[:, :, :k], target,
                              delta=float(self.cfg.yield_huber_delta_mps2),
                              reduction="none")
         weight = (prep["yield_mask"][:, c0:c1].to(error.dtype)
@@ -398,20 +401,24 @@ class RampAdaptHuberTerm(LossTerm):
         pred = ctx.pred.get("merge_negotiation_ramp_delta")
         if prep.get("empty") or pred is None or physics is None:
             return None
-        c0, c1 = ctx.c0, ctx.c1
-        delta = pred[:, c0:c1]
+        c0, c1, k = ctx.c0, ctx.c1, prep["ramp_mask"].shape[-1]
+        # Chunk-local predictions, absolute-clock targets (same convention as the recorded
+        # chunk terms): ``pred`` / ``physics`` already cover exactly ``[c0, c1)``.
+        pred = pred[:, :, :k]
+        physics = physics[:, :, :k]
+        delta = pred
         ramp_mask = prep["ramp_mask"][:, c0:c1].to(delta.dtype)
-        target = prep["ramp_acc_next"][:, c0:c1] - physics[:, c0:c1]
+        target = prep["ramp_acc_next"][:, c0:c1] - physics
         accel_err = F.huber_loss(delta, target,
                                  delta=float(self.cfg.yield_huber_delta_mps2),
                                  reduction="none")
         accel_value = (accel_err * ramp_mask).sum() / ramp_mask.sum().clamp_min(1.0)
         idx = prep["f_idx"][:, c0:c1]
-        physics_f = physics[:, c0:c1].gather(-1, idx)
+        physics_f = physics.gather(-1, idx)
         horizon = prep["horizon_s"][:, c0:c1]
         gap_pred = (prep["gap_min"][:, c0:c1]
                     + (prep["f_v"][:, c0:c1] - prep["ramp_v"][:, c0:c1]) * horizon
-                    + 0.5 * (physics_f - (physics[:, c0:c1] + delta)) * horizon.square())
+                    + 0.5 * (physics_f - (physics + delta)) * horizon.square())
         gap_target = prep["gap_star"].unsqueeze(1).expand_as(gap_pred)
         gap_err = F.huber_loss(gap_pred, gap_target,
                                delta=float(self.cfg.gap_huber_delta_m), reduction="none")
@@ -440,7 +447,9 @@ class SafetyBCETerm(LossTerm):
         brake = ctx.pred.get("merge_negotiation_required_brake")
         if prep.get("empty") or logit is None or brake is None:
             return None
-        c0, c1 = ctx.c0, ctx.c1
+        c0, c1, k = ctx.c0, ctx.c1, prep["safety_pos"].shape[-1]
+        logit = logit[:, :, :k]
+        brake = brake[:, :, :k]
         positive = prep["safety_pos"][:, c0:c1].to(logit.dtype)
         negative = prep["safety_neg"][:, c0:c1].to(logit.dtype)
         weight = positive + float(self.cfg.safety_control_weight) * negative
@@ -448,9 +457,9 @@ class SafetyBCETerm(LossTerm):
             zero = torch.zeros((), device=logit.device, dtype=logit.dtype)
             return TermValue(zero, log=zero)
         label = prep["conflict"][:, c0:c1].to(logit.dtype)
-        bce = F.binary_cross_entropy_with_logits(logit[:, c0:c1], label, reduction="none")
+        bce = F.binary_cross_entropy_with_logits(logit, label, reduction="none")
         bce_value = (bce * weight).sum() / weight.sum().clamp_min(1.0)
-        brake_err = F.smooth_l1_loss(brake[:, c0:c1], prep["required_brake"][:, c0:c1],
+        brake_err = F.smooth_l1_loss(brake, prep["required_brake"][:, c0:c1],
                                      beta=float(self.cfg.brake_huber_delta_mps2),
                                      reduction="none")
         brake_value = (brake_err * weight).sum() / weight.sum().clamp_min(1.0)
