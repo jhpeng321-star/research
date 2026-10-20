@@ -366,6 +366,48 @@ def test_merge_yield_masks_are_recorded_only_and_terms_get_gradients():
         assert torch.isfinite(pred[key].grad).all()
 
 
+def test_merge_yield_chunk_terms_use_chunk_local_predictions_at_absolute_c0():
+    """Truncated BPTT (c0 > 0) and validation (no backward) must both work.
+
+    ``ctx.pred`` holds only the current chunk, so indexing it with the absolute
+    ``[c0:c1]`` bounds produced an empty prediction in training and crashed validation.
+    """
+    targets = _yield_targets()
+    cfg = MergeYieldLossConfig(yield_huber=1.0, ramp_adapt_huber=1.0, safety_bce=1.0,
+                               yield_window_s=2.0, gap_window_s=2.0, safety_window_s=1.0)
+    terms = [YieldHuberTerm(cfg), RampAdaptHuberTerm(cfg), SafetyBCETerm(cfg)]
+    for term in terms:
+        term.prepare(targets)
+    length = 4
+    c0, c1 = 2, 6
+    pred = {
+        "physics_accel_mps2": torch.zeros(1, length, 2),
+        "merge_negotiation_yield_accel": torch.full((1, length, 2), -0.1,
+                                                    requires_grad=True),
+        "merge_negotiation_ramp_delta": torch.full((1, length, 2), -0.1,
+                                                   requires_grad=True),
+        "merge_negotiation_required_brake": torch.full((1, length, 2), 0.5,
+                                                       requires_grad=True),
+        "merge_negotiation_conflict_logit": torch.zeros(1, length, 2,
+                                                        requires_grad=True),
+    }
+    ctx = LossContext(pred=pred, current={}, targets=targets, c0=c0, c1=c1)
+    # Validation: forward only, no backward through the truncated chunk.
+    with torch.no_grad():
+        values = [term(ctx) for term in terms]
+    assert all(value is not None and torch.isfinite(value.logged) for value in values)
+    # Training: every term receives a finite gradient through the chunk-local prediction.
+    for term in terms:
+        value = term(ctx)
+        assert value is not None and torch.isfinite(value.value)
+        value.value.backward(retain_graph=True)
+    for key in ("merge_negotiation_yield_accel", "merge_negotiation_ramp_delta",
+                "merge_negotiation_required_brake", "merge_negotiation_conflict_logit"):
+        grad = pred[key].grad
+        assert grad is not None and torch.isfinite(grad).all()
+        assert float(grad.abs().sum()) > 0.0
+
+
 def test_old_negotiation_state_dict_loads_with_new_heads():
     net = MergeNegotiationNet()
     old = {key: value for key, value in net.state_dict().items()
