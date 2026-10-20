@@ -22,7 +22,11 @@ On-policy safety (advice section 2): the recorded time is valid supervision only
 interaction stays comparable.  A DETACHED compatibility mask predeclared by the config
 (``pos_tol_m``, ``speed_tol_mps``, ``gap_tol_m``, ``gap_speed_tol_mps``) compares ego
 position/speed and the target-lane leader/follower configuration; the car is censored at the
-last compatible step.  The recorded merge is never forced into a different gap.  A model merge
+last compatible step.  Only neighbours seen by BOTH the rollout and the record are compared:
+a missing leader/follower (free-gap sentinel) is neutral, not a divergence, and the rollout
+side excludes the same CAV/entrant vehicles as the recorded side.  Censoring and the
+diagnostic counters apply only to recorded ramp cars that have entered, never to padding or
+mainline slots.  The recorded merge is never forced into a different gap.  A model merge
 before the recorded one is not benign censoring: it is censored with the still-valid recorded
 survival and counted in ``early_merges``.
 
@@ -120,12 +124,19 @@ def _gap_compatible(cfg: MergeFirstPassageConfig, pred_kin: Tensor, rec_kin: Ten
     with torch.no_grad():
         p = target_gap_configuration(pred_kin, pred_present, shim)
         r = target_gap_configuration(rec_kin, rec_present, shim)
-        same = (p["has_f"] == r["has_f"]) & (p["has_l"] == r["has_l"])
-        gap_ok = (p["gap_f"] - r["gap_f"]).abs() <= float(cfg.gap_tol_m)
-        gap_ok = gap_ok & ((p["gap_l"] - r["gap_l"]).abs() <= float(cfg.gap_tol_m))
-        rel_ok = (p["rel_f"] - r["rel_f"]).abs() <= float(cfg.gap_speed_tol_mps)
-        rel_ok = rel_ok & ((p["rel_l"] - r["rel_l"]).abs() <= float(cfg.gap_speed_tol_mps))
-        ok = same & gap_ok & rel_ok
+        # A missing leader/follower is a free-gap sentinel, not a divergence: only the
+        # sides where BOTH the rollout and the record see the neighbour are compared.
+        # This also keeps a different free-gap representation (absent vs > max_gap_m)
+        # from censoring a car whose recorded interaction is still comparable.
+        both_f = p["has_f"] & r["has_f"]
+        both_l = p["has_l"] & r["has_l"]
+        gap_ok = ((p["gap_f"] - r["gap_f"]).abs() <= float(cfg.gap_tol_m)) | ~both_f
+        gap_ok = gap_ok & (((p["gap_l"] - r["gap_l"]).abs()
+                            <= float(cfg.gap_tol_m)) | ~both_l)
+        rel_ok = ((p["rel_f"] - r["rel_f"]).abs() <= float(cfg.gap_speed_tol_mps)) | ~both_f
+        rel_ok = rel_ok & (((p["rel_l"] - r["rel_l"]).abs()
+                            <= float(cfg.gap_speed_tol_mps)) | ~both_l)
+        ok = gap_ok & rel_ok
         # Only ramp slots are constrained; absent/other slots are neutral.
         return torch.where(p["ramp"], ok, torch.ones_like(ok))
 
@@ -173,6 +184,7 @@ class MergeFirstPassageTerm(LossTerm):
                 "m_carry": {0: torch.full(rec_event.shape, float("-inf"),
                                           dtype=rec.dtype, device=rec_event.device)},
                 "pred_merge": {0: torch.full_like(rec_event, -1)},
+                "diverged": torch.zeros_like(rec_event, dtype=torch.bool),
                 "stats": {},
             }
 
@@ -210,8 +222,12 @@ class MergeFirstPassageTerm(LossTerm):
         # The recorded car's own slots only: no CAVs, no post-t0 entrants (no record).
         rec_cav = t.is_cav[:, c0:c1, :k].bool()
         entrant = pred.get("entrant_seq")
-        ent = (cut(entrant)[:, :, :k].bool() if torch.is_tensor(entrant)
-               and cut(entrant).shape[:2] == pres_dec.shape else torch.zeros_like(pres_dec))
+        # NOTE: compare the full [B, T, K] shape.  The old ``shape[:2]`` check never
+        # matched [B, T, K] and silently disabled the entrant mask, so post-t0 entrant
+        # slots were treated as recorded ramp cars and censored every step.
+        ent_seq = cut(entrant) if torch.is_tensor(entrant) else None
+        ent = (ent_seq[:, :, :k].bool() if ent_seq is not None
+               and ent_seq.shape == pres_dec.shape else torch.zeros_like(pres_dec))
         own = ~rec_cav & ~ent
         ramp_dec = pres_dec & (lane_dec == int(cfg.merge_lane)) & own
         in_zone = ramp_dec & (s_dec >= float(cfg.zone_s0_m)) & (s_dec <= float(cfg.zone_s1_m))
@@ -244,8 +260,11 @@ class MergeFirstPassageTerm(LossTerm):
         pred_kin = _kin(s_dec, lane_dec, v_dec, a_dec, length)
         pos_ok = (s_dec - prep["rec_s"][:, c0:c1]).abs() <= float(cfg.pos_tol_m)
         spd_ok = (v_dec - prep["rec_v"][:, c0:c1]).abs() <= float(cfg.speed_tol_mps)
+        # The recorded side excludes CAVs and post-t0 entrants; the rollout side must use
+        # the same vehicle set, otherwise a CAV/entrant neighbour is compared with a
+        # different recorded HDV and an aligned slot looks "incompatible".
         gap_ok = _gap_compatible(cfg, pred_kin, prep["rec_kin"][:, c0:c1],
-                                 pres_dec, prep["rec_present"][:, c0:c1])
+                                 pres_dec & own, prep["rec_present"][:, c0:c1])
         compat = (pos_ok & spd_ok & gap_ok) | ~ramp_dec
         alive = torch.cumprod(compat.float(), 1) > 0.5
         idx = torch.arange(c0, c1, device=z.device).view(1, T, 1)
@@ -296,12 +315,15 @@ class MergeFirstPassageTerm(LossTerm):
         log_denom = log_survival(m_den, loc[:, 0])
 
         # Censor contribution at the last compatible step (compatibility, early merge,
-        # window end).  A car already merged in the record before this chunk is skipped.
-        last = torch.full_like(rec_event, c1 - 1)
-        last = torch.where((last_ok >= 0) & (last_ok < last), last_ok, last)
-        last = torch.where(early & (pred_merge >= 0) & (pred_merge < last), pred_merge, last)
-        has_censor = (~event_any) & (last >= entry) & (last >= c0) & (
+        # window end).  Only recorded ramp cars that have entered by this chunk are
+        # supervised: padding and mainline slots are not censored samples.
+        at_risk = prep["ramp_any"] & (entry < c1)
+        last = torch.where(last_ok >= 0, last_ok, torch.full_like(last_ok, -1))
+        last = torch.where(early & (pred_merge >= 0) & ((last < 0) | (pred_merge < last)),
+                           pred_merge, last)
+        censorable = (~event_any) & at_risk & (
             (rec_event < 0) | (rec_event >= c1) | early | (last_ok < rec_event))
+        has_censor = censorable & (last >= entry) & (last >= c0)
         last_local = (last - c0).clamp(0, T - 1)
         sel_c = (F.one_hot(last_local, T).bool().permute(0, 2, 1)
                  & has_censor.unsqueeze(1))
@@ -338,7 +360,15 @@ class MergeFirstPassageTerm(LossTerm):
             stats["events"] += float(event_any.sum())
             stats["unsupported"] += float((event_any & ~supported).sum())
             stats["early"] += float((early & (before_merge < 0) & (pred_merge >= 0)).sum())
-            divergent = has_censor & ((last_ok < c1 - 1) | early)
+            # One diagnostic per car: a divergence is counted in the chunk where it is
+            # first observed, never again in later chunks of the same unroll.  The last
+            # compatible step is compared with the car's last ramp/at-risk step, not with
+            # the chunk end: leaving the ramp or the unroll ending is not a divergence.
+            last_possible = torch.minimum(torch.full_like(last_ok, c1 - 1),
+                                          prep["last_risk"])
+            reason = censorable & ((last_ok < last_possible) | early)
+            divergent = reason & ~prep["diverged"]
+            prep["diverged"] = prep["diverged"] | reason
             stats["censored_divergence"] += float(divergent.sum())
             stats["censored_admin"] += float(
                 (has_censor & ~divergent & (rec_event < 0) & (c1 == prep["n_steps"])).sum())
