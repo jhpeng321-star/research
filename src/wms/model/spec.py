@@ -83,6 +83,9 @@ class ModelSpec:
     # LANEV5 (lane_model='hazard_v5' only): gated-decision gates and configured head APs.
     lane_v5_gates: tuple[float, float, float] = (0.25, 0.10, 0.5)
     lane_v5_head_ap: tuple[float, float, float] = (-1.0, -1.0, -1.0)
+    # R5INPUTS (default OFF): append the extra merge inputs (follower acceleration / gap
+    # trends / next neighbours / alignment times) to the lane-v5 feature vector.
+    lane_v5_extra_features: bool = False
     # V8LANE (default 'default' = lane_decision): mainline overtake / return decision rule.
     lane_v5_mainline: str = "default"
     # V6: default values preserve the legacy encoder and algebraic EMA updates.
@@ -186,6 +189,10 @@ class ModelSpec:
             raise ValueError(f"lane_v5_mainline must be one of {LANE_V5_MAINLINE}")
         if self.lane_v5_mainline != "default" and self.lane_model != "hazard_v5":
             raise ValueError("lane_v5_mainline needs lane_model='hazard_v5'")
+        if not isinstance(self.lane_v5_extra_features, bool):
+            raise ValueError("lane_v5_extra_features must be a boolean")
+        if self.lane_v5_extra_features and self.lane_model != "hazard_v5":
+            raise ValueError("lane_v5_extra_features needs lane_model='hazard_v5'")
         if self.history_features < 0:
             raise ValueError("history_features must be >= 0")
         if self.long_history and (self.black_box or self.history_features != HISTORY_F):

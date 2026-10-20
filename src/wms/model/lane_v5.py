@@ -28,6 +28,16 @@ raw inputs, the driver embedding as input) by:
   the rollout (``state["lane_v5_acc"]``, across truncated-BPTT chunks) and initialised at t0
   from the observed pre-t0 long driver history; the teacher-forced pass recomputes them on
   the recorded states from the same initial value.  No future information.
+* **R5INPUTS** (``model.lane_v5_extra_features``, default OFF = bit-identical): the base
+  vector is unchanged; :data:`EXTRA_FEATURE_NAMES` is APPENDED when the switch is on:
+  observed target-follower acceleration and its short EMA (the merge-negotiation
+  ``0.7 prev + 0.3 a`` definition), target leader/follower gap closing rates and ~2 s
+  gap trends, the next-behind (follower's follower) and next-ahead (leader's leader)
+  clear gaps / relative speeds / accelerations / validity masks, the predicted
+  time-to-align with the next-behind gap under the ego's current and maximum feasible
+  acceleration, and the lane-end travel time.  Their accumulators are appended at the
+  end of :data:`ACC_NAMES`; the new scaling buffers are identity (mu 0, sd 1) and an old
+  checkpoint's first trunk layer is ZERO-expanded on load (exact identity at init).
 * **Merges.**  The physics mask decides feasibility everywhere (never unmasked).  Inside the
   merge zone the merge head is a learned gap acceptance on feasible rows; in the last
   :data:`FORCE_WINDOW_M` a feasible merge is forced (logit ``max(physics, 8)``).  V8WM2
@@ -73,8 +83,17 @@ LANE_DECISIONS_V5 = ("argmax", "sample", "gated")
 FORCE_WINDOW_M = 5.0
 FORCED_MERGE_LOGIT = 8.0
 #: Recurrent accumulator channels.
+#:
+#: R5INPUTS (2026-10-20, default OFF): the last three channels are the extra-neighbour
+#: history.  ``tfa_ema`` is the target follower's acceleration EMA with the SAME definition
+#: as the merge-negotiation follower-acceleration EMA (``merge_neg_accel_ema`` in
+#: ``wms.model.wms`` / the negotiation path): ``0.7 * prev + 0.3 * a``.  ``tfg_e2`` /
+#: ``tlg_e2`` are the target follower / leader gap EMAs over ~2 s (``dt``-aware); ``-1``
+#: marks 'no EMA yet' so a new or reappearing neighbour starts its trend at zero.
+#: They are appended so every pre-existing channel index is unchanged.
 ACC_NAMES = ("v0h", "blk", "blk30", "def10", "def30", "sg", "kr", "krd", "tzone",
-             "vs5_0", "vs5_1", "vs5_2", "vs15_0", "vs15_1", "vs15_2", "seen")
+             "vs5_0", "vs5_1", "vs5_2", "vs15_0", "vs15_1", "vs15_2", "seen",
+             "tfa_ema", "tfg_e2", "tlg_e2")
 ACC_F = len(ACC_NAMES)
 _A = {name: i for i, name in enumerate(ACC_NAMES)}
 FEATURE_NAMES = (
@@ -87,6 +106,27 @@ FEATURE_NAMES = (
     "rec_t", "rec_c",
     "lane0", "lane1", "lane2", "is_merge", "dend", "in_zone", "tzone", "s_km")
 N_FEATURES = len(FEATURE_NAMES)
+#: R5INPUTS (``model.lane_v5_extra_features``, default OFF): extra merge-input columns,
+#: APPENDED after :data:`FEATURE_NAMES` only when the switch is on.  Keeping them out of
+#: ``FEATURE_NAMES`` keeps the off-path network (and every old checkpoint) bit-identical.
+EXTRA_FEATURE_NAMES = (
+    "tfa", "tfa_ema",
+    "tfg_rate", "tfg_trend", "tlg_rate", "tlg_trend",
+    "nbg", "nbv", "nba", "nbh",
+    "nag", "nav", "naa", "nah",
+    "tta_cur", "tta_max",
+    "tle_s",
+)
+FEATURE_NAMES_EXTRA = FEATURE_NAMES + EXTRA_FEATURE_NAMES
+N_FEATURES_EXTRA = len(FEATURE_NAMES_EXTRA)
+#: Merge-negotiation follower-acceleration EMA (``0.7 prev + 0.3 a``), shared definition.
+NEG_ACCEL_EMA_DECAY = 0.7
+#: Target-gap EMA time constant of the closing-rate trend features (s).
+GAP_TREND_TAU_S = 2.0
+#: Horizon of the predicted time-to-align features (s); unreachable = the horizon.
+ALIGN_HORIZON_S = 60.0
+#: Horizon of the lane-end travel time feature (s).
+LANE_END_HORIZON_S = 120.0
 #: Feature constants (round values / the SUMO vType of the data, as in tmp/laneranking).
 MIN_V0_MPS = 5.0
 BLOCKED_GAP_M = 50.0
@@ -134,10 +174,81 @@ def _free_gap(physics: PhysicsConfig) -> float:
     return float(physics.free_road_gap_m) if physics.open_road else 1.0e3
 
 
+def _second_nearest(key: Tensor, first: Tensor, inf: Tensor) -> tuple[Tensor, Tensor]:
+    """Second-smallest finite ``key`` after dropping the first-nearest index.
+
+    ``key [N, i, j]`` holds ``inf`` for invalid candidates; ``first [N, i]`` is the index
+    returned by ``key.min(-1)``.  Dropping exactly that index (not every tie) reproduces
+    'the next car after the nearest one' and leaves the first-nearest choice untouched.
+    """
+    k = key.shape[-1]
+    ar = torch.arange(k, device=key.device).view(1, 1, k)
+    dropped = torch.where(ar == first.unsqueeze(-1), inf, key)
+    return dropped.min(-1)
+
+
+def _gap_trend(gap: Tensor, ema: Tensor, dt: float, tau_s: float) -> Tensor:
+    """Rate of change of ``gap`` implied by its EMA: ``(gap - ema) / (tau * (1 - alpha))``.
+
+    ``ema`` is the EMA AFTER the current sample and ``alpha = 1 - exp(-dt / tau)``; the
+    inverse ``1 - alpha`` recovers the pre-update EMA, so a newly initialised gap has a
+    zero trend and a genuine change keeps its physical sign.
+    """
+    alpha = 1.0 - math.exp(-dt / tau_s)
+    return (gap - ema) / (tau_s * max(1.0 - alpha, 1.0e-6))
+
+
+def _time_to_align(d: Tensor, dv: Tensor, a: Tensor, horizon: float) -> Tensor:
+    """Smallest non-negative time to close a relative distance ``d`` at ``dv`` / ``a``.
+
+    Solves ``0.5 a t^2 + dv t - d = 0``; an unreachable / negative solution is the
+    ``horizon`` (a finite sentinel, never ``inf``).
+    """
+    big = torch.full_like(d, float(horizon))
+    eps = 1.0e-6
+    disc = dv * dv + 2.0 * a * d
+    ok = disc >= 0.0
+    sq = torch.sqrt(disc.clamp_min(0.0))
+    a_safe = torch.where(a.abs() > eps, a, torch.ones_like(a))
+    t1 = (-dv + sq) / a_safe
+    t2 = (-dv - sq) / a_safe
+    v1 = ok & (t1 >= 0.0) & (t1 <= horizon)
+    v2 = ok & (t2 >= 0.0) & (t2 <= horizon)
+    quad = torch.where(v1 & v2, torch.minimum(t1, t2),
+                       torch.where(v1, t1, torch.where(v2, t2, big)))
+    lin = torch.where(dv.abs() > eps, d / dv,
+                      torch.where(d.abs() < eps, torch.zeros_like(d), big))
+    lin = torch.where(lin >= 0.0, lin, big).clamp_max(horizon)
+    return torch.where(a.abs() > eps, quad, lin)
+
+
+def expand_input_state(state: dict, n_old: int, n_new: int) -> dict:
+    """Expand a pre-R5INPUTS lane state dict to ``n_new`` inputs with ZERO new weights.
+
+    The first trunk layer gains zero columns and the scaling buffers gain identity
+    entries (``mu = 0``, ``sd = 1``), so the logits of an old checkpoint are EXACTLY
+    unchanged.  Unknown / differently sized entries are left to ``load_state_dict``.
+    """
+    if n_new < n_old:
+        raise ValueError("lane v5 input expansion cannot shrink the feature vector")
+    out = dict(state)
+    weight = out.get("trunk.0.weight")
+    if weight is not None and int(weight.shape[1]) == n_old and n_old != n_new:
+        pad = weight.new_zeros((int(weight.shape[0]), n_new - n_old))
+        out["trunk.0.weight"] = torch.cat((weight, pad), 1)
+    for key, fill in (("feature_mu", 0.0), ("feature_sd", 1.0)):
+        buf = out.get(key)
+        if buf is not None and int(buf.numel()) == n_old and n_old != n_new:
+            pad = buf.new_full((n_new - n_old,), fill)
+            out[key] = torch.cat((buf.reshape(-1), pad))
+    return out
+
+
 # --------------------------------------------------------------------- stage A
 def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                      lane_age: Optional[Tensor],
-                     impatience: Optional[Tensor] = None) -> dict[str, Tensor]:
+                     impatience: Optional[Tensor] = None,
+                     extra: bool = False) -> dict[str, Tensor]:
     """Instantaneous (accumulator-free, v0-free) quantities of every slot ``[N, K]``.
 
     Per lane leader/follower, mean speed and densities ahead, the speed-gap-rule margins of
@@ -161,7 +272,7 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     bump_a = ds - length.unsqueeze(-2)
     bump_b = -ds - length.unsqueeze(-1)
     inf = torch.full_like(ds, float("inf"))
-    lg, lv, la, fg, fv = [], [], [], [], []
+    lg, lv, la, fg, fv, fa = [], [], [], [], [], []
     lane_j = lane.unsqueeze(-2)
     age = (torch.full_like(s, AGE_SENTINEL) if lane_age is None else lane_age.float())
     key_a = torch.where(other & ahead, bump_a, inf)
@@ -176,6 +287,7 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         has = torch.isfinite(g)
         fg.append(torch.where(has, g.clamp_min(MIN_GAP_M), torch.full_like(g, free)))
         fv.append(torch.where(has, v.gather(-1, gi), v))
+        fa.append(torch.where(has, a.gather(-1, gi), torch.zeros_like(a)))
     # Per-lane counts / speed sums as batched matmuls with the lane one-hot [N, K, 3].
     onehot = torch.nn.functional.one_hot(lane, 3).to(v.dtype)
     w_ahead = other & ahead
@@ -200,6 +312,46 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     clv = torch.where(obstacle, torch.zeros_like(clv), clv)
     cla = torch.where(obstacle, torch.zeros_like(cla), cla)
     tlg, tlv, tfg, tfv = g_t(lg3), g_t(lv3), g_t(fg3), g_t(fv3)
+    extra_inst: dict[str, Tensor] = {}
+    if extra:
+        # R5INPUTS: second-nearest target-lane neighbours (ego -> follower's follower /
+        # leader's leader).  The first-nearest index is dropped rather than every tie, so
+        # the existing tlg/tfg columns are untouched.
+        tq3 = tq.unsqueeze(-1)                 # [N, i, 1] target lane of each row
+        in_target = lane_j == tq3              # [N, i, j]
+        key_a_t = torch.where(in_target, key_a, inf)
+        key_b_t = torch.where(in_target, key_b, inf)
+        g_a1, i_a1 = key_a_t.min(-1)
+        g_a2, i_a2 = _second_nearest(key_a_t, i_a1, inf)
+        g_b1, i_b1 = key_b_t.min(-1)
+        g_b2, i_b2 = _second_nearest(key_b_t, i_b1, inf)
+        safe_a2 = i_a2.clamp(0, max(k - 1, 0))
+        safe_b2 = i_b2.clamp(0, max(k - 1, 0))
+        nb_has = torch.isfinite(g_b1) & torch.isfinite(g_b2) & present
+        na_has = torch.isfinite(g_a1) & torch.isfinite(g_a2) & present
+        # Alignment point: midway between the next-behind car's front and the immediate
+        # follower's rear; the ego front aims there.  Its motion is approximated by the
+        # next-behind car's speed (the follower may still yield).
+        s_f1 = s.gather(-1, i_b1.clamp(0, max(k - 1, 0)))
+        l_f1 = length.gather(-1, i_b1.clamp(0, max(k - 1, 0)))
+        s_nb = s.gather(-1, safe_b2)
+        nb_aim_d = 0.5 * (s_nb + (s_f1 - l_f1)) - s
+        zero = torch.zeros_like(s)
+        nb_gap = torch.where(nb_has, g_b2.clamp_min(MIN_GAP_M), zero)
+        na_gap = torch.where(na_has, g_a2.clamp_min(MIN_GAP_M), zero)
+        extra_inst = {
+            "tfa": g_t(torch.stack(fa, -1)),
+            "nb_gap": nb_gap,
+            "nb_v": torch.where(nb_has, v.gather(-1, safe_b2) - v, zero),
+            "nb_a": torch.where(nb_has, a.gather(-1, safe_b2), zero),
+            "nb_has": nb_has,
+            "nb_aim_d": torch.where(nb_has, nb_aim_d, zero),
+            "nb_speed": torch.where(nb_has, v.gather(-1, safe_b2), zero),
+            "na_gap": na_gap,
+            "na_v": torch.where(na_has, v.gather(-1, safe_a2) - v, zero),
+            "na_a": torch.where(na_has, a.gather(-1, safe_a2), zero),
+            "na_has": na_has,
+        }
     # Speed-gap-rule margins of the target lane (same rule and anticipation as the mask).
     p = physics
     kin_a = anticipated_kin(kin, p.gap_anticipation_s)
@@ -265,6 +417,7 @@ def instant_features(kin: Tensor, present: Tensor, physics: PhysicsConfig,
         "ms3": ms3, "c100_3": c100_3, "c200_3": c200_3, "x3": x3, "x_cur": x_cur,
         "rl_g": lg3[..., 1], "rl_v": lv3[..., 1], "rec3": rec3, "age": age,
         **({} if target_feasible is None else {"target_feasible": target_feasible}),
+        **extra_inst,
     }
 
 
@@ -277,15 +430,17 @@ def fast_mask_applies(physics: PhysicsConfig) -> bool:
 
 def instant_features_chunked(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                              lane_age: Optional[Tensor],
-                             impatience: Optional[Tensor] = None) -> dict[str, Tensor]:
+                             impatience: Optional[Tensor] = None,
+                             extra: bool = False) -> dict[str, Tensor]:
     """:func:`instant_features` over many rows ``[N, K]`` in memory-bounded chunks."""
     n, k = present.shape
     step = max(1, _PAIR_BUDGET // max(1, k * k))
     if n <= step:
-        return instant_features(kin, present, physics, lane_age, impatience)
+        return instant_features(kin, present, physics, lane_age, impatience, extra)
     parts = [instant_features(kin[i:i + step], present[i:i + step], physics,
                               None if lane_age is None else lane_age[i:i + step],
-                              None if impatience is None else impatience[i:i + step])
+                              None if impatience is None else impatience[i:i + step],
+                              extra)
              for i in range(0, n, step)]
     return {key: torch.cat([part[key] for part in parts], 0) for key in parts[0]}
 
@@ -305,6 +460,8 @@ def initial_acc(present: Tensor, kin: Tensor, physics: PhysicsConfig,
     """
     acc = torch.zeros((*present.shape, ACC_F), dtype=torch.float32, device=present.device)
     acc[..., _A["vs5_0"]:_A["vs15_2"] + 1] = -1.0
+    acc[..., _A["tfg_e2"]] = -1.0
+    acc[..., _A["tlg_e2"]] = -1.0
     if driver_history is None or driver_history_mask is None \
             or driver_history.shape[-1] < 9 or driver_history.shape[-2] <= 1:
         return acc
@@ -347,7 +504,8 @@ def initial_acc(present: Tensor, kin: Tensor, physics: PhysicsConfig,
     return acc
 
 
-def update_acc(acc: Tensor, inst: dict[str, Tensor], physics: PhysicsConfig) -> Tensor:
+def update_acc(acc: Tensor, inst: dict[str, Tensor], physics: PhysicsConfig,
+               extra: bool = False) -> Tensor:
     """One causal accumulator update with the current step's instantaneous quantities."""
     dt = float(physics.dt_s)
     acc = acc.detach().float()
@@ -392,16 +550,46 @@ def update_acc(acc: Tensor, inst: dict[str, Tensor], physics: PhysicsConfig) -> 
     fresh = (new.unsqueeze(-1) | (vs5_old < 0))
     vs5 = torch.where(fresh, vs3, _ema(vs5_old, vs3, 5.0, dt))
     vs15 = torch.where(fresh, vs3, _ema(vs15_old, vs3, 15.0, dt))
+    if extra:
+        # R5INPUTS: target follower acceleration EMA (same 0.7/0.3 definition as the merge
+        # negotiation's follower EMA) and the ~2 s leader / follower gap EMAs.  ``-1`` marks
+        # 'no EMA yet' for a missing target neighbour so a reappearing one starts at zero
+        # trend instead of a spurious jump.
+        f_has, l_has = inst["f_has"], ~inst["tl_free"]
+        tfa = torch.where(f_has, inst["tfa"], zero)
+        prev_a = torch.where(new, zero, get("tfa_ema"))
+        tfa_ema = NEG_ACCEL_EMA_DECAY * prev_a + (1.0 - NEG_ACCEL_EMA_DECAY) * tfa
+        alpha = 1.0 - math.exp(-dt / GAP_TREND_TAU_S)
+        missing = torch.full_like(v, -1.0)
+        prev_f = torch.where(new, missing, get("tfg_e2"))
+        cur_f = torch.where(f_has, inst["tfg"], missing)
+        tfg_e2 = torch.where(cur_f >= 0.0,
+                             torch.where(prev_f >= 0.0, prev_f + alpha * (cur_f - prev_f), cur_f),
+                             missing)
+        prev_l = torch.where(new, missing, get("tlg_e2"))
+        cur_l = torch.where(l_has, inst["tlg"], missing)
+        tlg_e2 = torch.where(cur_l >= 0.0,
+                             torch.where(prev_l >= 0.0, prev_l + alpha * (cur_l - prev_l), cur_l),
+                             missing)
+        extra_cols = torch.stack((tfa_ema, tfg_e2, tlg_e2), -1)
+    else:
+        extra_cols = torch.zeros((*present.shape, 3), dtype=torch.float32,
+                                 device=present.device)
     out = torch.cat((torch.stack((v0h, blk, be, d10, d30, sg, kr, krd, tz), -1), vs5, vs15,
-                     present.float().unsqueeze(-1)), -1)
+                     present.float().unsqueeze(-1), extra_cols), -1)
     return torch.where(present.unsqueeze(-1), out, torch.zeros_like(out).index_fill_(
         -1, torch.arange(_A["vs5_0"], _A["vs15_2"] + 1, device=out.device), -1.0))
 
 
 # --------------------------------------------------------------------- stage C
-def assemble_features(inst: dict[str, Tensor], acc: Tensor, physics: PhysicsConfig) -> Tensor:
+def assemble_features(inst: dict[str, Tensor], acc: Tensor, physics: PhysicsConfig,
+                      extra: bool = False) -> Tensor:
     """Raw feature vector ``[N, K, N_FEATURES]`` (physical units) from stage A + the updated
-    accumulators (zero on absent slots)."""
+    accumulators (zero on absent slots).
+
+    R5INPUTS ``extra=True`` appends :data:`EXTRA_FEATURE_NAMES` after the base columns
+    (``N_FEATURES_EXTRA`` total); ``extra=False`` is bit-identical to the legacy vector.
+    """
     v, a, s, lane, tq = inst["v"], inst["a"], inst["s"], inst["lane"], inst["tq"]
     get = lambda name: acc[..., _A[name]]  # noqa: E731
     v0e = get("v0h").clamp_min(MIN_V0_MPS)
@@ -439,24 +627,55 @@ def assemble_features(inst: dict[str, Tensor], acc: Tensor, physics: PhysicsConf
         (physics.merge_zone_s1_m - s).clamp(-100.0, 500.0), one(in_zone), get("tzone"),
         s / 1000.0,
     ]
+    if extra:
+        # R5INPUTS (``model.lane_v5_extra_features``): observed target-follower motion, the
+        # leader / follower closing rates and ~2 s gap trends, the next-behind / next-ahead
+        # neighbours, predicted alignment times and the lane-end travel time.  Missing
+        # neighbours are neutral zeros (validity masks are separate columns).
+        zeros = torch.zeros_like(v)
+        f_has, l_has = inst["f_has"], ~inst["tl_free"]
+        tfa = torch.where(f_has, inst["tfa"], zeros)
+        tfa_ema = torch.where(f_has, get("tfa_ema"), zeros)
+        tfg_rate = torch.where(f_has, v - inst["tfv"], zeros)
+        tlg_rate = torch.where(l_has, inst["tlv"] - v, zeros)
+        e2f, e2l = get("tfg_e2"), get("tlg_e2")
+        tfg_trend = torch.where(f_has & (e2f >= 0.0),
+                                _gap_trend(inst["tfg"], e2f, dt, GAP_TREND_TAU_S), zeros)
+        tlg_trend = torch.where(l_has & (e2l >= 0.0),
+                                _gap_trend(inst["tlg"], e2l, dt, GAP_TREND_TAU_S), zeros)
+        nbh, nah = inst["nb_has"], inst["na_has"]
+        dv_nb = v - inst["nb_speed"]
+        a_max = torch.full_like(a, float(physics.accel_max_mps2))
+        tta_cur = torch.where(nbh, _time_to_align(inst["nb_aim_d"], dv_nb, a,
+                                                  ALIGN_HORIZON_S), zeros)
+        tta_max = torch.where(nbh, _time_to_align(inst["nb_aim_d"], dv_nb, a_max,
+                                                  ALIGN_HORIZON_S), zeros)
+        tle = ((physics.merge_zone_s1_m - s).clamp(0.0, 500.0) / v.clamp_min(1.0)
+               ).clamp(0.0, LANE_END_HORIZON_S)
+        cols.extend([
+            tfa, tfa_ema, tfg_rate, tfg_trend, tlg_rate, tlg_trend,
+            inst["nb_gap"], inst["nb_v"], inst["nb_a"], one(nbh),
+            inst["na_gap"], inst["na_v"], inst["na_a"], one(nah),
+            tta_cur, tta_max, tle,
+        ])
     feats = torch.stack(cols, -1)
     feats = torch.nan_to_num(feats, nan=0.0, posinf=0.0, neginf=0.0)
     return torch.where(inst["present"].unsqueeze(-1), feats, torch.zeros_like(feats))
 
 
 def step_features(acc_prev: Tensor, kin: Tensor, present: Tensor, physics: PhysicsConfig,
-                  lane_age: Optional[Tensor]) -> tuple[Tensor, Tensor, dict]:
+                  lane_age: Optional[Tensor], extra: bool = False) -> tuple[Tensor, Tensor, dict]:
     """Rollout step: ``(raw features [B,K,F], updated accumulators, instantaneous dict)``."""
     with torch.no_grad():
         inst = instant_features(kin.detach(), present, physics,
-                                None if lane_age is None else lane_age.detach())
-        acc = update_acc(acc_prev, inst, physics)
-        return assemble_features(inst, acc, physics), acc, inst
+                                None if lane_age is None else lane_age.detach(), extra=extra)
+        acc = update_acc(acc_prev, inst, physics, extra=extra)
+        return assemble_features(inst, acc, physics, extra=extra), acc, inst
 
 
 def sequence_features(states: Tensor, present: Tensor, physics: PhysicsConfig,
                       lane_age: Tensor, acc0: Tensor, *, return_instant: bool = False,
-                      impatience: Optional[Tensor] = None):
+                      impatience: Optional[Tensor] = None, extra: bool = False):
     """Teacher-forced: raw features ``[B, T, K, F]`` and accumulators ``[B, T, K, ACC_F]`` on
     recorded states ``[B, T, K, 7]`` (accumulators run causally from ``acc0``)."""
     b, t, k = states.shape[:3]
@@ -465,16 +684,18 @@ def sequence_features(states: Tensor, present: Tensor, physics: PhysicsConfig,
                                         present.reshape(b * t, k).bool(), physics,
                                         lane_age.reshape(b * t, k),
                                         None if impatience is None
-                                        else impatience.reshape(b * t, k))
+                                        else impatience.reshape(b * t, k), extra)
         inst = {key: value.reshape(b, t, *value.shape[1:]) for key, value in inst.items()}
         accs = []
         acc = acc0
         for i in range(t):
-            acc = update_acc(acc, {key: value[:, i] for key, value in inst.items()}, physics)
+            acc = update_acc(acc, {key: value[:, i] for key, value in inst.items()}, physics,
+                             extra=extra)
             accs.append(acc)
         acc_seq = torch.stack(accs, 1)
         flat_inst = {key: value.reshape(b * t, *value.shape[2:]) for key, value in inst.items()}
-        feats = assemble_features(flat_inst, acc_seq.reshape(b * t, k, -1), physics)
+        feats = assemble_features(flat_inst, acc_seq.reshape(b * t, k, -1), physics,
+                                  extra=extra)
         if return_instant:
             return feats.reshape(b, t, k, -1), acc_seq, inst
         return feats.reshape(b, t, k, -1), acc_seq
@@ -482,31 +703,49 @@ def sequence_features(states: Tensor, present: Tensor, physics: PhysicsConfig,
 
 # --------------------------------------------------------------------- network
 class LaneV5Net(nn.Module):
-    """Shared trunk over the scaled situation features + one head per road transition."""
+    """Shared trunk over the scaled situation features + one head per road transition.
 
-    def __init__(self, hidden: int = 64, cap: float = 10.0) -> None:
+    ``extra_features`` (R5INPUTS, ``model.lane_v5_extra_features``, default OFF) widens the
+    input layer by :data:`EXTRA_FEATURE_NAMES`; the pre-existing features / keys are
+    unchanged, and an old checkpoint is expanded with ZERO new columns in
+    :func:`wms.model.checkpoint.load_checkpoint` (exact identity at init).
+    """
+
+    def __init__(self, hidden: int = 64, cap: float = 10.0,
+                 extra_features: bool = False) -> None:
         super().__init__()
         self.cap = float(cap)
+        self.extra_features = bool(extra_features)
+        n_in = self.n_features
         #: Trunk dropout (plain attribute, never saved; 0 = off). Only the offline pre-fit
         #: (tools/lanev5_pretrain.py --dropout) sets it, and resets it before saving.
         self.dropout = 0.0
-        self.trunk = nn.Sequential(nn.Linear(N_FEATURES, hidden), nn.GELU(),
+        self.trunk = nn.Sequential(nn.Linear(n_in, hidden), nn.GELU(),
                                    nn.Linear(hidden, hidden), nn.GELU())
         self.heads = nn.Linear(hidden, len(TRANSITIONS))
         nn.init.zeros_(self.heads.weight)
         with torch.no_grad():
             self.heads.bias.copy_(torch.tensor(HEAD_BIAS_INIT))
-        self.register_buffer("feature_mu", torch.zeros(N_FEATURES))
-        self.register_buffer("feature_sd", torch.ones(N_FEATURES))
+        self.register_buffer("feature_mu", torch.zeros(n_in))
+        self.register_buffer("feature_sd", torch.ones(n_in))
         self.register_buffer("head_ap", torch.full((len(TRANSITIONS),), UNKNOWN_AP))
+
+    @property
+    def n_features(self) -> int:
+        """Input width of this network (base only, or base + extra columns)."""
+        return N_FEATURES_EXTRA if self.extra_features else N_FEATURES
+
+    def feature_names(self) -> tuple[str, ...]:
+        """Feature names in network-input order (``FEATURE_NAMES`` + extra when enabled)."""
+        return FEATURE_NAMES_EXTRA if self.extra_features else FEATURE_NAMES
 
     def scale(self, raw: Tensor) -> Tensor:
         return (slog(raw) - self.feature_mu) / self.feature_sd.clamp_min(1.0e-6)
 
     def forward(self, raw: Tensor) -> Tensor:
         """Head logits ``[..., 3]`` (overtake, return, merge) from raw features ``[..., F]``."""
-        if raw.shape[-1] != N_FEATURES:
-            raise ValueError(f"lane v5 features must end in {N_FEATURES}")
+        if raw.shape[-1] != self.n_features:
+            raise ValueError(f"lane v5 features must end in {self.n_features}")
         x = self.scale(raw.to(self.feature_mu.dtype))
         p = float(getattr(self, "dropout", 0.0))
         if p > 0.0 and self.training:
@@ -761,7 +1000,8 @@ def sample_mask(lane: Tensor, learned: Tensor, open_heads: Sequence[bool]) -> Te
 # --------------------------------------------------------------------- teacher-forced rows
 def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: PhysicsConfig,
                   lane_base_fn: Optional[Callable[[Tensor, Tensor], Tensor]], lane_age: Tensor,
-                  acc0: Tensor, merge_wait0: Optional[Tensor] = None) -> dict[str, Tensor]:
+                  acc0: Tensor, merge_wait0: Optional[Tensor] = None,
+                  extra: bool = False) -> dict[str, Tensor]:
     """Teacher-forced rows of every recorded step of the windows.
 
     ``states [B, T+1, K, 7]`` / ``valid [B, T+1, K]`` (on-road, supervised) / ``is_cav``;
@@ -787,7 +1027,8 @@ def recorded_rows(states: Tensor, valid: Tensor, is_cav: Tensor, physics: Physic
         impatience = merge_impatience_level(
             recorded_merge_wait(states[:, :t], present, physics, merge_wait0), physics)
     feats, _, inst = sequence_features(states[:, :t], present, physics, lane_age, acc0,
-                                       return_instant=True, impatience=impatience)
+                                       return_instant=True, impatience=impatience,
+                                       extra=extra)
     with torch.no_grad():
         prev, nxt = lanes[:, :t], lanes[:, 1:]
         hdv = present & ~is_cav[:, :t].bool()
@@ -864,7 +1105,7 @@ PRETRAIN_FORMAT = "lanev5_pretrain/1"
 
 def save_pretrain(net: LaneV5Net, path, meta: dict) -> None:
     """Write a pre-fit file: the lane network's state dict (incl. scaling + head AP) + meta."""
-    torch.save({"format": PRETRAIN_FORMAT, "feature_names": list(FEATURE_NAMES),
+    torch.save({"format": PRETRAIN_FORMAT, "feature_names": list(net.feature_names()),
                 "hidden": int(net.heads.in_features), "cap": float(net.cap),
                 "state_dict": {k: v.detach().cpu() for k, v in net.state_dict().items()},
                 "meta": dict(meta)}, path)
@@ -879,10 +1120,16 @@ def load_pretrain(net: LaneV5Net, path) -> dict:
     payload = torch.load(p, map_location="cpu", weights_only=True)
     if not isinstance(payload, dict) or payload.get("format") != PRETRAIN_FORMAT:
         raise ValueError(f"{p} is not a {PRETRAIN_FORMAT} file")
-    if list(payload.get("feature_names", [])) != list(FEATURE_NAMES):
-        raise ValueError(f"{p}: lane v5 feature set differs from this code")
+    names = list(payload.get("feature_names", []))
+    state = payload["state_dict"]
+    if names != list(net.feature_names()):
+        if net.extra_features and names == list(FEATURE_NAMES):
+            # R5INPUTS: a pre-switch pre-fit loads with ZERO new columns (exact identity).
+            state = expand_input_state(state, N_FEATURES, N_FEATURES_EXTRA)
+        else:
+            raise ValueError(f"{p}: lane v5 feature set differs from this code")
     device = net.feature_mu.device
-    net.load_state_dict({k: v.to(device) for k, v in payload["state_dict"].items()}, strict=True)
+    net.load_state_dict({k: v.to(device) for k, v in state.items()}, strict=True)
     return {"path": str(p), "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
             "head_ap": [float(x) for x in net.head_ap.tolist()],
             "meta": {k: payload.get("meta", {}).get(k) for k in ("rows", "windows", "epochs")}}

@@ -206,7 +206,8 @@ class LaneEventLoss(UnrollTerm):
         lanes = states[..., 1:4].argmax(-1)
         age = recorded_lane_age(lanes, valid, prep["lane_age0"].to(states.dtype), n_all)
         rows = lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
-                                 age, prep["lane_v5_acc0"], prep.get("merge_wait0"))
+                                 age, prep["lane_v5_acc0"], prep.get("merge_wait0"),
+                                 extra=bool(getattr(model.lane_v5, "extra_features", False)))
         logits = model.lane_v5(rows["features"]).gather(
             -1, rows["head"].unsqueeze(-1)).squeeze(-1)
         offsets = tuple(getattr(model, "lane_logit_offsets", (0.0, 0.0, 0.0)))
@@ -247,4 +248,5 @@ def lane_v5_batch_rows(model: Any, batch: Mapping[str, Any], settings: Any,
                                           inp.observed_hist_mask)
                  if getattr(model, "_tracks_merge_wait", False) else None)
         return lv5.recorded_rows(states, valid, is_cav, model.physics, model.lane_v5_mask_fn(),
-                                 age, acc0, wait0)
+                                 age, acc0, wait0,
+                                 extra=bool(getattr(model.lane_v5, "extra_features", False)))
