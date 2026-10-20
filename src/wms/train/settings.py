@@ -300,6 +300,13 @@ class TrainSettings:
     # position/speed event boost for lane-1 followers near a merging ramp car.
     courtesy_inputs: bool = False
     courtesy_weight: float = 1.0
+    # V10NEGOT (default OFF): learned merge-negotiation block, censored merge-survival loss
+    # and the ramp-only merge teacher-forcing schedule.
+    merge_negotiation: bool = False
+    merge_survival_weight: float = 0.0
+    merge_survival_negative_weight: float = 0.0
+    merge_survival_metrics: bool = False
+    merge_teacher_frac_schedule: tuple[float, ...] = ()
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -543,6 +550,17 @@ class TrainSettings:
         _require(math.isfinite(float(self.courtesy_weight))
                  and float(self.courtesy_weight) >= 1.0,
                  "courtesy_weight must be finite and >= 1 (1 = off)")
+        _require(isinstance(self.merge_negotiation, bool)
+                 and isinstance(self.merge_survival_metrics, bool),
+                 "merge_negotiation / merge_survival_metrics must be booleans")
+        _require(math.isfinite(float(self.merge_survival_weight))
+                 and float(self.merge_survival_weight) >= 0.0
+                 and math.isfinite(float(self.merge_survival_negative_weight))
+                 and float(self.merge_survival_negative_weight) >= 0.0,
+                 "merge_survival weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and 0.0 <= float(x) <= 1.0
+                     for x in self.merge_teacher_frac_schedule),
+                 "merge_teacher_frac_schedule values must be in [0, 1]")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
@@ -591,7 +609,8 @@ class TrainSettings:
                 values[key] = tuple(float(x) for x in values[key])
         if values.get("merge_loss_speed_cells") is not None:
             values["merge_loss_speed_cells"] = tuple(int(x) for x in values["merge_loss_speed_cells"])
-        for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap"):
+        for key in ("lane_logit_offsets", "lane_v5_gates", "lane_v5_head_ap",
+                    "merge_teacher_frac_schedule"):
             if values.get(key) is not None:
                 values[key] = tuple(float(x) for x in values[key])
         return cls(**values)
@@ -625,8 +644,15 @@ class TrainSettings:
 
     @property
     def merge_timing_on(self) -> bool:
-        """V8WM merge-timing term built (loss weight > 0 or metrics-only)."""
-        return float(self.merge_timing_weight) > 0.0 or bool(self.merge_timing_metrics)
+        """V8WM/V10NEGOT merge-timing / survival term built (weight or metrics)."""
+        return (float(self.merge_timing_weight) > 0.0 or float(self.merge_survival_weight) > 0.0
+                or bool(self.merge_timing_metrics) or bool(self.merge_survival_metrics))
+
+    @property
+    def merge_negotiation_on(self) -> bool:
+        """V10NEGOT negotiation auxiliary (matched non-yield negatives) built."""
+        return (bool(self.merge_negotiation)
+                and float(self.merge_survival_negative_weight) > 0.0)
 
     @property
     def long_horizon_on(self) -> bool:

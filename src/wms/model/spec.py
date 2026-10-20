@@ -93,6 +93,8 @@ class ModelSpec:
     # V10COURTESY (default OFF): ramp-car distance-to-end / speed / waiting time and
     # the merge head's current probability as extra residual inputs.
     courtesy_inputs: bool = False
+    # V10NEGOT (default OFF): learned ramp/follower merge negotiation block (zero-init).
+    merge_negotiation: bool = False
 
     def __post_init__(self) -> None:
         if self.driver_param_mode not in ("legacy", "physical"):
@@ -151,6 +153,10 @@ class ModelSpec:
             raise ValueError(f"lane_decision must be one of {LANE_DECISIONS}")
         if not isinstance(self.courtesy_inputs, bool):
             raise ValueError("courtesy_inputs must be a boolean")
+        if not isinstance(self.merge_negotiation, bool):
+            raise ValueError("merge_negotiation must be a boolean")
+        if self.merge_negotiation and self.lane_model != "hazard_v5":
+            raise ValueError("merge_negotiation needs lane_model='hazard_v5'")
         if self.lane_hazard_features not in LANE_HAZARD_FEATURES:
             raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
         if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:

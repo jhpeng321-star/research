@@ -244,6 +244,11 @@ class ModelConfig:
     time and the merge head's current probability to the residual inputs.  Default
     OFF: the residual sees kinematics only and old checkpoints load unchanged.  The
     new adapters are zero-initialised, so enabling it is an exact no-op until trained."""
+    merge_negotiation: bool = False
+    """V10NEGOT (default OFF): learned ramp-car / lane-1-follower merge-negotiation block
+    (zero-initialised).  The follower gets a learned yield acceleration and the ramp car a
+    merge-logit correction; trained through the rollout, merge-survival and matched
+    non-yield negative losses.  Needs ``model.lane_model='hazard_v5'``."""
 
     def __post_init__(self) -> None:
         require(self.driver_param_mode in ("legacy", "physical"),
@@ -290,6 +295,11 @@ class ModelConfig:
                 "model.grad_decay_per_step must be in (0, 1]")
         require(isinstance(self.courtesy_inputs, bool),
                 "model.courtesy_inputs must be a boolean")
+        require(isinstance(self.merge_negotiation, bool),
+                "model.merge_negotiation must be a boolean")
+        if self.merge_negotiation:
+            require(self.lane_model == "hazard_v5",
+                    "model.merge_negotiation requires model.lane_model='hazard_v5'")
         if self.lane_head == "history":
             require(self.rollout_mode in ("driver_params", "hybrid"),
                     "model.lane_head='history' requires rollout_mode driver_params or hybrid")
@@ -637,6 +647,34 @@ class MergeTimingConfig:
 
 
 @config_dataclass
+class MergeSurvivalConfig:
+    """V10NEGOT merge-survival loss (correctly censored discrete-time hazard).
+
+    ``weight`` (0 = off): builds the per-vehicle merge-timing survival term with this weight
+    (the recorded merge time is the event, a ramp car still in lane 2 at the end of the
+    window / record is right-censored).  When the merge-negotiation block is enabled the same
+    term trains its merge-logit correction; ``negative_weight`` additionally scores the
+    matched non-yield negatives (a ramp car that stayed while its lane-1 follower did not
+    decelerate).  ``metrics`` computes the stuck / merge-time validation metrics without the
+    loss.
+    """
+
+    weight: float = 0.0
+    negative_weight: float = 0.0
+    metrics: bool = False
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.merge_survival.weight must be finite and non-negative")
+        require(is_finite(self.negative_weight) and self.negative_weight >= 0.0,
+                "loss.merge_survival.negative_weight must be finite and non-negative")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or self.negative_weight > 0.0 or bool(self.metrics)
+
+
+@config_dataclass
 class LaneFlowConfig:
     """V8LANE on-policy mainline lane-flow loss (``wms.train.losses.lane_flow``; 0 = off).
 
@@ -775,6 +813,7 @@ class LossConfig:
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
     merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
+    merge_survival: MergeSurvivalConfig = field(default_factory=MergeSurvivalConfig)
     lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
     courtesy_weight: float = 1.0
     """V10COURTESY: per-step loss multiplier for lane-1 followers within 40 m behind a
@@ -812,6 +851,10 @@ class CurriculumConfig:
     stage_steps: Optional[tuple[int, ...]] = None
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
+    merge_teacher_frac_schedule: tuple[float, ...] = ()
+    """V10NEGOT (default empty = off): per-curriculum-stage fraction of each window in which
+    ramp cars follow the recorded lane (merge-decision teacher forcing).  The fraction decays
+    linearly to 0 across each stage; the last value repeats for later stages."""
     driver_grad_across_chunks: bool = False
     epochs_per_stage: int = 1
     steps_per_epoch: int = 2000
@@ -893,6 +936,9 @@ class CurriculumConfig:
                     "truncation per curriculum stage")
         require(self.max_hours is None or (is_finite(self.max_hours) and self.max_hours > 0),
                 "curriculum.max_hours must be finite and positive when set")
+        require(all(is_finite(x) and 0.0 <= x <= 1.0
+                    for x in self.merge_teacher_frac_schedule),
+                "curriculum.merge_teacher_frac_schedule values must be in [0, 1]")
 
 
 @config_dataclass
@@ -1070,8 +1116,11 @@ class TrainConfig:
             terms.extend(name for name, w in (("merge_speed", merge.speed_weight),
                                               ("merge_discharge", merge.discharge_weight))
                          if w > 0.0)
-        if self.loss.merge_timing.weight > 0.0:
+        if self.loss.merge_timing.weight > 0.0 or self.loss.merge_survival.weight > 0.0:
             terms.append("merge_timing")
+        if (self.loss.merge_survival.negative_weight > 0.0
+                and self.model.merge_negotiation):
+            terms.append("merge_negotiation")
         if self.loss.lane_flow.weight > 0.0:
             terms.append("lane_flow")
         return tuple(terms)

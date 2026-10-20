@@ -238,13 +238,23 @@ class WmSTrainer:
         stream is untouched.  Argmax models take the unchanged path.
         """
         if not getattr(self.model, "_samples_lanes", False):
-            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
-                                  require_full_horizon=require_full_horizon)
+            teacher = getattr(self.model, "merge_teacher_frac", 0.0)
+            self.model.merge_teacher_frac = 0.0
+            try:
+                return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                      require_full_horizon=require_full_horizon)
+            finally:
+                self.model.merge_teacher_frac = teacher
         devices = [self.device.index or 0] if self.device.type == "cuda" else []
-        with torch.random.fork_rng(devices=devices):
-            torch.manual_seed(int(self.settings.seed) + 7919)
-            return self._evaluate(val_dataset, unroll_steps=unroll_steps,
-                                  require_full_horizon=require_full_horizon)
+        teacher = getattr(self.model, "merge_teacher_frac", 0.0)
+        self.model.merge_teacher_frac = 0.0
+        try:
+            with torch.random.fork_rng(devices=devices):
+                torch.manual_seed(int(self.settings.seed) + 7919)
+                return self._evaluate(val_dataset, unroll_steps=unroll_steps,
+                                      require_full_horizon=require_full_horizon)
+        finally:
+            self.model.merge_teacher_frac = teacher
 
     def _evaluate(self, val_dataset: Dataset, *, unroll_steps: int,
                   require_full_horizon: bool = False) -> dict:
@@ -347,6 +357,15 @@ class WmSTrainer:
 
     def _save(self, path: Path, **extra) -> None:
         save_checkpoint(path, self.model, self.cfg, extra=extra)
+
+    def _merge_teacher_fraction(self, stage_i: int, done: int, steps: int) -> float:
+        """V10NEGOT: per-stage ramp-only merge teacher fraction, decaying over the stage."""
+        schedule = tuple(float(x) for x in getattr(
+            self.settings, "merge_teacher_frac_schedule", ()))
+        if not schedule:
+            return 0.0
+        base = schedule[min(int(stage_i), len(schedule) - 1)]
+        return max(0.0, base * (1.0 - float(done) / max(int(steps), 1)))
 
     def fit(self) -> TrainResult:
         """Run every curriculum stage and write checkpoints, logs and the TRAIN receipt."""
@@ -553,6 +572,8 @@ class WmSTrainer:
                     # aggregate ramp/normalisers are computed over the unrolled steps.
                     unroll_steps = (plan.unroll_steps if short_s is None
                                     else max(1, min(plan.unroll_steps, round(short_s / dt_s))))
+                    self.model.merge_teacher_frac = self._merge_teacher_fraction(
+                        stage_i, done, plan.steps)
                     record = self.train_batch(batch, unroll_steps=unroll_steps,
                                               truncation_steps=plan.truncation_steps
                                               or None)

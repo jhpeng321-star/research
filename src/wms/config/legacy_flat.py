@@ -240,6 +240,12 @@ FLAT_TO_PATH: dict[str, str] = {
     # V10COURTESY (learned courtesy inputs + event weight boost)
     "courtesy_inputs": "model.courtesy_inputs",
     "courtesy_weight": "loss.courtesy_weight",
+    # V10NEGOT (merge-negotiation block, censored merge-survival loss, merge teacher schedule)
+    "merge_negotiation": "model.merge_negotiation",
+    "merge_survival_weight": "loss.merge_survival.weight",
+    "merge_survival_negative_weight": "loss.merge_survival.negative_weight",
+    "merge_survival_metrics": "loss.merge_survival.metrics",
+    "merge_teacher_frac_schedule": "curriculum.merge_teacher_frac_schedule",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -327,6 +333,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # V8LANE
     "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
     "courtesy_inputs", "courtesy_weight",
+    # V10NEGOT
+    "merge_negotiation", "merge_survival_weight", "merge_survival_negative_weight",
+    "merge_survival_metrics", "merge_teacher_frac_schedule",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON

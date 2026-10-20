@@ -121,9 +121,10 @@ class UnrollRunner:
                  projection: Optional[Any], device: torch.device) -> None:
         self.model, self.settings, self.composer = model, settings, composer
         self.projection, self.device = projection, device
-        if "merge_timing" in composer.names or "lane_flow" in composer.names:
-            # V8WM / V8LANE: the merge-timing and lane-flow terms need the hazard_v5 own-head
-            # logit with gradient.
+        if ("merge_timing" in composer.names or "lane_flow" in composer.names
+                or getattr(model, "merge_negotiation", None) is not None):
+            # V8WM / V8LANE / V10NEGOT: the merge-timing, lane-flow and negotiation terms
+            # need the hazard_v5 own-head logit with gradient.
             model.emit_merge_hazard = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
@@ -252,6 +253,9 @@ class UnrollRunner:
                     driver_history=inp.observed_hist,
                     driver_history_mask=inp.observed_hist_mask,
                     driver_params=chunk_params, driver_embedding=chunk_embedding,
+                    **({} if getattr(model, "merge_teacher_frac", 0.0) <= 0.0 else {
+                        "merge_lane_teacher": inp.states[:, c0:c1 + 1, :, 1:4].argmax(-1),
+                        "merge_teacher_frac": float(model.merge_teacher_frac)}),
                     **observe_kwargs)
                 self._collect_rollout(roll, acc, conservation, inp, c0, c1)
                 if "driver_parameters_updated" in roll:
@@ -628,6 +632,20 @@ class UnrollRunner:
             record["brake_persist_onsets"] = int(persist_prep["count"])
             record["brake_persist_cells"] = int(persist_prep["n_cells"])
             record["brake_persist_window_steps"] = int(persist_prep["window_steps"])
+        # V10COURTESY: expose the actually applied boost so train_log proves it is live.
+        boost = targets.courtesy_boost
+        if boost is not None:
+            hit = boost > 1.0
+            record["courtesy_weight"] = float(cfg.courtesy_weight)
+            record["courtesy_boost_slots"] = int(hit.sum())
+            record["courtesy_boost_frac"] = float(hit.to(torch.float64).mean())
+        if getattr(model, "merge_teacher_frac", 0.0) > 0.0:
+            record["merge_teacher_frac"] = float(model.merge_teacher_frac)
+        neg_prep = targets.prepared.get("merge_negotiation")
+        if neg_prep is not None:
+            record["merge_negotiation_pairs"] = neg_prep["n_valid"]
+            record["merge_negotiation_yield_pos"] = neg_prep["n_pos"]
+            record["merge_negotiation_non_yield_neg"] = neg_prep["n_neg"]
         merge_prep = targets.prepared.get("merge")
         if merge_prep is not None:
             # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.
