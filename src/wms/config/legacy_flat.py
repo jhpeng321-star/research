@@ -281,6 +281,17 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_safety_control_weight": "loss.merge_yield.safety_control_weight",
     "merge_yield_behind_m": "loss.merge_yield.behind_m",
     "merge_yield_dend_m": "loss.merge_yield.dend_m",
+    # R5THR (persistent learned gap-acceptance threshold + integrated first-passage loss)
+    "merge_decision": "model.merge_decision",
+    "merge_first_passage_weight": "loss.merge_first_passage.weight",
+    "merge_first_passage_rank_weight": "loss.merge_first_passage.rank_weight",
+    "merge_first_passage_metrics": "loss.merge_first_passage.metrics",
+    "merge_first_passage_pos_tol_m": "loss.merge_first_passage.pos_tol_m",
+    "merge_first_passage_speed_tol_mps": "loss.merge_first_passage.speed_tol_mps",
+    "merge_first_passage_gap_tol_m": "loss.merge_first_passage.gap_tol_m",
+    "merge_first_passage_gap_speed_tol_mps": "loss.merge_first_passage.gap_speed_tol_mps",
+    "merge_first_passage_location_reg_weight":
+        "loss.merge_first_passage.location_reg_weight",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -383,6 +394,11 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_safety_brake_weight", "merge_conflict_decel_mps2",
     "merge_yield_decel_mps2", "merge_yield_control_weight",
     "merge_safety_control_weight", "merge_yield_behind_m", "merge_yield_dend_m",
+    # R5THR
+    "merge_decision", "merge_first_passage_weight", "merge_first_passage_rank_weight",
+    "merge_first_passage_metrics", "merge_first_passage_pos_tol_m",
+    "merge_first_passage_speed_tol_mps", "merge_first_passage_gap_tol_m",
+    "merge_first_passage_gap_speed_tol_mps", "merge_first_passage_location_reg_weight",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON

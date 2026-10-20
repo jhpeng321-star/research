@@ -260,6 +260,10 @@ class ModelConfig:
     (zero-initialised).  The follower gets a learned yield acceleration and the ramp car a
     merge-logit correction; trained through the rollout, merge-survival and matched
     non-yield negative losses.  Needs ``model.lane_model='hazard_v5'``."""
+    merge_decision: Literal["hazard", "threshold"] = "hazard"
+    """R5THR (default 'hazard' = bit-identical): 'threshold' replaces the per-step Bernoulli
+    merge draw by one persistent learned gap-acceptance threshold per ramp car and a
+    first-passage decision on the merge-head logit.  Needs ``model.lane_model='hazard_v5'``."""
 
     def __post_init__(self) -> None:
         require(self.driver_param_mode in ("legacy", "physical"),
@@ -318,6 +322,11 @@ class ModelConfig:
         if self.merge_negotiation:
             require(self.lane_model == "hazard_v5",
                     "model.merge_negotiation requires model.lane_model='hazard_v5'")
+        require(self.merge_decision in ("hazard", "threshold"),
+                "model.merge_decision must be 'hazard' or 'threshold'")
+        if self.merge_decision != "hazard":
+            require(self.lane_model == "hazard_v5",
+                    "model.merge_decision='threshold' requires model.lane_model='hazard_v5'")
         if self.lane_head == "history":
             require(self.rollout_mode in ("driver_params", "hybrid"),
                     "model.lane_head='history' requires rollout_mode driver_params or hybrid")
@@ -806,6 +815,46 @@ class MergeYieldConfig:
 
 
 @config_dataclass
+class MergeFirstPassageConfig:
+    """R5THR integrated censored first-passage merge loss (``loss.merge_first_passage``).
+
+    ``weight`` (0 = off): on the free-running rollout states, the integrated (threshold
+    integrated out) censored first-passage NLL of the SAME car's recorded merge interval on
+    the absolute clock.  ``rank_weight`` (0 = off): warm-start structured ranking
+    ``softplus(M_{m-1} - z_m)`` on recorded events.  ``metrics`` builds the diagnostics
+    without the loss.  ``pos_tol_m`` / ``speed_tol_mps`` / ``gap_tol_m`` /
+    ``gap_speed_tol_mps`` predeclare the detached model-vs-record compatibility tolerances
+    (censor at the last compatible step).  ``location_reg_weight`` regularises the learned
+    threshold location.  When on it replaces ``loss.merge_timing`` / ``loss.merge_survival``
+    for the merge head (both are not applied).
+    """
+
+    weight: float = 0.0
+    rank_weight: float = 0.0
+    metrics: bool = False
+    pos_tol_m: float = 25.0
+    speed_tol_mps: float = 5.0
+    gap_tol_m: float = 20.0
+    gap_speed_tol_mps: float = 5.0
+    location_reg_weight: float = 1.0e-3
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0.0,
+                "loss.merge_first_passage.weight must be finite and non-negative")
+        require(is_finite(self.rank_weight) and self.rank_weight >= 0.0,
+                "loss.merge_first_passage.rank_weight must be finite and non-negative")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.pos_tol_m, self.speed_tol_mps, self.gap_tol_m, self.gap_speed_tol_mps)),
+            "loss.merge_first_passage tolerances must be finite and positive")
+        require(is_finite(self.location_reg_weight) and self.location_reg_weight >= 0.0,
+                "loss.merge_first_passage.location_reg_weight must be finite and >= 0")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or self.rank_weight > 0.0 or bool(self.metrics)
+
+
+@config_dataclass
 class LaneFlowConfig:
     """V8LANE on-policy mainline lane-flow loss (``wms.train.losses.lane_flow``; 0 = off).
 
@@ -948,6 +997,8 @@ class LossConfig:
     merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
     merge_survival: MergeSurvivalConfig = field(default_factory=MergeSurvivalConfig)
     merge_yield: MergeYieldConfig = field(default_factory=MergeYieldConfig)
+    merge_first_passage: MergeFirstPassageConfig = field(
+        default_factory=MergeFirstPassageConfig)
     lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
     courtesy_weight: float = 1.0
     """V10COURTESY: per-step loss multiplier for lane-1 followers within 40 m behind a
@@ -1272,7 +1323,10 @@ class TrainConfig:
             terms.extend(name for name, w in (("merge_speed", merge.speed_weight),
                                               ("merge_discharge", merge.discharge_weight))
                          if w > 0.0)
-        if self.loss.merge_timing.weight > 0.0 or self.loss.merge_survival.weight > 0.0:
+        if self.loss.merge_first_passage.enabled:
+            # R5THR replaces the merge-timing / survival likelihood for the merge head.
+            terms.append("merge_first_passage")
+        elif self.loss.merge_timing.weight > 0.0 or self.loss.merge_survival.weight > 0.0:
             terms.append("merge_timing")
         if (self.loss.merge_survival.negative_weight > 0.0
                 and self.model.merge_negotiation):
