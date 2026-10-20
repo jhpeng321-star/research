@@ -29,6 +29,7 @@ from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
 from .merge import MergeLossConfig, cap_merge_share, merge_terms
 from .merge_first_passage import MergeFirstPassageConfig, merge_first_passage_terms
+from .merge_frailty import MergeFrailtyConfig, merge_frailty_terms
 from .merge_negotiation import (MergeNegotiationLossConfig, MergeYieldLossConfig,
                                 merge_negotiation_terms, merge_yield_terms)
 from .lane_flow import LaneFlowConfig, lane_flow_terms
@@ -242,7 +243,23 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
                          else tuple(int(c) for c in settings.merge_loss_speed_cells)))))
     merge_cap = (getattr(settings, "merge_loss_max_share", None)
                  if getattr(settings, "merge_loss_on", False) else None)
-    if getattr(settings, "merge_first_passage_on", False):
+    if getattr(settings, "merge_frailty_on", False):
+        # R5FR frailty censored discrete-time survival merge term.  When it is on it
+        # REPLACES the first-passage / merge-timing / survival likelihood for the merge head.
+        chunk.extend(merge_frailty_terms(MergeFrailtyConfig(
+            weight=float(settings.merge_frailty_weight),
+            n_quad=int(settings.merge_frailty_n_quad),
+            metrics=bool(settings.merge_frailty_metrics),
+            pos_tol_m=float(settings.merge_frailty_pos_tol_m),
+            speed_tol_mps=float(settings.merge_frailty_speed_tol_mps),
+            gap_tol_m=float(settings.merge_frailty_gap_tol_m),
+            gap_speed_tol_mps=float(settings.merge_frailty_gap_speed_tol_mps),
+            location_reg_weight=float(settings.merge_frailty_location_reg_weight),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane),
+            zone_s0_m=0.0 if physics is None else float(physics.merge_zone_s0_m),
+            zone_s1_m=75.44 if physics is None else float(physics.merge_zone_s1_m))))
+    elif getattr(settings, "merge_first_passage_on", False):
         # R5THR integrated censored first-passage merge term.  When it is on it REPLACES the
         # merge-timing / survival likelihood for the merge head (both are never applied).
         chunk.extend(merge_first_passage_terms(MergeFirstPassageConfig(

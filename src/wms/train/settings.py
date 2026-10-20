@@ -370,6 +370,16 @@ class TrainSettings:
     merge_first_passage_gap_tol_m: float = 20.0
     merge_first_passage_gap_speed_tol_mps: float = 5.0
     merge_first_passage_location_reg_weight: float = 1.0e-3
+    # R5FR (default OFF / weights 0 = bit-identical): ONE persistent per-driver frailty on
+    # the per-step merge hazard and the censored discrete-time survival merge loss.
+    merge_frailty_weight: float = 0.0
+    merge_frailty_n_quad: int = 8
+    merge_frailty_metrics: bool = False
+    merge_frailty_pos_tol_m: float = 25.0
+    merge_frailty_speed_tol_mps: float = 5.0
+    merge_frailty_gap_tol_m: float = 20.0
+    merge_frailty_gap_speed_tol_mps: float = 5.0
+    merge_frailty_location_reg_weight: float = 1.0e-3
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -655,8 +665,8 @@ class TrainSettings:
             self.merge_gap_weight, self.merge_safety_brake_weight,
             self.merge_yield_control_weight, self.merge_safety_control_weight)),
             "merge_yield gap/brake/control weights must be non-negative")
-        _require(self.merge_decision in ("hazard", "threshold"),
-                 "merge_decision must be 'hazard' or 'threshold'")
+        _require(self.merge_decision in ("hazard", "threshold", "frailty"),
+                 "merge_decision must be 'hazard', 'threshold' or 'frailty'")
         _require(math.isfinite(float(self.merge_first_passage_weight))
                  and float(self.merge_first_passage_weight) >= 0.0
                  and math.isfinite(float(self.merge_first_passage_rank_weight))
@@ -669,6 +679,18 @@ class TrainSettings:
         _require(math.isfinite(float(self.merge_first_passage_location_reg_weight))
                  and float(self.merge_first_passage_location_reg_weight) >= 0.0,
                  "merge_first_passage_location_reg_weight must be finite and >= 0")
+        _require(math.isfinite(float(self.merge_frailty_weight))
+                 and float(self.merge_frailty_weight) >= 0.0,
+                 "merge_frailty_weight must be finite and non-negative")
+        _require(1 <= int(self.merge_frailty_n_quad) <= 64,
+                 "merge_frailty_n_quad must be in [1, 64]")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_frailty_pos_tol_m, self.merge_frailty_speed_tol_mps,
+            self.merge_frailty_gap_tol_m, self.merge_frailty_gap_speed_tol_mps)),
+            "merge_frailty tolerances must be finite and positive")
+        _require(math.isfinite(float(self.merge_frailty_location_reg_weight))
+                 and float(self.merge_frailty_location_reg_weight) >= 0.0,
+                 "merge_frailty_location_reg_weight must be finite and >= 0")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
@@ -836,6 +858,12 @@ class TrainSettings:
         return (float(self.merge_first_passage_weight) > 0.0
                 or float(self.merge_first_passage_rank_weight) > 0.0
                 or bool(self.merge_first_passage_metrics))
+
+    @property
+    def merge_frailty_on(self) -> bool:
+        """R5FR frailty survival merge term built (loss or metrics)."""
+        return (float(self.merge_frailty_weight) > 0.0
+                or bool(self.merge_frailty_metrics))
 
     @property
     def long_horizon_on(self) -> bool:

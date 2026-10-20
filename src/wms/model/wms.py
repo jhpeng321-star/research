@@ -45,6 +45,7 @@ from .lane_head import HistoryLaneHead, lane_context
 from . import lane_v5 as lv5
 from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
+from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from .merge_threshold import MergeThresholdNet, update_threshold_state
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
@@ -328,11 +329,19 @@ class WmSModel(nn.Module):
         # the default checkpoint layout is unchanged (the module comes after every existing one).
         self.merge_decision = getattr(spec, "merge_decision", "hazard")
         self.merge_threshold = None
+        self.merge_frailty = None
         if self.merge_decision == "threshold":
             input_dim = (self.driver_embed_dim
                          if self.rollout_mode in ("driver_params", "hybrid")
                          or self.long_history else 0)
             self.merge_threshold = MergeThresholdNet(input_dim=input_dim)
+        elif self.merge_decision == "frailty":
+            # R5FR: ONE persistent per-driver latent (location + positive scale) on top of
+            # the per-step merge hazard.  Created last for checkpoint-key compatibility.
+            input_dim = (self.driver_embed_dim
+                         if self.rollout_mode in ("driver_params", "hybrid")
+                         or self.long_history else 0)
+            self.merge_frailty = MergeFrailtyNet(input_dim=input_dim)
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -898,6 +907,12 @@ class WmSModel(nn.Module):
             # loss; the rollout decision uses a detached sample).
             result["merge_threshold_location"] = self.merge_threshold(
                 driver_embedding, (b, slots))
+        if self.merge_frailty is not None:
+            # R5FR: per-driver latent location and positive scale [B, K] (with gradient for
+            # the frailty survival loss; the rollout decision uses a detached draw).
+            location, sigma = self.merge_frailty(driver_embedding, (b, slots))
+            result["merge_frailty_location"] = location
+            result["merge_frailty_sigma"] = sigma
         if encoded is not None:
             result.update({"driver_parameters": encoded["values"],
                            "driver_uncertainty": encoded["uncertainty"],
@@ -1087,7 +1102,8 @@ class WmSModel(nn.Module):
                 logits = lv5.restrict_courtesy_logits(logits, inst["lane"], inst["s"], learned,
                                                       self.physics)
         hazard = None
-        if getattr(self, "emit_merge_hazard", False) or self.merge_decision == "threshold":
+        if (getattr(self, "emit_merge_hazard", False)
+                or self.merge_decision in ("threshold", "frailty")):
             # V8WM merge-timing loss / R5THR threshold decision: the own-head logit with
             # gradient on the rollout state.
             if self.lane_hazard_detach and torch.is_grad_enabled():
@@ -1326,6 +1342,10 @@ class WmSModel(nn.Module):
             # threshold decides the first feasible crossing on its own logit.
             next_lane = self._apply_merge_threshold(state, state_kin(state), present, out,
                                                     next_lane)
+        elif self.merge_frailty is not None:
+            # R5FR: per-step Bernoulli opportunity with ONE persistent per-driver latent.
+            next_lane = self._apply_merge_frailty(state, state_kin(state), present, out,
+                                                  next_lane)
 
         direct = (torch.zeros_like(cav)
                   if action_id is None or not self.apply_direct_commands else
@@ -1412,6 +1432,55 @@ class WmSModel(nn.Module):
         out["merge_fp_present"] = carry["prev_present"]
         out["merge_fp_cross"] = carry["cross"]
         # Never let the per-step head's own merge draw through: only the threshold crosses.
+        attempted = (current_lane == lane) & (next_lane.long() == target)
+        next_lane = torch.where(attempted, current_lane, next_lane.long())
+        return torch.where(carry["cross"], torch.full_like(next_lane, target), next_lane)
+
+    def _apply_merge_frailty(self, state: dict, kin: Tensor, present: Tensor,
+                             out: dict, next_lane: Tensor) -> Tensor:
+        """R5FR: per-step Bernoulli merge hazard with ONE persistent per-driver latent.
+
+        Uses the merge head's logit ``z_t`` (with the negotiation correction when active),
+        the envelope-feasible in-zone mask (``lane_v5_acts``) and a latent ``w`` drawn at the
+        car's first ramp appearance from ``Normal(location, sigma)``.  The car merges when a
+        per-step Bernoulli draw with prob ``sigmoid(z_t + w)`` succeeds.  The carried latent
+        and presence are stored in ``out`` for the rollout loop (reset on slot reuse).
+        """
+        lane = int(self.physics.merge_lane)
+        target = int(getattr(self.physics, "merge_target_lane", 1))
+        ramp_lane = (state.get("lane") if state.get("lane") is not None
+                     else kin[..., 1:4].argmax(-1)).long()
+        current_lane = torch.as_tensor(ramp_lane, device=kin.device).long()
+        s = kin[..., 0]
+        end = float(self.physics.merge_zone_s1_m)
+        start = float(getattr(self.physics, "merge_zone_s0_m", 0.0))
+        ramp = present.bool() & (current_lane == lane)
+        in_zone = ramp & (s >= start) & (s <= end)
+        head = out.get("lane_v5_head_logit")
+        acts = out.get("lane_v5_acts")
+        if not torch.is_tensor(head) or not torch.is_tensor(acts):
+            return next_lane
+        z = head.to(kin.dtype)
+        delta = out.get("merge_negotiation_merge_delta")
+        if torch.is_tensor(delta):
+            z = z + delta.to(z.dtype)
+        feasible = in_zone & acts.bool()
+        location = out.get("merge_frailty_location")
+        if not torch.is_tensor(location):
+            location = torch.zeros_like(z)
+        sigma = out.get("merge_frailty_sigma")
+        if not torch.is_tensor(sigma):
+            sigma = torch.ones_like(z)
+        carry = update_frailty_state(
+            z, ramp, feasible, present, location, sigma,
+            w=state.get("merge_frailty_w"), has_w=state.get("merge_frailty_has_w"),
+            prev_present=state.get("merge_frailty_present"))
+        out["merge_frailty_w"] = carry["w"]
+        out["merge_frailty_has_w"] = carry["has_w"]
+        out["merge_frailty_present"] = carry["prev_present"]
+        out["merge_frailty_hazard"] = carry["hazard"]
+        out["merge_frailty_cross"] = carry["cross"]
+        # Never let the per-step head's own merge draw through: only the frailty draw crosses.
         attempted = (current_lane == lane) & (next_lane.long() == target)
         next_lane = torch.where(attempted, current_lane, next_lane.long())
         return torch.where(carry["cross"], torch.full_like(next_lane, target), next_lane)
@@ -1644,6 +1713,9 @@ class WmSModel(nn.Module):
         if self.merge_threshold is not None and current.get("merge_fp_present") is None:
             # R5THR: presence at the rollout start (first-step new-car detection).
             current["merge_fp_present"] = pres0.clone()
+        if self.merge_frailty is not None and current.get("merge_frailty_present") is None:
+            # R5FR: presence at the rollout start (first-step new-car detection).
+            current["merge_frailty_present"] = pres0.clone()
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
                      if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
@@ -1781,6 +1853,12 @@ class WmSModel(nn.Module):
                 current["merge_fp_has_u"] = out["merge_fp_has_u"].detach()
                 current["merge_fp_max"] = out["merge_fp_max"].detach()
                 current["merge_fp_present"] = out["merge_fp_present"].detach()
+            if "merge_frailty_w" in out:
+                # R5FR: ONE latent + presence persist across chunks and slot moves; a reused
+                # slot is reset (redrawn) by the next step's new-car check.
+                current["merge_frailty_w"] = out["merge_frailty_w"].detach()
+                current["merge_frailty_has_w"] = out["merge_frailty_has_w"].detach()
+                current["merge_frailty_present"] = out["merge_frailty_present"].detach()
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)
@@ -1873,6 +1951,16 @@ class WmSModel(nn.Module):
             # R5THR: the first-passage loss integrates the threshold out at this location.
             log.setdefault("merge_threshold_location", []).append(
                 out["merge_threshold_location"])
+        if "merge_frailty_location" in out:
+            # R5FR: the frailty survival loss integrates the latent at this location / scale.
+            log.setdefault("merge_frailty_location", []).append(
+                out["merge_frailty_location"])
+            log.setdefault("merge_frailty_sigma", []).append(
+                out["merge_frailty_sigma"])
+            log.setdefault("merge_frailty_hazard", []).append(
+                out["merge_frailty_hazard"])
+            log.setdefault("merge_frailty_cross", []).append(
+                out["merge_frailty_cross"])
         # Monitoring uses the raw gate * delta_a before any residual/plant bound.
         log["raw_residuals"].append(
             out.get("raw_residual_mps2", torch.zeros_like(out["accel_mps2"])))
@@ -1941,4 +2029,13 @@ class WmSModel(nn.Module):
         if log.get("merge_threshold_location"):
             result["merge_threshold_location"] = torch.stack(
                 log["merge_threshold_location"], 1)
+        if log.get("merge_frailty_location"):
+            result["merge_frailty_location"] = torch.stack(
+                log["merge_frailty_location"], 1)
+            result["merge_frailty_sigma"] = torch.stack(
+                log["merge_frailty_sigma"], 1)
+            result["merge_frailty_hazard"] = torch.stack(
+                log["merge_frailty_hazard"], 1)
+            result["merge_frailty_cross"] = torch.stack(
+                log["merge_frailty_cross"], 1)
         return result

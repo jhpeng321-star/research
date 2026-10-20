@@ -301,6 +301,15 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_first_passage_gap_speed_tol_mps": "loss.merge_first_passage.gap_speed_tol_mps",
     "merge_first_passage_location_reg_weight":
         "loss.merge_first_passage.location_reg_weight",
+    # R5FR (persistent per-driver frailty + censored discrete-time survival loss)
+    "merge_frailty_weight": "loss.merge_frailty.weight",
+    "merge_frailty_n_quad": "loss.merge_frailty.n_quad",
+    "merge_frailty_metrics": "loss.merge_frailty.metrics",
+    "merge_frailty_pos_tol_m": "loss.merge_frailty.pos_tol_m",
+    "merge_frailty_speed_tol_mps": "loss.merge_frailty.speed_tol_mps",
+    "merge_frailty_gap_tol_m": "loss.merge_frailty.gap_tol_m",
+    "merge_frailty_gap_speed_tol_mps": "loss.merge_frailty.gap_speed_tol_mps",
+    "merge_frailty_location_reg_weight": "loss.merge_frailty.location_reg_weight",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -412,6 +421,10 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_first_passage_metrics", "merge_first_passage_pos_tol_m",
     "merge_first_passage_speed_tol_mps", "merge_first_passage_gap_tol_m",
     "merge_first_passage_gap_speed_tol_mps", "merge_first_passage_location_reg_weight",
+    # R5FR
+    "merge_frailty_weight", "merge_frailty_n_quad", "merge_frailty_metrics",
+    "merge_frailty_pos_tol_m", "merge_frailty_speed_tol_mps", "merge_frailty_gap_tol_m",
+    "merge_frailty_gap_speed_tol_mps", "merge_frailty_location_reg_weight",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON

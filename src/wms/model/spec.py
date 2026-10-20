@@ -23,9 +23,9 @@ LANE_DECISIONS = ("argmax", "sample", "gated")
 LANE_V5_MAINLINE = ("default", "sample", "budget", "budget_prop")
 LANE_HAZARD_FEATURES = ("v1", "v2")
 MERGE_HAZARD_ZONES = ("forced_late", "full")
-#: R5THR merge decision: per-step Bernoulli hazard (default) or persistent gap-acceptance
-#: threshold + first passage.
-MERGE_DECISIONS = ("hazard", "threshold")
+#: R5THR/R5FR merge decision: per-step Bernoulli hazard (default), persistent gap-acceptance
+#: threshold + first passage, or per-step hazard with a persistent per-driver latent frailty.
+MERGE_DECISIONS = ("hazard", "threshold", "frailty")
 #: SLOWRES: direct per-step temporal acceleration or a learned low-pass state.
 TEMPORAL_RESIDUAL_MODES = ("direct", "slow")
 
@@ -197,7 +197,7 @@ class ModelSpec:
         if self.merge_decision not in MERGE_DECISIONS:
             raise ValueError(f"merge_decision must be one of {MERGE_DECISIONS}")
         if self.merge_decision != "hazard" and self.lane_model != "hazard_v5":
-            raise ValueError("merge_decision='threshold' needs lane_model='hazard_v5'")
+            raise ValueError("merge_decision='threshold'/'frailty' needs lane_model='hazard_v5'")
         if self.lane_hazard_features not in LANE_HAZARD_FEATURES:
             raise ValueError(f"lane_hazard_features must be one of {LANE_HAZARD_FEATURES}")
         if self.merge_hazard_zone not in MERGE_HAZARD_ZONES:

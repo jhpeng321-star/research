@@ -123,6 +123,7 @@ class UnrollRunner:
         self.projection, self.device = projection, device
         if ("merge_timing" in composer.names or "lane_flow" in composer.names
                 or "merge_first_passage" in composer.names
+                or "merge_frailty" in composer.names
                 or getattr(model, "merge_negotiation", None) is not None):
             # V8WM / V8LANE / V10NEGOT: the merge-timing, lane-flow and negotiation terms
             # need the hazard_v5 own-head logit with gradient.
@@ -691,6 +692,16 @@ class UnrollRunner:
             if "merge_first_passage" in logged:
                 record["merge_fp_value_share"] = (
                     float(logged["merge_first_passage"]) / loss_logged
+                    if loss_logged > 0.0 else 0.0)
+        fr_prep = targets.prepared.get("merge_frailty")
+        if fr_prep is not None:
+            # R5FR frailty survival merge diagnostics and value share.
+            from .losses.merge_frailty import merge_frailty_metrics
+
+            record.update(merge_frailty_metrics(fr_prep))
+            if "merge_frailty" in logged:
+                record["merge_frailty_value_share"] = (
+                    float(logged["merge_frailty"]) / loss_logged
                     if loss_logged > 0.0 else 0.0)
         flow_prep = targets.prepared.get("lane_flow")
         if flow_prep is not None:
