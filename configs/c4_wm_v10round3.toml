@@ -1,0 +1,25 @@
+# V10 round 3 (2026-10-20): continue from round 2 (stage-240 checkpoint, exit fix in training) and add
+# (a) the learned merge negotiation block (zero-init, exact no-op at load) + censored merge-survival loss with
+#     matched non-yield negatives + a decaying ramp-only merge teacher (V10NEGOT, NEGOT.md enable keys);
+# (b) a real 300 s unroll stage so the A5 aggregate delay window [60, 300] s is fully covered (astra blocker 1).
+# pairs300b stays HELD OUT for the paired check.  Learned entrant insertion (V10INSERT) is an inference-side
+# switch evaluated on this checkpoint, not trained here.
+schema_version = 2
+name = "WM-S-C4-V10ROUND3"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_negotiation = true
+
+[loss.merge_survival]
+weight = 1.0
+negative_weight = 0.5
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [40, 60]
+max_hours = 2.5
+merge_teacher_frac_schedule = [0.5, 0.25]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round3"
