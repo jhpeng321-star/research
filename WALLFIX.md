@@ -81,10 +81,14 @@ the teacher path.
 120 s, lane seed 0, 3 workers. Off/on are the same command except for the switch and the
 sidecar.
 
-| variant | blow-ups | HDV ds60 | HDV ds120 | median abs dep. err s | early>2 s / late>2 s |
-|---|---|---|---|---|---|
-| off | 9/72 | 29.0 | 46.0 | 17.0 | 160 / 121 |
-| insert | 9/72 | 29.0 | 46.0 | 16.8 | 160 / 119 |
+| variant | stuck in lane 2 | blow-ups | HDV ds60 | HDV ds120 | median abs dep. err s | early>2 s / late>2 s |
+|---|---|---|---|---|---|---|
+| off | 50 of 368 (4 SUMO-stuck) | 9/72 | 29.0 | 46.0 | 17.0 | 160 / 121 |
+| insert | 50 of 368 (4 SUMO-stuck) | 9/72 | 29.0 | 46.0 | 16.8 | 160 / 119 |
+
+Both variants cover all 72 states with 0 errors. A committed-code spot rerun of state `0`
+(`--limit 1 --every 2`, 1 worker, 14-15 s per variant) reproduces the table exactly:
+off `35.9 / 2220.6`, insert `33.3 / 1807.4`, 0 blow-ups both.
 
 Only the windows with usable member paths changed:
 
@@ -93,7 +97,7 @@ Only the windows with usable member paths changed:
 | 0 | 2/2 missing | 35.9 / 2220.6 | 33.3 / 1807.4 | n -> n |
 | 2 | 2/2 missing | 35.9 / 2220.6 | 33.3 / 1807.4 | n -> n |
 
-The requested blow-up states and the four controls did **not** change, because their
+The requested blow-up states and the control states did **not** change, because their
 worlds' member paths are not available (section 4):
 
 | state | wall | ds60/ds120 off = insert | blow-up |
