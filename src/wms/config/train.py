@@ -737,6 +737,64 @@ class MergeSurvivalConfig:
 
 
 @config_dataclass
+class MergeYieldConfig:
+    """R5YIELD (default OFF): follower-yield, ramp-adaptation and safety supervision.
+
+    All weights default to 0 (the terms are never built, so old checkpoints and
+    receipts are unchanged).  ``yield_huber`` trains the intent-conditioned follower
+    yield against recorded pre-merge follower accelerations (matched non-yield controls
+    kept as regression samples); ``ramp_adapt_huber`` trains the gap-conditioned ramp
+    longitudinal residual and gap evolution; ``safety_bce`` trains the interaction /
+    safety head on recorded post-merge follower responses.
+    """
+
+    yield_huber: float = 0.0
+    ramp_adapt_huber: float = 0.0
+    safety_bce: float = 0.0
+    yield_window_s: float = 5.0
+    gap_window_s: float = 5.0
+    safety_window_s: float = 3.0
+    yield_huber_delta_mps2: float = 0.5
+    gap_huber_delta_m: float = 2.0
+    gap_weight: float = 0.5
+    brake_huber_delta_mps2: float = 1.0
+    safety_brake_weight: float = 0.5
+    conflict_decel_mps2: float = 1.5
+    yield_decel_mps2: float = -0.5
+    control_weight: float = 0.5
+    safety_control_weight: float = 0.25
+    behind_m: float = 40.0
+    dend_m: float = 60.0
+
+    def __post_init__(self) -> None:
+        weights = (self.yield_huber, self.ramp_adapt_huber, self.safety_bce)
+        require(all(is_finite(x) and x >= 0.0 for x in weights),
+                "loss.merge_yield weights must be finite and non-negative")
+        windows = (self.yield_window_s, self.gap_window_s, self.safety_window_s)
+        require(all(is_finite(x) and 0.0 < x <= 15.0 for x in windows),
+                "loss.merge_yield windows must be finite and in (0, 15] seconds")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.yield_huber_delta_mps2, self.gap_huber_delta_m,
+            self.brake_huber_delta_mps2)),
+            "loss.merge_yield Huber deltas must be finite and positive")
+        require(all(is_finite(x) and x >= 0.0 for x in (
+            self.gap_weight, self.safety_brake_weight, self.control_weight,
+            self.safety_control_weight)),
+            "loss.merge_yield weights must be finite and non-negative")
+        require(is_finite(self.conflict_decel_mps2) and self.conflict_decel_mps2 > 0.0,
+                "loss.merge_yield.conflict_decel_mps2 must be positive")
+        require(is_finite(self.yield_decel_mps2) and self.yield_decel_mps2 < 0.0,
+                "loss.merge_yield.yield_decel_mps2 must be negative")
+        require(self.behind_m > 0.0 and self.dend_m > 0.0,
+                "loss.merge_yield matching distances must be positive")
+
+    @property
+    def enabled(self) -> bool:
+        return (self.yield_huber > 0.0 or self.ramp_adapt_huber > 0.0
+                or self.safety_bce > 0.0)
+
+
+@config_dataclass
 class LaneFlowConfig:
     """V8LANE on-policy mainline lane-flow loss (``wms.train.losses.lane_flow``; 0 = off).
 
@@ -878,6 +936,7 @@ class LossConfig:
     merge: MergeLossConfig = field(default_factory=MergeLossConfig)
     merge_timing: MergeTimingConfig = field(default_factory=MergeTimingConfig)
     merge_survival: MergeSurvivalConfig = field(default_factory=MergeSurvivalConfig)
+    merge_yield: MergeYieldConfig = field(default_factory=MergeYieldConfig)
     lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
     courtesy_weight: float = 1.0
     """V10COURTESY: per-step loss multiplier for lane-1 followers within 40 m behind a
@@ -1092,6 +1151,9 @@ class TrainConfig:
         require(not self.loss.lane_hazard_decouple
                 or self.model.lane_model in ("hazard", "hazard_v5"),
                 "loss.lane_hazard_decouple requires model.lane_model='hazard'")
+        if self.loss.merge_yield.enabled:
+            require(self.model.merge_negotiation,
+                    "loss.merge_yield requires model.merge_negotiation=true")
 
     # -- training-time (stricter than construction) ---------------------
     def validate_for_training(self) -> None:
@@ -1193,6 +1255,14 @@ class TrainConfig:
         if (self.loss.merge_survival.negative_weight > 0.0
                 and self.model.merge_negotiation):
             terms.append("merge_negotiation")
+        yield_cfg = self.loss.merge_yield
+        if self.model.merge_negotiation:
+            if yield_cfg.yield_huber > 0.0:
+                terms.append("yield_huber")
+            if yield_cfg.ramp_adapt_huber > 0.0:
+                terms.append("ramp_adapt_huber")
+            if yield_cfg.safety_bce > 0.0:
+                terms.append("safety_bce")
         if self.loss.lane_flow.weight > 0.0:
             terms.append("lane_flow")
         return tuple(terms)

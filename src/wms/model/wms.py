@@ -644,7 +644,7 @@ class WmSModel(nn.Module):
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
         blocked_now = v5_acc = v5_sample = v5_hazard = None
         v5_precomputed = None
-        merge_prob = None
+        merge_prob = merge_logit = None
         if getattr(self, "lane_v5", None) is not None and (
                 bool(self.hdv.courtesy_inputs) or self.merge_negotiation is not None):
             # V10COURTESY / V10NEGOT: the residual / negotiation consumes the merge
@@ -654,16 +654,22 @@ class WmSModel(nn.Module):
                 kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask, merge_wait=state.get("merge_wait_s"))
             with torch.no_grad():
-                p_merge = torch.softmax(v5_precomputed[0].float(), dim=-1)[..., 1]
+                merge_target = int(getattr(self.physics, "merge_target_lane", 1))
+                p_merge = torch.softmax(v5_precomputed[0].float(), dim=-1)[..., merge_target]
                 merge_prob = torch.nan_to_num(p_merge, nan=0.0).to(kin.dtype)
+                # R5YIELD: detached merge-head score (the intent trend is its difference).
+                merge_logit = v5_precomputed[0][..., merge_target].detach().to(kin.dtype)
         negotiation = None
         if self.merge_negotiation is not None:
             pair = pair_features(
                 kin, present, self.physics, merge_prob=merge_prob,
+                merge_logit=merge_logit,
+                prev_merge_logit=state.get("merge_neg_intent_logit"),
                 wait_s=state.get("merge_wait_s"),
                 accel_ema=state.get("merge_neg_accel_ema"))
             negotiation = self.merge_negotiation(
-                pair["features"], follower_index=pair["follower_index"],
+                pair["features"], ext_features=pair["ext_features"],
+                follower_index=pair["follower_index"],
                 valid_pair=pair["valid_pair"], ramp=pair["ramp"])
         courtesy = None
         if bool(self.hdv.courtesy_inputs):
@@ -694,16 +700,21 @@ class WmSModel(nn.Module):
             accel = torch.where(learned, physics + correction + accel_noise.to(sigma.dtype) * sigma,
                                 physics)
         ema = None
+        intent_logit = None
         if negotiation is not None:
             # (a) learned yield: the ramp car's paired lane-1 follower decelerates.
             yield_delta = scatter_follower_accel(
                 negotiation["yield_accel"], negotiation["follower_index"],
                 negotiation["valid_pair"], slots) * learned.to(kin.dtype)
             accel = accel + yield_delta
+            # (b) gap-conditioned ramp speed adaptation (IDM core + small learned residual).
+            accel = accel + negotiation["ramp_accel_delta"] * learned.to(kin.dtype)
             # Follower-acceleration history carried across steps (detached: a discrete EMA).
             prev = state.get("merge_neg_accel_ema")
             prev = (torch.zeros_like(kin[..., 5]) if prev is None else prev.detach().float())
             ema = 0.7 * prev + 0.3 * kin[..., 5].detach().float()
+            intent_logit = (torch.zeros_like(kin[..., 5]) if merge_logit is None
+                            else merge_logit.detach().float())
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -770,10 +781,16 @@ class WmSModel(nn.Module):
             result["lane_v5_head_logit"], result["lane_v5_acts"] = v5_hazard
         if negotiation is not None:
             result["merge_negotiation_yield_logit"] = negotiation["yield_logit"]
+            result["merge_negotiation_yield_accel"] = negotiation["yield_accel"]
+            result["merge_negotiation_ramp_delta"] = negotiation["ramp_accel_delta"]
+            result["merge_negotiation_required_brake"] = negotiation["required_brake"]
+            result["merge_negotiation_conflict_logit"] = negotiation["conflict_logit"]
+            result["merge_negotiation_conflict_prob"] = negotiation["conflict_prob"]
             result["merge_negotiation_merge_delta"] = negotiation["merge_logit_delta"]
             result["merge_negotiation_follower"] = negotiation["follower_index"]
             result["merge_negotiation_valid"] = negotiation["valid_pair"]
             result["merge_neg_accel_ema"] = ema
+            result["merge_neg_intent_logit"] = intent_logit
         if self._samples_lanes:
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
             if v5_sample is not None:
@@ -1553,6 +1570,8 @@ class WmSModel(nn.Module):
                 current["lane_v5_acc"] = lane_v5_acc
             if "merge_neg_accel_ema" in out:
                 current["merge_neg_accel_ema"] = out["merge_neg_accel_ema"].detach()
+            if "merge_neg_intent_logit" in out:
+                current["merge_neg_intent_logit"] = out["merge_neg_intent_logit"].detach()
             if "lane_v5_budget" in out:
                 current["lane_v5_budget"] = out["lane_v5_budget"]
             current.pop("veh_kin", None)
@@ -1661,6 +1680,11 @@ class WmSModel(nn.Module):
         log["change_probabilities"].append(1.0 - stay)
         if self.lane_change_head is not None:
             log["lane_probabilities"].append(out["lane_probabilities"])
+        for key in ("merge_negotiation_yield_accel", "merge_negotiation_ramp_delta",
+                    "merge_negotiation_required_brake", "merge_negotiation_conflict_logit",
+                    "merge_negotiation_conflict_prob"):
+            if key in out:
+                log.setdefault(key, []).append(out[key])
 
     def _rollout_result(self, log: dict, current: dict, history: Tensor,
                         history_mask: Tensor, entrant: Tensor, pres0: Tensor, kin0: Tensor,
@@ -1685,6 +1709,11 @@ class WmSModel(nn.Module):
                   "lane_logits": torch.stack(log["lane_logits"], 1),
                   "entrant": entrant, "entrant_seq": entrant_seq, "sections": sections,
                   "state": current, "history": history, "history_mask": history_mask}
+        for key in ("merge_negotiation_yield_accel", "merge_negotiation_ramp_delta",
+                    "merge_negotiation_required_brake", "merge_negotiation_conflict_logit",
+                    "merge_negotiation_conflict_prob"):
+            if log.get(key):
+                result[key] = torch.stack(log[key], 1)
         if projection is not None:
             result["projection_stats"] = projection_totals
         if encoded_parameters is not None:

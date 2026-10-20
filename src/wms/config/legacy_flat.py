@@ -259,6 +259,24 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_survival_negative_weight": "loss.merge_survival.negative_weight",
     "merge_survival_metrics": "loss.merge_survival.metrics",
     "merge_teacher_frac_schedule": "curriculum.merge_teacher_frac_schedule",
+    # R5YIELD (follower-yield Huber, ramp speed adaptation, interaction/safety head)
+    "merge_yield_huber": "loss.merge_yield.yield_huber",
+    "merge_ramp_adapt_huber": "loss.merge_yield.ramp_adapt_huber",
+    "merge_safety_bce": "loss.merge_yield.safety_bce",
+    "merge_yield_window_s": "loss.merge_yield.yield_window_s",
+    "merge_gap_window_s": "loss.merge_yield.gap_window_s",
+    "merge_safety_window_s": "loss.merge_yield.safety_window_s",
+    "merge_yield_huber_delta_mps2": "loss.merge_yield.yield_huber_delta_mps2",
+    "merge_gap_huber_delta_m": "loss.merge_yield.gap_huber_delta_m",
+    "merge_gap_weight": "loss.merge_yield.gap_weight",
+    "merge_brake_huber_delta_mps2": "loss.merge_yield.brake_huber_delta_mps2",
+    "merge_safety_brake_weight": "loss.merge_yield.safety_brake_weight",
+    "merge_conflict_decel_mps2": "loss.merge_yield.conflict_decel_mps2",
+    "merge_yield_decel_mps2": "loss.merge_yield.yield_decel_mps2",
+    "merge_yield_control_weight": "loss.merge_yield.control_weight",
+    "merge_safety_control_weight": "loss.merge_yield.safety_control_weight",
+    "merge_yield_behind_m": "loss.merge_yield.behind_m",
+    "merge_yield_dend_m": "loss.merge_yield.dend_m",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -353,6 +371,14 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # V10NEGOT
     "merge_negotiation", "merge_survival_weight", "merge_survival_negative_weight",
     "merge_survival_metrics", "merge_teacher_frac_schedule",
+    # R5YIELD
+    "merge_yield_huber", "merge_ramp_adapt_huber", "merge_safety_bce",
+    "merge_yield_window_s", "merge_gap_window_s", "merge_safety_window_s",
+    "merge_yield_huber_delta_mps2", "merge_gap_huber_delta_m",
+    "merge_gap_weight", "merge_brake_huber_delta_mps2",
+    "merge_safety_brake_weight", "merge_conflict_decel_mps2",
+    "merge_yield_decel_mps2", "merge_yield_control_weight",
+    "merge_safety_control_weight", "merge_yield_behind_m", "merge_yield_dend_m",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON
