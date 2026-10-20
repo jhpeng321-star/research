@@ -602,7 +602,8 @@ def main(argv=None) -> int:
         raise SystemExit("--workers must be in [1, 3] on the laptop")
     specs = [parse_ckpt(spec) for spec in args.ckpt]
     rows = load_sources(args)
-    if refused_seed(args.seed, args.seed + len(rows) * 1000 + args.k):
+    if any(refused_seed(args.seed + i * 1000 + sample)
+           for i in range(len(rows)) for sample in range(args.k)):
         raise SystemExit("--seed would produce an evaluation seed (964000-964199)")
     tasks = [(f"{source}:{state_key(rec, i)}", source, rec, arm, float(args.horizon),
               int(args.k), int(args.seed), i)

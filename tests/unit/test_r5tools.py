@@ -129,6 +129,11 @@ def test_km_survival_and_quantiles():
     assert summary["events"] == 2 and summary["censored"] == 2
 
 
+def test_evaluation_seed_guard():
+    assert MT.refused_seed(964000) and MT.refused_seed(964199)
+    assert not MT.refused_seed(963999) and not MT.refused_seed(964200)
+
+
 def test_gap_buckets_and_t0_gap_identity():
     assert [MT.gap_bucket(g) for g in (10, 30, 60, float("inf"))] == [
         "tight", "medium", "open", "unknown"]
