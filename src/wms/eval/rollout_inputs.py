@@ -56,6 +56,132 @@ def t0_vehicles(state: Mapping[str, Any]):
     return t0_s, [str(row["id"]) for row in rows], kin, is_cav
 
 
+def wall_member_teacher(state: Mapping[str, Any], t0_s: float, ids: Sequence[str],
+                        n_steps: int) -> list[dict]:
+    """Recorded teacher rows for wall members that are absent from the t0 roster.
+
+    The state can carry ``wall_member_paths`` (a list of ``{"id", "time_s", "s",
+    "lane", "v", "present"}`` rows) produced by a rebuilt wall export.  Members that
+    already have a t0 slot are ignored (the normal CAV teacher covers them) and
+    members with no on-road appearance in the horizon are skipped.  The returned
+    dicts are ``{"id", "teacher"[T+1, 4], "present"[T+1], "junction"[T+1],
+    "first_index"}`` and use the same semantics as :func:`recorded_teacher`.
+    """
+    raw = state.get("wall_member_paths")
+    if not raw:
+        return []
+    t0_ids = {str(vid) for vid in ids}
+    out = []
+    for path in raw:
+        vid = str(path.get("id", ""))
+        if not vid or vid in t0_ids:
+            continue
+        times = np.asarray(path.get("time_s", []), dtype=float)
+        if times.size == 0:
+            continue
+        s = np.asarray(path.get("s", 0.0), dtype=float)
+        lane = np.asarray(path.get("lane", -1), dtype=int)
+        v = np.asarray(path.get("v", 0.0), dtype=float)
+        present = np.asarray(path.get("present", np.ones_like(times, bool)), dtype=bool)
+        if not (times.shape == s.shape == lane.shape == v.shape == present.shape):
+            raise PredictorError(f"wall member {vid!r} path arrays have different lengths")
+        index = np.rint((times - float(t0_s)) / DT_S).astype(int)
+        keep = (index >= 0) & (index <= int(n_steps))
+        rows = {int(i): (bool(present[j]), int(lane[j]), float(s[j]), float(v[j]))
+                for j, i in enumerate(index) if keep[j]}
+        if not rows:
+            continue
+        first = next((i for i in sorted(rows)
+                      if rows[i][0] and rows[i][1] >= 0), None)
+        if first is None:
+            continue
+        # Carry the last on-road state through a junction transit and stop at a real
+        # recorded exit, exactly like recorded_teacher.
+        first_row = next((rows[i] for i in sorted(rows) if rows[i][0] and rows[i][1] >= 0),
+                         (True, int(lane[0]), float(s[0]), float(v[0])))
+        prev = (first_row[2], first_row[1], first_row[3])
+        teacher = np.zeros((int(n_steps) + 1, 4), dtype=np.float32)
+        pres = np.zeros(int(n_steps) + 1, dtype=bool)
+        junc = np.zeros(int(n_steps) + 1, dtype=bool)
+        last_v = prev[2]
+        for i in range(int(n_steps) + 1):
+            row = rows.get(i)
+            if row is None:
+                pres[i] = False
+                teacher[i] = (*prev, 0.0)
+                continue
+            is_present, ln, pos, speed = row
+            if is_present and ln >= 0:
+                prev = (pos, ln, speed)
+                pres[i] = True
+            elif is_present:
+                junc[i] = True
+                pres[i] = True
+            else:
+                pres[i] = False
+            teacher[i] = (*prev, 0.0)
+            if pres[i] and i > 0 and not junc[i]:
+                teacher[i, 3] = (speed - last_v) / DT_S
+                last_v = speed
+        out.append({"id": vid, "teacher": teacher, "present": pres, "junction": junc,
+                    "first_index": int(first)})
+    return out
+
+
+class WallMemberInsert:
+    """Insert teacher-forced wall-member slots at their recorded first appearance.
+
+    The process follows the entry-process interface used by ``WM.rollout``: it is
+    called once before every step and writes a member's recorded state into its
+    reserved slot on the step before that member's first recorded on-road row.
+    """
+
+    def __init__(self, members: Sequence[Mapping[str, Any]], start: int) -> None:
+        self.members = list(members)
+        self.start = int(start)
+        self.step = 0
+        self.done = [False] * len(self.members)
+        self.inserted = 0
+        self.skipped = 0
+
+    def insert(self, state: Mapping[str, Any]):
+        import torch
+
+        present = state["present"]
+        if present.shape[0] != 1:
+            raise PredictorError("wall-member insertion supports batch size 1")
+        mask = torch.zeros_like(present)
+        for i, member in enumerate(self.members):
+            if self.done[i]:
+                continue
+            at = max(int(member["first_index"]) - 1, 0)
+            if self.step < at:
+                continue
+            k = self.start + i
+            if bool(present[0, k].item()):
+                self.skipped += 1
+                self.done[i] = True
+                continue
+            row = member["teacher"][at]
+            with torch.no_grad():
+                state["s_m"][0, k] = float(row[0])
+                state["lane"][0, k] = int(row[1])
+                state["v_mps"][0, k] = float(row[2])
+                state["a_mps2"][0, k] = 0.0
+                state["length_m"][0, k] = DEFAULT_LENGTH_M
+                state["present"][0, k] = True
+                state["is_cav"][0, k] = True
+            mask[0, k] = True
+            self.done[i] = True
+            self.inserted += 1
+        self.step += 1
+        return mask
+
+    def summary(self) -> dict:
+        return {"inserted": self.inserted, "skipped": self.skipped,
+                "pending": sum(not d for d in self.done), "members": len(self.members)}
+
+
 def recorded_teacher(state: Mapping[str, Any], t0_s: float, ids: Sequence[str],
                      kin: np.ndarray, n_steps: int, arm: str, tools: RolloutTools):
     """Recorded-arm teacher ``[1,T+1,N,4]`` (s, lane, v, a), presence and junction ``[1,T+1,N]``.

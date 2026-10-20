@@ -23,8 +23,8 @@ from .entries_input import entry_process_queue, entry_process_v1, entry_process_
 from .errors import PredictorError
 from .history_inputs import HistoryInputs
 from .normalize import DT_S
-from .rollout_inputs import (DEFAULT_LENGTH_M, action_timeline_inputs, recorded_teacher,
-                             t0_vehicles)
+from .rollout_inputs import (DEFAULT_LENGTH_M, WallMemberInsert, action_timeline_inputs,
+                             recorded_teacher, t0_vehicles, wall_member_teacher)
 from wms.physics.batched import road_end_exit_bound
 
 CAV_MODES = ("teacher",)
@@ -45,6 +45,10 @@ class RolloutFlags:
     #: V9ENTRY (default off): entries v2 seeded with the recorded SUMO entrance backlog and demand
     #: (``wms.eval.entry_queue``; sumo_like_v2 insertion, HDV entrants).  Needs entries_v2.
     entry_queue_state: bool = False
+    #: WALLFIX (default off): insert wall members that enter after t0 as exogenous
+    #: teacher-forced CAV slots at their recorded first appearance.  The recorded member
+    #: paths must be present in ``state['wall_member_paths']`` (a rebuilt wall export).
+    wall_members: bool = False
     diag_lane_gate_shared: bool = False
     diag_lane_cap_off: bool = False
     diag_encoder_population: bool = False
@@ -148,7 +152,6 @@ class WmsPredictor:
             else:
                 proc, n_pad = entry_process_v1(state, t0_s, horizon_s, seed, len(ids), tools)
         entries_on = proc is not None
-        action_timeline = action_timeline_inputs(state, controllers, ids, n_pad, tools)
         initial = {
             "s_m": torch.as_tensor(kin[None, :, 0]),
             "v_mps": torch.as_tensor(kin[None, :, 4]),
@@ -165,7 +168,34 @@ class WmsPredictor:
             initial["exit_s_m"] = torch.full((1, len(ids)), float(exit_s))
         teacher, present_seq, junction_seq = recorded_teacher(
             state, t0_s, ids, kin, n_steps, arm, tools)
-        if entries_on:
+        wall = (wall_member_teacher(state, t0_s, ids, n_steps)
+                if self.flags.wall_members else [])
+        wall_ids: list[str] = []
+        if wall:
+            if teacher is None:
+                raise PredictorError("wall members need the state's recorded arm")
+            if entries_on:
+                raise PredictorError("wall_members cannot be combined with entries")
+            wall_ids = [str(member["id"]) for member in wall]
+            n_pad = len(wall)
+            initial = _pad_slots(initial, n_pad)
+            initial["is_cav"][:, len(ids):] = True
+            extra_teacher = torch.as_tensor(
+                np.stack([member["teacher"] for member in wall], axis=1)[None],
+                dtype=teacher.dtype)
+            teacher = torch.cat((teacher, extra_teacher), dim=2)
+            extra_present = torch.as_tensor(
+                np.stack([member["present"] for member in wall], axis=1)[None],
+                dtype=torch.bool)
+            present_seq = (torch.cat((present_seq, extra_present), dim=2)
+                           if present_seq is not None else extra_present)
+            extra_junction = torch.zeros((1, n_steps + 1, n_pad), dtype=torch.bool)
+            junction_seq = (torch.cat((junction_seq, extra_junction), dim=2)
+                            if junction_seq is not None else extra_junction)
+            proc = WallMemberInsert(wall, start=len(ids))
+            entries_on = True
+        action_timeline = action_timeline_inputs(state, controllers, ids, n_pad, tools)
+        if entries_on and not wall_ids:
             initial = _pad_slots(initial, n_pad)
             pad_shape = (1, n_steps + 1, n_pad)
             if present_seq is not None:
@@ -177,6 +207,7 @@ class WmsPredictor:
                 # Padding slots are never junction transits; pad the mask to the slot count.
                 junction_seq = torch.cat(
                     (junction_seq, torch.zeros(*pad_shape, dtype=torch.bool)), dim=2)
+        if entries_on and n_pad:
             if driver_history is not None:
                 # Entrants carry no observed history: the encoder falls back to the
                 # physics defaults for them (mask False).
@@ -215,18 +246,21 @@ class WmsPredictor:
                     lane_teacher=lane_teacher, **lane_kwargs)
         if proc is not None:
             self.entries_summary = proc.summary()
-        return _frames_from_rollout(roll, t0_s, ids, kin, is_cav, n_pad, n_steps)
+        return _frames_from_rollout(roll, t0_s, ids, kin, is_cav, n_pad, n_steps,
+                                    wall_ids)
 
 
 def _frames_from_rollout(roll: Mapping[str, Any], t0_s: float, ids: list[str],
                          kin: np.ndarray, is_cav: np.ndarray, n_pad: int,
-                         n_steps: int) -> list[dict]:
+                         n_steps: int, wall_ids: list[str] | None = None) -> list[dict]:
     positions = roll["positions"][0].numpy()
     speeds = roll["speeds"][0].numpy()
     lanes = roll["lanes"][0].numpy()
     masks = roll["masks"][0].numpy()
     n_slots = len(ids) + n_pad
-    slot_vid = list(ids) + [f"__entry_{i}" for i in range(n_pad)]
+    wall_ids = list(wall_ids or [])
+    slot_vid = (list(ids) + wall_ids
+                + [f"__entry_{i}" for i in range(max(n_pad - len(wall_ids), 0))])
     final_cav = roll["state"]["is_cav"][0].numpy()
     cav_slot = [bool(is_cav[k]) if k < len(ids) else bool(final_cav[k]) for k in range(n_slots)]
     frames = [{"time_s": t0_s, "vehicles": [

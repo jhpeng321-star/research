@@ -113,7 +113,8 @@ def _to(obj, device):
 
 
 def load_predictor(path: str, mode: str, device: str = "cpu", threads: int = 1,
-                   hdv_exits: str = "sumo", entries: str = "off"):
+                   hdv_exits: str = "sumo", entries: str = "off",
+                   wall_members: bool = False):
     """-> (predictor, capture dict); ``capture['last']`` holds the last raw rollout (CPU).
 
     ``hdv_exits``: ``sumo`` = the predictor's standard semantics (recorded SUMO presence ends
@@ -131,8 +132,8 @@ def load_predictor(path: str, mode: str, device: str = "cpu", threads: int = 1,
     import torch
     from wms.eval.predictor import RolloutFlags, WmsPredictor
     torch.set_num_threads(threads)
-    p = WmsPredictor.from_checkpoint(guard(path), RolloutFlags(**ENTRY_MODES[entries]),
-                                     device=device)
+    flags = RolloutFlags(**ENTRY_MODES[entries], wall_members=bool(wall_members))
+    p = WmsPredictor.from_checkpoint(guard(path), flags, device=device)
     info = set_mode(p.model, mode)
     cap = {"mode_info": info, "hdv_exits": hdv_exits, "entries": entries}
     orig = p.model.rollout

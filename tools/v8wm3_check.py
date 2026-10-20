@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import json
 import os
 import pickle
 import sys
@@ -49,12 +50,15 @@ def parse_var(spec):
     return name, path, o
 
 
-def init(var_specs, entries="off"):
+def init(var_specs, entries="off", wall_members=False, wall_paths=None):
     import torch
     torch.set_num_threads(1)
     G["p"] = {}
+    G["wall_members"] = bool(wall_members)
+    G["wall_paths"] = wall_paths or {}
     for name, path, o in var_specs:
-        p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo", entries=entries)
+        p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo",
+                                   entries=entries, wall_members=wall_members)
         m = p.model
         ch = {}
         if "fw" in o:
@@ -102,6 +106,11 @@ def off2_dist(pos, lane, msk, k, end=75.44):
 def work(payload):
     idx, rec, arm = payload
     from wms.eval.rollout_inputs import recorded_teacher, t0_vehicles
+    if G.get("wall_members") and G.get("wall_paths"):
+        entry = G["wall_paths"].get(str(rec.get("key", ""))) or G["wall_paths"].get(idx)
+        if entry:
+            rec = dict(rec)
+            rec["wall_member_paths"] = entry.get("members", entry)
     out = []
     for name, (p, cap, o) in G["p"].items():
         try:
@@ -190,6 +199,13 @@ def main():
     ap.add_argument("--entries", choices=("off", "queue"), default="off",
                     help="off (frozen default) / queue = V9ENTRY entries ON with the recorded "
                          "SUMO entrance queue")
+    ap.add_argument("--wall-members", choices=("off", "insert"), default="off",
+                    help="off (frozen default) / insert = add wall_timeline members that enter "
+                         "after t0 as teacher-forced CAV slots at their recorded first "
+                         "appearance (needs --wall-member-paths)")
+    ap.add_argument("--wall-member-paths", default="",
+                    help="JSON sidecar from tools/wall_member_paths.py; only member paths that "
+                         "the original state export did not keep are used")
     a = ap.parse_args()
     if a.summarize:
         print(summarize(a.out))
@@ -200,21 +216,31 @@ def main():
     if a.limit:
         recs = recs[: a.limit]
     tasks = [(i, r, "wall") for i, r in recs]
+    wall_paths = {}
+    if a.wall_members == "insert":
+        if not a.wall_member_paths:
+            raise SystemExit("--wall-members insert needs --wall-member-paths")
+        with open(a.wall_member_paths, encoding="utf-8") as fh:
+            wall_paths = json.load(fh).get("windows", {})
+        print(f"wall-member paths: {len(wall_paths)} windows", flush=True)
     t0 = time.time()
     res = []
     if a.workers <= 1:
-        init(specs, a.entries)
+        init(specs, a.entries, a.wall_members == "insert", wall_paths)
         for t in tasks:
             res.extend(work(t))
     else:
         from multiprocessing import Pool
-        with Pool(a.workers, initializer=init, initargs=(specs, a.entries)) as pool:
+        with Pool(a.workers, initializer=init,
+                  initargs=(specs, a.entries, a.wall_members == "insert",
+                            wall_paths)) as pool:
             for j, rr in enumerate(pool.imap_unordered(work, tasks, chunksize=1)):
                 res.extend(rr)
                 if (j + 1) % 8 == 0:
                     print(f"{j+1}/{len(tasks)} {time.time()-t0:.0f}s", flush=True)
     with open(a.out, "wb") as fh:
-        pickle.dump({"specs": specs, "results": res, "entries": a.entries}, fh)
+        pickle.dump({"specs": specs, "results": res, "entries": a.entries,
+                     "wall_members": a.wall_members}, fh)
     print(f"done {time.time()-t0:.0f}s errors {sum(1 for r in res if r.get('error'))}", flush=True)
     for r in [r for r in res if r.get("error")][:3]:
         print(r)
