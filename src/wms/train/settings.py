@@ -793,6 +793,8 @@ class TrainSettings:
                 and (float(self.merge_yield_huber) > 0.0
                      or float(self.merge_ramp_adapt_huber) > 0.0
                      or float(self.merge_safety_bce) > 0.0))
+
+    @property
     def merge_first_passage_on(self) -> bool:
         """R5THR integrated first-passage merge term built (loss or metrics)."""
         return (float(self.merge_first_passage_weight) > 0.0
