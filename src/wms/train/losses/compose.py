@@ -21,6 +21,7 @@ from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContex
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
 from .brake_persist import BrakePersistConfig, brake_persist_terms
 from .brake_wave import BrakeWaveConfig, brake_wave_terms
+from .post_merge import PostMergeAccelConfig, post_merge_terms
 from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
@@ -168,6 +169,15 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             window_s=float(settings.brake_wave_window_s),
             onset_decel_mps2=float(settings.brake_wave_onset_decel_mps2),
             spurious_decel_mps2=float(settings.brake_wave_spurious_decel_mps2))))
+    if settings.post_merge_on:
+        # R5MERGE post-merge acceleration consistency (default off: never built).
+        chunk.extend(post_merge_terms(PostMergeAccelConfig(
+            weight=float(settings.post_merge_weight),
+            residual_weight=float(settings.post_merge_residual_weight),
+            window_s=float(settings.post_merge_window_s),
+            huber_delta_mps2=float(settings.post_merge_huber_delta_mps2),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane))))
     if settings.traffic_loss:
         chunk.append(TrafficLoss(TrafficLossConfig(
             dt_s=dt_s, bin_s=float(settings.traffic_bin_s),

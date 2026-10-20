@@ -244,6 +244,11 @@ class ModelConfig:
     time and the merge head's current probability to the residual inputs.  Default
     OFF: the residual sees kinematics only and old checkpoints load unchanged.  The
     new adapters are zero-initialised, so enabling it is an exact no-op until trained."""
+    residual_head_rescale: bool = False
+    """R5MERGE: divide the residual head's pre-tanh activation by a learned positive
+    scalar exp(log_scale), log_scale initialised to 0.  The output is bit-identical at
+    load (exp(0) = 1) and the scalar can shrink the activation back out of the tanh
+    tail so the head regains gradient.  Default OFF: identity and no new parameter."""
     merge_negotiation: bool = False
     """V10NEGOT (default OFF): learned ramp-car / lane-1-follower merge-negotiation block
     (zero-initialised).  The follower gets a learned yield acceleration and the ramp car a
@@ -295,6 +300,8 @@ class ModelConfig:
                 "model.grad_decay_per_step must be in (0, 1]")
         require(isinstance(self.courtesy_inputs, bool),
                 "model.courtesy_inputs must be a boolean")
+        require(isinstance(self.residual_head_rescale, bool),
+                "model.residual_head_rescale must be a boolean")
         require(isinstance(self.merge_negotiation, bool),
                 "model.merge_negotiation must be a boolean")
         if self.merge_negotiation:
@@ -413,6 +420,31 @@ class BrakeWaveConfig:
     def enabled(self) -> bool:
         return (self.weight > 0.0 or self.residual_weight > 0.0
                 or self.spurious_weight > 0.0)
+
+
+@config_dataclass
+class PostMergeConfig:
+    """R5MERGE post-merge acceleration-consistency terms (all default OFF)."""
+
+    weight: float = 0.0
+    residual_weight: float = 0.0
+    window_s: float = 10.0
+    huber_delta_mps2: float = 0.5
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(getattr(self, name)) for name in (
+            "weight", "residual_weight", "window_s", "huber_delta_mps2")),
+            "loss.post_merge values must be finite")
+        require(self.weight >= 0.0 and self.residual_weight >= 0.0,
+                "loss.post_merge weights must be >= 0 (0 = off)")
+        require(2.0 <= self.window_s <= 20.0,
+                "loss.post_merge.window_s must be in [2, 20] seconds")
+        require(self.huber_delta_mps2 > 0.0,
+                "loss.post_merge.huber_delta_mps2 must be positive")
+
+    @property
+    def enabled(self) -> bool:
+        return self.weight > 0.0 or self.residual_weight > 0.0
 
 
 @config_dataclass
@@ -833,6 +865,7 @@ class LossConfig:
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
     brake_wave: BrakeWaveConfig = field(default_factory=BrakeWaveConfig)
+    post_merge: PostMergeConfig = field(default_factory=PostMergeConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
@@ -1126,6 +1159,9 @@ class TrainConfig:
                                self.loss.brake_wave.residual_weight > 0.0),
                               ("brake_wave_spurious",
                                self.loss.brake_wave.spurious_weight > 0.0),
+                              ("post_merge", self.loss.post_merge.weight > 0.0),
+                              ("post_merge_residual",
+                               self.loss.post_merge.residual_weight > 0.0),
                               ("stability", self.loss.stability_weight > 0.0),
                               ("conservation", self.loss.conservation_weight > 0.0)):
             if enabled:

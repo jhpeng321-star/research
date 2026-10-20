@@ -128,6 +128,7 @@ class HdvConfig:
     zero_residual: bool = False         # no-op control: reproduce the baseline exactly
     conditioning_dim: int = 0           # width of the optional driver embedding
     courtesy_inputs: bool = False       # V10COURTESY ramp-car / merge-intent channels
+    residual_head_rescale: bool = False  # R5MERGE learned pre-tanh divisor (identity at load)
 
     def __post_init__(self) -> None:
         if self.d_model % self.n_heads:
@@ -136,6 +137,8 @@ class HdvConfig:
             raise ValueError("conditioning_dim must be non-negative")
         if not isinstance(self.courtesy_inputs, bool):
             raise ValueError("courtesy_inputs must be a boolean")
+        if not isinstance(self.residual_head_rescale, bool):
+            raise ValueError("residual_head_rescale must be a boolean")
 
     @property
     def in_features(self) -> int:
@@ -162,6 +165,7 @@ def input_schema(cfg: Optional[HdvConfig] = None) -> dict:
         "forbidden_inputs": forbidden,
         "use_cav_flag": bool(cfg.use_cav_flag),
         "zero_residual": bool(cfg.zero_residual),
+        "residual_head_rescale": bool(cfg.residual_head_rescale),
         "conditioning_dim": int(cfg.conditioning_dim),
         "identity_outputs": ("accel_delta_mps2", "lane_logit_delta"),
     }
@@ -312,6 +316,13 @@ class HdvResidualNet(nn.Module):
                 nn.Linear(c.d_model, c.d_model))
             nn.init.zeros_(self.courtesy_proj[-1].weight)
             nn.init.zeros_(self.courtesy_proj[-1].bias)
+        # R5MERGE: the head saturates at tanh's flat tail (WAVE.md).  Dividing the
+        # pre-tanh activation by exp(log_scale) is exactly the identity at load
+        # (exp(0) = 1) while log_scale can learn to shrink the activation and restore
+        # the head gradient.  No tensor is created when the key is off.
+        self.residual_head_log_scale = None
+        if c.residual_head_rescale:
+            self.residual_head_log_scale = nn.Parameter(torch.zeros(()))
 
     def input_schema(self) -> dict:
         """:func:`input_schema` of this network's configuration."""
@@ -393,7 +404,10 @@ class HdvResidualNet(nn.Module):
             }
 
         acc = self.accel(x)
-        delta = c.accel_delta_scale_mps2 * torch.tanh(acc[..., 0])
+        activation = acc[..., 0]
+        if self.residual_head_log_scale is not None:
+            activation = activation / torch.exp(self.residual_head_log_scale)
+        delta = c.accel_delta_scale_mps2 * torch.tanh(activation)
         log_sigma = acc[..., 1].clamp(-6.0, 2.0)
         lane_delta = c.lane_logit_scale * self.lane(x)
         delta = delta * mask.to(delta.dtype)

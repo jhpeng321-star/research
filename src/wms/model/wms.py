@@ -113,6 +113,11 @@ class WmSModel(nn.Module):
     #: window unless ``physics.forced_window_mode='hazard'``).  Forward values and decisions
     #: are unchanged.
     emit_merge_hazard: bool = False
+    #: R5MERGE runtime switch (``loss.post_merge_residual``; set by the unroll runner,
+    #: never part of a checkpoint): also log the physics-core IDM acceleration per step
+    #: so the one-sided post-merge residual penalty can condition on ``IDM > 0``.
+    #: Default OFF: no extra tensor is recorded and the rollout is unchanged.
+    emit_physics_accel: bool = False
 
     def __init__(self, spec: Optional[ModelSpec] = None, *,
                  physics: Optional[PhysicsConfig] = None, hdv: Optional[HdvConfig] = None,
@@ -168,6 +173,11 @@ class WmSModel(nn.Module):
             # V10COURTESY: the checkpoint/config switch exists independently of the
             # explicit HdvConfig override so loading a config enables the channels.
             self.hdv = replace(self.hdv, courtesy_inputs=True)
+        if bool(getattr(spec, "residual_head_rescale", False)) \
+                and not self.hdv.residual_head_rescale:
+            # R5MERGE: the output-divisor switch is config-driven too; it is exactly
+            # identity at load and adds one scalar parameter.
+            self.hdv = replace(self.hdv, residual_head_rescale=True)
         self.black_box = bool(spec.black_box)
         self.n_controllers = int(spec.n_controllers)
         self.controller_embed_dim = int(spec.controller_embed_dim)
@@ -1432,7 +1442,8 @@ class WmSModel(nn.Module):
 
         log = {name: [] for name in (
             "positions", "speeds", "lanes", "masks", "accel", "lane_logits",
-            "raw_residuals", "change_probabilities", "lane_probabilities", "entrant")}
+            "raw_residuals", "change_probabilities", "lane_probabilities", "entrant",
+            "physics_accels")}
         projection_totals: dict[str, float] = {}
         share = _ShareAccumulator()
         # Per-step activation checkpointing (round 5): only in training with gradients
@@ -1640,6 +1651,8 @@ class WmSModel(nn.Module):
         # Monitoring uses the raw gate * delta_a before any residual/plant bound.
         log["raw_residuals"].append(
             out.get("raw_residual_mps2", torch.zeros_like(out["accel_mps2"])))
+        if getattr(self, "emit_physics_accel", False):
+            log["physics_accels"].append(out["physics_accel_mps2"])
         probs = out.get("lane_probabilities")
         if probs is None:
             probs = torch.softmax(out["lane_logits"], dim=-1)
@@ -1664,6 +1677,8 @@ class WmSModel(nn.Module):
         result = {"positions": torch.stack(positions, 1),
                   "raw_residual_mps2": torch.stack(log["raw_residuals"], 1),
                   "lane_change_probabilities": torch.stack(log["change_probabilities"], 1),
+                  **({"physics_accel_mps2": torch.stack(log["physics_accels"], 1)}
+                     if log["physics_accels"] else {}),
                   "speeds": torch.stack(log["speeds"], 1),
                   "lanes": torch.stack(log["lanes"], 1),
                   "masks": torch.stack(masks, 1), "accel": torch.stack(log["accel"], 1),

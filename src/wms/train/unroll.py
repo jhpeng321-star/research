@@ -126,6 +126,9 @@ class UnrollRunner:
             # V8WM / V8LANE / V10NEGOT: the merge-timing, lane-flow and negotiation terms
             # need the hazard_v5 own-head logit with gradient.
             model.emit_merge_hazard = True
+        if "post_merge_residual" in composer.names:
+            # R5MERGE: the one-sided penalty conditions on the physics-core IDM term.
+            model.emit_physics_accel = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,

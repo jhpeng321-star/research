@@ -93,6 +93,9 @@ class ModelSpec:
     # V10COURTESY (default OFF): ramp-car distance-to-end / speed / waiting time and
     # the merge head's current probability as extra residual inputs.
     courtesy_inputs: bool = False
+    # R5MERGE (default OFF): learned pre-tanh divisor of the residual head, exactly
+    # identity (and no new parameter) when off.
+    residual_head_rescale: bool = False
     # V10NEGOT (default OFF): learned ramp/follower merge negotiation block (zero-init).
     merge_negotiation: bool = False
 
@@ -153,6 +156,8 @@ class ModelSpec:
             raise ValueError(f"lane_decision must be one of {LANE_DECISIONS}")
         if not isinstance(self.courtesy_inputs, bool):
             raise ValueError("courtesy_inputs must be a boolean")
+        if not isinstance(self.residual_head_rescale, bool):
+            raise ValueError("residual_head_rescale must be a boolean")
         if not isinstance(self.merge_negotiation, bool):
             raise ValueError("merge_negotiation must be a boolean")
         if self.merge_negotiation and self.lane_model != "hazard_v5":

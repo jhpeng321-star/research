@@ -117,6 +117,10 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
         terms.append("brake_wave_residual")
     if float(getattr(settings, "brake_wave_spurious_weight", 0.0)) > 0.0:
         terms.append("brake_wave_spurious")
+    if float(getattr(settings, "post_merge_weight", 0.0)) > 0.0:
+        terms.append("post_merge")
+    if float(getattr(settings, "post_merge_residual_weight", 0.0)) > 0.0:
+        terms.append("post_merge_residual")
     if settings.stability_weight > 0:
         terms.append("stability")
     if settings.conservation_weight > 0:
