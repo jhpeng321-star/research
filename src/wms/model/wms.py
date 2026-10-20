@@ -45,6 +45,7 @@ from .lane_head import HistoryLaneHead, lane_context
 from . import lane_v5 as lv5
 from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
+from .merge_threshold import MergeThresholdNet, update_threshold_state
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
 from .spec import ModelSpec
@@ -278,6 +279,16 @@ class WmSModel(nn.Module):
         # old checkpoints keep their key order and load unchanged.  Zero-initialised.
         self.merge_negotiation = (MergeNegotiationNet()
                                   if bool(getattr(spec, "merge_negotiation", False)) else None)
+        # R5THR (default 'hazard' = the per-step Bernoulli merge draw): a persistent learned
+        # gap-acceptance threshold replaces the merge decision.  Created only when enabled, so
+        # the default checkpoint layout is unchanged (the module comes after every existing one).
+        self.merge_decision = getattr(spec, "merge_decision", "hazard")
+        self.merge_threshold = None
+        if self.merge_decision == "threshold":
+            input_dim = (self.driver_embed_dim
+                         if self.rollout_mode in ("driver_params", "hybrid")
+                         or self.long_history else 0)
+            self.merge_threshold = MergeThresholdNet(input_dim=input_dim)
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -752,6 +763,11 @@ class WmSModel(nn.Module):
                   "accel_delta_mps2": accel - physics, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
+        if self.merge_threshold is not None:
+            # R5THR: per-driver threshold location [B, K] (with gradient for the first-passage
+            # loss; the rollout decision uses a detached sample).
+            result["merge_threshold_location"] = self.merge_threshold(
+                driver_embedding, (b, slots))
         if encoded is not None:
             result.update({"driver_parameters": encoded["values"],
                            "driver_uncertainty": encoded["uncertainty"],
@@ -934,8 +950,9 @@ class WmSModel(nn.Module):
                 logits = lv5.restrict_courtesy_logits(logits, inst["lane"], inst["s"], learned,
                                                       self.physics)
         hazard = None
-        if getattr(self, "emit_merge_hazard", False):
-            # V8WM merge-timing loss: the own-head logit with gradient on the rollout state.
+        if getattr(self, "emit_merge_hazard", False) or self.merge_decision == "threshold":
+            # V8WM merge-timing loss / R5THR threshold decision: the own-head logit with
+            # gradient on the rollout state.
             if self.lane_hazard_detach and torch.is_grad_enabled():
                 _, head, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
                                                 self.physics, offsets, merge_wait,
@@ -1166,6 +1183,11 @@ class WmSModel(nn.Module):
         else:
             lane = state["lane"].long()
             next_lane = lane + (choice == 2).long() - (choice == 1).long()
+        if self.merge_threshold is not None:
+            # R5THR: the merge head no longer draws a per-step Bernoulli; a persistent
+            # threshold decides the first feasible crossing on its own logit.
+            next_lane = self._apply_merge_threshold(state, state_kin(state), present, out,
+                                                    next_lane)
 
         direct = (torch.zeros_like(cav)
                   if action_id is None or not self.apply_direct_commands else
@@ -1210,6 +1232,51 @@ class WmSModel(nn.Module):
         out.update({"next_s_m": next_s, "next_v_mps": next_v,
                     "next_lane": next_lane, "next_present": next_present})
         return out
+
+    def _apply_merge_threshold(self, state: dict, kin: Tensor, present: Tensor,
+                               out: dict, next_lane: Tensor) -> Tensor:
+        """R5THR: persistent gap-acceptance threshold instead of the Bernoulli merge draw.
+
+        Uses the merge head's logit ``z_t`` (with the negotiation correction when active),
+        the envelope-feasible in-zone mask (``lane_v5_acts``) and the carried threshold /
+        running maximum / previous presence.  Returns the updated lane decision; the carried
+        state entries are stored in ``out`` for the rollout loop.
+        """
+        lane = int(self.physics.merge_lane)
+        target = int(getattr(self.physics, "merge_target_lane", 1))
+        ramp_lane = (state.get("lane") if state.get("lane") is not None
+                     else kin[..., 1:4].argmax(-1)).long()
+        current_lane = torch.as_tensor(ramp_lane, device=kin.device).long()
+        s = kin[..., 0]
+        end = float(self.physics.merge_zone_s1_m)
+        start = float(getattr(self.physics, "merge_zone_s0_m", 0.0))
+        ramp = present.bool() & (current_lane == lane)
+        in_zone = ramp & (s >= start) & (s <= end)
+        head = out.get("lane_v5_head_logit")
+        acts = out.get("lane_v5_acts")
+        if not torch.is_tensor(head) or not torch.is_tensor(acts):
+            return next_lane
+        z = head.to(kin.dtype)
+        delta = out.get("merge_negotiation_merge_delta")
+        if torch.is_tensor(delta):
+            z = z + delta.to(z.dtype)
+        feasible = in_zone & acts.bool()
+        location = out.get("merge_threshold_location")
+        if not torch.is_tensor(location):
+            location = torch.zeros_like(z)
+        carry = update_threshold_state(
+            z, ramp, feasible, present, location,
+            u=state.get("merge_threshold_u"), has_u=state.get("merge_fp_has_u"),
+            m=state.get("merge_fp_max"), prev_present=state.get("merge_fp_present"))
+        out["merge_threshold_u"] = carry["u"]
+        out["merge_fp_has_u"] = carry["has_u"]
+        out["merge_fp_max"] = carry["m"]
+        out["merge_fp_present"] = carry["prev_present"]
+        out["merge_fp_cross"] = carry["cross"]
+        # Never let the per-step head's own merge draw through: only the threshold crosses.
+        attempted = (current_lane == lane) & (next_lane.long() == target)
+        next_lane = torch.where(attempted, current_lane, next_lane.long())
+        return torch.where(carry["cross"], torch.full_like(next_lane, target), next_lane)
 
     def _exec_cap(self, out: dict, state: dict,
                   driver_params: Optional[dict[str, Tensor]]) -> Tensor:
@@ -1436,6 +1503,9 @@ class WmSModel(nn.Module):
             # V8WM3: carried across truncated-BPTT chunks in the returned state.
             current["merge_wait_s"] = self.initial_merge_wait(pres0, kin0, driver_history,
                                                               driver_history_mask)
+        if self.merge_threshold is not None and current.get("merge_fp_present") is None:
+            # R5THR: presence at the rollout start (first-step new-car detection).
+            current["merge_fp_present"] = pres0.clone()
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
                      if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
@@ -1560,6 +1630,13 @@ class WmSModel(nn.Module):
             if self._tracks_merge_wait:
                 current["merge_wait_s"] = update_merge_wait(current.get("merge_wait_s"), kin,
                                                             nxt_present, self.physics)
+            if "merge_threshold_u" in out:
+                # R5THR: threshold / running maximum / presence persist across chunks and
+                # slot moves; a reused slot is reset by the next step's new-car check.
+                current["merge_threshold_u"] = out["merge_threshold_u"].detach()
+                current["merge_fp_has_u"] = out["merge_fp_has_u"].detach()
+                current["merge_fp_max"] = out["merge_fp_max"].detach()
+                current["merge_fp_present"] = out["merge_fp_present"].detach()
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)
@@ -1648,6 +1725,10 @@ class WmSModel(nn.Module):
             # V8WM (emit_merge_hazard): per-step own-head logit (with gradient) + acting rows.
             log.setdefault("lane_v5_head_logit", []).append(out["lane_v5_head_logit"])
             log.setdefault("lane_v5_acts", []).append(out["lane_v5_acts"])
+        if "merge_threshold_location" in out:
+            # R5THR: the first-passage loss integrates the threshold out at this location.
+            log.setdefault("merge_threshold_location", []).append(
+                out["merge_threshold_location"])
         # Monitoring uses the raw gate * delta_a before any residual/plant bound.
         log["raw_residuals"].append(
             out.get("raw_residual_mps2", torch.zeros_like(out["accel_mps2"])))
@@ -1703,4 +1784,7 @@ class WmSModel(nn.Module):
         if log.get("lane_v5_head_logit"):
             result["lane_v5_head_logit"] = torch.stack(log["lane_v5_head_logit"], 1)
             result["lane_v5_acts"] = torch.stack(log["lane_v5_acts"], 1)
+        if log.get("merge_threshold_location"):
+            result["merge_threshold_location"] = torch.stack(
+                log["merge_threshold_location"], 1)
         return result

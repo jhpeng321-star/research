@@ -323,6 +323,17 @@ class TrainSettings:
     merge_survival_negative_weight: float = 0.0
     merge_survival_metrics: bool = False
     merge_teacher_frac_schedule: tuple[float, ...] = ()
+    # R5THR (default 'hazard' / weights 0 = bit-identical): persistent learned gap-acceptance
+    # threshold and the integrated censored first-passage merge loss.
+    merge_decision: str = "hazard"
+    merge_first_passage_weight: float = 0.0
+    merge_first_passage_rank_weight: float = 0.0
+    merge_first_passage_metrics: bool = False
+    merge_first_passage_pos_tol_m: float = 25.0
+    merge_first_passage_speed_tol_mps: float = 5.0
+    merge_first_passage_gap_tol_m: float = 20.0
+    merge_first_passage_gap_speed_tol_mps: float = 5.0
+    merge_first_passage_location_reg_weight: float = 1.0e-3
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -577,6 +588,20 @@ class TrainSettings:
         _require(all(math.isfinite(float(x)) and 0.0 <= float(x) <= 1.0
                      for x in self.merge_teacher_frac_schedule),
                  "merge_teacher_frac_schedule values must be in [0, 1]")
+        _require(self.merge_decision in ("hazard", "threshold"),
+                 "merge_decision must be 'hazard' or 'threshold'")
+        _require(math.isfinite(float(self.merge_first_passage_weight))
+                 and float(self.merge_first_passage_weight) >= 0.0
+                 and math.isfinite(float(self.merge_first_passage_rank_weight))
+                 and float(self.merge_first_passage_rank_weight) >= 0.0,
+                 "merge_first_passage weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_first_passage_pos_tol_m, self.merge_first_passage_speed_tol_mps,
+            self.merge_first_passage_gap_tol_m, self.merge_first_passage_gap_speed_tol_mps)),
+            "merge_first_passage tolerances must be finite and positive")
+        _require(math.isfinite(float(self.merge_first_passage_location_reg_weight))
+                 and float(self.merge_first_passage_location_reg_weight) >= 0.0,
+                 "merge_first_passage_location_reg_weight must be finite and >= 0")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
@@ -699,6 +724,13 @@ class TrainSettings:
         """V10NEGOT negotiation auxiliary (matched non-yield negatives) built."""
         return (bool(self.merge_negotiation)
                 and float(self.merge_survival_negative_weight) > 0.0)
+
+    @property
+    def merge_first_passage_on(self) -> bool:
+        """R5THR integrated first-passage merge term built (loss or metrics)."""
+        return (float(self.merge_first_passage_weight) > 0.0
+                or float(self.merge_first_passage_rank_weight) > 0.0
+                or bool(self.merge_first_passage_metrics))
 
     @property
     def long_horizon_on(self) -> bool:
