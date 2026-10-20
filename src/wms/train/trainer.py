@@ -6,6 +6,7 @@ chunked unroll live in ``wms.train.losses`` / ``wms.train.unroll``.
 """
 from __future__ import annotations
 
+import json
 import math
 import os
 import random
@@ -80,6 +81,65 @@ def switch_window_sampler(dataset: Dataset, fraction: float) -> WeightedRandomSa
     return WeightedRandomSampler(weights, num_samples=len(dataset), replacement=True)
 
 
+def build_optimizer(model, *, lr: float, weight_decay: float,
+                    freeze_prefixes: tuple[str, ...] = (),
+                    lr_scale: Optional[dict[str, float]] = None):
+    """R5TOOLS: Adam over trainable parameter groups with optional freezing / LR scales.
+
+    ``freeze_prefixes`` match by ``name.startswith(prefix)`` and set ``requires_grad=False``
+    (the tensors are not passed to the optimizer).  ``lr_scale`` maps a prefix to a multiplier
+    of the stage learning rate; when prefixes overlap the longest one wins.  With both options
+    empty this returns exactly the single-group optimizer over ``model.parameters()``.
+    """
+    named = list(model.named_parameters())
+    scale = dict(lr_scale or {})
+    frozen = tuple(freeze_prefixes)
+    buckets: dict[str, list] = {"": []}
+    frozen_tensors = frozen_parameters = 0
+    matched_freeze: set[str] = set()
+    matched_scale: set[str] = set()
+    for name, param in named:
+        hit = next((prefix for prefix in frozen if name.startswith(prefix)), None)
+        if hit is not None:
+            param.requires_grad_(False)
+            frozen_tensors += 1
+            frozen_parameters += int(param.numel())
+            matched_freeze.add(hit)
+            continue
+        if not param.requires_grad:
+            continue
+        keys = [prefix for prefix in scale if name.startswith(prefix)]
+        key = max(keys, key=len) if keys else ""
+        matched_scale.update(keys)
+        buckets.setdefault(key, []).append(param)
+    groups = []
+    report_groups = []
+    for key in [""] + sorted(k for k in buckets if k):
+        params = buckets.get(key) or []
+        if not params:
+            continue
+        factor = float(scale.get(key, 1.0))
+        groups.append({"params": params, "lr": float(lr) * factor,
+                       "weight_decay": float(weight_decay), "lr_scale": factor})
+        report_groups.append({"prefix": key or None, "lr_scale": factor,
+                              "lr": float(lr) * factor, "tensors": len(params),
+                              "parameters": sum(int(p.numel()) for p in params)})
+    if not groups:
+        raise ValueError("optimizer has no trainable parameters after freeze_prefixes")
+    report = {
+        "groups": report_groups,
+        "freeze_prefixes": list(frozen),
+        "frozen_tensors": frozen_tensors,
+        "frozen_parameters": frozen_parameters,
+        "trainable_tensors": sum(g["tensors"] for g in report_groups),
+        "trainable_parameters": sum(g["parameters"] for g in report_groups),
+        "total_parameters": sum(int(p.numel()) for _, p in named),
+        "unmatched_freeze_prefixes": sorted(set(frozen) - matched_freeze),
+        "unmatched_lr_scale_prefixes": sorted(set(scale) - matched_scale),
+    }
+    return (torch.optim.Adam(groups, lr=lr, weight_decay=weight_decay), report)
+
+
 class WmSTrainer:
     """Train one WM-S member through the 10/30/60/120 s curriculum."""
 
@@ -110,8 +170,11 @@ class WmSTrainer:
         self.composer = build_loss(s, physics=self.model.physics)
         self.runner = UnrollRunner(self.model, s, self.composer, projection=projection,
                                    device=self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=s.lr,
-                                          weight_decay=s.weight_decay)
+        self.optimizer, self.optimizer_groups = build_optimizer(
+            self.model, lr=s.lr, weight_decay=s.weight_decay,
+            freeze_prefixes=tuple(s.freeze_prefixes), lr_scale=s.lr_scale)
+        print("WM-S optimizer groups: " + json.dumps(self.optimizer_groups, sort_keys=True),
+              file=sys.stderr)
         self.dataset, self.val_dataset = dataset, val_dataset
         self.out_dir = Path(out_dir)
         self.init_report = self._init_from_checkpoint(s.init_from)
@@ -183,6 +246,11 @@ class WmSTrainer:
         self.out_dir.mkdir(parents=True, exist_ok=True)
         write_json(self.out_dir / "INIT_FROM.json", report)
         return report
+
+    def set_stage_lr(self, lr: float) -> None:
+        """R5TOOLS: apply a stage learning rate while keeping each group's ``lr_scale``."""
+        for group in self.optimizer.param_groups:
+            group["lr"] = float(lr) * float(group.get("lr_scale", 1.0))
 
     # ------------------------------------------------------------------ steps
     def forward_backward(self, batch: dict, *, unroll_steps: int, backward: bool = True,
@@ -514,8 +582,7 @@ class WmSTrainer:
         for stage_i, plan in enumerate(self.stages):
             stage_s = plan.stage_s
             if s.lr_per_stage is not None:
-                for group in self.optimizer.param_groups:
-                    group["lr"] = float(s.lr_per_stage[stage_i])
+                self.set_stage_lr(float(s.lr_per_stage[stage_i]))
             done = 0
             steps_before = global_step
             last_validation = None
