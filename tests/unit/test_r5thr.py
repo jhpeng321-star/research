@@ -25,6 +25,7 @@ from wms.train.losses.base import LossContext, UnrollTargets
 from wms.train.losses.compose import build_loss
 from wms.train.losses.merge_first_passage import (MergeFirstPassageConfig,
                                                   MergeFirstPassageTerm,
+                                                  _gap_compatible,
                                                   merge_first_passage_metrics)
 from wms.train.settings import TrainSettings
 
@@ -143,7 +144,7 @@ def _targets(n=8, k=3, event=3, entry=None, slot=0):
 
 
 def _ctx(targets, head, acts=None, lanes=None, positions=None, speeds=None, loc=None,
-         c0=0, c1=None):
+         entrant=None, c0=0, c1=None):
     n = targets.n_steps
     c1 = n if c1 is None else c1
     b, _, k = targets.states.shape[:3]
@@ -160,7 +161,8 @@ def _ctx(targets, head, acts=None, lanes=None, positions=None, speeds=None, loc=
         "lane_logits": torch.zeros(b, c1 - c0, k, 3),
         "lane_v5_head_logit": head[:, c0:c1],
         "lane_v5_acts": acts[:, c0:c1],
-        "entrant_seq": torch.zeros(b, c1 - c0, k, dtype=torch.bool),
+        "entrant_seq": (torch.zeros(b, c1 - c0, k, dtype=torch.bool)
+                        if entrant is None else entrant[:, c0:c1, :k].bool()),
     }
     if loc is not None:
         pred["merge_threshold_location"] = loc[:, c0:c1]
@@ -277,6 +279,130 @@ def test_compatibility_censors_at_last_compatible_step():
     metrics = merge_first_passage_metrics(prep)
     assert metrics["merge_fp_censored_divergence"] >= 1.0
     assert metrics["merge_fp_events"] == 0.0
+    assert torch.isfinite(value.value).all()
+
+
+def _gap_kin(s_ego, s_other, lane_other=1, v_ego=10.0, v_other=10.0):
+    """``[1, 1, 2, 7]`` kinematics of a ramp ego and one target-lane vehicle."""
+    kin = torch.zeros(1, 1, 2, 7)
+    kin[0, 0, 0, 0] = float(s_ego)
+    kin[0, 0, 1, 0] = float(s_other)
+    kin[0, 0, :, 4] = torch.tensor([float(v_ego), float(v_other)])
+    kin[0, 0, :, 6] = 5.0
+    kin[0, 0, 0, 1:4] = F.one_hot(torch.tensor(2), 3).float()
+    kin[0, 0, 1, 1:4] = F.one_hot(torch.tensor(int(lane_other)), 3).float()
+    return kin
+
+
+def test_missing_neighbour_and_free_gap_sentinel_are_not_divergence():
+    cfg = MergeFirstPassageConfig(weight=1.0)
+    present = torch.ones(1, 1, 2, dtype=torch.bool)
+    # Predicted rollout has a target-lane follower at a 15 m bumper gap; the record has
+    # no follower (free gap).  A missing neighbour must be neutral, not incompatible.
+    pred = _gap_kin(50.0, 30.0)
+    rec = _gap_kin(50.0, 0.0)
+    rec_present = torch.tensor([[[True, False]]])
+    assert bool(_gap_compatible(cfg, pred, rec, present, rec_present).all())
+    # Both sides see a follower, but the gap differs by more than the predeclared tolerance.
+    rec_far = _gap_kin(50.0, 0.0)
+    assert not bool(_gap_compatible(cfg, pred, rec_far, present, present).all())
+    # Both sides free (sentinel / absent) is compatible.
+    free = _gap_kin(50.0, 0.0)
+    none = torch.tensor([[[True, False]]])
+    assert bool(_gap_compatible(cfg, free, free, none, none).all())
+
+
+def test_cav_neighbour_is_excluded_from_the_rollout_gap_configuration():
+    """The recorded side excludes CAVs; the rollout side must use the same vehicle set."""
+    b, n, k = 1, 8, 4
+    states = torch.zeros(b, n + 1, k, 7)
+    lanes = torch.zeros(b, n + 1, k, dtype=torch.long)
+    lanes[:, :, 0] = 2                       # ramp ego, merges at step 5
+    lanes[:, 6:, 0] = 1
+    lanes[:, :, 1] = 1                       # HDV follower, 50 m bumper gap
+    lanes[:, :, 2] = 1                       # CAV follower, 10 m bumper gap
+    states[..., 1:4] = F.one_hot(lanes, 3).float()
+    ego = 50.0 + torch.arange(n + 1, dtype=torch.float32)
+    states[..., 0] = ego.view(1, n + 1, 1)
+    states[..., 0][:, :, 1] = ego - 55.0
+    states[..., 0][:, :, 2] = ego - 15.0
+    states[..., 4] = 10.0
+    states[..., 6] = 5.0
+    present = torch.ones(b, n + 1, k, dtype=torch.bool)
+    present[:, :, 3] = False
+    is_cav = torch.zeros(b, n + 1, k, dtype=torch.bool)
+    is_cav[:, :, 2] = True
+    targets = UnrollTargets(
+        states=states, n_steps=n, weights=torch.ones(1, n, 1),
+        hdv_mask=present[:, 1:], aux_mask=present[:, :n],
+        aux_count=int(present[:, :n].sum()), denom=torch.tensor(float(present[:, 1:].sum())),
+        lane_target=lanes[:, 1:], loss_valid=present, is_cav=is_cav, dt_s=0.5,
+        position_delta_m=5.0, speed_delta_mps=1.0, history_lane_head=False)
+    head = torch.zeros(1, n, k)
+    head[0, :, 0] = torch.arange(n, dtype=torch.float32)
+    _, value, prep = _run(targets, head)
+    metrics = merge_first_passage_metrics(prep)
+    assert metrics["merge_fp_events"] == 1.0
+    assert metrics["merge_fp_censored_divergence"] == 0.0
+    assert torch.isfinite(value.value).all()
+
+
+def test_non_ramp_slots_are_not_counted_as_censored_cars():
+    targets, lanes = _targets(event=3)
+    mainline = torch.zeros_like(lanes)
+    targets.states[..., 1:4] = F.one_hot(mainline, 3).float()
+    targets.lane_target = mainline[:, 1:]
+    _, value, prep = _run(targets, torch.zeros(1, 8, 3))
+    metrics = merge_first_passage_metrics(prep)
+    assert metrics["merge_fp_censored_divergence"] == 0.0
+    assert metrics["merge_fp_events"] == 0.0
+    assert torch.isfinite(value.value).all()
+
+
+def test_censored_divergence_is_counted_once_per_car_across_chunks():
+    targets, _ = _targets(n=8, k=1, event=6)
+    head = torch.zeros(1, 8, 1)
+    positions = targets.states[:, :, :, 0].clone()
+    positions[:, 1:, 0] += 100.0                 # the ego diverges from step 1 on
+    term = MergeFirstPassageTerm(MergeFirstPassageConfig(weight=1.0))
+    term.prepare(targets)
+    term(_ctx(targets, head, positions=positions, c0=0, c1=3))
+    term(_ctx(targets, head, positions=positions, c0=3, c1=8))
+    metrics = merge_first_passage_metrics(targets.prepared["merge_first_passage"])
+    assert metrics["merge_fp_censored_divergence"] == 1.0
+
+
+def test_recorded_event_metrics_match_across_chunks():
+    targets, _ = _targets(event=5)
+    head = torch.arange(24, dtype=torch.float32).reshape(1, 8, 3)
+    whole, _ = _targets(event=5)
+    term_w = MergeFirstPassageTerm(MergeFirstPassageConfig(weight=1.0))
+    term_w.prepare(whole)
+    term_w(_ctx(whole, head))
+    m_whole = merge_first_passage_metrics(whole.prepared["merge_first_passage"])
+
+    term_c = MergeFirstPassageTerm(MergeFirstPassageConfig(weight=1.0))
+    term_c.prepare(targets)
+    term_c(_ctx(targets, head, c0=0, c1=3))
+    term_c(_ctx(targets, head, c0=3, c1=8))
+    m_chunks = merge_first_passage_metrics(targets.prepared["merge_first_passage"])
+    for key in ("merge_fp_events", "merge_fp_censored_divergence",
+                "merge_fp_censored_admin", "merge_fp_early_merges"):
+        assert m_chunks[key] == m_whole[key]
+    assert m_whole["merge_fp_events"] == 1.0
+
+
+def test_post_t0_entrant_slots_are_not_supervised_as_recorded_cars():
+    targets, lanes = _targets(n=8, k=2, event=5)
+    head = torch.zeros(1, 8, 2)
+    model_lanes = lanes.clone()
+    model_lanes[:, 1:, 1] = 1                    # the entrant slot "merges" at step 0
+    entrant = torch.zeros(1, 8, 2, dtype=torch.bool)
+    entrant[..., 1] = True
+    _, value, prep = _run(targets, head, lanes=model_lanes, entrant=entrant)
+    metrics = merge_first_passage_metrics(prep)
+    assert metrics["merge_fp_early_merges"] == 0.0
+    assert metrics["merge_fp_events"] == 1.0
     assert torch.isfinite(value.value).all()
 
 
