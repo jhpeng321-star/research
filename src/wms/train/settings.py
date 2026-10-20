@@ -81,6 +81,12 @@ class TrainSettings:
     brake_wave_window_s: float = 4.0
     brake_wave_onset_decel_mps2: float = 1.0
     brake_wave_spurious_decel_mps2: float = 1.5
+    # R5MERGE (default 0 = OFF, bit-identical): acceleration consistency of recorded
+    # HDVs that changed lane 2->1 within the last window_s seconds.
+    post_merge_weight: float = 0.0
+    post_merge_residual_weight: float = 0.0
+    post_merge_window_s: float = 10.0
+    post_merge_huber_delta_mps2: float = 0.5
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -308,6 +314,8 @@ class TrainSettings:
     # position/speed event boost for lane-1 followers near a merging ramp car.
     courtesy_inputs: bool = False
     courtesy_weight: float = 1.0
+    # R5MERGE (default OFF): exact-identity-at-load output rescale of the residual head.
+    residual_head_rescale: bool = False
     # V10NEGOT (default OFF): learned merge-negotiation block, censored merge-survival loss
     # and the ramp-only merge teacher-forcing schedule.
     merge_negotiation: bool = False
@@ -599,6 +607,15 @@ class TrainSettings:
             and math.isfinite(float(self.brake_wave_window_s))
             and 3.0 <= float(self.brake_wave_window_s) <= 5.0,
             "brake_wave weights must be >= 0, thresholds > 0, window_s in [3,5]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.post_merge_weight, self.post_merge_residual_weight))
+            and math.isfinite(float(self.post_merge_window_s))
+            and 2.0 <= float(self.post_merge_window_s) <= 20.0
+            and math.isfinite(float(self.post_merge_huber_delta_mps2))
+            and float(self.post_merge_huber_delta_mps2) > 0.0,
+            "post_merge weights must be >= 0, window_s in [2,20], huber delta > 0")
+        _require(isinstance(self.residual_head_rescale, bool),
+                 "residual_head_rescale must be a boolean")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -653,6 +670,12 @@ class TrainSettings:
         return (float(self.brake_wave_weight) > 0.0
                 or float(self.brake_wave_residual_weight) > 0.0
                 or float(self.brake_wave_spurious_weight) > 0.0)
+
+    @property
+    def post_merge_on(self) -> bool:
+        """R5MERGE post-merge acceleration terms enabled (any weight > 0)."""
+        return (float(self.post_merge_weight) > 0.0
+                or float(self.post_merge_residual_weight) > 0.0)
 
     @property
     def merge_loss_on(self) -> bool:

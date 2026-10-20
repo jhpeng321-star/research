@@ -26,7 +26,8 @@ from .wms import WmSModel
 CHECKPOINT_FORMAT = "wm_s/1"
 #: Weights that checkpoints written before the corresponding feature legitimately lack.
 _OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.",
-                      "residual_net.courtesy_proj.", "merge_negotiation.")
+                      "residual_net.courtesy_proj.", "merge_negotiation.",
+                      "residual_net.residual_head_log_scale")
 #: V10COURTESY: per-block attention bias keys (``residual_net.blocks.N.attn.``).
 _OPTIONAL_CONTAINS = (".courtesy_bias.",)
 #: LANERATECAL: closed-loop per-head rate calibration stored next to a checkpoint
