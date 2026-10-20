@@ -1165,7 +1165,9 @@ class WmSModel(nn.Module):
         if direct.any():
             direct, next_s, next_v = self._apply_direct_commands(
                 out, direct, s, v, next_s, next_v, action_command, exec_cap=exec_cap)
-        if cav.any() and not self.black_box:
+        # The controller callback owns episode-persistent lifecycle state and must run exactly
+        # once per physics tick even after every CAV has exited (empty CAV mask).
+        if not self.black_box and (cav.any() or cav_controller is not None):
             next_s, next_v, next_lane = self._apply_cav_overrides(
                 out, state, cav, direct, present, k_steps, action_id, action_command,
                 cav_teacher, cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
@@ -1275,8 +1277,9 @@ class WmSModel(nn.Module):
                              exec_cap: Optional[Tensor] = None):
         """Replace the learned motion of CAV slots by teacher/controller motion.
 
-        The controller callback runs once per physics tick (also on direct-only ticks)
-        because the dispatcher owns episode-persistent controller lifecycle state.
+        The controller callback runs once per physics tick (also on direct-only ticks and
+        ticks with no present CAV) because the dispatcher owns episode-persistent controller
+        lifecycle state; an all-false ``cav`` mask applies no override.
         With ``exec_cap`` the callback state carries it under ``cav.EXEC_CAP_KEY``; command
         executors apply it to their commanded slots (``cav.apply_exec_cap``), teachers ignore it.
         """
