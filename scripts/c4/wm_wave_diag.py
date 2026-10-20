@@ -492,6 +492,10 @@ def main(argv=None) -> int:
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
     ap.add_argument("--md")
+    # V10BRKPROBE inference-only braking diagnostics (default off = bit-identical).
+    ap.add_argument("--diag-zero-temporal", action="store_true")
+    ap.add_argument("--diag-residual-bound", type=float, default=None)
+    ap.add_argument("--diag-temporal-tau", type=float, default=None)
     args = ap.parse_args(argv)
     _ensure_src()
     for path in (args.wm, args.states, args.out, args.md):
@@ -503,8 +507,16 @@ def main(argv=None) -> int:
         raise SystemExit("no starts selected")
     from wms.eval.predictor import RolloutFlags, WmsPredictor
 
+    diag = {}
+    if args.diag_zero_temporal:
+        diag["diag_zero_temporal"] = True
+    if args.diag_residual_bound is not None:
+        diag["diag_residual_bound_mps2"] = float(args.diag_residual_bound)
+    if args.diag_temporal_tau is not None:
+        diag["diag_temporal_tau_s"] = float(args.diag_temporal_tau)
     predictor = WmsPredictor.from_checkpoint(
-        args.wm, RolloutFlags(entries=True, entries_v2=True, entry_queue_state=True),
+        args.wm, RolloutFlags(entries=True, entries_v2=True, entry_queue_state=True,
+                              **diag),
         device=args.device)
     window_steps = max(1, int(round(float(args.window_s) / DT_S)))
     results = []
@@ -521,6 +533,9 @@ def main(argv=None) -> int:
             for key in results[0]["residual_head_probe"]}
     doc = {"schema": "c4_wm_wave_diag/1", "wm": args.wm, "states": args.states,
            "select": int(args.select), "horizon_s": float(args.horizon),
+           "diag": diag, "diag_zero_temporal": bool(args.diag_zero_temporal),
+           "diag_residual_bound_mps2": args.diag_residual_bound,
+           "diag_temporal_tau_s": args.diag_temporal_tau,
            "onset_decel_mps2": ON_FLAG, "window_s": float(args.window_s),
            "starts": results, "wm_pooled": pooled_wm, "sumo_pooled": pooled_sumo,
            "physics_only_pooled": phys, "residual_head_pooled": head}

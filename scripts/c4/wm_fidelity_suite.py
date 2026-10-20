@@ -666,13 +666,13 @@ def evaluate_state(predictor, payload) -> dict:
     }
 
 
-def _init_worker(wm, device, entries) -> None:
+def _init_worker(wm, device, entries, diag=None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("MKL_NUM_THREADS", "1")
     import torch
     torch.set_num_threads(1)
     _WORKER["predictor"] = _delay_module().PredictorFactory(
-        wm, device=device, entries=entries)()
+        wm, device=device, entries=entries, diag=diag)()
 
 
 def _work_state(predictor, payload):
@@ -682,13 +682,14 @@ def _work_state(predictor, payload):
 
 def _map(payloads, wm, args) -> list[dict]:
     workers = max(1, int(args.workers))
+    diag = diag_flags(args)
     if workers <= 1:
         predictor = _delay_module().PredictorFactory(
-            wm, device=args.device, entries=args.entries)()
+            wm, device=args.device, entries=args.entries, diag=diag)()
         return [_work_state(predictor, payload) for payload in payloads]
     from concurrent.futures import ProcessPoolExecutor
     with ProcessPoolExecutor(max_workers=workers, initializer=_init_worker,
-                             initargs=(str(wm), args.device, args.entries)) as pool:
+                             initargs=(str(wm), args.device, args.entries, diag)) as pool:
         futures = [pool.submit(_work_state, None, payload) for payload in payloads]
         return [future.result() for future in futures]
 
@@ -851,7 +852,26 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--out", required=True, help="output JSON path")
     ap.add_argument("--md", help="optional markdown report path")
+    # V10BRKPROBE inference-only braking diagnostics (default off = bit-identical).
+    ap.add_argument("--diag-zero-temporal", action="store_true",
+                    help="zero the temporal residual acceleration output")
+    ap.add_argument("--diag-residual-bound", type=float, default=None,
+                    help="hard bound B on the combined learned residual (m/s^2)")
+    ap.add_argument("--diag-temporal-tau", type=float, default=None,
+                    help="causal first-order low-pass time constant of the temporal output (s)")
     return ap
+
+
+def diag_flags(args) -> dict:
+    """V10BRKPROBE switches passed to ``RolloutFlags`` (empty = unchanged rollout)."""
+    flags = {}
+    if args.diag_zero_temporal:
+        flags["diag_zero_temporal"] = True
+    if args.diag_residual_bound is not None:
+        flags["diag_residual_bound_mps2"] = float(args.diag_residual_bound)
+    if args.diag_temporal_tau is not None:
+        flags["diag_temporal_tau_s"] = float(args.diag_temporal_tau)
+    return flags
 
 
 def _resolve_starts(args):
@@ -895,6 +915,7 @@ def main(argv=None) -> int:
         "targets": [_hlabel(t) for t in targets],
         "wave_window_s": float(args.wave_window_s),
         "entries": args.entries,
+        "diag": diag_flags(args),
         "device": args.device,
         "workers": max(1, int(args.workers)),
         "tolerance": TOLERANCE,

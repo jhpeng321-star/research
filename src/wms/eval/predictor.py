@@ -53,6 +53,12 @@ class RolloutFlags:
     diag_lane_cap_off: bool = False
     diag_encoder_population: bool = False
     diag_recorded_lanes: bool = False
+    #: V10BRKPROBE braking diagnostics (inference only, default off/bit-identical):
+    #: zero the temporal acceleration output, hard-bound the combined residual, or
+    #: low-pass the temporal output with this time constant (seconds).
+    diag_zero_temporal: bool = False
+    diag_residual_bound_mps2: float | None = None
+    diag_temporal_tau_s: float | None = None
     #: LANEFIX: seed of the lane draws when the model samples its lane decisions
     #: (``lane_decision='sample'``; ignored for argmax models) - every state is scored with
     #: the same, reproducible draws.
@@ -63,6 +69,11 @@ class RolloutFlags:
             raise ValueError("entries_v2 requires entries=True")
         if self.entry_queue_state and not self.entries_v2:
             raise ValueError("entry_queue_state requires entries=True and entries_v2=True")
+        for name in ("diag_residual_bound_mps2", "diag_temporal_tau_s"):
+            value = getattr(self, name)
+            if value is not None and not (isinstance(value, (int, float))
+                                          and value > 0 and np.isfinite(value)):
+                raise ValueError(f"{name} must be a finite positive number or None")
 
 
 def _pad_slots(initial: dict, n_pad: int) -> dict:
@@ -119,6 +130,12 @@ class WmsPredictor:
             self.model.lane_logit_cap = None
         if flags.diag_encoder_population:
             self.model.diag_encoder_population = True
+        if flags.diag_zero_temporal:
+            self.model.diag_zero_temporal = True
+        if flags.diag_residual_bound_mps2 is not None:
+            self.model.diag_residual_bound_mps2 = float(flags.diag_residual_bound_mps2)
+        if flags.diag_temporal_tau_s is not None:
+            self.model.diag_temporal_tau_s = float(flags.diag_temporal_tau_s)
 
     @classmethod
     def from_checkpoint(cls, path: str | Path, flags: RolloutFlags = RolloutFlags(), *,
@@ -135,6 +152,9 @@ class WmsPredictor:
             raise PredictorError(f"unsupported CAV evaluation mode: {mode}")
         arm = str(controllers.get("arm", "native"))
         tools = self.backend.tools
+        reset = getattr(self.model, "reset_diag_state", None)
+        if reset is not None:
+            reset()
         t0_s, ids, kin, is_cav = t0_vehicles(state)
         driver_history, driver_history_mask = self._history.build(state, ids)
         n_steps = max(1, int(round(float(horizon_s) / DT_S)))

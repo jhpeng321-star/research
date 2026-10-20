@@ -198,6 +198,19 @@ class WmSModel(nn.Module):
         # never replays the CAV controller callback (it runs outside ``forward``), so it is
         # safe with stateful controllers and leaves values and gradients unchanged.
         self.checkpoint_forward = False
+        # Braking diagnostic switches (V10BRKPROBE, inference only, never part of a
+        # checkpoint; all default OFF and bit-identical when off):
+        #   diag_zero_temporal      zero the temporal residual output (history_proj +
+        #                           k_embedding + temporal) while keeping the attention head
+        #                           and driver adaptation.
+        #   diag_residual_bound_mps2 hard bound on the COMBINED learned residual (attention +
+        #                           temporal) after the configured bounds; None = off.
+        #   diag_temporal_tau_s     causal first-order low-pass of the temporal acceleration
+        #                           output with this time constant in seconds; None = off.
+        self.diag_zero_temporal = False
+        self.diag_residual_bound_mps2 = None
+        self.diag_temporal_tau_s = None
+        self._diag_temporal_lp = None
         # Runtime execution-cap switch (EXECCAP_NOTES.md, never part of a checkpoint): "off"
         # (default, bit-identical) or "idm" -- every COMMAND-driven CAV realises at most the
         # SUMO-consistent ceiling min(own physics-core IDM accel, (v0-v)/dt, accel param).
@@ -317,6 +330,10 @@ class WmSModel(nn.Module):
         result = self.residual_net.load_state_dict(copied, strict=strict)
         return {"loaded": len(copied), "available": len(own),
                 "missing": list(result.missing_keys)}
+
+    def reset_diag_state(self) -> None:
+        """Clear the causal low-pass state of the braking diagnostic (no-op when off)."""
+        self._diag_temporal_lp = None
 
     def gate(self, k_steps: Tensor | int) -> Tensor:
         """Learned monotone gate with exactly ``g(0) == 0``."""
@@ -695,15 +712,36 @@ class WmSModel(nn.Module):
             action_command=action_command)
         temporal = self._temporal_delta(history, history_mask, k, (b, slots),
                                         kin.dtype, kin.device, controller_emb=controller_emb)
+        temporal_accel = temporal[..., 0]
+        if self.diag_zero_temporal:
+            # V10BRKPROBE (a): remove only the temporal acceleration emission; the
+            # attention head, driver adaptation and the temporal lane path stay intact.
+            temporal_accel = torch.zeros_like(temporal_accel)
+        if self.diag_temporal_tau_s is not None:
+            # V10BRKPROBE (c): causal first-order low-pass on the temporal output.  The
+            # state is cleared by ``reset_diag_state`` at every new rollout.
+            tau = float(self.diag_temporal_tau_s)
+            alpha = float(self.physics.dt_s) / (tau + float(self.physics.dt_s))
+            previous = self._diag_temporal_lp
+            if previous is None or tuple(previous.shape) != tuple(temporal_accel.shape) \
+                    or previous.device != temporal_accel.device:
+                previous = torch.zeros_like(temporal_accel)
+            filtered = previous + alpha * (temporal_accel - previous)
+            self._diag_temporal_lp = filtered.detach()
+            temporal_accel = filtered
         gate = self.gate(k).to(kin.dtype)
 
         accel_delta = (torch.zeros_like(physics) if self.rollout_mode == "driver_params"
-                       else base["accel_delta_mps2"] + temporal[..., 0])
+                       else base["accel_delta_mps2"] + temporal_accel)
         raw_residual = gate * accel_delta
         correction = bounded_accel_correction(
             gate * accel_delta, soft_bound_pos=self.residual_soft_bound_mps2,
             soft_bound_neg=self.residual_soft_bound_neg_mps2,
             cap_pos=self.residual_cap_mps2, cap_neg=self.residual_cap_neg_mps2)
+        if self.diag_residual_bound_mps2 is not None:
+            # V10BRKPROBE (b): hard inference bound on the COMBINED learned residual.
+            limit = float(self.diag_residual_bound_mps2)
+            correction = correction.clamp(-limit, limit)
         if accel_noise is None:
             accel = torch.where(learned, physics + correction, physics)
         else:

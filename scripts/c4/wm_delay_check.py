@@ -344,19 +344,23 @@ def group_pairs(records) -> list[dict]:
 class PredictorFactory:
     """Picklable factory of ``WmsPredictor.predict_states`` honouring device and entries."""
 
-    def __init__(self, path, device: str = "cpu", entries: str = "off") -> None:
+    def __init__(self, path, device: str = "cpu", entries: str = "off",
+                 diag: dict | None = None) -> None:
         self.path = str(path)
         self.device = str(device)
         self.entries = str(entries)
+        # V10BRKPROBE inference-only braking switches (None/default = bit-identical).
+        self.diag = dict(diag or {})
 
     def __call__(self):
         from wms.eval.predictor import RolloutFlags, WmsPredictor
         if self.entries == "queue":
-            flags = RolloutFlags(entries=True, entries_v2=True, entry_queue_state=True)
+            flags = RolloutFlags(entries=True, entries_v2=True, entry_queue_state=True,
+                                 **self.diag)
         elif self.entries == "on":
-            flags = RolloutFlags(entries=True, entries_v2=True)
+            flags = RolloutFlags(entries=True, entries_v2=True, **self.diag)
         else:
-            flags = RolloutFlags(entries=False, entries_v2=False)
+            flags = RolloutFlags(entries=False, entries_v2=False, **self.diag)
         return WmsPredictor.from_checkpoint(self.path, flags,
                                             device=self.device).predict_states
 
