@@ -224,6 +224,11 @@ class MergeFirstPassageTerm(LossTerm):
         prev_pres = torch.cat((cut(ctx.current["present"]).bool().unsqueeze(1),
                                pres_dec[:, :-1]), 1)
         new_car = pres_dec & ~prev_pres
+        # A slot reused at the chunk boundary is a new car: do not inherit its maximum.
+        carried_present = ctx.current.get("merge_fp_present")
+        if torch.is_tensor(carried_present):
+            new0 = pres_dec[:, 0] & ~carried_present.bool()
+            m_prev = torch.where(new0, torch.full_like(m_prev, float("-inf")), m_prev)
         m_list: list[Tensor] = []
         m = m_prev
         for i in range(T):
@@ -247,12 +252,16 @@ class MergeFirstPassageTerm(LossTerm):
         last_ok = torch.where(ramp_dec & alive, idx.expand_as(ramp_dec),
                               torch.full_like(idx, -1)).max(1).values
 
-        # ---- model's own first merge (global, carried across chunks)
-        departed = ramp_dec & masks & (lanes != int(cfg.merge_lane))
-        local_first = _first_index(departed)
-        before_merge = prep["pred_merge"].get(c0, torch.full_like(local_first, -1))
-        first_abs = torch.where(local_first >= 0, local_first + c0, torch.full_like(local_first, -1))
-        pred_merge = torch.where((before_merge < 0) & (first_abs >= 0), first_abs, before_merge)
+        # ---- model's own first merge (global, carried across chunks; reset on slot reuse)
+        departed = ramp_dec & masks & (lanes != int(cfg.merge_lane)) & ~new_car
+        before_merge = prep["pred_merge"].get(c0,
+                                              torch.full_like(departed[:, 0], -1))
+        pred_merge = before_merge
+        for i in range(T):
+            pred_merge = torch.where(new_car[:, i],
+                                     torch.full_like(pred_merge, -1), pred_merge)
+            pred_merge = torch.where((pred_merge < 0) & departed[:, i],
+                                     torch.full_like(pred_merge, c0 + i), pred_merge)
         prep["pred_merge"][c1] = pred_merge
 
         rec_event = prep["rec_event"]
@@ -279,7 +288,12 @@ class MergeFirstPassageTerm(LossTerm):
         mass = torch.sigmoid(m_e - loc_e) - torch.sigmoid(m_prev_e - loc_e)
         supported = event_any & (mass > 1.0e-12)
         log_mass = log_event_mass(m_prev_e, m_e, loc_e)
-        log_denom = log_survival(m_prev, loc[:, 0])
+        # Survival before the car's delayed entry (chunk start, or its first at-risk step).
+        den_idx = (entry.clamp_min(c0) - c0).clamp(0, T - 1)
+        m_den = torch.zeros_like(m_prev)
+        for i in range(T):
+            m_den = torch.where(den_idx == i, m_before[:, i], m_den)
+        log_denom = log_survival(m_den, loc[:, 0])
 
         # Censor contribution at the last compatible step (compatibility, early merge,
         # window end).  A car already merged in the record before this chunk is skipped.
