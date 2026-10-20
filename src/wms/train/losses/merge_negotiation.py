@@ -37,18 +37,48 @@ class MergeNegotiationLossConfig:
     dend_m: float = 60.0
     merge_lane: int = 2
     target_lane: int = 1
+    #: Time-chunk width of the pairwise gap matrix (bounds the [B, chunk, K, K] peak).
+    pair_chunk_steps: int = 50
 
     def __post_init__(self) -> None:
         if not (math.isfinite(float(self.weight)) and self.weight >= 0.0):
             raise ValueError("merge negotiation weight must be finite and non-negative")
         if self.behind_m <= 0.0 or self.dend_m <= 0.0:
             raise ValueError("merge negotiation matching distances must be positive")
+        if int(self.pair_chunk_steps) < 1:
+            raise ValueError("merge negotiation pair chunk size must be >= 1")
 
 
 def _lane(kin: Tensor) -> Tensor:
     onehot = kin[..., 1:4]
     lane = onehot.argmax(-1)
     return torch.where(onehot.sum(-1) > 0, lane, torch.full_like(lane, -1))
+
+
+def _nearest_behind_gap(s: Tensor, target: Tensor, behind_m: float,
+                        chunk_steps: int) -> tuple[Tensor, Tensor]:
+    """Nearest target-lane follower (``gap_min``, column index) per row.
+
+    ``s`` / ``target`` are ``[B, T, K]``; the output is ``[B, T, K]``.  The pairwise
+    ``s_i - s_j`` tensor is materialised ``chunk_steps`` time steps at a time, so the peak
+    is ``[B, min(T, chunk), K, K]`` instead of ``[B, T, K, K]``.  The reduction is over the
+    target columns, which chunking does not reorder, so results are bit-identical.
+    """
+    b, t, k = s.shape
+    gaps: list[Tensor] = []
+    idxs: list[Tensor] = []
+    for t0 in range(0, t, chunk_steps):
+        sc, tc = s[:, t0:t0 + chunk_steps], target[:, t0:t0 + chunk_steps]
+        ds = sc.unsqueeze(-1) - sc.unsqueeze(-2)                   # [B, chunk, K, K]
+        behind = tc.unsqueeze(-2) & (ds >= 0.0) & (ds <= float(behind_m))
+        gap = torch.where(behind, ds, torch.full_like(ds, float("inf")))
+        gap_min, idx = gap.min(-1)
+        gaps.append(gap_min)
+        idxs.append(idx)
+    if not gaps:
+        empty = s.new_empty((b, 0, k))
+        return empty, torch.empty((b, 0, k), dtype=torch.long, device=s.device)
+    return torch.cat(gaps, dim=1), torch.cat(idxs, dim=1)
 
 
 class MergeNegotiationTerm(LossTerm):
@@ -71,10 +101,8 @@ class MergeNegotiationTerm(LossTerm):
             end = 75.44
             near = ramp & ((end - s[:, :n]) < float(cfg.dend_m))
             target = valid[:, :n] & (lanes[:, :n] == cfg.target_lane)
-            ds = s[:, :n].unsqueeze(-1) - s[:, :n].unsqueeze(-2)       # [B, t, ramp, target]
-            behind = (target.unsqueeze(-2) & (ds >= 0.0) & (ds <= float(cfg.behind_m)))
-            gap = torch.where(behind, ds, torch.full_like(ds, float("inf")))
-            gap_min, idx = gap.min(-1)
+            gap_min, idx = _nearest_behind_gap(
+                s[:, :n], target, cfg.behind_m, int(cfg.pair_chunk_steps))
             has = torch.isfinite(gap_min) & near
             safe_idx = idx.clamp(0, max(k - 1, 0))
             f_acc = a[:, 1:n + 1].gather(-1, safe_idx)                 # next-step accel

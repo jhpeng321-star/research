@@ -10,6 +10,8 @@ from wms.model.merge_negotiation import (MergeNegotiationNet, N_PAIR_FEATURES,
                                          pair_features, scatter_follower_accel)
 from wms.physics.config import PhysicsConfig
 from wms.train.losses.base import LossContext, UnrollTargets
+from wms.train.losses.merge_negotiation import (MergeNegotiationLossConfig,
+                                                MergeNegotiationTerm)
 from wms.train.losses.merge_timing import MergeTimingConfig, MergeTimingTerm
 from wms.train.settings import TrainSettings
 from wms.train.inputs import state_from_kin
@@ -105,6 +107,83 @@ def _survival_targets():
         denom=torch.tensor(float(present[:, 1:].sum())), lane_target=lanes[:, 1:].argmax(-1),
         loss_valid=present, is_cav=torch.zeros_like(present), dt_s=0.5,
         position_delta_m=5.0, speed_delta_mps=1.0, history_lane_head=False)
+
+
+def _negotiation_targets(n_steps: int, k: int, seed: int = 0) -> UnrollTargets:
+    g = torch.Generator().manual_seed(seed)
+    b = 3
+    states = torch.zeros(b, n_steps + 1, k, 7)
+    lanes = torch.randint(-1, 3, (b, n_steps + 1, k), generator=g)
+    onehot = torch.zeros(b, n_steps + 1, k, 3)
+    keep = lanes >= 0
+    onehot[keep] = torch.nn.functional.one_hot(lanes[keep], 3).float()
+    states[..., 1:4] = onehot
+    pos = torch.randint(0, 150, (b, n_steps + 1, k), generator=g).float()
+    # Ties: two lane-1 vehicles at the same position -> equal gaps for the min reduction.
+    lanes[2, :, 2] = 1
+    lanes[2, :, 3] = 1
+    onehot[2, :, 2] = torch.tensor([0.0, 1.0, 0.0])
+    onehot[2, :, 3] = torch.tensor([0.0, 1.0, 0.0])
+    states[2, :, :, 1:4] = onehot[2]
+    pos[2, :, 2] = pos[2, :, 3]
+    states[..., 0] = pos
+    states[..., 5] = torch.rand(b, n_steps + 1, k, generator=g) * 4.0 - 2.5
+    present = torch.rand(b, n_steps + 1, k, generator=g) > 0.15
+    present[0] = False                                   # empty mask batch row
+    return UnrollTargets(
+        states=states, n_steps=n_steps, weights=torch.ones(1, n_steps, 1),
+        hdv_mask=present[:, 1:], aux_mask=present[:, :n_steps],
+        aux_count=int(present[:, :n_steps].sum()),
+        denom=torch.tensor(float(present[:, 1:].sum())),
+        lane_target=lanes[:, 1:].clamp_min(0), loss_valid=present,
+        is_cav=torch.zeros_like(present), dt_s=300.0,
+        position_delta_m=5.0, speed_delta_mps=1.0, history_lane_head=False)
+
+
+def _old_prepare(targets: UnrollTargets, cfg: MergeNegotiationLossConfig) -> dict:
+    """The pre-chunking dense [B, T, K, K] implementation, kept as the reference."""
+    n = targets.n_steps
+    rec = targets.states[:, :n + 1].float()
+    k = rec.shape[2]
+    onehot = rec[..., 1:4]
+    lane = onehot.argmax(-1)
+    lanes = torch.where(onehot.sum(-1) > 0, lane, torch.full_like(lane, -1))
+    valid = targets.loss_valid[:, :n + 1, :k].bool() & ~targets.is_cav[:, :n + 1, :k]
+    s, a = rec[..., 0], rec[..., 5]
+    ramp = valid[:, :n] & (lanes[:, :n] == cfg.merge_lane)
+    near = ramp & ((75.44 - s[:, :n]) < float(cfg.dend_m))
+    target = valid[:, :n] & (lanes[:, :n] == cfg.target_lane)
+    ds = s[:, :n].unsqueeze(-1) - s[:, :n].unsqueeze(-2)
+    behind = target.unsqueeze(-2) & (ds >= 0.0) & (ds <= float(cfg.behind_m))
+    gap = torch.where(behind, ds, torch.full_like(ds, float("inf")))
+    gap_min, idx = gap.min(-1)
+    has = torch.isfinite(gap_min) & near
+    safe_idx = idx.clamp(0, max(k - 1, 0))
+    f_acc = a[:, 1:n + 1].gather(-1, safe_idx)
+    yield_label = (f_acc < float(cfg.yield_decel_mps2)) & has
+    merged = (lanes[:, 1:n + 1] == cfg.target_lane) & ramp
+    return {"valid": has, "yield": yield_label, "merged": merged,
+            "n_valid": float(has.sum()), "n_pos": float(yield_label.sum()),
+            "n_merge_pos": float((yield_label & merged).sum()),
+            "n_neg": float((has & ~yield_label).sum())}
+
+
+@pytest.mark.parametrize("n_steps", [23, 0])
+def test_chunked_prepare_is_bit_identical_to_dense(n_steps):
+    for seed in (0, 1):
+        targets = _negotiation_targets(n_steps, k=6, seed=seed)
+        cfg = MergeNegotiationLossConfig(weight=1.0)
+        want = _old_prepare(targets, cfg)
+        for chunk in (1, 5, 7, 50, 1000):
+            term = MergeNegotiationTerm(MergeNegotiationLossConfig(
+                weight=1.0, pair_chunk_steps=chunk))
+            term.prepare(targets)
+            prep = targets.prepared["merge_negotiation"]
+            for key in ("valid", "yield", "merged"):
+                assert torch.equal(prep[key], want[key]), (seed, chunk, key)
+            for key in ("n_valid", "n_pos", "n_merge_pos", "n_neg"):
+                assert prep[key] == want[key], (seed, chunk, key)
+            targets.prepared.clear()
 
 
 def test_survival_loss_is_correctly_censored():
