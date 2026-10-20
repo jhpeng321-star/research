@@ -40,9 +40,9 @@ def test_margins_matched_speed_small_gap_accepted():
     assert torch.sigmoid(margin / 0.75).item() > 0.5
 
 
-def test_margins_absent_side_blocks_acceptance():
+def test_margins_absent_side_is_free_space():
     margin = _scene(10.0, 10.0, 10.0, 20.0, 20.0, has_f=False)
-    assert margin.item() < 0.0
+    assert margin.item() > 0.0
 
 
 def test_alpha_persists_and_resets_on_slot_reuse():

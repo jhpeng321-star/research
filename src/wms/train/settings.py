@@ -677,8 +677,8 @@ class TrainSettings:
             self.merge_gap_weight, self.merge_safety_brake_weight,
             self.merge_yield_control_weight, self.merge_safety_control_weight)),
             "merge_yield gap/brake/control weights must be non-negative")
-        _require(self.merge_decision in ("hazard", "threshold", "frailty"),
-                 "merge_decision must be 'hazard', 'threshold' or 'frailty'")
+        _require(self.merge_decision in ("hazard", "threshold", "frailty", "secure_gap"),
+                 "merge_decision must be 'hazard', 'threshold', 'frailty' or 'secure_gap'")
         _require(math.isfinite(float(self.merge_first_passage_weight))
                  and float(self.merge_first_passage_weight) >= 0.0
                  and math.isfinite(float(self.merge_first_passage_rank_weight))

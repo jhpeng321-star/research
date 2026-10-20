@@ -90,9 +90,9 @@ def _geometry(cfg: MergeCoreConfig) -> SimpleNamespace:
 def _core_margin(alpha: Tensor, gap_l: Tensor, gap_f: Tensor, v: Tensor, v_l: Tensor,
                  v_f: Tensor, a: Tensor, a_l: Tensor, a_f: Tensor, has_l: Tensor,
                  has_f: Tensor, s0: Tensor, T: Tensor, b: Tensor, tau_a: Tensor,
-                 residual: Optional[Tensor]) -> Tensor:
+                 residual: Optional[Tensor], require_both: Optional[Tensor] = None) -> Tensor:
     ml, mf = secure_gap_sides(gap_l, gap_f, v, v_l, v_f, a, a_l, a_f, has_l, has_f,
-                              s0, T, b, tau_a, alpha)
+                              s0, T, b, tau_a, alpha, require_both)
     margin = torch.minimum(ml, mf)
     return margin if residual is None else margin + residual
 
@@ -178,6 +178,8 @@ class MergeCoreTerm(LossTerm):
         sigma = cut(pred["merge_core_alpha_scale"]).float()
         residual = pred.get("merge_core_residual")
         residual = None if not torch.is_tensor(residual) else cut(residual).float()
+        require = pred.get("merge_core_require_both")
+        require = None if not torch.is_tensor(require) else cut(require).bool()
         s0 = pred["merge_core_s0"].float().mean()
         Tp = pred["merge_core_T"].float().mean()
         b = pred["merge_core_b"].float().mean()
@@ -251,7 +253,8 @@ class MergeCoreTerm(LossTerm):
                 a_l.unsqueeze(1), a_f.unsqueeze(1), has_l.unsqueeze(1),
                 has_f.unsqueeze(1))
         margin_q = _core_margin(alpha_q, *base, s0, Tp, b, tau,
-                                None if residual is None else residual.unsqueeze(1))
+                                None if residual is None else residual.unsqueeze(1),
+                                None if require is None else require.unsqueeze(1))
         logits = margin_q / temperature
         log_h = F.logsigmoid(logits)
         log_1mh = F.logsigmoid(-logits)
@@ -359,7 +362,7 @@ class MergeCoreTerm(LossTerm):
                                 v.unsqueeze(1), v_l.unsqueeze(1), v_f.unsqueeze(1),
                                 a.unsqueeze(1), a_l.unsqueeze(1), a_f.unsqueeze(1),
                                 has_l.unsqueeze(1), has_f.unsqueeze(1), s0, Tp, b, tau,
-                                None)
+                                None, None)
         logits = margin_q / temperature
         y = label.unsqueeze(1)
         ll = y * F.logsigmoid(logits) + (1.0 - y) * F.logsigmoid(-logits)

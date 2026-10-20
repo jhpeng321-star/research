@@ -77,7 +77,7 @@ def _frames(record: dict) -> list[dict]:
 def build_rows(records: list[dict]) -> tuple[dict, dict]:
     """Per-car rows of recorded ramp states and their next-step merge label."""
     names = ("gap_l", "gap_f", "v", "v_l", "v_f", "a", "a_l", "a_f",
-             "has_l", "has_f", "y", "time_idx", "car")
+             "has_l", "has_f", "y", "time_idx", "car", "s")
     feats = {name: [] for name in names}
     world_of_row: list[str] = []
     merge_step: list[int] = []
@@ -152,7 +152,7 @@ def build_rows(records: list[dict]) -> tuple[dict, dict]:
                                     ("a", float(accel[t, j])), ("a_l", a_l), ("a_f", a_f),
                                     ("has_l", 1.0 if has_l else 0.0),
                                     ("has_f", 1.0 if has_f else 0.0), ("y", y),
-                                    ("time_idx", t)):
+                                    ("time_idx", t), ("s", float(s[t, j]))):
                     feats[name].append(value)
                 feats["car"].append(car_id)
                 world_of_row.append(world)
@@ -181,7 +181,8 @@ def _quad(n_quad: int):
             torch.tensor(weights / math.sqrt(math.pi), dtype=torch.float32))
 
 
-def margins(arrays: dict, params: dict, alpha: torch.Tensor) -> torch.Tensor:
+def margins(arrays: dict, params: dict, alpha: torch.Tensor,
+            require_both: bool = False) -> torch.Tensor:
     v = arrays["v"]
     v_l = arrays["v_l"]
     v_f = arrays["v_f"]
@@ -196,18 +197,22 @@ def margins(arrays: dict, params: dict, alpha: torch.Tensor) -> torch.Tensor:
         v_ant.square() - v_l_ant.square()) / (2.0 * b)
     req_f = params["s0"] + params["T"] * v_f_ant + torch.relu(
         v_f_ant.square() - v_ant.square()) / (2.0 * b)
-    ml = torch.where(arrays["has_l"], gap_l + (v_l - v) * tau - req_l / alpha,
-                     torch.full_like(gap_l, -1.0e3))
-    mf = torch.where(arrays["has_f"], gap_f + (v - v_f) * tau - req_f / alpha,
-                     torch.full_like(gap_f, -1.0e3))
+    both = (arrays["s"] <= ZONE_END - 5.0 if require_both
+            else torch.zeros_like(arrays["s"], dtype=torch.bool))
+    absent_l = torch.where(both, torch.full_like(gap_l, -1.0e3),
+                           torch.full_like(gap_l, 1.0e3))
+    absent_f = torch.where(both, torch.full_like(gap_f, -1.0e3),
+                           torch.full_like(gap_f, 1.0e3))
+    ml = torch.where(arrays["has_l"], gap_l + (v_l - v) * tau - req_l / alpha, absent_l)
+    mf = torch.where(arrays["has_f"], gap_f + (v - v_f) * tau - req_f / alpha, absent_f)
     return torch.minimum(ml, mf)
 
 
 def car_loglik(arrays: dict, params: dict, nodes: torch.Tensor, weights: torch.Tensor,
-               n_cars: int) -> torch.Tensor:
+               n_cars: int, require_both: bool = False) -> torch.Tensor:
     y = arrays["y"]
     alpha_q = torch.exp((params["log_alpha_sigma"] * nodes).clamp(-8.0, 8.0))
-    rows = torch.stack([margins(arrays, params, a) for a in alpha_q], 0)  # [Q, R]
+    rows = torch.stack([margins(arrays, params, a, require_both) for a in alpha_q], 0)
     logits = rows / params["temperature"].clamp_min(1.0e-3)
     ll = y * torch.nn.functional.logsigmoid(logits) + (1.0 - y) * torch.nn.functional.logsigmoid(-logits)
     logw = torch.log(weights.clamp_min(1.0e-12))
@@ -217,16 +222,17 @@ def car_loglik(arrays: dict, params: dict, nodes: torch.Tensor, weights: torch.T
     return per_car
 
 
-def car_prob(arrays: dict, params: dict) -> torch.Tensor:
+def car_prob(arrays: dict, params: dict, require_both: bool = False) -> torch.Tensor:
     alpha = torch.ones_like(arrays["v"])
-    return torch.sigmoid(margins(arrays, params, alpha) / params["temperature"].clamp_min(1.0e-3))
+    return torch.sigmoid(margins(arrays, params, alpha, require_both)
+                         / params["temperature"].clamp_min(1.0e-3))
 
 
 def evaluate(arrays: dict, meta: dict, params: dict, mask_rows: np.ndarray,
-             mask_cars: np.ndarray) -> dict:
+             mask_cars: np.ndarray, require_both: bool = False) -> dict:
     tensors = {key: torch.as_tensor(value) for key, value in arrays.items()
                if key not in ("time_idx",)}
-    prob = car_prob(tensors, params).numpy()
+    prob = car_prob(tensors, params, require_both).numpy()
     rows_sel = mask_rows
     y = arrays["y"].astype(bool)
     pred = prob >= 0.5
@@ -280,8 +286,11 @@ def main() -> None:
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--report", default=str(DEFAULT_REPORT))
     parser.add_argument("--no-write", action="store_true")
+    parser.add_argument("--require-both", action="store_true",
+                        help="two-sided identification diagnostic")
     args = parser.parse_args()
     torch.set_num_threads(1)
+    require_both = bool(args.require_both)
     records = load_records(args.data or DEFAULT_DATA)
     arrays_np, meta = build_rows(records)
     worlds = meta["world"]
@@ -312,7 +321,7 @@ def main() -> None:
     best_score = -1.0
     for values in grid:
         params = as_params(values)
-        metrics = evaluate(arrays_np, meta, params, fit_rows, fit_cars)
+        metrics = evaluate(arrays_np, meta, params, fit_rows, fit_cars, require_both)
         rec, w2 = metrics["event_recall"], metrics["timing_within_2s"]
         if rec is None or w2 is None or not np.isfinite(rec) or not np.isfinite(w2):
             continue
@@ -336,12 +345,13 @@ def main() -> None:
         "alpha_log_sigma": float(math.exp(values["log_alpha_sigma"])),
         "residual_scale_m": 0.5, "yield_scale_mps2": 1.5,
     }
-    fit_metrics = evaluate(arrays_np, meta, params, fit_rows, fit_cars)
-    held_metrics = evaluate(arrays_np, meta, params, held_rows, held_cars)
+    fit_metrics = evaluate(arrays_np, meta, params, fit_rows, fit_cars, require_both)
+    held_metrics = evaluate(arrays_np, meta, params, held_rows, held_cars, require_both)
     report = {"fitted": fitted, "fit": fit_metrics, "held_out": held_metrics,
               "n_rows": int(len(worlds)), "n_worlds": len(unique_worlds),
               "n_held_worlds": len(held), "search": int(args.search),
               "seed": int(args.seed), "fit_score": float(best_score),
+              "require_both": require_both,
               "n_quad": int(args.n_quad)}
     print(json.dumps(report, indent=2), flush=True)
     if not args.no_write:

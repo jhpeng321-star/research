@@ -41,9 +41,9 @@ from .merge_threshold import target_gap_configuration
 INIT_FILE = Path(__file__).with_name("merge_core_init.json")
 #: Fallback initialisation (the fitted JSON is the authoritative init when present).
 DEFAULT_INIT = {
-    "s0_m": 2.1834043522406286, "T_s": 0.8101083991445911,
-    "b_mps2": 1.5961324661965697, "tau_a_s": 0.9874870780612045,
-    "temperature_m": 1.0591040636807836, "alpha_log_sigma": 0.4462892582004192,
+    "s0_m": 2.160959664129727, "T_s": 0.8617146481156865,
+    "b_mps2": 1.9684840575324012, "tau_a_s": 1.0793451040830009,
+    "temperature_m": 1.2781399549008334, "alpha_log_sigma": 0.1275461805704343,
     "residual_scale_m": 0.5, "yield_scale_mps2": 1.5,
 }
 #: Metric features of the margin residual head.
@@ -52,6 +52,8 @@ N_MARGIN_FEATURES = 8
 N_YIELD_FEATURES = 7
 #: Large sentinel margin used when a side of the gap is absent.
 BIG_MARGIN = 1.0e3
+#: Last metres of the acceleration lane where a missing gap side is physically free space.
+LANE_END_FALLBACK_M = 15.0
 
 
 def load_init(path: Optional[str | Path] = None) -> dict[str, float]:
@@ -84,10 +86,11 @@ def _softplus(raw: Tensor) -> Tensor:
 def secure_gap_margin(gap_l: Tensor, gap_f: Tensor, v: Tensor, v_l: Tensor, v_f: Tensor,
                       a: Tensor, a_l: Tensor, a_f: Tensor, has_l: Tensor, has_f: Tensor,
                       s0: Tensor, T: Tensor, b: Tensor, tau_a: Tensor, alpha: Tensor,
-                      residual: Optional[Tensor] = None) -> Tensor:
+                      residual: Optional[Tensor] = None,
+                      require_both: Optional[Tensor] = None) -> Tensor:
     """Exact per-slot margin: ``min(gap_l - req_l/alpha, gap_f - req_f/alpha) + residual``."""
     ml, mf = secure_gap_sides(gap_l, gap_f, v, v_l, v_f, a, a_l, a_f, has_l, has_f,
-                              s0, T, b, tau_a, alpha)
+                              s0, T, b, tau_a, alpha, require_both)
     margin = torch.minimum(ml, mf)
     return margin if residual is None else margin + residual
 
@@ -195,8 +198,14 @@ class MergeCoreNet(nn.Module):
 def secure_gap_sides(gap_l: Tensor, gap_f: Tensor, v: Tensor, v_l: Tensor, v_f: Tensor,
                      a: Tensor, a_l: Tensor, a_f: Tensor, has_l: Tensor, has_f: Tensor,
                      s0: Tensor, T: Tensor, b: Tensor, tau_a: Tensor,
-                     alpha: Tensor) -> tuple[Tensor, Tensor]:
-    """Anticipated leader / follower margins at assertiveness ``alpha``."""
+                     alpha: Tensor,
+                     require_both: Optional[Tensor] = None) -> tuple[Tensor, Tensor]:
+    """Anticipated leader / follower margins at assertiveness ``alpha``.
+
+    ``require_both`` (default None = a missing side is physically free space and does not
+    block).  The two-sided identification diagnostic used by :mod:`tools.merge_core_fit`
+    passes the last ``LANE_END_FALLBACK_M`` metres' mask, where a missing side is free.
+    """
     tau = tau_a.clamp(0.0, 5.0)
     v_ant = (v + a.clamp(-8.0, 4.0) * tau).clamp(0.0, 60.0)
     v_l_ant = (v_l + a_l.clamp(-8.0, 4.0) * tau).clamp(0.0, 60.0)
@@ -205,10 +214,14 @@ def secure_gap_sides(gap_l: Tensor, gap_f: Tensor, v: Tensor, v_l: Tensor, v_f: 
     req_l = s0 + T * v_ant + torch.relu(v_ant.square() - v_l_ant.square()) / (2.0 * b_safe)
     req_f = s0 + T * v_f_ant + torch.relu(v_f_ant.square() - v_ant.square()) / (2.0 * b_safe)
     scale = alpha.clamp_min(1.0e-3)
-    ml = torch.where(has_l.bool(), gap_l + (v_l - v) * tau - req_l / scale,
-                     torch.full_like(gap_l, -BIG_MARGIN))
-    mf = torch.where(has_f.bool(), gap_f + (v - v_f) * tau - req_f / scale,
-                     torch.full_like(gap_f, -BIG_MARGIN))
+    both = (torch.zeros_like(gap_l, dtype=torch.bool) if require_both is None
+            else require_both.bool())
+    absent_l = torch.where(both, torch.full_like(gap_l, -BIG_MARGIN),
+                           torch.full_like(gap_l, BIG_MARGIN))
+    absent_f = torch.where(both, torch.full_like(gap_f, -BIG_MARGIN),
+                           torch.full_like(gap_f, BIG_MARGIN))
+    ml = torch.where(has_l.bool(), gap_l + (v_l - v) * tau - req_l / scale, absent_l)
+    mf = torch.where(has_f.bool(), gap_f + (v - v_f) * tau - req_f / scale, absent_f)
     return ml, mf
 
 

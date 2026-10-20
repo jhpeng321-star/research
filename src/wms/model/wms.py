@@ -64,7 +64,8 @@ _MERGE_CORE_LOG_KEYS = (
     "merge_core_margin", "merge_core_margin_l", "merge_core_margin_f",
     "merge_core_residual", "merge_core_probability", "merge_core_yield_accel",
     "merge_core_follower_index", "merge_core_valid_pair", "merge_core_s0",
-    "merge_core_T", "merge_core_b", "merge_core_tau_a", "merge_core_temperature")
+    "merge_core_T", "merge_core_b", "merge_core_tau_a", "merge_core_temperature",
+    "merge_core_require_both")
 
 
 @dataclass
@@ -976,7 +977,7 @@ class WmSModel(nn.Module):
             for key in ("gap_l", "gap_f", "v_l", "v_f", "a_l", "a_f", "has_l", "has_f",
                         "ramp", "intent", "alpha_log_location", "alpha_scale",
                         "margin", "margin_l", "margin_f", "residual", "probability",
-                        "yield_accel", "follower_index", "valid_pair"):
+                        "yield_accel", "follower_index", "valid_pair", "require_both"):
                 result[f"merge_core_{key}"] = core[key]
             for key, value in core["params"].items():
                 result[f"merge_core_{key}"] = value
@@ -1441,12 +1442,14 @@ class WmSModel(nn.Module):
         feat = core_features(kin, present, self.physics, intent=intent)
         latent = self.merge_core(driver_embedding, shape)
         params = self.merge_core.params()
+        require_both = torch.zeros_like(kin[..., 0], dtype=torch.bool)
         # Population mean of alpha for the logged margin; the rollout uses its own draw.
         alpha_mean = torch.exp(latent["alpha_log_location"].clamp(-8.0, 8.0))
         margin_l, margin_f = secure_gap_sides(
             feat["gap_l"], feat["gap_f"], kin[..., 4], feat["v_l"], feat["v_f"],
             feat["a"], feat["a_l"], feat["a_f"], feat["has_l"], feat["has_f"],
-            params["s0"], params["T"], params["b"], params["tau_a"], alpha_mean)
+            params["s0"], params["T"], params["b"], params["tau_a"], alpha_mean,
+            require_both)
         residual = self.merge_core.margin_residual(
             margin_l, margin_f, kin[..., 4], feat["v_l"], feat["v_f"],
             feat["gap_l"], feat["gap_f"], feat["intent"])
@@ -1460,7 +1463,8 @@ class WmSModel(nn.Module):
                 "alpha_scale": latent["alpha_scale"], "margin_l": margin_l,
                 "margin_f": margin_f, "residual": residual, "margin": margin,
                 "probability": probability, "yield_accel": yield_accel,
-                "valid_pair": feat["ramp"] & feat["has_f"], "params": params}
+                "valid_pair": feat["ramp"] & feat["has_f"], "params": params,
+                "require_both": require_both}
 
     def _apply_merge_threshold(self, state: dict, kin: Tensor, present: Tensor,
                                out: dict, next_lane: Tensor) -> Tensor:
@@ -1601,7 +1605,7 @@ class WmSModel(nn.Module):
             out["merge_core_a_l"], out["merge_core_a_f"],
             out["merge_core_has_l"], out["merge_core_has_f"],
             params["s0"], params["T"], params["b"], params["tau_a"], carry["alpha"],
-            out.get("merge_core_residual"))
+            out.get("merge_core_residual"), out.get("merge_core_require_both"))
         probability = torch.sigmoid(margin / params["temperature"].clamp_min(1.0e-3))
         uniform = torch.rand(probability.shape, dtype=probability.dtype,
                              device=probability.device)
@@ -2151,7 +2155,8 @@ class WmSModel(nn.Module):
                 result[key] = torch.stack(log[key], 1)
         for key in _MERGE_CORE_LOG_KEYS:
             if log.get(key):
-                result[key] = torch.stack(log[key], 1)
+                values = log[key]
+                result[key] = torch.stack(values, 0 if values[0].ndim == 0 else 1)
         if projection is not None:
             result["projection_stats"] = projection_totals
         if encoded_parameters is not None:
