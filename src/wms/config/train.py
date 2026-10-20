@@ -386,6 +386,36 @@ class BrakePersistConfig:
 
 
 @config_dataclass
+class BrakeWaveConfig:
+    """WAVE onset-conditioned braking terms (all default OFF)."""
+
+    weight: float = 0.0
+    residual_weight: float = 0.0
+    spurious_weight: float = 0.0
+    window_s: float = 4.0
+    onset_decel_mps2: float = 1.0
+    spurious_decel_mps2: float = 1.5
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(getattr(self, name)) for name in (
+            "weight", "residual_weight", "spurious_weight", "window_s",
+            "onset_decel_mps2", "spurious_decel_mps2")),
+            "loss.brake_wave values must be finite")
+        require(self.weight >= 0.0 and self.residual_weight >= 0.0
+                and self.spurious_weight >= 0.0,
+                "loss.brake_wave weights must be >= 0 (0 = off)")
+        require(3.0 <= self.window_s <= 5.0,
+                "loss.brake_wave.window_s must be in [3, 5] seconds")
+        require(self.onset_decel_mps2 > 0.0 and self.spurious_decel_mps2 > 0.0,
+                "loss.brake_wave decel thresholds must be positive")
+
+    @property
+    def enabled(self) -> bool:
+        return (self.weight > 0.0 or self.residual_weight > 0.0
+                or self.spurious_weight > 0.0)
+
+
+@config_dataclass
 class ResidualLossConfig:
     """Penalties on the learned residual magnitude."""
 
@@ -802,6 +832,7 @@ class LossConfig:
     step_weight_decay: float = 0.01
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
+    brake_wave: BrakeWaveConfig = field(default_factory=BrakeWaveConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
@@ -1090,6 +1121,11 @@ class TrainConfig:
                               ("brake_persist", self.loss.brake_persist.weight > 0.0),
                               ("brake_persist_quantile",
                                self.loss.brake_persist.quantile_weight > 0.0),
+                              ("brake_wave", self.loss.brake_wave.weight > 0.0),
+                              ("brake_wave_residual",
+                               self.loss.brake_wave.residual_weight > 0.0),
+                              ("brake_wave_spurious",
+                               self.loss.brake_wave.spurious_weight > 0.0),
                               ("stability", self.loss.stability_weight > 0.0),
                               ("conservation", self.loss.conservation_weight > 0.0)):
             if enabled:

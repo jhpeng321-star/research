@@ -73,6 +73,14 @@ class TrainSettings:
     brake_persist_quantile_weight: float = 0.0
     brake_persist_event_balance: float = 0.0
     brake_persist_window_s: float = 4.0
+    # WAVE (default 0 = OFF, bit-identical): onset-conditioned speed-drop, residual
+    # cancellation and one-step spurious-pulse terms.
+    brake_wave_weight: float = 0.0
+    brake_wave_residual_weight: float = 0.0
+    brake_wave_spurious_weight: float = 0.0
+    brake_wave_window_s: float = 4.0
+    brake_wave_onset_decel_mps2: float = 1.0
+    brake_wave_spurious_decel_mps2: float = 1.5
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -583,6 +591,14 @@ class TrainSettings:
             and 3.0 <= float(self.brake_persist_window_s) <= 5.0,
             "brake_persist weights must be >= 0, event_balance in [0,4], "
             "window_s in [3,5]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.brake_wave_weight, self.brake_wave_residual_weight,
+            self.brake_wave_spurious_weight))
+            and all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+                self.brake_wave_onset_decel_mps2, self.brake_wave_spurious_decel_mps2))
+            and math.isfinite(float(self.brake_wave_window_s))
+            and 3.0 <= float(self.brake_wave_window_s) <= 5.0,
+            "brake_wave weights must be >= 0, thresholds > 0, window_s in [3,5]")
 
     @classmethod
     def from_flat(cls, data: Mapping[str, Any]) -> "TrainSettings":
@@ -630,6 +646,13 @@ class TrainSettings:
         """BRAKE_DIAG persistence terms enabled (either weight > 0)."""
         return (float(self.brake_persist_weight) > 0.0
                 or float(self.brake_persist_quantile_weight) > 0.0)
+
+    @property
+    def brake_wave_on(self) -> bool:
+        """WAVE onset-conditioned terms enabled (any weight > 0)."""
+        return (float(self.brake_wave_weight) > 0.0
+                or float(self.brake_wave_residual_weight) > 0.0
+                or float(self.brake_wave_spurious_weight) > 0.0)
 
     @property
     def merge_loss_on(self) -> bool:

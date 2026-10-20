@@ -111,6 +111,12 @@ def required_terms(settings: TrainSettings, *, long_horizon: bool = True) -> tup
         terms.append("brake_persist")
     if float(getattr(settings, "brake_persist_quantile_weight", 0.0)) > 0.0:
         terms.append("brake_persist_quantile")
+    if float(getattr(settings, "brake_wave_weight", 0.0)) > 0.0:
+        terms.append("brake_wave")
+    if float(getattr(settings, "brake_wave_residual_weight", 0.0)) > 0.0:
+        terms.append("brake_wave_residual")
+    if float(getattr(settings, "brake_wave_spurious_weight", 0.0)) > 0.0:
+        terms.append("brake_wave_spurious")
     if settings.stability_weight > 0:
         terms.append("stability")
     if settings.conservation_weight > 0:

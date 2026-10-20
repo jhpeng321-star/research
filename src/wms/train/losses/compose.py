@@ -20,6 +20,7 @@ from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContex
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
 from .brake_persist import BrakePersistConfig, brake_persist_terms
+from .brake_wave import BrakeWaveConfig, brake_wave_terms
 from .flip_rate import FlipRateLoss
 from .lane import LaneLoss
 from .lane_event import LaneEventLoss
@@ -157,6 +158,16 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             quantile_weight=float(settings.brake_persist_quantile_weight),
             event_balance=float(settings.brake_persist_event_balance),
             window_s=float(settings.brake_persist_window_s))))
+    if settings.brake_wave_on:
+        # WAVE onset-conditioned drop / residual-cancellation / spurious-pulse terms
+        # (all weights 0 by default: never built, bit-identical).
+        chunk.extend(brake_wave_terms(BrakeWaveConfig(
+            weight=float(settings.brake_wave_weight),
+            residual_weight=float(settings.brake_wave_residual_weight),
+            spurious_weight=float(settings.brake_wave_spurious_weight),
+            window_s=float(settings.brake_wave_window_s),
+            onset_decel_mps2=float(settings.brake_wave_onset_decel_mps2),
+            spurious_decel_mps2=float(settings.brake_wave_spurious_decel_mps2))))
     if settings.traffic_loss:
         chunk.append(TrafficLoss(TrafficLossConfig(
             dt_s=dt_s, bin_s=float(settings.traffic_bin_s),
