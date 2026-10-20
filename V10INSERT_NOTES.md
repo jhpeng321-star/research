@@ -123,3 +123,7 @@ tests/unit/test_c4_dreamer.py tests/unit/test_import_graph.py -q`:
   longer horizon is needed for a firm ramp rate statement.
 * The upstream/merge deficit is not addressed here; it needs the queue/spillback and
   merge-capacity supervision listed in `ENTRY_DIAG2.md` section 6.
+
+## 5. Commit
+`9a41911e` on `c4/v10insert` (not pushed).
+
