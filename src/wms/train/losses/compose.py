@@ -27,7 +27,8 @@ from .lane import LaneLoss
 from .lane_event import LaneEventLoss
 from .lane_rate import LaneRateLoss
 from .merge import MergeLossConfig, cap_merge_share, merge_terms
-from .merge_negotiation import MergeNegotiationLossConfig, merge_negotiation_terms
+from .merge_negotiation import (MergeNegotiationLossConfig, MergeYieldLossConfig,
+                                merge_negotiation_terms, merge_yield_terms)
 from .lane_flow import LaneFlowConfig, lane_flow_terms
 from .merge_timing import MergeTimingConfig, merge_timing_terms
 from .paired_diff import PairedDiffConfig, PairedDiffTerm, paired_diff_terms
@@ -248,6 +249,28 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         # V10NEGOT matched non-yield negatives (after the survival term; off: never built).
         chunk.extend(merge_negotiation_terms(MergeNegotiationLossConfig(
             weight=float(settings.merge_survival_negative_weight),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane))))
+    if getattr(settings, "merge_yield_on", False):
+        # R5YIELD follower yield / ramp adaptation / safety head (after V10NEGOT).
+        chunk.extend(merge_yield_terms(MergeYieldLossConfig(
+            yield_huber=float(settings.merge_yield_huber),
+            ramp_adapt_huber=float(settings.merge_ramp_adapt_huber),
+            safety_bce=float(settings.merge_safety_bce),
+            yield_window_s=float(settings.merge_yield_window_s),
+            gap_window_s=float(settings.merge_gap_window_s),
+            safety_window_s=float(settings.merge_safety_window_s),
+            yield_huber_delta_mps2=float(settings.merge_yield_huber_delta_mps2),
+            gap_huber_delta_m=float(settings.merge_gap_huber_delta_m),
+            gap_weight=float(settings.merge_gap_weight),
+            brake_huber_delta_mps2=float(settings.merge_brake_huber_delta_mps2),
+            safety_brake_weight=float(settings.merge_safety_brake_weight),
+            conflict_decel_mps2=float(settings.merge_conflict_decel_mps2),
+            yield_decel_mps2=float(settings.merge_yield_decel_mps2),
+            control_weight=float(settings.merge_yield_control_weight),
+            safety_control_weight=float(settings.merge_safety_control_weight),
+            behind_m=float(settings.merge_yield_behind_m),
+            dend_m=float(settings.merge_yield_dend_m),
             merge_lane=2 if physics is None else int(physics.merge_lane),
             target_lane=1 if physics is None else int(physics.merge_target_lane))))
     if float(getattr(settings, "lane_flow_weight", 0.0)) > 0.0:

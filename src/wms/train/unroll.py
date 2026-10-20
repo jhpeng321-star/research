@@ -129,6 +129,10 @@ class UnrollRunner:
         if "post_merge_residual" in composer.names:
             # R5MERGE: the one-sided penalty conditions on the physics-core IDM term.
             model.emit_physics_accel = True
+        if any(name in composer.names for name in
+               ("yield_huber", "ramp_adapt_huber", "safety_bce")):
+            # R5YIELD: the auxiliary residuals are measured against the IDM core.
+            model.emit_physics_accel = True
 
     def run(self, batch: Mapping[str, Any], *, unroll_steps: int, backward: bool = True,
             share: bool = False, capture_shares: bool = False,
@@ -649,6 +653,15 @@ class UnrollRunner:
             record["merge_negotiation_pairs"] = neg_prep["n_valid"]
             record["merge_negotiation_yield_pos"] = neg_prep["n_pos"]
             record["merge_negotiation_non_yield_neg"] = neg_prep["n_neg"]
+        yield_prep = targets.prepared.get("merge_yield")
+        if yield_prep is not None and not yield_prep.get("empty"):
+            record["merge_yield_premerge_windows"] = yield_prep["n_premerge"]
+            record["merge_yield_pos"] = yield_prep["n_pos"]
+            record["merge_yield_non_yield_controls"] = yield_prep["n_neg"]
+            record["merge_gap_windows"] = yield_prep["n_gap"]
+            record["merge_safety_pos"] = yield_prep["n_safety_pos"]
+            record["merge_safety_neg"] = yield_prep["n_safety_neg"]
+            record["merge_safety_conflicts"] = yield_prep["n_conflict"]
         merge_prep = targets.prepared.get("merge")
         if merge_prep is not None:
             # V7FT merge-zone calibration: whole-unroll metrics and share of the logged loss.

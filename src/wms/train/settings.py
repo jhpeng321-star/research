@@ -331,6 +331,24 @@ class TrainSettings:
     merge_survival_negative_weight: float = 0.0
     merge_survival_metrics: bool = False
     merge_teacher_frac_schedule: tuple[float, ...] = ()
+    # R5YIELD (default OFF): follower-yield Huber, ramp speed adaptation and safety head.
+    merge_yield_huber: float = 0.0
+    merge_ramp_adapt_huber: float = 0.0
+    merge_safety_bce: float = 0.0
+    merge_yield_window_s: float = 5.0
+    merge_gap_window_s: float = 5.0
+    merge_safety_window_s: float = 3.0
+    merge_yield_huber_delta_mps2: float = 0.5
+    merge_gap_huber_delta_m: float = 2.0
+    merge_gap_weight: float = 0.5
+    merge_brake_huber_delta_mps2: float = 1.0
+    merge_safety_brake_weight: float = 0.5
+    merge_conflict_decel_mps2: float = 1.5
+    merge_yield_decel_mps2: float = -0.5
+    merge_yield_control_weight: float = 0.5
+    merge_safety_control_weight: float = 0.25
+    merge_yield_behind_m: float = 40.0
+    merge_yield_dend_m: float = 60.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -598,6 +616,24 @@ class TrainSettings:
         _require(all(math.isfinite(float(x)) and 0.0 <= float(x) <= 1.0
                      for x in self.merge_teacher_frac_schedule),
                  "merge_teacher_frac_schedule values must be in [0, 1]")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_yield_huber, self.merge_ramp_adapt_huber, self.merge_safety_bce)),
+            "merge_yield weights must be finite and non-negative")
+        _require(all(math.isfinite(float(x)) and 0.0 < float(x) <= 15.0 for x in (
+            self.merge_yield_window_s, self.merge_gap_window_s, self.merge_safety_window_s)),
+            "merge_yield windows must be finite and in (0, 15]")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_yield_huber_delta_mps2, self.merge_gap_huber_delta_m,
+            self.merge_brake_huber_delta_mps2, self.merge_conflict_decel_mps2,
+            self.merge_yield_behind_m, self.merge_yield_dend_m)),
+            "merge_yield Huber deltas / distances / conflict threshold must be positive")
+        _require(math.isfinite(float(self.merge_yield_decel_mps2))
+                 and float(self.merge_yield_decel_mps2) < 0.0,
+                 "merge_yield_decel_mps2 must be negative")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
+            self.merge_gap_weight, self.merge_safety_brake_weight,
+            self.merge_yield_control_weight, self.merge_safety_control_weight)),
+            "merge_yield gap/brake/control weights must be non-negative")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
@@ -724,6 +760,14 @@ class TrainSettings:
         """V10NEGOT negotiation auxiliary (matched non-yield negatives) built."""
         return (bool(self.merge_negotiation)
                 and float(self.merge_survival_negative_weight) > 0.0)
+
+    @property
+    def merge_yield_on(self) -> bool:
+        """R5YIELD follower-yield / ramp-adaptation / safety terms built."""
+        return (bool(self.merge_negotiation)
+                and (float(self.merge_yield_huber) > 0.0
+                     or float(self.merge_ramp_adapt_huber) > 0.0
+                     or float(self.merge_safety_bce) > 0.0))
 
     @property
     def long_horizon_on(self) -> bool:
