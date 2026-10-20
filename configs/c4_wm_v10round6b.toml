@@ -1,0 +1,31 @@
+# V10 round 6b (2026-10-20 ~23:35): BRAKING-ONLY structural fix on the paired-ranking anchor. Round 5b's threshold merge
+# decision failed (72-state stuck 219/192 of 368 vs ~55; ~75 % of recorded merges "unsupported" under the first-crossing
+# model), so the merge redesign is withheld from this round. Round 2 (stage240) + V10SLOWRES slow temporal residual state
+# (learned tau, init 0.5 s, conditioned tau head) + free-rollout onset-statistics auxiliary; nothing else changes.
+schema_version = 2
+name = "WM-S-C4-V10ROUND6B"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+temporal_residual_mode = "slow"
+temporal_tau_init_s = 0.5
+temporal_tau_conditioned = true
+
+[loss.onset_stats]
+weight = 1.0
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+
+[selection]
+val_max_windows = 256
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round6b"
