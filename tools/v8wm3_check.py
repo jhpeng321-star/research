@@ -92,6 +92,12 @@ def init(var_specs, entries="off", wall_members=False, wall_paths=None):
         if "gm" in o:            # merge-head gate threshold (inference-time lane_v5_gates[2])
             g = tuple(m.lane_v5_gates)
             m.lane_v5_gates = (g[0], g[1], float(o["gm"]))
+        if "zt" in o:            # V10BRKPROBE: zero the temporal residual acceleration
+            m.diag_zero_temporal = o["zt"] not in ("0", "false", "off")
+        if "rb" in o:            # V10BRKPROBE: hard bound on the combined residual
+            m.diag_residual_bound_mps2 = float(o["rb"])
+        if "tau" in o:           # V10BRKPROBE: causal low-pass time constant (s)
+            m.diag_temporal_tau_s = float(o["tau"])
         G["p"][name] = (p, cap, o)
 
 
