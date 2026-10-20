@@ -29,7 +29,7 @@ PHYSICS_OVERRIDE_KEYS = (
     # V10LANEOPT (2026-10-19): courtesy approach-zone length upstream of the merge end.
     "mainline_courtesy_zone_m")
 #: V8WM3: boolean PhysicsConfig switches ``physics.overrides`` may set (training AND inference).
-PHYSICS_BOOL_OVERRIDE_KEYS = ("merge_impatience",)
+PHYSICS_BOOL_OVERRIDE_KEYS = ("merge_impatience", "entry_learned")
 #: V8WM2: string-valued PhysicsConfig modes ``physics.overrides`` / ``physics.inference`` may set
 #: (key -> allowed values).
 PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),

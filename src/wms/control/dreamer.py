@@ -512,7 +512,7 @@ def _queue_surrogate_fn(state, new_mask, pending_before, hist, entry_s, entry_cf
     return queue_surrogate(state, present, pending_before, hist, entry_s, entry_cfg, PHYSICS_DT_S)[0]
 
 
-def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
+def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=None):
     from wms.model.entries import EntryConfig, TorchEntryProcessV2
 
     pool = np.zeros((len(rows), n_slots), dtype=bool)
@@ -523,8 +523,10 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2"):
     # training).  A shared row seed alone loses CRN as soon as one row defers an insertion; with a
     # standing backlog every arrival-count difference becomes a queue (source-wait) difference.
     extra = {} if queues is None else {"queues": [queues[r] for r in rows], "couple_draws": True}
-    cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule) if queues is None else
-           EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True))
+    cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule,
+                       learned_entry=learned_entry) if queues is None else
+           EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True,
+                       learned_entry=learned_entry))
     # Uncapped backlog: every due arrival that cannot enter keeps waiting (as in SUMO).
     return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
                                dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
@@ -899,9 +901,15 @@ class DreamerTrainer:
             if lane_uniform is not None:
                 member_kwargs["lane_uniform"] = lane_uniform
             if entry_spec is not None:
+                learned = None
+                if bool(getattr(getattr(model, "physics", None), "entry_learned", False)):
+                    from wms.model.entry_learned import load_learned_entry
+
+                    learned = load_learned_entry()
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
                                                          initial["s_m"].shape[1],
-                                                         cfg.entry_insert_rule))
+                                                         cfg.entry_insert_rule,
+                                                         learned_entry=learned))
                 member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
