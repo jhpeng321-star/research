@@ -201,6 +201,8 @@ def target_gap_configuration(kin: Tensor, present: Tensor, physics,
     safe_l = l_idx.clamp(0, max(k - 1, 0))
     v_f = v.gather(-1, safe_f)
     v_l = v.gather(-1, safe_l)
+    a_f = kin[..., 5].gather(-1, safe_f)
+    a_l = kin[..., 5].gather(-1, safe_l)
     gap_f = torch.where(has_f, (gap_f - length.gather(-1, safe_f)).clamp_min(0.0),
                         torch.zeros_like(gap_f))
     gap_l = torch.where(has_l, (gap_l - length.gather(-1, safe_l)).clamp_min(0.0),
@@ -212,7 +214,12 @@ def target_gap_configuration(kin: Tensor, present: Tensor, physics,
             "gap_l": torch.where(keep, gap_l, torch.zeros_like(gap_l)),
             "rel_f": torch.where(keep, rel_f, torch.zeros_like(rel_f)),
             "rel_l": torch.where(keep, rel_l, torch.zeros_like(rel_l)),
-            "has_f": ramp & has_f, "has_l": ramp & has_l, "ramp": ramp}
+            "has_f": ramp & has_f, "has_l": ramp & has_l, "ramp": ramp,
+            "follower_index": safe_f, "leader_index": safe_l,
+            "v_f": torch.where(keep, v_f, torch.zeros_like(v_f)),
+            "v_l": torch.where(keep, v_l, torch.zeros_like(v_l)),
+            "a_f": torch.where(keep, a_f, torch.zeros_like(a_f)),
+            "a_l": torch.where(keep, a_l, torch.zeros_like(a_l))}
 
 
 __all__ = ["LOCATION_BOUND", "LOG_TINY", "MergeThresholdNet", "logistic_location",

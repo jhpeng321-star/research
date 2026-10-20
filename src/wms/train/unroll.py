@@ -703,6 +703,16 @@ class UnrollRunner:
                 record["merge_frailty_value_share"] = (
                     float(logged["merge_frailty"]) / loss_logged
                     if loss_logged > 0.0 else 0.0)
+        core_prep = targets.prepared.get("merge_core")
+        if core_prep is not None:
+            # SECUREGAP secure-gap core diagnostics and value shares.
+            from .losses.merge_core import merge_core_metrics
+
+            record.update(merge_core_metrics(core_prep))
+            for name in ("merge_core", "merge_core_yield"):
+                if name in logged:
+                    record[f"{name}_value_share"] = (
+                        float(logged[name]) / loss_logged if loss_logged > 0.0 else 0.0)
         flow_prep = targets.prepared.get("lane_flow")
         if flow_prep is not None:
             # V8LANE lane-flow: expected vs recorded mainline counts.

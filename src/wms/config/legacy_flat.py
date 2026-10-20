@@ -310,6 +310,17 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_frailty_gap_tol_m": "loss.merge_frailty.gap_tol_m",
     "merge_frailty_gap_speed_tol_mps": "loss.merge_frailty.gap_speed_tol_mps",
     "merge_frailty_location_reg_weight": "loss.merge_frailty.location_reg_weight",
+    # SECUREGAP (learned two-sided secure-gap core + teacher-forced / yield losses)
+    "merge_core_weight": "loss.merge_core.weight",
+    "merge_core_tf_weight": "loss.merge_core.tf_weight",
+    "merge_core_yield_weight": "loss.merge_core.yield_weight",
+    "merge_core_n_quad": "loss.merge_core.n_quad",
+    "merge_core_metrics": "loss.merge_core.metrics",
+    "merge_core_pos_tol_m": "loss.merge_core.pos_tol_m",
+    "merge_core_speed_tol_mps": "loss.merge_core.speed_tol_mps",
+    "merge_core_gap_tol_m": "loss.merge_core.gap_tol_m",
+    "merge_core_gap_speed_tol_mps": "loss.merge_core.gap_speed_tol_mps",
+    "merge_core_location_reg_weight": "loss.merge_core.location_reg_weight",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
@@ -425,6 +436,11 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_frailty_weight", "merge_frailty_n_quad", "merge_frailty_metrics",
     "merge_frailty_pos_tol_m", "merge_frailty_speed_tol_mps", "merge_frailty_gap_tol_m",
     "merge_frailty_gap_speed_tol_mps", "merge_frailty_location_reg_weight",
+    # SECUREGAP
+    "merge_core_weight", "merge_core_tf_weight", "merge_core_yield_weight",
+    "merge_core_n_quad", "merge_core_metrics", "merge_core_pos_tol_m",
+    "merge_core_speed_tol_mps", "merge_core_gap_tol_m", "merge_core_gap_speed_tol_mps",
+    "merge_core_location_reg_weight",
     # V9ENTRY
     "entry_queue_state",
     # V10HORIZON

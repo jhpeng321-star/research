@@ -45,6 +45,8 @@ from .lane_head import HistoryLaneHead, lane_context
 from . import lane_v5 as lv5
 from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
+from .merge_core import (MergeCoreNet, core_features, load_init,
+                         secure_gap_margin, secure_gap_sides, update_core_alpha)
 from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from .merge_threshold import MergeThresholdNet, update_threshold_state
 from .residual_bound import bounded_accel_correction, bounded_value
@@ -54,6 +56,15 @@ from .temporal_slow import inverse_softplus, slow_residual_step, softplus_positi
 
 #: Output width of the temporal MLP: one acceleration delta plus three lane logits.
 _TEMPORAL_OUT = 4
+#: SECUREGAP per-step tensors carried into the rollout result and the merge-core loss.
+_MERGE_CORE_LOG_KEYS = (
+    "merge_core_gap_l", "merge_core_gap_f", "merge_core_v_l", "merge_core_v_f",
+    "merge_core_a_l", "merge_core_a_f", "merge_core_has_l", "merge_core_has_f",
+    "merge_core_intent", "merge_core_alpha_log_location", "merge_core_alpha_scale",
+    "merge_core_margin", "merge_core_margin_l", "merge_core_margin_f",
+    "merge_core_residual", "merge_core_probability", "merge_core_yield_accel",
+    "merge_core_follower_index", "merge_core_valid_pair", "merge_core_s0",
+    "merge_core_T", "merge_core_b", "merge_core_tau_a", "merge_core_temperature")
 
 
 @dataclass
@@ -330,6 +341,7 @@ class WmSModel(nn.Module):
         self.merge_decision = getattr(spec, "merge_decision", "hazard")
         self.merge_threshold = None
         self.merge_frailty = None
+        self.merge_core = None
         if self.merge_decision == "threshold":
             input_dim = (self.driver_embed_dim
                          if self.rollout_mode in ("driver_params", "hybrid")
@@ -342,6 +354,13 @@ class WmSModel(nn.Module):
                          if self.rollout_mode in ("driver_params", "hybrid")
                          or self.long_history else 0)
             self.merge_frailty = MergeFrailtyNet(input_dim=input_dim)
+        elif self.merge_decision == "secure_gap":
+            # SECUREGAP: learned LC2013-like secure-gap core.  Created last for key order;
+            # parameters start at the values fitted on recorded TRAIN-val data.
+            input_dim = (self.driver_embed_dim
+                         if self.rollout_mode in ("driver_params", "hybrid")
+                         or self.long_history else 0)
+            self.merge_core = MergeCoreNet(input_dim=input_dim, init=load_init())
 
     # ------------------------------------------------------------------ physics
     def _zero_lane_outputs(self) -> None:
@@ -780,6 +799,11 @@ class WmSModel(nn.Module):
                 pair["features"], ext_features=pair["ext_features"],
                 follower_index=pair["follower_index"],
                 valid_pair=pair["valid_pair"], ramp=pair["ramp"])
+        core = None
+        if self.merge_core is not None:
+            # SECUREGAP: anticipated two-sided secure-gap geometry of every ramp slot.
+            core = self._merge_core_forward(
+                kin, present, driver_embedding, (b, slots), merge_prob)
         courtesy = None
         if bool(self.hdv.courtesy_inputs):
             courtesy = courtesy_features(
@@ -851,6 +875,11 @@ class WmSModel(nn.Module):
             ema = 0.7 * prev + 0.3 * kin[..., 5].detach().float()
             intent_logit = (torch.zeros_like(kin[..., 5]) if merge_logit is None
                             else merge_logit.detach().float())
+        if core is not None:
+            # SECUREGAP: a learned follower yield only for a near-zero follower margin.
+            core_yield = scatter_follower_accel(
+                core["yield_accel"], core["follower_index"], core["valid_pair"], slots)
+            accel = accel + core_yield * learned.to(kin.dtype)
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -941,6 +970,16 @@ class WmSModel(nn.Module):
             result["merge_negotiation_valid"] = negotiation["valid_pair"]
             result["merge_neg_accel_ema"] = ema
             result["merge_neg_intent_logit"] = intent_logit
+        if core is not None:
+            # SECUREGAP: core parameters (with gradient), latent distribution, margins and the
+            # per-step probability (detached only where the rollout needs a scalar decision).
+            for key in ("gap_l", "gap_f", "v_l", "v_f", "a_l", "a_f", "has_l", "has_f",
+                        "ramp", "intent", "alpha_log_location", "alpha_scale",
+                        "margin", "margin_l", "margin_f", "residual", "probability",
+                        "yield_accel", "follower_index", "valid_pair"):
+                result[f"merge_core_{key}"] = core[key]
+            for key, value in core["params"].items():
+                result[f"merge_core_{key}"] = value
         if self._samples_lanes:
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
             if v5_sample is not None:
@@ -1103,7 +1142,7 @@ class WmSModel(nn.Module):
                                                       self.physics)
         hazard = None
         if (getattr(self, "emit_merge_hazard", False)
-                or self.merge_decision in ("threshold", "frailty")):
+                or self.merge_decision in ("threshold", "frailty", "secure_gap")):
             # V8WM merge-timing loss / R5THR threshold decision: the own-head logit with
             # gradient on the rollout state.
             if self.lane_hazard_detach and torch.is_grad_enabled():
@@ -1346,6 +1385,10 @@ class WmSModel(nn.Module):
             # R5FR: per-step Bernoulli opportunity with ONE persistent per-driver latent.
             next_lane = self._apply_merge_frailty(state, state_kin(state), present, out,
                                                   next_lane)
+        elif self.merge_core is not None:
+            # SECUREGAP: smooth secure-gap probability with ONE persistent assertiveness latent.
+            next_lane = self._apply_merge_core(state, state_kin(state), present, out,
+                                               next_lane)
 
         direct = (torch.zeros_like(cav)
                   if action_id is None or not self.apply_direct_commands else
@@ -1390,6 +1433,34 @@ class WmSModel(nn.Module):
         out.update({"next_s_m": next_s, "next_v_mps": next_v,
                     "next_lane": next_lane, "next_present": next_present})
         return out
+
+    def _merge_core_forward(self, kin: Tensor, present: Tensor,
+                            driver_embedding: Optional[Tensor], shape: tuple[int, int],
+                            intent: Optional[Tensor]) -> dict:
+        """SECUREGAP: anticipated margins, latent distribution, probability and follower yield."""
+        feat = core_features(kin, present, self.physics, intent=intent)
+        latent = self.merge_core(driver_embedding, shape)
+        params = self.merge_core.params()
+        # Population mean of alpha for the logged margin; the rollout uses its own draw.
+        alpha_mean = torch.exp(latent["alpha_log_location"].clamp(-8.0, 8.0))
+        margin_l, margin_f = secure_gap_sides(
+            feat["gap_l"], feat["gap_f"], kin[..., 4], feat["v_l"], feat["v_f"],
+            feat["a"], feat["a_l"], feat["a_f"], feat["has_l"], feat["has_f"],
+            params["s0"], params["T"], params["b"], params["tau_a"], alpha_mean)
+        residual = self.merge_core.margin_residual(
+            margin_l, margin_f, kin[..., 4], feat["v_l"], feat["v_f"],
+            feat["gap_l"], feat["gap_f"], feat["intent"])
+        margin = torch.minimum(margin_l, margin_f) + residual
+        temperature = params["temperature"]
+        probability = torch.sigmoid(margin / temperature.clamp_min(1.0e-3))
+        yield_accel = self.merge_core.yield_accel(
+            margin_f, feat["intent"], kin[..., 4], feat["v_l"], feat["v_f"],
+            feat["gap_f"], temperature)
+        return {**feat, "alpha_log_location": latent["alpha_log_location"],
+                "alpha_scale": latent["alpha_scale"], "margin_l": margin_l,
+                "margin_f": margin_f, "residual": residual, "margin": margin,
+                "probability": probability, "yield_accel": yield_accel,
+                "valid_pair": feat["ramp"] & feat["has_f"], "params": params}
 
     def _apply_merge_threshold(self, state: dict, kin: Tensor, present: Tensor,
                                out: dict, next_lane: Tensor) -> Tensor:
@@ -1484,6 +1555,64 @@ class WmSModel(nn.Module):
         attempted = (current_lane == lane) & (next_lane.long() == target)
         next_lane = torch.where(attempted, current_lane, next_lane.long())
         return torch.where(carry["cross"], torch.full_like(next_lane, target), next_lane)
+
+    def _apply_merge_core(self, state: dict, kin: Tensor, present: Tensor,
+                          out: dict, next_lane: Tensor) -> Tensor:
+        """SECUREGAP: smooth secure-gap decision with ONE persistent assertiveness latent.
+
+        The forward pass has already produced the anticipated gaps / required gaps and the
+        mean-alpha margin.  This routine draws (once per car) the assertiveness ``alpha`` and
+        evaluates the exact margin, then samples the learned sigmoid probability on
+        envelope-feasible in-zone steps.  A recorded merge therefore always has positive
+        likelihood; the hard physical envelope remains a veto.
+        """
+        lane = int(self.physics.merge_lane)
+        target = int(getattr(self.physics, "merge_target_lane", 1))
+        ramp_lane = (state.get("lane") if state.get("lane") is not None
+                     else kin[..., 1:4].argmax(-1)).long()
+        current_lane = torch.as_tensor(ramp_lane, device=kin.device).long()
+        s = kin[..., 0]
+        end = float(self.physics.merge_zone_s1_m)
+        start = float(getattr(self.physics, "merge_zone_s0_m", 0.0))
+        ramp = present.bool() & (current_lane == lane)
+        in_zone = ramp & (s >= start) & (s <= end)
+        acts = out.get("lane_v5_acts")
+        location = out.get("merge_core_alpha_log_location")
+        sigma = out.get("merge_core_alpha_scale")
+        if not torch.is_tensor(acts) or not torch.is_tensor(location):
+            return next_lane
+        feasible = in_zone & acts.bool()
+        carry = update_core_alpha(
+            location, sigma if torch.is_tensor(sigma) else torch.ones_like(location),
+            ramp, present, alpha=state.get("merge_core_alpha"),
+            has_alpha=state.get("merge_core_has_alpha"),
+            prev_present=state.get("merge_core_present"))
+        out["merge_core_alpha"] = carry["alpha"]
+        out["merge_core_has_alpha"] = carry["has_alpha"]
+        out["merge_core_present"] = carry["prev_present"]
+        params = {key: out.get(f"merge_core_{name}") for key, name in (
+            ("s0", "s0"), ("T", "T"), ("b", "b"), ("tau_a", "tau_a"),
+            ("temperature", "temperature"))}
+        if not all(torch.is_tensor(value) for value in params.values()):
+            return next_lane
+        margin = secure_gap_margin(
+            out["merge_core_gap_l"], out["merge_core_gap_f"], kin[..., 4],
+            out["merge_core_v_l"], out["merge_core_v_f"], kin[..., 5],
+            out["merge_core_a_l"], out["merge_core_a_f"],
+            out["merge_core_has_l"], out["merge_core_has_f"],
+            params["s0"], params["T"], params["b"], params["tau_a"], carry["alpha"],
+            out.get("merge_core_residual"))
+        probability = torch.sigmoid(margin / params["temperature"].clamp_min(1.0e-3))
+        uniform = torch.rand(probability.shape, dtype=probability.dtype,
+                             device=probability.device)
+        cross = feasible & carry["has_alpha"].bool() & (uniform < probability)
+        out["merge_core_margin"] = margin
+        out["merge_core_probability"] = probability
+        out["merge_core_cross"] = cross
+        # Never let the per-step head's own merge draw through: only the core crosses.
+        attempted = (current_lane == lane) & (next_lane.long() == target)
+        next_lane = torch.where(attempted, current_lane, next_lane.long())
+        return torch.where(cross, torch.full_like(next_lane, target), next_lane)
 
     def _exec_cap(self, out: dict, state: dict,
                   driver_params: Optional[dict[str, Tensor]]) -> Tensor:
@@ -1716,6 +1845,9 @@ class WmSModel(nn.Module):
         if self.merge_frailty is not None and current.get("merge_frailty_present") is None:
             # R5FR: presence at the rollout start (first-step new-car detection).
             current["merge_frailty_present"] = pres0.clone()
+        if self.merge_core is not None and current.get("merge_core_present") is None:
+            # SECUREGAP: presence at the rollout start (first-step new-car detection).
+            current["merge_core_present"] = pres0.clone()
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)
                      if self._samples_lanes else None)
         timeline_dt = cav_motion.timeline_period(action_timeline)
@@ -1859,6 +1991,12 @@ class WmSModel(nn.Module):
                 current["merge_frailty_w"] = out["merge_frailty_w"].detach()
                 current["merge_frailty_has_w"] = out["merge_frailty_has_w"].detach()
                 current["merge_frailty_present"] = out["merge_frailty_present"].detach()
+            if "merge_core_alpha" in out:
+                # SECUREGAP: ONE assertiveness latent + presence persist across chunks and
+                # slot moves; a reused slot is reset (redrawn) by the new-car check.
+                current["merge_core_alpha"] = out["merge_core_alpha"].detach()
+                current["merge_core_has_alpha"] = out["merge_core_has_alpha"].detach()
+                current["merge_core_present"] = out["merge_core_present"].detach()
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)
@@ -1979,6 +2117,9 @@ class WmSModel(nn.Module):
                     "merge_negotiation_conflict_prob"):
             if key in out:
                 log.setdefault(key, []).append(out[key])
+        for key in _MERGE_CORE_LOG_KEYS:
+            if key in out:
+                log.setdefault(key, []).append(out[key])
 
     def _rollout_result(self, log: dict, current: dict, history: Tensor,
                         history_mask: Tensor, entrant: Tensor, pres0: Tensor, kin0: Tensor,
@@ -2006,6 +2147,9 @@ class WmSModel(nn.Module):
         for key in ("merge_negotiation_yield_accel", "merge_negotiation_ramp_delta",
                     "merge_negotiation_required_brake", "merge_negotiation_conflict_logit",
                     "merge_negotiation_conflict_prob"):
+            if log.get(key):
+                result[key] = torch.stack(log[key], 1)
+        for key in _MERGE_CORE_LOG_KEYS:
             if log.get(key):
                 result[key] = torch.stack(log[key], 1)
         if projection is not None:

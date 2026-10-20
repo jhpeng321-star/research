@@ -61,8 +61,11 @@ def init(var_specs, entries="off", wall_members=False, wall_paths=None):
     G["wall_members"] = bool(wall_members)
     G["wall_paths"] = wall_paths or {}
     for name, path, o in var_specs:
+        mc = o.get("mc") in ("1", "true", "on")
         p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo",
-                                   entries=entries, wall_members=wall_members)
+                                   entries=entries, wall_members=wall_members,
+                                   model_config=({"merge_decision": "secure_gap"} if mc
+                                                 else None))
         m = p.model
         ch = {}
         if "fw" in o:

@@ -260,11 +260,12 @@ class ModelConfig:
     (zero-initialised).  The follower gets a learned yield acceleration and the ramp car a
     merge-logit correction; trained through the rollout, merge-survival and matched
     non-yield negative losses.  Needs ``model.lane_model='hazard_v5'``."""
-    merge_decision: Literal["hazard", "threshold", "frailty"] = "hazard"
-    """R5THR/R5FR (default 'hazard' = bit-identical): 'threshold' replaces the per-step
-    Bernoulli merge draw by one persistent learned gap-acceptance threshold per ramp car and
-    a first-passage decision on the merge-head logit; 'frailty' keeps the per-step Bernoulli
-    opportunity but adds ONE persistent per-driver latent to the merge hazard.  Both need
+    merge_decision: Literal["hazard", "threshold", "frailty", "secure_gap"] = "hazard"
+    """R5THR/R5FR/SECUREGAP (default 'hazard' = bit-identical): 'threshold' replaces the
+    per-step Bernoulli merge draw by one persistent learned gap-acceptance threshold per ramp
+    car and a first-passage decision on the merge-head logit; 'frailty' keeps the per-step
+    Bernoulli opportunity but adds ONE persistent per-driver latent to the merge hazard;
+    'secure_gap' uses the learned LC2013-like two-sided secure-gap core.  All need
     ``model.lane_model='hazard_v5'``."""
     temporal_residual_mode: Literal["direct", "slow"] = "direct"
     """SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's direct
@@ -338,12 +339,11 @@ class ModelConfig:
         if self.merge_negotiation:
             require(self.lane_model == "hazard_v5",
                     "model.merge_negotiation requires model.lane_model='hazard_v5'")
-        require(self.merge_decision in ("hazard", "threshold", "frailty"),
-                "model.merge_decision must be 'hazard', 'threshold' or 'frailty'")
+        require(self.merge_decision in ("hazard", "threshold", "frailty", "secure_gap"),
+                "model.merge_decision must be 'hazard', 'threshold', 'frailty' or 'secure_gap'")
         if self.merge_decision != "hazard":
             require(self.lane_model == "hazard_v5",
-                    "model.merge_decision='threshold'/'frailty' requires "
-                    "model.lane_model='hazard_v5'")
+                    "model.merge_decision!='hazard' requires model.lane_model='hazard_v5'")
         require(self.temporal_residual_mode in ("direct", "slow"),
                 "model.temporal_residual_mode must be 'direct' or 'slow'")
         require(is_finite(self.temporal_tau_init_s) and self.temporal_tau_init_s > 0.0,
@@ -948,6 +948,48 @@ class MergeFrailtyConfig:
 
 
 @config_dataclass
+class MergeCoreConfig:
+    """SECUREGAP learned secure-gap core losses (``loss.merge_core``).
+
+    ``weight`` (0 = off): censored discrete-time survival NLL of the SAME car's recorded merge
+    on the free-rollout states, with the per-driver assertiveness latent integrated out by
+    Gauss-Hermite quadrature (``n_quad`` nodes).  ``tf_weight`` (0 = off): teacher-forced
+    acceptance likelihood of the core on the recorded states.  ``yield_weight`` (0 = off):
+    Huber follower-yield term trained on recorded pre-merge follower accelerations (reuses the
+    R5YIELD supervision).  ``metrics`` builds the diagnostics without a loss.  Tolerances are
+    the predeclared detached model-vs-record compatibility tolerances (censor at the last
+    comparable step).  When ``weight`` is on it replaces the first-passage / merge-timing /
+    survival likelihood for the merge head.
+    """
+
+    weight: float = 0.0
+    tf_weight: float = 0.0
+    yield_weight: float = 0.0
+    n_quad: int = 8
+    metrics: bool = False
+    pos_tol_m: float = 25.0
+    speed_tol_mps: float = 5.0
+    gap_tol_m: float = 20.0
+    gap_speed_tol_mps: float = 5.0
+    location_reg_weight: float = 1.0e-3
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(x) and x >= 0.0 for x in (
+            self.weight, self.tf_weight, self.yield_weight, self.location_reg_weight)),
+            "loss.merge_core weights must be finite and non-negative")
+        require(1 <= int(self.n_quad) <= 64,
+                "loss.merge_core.n_quad must be in [1, 64]")
+        require(all(is_finite(x) and x > 0.0 for x in (
+            self.pos_tol_m, self.speed_tol_mps, self.gap_tol_m, self.gap_speed_tol_mps)),
+            "loss.merge_core tolerances must be finite and positive")
+
+    @property
+    def enabled(self) -> bool:
+        return (self.weight > 0.0 or self.tf_weight > 0.0 or self.yield_weight > 0.0
+                or bool(self.metrics))
+
+
+@config_dataclass
 class LaneFlowConfig:
     """V8LANE on-policy mainline lane-flow loss (``wms.train.losses.lane_flow``; 0 = off).
 
@@ -1094,6 +1136,7 @@ class LossConfig:
     merge_first_passage: MergeFirstPassageConfig = field(
         default_factory=MergeFirstPassageConfig)
     merge_frailty: MergeFrailtyConfig = field(default_factory=MergeFrailtyConfig)
+    merge_core: MergeCoreConfig = field(default_factory=MergeCoreConfig)
     lane_flow: LaneFlowConfig = field(default_factory=LaneFlowConfig)
     courtesy_weight: float = 1.0
     """V10COURTESY: per-step loss multiplier for lane-1 followers within 40 m behind a
@@ -1322,6 +1365,9 @@ class TrainConfig:
         if self.loss.merge_yield.enabled:
             require(self.model.merge_negotiation,
                     "loss.merge_yield requires model.merge_negotiation=true")
+        if self.loss.merge_core.enabled:
+            require(self.model.merge_decision == "secure_gap",
+                    "loss.merge_core requires model.merge_decision='secure_gap'")
 
     # -- training-time (stricter than construction) ---------------------
     def validate_for_training(self) -> None:
@@ -1419,7 +1465,10 @@ class TrainConfig:
             terms.extend(name for name, w in (("merge_speed", merge.speed_weight),
                                               ("merge_discharge", merge.discharge_weight))
                          if w > 0.0)
-        if self.loss.merge_frailty.enabled:
+        if self.loss.merge_core.enabled:
+            # SECUREGAP core replaces the first-passage / frailty / timing likelihood.
+            terms.append("merge_core")
+        elif self.loss.merge_frailty.enabled:
             # R5FR replaces the first-passage / merge-timing / survival likelihood for the
             # merge head.
             terms.append("merge_frailty")
@@ -1439,6 +1488,8 @@ class TrainConfig:
                 terms.append("ramp_adapt_huber")
             if yield_cfg.safety_bce > 0.0:
                 terms.append("safety_bce")
+        if self.loss.merge_core.yield_weight > 0.0:
+            terms.append("merge_core_yield")
         if self.loss.lane_flow.weight > 0.0:
             terms.append("lane_flow")
         return tuple(terms)

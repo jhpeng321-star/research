@@ -348,8 +348,13 @@ class YieldHuberTerm(LossTerm):
 
     name = "yield_huber"
 
-    def __init__(self, cfg: MergeYieldLossConfig) -> None:
+    def __init__(self, cfg: MergeYieldLossConfig,
+                 pred_key: str = "merge_negotiation_yield_accel",
+                 name: Optional[str] = None) -> None:
         self.cfg = cfg
+        self.pred_key = str(pred_key)
+        if name is not None:
+            self.name = str(name)
 
     def prepare(self, targets: UnrollTargets) -> None:
         _plan(self.cfg, targets)
@@ -359,7 +364,7 @@ class YieldHuberTerm(LossTerm):
             return None
         prep = _plan(self.cfg, ctx.targets)
         physics = _physics(ctx)
-        pred = ctx.pred.get("merge_negotiation_yield_accel")
+        pred = ctx.pred.get(self.pred_key)
         if prep.get("empty") or pred is None or physics is None:
             return None
         c0, c1, k = ctx.c0, ctx.c1, prep["f_idx"].shape[-1]
