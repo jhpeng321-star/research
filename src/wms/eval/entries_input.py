@@ -114,10 +114,10 @@ def _entry_history(state: Mapping[str, Any], t0_s: float, kin: np.ndarray,
 
 
 def entry_process_v2(state: Mapping[str, Any], t0_s: float, horizon_s: float, seed: int,
-                     kin: np.ndarray, tools: RolloutTools):
+                     kin: np.ndarray, tools: RolloutTools, learned_entry: Any = None):
     """Observed-history entry process and its padding size."""
     mod = _entries(tools)
-    cfg = mod.EntryConfig()
+    cfg = mod.EntryConfig(learned_entry=learned_entry)
     history = _entry_history(state, t0_s, kin, tools)
     n_pad = _pad_size(history.rate.sum(), horizon_s)
     proc = mod.TorchEntryProcessV2(history=history, dt_s=DT_S, seed=int(seed), batch=1,
@@ -126,7 +126,7 @@ def entry_process_v2(state: Mapping[str, Any], t0_s: float, horizon_s: float, se
 
 
 def entry_process_queue(state: Mapping[str, Any], t0_s: float, horizon_s: float, seed: int,
-                        kin: np.ndarray, tools: RolloutTools):
+                        kin: np.ndarray, tools: RolloutTools, learned_entry: Any = None):
     """V9ENTRY queue mode: the observed-history process (:func:`entry_process_v2`) seeded with the
     recorded SUMO entrance backlog and driven at the recorded demand
     (:mod:`wms.eval.entry_queue`), inserted by SUMO's saturated-entrance rule (``sumo_like_v2``,
@@ -148,7 +148,8 @@ def entry_process_queue(state: Mapping[str, Any], t0_s: float, horizon_s: float,
     expected = float(np.sum(demand.rate)) * float(horizon_s) \
         + min(float(np.sum(queue.backlog)), 0.5 * float(horizon_s))
     n_pad = max(1, min(MAX_PAD_SLOTS, int(np.ceil(expected * PAD_SAFETY_FACTOR)) + PAD_MARGIN))
-    cfg = mod.EntryConfig(max_pending=10 ** 9, insert_rule="sumo_like_v2", fresh_no_credit=True)
+    cfg = mod.EntryConfig(max_pending=10 ** 9, insert_rule="sumo_like_v2", fresh_no_credit=True,
+                          learned_entry=learned_entry)
     proc = mod.TorchEntryProcessV2(history=history, dt_s=DT_S, seed=int(seed), batch=1, cfg=cfg,
                                    pool=_pool(int(kin.shape[0]), n_pad), queues=[queue])
     info = {"source": source, "vector": [float(x) for x in vec], "n_pad": int(n_pad)}

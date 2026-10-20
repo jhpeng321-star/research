@@ -276,6 +276,10 @@ class PhysicsConfig:
     # V10LANEOPT (2026-10-19): staged mainline lane changes (default 'free' = current behaviour).
     mainline_lane_mode: str = "free"
     mainline_courtesy_zone_m: float = MAINLINE_COURTESY_ZONE_M
+    # V10INSERT (2026-10-20): use the learned insertion speed / acceptance hazard
+    # (``wms.model.entry_learned``) instead of the hand-set sumo_like_v2 rule.  Default off
+    # keeps every pre-V10INSERT result bit-identical.
+    entry_learned: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.exit_at_road_end, bool):
@@ -352,6 +356,8 @@ class PhysicsConfig:
                 or not math.isfinite(self.mainline_courtesy_zone_m)
                 or self.mainline_courtesy_zone_m < 0.0):
             raise ValueError("mainline_courtesy_zone_m must be finite and >= 0")
+        if not isinstance(self.entry_learned, bool):
+            raise ValueError("entry_learned must be a boolean")
 
     def merge_end_follow_constants(self) -> tuple[float, float]:
         """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""

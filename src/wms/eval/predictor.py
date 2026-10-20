@@ -94,7 +94,18 @@ class WmsPredictor:
         self._history = HistoryInputs(backend)
         self.entries_summary: Mapping[str, Any] | None = None
         self.entry_queue_info: Mapping[str, Any] | None = None
+        self._learned_entry_model = None
         self._apply_diag_flags(flags)
+
+    def _learned_entry(self):
+        """Fitted V10INSERT model when ``physics.entry_learned`` is on (loaded once)."""
+        if not bool(getattr(getattr(self.model, "physics", None), "entry_learned", False)):
+            return None
+        if self._learned_entry_model is None:
+            from wms.model.entry_learned import load_learned_entry
+
+            self._learned_entry_model = load_learned_entry()
+        return self._learned_entry_model
 
     def _apply_diag_flags(self, flags: RolloutFlags) -> None:
         """Round-5 attribution switches: runtime model attributes, default no-op."""
@@ -125,11 +136,15 @@ class WmsPredictor:
         n_steps = max(1, int(round(float(horizon_s) / DT_S)))
         proc, n_pad = None, 0
         if self.flags.entries:
+            learned = self._learned_entry()
+            if learned is not None and not self.flags.entries_v2:
+                raise PredictorError("physics.entry_learned requires entries_v2=True")
             if self.flags.entry_queue_state:
                 proc, n_pad, self.entry_queue_info = entry_process_queue(
-                    state, t0_s, horizon_s, seed, kin, tools)
+                    state, t0_s, horizon_s, seed, kin, tools, learned_entry=learned)
             elif self.flags.entries_v2:
-                proc, n_pad = entry_process_v2(state, t0_s, horizon_s, seed, kin, tools)
+                proc, n_pad = entry_process_v2(state, t0_s, horizon_s, seed, kin, tools,
+                                               learned_entry=learned)
             else:
                 proc, n_pad = entry_process_v1(state, t0_s, horizon_s, seed, len(ids), tools)
         entries_on = proc is not None

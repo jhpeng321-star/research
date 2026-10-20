@@ -161,6 +161,11 @@ class EntryConfig:
     #: step); without this a free lane admits a second entrant at the same position (overlap)
     #: whenever an entrance has a backlog.  Set together with the entrance-queue state.
     fresh_no_credit: bool = False
+    #: V10INSERT (default None = bit-identical): a fitted ``wms.model.entry_learned``
+    #: ``LearnedEntryModel``.  When set, this process replaces the hand-set sumo_like_v2
+    #: speed / admission with the learned insertion speed and per-step acceptance hazard
+    #: (``TorchEntryProcessV2`` only).
+    learned_entry: object | None = None
 
     def __post_init__(self) -> None:
         if self.insert_rule not in INSERT_RULES:
@@ -932,6 +937,9 @@ class TorchEntryProcessV2(_EntryProcessBase):
         total = int(self.pending[b, e]) + n_due
         if total == 0:
             return
+        if self.cfg.learned_entry is not None:
+            self._insert_entrance_learned(work, b, e, n_due, total, hist)
+            return
         done = 0
         rng = self._rng(b)
         for attempt in range(total):
@@ -983,6 +991,97 @@ class TorchEntryProcessV2(_EntryProcessBase):
         if gap < max(0.0, required_gap):
             return False
         return self._place(work, b, e, ln, cav, v_new, float(VTYPE_LENGTH_M[vtype]))
+
+    # -- V10INSERT learned insertion speed / acceptance hazard -----------------------
+    def _learned_gap(self, work: _Working, b: int, ln: int, length_new: float):
+        """``(feature bumper gap, leader speed)`` of the learned model on ``ln``.
+
+        The gap is measured from the entrant's front at the lane start (no SUMO
+        ``POSITION_EPS``; the fit used the recorded vehicle length) to the rearmost
+        vehicle's rear, as in :func:`_entrance_gap`.
+        """
+        rear = self._lane_rear(work, b, ln)
+        if rear is None:
+            return _NO_GAP, 0.0
+        s_r, l_r, v_lead, _ = rear
+        return s_r - l_r - self.entry_s[ln] - float(length_new), float(v_lead)
+
+    def _insert_entrance_learned(self, work: _Working, b: int, e: int, n_due: int,
+                                 total: int, hist: "EntranceHistory") -> None:
+        """One learned entry decision per entrance and step.
+
+        A *fresh* arrival (no pending backlog) is inserted as it arrives; a waiting
+        entrant is admitted with the fitted per-step hazard.  If admitted, the entrant
+        departs at the fitted ``v0`` on the entrance lane with the largest gap (the same
+        lane-order semantics as sumo_like, common random numbers preserved), subject only
+        to physical non-overlap.  A vehicle that is not admitted, or finds no physically
+        safe slot, stays pending (FIFO).
+        """
+        model = self.cfg.learned_entry
+        rng = self._rng(b)
+        if self.couple_draws:
+            rng = np.random.default_rng([self._pair_seeds[b], e, 1,
+                                         int(self._candidate_index[b, e])])
+        u_cav = float(rng.random())
+        u_lane = float(rng.random())
+        _ = float(rng.normal(hist.speed_mean[e], max(hist.speed_std[e], 1.0e-3)))
+        _ = float(rng.normal(hist.gap_mean[e], max(hist.gap_std[e], 1.0e-3)))
+        vt = (int(rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
+              if hist.vtype_share[e].sum() > 0 else 0)
+        cav = bool(u_cav < float(hist.cav_share[e]))
+        length_new = float(VTYPE_LENGTH_M[vt])
+        if e == 0:
+            lanes_try = [1, 0] if u_lane < hist.lane_p1 else [0, 1]
+        else:
+            lanes_try = [2]
+        options = []
+        for ln in lanes_try:
+            gap, v_lead = self._learned_gap(work, b, ln, length_new)
+            options.append((gap, v_lead, ln))
+        options.sort(key=lambda x: -x[0])
+        backlog = float(total)
+        demand = float(hist.rate[e])
+
+        accepted = True
+        if int(self.pending[b, e]) > 0:
+            best_gap, best_v, best_ln = options[0]
+            hazard = float(np.asarray(model.acceptance_hazard(
+                best_gap, best_v, backlog, demand,
+                float(self.cfg.sumo_lane_speed_mps[best_ln]), e)).reshape(-1)[0])
+            accepted = float(rng.random()) < hazard
+
+        dropped = self.stats[b].dropped_pending
+        placed = False
+        if accepted:
+            for gap, v_lead, ln in options:
+                cap = float(self.cfg.sumo_lane_speed_mps[min(ln, len(
+                    self.cfg.sumo_lane_speed_mps) - 1)])
+                v0 = float(np.asarray(model.insertion_speed(
+                    gap, v_lead, backlog, demand, cap, e)).reshape(-1)[0])
+                v0 = min(max(0.0, v0), cap)
+                tau_vt = SUMO_V2_TAU_S[vt]
+                decel_vt = SUMO_V2_DECEL_MPS2[vt]
+                min_gap_vt = SUMO_V2_MIN_GAP_M[vt]
+                # Physical non-overlap after one step (both bodies move), then SUMO's own
+                # insertion safety at the fitted speed.
+                gap_end = (float(gap) - SUMO_POSITION_EPS_M
+                           + (max(0.0, float(v_lead)) - v0) * self.dt)
+                if gap_end + 1.0e-9 < min_gap_vt:
+                    continue
+                if not sumo_insert_ok(gap_end, v0, 0.0, tau_vt, decel_vt, min_gap_vt):
+                    continue
+                if not self._place(work, b, e, ln, cav, v0, length_new):
+                    continue
+                k = work.inserted[-1][1]
+                work.s[b, k] = self.entry_s[ln] + length_new + SUMO_POSITION_EPS_M
+                placed = True
+                break
+        if not placed:
+            self.stats[b].deferred_steps += 1
+        self._carry_over(b, e, total, 1 if placed else 0)
+        if self.couple_draws:
+            self._candidate_index[b, e] += ((1 if placed else 0)
+                                            + self.stats[b].dropped_pending - dropped)
 
     # -- sumo_like / sumo_like_v2 insertion (EntryConfig.insert_rule) -----------------
     def _entrance_gap(self, work: _Working, b: int, ln: int, length_new: float):
@@ -1076,6 +1175,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
                 "n_obs": [int(x) for x in hist.n_obs],
                 "inserted": stt.inserted, "inserted_cav": stt.inserted_cav,
                 "per_entrance": list(stt.per_entrance),
+                "learned_entry": self.cfg.learned_entry is not None,
                 "deferred_steps": stt.deferred_steps,
                 "dropped_pending": stt.dropped_pending, "no_slot": stt.no_slot,
                 **({} if self.queues is None else {
