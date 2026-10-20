@@ -1018,6 +1018,10 @@ class OptimConfig:
     grad_clip: float = 1.0
     lr_per_stage: Optional[tuple[float, ...]] = None
     """Optional learning rate per curriculum stage (round 5b); None = ``lr`` throughout."""
+    freeze_prefixes: tuple[str, ...] = ()
+    """R5TOOLS: parameter-name prefixes excluded from training (``requires_grad=False``)."""
+    lr_scale: Optional[dict[str, float]] = None
+    """R5TOOLS: parameter-name prefix -> multiplier of the stage learning rate (None = off)."""
 
     def __post_init__(self) -> None:
         require(self.batch_size >= 1, "optim.batch_size must be positive")
@@ -1027,6 +1031,13 @@ class OptimConfig:
             require(len(self.lr_per_stage) >= 1
                     and all(is_finite(x) and x > 0.0 for x in self.lr_per_stage),
                     "optim.lr_per_stage needs positive finite learning rates")
+        require(all(isinstance(prefix, str) and prefix for prefix in self.freeze_prefixes),
+                "optim.freeze_prefixes must be non-empty parameter-name prefixes")
+        if self.lr_scale is not None:
+            require(all(isinstance(prefix, str) and prefix
+                        and is_finite(scale) and scale > 0.0
+                        for prefix, scale in self.lr_scale.items()),
+                    "optim.lr_scale needs non-empty prefixes and positive finite multipliers")
         if self.batch_size_per_stage is not None:
             require(len(self.batch_size_per_stage) >= 1
                     and all(int(x) >= 1 for x in self.batch_size_per_stage),

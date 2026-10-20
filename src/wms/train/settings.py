@@ -91,6 +91,11 @@ class TrainSettings:
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
     lr_per_stage: Optional[tuple[float, ...]] = None
+    # R5TOOLS (default OFF = bit-identical): optimizer parameter protection.  Prefixes in
+    # freeze_prefixes get requires_grad=False and are excluded; lr_scale multiplies the stage
+    # learning rate for parameters whose names start with the prefix (longest prefix wins).
+    freeze_prefixes: tuple[str, ...] = ()
+    lr_scale: Optional[Mapping[str, float]] = None
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
@@ -410,6 +415,15 @@ class TrainSettings:
             len(self.lr_per_stage) == len(self.unroll_curriculum_s)
             and all(math.isfinite(float(x)) and float(x) > 0 for x in self.lr_per_stage)),
             "lr_per_stage must give one positive learning rate per stage")
+        _require(all(isinstance(prefix, str) and prefix for prefix in self.freeze_prefixes),
+                 "freeze_prefixes must be non-empty parameter-name prefixes")
+        _require(len(set(self.freeze_prefixes)) == len(self.freeze_prefixes),
+                 "freeze_prefixes must not contain duplicates")
+        _require(self.lr_scale is None or (
+            all(isinstance(prefix, str) and prefix for prefix in self.lr_scale)
+            and all(math.isfinite(float(scale)) and float(scale) > 0
+                    for scale in self.lr_scale.values())),
+            "lr_scale must map non-empty prefixes to positive finite multipliers")
         _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
                  "flip_rate_weight must be finite and non-negative")
         _require(math.isfinite(self.flip_rate_allowance)
@@ -636,6 +650,10 @@ class TrainSettings:
                 int(x) for x in values["truncation_steps_per_stage"])
         if values.get("lr_per_stage") is not None:
             values["lr_per_stage"] = tuple(float(x) for x in values["lr_per_stage"])
+        if values.get("freeze_prefixes") is not None:
+            values["freeze_prefixes"] = tuple(str(x) for x in values["freeze_prefixes"])
+        if values.get("lr_scale") is not None:
+            values["lr_scale"] = {str(k): float(v) for k, v in values["lr_scale"].items()}
         for key in ("selection_horizons_s", "selection_reference", "mixed_horizon_s",
                     "merge_loss_cell_edges_m", "agg_delay_sections_m"):
             if values.get(key) is not None:
