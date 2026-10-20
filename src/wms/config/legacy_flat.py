@@ -248,6 +248,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "selection_stuck_weight": "curriculum.selection_stuck_weight",
     # V8LANE (mainline overtake / return decision rule, on-policy lane-flow loss)
     "lane_v5_mainline": "model.lane_v5_mainline",
+    # R5INPUTS (extra lane-v5 merge inputs; default OFF = bit-identical)
+    "lane_v5_extra_features": "model.lane_v5_extra_features",
     "lane_flow_weight": "loss.lane_flow.weight",
     "lane_flow_balance": "loss.lane_flow.balance",
     # V10COURTESY (learned courtesy inputs + event weight boost)
@@ -348,7 +350,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_timing_metrics", "physics_overrides", "physics_inference",
     "selection_ramp_weight", "selection_stuck_weight",
     # V8LANE
-    "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance",
+    "lane_v5_mainline", "lane_flow_weight", "lane_flow_balance", "lane_v5_extra_features",
     "courtesy_inputs", "courtesy_weight",
     # V10NEGOT
     "merge_negotiation", "merge_survival_weight", "merge_survival_negative_weight",

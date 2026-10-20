@@ -270,7 +270,9 @@ class WmSModel(nn.Module):
                                if getattr(spec, "driver_update", "off") == "ema" else None)
         # LANEV5 (default OFF): created last; absent (no parameters, no RNG draw) otherwise.
         if getattr(spec, "lane_model", "residual") == "hazard_v5":
-            self.lane_v5 = lv5.LaneV5Net(spec.lane_hazard_hidden, spec.lane_hazard_cap)
+            self.lane_v5 = lv5.LaneV5Net(
+                spec.lane_hazard_hidden, spec.lane_hazard_cap,
+                extra_features=bool(getattr(spec, "lane_v5_extra_features", False)))
         elif lv5.forced_window_hazard(self.physics):
             raise ValueError("physics.forced_window_mode='hazard' requires "
                              "model.lane_model='hazard_v5'")
@@ -921,7 +923,8 @@ class WmSModel(nn.Module):
         lane-end waiting time (per-car forced-window hazard floor; ``None`` = constant floor)."""
         if acc is None:
             acc = self.initial_lane_v5_acc(present, kin, driver_history, driver_history_mask)
-        raw, acc, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
+        raw, acc, inst = lv5.step_features(acc, kin, present, self.physics, lane_age,
+                                           extra=self.lane_v5.extra_features)
         offsets = tuple(getattr(self, "lane_logit_offsets", (0.0, 0.0, 0.0)))
         with torch.no_grad() if self.lane_hazard_detach else contextlib.nullcontext():
             logits, head, acts = lv5.lane_logits_v5(self.lane_v5, raw, inst, learned, lane_base,
@@ -1004,7 +1007,8 @@ class WmSModel(nn.Module):
             acc = state.get("lane_v5_acc")
             if acc is None:
                 acc = lv5.initial_acc(present, kin, self.physics, None, None, 1)
-            raw, _, inst = lv5.step_features(acc, kin, present, self.physics, lane_age)
+            raw, _, inst = lv5.step_features(acc, kin, present, self.physics, lane_age,
+                                             extra=self.lane_v5.extra_features)
             with torch.no_grad():
                 lane_base = self.lane_v5_base(kin, present)
             logits, _, _ = lv5.lane_logits_v5(self.lane_v5, raw, inst, present & ~is_cav,

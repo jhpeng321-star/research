@@ -308,6 +308,9 @@ class TrainSettings:
     # V8LANE (2026-10-17, default OFF): mainline decision rule (model switch, mirrored for
     # validation) and the on-policy lane-flow loss.
     lane_v5_mainline: str = "default"
+    lane_v5_extra_features: bool = False
+    """R5INPUTS (default OFF): append follower acceleration/EMA, gap trends, next-behind and
+    next-ahead neighbours, alignment times and lane-end time to the lane-v5 features."""
     lane_flow_weight: float = 0.0
     lane_flow_balance: float = 0.0
     # V10COURTESY (2026-10-19, default OFF): learned courtesy inputs and the
@@ -503,6 +506,10 @@ class TrainSettings:
         _require((self.lane_v5_mainline == "default" and float(self.lane_flow_weight) == 0.0)
                  or self.lane_model == "hazard_v5",
                  "lane_v5_mainline / lane_flow_weight require lane_model='hazard_v5'")
+        _require(isinstance(self.lane_v5_extra_features, bool),
+                 "lane_v5_extra_features must be a boolean")
+        _require(not self.lane_v5_extra_features or self.lane_model == "hazard_v5",
+                 "lane_v5_extra_features requires lane_model='hazard_v5'")
         lanefix_on = (self.lane_decision != "argmax"
                       or any(float(x) for x in self.lane_logit_offsets)
                       or self.lane_hazard_features != "v1"

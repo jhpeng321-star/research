@@ -237,6 +237,12 @@ class ModelConfig:
     """V8LANE: overtake / return decision rule ('default' = lane_decision; 'sample' = always draw
     the calibrated hazard; 'budget' / 'budget_prop' = population-matched count, top-hazard /
     hazard-proportional car).  Merges keep lane_decision."""
+    lane_v5_extra_features: bool = False
+    """R5INPUTS (default OFF = bit-identical): append observed target-follower acceleration and
+    its short EMA, leader / follower gap closing rates and ~2 s trends, the next-behind
+    (follower's follower) and next-ahead (leader's leader) gaps, speeds, accelerations and
+    validity masks, predicted time-to-align under the current and maximum acceleration, and
+    the lane-end travel time at the end of the lane-v5 feature vector."""
     lane_conflict_resolve: bool = False
     """V6INTEG: resolve simultaneous lane-change conflicts during rollout."""
     courtesy_inputs: bool = False
@@ -296,6 +302,11 @@ class ModelConfig:
         if self.lane_v5_mainline != "default":
             require(self.lane_model == "hazard_v5",
                     "model.lane_v5_mainline needs model.lane_model='hazard_v5'")
+        require(isinstance(self.lane_v5_extra_features, bool),
+                "model.lane_v5_extra_features must be a boolean")
+        if self.lane_v5_extra_features:
+            require(self.lane_model == "hazard_v5",
+                    "model.lane_v5_extra_features needs model.lane_model='hazard_v5'")
         require(is_finite(self.grad_decay_per_step) and 0.0 < self.grad_decay_per_step <= 1.0,
                 "model.grad_decay_per_step must be in (0, 1]")
         require(isinstance(self.courtesy_inputs, bool),

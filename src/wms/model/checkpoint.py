@@ -190,9 +190,40 @@ def _check_keys(result, config: Mapping[str, Any], strict: bool) -> None:
         raise CheckpointError(f"checkpoint has unexpected weights: {result.unexpected_keys[:5]}")
 
 
+def _expand_lane_v5_inputs(weights: Mapping[str, Any], model: WmSModel):
+    """R5INPUTS: ZERO-expand an old lane-v5 first layer for ``model.lane_v5_extra_features``.
+
+    The checkpoint is read unchanged; only a model built with the switch ON widens the
+    input layer, so an old checkpoint keeps exact identity until trained (new columns have
+    zero weights and identity scaling).  No new key is invented and nothing is written.
+    """
+    net = getattr(model, "lane_v5", None)
+    if net is None or not bool(getattr(net, "extra_features", False)):
+        return weights
+    prefix = "lane_v5."
+    key = prefix + "trunk.0.weight"
+    weight = weights.get(key)
+    if weight is None:
+        return weights
+    n_new = int(net.trunk[0].in_features)
+    n_old = int(weight.shape[1])
+    if n_old == n_new:
+        return weights
+    if n_old > n_new:
+        raise CheckpointError(
+            f"checkpoint lane-v5 input width {n_old} exceeds the model's {n_new}; "
+            "disable model.lane_v5_extra_features for this checkpoint")
+    from . import lane_v5 as lv5
+    local = {name: weights[prefix + name] for name in
+             ("trunk.0.weight", "feature_mu", "feature_sd") if prefix + name in weights}
+    expanded = lv5.expand_input_state(local, n_old, n_new)
+    return {**weights, **{prefix + name: value for name, value in expanded.items()}}
+
+
 def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = True,
                     model_kind: str = "structured",
                     physics: Optional[Mapping[str, Any]] = None,
+                    model_config: Optional[Mapping[str, Any]] = None,
                     config_factory: Optional[Callable[[Mapping[str, Any]], Any]] = None
                     ) -> LoadedWms:
     """Load a ``wm_s/1`` checkpoint into an evaluation-mode model.
@@ -200,7 +231,9 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     Every network weight must be present except those of features newer than the
     checkpoint (``driver_encoder.*`` for residual models, ``command_proj.*``); with
     ``strict`` unexpected keys are errors too.  ``physics`` overrides the physics
-    stored with the run.
+    stored with the run.  ``model_config`` overrides flat model keys (e.g.
+    ``{"lane_v5_extra_features": True}``) on top of the stored config; an old lane-v5
+    checkpoint is then ZERO-expanded to the wider input layer (exact identity).
     """
     if model_kind not in MODEL_KINDS:
         raise CheckpointError(
@@ -208,10 +241,13 @@ def load_checkpoint(path: str | Path, *, device: str = "cpu", strict: bool = Tru
     path = Path(path)
     payload = _read_payload(path)
     config = dict(payload.get("config") or {})
+    if model_config:
+        config.update({str(key): value for key, value in model_config.items()})
     weights = payload["model"]
     model = build_model(_model_spec(config, model_kind), _physics_config(path, config, physics),
                         kind=model_kind,
                         action_conditioned="controller_embed.weight" in weights)
+    weights = _expand_lane_v5_inputs(weights, model)
     _check_keys(model.load_state_dict(weights, strict=False), config, strict)
     calib = payload.get("lane_v5_merge_calib")
     if calib is not None:
