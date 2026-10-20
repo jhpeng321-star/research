@@ -254,6 +254,62 @@ def test_old_checkpoint_loads_with_extra_inputs_as_exact_identity(tmp_path):
     assert torch.equal(loaded.lane_v5.heads.weight, model.lane_v5.heads.weight)
 
 
+def test_trainer_init_from_expands_lane_v5_inputs(tmp_path):
+    """``model.init_from`` must reload the widened lane-v5 first layer, not skip it."""
+    from wms.cli.assemble import build_model as assemble_model, build_physics
+    from wms.train.trainer import WmSTrainer
+
+    old_cfg = load_train_config("configs/c4_wm_v5_lane.toml", ["runtime.device=cpu"])
+    physics = build_physics(old_cfg, lambda name: name)
+    old = assemble_model(old_cfg, physics)
+    with torch.no_grad():
+        old.lane_v5.feature_mu.fill_(0.5)
+        old.lane_v5.feature_sd.fill_(2.0)
+    path = tmp_path / "old_wm_s.pt"
+    save_checkpoint(path, old, old_cfg)
+
+    extra_cfg = load_train_config("configs/c4_wm_v10round5.toml", [
+        "runtime.device=cpu", "runtime.threads=1",
+        "model.init_from=" + path.as_posix(),
+    ])
+    extra = assemble_model(extra_cfg, build_physics(extra_cfg, lambda name: name))
+    assert extra.lane_v5.extra_features is True
+    trainer = WmSTrainer(extra_cfg, extra, torch.utils.data.Dataset(),
+                         out_dir=tmp_path / "run")
+    report = trainer.init_report
+
+    widened = {"lane_v5.trunk.0.weight", "lane_v5.feature_mu", "lane_v5.feature_sd"}
+    assert set(report["expanded"]) == widened
+    assert widened <= set(report["loaded"])
+    assert report["shape_mismatch"] == []
+    assert json.loads((tmp_path / "run" / "INIT_FROM.json").read_text())["expanded"] == \
+        sorted(widened)
+
+    # Other R5 tensors that are new in the wider model are zero-init / identity at load.
+    model = trainer.model
+    assert torch.equal(model.residual_net.residual_head_log_scale, torch.zeros(()))
+    assert torch.equal(model.merge_threshold.location_bias, torch.zeros(()))
+    assert not bool(model.merge_threshold.net[-1].weight.any())
+    assert not bool(model.merge_negotiation.net[-1].weight.any())
+    for head in (model.merge_negotiation.yield_head, model.merge_negotiation.ramp_head,
+                 model.merge_negotiation.safety_head,
+                 model.merge_negotiation.merge_safety_head):
+        assert not bool(head[-1].weight.any()) and not bool(head[-1].bias.any())
+
+    phys = _phys()
+    kin = _scene_kin((-1.0, 0.1, 0.2, 0.0))
+    present = _present(kin)
+    age = torch.zeros(present.shape[0], 1, *present.shape[1:])
+    acc0 = lv5.initial_acc(present, kin, phys, None, None, 1)
+    base, _ = lv5.sequence_features(kin.unsqueeze(1), present.unsqueeze(1), phys, age, acc0)
+    wide, _ = lv5.sequence_features(kin.unsqueeze(1), present.unsqueeze(1), phys, age, acc0,
+                                    extra=True)
+    with torch.no_grad():
+        before = old.lane_v5(base[:, 0])
+        after = model.lane_v5(wide[:, 0])
+    assert torch.equal(before, after)
+
+
 # --------------------------------------------------------------- training / rollout
 def test_extra_model_rollout_and_teacher_forced_rows():
     from .test_lanefix import _initial

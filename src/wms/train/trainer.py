@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from wms.core.errors import WmsError
 from wms.data.collate import collate
-from wms.model.checkpoint import save_checkpoint, sha256_file
+from wms.model.checkpoint import _expand_lane_v5_inputs, save_checkpoint, sha256_file
 from wms.physics.projection import FeasibilityProjection, ProjectionConfig
 
 from .curriculum import PlateauRule, StagePlan, stage_plan
@@ -211,8 +211,12 @@ class WmSTrainer:
 
         Only same-name/same-shape tensors are copied (strict=False); the report lists
         what transferred, what was new in this model and what the checkpoint had that
-        this model lacks.  The name resolves through the data registry (an absolute
-        path is taken as already resolved), so restricted material is refused.
+        this model lacks.  A narrower lane-v5 first layer is ZERO-expanded to the model's
+        ``lane_v5_extra_features`` width first (exact identity), exactly as
+        :func:`wms.model.checkpoint.load_checkpoint` does; those tensors are reported as
+        ``expanded`` instead of shape mismatches.  The name resolves through the data
+        registry (an absolute path is taken as already resolved), so restricted material
+        is refused.
         """
         if name is None:
             return None
@@ -227,19 +231,24 @@ class WmSTrainer:
         if not isinstance(payload, dict) or payload.get("format") != "wm_s/1":
             raise CheckpointInitError(f"model.init_from: {path} is not a wm_s/1 checkpoint")
         own = self.model.state_dict()
-        source = payload.get("model") or {}
+        raw_source = payload.get("model") or {}
+        source = _expand_lane_v5_inputs(raw_source, self.model)
+        expanded = sorted(key for key in set(source) & set(raw_source)
+                          if source[key].shape != raw_source[key].shape)
         matched = {key: value for key, value in source.items()
                    if key in own and own[key].shape == value.shape}
         self.model.load_state_dict(matched, strict=False)
         report = {
             "source": str(path), "sha256": sha256_file(path),
             "loaded": sorted(matched),
+            "expanded": expanded,
             "new_in_model": sorted(set(own) - set(source)),
             "shape_mismatch": sorted(key for key in set(source) & set(own)
                                      if own[key].shape != source[key].shape),
             "unused_from_checkpoint": sorted(set(source) - set(own)),
         }
         print(f"init_from {path.name}: loaded {len(report['loaded'])} tensors, "
+              f"expanded {len(report['expanded'])}, "
               f"new {len(report['new_in_model'])}, shape-mismatch "
               f"{len(report['shape_mismatch'])}, unused {len(report['unused_from_checkpoint'])}",
               file=sys.stderr)
