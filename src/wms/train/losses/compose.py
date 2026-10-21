@@ -31,6 +31,7 @@ from .merge import MergeLossConfig, cap_merge_share, merge_terms
 from .merge_first_passage import MergeFirstPassageConfig, merge_first_passage_terms
 from .merge_frailty import MergeFrailtyConfig, merge_frailty_terms
 from .merge_core import MergeCoreConfig, merge_core_terms
+from .merge_pivot import MergePivotConfig, merge_pivot_terms
 from .merge_negotiation import (MergeNegotiationLossConfig, MergeYieldLossConfig,
                                 YieldHuberTerm, merge_negotiation_terms, merge_yield_terms)
 from .lane_flow import LaneFlowConfig, lane_flow_terms
@@ -244,7 +245,20 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
                          else tuple(int(c) for c in settings.merge_loss_speed_cells)))))
     merge_cap = (getattr(settings, "merge_loss_max_share", None)
                  if getattr(settings, "merge_loss_on", False) else None)
-    if getattr(settings, "merge_core_on", False):
+    if settings.merge_decision == "first_passage":
+        chunk.extend(merge_pivot_terms(MergePivotConfig(
+            weight=float(settings.merge_core_weight), tf_weight=float(settings.merge_core_tf_weight),
+            metrics=bool(settings.merge_core_metrics), z_tf=float(settings.merge_core_z_tf),
+            z_on=float(settings.merge_core_z_on), tau_reg_weight=float(settings.merge_core_tau_reg_weight),
+            pos_tol_m=float(settings.merge_core_pos_tol_m),
+            speed_tol_mps=float(settings.merge_core_speed_tol_mps),
+            gap_tol_m=float(settings.merge_core_gap_tol_m),
+            gap_speed_tol_mps=float(settings.merge_core_gap_speed_tol_mps),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane),
+            zone_s0_m=0.0 if physics is None else float(physics.merge_zone_s0_m),
+            zone_s1_m=75.44 if physics is None else float(physics.merge_zone_s1_m))))
+    elif getattr(settings, "merge_core_on", False):
         # SECUREGAP secure-gap core: survival + teacher-forced acceptance; replaces the
         # first-passage / frailty / timing likelihood for the merge head.
         chunk.extend(merge_core_terms(MergeCoreConfig(
