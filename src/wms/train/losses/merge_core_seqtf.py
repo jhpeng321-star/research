@@ -213,7 +213,8 @@ def seq_tf_chunk(scene: dict, c0: int, c1: int, *, s0, T, b, tau_a, temperature,
     a_q = log_post_eff + g_chunk
     d = torch.logsumexp(a_q, dim=1)
     nll = -(d * eligible.to(d.dtype)).sum()
-    new_log_post = (a_q - d.unsqueeze(1)).detach()
+    new_log_post = torch.where(eligible.unsqueeze(1),
+                              a_q - d.unsqueeze(1), log_post_eff).detach()
 
     with torch.no_grad():
         event_any = at_event.any(1)
