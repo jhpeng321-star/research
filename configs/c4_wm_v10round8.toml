@@ -25,8 +25,8 @@ gap_tol_m = 40.0
 gap_speed_tol_mps = 8.0
 location_reg_weight = 1.0e-3
 sigma_reg_weight = 1.0e-3
-z_tf = 1.0
-z_on = 1.0
+z_tf = 395.2   # pooled mean per-car recorded-state NLL at init (r8_measure: 8 x 120 s + 4 x 300 s TRAIN batches, 2026-10-21; heavy-tailed, one batch 3269)
+z_on = 2.15    # pooled mean per-car on-policy NLL at init (same measurement)
 
 [loss.merge_survival]
 weight = 0.0
