@@ -164,6 +164,17 @@ def test_actual_seqtf_omits_nonzero_heads_and_is_reported_separately(frozen):
     torch.testing.assert_close(runtime.nll(batch), refit.nll(batch))
 
 
+def test_quadrature_64_positive_tail_weights_without_float32_floor(frozen):
+    seq = sequence(prepare(frozen))
+    model = fit.ExactCandidate('Soft-hazard', frozen)
+    batch = fit.exact_pack([seq])
+    law = model.distribution(batch, 64)
+    assert law['log_mass'].dtype == torch.float64
+    assert torch.isfinite(model.nll(batch, 64)).all()
+    torch.testing.assert_close(law['log_mass'].exp().sum()+law['log_survival'][0, -1].exp(),
+                               torch.tensor(1., dtype=torch.float64), atol=1e-6, rtol=0)
+
+
 @pytest.mark.parametrize('kind', ['M0', 'M0-refit', 'Soft-hazard', 'M0-seqTF'])
 def test_prefix_is_decision_count_and_scores_conditional_survival_not_prior_reset(frozen, kind):
     cache = prepare(frozen)

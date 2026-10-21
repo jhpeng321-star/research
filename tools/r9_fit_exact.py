@@ -70,6 +70,7 @@ from tools import merge_fit_v2 as legacy  # noqa: E402
 from tools import r9_exact as exact  # noqa: E402
 from wms.model import lane_v5 as lv5  # noqa: E402
 from wms.model.merge_frailty import gauss_hermite  # noqa: E402
+from wms.model.merge_core import core_features  # noqa: E402
 
 MODELS = ('M0', 'M0-seqTF', 'M0-corrected', 'M0-refit', 'Soft-hazard')
 MODE = {'M0': 'original_runtime', 'M0-seqTF': 'seq_tf',
@@ -256,15 +257,44 @@ def prepare_episode(frozen, kin, mask, cav, vid, n_quad=8, actions=None, *,
         kwargs = dict(k_steps=0, history=torch.cat(hs), history_mask=torch.cat(hms),
                       driver_params={key: value.expand(hi-lo, -1) for key, value in params.items()},
                       driver_embedding=enc, lane_age=ages, lane_v5_acc=torch.cat(previous_acc))
-        out = model.forward(state, **kwargs)
         action = {} if actions is None else {
             key: torch.as_tensor(value[lo:hi], device='cpu') for key, value in actions.items()}
-        moved, _ = exact.longitudinal_proposal(
-            frozen, state, out=out, forward_kwargs=kwargs,
-            allow_unverified_physics=allow_unverified_physics, **action)
+        # Permanently absent slots in this chunk have no attention/physics edge.
+        # Keep the original slot ordering (including all tie-break semantics),
+        # all current neighbors, and all carried per-slot histories/encodings.
+        # This removes converter padding, not observed vehicles or exposure.
+        active = present.any(0).nonzero().flatten()
+        if not len(active):
+            active = torch.tensor([0])
+
+        def compact(value):
+            if isinstance(value, dict):
+                return {key: compact(v) for key, v in value.items()}
+            if isinstance(value, torch.Tensor) and value.ndim >= 2 and value.shape[1] == k:
+                return value.index_select(1, active)
+            return value
+
+        small_state, small_kwargs = compact(state), compact(kwargs)
+        small_out = model.forward(small_state, **small_kwargs)
+        small_moved, _ = exact.longitudinal_proposal(
+            frozen, small_state, out=small_out, forward_kwargs=small_kwargs,
+            allow_unverified_physics=allow_unverified_physics, **compact(action))
+        moved = current.clone()
+        moved[:, active] = small_moved
+        out = {}
+        for key in ('lane_v5_acts', 'merge_core_intent', *('merge_core_'+v for v in exact.FEATURES
+                                                        if v not in ('v', 'a'))):
+            value = small_out[key]
+            full = torch.zeros(hi-lo, k, *value.shape[2:], dtype=value.dtype)
+            if key == 'merge_core_intent':
+                # Absent lane logits are exactly zero in WMS -> uniform intent.
+                full.fill_(1./3.)
+            full[:, active] = value
+            out[key] = full
         proposals.append(moved)
+        original = core_features(current, present, model.physics)
         original = {key: current[..., 4 if key == 'v' else 5] if key in ('v', 'a')
-                    else out['merge_core_' + key] for key in exact.FEATURES}
+                    else original[key] for key in exact.FEATURES}
         ramp = present & (state['lane'] == model.physics.merge_lane)
         in_zone = ((current[..., 0] >= model.physics.merge_zone_s0_m)
                    & (current[..., 0] <= model.physics.merge_zone_s1_m))
@@ -398,6 +428,7 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal)
         attach_episode(subset, cache)
         for seq in subset:
+            seq['unknown_age'] = bool(seq['unknown_age'])
             entry, length = seq['entry_row'], len(seq['times'])
             output_times = loaded['time_s'][entry+1:entry+length+1]
             seq['score_start'] = int(np.sum(output_times < float(ep.get('warmup_s', 0))))
@@ -479,11 +510,12 @@ def exact_pack(sequences):
 class ExactCandidate(nn.Module):
     """Fitter-compatible full-head law; dynamics/encoders are never trainable."""
 
-    def __init__(self, kind, frozen):
+    def __init__(self, kind, frozen, *, corrected_protocol=False):
         super().__init__()
         if kind not in MODELS:
             raise ValueError(f'exact kind must be one of {MODELS}')
         self.kind = kind
+        self.mode = 'corrected' if corrected_protocol else MODE[kind]
         self.core = (exact.matched_refit_core(frozen) if kind in REFITS
                      else copy.deepcopy(frozen.core).requires_grad_(False))
         self.core.eval()
@@ -502,7 +534,7 @@ class ExactCandidate(nn.Module):
         return packed, packed['exact_pack']
 
     def _logits(self, data, n_quad):
-        mode = data[MODE[self.kind]]
+        mode = data[self.mode]
         if self.kind not in REFITS and mode['logits'].shape[-2] == n_quad:
             _, weights = gauss_hermite(n_quad, dtype=mode['logits'].dtype)
             return mode['logits'], weights
@@ -521,7 +553,12 @@ class ExactCandidate(nn.Module):
             raise ValueError('n_quad must be in 1..64')
         batch, data = self._batch(batch)
         logits, weights = self._logits(data, n_quad)
-        eligible = data[MODE[self.kind]]['eligible'] & batch['valid']
+        if not bool((weights > 0).all()):
+            # GH tail weights at 64 nodes underflow in float32. Recompute the
+            # actual positive weights in float64; never floor or drop nodes.
+            _, weights = gauss_hermite(n_quad, dtype=torch.float64)
+            logits = logits.to(torch.float64)
+        eligible = data[self.mode]['eligible'] & batch['valid']
         whole = exact.hazard_distribution(logits, weights, eligible)
         start = data['score_start']
         ix = (start-1).clamp_min(0).unsqueeze(-1)

@@ -21,6 +21,7 @@ from types import SimpleNamespace
 for _key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
     os.environ.setdefault(_key, "1")
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 import numpy as np
 import torch
@@ -868,7 +869,8 @@ def clean_json(value):
     return value
 
 
-def main(argv=None):
+def legacy_main(argv=None):
+    """Superseded scalar diagnostics only; all exported M0 labels are approximate."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", action="append", required=True, help="NAME=DIR converted TRAIN episode source")
     parser.add_argument("--models", nargs="+", default=list(MODELS), help=", or space separated: " + ", ".join(MODELS))
@@ -978,7 +980,15 @@ def main(argv=None):
                 "physical_mask_repair": "P1 exact interval intersection reported separately; M0 not retrofitted",
                 "unknown_age": "enumerated and masked for entry timing; likelihood uses observed-start prior",
                 "competing_exits": "separate exit strata, survival to observed exit; no merge invented"}}
-    report = clean_json(report)
+    def approx_labels(value):
+        if isinstance(value, dict):
+            return {approx_labels(k): approx_labels(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [approx_labels(v) for v in value]
+        if isinstance(value, str):
+            return value.replace("M0", "M0-approx")
+        return value
+    report = approx_labels(clean_json(report))
     text = ["# Round-9 offline fit", "", "Verdict: **CHANGES** (offline evidence only)", "",
             f"Cars: {len(sequences)}; fit worlds: {len(worlds)-len(audit)}; audit worlds: {len(audit)}.", "",
             "## Qualification blockers", *["- " + b for b in blockers], ""]
@@ -1003,6 +1013,15 @@ def main(argv=None):
         guard(path).write_text(content, encoding="utf-8")
     print(f"wrote {out.relative_to(ROOT)} and {md.relative_to(ROOT)}; verdict CHANGES", flush=True)
     return 0
+
+
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--legacy-approx" in argv:
+        argv.remove("--legacy-approx")
+        return legacy_main(argv)
+    from tools.merge_fit_stage2a import main as stage2a_main
+    return stage2a_main(argv)
 
 
 if __name__ == "__main__":

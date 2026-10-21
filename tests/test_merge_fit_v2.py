@@ -492,7 +492,7 @@ def test_cli_nonempty_audit_grouped_fit_and_bootstrap(workspace_tmp):
     (workspace_tmp/"C4_EPISODES_MANIFEST.json").write_text(
         json.dumps({"split": "TRAIN", "episodes": metas}), encoding="utf-8")
     out, md = workspace_tmp/"fit.json", workspace_tmp/"fit.md"
-    assert fit.main(["--source", "synthetic="+str(workspace_tmp), "--models", "M0,M0-refit,P1,P1+P2,P1-P3",
+    assert fit.main(["--legacy-approx", "--source", "synthetic="+str(workspace_tmp), "--models", "M0,M0-refit,P1,P1+P2,P1-P3",
                      "--audit-frac", "0.2", "--inner-folds", "2", "--bootstrap", "40", "--seed", "73",
                      "--round8-params", "default", "--iters", "2", "--shrinkage", "0", "0.01",
                      "--out", str(out), "--md", str(md)]) == 0
@@ -506,7 +506,7 @@ def test_cli_nonempty_audit_grouped_fit_and_bootstrap(workspace_tmp):
         assert audit["nll_world_bootstrap"]["status"] == "ok"
         assert audit["physical_support"]["share"] == 1
         assert audit["zero_mass_event_count"] == 0
-        assert set(audit["paired_vs"]) == {"M0", "M0-refit"}
+        assert set(audit["paired_vs"]) == {"M0-approx", "M0-approx-refit"}
         assert audit["noncompletion"]["all"]["tails"]["120"]["cars"] == 2
     assert report["models"]["P1-P3"]["fit"]["selection_status"] == "ok"
     assert "DIAGNOSTIC" in report["causal_proposal"]["name"]
