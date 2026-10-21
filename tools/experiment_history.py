@@ -462,6 +462,25 @@ OFFLOADED = os.path.join(ROOT, 'protocols', 'offloaded_paths.json')
 _offloaded = None
 
 
+def _evidence_path_key(rel):
+    """Compare recorded repository paths independently of the current worktree.
+
+    Clean-up receipts use the canonical checkout's absolute path. Ledger paths
+    are often repository-relative; resolving those against a different worktree
+    must not turn an explicitly recorded offload into an unrecorded disappearance.
+    This is a metadata identity operation, not a filesystem redirection.
+    """
+    text = _map_legacy_root(str(rel).replace('\\', '/'))
+    path = os.path.normcase(os.path.normpath(os.path.join(ROOT, text)))
+    roots = (ROOT, 'E:/research-dense', 'D:/research-dense',
+             os.environ.get('RESEARCH_DENSE_ROOT', 'E:/research-dense'))
+    for root in roots:
+        root = os.path.normcase(os.path.normpath(root))
+        if path == root or path.startswith(root + os.sep):
+            return '@repo' + path[len(root):]
+    return path
+
+
 def offloaded(rel):
     """Drive location if rel lies under evidence that an owner-run clean-up moved
     to Google Drive after a live size+MD5 check (protocols/offloaded_paths.json;
@@ -475,11 +494,11 @@ def offloaded(rel):
             with open(OFFLOADED, encoding='utf-8') as f:
                 m = json.load(f)
             for r in m.get('entries', []):
-                _offloaded.append((os.path.normcase(os.path.normpath(r['local'])), r['drive']))
+                _offloaded.append((_evidence_path_key(r['local']), r['drive']))
     key = (rel or '').split(' (')[0].strip()
     if not key:
         return None
-    path = os.path.normcase(resolve(key))
+    path = _evidence_path_key(key)
     for root, drive in _offloaded:
         if path == root or path.startswith(root + os.sep):
             return drive
