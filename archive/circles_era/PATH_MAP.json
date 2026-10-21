@@ -108,9 +108,12 @@
   },
   {
    "old": "traffic_shepherd/formation.py",
-   "new": "archive/circles_era/traffic_shepherd/formation.py",
-   "bytes": 27335,
-   "sha256": "06673f552321b49675e12b96df2e46297c9d0e50e904ab7e19e8fbcc13e37978"
+    "new": "archive/circles_era/traffic_shepherd/formation.py",
+    "bytes": 27335,
+    "sha256": "06673f552321b49675e12b96df2e46297c9d0e50e904ab7e19e8fbcc13e37978",
+    "current_bytes": 27279,
+    "current_sha256": "92e6b8fe981369a6725d9f512829a326b64b69ba3ffbc2aefe627058f8fbf8db",
+    "note": "TFIX2: pin the LF Git source imported in 766a6cb7; original migration byte identity above is retained, not claimed re-verified. No source text change."
   },
   {
    "old": "traffic_shepherd/formation_evidence.py",
@@ -492,9 +495,12 @@
   },
   {
    "old": "tests/test_formation.py",
-   "new": "archive/circles_era/tests/test_formation.py",
-   "bytes": 15654,
-   "sha256": "283c3ffff404596572eccbd587767baf745ff61d78ae771aa457d74606f69bbe"
+    "new": "archive/circles_era/tests/test_formation.py",
+    "bytes": 15654,
+    "sha256": "283c3ffff404596572eccbd587767baf745ff61d78ae771aa457d74606f69bbe",
+    "current_bytes": 15653,
+    "current_sha256": "bbfb5225432f757b8efbc68c7998237f1c5bcb64785f5e19989e0c0252c4953a",
+    "note": "TFIX2: LF checkout; original SHA256 reproduced by restoring the last newline to CRLF. No source text change."
   },
   {
    "old": "tests/test_formation_evidence.py",
@@ -726,9 +732,12 @@
   },
   {
    "old": "tests/test_target_adjust.py",
-   "new": "archive/circles_era/tests/test_target_adjust.py",
-   "bytes": 5868,
-   "sha256": "b2a2d430311be11c258c644c4d3b42dac526ecde27bab4c0711f55af7968317c"
+    "new": "archive/circles_era/tests/test_target_adjust.py",
+    "bytes": 5868,
+    "sha256": "b2a2d430311be11c258c644c4d3b42dac526ecde27bab4c0711f55af7968317c",
+    "current_bytes": 5765,
+    "current_sha256": "7fb127164e83d0cd78b0a99ac6936a489816f7bb38fa35f81c5b63170a38f680",
+    "note": "TFIX2: LF checkout; original SHA256 reproduced with CRLF for the first 103 newlines and LF thereafter. No source text change."
   },
   {
    "old": "tests/test_target_speed.py",
