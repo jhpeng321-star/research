@@ -1,232 +1,240 @@
-# Round 9 A-only offline fitter
+# Round 9 stage-2A offline fitter
 
-## Status and scope
+## Status
 
-`tools/merge_fit_v2.py` replaces the superseded DeepSeek context-model draft at
-`72ae890d`. It implements the nested offline comparisons and exact sequence
-statistics from `ROUND9_ADVICE_PIVOT.md` S3a/S3b. P4 and B are off.
+Implements `ROUND9_ADVICE_STAGE2A.md` items 22–26. The default entrypoint is
+`tools/merge_fit_v2.py`, which dispatches to `tools/merge_fit_stage2a.py`.
+P4/B remain off. Shared runtime geometry/causal update code was merged from
+`c4/v10r9w2` in `501af88a`.
 
-**Current evidence verdict: CHANGES.** This is an offline recorded-path tool, not
-launch authorization. In particular, this worktree contains neither a supplied
-round-8 stage300 dynamics checkpoint nor verified simulator decision-substep
-geometry. The default constant-current-acceleration proposal is explicitly
-**DIAGNOSTIC**. It cannot qualify the required frozen longitudinal branch. A
-stepwise adapter is supported for integration with the runtime agent's shared
-causal update; the external ordering/geometry evidence remains necessary.
+**Evidence verdict: CHANGES; execution is partial against the full brief.**
+Exact-head parity and F1/F2 contracts pass. The eight-world smoke completes,
+but its shared causal replay vetoes 422/608 events, scale quadrature is not
+converged, authoritative run physics is missing, and cold full preparation
+exceeds one hour. These failures are reported, not repaired with floors or
+supported-only fitting. The real one-in-five TRAIN audit remains unopened.
 
-The two materialized `_sample` worlds are corpus-TRAIN, converter-`val` worlds.
-They are suitable for a development smoke, not the fixed audit or the original
-LCSTATE 2,915-event qualification cohort. Missing manifest episodes, original
-LCSTATE denominator, its 16 no-left-want rows and two teleports, and actual
-sample exclusions are recorded explicitly. No LC flags are used as model inputs.
+## Comparator identity: two distinct laws in the actual round-8 code
 
-## Commands executed (PowerShell, worktree root)
+`data/r9_train/wm_s_stage300.pt` is loaded with `weights_only=True`, strict
+loading of all 149 tensors, CPU/evaluation mode, and no checkpoint mutation.
+The complete driver encoder, learned alpha-location head/bias, residual,
+temperature and persistent normal latent are retained.
 
-All paths used for data, artifacts, test scratch space and adapters must resolve
-inside this worktree. The executable below is the owner-specified CPU interpreter.
+An important incompatibility in the requested parity criterion is now tested:
+the actual `wms.train.losses.merge_core_seqtf.seq_tf_chunk` **does not use** the
+learned location or residual, whereas deployment's `_apply_merge_core` does.
+They cannot be called the same mass function for this checkpoint. The fitter
+therefore exports both, without changing the frozen runtime to force agreement:
 
-```powershell
-& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" -m pytest tests/test_merge_fit_v2.py tests/test_merge_core_v2_seqtf.py tests/test_merge_core.py tests/test_merge_core_v2_onpolicy.py --basetemp tmp/r9_pytest -q
-```
+- **M0:** untouched full learned deployed head, integrated over one persistent
+  normal draw, evaluated on the common corrected causal geometry and F2
+  observation protocol. Parameters, encodings and longitudinal dynamics are
+  frozen; observation bookkeeping changes are explicit.
+- **M0-original-runtime:** the same full frozen head on original runtime
+  pre-motion geometry/envelope. Separates the original-runtime/bookkeeping
+  effect from the candidate's parameter changes.
+- **M0-seqTF:** the actual frozen `seq_tf_chunk` law, with zero location and no
+  residual. Its masses/NLL are tested against actual `seq_tf_chunk`, including
+  a real TRAIN merge window. Full-cohort scoring does not copy legacy
+  unsupported-event omission.
+- **M0-refit:** complete decision-head refit, including location and residual,
+  on the same corrected geometry/F2 protocol as M0. The encoder/dynamics and
+  yield head stay frozen on the cached fixed path.
+- **M0-approx:** the former scalar-only M0, explicitly an approximation.
+- **Soft-hazard:** corrected full-head soft-hazard fallback treatment. Its
+  matched refit can be the same architecture/fit as M0-refit. Item 26 requires
+  improvement against untouched exact M0; refit comparisons are descriptive,
+  with no self-superiority gate. Absolute/relative timing and tail gates remain.
 
-```powershell
-& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" tools/merge_fit_v2.py --source v5_native=_sample/v5_native --models M0,M0-refit,P1,P1+P2,P1-P3 --audit-frac 0.2 --inner-folds 2 --bootstrap 100 --round8-params default --out results/r9_fit_sample.json --md results/r9_fit_sample.md --seed 73 --max-worlds 2 --iters 4 --shrinkage 0 0.01
-```
+Full-head quadrature is separately tested against `_apply_merge_core` on
+identical inputs, with a nonzero learned alpha head and a deliberately nonzero
+residual clone. Decision masses/CDF use the advice's `1e-6` absolute parity
+tolerance. This establishes identical-input parity, not a reconstruction of
+unrecorded simulator inputs or joint commit-conflict likelihood.
 
-The smoke completes with 167 HDV sequences (163 events, four non-events), 162/163
-physically supported events under the diagnostic proposal, and exact zero-mass
-event counts M0=0, M0-refit=0, P1=1, P1+P2=1, P1-P3=40. Failed candidates retain
-their attempted initialization and an explicit fit failure, not fitted-success
-labels. M0-refit takes four updates. The two-world audit is empty by design;
-sample fit diagnostics are labeled `fit_diagnostics_not_audit`. No audit
-confidence interval is fabricated. Generated artifacts stay in ignored `results/`.
+## F1/F2 and diagnostic laws
 
-For the coordinator, after placing full TRAIN exports, the exact checkpoint or
-scalar config, and the shared causal adapter **inside this worktree**, use:
+**F1** learns six positive gap parameters plus `tau=softplus(rho)` and
+`w=softplus(eta)`, with no offset in latent location:
 
-```powershell
-& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" tools/merge_fit_v2.py --source v5_native=data/r9_train/v5_native --source genrand_plain=data/r9_train/genrand_plain --models M0,M0-refit,P1,P1+P2,P1-P3 --audit-frac 0.2 --inner-folds 4 --bootstrap 2000 --round8-params data/r9_train/wm_s_stage300.pt --causal-adapter tools/r9_decision_adapter.py --out results/r9_fit_full.json --md results/r9_fit_full.md --seed 73 --iters 200 --shrinkage 0 0.001 0.01 0.1 1
-```
-
-This is a handoff command, not a claim that these full-data/checkpoint/adapter
-files are present or that this command has been run. Freeze the source cohort,
-adapter and hyperparameter grid before the single final audit. Do not tune from
-audit results. `--max-worlds` selects a sorted prefix and lists every omitted
-world; use it for development, not as an audit-cohort repair.
-
-## Input and baseline identity
-
-- `--source NAME=DIR` is repeatable. `DIR` contains a corpus-`TRAIN`
-  `C4_EPISODES_MANIFEST.json` and converted `episodes/<id>/*.npy` files.
-  Read-only inputs are `veh_kin`, `veh_mask`, `vid`, `is_cav`, `time_s`, and,
-  for an adapter, issued control channels. Arrays use `allow_pickle=False`.
-  No pickle, truth table, SUMO run, or post-event hypothetical path is used.
-- IDs only establish identity segments, action validity and world grouping;
-  they are not behavioral inputs. Slots are split on absence or ID replacement.
-  CAVs remain full-scene neighbors but are listed as supervision exclusions.
-- `--round8-params default` reads and hashes
-  `src/wms/model/merge_core_init.json` strictly, without copying rounded constants
-  from the brief. **This file currently contains s0=2.1609596641, T=0.8617146481,
-  b=1.9684840575, tau_a=1.0793451041, temperature=1.2781399549,
-  sigma=0.1275461806, not the stage300 values quoted in the brief.** For actual
-  stage300 evidence, supply the exact checkpoint/config.
-- JSON configs use `s0_m`, `T_s`, `b_mps2`, `tau_a_s`, `temperature_m`,
-  `alpha_log_sigma`, either at top level or under `fitted`. Checkpoints are loaded
-  with `weights_only=True`, CPU mapping; standard `model`, `state_dict` and
-  `model_state_dict` wrappers are supported. Their positive raw parameterization
-  and sigma transform match `MergeCoreNet`.
-- The untouched M0 is the **context-free round-8 seq-TF comparator**. Its scalar
-  parameters are frozen exactly; its per-step anticipation, 150m core feature
-  search, missing-side semantics, normal persistent latent and sequence
-  quadrature remain unchanged. A checkpoint with learned nonzero runtime
-  residual/location is refused rather than silently reconstructed without those
-  terms. Such a checkpoint needs a complete frozen comparator integration to
-  represent its deployed decisions; a scalar export alone cannot establish that
-  stronger claim.
-
-## Model and alignment contracts
-
-- `M0`: untouched scalar context-free round-8 soft hazard.
-- `M0-refit`: the same context-free soft-hazard architecture, refitted on fit
-  worlds only. This is never labeled the untouched baseline.
-- `P1`: one causal proposal, pre-change memberships, all-target interval veto,
-  legacy soft-hazard secure-gap boundary and persistent normal quadrature.
-- `P1+P2`: P1 geometry and physical veto plus separate positive
-  `s_f,T_f,b_f,s_l,T_l,b_l`, logistic persistent assertiveness, learned soft-hazard
-  temperature. No anticipation or legacy margin residual is added to P2.
-- `P1-P3`: those six distances plus learned positive `tau`. One
-  `z~Logistic(0,1)` per driver defines `a=exp(tau*z)`, median `a=1`. Conditional
-  decisions are deterministic first passage. No per-step random coin is added.
-
-All labels use the **first post-merge/authorizing output row**. The input is the
-preceding recorded snapshot. That snapshot is advanced exactly once by the
-proposal, retaining its lane membership. Recorded next-row position/velocity
-never supplies decision geometry. Events terminate at the observed transition;
-censors/exits terminate at observed support. Structural exits cannot regain
-eligibility. Temporary physical overlap is a veto, not a permanent identity exit.
-
-The physical mask uses every present target-lane vehicle, including CAVs and
-side-by-side vehicles, without a search radius or learned padding. For front
-coordinates, each vehicle occupies `[s-length,s]`; positive interval intersection
-is vetoed and zero intersection is permitted. Leader gap subtracts leader length,
-follower gap subtracts ego length. Converted lengths are nominal, so exact real
-length/projection parity still needs external evidence. A physical-mask repair
-is reported independently from model architecture. M0 is not retrofitted with it.
-
-For P2:
-
-```
+```text
 d_f = s_f + T_f*v_f + relu(v_f^2-v^2)/(2*b_f)
 d_l = s_l + T_l*v   + relu(v^2-v_l^2)/(2*b_l)
+c   = min(log(g_f/d_f), log(g_l/d_l))
+h_t(z) = E_t * sigmoid((c_t + tau*z)/w), z ~ Logistic(0,1) once per identity
 ```
 
-For P3, absent sides contribute `+inf`, a veto contributes `-inf`, and positive
-finite gaps give `c=min(log(g_f/d_f),log(g_l/d_l))`. A present zero gap has
-`c=-inf`. `C_t=max_{u<=t}c_u` and `F_t=sigmoid(C_t/tau)`. The event likelihood is
-exactly `F_t-F_(t-1)` and censor/competing-exit survival is `1-F_t`.
+Absent sides contribute `+infinity`; present zero gaps contribute `-infinity`.
+Structural eligibility, every target-lane interval intersection, and shared
+latent-independent reservations remain hard vetoes. Infinite atoms and exact
+zero masses are preserved. Independent conditional step noise does not redraw
+the persistent driver latent. Conditional log survival is accumulated before
+positive-weight quadrature/log-sum-exp; marginal hazards are never multiplied.
 
-The implementation evaluates finite record increments with:
+`P1`, `P1+P2` and strict analytic `P1-P3` remain attribution diagnostics. P1-P3
+uses the exact eligible running maximum and retains non-record zero masses.
+The F1 finite-margin `w -> 0` limit, normalization, vetoes, deterministic atoms,
+extreme likelihoods, nonzero gradients and save/reload are covered by tests.
 
+**F2** recovers available arrays from actual risk entry through the first
+scored decision. `score_start` counts prefix decisions; history is conditioning
+data, not scored exposure. Subtract `log S_(b-1)` from subsequent full-path
+log masses/survival. This preserves the posterior across windows and makes
+chunk scores telescope without double-counting prehistory. The same rule is
+applied to every comparator/candidate.
+
+Already-waiting cars with complete recorded prefixes are not unknown-age
+exclusions. Truly missing history and zero conditioning denominators remain
+unsupported, with infinite NLL and explicit flags; there is no population-prior
+reset. Competing exits remain counted separately. Without an identified exit
+model they have unsupported full-outcome NLL, not fabricated merges or
+administrative censor scores.
+
+## Determinism, observation scope and cohort
+
+- Only workspace-local, nonrestricted TRAIN paths are opened. Resolved symlinks
+  and traversal are checked; paths containing `sealed`, `holdout`, `heldout`,
+  `cal_split`, `chunk5`, `j4b`, or `inc1`, and seeds 964000–964199, are refused.
+  Guarded observation arrays use `allow_pickle=False`.
+- CPU only, deterministic PyTorch, seeded bootstrap, one tensor thread per
+  episode worker. Independent CPU episode preparation can use `--workers 6`;
+  ordered aggregation is deterministic. F1/strict laws use float64; frozen WM
+  heads use checkpoint float32. At 64 GH nodes, genuine positive float64 tail
+  weights avoid float32 underflow without floors or dropping nodes.
+- Shared `merge_pivot.advance_longitudinal` advances each causal input exactly
+  once, retaining pre-change lanes. Future recorded positions never supply
+  decision geometry. CAVs remain neighbors. Current replay uses the explicit
+  WM-physics CAV fallback; it does not pretend native/PI controls were replayed.
+- The frozen replay protocol is encode-once/no observational EMA, k=0, causal
+  histories/wait/lane accumulators and persistent birth encoding. The reference
+  helper accepts exact alternative runtime input/state overrides; different
+  observation schedules are not silently equated.
+- The copied checkpoint lacks authoritative `PhysicsConfig` metadata or a run
+  sidecar. Without `--physics`, the required `--allow-unverified-physics`
+  switch labels replay **DIAGNOSTIC**. Repository defaults are not evidence of
+  simulator substep, exact lengths/projection or deployed controller parity.
+- One retained cohort is used for every model. Reconciliation enumerates every
+  observed risk identity, retained event/non-event and exclusion reason;
+  duplicate risk identities are rejected. Paired comparisons check actual
+  identities/order, not only equal counts. Event-ID cross-tabs retain physical
+  veto, history, conditioning failure and each model's zero-mass flags.
+- The LCSTATE 2,915-event cohort is a separate unresolved mapping, not an
+  interchangeable denominator for these converted observations.
+
+## Validation and untouched audit
+
+Partition all discovered TRAIN worlds **before** smoke subsampling. Sorted
+world indices `4::5` are reserved; all arms/sources/windows of a world stay
+together. `--max-worlds` selects a prefix of the remaining fit worlds, so even
+an eight-world smoke cannot inspect the reserved audit.
+
+Fit worlds use grouped round-robin inner folds. Select the Cartesian penalty
+grid, including `(0,0)`, for the exact F1 sum objective
+`sum NLL + lambda_tau*tau^2 + lambda_w*w^2`. No scale cap or annealing endpoint
+is imposed. All refits use the declared iteration/LR budget. A failed fit or
+inner validation cannot be selected; invariant support failures abort the whole
+fit and retain attempted parameters. No car is dropped to make fitting pass.
+
+The audit is opened only with `--audit-once`, after primary fits/selection and
+authoritative physics are ready. An exclusive
+`results/r9_stage2a_audit_use.json` ledger is created **before** audit observation
+reads. A failure still consumes that attempt; a second invocation is refused.
+Do not delete that ledger to retune. Synthetic tests use their own isolated
+ledger. Full-model weights, fit choices, checkpoint/input/implementation hashes,
+cohort partition, physics and observation protocol are recorded.
+
+Reports include paired whole-world bootstrap NLL/early-mass uncertainty,
+event/censor/exit strata, NLL tails/worst world, timing/noncompletion bounds,
+source/queue/demand tails, history coverage, and learned/attempted scales.
+Quadrature refinement reports masses, NLL and gradients on fit worlds only;
+nonconvergence is not silently certified. No post-event continuation is used.
+
+## Exact commands
+
+Run from the worktree root. All artifacts and test scratch directories stay
+inside it. The interpreter is the supplied CPU environment.
+
+### Verified eight-world smoke (audit unopened)
+
+```powershell
+& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" tools/merge_fit_v2.py --source v5_native=data/r9_train/v5_native --source genrand_plain=data/r9_train/genrand_plain --models Soft-hazard,F1,P1,P1+P2,P1-P3 --allow-unverified-physics --max-worlds 8 --workers 6 --inner-folds 2 --iters 4 --n-quad 16 --shrinkage 0 0.01 --bootstrap 100 --seed 73 --out results/r9_stage2a_smoke8.json --md results/r9_stage2a_smoke8.md
 ```
-log p_t = logsigmoid(new) + logsigmoid(-old) + log(-expm1(old-new))
+
+### Full fit-world diagnostic command using the materialized inputs
+
+```powershell
+& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" tools/merge_fit_v2.py --source v5_native=data/r9_train/v5_native --source genrand_plain=data/r9_train/genrand_plain --round8-params data/r9_train/wm_s_stage300.pt --models Soft-hazard,F1,P1,P1+P2,P1-P3 --allow-unverified-physics --workers 6 --inner-folds 4 --iters 100 --n-quad 16 --shrinkage 0 0.01 1 --bootstrap 2000 --seed 73 --out results/r9_stage2a_full.json --md results/r9_stage2a_full.md
 ```
 
-where `new=C_t/tau`, `old=C_(t-1)/tau`. Non-records have exact log mass `-inf`.
-Free-road `+inf` consumes the remaining survival as an immediate atom. Both
-extreme tails have stable log masses. There is no epsilon likelihood floor, soft
-maximum, gate rescue or behavioral clearance threshold. M0's existing internal
-numerical clamps are retained solely for exact legacy parity.
+This is the full-size fit/inner-validation command, **not an executed full fit
+or an authorized audit/launch**. It uses all non-audit worlds across both
+sources and leaves audit observations unopened. Before the coordinator's one
+final audit, supply the authoritative workspace-local physics file, resolve
+support/exit/quadrature failures and freeze the candidate/grid. The exact final
+command is:
 
-## Fitting, splits, uncertainty and reports
-
-- Worlds are sorted, audit indices are `4::5`, and every arm/window of a world
-  stays together. An insufficient sample never borrows fit worlds for audit.
-- Inner folds are deterministic round-robin world groups within the other
-  four-fifths. The P2/P3 shrinkage grid includes zero and selects `lambda*tau^2`
-  by inner mean validation NLL. Empty folds or failed fits cannot be selected.
-  Other refits use the same iteration/LR budget. The soft P2 comparator integrates
-  one persistent Logistic draw by Gauss-Legendre population-quantile quadrature;
-  P3 integrates that same population law analytically.
-- CPU float64, single-thread PyTorch, deterministic algorithms and seeded NumPy
-  bootstrap are used. Full per-car gradients are accumulated over bounded
-  128-car batches; geometry temporaries use 32 time rows. Batching does not reset
-  driver quadrature or change the whole-sequence objective.
-- Before optimizing any P1 candidate, every fit event must pass the physical
-  mask. Nonfinite exact event/censor likelihoods abort that fit. Parameters are
-  not fitted on a supported-only subset. The trace records finite/nonzero raw
-  gradients on successful fits; zero-mass failures remain visible.
-- Audit output includes every per-car loss, event/censor/exit strata, mean,
-  nearest-rank p50/p90/p99, maximum, worst-world mean, physical-support failures,
-  positive-margin share, exact zero-mass count, and fitted/attempted parameters.
-- The paired CIs versus **both** M0s resample entire worlds, retaining all cars
-  in each sampled world. The audit estimand is mean per-car delta (resampled
-  sums/resampled counts); early mass uses the observed-event cohort. Standalone
-  `world_bootstrap` defaults to equal-world means, with explicit weighting in
-  the result. A single world is marked degenerate and cannot certify a gate.
-- `e_i` is model median since zone entry minus observed event time. Unreached
-  medians are lower-bounded, with infinite upper bounds. Unknown-age events stay
-  in full-cohort summaries as uninformative bounds and are enumerated; known-age
-  likelihood starts at zone entry, using available earlier observation history.
-  Unknown-age likelihoods explicitly use the observed-start population prior;
-  no unavailable pre-entry posterior is fabricated.
-- Early mass is `F_i(t_i-)`, not event hazard. Population CDFs are mixtures of
-  recorded-path CDFs, with post-support bounds. p25/p50/p90 errors are emitted
-  only when identifiable; these are not free-running distributions.
-- Noncompletion is reported at 120/300s since entry, by source, initial queue
-  front/behind and demand. Complete empirical outcomes get world-bootstrap 95%
-  bands. Post-event model survival stays bounded; observed competing exits
-  consume remaining non-merge mass separately. Model bounds, absolute-error
-  bounds, counts and certification against both M0s are explicit. No post-merge
-  road continuation or invented exit-to-merge event is used.
-- S3b gates use conservative full-cohort timing and noncompletion bounds.
-  Insufficient or infinite uncertainty cannot pass. JSON is RFC-compatible;
-  exact infinite losses/bounds are strings `+Infinity`/`-Infinity`, never floors.
-  Detailed exclusions and per-car evidence live in JSON; Markdown is a summary.
-
-## Shared causal adapter interface
-
-The optional workspace-local Python file exports:
-
-```python
-def reset_episode(): ...  # optional; required for a stateful adapter
-
-def decision_state(*, kin, present, is_cav, dt_s, actions):
-    # kin [K,7], present/is_cav [K]; current snapshot only.
-    # actions: None or current issued controller, issued_acceleration_mps2,
-    # issued_target_speed_mps, valid; each [K], identity-bound at issuance.
-    # Return numpy-compatible [K,7] geometry at the verified LC substep.
-    # Preserve slot order/identities and pre-change lane one-hots.
-    ...
+```powershell
+& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" tools/merge_fit_v2.py --source v5_native=data/r9_train/v5_native --source genrand_plain=data/r9_train/genrand_plain --round8-params data/r9_train/wm_s_stage300.pt --models Soft-hazard,F1,P1,P1+P2,P1-P3 --physics data/r9_train/round8_physics.json --workers 6 --inner-folds 4 --iters 100 --n-quad 16 --shrinkage 0 0.01 1 --bootstrap 2000 --seed 73 --audit-once --out results/r9_stage2a_full_audit.json --md results/r9_stage2a_full_audit.md
 ```
 
-Calls are strictly chronological, once per input tick. No future snapshot,
-observed event, LC flags, world ID, vehicle ID or truth parameters are passed.
-Load the frozen dynamics and numerical update contract in this adapter, with
-workspace-guarded paths. If driver history needs identity reset masks beyond
-absence detection, extend the shared integration contract before qualification.
-An adapter hash is recorded, but supplying an adapter does not assert SUMO
-substep parity. This fitter deliberately cannot self-sign that evidence.
+`data/r9_train/round8_physics.json` is a required owner-supplied input, currently
+absent; do not manufacture it from defaults. Failed primary fits or missing
+authoritative physics refuse audit consumption even if requested.
+
+Replay caches under `results/r9_stage2a_cache` use safe tensor loading,
+checkpoint/physics/observation/preparation-code hashes and atomic writes.
+Changing only scoring/penalties does not require repeating frozen dynamics.
+The old scalar CLI requires `--legacy-approx`; its exported M0 labels are
+renamed M0-approx. It is not the default qualification path.
+
+## Measured results and remaining blockers
+
+- Eight globally selected **fit** worlds, eight native episodes (the sorted
+  prefix contains no genrand worlds): **923 observed risk identities = 633
+  retained + 290 exclusions**, 608 retained events, 25 non-events, complete
+  entry histories for all retained cars, **35 prefix-conditioned survivors**.
+- Cold compacted six-worker preparation **379.145 s**, fitting/diagnostics
+  **92.604 s**, total **471.785 s**. A scoring/manifest verification using the
+  same valid caches took **112.104 s** (18.149 s preparation/load, 93.771 s
+  diagnostics). This repeat did not open the audit.
+- Common corrected physical support: **186/608 events**. Exact M0, fallback,
+  F1, P1 and P1+P2 each have **422 exact zero-mass events**. Strict P1-P3 has
+  **451**. Original-runtime M0 has four; actual seqTF has zero. These are
+  different geometry/law diagnostics, not grounds to delete events or soften
+  vetoes. Refits correctly stop with `exact_support_failure`.
+- Refinement 32→64 nodes changes fallback masses by as much as **0.05581** and
+  F1 by **0.0003261** on this attempted initialization. This is not converged
+  numerical evidence. Unsupported-car NLL/gradient convergence is explicitly
+  unavailable.
+- Cold full-preparation extrapolation from this dense native prefix is
+  **9,099 s (~2.53 h)** before full fitting/diagnostics. Sparse attention,
+  absent-slot compaction, batching, CPU workers and reuse improve cost, but
+  **the cold <1 h laptop criterion is not met**. Cached smoke timings are not
+  a claim that the uncached full corpus meets that budget.
+- Exact missing actions/physics, simulator geometry/substep evidence,
+  informative-exit handling, original LCSTATE mapping, F3 support repairs,
+  numerical convergence and runtime F1/F2 parameter/forward-law parity remain
+  prerequisites for qualification. F1/F2 cannot legalize a physical veto.
 
 ## Verification and commits
 
-The documented four-file CPU test command passes **107 tests, zero failures and
-zero skips**. The documented real-data smoke exits successfully and writes
-`results/r9_fit_sample.json` and `results/r9_fit_sample.md` with verdict CHANGES.
+```powershell
+& "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe" -m pytest tests/test_merge_fit_stage2a.py tests/test_r9_fit_exact.py tests/test_r9_exact.py tests/test_merge_fit_v2.py tests/test_merge_core_v2_seqtf.py tests/test_merge_core.py tests/test_merge_core_v2_onpolicy.py tests/test_merge_pivot.py tests/test_merge_pivot_runtime.py tests/test_merge_pivot_training.py --basetemp tmp/r9_stage2a_regression -q --tb=short
+```
 
-Synthetic tests cover exact running maxima, zero record increments, mass
-conservation with censoring/competing exits, extreme logs and gradients,
-infinite atoms/vetoes, persistent quadrature parity with `seq_tf_chunk`, alignment
-through the real episode loader, one causal advance, same-slot ID replacement,
-geometric overlap, all four refits, grouped bootstrap reproducibility, strict
-JSON, workspace/seed refusals, and a ten-world end-to-end audit CLI.
+The final selected fitter/runtime regression suite passed **329 tests, zero
+failures and zero skips**. The stage-2A file includes **18 tests**, including
+actual single-use synthetic audit, fit-only
+global-audit isolation, two-worker deterministic cache reuse, F1/F2,
+identity/order reconciliation, width save/reload and fallback gate amendment.
+Ruff passed for all six new helper/test modules. No full repository/SUMO launch
+qualification is claimed. Generated reports/weights/caches remain ignored in
+`results/`; the source data and unrelated untracked documents are preserved.
 
-Implementation foundation: `6242477e` (43 initial contract tests).
-Audit, timing, tail calibration and causal diagnostics: `59ee4603`.
-The final integration/documentation commit follows these on `c4/v10pfit`;
-obtain its exact identity with `git log --oneline -4`.
-
-Remaining evidence required: full materialized TRAIN cohort, exact stage300
-baseline identity, shared frozen longitudinal adapter, verified simulator update
-order and bumper conventions, original-cohort reconciliation, and runtime score/
-decision parity. The sample's one physical-support failure and 40 exact P3
-zero-mass events require diagnosis, not likelihood flooring or event deletion.
+Implementation commits on `c4/v10pfit`:
+- `501af88a`: merge shared first-passage runtime branch.
+- `1d9d00a1`: exact frozen complete heads and separate actual seqTF parity.
+- `e84d1833`: F1/F2, matched corrected comparators, audit/cohort protocol and
+  bounded/parallel cached replay.
+- Documentation/evidence handoff commit: `git log --oneline -1` after this file.
