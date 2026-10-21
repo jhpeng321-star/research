@@ -1,7 +1,8 @@
 """DATAHYG: no designed controllers in the WM-S training windows (``data.controller_hygiene``).
 
-Synthetic tests always run; real TRAIN-window tests are skipped without the E:/research-dense
-data cache.  ``off`` is bit-identical to c4/int a2d3716 (golden record hashes of TRAIN and
+Synthetic tests always run; real TRAIN-window tests are skipped without the workspace
+data cache or an explicit WMS_DATA_PACK_V3 / WMS_DATAHYG_DATA_ROOT. ``off`` is bit-identical
+to c4/int a2d3716 (golden record hashes of TRAIN and
 validation windows of configs/c4_wm_v3.toml and v4, captured before this change).  Only TRAIN
 windows are read; no guard / CAL / holdout file is opened.
 """

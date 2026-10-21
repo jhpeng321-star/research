@@ -30,6 +30,7 @@ import glob
 import hashlib
 import json
 import math
+import ntpath
 import os
 import sys
 from datetime import datetime, timezone
@@ -470,13 +471,20 @@ def _evidence_path_key(rel):
     must not turn an explicitly recorded offload into an unrecorded disappearance.
     This is a metadata identity operation, not a filesystem redirection.
     """
+    def normal(value):
+        # Receipts retain Windows drive letters even when inspected on Linux.
+        module = ntpath if ntpath.splitdrive(value)[0] else os.path
+        return module.normcase(module.normpath(value)).replace('\\', '/')
+
     text = _map_legacy_root(str(rel).replace('\\', '/'))
-    path = os.path.normcase(os.path.normpath(os.path.join(ROOT, text)))
+    if not (ntpath.isabs(text) or os.path.isabs(text)):
+        text = os.path.join(ROOT, text)
+    path = normal(text)
     roots = (ROOT, 'E:/research-dense', 'D:/research-dense',
              os.environ.get('RESEARCH_DENSE_ROOT', 'E:/research-dense'))
     for root in roots:
-        root = os.path.normcase(os.path.normpath(root))
-        if path == root or path.startswith(root + os.sep):
+        root = normal(root)
+        if path == root or path.startswith(root + '/'):
             return '@repo' + path[len(root):]
     return path
 
@@ -500,7 +508,7 @@ def offloaded(rel):
         return None
     path = _evidence_path_key(key)
     for root, drive in _offloaded:
-        if path == root or path.startswith(root + os.sep):
+        if path == root or path.startswith(root + '/'):
             return drive
     return None
 

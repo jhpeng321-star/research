@@ -1,7 +1,8 @@
 """JUNCTIONFIX: junction-transit rows of TRAIN pack windows (``data.junction_fix``).
 
 Synthetic tests of :func:`wms.data.junction_fix.fill_junction_rows` (always run) plus real
-TRAIN-window tests (skipped when the E:/research-dense data cache is absent): ``off`` is
+TRAIN-window tests (skipped without the workspace data cache or an explicit
+WMS_DATA_PACK_V3 / WMS_JUNCTIONFIX_DATA_ROOT): ``off`` is
 bit-identical to the pre-JUNCTIONFIX loader (golden record hashes captured with c4/int a8f552e),
 ``ffill`` removes the frozen-s lane-0 rows and the fake 1->0->1 changes and keeps the recorded
 (loss-valid) changes.  Only TRAIN windows of configs/c4_wm_v3.toml / v4 are read.

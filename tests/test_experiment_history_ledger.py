@@ -448,7 +448,8 @@ def test_offloaded_repository_paths_are_worktree_independent(tmp_path):
     tool.OFFLOADED = str(path)
     expected = receipt['entries'][0]['drive']
     for source in ('output/study_v1/REPORT.md', str(ROOT / 'output/study_v1/REPORT.md'),
-                   'D:/research-dense/output/study_v1/REPORT.md'):
+                   'D:/research-dense/output/study_v1/REPORT.md',
+                   'e:\\research-dense\\output\\study_v1\\REPORT.md'):
         assert tool.offloaded(source) == expected
     assert tool.offloaded('output/study_v10/REPORT.md') is None
     assert tool.offloaded('output/unregistered_study/REPORT.md') is None
