@@ -1,5 +1,7 @@
 """Native round-9 rollout/checkpoint contracts, independent of local datasets."""
 from dataclasses import replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
@@ -271,12 +273,23 @@ def test_draft_config_four_synthetic_updates_freeze_every_legacy_tensor():
         assert torch.isfinite(p) and not torch.equal(p, before[name]), name
 
 
-def test_draft_launcher_uses_round8_stage300_and_preserves_frozen_recipe(tmp_path, monkeypatch):
+@pytest.fixture
+def launcher_checkpoint_dir(tmp_path):
+    # The launcher intentionally refuses checkpoints outside its own worktree.
+    # Prefer pytest's temp tree when local, with a local fallback for default pytest runs.
+    root = Path(__file__).resolve().parents[1]
+    parent = tmp_path if tmp_path.resolve().is_relative_to(root) else root
+    with TemporaryDirectory(prefix="round9-launcher-", dir=parent) as directory:
+        yield Path(directory)
+
+
+def test_draft_launcher_uses_round8_stage300_and_preserves_frozen_recipe(
+        launcher_checkpoint_dir, monkeypatch):
     from tools.launch_round9 import main
     import wms.cli.train as cli
 
     old = model("secure_gap")
-    file = tmp_path / "round8_stage300.pt"
+    file = launcher_checkpoint_dir / "round8_stage300.pt"
     save_checkpoint(file, old, old.spec.__dict__, extra={"stage_s": 300.})
     seen = []
     monkeypatch.setattr(cli, "execute", lambda cfg, mode: seen.append((cfg, mode)) or 0)
@@ -288,12 +301,13 @@ def test_draft_launcher_uses_round8_stage300_and_preserves_frozen_recipe(tmp_pat
 
 
 @pytest.mark.parametrize("stage", [120., 240.])
-def test_draft_launcher_rejects_non_stage300_init(tmp_path, stage):
+def test_draft_launcher_rejects_non_stage300_init(launcher_checkpoint_dir, stage, capsys):
     from tools.launch_round9 import main
 
     old = model("secure_gap")
-    file = tmp_path / "wrong_stage.pt"
+    file = launcher_checkpoint_dir / "wrong_stage.pt"
     save_checkpoint(file, old, old.spec.__dict__, extra={"stage_s": stage})
     with pytest.raises(SystemExit) as exc:
         main(["--init-from", str(file)])
     assert exc.value.code == 2
+    assert "--init-from must record stage_s=300" in capsys.readouterr().err

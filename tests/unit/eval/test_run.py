@@ -36,11 +36,15 @@ def record(world, t0=0.0):
 @pytest.fixture(scope="module")
 def checkpoints(tmp_path_factory):
     root = tmp_path_factory.mktemp("ckpts")
+    # These synthetic streams keep their roster even beyond the physical road end.
+    # Store the replay physics alongside the checkpoints, as the eval backend expects.
+    physics = PhysicsConfig(exit_at_road_end=False)
+    (root / "physics.json").write_text(json.dumps(physics.__dict__), encoding="utf-8")
     paths = []
     for index, seed in enumerate((1, 2)):
         torch.manual_seed(seed)
         path = root / f"m{index}.pt"
-        save_checkpoint(path, WmSModel(ModelSpec(), physics=PhysicsConfig()), {})
+        save_checkpoint(path, WmSModel(ModelSpec(), physics=physics), {})
         paths.append(path)
     return paths
 
@@ -103,6 +107,9 @@ def test_a_model_compared_with_itself_is_inconclusive(checkpoints, states_file):
     comparison = result["comparisons"]["same"]
     assert comparison["verdict"] == "inconclusive"
     assert comparison["sets"]["wall_same"]["horizons"]["60"]["paired_new_minus_previous"]["lo"] == 0.0
+    paired = comparison["sets"]["wall_same"]["horizons"]["60"]["paired_new_minus_previous"]
+    assert paired["point"] == paired["hi"] == 0.0
+    assert paired["n_pairs"] == paired["n_worlds"] == 4
 
 
 def test_missing_state_file_and_missing_horizon_are_refused(checkpoints, tmp_path):

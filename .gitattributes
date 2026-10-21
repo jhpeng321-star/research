@@ -35,3 +35,48 @@ _out/brakefix_verification/main2*/command.log -whitespace
 
 # GENRAND box driver: LF on every checkout (bash on Linux)
 scripts/genrand/*.sh text eol=lf
+
+# MIG-03 records exact text-file byte sizes; provenance hashes the CIRCLES license.
+# Preserve those original LF bytes even with core.autocrlf=true.
+archive/circles_era/** text eol=lf
+baselines/circles/LICENSE text eol=lf
+
+# These MIG-03 entries were recorded with CRLF (confirmed against their SHA256).
+archive/circles_era/traffic_shepherd/candidate_availability.py text eol=crlf
+archive/circles_era/traffic_shepherd/continuation_dataset.py text eol=crlf
+archive/circles_era/traffic_shepherd/duration_study.py text eol=crlf
+archive/circles_era/traffic_shepherd/escalation_study.py text eol=crlf
+archive/circles_era/traffic_shepherd/hold_extend_mechanics.py text eol=crlf
+archive/circles_era/traffic_shepherd/hold_extend_study.py text eol=crlf
+archive/circles_era/traffic_shepherd/hold_extend_wall.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_contract.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_env.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_features.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_mechanics.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_pilot.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_selector_mech.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_timing_analysis.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_train.py text eol=crlf
+archive/circles_era/traffic_shepherd/ppo_worker.py text eol=crlf
+archive/circles_era/traffic_shepherd/selector_wall_policy.py text eol=crlf
+archive/circles_era/traffic_shepherd/target_adjust_mechanics.py text eol=crlf
+archive/circles_era/traffic_shepherd/wall_ppo_policy.py text eol=crlf
+archive/circles_era/tests/test_candidate_availability.py text eol=crlf
+archive/circles_era/tests/test_duration_campaign.py text eol=crlf
+archive/circles_era/tests/test_duration_evidence.py text eol=crlf
+archive/circles_era/tests/test_duration_study.py text eol=crlf
+archive/circles_era/tests/test_hold_extend_admission.py text eol=crlf
+archive/circles_era/tests/test_multi_wall_study.py text eol=crlf
+archive/circles_era/tests/test_ppo_audit.py text eol=crlf
+archive/circles_era/tests/test_ppo_credit.py text eol=crlf
+archive/circles_era/tests/test_ppo_duration_v2.py text eol=crlf
+archive/circles_era/tests/test_ppo_env_mocked.py text eol=crlf
+archive/circles_era/tests/test_ppo_mechanics_integration.py text eol=crlf
+archive/circles_era/tests/test_ppo_pilot_interface.py text eol=crlf
+archive/circles_era/tests/test_ppo_selector.py text eol=crlf
+archive/circles_era/tests/test_ppo_selector_mech_integration.py text eol=crlf
+archive/circles_era/tests/test_ppo_timing_v1.py text eol=crlf
+archive/circles_era/tests/test_sim_clock.py text eol=crlf
+archive/circles_era/tests/test_ttc_diagnosis.py text eol=crlf
+archive/circles_era/docs/ESCALATION_EXECUTION_STATUS.md text eol=crlf
+archive/circles_era/docs/ESCALATION_TESTS.md text eol=crlf

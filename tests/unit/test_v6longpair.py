@@ -400,13 +400,14 @@ def test_fit_propagates_stage_rebuilds_loader_and_bypasses_short_draw(
             events.append(("set", steps))
         return original_set(self, steps)
 
-    def track_loader(sampler):
+    def track_loader(sampler, *, batch_size=None):
         events.append(("loader", dataset.paired_horizon))
         if weighted:
             assert isinstance(sampler, torch.utils.data.WeightedRandomSampler)
         else:
             assert sampler is None
-        loader = original_loader(sampler)
+        loader = original_loader(sampler, batch_size=batch_size)
+        assert loader.batch_size == (batch_size or cfg.optim.batch_size)
         assert loader.num_workers == workers
         assert loader.persistent_workers == bool(workers)
         if workers:

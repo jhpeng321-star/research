@@ -131,7 +131,7 @@ def test_entries_v2_matches_legacy():
     _close(ref, got)
 
 
-def test_fit_matches_legacy_fit(tmp_path):
+def test_fit_matches_legacy_fit(tmp_path, monkeypatch):
     from output.wd01.wm_n1.wms.train import TrajectoryDataset
 
     kwargs = dict(device="cpu", threads=1, truncation_steps=8, seed=17, batch_size=2,
@@ -140,7 +140,22 @@ def test_fit_matches_legacy_fit(tmp_path):
     ds = TrajectoryDataset.from_arrays(make_arrays())
     cfg_old = train_mod.WmSTrainConfig(out_dir=str(tmp_path / "old"), **kwargs)
     old = train_mod.WmSTrainer(small_model(), cfg_old)
-    old.fit(ds)
+    # Record the legacy pass's actual pre-clip norms/LR to independently check the
+    # new trainer's additive telemetry without filtering any log keys.
+    telemetry = []
+    original_clip = torch.nn.utils.clip_grad_norm_
+
+    def record_clip(parameters, max_norm, *args, **kwargs):
+        norm = original_clip(parameters, max_norm, *args, **kwargs)
+        telemetry.append({"grad_norm": float(norm),
+                          "grad_clipped": bool(norm > max_norm),
+                          "lr": float(old.optimizer.param_groups[0]["lr"])})
+        return norm
+
+    with monkeypatch.context() as patch:
+        patch.setattr(torch.nn.utils, "clip_grad_norm_", record_clip)
+        old.fit(ds)
+    assert len(telemetry) == 4
     cfg_new = train_mod.WmSTrainConfig(out_dir=str(tmp_path / "new"), **kwargs)
     new = WmSTrainer(FlatConfig.from_legacy(cfg_new), small_model(), ds, out_dir=tmp_path / "new")
     result = new.fit()
@@ -150,8 +165,13 @@ def test_fit_matches_legacy_fit(tmp_path):
         a = [json.loads(x) for x in (tmp_path / "old" / name).read_text().splitlines()]
         b = [json.loads(x) for x in (tmp_path / "new" / name).read_text().splitlines()]
         assert len(a) == len(b)
-        for ra, rb in zip(a, b):
+        if name == "train_log.jsonl":
+            assert len(a) == len(telemetry)
+        for i, (ra, rb) in enumerate(zip(a, b)):
             ra.pop("seconds", None), rb.pop("seconds", None)
+            if name == "train_log.jsonl":
+                assert not (ra.keys() & telemetry[i].keys())
+                ra.update(telemetry[i])
             _close(ra, rb)
     assert result.receipt["steps"] == 4
     for name in ("wm_s.pt", "wm_s_stage5.pt", "wm_s_stage10.pt", "TRAIN_RECEIPT.json", "train_config.json"):

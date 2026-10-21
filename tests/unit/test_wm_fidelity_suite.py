@@ -74,12 +74,30 @@ def test_road_end_count_and_seconds():
     assert out["top_ids"] == ["b"]
 
 
-def test_road_end_code_path_reports_no_removal():
+def test_road_end_code_path_reports_no_removal(tmp_path, monkeypatch):
+    # Exercise the historical missing-bound branch against a synthetic source tree.
+    sources = {
+        "model/wms.py": "next_present = next_present & (next_s <= exit_s)\n",
+        "eval/predictor.py": "initial = {}\n",
+    }
+    for relative, text in sources.items():
+        path = tmp_path / "src" / "wms" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(FS, "__file__", str(tmp_path / "scripts" / "c4" / "wm_fidelity_suite.py"))
     out = FS.road_end_code_path()
     assert out["model_has_exit_gate"] is True
     assert out["predictor_sets_exit_s"] is False
     assert out["rollouts_remove_at_road_end"] is False
     assert "do NOT remove" in out["finding"]
+
+
+def test_road_end_code_path_reports_current_removal():
+    out = FS.road_end_code_path()
+    assert out["model_has_exit_gate"] is True
+    assert out["predictor_sets_exit_s"] is True
+    assert out["rollouts_remove_at_road_end"] is True
+    assert "DO remove" in out["finding"]
 
 
 def test_lane_share_and_per_lane_speed():
