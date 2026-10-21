@@ -92,6 +92,13 @@ class TrainSettings:
     post_merge_residual_weight: float = 0.0
     post_merge_window_s: float = 10.0
     post_merge_huber_delta_mps2: float = 0.5
+    # CUT-IN REACTION (R9K)
+    cutin_reaction_weight: float = 0.0
+    cutin_reaction_control_weight: float = 1.0
+    cutin_reaction_pre_s: float = 1.0
+    cutin_reaction_max_window_s: float = 6.0
+    cutin_reaction_huber_delta_mps2: float = 0.5
+    leader_change_features: bool = False
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -775,6 +782,19 @@ class TrainSettings:
             and math.isfinite(float(self.post_merge_huber_delta_mps2))
             and float(self.post_merge_huber_delta_mps2) > 0.0,
             "post_merge weights must be >= 0, window_s in [2,20], huber delta > 0")
+        # CUT-IN REACTION (R9K)
+        _require(isinstance(self.leader_change_features, bool),
+                 "leader_change_features must be a boolean")
+        _require(all(math.isfinite(float(x)) for x in (
+            self.cutin_reaction_weight, self.cutin_reaction_control_weight,
+            self.cutin_reaction_pre_s, self.cutin_reaction_max_window_s,
+            self.cutin_reaction_huber_delta_mps2))
+            and self.cutin_reaction_weight >= 0 and self.cutin_reaction_control_weight > 0
+            and 0 <= self.cutin_reaction_pre_s <= 1
+            and 0 < self.cutin_reaction_max_window_s <= 6
+            and self.cutin_reaction_huber_delta_mps2 > 0,
+            "cutin_reaction needs finite weight >= 0, control_weight > 0, "
+            "pre_s in [0,1], max_window_s in (0,6], huber delta > 0")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

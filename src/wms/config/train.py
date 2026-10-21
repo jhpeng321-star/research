@@ -192,6 +192,8 @@ class ModelConfig:
     n_controllers: int = N_CONTROLLERS
     controller_embed_dim: int = 16
     history_features: int = 6
+    # CUT-IN REACTION (R9K)
+    leader_change_features: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     grad_decay_per_step: float = 1.0
@@ -323,6 +325,9 @@ class ModelConfig:
         if self.lane_v5_mainline != "default":
             require(self.lane_model == "hazard_v5",
                     "model.lane_v5_mainline needs model.lane_model='hazard_v5'")
+        # CUT-IN REACTION (R9K)
+        require(isinstance(self.leader_change_features, bool),
+                "model.leader_change_features must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -518,6 +523,29 @@ class PostMergeConfig:
     @property
     def enabled(self) -> bool:
         return self.weight > 0.0 or self.residual_weight > 0.0
+
+
+# CUT-IN REACTION (R9K)
+@config_dataclass
+class CutinReactionConfig:
+    """Event-balanced recorded follower acceleration with non-insertion controls."""
+
+    weight: float = 0.0
+    control_weight: float = 1.0
+    pre_s: float = 1.0
+    max_window_s: float = 6.0
+    huber_delta_mps2: float = 0.5
+
+    def __post_init__(self) -> None:
+        require(all(is_finite(getattr(self, name)) for name in (
+            "weight", "control_weight", "pre_s", "max_window_s", "huber_delta_mps2")),
+            "loss.cutin_reaction values must be finite")
+        require(self.weight >= 0 and self.control_weight > 0,
+                "loss.cutin_reaction needs weight >= 0 and control_weight > 0")
+        require(0 <= self.pre_s <= 1 and 0 < self.max_window_s <= 6,
+                "loss.cutin_reaction needs pre_s in [0,1], max_window_s in (0,6]")
+        require(self.huber_delta_mps2 > 0,
+                "loss.cutin_reaction.huber_delta_mps2 must be positive")
 
 
 @config_dataclass
@@ -1133,6 +1161,8 @@ class LossConfig:
     brake_wave: BrakeWaveConfig = field(default_factory=BrakeWaveConfig)
     onset_stats: OnsetStatsConfig = field(default_factory=OnsetStatsConfig)
     post_merge: PostMergeConfig = field(default_factory=PostMergeConfig)
+    # CUT-IN REACTION (R9K)
+    cutin_reaction: CutinReactionConfig = field(default_factory=CutinReactionConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
@@ -1457,6 +1487,9 @@ class TrainConfig:
             if enabled:
                 terms.append(name)
         agg = self.loss.aggregate
+        # CUT-IN REACTION (R9K)
+        if self.loss.cutin_reaction.weight > 0:
+            terms.append("cutin_reaction")
         if agg.enabled:
             terms.extend(name for name, w in (("agg_field", agg.field_weight),
                                               ("agg_reward", agg.reward_weight),

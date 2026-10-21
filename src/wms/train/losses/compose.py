@@ -40,6 +40,8 @@ from .residual import ResidualMagnitudeLoss, ResidualPenalty
 from .stability import ConservationLoss, StabilityLoss
 from .traffic import TrafficLoss, TrafficLossConfig
 from .trajectory import PositionLoss, SpeedLoss
+# CUT-IN REACTION (R9K)
+from .cutin_reaction import CutinReactionConfig, cutin_reaction_terms
 
 
 class LossComposer:
@@ -384,5 +386,15 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
     if settings.stability_weight:
         unroll.append(StabilityLoss(settings.stability_weight, margin=settings.stability_margin,
                                     probes=settings.stability_probes))
+    # CUT-IN REACTION (R9K): never instantiate/evaluate replay at weight zero.
+    if settings.cutin_reaction_weight > 0:
+        unroll.extend(cutin_reaction_terms(CutinReactionConfig(
+            weight=settings.cutin_reaction_weight,
+            control_weight=settings.cutin_reaction_control_weight,
+            pre_s=settings.cutin_reaction_pre_s,
+            max_window_s=settings.cutin_reaction_max_window_s,
+            huber_delta_mps2=settings.cutin_reaction_huber_delta_mps2,
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane))))
     return LossComposer(chunk, unroll, braking=braking,
                         merge_share_cap=None if merge_cap is None else float(merge_cap))

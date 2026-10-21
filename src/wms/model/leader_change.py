@@ -104,7 +104,9 @@ def leader_geometry(s: Tensor, lane: Tensor, v: Tensor, present: Tensor,
                & (fwd > 0.0) & (fwd - length.unsqueeze(-2) <= float(MAX_NEIGHBOUR_GAP_M)))
     gap_raw = torch.where(lead_ok, fwd - length.unsqueeze(-2),
                           torch.full_like(fwd, float("inf")))
-    gap, index = gap_raw.min(-1)
+    # Association is by front position, not bumper gap (lengths may differ).
+    _, index = torch.where(lead_ok, fwd, torch.full_like(fwd, float("inf"))).min(-1)
+    gap = gap_raw.gather(-1, index.unsqueeze(-1)).squeeze(-1)
     has = torch.isfinite(gap) & present
     gap = torch.where(has, gap.clamp_min(0.0), torch.zeros_like(gap))
     index = torch.where(has, index, torch.full_like(index, -1))
@@ -126,6 +128,8 @@ def feature_matrix(out: dict[str, Tensor]) -> Tensor:
         if name in LEADER_CHANGE_SCALES:
             value = value / float(LEADER_CHANGE_SCALES[name])
         columns.append(value)
+    # Unknown history and a genuine zero-age/zero-gap change must be distinguishable.
+    columns.extend(out[f"{name}_valid"].float() for name in VALID_MASKED)
     return torch.stack(columns, dim=-1)
 
 
@@ -165,21 +169,27 @@ class LeaderChangeTracker:
         self.prev_leader_gap = torch.zeros(b, kk, dtype=fd, device=self.device)
         self.change_type = torch.zeros(b, kk, dtype=torch.long, device=self.device)
         self.has_change = torch.zeros(b, kk, dtype=torch.bool, device=self.device)
+        self.prev_gap_valid = torch.zeros(b, kk, dtype=torch.bool, device=self.device)
 
     # ------------------------------------------------------------------ state
     _STATE_NAMES = ("prev_present", "prev_lane", "leader_index", "prev_gap",
                     "t_since", "gap_at", "closing_at", "prev_leader_gap",
-                    "change_type", "has_change")
+                    "change_type", "has_change", "prev_gap_valid")
 
     def reset_slots(self, new_car_mask: Tensor) -> None:
         """Clear all per-car state of reused / identity-changed slots ``[B, K]``."""
         mask = torch.as_tensor(new_car_mask).to(self.device, dtype=torch.bool)
         if mask.shape != self.prev_present.shape:
             raise ValueError("new_car_mask must have shape [batch, k]")
+        # An immediately replaced leader is a different identity even if its slot
+        # index stays the same. Invalidate dependent history too.
+        safe = self.leader_index.clamp_min(0)
+        dependent = (self.leader_index >= 0) & mask.gather(-1, safe) if self.k else mask
+        affected = mask | dependent
         self.prev_present = self.prev_present & ~mask
         self.prev_lane = torch.where(mask, torch.full_like(self.prev_lane, -1),
                                      self.prev_lane)
-        self.leader_index = torch.where(mask, torch.full_like(self.leader_index, -1),
+        self.leader_index = torch.where(affected, torch.full_like(self.leader_index, -1),
                                         self.leader_index)
         zero = torch.zeros_like(self.prev_gap)
         self.prev_gap = torch.where(mask, zero, self.prev_gap)
@@ -189,7 +199,8 @@ class LeaderChangeTracker:
         self.prev_leader_gap = torch.where(mask, zero, self.prev_leader_gap)
         self.change_type = torch.where(mask, torch.zeros_like(self.change_type),
                                        self.change_type)
-        self.has_change = self.has_change & ~mask
+        self.has_change = self.has_change & ~affected
+        self.prev_gap_valid = self.prev_gap_valid & ~affected
 
     def state_dict(self) -> dict[str, Tensor]:
         """Detached copy of the whole tracker state."""
@@ -222,7 +233,7 @@ class LeaderChangeTracker:
         for name in ("prev_gap", "t_since", "gap_at", "closing_at", "prev_leader_gap"):
             setattr(self, name, getattr(self, name).to(device=device, dtype=dtype))
         for name in ("prev_present", "prev_lane", "leader_index", "change_type",
-                     "has_change"):
+                      "has_change", "prev_gap_valid"):
             setattr(self, name, getattr(self, name).to(device=device))
 
     # ------------------------------------------------------------------ step
@@ -243,6 +254,8 @@ class LeaderChangeTracker:
         s = torch.as_tensor(s).to(device=dev, dtype=fd)
         v = torch.as_tensor(v).to(device=dev, dtype=fd)
         length = torch.as_tensor(length).to(device=dev, dtype=fd)
+        if any(value.shape != (self.batch, self.k) for value in (present, lane, v, length)):
+            raise ValueError("all step inputs must have shape [batch,k]")
         if self.batch == 0 or self.k == 0:
             return self._empty_outputs(dev, fd)
 
@@ -258,8 +271,8 @@ class LeaderChangeTracker:
         cont = present & self.prev_present           # observed at both ends
         old_index = self.leader_index
         # A leader identity change on a continuous observation of this slot.
-        changed = cont & (index != old_index)
         own_lane_change = cont & (lane != self.prev_lane)
+        changed = cont & ((index != old_index) | own_lane_change)
 
         safe_new = index.clamp(0, max(self.k - 1, 0))
         new_came = torch.zeros_like(changed)
@@ -267,7 +280,9 @@ class LeaderChangeTracker:
             # The new leader switched INTO this slot's lane at this step (cut-in).
             new_lane_now = lane.gather(-1, safe_new)
             new_lane_prev = self.prev_lane.gather(-1, safe_new)
-            new_came = changed & has & (new_lane_now == lane) & (new_lane_prev != lane)
+            new_came = (changed & has & self.prev_present.gather(-1, safe_new)
+                        & (new_lane_now == lane) & (new_lane_prev >= 0)
+                        & (new_lane_prev != lane))
         safe_old = old_index.clamp(0, max(self.k - 1, 0))
         old_gone = torch.zeros_like(changed)
         if changed.any():
@@ -292,7 +307,8 @@ class LeaderChangeTracker:
         change_type = torch.where(
             (change_type == 0) & old_gone & ~new_came,
             torch.full_like(change_type, CHANGE_LEADER_EXIT), change_type)
-        episode = changed & (change_type != 0)
+        # Every observed re-association has known age, even if its cause is unknown.
+        episode = changed
 
         # Geometry recorded at the change step (current values when a leader
         # exists; the last carried gap when the change removed the leader).
@@ -310,17 +326,16 @@ class LeaderChangeTracker:
         # An unobserved gap (absent slot or first sight) restarts the episode
         # clock: the next observation is a new car as far as history goes.
         t_since = torch.where(cont, t_since, torch.zeros_like(t_since))
-        has_episode = self.has_change | episode
-        # Own lane changes always start a fresh episode (new lane, new history).
-        has_episode = torch.where(cont & ~changed & own_lane_change,
-                                  torch.zeros_like(has_episode), has_episode)
+        has_episode = cont & (self.has_change | episode)
         gap_at = torch.where(has_episode, gap_at, torch.zeros_like(gap_at))
         closing_at = torch.where(has_episode, closing_at, torch.zeros_like(closing_at))
         prev_leader_gap = torch.where(has_episode, prev_leader_gap,
                                       torch.zeros_like(prev_leader_gap))
         t_since = torch.where(has_episode, t_since, torch.zeros_like(t_since))
+        change_type = torch.where(changed, change_type, self.change_type)
         change_type = torch.where(has_episode, change_type,
-                                  torch.zeros_like(change_type))
+                                   torch.zeros_like(change_type))
+        prev_gap_valid = torch.where(changed, old_index >= 0, self.prev_gap_valid) & has_episode
 
         zeros = torch.zeros_like(v)
         out = {
@@ -335,9 +350,9 @@ class LeaderChangeTracker:
             "changed_own_lane": (change_type == CHANGE_OWN_LANE).to(fd),
             "changed_leader_exit": (change_type == CHANGE_LEADER_EXIT).to(fd),
             "t_since_change_s_valid": has_episode,
-            "gap_at_change_m_valid": has_episode,
-            "closing_at_change_mps_valid": has_episode,
-            "prev_leader_gap_m_valid": has_episode & (prev_leader_gap > 0.0),
+            "gap_at_change_m_valid": has_episode & has,
+            "closing_at_change_mps_valid": has_episode & has,
+            "prev_leader_gap_m_valid": prev_gap_valid,
         }
         out = {name: torch.where(present, value, torch.zeros_like(value))
                for name, value in out.items()}
@@ -353,6 +368,7 @@ class LeaderChangeTracker:
         self.prev_leader_gap = prev_leader_gap
         self.change_type = change_type
         self.has_change = has_episode
+        self.prev_gap_valid = prev_gap_valid
         return out
 
     def _empty_outputs(self, dev: torch.device, fd: torch.dtype) -> dict[str, Tensor]:
@@ -365,7 +381,8 @@ class LeaderChangeTracker:
 
 
 def recorded_leader_change(veh_kin: Tensor, present: Tensor, *,
-                           dt: float = 0.5) -> dict[str, Tensor]:
+                            dt: float = 0.5, reset: Tensor | None = None,
+                            tracker: LeaderChangeTracker | None = None) -> dict[str, Tensor]:
     """Run :class:`LeaderChangeTracker` over a recorded sequence.
 
     ``veh_kin`` is ``[B, N, K, 7]`` (``s``, lane one-hot x3, ``v``, ``a``,
@@ -382,12 +399,19 @@ def recorded_leader_change(veh_kin: Tensor, present: Tensor, *,
         raise ValueError("present must have shape [B, N, K]")
     b, n, k = kin.shape[:3]
     dtype = kin.dtype if kin.is_floating_point() else None
-    tracker = LeaderChangeTracker(b, k, dt=dt, device=kin.device, dtype=dtype)
+    if tracker is None:
+        tracker = LeaderChangeTracker(b, k, dt=dt, device=kin.device, dtype=dtype)
+    elif (tracker.batch, tracker.k, tracker.dt) != (b, k, float(dt)):
+        raise ValueError("tracker shape/dt does not match recorded sequence")
+    if reset is not None and reset.shape != present.shape:
+        raise ValueError("reset must have shape [B,N,K]")
     onehot = kin[..., 1:4]
     lanes = onehot.argmax(-1)
     lanes = torch.where(onehot.sum(-1) > 0, lanes, torch.full_like(lanes, -1))
     pieces: dict[str, list[Tensor]] = {}
     for t in range(n):
+        if reset is not None:
+            tracker.reset_slots(reset[:, t])
         out = tracker.step(kin[:, t, :, 0], lanes[:, t], kin[:, t, :, 4],
                            present[:, t], kin[:, t, :, 6])
         for name, value in out.items():
