@@ -6,6 +6,9 @@ soft-hazard oracle is the existing recorded-state sequence likelihood.
 """
 import math
 from pathlib import Path
+import json
+import tempfile
+import numpy as np
 
 import pytest
 import torch
@@ -147,16 +150,19 @@ def test_aligned_row_is_the_next_observation_authorized_by_previous_row(previous
     assert result == previous_row + 1
 
 
-def test_alignment_scores_the_gap_before_the_observed_lane_change():
-    # The generous gap is on the authorizing row, not on the observed event row.
-    gap_margin = _double([-3.0, 2.0, -8.0, -8.0])
+def test_alignment_shift_scores_the_authorizing_output_row():
+    # Cached SUMO authorization belongs to the first post-merge output row.
+    # Recorded next-row geometry is diagnostic ONLY. Runtime scores the causal
+    # proposal from its preceding input row, timestamped at this output row.
+    gap_margin = _double([-3.0, -2.0, 2.0, -8.0])
     lane = [2, 2, 1, 1]
     observed_event = next(i for i in range(1, len(lane)) if lane[i - 1] == 2 and lane[i] == 1)
-    authorizing_row = observed_event - 1
-    assert fit.aligned_row(authorizing_row) == observed_event
+    previous_waiting_row = observed_event - 1
+    authorizing_row = fit.aligned_row(previous_waiting_row)
+    assert authorizing_row == observed_event
     result = fit.first_passage(gap_margin, _double(1.0))
-    assert result["log_mass"][authorizing_row].exp() > 0.8
-    assert torch.isneginf(result["log_mass"][observed_event])
+    assert result["log_mass"][authorizing_row].exp() > 0.7
+    assert result["log_mass"][authorizing_row] != result["log_mass"][previous_waiting_row]
 
 
 def _features():
@@ -311,3 +317,198 @@ def test_check_seed_refuses_evaluation_seed_range(seed):
 @pytest.mark.parametrize("seed", [0, 73, 963999, 964200])
 def test_check_seed_accepts_training_seeds_and_range_boundaries(seed):
     fit.check_seed(seed)
+
+
+@pytest.mark.parametrize("values", [[-2., -1., 0.], [1000., 1001., 1002.],
+                                   [-1002., -1001., -1000.], [-math.inf, -1., math.inf]])
+def test_first_passage_exact_record_gradients_are_finite(values):
+    c = _double(values).requires_grad_()
+    tau = _double(.8).requires_grad_()
+    result = fit.first_passage(c, tau)
+    supported = torch.isfinite(result["log_mass"])
+    (-result["log_mass"][supported].sum()).backward()
+    assert torch.isfinite(c.grad).all()
+    assert torch.isfinite(tau.grad)
+    assert tau.grad != 0
+
+
+def _sequence(event=True, physical=True, unknown_age=False, world="a"):
+    features = {k: v.tolist() for k, v in _features().items()}
+    # Last step is a strict first-passage record, with both sides present.
+    features["gap_l"][-1] = 100.
+    features["gap_f"][-1] = 100.
+    return {"world": world, "source": "synthetic", "episode": world+"__native", "vehicle": 7,
+            "slot": 0, "entry_row": 2, "event_row": 7 if event else None,
+            "legacy": features, "updated": features, "physical": [physical]*5,
+            "physical_reasons": ["ok" if physical else "target_interval_intersection"]*5,
+            "event": event, "terminal_kind": "event" if event else "horizon_censor",
+            "unknown_age": unknown_age, "queue": "front", "demand": 1900,
+            "dt": .5, "times": [.5, 1., 1.5, 2., 2.5],
+            "observed_s": 2.5 if event else None, "horizon_s": 300.}
+
+
+def _initial():
+    return {k: float(v) for k, v in _params(.3).items()}
+
+
+def test_physical_veto_reports_zero_event_without_exclusion_or_floor():
+    seq = _sequence(physical=False)
+    model = fit.Candidate("P1-P3", _initial())
+    result = fit.evaluate(model, [seq], 8)
+    assert result["nll"]["count"] == 1
+    assert result["nll"]["mean"] == math.inf
+    assert result["zero_mass_event_count"] == 1
+    assert result["physical_support"]["share"] == 0
+    assert len(result["physical_support"]["failures"]) == 1
+    _, info = fit.optimize("P1-P3", _initial(), [seq], iters=4, lr=.03, shrinkage=0, n_quad=8)
+    assert info["status"] == "exact_support_failure"
+    assert info["updates"] == 0
+
+
+@pytest.mark.parametrize("kind", ["M0-refit", "P1", "P1+P2", "P1-P3"])
+def test_supported_fit_has_finite_gradients_and_updates(kind):
+    _, info = fit.optimize(kind, _initial(), [_sequence(), _sequence(event=False)],
+                           iters=4, lr=.03, shrinkage=0, n_quad=8)
+    assert info["status"] == "fitted", info
+    assert info["updates"] == 4
+    assert all(t["finite_nonzero_gradient_count"] > 0 for t in info["trace"])
+
+
+def test_unknown_age_is_retained_as_full_cohort_timing_bounds():
+    result = fit.evaluate(fit.Candidate("M0", _initial()), [_sequence(unknown_age=True)], 8)
+    assert result["timing"]["unknown_age_events"] == 1
+    assert result["timing"]["signed_median_bounds_s"] == [-math.inf, math.inf]
+    assert result["timing"]["absolute_median_bounds_s"] == [0., math.inf]
+
+
+def test_unreached_median_is_a_bound_and_post_event_tails_are_not_continued():
+    seq = _sequence()
+    seq["updated"]["gap_l"] = [.0001]*5
+    seq["updated"]["gap_f"] = [.0001]*5
+    result = fit.evaluate(fit.Candidate("P1-P3", _initial()), [seq], 8)
+    row = result["cars"][0]
+    assert not row["median_reached"]
+    assert row["error_bounds_s"] == [0., math.inf]
+    assert row["tail_noncompletion"]["120"]["model_bounds"][0] == 0
+    assert row["tail_noncompletion"]["120"]["model_bounds"][1] > .99
+    assert result["population_cdf"]["quantiles"]["50"]["identifiable"] is False
+
+
+def test_geometry_checks_all_intervals_with_variable_lengths_and_cav_neighbors():
+    # Ego front 10, rear 6. Adjacent front 20/rear 10 merely touches.
+    import numpy as np
+    kin = np.array([[10, 0, 0, 1, 3, 0, 4], [20, 0, 1, 0, 4, 0, 10],
+                    [0, 0, 1, 0, 2, 0, 8], [500, 0, 1, 0, 8, 0, 5]], float)
+    features, ok, reason = fit.geometry(kin, np.ones(4, bool), 0)
+    assert ok and reason == "ok"
+    assert features["gap_l"] == 0
+    assert features["gap_f"] == 6
+    kin[1, 0] -= .01
+    _, ok, reason = fit.geometry(kin, np.ones(4, bool), 0)
+    assert not ok and reason == "target_interval_intersection"
+
+
+def test_strict_json_preserves_infinite_losses_as_explicit_strings():
+    import json
+    import numpy as np
+    result = fit.clean_json({"loss": math.inf, "bound": -math.inf, "flag": np.bool_(True)})
+    assert json.loads(json.dumps(result, allow_nan=False)) == {
+        "loss": "+Infinity", "bound": "-Infinity", "flag": True}
+
+
+@pytest.fixture
+def workspace_tmp():
+    parent = ROOT / "tmp"
+    parent.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="r9_fit_test_", dir=parent) as directory:
+        yield Path(directory)
+
+
+def _write_episode(root, number, *, reused=False):
+    world = f"w963{number:03d}m1900p10t0"
+    episode = world+"__native"
+    path = root / "episodes" / episode
+    path.mkdir(parents=True)
+    kin = np.zeros((8, 3, 7), np.float32)
+    kin[:, :, 6] = 5
+    kin[:, :, 4] = 1
+    kin[:, 0, 3] = 1
+    kin[5:, 0, 3] = 0
+    kin[5:, 0, 2] = 1
+    kin[:, 1:, 2] = 1
+    kin[:, 0, 0] = np.arange(8)*.5-.5
+    kin[:, 1, 0] = 15+np.arange(8)*2
+    kin[:, 2, 0] = -15-np.arange(8)*2
+    # Future states deliberately incompatible with any causal proposal.
+    kin[5:, 0, 0] = 60
+    mask = np.ones((8, 3), np.uint8)
+    vid = np.tile(np.arange(3), (8, 1)).astype(np.int32)
+    if reused:
+        vid[5:, 0] = 99  # Same-slot successor must NOT be a ramp merge.
+    for key, array in {"veh_kin": kin, "veh_mask": mask, "vid": vid,
+                       "is_cav": np.zeros_like(mask), "time_s": np.arange(8)*.5}.items():
+        np.save(path/(key+".npy"), array, allow_pickle=False)
+    meta = {"world": world, "episode": episode, "seed": 963000+number,
+            "dir": "episodes/"+episode, "warmup_s": 0, "horizon_s": 3.5,
+            "demand_vph": 1900, "arm": "native", "split_role": "train"}
+    (path/"episode.json").write_text(json.dumps(meta), encoding="utf-8")
+    return meta
+
+
+def test_episode_loader_alignment_is_causal_and_identity_bound(workspace_tmp):
+    meta = _write_episode(workspace_tmp, 1)
+    (workspace_tmp/"C4_EPISODES_MANIFEST.json").write_text(
+        json.dumps({"split": "TRAIN", "episodes": [meta]}), encoding="utf-8")
+    episodes, _ = fit.discover(["synthetic="+str(workspace_tmp)])
+    snapshots = []
+    def adapter(**kwargs):
+        assert kwargs["kin"].shape == (3, 7)  # Not a time sequence.
+        snapshots.append(kwargs["kin"].copy())
+        return fit.causal_proposal(kwargs["kin"], kwargs["dt_s"])
+    seqs, data = fit.build_dataset(episodes, adapter)
+    assert len(seqs) == 1 and seqs[0]["event_row"] == 5
+    assert seqs[0]["entry_row"] == 1
+    assert seqs[0]["times"] == [.5, 1., 1.5, 2.]
+    # Score input row 4 advanced exactly once, not the jumped recorded row 5.
+    expected = fit.causal_proposal(snapshots[4], .5)
+    features, _, _ = fit.geometry(expected, np.ones(3, bool), 0)
+    assert seqs[0]["updated"]["gap_l"][-1] == features["gap_l"]
+    assert seqs[0]["updated"]["gap_l"][-1] > 0
+    assert data["episodes"][0]["events"] == 1
+
+
+def test_same_slot_replacement_does_not_invent_event(workspace_tmp):
+    meta = _write_episode(workspace_tmp, 1, reused=True)
+    (workspace_tmp/"C4_EPISODES_MANIFEST.json").write_text(
+        json.dumps({"split": "TRAIN", "episodes": [meta]}), encoding="utf-8")
+    episodes, _ = fit.discover(["synthetic="+str(workspace_tmp)])
+    seqs, _ = fit.build_dataset(episodes)
+    assert len(seqs) == 1 and not seqs[0]["event"]
+    assert seqs[0]["terminal_kind"] == "teleport_or_identity_exit"
+
+
+def test_cli_nonempty_audit_grouped_fit_and_bootstrap(workspace_tmp):
+    metas = [_write_episode(workspace_tmp, n) for n in range(10)]
+    (workspace_tmp/"C4_EPISODES_MANIFEST.json").write_text(
+        json.dumps({"split": "TRAIN", "episodes": metas}), encoding="utf-8")
+    out, md = workspace_tmp/"fit.json", workspace_tmp/"fit.md"
+    assert fit.main(["--source", "synthetic="+str(workspace_tmp), "--models", "M0,M0-refit,P1,P1+P2,P1-P3",
+                     "--audit-frac", "0.2", "--inner-folds", "2", "--bootstrap", "40", "--seed", "73",
+                     "--round8-params", "default", "--iters", "2", "--shrinkage", "0", "0.01",
+                     "--out", str(out), "--md", str(md)]) == 0
+    report = json.loads(out.read_text(encoding="utf-8"))
+    assert len(report["split"]["audit_worlds"]) == 2
+    assert len(report["split"]["fit_worlds"]) == 8
+    assert set(report["split"]["audit_worlds"]).isdisjoint(report["split"]["fit_worlds"])
+    for result in report["models"].values():
+        audit = result["audit"]
+        assert audit["nll"]["count"] == 2
+        assert audit["nll_world_bootstrap"]["status"] == "ok"
+        assert audit["physical_support"]["share"] == 1
+        assert audit["zero_mass_event_count"] == 0
+        assert set(audit["paired_vs"]) == {"M0", "M0-refit"}
+        assert audit["noncompletion"]["all"]["tails"]["120"]["cars"] == 2
+    assert report["models"]["P1-P3"]["fit"]["selection_status"] == "ok"
+    assert "DIAGNOSTIC" in report["causal_proposal"]["name"]
+    assert report["verdict"] == "CHANGES"
+    assert md.is_file()

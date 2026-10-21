@@ -100,7 +100,12 @@ def soft_hazard(features, params, n_quad=8, eligible=None):
 
 
 def hazard_distribution(logit, weights, eligible=None):
-    log_h, log_wait = F.logsigmoid(logit), F.logsigmoid(-logit)
+    finite = torch.isfinite(logit)
+    safe = torch.where(finite, logit, torch.zeros_like(logit))
+    log_h = torch.where(finite, F.logsigmoid(safe),
+                        torch.where(logit > 0, torch.zeros_like(logit), torch.full_like(logit, -math.inf)))
+    log_wait = torch.where(finite, F.logsigmoid(-safe),
+                           torch.where(logit > 0, torch.full_like(logit, -math.inf), torch.zeros_like(logit)))
     if eligible is not None:
         eligible = eligible.unsqueeze(-2)
         log_h = torch.where(eligible, log_h, torch.full_like(log_h, -math.inf))
@@ -108,10 +113,17 @@ def hazard_distribution(logit, weights, eligible=None):
     cumulative = torch.cumsum(log_wait, -1)
     previous = torch.cat((torch.zeros_like(cumulative[..., :1]), cumulative[..., :-1]), -1)
     logw = weights.log().unsqueeze(-1)
-    log_mass = torch.logsumexp(previous + log_h + logw, -2)
-    log_survival = torch.logsumexp(cumulative + logw, -2)
+    log_mass = exact_logsumexp(previous + log_h + logw, -2)
+    log_survival = exact_logsumexp(cumulative + logw, -2)
     return {"log_mass": log_mass, "log_survival": log_survival,
             "cdf": -torch.expm1(log_survival)}
+
+
+def exact_logsumexp(x, dim):
+    """Avoid undefined all-zero-mixture backward without adding event support."""
+    supported = torch.isfinite(x).any(dim, keepdim=True)
+    value = torch.logsumexp(torch.where(supported, x, torch.zeros_like(x)), dim)
+    return torch.where(supported.squeeze(dim), value, torch.full_like(value, -math.inf))
 
 
 def world_bootstrap(values, worlds, n_boot, seed, *, weighting="world"):
@@ -120,6 +132,9 @@ def world_bootstrap(values, worlds, n_boot, seed, *, weighting="world"):
     Public default is equal-world means. Audit NLL explicitly uses car weighting
     (resampled sums/counts) to match its mean-per-car estimand.
     """
+    check_seed(seed)
+    if len(values) != len(worlds) or weighting not in ("world", "car"):
+        raise ValueError("bootstrap needs matching values/worlds and world or car weighting")
     if not len(values):
         return {"estimate": None, "ci95": None, "status": "empty", "n_worlds": 0}
     groups = sorted(set(worlds))
@@ -198,7 +213,27 @@ def load_adapter(path):
     spec = importlib.util.spec_from_file_location("r9_local_causal_adapter", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if hasattr(module, "reset_episode"):
+        module.decision_state.reset_episode = module.reset_episode
     return module.decision_state, {"name": str(path.relative_to(ROOT)), "sha256": sha256(path), "verified": False}
+
+
+def current_actions(ep, times, vid, mask):
+    """Issued controls available at input time, identity-bound across held ticks."""
+    root = ep["path"]
+    names = ("controller", "issued_acceleration_mps2", "issued_target_speed_mps")
+    paths = [guard(root/(name+".npy")) for name in ("control_time_s", *names)]
+    if not all(p.is_file() for p in paths):
+        return None
+    control_time = np.load(paths[0], allow_pickle=False)
+    controls = {name: np.load(path, allow_pickle=False) for name, path in zip(names, paths[1:])}
+    current = np.searchsorted(control_time, times[:-1], side="right")-1
+    safe = current.clip(0, max(len(control_time)-1, 0))
+    if not len(control_time):
+        return None
+    start_rows = np.searchsorted(times, control_time[safe], side="left")
+    valid = (current >= 0)[:, None] & mask[:-1] & mask[start_rows] & (vid[:-1] == vid[start_rows])
+    return {**{name: np.where(valid, value[safe], 0) for name, value in controls.items()}, "valid": valid}
 
 
 def discover(sources, max_worlds=None):
@@ -230,11 +265,12 @@ def discover(sources, max_worlds=None):
                 raise ValueError(f"duplicate source episode: {path}")
             seen.add(path)
             episodes.append({**meta, "source_name": name, "path": path,
-                             "manifest_role": item.get("split", "unspecified")})
+                             "manifest_role": item.get("split_role", "unspecified")})
         notes.append({"source": name, "manifest_sha256": sha256(root / "C4_EPISODES_MANIFEST.json"),
                       "unmaterialized_episodes": missing})
     worlds = sorted({ep["world"] for ep in episodes})
     if max_worlds is not None:
+        notes.append({"max_worlds_excluded_worlds": worlds[max_worlds:]})
         worlds = worlds[:max_worlds]
     episodes = [e for e in episodes if e["world"] in worlds]
     if not episodes:
@@ -280,13 +316,29 @@ def build_dataset(episodes, adapter=None):
         if len(delta) == 0 or not np.allclose(delta, delta[0], rtol=0, atol=1e-9) or delta[0] != .5:
             raise ValueError("P1 requires uniform dt=0.5 seconds")
         dt = float(delta[0])
+        # Bound O(K^2) temporary geometry memory independently of episode length.
+        old_chunks = {k: [] for k in FEATURES if k not in ("v", "a")}
         with torch.no_grad():
-            old = core_features(torch.tensor(kin[:-1]).unsqueeze(0), torch.tensor(mask[:-1]).unsqueeze(0),
-                                SimpleNamespace(merge_lane=2, merge_target_lane=1))
-        old = {k: v[0].numpy() for k, v in old.items() if torch.is_tensor(v)}
-        proposed = (causal_proposal(kin[:-1], dt) if adapter is None else np.asarray(adapter(
-            kin=kin[:-1].copy(), present=mask[:-1].copy(), is_cav=cav[:-1].copy(), dt_s=dt,
-            metadata={k: ep[k] for k in ("world", "arm", "demand_vph")})))
+            for lo in range(0, len(times)-1, 32):
+                hi = min(lo+32, len(times)-1)
+                feats = core_features(torch.tensor(kin[lo:hi]).unsqueeze(0),
+                                      torch.tensor(mask[lo:hi]).unsqueeze(0),
+                                      SimpleNamespace(merge_lane=2, merge_target_lane=1))
+                for key in old_chunks:
+                    old_chunks[key].append(feats[key][0].numpy())
+        old = {key: np.concatenate(values) for key, values in old_chunks.items()}
+        if adapter is None:
+            proposed = causal_proposal(kin[:-1], dt)
+        else:
+            if hasattr(adapter, "reset_episode"):
+                adapter.reset_episode()
+            actions = current_actions(ep, times, vid, mask)
+            # The adapter sees ONLY the current snapshot/actions, never a future
+            # state, lane label, event timestamp, world id, or driver truth.
+            proposed = np.stack([np.asarray(adapter(
+                kin=kin[row].copy(), present=mask[row].copy(), is_cav=cav[row].copy(), dt_s=dt,
+                actions=None if actions is None else {k: v[row].copy() for k, v in actions.items()}))
+                for row in range(len(times)-1)])
         if proposed.shape != kin[:-1].shape or not np.array_equal(proposed[..., 1:4], kin[:-1, :, 1:4]):
             raise ValueError("causal adapter must preserve pre-change lanes and shape")
         if not np.isfinite(proposed[mask[:-1]]).all():
@@ -325,42 +377,46 @@ def build_dataset(episodes, adapter=None):
                     continue
                 stop = next((r for r in range(entry, terminal+1) if lane[r, slot] != 2 or
                              not (0 <= kin[r, slot, 0] <= 75.44)), None)
-                if stop is not None:
+                if stop is not None and event_row is None:
                     terminal = stop - 1
                 if terminal < entry:
                     exclusions.append({**identity, "reason": "zero_risk_exposure"})
                     continue
                 legacy = {k: [] for k in FEATURES}
                 updated = {k: [] for k in FEATURES}
-                physical, reasons = [], []
+                physical, reasons, legacy_support = [], [], []
                 for row in range(entry, terminal+1):
                     for k in FEATURES:
                         legacy[k].append(float(kin[row, slot, 4 if k == "v" else 5]) if k in ("v", "a") else old[k][row, slot])
                     feat, ok, reason = geometry(proposed[row], mask[row], slot)
+                    if stop is not None and row >= stop:
+                        ok, reason = False, "structural_exit_no_regain"
                     for k in FEATURES:
                         updated[k].append(feat[k])
                     physical.append(ok)
                     reasons.append(reason)
+                    legacy_support.append(bool(lane[row, slot] == 2 and 0 <= kin[row, slot, 0] <= 75.44))
                 event = event_row is not None
-                if event and terminal != event_row-1:
-                    physical[-1] = False
-                    reasons[-1] = "event_after_structural_exit"
                 unknown_age = entry == 0 or (entry == start and kin[entry, slot, 0] > 0)
                 next_row = terminal + 1
                 kind = ("event" if event else "horizon_censor" if next_row == len(times)-1 and
                         lane[next_row, slot] == 2 else "junction_exit" if lane[next_row, slot] == -1 and
-                        mask[next_row, slot] else "teleport_or_identity_exit" if next_row >= end else "route_exit")
+                        mask[next_row, slot] else "teleport_or_identity_exit" if
+                        terminal+2 >= end and end < len(times) else "route_exit")
                 q = int(np.sum(mask[entry] & (lane[entry] == 2) & (kin[entry, :, 0] > kin[entry, slot, 0])))
                 sequences.append({**identity, "legacy": legacy, "updated": updated, "physical": physical,
                     "physical_reasons": reasons, "event": event, "terminal_kind": kind,
+                    "legacy_support": legacy_support,
                     "unknown_age": unknown_age, "queue": "front" if q == 0 else "behind",
                     "demand": ep.get("demand_vph"), "dt": dt,
-                    "times": (times[entry+1:terminal+2] - times[entry]).tolist(),
+                    "times": [float(times[aligned_row(row)] - times[entry]) for row in range(entry, terminal+1)],
                     "observed_s": float(times[event_row] - times[entry]) if event else None,
                     "horizon_s": float(ep.get("horizon_s", times[-1]-times[0]))})
                 counts["candidate_cars"] += 1
                 counts["events"] += int(event)
-        diagnostics.append(counts)
+        diagnostics.append({**counts, "world": ep["world"], "manifest_role": ep["manifest_role"],
+                            "input_sha256": {k: sha256(ep["path"]/(k+".npy")) for k in
+                                             ("veh_kin", "veh_mask", "vid", "is_cav", "time_s")}})
         print(f"built {ep['episode']}: {counts['candidate_cars']} cars", flush=True)
     if not sequences:
         raise ValueError("no recorded ramp sequences")
@@ -381,12 +437,25 @@ def pack(sequences):
             batch[mode][key] = array
     batch["valid"] = torch.zeros(n, length, dtype=torch.bool)
     batch["physical"] = torch.zeros(n, length, dtype=torch.bool)
+    batch["legacy_support"] = torch.zeros(n, length, dtype=torch.bool)
     batch["last"] = torch.tensor([len(s["times"])-1 for s in sequences])
     batch["event"] = torch.tensor([s["event"] for s in sequences])
     for i, s in enumerate(sequences):
         batch["valid"][i, :len(s["times"])] = True
         batch["physical"][i, :len(s["times"])] = torch.tensor(s["physical"])
+        batch["legacy_support"][i, :len(s["times"])] = torch.tensor(s.get("legacy_support", [True]*len(s["times"])))
     return batch
+
+
+def sequence_batches(sequences, size=128):
+    for lo in range(0, len(sequences), size):
+        yield sequences[lo:lo+size]
+
+
+def score_losses(model, sequences, n_quad):
+    with torch.no_grad():
+        return [value for subset in sequence_batches(sequences)
+                for value in model.nll(pack(subset), n_quad).tolist()]
 
 
 class Candidate(nn.Module):
@@ -394,6 +463,9 @@ class Candidate(nn.Module):
         super().__init__()
         self.kind = kind
         values = dict(initial)
+        if kind == "M0":
+            for key, value in initial.items():
+                self.register_buffer("frozen_"+key, torch.tensor(value, dtype=DTYPE))
         if kind in ("P1+P2", "P1-P3"):
             values = {"s_f": initial["s0"], "T_f": initial["T"], "b_f": initial["b"],
                       "s_l": initial["s0"], "T_l": initial["T"], "b_l": initial["b"]}
@@ -404,12 +476,14 @@ class Candidate(nn.Module):
                                      for k, v in values.items()})
 
     def params(self):
+        if self.kind == "M0":
+            return {key: getattr(self, "frozen_"+key) for key in self.raw}
         return {k: F.softplus(v) for k, v in self.raw.items()}
 
     def distribution(self, batch, n_quad=8):
         p = self.params()
         f = batch["legacy" if self.kind in ("M0", "M0-refit") else "updated"]
-        eligible = batch["valid"] if self.kind in ("M0", "M0-refit") else batch["physical"]
+        eligible = batch["legacy_support"] if self.kind in ("M0", "M0-refit") else batch["physical"]
         if self.kind not in ("P1+P2", "P1-P3"):
             return soft_hazard(f, p, n_quad, eligible)
         d_f = p["s_f"] + p["T_f"] * f["v_f"] + torch.relu(f["v_f"].square()-f["v"].square())/(2*p["b_f"])
@@ -430,7 +504,24 @@ class Candidate(nn.Module):
         mf = f["gap_f"].unsqueeze(1) - d_f.unsqueeze(1)/alpha
         ml = torch.where(f["has_l"].unsqueeze(1), ml, torch.full_like(ml, math.inf))
         mf = torch.where(f["has_f"].unsqueeze(1), mf, torch.full_like(mf, math.inf))
-        return hazard_distribution(torch.minimum(ml, mf)/p["temperature"], weights, eligible)
+        margin = torch.minimum(ml, mf)
+        finite = torch.isfinite(margin)
+        logits = torch.where(finite, margin, torch.zeros_like(margin))/p["temperature"]
+        logits = torch.where(finite, logits, margin)
+        return hazard_distribution(logits, weights, eligible)
+
+    def median_margin(self, batch):
+        """Current eligible boundary at population median assertiveness (not F)."""
+        p = self.params()
+        f = batch["legacy" if self.kind in ("M0", "M0-refit") else "updated"]
+        if self.kind in ("P1+P2", "P1-P3"):
+            df = p["s_f"] + p["T_f"]*f["v_f"] + torch.relu(f["v_f"]**2-f["v"]**2)/(2*p["b_f"])
+            dl = p["s_l"] + p["T_l"]*f["v"] + torch.relu(f["v"]**2-f["v_l"]**2)/(2*p["b_l"])
+            ml = torch.where(f["has_l"], f["gap_l"]-dl, torch.full_like(dl, math.inf))
+            mf = torch.where(f["has_f"], f["gap_f"]-df, torch.full_like(df, math.inf))
+            return torch.minimum(ml, mf)
+        return _core_margin(torch.ones((), dtype=DTYPE), *(f[k] for k in FEATURES),
+                            p["s0"], p["T"], p["b"], p["tau_a"], None, None)
 
     def nll(self, batch, n_quad=8):
         dist = self.distribution(batch, n_quad)
@@ -446,34 +537,50 @@ def optimize(kind, initial, sequences, *, iters, lr, shrinkage, n_quad):
         return model, {"status": "untouched", "updates": 0}
     if not sequences:
         return model, {"status": "no_fit_cars", "updates": 0}
-    batch = pack(sequences)
+    if kind in ("P1", "P1+P2", "P1-P3"):
+        failures = [s for s in sequences if s["event"] and not s["physical"][-1]]
+        if failures:
+            return model, {"status": "exact_support_failure", "updates": 0,
+                           "physical_event_failures": len(failures),
+                           "event_denominator": sum(s["event"] for s in sequences),
+                           "trace": [], "reason": "100% physical event support required before optimization"}
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     trace, best, best_loss = [], copy.deepcopy(model.state_dict()), math.inf
     for step in range(iters):
         optimizer.zero_grad()
-        nll = model.nll(batch, n_quad)
-        if not torch.isfinite(nll).all():
-            return model, {"status": "exact_support_failure", "updates": step,
-                           "zero_likelihood_cars": int((~torch.isfinite(nll)).sum()), "trace": trace}
-        loss = nll.mean()
-        if kind == "P1-P3":
-            loss = loss + shrinkage * model.params()["tau"].square()
-        if float(loss.detach()) < best_loss:
-            best_loss, best = float(loss.detach()), copy.deepcopy(model.state_dict())
-        loss.backward()
+        total, unsupported = 0.0, 0
+        for subset in sequence_batches(sequences):
+            nll = model.nll(pack(subset), n_quad)
+            unsupported += int((~torch.isfinite(nll)).sum())
+            if unsupported:
+                # No optimization of a supported-only subset, epsilon rescue, or
+                # hidden deletion. Failed exact fits remain failed comparisons.
+                model.load_state_dict(best)
+                return model, {"status": "exact_support_failure", "updates": step,
+                               "zero_likelihood_cars_at_least": unsupported, "trace": trace}
+            contribution = nll.sum()/len(sequences)
+            total += float(contribution.detach())
+            contribution.backward()
+        penalty = shrinkage * model.params()["tau"].square() if kind == "P1-P3" else None
+        if penalty is not None:
+            total += float(penalty.detach())
+            penalty.backward()
+        if total < best_loss:
+            best_loss, best = total, copy.deepcopy(model.state_dict())
         gradients = {k: None if v.grad is None else float(v.grad) for k, v in model.raw.items()}
         if any(v is None or not math.isfinite(v) for v in gradients.values()):
             model.load_state_dict(best)
             return model, {"status": "nonfinite_gradient", "updates": step, "gradients": gradients, "trace": trace}
         if step == 0 or step == iters-1:
-            trace.append({"step": step, "loss": float(loss.detach()), "raw_gradients": gradients,
+            trace.append({"step": step, "loss": total, "raw_gradients": gradients,
                           "finite_nonzero_gradient_count": sum(v != 0 for v in gradients.values())})
         optimizer.step()
     with torch.no_grad():
-        value = model.nll(batch, n_quad).mean()
+        value = float(np.mean(score_losses(model, sequences, n_quad)))
         if kind == "P1-P3":
-            value = value + shrinkage * model.params()["tau"].square()
-        if torch.isfinite(value) and float(value) < best_loss:
+            value += float(shrinkage * model.params()["tau"].square())
+        if math.isfinite(value) and value < best_loss:
+            best_loss = value
             best = copy.deepcopy(model.state_dict())
     model.load_state_dict(best)
     return model, {"status": "fitted", "updates": iters, "objective": best_loss, "trace": trace}
@@ -495,7 +602,7 @@ def select_fit(kind, initial, sequences, args):
             model, info = optimize(kind, initial, train, iters=args.iters, lr=args.lr,
                                    shrinkage=lam, n_quad=args.n_quad)
             with torch.no_grad():
-                score = float(model.nll(pack(val), args.n_quad).mean())
+                score = float(np.mean(score_losses(model, val, args.n_quad)))
             scores.append(score)
             fold_reports.append({"worlds": validation, "nll_per_car": score, "fit": info})
         mean = float(np.mean(scores)) if scores else math.inf
@@ -563,14 +670,22 @@ def population_cdf(sequences, distributions):
 def evaluate(model, sequences, n_quad):
     if not sequences:
         return {"cars": [], "nll": summary_nll([]), "status": "no_audit_worlds"}
-    batch = pack(sequences)
+    losses, distributions, margins = [], [], []
     with torch.no_grad():
-        dist = model.distribution(batch, n_quad)
-        losses = model.nll(batch, n_quad).tolist()
+        for subset in sequence_batches(sequences):
+            batch = pack(subset)
+            dist = model.distribution(batch, n_quad)
+            losses.extend(model.nll(batch, n_quad).tolist())
+            margin = model.median_margin(batch)
+            for j, seq in enumerate(subset):
+                length = len(seq["times"])
+                distributions.append({k: v[j, :length].clone() for k, v in dist.items()})
+                margins.append(float(margin[j, length-1]))
     rows, cdfs = [], []
     for i, s in enumerate(sequences):
         n = len(s["times"])
-        cdf = dist["cdf"][i, :n].numpy()
+        dist = distributions[i]
+        cdf = dist["cdf"].numpy()
         cdfs.append(cdf)
         hits = np.flatnonzero(cdf >= .5)
         reached = bool(len(hits))
@@ -578,18 +693,42 @@ def evaluate(model, sequences, n_quad):
         error_low = pred - s["observed_s"] if s["event"] and not s["unknown_age"] else None
         error_high = (error_low if reached else math.inf) if error_low is not None else None
         early = float(cdf[-2]) if n > 1 else 0.0
-        zero = bool(s["event"] and torch.isneginf(dist["log_mass"][i, n-1]))
+        zero = bool(s["event"] and torch.isneginf(dist["log_mass"][n-1]))
         rows.append({k: s[k] for k in ("world", "source", "episode", "vehicle", "entry_row", "event_row",
                                      "queue", "demand", "terminal_kind", "unknown_age", "horizon_s")})
         rows[-1].update(nll=losses[i], event=s["event"], physical_supported=bool(s["physical"][-1]),
                         physical_reason=s["physical_reasons"][-1], zero_mass_event=zero,
                         early_mass=early if s["event"] else None, median_reached=reached,
                         error_bounds_s=[error_low, error_high] if error_low is not None else None,
-                        survival_at_stop=float(dist["log_survival"][i, n-1].exp()))
+                        survival_at_stop=float(dist["log_survival"][n-1].exp()), stop_s=s["times"][-1],
+                        median_driver_margin=margins[i], positive_margin=margins[i] > 0)
+        tails = {}
+        for horizon in (120, 300):
+            idx = int(np.searchsorted(s["times"], horizon, side="right"))-1
+            survival = float(dist["log_survival"][min(idx, n-1)].exp()) if idx >= 0 else 1.0
+            if s["unknown_age"]:
+                tails[str(horizon)] = {"identifiable_empirical": False, "model_bounds": [0.0, 1.0]}
+            elif s["times"][-1] >= horizon:
+                tails[str(horizon)] = {"identifiable_empirical": True,
+                                       "empirical": float(not (s["event"] and s["observed_s"] <= horizon)),
+                                       "model_bounds": [survival, survival]}
+            elif s["event"]:
+                tails[str(horizon)] = {"identifiable_empirical": True, "empirical": 0.0,
+                                       "model_bounds": [0.0, survival]}
+            elif s["terminal_kind"] != "horizon_censor":
+                # Exit consumes all remaining non-merge mass; no future road path.
+                tails[str(horizon)] = {"identifiable_empirical": True, "empirical": 1.0,
+                                       "model_bounds": [survival, survival]}
+            else:
+                tails[str(horizon)] = {"identifiable_empirical": False, "model_bounds": [0.0, survival]}
+        rows[-1]["tail_noncompletion"] = tails
     events = [r for r in rows if r["event"]]
-    timing = [r["error_bounds_s"] for r in events if r["error_bounds_s"] is not None]
+    known_timing = [r["error_bounds_s"] for r in events if r["error_bounds_s"] is not None]
+    timing = [r["error_bounds_s"] if r["error_bounds_s"] is not None else [-math.inf, math.inf] for r in events]
     abs_low = [0.0 if a <= 0 <= b else min(abs(a), abs(b)) for a, b in timing]
     abs_high = [max(abs(a), abs(b)) for a, b in timing]
+    signed_bounds = [median([x[0] for x in timing]), median([x[1] for x in timing])]
+    absolute_bounds = [median(abs_low), median(abs_high)]
     per_world = {w: summary_nll([r for r in rows if r["world"] == w]) for w in sorted({r["world"] for r in rows})}
     return {"status": "scored", "cars": rows, "nll": summary_nll(rows),
             "strata": {k: summary_nll([r for r in rows if r["terminal_kind"] == k]) for k in sorted({r["terminal_kind"] for r in rows})},
@@ -597,12 +736,15 @@ def evaluate(model, sequences, n_quad):
                 "share": float(np.mean([r["physical_supported"] for r in events])) if events else None,
                 "failures": [r for r in events if not r["physical_supported"]]},
             "zero_mass_event_count": sum(r["zero_mass_event"] for r in events),
+            "positive_margin_event_share": float(np.mean([r["positive_margin"] for r in events])) if events else None,
             "early_mass_mean": float(np.mean([r["early_mass"] for r in events])) if events else None,
-            "timing": {"event_denominator": len(events), "known_entry_events": len(timing),
-                "unknown_age_events": len(events)-len(timing),
+            "timing": {"event_denominator": len(events), "known_entry_events": len(known_timing),
+                "unknown_age_events": len(events)-len(known_timing),
                 "unreached_medians": sum(not r["median_reached"] for r in events),
-                "signed_median_bounds_s": [median([x[0] for x in timing]), median([x[1] for x in timing])],
-                "absolute_median_bounds_s": [median(abs_low), median(abs_high)]},
+                "signed_median_bounds_s": signed_bounds,
+                "absolute_median_bounds_s": absolute_bounds,
+                "signed_median_s": signed_bounds[0] if signed_bounds[0] == signed_bounds[1] else None,
+                "median_absolute_s": absolute_bounds[0] if absolute_bounds[0] == absolute_bounds[1] else None},
             "per_world_nll": per_world,
             "worst_world": max(per_world, key=lambda w: per_world[w]["mean"]),
             "population_cdf": population_cdf(sequences, cdfs)}
@@ -623,8 +765,82 @@ def paired_comparisons(result, baseline, args):
     return out
 
 
+def noncompletion(rows, args):
+    """Fully observed 120/300s entry cohorts; post-event model tails stay bounds."""
+    groups = {"all": rows}
+    for field in ("source", "queue", "demand"):
+        for value in sorted({str(r[field]) for r in rows}):
+            groups[f"{field}={value}"] = [r for r in rows if str(r[field]) == value]
+    result = {}
+    for name, group in groups.items():
+        result[name] = {"cars": len(group), "tails": {},
+                        "competing_exits": sum(r["terminal_kind"] not in ("event", "horizon_censor") for r in group)}
+        for horizon in (120, 300):
+            key = str(horizon)
+            eligible = [r for r in group if r["tail_noncompletion"][key]["identifiable_empirical"]]
+            if not eligible:
+                result[name]["tails"][key] = {"status": "unidentifiable", "cars": 0}
+                continue
+            empirical = world_bootstrap([r["tail_noncompletion"][key]["empirical"] for r in eligible],
+                                        [r["world"] for r in eligible], args.bootstrap, args.seed, weighting="car")
+            low = float(np.mean([r["tail_noncompletion"][key]["model_bounds"][0] for r in eligible]))
+            high = float(np.mean([r["tail_noncompletion"][key]["model_bounds"][1] for r in eligible]))
+            observed = empirical["estimate"]
+            error = [0.0 if low <= observed <= high else min(abs(low-observed), abs(high-observed)),
+                     max(abs(low-observed), abs(high-observed))]
+            band = empirical["ci95"]
+            result[name]["tails"][key] = {
+                "status": "identified" if low == high else "bounded_no_post_event_continuation",
+                "cars": len(eligible), "unidentifiable_cars": len(group)-len(eligible),
+                "empirical_world_bootstrap": empirical, "model_noncompletion_bounds": [low, high],
+                "absolute_error_bounds": error,
+                "inside_empirical_band_certified": (low >= band[0] and high <= band[1]) if band else None}
+    return result
+
+
+def s3b_gates(kind, results):
+    current = results[kind]["audit"]
+    if not current["cars"]:
+        return {"status": "blocked_no_audit", "passed": False}
+    timing = current["timing"]
+    signed = timing["signed_median_bounds_s"]
+    absolute = timing["absolute_median_bounds_s"]
+    def abs_range(bounds):
+        a, b = bounds
+        return [0.0 if a <= 0 <= b else min(abs(a), abs(b)), max(abs(a), abs(b))]
+    signed_abs = abs_range(signed) if signed[0] is not None else [0, math.inf]
+    gates = {"physical_support_100pct": current["physical_support"]["share"] == 1,
+             "zero_mass_events": current["zero_mass_event_count"] == 0,
+             "signed_median_within_2s": signed_abs[1] <= 2,
+             "median_absolute_within_12s": absolute[1] is not None and absolute[1] <= 12,
+             "full_event_timing_identifiable": timing["unknown_age_events"] == 0 and bool(timing["event_denominator"])}
+    for baseline in ("M0", "M0-refit"):
+        pair = current["paired_vs"][baseline]["nll"]
+        gates["nll_CI_below_0_vs_"+baseline] = bool(pair.get("status") == "ok" and pair["ci95"][1] < 0)
+        ref = results[baseline]["audit"]["timing"]
+        sb, ab = ref["signed_median_bounds_s"], ref["absolute_median_bounds_s"]
+        gates["signed_median_strictly_better_vs_"+baseline] = bool(sb[0] is not None and signed_abs[1] < abs_range(sb)[0])
+        gates["median_absolute_no_worse_vs_"+baseline] = bool(ab[0] is not None and absolute[1] is not None and absolute[1] <= ab[0])
+        for horizon in ("120", "300"):
+            tail = current["noncompletion"]["all"]["tails"][horizon]
+            other = results[baseline]["audit"]["noncompletion"]["all"]["tails"][horizon]
+            gates[f"noncompletion_no_worse_{horizon}_vs_{baseline}"] = bool(
+                "absolute_error_bounds" in tail and "absolute_error_bounds" in other and
+                tail["absolute_error_bounds"][1] <= other["absolute_error_bounds"][0])
+    early = current["paired_vs"]["M0"]["early_mass"]
+    gates["early_mass_CI_below_0_vs_M0"] = bool(early.get("status") == "ok" and early["ci95"][1] < 0)
+    for q in ("25", "50", "90"):
+        metric = current["population_cdf"]["quantiles"].get(q, {})
+        gates["population_CDF_p"+q] = metric.get("gate") is True
+    for horizon in ("120", "300"):
+        gates["noncompletion_in_band_"+horizon] = current["noncompletion"]["all"]["tails"][horizon].get("inside_empirical_band_certified") is True
+    return {"status": "passed" if all(gates.values()) else "CHANGES", "passed": all(gates.values()), "gates": gates}
+
+
 def clean_json(value):
     """Strict RFC JSON: infinities are explicit strings, never discarded."""
+    if isinstance(value, np.generic):
+        return clean_json(value.item())
     if isinstance(value, dict):
         return {str(k): clean_json(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -686,7 +902,8 @@ def main(argv=None):
         else:
             model, info = select_fit(kind, initial, fit, args)
         results[kind] = {"parameters": {k: float(v.detach()) for k, v in model.params().items()},
-                         "fit": info, "audit": evaluate(model, audit_sequences, args.n_quad)}
+                         "fit": info, "fit_diagnostics_not_audit": evaluate(model, fit, args.n_quad),
+                         "audit": evaluate(model, audit_sequences, args.n_quad)}
     blockers = ["P1 simulator decision-substep parity is unresolved; causal adapter is not qualification evidence",
                 "Converted lengths are nominal; exact bumper/projection geometry needs runtime parity",
                 "S1/S4-S6 runtime, full-cohort and closed-loop evidence is outside this offline packet"]
@@ -694,13 +911,37 @@ def main(argv=None):
         blockers.append("Default constant-current-acceleration proposal is diagnostic; supply frozen longitudinal adapter")
     if not audit:
         blockers.append("Fewer than five worlds: fixed one-in-five audit is empty (sample smoke only)")
-    if any(n["unmaterialized_episodes"] for n in source_notes):
+    if any(n.get("unmaterialized_episodes") for n in source_notes):
         blockers.append("Source manifests contain unmaterialized episodes; exclusions enumerated")
+    for result in results.values():
+        for partition in ("audit", "fit_diagnostics_not_audit"):
+            ev = result[partition]
+            ev["noncompletion"] = noncompletion(ev["cars"], args)
+            ev["nll_world_bootstrap"] = world_bootstrap([r["nll"] for r in ev["cars"]],
+                [r["world"] for r in ev["cars"]], args.bootstrap, args.seed, weighting="car")
     for kind, result in results.items():
         ev = result["audit"]
         ev["paired_vs"] = {base: paired_comparisons(ev, results[base]["audit"], args) for base in ("M0", "M0-refit")}
         if ev.get("zero_mass_event_count", 0):
             blockers.append(f"{kind}: {ev['zero_mass_event_count']} exact zero-mass audit events")
+        fit_info = result["fit"].get("final_fit", result["fit"])
+        if fit_info.get("status") not in ("untouched", "fitted"):
+            blockers.append(f"{kind}: fitting status {fit_info.get('status')}")
+        if kind != "M0" and result["fit"].get("selection_status") != "ok":
+            blockers.append(f"{kind}: grouped inner validation unresolved")
+    for kind, result in results.items():
+        result["s3b"] = s3b_gates(kind, results)
+    physical_events = [s for s in sequences if s["event"]]
+    data["physical_support_all_recorded_events"] = {
+        "denominator": len(physical_events),
+        "share": float(np.mean([s["physical"][-1] for s in physical_events])) if physical_events else None,
+        "failures": [{k: s[k] for k in ("world", "source", "episode", "vehicle", "event_row")} |
+                     {"reason": s["physical_reasons"][-1]} for s in physical_events if not s["physical"][-1]]}
+    data["unknown_age_sequences"] = [{k: s[k] for k in ("world", "source", "episode", "vehicle", "entry_row")}
+                                     for s in sequences if s["unknown_age"]]
+    data["alignment"] = {"event_timestamp": "first post-merge/authorizing output row",
+                         "input_timestamp": "preceding recorded row, causal proposal once; pre-change membership",
+                         "post_event_rows_used": 0, "recorded_future_motion_used": False}
     report = {"schema": "r9_offline_fit/2", "scope": "A-only; P4/B off", "verdict": "CHANGES",
               "seed": args.seed, "round8": identity, "initial_parameters": initial,
               "causal_proposal": adapter_info, "sources": source_notes,
@@ -726,7 +967,18 @@ def main(argv=None):
         text.extend(["## " + kind, "", "- Parameters: `" + json.dumps(result["parameters"]) + "`",
                      "- Audit NLL: `" + json.dumps(result["audit"]["nll"]) + "`",
                      "- Timing bounds: `" + json.dumps(result["audit"].get("timing")) + "`",
-                     "- Paired world bootstrap: `" + json.dumps(result["audit"].get("paired_vs")) + "`", ""])
+                     "- Paired world bootstrap: `" + json.dumps(result["audit"].get("paired_vs")) + "`",
+                     "- Physical support: `" + json.dumps({k: v for k, v in result["audit"].get("physical_support", {}).items() if k != "failures"}) + "`",
+                     "- Zero-mass audit events: `" + str(result["audit"].get("zero_mass_event_count")) + "`",
+                     "- Positive-margin event share: `" + str(result["audit"].get("positive_margin_event_share")) + "`",
+                     "- Worst world: `" + str(result["audit"].get("worst_world")) + "`",
+                     "- Population CDF quantiles: `" + json.dumps(result["audit"].get("population_cdf", {}).get("quantiles")) + "`",
+                     "- Noncompletion: `" + json.dumps(result["audit"]["noncompletion"].get("all")) + "`",
+                     "- S3b gates: `" + json.dumps(result["s3b"]) + "`", ""])
+        diagnostic = result["fit_diagnostics_not_audit"]
+        text.extend(["### Fit diagnostics (not audit evidence)", "",
+                     "- NLL: `" + json.dumps(diagnostic["nll"]) + "`",
+                     "- Zero-mass events: `" + str(diagnostic.get("zero_mass_event_count")) + "`", ""])
     for path, content in ((out, json.dumps(report, indent=2, allow_nan=False)+"\n"), (md, "\n".join(text))):
         guard(path.parent).mkdir(parents=True, exist_ok=True)
         guard(path).write_text(content, encoding="utf-8")
