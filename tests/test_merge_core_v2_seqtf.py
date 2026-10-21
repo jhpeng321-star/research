@@ -146,6 +146,14 @@ def test_chunk_split_equals_monolithic_at_fixed_parameters():
     assert torch.allclose(mono, first + second, atol=1e-5, rtol=1e-5)
 
 
+def test_event_on_chunk_boundary_matches_monolithic():
+    _, scene = _scene(n=8, event=3, k=3)
+    mono, _, _, _ = _chunk(scene, 0, 8, sigma=0.4, n_quad=5)
+    first, _, post1, _ = _chunk(scene, 0, 3, sigma=0.4, n_quad=5)
+    second, _, _, _ = _chunk(scene, 3, 8, sigma=0.4, n_quad=5, log_post=post1)
+    assert torch.allclose(mono, first + second, atol=1e-5, rtol=1e-5)
+
+
 def test_mixture_mass_sums_to_one_on_fully_supported_path():
     _, base = _scene(n=6, event=None, k=1)
     n = base["n_steps"]
