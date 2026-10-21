@@ -401,8 +401,15 @@ def _controllers(record: dict) -> dict:
     return dict(ctrl) if isinstance(ctrl, dict) else {}
 
 
-def predict_arm(predictor, record, arm, horizons, k, predict_horizon_s, t0_frame) -> dict:
-    """K-sample-averaged WM delay block + first-sample near-CAV |ds| for one arm."""
+def predict_arm(predictor, record, arm, horizons, k, predict_horizon_s, t0_frame,
+                roster_only: bool | None = None) -> dict:
+    """K-sample-averaged WM delay block + first-sample near-CAV |ds| for one arm.
+
+    ``roster_only`` overrides the module-level ``WM_DELAY_ROSTER_ONLY`` for this arm.  The
+    paired level and the paired deltas can need different fleets on the same invocation:
+    genrand_branch recordings include entrants (so all vehicles match), while the exported
+    v5_native level starts carry the t0 roster only (so only the roster matches).
+    """
     region_sum = {_h(hz): {r: 0.0 for r in REGIONS} for hz in horizons}
     queue_sum = {_h(hz): 0.0 for hz in horizons}
     first_frames = None
@@ -412,8 +419,9 @@ def predict_arm(predictor, record, arm, horizons, k, predict_horizon_s, t0_frame
                            sample)
         if first_frames is None:
             first_frames = frames
+        use_roster = ROSTER_ONLY if roster_only is None else bool(roster_only)
         roster = ({str(v.get("id", "")) for v in t0_frame.get("vehicles", [])}
-                  if ROSTER_ONLY and t0_frame else None)
+                  if use_roster and t0_frame else None)
         block = frame_delay(frames, float(record["t0_s"]), horizons, ids=roster)
         for hz in horizons:
             label = _h(hz)
@@ -432,7 +440,8 @@ def predict_arm(predictor, record, arm, horizons, k, predict_horizon_s, t0_frame
     return wm, near
 
 
-def evaluate_start(predictor, record, horizons, k, predict_horizon_s) -> dict:
+def evaluate_start(predictor, record, horizons, k, predict_horizon_s,
+                   roster_only: bool | None = None) -> dict:
     """WM vs SUMO delay level + near-CAV |ds| for every recorded arm of one start."""
     from wms.eval.normalize import recorded_for
     arms: dict[str, dict] = {}
@@ -441,7 +450,7 @@ def evaluate_start(predictor, record, horizons, k, predict_horizon_s) -> dict:
         try:
             rec_frames = recorded_for(record, arm)
             wm, near = predict_arm(predictor, record, arm, horizons, k, predict_horizon_s,
-                                   t0_frame)
+                                   t0_frame, roster_only=roster_only)
             arms[arm] = {"wm": wm, "sumo": frame_delay(rec_frames, float(record["t0_s"]),
                                                        horizons),
                          "near_cav_abs_ds": near}
@@ -461,13 +470,16 @@ def _t0_frame(record: dict) -> dict:
     return {"time_s": float(record.get("t0_s", 0.0)), "vehicles": []}
 
 
-def evaluate_pair(predictor, record, horizons, k, predict_horizon_s) -> dict:
+def evaluate_pair(predictor, record, horizons, k, predict_horizon_s,
+                  roster_only: bool | None = None) -> dict:
     """WM-predicted and recorded SUMO delay delta (action - base) for one pair."""
     from wms.eval.normalize import recorded_for
     ref, action = record["ref_arm"], record["action_arm"]
     t0_frame = _t0_frame(record)
-    wm_ref, _ = predict_arm(predictor, record, ref, horizons, k, predict_horizon_s, t0_frame)
-    wm_act, _ = predict_arm(predictor, record, action, horizons, k, predict_horizon_s, t0_frame)
+    wm_ref, _ = predict_arm(predictor, record, ref, horizons, k, predict_horizon_s, t0_frame,
+                            roster_only=roster_only)
+    wm_act, _ = predict_arm(predictor, record, action, horizons, k, predict_horizon_s, t0_frame,
+                            roster_only=roster_only)
     sumo_ref = frame_delay(recorded_for(record, ref), float(record["t0_s"]), horizons)
     sumo_act = frame_delay(recorded_for(record, action), float(record["t0_s"]), horizons)
     per_horizon = {}
@@ -586,14 +598,14 @@ def _map(items, worker, wm, args, workers: int) -> list:
 
 def _work_start(predictor, payload):
     predictor = predictor if predictor is not None else _WORKER["predictor"]
-    record, horizons, k, ph = payload
-    return evaluate_start(predictor, record, horizons, k, ph)
+    record, horizons, k, ph, roster_only = payload
+    return evaluate_start(predictor, record, horizons, k, ph, roster_only=roster_only)
 
 
 def _work_pair(predictor, payload):
     predictor = predictor if predictor is not None else _WORKER["predictor"]
-    record, horizons, k, ph = payload
-    return evaluate_pair(predictor, record, horizons, k, ph)
+    record, horizons, k, ph, roster_only = payload
+    return evaluate_pair(predictor, record, horizons, k, ph, roster_only=roster_only)
 
 
 # --------------------------------------------------------------------------- CLI
@@ -612,6 +624,10 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--entries", choices=("off", "on", "queue"), default="queue")
+    ap.add_argument("--level-roster-only", type=int, choices=(0, 1), default=None,
+                    help="override WM_DELAY_ROSTER_ONLY for the delay LEVEL starts only")
+    ap.add_argument("--pair-roster-only", type=int, choices=(0, 1), default=None,
+                    help="override WM_DELAY_ROSTER_ONLY for the paired DELTA records only")
     ap.add_argument("--sumo-pairs", help="parse-pair JSON providing total_D for the rollback")
     ap.add_argument("--out", required=True, help="output JSON path")
     ap.add_argument("--md", help="optional markdown summary path")
@@ -672,13 +688,19 @@ def main(argv=None) -> int:
     workers = max(1, int(args.workers))
     results: dict = {"schema": SCHEMA, "horizons": [_h(h) for h in horizons], "k": args.k,
                      "entries": args.entries, "n_starts": len(starts), "n_pairs": len(pairs),
+                     "roster_only_default": ROSTER_ONLY,
+                     "level_roster_only": args.level_roster_only,
+                     "pair_roster_only": args.pair_roster_only,
                      "rollback_metrics": {"pair_horizon_s": int(PAIR_HORIZON_S),
                                           "level_horizon_s": int(LEVEL_HORIZON_S)},
                      "wms": {}}
     primary = None
     for wm in args.wm:
-        start_payload = [(r, horizons, args.k, ph) for r in starts]
-        pair_payload = [(r, horizons, args.k, ph) for r in pairs]
+        level_roster = (None if args.level_roster_only is None
+                        else bool(args.level_roster_only))
+        pair_roster = (None if args.pair_roster_only is None else bool(args.pair_roster_only))
+        start_payload = [(r, horizons, args.k, ph, level_roster) for r in starts]
+        pair_payload = [(r, horizons, args.k, ph, pair_roster) for r in pairs]
         start_results = _map(start_payload, _work_start, wm, args, workers)
         pair_results = _map(pair_payload, _work_pair, wm, args, workers) if pairs else []
         level = aggregate_level(start_results, horizons)

@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
+if str(REPO / "src") not in sys.path:
+    sys.path.insert(0, str(REPO / "src"))
 _spec = importlib.util.spec_from_file_location(
     "wm_delay_check", REPO / "scripts" / "c4" / "wm_delay_check.py")
 WD = importlib.util.module_from_spec(_spec)
@@ -61,6 +63,42 @@ def test_frame_delay_counts_the_entrance_queue():
 def test_frame_delay_is_zero_without_frames():
     out = WD.frame_delay([], 0.0, (60.0,))
     assert out["60"]["total"] == 0.0 and out["60"]["ramp_queue"] == 0.0
+
+
+class _FakePredictor:
+    """Returns the same frames for every arm (enough to exercise roster selection)."""
+
+    def __init__(self, rows):
+        self.rows = rows
+
+    def __call__(self, record, controllers, horizon, sample):
+        return [_frame(t, self.rows) for t in range(int(horizon) + 1)]
+
+
+def _roster_record():
+    return {"world": "w", "source_arm": "native", "t0_s": 0.0,
+            "state": {"time_s": 0.0, "vehicles": [_v("m", 10.0, 1, 20.0)]},
+            "recorded": {"native": [_frame(t, [_v("m", 10.0, 1, 20.0)])
+                                    for t in range(61)]}}
+
+
+def test_level_roster_override_selects_the_matched_fleet(monkeypatch):
+    import copy
+    rows = [_v("m", 10.0, 1, 20.0), _v("__entry_1", 20.0, 1, 0.0)]
+    fake = _FakePredictor(rows)
+    rec = _roster_record()
+    roster = WD.evaluate_start(fake, copy.deepcopy(rec), (60.0,), 1, 60.0, roster_only=True)
+    everyone = WD.evaluate_start(fake, copy.deepcopy(rec), (60.0,), 1, 60.0, roster_only=False)
+    roster_total = roster["arms"]["native"]["wm"]["60"]["total"]
+    all_total = everyone["arms"]["native"]["wm"]["60"]["total"]
+    assert all_total - roster_total == pytest.approx(60.0)
+
+    monkeypatch.setattr(WD, "ROSTER_ONLY", True)
+    inherited = WD.evaluate_start(fake, copy.deepcopy(rec), (60.0,), 1, 60.0)
+    assert inherited["arms"]["native"]["wm"]["60"]["total"] == pytest.approx(roster_total)
+    monkeypatch.setattr(WD, "ROSTER_ONLY", False)
+    inherited = WD.evaluate_start(fake, copy.deepcopy(rec), (60.0,), 1, 60.0)
+    assert inherited["arms"]["native"]["wm"]["60"]["total"] == pytest.approx(all_total)
 
 
 # --------------------------------------------------------------------------- near CAV |ds|
@@ -174,6 +212,10 @@ def test_cli_parses_and_requires_wm_and_out():
     assert args.wm == ["x.pt"] and args.out == "o.json"
     assert args.device == "cpu" and args.k == 8 and args.entries == "queue"
     assert args.horizons == "60,120,300"
+    assert args.level_roster_only is None and args.pair_roster_only is None
+    split = ap.parse_args(["--wm", "x.pt", "--out", "o.json",
+                           "--level-roster-only", "1", "--pair-roster-only", "0"])
+    assert split.level_roster_only == 1 and split.pair_roster_only == 0
     multi = ap.parse_args(["--wm", "a.pt", "--wm", "b.pt", "--out", "o.json"])
     assert multi.wm == ["a.pt", "b.pt"]
     with pytest.raises(SystemExit):
