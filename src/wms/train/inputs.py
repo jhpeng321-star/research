@@ -174,6 +174,7 @@ class UnrollInputs:
     initial: dict[str, Tensor]
     paired_random: Optional[PairedRandom] = None
     merge_pivot_prefix: Optional[list] = None
+    merge_pivot_scene: Optional[list] = None
 
 
 def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings,
@@ -234,7 +235,8 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
     timeline = _device_timeline(batch.get("action_timeline"), device, entries)
     _refuse_unknown_commands(timeline, settings)
     cav_controller = None
-    if settings.cav_drive == "closed_loop":
+    if (settings.cav_drive == "closed_loop" or
+            (getattr(model, "merge_decision", None) == "first_passage" and timeline is not None)):
         if settings.black_box:
             raise ValueError("closed_loop CAV driving requires structured WM-S")
         cav_controller = TimelineControllers(model, timeline)
@@ -247,8 +249,10 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
     return UnrollInputs(states, present, present_seq, is_cav, teacher, hist, hist_mask,
                         observed_hist, observed_hist_mask, loss_valid, entries, controller_id,
                         timeline, cav_controller, entrant_seq, n_steps, initial, paired_random,
-                        batch.get("merge_pivot_prefix")
-                        if getattr(model, "merge_decision", None) == "first_passage" else None)
+                         batch.get("merge_pivot_prefix")
+                         if getattr(model, "merge_decision", None) == "first_passage" else None,
+                         batch.get("merge_pivot_scene")
+                         if getattr(model, "merge_decision", None) == "first_passage" else None)
 
 
 def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_cav: Tensor,

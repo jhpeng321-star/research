@@ -127,7 +127,8 @@ class TimelineControllers:
         s, v, lane = state["s_m"], state["v_mps"], state["lane"]
         cav = state["is_cav"].bool() & state["present"].bool()
         # Native handback remains native at each physics tick.
-        accel = model.physics_accel(state).detach().clone()
+        native = state.get("merge_pivot_native_accel")
+        accel = (model.physics_accel(state) if native is None else native).detach().clone()
         boundary = self.step_index % 2 == 0
         control = self.step_index // 2
         if control >= self.ids.shape[1]:
@@ -160,4 +161,14 @@ class TimelineControllers:
         self.step_index += 1
         speed = (v + accel * dt).clamp_min(0)
         position = s + 0.5 * (v + speed) * dt
+        if native is not None and model.physics.stop_time_integration:
+            from wms.model.merge_pivot import advance_longitudinal
+
+            # Same integration and encoded native plant as the first-passage step.
+            kin = state.get("veh_kin")
+            if kin is None:
+                from wms.physics.state import state_kin
+                kin = state_kin(state)
+            moved = advance_longitudinal(kin, accel, dt, True)
+            position, speed = moved[..., 0], moved[..., 4]
         return torch.stack((position, lane.float(), speed, accel), dim=-1)

@@ -695,7 +695,7 @@ class _PackWindowLoader:
             (window["present0"][0].numpy().astype(bool)[None],
              window["rollout_mask"][:, 0].numpy().astype(bool)), axis=0)
         road = None
-        if self.junction_fix != "off":
+        if self.junction_fix != "off" and not self.merge_pivot_history:
             teacher, present, road = self._fix_junctions(int(item["tick"]), teacher, present)
         states = _states_from_teacher(teacher, window["length0"][0].numpy())
         # A junction internal-lane step still carries the vehicle (the pack ``target_mask``
@@ -754,6 +754,24 @@ class _PackWindowLoader:
                                    history_stride_s=self.history_stride_s)
             result["driver_hist"], result["driver_hist_mask"] = dh, dm
         if self.merge_pivot_history:
+            from wms.data.recorded_prefix import causal_scene
+
+            tick = int(item["tick"])
+            start = int(corpus.run_start(tick))
+            stop = tick + horizon
+            occupied = np.asarray(corpus.array("veh_mask")[start:stop], bool)
+            continuity = np.asarray(corpus.array("target_mask")[start:stop - 1], bool)
+            current = causal_scene(corpus.array("veh_kin")[start:stop], occupied,
+                                   continuity)[tick - start:]
+            result["states"] = current
+            result["cav_teacher"] = np.stack((current[..., 0],
+                np.where(current[..., 1:4].sum(-1) > 0, current[..., 1:4].argmax(-1), -1),
+                current[..., 4], current[..., 5]), -1).astype(np.float32)
+            result["merge_pivot_scene"] = dict(
+                states=current, present=occupied[tick - start:].copy(),
+                is_cav=np.asarray(corpus.array("veh_step")[tick:stop, :, 7]) > .5,
+                continuity=continuity[tick - start:].copy(),
+                action_timeline=result["action_timeline"])
             # Window-bound switching providers and hygiene-directed plans do not
             # certify pre-window commands. Keep their age unknown, fail closed.
             prefix = None

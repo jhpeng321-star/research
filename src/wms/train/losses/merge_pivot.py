@@ -144,6 +144,39 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
     on-policy controller untouched. All present scene vehicles, including CAVs,
     remain neighbors; supervision masks are applied only by the likelihood.
     """
+    scenes = getattr(inp, "merge_pivot_scene", None)
+    if scenes is not None:
+        rows = []
+        for b, scene in enumerate(scenes):
+            values = vars(inp).copy()
+            for key in ("states", "present", "is_cav", "hist", "hist_mask",
+                        "observed_hist", "observed_hist_mask", "controller_id"):
+                val = values.get(key)
+                values[key] = None if val is None else val[b:b + 1]
+            values["merge_pivot_scene"] = None
+            if scene is not None:
+                for key in ("states", "present", "is_cav", "continuity"):
+                    val = torch.as_tensor(scene[key], device=inp.states.device).unsqueeze(0)
+                    pad = inp.states.shape[2] - val.shape[2]
+                    if pad:
+                        val = torch.nn.functional.pad(val, (0, 0, 0, pad) if key == "states"
+                                                      else (0, pad))
+                    values[key] = val
+                values["action_timeline"] = {
+                    key: (float(val) if key == "control_dt_s" else
+                          torch.as_tensor(val, device=inp.states.device).unsqueeze(0))
+                    for key, val in scene["action_timeline"].items()}
+                for key, val in values["action_timeline"].items():
+                    if torch.is_tensor(val) and val.shape[-1] < inp.states.shape[2]:
+                        values["action_timeline"][key] = torch.nn.functional.pad(
+                            val, (0, inp.states.shape[2] - val.shape[-1]))
+            elif inp.action_timeline is not None:
+                values["action_timeline"] = {
+                    key: val if key == "control_dt_s" else val[b:b + 1]
+                    for key, val in inp.action_timeline.items()}
+            rows.append(build_recorded_geometry(model, SimpleNamespace(**values), targets))
+        return {key: torch.cat([row[key] for row in rows]) for key in rows[0]}
+
     from wms.model import cav as cav_motion
     from wms.model.controllers import DIRECT_ID
     from wms.model.history import history_step_features, initial_history, push_history
@@ -159,6 +192,9 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
     lane_age = None
     rows = []
     for i in range(targets.n_steps):
+        progress = getattr(inp, "replay_progress", None)
+        if progress is not None and i % 500 == 0:
+            progress(i, targets.n_steps)
         kin, present = inp.states[:, i], inp.present[:, i]
         continuity = getattr(inp, "continuity", None)
         fresh = None if i == 0 or continuity is None else ~continuity[:, i - 1].bool()
@@ -349,45 +385,54 @@ def build_pre_window_history(model, inp, cfg: MergePivotConfig) -> list[Optional
                                  observed_hist_mask=observed_mask, action_timeline=timeline,
                                  controller_id=None)
         geo = build_recorded_geometry(model, source, SimpleNamespace(n_steps=h))
-        lane = rec[..., 1:4].argmax(-1)
-        lane_valid = rec[..., 1:4].sum(-1) > 0
-        pre_risk = (present & lane_valid & (lane == cfg.merge_lane)
-                    & (rec[..., 0] >= cfg.zone_s0_m) & (rec[..., 0] <= cfg.zone_s1_m))
-        risk = geo["ramp"] | pre_risk[:, :-1]
-        event = (present[:, :-1] & present[:, 1:] & cont
-                 & (lane[:, :-1] == cfg.merge_lane) & (lane[:, 1:] == cfg.target_lane))
-        scene_ok = ((~present | (torch.isfinite(rec).all(-1) & lane_valid)).all(-1))
-        seen = torch.zeros_like(present[:, 0])
-        known, terminal = seen.clone(), seen.clone()
-        masks = []
-        for i in range(h):
-            same = torch.zeros_like(seen) if i == 0 else (
-                cont[:, i - 1] & present[:, i - 1] & present[:, i])
-            seen, known, terminal = (val & same for val in (seen, known, terminal))
-            born = risk[:, i] & ~seen & ~terminal
-            outside = ~pre_risk[:, i]
-            if i:
-                outside = outside | (same & ~pre_risk[:, i - 1] & lane_valid[:, i - 1])
-            known = torch.where(born, outside, known)
-            seen = seen | born
-            terminal = terminal | (seen & ~risk[:, i])
-            known = known & (~risk[:, i] | scene_ok[:, i, None])
-            masks.append(seen & ~terminal & risk[:, i] & geo["eligible"][:, i])
-            terminal = terminal | event[:, i]
-        # Entry can occur in the recorded t0 row even when the final frozen
-        # pre-window substep did not yet reach risk. Its prior max is then -inf.
-        fresh_entry = (~seen & ~pre_risk[:, -2] & lane_valid[:, -2]
-                       & scene_ok[:, -2, None])
-        certified = (((seen & known & ~terminal) | fresh_entry) & cont[:, -1] & present[:, -1]
-                     & present[:, -2] & pre_risk[:, -1] & scene_ok[:, -1, None])
-        # Earlier occupants of a reused slot must never supply this identity's max.
-        same_to_t0 = present[:, -1].clone()
-        for i in range(h - 1, -1, -1):
-            same_to_t0 = same_to_t0 & cont[:, i] & present[:, i]
-            masks[i] = masks[i] & same_to_t0
-        result.append(dict(geometry=geo, history_mask=torch.stack(masks, 1),
-                           certified=certified, n_steps=h))
+        result.append(certify_pre_window(rec, present, cont, geo, cfg))
     return result
+
+
+def certify_pre_window(rec, present, cont, geo, cfg):
+    """Certify a causal prefix; also usable with a once-replayed audit episode.
+
+    The last recorded row is the t0 anchor. Geometry ends strictly before it.
+    """
+    h = rec.shape[1] - 1
+    lane = rec[..., 1:4].argmax(-1)
+    lane_valid = rec[..., 1:4].sum(-1) > 0
+    pre_risk = (present & lane_valid & (lane == cfg.merge_lane)
+                & (rec[..., 0] >= cfg.zone_s0_m) & (rec[..., 0] <= cfg.zone_s1_m))
+    risk = geo["ramp"] | pre_risk[:, :-1]
+    event = (present[:, :-1] & present[:, 1:] & cont
+             & (lane[:, :-1] == cfg.merge_lane) & (lane[:, 1:] == cfg.target_lane))
+    scene_ok = ((~present | (torch.isfinite(rec).all(-1) & lane_valid)).all(-1))
+    seen = torch.zeros_like(present[:, 0])
+    known, terminal = seen.clone(), seen.clone()
+    masks = []
+    for i in range(h):
+        same = torch.zeros_like(seen) if i == 0 else (
+            cont[:, i - 1] & present[:, i - 1] & present[:, i])
+        seen, known, terminal = (val & same for val in (seen, known, terminal))
+        born = risk[:, i] & ~seen & ~terminal
+        outside = ~pre_risk[:, i]
+        if i:
+            outside = outside | (same & ~pre_risk[:, i - 1] & lane_valid[:, i - 1])
+        known = torch.where(born, outside, known)
+        seen = seen | born
+        terminal = terminal | (seen & ~risk[:, i])
+        known = known & (~risk[:, i] | scene_ok[:, i, None])
+        masks.append(seen & ~terminal & risk[:, i] & geo["eligible"][:, i])
+        terminal = terminal | event[:, i]
+    # Entry can occur in the recorded t0 row even when the final frozen
+    # pre-window substep did not yet reach risk. Its prior max is then -inf.
+    fresh_entry = (~seen & ~pre_risk[:, -2] & lane_valid[:, -2]
+                   & scene_ok[:, -2, None])
+    certified = (((seen & known & ~terminal) | fresh_entry) & cont[:, -1] & present[:, -1]
+                 & present[:, -2] & pre_risk[:, -1] & scene_ok[:, -1, None])
+    # Earlier occupants of a reused slot must never supply this identity's max.
+    same_to_t0 = present[:, -1].clone()
+    for i in range(h - 1, -1, -1):
+        same_to_t0 = same_to_t0 & cont[:, i] & present[:, i]
+        masks[i] = masks[i] & same_to_t0
+    return dict(geometry=geo, history_mask=torch.stack(masks, 1),
+                certified=certified, n_steps=h)
 
 
 def pre_window_maximum(model, histories: list, like: Tensor) -> Tensor:
@@ -577,7 +622,12 @@ class MergePivotTerm(LossTerm):
             cav = ctx.targets.is_cav[:, ctx.c0:ctx.c1, :k].bool()
             moved[..., 0] = torch.where(cav, pred["positions"][..., :k], moved[..., 0])
             moved[..., 4] = torch.where(cav, pred["speeds"][..., :k], moved[..., 4])
-            if hasattr(prep["model"], "pivot_decision_geometry"):
+            if "merge_pivot_geometry_gap_f" in pred:
+                # Captured before commits, using actual rollout lengths and ALL
+                # present neighbours (including entrant padding), not target metadata.
+                p = {key: pred["merge_pivot_geometry_" + key][..., :k]
+                     for key in ("gap_f", "gap_l", "v_f", "v_l", "has_f", "has_l")}
+            elif hasattr(prep["model"], "pivot_decision_geometry"):
                 from ..inputs import state_from_kin
 
                 b, t = kin.shape[:2]

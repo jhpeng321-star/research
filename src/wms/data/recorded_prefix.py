@@ -9,6 +9,26 @@ from __future__ import annotations
 import numpy as np
 
 
+def causal_scene(states: np.ndarray, present: np.ndarray, continuity: np.ndarray) -> np.ndarray:
+    """Carry only a same-identity observed lane across internal-junction rows.
+
+    The recorder already holds the last route-projected front position on these
+    rows. Keep that observation verbatim: retrospective interpolation would use
+    future positions, and extrapolation would invent an unobserved projection.
+    A junction birth without a prior lane stays unobserved (and vetoed).
+    """
+    out = np.asarray(states, np.float32).copy()
+    last = np.zeros((out.shape[1], 3), np.float32)
+    for t in range(len(out)):
+        if t:
+            last *= (continuity[t - 1] & present[t - 1] & present[t])[:, None]
+        on_lane = out[t, :, 1:4].sum(-1) > 0
+        last = np.where((present[t] & on_lane)[:, None], out[t, :, 1:4], last)
+        out[t, :, 1:4] = np.where((present[t] & ~on_lane)[:, None], last,
+                                         out[t, :, 1:4])
+    return out
+
+
 def recorded_prefix(corpus, tick: int, *, cav_array: str = "veh_step") -> dict:
     """Read only this run's recorded observations through t0 (no outcome arrays)."""
     bounds = corpus.run_bounds(tick)
@@ -22,6 +42,7 @@ def recorded_prefix(corpus, tick: int, *, cav_array: str = "veh_step") -> dict:
     cav = (np.asarray(corpus.array("veh_step")[lo:tick + 1, :, 7]) > .5
            if cav_array == "veh_step" else
            np.asarray(corpus.array(cav_array)[lo:tick + 1], bool))
+    states = causal_scene(states, present, continuity)
     return dict(states=states, present=present, is_cav=cav & present,
                 **{"continue": continuity})
 

@@ -128,19 +128,34 @@ def geometry(kin: Tensor, present: Tensor, physics,
         physical = physical & decision_mask.bool()
     # Current-action immutable CAV insertions are a physical veto, but never
     # change PRE-change target-neighbor features.
+    incoming_overlap = torch.zeros_like(overlap)
+    incoming = torch.zeros_like(intersects)
     if fixed_target is not None:
-        incoming_overlap = (intersects & fixed_target.bool().unsqueeze(-2)
-                            & not_self).any(-1)
+        incoming = intersects & fixed_target.bool().unsqueeze(-2) & not_self
+        incoming_overlap = incoming.any(-1)
         physical = physical & ~incoming_overlap
     # Allocate simultaneous opportunities BEFORE willingness/latent draws. Exact
     # interval reservations are deterministic and independent of z, preserving a
     # scalar exact first-passage law conditional on the supplied scene. Arbitration
     # depending on competing z AFTER crossing would require a joint likelihood.
     reserved = torch.zeros_like(physical)
-    for i in range(k):
+    # Only potential entrants can reserve an interval. Preserve slot priority
+    # exactly while avoiding K tiny kernels for mostly-mainline recorded scenes.
+    slots = torch.nonzero(physical.reshape(-1, k).any(0)).flatten().tolist() if k else []
+    for i in slots:
         blocked = (intersects[..., i, :] & reserved).any(-1)
         reserved[..., i] = physical[..., i] & ~blocked
-    out = {"v": v, "ramp": ramp, "overlap": overlap,
+    blocker = (candidates & intersects)
+    blocker_index = (blocker.long().argmax(-1) if k else
+                     torch.zeros_like(s, dtype=torch.long))
+    fixed_index = incoming.long().argmax(-1) if k else torch.zeros_like(blocker_index)
+    out = {"v": v, "s": s, "length": length, "lane": lane, "pre_target": target,
+           "scene_valid": scene_valid.expand_as(present),
+           "overlap_index": torch.where(overlap, blocker_index, -torch.ones_like(blocker_index)),
+           "fixed_overlap_index": torch.where(incoming_overlap, fixed_index,
+                                                -torch.ones_like(fixed_index)),
+           "fixed_overlap": incoming_overlap,
+           "ramp": ramp, "overlap": overlap,
            "physical_eligible": physical, "reservation_veto": physical & ~reserved,
            "eligible": reserved}
     for side, mask, distance in (
@@ -148,7 +163,8 @@ def geometry(kin: Tensor, present: Tensor, physics,
             ("l", candidates & (ds <= 0.0), -ds)):
         if k == 0:
             out.update({f"gap_{side}": s.clone(), f"v_{side}": v.clone(),
-                        f"has_{side}": present.clone()})
+                        f"has_{side}": present.clone(),
+                        f"index_{side}": torch.zeros_like(s, dtype=torch.long)})
             continue
         dist, index = torch.where(mask, distance, torch.full_like(ds, torch.inf)).min(-1)
         has = torch.isfinite(dist)
@@ -158,6 +174,7 @@ def geometry(kin: Tensor, present: Tensor, physics,
         out[f"gap_{side}"] = torch.where(has, gap, torch.zeros_like(gap))
         out[f"v_{side}"] = torch.where(has, v.gather(-1, index), torch.zeros_like(v))
         out[f"has_{side}"] = has
+        out[f"index_{side}"] = torch.where(has, index, -torch.ones_like(index))
     return out
 
 

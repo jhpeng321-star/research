@@ -652,7 +652,7 @@ class C4WindowLoader:
         alive = self.alive(ep, tick)
         road = None
         on_road = lane >= 0
-        if self.junction_fix != "off":
+        if self.junction_fix != "off" and not self.merge_pivot_history:
             teacher, alive, road = self._fix_junctions(ep, int(tick), teacher, alive)
         states = _states_from_teacher(teacher, kin[0, :, 6])
         present0 = alive[0]
@@ -687,7 +687,26 @@ class C4WindowLoader:
                 ep, tick, present0, history_s=self.history_s,
                 history_stride_s=self.history_stride_s)
         if self.merge_pivot_history:
-            record["merge_pivot_prefix"] = self.recorded_prefix(ep, int(tick))
+            from wms.data.recorded_prefix import causal_scene
+
+            prefix = self.recorded_prefix(ep, int(tick))
+            # A full-scene observation is distinct from the t0 supervision cohort.
+            # Later arrivals/reused slots keep CURRENT length, identity and owner.
+            full_present = np.asarray(ep.array("veh_mask")[:tick + h + 1], bool)
+            full_cont = np.asarray(ep.array("target_mask")[:tick + h], bool)
+            full = causal_scene(ep.array("veh_kin")[:tick + h + 1], full_present, full_cont)
+            current = full[tick:tick + h + 1]
+            record["states"] = current.copy()
+            record["cav_teacher"] = np.stack((current[..., 0],
+                np.where(current[..., 1:4].sum(-1) > 0, current[..., 1:4].argmax(-1), -1),
+                current[..., 4], current[..., 5]), -1).astype(np.float32)
+            record["merge_pivot_prefix"] = prefix
+            scene_present = full_present[tick:tick + h + 1].copy()
+            record["merge_pivot_scene"] = dict(
+                states=current.copy(), present=scene_present,
+                is_cav=np.asarray(ep.array("is_cav")[tick:tick + h + 1], bool).copy(),
+                continuity=full_cont[tick:tick + h].copy(),
+                action_timeline=self.timeline(ep, tick, scene_present))
         return record
 
 

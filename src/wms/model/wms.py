@@ -71,7 +71,9 @@ _MERGE_CORE_LOG_KEYS = (
 _MERGE_PIVOT_LOG_KEYS = tuple("merge_pivot_" + name for name in (
     "c", "eligible", "physical_eligible", "reservation_veto", "cross", "committed",
     "cdf", "event_mass", "st",
-    "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau"))
+    "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau")) + tuple(
+        "merge_pivot_geometry_" + name for name in
+        ("gap_f", "gap_l", "v_f", "v_l", "has_f", "has_l"))
 _MERGE_PIVOT_STATE_KEYS = ("z", "maximum", "present", "identity", "terminal", "started")
 
 
@@ -1589,6 +1591,8 @@ class WmSModel(nn.Module):
             out["merge_pivot_" + key] = updated[key]
         for key, value in params.items():
             out["merge_pivot_" + key] = value
+        for key in ("gap_f", "gap_l", "v_f", "v_l", "has_f", "has_l"):
+            out["merge_pivot_geometry_" + key] = geo[key]
         return final
 
     def _merge_core_forward(self, kin: Tensor, present: Tensor,
@@ -1859,6 +1863,8 @@ class WmSModel(nn.Module):
         callback_teacher = None
         if cav_controller is not None:
             callback_state = {**state, "physics_step_index": k_steps}
+            if self.merge_pivot is not None:
+                callback_state["merge_pivot_native_accel"] = out["accel_mps2"]
             if exec_cap is not None:
                 callback_state[cav_motion.EXEC_CAP_KEY] = exec_cap
             if action_id is not None:
