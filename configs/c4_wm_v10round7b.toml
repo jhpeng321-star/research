@@ -3,12 +3,41 @@
 # < 0.3 % (s0 2.161 -> 2.164, temperature 1.278 -> 1.280, alpha sigma 0.128 -> 0.120) and the rollout early-merge bias
 # (-7.5 s) was untouched. Single change: lr_scale 100 on the core's physical scalars (lr 5e-3 / 3e-3) and 20 on its
 # small heads and bounded residual scale. Everything else identical to round 7 (same init: round 2 stage240).
+# (extends round 2 directly with round 7's settings copied: the loader caps the extends chain depth.)
 schema_version = 2
 name = "WM-S-C4-V10ROUND7B"
-extends = "c4_wm_v10round7.toml"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "secure_gap"
+
+[loss.merge_core]
+weight = 0.2
+tf_weight = 0.8
+yield_weight = 0.4
+n_quad = 8
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
 
 [optim.lr_scale]
-"lane_v5" = 0.05
+"lane_v5" = 0.05            # near-frozen mainline lane head (freezing breaks the unroll-level lane-flow term: no grad)
 "driver_encoder" = 0.3
 "driver_updater" = 0.3
 "residual_net" = 0.5
@@ -23,6 +52,9 @@ extends = "c4_wm_v10round7.toml"
 "merge_core.alpha_log_sigma_raw" = 100.0
 "merge_core.alpha_bias" = 100.0
 "merge_core.yield_scale_raw" = 100.0
+
+[selection]
+val_max_windows = 256
 
 [runtime]
 out_dir = "runs/active/c4_wm_v10_round7b"
