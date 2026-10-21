@@ -71,8 +71,9 @@ _MERGE_CORE_LOG_KEYS = (
 _MERGE_PIVOT_LOG_KEYS = tuple("merge_pivot_" + name for name in (
     "c", "eligible", "physical_eligible", "reservation_veto", "cross", "committed",
     "cdf", "event_mass", "st",
-    "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau"))
-_MERGE_PIVOT_STATE_KEYS = ("z", "maximum", "present", "identity", "terminal", "started")
+    "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau", "w"))
+_MERGE_PIVOT_STATE_KEYS = ("z", "maximum", "present", "identity", "terminal", "started",
+                           "epsilon", "rng_seed", "rng_generation", "decision_step", "history", "logS")
 
 
 @dataclass
@@ -374,7 +375,8 @@ class WmSModel(nn.Module):
                 # Retain round-8 tensors for exact checkpoint transfer, but never execute
                 # their anticipation/residual/yield/latent heads in the A-only pivot.
                 self.merge_core.requires_grad_(False)
-                self.merge_pivot = pivot.FirstPassageNet()
+                self.merge_pivot = pivot.FirstPassageNet(
+                    hybrid=spec.merge_passage_law == "hybrid", w_init=spec.merge_w_init)
         self.merge_st_width = float(spec.merge_st_width)
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
@@ -397,6 +399,16 @@ class WmSModel(nn.Module):
             if raw is not None:
                 value = raw.clamp(-4.0, 2.0).exp() * math.sqrt(3.0) / math.pi
                 state_dict["merge_pivot.tau_raw"] = value + torch.log(-torch.expm1(-value))
+        if (self.merge_pivot is not None and self.merge_pivot.hybrid
+                and "merge_pivot.w_raw" not in state_dict):
+            state_dict = state_dict.copy()
+            state_dict["merge_pivot.w_raw"] = self.merge_pivot.w_raw.detach().clone()
+        if (self.merge_pivot is not None and not self.merge_pivot.hybrid
+                and "merge_pivot.w_raw" in state_dict):
+            # Explicit strict comparison of a hybrid fit reuses its seven
+            # boundary/heterogeneity tensors; w has no role in the strict law.
+            state_dict = state_dict.copy()
+            state_dict.pop("merge_pivot.w_raw")
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -1542,8 +1554,15 @@ class WmSModel(nn.Module):
         carry = {key: state["merge_pivot_" + key] for key in _MERGE_PIVOT_STATE_KEYS
                  if "merge_pivot_" + key in state}
         identity = state.get("vehicle_id", state.get("identity"))
-        updated = pivot.update_state(c, params["tau"], geo["ramp"] & own, present,
-                                      carry=carry, identity=identity, uniform=uniform)
+        # Integrated rollout diagnostics are not the backward estimator. The
+        # likelihood term rebuilds its own graph; hard lane credit uses ST below.
+        hybrid = self.merge_pivot.hybrid
+        updated = pivot.update_state(c.detach() if hybrid else c,
+                                      params["tau"].detach() if hybrid else params["tau"],
+                                      geo["ramp"] & own, present,
+                                      carry=carry, identity=identity, uniform=uniform,
+                                      w=params["w"].detach() if hybrid else None,
+                                      quadrature_order=self.spec.merge_quadrature_order)
         crossing = updated["cross"] & ramp
         # Analytically scored, pre-willingness opportunities own their intervals.
         # Competing learned mainline insertions cannot make E depend on other z.
@@ -1562,7 +1581,8 @@ class WmSModel(nn.Module):
         if bool((crossing & ~committed).any()):
             raise RuntimeError("first_passage reservation/commit inconsistency")
         active = geo["eligible"] & ~updated["terminal"]
-        st = pivot.hard_st(c, params["tau"], updated["z"], self.merge_st_width, active)
+        st = pivot.hard_st(c, params["tau"], updated["z"], self.merge_st_width, active,
+                           w=params.get("w"), epsilon=updated.get("epsilon"))
         updated["terminal"] = updated["terminal"] | committed
         hard_weights = torch.nn.functional.one_hot(final.clamp_min(0), 3).to(c.dtype)
         direction = c.new_zeros(3)
@@ -1585,8 +1605,12 @@ class WmSModel(nn.Module):
                     "merge_pivot_st": st, "merge_pivot_cdf": -torch.expm1(
                         pivot.log_survival(updated["maximum"], params["tau"])),
                     "merge_pivot_event_mass": log_mass.exp()})
+        if self.merge_pivot.hybrid:
+            out["merge_pivot_cdf"] = updated["cdf"]
+            out["merge_pivot_event_mass"] = updated["event_mass"]
         for key in _MERGE_PIVOT_STATE_KEYS:
-            out["merge_pivot_" + key] = updated[key]
+            if key in updated:
+                out["merge_pivot_" + key] = updated[key]
         for key, value in params.items():
             out["merge_pivot_" + key] = value
         return final
@@ -2160,7 +2184,8 @@ class WmSModel(nn.Module):
                 current["merge_core_present"] = out["merge_core_present"].detach()
             if "merge_pivot_z" in out:
                 for key in _MERGE_PIVOT_STATE_KEYS:
-                    current["merge_pivot_" + key] = out["merge_pivot_" + key].detach()
+                    if "merge_pivot_" + key in out:
+                        current["merge_pivot_" + key] = out["merge_pivot_" + key].detach()
                 current["merge_pivot_lane_weights"] = out["merge_pivot_lane_weights"]
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(

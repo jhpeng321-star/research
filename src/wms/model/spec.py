@@ -111,6 +111,10 @@ class ModelSpec:
     # merge decision by a persistent learned gap-acceptance threshold (first passage).
     merge_decision: str = "hazard"
     merge_st_width: float = 1.0
+    # R9 first-passage law: strict preserves the legacy path; hybrid learns a width.
+    merge_passage_law: str = "strict"
+    merge_w_init: float = 1.0
+    merge_quadrature_order: int = 32
     # SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's
     # direct per-step acceleration with a learned low-pass residual state r_t carried in
     # the rollout state (see wms.model.temporal_slow).  New parameters are created only in
@@ -200,6 +204,15 @@ class ModelSpec:
             raise ValueError(f"merge_decision must be one of {MERGE_DECISIONS}")
         if not math.isfinite(self.merge_st_width) or self.merge_st_width <= 0.0:
             raise ValueError("merge_st_width must be finite and positive")
+        if self.merge_passage_law not in ("strict", "hybrid"):
+            raise ValueError("merge_passage_law must be strict or hybrid")
+        if isinstance(self.merge_w_init, bool) or not math.isfinite(float(self.merge_w_init)) \
+                or float(self.merge_w_init) <= 0.0:
+            raise ValueError("merge_w_init must be finite and positive")
+        if not isinstance(self.merge_quadrature_order, int) \
+                or isinstance(self.merge_quadrature_order, bool) \
+                or self.merge_quadrature_order < 2:
+            raise ValueError("merge_quadrature_order must be an integer >= 2")
         if self.merge_decision == "first_passage" and self.merge_negotiation:
             raise ValueError("first_passage requires B merge_negotiation off")
         if self.merge_decision != "hazard" and self.lane_model != "hazard_v5":

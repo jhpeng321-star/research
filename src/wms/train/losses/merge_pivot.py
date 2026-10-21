@@ -1,6 +1,6 @@
-"""P1--P3 exact persistent-logistic likelihood; no hazard or quadrature path.
+"""Persistent-logistic strict and F1 hybrid supplied-path likelihoods.
 
-Recorded geometry is a frozen causal longitudinal replay. Only the seven boundary
+Recorded geometry is a frozen causal longitudinal replay. Only the boundary
 parameters are differentiated on that path. Chunk contributions are conditional
 log-survival increments (or the conditional event mass), and telescope exactly.
 An unobserved risk-entry age is enumerated and masked, never assigned a prior.
@@ -14,7 +14,8 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor
 
-from wms.model.merge_pivot import advance_longitudinal, geometry, log_event_mass, log_survival
+from wms.model.merge_pivot import (advance_longitudinal, geometry, hybrid_log_masses,
+                                  log_event_mass, log_survival)
 
 from .base import LossContext, LossTerm, TermValue, UnrollTargets
 
@@ -29,6 +30,9 @@ class MergePivotConfig:
     z_tf: float = 1.0
     z_on: float = 1.0
     tau_reg_weight: float = 0.0
+    w_reg_weight: float = 0.0
+    passage_law: str = "strict"
+    quadrature_order: int = 32
     pos_tol_m: float = 25.0
     speed_tol_mps: float = 5.0
     gap_tol_m: float = 20.0
@@ -40,14 +44,16 @@ class MergePivotConfig:
 
     @property
     def enabled(self) -> bool:
-        return bool(self.weight or self.tf_weight or self.metrics or self.tau_reg_weight)
+        return bool(self.weight or self.tf_weight or self.metrics or self.tau_reg_weight or self.w_reg_weight)
 
 
 def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
                 known_entry: Tensor, reset: Tensor, eligible: Optional[Tensor] = None,
                 support: Optional[Tensor] = None, stop: Optional[Tensor] = None,
-                carry: Optional[Mapping[str, Tensor]] = None,
-                initial_maximum: Optional[Tensor] = None) -> tuple[Tensor, dict, dict]:
+                 carry: Optional[Mapping[str, Tensor]] = None,
+                 initial_maximum: Optional[Tensor] = None,
+                 w: Optional[Tensor] = None, quadrature_order: int = 32,
+                 initial_history: Optional[Tensor] = None) -> tuple[Tensor, dict, dict]:
     """Exact sequence NLL on [B,T,K], with absorbing exits/support/event lifecycle.
 
     ``known_entry`` marks births whose causal risk history is complete. An explicit
@@ -58,6 +64,11 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
     """
     shape = c[:, 0].shape
     carry = {} if carry is None else carry
+    if w is not None and initial_maximum is not None:
+        raise ValueError("hybrid survivor initialization needs causal history, not a strict maximum")
+    history = carry.get("history", c.new_empty((*shape, 0)))
+    if initial_history is not None and not carry:
+        history = initial_history.to(c)
     maximum = carry.get("maximum", torch.full_like(c[:, 0], -torch.inf))
     if initial_maximum is not None and not carry:
         maximum = torch.where(torch.isnan(initial_maximum), torch.full_like(initial_maximum, -torch.inf),
@@ -70,6 +81,33 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
     # logS with the CURRENT tau graph, rather than losing its denominator gradient
     # when a TBPTT carry was detached. The saved logS is also exposed to callers.
     previous_logS = log_survival(maximum, tau)
+    integrated = None
+    if w is not None:
+        previous_logS = (hybrid_log_masses(history, tau, w, quadrature_order)[1][..., -1]
+                         if history.shape[-1] else torch.zeros_like(c[:, 0], dtype=torch.float64))
+        # The ordinary no-identity-reset chunk needs ONE integration of its whole
+        # fixed path, not a growing quadratic grid rebuilt at every tick. A reset
+        # inside a chunk uses the general streaming fallback below.
+        if not bool(reset[:, 1:].any()):
+            prefix = torch.where(reset[:, 0].bool().unsqueeze(-1),
+                                 torch.full_like(history, -torch.inf), history)
+            seen = started & ~reset[:, 0].bool()
+            ended = terminal & ~reset[:, 0].bool()
+            rows = []
+            for j in range(c.shape[1]):
+                seen = seen | (risk[:, j].bool() & ~ended)
+                ended = ended | (seen & ~risk[:, j].bool())
+                if support is not None:
+                    ended = ended | (seen & ~support[:, j].bool())
+                active = seen & ~ended & risk[:, j].bool()
+                feasible = eligible[:, j].bool() if eligible is not None else c[:, j] != -torch.inf
+                current = torch.where(active & feasible, c[:, j], torch.full_like(c[:, j], -torch.inf))
+                rows.append(current)
+                ended = ended | (active & (event[:, j].bool() | (current == torch.inf)))
+                if stop is not None:
+                    ended = ended | (active & stop[:, j].bool())
+            path = torch.cat((prefix, torch.stack(rows, -1)), -1)
+            integrated = hybrid_log_masses(path, tau, w, quadrature_order)
     nll = tau.sum() * 0.0
     stats = dict(events=0, positive_mass_events=0, zero_mass_events=0, zero_survival=0, physical_fail_events=0,
                  unknown_age=0, unknown_age_events=0, births=0, exits=0,
@@ -78,11 +116,15 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
         new = reset[:, i].bool()
         maximum = torch.where(new, torch.full_like(maximum, -torch.inf), maximum)
         previous_logS = torch.where(new, torch.zeros_like(previous_logS), previous_logS)
+        if w is not None:
+            history = torch.where(new.unsqueeze(-1), torch.full_like(history, -torch.inf), history)
         started, terminal, known, doomed = (x & ~new for x in (started, terminal, known, doomed))
         born = risk[:, i].bool() & ~started & ~terminal
         is_known = known_entry[:, i].bool()
         if i == 0 and initial_maximum is not None and not carry:
             is_known = is_known | ~torch.isnan(initial_maximum)
+        if i == 0 and initial_history is not None and not carry:
+            is_known = is_known | ~torch.isnan(initial_history).any(-1)
         known = torch.where(born, is_known, known)
         stats["births"] += int(born.sum())
         stats["unknown_age"] += int((born & ~known).sum())
@@ -105,10 +147,20 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
         current = torch.where(active & feasible, c[:, i], torch.full_like(maximum, -torch.inf))
         updated = torch.maximum(maximum, current)
         next_logS = log_survival(updated, tau)
+        if w is not None:
+            history = torch.cat((history, current.unsqueeze(-1)), -1)
+            if integrated is None:
+                le, ls = hybrid_log_masses(history, tau, w, quadrature_order)
+                hybrid_event, next_logS = le[..., -1], ls[..., -1]
+            else:
+                index = path.shape[-1] - c.shape[1] + i
+                hybrid_event, next_logS = integrated[0][..., index], integrated[1][..., index]
         # No subtraction of -inf - -inf on impossible paths, even in masked branches.
         safe_den = torch.where(torch.isfinite(previous_logS), previous_logS,
                                torch.zeros_like(previous_logS))
         logp_event = log_event_mass(maximum, updated, tau) - safe_den
+        if w is not None:
+            logp_event = hybrid_event - safe_den
         logp_wait = next_logS - safe_den
         logp = torch.where(ev, logp_event, logp_wait)
         nll = nll - torch.where(used, logp, torch.zeros_like(logp)).sum()
@@ -129,6 +181,8 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
     posterior = {"maximum": maximum.detach(), "logS": previous_logS.detach(),
                  "started": started.detach(), "terminal": terminal.detach(), "known": known.detach(),
                  "doomed": doomed.detach()}
+    if w is not None:
+        posterior["history"] = history.detach()
     return nll, posterior, stats
 
 
@@ -292,11 +346,13 @@ class MergePivotTerm(LossTerm):
         model, c0, c1 = prep["model"], ctx.c0, ctx.c1
         params = model.merge_pivot.params()
         tau = params["tau"]
+        width = params.get("w")
         value = tau * 0.0
         stats = {}
         def cut(x):
             return x[:, c0:c1]
         initial = ctx.targets.prepared.get("merge_pivot_initial_maximum") if c0 == 0 else None
+        initial_history = ctx.targets.prepared.get("merge_pivot_initial_history") if c0 == 0 else None
         stats["recorded_events"] = int(cut(prep["event"]).sum())
         stats["recorded_physical_fail_events"] = int((cut(prep["event"])
                                                         & ~cut(prep["geometry"]["eligible"])).sum())
@@ -327,16 +383,26 @@ class MergePivotTerm(LossTerm):
                     maximum = torch.maximum(maximum, torch.where(
                         valid_entry, entry_max.to(maximum), torch.full_like(maximum, -torch.inf)))
                 tf_carry = {**tf_carry, "maximum": maximum}
+                if width is not None:
+                    history = torch.where(keep, prefix_c, torch.full_like(prefix_c, -torch.inf)).transpose(1, 2)
+                    entry_history = ctx.targets.prepared.get("merge_pivot_initial_history")
+                    if entry_history is not None:
+                        valid_entry = prep["last_reset"][:, c0 - 1] < 0
+                        entry_history = torch.where(valid_entry.unsqueeze(-1), entry_history.to(history),
+                                                    torch.full_like(entry_history.to(history), -torch.inf))
+                        history = torch.cat((entry_history, history), -1)
+                    tf_carry = {**tf_carry, "history": history}
             nll, prep["tf_carry"], counts = score_chunk(
                 c, tau, cut(prep["risk"]), cut(prep["event"]),
                 known_entry=cut(prep["known"]), reset=cut(prep["reset"]),
-                eligible=geo["eligible"], carry=tf_carry, initial_maximum=initial)
+                eligible=geo["eligible"], carry=tf_carry, initial_maximum=initial,
+                w=width, quadrature_order=cfg.quadrature_order, initial_history=initial_history)
             stats.update({"tf_" + key: val for key, val in counts.items()}, tf_nll=float(nll.detach()))
             if cfg.tf_weight:
                 value = value + cfg.tf_weight * nll / max(prep["n_cars"], 1) / cfg.z_tf
         if cfg.weight or cfg.metrics:
             for key in ("merge_pivot_c", "merge_pivot_eligible",
-                        *("merge_pivot_" + name for name in PARAM_NAMES)):
+                         *("merge_pivot_" + name for name in params)):
                 if key not in ctx.pred:
                     raise RuntimeError(f"first_passage rollout must emit {key}")
             c = ctx.pred["merge_pivot_c"]
@@ -347,13 +413,19 @@ class MergePivotTerm(LossTerm):
                 c, ctx.pred["merge_pivot_tau"].mean(), cut(prep["risk"]), cut(prep["event"]),
                 known_entry=cut(prep["known"]), reset=cut(prep["reset"]),
                 eligible=ctx.pred["merge_pivot_eligible"][..., :k].bool(), support=support,
-                stop=early, carry=prep["on_carry"], initial_maximum=initial)
+                stop=early, carry=prep["on_carry"], initial_maximum=initial,
+                w=ctx.pred["merge_pivot_w"].mean() if width is not None else None,
+                quadrature_order=cfg.quadrature_order, initial_history=initial_history)
             stats.update({"on_" + key: val for key, val in counts.items()}, on_nll=float(nll.detach()))
             if cfg.weight:
                 value = value + cfg.weight * nll / max(prep["n_cars"], 1) / cfg.z_on
         if cfg.tau_reg_weight:
             value = value + cfg.tau_reg_weight * tau.square() * (c1 - c0) / ctx.targets.n_steps
-        for name in PARAM_NAMES:
+        if cfg.w_reg_weight:
+            if width is None:
+                raise ValueError("w regularization requires the hybrid law")
+            value = value + cfg.w_reg_weight * width.square() * (c1 - c0) / ctx.targets.n_steps
+        for name in params:
             emitted = ctx.pred.get("merge_pivot_" + name)
             stats[name] = float((emitted.mean() if torch.is_tensor(emitted) else params[name]).detach())
         prep["stats"][c0] = stats
@@ -416,8 +488,8 @@ def merge_pivot_metrics(prep: Optional[dict], dt_s: float) -> dict:
     rows = list(prep["stats"].values())
     keys = set().union(*(row.keys() for row in rows)) if rows else set()
     out = {"merge_pivot_" + key: sum(row.get(key, 0) for row in rows)
-           for key in keys if key not in PARAM_NAMES}
-    for name in PARAM_NAMES:
+           for key in keys if key not in (*PARAM_NAMES, "w")}
+    for name in (*PARAM_NAMES, *(("w",) if "w" in keys else ())):
         out["merge_pivot_" + name] = rows[-1][name] if rows else None
     out["merge_pivot_n_cars"] = prep["n_cars"]
     out["merge_pivot_causal_cav_fallback_intervals"] = prep["causal_cav_fallback"]

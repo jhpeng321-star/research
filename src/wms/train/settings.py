@@ -363,7 +363,12 @@ class TrainSettings:
     # threshold and the integrated censored first-passage merge loss.
     merge_decision: str = "hazard"
     merge_st_width: float = 1.0
+    # R9: strict is the backward-compatible law; hybrid learns a positive passage width.
+    merge_passage_law: str = "strict"
+    merge_w_init: float = 1.0
+    merge_quadrature_order: int = 32
     merge_core_tau_reg_weight: float = 0.0
+    merge_core_w_reg_weight: float = 0.0
     merge_first_passage_weight: float = 0.0
     merge_first_passage_rank_weight: float = 0.0
     merge_first_passage_metrics: bool = False
@@ -689,8 +694,21 @@ class TrainSettings:
                  "merge_decision must be hazard, threshold, frailty, secure_gap or first_passage")
         _require(math.isfinite(self.merge_st_width) and self.merge_st_width > 0.0,
                  "merge_st_width must be finite and positive")
+        _require(self.merge_passage_law in ("strict", "hybrid"),
+                 "merge_passage_law must be strict or hybrid")
+        _require(not isinstance(self.merge_w_init, bool)
+                 and math.isfinite(float(self.merge_w_init)) and float(self.merge_w_init) > 0.0,
+                 "merge_w_init must be finite and positive")
+        _require(isinstance(self.merge_quadrature_order, int)
+                 and not isinstance(self.merge_quadrature_order, bool)
+                 and self.merge_quadrature_order >= 2,
+                 "merge_quadrature_order must be an integer >= 2")
         _require(math.isfinite(self.merge_core_tau_reg_weight) and self.merge_core_tau_reg_weight >= 0.0,
                  "merge_core_tau_reg_weight must be finite and non-negative")
+        _require(not isinstance(self.merge_core_w_reg_weight, bool)
+                 and math.isfinite(float(self.merge_core_w_reg_weight))
+                 and float(self.merge_core_w_reg_weight) >= 0.0,
+                 "merge_core_w_reg_weight must be finite and non-negative")
         if self.merge_decision == "first_passage":
             _require(self.lane_model == "hazard_v5", "first_passage requires lane_model=hazard_v5")
             _require(not self.merge_negotiation and not getattr(self, "merge_context", False)

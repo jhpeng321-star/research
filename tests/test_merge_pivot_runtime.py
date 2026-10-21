@@ -246,7 +246,7 @@ def test_draft_config_four_synthetic_updates_freeze_every_legacy_tensor():
     optimizer, report = build_optimizer(m, lr=5e-5, weight_decay=0.,
                                         freeze_prefixes=settings.freeze_prefixes,
                                         lr_scale=settings.lr_scale)
-    assert report["trainable_tensors"] == report["trainable_parameters"] == 7
+    assert report["trainable_tensors"] == report["trainable_parameters"] == 8
     assert not report["unmatched_freeze_prefixes"]
     assert cfg.model.merge_negotiation is False and cfg.loss.merge_core.yield_weight == 0
     frozen = {key: val.clone() for key, val in m.state_dict().items()
@@ -257,8 +257,9 @@ def test_draft_config_four_synthetic_updates_freeze_every_legacy_tensor():
     before = {name: p.clone() for name, p in m.merge_pivot.named_parameters()}
     for _ in range(4):
         optimizer.zero_grad(set_to_none=True)
-        loss = sum(-pivot.log_survival(m.merge_pivot(g)[:, 0],
-                                       m.merge_pivot.params()["tau"]).sum() for g in geometries)
+        loss = sum(-pivot.hybrid_log_masses(m.merge_pivot(g)[:, :1],
+                                            m.merge_pivot.params()["tau"],
+                                            m.merge_pivot.params()["w"])[1].sum() for g in geometries)
         assert torch.isfinite(loss)
         loss.backward()
         for name, p in m.merge_pivot.named_parameters():
