@@ -29,12 +29,14 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional, Sequence
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
+from .merge_context import CONTEXT_FEATURES, VALID_MASKED
 from .merge_negotiation import scatter_follower_accel
 from .merge_threshold import target_gap_configuration
 
@@ -54,6 +56,13 @@ N_YIELD_FEATURES = 7
 BIG_MARGIN = 1.0e3
 #: Last metres of the acceleration lane where a missing gap side is physically free space.
 LANE_END_FALLBACK_M = 15.0
+#: MERGE CONTEXT (R9W): modes of the context correction on the secure-gap decision.
+CONTEXT_MODES = ("off", "linear", "mlp", "gate")
+#: MERGE CONTEXT (R9W): default context inputs = every CONTEXT_FEATURES entry except
+#: ``wait_s`` (ROUND9_ADVICE_STAGE1.md Q3: wait_s is excluded from the primary candidate;
+#: it can be admitted explicitly via ``model.merge_context_features``).
+DEFAULT_CONTEXT_FEATURES: tuple[str, ...] = tuple(
+    name for name in CONTEXT_FEATURES if name != "wait_s")
 
 
 def load_init(path: Optional[str | Path] = None) -> dict[str, float]:
@@ -101,7 +110,14 @@ class MergeCoreNet(nn.Module):
     def __init__(self, input_dim: int = 0, hidden: int = 32,
                  init: Optional[dict[str, float]] = None,
                  residual_hidden: int = 32, yield_hidden: int = 32,
-                 alpha_bound: float = 4.0) -> None:
+                 alpha_bound: float = 4.0,
+                 context_mode: str = "off",
+                 context_features: Optional[Sequence[str]] = None,
+                 context_bound_m: float = 2.0,
+                 context_hidden: int = 16,
+                 context_gate_init_logit: float = 4.0,
+                 context_norm_mean: Optional[Sequence[float]] = None,
+                 context_norm_std: Optional[Sequence[float]] = None) -> None:
         super().__init__()
         if input_dim < 0:
             raise ValueError("merge core input_dim must be >= 0")
@@ -141,6 +157,87 @@ class MergeCoreNet(nn.Module):
         for head in (self.residual_head, self.yield_head):
             nn.init.zeros_(head[-1].weight)
             nn.init.zeros_(head[-1].bias)
+        # MERGE CONTEXT (R9W): context correction on the secure-gap decision.  Every module
+        # and buffer is created AFTER the round-8 parameters, so an 'off' core has exactly
+        # the round-8 state-dict keys and every checkpoint key order is unchanged.  The
+        # linear / mlp corrections are bounded signed margin deltas (|delta| <= bound) with
+        # zero-initialised output weights (exact round-8 behaviour at init); the gate
+        # multiplies the hazard by sigmoid(raw) with the output bias initialised to
+        # ``context_gate_init_logit`` (g(0) ~ sigmoid(4) ~ 0.982: an explicit, REPORTED
+        # initialisation drift, not an exact round-8 reconstruction).
+        self._init_context(context_mode, context_features, context_bound_m,
+                           int(context_hidden), float(context_gate_init_logit),
+                           context_norm_mean, context_norm_std)
+
+    def _init_context(self, mode: str, features: Optional[Sequence[str]], bound: float,
+                      hidden: int, gate_logit: float,
+                      mean: Optional[Sequence[float]],
+                      std: Optional[Sequence[float]]) -> None:
+        if mode not in CONTEXT_MODES:
+            raise ValueError(f"merge context mode must be one of {CONTEXT_MODES}")
+        if not (math.isfinite(bound) and bound > 0.0):
+            raise ValueError("merge context bound must be finite and positive")
+        if hidden < 1:
+            raise ValueError("merge context hidden width must be >= 1")
+        if not math.isfinite(gate_logit):
+            raise ValueError("merge context gate init logit must be finite")
+        self.context_mode = str(mode)
+        self.context_bound_m = float(bound)
+        self.context_gate_init_logit = float(gate_logit)
+        self.context_features: tuple[str, ...] = ()
+        self.context_mean = None
+        self.context_std = None
+        self.context_linear = None
+        self.context_mlp = None
+        self.context_gate = None
+        if mode == "off":
+            return
+        names = tuple(DEFAULT_CONTEXT_FEATURES if features is None else features)
+        if not names:
+            raise ValueError("merge context features must not be empty when the mode is on")
+        unknown = [name for name in names if name not in CONTEXT_FEATURES]
+        if unknown:
+            raise ValueError(f"unknown merge context features: {unknown}")
+        if len(set(names)) != len(names):
+            raise ValueError("merge context features must not repeat")
+        n_mean = torch.zeros(len(names)) if mean is None else torch.tensor(
+            [float(x) for x in mean], dtype=torch.float32)
+        n_std = torch.ones(len(names)) if std is None else torch.tensor(
+            [float(x) for x in std], dtype=torch.float32)
+        if tuple(n_mean.shape) != (len(names),) or tuple(n_std.shape) != (len(names),):
+            raise ValueError("merge context norm mean/std need one value per feature")
+        if not (torch.isfinite(n_mean).all() and torch.isfinite(n_std).all()
+                and (n_std > 0.0).all()):
+            raise ValueError("merge context norm std must be finite and positive")
+        self.context_features = names
+        # Normalisation statistics (fit-world values supplied later via config; defaults
+        # mean 0 / std 1 = raw physical units).  Buffers ride the state dict so a trained
+        # core carries its own statistics.
+        self.register_buffer("context_mean_buf", n_mean.clone())
+        self.register_buffer("context_std_buf", n_std.clone())
+        n_in = self.context_input_dim
+        if mode == "linear":
+            self.context_linear = nn.Linear(n_in, 1, bias=False)
+            nn.init.zeros_(self.context_linear.weight)
+        elif mode == "mlp":
+            self.context_mlp = nn.Sequential(
+                nn.Linear(n_in, hidden), nn.GELU(), nn.Linear(hidden, 1))
+            nn.init.zeros_(self.context_mlp[-1].weight)
+            nn.init.zeros_(self.context_mlp[-1].bias)
+        else:
+            self.context_gate = nn.Sequential(
+                nn.Linear(n_in, hidden), nn.GELU(), nn.Linear(hidden, 1))
+            nn.init.zeros_(self.context_gate[-1].weight)
+            with torch.no_grad():
+                self.context_gate[-1].bias.fill_(self.context_gate_init_logit)
+
+    @property
+    def context_input_dim(self) -> int:
+        """Number of context inputs: selected features + their ``_valid`` masks."""
+        if self.context_mode == "off":
+            return 0
+        return len(self.context_features) + sum(
+            1 for name in self.context_features if name in VALID_MASKED)
 
     # ------------------------------------------------------------------ parameters
     def params(self) -> dict[str, Tensor]:
@@ -193,6 +290,75 @@ class MergeCoreNet(nn.Module):
         feats = torch.nan_to_num(feats, nan=0.0).clamp(-5.0, 5.0)
         raw = self.yield_head(feats)[..., 0]
         return -_softplus(self.yield_scale_raw) * torch.tanh(raw / 2.0) * near
+
+    # ------------------------------------------------------------- context (R9W)
+    def context_input(self, features: Mapping[str, Tensor]) -> Tensor:
+        """Normalised context input vector (last axis) from tracker/recorded features.
+
+        Selected features are normalised as ``(value - mean) / std`` (config-supplied
+        fit-world statistics; defaults 0 / 1 = raw physical units); the ``_valid`` masks of
+        the selected maskable features enter as extra 0/1 inputs.  Works for per-step
+        ``[B, K]`` and recorded ``[B, N, K]`` feature dictionaries alike.
+        """
+        if self.context_mode == "off":
+            raise RuntimeError("context_input needs a merge context mode != 'off'")
+        pieces = []
+        for i, name in enumerate(self.context_features):
+            value = torch.as_tensor(features[name]).to(self.context_mean_buf.dtype)
+            value = (value - self.context_mean_buf[i]) / self.context_std_buf[i]
+            pieces.append(value)
+        for name in self.context_features:
+            if name in VALID_MASKED:
+                mask = torch.as_tensor(features[f"{name}_valid"]).to(
+                    self.context_mean_buf.dtype)
+                pieces.append(mask)
+        stacked = torch.stack(pieces, -1)
+        return torch.nan_to_num(stacked, nan=0.0, posinf=1.0e4, neginf=-1.0e4)
+
+    def context_delta(self, features: Optional[Mapping[str, Tensor]]) -> Optional[Tensor]:
+        """Bounded signed margin correction ``B * tanh(raw / B)`` (metres; None when off).
+
+        Zero at creation (zero-initialised output weights) and bounded by
+        ``context_bound_m`` in both directions, so the correction can neither fire an
+        unbounded early merge nor relax the hard physical envelope.
+        """
+        if self.context_mode not in ("linear", "mlp") or features is None:
+            return None
+        x = self.context_input(features)
+        raw = (F.linear(x, self.context_linear.weight)[..., 0]
+               if self.context_mode == "linear" else self.context_mlp(x)[..., 0])
+        return self.context_bound_m * torch.tanh(raw / self.context_bound_m)
+
+    def context_gate_value(self, features: Optional[Mapping[str, Tensor]]) -> Optional[Tensor]:
+        """Multiplicative hazard gate ``g(context)`` in (0, 1) (None unless gate mode)."""
+        if self.context_mode != "gate" or features is None:
+            return None
+        return torch.sigmoid(self.context_gate(self.context_input(features))[..., 0])
+
+    def context_head_parameters(self) -> list[Tensor]:
+        """Parameters of the context heads (empty in 'off' mode)."""
+        if self.context_mode == "off":
+            return []
+        module = {"linear": self.context_linear, "mlp": self.context_mlp,
+                  "gate": self.context_gate}[self.context_mode]
+        return list(module.parameters())
+
+    def context_l2_term(self) -> Tensor:
+        """L2 penalty of the context head (all weights; the gate's fixed init bias excepted).
+
+        Every context weight is zero-initialised, so the plain sum of squares pulls the
+        correction back to its no-op init; the gate's output bias is a fixed offset (its
+        documented init), not a shrinkage target, and is excluded.
+        """
+        params: list[Tensor] = []
+        if self.context_mode in ("linear", "mlp"):
+            params = self.context_head_parameters()
+        elif self.context_mode == "gate":
+            params = [p for n, p in self.context_gate.named_parameters()
+                      if n != "-1.bias"]
+        if not params:
+            return torch.zeros((), dtype=next(self.parameters()).dtype)
+        return torch.stack([p.pow(2).sum() for p in params]).sum()
 
 
 def secure_gap_sides(gap_l: Tensor, gap_f: Tensor, v: Tensor, v_l: Tensor, v_f: Tensor,
