@@ -1,6 +1,6 @@
-"""P1--P3 exact persistent-logistic likelihood; no hazard or quadrature path.
+"""Persistent-logistic strict and F1 hybrid supplied-path likelihoods.
 
-Recorded geometry is a frozen causal longitudinal replay. Only the seven boundary
+Recorded geometry is a frozen causal longitudinal replay. Only the boundary
 parameters are differentiated on that path. Chunk contributions are conditional
 log-survival increments (or the conditional event mass), and telescope exactly.
 An unobserved risk-entry age is enumerated and masked, never assigned a prior.
@@ -81,9 +81,33 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
     # logS with the CURRENT tau graph, rather than losing its denominator gradient
     # when a TBPTT carry was detached. The saved logS is also exposed to callers.
     previous_logS = log_survival(maximum, tau)
+    integrated = None
     if w is not None:
         previous_logS = (hybrid_log_masses(history, tau, w, quadrature_order)[1][..., -1]
                          if history.shape[-1] else torch.zeros_like(c[:, 0], dtype=torch.float64))
+        # The ordinary no-identity-reset chunk needs ONE integration of its whole
+        # fixed path, not a growing quadratic grid rebuilt at every tick. A reset
+        # inside a chunk uses the general streaming fallback below.
+        if not bool(reset[:, 1:].any()):
+            prefix = torch.where(reset[:, 0].bool().unsqueeze(-1),
+                                 torch.full_like(history, -torch.inf), history)
+            seen = started & ~reset[:, 0].bool()
+            ended = terminal & ~reset[:, 0].bool()
+            rows = []
+            for j in range(c.shape[1]):
+                seen = seen | (risk[:, j].bool() & ~ended)
+                ended = ended | (seen & ~risk[:, j].bool())
+                if support is not None:
+                    ended = ended | (seen & ~support[:, j].bool())
+                active = seen & ~ended & risk[:, j].bool()
+                feasible = eligible[:, j].bool() if eligible is not None else c[:, j] != -torch.inf
+                current = torch.where(active & feasible, c[:, j], torch.full_like(c[:, j], -torch.inf))
+                rows.append(current)
+                ended = ended | (active & (event[:, j].bool() | (current == torch.inf)))
+                if stop is not None:
+                    ended = ended | (active & stop[:, j].bool())
+            path = torch.cat((prefix, torch.stack(rows, -1)), -1)
+            integrated = hybrid_log_masses(path, tau, w, quadrature_order)
     nll = tau.sum() * 0.0
     stats = dict(events=0, positive_mass_events=0, zero_mass_events=0, zero_survival=0, physical_fail_events=0,
                  unknown_age=0, unknown_age_events=0, births=0, exits=0,
@@ -125,14 +149,18 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
         next_logS = log_survival(updated, tau)
         if w is not None:
             history = torch.cat((history, current.unsqueeze(-1)), -1)
-            le, ls = hybrid_log_masses(history, tau, w, quadrature_order)
-            next_logS = ls[..., -1]
+            if integrated is None:
+                le, ls = hybrid_log_masses(history, tau, w, quadrature_order)
+                hybrid_event, next_logS = le[..., -1], ls[..., -1]
+            else:
+                index = path.shape[-1] - c.shape[1] + i
+                hybrid_event, next_logS = integrated[0][..., index], integrated[1][..., index]
         # No subtraction of -inf - -inf on impossible paths, even in masked branches.
         safe_den = torch.where(torch.isfinite(previous_logS), previous_logS,
                                torch.zeros_like(previous_logS))
         logp_event = log_event_mass(maximum, updated, tau) - safe_den
         if w is not None:
-            logp_event = le[..., -1] - safe_den
+            logp_event = hybrid_event - safe_den
         logp_wait = next_logS - safe_den
         logp = torch.where(ev, logp_event, logp_wait)
         nll = nll - torch.where(used, logp, torch.zeros_like(logp)).sum()

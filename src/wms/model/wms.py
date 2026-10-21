@@ -73,7 +73,7 @@ _MERGE_PIVOT_LOG_KEYS = tuple("merge_pivot_" + name for name in (
     "cdf", "event_mass", "st",
     "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau", "w"))
 _MERGE_PIVOT_STATE_KEYS = ("z", "maximum", "present", "identity", "terminal", "started",
-                           "epsilon", "rng_seed", "decision_step", "history", "logS")
+                           "epsilon", "rng_seed", "rng_generation", "decision_step", "history", "logS")
 
 
 @dataclass
@@ -403,6 +403,12 @@ class WmSModel(nn.Module):
                 and "merge_pivot.w_raw" not in state_dict):
             state_dict = state_dict.copy()
             state_dict["merge_pivot.w_raw"] = self.merge_pivot.w_raw.detach().clone()
+        if (self.merge_pivot is not None and not self.merge_pivot.hybrid
+                and "merge_pivot.w_raw" in state_dict):
+            # Explicit strict comparison of a hybrid fit reuses its seven
+            # boundary/heterogeneity tensors; w has no role in the strict law.
+            state_dict = state_dict.copy()
+            state_dict.pop("merge_pivot.w_raw")
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -1548,9 +1554,15 @@ class WmSModel(nn.Module):
         carry = {key: state["merge_pivot_" + key] for key in _MERGE_PIVOT_STATE_KEYS
                  if "merge_pivot_" + key in state}
         identity = state.get("vehicle_id", state.get("identity"))
-        updated = pivot.update_state(c, params["tau"], geo["ramp"] & own, present,
+        # Integrated rollout diagnostics are not the backward estimator. The
+        # likelihood term rebuilds its own graph; hard lane credit uses ST below.
+        hybrid = self.merge_pivot.hybrid
+        updated = pivot.update_state(c.detach() if hybrid else c,
+                                      params["tau"].detach() if hybrid else params["tau"],
+                                      geo["ramp"] & own, present,
                                       carry=carry, identity=identity, uniform=uniform,
-                                      w=params.get("w"), quadrature_order=self.spec.merge_quadrature_order)
+                                      w=params["w"].detach() if hybrid else None,
+                                      quadrature_order=self.spec.merge_quadrature_order)
         crossing = updated["cross"] & ramp
         # Analytically scored, pre-willingness opportunities own their intervals.
         # Competing learned mainline insertions cannot make E depend on other z.

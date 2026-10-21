@@ -181,10 +181,10 @@ def test_nested_first_passage_rejects_b_weights_and_negotiation():
                                               merge_decision="first_passage", merge_negotiation=True)))
 
 
-def _fixture():
+def _fixture(passage_law="strict"):
     torch.manual_seed(12)
     model = WmSModel(ModelSpec(rollout_mode="hybrid", lane_model="hazard_v5",
-                               merge_decision="first_passage"),
+                               merge_decision="first_passage", merge_passage_law=passage_law),
                       physics=PhysicsConfig()).eval()
     # One observed pre-zone state, then entry, then a merge. Full scene includes
     # a CAV neighbor. Its current motion is modeled without the future teacher.
@@ -418,3 +418,78 @@ def test_recorded_chunk_gradients_match_exact_whole_sequence_not_detached_poster
     assert chunked == pytest.approx(float(full.detach()), abs=1e-6)
     for name, p in model.merge_pivot.named_parameters():
         assert torch.allclose(p.grad, expected[name], atol=1e-6, rtol=0), name
+
+
+@pytest.mark.parametrize("split", [1, 2, 3])
+@pytest.mark.parametrize("event", [False, True])
+def test_hybrid_score_chunks_telescope_with_nonrecord_events(split, event):
+    from wms.model.merge_pivot import hybrid_log_masses
+
+    c = torch.tensor([[[-1.], [-.3], [-.7], [-.8]]], dtype=torch.float64)
+    ones = torch.ones_like(c, dtype=torch.bool)
+    events = torch.zeros_like(ones)
+    events[:, -1] = event
+    tau, w = c.new_tensor(.7), c.new_tensor(.4)
+    def score(a, b, carry=None):
+        return score_chunk(c[:, a:b], tau, ones[:, a:b], events[:, a:b],
+                           known_entry=ones[:, a:b], reset=~ones[:, a:b],
+                           w=w, carry=carry, quadrature_order=64)
+    full, _, stats = score(0, 4)
+    first, carry, _ = score(0, split)
+    last, _, _ = score(split, 4, carry)
+    le, ls = hybrid_log_masses(c.transpose(1, 2), tau, w, 64)
+    expected = -le[..., -1] if event else -ls[..., -1]
+    assert float(full) == pytest.approx(float(expected), abs=1e-6)
+    assert float(first + last) == pytest.approx(float(full), abs=1e-6)
+    assert stats["zero_mass_events"] == 0
+
+
+def test_hybrid_recorded_chunk_gradients_all_eight_and_penalty_wiring():
+    model, inp, targets = _fixture("hybrid")
+    cfg = MergePivotConfig(tf_weight=.6, z_tf=395.2, passage_law="hybrid",
+                           quadrature_order=64, tau_reg_weight=.02, w_reg_weight=.03)
+    term = MergePivotTerm(cfg)
+    def prepare():
+        term.prepare(targets)
+        geo = targets.prepared["merge_pivot"]["geometry"]
+        geo["v"][..., 0] = 8.
+        geo["v_f"][..., 0], geo["v_l"][..., 0] = 12., 4.
+        geo["has_f"][..., 0] = geo["has_l"][..., 0] = True
+        geo["gap_f"][0, :, 0] = torch.tensor([15., 1000., 20., 20.])
+        geo["gap_l"][0, :, 0] = torch.tensor([1000., 15., 1000., 1000.])
+    prepare()
+    full = term(LossContext(pred={}, current=inp.initial, targets=targets, c0=0, c1=4)).value
+    full.backward()
+    expected = {name: p.grad.clone() for name, p in model.merge_pivot.named_parameters()}
+    assert len(expected) == 8
+    assert all(torch.isfinite(g) and g.abs() > 0 for g in expected.values())
+    assert all(p.grad is None for name, p in model.named_parameters()
+               if not name.startswith("merge_pivot."))
+    model.zero_grad(set_to_none=True)
+    prepare()
+    value = 0.
+    for c0, c1 in [(0, 1), (1, 2), (2, 4)]:
+        chunk = term(LossContext(pred={}, current=inp.initial, targets=targets, c0=c0, c1=c1)).value
+        value += float(chunk.detach())
+        chunk.backward()
+    assert value == pytest.approx(float(full.detach()), abs=1e-6)
+    for name, p in model.merge_pivot.named_parameters():
+        assert torch.allclose(p.grad, expected[name], atol=1e-6, rtol=0), name
+    params = model.merge_pivot.params()
+    regularizer = MergePivotTerm(MergePivotConfig(w_reg_weight=.03, tau_reg_weight=.02))
+    regularizer.prepare(targets)
+    loss = regularizer(LossContext(pred={}, current=inp.initial, targets=targets, c0=0, c1=4)).value
+    assert torch.allclose(loss, .03 * params["w"].square() + .02 * params["tau"].square())
+
+
+def test_hybrid_config_penalties_and_default_omission():
+    cfg = TrainConfig.from_dict(dict(
+        model=dict(rollout_mode="hybrid", lane_model="hazard_v5", merge_decision="first_passage",
+                   merge_passage_law="hybrid", merge_w_init=.3, merge_quadrature_order=64),
+        loss=dict(merge_core=dict(weight=.4, tf_weight=.6, w_reg_weight=.07))))
+    settings = TrainSettings.from_config(cfg)
+    term = next(t for t in build_loss(settings).chunk_terms if t.name == "merge_pivot")
+    assert term.cfg.passage_law == "hybrid" and term.cfg.quadrature_order == 64
+    assert term.cfg.w_reg_weight == .07 and settings.merge_w_init == .3
+    defaults = TrainConfig().to_legacy_flat()
+    assert not {"merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_core_w_reg_weight"} & defaults.keys()

@@ -312,6 +312,18 @@ def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
     if not bool((torch.isfinite(tau) & (tau > 0)).all()
                 & (torch.isfinite(w) & (w > 0)).all()):
         raise ValueError("hybrid tau and w must be finite and positive")
+    if c.ndim > 1:
+        flat = c.reshape(-1, c.shape[-1])
+        used = (flat != -torch.inf).any(-1)
+        if not bool(used.all()):
+            # Padding/never-eligible cars contribute exact zero survival loss,
+            # and do not need a quadrature grid or an autograd graph per tick.
+            le = torch.full_like(flat, -torch.inf)
+            ls = torch.zeros_like(flat)
+            if bool(used.any()):
+                e, s = hybrid_log_masses(flat[used], tau, w, order)
+                le[used], ls[used] = e, s
+            return le.reshape_as(c), ls.reshape_as(c)
     if c.ndim > 1 and not any(x.requires_grad for x in (c, tau, w)):
         flat = c.reshape(-1, c.shape[-1])
         unique, inverse = torch.unique(flat, dim=0, return_inverse=True)
@@ -327,6 +339,9 @@ def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
     knots = ((-safe.unsqueeze(-1) + w * offsets) / tau).detach()
     knots = torch.where(finite.unsqueeze(-1), knots, torch.zeros_like(knots))
     knots = knots.flatten(-2).sort(-1).values
+    # Coincident numerical knots have zero prior mass; removing shared duplicate
+    # columns preserves the integral and avoids grids dominated by veto padding.
+    knots = torch.unique_consecutive(knots, dim=-1)
     ends = torch.full_like(knots[..., :1], torch.inf)
     knots = torch.cat((-ends, knots, ends), -1)
     a, b = knots[..., :-1], knots[..., 1:]
@@ -371,6 +386,40 @@ def _keyed_logistic(seed: Tensor, identity: Tensor, step: Tensor, dtype) -> Tens
     # 52 bits ensure midpoint addition is exact in float64 at both endpoints.
     u = ((x & ((1 << 52) - 1)).double() + 0.5) / float(1 << 52)
     return (u.log() - torch.log1p(-u)).to(dtype)
+
+
+def hybrid_quadrature_report(c: Tensor, tau: Tensor, w: Tensor, *,
+                              event_index: Optional[int] = None, order: int = 32,
+                              atol: float = 1.e-6) -> dict:
+    """Refinement certificate for a fixed path/fit, including true-law adjoints.
+
+    Compare order N,2N,4N; require BOTH successive refinements to meet the
+    registered 1e-6 absolute parity tolerance on masses, summed sequence NLL,
+    and c/tau/w gradients. No scale is changed to make a check pass. A false
+    result calls for more quadrature/work on that fit, not a likelihood floor.
+    ``None`` scores administrative censoring at the supplied path endpoint.
+    """
+    rows = []
+    with torch.enable_grad():
+        for n in (order, 2 * order, 4 * order):
+            boundary = c.detach().double().requires_grad_(True)
+            scale = _scale(tau, boundary).detach().requires_grad_(True)
+            width = _scale(w, boundary).detach().requires_grad_(True)
+            le, ls = hybrid_log_masses(boundary, scale, width, n)
+            score = -(ls[..., -1] if event_index is None else le[..., event_index]).sum()
+            if not bool(torch.isfinite(score)):
+                return {"converged": False, "supported": False, "orders": [order, 2 * order, 4 * order]}
+            # A deterministic sequence can be independent of every parameter.
+            score = score + 0. * (boundary[torch.isfinite(boundary)].sum() + scale + width)
+            gradients = torch.autograd.grad(score, (boundary, scale, width))
+            rows.append((torch.cat((le.exp().flatten(), ls.exp().flatten())).detach(),
+                         score.detach(), torch.cat([g.flatten() for g in gradients]).detach()))
+    errors = [tuple(float((a - b).abs().max()) for a, b in zip(left, right))
+              for left, right in zip(rows[:-1], rows[1:])]
+    return {"converged": all(math.isfinite(e) and e <= atol for row in errors for e in row),
+            "supported": True, "orders": [order, 2 * order, 4 * order], "atol": atol,
+            "mass_errors": [row[0] for row in errors], "nll_errors": [row[1] for row in errors],
+            "gradient_errors": [row[2] for row in errors]}
 
 
 def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
@@ -426,21 +475,35 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
     terminal = terminal | (started & ~ramp)
     z = torch.where(keep, carry.get("z", torch.zeros_like(c)), torch.zeros_like(c))
     maximum = torch.where(keep, carry.get("maximum", torch.full_like(c, -torch.inf)),
-                          torch.full_like(c, -torch.inf))
+                           torch.full_like(c, -torch.inf))
     need = present & ramp & ~started & ~terminal
+    if w is not None:
+        # Allocate the saved per-slot stream keys once, even for slots whose
+        # first identity arrives later. New births after checkpoint resumption
+        # therefore never depend on the process-global RNG. Generation is a
+        # stream namespace for presence reuse when explicit IDs are unavailable.
+        seed = carry.get("rng_seed")
+        if seed is None:
+            seed = torch.randint(0, 1 << 52, c.shape, device=c.device, dtype=torch.long)
+        generation = carry.get("rng_generation", torch.zeros_like(identity)) + need.long()
+        stream_identity = identity.long() ^ (generation * 2862933555777941757)
+        if uniform is None:
+            draw = _keyed_logistic(seed, stream_identity, torch.zeros_like(identity), c.dtype)
+            z = torch.where(need, draw, z)
     if bool(need.any()):
         n = int(need.sum().item())
-        if uniform is None:
+        if uniform is None and w is None:
             u = torch.rand(n, dtype=c.dtype, device=c.device)
             endpoints = (u == 0.0) | (u == 1.0)
             while bool(endpoints.any()):
                 u[endpoints] = torch.rand(int(endpoints.sum().item()), dtype=c.dtype, device=c.device)
                 endpoints = (u == 0.0) | (u == 1.0)
-        else:
+        elif uniform is not None:
             u = torch.broadcast_to(uniform.to(device=c.device, dtype=c.dtype), c.shape)[need]
             if not bool((torch.isfinite(u) & (u > 0.0) & (u < 1.0)).all()):
                 raise ValueError("needed logistic uniforms must be strictly between 0 and 1")
-        z = z.masked_scatter(need, u.log() - torch.log1p(-u))
+        if uniform is not None or w is None:
+            z = z.masked_scatter(need, u.log() - torch.log1p(-u))
     active = present & ramp & ~terminal
     started = started | need
     maximum = torch.where(active, torch.maximum(maximum, c), maximum)
@@ -452,15 +515,10 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
               "terminal": terminal, "cross": active & (crossing | (c == torch.inf)), "started": started}
     if w is None:
         return result
-    seed = torch.where(keep, carry.get("rng_seed", torch.zeros_like(identity)),
-                       torch.zeros_like(identity))
-    if bool(need.any()):
-        seed = seed.masked_scatter(need, torch.randint(0, 1 << 52, (int(need.sum()),),
-                                                     device=c.device, dtype=torch.long))
     counter = torch.where(keep, carry.get("decision_step", torch.zeros_like(identity)),
                           torch.zeros_like(identity))
     counter = counter + active.long()
-    epsilon = _keyed_logistic(seed, identity, counter, c.dtype)
+    epsilon = _keyed_logistic(seed, stream_identity, counter, c.dtype)
     if epsilon_uniform is not None:
         u = torch.broadcast_to(epsilon_uniform.to(c), c.shape)
         if not bool((~active | (torch.isfinite(u) & (u > 0) & (u < 1))).all()):
@@ -473,11 +531,15 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
     history = carry.get("history", c.new_empty((*c.shape, 0)))
     history = torch.where(keep.unsqueeze(-1), history, torch.full_like(history, -torch.inf))
     history = torch.cat((history, torch.where(active, c, torch.full_like(c, -torch.inf)).unsqueeze(-1)), -1)
-    le, ls = hybrid_log_masses(history, tau, w, quadrature_order)
-    logS = ls[..., -1]
-    logS = torch.where(active, logS, carry.get("logS", torch.zeros_like(logS)))
-    result.update(epsilon=epsilon, rng_seed=seed, decision_step=counter, history=history,
-                  logS=logS, event_mass=le[..., -1].exp(), cdf=-torch.expm1(logS))
+    logS = carry.get("logS", torch.zeros_like(c, dtype=torch.float64))
+    event_mass = torch.zeros_like(c, dtype=torch.float64)
+    if bool(active.any()):
+        le, ls = hybrid_log_masses(history[active], tau, w, quadrature_order)
+        logS = logS.masked_scatter(active, ls[..., -1])
+        event_mass = event_mass.masked_scatter(active, le[..., -1].exp())
+    result.update(epsilon=epsilon, rng_seed=seed, rng_generation=generation,
+                  decision_step=counter, history=history,
+                  logS=logS, event_mass=event_mass, cdf=-torch.expm1(logS))
     return result
 
 
@@ -546,5 +608,5 @@ def resolve_conflicts(kin: Tensor, present: Tensor, current_lane: Tensor,
 
 
 __all__ = ["FirstPassageNet", "geometry", "log_survival", "log_event_mass",
-           "conditional_log_hazards", "hybrid_log_masses", "advance_longitudinal",
+           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal",
            "update_state", "hard_st", "resolve_conflicts"]

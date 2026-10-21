@@ -290,6 +290,19 @@ def test_hybrid_nll_gradcheck_includes_boundary_population_scale_and_width():
     assert torch.autograd.gradcheck(objective, (c, tau, w), eps=1e-6, atol=2e-5, rtol=2e-4)
 
 
+@pytest.mark.parametrize("width", [.4, .003])
+def test_fitted_path_refinement_certificate_includes_nll_and_all_adjoints(width):
+    report = pivot.hybrid_quadrature_report(_tensor([-1., -.4, -.7, .5]),
+                                            _tensor(.65), _tensor(width), event_index=3)
+    assert report["supported"] and report["converged"], report
+    assert report["orders"] == [32, 64, 128]
+    for key in ("mass_errors", "nll_errors", "gradient_errors"):
+        assert len(report[key]) == 2 and max(report[key]) <= 1e-6
+    unsupported = pivot.hybrid_quadrature_report(_tensor([-math.inf]), _tensor(.65),
+                                                _tensor(width), event_index=0)
+    assert not unsupported["converged"] and not unsupported["supported"]
+
+
 def test_width_to_zero_recovers_strict_running_max_masses_not_independent_hazards():
     c = _tensor([-1.5, -2.0, -0.5, -1.0, 0.4, 0.1, 1.1])
     tau = _tensor(0.7)
@@ -350,6 +363,30 @@ def test_unrelated_identity_reset_cannot_change_an_existing_identity_epsilon_str
                                rtol=0, atol=0)
     torch.testing.assert_close(normal["rng_seed"][0], replaced["rng_seed"][0], rtol=0, atol=0)
     assert first["epsilon"][0] != first["epsilon"][1]
+
+
+def test_checkpointed_stream_keys_cover_future_births_without_global_rng():
+    c = _tensor([-1., -1.])
+    initial = _tick(c, ramp=torch.tensor([True, False]), identity=torch.tensor([17, 18]))
+    # The second identity first enters risk AFTER the saved state. Both its z
+    # and epsilon must resume from saved stream keys, not process-global RNG.
+    expected = _tick(c, carry=_clone_tree(initial), identity=torch.tensor([17, 19]))
+    torch.manual_seed(8729)
+    torch.rand(149)
+    resumed = _tick(c, carry=_clone_tree(initial), identity=torch.tensor([17, 19]))
+    _assert_same_tree(expected, resumed)
+
+
+def test_strict_checkpoint_can_initialize_hybrid_without_changing_old_tensors(tmp_path):
+    spec = ModelSpec(rollout_mode="driver_params", lane_model="hazard_v5",
+                     merge_decision="first_passage")
+    old = WmSModel(spec)
+    path = tmp_path / "old_strict.pt"
+    save_checkpoint(path, old, {**asdict(spec), "physics": asdict(old.physics)})
+    new = load_checkpoint(path, model_config={"merge_passage_law": "hybrid", "merge_w_init": .23}).model
+    assert new.merge_pivot.params()["w"].item() == pytest.approx(.23, rel=1e-6)
+    for name, value in old.state_dict().items():
+        assert torch.equal(new.state_dict()[name], value), name
 
 
 def test_sampled_conditional_frequencies_match_analytic_hazard():
