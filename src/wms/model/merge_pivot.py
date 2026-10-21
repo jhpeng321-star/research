@@ -25,10 +25,10 @@ from .merge_core import load_init
 
 
 class FirstPassageNet(nn.Module):
-    """Seven positive softplus parameters, with no residual or driver inputs.
+    """Seven strict / eight hybrid softplus scalars, no residual or driver inputs.
 
     ``init`` optionally overrides ``merge_core.load_init()`` keys (``s0_m``,
-    ``T_s``, ``b_mps2``, ``alpha_log_sigma``), or any of the seven new names.
+    ``T_s``, ``b_mps2``, ``alpha_log_sigma``), or any effective parameter name.
     The default logistic scale variance-matches the old Gaussian log scale.
     """
 
@@ -52,7 +52,7 @@ class FirstPassageNet(nn.Module):
             self.register_parameter(f"{name}_raw", nn.Parameter(torch.tensor(raw)))
 
     def params(self) -> dict[str, Tensor]:
-        """Effective ``s_f,T_f,b_f,s_l,T_l,b_l,tau`` (plain softplus)."""
+        """Effective gap parameters, tau, and (hybrid only) w; plain softplus."""
         names = ("s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau")
         return {name: F.softplus(getattr(self, f"{name}_raw"))
                 for name in (*names, "w") if hasattr(self, f"{name}_raw")}
@@ -456,10 +456,15 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
     next call.  Presence gaps / changed identities reset the whole slot;
     neighbor switches do not.  ``identity`` is lifecycle metadata only.
 
-    One Logistic(0,1) draw is needed on first risk entry.  Supplied uniforms
+    One Logistic(0,1) draw is needed on first risk entry. Supplied uniforms
     must be strictly in (0,1); generated uniforms redraw exact RNG endpoints,
     never clip the latent tails.  No RNG is consumed if no slot needs a draw.
     The returned carry retains its autograd history; crossing is hard/bool.
+    With ``w`` supplied the hybrid law adds keyed per-decision epsilon. Stream
+    keys/generations/counters and boundary history are explicit carry tensors;
+    new births after resumption use saved keys, not the global RNG. Diagnostic
+    quadrature includes the same persistent population prior. Native rollout
+    detaches those diagnostics and uses the separately labeled ST estimator.
     """
     carry = {} if carry is None else carry
     present, ramp = present.bool(), ramp.bool()

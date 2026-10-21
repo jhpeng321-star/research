@@ -387,6 +387,12 @@ def test_strict_checkpoint_can_initialize_hybrid_without_changing_old_tensors(tm
     assert new.merge_pivot.params()["w"].item() == pytest.approx(.23, rel=1e-6)
     for name, value in old.state_dict().items():
         assert torch.equal(new.state_dict()[name], value), name
+    hybrid_path = tmp_path / "hybrid.pt"
+    save_checkpoint(hybrid_path, new, {**asdict(new.spec), "physics": asdict(new.physics)})
+    comparator = load_checkpoint(hybrid_path, model_config={"merge_passage_law": "strict"}).model
+    assert "w" not in comparator.merge_pivot.params()
+    for name, value in old.merge_pivot.state_dict().items():
+        assert torch.equal(comparator.merge_pivot.state_dict()[name], value), name
 
 
 def test_sampled_conditional_frequencies_match_analytic_hazard():

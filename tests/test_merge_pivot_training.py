@@ -493,3 +493,22 @@ def test_hybrid_config_penalties_and_default_omission():
     assert term.cfg.w_reg_weight == .07 and settings.merge_w_init == .3
     defaults = TrainConfig().to_legacy_flat()
     assert not {"merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_core_w_reg_weight"} & defaults.keys()
+
+
+def test_hybrid_initial_history_conditions_on_survival_without_a_prior_reset():
+    from wms.model.merge_pivot import hybrid_log_masses
+
+    prefix = torch.tensor([[[-.8, -.4]]], dtype=torch.float64)
+    c = torch.tensor([[[-.7], [.1]]], dtype=torch.float64)
+    ones = torch.ones_like(c, dtype=torch.bool)
+    event = torch.tensor([[[False], [True]]])
+    tau, w = c.new_tensor(.7), c.new_tensor(.35)
+    nll, carry, stats = score_chunk(c, tau, ones, event, known_entry=~ones, reset=~ones,
+                                    w=w, initial_history=prefix, quadrature_order=64)
+    le, ls = hybrid_log_masses(torch.cat((prefix, c.transpose(1, 2)), -1), tau, w, 64)
+    assert nll == pytest.approx(float(-le[..., -1] + ls[..., 1]), abs=1e-6)
+    assert stats["unknown_age"] == 0 and stats["positive_mass_events"] == 1
+    assert carry["history"].shape == (1, 1, 4)
+    with pytest.raises(ValueError, match="causal history"):
+        score_chunk(c, tau, ones, event, known_entry=ones, reset=~ones,
+                    w=w, initial_maximum=prefix[..., -1])
