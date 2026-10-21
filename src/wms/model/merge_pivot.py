@@ -14,6 +14,7 @@ There are no behavioral clips, clearance padding or likelihood floors here.
 from __future__ import annotations
 
 import math
+from functools import lru_cache
 from typing import Mapping, Optional
 
 import torch
@@ -31,7 +32,8 @@ class FirstPassageNet(nn.Module):
     The default logistic scale variance-matches the old Gaussian log scale.
     """
 
-    def __init__(self, init: Optional[Mapping[str, float]] = None) -> None:
+    def __init__(self, init: Optional[Mapping[str, float]] = None, *,
+                 hybrid: bool = False, w_init: float = 1.0) -> None:
         super().__init__()
         old = {**load_init(), **({} if init is None else init)}
         values = {
@@ -39,6 +41,9 @@ class FirstPassageNet(nn.Module):
             "s_l": old["s0_m"], "T_l": old["T_s"], "b_l": old["b_mps2"],
             "tau": old["alpha_log_sigma"] * math.sqrt(3.0) / math.pi,
         }
+        self.hybrid = hybrid
+        if hybrid:
+            values["w"] = w_init
         for name, default in values.items():
             value = float(old.get(name, default))
             if not math.isfinite(value) or value <= 0.0:
@@ -48,8 +53,9 @@ class FirstPassageNet(nn.Module):
 
     def params(self) -> dict[str, Tensor]:
         """Effective ``s_f,T_f,b_f,s_l,T_l,b_l,tau`` (plain softplus)."""
+        names = ("s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau")
         return {name: F.softplus(getattr(self, f"{name}_raw"))
-                for name in ("s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau")}
+                for name in (*names, "w") if hasattr(self, f"{name}_raw")}
 
     def boundary(self, geometry: Mapping[str, Tensor]) -> Tensor:
         """Exact min log clearance ratio; absent=+inf, veto/zero gap=-inf.
@@ -244,6 +250,129 @@ def log_event_mass(previous: Tensor, current: Tensor, tau: Tensor) -> Tensor:
                        torch.zeros_like(result), result)
 
 
+def conditional_log_hazards(c: Tensor, tau: Tensor, w: Tensor, z: Tensor,
+                            eligible: Optional[Tensor] = None) -> tuple[Tensor, Tensor]:
+    """Hybrid conditional law, with exact vetoes/atoms and no support floor.
+
+    Work in logs: even when exp(logh) underflows, its finite log probability
+    remains scoreable. Infinite boundaries are constants, never divided.
+    """
+    finite = torch.isfinite(c)
+    allowed = torch.ones_like(c, dtype=torch.bool) if eligible is None else eligible.bool()
+    active = allowed & finite
+    safe = torch.where(active, c, torch.zeros_like(c))
+    safe_z = torch.where(active, z, torch.zeros_like(z))
+    x = _ratio(safe + _scale(tau, c) * safe_z, _scale(w, c))
+    certain = allowed & (c == torch.inf)
+    logh = torch.where(active, -F.softplus(-x),
+                       torch.where(certain, torch.zeros_like(x), torch.full_like(x, -torch.inf)))
+    logwait = torch.where(active, -F.softplus(x),
+                          torch.where(certain, torch.full_like(x, -torch.inf), torch.zeros_like(x)))
+    return logh, logwait
+
+
+def _logsumexp_supported(x: Tensor, dim: int) -> Tensor:
+    """logsumexp with a zero adjoint for a genuinely empty support."""
+    supported = torch.isfinite(x).any(dim, keepdim=True)
+    safe = torch.where(supported, x, torch.zeros_like(x))
+    result = torch.logsumexp(safe, dim)
+    return torch.where(supported.squeeze(dim), result, torch.full_like(result, -torch.inf))
+
+
+@lru_cache(maxsize=16)
+def _legendre(order: int):
+    import numpy as np
+
+    if isinstance(order, bool) or int(order) != order or order < 2:
+        raise ValueError("quadrature order must be an integer >= 2")
+    x, weights = np.polynomial.legendre.leggauss(order)
+    return (x + 1.0) / 2.0, weights / 2.0
+
+
+def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
+                      ) -> tuple[Tensor, Tensor]:
+    """Integrate persistent z ONCE over a fixed supplied path (time LAST).
+
+    Positive composite Gauss--Legendre weights integrate the logistic prior in
+    probability coordinates. Split at each finite crossing and at +/-1,+/-8
+    conditional-noise widths; these are numerical integration knots, not a
+    truncated prior or decision threshold. Both unbounded tails are retained.
+    Log-CDF interpolation keeps far-tail intervals representable. Refinement of
+    ``order`` must be checked on the fitted paths, NLL AND parameter gradients.
+    Cost is quadratic in path length; callers should batch only scored cars.
+    """
+    if c.shape[-1] == 0:
+        return c.clone(), c.clone()
+    # Accumulate likelihoods in float64, including for float32 WM parameters.
+    c = c.to(torch.float64)
+    atom = (c == torch.inf).long().cumsum(-1)
+    after_atom = atom - (c == torch.inf).long() > 0
+    c = torch.where(after_atom, torch.full_like(c, -torch.inf), c)
+    tau, w = _scale(tau, c), _scale(w, c)
+    if not bool((torch.isfinite(tau) & (tau > 0)).all()
+                & (torch.isfinite(w) & (w > 0)).all()):
+        raise ValueError("hybrid tau and w must be finite and positive")
+    if c.ndim > 1 and not any(x.requires_grad for x in (c, tau, w)):
+        flat = c.reshape(-1, c.shape[-1])
+        unique, inverse = torch.unique(flat, dim=0, return_inverse=True)
+        if unique.shape[0] < flat.shape[0]:
+            le, ls = hybrid_log_masses(unique, tau, w, order)
+            return le[inverse].reshape_as(c), ls[inverse].reshape_as(c)
+    finite = torch.isfinite(c)
+    safe = torch.where(finite, c, torch.zeros_like(c))
+    offsets = c.new_tensor([-8., -1., 0., 1., 8.])
+    # Adaptive mesh placement is numerical, not a model transformation. Hold it
+    # fixed in the adjoint and integrate the derivative of the defining law.
+    # This also avoids spurious moving-boundary gradients at coincident knots.
+    knots = ((-safe.unsqueeze(-1) + w * offsets) / tau).detach()
+    knots = torch.where(finite.unsqueeze(-1), knots, torch.zeros_like(knots))
+    knots = knots.flatten(-2).sort(-1).values
+    ends = torch.full_like(knots[..., :1], torch.inf)
+    knots = torch.cat((-ends, knots, ends), -1)
+    a, b = knots[..., :-1], knots[..., 1:]
+    logweights = log_event_mass(a, b, c.new_tensor(1.))
+    nodes_np, weights_np = _legendre(order)
+    u = torch.as_tensor(nodes_np, device=c.device, dtype=c.dtype)
+    weights = torch.as_tensor(weights_np, device=c.device, dtype=c.dtype)
+    # sigmoid(knot) is never materialized, so z~1000 remains a finite node.
+    la, lb = log_survival(-a, c.new_tensor(1.)), log_survival(-b, c.new_tensor(1.))
+    sa, sb = log_survival(a, c.new_tensor(1.)), log_survival(b, c.new_tensor(1.))
+    logu = torch.logaddexp(la.unsqueeze(-1) + torch.log1p(-u), lb.unsqueeze(-1) + u.log())
+    logv = torch.logaddexp(sa.unsqueeze(-1) + torch.log1p(-u), sb.unsqueeze(-1) + u.log())
+    z = (logu - logv).flatten(-2)
+    lw = (logweights.unsqueeze(-1) + weights.log()).flatten(-2)
+    # Do not create [cars,time,knots,order] intermediates for long paths.
+    running = torch.zeros_like(z)
+    events, survival = [], []
+    for step in range(c.shape[-1]):
+        lh, ls = conditional_log_hazards(c[..., step, None], tau, w, z)
+        le = _logsumexp_supported(lw + running + lh, -1)
+        no_previous = (c[..., :step] == -torch.inf).all(-1)
+        le = torch.where(no_previous & (c[..., step] == torch.inf), torch.zeros_like(le), le)
+        events.append(le)
+        running = running + ls
+        surv = _logsumexp_supported(lw + running, -1)
+        surv = torch.where((c[..., :step + 1] == -torch.inf).all(-1), torch.zeros_like(surv), surv)
+        survival.append(surv)
+    return torch.stack(events, -1), torch.stack(survival, -1)
+
+
+def _keyed_logistic(seed: Tensor, identity: Tensor, step: Tensor, dtype) -> Tensor:
+    """Counter-based 64-bit mixing; RNG key/counter are explicit rollout state.
+
+    Integer overflow is intentional modulo-2**64 arithmetic. Logical shifts
+    are expressed using masks because torch int64 right shifts are arithmetic.
+    Midpoint 53-bit uniforms have no endpoints and need no clipping/redraw.
+    """
+    x = seed ^ (identity.long() * 6364136223846793005) ^ (step * 1442695040888963407)
+    x = (x ^ ((x >> 30) & ((1 << 34) - 1))) * -4658895280553007687
+    x = (x ^ ((x >> 27) & ((1 << 37) - 1))) * -7723592293110705685
+    x = x ^ ((x >> 31) & ((1 << 33) - 1))
+    # 52 bits ensure midpoint addition is exact in float64 at both endpoints.
+    u = ((x & ((1 << 52) - 1)).double() + 0.5) / float(1 << 52)
+    return (u.log() - torch.log1p(-u)).to(dtype)
+
+
 def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
                          stop_time_integration: bool = False) -> Tensor:
     """Return updated kin, matching WmSModel.step's single longitudinal update.
@@ -266,7 +395,9 @@ def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
 def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
                  carry: Optional[Mapping[str, Tensor]] = None,
                  identity: Optional[Tensor] = None,
-                 uniform: Optional[Tensor] = None) -> dict[str, Tensor]:
+                  uniform: Optional[Tensor] = None, w: Optional[Tensor] = None,
+                  epsilon_uniform: Optional[Tensor] = None,
+                  quadrature_order: int = 32) -> dict[str, Tensor]:
     """Advance persistent latent, exact maximum and absorbing risk lifecycle.
 
     ``ramp`` is risk membership, NOT instantaneous physical eligibility (the
@@ -317,13 +448,42 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
     finite = torch.isfinite(c)
     safe_c = torch.where(finite, c, torch.zeros_like(c))
     crossing = (safe_c + _scale(tau, c) * z >= 0.0) & finite
-    cross = active & (crossing | (c == torch.inf))
-    return {"z": z, "maximum": maximum, "present": present, "identity": identity.clone(),
-            "terminal": terminal, "cross": cross, "started": started}
+    result = {"z": z, "maximum": maximum, "present": present, "identity": identity.clone(),
+              "terminal": terminal, "cross": active & (crossing | (c == torch.inf)), "started": started}
+    if w is None:
+        return result
+    seed = torch.where(keep, carry.get("rng_seed", torch.zeros_like(identity)),
+                       torch.zeros_like(identity))
+    if bool(need.any()):
+        seed = seed.masked_scatter(need, torch.randint(0, 1 << 52, (int(need.sum()),),
+                                                     device=c.device, dtype=torch.long))
+    counter = torch.where(keep, carry.get("decision_step", torch.zeros_like(identity)),
+                          torch.zeros_like(identity))
+    counter = counter + active.long()
+    epsilon = _keyed_logistic(seed, identity, counter, c.dtype)
+    if epsilon_uniform is not None:
+        u = torch.broadcast_to(epsilon_uniform.to(c), c.shape)
+        if not bool((~active | (torch.isfinite(u) & (u > 0) & (u < 1))).all()):
+            raise ValueError("epsilon uniforms must be strictly between 0 and 1")
+        safe_u = torch.where(active, u, torch.full_like(u, .5))
+        epsilon = safe_u.log() - torch.log1p(-safe_u)
+    epsilon = torch.where(active, epsilon, torch.zeros_like(epsilon))
+    margin = safe_c + _scale(tau, c) * z + _scale(w, c) * epsilon
+    result["cross"] = active & ((finite & (margin >= 0)) | (c == torch.inf))
+    history = carry.get("history", c.new_empty((*c.shape, 0)))
+    history = torch.where(keep.unsqueeze(-1), history, torch.full_like(history, -torch.inf))
+    history = torch.cat((history, torch.where(active, c, torch.full_like(c, -torch.inf)).unsqueeze(-1)), -1)
+    le, ls = hybrid_log_masses(history, tau, w, quadrature_order)
+    logS = ls[..., -1]
+    logS = torch.where(active, logS, carry.get("logS", torch.zeros_like(logS)))
+    result.update(epsilon=epsilon, rng_seed=seed, decision_step=counter, history=history,
+                  logS=logS, event_mass=le[..., -1].exp(), cdf=-torch.expm1(logS))
+    return result
 
 
 def hard_st(c: Tensor, tau: Tensor, z: Tensor, width: float | Tensor,
-            eligible: Tensor) -> Tensor:
+             eligible: Tensor, *, w: Optional[Tensor] = None,
+             epsilon: Optional[Tensor] = None) -> Tensor:
     """Hard 0/1 forward, sigmoid straight-through backward (NOT a likelihood).
 
     Width is solely a numerical backward estimator parameter.  Infinite c
@@ -337,6 +497,8 @@ def hard_st(c: Tensor, tau: Tensor, z: Tensor, width: float | Tensor,
     safe_c = torch.where(active, c, torch.zeros_like(c))
     safe_z = torch.where(active, z, torch.zeros_like(z))
     margin = safe_c + _scale(tau, c) * safe_z
+    if w is not None:
+        margin = margin + _scale(w, c) * torch.where(active, epsilon, torch.zeros_like(c))
     soft = torch.where(active, torch.sigmoid(_ratio(margin, width)), torch.zeros_like(margin))
     hard = (eligible.bool() & ((active & (margin >= 0.0)) | (c == torch.inf))).to(c.dtype)
     return hard + (soft - soft.detach())
@@ -384,4 +546,5 @@ def resolve_conflicts(kin: Tensor, present: Tensor, current_lane: Tensor,
 
 
 __all__ = ["FirstPassageNet", "geometry", "log_survival", "log_event_mass",
-           "advance_longitudinal", "update_state", "hard_st", "resolve_conflicts"]
+           "conditional_log_hazards", "hybrid_log_masses", "advance_longitudinal",
+           "update_state", "hard_st", "resolve_conflicts"]

@@ -269,6 +269,12 @@ class ModelConfig:
     ``model.lane_model='hazard_v5'``."""
     merge_st_width: float = 1.0
     """First-passage straight-through backward width; does not change hard forward timing."""
+    merge_passage_law: Literal["strict", "hybrid"] = "strict"
+    """R9 first-passage law; strict keeps the legacy path, hybrid learns the passage width."""
+    merge_w_init: float = 1.0
+    """Initial positive learned passage width in hybrid mode."""
+    merge_quadrature_order: int = 32
+    """Quadrature order for the hybrid passage likelihood."""
     temporal_residual_mode: Literal["direct", "slow"] = "direct"
     """SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's direct
     per-step acceleration with a learned low-pass residual state r_t carried in the rollout
@@ -345,6 +351,14 @@ class ModelConfig:
                 "model.merge_decision must be hazard, threshold, frailty, secure_gap or first_passage")
         require(is_finite(self.merge_st_width) and self.merge_st_width > 0.0,
                 "model.merge_st_width must be finite and positive")
+        require(self.merge_passage_law in ("strict", "hybrid"),
+                "model.merge_passage_law must be strict or hybrid")
+        require(is_finite(self.merge_w_init) and self.merge_w_init > 0.0,
+                "model.merge_w_init must be finite and positive")
+        require(isinstance(self.merge_quadrature_order, int)
+                and not isinstance(self.merge_quadrature_order, bool)
+                and self.merge_quadrature_order >= 2,
+                "model.merge_quadrature_order must be an integer >= 2")
         if self.merge_decision == "first_passage":
             require(not self.merge_negotiation, "first_passage requires merge_negotiation=false (B off)")
             require(not getattr(self, "merge_context", False), "first_passage requires context off")
@@ -986,11 +1000,12 @@ class MergeCoreConfig:
     sigma_reg_weight: float = 0.0
     sigma_fit: float = 0.0
     tau_reg_weight: float = 0.0
+    w_reg_weight: float = 0.0
 
     def __post_init__(self) -> None:
         require(all(is_finite(x) and x >= 0.0 for x in (
             self.weight, self.tf_weight, self.yield_weight, self.location_reg_weight,
-            self.sigma_reg_weight, self.tau_reg_weight)),
+            self.sigma_reg_weight, self.tau_reg_weight, self.w_reg_weight)),
             "loss.merge_core weights must be finite and non-negative")
         require(1 <= int(self.n_quad) <= 64,
                 "loss.merge_core.n_quad must be in [1, 64]")
@@ -1491,7 +1506,8 @@ class TrainConfig:
                                               ("merge_discharge", merge.discharge_weight))
                          if w > 0.0)
         if self.model.merge_decision == "first_passage":
-            if self.loss.merge_core.enabled or self.loss.merge_core.tau_reg_weight > 0.0:
+            if (self.loss.merge_core.enabled or self.loss.merge_core.tau_reg_weight > 0.0
+                    or self.loss.merge_core.w_reg_weight > 0.0):
                 terms.append("merge_pivot")
         elif self.loss.merge_core.enabled:
             # SECUREGAP core replaces the first-passage / frailty / timing likelihood.

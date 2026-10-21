@@ -1,6 +1,6 @@
-# R9 A-only P1--P3 DRAFT. Extends round2 directly to respect loader depth.
+# R9 A-only hybrid first-passage DRAFT. Extends round2 directly to respect loader depth.
 # Init is supplied by tools/launch_round9.py from a workspace round8 stage300.
-# Width and tau shrinkage are provisional inner-validation candidates, not qualified fit results.
+# Learned width initialization and tau shrinkage are provisional inner-validation candidates.
 schema_version = 2
 name = "WM-S-C4-V10ROUND9"
 extends = "c4_wm_v10round2.toml"
@@ -8,6 +8,9 @@ extends = "c4_wm_v10round2.toml"
 [model]
 merge_decision = "first_passage"
 merge_st_width = 1.0
+merge_passage_law = "hybrid"
+merge_w_init = 1.0          # Learned positive passage width initialization.
+merge_quadrature_order = 32
 merge_negotiation = false
 
 [physics]
@@ -26,6 +29,7 @@ gap_speed_tol_mps = 8.0
 location_reg_weight = 0.0
 sigma_reg_weight = 0.0
 tau_reg_weight = 0.0
+w_reg_weight = 0.0
 z_tf = 395.2
 z_on = 2.15
 
@@ -42,8 +46,8 @@ max_hours = 2.5
 [optim]
 lr_per_stage = [5.0e-5, 3.0e-5]
 batch_size_per_stage = [4, 2]
-# Freeze untouched dynamics and all legacy tensors initially. The seven new
-# boundary/tau parameters are the entire optimizer membership.
+# Freeze untouched dynamics and all legacy tensors initially. The eight new
+# boundary/tau/width parameters are the entire optimizer membership.
 freeze_prefixes = [
   "driver_encoder", "driver_updater", "gate_", "lane_gate_", "history_proj",
   "k_embedding", "lane_v5", "merge_core", "residual_net", "temporal",
