@@ -1,6 +1,4 @@
 """SECUREGAP merge core: geometry, latent persistence, gradients and checkpoint loading."""
-from pathlib import Path
-
 import pytest
 import torch
 

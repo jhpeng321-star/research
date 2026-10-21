@@ -197,8 +197,9 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
                 direct, moved[..., 0], moved[..., 4] = model._apply_direct_commands(
                     out, direct, kin[..., 0], kin[..., 4], moved[..., 0], moved[..., 4],
                     action_command, exec_cap=exec_cap)
+        fixed_next_lane = state["lane"]
         if controller is not None:
-            ns, nv, _ = model._apply_cav_overrides(
+            ns, nv, fixed_next_lane = model._apply_cav_overrides(
                 out, state, cav, direct, present, i, action_id, action_command, None,
                 controller, moved[..., 0], moved[..., 4], state["lane"], exec_cap=exec_cap)
             moved[..., 0], moved[..., 4] = ns, nv
@@ -207,7 +208,8 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
         moved[..., 5] = out["accel_mps2"]
         if hasattr(model, "pivot_decision_geometry"):
             geo = model.pivot_decision_geometry(state, out["accel_mps2"],
-                                                 next_s=moved[..., 0], next_v=moved[..., 4])
+                                                 next_s=moved[..., 0], next_v=moved[..., 4],
+                                                 fixed_next_lane=fixed_next_lane)
         else:
             geo = geometry(moved, present, model.physics)
         rows.append({key: value.detach() for key, value in geo.items()})
@@ -297,7 +299,11 @@ class MergePivotTerm(LossTerm):
         initial = ctx.targets.prepared.get("merge_pivot_initial_maximum") if c0 == 0 else None
         stats["recorded_events"] = int(cut(prep["event"]).sum())
         stats["recorded_physical_fail_events"] = int((cut(prep["event"])
-                                                       & ~cut(prep["geometry"]["eligible"])).sum())
+                                                        & ~cut(prep["geometry"]["eligible"])).sum())
+        stats["recorded_geometric_fail_events"] = int((cut(prep["event"])
+            & ~cut(prep["geometry"]["physical_eligible"])).sum())
+        stats["recorded_reservation_fail_events"] = int((cut(prep["event"])
+            & cut(prep["geometry"]["reservation_veto"])).sum())
         stats["recorded_competing_exits"] = int(cut(prep["competing_exit"]).sum())
         stats["recorded_vanished_exits"] = int(cut(prep["vanished"]).sum())
         if cfg.tf_weight or cfg.metrics:
@@ -381,7 +387,8 @@ class MergePivotTerm(LossTerm):
                 state["is_cav"] = cav.reshape(b * t, k)
                 flat = prep["model"].pivot_decision_geometry(
                     state, pred["accel"][..., :k].reshape(b * t, k),
-                    next_s=moved[..., 0].reshape(b * t, k), next_v=moved[..., 4].reshape(b * t, k))
+                    next_s=moved[..., 0].reshape(b * t, k), next_v=moved[..., 4].reshape(b * t, k),
+                    fixed_next_lane=pred["lanes"][..., :k].reshape(b * t, k))
                 p = {key: val.reshape(b, t, k) for key, val in flat.items()}
             else:
                 p = geometry(moved, present, self.physics)

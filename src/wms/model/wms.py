@@ -69,7 +69,8 @@ _MERGE_CORE_LOG_KEYS = (
     "merge_core_T", "merge_core_b", "merge_core_tau_a", "merge_core_temperature",
     "merge_core_require_both")
 _MERGE_PIVOT_LOG_KEYS = tuple("merge_pivot_" + name for name in (
-    "c", "eligible", "cross", "committed", "cdf", "event_mass", "st",
+    "c", "eligible", "physical_eligible", "reservation_veto", "cross", "committed",
+    "cdf", "event_mass", "st",
     "s_f", "T_f", "b_f", "s_l", "T_l", "b_l", "tau"))
 _MERGE_PIVOT_STATE_KEYS = ("z", "maximum", "present", "identity", "terminal", "started")
 
@@ -1455,6 +1456,10 @@ class WmSModel(nn.Module):
         if direct.any():
             direct, next_s, next_v = self._apply_direct_commands(
                 out, direct, s, v, next_s, next_v, action_command, exec_cap=exec_cap)
+        if self.merge_pivot is not None and cav_controller is None:
+            # The no-command fallback is longitudinal prediction with the current
+            # lane held, shared with recorded replay; no future teacher motion.
+            next_lane = torch.where(cav, state["lane"].long(), next_lane)
         # The controller callback owns episode-persistent lifecycle state and must run exactly
         # once per physics tick even after every CAV has exited (empty CAV mask).
         if (not self.black_box and (cav.any() or cav_controller is not None)
@@ -1500,7 +1505,8 @@ class WmSModel(nn.Module):
                     "next_lane": next_lane, "next_present": next_present})
         return out
 
-    def pivot_decision_geometry(self, state, accel, *, next_s=None, next_v=None):
+    def pivot_decision_geometry(self, state, accel, *, next_s=None, next_v=None,
+                                fixed_next_lane=None):
         """P1 LC substep shared by deployment and recorded causal replay.
 
         Decision is after the single trapezoid/stop-time longitudinal update and
@@ -1514,13 +1520,19 @@ class WmSModel(nn.Module):
         else:
             moved = kin.clone()
             moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, accel
-        return pivot.geometry(moved, state_present(state, kin), self.physics)
+        present = state_present(state, kin)
+        cav = state.get("is_cav", torch.zeros_like(present)).bool()
+        fixed_target = (None if fixed_next_lane is None else
+                        present & cav & (fixed_next_lane == int(self.physics.merge_target_lane)))
+        return pivot.geometry(moved, present, self.physics, decision_mask=~cav,
+                              fixed_target=fixed_target)
 
     def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform):
         kin = state_kin(state)
         present = state_present(state, kin)
         geo = self.pivot_decision_geometry(state, out["accel_mps2"],
-                                           next_s=next_s, next_v=next_v)
+                                           next_s=next_s, next_v=next_v,
+                                           fixed_next_lane=next_lane)
         own = present & out["hdv_mask"].bool()
         ramp_lane, target_lane = int(self.physics.merge_lane), int(self.physics.merge_target_lane)
         ramp = own & (state["lane"].long() == ramp_lane)
@@ -1533,16 +1545,24 @@ class WmSModel(nn.Module):
         updated = pivot.update_state(c, params["tau"], geo["ramp"] & own, present,
                                       carry=carry, identity=identity, uniform=uniform)
         crossing = updated["cross"] & ramp
+        # Analytically scored, pre-willingness opportunities own their intervals.
+        # Competing learned mainline insertions cannot make E depend on other z.
+        rear = next_s - kin[..., 6]
+        intersects = (torch.maximum(rear.unsqueeze(-1), rear.unsqueeze(-2))
+                      < torch.minimum(next_s.unsqueeze(-1), next_s.unsqueeze(-2)))
+        reserved_overlap = (intersects & geo["eligible"].unsqueeze(-2)).any(-1)
+        other_incoming = (own & ~ramp & (state["lane"] != target_lane)
+                          & (next_lane == target_lane) & reserved_overlap)
+        next_lane = torch.where(other_incoming, state["lane"].long(), next_lane)
         proposed = torch.where(ramp, torch.where(crossing, target_lane, ramp_lane), next_lane)
         moved = kin.clone()
         moved[..., 0], moved[..., 4] = next_s, next_v
         final = pivot.resolve_conflicts(moved, present, state["lane"].long(), proposed, own)
         committed = ramp & (final == target_lane)
+        if bool((crossing & ~committed).any()):
+            raise RuntimeError("first_passage reservation/commit inconsistency")
         active = geo["eligible"] & ~updated["terminal"]
         st = pivot.hard_st(c, params["tau"], updated["z"], self.merge_st_width, active)
-        # A canceled proposal has no lane-change derivative. A waiting eligible car
-        # retains the surrogate gradient for a possible crossing.
-        st = torch.where(crossing & ~committed, torch.zeros_like(st), st)
         updated["terminal"] = updated["terminal"] | committed
         hard_weights = torch.nn.functional.one_hot(final.clamp_min(0), 3).to(c.dtype)
         direction = c.new_zeros(3)
@@ -1559,6 +1579,8 @@ class WmSModel(nn.Module):
         previous = torch.where(reset, torch.full_like(c, -torch.inf), previous)
         log_mass = pivot.log_event_mass(previous, updated["maximum"], params["tau"])
         out.update({"merge_pivot_c": c, "merge_pivot_eligible": geo["eligible"],
+                    "merge_pivot_physical_eligible": geo["physical_eligible"],
+                    "merge_pivot_reservation_veto": geo["reservation_veto"],
                     "merge_pivot_cross": crossing, "merge_pivot_committed": committed,
                     "merge_pivot_st": st, "merge_pivot_cdf": -torch.expm1(
                         pivot.log_survival(updated["maximum"], params["tau"])),
@@ -1983,7 +2005,8 @@ class WmSModel(nn.Module):
         if self.merge_frailty is not None and current.get("merge_frailty_present") is None:
             # R5FR: presence at the rollout start (first-step new-car detection).
             current["merge_frailty_present"] = pres0.clone()
-        if self.merge_core is not None and current.get("merge_core_present") is None:
+        if (self.merge_core is not None and self.merge_pivot is None
+                and current.get("merge_core_present") is None):
             # SECUREGAP: presence at the rollout start (first-step new-car detection).
             current["merge_core_present"] = pres0.clone()
         lane_draw = (self._lane_draws(lane_uniform, lane_seed, lane_crn, pres0)

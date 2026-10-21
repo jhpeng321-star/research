@@ -84,14 +84,18 @@ class FirstPassageNet(nn.Module):
         return self.boundary(geometry)
 
 
-def geometry(kin: Tensor, present: Tensor, physics) -> dict[str, Tensor]:
-    """Full-scene nearest target neighbors and exact all-target overlap veto.
+def geometry(kin: Tensor, present: Tensor, physics,
+             decision_mask: Optional[Tensor] = None,
+             fixed_target: Optional[Tensor] = None) -> dict[str, Tensor]:
+    """Full-scene neighbors, exact overlap veto and latent-independent reservations.
 
     Touching bumpers are physically eligible but constrain the learned boundary
     to -inf.  A missing/nonfinite PRESENT observation invalidates the scene;
     absent slots may contain arbitrary padding.  No distance cutoff is used.
     ``ramp`` includes both endpoints of the configured merge zone, independent
     of physical vetoes, for lifecycle tracking.
+    ``decision_mask`` excludes nonlearned candidates from opportunity allocation;
+    ``fixed_target`` marks immutable target occupancy from current actions only.
     """
     present = present.bool()
     observed = (torch.isfinite(kin).all(-1) & (kin[..., 1:4].sum(-1) > 0.0)
@@ -119,8 +123,26 @@ def geometry(kin: Tensor, present: Tensor, physics) -> dict[str, Tensor]:
     intersects = (torch.maximum(rear.unsqueeze(-1), rear.unsqueeze(-2))
                   < torch.minimum(s.unsqueeze(-1), s.unsqueeze(-2)))
     overlap = (candidates & intersects).any(-1)
+    physical = ramp & scene_valid & ~overlap
+    if decision_mask is not None:
+        physical = physical & decision_mask.bool()
+    # Current-action immutable CAV insertions are a physical veto, but never
+    # change PRE-change target-neighbor features.
+    if fixed_target is not None:
+        incoming_overlap = (intersects & fixed_target.bool().unsqueeze(-2)
+                            & not_self).any(-1)
+        physical = physical & ~incoming_overlap
+    # Allocate simultaneous opportunities BEFORE willingness/latent draws. Exact
+    # interval reservations are deterministic and independent of z, preserving a
+    # scalar exact first-passage law conditional on the supplied scene. Arbitration
+    # depending on competing z AFTER crossing would require a joint likelihood.
+    reserved = torch.zeros_like(physical)
+    for i in range(k):
+        blocked = (intersects[..., i, :] & reserved).any(-1)
+        reserved[..., i] = physical[..., i] & ~blocked
     out = {"v": v, "ramp": ramp, "overlap": overlap,
-           "eligible": ramp & scene_valid & ~overlap}
+           "physical_eligible": physical, "reservation_veto": physical & ~reserved,
+           "eligible": reserved}
     for side, mask, distance in (
             ("f", candidates & (ds >= 0.0), ds),
             ("l", candidates & (ds <= 0.0), -ds)):

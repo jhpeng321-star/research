@@ -49,7 +49,8 @@ def test_round8_load_into_pivot_uses_loaded_parameters_and_preserves_every_tenso
         old.merge_core.alpha_log_sigma_raw.fill_(-1.5)
     file = tmp_path / "round8.pt"
     save_checkpoint(file, old, {**old.spec.__dict__, "physics": old.physics.__dict__})
-    new = load_checkpoint(file, model_config={"merge_decision": "first_passage"}).model
+    new = load_checkpoint(file, model_config={"merge_decision": "first_passage",
+                                              "merge_st_width": 0.4}).model
     for key, value in old.state_dict().items():
         assert torch.equal(new.state_dict()[key], value), key
     p, old_p = new.merge_pivot.params(), old.merge_core.params()
@@ -62,6 +63,7 @@ def test_round8_load_into_pivot_uses_loaded_parameters_and_preserves_every_tenso
     file2 = tmp_path / "pivot.pt"
     save_checkpoint(file2, new, {**new.spec.__dict__, "physics": new.physics.__dict__})
     loaded = load_checkpoint(file2).model
+    assert loaded.merge_st_width == 0.4
     assert all(torch.equal(v, loaded.state_dict()[k]) for k, v in new.state_dict().items())
 
 
@@ -147,13 +149,68 @@ def test_native_simultaneous_gap_conflict_and_st_backward_width():
     m, s = model(), state(positions=(30., 31., 100.), lanes=(2, 2, 1))
     with patch.object(m, "forward", side_effect=fixed_forward):
         out = m.step(s, lane_uniform=torch.full_like(s["s_m"], 0.5))
-    assert out["merge_pivot_cross"][0, :2].all()
+    assert out["merge_pivot_cross"][0, :2].tolist() == [True, False]
     assert out["next_lane"].tolist() == [[1, 2, 1]]
     assert out["merge_pivot_committed"].tolist() == [[True, False, False]]
     assert out["merge_pivot_st"][0, 1] == 0
     out["merge_pivot_st"].sum().backward()
     assert m.merge_pivot.s_l_raw.grad is not None
     assert torch.isfinite(m.merge_pivot.s_l_raw.grad)
+
+
+def test_merge_reservation_is_independent_of_competing_willingness_and_mainline_draws():
+    m, s = model(), state(positions=(30., 31., 48.), lanes=(2, 0, 1))
+    with torch.no_grad():
+        m.merge_pivot.tau_raw.fill_(1. + torch.log(-torch.expm1(torch.tensor(-1.))))
+    def incoming(current, **kwargs):
+        out = fixed_forward(current, **kwargs)
+        out["lane_logits"][0, 1] = torch.tensor([-20., 20., -20.])
+        return out
+    with patch.object(m, "forward", side_effect=incoming):
+        wait = m.step(s, lane_uniform=torch.full_like(s["s_m"], .01))
+        merge = m.step(s, lane_uniform=torch.full_like(s["s_m"], .99))
+    assert not wait["merge_pivot_cross"][0, 0] and merge["merge_pivot_cross"][0, 0]
+    assert wait["next_lane"].tolist() == [[2, 0, 1]]
+    assert merge["next_lane"].tolist() == [[1, 0, 1]]
+    for key in ("merge_pivot_c", "merge_pivot_eligible", "merge_pivot_cdf", "merge_pivot_event_mass"):
+        assert torch.equal(wait[key], merge[key]), key
+    assert torch.equal(merge["merge_pivot_cross"], merge["merge_pivot_committed"])
+
+
+def test_current_action_cav_insertion_veto_uses_prechange_neighbor_features():
+    m, s = model(), state(positions=(30., 31., 48.), lanes=(2, 0, 1))
+    s["is_cav"][0, 1] = True
+    def callback(current):
+        lanes = current["lane"].clone()
+        lanes[0, 1] = 1
+        return torch.stack((current["s_m"], lanes, current["v_mps"], current["a_mps2"]), -1)
+    with patch.object(m, "forward", side_effect=fixed_forward):
+        out = m.step(s, cav_controller=callback,
+                     lane_uniform=torch.full_like(s["s_m"], .99))
+    assert not out["merge_pivot_eligible"][0, 0]
+    assert out["next_lane"].tolist() == [[2, 1, 1]]
+    geo = m.pivot_decision_geometry(s, out["accel_mps2"], next_s=out["next_s_m"],
+                                    next_v=out["next_v_mps"], fixed_next_lane=out["next_lane"])
+    assert geo["gap_l"][0, 0] == 13.0  # pre-change leader at 48+2.5, not incoming CAV at31
+    assert not geo["has_f"][0, 0]
+
+
+def test_no_command_cav_fallback_holds_lane_and_ignores_future_teacher():
+    m, s = model(), state(positions=(30., 31., 48.), lanes=(2, 0, 1))
+    s["is_cav"][0, 1] = True
+    def future_change(current, **kwargs):
+        out = fixed_forward(current, **kwargs)
+        out["lane_logits"][0, 1] = torch.tensor([-20., 20., -20.])
+        return out
+    with patch.object(m, "forward", side_effect=future_change):
+        a = m.step(s, cav_teacher=torch.full((1, 3, 4), 999.),
+                   lane_uniform=torch.full((1, 3), .5))
+        b = m.step(s, cav_teacher=torch.full((1, 3, 4), -999.),
+                   lane_uniform=torch.full((1, 3), .5))
+    assert a["next_lane"][0, 1] == 0
+    assert torch.equal(a["next_s_m"], s["s_m"] + .5 * s["v_mps"])
+    for key in ("next_lane", "next_s_m", "next_v_mps", "merge_pivot_c"):
+        assert torch.equal(a[key], b[key])
 
 
 def test_hard_lane_transition_has_a_downstream_residual_adjoint():
@@ -211,3 +268,31 @@ def test_draft_config_four_synthetic_updates_freeze_every_legacy_tensor():
         assert torch.equal(value, m.state_dict()[key]), key
     for name, p in m.merge_pivot.named_parameters():
         assert torch.isfinite(p) and not torch.equal(p, before[name]), name
+
+
+def test_draft_launcher_uses_round8_stage300_and_preserves_frozen_recipe(tmp_path, monkeypatch):
+    from tools.launch_round9 import main
+    import wms.cli.train as cli
+
+    old = model("secure_gap")
+    file = tmp_path / "round8_stage300.pt"
+    save_checkpoint(file, old, old.spec.__dict__, extra={"stage_s": 300.})
+    seen = []
+    monkeypatch.setattr(cli, "execute", lambda cfg, mode: seen.append((cfg, mode)) or 0)
+    assert main(["--init-from", str(file)]) == 0
+    cfg, mode = seen[0]
+    assert cfg.model.init_from == str(file.resolve())
+    assert cfg.model.merge_decision == "first_passage" and mode == "preflight"
+    assert cfg.loss.merge_core.z_tf == 395.2 and cfg.loss.merge_core.z_on == 2.15
+
+
+@pytest.mark.parametrize("stage", [120., 240.])
+def test_draft_launcher_rejects_non_stage300_init(tmp_path, stage):
+    from tools.launch_round9 import main
+
+    old = model("secure_gap")
+    file = tmp_path / "wrong_stage.pt"
+    save_checkpoint(file, old, old.spec.__dict__, extra={"stage_s": stage})
+    with pytest.raises(SystemExit) as exc:
+        main(["--init-from", str(file)])
+    assert exc.value.code == 2
