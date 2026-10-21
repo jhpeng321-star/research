@@ -972,16 +972,29 @@ class MergeCoreConfig:
     gap_tol_m: float = 20.0
     gap_speed_tol_mps: float = 5.0
     location_reg_weight: float = 1.0e-3
+    # R8 merge-core v2 (version 1 = bit-identical legacy behaviour).
+    version: int = 1
+    z_tf: float = 1.0
+    z_on: float = 1.0
+    sigma_reg_weight: float = 0.0
+    sigma_fit: float = 0.0
 
     def __post_init__(self) -> None:
         require(all(is_finite(x) and x >= 0.0 for x in (
-            self.weight, self.tf_weight, self.yield_weight, self.location_reg_weight)),
+            self.weight, self.tf_weight, self.yield_weight, self.location_reg_weight,
+            self.sigma_reg_weight)),
             "loss.merge_core weights must be finite and non-negative")
         require(1 <= int(self.n_quad) <= 64,
                 "loss.merge_core.n_quad must be in [1, 64]")
         require(all(is_finite(x) and x > 0.0 for x in (
             self.pos_tol_m, self.speed_tol_mps, self.gap_tol_m, self.gap_speed_tol_mps)),
             "loss.merge_core tolerances must be finite and positive")
+        require(not isinstance(self.version, bool) and int(self.version) in (1, 2),
+                "loss.merge_core.version must be 1 or 2")
+        require(all(is_finite(x) and x > 0.0 for x in (self.z_tf, self.z_on)),
+                "loss.merge_core z_tf / z_on must be finite and positive")
+        require(is_finite(self.sigma_fit) and self.sigma_fit >= 0.0,
+                "loss.merge_core.sigma_fit must be finite and non-negative")
 
     @property
     def enabled(self) -> bool:

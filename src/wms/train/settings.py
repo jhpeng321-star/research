@@ -392,6 +392,12 @@ class TrainSettings:
     merge_core_gap_tol_m: float = 20.0
     merge_core_gap_speed_tol_mps: float = 5.0
     merge_core_location_reg_weight: float = 1.0e-3
+    # R8 merge-core v2 (version 1 = bit-identical legacy behaviour).
+    merge_core_version: int = 1
+    merge_core_z_tf: float = 1.0
+    merge_core_z_on: float = 1.0
+    merge_core_sigma_reg_weight: float = 0.0
+    merge_core_sigma_fit: float = 0.0
 
     def __post_init__(self) -> None:
         _require(self.emergency_decel_mps2 is None or (
@@ -705,7 +711,7 @@ class TrainSettings:
                  "merge_frailty_location_reg_weight must be finite and >= 0")
         _require(all(math.isfinite(float(x)) and float(x) >= 0.0 for x in (
             self.merge_core_weight, self.merge_core_tf_weight, self.merge_core_yield_weight,
-            self.merge_core_location_reg_weight)),
+            self.merge_core_location_reg_weight, self.merge_core_sigma_reg_weight)),
             "merge_core weights must be finite and non-negative")
         _require(1 <= int(self.merge_core_n_quad) <= 64,
                  "merge_core_n_quad must be in [1, 64]")
@@ -713,6 +719,15 @@ class TrainSettings:
             self.merge_core_pos_tol_m, self.merge_core_speed_tol_mps,
             self.merge_core_gap_tol_m, self.merge_core_gap_speed_tol_mps)),
             "merge_core tolerances must be finite and positive")
+        _require(not isinstance(self.merge_core_version, bool)
+                 and int(self.merge_core_version) in (1, 2),
+                 "merge_core_version must be 1 or 2")
+        _require(all(math.isfinite(float(x)) and float(x) > 0.0 for x in (
+            self.merge_core_z_tf, self.merge_core_z_on)),
+            "merge_core z_tf / z_on must be finite and positive")
+        _require(math.isfinite(float(self.merge_core_sigma_fit))
+                 and float(self.merge_core_sigma_fit) >= 0.0,
+                 "merge_core_sigma_fit must be finite and non-negative")
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
