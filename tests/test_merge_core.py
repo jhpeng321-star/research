@@ -1,6 +1,4 @@
 """SECUREGAP merge core: geometry, latent persistence, gradients and checkpoint loading."""
-from pathlib import Path
-
 import pytest
 import torch
 
@@ -198,12 +196,15 @@ def test_default_switch_is_off_and_yield_is_zero_init():
     assert torch.allclose(with_core["lane_logits"], without["lane_logits"], atol=1e-7)
 
 
-ROUND2 = Path("E:/Temp/dc_laptop/ck_round2/wm_s_stage240.pt")
-
-
-@pytest.mark.skipif(not ROUND2.is_file(), reason="round-2 checkpoint is not available")
-def test_round2_loads_with_switch_on_at_fitted_init():
-    loaded = load_checkpoint(ROUND2, strict=False,
+def test_round2_loads_with_switch_on_at_fitted_init(tmp_path):
+    # Portable round-2-format checkpoint: exercise the real loader without a
+    # developer-local checkpoint dependency or skipping the compatibility gate.
+    spec = ModelSpec(lane_model="hazard_v5", rollout_mode="driver_params")
+    old = WmSModel(spec)
+    checkpoint = tmp_path / "round2.pt"
+    torch.save({"format": "wm_s/1", "model": old.state_dict(),
+                "config": {**spec.__dict__, "physics": PhysicsConfig().__dict__}}, checkpoint)
+    loaded = load_checkpoint(checkpoint, strict=False,
                             model_config={"merge_decision": "secure_gap"})
     model = loaded.model
     assert model.merge_core is not None

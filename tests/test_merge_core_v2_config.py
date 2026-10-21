@@ -59,14 +59,15 @@ def test_round8_config_reaches_flat_and_settings():
                                                        pytest.approx(8.0))
     assert core.location_reg_weight == pytest.approx(1.0e-3)
     assert core.sigma_reg_weight == pytest.approx(1.0e-3)
-    assert core.z_tf == pytest.approx(1.0) and core.z_on == pytest.approx(1.0)
+    assert core.z_tf == pytest.approx(395.2) and core.z_on == pytest.approx(2.15)
     assert core.sigma_fit == pytest.approx(0.0)      # 0 -> fitted alpha_log_sigma
 
     flat = cfg.to_legacy_flat()
     assert flat["merge_core_version"] == 2
     assert flat["merge_core_sigma_reg_weight"] == pytest.approx(1.0e-3)
-    # z_tf / z_on / sigma_fit equal their defaults here, so the legacy flat form omits them.
-    assert "merge_core_z_tf" not in flat and "merge_core_z_on" not in flat
+    # Measured round-8 normalizers are nondefault; sigma_fit keeps its default.
+    assert flat["merge_core_z_tf"] == pytest.approx(395.2)
+    assert flat["merge_core_z_on"] == pytest.approx(2.15)
     assert "merge_core_sigma_fit" not in flat
     overridden = load_train_config(
         ROUND8, ["loss.merge_core.z_tf=2.0", "loss.merge_core.z_on=3.0",
@@ -78,8 +79,8 @@ def test_round8_config_reaches_flat_and_settings():
 
     settings = TrainSettings.from_config(cfg)
     assert settings.merge_core_version == 2
-    assert settings.merge_core_z_tf == pytest.approx(1.0)
-    assert settings.merge_core_z_on == pytest.approx(1.0)
+    assert settings.merge_core_z_tf == pytest.approx(395.2)
+    assert settings.merge_core_z_on == pytest.approx(2.15)
     assert settings.merge_core_sigma_reg_weight == pytest.approx(1.0e-3)
     assert settings.merge_core_sigma_fit == pytest.approx(0.0)
     assert settings.merge_core_on
@@ -142,7 +143,7 @@ def test_compose_passes_the_r8_fields():
     term = next(t for t in composer.chunk_terms if t.name == "merge_core")
     cfg = term.cfg
     assert cfg.version == 2
-    assert cfg.z_tf == pytest.approx(1.0) and cfg.z_on == pytest.approx(1.0)
+    assert cfg.z_tf == pytest.approx(395.2) and cfg.z_on == pytest.approx(2.15)
     assert cfg.sigma_reg_weight == pytest.approx(1.0e-3)
     assert cfg.sigma_fit == pytest.approx(0.0)
 

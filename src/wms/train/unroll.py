@@ -177,6 +177,8 @@ class UnrollRunner:
         inp = prepare_inputs(batch, model, cfg, self.device, unroll_steps)
         targets = build_targets(inp, batch, cfg, float(model.physics.dt_s), self.device,
                                 physics=model.physics)
+        if "merge_pivot" in self.composer.names:
+            targets.prepared["merge_pivot_source"] = (model, inp)
         self.composer.prepare(targets)
         if pair_reference is not None:
             targets.prepared["paired_return_reference"] = pair_reference
@@ -306,6 +308,11 @@ class UnrollRunner:
                     for name, tensor in shareable.items():
                         shares.capture(name, tensor)
                 if not bool(torch.isfinite(breakdown.total)):
+                    if "merge_pivot" in self.composer.names:
+                        from .losses.merge_pivot import merge_pivot_metrics
+
+                        metrics = merge_pivot_metrics(targets.prepared["merge_pivot"], targets.dt_s)
+                        raise RuntimeError(f"non-finite first_passage loss: {metrics}")
                     raise RuntimeError("non-finite WM-S loss")
                 if pair_grads is not None:
                     paired = sum(v.value for n, v in breakdown.terms.items()
@@ -704,6 +711,10 @@ class UnrollRunner:
                     float(logged["merge_frailty"]) / loss_logged
                     if loss_logged > 0.0 else 0.0)
         core_prep = targets.prepared.get("merge_core")
+        if "merge_pivot" in targets.prepared:
+            from .losses.merge_pivot import merge_pivot_metrics
+
+            record.update(merge_pivot_metrics(targets.prepared["merge_pivot"], targets.dt_s))
         if core_prep is not None:
             # SECUREGAP secure-gap core diagnostics and value shares.
             from .losses.merge_core import merge_core_metrics
