@@ -1,0 +1,28 @@
+# V10 round 7b (2026-10-21 08:45): round 7 with a TRAINABLE merge core. Round 7 left the core at its init: Adam at the
+# stage lr (5e-5 / 3e-5) moves a raw scalar by at most ~lr per step, so 90 steps changed s0/T/b/tau_a/temperature by
+# < 0.3 % (s0 2.161 -> 2.164, temperature 1.278 -> 1.280, alpha sigma 0.128 -> 0.120) and the rollout early-merge bias
+# (-7.5 s) was untouched. Single change: lr_scale 100 on the core's physical scalars (lr 5e-3 / 3e-3) and 20 on its
+# small heads and bounded residual scale. Everything else identical to round 7 (same init: round 2 stage240).
+schema_version = 2
+name = "WM-S-C4-V10ROUND7B"
+extends = "c4_wm_v10round7.toml"
+
+[optim.lr_scale]
+"lane_v5" = 0.05
+"driver_encoder" = 0.3
+"driver_updater" = 0.3
+"residual_net" = 0.5
+"k_embedding" = 0.5
+"history_proj" = 0.5
+"merge_core" = 20.0
+"merge_core.s0_raw" = 100.0
+"merge_core.t_raw" = 100.0
+"merge_core.b_raw" = 100.0
+"merge_core.tau_raw" = 100.0
+"merge_core.temperature_raw" = 100.0
+"merge_core.alpha_log_sigma_raw" = 100.0
+"merge_core.alpha_bias" = 100.0
+"merge_core.yield_scale_raw" = 100.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round7b"
