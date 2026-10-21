@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+from functools import lru_cache
 import hashlib
 import importlib.util
 import json
@@ -124,6 +125,18 @@ def exact_logsumexp(x, dim):
     supported = torch.isfinite(x).any(dim, keepdim=True)
     value = torch.logsumexp(torch.where(supported, x, torch.zeros_like(x)), dim)
     return torch.where(supported.squeeze(dim), value, torch.full_like(value, -math.inf))
+
+
+@lru_cache(maxsize=64)
+def logistic_quadrature(n_quad):
+    """Gauss-Legendre integration over population quantiles, z=logit(U).
+
+    P2 and P3 share the proposed Logistic latent. P3 integrates it analytically;
+    this soft-hazard comparator integrates its sequence likelihood, not each tick.
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(n_quad)
+    u = torch.tensor((nodes+1)/2, dtype=DTYPE)
+    return u.log()-torch.log1p(-u), torch.tensor(weights/2, dtype=DTYPE)
 
 
 def world_bootstrap(values, worlds, n_boot, seed, *, weighting="world"):
@@ -469,8 +482,9 @@ class Candidate(nn.Module):
         if kind in ("P1+P2", "P1-P3"):
             values = {"s_f": initial["s0"], "T_f": initial["T"], "b_f": initial["b"],
                       "s_l": initial["s0"], "T_l": initial["T"], "b_l": initial["b"]}
-            values.update({"tau": initial["sigma"]} if kind == "P1-P3" else
-                          {"sigma": initial["sigma"], "temperature": initial["temperature"]})
+            values["tau"] = initial["sigma"]
+            if kind == "P1+P2":
+                values["temperature"] = initial["temperature"]
         self.raw = nn.ParameterDict({k: nn.Parameter(torch.tensor(math.log(math.expm1(v)) if v < 20 else v,
                                                                dtype=DTYPE), requires_grad=kind != "M0")
                                      for k, v in values.items()})
@@ -498,8 +512,8 @@ class Candidate(nn.Module):
                              torch.full_like(ratio, -math.inf)), torch.full_like(ratio, math.inf)))
             c = torch.where(eligible, torch.minimum(*sides), torch.full_like(d_f, -math.inf))
             return first_passage(c, p["tau"])
-        nodes, weights = gauss_hermite(n_quad, dtype=DTYPE)
-        alpha = torch.exp((p["sigma"] * nodes).clamp(-8, 8)).unsqueeze(-1)
+        nodes, weights = logistic_quadrature(n_quad)
+        alpha = torch.exp(p["tau"] * nodes).unsqueeze(-1)
         ml = f["gap_l"].unsqueeze(1) - d_l.unsqueeze(1)/alpha
         mf = f["gap_f"].unsqueeze(1) - d_f.unsqueeze(1)/alpha
         ml = torch.where(f["has_l"].unsqueeze(1), ml, torch.full_like(ml, math.inf))
@@ -561,7 +575,7 @@ def optimize(kind, initial, sequences, *, iters, lr, shrinkage, n_quad):
             contribution = nll.sum()/len(sequences)
             total += float(contribution.detach())
             contribution.backward()
-        penalty = shrinkage * model.params()["tau"].square() if kind == "P1-P3" else None
+        penalty = shrinkage * model.params()["tau"].square() if kind in ("P1+P2", "P1-P3") else None
         if penalty is not None:
             total += float(penalty.detach())
             penalty.backward()
@@ -577,7 +591,7 @@ def optimize(kind, initial, sequences, *, iters, lr, shrinkage, n_quad):
         optimizer.step()
     with torch.no_grad():
         value = float(np.mean(score_losses(model, sequences, n_quad)))
-        if kind == "P1-P3":
+        if kind in ("P1+P2", "P1-P3"):
             value += float(shrinkage * model.params()["tau"].square())
         if math.isfinite(value) and value < best_loss:
             best_loss = value
@@ -589,7 +603,7 @@ def optimize(kind, initial, sequences, *, iters, lr, shrinkage, n_quad):
 def select_fit(kind, initial, sequences, args):
     worlds = sorted({s["world"] for s in sequences})
     folds = [worlds[i::args.inner_folds] for i in range(args.inner_folds)]
-    lambdas = args.shrinkage if kind == "P1-P3" else [0.0]
+    lambdas = args.shrinkage if kind in ("P1+P2", "P1-P3") else [0.0]
     inner = []
     for lam in lambdas:
         scores, fold_reports = [], []
@@ -602,10 +616,11 @@ def select_fit(kind, initial, sequences, args):
             model, info = optimize(kind, initial, train, iters=args.iters, lr=args.lr,
                                    shrinkage=lam, n_quad=args.n_quad)
             with torch.no_grad():
-                score = float(np.mean(score_losses(model, val, args.n_quad)))
+                score = (float(np.mean(score_losses(model, val, args.n_quad)))
+                         if info["status"] == "fitted" else math.inf)
             scores.append(score)
             fold_reports.append({"worlds": validation, "nll_per_car": score, "fit": info})
-        mean = float(np.mean(scores)) if scores else math.inf
+        mean = float(np.mean(scores)) if len(scores) == args.inner_folds else math.inf
         inner.append({"lambda": lam, "mean_validation_nll": mean, "folds": fold_reports})
     chosen = min(inner, key=lambda r: (r["mean_validation_nll"], r["lambda"]))
     selected = chosen["lambda"] if math.isfinite(chosen["mean_validation_nll"]) else 0.0
@@ -814,6 +829,9 @@ def s3b_gates(kind, results):
              "signed_median_within_2s": signed_abs[1] <= 2,
              "median_absolute_within_12s": absolute[1] is not None and absolute[1] <= 12,
              "full_event_timing_identifiable": timing["unknown_age_events"] == 0 and bool(timing["event_denominator"])}
+    fitting = results[kind]["fit"]
+    gates["fit_and_inner_selection_completed"] = bool(kind == "M0" or (
+        fitting.get("final_fit", {}).get("status") == "fitted" and fitting.get("selection_status") == "ok"))
     for baseline in ("M0", "M0-refit"):
         pair = current["paired_vs"][baseline]["nll"]
         gates["nll_CI_below_0_vs_"+baseline] = bool(pair.get("status") == "ok" and pair["ci95"][1] < 0)
@@ -954,8 +972,9 @@ def main(argv=None):
               "semantics": {"M0": "untouched context-free round-8 soft hazard on pre-update geometry",
                 "M0-refit": "refitted context-free round-8 soft hazard on pre-update geometry",
                 "P1": "causal proposal + all-neighbor physical mask; legacy soft hazard boundary",
-                "P1+P2": "causal proposal + separate learned gap sides; persistent normal latent soft hazard",
+                "P1+P2": "causal proposal + separate learned gap sides; persistent logistic latent soft hazard",
                 "P1-P3": "P2 boundary; persistent logistic latent; exact eligible running maximum",
+                "sequence_latent_integration": "M0/M0-refit/P1: persistent Gauss-Hermite normal; P1+P2: persistent Gauss-Legendre logistic quantiles; P1-P3: analytic logistic law",
                 "physical_mask_repair": "P1 exact interval intersection reported separately; M0 not retrofitted",
                 "unknown_age": "enumerated and masked for entry timing; likelihood uses observed-start prior",
                 "competing_exits": "separate exit strata, survival to observed exit; no merge invented"}}

@@ -512,3 +512,77 @@ def test_cli_nonempty_audit_grouped_fit_and_bootstrap(workspace_tmp):
     assert "DIAGNOSTIC" in report["causal_proposal"]["name"]
     assert report["verdict"] == "CHANGES"
     assert md.is_file()
+
+
+def test_round8_checkpoint_transform_and_learned_residual_refusal(workspace_tmp):
+    from wms.model.merge_core import MergeCoreNet
+    core = MergeCoreNet(input_dim=0)
+    path = workspace_tmp/"round8.pt"
+    state = {"merge_core."+k: v for k, v in core.state_dict().items()}
+    torch.save({"model": state}, path)
+    params, identity = fit.load_params(path)
+    expected = {k: float(v.detach()) for k, v in core.params().items()}
+    expected["sigma"] = float(core.alpha_scale().detach())
+    assert params == expected
+    assert len(identity["sha256"]) == 64
+    state["merge_core.residual_head.2.bias"] = torch.ones(1)
+    torch.save({"model": state}, path)
+    with pytest.raises(ValueError, match="residual/location"):
+        fit.load_params(path)
+
+
+def test_untouched_m0_preserves_config_scalars_exactly():
+    initial, _ = fit.load_params("default")
+    model = fit.Candidate("M0", initial)
+    assert {k: float(v) for k, v in model.params().items()} == initial
+    assert not any(p.requires_grad for p in model.parameters())
+
+
+def test_current_actions_use_only_issued_past_controls_and_reset_identity(workspace_tmp):
+    times = np.arange(5)*.5
+    vid = np.zeros((5, 1), np.int32)
+    vid[1, 0] = 99
+    mask = np.ones((5, 1), bool)
+    arrays = {"control_time_s": np.array([0., 1.]), "controller": np.array([[3], [0]]),
+              "issued_acceleration_mps2": np.array([[2.], [-3.]]),
+              "issued_target_speed_mps": np.array([[10.], [20.]])}
+    for key, value in arrays.items():
+        np.save(workspace_tmp/(key+".npy"), value, allow_pickle=False)
+    actions = fit.current_actions({"path": workspace_tmp}, times, vid, mask)
+    assert actions["issued_acceleration_mps2"].flatten().tolist() == [2., 0., -3., -3.]
+    assert actions["valid"].flatten().tolist() == [True, False, True, True]
+
+
+def test_insufficient_inner_worlds_cannot_be_labeled_selected():
+    from types import SimpleNamespace
+    args = SimpleNamespace(inner_folds=4, shrinkage=[0], iters=1, lr=.03, n_quad=8)
+    _, result = fit.select_fit("M0-refit", _initial(), [_sequence(world="a"), _sequence(world="b")], args)
+    assert result["selection_status"] == "unresolved"
+    assert result["inner"][0]["mean_validation_nll"] == math.inf
+
+
+def test_p2_soft_hazard_uses_one_persistent_logistic_not_normal_or_tick_mixtures():
+    initial = _initial()
+    initial["sigma"] = .8
+    model = fit.Candidate("P1+P2", initial)
+    seq = _sequence()
+    features = {k: torch.tensor(v, dtype=torch.bool if k.startswith("has_") else DTYPE)
+                for k, v in seq["updated"].items()}
+    p = model.params()
+    x, w = np.polynomial.legendre.leggauss(8)
+    u = (x+1)/2
+    z = _double(np.log(u)-np.log1p(-u))
+    alpha = torch.exp(p["tau"]*z).unsqueeze(1)
+    df = p["s_f"]+p["T_f"]*features["v_f"]+torch.relu(features["v_f"]**2-features["v"]**2)/(2*p["b_f"])
+    dl = p["s_l"]+p["T_l"]*features["v"]+torch.relu(features["v"]**2-features["v_l"]**2)/(2*p["b_l"])
+    ml = torch.where(features["has_l"], features["gap_l"]-dl/alpha, math.inf)
+    mf = torch.where(features["has_f"], features["gap_f"]-df/alpha, math.inf)
+    hazards = torch.sigmoid(torch.minimum(ml, mf)/p["temperature"])
+    weights = _double(w/2)
+    persistent = (weights*((1-hazards[:, :-1]).prod(1))*hazards[:, -1]).sum()
+    marginal = (weights[:, None]*hazards).sum(0)
+    per_tick = (1-marginal[:-1]).prod()*marginal[-1]
+    expected = -persistent.log()
+    actual = model.nll(fit.pack([seq]))[0]
+    torch.testing.assert_close(actual, expected, atol=1e-12, rtol=1e-12)
+    assert abs(float((actual+per_tick.log()).detach())) > 1e-4
