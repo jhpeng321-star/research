@@ -1,6 +1,7 @@
 # F2: recorded pre-window survival conditioning
 
-Implemented on `c4/v10r9w2`, without changing runtime geometry or the audit tool.
+Implemented on `c4/v10r9w2`. See `R9_F2F3.md` for the subsequent full-scene/causal
+input repairs, audit command, measured recovery and remaining support blockers.
 
 ## Enable / data contract
 

@@ -131,6 +131,28 @@ def event_details(geo, raw, vid, cav, t, k, params):
     return clean(d)
 
 
+def diagnose(rows):
+    """Diagnostic successor projections never alter support or enter replay."""
+    out = Counter()
+    for row in rows:
+        if row["is_cav"] or row["support_verdict"] != "vetoed":
+            continue
+        d = json.loads(row["geometry_json"])
+        ego, blocker = d.get("ego"), d.get("blocker")
+        if ego is None or blocker is None:
+            continue
+        if blocker["recorded_post_lane"] == -1:
+            out["veto_blocker_successor_is_junction"] += 1
+        elif blocker["recorded_post_lane"] != blocker["pre_lane"]:
+            out["veto_blocker_successor_leaves_target_lane"] += 1
+        es, bs = ego["recorded_post_front"], blocker["recorded_post_front"]
+        if max(es - ego["length"], bs - blocker["length"]) < min(es, bs):
+            out["veto_also_intersects_in_recorded_successor_projection"] += 1
+        else:
+            out["veto_only_in_predicted_motion_projection"] += 1
+    return dict(out)
+
+
 @torch.no_grad()
 def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=None):
     raw = np.asarray(ep.array("veh_kin"), np.float32)
@@ -351,6 +373,8 @@ def main(argv=None):
                                                cache=args.output / ".replay_cache")
                 rows.extend(found)
                 counts.update(summary)
+        if not counts["episodes"]:
+            parser.error("no workspace-local TRAIN episodes are present")
         args.output = local_path(args.output)
         args.output.mkdir(parents=True, exist_ok=True)
         if rows:
@@ -364,6 +388,7 @@ def main(argv=None):
                        physical_support_share=counts["physically_supported"] / counts["hdv_events"]
                        if counts["hdv_events"] else None,
                        zero_mass_count_at_init=counts["all_hdv_zero_mass"],
+                       diagnostic_counts=diagnose(rows),
                        veto_reasons=dict(Counter(row["veto_reason"] for row in rows
                                                 if not row["is_cav"] and row["veto_reason"])))
         local_path(args.output / "summary.json").write_text(
