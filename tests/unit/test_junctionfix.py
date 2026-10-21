@@ -19,10 +19,12 @@ import torch
 
 from wms.config.load import load_train_config
 from wms.data.junction_fix import fill_junction_rows, pre_t0_rows, run_prefix
+from tests.fixtures.c4_historical import load_window_config
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA_ROOT = Path(os.environ.get("WMS_JUNCTIONFIX_DATA_ROOT", "E:/research-dense"))
-HAS_DATA = (DATA_ROOT / "data_cache" / "pack_v3" / "manifest.json").is_file()
+DATA_ROOT = Path(os.environ.get("WMS_JUNCTIONFIX_DATA_ROOT", str(ROOT)))
+HAS_DATA = (Path(os.environ.get("WMS_DATA_PACK_V3", str(DATA_ROOT / "data_cache" / "pack_v3")))
+            / "manifest.json").is_file()
 
 
 # ----------------------------------------------------------------------------- synthetic
@@ -134,7 +136,7 @@ def test_v4_config_differs_from_v3_only_by_the_switch_and_out_dir():
     from wms.config.train import TrainConfig
     from wms.train.settings import TrainSettings
 
-    v4 = load_train_config("configs/c4_wm_v4.toml", ["runtime.device=cpu"])
+    v4 = load_window_config("c4_wm_v4", ["runtime.device=cpu"])
     v3 = load_train_config("configs/c4_wm_v3.toml", ["runtime.device=cpu"])
     f4, f3 = v4.to_legacy_flat(), v3.to_legacy_flat()
     diff = {k for k in set(f4) | set(f3) if f4.get(k) != f3.get(k)}
@@ -193,7 +195,7 @@ def train_sets(tmp_path_factory):
 
     out = {}
     for name in ("c4_wm_v3", "c4_wm_v4"):
-        cfg = load_train_config(f"configs/{name}.toml", ["runtime.device=cpu"])
+        cfg = load_window_config(name, ["runtime.device=cpu"])
         out[name], _, _ = build_datasets(cfg, tmp_path_factory.mktemp(name))
     return out
 
