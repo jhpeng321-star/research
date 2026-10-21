@@ -14,8 +14,9 @@ from wms.model.leader_change import (LEADER_CHANGE_FEATURES, VALID_MASKED,
     LeaderChangeTracker, feature_matrix, leader_geometry, recorded_leader_change)
 from wms.model.residual_net import HdvConfig
 from wms.model.spec import ModelSpec
+from wms.model.history import LONG_HISTORY_F
 from wms.model.wms import WmSModel
-from wms.train.inputs import build_targets, prepare_inputs
+from wms.train.inputs import build_targets, prepare_inputs, state_from_kin
 from wms.train.losses.base import UnrollContext
 from wms.train.losses.compose import build_loss
 from wms.train.losses.cutin_reaction import (CutinReactionConfig, CutinReactionLoss,
@@ -289,6 +290,90 @@ def test_temporal_replay_uses_only_causal_recorded_prefix():
     modified.states[:, 5:, :, 4:6] += 2
     second = one_step_predicted_accel(model, modified)
     assert torch.equal(first[:, :5], second[:, :5])
+
+
+def test_round8_trainable_paths_and_frozen_parameters():
+    settings = TrainSettings.from_config(load_train_config(ROOT / "configs/c4_wm_v10round8.toml"))
+    torch.manual_seed(32)
+    model = WmSModel(ModelSpec.from_mapping(
+        load_train_config(ROOT / "configs/c4_wm_v10round8.toml").to_legacy_flat())).eval()
+    optimizer, report = build_optimizer(model, lr=1e-4, weight_decay=0,
+        freeze_prefixes=settings.freeze_prefixes, lr_scale=settings.lr_scale)
+    assert report["unmatched_freeze_prefixes"] == []
+    t = targets(sequence())
+    history = t.states.new_zeros(1, 4, model.driver_history_len, LONG_HISTORY_F)
+    history[..., 0] = 10 / 30
+    history[..., 2:5] = t.states[:, 0, :, None, 1:4]
+    history_mask = torch.zeros(history.shape[:-1], dtype=torch.bool)
+    history_mask[..., -2:] = True  # causal observations available before window t0
+    t.prepared["cutin_reaction_inputs"] = {"driver_history": history,
+                                          "driver_history_mask": history_mask}
+    loss = CutinReactionLoss(CutinReactionConfig(weight=1))(context(model, t)).value
+    loss.backward()
+    reached = {name for name, p in model.named_parameters()
+               if p.grad is not None and torch.isfinite(p.grad).all() and p.grad.abs().sum() > 0}
+    assert all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None)
+    assert any(name.startswith("residual_net.accel") for name in reached)
+    assert any(name.startswith("temporal.") for name in reached)
+    assert model.rollout_mode == "hybrid"
+    assert any(name.startswith("driver_encoder.") for name in reached)
+    frozen = {name: p.detach().clone() for name, p in model.named_parameters() if not p.requires_grad}
+    assert "merge_core.temperature_raw" in frozen
+    optimizer.step()
+    assert all(torch.equal(frozen[name], p) for name, p in model.named_parameters() if name in frozen)
+    # Real initialized-model reachability evidence; no claim about a trained checkpoint.
+    print("R9K round8 reached:", sorted({name.split('.')[0] for name in reached}))
+
+
+def test_hybrid_replay_can_reach_inferred_idm_parameters():
+    model = small_model(rollout_mode="hybrid")
+    t = targets(sequence())
+    CutinReactionLoss(CutinReactionConfig(weight=1))(context(model, t)).value.backward()
+    assert any(name.startswith("driver_encoder.") and p.grad is not None
+               and torch.isfinite(p.grad).all() and p.grad.abs().sum() > 0
+               for name, p in model.named_parameters())
+
+
+def test_prepared_history_reaches_replay_and_slot_reset_clears_it():
+    model = small_model()
+    t = targets(sequence())
+    history = torch.ones(1, 4, model.history_len, model.history_features)
+    mask = torch.ones(history.shape[:-1], dtype=torch.bool)
+    reset = torch.zeros_like(t.loss_valid)
+    reset[:, 0, 0] = True
+    reset[:, 4, 0] = True
+    t.prepared["cutin_reaction_inputs"] = {"history": history, "history_mask": mask, "reset": reset}
+    masks = []
+    def observe(module, args, kwargs):
+        masks.append(kwargs["history_mask"].clone())
+    handle = model.register_forward_pre_hook(observe, with_kwargs=True)
+    one_step_predicted_accel(model, t)
+    handle.remove()
+    assert not masks[0][0, 0].any()
+    assert masks[0][0, 1].all()
+    assert masks[4][0, 0].sum() == 1
+    assert history.eq(1).all() and mask.all()  # never mutate runner inputs
+
+
+def test_model_default_checkpoint_remains_strictly_loadable():
+    old = small_model()
+    state = old.state_dict()
+    new = small_model()
+    result = new.load_state_dict(state, strict=True)
+    assert not result.missing_keys and not result.unexpected_keys
+    assert not any("leader_change" in name for name in state)
+
+
+@pytest.mark.parametrize("slow", [False, True])
+def test_replay_matches_rollout_with_every_recorded_state_revealed(slow):
+    model = small_model(temporal_residual_mode="slow" if slow else "direct")
+    t = targets(sequence())
+    state = state_from_kin(t.states[:, 0], t.loss_valid[:, 0])
+    state["is_cav"] = t.is_cav[:, 0]
+    replay = one_step_predicted_accel(model, t)
+    rollout = model.rollout(state, n_steps=t.n_steps,
+        observe_states=t.states, observe_mask=t.loss_valid, is_cav_seq=t.is_cav)
+    torch.testing.assert_close(replay, rollout["accel"], rtol=0, atol=1e-6)
 
 
 def test_config_toml_settings_composer_and_default_flat_hash(tmp_path):

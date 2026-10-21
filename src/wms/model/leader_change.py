@@ -1,11 +1,9 @@
 """Stateful per-vehicle leader-change features (R9K, pure torch, no parameters).
 
-The WM follower over-reacts to lane-1 cut-ins (FOLLOWER_YIELD.md: WM follower min
-accel ~-2.4 vs SUMO ~-0.9 m/s^2 at matched gap/closing, the excess arriving AFTER
-the insertion).  The residual net only sees instantaneous kinematics, so it cannot
-distinguish "my leader changed half a second ago" (a cut-in; brake moderately) from
-an ordinary closing gap.  This module is the *missing history*: a per-slot tracker
-of leader-identity changes with the geometry at the change, exposed the same way as
+The supplied brief reports excess WM braking after lane-1 insertions. This module
+exposes leader-identity history and geometry without prescribing an acceleration
+response. A measured missing-history effect is required before enabling it. The
+per-slot tracker is exposed the same way as
 :mod:`wms.model.merge_context` (``MergeContextTracker``), for the coordinator to
 append to the residual-net inputs behind ``model.leader_change_features`` (default
 false; NO wms.py edit is made in this branch - R9_K.md documents the exact hooks).
@@ -54,7 +52,7 @@ LEADER_CHANGE_FEATURES: tuple[str, ...] = (
     "closing_now_mps",        # [m/s] v_leader - v_own now
     "gap_at_change_m",        # [m] leader gap recorded at the change step
     "closing_at_change_mps",  # [m/s] closing speed recorded at the change step
-    "prev_leader_gap_m",      # [m] gap to the displaced leader at the change step
+    "prev_leader_gap_m",      # [m] last observed gap to the displaced leader
     "changed_cut_in",         # 1 while the current episode is an adjacent-lane cut-in
     "changed_own_lane",       # 1 while the episode followed the slot's own lane change
     "changed_leader_exit",    # 1 while the episode followed the leader leaving
@@ -67,6 +65,8 @@ VALID_MASKED: tuple[str, ...] = (
     "closing_at_change_mps",
     "prev_leader_gap_m",
 )
+
+LEADER_CHANGE_INPUTS = LEADER_CHANGE_FEATURES + tuple(f"{name}_valid" for name in VALID_MASKED)
 
 #: Change-type ids of :attr:`LeaderChangeTracker.CHANGE_TYPES`.
 CHANGE_CUT_IN = 1
@@ -116,7 +116,7 @@ def leader_geometry(s: Tensor, lane: Tensor, v: Tensor, present: Tensor,
 
 
 def feature_matrix(out: dict[str, Tensor]) -> Tensor:
-    """Normalised ``[B, K, F]`` matrix of :data:`LEADER_CHANGE_FEATURES`.
+    """Normalised ``[B, K, 14]`` values then :data:`VALID_MASKED` validity bits.
 
     Binary flags (``has_leader``, ``changed_*``) pass through as 0/1; physical
     values are divided by :data:`LEADER_CHANGE_SCALES`; missing values (valid
@@ -125,6 +125,8 @@ def feature_matrix(out: dict[str, Tensor]) -> Tensor:
     columns = []
     for name in LEADER_CHANGE_FEATURES:
         value = out[name].float()
+        if name in VALID_MASKED:
+            value = torch.where(out[f"{name}_valid"], value, torch.zeros_like(value))
         if name in LEADER_CHANGE_SCALES:
             value = value / float(LEADER_CHANGE_SCALES[name])
         columns.append(value)
@@ -259,6 +261,7 @@ class LeaderChangeTracker:
         if self.batch == 0 or self.k == 0:
             return self._empty_outputs(dev, fd)
 
+        present = present & (lane >= 0)
         s = torch.where(present, s, torch.zeros_like(s))
         v = torch.where(present, v, torch.zeros_like(v))
         length = torch.where(present, length, torch.zeros_like(length))
@@ -337,7 +340,6 @@ class LeaderChangeTracker:
                                    torch.zeros_like(change_type))
         prev_gap_valid = torch.where(changed, old_index >= 0, self.prev_gap_valid) & has_episode
 
-        zeros = torch.zeros_like(v)
         out = {
             "has_leader": has.to(fd),
             "t_since_change_s": t_since,
@@ -388,8 +390,9 @@ def recorded_leader_change(veh_kin: Tensor, present: Tensor, *,
     ``veh_kin`` is ``[B, N, K, 7]`` (``s``, lane one-hot x3, ``v``, ``a``,
     ``length`` as in ``UnrollTargets.states``); ``present`` is ``[B, N, K]``.
     Returns ``{name: [B, N, K]}`` including the valid masks - identical to
-    stepping one fresh tracker over the same sequence (window-start history is
-    unknown, so the first step of every slot starts a fresh episode).
+    stepping the same tracker over the sequence. With no tracker, window-start
+    history is unknown. Pass a tracker across chunks, without re-playing the last
+    row of the preceding chunk. ``reset`` marks explicit identity replacements.
     """
     kin = torch.as_tensor(veh_kin)
     present = torch.as_tensor(present)
@@ -431,4 +434,4 @@ __all__ = ["LEADER_CHANGE_FEATURES", "VALID_MASKED", "LEADER_CHANGE_SCALES",
            "RAMP_LANE", "TARGET_LANE", "MAX_NEIGHBOUR_GAP_M", "T_SINCE_CHANGE_MAX_S",
            "CHANGE_CUT_IN", "CHANGE_OWN_LANE", "CHANGE_LEADER_EXIT",
            "leader_geometry", "feature_matrix", "LeaderChangeTracker",
-           "recorded_leader_change"]
+            "recorded_leader_change", "LEADER_CHANGE_INPUTS"]

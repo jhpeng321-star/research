@@ -31,6 +31,7 @@ from torch import Tensor
 from wms.model.history import (LONG_HISTORY_F, history_step_features,
                                initial_history, push_history)
 from wms.model.leader_change import LeaderChangeTracker, feature_matrix
+from wms.physics.mobil import update_merge_wait
 from wms.physics.neighbours import lead_neighbour
 
 from .base import TermValue, UnrollContext, UnrollTerm, UnrollTargets
@@ -90,7 +91,7 @@ def insertion_events(targets: UnrollTargets, config: CutinReactionConfig) -> lis
     if not math.isfinite(dt) or dt <= 0:
         raise ValueError("cutin_reaction dt_s must be finite and positive")
     n = targets.n_steps
-    kin, lane, valid, reset, continuous, hdv = _recorded(targets)
+    kin, lane, valid, _, continuous, hdv = _recorded(targets)
     insert = continuous & (lane[:, :-1] == config.merge_lane) & (lane[:, 1:] == config.target_lane)
     events = []
     pre = int(math.floor(config.pre_s / dt + 1e-8))
@@ -162,6 +163,8 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets) -> Tensor:
     kin, lane, valid, reset, _, _ = _recorded(targets)
     prep = targets.prepared.get("cutin_reaction_inputs", {})
     b, _, k = kin.shape[:3]
+    if targets.n_steps == 0:
+        return kin.new_empty(b, 0, k)
     history = prep.get("history")
     mask = prep.get("history_mask")
     if history is not None:
@@ -176,32 +179,51 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets) -> Tensor:
         driver_mask = torch.zeros(driver_history.shape[:-1], dtype=torch.bool, device=kin.device)
     tracker = LeaderChangeTracker(b, k, dt=targets.dt_s, device=kin.device)
     carry: dict[str, Tensor] = {}
-    age = kin.new_full((b, k), 999.)
+    recurrent: dict[str, Tensor] = {}
+    age = prep.get("lane_age0")
+    if age is None and hasattr(model, "_initial_lane_age"):
+        age = model._initial_lane_age({}, valid[:, 0], kin[:, 0],
+                                      driver_history, driver_mask)
+    age = kin.new_full((b, k), 999.) if age is None else age.detach()
     params = embedding = None
     outputs = []
     for t in range(targets.n_steps):
         present = valid[:, t]
         new = reset[:, t] | (present & ~valid[:, t - 1] if t else torch.zeros_like(present))
         if t:
-            age = torch.where(new | (lane[:, t] != lane[:, t - 1]), 0., age + 1)
+            age = torch.where(lane[:, t] != lane[:, t - 1], 0., age + 1)
+            age = torch.where(new, 999., age)
         tracker.reset_slots(new)
         features = tracker.step(kin[:, t, :, 0], lane[:, t], kin[:, t, :, 4],
                                 present, kin[:, t, :, 6])
-        for key, value in carry.items():
-            carry[key] = torch.where(new, torch.zeros_like(value), value)
-        kwargs: dict[str, Any] = {"lane_age": age}
+        for tensors in (carry, recurrent):
+            for key, value in tensors.items():
+                expanded = new.reshape(b, k, *([1] * (value.ndim - 2)))
+                tensors[key] = torch.where(expanded, torch.zeros_like(value), value)
+        kwargs: dict[str, Any] = {"lane_age": age, **recurrent}
+        if driver_history is not None:
+            kwargs.update(driver_history=driver_history,
+                          driver_history_mask=driver_mask & ~new[..., None])
         if hasattr(model, "history_len"):
             gap, _ = lead_neighbour(kin[:, t], present, model.physics)
             feat = history_step_features(kin[:, t], gap)
             if history is None:
                 history, mask = initial_history(feat, present, model.history_len)
-            elif t:
+            else:
                 history = torch.where(new[..., None, None], 0., history)
                 mask = mask & ~new[..., None]
-                history, mask = push_history(history, mask, feat, present)
+                if t:
+                    history, mask = push_history(history, mask, feat, present)
             kwargs.update(history=history, history_mask=mask)
         state = {"veh_kin": kin[:, t].float(), "present": present,
                  "is_cav": targets.is_cav[:, t].bool(), **carry}
+        if bool(getattr(model, "_tracks_merge_wait", False)):
+            if t == 0:
+                state["merge_wait_s"] = model.initial_merge_wait(
+                    present, kin[:, t], driver_history, driver_mask)
+            else:
+                state["merge_wait_s"] = update_merge_wait(
+                    carry.get("merge_wait_s"), kin[:, t], present, model.physics)
         if bool(getattr(model, "leader_change_features", False)):
             state["leader_change_features"] = feature_matrix(features)
         if hasattr(model, "encode_drivers") and (t == 0 or bool(new.any())):
@@ -210,21 +232,25 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets) -> Tensor:
                 enc_kwargs.update(driver_history=driver_history,
                                   driver_history_mask=driver_mask & ~new[..., None])
             _, fresh_embedding, fresh_params = model.encode_drivers(state, **enc_kwargs)
-            if params is None:
+            if t == 0:
                 params, embedding = fresh_params, fresh_embedding
-            elif fresh_params is not None:
+            elif fresh_params is not None and params is not None:
                 params = {name: torch.where(new, fresh_params[name], value)
                           for name, value in params.items()}
-                if embedding is not None:
-                    embedding = torch.where(new[..., None], fresh_embedding, embedding)
+            if t and embedding is not None and fresh_embedding is not None:
+                embedding = torch.where(new[..., None], fresh_embedding, embedding)
         if params is not None:
             kwargs["driver_params"] = params
         if embedding is not None:
             kwargs["driver_embedding"] = embedding
         out = model(state, k_steps=t, **kwargs)
         outputs.append(out["accel_mps2"])
-        carry = {key: out[key] for key in ("temporal_residual_mps2", "temporal_residual_present")
+        carry = {key: out[key] for key in ("temporal_residual_mps2", "temporal_residual_present",
+                                          "merge_neg_accel_ema", "merge_neg_intent_logit")
                  if key in out}
+        if "merge_wait_s" in state:
+            carry["merge_wait_s"] = state["merge_wait_s"]
+        recurrent = {key: out[key] for key in ("lane_v5_acc", "lane_blocked") if key in out}
     return torch.stack(outputs, 1)
 
 
