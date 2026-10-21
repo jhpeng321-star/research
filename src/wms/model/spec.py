@@ -26,7 +26,7 @@ MERGE_HAZARD_ZONES = ("forced_late", "full")
 #: R5THR/R5FR/SECUREGAP merge decision: per-step Bernoulli hazard (default), persistent
 #: gap-acceptance threshold + first passage, per-step hazard with a persistent per-driver
 #: latent frailty, or the learned LC2013-like two-sided secure-gap core.
-MERGE_DECISIONS = ("hazard", "threshold", "frailty", "secure_gap")
+MERGE_DECISIONS = ("hazard", "threshold", "frailty", "secure_gap", "first_passage")
 #: SLOWRES: direct per-step temporal acceleration or a learned low-pass state.
 TEMPORAL_RESIDUAL_MODES = ("direct", "slow")
 
@@ -110,6 +110,7 @@ class ModelSpec:
     # R5THR (default 'hazard' = the per-step Bernoulli merge draw): 'threshold' replaces the
     # merge decision by a persistent learned gap-acceptance threshold (first passage).
     merge_decision: str = "hazard"
+    merge_st_width: float = 1.0
     # SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's
     # direct per-step acceleration with a learned low-pass residual state r_t carried in
     # the rollout state (see wms.model.temporal_slow).  New parameters are created only in
@@ -197,6 +198,10 @@ class ModelSpec:
             raise ValueError("merge_negotiation needs lane_model='hazard_v5'")
         if self.merge_decision not in MERGE_DECISIONS:
             raise ValueError(f"merge_decision must be one of {MERGE_DECISIONS}")
+        if not math.isfinite(self.merge_st_width) or self.merge_st_width <= 0.0:
+            raise ValueError("merge_st_width must be finite and positive")
+        if self.merge_decision == "first_passage" and self.merge_negotiation:
+            raise ValueError("first_passage requires B merge_negotiation off")
         if self.merge_decision != "hazard" and self.lane_model != "hazard_v5":
             raise ValueError("merge_decision!='hazard' needs lane_model='hazard_v5'")
         if self.lane_hazard_features not in LANE_HAZARD_FEATURES:

@@ -362,6 +362,8 @@ class TrainSettings:
     # R5THR (default 'hazard' / weights 0 = bit-identical): persistent learned gap-acceptance
     # threshold and the integrated censored first-passage merge loss.
     merge_decision: str = "hazard"
+    merge_st_width: float = 1.0
+    merge_core_tau_reg_weight: float = 0.0
     merge_first_passage_weight: float = 0.0
     merge_first_passage_rank_weight: float = 0.0
     merge_first_passage_metrics: bool = False
@@ -683,8 +685,19 @@ class TrainSettings:
             self.merge_gap_weight, self.merge_safety_brake_weight,
             self.merge_yield_control_weight, self.merge_safety_control_weight)),
             "merge_yield gap/brake/control weights must be non-negative")
-        _require(self.merge_decision in ("hazard", "threshold", "frailty", "secure_gap"),
-                 "merge_decision must be 'hazard', 'threshold', 'frailty' or 'secure_gap'")
+        _require(self.merge_decision in ("hazard", "threshold", "frailty", "secure_gap", "first_passage"),
+                 "merge_decision must be hazard, threshold, frailty, secure_gap or first_passage")
+        _require(math.isfinite(self.merge_st_width) and self.merge_st_width > 0.0,
+                 "merge_st_width must be finite and positive")
+        _require(math.isfinite(self.merge_core_tau_reg_weight) and self.merge_core_tau_reg_weight >= 0.0,
+                 "merge_core_tau_reg_weight must be finite and non-negative")
+        if self.merge_decision == "first_passage":
+            _require(self.lane_model == "hazard_v5", "first_passage requires lane_model=hazard_v5")
+            _require(not self.merge_negotiation and not getattr(self, "merge_context", False)
+                     and not any((self.merge_core_yield_weight, self.merge_yield_huber,
+                                  self.merge_ramp_adapt_huber, self.merge_safety_bce,
+                                  self.merge_survival_negative_weight)),
+                     "first_passage requires B yield/negotiation weights and context off")
         _require(math.isfinite(float(self.merge_first_passage_weight))
                  and float(self.merge_first_passage_weight) >= 0.0
                  and math.isfinite(float(self.merge_first_passage_rank_weight))
