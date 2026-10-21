@@ -433,6 +433,8 @@ def test_seqtf_contract_with_a_stub(monkeypatch):
     module.build_recorded_scene = build_recorded_scene
     module.seq_tf_chunk = seq_tf_chunk
     monkeypatch.setitem(sys.modules, "wms.train.losses.merge_core_seqtf", module)
+    import wms.train.losses as losses_pkg
+    monkeypatch.setattr(losses_pkg, "merge_core_seqtf", module, raising=False)
     n = 6
     targets, pred, current = _make(n=n, event=2)
     term = _term(tf_weight=1.0)
