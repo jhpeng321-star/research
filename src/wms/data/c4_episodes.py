@@ -60,6 +60,7 @@ from wms.core.guard import refuse_restricted
 from wms.data.action_timeline import CONTROLLERS, ActionTimeline
 from wms.data.dataset import (TrajectoryDataset, _n_control_steps, _states_from_teacher,
                               road_presence)
+from wms.data.recorded_prefix import recorded_prefix
 from wms.data.sources import validate_train_source
 
 SOURCE_SCHEMA = "wms_c4_episode_source/1"
@@ -488,6 +489,10 @@ class EpisodeArrays:
     def run_start(_tick: int) -> int:
         return 0
 
+    def run_bounds(self, tick: int) -> Optional[tuple[int, int]]:
+        n = len(self.array("veh_kin"))
+        return (0, n) if 0 <= tick < n else None
+
 
 @lru_cache(maxsize=64)
 def _open_episode(path: str) -> EpisodeArrays:
@@ -523,7 +528,8 @@ class C4WindowLoader:
 
     def __init__(self, root: Path, entries: list[dict], index: list[tuple[int, int]], *,
                  horizon_steps: int, history_s, history_stride_s: float, entries_v2: bool,
-                 junction_fix: str = "off", command_known: bool = False):
+                 junction_fix: str = "off", command_known: bool = False,
+                 merge_pivot_history: bool = False):
         self.root = Path(root)
         self.entries = entries
         self.index = index
@@ -535,6 +541,7 @@ class C4WindowLoader:
         # ``command_known`` (every issued command of a C4 episode is recorded).
         self.junction_fix = str(junction_fix)
         self.command_known = bool(command_known)
+        self.merge_pivot_history = bool(merge_pivot_history)
 
     def episode(self, e: int) -> EpisodeArrays:
         return _open_episode(str(self.root / self.entries[e]["dir"]))
@@ -582,6 +589,29 @@ class C4WindowLoader:
             road["road_present"] = road["road_present"] & ~gone
             road["road_continue"] = road["road_continue"] & ~gone[:-1]
         return teacher, alive, road
+
+    def recorded_prefix(self, ep: EpisodeArrays, tick: int) -> Optional[dict]:
+        """Full historical scenes/actions, not the window's t0-cohort timeline."""
+        prefix = recorded_prefix(ep, tick, cav_array="is_cav")
+        if not tick:
+            return prefix
+        times, controls = ep.array("time_s"), ep.array("control_time_s")
+        c0 = int(np.searchsorted(controls, float(times[0]) - 1e-6))
+        count = _n_control_steps(tick + 1)
+        # Missing historical control coverage cannot be filled from t0 commands.
+        expected = float(times[0]) + np.arange(count)
+        if (c0 + count > len(controls)
+                or not np.allclose(controls[c0:c0 + count], expected, atol=1e-6, rtol=0)):
+            return None if prefix["is_cav"][:-1].any() else prefix
+        sl = slice(c0, c0 + count)
+        prefix["action_timeline"] = {
+            key: np.asarray(ep.array(name)[sl]).copy() for key, name in (
+                ("controller", "controller"),
+                ("acceleration_mps2", "issued_acceleration_mps2"),
+                ("target_speed_mps", "issued_target_speed_mps"))}
+        prefix["action_timeline"].update(
+            control_dt_s=1., command_known=np.ones((count, prefix["states"].shape[1]), bool))
+        return prefix
 
     def events(self, e: int, tick: int) -> tuple[int, int]:
         """``(first_switch_step, first_direct_step)`` of the window's timeline."""
@@ -656,6 +686,8 @@ class C4WindowLoader:
             record["driver_hist"], record["driver_hist_mask"] = prior_history(
                 ep, tick, present0, history_s=self.history_s,
                 history_stride_s=self.history_stride_s)
+        if self.merge_pivot_history:
+            record["merge_pivot_prefix"] = self.recorded_prefix(ep, int(tick))
         return record
 
 
@@ -663,7 +695,7 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
                history_stride_s: float, entries_v2: bool, stride_s: float,
                start_s: Optional[float], refuse_worlds=None, role_of=None,
                junction_fix: str = "off", command_known: bool = False,
-               allow_empty: bool = False):
+               allow_empty: bool = False, merge_pivot_history: bool = False):
     roles = role_of or {}
     entries = [e for e in doc["episodes"]
                if roles.get(e["world"], e.get("split_role")) == role]
@@ -688,7 +720,7 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
     loader = C4WindowLoader(root, entries, index, horizon_steps=horizon_steps,
                             history_s=history_s, history_stride_s=history_stride_s,
                             entries_v2=entries_v2, junction_fix=junction_fix,
-                            command_known=command_known)
+                            command_known=command_known, merge_pivot_history=merge_pivot_history)
     events = np.asarray([loader.events(e, t) for e, t in index], np.int64)
     receipt = {
         "mode": "c4-episodes", "split": "TRAIN", "role": role, "source": str(root),
@@ -703,6 +735,8 @@ def _one_split(root: Path, doc: dict, role: str, *, horizon_steps: int, history_
     if history_s is not None:
         receipt["driver_history"] = {"history_s": history_s,
                                      "history_stride_s": history_stride_s}
+    if merge_pivot_history:
+        receipt["merge_pivot_history"] = "raw native full-scene prefix through t0"
     dataset = TrajectoryDataset([{} for _ in index], loader=loader, receipt=receipt)
     dataset.positions = list(index)
     return dataset, events
@@ -713,7 +747,7 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
                       stride_s: float = 10.0, start_s: Optional[float] = None,
                       k_slots: Optional[int] = None, heldout=None, role_of=None,
                       junction_fix: str = "off", command_known: bool = False,
-                      allow_empty: bool = False) -> dict:
+                      allow_empty: bool = False, merge_pivot_history: bool = False) -> dict:
     """``{"train", "train_events", "val", "receipt"}`` of a converted episode source.
 
     ``heldout`` (a :class:`wms.data.mixdata.HeldOutGuard`) refuses held-out worlds;
@@ -739,6 +773,8 @@ def build_c4_datasets(root: str | Path, *, horizon_steps: int, history_s=None,
     if role_of is not None or junction_fix != "off" or command_known or allow_empty:
         common.update(role_of=role_of, junction_fix=junction_fix, command_known=command_known,
                       allow_empty=allow_empty)
+    if merge_pivot_history:
+        common["merge_pivot_history"] = True
     train, events = _one_split(root, doc, "train", **common)
     if train is None and allow_empty:
         val, _ = _one_split(root, doc, "val", **common)

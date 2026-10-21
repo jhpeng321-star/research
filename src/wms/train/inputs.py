@@ -173,6 +173,7 @@ class UnrollInputs:
     n_steps: int
     initial: dict[str, Tensor]
     paired_random: Optional[PairedRandom] = None
+    merge_pivot_prefix: Optional[list] = None
 
 
 def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings,
@@ -245,7 +246,9 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
         entrant_seq = entrant_seq.to(device).bool()
     return UnrollInputs(states, present, present_seq, is_cav, teacher, hist, hist_mask,
                         observed_hist, observed_hist_mask, loss_valid, entries, controller_id,
-                        timeline, cav_controller, entrant_seq, n_steps, initial, paired_random)
+                        timeline, cav_controller, entrant_seq, n_steps, initial, paired_random,
+                        batch.get("merge_pivot_prefix")
+                        if getattr(model, "merge_decision", None) == "first_passage" else None)
 
 
 def _perturb_t0(initial: dict[str, Tensor], states: Tensor, present: Tensor, is_cav: Tensor,

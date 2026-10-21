@@ -239,6 +239,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             start_shift_prob=start_shift, window_list=window_list,
             exclude_window_list=exclude, entries_v2=bool(data.entries_v2), item_filter=guard,
             history_s=data.history_s, history_stride_s=data.history_stride_s,
+            **({"merge_pivot_history": True}
+               if cfg.model.merge_decision == "first_passage" else {}),
             **_junction_kwargs(data))
 
     train = original(train_list, float(data.effective_start_shift_prob))
@@ -298,7 +300,8 @@ def build_datasets(cfg: TrainConfig, out_dir: Path, resolver: Optional[Resolver]
             path(c4.path), horizon_steps=horizon, history_s=data.history_s,
             history_stride_s=data.history_stride_s, entries_v2=bool(data.entries_v2),
             stride_s=float(c4.window_stride_s), start_s=c4.start_s, k_slots=pack_k,
-            heldout=heldout)
+            heldout=heldout, **({"merge_pivot_history": True}
+                               if cfg.model.merge_decision == "first_passage" else {}))
         if not c4.use_val:
             source["val"] = None
         train, val = add_c4_source(train, val, source, mix_ratio=float(c4.mix_ratio),
@@ -370,6 +373,8 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                   k_slots=pack_k, heldout=heldout, role_of=roles,
                   junction_fix=getattr(data, "junction_fix", "off"),
                   command_known=getattr(data, "controller_hygiene", "off") == "strict")
+    if cfg.model.merge_decision == "first_passage":
+        common["merge_pivot_history"] = True
     mixed = []
     order = sorted(data.c4_sources, key=lambda src: src.name != base)   # base first (V5DATA)
     for src in order:

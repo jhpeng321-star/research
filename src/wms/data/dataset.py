@@ -31,6 +31,7 @@ from wms.data.junction_fix import (JUNCTION_FIX_MODES, fill_junction_rows, pre_t
                                    run_prefix)
 from wms.data.pack_history import entry_features, prior_history
 from wms.data.presence import junction_carry_presence, junction_mask_from_lane
+from wms.data.recorded_prefix import array_prefix, recorded_prefix
 from wms.data.sidecars import read_identity_rows
 from wms.data.sources import validate_train_source
 from wms.data.windows import select_lpo_positions
@@ -140,7 +141,7 @@ class TrajectoryDataset(Dataset):
     # ------------------------------------------------------------- in-memory ----
     @classmethod
     def from_arrays(cls, arrays: dict[str, np.ndarray], *, split: str = "TRAIN",
-                    history_s=None, history_stride_s=1.0):
+                    history_s=None, history_stride_s=1.0, merge_pivot_history: bool = False):
         if str(split).upper() != "TRAIN":
             raise TrainDataRefusal("TrajectoryDataset only accepts TRAIN")
         states = np.asarray(arrays["states" if "states" in arrays else "veh_kin"],
@@ -197,6 +198,8 @@ class TrajectoryDataset(Dataset):
             rec = {"states": states[i], "present": alive,
                    "loss_valid": alive & on_road,
                    "slot_index": slot[i].astype(np.int64)}
+            if merge_pivot_history:
+                rec["merge_pivot_prefix"] = array_prefix(arrays, i, n, states[i, 0])
             if history_s is not None:
                 rec["driver_hist"], rec["driver_hist_mask"] = cls._array_history(
                     arrays, i, n, k, states, actual_present, alive,
@@ -282,7 +285,7 @@ class TrajectoryDataset(Dataset):
     # ------------------------------------------------------------ trajectories ---
     @classmethod
     def from_pack(cls, path: str | Path, *, history_s=None,
-                  history_stride_s=1.0) -> "TrajectoryDataset":
+                  history_stride_s=1.0, merge_pivot_history: bool = False) -> "TrajectoryDataset":
         """Load a ``.npz`` trajectory file or a directory of ``states.npy`` sidecars."""
         p = validate_train_source(path)
         if not p.exists():
@@ -292,7 +295,8 @@ class TrajectoryDataset(Dataset):
                 raise ValueError("trajectory source file must be .npz")
             with np.load(p, allow_pickle=False) as data:
                 return cls.from_arrays({k: data[k] for k in data.files},
-                                       history_s=history_s, history_stride_s=history_stride_s)
+                                       history_s=history_s, history_stride_s=history_stride_s,
+                                       merge_pivot_history=merge_pivot_history)
         manifest_path = p / "manifest.json"
         if manifest_path.is_file():
             validate_train_source(p, json.loads(manifest_path.read_text(encoding="utf-8")))
@@ -300,16 +304,19 @@ class TrajectoryDataset(Dataset):
             candidate = p / name
             if candidate.is_file():
                 return cls.from_pack(candidate, history_s=history_s,
-                                     history_stride_s=history_stride_s)
+                                     history_stride_s=history_stride_s,
+                                     merge_pivot_history=merge_pivot_history)
         for name in ("states.npy", "veh_kin.npy"):
             candidate = p / name
             if candidate.is_file():
-                return cls._from_state_files(p, candidate, history_s, history_stride_s)
+                return cls._from_state_files(p, candidate, history_s, history_stride_s,
+                                            merge_pivot_history)
         raise TrainDataRefusal(
             f"{p} has no trajectory sequence; snapshot-only A11 packs are refused")
 
     @classmethod
-    def _from_state_files(cls, root: Path, states_file: Path, history_s, history_stride_s):
+    def _from_state_files(cls, root: Path, states_file: Path, history_s, history_stride_s,
+                         merge_pivot_history=False):
         states = np.load(states_file, mmap_mode="r", allow_pickle=False)
         if states.ndim < 4:
             raise TrainDataRefusal(f"{states_file} has snapshots only; no multi-step sequence")
@@ -318,15 +325,18 @@ class TrajectoryDataset(Dataset):
                     "controller_timeline.npy", "issued_acceleration_mps2.npy",
                     "issued_target_speed_mps.npy", "controller_vocab.npy",
                     "controller_timeline_schema.npy"]
-        if history_s is not None:
+        if history_s is not None or merge_pivot_history:
             optional += [f"{name}.npy" for name in
                          ("history_kin", "history_mask", "history_target_mask")]
+        if merge_pivot_history:
+            optional.append("history_is_cav.npy")
         for sidecar in optional:
             f = root / sidecar
             if f.is_file():
                 arrays[sidecar.removesuffix(".npy")] = np.load(
                     f, mmap_mode="r", allow_pickle=False)
-        return cls.from_arrays(arrays, history_s=history_s, history_stride_s=history_stride_s)
+        return cls.from_arrays(arrays, history_s=history_s, history_stride_s=history_stride_s,
+                              merge_pivot_history=merge_pivot_history)
 
     # --------------------------------------------------------------- A11 packs ---
     @classmethod
@@ -345,7 +355,8 @@ class TrajectoryDataset(Dataset):
                         identity_env_dir: Optional[str | Path] = None,
                         history_s=None, history_stride_s=1.0,
                         junction_fix: str = "off",
-                        controller_hygiene: str = "off") -> "TrajectoryDataset":
+                        controller_hygiene: str = "off",
+                        merge_pivot_history: bool = False) -> "TrajectoryDataset":
         """Build a lazy TRAIN view over A11 packs and verified identity windows.
 
         ``PackCorpus`` performs the authoritative split and INDEX range checks.  The
@@ -459,7 +470,7 @@ class TrajectoryDataset(Dataset):
             corpus, kept_orig, positions, identity_rows, horizon_steps=int(horizon_steps),
             start_shift_prob=start_shift_prob, timelines=timelines, entries_v2=entries_v2,
             history_s=history_s, history_stride_s=history_stride_s, junction_fix=junction_fix,
-            hygiene_runs=hygiene_runs)
+            hygiene_runs=hygiene_runs, merge_pivot_history=merge_pivot_history)
         receipt = {
             "mode": "a11-index-window",
             "split": "TRAIN",
@@ -485,6 +496,8 @@ class TrajectoryDataset(Dataset):
             receipt["driver_history"] = {
                 "history_s": history_s, "history_stride_s": history_stride_s,
                 "short_history_policy": "front-pad and mask; no windows dropped"}
+        if merge_pivot_history:
+            receipt["merge_pivot_history"] = "raw native full-scene prefix through t0"
         if junction_fix != "off":
             receipt["junction_fix"] = junction_fix
         if hygiene_receipt is not None:
@@ -643,7 +656,8 @@ class _PackWindowLoader:
     def __init__(self, corpus: PackCorpus, kept_orig: list[int], positions: list[tuple],
                  identity_rows: list[dict], *, horizon_steps: int, start_shift_prob: float,
                  timelines: Optional[dict], entries_v2: bool, history_s, history_stride_s,
-                 junction_fix: str = "off", hygiene_runs: Optional[dict] = None):
+                 junction_fix: str = "off", hygiene_runs: Optional[dict] = None,
+                 merge_pivot_history: bool = False):
         self.corpus = corpus
         self.kept_orig = kept_orig
         self.positions = positions
@@ -657,6 +671,7 @@ class _PackWindowLoader:
         self.junction_fix = junction_fix
         #: DATAHYG strict: ``{index: DspeedRun}`` of the dspeed items (None = hygiene off)
         self.hygiene_runs = hygiene_runs
+        self.merge_pivot_history = merge_pivot_history
 
     def __call__(self, index: int) -> dict:
         corpus = self.corpus
@@ -738,6 +753,21 @@ class _PackWindowLoader:
                                    history_s=self.history_s,
                                    history_stride_s=self.history_stride_s)
             result["driver_hist"], result["driver_hist_mask"] = dh, dm
+        if self.merge_pivot_history:
+            # Window-bound switching providers and hygiene-directed plans do not
+            # certify pre-window commands. Keep their age unknown, fail closed.
+            prefix = None
+            if provider is None and run is None:
+                tick = int(item["tick"])
+                prefix = recorded_prefix(corpus, tick)
+                h = len(prefix["states"]) - 1
+                if h and action_name in ("native", "damping", "direct", "pi-external-u"):
+                    start = {**item, "tick": corpus.run_start(tick)}
+                    prefix["action_timeline"] = self._fixed_timeline(
+                        action_name, start, h + 1, states.shape[1], decision_steps=h)
+                elif h and prefix["is_cav"][:-1].any():
+                    prefix = None  # snapshot ownership at t0 cannot certify a prefix
+            result["merge_pivot_prefix"] = prefix
         return result
 
     def _fix_junctions(self, tick: int, teacher: np.ndarray, present: np.ndarray):
@@ -799,7 +829,8 @@ class _PackWindowLoader:
         room = bounds[1] - tick0 - 1 - int(self.horizon_steps)
         return int(torch.randint(1, room + 1, ())) if room > 0 else 0
 
-    def _fixed_timeline(self, action_name: str, item: dict, horizon: int, k: int) -> dict:
+    def _fixed_timeline(self, action_name: str, item: dict, horizon: int, k: int, *,
+                       decision_steps: Optional[int] = None) -> dict:
         """Legacy fixed-controller runs become constant action timelines."""
         n_control = _n_control_steps(horizon)
         fixed = ActionTimeline.constant(action_name, n_control, k)
@@ -807,7 +838,8 @@ class _PackWindowLoader:
             # Original direct-speed packs: fixed controller identity, recorded issued
             # command channels, never invented zeros.
             tick = int(item["tick"])
-            stop = min(tick + horizon, self.corpus.run_end(tick))
+            stop = min(tick + (horizon if decision_steps is None else decision_steps),
+                       self.corpus.run_end(tick))
             commands = np.asarray(self.corpus.array("cav_plan_ch")[tick:stop:2], np.float32)
             count = min(n_control, commands.shape[0])
             fixed.acceleration_mps2[:count] = commands[:count, :, 1] * 3.0
