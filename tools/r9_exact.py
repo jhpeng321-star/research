@@ -137,7 +137,21 @@ class FrozenRound8:
         return self.model.merge_core
 
 
-def load_frozen(path=DEFAULT_CHECKPOINT, *, physics: PhysicsConfig | Mapping | None = None):
+def training_physics(config_path):
+    """``PhysicsConfig`` exactly as ``wms train`` builds it from a preset (extends resolved).
+
+    The flat checkpoint ``config`` lacks several physics switches (``sumo_fidelity``,
+    ``merge_cal`` ...); defaults then silently differ from training (sumo_fidelity,
+    and for the round-9 preset ``merge_end_wait``).  This is the authoritative source.
+    """
+    from wms.cli.assemble import build_physics
+    from wms.config.load import load_train_config
+
+    return build_physics(load_train_config(guard(config_path), []))
+
+
+def load_frozen(path=DEFAULT_CHECKPOINT, *, physics: PhysicsConfig | Mapping | None = None,
+                physics_source: str | None = None):
     """Strict, deterministic CPU load; no optional/missing tensor initialization.
 
     Sets CPU threads=1 and deterministic algorithms on. Model construction uses
@@ -155,7 +169,7 @@ def load_frozen(path=DEFAULT_CHECKPOINT, *, physics: PhysicsConfig | Mapping | N
     spec = ModelSpec.from_mapping(config)
     if spec.merge_decision != "secure_gap" or config.get("black_box", False):
         raise ValueError("expected structured round-8 secure_gap checkpoint")
-    source = "explicit" if physics is not None else "embedded"
+    source = (physics_source or "explicit") if physics is not None else "embedded"
     raw = physics if physics is not None else config.get("physics")
     if raw is None:
         for name in ("physics.json", "TRAIN_RECEIPT.json"):

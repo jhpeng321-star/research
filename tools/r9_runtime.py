@@ -73,7 +73,8 @@ def cached_prepare(frozen, loaded, directory, n_quad=8):
                  exact.ROOT / "src/wms/model/wms.py", exact.ROOT / "src/wms/model/merge_pivot.py",
                  exact.ROOT / "src/wms/train/losses/merge_pivot.py",
                  exact.ROOT / "src/wms/train/cav_drive.py",
-                 exact.ROOT / "src/wms/data/recorded_prefix.py"):
+                 exact.ROOT / "src/wms/data/recorded_prefix.py",
+                 exact.ROOT / "src/wms/data/route_frame.py"):
         digest.update(exact.guard(path).read_bytes())
     from tools.r9_fit_exact import _replay_model, _SparsePairAttention
     digest.update(inspect.getsource(_replay_model).encode())

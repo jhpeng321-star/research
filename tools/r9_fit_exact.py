@@ -387,11 +387,15 @@ def attach_episode(sequences, cache):
                     & (kin[:, 1:4].argmax(-1) == physics['merge_lane'])
                     & (kin[:, 0] >= physics['merge_zone_s0_m'])
                     & (kin[:, 0] <= physics['merge_zone_s1_m']))
-        moved = cache['proposals'][entry:stop, slot]
-        post_risk = ((moved[:, 1:4].sum(-1) > 0)
-                     & (moved[:, 1:4].argmax(-1) == physics['merge_lane'])
-                     & (moved[:, 0] >= physics['merge_zone_s0_m'])
-                     & (moved[:, 0] <= physics['merge_zone_s1_m']))
+        if 'geometry' in cache:
+            # Post-move zone membership is the shared route-coordinate decision geometry.
+            post_risk = cache['geometry']['ramp'][0, entry:stop, slot]
+        else:  # legacy parity caches (prepare_episode) carry only the proposed states
+            moved = cache['proposals'][entry:stop, slot]
+            post_risk = ((moved[:, 1:4].sum(-1) > 0)
+                         & (moved[:, 1:4].argmax(-1) == physics['merge_lane'])
+                         & (moved[:, 0] >= physics['merge_zone_s0_m'])
+                         & (moved[:, 0] <= physics['merge_zone_s1_m']))
         causal_risk = post_risk | pre_risk
         seq['lifecycle_active'] = causal_risk.long().cumprod(0).bool().tolist()
         seq['absorbed_before_event'] = bool(seq['event'] and not seq['lifecycle_active'][-1])
@@ -407,6 +411,38 @@ def attach_episode(sequences, cache):
             reasons.append(reason)
         seq['physical_reasons'] = reasons
     return sequences
+
+
+def drop_explained_exclusions(sequences, cache):
+    """Remove sequences whose terminal event is a P1-unrepresentable recorded merge.
+
+    Identical classification and sequence exclusion to ``MergePivotTerm.prepare`` and the
+    support audit (``merge_pivot_support``).  Returns ``(kept, dropped)``; each dropped
+    entry names the vehicle, event row and physical reason.  Unexplained vetoes and
+    model-motion vetoes are never dropped here.
+    """
+    from wms.train.losses.merge_pivot_support import classify_vetoed_events
+
+    geo = cache['geometry']
+    n = geo['eligible'].shape[1]
+    event = torch.zeros_like(geo['eligible'])
+    for seq in sequences:
+        if seq['event']:
+            event[0, seq['event_row'] - 1, seq['slot']] = True
+    verdict = classify_vetoed_events(geo, event, target_lane=cache['metadata']['physics']['merge_target_lane'])
+    kept, dropped = [], []
+    for seq in sequences:
+        if seq['event'] and bool(verdict['explained'][0, seq['event_row'] - 1, seq['slot']]):
+            at = (0, seq['event_row'] - 1, seq['slot'])
+            cause = ('same_step_vacated_leader' if bool(verdict['vacated'][at]) else
+                     'junction_internal_target_vehicle' if bool(verdict['junction'][at]) else
+                     'vacated_leader_and_junction_vehicle')
+            dropped.append({'vehicle': seq['vehicle'], 'event_row': seq['event_row'],
+                            'reason': 'explained_P1_unrepresentable:' + cause, 'episode': seq['episode']})
+        else:
+            kept.append(seq)
+    assert n >= 0
+    return kept, dropped
 
 
 def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
@@ -451,6 +487,8 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal,
                                                runtime_risk=cache['geometry']['ramp'][0].numpy())
         attach_episode(subset, cache)
+        subset, dropped = drop_explained_exclusions(subset, cache)
+        report['exclusions'] = list(report['exclusions']) + dropped
         for seq in subset:
             seq['unknown_age'] = bool(seq['unknown_age'])
             entry, length = seq['entry_row'], len(seq['times'])

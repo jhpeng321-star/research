@@ -24,12 +24,26 @@ from wms.data.c4_episodes import EpisodeArrays  # noqa: E402
 from wms.model.merge_pivot import log_event_mass  # noqa: E402
 
 
+def load_run_frozen(checkpoint, train_config):
+    """Frozen checkpoint with the physics ``wms train`` builds from the preset."""
+    if train_config is None:
+        return exact.load_frozen(checkpoint)
+    return exact.load_frozen(checkpoint, physics=exact.training_physics(train_config),
+                             physics_source="training_preset:" + str(train_config))
+
+
 def episode_job(job):
-    ep, checkpoint, output = job
+    ep, checkpoint, output, train_config, cache_dir, resume = job
+    directory = exact.guard(Path(output) / ep["source_name"] / ep["episode"])
+    if resume and (directory / "report.json").is_file() and (directory / "events.json").is_file():
+        print(json.dumps(dict(episode=ep["episode"], resumed=True)), flush=True)
+        return (json.loads((directory / "events.json").read_text(encoding="utf-8")),
+                json.loads((directory / "report.json").read_text(encoding="utf-8")))
     torch.set_num_threads(1)
-    frozen = exact.load_frozen(checkpoint)
+    frozen = load_run_frozen(checkpoint, train_config)
     loaded = runtime.load_scene(ep["path"])
-    cache = runtime.cached_prepare(frozen, loaded, ROOT / "results/r9_runtime_cache")
+    cache = (runtime.prepare(frozen, loaded) if cache_dir is None else
+             runtime.cached_prepare(frozen, loaded, cache_dir))
     model = runtime.runtime_model(frozen)
     # The authorizing/output row, rather than the input row, determines exposure.
     start = max(0., float(ep.get("warmup_s", 0)) - model.physics.dt_s)
@@ -47,6 +61,8 @@ def episode_job(job):
     sequences, cohort = legacy.build_dataset([ep], adapter=proposal,
                                             runtime_risk=cache["geometry"]["ramp"][0].numpy())
     heads.attach_episode(sequences, cache)
+    sequences, explained = heads.drop_explained_exclusions(sequences, cache)
+    counts["explained_exclusion_sequences_dropped"] = len(explained)
     for seq in sequences:
         entry, size = seq["entry_row"], len(seq["times"])
         seq["score_start"] = int((loaded["time_s"][entry + 1:entry + size + 1]
@@ -80,7 +96,7 @@ def episode_job(job):
                     law_counts[kind][state] += 1
                     by_id[identity][kind + "_mass"] = state
     mismatch = []
-    causes = Counter()
+    causes, excluded_causes = Counter(), Counter()
     for row in rows:
         identity = (row["vehicle_id"], int(row["event_id"].rsplit("/", 1)[-1]))
         law = by_id.get(identity, {})
@@ -89,9 +105,15 @@ def episode_job(job):
         row["raw_scene_unknown"] = bool((loaded["present"][tick]
                                           & (loaded["raw"][tick, :, 1:4].sum(-1) == 0)).any())
         if not row["is_cav"]:
-            if not law or law["fitter_supported"] != (row["support_verdict"] == "supported"):
+            verdict = row["support_verdict"]
+            if verdict == "excluded_explained":
+                # audit and fitter must drop the same explained sequence
+                if law:
+                    mismatch.append(row["event_id"])
+                excluded_causes[json.loads(row["geometry_json"])["veto_cause"]] += 1
+            elif not law or law["fitter_supported"] != (verdict == "supported"):
                 mismatch.append(row["event_id"])
-            if row["support_verdict"] == "vetoed":
+            if verdict == "vetoed":
                 causes[json.loads(row["geometry_json"])["veto_cause"]] += 1
     counts["hdv_events_raw_scene_unknown"] = sum(r["raw_scene_unknown"] for r in rows if not r["is_cav"])
     counts["runtime_strict_fullpath_zero"] = sum(r.get("runtime_strict_fullpath_mass") == "zero"
@@ -103,8 +125,8 @@ def episode_job(job):
         for r in rows if not r["is_cav"])
     report = dict(episode=ep["episode"], source=ep["source_name"], counts=dict(counts),
                   cohort=cohort, laws={k: dict(v) for k, v in law_counts.items()},
-                  causes=dict(causes), mismatched_events=mismatch, metadata=cache["metadata"])
-    directory = exact.guard(Path(output) / ep["source_name"] / ep["episode"])
+                  causes=dict(causes), excluded_causes=dict(excluded_causes),
+                  mismatched_events=mismatch, metadata=cache["metadata"])
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "report.json").write_text(json.dumps(audit.clean(report), indent=2), encoding="utf-8")
     (directory / "events.json").write_text(json.dumps(audit.clean(rows)), encoding="utf-8")
@@ -118,7 +140,14 @@ def main(argv=None):
     parser.add_argument("--source", action="append", required=True)
     parser.add_argument("--checkpoint", default=str(exact.DEFAULT_CHECKPOINT))
     parser.add_argument("--output", default="results/r9_support")
+    parser.add_argument("--train-config", default="configs/c4_wm_v10round9.toml",
+                        help="preset whose build_physics() gives the run physics; 'none' = "
+                             "unverified checkpoint defaults")
+    parser.add_argument("--cache", default="results/r9_runtime_cache",
+                        help="directory of ~0.5 GB per-episode replay caches, or 'none'")
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--resume", action="store_true",
+                        help="reuse finished per-episode report.json/events.json in --output")
     parser.add_argument("--max-episodes", type=int)
     args = parser.parse_args(argv)
     output = exact.guard(args.output)
@@ -126,7 +155,10 @@ def main(argv=None):
     if args.max_episodes is not None:
         episodes = episodes[:args.max_episodes]
     output.mkdir(parents=True, exist_ok=True)
-    jobs = [(ep, str(exact.guard(args.checkpoint)), str(output)) for ep in episodes]
+    config = None if args.train_config == "none" else args.train_config
+    cache_dir = None if args.cache == "none" else str(exact.guard(args.cache))
+    jobs = [(ep, str(exact.guard(args.checkpoint)), str(output), config, cache_dir, args.resume)
+            for ep in episodes]
     rows, reports = [], []
     if args.workers == 1:
         results = map(episode_job, jobs)
@@ -138,14 +170,16 @@ def main(argv=None):
             for found, report in pool.map(episode_job, jobs):
                 rows.extend(found)
                 reports.append(report)
-    counts, causes = Counter(), Counter()
+    counts, causes, excluded_causes = Counter(), Counter(), Counter()
     laws = {kind: Counter() for kind in ("P1-P3", "F1", "M0")}
     for report in reports:
         counts.update(report["counts"])
         causes.update(report["causes"])
+        excluded_causes.update(report["excluded_causes"])
         for kind in laws:
             laws[kind].update(report["laws"][kind])
     summary = dict(episodes=len(reports), counts=dict(counts), causes=dict(causes),
+                   excluded_causes=dict(excluded_causes),
                    laws={k: dict(v) for k, v in laws.items()},
                    mismatched_events=[e for r in reports for e in r["mismatched_events"]],
                    checkpoint=reports[0]["metadata"], sources=sources,

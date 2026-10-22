@@ -35,6 +35,7 @@ from wms.physics.config import PhysicsConfig
 from wms.train.losses.merge_pivot import (
     MergePivotConfig, build_recorded_geometry, certify_pre_window, pre_window_maximum, score_chunk,
 )
+from wms.train.losses.merge_pivot_support import classify_vetoed_events, sequence_rows
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 
@@ -98,20 +99,35 @@ def runtime_replay(model, rec, present, cav, cont, timeline):
     return build_recorded_geometry(model, inp, SimpleNamespace(n_steps=rec.shape[1] - 1))
 
 
-def event_details(geo, raw, vid, cav, t, k, params):
+def event_details(geo, raw, vid, cav, t, k, params, route=None):
+    """Veto/zero-mass diagnosis of one recorded merge (decision geometry at tick ``t``).
+
+    ``route`` is the recorded route coordinate ``x = s + shift`` of every row
+    (``wms.data.route_frame``); without it the pack frame is used.  Everything taken
+    from row ``t + 1`` is a DIAGNOSTIC label (SUMO applies lane changes after the
+    longitudinal move, so its successor row holds the true decision positions); it
+    never enters the model geometry.
+    """
+    def recorded(row, j):
+        return float(raw[row, j, 0] if route is None else route[row, j])
+
     def vehicle(j):
         if j < 0:
             return None
         s, length = float(geo["s"][0, t, j]), float(geo["length"][0, t, j])
+        x = float(geo["route_s"][0, t, j]) if "route_s" in geo else s
+        post_lane = int(raw[t + 1, j, 1:4].argmax()) if raw[t + 1, j, 1:4].sum() else -1
         return dict(slot=j, vehicle_id=int(vid[t, j]), is_cav=bool(cav[0, t, j]),
-                    pre_lane=int(geo["lane"][0, t, j]), front=s, rear=s - length,
-                    length=length, v=float(geo["v"][0, t, j]),
+                    pre_lane=int(geo["lane"][0, t, j]), front=x, rear=x - length,
+                    pack_front=s, length=length, v=float(geo["v"][0, t, j]),
                     recorded_pre_front=float(raw[t, j, 0]),
+                    recorded_pre_route_front=recorded(t, j),
                     recorded_pre_junction=not bool(raw[t, j, 1:4].sum()),
-                    recorded_post_front=float(raw[t + 1, j, 0]),
-                    recorded_post_lane=(int(raw[t + 1, j, 1:4].argmax())
-                                        if raw[t + 1, j, 1:4].sum() else -1),
-                    predicted_minus_recorded_front=s - float(raw[t + 1, j, 0]))
+                    recorded_post_front=recorded(t + 1, j),
+                    recorded_post_pack_front=float(raw[t + 1, j, 0]),
+                    recorded_post_lane=post_lane,
+                    recorded_post_junction=post_lane == -1,
+                    predicted_minus_recorded_front=x - recorded(t + 1, j))
     d = {key: number(val[0, t, k]) for key, val in geo.items()}
     d.update(ego=vehicle(k), follower=vehicle(int(geo["index_f"][0, t, k])),
              leader=vehicle(int(geo["index_l"][0, t, k])),
@@ -120,8 +136,7 @@ def event_details(geo, raw, vid, cav, t, k, params):
     ego = d["ego"]
     d["all_pre_target_intersections"] = [vehicle(j) for j in range(raw.shape[1])
         if j != k and bool(geo["pre_target"][0, t, j])
-        and max(ego["rear"], float(geo["s"][0, t, j] - geo["length"][0, t, j]))
-        < min(ego["front"], float(geo["s"][0, t, j]))]
+        and max(ego["rear"], vehicle(j)["rear"]) < min(ego["front"], vehicle(j)["front"])]
     targets = [vehicle(j) for j in range(raw.shape[1])
                if j != k and bool(geo["pre_target"][0, t, j])]
     d["all_pre_target_neighbours"] = targets
@@ -135,8 +150,9 @@ def event_details(geo, raw, vid, cav, t, k, params):
         if overlap > 0:
             recorded_intersections.append({**other, "recorded_overlap_m": overlap})
     d["diagnostic_recorded_motion_pre_lanes_intersections"] = recorded_intersections
-    d["contract"] = dict(bumper="front; body=[s-length,s]; strict intersection >0",
-                          projection="recorded lane-chain s; junction s carried, not interpolated",
+    d["contract"] = dict(bumper="front; body=[x-length,x]; strict intersection >0",
+                          projection="route coordinate x=s+shift: junction lengths added, junction "
+                                     "rows dead-reckoned x_t=x_{t-1}+v_t*dt (wms.data.route_frame)",
                           neighbour_set="all pre-change target occupants including CAVs and side-by-side",
                           substep="one frozen WM longitudinal update then current CAV execution before LC commit",
                           dt_s=.5, future_motion_use="diagnostic only")
@@ -148,9 +164,14 @@ def event_details(geo, raw, vid, cav, t, k, params):
         cause = "simultaneous_reservation"
     elif not recorded_intersections:
         cause = "wm_motion_only_intersection"
-    elif any(v["recorded_pre_junction"] or v["recorded_post_lane"] == -1
+    elif all(v["recorded_post_lane"] != ego["pre_lane"] and v["recorded_post_lane"] != v["pre_lane"]
+             and v["recorded_post_lane"] != -1 and v["recorded_post_front"] > ego["recorded_post_front"]
              for v in recorded_intersections):
-        cause = "junction_projection_unresolved"
+        # SUMO executes lane changes sequentially, front-most vehicle first; a leader that
+        # leaves the target lane in the same step is already gone when the ego decides.
+        cause = "same_step_vacated_leader"
+    elif all(v["recorded_pre_junction"] or v["recorded_post_junction"] for v in recorded_intersections):
+        cause = "junction_vehicle_intersection_unresolved"
     elif any(v["recorded_post_lane"] != v["pre_lane"] for v in recorded_intersections):
         cause = "outgoing_target_substep_unverified"
     else:
@@ -201,6 +222,10 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
     dt = float(model.physics.dt_s)
     if not np.allclose(np.diff(times), dt, rtol=0, atol=1e-6):
         raise ValueError("episode/model native-tick mismatch")
+    from wms.data.route_frame import route_shift
+    route = (rec[0, :, :, 0].double() + route_shift(
+        rec, present, cont, dt_s=dt, zone_start_m=float(model.physics.merge_zone_s0_m),
+        zone_end_m=float(model.physics.merge_zone_s1_m))[0].double()).numpy()
     controls = np.asarray(ep.array("control_time_s"))
     if not np.allclose(controls, times[0] + np.arange(len(controls)), rtol=0, atol=1e-6):
         raise ValueError("audit requires complete recorded 1 s control clock")
@@ -243,6 +268,16 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
     own = ~cav[:, :-1]
     risk = (geo["ramp"] | pre_risk[:, :-1] | events) & own
     n = c.shape[1]
+    # The same P1-unrepresentable classification and sequence exclusion as the likelihood
+    # (MergePivotTerm.prepare): explained events leave scoring WITH their whole sequence.
+    verdict = classify_vetoed_events(geo, events & own, target_lane=cfg.target_lane)
+    explained = verdict["explained"]
+    events_all = events
+    if bool(explained.any()):
+        full_reset = torch.cat((torch.zeros_like(present[:, :1]),
+                                ~cont[:, :n - 1] | ~present[:, :n - 1]), 1)[:, :n]
+        risk = risk & ~sequence_rows(explained, risk, full_reset)
+        events = events & ~explained
     start = int(np.searchsorted(times, entry.get("warmup_s", 0.) if start_s is None else start_s))
     size = int(round(window_s / dt))
     if size < 1:
@@ -295,7 +330,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
             active = risk[:, t] & ~terminal
             updated = torch.where(active, torch.maximum(maximum, c[:, t]), maximum)
             logmass = log_event_mass(maximum, updated, tau)
-            for k in torch.nonzero(events[0, t]).flatten().tolist():
+            for k in torch.nonzero(events_all[0, t]).flatten().tolist():
                 is_cav = bool(cav[0, t, k])
                 physical = bool(geo["physical_eligible"][0, t, k])
                 eligible = bool(geo["eligible"][0, t, k])
@@ -308,8 +343,16 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
                         reason.append(text)
                 if is_cav:
                     reason.append("cav_not_learned")
-                zero = bool(torch.isneginf(logmass[0, k]))
-                details = event_details(geo, raw, vid, cav, t, k, params) if (not eligible or zero) else {}
+                excluded = bool(explained[0, t, k])
+                zero = bool(torch.isneginf(logmass[0, k])) and not excluded
+                details = (event_details(geo, raw, vid, cav, t, k, params, route)
+                           if (not eligible or zero) else {})
+                if excluded:
+                    shared = ("same_step_vacated_leader" if bool(verdict["vacated"][0, t, k]) else
+                              "junction_internal_target_vehicle" if bool(verdict["junction"][0, t, k])
+                              else "vacated_leader_and_junction_vehicle")
+                    details["shared_classifier_cause"] = shared
+                    details["veto_cause"] = shared
                 details.update(c=number(c[0, t, k]), previous_maximum=number(maximum[0, k]),
                                log_event_mass=number(logmass[0, k]),
                                entry_maximum=number(initial[0, k]),
@@ -323,16 +366,17 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
                     if earlier >= 0:
                         details["record_setting_prestate_time_s"] = float(times[earlier])
                         details["record_setting_geometry"] = event_details(
-                            geo, raw, vid, cav, earlier, k, params)
+                            geo, raw, vid, cav, earlier, k, params, route)
                 rows.append(dict(source=source, episode=entry["episode"],
                     event_id=f'{source}/{entry["episode"]}/{int(vid[t, k])}/{t + 1}',
                     vehicle_id=int(vid[t, k]), slot=k, event_time_s=float(times[t + 1]),
                     window_start_s=float(times[lo]), is_cav=is_cav,
-                    support_verdict="cav_not_modelled" if is_cav else "supported" if eligible else "vetoed",
+                    support_verdict=("cav_not_modelled" if is_cav else "supported" if eligible else
+                                     "excluded_explained" if excluded else "vetoed"),
                     physical_supported=physical, veto_reason=";".join(reason),
                     unknown_age_before=not bool(old_known[0, k]), unknown_age_after=not bool(known[0, k]),
                     scored_event_after=bool(active[0, k] & known[0, k]) and not is_cav,
-                    absorbed_before_event=bool(terminal[0, k]) and not is_cav,
+                    absorbed_before_event=bool(terminal[0, k]) and not is_cav and not excluded,
                     zero_mass=zero, gap_f=number(geo["gap_f"][0, t, k]),
                     gap_l=number(geo["gap_l"][0, t, k]),
                     geometry_json=json.dumps(clean(details), sort_keys=True, allow_nan=False)))
@@ -343,6 +387,8 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
     counts.update(recorded_merges=len(rows), hdv_events=len(hdv), cav_merges=len(rows) - len(hdv),
                   physically_supported=sum(row["physical_supported"] for row in hdv),
                   runtime_supported=sum(row["support_verdict"] == "supported" for row in hdv),
+                  explained_exclusions=sum(row["support_verdict"] == "excluded_explained" for row in hdv),
+                  unexplained_vetoes=sum(row["support_verdict"] == "vetoed" for row in hdv),
                   all_hdv_zero_mass=sum(row["zero_mass"] for row in hdv),
                   absorbed_before_event=sum(row["absorbed_before_event"] for row in hdv), episodes=1)
     return rows, counts
@@ -354,6 +400,8 @@ def main(argv=None):
     parser.add_argument("--max-episodes", type=int)
     parser.add_argument("--checkpoint", type=local_path)
     parser.add_argument("--physics", type=local_path)
+    parser.add_argument("--train-config", type=local_path,
+                        help="training preset whose build_physics() is the authoritative run physics")
     parser.add_argument("--allow-unverified-physics", action="store_true")
     parser.add_argument("--output", type=local_path, default=ROOT / "_out/r9_support_audit")
     parser.add_argument("--window-s", type=float, default=120.)
@@ -368,7 +416,10 @@ def main(argv=None):
         sys.path.insert(0, str(ROOT))
         from tools import r9_exact, r9_runtime
         physics = None if args.physics is None else json.loads(args.physics.read_text(encoding="utf-8"))
-        frozen = r9_exact.load_frozen(args.checkpoint, physics=physics)
+        source = None
+        if args.train_config is not None:
+            physics, source = r9_exact.training_physics(args.train_config), "training_preset:" + args.train_config.name
+        frozen = r9_exact.load_frozen(args.checkpoint, physics=physics, physics_source=source)
         if not frozen.metadata["physics_confirmed"] and not args.allow_unverified_physics:
             parser.error("checkpoint needs authoritative physics or --allow-unverified-physics for diagnostics")
         model = r9_runtime.runtime_model(frozen)
