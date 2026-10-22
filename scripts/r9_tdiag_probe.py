@@ -12,6 +12,8 @@ import torch
 import wms.train.losses.merge_pivot as lp
 from wms.train.losses.compose import LossComposer
 from wms.train.trainer import WmSTrainer
+from wms.model import WmSModel
+from scripts.r9_tdiag_geometry import capture_rollout_geometry, wm_diag
 
 OUT = os.environ["R9_TD_OUT"]
 STEPS = int(os.environ.get("R9_TD_STEPS", "10"))
@@ -94,49 +96,6 @@ def traced(c, tau, risk, event, **kw):
     return out
 
 
-def wm_diag(prep, ctx, b, j, k):
-    """Veto components of the ON-POLICY (WM-state) decision geometry for slot k at chunk step j."""
-    from wms.train.losses.merge_first_passage import _kin
-    from wms.train.inputs import state_from_kin
-    from wms.model.merge_pivot import advance_longitudinal
-    model, pred, c0, c1 = prep["model"], ctx.pred, ctx.c0, ctx.c1
-    K = prep["risk"].shape[-1]
-    with torch.no_grad():
-        def pre(key, current):
-            return torch.cat((ctx.current[current][..., :K].unsqueeze(1), pred[key][:, :-1, :K]), 1)
-        lane, present = pre("lanes", "lane"), pre("masks", "present").bool()
-        rec = ctx.targets.states[:, c0:c1]
-        kin = _kin(pre("positions", "s_m"), lane, pre("speeds", "v_mps"), pre("accel", "a_mps2"), rec[:, :, :, 6])
-        moved = advance_longitudinal(kin, pred["accel"][..., :K], ctx.targets.dt_s,
-                                     bool(getattr(model.physics, "stop_time_integration", False)))
-        cav = ctx.targets.is_cav[:, c0:c1, :K].bool()
-        moved[..., 0] = torch.where(cav, pred["positions"][..., :K], moved[..., 0])
-        moved[..., 4] = torch.where(cav, pred["speeds"][..., :K], moved[..., 4])
-        st = state_from_kin(kin[b, j][None], present[b, j][None]); st["is_cav"] = cav[b, j][None]
-        g = model.pivot_decision_geometry(st, pred["accel"][b, j, :K][None], next_s=moved[b, j, :, 0][None],
-                                          next_v=moved[b, j, :, 4][None], fixed_next_lane=pred["lanes"][b, j, :K][None])
-        ov = int(g["overlap_index"][0, k])
-        out = dict(ramp=bool(g["ramp"][0, k]), scene_valid=bool(g["scene_valid"][0, k]), overlap=bool(g["overlap"][0, k]),
-                   cav=bool(cav[b, j, k]), phys=bool(g["physical_eligible"][0, k]), elig=bool(g["eligible"][0, k]),
-                   fixed_overlap=bool(g["fixed_overlap"][0, k]), partner=ov,
-                   ego_wm_pre=float(kin[b, j, k, 0]), ego_wm_moved=float(moved[b, j, k, 0]), ego_len=float(kin[b, j, k, 6]),
-                   ego_rec_pre=float(rec[b, j, k, 0]), ego_wm_present=bool(present[b, j, k]),
-                   ego_rec_present=bool(ctx.targets.states.new_tensor(0) == 0 and prep["risk"][b, c0 + j, k]))
-        if ov >= 0:
-            out.update(p_wm_moved=float(moved[b, j, ov, 0]), p_len=float(kin[b, j, ov, 6]), p_lane=int(lane[b, j, ov]),
-                       p_rec_pre=float(rec[b, j, ov, 0]), p_rec_lane=int(rec[b, j, ov, 1:4].argmax()),
-                       p_present_wm=bool(present[b, j, ov]), p_is_cav=bool(cav[b, j, ov]),
-                       p_wm_pre=float(kin[b, j, ov, 0]))
-        # scene-level: any present WM slot violating `observed` (would void the whole scene)
-        obs = (torch.isfinite(kin[b, j]).all(-1) & (kin[b, j, :, 1:4].sum(-1) > 0) & (kin[b, j, :, 6] > 0))
-        out["n_unobserved_present"] = int((present[b, j] & ~obs).sum())
-        tgt_wm = int((present[b, j] & (lane[b, j] == 1)).sum())
-        out["n_target_wm"] = tgt_wm
-        out["n_target_rec"] = int((ctx.targets.states.new_tensor(0) == 0) and
-                                  int(((rec[b, j, :, 1:4].argmax(-1) == 1) & (rec[b, j, :, 1:4].sum(-1) > 0)).sum()))
-    return out
-
-
 def model_c(prep, g, b, t, k):
     with torch.no_grad():
         geo = {key: val[b:b + 1, t:t + 1, k:k + 1] for key, val in g.items()}
@@ -152,8 +111,6 @@ GEO = {"calls": 0, "scene_invalid_rows": 0, "rows": 0, "reasons": {"nonfinite": 
 
 def geo_wrap(kin, present, physics, decision_mask=None, fixed_target=None, route_shift=None):
     out = _orig_geo(kin, present, physics, decision_mask=decision_mask, fixed_target=fixed_target, route_shift=route_shift)
-    if route_shift is None and not torch.is_grad_enabled() is False:
-        pass
     if route_shift is None:
         with torch.no_grad():
             pr = present.bool()
@@ -253,4 +210,5 @@ def _window_id(batch):
 
 WmSTrainer.train_batch = train_batch
 from wms.cli.__main__ import main
-sys.exit(main(sys.argv[1:]))
+with capture_rollout_geometry(WmSModel):
+    sys.exit(main(sys.argv[1:]))
