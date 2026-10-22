@@ -39,3 +39,21 @@ Finding 1 (contract mismatch, size known): SUMO's recorded positions follow Eule
 
 ## The 12 F1-unsupported cars of the 48-episode partial fit (part48b, 6847020a, 3689/3701)
 Cross-referenced with this run (ON) and, where available, the flag-off replay of the same episodes.
+
+| # | episode / veh / event row | fit label (F1 unsupported) | flag OFF | flag ON | class |
+|---|---|---|---|---|---|
+| 1 | w963054 / 727 / 2239 | physical veto: outside_merge_zone | not replayed | supported, F1 positive | lane-end overshoot (fixed by flag; inferred from fit label + ON result) |
+| 2 | w963089 / 420 / 1335 | physical veto: outside_merge_zone | vetoed, WM front 75.531 vs recorded 75.440, v 0 | supported, F1 positive | lane-end overshoot (fixed) |
+| 3 | w963098 / 526 / 1845 | zero mass, no physical veto | not replayed | supported but F1 zero, absorbed_fullpath | lifecycle absorption (not lane end), see below |
+| 4 | w963113 / 495 / 1571 | zero mass, no physical veto | supported, F1 zero, absorbed_fullpath | same | lifecycle absorption |
+| 5 | w963133 / 538 / 1712 | physical veto: target_interval_intersection | not replayed | still vetoed (wm_motion_only_intersection): lane-1 lead veh 427 predicted 64.362 vs recorded 64.877 (-0.51 m), overlap with the stopped ego at 59.385 is 0.023 m; recorded successor is clear (427 left to lane 0) | neighbour one-step motion error (genuine model error) |
+| 6 | w963142 / 292 / 971 | physical veto: outside_merge_zone | not replayed | supported, F1 positive (ego front 75.440 vs recorded 75.439) | lane-end overshoot (fixed) |
+| 7 | w963276 / 737 / 2335 | physical veto: outside_merge_zone | not replayed | supported, F1 positive | lane-end overshoot (fixed) |
+| 8 | w963486 / 549 / 1651 | zero mass, no physical veto | supported, F1 zero, absorbed | same (front 6.445 vs 6.675, v 0.63) | lifecycle absorption |
+| 9 | w963501 / 162 / 614 | physical veto: outside_merge_zone | vetoed, WM front 75.567 vs 75.439 | supported, F1 positive | lane-end overshoot (fixed) |
+| 10 | w963633 / 688 / 2248 | physical veto: target_interval_intersection | pending | pending | likely like #5 (check) |
+| 11 | w963683 / 488 / 1584 | physical veto: outside_merge_zone | vetoed, WM front 75.524 vs 75.440 | pending | lane-end overshoot (OFF verified) |
+| 12 | w963727 / 196 / 779 | zero mass, no physical veto | pending | pending | likely lifecycle absorption (check) |
+
+Lifecycle absorption (#3, #4, #8, #12): the car queues at the head of the ramp with an UNKNOWN lane one-hot for 5-23 rows (inside the 2.93 m junction, pack `s` frozen at about -0.6 .. -1.4), then crawls onto the merge edge at v < 0.6 m/s. For #8 the replay cache shows the risk-membership flag `ramp` = 1,0,1 at rows 1603-1605: the route coordinate `x` hovers around the zone start (0.04, -0.004, 0.024 in the WM's moved position), the car "starts" at 1603, leaves risk at 1604 and the absorbing exit makes the later merge zero mass. This is NOT the lane-end problem and the flag does not change it; the physical support is fine (verdict `supported`), only the strict full-path lifecycle is zero. Not a defect of F1/M0 laws; a lifecycle-at-zone-start-boundary effect for crawling queue heads (suggested follow-up: not treat a junction/zone-start boundary flicker of a stopped queue head as an absorbing exit; not implemented, as it changes the lifecycle contract). For #3, #4, #12 I verified only the unknown-lane/crawl signature, not the per-row ramp flicker.
+Tally of the 12: lane-end overshoot 6 (#1, #2, #6, #7, #9, #11) - fixed by the flag (5 verified ON, #11 verified OFF only so far); lifecycle absorption 4 (#3, #4, #8, #12); neighbour motion error 2 (#5, #10 likely); the flag fixes 6/12 and leaves 6/12 (they are not lane-end).
