@@ -2,6 +2,7 @@
 from dataclasses import replace
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -424,3 +425,90 @@ def test_real_runner_default_off_identical_and_enabled_backward():
     record = runner.run(batch, unroll_steps=8, backward=True)
     assert record["cutin_reaction"] > 0
     assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in model.parameters())
+
+
+def test_grad_steps_truncate_carry_but_keep_values_and_supervised_gradients():
+    model = small_model(temporal_residual_mode="slow")
+    t = targets(sequence())
+    full = one_step_predicted_accel(model, t)
+    steps = torch.zeros(t.n_steps, dtype=torch.bool)
+    steps[2:6] = True
+    part = one_step_predicted_accel(model, t, grad_steps=steps)
+    torch.testing.assert_close(part, full, rtol=0, atol=1e-6)
+    params = [p for p in model.parameters() if p.requires_grad]
+    outside = torch.autograd.grad(part[:, 0].sum(), params, allow_unused=True, retain_graph=True)
+    assert all(g is None or not g.abs().sum() for g in outside)
+    inside = torch.autograd.grad(part[:, 3].sum(), params, allow_unused=True)
+    assert any(g is not None and g.abs().sum() > 0 for g in inside)
+    # The loss builds the step mask from its own supervised/control rows.
+    value = CutinReactionLoss(CutinReactionConfig(weight=1))(context(model, t)).value
+    value.backward()
+    assert all(torch.isfinite(p.grad).all() for p in params if p.grad is not None)
+
+
+def test_activation_checkpointed_replay_is_numerically_identical():
+    t = targets(sequence())
+    grads, values = [], []
+    for checkpointed in (False, True):
+        model = small_model()
+        model.checkpoint_forward = checkpointed
+        term = CutinReactionLoss(CutinReactionConfig(weight=1))
+        value = term(context(model, t)).value
+        value.backward()
+        values.append(value.detach())
+        grads.append([p.grad.clone() if p.grad is not None else torch.zeros_like(p)
+                      for p in model.parameters()])
+    torch.testing.assert_close(values[0], values[1], rtol=0, atol=1e-7)
+    for a, b in zip(*grads):
+        torch.testing.assert_close(a, b, rtol=1e-5, atol=1e-7)
+
+
+def test_runner_hands_the_rollout_histories_to_the_replay_and_logs_telemetry(monkeypatch):
+    import wms.train.losses.cutin_reaction as module
+    model = small_model()
+    batch = sequence()
+    batch["hist"] = torch.ones(1, 4, model.history_len, model.history_features)
+    batch["hist_mask"] = torch.ones(batch["hist"].shape[:-1], dtype=torch.bool)
+    seen = {}
+    original = module.one_step_predicted_accel
+
+    def spy(model_, targets_, grad_steps=None):
+        seen.update(targets_.prepared["cutin_reaction_inputs"])
+        return original(model_, targets_, grad_steps)
+
+    monkeypatch.setattr(module, "one_step_predicted_accel", spy)
+    cfg = replace(TrainSettings(truncation_steps=2), cutin_reaction_weight=1)
+    runner = UnrollRunner(model, cfg, build_loss(cfg), projection=None, device=torch.device("cpu"))
+    record = runner.run(batch, unroll_steps=8, backward=True)
+    assert set(seen) == {"history", "history_mask", "driver_history", "driver_history_mask"}
+    assert seen["history"].shape == batch["hist"].shape and seen["history_mask"].all()
+    assert record["cutin_reaction_n_events"] >= 1
+    assert record["cutin_reaction_n_event_rows"] >= 1 and record["cutin_reaction_n_control_rows"] >= 1
+    assert record["cutin_reaction_censored_windows"] >= 0
+    assert all(math.isfinite(record[f"cutin_reaction_{k}"]) for k in ("event_loss", "control_loss"))
+    off = TrainSettings(truncation_steps=2)
+    other = UnrollRunner(model, off, build_loss(off), projection=None,
+                         device=torch.device("cpu")).run(batch, unroll_steps=8, backward=False)
+    assert not any(key.startswith("cutin_reaction") for key in other)
+
+
+def test_leader_change_features_fail_closed_until_the_runtime_consumer_exists():
+    ModelSpec(leader_change_features=False)
+    with pytest.raises(ValueError, match="refused"):
+        ModelSpec(leader_change_features=True)
+    with pytest.raises(ValueError):
+        ModelSpec.from_mapping({"leader_change_features": True})
+    flat = load_train_config(ROOT / "configs/c4_wm_v10round7b.toml").to_legacy_flat()
+    assert ModelSpec.from_mapping(flat).leader_change_features is False
+
+
+def test_forward_only_passes_skip_the_replay_and_clear_stale_stats():
+    t = targets(sequence())
+    model = AccelOutput()
+    loss = CutinReactionLoss(CutinReactionConfig(weight=1))
+    loss(context(model, t)).value.backward()
+    assert loss.last_stats["n_events"] == 1 and model.calls
+    model.calls.clear()
+    with torch.no_grad():
+        value = loss(context(model, t))
+    assert value.value.item() == 0 and model.calls == [] and loss.last_stats == {}

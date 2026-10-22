@@ -123,8 +123,20 @@ class ModelSpec:
     temporal_tau_init_s: float = 0.1
     temporal_tau_conditioned: bool = False
     temporal_slew_init_mps2: Optional[float] = None
+    # R9K/R10 (default OFF, FAIL CLOSED): the leader-change tracker exists for recorded-state
+    # replay only.  The runtime consumer (zero-init 14->d_model adapter on the residual net and
+    # the rollout carry) is NOT installed, so enabling this key would silently do nothing;
+    # ModelSpec therefore refuses it until the consumer lands.
+    leader_change_features: bool = False
 
     def __post_init__(self) -> None:
+        if not isinstance(self.leader_change_features, bool):
+            raise ValueError("leader_change_features must be a boolean")
+        if self.leader_change_features:
+            raise ValueError(
+                "model.leader_change_features=true is refused: only the recorded-state replay "
+                "tracker exists (R9_K.md coordinator hooks 1-6 are not installed), so the "
+                "runtime model would ignore the key")
         if self.driver_param_mode not in ("legacy", "physical"):
             raise ValueError("driver_param_mode must be legacy or physical")
         if not isinstance(self.driver_ema_update, bool):

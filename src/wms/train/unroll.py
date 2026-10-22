@@ -180,6 +180,15 @@ class UnrollRunner:
         if "merge_pivot" in self.composer.names:
             targets.prepared["merge_pivot_source"] = (model, inp)
         self.composer.prepare(targets)
+        if "cutin_reaction" in self.composer.names:
+            # R10 fix B: the recorded-state replay must see the same causal pre-t0 observations
+            # the rollout encodes (detached raw observations, never driver truth tables).
+            # Presence-only C4 windows keep stable slots (a reused slot never revives), so no
+            # explicit ``reset`` mask is needed; a source that reuses slots must add one.
+            targets.prepared["cutin_reaction_inputs"] = {
+                "history": inp.hist, "history_mask": inp.hist_mask,
+                "driver_history": inp.observed_hist,
+                "driver_history_mask": inp.observed_hist_mask}
         if pair_reference is not None:
             targets.prepared["paired_return_reference"] = pair_reference
         parameters = [p for p in model.parameters() if p.requires_grad]
@@ -710,6 +719,11 @@ class UnrollRunner:
                 record["merge_frailty_value_share"] = (
                     float(logged["merge_frailty"]) / loss_logged
                     if loss_logged > 0.0 else 0.0)
+        for term in composer.unroll_terms:
+            stats = getattr(term, "last_stats", None)
+            if term.name == "cutin_reaction" and stats:
+                # R10 fix B telemetry: per-unroll event census and the two loss parts.
+                record.update({f"cutin_reaction_{key}": value for key, value in stats.items()})
         core_prep = targets.prepared.get("merge_core")
         if "merge_pivot" in targets.prepared:
             from .losses.merge_pivot import merge_pivot_metrics

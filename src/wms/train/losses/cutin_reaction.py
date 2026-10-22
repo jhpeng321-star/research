@@ -22,11 +22,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 import torch
 import torch.nn.functional as F
 from torch import Tensor
+from torch.utils.checkpoint import checkpoint
 
 from wms.model.history import (LONG_HISTORY_F, history_step_features,
                                initial_history, push_history)
@@ -152,8 +154,15 @@ def insertion_plan(targets: UnrollTargets, config: CutinReactionConfig) -> dict[
             "n_control_rows": int(control.sum())}
 
 
-def one_step_predicted_accel(model: Any, targets: UnrollTargets) -> Tensor:
+def one_step_predicted_accel(model: Any, targets: UnrollTargets,
+                             grad_steps: Tensor | None = None) -> Tensor:
     """Causal recorded-state replay [B,n,K], including temporal and slow history.
+
+    ``grad_steps`` (optional bool [n]) limits autograd to the steps that carry a supervised
+    row: the other steps still advance the causal recurrent state but run under ``no_grad``
+    (their carried state is a constant for later steps, i.e. truncated backpropagation).
+    ``None`` keeps every step differentiable.  With ``model.checkpoint_forward`` each
+    differentiable step is activation-checkpointed exactly like ``WmSModel.step``.
 
     Kinematics and history features are recorded/detached. Only learned recurrent
     state (e.g. slow residual) and the model outputs carry gradients. No rollout
@@ -243,7 +252,15 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets) -> Tensor:
             kwargs["driver_params"] = params
         if embedding is not None:
             kwargs["driver_embedding"] = embedding
-        out = model(state, k_steps=t, **kwargs)
+        grad_here = grad_steps is None or bool(grad_steps[t])
+        if not grad_here:
+            with torch.no_grad():
+                out = model(state, k_steps=t, **kwargs)
+        elif bool(getattr(model, "checkpoint_forward", False)) and torch.is_grad_enabled():
+            out = checkpoint(partial(model.forward, k_steps=t, **kwargs), state,
+                             use_reentrant=False, preserve_rng_state=model.training)
+        else:
+            out = model(state, k_steps=t, **kwargs)
         outputs.append(out["accel_mps2"])
         carry = {key: out[key] for key in ("temporal_residual_mps2", "temporal_residual_present",
                                           "merge_neg_accel_ema", "merge_neg_intent_logit")
@@ -268,14 +285,20 @@ class CutinReactionLoss(UnrollTerm):
         zero = torch.zeros((), device=ctx.targets.states.device, requires_grad=torch.is_grad_enabled())
         if not self.config.enabled:
             return TermValue(zero, valid_count=0)
+        if not torch.is_grad_enabled():
+            # Validation / forward-only probes: a recorded-state replay there would only double
+            # the cost and put a training-only term into validation losses.
+            self.last_stats = {}
+            return TermValue(zero, valid_count=0)
         plan = insertion_plan(ctx.targets, self.config)
         self.last_stats = {key: plan[key] for key in ("n_events", "n_event_rows", "n_control_rows")}
         self.last_stats["censored_windows"] = sum(e["censored"] for e in plan["events"])
         if not plan["n_event_rows"] and not plan["n_control_rows"]:
             return TermValue(zero, valid_count=0)
-        accel = one_step_predicted_accel(ctx.model, ctx.targets)
-        target = ctx.targets.states[:, 1:ctx.targets.n_steps + 1, :, 5].detach()
         needed = plan["supervised"] | plan["control"]
+        accel = one_step_predicted_accel(ctx.model, ctx.targets,
+                                         grad_steps=needed.any(-1).any(0))
+        target = ctx.targets.states[:, 1:ctx.targets.n_steps + 1, :, 5].detach()
         # Invalid/padding rows must not poison a reduction via NaN * 0.
         error = F.huber_loss(accel[needed], target[needed],
                              delta=self.config.huber_delta_mps2, reduction="none")
