@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import replace
 import csv
 import json
 from pathlib import Path
@@ -24,23 +25,31 @@ from wms.data.c4_episodes import EpisodeArrays  # noqa: E402
 from wms.model.merge_pivot import log_event_mass  # noqa: E402
 
 
-def load_run_frozen(checkpoint, train_config):
-    """Frozen checkpoint with the physics ``wms train`` builds from the preset."""
+def load_run_frozen(checkpoint, train_config, ramp_lane_end_stop=None):
+    """Frozen checkpoint with the physics ``wms train`` builds from the preset.
+
+    ``ramp_lane_end_stop`` (True/False) overrides the R9LANE physics flag of the preset;
+    ``None`` keeps the preset's own value.
+    """
     if train_config is None:
         return exact.load_frozen(checkpoint)
-    return exact.load_frozen(checkpoint, physics=exact.training_physics(train_config),
-                             physics_source="training_preset:" + str(train_config))
+    physics = exact.training_physics(train_config)
+    source = "training_preset:" + str(train_config)
+    if ramp_lane_end_stop is not None:
+        physics = replace(physics, ramp_lane_end_stop=bool(ramp_lane_end_stop))
+        source += "+ramp_lane_end_stop=" + str(bool(ramp_lane_end_stop)).lower()
+    return exact.load_frozen(checkpoint, physics=physics, physics_source=source)
 
 
 def episode_job(job):
-    ep, checkpoint, output, train_config, cache_dir, resume = job
+    ep, checkpoint, output, train_config, cache_dir, resume, lane_stop = job
     directory = exact.guard(Path(output) / ep["source_name"] / ep["episode"])
     if resume and (directory / "report.json").is_file() and (directory / "events.json").is_file():
         print(json.dumps(dict(episode=ep["episode"], resumed=True)), flush=True)
         return (json.loads((directory / "events.json").read_text(encoding="utf-8")),
                 json.loads((directory / "report.json").read_text(encoding="utf-8")))
     torch.set_num_threads(1)
-    frozen = load_run_frozen(checkpoint, train_config)
+    frozen = load_run_frozen(checkpoint, train_config, lane_stop)
     loaded = runtime.load_scene(ep["path"])
     cache = (runtime.prepare(frozen, loaded, pack_frame_ablation=True) if cache_dir is None else
              runtime.cached_prepare(frozen, loaded, cache_dir))
@@ -156,6 +165,9 @@ def main(argv=None):
                         help="summarise only episodes that already have report.json in --output")
     parser.add_argument("--resume", action="store_true",
                         help="reuse finished per-episode report.json/events.json in --output")
+    parser.add_argument("--ramp-lane-end-stop", choices=("on", "off", "preset"), default="preset",
+                        help="R9LANE: override physics.ramp_lane_end_stop (ramp-lane cars cannot "
+                             "pass the real lane end); default = the preset's own value")
     parser.add_argument("--max-episodes", type=int)
     args = parser.parse_args(argv)
     output = exact.guard(args.output)
@@ -174,7 +186,8 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=True)
     config = None if args.train_config == "none" else args.train_config
     cache_dir = None if args.cache == "none" else str(exact.guard(args.cache))
-    jobs = [(ep, str(exact.guard(args.checkpoint)), str(output), config, cache_dir, args.resume)
+    jobs = [(ep, str(exact.guard(args.checkpoint)), str(output), config, cache_dir, args.resume,
+             {"on": True, "off": False, "preset": None}[args.ramp_lane_end_stop])
             for ep in episodes]
     rows, reports = [], []
     if args.workers == 1:

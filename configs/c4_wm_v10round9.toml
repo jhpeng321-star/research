@@ -16,6 +16,9 @@ merge_negotiation = false
 
 [physics]
 merge_end_wait = false
+# R9LANE (owner-approved 2026-10-22): SUMO never moves a ramp-lane car past its lane end
+# (merge_zone_s1_m); code default stays false.
+ramp_lane_end_stop = true
 
 [loss.merge_core]
 version = 2
