@@ -14,3 +14,28 @@ Branch c4/v10r9lane (merged c4/v10r9launch 78b93f16). Status block at the bottom
 
 ## Tests
 `tests/test_r9_lane_end_stop.py` (11): end==75.44; stopped car at the end stays (pinned, v 0); approaching car stops exactly at the end; cars not reaching it / lane-1 cars / absent slots untouched; route shift honoured; flag off = unchanged (car carried past end in legacy); step holds a staying car and leaves other slots bit-identical; a merging car is decided at the end and keeps its free motion (next_s/next_v equal the flag-off free motion); decision geometry pinned + idempotent; round-9 preset + physics JSON pin; bool validation.
+
+## Tests run
+- `python -m pytest -q --basetemp=results/pt_tmp tests/test_r9_lane_end_stop.py tests/test_merge_pivot_training.py tests/test_merge_pivot_pre_window.py tests/test_merge_pivot_runtime.py tests/test_merge_pivot.py tests/test_merge_pivot_hybrid.py tests/test_merge_pivot_memory.py tests/test_r9_support_audit.py tests/test_r9_runtime.py tests/test_r9_fit_exact.py tests/test_r9_exact.py tests/test_merge_fit_stage2a.py tests/test_merge_fit_v2.py tests/test_route_frame.py tests/test_merge_pivot_support.py tests/test_merge_core.py tests/test_merge_core_v2_config.py tests/test_merge_core_v2_seqtf.py tests/test_merge_core_v2_onpolicy.py tests/test_merge_context.py tests/unit/config`: 637 passed, 10 failed. The 10 are environment-only (the guard refuses pytest's default `E:\Temp` tmp_path outside the workspace; the real-checkpoint / TRAIN-episode tests need `data/r9_train/{wm_s_stage300.pt,v5_native/episodes/w963004...}`, copied untracked into this worktree). Re-run of exactly those files with `--basetemp` inside the workspace: `tests/test_r9_runtime.py tests/test_r9_exact.py` 35 passed; `tests/test_r9_fit_exact.py tests/test_merge_fit_stage2a.py` 66 passed => all 647 pass, none skipped/weakened.
+- `tests/unit/config tests/unit/physics tests/golden tests/equivalence`: 217 passed, 26 skipped (pre-existing skips: data_cache C1 checkpoints absent / WMS_EQ_FULL unset).
+- `ruff check` on the touched files: clean.
+- Flag OFF on real data: new code with `--ramp-lane-end-stop off` on w963486/490/494 reproduces the S-SUP v3 events (support verdict, F1/M0/P1-P3 mass, gaps) with 0 differences over 335 events.
+
+## Diagnosis of the 2 fast "short of the merge edge" cases (not lane-end; NOT fixed by the flag)
+Both are a ramp car crossing the 2.93 m ramp junction into the merge edge and merging in its first row there (zone start x = 0, `merge_zone_s0_m`).
+
+| | w963494 veh 783 (t 1181.0->1181.5) | w963526 veh 280 (t 439.0->439.5) |
+|---|---|---|
+| recorded pre route x / v | -7.820 / 16.349 | -6.851 / 14.388 |
+| recorded a, v_post | -1.1685, 15.7648 | -1.0497, 13.8634 |
+| recorded post x (lane 1) | 0.0624 | 0.0803 |
+| SUMO Euler x_pre + v_post*dt | 0.0624 (exact) | 0.0803 (exact) |
+| trapezoid with the RECORDED v/a (WM convention) | +0.146 m too far | +0.131 m too far |
+| WM accel / v_next | about -3.31 / 14.696 | about -2.78 / 12.997 |
+| WM predicted x (trapezoid) | -0.0587 | -0.0052 |
+| miss | -0.121 = -0.267 (WM braking error) + 0.146 (integration) | -0.0855 = -0.2167 + 0.1312 |
+
+Finding 1 (contract mismatch, size known): SUMO's recorded positions follow Euler `x_{t+1} = x_t + v_{t+1} dt` exactly (median |error| 1.5e-5 m over 198,865 same-lane rows of w963494, vs 3.0e-2 m for the WM's trapezoid `0.5 (v_t + v_{t+1}) dt`; `a` in a row is the acceleration that produced that row's speed). `advance_longitudinal` uses the trapezoid, so every moving car has a systematic bias of 0.5 |a| dt^2 = 0.125 |a| m (0.15 m at -1.2 m/s^2, 1.1 m at -9). Finding 2 (genuine model error): in both cases the WM brakes about 1.7-2.2 m/s^2 harder than SUMO as the car approaches the junction/merge edge. The trapezoid bias partly masks it (net -0.12/-0.09 m); a switch to Euler alone would make these two cases WORSE (predicted x -0.472 / -0.353, i.e. 0.53 / 0.43 m short) because the learned acceleration was trained against the trapezoid. Verdict: the two cases are model error (acceleration), amplified/compensated by a known trapezoid-vs-Euler convention difference. NOT implemented: an opt-in `euler_position_update` would change every rollout and needs a recalibration/retrain of the acceleration; recorded here as a follow-up, not as a contract fix for round 9.
+
+## The 12 F1-unsupported cars of the 48-episode partial fit (part48b, 6847020a, 3689/3701)
+Cross-referenced with this run (ON) and, where available, the flag-off replay of the same episodes.
