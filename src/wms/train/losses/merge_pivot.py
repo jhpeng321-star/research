@@ -672,6 +672,7 @@ class MergePivotTerm(LossTerm):
             support_counts=support_counts,
             known_before=known_before, pre_window_initial_maximum=entry_snapshot,
             n_cars=int(births.sum()), model=model, tf_carry=None, on_carry=None,
+            on_objective_disabled=int(self.cfg.weight == 0),
             stats={}, causal_cav_fallback=int((present[:, :n] & inp.is_cav[:, :n]).sum())
             if inp.action_timeline is None else 0,
             unknown_age_sequences=torch.nonzero(unknown).cpu().tolist(),
@@ -760,23 +761,28 @@ class MergePivotTerm(LossTerm):
             k = prep["risk"].shape[-1]
             c = c[..., :k]
             support, early = self._comparison(ctx, prep)
-            on_carry = prep["on_carry"]
-            if c0 and width is not None and entry_history is not None and on_carry is not None:
-                # Reattach only the frozen pre-window graph. Rollout history is
-                # a TBPTT carry and remains detached; slot resets erase its prior.
-                valid = prep["last_reset"][:, c0 - 1] < 0
-                prefix = torch.where(valid.unsqueeze(-1) & ~torch.isnan(entry_history),
-                                     entry_history, torch.full_like(entry_history, -torch.inf))
-                on_carry = {**on_carry, "history": torch.cat(
-                    (prefix, on_carry["history"][..., entry_history.shape[-1]:]), -1)}
-            nll, prep["on_carry"], counts = score_chunk(
-                c, ctx.pred["merge_pivot_tau"].mean(), cut(prep["risk"]), cut(prep["event"]),
-                known_entry=cut(prep["known"]), reset=cut(prep["reset"]),
-                eligible=ctx.pred["merge_pivot_eligible"][..., :k].bool(), support=support,
-                stop=early, carry=on_carry, initial_maximum=initial,
-                w=ctx.pred["merge_pivot_w"].mean() if width is not None else None,
-                quadrature_order=cfg.quadrature_order, initial_history=initial_history)
-            stats.update({"on_" + key: val for key, val in counts.items()}, on_nll=float(nll.detach()))
+            # Retired objective: score only for diagnostics, with no autograd graph.
+            # Keep the positive-weight path's operations/order exactly as before.
+            with torch.set_grad_enabled(torch.is_grad_enabled() and cfg.weight != 0):
+                on_carry = prep["on_carry"]
+                if c0 and width is not None and entry_history is not None and on_carry is not None:
+                    # Reattach only the frozen pre-window graph. Rollout history is
+                    # a TBPTT carry and remains detached; slot resets erase its prior.
+                    valid = prep["last_reset"][:, c0 - 1] < 0
+                    prefix = torch.where(valid.unsqueeze(-1) & ~torch.isnan(entry_history),
+                                         entry_history, torch.full_like(entry_history, -torch.inf))
+                    on_carry = {**on_carry, "history": torch.cat(
+                        (prefix, on_carry["history"][..., entry_history.shape[-1]:]), -1)}
+                nll, prep["on_carry"], counts = score_chunk(
+                    c, ctx.pred["merge_pivot_tau"].mean(), cut(prep["risk"]), cut(prep["event"]),
+                    known_entry=cut(prep["known"]), reset=cut(prep["reset"]),
+                    eligible=ctx.pred["merge_pivot_eligible"][..., :k].bool(), support=support,
+                    stop=early, carry=on_carry, initial_maximum=initial,
+                    w=ctx.pred["merge_pivot_w"].mean() if width is not None else None,
+                    quadrature_order=cfg.quadrature_order, initial_history=initial_history)
+            label = "on_diagnostic_" if cfg.weight == 0 else "on_"
+            stats.update({label + key: val for key, val in counts.items()})
+            stats[label + "nll"] = float(nll.detach())
             if cfg.weight:
                 value = value + cfg.weight * nll / max(prep["n_cars"], 1) / cfg.z_on
         if cfg.tau_reg_weight:
@@ -857,6 +863,7 @@ def merge_pivot_metrics(prep: Optional[dict], dt_s: float) -> dict:
     for name in (*PARAM_NAMES, *(("w",) if "w" in keys else ())):
         out["merge_pivot_" + name] = rows[-1][name] if rows else None
     out["merge_pivot_n_cars"] = prep["n_cars"]
+    out["merge_pivot_on_objective_disabled"] = prep["on_objective_disabled"]
     out["merge_pivot_causal_cav_fallback_intervals"] = prep["causal_cav_fallback"]
     out["merge_pivot_unknown_age_sequences"] = prep["unknown_age_sequences"]
     out["merge_pivot_unknown_age_sequences_before"] = prep["unknown_age_sequences_before"]
@@ -866,7 +873,7 @@ def merge_pivot_metrics(prep: Optional[dict], dt_s: float) -> dict:
     out["merge_pivot_pre_window_recovered"] = len(prep["pre_window_recovered_sequences"])
     out["merge_pivot_pre_window_replayed_intervals"] = sum(
         h["n_steps"] for h in prep["pre_window_history"] if h is not None)
-    for path in ("tf", "on"):
+    for path in ("tf", "on_diagnostic" if prep["on_objective_disabled"] else "on"):
         out[f"merge_pivot_{path}_scored_seconds"] = out.get(f"merge_pivot_{path}_scored_intervals", 0) * dt_s
     return out
 
