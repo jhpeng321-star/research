@@ -75,4 +75,4 @@ its own equivalence check against the recorded (fitter) path and its share of th
 
 ## Tests / commits
 - `PYTHONPATH="src;.;tests" python -m pytest -q tests/test_merge_pivot_training.py tests/test_r9_tdiag.py` -> 48 passed, 0 failed (local CPU).
-- Commits on c4/v10r9tdiag: probes; `unroll.py` fix + `tests/test_r9_tdiag.py`; this note. Not pushed. gpuR work dir `/root/autodl-tmp/c4/v5/tdiag_r9` (kept; ~1 GB).
+- Commits on c4/v10r9tdiag: probes; `unroll.py` fix + `tests/test_r9_tdiag.py`; this note. Not pushed. gpuR work dir `/root/autodl-tmp/c4/v5/tdiag_r9` (kept; 33 MB).
