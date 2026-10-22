@@ -1,0 +1,5 @@
+{
+  "rule": "weight = G_brake / G_cutin(weight=1): geometric-mean accumulated gradient norm of the explicit braking terms (brake_persist + brake_persist_quantile) over the round-10 trainable parameters, divided by the gradient norm of the unweighted cut-in term; tools/r10_weight_rule.py",
+  "status": "PROVISIONAL: measurement not completed locally (CPU contention); weight 1.0 = unweighted cut-in term (event mean + control mean) until the measurement replaces it",
+  "chosen_weight": 1.0
+}
