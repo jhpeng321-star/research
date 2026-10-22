@@ -54,3 +54,25 @@ Options for the owner (each a decision, none implemented):
 3. tighten the support tolerances to physical scale (hand-set thresholds - owner call).
 
 ## Real-data check of the actual entry (see addendum below for numbers)
+
+Real training entry `python -m wms train --config configs/c4_wm_v10round9.toml --mode run` on gpuR (repo = this branch, round-8 init, real TRAIN data,
+60 s stage, batch 1, truncation 60, `model.merge_pivot_state_st=true` as the owner requires, 4 steps requested; run dirs
+`/root/autodl-tmp/c4/v5/tdiag_r9/run_b1`, `run_b2`):
+- **b1, exactly the round-9 recipe**: aborts at step 0, `RuntimeError: non-finite first_passage loss` - tf: 2 events, 2 positive mass, 0 zero mass;
+  on-policy: 1 event, 0 positive mass, **1 zero mass (physical veto)**, `on_nll = inf`. Blocker 1 is NOT closed by any bookkeeping fix.
+- **b2, same + `loss.merge_core.weight=0.0` (on-policy term logged only, a diagnostic, NOT a proposal I applied)**: **4/4 optimizer steps complete**,
+  finite loss (150.0, 111.3, 207.3, 186.7; includes lane_event w=10 value), finite nonzero grad_norm (9.3e-4, 2.6e-3, 4.4e-3, 1.0e-3, unclipped),
+  tf zero mass 0 on all 4 steps (2, 2, 5, 5 events, all positive mass), on-policy zero-mass counted and visible (1, 2, 2, 4 of 1, 2, 2, 4 events),
+  tau 0.07274 -> 0.07278, w 1.0 -> 0.9982 (both move). Blocker-2 fix verified end to end under state_st=true (before the fix this raised at the end of every batch).
+- Per-tensor merge_pivot gradients (state_st=false probe, clean batches): 8/8 nonzero, see Blocker 2; state_st=true batch-1 run a3 reproduced the same
+  batch-0..5 values (identical forward) with the full-graph backward completing (no OOM at 60 s).
+
+Entrant slots (open, not fixed): in rollouts the WM geometry sees present slots k >= 192 (generated entrants/queue) with `length_m = 0` and positions such as
+-1733 m or -2625 m (run a6: 19 slot-steps in one batch, 7 in another); `geometry()` treats a present slot with length <= 0 as an unobserved scene and vetoes
+EVERY ramp car in that row (`ramp_scene_invalid` 62 of 8074 ramp-car steps overall, up to 16 % of the steps of single batches). Whether these slots should be
+present, carry a length, or be excluded from `scene_valid` is a model-contract question for the entry/geometry owner; I did not change it because it needs
+its own equivalence check against the recorded (fitter) path and its share of the 33 on-policy zero-mass events was not measured in the time available.
+
+## Tests / commits
+- `PYTHONPATH="src;.;tests" python -m pytest -q tests/test_merge_pivot_training.py tests/test_r9_tdiag.py` -> 48 passed, 0 failed (local CPU).
+- Commits on c4/v10r9tdiag: probes; `unroll.py` fix + `tests/test_r9_tdiag.py`; this note. Not pushed. gpuR work dir `/root/autodl-tmp/c4/v5/tdiag_r9` (kept; ~1 GB).
