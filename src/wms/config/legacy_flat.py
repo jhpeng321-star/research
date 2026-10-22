@@ -10,6 +10,13 @@ from typing import Any, Mapping, MutableMapping
 #: flat key -> dotted path inside the nested config. ``black_box`` and
 #: ``exclude_window_list`` need value conversion and are handled in ``TrainConfig``.
 FLAT_TO_PATH: dict[str, str] = {
+    # CUT-IN REACTION (R9K)
+    "cutin_reaction_weight": "loss.cutin_reaction.weight",
+    "cutin_reaction_control_weight": "loss.cutin_reaction.control_weight",
+    "cutin_reaction_pre_s": "loss.cutin_reaction.pre_s",
+    "cutin_reaction_max_window_s": "loss.cutin_reaction.max_window_s",
+    "cutin_reaction_huber_delta_mps2": "loss.cutin_reaction.huber_delta_mps2",
+    "leader_change_features": "model.leader_change_features",
     "unroll_curriculum_s": "curriculum.unroll_s",
     "stage_steps": "curriculum.stage_steps",
     "num_workers": "runtime.num_workers",
@@ -350,6 +357,9 @@ FLAT_TO_PATH: dict[str, str] = {
 #: Keys the legacy ``to_dict`` omits while they equal their default (braking-fix
 #: and long-horizon fields), so old flags-off receipts stay byte-identical.
 OMIT_WHEN_DEFAULT: tuple[str, ...] = (
+    # CUT-IN REACTION (R9K)
+    "cutin_reaction_weight", "cutin_reaction_control_weight", "cutin_reaction_pre_s",
+    "cutin_reaction_max_window_s", "cutin_reaction_huber_delta_mps2", "leader_change_features",
     "batch_size_per_stage",
     "brake_follow_weight",
     "brake_follow_cav_weight",
