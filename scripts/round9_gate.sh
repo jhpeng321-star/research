@@ -22,7 +22,8 @@ done
 # Atomic reservation also prevents concurrent launchers. Retained on failure/success:
 # even a crash before the first log must not silently reuse this run's artifacts.
 mkdir "$L/.round9_gate.lock" || exit 4
-CK=$L/runs/c4_wm_v10_round8/wm_s_stage300.pt
+# R9_INIT overrides the init checkpoint (a2 relaunch: round-8 stage300 + fitted F1 merge_pivot scalars).
+CK=${R9_INIT:-$L/runs/c4_wm_v10_round8/wm_s_stage300.pt}
 export PYTHONPATH=src:. OMP_NUM_THREADS=12 WMS_JAM_WORKERS=12 WMS_LATEST_EVERY=20
 export WMS_DATA_V5_NATIVE="$L/data/v5_native" WMS_DATA_GENRAND_PLAIN="$L/data/genrand_plain"
 export WMS_DATA_GENRAND_BRANCH="$L/data/genrand_branch" WMS_DATA_PAIRS300="$L/data/pairs300"
