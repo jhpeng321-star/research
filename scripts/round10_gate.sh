@@ -19,7 +19,8 @@ export PYTHONPATH=src:. OMP_NUM_THREADS=12 WMS_JAM_WORKERS=12 WMS_LATEST_EVERY=2
 export WMS_DATA_V5_NATIVE=$L/data/v5_native WMS_DATA_GENRAND_PLAIN=$L/data/genrand_plain WMS_DATA_GENRAND_BRANCH=$L/data/genrand_branch WMS_DATA_PAIRS300=$L/data/pairs300
 COMMON="--set model.init_from=$CK --set loss.loss_share_logging=false --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4"
 /root/miniconda3/bin/python -m wms train --config configs/c4_wm_v10round10.toml --mode run --out $L/runs/smoke_r10 $COMMON \
-  --set "optim.batch_size_per_stage=[4,4]" \n  --set "curriculum.unroll_s=[120.0,300.0]" --set "curriculum.stage_steps=[2,2]" --set "curriculum.truncation_steps_per_stage=[120,60]" \
+  --set "optim.batch_size_per_stage=[4,4]" \
+  --set "curriculum.unroll_s=[120.0,300.0]" --set "curriculum.stage_steps=[2,2]" --set "curriculum.truncation_steps_per_stage=[120,60]" \
   --set curriculum.max_hours=0.5 > $L/smoke_r10.log 2>&1
 OK=$(CK="$CK" SMOKE="$L/runs/smoke_r10" /root/miniconda3/bin/python - <<'PY'
 import glob, json, math, os, sys

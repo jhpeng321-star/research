@@ -91,6 +91,8 @@ def test_round10_init_checkpoint_path_and_gate_chain():
     gate = (ROOT / "scripts/round10_gate.sh").read_bytes()
     assert b"\r" not in gate and b"configs/c4_wm_v10round10.toml" in gate
     assert b"runs/c4_wm_v10_round10" in gate and b"repo_r10" in gate
+    # a literal "\n" in place of a line continuation becomes a stray positional argument
+    assert b"\\n  --set" not in gate
 
 
 def test_cutin_weight_comes_from_the_documented_rule_file():
