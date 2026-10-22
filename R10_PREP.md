@@ -85,3 +85,29 @@ INIT_FROM.json complete, frozen tensors and merge_pivot bitwise unchanged, a tra
 Done: merge (clean), fix B finished (history hook, telemetry, checkpointed replay, fail-closed leader_change_features), tests green (sections 3), attribution verdict (section 4), round-10 config + config-pin test, scripts/round10_gate.sh, astra packet src_r10/ROUND10_PROPOSAL.md, offline pilot.
 Not done: the weight measurement and the 2-step local micro-smoke did not finish on the loaded CPU (weight is PROVISIONAL 1.0, docs/r10_weight_rule.json; rerun tools/r10_weight_rule.py and tools/r10_micro_smoke.py, commands in sections 6-7). Gate not run on gpuR.
 Notes: data/ in the worktree (r9_train ckpt + one episode) is untracked test data; round-9 postponed so round 10 is not launchable until round 9 exists.
+
+## STATUS (2026-10-23 ~01:30, S-R10b; supersedes the pause status above for sections 6-7)
+- **Merged c4/v10r9excl** (round-9 final objective + counted exclusion; stage-2E consistency commit f91d8753) into c4/v10r10: no conflicts.
+- **Objective/adjoint config** (configs/c4_wm_v10round10.toml): `model.merge_pivot_state_st = true`, `model.checkpoint_forward = true`,
+  `loss.merge_core.weight = 0.0` (TF + F2 only, tf_weight 0.6, yield 0), `physics.ramp_lane_end_stop/ramp_risk_retain = true`;
+  the counted motion exclusion is code-level (inherited with the merge). tests/test_r10_config.py pins that round 10 equals round 9 in all of these and differs
+  only by name, init_from, cut-in loss, freeze/lr lists, out_dir.
+- **Cut-in weight measured: 2.174** (docs/r10_weight_rule.json, was provisional 1.0). Method: tools/r10_weight_rule.py `--pre-steps 24` (windows with a
+  recorded ramp->lane-1 insertion 24 steps after the start, 117 candidates in the one local TRAIN episode), round-8 stage-300 weights, real
+  WmSTrainer.forward_backward, per-term accumulated gradient norms over the round-10 trainable set (temporal + gate scalars); 7 batches (batch 2, 20 s, truncation 40,
+  sampler seeds 0-3), geometric means: brake_persist 0.3940 + brake_persist_quantile 0.3432 = 0.7372 over cut-in 0.3392 -> ratio 2.1736, rounded to 4 significant digits;
+  tools/r10_weight_combine.py. Per-batch ratios 0.60-4.33 (wide: few events per batch). Caveats: merge_pivot loss disabled for the measurement
+  (`loss.merge_core.tf_weight=0`, `metrics=false`; its pre-window replay made a batch >25 min on CPU; per-term norms do not depend on it);
+  20 s windows on one episode; a re-measure of the first batch of each seed with the gate overrides (`brake_follow_cav_weight=2.0`) gave identical norms.
+- **Gate** scripts/round10_gate.sh updated to the round-9 final checks (objective-disabled flag, TF counters, no pivot gradient required since the pivot is frozen),
+  smoke 120/300 s, 2+2 steps, batch 4. Not run on gpuR; bash -n clean.
+- **Micro-smoke** (tools/r10_micro_smoke.py, local CPU, 2 steps, batch 2, 20 s windows each with an insertion): see the result block below.
+- **Tests** (PYTHONPATH="src;.;tests", --basetemp inside the worktree): 585 passed (cut-in, r10 config, merge-pivot incl. exclusion/hybrid/memory/pre-window/runtime/support/training,
+  r9 lane-end/risk-retain, checkpoint_forward exact, r9 support audit, round-9 gate launcher/training/verdict, r9 tdiag, merge-core v2 config) and 144 passed
+  (r9 exact/fit/runtime, merge context/core/v2). test_r9_tdiag imports a sibling test module, so `tests` must be on PYTHONPATH.
+
+### Micro-smoke result (2026-10-23, local CPU, merged code at 40dd7c37 + weight 2.174; docs/r10_micro_smoke_summary.json, docs/r10_micro_smoke_train_log.jsonl)
+tools/r10_micro_smoke.py: real WmSTrainer.train_batch, 2 steps, batch 2, 20 s windows each with a recorded insertion, round-8 stage-300 init (INIT_FROM: 149 loaded, 8 new = merge_pivot).
+Step 1 loss 27.30 (cut-in 0.943: events 6, event rows 17, control rows 2837, 501 s); step 2 loss 22.17 (cut-in 1.166: events 7, rows 20/2936, 290 s). All finite, grad_norm 4.80 / 1.44.
+Changed tensors = exactly the 6 trainable ones (gate_g_max_logit, gate_tau_raw, temporal.0/2 weight+bias); no frozen tensor and no merge_pivot tensor changed; the script exits non-zero otherwise.
+An earlier attempt (run1) crashed with KeyError 'excluded_scored_cars' only because the c4/v10r9excl merge landed in the worktree while it ran (mixed module versions); kept as run1_aborted_midmerge.log, rerun from scratch as run2.
