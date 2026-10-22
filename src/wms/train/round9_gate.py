@@ -8,10 +8,14 @@ from pathlib import Path
 
 
 POSITIVE = ("merge_pivot_tau", "merge_pivot_w", "cuda_peak_mb")
+# Owner decision 2026-10-22: the objective is teacher-forced + F2 only. The recorded-matched
+# on-policy merge objective is retired (weight 0, not in loss/backward); its rules are replaced
+# by the flag below. Zero mass is checked INSIDE the loss, i.e. after the counted exclusion.
+OBJECTIVE_FLAG = "merge_pivot_on_objective_disabled"
 COUNTERS = (
-    "merge_pivot_on_events", "merge_pivot_tf_positive_mass_events",
-    "merge_pivot_tf_zero_mass_events", "merge_pivot_on_zero_mass_events",
-    "merge_pivot_on_scored_seconds", "merge_pivot_grad_norm",
+    "merge_pivot_tf_positive_mass_events", "merge_pivot_tf_zero_mass_events",
+    "merge_pivot_tf_scored_seconds", "merge_pivot_tf_scored_cars",
+    "merge_pivot_tf_excluded_motion", "merge_pivot_grad_norm",
 )
 
 
@@ -55,7 +59,7 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> 
         errors.append("need at least 4 optimizer steps")
     valid = True
     for index, row in enumerate(rows, 1):
-        for key in ("step", "loss", "stage_s", *POSITIVE, *COUNTERS):
+        for key in ("step", "loss", "stage_s", OBJECTIVE_FLAG, *POSITIVE, *COUNTERS):
             value = row.get(key)
             if not finite(value):
                 errors.append(f"row {index}: {key} missing/null/non-finite/non-numeric")
@@ -64,6 +68,8 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> 
                 errors.append(f"row {index}: {key} must be positive")
             elif key in COUNTERS and value < 0:
                 errors.append(f"row {index}: {key} must be nonnegative")
+        if finite(row.get(OBJECTIVE_FLAG)) and row[OBJECTIVE_FLAG] != 1:
+            errors.append(f"row {index}: {OBJECTIVE_FLAG} must be 1 (on-policy objective retired)")
         step = row.get("step")
         if type(step) is not int or step != index:
             errors.append(f"row {index}: step must be consecutive integer {index}")
@@ -72,22 +78,25 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> 
             metrics[key] = sum(row[key] for row in rows)
             if not finite(metrics[key]):
                 errors.append(f"non-finite total {key}")
-        for key in ("merge_pivot_on_events", "merge_pivot_tf_positive_mass_events",
+        for key in ("merge_pivot_tf_positive_mass_events", "merge_pivot_tf_scored_cars",
                     "merge_pivot_grad_norm"):
             if metrics[key] <= 0:
                 errors.append(f"total {key} must be >0")
-        for key in ("merge_pivot_tf_zero_mass_events", "merge_pivot_on_zero_mass_events"):
+        for key in ("merge_pivot_tf_zero_mass_events",):
             if metrics[key] != 0:
                 errors.append(f"total {key} must be zero")
         for stage in (120, 300):
             if sum(row["stage_s"] == stage for row in rows) < 2:
                 errors.append(f"need at least 2 optimizer steps at stage_s={stage}")
-            scored = sum(row["merge_pivot_on_scored_seconds"] for row in rows
+            scored = sum(row["merge_pivot_tf_scored_seconds"] for row in rows
                          if row["stage_s"] >= stage)
             metrics[f"scored_s_{stage}"] = scored
             if not finite(scored) or scored <= 0:
                 errors.append(f"scored seconds at stage_s>={stage} must be finite and >0")
         metrics["cuda_peak_mb"] = max(row["cuda_peak_mb"] for row in rows)
+        cars = metrics["merge_pivot_tf_scored_cars"] + metrics["merge_pivot_tf_excluded_motion"]
+        metrics["tf_excluded_motion_rate"] = (metrics["merge_pivot_tf_excluded_motion"] / cars
+                                              if cars else None)
     return {"ok": not errors, "errors": errors, "metrics": metrics}
 
 

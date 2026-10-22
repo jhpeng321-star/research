@@ -9,29 +9,30 @@ REQUIRED_FIELDS = (
     "step",
     "stage_s",
     "loss",
-    "merge_pivot_on_events",
+    "merge_pivot_on_objective_disabled",
     "merge_pivot_tf_positive_mass_events",
     "merge_pivot_tf_zero_mass_events",
-    "merge_pivot_on_zero_mass_events",
-    "merge_pivot_on_scored_seconds",
+    "merge_pivot_tf_scored_seconds",
+    "merge_pivot_tf_scored_cars",
+    "merge_pivot_tf_excluded_motion",
     "merge_pivot_tau",
     "merge_pivot_w",
     "merge_pivot_grad_norm",
     "cuda_peak_mb",
 )
 POSITIVE_TOTAL_FIELDS = (
-    "merge_pivot_on_events",
     "merge_pivot_tf_positive_mass_events",
+    "merge_pivot_tf_scored_cars",
     "merge_pivot_grad_norm",
 )
 ZERO_TOTAL_FIELDS = (
     "merge_pivot_tf_zero_mass_events",
-    "merge_pivot_on_zero_mass_events",
 )
 NONNEGATIVE_FIELDS = (
     *POSITIVE_TOTAL_FIELDS,
     *ZERO_TOTAL_FIELDS,
-    "merge_pivot_on_scored_seconds",
+    "merge_pivot_tf_scored_seconds",
+    "merge_pivot_tf_excluded_motion",
 )
 POSITIVE_FIELDS = ("stage_s", "merge_pivot_tau", "merge_pivot_w", "cuda_peak_mb")
 INVALID_NUMBERS = (
@@ -61,11 +62,12 @@ def rows():
             "step": index + 1,
             "stage_s": stage,
             "loss": (1.0, 0.0, -0.25, 0.5)[index],
-            "merge_pivot_on_events": (0, 1, 2, 0)[index],
+            "merge_pivot_on_objective_disabled": 1,
             "merge_pivot_tf_positive_mass_events": (0, 2, 0, 1)[index],
             "merge_pivot_tf_zero_mass_events": 0,
-            "merge_pivot_on_zero_mass_events": 0,
-            "merge_pivot_on_scored_seconds": (0.0, 2.0, 0.0, 3.0)[index],
+            "merge_pivot_tf_scored_seconds": (0.0, 2.0, 0.0, 3.0)[index],
+            "merge_pivot_tf_scored_cars": (0, 2, 0, 1)[index],
+            "merge_pivot_tf_excluded_motion": (0, 1, 0, 0)[index],
             "merge_pivot_tau": 0.5,
             "merge_pivot_w": 0.25,
             "merge_pivot_grad_norm": (0.0, 0.2, 0.0, 0.1)[index],
@@ -182,8 +184,23 @@ def test_zero_mass_negative_counts_cannot_cancel(check_log, logs, rows, field):
 def test_scored_seconds_required_at_each_stage_threshold(check_log, logs, rows, threshold):
     for row in rows:
         if row["stage_s"] >= threshold:
-            row["merge_pivot_on_scored_seconds"] = 0
+            row["merge_pivot_tf_scored_seconds"] = 0
     reject_rows(check_log, logs, rows)
+
+
+@pytest.mark.parametrize("value", (0, 2))
+def test_retired_onpolicy_objective_must_be_flagged_disabled_on_every_row(
+        check_log, logs, rows, value):
+    rows[2]["merge_pivot_on_objective_disabled"] = value
+    reject_rows(check_log, logs, rows)
+
+
+def test_excluded_motion_is_reported_with_its_rate(check_log, logs):
+    result = check_log(*logs)
+    assert_verdict(result, ok=True)
+    assert result["metrics"]["merge_pivot_tf_excluded_motion"] == 1
+    assert result["metrics"]["merge_pivot_tf_scored_cars"] == 3
+    assert result["metrics"]["tf_excluded_motion_rate"] == 0.25
 
 
 @pytest.mark.parametrize(
