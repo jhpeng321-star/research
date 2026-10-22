@@ -382,6 +382,7 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
         if observer is not None:
             observer(i, state, out, moved, geo,
                      dict(driver_params=params, lane_age=lane_age,
+                          fixed_next_lane=fixed_next_lane,
                           lane_v5_acc=recurrent.get("lane_v5_acc"),
                           driver_history=inp.observed_hist if i == 0 else None,
                           driver_history_mask=inp.observed_hist_mask if i == 0 else None))

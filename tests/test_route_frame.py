@@ -136,3 +136,36 @@ def test_geometry_uses_the_route_frame_for_the_overlap_veto():
     assert route["gap_l"][0, 0] == pytest.approx(76. - 75.44, abs=1e-5)
     # touching/overlapping bodies in the route frame are still vetoed
     assert geometry(kin, present, physics, route_shift=torch.tensor([[0., 3.]]))["overlap"][0, 0]
+
+
+def test_zone_membership_follows_the_route_coordinate_through_the_ramp_junction():
+    """A decelerating ramp vehicle inside the 2.93 m internal lane must not leave the zone.
+
+    Pack frame: its frozen stale ``s`` plus the WM step re-enters/leaves the zone (a spurious
+    exit is an absorbing risk exit -> its later merge had zero mass).  Route frame: it is
+    outside until it really reaches the merge edge, then inside.
+    """
+    from wms.model.merge_pivot import advance_longitudinal
+
+    route_x = [-7.0, -4.2, -2.5, -2.0, 0.1]          # Euler path, speeds below
+    speed = [5.6, 5.6, 3.4, 1.0, 4.2]
+    s_pack = [-4.07, -1.27, -1.27, -1.27, 0.1]       # junction rows keep the last on-lane s
+    kin = np.zeros((5, 1, 7), np.float32)
+    kin[:, 0, 0], kin[:, 0, 4], kin[:, 0, 6] = s_pack, speed, 5.
+    on_lane = np.array([1, 1, 0, 0, 1], bool)
+    kin[on_lane, 0, 3] = 1.                           # ramp lane; junction rows have no lane
+    present = np.ones((5, 1), bool)
+    cont = np.ones((4, 1), bool)
+    rec = torch.tensor(causal_scene(kin, present, cont))[None]
+    shift = rf.route_shift(rec, torch.tensor(present)[None], torch.tensor(cont)[None], dt_s=DT)
+    np.testing.assert_allclose((rec[0, :, 0, 0] + shift[0, :, 0]).double().numpy(), route_x,
+                               atol=1e-5)
+    physics = PhysicsConfig()
+    pack, route = [], []
+    for i in range(5):
+        moved = advance_longitudinal(rec[:, i], torch.zeros(1, 1), DT)
+        pres = torch.ones(1, 1, dtype=torch.bool)
+        pack.append(bool(geometry(moved, pres, physics)["ramp"][0, 0]))
+        route.append(bool(geometry(moved, pres, physics, route_shift=shift[:, i])["ramp"][0, 0]))
+    assert pack == [False, True, True, False, True]   # old frame: entry, spurious exit, re-entry
+    assert route == [False, False, False, False, True]  # one entry, no spurious exit

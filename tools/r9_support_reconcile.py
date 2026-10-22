@@ -42,7 +42,7 @@ def episode_job(job):
     torch.set_num_threads(1)
     frozen = load_run_frozen(checkpoint, train_config)
     loaded = runtime.load_scene(ep["path"])
-    cache = (runtime.prepare(frozen, loaded) if cache_dir is None else
+    cache = (runtime.prepare(frozen, loaded, pack_frame_ablation=True) if cache_dir is None else
              runtime.cached_prepare(frozen, loaded, cache_dir))
     model = runtime.runtime_model(frozen)
     # The authorizing/output row, rather than the input row, determines exposure.
@@ -102,6 +102,10 @@ def episode_job(job):
         law = by_id.get(identity, {})
         row.update(law)
         tick = identity[1] - 1
+        pack = cache.get("pack_frame")
+        if pack is not None:  # old collapsed-frame verdict of the SAME moved states
+            row["pack_frame_eligible"] = bool(pack["eligible"][tick, row["slot"]])
+            row["pack_frame_ramp"] = bool(pack["ramp"][tick, row["slot"]])
         row["raw_scene_unknown"] = bool((loaded["present"][tick]
                                           & (loaded["raw"][tick, :, 1:4].sum(-1) == 0)).any())
         if not row["is_cav"]:
@@ -146,12 +150,25 @@ def main(argv=None):
     parser.add_argument("--cache", default="results/r9_runtime_cache",
                         help="directory of ~0.5 GB per-episode replay caches, or 'none'")
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--interleave", action="store_true",
+                        help="alternate the sources so a partial run covers both")
+    parser.add_argument("--aggregate-only", action="store_true",
+                        help="summarise only episodes that already have report.json in --output")
     parser.add_argument("--resume", action="store_true",
                         help="reuse finished per-episode report.json/events.json in --output")
     parser.add_argument("--max-episodes", type=int)
     args = parser.parse_args(argv)
     output = exact.guard(args.output)
     episodes, sources = legacy.discover(args.source)
+    if args.interleave:
+        by_source = {}
+        for ep in episodes:
+            by_source.setdefault(ep["source_name"], []).append(ep)
+        episodes = [ep for group in zip(*by_source.values()) for ep in group]
+    if args.aggregate_only:
+        episodes = [ep for ep in episodes if (output / ep["source_name"] / ep["episode"]
+                                              / "report.json").is_file()]
+        args.resume = True
     if args.max_episodes is not None:
         episodes = episodes[:args.max_episodes]
     output.mkdir(parents=True, exist_ok=True)
