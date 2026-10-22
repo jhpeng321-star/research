@@ -32,6 +32,19 @@ def call(self, ctx):
         b.total = torch.nan_to_num(b.total, nan=0.0, posinf=1e6, neginf=-1e6)
     return b
 LossComposer.__call__ = call
+stages = []
+def _mark(tag):
+    if torch.cuda.is_available():
+        stages.append((tag, round(torch.cuda.max_memory_allocated() / 2**20), round(torch.cuda.memory_allocated() / 2**20)))
+_orig_prepare = LossComposer.prepare
+def prepare(self, targets):
+    _mark("before_prepare"); r = _orig_prepare(self, targets); _mark("after_prepare"); return r
+LossComposer.prepare = prepare
+from wms.model.wms import WmSModel
+_orig_rollout = WmSModel.rollout
+def rollout(self, *a, **k):
+    _mark("rollout_start"); r = _orig_rollout(self, *a, **k); _mark("rollout_end"); return r
+WmSModel.rollout = rollout
 done = {"n": 0}
 def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     dev = self.device
@@ -40,16 +53,17 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     t0 = time.perf_counter()
     self.optimizer.zero_grad(set_to_none=True)
     err = None
+    stages.clear()
     try:
         parts = self.forward_backward(batch, unroll_steps=unroll_steps, truncation_steps=truncation_steps)
     except RuntimeError as e:   # CUDA OOM, or a batch without any scored merge term (no grad_fn): memory still recorded
         if not isinstance(e, torch.cuda.OutOfMemoryError) and 'does not require grad' not in str(e):
             raise
-        import traceback; parts, err = {}, ("CUDA_OOM: " if isinstance(e, torch.cuda.OutOfMemoryError) else "NOGRAD: ") + str(e)[:300] + " || " + " | ".join(" ".join(l.split()) for l in traceback.format_tb(e.__traceback__)[-9:])
+        import traceback; parts, err = {}, ("CUDA_OOM: " if isinstance(e, torch.cuda.OutOfMemoryError) else "NOGRAD: ") + str(e)[:300] + " || " + " | ".join(" ".join(l.split()) for l in traceback.format_tb(e.__traceback__)[-30:])
     if dev.type == "cuda":
         torch.cuda.synchronize(dev)
     row = dict(step=done["n"], unroll_steps=unroll_steps, truncation_steps=truncation_steps,
-               seconds=time.perf_counter() - t0, composer_calls=calls["n"], nonfinite_masked=calls["nonfinite"],
+               seconds=time.perf_counter() - t0, composer_calls=calls["n"], stages=list(stages), nonfinite_masked=calls["nonfinite"],
                cuda_max_allocated_mb=(torch.cuda.max_memory_allocated(dev) / 2**20 if dev.type == "cuda" else None),
                cuda_max_reserved_mb=(torch.cuda.max_memory_reserved(dev) / 2**20 if dev.type == "cuda" else None),
                error=err, loss=float(parts.get("loss", float("nan"))) if parts else None)
