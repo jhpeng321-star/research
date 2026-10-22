@@ -60,3 +60,21 @@ Open: re-run tests/test_merge_pivot_memory.py on the final commit (the checkpoin
 * Merged c4/v10r9fix (clean). Hypothesis CONFIRMED: the first_passage lane straight-through weights (`merge_pivot_lane_weights`) were fed into the next rollout step's residual_kin (wms.py `forward`, ST adjoint), so the whole frozen rollout graph was retained (OOM in residual_net). New `model.merge_pivot_state_st` (default true = legacy; round-9 config sets false) keeps the hard forward value exactly (adds `w - w.detach()` = 0) and cuts only that pathwise adjoint; unit test + config test added; 241 merge-pivot/route/memory tests pass on the merged branch.
 * GPU b4 (probe, real TRAIN batches, state_st=false): 120 s peak 1.66-1.70 GB, 300 s peak 3.29 GB (was OOM >23 GB at b2/b4). Caveat: probe steps hit NOGRAD chunks and zero-mass inf (masked in probe only), so backward through every chunk was not exercised; rerun out12/out13 (anchored probe) was in progress and killed at pause (partial rows: 120 s 1.66 GB, 300 s 3.29 GB).
 * NOT done: magnitude of the removed pathwise gradient on a real batch (compare mode r9_mem_probe.py R9_PROBE_COMPARE=1 written; local finite-mask run inconclusive/killed). memtrial dir left in place on gpuR; no processes of mine remain.
+
+## Pathwise-term quantification attempt (2026-10-22 evening) -- INCONCLUSIVE
+Compare mode (`R9_PROBE_COMPARE=1`, scripts/r9_mem_probe.py): per real TRAIN batch, same RNG, state_st False then True,
+batches with non-finite loss or without a scored merge term are SKIPPED (counted), never masked. gpuR, round-8 init, round-9 config,
+single chunk (truncation = unroll) so one backward per batch:
+| setting | tried | skipped: non-finite loss (zero-mass events) | skipped: no scored merge term (loss has no grad_fn) | compared |
+|---|---|---|---|---|
+| 60 s, batch 1 | 21 | 12 | 9 | 0 |
+| 120 s, batch 1 | 18 | 6 | 12 | 0 |
+| 60 s, batch 2 | 5 | 4 | 1 | 0 |
+| 60 s, batch 2, FINITE-mask probe (-inf masses -> -50) | 10 | 0 | 10 | 0 |
+| 120 s, batch 1, FINITE-mask probe | 14 | 0 | 14 | 0 |
+No batch gave a finite loss with a grad path, so loss-value equality (true vs false) and the gradient cosine/relative difference were NOT
+measured on real data. Take-away: with the current code, roughly half of real batches contain zero-mass events (non-finite first_passage loss, the S-SUP
+issue) and most others have no scored pivot term in the window; the FINITE-mask runs all hit "no grad_fn", which I did not have time to explain
+(possibly the masking wrapper or batch composition). Value equality is guaranteed by construction (the removed term adds exactly `w - w.detach() = 0` in the
+forward) and unit-tested on a synthetic two-step case; the magnitude of the removed pathwise gradient remains UNKNOWN. No b4 true-mode fit test was needed
+(compare used batch 1-2). Own probe processes on gpuR stopped; memtrial dir kept.
