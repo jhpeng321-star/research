@@ -79,7 +79,7 @@ freeze_prefixes = [
 ]
 
 [optim.lr_scale]
-"temporal" = 20.0     # small MLP head: project convention (rounds 7b/8: 20 for small heads); pilot 20x beats 1x/5x on held-out loss
+"temporal" = 5.0      # pilot rule: largest scale in {1,5,20,100} whose held-out post-insertion min-accel deficit is not worse than baseline by > 0.01 m/s^2 (20x and 100x worsen it)
 "gate_" = 100.0       # two raw scalars: Adam moves a scalar <= lr per step, so 100x (rounds 7b/8 convention for scalars)
 
 [selection]
