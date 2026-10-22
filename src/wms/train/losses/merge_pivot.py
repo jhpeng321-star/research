@@ -639,7 +639,7 @@ class MergePivotTerm(LossTerm):
         # event step is vetoed (E_T = 0), or its prefix / F2 denominator survival is exactly
         # zero - leaves the loss WITH its whole risk chain and is counted.  The identical
         # function (merge_pivot_support.counted_exclusion) feeds the fitter and the audit.
-        from .merge_pivot_support import (CLASSES, counted_exclusion, exclusion_counts,
+        from .merge_pivot_support import (EXCLUSION_VERSION_NUMBER, counted_exclusion, exclusion_counts,
                                           lifecycle_rows, prefix_survival_zero)
         births0, live0 = lifecycle_rows(risk, event, reset)
         unknown0, recovered0 = entry_status(births0)
@@ -652,9 +652,9 @@ class MergePivotTerm(LossTerm):
         support_counts = dict(
             vetoed_events=int(((event & own) & ~geo["eligible"].bool()).sum()),
             excluded_events=int(res["event"].sum()),
-            excluded_cars=counts["excluded_cars"], excluded_scored_cars=counts["excluded_scored_cars"],
-            **{"excluded_" + name: counts[name] for name in CLASSES},
-            **{"excluded_scored_" + name: counts["scored_" + name] for name in CLASSES})
+            original_cars=int(births0.sum()), original_scored_cars=int(scored0.sum()),
+            original_events=int((event & own & live0).sum()),
+            exclusion_version=EXCLUSION_VERSION_NUMBER, **counts)
         if counts["excluded_cars"]:
             risk, event = risk & ~res["tail"], event & ~res["tail"]
         births, history_mask = lifecycle_rows(risk, event, reset)
@@ -664,6 +664,11 @@ class MergePivotTerm(LossTerm):
         unknown_before = unknown.clone()
         unknown = unknown & ~recovered
         scored_cars = int((births & (known | recovered)).sum())
+        retained_events = int((event & own & history_mask).sum())
+        support_counts.update(
+            retained_cars=int(births.sum()), retained_scored_cars=scored_cars,
+            retained_events=retained_events, retained_censor_cars=int(births.sum()) - retained_events,
+            empty_retained_batch=int(scored_cars == 0))
         known_before = known
         known = known | recovered
         with torch.no_grad():
@@ -674,7 +679,7 @@ class MergePivotTerm(LossTerm):
             support_counts=support_counts,
             known_before=known_before, pre_window_initial_maximum=entry_snapshot,
             n_cars=int(births.sum()), model=model, tf_carry=None, on_carry=None,
-            scored_cars=scored_cars, excluded_motion=support_counts["excluded_scored_cars"],
+            scored_cars=scored_cars, excluded_motion=support_counts["scored_excluded_cars"],
             on_objective_disabled=int(self.cfg.weight == 0),
             stats={}, causal_cav_fallback=int((present[:, :n] & inp.is_cav[:, :n]).sum())
             if inp.action_timeline is None else 0,

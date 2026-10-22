@@ -52,7 +52,9 @@ def test_boundary_support_is_the_parameter_independent_infinity_pattern_of_the_b
         geo[key] = torch.rand(1, n, k) > 0.35
     geo["v"] = torch.rand(1, n, k) * 20
     geo["v_f"], geo["v_l"] = torch.rand(1, n, k) * 20, torch.rand(1, n, k) * 20
-    geo["v"][0, 3, 2] = torch.nan
+    geo["eligible"][0, 3, 2] = False
+    geo["v"][0, 3, 2] = torch.nan            # ineligible rows may carry anything
+    geo["eligible"][0, 4, 1] = False
     geo["gap_l"][0, 4, 1] = torch.nan
     for init in ({}, {"s0_m": 7.0, "T_s": 0.4}):
         c = FirstPassageNet(init).boundary(geo)
@@ -91,10 +93,12 @@ def test_zero_clearance_atom_wait_and_prefix_are_each_counted_once_by_class():
     spec = {0: (1, 3, True), 1: (1, 4, True), 2: (0, 4, True), 3: (1, 4, True)}
     res, *_ = run(geo, spec, prefix)
     counts = exclusion_counts(res)
-    assert counts["event_zero_clearance"] == 1
-    assert counts["wait_survival_zero"] == 1
-    assert counts["prefix_survival_zero"] == 1
+    assert counts["excluded_event_zero_clearance"] == 1
+    assert counts["excluded_wait_survival_zero"] == 1
+    assert counts["excluded_prefix_survival_zero"] == 1
     assert counts["excluded_cars"] == 3
+    assert counts["excluded_event_cars"] == 3 and counts["excluded_censor_cars"] == 0
+
     assert not res["rows"][0, :, 3].any()               # slot 3 is supported
 
 
@@ -189,3 +193,80 @@ def test_fitter_flow_drops_exactly_the_chains_the_training_flow_flags():
     classes = {s["slot"]: s["class"] for s in dropped}
     assert classes == {0: "event_vetoed_wm_motion", 1: "wait_survival_zero"}
     assert all(s["scored"] for s in dropped)
+
+
+def test_non_finite_eligible_geometry_fails_loudly_instead_of_being_excluded():
+    import pytest
+
+    for key, value in (("v", torch.nan), ("gap_f", torch.nan), ("v_f", torch.inf)):
+        geo = make_geo()
+        for t in range(8):
+            side(geo, t, 0)
+        geo[key][0, 3, 0] = value
+        with pytest.raises(ValueError, match="numerical error"):
+            boundary_support(geo)
+        geo["eligible"][0, 3, 0] = False            # an ineligible row may carry anything
+        boundary_support(geo)
+
+
+def test_censored_cars_are_kept_unless_their_survival_is_exactly_zero():
+    geo = make_geo()
+    for t in range(8):
+        for slot in range(4):
+            side(geo, t, slot)
+    geo["eligible"][0, 4, 0] = False                    # slot 0: censored while vetoed: kept
+    geo["has_f"][0, 3, 1] = geo["has_l"][0, 3, 1] = False   # slot 1: censored survivor of a certain passage
+    spec = {0: (1, 4, False), 1: (1, 4, False), 2: (1, 5, False), 3: (1, 4, True)}
+    res, *_ = run(geo, spec)
+    counts = exclusion_counts(res)
+    assert not res["rows"][0, :, 0].any()               # ineligible at the censor step is NOT a veto
+    assert counts["excluded_cars"] == 1 and counts["excluded_wait_survival_zero"] == 1
+    assert counts["excluded_censor_cars"] == 1 and counts["excluded_event_cars"] == 0
+    assert res["rows"][0, :, 1].tolist() == [False] + [True] * 4 + [False] * 3
+
+
+def test_an_excluded_event_is_never_converted_into_a_censor():
+    geo = make_geo()
+    for t in range(8):
+        side(geo, t, 0)
+    geo["eligible"][0, 4, 0] = False
+    res, risk, event, reset = run(geo, {0: (1, 4, True)})
+    kept_risk, kept_event = risk & ~res["tail"], event & ~res["tail"]
+    assert not kept_risk[0, :, 0].any() and not kept_event.any()   # no waiting factors survive
+
+
+def test_primary_class_is_disjoint_and_overlapping_causes_are_reported():
+    geo = make_geo()
+    for t in range(8):
+        side(geo, t, 0)
+    geo["has_f"][0, 2, 0] = geo["has_l"][0, 2, 0] = False   # certain passage at row 2 ...
+    geo["gap_f"][0, 4, 0] = 0.0                             # ... and zero clearance at the event
+    res, *_ = run(geo, {0: (1, 4, True)})
+    counts = exclusion_counts(res)
+    assert counts["excluded_cars"] == 1 and counts["excluded_overlap_cars"] == 1
+    assert counts["excluded_event_zero_clearance"] == 1 and counts["excluded_wait_survival_zero"] == 0
+    assert counts["excluded_bit_event_zero_clearance"] == 1
+    assert counts["excluded_bit_wait_survival_zero"] == 1
+    assert sum(counts["excluded_" + name] for name in CLASSES) == counts["excluded_cars"]
+
+
+def test_mask_is_invariant_to_batch_composition_and_scored_counts_are_a_subset():
+    geo = make_geo()
+    for t in range(8):
+        for slot in range(4):
+            side(geo, t, slot)
+    geo["eligible"][0, 4, 0] = False
+    geo["has_f"][0, 2, 2] = geo["has_l"][0, 2, 2] = False
+    spec = {0: (1, 4, True), 1: (1, 4, True), 2: (1, 4, True), 3: (1, 5, False)}
+    res, risk, event, reset = run(geo, spec)
+    for keep in ([0], [1, 2], [3, 2, 0]):
+        sub_geo = {key: val[..., keep] for key, val in geo.items()}
+        _, live = lifecycle_rows(risk[..., keep], event[..., keep], reset[..., keep])
+        part = counted_exclusion(sub_geo, live, event[..., keep], reset[..., keep],
+                                 target_lane=TARGET)
+        assert torch.equal(part["rows"], res["rows"][..., keep])
+        assert torch.equal(part["bits"], res["bits"][..., keep])
+    scored = torch.zeros_like(res["starts"])
+    scored[..., 0] = True
+    counts = exclusion_counts(res, scored)
+    assert counts["excluded_cars"] == 2 and counts["scored_excluded_cars"] == 1

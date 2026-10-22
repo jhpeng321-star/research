@@ -94,6 +94,11 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> 
             if not finite(scored) or scored <= 0:
                 errors.append(f"scored seconds at stage_s>={stage} must be finite and >0")
         metrics["cuda_peak_mb"] = max(row["cuda_peak_mb"] for row in rows)
+        # Informational (never a pass/fail input): counted-exclusion totals by class over the smoke rows.
+        keys = sorted({key for row in rows for key in row if key.startswith("merge_pivot_support_")
+                       and finite(row[key])})
+        metrics["support_totals"] = {key: sum(row.get(key, 0) for row in rows if finite(row.get(key, 0)))
+                                     for key in keys}
         cars = metrics["merge_pivot_tf_scored_cars"] + metrics["merge_pivot_tf_excluded_motion"]
         metrics["tf_excluded_motion_rate"] = (metrics["merge_pivot_tf_excluded_motion"] / cars
                                               if cars else None)
