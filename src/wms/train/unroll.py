@@ -571,7 +571,12 @@ class UnrollRunner:
             if measure:
                 shares.capture(name, value.value)
             if backward and composer.differentiable(name):
-                value.value.backward()
+                # R9TDIAG: a differentiable unroll term (lane_event, stability) whose inputs are all
+                # frozen has no autograd graph and a zero gradient by definition (round 9 trains only
+                # merge_pivot, yet inherits loss.lane_event.weight > 0).  Its VALUE is still logged;
+                # only the empty backward is skipped, a term WITH a graph is always back-propagated.
+                if torch.is_tensor(value.value) and value.value.requires_grad:
+                    value.value.backward()
             if share:
                 shares.probe(name, value.value, keep_zero=True)
         extra = composer.extra_total(unroll_values, like=inp.states)
