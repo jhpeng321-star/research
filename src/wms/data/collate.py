@@ -74,4 +74,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
         if all(r.get("meta", {}).get("pair_key") is not None for r in records):
             out["pair_key"] = [r["meta"]["pair_key"] for r in records]
     out["identities"] = [r.get("identities") for r in records]
+    if any("merge_pivot_prefix" in r for r in records):
+        # Ragged run prefixes are intentionally not padded into fictitious ticks.
+        out["merge_pivot_prefix"] = [r.get("merge_pivot_prefix") for r in records]
+    if any("merge_pivot_scene" in r for r in records):
+        out["merge_pivot_scene"] = [r.get("merge_pivot_scene") for r in records]
     return out
