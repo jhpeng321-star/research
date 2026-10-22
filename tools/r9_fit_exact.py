@@ -449,7 +449,7 @@ def drop_counted_exclusions(sequences, cache):
     Returns ``(kept, dropped)``; each dropped entry names the vehicle, rows, class and
     whether the car was scored (known entry age).  Nothing else is dropped here.
     """
-    from wms.train.losses.merge_pivot_support import CLASSES, counted_exclusion
+    from wms.train.losses.merge_pivot_support import CLASSES, EXCLUSION_VERSION, counted_exclusion
 
     geo = cache['geometry']
     live = torch.zeros_like(geo['eligible'])
@@ -475,6 +475,7 @@ def drop_counted_exclusions(sequences, cache):
             dropped.append({**{key: seq[key] for key in ('world', 'source', 'episode', 'vehicle',
                                                          'slot', 'entry_row', 'event_row')},
                             'class': CLASSES[cls], 'scored': scored,
+                            'event': bool(seq['event']), 'exclusion_version': EXCLUSION_VERSION,
                             'reason': ('counted_exclusion:' if scored
                                        else 'counted_exclusion_unknown_age:') + CLASSES[cls]})
         else:

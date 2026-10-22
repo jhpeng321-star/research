@@ -36,7 +36,7 @@ from wms.train.losses.merge_pivot import (
     MergePivotConfig, build_recorded_geometry, certify_pre_window, pre_window_maximum, score_chunk,
 )
 from wms.train.losses.merge_pivot_support import (
-    CLASSES, counted_exclusion, exclusion_counts, lifecycle_rows, prefix_survival_zero)
+    CLASSES, EXCLUSION_VERSION, counted_exclusion, exclusion_counts, lifecycle_rows, prefix_survival_zero)
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 
@@ -290,6 +290,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
         raise ValueError("window length must be positive")
     vid = ep.array("vid")
     rows, counts = [], Counter()
+    excluded_ids = set()  # unique excluded cars of this episode (windows may repeat a car)
     for lo in range(start, n, size):
         hi = min(lo + size, n)
         reset = torch.cat((torch.zeros_like(present[:, :1]),
@@ -313,6 +314,9 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
             prefix_zero=prefix_survival_zero([history], c[:, 0]) if lo else None)
         for key, val in exclusion_counts(res, scored_w).items():
             counts[key] += val
+        counts["windows"] += 1
+        for t_, k_ in torch.nonzero(res["starts"][0]).tolist():
+            excluded_ids.add(int(vid[lo + t_, k_]))
         risk[:, lo:hi] = risk[:, lo:hi] & ~res["tail"]
         events[:, lo:hi] = events[:, lo:hi] & ~res["tail"]
         excl_event[:, lo:hi] = res["event"]
@@ -403,6 +407,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
             max_tick = torch.where(active & (c[:, t] > maximum), t, max_tick)
             maximum = updated
             terminal |= events[:, t] & own[:, t]
+    counts["excluded_unique_cars"] = len(excluded_ids)
     hdv = [row for row in rows if not row["is_cav"]]
     counts.update(recorded_merges=len(rows), hdv_events=len(hdv), cav_merges=len(rows) - len(hdv),
                   physically_supported=sum(row["physical_supported"] for row in hdv),
@@ -493,6 +498,9 @@ def main(argv=None):
                 writer.writeheader()
                 writer.writerows(rows)
         summary = dict(schema="r9_support_audit/1", **identity, sources=sources,
+                       exclusion_version=EXCLUSION_VERSION,
+                       exclusion_reference="WM one-step motion of the identified checkpoint; "
+                                           "classes: " + ", ".join(CLASSES),
                        parameters={key: float(val.detach()) for key, val in model.merge_pivot.params().items()},
                        window_s=args.window_s, counts=dict(counts),
                        physical_support_share=counts["physically_supported"] / counts["hdv_events"]

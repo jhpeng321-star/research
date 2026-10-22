@@ -323,7 +323,21 @@ def reconcile(sequences, reports):
         raise ValueError("overlapping windows/duplicate risk identities would overweight cohort")
     reasons = {reason: sum(e["reason"] == reason for e in excluded)
                for reason in sorted({e["reason"] for e in excluded})}
+    classes = {}
+    for e in excluded:
+        if "class" in e:
+            kind = ("scored_" if e.get("scored") else "unscored_") + ("event_" if e.get("event") else "censor_")
+            classes[kind + e["class"]] = classes.get(kind + e["class"], 0) + 1
+    checkpoint = (reports[0].get("checkpoint") or {}) if reports else {}
     return {"original_observed_risk_identities": len(ids), "retained": len(sequences),
+            "counted_exclusion_by_class": dict(sorted(classes.items())),
+            "counted_exclusion_version": next((e["exclusion_version"] for e in excluded
+                                               if "exclusion_version" in e), None),
+            "common_reference_mask": "ONE counted-exclusion mask per run (shared geometry cache of "
+                                     "the frozen checkpoint): every compared law is scored on the "
+                                     "identical retained sequences; selected-cohort TF+F2 scores, "
+                                     "not a full-population likelihood",
+            "exclusion_reference_checkpoint_sha256": checkpoint.get("sha256"),
             "retained_events": sum(s["event"] for s in sequences), "excluded": len(excluded),
             "exclusion_reasons": reasons, "exclusions": excluded,
             "identity_sha256": hashlib.sha256(json.dumps(sorted(ids)).encode()).hexdigest(),

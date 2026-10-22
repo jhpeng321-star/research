@@ -99,7 +99,8 @@ def sequence_rows(excluded_event: Tensor, risk: Tensor, reset: Tensor) -> Tensor
 # ---------------------------------------------------------------------------
 CLASSES = ("event_vetoed_explained", "event_vetoed_wm_motion", "event_vetoed_other",
            "event_zero_clearance", "prefix_survival_zero", "wait_survival_zero")
-_NONE = 99
+EXCLUSION_VERSION = "r9-excl-1"   # classifier/cohort version, recorded with every count
+EXCLUSION_VERSION_NUMBER = 1       # numeric form of the above for per-row training logs
 
 
 @torch.no_grad()
@@ -110,16 +111,23 @@ def boundary_support(geo: dict[str, Tensor]) -> tuple[Tensor, Tensor]:
     present side without positive finite clearance).  ``atom``: ``c == +inf`` (eligible
     with no neighbour on either side: certain immediate passage).
     """
-    eligible = geo["eligible"].bool() & torch.isfinite(geo["v"])
+    eligible = geo["eligible"].bool()
+    # Structural zeros only.  A non-finite observation on an ELIGIBLE row (the geometry already
+    # vetoes scenes with unobserved present vehicles) is a numerical/data error: fail loudly
+    # instead of silently excluding the car.
+    bad = eligible & ~torch.isfinite(geo["v"])
     dead_side = torch.zeros_like(eligible)
     any_side = torch.zeros_like(eligible)
     for side in ("f", "l"):
         has = geo[f"has_{side}"].bool()
         gap, other = geo[f"gap_{side}"], geo[f"v_{side}"]
-        valid = has & torch.isfinite(gap) & (gap > 0.0) & torch.isfinite(other)
-        dead_side = dead_side | (has & ~valid)
+        bad = bad | (eligible & has & ~(torch.isfinite(gap) & torch.isfinite(other)))
+        dead_side = dead_side | (has & (gap <= 0.0))
         any_side = any_side | has
-    return ~eligible | dead_side, eligible & ~any_side
+    if bool(bad.any()):
+        raise ValueError(f"{int(bad.sum())} eligible geometry rows carry non-finite speeds/gaps: "
+                         "a numerical error, not a structural zero; refusing to exclude")
+    return ~eligible | (eligible & dead_side), eligible & ~any_side
 
 
 def lifecycle_rows(risk: Tensor, event: Tensor, reset: Tensor) -> tuple[Tensor, Tensor]:
@@ -175,20 +183,23 @@ def counted_exclusion(geo: dict[str, Tensor], live: Tensor, event: Tensor, reset
     ``live``/``event``/``reset`` are ``[B, n, K]`` (``lifecycle_rows`` bookkeeping, recorded
     ramp->target events of modelled vehicles, identity resets).  ``prefix_zero`` is the
     optional ``[B, K]`` ``prefix_survival_zero`` mask of chains that begin at row 0.
-    Returns ``rows`` (chain rows to remove), ``tail`` (``rows`` plus later rows of the same
-    identity, so a re-entry is not born as a new chain), ``starts`` (first row of each
-    excluded chain), ``cls`` (class index into ``CLASSES`` at ``starts``, -1 elsewhere).
-    A chain with several causes is counted once under the first cause listed in CLASSES.
+    The decision is made per whole chain (one car, one identity) over the full supplied
+    window, before any computational chunking, and depends only on geometry (never on
+    the boundary parameters).  Returns ``rows`` (chain rows to remove), ``tail`` (``rows`` plus
+    later rows of the same identity, so a re-entry is not born as a new chain), ``starts``
+    (first row of each excluded chain), ``cls`` (PRIMARY class index into ``CLASSES`` at
+    ``starts``, -1 elsewhere: the first cause listed), ``bits`` (all causes of the chain,
+    bit ``i`` = ``CLASSES[i]``, at every chain row) and ``event`` (excluded recorded events).
     """
     live, event, reset = live.bool(), event.bool(), reset.bool()
     ev = event & live
     verdict = classify_vetoed_events(geo, ev, target_lane=target_lane)
     dead, atom = boundary_support(geo)
-    code = torch.full(live.shape, _NONE, dtype=torch.int16, device=live.device)
+    bits = torch.zeros(live.shape, dtype=torch.int16, device=live.device)
 
     def put(mask, index):
-        nonlocal code
-        code = torch.where(mask, torch.minimum(code, torch.full_like(code, index)), code)
+        nonlocal bits
+        bits = bits | (mask.to(torch.int16) << index)
 
     vetoed = verdict["vetoed"]
     put(verdict["explained"], 0)
@@ -202,32 +213,56 @@ def counted_exclusion(geo: dict[str, Tensor], live: Tensor, event: Tensor, reset
     put(live & atom & ~event, 5)
     cont = _continues(live, event, reset)
     n = live.shape[1]
-    big = torch.full_like(code[:, 0], _NONE)
-    acc = code.clone()
+    zero = torch.zeros_like(bits[:, 0])
+    acc = bits.clone()
     for i in range(1, n):
-        acc[:, i] = torch.minimum(code[:, i], torch.where(cont[:, i - 1], acc[:, i - 1], big))
+        acc[:, i] = bits[:, i] | torch.where(cont[:, i - 1], acc[:, i - 1], zero)
     full = acc.clone()
     for i in range(n - 2, -1, -1):
-        full[:, i] = torch.minimum(acc[:, i], torch.where(cont[:, i], full[:, i + 1], big))
-    rows = live & (full < _NONE)
+        full[:, i] = acc[:, i] | torch.where(cont[:, i], full[:, i + 1], zero)
+    rows = live & (full != 0)
+    full = torch.where(rows, full, torch.zeros_like(full))
     starts = rows.clone()
     starts[:, 1:] = rows[:, 1:] & ~cont[:, :-1]
     tail = rows.clone()
     for i in range(1, n):
         tail[:, i] = tail[:, i] | (tail[:, i - 1] & ~reset[:, i])
-    cls = torch.where(starts, full.long(), torch.full_like(full, -1, dtype=torch.long))
-    return dict(rows=rows, tail=tail, starts=starts, cls=cls, event=ev & rows,
-                cls_rows=torch.where(rows, full.long(), torch.full_like(full, -1, dtype=torch.long)))
+    back = ev & rows
+    for i in range(n - 2, -1, -1):
+        back[:, i] = back[:, i] | (back[:, i + 1] & cont[:, i])
+    primary = torch.full(live.shape, -1, dtype=torch.long, device=live.device)
+    for index in reversed(range(len(CLASSES))):
+        primary = torch.where(((full >> index) & 1).bool(), torch.full_like(primary, index), primary)
+    return dict(rows=rows, tail=tail, starts=starts, event=ev & rows, bits=full,
+                ends_in_event=starts & back,
+                cls=torch.where(starts, primary, torch.full_like(primary, -1)),
+                cls_rows=primary)
 
 
 def exclusion_counts(res: dict[str, Tensor], scored_starts: Tensor | None = None) -> dict[str, int]:
-    """Plain-int counts of excluded chains (cars) by class; ``scored_*`` restricts to scored cars."""
-    out = {"excluded_cars": int(res["starts"].sum())}
-    for index, name in enumerate(CLASSES):
-        out[name] = int((res["cls"] == index).sum())
-    if scored_starts is not None:
-        hit = res["starts"] & scored_starts.bool()
-        out["excluded_scored_cars"] = int(hit.sum())
+    """Plain-int counts of excluded chains (cars).
+
+    ``excluded_<class>``: chains whose PRIMARY (first listed) cause is the class (disjoint, sum
+    to ``excluded_cars``).  ``excluded_bit_<class>``: chains having that cause at all
+    (overlapping), and ``excluded_overlap_cars`` those with more than one cause.  ``excluded_event_cars`` /
+    ``excluded_censor_cars`` split by whether the chain ended in a recorded merge.
+    ``scored_*`` restrict every count to scored (known-entry) cars.
+    """
+    starts = res["starts"]
+    # the chain's bits are constant over its rows; read them at the start row
+    bits = torch.where(starts, res["bits"], torch.zeros_like(res["bits"]))
+    ends_in_event = res["ends_in_event"]
+    out = {}
+    for label, mask in (("", starts),
+                        ("scored_", starts & scored_starts.bool() if scored_starts is not None
+                         else None)):
+        if mask is None:
+            continue
+        out[label + "excluded_cars"] = int(mask.sum())
+        out[label + "excluded_event_cars"] = int((mask & ends_in_event).sum())
+        out[label + "excluded_censor_cars"] = int((mask & ~ends_in_event).sum())
+        out[label + "excluded_overlap_cars"] = int((mask & ((bits & (bits - 1)) != 0)).sum())
         for index, name in enumerate(CLASSES):
-            out["scored_" + name] = int(((res["cls"] == index) & hit).sum())
+            out[label + "excluded_" + name] = int((mask & (res["cls"] == index)).sum())
+            out[label + "excluded_bit_" + name] = int((mask & ((bits >> index) & 1).bool()).sum())
     return out
