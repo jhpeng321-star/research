@@ -275,6 +275,10 @@ class ModelConfig:
     """Initial positive learned passage width in hybrid mode."""
     merge_quadrature_order: int = 32
     """Quadrature order for the hybrid passage likelihood."""
+    merge_pivot_state_st: bool = True
+    """First-passage lane straight-through ADJOINT into the next rollout step (default True = legacy).
+    False keeps the hard forward exactly but cuts the adjoint through the (frozen) rollout dynamics, so the
+    on-policy likelihood treats rollout states as data and the backward graph of the rollout is not retained."""
     temporal_residual_mode: Literal["direct", "slow"] = "direct"
     """SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's direct
     per-step acceleration with a learned low-pass residual state r_t carried in the rollout

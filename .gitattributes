@@ -80,3 +80,7 @@ archive/circles_era/tests/test_sim_clock.py text eol=crlf
 archive/circles_era/tests/test_ttc_diagnosis.py text eol=crlf
 archive/circles_era/docs/ESCALATION_EXECUTION_STATUS.md text eol=crlf
 archive/circles_era/docs/ESCALATION_TESTS.md text eol=crlf
+
+# Round 9 launch scripts run on gpuR (Linux): pin LF so a Windows checkout cannot ship CRLF.
+scripts/round9_gate.sh text eol=lf
+scripts/ship_r9_gpuR.sh text eol=lf

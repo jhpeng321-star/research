@@ -296,6 +296,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_passage_law": "model.merge_passage_law",
     "merge_w_init": "model.merge_w_init",
     "merge_quadrature_order": "model.merge_quadrature_order",
+    "merge_pivot_state_st": "model.merge_pivot_state_st",
     "merge_core_tau_reg_weight": "loss.merge_core.tau_reg_weight",
     "merge_core_w_reg_weight": "loss.merge_core.w_reg_weight",
     "merge_first_passage_weight": "loss.merge_first_passage.weight",
@@ -441,7 +442,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_safety_control_weight", "merge_yield_behind_m", "merge_yield_dend_m",
     # R5THR
     "merge_decision", "merge_st_width", "merge_core_tau_reg_weight",
-    "merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_core_w_reg_weight",
+    "merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_pivot_state_st",
+    "merge_core_w_reg_weight",
     "merge_first_passage_weight", "merge_first_passage_rank_weight",
     "merge_first_passage_metrics", "merge_first_passage_pos_tol_m",
     "merge_first_passage_speed_tol_mps", "merge_first_passage_gap_tol_m",
