@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Round-9 stage-2C launch gate. Run only after the separate support gate passes.
 # Real-data smoke: batch 4 at 120/300 s, 2+2 full training steps (backward + Adam),
+# validation capped at 4 windows per horizon (see the production-run comment below),
 # stage/final checkpoint save/reload, and peak allocated GPU memory in the JSON report.
 # Usage: bash scripts/round9_gate.sh [REPO_DIR]
 # R9_ROOT / R9_PYTHON allow a local installation or isolated launcher tests.
@@ -32,7 +33,8 @@ if "$PYTHON" -m wms train --config configs/c4_wm_v10round9.toml --mode run \
     --set "optim.batch_size_per_stage=[4,4]" \
     --set "curriculum.unroll_s=[120.0,300.0]" --set "curriculum.stage_steps=[2,2]" \
     --set "curriculum.truncation_steps_per_stage=[120,60]" \
-    --set curriculum.max_hours=0.5 > "$L/smoke_r9.log" 2>&1; then
+    --set selection.val_max_windows=4 \
+    --set curriculum.max_hours=1.5 > "$L/smoke_r9.log" 2>&1; then
     TRAIN_EXIT=0
 else
     TRAIN_EXIT=$?
@@ -42,5 +44,8 @@ if ! "$PYTHON" -m wms.train.round9_gate --smoke-dir "$L/runs/smoke_r9" \
     --report "$L/smoke_r9.gate.json" > "$L/smoke_r9.verdict" 2>&1; then
     exit 3
 fi
+# Stage-end long-horizon validation runs the full merge_pivot prepare (2120-step F2 prefix replay)
+# per eval batch: ~100-125 s per batch measured on gpuR, so the preset's 256 windows x all horizons
+# would take hours.  Monitoring/selection set capped (operational, 2026-10-23).
 exec "$PYTHON" -m wms train --config configs/c4_wm_v10round9.toml --mode run \
-    --out "$L/runs/c4_wm_v10_round9" "${COMMON[@]}"
+    --out "$L/runs/c4_wm_v10_round9" "${COMMON[@]}" --set selection.val_max_windows=16
