@@ -1,7 +1,8 @@
 # V10 round 10 (2026-10-22): ROUND 9 + ONE change = fix B, recorded cut-in reaction supervision.
 # Everything not listed under "fix B" below is byte-identical to configs/c4_wm_v10round9.toml (the effective
 # config differs from round 9 only in: name, model.init_from, loss.cutin_reaction.*, optim.freeze_prefixes,
-# optim.lr_scale, runtime.out_dir -- enforced by tests/test_r10_config.py).  Extends round 2 directly with
+# optim.lr_scale, runtime.out_dir, model.merge_pivot_state_st (owner-required final-round-9 setting)
+# -- enforced by tests/test_r10_config.py). Extends round 2 directly with
 # round 9's blocks copied inline: the loader caps the extends chain at 16 files and round 9 already uses 16.
 #
 # Evidence (tmp_r10 attribution, see R10_PREP.md): at matched recorded state the WM lane-1 follower's
@@ -19,12 +20,15 @@ merge_st_width = 1.0
 merge_passage_law = "hybrid"
 merge_w_init = 1.0
 merge_quadrature_order = 32
+merge_pivot_state_st = true # Keep the pathwise adjoint, including through frozen merge-pivot dynamics.
 merge_negotiation = false
 # Round 9 final checkpoint (gate and driver pass --set model.init_from=... as in round 9).
 init_from = "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round9/wm_s_stage300.pt"
 
 [physics]
 merge_end_wait = false
+ramp_lane_end_stop = true
+ramp_risk_retain = true
 
 [loss.merge_core]
 version = 2
