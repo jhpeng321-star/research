@@ -377,7 +377,7 @@ def _worker_frozen(checkpoint, physics_json):
 
 def prepare_cached(job):
     """Independent CPU episode replay; stable input-order aggregation in parent."""
-    ep, checkpoint, physics_json, n_quad, allow_unverified, path = job
+    ep, checkpoint, physics_json, n_quad, allow_unverified, path, runtime_cache = job
     path = exact.guard(path)
     if path.exists():
         cached = torch.load(path, map_location="cpu", weights_only=True)
@@ -385,7 +385,9 @@ def prepare_cached(job):
         return cached["sequences"], cached["report"]
     frozen = _worker_frozen(checkpoint, physics_json)
     subset, report = heads.build_dataset([ep], frozen, n_quad=n_quad,
-                                        allow_unverified_physics=allow_unverified)
+                                        allow_unverified_physics=allow_unverified,
+                                        runtime_cache=None if runtime_cache is None
+                                        else exact.guard(runtime_cache))
     temporary = exact.guard(path.with_suffix(f".{os.getpid()}.tmp"))
     torch.save({"sequences": subset, "report": report}, temporary)
     temporary.replace(path)
@@ -420,6 +422,8 @@ def main(argv=None):
     parser.add_argument("--out", required=True)
     parser.add_argument("--md", required=True)
     parser.add_argument("--cache-dir", default="results/r9_stage2a_cache")
+    parser.add_argument("--runtime-cache", default=None,
+                        help="shared per-episode replay cache directory (default results/r9_runtime_cache)")
     parser.add_argument("--workers", type=int, default=min(6, os.cpu_count() or 1),
                         help="independent single-thread CPU episode workers; results ordered deterministically")
     args = parser.parse_args(argv)
@@ -484,7 +488,7 @@ def main(argv=None):
             key = hashlib.sha256(json.dumps(stamp, sort_keys=True).encode()).hexdigest()
             path = exact.guard(cache_dir/(key+".pt"))
             jobs.append((ep, str(exact.guard(args.round8_params)), json.dumps(physics) if physics else None,
-                         args.n_quad, args.allow_unverified_physics, str(path)))
+                         args.n_quad, args.allow_unverified_physics, str(path), args.runtime_cache))
         if args.workers == 1:
             prepared = map(prepare_cached, jobs)
             for subset, report in prepared:

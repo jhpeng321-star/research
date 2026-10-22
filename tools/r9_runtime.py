@@ -73,7 +73,8 @@ def cached_prepare(frozen, loaded, directory, n_quad=8):
                  exact.ROOT / "src/wms/model/wms.py", exact.ROOT / "src/wms/model/merge_pivot.py",
                  exact.ROOT / "src/wms/train/losses/merge_pivot.py",
                  exact.ROOT / "src/wms/train/cav_drive.py",
-                 exact.ROOT / "src/wms/data/recorded_prefix.py"):
+                 exact.ROOT / "src/wms/data/recorded_prefix.py",
+                 exact.ROOT / "src/wms/data/route_frame.py"):
         digest.update(exact.guard(path).read_bytes())
     from tools.r9_fit_exact import _replay_model, _SparsePairAttention
     digest.update(inspect.getsource(_replay_model).encode())
@@ -81,7 +82,7 @@ def cached_prepare(frozen, loaded, directory, n_quad=8):
     path = exact.guard(directory / (digest.hexdigest() + ".pt"))
     if path.is_file():
         return torch.load(path, map_location="cpu", weights_only=True)
-    cache = prepare(frozen, loaded, n_quad)
+    cache = prepare(frozen, loaded, n_quad, pack_frame_ablation=True)
     directory.mkdir(parents=True, exist_ok=True)
     torch.save(cache, path)
     return cache
@@ -118,8 +119,14 @@ def compact_forward(model):
 
 
 @torch.no_grad()
-def prepare(frozen, loaded, n_quad=8, *, compact=True):
-    """Run the training/runtime replay once, capturing heads without feeding them back."""
+def prepare(frozen, loaded, n_quad=8, *, compact=True, pack_frame_ablation=False):
+    """Run the training/runtime replay once, capturing heads without feeding them back.
+
+    ``pack_frame_ablation`` additionally evaluates the SAME moved states in the old
+    collapsed pack frame (no route shift) and stores its eligibility/ramp flags under
+    ``cache["pack_frame"]``: a diagnostic baseline for before/after tables, never used
+    by the fitter or the likelihood.
+    """
     # Sparse attention changes only masked pair-bias work, never a scene edge.
     from tools.r9_fit_exact import _replay_model
     from wms.data.history import long_history_features
@@ -138,7 +145,7 @@ def prepare(frozen, loaded, n_quad=8, *, compact=True):
             history_s=model.history_s, history_stride_s=model.history_stride_s,
             dt_s=model.physics.dt_s)
         observed, observed_mask = observed[None], observed_mask[None]
-    rows = []
+    rows, pack_rows = [], []
     birth = has_birth = None
 
     def capture(i, state, out, moved, geo, context):
@@ -169,6 +176,12 @@ def prepare(frozen, loaded, n_quad=8, *, compact=True):
             index = geo["index_" + side].clamp_min(0)
             corrected["a_" + side] = torch.where(geo["has_" + side],
                                                 moved[..., 5].gather(-1, index), 0.)
+        if pack_frame_ablation:
+            pack = model.pivot_decision_geometry(
+                state, out["accel_mps2"], next_s=moved[..., 0], next_v=moved[..., 4],
+                fixed_next_lane=context["fixed_next_lane"])
+            pack_rows.append({key: pack[key][0].clone() for key in
+                              ("eligible", "ramp", "overlap", "physical_eligible", "gap_l", "gap_f")})
         in_zone = ((rec[:, i, :, 0] >= model.physics.merge_zone_s0_m)
                    & (rec[:, i, :, 0] <= model.physics.merge_zone_s1_m))
         rows.append(dict(original=original, corrected=corrected,
@@ -192,6 +205,8 @@ def prepare(frozen, loaded, n_quad=8, *, compact=True):
                  proposals=torch.stack([r["moved"] for r in rows]),
                  geometry_flags={key: value[0].T for key, value in geo.items()
                                  if key in ("overlap", "physical_eligible", "reservation_veto", "ramp")})
+    if pack_frame_ablation:
+        cache["pack_frame"] = {key: torch.stack([r[key] for r in pack_rows]) for key in pack_rows[0]}
     for name, field in (("original_runtime", "original"), ("corrected", "corrected")):
         features = {key: torch.stack([r[field][key][0] for r in rows], -1)
                     for key in exact.FEATURES}

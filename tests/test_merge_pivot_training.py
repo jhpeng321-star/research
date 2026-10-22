@@ -222,7 +222,13 @@ def test_frozen_recorded_replay_matches_runtime_causal_update_and_boundary_to_1e
                          lane_uniform=torch.full((1, 3), .5))
         moved = advance_longitudinal(state["veh_kin"], out["accel_mps2"], .5,
                                      model.physics.stop_time_integration)
-        expected = geometry(moved, state["present"], model.physics)
+        # The recorded scene is evaluated in the lossless route frame (junction lengths);
+        # parity means the same geometry() on the same pre-state shift, not a different one.
+        from wms.data.route_frame import route_shift
+        shift = route_shift(inp.states, inp.present, getattr(inp, "continuity", None),
+                            dt_s=model.physics.dt_s)[:, 0]
+        expected = geometry(moved, state["present"], model.physics, route_shift=shift)
+    assert expected["route_s"].ne(expected["s"]).any(), "fixture must exercise the shift"
     rec = build_recorded_geometry(model, inp, targets)
     for key in expected:
         assert torch.allclose(rec[key][:, 0], expected[key], atol=1e-6, rtol=0), key
@@ -248,8 +254,18 @@ def test_recorded_step_has_no_next_row_motion_or_acceleration_leakage():
     inp.states[:, 1:, :, 4:6] += 123.
     inp.teacher = torch.full((1, 5, 3, 4), 99999.)
     changed = build_recorded_geometry(model, inp, targets)
+    # ``label_*`` rows are the recorded SUCCESSOR, exposed to label-side audits only; every
+    # model-facing key (and therefore the boundary c) must be invariant to the future.
+    labels = [key for key in baseline if key.startswith("label_")]
+    assert labels and any(not torch.equal(baseline[key][:, 0], changed[key][:, 0])
+                          for key in labels)
     for key in baseline:
-        assert torch.equal(baseline[key][:, 0], changed[key][:, 0]), key
+        if key not in labels:
+            assert torch.equal(baseline[key][:, 0], changed[key][:, 0]), key
+    model_facing = lambda geo: {key: val[:, :1] for key, val in geo.items()  # noqa: E731
+                                if not key.startswith("label_")}
+    assert torch.equal(model.merge_pivot(model_facing(baseline)),
+                       model.merge_pivot(model_facing(changed)))
 
 
 def test_recorded_current_cav_actions_match_runtime_and_do_not_advance_rollout_controller():
@@ -279,7 +295,10 @@ def test_recorded_current_cav_actions_match_runtime_and_do_not_advance_rollout_c
                          cav_controller=TimelineControllers(model, inp.action_timeline))
     moved = state["veh_kin"].clone()
     moved[..., 0], moved[..., 4], moved[..., 5] = out["next_s_m"], out["next_v_mps"], out["accel_mps2"]
-    expected = geometry(moved, state["present"], model.physics)
+    from wms.data.route_frame import route_shift
+    shift = route_shift(inp.states, inp.present, getattr(inp, "continuity", None),
+                        dt_s=model.physics.dt_s)[:, 0]
+    expected = geometry(moved, state["present"], model.physics, route_shift=shift)
     for key in expected:
         assert torch.allclose(rec[key][:, 0], expected[key], atol=1e-6, rtol=0), key
 
