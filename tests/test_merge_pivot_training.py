@@ -397,6 +397,112 @@ def test_zero_mass_recorded_event_is_reported_as_infinite_by_term():
     assert metrics["merge_pivot_tf_zero_mass_events"] == 1
 
 
+@pytest.mark.parametrize("law", ["strict", "hybrid"])
+@pytest.mark.parametrize("chunks", [[(0, 4)], [(0, 1), (1, 2), (2, 4)]])
+@pytest.mark.parametrize("zero_mass", [False, True])
+def test_disabled_onpolicy_is_diagnostic_only_and_exactly_tf(law, chunks, zero_mass, monkeypatch):
+    from wms.train.losses import merge_pivot as loss_module
+
+    model, inp, targets = _fixture(law)
+    cfg = MergePivotConfig(weight=0., tf_weight=.6, z_tf=395.2, z_on=2.15,
+                           passage_law=law)
+    original_score = loss_module.score_chunk
+    scored = []
+
+    def observe(*args, **kwargs):
+        result = original_score(*args, **kwargs)
+        scored.append((torch.is_grad_enabled(), result[0].requires_grad))
+        return result
+
+    monkeypatch.setattr(loss_module, "score_chunk", observe)
+
+    def run(metrics):
+        model.zero_grad(set_to_none=True)
+        term = MergePivotTerm(replace(cfg, metrics=metrics))
+        term.prepare(targets)
+        prep = targets.prepared["merge_pivot"]
+        # Keep TF supported while independently making the on-policy event impossible.
+        for side in ("f", "l"):
+            prep["geometry"][f"gap_{side}"][:, 2, 0] = 10000.
+        pred = _prediction(inp, model)
+        # Emit the same synthetic decision geometry so comparison retains the event.
+        pred.update({"merge_pivot_geometry_" + key: prep["geometry"][key].clone()
+                     for key in ("gap_f", "gap_l", "v_f", "v_l", "has_f", "has_l")})
+        if zero_mass:
+            pred["merge_pivot_eligible"][:, 2, 0] = False
+        losses = []
+        scored.clear()
+        for c0, c1 in chunks:
+            chunk = {key: (val[:, c0:c1] if val.ndim == 3 else val)
+                     for key, val in pred.items()}
+            current = state_from_kin(inp.states[:, c0], inp.present[:, c0])
+            value = term(LossContext(pred=chunk, current=current, targets=targets,
+                                     c0=c0, c1=c1)).value
+            assert torch.isfinite(value)
+            losses.append(value.detach().clone())
+            value.backward()
+        gradients = {name: p.grad.clone() for name, p in model.merge_pivot.named_parameters()}
+        assert pred["merge_pivot_c"].grad is None
+        return losses, gradients, merge_pivot_metrics(prep, .5), list(scored)
+
+    expected, expected_grad, _, tf_scored = run(False)
+    actual, actual_grad, metrics, diagnostic_scored = run(True)
+    assert all(torch.equal(a, b) for a, b in zip(actual, expected))
+    assert all(torch.equal(actual_grad[k], v) for k, v in expected_grad.items())
+    assert all(torch.isfinite(g).all() for g in actual_grad.values())
+    assert tf_scored == [(True, True)] * len(chunks)
+    assert diagnostic_scored == [(True, True), (False, False)] * len(chunks)
+    assert metrics["merge_pivot_on_objective_disabled"] == 1  # not the number of chunks
+    assert metrics["merge_pivot_on_diagnostic_events"] == 1
+    assert metrics["merge_pivot_on_diagnostic_zero_mass_events"] == int(zero_mass)
+    assert metrics["merge_pivot_on_diagnostic_scored_seconds"] == 1.5
+    assert "merge_pivot_on_nll" not in metrics
+    if zero_mass:
+        assert metrics["merge_pivot_on_diagnostic_nll"] == float("inf")
+
+
+@pytest.mark.parametrize("law", ["strict", "hybrid"])
+def test_positive_onpolicy_keeps_original_loss_and_gradients_bit_exact(law):
+    model, inp, targets = _fixture(law)
+    cfg = MergePivotConfig(weight=.4, tf_weight=.6, z_tf=395.2, z_on=2.15,
+                           passage_law=law)
+    term = MergePivotTerm(cfg)
+    term.prepare(targets)
+    prep = targets.prepared["merge_pivot"]
+    for side in ("f", "l"):
+        prep["geometry"][f"gap_{side}"][:, 2, 0] = 10000.
+    pred = _prediction(inp, model)
+    ctx = LossContext(pred=pred, current=inp.initial, targets=targets, c0=0, c1=4)
+    pred.update({"merge_pivot_geometry_" + key: prep["geometry"][key].clone()
+                 for key in ("gap_f", "gap_l", "v_f", "v_l", "has_f", "has_l")})
+    actual = term(ctx).value
+    # Original positive-weight arithmetic and score inputs on the existing fixture.
+    from wms.train.losses.merge_pivot import pre_window_maximum, pre_window_hybrid_history
+    params = model.merge_pivot.params()
+    tau, width = params["tau"], params.get("w")
+    like = prep["risk"][:, 0].to(tau)
+    initial = pre_window_maximum(model, prep["pre_window_history"], like) if width is None else None
+    history = pre_window_hybrid_history(model, prep["pre_window_history"], like) if width is not None else None
+    kwargs = dict(known_entry=prep["known"], reset=prep["reset"], initial_maximum=initial,
+                  w=width, quadrature_order=cfg.quadrature_order, initial_history=history)
+    tf, _, _ = score_chunk(model.merge_pivot(prep["geometry"]), tau, prep["risk"], prep["event"],
+                           eligible=prep["geometry"]["eligible"], **kwargs)
+    support, early = term._comparison(ctx, prep)
+    kwargs["w"] = pred["merge_pivot_w"].mean() if width is not None else None
+    on, _, _ = score_chunk(pred["merge_pivot_c"], pred["merge_pivot_tau"].mean(),
+                           prep["risk"], prep["event"], eligible=pred["merge_pivot_eligible"],
+                           support=support, stop=early, **kwargs)
+    expected = tau * 0.0 + cfg.tf_weight * tf / max(prep["n_cars"], 1) / cfg.z_tf
+    expected = expected + cfg.weight * on / max(prep["n_cars"], 1) / cfg.z_on
+    variables = (*model.merge_pivot.parameters(), pred["merge_pivot_c"])
+    actual_grad = torch.autograd.grad(actual, variables, retain_graph=True)
+    expected_grad = torch.autograd.grad(expected, variables)
+    assert torch.equal(actual, expected)
+    assert all(torch.equal(a, b) for a, b in zip(actual_grad, expected_grad))
+    assert actual_grad[-1].abs().sum() > 0
+    assert merge_pivot_metrics(prep, .5)["merge_pivot_on_objective_disabled"] == 0
+
+
 def test_unroll_runner_prepares_new_term_and_backpropagates_nonzero_chunk_offsets():
     from wms.train.unroll import UnrollRunner
 

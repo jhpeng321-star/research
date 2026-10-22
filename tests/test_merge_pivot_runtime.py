@@ -350,6 +350,21 @@ def test_round9_config_keeps_state_st_on():
     assert ModelSpec.from_mapping(cfg.to_legacy_flat()).merge_pivot_state_st is True
 
 
+def test_round9_config_uses_tf_f2_only_without_renormalization():
+    from wms.config.load import load_train_config
+    from wms.train.settings import TrainSettings
+    from wms.train.losses.compose import build_loss
+
+    cfg = load_train_config("configs/c4_wm_v10round9.toml")
+    settings = TrainSettings.from_config(cfg)
+    term = next(t for t in build_loss(settings).chunk_terms if t.name == "merge_pivot")
+    assert term.cfg.weight == 0 and term.cfg.metrics is True
+    assert term.cfg.tf_weight == .6 and term.cfg.z_tf == 395.2 and term.cfg.z_on == 2.15
+    assert (term.cfg.pos_tol_m, term.cfg.speed_tol_mps,
+            term.cfg.gap_tol_m, term.cfg.gap_speed_tol_mps) == (50., 8., 40., 8.)
+    assert term.cfg.tau_reg_weight == term.cfg.w_reg_weight == 0
+
+
 def test_round9_config_enables_checkpoint_forward():
     from wms.config.load import load_train_config
     from wms.train.settings import TrainSettings
