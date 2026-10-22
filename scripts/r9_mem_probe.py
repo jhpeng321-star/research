@@ -36,7 +36,7 @@ calls = {"n": 0, "nonfinite": 0}
 def call(self, ctx):
     b = _orig_call(self, ctx)
     calls["n"] += 1
-    if os.environ.get("R9_PROBE_COMPARE") == "1":
+    if os.environ.get("R9_PROBE_COMPARE") == "1" and os.environ.get("R9_PROBE_MASK") != "1":
         return b
     if not b.total.requires_grad:   # PROBE ONLY: chunks without a scored merge term still run a backward
         anchor = sum(p.sum() for p in ctx.targets.prepared["merge_pivot"]["model"].merge_pivot.parameters())
@@ -101,7 +101,10 @@ def train_batch_compare(self, batch, *, unroll_steps, truncation_steps=None):
     names = [n for n, p in self.model.named_parameters() if p.requires_grad]
     skip = None
     for flag in (False, True):
-        object.__setattr__(self.model.spec, "merge_pivot_state_st", flag)
+        if os.environ.get("R9_PROBE_KIND") == "ckf":
+            self.model.checkpoint_forward = flag
+        else:
+            object.__setattr__(self.model.spec, "merge_pivot_state_st", flag)
         totals.clear(); torch.manual_seed(4321)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(4321); torch.cuda.reset_peak_memory_stats()
@@ -144,7 +147,8 @@ def train_batch_compare(self, batch, *, unroll_steps, truncation_steps=None):
             a, b = a.double().flatten(), b.double().flatten(); va.append(a); vb.append(b)
             na, nb = float(a.norm()), float(b.norm())
             row["grads"][n] = dict(true_norm=na, false_norm=nb, cosine=float(a @ b) / max(na * nb, 1e-300),
-                                   rel_diff=float((a - b).norm()) / max(na, 1e-300))
+                                   rel_diff=float((a - b).norm()) / max(na, 1e-300),
+                                   max_abs_diff=float((a - b).abs().max()), max_abs=float(a.abs().max()))
         if va:
             A, B = torch.cat(va), torch.cat(vb)
             row["global"] = dict(true_norm=float(A.norm()), false_norm=float(B.norm()),
