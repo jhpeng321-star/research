@@ -27,6 +27,17 @@ def _slice_kw(kw, key, b, k):
 def traced(c, tau, risk, event, **kw):
     out = _orig_score(c, tau, risk, event, **kw)
     stats = out[2]
+    if kw.get("support") is not None and CUR["ctx"] is not None:
+        ctx, pr = CUR["ctx"], CUR["ctx"].targets.prepared["merge_pivot"]
+        for b, i, k in torch.nonzero(event.bool() & risk.bool()).tolist():
+            CUR.setdefault("onev", []).append(dict(
+                call=CUR["calls"], b=b, i=i, k=k, t=ctx.c0 + i,
+                elig=bool(ctx.pred["merge_pivot_eligible"][b, i, k]),
+                phys=bool(ctx.pred["merge_pivot_physical_eligible"][b, i, k]),
+                support=bool(kw["support"][b, i, k]),
+                dpos=float(ctx.pred["positions"][b, i, k] - ctx.targets.states[b, ctx.c0 + i, k, 0]),
+                dv=float(ctx.pred["speeds"][b, i, k] - ctx.targets.states[b, ctx.c0 + i, k, 4]),
+                wm_c=float(c[b, i, k])))
     if stats["zero_mass_events"] or stats["zero_survival"] or stats["physical_fail_events"]:
         path = "on" if kw.get("support") is not None else "tf"
         carry = kw.get("carry") or {}
@@ -74,7 +85,55 @@ def traced(c, tau, risk, event, **kw):
                                    on_support=bool(kw["support"][b, i, k]), on_c=float(c[b, i, k]),
                                    wm_pos=float(pr["positions"][b, i, k]), wm_lane=int(pr["lanes"][b, i, k]),
                                    rec_pos=float(ctx.targets.states[b, t, k, 0]))
+                    if path == "on":
+                        try:
+                            rec["wm"] = wm_diag(prep, ctx, b, i, k)
+                        except Exception as e:  # noqa
+                            rec["wm"] = {"error": repr(e)[:200]}
                     CUR["recs"].append(rec)
+    return out
+
+
+def wm_diag(prep, ctx, b, j, k):
+    """Veto components of the ON-POLICY (WM-state) decision geometry for slot k at chunk step j."""
+    from wms.train.losses.merge_first_passage import _kin
+    from wms.train.inputs import state_from_kin
+    from wms.model.merge_pivot import advance_longitudinal
+    model, pred, c0, c1 = prep["model"], ctx.pred, ctx.c0, ctx.c1
+    K = prep["risk"].shape[-1]
+    with torch.no_grad():
+        def pre(key, current):
+            return torch.cat((ctx.current[current][..., :K].unsqueeze(1), pred[key][:, :-1, :K]), 1)
+        lane, present = pre("lanes", "lane"), pre("masks", "present").bool()
+        rec = ctx.targets.states[:, c0:c1]
+        kin = _kin(pre("positions", "s_m"), lane, pre("speeds", "v_mps"), pre("accel", "a_mps2"), rec[:, :, :, 6])
+        moved = advance_longitudinal(kin, pred["accel"][..., :K], ctx.targets.dt_s,
+                                     bool(getattr(model.physics, "stop_time_integration", False)))
+        cav = ctx.targets.is_cav[:, c0:c1, :K].bool()
+        moved[..., 0] = torch.where(cav, pred["positions"][..., :K], moved[..., 0])
+        moved[..., 4] = torch.where(cav, pred["speeds"][..., :K], moved[..., 4])
+        st = state_from_kin(kin[b, j][None], present[b, j][None]); st["is_cav"] = cav[b, j][None]
+        g = model.pivot_decision_geometry(st, pred["accel"][b, j, :K][None], next_s=moved[b, j, :, 0][None],
+                                          next_v=moved[b, j, :, 4][None], fixed_next_lane=pred["lanes"][b, j, :K][None])
+        ov = int(g["overlap_index"][0, k])
+        out = dict(ramp=bool(g["ramp"][0, k]), scene_valid=bool(g["scene_valid"][0, k]), overlap=bool(g["overlap"][0, k]),
+                   cav=bool(cav[b, j, k]), phys=bool(g["physical_eligible"][0, k]), elig=bool(g["eligible"][0, k]),
+                   fixed_overlap=bool(g["fixed_overlap"][0, k]), partner=ov,
+                   ego_wm_pre=float(kin[b, j, k, 0]), ego_wm_moved=float(moved[b, j, k, 0]), ego_len=float(kin[b, j, k, 6]),
+                   ego_rec_pre=float(rec[b, j, k, 0]), ego_wm_present=bool(present[b, j, k]),
+                   ego_rec_present=bool(ctx.targets.states.new_tensor(0) == 0 and prep["risk"][b, c0 + j, k]))
+        if ov >= 0:
+            out.update(p_wm_moved=float(moved[b, j, ov, 0]), p_len=float(kin[b, j, ov, 6]), p_lane=int(lane[b, j, ov]),
+                       p_rec_pre=float(rec[b, j, ov, 0]), p_rec_lane=int(rec[b, j, ov, 1:4].argmax()),
+                       p_present_wm=bool(present[b, j, ov]), p_is_cav=bool(cav[b, j, ov]),
+                       p_wm_pre=float(kin[b, j, ov, 0]))
+        # scene-level: any present WM slot violating `observed` (would void the whole scene)
+        obs = (torch.isfinite(kin[b, j]).all(-1) & (kin[b, j, :, 1:4].sum(-1) > 0) & (kin[b, j, :, 6] > 0))
+        out["n_unobserved_present"] = int((present[b, j] & ~obs).sum())
+        tgt_wm = int((present[b, j] & (lane[b, j] == 1)).sum())
+        out["n_target_wm"] = tgt_wm
+        out["n_target_rec"] = int((ctx.targets.states.new_tensor(0) == 0) and
+                                  int(((rec[b, j, :, 1:4].argmax(-1) == 1) & (rec[b, j, :, 1:4].sum(-1) > 0)).sum()))
     return out
 
 
@@ -85,6 +144,34 @@ def model_c(prep, g, b, t, k):
 
 
 lp.score_chunk = traced
+import wms.model.merge_pivot as mp
+_orig_geo = mp.geometry
+GEO = {"calls": 0, "scene_invalid_rows": 0, "rows": 0, "reasons": {"nonfinite": 0, "no_lane": 0, "len0": 0}, "ramp_cars": 0,
+       "ramp_scene_invalid": 0, "ramp_overlap": 0, "ramp_phys_ok": 0}
+
+
+def geo_wrap(kin, present, physics, decision_mask=None, fixed_target=None, route_shift=None):
+    out = _orig_geo(kin, present, physics, decision_mask=decision_mask, fixed_target=fixed_target, route_shift=route_shift)
+    if route_shift is None and not torch.is_grad_enabled() is False:
+        pass
+    if route_shift is None:
+        with torch.no_grad():
+            pr = present.bool()
+            GEO["calls"] += 1
+            sv = out["scene_valid"][..., 0] if out["scene_valid"].ndim > 1 else out["scene_valid"]
+            bad = ~sv
+            GEO["rows"] += int(bad.numel()); GEO["scene_invalid_rows"] += int(bad.sum())
+            fin = torch.isfinite(kin).all(-1)
+            GEO["reasons"]["nonfinite"] += int((pr & ~fin).sum())
+            GEO["reasons"]["no_lane"] += int((pr & fin & (kin[..., 1:4].sum(-1) <= 0)).sum())
+            GEO["reasons"]["len0"] += int((pr & fin & (kin[..., 6] <= 0)).sum())
+            ramp = out["ramp"]
+            GEO["ramp_cars"] += int(ramp.sum()); GEO["ramp_scene_invalid"] += int((ramp & ~out["scene_valid"]).sum())
+            GEO["ramp_overlap"] += int((ramp & out["overlap"]).sum()); GEO["ramp_phys_ok"] += int(out["physical_eligible"].sum())
+    return out
+
+
+mp.geometry = geo_wrap
 _orig_term = lp.MergePivotTerm.__call__
 
 
@@ -115,7 +202,9 @@ done = {"n": 0}
 def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     t0 = time.perf_counter()
     self.optimizer.zero_grad(set_to_none=True)
-    CUR["recs"].clear(); CUR["calls"] = 0
+    CUR["recs"].clear(); CUR["calls"] = 0; CUR["onev"] = []
+    GEO.update(calls=0, scene_invalid_rows=0, rows=0, ramp_cars=0, ramp_scene_invalid=0, ramp_overlap=0, ramp_phys_ok=0)
+    GEO["reasons"].update(nonfinite=0, no_lane=0, len0=0)
     info.update(nonfinite=0, chunks=0, total_requires_grad=[])
     err = None
     pv = {n: p.requires_grad for n, p in self.model.named_parameters() if n.startswith("merge_pivot")}
@@ -137,7 +226,7 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
                nonfinite_chunks=info["nonfinite"], chunks=info["chunks"], total_requires_grad=info["total_requires_grad"],
                requires_grad=pv, grad_norms=grads, error=err, loss=parts.get("loss"),
                metrics={k: v for k, v in {**metrics, **parts}.items() if k.startswith("merge_pivot_") and not isinstance(v, (list, dict))},
-               zero_mass=list(CUR["recs"]),
+               zero_mass=list(CUR["recs"]), on_events=list(CUR.get("onev", [])), geo=json.loads(json.dumps(GEO)),
                batch_keys=[k for k in batch.keys()] if done["n"] == 0 else None,
                window=_window_id(batch))
     with open(OUT, "a") as f:
