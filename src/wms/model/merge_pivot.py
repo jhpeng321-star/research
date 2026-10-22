@@ -430,7 +430,7 @@ def _hybrid_scan(c: Tensor, tau: Tensor, w: Tensor, order: int, budget: int) -> 
     events, survival = [], []
     for lo in range(0, mmax, group):
         args = (cc, tau, w, a[:, lo:lo + group], b[:, lo:lo + group], lw[:, lo:lo + group], order)
-        if grad and mmax > group:
+        if grad:
             from torch.utils.checkpoint import checkpoint
             e, s = checkpoint(_hybrid_block, *args, use_reentrant=False)
         else:

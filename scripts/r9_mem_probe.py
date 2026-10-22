@@ -51,6 +51,10 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
                cuda_max_allocated_mb=(torch.cuda.max_memory_allocated(dev) / 2**20 if dev.type == "cuda" else None),
                cuda_max_reserved_mb=(torch.cuda.max_memory_reserved(dev) / 2**20 if dev.type == "cuda" else None),
                error=err, loss=float(parts.get("loss", float("nan"))) if parts else None)
+    try:
+        import psutil; mi = psutil.Process().memory_info(); row['peak_rss_gb'] = getattr(mi, 'peak_wset', mi.rss) / 2**30
+    except Exception:
+        pass
     with open(OUT, "a") as f:
         f.write(json.dumps(row) + "\n")
     done["n"] += 1
