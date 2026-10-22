@@ -367,6 +367,7 @@ class TrainSettings:
     merge_passage_law: str = "strict"
     merge_w_init: float = 1.0
     merge_quadrature_order: int = 32
+    merge_pivot_state_st: bool = True
     merge_core_tau_reg_weight: float = 0.0
     merge_core_w_reg_weight: float = 0.0
     merge_first_passage_weight: float = 0.0

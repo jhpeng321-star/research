@@ -11,6 +11,7 @@ merge_st_width = 1.0
 merge_passage_law = "hybrid"
 merge_w_init = 1.0          # Learned positive passage width initialization.
 merge_quadrature_order = 32
+merge_pivot_state_st = false   # no ST adjoint through the frozen rollout dynamics (memory: rollout graph not retained)
 merge_negotiation = false
 
 [physics]

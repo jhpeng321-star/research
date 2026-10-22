@@ -861,7 +861,8 @@ class WmSModel(nn.Module):
                 kin, present, self.physics, lane_age=lane_age,
                 merge_wait_s=state.get("merge_wait_s"), merge_prob=merge_prob)
         residual_kin = kin
-        if self.merge_pivot is not None and "merge_pivot_lane_weights" in state:
+        if (self.merge_pivot is not None and self.spec.merge_pivot_state_st
+                and "merge_pivot_lane_weights" in state):
             # Hard one-hot forward, ST backward into the next residual/dynamics
             # step. Discrete neighbor lookup remains exact. Observed/projected
             # lane corrections and new identities do not inherit a stale adjoint.
@@ -2192,7 +2193,9 @@ class WmSModel(nn.Module):
                 for key in _MERGE_PIVOT_STATE_KEYS:
                     if "merge_pivot_" + key in out:
                         current["merge_pivot_" + key] = out["merge_pivot_" + key].detach()
-                current["merge_pivot_lane_weights"] = out["merge_pivot_lane_weights"]
+                current["merge_pivot_lane_weights"] = (
+                    out["merge_pivot_lane_weights"] if self.spec.merge_pivot_state_st
+                    else out["merge_pivot_lane_weights"].detach())
             gap, _ = lead_neighbour(kin, nxt_present, self.physics)
             history, history_mask = push_history(
                 history, history_mask, history_step_features(kin, gap), nxt_present)

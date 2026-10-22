@@ -311,3 +311,40 @@ def test_draft_launcher_rejects_non_stage300_init(launcher_checkpoint_dir, stage
         main(["--init-from", str(file)])
     assert exc.value.code == 2
     assert "--init-from must record stage_s=300" in capsys.readouterr().err
+
+
+def test_state_st_off_keeps_forward_exact_and_cuts_only_the_downstream_adjoint():
+    """merge_pivot_state_st=False: identical forward values, no pivot adjoint through the next residual step."""
+    base = WmSModel(replace(model().spec, rollout_mode="hybrid")).eval()
+    cut = WmSModel(replace(base.spec, merge_pivot_state_st=False)).eval()
+    cut.load_state_dict(base.state_dict())
+    s = state(positions=(30., 38., 20.))
+    outputs = []
+    for m in (base, cut):
+        original = m._residual_prediction
+        def probe(kin, present, conditioning, courtesy=None, _o=original):
+            result = _o(kin, present, conditioning, courtesy)
+            result["accel_delta_mps2"] = kin[..., 2]
+            return result
+        out = m.step(s, lane_uniform=torch.full_like(s["s_m"], 0.5))
+        current = {**s, "s_m": out["next_s_m"], "v_mps": out["next_v_mps"], "a_mps2": out["accel_mps2"],
+                   "lane": out["next_lane"], "merge_pivot_lane_weights": out["merge_pivot_lane_weights"]}
+        # what the rollout carries to the next step
+        carried = out["merge_pivot_lane_weights"] if m.spec.merge_pivot_state_st else out["merge_pivot_lane_weights"].detach()
+        current["merge_pivot_lane_weights"] = carried
+        with patch.object(m, "_residual_prediction", side_effect=probe):
+            following = m.forward(current, k_steps=2)
+        outputs.append((out, following))
+        grads = torch.autograd.grad(following["raw_residual_mps2"].sum(), list(m.merge_pivot.parameters()),
+                                    allow_unused=True)
+        has = any(g is not None and g.abs().sum() > 0 for g in grads)
+        assert has is (m.spec.merge_pivot_state_st)
+    for key in ("next_s_m", "next_v_mps", "next_lane", "merge_pivot_c"):
+        assert torch.equal(outputs[0][0][key], outputs[1][0][key])
+    assert torch.equal(outputs[0][1]["raw_residual_mps2"], outputs[1][1]["raw_residual_mps2"])
+
+
+def test_round9_config_turns_state_st_off():
+    from wms.config.load import load_train_config
+    cfg = load_train_config("configs/c4_wm_v10round9.toml")
+    assert ModelSpec.from_mapping(cfg.to_legacy_flat()).merge_pivot_state_st is False
