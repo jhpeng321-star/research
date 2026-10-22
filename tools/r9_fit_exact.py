@@ -437,8 +437,10 @@ def drop_explained_exclusions(sequences, cache):
             cause = ('same_step_vacated_leader' if bool(verdict['vacated'][at]) else
                      'junction_internal_target_vehicle' if bool(verdict['junction'][at]) else
                      'vacated_leader_and_junction_vehicle')
-            dropped.append({'vehicle': seq['vehicle'], 'event_row': seq['event_row'],
-                            'reason': 'explained_P1_unrepresentable:' + cause, 'episode': seq['episode']})
+            # same identity keys as legacy exclusions (merge_fit_stage2a.reconcile)
+            dropped.append({**{key: seq[key] for key in ('world', 'source', 'episode', 'vehicle',
+                                                         'slot', 'entry_row', 'event_row')},
+                            'reason': 'explained_P1_unrepresentable:' + cause})
         else:
             kept.append(seq)
     assert n >= 0
@@ -446,7 +448,7 @@ def drop_explained_exclusions(sequences, cache):
 
 
 def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
-                  allow_unverified_physics=False, actions_by_episode=None):
+                  allow_unverified_physics=False, actions_by_episode=None, runtime_cache=None):
     """Use the existing cohort builder, augment once per episode; no audit fit.
 
     Controls must be supplied in runtime vocabulary via actions_by_episode(ep).
@@ -472,7 +474,8 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         if actions is not None:
             raise ValueError('dataset replay uses the recorded current runtime timeline; '
                              'use prepare_episode for alternative-input parity diagnostics')
-        cache = r9_runtime.cached_prepare(frozen, loaded, ROOT / 'results/r9_runtime_cache', n_quad)
+        cache = r9_runtime.cached_prepare(frozen, loaded, runtime_cache or ROOT / 'results/r9_runtime_cache',
+                                           n_quad)
         index = 0
 
         def proposal(**kwargs):
