@@ -39,7 +39,7 @@ exactly zero gradient. Also: recorded a[t+1] ~ a[t] (Huber 0.009 vs model 0.32, 
 (persistence shortcut risk).
 
 ## 5. What round 10 trains
-Trainable: `temporal.*` (MLP, 6.5k params, lr x20) and `gate_g_max_logit`, `gate_tau_raw` (lr x100). Frozen bitwise:
+Trainable: `temporal.*` (MLP, 6.5k params, lr x5; pilot rule in the astra packet) and `gate_g_max_logit`, `gate_tau_raw` (lr x100). Frozen bitwise:
 merge_pivot, driver_encoder/updater, lane_gate_*, lane_v5, history_proj, k_embedding, merge_core, the whole residual_net
 (incl. the dead attention head). Justification and the "one change" decision: round 9 trains only merge_pivot; round 10
 freezes it so every round-10-vs-round-9 difference is attributable to fix B and the merge result of round 9 stays valid;
