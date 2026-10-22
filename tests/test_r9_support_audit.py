@@ -182,3 +182,33 @@ def test_audit_includes_unknown_and_cav_and_reports_exact_zero_mass():
     assert len(rows) == 1 and counts["hdv_events"] == 1
     assert rows[0]["unknown_age_before"] and not rows[0]["unknown_age_after"]
     assert counts["after_unknown_age_events"] == 0
+
+
+def test_audit_applies_the_counted_exclusion_to_a_vetoed_event_and_scores_no_zero_mass():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("r9_support_audit_excl",
+        Path(__file__).resolve().parents[1] / "tools/r9_support_audit.py")
+    audit = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(audit)
+    model, _, _ = _fixture()
+    kin = np.zeros((5, 2, 7), np.float32)
+    kin[..., 6] = 5
+    kin[:, 0, 0] = [-1, 1, 2, 3, 4]
+    kin[:, 1, 0] = 4                                    # a static target-lane body on the merge spot
+    kin[:4, 0, 3] = 1
+    kin[4, 0, 2] = 1
+    kin[:, 1, 2] = 1
+    arrays = dict(veh_kin=kin, veh_mask=np.ones((5, 2), bool),
+                  target_mask=np.ones((4, 2), bool), is_cav=np.zeros((5, 2), bool),
+                  vid=np.broadcast_to(np.array([10, 11]), (5, 2)),
+                  time_s=np.arange(5) * .5, control_time_s=np.arange(2),
+                  controller=np.zeros((2, 2), np.int64),
+                  issued_acceleration_mps2=np.zeros((2, 2), np.float32),
+                  issued_target_speed_mps=np.zeros((2, 2), np.float32))
+    rows, counts = audit.audit_episode(model, SimpleNamespace(array=arrays.__getitem__),
+        dict(episode="synthetic", warmup_s=0.), "test", window_s=10.)
+    assert len(rows) == 1
+    assert rows[0]["support_verdict"] == "excluded_counted" and not rows[0]["zero_mass"]
+    assert counts["excluded_cars"] == 1 and counts["counted_exclusion_events"] == 1
+    assert counts["after_zero_mass_events"] == 0 and counts["before_zero_mass_events"] == 0

@@ -70,8 +70,12 @@ def episode_job(job):
     sequences, cohort = legacy.build_dataset([ep], adapter=proposal,
                                             runtime_risk=cache["geometry"]["ramp"][0].numpy())
     heads.attach_episode(sequences, cache)
-    sequences, explained = heads.drop_explained_exclusions(sequences, cache)
-    counts["explained_exclusion_sequences_dropped"] = len(explained)
+    sequences, explained = heads.drop_counted_exclusions(sequences, cache)
+    counts["counted_exclusion_sequences_dropped"] = len(explained)
+    for entry in explained:  # the fitter's view of the same shared exclusion, by class and scoredness
+        counts["fitter_excluded_" + ("scored_" if entry["scored"] else "unscored_") + entry["class"]] += 1
+    counts["fitter_sequences_kept"] = len(sequences)
+    counts["fitter_scored_sequences_kept"] = sum(not s["unknown_age"] for s in sequences)
     for seq in sequences:
         entry, size = seq["entry_row"], len(seq["times"])
         seq["score_start"] = int((loaded["time_s"][entry + 1:entry + size + 1]
@@ -119,8 +123,8 @@ def episode_job(job):
                                           & (loaded["raw"][tick, :, 1:4].sum(-1) == 0)).any())
         if not row["is_cav"]:
             verdict = row["support_verdict"]
-            if verdict == "excluded_explained":
-                # audit and fitter must drop the same explained sequence
+            if verdict == "excluded_counted":
+                # audit and fitter must drop the same counted-exclusion sequence
                 if law:
                     mismatch.append(row["event_id"])
                 excluded_causes[json.loads(row["geometry_json"])["veto_cause"]] += 1

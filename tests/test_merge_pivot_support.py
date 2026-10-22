@@ -116,13 +116,17 @@ def _term_for(leader_next_lane):
     return targets.prepared["merge_pivot"]
 
 
-def test_prepare_excludes_a_vacated_leader_event_and_keeps_a_real_conflict():
+def test_prepare_excludes_every_vetoed_event_and_counts_it_by_class():
+    # Owner decision 2026-10-22: ALL recorded events vetoed under the WM's one-step geometry leave
+    # the loss with their whole chain (counted), not only the "explained" classes.
     gone = _term_for(leader_next_lane=0)
     assert gone["support_counts"]["vetoed_events"] == 1
     assert gone["support_counts"]["excluded_events"] == 1
+    assert gone["support_counts"]["excluded_cars"] == 1
+    assert gone["support_counts"]["excluded_event_vetoed_explained"] == 1
     assert not gone["event"].any() and not gone["risk"][0, :, 0].any()
     stays = _term_for(leader_next_lane=TARGET)
     assert stays["support_counts"]["vetoed_events"] == 1
-    assert stays["support_counts"]["excluded_events"] == 0
-    assert stays["support_counts"]["unexplained_vetoed_events"] == 1
-    assert stays["event"].any()  # stays a zero-mass failure, visible to the gate
+    assert stays["support_counts"]["excluded_events"] == 1
+    assert stays["support_counts"]["excluded_event_vetoed_other"] == 1
+    assert not stays["event"].any() and not stays["risk"][0, :, 0].any()

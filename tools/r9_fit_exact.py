@@ -421,37 +421,46 @@ def attach_episode(sequences, cache):
     return sequences
 
 
-def drop_explained_exclusions(sequences, cache):
-    """Remove sequences whose terminal event is a P1-unrepresentable recorded merge.
+def drop_counted_exclusions(sequences, cache):
+    """Remove sequences made physically impossible by the WM's own one-step motion.
 
-    Identical classification and sequence exclusion to ``MergePivotTerm.prepare`` and the
-    support audit (``merge_pivot_support``).  Returns ``(kept, dropped)``; each dropped
-    entry names the vehicle, event row and physical reason.  Unexplained vetoes and
-    model-motion vetoes are never dropped here.
+    The COUNTED EXCLUSION (``merge_pivot_support.counted_exclusion``): identical function
+    and chain bookkeeping to ``MergePivotTerm.prepare`` and the support audit.  A sequence
+    leaves the cohort, for every compared law alike, when its recorded event step has zero
+    passage support (``E_T = 0``) or its survival is exactly zero before the event/censoring.
+    Returns ``(kept, dropped)``; each dropped entry names the vehicle, rows, class and
+    whether the car was scored (known entry age).  Nothing else is dropped here.
     """
-    from wms.train.losses.merge_pivot_support import classify_vetoed_events
+    from wms.train.losses.merge_pivot_support import CLASSES, counted_exclusion
 
     geo = cache['geometry']
-    n = geo['eligible'].shape[1]
-    event = torch.zeros_like(geo['eligible'])
+    live = torch.zeros_like(geo['eligible'])
+    event, reset = torch.zeros_like(live), torch.zeros_like(live)
     for seq in sequences:
-        if seq['event']:
-            event[0, seq['event_row'] - 1, seq['slot']] = True
-    verdict = classify_vetoed_events(geo, event, target_lane=cache['metadata']['physics']['merge_target_lane'])
+        slot, entry, stop = int(seq['slot']), int(seq['entry_row']), int(seq['entry_row']) + len(seq['times'])
+        active = torch.tensor(seq['lifecycle_active'], dtype=torch.bool)
+        live[0, entry:stop, slot] = active
+        if entry:
+            reset[0, entry, slot] = True
+        if seq['event'] and bool(active[-1]):
+            event[0, stop - 1, slot] = True
+    res = counted_exclusion(geo, live, event, reset,
+                            target_lane=cache['metadata']['physics']['merge_target_lane'])
     kept, dropped = [], []
     for seq in sequences:
-        if seq['event'] and bool(verdict['explained'][0, seq['event_row'] - 1, seq['slot']]):
-            at = (0, seq['event_row'] - 1, seq['slot'])
-            cause = ('same_step_vacated_leader' if bool(verdict['vacated'][at]) else
-                     'junction_internal_target_vehicle' if bool(verdict['junction'][at]) else
-                     'vacated_leader_and_junction_vehicle')
+        slot, entry = int(seq['slot']), int(seq['entry_row'])
+        stop = entry + len(seq['times'])
+        if bool(res['rows'][0, entry:stop, slot].any()):
+            cls = int(res['cls'][0, entry:stop, slot].max())
+            scored = not seq['unknown_age']
             # same identity keys as legacy exclusions (merge_fit_stage2a.reconcile)
             dropped.append({**{key: seq[key] for key in ('world', 'source', 'episode', 'vehicle',
                                                          'slot', 'entry_row', 'event_row')},
-                            'reason': 'explained_P1_unrepresentable:' + cause})
+                            'class': CLASSES[cls], 'scored': scored,
+                            'reason': ('counted_exclusion:' if scored
+                                       else 'counted_exclusion_unknown_age:') + CLASSES[cls]})
         else:
             kept.append(seq)
-    assert n >= 0
     return kept, dropped
 
 
@@ -498,7 +507,7 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal,
                                                runtime_risk=cache['geometry']['ramp'][0].numpy())
         attach_episode(subset, cache)
-        subset, dropped = drop_explained_exclusions(subset, cache)
+        subset, dropped = drop_counted_exclusions(subset, cache)
         report['exclusions'] = list(report['exclusions']) + dropped
         for seq in subset:
             seq['unknown_age'] = bool(seq['unknown_age'])

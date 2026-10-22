@@ -108,6 +108,9 @@ def test_observed_entry_recovers_waiting_identity_and_reports_auditable_counts()
     assert metrics["merge_pivot_tf_unknown_age"] == 0
     assert metrics["merge_pivot_tf_positive_mass_events"] == 1
     assert metrics["merge_pivot_tf_scored_intervals"] == 2
+    assert metrics["merge_pivot_tf_scored_cars"] == 1
+    assert metrics["merge_pivot_tf_excluded_motion"] == 0
+    assert metrics["merge_pivot_support_excluded_cars"] == 0
 
 
 def test_pre_window_boundary_graph_rebuilt_for_each_tbptt_backward():
