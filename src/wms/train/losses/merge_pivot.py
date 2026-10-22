@@ -344,6 +344,13 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
                                                  fixed_next_lane=fixed_next_lane)
         else:
             geo = geometry(moved, present, model.physics)
+        observer = getattr(inp, "replay_observer", None)
+        if observer is not None:
+            observer(i, state, out, moved, geo,
+                     dict(driver_params=params, lane_age=lane_age,
+                          lane_v5_acc=recurrent.get("lane_v5_acc"),
+                          driver_history=inp.observed_hist if i == 0 else None,
+                          driver_history_mask=inp.observed_hist_mask if i == 0 else None))
         rows.append({key: value.detach() for key, value in geo.items()})
         for key in ("temporal_residual_mps2", "temporal_residual_present", "lane_v5_acc", "lane_blocked"):
             if key in out:
@@ -521,7 +528,9 @@ def pre_window_hybrid_history(model, histories: list, like: Tensor) -> Tensor:
             path = torch.where(history["history_mask"], c, torch.full_like(c, -torch.inf))
             path = torch.nn.functional.pad(path.transpose(1, 2), (0, size - c.shape[1]),
                                            value=-torch.inf)
-            row = torch.where(history["certified"].unsqueeze(-1), path, row)
+            width = path.shape[1]
+            row[:, :width] = torch.where(history["certified"].unsqueeze(-1), path,
+                                         row[:, :width])
         rows.append(row)
     return torch.cat(rows)
 
@@ -657,7 +666,8 @@ class MergePivotTerm(LossTerm):
                     history = torch.where(keep, prefix_c, torch.full_like(prefix_c, -torch.inf)).transpose(1, 2)
                     if entry_history is not None:
                         valid_entry = prep["last_reset"][:, c0 - 1] < 0
-                        entry_history = torch.where(valid_entry.unsqueeze(-1), entry_history.to(history),
+                        entry_history = torch.where(valid_entry.unsqueeze(-1) & ~torch.isnan(entry_history),
+                                                    entry_history.to(history),
                                                     torch.full_like(entry_history.to(history), -torch.inf))
                         history = torch.cat((entry_history, history), -1)
                     tf_carry = {**tf_carry, "history": history}
@@ -678,11 +688,20 @@ class MergePivotTerm(LossTerm):
             k = prep["risk"].shape[-1]
             c = c[..., :k]
             support, early = self._comparison(ctx, prep)
+            on_carry = prep["on_carry"]
+            if c0 and width is not None and entry_history is not None and on_carry is not None:
+                # Reattach only the frozen pre-window graph. Rollout history is
+                # a TBPTT carry and remains detached; slot resets erase its prior.
+                valid = prep["last_reset"][:, c0 - 1] < 0
+                prefix = torch.where(valid.unsqueeze(-1) & ~torch.isnan(entry_history),
+                                     entry_history, torch.full_like(entry_history, -torch.inf))
+                on_carry = {**on_carry, "history": torch.cat(
+                    (prefix, on_carry["history"][..., entry_history.shape[-1]:]), -1)}
             nll, prep["on_carry"], counts = score_chunk(
                 c, ctx.pred["merge_pivot_tau"].mean(), cut(prep["risk"]), cut(prep["event"]),
                 known_entry=cut(prep["known"]), reset=cut(prep["reset"]),
                 eligible=ctx.pred["merge_pivot_eligible"][..., :k].bool(), support=support,
-                stop=early, carry=prep["on_carry"], initial_maximum=initial,
+                stop=early, carry=on_carry, initial_maximum=initial,
                 w=ctx.pred["merge_pivot_w"].mean() if width is not None else None,
                 quadrature_order=cfg.quadrature_order, initial_history=initial_history)
             stats.update({"on_" + key: val for key, val in counts.items()}, on_nll=float(nll.detach()))

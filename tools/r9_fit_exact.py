@@ -379,6 +379,22 @@ def attach_episode(sequences, cache):
             seq[target] = {key: value.tolist() for key, value in data[mode]['features'].items()}
         seq['legacy_support'] = data['original_runtime']['eligible'].tolist()
         seq['physical'] = data['corrected']['eligible'].tolist()
+        # Eligibility can reopen after a veto, but an observed causal risk exit
+        # is absorbing. Do not overwrite this lifecycle when attaching geometry.
+        kin = cache['kin'][entry:stop, slot]
+        physics = cache['metadata']['physics']
+        pre_risk = ((kin[:, 1:4].sum(-1) > 0)
+                    & (kin[:, 1:4].argmax(-1) == physics['merge_lane'])
+                    & (kin[:, 0] >= physics['merge_zone_s0_m'])
+                    & (kin[:, 0] <= physics['merge_zone_s1_m']))
+        moved = cache['proposals'][entry:stop, slot]
+        post_risk = ((moved[:, 1:4].sum(-1) > 0)
+                     & (moved[:, 1:4].argmax(-1) == physics['merge_lane'])
+                     & (moved[:, 0] >= physics['merge_zone_s0_m'])
+                     & (moved[:, 0] <= physics['merge_zone_s1_m']))
+        causal_risk = post_risk | pre_risk
+        seq['lifecycle_active'] = causal_risk.long().cumprod(0).bool().tolist()
+        seq['absorbed_before_event'] = bool(seq['event'] and not seq['lifecycle_active'][-1])
         flags = cache.get('geometry_flags')
         reasons = []
         for row, ok in enumerate(seq['physical'], entry):
@@ -409,23 +425,31 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         for key in ('world', 'source_name', 'episode'):
             exact.guard(ROOT / str(ep[key]))
         legacy.check_seed(ep.get('seed', -1))
-        loaded = exact.load_episode(path)
+        from tools import r9_runtime
+        loaded = r9_runtime.load_scene(path)
         for name in ('control_time_s', 'controller', 'issued_acceleration_mps2',
                      'issued_target_speed_mps'):
             exact.guard(path / (name + '.npy'))
         actions = None if actions_by_episode is None else actions_by_episode(ep)
-        cache = prepare_episode(frozen, loaded['kin'], loaded['present'], loaded['is_cav'],
-                                loaded['identity'], n_quad, actions, chunk_size=chunk_size,
-                                allow_unverified_physics=allow_unverified_physics)
+        if not frozen.metadata['physics_confirmed'] and not allow_unverified_physics:
+            raise ValueError('authoritative run physics required for causal geometry')
+        if actions is not None:
+            raise ValueError('dataset replay uses the recorded current runtime timeline; '
+                             'use prepare_episode for alternative-input parity diagnostics')
+        cache = r9_runtime.cached_prepare(frozen, loaded, ROOT / 'results/r9_runtime_cache', n_quad)
         index = 0
 
         def proposal(**kwargs):
             nonlocal index
-            value = cache['proposals'][index].numpy()
+            value = cache['proposals'][index].numpy().copy()
+            # The legacy builder owns RAW observation labels/cohort only. Its
+            # temporary geometry is replaced wholesale by attach_episode below.
+            value[:, 1:4] = loaded['raw'][index, :, 1:4]
             index += 1
             return value
 
-        subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal)
+        subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal,
+                                               runtime_risk=cache['geometry']['ramp'][0].numpy())
         attach_episode(subset, cache)
         for seq in subset:
             seq['unknown_age'] = bool(seq['unknown_age'])
@@ -445,7 +469,7 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         raise ValueError('no recorded ramp sequences')
     return sequences, {'exclusions': exclusions, 'episodes': diagnostics, 'timing': timing,
                        'build_seconds': perf_counter()-started, 'checkpoint': frozen.metadata,
-                       'CAV_controls': 'WM_physics_fallback' if actions_by_episode is None else 'supplied',
+                        'CAV_controls': 'shared_runtime_current_timeline_or_explicit_fallback',
                        'physics_diagnostic': not frozen.metadata['physics_confirmed'],
                        'conditioning': 'full available risk prefix; score_start counts decisions',
                        'seqTF_caveat': 'actual loss omits location/residual; no deployed parity claim',
@@ -558,7 +582,11 @@ class ExactCandidate(nn.Module):
             # actual positive weights in float64; never floor or drop nodes.
             _, weights = gauss_hermite(n_quad, dtype=torch.float64)
             logits = logits.to(torch.float64)
-        eligible = data[self.mode]['eligible'] & batch['valid']
+        lifecycle = torch.ones_like(batch['valid'])
+        for i, seq in enumerate(batch['sequences']):
+            if 'lifecycle_active' in seq:
+                lifecycle[i, :len(seq['times'])] = torch.tensor(seq['lifecycle_active'])
+        eligible = data[self.mode]['eligible'] & batch['valid'] & lifecycle
         whole = exact.hazard_distribution(logits, weights, eligible)
         start = data['score_start']
         ix = (start-1).clamp_min(0).unsqueeze(-1)

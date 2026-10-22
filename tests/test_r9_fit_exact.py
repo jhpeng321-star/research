@@ -274,12 +274,12 @@ def test_build_dataset_augments_same_existing_cohort_and_alignment(frozen, tmp_p
                                            allow_unverified_physics=True, chunk_size=3)
     assert len(sequences) == 1 and sequences[0]['event_row'] == 7
     seq = sequences[0]
-    assert seq['entry_row'] == 1 and len(seq['times']) == 6
-    assert seq['score_start'] == 2  # output times 1.0 and 1.5, not absolute row 2
+    assert seq['entry_row'] == 0 and len(seq['times']) == 7
+    assert seq['score_start'] == 3  # output .5, 1.0, 1.5; causal entry precedes raw zone entry
     assert not seq['unknown_age']
-    assert seq['exact']['embedding'].shape == (6, frozen.core.input_dim)
-    assert seq['exact']['original_runtime']['logits'].shape == (8, 6)
-    assert report['physics_diagnostic'] and report['timing'][0]['engine'] == 'batched_causal_scan'
+    assert seq['exact']['embedding'].shape == (7, frozen.core.input_dim)
+    assert seq['exact']['original_runtime']['logits'].shape == (8, 7)
+    assert report['physics_diagnostic'] and report['timing'][0]['engine'] == 'shared_runtime_causal'
     assert 'omits' in report['seqTF_caveat']
     assert math.isfinite(fit.ExactCandidate('M0', frozen).nll(fit.exact_pack(sequences))[0])
 

@@ -462,7 +462,8 @@ def main(argv=None):
     fit_eps = [e for e in episodes if e["world"] in fit_worlds]
     audit_eps = [e for e in episodes if e["world"] in audit_worlds]
     # Input hashes and implementation hashes prevent stale geometry/head caches.
-    code_paths = [ROOT / "tools" / name for name in ("r9_exact.py", "merge_fit_v2.py")]
+    code_paths = [ROOT / "tools" / name for name in
+                  ("r9_exact.py", "r9_runtime.py", "merge_fit_v2.py")]
     code_paths += sorted((ROOT / "src/wms").rglob("*.py"))
     preparation_code = "".join(inspect.getsource(getattr(heads, name)) for name in
                                ("_SparsePairAttention", "_replay_model", "_arrays", "_batchable",

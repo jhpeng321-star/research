@@ -17,7 +17,7 @@ from wms.train.inputs import build_targets, prepare_inputs
 from wms.train.losses.base import LossContext
 from wms.train.losses.merge_pivot import (
     MergePivotConfig, MergePivotTerm, build_pre_window_history, build_recorded_geometry,
-    merge_pivot_metrics, pre_window_maximum, score_chunk,
+    merge_pivot_metrics, pre_window_hybrid_history, pre_window_maximum, score_chunk,
 )
 from wms.train.settings import TrainSettings
 
@@ -467,3 +467,290 @@ def test_prefix_rng_is_independent_of_future_window_length_and_preserves_caller_
     after = targets.prepared["merge_pivot"]["pre_window_history"][0]["geometry"]["gap_f"]
     assert torch.equal(before, after)
     assert torch.equal(rng, torch.random.get_rng_state())
+
+
+def _hybrid_reference(prefix, decisions, tau, w, *, event=True):
+    """Independent integral in z of P(window outcome | prefix survival).
+
+    Fixed composite nodes differentiate only the defining integrand, not the
+    production probability-coordinate quadrature. These moderate synthetic
+    paths have negligible logistic prior mass outside [-48, 48].
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(32)
+    centers = np.arange(-47., 48., 2.)
+    z = tau.new_tensor((centers[:, None] + nodes).reshape(-1))
+    log_weight = (tau.new_tensor(np.tile(weights, len(centers))).log()
+                  + torch.nn.functional.logsigmoid(z)
+                  + torch.nn.functional.logsigmoid(-z))
+
+    def logwait(path):
+        # -inf is a physical veto/padding, with an exact zero adjoint.
+        finite = torch.isfinite(path)
+        safe = torch.where(finite, path, torch.zeros_like(path))
+        logits = (safe[:, None] + tau * z) / w
+        return torch.where(finite[:, None], torch.nn.functional.logsigmoid(-logits),
+                           torch.zeros_like(logits)).sum(0)
+
+    prior = logwait(prefix)
+    if event:
+        before = prior + logwait(decisions[:-1])
+        outcome = before + torch.nn.functional.logsigmoid((decisions[-1] + tau * z) / w)
+    else:
+        outcome = prior + logwait(decisions)
+    return -(torch.logsumexp(log_weight + outcome, 0)
+             - torch.logsumexp(log_weight + prior, 0))
+
+
+def _prepare_hybrid(model, targets, *, path="tf"):
+    term, prep = _prepare(model, targets)
+    term.cfg = MergePivotConfig(tf_weight=float(path == "tf"), weight=float(path == "on"),
+                               passage_law="hybrid", quadrature_order=64)
+    model.merge_pivot.double()
+    with torch.no_grad():
+        model.merge_pivot.tau_raw.copy_(torch.log(torch.expm1(torch.tensor(.7))))
+    # Both min sides and both braking terms are active somewhere in the prefix.
+    # The event boundary is deliberately below an earlier boundary: F1 still
+    # assigns positive mass, and replacing the prefix by its maximum is wrong.
+    prefix = prep["pre_window_history"][0]
+    for owner in (prefix, prep):
+        owner["geometry"] = {key: val.double() if val.is_floating_point() else val
+                             for key, val in owner["geometry"].items()}
+        geo = owner["geometry"]
+        geo["v"][..., 0], geo["v_f"][..., 0], geo["v_l"][..., 0] = 8., 12., 4.
+        geo["has_f"][..., 0] = geo["has_l"][..., 0] = True
+        geo["eligible"][..., 0] = True
+    prefix["geometry"]["gap_f"][0, :, 0] = torch.tensor([15., 1000., 20.])
+    prefix["geometry"]["gap_l"][0, :, 0] = torch.tensor([1000., 12., 1000.])
+    prep["geometry"]["gap_f"][0, :, 0] = torch.tensor([18., 14.])
+    prep["geometry"]["gap_l"][0, :, 0] = 1000.
+    return term, prep
+
+
+def _hybrid_prefix_and_decisions(model, prep):
+    history = prep["pre_window_history"][0]
+    c = model.merge_pivot(history["geometry"])
+    prefix = torch.where(history["history_mask"], c, -torch.inf)[0, :, 0]
+    return prefix, model.merge_pivot(prep["geometry"])[0, :, 0]
+
+
+def _hybrid_prediction(model, prep, c0, c1):
+    return dict(merge_pivot_c=model.merge_pivot(
+                    {key: val[:, c0:c1] for key, val in prep["geometry"].items()}),
+                merge_pivot_eligible=prep["geometry"]["eligible"][:, c0:c1],
+                **{"merge_pivot_" + key: val for key, val in model.merge_pivot.params().items()})
+
+
+@pytest.mark.parametrize("path", ["tf", "on"])
+@pytest.mark.parametrize("event", [False, True], ids=["censor", "event"])
+def test_automatic_hybrid_prefix_matches_independent_conditional_law(monkeypatch, path, event):
+    model, inp, targets = _fixture(merge_passage_law="hybrid", merge_w_init=.4)
+    term, prep = _prepare_hybrid(model, targets, path=path)
+    prep["event"][0, -1, 0] = event
+    assert prep["pre_window_recovered_sequences"] == [[0, 0, 0]]
+    assert "merge_pivot_initial_history" not in targets.prepared
+    assert "merge_pivot_initial_maximum" not in targets.prepared
+    monkeypatch.setattr(term, "_comparison", lambda ctx, prep: (
+        torch.ones_like(ctx.pred["merge_pivot_c"], dtype=torch.bool),
+        torch.zeros_like(ctx.pred["merge_pivot_c"], dtype=torch.bool)))
+    prefix, decisions = _hybrid_prefix_and_decisions(model, prep)
+    assert decisions[-1] < prefix.max()
+    params = model.merge_pivot.params()
+    expected = _hybrid_reference(prefix, decisions, params["tau"], params["w"], event=event)
+    maximum_only = _hybrid_reference(prefix.max().reshape(1), decisions,
+                                      params["tau"], params["w"], event=event)
+    assert abs(float((expected - maximum_only).detach())) > .01
+    parameters = tuple(model.merge_pivot.parameters())
+    expected_grad = torch.autograd.grad(expected, parameters)
+    pred = _hybrid_prediction(model, prep, 0, 2) if path == "on" else {}
+    actual = term(LossContext(pred=pred, current=inp.initial, targets=targets, c0=0, c1=2)).value
+    actual_grad = torch.autograd.grad(actual, parameters)
+    torch.testing.assert_close(actual, expected, atol=1e-6, rtol=0)
+    assert len(actual_grad) == 8
+    for (name, _), got, want in zip(model.merge_pivot.named_parameters(), actual_grad, expected_grad):
+        assert torch.isfinite(got) and want.abs() > 1e-8, name
+        torch.testing.assert_close(got, want, atol=1e-6, rtol=0, msg=name)
+    metrics = merge_pivot_metrics(prep, .5)
+    assert metrics[f"merge_pivot_{path}_scored_intervals"] == 2
+    assert metrics[f"merge_pivot_{path}_unknown_age"] == 0
+    assert metrics[f"merge_pivot_{path}_positive_mass_events"] == int(event)
+
+
+@pytest.mark.parametrize("path", ["tf", "on"])
+def test_automatic_hybrid_prefix_chunk_backward_preserves_all_eight_gradients(monkeypatch, path):
+    model, inp, targets = _fixture(merge_passage_law="hybrid", merge_w_init=.4)
+    term, prep = _prepare_hybrid(model, targets, path=path)
+    monkeypatch.setattr(term, "_comparison", lambda ctx, prep: (
+        torch.ones_like(ctx.pred["merge_pivot_c"], dtype=torch.bool),
+        torch.zeros_like(ctx.pred["merge_pivot_c"], dtype=torch.bool)))
+    prefix, decisions = _hybrid_prefix_and_decisions(model, prep)
+    params = model.merge_pivot.params()
+    if path == "on":
+        # Isolate the frozen F2 posterior graph from the deliberately truncated
+        # rollout graph. Only prefix boundaries, tau and w are trainable here.
+        decisions = decisions.detach()
+    reference = _hybrid_reference(prefix, decisions, params["tau"], params["w"])
+    expected_grad = torch.autograd.grad(reference, tuple(model.merge_pivot.parameters()))
+    values = []
+    for c0, c1 in [(0, 1), (1, 2)]:
+        pred = _hybrid_prediction(model, prep, c0, c1) if path == "on" else {}
+        if path == "on":
+            pred["merge_pivot_c"] = pred["merge_pivot_c"].detach()
+        value = term(LossContext(pred=pred, current=inp.initial, targets=targets, c0=c0, c1=c1)).value
+        values.append(float(value.detach()))
+        value.backward()  # A new prefix graph is required after the first backward.
+        carry = prep[path + "_carry"]
+        assert not carry["history"].requires_grad
+    assert sum(values) == pytest.approx(float(reference.detach()), abs=1e-6)
+    errors = {}
+    for (name, parameter), want in zip(model.merge_pivot.named_parameters(), expected_grad):
+        assert torch.isfinite(parameter.grad) and want.abs() > 1e-8, name
+        if not torch.allclose(parameter.grad, want, atol=1e-6, rtol=0):
+            errors[name] = (float(parameter.grad), float(want))
+    assert not errors, f"chunk vs independent whole-path gradients: {errors}"
+    assert all(p.grad is None for name, p in model.named_parameters()
+               if not name.startswith("merge_pivot."))
+
+
+def test_hybrid_prefix_builder_retains_nonrecord_decisions_and_masks_old_identity():
+    model, _, targets = _fixture(merge_passage_law="hybrid", merge_w_init=.4)
+    _, prep = _prepare_hybrid(model, targets)
+    history = prep["pre_window_history"][0]
+    history["history_mask"][0, 0, 0] = False  # earlier occupant / excluded decision
+    like = torch.zeros(1, 3, dtype=torch.float64)
+    before = pre_window_hybrid_history(model, [history], like)
+    assert before.shape == (1, 3, 3)
+    assert torch.isneginf(before[0, 0, 0])
+    assert torch.isnan(before[0, 1:]).all()
+    expected = model.merge_pivot(history["geometry"])[0, 1:, 0]
+    torch.testing.assert_close(before[0, 0, 1:], expected)
+    assert before.requires_grad
+    for side in ("f", "l"):
+        history["geometry"][f"gap_{side}"][0, 0, 0] = 1e12
+    after = pre_window_hybrid_history(model, [history], like)
+    torch.testing.assert_close(after, before, equal_nan=True, rtol=0, atol=0)
+    # A certified all-veto path is empty survival, never unknown age.
+    history["history_mask"].zero_()
+    veto = pre_window_hybrid_history(model, [history], like)
+    assert torch.isneginf(veto[0, 0]).all() and torch.isnan(veto[0, 1:]).all()
+
+
+@pytest.mark.parametrize("padded_slots", [3, 5])
+@pytest.mark.parametrize("recorded_slots", [1, 3])
+def test_hybrid_prefix_builder_pads_ragged_time_and_missing_slots(padded_slots, recorded_slots):
+    model, _, targets = _fixture(merge_passage_law="hybrid", merge_w_init=.4)
+    _, prep = _prepare_hybrid(model, targets)
+    history = deepcopy(prep["pre_window_history"][0])
+    history["geometry"] = {key: val[..., :recorded_slots]
+                           for key, val in history["geometry"].items()}
+    history["history_mask"] = history["history_mask"][..., :recorded_slots]
+    history["certified"] = history["certified"][..., :recorded_slots]
+    short = deepcopy(history)
+    short["n_steps"] = 2
+    short["geometry"] = {key: val[:, :2] for key, val in short["geometry"].items()}
+    short["history_mask"] = short["history_mask"][:, :2]
+    like = torch.zeros(3, padded_slots, dtype=torch.float64)
+    actual = pre_window_hybrid_history(model, [history, short, None], like)
+    assert actual.shape == (3, padded_slots, 3)
+    c = model.merge_pivot(history["geometry"])
+    expected = torch.where(history["history_mask"], c, -torch.inf)
+    torch.testing.assert_close(actual[0, 0], expected[0, :, 0])
+    torch.testing.assert_close(actual[1, 0, :2], expected[0, :2, 0])
+    assert torch.isneginf(actual[1, 0, 2])
+    assert torch.isnan(actual[:2, 1:]).all() and torch.isnan(actual[2]).all()
+
+
+@pytest.mark.parametrize("path", ["tf", "on"])
+def test_uncertified_hybrid_identity_remains_unknown_across_chunks(monkeypatch, path):
+    model, inp, targets = _fixture(merge_passage_law="hybrid", merge_w_init=.4)
+    inp.merge_pivot_prefix[0]["continue"][-1, 0] = False
+    term, prep = _prepare_hybrid(model, targets, path=path)
+    monkeypatch.setattr(term, "_comparison", lambda ctx, prep: (
+        torch.ones_like(ctx.pred["merge_pivot_c"], dtype=torch.bool),
+        torch.zeros_like(ctx.pred["merge_pivot_c"], dtype=torch.bool)))
+    assert not prep["pre_window_history"][0]["certified"].any()
+    assert prep["unknown_age_sequences"] == [[0, 0, 0]]
+    for c0, c1 in [(0, 1), (1, 2)]:
+        pred = _hybrid_prediction(model, prep, c0, c1) if path == "on" else {}
+        value = term(LossContext(pred=pred, current=inp.initial, targets=targets, c0=c0, c1=c1)).value
+        assert value == 0
+        value.backward()
+        assert not prep[path + "_carry"]["known"][0, 0]
+    metrics = merge_pivot_metrics(prep, .5)
+    assert metrics[f"merge_pivot_{path}_scored_intervals"] == 0
+    assert metrics[f"merge_pivot_{path}_unknown_age"] == 1
+    assert metrics[f"merge_pivot_{path}_unknown_age_events"] == 1
+    for parameter in model.merge_pivot.parameters():
+        assert parameter.grad is None or torch.equal(parameter.grad, torch.zeros_like(parameter.grad))
+
+
+@pytest.mark.parametrize("chunked", [False, True])
+def test_hybrid_score_mixed_certification_and_temporary_veto(chunked):
+    c = torch.tensor([[[-.6, .1], [-.9, .4]]], dtype=torch.float64, requires_grad=True)
+    prefix = torch.tensor([[[-.8, -torch.inf, -.4], [torch.nan] * 3]], dtype=torch.float64,
+                          requires_grad=True)
+    tau = torch.tensor(.7, dtype=torch.float64, requires_grad=True)
+    w = torch.tensor(.4, dtype=torch.float64, requires_grad=True)
+    risk = torch.ones_like(c, dtype=torch.bool)
+    event = torch.zeros_like(risk)
+    event[:, -1] = True
+    eligible = risk.clone()
+    eligible[:, 0, 0] = False  # physical veto preserves this certified posterior
+    values, stats, carry = [], [], None
+    for a, b in ([(0, 1), (1, 2)] if chunked else [(0, 2)]):
+        value, carry, counts = score_chunk(
+            c[:, a:b], tau, risk[:, a:b], event[:, a:b], known_entry=~risk[:, a:b],
+            reset=~risk[:, a:b], eligible=eligible[:, a:b], carry=carry,
+            initial_history=prefix if a == 0 else None, w=w, quadrature_order=64)
+        values.append(value)
+        stats.append(counts)
+    expected = _hybrid_reference(prefix[0, 0], c[0, -1:, 0], tau, w)
+    actual = sum(values)
+    torch.testing.assert_close(actual, expected, atol=1e-6, rtol=0)
+    assert sum(row["unknown_age"] for row in stats) == 1
+    assert sum(row["unknown_age_events"] for row in stats) == 1
+    assert sum(row["positive_mass_events"] for row in stats) == 1
+    assert sum(row["scored_intervals"] for row in stats) == 2
+    assert carry["known"].tolist() == [[True, False]]
+    assert carry["terminal"].all() and not carry["history"].requires_grad
+    assert not torch.isnan(carry["history"]).any()
+    # Even a masked identity's arbitrary finite c must have zero adjoint.
+    gradients = torch.autograd.grad(actual, (c, prefix, tau, w))
+    assert all(torch.isfinite(g).all() for g in gradients)
+    assert torch.equal(gradients[0][..., 1], torch.zeros_like(gradients[0][..., 1]))
+    assert gradients[0][0, 0, 0] == 0
+    assert torch.equal(gradients[1][0, 1], torch.zeros_like(gradients[1][0, 1]))
+
+
+@pytest.mark.parametrize("split", [None, 1, 2], ids=["inside-chunk", "before-reset", "at-reset"])
+@pytest.mark.parametrize("new_known", [False, True], ids=["unknown-birth", "known-birth"])
+def test_hybrid_score_identity_reset_discards_certified_prefix(split, new_known):
+    c = torch.tensor([[[-.6], [-.2], [-.7], [-.9]]], dtype=torch.float64)
+    prefix = torch.tensor([[[-.8, -.4]]], dtype=torch.float64)
+    risk = torch.ones_like(c, dtype=torch.bool)
+    event = torch.zeros_like(risk)
+    event[:, -1] = True
+    reset = torch.zeros_like(risk)
+    reset[:, 2] = True
+    known = torch.zeros_like(risk)
+    known[:, 2] = new_known
+    tau, w = c.new_tensor(.7), c.new_tensor(.4)
+    expected = _hybrid_reference(prefix.flatten(), c[0, :2, 0], tau, w, event=False)
+    if new_known:
+        expected += _hybrid_reference(c.new_empty(0), c[0, 2:, 0], tau, w)
+    carry, values, counts = None, [], []
+    boundaries = [0, 4] if split is None else [0, split, 4]
+    for a, b in zip(boundaries[:-1], boundaries[1:]):
+        value, carry, stats = score_chunk(
+            c[:, a:b], tau, risk[:, a:b], event[:, a:b], known_entry=known[:, a:b],
+            reset=reset[:, a:b], carry=carry, initial_history=prefix if a == 0 else None,
+            w=w, quadrature_order=64)
+        values.append(float(value))
+        counts.append(stats)
+    assert sum(values) == pytest.approx(float(expected), abs=1e-6)
+    assert sum(row["births"] for row in counts) == 2
+    assert sum(row["unknown_age"] for row in counts) == int(not new_known)
+    assert sum(row["unknown_age_events"] for row in counts) == int(not new_known)
+    assert sum(row["scored_intervals"] for row in counts) == (4 if new_known else 2)
+    assert carry["known"].item() == new_known and carry["terminal"].item()
+    assert torch.isneginf(carry["history"][..., :-2]).all()
+    torch.testing.assert_close(carry["history"][..., -2:], c[:, 2:].transpose(1, 2))

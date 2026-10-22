@@ -23,13 +23,13 @@ for _key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
-import numpy as np
-import torch
-from torch import nn
-import torch.nn.functional as F
-from wms.model.merge_core import core_features
-from wms.model.merge_frailty import gauss_hermite
-from wms.train.losses.merge_core import _core_margin
+import numpy as np  # noqa: E402
+import torch  # noqa: E402
+from torch import nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+from wms.model.merge_core import core_features  # noqa: E402
+from wms.model.merge_frailty import gauss_hermite  # noqa: E402
+from wms.train.losses.merge_core import _core_margin  # noqa: E402
 
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 MODELS = ("M0", "M0-refit", "P1", "P1+P2", "P1-P3")
@@ -317,7 +317,9 @@ def geometry(kin, mask, slot):
     return result, physical, "ok" if physical else "target_interval_intersection"
 
 
-def build_dataset(episodes, adapter=None):
+def build_dataset(episodes, adapter=None, *, runtime_risk=None):
+    if runtime_risk is not None and len(episodes) != 1:
+        raise ValueError("runtime_risk is one episode's causal decision mask")
     sequences, exclusions, diagnostics = [], [], []
     for ep in episodes:
         def load(name):
@@ -366,8 +368,14 @@ def build_dataset(episodes, adapter=None):
                 end = start + 1
                 while end < len(times) and mask[end, slot] and vid[end, slot] == vid[start, slot]:
                     end += 1
-                ramp = np.flatnonzero((lane[start:end, slot] == 2) & (kin[start:end, slot, 0] >= 0) &
-                                     (kin[start:end, slot, 0] <= 75.44)) + start
+                observed_risk = ((lane[start:end, slot] == 2) & (kin[start:end, slot, 0] >= 0)
+                                 & (kin[start:end, slot, 0] <= 75.44))
+                if runtime_risk is not None:
+                    causal = np.zeros(end - start, dtype=bool)
+                    stop_risk = min(end, len(times) - 1)
+                    causal[:stop_risk - start] = runtime_risk[start:stop_risk, slot]
+                    observed_risk |= causal
+                ramp = np.flatnonzero(observed_risk) + start
                 if not len(ramp):
                     continue
                 entry = int(ramp[0])
@@ -412,6 +420,11 @@ def build_dataset(episodes, adapter=None):
                     legacy_support.append(bool(lane[row, slot] == 2 and 0 <= kin[row, slot, 0] <= 75.44))
                 event = event_row is not None
                 unknown_age = entry == 0 or (entry == start and kin[entry, slot, 0] > 0)
+                if (runtime_risk is not None and lane[entry, slot] == 2
+                        and kin[entry, slot, 0] < 0):
+                    # Causal motion entered the zone from an observed upstream
+                    # prestate; even row zero observes this identity before risk.
+                    unknown_age = False
                 next_row = terminal + 1
                 kind = ("event" if event else "horizon_censor" if next_row == len(times)-1 and
                         lane[next_row, slot] == 2 else "junction_exit" if lane[next_row, slot] == -1 and
@@ -457,6 +470,8 @@ def pack(sequences):
     for i, s in enumerate(sequences):
         batch["valid"][i, :len(s["times"])] = True
         batch["physical"][i, :len(s["times"])] = torch.tensor(s["physical"])
+        if "lifecycle_active" in s:
+            batch["physical"][i, :len(s["times"])] &= torch.tensor(s["lifecycle_active"])
         batch["legacy_support"][i, :len(s["times"])] = torch.tensor(s.get("legacy_support", [True]*len(s["times"])))
     return batch
 
@@ -663,8 +678,10 @@ def population_cdf(sequences, distributions):
             occurred = s["event"] and s["observed_s"] <= t
             ol.append(float(occurred))
             oh.append(float(occurred or (not s["event"] and t > s["times"][-1])))
-        model_lo.append(float(np.mean(ml))); model_hi.append(float(np.mean(mh)))
-        obs_lo.append(float(np.mean(ol))); obs_hi.append(float(np.mean(oh)))
+        model_lo.append(float(np.mean(ml)))
+        model_hi.append(float(np.mean(mh)))
+        obs_lo.append(float(np.mean(ol)))
+        obs_hi.append(float(np.mean(oh)))
     def bound(low, high, q):
         early = next((t for t, f in zip(grid, high) if f >= q), math.inf)
         late = next((t for t, f in zip(grid, low) if f >= q), math.inf)

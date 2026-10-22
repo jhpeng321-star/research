@@ -30,7 +30,6 @@ import torch
 from wms.data.c4_episodes import EpisodeArrays, read_source_manifest
 from wms.data.recorded_prefix import causal_scene
 from wms.model import ModelSpec, WmSModel
-from wms.model.checkpoint import load_checkpoint
 from wms.model.merge_pivot import log_event_mass, log_survival
 from wms.physics.config import PhysicsConfig
 from wms.train.losses.merge_pivot import (
@@ -108,6 +107,7 @@ def event_details(geo, raw, vid, cav, t, k, params):
                     pre_lane=int(geo["lane"][0, t, j]), front=s, rear=s - length,
                     length=length, v=float(geo["v"][0, t, j]),
                     recorded_pre_front=float(raw[t, j, 0]),
+                    recorded_pre_junction=not bool(raw[t, j, 1:4].sum()),
                     recorded_post_front=float(raw[t + 1, j, 0]),
                     recorded_post_lane=(int(raw[t + 1, j, 1:4].argmax())
                                         if raw[t + 1, j, 1:4].sum() else -1),
@@ -122,6 +122,40 @@ def event_details(geo, raw, vid, cav, t, k, params):
         if j != k and bool(geo["pre_target"][0, t, j])
         and max(ego["rear"], float(geo["s"][0, t, j] - geo["length"][0, t, j]))
         < min(ego["front"], float(geo["s"][0, t, j]))]
+    targets = [vehicle(j) for j in range(raw.shape[1])
+               if j != k and bool(geo["pre_target"][0, t, j])]
+    d["all_pre_target_neighbours"] = targets
+    recorded_intersections = []
+    for other in targets:
+        j = other["slot"]
+        if vid[t + 1, j] != vid[t, j]:
+            continue
+        es, bs = ego["recorded_post_front"], other["recorded_post_front"]
+        overlap = min(es, bs) - max(es - ego["length"], bs - other["length"])
+        if overlap > 0:
+            recorded_intersections.append({**other, "recorded_overlap_m": overlap})
+    d["diagnostic_recorded_motion_pre_lanes_intersections"] = recorded_intersections
+    d["contract"] = dict(bumper="front; body=[s-length,s]; strict intersection >0",
+                          projection="recorded lane-chain s; junction s carried, not interpolated",
+                          neighbour_set="all pre-change target occupants including CAVs and side-by-side",
+                          substep="one frozen WM longitudinal update then current CAV execution before LC commit",
+                          dt_s=.5, future_motion_use="diagnostic only")
+    if not d["scene_valid"]:
+        cause = "unobserved_scene"
+    elif not d["ramp"]:
+        cause = "wm_motion_outside_decision_zone"
+    elif d["reservation_veto"]:
+        cause = "simultaneous_reservation"
+    elif not recorded_intersections:
+        cause = "wm_motion_only_intersection"
+    elif any(v["recorded_pre_junction"] or v["recorded_post_lane"] == -1
+             for v in recorded_intersections):
+        cause = "junction_projection_unresolved"
+    elif any(v["recorded_post_lane"] != v["pre_lane"] for v in recorded_intersections):
+        cause = "outgoing_target_substep_unverified"
+    else:
+        cause = "recorded_projected_intersection_unresolved"
+    d["veto_cause"] = cause
     v = float(geo["v"][0, t, k])
     for side in ("f", "l"):
         other = float(geo["v_" + side][0, t, k])
@@ -154,7 +188,8 @@ def diagnose(rows):
 
 
 @torch.no_grad()
-def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=None):
+def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=None,
+                  geometry_override=None):
     raw = np.asarray(ep.array("veh_kin"), np.float32)
     present_np = np.asarray(ep.array("veh_mask"), bool)
     cont_np = np.asarray(ep.array("target_mask")[:len(raw) - 1], bool)
@@ -173,8 +208,8 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
         ("controller", "controller"), ("acceleration_mps2", "issued_acceleration_mps2"),
         ("target_speed_mps", "issued_target_speed_mps"))}
     timeline["control_dt_s"] = 1.
-    geo = None
-    if cache is not None:
+    geo = geometry_override
+    if cache is not None and geo is None:
         digest = hashlib.sha256()
         for tensor in (*model.state_dict().values(), rec, present, cav, cont,
                        *(val for val in timeline.values() if torch.is_tensor(val))):
@@ -318,6 +353,8 @@ def main(argv=None):
     parser.add_argument("--source", action="append", required=True, metavar="NAME=DIR")
     parser.add_argument("--max-episodes", type=int)
     parser.add_argument("--checkpoint", type=local_path)
+    parser.add_argument("--physics", type=local_path)
+    parser.add_argument("--allow-unverified-physics", action="store_true")
     parser.add_argument("--output", type=local_path, default=ROOT / "_out/r9_support_audit")
     parser.add_argument("--window-s", type=float, default=120.)
     parser.add_argument("--start-s", type=float)
@@ -328,19 +365,16 @@ def main(argv=None):
     torch.set_num_threads(args.threads)
     torch.manual_seed(0)
     if args.checkpoint:
-        # Avoid implicit sidecar access: explicit physics is used unless embedded.
-        payload = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
-        physics = payload.get("config", {}).get("physics")
-        if not physics:
-            sidecar = local_path(args.checkpoint.with_name("physics.json"))
-            if not sidecar.is_file():
-                parser.error("checkpoint needs embedded physics or workspace-local physics.json")
-            physics = json.loads(sidecar.read_text(encoding="utf-8"))
-        local_path(args.checkpoint.with_name("lane_calib.json"))
-        loaded = load_checkpoint(args.checkpoint, physics=physics,
-                                 model_config={"merge_decision": "first_passage"})
-        model, identity = loaded.model, dict(checkpoint_sha256=loaded.sha256,
-                                            initialization="checkpoint")
+        sys.path.insert(0, str(ROOT))
+        from tools import r9_exact, r9_runtime
+        physics = None if args.physics is None else json.loads(args.physics.read_text(encoding="utf-8"))
+        frozen = r9_exact.load_frozen(args.checkpoint, physics=physics)
+        if not frozen.metadata["physics_confirmed"] and not args.allow_unverified_physics:
+            parser.error("checkpoint needs authoritative physics or --allow-unverified-physics for diagnostics")
+        model = r9_runtime.runtime_model(frozen)
+        identity = dict(checkpoint_sha256=frozen.metadata["sha256"], initialization="checkpoint",
+                        qualification=False, physics_confirmed=frozen.metadata["physics_confirmed"],
+                        replay_engine="shared_runtime_causal")
     else:
         model = WmSModel(ModelSpec(rollout_mode="hybrid", lane_model="hazard_v5",
                                   merge_decision="first_passage"), physics=PhysicsConfig()).eval()
@@ -368,9 +402,14 @@ def main(argv=None):
                 from wms.data.c4_episodes import ARRAYS, QUEUE_ARRAYS
                 for array in (*ARRAYS, *QUEUE_ARRAYS):
                     local_path(directory / (array + ".npy"))
+                shared = None
+                if args.checkpoint:
+                    loaded = r9_runtime.load_scene(directory)
+                    shared = r9_runtime.cached_prepare(frozen, loaded, ROOT / "results/r9_runtime_cache")
                 found, summary = audit_episode(model, EpisodeArrays(directory), entry, name,
-                                               args.window_s, args.start_s,
-                                               cache=args.output / ".replay_cache")
+                                                args.window_s, args.start_s,
+                                                cache=args.output / ".replay_cache" if shared is None else None,
+                                                geometry_override=None if shared is None else shared["geometry"])
                 rows.extend(found)
                 counts.update(summary)
         if not counts["episodes"]:
