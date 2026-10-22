@@ -92,7 +92,8 @@ class FirstPassageNet(nn.Module):
 
 def geometry(kin: Tensor, present: Tensor, physics,
              decision_mask: Optional[Tensor] = None,
-             fixed_target: Optional[Tensor] = None) -> dict[str, Tensor]:
+             fixed_target: Optional[Tensor] = None,
+             route_shift: Optional[Tensor] = None) -> dict[str, Tensor]:
     """Full-scene neighbors, exact overlap veto and latent-independent reservations.
 
     Touching bumpers are physically eligible but constrain the learned boundary
@@ -102,6 +103,12 @@ def geometry(kin: Tensor, present: Tensor, physics,
     of physical vetoes, for lifecycle tracking.
     ``decision_mask`` excludes nonlearned candidates from opportunity allocation;
     ``fixed_target`` marks immutable target occupancy from current actions only.
+    ``route_shift`` (``wms.data.route_frame``) converts the collapsed pack-frame ``s`` of
+    each vehicle to the lossless route coordinate ``x = s + shift`` in which bodies
+    ``[x - length, x]``, gaps and overlaps are evaluated; it is the PRE-state shift
+    carried along the single longitudinal update.  ``None`` keeps the pack line
+    (WM rollout states, which are a junction-free line).  Returned ``s`` is always the
+    pack value; ``route_s`` is the coordinate that the overlap veto used.
     """
     present = present.bool()
     observed = (torch.isfinite(kin).all(-1) & (kin[..., 1:4].sum(-1) > 0.0)
@@ -109,6 +116,11 @@ def geometry(kin: Tensor, present: Tensor, physics,
     scene_valid = (~present | observed).all(-1, keepdim=True)
     safe = torch.where((present & observed).unsqueeze(-1), kin, torch.zeros_like(kin))
     s, v, length = safe[..., 0], safe[..., 4], safe[..., 6]
+    pack_s = s
+    if route_shift is not None:
+        shift = torch.where(present & observed & torch.isfinite(route_shift),
+                            route_shift, torch.zeros_like(route_shift))
+        s = s + shift.to(s.dtype)
     # Risk membership uses route/position observations, independently of a
     # missing speed/acceleration.  A temporary observation veto is not an exit.
     route = kin[..., 1:4]
@@ -118,8 +130,11 @@ def geometry(kin: Tensor, present: Tensor, physics,
     target_lane = int(getattr(physics, "merge_target_lane", 1))
     start = float(getattr(physics, "merge_zone_s0_m", 0.0))
     end = float(physics.merge_zone_s1_m)
+    # Zone membership is a merge-edge coordinate: the route coordinate, so that a
+    # vehicle inside a junction (stale pack ``s``) neither enters nor leaves the zone.
+    zone_x = kin[..., 0] if route_shift is None else kin[..., 0] + torch.nan_to_num(route_shift)
     ramp = (present & route_valid & (lane == ramp_lane) & torch.isfinite(kin[..., 0])
-            & (kin[..., 0] >= start) & (kin[..., 0] <= end))
+            & (zone_x >= start) & (zone_x <= end))
     target = present & observed & (lane == target_lane)
     ds = s.unsqueeze(-1) - s.unsqueeze(-2)  # ego front - other front
     k = s.shape[-1]
@@ -155,7 +170,7 @@ def geometry(kin: Tensor, present: Tensor, physics,
     blocker_index = (blocker.long().argmax(-1) if k else
                      torch.zeros_like(s, dtype=torch.long))
     fixed_index = incoming.long().argmax(-1) if k else torch.zeros_like(blocker_index)
-    out = {"v": v, "s": s, "length": length, "lane": lane, "pre_target": target,
+    out = {"v": v, "s": pack_s, "route_s": s, "length": length, "lane": lane, "pre_target": target,
            "scene_valid": scene_valid.expand_as(present),
            "overlap_index": torch.where(overlap, blocker_index, -torch.ones_like(blocker_index)),
            "fixed_overlap_index": torch.where(incoming_overlap, fixed_index,

@@ -1520,7 +1520,7 @@ class WmSModel(nn.Module):
         return out
 
     def pivot_decision_geometry(self, state, accel, *, next_s=None, next_v=None,
-                                fixed_next_lane=None):
+                                fixed_next_lane=None, route_shift=None):
         """P1 LC substep shared by deployment and recorded causal replay.
 
         Decision is after the single trapezoid/stop-time longitudinal update and
@@ -1539,7 +1539,7 @@ class WmSModel(nn.Module):
         fixed_target = (None if fixed_next_lane is None else
                         present & cav & (fixed_next_lane == int(self.physics.merge_target_lane)))
         return pivot.geometry(moved, present, self.physics, decision_mask=~cav,
-                              fixed_target=fixed_target)
+                              fixed_target=fixed_target, route_shift=route_shift)
 
     def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform):
         kin = state_kin(state)
