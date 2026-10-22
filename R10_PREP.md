@@ -25,7 +25,15 @@ root by d679c0e6 (R9A) in the base: tests/test_merge_core_v2_config.py passes un
 - Config hooks (settings/compose/legacy flat) were already in the merged branch.
 
 ## 3. Tests (CPU, Python = rl_driving env, PYTHONPATH=src:.)
-@@TESTS@@
+Env: `C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest ... -q -p no:cacheprovider` from the worktree, PYTHONPATH=src:. All runs on 2026-10-22.
+1. `tests/test_cutin_reaction.py tests/test_r10_config.py tests/test_merge_context.py tests/test_merge_core.py tests/test_merge_core_v2_onpolicy.py tests/test_merge_core_v2_seqtf.py tests/test_merge_core_v2_config.py` (deselect `test_r10_config.py::test_cutin_weight_comes_from_the_documented_rule_file`, run separately below): **106 passed**.
+   New in this task: 6 cut-in tests (grad-step truncation, checkpoint equivalence, runner history hook + telemetry, no_grad skip, fail-closed leader_change_features) and 5 config-pin tests (tests/test_r10_config.py).
+2. `tests/test_merge_pivot.py tests/test_merge_pivot_hybrid.py tests/test_merge_pivot_pre_window.py tests/test_merge_pivot_runtime.py tests/test_merge_pivot_training.py tests/test_r9_support_audit.py`: **225 passed**.
+   `tests/test_r9_exact.py tests/test_r9_fit_exact.py tests/test_r9_runtime.py`: **83 passed** once `data/r9_train/wm_s_stage300.pt` and the one episode `v5_native/episodes/w963004m1900p40t300__native` are present inside the worktree (they are gitignored data, copied read-only from c4-v10r9fix; without them 69 tests ERROR with FileNotFoundError, which is an environment gap of the round-9 tests, not a regression).
+3. `tests/unit/config tests/unit/train tests/unit/test_c4_slowres.py tests/unit/test_wmloss.py tests/unit/test_wmlane.py`: **274 passed**.
+4. `tests/equivalence`: **60 passed, 16 skipped** (skips are pre-existing golden/checkpoint-availability skips in that suite, untouched).
+5. `tests/test_r10_config.py::test_cutin_weight_comes_from_the_documented_rule_file`: passes with the provisional weight file (5 passed in tests/test_r10_config.py in total).
+`ruff check` on every file I touched (unroll.py, cutin_reaction.py, tools/r10_*.py): clean.
 
 ## 4. Component attribution (tools/r10_attribution.py; json: tmp_r10/attr_r9.json, copy in the astra packet)
 740 insertions / 164 windows (16 local episodes, all manifest-role `val` of the round-8 TRAIN split, i.e. not fit by round 8),
