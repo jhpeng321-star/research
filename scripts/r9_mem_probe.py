@@ -43,7 +43,8 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     try:
         parts = self.forward_backward(batch, unroll_steps=unroll_steps, truncation_steps=truncation_steps)
     except torch.cuda.OutOfMemoryError as e:
-        parts, err = {}, "CUDA_OOM: " + str(e)[:300]
+        import traceback; parts, err = {}, "CUDA_OOM: " + str(e)[:300] + " || " + " | ".join(l.strip().replace("
+", " ") for l in traceback.format_tb(e.__traceback__)[-9:])
     if dev.type == "cuda":
         torch.cuda.synchronize(dev)
     row = dict(step=done["n"], unroll_steps=unroll_steps, truncation_steps=truncation_steps,
