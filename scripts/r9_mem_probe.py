@@ -36,6 +36,8 @@ calls = {"n": 0, "nonfinite": 0}
 def call(self, ctx):
     b = _orig_call(self, ctx)
     calls["n"] += 1
+    if os.environ.get("R9_PROBE_COMPARE") == "1" and os.environ.get("R9_PROBE_MASK") != "1":
+        return b
     if not b.total.requires_grad:   # PROBE ONLY: chunks without a scored merge term still run a backward
         anchor = sum(p.sum() for p in ctx.targets.prepared["merge_pivot"]["model"].merge_pivot.parameters())
         b.total = b.total + 0.0 * anchor
@@ -90,38 +92,74 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
         os._exit(0)
     return {**parts, "seconds": row["seconds"], "finite": True}
 
+cmpstat = {"tried": 0, "compared": 0, "skipped_nonfinite_zero_mass": 0, "skipped_no_scored_term": 0, "true_oom": 0}
 def train_batch_compare(self, batch, *, unroll_steps, truncation_steps=None):
-    # PROBE ONLY: same batch and RNG, merge_pivot_state_st True vs False -> loss totals and merge_pivot grads.
+    # PROBE ONLY: same batch and RNG with merge_pivot_state_st False vs True. Batches whose loss is non-finite
+    # (zero-mass events) or that have no scored merge term are SKIPPED and counted, never masked.
+    cmpstat["tried"] += 1
     res = {}
     names = [n for n, p in self.model.named_parameters() if p.requires_grad]
-    for flag in (True, False):
-        object.__setattr__(self.model.spec, "merge_pivot_state_st", flag)
+    skip = None
+    for flag in (False, True):
+        if os.environ.get("R9_PROBE_KIND") == "ckf":
+            self.model.checkpoint_forward = flag
+        else:
+            object.__setattr__(self.model.spec, "merge_pivot_state_st", flag)
         totals.clear(); torch.manual_seed(4321)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(4321); torch.cuda.reset_peak_memory_stats()
         self.optimizer.zero_grad(set_to_none=True)
         try:
             self.forward_backward(batch, unroll_steps=unroll_steps, truncation_steps=truncation_steps)
-        except RuntimeError as e:
-            if 'does not require grad' not in str(e):
+        except torch.cuda.OutOfMemoryError:
+            if flag:
+                cmpstat["true_oom"] += 1; skip = "true_oom"
+            else:
                 raise
-        grads = {n: (p.grad.detach().clone() if p.grad is not None else None)
-                 for n, p in self.model.named_parameters() if p.requires_grad}
-        res[flag] = dict(totals=list(totals), grads=grads,
+            break
+        except RuntimeError as e:
+            m = str(e)
+            if "non-finite first_passage loss" in m or "non-finite WM-S loss" in m:
+                skip = "skipped_nonfinite_zero_mass"
+            elif "does not require grad" in m:
+                skip = "skipped_no_scored_term"
+            else:
+                raise
+            cmpstat[skip] += 1
+            break
+        res[flag] = dict(totals=list(totals),
+                         grads={n: (p.grad.detach().clone() if p.grad is not None else None)
+                                for n, p in self.model.named_parameters() if p.requires_grad},
                          peak_mb=(torch.cuda.max_memory_allocated() / 2**20 if torch.cuda.is_available() else None))
-    row = dict(step=done["n"], mode="compare", totals_true=res[True]["totals"], totals_false=res[False]["totals"],
-               peak_true_mb=res[True]["peak_mb"], peak_false_mb=res[False]["peak_mb"], grads={})
-    for n in names:
-        a, b = res[True]["grads"][n], res[False]["grads"][n]
-        if a is None or b is None:
-            row["grads"][n] = dict(true=None if a is None else float(a.norm()), false=None if b is None else float(b.norm()))
-        else:
-            row["grads"][n] = dict(true_norm=float(a.norm()), false_norm=float(b.norm()), diff_norm=float((a - b).norm()),
-                                   rel_diff=float((a - b).norm() / a.norm().clamp_min(1e-300)))
-    with open(OUT, "a") as f:
-        f.write(json.dumps(row) + chr(10))
-    done["n"] += 1
-    if done["n"] >= STEPS:
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+    if skip is None:
+        cmpstat["compared"] += 1
+        row = dict(mode="compare", batch_try=cmpstat["tried"], unroll_steps=unroll_steps, truncation_steps=truncation_steps,
+                   totals_true=res[True]["totals"], totals_false=res[False]["totals"],
+                   max_abs_total_diff=max(abs(x - y) for x, y in zip(res[True]["totals"], res[False]["totals"])),
+                   peak_true_mb=res[True]["peak_mb"], peak_false_mb=res[False]["peak_mb"], grads={})
+        va, vb = [], []
+        for n in names:
+            a, b = res[True]["grads"][n], res[False]["grads"][n]
+            if a is None or b is None:
+                row["grads"][n] = dict(true=None if a is None else float(a.norm()), false=None if b is None else float(b.norm()))
+                continue
+            a, b = a.double().flatten(), b.double().flatten(); va.append(a); vb.append(b)
+            na, nb = float(a.norm()), float(b.norm())
+            row["grads"][n] = dict(true_norm=na, false_norm=nb, cosine=float(a @ b) / max(na * nb, 1e-300),
+                                   rel_diff=float((a - b).norm()) / max(na, 1e-300),
+                                   max_abs_diff=float((a - b).abs().max()), max_abs=float(a.abs().max()))
+        if va:
+            A, B = torch.cat(va), torch.cat(vb)
+            row["global"] = dict(true_norm=float(A.norm()), false_norm=float(B.norm()),
+                                 cosine=float(A @ B) / max(float(A.norm()) * float(B.norm()), 1e-300),
+                                 rel_diff=float((A - B).norm()) / max(float(A.norm()), 1e-300))
+        with open(OUT, "a") as f:
+            f.write(json.dumps(row) + chr(10))
+    with open(OUT + ".summary.json", "w") as f:
+        json.dump(dict(cmpstat, last_skip=skip), f)
+    done["n"] = cmpstat["compared"]
+    if cmpstat["compared"] >= STEPS or cmpstat["tried"] >= int(os.environ.get("R9_PROBE_MAXTRY", "40")):
         os._exit(0)
     return {"seconds": 0.0, "finite": True}
 totals = []
