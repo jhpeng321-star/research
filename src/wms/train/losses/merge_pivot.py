@@ -15,7 +15,7 @@ import torch
 from torch import Tensor
 
 from wms.model.merge_pivot import (advance_longitudinal, geometry, hybrid_log_masses,
-                                  log_event_mass, log_survival, ramp_lane_end_stop)
+                                  log_event_mass, log_survival, ramp_lane_end_stop, close_risk)
 
 from .base import LossContext, LossTerm, TermValue, UnrollTargets
 
@@ -489,11 +489,12 @@ def build_pre_window_history(model, inp, cfg: MergePivotConfig) -> list[Optional
                                  observed_hist_mask=observed_mask, action_timeline=timeline,
                                  controller_id=None)
         geo = build_recorded_geometry(model, source, SimpleNamespace(n_steps=h))
-        result.append(certify_pre_window(rec, present, cont, geo, cfg))
+        result.append(certify_pre_window(rec, present, cont, geo, cfg,
+                                         retain=bool(getattr(model.physics, "ramp_risk_retain", False))))
     return result
 
 
-def certify_pre_window(rec, present, cont, geo, cfg):
+def certify_pre_window(rec, present, cont, geo, cfg, retain=False):
     """Certify a causal prefix; also usable with a once-replayed audit episode.
 
     The last recorded row is the t0 anchor. Geometry ends strictly before it.
@@ -504,6 +505,11 @@ def certify_pre_window(rec, present, cont, geo, cfg):
     pre_risk = (present & lane_valid & (lane == cfg.merge_lane)
                 & (rec[..., 0] >= cfg.zone_s0_m) & (rec[..., 0] <= cfg.zone_s1_m))
     risk = geo["ramp"] | pre_risk[:, :-1]
+    if retain:  # physics.ramp_risk_retain: same chain bookkeeping as MergePivotTerm.prepare
+        pre_open = present & lane_valid & (lane == cfg.merge_lane) & (rec[..., 0] <= cfg.zone_s1_m)
+        breaks = torch.cat((torch.zeros_like(present[:, :1]),
+                            ~(cont[:, :h - 1] & present[:, :h - 1] & present[:, 1:h])), 1)[:, :h]
+        risk = close_risk(risk, geo["ramp_open"] | pre_open[:, :-1], breaks)
     event = (present[:, :-1] & present[:, 1:] & cont
              & (lane[:, :-1] == cfg.merge_lane) & (lane[:, 1:] == cfg.target_lane))
     scene_ok = ((~present | (torch.isfinite(rec).all(-1) & lane_valid)).all(-1))
@@ -607,6 +613,12 @@ class MergePivotTerm(LossTerm):
         risk = (geo["ramp"] | pre_risk[:, :n] | event) & own
         reset = torch.cat((torch.zeros_like(present[:, :1]),
                            present[:, 1:n] & ~present[:, :n - 1]), 1)
+        if getattr(model.physics, "ramp_risk_retain", False):
+            # R9LANE2: a started chain on the ramp lane before its end survives a tick whose
+            # WM-predicted position dips below the zone start (crawling queue head).
+            pre_open = (present & (rec[..., 1:4].sum(-1) > 0) & (lane == self.cfg.merge_lane)
+                        & (rec[..., 0] <= self.cfg.zone_s1_m))
+            risk = close_risk(risk, (geo["ramp_open"] | pre_open[:, :n]) & own, reset)
         # Recorded merges that are vetoed by P1 although SUMO executed them legally
         # (same-step sequential lane change of a leader, internal-junction occupant) are
         # excluded WITH their whole risk sequence; every other veto stays a zero-mass

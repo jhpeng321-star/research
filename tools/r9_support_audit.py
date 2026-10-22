@@ -268,6 +268,14 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
     own = ~cav[:, :-1]
     risk = (geo["ramp"] | pre_risk[:, :-1] | events) & own
     n = c.shape[1]
+    retain = bool(getattr(model.physics, "ramp_risk_retain", False))
+    if retain:  # same chain bookkeeping as MergePivotTerm.prepare / the fitter
+        from wms.model.merge_pivot import close_risk
+        pre_open = (present & (rec[..., 1:4].sum(-1) > 0) & (lane == cfg.merge_lane)
+                    & (rec[..., 0] <= cfg.zone_s1_m))
+        breaks = torch.cat((torch.zeros_like(present[:, :1]),
+                            ~cont[:, :n - 1] | ~present[:, :n - 1]), 1)[:, :n]
+        risk = close_risk(risk, (geo["ramp_open"] | pre_open[:, :-1]) & own, breaks)
     # The same P1-unrepresentable classification and sequence exclusion as the likelihood
     # (MergePivotTerm.prepare): explained events leave scoring WITH their whole sequence.
     verdict = classify_vetoed_events(geo, events & own, target_lane=cfg.target_lane)
@@ -295,7 +303,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
         if lo:
             prefix_geo = {key: val[:, :lo] for key, val in geo.items()}
             history = certify_pre_window(rec[:, :lo + 1], present[:, :lo + 1],
-                                         cont[:, :lo], prefix_geo, cfg)
+                                         cont[:, :lo], prefix_geo, cfg, retain=retain)
             initial = pre_window_maximum(model, [history], c[:, 0])
         kw = dict(risk=risk[:, lo:hi], event=events[:, lo:hi] & own[:, lo:hi],
                   reset=reset, eligible=geo["eligible"][:, lo:hi])

@@ -37,7 +37,7 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
                      "mainline_lane_mode": ("free", "courtesy")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
-                              "merge_impatience", "lane_learnable", "ramp_lane_end_stop")
+                              "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -68,6 +68,10 @@ class PhysicsOptions:
     """R9LANE (2026-10-22, default false = bit-identical): a ramp-lane car is never moved past the
     real lane end ``merge_zone_s1_m`` (held there at speed 0 unless it changes lanes that step;
     ``wms.physics.config.PhysicsConfig.ramp_lane_end_stop``)."""
+    ramp_risk_retain: bool = False
+    """R9LANE2 (2026-10-22, default false = bit-identical): a started merge-risk chain survives a
+    zone-start-boundary flicker of a car still on the ramp lane
+    (``wms.physics.config.PhysicsConfig.ramp_risk_retain``)."""
     mainline_lane_mode: str = "free"
     """V10LANEOPT (2026-10-19, default 'free' = current behaviour, ``lane_learnable`` only):
     staged mainline lane changes.  'courtesy' keeps merges fully learned and allows only the

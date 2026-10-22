@@ -397,6 +397,14 @@ def attach_episode(sequences, cache):
                          & (moved[:, 0] >= physics['merge_zone_s0_m'])
                          & (moved[:, 0] <= physics['merge_zone_s1_m']))
         causal_risk = post_risk | pre_risk
+        if physics.get('ramp_risk_retain', False) and 'geometry' in cache:
+            # R9LANE2: the same chain rule as MergePivotTerm.prepare / the audit - a started
+            # chain on the ramp lane before its end is not terminated by a zone-start flicker.
+            pre_open = ((kin[:, 1:4].sum(-1) > 0)
+                        & (kin[:, 1:4].argmax(-1) == physics['merge_lane'])
+                        & (kin[:, 0] <= physics['merge_zone_s1_m']))
+            post_open = cache['geometry']['ramp_open'][0, entry:stop, slot]
+            causal_risk = causal_risk | pre_open | post_open
         seq['lifecycle_active'] = causal_risk.long().cumprod(0).bool().tolist()
         seq['absorbed_before_event'] = bool(seq['event'] and not seq['lifecycle_active'][-1])
         flags = cache.get('geometry_flags')

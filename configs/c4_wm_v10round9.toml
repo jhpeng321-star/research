@@ -19,6 +19,8 @@ merge_end_wait = false
 # R9LANE (owner-approved 2026-10-22): SUMO never moves a ramp-lane car past its lane end
 # (merge_zone_s1_m); code default stays false.
 ramp_lane_end_stop = true
+# R9LANE2: a started risk chain survives a zone-start flicker of a crawling queue head.
+ramp_risk_retain = true
 
 [loss.merge_core]
 version = 2

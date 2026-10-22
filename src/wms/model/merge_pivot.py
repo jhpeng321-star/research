@@ -135,6 +135,11 @@ def geometry(kin: Tensor, present: Tensor, physics,
     zone_x = kin[..., 0] if route_shift is None else kin[..., 0] + torch.nan_to_num(route_shift)
     ramp = (present & route_valid & (lane == ramp_lane) & torch.isfinite(kin[..., 0])
             & (zone_x >= start) & (zone_x <= end))
+    # Same lane and end test WITHOUT the start bound: the car is still on the ramp lane,
+    # on or before the lane end.  Only used to keep an already started risk chain alive
+    # (``ramp_risk_retain``); it never makes a car eligible.
+    ramp_open = (present & route_valid & (lane == ramp_lane) & torch.isfinite(kin[..., 0])
+                 & (zone_x <= end))
     target = present & observed & (lane == target_lane)
     ds = s.unsqueeze(-1) - s.unsqueeze(-2)  # ego front - other front
     k = s.shape[-1]
@@ -176,7 +181,7 @@ def geometry(kin: Tensor, present: Tensor, physics,
            "fixed_overlap_index": torch.where(incoming_overlap, fixed_index,
                                                 -torch.ones_like(fixed_index)),
            "fixed_overlap": incoming_overlap,
-           "ramp": ramp, "overlap": overlap,
+           "ramp": ramp, "ramp_open": ramp_open, "overlap": overlap,
            "physical_eligible": physical, "reservation_veto": physical & ~reserved,
            "eligible": reserved}
     for side, mask, distance in (
@@ -558,9 +563,31 @@ def ramp_lane_end_stop(kin: Tensor, next_s: Tensor, next_v: Tensor, present: Ten
             torch.where(stopped, torch.zeros_like(next_v), next_v), stopped)
 
 
+def close_risk(risk: Tensor, ramp_open: Tensor, reset: Optional[Tensor] = None) -> Tensor:
+    """Keep a started risk chain alive while the car is still on the ramp lane before its end.
+
+    ``risk`` / ``ramp_open`` / ``reset`` are ``[B, T, K]`` booleans (``reset`` = a fresh
+    identity starts at that tick).  A chain that has started at some tick stays at risk on later
+    ticks where ``ramp_open`` holds even if ``risk`` is momentarily false.  The WM-predicted
+    next position of a car crawling across the zone start (route x = ``merge_zone_s0_m``, the
+    end of the 2.93 m junction) jitters around 0 while its true route x is monotone; such a tick
+    is not a physical zone exit, so it must not be an absorbing risk exit.  Real exits (lane change,
+    passing the lane end, absence, a new identity) still end the chain.  No constants.
+    """
+    out = risk.clone()
+    active = risk[:, 0]
+    for t in range(1, risk.shape[1]):
+        keep = ramp_open[:, t] & active
+        if reset is not None:
+            keep = keep & ~reset[:, t]
+        active = risk[:, t] | keep
+        out[:, t] = active
+    return out
+
+
 def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
                  carry: Optional[Mapping[str, Tensor]] = None,
-                 identity: Optional[Tensor] = None,
+                 identity: Optional[Tensor] = None, retain: Optional[Tensor] = None,
                   uniform: Optional[Tensor] = None, w: Optional[Tensor] = None,
                   epsilon_uniform: Optional[Tensor] = None,
                   quadrature_order: int = 32) -> dict[str, Tensor]:
@@ -594,6 +621,10 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
         keep = keep & (identity == old_identity)
     started = keep & carry.get("started", torch.zeros_like(present)).bool()
     terminal = keep & carry.get("terminal", torch.zeros_like(present)).bool()
+    if retain is not None:
+        # ``close_risk`` for the online path: a started, non-terminal chain stays at risk
+        # while the car is still on the ramp lane before its end (``geo['ramp_open']``).
+        ramp = ramp | (retain.bool() & started & ~terminal)
     terminal = terminal | (started & ~ramp)
     z = torch.where(keep, carry.get("z", torch.zeros_like(c)), torch.zeros_like(c))
     maximum = torch.where(keep, carry.get("maximum", torch.full_like(c, -torch.inf)),
@@ -730,5 +761,5 @@ def resolve_conflicts(kin: Tensor, present: Tensor, current_lane: Tensor,
 
 
 __all__ = ["FirstPassageNet", "geometry", "log_survival", "log_event_mass",
-           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal", "ramp_lane_end_stop",
+           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal", "ramp_lane_end_stop", "close_risk",
            "update_state", "hard_st", "resolve_conflicts"]

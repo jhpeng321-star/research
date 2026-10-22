@@ -1580,6 +1580,8 @@ class WmSModel(nn.Module):
                                       params["tau"].detach() if hybrid else params["tau"],
                                       geo["ramp"] & own, present,
                                       carry=carry, identity=identity, uniform=uniform,
+                                      retain=(geo["ramp_open"] & own if getattr(
+                                          self.physics, "ramp_risk_retain", False) else None),
                                       w=params["w"].detach() if hybrid else None,
                                       quadrature_order=self.spec.merge_quadrature_order)
         crossing = updated["cross"] & ramp

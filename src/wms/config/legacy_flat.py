@@ -235,6 +235,7 @@ FLAT_TO_PATH: dict[str, str] = {
     # V10UNBLOCK (physical envelope + all-risk lane learning)
     "lane_learnable": "physics.lane_learnable",
     "ramp_lane_end_stop": "physics.ramp_lane_end_stop",
+    "ramp_risk_retain": "physics.ramp_risk_retain",
     # V10LANEOPT (staged mainline lane changes under lane_learnable)
     "mainline_lane_mode": "physics.mainline_lane_mode",
     "mainline_courtesy_zone_m": "physics.mainline_courtesy_zone_m",
@@ -412,6 +413,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "stop_time_integration", "emergency_decel_mps2", "exit_at_road_end",
     "lane_conflict_resolve",
     "merge_end_wait", "mainline_merge_yield", "lane_learnable", "ramp_lane_end_stop",
+    "ramp_risk_retain",
     "mainline_lane_mode", "mainline_courtesy_zone_m",
     # V7FT
     "merge_loss_speed_weight",
