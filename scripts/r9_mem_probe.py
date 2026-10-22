@@ -42,8 +42,10 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     err = None
     try:
         parts = self.forward_backward(batch, unroll_steps=unroll_steps, truncation_steps=truncation_steps)
-    except torch.cuda.OutOfMemoryError as e:
-        import traceback; parts, err = {}, "CUDA_OOM: " + str(e)[:300] + " || " + " | ".join(" ".join(l.split()) for l in traceback.format_tb(e.__traceback__)[-9:])
+    except RuntimeError as e:   # CUDA OOM, or a batch without any scored merge term (no grad_fn): memory still recorded
+        if not isinstance(e, torch.cuda.OutOfMemoryError) and 'does not require grad' not in str(e):
+            raise
+        import traceback; parts, err = {}, ("CUDA_OOM: " if isinstance(e, torch.cuda.OutOfMemoryError) else "NOGRAD: ") + str(e)[:300] + " || " + " | ".join(" ".join(l.split()) for l in traceback.format_tb(e.__traceback__)[-9:])
     if dev.type == "cuda":
         torch.cuda.synchronize(dev)
     row = dict(step=done["n"], unroll_steps=unroll_steps, truncation_steps=truncation_steps,
@@ -58,7 +60,7 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     with open(OUT, "a") as f:
         f.write(json.dumps(row) + "\n")
     done["n"] += 1
-    if err or done["n"] >= STEPS:
+    if (err and err.startswith("CUDA_OOM")) or done["n"] >= STEPS:
         os._exit(0)
     return {**parts, "seconds": row["seconds"], "finite": True}
 WmSTrainer.train_batch = train_batch
