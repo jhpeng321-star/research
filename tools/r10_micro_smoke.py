@@ -17,6 +17,7 @@ import argparse
 import json
 import math
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -93,7 +94,9 @@ def main(argv=None):
     results = []
     for step in range(args.steps):
         chosen = rng.choice(len(picked), size=args.batch, replace=False)
+        t_data = time.time()
         batch = collate([picked[i][0][picked[i][1]] for i in chosen])
+        print(f"batch built in {time.time() - t_data:.0f}s", flush=True)
         record = trainer.train_batch(batch, unroll_steps=args.horizon_steps,
                                      truncation_steps=args.horizon_steps)
         record.update(stage_s=args.horizon_steps * 0.5, step=step + 1)
