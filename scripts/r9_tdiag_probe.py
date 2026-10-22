@@ -165,6 +165,11 @@ def geo_wrap(kin, present, physics, decision_mask=None, fixed_target=None, route
             GEO["reasons"]["nonfinite"] += int((pr & ~fin).sum())
             GEO["reasons"]["no_lane"] += int((pr & fin & (kin[..., 1:4].sum(-1) <= 0)).sum())
             GEO["reasons"]["len0"] += int((pr & fin & (kin[..., 6] <= 0)).sum())
+            bad_slots = torch.nonzero(pr & fin & (kin[..., 6] <= 0))
+            ex = GEO.setdefault("len0_examples", [])
+            for bb, kk in bad_slots[:3].tolist():
+                if len(ex) < 12:
+                    ex.append(dict(call=GEO["calls"], b=bb, k=kk, s=float(kin[bb, kk, 0]), v=float(kin[bb, kk, 4]), lane=kin[bb, kk, 1:4].tolist(), length=float(kin[bb, kk, 6])))
             ramp = out["ramp"]
             GEO["ramp_cars"] += int(ramp.sum()); GEO["ramp_scene_invalid"] += int((ramp & ~out["scene_valid"]).sum())
             GEO["ramp_overlap"] += int((ramp & out["overlap"]).sum()); GEO["ramp_phys_ok"] += int(out["physical_eligible"].sum())
@@ -204,7 +209,7 @@ def train_batch(self, batch, *, unroll_steps, truncation_steps=None):
     self.optimizer.zero_grad(set_to_none=True)
     CUR["recs"].clear(); CUR["calls"] = 0; CUR["onev"] = []
     GEO.update(calls=0, scene_invalid_rows=0, rows=0, ramp_cars=0, ramp_scene_invalid=0, ramp_overlap=0, ramp_phys_ok=0)
-    GEO["reasons"].update(nonfinite=0, no_lane=0, len0=0)
+    GEO["reasons"].update(nonfinite=0, no_lane=0, len0=0); GEO["len0_examples"] = []
     info.update(nonfinite=0, chunks=0, total_requires_grad=[])
     err = None
     pv = {n: p.requires_grad for n, p in self.model.named_parameters() if n.startswith("merge_pivot")}
