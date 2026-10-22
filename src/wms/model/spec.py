@@ -115,6 +115,8 @@ class ModelSpec:
     merge_passage_law: str = "strict"
     merge_w_init: float = 1.0
     merge_quadrature_order: int = 32
+    # False: no straight-through adjoint from the pivot lane weights into the next rollout step.
+    merge_pivot_state_st: bool = True
     # SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's
     # direct per-step acceleration with a learned low-pass residual state r_t carried in
     # the rollout state (see wms.model.temporal_slow).  New parameters are created only in

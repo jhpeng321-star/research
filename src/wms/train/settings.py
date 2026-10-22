@@ -299,6 +299,10 @@ class TrainSettings:
     # V10UNBLOCK (2026-10-19, default OFF = bit-identical): physical envelope + all-risk lane
     # learning (wms.physics.config.PhysicsConfig.lane_learnable).
     lane_learnable: bool = False
+    # R9LANE (2026-10-22, default OFF = bit-identical): ramp-lane cars cannot pass the lane end.
+    ramp_lane_end_stop: bool = False
+    # R9LANE2 (2026-10-22, default OFF = bit-identical): zone-start risk-chain retain.
+    ramp_risk_retain: bool = False
     # V10LANEOPT (2026-10-19, default 'free' = current behaviour): staged mainline lane changes
     # (wms.physics.config.PhysicsConfig.mainline_lane_mode).
     mainline_lane_mode: str = "free"
@@ -374,6 +378,7 @@ class TrainSettings:
     merge_passage_law: str = "strict"
     merge_w_init: float = 1.0
     merge_quadrature_order: int = 32
+    merge_pivot_state_st: bool = True
     merge_core_tau_reg_weight: float = 0.0
     merge_core_w_reg_weight: float = 0.0
     merge_first_passage_weight: float = 0.0

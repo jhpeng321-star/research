@@ -272,6 +272,15 @@ class PhysicsConfig:
     merge_impatience_t_min_s: float = MERGE_IMPATIENCE_T_MIN_S
     # V10UNBLOCK (2026-10-19): learn merge / lane-change / yield from data (default off).
     lane_learnable: bool = False
+    # R9LANE (2026-10-22, default off = bit-identical): a ramp-lane car cannot be moved past
+    # the real lane end ``merge_zone_s1_m`` (SUMO never lets a vehicle pass its lane end);
+    # it is held there at speed 0 unless it changes lanes in that step.
+    ramp_lane_end_stop: bool = False
+    # R9LANE2 (2026-10-22, default off = bit-identical): a started merge-risk chain is not
+    # terminated by a tick on which the WM-predicted next position of a car that is still on the
+    # ramp lane (before its end) falls just outside the zone-start bound (crawling queue head at
+    # route x = merge_zone_s0_m); real exits still are (lane change, past the end, absence).
+    ramp_risk_retain: bool = False
     lane_physical_margin_m: float = LANE_PHYSICAL_MARGIN_M
     # V10LANEOPT (2026-10-19): staged mainline lane changes (default 'free' = current behaviour).
     mainline_lane_mode: str = "free"
@@ -343,6 +352,10 @@ class PhysicsConfig:
             raise ValueError("merge_impatience requires lane_gap_rule='speed' and merge_cal off")
         if not isinstance(self.lane_learnable, bool):
             raise ValueError("lane_learnable must be a boolean")
+        if not isinstance(self.ramp_lane_end_stop, bool):
+            raise ValueError("ramp_lane_end_stop must be a boolean")
+        if not isinstance(self.ramp_risk_retain, bool):
+            raise ValueError("ramp_risk_retain must be a boolean")
         if (isinstance(self.lane_physical_margin_m, bool)
                 or not isinstance(self.lane_physical_margin_m, (int, float))
                 or not math.isfinite(self.lane_physical_margin_m)
@@ -403,7 +416,7 @@ class PhysicsConfig:
                                             "emergency_decel_mps2", "merge_end_wait",
                                             "mainline_merge_yield", "forced_window_mode",
                                             "mainline_merge_yield_scope", "merge_impatience",
-                                            "lane_learnable")
+                                            "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain")
                 and v is not None}
         data.update(overrides)
         return cls(**data)

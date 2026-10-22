@@ -37,7 +37,7 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
                      "mainline_lane_mode": ("free", "courtesy")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
-                              "merge_impatience", "lane_learnable")
+                              "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -64,6 +64,14 @@ class PhysicsOptions:
     """V10UNBLOCK (2026-10-19, default false = bit-identical): replace behavioural lane-change
     vetoes by the physical envelope and learn merge / lane-change / yield from data
     (``wms.physics.config.PhysicsConfig.lane_learnable``)."""
+    ramp_lane_end_stop: bool = False
+    """R9LANE (2026-10-22, default false = bit-identical): a ramp-lane car is never moved past the
+    real lane end ``merge_zone_s1_m`` (held there at speed 0 unless it changes lanes that step;
+    ``wms.physics.config.PhysicsConfig.ramp_lane_end_stop``)."""
+    ramp_risk_retain: bool = False
+    """R9LANE2 (2026-10-22, default false = bit-identical): a started merge-risk chain survives a
+    zone-start-boundary flicker of a car still on the ramp lane
+    (``wms.physics.config.PhysicsConfig.ramp_risk_retain``)."""
     mainline_lane_mode: str = "free"
     """V10LANEOPT (2026-10-19, default 'free' = current behaviour, ``lane_learnable`` only):
     staged mainline lane changes.  'courtesy' keeps merges fully learned and allows only the
@@ -277,6 +285,10 @@ class ModelConfig:
     """Initial positive learned passage width in hybrid mode."""
     merge_quadrature_order: int = 32
     """Quadrature order for the hybrid passage likelihood."""
+    merge_pivot_state_st: bool = True
+    """First-passage lane straight-through ADJOINT into the next rollout step (default True = legacy).
+    False keeps the hard forward exactly but cuts the adjoint through the (frozen) rollout dynamics, so the
+    on-policy likelihood treats rollout states as data and the backward graph of the rollout is not retained."""
     temporal_residual_mode: Literal["direct", "slow"] = "direct"
     """SLOWRES (default 'direct' = bit-identical): 'slow' replaces the temporal path's direct
     per-step acceleration with a learned low-pass residual state r_t carried in the rollout

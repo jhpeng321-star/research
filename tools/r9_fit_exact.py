@@ -387,12 +387,24 @@ def attach_episode(sequences, cache):
                     & (kin[:, 1:4].argmax(-1) == physics['merge_lane'])
                     & (kin[:, 0] >= physics['merge_zone_s0_m'])
                     & (kin[:, 0] <= physics['merge_zone_s1_m']))
-        moved = cache['proposals'][entry:stop, slot]
-        post_risk = ((moved[:, 1:4].sum(-1) > 0)
-                     & (moved[:, 1:4].argmax(-1) == physics['merge_lane'])
-                     & (moved[:, 0] >= physics['merge_zone_s0_m'])
-                     & (moved[:, 0] <= physics['merge_zone_s1_m']))
+        if 'geometry' in cache:
+            # Post-move zone membership is the shared route-coordinate decision geometry.
+            post_risk = cache['geometry']['ramp'][0, entry:stop, slot]
+        else:  # legacy parity caches (prepare_episode) carry only the proposed states
+            moved = cache['proposals'][entry:stop, slot]
+            post_risk = ((moved[:, 1:4].sum(-1) > 0)
+                         & (moved[:, 1:4].argmax(-1) == physics['merge_lane'])
+                         & (moved[:, 0] >= physics['merge_zone_s0_m'])
+                         & (moved[:, 0] <= physics['merge_zone_s1_m']))
         causal_risk = post_risk | pre_risk
+        if physics.get('ramp_risk_retain', False) and 'geometry' in cache:
+            # R9LANE2: the same chain rule as MergePivotTerm.prepare / the audit - a started
+            # chain on the ramp lane before its end is not terminated by a zone-start flicker.
+            pre_open = ((kin[:, 1:4].sum(-1) > 0)
+                        & (kin[:, 1:4].argmax(-1) == physics['merge_lane'])
+                        & (kin[:, 0] <= physics['merge_zone_s1_m']))
+            post_open = cache['geometry']['ramp_open'][0, entry:stop, slot]
+            causal_risk = causal_risk | pre_open | post_open
         seq['lifecycle_active'] = causal_risk.long().cumprod(0).bool().tolist()
         seq['absorbed_before_event'] = bool(seq['event'] and not seq['lifecycle_active'][-1])
         flags = cache.get('geometry_flags')
@@ -409,8 +421,42 @@ def attach_episode(sequences, cache):
     return sequences
 
 
+def drop_explained_exclusions(sequences, cache):
+    """Remove sequences whose terminal event is a P1-unrepresentable recorded merge.
+
+    Identical classification and sequence exclusion to ``MergePivotTerm.prepare`` and the
+    support audit (``merge_pivot_support``).  Returns ``(kept, dropped)``; each dropped
+    entry names the vehicle, event row and physical reason.  Unexplained vetoes and
+    model-motion vetoes are never dropped here.
+    """
+    from wms.train.losses.merge_pivot_support import classify_vetoed_events
+
+    geo = cache['geometry']
+    n = geo['eligible'].shape[1]
+    event = torch.zeros_like(geo['eligible'])
+    for seq in sequences:
+        if seq['event']:
+            event[0, seq['event_row'] - 1, seq['slot']] = True
+    verdict = classify_vetoed_events(geo, event, target_lane=cache['metadata']['physics']['merge_target_lane'])
+    kept, dropped = [], []
+    for seq in sequences:
+        if seq['event'] and bool(verdict['explained'][0, seq['event_row'] - 1, seq['slot']]):
+            at = (0, seq['event_row'] - 1, seq['slot'])
+            cause = ('same_step_vacated_leader' if bool(verdict['vacated'][at]) else
+                     'junction_internal_target_vehicle' if bool(verdict['junction'][at]) else
+                     'vacated_leader_and_junction_vehicle')
+            # same identity keys as legacy exclusions (merge_fit_stage2a.reconcile)
+            dropped.append({**{key: seq[key] for key in ('world', 'source', 'episode', 'vehicle',
+                                                         'slot', 'entry_row', 'event_row')},
+                            'reason': 'explained_P1_unrepresentable:' + cause})
+        else:
+            kept.append(seq)
+    assert n >= 0
+    return kept, dropped
+
+
 def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
-                  allow_unverified_physics=False, actions_by_episode=None):
+                  allow_unverified_physics=False, actions_by_episode=None, runtime_cache=None):
     """Use the existing cohort builder, augment once per episode; no audit fit.
 
     Controls must be supplied in runtime vocabulary via actions_by_episode(ep).
@@ -436,7 +482,8 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         if actions is not None:
             raise ValueError('dataset replay uses the recorded current runtime timeline; '
                              'use prepare_episode for alternative-input parity diagnostics')
-        cache = r9_runtime.cached_prepare(frozen, loaded, ROOT / 'results/r9_runtime_cache', n_quad)
+        cache = r9_runtime.cached_prepare(frozen, loaded, runtime_cache or ROOT / 'results/r9_runtime_cache',
+                                           n_quad)
         index = 0
 
         def proposal(**kwargs):
@@ -451,6 +498,8 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal,
                                                runtime_risk=cache['geometry']['ramp'][0].numpy())
         attach_episode(subset, cache)
+        subset, dropped = drop_explained_exclusions(subset, cache)
+        report['exclusions'] = list(report['exclusions']) + dropped
         for seq in subset:
             seq['unknown_age'] = bool(seq['unknown_age'])
             entry, length = seq['entry_row'], len(seq['times'])

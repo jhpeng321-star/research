@@ -26,7 +26,7 @@ def _arrays():
     states = np.zeros((6, 3, 7), np.float32)
     states[..., 6] = 5.
     for i in range(6):
-        states[i, :, 0] = [-6 + 4 * i, 35 + 6 * i, -30 + 3 * i]
+        states[i, :, 0] = [-5 + 4 * i, 35 + 6 * i, -30 + 3 * i]  # -5: one tick before the route-frame zone entry
         states[i, :, 4] = [8., 12., 6.]
         states[i, 0, 3 if i < 5 else 2] = 1.
         states[i, 1:, 2] = 1.

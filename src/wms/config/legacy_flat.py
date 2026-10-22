@@ -241,6 +241,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "mainline_merge_yield": "physics.mainline_merge_yield",
     # V10UNBLOCK (physical envelope + all-risk lane learning)
     "lane_learnable": "physics.lane_learnable",
+    "ramp_lane_end_stop": "physics.ramp_lane_end_stop",
+    "ramp_risk_retain": "physics.ramp_risk_retain",
     # V10LANEOPT (staged mainline lane changes under lane_learnable)
     "mainline_lane_mode": "physics.mainline_lane_mode",
     "mainline_courtesy_zone_m": "physics.mainline_courtesy_zone_m",
@@ -303,6 +305,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_passage_law": "model.merge_passage_law",
     "merge_w_init": "model.merge_w_init",
     "merge_quadrature_order": "model.merge_quadrature_order",
+    "merge_pivot_state_st": "model.merge_pivot_state_st",
     "merge_core_tau_reg_weight": "loss.merge_core.tau_reg_weight",
     "merge_core_w_reg_weight": "loss.merge_core.w_reg_weight",
     "merge_first_passage_weight": "loss.merge_first_passage.weight",
@@ -419,7 +422,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "driver_prior_decel", "driver_prior_min_gap", "driver_prior_v0_ratio",
     "stop_time_integration", "emergency_decel_mps2", "exit_at_road_end",
     "lane_conflict_resolve",
-    "merge_end_wait", "mainline_merge_yield", "lane_learnable",
+    "merge_end_wait", "mainline_merge_yield", "lane_learnable", "ramp_lane_end_stop",
+    "ramp_risk_retain",
     "mainline_lane_mode", "mainline_courtesy_zone_m",
     # V7FT
     "merge_loss_speed_weight",
@@ -451,7 +455,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_safety_control_weight", "merge_yield_behind_m", "merge_yield_dend_m",
     # R5THR
     "merge_decision", "merge_st_width", "merge_core_tau_reg_weight",
-    "merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_core_w_reg_weight",
+    "merge_passage_law", "merge_w_init", "merge_quadrature_order", "merge_pivot_state_st",
+    "merge_core_w_reg_weight",
     "merge_first_passage_weight", "merge_first_passage_rank_weight",
     "merge_first_passage_metrics", "merge_first_passage_pos_tol_m",
     "merge_first_passage_speed_tol_mps", "merge_first_passage_gap_tol_m",

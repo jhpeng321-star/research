@@ -25,6 +25,9 @@ def write_episode(path):
     kin[:, 0, 3], kin[:, 1:, 2] = 1., 1.
     kin[2:, 0, 3], kin[2:, 0, 2] = 0., 1.  # merge in the first zone-crossing step
     kin[..., 4], kin[..., 6] = 4., 5.
+    # 8 m/s carries the ramp vehicle across the 2.93 m internal lane in front of the merge
+    # edge, so the WM motion enters the zone from the observed upstream prestate (row 1).
+    kin[:, 0, 4] = 8.
     kin[3, 1, 1:4] = 0.  # already observed target enters a junction
     cav = np.zeros((n, k), bool)
     cav[:, 2] = True
@@ -73,9 +76,13 @@ def test_shared_replay_uses_current_native_controls_but_no_future_motion(frozen,
     changed = copy.deepcopy(scene)
     changed["kin"][5:, :, 0] += 1000
     other = runtime.prepare(frozen, changed)
+    labels = [key for key in baseline["geometry"] if key.startswith("label_")]
+    assert labels and any(not torch.equal(baseline["geometry"][key][:, :5],
+                                          other["geometry"][key][:, :5]) for key in labels)
     for key in baseline["geometry"]:
-        torch.testing.assert_close(baseline["geometry"][key][:, :5],
-                                   other["geometry"][key][:, :5], atol=0, rtol=0)
+        if key not in labels:  # label_* is the recorded successor, never a model input
+            torch.testing.assert_close(baseline["geometry"][key][:, :5],
+                                       other["geometry"][key][:, :5], atol=0, rtol=0)
     assert baseline["metadata"]["CAV_controls"] == "current_timeline"
     assert torch.equal(baseline["proposals"][..., 1:4], torch.tensor(scene["kin"][:-1, :, 1:4]))
 
@@ -106,7 +113,9 @@ def test_successor_diagnostic_checks_all_targets_and_preserves_prechange_lanes()
                                    torch.zeros(1, 2, 3, dtype=torch.bool), 0, 0, params)
     assert details["leader"]["slot"] == 1
     assert details["diagnostic_recorded_motion_pre_lanes_intersections"][0]["slot"] == 2
-    assert details["veto_cause"] == "outgoing_target_substep_unverified"
+    # the only intersecting body is AHEAD of the ego and leaves the target lane in the same
+    # step: SUMO's front-first sequential lane changes have already vacated it.
+    assert details["veto_cause"] == "same_step_vacated_leader"
     assert len(details["all_pre_target_neighbours"]) == 2
 
 

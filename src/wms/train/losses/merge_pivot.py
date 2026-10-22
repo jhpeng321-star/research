@@ -15,7 +15,7 @@ import torch
 from torch import Tensor
 
 from wms.model.merge_pivot import (advance_longitudinal, geometry, hybrid_log_masses,
-                                  log_event_mass, log_survival)
+                                  log_event_mass, log_survival, ramp_lane_end_stop, close_risk)
 
 from .base import LossContext, LossTerm, TermValue, UnrollTargets
 
@@ -190,6 +190,30 @@ def score_chunk(c: Tensor, tau: Tensor, risk: Tensor, event: Tensor, *,
     return nll, posterior, stats
 
 
+def _successor_labels(inp, shifts: Tensor, junction: Tensor, i: int) -> dict[str, Tensor]:
+    """``label_*``: the RECORDED successor row (route frame), for label-side diagnosis only.
+
+    SUMO moves every vehicle and then changes lanes, so row ``i + 1`` carries the true
+    decision positions.  The model never reads these: they classify which vetoed
+    recorded events are P1-unrepresentable (``merge_pivot_support``) and feed audits.
+    """
+    states, present = inp.states, inp.present.bool()
+    kin, now = states[:, i], present[:, i]
+    out = {"label_pre_junction": junction[:, i] & now}
+    if i + 1 >= states.shape[1]:
+        zero = torch.zeros_like(kin[..., 0])
+        return {**out, "label_succ_x": zero, "label_succ_length": zero,
+                "label_succ_lane": torch.zeros_like(kin[..., 0], dtype=torch.long),
+                "label_linked": torch.zeros_like(now)}
+    nxt, there = states[:, i + 1], present[:, i + 1]
+    continuity = getattr(inp, "continuity", None)
+    linked = now & there if continuity is None else now & there & continuity[:, i].bool()
+    out.update(label_succ_x=nxt[..., 0] + shifts[:, i + 1].to(nxt.dtype),
+               label_succ_length=nxt[..., 6],
+               label_succ_lane=nxt[..., 1:4].argmax(-1), label_linked=linked)
+    return out
+
+
 @torch.no_grad()
 def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Tensor]:
     """Frozen forward from each RECORDED PRESTATE, followed by shared causal motion.
@@ -241,6 +265,15 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
 
     controller = (TimelineControllers(model, inp.action_timeline)
                   if inp.action_timeline is not None else None)
+    # Lossless route coordinate (junction lengths + exact dead reckoning of junction
+    # rows) from the causal scene alone: every consumer of the recorded geometry
+    # (fitter, support audit, likelihood) goes through this single construction.
+    from wms.data.route_frame import route_shift
+    shifts, junction = route_shift(inp.states, inp.present, getattr(inp, "continuity", None),
+                                   dt_s=float(model.physics.dt_s),
+                                   zone_start_m=float(model.physics.merge_zone_s0_m),
+                                   zone_end_m=float(model.physics.merge_zone_s1_m),
+                                   return_junction=True)
     hist, hist_mask = inp.hist, inp.hist_mask
     params = embedding = None
     recurrent = {}
@@ -338,19 +371,28 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
         # Without commands, use the frozen native longitudinal branch for CAVs.
         # This fallback is explicitly counted, never replaced by recorded future motion.
         moved[..., 5] = out["accel_mps2"]
+        if getattr(model.physics, "ramp_lane_end_stop", False):
+            # Same physical lane-end stop as WmSModel.step / pivot_decision_geometry; applying
+            # it here lets the replay observers and the fitter see the pinned motion.
+            moved[..., 0], moved[..., 4], _ = ramp_lane_end_stop(
+                kin, moved[..., 0], moved[..., 4], present, model.physics, shifts[:, i])
         if hasattr(model, "pivot_decision_geometry"):
             geo = model.pivot_decision_geometry(state, out["accel_mps2"],
                                                  next_s=moved[..., 0], next_v=moved[..., 4],
-                                                 fixed_next_lane=fixed_next_lane)
+                                                 fixed_next_lane=fixed_next_lane,
+                                                 route_shift=shifts[:, i])
         else:
-            geo = geometry(moved, present, model.physics)
+            geo = geometry(moved, present, model.physics, route_shift=shifts[:, i])
         observer = getattr(inp, "replay_observer", None)
         if observer is not None:
             observer(i, state, out, moved, geo,
                      dict(driver_params=params, lane_age=lane_age,
+                          fixed_next_lane=fixed_next_lane,
                           lane_v5_acc=recurrent.get("lane_v5_acc"),
                           driver_history=inp.observed_hist if i == 0 else None,
                           driver_history_mask=inp.observed_hist_mask if i == 0 else None))
+        geo = dict(geo)
+        geo.update(_successor_labels(inp, shifts, junction, i))
         rows.append({key: value.detach() for key, value in geo.items()})
         for key in ("temporal_residual_mps2", "temporal_residual_present", "lane_v5_acc", "lane_blocked"):
             if key in out:
@@ -447,11 +489,12 @@ def build_pre_window_history(model, inp, cfg: MergePivotConfig) -> list[Optional
                                  observed_hist_mask=observed_mask, action_timeline=timeline,
                                  controller_id=None)
         geo = build_recorded_geometry(model, source, SimpleNamespace(n_steps=h))
-        result.append(certify_pre_window(rec, present, cont, geo, cfg))
+        result.append(certify_pre_window(rec, present, cont, geo, cfg,
+                                         retain=bool(getattr(model.physics, "ramp_risk_retain", False))))
     return result
 
 
-def certify_pre_window(rec, present, cont, geo, cfg):
+def certify_pre_window(rec, present, cont, geo, cfg, retain=False):
     """Certify a causal prefix; also usable with a once-replayed audit episode.
 
     The last recorded row is the t0 anchor. Geometry ends strictly before it.
@@ -462,6 +505,11 @@ def certify_pre_window(rec, present, cont, geo, cfg):
     pre_risk = (present & lane_valid & (lane == cfg.merge_lane)
                 & (rec[..., 0] >= cfg.zone_s0_m) & (rec[..., 0] <= cfg.zone_s1_m))
     risk = geo["ramp"] | pre_risk[:, :-1]
+    if retain:  # physics.ramp_risk_retain: same chain bookkeeping as MergePivotTerm.prepare
+        pre_open = present & lane_valid & (lane == cfg.merge_lane) & (rec[..., 0] <= cfg.zone_s1_m)
+        breaks = torch.cat((torch.zeros_like(present[:, :1]),
+                            ~(cont[:, :h - 1] & present[:, :h - 1] & present[:, 1:h])), 1)[:, :h]
+        risk = close_risk(risk, geo["ramp_open"] | pre_open[:, :-1], breaks)
     event = (present[:, :-1] & present[:, 1:] & cont
              & (lane[:, :-1] == cfg.merge_lane) & (lane[:, 1:] == cfg.target_lane))
     scene_ok = ((~present | (torch.isfinite(rec).all(-1) & lane_valid)).all(-1))
@@ -484,7 +532,7 @@ def certify_pre_window(rec, present, cont, geo, cfg):
         terminal = terminal | event[:, i]
     # Entry can occur in the recorded t0 row even when the final frozen
     # pre-window substep did not yet reach risk. Its prior max is then -inf.
-    fresh_entry = (~seen & ~pre_risk[:, -2] & lane_valid[:, -2]
+    fresh_entry = (~seen & ~terminal & ~pre_risk[:, -2] & lane_valid[:, -2]
                    & scene_ok[:, -2, None])
     certified = (((seen & known & ~terminal) | fresh_entry) & cont[:, -1] & present[:, -1]
                  & present[:, -2] & pre_risk[:, -1] & scene_ok[:, -1, None])
@@ -565,6 +613,26 @@ class MergePivotTerm(LossTerm):
         risk = (geo["ramp"] | pre_risk[:, :n] | event) & own
         reset = torch.cat((torch.zeros_like(present[:, :1]),
                            present[:, 1:n] & ~present[:, :n - 1]), 1)
+        if getattr(model.physics, "ramp_risk_retain", False):
+            # R9LANE2: a started chain on the ramp lane before its end survives a tick whose
+            # WM-predicted position dips below the zone start (crawling queue head).
+            pre_open = (present & (rec[..., 1:4].sum(-1) > 0) & (lane == self.cfg.merge_lane)
+                        & (rec[..., 0] <= self.cfg.zone_s1_m))
+            risk = close_risk(risk, (geo["ramp_open"] | pre_open[:, :n]) & own, reset)
+        # Recorded merges that are vetoed by P1 although SUMO executed them legally
+        # (same-step sequential lane change of a leader, internal-junction occupant) are
+        # excluded WITH their whole risk sequence; every other veto stays a zero-mass
+        # failure.  The identical classification feeds the fitter and the support audit.
+        from .merge_pivot_support import classify_vetoed_events, sequence_rows
+        verdict = classify_vetoed_events(geo, event & own, target_lane=self.cfg.target_lane)
+        excluded = verdict["explained"]
+        support_counts = dict(vetoed_events=int(verdict["vetoed"].sum()),
+                              excluded_events=int(excluded.sum()),
+                              unexplained_vetoed_events=int((verdict["vetoed"] & ~excluded).sum()),
+                              wm_motion_vetoed_events=int(verdict["recorded_clear"].sum()))
+        if support_counts["excluded_events"]:
+            dropped = sequence_rows(excluded, risk, reset)
+            risk, event = risk & ~dropped, event & ~excluded
         # Complete entry only if observed from before zone entry; a presence birth
         # directly into risk is unknown age. IDs are neither needed nor consumed.
         prior_outside = torch.cat((~pre_risk[:, :1],
@@ -601,6 +669,7 @@ class MergePivotTerm(LossTerm):
         competing = risk & ~event & (~present[:, 1:] | (lane[:, 1:] != self.cfg.merge_lane))
         targets.prepared[self.name] = dict(
             geometry=geo, risk=risk, event=event & own, reset=reset, known=known,
+            support_counts=support_counts,
             known_before=known_before, pre_window_initial_maximum=entry_snapshot,
             n_cars=int(births.sum()), model=model, tf_carry=None, on_carry=None,
             stats={}, causal_cav_fallback=int((present[:, :n] & inp.is_cav[:, :n]).sum())
@@ -620,6 +689,9 @@ class MergePivotTerm(LossTerm):
         width = params.get("w")
         value = tau * 0.0
         stats = {}
+        if c0 == 0:
+            stats.update({"support_" + key: val for key, val in prep["support_counts"].items()})
+
         def cut(x):
             return x[:, c0:c1]
         entry_max = pre_window_maximum(model, prep["pre_window_history"], prep["risk"][:, 0].to(tau))

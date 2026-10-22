@@ -92,7 +92,8 @@ class FirstPassageNet(nn.Module):
 
 def geometry(kin: Tensor, present: Tensor, physics,
              decision_mask: Optional[Tensor] = None,
-             fixed_target: Optional[Tensor] = None) -> dict[str, Tensor]:
+             fixed_target: Optional[Tensor] = None,
+             route_shift: Optional[Tensor] = None) -> dict[str, Tensor]:
     """Full-scene neighbors, exact overlap veto and latent-independent reservations.
 
     Touching bumpers are physically eligible but constrain the learned boundary
@@ -102,6 +103,12 @@ def geometry(kin: Tensor, present: Tensor, physics,
     of physical vetoes, for lifecycle tracking.
     ``decision_mask`` excludes nonlearned candidates from opportunity allocation;
     ``fixed_target`` marks immutable target occupancy from current actions only.
+    ``route_shift`` (``wms.data.route_frame``) converts the collapsed pack-frame ``s`` of
+    each vehicle to the lossless route coordinate ``x = s + shift`` in which bodies
+    ``[x - length, x]``, gaps and overlaps are evaluated; it is the PRE-state shift
+    carried along the single longitudinal update.  ``None`` keeps the pack line
+    (WM rollout states, which are a junction-free line).  Returned ``s`` is always the
+    pack value; ``route_s`` is the coordinate that the overlap veto used.
     """
     present = present.bool()
     observed = (torch.isfinite(kin).all(-1) & (kin[..., 1:4].sum(-1) > 0.0)
@@ -109,6 +116,11 @@ def geometry(kin: Tensor, present: Tensor, physics,
     scene_valid = (~present | observed).all(-1, keepdim=True)
     safe = torch.where((present & observed).unsqueeze(-1), kin, torch.zeros_like(kin))
     s, v, length = safe[..., 0], safe[..., 4], safe[..., 6]
+    pack_s = s
+    if route_shift is not None:
+        shift = torch.where(present & observed & torch.isfinite(route_shift),
+                            route_shift, torch.zeros_like(route_shift))
+        s = s + shift.to(s.dtype)
     # Risk membership uses route/position observations, independently of a
     # missing speed/acceleration.  A temporary observation veto is not an exit.
     route = kin[..., 1:4]
@@ -118,8 +130,16 @@ def geometry(kin: Tensor, present: Tensor, physics,
     target_lane = int(getattr(physics, "merge_target_lane", 1))
     start = float(getattr(physics, "merge_zone_s0_m", 0.0))
     end = float(physics.merge_zone_s1_m)
+    # Zone membership is a merge-edge coordinate: the route coordinate, so that a
+    # vehicle inside a junction (stale pack ``s``) neither enters nor leaves the zone.
+    zone_x = kin[..., 0] if route_shift is None else kin[..., 0] + torch.nan_to_num(route_shift)
     ramp = (present & route_valid & (lane == ramp_lane) & torch.isfinite(kin[..., 0])
-            & (kin[..., 0] >= start) & (kin[..., 0] <= end))
+            & (zone_x >= start) & (zone_x <= end))
+    # Same lane and end test WITHOUT the start bound: the car is still on the ramp lane,
+    # on or before the lane end.  Only used to keep an already started risk chain alive
+    # (``ramp_risk_retain``); it never makes a car eligible.
+    ramp_open = (present & route_valid & (lane == ramp_lane) & torch.isfinite(kin[..., 0])
+                 & (zone_x <= end))
     target = present & observed & (lane == target_lane)
     ds = s.unsqueeze(-1) - s.unsqueeze(-2)  # ego front - other front
     k = s.shape[-1]
@@ -155,13 +175,13 @@ def geometry(kin: Tensor, present: Tensor, physics,
     blocker_index = (blocker.long().argmax(-1) if k else
                      torch.zeros_like(s, dtype=torch.long))
     fixed_index = incoming.long().argmax(-1) if k else torch.zeros_like(blocker_index)
-    out = {"v": v, "s": s, "length": length, "lane": lane, "pre_target": target,
+    out = {"v": v, "s": pack_s, "route_s": s, "length": length, "lane": lane, "pre_target": target,
            "scene_valid": scene_valid.expand_as(present),
            "overlap_index": torch.where(overlap, blocker_index, -torch.ones_like(blocker_index)),
            "fixed_overlap_index": torch.where(incoming_overlap, fixed_index,
                                                 -torch.ones_like(fixed_index)),
            "fixed_overlap": incoming_overlap,
-           "ramp": ramp, "overlap": overlap,
+           "ramp": ramp, "ramp_open": ramp_open, "overlap": overlap,
            "physical_eligible": physical, "reservation_veto": physical & ~reserved,
            "eligible": reserved}
     for side, mask, distance in (
@@ -306,8 +326,8 @@ def _legendre(order: int):
     return (x + 1.0) / 2.0, weights / 2.0
 
 
-def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
-                      ) -> tuple[Tensor, Tensor]:
+def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32,
+                      node_budget: Optional[int] = None) -> tuple[Tensor, Tensor]:
     """Integrate persistent z ONCE over a fixed supplied path (time LAST).
 
     Positive composite Gauss--Legendre weights integrate the logistic prior in
@@ -316,7 +336,8 @@ def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
     truncated prior or decision threshold. Both unbounded tails are retained.
     Log-CDF interpolation keeps far-tail intervals representable. Refinement of
     ``order`` must be checked on the fitted paths, NLL AND parameter gradients.
-    Cost is quadratic in path length; callers should batch only scored cars.
+    Memory is bounded by ``node_budget`` (elements of one [rows, live steps, nodes] block) via exact step/
+    interval compaction, node grouping and checkpointing; time is still ~quadratic in live path length.
     """
     if c.shape[-1] == 0:
         return c.clone(), c.clone()
@@ -338,55 +359,116 @@ def hybrid_log_masses(c: Tensor, tau: Tensor, w: Tensor, order: int = 32
             le = torch.full_like(flat, -torch.inf)
             ls = torch.zeros_like(flat)
             if bool(used.any()):
-                e, s = hybrid_log_masses(flat[used], tau, w, order)
+                e, s = hybrid_log_masses(flat[used], tau, w, order, node_budget)
                 le[used], ls[used] = e, s
             return le.reshape_as(c), ls.reshape_as(c)
     if c.ndim > 1 and not any(x.requires_grad for x in (c, tau, w)):
         flat = c.reshape(-1, c.shape[-1])
         unique, inverse = torch.unique(flat, dim=0, return_inverse=True)
         if unique.shape[0] < flat.shape[0]:
-            le, ls = hybrid_log_masses(unique, tau, w, order)
+            le, ls = hybrid_log_masses(unique, tau, w, order, node_budget)
             return le[inverse].reshape_as(c), ls[inverse].reshape_as(c)
-    finite = torch.isfinite(c)
-    safe = torch.where(finite, c, torch.zeros_like(c))
-    offsets = c.new_tensor([-8., -1., 0., 1., 8.])
-    # Adaptive mesh placement is numerical, not a model transformation. Hold it
-    # fixed in the adjoint and integrate the derivative of the defining law.
-    # This also avoids spurious moving-boundary gradients at coincident knots.
+    return _hybrid_scan(c, tau, w, order, _HYBRID_NODE_BUDGET if node_budget is None else int(node_budget))
+
+
+# Elements of one [rows, steps, nodes] block kept alive by autograd (about 12 float64 tensors of that
+# size are saved per block, i.e. ~100 bytes per element). Larger blocks only trade memory for speed.
+_HYBRID_NODE_BUDGET = 15_000_000
+
+
+def _hybrid_block(cc: Tensor, tau: Tensor, w: Tensor, a: Tensor, b: Tensor, lw: Tensor, order: int
+                  ) -> tuple[Tensor, Tensor]:
+    """Event/survival log masses of a compacted path restricted to ONE group of integration intervals.
+
+    ``cc`` is [R, A] (A steps, -inf padded), ``a``/``b``/``lw`` are [R, m] interval ends and log prior masses
+    (``lw == -inf`` padding). Returns the [R, A] log-sum-exp over this group's Gauss nodes; the caller combines
+    groups with a second log-sum-exp, which is the identical integral.
+    """
+    one = cc.new_tensor(1.)
+    nodes_np, weights_np = _legendre(order)
+    u = torch.as_tensor(nodes_np, device=cc.device, dtype=cc.dtype)
+    weights = torch.as_tensor(weights_np, device=cc.device, dtype=cc.dtype)
+    # sigmoid(knot) is never materialized, so z~1000 remains a finite node.
+    la, lb = log_survival(-a, one), log_survival(-b, one)
+    sa, sb = log_survival(a, one), log_survival(b, one)
+    logu = torch.logaddexp(la.unsqueeze(-1) + torch.log1p(-u), lb.unsqueeze(-1) + u.log())
+    logv = torch.logaddexp(sa.unsqueeze(-1) + torch.log1p(-u), sb.unsqueeze(-1) + u.log())
+    z = (logu - logv).flatten(-2).unsqueeze(1)                    # [R, 1, nodes]
+    lwn = (lw.unsqueeze(-1) + weights.log()).flatten(-2).unsqueeze(1)
+    lh, ls = conditional_log_hazards(cc.unsqueeze(-1), tau, w, z)  # [R, A, nodes]
+    running = ls.cumsum(1)
+    previous = torch.cat((torch.zeros_like(running[:, :1]), running[:, :-1]), 1)
+    return (_logsumexp_supported(lwn + previous + lh, -1),
+            _logsumexp_supported(lwn + running, -1))
+
+
+def _hybrid_scan(c: Tensor, tau: Tensor, w: Tensor, order: int, budget: int) -> tuple[Tensor, Tensor]:
+    """Exact memory-bounded evaluation of the hybrid law (same integral and grid as the O(T^2) original).
+
+    * Steps where a row is -inf have zero hazard and leave the running product unchanged, so each row is
+      compacted to its own non-vetoed steps and the results are scattered back (events -inf, survival carried
+      forward, 0 before the first live step).
+    * Integration intervals of zero prior mass (coincident knots) contribute exactly nothing and are dropped
+      per row; the knot set itself (including the 0 knot placed for vetoed steps) is unchanged.
+    * Persistent-z nodes are independent, so they are processed in groups sized by ``budget`` and joined with a
+      log-sum-exp; groups are gradient-checkpointed so only one [rows, steps, group-nodes] graph is alive.
+    """
+    shape = c.shape
+    flat = c.reshape(-1, shape[-1])
+    rows, steps = flat.shape
+    live = flat != -torch.inf
+    count = live.sum(-1)
+    width = int(count.max())
+    if width == 0:
+        return torch.full_like(c, -torch.inf), torch.zeros_like(c)
+    # Live steps first, in time order (stable); the tail is -inf padding.
+    position = torch.sort((~live).to(torch.int8), dim=-1, stable=True).indices[:, :width]
+    keep = torch.arange(width, device=c.device) < count.unsqueeze(-1)
+    cc = torch.where(keep, flat.gather(1, position), torch.full_like(flat[:, :width], -torch.inf))
+    # Adaptive mesh placement is numerical, not a model transformation. Hold it fixed in the adjoint and
+    # integrate the derivative of the defining law (avoids spurious moving-boundary gradients).
+    finite = torch.isfinite(flat)
+    safe = torch.where(finite, flat, torch.zeros_like(flat))
+    offsets = flat.new_tensor([-8., -1., 0., 1., 8.])
     knots = ((-safe.unsqueeze(-1) + w * offsets) / tau).detach()
     knots = torch.where(finite.unsqueeze(-1), knots, torch.zeros_like(knots))
     knots = knots.flatten(-2).sort(-1).values
-    # Coincident numerical knots have zero prior mass; removing shared duplicate
-    # columns preserves the integral and avoids grids dominated by veto padding.
-    knots = torch.unique_consecutive(knots, dim=-1)
     ends = torch.full_like(knots[..., :1], torch.inf)
     knots = torch.cat((-ends, knots, ends), -1)
     a, b = knots[..., :-1], knots[..., 1:]
-    logweights = log_event_mass(a, b, c.new_tensor(1.))
-    nodes_np, weights_np = _legendre(order)
-    u = torch.as_tensor(nodes_np, device=c.device, dtype=c.dtype)
-    weights = torch.as_tensor(weights_np, device=c.device, dtype=c.dtype)
-    # sigmoid(knot) is never materialized, so z~1000 remains a finite node.
-    la, lb = log_survival(-a, c.new_tensor(1.)), log_survival(-b, c.new_tensor(1.))
-    sa, sb = log_survival(a, c.new_tensor(1.)), log_survival(b, c.new_tensor(1.))
-    logu = torch.logaddexp(la.unsqueeze(-1) + torch.log1p(-u), lb.unsqueeze(-1) + u.log())
-    logv = torch.logaddexp(sa.unsqueeze(-1) + torch.log1p(-u), sb.unsqueeze(-1) + u.log())
-    z = (logu - logv).flatten(-2)
-    lw = (logweights.unsqueeze(-1) + weights.log()).flatten(-2)
-    # Do not create [cars,time,knots,order] intermediates for long paths.
-    running = torch.zeros_like(z)
+    lw = log_event_mass(a, b, flat.new_tensor(1.))
+    valid = lw != -torch.inf
+    nvalid = valid.sum(-1)
+    mmax = max(int(nvalid.max()), 1)
+    pick = torch.sort((~valid).to(torch.int8), dim=-1, stable=True).indices[:, :mmax]
+    ok = torch.arange(mmax, device=c.device) < nvalid.unsqueeze(-1)
+    a = torch.where(ok, a.gather(1, pick), torch.zeros_like(lw[:, :mmax]))
+    b = torch.where(ok, b.gather(1, pick), torch.ones_like(lw[:, :mmax]))
+    lw = torch.where(ok, lw.gather(1, pick), torch.full_like(lw[:, :mmax], -torch.inf))
+    group = max(1, min(mmax, budget // max(1, rows * width * order)))
+    grad = torch.is_grad_enabled() and any(x.requires_grad for x in (cc, tau, w))
     events, survival = [], []
-    for step in range(c.shape[-1]):
-        lh, ls = conditional_log_hazards(c[..., step, None], tau, w, z)
-        le = _logsumexp_supported(lw + running + lh, -1)
-        no_previous = (c[..., :step] == -torch.inf).all(-1)
-        le = torch.where(no_previous & (c[..., step] == torch.inf), torch.zeros_like(le), le)
-        events.append(le)
-        running = running + ls
-        surv = _logsumexp_supported(lw + running, -1)
-        surv = torch.where((c[..., :step + 1] == -torch.inf).all(-1), torch.zeros_like(surv), surv)
-        survival.append(surv)
-    return torch.stack(events, -1), torch.stack(survival, -1)
+    for lo in range(0, mmax, group):
+        args = (cc, tau, w, a[:, lo:lo + group], b[:, lo:lo + group], lw[:, lo:lo + group], order)
+        if grad:
+            from torch.utils.checkpoint import checkpoint
+            e, s = checkpoint(_hybrid_block, *args, use_reentrant=False)
+        else:
+            e, s = _hybrid_block(*args)
+        events.append(e)
+        survival.append(s)
+    if len(events) > 1:
+        e, s = (_logsumexp_supported(torch.stack(x), 0) for x in (events, survival))
+    else:
+        e, s = events[0], survival[0]
+    # Back to the full time axis.
+    prior_live = live.long().cumsum(-1) - live.long()
+    zero = torch.zeros_like(e[:, :1])
+    ev = torch.full_like(flat, -torch.inf).scatter(1, position, e)
+    ev = torch.where((prior_live == 0) & (flat == torch.inf), torch.zeros_like(ev), ev)
+    slot = live.long().cumsum(-1) - 1
+    sv = torch.where(slot >= 0, s.gather(1, slot.clamp_min(0)), zero.expand(rows, steps))
+    return ev.reshape(shape), sv.reshape(shape)
 
 
 def _keyed_logistic(seed: Tensor, identity: Tensor, step: Tensor, dtype) -> Tensor:
@@ -458,9 +540,54 @@ def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
     return out
 
 
+def ramp_lane_end_stop(kin: Tensor, next_s: Tensor, next_v: Tensor, present: Tensor, physics,
+                       route_shift: Optional[Tensor] = None
+                       ) -> tuple[Tensor, Tensor, Tensor]:
+    """Real ramp-lane end (``physics.merge_zone_s1_m``): SUMO never moves a car past it.
+
+    ``kin`` is the PRE-step snapshot (its one-hot lane is the lane the car drives on).
+    A present ramp-lane car whose longitudinal update would put its front beyond the lane
+    end (route coordinate ``x = s + shift``) is held at the end with speed 0.  No tolerance:
+    the end is the network geometry already in ``physics`` (cast to the tensor dtype only).
+    Returns ``(s, v, stopped)``; the caller decides which cars keep the stop (cars that
+    change lanes in the same step do not).  Only used when
+    ``physics.ramp_lane_end_stop`` is true.
+    """
+    route = torch.nan_to_num(kin[..., 1:4])
+    on_ramp = present.bool() & (route.argmax(-1) == int(physics.merge_lane)) & (route.sum(-1) > 0.0)
+    end = torch.as_tensor(float(physics.merge_zone_s1_m), dtype=next_s.dtype, device=next_s.device)
+    shift = (torch.zeros_like(next_s) if route_shift is None else
+             torch.nan_to_num(route_shift).to(next_s.dtype))
+    stopped = on_ramp & torch.isfinite(next_s) & (next_s + shift > end)
+    return (torch.where(stopped, end - shift, next_s),
+            torch.where(stopped, torch.zeros_like(next_v), next_v), stopped)
+
+
+def close_risk(risk: Tensor, ramp_open: Tensor, reset: Optional[Tensor] = None) -> Tensor:
+    """Keep a started risk chain alive while the car is still on the ramp lane before its end.
+
+    ``risk`` / ``ramp_open`` / ``reset`` are ``[B, T, K]`` booleans (``reset`` = a fresh
+    identity starts at that tick).  A chain that has started at some tick stays at risk on later
+    ticks where ``ramp_open`` holds even if ``risk`` is momentarily false.  The WM-predicted
+    next position of a car crawling across the zone start (route x = ``merge_zone_s0_m``, the
+    end of the 2.93 m junction) jitters around 0 while its true route x is monotone; such a tick
+    is not a physical zone exit, so it must not be an absorbing risk exit.  Real exits (lane change,
+    passing the lane end, absence, a new identity) still end the chain.  No constants.
+    """
+    out = risk.clone()
+    active = risk[:, 0]
+    for t in range(1, risk.shape[1]):
+        keep = ramp_open[:, t] & active
+        if reset is not None:
+            keep = keep & ~reset[:, t]
+        active = risk[:, t] | keep
+        out[:, t] = active
+    return out
+
+
 def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
                  carry: Optional[Mapping[str, Tensor]] = None,
-                 identity: Optional[Tensor] = None,
+                 identity: Optional[Tensor] = None, retain: Optional[Tensor] = None,
                   uniform: Optional[Tensor] = None, w: Optional[Tensor] = None,
                   epsilon_uniform: Optional[Tensor] = None,
                   quadrature_order: int = 32) -> dict[str, Tensor]:
@@ -494,6 +621,10 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
         keep = keep & (identity == old_identity)
     started = keep & carry.get("started", torch.zeros_like(present)).bool()
     terminal = keep & carry.get("terminal", torch.zeros_like(present)).bool()
+    if retain is not None:
+        # ``close_risk`` for the online path: a started, non-terminal chain stays at risk
+        # while the car is still on the ramp lane before its end (``geo['ramp_open']``).
+        ramp = ramp | (retain.bool() & started & ~terminal)
     terminal = terminal | (started & ~ramp)
     z = torch.where(keep, carry.get("z", torch.zeros_like(c)), torch.zeros_like(c))
     maximum = torch.where(keep, carry.get("maximum", torch.full_like(c, -torch.inf)),
@@ -630,5 +761,5 @@ def resolve_conflicts(kin: Tensor, present: Tensor, current_lane: Tensor,
 
 
 __all__ = ["FirstPassageNet", "geometry", "log_survival", "log_event_mass",
-           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal",
+           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal", "ramp_lane_end_stop", "close_risk",
            "update_state", "hard_st", "resolve_conflicts"]

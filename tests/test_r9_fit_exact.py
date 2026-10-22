@@ -264,6 +264,9 @@ def test_complete_refit_gradients_frozen_WM_and_exact_save_reload(frozen, kind):
 def test_build_dataset_augments_same_existing_cohort_and_alignment(frozen, tmp_path):
     ep = episode()
     ep['kin'][7:, 0, 3], ep['kin'][7:, 0, 2] = 0, 1
+    # 10 m/s crosses the 2.93 m internal lane in front of the merge edge in one 0.5 s tick, so
+    # the causal WM motion (route frame) enters the zone before the raw pack s becomes >= 0.
+    ep['kin'][:, 0, 4] = 10.
     for key, name in (('kin', 'veh_kin'), ('mask', 'veh_mask'), ('cav', 'is_cav'), ('vid', 'vid')):
         np.save(tmp_path / (name+'.npy'), ep[key].numpy())
     np.save(tmp_path/'time_s.npy', np.arange(9)*.5)
