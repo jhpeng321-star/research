@@ -67,6 +67,6 @@ still uses the junction-free WM line, so on-policy support near the zone ends is
 - Dev (local, single core 12.6 min/episode): `python tools/r9_support_reconcile.py --source v5_native=data/r9_train/v5_native --workers 1 --max-episodes 1 --cache none --output results/r9_dev1`.
 - `results/r9_dev4`: `... --source v5_native=... --source genrand_plain=... --workers 4 --max-episodes 4 --cache none --output results/r9_dev4` (15:22-16:02, local PC, contended).
 - `results/r9_dev_r8phys`: same with `--train-config configs/c4_wm_v10round8.toml`.
-- Physics for the fitter: `results/r9_physics_round9.json` (= `asdict(build_physics(load_train_config("configs/c4_wm_v10round9.toml")))`; regenerate with `tools/r9_exact.training_physics`).
+- Physics for the fitter: `configs/r9_physics_round9.json` (= `asdict(build_physics(load_train_config("configs/c4_wm_v10round9.toml")))`; regenerate with `tools/r9_exact.training_physics`).
 - Prior agent's reconcile (PIDs 24960/22672/14732) had already exited before this session; nothing of it left running.
 - cpuN receipt: Linux 6.8 Ubuntu 24.04, 48 cores, `~/miniconda3/bin/python` 3.10 + torch 2.12.1+cpu, 37 GB free. Not usable for this job: the PC->cpuN link measured 265 KB/s (20 MB in 75 s; 4 parallel streams: same aggregate), the 3.7 GB TRAIN set would take ~4 h; ssh resets after ~2 min and banner timeouts while another agent transferred. A partial `~/r9fix_sup/data/r9_train` (empty dir) was left by me and is harmless. So the scale run was local (22 logical cores shared with other agents, ~32 GB RAM).
