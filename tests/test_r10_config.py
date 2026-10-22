@@ -28,10 +28,11 @@ def leaves(node, prefix=""):
 
 def test_round10_differs_from_round9_only_by_fix_b():
     a, b = dict(leaves(load_raw(ROUND9))), dict(leaves(load_raw(ROUND10)))
-    # The merged round-9 draft disables this adjoint for memory; the owner requires
-    # it in both final presets. Compare against that explicit final-round-9 value.
-    assert b["model.merge_pivot_state_st"] is True
-    a["model.merge_pivot_state_st"] = True
+    # round 10 inherits round 9's FINAL merge objective and memory/adjoint settings unchanged
+    for key, value in (("model.merge_pivot_state_st", True), ("model.checkpoint_forward", True),
+                       ("loss.merge_core.weight", 0.0), ("loss.merge_core.tf_weight", 0.6),
+                       ("loss.merge_core.yield_weight", 0.0)):
+        assert a[key] == value and b[key] == value, key
     changed = {k for k in set(a) | set(b) if a.get(k, "<absent>") != b.get(k, "<absent>")}
     changed = {"optim.lr_scale" if k.startswith("optim.lr_scale.") else k for k in changed}
     cutin = {k for k in changed if k.startswith("loss.cutin_reaction.")}
@@ -56,6 +57,8 @@ def test_round10_loss_contract_and_composition():
     assert cfg.model.merge_decision == "first_passage" and cfg.model.merge_passage_law == "hybrid"
     assert not cfg.model.leader_change_features
     assert cfg.model.merge_pivot_state_st is True
+    assert cfg.model.checkpoint_forward is True
+    assert cfg.loss.merge_core.weight == 0.0 and cfg.loss.merge_core.tf_weight == 0.6
     assert cfg.physics.ramp_lane_end_stop is True
     assert cfg.physics.ramp_risk_retain is True
     model = build_model(cfg, build_physics(cfg))
