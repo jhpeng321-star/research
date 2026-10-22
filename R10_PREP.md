@@ -59,15 +59,15 @@ partially fixable (stated limit).
 configs/c4_wm_v10round10.toml: extends round 2 directly with round 9's blocks copied inline (round 9 already uses the full 16-file
 extends depth, so extending round 9 is refused by the loader; tests/test_r10_config.py pins that the effective config differs
 from round 9 only in name, model.init_from, loss.cutin_reaction.*, optim.freeze_prefixes, optim.lr_scale, runtime.out_dir).
-Init: /root/autodl-tmp/c4/v5/runs/c4_wm_v10_round9/wm_s_stage300.pt. `[loss.cutin_reaction]` weight @@W@@, control_weight 1,
+Init: /root/autodl-tmp/c4/v5/runs/c4_wm_v10_round9/wm_s_stage300.pt. `[loss.cutin_reaction]` weight 1.0 (provisional), control_weight 1,
 pre_s 1, max_window_s 6, huber 0.5.
 Weight rule (tools/r10_weight_rule.py, no hand-set number): weight = G_brake / G_cutin(weight=1), the geometric-mean accumulated
 gradient norm of the explicit braking terms (brake_persist + brake_persist_quantile as composed in round 9/10) over the
 round-10 trainable parameters divided by the gradient norm of the unweighted cut-in term, measured with the real runner on real
-local TRAIN windows at the round-8 stage-300 weights. @@WEIGHTRESULT@@
+local TRAIN windows at the round-8 stage-300 weights. NOT COMPLETED (same CPU limit): the config uses weight 1.0 = the unweighted cut-in term (event mean + control mean) and docs/r10_weight_rule.json is marked PROVISIONAL. Run `python tools/r10_weight_rule.py --ckpt <round8 or round9 ckpt> --out ...` on gpuR/CPU and set loss.cutin_reaction.weight to its `weight_geomean_ratio` (the config test reads docs/r10_weight_rule.json).
 
 ## 7. Micro-smoke (tools/r10_micro_smoke.py: real WmSTrainer.train_batch, local TRAIN, 2 steps, batch 2, 20 s windows each with a recorded insertion)
-@@SMOKE@@
+NOT COMPLETED in the time available: the shared CPU (100% load, 3-5x slow) did not finish the first optimizer step (rollout + round-9 losses + replay, batch 2, 20 s) in 30+ minutes of wall time; window building (1 s warm) and trainer construction succeed on the round-10 config (INIT_FROM.json: 149 tensors loaded, 8 new = merge_pivot from the round-8 checkpoint, 0 mismatch). Command: `python tools/r10_micro_smoke.py --ckpt <round8 stage300> --roots tmp_r10/local_roots/v5_native --out <dir> --steps 2 --batch 2 --horizon-steps 40 --pre-steps 24`. What IS verified: cut-in loss nonzero/finite/telemetry/gradient reach on the real runner at small scale (tests/test_cutin_reaction.py), the trainable/frozen set on the real model (tests/test_r10_config.py), the telemetry keys (runner test) and the gate's checks (bash -n).
 
 ## 8. Gate
 scripts/round10_gate.sh (LF, `bash -n` clean): same structure as round 9 (smoke then `exec` the full run; out dir
@@ -80,3 +80,8 @@ INIT_FROM.json complete, frozen tensors and merge_pivot bitwise unchanged, a tra
 - Free-rollout over-reaction not re-measured (needs SUMO-free rollouts on GPU); attribution is teacher-forced at matched state.
 - The dead attention head means round 10 can only change the residual through the temporal MLP and the gate (global scale).
 - Round-9 outcome unknown: the gate requires its checkpoint; if round 9 failed the merge, round 10 inherits it.
+
+## STATUS (owner pause, 2026-10-22 ~17:10)
+Done: merge (clean), fix B finished (history hook, telemetry, checkpointed replay, fail-closed leader_change_features), tests green (sections 3), attribution verdict (section 4), round-10 config + config-pin test, scripts/round10_gate.sh, astra packet src_r10/ROUND10_PROPOSAL.md, offline pilot.
+Not done: the weight measurement and the 2-step local micro-smoke did not finish on the loaded CPU (weight is PROVISIONAL 1.0, docs/r10_weight_rule.json; rerun tools/r10_weight_rule.py and tools/r10_micro_smoke.py, commands in sections 6-7). Gate not run on gpuR.
+Notes: data/ in the worktree (r9_train ckpt + one episode) is untracked test data; round-9 postponed so round 10 is not launchable until round 9 exists.
