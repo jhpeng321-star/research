@@ -204,6 +204,9 @@ class ModelConfig:
     leader_change_features: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
+    checkpoint_forward: bool = False
+    """Recompute the pure per-step forward in backward (exact; safe with stateful CAV controllers, unlike
+    checkpoint_step). Runtime switch, not part of a checkpoint."""
     grad_decay_per_step: float = 1.0
     """Round 5b: backward-only gradient damping per rollout step through the carried state (1.0 = off)."""
     init_from: Optional[str] = None

@@ -186,6 +186,7 @@ class WmSTrainer:
         """Mirror the flag-gated model bounds onto the model (no-ops when unset)."""
         s, model = self.settings, self.model
         model.apply_direct_commands = False  # recorded teacher or the full dispatcher owns CAVs
+        model.checkpoint_forward = bool(getattr(s, "checkpoint_forward", False))
         if getattr(s, "lane_hazard_decouple", False):
             # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
             model.lane_hazard_detach = True
@@ -279,6 +280,11 @@ class WmSTrainer:
         if any(p.grad is not None and not bool(torch.isfinite(p.grad).all())
                for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S gradient")
+        # Diagnostic only: detached pre-clip L2 norm; never modify the gradients.
+        pivot = getattr(self.model, "merge_pivot", None)
+        pivot_grad_norm = (math.hypot(*(float(p.grad.detach().double().norm())
+                                      for p in pivot.parameters() if p.grad is not None))
+                           if pivot is not None else None)
         grad_norm = None
         if self.settings.grad_clip:
             grad_norm = float(torch.nn.utils.clip_grad_norm_(self.model.parameters(),
@@ -287,6 +293,8 @@ class WmSTrainer:
         if any(not bool(torch.isfinite(p).all()) for p in self.model.parameters()):
             raise RuntimeError("non-finite WM-S parameter")
         record = {**parts, "seconds": time.perf_counter() - started, "finite": True}
+        if pivot_grad_norm is not None:
+            record["merge_pivot_grad_norm"] = pivot_grad_norm
         if grad_norm is not None:
             # pre-clip global gradient norm and whether the clip was active (round 5b logging)
             record["grad_norm"] = grad_norm

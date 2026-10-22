@@ -93,7 +93,7 @@ def test_unknown_history_zero_conditioning_and_exits_never_reset_prior():
     assert torch.isinf(model.nll(fit.pack([s]))).all()
 
 
-def test_f1_penalty_is_sum_objective_and_grouped_cartesian_selection():
+def test_f1_penalty_and_grouped_cartesian_selection():
     args = SimpleNamespace(iters=2, lr=.01, n_quad=16, inner_folds=2, shrinkage=[0., .01])
     seqs = [sequence("w"+str(i)) for i in range(4)]
     model, report = fit.select("F1", initial(), None, seqs, args)
@@ -105,6 +105,41 @@ def test_f1_penalty_is_sum_objective_and_grouped_cartesian_selection():
         groups = [set(fold["worlds"]) for fold in trial["folds"]]
         assert groups[0].isdisjoint(groups[1])
     assert (0., 0.) in [(r["lambda_tau"], r["lambda_w"]) for r in report["inner"]]
+
+
+@pytest.mark.parametrize('pair', [(0., 0.), (.002, 0.)])
+@pytest.mark.parametrize('bucket_sizes', [(1, 2), (3,)])
+def test_tf_objective_optimizer_scales_batches_gradients_and_final_selection(monkeypatch, pair,
+                                                                           bucket_sizes):
+    class QuadraticTF(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.value = torch.nn.Parameter(torch.tensor(2., dtype=torch.float64))
+
+        def nll(self, batch, n_quad):
+            return (self.value - batch).square()
+
+        def params(self):
+            return {'tau': self.value}
+
+    model = QuadraticTF()
+    monkeypatch.setattr(fit, 'make_model', lambda *args: model)
+    # Unequal batches catch an accidental mean reduction or per-batch denominator.
+    packed = torch.tensor([0., 1., 3.], dtype=torch.float64).split(bucket_sizes)
+    monkeypatch.setattr(fit, 'batches', lambda sequences: packed)
+    start_nll = sum(float(model.nll(b, 2).sum().detach()) for b in packed)
+    expected_start = (0.6 / 395.2) * start_nll / 3 + pair[0] * 4.
+    expected_grad = (0.6 / 395.2) * 4. / 3 + pair[0] * 4.
+    fitted, report = fit.optimize('F1', None, None, [None]*3,
+                                  SimpleNamespace(iters=1, lr=.01, n_quad=2), pair)
+    assert report['status'] == 'fitted'
+    assert report['trace'][0]['sum_objective'] == pytest.approx(expected_start)
+    assert report['trace'][0]['gradient_norms']['value'] == pytest.approx(expected_grad)
+    final_nll = sum(float(fitted.nll(b, 2).sum().detach()) for b in packed)
+    expected_final = (0.6 / 395.2) * final_nll / 3 + pair[0] * float(fitted.value.detach())**2
+    assert report['sum_objective'] == pytest.approx(expected_final)
+    assert report['sum_objective'] < expected_start
+    assert fitted.value < 2.  # the post-update score must use the same normalization
 
 
 def test_reconciles_one_denominator_and_refuses_duplicate_exposure():

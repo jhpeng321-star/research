@@ -37,7 +37,7 @@ def main(argv=None):
         c["cav_merges"] += len(rows) - len(hdv)
         for r in hdv:
             c["supported"] += r["support_verdict"] == "supported"
-            c["excluded"] += r["support_verdict"] == "excluded_explained"
+            c["excluded"] += r["support_verdict"] == "excluded_counted"
             c["vetoed"] += r["support_verdict"] == "vetoed"
             if "pack_frame_eligible" in r:
                 c["pack_eligible"] += bool(r["pack_frame_eligible"])
@@ -53,10 +53,10 @@ def main(argv=None):
         causes.update(report["causes"])
         excluded.update(report.get("excluded_causes", {}))
         for r in hdv:
-            if "F1_mass" not in r:  # explained sequences are dropped from the fitter
-                laws[src][("F1", "dropped_explained")] += 1
+            if "F1_mass" not in r:  # counted-exclusion sequences are dropped from the fitter
+                laws[src][("F1", "dropped_counted_exclusion")] += 1
     print(f"episodes: {episodes}\n")
-    print("| source | episodes | HDV events | supported | explained exclusions | unexplained vetoes | "
+    print("| source | episodes | HDV events | supported | counted exclusions (events) | unexcluded vetoes | "
           "supported % (of all) | pack-frame supported |")
     print("|---|---|---|---|---|---|---|---|")
     total = Counter()

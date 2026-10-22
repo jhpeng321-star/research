@@ -1,8 +1,7 @@
 """R9LANE2: ``physics.ramp_risk_retain`` - a crawling queue head at the zone start keeps its chain."""
-from dataclasses import asdict, replace
+from dataclasses import asdict
 import json
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import torch

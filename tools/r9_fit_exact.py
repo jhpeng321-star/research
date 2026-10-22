@@ -7,8 +7,8 @@ Usage from the workspace::
     sequences, report = fit.build_dataset(episodes, frozen, n_quad=8)
     batch = fit.exact_pack(sequences[:128])
     model = fit.ExactCandidate('M0-refit', frozen)
-    loss = model.nll(batch, 8).mean()
-    loss.backward()  # optimize every requires_grad parameter of model
+    loss = fit.tf_objective(model.nll(batch, 8), cohort_cars=len(sequences))
+    loss.backward()  # accumulate all cohort batches before the optimizer step
 
 Alternatively augment existing sequences with ``attach_episode`` and pass
 ``{**merge_fit_v2.pack(subset), 'sequences': subset}``. No monkeypatching needed.
@@ -31,6 +31,12 @@ row). Prefix survival conditions the persistent latent, is not scored again,
 and is differentiable during refit. Unknown age/history returns NaN curves and
 infinite NLL; it never gets a new population prior. Competing exits have a
 survival curve but infinite full-outcome NLL without a declared exit model.
+
+Owner-amended R9 objective: TF+F2 only, exactly (0.6/395.2)*L_TF.
+L_TF is the global cohort per-car mean conditional NLL, matching training.
+Each length bucket contributes its NLL sum divided by the total cohort size,
+never its own batch size. NLLs and distributions remain unscaled for diagnostics.
+The zero-weight on-policy term is absent, not evaluated and multiplied by zero.
 
 Default replay uses r9_exact's encode-once/no-EMA, k=0, runtime identity policy.
 Full-scene inputs are batched over time, NOT interpreted as an unroll. Rolling
@@ -77,6 +83,18 @@ MODE = {'M0': 'original_runtime', 'M0-seqTF': 'seq_tf',
         'M0-corrected': 'corrected', 'M0-refit': 'original_runtime',
         'Soft-hazard': 'corrected'}
 REFITS = ('M0-refit', 'Soft-hazard')
+TF_SCALE = 0.6 / 395.2
+
+
+def tf_objective(losses, *, cohort_cars):
+    """Contribution to (0.6/395.2) times the global per-car conditional TF mean.
+
+    Pass the full cohort size even for a partial length bucket, so contributions
+    remain additive. This matches training's NLL sum / max(n_cars, 1), with the
+    fixed TF weight and 395.2 normalization unchanged. No on-policy term is
+    evaluated, and unsupported TF outcomes retain their infinite loss.
+    """
+    return TF_SCALE * losses.sum() / max(cohort_cars, 1)
 
 
 class _SparsePairAttention(nn.Module):
@@ -421,37 +439,46 @@ def attach_episode(sequences, cache):
     return sequences
 
 
-def drop_explained_exclusions(sequences, cache):
-    """Remove sequences whose terminal event is a P1-unrepresentable recorded merge.
+def drop_counted_exclusions(sequences, cache):
+    """Remove sequences made physically impossible by the WM's own one-step motion.
 
-    Identical classification and sequence exclusion to ``MergePivotTerm.prepare`` and the
-    support audit (``merge_pivot_support``).  Returns ``(kept, dropped)``; each dropped
-    entry names the vehicle, event row and physical reason.  Unexplained vetoes and
-    model-motion vetoes are never dropped here.
+    The COUNTED EXCLUSION (``merge_pivot_support.counted_exclusion``): identical function
+    and chain bookkeeping to ``MergePivotTerm.prepare`` and the support audit.  A sequence
+    leaves the cohort, for every compared law alike, when its recorded event step has zero
+    passage support (``E_T = 0``) or its survival is exactly zero before the event/censoring.
+    Returns ``(kept, dropped)``; each dropped entry names the vehicle, rows, class and
+    whether the car was scored (known entry age).  Nothing else is dropped here.
     """
-    from wms.train.losses.merge_pivot_support import classify_vetoed_events
+    from wms.train.losses.merge_pivot_support import CLASSES, counted_exclusion
 
     geo = cache['geometry']
-    n = geo['eligible'].shape[1]
-    event = torch.zeros_like(geo['eligible'])
+    live = torch.zeros_like(geo['eligible'])
+    event, reset = torch.zeros_like(live), torch.zeros_like(live)
     for seq in sequences:
-        if seq['event']:
-            event[0, seq['event_row'] - 1, seq['slot']] = True
-    verdict = classify_vetoed_events(geo, event, target_lane=cache['metadata']['physics']['merge_target_lane'])
+        slot, entry, stop = int(seq['slot']), int(seq['entry_row']), int(seq['entry_row']) + len(seq['times'])
+        active = torch.tensor(seq['lifecycle_active'], dtype=torch.bool)
+        live[0, entry:stop, slot] = active
+        if entry:
+            reset[0, entry, slot] = True
+        if seq['event'] and bool(active[-1]):
+            event[0, stop - 1, slot] = True
+    res = counted_exclusion(geo, live, event, reset,
+                            target_lane=cache['metadata']['physics']['merge_target_lane'])
     kept, dropped = [], []
     for seq in sequences:
-        if seq['event'] and bool(verdict['explained'][0, seq['event_row'] - 1, seq['slot']]):
-            at = (0, seq['event_row'] - 1, seq['slot'])
-            cause = ('same_step_vacated_leader' if bool(verdict['vacated'][at]) else
-                     'junction_internal_target_vehicle' if bool(verdict['junction'][at]) else
-                     'vacated_leader_and_junction_vehicle')
+        slot, entry = int(seq['slot']), int(seq['entry_row'])
+        stop = entry + len(seq['times'])
+        if bool(res['rows'][0, entry:stop, slot].any()):
+            cls = int(res['cls'][0, entry:stop, slot].max())
+            scored = not seq['unknown_age']
             # same identity keys as legacy exclusions (merge_fit_stage2a.reconcile)
             dropped.append({**{key: seq[key] for key in ('world', 'source', 'episode', 'vehicle',
                                                          'slot', 'entry_row', 'event_row')},
-                            'reason': 'explained_P1_unrepresentable:' + cause})
+                            'class': CLASSES[cls], 'scored': scored,
+                            'reason': ('counted_exclusion:' if scored
+                                       else 'counted_exclusion_unknown_age:') + CLASSES[cls]})
         else:
             kept.append(seq)
-    assert n >= 0
     return kept, dropped
 
 
@@ -498,7 +525,7 @@ def build_dataset(episodes, frozen, *, n_quad=8, chunk_size=16,
         subset, report = legacy.build_dataset([{**ep, 'path': path}], adapter=proposal,
                                                runtime_risk=cache['geometry']['ramp'][0].numpy())
         attach_episode(subset, cache)
-        subset, dropped = drop_explained_exclusions(subset, cache)
+        subset, dropped = drop_counted_exclusions(subset, cache)
         report['exclusions'] = list(report['exclusions']) + dropped
         for seq in subset:
             seq['unknown_age'] = bool(seq['unknown_age'])

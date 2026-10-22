@@ -14,6 +14,58 @@ from wms.model.controllers import DIRECT_ID
 from wms.train.losses.merge_core_seqtf import build_recorded_scene
 
 
+def test_tf_objective_fixed_normalization_is_additive_and_preserves_support():
+    losses = torch.tensor([2., 5., 11.], dtype=torch.float64, requires_grad=True)
+    objective = fit.tf_objective(losses, cohort_cars=3)
+    # Independent training expression: cfg.tf_weight * nll / n_cars / cfg.z_tf.
+    torch.testing.assert_close(objective, 0.6 * losses.sum() / 3 / 395.2, rtol=1e-15, atol=0)
+    torch.testing.assert_close(objective, fit.tf_objective(losses[:1], cohort_cars=3) +
+                               fit.tf_objective(losses[1:], cohort_cars=3), rtol=1e-15, atol=0)
+    torch.testing.assert_close(objective, fit.tf_objective(losses.repeat(2), cohort_cars=6),
+                               rtol=1e-15, atol=0)
+    objective.backward()
+    torch.testing.assert_close(losses.grad, torch.full_like(losses, (0.6 / 395.2) / 3),
+                               rtol=1e-15, atol=0)
+    assert torch.isposinf(fit.tf_objective(torch.tensor([1., torch.inf]), cohort_cars=2))
+    assert fit.tf_objective(torch.empty(0), cohort_cars=0) == 0
+
+
+@pytest.mark.parametrize('event', [False, True])
+def test_tf_objective_keeps_exact_survivor_conditioning_and_prefix_gradients(event):
+    # Exercise the production distribution/NLL without a checkpoint or replay data.
+    class SyntheticCandidate(fit.ExactCandidate):
+        def __init__(self):
+            torch.nn.Module.__init__(self)
+            self.mode = 'corrected'
+            self.logits = torch.nn.Parameter(torch.tensor(
+                [[[-2., -.8, .1, .7], [.3, .9, -.4, 1.2]]], dtype=torch.float64))
+
+        def _logits(self, data, n_quad):
+            return self.logits, torch.tensor([.5, .5], dtype=torch.float64)
+
+    model = SyntheticCandidate()
+    batch = dict(valid=torch.ones(1, 4, dtype=torch.bool), last=torch.tensor([3]),
+                 event=torch.tensor([event]), sequences=[dict(times=[.5, 1., 1.5, 2.])],
+                 exact_pack=dict(score_start=torch.tensor([2]), unknown=torch.tensor([False]),
+                                 exit_unsupported=torch.tensor([False]),
+                                 corrected=dict(eligible=torch.ones(1, 4, dtype=torch.bool))))
+    hazards = model.logits.sigmoid()
+    denominator = (1 - hazards[:, :, :2]).prod(-1).mean(-1)
+    numerator = ((1 - hazards[:, :, :3]).prod(-1) * hazards[:, :, 3]).mean(-1) if event else (
+        (1 - hazards).prod(-1).mean(-1))
+    expected_nll = -(numerator / denominator).log()
+    raw = model.nll(batch, 2)
+    torch.testing.assert_close(raw, expected_nll)
+    expected_grad, = torch.autograd.grad((0.6 / 395.2) * expected_nll.sum(), model.logits,
+                                        retain_graph=True)
+    fit.tf_objective(raw, cohort_cars=1).backward()
+    torch.testing.assert_close(model.logits.grad, expected_grad)
+    assert (model.logits.grad[:, :, :2].abs() > 0).all()
+    dist = model.distribution(batch, 2)
+    assert torch.isneginf(dist['log_mass'][:, :2]).all()
+    torch.testing.assert_close(dist['cdf'][:, :2], torch.zeros(1, 2, dtype=torch.float64))
+
+
 @pytest.fixture(scope='module')
 def frozen():
     return exact.load_frozen()

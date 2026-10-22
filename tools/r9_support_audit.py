@@ -35,7 +35,8 @@ from wms.physics.config import PhysicsConfig
 from wms.train.losses.merge_pivot import (
     MergePivotConfig, build_recorded_geometry, certify_pre_window, pre_window_maximum, score_chunk,
 )
-from wms.train.losses.merge_pivot_support import classify_vetoed_events, sequence_rows
+from wms.train.losses.merge_pivot_support import (
+    CLASSES, counted_exclusion, exclusion_counts, lifecycle_rows, prefix_survival_zero)
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
 
@@ -276,16 +277,13 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
         breaks = torch.cat((torch.zeros_like(present[:, :1]),
                             ~cont[:, :n - 1] | ~present[:, :n - 1]), 1)[:, :n]
         risk = close_risk(risk, (geo["ramp_open"] | pre_open[:, :-1]) & own, breaks)
-    # The same P1-unrepresentable classification and sequence exclusion as the likelihood
-    # (MergePivotTerm.prepare): explained events leave scoring WITH their whole sequence.
-    verdict = classify_vetoed_events(geo, events & own, target_lane=cfg.target_lane)
-    explained = verdict["explained"]
+    # The COUNTED EXCLUSION of the likelihood (MergePivotTerm.prepare) is applied per analysis
+    # window below, with the same shared function: a car whose exact likelihood is zero under the
+    # WM's own one-step motion leaves scoring WITH its whole chain and is counted.
     events_all = events
-    if bool(explained.any()):
-        full_reset = torch.cat((torch.zeros_like(present[:, :1]),
-                                ~cont[:, :n - 1] | ~present[:, :n - 1]), 1)[:, :n]
-        risk = risk & ~sequence_rows(explained, risk, full_reset)
-        events = events & ~explained
+    risk, events = risk.clone(), events.clone()
+    excl_event = torch.zeros_like(events_all)
+    excl_cls = torch.full(events_all.shape, -1, dtype=torch.long)
     start = int(np.searchsorted(times, entry.get("warmup_s", 0.) if start_s is None else start_s))
     size = int(round(window_s / dt))
     if size < 1:
@@ -305,6 +303,22 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
             history = certify_pre_window(rec[:, :lo + 1], present[:, :lo + 1],
                                          cont[:, :lo], prefix_geo, cfg, retain=retain)
             initial = pre_window_maximum(model, [history], c[:, 0])
+        births_w, live_w = lifecycle_rows(risk[:, lo:hi], events_all[:, lo:hi], reset)
+        first = torch.zeros_like(births_w)
+        first[:, 0] = ~torch.isnan(initial) & ~reset[:, 0]
+        scored_w = births_w & (known_before | first)
+        res = counted_exclusion(
+            {key: val[:, lo:hi] for key, val in geo.items()}, live_w,
+            events_all[:, lo:hi] & own[:, lo:hi], reset, target_lane=cfg.target_lane,
+            prefix_zero=prefix_survival_zero([history], c[:, 0]) if lo else None)
+        for key, val in exclusion_counts(res, scored_w).items():
+            counts[key] += val
+        risk[:, lo:hi] = risk[:, lo:hi] & ~res["tail"]
+        events[:, lo:hi] = events[:, lo:hi] & ~res["tail"]
+        excl_event[:, lo:hi] = res["event"]
+        excl_cls[:, lo:hi] = res["cls_rows"]
+        counts["scored_cars_after"] += int((lifecycle_rows(risk[:, lo:hi], events[:, lo:hi], reset)[0]
+                                            & (known_before | first)).sum())
         kw = dict(risk=risk[:, lo:hi], event=events[:, lo:hi] & own[:, lo:hi],
                   reset=reset, eligible=geo["eligible"][:, lo:hi])
         for label, prior in (("before", None), ("after", initial)):
@@ -351,14 +365,12 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
                         reason.append(text)
                 if is_cav:
                     reason.append("cav_not_learned")
-                excluded = bool(explained[0, t, k])
+                excluded = bool(excl_event[0, t, k])
                 zero = bool(torch.isneginf(logmass[0, k])) and not excluded
                 details = (event_details(geo, raw, vid, cav, t, k, params, route)
                            if (not eligible or zero) else {})
                 if excluded:
-                    shared = ("same_step_vacated_leader" if bool(verdict["vacated"][0, t, k]) else
-                              "junction_internal_target_vehicle" if bool(verdict["junction"][0, t, k])
-                              else "vacated_leader_and_junction_vehicle")
+                    shared = CLASSES[int(excl_cls[0, t, k])]
                     details["shared_classifier_cause"] = shared
                     details["veto_cause"] = shared
                 details.update(c=number(c[0, t, k]), previous_maximum=number(maximum[0, k]),
@@ -380,7 +392,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
                     vehicle_id=int(vid[t, k]), slot=k, event_time_s=float(times[t + 1]),
                     window_start_s=float(times[lo]), is_cav=is_cav,
                     support_verdict=("cav_not_modelled" if is_cav else "supported" if eligible else
-                                     "excluded_explained" if excluded else "vetoed"),
+                                     "excluded_counted" if excluded else "vetoed"),
                     physical_supported=physical, veto_reason=";".join(reason),
                     unknown_age_before=not bool(old_known[0, k]), unknown_age_after=not bool(known[0, k]),
                     scored_event_after=bool(active[0, k] & known[0, k]) and not is_cav,
@@ -395,7 +407,7 @@ def audit_episode(model, ep, entry, source, window_s=120., start_s=None, cache=N
     counts.update(recorded_merges=len(rows), hdv_events=len(hdv), cav_merges=len(rows) - len(hdv),
                   physically_supported=sum(row["physical_supported"] for row in hdv),
                   runtime_supported=sum(row["support_verdict"] == "supported" for row in hdv),
-                  explained_exclusions=sum(row["support_verdict"] == "excluded_explained" for row in hdv),
+                  counted_exclusion_events=sum(row["support_verdict"] == "excluded_counted" for row in hdv),
                   unexplained_vetoes=sum(row["support_verdict"] == "vetoed" for row in hdv),
                   all_hdv_zero_mass=sum(row["zero_mass"] for row in hdv),
                   absorbed_before_event=sum(row["absorbed_before_event"] for row in hdv), episodes=1)

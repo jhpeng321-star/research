@@ -11,7 +11,8 @@ merge_st_width = 1.0
 merge_passage_law = "hybrid"
 merge_w_init = 1.0          # Learned positive passage width initialization.
 merge_quadrature_order = 32
-merge_pivot_state_st = false   # no ST adjoint through the frozen rollout dynamics (memory: rollout graph not retained)
+merge_pivot_state_st = true    # full pathwise adjoint kept (owner decision 10-22); memory handled by checkpoint_forward
+checkpoint_forward = true      # recompute the pure per-step forward in backward (exact; bit-identical grads, ~30x less memory)
 merge_negotiation = false
 
 [physics]
@@ -24,7 +25,8 @@ ramp_risk_retain = true
 
 [loss.merge_core]
 version = 2
-weight = 0.4
+# Owner amendment: TF + F2 only; recorded-matched on-policy scores are diagnostics.
+weight = 0.0
 tf_weight = 0.6
 yield_weight = 0.0
 metrics = true
