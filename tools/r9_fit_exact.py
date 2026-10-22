@@ -7,8 +7,8 @@ Usage from the workspace::
     sequences, report = fit.build_dataset(episodes, frozen, n_quad=8)
     batch = fit.exact_pack(sequences[:128])
     model = fit.ExactCandidate('M0-refit', frozen)
-    loss = model.nll(batch, 8).mean()
-    loss.backward()  # optimize every requires_grad parameter of model
+    loss = fit.tf_objective(model.nll(batch, 8), cohort_cars=len(sequences))
+    loss.backward()  # accumulate all cohort batches before the optimizer step
 
 Alternatively augment existing sequences with ``attach_episode`` and pass
 ``{**merge_fit_v2.pack(subset), 'sequences': subset}``. No monkeypatching needed.
@@ -31,6 +31,12 @@ row). Prefix survival conditions the persistent latent, is not scored again,
 and is differentiable during refit. Unknown age/history returns NaN curves and
 infinite NLL; it never gets a new population prior. Competing exits have a
 survival curve but infinite full-outcome NLL without a declared exit model.
+
+Owner-amended R9 objective: TF+F2 only, exactly (0.6/395.2)*L_TF.
+L_TF is the global cohort per-car mean conditional NLL, matching training.
+Each length bucket contributes its NLL sum divided by the total cohort size,
+never its own batch size. NLLs and distributions remain unscaled for diagnostics.
+The zero-weight on-policy term is absent, not evaluated and multiplied by zero.
 
 Default replay uses r9_exact's encode-once/no-EMA, k=0, runtime identity policy.
 Full-scene inputs are batched over time, NOT interpreted as an unroll. Rolling
@@ -77,6 +83,18 @@ MODE = {'M0': 'original_runtime', 'M0-seqTF': 'seq_tf',
         'M0-corrected': 'corrected', 'M0-refit': 'original_runtime',
         'Soft-hazard': 'corrected'}
 REFITS = ('M0-refit', 'Soft-hazard')
+TF_SCALE = 0.6 / 395.2
+
+
+def tf_objective(losses, *, cohort_cars):
+    """Contribution to (0.6/395.2) times the global per-car conditional TF mean.
+
+    Pass the full cohort size even for a partial length bucket, so contributions
+    remain additive. This matches training's NLL sum / max(n_cars, 1), with the
+    fixed TF weight and 395.2 normalization unchanged. No on-policy term is
+    evaluated, and unsupported TF outcomes retain their infinite loss.
+    """
+    return TF_SCALE * losses.sum() / max(cohort_cars, 1)
 
 
 class _SparsePairAttention(nn.Module):

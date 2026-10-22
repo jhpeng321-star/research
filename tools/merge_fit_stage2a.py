@@ -1,6 +1,8 @@
 """Round-9 items 22--26: exact frozen heads, F1/F2, single-use TRAIN audit.
 
 All data/artifacts are workspace-local. CPU only; zero support is never floored.
+Owner-amended TF+F2 fit: (0.6/395.2)*L_TF, with L_TF the global cohort per-car
+mean conditional NLL; on-policy is excluded entirely.
 The old scalar fitter remains available explicitly as --legacy-approx.
 """
 # The standalone entrypoint must bootstrap workspace packages before importing.
@@ -143,6 +145,7 @@ def optimize(kind, initial, frozen, sequences, args, pair=(0., 0.)):
     if kind in FROZEN:
         return model, {"status": "untouched", "updates": 0}
     packed = batches(sequences)
+    cohort_cars = len(sequences)
     # Physical/support failures abort the WHOLE fit, never a supported-only subset.
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
     best, best_loss, trace = copy.deepcopy(model.state_dict()), math.inf, []
@@ -156,8 +159,9 @@ def optimize(kind, initial, frozen, sequences, args, pair=(0., 0.)):
                 return model, {"status": "exact_support_failure", "updates": step,
                                "unsupported_cars_in_batch": int((~torch.isfinite(losses)).sum()),
                                "cohort_cars": len(sequences), "trace": trace}
-            # Advice objective is SUM NLL + lambda_tau*tau^2 + lambda_w*w^2.
-            contribution = losses.sum()
+            # Every bucket uses the same global per-car denominator. F2 is
+            # already inside nll; diagnostic shrinkage is added separately.
+            contribution = heads.tf_objective(losses, cohort_cars=cohort_cars)
             total += float(contribution.detach())
             contribution.backward()
         shrink = penalty(model, pair)
@@ -176,7 +180,8 @@ def optimize(kind, initial, frozen, sequences, args, pair=(0., 0.)):
                           "gradient_norms": {k: float(v.norm()) for k, v in grads.items()}})
         optimizer.step()
     with torch.no_grad():
-        final = sum(float(model.nll(b, args.n_quad).sum()) for b in packed)
+        final = sum(float(heads.tf_objective(model.nll(b, args.n_quad), cohort_cars=cohort_cars))
+                    for b in packed)
         final += float(penalty(model, pair))
     if math.isfinite(final) and final < best_loss:
         best, best_loss = copy.deepcopy(model.state_dict()), final
@@ -580,7 +585,10 @@ def main(argv=None):
                          "audit_seconds": finished-fitted, "total_seconds": finished-started,
                          "fit_worlds": len(fit_worlds), "episodes": len(fit_eps),
                          "projected_full_prepare_seconds": (prepared-started)*len(episodes)/len(fit_eps)},
-              "semantics": {"M0": "untouched full learned deployed head on common corrected causal path and F2",
+              "semantics": {"objective": "(0.6/395.2)*L_TF; L_TF=global cohort per-car mean conditional NLL; "
+                                         "on-policy excluded (weight 0); diagnostic shrinkage added separately",
+                            "NLL_diagnostics": "raw unscaled conditional NLL, including inner validation and quadrature refinement",
+                            "M0": "untouched full learned deployed head on common corrected causal path and F2",
                             "M0-original-runtime": "same frozen head, original runtime geometry/envelope; bookkeeping effect diagnostic",
                             "M0-seqTF": "untouched actual seq_tf_chunk zero-location/no-residual law",
                             "M0-approx": "old scalar-only approximation; never deployed round 8",
