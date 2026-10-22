@@ -2,6 +2,7 @@
 # Ship the round-9 code delta to gpuR into a FRESH repo dir (never overwrites, never deletes on gpuR).
 #
 #   scripts/ship_r9_gpuR.sh <local-commit> [--local-only | --stage-only] [--skip-base-check] [--base <commit>]
+#   --check-base-only: only compare gpuR repo_r9_base against the base commit (read-only on gpuR), then exit.
 #   --local-only: build + self-verify the tarball locally, never contact gpuR.
 #
 # What it does (run from any directory inside the local worktree, Git Bash):
@@ -24,11 +25,13 @@ L=/root/autodl-tmp/c4/v5
 BASE=21ca456f
 STAGE_ONLY=0
 LOCAL_ONLY=0
+BASE_ONLY=0
 SKIP_BASE=0
 COMMIT=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --stage-only) STAGE_ONLY=1;;
+    --check-base-only) BASE_ONLY=1;;
     --local-only) LOCAL_ONLY=1; SKIP_BASE=1;;
     --skip-base-check) SKIP_BASE=1;;
     --base) shift; BASE="$1";;
@@ -44,7 +47,7 @@ cd "$ROOT"
 SHA=$(git rev-parse --short=8 "$COMMIT^{commit}")
 BASE_FULL=$(git rev-parse "$BASE^{commit}")
 git merge-base --is-ancestor "$BASE_FULL" "$SHA" || { echo "BASE $BASE is not an ancestor of $SHA" >&2; exit 65; }
-WORK="$ROOT/runs/active/ship_r9_$SHA"
+WORK="$ROOT/runs/active/ship_r9_${SHA}_$(date +%Y%m%d_%H%M%S)"
 [ ! -e "$WORK" ] || { echo "local staging dir exists: $WORK (choose a new commit or remove it yourself)" >&2; exit 66; }
 mkdir -p "$WORK/files"
 echo "[ship] commit=$SHA base=${BASE_FULL:0:8} remote=$REMOTE stage_only=$STAGE_ONLY"
@@ -95,6 +98,8 @@ sys.exit(1 if hard else 0)
 PY" || { echo "[ship] base check FAILED (src/configs differ from $BASE); inspect above" >&2; exit 67; }
 fi
 
+if [ "$BASE_ONLY" = 1 ]; then echo "[ship] base check done; nothing built or sent."; exit 0; fi
+
 # ---- 3. delta + tar + manifest --------------------------------------------------------------------------
 git diff --name-status --no-renames "$BASE_FULL" "$SHA" > "$WORK/delta_status.txt"
 awk '$1=="A"||$1=="M"{print $2}' "$WORK/delta_status.txt" > "$WORK/ship_paths.txt"
@@ -109,7 +114,7 @@ while IFS= read -r p; do
 done < "$WORK/ship_paths.txt"
 # shell scripts must be LF on gpuR
 while IFS= read -r p; do
-  if grep -q -P '\r$' "$WORK/files/$p"; then echo "[ship] ERROR: CRLF in shipped $p" >&2; exit 68; fi
+  if [ "$(tr -cd '\r' < "$WORK/files/$p" | wc -c)" != 0 ]; then echo "[ship] ERROR: CRLF in shipped $p" >&2; exit 68; fi
 done < <(grep -E '\.sh$' "$WORK/ship_paths.txt" || true)
 ( cd "$WORK/files" && tar --force-local --no-same-owner -cf "../r9_delta_$SHA.tar" -T "../ship_paths.txt" )
 TARBYTES=$(stat -c %s "$WORK/r9_delta_$SHA.tar")

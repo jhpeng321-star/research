@@ -138,14 +138,17 @@ they may need the memory mitigation first.
 No training, no gate, no deletion is performed by the script.
 
 [Measured] dry runs: `--local-only` on `0aba97cc`: 72 files, tar 2,539,520 bytes, local self-check OK.
-`--stage-only` on gpuR: base check "mismatched 3 missing 3", then remote verify OK for 72 files; staged under
+`--stage-only` on gpuR: remote verify OK for 72 files (0aba97cc) and 77 files (31145f43); staged under
 `/root/autodl-tmp/c4/v5/ship_r9_0aba97cc/` (2.5 MB tar + check/ copy, left in place; the full `cp -a` dry run was not
 done: 296 MB base copy exceeds the 200 MB allowance).
-The base-check findings are benign: missing `tests/test_merge_core_v2_{config,onpolicy,seqtf}.py` (never shipped for
-round 8; they arrive with the delta), and CRLF/line-ending-only or fixture differences in `tests/test_pi_owner_adapter.py`,
-`tests/test_workflow_write_json_retry.py`, `tests/unit/__init__.py` (tests only; no src/configs drift).
-Run for the real thing: `bash scripts/ship_r9_gpuR.sh <final-merged-commit>` (takes ~10 min on this Windows box because the
-base md5 list is computed with one `git cat-file` per file; use `--skip-base-check` after the first successful run).
+Base check after hashing fix [Measured, `--check-base-only`, 10 s]: **0 mismatched, 3 missing** -- the missing files are
+`tests/test_merge_core_v2_{config,onpolicy,seqtf}.py` (never shipped for round 8; they arrive with the delta). (The first
+dry run showed 3 spurious test mismatches caused by CRLF inside committed blobs and intermittent fork failures in the
+per-file `git cat-file` loop; the script now hashes through one `git cat-file --batch` process with CRLF normalisation
+on both sides.) Staging dirs locally are time-stamped (`runs/active/ship_r9_<sha8>_<time>`); the remote dir is keyed by
+sha and never reused. `--stage-only` leaves `ship_r9_<sha8>/` (tar + check copy, ~5 MB) on gpuR; two such dirs exist now
+(`ship_r9_0aba97cc`, `ship_r9_31145f43`, both from dry runs; remove them yourself if wanted, I did not delete anything).
+Real run: `bash scripts/ship_r9_gpuR.sh <final-merged-commit>` (add `--skip-base-check` to skip the 10 s check).
 
 ## 6. gpuR state (read-only inspection, 2026-10-22 ~13:50 local)
 
