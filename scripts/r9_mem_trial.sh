@@ -13,6 +13,6 @@ mkdir -p $OUTD
 TR=${TR:-120}; [ "$STAGE" = 300 ] && TR=60
 /root/miniconda3/bin/python scripts/r9_mem_probe.py train --config configs/c4_wm_v10round9.toml --mode run --out $OUTD/run_${STAGE}${OLD}_b${B:-4} \
   --set model.init_from=$CK --set loss.loss_share_logging=false --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=${B:-4} \
-  --set "curriculum.unroll_s=[$STAGE.0]" --set "curriculum.stage_steps=[3]" --set "curriculum.truncation_steps_per_stage=[$TR]" \
+  --set "curriculum.unroll_s=[$STAGE.0]" --set "curriculum.stage_steps=[${NSTEPS:-3}]" --set "curriculum.truncation_steps_per_stage=[$TR]" \
   --set "optim.batch_size_per_stage=[${B:-4}]" --set "optim.lr_per_stage=[5.0e-5]" --set curriculum.max_hours=0.3 > $OUTD/log_${STAGE}${OLD}_b${B:-4}.txt 2>&1
 echo exit=$? >> $OUTD/log_${STAGE}${OLD}_b${B:-4}.txt
