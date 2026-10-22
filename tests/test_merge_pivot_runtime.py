@@ -348,3 +348,9 @@ def test_round9_config_keeps_state_st_on():
     from wms.config.load import load_train_config
     cfg = load_train_config("configs/c4_wm_v10round9.toml")
     assert ModelSpec.from_mapping(cfg.to_legacy_flat()).merge_pivot_state_st is True
+
+
+def test_round9_config_enables_checkpoint_forward():
+    from wms.config.load import load_train_config
+    from wms.train.settings import TrainSettings
+    assert TrainSettings.from_config(load_train_config("configs/c4_wm_v10round9.toml")).checkpoint_forward is True
