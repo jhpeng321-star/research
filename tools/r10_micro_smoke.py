@@ -59,8 +59,10 @@ def main(argv=None):
     p.add_argument("--set", action="append", default=[])
     args = p.parse_args(argv)
     cfg = load_train_config(ROOT / args.config, [
-        f"model.init_from={args.ckpt}", "runtime.device=cpu", *args.set])
+        f"model.init_from={args.ckpt}", "runtime.device=cpu",
+        f"runtime.threads={args.threads}", *args.set])
     torch.set_num_threads(args.threads)
+    torch.manual_seed(cfg.runtime.seed)
     model = build_model(cfg, build_physics(cfg))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -83,6 +85,8 @@ def main(argv=None):
                     picked.append((ds, index))
         dataset = ds if dataset is None else dataset
     print("windows with an insertion at step ~%d: %d" % (args.pre_steps, len(picked)), flush=True)
+    if args.steps < 1 or len(picked) < args.batch:
+        raise ValueError("smoke requires positive steps and enough insertion windows for a batch")
     trainer = WmSTrainer(cfg, model, picked[0][0], val_dataset=None, out_dir=out)
     model = trainer.model
     model.train()
@@ -128,6 +132,12 @@ def main(argv=None):
     }
     (out / "micro_smoke_summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     print(json.dumps(summary, indent=1))
+    if not (summary["all_finite"] and changed and summary["changed_subset_of_trainable"]
+            and not summary["merge_pivot_changed"]
+            and all(v is not None and math.isfinite(v) and v > 0
+                    for key in ("cutin_values", "cutin_events", "cutin_event_rows", "cutin_control_rows")
+                    for v in summary[key])):
+        raise RuntimeError("micro-smoke failed finite loss, cut-in coverage, or parameter-change checks")
 
 
 if __name__ == "__main__":

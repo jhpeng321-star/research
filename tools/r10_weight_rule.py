@@ -34,10 +34,11 @@ for extra in (ROOT / "src", ROOT):
     if str(extra) not in sys.path:
         sys.path.insert(0, str(extra))
 
-from torch.utils.data import DataLoader  # noqa: E402
+from torch.utils.data import ConcatDataset, DataLoader  # noqa: E402
 
-from wms.cli.assemble import assemble  # noqa: E402
+from wms.cli.assemble import TrainingInputs, assemble, build_model, build_physics  # noqa: E402
 from wms.config.load import load_train_config  # noqa: E402
+from wms.data.c4_episodes import build_c4_datasets  # noqa: E402
 from wms.data.collate import collate  # noqa: E402
 from wms.train.trainer import WmSTrainer  # noqa: E402
 
@@ -50,16 +51,30 @@ BRAKING = ("brake_persist", "brake_persist_quantile", "asym_speed", "decel_weigh
 def measure(args) -> dict:
     cfg = load_train_config(ROOT / args.config, [
         f"model.init_from={args.ckpt}", "runtime.device=cpu",
-        "loss.cutin_reaction.weight=1.0", *args.set])
-    out = Path(tempfile.mkdtemp(prefix="r10_weight_"))
+        f"runtime.threads={args.threads}", "loss.cutin_reaction.weight=1.0", *args.set])
+    output = Path(args.out).resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    out = Path(tempfile.mkdtemp(prefix="r10_weight_", dir=output.parent))
     torch.set_num_threads(args.threads)
-    inputs = assemble(cfg, out)
+    torch.manual_seed(cfg.runtime.seed)
+    chunk = max(1, round(args.unroll_s / 0.5))
+    if args.roots:
+        datasets = [build_c4_datasets(
+            root, horizon_steps=chunk, history_s=cfg.data.history_s,
+            history_stride_s=cfg.data.history_stride_s, entries_v2=bool(cfg.data.entries_v2),
+            stride_s=10.0, junction_fix=cfg.data.junction_fix,
+            command_known=True, merge_pivot_history=True)["train"] for root in args.roots]
+        physics = build_physics(cfg)
+        inputs = TrainingInputs(ConcatDataset(datasets), None, build_model(cfg, physics), physics,
+                                {f"local_train_{i}": str(Path(root).resolve())
+                                 for i, root in enumerate(args.roots)})
+    else:
+        inputs = assemble(cfg, out)
     trainer = WmSTrainer(cfg, inputs.model, inputs.train, val_dataset=inputs.val, out_dir=out)
     trainer.model.train()
     generator = torch.Generator().manual_seed(args.seed)
     loader = DataLoader(trainer.dataset, batch_size=args.batch_size, shuffle=True,
                         collate_fn=collate, generator=generator)
-    chunk = max(1, round(args.unroll_s / 0.5))
     rows = []
     for i, batch in enumerate(loader):
         if i >= args.n_batches:
@@ -88,8 +103,18 @@ def measure(args) -> dict:
         if b > 0 and c > 0:
             ratios.append(b / c)
     g_cut = gmean.get("cutin_reaction", 0.0)
+    if len(rows) != args.n_batches or not all(
+            math.isfinite(v) and v > 0 for v in (g_brake, g_cut)):
+        raise RuntimeError("gradient parity requires all requested batches and finite positive norms")
     return {"config": args.config, "ckpt": str(args.ckpt), "n_batches": len(rows),
             "unroll_s": args.unroll_s, "batch_size": args.batch_size,
+            "method": "Sum of per-term geometric-mean accumulated weighted braking gradient norms / "
+                      "geometric-mean accumulated cut-in gradient norm at weight 1; "
+                      "real WmSTrainer.forward_backward, no optimizer steps",
+            "overrides": args.set, "sampler_seed": args.seed,
+            "model_seed": cfg.runtime.seed, "threads": cfg.runtime.threads,
+            "truncation_steps": args.truncation_steps,
+            "resolved_data": inputs.resolved, "init_report": trainer.init_report,
             "trainable_parameters": trainable,
             "geomean_grad_norm": gmean, "braking_terms": braking, "g_brake": g_brake,
             "g_cutin_at_weight_1": g_cut,
@@ -105,6 +130,7 @@ def main(argv=None):
     p.add_argument("--config", default="configs/c4_wm_v10round10.toml")
     p.add_argument("--ckpt", required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--roots", nargs="+", help="Local TRAIN episode sources; uniform 10 s window grid")
     p.add_argument("--n-batches", type=int, default=6)
     p.add_argument("--unroll-s", type=float, default=60.0)
     p.add_argument("--truncation-steps", type=int, default=120)
