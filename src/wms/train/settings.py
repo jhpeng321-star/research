@@ -167,6 +167,7 @@ class TrainSettings:
     lane_gate_g_max_init: float = 0.16
     lane_gate_tau_steps_init: float = 30.0
     checkpoint_step: bool = False
+    checkpoint_forward: bool = False
     grad_decay_per_step: float = 1.0
     init_from: Optional[str] = None
     flip_rate_weight: float = 0.0

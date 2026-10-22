@@ -186,6 +186,7 @@ class WmSTrainer:
         """Mirror the flag-gated model bounds onto the model (no-ops when unset)."""
         s, model = self.settings, self.model
         model.apply_direct_commands = False  # recorded teacher or the full dispatcher owns CAVs
+        model.checkpoint_forward = bool(getattr(s, "checkpoint_forward", False))
         if getattr(s, "lane_hazard_decouple", False):
             # LANEFIX: rollout lane CE / flip-rate do not train the hazard (event loss does).
             model.lane_hazard_detach = True

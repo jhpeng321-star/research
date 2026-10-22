@@ -344,7 +344,7 @@ def test_state_st_off_keeps_forward_exact_and_cuts_only_the_downstream_adjoint()
     assert torch.equal(outputs[0][1]["raw_residual_mps2"], outputs[1][1]["raw_residual_mps2"])
 
 
-def test_round9_config_turns_state_st_off():
+def test_round9_config_keeps_state_st_on():
     from wms.config.load import load_train_config
     cfg = load_train_config("configs/c4_wm_v10round9.toml")
-    assert ModelSpec.from_mapping(cfg.to_legacy_flat()).merge_pivot_state_st is False
+    assert ModelSpec.from_mapping(cfg.to_legacy_flat()).merge_pivot_state_st is True
