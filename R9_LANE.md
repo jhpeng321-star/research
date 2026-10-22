@@ -1,0 +1,4 @@
+# R9_LANE status (owner pause 17:10) - WIP, no code changed yet
+1. Findings so far: 6 unexplained vetoes (v3, genrand_plain) are all ramp-lane cars; 4 have WM front 75.50-75.57 vs real lane end 75.44 (merge_zone_s1_m=75.44 in configs/r9_physics_round9.json); recorded successor is a merge at 75.44 (SUMO pins at lane end). 2 fast cases have route front -0.059 / -0.005 vs zone start 0 (recorded post 0.062 / 0.080), not yet diagnosed.
+2. Plan: flag physics.ramp_lane_end_stop (default off) in PhysicsConfig + clamp helper in wms.model.merge_pivot, applied in WmSModel.pivot_decision_geometry (shared by replay/fitter/runtime) and in step() final state for cars that stay on lane 2; no edits, tests, or reruns done.
+3. No processes were started by this session; nothing to stop. Data: E:/agent-work/c4-v10r9fix/data/r9_train (read-only), baseline: E:/agent-work/c4-v10r9fix/results/r9_support_v3/events.csv.
