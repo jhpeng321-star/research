@@ -1488,8 +1488,19 @@ class WmSModel(nn.Module):
             # P1: exactly one longitudinal update above; CAV current-action execution
             # precedes LC geometry, while EVERY neighbor keeps its pre-change lane.
             # The merge is evaluated once, then final conflicts are resolved once.
+            pinned = None
+            if getattr(self.physics, "ramp_lane_end_stop", False):
+                # Decision geometry sees the car held at the real lane end; the hold is
+                # kept only for cars that stay on the ramp lane (a merging car moves on).
+                free_s, free_v = next_s, next_v
+                next_s, next_v, pinned = pivot.ramp_lane_end_stop(
+                    state_kin(state), next_s, next_v, present, self.physics)
             next_lane = self._apply_merge_pivot(state, out, next_s, next_v, next_lane,
                                                lane_uniform)
+            if pinned is not None:
+                release = pinned & (next_lane != int(self.physics.merge_lane))
+                next_s = torch.where(release, free_s, next_s)
+                next_v = torch.where(release, free_v, next_v)
 
         if self.merge_pivot is None and (self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics)
                 or getattr(self.physics, "lane_learnable", False)):
@@ -1536,6 +1547,11 @@ class WmSModel(nn.Module):
             moved = kin.clone()
             moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, accel
         present = state_present(state, kin)
+        if getattr(self.physics, "ramp_lane_end_stop", False):
+            # SUMO never moves a ramp-lane car past its lane end (idempotent when the
+            # caller already applied it).  Opt-in physics flag; default off = unchanged.
+            moved[..., 0], moved[..., 4], _ = pivot.ramp_lane_end_stop(
+                kin, moved[..., 0], moved[..., 4], present, self.physics, route_shift)
         cav = state.get("is_cav", torch.zeros_like(present)).bool()
         fixed_target = (None if fixed_next_lane is None else
                         present & cav & (fixed_next_lane == int(self.physics.merge_target_lane)))

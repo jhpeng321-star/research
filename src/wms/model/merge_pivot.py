@@ -535,6 +535,29 @@ def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
     return out
 
 
+def ramp_lane_end_stop(kin: Tensor, next_s: Tensor, next_v: Tensor, present: Tensor, physics,
+                       route_shift: Optional[Tensor] = None
+                       ) -> tuple[Tensor, Tensor, Tensor]:
+    """Real ramp-lane end (``physics.merge_zone_s1_m``): SUMO never moves a car past it.
+
+    ``kin`` is the PRE-step snapshot (its one-hot lane is the lane the car drives on).
+    A present ramp-lane car whose longitudinal update would put its front beyond the lane
+    end (route coordinate ``x = s + shift``) is held at the end with speed 0.  No tolerance:
+    the end is the network geometry already in ``physics`` (cast to the tensor dtype only).
+    Returns ``(s, v, stopped)``; the caller decides which cars keep the stop (cars that
+    change lanes in the same step do not).  Only used when
+    ``physics.ramp_lane_end_stop`` is true.
+    """
+    route = torch.nan_to_num(kin[..., 1:4])
+    on_ramp = present.bool() & (route.argmax(-1) == int(physics.merge_lane)) & (route.sum(-1) > 0.0)
+    end = torch.as_tensor(float(physics.merge_zone_s1_m), dtype=next_s.dtype, device=next_s.device)
+    shift = (torch.zeros_like(next_s) if route_shift is None else
+             torch.nan_to_num(route_shift).to(next_s.dtype))
+    stopped = on_ramp & torch.isfinite(next_s) & (next_s + shift > end)
+    return (torch.where(stopped, end - shift, next_s),
+            torch.where(stopped, torch.zeros_like(next_v), next_v), stopped)
+
+
 def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
                  carry: Optional[Mapping[str, Tensor]] = None,
                  identity: Optional[Tensor] = None,
@@ -707,5 +730,5 @@ def resolve_conflicts(kin: Tensor, present: Tensor, current_lane: Tensor,
 
 
 __all__ = ["FirstPassageNet", "geometry", "log_survival", "log_event_mass",
-           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal",
+           "conditional_log_hazards", "hybrid_log_masses", "hybrid_quadrature_report", "advance_longitudinal", "ramp_lane_end_stop",
            "update_state", "hard_st", "resolve_conflicts"]

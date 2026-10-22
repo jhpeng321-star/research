@@ -15,7 +15,7 @@ import torch
 from torch import Tensor
 
 from wms.model.merge_pivot import (advance_longitudinal, geometry, hybrid_log_masses,
-                                  log_event_mass, log_survival)
+                                  log_event_mass, log_survival, ramp_lane_end_stop)
 
 from .base import LossContext, LossTerm, TermValue, UnrollTargets
 
@@ -371,6 +371,11 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
         # Without commands, use the frozen native longitudinal branch for CAVs.
         # This fallback is explicitly counted, never replaced by recorded future motion.
         moved[..., 5] = out["accel_mps2"]
+        if getattr(model.physics, "ramp_lane_end_stop", False):
+            # Same physical lane-end stop as WmSModel.step / pivot_decision_geometry; applying
+            # it here lets the replay observers and the fitter see the pinned motion.
+            moved[..., 0], moved[..., 4], _ = ramp_lane_end_stop(
+                kin, moved[..., 0], moved[..., 4], present, model.physics, shifts[:, i])
         if hasattr(model, "pivot_decision_geometry"):
             geo = model.pivot_decision_geometry(state, out["accel_mps2"],
                                                  next_s=moved[..., 0], next_v=moved[..., 4],

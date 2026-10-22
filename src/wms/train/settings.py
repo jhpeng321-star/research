@@ -292,6 +292,8 @@ class TrainSettings:
     # V10UNBLOCK (2026-10-19, default OFF = bit-identical): physical envelope + all-risk lane
     # learning (wms.physics.config.PhysicsConfig.lane_learnable).
     lane_learnable: bool = False
+    # R9LANE (2026-10-22, default OFF = bit-identical): ramp-lane cars cannot pass the lane end.
+    ramp_lane_end_stop: bool = False
     # V10LANEOPT (2026-10-19, default 'free' = current behaviour): staged mainline lane changes
     # (wms.physics.config.PhysicsConfig.mainline_lane_mode).
     mainline_lane_mode: str = "free"
