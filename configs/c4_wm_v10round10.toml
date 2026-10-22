@@ -55,9 +55,9 @@ negative_weight = 0.0
 # FIX B (the only new loss): teacher-forced Huber on the lane-1 follower's recorded acceleration after each
 # recorded ramp->lane-1 insertion (event windows end at the first non-negative recorded acceleration, max 6 s,
 # 1 s pre-context), anchored by ordinary lane-1 HDV transitions (control_weight relative).  weight = the
-# gradient-norm parity weight of R10_PREP.md (tools/r10_weight_rule.py).
+# gradient-norm parity weight of R10_PREP.md (tools/r10_weight_rule.py, measured 2026-10-23, docs/r10_weight_rule.json).
 [loss.cutin_reaction]
-weight = 1.0
+weight = 2.174
 control_weight = 1.0
 pre_s = 1.0
 max_window_s = 6.0
