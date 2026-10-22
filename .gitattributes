@@ -84,3 +84,9 @@ archive/circles_era/docs/ESCALATION_TESTS.md text eol=crlf
 # Round 9 launch scripts run on gpuR (Linux): pin LF so a Windows checkout cannot ship CRLF.
 scripts/round9_gate.sh text eol=lf
 scripts/ship_r9_gpuR.sh text eol=lf
+configs/c4_wm_v10round9.toml text eol=lf
+src/wms/train/trainer.py text eol=lf
+src/wms/train/round9_gate.py text eol=lf
+tests/test_round9_gate*.py text eol=lf
+R9_GATE2.md text eol=lf
+.gitattributes text eol=lf
