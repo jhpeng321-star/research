@@ -34,7 +34,7 @@ for extra in (ROOT / "src", ROOT):
     if str(extra) not in sys.path:
         sys.path.insert(0, str(extra))
 
-from torch.utils.data import ConcatDataset, DataLoader  # noqa: E402
+from torch.utils.data import ConcatDataset, DataLoader, Subset  # noqa: E402
 
 from wms.cli.assemble import TrainingInputs, assemble, build_model, build_physics  # noqa: E402
 from wms.config.load import load_train_config  # noqa: E402
@@ -46,6 +46,28 @@ from wms.train.trainer import WmSTrainer  # noqa: E402
 # is not a separable term).  Terms that are not in the composed loss simply do not appear.
 BRAKING = ("brake_persist", "brake_persist_quantile", "asym_speed", "decel_weight",
            "propagation", "brake_wave", "brake_wave_residual", "brake_wave_spurious")
+
+
+def event_windows(ds, pre_steps: int, warmup_ticks: int = 600) -> list[int]:
+    """Indices of windows whose recorded ramp->lane-1 insertion falls ``pre_steps`` steps after the start.
+
+    Positions come from the recorded arrays only (same rule as tools/r10_micro_smoke.py): lane 2 -> lane 1 for the
+    same vehicle id between consecutive ticks.  Without an insertion the cut-in term (and its gradient) is zero.
+    """
+    picked, cache = [], {}
+    for index, (ep, tick) in enumerate(ds.positions):
+        epdir = Path(ds._loader.root) / ds._loader.entries[ep]["dir"]
+        if not (epdir / "veh_kin.npy").is_file():
+            continue
+        if ep not in cache:
+            kin = np.load(epdir / "veh_kin.npy", mmap_mode="r")
+            vid = np.load(epdir / "vid.npy", mmap_mode="r")
+            lane = np.where(kin[..., 1:4].sum(-1) > 0, kin[..., 1:4].argmax(-1), -1)
+            ins = (lane[:-1] == 2) & (lane[1:] == 1) & (vid[:-1] == vid[1:]) & (vid[1:] >= 0)
+            cache[ep] = [int(t) for t in np.nonzero(ins.any(-1))[0] + 1 if t > warmup_ticks]
+        if any(0 <= e - tick - pre_steps <= 1 for e in cache[ep]):
+            picked.append(index)
+    return picked
 
 
 def measure(args) -> dict:
@@ -62,8 +84,11 @@ def measure(args) -> dict:
         datasets = [build_c4_datasets(
             root, horizon_steps=chunk, history_s=cfg.data.history_s,
             history_stride_s=cfg.data.history_stride_s, entries_v2=bool(cfg.data.entries_v2),
-            stride_s=10.0, junction_fix=cfg.data.junction_fix,
+            stride_s=1.0 if args.pre_steps is not None else 10.0, junction_fix=cfg.data.junction_fix,
             command_known=True, merge_pivot_history=True)["train"] for root in args.roots]
+        if args.pre_steps is not None:
+            datasets = [Subset(ds, event_windows(ds, args.pre_steps)) for ds in datasets]
+            print("insertion windows per root:", [len(d) for d in datasets], flush=True)
         physics = build_physics(cfg)
         inputs = TrainingInputs(ConcatDataset(datasets), None, build_model(cfg, physics), physics,
                                 {f"local_train_{i}": str(Path(root).resolve())
@@ -131,6 +156,8 @@ def main(argv=None):
     p.add_argument("--ckpt", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--roots", nargs="+", help="Local TRAIN episode sources; uniform 10 s window grid")
+    p.add_argument("--pre-steps", type=int, default=None,
+                   help="with --roots: use only 1 s-stride windows whose recorded insertion is at this step")
     p.add_argument("--n-batches", type=int, default=6)
     p.add_argument("--unroll-s", type=float, default=60.0)
     p.add_argument("--truncation-steps", type=int, default=120)
