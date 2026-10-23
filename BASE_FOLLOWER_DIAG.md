@@ -45,7 +45,8 @@ rollouts.
 **Recommended fixes, ranked (proposed).**
 1. **Reachable IDM settings.** Set `model.driver_param_mode = "physical"` (V6ENC: implemented and tested; a 0.3-4.0, b 0.8-6.0;
    learned centre; prediction error only). Keep the textbook `driver_prior` that the config already carries; it is ineffective today
-   because of the floor. Retrain together with a re-initialised residual: zero the dead attention head's output layer. Do not
+   because of the floor. It is **required**: offline, the physical encoder without it sends a to the 0.3 bound, and with it a lands
+   at 0.87. Retrain together with a re-initialised residual: zero the dead attention head's output layer. Do not
    reuse its constant offset: with a = 1.2 and the old residual, post-merge rows go from +0.07 to -0.48. V5_DIAGNOSIS Q3 found
    this on 10-15 and v6 fixed it, but the v10 line descends from v5m and never got the fix.
 2. **The merge-specific hold as a learned term on the calibrated base.** The R11 contrast courtesy head (already built) is the
@@ -63,7 +64,10 @@ rollouts.
 - Ranking: today every controller that opens or closes gaps is scored against HDVs that react about 2x too eagerly. The direction
   of the ranking change cannot be predicted offline.
 
-**Offline test (section 7 has the result of a first version).**
+**Offline test (first version run, section 7).** Teacher-forced, residual off, physical encoder head + centre fitted on 72
+TRAIN windows, evaluated on 24 held-out episodes. With the textbook prior: encoded a median 0.87, b 2.02; far-upstream start-up
+bias +1.04 -> 0.00; all-row one-step MAE 1.00 (model) -> 0.38; last-3-s bias +1.37 -> +1.00 (the rest is the hold). Without the
+prior a collapses to the 0.3 bound, so the prior (or rollout terms) is required. Full gate list:
 - Fit the physical-mode encoder (head + centre) teacher-forced on TRAIN windows, residual off; then fit the R11 head on that base.
 - Pass if: recovered accel median 0.9-1.5 and not piled at a bound; far-upstream start-up bias |.| < 0.2; braking rows not worse;
   last-3-s target-follower bias <= +0.9 before the head and within +-0.3 after it.
@@ -256,7 +260,45 @@ Recorded data agree: in the raw rows a junction (one-hot 0) vehicle is nearer th
 - **Data.** 72 fit windows; 24 held-out windows, held out by episode.
 - **Trained parameters.** Head + centre only, 150 Adam steps x 8 windows.
 
-RESULT_ENCFIT (filled below when the fit finishes)
+Held-out episodes (24 windows, 113k rows); mean (pred - rec) [MAE]. "Model" = full round-8 model incl. residual; the other
+columns are the pure IDM core with the stated encoder:
+
+| group | n | rec | model as is | legacy encoder (core only) | physical, r8 head, centre = defaults | physical fit, no prior | **physical fit + textbook prior 0.05** |
+|---|---|---|---|---|---|---|---|
+| partners last 3 s | 446 | -0.02 | +1.37 [1.79] | +1.54 [1.75] | +0.99 [1.17] | +0.85 [1.02] | **+1.00 [1.13]** |
+| partners [-6,-3) s | 397 | +0.07 | +0.66 [1.50] | +0.74 [1.36] | +0.42 [0.98] | +0.47 [0.82] | +0.57 [0.88] |
+| unpartnered zone v < 2 | 6325 | +0.06 | -0.13 [1.46] | -0.21 [1.29] | -0.07 [1.07] | +0.30 [0.73] | +0.32 [0.73] |
+| slow start (v < 2, gap 6-30) | 1431 | +0.18 | +1.50 [1.98] | +1.72 [1.73] | +1.24 [1.33] | +1.03 [1.14] | +1.19 [1.24] |
+| far-upstream start-up (s < -400) | 26 | +1.01 | +0.52 [0.57] | +1.04 [1.04] | +0.77 [0.77] | -0.22 [0.23] | **+0.00 [0.16]** |
+| after the merge zone | 24,086 | +0.49 | +0.09 [1.09] | +0.68 [0.90] | +0.63 [0.85] | +0.41 [0.60] | +0.43 [0.59] |
+| recorded braking rec < -1 | 6675 | -1.71 | +0.62 [1.08] | +0.24 [1.08] | +0.72 [0.84] | +0.66 [0.74] | +0.61 [0.73] |
+| v > 15 m/s | 69,717 | +0.04 | +0.17 [0.80] | +0.30 [0.64] | +0.15 [0.42] | +0.12 [0.29] | +0.14 [0.30] |
+| all | 113,299 | +0.05 | +0.10 [1.00] | +0.20 [0.78] | +0.12 [0.51] | +0.15 [0.36] | **+0.16 [0.38]** |
+
+Encoded parameters on held-out rows (p10 / p50 / p90):
+
+| encoder | a | b | T | s0 |
+|---|---|---|---|---|
+| legacy (as is) | 1.78 / 1.85 / 2.49 | 2.88 / 3.00 / 4.20 | 1.13 / 1.53 / 1.82 | 1.25 / 1.99 / 2.60 |
+| physical fit, no prior | **0.30 / 0.35** / 2.10 | 1.01 / 1.89 / 3.92 | 0.90 / 1.09 / 1.35 | 1.81 / 2.04 / 2.26 |
+| physical fit + textbook prior | **0.68 / 0.87** / 2.10 | 1.83 / 2.02 / 3.68 | 1.03 / 1.11 / 1.19 | 2.00 / 2.08 / 2.24 |
+
+(The p90 values 2.10 / 2.49 are drivers without history, at the centre / default.)
+
+Readings:
+* **Reachability works.**
+  - With the textbook prior the encoder lands near the population (a median 0.87, b 2.02, T 1.11, s0 2.08).
+  - The far-upstream start-up bias goes from +1.04 (legacy core) to 0.00.
+  - One-step MAE on all rows falls from 0.78 (legacy core) / 1.00 (full model) to 0.38. Braking rows are no worse than the model.
+  - The last 3 s fall from +1.54 (legacy core) / +1.37 (model) to +1.00. The generic part is removed; what remains is the hold
+    (section 4) plus zone effects. The offline gate "<= +0.9" is narrowly missed (+1.00), as expected before fix 2.
+* **The prior is needed.** Without it, one-step error alone drives a to the 0.3 bound (median 0.35), the same "sluggish IDM"
+  preference the per-driver grid fit showed. The legacy encoder sitting on its 1.78 floor is the same pull, stopped by the floor.
+  Identification of a needs the textbook prior and/or rollout terms; one-step error is not enough.
+* Slow-start rows inside the zone/approach stay +1.0..1.2 even after calibration. SUMO start-ups there are sluggish (effective a
+  0.5-0.8, section 3.1): hidden junction leaders, the hold of non-target followers, selection. Fix 2 and fix 3 address the first
+  two.
+* Limits: teacher-forced one-step, residual off, 150 steps, 72 fit windows; not a rollout result.
 
 Caution from a cruder per-driver grid fit (`tools/diag_base_perdriver_fit.py`: each driver's a, b fitted on its own approach rows,
 pure IDM).
@@ -269,13 +311,15 @@ pure IDM).
 
 1. **Fix 1: reachable IDM settings + residual re-initialisation.** This is one base change, so it needs its own run vs the current
    best (one-fix protocol).
-   - Config: `model.driver_param_mode = "physical"`, `driver_prior` textbook kept (0.05).
+   - Config: `model.driver_param_mode = "physical"`, `driver_prior` textbook kept (0.05; required, section 7).
    - Trainable: `driver_encoder.*` (head, centre_logits), `residual_net` with the attention output layer re-zeroed, `temporal.*`,
      gate.
    - Losses: the base WM-S rollout losses as in round 8, fix-B controls (unpartnered only), plus a one-step lane-0/1 HDV anchor.
    - Do not reuse the round-8 residual's constant.
-   - Expected effect: last-3-s bias about +1.34 to ~+0.8; slow-start bias +1.52 to ~+0.1..0.8 (zone-dependent); merge-zone
-     discharge slower; merge-zone delay ratio up from 0.48.
+   - Expected effect.
+     - Measured offline (teacher-forced, pure core): last-3-s bias +1.37 -> +1.00; far-upstream start-up +1.04 -> 0.00;
+       all-row MAE 1.00 -> 0.38.
+     - Proposed: merge-zone discharge slower; merge-zone delay ratio up from 0.48.
 2. **Fix 2: learned hold.** The R11 contrast head on the fix-1 base; same code, same rules.
    - Expected effect: last-3-s absolute bias to ~0 (the calibrated + hold diagnostic gives -0.08), the follower no longer fills the
      ramp gap, ramp delay ratio down from 2.1, fewer stuck ramp cars.
