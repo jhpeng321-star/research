@@ -23,8 +23,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from common import END_M, add_paths  # noqa: E402
 
+DT_S = 0.5
 COLS = ["t", "slot", "lane", "fin", "pre", "rec", "has", "dA", "dend", "bgap", "rampbehind", "gapL", "ev", "onset",
-        "inwin", "ctrl", "v", "off", "win"]
+        "inwin", "ctrl", "v", "off", "win",
+        # R11 (appended; analyze.py reads columns by name): time until the partner's merge (s, partner rows), time since
+        # the insertion step (s, cut-in event rows), position, closing speed to the same-lane leader
+        "tm", "te", "s", "closing"]
 G: dict = {}
 
 
@@ -36,8 +40,14 @@ def _init(repo, config, specs, roots, horizon_s, stride_s):
     from tools.r10b_courtesy_offline import datasets
     G["arms"] = {}
     for name, ck in specs:
-        cfg, settings, model, report = load_model(config, ck)
+        # R11: a version-2 head (13 pair inputs) needs model.follower_courtesy_version=2, otherwise load_model's
+        # same-shape matching would silently drop its first layer.
+        stored = torch.load(ck, map_location="cpu", weights_only=True)["model"].get("follower_courtesy.net.0.weight")
+        v2 = stored is not None and stored.shape[-1] == 13
+        cfg, settings, model, report = load_model(config, ck, ("model.follower_courtesy_version=2",) if v2 else ())
         assert model.follower_courtesy is not None
+        if stored is not None:   # the stored head must be loaded as is (same-shape matching drops mismatches silently)
+            assert torch.equal(model.follower_courtesy.net[0].weight.detach(), stored), name
         G["arms"][name] = (cfg, settings, model, report)
     cfg0 = next(iter(G["arms"].values()))[0]
     G["sets"] = datasets(cfg0, roots, int(round(horizon_s / 0.5)), stride_s)
@@ -69,12 +79,17 @@ def one_window(job):
         n = tg.n_steps
         phys = model.physics
         ev_id = np.full((n, kin.shape[1]), -1, np.int32)
+        ev_step = np.full((n, kin.shape[1]), np.nan, np.float32)
+        from tools.r10b_courtesy_offline import next_merge_steps
+        cont_np = cont[0].numpy()
+        nm = next_merge_steps(lane.numpy(), np.concatenate([cont_np, np.zeros_like(cont_np[:1])]))
         onset = np.zeros((n, kin.shape[1]), bool)
         inwin = np.zeros((n, kin.shape[1]), bool)
         for e_i, e in enumerate(plan["events"]):
             f = e["follower"]
             for t in range(e["start"], e["end"] + 1):
                 ev_id[t, f] = e_i
+                ev_step[t, f] = e["step"]
                 inwin[t, f] = True
             onset[e["step"], f] = True
         ctrl = plan["control"][0].numpy()
@@ -94,7 +109,11 @@ def one_window(job):
             rampbehind = (~has) & behind & (lane[t] == 1)
             ds_ = s[None, :] - s[:, None]                       # s_j - s_i
             same = valid[t][None, :] & (lane[t][None, :] == lane[t][:, None]) & (ds_ > 0)
-            gl = torch.where(same, ds_ - length[None, :], torch.full_like(ds_, float("inf"))).min(-1).values
+            gl, lead_i = torch.where(same, ds_ - length[None, :], torch.full_like(ds_, float("inf"))).min(-1)
+            closing = torch.where(torch.isfinite(gl), v - v[lead_i], torch.zeros_like(v))
+            tm = torch.where(has, torch.tensor((nm[t, partner.numpy()] - t) * DT_S, dtype=torch.float32),
+                             torch.full_like(s, float("nan")))
+            te = torch.tensor((t - ev_step[t]) * DT_S, dtype=torch.float32)
             dA = torch.where(has, s[partner] - s, torch.full_like(s, float("nan")))
             dend = torch.where(has, END_M - s[partner], torch.full_like(s, float("nan")))
             bgap = torch.where(has, s[partner] - length[partner] - s, torch.full_like(s, float("nan")))
@@ -105,7 +124,7 @@ def one_window(job):
                              rec[sel], has[sel].float(), dA[sel], dend[sel], bgap[sel], rampbehind[sel].float(),
                              gl[sel], torch.tensor(ev_id[t])[sel].float(), torch.tensor(onset[t])[sel].float(),
                              torch.tensor(inwin[t])[sel].float(), torch.tensor(ctrl[t])[sel].float(), v[sel], col["courtesy_accel_mps2"][0, t][sel],
-                             torch.full((len(sel),), float(i))], -1)
+                             torch.full((len(sel),), float(i)), tm[sel], te[sel], s[sel], closing[sel]], -1)
             rows.append(m.numpy())
         # recorded outcome of every event window: min recorded accel (next-row) over the window
         evb = {}

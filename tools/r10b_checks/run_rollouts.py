@@ -71,7 +71,7 @@ def head_tables(res, a_model_unused, physics):
                 nonapp_max = max(nonapp_max, float(np.abs(off[~app]).max()))
             sl = np.flatnonzero(app)
             if len(sl):
-                x = c["x"][:n][sl]
+                x = c["x"][:n][sl][:, :10]   # the 10 round-10b inputs (a version-2 head appends 3; layout kept)
                 tab.append(np.column_stack([np.full(len(sl), k), sl, off[sl], c["pre"][:n][sl], c["accel"][:n][sl],
                                             partner[k][sl], x]))
     tab = np.concatenate(tab).astype(np.float32) if tab else np.zeros((0, 16), np.float32)

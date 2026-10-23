@@ -53,6 +53,8 @@ $PY $REPO/tools/r11_checks/m7_head_range.py "$RUN" "$REPO/configs/c4_wm_v10round
 echo "== analysis $(date +%T)"
 echo "{\"mode\": \"$MODE\", \"labels\": {\"r9\": \"round-10b reference\", \"r10b\": \"round 11\", \"headzero\": \"round 11 head zeroed\"}, \"r10b_checkpoint\": \"$R11_CK\", \"r9_checkpoint\": \"$REF_CK\", \"date\": \"$(date '+%F %T')\"}" > $OUT/meta.json
 $PY $CHK/r10b_checks/analyze.py --repo $REPO --shm $OUT --meta $OUT/meta.json --m5 $CHK/SUMMARY_R11.md --run $RUN --out $CHK/results/VERDICT_R11_CHECKS_$MODE.md
+echo "== M8 absolute bias + keep-10b rule (R11_REVIEW C3) $(date +%T)"
+$PY $REPO/tools/r11_checks/absolute_bias.py --shm $OUT --out $CHK/results/M8_R11_$MODE.md --json $CHK/results/M8_R11_$MODE.json 2>&1 | grep -v -i warn | tail -1
 echo "r11 run_all $MODE done $(date '+%F %T')"
-[ "$MODE" = full ] && cp "$CHK/results/VERDICT_R11_CHECKS_full.md" "$CHK/VERDICT_R11_CHECKS.md"
+[ "$MODE" = full ] && cp "$CHK/results/VERDICT_R11_CHECKS_full.md" "$CHK/VERDICT_R11_CHECKS.md"     && cp "$CHK/results/M8_R11_full.md" "$CHK/M8_R11.md"
 exit 0
