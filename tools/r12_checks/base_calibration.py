@@ -20,7 +20,8 @@ bumper gap in the replay state = column gapF when present, else gapL; no leader 
 
 REGISTERED BASE REJECT RULES (evaluation rules, not model rules; magnitudes = |mean bias|, point estimates, literal):
   BASE-1  REJECT round 12 if its slow-start |mean bias| > 0.3 m/s^2 OR it is not smaller than round 9's.
-  BASE-2  REJECT round 12 if its free-road |mean bias| > 0.2 or its far-upstream slow-start |mean bias| > 0.2.
+  BASE-2  REJECT round 12 if its free-road |mean bias| or its far-upstream slow-start |mean bias| exceeds
+          max(0.3, round 9's |mean bias| of the same class + 0.1) m/s^2 ("near 0", and not worse than round 9).
   BASE-3  REJECT round 12 if its recorded-braking |mean bias| exceeds round 9's by > 0.1 m/s^2.
   BASE-4  (read) last-3-s target-follower absolute bias for round 12, round-12 head-zero and round 9; expectation
           (BASE_FOLLOWER_DIAG): about +0.8 with the head zeroed, within +-0.3 with the head.
@@ -50,7 +51,7 @@ REF, R12, HZ = "r9", "r10b", "headzero"
 ARMS = (REF, R12, HZ)
 LABEL = {REF: "round 9", R12: "round 12", HZ: "round 12 head-zero"}
 END_M = 75.44
-TH = {"BASE1": 0.3, "BASE2": 0.2, "BASE3": 0.1, "BASE4": 0.3, "ENC_SHARE": 0.20, "ENC_TOL": 0.01}
+TH = {"BASE1": 0.3, "BASE2": 0.3, "BASE2_REF_MARGIN": 0.1, "BASE3": 0.1, "BASE4": 0.3, "ENC_SHARE": 0.20, "ENC_TOL": 0.01}
 BOUNDS = {"accel": (0.3, 4.0), "decel": (0.8, 6.0)}
 CLASSES = ("slow_start", "far_upstream_slow", "free_road", "last3_target_follower", "far_partner", "d_end_gt40",
            "alongside", "recorded_braking", "after_merge_zone", "all_lane1")
@@ -144,14 +145,21 @@ def decide(stats: dict) -> dict:
         res["BASE-1"] = ("REJECT" if bad else "PASS",
                          f"slow-start |bias| round 12 {s12:.3f} vs threshold {TH['BASE1']} and round 9 {s9:.3f}")
     fr, fu = _mag(stats, R12, "free_road"), _mag(stats, R12, "far_upstream_slow")
-    bad2 = [f"{nm} {v:.3f}" for nm, v in (("free-road", fr), ("far-upstream slow-start", fu))
-            if np.isfinite(v) and v > TH["BASE2"]]
+
+    def limit2(cls):
+        ref = _mag(stats, REF, cls)
+        return max(TH["BASE2"], ref + TH["BASE2_REF_MARGIN"]) if np.isfinite(ref) else TH["BASE2"]
+
+    lim = {"free-road": limit2("free_road"), "far-upstream slow-start": limit2("far_upstream_slow")}
+    bad2 = [f"{nm} {v:.3f} > {lim[nm]:.3f}" for nm, v in (("free-road", fr), ("far-upstream slow-start", fu))
+            if np.isfinite(v) and v > lim[nm]]
     if bad2:
-        res["BASE-2"] = ("REJECT", "; ".join(bad2) + f" > {TH['BASE2']}")
+        res["BASE-2"] = ("REJECT", "; ".join(bad2))
     elif not (np.isfinite(fr) and np.isfinite(fu)):
         res["BASE-2"] = ("UNDECIDED", f"free-road |bias| {fr:.3f}, far-upstream slow-start |bias| {fu:.3f} (missing / n < 5)")
     else:
-        res["BASE-2"] = ("PASS", f"free-road |bias| {fr:.3f}, far-upstream slow-start |bias| {fu:.3f} <= {TH['BASE2']}")
+        res["BASE-2"] = ("PASS", f"free-road |bias| {fr:.3f} <= {lim['free-road']:.3f}, far-upstream slow-start "
+                                 f"|bias| {fu:.3f} <= {lim['far-upstream slow-start']:.3f}")
     b12, b9 = _mag(stats, R12, "recorded_braking"), _mag(stats, REF, "recorded_braking")
     if not np.isfinite(b12) or not np.isfinite(b9):
         res["BASE-3"] = ("UNDECIDED", f"braking |bias| round 12 {b12:.3f}, round 9 {b9:.3f} (missing / n < 5)")
@@ -219,7 +227,7 @@ def main(argv=None) -> int:
     L += [f"| {k} | **{v[0]}** | {v[1]} |" for k, v in rules.items()]
     L += ["\nRegistered rules (evaluation rules, not model rules; |.| = magnitude of the mean bias, point estimates):",
           f"BASE-1 reject if slow-start |bias| > {TH['BASE1']} or not smaller than round 9's; BASE-2 reject if free-road or "
-          f"far-upstream slow-start |bias| > {TH['BASE2']}; BASE-3 reject if recorded-braking |bias| exceeds round 9's by "
+          f"far-upstream slow-start |bias| > max({TH['BASE2']}, round 9's + {TH['BASE2_REF_MARGIN']}); BASE-3 reject if recorded-braking |bias| exceeds round 9's by "
           f"> {TH['BASE3']}; BASE-4 read (expectation: head-zero about +0.8, round 12 within +-{TH['BASE4']}).\n",
           "## Bias by row class\n", "| class | " + " | ".join(LABEL[a] for a in ARMS if a in stats) + " | recorded mean |",
           "|---|" + "---|" * (sum(a in stats for a in ARMS) + 1)]

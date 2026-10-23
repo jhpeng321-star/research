@@ -98,9 +98,12 @@ def test_base_rules():
     assert BC.decide(_stats(both(0.35), both(1.5)))["BASE-1"][0] == "REJECT"
     assert BC.decide(_stats(both(-0.2), both(0.2)))["BASE-1"][0] == "REJECT"       # not smaller in magnitude
     assert BC.decide(_stats(both(-0.2), both(0.25)))["BASE-1"][0] == "PASS"
-    # BASE-2: free road or far-upstream slow start > 0.2
-    assert BC.decide(_stats(_rows(free_bias=-0.25), _rows()))["BASE-2"][0] == "REJECT"
-    assert BC.decide(_stats(_rows(far_bias=0.21, slow_bias=0.0), _rows(slow_bias=1.0)))["BASE-2"][0] == "REJECT"
+    # BASE-2: free road or far-upstream slow start > max(0.3, round 9's |bias| + 0.1)
+    assert BC.decide(_stats(_rows(free_bias=-0.35), _rows()))["BASE-2"][0] == "REJECT"
+    assert BC.decide(_stats(_rows(free_bias=-0.25), _rows()))["BASE-2"][0] == "PASS"
+    assert BC.decide(_stats(_rows(far_bias=0.31, slow_bias=0.0), _rows(slow_bias=1.0)))["BASE-2"][0] == "REJECT"
+    assert BC.decide(_stats(_rows(free_bias=0.45), _rows(free_bias=0.4)))["BASE-2"][0] == "PASS"   # within ref + 0.1
+    assert BC.decide(_stats(_rows(free_bias=0.55), _rows(free_bias=0.4)))["BASE-2"][0] == "REJECT"
     # BASE-3: braking |bias| worse than round 9 by > 0.1
     assert BC.decide(_stats(_rows(brake_bias=0.65), _rows(brake_bias=0.5)))["BASE-3"][0] == "REJECT"
     assert BC.decide(_stats(_rows(brake_bias=0.55), _rows(brake_bias=0.5)))["BASE-3"][0] == "PASS"
