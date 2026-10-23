@@ -426,5 +426,3 @@ def test_cli_prior_mode_mismatch_fails(tmp_path, capsys, smoke):
     args = write_smoke(out, init, report, rows, tmp_path / "smoke2.log")
     assert round12_gate.main([*args, "--expect-prior", "weak", "--report", str(tmp_path / "y.json")]) == 3
     assert "driver_prior_weight" in capsys.readouterr().out
-
-

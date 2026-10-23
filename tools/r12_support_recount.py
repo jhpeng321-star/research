@@ -76,6 +76,26 @@ def recount(arm, jobs, sets, n_steps):
     return {"totals": dict(totals), "per_window": per_window, "classes": list(CLASSES)}
 
 
+def merge_shards(paths, out_path):
+    docs = [json.loads(Path(p).read_text(encoding="utf-8")) for p in paths]
+    out = {"tool": docs[0]["tool"], "windows": sum(d["windows"] for d in docs), "horizon_s": docs[0]["horizon_s"],
+           "shards": [str(p) for p in paths], "seconds": max(d["seconds"] for d in docs), "arms": {}}
+    for name in docs[0]["arms"]:
+        totals, per_window, diff = Counter(), [], Counter()
+        for d in docs:
+            arm = d["arms"][name]
+            per_window.extend(arm["per_window"])
+            totals.update({k: v for k, v in arm["totals"].items() if k != "exclusion_version"})
+            diff.update(arm.get("windows_differing_from_round9", {}))
+        out["arms"][name] = {"totals": dict(totals), "per_window": per_window,
+                             "classes": docs[0]["arms"][name]["classes"]}
+        if name != "round9":
+            out["arms"][name]["windows_differing_from_round9"] = dict(diff)
+    Path(out_path).write_text(json.dumps(out, indent=1), encoding="utf-8")
+    for name, res in out["arms"].items():
+        print(name, {k: v for k, v in res["totals"].items() if v})
+
+
 def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--roots", nargs="+", required=True)
@@ -85,7 +105,13 @@ def main(argv=None):
     p.add_argument("--horizon-s", type=float, default=120.0)
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--out", default="docs/r12_support_recount.json")
+    p.add_argument("--shard", type=int, default=0)
+    p.add_argument("--n-shards", type=int, default=1)
+    p.add_argument("--merge", nargs="*", default=None, help="merge shard JSONs into --out and exit")
     a = p.parse_args(argv)
+    if a.merge:
+        merge_shards(a.merge, a.out)
+        return
     torch.set_num_threads(a.threads)
     from tools.r10b_courtesy_offline import datasets
     t0 = time.time()
@@ -103,7 +129,7 @@ def main(argv=None):
             by_ep.setdefault(ep, []).append(i)
         jobs.extend((si, int(rng.choice(idx))) for idx in by_ep.values())
     rng.shuffle(jobs)
-    jobs = jobs[:a.windows]
+    jobs = jobs[:a.windows][a.shard::a.n_shards]
     out = {"tool": "tools/r12_support_recount.py", "windows": len(jobs), "horizon_s": a.horizon_s,
            "arms": {name: recount(arm, jobs, sets, n_steps) for name, arm in arms.items()}}
     ref = out["arms"]["round9"]["per_window"]
