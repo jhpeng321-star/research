@@ -129,7 +129,7 @@ def test_native_cav_callback_once_and_no_recorded_future_motion_input():
         return torch.stack((current["s_m"] + 1.0, current["lane"],
                             current["v_mps"], current["a_mps2"]), -1)
     with patch.object(m, "forward", side_effect=fixed_forward):
-        out = m.step(s, cav_teacher=teacher, cav_controller=callback,
+        out = m.step(s, cav_controller=callback,
                      lane_uniform=torch.full_like(s["s_m"], 0.5))
     assert len(calls) == 1
     assert out["next_s_m"][0, 1] == s["s_m"][0, 1] + 1.0
@@ -197,7 +197,7 @@ def test_current_action_cav_insertion_veto_uses_prechange_neighbor_features():
     assert not geo["has_f"][0, 0]
 
 
-def test_no_command_cav_fallback_holds_lane_and_ignores_future_teacher():
+def test_no_command_cav_fallback_holds_lane_without_teacher_or_controller():
     m, s = model(), state(positions=(30., 31., 48.), lanes=(2, 0, 1))
     s["is_cav"][0, 1] = True
     def future_change(current, **kwargs):
@@ -205,14 +205,58 @@ def test_no_command_cav_fallback_holds_lane_and_ignores_future_teacher():
         out["lane_logits"][0, 1] = torch.tensor([-20., 20., -20.])
         return out
     with patch.object(m, "forward", side_effect=future_change):
-        a = m.step(s, cav_teacher=torch.full((1, 3, 4), 999.),
-                   lane_uniform=torch.full((1, 3), .5))
-        b = m.step(s, cav_teacher=torch.full((1, 3, 4), -999.),
-                   lane_uniform=torch.full((1, 3), .5))
+        a = m.step(s, lane_uniform=torch.full((1, 3), .5))
     assert a["next_lane"][0, 1] == 0
     assert torch.equal(a["next_s_m"], s["s_m"] + .5 * s["v_mps"])
-    for key in ("next_lane", "next_s_m", "next_v_mps", "merge_pivot_c"):
-        assert torch.equal(a[key], b[key])
+
+
+def _replay_teacher(s, shift=3.0, lane=1):
+    teacher = torch.stack((s["s_m"] + shift, torch.full_like(s["s_m"], float(lane)),
+                           s["v_mps"] + 1.0, torch.full_like(s["s_m"], 0.7)), -1)
+    return teacher
+
+
+def test_pivot_honours_recorded_cav_teacher_exactly_like_the_non_pivot_path():
+    # S-FIX9: the first_passage step used to drop cav_teacher (recorded-arm replay).
+    s = state(positions=(30., 31., 48.), lanes=(2, 0, 1))
+    s["is_cav"][0, 1] = True
+    teacher = _replay_teacher(s)
+    nxt = {}
+    for mode in ("first_passage", "secure_gap"):
+        m = model(mode)
+        with patch.object(m, "forward", side_effect=fixed_forward):
+            nxt[mode] = m.step(s, cav_teacher=teacher,
+                               lane_uniform=torch.full((1, 3), .5))
+    out = nxt["first_passage"]
+    # The CAV slot follows the teacher exactly (position, speed, accel; lane is the teacher lane).
+    assert out["next_s_m"][0, 1] == teacher[0, 1, 0]
+    assert out["next_v_mps"][0, 1] == teacher[0, 1, 2]
+    assert out["accel_mps2"][0, 1] == teacher[0, 1, 3]
+    assert out["next_lane"][0, 1] == 1
+    ref = nxt["secure_gap"]
+    for key in ("next_s_m", "next_v_mps"):
+        assert torch.equal(out[key][0, 1], ref[key][0, 1]), key
+    # A different teacher gives a different CAV state (the argument is not ignored).
+    m = model()
+    with patch.object(m, "forward", side_effect=fixed_forward):
+        other = m.step(s, cav_teacher=_replay_teacher(s, shift=9.0),
+                       lane_uniform=torch.full((1, 3), .5))
+    assert other["next_s_m"][0, 1] != out["next_s_m"][0, 1]
+
+
+def test_pivot_teacher_precedes_callback_for_base_cavs_and_entrants_use_the_callback():
+    m, s = model(), state(positions=(30., 31., 48.), lanes=(2, 0, 1))
+    s["is_cav"][0, 1:] = True
+    s["entrant"] = torch.tensor([[False, False, True]])
+    teacher = _replay_teacher(s)
+    def callback(current):
+        return torch.stack((current["s_m"] + 1.0, current["lane"], current["v_mps"],
+                            current["a_mps2"]), -1)
+    with patch.object(m, "forward", side_effect=fixed_forward):
+        out = m.step(s, cav_teacher=teacher, cav_controller=callback,
+                     lane_uniform=torch.full((1, 3), .5))
+    assert out["next_s_m"][0, 1] == teacher[0, 1, 0]            # base CAV: teacher
+    assert out["next_s_m"][0, 2] == s["s_m"][0, 2] + 1.0        # entrant: callback
 
 
 def test_hard_lane_transition_has_a_downstream_residual_adjoint():

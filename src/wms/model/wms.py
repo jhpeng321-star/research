@@ -1471,17 +1471,20 @@ class WmSModel(nn.Module):
         if direct.any():
             direct, next_s, next_v = self._apply_direct_commands(
                 out, direct, s, v, next_s, next_v, action_command, exec_cap=exec_cap)
-        if self.merge_pivot is not None and cav_controller is None:
-            # The no-command fallback is longitudinal prediction with the current
-            # lane held, shared with recorded replay; no future teacher motion.
+        if self.merge_pivot is not None and cav_controller is None and cav_teacher is None:
+            # The no-command fallback (no controller AND no recorded teacher) is
+            # longitudinal prediction with the current lane held; a supplied
+            # ``cav_teacher`` (recorded-arm replay) is honoured below exactly as on the
+            # non-pivot path (S-FIX9: it used to be silently dropped here).
             next_lane = torch.where(cav, state["lane"].long(), next_lane)
         # The controller callback owns episode-persistent lifecycle state and must run exactly
         # once per physics tick even after every CAV has exited (empty CAV mask).
         if (not self.black_box and (cav.any() or cav_controller is not None)
-                and (self.merge_pivot is None or cav_controller is not None)):
+                and (self.merge_pivot is None or cav_controller is not None
+                     or cav_teacher is not None)):
             next_s, next_v, next_lane = self._apply_cav_overrides(
                 out, state, cav, direct, present, k_steps, action_id, action_command,
-                cav_teacher if self.merge_pivot is None else None,
+                cav_teacher,
                 cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
 
         if self.merge_pivot is not None:

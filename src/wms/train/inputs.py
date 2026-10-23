@@ -241,6 +241,11 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
             raise ValueError("closed_loop CAV driving requires structured WM-S")
         cav_controller = TimelineControllers(model, timeline)
         teacher = None
+    if getattr(model, "merge_decision", None) == "first_passage":
+        # S-FIX9: WmSModel.step now honours a supplied cav_teacher on the first_passage
+        # path (eval replay of the recorded arm).  Training never replayed the recorded
+        # CAV motion there (the teacher was dropped), so keep that training contract.
+        teacher = None
     if not model.long_history:
         observed_hist, observed_hist_mask = hist, hist_mask
     entrant_seq = batch.get("entrant_seq")
