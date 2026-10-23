@@ -88,12 +88,15 @@ max_hours = 8.0
 lr_per_stage = [5.0e-5, 3.0e-5]
 batch_size_per_stage = [4, 2]
 # Trainable = the car-following path: driver-encoder settings head + learned centre, the residual net except its
-# lane read-out, the temporal MLP, the two gate scalars, the courtesy head.  Frozen bitwise: the merge pivot (round
-# 9's fit), merge core, the driver-encoder trunk (so the driver EMBEDDING fed to lane_v5 / residual is unchanged),
-# driver updater, lane network and gates, history/step embeddings, the residual lane read-out.
+# lane read-out, the temporal MLP, the courtesy head.  Frozen bitwise: the merge pivot (round 9's fit), merge core,
+# the two residual GATE scalars (R10_DIAG: under the position-dominated, always-clipped gradient the gate drifted down
+# in 87 % of round-10 steps without converging, i.e. it shrinks the whole residual instead of correcting it; with the
+# re-initialised read-out the residual sets its own magnitude inside the round-9 gate envelope), the driver-encoder
+# trunk (the driver EMBEDDING fed to lane_v5 / residual is unchanged), driver updater, lane network and gates,
+# history/step embeddings, the residual lane read-out.
 freeze_prefixes = [
   "driver_encoder.history_proj", "driver_encoder.query", "driver_encoder.interaction_proj",
-  "driver_encoder.history_gru", "driver_updater", "lane_gate_", "history_proj", "k_embedding",
+  "driver_encoder.history_gru", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
   "lane_v5", "merge_core", "merge_pivot", "residual_net.lane",
 ]
 
@@ -102,7 +105,6 @@ freeze_prefixes = [
 "driver_encoder.centre_logits" = 100.0  # R12 lr rule (docs/r12_lr_rule.json)
 "residual_net" = 0.5                  # round-8 recipe
 "temporal" = 5.0                      # round 10/11
-"gate_" = 100.0                       # two raw scalars (rounds 7b/8 convention)
 "follower_courtesy" = 1000.0          # R11 zero-init rule (docs/r11_weight_rule.json)
 
 [selection]

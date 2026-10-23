@@ -5,7 +5,12 @@
 
 Per run and arm (``DIR/<arm>/s<idx>_k<sample>.npz``): lane-1 HDV rows (diag_yield_extract.rows_from_arrays), merge-event
 windows (events_from_arrays, +-S-YIELD definitions), the courtesy head table (rows where the head applies), the exact-zero
-check on every other row, partner-switch jerk and a CAV-replay error.  ``sumo`` = the recorded future of the same t0 roster."""
+check on every other row, partner-switch jerk and a CAV-replay error.  ``sumo`` = the recorded future of the same t0 roster.
+
+R12 seed replication: ``--seed-offset N`` (default: absent = unchanged, process-global torch RNG) rolls sample k with
+seed / lane seed k + N AND seeds the global torch RNG (the first-passage merge draws' stream keys) with
+seed_of(state, k + N) before every arm's roll: reproducible, common random numbers across arms.  File names keep the
+sample index k, so a replication pass must write to its own ``--out``."""
 from __future__ import annotations
 
 import argparse
@@ -27,11 +32,18 @@ PRE, POST = 40, 24
 SPECS = []
 OUTDIR = ""
 REPO = ""
+SEED_OFFSET = None
 
 
-def _init(specs, repo, outdir):
-    global SPECS, OUTDIR, REPO
+def seed_of(idx: int, seed: int) -> int:
+    """Global torch seed of one (state, sample seed) roll (R12 --seed-offset; identical for every arm)."""
+    return (1_000_003 * int(idx) + 7919 * int(seed) + 12345) % (2 ** 31 - 1)
+
+
+def _init(specs, repo, outdir, seed_offset=None):
+    global SPECS, OUTDIR, REPO, SEED_OFFSET
     SPECS, OUTDIR, REPO = specs, outdir, repo
+    SEED_OFFSET = None if seed_offset is None else int(seed_offset)
     add_paths(repo)
     import rollout_worker as rw
     rw.init_arms(specs, "off")
@@ -97,7 +109,12 @@ def work(payload):
     out_msgs = []
     first = True
     for name, _ in SPECS:
-        res = rw.roll_once(name, rec, sample, steps)
+        if SEED_OFFSET is None:
+            res = rw.roll_once(name, rec, sample, steps)
+        else:
+            import torch
+            torch.manual_seed(seed_of(idx, sample + SEED_OFFSET))
+            res = rw.roll_once(name, rec, sample + SEED_OFFSET, steps)
         p, _cap = rw.G["p"][name]
         physics = p.model.physics
         pen = float(res["pen"] or np.nan)
@@ -137,6 +154,8 @@ def main():
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--stride", type=int, default=1, help="use every Nth state")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--seed-offset", type=int, default=None,
+                    help="R12 seed replication: sample k uses seed k + offset and a seeded torch RNG (default: unchanged)")
     a = ap.parse_args()
     specs = [tuple(v.split("=", 1)) for v in a.var]
     with gzip.open(a.states, "rt") as f:
@@ -149,19 +168,21 @@ def main():
     t0 = time.time()
     summary = []
     if a.workers <= 1:
-        _init(specs, a.repo, a.out)
+        _init(specs, a.repo, a.out, a.seed_offset)
         for t in tasks:
             summary.append(work(t))
             print(summary[-1], flush=True)
     else:
         from multiprocessing import Pool
-        with Pool(a.workers, initializer=_init, initargs=(specs, a.repo, a.out)) as pool:
+        with Pool(a.workers, initializer=_init, initargs=(specs, a.repo, a.out, a.seed_offset)) as pool:
             for j, r in enumerate(pool.imap_unordered(work, tasks, chunksize=1)):
                 summary.append(r)
                 if (j + 1) % 8 == 0:
                     print(f"{j+1}/{len(tasks)} {time.time()-t0:.0f}s", flush=True)
-    json.dump({"n_states": len(recs), "k": a.k, "steps": a.steps, "specs": specs, "seconds": time.time() - t0},
-              open(os.path.join(a.out, "ROLLOUT_DONE.json"), "w"))
+    done = {"n_states": len(recs), "k": a.k, "steps": a.steps, "specs": specs, "seconds": time.time() - t0}
+    if a.seed_offset is not None:
+        done["seed_offset"] = a.seed_offset
+    json.dump(done, open(os.path.join(a.out, "ROLLOUT_DONE.json"), "w"))
     print(f"done {time.time()-t0:.0f}s runs {len(summary)}", flush=True)
 
 
