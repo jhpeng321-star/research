@@ -49,7 +49,9 @@ merge_pivot_state_st = true, checkpoint_forward = true. The motion objective equ
   `--set curriculum.stage_steps=[40,60]`.
 
 ## 3. Offline TRAIN check (tools/r12_offline_base.py; docs/r12_offline_base.json)
-One-step, teacher-forced, on 24 held-out TRAIN windows (113k lane-1 HDV rows). Bias = model - recorded, as
+One-step, teacher-forced, on 24 held-out TRAIN windows (113k lane-1 HDV rows). docs/r12_offline_base.json
+(lr grid + classes); the two slow-start split rows come from the identical deterministic re-run with `--chosen 10 1000`
+(docs/r12_offline_base_classes.json; the shared classes match to the last digit). Bias = model - recorded, as
 [mean, MAE] in m/s^2. Arms:
 - **r9:** round 9 as is.
 - **r12 init:** physical encoder at the centre; attention read-out 0; round-9 gate x temporal kept.
@@ -60,6 +62,8 @@ One-step, teacher-forced, on 24 held-out TRAIN windows (113k lane-1 HDV rows). B
 |---|---|---|---|---|---|---|---|---|---|---|
 | slow start (unpartnered, v<2, gap 6-30) | 1431 | +0.18 | +1.50 [1.98] | +1.72 [1.73] | +2.20 [2.96] | +1.93 [1.93] | +1.15 [2.27] | +0.87 [0.90] | +0.65 [0.74] | +0.73 [0.80] |
 | far-upstream slow start (s<-400) | 26 | +1.01 | +0.52 [0.57] | +1.04 [1.04] | +0.65 [0.67] | +1.16 [1.16] | -0.31 [0.47] | +0.21 [0.35] | +0.03 [0.28] | +0.10 [0.30] |
+| upstream slow start (unpartnered, s<-100) | 46 | +0.98 | +0.34 [0.75] | +0.77 [0.82] | +0.75 [1.00] | +1.08 [1.08] | -0.30 [0.74] | +0.03 [0.32] | -0.19 [0.36] | -0.11 [0.34] |
+| approach/zone slow start (unpartnered, -100<=s<=75.44) | 1385 | +0.15 | +1.53 [2.02] | +1.75 [1.76] | +2.25 [3.03] | +1.95 [1.95] | +1.19 [2.32] | +0.89 [0.92] | +0.68 [0.75] | +0.76 [0.81] |
 | free road (5<v<20, gap>60) | 7230 | +0.49 | +0.11 [1.39] | +1.39 [1.39] | +0.26 [2.40] | +1.66 [1.66] | -0.93 [2.31] | +0.47 [0.54] | +0.30 [0.45] | +0.37 [0.48] |
 | target follower last 3 s | 446 | -0.02 | +1.37 [1.79] | +1.54 [1.75] | +2.11 [2.49] | +1.91 [2.06] | +1.04 [1.66] | +0.84 [1.02] | +0.64 [0.86] | +0.71 [0.92] |
 | target follower [-6,-3) s | 397 | +0.07 | +0.66 [1.50] | +0.74 [1.36] | +1.24 [2.16] | +1.03 [1.64] | +0.54 [1.50] | +0.33 [0.81] | +0.13 [0.76] | +0.20 [0.78] |
@@ -75,7 +79,11 @@ Readings:
 1. **Calibration works for the core.** These are the "core" columns, i.e. the encoder's own read, because the run
    retrains the temporal MLP. After the production-schedule fit with the prior:
    - all-row one-step MAE 0.53 (round 9: 1.00 full model, 0.78 core);
-   - slow start +0.87 (round 9 +1.50);
+   - slow start +0.87 (round 9 +1.50), split as follows:
+     - upstream (s < -100 m) +0.03 (round 9 +0.34);
+     - approach/zone +0.89 (+1.53). This is where SUMO start-ups are sluggish because of the hold of non-target
+       followers and hidden junction leaders (BASE_FOLLOWER_DIAG 3.1). BASE-1 therefore tests the upstream rows for
+       "near 0" and all positions for improvement;
    - far-upstream start-up +0.21 (+0.52);
    - braking rows +0.26 (+0.62);
    - far partners (negative control) +0.07 (+0.44);
@@ -219,7 +227,7 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
 | id | reject if | notes |
 |---|---|---|
 | M5 (round) | collisions, or TTC < 1.5 s share, worse than round 9: point estimate (analyze.py), AND/OR the seed-replicated paired CI lies above 0 | the hard safety rule |
-| BASE-1 | slow-start one-step mean bias: \|.\| > 0.3, or not smaller than round 9's | tools/r12_checks/base_calibration.py |
+| BASE-1 | UPSTREAM (s < -100 m) slow-start one-step \|mean bias\| > 0.3, or all-position slow-start \|bias\| not smaller than round 9's | tools/r12_checks/base_calibration.py; offline core after the fit: upstream +0.03, all +0.87 (round 9 +0.34 / +1.50) |
 | BASE-2 | free-road or far-upstream slow-start \|bias\| > max(0.3, round 9's \|bias\| of the class + 0.1) | offline core after the fit: +0.47 / +0.21 (round 9 +0.11 / +0.52); depends on the retrained temporal/residual |
 | BASE-3 | recorded-braking-row bias worse than round 9's by > 0.1 | b moves from 3.0 to about 2.0-2.4 |
 | BASE-4 (read) | last-3-s target follower: round 12 / head-zero / round 9 | expectation: about +0.8..+1.0 with the head zeroed; within +-0.3 with the head |
