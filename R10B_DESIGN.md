@@ -44,14 +44,22 @@ runtime/scoring rollout identically. Flag off = no module, no tensor, no RNG dra
 | fix B `cutin_reaction` (unchanged, weight 2.174) | lane-1 follower after each recorded insertion (to first non-negative recorded accel, <= 6 s, 1 s pre) + all other lane-1 HDV transitions as controls | full model acceleration | temporal MLP + gate scalars |
 | R10B `follower_courtesy` | every lane-1 HDV transition whose follower has a ramp partner at t (model's own pairing) | `clamp(a_pre(t).detach() + head(x_t))` | courtesy head only |
 
-`a_pre` is the full model's acceleration without the courtesy offset at the recorded state. The frozen, state-conditioned
-model is the **matched control at the identical state**: a learned expectation fitted on all TRAIN rows (no hand-set
-cells). Offline (section 6 of the packet) its residual on C3-type non-adjacent controls is ~0 while on target followers at
-dA 6-15 m it is ~-0.9 m/s^2 (the model accelerates into the gap the SUMO follower does not take). Partner rows where SUMO
-followers do not slow (far partners, ramp car far from the end, fast free gaps) are in the same loss and anchor the head
-at the model's residual there. Lane-1 cars without a partner contribute nothing (offset identically 0). Huber delta 1.0
-m/s^2 (closer to the conditional mean than fix-B's 0.5, because the SUMO response is a mean deficit with a heavy tail).
-Recorded future quantities enter only as the target a[t+1]; the replay runs without gradient.
+`a_pre` is the full model's acceleration without the courtesy offset at the recorded state. The frozen,
+state-conditioned model is the **matched control at the identical state**: a learned expectation fitted on all TRAIN rows
+(no hand-set cells); the head can only explain what the model without courtesy does not. Partner rows where the
+recorded follower does what the model already predicts (alongside/overlapping, far partners in free flow, fast free gaps)
+are in the same loss with equal weight and anchor the head there; lane-1 cars without a partner contribute nothing
+(offset identically 0). Huber delta 1.0 m/s^2 (closer to the conditional mean than fix-B's 0.5, because the SUMO response
+is a mean deficit with a heavy tail). Recorded future quantities enter only as the target a[t+1]; the replay runs without
+gradient.
+
+**Alternative tried offline and rejected (option B, learned control regressor).** A training-only own-state regressor
+g(v, leader gap, closing, position) fitted to the model residual on NON-partner lane-1 rows, with the head fitted to
+`r - g`, would remove any model bias that is not adjacency-specific. Offline it is not identified: near the merge almost
+every slow, short-gap lane-1 car is a target follower, so g must extrapolate, and the head target at dA 6-15 m swung from
+-1.14 to +0.12 m/s^2 with g's training length alone (400 vs 3000 steps). The code was not kept (snapshot in the worktree
+tmp_r10b/optionB/, untracked). Option A's known cost (packet section 5): where the base model's error is generic to the
+state rather than to adjacency, the head absorbs it on partner rows only.
 
 **Gradient scope.** The head's weights are reached ONLY by the courtesy term: `follower_courtesy_rollout_grad = false`
 evaluates the head inside forward with detached parameters (`torch.func.functional_call`), so rollout losses and the cut-in
@@ -90,10 +98,13 @@ the production schedule (30 steps x 4 windows at 5e-5 s, 60 steps x 5 windows at
 1. **Followers yielding to cars that are not waiting** (e.g. fast ramp cars far from the end): the head sees speed, distance
    to end and gap and is anchored by such rows, but rows are dominated by jammed states; check the negative controls
    (partner dA > 30 m, d_end > 40 m, alongside) in rollouts.
-2. **Base errors absorbed by the head.** The target is recorded minus the model; where the frozen model errs for reasons
-   tied to the pair geometry (e.g. it over-brakes when the ramp car is alongside, +0.24 m/s^2 offline), the head corrects
-   that too. This is fitting recorded accelerations, not a yield rule, but it means "head ~0 where SUMO does not yield" holds
-   only where the base model is unbiased.
+2. **Base errors absorbed by the head (main risk).** The target is recorded minus the model; where the frozen model errs
+   in a state for reasons that are not adjacency-specific (offline: it over-predicts acceleration of slow lane-1 cars near
+   the merge whether or not a ramp car is adjacent; it over-brakes when the ramp car is alongside), the head corrects that
+   on partner rows only. One-step prediction improves (row bias +0.78 -> ~0), but a partner and a non-partner car in the same
+   state can then differ by more than SUMO's matched excess (see packet: position-matched cells need ~-0.5 at dA 6-15 m, the
+   fitted head gives -0.45 (production schedule) to -0.9 (converged); far partners get a non-zero offset). This is fitting
+   recorded accelerations, not a yield rule, but "head ~0 where SUMO does not yield" holds only where the base is unbiased.
 3. **Interaction with the merge rule.** More follower slowdown means more licensed merges (desired) but also possible earlier
    merges into small gaps, with fix B now softening the post-insertion reaction: watch collisions/TTC and the minimum gap.
 4. **Train/runtime pairing shift.** In rollouts the partner set depends on rolled-out lanes; a mis-predicted lane-1 car can
