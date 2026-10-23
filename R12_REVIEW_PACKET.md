@@ -150,7 +150,31 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
   insertion;
 - production lr (`optim.lr = 5e-5`). It ran with the pre-rule scales (head x1, centre x100), a mechanics check only.
 
-SMOKE
+**First run (head x1, centre x100; `tmp_r12/smoke`; docs/r12_micro_smoke_summary.json): PASS.**
+- **Init report:** loaded 157, new 9 (`driver_encoder.centre_logits`, the `physical_lower` / `physical_upper` buffers,
+  and the 6 head tensors), expanded 0, shape-mismatch 0, unused 0, `follower_courtesy_init = zero`; driver-head rows
+  0-4 zeroed; accel row 0 zeroed (abs-sum before 12.19).
+- **Losses:** 59.24 / 49.94, finite. Pre-clip grad norm 181 / 173 (clip 1). Step time 377 / 684 s on the laptop CPU.
+- **Parameter changes:**
+  - 92 of the 99 trainable tensors changed (the 7 unchanged have structurally zero gradient: the attention key biases and pair-bias output biases are softmax-invariant, and `residual_net.courtesy_proj.0` sits behind a zero last layer);
+  - **no frozen tensor, no merge_pivot tensor and neither gate scalar changed** (bitwise);
+  - no cut-in key logged.
+- **Centre and heads moved:** the centre moved (a 2.49 -> 2.481 in 2 steps at x100; the production x1000 moves about
+  10x faster). Driver-head rows 0-4 are nonzero. Accel row 0 abs-sum is 0.025 (alive). The courtesy head moved (head
+  mean 0 -> -0.16, min/max -0.27/-0.10; grad 0.033 / 0.183).
+- **Courtesy:** loss 1.19 / 0.80 on 266 / 214 rows; contrast controls 1,635 / 2,053; control residual mean -0.58 / -0.63.
+- **Fix D active:** 101 / 53 replay-state rows that loss_valid would have hidden.
+- **Per-term gradient shares** over the trainable set (one 40-step probe chunk; 20 s windows, so agg_delay and pair
+  terms are inactive):
+
+  | position | speed | courtesy | brake-persist quantile | brake persist | aggregate (field/reward/flow) | residual mag | lane event |
+  |---|---|---|---|---|---|---|---|
+  | 0.802 | 0.058 | 0.079 | 0.038 | 0.007 | 0.014 | 0.002 | 0 (lane network frozen) |
+
+  The driver prior's share at the encoder output is 0.003 (`driver_prior_grad_share`). Position dominates (as R10_DIAG
+  found for round 10). This is the intended objective for a base retrain; the gate, which drifted under it, is frozen.
+
+**Second run with the final rule scales (head x10, centre x1000, `--no-share`; `tmp_r12/smoke2`):** SMOKE2
 
 ## 6. Gate (scripts/round12_gate.sh; sha256 GATE_SHA)
 - **Script hygiene:** LF, `bash -n` clean, no CR. Hardened like round 11: set -u/pipefail/noclobber; stale-artifact
