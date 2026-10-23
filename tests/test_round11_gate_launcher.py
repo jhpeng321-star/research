@@ -1,4 +1,5 @@
 """Execute the real round-11 Bash gate with an isolated stub training executable."""
+import json
 import os
 from pathlib import Path
 import shlex
@@ -112,6 +113,11 @@ def test_head_init_switch_reaches_smoke_full_and_verdict(tmp_path, head_init, ze
     assert f"model.follower_courtesy_init_zero={zero}" in full
     expect = "zero" if zero == "true" else "checkpoint"
     assert f"--expect-courtesy-init {expect}" in verdict
+    rule = json.loads((ROOT / "docs/r11_weight_rule.json").read_text(encoding="utf-8"))["switch_zero_init_head"]
+    for call in (smoke, full):
+        has = (f"loss.follower_courtesy.weight={rule['weight']}" in call
+               and f"optim.lr_scale.follower_courtesy={rule['lr_scale']}" in call)
+        assert has == (zero == "true")
 
 
 def test_bad_head_init_is_a_setup_failure(tmp_path):

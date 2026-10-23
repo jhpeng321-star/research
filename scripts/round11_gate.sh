@@ -20,9 +20,12 @@ REPO=${1:-$L/repo_r11}
 PYTHON=${R11_PYTHON:-/root/miniconda3/bin/python}
 CK=${R11_INIT:-$L/runs/c4_wm_v10_round10b/wm_s_stage300.pt}
 HEAD_INIT=${R11_HEAD_INIT:-checkpoint}
+# Head weight / lr scale per docs/r11_weight_rule.json: the config carries the round-10b-head values; the zero-init
+# head has its own measured values (same rules, measured at the zero-init head).
 case "$HEAD_INIT" in
-    checkpoint) ZERO=false ;;
-    zero) ZERO=true ;;
+    checkpoint) ZERO=false; HEAD_RULE=() ;;
+    zero) ZERO=true; HEAD_RULE=(--set loss.follower_courtesy.weight=9.067
+              --set optim.lr_scale.follower_courtesy=1000.0) ;;
     *) echo "R11_HEAD_INIT must be checkpoint or zero: $HEAD_INIT" >&2; exit 2 ;;
 esac
 ulimit -n 65536 || exit 2
@@ -43,7 +46,8 @@ export WMS_DATA_V5_NATIVE="$L/data/v5_native" WMS_DATA_GENRAND_PLAIN="$L/data/ge
 export WMS_DATA_GENRAND_BRANCH="$L/data/genrand_branch" WMS_DATA_PAIRS300="$L/data/pairs300"
 COMMON=(--set "model.init_from=$CK" --set "model.follower_courtesy_init_zero=$ZERO"
     --set loss.loss_share_logging=false
-    --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda)
+    --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda
+    ${HEAD_RULE[@]+"${HEAD_RULE[@]}"})
 if "$PYTHON" -m wms train --config configs/c4_wm_v10round11.toml --mode run \
     --out "$L/runs/smoke_r11" "${COMMON[@]}" \
     --set "optim.batch_size_per_stage=[4,4]" \
