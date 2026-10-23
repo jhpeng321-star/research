@@ -637,3 +637,24 @@ def test_hybrid_initial_history_conditions_on_survival_without_a_prior_reset():
     with pytest.raises(ValueError, match="causal history"):
         score_chunk(c, tau, ones, event, known_entry=ones, reset=~ones,
                     w=w, initial_maximum=prefix[..., -1])
+
+
+def test_s_fix9_training_inputs_never_hand_the_recorded_teacher_to_first_passage_rollouts():
+    # WmSModel.step now honours cav_teacher on the first_passage path (eval replay).  The
+    # training contract is unchanged: no recorded CAV motion reaches a first_passage unroll.
+    for mode, expect_none in (("first_passage", True), ("secure_gap", False)):
+        model = WmSModel(ModelSpec(rollout_mode="hybrid", lane_model="hazard_v5",
+                                   merge_decision=mode), physics=PhysicsConfig()).eval()
+        states = torch.zeros(1, 5, 3, 7)
+        states[..., 6] = 5.
+        states[..., 0] = torch.tensor([10., 40., -10.])
+        states[..., 2] = 1.
+        present = torch.ones(1, 5, 3, dtype=torch.bool)
+        is_cav = torch.zeros_like(present)
+        is_cav[:, :, 1] = True
+        batch = dict(states=states, present=present, is_cav=is_cav,
+                     cav_teacher=torch.ones(1, 5, 3, 4))
+        inp = prepare_inputs(batch, model, TrainSettings(rollout_mode="hybrid",
+                                                         lane_model="hazard_v5"),
+                             torch.device("cpu"), 4)
+        assert (inp.teacher is None) == expect_none, mode
