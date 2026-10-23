@@ -132,8 +132,15 @@ plant clamp (no clamp is added, per the owner rules). Watch `follower_courtesy_h
 
 5b. **Production lr** (`--set optim.lr=5e-5`: head 5e-3, temporal 2.5e-4, gate 5e-3; `tmp_r11/smoke`). This was still
 running on the laptop CPU at this commit. Per R11_REVIEW C4 it is **superseded by the GPU gate smoke**: 2+2
-production-lr steps from the real init, with the C1 head-saturation rule in the verdict. Its summary is appended
-below only if it completes.
+production-lr steps from the real init, with the C1 head-saturation rule in the verdict. It then completed. **PASS**
+(docs/r11_micro_smoke_summary.json, docs/r11_micro_smoke_train_log.jsonl):
+- losses 30.66 / 24.99, all finite; grad norm 5.2 / 5.8.
+- courtesy (contrast) loss 0.416 / 0.334 on 229 / 1,260 rows; head mean +0.15 / +0.55, so the C1 rule passes.
+- head gradient 2.14 / 1.63 (alive); contrast controls 2,625 / 1,696; median effective controls 191 / 142; shift
+  +0.43 / +0.05.
+- partnered controls excluded 218 / 1,246; cut-in events 6 / 7.
+- changed tensors = the 12 trainable ones only; frozen and merge_pivot bitwise; init report as above.
+- step times 1,252 / 747 s on the laptop CPU.
 
 ## 6. Gate
 `scripts/round11_gate.sh [REPO_DIR]` (LF, `bash -n` clean, blob has no CR). It has the round-10b hardened structure:
@@ -191,3 +198,21 @@ v2 checkpoint.
 ## 8. Commits
 86fb7f12 (code), 42f62ca4 (contrast matching, config, gate, tests), 50204cff (verdict tests), 76fe0e65
 (offline fit, rules, config values, design). See `git log c4/v10r11`.
+
+## 9. Post-run checks armed on gpuR (laptop independent)
+`/root/autodl-tmp/c4/v5/chk_r11/`:
+- tools = `tools/r10b_checks` + `tools/r11_checks` from commit 5cb8488d. Shipped as LF git blobs; `sha256sum -c
+  SHA256SUMS`: all 14 OK.
+- code = `repo_r11_4d8de32b`. The files used by the checks match 4d8de32b by blob hash; `tools/wm_eval_common.py`
+  differs only by CRLF.
+- **auto_arm.sh PID 426390** (setsid nohup, `chk_r11/auto_arm.pid`, log `chk_r11/auto_arm.log`). It waits for
+  `runs/c4_wm_v10_round11/RUN_SUMMARY.json` AND for the round-10b checks to finish (`chk_r10b/VERDICT_R10B_CHECKS.md`,
+  or PID 413441 gone; that process is untouched). It then runs `run_all.sh full`: CPU only, nice 10, 20 workers,
+  intermediates in `/dev/shm/chk_r11`.
+- Output: `chk_r11/VERDICT_R11_CHECKS.md` = label mapping + M7 head rule + M8 (absolute profiles, matched-control
+  bias, KEEP-10b rule, under-yield flag) + the reused M1-M7 verdict.
+- Dry run (nice 19, 6 workers, stand-in checkpoints: the round-10b smoke as reference and a local v2 stand-in as
+  "round 11") completed end to end in 3.5 min: rollouts, removal, one-step, gates, analysis, M7 and M8. Its numbers
+  are meaningless.
+- Expected full runtime ~75-90 min after both conditions hold. Estimate scaled from the round-10b mid run:
+  rollouts ~50 min, removal ~7 min, one-step ~15 min.
