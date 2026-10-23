@@ -232,18 +232,27 @@ def main(argv=None):
     p.add_argument("--threads", type=int, default=1)
     p.add_argument("--out", default="docs/r12_offline_base.json")
     p.add_argument("--quick", action="store_true", help="2 grid points, 2+2 steps (smoke of the tool only)")
+    p.add_argument("--chosen", nargs=2, type=float, default=None, metavar=("HEAD", "CENTRE"),
+                   help="skip the grid: fit only these scales (+ the no-prior / weak-prior variants), all in parallel")
     a = p.parse_args(argv)
     schedule = ((2, 4, 5.0e-5), (2, 2, 3.0e-5)) if a.quick else SCHEDULE
     t0 = time.time()
-    grid = GRID[:2] if a.quick else GRID
-    jobs = [(h, c, 0.05, a.decomp, a.enc, a.threads, 0, schedule) for h, c in grid]
-    with ProcessPoolExecutor(a.workers) as pool:
-        results = list(pool.map(fit_arm, jobs))
-    best = min(results, key=lambda r: r["held_objective"])
-    extra = [(best["head_scale"], best["centre_scale"], w, a.decomp, a.enc, a.threads, 0, schedule)
-             for w in (0.0, 0.01)]
-    with ProcessPoolExecutor(min(a.workers, 2)) as pool:
-        noprior, weak = list(pool.map(fit_arm, extra))
+    if a.chosen:
+        h, c = a.chosen
+        jobs = [(h, c, w, a.decomp, a.enc, a.threads, 0, schedule) for w in (0.05, 0.0, 0.01)]
+        with ProcessPoolExecutor(min(a.workers, 3)) as pool:
+            best, noprior, weak = list(pool.map(fit_arm, jobs))
+        results = [best]
+    else:
+        grid = GRID[:2] if a.quick else GRID
+        jobs = [(h, c, 0.05, a.decomp, a.enc, a.threads, 0, schedule) for h, c in grid]
+        with ProcessPoolExecutor(a.workers) as pool:
+            results = list(pool.map(fit_arm, jobs))
+        best = min(results, key=lambda r: r["held_objective"])
+        extra = [(best["head_scale"], best["centre_scale"], w, a.decomp, a.enc, a.threads, 0, schedule)
+                 for w in (0.0, 0.01)]
+        with ProcessPoolExecutor(min(a.workers, 2)) as pool:
+            noprior, weak = list(pool.map(fit_arm, extra))
     data = load_data(Path(a.decomp), Path(a.enc))
     held = [d for d in data if d["held"]]
     init_pred, init_par = init_arm(a.decomp, a.enc)
@@ -282,6 +291,7 @@ def main(argv=None):
                                         "weak_0.01": weak["trace"][-1]["centre"]}},
            "classes": summarise(arms, held), "encoded_percentiles_p1_p10_p50_p90_p99": enc_pct,
            "sign": "bias = model - recorded (m/s^2); [mean, MAE]"}
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(Path(a.out).with_suffix(".preds.npz"), keep=keep, rec=cat([np.asarray(d["w"]["rec"]) for d in held]),
                         **{f"pred_{k}": v.astype(np.float32) for k, v in arms.items()},
                         **{f"col_{k}": cat([np.asarray(d["w"][k]) for d in held]) for k in
