@@ -57,13 +57,15 @@ def sequence(n=9, cav=True):
     return {"states": states, "present": torch.ones(1, n, 5, dtype=torch.bool), "is_cav": is_cav}
 
 
-def targets(batch):
+def targets(batch, n=None):
+    """Trainer targets; ``n`` < window rows reproduces real batches (window longer than the unroll)."""
     class Model:
         long_history = False
         rollout_mode = "residual"
         physics = None
     cfg = TrainSettings()
-    inp = prepare_inputs(batch, Model(), cfg, torch.device("cpu"), batch["states"].shape[1] - 1)
+    n = batch["states"].shape[1] - 1 if n is None else n
+    inp = prepare_inputs(batch, Model(), cfg, torch.device("cpu"), n)
     return build_targets(inp, batch, cfg, .5, torch.device("cpu"))
 
 
@@ -280,6 +282,37 @@ def test_loss_without_head_and_weight_without_model_flag_are_refused():
         FollowerCourtesyLoss(FollowerCourtesyConfig(weight=1.0))(context(model, targets(sequence())))
 
 
+# ------------------------------------------------------------------ window longer than the unroll
+@pytest.mark.parametrize("shared", [False, True])
+def test_window_longer_than_unroll_real_shaped_batch(shared):
+    """Real batches carry 300 s windows with 120 s unrolls: every mask must be cut to n_steps (+1)."""
+    model = small_model(courtesy=True, randomize=True)
+    t = targets(sequence(n=9), n=5)
+    assert t.n_steps == 5 and t.is_cav.shape[1] == 9 and t.states.shape[1] >= 6
+    if shared:
+        CutinReactionLoss(CutinReactionConfig(weight=1.0), share_keys=REPLAY_KEYS,
+                          share_to=SHARED_KEY)(context(model, t))
+        assert t.prepared[SHARED_KEY]["courtesy_applies"].shape[1] == 5
+    term = FollowerCourtesyLoss(FollowerCourtesyConfig(weight=1.0))
+    value = term(context(model, t))
+    assert term.last_stats["shared_replay"] == int(shared)
+    assert term.last_stats["n_rows"] > 0 and torch.isfinite(value.value)
+    full = targets(sequence(n=9))
+    _, out_full = one_step_replay(model, full, collect=REPLAY_KEYS)
+    _, out_cut = one_step_replay(model, targets(sequence(n=9), n=5), collect=REPLAY_KEYS)
+    for key in REPLAY_KEYS:                                     # causal: the cut replay is a prefix
+        assert torch.equal(out_cut[key], out_full[key][:, :5]), key
+
+
+def test_runner_with_window_longer_than_unroll():
+    model = small_model(courtesy=True, randomize=True)
+    cfg = replace(TrainSettings(truncation_steps=2), cutin_reaction_weight=1.0,
+                  follower_courtesy=True, follower_courtesy_weight=0.5)
+    record = UnrollRunner(model, cfg, build_loss(cfg), projection=None, device=torch.device("cpu")).run(
+        sequence(n=12, cav=False), unroll_steps=6, backward=True)
+    assert record["follower_courtesy_n_rows"] > 0 and record["follower_courtesy"] > 0
+
+
 # ------------------------------------------------------------------ config pins
 def leaves(node, prefix=""):
     if isinstance(node, dict):
@@ -344,7 +377,8 @@ def test_round10b_gate_script_is_launchable():
     assert b"runs/c4_wm_v10_round10b" in gate and b"repo_r10b" in gate
     assert b"\\n  --set" not in gate and b"\\n --set" not in gate
     assert b"selection.val_max_windows=4" in gate and b"selection.val_max_windows=16" in gate
-    assert b"curriculum.max_hours=1.5" in gate and b"follower_courtesy_n_rows" in gate
+    assert b"curriculum.max_hours=1.5" in gate and b"wms.train.round10b_gate" in gate
+    assert b"R10B_INIT" in gate and b"set -u -o pipefail -o noclobber" in gate
 
 
 def test_legacy_flat_round_trip_and_default_omission():

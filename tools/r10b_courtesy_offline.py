@@ -181,12 +181,14 @@ def cache(args):
 
 
 # ------------------------------------------------------------------------------------------- fit
-def load_windows(out, n_shards):
+def load_windows(out, n_shards, extra=()):
+    """Windows of ``out`` shards plus ``extra`` caches given as ``prefix:n_shards`` (partial shards allowed)."""
     windows = []
-    for i in range(n_shards):
-        p = Path(f"{out}.shard{i}.pkl")
-        if p.is_file():
-            windows.extend(pickle.load(open(p, "rb"))["windows"])
+    for prefix, count in ((out, n_shards), *((e.rsplit(":", 1)[0], int(e.rsplit(":", 1)[1])) for e in extra)):
+        for i in range(count):
+            p = Path(f"{prefix}.shard{i}.pkl")
+            if p.is_file():
+                windows.extend(pickle.load(open(p, "rb"))["windows"])
     return windows
 
 
@@ -311,7 +313,7 @@ def report_excess(head, windows, label):
 
 def fit(args):
     torch.set_num_threads(args.threads)
-    windows = load_windows(args.out, args.n_shards)
+    windows = load_windows(args.out, args.n_shards, args.extra)
     eps = sorted({w["episode"] for w in windows})
     held = set(eps[::4])
     fit_w = [w for w in windows if w["episode"] not in held]
@@ -396,6 +398,7 @@ def main(argv=None):
     f.add_argument("--n-shards", type=int, default=1)
     f.add_argument("--report", required=True)
     f.add_argument("--fit-steps", type=int, default=400)
+    f.add_argument("--extra", nargs="*", default=[], help="more caches as prefix:n_shards")
     f.add_argument("--threads", type=int, default=8)
     args = p.parse_args(argv)
     cache(args) if args.cmd == "cache" else fit(args)
