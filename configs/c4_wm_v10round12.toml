@@ -101,8 +101,8 @@ freeze_prefixes = [
 ]
 
 [optim.lr_scale]
-"driver_encoder.head" = 1.0           # R12 lr rule (docs/r12_lr_rule.json)
-"driver_encoder.centre_logits" = 100.0  # R12 lr rule (docs/r12_lr_rule.json)
+"driver_encoder.head" = 10.0          # R12 lr rule (docs/r12_lr_rule.json): best held-out of {1,10} x {10..1000}
+"driver_encoder.centre_logits" = 1000.0  # R12 lr rule (docs/r12_lr_rule.json)
 "residual_net" = 0.5                  # round-8 recipe
 "temporal" = 5.0                      # round 10/11
 "follower_courtesy" = 1000.0          # R11 zero-init rule (docs/r11_weight_rule.json)
