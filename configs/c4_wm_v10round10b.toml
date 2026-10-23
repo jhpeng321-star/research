@@ -72,7 +72,7 @@ huber_delta_mps2 = 0.5
 # (prediction = detached no-courtesy model acceleration + courtesy offset, plant clamp; trains only the head).
 # weight = gradient-norm parity with the weighted fix-B term (docs/r10b_weight_rule.json, tools/r10b_courtesy_offline.py).
 [loss.follower_courtesy]
-weight = 1.0
+weight = 4.719
 huber_delta_mps2 = 1.0
 
 [curriculum]
@@ -98,7 +98,7 @@ freeze_prefixes = [
 [optim.lr_scale]
 "temporal" = 5.0      # pilot rule: largest scale in {1,5,20,100} whose held-out post-insertion min-accel deficit is not worse than baseline by > 0.01 m/s^2 (20x and 100x worsen it)
 "gate_" = 100.0       # two raw scalars: Adam moves a scalar <= lr per step, so 100x (rounds 7b/8 convention for scalars)
-"follower_courtesy" = 100.0   # R10B fresh zero-init head: offline lr pilot rule (docs/r10b_weight_rule.json)
+"follower_courtesy" = 1000.0  # R10B fresh zero-init head: offline lr pilot rule, best held-out loss in {1,10,100,1000} (docs/r10b_weight_rule.json)
 
 [selection]
 val_max_windows = 256
