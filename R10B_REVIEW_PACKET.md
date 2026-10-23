@@ -110,4 +110,4 @@ artifact refusal, lock, R10B_INIT/R10B_ROOT/R10B_PYTHON), smoke batch 4 at 120/3
 cut-in census) + courtesy finite/positive with rows > 0, init report clean except the new zero-init head tensors, strict
 reload with the head enabled, frozen + merge_pivot bitwise, a fix-B tensor and the head read-out moved; then exec the
 full run (`runs/c4_wm_v10_round10b`, `selection.val_max_windows=16`). Default repo dir `$L/repo_r10b`. Not run anywhere.
-Commits: SEE_COMMIT.
+Commits: through dfc58467 (packet commit; see git log c4/v10r10b).
