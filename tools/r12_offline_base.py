@@ -196,6 +196,9 @@ def classes(held):
     out = {
         "slow start (unpartnered, v<2, gap 6-30)": ~has & (v < 2) & (gap > 6) & (gap < 30),
         "far-upstream slow start (s<-400)": (s < -400) & (v < 2) & (gap > 6) & (gap < 30),
+        "upstream slow start (unpartnered, s<-100)": ~has & (s < -100) & (v < 2) & (gap > 6) & (gap < 30),
+        "approach/zone slow start (unpartnered, -100<=s<=75.44)": ~has & (s >= -100) & (s <= ZONE_END) & (v < 2)
+        & (gap > 6) & (gap < 30),
         "free road (5<v<20, gap>60)": (v > 5) & (v < 20) & (gap > 60),
         "target follower last 3 s": zone & (tm > 0) & (tm <= 3),
         "target follower [-6,-3) s": zone & (tm > 3) & (tm <= 6),
@@ -249,6 +252,11 @@ def main(argv=None):
             "r9_core": cat([np.asarray(d["w"]["phys"]) for d in held]),
             "r12_init": cat(init_pred), "r12_fit": cat(best["preds"]),
             "r12_fit_noprior": cat(noprior["preds"]), "r12_fit_weak": cat(weak["preds"])}
+    # IDM core alone (the round-8 gate x temporal emission removed): the encoder's own one-step read; the production
+    # run retrains the temporal MLP, so the core-only columns are the cleaner read of the settings.
+    temp = cat([np.asarray(d["w"]["temp"]) for d in held])
+    for name in ("r12_init", "r12_fit", "r12_fit_noprior", "r12_fit_weak"):
+        arms[name + "_core"] = arms[name] - temp
     pars = {"r9": cat([np.asarray(d["w"]["params"]) for d in held]), "r12_init": cat(init_par),
             "r12_fit": cat(best["pars"]), "r12_fit_noprior": cat(noprior["pars"]), "r12_fit_weak": cat(weak["pars"])}
     keep = np.concatenate([d["keep"].numpy() for d in held])
@@ -274,6 +282,10 @@ def main(argv=None):
                                         "weak_0.01": weak["trace"][-1]["centre"]}},
            "classes": summarise(arms, held), "encoded_percentiles_p1_p10_p50_p90_p99": enc_pct,
            "sign": "bias = model - recorded (m/s^2); [mean, MAE]"}
+    np.savez_compressed(Path(a.out).with_suffix(".preds.npz"), keep=keep, rec=cat([np.asarray(d["w"]["rec"]) for d in held]),
+                        **{f"pred_{k}": v.astype(np.float32) for k, v in arms.items()},
+                        **{f"col_{k}": cat([np.asarray(d["w"][k]) for d in held]) for k in
+                           ("v", "s", "gap", "has", "tmerge", "dend", "da", "gap_r", "inv_between")})
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(out, indent=1), encoding="utf-8")
     print(json.dumps({"chosen": out["lr_rule"]["chosen"], "seconds": out["seconds"]}))

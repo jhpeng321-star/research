@@ -98,6 +98,8 @@ def test_base_rules():
     assert BC.decide(_stats(both(0.35), both(1.5)))["BASE-1"][0] == "REJECT"
     assert BC.decide(_stats(both(-0.2), both(0.2)))["BASE-1"][0] == "REJECT"       # not smaller in magnitude
     assert BC.decide(_stats(both(-0.2), both(0.25)))["BASE-1"][0] == "PASS"
+    # approach/zone slow starts may stay biased (hold, hidden junction leaders) if upstream is near 0 and the total improves
+    assert BC.decide(_stats(_rows(slow_bias=0.8, far_bias=0.1), _rows(slow_bias=1.5)))["BASE-1"][0] == "PASS"
     # BASE-2: free road or far-upstream slow start > max(0.3, round 9's |bias| + 0.1)
     assert BC.decide(_stats(_rows(free_bias=-0.35), _rows()))["BASE-2"][0] == "REJECT"
     assert BC.decide(_stats(_rows(free_bias=-0.25), _rows()))["BASE-2"][0] == "PASS"

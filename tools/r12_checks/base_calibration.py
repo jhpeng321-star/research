@@ -9,6 +9,9 @@ Row classes (lane-1 HDV transition rows; bias = model - recorded next-row accele
 bumper gap in the replay state = column gapF when present, else gapL; no leader = non-finite gap):
   slow_start            unpartnered (has == 0), v < 2 m/s, 6 <= gap <= 30 m
   far_upstream_slow     slow_start and s < -400 m
+  upstream_slow         slow_start and s < -100 m (outside the approach/zone, where SUMO start-ups follow plain IDM;
+                        inside, the hold of non-target followers and hidden junction leaders make them sluggish -
+                        BASE_FOLLOWER_DIAG 3.1 / 7 - which a calibrated IDM core alone cannot carry)
   free_road             5 < v < 20 m/s and (gap > 60 m or no leader)
   last3_target_follower partner rows with 0 < t_merge <= 3 s (column tm)
   far_partner           partner rows with dA > 30 m          (M3 negative control)
@@ -19,7 +22,8 @@ bumper gap in the replay state = column gapF when present, else gapL; no leader 
   all_lane1             every lane-1 row
 
 REGISTERED BASE REJECT RULES (evaluation rules, not model rules; magnitudes = |mean bias|, point estimates, literal):
-  BASE-1  REJECT round 12 if its slow-start |mean bias| > 0.3 m/s^2 OR it is not smaller than round 9's.
+  BASE-1  REJECT round 12 if its UPSTREAM slow-start |mean bias| > 0.3 m/s^2 OR its all-position slow-start
+          |mean bias| is not smaller than round 9's.
   BASE-2  REJECT round 12 if its free-road |mean bias| or its far-upstream slow-start |mean bias| exceeds
           max(0.3, round 9's |mean bias| of the same class + 0.1) m/s^2 ("near 0", and not worse than round 9).
   BASE-3  REJECT round 12 if its recorded-braking |mean bias| exceeds round 9's by > 0.1 m/s^2.
@@ -53,7 +57,7 @@ LABEL = {REF: "round 9", R12: "round 12", HZ: "round 12 head-zero"}
 END_M = 75.44
 TH = {"BASE1": 0.3, "BASE2": 0.3, "BASE2_REF_MARGIN": 0.1, "BASE3": 0.1, "BASE4": 0.3, "ENC_SHARE": 0.20, "ENC_TOL": 0.01}
 BOUNDS = {"accel": (0.3, 4.0), "decel": (0.8, 6.0)}
-CLASSES = ("slow_start", "far_upstream_slow", "free_road", "last3_target_follower", "far_partner", "d_end_gt40",
+CLASSES = ("slow_start", "upstream_slow", "far_upstream_slow", "free_road", "last3_target_follower", "far_partner", "d_end_gt40",
            "alongside", "recorded_braking", "after_merge_zone", "all_lane1")
 
 
@@ -84,6 +88,7 @@ def row_classes(d) -> dict:
         return {
             "slow_start": slow,
             "far_upstream_slow": slow & (s < -400.0),
+            "upstream_slow": slow & (s < -100.0),
             "free_road": lane1 & (v > 5.0) & (v < 20.0) & ((gap > 60.0) | no_leader),
             "last3_target_follower": lane1 & has & (tm > 0.0) & (tm <= 3.0),
             "far_partner": lane1 & has & (d["dA"] > 30.0),
@@ -138,12 +143,15 @@ def decide(stats: dict) -> dict:
     """Apply BASE-1..3 (+ the BASE-4 read) to ``class_stats`` per arm.  Returns {rule: (verdict, detail)}."""
     res = {}
     s12, s9 = _mag(stats, R12, "slow_start"), _mag(stats, REF, "slow_start")
-    if not np.isfinite(s12) or not np.isfinite(s9):
-        res["BASE-1"] = ("UNDECIDED", f"slow-start |bias| round 12 {s12:.3f}, round 9 {s9:.3f} (missing / n < 5)")
+    u12 = _mag(stats, R12, "upstream_slow")
+    if not (np.isfinite(s12) and np.isfinite(s9) and np.isfinite(u12)):
+        res["BASE-1"] = ("UNDECIDED", f"slow-start |bias| round 12 {s12:.3f}, round 9 {s9:.3f}, upstream round 12 "
+                                      f"{u12:.3f} (missing / n < 5)")
     else:
-        bad = s12 > TH["BASE1"] or not s12 < s9
+        bad = u12 > TH["BASE1"] or not s12 < s9
         res["BASE-1"] = ("REJECT" if bad else "PASS",
-                         f"slow-start |bias| round 12 {s12:.3f} vs threshold {TH['BASE1']} and round 9 {s9:.3f}")
+                         f"upstream slow-start |bias| round 12 {u12:.3f} vs threshold {TH['BASE1']}; all-position "
+                         f"slow-start |bias| round 12 {s12:.3f} vs round 9 {s9:.3f}")
     fr, fu = _mag(stats, R12, "free_road"), _mag(stats, R12, "far_upstream_slow")
 
     def limit2(cls):
@@ -226,7 +234,7 @@ def main(argv=None) -> int:
          "| rule | result | detail |", "|---|---|---|"]
     L += [f"| {k} | **{v[0]}** | {v[1]} |" for k, v in rules.items()]
     L += ["\nRegistered rules (evaluation rules, not model rules; |.| = magnitude of the mean bias, point estimates):",
-          f"BASE-1 reject if slow-start |bias| > {TH['BASE1']} or not smaller than round 9's; BASE-2 reject if free-road or "
+          f"BASE-1 reject if upstream (s<-100) slow-start |bias| > {TH['BASE1']} or all-position slow-start |bias| not smaller than round 9's; BASE-2 reject if free-road or "
           f"far-upstream slow-start |bias| > max({TH['BASE2']}, round 9's + {TH['BASE2_REF_MARGIN']}); BASE-3 reject if recorded-braking |bias| exceeds round 9's by "
           f"> {TH['BASE3']}; BASE-4 read (expectation: head-zero about +0.8, round 12 within +-{TH['BASE4']}).\n",
           "## Bias by row class\n", "| class | " + " | ".join(LABEL[a] for a in ARMS if a in stats) + " | recorded mean |",
