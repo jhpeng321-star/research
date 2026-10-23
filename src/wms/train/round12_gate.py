@@ -10,16 +10,22 @@ centre, re-initialised residual acceleration read-out, filled replay presence) +
   controls > 0 in total, contrast shift finite) and the round-11 head-range rule with the config's plant clamp;
   the cut-in reaction term must be ABSENT (any ``cutin_reaction*`` value other than an exact zero fails);
 * R12 log: fix D telemetry ``follower_courtesy_replay_filled_extra_rows`` (integer >= 0) on every step with courtesy
-  rows (its total is a metric, not a requirement); ``driver_prior_means`` on every step with finite accel / decel /
-  time_headway / min_gap / v0_ratio strictly inside the physical open intervals;
+  rows (its total is a metric, not a requirement); driver prior (owner switch ``--expect-prior`` = config / off /
+  weak -> effective ``loss.driver_prior.weight`` = config value / 0.0 / 0.01): with weight > 0
+  ``driver_prior_means`` on every step with finite accel / decel / time_headway / min_gap / v0_ratio strictly inside
+  the physical open intervals; with weight 0 (off) the prior is never computed, so ``driver_prior_means`` and
+  ``driver_prior`` must be ABSENT from every step;
 * init report: clean, the only new tensors are the driver-encoder centre/bounds and the six courtesy head tensors,
   zero courtesy head, centre init (head rows 0..4 zeroed), residual acceleration row 0 re-initialised, every
   init-checkpoint tensor loaded, source sha256 = the init checkpoint;
 * checkpoints (stage 120, stage 300, final): strict reload, weights finite and unchanged, physical driver mode with
   bounds equal to the constants, version-2 head with rollout_grad off, merge_pivot + state ST + lane-end stop, batch 4,
   stage/step/history consistent with the log; vs the init checkpoint every frozen-prefix tensor and every
-  merge_pivot tensor is bitwise equal and the tensor set is init + the new tensors; at the final checkpoint the
-  courtesy head, the learned centre, residual acceleration row 0 and driver-encoder head rows 0..4 have all moved.
+  merge_pivot tensor is bitwise equal (the config also freezes the two gate scalars ``gate_*``) and the tensor set is
+  init + the new tensors; the saved config's ``driver_prior_weight`` equals the effective prior weight; the learned
+  centre mapped through physical_lower/upper lies strictly inside the physical open intervals (every prior mode); at
+  the final checkpoint the courtesy head, the learned centre, residual acceleration row 0 and driver-encoder head
+  rows 0..4 have all moved.
 """
 from __future__ import annotations
 
@@ -45,9 +51,12 @@ NEW_KEYS = tuple(sorted((*DRIVER_NEW, *HEAD_NEW)))
 DRIVER_HEAD = "driver_encoder.head.2"
 DRIVER_ROWS = [0, 1, 2, 3, 4]
 ACCEL_HEAD = "residual_net.accel.2"
-#: intended trainable set (informational: changes outside it are reported, frozen changes fail)
+#: intended trainable set (informational: changes outside it are reported, frozen changes fail).  The two gate
+#: scalars (gate_g_max_logit, gate_tau_raw) are FROZEN by the round-12 config (freeze prefix "gate_").
 TRAINABLE_PREFIXES = ("driver_encoder.head", "driver_encoder.centre_logits", "residual_net", "temporal",
-                      "gate_", HEAD_PREFIX)
+                      HEAD_PREFIX)
+#: R12_PRIOR owner switch -> override of loss.driver_prior.weight (config = no override)
+PRIOR_MODES = {"config": None, "off": 0.0, "weak": 0.01}
 REQUIRED = ("step", "loss", "stage_s", OBJECTIVE_FLAG, *POSITIVE, *ROUND10_COUNTERS)
 
 
@@ -153,6 +162,23 @@ def replay_errors(rows: list[dict], metrics: dict) -> list[str]:
     return errors
 
 
+def prior_weight(config: Path, mode: str) -> float:
+    """Effective ``loss.driver_prior.weight`` of the run: the config value with the R12_PRIOR override applied."""
+    from wms.config.load import load_train_config
+
+    if mode not in PRIOR_MODES:
+        raise ValueError(f"prior mode must be one of {tuple(PRIOR_MODES)}: {mode!r}")
+    override = PRIOR_MODES[mode]
+    overrides = () if override is None else (f"loss.driver_prior.weight={override}",)
+    return float(load_train_config(config, overrides).loss.driver_prior.weight)
+
+
+def prior_absent_errors(rows: list[dict]) -> list[str]:
+    """Prior off (weight 0): the prior is never computed, so no step may log it."""
+    return [f"row {index}: {key} logged although the driver prior is off (weight 0)"
+            for index, row in enumerate(rows, 1) for key in (PRIOR_KEY, "driver_prior") if key in row]
+
+
 def prior_errors(rows: list[dict], metrics: dict) -> list[str]:
     """``driver_prior_means`` on every step, every mean finite and strictly inside its physical interval."""
     errors = []
@@ -177,8 +203,12 @@ def prior_errors(rows: list[dict], metrics: dict) -> list[str]:
 
 
 def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0,
-              accel_bounds: tuple[float, float] | None = None) -> dict:
-    """``accel_bounds`` = the plant clamp (default: :class:`PhysicsConfig` defaults; the CLI reads the config's)."""
+              accel_bounds: tuple[float, float] | None = None, prior_weight: float | None = None) -> dict:
+    """``accel_bounds`` = the plant clamp (default: :class:`PhysicsConfig` defaults; the CLI reads the config's).
+
+    ``prior_weight`` = the effective driver prior weight (None = the round-12 default, a positive weight): > 0
+    requires ``driver_prior_means`` on every step, 0 requires the prior telemetry to be absent.
+    """
     if accel_bounds is None:
         from wms.physics.config import PhysicsConfig
 
@@ -202,7 +232,12 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0,
     metrics["head_range_bounds"] = [float(accel_bounds[0]), float(accel_bounds[1])]
     errors.extend(cutin_absent_errors(rows))
     errors.extend(replay_errors(rows, metrics))
-    errors.extend(prior_errors(rows, metrics))
+    if prior_weight is not None and not (finite(prior_weight) and prior_weight >= 0):
+        errors.append(f"bad driver prior weight {prior_weight!r}")
+    elif prior_weight == 0:
+        errors.extend(prior_absent_errors(rows))
+    else:
+        errors.extend(prior_errors(rows, metrics))
     return {"ok": not errors, "errors": errors, "metrics": metrics}
 
 
@@ -246,9 +281,28 @@ def _physical_bounds(physics):
     return lower, upper
 
 
+def centre_physical(saved: dict, speed_limit_mps: float) -> dict:
+    """The learned centre mapped through physical_lower/upper (PRIOR_BOUNDS keys, v0 as a speed-limit ratio).
+
+    Raises unless every value is finite and strictly inside its physical open interval (all prior modes).
+    """
+    import torch
+
+    lower, upper = saved["driver_encoder.physical_lower"], saved["driver_encoder.physical_upper"]
+    values = lower + (upper - lower) * torch.sigmoid(saved["driver_encoder.centre_logits"].to(lower))
+    if not (bool(torch.isfinite(values).all()) and bool((values > lower).all()) and bool((values < upper).all())):
+        raise ValueError(f"learned centre {values.tolist()} not strictly inside the physical intervals "
+                         f"({lower.tolist()}, {upper.tolist()})")
+    v0, t, s0, a, b = (float(x) for x in values)
+    return {"v0_ratio": v0 / float(speed_limit_mps), "time_headway": t, "min_gap": s0, "accel": a, "decel": b}
+
+
 def check_checkpoints(smoke_dir: Path, rows: list[dict], init_checkpoint: Path, freeze_prefixes,
-                      init_report: dict) -> list[dict]:
-    """Reload each saved model strictly (CPU) and compare it with the round-9 init checkpoint."""
+                      init_report: dict, prior_weight: float | None = None) -> list[dict]:
+    """Reload each saved model strictly (CPU) and compare it with the round-9 init checkpoint.
+
+    ``prior_weight`` (when given) must equal the saved config's ``driver_prior_weight`` (absent = 0).
+    """
     import torch
 
     from wms.model.checkpoint import load_checkpoint
@@ -275,6 +329,13 @@ def check_checkpoints(smoke_dir: Path, rows: list[dict], init_checkpoint: Path, 
         if not (torch.equal(saved["driver_encoder.physical_lower"], lower)
                 and torch.equal(saved["driver_encoder.physical_upper"], upper)):
             raise ValueError(f"{name}: physical_lower/upper differ from the PHYSICAL_LOWER/UPPER constants")
+        try:
+            centre_phys = centre_physical(saved, model.physics.speed_limit_mps)
+        except ValueError as exc:
+            raise ValueError(f"{name}: {exc}") from None
+        saved_prior = loaded.legacy_config.get("driver_prior_weight", 0.0)
+        if prior_weight is not None and (not finite(saved_prior) or float(saved_prior) != float(prior_weight)):
+            raise ValueError(f"{name}: saved driver_prior_weight {saved_prior!r} != effective {prior_weight!r}")
         head_module = model.follower_courtesy
         if head_module is None or model.follower_courtesy_rollout_grad:
             raise ValueError(f"{name}: courtesy head missing or rollout_grad on after reload")
@@ -320,7 +381,8 @@ def check_checkpoints(smoke_dir: Path, rows: list[dict], init_checkpoint: Path, 
         reports.append({"file": name, "sha256": loaded.sha256, "reloaded": True, "changed_tensors": len(changed),
                         "head_moved": head_moved, "centre_moved": centre_moved, "accel_row0_moved": accel_moved,
                         "driver_head_rows_moved": rows_moved,
-                        "centre_logits": [float(x) for x in centre],
+                        "centre_logits": [float(x) for x in centre], "centre_physical": centre_phys,
+                        "driver_prior_weight": saved_prior,
                         "changed_outside_trainable_set": sorted(other)})
     return reports
 
@@ -332,15 +394,20 @@ def main(argv=None) -> int:
     parser.add_argument("--train-exit-code", type=int, required=True)
     parser.add_argument("--init-checkpoint", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--expect-prior", choices=tuple(PRIOR_MODES), required=True)
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args(argv)
     train_log = args.smoke_dir / "train_log.jsonl"
     try:
         bounds = physics_accel_bounds(args.config)
+        weight = prior_weight(args.config, args.expect_prior)
     except Exception as exc:
         print(f"smoke: bad config {args.config}: {exc}")
         return 3
-    result = check_log(train_log, args.smoke_log, train_exit_code=args.train_exit_code, accel_bounds=bounds)
+    result = check_log(train_log, args.smoke_log, train_exit_code=args.train_exit_code, accel_bounds=bounds,
+                       prior_weight=weight)
+    result["prior"] = {"mode": args.expect_prior, "effective_weight": weight,
+                       "override": PRIOR_MODES[args.expect_prior]}
     if result["ok"]:
         try:
             import torch
@@ -353,7 +420,7 @@ def main(argv=None) -> int:
             init_keys = torch.load(args.init_checkpoint, map_location="cpu", weights_only=True)["model"].keys()
             check_init_report(init, init_keys=init_keys, init_sha256=sha256_file(args.init_checkpoint))
             result["checkpoints"] = check_checkpoints(args.smoke_dir, read_rows(train_log),
-                                                     args.init_checkpoint, freeze, init)
+                                                     args.init_checkpoint, freeze, init, prior_weight=weight)
         except Exception as exc:
             result["ok"] = False
             result["errors"].append(f"checkpoint/init check failed: {exc}")

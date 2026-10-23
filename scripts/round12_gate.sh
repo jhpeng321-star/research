@@ -4,7 +4,11 @@
 # (loss.cutin_reaction.weight = 0, the term is never built).  The config (configs/c4_wm_v10round12.toml) carries every
 # switch: driver_param_mode = physical + driver_param_init = centre, residual_accel_reinit = true,
 # recorded_replay_present = filled, follower_courtesy_init_zero = true with the zero-init head weight 9.067 and head
-# lr x1000.  This gate passes NO head-init switch and NO weight/lr overrides (unlike round 11).
+# lr x1000; the gate scalars are frozen by the config.  This gate passes NO head-init switch and NO head weight/lr
+# overrides (unlike round 11).  Owner decision on the driver prior: R12_PRIOR = config (default, no override) | off
+# (--set loss.driver_prior.weight=0.0) | weak (--set loss.driver_prior.weight=0.01); passed to the smoke AND the full
+# run, and to the verdict as --expect-prior (off: driver_prior_means must be absent from the log; every mode: the
+# learned centre in the checkpoints strictly inside the physical ranges); any other value is a setup failure.
 # Init = round-9 final checkpoint ($L/runs/c4_wm_v10_round9/wm_s_stage300.pt, else wm_s_best.pt in that dir).
 # Real-data smoke: batch 4 at 120/300 s, 2+2 full training steps (backward + Adam), truncation [120,60], stage-end
 # validation capped at 4 windows, max_hours 1.5, stage/final checkpoint save/reload, peak GPU memory; the verdict
@@ -16,8 +20,9 @@
 # (validation capped at 16 windows).  Start only after the coordinator has decided the launch.
 # Usage: bash scripts/round12_gate.sh [REPO_DIR]
 # R12_ROOT / R12_PYTHON / R12_INIT (default: $L/runs/c4_wm_v10_round9/wm_s_stage300.pt, else wm_s_best.pt) allow a
-# local installation, another init checkpoint, or isolated launcher tests.
-# Exit: 2 setup failure (repo or init checkpoint missing), 3 smoke/verdict failure, 4 prior artifacts/concurrent gate.
+# local installation, another init checkpoint, or isolated launcher tests; R12_PRIOR (config|off|weak) as above.
+# Exit: 2 setup failure (repo or init checkpoint missing, bad R12_PRIOR), 3 smoke/verdict failure,
+# 4 prior artifacts/concurrent gate.
 set -u -o pipefail -o noclobber
 L=${R12_ROOT:-/root/autodl-tmp/c4/v5}
 REPO=${1:-$L/repo_r12}
@@ -28,6 +33,13 @@ if [ -z "$CK" ]; then
     CK=$L/runs/c4_wm_v10_round9/wm_s_stage300.pt
     [ -f "$CK" ] || CK=$L/runs/c4_wm_v10_round9/wm_s_best.pt
 fi
+PRIOR=${R12_PRIOR:-config}
+case "$PRIOR" in
+    config) PRIOR_SET=() ;;
+    off) PRIOR_SET=(--set loss.driver_prior.weight=0.0) ;;
+    weak) PRIOR_SET=(--set loss.driver_prior.weight=0.01) ;;
+    *) echo "R12_PRIOR must be config, off or weak: $PRIOR" >&2; exit 2 ;;
+esac
 ulimit -n 65536 || exit 2
 cd "$REPO" || exit 2
 [ -f "$CK" ] || { echo "round-12 init checkpoint missing: $CK" >&2; exit 2; }
@@ -46,7 +58,8 @@ export WMS_DATA_V5_NATIVE="$L/data/v5_native" WMS_DATA_GENRAND_PLAIN="$L/data/ge
 export WMS_DATA_GENRAND_BRANCH="$L/data/genrand_branch" WMS_DATA_PAIRS300="$L/data/pairs300"
 # No follower_courtesy_init_zero / head weight / head lr override: the round-12 config carries them.
 COMMON=(--set "model.init_from=$CK" --set loss.loss_share_logging=false
-    --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda)
+    --set loss.brake_follow_cav_weight=2.0 --set optim.batch_size=4 --set runtime.device=cuda
+    ${PRIOR_SET[@]+"${PRIOR_SET[@]}"})
 if "$PYTHON" -m wms train --config configs/c4_wm_v10round12.toml --mode run \
     --out "$L/runs/smoke_r12" "${COMMON[@]}" \
     --set "optim.batch_size_per_stage=[4,4]" \
@@ -60,7 +73,7 @@ else
 fi
 if ! "$PYTHON" -m wms.train.round12_gate --smoke-dir "$L/runs/smoke_r12" \
     --smoke-log "$L/smoke_r12.log" --train-exit-code "$TRAIN_EXIT" \
-    --init-checkpoint "$CK" --config configs/c4_wm_v10round12.toml \
+    --init-checkpoint "$CK" --config configs/c4_wm_v10round12.toml --expect-prior "$PRIOR" \
     --report "$L/smoke_r12.gate.json" > "$L/smoke_r12.verdict" 2>&1; then
     exit 3
 fi

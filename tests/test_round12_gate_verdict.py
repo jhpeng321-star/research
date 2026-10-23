@@ -17,7 +17,7 @@ from wms.train.round12_gate import NEW_KEYS, check_checkpoints, check_init_repor
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs/c4_wm_v10round12.toml"
 FREEZE = ("driver_encoder.history_proj", "driver_encoder.query", "driver_encoder.interaction_proj",
-          "driver_encoder.history_gru", "driver_updater", "lane_gate_", "history_proj", "k_embedding",
+          "driver_encoder.history_gru", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
           "lane_v5", "merge_core", "merge_pivot", "residual_net.lane")
 MEANS = {"accel": 1.4, "decel": 2.2, "time_headway": 1.3, "min_gap": 2.1, "v0_ratio": 1.0}
 
@@ -193,17 +193,20 @@ def test_bad_init_report_variants_fail(over):
 @pytest.fixture(scope="module")
 def models():
     base = {"rollout_mode": "hybrid", "lane_model": "hazard_v5", "merge_decision": "first_passage",
-            "merge_passage_law": "hybrid", "merge_pivot_state_st": True}
+            "merge_passage_law": "hybrid", "merge_pivot_state_st": True, "gate": {"kind": "saturating"}}
     common = {"physics": {"ramp_lane_end_stop": True},
-              "curriculum": {"unroll_s": [120.0, 300.0], "stage_steps": [2, 2]},
               "optim": {"batch_size": 4, "batch_size_per_stage": [4, 4]}}
-    cfg9 = TrainConfig.from_dict({"model": base, **common})
-    cfg = TrainConfig.from_dict({"model": {**base, "follower_courtesy": True, "follower_courtesy_version": 2,
-                                           "driver_param_mode": "physical"}, **common})
+    curriculum = {"unroll_s": [120.0, 300.0], "stage_steps": [2, 2]}
+    r12 = {**base, "follower_courtesy": True, "follower_courtesy_version": 2, "driver_param_mode": "physical"}
+    cfg9 = TrainConfig.from_dict({"model": base, "curriculum": curriculum, **common})
+    cfgs = {weight: TrainConfig.from_dict({
+        "model": r12, "loss": {"driver_prior": {"weight": weight}},
+        "curriculum": {**curriculum, "driver_grad_across_chunks": weight > 0}, **common})
+        for weight in (0.0, 0.01, 0.05)}
     physics = PhysicsConfig(ramp_lane_end_stop=True)
     torch.manual_seed(0)
     m9 = WmSModel(ModelSpec.from_mapping(cfg9.to_legacy_flat()), physics=physics)
-    model = WmSModel(ModelSpec.from_mapping(cfg.to_legacy_flat()), physics=physics)
+    model = WmSModel(ModelSpec.from_mapping(cfgs[0.0].to_legacy_flat()), physics=physics)
     own = model.state_dict()
     model.load_state_dict({k: v for k, v in m9.state_dict().items() if k in own and own[k].shape == v.shape},
                           strict=False)
@@ -212,31 +215,7 @@ def models():
         model.driver_encoder.head[-1].bias[:5].zero_()
         model.residual_net.accel[-1].weight[0].zero_()
         model.residual_net.accel[-1].bias[0].zero_()
-    return m9, cfg9, model, cfg, physics
-
-
-@pytest.fixture
-def smoke(tmp_path, models):
-    m9, cfg9, model, cfg, physics = models
-    init = tmp_path / "init.pt"
-    save_checkpoint(init, m9, cfg9)
-    report = good_init(sha256=sha256_file(init), loaded=sorted(m9.state_dict()))
-    report["driver_param_init"]["centre_logits"] = model.driver_encoder.centre_logits.detach().tolist()
-    check_init_report(report, init_keys=m9.state_dict().keys(), init_sha256=sha256_file(init))
-    rows = [{"step": i + 1, "stage_s": stage, "loss": 0.5} for i, stage in enumerate((120, 120, 300, 300))]
-    out = tmp_path / "smoke"
-    out.mkdir()
-    (out / "physics.json").write_text(json.dumps(asdict(physics)), encoding="utf-8")
-
-    def save(mutate=train):
-        trained = copy.deepcopy(model)
-        with torch.no_grad():
-            mutate(trained)
-        for stage, step in ((120, 2), (300, 4)):
-            save_checkpoint(out / f"wm_s_stage{stage}.pt", trained, cfg, extra={"stage_s": stage, "step": step})
-        save_checkpoint(out / "wm_s.pt", trained, cfg, history=rows)
-        return out, rows, init, FREEZE, report
-    return save
+    return m9, cfg9, model, cfgs, physics
 
 
 def param(m, name):
@@ -258,11 +237,41 @@ def train(m, skip=()):
     next(p for n, p in m.named_parameters() if n.startswith("temporal")).add_(0.5)
 
 
+@pytest.fixture
+def smoke(tmp_path, models):
+    m9, cfg9, model, cfgs, physics = models
+    init = tmp_path / "init.pt"
+    save_checkpoint(init, m9, cfg9)
+    report = good_init(sha256=sha256_file(init), loaded=sorted(m9.state_dict()))
+    report["driver_param_init"]["centre_logits"] = model.driver_encoder.centre_logits.detach().tolist()
+    check_init_report(report, init_keys=m9.state_dict().keys(), init_sha256=sha256_file(init))
+    bare = [{"step": i + 1, "stage_s": stage, "loss": 0.5} for i, stage in enumerate((120, 120, 300, 300))]
+    counter = iter(range(100))
+
+    def save(mutate=train, *, prior=0.0, rows=None):
+        rows = rows or bare
+        out = tmp_path / f"smoke{next(counter)}"
+        out.mkdir()
+        (out / "physics.json").write_text(json.dumps(asdict(physics)), encoding="utf-8")
+        trained = copy.deepcopy(model)
+        with torch.no_grad():
+            mutate(trained)
+        for stage, step in ((120, 2), (300, 4)):
+            save_checkpoint(out / f"wm_s_stage{stage}.pt", trained, cfgs[prior],
+                            extra={"stage_s": stage, "step": step})
+        save_checkpoint(out / "wm_s.pt", trained, cfgs[prior], history=rows)
+        return out, rows, init, FREEZE, report
+    return save
+
+
 def test_trained_checkpoints_pass(smoke):
     reports = check_checkpoints(*smoke())
     assert len(reports) == 3
     assert all(r["head_moved"] and r["centre_moved"] and r["accel_row0_moved"] and all(r["driver_head_rows_moved"])
                for r in reports)
+    centre = reports[-1]["centre_physical"]
+    assert set(centre) == {"v0_ratio", "time_headway", "min_gap", "accel", "decel"}
+    assert 0.6 < centre["v0_ratio"] < 1.4 and 0.3 < centre["accel"] < 4.0
 
 
 @pytest.mark.parametrize("skip,match", ((("head",), "courtesy head"), (("centre",), "centre"),
@@ -274,13 +283,22 @@ def test_untrained_reinit_pieces_fail(smoke, skip, match):
 
 
 @pytest.mark.parametrize("name", ("merge_pivot", "driver_encoder.history_proj", "residual_net.lane",
-                                  "lane_v5", "driver_encoder.query"))
-def test_frozen_or_pivot_tensor_change_fails(smoke, name):
+                                  "lane_v5", "driver_encoder.query", "gate_g_max_logit", "gate_tau_raw"))
+def test_frozen_pivot_or_gate_tensor_change_fails(smoke, name):
     def move(m):
         train(m)
         next(p for n, p in m.named_parameters() if n.startswith(name)).add_(1e-3)
     with pytest.raises(ValueError, match="stay frozen"):
         check_checkpoints(*smoke(move))
+
+
+def test_gate_scalars_are_frozen_by_the_round12_config():
+    from wms.config.load import load_train_config
+
+    optim = load_train_config(CONFIG).optim
+    assert "gate_" in optim.freeze_prefixes and "gate_" in FREEZE
+    assert not any(key.startswith("gate_") for key in optim.lr_scale)
+    assert not any(prefix.startswith("gate_") for prefix in round12_gate.TRAINABLE_PREFIXES)
 
 
 def test_physical_bounds_must_equal_constants(smoke):
@@ -291,6 +309,29 @@ def test_physical_bounds_must_equal_constants(smoke):
         check_checkpoints(*smoke(move))
 
 
+@pytest.mark.parametrize("index,value", ((0, 40.0), (3, -40.0), (4, float("nan"))))
+def test_centre_outside_physical_interval_fails(smoke, index, value):
+    def move(m):
+        train(m)
+        param(m, "driver_encoder.centre_logits")[index] = value
+    # NaN fails the finite-weights reload check first; a saturated sigmoid lands exactly on the bound
+    with pytest.raises(ValueError, match="non-finite" if value != value else "strictly inside the physical"):
+        check_checkpoints(*smoke(move))
+
+
+@pytest.mark.parametrize("saved,expected,ok", ((0.0, 0.0, True), (0.01, 0.01, True), (0.05, 0.05, True),
+                                               (0.0, 0.01, False), (0.05, 0.0, False), (0.01, 0.05, False),
+                                               (0.05, None, True)))
+def test_saved_prior_weight_must_match_effective(smoke, saved, expected, ok):
+    args = smoke(prior=saved)
+    if ok:
+        reports = check_checkpoints(*args, prior_weight=expected)
+        assert all(r["driver_prior_weight"] == saved for r in reports)
+    else:
+        with pytest.raises(ValueError, match="driver_prior_weight"):
+            check_checkpoints(*args, prior_weight=expected)
+
+
 def test_history_and_stage_step_mismatch_fail(smoke):
     out, rows, init, freeze, report = smoke()
     with pytest.raises(ValueError, match="history"):
@@ -299,49 +340,91 @@ def test_history_and_stage_step_mismatch_fail(smoke):
         check_checkpoints(out, [*rows, {"step": 5, "stage_s": 300, "loss": 0.5}], init, freeze, report)
 
 
-def test_cli_writes_report_and_fails_closed(tmp_path, capsys, smoke):
-    out, rows, init, _, report = smoke()
+def test_prior_weight_modes_from_the_config():
+    assert round12_gate.prior_weight(CONFIG, "config") == 0.05
+    assert round12_gate.prior_weight(CONFIG, "off") == 0.0
+    assert round12_gate.prior_weight(CONFIG, "weak") == 0.01
+    with pytest.raises(ValueError):
+        round12_gate.prior_weight(CONFIG, "strong")
+
+
+def off_rows():
+    rows = make_rows()
+    for row in rows:
+        del row["driver_prior_means"], row["driver_prior"]
+    return rows
+
+
+@pytest.mark.parametrize("weight", (None, 0.0, 0.01, 0.05))
+def test_prior_modes_in_the_log_check(tmp_path, weight):
+    def go(rows):
+        log, smoke_log = tmp_path / "train_log.jsonl", tmp_path / "smoke.log"
+        log.write_text("".join(json.dumps(r, allow_nan=True) + "\n" for r in rows), encoding="utf-8")
+        smoke_log.write_text("ok\n", encoding="utf-8")
+        return check_log(log, smoke_log, accel_bounds=(-9.0, 3.0), prior_weight=weight)
+    if weight == 0:
+        assert go(off_rows())["ok"]
+        result = go(make_rows())
+        assert not result["ok"] and any("prior is off" in e for e in result["errors"])
+        rows = off_rows()
+        rows[2]["driver_prior"] = 0.0
+        assert not go(rows)["ok"]
+    else:   # None = round-12 default (prior on)
+        assert go(make_rows())["ok"]
+        assert not go(off_rows())["ok"]
+        rows = make_rows()
+        rows[1]["driver_prior_means"]["decel"] = 6.0
+        assert not go(rows)["ok"]
+
+
+def write_smoke(out, init, report, rows, smoke_log):
     (out / "INIT_FROM.json").write_text(json.dumps(report), encoding="utf-8")
-    (out / "train_log.jsonl").write_text("".join(json.dumps(r) + "\n" for r in make_rows()), encoding="utf-8")
-    smoke_log = tmp_path / "smoke.log"
+    (out / "train_log.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     smoke_log.write_text("ok\n", encoding="utf-8")
-    args = ["--smoke-dir", str(out), "--smoke-log", str(smoke_log), "--train-exit-code", "0",
+    return ["--smoke-dir", str(out), "--smoke-log", str(smoke_log), "--train-exit-code", "0",
             "--init-checkpoint", str(init), "--config", str(CONFIG)]
+
+
+def test_cli_writes_report_and_fails_closed(tmp_path, capsys, smoke):
+    out, _, init, _, report = smoke()
+    args = write_smoke(out, init, report, make_rows(), tmp_path / "smoke.log")
     # checkpoint history = 4 bare rows != the 4 log rows: the checkpoint stage must fail closed
-    assert round12_gate.main([*args, "--report", str(tmp_path / "a.json")]) == 3
+    assert round12_gate.main([*args, "--expect-prior", "config", "--report", str(tmp_path / "a.json")]) == 3
     assert "smoke: bad" in capsys.readouterr().out
     result = json.loads((tmp_path / "a.json").read_text(encoding="utf-8"))
     assert not result["ok"] and any("checkpoint/init check failed" in e for e in result["errors"])
+    assert result["prior"] == {"mode": "config", "effective_weight": 0.05, "override": None}
     # the report is never overwritten
-    assert round12_gate.main([*args, "--report", str(tmp_path / "a.json")]) == 3
+    assert round12_gate.main([*args, "--expect-prior", "config", "--report", str(tmp_path / "a.json")]) == 3
     assert "bad report" in capsys.readouterr().out
+    with pytest.raises(SystemExit):   # the prior mode is mandatory and closed
+        round12_gate.main([*args, "--expect-prior", "strong", "--report", str(tmp_path / "b.json")])
 
 
-def test_cli_pass(tmp_path, capsys, models):
-    m9, cfg9, model, cfg, physics = models
-    rows = make_rows()
-    out = tmp_path / "smoke"
-    out.mkdir()
-    (out / "physics.json").write_text(json.dumps(asdict(physics)), encoding="utf-8")
-    init = tmp_path / "init.pt"
-    save_checkpoint(init, m9, cfg9)
-    report = good_init(sha256=sha256_file(init), loaded=sorted(m9.state_dict()))
-    report["driver_param_init"]["centre_logits"] = model.driver_encoder.centre_logits.detach().tolist()
-    trained = copy.deepcopy(model)
-    with torch.no_grad():
-        train(trained)
-    for stage, step in ((120, 2), (300, 4)):
-        save_checkpoint(out / f"wm_s_stage{stage}.pt", trained, cfg, extra={"stage_s": stage, "step": step})
-    save_checkpoint(out / "wm_s.pt", trained, cfg, history=rows)
-    (out / "INIT_FROM.json").write_text(json.dumps(report), encoding="utf-8")
-    (out / "train_log.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
-    smoke_log = tmp_path / "smoke.log"
-    smoke_log.write_text("ok\n", encoding="utf-8")
-    code = round12_gate.main(["--smoke-dir", str(out), "--smoke-log", str(smoke_log), "--train-exit-code", "0",
-                              "--init-checkpoint", str(init), "--config", str(CONFIG),
-                              "--report", str(tmp_path / "ok.json")])
+@pytest.mark.parametrize("mode,weight", (("config", 0.05), ("weak", 0.01), ("off", 0.0)))
+def test_cli_pass_per_prior_mode(tmp_path, capsys, smoke, mode, weight):
+    out, rows, init, _, report = smoke(prior=weight, rows=make_rows() if weight > 0 else off_rows())
+    args = write_smoke(out, init, report, rows, tmp_path / "smoke.log")
+    code = round12_gate.main([*args, "--expect-prior", mode, "--report", str(tmp_path / "ok.json")])
     printed = capsys.readouterr().out
     assert code == 0, printed
     assert printed.strip() == "smoke: ok"
     result = json.loads((tmp_path / "ok.json").read_text(encoding="utf-8"))
     assert result["ok"] and len(result["checkpoints"]) == 3
+    assert result["prior"] == {"mode": mode, "effective_weight": weight, "override": round12_gate.PRIOR_MODES[mode]}
+    assert all(r["driver_prior_weight"] == weight for r in result["checkpoints"])
+
+
+def test_cli_prior_mode_mismatch_fails(tmp_path, capsys, smoke):
+    # trained with the config prior: the launcher claiming off finds the means logged
+    out, rows, init, _, report = smoke(prior=0.05, rows=make_rows())
+    args = write_smoke(out, init, report, rows, tmp_path / "smoke.log")
+    assert round12_gate.main([*args, "--expect-prior", "off", "--report", str(tmp_path / "x.json")]) == 3
+    assert "prior is off" in capsys.readouterr().out
+    # checkpoints saved without a prior but the launcher claims weak: saved weight mismatch
+    out, rows, init, _, report = smoke(prior=0.0, rows=make_rows())
+    args = write_smoke(out, init, report, rows, tmp_path / "smoke2.log")
+    assert round12_gate.main([*args, "--expect-prior", "weak", "--report", str(tmp_path / "y.json")]) == 3
+    assert "driver_prior_weight" in capsys.readouterr().out
+
+

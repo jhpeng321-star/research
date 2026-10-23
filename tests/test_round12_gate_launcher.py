@@ -21,7 +21,7 @@ def bash(script, timeout=30):
     return subprocess.run(command, input=script.encode("utf-8"), capture_output=True, timeout=timeout)
 
 
-def launch(tmp_path, *, stale=None, train_exit=0, verdict_exit=0):
+def launch(tmp_path, *, stale=None, train_exit=0, verdict_exit=0, prior=None):
     root = tmp_path / "root with spaces"
     root.mkdir()
     if stale:
@@ -46,6 +46,7 @@ export R12_ROOT={shlex.quote(shell_path(root))}
 export R12_INIT={shlex.quote(shell_path(init))}
 export R12_PYTHON={shlex.quote(shell_path(fake))}
 export TRAIN_EXIT={train_exit} VERDICT_EXIT={verdict_exit}
+{'' if prior is None else 'export R12_PRIOR=' + shlex.quote(prior)}
 chmod +x "$R12_PYTHON"
 bash {shlex.quote(shell_path(SCRIPT))} {shlex.quote(shell_path(ROOT))}
 '''
@@ -57,7 +58,8 @@ def test_script_bytes_are_lf_and_carry_the_contract():
     assert b"\r" not in data
     text = data.decode("utf-8")
     assert text.startswith("#!/usr/bin/env bash\n")
-    for required in ("set -u -o pipefail -o noclobber", "R12_ROOT", "R12_PYTHON", "R12_INIT",
+    for required in ("set -u -o pipefail -o noclobber", "R12_ROOT", "R12_PYTHON", "R12_INIT", "R12_PRIOR",
+                     '--expect-prior "$PRIOR"', "loss.driver_prior.weight=0.0", "loss.driver_prior.weight=0.01",
                      "runs/c4_wm_v10_round9/wm_s_stage300.pt", "runs/c4_wm_v10_round9/wm_s_best.pt",
                      'mkdir "$L/.round12_gate.lock" || exit 4', "ulimit -n 65536 || exit 2",
                      "configs/c4_wm_v10round12.toml", "wms.train.round12_gate", "selection.val_max_windows=4",
@@ -137,6 +139,29 @@ def test_smoke_arguments_and_success_launch(tmp_path):
     assert (root / "full-launched").exists()
     assert (root / ".round12_gate.lock").is_dir()
     assert (root / "smoke_r12.log").exists() and (root / "smoke_r12.verdict").exists()
+
+
+@pytest.mark.parametrize("prior,override,expect", ((None, None, "config"), ("config", None, "config"),
+                                                   ("off", "loss.driver_prior.weight=0.0", "off"),
+                                                   ("weak", "loss.driver_prior.weight=0.01", "weak")))
+def test_prior_switch_reaches_smoke_full_and_verdict(tmp_path, prior, override, expect):
+    root, _, result = launch(tmp_path, prior=prior)
+    assert result.returncode == 0, result.stderr
+    smoke, verdict, full = (root / "calls").read_text(encoding="utf-8").splitlines()
+    assert f"--expect-prior {expect}" in verdict
+    for call in (smoke, full):
+        if override is None:
+            assert "loss.driver_prior" not in call
+        else:
+            assert f"--set {override}" in call and call.count("loss.driver_prior") == 1
+
+
+@pytest.mark.parametrize("prior", ("strong", "OFF", "0.01"))
+def test_bad_prior_is_a_setup_failure(tmp_path, prior):
+    root, _, result = launch(tmp_path, prior=prior)
+    assert result.returncode == 2
+    assert b"R12_PRIOR" in result.stderr
+    assert not (root / "calls").exists() and not (root / ".round12_gate.lock").exists()
 
 
 @pytest.mark.parametrize("train_exit,verdict_exit", ((7, 0), (0, 3)))
