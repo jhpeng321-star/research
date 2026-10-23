@@ -81,8 +81,10 @@ def _recorded(targets: UnrollTargets):
     if reset.shape != valid.shape:
         raise ValueError("cutin_reaction reset must be [B,n_steps+1,K]")
     continuous = valid[:, :-1] & valid[:, 1:] & ~reset[:, 1:]
-    hdv = (targets.hdv_mask.bool() & continuous
-           & ~targets.is_cav[:, :-1].bool() & ~targets.is_cav[:, 1:].bool())
+    # Every operand is cut to the unrolled n_steps+1 rows: a window longer than the unroll (any mixed or
+    # shorter-than-window stage) keeps full-length ``is_cav``/``loss_valid`` on the targets.
+    is_cav = targets.is_cav[:, :targets.n_steps + 1].bool()
+    hdv = (targets.hdv_mask.bool() & continuous & ~is_cav[:, :-1] & ~is_cav[:, 1:])
     return kin, lane, valid, reset, continuous, hdv
 
 

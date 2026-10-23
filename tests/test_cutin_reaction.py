@@ -53,14 +53,14 @@ def sequence(two=False):
             "is_cav": torch.zeros(1, 9, 4, dtype=torch.bool)}
 
 
-def targets(batch):
+def targets(batch, unroll=8):
     # Use the actual trainer's target construction, including its output-row mask.
     class Model:
         long_history = False
         rollout_mode = "residual"
         physics = None
     cfg = TrainSettings()
-    inp = prepare_inputs(batch, Model(), cfg, torch.device("cpu"), 8)
+    inp = prepare_inputs(batch, Model(), cfg, torch.device("cpu"), unroll)
     return build_targets(inp, batch, cfg, .5, torch.device("cpu"))
 
 
@@ -102,6 +102,19 @@ def test_two_insertions_have_first_lane1_timestamps_and_data_windows():
     plan = insertion_plan(t, CutinReactionConfig(weight=1))
     assert plan["event_weights"].sum().item() == pytest.approx(1.)
     assert plan["event_weights"][0, 2, 0] > plan["event_weights"][0, 0, 0]
+
+
+@pytest.mark.parametrize("unroll", (2, 4, 6, 8))
+def test_window_longer_than_the_unroll_is_cut_to_the_unrolled_rows(unroll):
+    # Real batches carry the full window (e.g. 600 steps) while a stage unrolls fewer steps; the
+    # round-10 smoke on gpuR failed with a [B,n]/[B,window] shape mismatch here.
+    batch = sequence(two=True)
+    batch["is_cav"][0, :, 1] = True
+    cut = targets(batch, unroll)
+    assert cut.n_steps == unroll and cut.is_cav.shape[1] == 9 and cut.hdv_mask.shape[1] == unroll
+    plan = insertion_plan(cut, CutinReactionConfig(weight=1))
+    assert plan["window"].shape == (1, unroll, 4) and plan["control"].shape == (1, unroll, 4)
+    assert not plan["control"][..., 1].any() and not plan["supervised"][..., 1].any()  # CAV slot never supervised
 
 
 def test_response_maximum_never_exceeds_six_seconds():
