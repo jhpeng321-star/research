@@ -24,8 +24,14 @@ def main(argv=None) -> int:
     verdict = "REJECT-ROUND-11" if errors else ("INCOMPLETE" if steps < expected else "PASS")
     heads = [(r.get("follower_courtesy_head_min"), r.get("follower_courtesy_head_max"),
               r.get("follower_courtesy_head_mean")) for r in rows]
+    # R11_REVIEW C5b: does the near-merge control bias fall over the run? (contrast telemetry per step)
+    contrast = {key: [r.get(f"follower_courtesy_contrast_{key}") for r in rows]
+                for key in ("control_resid_mean", "shift_mean", "neff_median", "n_controls")}
+    excluded = [r.get("cutin_reaction_n_partnered_controls_excluded") for r in rows]
     out.write_text(json.dumps({"verdict": verdict, "steps": steps, "expected_steps": expected, "bounds": bounds,
-                               "errors": errors, "head_min_max_mean_per_step": heads}, indent=1), encoding="utf-8")
+                               "errors": errors, "head_min_max_mean_per_step": heads,
+                               "contrast_per_step": contrast, "partnered_controls_excluded_per_step": excluded},
+                              indent=1), encoding="utf-8")
     print(f"M7 head range: {verdict} ({steps}/{expected} steps, {len(errors)} violations)")
     return 0
 

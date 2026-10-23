@@ -59,6 +59,13 @@ def onestep_profile(d):
 
 
 def matched_control_bias(d, last3):
+    """Kernel-matched control bias for the last-3-s partner rows, two control sets (R11_REVIEW C5a): all unpartnered
+    lane-1 rows (= the training term's controls) and the same without fix-B event-window rows."""
+    return {"all_unpartnered": _matched_control_bias(d, last3, exclude_event_windows=False),
+            "without_fixb_event_windows": _matched_control_bias(d, last3, exclude_event_windows=True)}
+
+
+def _matched_control_bias(d, last3, exclude_event_windows):
     """Mean (model - recorded) of the kernel-matched unpartnered lane-1 controls of the same window, for the last-3-s
     partner rows (R11 loss matcher: v, time headway, closing speed, position)."""
     import torch
@@ -67,7 +74,9 @@ def matched_control_bias(d, last3):
     gap = np.where(np.isfinite(d["gapL"]), d["gapL"], np.nan)
     hw = np.where(np.isfinite(gap), gap / np.maximum(d["v"], 0.5), 99.0)
     phi = np.stack([d["v"] / 10.0, np.arcsinh(hw), d["closing"] / 5.0, np.arcsinh((END_M - d["s"]) / 20.0)], -1)
-    ctrl = (d["has"] == 0) & (d["lane"] == 1) & (d["rampbehind"] == 0)
+    ctrl = (d["has"] == 0) & (d["lane"] == 1)
+    if exclude_event_windows:
+        ctrl = ctrl & (d["inwin"] == 0)
     resid = d["rec"] - d["fin"]
     out, row_bias = [], []
     for w in np.unique(d["win"][last3]):
@@ -212,7 +221,8 @@ def main(argv=None) -> int:
     for arm, r in res["onestep"].items():
         c = res["control"].get(arm, {})
         L.append(f"| {LABEL[arm]} | " + " | ".join(A.fmt(*r["profile"][o][:1]) for o in OFFSETS)
-                 + f" | {A.fmt(*r['mean_m3_0'])} | {A.fmt(c.get('control_bias', float('nan')))} |")
+                 + f" | {A.fmt(*r['mean_m3_0'])} | {A.fmt(c.get('all_unpartnered', {}).get('control_bias', float('nan')))}"
+                 f" (w/o fix-B windows {A.fmt(c.get('without_fixb_event_windows', {}).get('control_bias', float('nan')))}) |")
     L += ["\n## Rollout absolute bias (model - recorded mean of the merge follower), by event time (s)\n",
           "| arm | " + " | ".join(str(o) for o in OFFSETS) + " | mean [-3,0) |", "|---" * (len(OFFSETS) + 2) + "|"]
     for arm, r in res["rollout"].items():

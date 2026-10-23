@@ -44,7 +44,7 @@ section 4).
     writes the report.
   - config pins vs 10b (only the R11 keys differ; round-9 decisions and fix B inherited); trainable set; weight/lr
     from the rule file; gate content; legacy-flat round trip.
-- `tests/test_round11_gate_verdict.py` (25) and `tests/test_round11_gate_launcher.py` (16, via WSL, including the
+- `tests/test_round11_gate_verdict.py` (28, incl. the C1 head-saturation rule on the lr-1.0 log), `tests/test_r11_checks.py` (3: keep-10b rule, under-yield flag, one-step profile binning) and `tests/test_round11_gate_launcher.py` (16, via WSL, including the
   head-init switch and its weight/lr overrides, and the default init with its wm_s_best fallback).
 - Regression: the new tests plus r10b courtesy, cut-in, round-10/10b gate verdict/launcher, merge context/core/core-v2
   config/pivot/runtime/training/exclusion/hybrid, tests/unit/{config,train,model}, equivalence. Result: **726 passed,
@@ -171,7 +171,22 @@ round 11, round 11 head-zero. Thresholds:
 | M5 | collisions or TTC worse than round 10b / round 9: reject the round | also stuck ramp cars and merge count vs 10b (absolute caveat, section 4.2) |
 | M6 | fix-B reads as R10_REVIEW | on round 11 and head-zero |
 | M7 | **reject round 11 if any of the 90 steps violates the C1 head-saturation rule** (`tools/r11_checks/m7_head_range.py`, run by run_all.sh); 90 steps completed; contrast telemetry finite every step | - |
-| M8 (new) | - (read) | one-step absolute last-3-s target-follower bias and the C3-control bias at the merge (does fix B remove the generic over-prediction?) |
+| **M8 (R11_REVIEW C3, decision rule)** | **KEEP ROUND 10b (reject round 11)** if round 11's mean ABSOLUTE target-follower bias (model - recorded) over [-3, 0) s exceeds round 10b's by > 0.3 m/s^2 (rollout, or one-step) AND any of merges per run, stuck ramp cars (time-mean ramp cars in the merge zone; share of times with a wait > 60 s), TTC < 1.5 s share, min gap at insertion (p5), post-insertion hard brakes (share of merge followers with min accel < -3) is worse than in 10b (point estimates, literal) | `tools/r11_checks/absolute_bias.py` (run by run_all.sh -> `chk_r11/M8_R11.md`). Also reports the per-event-time absolute profile over [-6, +2] s for 10b / 11 / 11-headzero (one-step and rollout) and the kernel-matched control bias near the merge |
+| M1-under (read) | flag under-yield if round 11's M1 mean over [-3, 0) s > -0.1 | in M8_R11.md |
+| C5 reads | (a) matched control bias with vs without fix-B event-window rows among the controls (M8_R11.md); (b) per-step `follower_courtesy_contrast_control_resid_mean` / shift / effective controls (`M7_head_range_full.json`): does the near-merge control bias fall over the 90 steps?; (c) see below | - |
+
+**C5c, the R10B vs R11 offline base discrepancy (reconciled, offline).** Both tools give the same absolute base. The
+R10B packet's event-profile columns ("before -0.01 at -2 s", n 47 held-out) are MATCHED EXCESS (C3 cells). The R11
+"+1.42/+1.46 at -2 s" is the ABSOLUTE mean. On the R10B cache (104 windows) the absolute base at -2 s is +1.13 vs
+recorded -0.12 (plant clamp 2.6 in that quick read); on the R11 cache (207 windows) it is +1.42 vs -0.05 (clamp 3.0).
+In excess terms the R11 held-out base is +0.17 at -2 s, consistent with R10B's -0.01 given n 47. "+1.2..1.6" refers
+only to absolute values.
+
+**Check-tool adaptations (tools/r10b_checks, backward compatible).** run_onestep.py loads a version-2 head with
+`model.follower_courtesy_version=2` per arm (asserts the stored first layer is loaded as is; same-shape matching would
+silently drop it) and appends columns tm/te/s/closing (analyze.py reads columns by name). run_rollouts.py keeps the
+first 10 inputs in the head table, so analyze.py's layout is unchanged. Tested locally on one window with a v1 and a
+v2 checkpoint.
 
 ## 8. Commits
 86fb7f12 (code), 42f62ca4 (contrast matching, config, gate, tests), 50204cff (verdict tests), 76fe0e65
