@@ -24,6 +24,11 @@ FLAT_TO_PATH: dict[str, str] = {
     "follower_courtesy_rollout_grad": "model.follower_courtesy_rollout_grad",
     "follower_courtesy_weight": "loss.follower_courtesy.weight",
     "follower_courtesy_huber_delta_mps2": "loss.follower_courtesy.huber_delta_mps2",
+    # R11 STRUCTURAL COURTESY FIX
+    "follower_courtesy_version": "model.follower_courtesy_version",
+    "follower_courtesy_init_zero": "model.follower_courtesy_init_zero",
+    "follower_courtesy_contrast": "loss.follower_courtesy.contrast",
+    "cutin_reaction_exclude_partnered_controls": "loss.cutin_reaction.exclude_partnered_controls",
     "unroll_curriculum_s": "curriculum.unroll_s",
     "stage_steps": "curriculum.stage_steps",
     "num_workers": "runtime.num_workers",
@@ -375,6 +380,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "follower_courtesy", "follower_courtesy_hidden", "follower_courtesy_embedding",
     "follower_courtesy_rollout_grad", "follower_courtesy_weight",
     "follower_courtesy_huber_delta_mps2",
+    # R11 STRUCTURAL COURTESY FIX
+    "follower_courtesy_version", "follower_courtesy_init_zero", "follower_courtesy_contrast",
+    "cutin_reaction_exclude_partnered_controls",
     "batch_size_per_stage",
     "brake_follow_weight",
     "brake_follow_cav_weight",

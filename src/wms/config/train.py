@@ -207,6 +207,10 @@ class ModelConfig:
     follower_courtesy_hidden: int = 32
     follower_courtesy_embedding: bool = False
     follower_courtesy_rollout_grad: bool = False
+    # R11: 1 = round-10b inputs; 2 = + ramp car's acceleration (t, t-1) and its carried merge-zone time
+    follower_courtesy_version: int = 1
+    # R11: true = do NOT take follower_courtesy.* from model.init_from (fresh zero-init head)
+    follower_courtesy_init_zero: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -364,6 +368,14 @@ class ModelConfig:
                 and not isinstance(self.follower_courtesy_hidden, bool)
                 and self.follower_courtesy_hidden >= 1,
                 "model.follower_courtesy_hidden must be an integer >= 1")
+        require(isinstance(self.follower_courtesy_version, int)
+                and not isinstance(self.follower_courtesy_version, bool)
+                and self.follower_courtesy_version in (1, 2),
+                "model.follower_courtesy_version must be 1 or 2")
+        require(isinstance(self.follower_courtesy_init_zero, bool),
+                "model.follower_courtesy_init_zero must be a boolean")
+        require(self.follower_courtesy_version == 1 or self.follower_courtesy,
+                "model.follower_courtesy_version = 2 needs model.follower_courtesy = true")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -584,8 +596,12 @@ class CutinReactionConfig:
     pre_s: float = 1.0
     max_window_s: float = 6.0
     huber_delta_mps2: float = 0.5
+    # R11: drop partnered lane-1 rows (courtesy pairing) from the control anchor
+    exclude_partnered_controls: bool = False
 
     def __post_init__(self) -> None:
+        require(isinstance(self.exclude_partnered_controls, bool),
+                "loss.cutin_reaction.exclude_partnered_controls must be a boolean")
         require(all(is_finite(getattr(self, name)) for name in (
             "weight", "control_weight", "pre_s", "max_window_s", "huber_delta_mps2")),
             "loss.cutin_reaction values must be finite")
@@ -604,8 +620,11 @@ class FollowerCourtesyLossConfig:
 
     weight: float = 0.0
     huber_delta_mps2: float = 1.0
+    # R11: matched-control contrast target (recorded minus the in-batch kernel-matched control residual)
+    contrast: bool = False
 
     def __post_init__(self) -> None:
+        require(isinstance(self.contrast, bool), "loss.follower_courtesy.contrast must be a boolean")
         require(is_finite(self.weight) and self.weight >= 0,
                 "loss.follower_courtesy.weight must be finite and >= 0")
         require(is_finite(self.huber_delta_mps2) and self.huber_delta_mps2 > 0,

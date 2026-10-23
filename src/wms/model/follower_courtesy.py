@@ -43,6 +43,25 @@ COURTESY_PAIR_FIELDS = (
     "closing_leader",   # (v_follower - v_leader) / 5 m/s (0 without leader)
 )
 COURTESY_PAIR_F = len(COURTESY_PAIR_FIELDS)
+#: R11 (``follower_courtesy_version = 2``) inputs APPENDED to the round-10b ones (so a round-10b head
+#: initialises a version-2 head exactly by zero-expanding its first layer):
+COURTESY_V2_FIELDS = (
+    "a_ramp",           # ramp car's acceleration in its state at t (kin[..., 5]: the acceleration that
+                        # produced its current state; recorded backward difference / applied rollout accel) / 3
+    "a_ramp_prev",      # the same one step earlier (short motion-history slot t-1; 0 when unobserved) / 3
+    "zone_wait",        # asinh(t_zone / 10 s): time since the ramp car entered the merge zone (carried,
+                        # causal; ``courtesy_zone_s``) - replaces the dead lane-age wait of round 10b
+)
+COURTESY_V2_F = COURTESY_PAIR_F + len(COURTESY_V2_FIELDS)
+#: Carried state key of the R11 merge-zone time (s, including the current state).
+ZONE_STATE_KEY = "courtesy_zone_s"
+
+
+def n_pair_inputs(version: int) -> int:
+    """Number of pair inputs of a courtesy head of ``version`` (1 = round 10b, 2 = round 11)."""
+    if int(version) not in (1, 2):
+        raise ValueError("follower_courtesy_version must be 1 or 2")
+    return COURTESY_PAIR_F if int(version) == 1 else COURTESY_V2_F
 
 
 def _lane(kin: Tensor) -> Tensor:
@@ -51,17 +70,75 @@ def _lane(kin: Tensor) -> Tensor:
     return torch.where(onehot.sum(-1) > 0, lane, torch.full_like(lane, -1))
 
 
+def in_merge_zone(kin: Tensor, present: Tensor, physics) -> Tensor:
+    """Ramp-lane cars inside the geometric merge zone ``[merge_zone_s0_m, merge_zone_s1_m]`` (the
+    acceleration lane, where a merge is physically possible; road geometry, not a behaviour window)."""
+    s = kin[..., 0]
+    return (present.bool() & (_lane(kin) == int(getattr(physics, "merge_lane", 2)))
+            & (s >= float(getattr(physics, "merge_zone_s0_m", 0.0)))
+            & (s <= float(getattr(physics, "merge_zone_s1_m", 75.44))))
+
+
+def update_zone_time(prev: Optional[Tensor], kin: Tensor, present: Tensor, physics) -> Tensor:
+    """R11 merge-zone time ``[B, K]`` (s) INCLUDING the state ``kin``: ``+dt`` while the car is in
+    the merge zone, 0 outside it / absent (a discrete causal counter; no autograd graph)."""
+    with torch.no_grad():
+        kin = kin.detach()
+        base = (torch.zeros(kin.shape[:-1], dtype=torch.float32, device=kin.device)
+                if prev is None else prev.detach().float())
+        inside = in_merge_zone(kin, present, physics)
+        return torch.where(inside, base + float(getattr(physics, "dt_s", 0.5)),
+                           torch.zeros_like(base))
+
+
+def initial_zone_time(present: Tensor, kin: Tensor, physics, driver_history: Optional[Tensor],
+                      driver_history_mask: Optional[Tensor], stride_steps: int) -> Tensor:
+    """Merge-zone time at a rollout / replay start, INCLUDING the t0 state.
+
+    Pre-t0 part from the observed long-history samples strictly before t0 (channels v/30, lane
+    one-hot 2:5, displacement/250 relative to t0 at index 6 - the conventions of
+    :func:`wms.model.merge_wait.initial_merge_wait`): ``+stride * dt`` per sample in the zone, reset
+    outside it / unseen.  Without a long history every car starts at 0.  Then the t0 state is applied.
+    """
+    zone = torch.zeros(present.shape, dtype=torch.float32, device=present.device)
+    if driver_history is not None and driver_history_mask is not None \
+            and driver_history.shape[-1] >= 9 and driver_history.shape[-2] > 1:
+        period = float(getattr(physics, "dt_s", 0.5)) * float(stride_steps)
+        s0 = float(getattr(physics, "merge_zone_s0_m", 0.0))
+        s1 = float(getattr(physics, "merge_zone_s1_m", 75.44))
+        with torch.no_grad():
+            hist = driver_history[..., :-1, :].float()
+            seen_h = driver_history_mask[..., :-1].bool()
+            s_t0 = kin[..., 0].detach().float()
+            for h in range(hist.shape[-2]):
+                lane = hist[..., h, 2:5].argmax(-1)
+                s = s_t0 + hist[..., h, 6] * 250.0
+                inside = (seen_h[..., h] & (lane == int(getattr(physics, "merge_lane", 2)))
+                          & (s >= s0) & (s <= s1))
+                zone = torch.where(inside, zone + period, torch.zeros_like(zone))
+    return update_zone_time(zone, kin, present, physics)
+
+
 def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
                             merge_wait_s: Optional[Tensor] = None,
                             lane_age: Optional[Tensor] = None,
-                            merge_prob: Optional[Tensor] = None) -> dict[str, Tensor]:
+                            merge_prob: Optional[Tensor] = None,
+                            version: int = 1,
+                            zone_time_s: Optional[Tensor] = None,
+                            history: Optional[Tensor] = None,
+                            history_mask: Optional[Tensor] = None) -> dict[str, Tensor]:
     """Pair every lane-1 follower with its ramp partner; return features ``[B, K, F]``.
 
     Returns ``features`` (zeros where there is no partner), ``has_partner [B, K]`` and
     ``partner [B, K]`` (slot index of the ramp car; meaningless where ``has_partner`` is false).
     Only current-state quantities enter (``merge_wait_s`` is the carried waiting time, a function
     of the past; ``merge_prob`` is detached).
+
+    ``version=2`` (R11) appends the ramp car's acceleration at t and t-1 (``history`` slot -2 of the
+    short motion history, channel 1 = accel/3; zero where unobserved) and its merge-zone time
+    ``zone_time_s`` (carried; missing -> the current state only, :func:`update_zone_time`).
     """
+    n_pair_inputs(version)
     kin = kin.float()
     present = present.bool()
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
@@ -119,6 +196,20 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
         torch.where(has_leader, torch.asinh(gap_l / 10.0), zero),
         torch.where(has_leader, (v - at(v, leader)) / 5.0, zero),
     ), -1)
+    if int(version) >= 2:
+        acc = kin[..., 5]
+        if history is not None and history_mask is not None and history.shape[-2] >= 2:
+            prev_all = torch.where(history_mask[..., -2].bool(),
+                                   history[..., -2, 1].detach().to(s.dtype) * 3.0, zero)
+        else:
+            prev_all = zero
+        zone_all = (update_zone_time(None, kin, present, physics) if zone_time_s is None
+                    else torch.as_tensor(zone_time_s, dtype=s.dtype, device=s.device))
+        feats = torch.cat((feats, torch.stack((
+            at(acc, partner) / 3.0,
+            at(prev_all, partner) / 3.0,
+            torch.asinh(at(zone_all, partner).clamp_min(0.0) / 10.0),
+        ), -1)), -1)
     feats = torch.nan_to_num(feats, nan=0.0, posinf=0.0, neginf=0.0)
     feats = torch.where(has_partner.unsqueeze(-1), feats, torch.zeros_like(feats))
     return {"features": feats.detach(), "has_partner": has_partner, "partner": partner}
@@ -127,11 +218,13 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
 class FollowerCourtesyHead(nn.Module):
     """Pair MLP -> one acceleration offset (m/s^2) per follower; zero last layer (exact no-op)."""
 
-    def __init__(self, hidden: int = 32, embed_dim: int = 0) -> None:
+    def __init__(self, hidden: int = 32, embed_dim: int = 0, version: int = 1) -> None:
         super().__init__()
         if int(hidden) < 1 or int(embed_dim) < 0:
             raise ValueError("follower courtesy needs hidden >= 1 and embed_dim >= 0")
-        self.n_in = COURTESY_PAIR_F + int(embed_dim)
+        self.version = int(version)
+        self.n_pair = n_pair_inputs(self.version)
+        self.n_in = self.n_pair + int(embed_dim)
         self.embed_dim = int(embed_dim)
         self.net = nn.Sequential(
             nn.Linear(self.n_in, int(hidden)), nn.GELU(),
@@ -146,5 +239,24 @@ class FollowerCourtesyHead(nn.Module):
         return self.net(inputs)[..., 0]
 
 
-__all__ = ["COURTESY_PAIR_F", "COURTESY_PAIR_FIELDS", "FollowerCourtesyHead",
-           "follower_courtesy_pairs"]
+def expand_head_inputs(source: dict, own: dict, prefix: str = "follower_courtesy.") -> dict:
+    """Zero-expand a narrower stored first layer (round-10b head, 10 pair inputs) to a version-2
+    head (13 pair inputs; the new inputs are APPENDED, so the expanded head computes exactly the
+    stored function).  Only the plain pair-input heads (no embedding ablation) are expanded."""
+    key = prefix + "net.0.weight"
+    stored, want = source.get(key), own.get(key)
+    if stored is None or want is None or tuple(stored.shape) == tuple(want.shape):
+        return source
+    if (stored.ndim != 2 or want.ndim != 2 or stored.shape[0] != want.shape[0]
+            or stored.shape[1] != COURTESY_PAIR_F or want.shape[1] != COURTESY_V2_F):
+        return source
+    out = dict(source)
+    grown = torch.zeros(tuple(want.shape), dtype=stored.dtype, device=stored.device)
+    grown[:, :COURTESY_PAIR_F] = stored
+    out[key] = grown
+    return out
+
+
+__all__ = ["COURTESY_PAIR_F", "COURTESY_PAIR_FIELDS", "COURTESY_V2_F", "COURTESY_V2_FIELDS",
+           "FollowerCourtesyHead", "ZONE_STATE_KEY", "expand_head_inputs", "follower_courtesy_pairs",
+           "in_merge_zone", "initial_zone_time", "n_pair_inputs", "update_zone_time"]

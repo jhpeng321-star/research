@@ -418,7 +418,9 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             max_window_s=settings.cutin_reaction_max_window_s,
             huber_delta_mps2=settings.cutin_reaction_huber_delta_mps2,
             merge_lane=2 if physics is None else int(physics.merge_lane),
-            target_lane=1 if physics is None else int(physics.merge_target_lane)),
+            target_lane=1 if physics is None else int(physics.merge_target_lane),
+            exclude_partnered_controls=bool(getattr(
+                settings, "cutin_reaction_exclude_partnered_controls", False))),
             share_keys=COURTESY_REPLAY_KEYS if courtesy_on else (),
             share_to=COURTESY_SHARED_KEY if courtesy_on else None))
     # R10B learned follower courtesy (after the cut-in term, whose replay it reuses).
@@ -426,6 +428,10 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         unroll.extend(follower_courtesy_terms(FollowerCourtesyConfig(
             weight=settings.follower_courtesy_weight,
             huber_delta_mps2=settings.follower_courtesy_huber_delta_mps2,
-            target_lane=1 if physics is None else int(physics.merge_target_lane))))
+            target_lane=1 if physics is None else int(physics.merge_target_lane),
+            contrast=bool(getattr(settings, "follower_courtesy_contrast", False)),
+            merge_lane=2 if physics is None else int(physics.merge_lane),
+            zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m),
+            zone_start_m=0.0 if physics is None else float(physics.merge_zone_s0_m))))
     return LossComposer(chunk, unroll, braking=braking,
                         merge_share_cap=None if merge_cap is None else float(merge_cap))

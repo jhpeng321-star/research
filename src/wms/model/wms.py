@@ -49,7 +49,8 @@ from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
 from .merge_core import (MergeCoreNet, core_features, load_init,
                          secure_gap_margin, secure_gap_sides, update_core_alpha)
-from .follower_courtesy import FollowerCourtesyHead, follower_courtesy_pairs
+from .follower_courtesy import (ZONE_STATE_KEY, FollowerCourtesyHead, follower_courtesy_pairs,
+                                initial_zone_time, update_zone_time)
 from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from . import merge_pivot as pivot
 from .merge_threshold import MergeThresholdNet, update_threshold_state
@@ -391,8 +392,25 @@ class WmSModel(nn.Module):
         if bool(getattr(spec, "follower_courtesy", False)):
             embed = (self.driver_embed_dim
                      if bool(getattr(spec, "follower_courtesy_embedding", False)) else 0)
+            # R11: version 2 appends the ramp car's acceleration (t, t-1) and its merge-zone time.
             self.follower_courtesy = FollowerCourtesyHead(
-                hidden=int(getattr(spec, "follower_courtesy_hidden", 32)), embed_dim=embed)
+                hidden=int(getattr(spec, "follower_courtesy_hidden", 32)), embed_dim=embed,
+                version=int(getattr(spec, "follower_courtesy_version", 1)))
+
+    @property
+    def _tracks_courtesy_zone(self) -> bool:
+        """R11: the rollout / replay carries the ramp cars' merge-zone time (courtesy v2 input)."""
+        head = getattr(self, "follower_courtesy", None)
+        return head is not None and int(getattr(head, "version", 1)) >= 2
+
+    def initial_courtesy_zone(self, present: Tensor, kin: Tensor,
+                              driver_history: Optional[Tensor],
+                              driver_history_mask: Optional[Tensor]) -> Tensor:
+        """R11: merge-zone time at t0 (incl. t0) from the observed pre-t0 long history."""
+        return initial_zone_time(present, kin, self.physics,
+                                 driver_history if self.long_history else None,
+                                 driver_history_mask if self.long_history else None,
+                                 self._history_stride_steps())
 
     # ------------------------------------------------------------ R10B courtesy
     def follower_courtesy_offset(self, inputs: Tensor, *, live: bool = True) -> Tensor:
@@ -987,9 +1005,14 @@ class WmSModel(nn.Module):
         if self.follower_courtesy is not None:
             # R10B: learned courtesy offset on the target lane-1 follower of a ramp-lane car.
             # Exactly zero for a slot without a ramp partner and for every non-learned (CAV) slot.
+            # R11 (version 2): + the ramp car's acceleration at t / t-1 (state + short motion
+            # history) and its carried merge-zone time (missing -> the current state only).
+            v2 = self._tracks_courtesy_zone
             pairs = follower_courtesy_pairs(
                 kin, present, self.physics, merge_wait_s=state.get("merge_wait_s"),
-                lane_age=lane_age, merge_prob=merge_prob)
+                lane_age=lane_age, merge_prob=merge_prob,
+                **({} if not v2 else {"version": 2, "zone_time_s": state.get(ZONE_STATE_KEY),
+                                      "history": history, "history_mask": history_mask}))
             inputs = pairs["features"]
             if self.follower_courtesy.embed_dim:
                 # Ablation only: the follower's driver embedding (detached; the encoder is frozen).
@@ -2111,6 +2134,10 @@ class WmSModel(nn.Module):
             # V8WM3: carried across truncated-BPTT chunks in the returned state.
             current["merge_wait_s"] = self.initial_merge_wait(pres0, kin0, driver_history,
                                                               driver_history_mask)
+        if self._tracks_courtesy_zone and current.get(ZONE_STATE_KEY) is None:
+            # R11: merge-zone time of the courtesy v2 input, carried across chunks.
+            current[ZONE_STATE_KEY] = self.initial_courtesy_zone(pres0, kin0, driver_history,
+                                                                 driver_history_mask)
         if self.merge_threshold is not None and current.get("merge_fp_present") is None:
             # R5THR: presence at the rollout start (first-step new-car detection).
             current["merge_fp_present"] = pres0.clone()
@@ -2251,6 +2278,9 @@ class WmSModel(nn.Module):
             if self._tracks_merge_wait:
                 current["merge_wait_s"] = update_merge_wait(current.get("merge_wait_s"), kin,
                                                             nxt_present, self.physics)
+            if self._tracks_courtesy_zone:
+                current[ZONE_STATE_KEY] = update_zone_time(current.get(ZONE_STATE_KEY), kin,
+                                                           nxt_present, self.physics)
             if "merge_threshold_u" in out:
                 # R5THR: threshold / running maximum / presence persist across chunks and
                 # slot moves; a reused slot is reset by the next step's new-car check.

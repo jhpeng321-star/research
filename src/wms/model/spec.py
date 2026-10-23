@@ -139,8 +139,16 @@ class ModelSpec:
     follower_courtesy_hidden: int = 32
     follower_courtesy_embedding: bool = False
     follower_courtesy_rollout_grad: bool = False
+    # R11: courtesy input version (1 = round 10b; 2 = + ramp car accel t/t-1 + carried merge-zone time)
+    follower_courtesy_version: int = 1
 
     def __post_init__(self) -> None:
+        if (not isinstance(self.follower_courtesy_version, int)
+                or isinstance(self.follower_courtesy_version, bool)
+                or self.follower_courtesy_version not in (1, 2)):
+            raise ValueError("follower_courtesy_version must be 1 or 2")
+        if self.follower_courtesy_version == 2 and not self.follower_courtesy:
+            raise ValueError("follower_courtesy_version = 2 needs follower_courtesy")
         for name in ("follower_courtesy", "follower_courtesy_embedding",
                      "follower_courtesy_rollout_grad"):
             if not isinstance(getattr(self, name), bool):

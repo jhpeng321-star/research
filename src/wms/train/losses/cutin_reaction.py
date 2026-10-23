@@ -23,6 +23,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from functools import partial
+from types import SimpleNamespace
 from typing import Any
 
 import torch
@@ -30,6 +31,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.utils.checkpoint import checkpoint
 
+from wms.model.follower_courtesy import ZONE_STATE_KEY, follower_courtesy_pairs, update_zone_time
 from wms.model.history import (LONG_HISTORY_F, history_step_features,
                                initial_history, push_history)
 from wms.model.leader_change import LeaderChangeTracker, feature_matrix
@@ -51,8 +53,14 @@ class CutinReactionConfig:
     huber_delta_mps2: float = 0.5
     merge_lane: int = 2
     target_lane: int = 1
+    # R11 (default False = round 10b): drop lane-1 rows whose follower has a ramp partner at t (the
+    # courtesy head's geometric pairing on the recorded state) from the CONTROL anchor, so the
+    # temporal/gate controls never see a_pre + head (attribution between fix B and the head).
+    exclude_partnered_controls: bool = False
 
     def __post_init__(self) -> None:
+        if not isinstance(self.exclude_partnered_controls, bool):
+            raise ValueError("cutin_reaction.exclude_partnered_controls must be a boolean")
         for name in ("weight", "control_weight", "pre_s", "max_window_s",
                      "huber_delta_mps2"):
             if not math.isfinite(float(getattr(self, name))):
@@ -150,10 +158,34 @@ def insertion_plan(targets: UnrollTargets, config: CutinReactionConfig) -> dict[
         mass /= len(events)
     control = hdv & (lane[:, :-1] == config.target_lane) \
         & (lane[:, 1:] == config.target_lane) & ~window
+    n_excluded = 0
+    if config.exclude_partnered_controls:
+        partnered = recorded_partnered(targets, config)
+        n_excluded = int((control & partnered).sum())
+        control = control & ~partnered
     return {"events": events, "event_weights": mass, "window": window,
             "supervised": (mass > 0), "control": control,
             "n_events": len(events), "n_event_rows": int((mass > 0).sum()),
-            "n_control_rows": int(control.sum())}
+            "n_control_rows": int(control.sum()), "n_partnered_controls_excluded": n_excluded}
+
+
+@torch.no_grad()
+def recorded_partnered(targets: UnrollTargets, config: CutinReactionConfig) -> Tensor:
+    """``[B, n, K]``: the slot is a lane-1 car with a ramp partner at recorded state t (the courtesy
+    head's geometric pairing, :func:`wms.model.follower_courtesy.follower_courtesy_pairs`)."""
+    kin, _, valid, _, _, _ = _recorded(targets)
+    b, n1, k = kin.shape[:3]
+    n = n1 - 1
+    if n <= 0:
+        return torch.zeros((b, 0, k), dtype=torch.bool, device=kin.device)
+    lanes = SimpleNamespace(merge_lane=config.merge_lane, merge_target_lane=config.target_lane)
+    out = []
+    for lo in range(0, n, 32):   # pairing builds [rows, K, K] matrices: bounded time chunks
+        hi = min(n, lo + 32)
+        pairs = follower_courtesy_pairs(kin[:, lo:hi].reshape(b * (hi - lo), k, kin.shape[-1]),
+                                        valid[:, lo:hi].reshape(b * (hi - lo), k), lanes)
+        out.append(pairs["has_partner"].reshape(b, hi - lo, k))
+    return torch.cat(out, 1)
 
 
 def one_step_predicted_accel(model: Any, targets: UnrollTargets,
@@ -246,6 +278,14 @@ def one_step_replay(model: Any, targets: UnrollTargets, grad_steps: Tensor | Non
             else:
                 state["merge_wait_s"] = update_merge_wait(
                     carry.get("merge_wait_s"), kin[:, t], present, model.physics)
+        if bool(getattr(model, "_tracks_courtesy_zone", False)):
+            # R11: the courtesy v2 merge-zone time, the rollout's own causal counter on recorded rows.
+            if t == 0:
+                state[ZONE_STATE_KEY] = model.initial_courtesy_zone(
+                    present, kin[:, t], driver_history, driver_mask)
+            else:
+                state[ZONE_STATE_KEY] = update_zone_time(
+                    carry.get(ZONE_STATE_KEY), kin[:, t], present, model.physics)
         if bool(getattr(model, "leader_change_features", False)):
             state["leader_change_features"] = feature_matrix(features)
         if hasattr(model, "encode_drivers") and (t == 0 or bool(new.any())):
@@ -283,6 +323,8 @@ def one_step_replay(model: Any, targets: UnrollTargets, grad_steps: Tensor | Non
                  if key in out}
         if "merge_wait_s" in state:
             carry["merge_wait_s"] = state["merge_wait_s"]
+        if ZONE_STATE_KEY in state:
+            carry[ZONE_STATE_KEY] = state[ZONE_STATE_KEY]
         recurrent = {key: out[key] for key in ("lane_v5_acc", "lane_blocked") if key in out}
     stacked = {key: torch.stack(values, 1) for key, values in collected.items()
                if len(values) == targets.n_steps}
@@ -316,6 +358,8 @@ class CutinReactionLoss(UnrollTerm):
         plan = insertion_plan(ctx.targets, self.config)
         self.last_stats = {key: plan[key] for key in ("n_events", "n_event_rows", "n_control_rows")}
         self.last_stats["censored_windows"] = sum(e["censored"] for e in plan["events"])
+        if self.config.exclude_partnered_controls:
+            self.last_stats["n_partnered_controls_excluded"] = plan["n_partnered_controls_excluded"]
         if not plan["n_event_rows"] and not plan["n_control_rows"]:
             return TermValue(zero, valid_count=0)
         needed = plan["supervised"] | plan["control"]

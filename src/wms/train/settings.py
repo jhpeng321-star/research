@@ -106,6 +106,11 @@ class TrainSettings:
     follower_courtesy_rollout_grad: bool = False
     follower_courtesy_weight: float = 0.0
     follower_courtesy_huber_delta_mps2: float = 1.0
+    # R11 STRUCTURAL COURTESY FIX (all default = round 10b)
+    follower_courtesy_version: int = 1
+    follower_courtesy_init_zero: bool = False
+    follower_courtesy_contrast: bool = False
+    cutin_reaction_exclude_partnered_controls: bool = False
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -846,6 +851,12 @@ class TrainSettings:
                  "follower_courtesy needs finite weight >= 0 and huber delta > 0")
         _require(float(self.follower_courtesy_weight) == 0 or bool(self.follower_courtesy),
                  "loss.follower_courtesy.weight > 0 needs model.follower_courtesy = true")
+        _require(int(self.follower_courtesy_version) in (1, 2)
+                 and (int(self.follower_courtesy_version) == 1 or bool(self.follower_courtesy)),
+                 "follower_courtesy_version must be 1 or 2 (2 needs model.follower_courtesy)")
+        _require(not bool(self.follower_courtesy_contrast)
+                 or float(self.follower_courtesy_weight) > 0,
+                 "loss.follower_courtesy.contrast needs loss.follower_courtesy.weight > 0")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

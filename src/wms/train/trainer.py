@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 from wms.core.errors import WmsError
 from wms.data.collate import collate
 from wms.model.checkpoint import _expand_lane_v5_inputs, save_checkpoint, sha256_file
+from wms.model.follower_courtesy import expand_head_inputs
 from wms.physics.projection import FeasibilityProjection, ProjectionConfig
 
 from .curriculum import PlateauRule, StagePlan, stage_plan
@@ -233,7 +234,19 @@ class WmSTrainer:
             raise CheckpointInitError(f"model.init_from: {path} is not a wm_s/1 checkpoint")
         own = self.model.state_dict()
         raw_source = payload.get("model") or {}
+        courtesy_init = None
+        if getattr(self.model, "follower_courtesy", None) is not None:
+            if bool(getattr(self.settings, "follower_courtesy_init_zero", False)):
+                # R11 switch: a fresh zero-initialised head even if the checkpoint has one.
+                raw_source = {key: value for key, value in raw_source.items()
+                              if not key.startswith("follower_courtesy.")}
+                courtesy_init = "zero"
+            else:
+                courtesy_init = ("checkpoint" if any(key.startswith("follower_courtesy.")
+                                                     for key in raw_source) else "zero")
         source = _expand_lane_v5_inputs(raw_source, self.model)
+        # R11: a round-10b head (10 pair inputs) zero-expands exactly to the version-2 head.
+        source = expand_head_inputs(source, own)
         expanded = sorted(key for key in set(source) & set(raw_source)
                           if source[key].shape != raw_source[key].shape)
         matched = {key: value for key, value in source.items()
@@ -248,6 +261,8 @@ class WmSTrainer:
                                      if own[key].shape != source[key].shape),
             "unused_from_checkpoint": sorted(set(source) - set(own)),
         }
+        if courtesy_init is not None:
+            report["follower_courtesy_init"] = courtesy_init
         print(f"init_from {path.name}: loaded {len(report['loaded'])} tensors, "
               f"expanded {len(report['expanded'])}, "
               f"new {len(report['new_in_model'])}, shape-mismatch "
