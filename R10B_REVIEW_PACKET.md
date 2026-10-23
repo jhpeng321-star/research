@@ -41,12 +41,25 @@ Same function in training rollouts, the recorded-state replays and every runtime
   composes both terms + telemetry; refusals (weight without model flag, loss without head); **window longer than the unroll**
   (direct, shared replay, runner 12-row windows / 6-step unroll); config pins vs round 10; trainable set; weight/lr from the
   rule file; gate content; legacy-flat round trip.
-- New: `tests/test_round10b_gate_verdict.py` (23) and `tests/test_round10b_gate_launcher.py` (10, via WSL).
-- Regression (final run, see section 7): cut-in, r10 config, round-10 gate, merge context/core/pivot, unit config/train,
-  wmloss/wmlane, equivalence.
+- New: `tests/test_round10b_gate_verdict.py` (28) and `tests/test_round10b_gate_launcher.py` (10, via WSL).
+- Final run (2026-10-23 17:37, all new + regression: cut-in, r10 config, round-10 gate verdict/launcher, merge context/core/
+  core-v2 config/pivot/pivot runtime/pivot training, tests/unit/config, tests/unit/train, wmloss, wmlane, equivalence):
+  **657 passed, 17 skipped** (pre-existing data-availability skips). ruff clean on all touched files.
 
 ## 4. Micro-smoke (tools/r10b_micro_smoke.py; real WmSTrainer.train_batch, local CPU)
-SEE_SMOKE
+PASS (docs/r10b_micro_smoke_summary.json, docs/r10b_micro_smoke_train_log.jsonl). Round-10b config, init round-8
+stage-300 (INIT_FROM: 149 loaded; new = 8 merge_pivot + 6 courtesy-head tensors), 2 steps, batch 2, dataset windows 60 steps
+with a 40-step unroll (window > unroll, the shape that crashed round 10's first gpuR smoke), each with a recorded insertion.
+Run started before the weight/lr were measured, so it used weight 1.0 / lr scale 100 and the micro-smoke's base lr (mechanics only).
+
+| step | loss | cut-in | cut-in events / rows / controls | courtesy | courtesy rows | shared replay | grad norm |
+|---|---|---|---|---|---|---|---|
+| 1 | 28.59 | 0.943 | 6 / 17 / 2837 | 0.610 | 229 | 1 | 4.80 |
+| 2 | 23.84 | 1.175 | 7 / 20 / 2936 | 0.662 | 1260 | 1 | 1.07 |
+
+All finite; head gradient > 0 on both steps; changed tensors = exactly the 6 head tensors + gate_g_max_logit, gate_tau_raw,
+temporal.0/2 weight+bias; no frozen tensor and no merge_pivot tensor changed. (Step 1 wall time 9,628 s includes a laptop
+sleep; step 2 took 1,313 s on the shared CPU.)
 
 ## 5. Offline check on recorded TRAIN windows (tools/r10b_courtesy_offline.py; docs/r10b_offline_fit.json)
 104 windows x 120 s (53 v5_native, 51 genrand_plain; 26 held-out by episode), round-8 stage-300 weights (HDV acceleration

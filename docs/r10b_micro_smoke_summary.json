@@ -1,0 +1,99 @@
+{
+ "steps": 2,
+ "cutin_values": [
+  0.9434223175048828,
+  1.174550175666809
+ ],
+ "cutin_events": [
+  6,
+  7
+ ],
+ "cutin_event_rows": [
+  17,
+  20
+ ],
+ "cutin_control_rows": [
+  2837,
+  2936
+ ],
+ "cutin_event_loss": [
+  0.6491671204566956,
+  0.8526930212974548
+ ],
+ "cutin_control_loss": [
+  0.29425519704818726,
+  0.32185715436935425
+ ],
+ "losses": [
+  28.590167735694966,
+  23.83827513463563
+ ],
+ "all_finite": true,
+ "trainable_parameter_names": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight",
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_tensors": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight",
+  "gate_g_max_logit",
+  "gate_tau_raw",
+  "temporal.0.bias",
+  "temporal.0.weight",
+  "temporal.2.bias",
+  "temporal.2.weight"
+ ],
+ "changed_subset_of_trainable": true,
+ "frozen_changed": [],
+ "merge_pivot_changed": [],
+ "grad_norm": [
+  4.802351951599121,
+  1.0730751752853394
+ ],
+ "courtesy_values": [
+  0.6095362901687622,
+  0.6622489094734192
+ ],
+ "courtesy_rows": [
+  229,
+  1260
+ ],
+ "courtesy_shared_replay": [
+  1,
+  1
+ ],
+ "courtesy_head_mean": [
+  0.0,
+  0.12070205807685852
+ ],
+ "courtesy_base_residual_mean": [
+  0.08545055985450745,
+  0.7158001661300659
+ ],
+ "courtesy_head_grad_abs_sum": [
+  0.10032299160957336,
+  5.309657573699951
+ ],
+ "courtesy_head_changed": [
+  "follower_courtesy.net.0.bias",
+  "follower_courtesy.net.0.weight",
+  "follower_courtesy.net.2.bias",
+  "follower_courtesy.net.2.weight",
+  "follower_courtesy.net.4.bias",
+  "follower_courtesy.net.4.weight"
+ ]
+}
