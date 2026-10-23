@@ -37,8 +37,8 @@ no clamp, floor, threshold or tolerance in the model; no driver labels, types or
 Round 12 retrains the base on purpose. Only the car-following path trains, and only what the diagnosis implicates:
 | trainable | lr scale (stage lr 5e-5 / 3e-5) | why |
 |---|---|---|
-| `driver_encoder.head.*` | x1 (docs/r12_lr_rule.json) | per-driver settings (A); rows 0-4 restart at the centre |
-| `driver_encoder.centre_logits` | x100 (rule) | the population centre of the settings (A) |
+| `driver_encoder.head.*` | x10 (docs/r12_lr_rule.json) | per-driver settings (A); rows 0-4 restart at the centre |
+| `driver_encoder.centre_logits` | x1000 (rule) | the population centre of the settings (A) |
 | `residual_net.*` except `residual_net.lane.*` | x0.5 (round-8 recipe) | the re-initialised read-out (B) and its trunk, co-adapted to the old core |
 | `temporal.*` | x5 (round 10/11) | the temporal residual is co-adapted to the old core (BASE_FOLLOWER_DIAG 2.1, 3.3) |
 | `follower_courtesy.*` | x1000 (R11 zero-init rule) | (C) |
@@ -98,6 +98,8 @@ So the lane model, the merge law and every lane-side input stay those of round 9
 - The centre must move from the physics default (a 2.49, logit +0.37) to the data's region (BASE_FOLLOWER_DIAG:
   around 0.9-1.2, logit about -1.1 to -1.6) within the schedule. Adam moves about lr per step, so the round-8 scalar
   convention (x100 = 5e-3) gives at most about 0.5 logit in 110 steps.
+- **Result: head x10, centre x1000** (held-out objective 0.732; the grid is monotone in both scales). The centre
+  reaches a about 1.4 / b about 2.4 by step 30 and is stable afterwards (packet section 3).
 - Rule: (head scale, centre scale) in {1, 10} x {10, 100, 300, 1000}, choosing the lowest held-out (episode-disjoint
   TRAIN) objective after the PRODUCTION schedule (40 x 4 windows @ 5e-5 s, 70 x 2 @ 3e-5 s, Adam, clip 1).
   - The objective is the one-step Huber of the IDM core (+ round-9 gate x temporal) plus the production prior, on
