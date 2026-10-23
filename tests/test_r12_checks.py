@@ -21,6 +21,8 @@ for extra in (ROOT / "tools" / "r12_checks", ROOT / "tools" / "r11_checks", ROOT
 
 import base_calibration as BC  # noqa: E402
 import m8_r12 as M8  # noqa: E402
+import midrun_check as MR  # noqa: E402
+import telemetry_reads as TR  # noqa: E402
 import run_onestep as OS  # noqa: E402
 import run_rollouts as RR  # noqa: E402
 
@@ -89,8 +91,10 @@ def _stats(r12, r9, hz=None):
 
 
 def test_base_rules():
-    ok = BC.decide(_stats(_rows(slow_bias=0.1), _rows(slow_bias=1.5)))
-    assert [ok[k][0] for k in ("BASE-1", "BASE-2", "BASE-3", "BASE-4")] == ["PASS", "PASS", "PASS", "READ"]
+    r12 = _rows(slow_bias=0.1)
+    ok = BC.decide(_stats(r12, _rows(slow_bias=1.5)), {"r10b": BC.encoded_params(r12)})
+    assert [ok[k][0] for k in ("BASE-1", "BASE-2", "BASE-3", "BASE-4", "BASE-5")] == \
+        ["PASS", "PASS", "PASS", "READ", "PASS"]
     assert BC.overall(ok).startswith("PASS")
     # BASE-1: > 0.3, or not smaller than round 9 (magnitudes)
     def both(x):   # slow_start pools the near and the far-upstream block
@@ -118,6 +122,24 @@ def test_base_rules():
     und = BC.decide(_stats(few, few))
     assert und["BASE-1"][0] == "UNDECIDED" and BC.overall(und).startswith("UNDECIDED")
     assert BC.overall({**ok, "BASE-3": ("REJECT", "")}).startswith("REJECT ROUND 12")
+
+
+def test_base5_encoder_bound_rule():
+    d = _rows(n_per=50)
+    stats = _stats(d, _rows(n_per=50, slow_bias=1.5))
+    assert BC.decide(stats, {"r10b": BC.encoded_params(d)})["BASE-5"][0] == "PASS"
+    d["ddec"][:60] = 5.96                                    # b: 24 % within 1 % (0.052) of the upper bound 6.0
+    r = BC.decide(stats, {"r10b": BC.encoded_params(d)})
+    assert r["BASE-5"][0] == "REJECT" and "decel 0.240" in r["BASE-5"][1]
+    assert BC.overall(r).startswith("REJECT ROUND 12") and "BASE-5" in BC.overall(r)
+    d["ddec"][:60] = 2.0
+    d["dacc"][:40] = 0.3                                     # 16 %: below the 20 % threshold
+    assert BC.decide(stats, {"r10b": BC.encoded_params(d)})["BASE-5"][0] == "PASS"
+    # only the round-12 arm is ruled; round 9 on its floor does not matter; unavailable -> UNDECIDED
+    floor = _rows(n_per=50)
+    floor["dacc"][:] = 0.3
+    assert BC.decide(stats, {"r9": BC.encoded_params(floor), "r10b": BC.encoded_params(d)})["BASE-5"][0] == "PASS"
+    assert BC.decide(stats, {})["BASE-5"][0] == "UNDECIDED"
 
 
 def test_encoded_param_flag():
@@ -170,15 +192,23 @@ def test_m8_rule_needs_bias_not_below_round9_and_a_worse_behaviour():
 
 def test_m5_and_seed_consistency():
     d = {"r10b-r9": {"ttc_lt_1p5_share": [0.01, 0.002, 0.02], "overlap_share": [0.0, -0.001, 0.001]}}
-    assert M8.m5_decide(d) == {"verdict": "REJECT ROUND 12", "worse_ci_above_0": ["ttc_lt_1p5_share"]}
-    d["r10b-r9"]["ttc_lt_1p5_share"] = [0.01, -0.002, 0.02]
+    r = M8.m5_decide(d)
+    assert r["verdict"] == "REJECT ROUND 12" and r["worse"] == ["ttc_lt_1p5_share"]
+    assert r["worse_ci_above_0"] == ["ttc_lt_1p5_share"] and r["worse_point_gt_0"] == ["ttc_lt_1p5_share"]
+    d["r10b-r9"]["ttc_lt_1p5_share"] = [0.01, -0.002, 0.02]        # point > 0 alone rejects (CI straddles 0)
+    r = M8.m5_decide(d)
+    assert r["verdict"] == "REJECT ROUND 12" and r["worse_point_gt_0"] == ["ttc_lt_1p5_share"] and not r["worse_ci_above_0"]
+    d["r10b-r9"]["ttc_lt_1p5_share"] = [-0.001, -0.002, 0.001]
+    d["r10b-r9"]["overlap_share"] = [0.0001, -0.001, 0.001]        # overlap point > 0 rejects too
+    assert M8.m5_decide(d)["worse"] == ["overlap_share"]
+    d["r10b-r9"]["overlap_share"] = [0.0, -0.001, 0.001]
     assert M8.m5_decide(d)["verdict"] == "PASS" and M8.m5_decide({})["verdict"] == "MISSING"
     assert M8.combine({"seed set 1": "PASS", "pooled": "PASS"}) == "PASS"
     c = M8.combine({"seed set 1": "PASS", "seed set 2": "REJECT ROUND 12", "pooled": "PASS"})
     assert c.startswith("PASS (seed-inconsistent")
 
 
-def _roll_file(path: Path, state: int, k: int, ttc_rows: int, n_rows=100, n_ev=3, accel=0.5, gap=5.0):
+def _roll_file(path: Path, state: int, k: int, ttc_rows: int, n_rows=100, n_ev=3, accel=0.5, gap=5.0, lc=4.0):
     """One synthetic run: lane-1 HDV rows (analyze.C layout) and n_ev HDV merge events."""
     import analyze as A
     r = np.zeros((n_rows, len(A.C)))
@@ -194,12 +224,13 @@ def _roll_file(path: Path, state: int, k: int, ttc_rows: int, n_rows=100, n_ev=3
     path.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path / f"s{state:03d}_k{k}.npz", rows=r.astype(np.float32), ev=ev.astype(np.float32), me=me,
                         head=np.zeros((0, 16), np.float32), jerk_switch=np.zeros(0, np.float32),
-                        jerk_all=np.zeros(3, np.float32), n_jerk_all=0, misc=np.zeros(5))
+                        jerk_all=np.zeros(3, np.float32), n_jerk_all=0, misc=np.zeros(5),
+                        lc01=np.array([lc, lc + 1.0, 1000.0]))
 
 
 def test_run_stats_and_seed_replicated_bootstrap(tmp_path):
     for s in range(12):
-        _roll_file(tmp_path / "a" / "roll" / "sumo", s, 0, 0, accel=0.0)
+        _roll_file(tmp_path / "a" / "roll" / "sumo", s, 0, 0, accel=0.0, lc=2.0)
         for k in range(2):
             _roll_file(tmp_path / "a" / "roll" / "r9", s, k, ttc_rows=1, accel=1.0)
             _roll_file(tmp_path / "a" / "roll" / "r10b", s, k, ttc_rows=5 + s % 3, accel=0.2)
@@ -227,6 +258,21 @@ def test_run_stats_and_seed_replicated_bootstrap(tmp_path):
     assert res["M5_verdict"].startswith("REJECT ROUND 12")
     assert res["decision"]["pooled"]["bias_not_below_round9"] == {"rollout": False}   # |0.2| < |1.0|
     assert "pooled" in out.read_text()
+    pb = res["sets"]["pooled"]["bootstrap"]
+    assert abs(pb["r10b"]["lane_changes_01_hdv_per_run"][0] - 4.0) < 1e-9
+    assert abs(pb["r9"]["lane_changes_01_all_per_run"][0] - 5.0) < 1e-9
+    assert abs(res["sets"]["pooled"]["sumo_lane_changes"]["lane_changes_01_hdv_per_run"][0] - 3.0) < 1e-9  # 2 and 4
+    assert "Lane-change READ" in out.read_text()
+
+
+def test_lane_changes_01_counts_mainline_changes_only():
+    lane = np.array([[1, 0, 2], [0, 0, 1], [0, 1, 1], [1, 1, 1]], float)
+    mask = np.ones_like(lane, bool)
+    mask[3, 1] = False
+    is_cav = np.array([False, True, False])
+    # slot 0: 1->0, 0->1 (2 HDV changes); slot 1 (CAV): 0->1 counted in all; slot 2: 2->1 not mainline
+    assert RR.lane_changes_01(lane, mask, is_cav).tolist() == [2.0, 3.0, 8.0]
+    assert "lc01" not in RR.__dict__ and RR.LANE_CHANGES is False
 
 
 # ------------------------------------------------------------------------------------------------ default-off flags
@@ -267,7 +313,8 @@ def test_run_all_sh_is_lf_and_parses():
     for needle in ("--replay-present filled", "--base-cols", "--arm-set r9=model.driver_param_mode=legacy",
                    "m8_r12.py", "base_calibration.py", "m7_head_range.py", "VERDICT_R12_CHECKS_COMBINED_$MODE.md",
                    "VERDICT_R12_CHECKS.md", "--seed-offset 0", "--seed-offset $SEED2_OFFSET",
-                   "c4_wm_v10_round9/wm_s_stage300.pt", "chk_r10b/states192.json.gz", "c4_wm_v10round12.toml"):
+                   "c4_wm_v10_round9/wm_s_stage300.pt", "chk_r10b/states192.json.gz", "c4_wm_v10round12.toml",
+                   "telemetry_reads.py", "TELEMETRY_R12_$MODE.md", "--lane-changes"):
         assert needle in text, needle
     bash = shutil.which("bash")
     if bash is None:
@@ -315,3 +362,62 @@ def test_real_onestep_refuses_an_encoder_mode_mismatch(tmp_path):
         pytest.skip("local round-9 checkpoint missing")
     r = _run_os(tmp_path / "x", arms=(("r9", R9_CK),))        # physical config, legacy checkpoint, no --arm-set
     assert r.returncode != 0 and "driver_param_mode" in (r.stderr + r.stdout)
+
+
+# ------------------------------------------------------------------------------------------------ telemetry / mid-run
+def _log(tmp_path, rows):
+    run = tmp_path / "run"
+    run.mkdir(exist_ok=True)
+    (run / "train_log.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    return run
+
+
+def test_telemetry_reads(tmp_path):
+    rows = [{"step": i, "driver_centre": {"v0": 1.0, "T": 1.2, "s0": 2.0, "a": 1.2 + 0.001 * i, "b": 2.0},
+             M8_C: (-0.1 if i <= 10 else -0.4), "follower_courtesy_contrast_n_controls": 5} for i in range(1, 111)]
+    run = _log(tmp_path, rows)
+    js, md = tmp_path / "t.json", tmp_path / "t.md"
+    assert TR.main([str(run), str(js), str(md)]) == 0
+    res = json.loads(js.read_text())
+    assert res["centre"]["status"] == "OK" and set(res["centre"]["at_step"]) >= {"1", "20", "110", "last"}
+    assert abs(res["centre"]["at_step"]["110"]["a"] - 1.31) < 1e-9 and res["centre"]["at_step"]["last_step"] == 110
+    assert res["contrast"]["head_contrast_limited"] and abs(res["contrast"]["first10_mean"] + 0.1) < 1e-9
+    assert res["prior"]["status"] == "ABSENT-OK" and "contrast-limited" in md.read_text()
+    # centre missing, prior present, steps without courtesy rows ignored
+    rows = [{"step": i, M8_C: -0.1, "follower_courtesy_contrast_n_controls": 0 if i > 5 else 3,
+             "driver_prior_means": {"accel": 1.2}} for i in range(1, 30)]
+    TR.main([str(_log(tmp_path, rows)), str(js), str(md)])
+    res = json.loads(js.read_text())
+    assert res["centre"]["status"] == "MISSING" and res["prior"]["status"] == "PRESENT"
+    assert res["contrast"]["n_steps"] == 5 and not res["contrast"]["head_contrast_limited"]
+    # no log: still exit 0
+    assert TR.main([str(tmp_path / "none"), str(js), str(md)]) == 0
+    assert json.loads(js.read_text())["centre"]["status"] == "MISSING"
+
+
+M8_C = TR.CONTRAST
+
+
+def test_midrun_decision():
+    def st(free12, brake12, brake9, n=200):
+        return {"r9": BC.class_stats(_rows(n_per=n, brake_bias=brake9), 20),
+                "r10b": BC.class_stats(_rows(n_per=n, free_bias=free12, brake_bias=brake12), 20)}
+    assert MR.decide(st(-0.3, 0.5, 0.4))["decision"] == "CONTINUE"
+    r = MR.decide(st(-0.7, 0.5, 0.4))
+    assert r["decision"] == "STOP" and "free-road" in r["reasons"][0]
+    assert MR.decide(st(-0.3, 0.75, 0.4))["decision"] == "STOP"           # signed: 0.75 > 0.4 + 0.3
+    assert MR.decide(st(-0.3, -0.9, 0.4))["decision"] == "CONTINUE"        # signed, not magnitude
+    few = MR.decide(st(-0.3, 0.5, 0.4, n=2))
+    assert few["decision"] == "UNDECIDED" and few["treated_as"] == "CONTINUE"
+
+
+def test_midrun_dry_run(tmp_path):
+    _write_os(tmp_path / "os", {"r9": _rows(brake_bias=0.4), "r10b": _rows(free_bias=-0.8)})
+    js, md = tmp_path / "mid.json", tmp_path / "mid.md"
+    assert MR.main(["--os-dir", str(tmp_path / "os"), "--out-json", str(js), "--out-md", str(md), "--boot", "20"]) == 0
+    res = json.loads(js.read_text())
+    assert res["decision"] == "STOP" and abs(res["free_road_bias_round12"] + 0.8) < 1e-6
+    text = md.read_text()
+    assert "Decision: STOP" in text and "Bias by row class" in text
+    assert MR.main(["--os-dir", str(tmp_path / "none"), "--out-json", str(js), "--out-md", str(md)]) == 0
+    assert json.loads(js.read_text())["decision"] == "UNDECIDED"

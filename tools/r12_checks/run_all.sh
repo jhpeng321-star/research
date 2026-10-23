@@ -11,7 +11,9 @@
 # Steps: rollouts (seed set 1, seeded: --seed-offset 0), [SEEDS2=1: rollouts seed set 2, --seed-offset $SEED2_OFFSET,
 # arms r9 + r10b], removal, one-step, gates, M7 head range, analyze.py (M1-M7; M5 proxy vs round 9 on seed set 1),
 # M8 (tools/r12_checks/m8_r12.py: absolute bias + behaviour rule, seed-replicated M5 with state-bootstrap CIs) and the
-# BASE checks (tools/r12_checks/base_calibration.py, rules BASE-1..4 in its header).
+# BASE checks (tools/r12_checks/base_calibration.py, rules BASE-1..5 in its header), telemetry reads
+# (tools/r12_checks/telemetry_reads.py: learned driver centre, contrast trend, prior off).  Rollouts store lane changes
+# (--lane-changes) for the M8 lane-change read.  The mid-run read (stage 120) is tools/r12_checks/midrun_check.py.
 # Combined verdict: $CHK/results/VERDICT_R12_CHECKS_COMBINED_$MODE.md (full mode: copied to $CHK/VERDICT_R12_CHECKS.md).
 # Env: R12_RUN, R12_REF_CK, R12_REPO (code), R12_TOOLS (check tools; default $R12_REPO/tools), R12_CHK, STATES (default:
 # the round-10b check states), WORKERS (<= 24), SEEDS2 (0|1, default 0), SEED2_OFFSET (default 1000),
@@ -81,6 +83,8 @@ echo "== gates $(date +%T)"
 $PY $CHK/r10b_checks/gates.py $REPO $OUT/gates.json r9=$REF_CK r10b=$R12_CK 2>&1 | tail -1
 echo "== M7 head range (round-12 config; REJECT-ROUND-11 in its output = reject round 12) $(date +%T)"
 $PY $TOOLS/r11_checks/m7_head_range.py "$RUN" "$REPO/configs/$CFG" "$CHK/results/M7_head_range_$MODE.json" "$R12_STEPS" 2>&1 | tail -1
+echo "== telemetry reads (driver centre, contrast trend, prior off) $(date +%T)"
+$PY $TOOLS/r12_checks/telemetry_reads.py "$RUN" "$CHK/results/TELEMETRY_R12_$MODE.json" "$CHK/results/TELEMETRY_R12_$MODE.md" 2>&1 | tail -1
 echo "== analysis (M1-M7, reference round 9, seed set 1) $(date +%T)"
 echo "{\"mode\": \"$MODE\", \"labels\": {\"r9\": \"round 9 reference\", \"r10b\": \"round 12\", \"headzero\": \"round 12 head zeroed\"}, \"r10b_checkpoint\": \"$R12_CK\", \"r9_checkpoint\": \"$REF_CK\", \"onestep_replay_present\": \"filled\", \"seeds2\": $SEEDS2, \"date\": \"$(date '+%F %T')\"}" > $OUT/meta.json
 $PY $CHK/r10b_checks/analyze.py --repo $REPO --shm $OUT --meta $OUT/meta.json --m5 $CHK/SUMMARY_R12.md --run $RUN --out $CHK/results/VERDICT_R12_CHECKS_$MODE.md
@@ -98,11 +102,13 @@ COMBINED=$CHK/results/VERDICT_R12_CHECKS_COMBINED_$MODE.md
   echo "Label mapping in the reused sections: r9 = ROUND 9 (reference, $REF_CK), r10b = ROUND 12 ($R12_CK),"
   echo "headzero = round 12 with follower_courtesy.net.4.* zeroed. One-step rows: every arm replayed with the FILLED"
   echo "replay presence. Seed set 2: $([ "$SEEDS2" = 1 ] && echo "yes (offset $SEED2_OFFSET, arms r9 + r10b)" || echo "not run (SEEDS2=0)")."
-  echo "Rules: BASE-1..4 (base_calibration.py header), M7 (R11 rule, round-12 config), M8 / M5 (m8_r12.py header),"
+  echo "Rules: BASE-1..5 (base_calibration.py header), M7 (R11 rule, round-12 config), M8 / M5 (m8_r12.py header),"
   echo "M1-M4 as R11_REVIEW_PACKET.md section 7 with round 9 as the reference. The M7 completion line inside the reused"
   echo "verdict says 'expected 90'; round 12 has $R12_STEPS steps (the M7 head-range json is authoritative)."
   echo
   cat "$CHK/results/BASE_R12_$MODE.md" 2>/dev/null || echo "BASE missing"
+  echo
+  cat "$CHK/results/TELEMETRY_R12_$MODE.md" 2>/dev/null || echo "telemetry reads missing"
   echo
   echo "## M7 head-saturation rule (all steps; REJECT-ROUND-11 = reject round 12)"
   echo

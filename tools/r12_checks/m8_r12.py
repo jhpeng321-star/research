@@ -13,8 +13,10 @@ Per seed set and POOLED (both sets; clusters = states, so both seed sets of one 
   with post-insertion min accel < -3) - each with a state-cluster bootstrap 95 % CI, plus the paired CI of
   round 12 - round 9.  NOTE: these are computed PER RUN (time-means within a run, then pooled), so they can differ
   slightly from absolute_bias.behaviour, which merges the k samples of one state at equal times;
-* M5 read: TTC < 1.5 s, overlap (gap < 0) and hard-brake (a < -3) row shares, round 12 (and head-zero) minus round 9,
-  paired state bootstrap CI (as analyze.paired_diff).
+* M5: TTC < 1.5 s, overlap (gap < 0) and hard-brake (a < -3) row shares, round 12 (and head-zero) minus round 9,
+  paired state bootstrap CI (as analyze.paired_diff);
+* lane-change READ: mainline 0<->1 lane changes per run (HDVs; all vehicles) from the full rollout lane arrays
+  (run_rollouts.py --lane-changes, key lc01), for round 12 / head-zero / round 9 and the recorded (sumo) reference.
 
 REGISTERED RULES (R12; evaluated on the POOLED point estimates, literal; per-seed-set verdicts are reported and a
 disagreement between seed sets is flagged as seed-inconsistent):
@@ -22,8 +24,11 @@ disagreement between seed sets is flagged as seed-inconsistent):
       (|r12| >= |r9|; rollout OR one-step) AND any of merges per run, stuck ramp cars (either metric), TTC < 1.5 s
       share, min gap at insertion p5, post-insertion hard brakes is worse than round 9's.
   M8-under (read)  flag under-yield if round 12's rollout M1 mean over [-3, 0) s (C3-own matched excess) > -0.1.
-  M5  REJECT ROUND 12 if the paired 95 % CI of (round 12 - round 9) TTC < 1.5 s share or overlap share lies above 0.
-      (analyze.py's single-seed M5 proxy on seed set 1 stays in the reused M1-M7 verdict.)
+  M5  REJECT ROUND 12 if, for the TTC < 1.5 s share or the overlap (gap < 0) share, the POOLED two-seed point estimate
+      of (round 12 - round 9) is > 0 (worse) OR its paired 95 % state-bootstrap CI lies above 0.  Per-seed-set verdicts
+      use the same rule and are reported.  (analyze.py's single-seed M5 proxy on seed set 1 stays in the reused M1-M7
+      verdict.)
+  LC  (read) mainline lane changes per run; no rule.
 Usage: m8_r12.py --shm DIR [--shm2 DIR] --out MD --json JSON [--boot N]   (always exits 0)
 """
 from __future__ import annotations
@@ -56,17 +61,20 @@ TH_UNDER = -0.1
 I0 = list(A.OF).index(0)
 M1_IDX = [list(A.OF).index(int(round(o * 2))) for o in A.M1_T]
 ADD_KEYS = ("runs", "n_ev", "zone_sum", "zone_cnt", "wait_gt60", "wait_cnt", "nrows", "ttc", "ovl", "hb",
-            "post_hb", "post_n", "m1_sum", "m1_cnt")
+            "post_hb", "post_n", "m1_sum", "m1_cnt", "lc_hdv", "lc_all", "lc_runs")
 
 
 # ------------------------------------------------------------------------------------------------ per-run statistics
-def run_stats(rows, ev, me) -> dict:
-    """Additive statistics of one rollout run (rows: lane-1 HDV rows in analyze.C layout; ev/me: merge events)."""
+def run_stats(rows, ev, me, lc01=None) -> dict:
+    """Additive statistics of one rollout run (rows: lane-1 HDV rows in analyze.C layout; ev/me: merge events;
+    lc01: [HDV 0<->1 lane changes, all-vehicle changes, HDV vehicle-steps] or None if the run file has no lc01)."""
     rows = np.asarray(rows, np.float64).reshape(-1, len(A.C))
     t = {c: rows[:, i] for i, c in enumerate(A.C)}
     st = {k: 0.0 for k in ADD_KEYS}
     st["runs"] = 1.0
     st["n_ev"] = float(len(ev))
+    if lc01 is not None:
+        st["lc_hdv"], st["lc_all"], st["lc_runs"] = float(lc01[0]), float(lc01[1]), 1.0
     if len(rows):
         tt, first = np.unique(t["t"], return_index=True)
         st["zone_sum"], st["zone_cnt"] = float(np.sum(t["nzone"][first])), float(len(first))
@@ -111,7 +119,7 @@ def load_set(roll_dirs, arm) -> dict:
         for f in sorted(glob.glob(os.path.join(d, arm, "*.npz"))):
             sid = int(re.search(r"s(\d+)_k", os.path.basename(f)).group(1))
             z = np.load(f)
-            st = run_stats(z["rows"], z["ev"], z["me"])
+            st = run_stats(z["rows"], z["ev"], z["me"], z["lc01"] if "lc01" in z.files else None)
             if sid not in out:
                 out[sid] = st
             else:
@@ -140,7 +148,9 @@ def metrics(per_state: dict, states, weights=None, sumo: dict | None = None) -> 
          "post_ins_hard_brake_share": _ratio(tot["post_hb"], tot["post_n"]),
          "overlap_share": _ratio(tot["ovl"], tot["nrows"]),
          "hard_brake_share": _ratio(tot["hb"], tot["nrows"]),
-         "m1_raw_mean": _ratio(tot["m1_sum"], tot["m1_cnt"])}
+         "m1_raw_mean": _ratio(tot["m1_sum"], tot["m1_cnt"]),
+         "lane_changes_01_hdv_per_run": _ratio(tot["lc_hdv"], tot["lc_runs"]),
+         "lane_changes_01_all_per_run": _ratio(tot["lc_all"], tot["lc_runs"])}
     if sumo is not None:
         ss = float(sum(wi * sumo[s]["m1_sum"] for s, wi in zip(states, w) if s in sumo))
         sc = float(sum(wi * sumo[s]["m1_cnt"] for s, wi in zip(states, w) if s in sumo))
@@ -148,7 +158,8 @@ def metrics(per_state: dict, states, weights=None, sumo: dict | None = None) -> 
     return m
 
 
-BEH_KEYS = tuple(WORSE_SIGN) + ("abs_bias_rollout_m3_0", "overlap_share", "hard_brake_share")
+LC_KEYS = ("lane_changes_01_hdv_per_run", "lane_changes_01_all_per_run")
+BEH_KEYS = tuple(WORSE_SIGN) + ("abs_bias_rollout_m3_0", "overlap_share", "hard_brake_share") + LC_KEYS
 
 
 def bootstrap(sets: dict, sumo: dict | None, n_boot: int, seed: int = 0) -> dict:
@@ -212,10 +223,13 @@ def decide(abs_ro: dict, abs_os: dict, beh: dict, m1_r12) -> dict:
 
 
 def m5_decide(boot: dict) -> dict:
+    """M5: worse if the (round 12 - round 9) point estimate is > 0 OR its paired CI lies above 0."""
     d = boot.get(f"{R12}-{REF}", {})
-    bad = [k for k in ("ttc_lt_1p5_share", "overlap_share")
-           if k in d and np.isfinite(d[k][1]) and d[k][1] > 0]
-    return {"verdict": "REJECT ROUND 12" if bad else ("PASS" if d else "MISSING"), "worse_ci_above_0": bad}
+    point = [k for k in ("ttc_lt_1p5_share", "overlap_share") if k in d and np.isfinite(d[k][0]) and d[k][0] > 0]
+    ci = [k for k in ("ttc_lt_1p5_share", "overlap_share") if k in d and np.isfinite(d[k][1]) and d[k][1] > 0]
+    bad = sorted(set(point) | set(ci))
+    return {"verdict": "REJECT ROUND 12" if bad else ("PASS" if d else "MISSING"), "worse": bad,
+            "worse_point_gt_0": point, "worse_ci_above_0": ci}
 
 
 def combine(verdicts: dict) -> str:
@@ -284,6 +298,9 @@ def main(argv=None) -> int:
         res["sets"][name] = {"bootstrap": boot, "n_runs": {arm: int(sum(s["runs"] for s in sets[arm].values()))
                                                           for arm in sets}}
         res["decision"][name] = decide(abs_ro, abs_os, beh, m1_r12)
+        if sumo is not None:   # lane-change read of the recorded reference (one run per state)
+            res["sets"][name]["sumo_lane_changes"] = {
+                k: v for k, v in bootstrap({"sumo": sumo}, None, args.boot).get("sumo", {}).items() if k in LC_KEYS}
         res["m5"][name] = m5_decide(boot)
     res["m1_reads"] = m1_by
     res["M8_verdict"] = combine({k: v["verdict"] for k, v in res["decision"].items()})
@@ -323,7 +340,7 @@ def write_md(path, res):
         L += [f"\n## {name} ({b.get('n_states', 0)} states; runs {s['n_runs']})\n",
               f"M8 {d['verdict']} (bias not below round 9: {d['bias_not_below_round9']}; worse: "
               f"{d['worse_than_round9'] or 'none'}; M1 round 12 {d['m1_mean_m3_0_round12']}); M5 {res['m5'][name]['verdict']} "
-              f"{res['m5'][name]['worse_ci_above_0'] or ''}\n",
+              f"{res['m5'][name]['worse'] or ''}\n",
               "| metric | " + " | ".join(LABEL[a] for a in ARMS if a in b) + " | round 12 - round 9 | head-zero - round 9 |",
               "|---|" + "---|" * (sum(a in b for a in ARMS) + 2)]
         for k in BEH_KEYS:
@@ -331,6 +348,16 @@ def write_md(path, res):
             cells.append(_f(b[f"{R12}-{REF}"][k]) if f"{R12}-{REF}" in b else "n/a")
             cells.append(_f(b[f"{HZ}-{REF}"][k]) if f"{HZ}-{REF}" in b else "n/a")
             L.append(f"| {k} | " + " | ".join(cells) + " |")
+    L += ["\n## Lane-change READ: mainline 0<->1 lane changes per run (pooled seed sets; state-bootstrap 95 % CI)\n",
+          "| arm | HDV changes / run | all-vehicle changes / run |", "|---|---|---|"]
+    pooled = res["sets"].get("pooled", {})
+    pb = pooled.get("bootstrap", {})
+    for a in ARMS:
+        if a in pb:
+            L.append(f"| {LABEL[a]} | {_f(pb[a][LC_KEYS[0]], 2)} | {_f(pb[a][LC_KEYS[1]], 2)} |")
+    sl = pooled.get("sumo_lane_changes")
+    if sl:
+        L.append(f"| recorded | {_f(sl[LC_KEYS[0]], 2)} | {_f(sl[LC_KEYS[1]], 2)} |")
     L.append("\nM1 reads (C3-own matched excess, mean [-3, 0) s): " + json.dumps(
         {k: ({a: round(v[0], 3) for a, v in r.items()} if "error" not in r else r) for k, r in res["m1_reads"].items()},
         default=str))
