@@ -36,7 +36,7 @@ COURTESY_PAIR_FIELDS = (
     "v_follower",       # follower speed / 10 m/s
     "v_ramp",           # ramp car speed / 10 m/s
     "dv",               # (v_ramp - v_follower) / 5 m/s
-    "wait",             # asinh(carried merge wait of the ramp car / 10 s)
+    "wait",             # 1 - exp(-t_wait / 30 s): ramp car's carried merge wait (or time in its lane)
     "intent",           # merge head's detached P(merge) of the ramp car (0 when unavailable)
     "has_leader",       # follower has a lane-1 leader
     "gap_leader",       # asinh(follower bumper gap to its lane-1 leader / 10 m) (0 without leader)
@@ -111,7 +111,9 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
         v / 10.0,
         v_r / 10.0,
         (v_r - v) / 5.0,
-        torch.asinh(at(wait_all, partner) / 10.0),
+        # Smooth saturating map: the lane-age fallback uses a large sentinel for "in this lane for
+        # at least the observed history", which this maps to ~1 instead of an outlier.
+        -torch.expm1(-at(wait_all, partner).clamp_min(0.0) / 30.0),
         at(intent_all, partner),
         lead_on,
         torch.where(has_leader, torch.asinh(gap_l / 10.0), zero),

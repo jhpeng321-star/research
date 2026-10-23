@@ -317,10 +317,14 @@ class CutinReactionLoss(UnrollTerm):
         if not plan["n_event_rows"] and not plan["n_control_rows"]:
             return TermValue(zero, valid_count=0)
         needed = plan["supervised"] | plan["control"]
-        accel, shared = one_step_replay(ctx.model, ctx.targets,
-                                        grad_steps=needed.any(-1).any(0), collect=self.share_keys)
-        if self.share_to is not None and shared:
-            ctx.targets.prepared[self.share_to] = shared
+        grad_steps = needed.any(-1).any(0)
+        if self.share_keys:
+            accel, shared = one_step_replay(ctx.model, ctx.targets, grad_steps=grad_steps,
+                                            collect=self.share_keys)
+            if self.share_to is not None and shared:
+                ctx.targets.prepared[self.share_to] = shared
+        else:
+            accel = one_step_predicted_accel(ctx.model, ctx.targets, grad_steps=grad_steps)
         target = ctx.targets.states[:, 1:ctx.targets.n_steps + 1, :, 5].detach()
         # Invalid/padding rows must not poison a reduction via NaN * 0.
         error = F.huber_loss(accel[needed], target[needed],
