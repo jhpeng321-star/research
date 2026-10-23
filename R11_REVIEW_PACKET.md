@@ -131,7 +131,9 @@ plant clamp (no clamp is added, per the owner rules). Watch `follower_courtesy_h
 ## 6. Gate
 `scripts/round11_gate.sh [REPO_DIR]` (LF, `bash -n` clean, blob has no CR). It has the round-10b hardened structure:
 set -u/pipefail/noclobber, stale-artifact refusal (smoke_r11, c4_wm_v10_round11, logs, `.round11_gate.lock`), atomic
-lock, R11_ROOT/R11_PYTHON/R11_INIT (default `$L/runs/c4_wm_v10_round10b/wm_s_stage300.pt`), R11_HEAD_INIT
+lock, R11_ROOT/R11_PYTHON, **R11_INIT** (default = round-10b final `$L/runs/c4_wm_v10_round10b/wm_s_stage300.pt`,
+falling back to `wm_s_best.pt` in the same dir if stage300 is absent; `R11_INIT=<path>` overrides both, e.g. the
+r10b_headzero checkpoint), R11_HEAD_INIT
 (checkpoint|zero; zero also passes the zero-init weight/lr). The smoke runs batch 4 at 120/300 s, 2+2 steps,
 `selection.val_max_windows=4`, `curriculum.max_hours=1.5`. Verdict `python -m wms.train.round11_gate`: round-10b checks
 (round-10 merge/fix-B census, courtesy finite/positive/rows) + contrast controls > 0 and finite shift + the
@@ -140,11 +142,15 @@ and rollout_grad off + frozen and merge_pivot bitwise vs the (zero-expanded) ini
 run then execs (`runs/c4_wm_v10_round11`, `selection.val_max_windows=16`). Default repo dir `$L/repo_r11` (ship as for
 10b). Not run anywhere.
 
-## 7. Reject criteria for the round-11 run (register BEFORE exec; same tools as 10b)
-Reuse `tools/r10b_checks` (run_all.sh) with `R10B_RUN=$L/runs/c4_wm_v10_round11` and `R9_CK=<round-10b final>`. The
-reference arm is labelled `r9` in the output and the round-11 arm `r10b`; the head-zero arm is round 11 with
-`follower_courtesy.net.4.*` = 0 (make_headzero works for the version-2 head). Rollouts carry the zone counter through
-`model.rollout`. Thresholds as registered for 10b:
+## 7. Reject criteria for the round-11 run (registered here BEFORE exec; same tools and thresholds as 10b)
+Run `bash tools/r11_checks/run_all.sh full` on gpuR (CPU; <= 24 workers) after `runs/c4_wm_v10_round11/RUN_SUMMARY.json`
+exists. Env: `R11_RUN` (default `$L/runs/c4_wm_v10_round11`), `R11_REF_CK` (default round-10b stage300, else best),
+`R11_REPO` (default `$L/repo_r11`), `STATES` (default `$L/chk_r10b/states192.json.gz`, the round-10b check states).
+It reuses `tools/r10b_checks` unchanged, with this label mapping in the output files: `r9` = round-10b reference,
+`r10b` = round 11, `headzero` = round 11 with `follower_courtesy.net.4.*` = 0 (make_headzero works for the version-2
+head; exact ablation). Output goes to `$L/chk_r11/VERDICT_R11_CHECKS.md`. Rollouts carry the zone counter through
+`model.rollout`. Arms for the morning score (unseen walls/PI per protocol, never sealed): round 10b (current code),
+round 11, round 11 head-zero. Thresholds:
 
 | id | reject the head (zero it) if | round-11 specific reading |
 |---|---|---|

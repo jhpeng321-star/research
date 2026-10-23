@@ -10,7 +10,8 @@
 # verdict passes does it exec the full round (validation capped at 16 windows). Start only after round 10b's final
 # checkpoint exists AND the coordinator has decided the launch (round-10b reject checks + independent review).
 # Usage: bash scripts/round11_gate.sh [REPO_DIR]
-# R11_ROOT / R11_PYTHON / R11_INIT / R11_HEAD_INIT (checkpoint|zero) allow a local installation, another init
+# R11_ROOT / R11_PYTHON / R11_INIT (default: $L/runs/c4_wm_v10_round10b/wm_s_stage300.pt, else wm_s_best.pt) /
+# R11_HEAD_INIT (checkpoint|zero) allow a local installation, another init
 # checkpoint, the zero-head switch, or isolated launcher tests.
 # Exit: 2 setup failure (repo or init checkpoint missing, bad R11_HEAD_INIT), 3 smoke/verdict failure,
 # 4 prior artifacts/concurrent gate.
@@ -18,7 +19,12 @@ set -u -o pipefail -o noclobber
 L=${R11_ROOT:-/root/autodl-tmp/c4/v5}
 REPO=${1:-$L/repo_r11}
 PYTHON=${R11_PYTHON:-/root/miniconda3/bin/python}
-CK=${R11_INIT:-$L/runs/c4_wm_v10_round10b/wm_s_stage300.pt}
+# Default init: round-10b final checkpoint (stage 300), falling back to its wm_s_best.pt; R11_INIT overrides both.
+CK=${R11_INIT:-}
+if [ -z "$CK" ]; then
+    CK=$L/runs/c4_wm_v10_round10b/wm_s_stage300.pt
+    [ -f "$CK" ] || CK=$L/runs/c4_wm_v10_round10b/wm_s_best.pt
+fi
 HEAD_INIT=${R11_HEAD_INIT:-checkpoint}
 # Head weight / lr scale per docs/r11_weight_rule.json: the config carries the round-10b-head values; the zero-init
 # head has its own measured values (same rules, measured at the zero-init head).

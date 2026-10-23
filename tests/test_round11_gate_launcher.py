@@ -124,3 +124,24 @@ def test_bad_head_init_is_a_setup_failure(tmp_path):
     root, result = launch(tmp_path, head_init="random")
     assert result.returncode == 2
     assert not (root / "calls").exists() and not (root / ".round11_gate.lock").exists()
+
+
+@pytest.mark.parametrize("present,expected", ((("wm_s_stage300.pt", "wm_s_best.pt"), "wm_s_stage300.pt"),
+                                              (("wm_s_best.pt",), "wm_s_best.pt")))
+def test_default_init_is_round10b_final_with_best_fallback(tmp_path, present, expected):
+    root = tmp_path / "root"
+    run = root / "runs" / "c4_wm_v10_round10b"
+    run.mkdir(parents=True)
+    for name in present:
+        (run / name).write_text("checkpoint", encoding="utf-8")
+    fake = tmp_path / "fake-python.sh"
+    fake.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$R11_ROOT/calls"\n',
+                    encoding="utf-8", newline="\n")
+    script = (f"export R11_ROOT={shlex.quote(shell_path(root))} R11_PYTHON={shlex.quote(shell_path(fake))}\n"
+              'chmod +x "$R11_PYTHON"\n'
+              f"bash {shlex.quote(shell_path(ROOT / 'scripts/round11_gate.sh'))} {shlex.quote(shell_path(ROOT))}\n")
+    command = (["wsl.exe", "--exec"] if os.name == "nt" else []) + ["bash", "--noprofile", "--norc", "-s"]
+    result = subprocess.run(command, input=script.encode("utf-8"), capture_output=True, timeout=60)
+    assert result.returncode == 0, result.stderr
+    smoke = (root / "calls").read_text(encoding="utf-8").splitlines()[0]
+    assert f"model.init_from={shell_path(run / expected)}" in smoke
