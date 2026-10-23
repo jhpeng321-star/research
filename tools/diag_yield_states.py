@@ -12,7 +12,7 @@ OUT = sys.argv[1]
 T0S = [450.0, 750.0]
 recs = []
 for src in ("v5_native", "genrand_plain"):
-    paths = sorted(glob.glob(f"{ROOT}/{src}/episodes/*"))[::8]
+    paths = sorted(glob.glob(f"{ROOT}/{src}/episodes/*"))[::int(sys.argv[2]) if len(sys.argv) > 2 else 8]
     for p in paths:
         k = np.load(p + "/veh_kin.npy"); m = np.load(p + "/veh_mask.npy").astype(bool)
         vid = np.load(p + "/vid.npy").astype(np.int64); cav = np.load(p + "/is_cav.npy").astype(bool)

@@ -21,6 +21,25 @@ def init(specs, entries):
     G["p"] = {}
     for name, path in specs:
         p, cap = wc.load_predictor(wc.guard(path), "AS_IS", hdv_exits="sumo", entries=entries)
+        m = p.model
+        if getattr(m, "merge_pivot", None) is not None:
+            # first_passage step ignores cav_teacher (R9_STUCK_DIAG.md): replay the recorded CAV arm through the
+            # supported cav_controller hook; i-th controller call = physics tick i (same as diag_r9stuck_trace tf=1).
+            orig_rollout = m.rollout
+
+            def rollout(state, *a, _orig=orig_rollout, **kw):
+                teacher = kw.get("cav_teacher")
+                if teacher is not None and kw.get("cav_controller") is None:
+                    calls = {"i": 0}
+
+                    def controller(_state, _t=teacher, _c=calls):
+                        row = _t[:, min(_c["i"] + 1, _t.shape[1] - 1)]
+                        _c["i"] += 1
+                        return row
+                    kw["cav_controller"] = controller
+                return _orig(state, *a, **kw)
+
+            m.rollout = rollout
         G["p"][name] = (p, cap)
 
 
@@ -46,8 +65,9 @@ def work(payload):
             out.append({"idx": idx, "var": name, "sample": sample, "error": None, "t0": t0, "ids": ids,
                         "is_cav": np.asarray(is_cav, bool), "episode": rec.get("episode"), "key": rec.get("key"),
                         "pos": f32(pos), "lane": f32(lan), "mask": msk, "v": f32(spd),
-                        "acc": None if acc is None else f32(acc),
-                        "rec_pos": f32(tr[:, :, 0]), "rec_lane": f32(tr[:, :, 1]), "rec_v": f32(tr[:, :, 2]), "rec_mask": rp,
+                        "acc": None,
+                        **({"rec_pos": f32(tr[:, :, 0]), "rec_lane": f32(tr[:, :, 1]), "rec_v": f32(tr[:, :, 2]), "rec_mask": rp}
+                           if (sample == 0 and name == next(iter(G["p"]))) else {}),
                         "dem": rec.get("demand_vph"), "pen": rec.get("penetration")})
         except Exception as exc:  # noqa: BLE001
             import traceback

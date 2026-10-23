@@ -43,10 +43,8 @@ def tables(variant, which):
         if r["var"] != variant:
             continue
         if which == "rec":
-            key = (r["idx"],)
-            if key in seen:
+            if "rec_pos" not in r:
                 continue
-            seen.add(key)
         s, v, a, lane, m, vid, cav, tt = arrays(r, which)
         dem = float(r.get("dem") or np.nan); pen = float(r.get("pen") or np.nan)
         tab = rows_from_arrays(s, v, a, lane, m, vid, cav, tt, r["idx"], pen, dem, tt[0] + 0.5)
@@ -75,6 +73,26 @@ def own_model(t):
     return u, np.where(n >= 10, mu, np.nan)
 
 
+def own3_model(t):
+    c = cells(t)
+    h = (t["cav"] == 0) & (t["lane"] == 1) & (t["nzone"] > 0) & (t["tf"] == 0) & ~(t["dA"] < 30) & ~(t["dB"] < 20)
+    u, inv = np.unique(c, return_inverse=True)
+    n = np.bincount(inv[h], minlength=len(u)); mu = np.bincount(inv[h], t["a"][h], minlength=len(u)) / np.maximum(n, 1)
+    return u, np.where(n >= 10, mu, np.nan)
+
+
+def boot(vals, groups, n=300, seed=0):
+    """cluster bootstrap (by state) of the mean of finite vals"""
+    rng = np.random.default_rng(seed); g = np.asarray(groups); ok = np.isfinite(vals); vals = vals[ok]; g = g[ok]
+    ug = np.unique(g)
+    sums = {k: (vals[g == k].sum(), (g == k).sum()) for k in ug}
+    out = []
+    for _ in range(n):
+        pick = rng.choice(ug, len(ug)); s = sum(sums[k][0] for k in pick); c = sum(sums[k][1] for k in pick)
+        out.append(s / max(c, 1))
+    return np.percentile(out, [2.5, 97.5])
+
+
 def st(x):
     x = x[np.isfinite(x)]
     if len(x) < 20:
@@ -82,6 +100,7 @@ def st(x):
     return "n=%6d mean %+.3f med %+.3f p10 %+.3f" % (len(x), x.mean(), np.median(x), np.percentile(x, 10))
 
 
+res_c3 = {}
 out = []
 for variant, which in [("r9", "rec"), ("r9", "wm"), ("r8", "wm")]:
     t, ev, me = tables(variant, which)
@@ -95,11 +114,27 @@ for variant, which in [("r9", "rec"), ("r9", "wm"), ("r8", "wm")]:
     for lo, hi in [(0, 10), (10, 20), (20, 40), (40, 80)]:
         sel = hdvm & (t["tf"] == 1) & (t["dA"] < 20) & (t["dendR"] >= lo) & (t["dendR"] < hi)
         print("  tf dA<20, dend %2d-%2d  SUMO-ctrl %s | own-ctrl %s" % (lo, hi, st(ex[sel]), st(exo[sel])))
+    ex3 = excess(t, own3_model(t))
+    sel = hdvm & (t["tf"] == 1) & (t["dA"] >= 6) & (t["dA"] < 15)
+    ci = boot(ex3[sel], t["ep"][sel])
+    print("  [C3-own: lane-1 rows with a waiting ramp car in zone but not adjacent] tf dA 6-15: %s  mean 95%% CI (state bootstrap) [%+.3f, %+.3f]" % (st(ex3[sel]), *ci))
+    for lo, hi in [(0, 6), (15, 30)]:
+        s2 = hdvm & (t["tf"] == 1) & (t["dA"] >= lo) & (t["dA"] < hi)
+        print("  [C3-own] tf dA %d-%d: %s" % (lo, hi, st(ex3[s2])))
+    for lo, hi in [(0, 10), (10, 20), (20, 40), (40, 80)]:
+        s2 = hdvm & (t["tf"] == 1) & (t["dA"] < 20) & (t["dendR"] >= lo) & (t["dendR"] < hi)
+        print("  [C3-own] tf dA<20, dend %2d-%2d: %s" % (lo, hi, st(ex3[s2])))
+    res_c3[(variant, which)] = (t, ex3, own3_model(t))
     sel0 = hdvm & (t["nRamp"] == 0)
     print("  control rows (lane1, no ramp near): a mean %+.3f p10 %+.3f  n=%d" % (np.nanmean(t["a"][sel0]), np.nanpercentile(t["a"][sel0], 10), sel0.sum()))
     if len(ev):
         cide = event_cells(ev, np.nan_to_num(me[:, 7], nan=2400.0)); exe = ev[..., 2] - lookup(u1, mu1, cide)
         h = me[:, 4] == 0
+        cide3 = event_cells(ev, np.nan_to_num(me[:, 7], nan=2400.0)); exe3 = ev[..., 2] - lookup(*res_c3[(variant, which)][2], cide3)
+        for o in [-6, -3, -2, -1, 1, 2]:
+            oi = list(OF).index(o * 2); ok = h & (ev[:, oi, 3] == 1) & np.isfinite(exe3[:, oi])
+            ci = boot(exe3[ok, oi], me[ok, 0]) if ok.sum() > 5 else (np.nan, np.nan)
+            print("   [C3-own] event t_m%+3ds: %s  mean CI [%+.3f, %+.3f]" % (o, st(exe3[ok, oi]), *ci))
         print("  merge events HDV F*: %d (CAV F* %d)" % (h.sum(), (~h).sum()))
         for o in [-10, -6, -4, -3, -2, -1, 0, 1, 2, 3, 5, 8]:
             oi = list(OF).index(o * 2); ok = h & (ev[:, oi, 3] == 1) & np.isfinite(exe[:, oi])
