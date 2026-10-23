@@ -136,8 +136,8 @@ WORSE_SIGN = {"merges_per_run": -1, "stuck_mean_ramp_in_zone": +1, "stuck_share_
 def decide(abs_rollout, abs_onestep, beh, m1_r11):
     deltas = {}
     for name, src in (("rollout", abs_rollout), ("one_step", abs_onestep)):
-        if R11 in src and REF in src:
-            deltas[name] = src[R11] - src[REF]
+        if R11 in src and REF in src and np.isfinite(src[R11] - src[REF]):
+            deltas[name] = float(src[R11] - src[REF])
     bias_trigger = any(np.isfinite(v) and v > TH_BIAS for v in deltas.values())
     worse = []
     if R11 in beh and REF in beh:
