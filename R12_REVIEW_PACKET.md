@@ -122,7 +122,15 @@ Learned centre over the production schedule (chosen scales): step 0: a 2.45, b 4
 The counted exclusion is recomputed in every training batch from the WM's one-step geometry (never reused). The offline
 recount runs the identical `MergePivotTerm.prepare` on the same TRAIN windows with round 9 and the round-12 init:
 
-SUPPORT
+24 TRAIN windows x 120 s (one per sampled episode; 6 CPU shards; docs/r12_support_recount.json):
+
+| arm | risk-chain cars | recorded events | vetoed events | excluded cars (class) | retained scored cars / events |
+|---|---|---|---|---|---|
+| round 9 | 95 | 93 | 1 | 1 (`event_vetoed_explained`, geometry) | 94 / 92 |
+| round-12 init | 95 | 93 | 1 | 1 (`event_vetoed_explained`, geometry) | 94 / 92 |
+
+Every per-window count is identical (0 of 24 windows differ). The geometry-only exclusion is base-independent as
+required, and no WM-motion exclusion occurs in either arm on this sample.
 
 Exclusions are rare: 113 of 14,676 merges (0.77 %) over all 192 TRAIN episodes, 15 of them WM-motion. A CPU sample of
 tens of windows can therefore show that the geometry class does not move, but cannot measure the motion class.
@@ -191,7 +199,7 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
 - Courtesy 1.19 / 0.81 on 266 / 214 rows. Fix-D extra rows 101 / 53.
 - Step time 809 / 964 s (laptop CPU shared with the offline jobs).
 
-## 6. Gate (scripts/round12_gate.sh; sha256 GATE_SHA)
+## 6. Gate (scripts/round12_gate.sh; sha256 9897c573ee36f8caa502bf5d8333e361cba389bea27acf1d08bb369948d21b88)
 - **Script hygiene:** LF, `bash -n` clean, no CR. Hardened like round 11: set -u/pipefail/noclobber; stale-artifact
   refusal (smoke_r12, c4_wm_v10_round12, logs, `.round12_gate.lock`); atomic lock.
 - **Variables:** R12_ROOT / R12_PYTHON. R12_INIT defaults to the round-9 final stage300, falling back to wm_s_best.

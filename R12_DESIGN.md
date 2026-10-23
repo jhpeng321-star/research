@@ -179,6 +179,6 @@ So the lane model, the merge law and every lane-side input stay those of round 9
      longer resetting the transit car's history and temporal state.
    - It affects only teacher-forced terms. In round 12 that is the courtesy contrast alone; fix B is off and
      rollouts never hide vehicles.
-   - Packet section 3 measures it on more windows.
+   - Extent: BASE_FOLLOWER_DIAG section 6 (96 windows: a hidden vehicle on 4.8 % of all lane-1 rows and 19.9 % of last-3-s partner rows) and the micro-smoke telemetry (101 / 53 extra replay-state rows per step). The post-run one-step checks replay every arm with the filled presence, so the comparison is like for like.
 7. **Seed noise** (R10_DIAG): 300 s rollouts are chaotic; a seed change alone moves log ds120 by 0.375. Acceptance
    uses seed-replicated metrics (two seed sets, pooled, bootstrap CIs; packet section 7).
