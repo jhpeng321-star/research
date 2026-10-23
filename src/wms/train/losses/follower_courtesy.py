@@ -28,7 +28,7 @@ target becomes
 
 so ``head_i -> (a_rec_i - a_pre_i) - r_hat(phi_i)``: the part of the partner row's residual that a
 state-matched unpartnered car does not have (the adjacency effect only).  ``phi`` are the follower's own
-recorded state at t (speed, leader gap, closing speed, distance to the lane end, merge-zone occupancy);
+recorded state at t (speed, time headway, closing speed, distance to the lane end; R9_YIELD's covariates);
 the matching is a Gaussian kernel in batch-standardised ``phi`` with Scott's bandwidth
 ``h = n_controls^(-1/(d+4))`` and one pseudo-row at the batch control mean (smooth shrinkage where
 support is thin).  No bin, cell, window or threshold; the controls' recorded accelerations enter only
@@ -88,7 +88,7 @@ def courtesy_rows(targets: UnrollTargets, applies: Tensor, target_lane: int = 1)
 
 
 #: Number of own-state matching features (see :func:`matching_features`).
-MATCH_F = 5
+MATCH_F = 4
 #: Shrinkage: one pseudo-row at the batch control mean (documented rule, not tuned).
 PRIOR_ROWS = 1.0
 
@@ -99,11 +99,11 @@ def matching_features(kin: Tensor, valid: Tensor, config: FollowerCourtesyConfig
     """``[B, n, K, MATCH_F]`` own-state descriptors of every slot at recorded state t (t < n).
 
     The covariates of R9_YIELD's matched expectation (own speed x time headway x closing speed x
-    position) as continuous coordinates, plus the merge-zone occupancy that its C3 control holds
-    fixed: v/10; asinh(time headway to the own-lane leader in s) (99 s without a leader); closing
-    speed to it / 5 m/s (0 without); asinh((lane end - s) / 20 m); asinh(number of ramp-lane cars
-    inside the geometric merge zone).  Smooth maps of the recorded state; used ONLY to match controls
-    in the loss target, never as a model input.
+    position) as continuous coordinates: v/10; asinh(time headway to the own-lane leader in s) (99 s
+    without a leader); closing speed to it / 5 m/s (0 without); asinh((lane end - s) / 20 m).  Smooth
+    maps of the recorded state; used ONLY to match controls in the loss target, never as a model
+    input.  (A merge-zone occupancy coordinate was tried offline and dropped: it leaves ~1 effective
+    control per partner row in the last 2 s before a merge, so the target falls back to the batch mean.)
     """
     b, n1, k = kin.shape[:3]
     n = n1 - 1
@@ -127,10 +127,8 @@ def matching_features(kin: Tensor, valid: Tensor, config: FollowerCourtesyConfig
         # time headway as in R9_YIELD's matched expectation (gap / max(v, 0.5 m/s); 99 s without leader)
         headway = torch.where(has, gap / v.clamp_min(0.5), torch.full_like(s, 99.0))
         closing = torch.where(has, v - v.gather(-1, lead), torch.zeros_like(v))
-        zone = (pres & (lane == config.merge_lane) & (s >= config.zone_start_m)
-                & (s <= config.zone_end_m)).sum(-1, keepdim=True).float().expand_as(s)
         feats = torch.stack((v / 10.0, torch.asinh(headway), closing / 5.0,
-                             torch.asinh((config.zone_end_m - s) / 20.0), torch.asinh(zone)), -1)
+                             torch.asinh((config.zone_end_m - s) / 20.0)), -1)
         out.append(torch.nan_to_num(feats).reshape(b, hi - lo, k, MATCH_F))
     if not out:
         return kin.new_zeros(b, 0, k, MATCH_F)

@@ -158,12 +158,22 @@ def cache(args):
 KEYS = ("x", "pre", "pre_clamped", "rec", "has", "phi")
 
 
+def phi_from_fields(w):
+    """The contrast matching features (``matching_features``) rebuilt from the cached recorded fields
+    (own speed, time headway, closing speed, position), so caches written with an earlier feature set
+    are scored with the final term (equality with ``matching_features`` is tested)."""
+    return np.stack([w["v"] / 10.0, np.arcsinh(w["hw"]), w["closing"] / 5.0,
+                     np.arcsinh((75.44 - w["s"]) / 20.0)], -1).astype(np.float32)
+
+
 def load_windows(prefix, n_shards):
     windows = []
     for i in range(n_shards):
         p = Path(f"{prefix}.shard{i}.pkl")
         if p.is_file():
             windows.extend(pickle.load(open(p, "rb"))["windows"])
+    for w in windows:
+        w["phi"] = phi_from_fields(w)
     return windows
 
 
