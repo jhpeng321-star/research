@@ -136,6 +136,20 @@ So the lane model, the merge law and every lane-side input stay those of round 9
   - The merge-pivot TF term is diagnostic in round 12 (pivot frozen), so the cohort only changes what is logged and
     scored.
 
+## 6b. Expected effects (proposed; tested by the registered checks)
+- **Calibrated core (A + B):** slow cars no longer start about 2x too fast, so queues in and before the merge zone
+  discharge more slowly. The merge-zone delay ratio should rise from 0.48 toward SUMO (BASE_FOLLOWER_DIAG).
+- **Learned hold on a calibrated base (C):** target followers stop filling the ramp car's gap. The ramp delay ratio
+  should fall from 2.1 toward SUMO, and stuck ramp cars (R9_STUCK bistability) should become rarer.
+- **Ranking:**
+  - REGION_R9.md (coordinator 2026-10-24): at 300 s, ramp + merge carry 0.96 [0.71, 1.76] of round 9's WM-vs-SUMO
+    paired offset (+546 veh-s; ramp +255, merge +269). Fixing those two regions alone would correct 12/14 wrong pairs
+    (sign 0.875).
+  - SUMO's late gains come from merge-zone (-622) and ramp (-508) dynamics that the WM misses (-38).
+  - Round 12 targets exactly these processes. The registered read is the ramp + merge offset falling vs round 9.
+    up_near (+241) is re-measured; it is the largest region in 7/14 wrong pairs, and slower discharge can move it
+    either way.
+
 ## 7. Risks
 1. **Long-horizon stability with physical settings.**
    - The start point (centre at the physics defaults, every driver equal) over-accelerates MORE than round 9

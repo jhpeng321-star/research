@@ -174,7 +174,14 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
   The driver prior's share at the encoder output is 0.003 (`driver_prior_grad_share`). Position dominates (as R10_DIAG
   found for round 10). This is the intended objective for a base retrain; the gate, which drifted under it, is frozen.
 
-**Second run with the final rule scales (head x10, centre x1000, `--no-share`; `tmp_r12/smoke2`):** SMOKE2
+**Second run with the final rule scales (head x10, centre x1000, `--no-share`; `tmp_r12/smoke2`):** **PASS** (docs/r12_micro_smoke2_summary.json).
+- Losses 59.24 / 48.83; pre-clip grad norm 181 / 162.
+- 91 tensors changed, all trainable. No frozen, merge_pivot or gate tensor changed; no cut-in key.
+- The centre moved 0.045 logit per step: a 2.49 -> 2.40, b 4.20 -> 4.09 in 2 steps (about 30 steps to the offline
+  region).
+- Driver-head rows 0-4, the accel row and the courtesy head are all alive.
+- Courtesy 1.19 / 0.81 on 266 / 214 rows. Fix-D extra rows 101 / 53.
+- Step time 809 / 964 s (laptop CPU shared with the offline jobs).
 
 ## 6. Gate (scripts/round12_gate.sh; sha256 GATE_SHA)
 - **Script hygiene:** LF, `bash -n` clean, no CR. Hardened like round 11: set -u/pipefail/noclobber; stale-artifact
@@ -228,6 +235,16 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
   - the pooled stuck-car and merge-count differences vs round 9 have CIs that do not lie on the worse side.
 
   The 48-pair rank metrics are read with their bootstrap CIs, never as single scorings.
+- **Per-region paired offsets** (coordinator 2026-10-24; reference E:/agent-work/c4-rankdiag/REGION_R9.md). Run the
+  region-dump paired tool (`scripts/c4/wm_delay_check.py` + `rankdiag/pair_region_dump.patch`, k=3, the same 48 pairs).
+  - Report WM-minus-SUMO (action minus native) offsets at 120 s and 300 s for ramp, merge, up_near, downstream and
+    total, round 12 vs round 9, each with the pair-bootstrap CI.
+  - Round-9 reference at 300 s: ramp +255, merge +269, up_near +241, downstream -218, total +546 veh-s. Ramp + merge
+    = 0.96 of the total, and fixing ramp + merge alone would correct 12/14 wrong pairs.
+  - **Registered expected effect (read, not a reject):** the ramp + merge 300 s offset falls vs round 9 (paired
+    round 12 - round 9 CI below 0).
+  - up_near is re-measured and read separately. It is the largest region in 7/14 wrong pairs; slower queue discharge
+    could move it either way.
 - **Round 11 vs round 12:** compared in the same scoring if round 11 passes its own checks. Round 12 inherits no
   round-11 weights.
 
