@@ -2,6 +2,7 @@
 import copy
 from dataclasses import asdict
 import json
+from pathlib import Path
 
 import pytest
 import torch
@@ -11,7 +12,8 @@ from wms.model import ModelSpec, WmSModel
 from wms.model.checkpoint import save_checkpoint
 from wms.model.follower_courtesy import expand_head_inputs
 from wms.physics.config import PhysicsConfig
-from wms.train.round11_gate import check_checkpoints, check_init_report, check_log
+from wms.train.round11_gate import (check_checkpoints, check_init_report, check_log, head_range_errors,
+                                    physics_accel_bounds)
 
 from test_round10b_gate_verdict import FREEZE, make_rows as make_rows_10b
 
@@ -22,7 +24,8 @@ def make_rows():
     rows = make_rows_10b()
     for row in rows:
         row.update(follower_courtesy_contrast_n_controls=4000, follower_courtesy_contrast_shift_mean=-0.2,
-                   follower_courtesy_contrast_neff_median=30.0, cutin_reaction_n_partnered_controls_excluded=12)
+                   follower_courtesy_contrast_neff_median=30.0, cutin_reaction_n_partnered_controls_excluded=12,
+                   follower_courtesy_head_min=-1.9, follower_courtesy_head_max=1.6, follower_courtesy_head_mean=0.15)
     return rows
 
 
@@ -160,3 +163,39 @@ def test_frozen_or_pivot_tensor_change_refuses(smoke, prefix):
         first(m, prefix).add_(1e-3)
     with pytest.raises(ValueError, match="stay frozen"):
         check_checkpoints(*smoke(move), FREEZE)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+LR1_LOG = ROOT / "tests/r11_lr1_smoke_log.jsonl"   # the lr-1.0 micro-smoke train log (packet 5a)
+
+
+def test_head_saturation_rule_bounds_come_from_the_config_plant_clamp():
+    assert physics_accel_bounds(ROOT / "configs/c4_wm_v10round11.toml") == (-9.0, 3.0)
+    bounds = (-9.0, 3.0)
+    ok = {"follower_courtesy_n_rows": 10, "follower_courtesy_head_min": -11.9,
+          "follower_courtesy_head_max": 11.9, "follower_courtesy_head_mean": -8.9}
+    assert head_range_errors([ok], bounds) == []
+    for key, value in (("follower_courtesy_head_min", -12.0), ("follower_courtesy_head_max", 12.0),
+                       ("follower_courtesy_head_mean", -9.0), ("follower_courtesy_head_mean", 3.0),
+                       ("follower_courtesy_head_mean", float("nan")), ("follower_courtesy_head_min", None)):
+        assert head_range_errors([{**ok, key: value}], bounds), (key, value)
+    assert head_range_errors([{**ok, "follower_courtesy_n_rows": 0, "follower_courtesy_head_mean": -40.0}],
+                             bounds) == []          # no courtesy rows: no head statistics on that step
+    # other plant clamps move the bounds
+    assert head_range_errors([{**ok, "follower_courtesy_head_mean": -8.9}], (-5.0, 2.0))
+
+
+def test_lr1_micro_smoke_log_fails_and_its_first_step_passes():
+    rows = [json.loads(line) for line in LR1_LOG.read_text(encoding="utf-8").splitlines()]
+    assert rows[1]["follower_courtesy_head_mean"] == pytest.approx(-37.56, abs=0.01)
+    errors = head_range_errors(rows, (-9.0, 3.0))
+    assert errors and all(e.startswith("row 2:") for e in errors)
+    assert head_range_errors(rows[:1], (-9.0, 3.0)) == []
+
+
+def test_saturated_head_fails_the_verdict(run):
+    rows = make_rows()
+    rows[2]["follower_courtesy_head_mean"] = -37.6
+    result = run(rows)
+    assert not result["ok"] and any("saturated head" in e for e in result["errors"])
+    assert run(make_rows())["metrics"]["head_range_bounds"] == [-9.0, 3.0]

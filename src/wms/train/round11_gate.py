@@ -8,6 +8,10 @@ On top of the round-10b verdict (round-10 merge/fix-B checks; courtesy loss fini
   first layer (round-10b 10-input head -> version-2 13-input head); the only new tensors are head tensors, and the
   recorded ``follower_courtesy_init`` mode equals the launcher's expectation (``checkpoint`` = round-10b head, the
   default; ``zero`` = fresh zero-init head);
+* head saturation (R11_REVIEW C1): on every step with courtesy rows the head output must stay where it can still
+  learn: ``head_min > accel_min - accel_max``, ``head_max < accel_max - accel_min`` and ``accel_min < head_mean <
+  accel_max`` (bounds = the config's physics plant clamp).  Outside them the offset alone pushes rows past the plant
+  clamp and the head's gradient vanishes (dead head; seen at head lr 1.0).  A launch check, not a clamp in the model;
 * every saved checkpoint reloads strictly with a VERSION-2 head and rollout_grad off; frozen tensors and merge_pivot are
   bitwise equal to the init; only temporal.*, the two gate scalars and the head may differ; the head moved relative to
   its (zero-expanded) init.
@@ -28,7 +32,44 @@ EXCLUDED_KEY = "cutin_reaction_n_partnered_controls_excluded"
 INIT_MODES = ("checkpoint", "zero")
 
 
-def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> dict:
+def head_range_errors(rows: list[dict], accel_bounds: tuple[float, float]) -> list[str]:
+    """R11_REVIEW C1: head saturation on any step with courtesy rows (also used for all steps of the run, M7)."""
+    amin, amax = (float(b) for b in accel_bounds)
+    if not amin < amax:
+        raise ValueError(f"bad plant clamp bounds {accel_bounds}")
+    errors = []
+    for index, row in enumerate(rows, 1):
+        if not row.get("follower_courtesy_n_rows"):
+            continue
+        values = {key: row.get(f"follower_courtesy_head_{key}") for key in ("min", "max", "mean")}
+        if not all(finite(v) for v in values.values()):
+            errors.append(f"row {index}: follower_courtesy_head_min/max/mean missing or non-finite")
+            continue
+        if values["min"] <= amin - amax:
+            errors.append(f"row {index}: head_min {values['min']:.3g} <= {amin - amax:.3g} (saturated head)")
+        if values["max"] >= amax - amin:
+            errors.append(f"row {index}: head_max {values['max']:.3g} >= {amax - amin:.3g} (saturated head)")
+        if not amin < values["mean"] < amax:
+            errors.append(f"row {index}: head_mean {values['mean']:.3g} outside ({amin:.3g}, {amax:.3g}) (saturated head)")
+    return errors
+
+
+def physics_accel_bounds(config: Path) -> tuple[float, float]:
+    """The plant clamp of the run's config (``physics.accel_min_mps2`` / ``accel_max_mps2``)."""
+    from wms.cli.assemble import build_physics
+    from wms.config.load import load_train_config
+
+    physics = build_physics(load_train_config(config))
+    return float(physics.accel_min_mps2), float(physics.accel_max_mps2)
+
+
+def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0,
+              accel_bounds: tuple[float, float] | None = None) -> dict:
+    """``accel_bounds`` = the plant clamp (default: :class:`PhysicsConfig` defaults; the CLI reads the config's)."""
+    if accel_bounds is None:
+        from wms.physics.config import PhysicsConfig
+
+        accel_bounds = (PhysicsConfig().accel_min_mps2, PhysicsConfig().accel_max_mps2)
     result = round10b_check_log(train_log, smoke_log, train_exit_code=train_exit_code)
     errors, metrics = result["errors"], result["metrics"]
     try:
@@ -47,6 +88,8 @@ def check_log(train_log: Path, smoke_log: Path, *, train_exit_code: int = 0) -> 
         if not finite(value) or value < 0:
             errors.append(f"row {index}: {EXCLUDED_KEY} missing/non-finite/negative")
             valid = False
+    errors.extend(head_range_errors(rows, accel_bounds))
+    metrics["head_range_bounds"] = [float(accel_bounds[0]), float(accel_bounds[1])]
     if valid and rows:
         metrics["contrast_n_controls"] = sum(int(row.get("follower_courtesy_contrast_n_controls") or 0)
                                              for row in rows)
@@ -151,7 +194,12 @@ def main(argv=None) -> int:
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args(argv)
     train_log = args.smoke_dir / "train_log.jsonl"
-    result = check_log(train_log, args.smoke_log, train_exit_code=args.train_exit_code)
+    try:
+        bounds = physics_accel_bounds(args.config)
+    except Exception as exc:
+        print(f"smoke: bad config {args.config}: {exc}")
+        return 3
+    result = check_log(train_log, args.smoke_log, train_exit_code=args.train_exit_code, accel_bounds=bounds)
     if result["ok"]:
         try:
             from wms.config.load import load_train_config

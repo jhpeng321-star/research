@@ -48,6 +48,8 @@ echo "== one-step $(date +%T)"
 $PY $CHK/r10b_checks/run_onestep.py --repo $REPO $VARS --roots $L/data/v5_native $L/data/genrand_plain --workers $WORKERS $LIM_OS --out $OUT/os 2>&1 | grep -v -i warn | grep -v "kin = " | tail -5
 echo "== gates $(date +%T)"
 $PY $CHK/r10b_checks/gates.py $REPO $OUT/gates.json r9=$REF_CK r10b=$R11_CK 2>&1 | tail -1
+echo "== M7 head range (R11_REVIEW C1) $(date +%T)"
+$PY $REPO/tools/r11_checks/m7_head_range.py "$RUN" "$REPO/configs/c4_wm_v10round11.toml" "$CHK/results/M7_head_range_$MODE.json" 2>&1 | tail -1
 echo "== analysis $(date +%T)"
 echo "{\"mode\": \"$MODE\", \"labels\": {\"r9\": \"round-10b reference\", \"r10b\": \"round 11\", \"headzero\": \"round 11 head zeroed\"}, \"r10b_checkpoint\": \"$R11_CK\", \"r9_checkpoint\": \"$REF_CK\", \"date\": \"$(date '+%F %T')\"}" > $OUT/meta.json
 $PY $CHK/r10b_checks/analyze.py --repo $REPO --shm $OUT --meta $OUT/meta.json --m5 $CHK/SUMMARY_R11.md --run $RUN --out $CHK/results/VERDICT_R11_CHECKS_$MODE.md

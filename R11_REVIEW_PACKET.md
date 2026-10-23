@@ -44,8 +44,8 @@ section 4).
     writes the report.
   - config pins vs 10b (only the R11 keys differ; round-9 decisions and fix B inherited); trainable set; weight/lr
     from the rule file; gate content; legacy-flat round trip.
-- `tests/test_round11_gate_verdict.py` (25) and `tests/test_round11_gate_launcher.py` (14, via WSL, including the
-  head-init switch and its weight/lr overrides).
+- `tests/test_round11_gate_verdict.py` (25) and `tests/test_round11_gate_launcher.py` (16, via WSL, including the
+  head-init switch and its weight/lr overrides, and the default init with its wm_s_best fallback).
 - Regression: the new tests plus r10b courtesy, cut-in, round-10/10b gate verdict/launcher, merge context/core/core-v2
   config/pivot/runtime/training/exclusion/hybrid, tests/unit/{config,train,model}, equivalence. Result: **726 passed,
   17 skipped** (data-availability skips) before the rule file existed. The one failure then was the rule-file test,
@@ -102,7 +102,11 @@ Findings:
    to recorded at every event time and on dA 6-15 m. The real round-10b head is more extreme than the stand-in
    (training telemetry -3.9..+4.7), so inheriting it carries more to unlearn. **Recommendation for the coordinator:**
    prefer `R11_HEAD_INIT=zero` (with `R11_INIT` = the round-10b checkpoint, so temporal/gate come from 10b) unless the
-   round-10b checks favour keeping its head. The default stays "checkpoint" as instructed.
+   round-10b checks favour keeping its head. The default stays "checkpoint" as instructed. **Review decision
+   (R11_REVIEW C2): launch with `R11_HEAD_INIT=zero`, R11_INIT at its default.** The gate then passes weight 9.067
+   and lr x1000. That wiring is covered by `test_head_init_switch_reaches_smoke_full_and_verdict` (zero ->
+   `model.follower_courtesy_init_zero=true`, both overrides in the smoke and full calls, `--expect-courtesy-init zero`
+   to the verdict, which requires `follower_courtesy_init = "zero"` and only head tensors new).
 5. Offline numbers are teacher-forced one-step at recorded states with a frozen base, on local windows. They are not
    rollouts.
 
@@ -126,7 +130,10 @@ every row. The plant clamp then saturates, so the head's gradient is exactly 0 (
 3e-3..5e-3 (x100), so this is not expected in the run, but it is a real failure mode of an unbounded head behind the
 plant clamp (no clamp is added, per the owner rules). Watch `follower_courtesy_head_min/max` every step (M4/M7).
 
-5b. **Production lr (`--set optim.lr=5e-5` -> head 5e-3, temporal 2.5e-4, gate 5e-3; `tmp_r11/smoke`).** RESULT_5B
+5b. **Production lr** (`--set optim.lr=5e-5`: head 5e-3, temporal 2.5e-4, gate 5e-3; `tmp_r11/smoke`). This was still
+running on the laptop CPU at this commit. Per R11_REVIEW C4 it is **superseded by the GPU gate smoke**: 2+2
+production-lr steps from the real init, with the C1 head-saturation rule in the verdict. Its summary is appended
+below only if it completes.
 
 ## 6. Gate
 `scripts/round11_gate.sh [REPO_DIR]` (LF, `bash -n` clean, blob has no CR). It has the round-10b hardened structure:
@@ -137,7 +144,10 @@ r10b_headzero checkpoint), R11_HEAD_INIT
 (checkpoint|zero; zero also passes the zero-init weight/lr). The smoke runs batch 4 at 120/300 s, 2+2 steps,
 `selection.val_max_windows=4`, `curriculum.max_hours=1.5`. Verdict `python -m wms.train.round11_gate`: round-10b checks
 (round-10 merge/fix-B census, courtesy finite/positive/rows) + contrast controls > 0 and finite shift + the
-partnered-control exclusion logged + an init report matching the requested mode + strict reload with a VERSION-2 head
+partnered-control exclusion logged + **head saturation rule (R11_REVIEW C1): on every step with courtesy rows,
+fail if head_min <= accel_min - accel_max (-12), head_max >= accel_max - accel_min (+12), or head_mean is outside
+(accel_min, accel_max) = (-9, +3). The bounds are read from the config's physics plant clamp; the lr-1.0 micro-smoke
+log is a failing test fixture** + an init report matching the requested mode + strict reload with a VERSION-2 head
 and rollout_grad off + frozen and merge_pivot bitwise vs the (zero-expanded) init + the head moved vs its init. The full
 run then execs (`runs/c4_wm_v10_round11`, `selection.val_max_windows=16`). Default repo dir `$L/repo_r11` (ship as for
 10b). Not run anywhere.
@@ -160,7 +170,7 @@ round 11, round 11 head-zero. Thresholds:
 | M4 | head regularly < -3 m/s^2 on any group | offline p0.1 -1.85..-2.4, share < -3 = 0 |
 | M5 | collisions or TTC worse than round 10b / round 9: reject the round | also stuck ramp cars and merge count vs 10b (absolute caveat, section 4.2) |
 | M6 | fix-B reads as R10_REVIEW | on round 11 and head-zero |
-| M7 | 90 steps completed; contrast telemetry (`follower_courtesy_contrast_*`, `cutin_reaction_n_partnered_controls_excluded`) finite every step | - |
+| M7 | **reject round 11 if any of the 90 steps violates the C1 head-saturation rule** (`tools/r11_checks/m7_head_range.py`, run by run_all.sh); 90 steps completed; contrast telemetry finite every step | - |
 | M8 (new) | - (read) | one-step absolute last-3-s target-follower bias and the C3-control bias at the merge (does fix B remove the generic over-prediction?) |
 
 ## 8. Commits
