@@ -33,7 +33,8 @@ def idm(v, vl, gap, a, b, T, s0, v0=33.0, delta=4, amin=-9.0, amax=3.0):
 
 PSETS = {  # (a, b, T, s0)
     "wm": (2.49, 4.2, 1.135, 2.6),          # WM physics default (physics.idm())
-    "sumo": (2.6, 2.02, 1.19, 2.0),         # LCSTATE.md section 9 population medians (accel = SUMO default 2.6)
+    "sumo": (2.6, 2.02, 1.19, 2.0),         # LCSTATE.md section 9 medians, accel = SUMO default 2.6 (assumed)
+    "textbook": (1.2, 2.0, 1.2, 2.0),       # TEXTBOOK_POPULATION_MEDIANS (src/wms/train/losses/driver_prior.py)
 }
 
 

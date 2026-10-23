@@ -108,6 +108,10 @@ def window_rows(model, tg):
     # junction / invisible vehicles: occupied in the raw state but no lane one-hot
     raw_kin = tg.states[0, :n + 1]
     invisible = (raw_kin[..., 1:4].sum(-1) == 0) & (raw_kin[..., 6] > 0)
+    # rows present in the window state but NOT in the replay (loss_valid false: junction transit,
+    # filled by junction_fix=ffill in ``states`` but dropped by ``_recorded``'s valid mask)
+    hidden = (raw_kin[..., 6] > 0) & ~valid & (raw_kin[..., 1:4].sum(-1) > 0)
+    hidden_lane = raw_kin[..., 1:4].argmax(-1)
     out = []
     for t in range(n):
         sel = l1[t].nonzero().flatten()
@@ -136,6 +140,10 @@ def window_rows(model, tg):
         ds = raw_kin[t, :, 0][None, :] - s[:, None]
         inv_between = (invisible[t][None, :] & (ds > 0) & (ds < gap_m[:, None] + 5.0)
                        & (ds < 60.0)).any(-1)
+        hid = hidden[t] & (hidden_lane[t] == 1)
+        dh = torch.where(hid[None, :] & (ds > 0), ds - raw_kin[t, :, 6][None, :],
+                         torch.full_like(ds, float("inf"))).min(-1).values
+        hid_between = dh < gap_m
         wait_ramp = present & (lane[t] == 2) & (s >= 0) & (s <= end)
         rel = s[None, :] - s[:, None]
         near = (wait_ramp[None, :] & (rel <= 30) & (rel >= -20)).any(-1)
@@ -153,7 +161,8 @@ def window_rows(model, tg):
             "a_r": torch.where(has, a_r, nan)[sel],
             "tmerge": torch.where(has, tmerge, nan)[sel],
             "a_virt": torch.where(has, a_virt, nan)[sel], "a_free": a_free[sel],
-            "inv_between": inv_between[sel],
+            "inv_between": inv_between[sel], "hid_between": hid_between[sel],
+            "hid_gap": torch.where(hid_between, dh, nan)[sel],
             "step": torch.full((len(sel),), t, dtype=torch.int32), "slot": sel.to(torch.int32)}
         if params is not None:
             row["params"] = params[t, sel]
