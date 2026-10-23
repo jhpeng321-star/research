@@ -384,13 +384,14 @@ def main():
     if "r10b" in M2 and 10 in M2["r10b"]["far"]:
         m, lo, hi, n = M2["r10b"]["far"][10]
         bad = (m < TH["M2_far10"]) or (np.isfinite(hi) and hi < 0)
-        verdict["M2"] = ("ZERO-HEAD" if bad else "PASS", f"far placebo dv(10 s) {fmt(m, lo, hi, n)}; near {fmt(*M2['r10b']['near'][10][:3]) if 10 in M2['r10b']['near'] else 'n/a'}")
+        hz = M2.get("headzero", {}).get("far", {}).get(10)
+        verdict["M2"] = ("ZERO-HEAD" if bad else "PASS", f"far placebo dv(10 s) {fmt(m, lo, hi, n)} (headzero {fmt(*hz[:3]) if hz else 'n/a'}, r9 {fmt(*M2['r9']['far'][10][:3]) if 'r9' in M2 and 10 in M2['r9']['far'] else 'n/a'}); near {fmt(*M2['r10b']['near'][10][:3]) if 10 in M2['r10b']['near'] else 'n/a'}")
     else:
         verdict["M2"] = ("MISSING", "no removal results")
     # M3
     L.append("\n## M3 negative controls (one-step teacher-forced, TRAIN windows): model minus recorded acceleration, mean [95% CI over windows]\n")
-    L.append("Rule: ZERO-HEAD if |r10b - recorded| > 0.3 m/s^2 in a group AND the head is the cause (headzero closer to recorded by > 0.05); "
-             "if r9/headzero are equally off the miss is base bias, FLAG only. Ramp car behind and lane 0 head offset must be EXACTLY 0.\n")
+    L.append("Rule (literal, registered): ZERO-HEAD if |r10b - recorded| > 0.3 m/s^2 in the dA>30 / d_end>40 / alongside groups (the note says whether headzero is also off, "
+             "i.e. base bias); in the ramp-car-behind and lane-0 groups the HEAD OFFSET must be EXACTLY 0 (their model-minus-recorded bias is base behaviour, shown for information).\n")
     names = list(next(iter(M3o.values())).keys()) if M3o else []
     names = [n for n in names if not n.startswith("_")]
     L.append("| group | " + " | ".join(f"{arm} bias" for arm in M3o) + " | r10b head mean | r10b max abs head | n |")
@@ -405,12 +406,10 @@ def main():
             if g in ("ramp car behind (no partner)", "lane 0"):
                 if r["max_abs_head"] != 0.0:
                     m3_fail.append(f"{g}: head offset not exactly 0 (max {r['max_abs_head']:.3g})")
-            if np.isfinite(b) and abs(b) > TH["M3"]:
+            elif np.isfinite(b) and abs(b) > TH["M3"]:
                 bz = M3o.get("headzero", {}).get(g, {}).get("bias", (np.nan,))[0]
-                if np.isfinite(bz) and abs(bz) <= abs(b) - 0.05:
-                    m3_fail.append(f"{g}: |bias| {abs(b):.2f} (headzero {abs(bz):.2f})")
-                else:
-                    m3_flag.append(f"{g}: |bias| {abs(b):.2f} but headzero {abs(bz):.2f} (base, not head)")
+                note = f"{g}: |bias| {abs(b):.2f} (headzero {abs(bz):.2f})"
+                m3_fail.append(note + ("" if (np.isfinite(bz) and abs(bz) <= abs(b) - 0.10) else " [base bias also present without the head]"))
     if "r10b" in M3o:
         mx = M3o["r10b"]["_max_abs_head_nonpartner"]
         L.append(f"\nMax |head offset| over all one-step rows WITHOUT a ramp partner (lane 0 and lane 1): {mx:.3g} (must be 0).")
@@ -425,8 +424,7 @@ def main():
         for k, v in M3r.items():
             if not k.startswith("_") and np.isfinite(v[0]) and abs(v[0]) > TH["M3"]:
                 m3_fail.append(f"rollout {k}: mean head offset {v[0]:+.2f}")
-    verdict["M3"] = ("ZERO-HEAD" if m3_fail else "PASS", "; ".join(m3_fail) or "no head-attributable miss > 0.3" +
-                     (" (flags: " + "; ".join(m3_flag) + ")" if m3_flag else ""))
+    verdict["M3"] = ("ZERO-HEAD" if m3_fail else "PASS", "; ".join(m3_fail) or "no group off recorded by > 0.3; no-partner rows exactly 0")
     # M4
     L.append("\n## M4 head output distribution on r10b rollout states (m/s^2)\n")
     L.append(f"Rule: ZERO-HEAD if the head is 'regularly' below -3: share(offset < -3) >= {TH['M4_share']:.0%} (i.e. p5 < -3) in any group with n >= 100.\n")
@@ -471,6 +469,28 @@ def main():
             if d < -0.25:
                 reject.append("tight-gap non-insertion braking p10 worse than r9")
     L.append("\ngate_g_by_k (saturating gate, k -> g): " + (json.dumps(gates) if gates else "n/a"))
+    # M7
+    L.append("\n## M7 training completion and head telemetry\n")
+    tl = os.path.join(a.run, "train_log.jsonl") if a.run else None
+    if tl and os.path.exists(tl):
+        recs = [json.loads(x) for x in open(tl, encoding="utf-8") if x.strip()]
+        steps = [r.get("step") for r in recs]
+        cl = np.array([r.get("follower_courtesy_loss_raw", np.nan) for r in recs], float)
+        hmin = np.array([r.get("follower_courtesy_head_min", np.nan) for r in recs], float)
+        hmax = np.array([r.get("follower_courtesy_head_max", np.nan) for r in recs], float)
+        hmean = np.array([r.get("follower_courtesy_head_mean", np.nan) for r in recs], float)
+        has_sum = os.path.exists(os.path.join(a.run, "RUN_SUMMARY.json"))
+        done = len(recs) >= 90 and has_sum
+        L.append(f"- training steps logged: {len(recs)} (last step {steps[-1] if steps else 'n/a'}; expected 90); RUN_SUMMARY.json present: "
+                 f"{has_sum} -> {'OK' if done else 'INCOMPLETE'}")
+        k = min(10, len(cl))
+        L.append(f"- courtesy loss (raw): first {k} steps mean {np.nanmean(cl[:k]):.3f}, last {k} steps mean {np.nanmean(cl[-k:]):.3f}")
+        L.append(f"- head telemetry per step (training batches): min over steps {np.nanmin(hmin):+.2f} (last {k} mean {np.nanmean(hmin[-k:]):+.2f}), "
+                 f"max {np.nanmax(hmax):+.2f} (last {k} mean {np.nanmean(hmax[-k:]):+.2f}), head mean last {k} {np.nanmean(hmean[-k:]):+.3f}")
+        verdict["M7"] = ("OK" if done else "INCOMPLETE", f"{len(recs)} steps")
+    else:
+        L.append("train_log.jsonl not available")
+        verdict["M7"] = ("n/a", "")
     # M5
     L.append("\n## M5 collisions / TTC vs round 9 (official: cpuN SUMMARY_R10B.md)\n")
     if a.m5 and os.path.exists(a.m5):
@@ -501,7 +521,7 @@ def main():
     else:
         rec_ = "USE r10b (M1-M4 pass; M5 per cpuN)"
     summary.append(f"\n**Overall recommendation: {rec_}.** M5 official verdict (collisions / TTC<1.5 s vs round 9) comes from cpuN SUMMARY_R10B.md: {verdict['M5'][1]}.")
-    L[3:3] = summary
+    L[4:4] = summary
     open(a.out, "w", encoding="utf-8").write("\n".join(L) + "\n")
     json.dump({"verdict": {k: list(v) for k, v in verdict.items()}, "recommendation": rec_}, open(a.out + ".json", "w"), indent=1)
     print("\n".join(summary))

@@ -12,6 +12,8 @@ R9_CK=${R9_CK:-$L/runs/c4_wm_v10_round9/wm_s_stage300.pt}
 RUN=${R10B_RUN:-$L/runs/c4_wm_v10_round10b}
 if [ "$MODE" = dry ]; then
   RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_dry; LIM_ROLL="--limit 6 --k 1 --steps 120"; LIM_REM="--limit 6 --k 1"; LIM_OS="--limit 8 --stride-eps 30"; WORKERS=${WORKERS_DRY:-12}
+elif [ "$MODE" = mid ]; then
+  RUN=${R10B_RUN:-$L/runs/smoke_r10b}; OUT=/dev/shm/chk_r10b_mid; LIM_ROLL="--limit 48 --k 1 --steps 240"; LIM_REM="--limit 48 --k 1"; LIM_OS="--limit 24 --stride-eps 10"
 else
   OUT=/dev/shm/chk_r10b; LIM_ROLL="--k 2 --steps 240"; LIM_REM="--k 2"; LIM_OS="--stride-eps 4"
 fi
