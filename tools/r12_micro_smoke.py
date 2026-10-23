@@ -58,6 +58,7 @@ def main(argv=None):
     p.add_argument("--threads", type=int, default=8)
     p.add_argument("--set", action="append", default=[])
     p.add_argument("--split", default="train", choices=("train", "val"))
+    p.add_argument("--no-share", action="store_true", help="skip the per-term gradient-share probe (slow on CPU)")
     args = p.parse_args(argv)
     cfg = load_train_config(ROOT / args.config, [
         f"model.init_from={args.ckpt}", "runtime.device=cpu",
@@ -118,9 +119,11 @@ def main(argv=None):
     changed = sorted(k for k in after if not torch.equal(after[k], before[k]))
     # Gradient shares of every loss term over the trainable set on one probe chunk (forward-only diagnostic).
     t_share = time.time()
-    batch = collate([picked[i][0][picked[i][1]] for i in rng.choice(len(picked), size=args.batch, replace=False)])
-    shares = trainer.forward_backward(batch, unroll_steps=args.horizon_steps, backward=False, share=True,
-                                      truncation_steps=args.horizon_steps)
+    shares = {}
+    if not args.no_share:
+        batch = collate([picked[i][0][picked[i][1]] for i in rng.choice(len(picked), size=args.batch, replace=False)])
+        shares = trainer.forward_backward(batch, unroll_steps=args.horizon_steps, backward=False, share=True,
+                                          truncation_steps=args.horizon_steps)
     share_seconds = time.time() - t_share
     enc = model.driver_encoder
     lo, hi = enc.physical_lower, enc.physical_upper
