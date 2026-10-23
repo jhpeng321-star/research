@@ -39,8 +39,12 @@ def one(args):
     path, ei, tstart = args
     k, m, vid, cav, tt, meta = load(path)
     lane = lanes(k); s = k[..., 0].astype(np.float64); v = k[..., 4].astype(np.float64); a = k[..., 5].astype(np.float64)
-    T, K = m.shape
     pen = float(meta.get("penetration", np.nan)); dem = float(meta.get("demand_vph", np.nan))
+    return rows_from_arrays(s, v, a, lane, m, vid, cav, tt, ei, pen, dem, tstart)
+
+
+def rows_from_arrays(s, v, a, lane, m, vid, cav, tt, ei, pen, dem, tstart):
+    T, K = m.shape
     first_zone = {}
     rows = []
     for ti in range(T):

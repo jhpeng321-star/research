@@ -21,8 +21,13 @@ def events_of(args):
     path, ei = args
     k, m, vid, cav, tt, meta = load(path)
     lane = lanes(k); s = k[..., 0].astype(np.float64); v = k[..., 4].astype(np.float64); a = k[..., 5].astype(np.float64)
+    return events_from_arrays(s, v, a, lane, m, vid, cav, tt, ei, float(meta.get("penetration", np.nan)),
+                              float(meta.get("demand_vph", np.nan)), 300.0, PRE, POST)
+
+
+def events_from_arrays(s, v, a, lane, m, vid, cav, tt, ei, pen, dem, tmin, PRE, POST):
+    OFFS = np.arange(-PRE, POST + 1)
     T, K = m.shape
-    # index per vid: row -> slot
     ev = []; meta_rows = []
     # find merges
     same = m[1:] & m[:-1] & (vid[1:] == vid[:-1])
@@ -37,7 +42,7 @@ def events_of(args):
     # vid -> (slot) lookup per time via dict built lazily
     for ti0, kr in zip(ti_arr, k_arr):
         tm = ti0 + 1
-        if tt[tm] < 300 or tm - PRE < 0 or tm + POST >= T:
+        if tt[tm] < tmin or tm - PRE < 0 or tm + POST >= T:
             continue
         cand = np.flatnonzero(m[tm] & (lane[tm] == 1) & (np.arange(K) != kr) & (s[tm] <= s[tm, kr]))
         if len(cand) == 0:
@@ -65,9 +70,8 @@ def events_of(args):
                 if len(fs):
                     arr[oi, 11] = s[ti, rr] - L - s[ti, fs[0]]
         ev.append(arr)
-        meta_rows.append((ei, tt[tm], vf, vr, float(cav[tm, f]), float(cav[tm, kr]), float(meta.get("penetration", np.nan)),
-                          float(meta.get("demand_vph", np.nan))))
-    return np.array(ev), np.array(meta_rows)
+        meta_rows.append((ei, tt[tm], vf, vr, float(cav[tm, f]), float(cav[tm, kr]), pen, dem))
+    return np.array(ev).reshape(-1, len(OFFS), len(FIELDS)), np.array(meta_rows)
 
 
 def main():
