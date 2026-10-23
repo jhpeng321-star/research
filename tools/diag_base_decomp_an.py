@@ -24,6 +24,7 @@ def load(prefix):
     D = {k: np.concatenate([w[k] for w in W]) for k in keys}
     D["ep"] = np.concatenate([np.full(len(w["rec"]), hash(w["episode"]) % 100003) for w in W])
     D["nwin"] = len(W)
+    D["_lens"] = [len(w["rec"]) for w in W]
     return D
 
 
@@ -125,3 +126,33 @@ def report(prefix):
 if __name__ == "__main__":
     for pre in sys.argv[1:]:
         report(pre)
+
+
+def hidden_report(prefix):
+    """Rows whose replay state hides a junction-transit lane-1 vehicle between the follower and its leader."""
+    D = load(prefix)
+    if "hid_between" not in D:
+        return
+    has = D["has"].astype(bool)
+    tm = D["tmerge"]
+    zone = has & (D["dend"] >= 0) & (D["dend"] <= 75.44)
+    last3 = zone & (tm > 0) & (tm <= 3)
+    hid = D["hid_between"].astype(bool)
+    print(f"\n## {prefix}: hidden (junction-transit, loss_valid=0) lane-1 vehicle between follower and its replay leader")
+    print("group | n | share hidden | final-rec (hidden) | final-rec (not hidden) | IDM-rec (hidden) | median hidden gap / replay gap")
+    s = D["s"]
+    for g, m in (("partners last 3 s", last3), ("partners [-6,-3)", zone & (tm > 3) & (tm <= 6)),
+                 ("all lane-1 rows", np.ones_like(has)), ("rows s in [50,75.44)", (s >= 50) & (s < 75.44)),
+                 ("rows s in [-25,0)", (s >= -25) & (s < 0))):
+        mh, mn = m & hid, m & ~hid
+        if mh.sum() < 5:
+            print(f"{g} | {int(m.sum())} | {mh.mean() if m.sum() else 0:.3f} | - | - | - | -")
+            continue
+        print(f"{g} | {int(m.sum())} | {mh.sum() / m.sum():.3f} | {(D['final'] - D['rec'])[mh].mean():+.2f} | "
+              f"{(D['final'] - D['rec'])[mn].mean():+.2f} | {(D['phys'] - D['rec'])[mh].mean():+.2f} | "
+              f"{np.nanmedian(D['hid_gap'][mh]):.1f} / {np.median(D['gap'][mh]):.1f}")
+
+
+if __name__ == "__main__" and len(sys.argv) > 1:
+    for pre in sys.argv[1:]:
+        hidden_report(pre)
