@@ -54,6 +54,7 @@ def main(argv=None):
     p.add_argument("--roots", nargs="+", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--horizon-steps", type=int, default=40)
+    p.add_argument("--window-steps", type=int, default=0, help="dataset window length (0 = horizon); unroll uses --horizon-steps")
     p.add_argument("--pre-steps", type=int, default=24)
     p.add_argument("--steps", type=int, default=2)
     p.add_argument("--batch", type=int, default=2)
@@ -71,7 +72,7 @@ def main(argv=None):
     picked, dataset = [], None
     for root in args.roots:
         built = build_c4_datasets(
-            root, horizon_steps=args.horizon_steps, history_s=cfg.data.history_s,
+            root, horizon_steps=(args.window_steps or args.horizon_steps), history_s=cfg.data.history_s,
             history_stride_s=cfg.data.history_stride_s, entries_v2=bool(cfg.data.entries_v2),
             stride_s=1.0, k_slots=None, role_of=None, junction_fix=cfg.data.junction_fix,
             command_known=True, merge_pivot_history=True)

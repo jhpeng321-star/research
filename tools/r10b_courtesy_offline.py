@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import pickle
 import sys
 import time
@@ -193,6 +192,7 @@ def load_windows(out, n_shards, extra=()):
 
 
 def head_loss(head, w, delta, amin, amax):
+    """The courtesy loss in its training form: Huber(clamp(a_pre + head), a_rec) on partner rows."""
     x = torch.from_numpy(w["x"][w["has"]])
     pre = torch.from_numpy(w["pre"][w["has"]])
     rec = torch.from_numpy(w["rec"][w["has"]])
@@ -231,7 +231,7 @@ def train_head(windows, schedule, delta, amin, amax, seed=0, hidden=32, log_ever
             opt.step()
             step += 1
             if log_every and step % log_every == 0:
-                print(f"  step {step} loss {float(loss):.4f}", flush=True)
+                print(f"  step {step} loss {float(loss.detach()):.4f}", flush=True)
     return head
 
 
@@ -241,11 +241,15 @@ def predict(head, w):
     return np.where(w["has"], h, 0.0)
 
 
-def cells(v, hw, closing):
+def cells(v, hw, closing, s=None):
+    """Diagnostic matching cells (evaluation only): speed x time headway x closing speed [x position]."""
     vb = np.digitize(v, [1, 3, 6, 10, 15, 20, 25, 30])
     hb = np.digitize(np.minimum(hw, 99), [0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0])
     cb = np.digitize(closing, [-3, -1, -0.3, 0.3, 1, 3])
-    return vb * 100 + hb * 10 + cb
+    cell = vb * 100 + hb * 10 + cb
+    if s is not None:
+        cell = cell * 10 + np.digitize(s, [-100, -50, -20, 0, 40])
+    return cell
 
 
 def matched_excess(values, all_rows, sel, ctrl, min_ctrl=20):
@@ -269,8 +273,8 @@ def matched_excess(values, all_rows, sel, ctrl, min_ctrl=20):
 
 def report_excess(head, windows, label):
     rows = {k: np.concatenate([w[k] for w in windows]) for k in
-            ("pre", "rec", "has", "c3", "da", "dend", "tmerge", "v", "hw", "closing")}
-    rows["cell"] = cells(rows["v"], rows["hw"], rows["closing"])
+            ("pre", "rec", "has", "c3", "da", "dend", "tmerge", "v", "hw", "closing", "s")}
+    rows["cell"] = cells(rows["v"], rows["hw"], rows["closing"], rows["s"])
     h = np.concatenate([predict(head, w) for w in windows]) if head is not None else np.zeros_like(rows["pre"])
     after = rows["pre"] + h
     has, c3 = rows["has"], rows["c3"]
@@ -289,9 +293,16 @@ def report_excess(head, windows, label):
         rec_e, n, cov = matched_excess(rows["rec"], rows, sel, c3)
         base_e, _, _ = matched_excess(rows["pre"], rows, sel, c3)
         aft_e, _, _ = matched_excess(after, rows, sel, c3)
+        # raw one-step bias on the rows themselves, and the same-cell bias of the base on C3 controls
+        # (model excess - recorded excess = row bias - control-cell bias)
+        ctrl_bias, _, _ = matched_excess(rows["pre"] - rows["rec"], rows, sel, c3)
+        row_bias_before = float((rows["pre"] - rows["rec"])[sel].mean()) if sel.any() else float("nan")
         out[name] = {"n": n, "coverage": cov, "recorded_excess": rec_e,
                      "model_excess_before": base_e, "model_excess_after": aft_e,
-                     "head_mean": float(h[sel].mean()) if sel.any() else float("nan")}
+                     "head_mean": float(h[sel].mean()) if sel.any() else float("nan"),
+                     "row_bias_before": row_bias_before,
+                     "row_bias_after": float((after - rows["rec"])[sel].mean()) if sel.any() else float("nan"),
+                     "c3_cell_base_bias": row_bias_before - ctrl_bias if sel.any() else float("nan")}
     prof = {}
     for lo in (-10, -8, -6, -5, -4, -3, -2, -1.5, -1, -0.5):
         sel = has & (tm > -lo - 0.25) & (tm <= -lo + 0.25)
@@ -369,12 +380,19 @@ def fit(args):
     res["held_after_production_schedule"] = report_excess(prod, held_w, f"production schedule, scale {best}")
     res["held_after_long_fit"] = report_excess(long_head, held_w, f"{args.fit_steps} steps lr 1e-3")
     res["fit_after_long_fit"] = report_excess(long_head, fit_w, "fit episodes, long fit")
+    # all windows (larger n for the matched-excess comparison; the head saw the fit episodes)
+    res["all_before"] = report_excess(None, windows, "all windows, head=0")
+    res["all_after_production_schedule"] = report_excess(prod, windows, "all windows, production schedule")
+    res["all_after_long_fit"] = report_excess(long_head, windows, "all windows, long fit")
+    res["sources"] = sorted({w["episode"].split("__")[-1] for w in windows})
+    res["windows_by_source"] = {s: sum(w["episode"].endswith(s) for w in windows) for s in res["sources"]}
     res["sumo_train_reference_dA_6_15"] = SUMO_TRAIN_EXCESS
     Path(args.report).parent.mkdir(parents=True, exist_ok=True)
     Path(args.report).write_text(json.dumps(res, indent=1, default=float), encoding="utf-8")
     torch.save({"production": prod.state_dict(), "long": long_head.state_dict()},
                Path(args.out).with_suffix(".heads.pt"))
-    for key in ("held_before", "held_after_production_schedule", "held_after_long_fit"):
+    for key in ("held_before", "held_after_production_schedule", "held_after_long_fit",
+                "all_before", "all_after_production_schedule", "all_after_long_fit"):
         r = res[key]["dA_6_15"]
         print(key, json.dumps(r), flush=True)
     print("weight", res["weight_rule"]["chosen_weight"], "lr scale", best, flush=True)
