@@ -403,8 +403,14 @@ def test_midrun_decision():
         return {"r9": BC.class_stats(_rows(n_per=n, brake_bias=brake9), 20),
                 "r10b": BC.class_stats(_rows(n_per=n, free_bias=free12, brake_bias=brake12), 20)}
     assert MR.decide(st(-0.3, 0.5, 0.4))["decision"] == "CONTINUE"
-    r = MR.decide(st(-0.7, 0.5, 0.4))
+    r = MR.decide(st(-0.7, 0.5, 0.4))                                     # round 9 free road +0.05 (default rows)
     assert r["decision"] == "STOP" and "free-road" in r["reasons"][0]
+
+    def st9(free12, free9):
+        return {"r9": BC.class_stats(_rows(free_bias=free9, brake_bias=0.4), 20),
+                "r10b": BC.class_stats(_rows(free_bias=free12, brake_bias=0.4), 20)}
+    assert MR.decide(st9(-0.7, -0.42))["decision"] == "CONTINUE"         # within 0.5 of round 9 under the same replay
+    assert MR.decide(st9(-1.0, -0.42))["decision"] == "STOP"
     assert MR.decide(st(-0.3, 0.75, 0.4))["decision"] == "STOP"           # signed: 0.75 > 0.4 + 0.3
     assert MR.decide(st(-0.3, -0.9, 0.4))["decision"] == "CONTINUE"        # signed, not magnitude
     few = MR.decide(st(-0.3, 0.5, 0.4, n=2))

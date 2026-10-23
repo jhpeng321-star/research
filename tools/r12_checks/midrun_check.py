@@ -5,7 +5,12 @@ checkpoint), run with --replay-present filled --base-cols.  Row classes = tools/
 (free_road: lane-1, 5 < v < 20 m/s, leader gap > 60 m or none; recorded_braking: lane-1, rec < -1 m/s^2).
 
 REGISTERED DECISION (signed mean one-step bias = prediction - recorded, NOT magnitudes):
-  STOP      if round-12 free-road bias < -0.6 m/s^2  OR  round-12 braking bias > round-9 braking bias + 0.3;
+  STOP      if round-12 free-road bias < -0.6 m/s^2 AND < round-9 free-road bias - 0.5 (both under the same filled
+            replay)  OR  round-12 braking bias > round-9 braking bias + 0.3;
+  The free-road branch is relative as well (S-R12 amendment 2026-10-24 07:45, before launch): the filled replay
+  alone shifts ROUND 9's free-road one-step bias from +0.01 to -0.42 m/s^2 (12 TRAIN windows; after-merge -0.04 ->
+  -0.66), because junction-transit cars keep their state.  An absolute -0.6 cut would sit next to round 9 itself.
+  The stale-temporal signature it targets is about -1.0 relative to round 9 (offline: -0.93 vs +0.11).
   CONTINUE  otherwise;
   UNDECIDED if a class needed for an untriggered condition has < 5 rows (treated as CONTINUE; said so).
 Usage: midrun_check.py --os-dir DIR --out-json JSON --out-md MD
@@ -27,6 +32,7 @@ if HERE not in sys.path:
 import base_calibration as BC  # noqa: E402
 
 TH_FREE = -0.6
+TH_FREE_REL = 0.5
 TH_BRAKE = 0.3
 
 
@@ -39,11 +45,12 @@ def decide(stats: dict) -> dict:
     fr = bias(BC.R12, "free_road")
     b12, b9 = bias(BC.R12, "recorded_braking"), bias(BC.REF, "recorded_braking")
     reasons, missing = [], []
-    if np.isfinite(fr):
-        if fr < TH_FREE:
-            reasons.append(f"round-12 free-road bias {fr:+.3f} < {TH_FREE}")
+    fr9 = bias(BC.REF, "free_road")
+    if np.isfinite(fr) and np.isfinite(fr9):
+        if fr < TH_FREE and fr < fr9 - TH_FREE_REL:
+            reasons.append(f"round-12 free-road bias {fr:+.3f} < {TH_FREE} and < round-9 {fr9:+.3f} - {TH_FREE_REL}")
     else:
-        missing.append("free_road (round 12)")
+        missing.append("free_road (round 12 and/or round 9)")
     if np.isfinite(b12) and np.isfinite(b9):
         if b12 > b9 + TH_BRAKE:
             reasons.append(f"round-12 braking bias {b12:+.3f} > round-9 {b9:+.3f} + {TH_BRAKE}")
@@ -88,7 +95,7 @@ def main(argv=None) -> int:
         json.dump(res, stream, indent=1, default=float)
     L = ["# R12 mid-run read (stage-120 checkpoint, one-step, filled replay presence)\n",
          f"**Decision: {res['decision']}**" + (" (treated as CONTINUE)" if res["decision"] == "UNDECIDED" else ""),
-         "", f"Rule: STOP if round-12 free-road bias < {TH_FREE} OR round-12 braking bias > round-9 braking bias + "
+         "", f"Rule: STOP if round-12 free-road bias < {TH_FREE} AND < round-9 free-road bias - {TH_FREE_REL} OR round-12 braking bias > round-9 braking bias + "
          f"{TH_BRAKE} (signed means, prediction - recorded, m/s^2); UNDECIDED if a class has < 5 rows.", ""]
     if "error" in res:
         L.append(f"Error: {res['error']}")

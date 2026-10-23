@@ -254,7 +254,7 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
 | support | geometry-class exclusions differ from round 9 on the post-run recount | section 4 |
 | BASE-5 (reject the base; prior off) | > 20 % of round-12 rows within 1 % of the physical range width of an a OR b bound | base_calibration.py; also the learned centre per step (`driver_centre` train-log key, telemetry_reads.py) |
 | lane changes (read) | mainline lane-change counts per run, round 12 / head-zero / round 9, pooled over seeds with CIs | m8_r12.py; R12_REVIEW finding 7 |
-| **MID-RUN STOP (C2)** | at the stage-120 checkpoint (step 40): round-12 one-step free-road bias < -0.6, OR braking bias > round 9's + 0.3 (signed means; filled replay; about 24 TRAIN windows). Then STOP round 12 (its own training PID only), write the verdict, and do NOT auto-relaunch. The coordinator relaunches a corrected round (e.g. temporal accel row zeroed or higher temporal lr) as a NEW registered round | tools/r12_checks/midrun_check.py via the gpuR waiter (section 10) |
+| **MID-RUN STOP (C2)** | at the stage-120 checkpoint (step 40): round-12 one-step free-road bias < -0.6 AND more than 0.5 below round 9's (S-R12 amendment before launch: the filled replay alone moves round 9's free-road bias from +0.01 to -0.42 and after-merge from -0.04 to -0.66 on 12 TRAIN windows, so an absolute -0.6 cut would sit next to round 9 itself), OR braking bias > round 9's + 0.3 (signed means; filled replay; about 24 TRAIN windows). Then STOP round 12 (its own training PID only), write the verdict, and do NOT auto-relaunch. The coordinator relaunches a corrected round (e.g. temporal accel row zeroed or higher temporal lr) as a NEW registered round | tools/r12_checks/midrun_check.py via the gpuR waiter (section 10) |
 
 - **cpuN scoring** (72-state check, paired ranking): run with 2 seed sets for round 12 AND round 9 (re-scored with the
   current code). Accept round 12 as the new base only if:
@@ -287,3 +287,18 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
 
 ## 9. Commits
 `git log c4/v10r12 ^c476cad4`. The packet commit is the last one.
+
+## 10. Launch registration (S-R12, 2026-10-24, after R12_REVIEW GO-WITH-CHANGES)
+- Launch choice: **R12_PRIOR=off**, default R12_INIT (round-9 final stage300), schedule [40,70]. Review changes C1-C5
+  applied (sections 2 and 7).
+- gpuR waiters (setsid nohup, laptop independent; PIDs in the launch message):
+  - `scripts/round12_wait.sh` -> `$L/gate_r12.out`, PID file `$L/gate_r12.pid`. Starts the gate once round 11 has its
+    RUN_SUMMARY.json and PID 423697 is gone. Refuses if runs/c4_wm_v10_round12 exists. The PID becomes the round-12
+    training PID.
+  - `tools/r12_checks/midrun_arm.sh` -> `$L/chk_r12/midrun_arm.log`. Runs the registered stage-120 read on gpuR CPU
+    (<= 8 workers, nice 15): about 3.5 h into the run, after the round-11 checks have finished. Writes
+    `chk_r12/results/MIDRUN_R12.{json,md}` and `chk_r12/MIDRUN_STOP` or `chk_r12/MIDRUN_CONTINUE`. On STOP it sends
+    SIGTERM to the round-12 training PID only. There is no relaunch: the coordinator polls `chk_r12/MIDRUN_*`.
+  - `tools/r12_checks/auto_arm.sh` -> `$L/chk_r12/auto_arm.log`. After the round-12 RUN_SUMMARY and the round-11
+    checks it runs `SEEDS2=1 run_all.sh full`, then the telemetry reads and the 96-window support recount. Output:
+    `chk_r12/VERDICT_R12_CHECKS.md`, `results/TELEMETRY_R12.*`, `results/SUPPORT_R12.json`.
