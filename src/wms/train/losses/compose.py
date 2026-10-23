@@ -42,7 +42,10 @@ from .stability import ConservationLoss, StabilityLoss
 from .traffic import TrafficLoss, TrafficLossConfig
 from .trajectory import PositionLoss, SpeedLoss
 # CUT-IN REACTION (R9K)
-from .cutin_reaction import CutinReactionConfig, cutin_reaction_terms
+from .cutin_reaction import CutinReactionConfig, CutinReactionLoss
+from .follower_courtesy import REPLAY_KEYS as COURTESY_REPLAY_KEYS
+from .follower_courtesy import SHARED_KEY as COURTESY_SHARED_KEY
+from .follower_courtesy import FollowerCourtesyConfig, follower_courtesy_terms
 
 
 class LossComposer:
@@ -404,14 +407,25 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
         unroll.append(StabilityLoss(settings.stability_weight, margin=settings.stability_margin,
                                     probes=settings.stability_probes))
     # CUT-IN REACTION (R9K): never instantiate/evaluate replay at weight zero.
+    courtesy_on = float(getattr(settings, "follower_courtesy_weight", 0.0)) > 0
     if settings.cutin_reaction_weight > 0:
-        unroll.extend(cutin_reaction_terms(CutinReactionConfig(
+        # R10B: with the courtesy term on, the cut-in replay also collects the (detached) courtesy
+        # inputs so the courtesy term does not need a second recorded-state replay.
+        unroll.append(CutinReactionLoss(CutinReactionConfig(
             weight=settings.cutin_reaction_weight,
             control_weight=settings.cutin_reaction_control_weight,
             pre_s=settings.cutin_reaction_pre_s,
             max_window_s=settings.cutin_reaction_max_window_s,
             huber_delta_mps2=settings.cutin_reaction_huber_delta_mps2,
             merge_lane=2 if physics is None else int(physics.merge_lane),
+            target_lane=1 if physics is None else int(physics.merge_target_lane)),
+            share_keys=COURTESY_REPLAY_KEYS if courtesy_on else (),
+            share_to=COURTESY_SHARED_KEY if courtesy_on else None))
+    # R10B learned follower courtesy (after the cut-in term, whose replay it reuses).
+    if courtesy_on:
+        unroll.extend(follower_courtesy_terms(FollowerCourtesyConfig(
+            weight=settings.follower_courtesy_weight,
+            huber_delta_mps2=settings.follower_courtesy_huber_delta_mps2,
             target_lane=1 if physics is None else int(physics.merge_target_lane))))
     return LossComposer(chunk, unroll, braking=braking,
                         merge_share_cap=None if merge_cap is None else float(merge_cap))

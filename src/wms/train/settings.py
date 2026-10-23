@@ -99,6 +99,13 @@ class TrainSettings:
     cutin_reaction_max_window_s: float = 6.0
     cutin_reaction_huber_delta_mps2: float = 0.5
     leader_change_features: bool = False
+    # R10B LEARNED FOLLOWER COURTESY (model switches live in ModelSpec; the loss reads these)
+    follower_courtesy: bool = False
+    follower_courtesy_hidden: int = 32
+    follower_courtesy_embedding: bool = False
+    follower_courtesy_rollout_grad: bool = False
+    follower_courtesy_weight: float = 0.0
+    follower_courtesy_huber_delta_mps2: float = 1.0
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -832,6 +839,13 @@ class TrainSettings:
             and self.cutin_reaction_huber_delta_mps2 > 0,
             "cutin_reaction needs finite weight >= 0, control_weight > 0, "
             "pre_s in [0,1], max_window_s in (0,6], huber delta > 0")
+        _require(math.isfinite(float(self.follower_courtesy_weight))
+                 and float(self.follower_courtesy_weight) >= 0
+                 and math.isfinite(float(self.follower_courtesy_huber_delta_mps2))
+                 and float(self.follower_courtesy_huber_delta_mps2) > 0,
+                 "follower_courtesy needs finite weight >= 0 and huber delta > 0")
+        _require(float(self.follower_courtesy_weight) == 0 or bool(self.follower_courtesy),
+                 "loss.follower_courtesy.weight > 0 needs model.follower_courtesy = true")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

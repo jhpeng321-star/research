@@ -29,7 +29,9 @@ _OPTIONAL_PREFIXES = ("driver_encoder.", "command_proj.",
                       "residual_net.courtesy_proj.", "merge_negotiation.",
                       "merge_threshold.", "merge_frailty.", "merge_core.", "merge_pivot.",
                       "residual_net.residual_head_log_scale",
-                      "temporal_tau", "temporal_slew")
+                      "temporal_tau", "temporal_slew",
+                      # R10B learned follower courtesy head (zero last layer at creation)
+                      "follower_courtesy.")
 #: V10COURTESY: per-block attention bias keys (``residual_net.blocks.N.attn.``).
 _OPTIONAL_CONTAINS = (".courtesy_bias.",)
 #: LANERATECAL: closed-loop per-head rate calibration stored next to a checkpoint

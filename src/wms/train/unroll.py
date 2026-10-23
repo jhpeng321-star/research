@@ -180,7 +180,8 @@ class UnrollRunner:
         if "merge_pivot" in self.composer.names:
             targets.prepared["merge_pivot_source"] = (model, inp)
         self.composer.prepare(targets)
-        if "cutin_reaction" in self.composer.names:
+        if ("cutin_reaction" in self.composer.names
+                or "follower_courtesy" in self.composer.names):
             # R10 fix B: the recorded-state replay must see the same causal pre-t0 observations
             # the rollout encodes (detached raw observations, never driver truth tables).
             # Presence-only C4 windows keep stable slots (a reused slot never revives), so no
@@ -729,6 +730,9 @@ class UnrollRunner:
             if term.name == "cutin_reaction" and stats:
                 # R10 fix B telemetry: per-unroll event census and the two loss parts.
                 record.update({f"cutin_reaction_{key}": value for key, value in stats.items()})
+            if term.name == "follower_courtesy" and stats:
+                # R10B telemetry: courtesy row census, raw loss, head output summary.
+                record.update({f"follower_courtesy_{key}": value for key, value in stats.items()})
         core_prep = targets.prepared.get("merge_core")
         if "merge_pivot" in targets.prepared:
             from .losses.merge_pivot import merge_pivot_metrics

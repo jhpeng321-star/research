@@ -156,7 +156,17 @@ def insertion_plan(targets: UnrollTargets, config: CutinReactionConfig) -> dict[
 
 def one_step_predicted_accel(model: Any, targets: UnrollTargets,
                              grad_steps: Tensor | None = None) -> Tensor:
+    """Causal recorded-state replay [B,n,K] (see :func:`one_step_replay`)."""
+    return one_step_replay(model, targets, grad_steps)[0]
+
+
+def one_step_replay(model: Any, targets: UnrollTargets, grad_steps: Tensor | None = None,
+                    collect: tuple[str, ...] = ()) -> tuple[Tensor, dict[str, Tensor]]:
     """Causal recorded-state replay [B,n,K], including temporal and slow history.
+
+    Returns ``(accel, collected)``: ``collected[key]`` stacks the DETACHED per-step model output
+    ``key`` to ``[B, n, ...]`` for every key in ``collect`` the model returns (R10B: the courtesy
+    head inputs share this replay; collecting never changes the computed values).
 
     ``grad_steps`` (optional bool [n]) limits autograd to the steps that carry a supervised
     row: the other steps still advance the causal recurrent state but run under ``no_grad``
@@ -173,7 +183,7 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets,
     prep = targets.prepared.get("cutin_reaction_inputs", {})
     b, _, k = kin.shape[:3]
     if targets.n_steps == 0:
-        return kin.new_empty(b, 0, k)
+        return kin.new_empty(b, 0, k), {}
     history = prep.get("history")
     mask = prep.get("history_mask")
     if history is not None:
@@ -196,6 +206,7 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets,
     age = kin.new_full((b, k), 999.) if age is None else age.detach()
     params = embedding = None
     outputs = []
+    collected: dict[str, list[Tensor]] = {key: [] for key in collect}
     for t in range(targets.n_steps):
         present = valid[:, t]
         new = reset[:, t] | (present & ~valid[:, t - 1] if t else torch.zeros_like(present))
@@ -262,22 +273,32 @@ def one_step_predicted_accel(model: Any, targets: UnrollTargets,
         else:
             out = model(state, k_steps=t, **kwargs)
         outputs.append(out["accel_mps2"])
+        for key, values in collected.items():
+            if key in out:
+                values.append(out[key].detach())
         carry = {key: out[key] for key in ("temporal_residual_mps2", "temporal_residual_present",
                                           "merge_neg_accel_ema", "merge_neg_intent_logit")
                  if key in out}
         if "merge_wait_s" in state:
             carry["merge_wait_s"] = state["merge_wait_s"]
         recurrent = {key: out[key] for key in ("lane_v5_acc", "lane_blocked") if key in out}
-    return torch.stack(outputs, 1)
+    stacked = {key: torch.stack(values, 1) for key, values in collected.items()
+               if len(values) == targets.n_steps}
+    return torch.stack(outputs, 1), stacked
 
 
 class CutinReactionLoss(UnrollTerm):
     name = TERM_NAME
     differentiable = True
 
-    def __init__(self, config: CutinReactionConfig) -> None:
+    def __init__(self, config: CutinReactionConfig, share_keys: tuple[str, ...] = (),
+                 share_to: str | None = None) -> None:
         self.config = config
         self.last_stats: dict[str, Any] = {}
+        # R10B: when another recorded-state term needs detached outputs of the SAME replay
+        # (the courtesy loss), collect them here and leave them in targets.prepared[share_to].
+        self.share_keys = tuple(share_keys)
+        self.share_to = share_to
 
     def __call__(self, ctx: UnrollContext) -> TermValue:
         # A connected zero is safe for the runner's unconditional unroll backward,
@@ -296,8 +317,10 @@ class CutinReactionLoss(UnrollTerm):
         if not plan["n_event_rows"] and not plan["n_control_rows"]:
             return TermValue(zero, valid_count=0)
         needed = plan["supervised"] | plan["control"]
-        accel = one_step_predicted_accel(ctx.model, ctx.targets,
-                                         grad_steps=needed.any(-1).any(0))
+        accel, shared = one_step_replay(ctx.model, ctx.targets,
+                                        grad_steps=needed.any(-1).any(0), collect=self.share_keys)
+        if self.share_to is not None and shared:
+            ctx.targets.prepared[self.share_to] = shared
         target = ctx.targets.states[:, 1:ctx.targets.n_steps + 1, :, 5].detach()
         # Invalid/padding rows must not poison a reduction via NaN * 0.
         error = F.huber_loss(accel[needed], target[needed],

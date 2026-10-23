@@ -130,8 +130,25 @@ class ModelSpec:
     # the rollout carry) is NOT installed, so enabling this key would silently do nothing;
     # ModelSpec therefore refuses it until the consumer lands.
     leader_change_features: bool = False
+    # R10B (default OFF = bit-identical, no new tensor): learned pre-merge courtesy offset for the
+    # target lane-1 follower of a ramp-lane car (wms.model.follower_courtesy).  ``hidden`` is the MLP
+    # width; ``embedding`` (ablation only) adds the follower's driver embedding as an input;
+    # ``rollout_grad`` lets rollout losses train the head (default False: only the recorded-state
+    # courtesy loss reaches its parameters; the state adjoint through the head is kept either way).
+    follower_courtesy: bool = False
+    follower_courtesy_hidden: int = 32
+    follower_courtesy_embedding: bool = False
+    follower_courtesy_rollout_grad: bool = False
 
     def __post_init__(self) -> None:
+        for name in ("follower_courtesy", "follower_courtesy_embedding",
+                     "follower_courtesy_rollout_grad"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
+        if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:
+            raise ValueError("follower_courtesy_hidden must be an integer >= 1")
+        if self.follower_courtesy and self.black_box:
+            raise ValueError("follower_courtesy needs the structured WM-S (black_box off)")
         if not isinstance(self.leader_change_features, bool):
             raise ValueError("leader_change_features must be a boolean")
         if self.leader_change_features:

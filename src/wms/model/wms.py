@@ -20,6 +20,7 @@ from typing import Callable, Mapping, Optional
 
 import torch
 from torch import Tensor, nn
+from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
 from wms.physics.accel import baseline_accel
@@ -48,6 +49,7 @@ from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
 from .merge_core import (MergeCoreNet, core_features, load_init,
                          secure_gap_margin, secure_gap_sides, update_core_alpha)
+from .follower_courtesy import FollowerCourtesyHead, follower_courtesy_pairs
 from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from . import merge_pivot as pivot
 from .merge_threshold import MergeThresholdNet, update_threshold_state
@@ -380,6 +382,40 @@ class WmSModel(nn.Module):
                 self.merge_pivot = pivot.FirstPassageNet(
                     hybrid=spec.merge_passage_law == "hybrid", w_init=spec.merge_w_init)
         self.merge_st_width = float(spec.merge_st_width)
+        # R10B (default OFF): learned pre-merge follower courtesy head.  Created after EVERY other
+        # module so the default model keeps its exact key order, parameter set and RNG stream; the
+        # zero last layer makes a freshly enabled head an exact no-op.
+        self.follower_courtesy = None
+        self.follower_courtesy_rollout_grad = bool(getattr(spec, "follower_courtesy_rollout_grad",
+                                                           False))
+        if bool(getattr(spec, "follower_courtesy", False)):
+            embed = (self.driver_embed_dim
+                     if bool(getattr(spec, "follower_courtesy_embedding", False)) else 0)
+            self.follower_courtesy = FollowerCourtesyHead(
+                hidden=int(getattr(spec, "follower_courtesy_hidden", 32)), embed_dim=embed)
+
+    # ------------------------------------------------------------ R10B courtesy
+    def follower_courtesy_offset(self, inputs: Tensor, *, live: bool = True) -> Tensor:
+        """Courtesy head output for prepared inputs ``[..., n_in]``.
+
+        ``live=False`` evaluates the same function with DETACHED parameters: gradients still flow
+        through the inputs (the state adjoint), but no rollout loss reaches the head's weights.
+        """
+        head = self.follower_courtesy
+        if head is None:
+            raise RuntimeError("follower courtesy head is not enabled (model.follower_courtesy)")
+        if live:
+            return head(inputs)
+        params = {name: value.detach() for name, value in head.named_parameters()}
+        return functional_call(head, params, (inputs,))
+
+    def follower_courtesy_total(self, pre_courtesy: Tensor, offset: Tensor) -> Tensor:
+        """The final acceleration from the pre-courtesy acceleration and the courtesy offset
+        (exactly the composition used inside :meth:`forward`, including the plant clamp)."""
+        accel = pre_courtesy + offset
+        if self.rollout_mode != "driver_params":
+            accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
+        return accel
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Round-8 -> pivot: duplicate loaded positive gap scalars, match latent variance.
@@ -825,7 +861,8 @@ class WmSModel(nn.Module):
         v5_precomputed = None
         merge_prob = merge_logit = None
         if getattr(self, "lane_v5", None) is not None and (
-                bool(self.hdv.courtesy_inputs) or self.merge_negotiation is not None):
+                bool(self.hdv.courtesy_inputs) or self.merge_negotiation is not None
+                or self.follower_courtesy is not None):
             # V10COURTESY / V10NEGOT: the residual / negotiation consumes the merge
             # head's current probability, so the lane-v5 pass runs first (forward values
             # are unchanged; frozen dropout / deterministic features make the reorder exact).
@@ -946,6 +983,27 @@ class WmSModel(nn.Module):
             core_yield = scatter_follower_accel(
                 core["yield_accel"], core["follower_index"], core["valid_pair"], slots)
             accel = accel + core_yield * learned.to(kin.dtype)
+        courtesy_out = None
+        if self.follower_courtesy is not None:
+            # R10B: learned courtesy offset on the target lane-1 follower of a ramp-lane car.
+            # Exactly zero for a slot without a ramp partner and for every non-learned (CAV) slot.
+            pairs = follower_courtesy_pairs(
+                kin, present, self.physics, merge_wait_s=state.get("merge_wait_s"),
+                lane_age=lane_age, merge_prob=merge_prob)
+            inputs = pairs["features"]
+            if self.follower_courtesy.embed_dim:
+                # Ablation only: the follower's driver embedding (detached; the encoder is frozen).
+                emb = (driver_embedding.detach().to(kin.dtype) if driver_embedding is not None
+                       else kin.new_zeros(b, slots, self.follower_courtesy.embed_dim))
+                inputs = torch.cat((inputs, torch.where(pairs["has_partner"].unsqueeze(-1), emb,
+                                                        torch.zeros_like(emb))), -1)
+            applies = pairs["has_partner"] & learned
+            raw = self.follower_courtesy_offset(inputs, live=self.follower_courtesy_rollout_grad)
+            offset = torch.where(applies, raw, torch.zeros_like(raw))
+            courtesy_out = {"courtesy_accel_mps2": offset, "courtesy_applies": applies,
+                            "courtesy_inputs": inputs.detach(),
+                            "accel_pre_courtesy_mps2": accel.detach()}
+            accel = accel + offset
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -997,6 +1055,8 @@ class WmSModel(nn.Module):
         if temporal_residual_state is not None:
             result["temporal_residual_mps2"] = temporal_residual_state
             result["temporal_residual_present"] = present
+        if courtesy_out is not None:
+            result.update(courtesy_out)
         if self.merge_threshold is not None:
             # R5THR: per-driver threshold location [B, K] (with gradient for the first-passage
             # loss; the rollout decision uses a detached sample).

@@ -202,6 +202,11 @@ class ModelConfig:
     history_features: int = 6
     # CUT-IN REACTION (R9K)
     leader_change_features: bool = False
+    # R10B learned pre-merge follower courtesy head (default OFF = bit-identical, no new tensor)
+    follower_courtesy: bool = False
+    follower_courtesy_hidden: int = 32
+    follower_courtesy_embedding: bool = False
+    follower_courtesy_rollout_grad: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -351,6 +356,14 @@ class ModelConfig:
         # CUT-IN REACTION (R9K)
         require(isinstance(self.leader_change_features, bool),
                 "model.leader_change_features must be a boolean")
+        # R10B
+        require(all(isinstance(getattr(self, name), bool) for name in (
+            "follower_courtesy", "follower_courtesy_embedding", "follower_courtesy_rollout_grad")),
+            "model.follower_courtesy* switches must be booleans")
+        require(isinstance(self.follower_courtesy_hidden, int)
+                and not isinstance(self.follower_courtesy_hidden, bool)
+                and self.follower_courtesy_hidden >= 1,
+                "model.follower_courtesy_hidden must be an integer >= 1")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -582,6 +595,21 @@ class CutinReactionConfig:
                 "loss.cutin_reaction needs pre_s in [0,1], max_window_s in (0,6]")
         require(self.huber_delta_mps2 > 0,
                 "loss.cutin_reaction.huber_delta_mps2 must be positive")
+
+
+# R10B LEARNED FOLLOWER COURTESY
+@config_dataclass
+class FollowerCourtesyLossConfig:
+    """Teacher-forced recorded acceleration of lane-1 followers that have a ramp partner."""
+
+    weight: float = 0.0
+    huber_delta_mps2: float = 1.0
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0,
+                "loss.follower_courtesy.weight must be finite and >= 0")
+        require(is_finite(self.huber_delta_mps2) and self.huber_delta_mps2 > 0,
+                "loss.follower_courtesy.huber_delta_mps2 must be finite and positive")
 
 
 @config_dataclass
@@ -1201,6 +1229,9 @@ class LossConfig:
     post_merge: PostMergeConfig = field(default_factory=PostMergeConfig)
     # CUT-IN REACTION (R9K)
     cutin_reaction: CutinReactionConfig = field(default_factory=CutinReactionConfig)
+    # R10B LEARNED FOLLOWER COURTESY
+    follower_courtesy: FollowerCourtesyLossConfig = field(
+        default_factory=FollowerCourtesyLossConfig)
     residual: ResidualLossConfig = field(default_factory=ResidualLossConfig)
     lane_rate: LaneRateConfig = field(default_factory=LaneRateConfig)
     flip_rate: FlipRateConfig = field(default_factory=FlipRateConfig)
@@ -1532,6 +1563,8 @@ class TrainConfig:
         # CUT-IN REACTION (R9K)
         if self.loss.cutin_reaction.weight > 0:
             terms.append("cutin_reaction")
+        if self.loss.follower_courtesy.weight > 0:
+            terms.append("follower_courtesy")
         if agg.enabled:
             terms.extend(name for name, w in (("agg_field", agg.field_weight),
                                               ("agg_reward", agg.reward_weight),
