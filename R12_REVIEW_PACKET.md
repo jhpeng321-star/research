@@ -41,9 +41,18 @@ merge_pivot_state_st = true, checkpoint_forward = true. The motion objective equ
   (`rollout_grad = false`, Adam scale invariant).
 - **Clip 1.0 kept.** Every step is clipped (micro-smoke pre-clip norms 181 / 173; round 10: 3-79). Adam on the
   normalised gradient keeps the per-parameter step at about lr.
-- **Driver prior** (owner decision flagged to main): the existing population-mean prior (literature IDM values, equal
-  to the textbook generator medians), weight 0.05. Default kept. Gate switch `R12_PRIOR=off|weak` (0 / 0.01).
-- **Schedule** `[40, 70]` steps (120 s x 4, then 300 s x 2; lr 5e-5 / 3e-5). Round-9 pace was about 190 s/step on
+- **Driver prior: OFF for the launch (`R12_PRIOR=off`; R12_REVIEW C1, coordinator decision 2026-10-24).**
+  - Why: the prior's targets are the textbook generator's population medians by construction. `tests/unit/test_infrav5.py`
+    asserts that they equal `TEXTBOOK_POPULATION_MEDIANS`. That conflicts with the owner rule "driver settings learned
+    only, truth only for evaluation".
+  - Its gradient share is 0.003. Offline, no-prior does not collapse within the schedule (a median 0.78, no rows at a
+    bound).
+  - Identifiability is guarded by an evaluation rule instead (BASE-5: > 20 % of rows within 1 % of an a/b bound rejects
+    the base).
+  - The config keeps weight 0.05 (round-9 recipe); the gate passes `loss.driver_prior.weight=0.0`. The saved checkpoint
+    config records 0 and the verdict checks it.
+  - weak (0.01) is not used.
+- **Schedule (kept, R12_REVIEW C4):** `[40, 70]` steps (120 s x 4, then 300 s x 2; lr 5e-5 / 3e-5). Re-projected from round 11's pace (median 228 s/step at stage 120): about 7-7.5 h training + 1 h validation + 1 h smoke, i.e. **about 9 h** (gpuR rented through about 04:00 on 10-25). The original estimate below used round 9's pace (about 190 s/step on
   the 4090. Estimate about 5.8 h training + about 1 h final validation + about 1 h smoke, about 7.8 h in total.
   Latest checkpoint every 20 steps plus the stage checkpoints. If the smoke projects more than 8 h:
   `--set curriculum.stage_steps=[40,60]`.
@@ -234,16 +243,18 @@ Registered post-run: `python tools/r12_support_recount.py --extra <round-12 fina
 
 | id | reject if | notes |
 |---|---|---|
-| M5 (round) | collisions, or TTC < 1.5 s share, worse than round 9: point estimate (analyze.py), AND/OR the seed-replicated paired CI lies above 0 | the hard safety rule |
+| M5 (round) | collisions, TTC < 1.5 s share or overlap share worse than round 9: the POOLED two-seed point estimate is worse, OR the paired 95 % CI (round 12 - round 9) lies above 0. Seed set 1 alone is not decisive | the hard safety rule |
 | BASE-1 | UPSTREAM (s < -100 m) slow-start one-step \|mean bias\| > 0.3, or all-position slow-start \|bias\| not smaller than round 9's | tools/r12_checks/base_calibration.py; offline core after the fit: upstream +0.03, all +0.87 (round 9 +0.34 / +1.50) |
 | BASE-2 | free-road or far-upstream slow-start \|bias\| > max(0.3, round 9's \|bias\| of the class + 0.1) | offline core after the fit: +0.47 / +0.21 (round 9 +0.11 / +0.52); depends on the retrained temporal/residual |
 | BASE-3 | recorded-braking-row bias worse than round 9's by > 0.1 | b moves from 3.0 to about 2.0-2.4 |
-| BASE-4 (read) | last-3-s target follower: round 12 / head-zero / round 9 | expectation: about +0.8..+1.0 with the head zeroed; within +-0.3 with the head |
+| BASE-4 (read; restated, R12_REVIEW C3) | last-3-s target follower: round 12 / head-zero / round 9 | head-zero about +0.8..+1.0. With the head, the contrast target's floor is the matched zone-control bias (86-89 % of controls sit in the zone/approach, where the calibrated core still shows about +0.9 offline). So the head may remove much less than the full hold; ±0.3 is optimistic. Read the trend of `follower_courtesy_contrast_control_resid_mean` (telemetry_reads.py): if the last-10-step mean is below -0.3, the head is CONTRAST-LIMITED. That is not a base failure, and the head must not be over-credited |
 | M8-R12 | round 12's mean ABSOLUTE target-follower bias over [-3, 0) s (rollout or one-step) is not below round 9's, AND any of merges/run, stuck ramp cars, TTC < 1.5 s, min insertion gap p5, post-insertion hard brakes is worse (pooled point estimates) | tools/r12_checks/m8_r12.py |
 | M7 | any of the 110 steps violates the C1 head-saturation rule; steps incomplete; contrast telemetry non-finite | m7_head_range.py with the round-12 config |
 | M1-M4 | as round 11 (head behaviour; M3 attribution against head-zero) | the head is rejected (zeroed), not the round |
 | support | geometry-class exclusions differ from round 9 on the post-run recount | section 4 |
-| encoded settings (read) | > 20 % of rows within 1 % of an a/b range bound | base_calibration.py |
+| BASE-5 (reject the base; prior off) | > 20 % of round-12 rows within 1 % of the physical range width of an a OR b bound | base_calibration.py; also the learned centre per step (`driver_centre` train-log key, telemetry_reads.py) |
+| lane changes (read) | mainline lane-change counts per run, round 12 / head-zero / round 9, pooled over seeds with CIs | m8_r12.py; R12_REVIEW finding 7 |
+| **MID-RUN STOP (C2)** | at the stage-120 checkpoint (step 40): round-12 one-step free-road bias < -0.6, OR braking bias > round 9's + 0.3 (signed means; filled replay; about 24 TRAIN windows). Then STOP round 12 (its own training PID only), write the verdict, and do NOT auto-relaunch. The coordinator relaunches a corrected round (e.g. temporal accel row zeroed or higher temporal lr) as a NEW registered round | tools/r12_checks/midrun_check.py via the gpuR waiter (section 10) |
 
 - **cpuN scoring** (72-state check, paired ranking): run with 2 seed sets for round 12 AND round 9 (re-scored with the
   current code). Accept round 12 as the new base only if:

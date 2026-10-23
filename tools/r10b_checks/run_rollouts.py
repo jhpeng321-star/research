@@ -10,7 +10,9 @@ check on every other row, partner-switch jerk and a CAV-replay error.  ``sumo`` 
 R12 seed replication: ``--seed-offset N`` (default: absent = unchanged, process-global torch RNG) rolls sample k with
 seed / lane seed k + N AND seeds the global torch RNG (the first-passage merge draws' stream keys) with
 seed_of(state, k + N) before every arm's roll: reproducible, common random numbers across arms.  File names keep the
-sample index k, so a replication pass must write to its own ``--out``."""
+sample index k, so a replication pass must write to its own ``--out``.
+R12 ``--lane-changes`` (default off = unchanged files): every run file (and the ``sumo`` reference) gets ``lc01`` =
+[HDV mainline lane changes 0<->1, all-vehicle 0<->1 changes, HDV vehicle-steps] from the full lane arrays."""
 from __future__ import annotations
 
 import argparse
@@ -33,6 +35,16 @@ SPECS = []
 OUTDIR = ""
 REPO = ""
 SEED_OFFSET = None
+LANE_CHANGES = False
+
+
+def lane_changes_01(lane, mask, is_cav):
+    """[HDV 0<->1 lane changes, all-vehicle 0<->1 changes, HDV vehicle-steps] of one trajectory [T, n]."""
+    li = np.where(np.isfinite(lane), np.rint(lane), -1)
+    m = np.asarray(mask, bool)
+    ok = m[:-1] & m[1:] & np.isin(li[:-1], (0, 1)) & np.isin(li[1:], (0, 1)) & (li[:-1] != li[1:])
+    hdv = ~np.asarray(is_cav, bool)[None, :]
+    return np.array([float((ok & hdv).sum()), float(ok.sum()), float((m & hdv).sum())], np.float64)
 
 
 def seed_of(idx: int, seed: int) -> int:
@@ -40,9 +52,10 @@ def seed_of(idx: int, seed: int) -> int:
     return (1_000_003 * int(idx) + 7919 * int(seed) + 12345) % (2 ** 31 - 1)
 
 
-def _init(specs, repo, outdir, seed_offset=None):
-    global SPECS, OUTDIR, REPO, SEED_OFFSET
+def _init(specs, repo, outdir, seed_offset=None, lane_changes=False):
+    global SPECS, OUTDIR, REPO, SEED_OFFSET, LANE_CHANGES
     SPECS, OUTDIR, REPO = specs, outdir, repo
+    LANE_CHANGES = bool(lane_changes)
     SEED_OFFSET = None if seed_offset is None else int(seed_offset)
     add_paths(repo)
     import rollout_worker as rw
@@ -127,9 +140,11 @@ def work(payload):
         cav_err = float(np.abs(res["pos"] - res["rec_pos"])[cav_sel].mean()) if cav_sel.any() else float("nan")
         d = os.path.join(OUTDIR, name)
         os.makedirs(d, exist_ok=True)
+        extra = {"lc01": lane_changes_01(res["lane"], res["mask"], res["is_cav"])} if LANE_CHANGES else {}
         np.savez_compressed(os.path.join(d, f"s{idx:03d}_k{sample}.npz"), rows=rows, ev=ev, me=me, head=tab,
                             jerk_switch=jsw, jerk_all=jall, n_jerk_all=njall,
-                            misc=np.array([nonapp_max, n_calls, steps, cav_err, res["pos"].shape[1]], np.float64))
+                            misc=np.array([nonapp_max, n_calls, steps, cav_err, res["pos"].shape[1]], np.float64),
+                            **extra)
         out_msgs.append((name, len(rows), len(ev), len(tab), nonapp_max, n_calls, cav_err))
         if first and sample == 0:
             rows, ev, me, *_ = summarize_traj(res["rec_pos"], res["rec_lane"], res["rec_mask"], res["rec_v"],
@@ -138,7 +153,9 @@ def work(payload):
             os.makedirs(d, exist_ok=True)
             np.savez_compressed(os.path.join(d, f"s{idx:03d}_k0.npz"), rows=rows, ev=ev, me=me,
                                 head=np.zeros((0, 16), np.float32), jerk_switch=np.zeros(0, np.float32),
-                                jerk_all=np.zeros(3, np.float32), n_jerk_all=0, misc=np.zeros(5))
+                                jerk_all=np.zeros(3, np.float32), n_jerk_all=0, misc=np.zeros(5),
+                                **({"lc01": lane_changes_01(res["rec_lane"], res["rec_mask"], res["is_cav"])}
+                                   if LANE_CHANGES else {}))
         first = False
     return idx, sample, out_msgs
 
@@ -156,6 +173,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--seed-offset", type=int, default=None,
                     help="R12 seed replication: sample k uses seed k + offset and a seeded torch RNG (default: unchanged)")
+    ap.add_argument("--lane-changes", action="store_true",
+                    help="R12 read: store lc01 (mainline 0<->1 lane changes) in every run file (default off)")
     a = ap.parse_args()
     specs = [tuple(v.split("=", 1)) for v in a.var]
     with gzip.open(a.states, "rt") as f:
@@ -168,13 +187,13 @@ def main():
     t0 = time.time()
     summary = []
     if a.workers <= 1:
-        _init(specs, a.repo, a.out, a.seed_offset)
+        _init(specs, a.repo, a.out, a.seed_offset, a.lane_changes)
         for t in tasks:
             summary.append(work(t))
             print(summary[-1], flush=True)
     else:
         from multiprocessing import Pool
-        with Pool(a.workers, initializer=_init, initargs=(specs, a.repo, a.out, a.seed_offset)) as pool:
+        with Pool(a.workers, initializer=_init, initargs=(specs, a.repo, a.out, a.seed_offset, a.lane_changes)) as pool:
             for j, r in enumerate(pool.imap_unordered(work, tasks, chunksize=1)):
                 summary.append(r)
                 if (j + 1) % 8 == 0:

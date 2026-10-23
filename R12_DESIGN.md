@@ -50,7 +50,13 @@ Frozen bitwise (verdict and micro-smoke check this):
   that feeds `lane_v5` and the residual is unchanged.
 - `driver_updater`, `lane_v5`, the lane gates, `history_proj`, `k_embedding` and the residual's lane read-out.
 
-So the lane model, the merge law and every lane-side input stay those of round 9. 99 tensors, 0.74 M parameters.
+The lane network and the merge law stay those of round 9 (99 tensors, 0.74 M parameters).
+
+Correction (R12_REVIEW finding 7): not every lane-side INPUT is unchanged.
+- The encoded driver settings feed MOBIL's `lane_base`.
+- The lane-parameter rows 5-8 of `driver_encoder.head.2` can drift through the shared `head.0` (x10), with no loss on them.
+- Under `lane_learnable = true`, feasibility is geometric and the v5 head overrides the learned rows, so the impact should be about zero.
+- Mainline lane-change counts vs round 9 are a registered read.
 
 ## 3. Objective (rules for losses and weights)
 - **Motion objective = round 9's effective config, unchanged** (pinned by `test_round12_effective_motion_objective_equals_round9`):

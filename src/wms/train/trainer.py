@@ -354,6 +354,13 @@ class WmSTrainer:
             record["grad_norm"] = grad_norm
             record["grad_clipped"] = bool(grad_norm > float(self.settings.grad_clip))
         record["lr"] = float(self.optimizer.param_groups[0]["lr"])
+        encoder = getattr(self.model, "driver_encoder", None)
+        if getattr(encoder, "driver_param_mode", "legacy") == "physical":
+            # R12 telemetry (review C1): the learned shared centre of the longitudinal settings, physical units.
+            with torch.no_grad():
+                lo, hi = encoder.physical_lower, encoder.physical_upper
+                centre = (lo + (hi - lo) * torch.sigmoid(encoder.centre_logits)).tolist()
+            record["driver_centre"] = dict(zip(("v0", "T", "s0", "a", "b"), (float(x) for x in centre)))
         if self.device.type == "cuda":
             record["cuda_peak_mb"] = torch.cuda.max_memory_allocated(self.device) / 2 ** 20
         return record

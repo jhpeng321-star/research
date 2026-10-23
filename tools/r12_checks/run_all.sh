@@ -65,11 +65,11 @@ R9_SET="--arm-set r9=model.driver_param_mode=legacy --arm-set r9=model.driver_pa
 export PYTHONPATH=$REPO/src:$REPO:$REPO/tools:$CHK/r10b_checks OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 cd "$REPO" || exit 2
 echo "== rollouts, seed set 1 $(date +%T)"
-$PY $CHK/r10b_checks/run_rollouts.py --repo $REPO --states $STATES $VARS --workers $WORKERS $LIM_ROLL --seed-offset 0 --out $OUT/roll 2>&1 | grep -v -i warn | tail -5
+$PY $CHK/r10b_checks/run_rollouts.py --repo $REPO --states $STATES $VARS --workers $WORKERS $LIM_ROLL --seed-offset 0 --lane-changes --out $OUT/roll 2>&1 | grep -v -i warn | tail -5
 SHM2_ARG=""
 if [ "$SEEDS2" = 1 ]; then
   echo "== rollouts, seed set 2 (offset $SEED2_OFFSET; r9 + r10b) $(date +%T)"
-  $PY $CHK/r10b_checks/run_rollouts.py --repo $REPO --states $STATES --var r9=$REF_CK --var r10b=$R12_CK --workers $WORKERS $LIM_ROLL --seed-offset $SEED2_OFFSET --out $OUT/seeds2/roll 2>&1 | grep -v -i warn | tail -5
+  $PY $CHK/r10b_checks/run_rollouts.py --repo $REPO --states $STATES --var r9=$REF_CK --var r10b=$R12_CK --workers $WORKERS $LIM_ROLL --seed-offset $SEED2_OFFSET --lane-changes --out $OUT/seeds2/roll 2>&1 | grep -v -i warn | tail -5
   SHM2_ARG="--shm2 $OUT/seeds2"
 fi
 echo "== removal $(date +%T)"

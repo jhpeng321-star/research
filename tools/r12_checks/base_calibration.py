@@ -29,9 +29,10 @@ REGISTERED BASE REJECT RULES (evaluation rules, not model rules; magnitudes = |m
   BASE-3  REJECT round 12 if its recorded-braking |mean bias| exceeds round 9's by > 0.1 m/s^2.
   BASE-4  (read) last-3-s target-follower absolute bias for round 12, round-12 head-zero and round 9; expectation
           (BASE_FOLLOWER_DIAG): about +0.8 with the head zeroed, within +-0.3 with the head.
-  ENC     (read) encoded IDM accel / decel percentiles p1/p10/p50/p90/p99 per arm (columns dacc/ddec, the values the
-          IDM core received); flag if > 20 % of rows lie within 1 % of the physical range width of a bound
-          (a 0.3-4.0, b 0.8-6.0; meaningful for physical-mode arms; legacy arms are read only).
+  BASE-5  REJECT round 12 if > 20 % of its lane-1 rows have an encoded IDM accel OR decel (columns dacc/ddec, the
+          values the IDM core received) within 1 % of the physical range width of a bound (a 0.3-4.0, b 0.8-6.0);
+          UNDECIDED if the encoded values are not available.  Percentiles p1/p10/p50/p90/p99 are reported for every
+          arm (round 9 is a legacy-encoder arm: its share is a read only).
 A class with fewer than 5 finite rows gives an UNDECIDED rule (never a silent PASS).
 Usage: base_calibration.py --os DIR --out MD --json JSON [--boot N]   (always exits 0)
 """
@@ -139,8 +140,9 @@ def _mag(stats, arm, cls):
     return abs(v) if np.isfinite(v) else float("nan")
 
 
-def decide(stats: dict) -> dict:
-    """Apply BASE-1..3 (+ the BASE-4 read) to ``class_stats`` per arm.  Returns {rule: (verdict, detail)}."""
+def decide(stats: dict, enc: dict | None = None) -> dict:
+    """Apply BASE-1..3, BASE-5 (+ the BASE-4 read) to ``class_stats`` / ``encoded_params`` per arm.
+    Returns {rule: (verdict, detail)}."""
     res = {}
     s12, s9 = _mag(stats, R12, "slow_start"), _mag(stats, REF, "slow_start")
     u12 = _mag(stats, R12, "upstream_slow")
@@ -179,17 +181,29 @@ def decide(stats: dict) -> dict:
     res["BASE-4"] = ("READ", "last-3-s target-follower bias: " + ", ".join(
         f"{LABEL[a]} {v:+.3f}" if np.isfinite(v) else f"{LABEL[a]} n/a" for a, v in reads.items())
         + (f"; round 12 within +-{TH['BASE4']}: {abs(r) <= TH['BASE4']}" if np.isfinite(r) else ""))
+    e = (enc or {}).get(R12, {})
+    avail = [k for k in ("accel", "decel") if e.get(k, {}).get("available")]
+    if len(avail) < 2:
+        res["BASE-5"] = ("UNDECIDED", "encoded accel / decel of round 12 not available (run_onestep --base-cols)")
+    else:
+        shares = {k: e[k]["share_near_bound"] for k in avail}
+        bad = [k for k in avail if shares[k] > TH["ENC_SHARE"]]
+        res["BASE-5"] = ("REJECT" if bad else "PASS", "round 12 share of rows within 1 % of a bound: "
+                         + ", ".join(f"{k} {v:.3f}" for k, v in shares.items()) + f" (reject if > {TH['ENC_SHARE']})")
     return res
 
 
+RULES = ("BASE-1", "BASE-2", "BASE-3", "BASE-5")
+
+
 def overall(rules: dict) -> str:
-    rej = [k for k in ("BASE-1", "BASE-2", "BASE-3") if rules.get(k, ("",))[0] == "REJECT"]
-    und = [k for k in ("BASE-1", "BASE-2", "BASE-3") if rules.get(k, ("",))[0] == "UNDECIDED"]
+    rej = [k for k in RULES if rules.get(k, ("",))[0] == "REJECT"]
+    und = [k for k in RULES if rules.get(k, ("",))[0] == "UNDECIDED"]
     if rej:
         return f"REJECT ROUND 12 ({', '.join(rej)})"
     if und:
         return f"UNDECIDED ({', '.join(und)} lack rows)"
-    return "PASS (BASE-1..3)"
+    return "PASS (BASE-1..3, BASE-5)"
 
 
 def fmtb(c):
@@ -221,7 +235,7 @@ def main(argv=None) -> int:
             meta[arm] = {"base_cols": False}
     done = os.path.join(args.os, "ONESTEP_DONE.json")
     replay = json.load(open(done)).get("replay_present", "loss_valid") if os.path.exists(done) else "unknown"
-    rules = decide(stats)
+    rules = decide(stats, enc)
     verdict = overall(rules)
     res = {"verdict": verdict, "rules": {k: list(v) for k, v in rules.items()}, "classes": stats, "encoded": enc,
            "meta": meta, "replay_present": replay, "thresholds": TH, "labels": LABEL}
@@ -236,14 +250,15 @@ def main(argv=None) -> int:
     L += ["\nRegistered rules (evaluation rules, not model rules; |.| = magnitude of the mean bias, point estimates):",
           f"BASE-1 reject if upstream (s<-100) slow-start |bias| > {TH['BASE1']} or all-position slow-start |bias| not smaller than round 9's; BASE-2 reject if free-road or "
           f"far-upstream slow-start |bias| > max({TH['BASE2']}, round 9's + {TH['BASE2_REF_MARGIN']}); BASE-3 reject if recorded-braking |bias| exceeds round 9's by "
-          f"> {TH['BASE3']}; BASE-4 read (expectation: head-zero about +0.8, round 12 within +-{TH['BASE4']}).\n",
+          f"> {TH['BASE3']}; BASE-4 read (expectation: head-zero about +0.8, round 12 within +-{TH['BASE4']}); BASE-5 reject if "
+          f"> {TH['ENC_SHARE']:.0%} of round-12 rows have encoded accel or decel within 1 % of a range bound.\n",
           "## Bias by row class\n", "| class | " + " | ".join(LABEL[a] for a in ARMS if a in stats) + " | recorded mean |",
           "|---|" + "---|" * (sum(a in stats for a in ARMS) + 1)]
     for cls in CLASSES:
         rec = next((stats[a][cls]["rec"] for a in ARMS if a in stats), float("nan"))
         L.append(f"| {cls} | " + " | ".join(fmtb(stats[a].get(cls)) for a in ARMS if a in stats) + f" | {rec:+.2f} |")
     L += ["\n## Encoded IDM accel / decel (values the core received; lane-1 rows)\n",
-          "| arm | param | p1 | p10 | p50 | p90 | p99 | share within 1 % of a bound | flag (> 20 %) |",
+          "| arm | param | p1 | p10 | p50 | p90 | p99 | share within 1 % of a bound | > 20 % (BASE-5 for round 12) |",
           "|---|---|---|---|---|---|---|---|---|"]
     for arm, e in enc.items():
         for key, r in e.items():

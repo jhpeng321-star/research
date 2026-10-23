@@ -330,3 +330,9 @@ def test_courtesy_offset_is_exactly_zero_without_partner_under_filled_replay():
                              collect=("courtesy_accel_mps2", "courtesy_applies"))
     offset, applies = out["courtesy_accel_mps2"], out["courtesy_applies"].bool()
     assert bool((offset[~applies] == 0).all())
+
+
+def test_trainer_logs_the_learned_centre_only_in_physical_mode():
+    import inspect
+    source = inspect.getsource(WmSTrainer.train_batch)
+    assert 'record["driver_centre"]' in source and '"physical"' in source
