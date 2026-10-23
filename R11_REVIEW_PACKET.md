@@ -110,7 +110,23 @@ Findings:
 Real `WmSTrainer.train_batch`, round-11 config, local CPU, 2 steps, batch 2, 60-step windows with a 40-step unroll
 (window > unroll), each with a recorded insertion. Init: a local round-10b stand-in (round-8 weights + the R10B
 offline production head, 10 inputs; `tmp_r11/make_r10b_like.py`, mechanics only). Init report: loaded 163, expanded 1
-(`follower_courtesy.net.0.weight`), new 0, shape-mismatch 0, unused 0. Results: see section 5a (filled at completion).
+(`follower_courtesy.net.0.weight`), new 0, shape-mismatch 0, unused 0.
+
+5a. **First run, mechanics only (base lr 1e-3, the micro-smoke default, x1000 -> head lr 1.0;
+`tmp_r11/smoke_lr1_mechanics`).** All plumbing worked:
+- loss finite; init report as above; changed tensors = exactly the 6 head tensors + gate_g_max_logit, gate_tau_raw,
+  temporal.0/2 weight+bias; no frozen and no merge_pivot tensor changed.
+- step 1: 6 events, 17 rows, 2,619 controls (r10b's run on the same windows had 2,837: **218 partnered controls
+  excluded**); 229 courtesy rows; shared replay; 2,625 contrast controls; median effective controls 191; contrast
+  shift +0.43; head gradient 7.6.
+- step 2: 1,246 partnered controls excluded; 1,696 contrast controls.
+
+It FAILED one check, for an informative reason: after one Adam step at lr 1.0 the head output was -37.6 m/s^2 on
+every row. The plant clamp then saturates, so the head's gradient is exactly 0 (a dead head). Production lr is
+3e-3..5e-3 (x100), so this is not expected in the run, but it is a real failure mode of an unbounded head behind the
+plant clamp (no clamp is added, per the owner rules). Watch `follower_courtesy_head_min/max` every step (M4/M7).
+
+5b. **Production lr (`--set optim.lr=5e-5` -> head 5e-3, temporal 2.5e-4, gate 5e-3; `tmp_r11/smoke`).** RESULT_5B
 
 ## 6. Gate
 `scripts/round11_gate.sh [REPO_DIR]` (LF, `bash -n` clean, blob has no CR). It has the round-10b hardened structure:

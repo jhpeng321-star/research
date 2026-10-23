@@ -111,3 +111,6 @@ target. Deferred (risk 4).
    packet section 5). The zero switch exists if the coordinator prefers the head-zero base.
 4. **Heavy tail not modelled** (deterministic head).
 5. **Train/runtime state shift** (rollout pairing, moving cohort), as in 10b.
+6. **Dead head behind the plant clamp.** If an optimizer step drives the unbounded offset past the plant clamp on
+   every row, its gradient is exactly zero. This happened in a mechanics-only micro-smoke at head lr 1.0. Production
+   head lr is 3e-3..5e-3. No clamp or floor is added (owner rule); watch `follower_courtesy_head_min/max`.
