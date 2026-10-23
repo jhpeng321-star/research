@@ -178,7 +178,7 @@ round 11, round 11 head-zero. Thresholds:
 **C5c, the R10B vs R11 offline base discrepancy (reconciled, offline).** Both tools give the same absolute base. The
 R10B packet's event-profile columns ("before -0.01 at -2 s", n 47 held-out) are MATCHED EXCESS (C3 cells). The R11
 "+1.42/+1.46 at -2 s" is the ABSOLUTE mean. On the R10B cache (104 windows) the absolute base at -2 s is +1.13 vs
-recorded -0.12 (plant clamp 2.6 in that quick read); on the R11 cache (207 windows) it is +1.42 vs -0.05 (clamp 3.0).
+recorded -0.12 (plant clamp 2.6 in that quick read); on the R11 cache (207 windows) it is +1.48 vs -0.08 (clamp 3.0; held-out +1.46 vs -0.12, n 217).
 In excess terms the R11 held-out base is +0.17 at -2 s, consistent with R10B's -0.01 given n 47. "+1.2..1.6" refers
 only to absolute values.
 
