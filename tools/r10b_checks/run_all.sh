@@ -39,7 +39,7 @@ $PY $CHK/r10b_checks/gates.py $REPO $OUT/gates.json r9=$R9_CK r10b=$R10B_CK 2>&1
 echo "== analysis $(date +%T)"
 M5=$CHK/SUMMARY_R10B.md
 echo "{\"mode\": \"$MODE\", \"r10b_checkpoint\": \"$R10B_CK\", \"r9_checkpoint\": \"$R9_CK\", \"date\": \"$(date '+%F %T')\"}" > $OUT/meta.json
-$PY $CHK/r10b_checks/analyze.py --repo $REPO --shm $OUT --meta $OUT/meta.json --m5 $M5 --out $CHK/results/VERDICT_R10B_CHECKS_$MODE.md
+$PY $CHK/r10b_checks/analyze.py --repo $REPO --shm $OUT --meta $OUT/meta.json --m5 $M5 --run $RUN --out $CHK/results/VERDICT_R10B_CHECKS_$MODE.md
 echo "run_all $MODE done $(date '+%F %T')"
 [ "$MODE" = full ] && cp "$CHK/results/VERDICT_R10B_CHECKS_full.md" "$CHK/VERDICT_R10B_CHECKS.md"
 exit 0

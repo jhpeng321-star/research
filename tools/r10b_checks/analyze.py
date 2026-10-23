@@ -333,6 +333,7 @@ def main():
     ap.add_argument("--m5", default=None)
     ap.add_argument("--meta", default=None)
     ap.add_argument("--repo", required=True)
+    ap.add_argument("--run", default=None, help="round-10b run dir (M7 reads train_log.jsonl)")
     a = ap.parse_args()
     sys.path.insert(0, a.repo + "/tools")
     dc = cells_fn()
@@ -485,8 +486,8 @@ def main():
     L.insert(2, "")
     summary = ["## Verdict table\n", "| check | value | threshold | result |", "|---|---|---|---|"]
     thr = {"M1": "mean [-3,0) s >= -0.9", "M2": "far dv(10 s) >= -0.5 and CI not < 0", "M3": "|model-recorded| <= 0.3, exact 0 for no-partner rows",
-           "M4": "share(head < -3) < 5% in every group", "M5": "collisions/TTC not worse than r9"}
-    for k in ("M1", "M2", "M3", "M4", "M5"):
+           "M4": "share(head < -3) < 5% in every group", "M5": "collisions/TTC not worse than r9", "M7": "90 steps completed"}
+    for k in ("M1", "M2", "M3", "M4", "M5", "M7"):
         res_, val = verdict[k]
         summary.append(f"| {k} | {val} | {thr[k]} | **{res_}** |")
     zero = [k for k in ("M1", "M2", "M3", "M4") if verdict[k][0] == "ZERO-HEAD"]
