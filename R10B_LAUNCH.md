@@ -23,3 +23,13 @@ M6 is read on both the 10b and the head-zeroed arms.
 Repo dir: /root/autodl-tmp/c4/v5/repo_r10b_6a6f2afd = cp -a of repo_r10_d19c2066 (commit d19c2066, an ancestor of 6a6f2afd) plus the 25 files changed d19c2066..6a6f2afd, taken as LF git blobs (no CR; gate .sh md5 bef04899188b40503097ffeb8e22408f matches local).
 Verification: all 7752 tracked files at HEAD checked on gpuR by git blob hash: 520 exact (includes the 25 shipped files), 7227 identical after CR removal (the round-10 base copy has CRLF text files, harmless for python), 5 absent (R8_A/B/C.md, tests/test_merge_core_v2_onpolicy.py, tests/test_merge_core_v2_seqtf.py; not used by the gate). No file differs in content.
 Disk after copy: 907 MB free (run dirs ~15-25 MB each).
+
+## Smoke (runs/smoke_r10b, log smoke_r10b.log, verdict smoke_r10b.verdict = "smoke: ok", report smoke_r10b.gate.json)
+Launched 18:17 (CST) with nohup/setsid bash scripts/round10b_gate.sh (PID 400794, same PID continues as the full run via exec). Total smoke wall time about 63 min while sharing the GPU with round 10 (stage120 ended 18:44, stage300 and checks 19:20).
+Gate metrics: 4 optimizer steps, cuda_peak_mb 3308 (gate metric; per-step log shows 1704 MB at step 1), courtesy rows 4298, cut-in events 88 (454 event rows), TF zero-mass events 0, scored seconds 3237 (120 s) / 1565 (300 s), shared replay 4, courtesy loss last 0.887, cut-in loss last 1.076. All 3 checkpoints reload strictly, head read-out moved, nothing changed outside the trainable set.
+"changed_tensors: 6" in the gate report counts only keys that exist in the round-9 init (temporal.0/2 weight+bias = 4, gate_g_max_logit, gate_tau_raw); the 6 courtesy head tensors are new keys, all nonzero and all moved between stage120 and stage300. Total trainable = 12 tensors / 7911 parameters.
+
+## Full run (runs/c4_wm_v10_round10b, log gate_r10b.out)
+Started about 19:21 (CST), PID 400794, GPU shared with round 10 (PID 354035, untouched). Memory on the GPU about 12.0 GB total used with both jobs (round 10 alone about 7.4 GB).
+Step 1: loss finite (231.7), courtesy loss 1.019 on 844 rows (889 partner rows), head output exactly 0 (zero-init no-op, base residual mean -0.173), cut-in events 26 (124 event rows, 16337 control rows), TF zero mass 0, merge_pivot_on_objective_disabled 1, merge_pivot_grad_norm 0, grad_norm 6.17 (clipped), lr 0.05.
+Step 2: courtesy 0.910 on 1236 rows, head_min -0.377. Step time at stage 120 (batch 4, shared GPU): 124.5 / 267.7 / 108.9 s for steps 1-3 (round 10 stage-300 median 209 s for reference).
