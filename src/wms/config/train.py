@@ -211,6 +211,13 @@ class ModelConfig:
     follower_courtesy_version: int = 1
     # R11: true = do NOT take follower_courtesy.* from model.init_from (fresh zero-init head)
     follower_courtesy_init_zero: bool = False
+    # R12: init-only switches applied in WmSTrainer._init_from_checkpoint (default = load as is).
+    # "centre" zeroes the driver-encoder head rows of the five longitudinal parameter means after
+    # loading, so every driver starts at the learned shared centre (physical mode only).
+    driver_param_init: Literal["checkpoint", "centre"] = "checkpoint"
+    # true zeroes the delta row of the residual acceleration read-out (residual_net.accel.2) after
+    # loading: the dead tanh-saturated head restarts at an exact zero with a live gradient.
+    residual_accel_reinit: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -376,6 +383,13 @@ class ModelConfig:
                 "model.follower_courtesy_init_zero must be a boolean")
         require(self.follower_courtesy_version == 1 or self.follower_courtesy,
                 "model.follower_courtesy_version = 2 needs model.follower_courtesy = true")
+        # R12 init switches
+        require(self.driver_param_init in ("checkpoint", "centre"),
+                "model.driver_param_init must be checkpoint or centre")
+        require(self.driver_param_init == "checkpoint" or self.driver_param_mode == "physical",
+                "model.driver_param_init = centre needs model.driver_param_mode = physical")
+        require(isinstance(self.residual_accel_reinit, bool),
+                "model.residual_accel_reinit must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -1279,6 +1293,11 @@ class LossConfig:
     conservation_enabled: bool = False
     conservation_weight: float = 0.0
     loss_share_logging: bool = False
+    recorded_replay_present: Literal["loss_valid", "filled"] = "loss_valid"
+    """R12 (fix D): presence used by the causal recorded-state replay (cut-in reaction, follower
+    courtesy).  "loss_valid" (default) = supervised rows only, so junction-transit vehicles vanish
+    from the replay STATE; "filled" = the filled window presence (junction_fix = ffill) is the replay
+    state and loss_valid only selects supervised rows."""
     lane_hazard_decouple: bool = False
     """LANEFIX: in hazard mode the rollout lane CE and the flip-rate guard do not reach the
     hazard parameters (its delta enters the rollout logits detached); loss.lane_event is the
@@ -1290,6 +1309,8 @@ class LossConfig:
         require(is_finite(self.courtesy_weight) and float(self.courtesy_weight) >= 1.0,
                 "loss.courtesy_weight must be finite and >= 1 (1 = off)")
         require(self.stability_probes >= 1, "loss.stability_probes must be positive")
+        require(self.recorded_replay_present in ("loss_valid", "filled"),
+                "loss.recorded_replay_present must be loss_valid or filled")
         require(is_finite(self.brake_follow_weight) and self.brake_follow_weight >= 1.0,
                 "loss.brake_follow_weight must be finite and >= 1 (1 = off)")
         require(is_finite(self.brake_follow_cav_weight)

@@ -221,6 +221,10 @@ class WmSTrainer:
         is refused.
         """
         if name is None:
+            if (getattr(self.settings, "driver_param_init", "checkpoint") != "checkpoint"
+                    or bool(getattr(self.settings, "residual_accel_reinit", False))):
+                raise CheckpointInitError("R12 init switches (driver_param_init, residual_accel_reinit) "
+                                          "need model.init_from")
             return None
         import torch as _torch
 
@@ -263,6 +267,7 @@ class WmSTrainer:
         }
         if courtesy_init is not None:
             report["follower_courtesy_init"] = courtesy_init
+        report.update(WmSTrainer._r12_reinit(self))   # explicit: also works on test stand-ins
         print(f"init_from {path.name}: loaded {len(report['loaded'])} tensors, "
               f"expanded {len(report['expanded'])}, "
               f"new {len(report['new_in_model'])}, shape-mismatch "
@@ -271,6 +276,40 @@ class WmSTrainer:
         self.out_dir.mkdir(parents=True, exist_ok=True)
         write_json(self.out_dir / "INIT_FROM.json", report)
         return report
+
+    @torch.no_grad()
+    def _r12_reinit(self) -> dict:
+        """R12 init-only switches, applied AFTER the checkpoint tensors are loaded (no-op by default).
+
+        ``driver_param_init = "centre"`` (physical mode): zero the driver-encoder head rows that emit
+        the five longitudinal parameter MEANS (raw[..., 0, :5] = output rows 0..4), weight and bias.
+        Every driver then starts exactly at the learned shared centre (``centre_logits``) and the
+        per-driver deviation is re-learned from prediction error; a legacy-mode head's saturated
+        raw outputs would otherwise map onto the physical range bounds.  Lane-parameter means and all
+        uncertainty rows are kept.  ``residual_accel_reinit``: zero the delta row (row 0) of the
+        residual acceleration read-out ``residual_net.accel[-1]`` (tanh(0) = 0, live gradient); its
+        log-sigma row is kept.  Returns the report entries (empty when both switches are off).
+        """
+        s, model, out = self.settings, self.model, {}
+        if getattr(s, "driver_param_init", "checkpoint") == "centre":
+            enc = model.driver_encoder
+            if getattr(enc, "driver_param_mode", "legacy") != "physical":
+                raise CheckpointInitError("driver_param_init = centre needs driver_param_mode = physical")
+            last = enc.head[-1]
+            n_long = int(enc.physical_lower.numel())
+            last.weight[:n_long].zero_()
+            last.bias[:n_long].zero_()
+            out["driver_param_init"] = {"mode": "centre", "zeroed_rows": list(range(n_long)),
+                                        "tensor": "driver_encoder.head.2",
+                                        "centre_logits": [float(x) for x in enc.centre_logits]}
+        if bool(getattr(s, "residual_accel_reinit", False)):
+            last = model.residual_net.accel[-1]
+            before = float(last.weight[0].abs().sum() + last.bias[0].abs())
+            last.weight[0].zero_()
+            last.bias[0].zero_()
+            out["residual_accel_reinit"] = {"tensor": "residual_net.accel.2", "zeroed_rows": [0],
+                                            "abs_sum_before": before}
+        return out
 
     def set_stage_lr(self, lr: float) -> None:
         """R5TOOLS: apply a stage learning rate while keeping each group's ``lr_scale``."""

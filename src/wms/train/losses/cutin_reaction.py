@@ -96,6 +96,26 @@ def _recorded(targets: UnrollTargets):
     return kin, lane, valid, reset, continuous, hdv
 
 
+def replay_present(targets: UnrollTargets) -> Tensor:
+    """``[B, n_steps+1, K]`` presence of the recorded-state replay STATE (R12 fix D).
+
+    Default: the supervised rows of :func:`_recorded` (``loss_valid`` with a lane one-hot), so a
+    junction-transit vehicle (filled lane, ``loss_valid = 0``) vanishes from the replay state on its
+    transit steps.  When the runner supplies the filled window presence
+    (``cutin_reaction_inputs["present"]``, ``loss.recorded_replay_present = "filled"``) the replay
+    state is every present vehicle with a (filled) lane; supervision rows still come from
+    ``_recorded`` (``loss_valid``) only.
+    """
+    kin, _, valid, _, _, _ = _recorded(targets)
+    present = targets.prepared.get("cutin_reaction_inputs", {}).get("present")
+    if present is None:
+        return valid
+    present = present[:, :targets.n_steps + 1].detach().bool()
+    if present.shape != valid.shape:
+        raise ValueError("cutin_reaction_inputs present must be [B,n_steps+1,K]")
+    return present & (kin[..., 1:4].sum(-1) > 0)
+
+
 @torch.no_grad()
 def insertion_events(targets: UnrollTargets, config: CutinReactionConfig) -> list[dict[str, Any]]:
     """Event rows and inclusive prediction-index windows, detached from autograd."""
@@ -173,7 +193,8 @@ def insertion_plan(targets: UnrollTargets, config: CutinReactionConfig) -> dict[
 def recorded_partnered(targets: UnrollTargets, config: CutinReactionConfig) -> Tensor:
     """``[B, n, K]``: the slot is a lane-1 car with a ramp partner at recorded state t (the courtesy
     head's geometric pairing, :func:`wms.model.follower_courtesy.follower_courtesy_pairs`)."""
-    kin, _, valid, _, _, _ = _recorded(targets)
+    kin, _, _, _, _, _ = _recorded(targets)
+    valid = replay_present(targets)   # the replay state's presence (= supervised rows by default)
     b, n1, k = kin.shape[:3]
     n = n1 - 1
     if n <= 0:
@@ -213,7 +234,10 @@ def one_step_replay(model: Any, targets: UnrollTargets, grad_steps: Tensor | Non
     positions, future accelerations, or event/window labels enter predictions.
     A fresh graph is built on every call, independent of previous runner backward.
     """
-    kin, lane, valid, reset, _, _ = _recorded(targets)
+    kin, lane, _, reset, _, _ = _recorded(targets)
+    # R12 fix D: the replay STATE uses replay_present (filled presence when supplied); supervision
+    # rows are selected by the callers from _recorded (loss_valid) only.
+    valid = replay_present(targets)
     prep = targets.prepared.get("cutin_reaction_inputs", {})
     b, _, k = kin.shape[:3]
     if targets.n_steps == 0:

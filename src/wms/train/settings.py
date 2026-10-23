@@ -111,6 +111,10 @@ class TrainSettings:
     follower_courtesy_init_zero: bool = False
     follower_courtesy_contrast: bool = False
     cutin_reaction_exclude_partnered_controls: bool = False
+    # R12 BASE CALIBRATION (all default = round 11 behaviour)
+    driver_param_init: str = "checkpoint"
+    residual_accel_reinit: bool = False
+    recorded_replay_present: str = "loss_valid"
     step_weight_decay: float = 0.01
     truncation_steps: int = 20
     truncation_steps_per_stage: Optional[tuple[int, ...]] = None
@@ -854,6 +858,11 @@ class TrainSettings:
         _require(int(self.follower_courtesy_version) in (1, 2)
                  and (int(self.follower_courtesy_version) == 1 or bool(self.follower_courtesy)),
                  "follower_courtesy_version must be 1 or 2 (2 needs model.follower_courtesy)")
+        _require(self.driver_param_init in ("checkpoint", "centre")
+                 and (self.driver_param_init == "checkpoint" or self.driver_param_mode == "physical"),
+                 "driver_param_init must be checkpoint or centre (centre needs physical mode)")
+        _require(self.recorded_replay_present in ("loss_valid", "filled"),
+                 "recorded_replay_present must be loss_valid or filled")
         _require(not bool(self.follower_courtesy_contrast)
                  or float(self.follower_courtesy_weight) > 0,
                  "loss.follower_courtesy.contrast needs loss.follower_courtesy.weight > 0")

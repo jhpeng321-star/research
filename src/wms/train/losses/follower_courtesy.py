@@ -45,7 +45,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from .base import TermValue, UnrollContext, UnrollTerm, UnrollTargets
-from .cutin_reaction import _recorded, one_step_replay
+from .cutin_reaction import _recorded, one_step_replay, replay_present
 
 TERM_NAME = "follower_courtesy"
 #: Replay outputs the term needs (shared with the cut-in replay when both terms are on).
@@ -210,6 +210,12 @@ class FollowerCourtesyLoss(UnrollTerm):
         self.last_stats = {"n_rows": n_rows,
                            "n_partner_rows": int(out["courtesy_applies"].bool().sum()),
                            "shared_replay": int(bool(out["_shared"]))}
+        if "present" in targets.prepared.get("cutin_reaction_inputs", {}):
+            # R12 fix D telemetry: replay-state rows that the loss_valid mask would have hidden.
+            with torch.no_grad():
+                supervised = _recorded(targets)[2]
+                self.last_stats["replay_filled_extra_rows"] = int(
+                    (replay_present(targets) & ~supervised).sum())
         if not n_rows:
             return TermValue(zero, valid_count=0)
         inputs = out["courtesy_inputs"][rows]
@@ -236,8 +242,9 @@ class FollowerCourtesyLoss(UnrollTerm):
                        rec_all: Tensor) -> Tensor:
         """R11: kernel-matched control residual ``r_hat`` for every supervised partner row."""
         ctrl = lane1_rows(targets, self.config.target_lane) & ~out["courtesy_applies"].bool()
-        kin, _, valid, _, _, _ = _recorded(targets)
-        phi = matching_features(kin, valid, self.config)
+        kin, _, _, _, _, _ = _recorded(targets)
+        # R12 fix D: matching geometry (own-lane leader) sees the replay state's presence.
+        phi = matching_features(kin, replay_present(targets), self.config)
         pre_all = out["accel_pre_courtesy_mps2"].detach()
         # Controls have no offset: their model acceleration is the plant-clamped a_pre.
         resid = rec_all - model.follower_courtesy_total(pre_all, torch.zeros_like(pre_all))

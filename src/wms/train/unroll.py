@@ -190,6 +190,10 @@ class UnrollRunner:
                 "history": inp.hist, "history_mask": inp.hist_mask,
                 "driver_history": inp.observed_hist,
                 "driver_history_mask": inp.observed_hist_mask}
+            if getattr(cfg, "recorded_replay_present", "loss_valid") == "filled":
+                # R12 fix D: the replay state is the filled window presence (junction_fix = ffill);
+                # loss_valid keeps selecting the supervised rows only.
+                targets.prepared["cutin_reaction_inputs"]["present"] = inp.present
         if pair_reference is not None:
             targets.prepared["paired_return_reference"] = pair_reference
         parameters = [p for p in model.parameters() if p.requires_grad]
