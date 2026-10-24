@@ -277,6 +277,10 @@ class WmSModel(nn.Module):
         # Diagnostic (never part of a checkpoint, default off = no extra output): emit the pre-gate
         # temporal acceleration as ``temporal_accel_pregate_mps2`` (tools/r13m_lane_bias_init.py).
         self.diag_emit_temporal = False
+        self.mainline_merge_yield_learnable = False
+        self.merge_yield = None
+        if spec.mainline_merge_yield_learnable:
+            self.enable_mainline_merge_yield_learnable()
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
 
@@ -435,6 +439,22 @@ class WmSModel(nn.Module):
                 hidden=int(getattr(spec, "follower_courtesy_hidden", 32)), embed_dim=embed,
                 version=int(getattr(spec, "follower_courtesy_version", 1)))
 
+    def enable_mainline_merge_yield_learnable(self) -> None:
+        """Enable R13Y on a loaded legacy core; call before building an optimizer.
+
+        Native configurations use ModelSpec; this hook supports offline old-checkpoint
+        comparisons. Creation is deterministic and leaves the legacy RNG stream alone.
+        """
+        if (self.black_box or not self.physics.lane_learnable
+                or self.physics_step is not None
+                or not (self.rollout_mode in ("driver_params", "hybrid") or self.long_history)):
+            raise ValueError("learnable mainline yield needs a learned-driver lane_learnable core")
+        if self.merge_yield is None:
+            from .merge_yield import LearnedMergeYield
+            like = next(self.parameters())
+            self.merge_yield = LearnedMergeYield().to(device=like.device, dtype=like.dtype)
+        self.mainline_merge_yield_learnable = True
+
     @property
     def _tracks_courtesy_zone(self) -> bool:
         """R11: the rollout / replay carries the ramp cars' merge-zone time (courtesy v2 input)."""
@@ -505,6 +525,11 @@ class WmSModel(nn.Module):
             # boundary/heterogeneity tensors; w has no role in the strict law.
             state_dict = state_dict.copy()
             state_dict.pop("merge_pivot.w_raw")
+        if self.merge_yield is not None and not any(
+                key.startswith("merge_yield.") for key in state_dict):
+            state_dict = state_dict.copy()
+            state_dict.update({f"merge_yield.{key}": value.detach().clone()
+                               for key, value in self.merge_yield.state_dict().items()})
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -560,7 +585,13 @@ class WmSModel(nn.Module):
                       driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
         """Physics-baseline acceleration ``[B, K]``."""
         kin = state_kin(state)
-        return baseline_accel(kin, state_present(state, kin), self.physics, driver_params)
+        present = state_present(state, kin)
+        accel = baseline_accel(kin, present, self.physics, driver_params)
+        if self.mainline_merge_yield_learnable:
+            accel, _ = self.merge_yield(kin, present, accel, self.physics, driver_params,
+                                        is_cav=state.get("is_cav"),
+                                        merge_wait_s=state.get("merge_wait_s"))
+        return accel
 
     def mobil_merge_logits(self, state: dict[str, Tensor],
                            driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
@@ -573,6 +604,12 @@ class WmSModel(nn.Module):
                       ) -> tuple[Tensor, Tensor]:
         """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
         if self.physics_step is None:
+            if self.mainline_merge_yield_learnable:
+                # Keep the unconstrained baseline for residual/courtesy composition.
+                # The virtual-leader cap is applied ONCE after those terms below.
+                kin = state_kin(state)
+                return (baseline_accel(kin, state_present(state, kin), self.physics, driver_params),
+                        self.mobil_merge_logits(state, driver_params))
             # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
             impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
             if (self.physics.merge_end_wait or self.physics.mainline_merge_yield) \
@@ -912,6 +949,12 @@ class WmSModel(nn.Module):
         else:
             physics, lane_base = self._physics_step({**state, "veh_kin": kin})
 
+        yield_bound = yield_selected = yield_weight = None
+        if self.mainline_merge_yield_learnable:
+            yield_bound, yield_selected, yield_weight = self.merge_yield(
+                kin, present, physics, self.physics, driver_params, is_cav=is_cav,
+                merge_wait_s=state.get("merge_wait_s"), return_influence=True)
+
         conditioning = (driver_embedding
                         if self.rollout_mode == "hybrid" or self.long_history else None)
         lane_base = lane_base if baseline_lane_logits is None else baseline_lane_logits
@@ -1100,6 +1143,13 @@ class WmSModel(nn.Module):
                             "accel_pre_courtesy_mps2": accel.detach()}
             if not self.follower_courtesy_off:
                 accel = accel + offset
+        if yield_bound is not None:
+            # Courtesy repair A and the physics yield are competing constraints:
+            # the stronger deceleration wins; never sum two yielding offsets.
+            # Retain the uninfluenced share of a positive correction: otherwise
+            # even a zero-weight distant pair would cap it at the raw baseline.
+            yield_bound = yield_bound + (1.0 - yield_weight) * (accel - physics).clamp_min(0.0)
+            accel = torch.where(yield_selected, torch.minimum(accel, yield_bound), accel)
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
