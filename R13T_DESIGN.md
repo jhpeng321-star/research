@@ -52,10 +52,7 @@ Rows: all rollout rows of present lane-1 HDVs, not only onsets.
   - round 12: 345/345 identical;
   - 13F vs 079e39ff + `diag_zero_temporal`: 336/336, including gradients;
   - M with b = 0 and S with a zero table equal 13F on all 336 shared tensors.
-- Full suite: 4236 passed, 38 failed, 186 skipped, 85 errors.
-  - Almost all failures/errors are files missing from the fresh worktree: untracked `data/r9_train/wm_s_stage300.pt`, `output/*`.
-  - Also failing: the ledger tests, the round11_gate import-layer test (fails on base too), and prepush not-a-repo.
-  - The failed tests also fail or error on the base src; none of them involve changed files.
+- Full suite: 4236 passed, 38 failed, 186 skipped, 85 errors. The causes are files missing from the fresh worktree (untracked `data/`, `output/*`), the ledger tests, the round11_gate import-layer test, and prepush not-a-repo. All of them also fail on the base src; none involve changed files.
 
 ## 6. Launch condition
 
@@ -69,7 +66,7 @@ On gpuR beforehand:
 
 ## 7. Closed-loop statistics for the temporal path?
 
-The round-12 terms do not constrain the per-row acceleration distribution: position integrates a zero-mean pulse out, and the braking terms are onset-only. `accel_tail` (T) is such a closed-loop statistic. S removes the noise structurally, by having no history input. Nothing more was built.
+Round-12 terms leave the per-row acceleration distribution free (position integrates pulses out; braking terms are onset-only). `accel_tail` is such a statistic; S removes the noise structurally. Nothing more built.
 
 ## 8. Risks
 
