@@ -31,6 +31,7 @@ TRAIN_EXIT=0
     --init-checkpoint "$CK" --config configs/c4_wm_v10round13c.toml \
     --report "$L/smoke_r13c.gate.json" > "$L/smoke_r13c.verdict" 2>&1 || exit 3
 cat "$L/smoke_r13c.verdict"
+cat "$L/smoke_r13c.verdict" >> "$L/smoke_r13c.log"
 # The registration acknowledgment is written by the operator BEFORE starting this gate.
 test -f "$L/registration_r13c.json"
 # Arm both monitors against this exact PID/start identity before production exec.

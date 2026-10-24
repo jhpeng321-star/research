@@ -11,6 +11,8 @@ test -f "$L/registration_r13c_operational.json"
 test -f "$L/smoke_r13c.gate.json"
 test ! -e "$L/runs/c4_wm_v10_round13c"
 "$PYTHON" -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["ok"] and len(d["checkpoints"])==3; assert all(c["temporal_emission"]==0 and c["core_bitwise_frozen"] for c in d["checkpoints"])' "$L/smoke_r13c.gate.json"
+"$PYTHON" -c 'import hashlib,json,pathlib,sys; d=json.load(open(sys.argv[1])); assert hashlib.sha256(pathlib.Path("configs/c4_wm_v10round13c.toml").read_bytes()).hexdigest()==d["config_sha256"]; assert hashlib.sha256(pathlib.Path(sys.argv[2]).read_bytes()).hexdigest()==d["init_sha256"]' "$L/registration_r13c_operational.json" "$L/runs/c4_wm_v10_round12c/wm_s.pt"
+cat "$L/smoke_r13c.verdict" >> "$L/smoke_r13c.log"
 mkdir "$L/.round13c_production.lock"
 export PYTHONPATH=src:. OMP_NUM_THREADS=12 WMS_JAM_WORKERS=12 WMS_LATEST_EVERY=20
 export WMS_DATA_V5_NATIVE="$L/data/v5_native" WMS_DATA_GENRAND_PLAIN="$L/data/genrand_plain"
