@@ -236,6 +236,11 @@ class ModelConfig:
     # init table (.npz of tools/r13s_state_table.py; init-only, applied after loading; relative = repo root).
     temporal_accel_state_table: bool = False
     temporal_state_table_init: Optional[str] = None
+    # R12C (default false = round 12): physics-only core calibration switches (BRAKE_DIAG 'physics
+    # only' arm).  residual_accel_off = the residual attention/accel emission is an exact 0;
+    # follower_courtesy_off = the courtesy offset is an exact 0.  Part of the checkpoint.
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -432,6 +437,8 @@ class ModelConfig:
                 "model.temporal_state_table_init needs model.temporal_accel_state_table")
         require(not (self.temporal_accel_reinit and self.temporal_accel_off),
                 "model.temporal_accel_reinit has no effect with model.temporal_accel_off")
+        require(isinstance(self.residual_accel_off, bool), "model.residual_accel_off must be a boolean")
+        require(isinstance(self.follower_courtesy_off, bool), "model.follower_courtesy_off must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:

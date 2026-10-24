@@ -126,6 +126,9 @@ class TrainSettings:
     accel_tail_jerk_weight: float = 0.0
     accel_tail_table: Optional[str] = None
     accel_tail_lanes: tuple[int, ...] = (1,)
+    # R12C PHYSICS-ONLY CORE CALIBRATION (default = round 12)
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
     driver_param_init: str = "checkpoint"
     residual_accel_reinit: bool = False
@@ -905,6 +908,8 @@ class TrainSettings:
                  and len(tuple(self.accel_tail_lanes)) > 0
                  and all(int(x) in (0, 1, 2) for x in self.accel_tail_lanes),
                  "accel_tail weights must be >= 0, a table is needed when on, lanes in {0, 1, 2}")
+        _require(isinstance(self.residual_accel_off, bool), "residual_accel_off must be a boolean")
+        _require(isinstance(self.follower_courtesy_off, bool), "follower_courtesy_off must be a boolean")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

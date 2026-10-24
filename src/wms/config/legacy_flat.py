@@ -44,6 +44,9 @@ FLAT_TO_PATH: dict[str, str] = {
     "accel_tail_jerk_weight": "loss.accel_tail.jerk_weight",
     "accel_tail_table": "loss.accel_tail.table",
     "accel_tail_lanes": "loss.accel_tail.lanes",
+    # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
+    "residual_accel_off": "model.residual_accel_off",
+    "follower_courtesy_off": "model.follower_courtesy_off",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -408,6 +411,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "temporal_accel_off", "temporal_accel_reinit", "temporal_accel_lane_bias", "temporal_lane_bias_init",
     "temporal_accel_state_table", "temporal_state_table_init",
     "accel_tail_weight", "accel_tail_jerk_weight", "accel_tail_table", "accel_tail_lanes",
+    # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
+    "residual_accel_off", "follower_courtesy_off",
     # R12 BASE CALIBRATION
     "driver_param_init", "residual_accel_reinit", "recorded_replay_present",
     "batch_size_per_stage",
