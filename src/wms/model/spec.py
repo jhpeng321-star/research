@@ -146,6 +146,9 @@ class ModelSpec:
     # first-passage clearance CDF at the step-start state) or none (ablation: input slot = 0).
     follower_courtesy_state_grad: bool = False
     follower_courtesy_intent: str = "lane_v5"
+    # R13F (default false = round 12): the temporal acceleration emission (row 0 of the temporal
+    # MLP output) is replaced by an exact 0 (the BRAKE_DIAG zerotemp tensor); lane rows unchanged.
+    temporal_accel_off: bool = False
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -159,7 +162,8 @@ class ModelSpec:
         if self.follower_courtesy_intent == "pivot" and self.merge_decision != "first_passage":
             raise ValueError("follower_courtesy_intent='pivot' needs merge_decision='first_passage'")
         for name in ("follower_courtesy", "follower_courtesy_embedding",
-                     "follower_courtesy_rollout_grad", "follower_courtesy_state_grad"):
+                     "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
+                     "temporal_accel_off"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:

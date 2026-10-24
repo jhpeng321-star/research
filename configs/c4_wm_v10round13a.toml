@@ -8,8 +8,9 @@
 #       first-passage pivot's clearance CDF sigmoid(c_t / tau) at the step-START state (no accel/intent
 #       algebraic loop; latent-free; pivot parameters detached and frozen).  follower_courtesy_init_zero
 #       stays true (fresh zero head: the intent input changes meaning).
-#   (3) loss.follower_courtesy.absolute_weight = weight: absolute recorded follower acceleration on the same
-#       partnered rows next to the contrast + matched negative controls (equal weight; untuned).
+#   (3) loss.follower_courtesy.absolute_weight = 4.525: absolute recorded follower acceleration on the same
+#       partnered rows next to the contrast + matched negative controls; weight 4.525 by gradient-norm parity
+#       with the weighted contrast term at the zero-init head (docs/r13a_absolute_weight_rule.json).
 #   + name, runtime.out_dir, model.init_from (round 12 final checkpoint; the gate passes --set).
 # ---- round 12 header follows ----
 # V10 round 12 (2026-10-24): ROUND 9 (A-only hybrid first-passage merge law, frozen) + the BASE CALIBRATION of
@@ -94,7 +95,7 @@ weight = 0.0
 weight = 9.067   # R11 zero-init rule value (docs/r11_weight_rule.json; R12_DESIGN.md section 4)
 huber_delta_mps2 = 1.0
 contrast = true
-absolute_weight = 9.067   # R13A: = weight (equal weighting, untuned)
+absolute_weight = 4.525   # R13A rule: gradient-norm parity with the weighted contrast (docs/r13a_absolute_weight_rule.json)
 
 [curriculum]
 unroll_s = [120.0, 300.0]

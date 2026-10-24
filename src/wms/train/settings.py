@@ -115,6 +115,8 @@ class TrainSettings:
     follower_courtesy_state_grad: bool = False
     follower_courtesy_intent: str = "lane_v5"
     follower_courtesy_absolute_weight: float = 0.0
+    # R13F/R13T TEMPORAL EMISSION SWITCHES (default = round 12)
+    temporal_accel_off: bool = False
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
     driver_param_init: str = "checkpoint"
     residual_accel_reinit: bool = False
@@ -880,6 +882,7 @@ class TrainSettings:
                       or float(self.follower_courtesy_weight) > 0),
                  "loss.follower_courtesy.absolute_weight must be finite >= 0 (> 0 needs "
                  "loss.follower_courtesy.weight > 0)")
+        _require(isinstance(self.temporal_accel_off, bool), "temporal_accel_off must be a boolean")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

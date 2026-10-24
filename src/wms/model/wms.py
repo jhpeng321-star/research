@@ -236,6 +236,9 @@ class WmSModel(nn.Module):
         #   diag_temporal_tau_s     causal first-order low-pass of the temporal acceleration
         #                           output with this time constant in seconds; None = off.
         self.diag_zero_temporal = False
+        # R13F (spec, part of the checkpoint; default False = round 12): the temporal acceleration
+        # emission is an exact 0 in training and rollout -- the same tensor diag_zero_temporal zeroes.
+        self.temporal_accel_off = bool(getattr(spec, "temporal_accel_off", False))
         self.diag_residual_bound_mps2 = None
         self.diag_temporal_tau_s = None
         self._diag_temporal_lp = None
@@ -952,8 +955,8 @@ class WmSModel(nn.Module):
                                         kin.dtype, kin.device, controller_emb=controller_emb)
         temporal_accel = temporal[..., 0]
         temporal_residual_state = None
-        if self.diag_zero_temporal:
-            # V10BRKPROBE (a): remove only the temporal acceleration emission; the
+        if self.diag_zero_temporal or self.temporal_accel_off:
+            # V10BRKPROBE (a) / R13F: remove only the temporal acceleration emission; the
             # attention head, driver adaptation and the temporal lane path stay intact.
             temporal_accel = torch.zeros_like(temporal_accel)
         if self.temporal_residual_mode == "slow":

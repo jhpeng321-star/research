@@ -221,6 +221,10 @@ class ModelConfig:
     # true zeroes the delta row of the residual acceleration read-out (residual_net.accel.2) after
     # loading: the dead tanh-saturated head restarts at an exact zero with a live gradient.
     residual_accel_reinit: bool = False
+    # R13F (default false = round 12): the temporal path's acceleration emission (history_proj +
+    # k_embedding + temporal, output row 0) contributes exactly 0 in training AND rollout (the tensor
+    # BRAKE_DIAG's zerotemp counterfactual zeroes); its lane rows are unchanged.  Part of the checkpoint.
+    temporal_accel_off: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -400,6 +404,7 @@ class ModelConfig:
                 "model.driver_param_init = centre needs model.driver_param_mode = physical")
         require(isinstance(self.residual_accel_reinit, bool),
                 "model.residual_accel_reinit must be a boolean")
+        require(isinstance(self.temporal_accel_off, bool), "model.temporal_accel_off must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:

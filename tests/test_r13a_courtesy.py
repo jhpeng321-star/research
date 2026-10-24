@@ -366,11 +366,11 @@ def test_round13a_config_differs_from_round12_only_by_the_repair_flags():
     assert cfg.model.follower_courtesy_state_grad is True
     assert cfg.model.follower_courtesy_intent == "pivot"
     assert cfg.model.follower_courtesy_init_zero is True           # fresh head: intent meaning changed
-    assert cfg.loss.follower_courtesy.absolute_weight == cfg.loss.follower_courtesy.weight
+    assert cfg.loss.follower_courtesy.absolute_weight == 4.525          # docs/r13a_absolute_weight_rule.json
     assert cfg.loss.follower_courtesy.contrast is True
     assert cfg.model.follower_courtesy_rollout_grad is False
     assert cfg.model.merge_pivot_state_st is True and cfg.model.merge_decision == "first_passage"
     settings = TrainSettings.from_config(cfg)
-    assert settings.follower_courtesy_absolute_weight == cfg.loss.follower_courtesy.weight
+    assert settings.follower_courtesy_absolute_weight == 4.525
     spec = ModelSpec.from_mapping(cfg.to_legacy_flat())
     assert spec.follower_courtesy_state_grad and spec.follower_courtesy_intent == "pivot"
