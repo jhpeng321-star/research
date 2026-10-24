@@ -251,6 +251,8 @@ class ModelConfig:
     # follower_courtesy_off = the courtesy offset is an exact 0.  Part of the checkpoint.
     residual_accel_off: bool = False
     follower_courtesy_off: bool = False
+    # R13Y (default false = no new parameter): learn the mainline merge-yield rule.
+    mainline_merge_yield_learnable: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -449,6 +451,8 @@ class ModelConfig:
                 "model.temporal_accel_reinit has no effect with model.temporal_accel_off")
         require(isinstance(self.residual_accel_off, bool), "model.residual_accel_off must be a boolean")
         require(isinstance(self.follower_courtesy_off, bool), "model.follower_courtesy_off must be a boolean")
+        require(isinstance(self.mainline_merge_yield_learnable, bool),
+                "model.mainline_merge_yield_learnable must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:

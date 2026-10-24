@@ -47,6 +47,8 @@ FLAT_TO_PATH: dict[str, str] = {
     # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
     "residual_accel_off": "model.residual_accel_off",
     "follower_courtesy_off": "model.follower_courtesy_off",
+    # R13Y LEARNABLE MAINLINE MERGE-YIELD RULE
+    "mainline_merge_yield_learnable": "model.mainline_merge_yield_learnable",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -535,6 +537,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "replay_brake_oversample",
     "replay_error_max_boost", "replay_error_alpha", "replay_error_decay",
     "replay_probe_windows", "replay_refresh_every",
+    # R13Y (separate insertion site for conflict-free 13E integration)
+    "mainline_merge_yield_learnable",
 )
 
 
