@@ -170,3 +170,9 @@ Implementation:
 
   Flags-off base on the 7 states where it finished (3 base arms hit the 1,800 s timeout): overlap 2,624 pair-s,
   exact-stop .099, hard-brake 4.9%. No column freeze (COMBO300 Egsy stop share .76) with the pass rule.
+
+Gate fix (65cc714e): the first smoke (d5ff39b1) failed stage A only on the gate's blanket finite check,
+triggered by the weight-0 telemetry `merge_pivot_on_diagnostic_nll = inf` (also inf in S-R12C production and
+the passed 13C smoke). Keys containing `_on_diagnostic_` are now exempt; all optimized metrics/losses must
+still be finite. Re-verdict of the preserved failed-smoke artifacts with the fix: ok. Failed artifacts were moved
+to `r13e_superseded_d5ff39b1_gatefinite/` on gpuR and the run was re-registered (REGISTRATION.md addendum).
