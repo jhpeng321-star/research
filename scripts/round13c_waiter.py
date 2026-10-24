@@ -10,12 +10,15 @@ training (or a measurement error, fail closed). TRAIN here means the 963000..
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
 import gzip
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
+import platform
 import shutil
 import signal
 import subprocess
@@ -60,6 +63,34 @@ def proc_stat(pid):
     return int(fields[19]), fields[0]
 
 
+def _pidfd_syscall(number, *args):
+    """Raw pidfd fallback for the Linux x86-64 syscall ABI only."""
+    if (sys.platform != "linux" or platform.machine().lower() not in ("x86_64", "amd64")
+            or ctypes.sizeof(ctypes.c_long) != 8 or ctypes.sizeof(ctypes.c_void_p) != 8):
+        raise OSError(errno.ENOSYS, "pidfd syscall fallback requires Linux x86-64")
+    syscall = ctypes.CDLL(None, use_errno=True).syscall
+    syscall.restype = ctypes.c_long
+    syscall.argtypes = [ctypes.c_long]  # remaining variadic arguments are explicitly typed
+    result = syscall(ctypes.c_long(number), *args)
+    if result == -1:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    return result
+
+
+def pidfd_open(pid):
+    if hasattr(os, "pidfd_open"):
+        return os.pidfd_open(pid)
+    return _pidfd_syscall(434, ctypes.c_int(pid), ctypes.c_uint(0))
+
+
+def pidfd_send_signal(fd, sig):
+    if hasattr(signal, "pidfd_send_signal"):
+        return signal.pidfd_send_signal(fd, sig)
+    return _pidfd_syscall(424, ctypes.c_int(fd), ctypes.c_int(sig),
+                          ctypes.c_void_p(None), ctypes.c_uint(0))
+
+
 class ProductionProcess:
     def __init__(self, pid, run, start_ticks=None):
         if pid <= 1 or pid == os.getpid():
@@ -91,14 +122,12 @@ class ProductionProcess:
         """A pidfd pins identity across the check/signal race; never signal a PID group."""
         if not self.is_production():
             return "not sent: production PID/start identity/argv no longer matches"
-        if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
-            return "not sent: safe pidfd signalling unavailable"
         try:
-            fd = os.pidfd_open(self.pid)
+            fd = pidfd_open(self.pid)
             try:
                 if not self.is_production():
                     return "not sent: identity changed before signal"
-                signal.pidfd_send_signal(fd, signal.SIGTERM)
+                pidfd_send_signal(fd, signal.SIGTERM)
             finally:
                 os.close(fd)
         except ProcessLookupError:

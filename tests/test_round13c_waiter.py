@@ -1,5 +1,7 @@
 """No SSH, training or model imports: exercise waiter control and real metric arrays."""
 import importlib.util
+import ctypes
+import errno
 import gzip
 import json
 from pathlib import Path
@@ -55,6 +57,105 @@ def test_signal_requires_exact_production_argv_and_pins_pidfd(monkeypatch):
     monkeypatch.setattr(W.os, "pidfd_open", lambda pid: (setattr(proc, "start_ticks", 999) or 77), raising=False)
     assert proc.terminate().startswith("not sent")
     assert len(sent) == 1
+
+
+def mock_pidfd_syscall(monkeypatch, results):
+    monkeypatch.delattr(W.os, "pidfd_open", raising=False)
+    monkeypatch.delattr(W.signal, "pidfd_send_signal", raising=False)
+    monkeypatch.setattr(W.sys, "platform", "linux")
+    monkeypatch.setattr(W.platform, "machine", lambda: "x86_64")
+    calls = []
+    results = iter(results)
+    def syscall(*args):
+        calls.append(args)
+        result, error = next(results)
+        ctypes.set_errno(error)
+        return result
+    def cdll(name, **kwargs):
+        assert name is None and kwargs == {"use_errno": True}
+        return SimpleNamespace(syscall=syscall)
+    monkeypatch.setattr(W.ctypes, "CDLL", cdll)
+    return calls, syscall
+
+
+def test_pidfd_fallback_syscall_numbers_and_abi_types(monkeypatch):
+    # Simulate the Linux ABI even when this test runs on Windows (LLP64).
+    monkeypatch.setattr(W.ctypes, "sizeof", lambda kind: 8)
+    calls, syscall = mock_pidfd_syscall(monkeypatch, [(77, 0), (0, 0)])
+    assert W.pidfd_open(12345) == 77
+    assert W.pidfd_send_signal(77, 0) == 0
+    assert syscall.restype is ctypes.c_long
+    assert syscall.argtypes == [ctypes.c_long]
+    assert [type(x) for x in calls[0]] == [ctypes.c_long, ctypes.c_int, ctypes.c_uint]
+    assert [x.value for x in calls[0]] == [434, 12345, 0]
+    assert [type(x) for x in calls[1]] == [
+        ctypes.c_long, ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_uint]
+    assert [x.value for x in calls[1]] == [424, 77, 0, None, 0]
+
+
+@pytest.mark.parametrize("operation,error", [
+    ("open", errno.ENOSYS), ("open", errno.ESRCH),
+    ("send", errno.EBADF), ("send", errno.EPERM)])
+def test_pidfd_fallback_propagates_errno(monkeypatch, operation, error):
+    monkeypatch.setattr(W.ctypes, "sizeof", lambda kind: 8)
+    mock_pidfd_syscall(monkeypatch, [(-1, error)])
+    with pytest.raises(OSError) as exc:
+        if operation == "open":
+            W.pidfd_open(12345)
+        else:
+            W.pidfd_send_signal(77, 0)
+    assert exc.value.errno == error
+    if error == errno.ESRCH:
+        assert isinstance(exc.value, ProcessLookupError)
+
+
+@pytest.mark.parametrize("os_name,machine,width", [
+    ("win32", "AMD64", 8), ("linux", "aarch64", 8), ("linux", "x86_64", 4)])
+def test_pidfd_fallback_rejects_unsupported_abi(monkeypatch, os_name, machine, width):
+    mock_pidfd_syscall(monkeypatch, [])  # any syscall would fail this test
+    monkeypatch.setattr(W.sys, "platform", os_name)
+    monkeypatch.setattr(W.platform, "machine", lambda: machine)
+    monkeypatch.setattr(W.ctypes, "sizeof", lambda kind: width)
+    with pytest.raises(OSError) as exc:
+        W.pidfd_open(12345)
+    assert exc.value.errno == errno.ENOSYS
+    with pytest.raises(OSError) as exc:
+        W.pidfd_send_signal(77, 0)
+    assert exc.value.errno == errno.ENOSYS
+
+
+def test_pidfd_native_functions_preferred(monkeypatch):
+    monkeypatch.setattr(W, "_pidfd_syscall", lambda *a: pytest.fail("native API available"))
+    monkeypatch.setattr(W.os, "pidfd_open", lambda pid: pid + 1, raising=False)
+    sent = []
+    monkeypatch.setattr(W.signal, "pidfd_send_signal", lambda *a: sent.append(a), raising=False)
+    assert W.pidfd_open(12345) == 12346
+    W.pidfd_send_signal(77, 0)
+    assert sent == [(77, 0)]
+
+
+@pytest.mark.parametrize("outcome", ["sent", "replaced", "exited", "denied"])
+def test_terminate_fallback_pins_identity_and_closes_on_all_paths(monkeypatch, outcome):
+    monkeypatch.setattr(W.ctypes, "sizeof", lambda kind: 8)
+    error = errno.ESRCH if outcome == "exited" else errno.EPERM
+    results = [(77, 0)] + ([(0, 0)] if outcome == "sent" else [(-1, error)])
+    calls, _ = mock_pidfd_syscall(monkeypatch, results)
+    monkeypatch.setattr(W, "proc_stat", lambda pid: (100, "S"))
+    proc = W.ProductionProcess(12345, "/production", 100)
+    identities = iter([True, outcome != "replaced"])
+    monkeypatch.setattr(proc, "is_production", lambda: next(identities))
+    closed = []
+    monkeypatch.setattr(W.os, "close", closed.append)
+    if outcome == "denied":
+        with pytest.raises(PermissionError):
+            proc.terminate()
+    else:
+        result = proc.terminate()
+        assert result.startswith("SIGTERM sent" if outcome == "sent" else "not sent")
+    assert closed == [77]
+    assert len(calls) == (1 if outcome == "replaced" else 2)
+    if len(calls) == 2:
+        assert [x.value for x in calls[1]] == [424, 77, W.signal.SIGTERM, None, 0]
 
 
 def test_paired_mae_rejects_different_baseline_rows(tmp_path):
