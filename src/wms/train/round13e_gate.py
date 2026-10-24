@@ -543,6 +543,9 @@ def check_init(report, before, checkpoint, stage):
             "courtesy init mode mismatch")
 
 
+DIAGNOSTIC_ONLY = "_on_diagnostic_"
+
+
 def check_log(rows, text, stage, *, production=False, train_exit_code=0):
     errors, metrics = [], {}
     if train_exit_code != 0:
@@ -573,7 +576,11 @@ def check_log(rows, text, stage, *, production=False, train_exit_code=0):
         if isinstance(value, float):
             return math.isfinite(value)
         if isinstance(value, dict):
-            return all(finite_tree(v) for v in value.values())
+            # Weight-0 "on_diagnostic_" telemetry (losses/merge_pivot.py labels it so only
+            # when its loss weight is 0) is never optimized; it is +inf in S-R12C production
+            # and the passed 13C smoke too. Every optimized metric/loss must be finite.
+            return all(finite_tree(v) for k, v in value.items()
+                       if DIAGNOSTIC_ONLY not in str(k))
         if isinstance(value, list):
             return all(finite_tree(v) for v in value)
         return True

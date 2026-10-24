@@ -822,3 +822,15 @@ def test_gpu_guard_refuses_while_gpu_is_held_and_never_signals(tmp_path, listing
     assert ("GUARD_PASSED" in proc.stdout) is (code == 0)
     if listing.strip() and listing != "FAIL":
         assert "527550" in proc.stderr and "--wait" in proc.stderr
+
+
+def test_check_log_allows_only_weight_zero_on_diagnostic_infinities():
+    """The weight-0 on-policy diagnostic NLL is +inf in S-R12C/13C logs; losses must stay finite."""
+    import math as _math
+    from wms.train import round13e_gate as gate
+    row = {"merge_pivot_on_diagnostic_nll": _math.inf, "loss": 1.0}
+    assert "non-finite metric/loss" not in gate.check_log([row], "", "a")["errors"]
+    bad = {"merge_pivot_on_diagnostic_nll": 0.5, "loss": _math.inf}
+    assert "non-finite metric/loss" in gate.check_log([bad], "", "a")["errors"]
+    nested = {"x": {"merge_pivot_on_nll": _math.nan}}
+    assert "non-finite metric/loss" in gate.check_log([nested], "", "a")["errors"]
