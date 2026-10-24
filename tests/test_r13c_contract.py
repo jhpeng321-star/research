@@ -37,6 +37,10 @@ def test_config_and_actual_trainable_parameter_contract():
     kin[..., 4] = 10.
     kin[..., 6] = 5.
     model.diag_emit_temporal = True
+    from wms.model.history import LONG_HISTORY_F
+    history = torch.zeros(1, 3, model.driver_history_len, LONG_HISTORY_F)
+    mask = torch.zeros(history.shape[:-1], dtype=torch.bool)
     with torch.no_grad():
-        result = model({"veh_kin": kin, "present": torch.ones(1, 3, dtype=torch.bool)}, k_steps=1)
+        result = model({"veh_kin": kin, "present": torch.ones(1, 3, dtype=torch.bool)}, k_steps=1,
+                       driver_history=history, driver_history_mask=mask)
     assert torch.count_nonzero(result["temporal_accel_pregate_mps2"]) == 0

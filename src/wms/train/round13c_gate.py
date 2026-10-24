@@ -89,8 +89,11 @@ def check_artifacts(args):
         state = {"veh_kin": kin, "present": torch.ones(1, 3, dtype=torch.bool),
                  "is_cav": torch.zeros(1, 3, dtype=torch.bool)}
         model.diag_emit_temporal = True
+        from wms.model.history import LONG_HISTORY_F
+        history = torch.zeros(1, 3, model.driver_history_len, LONG_HISTORY_F)
+        history_mask = torch.zeros(history.shape[:-1], dtype=torch.bool)
         with torch.no_grad():
-            out = model(state, k_steps=1)
+            out = model(state, k_steps=1, driver_history=history, driver_history_mask=history_mask)
         emission = out.get("temporal_accel_pregate_mps2")
         if emission is None or torch.count_nonzero(emission).item() != 0:
             raise ValueError(f"{name}: temporal emission is not exactly zero")
