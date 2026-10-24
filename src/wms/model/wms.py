@@ -239,6 +239,13 @@ class WmSModel(nn.Module):
         # R13F (spec, part of the checkpoint; default False = round 12): the temporal acceleration
         # emission is an exact 0 in training and rollout -- the same tensor diag_zero_temporal zeroes.
         self.temporal_accel_off = bool(getattr(spec, "temporal_accel_off", False))
+        # R12C (spec, part of the checkpoint; default False = round 12): physics-only core
+        # calibration.  residual_accel_off replaces the residual attention/accel emission
+        # (base["accel_delta_mps2"]) by an exact 0 (the BRAKE_DIAG 'physics only' arm);
+        # follower_courtesy_off makes the courtesy offset an exact 0 and skips its addition.
+        # The lane read-outs of both nets are untouched; both are bit-identical when off.
+        self.residual_accel_off = bool(getattr(spec, "residual_accel_off", False))
+        self.follower_courtesy_off = bool(getattr(spec, "follower_courtesy_off", False))
         self.diag_residual_bound_mps2 = None
         self.diag_temporal_tau_s = None
         self._diag_temporal_lp = None
@@ -978,8 +985,14 @@ class WmSModel(nn.Module):
             temporal_accel = filtered
         gate = self.gate(k).to(kin.dtype)
 
+        # R12C physics-only calibration: the residual attention/accel emission is an exact 0
+        # (gate * (0 + temporal) with temporal_accel_off as well -> correction exactly 0);
+        # the residual lane read-out keeps its value (unused by the hazard_v5 lane model).
+        residual_delta = base["accel_delta_mps2"]
+        if self.residual_accel_off:
+            residual_delta = torch.zeros_like(residual_delta)
         accel_delta = (torch.zeros_like(physics) if self.rollout_mode == "driver_params"
-                       else base["accel_delta_mps2"] + temporal_accel)
+                       else residual_delta + temporal_accel)
         raw_residual = gate * accel_delta
         correction = bounded_accel_correction(
             gate * accel_delta, soft_bound_pos=self.residual_soft_bound_mps2,
@@ -1050,10 +1063,15 @@ class WmSModel(nn.Module):
             applies = pairs["has_partner"] & learned
             raw = self.follower_courtesy_offset(inputs, live=self.follower_courtesy_rollout_grad)
             offset = torch.where(applies, raw, torch.zeros_like(raw))
+            if self.follower_courtesy_off:
+                # R12C: the courtesy offset is an exact 0 (emission off; the head may still be
+                # trained by loss.follower_courtesy through its own internal replay).
+                offset = torch.zeros_like(offset)
             courtesy_out = {"courtesy_accel_mps2": offset, "courtesy_applies": applies,
                             "courtesy_inputs": inputs.detach(),
                             "accel_pre_courtesy_mps2": accel.detach()}
-            accel = accel + offset
+            if not self.follower_courtesy_off:
+                accel = accel + offset
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 

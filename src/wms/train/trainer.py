@@ -96,6 +96,7 @@ def build_optimizer(model, *, lr: float, weight_decay: float,
     scale = dict(lr_scale or {})
     frozen = tuple(freeze_prefixes)
     buckets: dict[str, list] = {"": []}
+    trainable_names: list[str] = []
     frozen_tensors = frozen_parameters = 0
     matched_freeze: set[str] = set()
     matched_scale: set[str] = set()
@@ -113,6 +114,7 @@ def build_optimizer(model, *, lr: float, weight_decay: float,
         key = max(keys, key=len) if keys else ""
         matched_scale.update(keys)
         buckets.setdefault(key, []).append(param)
+        trainable_names.append(name)
     groups = []
     report_groups = []
     for key in [""] + sorted(k for k in buckets if k):
@@ -134,6 +136,7 @@ def build_optimizer(model, *, lr: float, weight_decay: float,
         "frozen_parameters": frozen_parameters,
         "trainable_tensors": sum(g["tensors"] for g in report_groups),
         "trainable_parameters": sum(g["parameters"] for g in report_groups),
+        "trainable_tensor_names": trainable_names,
         "total_parameters": sum(int(p.numel()) for _, p in named),
         "unmatched_freeze_prefixes": sorted(set(frozen) - matched_freeze),
         "unmatched_lr_scale_prefixes": sorted(set(scale) - matched_scale),

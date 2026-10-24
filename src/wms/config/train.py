@@ -225,6 +225,11 @@ class ModelConfig:
     # k_embedding + temporal, output row 0) contributes exactly 0 in training AND rollout (the tensor
     # BRAKE_DIAG's zerotemp counterfactual zeroes); its lane rows are unchanged.  Part of the checkpoint.
     temporal_accel_off: bool = False
+    # R12C (default false = round 12): physics-only core calibration switches (BRAKE_DIAG 'physics
+    # only' arm).  residual_accel_off = the residual attention/accel emission is an exact 0;
+    # follower_courtesy_off = the courtesy offset is an exact 0.  Part of the checkpoint.
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -405,6 +410,8 @@ class ModelConfig:
         require(isinstance(self.residual_accel_reinit, bool),
                 "model.residual_accel_reinit must be a boolean")
         require(isinstance(self.temporal_accel_off, bool), "model.temporal_accel_off must be a boolean")
+        require(isinstance(self.residual_accel_off, bool), "model.residual_accel_off must be a boolean")
+        require(isinstance(self.follower_courtesy_off, bool), "model.follower_courtesy_off must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:

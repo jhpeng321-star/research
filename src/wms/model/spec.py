@@ -149,6 +149,11 @@ class ModelSpec:
     # R13F (default false = round 12): the temporal acceleration emission (row 0 of the temporal
     # MLP output) is replaced by an exact 0 (the BRAKE_DIAG zerotemp tensor); lane rows unchanged.
     temporal_accel_off: bool = False
+    # R12C (default false = round 12): physics-only core calibration switches.  residual_accel_off
+    # replaces the residual attention/accel emission by an exact 0; follower_courtesy_off makes the
+    # courtesy offset an exact 0 (BRAKE_DIAG 'physics only (residual and courtesy off)' arm).
+    residual_accel_off: bool = False
+    follower_courtesy_off: bool = False
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -163,7 +168,7 @@ class ModelSpec:
             raise ValueError("follower_courtesy_intent='pivot' needs merge_decision='first_passage'")
         for name in ("follower_courtesy", "follower_courtesy_embedding",
                      "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
-                     "temporal_accel_off"):
+                     "temporal_accel_off", "residual_accel_off", "follower_courtesy_off"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:
