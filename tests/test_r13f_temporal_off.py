@@ -173,9 +173,15 @@ def test_r13f_verdict_switch_check(tmp_path):
 
     write(temporal_accel_off=True, follower_courtesy_state_grad=True, follower_courtesy_intent="pivot")
     reports = check_r13f_checkpoints(tmp_path, 4.525)
-    assert len(reports) == 3 and all(r["temporal_accel_off"] for r in reports)
+    assert len(reports) == 3 and all(r["temporal_mode"] == "off" for r in reports)
     with pytest.raises(ValueError, match="absolute_weight"):
         check_r13f_checkpoints(tmp_path, 9.067)
     write(temporal_accel_off=False, follower_courtesy_state_grad=True, follower_courtesy_intent="pivot")
     with pytest.raises(ValueError, match="temporal_accel_off"):
         check_r13f_checkpoints(tmp_path, 4.525)
+    with pytest.raises(ValueError, match="temporal_accel_lane_bias"):
+        check_r13f_checkpoints(tmp_path, 4.525, "lane_bias")
+    write(temporal_accel_lane_bias=True, follower_courtesy_state_grad=True, follower_courtesy_intent="pivot")
+    assert all(r["temporal_mode"] == "lane_bias" for r in check_r13f_checkpoints(tmp_path, 4.525, "lane_bias"))
+    with pytest.raises(ValueError, match="temporal_accel_off"):
+        check_r13f_checkpoints(tmp_path, 4.525, "off")

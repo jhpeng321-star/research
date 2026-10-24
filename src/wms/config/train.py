@@ -225,6 +225,13 @@ class ModelConfig:
     # k_embedding + temporal, output row 0) contributes exactly 0 in training AND rollout (the tensor
     # BRAKE_DIAG's zerotemp counterfactual zeroes); its lane rows are unchanged.  Part of the checkpoint.
     temporal_accel_off: bool = False
+    # R13T init-only switch (default false = round 12): zero row 0 (the acceleration delta) of the temporal
+    # read-out temporal[-1] after loading (exact 0 emission, live gradient), mirroring residual_accel_reinit.
+    temporal_accel_reinit: bool = False
+    # R13M (default false/None = round 12): per-lane constant temporal emission and its init values
+    # (pre-gate m/s^2 for lanes 0, 1, 2; init-only, applied after loading; None = zeros).
+    temporal_accel_lane_bias: bool = False
+    temporal_lane_bias_init: Optional[tuple[float, ...]] = None
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -405,6 +412,16 @@ class ModelConfig:
         require(isinstance(self.residual_accel_reinit, bool),
                 "model.residual_accel_reinit must be a boolean")
         require(isinstance(self.temporal_accel_off, bool), "model.temporal_accel_off must be a boolean")
+        require(isinstance(self.temporal_accel_reinit, bool), "model.temporal_accel_reinit must be a boolean")
+        require(isinstance(self.temporal_accel_lane_bias, bool)
+                and not (self.temporal_accel_lane_bias and self.temporal_accel_off),
+                "model.temporal_accel_lane_bias must be a boolean, exclusive with temporal_accel_off")
+        require(self.temporal_lane_bias_init is None or (
+            self.temporal_accel_lane_bias and len(self.temporal_lane_bias_init) == 3
+            and all(is_finite(x) for x in self.temporal_lane_bias_init)),
+            "model.temporal_lane_bias_init needs temporal_accel_lane_bias and 3 finite values")
+        require(not (self.temporal_accel_reinit and self.temporal_accel_off),
+                "model.temporal_accel_reinit has no effect with model.temporal_accel_off")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -640,6 +657,27 @@ class CutinReactionConfig:
                 "loss.cutin_reaction needs pre_s in [0,1], max_window_s in (0,6]")
         require(self.huber_delta_mps2 > 0,
                 "loss.cutin_reaction.huber_delta_mps2 must be positive")
+
+
+# R13T TAIL MATCHING
+@config_dataclass
+class AccelTailLossConfig:
+    """R13T per-cell pinball quantile score of the rollout's HDV acceleration / |jerk| on all rows
+    (wms.train.losses.accel_tail; default OFF = round 12).  ``table`` = recorded TRAIN quantile table
+    (tools/r13t_tail_table.py); relative paths resolve against the repository root."""
+
+    weight: float = 0.0
+    jerk_weight: float = 0.0
+    table: Optional[str] = None
+    lanes: tuple[int, ...] = (1,)
+
+    def __post_init__(self) -> None:
+        require(is_finite(self.weight) and self.weight >= 0 and is_finite(self.jerk_weight)
+                and self.jerk_weight >= 0, "loss.accel_tail weights must be finite and >= 0 (0 = off)")
+        require(not (self.weight > 0 or self.jerk_weight > 0) or bool(self.table),
+                "loss.accel_tail needs loss.accel_tail.table when a weight is > 0")
+        require(len(self.lanes) > 0 and all(int(x) in (0, 1, 2) for x in self.lanes),
+                "loss.accel_tail.lanes must be a non-empty subset of {0, 1, 2}")
 
 
 # R10B LEARNED FOLLOWER COURTESY
@@ -1277,6 +1315,8 @@ class LossConfig:
     step_weight_decay: float = 0.01
     braking: BrakingConfig = field(default_factory=BrakingConfig)
     brake_persist: BrakePersistConfig = field(default_factory=BrakePersistConfig)
+    # R13T TAIL MATCHING
+    accel_tail: AccelTailLossConfig = field(default_factory=AccelTailLossConfig)
     brake_wave: BrakeWaveConfig = field(default_factory=BrakeWaveConfig)
     onset_stats: OnsetStatsConfig = field(default_factory=OnsetStatsConfig)
     post_merge: PostMergeConfig = field(default_factory=PostMergeConfig)
@@ -1606,6 +1646,8 @@ class TrainConfig:
                               ("brake_persist", self.loss.brake_persist.weight > 0.0),
                               ("brake_persist_quantile",
                                self.loss.brake_persist.quantile_weight > 0.0),
+                              ("accel_tail", self.loss.accel_tail.weight > 0.0),
+                              ("jerk_tail", self.loss.accel_tail.jerk_weight > 0.0),
                               ("brake_wave", self.loss.brake_wave.weight > 0.0),
                               ("brake_wave_residual",
                                self.loss.brake_wave.residual_weight > 0.0),

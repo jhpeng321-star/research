@@ -1,0 +1,135 @@
+# V10 round 13T (PREPARED 2026-10-24, NOT registered, NOT launched): ROUND 12 (inline copy below; round 12 is
+# at the 16-file extends cap) + the temporal-emission fix of BRAKE_DIAG.md / R13T_DESIGN.md, one fix vs round 12:
+#   (1) model.temporal_accel_reinit = true: the temporal read-out's acceleration row restarts at an exact 0
+#       (live gradient), mirroring residual_accel_reinit; the temporal MLP keeps training (lr x5, round 12).
+#   (2) [loss.accel_tail]: pinball tail matching of lane-1 HDV acceleration and |jerk| on all rollout rows.
+#   Init = round-12 FINAL (gate passes --set model.init_from=$R13T_INIT), so round 12's init transforms are off:
+#   driver_param_init = checkpoint, residual_accel_reinit = false, follower_courtesy_init_zero = false (the
+#   trained round-12 courtesy head is loaded).  Launch only after round 12 results and registration + ack.
+# ---- round 12 header follows ----
+# V10 round 12 (2026-10-24): ROUND 9 (A-only hybrid first-passage merge law, frozen) + the BASE CALIBRATION of
+# BASE_FOLLOWER_DIAG.md + the round-11 contrast courtesy head, fix B DROPPED (round 10 showed it leaves the cause
+# untouched and degraded ranking/stuck; R12_DESIGN.md section 1).  The car-following path is retrained on the full
+# round-8/9 motion objective (position/speed, aggregate, agg_delay incl. the paired 300 s delay term, paired_diff,
+# brake persistence, lane event/flow guards, residual magnitude, textbook driver prior) with merge_pivot FROZEN.
+#   (A) model.driver_param_mode = "physical" (V6ENC: a 0.3-4.0, b 0.8-6.0, T 0.4-3.0, s0 0.5-5.0, v0 0.6-1.4 x limit;
+#       learned shared centre; prediction error only) + model.driver_param_init = "centre" (head rows of the five
+#       longitudinal means zeroed after loading: every driver starts at the learned centre = physics defaults).
+#   (B) model.residual_accel_reinit = true (the dead tanh-saturated residual acceleration read-out restarts at 0).
+#   (C) round-11 contrast courtesy v2, zero-init head (R11_REVIEW C2 launch choice), weight/lr of the R11 zero-init rule.
+#   (D) loss.recorded_replay_present = "filled" (replay state = filled window presence; loss_valid = supervision only).
+# Every new switch defaults to the round-11 behaviour elsewhere (tests/test_r12_base.py).  Extends round 2 directly
+# (16-file extends cap), blocks copied inline from round 9 / round 11.
+schema_version = 2
+name = "WM-S-C4-V10ROUND13T"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "first_passage"
+merge_st_width = 1.0
+merge_passage_law = "hybrid"
+merge_w_init = 1.0
+merge_quadrature_order = 32
+merge_pivot_state_st = true    # full pathwise adjoint kept (owner decision 10-22), as in round 9
+checkpoint_forward = true      # recompute the pure per-step forward in backward (exact; as in round 9)
+merge_negotiation = false
+# (A) reachable IDM settings (V6ENC) and the centre start
+driver_param_mode = "physical"
+driver_param_init = "checkpoint"   # R13: init = round-12 FINAL; its own init transforms are NOT re-applied
+# (B) dead residual acceleration head re-initialised
+residual_accel_reinit = false     # R13: keep round 12's trained residual read-out
+# (C) round-11 learned follower courtesy (contrast target, version-2 inputs, fresh zero head)
+follower_courtesy = true
+follower_courtesy_hidden = 32
+follower_courtesy_embedding = false
+follower_courtesy_rollout_grad = false  # head weights trained ONLY by loss.follower_courtesy (state adjoint kept)
+follower_courtesy_version = 2
+follower_courtesy_init_zero = false   # R13T: load round 12's trained head
+# R13T temporal read-out re-initialised (acceleration row only)
+temporal_accel_reinit = true
+# Round 12 final checkpoint (gate passes --set model.init_from=$R13T_INIT).
+init_from = "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round12/wm_s_stage300.pt"
+
+[physics]
+merge_end_wait = false
+ramp_lane_end_stop = true
+ramp_risk_retain = true
+
+[loss]
+recorded_replay_present = "filled"   # (D) fix of the replay visibility mask
+
+[loss.merge_core]
+version = 2
+# Owner amendment (as round 9): TF + F2 only; recorded-matched on-policy scores are diagnostics.
+weight = 0.0
+tf_weight = 0.6
+yield_weight = 0.0
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+location_reg_weight = 0.0
+sigma_reg_weight = 0.0
+tau_reg_weight = 0.0
+w_reg_weight = 0.0
+z_tf = 395.2
+z_on = 2.15
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+# Fix B is dropped (weight 0 = the term is never built).  The courtesy contrast keeps its own no-grad replay.
+[loss.cutin_reaction]
+weight = 0.0
+
+[loss.follower_courtesy]
+weight = 9.067   # R11 zero-init rule value (docs/r11_weight_rule.json; R12_DESIGN.md section 4)
+huber_delta_mps2 = 1.0
+contrast = true
+
+# R13T tail matching (R13T_DESIGN.md): per-cell pinball quantile score of the rollout's lane-1 HDV acceleration
+# and |jerk| on ALL rows vs the recorded TRAIN quantiles (tools/r13t_tail_table.py; regenerated on the launch
+# host from the TRAIN split, the loss refuses any other split); weights by gradient-norm parity with the braking
+# terms (docs/r13t_weight_rule.json; re-measured at launch on the round-12 final).
+[loss.accel_tail]
+weight = 10.33
+jerk_weight = 38.74
+table = "docs/r13t_tail_table.json"
+lanes = [1]
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [40, 70]               # R12_DESIGN.md section 5 (base retrain; ~8 h budget on the 4090)
+truncation_steps_per_stage = [120, 60]
+max_hours = 8.0
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+# Trainable = the car-following path: driver-encoder settings head + learned centre, the residual net except its
+# lane read-out, the temporal MLP, the courtesy head.  Frozen bitwise: the merge pivot (round 9's fit), merge core,
+# the two residual GATE scalars (R10_DIAG: under the position-dominated, always-clipped gradient the gate drifted down
+# in 87 % of round-10 steps without converging, i.e. it shrinks the whole residual instead of correcting it; with the
+# re-initialised read-out the residual sets its own magnitude inside the round-9 gate envelope), the driver-encoder
+# trunk (the driver EMBEDDING fed to lane_v5 / residual is unchanged), driver updater, lane network and gates,
+# history/step embeddings, the residual lane read-out.
+freeze_prefixes = [
+  "driver_encoder.history_proj", "driver_encoder.query", "driver_encoder.interaction_proj",
+  "driver_encoder.history_gru", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
+  "lane_v5", "merge_core", "merge_pivot", "residual_net.lane",
+]
+
+[optim.lr_scale]
+"driver_encoder.head" = 10.0          # R12 lr rule (docs/r12_lr_rule.json): best held-out of {1,10} x {10..1000}
+"driver_encoder.centre_logits" = 1000.0  # R12 lr rule (docs/r12_lr_rule.json)
+"residual_net" = 0.5                  # round-8 recipe
+"temporal" = 5.0                      # round 10/11
+"follower_courtesy" = 1000.0          # R11 zero-init rule (docs/r11_weight_rule.json)
+
+[selection]
+val_max_windows = 256
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round13t"

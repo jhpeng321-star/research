@@ -145,6 +145,40 @@ def onset_mask(targets: UnrollTargets, *, onset_decel_mps2: float = 1.0) -> Tens
 
 
 @torch.no_grad()
+def leader_cells(s: Tensor, lane_onehot: Tensor, v: Tensor, a: Tensor, valid: Tensor, *,
+                 max_gap_m: float) -> Tensor:
+    """``[B, K]`` (gap x closing x leader-decel) cell id of every slot at one time slice.
+
+    The nearest valid same-lane car ahead within ``max_gap_m`` (centre distance) is the leader;
+    bins: gap <= 10 / <= 20 / <= max_gap / no leader, closing (v - v_leader) < 0 / < 3 / < 6 / >= 6,
+    leader acceleration >= -1 / >= -2.5 / below / no leader.  ``valid`` must already include
+    "on the road" (a lane one-hot).  Shared by the onset event-balance weights and the R13T
+    tail-matching term so both use one cell convention.
+    """
+    lane = lane_onehot.argmax(dim=-1)
+    gap = s.unsqueeze(-2) - s.unsqueeze(-1)          # [B, follower, leader]
+    same_lane = lane.unsqueeze(-2) == lane.unsqueeze(-1)
+    ahead = (valid.unsqueeze(-2) & valid.unsqueeze(-1) & same_lane
+             & (gap > 0.0) & (gap <= float(max_gap_m)))
+    dist = torch.where(ahead, gap, torch.full_like(gap, float("inf")))
+    nearest, index = dist.min(dim=-1)
+    has_leader = torch.isfinite(nearest)
+    v_leader = torch.gather(v, -1, index)
+    a_leader = torch.gather(a, -1, index)
+    closing = v - v_leader
+    gap_bin = torch.where(nearest <= 10.0, 0,
+                          torch.where(nearest <= 20.0, 1,
+                                      torch.where(has_leader, 2, _NO_LEADER_BIN)))
+    closing_bin = torch.where(closing < 0.0, 0,
+                              torch.where(closing < 3.0, 1,
+                                          torch.where(closing < 6.0, 2, 3)))
+    decel_bin = torch.where(~has_leader, _NO_LEADER_BIN,
+                            torch.where(a_leader >= -1.0, 0,
+                                        torch.where(a_leader >= -2.5, 1, 2)))
+    return (gap_bin * _CLOSING_BINS + closing_bin) * _DECEL_BINS + decel_bin
+
+
+@torch.no_grad()
 def _cell_ids(targets: UnrollTargets, onset: Tensor, *, max_gap_m: float) -> Tensor:
     """``[B, n_steps, K]`` recorded (gap x closing x leader-decel) cell id, -1 off-onset."""
     b_n, n, k_n = onset.shape
@@ -153,32 +187,10 @@ def _cell_ids(targets: UnrollTargets, onset: Tensor, *, max_gap_m: float) -> Ten
     for t in range(n):
         if not bool(onset[:, t].any()):
             continue
-        s_t = states[:, t, :, 0]
-        lane = states[:, t, :, 1:4].argmax(dim=-1)
         on_road = states[:, t, :, 1:4].sum(dim=-1) > 0
         valid_t = targets.loss_valid[:, t] & on_road
-        gap = s_t.unsqueeze(-2) - s_t.unsqueeze(-1)          # [B, follower, leader]
-        same_lane = lane.unsqueeze(-2) == lane.unsqueeze(-1)
-        ahead = (valid_t.unsqueeze(-2) & valid_t.unsqueeze(-1) & same_lane
-                 & (gap > 0.0) & (gap <= float(max_gap_m)))
-        dist = torch.where(ahead, gap, torch.full_like(gap, float("inf")))
-        nearest, index = dist.min(dim=-1)
-        has_leader = torch.isfinite(nearest)
-        v = states[:, t, :, 4]
-        a = states[:, t, :, 5]
-        v_leader = torch.gather(v, -1, index)
-        a_leader = torch.gather(a, -1, index)
-        closing = v - v_leader
-        gap_bin = torch.where(nearest <= 10.0, 0,
-                              torch.where(nearest <= 20.0, 1,
-                                          torch.where(has_leader, 2, _NO_LEADER_BIN)))
-        closing_bin = torch.where(closing < 0.0, 0,
-                                  torch.where(closing < 3.0, 1,
-                                              torch.where(closing < 6.0, 2, 3)))
-        decel_bin = torch.where(~has_leader, _NO_LEADER_BIN,
-                                torch.where(a_leader >= -1.0, 0,
-                                            torch.where(a_leader >= -2.5, 1, 2)))
-        cell = (gap_bin * _CLOSING_BINS + closing_bin) * _DECEL_BINS + decel_bin
+        cell = leader_cells(states[:, t, :, 0], states[:, t, :, 1:4], states[:, t, :, 4],
+                            states[:, t, :, 5], valid_t, max_gap_m=float(max_gap_m))
         cells[:, t] = torch.where(onset[:, t], cell, torch.full_like(cell, -1))
     return cells
 
@@ -335,4 +347,4 @@ def brake_persist_terms(config: BrakePersistConfig) -> list[LossTerm]:
 
 
 __all__ = ["BrakePersistConfig", "BrakePersistLoss", "BrakePersistQuantileLoss",
-           "brake_persist_terms", "onset_mask", "prepare_brake_persist", "QUANTILES"]
+           "brake_persist_terms", "leader_cells", "onset_mask", "prepare_brake_persist", "QUANTILES"]

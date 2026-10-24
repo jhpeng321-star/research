@@ -254,6 +254,13 @@ class WmSModel(nn.Module):
         # SUMO-consistent ceiling min(own physics-core IDM accel, (v0-v)/dt, accel param).
         self.cav_exec_cap = "off"
         self._build_modules(spec)
+        # R13M: per-lane constant temporal emission (created last: default key set / RNG unchanged).
+        self.temporal_accel_lane_bias = bool(getattr(spec, "temporal_accel_lane_bias", False))
+        self.temporal_lane_bias = (nn.Parameter(torch.zeros(3)) if self.temporal_accel_lane_bias
+                                   else None)
+        # Diagnostic (never part of a checkpoint, default off = no extra output): emit the pre-gate
+        # temporal acceleration as ``temporal_accel_pregate_mps2`` (tools/r13m_lane_bias_init.py).
+        self.diag_emit_temporal = False
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
 
@@ -959,6 +966,12 @@ class WmSModel(nn.Module):
             # V10BRKPROBE (a) / R13F: remove only the temporal acceleration emission; the
             # attention head, driver adaptation and the temporal lane path stay intact.
             temporal_accel = torch.zeros_like(temporal_accel)
+        elif self.temporal_lane_bias is not None:
+            # R13M: the emission is the learned per-lane constant of the step-start lane (0 off road).
+            on_road = kin[..., 1:4].sum(-1) > 0
+            lane_now = kin[..., 1:4].argmax(-1)
+            temporal_accel = torch.where(on_road, self.temporal_lane_bias.to(kin.dtype)[lane_now],
+                                         torch.zeros_like(temporal_accel))
         if self.temporal_residual_mode == "slow":
             # SLOWRES: replace the direct temporal emission by the carried low-pass state.
             temporal_accel = self._slow_temporal_accel(
@@ -1102,6 +1115,8 @@ class WmSModel(nn.Module):
                   "accel_delta_mps2": accel - physics, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
+        if self.diag_emit_temporal:
+            result["temporal_accel_pregate_mps2"] = temporal_accel
         if temporal_residual_state is not None:
             result["temporal_residual_mps2"] = temporal_residual_state
             result["temporal_residual_present"] = present
