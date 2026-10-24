@@ -23,7 +23,7 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
-from wms.physics.accel import baseline_accel
+from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
 from wms.physics.mobil import (MASKED_LOGIT, merge_end_blocked, merge_impatience_level,
@@ -585,15 +585,24 @@ class WmSModel(nn.Module):
                                self.physics.max_gap_steps)
 
     def physics_accel(self, state: dict[str, Tensor],
-                      driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
-        """Physics-baseline acceleration ``[B, K]``."""
+                      driver_params: Optional[dict[str, Tensor]] = None, *,
+                      emergency_envelope: bool = True) -> Tensor:
+        """Physics-baseline acceleration ``[B, K]``.
+
+        R13E: the emergency envelope is applied last (after the learned yield cap);
+        ``emergency_envelope=False`` returns the un-enveloped composition input.
+        """
         kin = state_kin(state)
         present = state_present(state, kin)
-        accel = baseline_accel(kin, present, self.physics, driver_params)
+        accel = baseline_accel(kin, present, self.physics, driver_params,
+                               emergency_envelope=False)
         if self.mainline_merge_yield_learnable:
             accel, _ = self.merge_yield(kin, present, accel, self.physics, driver_params,
                                         is_cav=state.get("is_cav"),
                                         merge_wait_s=state.get("merge_wait_s"))
+        if emergency_envelope and self.physics.emergency_braking:
+            accel = torch.where(present, apply_emergency_envelope(
+                kin, present, accel, self.physics, driver_params), torch.zeros_like(accel))
         return accel
 
     def mobil_merge_logits(self, state: dict[str, Tensor],
@@ -603,15 +612,22 @@ class WmSModel(nn.Module):
         return mobil_merge_logits(kin, state_present(state, kin), self.physics, driver_params)
 
     def _physics_step(self, state: dict[str, Tensor],
-                      driver_params: Optional[dict[str, Tensor]] = None
+                      driver_params: Optional[dict[str, Tensor]] = None, *,
+                      emergency_envelope: bool = True
                       ) -> tuple[Tensor, Tensor]:
-        """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
+        """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics.
+
+        ``emergency_envelope=False`` (R13E forward) omits the emergency envelope so the
+        caller can apply it once to the final composed acceleration.
+        """
+        env = emergency_envelope
         if self.physics_step is None:
             if self.mainline_merge_yield_learnable:
                 # Keep the unconstrained baseline for residual/courtesy composition.
                 # The virtual-leader cap is applied ONCE after those terms below.
                 kin = state_kin(state)
-                return (baseline_accel(kin, state_present(state, kin), self.physics, driver_params),
+                return (baseline_accel(kin, state_present(state, kin), self.physics, driver_params,
+                                       emergency_envelope=env),
                         self.mobil_merge_logits(state, driver_params))
             # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
             impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
@@ -624,22 +640,23 @@ class WmSModel(nn.Module):
                 if impatience is None:
                     blocked = merge_end_blocked(kin, present, self.physics)
                     return (baseline_accel(kin, present, self.physics, driver_params,
-                                           merge_blocked=blocked),
+                                           merge_blocked=blocked, emergency_envelope=env),
                             mobil_merge_logits(kin, present, self.physics, driver_params,
                                                merge_blocked=blocked))
                 blocked = merge_end_blocked(kin, present, self.physics, impatience)
                 return (baseline_accel(kin, present, self.physics, driver_params,
-                                       merge_blocked=blocked, impatience=impatience),
+                                       merge_blocked=blocked, impatience=impatience,
+                                       emergency_envelope=env),
                         mobil_merge_logits(kin, present, self.physics, driver_params,
                                            merge_blocked=blocked, impatience=impatience))
             if impatience is not None:
                 kin = state_kin(state)
                 present = state_present(state, kin)
                 return (baseline_accel(kin, present, self.physics, driver_params,
-                                       impatience=impatience),
+                                       impatience=impatience, emergency_envelope=env),
                         mobil_merge_logits(kin, present, self.physics, driver_params,
                                            impatience=impatience))
-            return (self.physics_accel(state, driver_params),
+            return (self.physics_accel(state, driver_params, emergency_envelope=env),
                     self.mobil_merge_logits(state, driver_params))
         result = self.physics_step(state)
         if not isinstance(result, Mapping) or "accel_mps2" not in result:
@@ -944,13 +961,23 @@ class WmSModel(nn.Module):
             raise ValueError("k_steps must be scalar or [B,K]")
 
         encoded = None
+        final_envelope = bool(getattr(self.physics, "emergency_braking", False))             and self.physics_step is None
         if self.rollout_mode in ("driver_params", "hybrid") or self.long_history:
             encoded, driver_embedding, driver_params = self._encode_drivers(
                 kin, present, driver_history, driver_history_mask, history, history_mask,
                 driver_defaults, driver_params, driver_embedding)
-            physics, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params)
+            physics, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params,
+                                                    emergency_envelope=not final_envelope)
         else:
-            physics, lane_base = self._physics_step({**state, "veh_kin": kin})
+            physics, lane_base = self._physics_step({**state, "veh_kin": kin},
+                                                    emergency_envelope=not final_envelope)
+        # R13E review B2: the emergency envelope bounds the FINAL pre-clamp acceleration
+        # (after residual, courtesy and yield). ``physics`` stays the un-enveloped
+        # composition input; the reported physics baseline is enveloped as before.
+        physics_reported = physics
+        if final_envelope:
+            physics_reported = torch.where(present, apply_emergency_envelope(
+                kin, present, physics, self.physics, driver_params), torch.zeros_like(physics))
 
         yield_bound = yield_selected = yield_weight = None
         if self.mainline_merge_yield_learnable:
@@ -1153,6 +1180,10 @@ class WmSModel(nn.Module):
             # even a zero-weight distant pair would cap it at the raw baseline.
             yield_bound = yield_bound + (1.0 - yield_weight) * (accel - physics).clamp_min(0.0)
             accel = torch.where(yield_selected, torch.minimum(accel, yield_bound), accel)
+        if final_envelope:
+            # Once, on the final composed acceleration; d/d(accel) in [0, 1].
+            accel = torch.where(present, apply_emergency_envelope(
+                kin, present, accel, self.physics, driver_params), accel)
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -1196,9 +1227,9 @@ class WmSModel(nn.Module):
             lane_logits = self.lane_change_head(driver_embedding, context, feasible_actions)
             lane_probabilities = torch.softmax(lane_logits, dim=-1)
 
-        result = {"physics_accel_mps2": physics, "accel_mps2": accel,
+        result = {"physics_accel_mps2": physics_reported, "accel_mps2": accel,
                   "raw_residual_mps2": raw_residual,
-                  "accel_delta_mps2": accel - physics, "lane_logits": lane_logits,
+                  "accel_delta_mps2": accel - physics_reported, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
         if self.diag_emit_temporal:

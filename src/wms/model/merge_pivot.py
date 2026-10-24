@@ -21,6 +21,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
+from ..physics.secure_gap import secure_gap_need, secure_gap_ok
 from .merge_core import load_init
 
 
@@ -96,50 +97,59 @@ class FirstPassageNet(nn.Module):
     @staticmethod
     def secure_gap_margin(geometry: Mapping[str, Tensor],
                           driver_params: Mapping[str, Tensor]) -> Tensor:
-        """Min log gap/required-gap, using the actual follower and leader settings.
+        """Min log gap/required-gap; its SIGN is exactly GAPACC ``gs`` acceptance.
 
-        Required bumper clearance is s0_f + v_f*T_f + relu(v_f²/(2*b_f)
-        - v_l²/(2*b_l)). The ego follows its target leader and the target follower
-        follows the ego. Gather by geometry's neighbour indices, never slot order.
-        Include learned follower min-gap, consistent with internal secure_gaps.
-        This is the requested SUMO-style form; exact external GAPACC gs semantics
-        could not be verified under the workspace-only restriction.
+        Required bumper gap (wms.physics.secure_gap, GAPACC install_gate(use_T=True)):
+        T_back*v_back + relu(v_back²/(2*b_back) - v_front²/(2*b_front)), with the actual
+        learned settings gathered by geometry's neighbour indices (never slot order).
+        NO standstill/s0 term (R13E review B3). A side passes iff its requirement is
+        satisfied (gap >= need, direct comparison, no log rounding). Invalid settings or
+        states fail closed (GAPACC would accept a non-finite need; not reproduced).
+        The finite log ratio only feeds the labeled straight-through surrogate.
         No anticipation, relaxation, distance/speed cutoffs or overlap changes.
         """
         v = geometry["v"]
-        settings = {name: driver_params[name].to(v)
-                    for name in ("time_headway", "decel", "min_gap")}
+        settings = {name: driver_params[name].to(v) for name in ("time_headway", "decel")}
         if any(value.shape != v.shape for value in settings.values()):
             raise ValueError("secure-gap driver settings must have the geometry's per-slot shape")
-        eligible = geometry["eligible"].bool() & torch.isfinite(v) & (v >= 0.0)
         if v.shape[-1] == 0:
             return torch.full_like(v, torch.inf)
+        eligible = geometry["eligible"].bool()
+        tiny = torch.finfo(v.dtype).tiny
         sides = []
         for side in ("f", "l"):
             has = geometry[f"has_{side}"].bool()
             index = geometry[f"index_{side}"]
             gap, other = geometry[f"gap_{side}"], geometry[f"v_{side}"]
-            valid = (eligible & has & (index >= 0) & (index < v.shape[-1])
-                     & torch.isfinite(gap) & (gap > 0.0)
-                     & torch.isfinite(other) & (other >= 0.0))
             neighbor = {name: value.gather(-1, index.clamp(0, v.shape[-1] - 1))
                         for name, value in settings.items()}
-            follower, leader = (neighbor, settings) if side == "f" else (settings, neighbor)
-            t, s0 = follower["time_headway"], follower["min_gap"]
-            bf, bl = follower["decel"], leader["decel"]
-            valid = (valid & torch.isfinite(t) & (t >= 0.0)
-                     & torch.isfinite(s0) & (s0 > 0.0)
-                     & torch.isfinite(bf) & (bf > 0.0) & torch.isfinite(bl) & (bl > 0.0))
-            vf, vl = (other, v) if side == "f" else (v, other)
-            vf, vl, t, s0 = (torch.where(valid, x, torch.zeros_like(x)) for x in (vf, vl, t, s0))
-            bf, bl = (torch.where(valid, x, torch.ones_like(x)) for x in (bf, bl))
-            req = s0 + vf * t + F.relu(vf.square() / (2.0 * bf) - vl.square() / (2.0 * bl))
-            valid = valid & torch.isfinite(req) & (req > 0.0)
-            safe_gap = torch.where(valid, gap, torch.ones_like(gap))
-            safe_req = torch.where(valid, req, torch.ones_like(req))
-            margin = safe_gap.log() - safe_req.log()
-            constrained = torch.where(valid, margin, torch.full_like(v, -torch.inf))
-            sides.append(torch.where(has, constrained, torch.full_like(v, torch.inf)))
+            back, front = (neighbor, settings) if side == "f" else (settings, neighbor)
+            v_back, v_front = (other, v) if side == "f" else (v, other)
+            t_back, b_back, b_front = back["time_headway"], back["decel"], front["decel"]
+            # Mask operands BEFORE arithmetic (finite adjoints). Invalid settings or
+            # states fail CLOSED (veto); on valid inputs the arithmetic and the direct
+            # gap >= need comparison are GAPACC's, bit for bit.
+            valid = (has & (index >= 0) & (index < v.shape[-1]) & ~torch.isnan(gap)
+                     & torch.isfinite(v_back) & (v_back >= 0.0)
+                     & torch.isfinite(v_front) & (v_front >= 0.0)
+                     & torch.isfinite(t_back) & (t_back >= 0.0)
+                     & torch.isfinite(b_back) & (b_back > 0.0)
+                     & torch.isfinite(b_front) & (b_front > 0.0))
+            v_back, v_front, t_back = (torch.where(valid, x, torch.zeros_like(x))
+                                       for x in (v_back, v_front, t_back))
+            b_back, b_front = (torch.where(valid, x, torch.ones_like(x)) for x in (b_back, b_front))
+            need = secure_gap_need(v_back, v_front, t_back, b_back, b_front)
+            ok = valid & secure_gap_ok(gap, need)
+            finite = (valid & torch.isfinite(gap) & (gap > 0.0)
+                      & torch.isfinite(need) & (need > 0.0))
+            safe_gap = torch.where(finite, gap, torch.ones_like(gap))
+            safe_need = torch.where(finite, need, torch.ones_like(need))
+            ratio = safe_gap.log() - safe_need.log()
+            # Force the surrogate's sign to the direct decision (1-ULP log rounding).
+            ratio = torch.where(ok, ratio.clamp_min(0.0), ratio.clamp_max(-tiny))
+            infinite = torch.where(ok, torch.full_like(v, torch.inf), torch.full_like(v, -torch.inf))
+            margin = torch.where(finite, ratio, infinite)
+            sides.append(torch.where(has, margin, torch.full_like(v, torch.inf)))
         margin = torch.minimum(*sides)
         return torch.where(eligible, margin, torch.full_like(margin, -torch.inf))
 

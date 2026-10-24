@@ -27,7 +27,9 @@ def cpu_only(monkeypatch):
     monkeypatch.setattr(torch.cuda, "_lazy_init", forbidden)
     old = torch.get_num_threads()
     torch.set_num_threads(1)
+    gate.set_variant("main")
     yield
+    gate.set_variant("main")
     torch.set_num_threads(old)
 
 
@@ -45,10 +47,13 @@ def test_resolved_recipes_depth_and_actual_optimizer_sets():
     assert not b.model.follower_courtesy_off and b.model.follower_courtesy_init_zero
     assert b.model.follower_courtesy_state_grad and b.model.follower_courtesy_intent == "pivot"
     assert b.loss.follower_courtesy.absolute_weight == 4.525
+    assert a.optim.lr_scale["merge_yield"] == 1000.0 and "merge_yield" in b.optim.freeze_prefixes
     for stage, cfg in configs.items():
         assert cfg.physics.emergency_braking and cfg.physics.secure_gap_veto
+        assert cfg.model.mainline_merge_yield_learnable
         assert cfg.runtime.out_dir == f"runs/c4_wm_v10_round13e_{stage}"
         model = build_model(cfg, build_physics(cfg))
+        gate.check_yield_init(model)
         _, report = build_optimizer(model, lr=cfg.optim.lr,
                                     weight_decay=cfg.optim.weight_decay,
                                     freeze_prefixes=cfg.optim.freeze_prefixes, lr_scale=cfg.optim.lr_scale)
@@ -146,6 +151,13 @@ def synthetic(tmp_path, monkeypatch):
         source_flat["physics"] = asdict(build_physics(load_train_config(
             ROOT / "configs/c4_wm_v10round12c.toml")))
         save_checkpoint(source, model, source_flat, history=a_rows(30))
+        if stage == "a":
+            # The real A init (S-R12C) predates R13Y: no yield tensors or flag.
+            payload = torch.load(source, map_location="cpu", weights_only=True)
+            payload["model"] = {k: v for k, v in payload["model"].items()
+                                if not k.startswith("merge_yield.")}
+            payload["config"].pop("mainline_merge_yield_learnable", None)
+            torch.save(payload, source)
         model = build_model(effective, physics)  # Trainer creates a fresh target before init.
         report = WmSTrainer._init_from_checkpoint(SimpleNamespace(
             model=model, settings=SimpleNamespace(**effective.to_legacy_flat()), out_dir=directory), str(source))
@@ -414,7 +426,7 @@ def test_shell_default_and_launch_order_are_fail_closed_without_execution():
     default = script.index('if [ "$MODE" = config ]')
     assert default < script.index('"${GATE[@]}" registered') < script.index("-m pytest")
     assert script.index("-m pytest") < script.index('smoke a "$A" "$CK" a')
-    assert script.index('smoke a "$A" "$CK" a') < script.index('smoke b "$B" "$L/runs/smoke_r13e_a/wm_s.pt" b')
+    assert script.index('smoke a "$A" "$CK" a') < script.index('smoke b "$B" "$L/runs/smoke_${TAG}_a/wm_s.pt" b')
     assert script.index('"${GATE[@]}" smoke-complete') < script.index('"${GATE[@]}" production-ready')
     assert script.index('smoke b "$B" "$INIT" b_final') < script.index('exec "$PYTHON"')
     assert 'requires --offline-report' in script
@@ -422,7 +434,13 @@ def test_shell_default_and_launch_order_are_fail_closed_without_execution():
     assert 'for CHECK in midrun postrun' in script
     assert script.index('test -f "$READY"') < script.index('exec "$PYTHON"')
     assert 'kill -0 "$WAITER"' in script
-    assert "pkill" not in script and "killall" not in script and "nvidia-smi" not in script
+    assert "pkill" not in script and "killall" not in script and "kill -" not in script.replace(
+        'kill -0 "$WAITER"', "")
+    # The GPU guard only lists compute PIDs and runs before every training start.
+    assert "nvidia-smi --query-compute-apps=pid --format=csv,noheader" in script
+    assert script.index("gpu_guard" + chr(10) + "    smoke a") < script.index('smoke a "$A" "$CK" a')
+    last_guard = script.rindex(chr(10) + "gpu_guard" + chr(10))
+    assert script.index('"${GATE[@]}" production-ready') < last_guard < script.index('exec "$PYTHON"')
 
 
 @pytest.mark.parametrize("stage", ["a", "b"])
@@ -516,9 +534,13 @@ def test_waiter_adapter_uses_owned_identity_and_preserves_control_physics(
     assert args[args.index("--workers") + 1] == "4"
     assert kw["env"]["CUDA_VISIBLE_DEVICES"] == "" and kw["env"]["WMS_JAM_WORKERS"] == "4"
     assert all(kw["env"][key] == "1" for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"))
-    for arm in ("r12c", "r9"):
-        for flag in ("emergency_braking", "secure_gap_veto"):
-            assert f"{arm}=physics.{flag}=false" in args
+    # B1: only the as-trained round-9 context is forced flags-off; the S-R12C
+    # reference keeps the candidate's switches and enables the learned yield.
+    for flag in ("emergency_braking", "secure_gap_veto"):
+        assert f"r9=physics.{flag}=false" in args
+        assert not any(a.startswith("r12c=physics.") for a in args)
+    assert "r9=model.mainline_merge_yield_learnable=false" in args
+    assert "r12c=model.mainline_merge_yield_learnable=true" in args
     # The implementation inherited by R13E must not signal an unrelated process.
     monkeypatch.setattr(r13c_waiter, "proc_stat", lambda pid: (9999, "S"))
     monkeypatch.setattr(r13c_waiter, "pidfd_open", lambda pid: pytest.fail("unowned PID"))
@@ -686,3 +708,117 @@ def test_production_requires_both_smokes_and_current_a_final_checks(monkeypatch,
     (tmp_path / "chk_r13e/a/midrun/RESULT.json").write_text('{"decision":"STOP"}')
     with pytest.raises(ValueError, match="A midrun check"):
         gate.production_ready(tmp_path, checkpoint, path, "b")
+
+
+def test_fallback_variant_is_the_same_recipe_without_gs_and_disjoint_artifacts():
+    main = gate.check_configs()
+    gate.set_variant("fb")
+    assert (gate.TAG, gate.RUN, gate.GS) == ("r13e_fb", "c4_wm_v10_round13e_fb", False)
+    fb = gate.check_configs()
+    for stage in ("a", "b"):
+        assert fb[stage].physics.secure_gap_veto is False and fb[stage].physics.emergency_braking
+        assert fb[stage].model.mainline_merge_yield_learnable
+        assert fb[stage].runtime.out_dir == f"runs/c4_wm_v10_round13e_fb_{stage}"
+        # Everything else equals the primary recipe.
+        assert fb[stage].optim == main[stage].optim and fb[stage].loss == main[stage].loss
+        assert fb[stage].curriculum == main[stage].curriculum
+    assert fb["b"].model.init_from == "runs/c4_wm_v10_round13e_fb_a/wm_s.pt"
+    with pytest.raises(ValueError):
+        gate.set_variant("other")
+    gate.set_variant("main")
+    assert gate.CONFIGS["a"].name == "c4_wm_v10round13e.toml"
+
+
+def test_fallback_variant_waiter_uses_disjoint_paths(r13c_waiter, monkeypatch, tmp_path):
+    monkeypatch.setattr(r13c_waiter, "ProductionProcess", lambda *args: SimpleNamespace())
+    gate.set_variant("fb")
+    waiter = gate.make_waiter(r13c_waiter, SimpleNamespace(
+        root=tmp_path, stage="a", mode="postrun", pid=1, start_ticks=2))
+    assert waiter.run == tmp_path / "runs/c4_wm_v10_round13e_fb_a"
+    assert waiter.out == tmp_path / "chk_r13e_fb/a/postrun"
+
+
+@pytest.mark.parametrize("variant", ["main", "fb"])
+def test_same_flags_reference_keeps_bytes_and_copies_only_the_three_switches(tmp_path, variant):
+    """B1: S-R12C with the candidate's 13E switches; identical tensors."""
+    gate.set_variant(variant)
+    r12c_cfg = load_train_config(ROOT / "configs/c4_wm_v10round12c.toml")
+    base_model = build_model(r12c_cfg, build_physics(r12c_cfg))
+    base_dir, cand_dir = tmp_path / "baseline", tmp_path / "candidate"
+    base_dir.mkdir()
+    cand_dir.mkdir()
+    flat = r12c_cfg.to_legacy_flat()
+    save_checkpoint(base_dir / "wm_s.pt", base_model, flat)
+    (base_dir / "physics.json").write_text(json.dumps(asdict(build_physics(r12c_cfg))), encoding="utf-8")
+    cand_cfg = gate.check_configs()["a"]
+    cand_physics = build_physics(cand_cfg)
+    cand_model = build_model(cand_cfg, cand_physics)
+    save_checkpoint(cand_dir / "wm_s.pt", cand_model, cand_cfg.to_legacy_flat())
+    (cand_dir / "physics.json").write_text(json.dumps(asdict(cand_physics)), encoding="utf-8")
+    path, info = gate.derive_same_flags_reference(base_dir / "wm_s.pt", cand_dir / "wm_s.pt",
+                                                  tmp_path / "reference")
+    assert info["flags"] == {"physics.emergency_braking": True, "physics.secure_gap_veto": gate.GS,
+                             "model.mainline_merge_yield_learnable": True}
+    before = torch.load(base_dir / "wm_s.pt", map_location="cpu", weights_only=True)
+    after = torch.load(path, map_location="cpu", weights_only=True)
+    assert set(after["model"]) == set(before["model"])
+    assert all(gate.same_bytes(v, before["model"][k]) for k, v in after["model"].items())
+    changed = {k for k in set(before["config"]) | set(after["config"])
+               if before["config"].get(k) != after["config"].get(k)}
+    assert changed == {"mainline_merge_yield_learnable"}
+    old = json.loads((base_dir / "physics.json").read_text(encoding="utf-8"))
+    new = json.loads((path.parent / "physics.json").read_text(encoding="utf-8"))
+    assert {k for k in set(old) | set(new) if old.get(k) != new.get(k)} <= {
+        "emergency_braking", "secure_gap_veto"}
+    assert new["emergency_braking"] is True and new["secure_gap_veto"] is gate.GS
+    from wms.model.checkpoint import load_checkpoint
+    loaded = load_checkpoint(path, device="cpu", strict=True)
+    assert asdict(loaded.model.physics) == asdict(cand_physics)
+    assert loaded.model.mainline_merge_yield_learnable
+    gate.check_yield_init(loaded.model)  # absent yield tensors load at the documented init
+    # Any other physics difference fails closed; the target is never reused.
+    damaged = asdict(cand_physics)
+    damaged["dt_s"] = 1.0
+    (cand_dir / "physics.json").write_text(json.dumps(damaged), encoding="utf-8")
+    with pytest.raises(ValueError, match="beyond the 13E switches"):
+        gate.derive_same_flags_reference(base_dir / "wm_s.pt", cand_dir / "wm_s.pt", tmp_path / "ref2")
+    with pytest.raises(FileExistsError):
+        (cand_dir / "physics.json").write_text(json.dumps(asdict(cand_physics)), encoding="utf-8")
+        gate.derive_same_flags_reference(base_dir / "wm_s.pt", cand_dir / "wm_s.pt", tmp_path / "reference")
+
+
+def _bash():
+    import shutil
+    for candidate in (r"C:\Program Files\Git\bin\bash.exe", shutil.which("bash")):
+        if candidate and Path(candidate).is_file() and "system32" not in candidate.lower():
+            return candidate
+    return None
+
+
+@pytest.mark.parametrize("listing,wait,code", [("527550\n", "0", 5), ("", "0", 0),
+                                               (" \n", "0", 0), ("FAIL", "0", 5)])
+def test_gpu_guard_refuses_while_gpu_is_held_and_never_signals(tmp_path, listing, wait, code):
+    import subprocess
+    bash = _bash()
+    if bash is None:
+        pytest.skip("no POSIX bash")
+    script = (ROOT / "scripts/round13e_gate.sh").read_text(encoding="utf-8")
+    body = script[script.index("gpu_guard() {"):script.index("\n}\n", script.index("gpu_guard() {")) + 3]
+    fake = tmp_path / "bin"
+    fake.mkdir()
+    tool = fake / "nvidia-smi"
+    tool.write_text("#!/bin/sh\n" + ("exit 9\n" if listing == "FAIL" else
+                                     f"printf '%s' '{listing}'\n"), encoding="utf-8", newline="\n")
+    tool.chmod(0o755)
+    test = (f"set -eu -o pipefail\nMODE=smoke\nWAIT={wait}\n{body}\n"
+            "gpu_guard\necho GUARD_PASSED\n")
+    runner = tmp_path / "guard.sh"
+    runner.write_text(test, encoding="utf-8", newline="\n")
+    fake_posix = subprocess.run([bash, "-c", f'cd "{fake.as_posix()}" && pwd'],
+                                capture_output=True, text=True, check=True).stdout.strip()
+    proc = subprocess.run([bash, "-c", f'export PATH="{fake_posix}:$PATH"; bash "{runner.as_posix()}"'],
+                          capture_output=True, text=True, timeout=60)
+    assert proc.returncode == code, proc.stderr
+    assert ("GUARD_PASSED" in proc.stdout) is (code == 0)
+    if listing.strip() and listing != "FAIL":
+        assert "527550" in proc.stderr and "--wait" in proc.stderr

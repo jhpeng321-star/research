@@ -92,3 +92,57 @@ Risks: strict gaps may starve merges; conservative stopping may over-brake; stag
 residual/courtesy may counteract the baseline envelope. Synthetic baseline safety
 does not establish full residual-rollout collision freedom. Resolve through the
 registered empirical checks and stage gates, without relaxing physical vetoes.
+
+## Review fixes + integration
+
+Owner decisions (2026-10-25, S-R13E-INT), recorded verbatim:
+
+> B1 mid-run/stage-A-end stop rule reference = S-R12C evaluated with the SAME 13E flags on (same invocation/panel); stage A's end check must not block stage B on a flag-only difference; thresholds unchanged (2x hard-brake share, one-step MAE +0.1) relative to that reference.
+>
+> B2 apply the emergency envelope to the FINAL pre-clamp acceleration (after residual, courtesy and yield terms), gradients bounded; test that a large positive residual cannot exceed it.
+>
+> B3 secure-gap veto 'gs' must match GAPACC's gs exactly (drop the extra learned s0_f term); finish tools/r13e_checks/gs_equivalence.py and run it on a small event set.
+>
+> Y merge c4/v10r13y into c4/v10r13e (conflict-free per merge-tree) and ADD the COMBO300 'pass rule' to the yield: a lane-1 follower yields to a blocked lane-end merger only while it is still OUTSIDE the secure gap to that merger (the same learned-parameter secure-gap function as gs, no new constants); once inside it, the yield releases (follower may pass) - this removes the hold deadlock (COMBO300 arms EyG/EgsyG). Yield params remain learned (init documented). Synthetic tests: crawl-beside then release; no deadlock (follower stopped inside the gap does not stay held); no effect without a blocked merger.
+>
+> Launch config: 13E = E + gs + yield(pass rule) in both stages (stage A core recalibration from S-R12C incl. yield params; stage B 13C recipe with flags on). Also prepare a fallback config 13E_fb = E + yield(pass rule), no gs. GPU-busy guard in scripts/round13e_gate.sh (refuse while another training process holds the GPU; --wait polls).
+
+Implementation:
+
+- **Y (merge).** `c4/v10r13y` (e6e0cdd4) merged conflict-free (merge commit 73fa3200).
+  `model.mainline_merge_yield_learnable` stays default-off (no tensors/RNG when off).
+- **B3.** New `src/wms/physics/secure_gap.py`: `need = T_back*v_back + relu(v_back²/(2b_back) -
+  v_front²/(2b_front))`, pass iff `gap >= need` (GAPACC `install_gate(use_T=True)` arithmetic and
+  direct comparison; no s0, no multiplier). `FirstPassageNet.secure_gap_margin` uses it; the
+  log-ratio feeds only the straight-through surrogate and its sign is forced to the direct
+  decision (no 1-ULP log disagreements). Deliberate difference: invalid/non-finite settings or
+  negative speeds fail CLOSED (GAPACC would accept a non-finite need). learned `min_gap` no longer
+  enters gs. `tools/r13e_checks/gs_equivalence.py` now asserts identical decisions on the valid
+  domain (synthetic: 4,096/4,096 random heterogeneous cases and 25/25 valid edge cases equal in
+  fp32 and fp64; 0 log-vs-direct differences); `tools/r13e_checks/gs_events_small.py` runs the
+  same comparison on recorded insertions of the first 12 R13E TRAIN-panel states (result below).
+- **Y (pass rule).** In `mainline_merge_yield` (learned path only), after nearest-pair selection the
+  follower is held only while `secure_gap_ok(gap - s0_f, need(v_f, v_m, T_f, b_f, b_m))`, i.e. its
+  clearance beyond its learned standstill gap (the R13Y virtual leader sits s0_f behind the merger
+  rear; SUMO compares gap - minGap with the secure gap) still satisfies the SAME gs law. Inside it
+  the yield releases (bound = input acceleration) and the follower may pass. At standstill this is
+  COMBO300's G rule (hold iff gap >= s0) with the learned s0. Discrete mask, like the pairing; no
+  constants. Yield scalars stay learned: init 2 m/s² and 60 m (`merge_yield.log_decel/log_distance`).
+  Note: a follower whose speed makes its secure gap longer than its distance passes; yielding is
+  therefore confined to slow/near followers (queue zipper), the regime of the COMBO300 deadlock.
+- **B2.** `apply_emergency_envelope` (accel.py) is applied ONCE in `WmSModel.forward` to the final
+  pre-clamp acceleration (baseline + residual + noise + courtesy + yield cap); the composition uses
+  the un-enveloped baseline (`_physics_step(..., emergency_envelope=False)`). `physics_accel_mps2`
+  remains the enveloped baseline (CAV exec cap, diagnostics); direct `physics_accel()` = baseline ->
+  yield cap -> envelope. d(out)/d(composed accel) ∈ [0, 1] (smooth minimum). Tests: large positive
+  residual/noise and courtesy cannot exceed the envelope; envelope applied once.
+- **B1.** `round13e_gate.derive_same_flags_reference`: the r12c reference arm is S-R12C (identical
+  tensor bytes) with exactly the candidate's `physics.emergency_braking`, `physics.secure_gap_veto`
+  and `model.mainline_merge_yield_learnable`; any other physics difference fails closed. Used for
+  both the one-step MAE and the rollout hard-brake share in the same invocation/panel; r9 context
+  arm stays flags-off. Thresholds unchanged. A flag-only difference can no longer stop A or block B.
+- **Configs.** 13E A: E + gs + yield, trainable = R12C core head/centre + `merge_yield.*`
+  (lr_scale 1000, same as the centre scalars). 13E B: 13C recipe + flags, `merge_yield` frozen.
+  Fallback `c4_wm_v10round13e_fb{,_stage_b}.toml`: identical with `secure_gap_veto=false`
+  (`--variant fb`, separate run/check/lock names). `scripts/round13e_gate.sh` refuses smoke/launch
+  (exit 5) while `nvidia-smi` lists any compute process; `--wait` polls every 60 s; never signals.

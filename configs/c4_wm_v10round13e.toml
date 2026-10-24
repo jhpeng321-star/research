@@ -1,4 +1,4 @@
-# S-R13E stage A: conservative emergency-braking core calibration.
+# S-R13E stage A: conservative emergency-braking core calibration (E + gs + learned yield).
 # R12C is already at the 16-file cap: its recipe is inlined over round 2.
 # No init transformations:
 # S-R12C FINAL weights, including frozen emission networks, transfer as-is.
@@ -28,6 +28,8 @@ follower_courtesy_hidden = 32
 follower_courtesy_embedding = false
 follower_courtesy_rollout_grad = false
 follower_courtesy_version = 2
+# R13Y learned cooperative yield with the R13E pass rule (init 2 m/s^2, 60 m).
+mainline_merge_yield_learnable = true
 
 [physics]
 emergency_braking = true
@@ -91,6 +93,8 @@ freeze_prefixes = [
 [optim.lr_scale]
 "driver_encoder.head" = 10.0
 "driver_encoder.centre_logits" = 1000.0
+# Shared learned yield scalars: same scale as the other shared physical-centre scalars.
+"merge_yield" = 1000.0
 
 [selection]
 val_max_windows = 4

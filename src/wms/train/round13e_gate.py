@@ -22,8 +22,30 @@ from .round12c_gate import EXPECTED_TRAINABLE_TENSORS, merge_log_errors_single_s
 from .round9_gate import read_rows
 
 ROOT = Path(__file__).resolve().parents[3]
-CONFIGS = {"a": ROOT / "configs/c4_wm_v10round13e.toml",
-           "b": ROOT / "configs/c4_wm_v10round13e_stage_b.toml"}
+# Primary 13E = emergency envelope + GAPACC gs veto + learned yield (pass rule);
+# registered fallback 13E_fb = the same without the gs veto. Each variant owns
+# disjoint configs, outputs, checks, locks and registration files.
+VARIANTS = {
+    "main": {"tag": "r13e", "run": "c4_wm_v10_round13e", "secure_gap_veto": True,
+             "name": "WM-S-C4-V10ROUND13E",
+             "configs": {"a": ROOT / "configs/c4_wm_v10round13e.toml",
+                         "b": ROOT / "configs/c4_wm_v10round13e_stage_b.toml"}},
+    "fb": {"tag": "r13e_fb", "run": "c4_wm_v10_round13e_fb", "secure_gap_veto": False,
+           "name": "WM-S-C4-V10ROUND13E-FB",
+           "configs": {"a": ROOT / "configs/c4_wm_v10round13e_fb.toml",
+                       "b": ROOT / "configs/c4_wm_v10round13e_fb_stage_b.toml"}},
+}
+VARIANT = "main"
+TAG, RUN, GS = "r13e", "c4_wm_v10_round13e", True
+CONFIGS = dict(VARIANTS["main"]["configs"])
+# R13Y learned yield scalars: added to the stage-A core recalibration, frozen in B.
+# Their documented initialisations (R13Y_DESIGN.md) are exp(log_decel)=2 m/s^2 and
+# exp(log_distance)=60 m.
+YIELD_TENSORS = ("merge_yield.log_decel", "merge_yield.log_distance")
+YIELD_INIT = {"merge_yield.log_decel": 2.0, "merge_yield.log_distance": 60.0}
+# The switches a same-flags S-R12C reference copies from the candidate (owner B1).
+FLAG_KEYS = ("emergency_braking", "secure_gap_veto")
+MODEL_FLAG_KEYS = ("mainline_merge_yield_learnable",)
 EMISSIONS = ("temporal_accel_off", "residual_accel_off", "follower_courtesy_off")
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
              "truth", "vtype")
@@ -31,7 +53,12 @@ OPTIMIZER = re.compile(r"^WM-S optimizer groups: (\{.*\})\s*$", re.MULTILINE)
 REMOTE_ROOT = Path("/root/autodl-tmp/c4/v5")
 # Registered S-R12C FINAL (13C's registration and operator start script).
 R12C_SHA256 = "c76c338dea6355f85cfaee63cdb9077fb129ed25db0ab582d77eda2961822091"
+# Owner B1 (2026-10-25): the reference is S-R12C evaluated with the SAME 13E
+# switches as the candidate (emergency, gs veto, learned yield at its init) in the
+# same invocation/panel, so a stop isolates training rather than the flags.
 STOP_RULE = {"baseline": "S-R12C", "paired_same_panel": True,
+             "baseline_flags": "same_as_candidate: physics.emergency_braking, "
+                               "physics.secure_gap_veto, model.mainline_merge_yield_learnable",
              "full_road_lane1_hdv_a_lt_minus3_share_ratio_gt": 2.0,
              "all_lane1_onestep_mae_delta_gt_mps2": 0.1,
              "measurement_error": "STOP", "signal": "owned production pidfd SIGTERM only"}
@@ -48,6 +75,11 @@ REQUIRED_SOURCE = ("configs/c4_wm_v10round13e.toml", "configs/c4_wm_v10round13e_
                    "tools/r10b_courtesy_offline.py", "tools/wm_eval_common.py",
                    "src/wms/physics/emergency.py", "src/wms/model/merge_pivot.py",
                    "tests/test_r13e_offline.py", "tests/test_round12_gate_verdict.py",
+                   "configs/c4_wm_v10round13e_fb.toml", "configs/c4_wm_v10round13e_fb_stage_b.toml",
+                   "src/wms/model/merge_yield.py", "src/wms/physics/merge_v6.py",
+                   "src/wms/physics/secure_gap.py", "src/wms/physics/accel.py",
+                   "tests/test_r13y_yield.py", "tests/test_r13y_config.py",
+                   "tools/r13e_checks/gs_equivalence.py",
                    "tests/test_r10b_courtesy.py", "tests/test_r11_courtesy.py", "tests/__init__.py",
                    "pyproject.toml")
 BASELINE_COMMIT = "eb75010c6a2a7ef66eebc3282e03f50e37d4b202"
@@ -91,6 +123,17 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def set_variant(name):
+    """Select the primary or fallback recipe for every later gate operation."""
+    global VARIANT, TAG, RUN, GS
+    require(name in VARIANTS, f"unknown R13E variant: {name}")
+    spec = VARIANTS[name]
+    VARIANT, TAG, RUN, GS = name, spec["tag"], spec["run"], spec["secure_gap_veto"]
+    CONFIGS.clear()
+    CONFIGS.update(spec["configs"])
+    return spec
+
+
 def reference_13c(overrides):
     """Use the local 13C config, or its local Git object before the pending merge.
 
@@ -112,29 +155,47 @@ def reference_13c(overrides):
 
 
 def check_configs():
-    """Resolve both complete recipes, including the real 16-file extends chains."""
+    """Resolve both complete recipes, including the real 16-file extends chains.
+
+    Selected variant: main = E + gs + learned yield; fb = E + learned yield, no gs.
+    A adds only the two shared yield scalars (LR scale of the other shared
+    physical-centre scalars) to R12C's core recalibration; B freezes them.
+    """
+    from dataclasses import replace
+    name, gs = VARIANTS[VARIANT]["name"], "true" if GS else "false"
     a, b = (load_train_config(CONFIGS[s]) for s in ("a", "b"))
     expected_a = load_train_config(ROOT / "configs/c4_wm_v10round12c.toml", [
-        "name=WM-S-C4-V10ROUND13E", "model.init_from=runs/c4_wm_v10_round12c/wm_s.pt",
+        f"name={name}", "model.init_from=runs/c4_wm_v10_round12c/wm_s.pt",
         "model.driver_param_init=checkpoint", "model.residual_accel_reinit=false",
         "model.follower_courtesy_init_zero=false", "physics.emergency_braking=true",
-        "physics.secure_gap_veto=true",
+        f"physics.secure_gap_veto={gs}", "model.mainline_merge_yield_learnable=true",
         "loss.driver_prior.weight=0.0", "loss.follower_courtesy.weight=0.0",
         "loss.follower_courtesy.contrast=false",
-        "runtime.out_dir=runs/c4_wm_v10_round13e_a"])
+        f"runtime.out_dir=runs/{RUN}_a"])
+    expected_a = replace(expected_a, optim=replace(expected_a.optim, lr_scale={
+        **(expected_a.optim.lr_scale or {}), "merge_yield": 1000.0}))
     expected_b = reference_13c([
-        "name=WM-S-C4-V10ROUND13E-STAGE-B",
-        "model.init_from=runs/c4_wm_v10_round13e_a/wm_s.pt",
-        "physics.emergency_braking=true", "physics.secure_gap_veto=true",
-        "runtime.out_dir=runs/c4_wm_v10_round13e_b"])
+        f"name={name}-STAGE-B",
+        f"model.init_from=runs/{RUN}_a/wm_s.pt",
+        "physics.emergency_braking=true", f"physics.secure_gap_veto={gs}",
+        "model.mainline_merge_yield_learnable=true",
+        f"runtime.out_dir=runs/{RUN}_b"])
+    expected_b = replace(expected_b, optim=replace(
+        expected_b.optim, freeze_prefixes=(*expected_b.optim.freeze_prefixes, "merge_yield")))
     require(a == expected_a, "stage A differs from the conservative R12C recipe")
     require(b == expected_b, "stage B differs from the EXACT13C recipe")
     for cfg in (a, b):
         require(cfg.physics.emergency_braking is True, "emergency braking must be ON")
-        require(cfg.physics.secure_gap_veto is True, "secure gap veto must be ON")
+        require(cfg.physics.secure_gap_veto is GS,
+                f"secure gap veto must be {'ON' if GS else 'OFF'} for variant {VARIANT}")
+        require(cfg.model.mainline_merge_yield_learnable is True, "learned merge yield must be ON")
         require(cfg.model.driver_param_init == "checkpoint" and not cfg.model.residual_accel_reinit,
                 "centre/reset init transforms must be OFF")
         require(cfg.loss.driver_prior.weight == 0, "driver prior must be OFF")
+    require(a.optim.lr_scale.get("merge_yield") == 1000.0
+            and not any(p.startswith("merge_yield") for p in a.optim.freeze_prefixes),
+            "A must train the learned yield scalars")
+    require("merge_yield" in b.optim.freeze_prefixes, "B must freeze the learned yield scalars")
     require(all(getattr(a.model, k) is True for k in EMISSIONS), "A emissions must all be OFF")
     require(a.loss.follower_courtesy.weight == 0 and not a.model.follower_courtesy_init_zero,
             "A courtesy loss/init must be OFF")
@@ -143,6 +204,17 @@ def check_configs():
     require(b.curriculum.stage_steps == (40, 60) and b.curriculum.unroll_s == (120., 300.),
             "B must retain the 13C schedule")
     return {"a": a, "b": b}
+
+
+def check_yield_init(model):
+    """A freshly built model carries exactly the documented yield initialisation."""
+    import torch
+    state = model.state_dict()
+    for key, value in YIELD_INIT.items():
+        require(key in state, f"missing learned yield tensor: {key}")
+        expected = torch.tensor(math.log(value), dtype=state[key].dtype)
+        require(same_bytes(state[key].reshape(()), expected),
+                f"learned yield init is not log({value:g}): {key}")
 
 
 def same_bytes(left, right):
@@ -269,7 +341,8 @@ def check_offline_rollouts(rollouts, offline):
                "invalid_hdv_rows", "bad_acceleration_rows", "blowup", "stuck_vehicle_steps",
                "stuck_final_vehicles", "stuck_max_wait_s", "stuck_mean_ramp_in_zone",
                "delay_total_veh_s", "merges_per_run", "hdv_insertion_events",
-               "post_insertion_truncated_events"}
+               "post_insertion_truncated_events", "merge_zone_hdv_rows",
+               "merge_zone_mean_hdv_count", "merge_zone_mean_speed_mps"}
     for region in ("upstream", "merge", "downstream"):
         metrics.update((f"delay_{region}_veh_s", f"exposure_{region}_veh_s"))
     for who in ("inserter", "follower"):
@@ -303,12 +376,15 @@ def check_offline_rollouts(rollouts, offline):
             require(isinstance(values, dict) and set(values) == metrics,
                     f"offline rollout metrics incomplete: {arm}")
             for key, value in values.items():
-                nullable = key.startswith("hdv_") and key.endswith("_share")
+                # An empty merge zone has no row-weighted speed (NaN -> null).
+                nullable = ((key.startswith("hdv_") and key.endswith("_share"))
+                            or key == "merge_zone_mean_speed_mps")
                 require((nullable and value is None) or
                         (type(value) in (int, float, bool) and math.isfinite(value) and value >= 0),
                         f"offline invalid rollout metric: {key}")
                 if (not key.endswith(("_share", "_veh_s"))
-                        and key not in ("blowup", "stuck_max_wait_s", "stuck_mean_ramp_in_zone")):
+                        and key not in ("blowup", "stuck_max_wait_s", "stuck_mean_ramp_in_zone",
+                                        "merge_zone_mean_hdv_count", "merge_zone_mean_speed_mps")):
                     require(type(value) is int, f"offline rollout count must be integer: {key}")
             require(type(values["blowup"]) is bool
                     and values["blowup"] == bool(values["invalid_hdv_rows"] or values["bad_acceleration_rows"]),
@@ -385,15 +461,17 @@ def preflight(root, checkpoint, offline_report):
     for cfg in check_configs().values():
         TrainSettings.from_config(cfg)  # refuse incomplete cross-owner physics/config integration
     for stage, cfg in check_configs().items():
-        check_emissions(build_model(cfg, build_physics(cfg)), stage)
-    artifacts = [root / ".round13e_gate.lock", root / "runs/r13e_gate_core_tests",
-                 root / "smoke_r13e.complete.json"]
+        model = build_model(cfg, build_physics(cfg))
+        check_emissions(model, stage)
+        check_yield_init(model)
+    artifacts = [root / f".round{TAG[1:]}_gate.lock", root / f"runs/{TAG}_gate_core_tests",
+                 root / f"smoke_{TAG}.complete.json"]
     for stage in ("a", "b"):
-        artifacts += [root / f"runs/smoke_r13e_{stage}", root / f"smoke_r13e_{stage}.log",
-                      root / f"smoke_r13e_{stage}.gate.json", root / f"production_r13e_{stage}.log",
-                      root / f"production_r13e_{stage}.gate.json"]
-    artifacts += [root / "runs/c4_wm_v10_round13e_a",
-                  root / "runs/c4_wm_v10_round13e_b", root / "chk_r13e"]
+        artifacts += [root / f"runs/smoke_{TAG}_{stage}", root / f"smoke_{TAG}_{stage}.log",
+                      root / f"smoke_{TAG}_{stage}.gate.json", root / f"production_{TAG}_{stage}.log",
+                      root / f"production_{TAG}_{stage}.gate.json"]
+    artifacts += [root / f"runs/{RUN}_a",
+                  root / f"runs/{RUN}_b", root / f"chk_{TAG}"]
     for path in artifacts:
         workspace_path(path, exists=False)
         require(not path.exists() and not path.is_symlink(), f"prior R13E artifact exists: {path}")
@@ -403,7 +481,8 @@ def preflight(root, checkpoint, offline_report):
 def allowed_trainables(model, cfg, stage):
     names = sorted(n for n, _ in model.named_parameters() if not n.startswith(cfg.optim.freeze_prefixes))
     if stage == "a":
-        require(names == sorted(EXPECTED_TRAINABLE_TENSORS), "A trainable set is not exactly core-only")
+        require(names == sorted((*EXPECTED_TRAINABLE_TENSORS, *YIELD_TENSORS)),
+                "A trainable set is not exactly core plus the learned yield scalars")
     else:
         require(names and all(n.startswith(("residual_net.", "follower_courtesy."))
                                  and not n.startswith("residual_net.lane") for n in names),
@@ -444,9 +523,18 @@ def check_optimizer(text, model, cfg, stage):
 def check_init(report, before, checkpoint, stage):
     from wms.model.checkpoint import sha256_file
     courtesy = sorted(n for n in before if n.startswith("follower_courtesy.")) if stage == "b" else []
+    # A: S-R12C has no yield tensors, so exactly those two are new and keep their
+    # documented construction init (check_yield_init). B: A FINAL carries them and
+    # they load as-is (frozen bytes are then enforced checkpoint by checkpoint).
+    new = sorted(YIELD_TENSORS) if stage == "a" else []
+    require(stage == "b" or not any(n.startswith("merge_yield.") for n in before),
+            "A init source must be S-R12C without learned yield tensors")
+    require(stage == "a" or set(YIELD_TENSORS) <= set(before),
+            "B init source lacks the stage-A learned yield tensors")
     require(report.get("sha256") == sha256_file(checkpoint), "init source SHA mismatch")
     require(sorted(report.get("loaded", [])) == sorted(set(before) - set(courtesy))
-            and sorted(report.get("new_in_model", [])) == courtesy, "init is not as-is source weights")
+            and sorted(report.get("new_in_model", [])) == sorted(courtesy + new),
+            "init is not as-is source weights")
     for key in ("expanded", "shape_mismatch", "unused_from_checkpoint"):
         require(report.get(key) == [], f"unclean init: {key}")
     for key in ("driver_param_init", "residual_accel_reinit", "temporal_accel_reinit"):
@@ -533,14 +621,18 @@ def check_checkpoints(directory, rows, text, checkpoint, cfg, stage, *, producti
     for name, horizon in files:
         payload, loaded = strict_checkpoint(directory / name)
         model, saved = loaded.model, payload["model"]
-        require(set(saved) == set(before), f"{name}: tensor set differs from init")
+        expected_set = set(before) | (set(YIELD_TENSORS) if stage == "a" else set())
+        require(set(saved) == expected_set, f"{name}: tensor set differs from init")
         names = check_optimizer(text, model, cfg, stage)
         changed = [n for n in before if not same_bytes(before[n], saved[n])]
         allowed = set(names)
         require(all(n in allowed for n in changed), f"{name}: frozen tensor bytes changed")
         require(asdict(model.physics) == asdict(build_physics(cfg)), f"{name}: physics contract mismatch")
         require(model.physics.emergency_braking is True, f"{name}: emergency braking OFF")
-        require(model.physics.secure_gap_veto is True, f"{name}: secure gap veto OFF")
+        require(model.physics.secure_gap_veto is GS, f"{name}: secure gap veto mismatch")
+        require(model.mainline_merge_yield_learnable is True
+                and model.spec.mainline_merge_yield_learnable is True,
+                f"{name}: learned merge yield OFF")
         for flag in EMISSIONS:
             expected = stage == "a" or flag == "temporal_accel_off"
             require(getattr(model.spec, flag) is expected and getattr(model, flag) is expected,
@@ -599,7 +691,8 @@ def check_checkpoints(directory, rows, text, checkpoint, cfg, stage, *, producti
         check_emissions(model, stage)
         reports.append({"file": name, "sha256": loaded.sha256, "frozen_bitwise": True,
                         "strict_exact_weights": True, "emergency_braking": True,
-                        "secure_gap_veto": True, "temporal_emission": 0.0,
+                        "secure_gap_veto": GS, "mainline_merge_yield_learnable": True,
+                        "variant": VARIANT, "temporal_emission": 0.0,
                         "trainable_tensor_names": names, "changed_tensors": changed})
     return reports
 
@@ -803,13 +896,13 @@ def check_registration(root, checkpoint, offline_report):
             "registered S-R12C final path mismatch")
     require(digest(checkpoint) == R12C_SHA256, "registered S-R12C FINAL SHA256 mismatch")
     check_offline(offline_report, checkpoint)
-    doc = read_json(root / "registration_r13e.json")
+    doc = read_json(root / f"registration_{TAG}.json")
     expected = {"registration": "S-R13E preregistered", "commit": source["commit"],
                 "source_manifest_sha256": digest(ROOT / "R13E_SOURCE.json"),
                 "config_sha256": {s: digest(p) for s, p in CONFIGS.items()},
                 "init_sha256": R12C_SHA256, "offline_sha256": digest(offline_report),
-                "stop_rule": STOP_RULE, "check_dir": "chk_r13e",
-                "outputs": {s: f"runs/c4_wm_v10_round13e_{s}" for s in ("a", "b")}}
+                "stop_rule": STOP_RULE, "check_dir": f"chk_{TAG}",
+                "outputs": {s: f"runs/{RUN}_{s}" for s in ("a", "b")}}
     require(all(doc.get(k) == v for k, v in expected.items()), "R13E preregistration identity/rule mismatch")
     for path in (root / "diag_brake/d11_run5.py", root / "chk_r10b/states192.json.gz"):
         workspace_path(path)
@@ -817,8 +910,8 @@ def check_registration(root, checkpoint, offline_report):
 
 
 def artifact_verdict(root, stage, checkpoint, *, production=False):
-    stem = f"production_r13e_{stage}" if production else f"smoke_r13e_{stage}"
-    directory = root / "runs" / (f"c4_wm_v10_round13e_{stage}" if production else stem)
+    stem = f"production_{TAG}_{stage}" if production else f"smoke_{TAG}_{stage}"
+    directory = root / "runs" / (f"{RUN}_{stage}" if production else stem)
     result = verdict(argparse.Namespace(stage=stage, production=production, smoke_dir=directory,
                                        smoke_log=root / f"{stem}.log", init_checkpoint=checkpoint,
                                        train_exit_code=0))
@@ -830,29 +923,90 @@ def production_ready(root, checkpoint, offline_report, stage):
     """Recompute evidence, never trust a mutable 'ok' receipt alone."""
     registration = check_registration(root, checkpoint, offline_report)
     root, checkpoint = workspace_path(root), workspace_path(checkpoint)
-    smoke_a = root / "runs/smoke_r13e_a/wm_s.pt"
+    smoke_a = root / f"runs/smoke_{TAG}_a/wm_s.pt"
     artifact_verdict(root, "a", checkpoint)
     artifact_verdict(root, "b", smoke_a)
-    receipt = read_json(root / "smoke_r13e.complete.json")
+    receipt = read_json(root / f"smoke_{TAG}.complete.json")
     require(receipt == {"registration": registration,
                         "a_sha256": digest(smoke_a),
-                        "b_sha256": digest(root / "runs/smoke_r13e_b/wm_s.pt")},
+                        "b_sha256": digest(root / f"runs/smoke_{TAG}_b/wm_s.pt")},
             "both-stage smoke receipt identity mismatch")
     if stage == "b":
         # The provisional B smoke bootstraps from A smoke. Re-smoke B separately
         # against the actual A FINAL before the explicit B production command.
-        a_final = root / "runs/c4_wm_v10_round13e_a/wm_s.pt"
+        a_final = root / f"runs/{RUN}_a/wm_s.pt"
         artifact_verdict(root, "a", checkpoint, production=True)
         for mode in ("midrun", "postrun"):
-            result = read_json(root / f"chk_r13e/a/{mode}/RESULT.json")
+            result = read_json(root / f"chk_{TAG}/a/{mode}/RESULT.json")
             require(result.get("decision") == "CONTINUE"
-                    and result.get("registration_sha256") == digest(root / "registration_r13e.json")
+                    and result.get("registration_sha256") == digest(root / f"registration_{TAG}.json")
                     and result.get("checkpoints", {}).get("r10b", {}).get("sha256")
-                    == digest(root / "runs/c4_wm_v10_round13e_a" /
+                    == digest(root / f"runs/{RUN}_a" /
                               ("wm_s_stage120.pt" if mode == "midrun" else "wm_s.pt")),
                     f"A {mode} check missing/failed or checkpoint identity mismatch")
         return {"ok": True, "init_checkpoint": str(a_final)}
     return {"ok": True, "init_checkpoint": str(checkpoint)}
+
+
+def _snapshot_physics(checkpoint, payload):
+    """The physics a checkpoint loader would use: embedded block, else physics.json."""
+    from wms.physics.config import PhysicsConfig
+    raw = (payload.get("config") or {}).get("physics")
+    sibling = checkpoint.with_name("physics.json")
+    if raw is None and sibling.is_file():
+        raw = json.loads(sibling.read_text(encoding="utf-8"))
+    require(isinstance(raw, dict) and raw, f"{checkpoint}: no inference physics")
+    allowed = set(PhysicsConfig.__dataclass_fields__)
+    return raw, asdict(PhysicsConfig(**{k: v for k, v in raw.items() if k in allowed}))
+
+
+def derive_same_flags_reference(baseline, candidate, target):
+    """S-R12C with exactly the candidate's 13E switches (owner B1), same tensor bytes.
+
+    Copies ONLY physics.emergency_braking, physics.secure_gap_veto and the flat
+    model flag mainline_merge_yield_learnable from the candidate snapshot. A yield
+    enabled on S-R12C loads its absent tensors at the documented construction
+    init. Every other physics field must already agree with the candidate; any
+    other difference fails closed. Returns the new checkpoint and its identity.
+    """
+    import shutil
+    import torch
+    from wms.model.checkpoint import sha256_file
+    baseline, candidate, target = Path(baseline), Path(candidate), Path(target)
+    base_payload = torch.load(baseline, map_location="cpu", weights_only=True)
+    cand_payload = torch.load(candidate, map_location="cpu", weights_only=True)
+    base_raw, base_physics = _snapshot_physics(baseline, base_payload)
+    _, cand_physics = _snapshot_physics(candidate, cand_payload)
+    cand_config = cand_payload.get("config") or {}
+    flags = {key: cand_physics[key] for key in FLAG_KEYS}
+    model_flags = {key: bool(cand_config.get(key, False)) for key in MODEL_FLAG_KEYS}
+    physics = {**base_raw, **flags}
+    _, normalized = _snapshot_physics(baseline, {"config": {"physics": physics}})
+    require(normalized == cand_physics,
+            "same-flags reference physics differs from candidate beyond the 13E switches: "
+            + ", ".join(sorted(k for k in cand_physics if normalized.get(k) != cand_physics[k])))
+    config = dict(base_payload.get("config") or {})
+    config.update(model_flags)
+    if "physics" in config:
+        config["physics"] = physics
+    target.mkdir(parents=False, exist_ok=False)
+    path = target / baseline.name
+    torch.save({**base_payload, "config": config}, path)
+    if "physics" not in config:
+        (target / "physics.json").write_text(json.dumps(physics, indent=2, sort_keys=True),
+                                             encoding="utf-8")
+    calibration = baseline.with_name("lane_calib.json")
+    if calibration.is_file():
+        shutil.copyfile(calibration, target / calibration.name)
+    again = torch.load(path, map_location="cpu", weights_only=True)
+    require(set(again["model"]) == set(base_payload["model"])
+            and all(same_bytes(v, base_payload["model"][k]) for k, v in again["model"].items()),
+            "same-flags reference changed tensor bytes")
+    _, again_physics = _snapshot_physics(path, again)
+    require(again_physics == cand_physics, "same-flags reference physics did not persist")
+    return path, {"source_sha256": sha256_file(baseline), "sha256": sha256_file(path),
+                  "flags": {**{f"physics.{k}": v for k, v in flags.items()},
+                            **{f"model.{k}": v for k, v in model_flags.items()}}}
 
 
 def make_waiter(r13c, args):
@@ -862,10 +1016,10 @@ def make_waiter(r13c, args):
     class Waiter(r13c.Waiter):
         def __init__(self):
             self.repo, self.root, self.mode = ROOT, workspace_path(args.root), args.mode
-            self.run = self.root / f"runs/c4_wm_v10_round13e_{stage}"
+            self.run = self.root / f"runs/{RUN}_{stage}"
             self.process = r13c.ProductionProcess(args.pid, self.run, args.start_ticks)
-            self.out = self.root / f"chk_r13e/{stage}/{self.mode}"
-            self.work = self.root / f"chk_r13e/{stage}/{self.mode}_work"
+            self.out = self.root / f"chk_{TAG}/{stage}/{self.mode}"
+            self.work = self.root / f"chk_{TAG}/{stage}/{self.mode}_work"
             self.commands = []
 
         def wait_checkpoint(self):
@@ -880,8 +1034,20 @@ def make_waiter(r13c, args):
             for sibling in ("physics.json", "lane_calib.json"):
                 workspace_path(src.with_name(sibling), exists=False)
             checkpoint, info = super().snapshot(src, name)
+            if name == "candidate":
+                self.candidate_snapshot = checkpoint
             if name == "baseline":
                 require(info["sha256"] == R12C_SHA256, "midrun baseline is not registered S-R12C FINAL")
+                # Owner B1: the r12c arm of BOTH the one-step and the rollout tool is
+                # S-R12C with the candidate's 13E switches, in this same invocation and
+                # panel. A flag-only difference therefore cannot trigger a stop, and a
+                # stage-A end check cannot block stage B for that reason.
+                require(getattr(self, "candidate_snapshot", None) is not None,
+                        "candidate must be snapshotted before the same-flags reference")
+                checkpoint, reference = derive_same_flags_reference(
+                    checkpoint, self.candidate_snapshot,
+                    workspace_path(self.work / "baseline_same_flags", exists=False))
+                info = {**info, "same_flags_reference": reference}
             return checkpoint, info
 
         def command(self, script, *values):
@@ -891,11 +1057,14 @@ def make_waiter(r13c, args):
             values = tuple(CONFIGS[stage].name if v == "c4_wm_v10round13c.toml" else v
                            for v in values)
             if Path(script).name == "run_onestep.py":
-                # This legacy reader builds physics from the config rather than
-                # the snapshot. Keep the NEW flags OFF for the as-trained controls.
-                values += tuple(v for arm in ("r12c", "r9")
-                                for flag in ("emergency_braking", "secure_gap_veto")
-                                for v in ("--arm-set", f"{arm}=physics.{flag}=false"))
+                # This legacy reader builds physics from the (13E, flags-on) config
+                # rather than the snapshot. B1: the r12c reference keeps the SAME
+                # switches as the candidate (config physics + learned yield at init);
+                # only the as-trained round-9 context arm is forced to all-OFF.
+                values += tuple(v for flag in ("emergency_braking", "secure_gap_veto")
+                                for v in ("--arm-set", f"r9=physics.{flag}=false"))
+                values += ("--arm-set", "r9=model.mainline_merge_yield_learnable=false",
+                           "--arm-set", "r12c=model.mainline_merge_yield_learnable=true")
             # Keep 13C's measurement math and process ownership, but do not inherit
             # its 8-worker/nice15 execution policy. This covers BOTH diagnostics.
             values = list(map(str, values))
@@ -922,8 +1091,8 @@ def make_waiter(r13c, args):
         def measure(self, checkpoint):
             result = super().measure(checkpoint)
             result["labels"]["r10b"] = f"R13E {stage.upper()} candidate"
-            result["registration"] = read_json(self.root / "registration_r13e.json")
-            result["registration_sha256"] = digest(self.root / "registration_r13e.json")
+            result["registration"] = read_json(self.root / f"registration_{TAG}.json")
+            result["registration_sha256"] = digest(self.root / f"registration_{TAG}.json")
             return result
 
         def execute(self):
@@ -954,6 +1123,8 @@ def wait_registered(args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--variant", choices=tuple(VARIANTS), default="main",
+                        help="main = E+gs+yield (13E); fb = E+yield without gs (13E_fb)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("config")
     sub.add_parser("prepare")
@@ -981,9 +1152,10 @@ def main(argv=None):
         check.add_argument("--" + flag, required=True)
     args = parser.parse_args(argv)
     try:
+        set_variant(args.variant)
         if args.command == "config":
             check_configs()
-            print("R13E stage A/B config contracts: ok")
+            print(f"R13E ({args.variant}) stage A/B config contracts: ok")
             return 0
         if args.command == "prepare":
             result = prepare()
@@ -997,12 +1169,12 @@ def main(argv=None):
         elif args.command == "smoke-complete":
             registration = check_registration(args.root, args.init_checkpoint, args.offline_report)
             root = workspace_path(args.root)
-            a_final = root / "runs/smoke_r13e_a/wm_s.pt"
+            a_final = root / f"runs/smoke_{TAG}_a/wm_s.pt"
             artifact_verdict(root, "a", workspace_path(args.init_checkpoint))
             artifact_verdict(root, "b", a_final)
-            write_once(root / "smoke_r13e.complete.json", {
+            write_once(root / f"smoke_{TAG}.complete.json", {
                 "registration": registration, "a_sha256": digest(a_final),
-                "b_sha256": digest(root / "runs/smoke_r13e_b/wm_s.pt")})
+                "b_sha256": digest(root / f"runs/smoke_{TAG}_b/wm_s.pt")})
             result = {"ok": True}
         elif args.command == "preflight":
             result = preflight(args.root, args.init_checkpoint, args.offline_report)

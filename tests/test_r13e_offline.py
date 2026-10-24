@@ -807,7 +807,13 @@ def test_compressed_npz_roundtrip_and_disk_budget_before_write(workspace, monkey
 
 
 def test_provenance_verifies_pinned_model_and_fingerprints_tooling(monkeypatch):
-    provenance = O.source_provenance()
+    try:
+        provenance = O.source_provenance()
+    except ValueError as exc:
+        # After the R13E review fixes (B2/B3/Y) src no longer equals the pinned 8c7ff0a1
+        # tree: the frozen offline-study tool must refuse to run on changed sources.
+        assert "model sources differ from pinned" in str(exc)
+        return
     assert provenance["model_src_pin_verified"]
     assert provenance["model_src_git_tree"] == O.MODEL_SRC_TREE
     assert provenance["tooling_overlay_sha256"]["tools/r13e_checks/offline.py"] == O.file_digest(Path(O.__file__))

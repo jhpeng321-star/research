@@ -16,6 +16,7 @@ from .idm import IDMParams, idm_accel
 from .mobil import (anticipated_kin, impatient_margins, merge_end_blocked, merge_end_waiting,
                     secure_gaps)
 from .neighbours import _CLOSED_ROAD_FREE_GAP_M, MIN_GAP_M, lane_of
+from .secure_gap import secure_gap_need, secure_gap_ok
 
 
 def _pair_neighbours(s: Tensor, v: Tensor, length: Tensor, cand: Tensor, free: float
@@ -186,6 +187,20 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
         has = torch.isfinite(best)
     # Differentiable [B, K] gap to the selected merger (follower front -> merger rear).
     best = s.gather(-1, index) - length.gather(-1, index) - s
+    if learned:
+        # R13E pass rule (COMBO300 hold deadlock): the follower yields only while it is
+        # still OUTSIDE the secure gap to its merger, measured from the yield's own
+        # virtual leader (merger rear minus the follower's learned s0; SUMO compares
+        # gap - minGap with the secure gap). Inside it, the yield releases and the
+        # follower may pass. Same learned-parameter GAPACC gs law as the insertion veto
+        # (wms.physics.secure_gap); no new constants. A discrete mask, like the pairing.
+        with torch.no_grad():
+            def per_slot(value):
+                return torch.as_tensor(value, dtype=v.dtype, device=v.device).expand_as(v)
+            decel = per_slot(params.b_comf)
+            need = secure_gap_need(v, v.gather(-1, index), per_slot(params.time_headway),
+                                   decel, decel.gather(-1, index))
+            has = has & secure_gap_ok(best - per_slot(params.s0), need)
     # The virtual leader stands the road's minimum gap s0 behind the merger's rear: a follower
     # that stops for it leaves the merger's standstill secure follower gap (s0 + T*0 + 0), so
     # yielding can never itself block the merge (deadlock when the driver's own s0 < road s0).

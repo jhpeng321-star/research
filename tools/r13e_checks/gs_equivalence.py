@@ -144,9 +144,13 @@ def compare(reference, cases, dtype, net=None):
         finite &= (dp[..., 1] >= 0).all(-1) & (dp[..., 2] > 0).all(-1)
         finite &= g["eligible"][:, 0]
         assert torch.equal(ga[finite], oracle(g, dp, add_s0=False)[:, 0][finite])
-        assert not bool((r13 & ~ga & finite).any()), "unexpected non-conservative difference"
+        # R13E review B3: on the valid domain (finite settings, b > 0, T >= 0, finite
+        # nonnegative speeds, eligible) the decisions must be IDENTICAL to GAPACC.
+        assert torch.equal(r13[finite], ga[finite]), "gs differs from GAPACC on valid inputs"
+        # Outside it R13E fails closed (GAPACC may accept a non-finite need).
+        assert not bool((r13 & ~ga).any()), "unexpected non-conservative difference"
         # Count log-rounding differences against direct comparisons separately.
-        direct = oracle(g, dp, add_s0=True)[:, 0]
+        direct = oracle(g, dp, add_s0=False)[:, 0]
         positive_gaps = torch.ones_like(finite)
         for side in ("f", "l"):
             gap = g[f"gap_{side}"][:, 0]
@@ -154,7 +158,9 @@ def compare(reference, cases, dtype, net=None):
         valid = finite & positive_gaps
     differences = torch.nonzero(ga != r13).flatten().tolist()
     rounding = torch.nonzero((r13 != direct) & valid).flatten().tolist()
-    return dict(n=len(cases), gate_equal=int((ga == r13).sum()),
+    return dict(n=len(cases), valid_domain=int(finite.sum()),
+                valid_domain_differences=int((ga != r13)[finite].sum()),
+                gate_equal=int((ga == r13).sum()),
                 gapacc_only=int((ga & ~r13).sum()), r13e_only=int((r13 & ~ga).sum()),
                 both_accept=int((ga & r13).sum()), both_reject=int((~ga & ~r13).sum()),
                 boundary_equal=int((ga_c == r13_c).sum()),
@@ -301,12 +307,13 @@ def main():
     for dtype in (torch.float32, torch.float64):
         edges = edge_cases(dtype)
         result = compare(reference, edges, dtype)
-        assert result["gapacc_only"] > 0
+        assert result["valid_domain_differences"] == 0
         g, dp, settings = tensors([edges[-1]], dtype)
         net = FirstPassageNet().to(dtype)
         with torch.no_grad():
+            # The former s0 counterexample is now accepted by both (no s0 term).
             assert torch.isfinite(gapacc_boundary(reference, net, g, dp)[0, 0])
-            assert torch.isneginf(net(g, settings)[0, 0])
+            assert torch.isfinite(net(g, settings)[0, 0])
         report["synthetic"][str(dtype)] = {
             "edge_cases": result, "random_heterogeneous_cases": compare(reference, random, dtype),
             "index_shape_edges": index_shape_edges(reference, dtype)}
@@ -323,6 +330,12 @@ def main():
                              ("hdv_window40_216", [c for c in all_recorded if c["hdv"] and c["window"]])):
             report["recorded"][label] = {str(dt): compare(reference, cases, dt)
                                          for dt in (torch.float32, torch.float64)} if cases else {}
+    differences = [r["valid_domain_differences"] for part in report["synthetic"].values()
+                   for r in (part["edge_cases"], part["random_heterogeneous_cases"])]
+    for part in report.get("recorded", {}).values():
+        differences += [r["valid_domain_differences"] for r in part.values()]
+    report["verdict"] = ("EQUIVALENT_ON_VALID_DOMAIN" if not any(differences)
+                         else "NOT_EQUIVALENT")
     print(json.dumps(report, indent=2, allow_nan=True))
 
 

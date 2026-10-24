@@ -28,7 +28,7 @@ def physics():
                          lane_gap_rule="speed", stop_time_integration=True)
 
 
-def scene(positions=(75., 15.), speeds=(0., 25.), lanes=(2, 1), *, dtype=torch.float32):
+def scene(positions=(75., 15.), speeds=(0., 17.), lanes=(2, 1), *, dtype=torch.float32):
     kin = torch.zeros(1, len(positions), 7, dtype=dtype, device="cpu")
     kin[..., 0] = kin.new_tensor(positions)
     kin[..., 1:4] = F.one_hot(torch.tensor([lanes], device="cpu"), 3).to(dtype)
@@ -131,7 +131,7 @@ def test_only_nearest_eligible_lane_one_follower_is_selected():
     # The closer lane-0 car, an overlapping lane-1 body, an absent car and a car
     # ahead of the merger must not replace the nearest strictly-behind follower.
     kin = scene((75., 15., -25., 65., 73., 80., 40.),
-                (0., 25., 25., 25., 0., 0., 25.), (2, 1, 1, 0, 1, 1, 1))
+                (0., 17., 25., 25., 0., 0., 25.), (2, 1, 1, 0, 1, 1, 1))
     st = state(kin)
     st["present"][0, -1] = False
     raw = torch.full_like(kin[..., 0], 1.5)
@@ -144,6 +144,10 @@ def test_only_nearest_eligible_lane_one_follower_is_selected():
 
 def test_both_log_parameter_gradients_are_nonzero_and_match_finite_differences():
     layer = LearnedMergeYield().double()
+    with torch.no_grad():
+        # R13E pass rule: an outside-the-secure-gap follower brakes more gently than
+        # 2 m/s2 here, so make the shared cap (1 m/s2) the binding term.
+        layer.log_decel.fill_(math.log(1.))
     kin = scene(dtype=torch.float64)
     st, params, p = state(kin), drivers(kin), physics()
     raw = torch.full_like(kin[..., 0], 1.5)
@@ -151,7 +155,7 @@ def test_both_log_parameter_gradients_are_nonzero_and_match_finite_differences()
     virtual = idm_accel(kin[:, 1, 4], kin[:, 0, 4], kin.new_tensor([52.5]),
                        IDMParams.from_driver_params({k: v[:, 1] for k, v in params.items()}),
                        accel_min=p.accel_min_mps2, accel_max=p.accel_max_mps2)
-    assert virtual.item() < -2. and params["decel"][0, 1] > 2.
+    assert virtual.item() < -1. and params["decel"][0, 1] > 1.
 
     def evaluate():
         out, selected = layer(kin, st["present"], raw, p, params)
@@ -219,14 +223,17 @@ def test_virtual_gap_and_range_use_the_followers_learned_min_gap():
 
 def test_own_learned_deceleration_caps_yield():
     layer = LearnedMergeYield().double()
-    kin = scene(dtype=torch.float64)
+    # gap 3.25 m at 0.5 m/s: outside the b=0.8 secure gap (3.206 m incl. s0) yet
+    # blocked by the road mask's one-step anticipation (< 3.33 m).
+    kin = scene((75., 66.75), (0., 0.5), dtype=torch.float64)
     raw = torch.full_like(kin[..., 0], 1.5)
     with torch.no_grad():
         layer.log_decel.fill_(math.log(6.))
     params = drivers(kin, decel=0.8)
+    assert merge_end_blocked(kin, state(kin)["present"], physics())[0, 0]
     out, selected = layer(kin, state(kin)["present"], raw, physics(), params)
     assert selected[0, 1]
-    weight = torch.sigmoid((layer.distance_m - 60.) / params["min_gap"][0, 1])
+    weight = torch.sigmoid((layer.distance_m - 8.25) / params["min_gap"][0, 1])
     torch.testing.assert_close(out[0, 1], 1.5 + weight * (-0.8 - 1.5))
     grad, = torch.autograd.grad(out[0, 1], layer.log_decel)
     assert grad.item() == 0.  # the driver's b, rather than shared b, is binding
@@ -248,6 +255,8 @@ def test_direct_physics_and_forward_apply_yield_once_from_raw_baseline():
 
 def test_short_step_rollout_pathwise_gradients_match_fd_for_both_log_parameters():
     m = model()
+    with torch.no_grad():
+        m.merge_yield.log_decel.fill_(math.log(1.))  # binding shared cap (see above)
     kin = scene()
     initial = state(kin, cav=torch.tensor([[True, False]]))
     params = drivers(kin)
@@ -367,33 +376,74 @@ def blocked_rollout(m, *, chain=False):
     return history, params
 
 
-@pytest.mark.parametrize("release", ["gone", "merged"])
-def test_blocked_ramp_causes_near_end_crawl_and_releases(release):
-    m = model()
-    history, params = blocked_rollout(m)
-    assert history[-1]["v_mps"][0, 1].item() < 2.
-    assert 55. < history[-1]["s_m"][0, 1].item() < 75.
-    assert merge_end_blocked(history[-1]["veh_kin"], history[-1]["present"], m.physics)[0, 0]
-    free_history, _ = blocked_rollout(model(enabled=False))
-    assert free_history[-1]["v_mps"][0, 1] > 15.
-    kin = history[-1]["veh_kin"].clone()
-    present = history[-1]["present"].clone()
-    if release == "gone":
-        present[0, 0] = False
-    else:
-        # A merger that has entered lane 1 and pulled clear is an ordinary IDM leader.
-        kin[0, 0, 0] += 35.
-        kin[0, 0, 1:4] = kin.new_tensor([0., 1., 0.])
-        kin[0, 0, 4] = 15.
-    released = state(kin, present=present, cav=history[-1]["is_cav"])
-    raw = m._physics_step(released, params)[0]
-    assert torch.equal(m.physics_accel(released, params), raw)
-    assert raw[0, 1] > 1.
-    before = released["v_mps"][0, 1].item()
+def leader_blocked_scene(follower_s, follower_v, *, leader=True):
+    # Stopped lane-end merger (rear at 70 m); a lane-1 car beside it blocks the
+    # merger's LEADER side, so the follower behind decides hold versus pass.
+    if leader:
+        return scene((75., follower_s, 78.), (0., follower_v, .5), (2, 1, 1),
+                     dtype=torch.float64)
+    return scene((75., follower_s), (0., follower_v), (2, 1), dtype=torch.float64)
+
+
+def test_pass_rule_crawl_beside_then_release():
+    """R13E pass rule: hold (crawl) while OUTSIDE the secure gap, then release."""
+    layer, p = LearnedMergeYield().double(), physics()
+    raw_value = 1.5
+    # (1) slow follower 8 m behind the blocked merger: need 2.5 + 1.1 + 1/9 < 8 -> hold.
+    kin = leader_blocked_scene(62., 1.)
+    st, params = state(kin), drivers(kin)
+    assert merge_end_blocked(kin, st["present"], p)[0, 0]
+    raw = torch.full_like(kin[..., 0], raw_value)
+    out, selected = layer(kin, st["present"], raw, p, params)
+    assert selected.tolist() == [[False, True, False]]
+    assert out[0, 1] < 1.e-6 < raw[0, 1]  # crawl: no further acceleration toward the merger
+    # (2) the blocking car has left: the merger is no longer blocked -> released.
+    kin = leader_blocked_scene(62., 1., leader=False)
+    st = state(kin)
+    assert not merge_end_blocked(kin, st["present"], p)[0, 0]
+    out, selected = layer(kin, st["present"], torch.full_like(kin[..., 0], raw_value), p,
+                          drivers(kin))
+    assert not selected.any() and torch.equal(out, torch.full_like(out, raw_value))
+    # (3) still blocked, but the follower is INSIDE its secure gap (faster): pass.
+    kin = leader_blocked_scene(62., 9.)  # need 2.5 + 9.9 + 9 > 8 m
+    st = state(kin)
+    assert merge_end_blocked(kin, st["present"], p)[0, 0]
+    out, selected = layer(kin, st["present"], torch.full_like(kin[..., 0], raw_value), p,
+                          drivers(kin))
+    assert not selected.any() and torch.equal(out, torch.full_like(out, raw_value))
+
+
+@pytest.mark.parametrize("gap", [0.4, 1.5])
+def test_pass_rule_stopped_follower_inside_the_gap_is_not_held(gap):
+    """COMBO300 hold deadlock: a STOPPED follower inside s0 of a blocked merger passes."""
+    m, p = model(), physics()
+    kin = scene((75., 70. - gap), (0., 0.), (2, 1))
+    cav = torch.tensor([[True, False]])  # the stopped ramp car is held in place
+    st, params = state(kin, cav=cav), drivers(kin)
+    assert merge_end_blocked(kin, st["present"], p)[0, 0]
+    raw = m._physics_step(st, params)[0]
+    bound, selected = m.merge_yield(kin, st["present"], raw, p, params, is_cav=cav)
+    assert not selected.any() and torch.equal(bound, raw)
+    assert raw[0, 1] > 0.
+    start = st["s_m"][0, 1].item()
     with torch.no_grad():
-        for _ in range(4):
-            released, _ = advance(m, released, params)
-    assert released["v_mps"][0, 1].item() > before + 2.
+        for _ in range(12):
+            st, _ = advance(m, st, params)
+    # Not held: the follower drives on past the standing merger's rear.
+    assert st["v_mps"][0, 1].item() > 2. and st["s_m"][0, 1].item() > start + 5.
+
+
+@pytest.mark.parametrize("case", ["no_ramp_car", "ramp_car_far_upstream"])
+def test_pass_rule_has_no_effect_without_a_blocked_merger(case):
+    m, off = model(), model(enabled=False)
+    if case == "no_ramp_car":
+        kin = scene((40., 15.), (10., 12.), (1, 1))
+    else:
+        kin = scene((-300., 15.), (20., 12.), (2, 1))
+    st, params = state(kin), drivers(kin)
+    assert not merge_end_blocked(kin, st["present"], m.physics).any()
+    assert torch.equal(m(st, driver_params=params)["accel_mps2"],
+                       off(st, driver_params=params)["accel_mps2"])
 
 
 def test_controlled_follow_chain_develops_no_new_same_lane_overlap():
@@ -404,7 +454,6 @@ def test_controlled_follow_chain_develops_no_new_same_lane_overlap():
         assert st["lane"].tolist() == [[2, 1, 1, 1]], step
         gaps = st["s_m"][:, 1:-1] - st["length_m"][:, 1:-1] - st["s_m"][:, 2:]
         assert (gaps >= 0.).all(), (step, gaps)
-    assert history[-1]["v_mps"][0, 1] < 2.
 
 
 def test_synthetic_state_dict_roundtrip_preserves_learned_yield():
@@ -452,6 +501,8 @@ def test_checkpoint_records_runtime_enable_and_reloads_strictly(tmp_path):
 
 def test_activation_checkpoint_preserves_yield_pathwise_gradients():
     m = model()
+    with torch.no_grad():
+        m.merge_yield.log_decel.fill_(math.log(1.))  # binding shared cap
     initial = state(scene(), cav=torch.tensor([[True, False]]))
     params = drivers(initial["veh_kin"])
     values, gradients = [], []

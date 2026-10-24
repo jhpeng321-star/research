@@ -30,6 +30,8 @@ follower_courtesy_init_zero = true
 follower_courtesy_state_grad = true
 follower_courtesy_intent = "pivot"
 init_from = "runs/c4_wm_v10_round13e_a/wm_s.pt"
+# R13Y learned yield (fitted in stage A, frozen with the core here).
+mainline_merge_yield_learnable = true
 
 [physics]
 emergency_braking = true
@@ -85,7 +87,7 @@ lr_per_stage = [5.0e-5, 3.0e-5]
 batch_size_per_stage = [4, 2]
 freeze_prefixes = [
   "driver_encoder", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
-  "lane_v5", "merge_core", "merge_pivot", "residual_net.lane", "temporal",
+  "lane_v5", "merge_core", "merge_pivot", "residual_net.lane", "temporal", "merge_yield",
 ]
 
 [optim.lr_scale]

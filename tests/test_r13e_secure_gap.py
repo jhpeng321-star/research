@@ -71,9 +71,10 @@ def oracle_margin(g, d):
     # Independent pair arithmetic for this fixture: ramp=0, follower=1, leader=2.
     v, vf, vl = g["v"][0, 0], g["v_f"][0, 0], g["v_l"][0, 0]
     b = d["decel"][0]
-    rf = d["min_gap"][0, 1] + vf * d["time_headway"][0, 1] + F.relu(
+    # GAPACC gs (R13E review B3): no learned min_gap term.
+    rf = vf * d["time_headway"][0, 1] + F.relu(
         vf**2 / (2 * b[1]) - v**2 / (2 * b[0]))
-    rl = d["min_gap"][0, 0] + v * d["time_headway"][0, 0] + F.relu(
+    rl = v * d["time_headway"][0, 0] + F.relu(
         v**2 / (2 * b[0]) - vl**2 / (2 * b[2]))
     return torch.minimum((g["gap_f"][0, 0] / rf).log(), (g["gap_l"][0, 0] / rl).log())
 
@@ -187,13 +188,18 @@ def test_leader_side_can_veto_and_equal_gap_is_secure():
     g = geometry(state_kin(state), state["present"], PhysicsConfig())
     assert g["gap_f"][0, 0] > 0 and net.secure_gap_margin(g, d)[0, 0] < 0
     assert torch.isneginf(net(g, d)[0, 0])
-    # At rest both sides require just the follower's learned standstill gap.
+    # At rest GAPACC gs requires no clearance (no s0 term): any positive gap passes;
+    # the unchanged overlap veto and willingness boundary still govern contact.
     kin = state_kin(state)
     kin[..., 4] = 0.
     kin[0, 1, 0], kin[0, 2, 0] = 23.5, 37.
     g = geometry(kin, state["present"], PhysicsConfig())
-    assert net.secure_gap_margin(g, d)[0, 0] == 0
+    assert net.secure_gap_margin(g, d)[0, 0] == torch.inf
     assert torch.isfinite(net(g, d)[0, 0])
+    # A gap exactly equal to the requirement is secure (GAPACC: gap >= need).
+    from wms.physics.secure_gap import secure_gap_need, secure_gap_ok
+    need = secure_gap_need(*(torch.tensor(x, dtype=DTYPE) for x in (12., 9., 1.2, 3., 2.)))
+    assert secure_gap_ok(need, need) and not secure_gap_ok(torch.nextafter(need, -need), need)
 
 
 @pytest.mark.parametrize("overlap", [False, True])
@@ -217,13 +223,15 @@ def test_absence_invalid_padding_and_overlap_remain_exact_with_zero_adjoint(over
     assert bool(g["overlap"][0, 0]) is overlap
     st = hard_st(net(g), net.params()["tau"], torch.zeros_like(c), 1., g["eligible"],
                  secure_gap_margin=net.secure_gap_margin(g, d))
-    grads = torch.autograd.grad(st.sum(), [kin, *d.values()])
+    # min_gap is not part of GAPACC gs: unused (None) is an exact zero adjoint.
+    grads = [g_ for g_ in torch.autograd.grad(st.sum(), [kin, *d.values()], allow_unused=True)
+             if g_ is not None]
     for grad in grads:
         assert torch.isfinite(grad).all()
         assert torch.count_nonzero(grad) == 0
 
 
-@pytest.mark.parametrize("name", ["time_headway", "decel", "min_gap"])
+@pytest.mark.parametrize("name", ["time_headway", "decel"])
 def test_invalid_present_driver_setting_vetoes_without_nan_gradients(name):
     state, d, net = scene(), drivers(), FirstPassageNet().double()
     d[name][0, 1] = torch.nan
@@ -233,12 +241,13 @@ def test_invalid_present_driver_setting_vetoes_without_nan_gradients(name):
     assert torch.isneginf(c[0, 0])
     st = hard_st(net(g), net.params()["tau"], torch.zeros_like(c), 1., g["eligible"],
                  secure_gap_margin=net.secure_gap_margin(g, d))
-    for grad in torch.autograd.grad(st.sum(), list(d.values())):
+    for grad in [g_ for g_ in torch.autograd.grad(st.sum(), list(d.values()), allow_unused=True)
+                 if g_ is not None]:
         assert torch.isfinite(grad).all() and torch.count_nonzero(grad) == 0
 
 
 @pytest.mark.parametrize("speed", [8., 15.])
-@pytest.mark.parametrize("parameter", ["tau_raw", "time_headway", "decel", "min_gap", "speed"])
+@pytest.mark.parametrize("parameter", ["tau_raw", "time_headway", "decel", "speed"])
 def test_native_rollout_surrogate_fd_is_nonzero_on_accepted_and_rejected_gaps(speed, parameter):
     m, state, d = model(True), scene(speed), drivers()
     # Keep the existing learned scale away from sigmoid saturation for a meaningful FD.
@@ -324,3 +333,13 @@ def test_recorded_replay_geometry_likelihood_and_gradients_are_ungated(hybrid):
     assert results[0][0] > 0
     for a, b in zip(results[0][1], results[1][1]):
         assert torch.isfinite(a).all() and torch.equal(a, b)
+
+
+def test_min_gap_does_not_enter_the_gapacc_secure_gap():
+    """R13E review B3: gs has no learned s0 term (GAPACC install_gate(use_T=True))."""
+    state, d, net = scene(), drivers(), FirstPassageNet().double()
+    g = geometry(state_kin(state), state["present"], PhysicsConfig())
+    reference = net.secure_gap_margin(g, d)
+    for value in (0.1, 50., torch.nan):
+        changed = {**d, "min_gap": torch.full_like(d["min_gap"], value)}
+        assert torch.equal(net.secure_gap_margin(g, changed), reference)

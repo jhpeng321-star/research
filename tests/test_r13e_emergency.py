@@ -360,3 +360,75 @@ def test_gitless_deployment_baseline_is_pinned_and_hash_checked(artifact_dir, mo
     (base / "src/wms/__init__.py").write_text("# altered\n", encoding="utf-8")
     with pytest.raises(ValueError, match="source drift"):
         identity.bundled_base()
+
+
+# ---------------------------------------------------------------- R13E review B2
+def _final_envelope_model(*, yield_on, courtesy=False):
+    from wms.model.spec import ModelSpec
+    from wms.model.wms import WmSModel
+    physics = PhysicsConfig(lane_learnable=True, lane_rule="forced_merge_only",
+                            lane_gap_rule="speed", stop_time_integration=True,
+                            emergency_braking=True)
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(1319)
+        return WmSModel(ModelSpec(rollout_mode="driver_params",
+                                  mainline_merge_yield_learnable=yield_on,
+                                  follower_courtesy=courtesy, follower_courtesy_intent="none"),
+                        physics=physics).cpu().eval()
+
+
+def _closing_scene():
+    from test_r13y_yield import drivers, scene, state
+    # Lane-1 follower closing at 15 m/s on a stopped lane-1 car 20 m ahead.
+    kin = scene((80., 55.), (0., 15.), (1, 1))
+    return state(kin), drivers(kin)
+
+
+@pytest.mark.parametrize("yield_on", [False, True])
+def test_large_positive_residual_cannot_exceed_final_envelope(yield_on):
+    from wms.physics.accel import apply_emergency_envelope
+    m = _final_envelope_model(yield_on=yield_on)
+    st, params = _closing_scene()
+    kin, present = st["veh_kin"], st["present"]
+    cap = apply_emergency_envelope(kin, present, torch.full_like(kin[..., 0], 1.e6),
+                                   m.physics, params)[0, 1]
+    assert cap < 0.  # the envelope demands braking here
+    base = m(st, driver_params=params)
+    # Reported physics baseline is the enveloped baseline (CAV exec cap / losses).
+    assert base["physics_accel_mps2"][0, 1] <= cap + 1.e-5
+    for noise in (0., 5., 1.e3):
+        draw = torch.zeros_like(kin[..., 0])
+        draw[0, 1] = noise
+        out = m(st, driver_params=params, accel_noise=draw)
+        assert out["accel_mps2"][0, 1] <= cap + 1.e-5, noise
+    # Gradient through the final envelope is bounded: d(out)/d(term) in [0, 1].
+    draw = torch.zeros_like(kin[..., 0]).requires_grad_()
+    out = m(st, driver_params=params, accel_noise=draw)["accel_mps2"][0, 1]
+    grad, = torch.autograd.grad(out, draw)
+    sigma = m(st, driver_params=params)["residual_log_sigma"].exp()[0, 1]
+    assert torch.isfinite(grad).all() and 0. <= grad[0, 1] <= sigma + 1.e-6
+
+
+def test_large_positive_courtesy_cannot_exceed_final_envelope():
+    from wms.physics.accel import apply_emergency_envelope
+    m = _final_envelope_model(yield_on=False, courtesy=True)
+    st, params = _closing_scene()
+    with torch.no_grad():
+        m.follower_courtesy.net[-1].bias.fill_(8.)
+    cap = apply_emergency_envelope(st["veh_kin"], st["present"],
+                                   torch.full_like(st["s_m"], 1.e6), m.physics, params)[0, 1]
+    out = m(st, driver_params=params)
+    assert out["accel_mps2"][0, 1] <= cap + 1.e-5
+
+
+def test_final_envelope_is_applied_once_and_off_path_unchanged():
+    from wms.physics.accel import apply_emergency_envelope
+    m = _final_envelope_model(yield_on=False)
+    st, params = _closing_scene()
+    raw = m._physics_step(st, params, emergency_envelope=False)[0]
+    once = apply_emergency_envelope(st["veh_kin"], st["present"], raw, m.physics, params)
+    out = m(st, driver_params=params)
+    torch.testing.assert_close(out["accel_mps2"], once.clamp(m.physics.accel_min_mps2,
+                                                             m.physics.accel_max_mps2),
+                               rtol=0., atol=0.)
+    assert torch.equal(m.physics_accel(st, params), m._physics_step(st, params)[0])
