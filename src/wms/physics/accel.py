@@ -59,4 +59,11 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                                      merge_blocked, impatience)
     if physics.emergency_decel_mps2 is not None:
         accel = accel.clamp_min(-physics.emergency_decel_mps2)
+    if physics.emergency_braking:
+        from .emergency import leader_inputs, safe_accel
+
+        safe_gap, safe_leader_v, has_leader = leader_inputs(kin, present, physics)
+        emergency = safe_accel(kin[..., 4], safe_leader_v, safe_gap, accel, params.s0,
+                               dt=physics.dt_s, emergency_decel=-physics.accel_min_mps2)
+        accel = torch.where(has_leader, emergency, accel)
     return torch.where(present, accel, torch.zeros_like(accel))
