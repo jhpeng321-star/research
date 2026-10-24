@@ -153,6 +153,9 @@ class ModelSpec:
     # emission is replaced by a learned per-lane constant b[lane] (pre-gate, learned HDV rows only;
     # parameter ``temporal_lane_bias`` [3], created only when on); the history MLP no longer acts.
     temporal_accel_lane_bias: bool = False
+    # R13S (default false = round 12): the emission is the S-FACTORIAL state-conditional mean table over
+    # (lane, v, gap, closing, s, k) with backoff (wms.model.temporal_state_table); the tables are parameters.
+    temporal_accel_state_table: bool = False
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -161,15 +164,17 @@ class ModelSpec:
             raise ValueError("follower_courtesy_version must be 1 or 2")
         if self.follower_courtesy_version == 2 and not self.follower_courtesy:
             raise ValueError("follower_courtesy_version = 2 needs follower_courtesy")
-        if self.temporal_accel_lane_bias is True and self.temporal_accel_off is True:
-            raise ValueError("temporal_accel_lane_bias and temporal_accel_off are exclusive")
+        if sum(getattr(self, name) is True for name in (
+                "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table")) > 1:
+            raise ValueError("temporal_accel_off, temporal_accel_lane_bias and temporal_accel_state_table "
+                             "are exclusive")
         if self.follower_courtesy_intent not in ("lane_v5", "pivot", "none"):
             raise ValueError("follower_courtesy_intent must be lane_v5, pivot or none")
         if self.follower_courtesy_intent == "pivot" and self.merge_decision != "first_passage":
             raise ValueError("follower_courtesy_intent='pivot' needs merge_decision='first_passage'")
         for name in ("follower_courtesy", "follower_courtesy_embedding",
                      "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
-                     "temporal_accel_off", "temporal_accel_lane_bias"):
+                     "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:

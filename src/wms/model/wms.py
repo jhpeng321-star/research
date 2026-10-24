@@ -258,6 +258,15 @@ class WmSModel(nn.Module):
         self.temporal_accel_lane_bias = bool(getattr(spec, "temporal_accel_lane_bias", False))
         self.temporal_lane_bias = (nn.Parameter(torch.zeros(3)) if self.temporal_accel_lane_bias
                                    else None)
+        # R13S: S-FACTORIAL state-conditional mean tables (parameters) + fitted row counts (buffers, backoff).
+        self.temporal_accel_state_table = bool(getattr(spec, "temporal_accel_state_table", False))
+        self.temporal_state_mean = None
+        if self.temporal_accel_state_table:
+            from . import temporal_state_table as tst
+            self.temporal_state_mean = nn.ParameterList(
+                [nn.Parameter(torch.zeros(tst.level_shape(lv))) for lv in range(len(tst.LEVELS))])
+            for lv in range(len(tst.LEVELS)):
+                self.register_buffer(f"temporal_state_n{lv}", torch.zeros(tst.level_shape(lv)))
         # Diagnostic (never part of a checkpoint, default off = no extra output): emit the pre-gate
         # temporal acceleration as ``temporal_accel_pregate_mps2`` (tools/r13m_lane_bias_init.py).
         self.diag_emit_temporal = False
@@ -972,6 +981,12 @@ class WmSModel(nn.Module):
             lane_now = kin[..., 1:4].argmax(-1)
             temporal_accel = torch.where(on_road, self.temporal_lane_bias.to(kin.dtype)[lane_now],
                                          torch.zeros_like(temporal_accel))
+        elif self.temporal_state_mean is not None:
+            # R13S: deterministic state-conditional mean of the emission (current state + k only).
+            from . import temporal_state_table as tst
+            bins = tst.bin_index(*tst.state_features(kin.detach(), present, k))
+            counts = [getattr(self, f"temporal_state_n{lv}") for lv in range(len(tst.LEVELS))]
+            temporal_accel = tst.lookup(list(self.temporal_state_mean), counts, bins).to(kin.dtype)
         if self.temporal_residual_mode == "slow":
             # SLOWRES: replace the direct temporal emission by the carried low-pass state.
             temporal_accel = self._slow_temporal_accel(

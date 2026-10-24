@@ -13,6 +13,10 @@ Round 13M (same verdict, chosen by the config): ``model.temporal_accel_lane_bias
 ``temporal_accel_off``; the one extra new tensor ``temporal_lane_bias`` is admitted in the round-12 tensor-set and
 init-report checks, the init report must carry the config's ``temporal_lane_bias_init`` and every reloaded
 checkpoint must have the lane-bias mode on (temporal_accel_off off).
+
+Round 13S likewise: ``model.temporal_accel_state_table`` (the S-FACTORIAL state-conditional mean tables); the ten
+table tensors are admitted, the init report must carry the config's table (sha256) and every reloaded checkpoint
+must have the state-table mode on.
 """
 from __future__ import annotations
 
@@ -24,6 +28,9 @@ from . import round12_gate
 
 CHECKPOINTS = ("wm_s_stage120.pt", "wm_s_stage300.pt", "wm_s.pt")
 LANE_BIAS_KEY = "temporal_lane_bias"
+#: R13S new tensors: the five mean tables (parameters) and their fitted counts (buffers)
+STATE_TABLE_KEYS = tuple(f"temporal_state_mean.{lv}" for lv in range(5)) + tuple(f"temporal_state_n{lv}"
+                                                                                  for lv in range(5))
 
 
 def check_r13f_checkpoints(smoke_dir: Path, absolute_weight: float, mode: str = "off") -> list[dict]:
@@ -43,6 +50,9 @@ def check_r13f_checkpoints(smoke_dir: Path, absolute_weight: float, mode: str = 
         if mode == "lane_bias" and (spec.temporal_accel_lane_bias is not True or spec.temporal_accel_off
                                     or getattr(model, "temporal_lane_bias", None) is None):
             problems.append("temporal_accel_lane_bias is not on (or temporal_accel_off is on) after reload")
+        if mode == "state_table" and (spec.temporal_accel_state_table is not True or spec.temporal_accel_off
+                                      or getattr(model, "temporal_state_mean", None) is None):
+            problems.append("temporal_accel_state_table is not on (or temporal_accel_off is on) after reload")
         if spec.follower_courtesy_state_grad is not True:
             problems.append("follower_courtesy_state_grad is not on")
         if spec.follower_courtesy_intent != "pivot":
@@ -77,10 +87,13 @@ def main(argv=None) -> int:
     except Exception as exc:
         print(f"smoke: bad config {config}: {exc}")
         return 3
-    mode = "lane_bias" if model_cfg.temporal_accel_lane_bias else "off"
+    mode = ("lane_bias" if model_cfg.temporal_accel_lane_bias
+            else "state_table" if model_cfg.temporal_accel_state_table else "off")
     saved_new = round12_gate.NEW_KEYS
     if mode == "lane_bias":
         round12_gate.NEW_KEYS = tuple(sorted((*saved_new, LANE_BIAS_KEY)))
+    elif mode == "state_table":
+        round12_gate.NEW_KEYS = tuple(sorted((*saved_new, *STATE_TABLE_KEYS)))
     try:
         code = round12_gate.main(r12_argv)
     finally:
@@ -106,6 +119,15 @@ def main(argv=None) -> int:
                 if not want or init.get("temporal_lane_bias_init") != want:
                     raise ValueError(f"init report temporal_lane_bias_init {init.get('temporal_lane_bias_init')!r}"
                                      f" != config {want!r}")
+            if mode == "state_table":
+                from wms.model.checkpoint import sha256_file
+                from wms.train.losses.accel_tail import resolve_table
+
+                init = json.loads((smoke_dir / "INIT_FROM.json").read_text(encoding="utf-8"))
+                want = sha256_file(Path(resolve_table(model_cfg.temporal_state_table_init)))
+                got = (init.get("temporal_state_table_init") or {}).get("sha256")
+                if got != want:
+                    raise ValueError(f"init report temporal_state_table_init sha256 {got!r} != config table {want!r}")
             result["r13f_checkpoints"] = check_r13f_checkpoints(smoke_dir, weight, mode)
         except Exception as exc:
             result["ok"] = False

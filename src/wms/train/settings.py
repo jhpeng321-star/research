@@ -120,6 +120,8 @@ class TrainSettings:
     temporal_accel_reinit: bool = False
     temporal_accel_lane_bias: bool = False
     temporal_lane_bias_init: Optional[tuple[float, ...]] = None
+    temporal_accel_state_table: bool = False
+    temporal_state_table_init: Optional[str] = None
     accel_tail_weight: float = 0.0
     accel_tail_jerk_weight: float = 0.0
     accel_tail_table: Optional[str] = None
@@ -895,6 +897,8 @@ class TrainSettings:
                  or (bool(self.temporal_accel_lane_bias) and len(tuple(self.temporal_lane_bias_init)) == 3
                      and all(math.isfinite(float(x)) for x in self.temporal_lane_bias_init)),
                  "temporal_lane_bias_init needs temporal_accel_lane_bias and 3 finite values")
+        _require(self.temporal_state_table_init is None or bool(self.temporal_accel_state_table),
+                 "temporal_state_table_init needs temporal_accel_state_table")
         _require(all(math.isfinite(float(x)) and float(x) >= 0.0
                      for x in (self.accel_tail_weight, self.accel_tail_jerk_weight))
                  and (not self.accel_tail_on or bool(self.accel_tail_table))

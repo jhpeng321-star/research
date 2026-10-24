@@ -232,6 +232,10 @@ class ModelConfig:
     # (pre-gate m/s^2 for lanes 0, 1, 2; init-only, applied after loading; None = zeros).
     temporal_accel_lane_bias: bool = False
     temporal_lane_bias_init: Optional[tuple[float, ...]] = None
+    # R13S (default false/None = round 12): S-FACTORIAL state-conditional mean table emission and its fitted
+    # init table (.npz of tools/r13s_state_table.py; init-only, applied after loading; relative = repo root).
+    temporal_accel_state_table: bool = False
+    temporal_state_table_init: Optional[str] = None
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -420,6 +424,12 @@ class ModelConfig:
             self.temporal_accel_lane_bias and len(self.temporal_lane_bias_init) == 3
             and all(is_finite(x) for x in self.temporal_lane_bias_init)),
             "model.temporal_lane_bias_init needs temporal_accel_lane_bias and 3 finite values")
+        require(isinstance(self.temporal_accel_state_table, bool)
+                and sum((self.temporal_accel_off, self.temporal_accel_lane_bias,
+                         self.temporal_accel_state_table)) <= 1,
+                "model.temporal_accel_off / _lane_bias / _state_table are exclusive booleans")
+        require(self.temporal_state_table_init is None or self.temporal_accel_state_table,
+                "model.temporal_state_table_init needs model.temporal_accel_state_table")
         require(not (self.temporal_accel_reinit and self.temporal_accel_off),
                 "model.temporal_accel_reinit has no effect with model.temporal_accel_off")
         require(isinstance(self.lane_v5_extra_features, bool),

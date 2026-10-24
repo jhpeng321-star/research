@@ -224,7 +224,8 @@ class WmSTrainer:
             if (getattr(self.settings, "driver_param_init", "checkpoint") != "checkpoint"
                     or bool(getattr(self.settings, "residual_accel_reinit", False))
                     or bool(getattr(self.settings, "temporal_accel_reinit", False))
-                    or getattr(self.settings, "temporal_lane_bias_init", None) is not None):
+                    or getattr(self.settings, "temporal_lane_bias_init", None) is not None
+                    or getattr(self.settings, "temporal_state_table_init", None) is not None):
                 raise CheckpointInitError("init switches (driver_param_init, residual_accel_reinit, "
                                           "temporal_accel_reinit) need model.init_from")
             return None
@@ -328,6 +329,23 @@ class WmSTrainer:
             model.temporal_lane_bias.copy_(torch.as_tensor([float(x) for x in init_bias],
                                                            dtype=model.temporal_lane_bias.dtype))
             out["temporal_lane_bias_init"] = [float(x) for x in model.temporal_lane_bias]
+        table_path = getattr(s, "temporal_state_table_init", None)
+        if table_path is not None:
+            # R13S: the state-conditional mean tables start at the fitted S-FACTORIAL-style table.
+            import numpy as _np
+
+            from ..model import temporal_state_table as tst
+            from ..train.losses.accel_tail import resolve_table
+            if getattr(model, "temporal_state_mean", None) is None:
+                raise CheckpointInitError("temporal_state_table_init needs model.temporal_accel_state_table")
+            path = Path(resolve_table(table_path))
+            table = dict(_np.load(path))
+            tst.check_table(table)
+            for lv in range(len(tst.LEVELS)):
+                model.temporal_state_mean[lv].copy_(torch.as_tensor(table[f"mean{lv}"], dtype=torch.float32))
+                getattr(model, f"temporal_state_n{lv}").copy_(torch.as_tensor(table[f"n{lv}"], dtype=torch.float32))
+            out["temporal_state_table_init"] = {"path": str(path), "sha256": sha256_file(path),
+                                                "cells_used_level0": int((table["n0"] >= tst.MIN_ROWS).sum())}
         return out
 
     def set_stage_lr(self, lr: float) -> None:

@@ -1,0 +1,48 @@
+{
+ "rule": "S-FACTORIAL T-mean arm: per-level cell means of the pre-gate temporal emission over (lane, v, gap, closing, s, k), backoff >= 30 rows (wms.model.temporal_state_table), fitted on as-is free rollouts of the init checkpoint (run init transforms applied)",
+ "config": "configs/c4_wm_v10round13f.toml",
+ "overrides": [
+  "model.temporal_accel_off=false",
+  "loss.merge_core.tf_weight=0.0",
+  "loss.merge_core.metrics=false",
+  "loss.driver_prior.weight=0.0",
+  "loss.brake_follow_cav_weight=2.0"
+ ],
+ "ckpt": "E:/agent-work/c4-v10r10/tmp_diag/r9/wm_s_stage300.pt",
+ "roots": [
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/v5_native",
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/genrand_plain"
+ ],
+ "n_batches": 3,
+ "batch_size": 2,
+ "unroll_s": 60.0,
+ "sampler_seed": 0,
+ "rows": 53707,
+ "lanes": {
+  "0": {
+   "rows": 26584,
+   "mean": 1.7220593406989768,
+   "sd": 7.872351410530699
+  },
+  "1": {
+   "rows": 23511,
+   "mean": -0.7884917127283896,
+   "sd": 11.159650755802991
+  },
+  "2": {
+   "rows": 3612,
+   "mean": -1.8622942017535715,
+   "sd": 13.802182705489454
+  }
+ },
+ "r2_in_sample": 0.3071444055921594,
+ "r2_held_out_by_window": 0.22073420194485238,
+ "cells_used_level0": 350,
+ "npz": "r13s_state_table.npz",
+ "npz_sha256": "7bd6235b05ecebd178f565125141c5ae2657f8119d6fa7ff0e22f82d118eaaca",
+ "notes": [
+  "init checkpoint = round-9 final (round 12 init) + round 12 init transforms via the trainer init_from path; S-FACTORIAL fitted its tables per checkpoint (r10b, r11) on 48 TRAIN states x 120 s; here 6 windows x 60 s (3 batches x 2)",
+  "windows: local val-role episodes of the r9 TRAIN pool windowed as train (--all-roles-as-train); re-fit on TRAIN-split windows (more rows) on the launch host",
+  "merge_core TF term off, driver prior off, brake_follow_cav_weight 2.0 for the capture; no backward"
+ ]
+}
