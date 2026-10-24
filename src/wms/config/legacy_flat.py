@@ -269,6 +269,8 @@ FLAT_TO_PATH: dict[str, str] = {
     # V6INTEG (opt-in integration and simultaneous lane-conflict resolution)
     "stop_time_integration": "physics.stop_time_integration",
     "emergency_decel_mps2": "physics.emergency_decel_mps2",
+    "emergency_braking": "physics.emergency_braking",
+    "secure_gap_veto": "physics.secure_gap_veto",
     "exit_at_road_end": "physics.exit_at_road_end",
     "lane_conflict_resolve": "model.lane_conflict_resolve",
     # V6MERGE (opt-in lane-end interaction rules)
@@ -413,6 +415,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "accel_tail_weight", "accel_tail_jerk_weight", "accel_tail_table", "accel_tail_lanes",
     # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
     "residual_accel_off", "follower_courtesy_off",
+    "emergency_braking", "secure_gap_veto",
     # R12 BASE CALIBRATION
     "driver_param_init", "residual_accel_reinit", "recorded_replay_present",
     "batch_size_per_stage",

@@ -50,7 +50,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         native: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
                         accel_max: Optional[float] = None,
                         native_accel_max: Optional[float] = None,
-                        zone: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None) -> CavController:
+                        zone: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
+                        symmetric_exec_cap: bool = False,
+                        mask_forced_merge: bool = False) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -167,6 +169,12 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
         lane = _merge_lane({**state, "lane": lane_now}, mask)
+        if mask_forced_merge and lane_rules is not None:
+            from .lanes import lane_feasibility
+            # The old bridge's forced ramp merge bypassed the learned head's veto.
+            forced = (lane_now == 2) & (lane == 1)
+            permitted = lane_feasibility({**state, "lane": lane_now}, ages, lane_rules)[..., 1]
+            lane = torch.where(forced & ~permitted, lane_now, lane)
         command_accel = held
         ceiling = policy_max
         if native_in_use:
@@ -198,7 +206,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         target_v = v + ceiling * PHYSICS_DT_S
         # EXECCAP_NOTES.md: with the WM's cav_exec_cap on, policy-driven CAVs realise at most the
         # SUMO-consistent ceiling (identity when off; native counterfactual CAVs are not capped).
-        executed = apply_exec_cap(state, executed, acting)
+        executed = apply_exec_cap(state, executed, mask if symmetric_exec_cap else acting)
         command = torch.stack((executed, target_v), -1)
         next_s, next_v, applied, _ = direct_command_motion(
             s, v, command, PHYSICS_DT_S,

@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 
 
-_RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
+_RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth", re.I)
 _PENETRATION = re.compile(r"m\d+p(02|05|10|20|40)(?!\d)", re.I)  # e.g. w8411m2700p02t240
 
 

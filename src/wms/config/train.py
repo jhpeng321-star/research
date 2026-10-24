@@ -37,7 +37,8 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
                      "mainline_lane_mode": ("free", "courtesy")}
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
-                              "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain")
+                              "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain",
+                              "secure_gap_veto")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -53,6 +54,9 @@ class PhysicsOptions:
 
     stop_time_integration: bool = False
     emergency_decel_mps2: Optional[float] = None
+    emergency_braking: bool = False
+    secure_gap_veto: bool = False
+    """R13E: rollout veto using learned driver T, b and min-gap; replay is ungated."""
     exit_at_road_end: bool = True
     """Plain-bug fix (default true): rollouts remove vehicles past 553.33 m.  False reproduces
     pre-fix results bit-identically (``wms.physics.config.PhysicsConfig.exit_at_road_end``)."""
@@ -97,6 +101,12 @@ class PhysicsOptions:
     physics is kept as ``physics_train.json``."""
 
     def __post_init__(self) -> None:
+        require(isinstance(self.secure_gap_veto, bool),
+                "physics.secure_gap_veto must be a boolean")
+        require(isinstance(self.emergency_braking, bool),
+                "physics.emergency_braking must be a boolean")
+        require(not self.emergency_braking or self.emergency_decel_mps2 is None,
+                "physics.emergency_braking cannot combine with legacy emergency_decel_mps2")
         require(self.emergency_decel_mps2 is None or (
             is_finite(self.emergency_decel_mps2) and 0.0 < self.emergency_decel_mps2 <= 9.0),
             "physics.emergency_decel_mps2 must be finite and in (0, 9] when set")
@@ -1583,6 +1593,9 @@ class TrainConfig:
 
     def __post_init__(self) -> None:
         require(self.schema_version == 2, f"unsupported schema_version {self.schema_version}")
+        if self.physics.secure_gap_veto or self.physics.inference.get("secure_gap_veto", False):
+            require(self.model.merge_decision == "first_passage",
+                    "physics.secure_gap_veto requires model.merge_decision='first_passage'")
         if self.data.history_s is not None:
             require(self.model.kind == "structured", "long history requires structured WM-S")
         if self.model.kind != "structured":

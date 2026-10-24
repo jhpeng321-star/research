@@ -25,7 +25,7 @@ from .merge_core import load_init
 
 
 class FirstPassageNet(nn.Module):
-    """Seven strict / eight hybrid softplus scalars, no residual or driver inputs.
+    """Seven strict / eight hybrid softplus scalars; optional rollout driver veto.
 
     ``init`` optionally overrides ``merge_core.load_init()`` keys (``s0_m``,
     ``T_s``, ``b_mps2``, ``alpha_log_sigma``), or any effective parameter name.
@@ -57,11 +57,14 @@ class FirstPassageNet(nn.Module):
         return {name: F.softplus(getattr(self, f"{name}_raw"))
                 for name in (*names, "w") if hasattr(self, f"{name}_raw")}
 
-    def boundary(self, geometry: Mapping[str, Tensor]) -> Tensor:
+    def boundary(self, geometry: Mapping[str, Tensor],
+                 driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
         """Exact min log clearance ratio; absent=+inf, veto/zero gap=-inf.
 
         Mask operands BEFORE arithmetic: an absent/invalid observation must
         neither invent event support nor poison gradients in other slots.
+        Supplying per-slot driver settings opts into the R13E secure-gap veto.
+        Recorded replay omits them, preserving its original likelihood/support.
         """
         p = self.params()
         v = geometry["v"]
@@ -84,10 +87,64 @@ class FirstPassageNet(nn.Module):
             constrained = torch.where(valid, margin, torch.full_like(v, -torch.inf))
             sides.append(torch.where(has, constrained, torch.full_like(v, torch.inf)))
         c = torch.minimum(*sides)
-        return torch.where(eligible, c, torch.full_like(c, -torch.inf))
+        c = torch.where(eligible, c, torch.full_like(c, -torch.inf))
+        if driver_params is not None:
+            secure = self.secure_gap_margin(geometry, driver_params) >= 0.0
+            c = torch.where(secure, c, torch.full_like(c, -torch.inf))
+        return c
 
-    def forward(self, geometry: Mapping[str, Tensor]) -> Tensor:
-        return self.boundary(geometry)
+    @staticmethod
+    def secure_gap_margin(geometry: Mapping[str, Tensor],
+                          driver_params: Mapping[str, Tensor]) -> Tensor:
+        """Min log gap/required-gap using actual follower and leader settings.
+
+        Required bumper clearance is s0_f + v_f*T_f + relu(v_f²/(2*b_f)
+        - v_l²/(2*b_l)). The ego follows its target leader and the target follower
+        follows the ego. Gather by geometry's neighbour indices, never slot order.
+        Learned follower min-gap is included, preserving the actual R13E gs
+        semantics even though the brief GAPACC formula omits that term.
+        No anticipation, relaxation, distance/speed cutoffs or overlap changes.
+        """
+        v = geometry["v"]
+        settings = {name: driver_params[name].to(v)
+                    for name in ("time_headway", "decel", "min_gap")}
+        if any(value.shape != v.shape for value in settings.values()):
+            raise ValueError("secure-gap driver settings must have the geometry's per-slot shape")
+        eligible = geometry["eligible"].bool() & torch.isfinite(v) & (v >= 0.0)
+        if v.shape[-1] == 0:
+            return torch.full_like(v, torch.inf)
+        sides = []
+        for side in ("f", "l"):
+            has = geometry[f"has_{side}"].bool()
+            index = geometry[f"index_{side}"]
+            gap, other = geometry[f"gap_{side}"], geometry[f"v_{side}"]
+            valid = (eligible & has & (index >= 0) & (index < v.shape[-1])
+                     & torch.isfinite(gap) & (gap > 0.0)
+                     & torch.isfinite(other) & (other >= 0.0))
+            neighbor = {name: value.gather(-1, index.clamp(0, v.shape[-1] - 1))
+                        for name, value in settings.items()}
+            follower, leader = (neighbor, settings) if side == "f" else (settings, neighbor)
+            t, s0 = follower["time_headway"], follower["min_gap"]
+            bf, bl = follower["decel"], leader["decel"]
+            valid = (valid & torch.isfinite(t) & (t >= 0.0)
+                     & torch.isfinite(s0) & (s0 > 0.0)
+                     & torch.isfinite(bf) & (bf > 0.0) & torch.isfinite(bl) & (bl > 0.0))
+            vf, vl = (other, v) if side == "f" else (v, other)
+            vf, vl, t, s0 = (torch.where(valid, x, torch.zeros_like(x)) for x in (vf, vl, t, s0))
+            bf, bl = (torch.where(valid, x, torch.ones_like(x)) for x in (bf, bl))
+            req = s0 + vf * t + F.relu(vf.square() / (2.0 * bf) - vl.square() / (2.0 * bl))
+            valid = valid & torch.isfinite(req) & (req > 0.0)
+            safe_gap = torch.where(valid, gap, torch.ones_like(gap))
+            safe_req = torch.where(valid, req, torch.ones_like(req))
+            margin = safe_gap.log() - safe_req.log()
+            constrained = torch.where(valid, margin, torch.full_like(v, -torch.inf))
+            sides.append(torch.where(has, constrained, torch.full_like(v, torch.inf)))
+        margin = torch.minimum(*sides)
+        return torch.where(eligible, margin, torch.full_like(margin, -torch.inf))
+
+    def forward(self, geometry: Mapping[str, Tensor],
+                driver_params: Optional[Mapping[str, Tensor]] = None) -> Tensor:
+        return self.boundary(geometry, driver_params)
 
 
 def geometry(kin: Tensor, present: Tensor, physics,
@@ -698,12 +755,18 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
 
 def hard_st(c: Tensor, tau: Tensor, z: Tensor, width: float | Tensor,
              eligible: Tensor, *, w: Optional[Tensor] = None,
-             epsilon: Optional[Tensor] = None) -> Tensor:
+             epsilon: Optional[Tensor] = None,
+             secure_gap_margin: Optional[Tensor] = None) -> Tensor:
     """Hard 0/1 forward, sigmoid straight-through backward (NOT a likelihood).
 
     Width is solely a numerical backward estimator parameter.  Infinite c
     has an exact constant forward and zero backward; invalid/ineligible slots
     have zero derivative.  ``tau`` is population dispersion, not this width.
+    With R13E, c is the UNGATED willingness boundary: the hard secure-gap veto
+    is ANDed in forward. Its labeled surrogate multiplies the willingness sigmoid
+    by sigmoid(secure_gap_margin/tau), reusing the existing learned scale (no new
+    tensors). This is not a likelihood or the derivative of the hard veto.
+    Physical vetoes retain zero gradients; finite rejected gaps retain credit.
     """
     width = _scale(width, c)
     if not bool((torch.isfinite(width) & (width > 0.0)).all()):
@@ -716,6 +779,13 @@ def hard_st(c: Tensor, tau: Tensor, z: Tensor, width: float | Tensor,
         margin = margin + _scale(w, c) * torch.where(active, epsilon, torch.zeros_like(c))
     soft = torch.where(active, torch.sigmoid(_ratio(margin, width)), torch.zeros_like(margin))
     hard = (eligible.bool() & ((active & (margin >= 0.0)) | (c == torch.inf))).to(c.dtype)
+    if secure_gap_margin is not None:
+        finite_gap = eligible.bool() & torch.isfinite(secure_gap_margin)
+        safe_gap = torch.where(finite_gap, secure_gap_margin, torch.zeros_like(c))
+        gate = torch.where(finite_gap, torch.sigmoid(_ratio(safe_gap, _scale(tau, c))),
+                           (eligible.bool() & (secure_gap_margin == torch.inf)).to(c.dtype))
+        soft = soft * gate
+        hard = hard * (secure_gap_margin >= 0.0).to(c.dtype)
     return hard + (soft - soft.detach())
 
 

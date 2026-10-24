@@ -319,7 +319,10 @@ class TeamCritic(nn.Module):
                        if backlog is None else backlog.to(pooled.dtype).reshape(pooled.shape[0], 2))
             pooled = torch.cat((pooled, backlog / self.BACKLOG_SCALE), -1)
         value = self.head(pooled).squeeze(-1)
-        return torch.where(mask.any(1), value, torch.zeros_like(value))
+        nonempty = mask.any(1)
+        if self.entry_backlog:
+            nonempty = nonempty | (backlog > 0).any(-1)
+        return torch.where(nonempty, value, torch.zeros_like(value))
 
 
 CHECKPOINT_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", "c4_dreamer/3")

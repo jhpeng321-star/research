@@ -32,6 +32,7 @@ from .counterfactual import (KIND_ALL, CounterfactualConfig, baseline_index, bui
                              row_coefficients)
 from .entrance import DEFAULT_ENTRANCE_ZONE_M, make_entrance_zone_fn
 from .futures import FuturesConfig, SampledFutures, lane_uniform_draws
+from .real_returns14 import RealReturnBatch, RealReturnProvider
 from .start_states import StartBatch, checked_path
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
@@ -169,8 +170,28 @@ class DreamerConfig:
     entrance_zone_native: bool = False
     entrance_zone_main_m: float = DEFAULT_ENTRANCE_ZONE_M
     entrance_zone_ramp_m: float = DEFAULT_ENTRANCE_ZONE_M
+    # POLICY14: critic-only fitting of authoritative negative-total-vehicle-second
+    # returns. Convex mix of independently mean-reduced real/imagined MSE. The
+    # real residual uses the return scale with the floor below. Zero never calls the provider.
+    # Enable only with imagined rewards in these same raw units (no per-car mean).
+    real_return_mix: float = 0.0
+    # Independent real-target residual scale floor; raw critic values stay in veh-s.
+    real_return_scale: float = 1.0
+    # Extra autograd passes for weighted actor-loss components, plus pre-safety
+    # acceleration saturation/entropy in m/s^2. False adds no diagnostic graph work.
+    actor_gradient_audit: bool = False
 
     def __post_init__(self):
+        if (isinstance(self.real_return_mix, bool)
+                or not isinstance(self.real_return_mix, (int, float))
+                or not math.isfinite(self.real_return_mix) or not 0 <= self.real_return_mix <= 1):
+            raise ValueError("real_return_mix must be a finite number in [0, 1]")
+        if (isinstance(self.real_return_scale, bool)
+                or not isinstance(self.real_return_scale, (int, float))
+                or not math.isfinite(self.real_return_scale) or self.real_return_scale <= 0):
+            raise ValueError("real_return_scale must be a finite positive number")
+        if not isinstance(self.actor_gradient_audit, bool):
+            raise ValueError("actor_gradient_audit must be a boolean")
         for name in ("batch_size", "horizon"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -553,8 +574,10 @@ class DreamerTrainer:
     def __init__(self, world_models, policy, group_encoder, critic, start_states, *,
                  observation_builder, reward_fn, safety, controller_factory=None, config=None,
                  reward_weights=None, device="cpu", output_dir=None, lane_rules=None,
-                 counterfactual=None):
+                 counterfactual=None, real_return_provider: RealReturnProvider | None = None):
         self.config = config or DreamerConfig()
+        self.real_return_provider = real_return_provider
+        self._check_real_return_provider(self.config)
         # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
         # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
         self.lane_rules = lane_rules
@@ -622,6 +645,24 @@ class DreamerTrainer:
         self.validation_states = None
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
+
+    def _check_real_return_provider(self, config):
+        if self.real_return_provider is not None and not callable(self.real_return_provider):
+            raise ValueError("real_return_provider must be callable or None")
+        if config.real_return_mix > 0 and self.real_return_provider is None:
+            raise ValueError("real_return_mix > 0 requires a real_return_provider")
+
+    def _real_return_batch(self):
+        """Provider boundary: no actor/WM graph can enter critic regression."""
+        if self.config.real_return_mix == 0:
+            return None
+        self._check_real_return_provider(self.config)
+        with torch.no_grad():
+            batch = self.real_return_provider(batch_size=self.config.batch_size,
+                                              device=self.device, update=self.update_count + 1)
+            if not isinstance(batch, RealReturnBatch):
+                raise ValueError("real_return_provider must return a RealReturnBatch")
+            return batch.detached(device=self.device, gamma=self.config.gamma)
 
     def _init_entropy_temperature(self):
         """(Re)create the learned entropy-temperature parameters for the configured targets.
@@ -771,6 +812,7 @@ class DreamerTrainer:
         member_states, member_rewards, member_costs, member_values = [], [], [], []
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         member_zone = []
+        member_action_audit = []
         profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
@@ -805,6 +847,10 @@ class DreamerTrainer:
                         record["credit_action"] = held_out[0]
                         record["credit_mask"] = acting
                     record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
+                    if cfg.actor_gradient_audit:
+                        record["audit_action"] = held_out[0].detach()
+                        record["audit_log_prob"] = log_prob.detach()
+                        record["audit_acting"] = acting.detach()
                     if hasattr(held_out, "log_prob_lane"):
                         record["lane_log_prob"] = held_out.log_prob_lane
                         record["lane_entropy"] = held_out.entropy_lane
@@ -1008,6 +1054,10 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
+            if cfg.actor_gradient_audit:
+                member_action_audit.append({name: torch.stack([record[name] for record in records])
+                                            for name in ("audit_action", "audit_log_prob",
+                                                         "audit_acting")})
             if zone_fn is not None:
                 member_zone.append(torch.stack([record["entrance_zone"] for record in records]))
             if self.use_lanes:
@@ -1046,6 +1096,9 @@ class DreamerTrainer:
             zone_base = zone_masks[..., :n_base, :]
             zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                **({"action_audit": {name: torch.stack([m[name] for m in member_action_audit])
+                                     for name in member_action_audit[0]}}
+                   if member_action_audit else {}),
                 **({"credit_profile": profile} if profile is not None else {}),
                 "values": torch.stack(member_values),
                 "disagreement": disagreement, "states": member_states,
@@ -1125,7 +1178,7 @@ class DreamerTrainer:
             self.return_high = decay * self.return_high + (1 - decay) * high
         return max(1.0, self.return_high - self.return_low)
 
-    def actor_objective(self, imagined, scale, weights):
+    def actor_objective(self, imagined, scale, weights, *, gradient_components=None):
         """Actor objective to MINIMISE (without the accel entropy / Lagrangian terms).
 
         The maximised objective is ``sum_r c_r * mean_{E,H}(R_r - B_r) / scale`` with the row
@@ -1167,6 +1220,9 @@ class DreamerTrainer:
             lane_weight = _entropy_temperature(getattr(self, "log_lane_alpha", None),
                                                self.config.lane_entropy_weight, self.config)
             loss = loss + self.config.lane_pg_weight * pg_loss - lane_weight * lane_entropy
+            if gradient_components is not None:
+                gradient_components["lane"] = (self.config.lane_pg_weight * pg_loss
+                                                - lane_weight * lane_entropy)
             acting = lanes["lane_acting"][..., :n_base, :]
             changed = lanes["lane_changed"][..., :n_base, :] & acting
             extra.update({"lane_pg_loss": float(pg_loss.detach()),
@@ -1174,6 +1230,65 @@ class DreamerTrainer:
                           "lane_change_rate": float(changed.sum() / acting.sum().clamp_min(1)),
                           "lane_decisions_with_options": int(active[..., :n_base, :].sum())})
         return loss, extra
+
+    def _actor_gradient_norms(self, imagined, scale, weights, components):
+        """Pre-clip L2 parameter norms of actual weighted loss contributions.
+
+        TD(lambda) is linear: split analytic return credit into raw reward,
+        disagreement and frozen-critic bootstrap, preserving the row coefficients.
+        Counterfactual baselines and lane advantages are detached in the loss.
+        autograd.grad retains the training graph and never writes .grad buffers.
+        """
+        rewards, values = imagined["rewards"], imagined["values"]
+        coefficients = row_coefficients(imagined.get("variants"), weights, rewards.shape[-1],
+                                        imagined["n_base"], device=rewards.device,
+                                        dtype=rewards.dtype)
+        sources = {"reward": (rewards, torch.zeros_like(values)),
+                   "critic": (torch.zeros_like(rewards), values)}
+        if self.config.uncertainty_weight > 0:
+            sources["uncertainty"] = (
+                -self.config.uncertainty_weight * imagined["disagreement"].unsqueeze(0).expand_as(rewards),
+                torch.zeros_like(values))
+        for name, (reward, value) in sources.items():
+            credit = torch.stack([lambda_returns(r, v, self.config.gamma, self.config.lambda_)
+                                  for r, v in zip(reward, value)])
+            components[name] = -(credit.mean((0, 1)) * coefficients).sum() / scale
+        parameters = [p for p in self.actor_parameters if p.requires_grad]
+        norms = {}
+        for name, term in components.items():
+            grads = (torch.autograd.grad(term, parameters, retain_graph=True, allow_unused=True)
+                     if term.requires_grad and parameters else ())
+            norms[name] = math.sqrt(sum(float(g.detach().double().square().sum())
+                                        for g in grads if g is not None))
+        return norms
+
+    def _action_audit_metrics(self, imagined):
+        """Policy commands BEFORE safety/caps, only actively controlled all-CAV rows.
+
+        CavPolicy's log density includes the affine-tanh Jacobian in m/s^2.
+        exp(differential entropy) is an effective action width in those units.
+        Saturation means within 1% of the action span of either stored bound.
+        """
+        audit, n_base = imagined.get("action_audit"), imagined["n_base"]
+        if audit is None:
+            return {}
+        active = audit["audit_acting"][..., :n_base, :]
+        actions = audit["audit_action"][..., :n_base, :][active]
+        log_prob = audit["audit_log_prob"][..., :n_base, :][active]
+        entropy = float(-log_prob.double().mean()) if log_prob.numel() else 0.0
+        out = {"active_actions": actions.numel(), "action_unit": "m/s^2",
+               "entropy_nats": entropy,
+               "entropy_effective_width_mps2": math.exp(entropy) if log_prob.numel() else 0.0}
+        lo, hi = getattr(self.policy, "accel_min", None), getattr(self.policy, "accel_max", None)
+        if lo is not None and hi is not None:
+            margin = 0.01 * (hi - lo)
+            low, high = actions <= lo + margin, actions >= hi - margin
+            out.update({"lower_bound_mps2": float(lo), "upper_bound_mps2": float(hi),
+                        "saturation_margin_mps2": float(margin),
+                        "saturation_low_fraction": float(low.float().mean()) if actions.numel() else 0.0,
+                        "saturation_high_fraction": float(high.float().mean()) if actions.numel() else 0.0,
+                        "saturation_fraction": float((low | high).float().mean()) if actions.numel() else 0.0})
+        return out
 
     @staticmethod
     def _cooperation_metrics(imagined, variants, weights):
@@ -1259,6 +1374,7 @@ class DreamerTrainer:
 
     def update(self):
         started = time.perf_counter()
+        real_batch = self._real_return_batch()
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
@@ -1280,7 +1396,10 @@ class DreamerTrainer:
         weights = self.counterfactual.weights(self.update_count)
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
-        objective, extra = self.actor_objective(imagined, scale, weights)
+        audit_components = {} if self.config.actor_gradient_audit else None
+        objective, extra = self.actor_objective(
+            imagined, scale, weights,
+            **({"gradient_components": audit_components} if audit_components is not None else {}))
         # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
         # (V7POL: floored at alpha_min).
         entropy_weight = self._temperature(self.log_alpha, self.config.entropy_weight)
@@ -1291,6 +1410,11 @@ class DreamerTrainer:
         if self.config.lagrange_scaled:
             lagrange_term = lagrange_term / scale
         actor_loss = (objective - entropy_weight * entropy + lagrange_term)
+        if audit_components is not None:
+            audit_components.update(constraint=lagrange_term, entropy=-entropy_weight * entropy)
+            extra["actor_grad_norms"] = self._actor_gradient_norms(
+                imagined, scale, weights, audit_components)
+            extra["action_audit"] = self._action_audit_metrics(imagined)
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
         # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
@@ -1301,10 +1425,34 @@ class DreamerTrainer:
         # V6EXPLORE: dual steps on the entropy temperature(s), logged with the entropy above.
         extra.update(self._alpha_update(imagined, entropy))
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
-        predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
-                                                for state in states[:-1]])
-                                   for states in imagined["states"]])
-        critic_loss = ((predictions - returns.detach()) / scale).square().mean()
+        mix = self.config.real_return_mix
+        imagined_loss = None
+        if mix < 1:
+            predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
+                                                    for state in states[:-1]])
+                                       for states in imagined["states"]])
+            # Real and imagined targets share raw value units, including scaled
+            # critics. Do not amplify imagined regression by a short-rollout
+            # advantage scale when real-return scaling was explicitly requested.
+            critic_scale = max(scale, self.config.real_return_scale)
+            imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
+        if real_batch is None:
+            critic_loss = imagined_loss
+        else:
+            real_predictions = self.critic(real_batch.states)
+            if real_predictions.shape != real_batch.returns.shape:
+                raise ValueError("real critic predictions must have shape [B], matching real returns")
+            real_scale = max(scale, self.config.real_return_scale)
+            real_loss = ((real_predictions - real_batch.returns.to(real_predictions)) / real_scale).square().mean()
+            critic_loss = mix * real_loss
+            if imagined_loss is not None:
+                critic_loss = critic_loss + (1 - mix) * imagined_loss
+            extra.update({"real_return_mix": mix, "critic_real_loss": float(real_loss.detach()),
+                          "critic_imagined_loss": (float(imagined_loss.detach())
+                                                   if imagined_loss is not None else None),
+                          "real_return_mean": float(real_batch.returns.mean()),
+                          "real_return_count": real_batch.returns.numel(),
+                          "real_return_units": real_batch.units})
         self.critic_optimizer.zero_grad(set_to_none=True)
         critic_loss.backward()
         critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), self.config.grad_clip,
@@ -1495,6 +1643,8 @@ class DreamerTrainer:
             raise ValueError(f"expected a {' or '.join(READABLE_FORMATS)} checkpoint")
         if not policy_only and payload["format"] != CHECKPOINT_FORMAT:
             raise ValueError(f"full resume requires a {CHECKPOINT_FORMAT} checkpoint (use policy_only)")
+        if not policy_only:
+            self._check_real_return_provider(DreamerConfig(**payload["config"]))
         loop_refresh = os.environ.get("WMS_LOOP_REFRESH", "") == "1"
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
                                 (payload["world_model_ids"] != self.world_model_ids

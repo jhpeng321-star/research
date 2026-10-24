@@ -341,8 +341,9 @@ def row_coefficients(variants: Optional[Variants], weights: Mapping[str, float],
         c[row] += weights["individual"] * per_start
     for group in variants.groups:
         c[group["row"]] += (weights["group"] + weights["coop"]) * per_start
-        for member in group["members"]:
-            c[variants.individual_rows[(group["start"], member)]] -= weights["coop"] * per_start
+        if weights["coop"]:
+            for member in group["members"]:
+                c[variants.individual_rows[(group["start"], member)]] -= weights["coop"] * per_start
         if len(group["members"]) < 3:
             # |G| = 2: G\i is the other member ALONE, so M_i would put -w_team on a solo benefit;
             # the team term is applied to groups of >= 3 only (M_i is still logged for pairs).

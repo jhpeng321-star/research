@@ -210,8 +210,10 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
     if int(version) >= 2:
         acc = kin[..., 5]
         if history is not None and history_mask is not None and history.shape[-2] >= 2:
+            previous_accel = history[..., -2, 1]
+            previous_accel = previous_accel if state_grad else previous_accel.detach()
             prev_all = torch.where(history_mask[..., -2].bool(),
-                                   history[..., -2, 1].detach().to(s.dtype) * 3.0, zero)
+                                   previous_accel.to(s.dtype) * 3.0, zero)
         else:
             prev_all = zero
         zone_all = (update_zone_time(None, kin, present, physics) if zone_time_s is None

@@ -155,6 +155,9 @@ class WmSModel(nn.Module):
         spec = spec or ModelSpec()
         self.spec = spec
         self.physics = physics or PhysicsConfig()
+        if (getattr(self.physics, "secure_gap_veto", False)
+                and spec.merge_decision != "first_passage"):
+            raise ValueError("secure_gap_veto requires merge_decision='first_passage'")
         if physics_step is not None and not callable(physics_step):
             raise TypeError("physics_step must be a callable batched Torch module")
         self.physics_step = physics_step
@@ -1643,7 +1646,8 @@ class WmSModel(nn.Module):
             next_s, next_v, next_lane = self._apply_cav_overrides(
                 out, state, cav, direct, present, k_steps, action_id, action_command,
                 cav_teacher,
-                cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap)
+                cav_controller, next_s, next_v, next_lane, exec_cap=exec_cap,
+                driver_params=driver_params)
 
         if self.merge_pivot is not None:
             # P1: exactly one longitudinal update above; CAV current-action execution
@@ -1657,7 +1661,7 @@ class WmSModel(nn.Module):
                 next_s, next_v, pinned = pivot.ramp_lane_end_stop(
                     state_kin(state), next_s, next_v, present, self.physics)
             next_lane = self._apply_merge_pivot(state, out, next_s, next_v, next_lane,
-                                               lane_uniform)
+                                               lane_uniform, driver_params)
             if pinned is not None:
                 release = pinned & (next_lane != int(self.physics.merge_lane))
                 next_s = torch.where(release, free_s, next_s)
@@ -1719,7 +1723,8 @@ class WmSModel(nn.Module):
         return pivot.geometry(moved, present, self.physics, decision_mask=~cav,
                               fixed_target=fixed_target, route_shift=route_shift)
 
-    def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform):
+    def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform,
+                           driver_params=None):
         kin = state_kin(state)
         present = state_present(state, kin)
         geo = self.pivot_decision_geometry(state, out["accel_mps2"],
@@ -1730,6 +1735,15 @@ class WmSModel(nn.Module):
         ramp = own & (state["lane"].long() == ramp_lane)
         geo["eligible"] = geo["eligible"] & own
         c = self.merge_pivot(geo)
+        veto_margin = None
+        willingness = c
+        if getattr(self.physics, "secure_gap_veto", False):
+            if driver_params is None:
+                driver_params = {name: out["driver_parameters"][..., i]
+                                 for i, name in enumerate(PARAMETER_NAMES)}
+            # Recorded likelihood and courtesy intent retain the ungated boundary.
+            c = self.merge_pivot(geo, driver_params)
+            veto_margin = self.merge_pivot.secure_gap_margin(geo, driver_params)
         params = self.merge_pivot.params()
         carry = {key: state["merge_pivot_" + key] for key in _MERGE_PIVOT_STATE_KEYS
                  if "merge_pivot_" + key in state}
@@ -1763,8 +1777,9 @@ class WmSModel(nn.Module):
         if bool((crossing & ~committed).any()):
             raise RuntimeError("first_passage reservation/commit inconsistency")
         active = geo["eligible"] & ~updated["terminal"]
-        st = pivot.hard_st(c, params["tau"], updated["z"], self.merge_st_width, active,
-                           w=params.get("w"), epsilon=updated.get("epsilon"))
+        st = pivot.hard_st(willingness, params["tau"], updated["z"], self.merge_st_width, active,
+                           w=params.get("w"), epsilon=updated.get("epsilon"),
+                           secure_gap_margin=veto_margin)
         updated["terminal"] = updated["terminal"] | committed
         hard_weights = torch.nn.functional.one_hot(final.clamp_min(0), 3).to(c.dtype)
         direction = c.new_zeros(3)
@@ -2055,7 +2070,8 @@ class WmSModel(nn.Module):
     def _apply_cav_overrides(self, out: dict, state: dict, cav: Tensor, direct: Tensor,
                              present: Tensor, k_steps, action_id, action_command,
                              cav_teacher, cav_controller, next_s, next_v, next_lane,
-                             exec_cap: Optional[Tensor] = None):
+                             exec_cap: Optional[Tensor] = None,
+                             driver_params: Optional[dict[str, Tensor]] = None):
         """Replace the learned motion of CAV slots by teacher/controller motion.
 
         The controller callback runs once per physics tick (also on direct-only ticks and
@@ -2063,12 +2079,23 @@ class WmSModel(nn.Module):
         lifecycle state; an all-false ``cav`` mask applies no override.
         With ``exec_cap`` the callback state carries it under ``cav.EXEC_CAP_KEY``; command
         executors apply it to their commanded slots (``cav.apply_exec_cap``), teachers ignore it.
+        R13E secure-gap callbacks also receive per-slot T, b and s0 from the supplied
+        rollout driver settings, or the inferred settings when not supplied.
         """
         callback_teacher = None
         if cav_controller is not None:
             callback_state = {**state, "physics_step_index": k_steps}
             if self.merge_pivot is not None:
                 callback_state["merge_pivot_native_accel"] = out["accel_mps2"]
+            if self.physics.secure_gap_veto:
+                settings = driver_params
+                if settings is None:
+                    settings = {name: out["driver_parameters"][..., i]
+                                for i, name in enumerate(PARAMETER_NAMES)}
+                for key, name in (("secure_gap_T_s", "time_headway"),
+                                  ("secure_gap_b_mps2", "decel"),
+                                  ("secure_gap_s0_m", "min_gap")):
+                    callback_state[key] = settings[name]
             if exec_cap is not None:
                 callback_state[cav_motion.EXEC_CAP_KEY] = exec_cap
             if action_id is not None:
