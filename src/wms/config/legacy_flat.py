@@ -29,6 +29,10 @@ FLAT_TO_PATH: dict[str, str] = {
     "follower_courtesy_init_zero": "model.follower_courtesy_init_zero",
     "follower_courtesy_contrast": "loss.follower_courtesy.contrast",
     "cutin_reaction_exclude_partnered_controls": "loss.cutin_reaction.exclude_partnered_controls",
+    # R13A COURTESY PAIR-CONTRACT REPAIR
+    "follower_courtesy_state_grad": "model.follower_courtesy_state_grad",
+    "follower_courtesy_intent": "model.follower_courtesy_intent",
+    "follower_courtesy_absolute_weight": "loss.follower_courtesy.absolute_weight",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -387,6 +391,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # R11 STRUCTURAL COURTESY FIX
     "follower_courtesy_version", "follower_courtesy_init_zero", "follower_courtesy_contrast",
     "cutin_reaction_exclude_partnered_controls",
+    # R13A COURTESY PAIR-CONTRACT REPAIR
+    "follower_courtesy_state_grad", "follower_courtesy_intent", "follower_courtesy_absolute_weight",
     # R12 BASE CALIBRATION
     "driver_param_init", "residual_accel_reinit", "recorded_replay_present",
     "batch_size_per_stage",

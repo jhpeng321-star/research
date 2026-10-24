@@ -141,6 +141,11 @@ class ModelSpec:
     follower_courtesy_rollout_grad: bool = False
     # R11: courtesy input version (1 = round 10b; 2 = + ramp car accel t/t-1 + carried merge-zone time)
     follower_courtesy_version: int = 1
+    # R13A (defaults = round 12): keep the pair features' continuous state derivative (discrete
+    # pairing stays non-differentiable); intent input source: lane_v5 (round 10b-12), pivot (the
+    # first-passage clearance CDF at the step-start state) or none (ablation: input slot = 0).
+    follower_courtesy_state_grad: bool = False
+    follower_courtesy_intent: str = "lane_v5"
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -149,8 +154,12 @@ class ModelSpec:
             raise ValueError("follower_courtesy_version must be 1 or 2")
         if self.follower_courtesy_version == 2 and not self.follower_courtesy:
             raise ValueError("follower_courtesy_version = 2 needs follower_courtesy")
+        if self.follower_courtesy_intent not in ("lane_v5", "pivot", "none"):
+            raise ValueError("follower_courtesy_intent must be lane_v5, pivot or none")
+        if self.follower_courtesy_intent == "pivot" and self.merge_decision != "first_passage":
+            raise ValueError("follower_courtesy_intent='pivot' needs merge_decision='first_passage'")
         for name in ("follower_courtesy", "follower_courtesy_embedding",
-                     "follower_courtesy_rollout_grad"):
+                     "follower_courtesy_rollout_grad", "follower_courtesy_state_grad"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:

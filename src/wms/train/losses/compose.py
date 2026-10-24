@@ -430,6 +430,7 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             huber_delta_mps2=settings.follower_courtesy_huber_delta_mps2,
             target_lane=1 if physics is None else int(physics.merge_target_lane),
             contrast=bool(getattr(settings, "follower_courtesy_contrast", False)),
+            absolute_weight=float(getattr(settings, "follower_courtesy_absolute_weight", 0.0)),
             merge_lane=2 if physics is None else int(physics.merge_lane),
             zone_end_m=75.44 if physics is None else float(physics.merge_zone_s1_m),
             zone_start_m=0.0 if physics is None else float(physics.merge_zone_s0_m))))

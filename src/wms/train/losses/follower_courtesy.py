@@ -18,6 +18,10 @@ it at ~0.  Lane-1 cars without a partner have an identically zero offset and con
 Only the head is trained by this term (``a_pre`` is detached; the replay runs without gradient).
 Recorded future quantities enter only as the TARGET.  No event window, threshold or label is used.
 
+R13A ``absolute_weight > 0`` ADDS ``absolute_weight * huber(a_hat, a_rec)`` on the same partnered rows
+(the absolute follower acceleration, next to the contrast target and its matched negative controls);
+default 0 = round 12.
+
 R11 ``contrast = true`` (matched-negative contrast; R11_DESIGN.md).  The round-10b target makes the
 head absorb every error of the base model on partner rows, including errors that are generic to the
 STATE (the base also mis-predicts unpartnered lane-1 cars in the same state).  With the contrast the
@@ -64,8 +68,12 @@ class FollowerCourtesyConfig:
     merge_lane: int = 2
     zone_end_m: float = 75.44
     zone_start_m: float = 0.0
+    # R13A: weight of an ADDED absolute term on the same partnered rows (default 0 = round 12)
+    absolute_weight: float = 0.0
 
     def __post_init__(self) -> None:
+        if not (math.isfinite(float(self.absolute_weight)) and self.absolute_weight >= 0):
+            raise ValueError("follower_courtesy.absolute_weight must be finite and >= 0")
         if not isinstance(self.contrast, bool):
             raise ValueError("follower_courtesy.contrast must be a boolean")
         if not (math.isfinite(float(self.weight)) and self.weight >= 0):
@@ -228,6 +236,13 @@ class FollowerCourtesyLoss(UnrollTerm):
         offset = model.follower_courtesy_offset(inputs, live=True)
         pred = model.follower_courtesy_total(pre, offset)
         value = F.huber_loss(pred, target, delta=self.config.huber_delta_mps2)
+        total = self.config.weight * value
+        if self.config.absolute_weight > 0:
+            # R13A: absolute follower acceleration on the same partnered rows (recorded target, no
+            # contrast shift), next to the contrast + matched negative controls.
+            absolute = F.huber_loss(pred, recorded, delta=self.config.huber_delta_mps2)
+            total = total + self.config.absolute_weight * absolute
+            self.last_stats["absolute_loss_raw"] = float(absolute.detach())
         with torch.no_grad():
             residual = recorded - pre
             self.last_stats.update(
@@ -235,7 +250,7 @@ class FollowerCourtesyLoss(UnrollTerm):
                 head_mean=float(offset.mean()), head_min=float(offset.min()),
                 head_max=float(offset.max()),
                 base_residual_mean=float(residual.mean()))
-        return TermValue(self.config.weight * value, log=value, valid_count=n_rows)
+        return TermValue(total, log=value, valid_count=n_rows)
 
     @torch.no_grad()
     def _control_shift(self, model: Any, targets: UnrollTargets, out: dict, rows: Tensor,

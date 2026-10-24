@@ -211,6 +211,9 @@ class ModelConfig:
     follower_courtesy_version: int = 1
     # R11: true = do NOT take follower_courtesy.* from model.init_from (fresh zero-init head)
     follower_courtesy_init_zero: bool = False
+    # R13A (defaults = round 12): pair-feature state derivative and the intent input source
+    follower_courtesy_state_grad: bool = False
+    follower_courtesy_intent: Literal["lane_v5", "pivot", "none"] = "lane_v5"
     # R12: init-only switches applied in WmSTrainer._init_from_checkpoint (default = load as is).
     # "centre" zeroes the driver-encoder head rows of the five longitudinal parameter means after
     # loading, so every driver starts at the learned shared centre (physical mode only).
@@ -383,6 +386,13 @@ class ModelConfig:
                 "model.follower_courtesy_init_zero must be a boolean")
         require(self.follower_courtesy_version == 1 or self.follower_courtesy,
                 "model.follower_courtesy_version = 2 needs model.follower_courtesy = true")
+        # R13A
+        require(isinstance(self.follower_courtesy_state_grad, bool),
+                "model.follower_courtesy_state_grad must be a boolean")
+        require(self.follower_courtesy_intent in ("lane_v5", "pivot", "none"),
+                "model.follower_courtesy_intent must be lane_v5, pivot or none")
+        require(self.follower_courtesy_intent != "pivot" or self.merge_decision == "first_passage",
+                "model.follower_courtesy_intent='pivot' needs model.merge_decision='first_passage'")
         # R12 init switches
         require(self.driver_param_init in ("checkpoint", "centre"),
                 "model.driver_param_init must be checkpoint or centre")
@@ -636,9 +646,14 @@ class FollowerCourtesyLossConfig:
     huber_delta_mps2: float = 1.0
     # R11: matched-control contrast target (recorded minus the in-batch kernel-matched control residual)
     contrast: bool = False
+    # R13A: weight of an ADDED absolute term (recorded follower acceleration, no contrast shift) on
+    # the same partnered rows; 0 = off (round 12).
+    absolute_weight: float = 0.0
 
     def __post_init__(self) -> None:
         require(isinstance(self.contrast, bool), "loss.follower_courtesy.contrast must be a boolean")
+        require(is_finite(self.absolute_weight) and self.absolute_weight >= 0,
+                "loss.follower_courtesy.absolute_weight must be finite and >= 0")
         require(is_finite(self.weight) and self.weight >= 0,
                 "loss.follower_courtesy.weight must be finite and >= 0")
         require(is_finite(self.huber_delta_mps2) and self.huber_delta_mps2 > 0,

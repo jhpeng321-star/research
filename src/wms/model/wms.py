@@ -49,7 +49,8 @@ from .merge_negotiation import (MergeNegotiationNet, pair_features,
                               scatter_follower_accel)
 from .merge_core import (MergeCoreNet, core_features, load_init,
                          secure_gap_margin, secure_gap_sides, update_core_alpha)
-from .follower_courtesy import (ZONE_STATE_KEY, FollowerCourtesyHead, follower_courtesy_pairs,
+from .follower_courtesy import (INTENT_SOURCES, ZONE_STATE_KEY, FollowerCourtesyHead,
+                                follower_courtesy_pairs, pivot_clearance_intent,
                                 initial_zone_time, update_zone_time)
 from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from . import merge_pivot as pivot
@@ -389,7 +390,18 @@ class WmSModel(nn.Module):
         self.follower_courtesy = None
         self.follower_courtesy_rollout_grad = bool(getattr(spec, "follower_courtesy_rollout_grad",
                                                            False))
+        # R13A (defaults = round 12): ``state_grad`` keeps the pair features' continuous state
+        # derivative (repairs the input-state adjoint promised by ``follower_courtesy_offset``);
+        # ``intent`` selects the ramp car's intent input (lane_v5 = round 12, pivot, none).
+        self.follower_courtesy_state_grad = bool(getattr(spec, "follower_courtesy_state_grad",
+                                                         False))
+        self.follower_courtesy_intent = str(getattr(spec, "follower_courtesy_intent", "lane_v5"))
+        if self.follower_courtesy_intent not in INTENT_SOURCES:
+            raise ValueError(f"follower_courtesy_intent must be one of {INTENT_SOURCES}")
         if bool(getattr(spec, "follower_courtesy", False)):
+            if self.follower_courtesy_intent == "pivot" and self.merge_pivot is None:
+                raise ValueError("follower_courtesy_intent='pivot' needs "
+                                 "merge_decision='first_passage'")
             embed = (self.driver_embed_dim
                      if bool(getattr(spec, "follower_courtesy_embedding", False)) else 0)
             # R11: version 2 appends the ramp car's acceleration (t, t-1) and its merge-zone time.
@@ -416,8 +428,10 @@ class WmSModel(nn.Module):
     def follower_courtesy_offset(self, inputs: Tensor, *, live: bool = True) -> Tensor:
         """Courtesy head output for prepared inputs ``[..., n_in]``.
 
-        ``live=False`` evaluates the same function with DETACHED parameters: gradients still flow
-        through the inputs (the state adjoint), but no rollout loss reaches the head's weights.
+        ``live=False`` evaluates the same function with DETACHED parameters: no rollout loss reaches
+        the head's weights.  Gradients flow through the inputs only when they carry a graph, i.e. with
+        ``follower_courtesy_state_grad`` (R13A); in round 10b-12 the pair features were detached, so
+        the courtesy offset had NO state derivative despite this design intent.
         """
         head = self.follower_courtesy
         if head is None:
@@ -1007,10 +1021,20 @@ class WmSModel(nn.Module):
             # Exactly zero for a slot without a ramp partner and for every non-learned (CAV) slot.
             # R11 (version 2): + the ramp car's acceleration at t / t-1 (state + short motion
             # history) and its carried merge-zone time (missing -> the current state only).
+            # R13A: the intent input is computed from the step-START state (no algebraic loop with
+            # this step's acceleration); ``state_grad`` keeps the pair features' state derivative.
             v2 = self._tracks_courtesy_zone
+            if self.follower_courtesy_intent == "pivot":
+                courtesy_intent = pivot_clearance_intent(self.merge_pivot, kin, present,
+                                                         self.physics, is_cav)
+            elif self.follower_courtesy_intent == "none":
+                courtesy_intent = None
+            else:
+                courtesy_intent = merge_prob
             pairs = follower_courtesy_pairs(
                 kin, present, self.physics, merge_wait_s=state.get("merge_wait_s"),
-                lane_age=lane_age, merge_prob=merge_prob,
+                lane_age=lane_age, merge_prob=courtesy_intent,
+                state_grad=self.follower_courtesy_state_grad,
                 **({} if not v2 else {"version": 2, "zone_time_s": state.get(ZONE_STATE_KEY),
                                       "history": history, "history_mask": history_mask}))
             inputs = pairs["features"]

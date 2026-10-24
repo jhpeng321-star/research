@@ -111,6 +111,10 @@ class TrainSettings:
     follower_courtesy_init_zero: bool = False
     follower_courtesy_contrast: bool = False
     cutin_reaction_exclude_partnered_controls: bool = False
+    # R13A COURTESY PAIR-CONTRACT REPAIR (all default = round 12 behaviour)
+    follower_courtesy_state_grad: bool = False
+    follower_courtesy_intent: str = "lane_v5"
+    follower_courtesy_absolute_weight: float = 0.0
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
     driver_param_init: str = "checkpoint"
     residual_accel_reinit: bool = False
@@ -866,6 +870,16 @@ class TrainSettings:
         _require(not bool(self.follower_courtesy_contrast)
                  or float(self.follower_courtesy_weight) > 0,
                  "loss.follower_courtesy.contrast needs loss.follower_courtesy.weight > 0")
+        _require(isinstance(self.follower_courtesy_state_grad, bool)
+                 and self.follower_courtesy_intent in ("lane_v5", "pivot", "none"),
+                 "follower_courtesy_state_grad must be a boolean and follower_courtesy_intent "
+                 "lane_v5, pivot or none")
+        _require(math.isfinite(float(self.follower_courtesy_absolute_weight))
+                 and float(self.follower_courtesy_absolute_weight) >= 0
+                 and (float(self.follower_courtesy_absolute_weight) == 0
+                      or float(self.follower_courtesy_weight) > 0),
+                 "loss.follower_courtesy.absolute_weight must be finite >= 0 (> 0 needs "
+                 "loss.follower_courtesy.weight > 0)")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

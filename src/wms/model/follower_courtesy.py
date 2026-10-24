@@ -37,7 +37,8 @@ COURTESY_PAIR_FIELDS = (
     "v_ramp",           # ramp car speed / 10 m/s
     "dv",               # (v_ramp - v_follower) / 5 m/s
     "wait",             # 1 - exp(-t_wait / 30 s): ramp car's carried merge wait (or time in its lane)
-    "intent",           # merge head's detached P(merge) of the ramp car (0 when unavailable)
+    "intent",           # ramp car's merge intent: lane-v5 merge head's P(merge) (round 10b-12 default),
+                        # R13A ``follower_courtesy_intent='pivot'`` the pivot clearance CDF at t, 'none' 0
     "has_leader",       # follower has a lane-1 leader
     "gap_leader",       # asinh(follower bumper gap to its lane-1 leader / 10 m) (0 without leader)
     "closing_leader",   # (v_follower - v_leader) / 5 m/s (0 without leader)
@@ -126,7 +127,8 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
                             version: int = 1,
                             zone_time_s: Optional[Tensor] = None,
                             history: Optional[Tensor] = None,
-                            history_mask: Optional[Tensor] = None) -> dict[str, Tensor]:
+                            history_mask: Optional[Tensor] = None,
+                            state_grad: bool = False) -> dict[str, Tensor]:
     """Pair every lane-1 follower with its ramp partner; return features ``[B, K, F]``.
 
     Returns ``features`` (zeros where there is no partner), ``has_partner [B, K]`` and
@@ -137,6 +139,12 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
     ``version=2`` (R11) appends the ramp car's acceleration at t and t-1 (``history`` slot -2 of the
     short motion history, channel 1 = accel/3; zero where unobserved) and its merge-zone time
     ``zone_time_s`` (carried; missing -> the current state only, :func:`update_zone_time`).
+
+    ``state_grad`` (R13A, default False = round 12: every feature detached) keeps the continuous
+    derivative of the gathered pair features with respect to the state ``kin`` (and a supplied
+    differentiable ``merge_prob``).  The discrete pairing (partner / leader indices, presence and
+    lane masks) stays an explicit, non-differentiable selection; the carried counters (wait, zone
+    time) and the short-history slot t-1 stay detached.
     """
     n_pair_inputs(version)
     kin = kin.float()
@@ -178,8 +186,11 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
                     * float(getattr(physics, "dt_s", 0.5)))
     else:
         wait_all = zero
-    intent_all = zero if merge_prob is None else torch.as_tensor(
-        merge_prob, dtype=s.dtype, device=s.device).detach()
+    if merge_prob is None:
+        intent_all = zero
+    else:
+        intent_all = torch.as_tensor(merge_prob, dtype=s.dtype, device=s.device)
+        intent_all = intent_all if state_grad else intent_all.detach()
     gap_l = at(s, leader) - at(length, leader) - s
     lead_on = has_leader.to(s.dtype)
     feats = torch.stack((
@@ -212,7 +223,46 @@ def follower_courtesy_pairs(kin: Tensor, present: Tensor, physics, *,
         ), -1)), -1)
     feats = torch.nan_to_num(feats, nan=0.0, posinf=0.0, neginf=0.0)
     feats = torch.where(has_partner.unsqueeze(-1), feats, torch.zeros_like(feats))
-    return {"features": feats.detach(), "has_partner": has_partner, "partner": partner}
+    return {"features": feats if state_grad else feats.detach(), "has_partner": has_partner,
+            "partner": partner}
+
+
+#: R13A courtesy ``intent`` input sources (``model.follower_courtesy_intent``).
+INTENT_SOURCES = ("lane_v5", "pivot", "none")
+
+
+def pivot_clearance_intent(pivot_net: nn.Module, kin: Tensor, present: Tensor, physics,
+                           is_cav: Optional[Tensor] = None) -> Tensor:
+    """R13A causal courtesy intent ``[B, K]`` from the first-passage pivot, at the step-START state.
+
+    ``sigmoid(c_t / tau)`` with ``c_t`` the pivot's own boundary (min log clearance ratio to its
+    learned two-sided gap requirement) evaluated on the CURRENT state ``kin`` (before this step's
+    longitudinal update, so there is no acceleration/intent algebraic loop) and ``tau`` its
+    persistent-latent scale: the fraction of the pivot's population latent ``z ~ Logistic(0, 1)``
+    for which ``c_t + tau z >= 0``.  Deterministic and latent-free (the drawn latent and the hybrid
+    per-decision noise never enter pre-merge motion).  Exact limits: ineligible / vetoed (``c = -inf``)
+    -> 0, unconstrained (``c = +inf``) -> 1.  HDV ramp cars use the pivot's decision geometry (CAVs
+    excluded from interval reservation, as in :meth:`WmSModel.pivot_decision_geometry`); a CAV ramp
+    car is scored on its own neighbours with the same physical veto (overlap / invalid scene), since
+    its lane decision is commanded, not drawn.  The pivot's parameters enter DETACHED (the courtesy
+    losses never train the pivot); the state derivative is kept.
+    """
+    from torch.func import functional_call
+
+    from . import merge_pivot as pivot
+
+    present = present.bool()
+    cav = torch.zeros_like(present) if is_cav is None else is_cav.bool()
+    geo = pivot.geometry(kin, present, physics, decision_mask=~cav)
+    own_physical = geo["ramp"] & geo["scene_valid"] & ~geo["overlap"]
+    geo = {**geo, "eligible": torch.where(cav, own_physical, geo["eligible"])}
+    params = {name: value.detach() for name, value in pivot_net.named_parameters()}
+    c = functional_call(pivot_net, params, (geo,))
+    tau = torch.nn.functional.softplus(params["tau_raw"]).to(c.dtype)
+    finite = torch.isfinite(c)
+    safe = torch.where(finite, c, torch.zeros_like(c))
+    limit = (c == torch.inf).to(c.dtype)
+    return torch.where(finite, torch.sigmoid(safe / tau), limit)
 
 
 class FollowerCourtesyHead(nn.Module):
@@ -258,5 +308,6 @@ def expand_head_inputs(source: dict, own: dict, prefix: str = "follower_courtesy
 
 
 __all__ = ["COURTESY_PAIR_F", "COURTESY_PAIR_FIELDS", "COURTESY_V2_F", "COURTESY_V2_FIELDS",
-           "FollowerCourtesyHead", "ZONE_STATE_KEY", "expand_head_inputs", "follower_courtesy_pairs",
-           "in_merge_zone", "initial_zone_time", "n_pair_inputs", "update_zone_time"]
+           "FollowerCourtesyHead", "INTENT_SOURCES", "ZONE_STATE_KEY", "expand_head_inputs",
+           "follower_courtesy_pairs", "in_merge_zone", "initial_zone_time", "n_pair_inputs",
+           "pivot_clearance_intent", "update_zone_time"]
