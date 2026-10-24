@@ -69,8 +69,11 @@ smoke() {
 if [ "$MODE" = smoke ]; then
     CUDA_VISIBLE_DEVICES= "${GATE[@]}" preflight "${EVIDENCE[@]}"
     mkdir "$L/.round13e_gate.lock"
-    CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 "$PYTHON" -B -m pytest -q -p no:cacheprovider \
+    mkdir "$REPO/_out"
+    CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+        nice -n 19 "$PYTHON" -B -m pytest -q -p no:cacheprovider --noconftest \
         tests/test_r13e_emergency.py tests/test_r13e_secure_gap.py tests/test_r13e_plan.py \
+        tests/test_r13e_offline.py \
         --basetemp "$REPO/runs/r13e_gate_core_tests"
     smoke a "$A" "$CK" a
     smoke b "$B" "$L/runs/smoke_r13e_a/wm_s.pt" b
@@ -96,7 +99,8 @@ START_TICKS=$("$PYTHON" -B -c 'import pathlib,sys; print(pathlib.Path("/proc/"+s
 mkdir -p "$L/chk_r13e/$STAGE"
 for CHECK in midrun postrun; do
     READY="$L/chk_r13e/$STAGE/${CHECK}_ready.json"
-    CUDA_VISIBLE_DEVICES= "$PYTHON" -B -u -m wms.train.round13e_gate waiter --root "$L" --stage "$STAGE" \
+    CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 WMS_JAM_WORKERS=4 \
+        nice -n 19 "$PYTHON" -B -u -m wms.train.round13e_gate waiter --root "$L" --stage "$STAGE" \
         --pid "$$" --start-ticks "$START_TICKS" --mode "$CHECK" --ready "$READY" \
         > "$L/chk_r13e/$STAGE/${CHECK}_waiter.log" 2>&1 < /dev/null &
     WAITER=$!

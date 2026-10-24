@@ -41,7 +41,18 @@ REQUIRED_SOURCE = ("configs/c4_wm_v10round13e.toml", "configs/c4_wm_v10round13e_
                    "scripts/round13c_waiter.py", "tests/test_r13e_emergency.py",
                    "tests/test_r13e_secure_gap.py",
                    "tools/r10b_checks/run_onestep.py", "tools/r12_checks/midrun_check.py",
-                   "tools/r12_checks/base_calibration.py")
+                   "tools/r12_checks/base_calibration.py",
+                   "tools/r13e_checks/offline.py", "tools/r13e_checks/bit_identity.py",
+                   "tools/r10b_checks/common.py", "tools/r10b_checks/analyze.py",
+                   "tools/r10b_checks/make_headzero.py", "tools/r10_attribution.py",
+                   "tools/r10b_courtesy_offline.py", "tools/wm_eval_common.py",
+                   "src/wms/physics/emergency.py", "src/wms/model/merge_pivot.py",
+                   "tests/test_r13e_offline.py", "tests/test_round12_gate_verdict.py",
+                   "tests/test_r10b_courtesy.py", "tests/test_r11_courtesy.py", "tests/__init__.py",
+                   "pyproject.toml")
+BASELINE_COMMIT = "eb75010c6a2a7ef66eebc3282e03f50e37d4b202"
+BASELINE_DIR = ".r13e_baseline"
+BASELINE_HELPERS = ("tests/test_r10b_courtesy.py", "tests/test_r11_courtesy.py")
 
 
 def operational_root():
@@ -162,15 +173,188 @@ def strict_checkpoint(path):
 
 
 def check_offline(report_path, checkpoint):
+    """Validate the producer's evidence, not a four-field completion assertion.
+
+    Recompute one-step statistics from the adjacent NPZ evidence and paired
+    rollout estimates from all 96 state/seed rows (48 bootstrap clusters).
+    No provenance path in the report is followed to a dataset.
+    """
+    from tools.r13e_checks import offline
     from wms.model.checkpoint import sha256_file
+    import numpy as np
+
+    report_path, checkpoint = workspace_path(report_path), workspace_path(checkpoint)
     doc = read_json(report_path)
     require(isinstance(doc, dict) and doc.get("status") == "complete", "offline report is not complete")
     require(doc.get("strict_exact_weights") is True, "offline strict_exact_weights must be true")
-    require(doc.get("checkpoint_sha256") == sha256_file(workspace_path(checkpoint)),
-            "offline report does not identify the exact S-R12C init checkpoint")
-    require(workspace_path(doc.get("checkpoint", "")) == workspace_path(checkpoint),
-            "offline checkpoint path mismatch")
+    require(doc.get("checkpoint_sha256") == sha256_file(checkpoint) == R12C_SHA256,
+             "offline report does not identify the exact S-R12C init checkpoint")
+    require(workspace_path(doc.get("checkpoint", "")) == checkpoint,
+             "offline checkpoint path mismatch")
+    for key, expected in {"states": 48, "seeds_per_state": 2, "horizon_s": 120.,
+                          "dt_s": .5, "device": "cpu", "linux_nice": 19,
+                          "arms": offline.ARMS, "definitions": offline.DEFINITIONS,
+                          "override_only": ["emergency_braking", "secure_gap_veto"],
+                          "emissions": dict.fromkeys(EMISSIONS, True)}.items():
+        require(doc.get(key) == expected, f"offline contract mismatch: {key}")
+    require(all(type(value) is bool for arm in doc["arms"].values() for value in arm.values())
+            and all(value is True for value in doc["emissions"].values()),
+            "offline physics switches/emissions must be booleans")
+    for key in ("workers", "threads"):
+        require(type(doc.get(key)) is int and 1 <= doc[key] <= 4, f"offline CPU limit: {key}")
+    roots, hashes = doc.get("train_roots"), doc.get("train_manifest_sha256")
+    require(isinstance(roots, list) and roots and isinstance(hashes, list)
+            and len(roots) == len(hashes), "offline TRAIN manifest provenance missing")
+    for path in [doc.get("config", ""), *roots]:
+        require(isinstance(path, str) and path, "offline source path missing")
+        workspace_path(path, exists=False)  # spelling and symlink guard; never open data
+    require(len(set(roots)) == len(roots), "offline duplicate TRAIN roots")
+    for value in [doc.get("state_dict_sha256"), doc.get("states_sha256"), *hashes]:
+        require(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value),
+                "offline provenance digest missing")
+    payload, loaded = strict_checkpoint(checkpoint)
+    require(offline.state_digest(payload["model"]) == doc["state_dict_sha256"],
+            "offline tensor bytes do not match S-R12C")
+    require(doc.get("base_physics") == asdict(loaded.model.physics)
+            and all(getattr(loaded.model, key) is True for key in EMISSIONS),
+            "offline base physics/emissions mismatch")
+    require(not loaded.model.physics.emergency_braking and not loaded.model.physics.secure_gap_veto,
+            "offline baseline switches must be OFF")
+
+    windows = doc.get("one_step_windows")
+    require(isinstance(windows, list) and len(windows) >= 2
+            and all(isinstance(w, str) and w for w in windows)
+            and len(set(windows)) == len(windows), "offline one-step windows missing/duplicated")
+    for window in windows:
+        offline.guard_text(window)
+    # Guard ALL evidence filenames before opening the first table.
+    paths = {arm: workspace_path(report_path.parent / f"onestep_{arm}.npz") for arm in offline.ARMS}
+    from tools.r10b_checks import run_onestep as producer
+    cols = producer.COLS + producer.BASE_COLS
+    packed = {}
+    for arm, path in paths.items():
+        with np.load(path, allow_pickle=False) as data:
+            require(set(data.files) == {"rows", "cols"} and list(data["cols"]) == cols,
+                    "offline one-step evidence columns mismatch")
+            rows = data["rows"]
+            require(rows.ndim == 2 and rows.shape[1] == len(cols) and len(rows) >= 5,
+                    "offline one-step evidence empty/malformed")
+            require(set(rows[:, cols.index("win")]) == set(range(len(windows))),
+                    "offline one-step evidence windows mismatch")
+            require(np.isfinite(rows[:, [cols.index(c) for c in ("fin", "rec")]]).all(),
+                    "offline nonfinite one-step evidence")
+            packed[arm] = rows
+    fixed = [i for i, c in enumerate(cols) if c not in ("fin", "pre", "off")]
+    require(all(np.array_equal(packed["off"][:, fixed], rows[:, fixed], equal_nan=True)
+                for rows in packed.values()), "offline one-step arms are not paired")
+    require(doc.get("one_step") == offline.json_safe(offline.analyze_onestep(packed, cols)),
+            "offline one-step statistics/paired CIs differ from evidence")
+    for arm in (*offline.ARMS, *offline.CONTRASTS):
+        for cls in offline.CLASSES:
+            for metric in ("bias", "mae"):
+                require(doc["one_step"][arm][cls][metric]["ci_available"] is True,
+                        f"offline one-step evidence insufficient: {arm}/{cls}/{metric}")
+    check_offline_rollouts(doc.get("rollouts"), offline)
     return doc
+
+
+def check_offline_rollouts(rollouts, offline):
+    import numpy as np
+
+    require(isinstance(rollouts, dict), "offline rollout evidence missing")
+    rows = rollouts.get("rows")
+    require(isinstance(rows, list) and len(rows) == 96, "offline needs 48 states x 2 seeds")
+    metrics = {"hdv_rows", "finite_hdv_transitions", "a_lt_minus3_rows", "a_lt_minus3_share",
+               "ttc_eligible_rows", "ttc_lt_1_5_rows", "ttc_lt_1_5_share", "overlap_pair_steps",
+               "invalid_hdv_rows", "bad_acceleration_rows", "blowup", "stuck_vehicle_steps",
+               "stuck_final_vehicles", "stuck_max_wait_s", "stuck_mean_ramp_in_zone",
+               "delay_total_veh_s", "merges_per_run", "hdv_insertion_events",
+               "post_insertion_truncated_events"}
+    for region in ("upstream", "merge", "downstream"):
+        metrics.update((f"delay_{region}_veh_s", f"exposure_{region}_veh_s"))
+    for who in ("inserter", "follower"):
+        metrics.update(f"hdv_{who}_post_{suffix}" for suffix in
+                       ("events", "hard_brake_events", "finite_rows", "hard_brake_rows",
+                        "hard_brake_events_share", "hard_brake_rows_share"))
+    identities, snapshots, seen = {}, set(), set()
+    for row in rows:
+        state, replicate = row.get("state"), row.get("replicate")
+        require(type(state) is int and 0 <= state < 48 and type(replicate) is int
+                and replicate in (0, 1) and (state, replicate) not in seen,
+                "offline duplicate/invalid state-seed pairing")
+        seen.add((state, replicate))
+        require(row.get("seed") == offline.RNG_SEED + 2 * state + replicate,
+                "offline seed pairing mismatch")
+        require(type(row.get("vehicles")) is int and row["vehicles"] > 0,
+                "offline rollout vehicle roster missing")
+        t0 = row.get("t0_s")
+        require(type(t0) in (int, float) and math.isfinite(t0), "offline state time missing")
+        identity = (row.get("world") or row.get("key"), t0)
+        require(isinstance(identity[0], str) and identity[0], "offline snapshot identity missing")
+        offline.guard_text(identity[0])
+        if state in identities:
+            require(identities[state] == (identity, row["vehicles"]), "offline seed rosters differ")
+        else:
+            require(identity not in snapshots, "offline duplicate snapshot")
+            snapshots.add(identity)
+            identities[state] = (identity, row["vehicles"])
+        for arm in offline.ARMS:
+            values = row.get(arm)
+            require(isinstance(values, dict) and set(values) == metrics,
+                    f"offline rollout metrics incomplete: {arm}")
+            for key, value in values.items():
+                nullable = key.startswith("hdv_") and key.endswith("_share")
+                require((nullable and value is None) or
+                        (type(value) in (int, float, bool) and math.isfinite(value) and value >= 0),
+                        f"offline invalid rollout metric: {key}")
+                if (not key.endswith(("_share", "_veh_s"))
+                        and key not in ("blowup", "stuck_max_wait_s", "stuck_mean_ramp_in_zone")):
+                    require(type(value) is int, f"offline rollout count must be integer: {key}")
+            require(type(values["blowup"]) is bool
+                    and values["blowup"] == bool(values["invalid_hdv_rows"] or values["bad_acceleration_rows"]),
+                    "offline blowup evidence inconsistent")
+            require(0 < values["finite_hdv_transitions"] <= 240 * row["vehicles"]
+                    and 0 < values["ttc_eligible_rows"] <= values["hdv_rows"] <= 240 * row["vehicles"],
+                    "offline rollout exposure missing/invalid")
+            shares = [("a_lt_minus3_rows", "finite_hdv_transitions", "a_lt_minus3_share"),
+                      ("ttc_lt_1_5_rows", "ttc_eligible_rows", "ttc_lt_1_5_share")]
+            for who in ("inserter", "follower"):
+                p = f"hdv_{who}_post_"
+                shares += [(p + "hard_brake_events", p + "events", p + "hard_brake_events_share"),
+                           (p + "hard_brake_rows", p + "finite_rows", p + "hard_brake_rows_share")]
+            for numerator, denominator, share in shares:
+                n, d = values[numerator], values[denominator]
+                require(type(n) is int and type(d) is int and 0 <= n <= d
+                        and values[share] == (n / d if d else None), "offline rollout share/count mismatch")
+            require(math.isclose(values["delay_total_veh_s"], sum(values[f"delay_{r}_veh_s"]
+                    for r in ("upstream", "merge", "downstream"))), "offline delay regions mismatch")
+    groups = np.array([r["state"] for r in rows])
+    summary, estimates = {}, {}
+    for arm in (*offline.ARMS, *offline.CONTRASTS):
+        summary[arm] = {}
+        for metric in sorted(metrics):
+            later, earlier = offline.CONTRASTS.get(arm, (arm, arm))
+            def number(value):
+                return float("nan") if value is None else float(value)
+            values = [number(r[later][metric]) - number(r[earlier][metric])
+                      if arm in offline.CONTRASTS else number(r[arm][metric]) for r in rows]
+            key = tuple(None if not math.isfinite(v) else v for v in values)
+            if key not in estimates:
+                estimates[key] = offline._estimate(values, groups)
+            summary[arm][metric] = estimates[key]
+    require(rollouts.get("state_cluster_run_mean") == offline.json_safe(summary),
+            "offline rollout paired snapshot-cluster CIs differ from evidence")
+    totals = {}
+    for arm in offline.ARMS:
+        total = {key: sum(r[arm][key] for r in rows) for key in
+                 ("hdv_rows", "finite_hdv_transitions", "a_lt_minus3_rows", "ttc_eligible_rows",
+                  "ttc_lt_1_5_rows", "overlap_pair_steps", "invalid_hdv_rows", "bad_acceleration_rows")}
+        total.update(blowup_runs=sum(r[arm]["blowup"] for r in rows),
+                     blowup_states=len({r["state"] for r in rows if r[arm]["blowup"]}), states=48, runs=96)
+        total["a_lt_minus3_share"] = total["a_lt_minus3_rows"] / total["finite_hdv_transitions"]
+        total["ttc_lt_1_5_share"] = total["ttc_lt_1_5_rows"] / total["ttc_eligible_rows"]
+        totals[arm] = total
+    require(rollouts.get("totals") == totals, "offline rollout totals differ from evidence")
 
 
 def preflight(root, checkpoint, offline_report):
@@ -451,58 +635,110 @@ def write_once(path, doc):
         stream.write("\n")
 
 
-def prepare():
-    """Future operator operation: export committed source only, never a worktree copy.
+def source_name_allowed(name, *, baseline=False):
+    """Lexical source allowlist; call before Git archive opens any blob bytes."""
+    from pathlib import PurePosixPath
+    path = PurePosixPath(name)
+    if (not name or "\\" in name or path.is_absolute() or ".." in path.parts
+            or path.as_posix() != name or any(t in name.lower() for t in FORBIDDEN)):
+        return False
+    if name.startswith("src/wms/") and path.suffix in (".py", ".json"):
+        return True
+    if baseline:
+        return name in BASELINE_HELPERS
+    return (name == "pyproject.toml" or name in REQUIRED_SOURCE
+            or (name.startswith("configs/") and path.suffix == ".toml")
+            or (name.startswith("tools/") and path.suffix == ".py"))
 
-    Deliberately unavailable on a local workstation. No training/process inspection.
-    Restricted archive members are not extracted or opened.
-    """
+
+def committed_sources(sha, *, baseline=False):
+    # ls-tree reads names/modes only, never restricted blob contents.
+    raw = subprocess.check_output(["git", "ls-tree", "-rz", "--full-tree", sha], cwd=ROOT)
+    names = []
+    for entry in raw.split(b"\0"):
+        if not entry:
+            continue
+        info, name = entry.split(b"\t", 1)
+        name = name.decode("utf-8")
+        if not source_name_allowed(name, baseline=baseline):
+            continue
+        mode, kind, _oid = info.split()
+        require(mode in (b"100644", b"100755") and kind == b"blob",
+                f"non-regular committed source: {name}")
+        names.append(name)
+    required = BASELINE_HELPERS + ("src/wms/__init__.py",) if baseline else REQUIRED_SOURCE
+    require(set(required) <= set(names), "missing committed launch dependencies")
+    return sorted(names)
+
+
+def export_sources(sha, names, target):
+    """Export ONLY prevalidated regular source members; never archive broad trees."""
     import hashlib
     import tarfile
-    require(sys.platform == "linux" and ROOT.is_relative_to(REMOTE_ROOT),
-            "prepare must be run on the deployment host under /root/autodl-tmp/c4/v5")
-    sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-    require(re.fullmatch(r"[0-9a-f]{40}", sha), "invalid source commit")
-    for name in REQUIRED_SOURCE:
-        subprocess.run(["git", "cat-file", "-e", f"{sha}:{name}"], cwd=ROOT, check=True)
-    target = REMOTE_ROOT / f"repo_r13e_{sha[:8]}"
-    require(not target.exists() and not target.is_symlink(), "prepared repo already exists")
-    # Verification precedes mkdir; no overwrite/retry of a partial archive.
-    require(REMOTE_ROOT.is_dir(), "deployment parent is missing")
-    target.mkdir()
-    files = {}
-    proc = subprocess.Popen(["git", "archive", "--format=tar", sha,
-                             "src", "configs", "scripts", "tests", "tools", "pyproject.toml"],
+    require(names and len(set(names)) == len(names)
+            and all(source_name_allowed(n) for n in names), "invalid source allowlist")
+    selected, files = set(names), {}
+    proc = subprocess.Popen(["git", "archive", "--format=tar", sha, "--", *names],
                             cwd=ROOT, stdout=subprocess.PIPE)
     try:
         with tarfile.open(fileobj=proc.stdout, mode="r|") as archive:
             for member in archive:
-                if any(token in member.name.lower() for token in FORBIDDEN):
+                if member.isdir():
+                    require(any(n.startswith(member.name.rstrip("/") + "/") for n in selected),
+                            "unexpected archive directory")
                     continue
+                require(member.name in selected and member.name not in files and member.isfile(),
+                        f"unexpected archive entry: {member.name}")
                 path = target / member.name
                 require(path.resolve().is_relative_to(target), "unsafe archive member")
-                if member.isdir():
-                    path.mkdir(parents=True, exist_ok=True)
-                elif member.isfile():
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    with archive.extractfile(member) as stream, path.open("xb") as out:
-                        h = hashlib.sha256()
-                        for block in iter(lambda: stream.read(1 << 20), b""):
-                            out.write(block)
-                            h.update(block)
-                    files[member.name] = h.hexdigest()
-                else:
-                    raise ValueError(f"non-regular archive member: {member.name}")
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with archive.extractfile(member) as stream, path.open("xb") as out:
+                    h = hashlib.sha256()
+                    for block in iter(lambda: stream.read(1 << 20), b""):
+                        out.write(block)
+                        h.update(block)
+                files[member.name] = h.hexdigest()
+                path.chmod(member.mode & 0o777)
         require(proc.wait() == 0, "git archive failed")
     finally:
         proc.stdout.close()
         if proc.poll() is None:
             proc.terminate()
             proc.wait()
-    require(all(name in files for name in REQUIRED_SOURCE), "archive missing launch dependencies")
+    require(set(files) == selected, "archive missing launch dependencies")
+    return files
+
+
+def prepare():
+    """Future operator operation: export committed source only, never a worktree copy.
+
+    Deliberately unavailable on a local workstation. No training/process inspection.
+    Restricted archive members are not extracted or opened.
+    """
+    require(sys.platform == "linux" and ROOT.is_relative_to(REMOTE_ROOT.parent),
+            "prepare must be run on the deployment host under /root/autodl-tmp/c4")
+    sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    require(re.fullmatch(r"[0-9a-f]{40}", sha), "invalid source commit")
+    names = committed_sources(sha)
+    baseline = committed_sources(BASELINE_COMMIT, baseline=True)
+    untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard", "-z"], cwd=ROOT)
+    require(not any(source_name_allowed(n.decode("utf-8")) for n in untracked.split(b"\0") if n),
+            "uncommitted source dependency: commit tested sources before preparing")
+    # Refuse a stale commit when the tested launch sources are still pending.
+    subprocess.run(["git", "diff", "--quiet", "--no-ext-diff", "--no-textconv", sha, "--", *names],
+                   cwd=ROOT, check=True)
+    target = REMOTE_ROOT / f"repo_r13e_{sha[:8]}"
+    require(not target.exists() and not target.is_symlink(), "prepared repo already exists")
+    # Verification precedes mkdir; no overwrite/retry of a partial archive.
+    require(REMOTE_ROOT.is_dir(), "deployment parent is missing")
+    target.mkdir()
+    files = export_sources(sha, names, target)
+    baseline_files = export_sources(BASELINE_COMMIT, baseline, target / BASELINE_DIR)
     # The marker is inside a new archive, not part of this source checkout.
     with (target / "R13E_SOURCE.json").open("x", encoding="utf-8") as stream:
-        json.dump({"commit": sha, "files": files}, stream, indent=2)
+        json.dump({"commit": sha, "files": files,
+                   "baseline": {"commit": BASELINE_COMMIT, "directory": BASELINE_DIR,
+                                "files": baseline_files}}, stream, indent=2)
     return {"ok": True, "repo": str(target), "commit": sha}
 
 
@@ -513,9 +749,14 @@ def check_source():
     require(re.fullmatch(r"[0-9a-f]{40}", sha)
             and ROOT.name == f"repo_r13e_{sha[:8]}", "archive source identity mismatch")
     files = doc.get("files", {})
+    require(isinstance(files, dict) and all(source_name_allowed(n) for n in files),
+            "invalid prepared source allowlist")
     require(all(name in files for name in REQUIRED_SOURCE), "missing committed launch dependencies")
     actual = {"pyproject.toml"}
     for directory in ("src", "configs", "scripts", "tests", "tools"):
+        top = ROOT / directory
+        require(not top.is_symlink(), "symlink addition to prepared source")
+        workspace_path(top)
         for parent, directories, names in os.walk(ROOT / directory, followlinks=False):
             for name in (*directories, *names):
                 candidate = Path(parent) / name
@@ -527,8 +768,31 @@ def check_source():
     for name, expected in files.items():
         path = workspace_path(ROOT / name)
         require(path.is_relative_to(ROOT) and not path.is_symlink() and digest(path) == expected,
-                f"prepared source drift: {name}")
+                 f"prepared source drift: {name}")
+    check_baseline(doc.get("baseline"))
     return doc
+
+
+def check_baseline(doc):
+    require(isinstance(doc, dict) and doc.get("commit") == BASELINE_COMMIT
+            and doc.get("directory") == BASELINE_DIR, "missing pinned 13C baseline export")
+    files = doc.get("files")
+    require(isinstance(files, dict) and set(BASELINE_HELPERS + ("src/wms/__init__.py",)) <= set(files)
+            and all(source_name_allowed(n, baseline=True) for n in files), "invalid 13C baseline allowlist")
+    require(not (ROOT / BASELINE_DIR).is_symlink(), "symlink 13C baseline export")
+    base, actual = workspace_path(ROOT / BASELINE_DIR), set()
+    require(base.is_relative_to(ROOT), "13C baseline must stay inside prepared source")
+    for parent, directories, names in os.walk(base, followlinks=False):
+        for name in (*directories, *names):
+            candidate = Path(parent) / name
+            require(not candidate.is_symlink() and not any(t in name.lower() for t in FORBIDDEN),
+                    "unsafe 13C baseline addition")
+        actual.update((Path(parent) / n).relative_to(base).as_posix() for n in names)
+    require(actual == set(files), "13C baseline source file set changed")
+    # Validate every name and file set before opening even the first blob.
+    for name, expected in files.items():
+        require(digest(base / name) == expected, f"13C baseline source drift: {name}")
+    return base
 
 
 def check_registration(root, checkpoint, offline_report):
@@ -632,7 +896,28 @@ def make_waiter(r13c, args):
                 values += tuple(v for arm in ("r12c", "r9")
                                 for flag in ("emergency_braking", "secure_gap_veto")
                                 for v in ("--arm-set", f"{arm}=physics.{flag}=false"))
-            return super().command(script, *values)
+            # Keep 13C's measurement math and process ownership, but do not inherit
+            # its 8-worker/nice15 execution policy. This covers BOTH diagnostics.
+            values = list(map(str, values))
+            for i, value in enumerate(values):
+                if value == "--workers":
+                    require(i + 1 < len(values), "missing diagnostic worker count")
+                    values[i + 1] = str(min(4, max(1, int(values[i + 1]))))
+                elif value.startswith("--workers="):
+                    values[i] = f"--workers={min(4, max(1, int(value.split('=', 1)[1])))}"
+            command = ["nice", "-n", "19", sys.executable, "-B", str(script), *values]
+            self.commands.append(command)
+            env = os.environ.copy()
+            env.update({k: "1" for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+                                         "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")})
+            env.update(CUDA_VISIBLE_DEVICES="", WMS_JAM_WORKERS="4", PYTHONDONTWRITEBYTECODE="1",
+                       PYTHONPATH=os.pathsep.join(map(str, (self.repo / "src", self.repo,
+                                                   self.repo / "tools", self.repo / "tools/r10b_checks"))))
+            log = workspace_path(self.work / f"command_{len(self.commands):02d}.log", exists=False)
+            with log.open("x", encoding="utf-8") as stream:
+                proc = subprocess.run(command, cwd=self.repo, env=env, stdout=stream,
+                                      stderr=subprocess.STDOUT, timeout=4 * 3600, check=False)
+            require(proc.returncode == 0, f"measurement command exit {proc.returncode}: {log}")
 
         def measure(self, checkpoint):
             result = super().measure(checkpoint)

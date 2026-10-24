@@ -225,9 +225,12 @@ class WmSTrainer:
         """
         if name is None:
             if (getattr(self.settings, "driver_param_init", "checkpoint") != "checkpoint"
-                    or bool(getattr(self.settings, "residual_accel_reinit", False))):
-                raise CheckpointInitError("R12 init switches (driver_param_init, residual_accel_reinit) "
-                                          "need model.init_from")
+                    or bool(getattr(self.settings, "residual_accel_reinit", False))
+                    or bool(getattr(self.settings, "temporal_accel_reinit", False))
+                    or getattr(self.settings, "temporal_lane_bias_init", None) is not None
+                    or getattr(self.settings, "temporal_state_table_init", None) is not None):
+                raise CheckpointInitError("init switches (driver_param_init, residual_accel_reinit, "
+                                          "temporal_accel_reinit) need model.init_from")
             return None
         import torch as _torch
 
@@ -312,6 +315,40 @@ class WmSTrainer:
             last.bias[0].zero_()
             out["residual_accel_reinit"] = {"tensor": "residual_net.accel.2", "zeroed_rows": [0],
                                             "abs_sum_before": before}
+        if bool(getattr(s, "temporal_accel_reinit", False)):
+            # R13T: the temporal read-out's acceleration row (row 0 of temporal[-1]) restarts at an exact
+            # 0 (the lane rows 1..3 are kept); the emission is then 0 with a live gradient.
+            last = model.temporal[-1]
+            before = float(last.weight[0].abs().sum() + last.bias[0].abs())
+            last.weight[0].zero_()
+            last.bias[0].zero_()
+            out["temporal_accel_reinit"] = {"tensor": "temporal.2", "zeroed_rows": [0],
+                                            "abs_sum_before": before}
+        init_bias = getattr(s, "temporal_lane_bias_init", None)
+        if init_bias is not None:
+            # R13M: the per-lane constant emission starts at the documented values (pre-gate m/s^2).
+            if getattr(model, "temporal_lane_bias", None) is None:
+                raise CheckpointInitError("temporal_lane_bias_init needs model.temporal_accel_lane_bias")
+            model.temporal_lane_bias.copy_(torch.as_tensor([float(x) for x in init_bias],
+                                                           dtype=model.temporal_lane_bias.dtype))
+            out["temporal_lane_bias_init"] = [float(x) for x in model.temporal_lane_bias]
+        table_path = getattr(s, "temporal_state_table_init", None)
+        if table_path is not None:
+            # R13S: the state-conditional mean tables start at the fitted S-FACTORIAL-style table.
+            import numpy as _np
+
+            from ..model import temporal_state_table as tst
+            from ..train.losses.accel_tail import resolve_table
+            if getattr(model, "temporal_state_mean", None) is None:
+                raise CheckpointInitError("temporal_state_table_init needs model.temporal_accel_state_table")
+            path = Path(resolve_table(table_path))
+            table = dict(_np.load(path))
+            tst.check_table(table)
+            for lv in range(len(tst.LEVELS)):
+                model.temporal_state_mean[lv].copy_(torch.as_tensor(table[f"mean{lv}"], dtype=torch.float32))
+                getattr(model, f"temporal_state_n{lv}").copy_(torch.as_tensor(table[f"n{lv}"], dtype=torch.float32))
+            out["temporal_state_table_init"] = {"path": str(path), "sha256": sha256_file(path),
+                                                "cells_used_level0": int((table["n0"] >= tst.MIN_ROWS).sum())}
         return out
 
     def set_stage_lr(self, lr: float) -> None:

@@ -1,0 +1,88 @@
+{
+ "rule": "accel_weight = (G_brake/2)/G_accel_tail, jerk_weight = (G_brake/2)/G_jerk_tail; G = geometric mean accumulated gradient norm (real WmSTrainer.forward_backward, no optimizer step), braking terms at their configured weights, tail terms at weight 1; tools/r13t_weight_rule.py + tools/r13t_weight_combine.py",
+ "status": "MEASURED_LOCAL_STANDIN",
+ "notes": [
+  "init stand-in = round-9 final (round 12's init) with round 12's init transforms + temporal_accel_reinit; re-measure at the round-12 final at launch (R13T_DESIGN.md section 6)",
+  "provisional table from val-role episodes of the r9 TRAIN pool (local subset); the training loss refuses it",
+  "merge_core TF term disabled for the measurement (as R10b); 20 s windows, batch 2, truncation 40, CPU"
+ ],
+ "accel_weight": 10.33,
+ "jerk_weight": 38.74,
+ "g_brake": 3.6695328373420417,
+ "g_accel_tail_w1": 0.1776551632117288,
+ "g_jerk_tail_w1": 0.04736692486358025,
+ "geomean_grad_norm": {
+  "accel_tail": 0.1776551632117288,
+  "agg_delay_region": 0.0,
+  "agg_field": 0.31901919596995326,
+  "agg_flow": 0.5882931159467064,
+  "agg_pair": 0.0,
+  "agg_queue": 0.0,
+  "agg_reward": 3.6932004462592123,
+  "agg_throughput": 0.0,
+  "brake_persist": 3.3161495511967822,
+  "brake_persist_quantile": 0.3533832861452593,
+  "flip_rate": 0.0006162467864721868,
+  "follower_courtesy": 1.983986904884363,
+  "jerk_tail": 0.04736692486358025,
+  "lane": 0.0,
+  "lane_event": 0.0,
+  "lane_flow": 0.0,
+  "pair_agg": 0.0,
+  "pair_pos": 0.0,
+  "pair_speed": 0.0,
+  "position": 123.7943315679619,
+  "residual_mag": 0.0,
+  "speed": 6.921204289304633
+ },
+ "per_batch_weights": [
+  {
+   "accel": 7.5846090416510945,
+   "jerk": 19.945977068140728
+  },
+  {
+   "accel": 16.433657012167018,
+   "jerk": 30.60190151418123
+  },
+  {
+   "accel": 5.597814957601662,
+   "jerk": 23.57851259093671
+  },
+  {
+   "accel": 17.70205121121643,
+   "jerk": 169.8243610298752
+  }
+ ],
+ "n_batches": 4,
+ "sampler_seeds": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "shards": [
+  "wr_s0.json",
+  "wr_s1.json",
+  "wr_s2.json",
+  "wr_s3.json"
+ ],
+ "config": "configs/c4_wm_v10round13t.toml",
+ "ckpt": "E:/agent-work/c4-v10r10/tmp_diag/r9/wm_s_stage300.pt",
+ "table": "E:\\agent-work\\c4-v10r13t\\tmp_r13\\tail_table_val_provisional.json",
+ "roots": [
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/v5_native",
+  "E:/agent-work/c4-v10r10b/tmp_r10b/roots/genrand_plain"
+ ],
+ "overrides": [
+  "model.driver_param_init=centre",
+  "model.residual_accel_reinit=true",
+  "model.follower_courtesy_init_zero=true",
+  "loss.merge_core.tf_weight=0.0",
+  "loss.merge_core.metrics=false",
+  "loss.driver_prior.weight=0.0",
+  "loss.brake_follow_cav_weight=2.0"
+ ],
+ "batch_size": 2,
+ "unroll_s": 20.0,
+ "truncation_steps": 40
+}

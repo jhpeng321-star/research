@@ -101,6 +101,17 @@ def guard_text(value):
         raise ValueError(f"refusing prohibited evaluation seed in {value}")
 
 
+def operational_root():
+    """The prepared deployment archive explicitly shares its registered run root.
+
+    Everywhere else, including this workstation, paths stay in the worktree.
+    """
+    remote = Path("/root/autodl-tmp/c4/v5")
+    if ROOT.parent == remote and re.fullmatch(r"repo_r13e_[0-9a-f]{8}", ROOT.name):
+        return remote
+    return ROOT.resolve()
+
+
 def checked_path(value, *, exists=True):
     """Check spelling AND resolved target (including symlinks), before opening anything."""
     guard_text(value)
@@ -109,11 +120,11 @@ def checked_path(value, *, exists=True):
         path = ROOT / path
     # Reject external/UNC spellings before resolve can inspect a remote target.
     path = Path(os.path.abspath(path))
-    if not path.is_relative_to(ROOT.resolve()):
+    if not path.is_relative_to(operational_root()):
         raise ValueError(f"path must be inside workspace {ROOT}: {value}")
     path = path.resolve()
     guard_text(path)
-    if not path.is_relative_to(ROOT.resolve()):
+    if not path.is_relative_to(operational_root()):
         raise ValueError(f"path must be inside workspace {ROOT}: {value}")
     if exists and not path.exists():
         raise FileNotFoundError(f"missing required asset: {path}")

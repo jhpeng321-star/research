@@ -273,26 +273,130 @@ def test_b_keeps_exact13c_frozen_and_repair_a_rules(synthetic, damage):
         validate(s)
 
 
-def test_offline_report_must_be_complete_boolean_strict_and_bind_exact_init(synthetic, tmp_path, monkeypatch):
+@pytest.fixture
+def offline_evidence(synthetic, tmp_path, monkeypatch):
+    """Producer statistics over synthetic evidence, never an operational report."""
+    import copy
+    import numpy as np
+    from tools.r13e_checks import offline as o
+    from tools.r10b_checks import run_onestep as producer
     s = synthetic()
+    monkeypatch.setattr(gate, "R12C_SHA256", sha256_file(s.source))
+    payload, loaded = gate.strict_checkpoint(s.source)
     path = tmp_path / "offline.json"
+    cols, packed = producer.COLS + producer.BASE_COLS, {}
+    for arm, offset in zip(o.ARMS, (0.2, 0.1, 0.05)):
+        data = []
+        for window in range(2):
+            for rec, speed, gap in ((-2., 4., 10.), (0., 10., 80.), (.5, 1., 10.)):
+                for slot in range(5):
+                    row = dict.fromkeys(cols, 0.)
+                    row.update(win=window, lane=1, slot=slot, rec=rec, fin=rec + offset,
+                               v=speed, gapF=gap)
+                    data.append([row[c] for c in cols])
+        packed[arm] = np.array(data)
+        np.savez_compressed(tmp_path / f"onestep_{arm}.npz", rows=packed[arm], cols=np.array(cols))
+    pos = np.arange(241)[:, None] * 2.5
+    values = o.json_safe(o.rollout_metrics(pos, np.full_like(pos, 5.), np.ones_like(pos),
+                                         np.ones_like(pos, dtype=bool), np.array([False]), np.array([5.])))
+    rows = [{"state": state, "replicate": rep, "seed": o.RNG_SEED + 2 * state + rep,
+             "world": f"train-{state}", "key": f"snapshot-{state}", "t0_s": 0., "vehicles": 1,
+             **{arm: copy.deepcopy(values) for arm in o.ARMS}}
+            for state in range(48) for rep in range(2)]
+    summary, estimates = {}, {}
+    for arm in (*o.ARMS, *o.CONTRASTS):
+        summary[arm] = {}
+        for metric, value in values.items():
+            value = None if value is None else (0. if arm in o.CONTRASTS else float(value))
+            if value not in estimates:
+                estimates[value] = o.json_safe(o._estimate(
+                    [np.nan if value is None else value] * 96, np.repeat(np.arange(48), 2)))
+            summary[arm][metric] = estimates[value]
+    totals = {}
+    for arm in o.ARMS:
+        total = {key: 96 * values[key] for key in
+                 ("hdv_rows", "finite_hdv_transitions", "a_lt_minus3_rows", "ttc_eligible_rows",
+                  "ttc_lt_1_5_rows", "overlap_pair_steps", "invalid_hdv_rows", "bad_acceleration_rows")}
+        total.update(states=48, runs=96, blowup_runs=0, blowup_states=0,
+                     a_lt_minus3_share=0., ttc_lt_1_5_share=0.)
+        totals[arm] = total
     good = {"status": "complete", "strict_exact_weights": True, "checkpoint": str(s.source),
-            "checkpoint_sha256": sha256_file(s.source)}
+            "checkpoint_sha256": sha256_file(s.source), "state_dict_sha256": o.state_digest(payload["model"]),
+            "device": "cpu", "workers": 1, "threads": 1, "linux_nice": 19,
+            "states": 48, "seeds_per_state": 2, "horizon_s": 120., "dt_s": .5,
+            "arms": o.ARMS, "definitions": o.DEFINITIONS, "emissions": dict.fromkeys(gate.EMISSIONS, True),
+            "override_only": ["emergency_braking", "secure_gap_veto"],
+            "config": str(ROOT / "configs/c4_wm_v10round12c.toml"),
+            "train_roots": [str(tmp_path / "train")], "train_manifest_sha256": ["1" * 64],
+            "states_sha256": "2" * 64, "base_physics": asdict(loaded.model.physics),
+            "one_step_windows": ["window-0", "window-1"],
+            "one_step": o.json_safe(o.analyze_onestep(packed, cols)),
+            "rollouts": {"rows": rows, "totals": totals, "state_cluster_run_mean": summary}}
+    path.write_text(json.dumps(good), encoding="utf-8")
+    return s, path, good
+
+
+def test_offline_report_must_be_complete_boolean_strict_and_bind_exact_init(offline_evidence, monkeypatch, tmp_path):
+    s, path, good = offline_evidence
     for doc in ({}, {**good, "status": "pending"}, {**good, "strict_exact_weights": 1},
-                {**good, "strict_exact_weights": False}, {**good, "checkpoint_sha256": "wrong"}):
+                {**good, "strict_exact_weights": False}, {**good, "checkpoint_sha256": "wrong"},
+                {k: good[k] for k in ("status", "strict_exact_weights", "checkpoint", "checkpoint_sha256")}):
         path.write_text(json.dumps(doc), encoding="utf-8")
         with pytest.raises(ValueError):
             gate.check_offline(path, s.source)
     path.write_text(json.dumps(good), encoding="utf-8")
     assert gate.check_offline(path, s.source) == good
-    with pytest.raises(ValueError, match="registered S-R12C FINAL SHA256"):
-        gate.preflight(tmp_path, s.source, path)
-    monkeypatch.setattr(gate, "R12C_SHA256", sha256_file(s.source))
     monkeypatch.setattr(TrainSettings, "from_config", lambda cfg: None)
     assert gate.preflight(tmp_path, s.source, path)["ok"]
     (tmp_path / ".round13e_gate.lock").mkdir()
     with pytest.raises(ValueError, match="prior R13E artifact"):
         gate.preflight(tmp_path, s.source, path)
+
+
+@pytest.mark.parametrize("damage", ["old_panel", "old_horizon", "one_seed", "gpu", "workers", "nice",
+                                     "arm", "metrics", "pair", "seed", "snapshot", "ci", "one_step",
+                                     "tensor_bytes", "totals", "npz", "provenance", "emission_type"])
+def test_offline_rejects_obsolete_incomplete_and_unpaired_evidence(offline_evidence, damage):
+    s, path, doc = offline_evidence
+    if damage == "old_panel":
+        doc["states"] = 24
+    elif damage == "old_horizon":
+        doc["horizon_s"] = 60.
+    elif damage == "one_seed":
+        doc["seeds_per_state"] = 1
+    elif damage == "gpu":
+        doc["device"] = "cuda"
+    elif damage == "workers":
+        doc["workers"] = 8
+    elif damage == "nice":
+        doc["linux_nice"] = 15
+    elif damage == "arm":
+        doc["arms"] = {"off": doc["arms"]["off"]}
+    elif damage == "metrics":
+        del doc["rollouts"]["rows"][0]["off"]["delay_merge_veh_s"]
+    elif damage == "pair":
+        doc["rollouts"]["rows"][-1] = doc["rollouts"]["rows"][0]
+    elif damage == "seed":
+        doc["rollouts"]["rows"][0]["seed"] += 1
+    elif damage == "snapshot":
+        doc["rollouts"]["rows"][0]["world"] = "another-state"
+    elif damage == "ci":
+        doc["rollouts"]["state_cluster_run_mean"]["emergency_minus_off"]["delay_total_veh_s"]["clusters"] = 96
+    elif damage == "one_step":
+        doc["one_step"]["emergency_minus_off"]["all_lane1"]["bias"]["lo"] = -999
+    elif damage == "tensor_bytes":
+        doc["state_dict_sha256"] = "0" * 64
+    elif damage == "totals":
+        doc["rollouts"]["totals"]["off"]["runs"] = 48
+    elif damage == "npz":
+        (path.parent / "onestep_off.npz").unlink()
+    elif damage == "emission_type":
+        doc["emissions"]["temporal_accel_off"] = 1
+    else:
+        doc["train_roots"] = []
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises((ValueError, FileNotFoundError)):
+        gate.check_offline(path, s.source)
 
 
 def test_workspace_paths_and_signed_zero_bytes():
@@ -343,8 +447,10 @@ def test_production_checkpoint_schedule_identity(synthetic, stage):
 def test_prepare_and_source_validation_are_static_no_launch(monkeypatch):
     import inspect
     source = inspect.getsource(gate.prepare)
-    assert '"git", "archive", "--format=tar", sha' in source
-    assert '"git", "cat-file", "-e"' in source
+    assert "committed_sources(sha)" in source
+    assert "committed_sources(BASELINE_COMMIT, baseline=True)" in source
+    assert "export_sources(sha, names, target)" in source
+    assert '"git", "archive", "--format=tar", sha, "--", *names' in inspect.getsource(gate.export_sources)
     assert "copytree" not in source and "wms train" not in source
     monkeypatch.setattr(gate, "operational_root", lambda: ROOT)
     with pytest.raises(ValueError, match="prepared repo"):
@@ -391,17 +497,25 @@ def test_waiter_adapter_uses_owned_identity_and_preserves_control_physics(
     process_type = r13c_waiter.ProductionProcess
     monkeypatch.setattr(r13c_waiter, "ProductionProcess",
                         lambda *args: (identities.append(args) or SimpleNamespace()))
-    monkeypatch.setattr(r13c_waiter.Waiter, "command",
-                        lambda self, script, *args: commands.append((script, args)))
+    def run(command, **kwargs):
+        commands.append((command, kwargs))
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(gate.subprocess, "run", run)
     waiter = gate.make_waiter(r13c_waiter, SimpleNamespace(
         root=tmp_path, stage=stage, mode="midrun", pid=12345, start_ticks=9876))
     assert identities == [(12345, tmp_path / f"runs/c4_wm_v10_round13e_{stage}", 9876)]
     assert waiter.out == tmp_path / f"chk_r13e/{stage}/midrun"
     assert waiter.work.is_relative_to(tmp_path / "chk_r13e")
+    waiter.work.mkdir(parents=True)
     waiter.command(ROOT / "tools/r10b_checks/run_onestep.py",
-                   "--config", "c4_wm_v10round13c.toml", "--var", "r10b=candidate")
-    args = commands[0][1]
-    assert args[:2] == ("--config", gate.CONFIGS[stage].name)
+                   "--config", "c4_wm_v10round13c.toml", "--var", "r10b=candidate", "--workers", 8)
+    command, kw = commands[0]
+    assert command[:3] == ["nice", "-n", "19"]
+    args = command[6:]
+    assert args[:2] == ["--config", gate.CONFIGS[stage].name]
+    assert args[args.index("--workers") + 1] == "4"
+    assert kw["env"]["CUDA_VISIBLE_DEVICES"] == "" and kw["env"]["WMS_JAM_WORKERS"] == "4"
+    assert all(kw["env"][key] == "1" for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"))
     for arm in ("r12c", "r9"):
         for flag in ("emergency_braking", "secure_gap_veto"):
             assert f"{arm}=physics.{flag}=false" in args
@@ -409,6 +523,126 @@ def test_waiter_adapter_uses_owned_identity_and_preserves_control_physics(
     monkeypatch.setattr(r13c_waiter, "proc_stat", lambda pid: (9999, "S"))
     monkeypatch.setattr(r13c_waiter, "pidfd_open", lambda pid: pytest.fail("unowned PID"))
     assert process_type(12345, waiter.run, 9876).terminate().startswith("not sent")
+
+
+def test_committed_source_allowlist_excludes_names_before_blob_export(monkeypatch):
+    safe = [*gate.REQUIRED_SOURCE, "src/wms/__init__.py", "src/wms/model/entry_learned.json"]
+    excluded = ["tools/SEALED/payload.py", "src/wms/holdout_reader.py", "configs/heldout.toml",
+                "tools/cal_split.py", "tests/chunk5.py", "scripts/j4b.py", "tools/inc1.py",
+                "tools/hetdata_truth.py", "src/wms/vType.py", "tools/payload.npz", "data/train.npy"]
+    raw = b"\0".join(f"100644 blob {'1' * 40}\t{name}".encode() for name in (*safe, *excluded)) + b"\0"
+    monkeypatch.setattr(gate.subprocess, "check_output", lambda *a, **kw: raw)
+    assert gate.committed_sources("a" * 40) == sorted(safe)
+    for name in ("../escape.py", "/src/wms/x.py", "src/wms/../x.py", "src\\wms\\x.py"):
+        assert not gate.source_name_allowed(name)
+    raw += f"120000 blob {'2' * 40}\tsrc/wms/link.py\0".encode()
+    with pytest.raises(ValueError, match="non-regular"):
+        gate.committed_sources("a" * 40)
+
+
+def test_missing_committed_dependency_stops_before_archive_or_mkdir(monkeypatch):
+    monkeypatch.setattr(gate.subprocess, "check_output", lambda *a, **kw:
+                        b"100644 blob " + b"1" * 40 + b"\tsrc/wms/__init__.py\0")
+    monkeypatch.setattr(gate.subprocess, "Popen", lambda *a, **kw: pytest.fail("no archive before validation"))
+    with pytest.raises(ValueError, match="missing committed launch dependencies"):
+        gate.committed_sources("a" * 40)
+
+
+def test_archive_exports_only_explicit_allowlist_and_rejects_extra_members(tmp_path, monkeypatch):
+    import io
+    import tarfile
+    names = ["src/wms/__init__.py", "pyproject.toml"]
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w") as archive:
+        for name in names:
+            info = tarfile.TarInfo(name)
+            info.size = 4
+            archive.addfile(info, io.BytesIO(b"test"))
+    commands = []
+    def popen(command, **kw):
+        commands.append(command)
+        return SimpleNamespace(stdout=io.BytesIO(buffer.getvalue()), wait=lambda: 0, poll=lambda: 0)
+    monkeypatch.setattr(gate.subprocess, "Popen", popen)
+    files = gate.export_sources("a" * 40, names, tmp_path)
+    assert set(files) == set(names)
+    assert commands == [["git", "archive", "--format=tar", "a" * 40, "--", *names]]
+    with pytest.raises(ValueError, match="invalid source allowlist"):
+        gate.export_sources("a" * 40, ["tools/SEALED/payload.py"], tmp_path)
+    assert len(commands) == 1
+
+
+def test_pinned_baseline_export_validates_all_names_and_hashes_before_use(tmp_path, monkeypatch):
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    base = tmp_path / gate.BASELINE_DIR
+    files = {}
+    for name in (*gate.BASELINE_HELPERS, "src/wms/__init__.py"):
+        path = base / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"trusted source")
+        files[name] = gate.digest(path)
+    doc = {"commit": gate.BASELINE_COMMIT, "directory": gate.BASELINE_DIR, "files": files}
+    assert gate.check_baseline(doc) == base
+    (base / "src/wms/__init__.py").write_bytes(b"changed source")
+    with pytest.raises(ValueError, match="baseline source drift"):
+        gate.check_baseline(doc)
+    files["tools/SEALED/payload.py"] = "0" * 64
+    monkeypatch.setattr(gate, "digest", lambda *a: pytest.fail("validate all names before bytes"))
+    with pytest.raises(ValueError, match="baseline allowlist"):
+        gate.check_baseline(doc)
+
+
+def test_prepare_from_remote_sibling_checkout_and_revalidate_gitless_archive(tmp_path, monkeypatch):
+    """The host checkout is a sibling of v5; the deployed copy has no Git DB."""
+    import io
+    import tarfile
+
+    source, deployment = tmp_path / "checkout", tmp_path / "v5"
+    source.mkdir()
+    deployment.mkdir()
+    sha = "a" * 40
+    names = sorted({*gate.REQUIRED_SOURCE, "src/wms/__init__.py"})
+    base_names = sorted({*gate.BASELINE_HELPERS, "src/wms/__init__.py"})
+    monkeypatch.setattr(gate, "ROOT", source)
+    monkeypatch.setattr(gate, "REMOTE_ROOT", deployment)
+    monkeypatch.setattr(gate, "sys", SimpleNamespace(platform="linux"))
+    def output(command, **kw):
+        if command[1] == "rev-parse":
+            return sha + "\n"
+        if command[1] == "ls-files":
+            return b""
+        assert command[1:4] == ["ls-tree", "-rz", "--full-tree"]
+        selected = names if command[4] == sha else base_names
+        return b"\0".join(f"100644 blob {'1' * 40}\t{name}".encode() for name in selected) + b"\0"
+    monkeypatch.setattr(gate.subprocess, "check_output", output)
+    checked = []
+    monkeypatch.setattr(gate.subprocess, "run", lambda command, **kw: checked.append(command))
+    archived = []
+    def popen(command, **kw):
+        assert command[:4] == ["git", "archive", "--format=tar", command[3]]
+        assert command[4] == "--"
+        archived.append(command[5:])
+        buffer = io.BytesIO()
+        with tarfile.open(fileobj=buffer, mode="w") as archive:
+            for name in command[5:]:
+                payload = f"source bytes for {name}".encode()
+                info = tarfile.TarInfo(name)
+                info.size = len(payload)
+                archive.addfile(info, io.BytesIO(payload))
+        return SimpleNamespace(stdout=io.BytesIO(buffer.getvalue()), wait=lambda: 0, poll=lambda: 0)
+    monkeypatch.setattr(gate.subprocess, "Popen", popen)
+    result = gate.prepare()
+    prepared = Path(result["repo"])
+    assert prepared == deployment / f"repo_r13e_{sha[:8]}"
+    assert not (prepared / ".git").exists()
+    assert archived == [names, base_names]
+    assert checked[0][:6] == ["git", "diff", "--quiet", "--no-ext-diff", "--no-textconv", sha]
+    monkeypatch.setattr(gate, "ROOT", prepared)
+    manifest = gate.check_source()
+    assert manifest["commit"] == sha and manifest["baseline"]["commit"] == gate.BASELINE_COMMIT
+    assert set(manifest["files"]) == set(names)
+    (prepared / "tools/added.py").write_text("unexpected", encoding="utf-8")
+    with pytest.raises(ValueError, match="source file set changed"):
+        gate.check_source()
 
 
 def test_production_requires_both_smokes_and_current_a_final_checks(monkeypatch, tmp_path):

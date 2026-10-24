@@ -117,6 +117,15 @@ class TrainSettings:
     follower_courtesy_absolute_weight: float = 0.0
     # R13F/R13T TEMPORAL EMISSION SWITCHES (default = round 12)
     temporal_accel_off: bool = False
+    temporal_accel_reinit: bool = False
+    temporal_accel_lane_bias: bool = False
+    temporal_lane_bias_init: Optional[tuple[float, ...]] = None
+    temporal_accel_state_table: bool = False
+    temporal_state_table_init: Optional[str] = None
+    accel_tail_weight: float = 0.0
+    accel_tail_jerk_weight: float = 0.0
+    accel_tail_table: Optional[str] = None
+    accel_tail_lanes: tuple[int, ...] = (1,)
     # R12C PHYSICS-ONLY CORE CALIBRATION (default = round 12)
     residual_accel_off: bool = False
     follower_courtesy_off: bool = False
@@ -888,7 +897,20 @@ class TrainSettings:
                       or float(self.follower_courtesy_weight) > 0),
                  "loss.follower_courtesy.absolute_weight must be finite >= 0 (> 0 needs "
                  "loss.follower_courtesy.weight > 0)")
-        _require(isinstance(self.temporal_accel_off, bool), "temporal_accel_off must be a boolean")
+        _require(isinstance(self.temporal_accel_off, bool) and isinstance(self.temporal_accel_reinit, bool),
+                 "temporal_accel_off / temporal_accel_reinit must be booleans")
+        _require(self.temporal_lane_bias_init is None
+                 or (bool(self.temporal_accel_lane_bias) and len(tuple(self.temporal_lane_bias_init)) == 3
+                     and all(math.isfinite(float(x)) for x in self.temporal_lane_bias_init)),
+                 "temporal_lane_bias_init needs temporal_accel_lane_bias and 3 finite values")
+        _require(self.temporal_state_table_init is None or bool(self.temporal_accel_state_table),
+                 "temporal_state_table_init needs temporal_accel_state_table")
+        _require(all(math.isfinite(float(x)) and float(x) >= 0.0
+                     for x in (self.accel_tail_weight, self.accel_tail_jerk_weight))
+                 and (not self.accel_tail_on or bool(self.accel_tail_table))
+                 and len(tuple(self.accel_tail_lanes)) > 0
+                 and all(int(x) in (0, 1, 2) for x in self.accel_tail_lanes),
+                 "accel_tail weights must be >= 0, a table is needed when on, lanes in {0, 1, 2}")
         _require(isinstance(self.residual_accel_off, bool), "residual_accel_off must be a boolean")
         _require(isinstance(self.follower_courtesy_off, bool), "follower_courtesy_off must be a boolean")
         _require(isinstance(self.emergency_braking, bool), "emergency_braking must be a boolean")
@@ -951,6 +973,11 @@ class TrainSettings:
     def uses_hard_cap(self) -> bool:
         """True when a legacy hard residual clamp is configured (REJECTED, #3)."""
         return any(getattr(self, name) is not None for name in HARD_CAP_FIELDS)
+
+    @property
+    def accel_tail_on(self) -> bool:
+        """R13T tail-matching terms enabled (either weight > 0)."""
+        return float(self.accel_tail_weight) > 0.0 or float(self.accel_tail_jerk_weight) > 0.0
 
     @property
     def brake_persist_on(self) -> bool:

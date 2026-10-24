@@ -19,6 +19,7 @@ from .agg_horizon import AggHorizonConfig, agg_horizon_terms
 from .base import (LossBreakdown, LossContext, LossTerm, TermValue, UnrollContext, UnrollTargets,
                    UnrollTerm)
 from .braking import AsymSpeedLoss, BrakingParams, DecelWeightLoss, PropagationLoss
+from .accel_tail import AccelTailConfig, accel_tail_terms, resolve_table
 from .brake_persist import BrakePersistConfig, brake_persist_terms
 from .brake_wave import BrakeWaveConfig, brake_wave_terms
 from .onset_stats import OnsetStatsConfig, onset_stats_terms
@@ -170,6 +171,13 @@ def build_loss(settings: TrainSettings, *, physics: Optional[Any] = None) -> Los
             quantile_weight=float(settings.brake_persist_quantile_weight),
             event_balance=float(settings.brake_persist_event_balance),
             window_s=float(settings.brake_persist_window_s))))
+    if getattr(settings, "accel_tail_on", False):
+        # R13T tail matching on all rollout rows (off: never built, bit-identical).
+        chunk.extend(accel_tail_terms(AccelTailConfig(
+            weight=float(settings.accel_tail_weight),
+            jerk_weight=float(settings.accel_tail_jerk_weight),
+            table=resolve_table(settings.accel_tail_table),
+            lanes=tuple(int(x) for x in settings.accel_tail_lanes))))
     if settings.brake_wave_on:
         # WAVE onset-conditioned drop / residual-cancellation / spurious-pulse terms
         # (all weights 0 by default: never built, bit-identical).

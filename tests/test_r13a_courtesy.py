@@ -358,7 +358,9 @@ def test_round13a_config_differs_from_round12_only_by_the_repair_flags():
     a, b = dict(leaves(load_raw(ROUND12))), dict(leaves(load_raw(ROUND13A)))
     changed = {k for k in set(a) | set(b) if a.get(k, "<absent>") != b.get(k, "<absent>")}
     allowed = {"name", "runtime.out_dir", "model.init_from", "model.follower_courtesy_state_grad",
-               "model.follower_courtesy_intent", "loss.follower_courtesy.absolute_weight"}
+               "model.follower_courtesy_intent", "loss.follower_courtesy.absolute_weight",
+               # R13T fix: init = round-12 final, so round 12's own init transforms are not re-applied
+               "model.driver_param_init", "model.residual_accel_reinit"}
     assert changed <= allowed, sorted(changed - allowed)
     assert {"model.follower_courtesy_state_grad", "model.follower_courtesy_intent",
             "loss.follower_courtesy.absolute_weight"} <= changed
@@ -366,6 +368,7 @@ def test_round13a_config_differs_from_round12_only_by_the_repair_flags():
     assert cfg.model.follower_courtesy_state_grad is True
     assert cfg.model.follower_courtesy_intent == "pivot"
     assert cfg.model.follower_courtesy_init_zero is True           # fresh head: intent meaning changed
+    assert cfg.model.driver_param_init == "checkpoint" and cfg.model.residual_accel_reinit is False
     assert cfg.loss.follower_courtesy.absolute_weight == 4.525          # docs/r13a_absolute_weight_rule.json
     assert cfg.loss.follower_courtesy.contrast is True
     assert cfg.model.follower_courtesy_rollout_grad is False

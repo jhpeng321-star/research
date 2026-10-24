@@ -1,4 +1,4 @@
-"""Compare emergency-off execution with real, isolated c8dd7162 sources.
+"""Compare both-flags-off execution with real, isolated round-13C tip sources.
 
 Run with ``.venv/Scripts/python.exe tools/r13e_checks/bit_identity.py``.
 Only selected package sources and the two synthetic test helpers are exported
@@ -8,6 +8,7 @@ from a training run is needed. All generated files stay below workspace/runs.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import os
@@ -19,7 +20,7 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE = "c8dd71620d866620532eded754dd467649358175"
+BASE = "eb75010c6a2a7ef66eebc3282e03f50e37d4b202"
 HELPERS = ("tests/test_r10b_courtesy.py", "tests/test_r11_courtesy.py")
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
              "truth", "vtype")
@@ -84,6 +85,42 @@ def export_base(destination: Path) -> list[str]:
     return selected
 
 
+def bundled_base() -> tuple[Path, list[str]]:
+    """Validate the pinned source export shipped in a Git-less deployment archive."""
+    manifest = workspace_path(ROOT / "R13E_SOURCE.json")
+    doc = json.loads(manifest.read_text(encoding="utf-8")).get("baseline", {})
+    if doc.get("commit") != BASE or doc.get("directory") != ".r13e_baseline":
+        raise ValueError("missing pinned round-13C source export")
+    if (ROOT / ".r13e_baseline").is_symlink():
+        raise ValueError("symlink baseline export")
+    base = workspace_path(ROOT / ".r13e_baseline")
+    files = doc.get("files", {})
+    if not isinstance(files, dict) or not set((*HELPERS, "src/wms/__init__.py")) <= set(files):
+        raise ValueError("incomplete round-13C source manifest")
+    for name, digest in files.items():
+        path = PurePosixPath(name)
+        if (path.is_absolute() or ".." in path.parts
+                or not ((name.startswith("src/wms/") and path.suffix in (".py", ".json"))
+                        or name in HELPERS)):
+            raise ValueError(f"invalid baseline source name: {name}")
+        if (base / name).is_symlink() or not isinstance(digest, str):
+            raise ValueError(f"invalid baseline source: {name}")
+        target = workspace_path(base / name)
+        if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"baseline source drift: {name}")
+    actual = set()
+    for parent, directories, names in os.walk(base, followlinks=False):
+        for name in (*directories, *names):
+            candidate = Path(parent) / name
+            if candidate.is_symlink():
+                raise ValueError("symlink in baseline export")
+            workspace_path(candidate)
+        actual.update((Path(parent) / name).relative_to(base).as_posix() for name in names)
+    if actual != set(files):
+        raise ValueError("baseline source file set changed")
+    return base, sorted(files)
+
+
 def snapshot(source: Path, output: Path, *, explicit_off: bool = False) -> None:
     """Executed in a fresh interpreter with exactly one chosen package on PYTHONPATH."""
     import torch
@@ -127,6 +164,7 @@ def snapshot(source: Path, output: Path, *, explicit_off: bool = False) -> None:
             changes = {"emergency_decel_mps2": old_emergency}
             if explicit_off:
                 changes["emergency_braking"] = False
+                changes["secure_gap_veto"] = False
             model.physics = replace(model.physics, **changes)
             batch = sequence(n=9, cav=True)
             # Exercise actual leaders, an absent slot, a ramp obstacle, and CAV execution.
@@ -188,8 +226,11 @@ def run_check(out_dir: str | Path = "runs/r13e_bit_identity") -> dict:
         raise ValueError("identity artifacts must stay below workspace/runs")
     out_dir.mkdir(parents=True, exist_ok=True)
     run = Path(tempfile.mkdtemp(prefix="check-", dir=out_dir))
-    base = run / "base"
-    exported = export_base(base)
+    if (ROOT / ".git").exists():
+        base = run / "base"
+        exported = export_base(base)
+    else:
+        base, exported = bundled_base()
     snapshots = []
     for label, source, explicit in (("base", base, False), ("default", ROOT, False),
                                     ("explicit_off", ROOT, True)):
@@ -197,6 +238,7 @@ def run_check(out_dir: str | Path = "runs/r13e_bit_identity") -> dict:
         env = os.environ.copy()
         env.update(PYTHONPATH=os.pathsep.join((str(source / "src"), str(source / "tests"))),
                    PYTHONHASHSEED="0", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
+                   OPENBLAS_NUM_THREADS="1", CUDA_VISIBLE_DEVICES="",
                    PYTHONDONTWRITEBYTECODE="1")
         command = [sys.executable, str(Path(__file__).resolve()), "--snapshot", str(source),
                    "--output", str(output)]

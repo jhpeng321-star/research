@@ -35,6 +35,15 @@ FLAT_TO_PATH: dict[str, str] = {
     "follower_courtesy_absolute_weight": "loss.follower_courtesy.absolute_weight",
     # R13F/R13T TEMPORAL EMISSION SWITCHES
     "temporal_accel_off": "model.temporal_accel_off",
+    "temporal_accel_reinit": "model.temporal_accel_reinit",
+    "temporal_accel_lane_bias": "model.temporal_accel_lane_bias",
+    "temporal_lane_bias_init": "model.temporal_lane_bias_init",
+    "temporal_accel_state_table": "model.temporal_accel_state_table",
+    "temporal_state_table_init": "model.temporal_state_table_init",
+    "accel_tail_weight": "loss.accel_tail.weight",
+    "accel_tail_jerk_weight": "loss.accel_tail.jerk_weight",
+    "accel_tail_table": "loss.accel_tail.table",
+    "accel_tail_lanes": "loss.accel_tail.lanes",
     # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
     "residual_accel_off": "model.residual_accel_off",
     "follower_courtesy_off": "model.follower_courtesy_off",
@@ -401,7 +410,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # R13A COURTESY PAIR-CONTRACT REPAIR
     "follower_courtesy_state_grad", "follower_courtesy_intent", "follower_courtesy_absolute_weight",
     # R13F/R13T TEMPORAL EMISSION SWITCHES
-    "temporal_accel_off",
+    "temporal_accel_off", "temporal_accel_reinit", "temporal_accel_lane_bias", "temporal_lane_bias_init",
+    "temporal_accel_state_table", "temporal_state_table_init",
+    "accel_tail_weight", "accel_tail_jerk_weight", "accel_tail_table", "accel_tail_lanes",
     # R12C PHYSICS-ONLY CORE CALIBRATION SWITCHES
     "residual_accel_off", "follower_courtesy_off",
     "emergency_braking",

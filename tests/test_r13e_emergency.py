@@ -326,13 +326,37 @@ def test_infeasible_state_is_bounded_but_not_claimed_preventable():
     assert first_step_min_distance > .5
 
 
-def test_emergency_off_is_bit_identical_to_actual_c8dd7162_forward_and_rollout():
+def test_both_flags_off_is_bit_identical_to_actual_13c_tip_forward_and_rollout():
     path = ROOT / "tools/r13e_checks/bit_identity.py"
     spec = importlib.util.spec_from_file_location("r13e_bit_identity", path)
     identity = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(identity)
     report = identity.run_check()
     assert report["status"] == "PASS"
-    assert report["base_commit"] == "c8dd71620d866620532eded754dd467649358175"
+    assert report["base_commit"] == "eb75010c6a2a7ef66eebc3282e03f50e37d4b202"
     assert report["cases"] == 4 and report["rollout_steps"] == 6
     assert all(count > 100 for count in report["tensor_comparisons"].values())
+
+
+def test_gitless_deployment_baseline_is_pinned_and_hash_checked(artifact_dir, monkeypatch):
+    import hashlib
+
+    path = ROOT / "tools/r13e_checks/bit_identity.py"
+    spec = importlib.util.spec_from_file_location("r13e_bundled_identity", path)
+    identity = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(identity)
+    base = artifact_dir / ".r13e_baseline"
+    names = [*identity.HELPERS, "src/wms/__init__.py"]
+    for name in names:
+        target = base / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("# synthetic integrity fixture\n", encoding="utf-8")
+    files = {name: hashlib.sha256((base / name).read_bytes()).hexdigest() for name in names}
+    manifest = artifact_dir / "R13E_SOURCE.json"
+    manifest.write_text(json.dumps({"baseline": {"commit": identity.BASE,
+                        "directory": ".r13e_baseline", "files": files}}), encoding="utf-8")
+    monkeypatch.setattr(identity, "ROOT", artifact_dir)
+    assert identity.bundled_base() == (base, sorted(names))
+    (base / "src/wms/__init__.py").write_text("# altered\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="source drift"):
+        identity.bundled_base()
