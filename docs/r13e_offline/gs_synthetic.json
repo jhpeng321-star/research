@@ -1,0 +1,342 @@
+{
+  "reference": "E:\\agent-work\\c4-gapacc\\scripts\\factworker.py",
+  "learned_veto_scale": "none: hard requirement has implicit fixed multiplier 1",
+  "tau_initial_formula": "alpha_log_sigma * sqrt(3) / pi; softplus(raw)",
+  "tau_initial_expected": 0.07031989484916598,
+  "tau_initial_actual": 0.07031989842653275,
+  "synthetic": {
+    "torch.float32": {
+      "edge_cases": {
+        "n": 51,
+        "gate_equal": 25,
+        "gapacc_only": 26,
+        "r13e_only": 0,
+        "both_accept": 18,
+        "both_reject": 7,
+        "boundary_equal": 28,
+        "boundary_different": 23,
+        "ungated_boundary_neg_inf": 6,
+        "log_vs_direct_differences": 1,
+        "log_vs_direct_examples": [
+          {
+            "label": "f:r13e:ulp-1",
+            "direct": false,
+            "r13e": true
+          }
+        ],
+        "examples": [
+          {
+            "label": "f:gapacc:ulp+0",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 41.0,
+            "gap_l": 100.0
+          },
+          {
+            "label": "f:gapacc:ulp+1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 41.000003814697266,
+            "gap_l": 100.0
+          },
+          {
+            "label": "l:gapacc:ulp+0",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 10.40000057220459
+          },
+          {
+            "label": "l:gapacc:ulp+1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 10.400001525878906
+          },
+          {
+            "label": "l:r13e:ulp-1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 12.399999618530273
+          },
+          {
+            "label": "rest-small-clearance",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 0.5,
+            "gap_l": 0.5
+          },
+          {
+            "label": "rest-zero-clearance",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 0.0,
+            "gap_l": 0.0
+          },
+          {
+            "label": "ineligible",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 100.0
+          }
+        ]
+      },
+      "random_heterogeneous_cases": {
+        "n": 4096,
+        "gate_equal": 3161,
+        "gapacc_only": 935,
+        "r13e_only": 0,
+        "both_accept": 2291,
+        "both_reject": 870,
+        "boundary_equal": 3161,
+        "boundary_different": 935,
+        "ungated_boundary_neg_inf": 0,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "random-4",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 47.89151030811795,
+            "gap_l": 120.71889534104876
+          },
+          {
+            "label": "random-7",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 55.17552174151531,
+            "gap_l": 4.5615536148004825
+          },
+          {
+            "label": "random-16",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 33.4365468100348,
+            "gap_l": 20.341305015092033
+          },
+          {
+            "label": "random-26",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 28.357641710187675,
+            "gap_l": 72.40253287323749
+          },
+          {
+            "label": "random-29",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 44.30551596380643,
+            "gap_l": 5.850179790896946
+          },
+          {
+            "label": "random-30",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 58.318129490615064,
+            "gap_l": 8.646222381876196
+          },
+          {
+            "label": "random-39",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 6.787872859924508,
+            "gap_l": 47.07617266180048
+          },
+          {
+            "label": "random-40",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 9.897166624116394,
+            "gap_l": 365.0133409403164
+          }
+        ]
+      },
+      "index_shape_edges": {
+        "indices": [
+          {
+            "index": -1,
+            "gapacc": true,
+            "r13e": false
+          },
+          {
+            "index": 3,
+            "gapacc": "RuntimeError: index out of bounds",
+            "r13e": false
+          }
+        ],
+        "bad_settings_shape": "ValueError",
+        "empty_slots": "passed"
+      }
+    },
+    "torch.float64": {
+      "edge_cases": {
+        "n": 51,
+        "gate_equal": 25,
+        "gapacc_only": 26,
+        "r13e_only": 0,
+        "both_accept": 18,
+        "both_reject": 7,
+        "boundary_equal": 28,
+        "boundary_different": 23,
+        "ungated_boundary_neg_inf": 6,
+        "log_vs_direct_differences": 1,
+        "log_vs_direct_examples": [
+          {
+            "label": "l:r13e:ulp-1",
+            "direct": false,
+            "r13e": true
+          }
+        ],
+        "examples": [
+          {
+            "label": "f:gapacc:ulp+0",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 41.0,
+            "gap_l": 100.0
+          },
+          {
+            "label": "f:gapacc:ulp+1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 41.00000000000001,
+            "gap_l": 100.0
+          },
+          {
+            "label": "f:r13e:ulp-1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 42.49999999999999,
+            "gap_l": 100.0
+          },
+          {
+            "label": "l:gapacc:ulp+0",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 10.4
+          },
+          {
+            "label": "l:gapacc:ulp+1",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 10.400000000000002
+          },
+          {
+            "label": "rest-small-clearance",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 0.5,
+            "gap_l": 0.5
+          },
+          {
+            "label": "rest-zero-clearance",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 0.0,
+            "gap_l": 0.0
+          },
+          {
+            "label": "ineligible",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 100.0,
+            "gap_l": 100.0
+          }
+        ]
+      },
+      "random_heterogeneous_cases": {
+        "n": 4096,
+        "gate_equal": 3161,
+        "gapacc_only": 935,
+        "r13e_only": 0,
+        "both_accept": 2291,
+        "both_reject": 870,
+        "boundary_equal": 3161,
+        "boundary_different": 935,
+        "ungated_boundary_neg_inf": 0,
+        "log_vs_direct_differences": 0,
+        "log_vs_direct_examples": [],
+        "examples": [
+          {
+            "label": "random-4",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 47.89151030811795,
+            "gap_l": 120.71889534104876
+          },
+          {
+            "label": "random-7",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 55.17552174151531,
+            "gap_l": 4.5615536148004825
+          },
+          {
+            "label": "random-16",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 33.4365468100348,
+            "gap_l": 20.341305015092033
+          },
+          {
+            "label": "random-26",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 28.357641710187675,
+            "gap_l": 72.40253287323749
+          },
+          {
+            "label": "random-29",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 44.30551596380643,
+            "gap_l": 5.850179790896946
+          },
+          {
+            "label": "random-30",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 58.318129490615064,
+            "gap_l": 8.646222381876196
+          },
+          {
+            "label": "random-39",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 6.787872859924508,
+            "gap_l": 47.07617266180048
+          },
+          {
+            "label": "random-40",
+            "gapacc": true,
+            "r13e": false,
+            "gap_f": 9.897166624116394,
+            "gap_l": 365.0133409403164
+          }
+        ]
+      },
+      "index_shape_edges": {
+        "indices": [
+          {
+            "index": -1,
+            "gapacc": true,
+            "r13e": false
+          },
+          {
+            "index": 3,
+            "gapacc": "RuntimeError: index out of bounds",
+            "r13e": false
+          }
+        ],
+        "bad_settings_shape": "ValueError",
+        "empty_slots": "passed"
+      }
+    }
+  },
+  "recorded_events": 0
+}

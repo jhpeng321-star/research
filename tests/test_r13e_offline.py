@@ -4,6 +4,8 @@ import gzip
 import importlib.util
 import json
 from pathlib import Path
+import pickle
+import sys
 import tempfile
 from types import SimpleNamespace
 
@@ -14,6 +16,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("r13e_offline", ROOT / "tools/r13e_checks/offline.py")
 O = importlib.util.module_from_spec(SPEC)  # noqa: E741 (offline module alias)
+sys.modules[SPEC.name] = O  # fork Pool must resolve top-level worker functions by module name
 SPEC.loader.exec_module(O)
 
 
@@ -183,7 +186,7 @@ def test_real_source_loader_keeps_recorded_training_split_and_never_opens_valida
     arrays = {"veh_kin": kin, "veh_mask": np.ones((241, 1), np.uint8),
               "target_mask": np.ones((241, 1), np.uint8), "counter": np.zeros((241, 2, 30), np.float32),
               "vid": np.zeros((241, 1), np.int32), "is_cav": np.zeros((241, 1), np.uint8),
-              "time_s": np.arange(241) * .5, "control_time_s": np.arange(121, dtype=float),
+              "time_s": 300 + np.arange(241) * .5, "control_time_s": 300 + np.arange(121, dtype=float),
               "controller": np.zeros((121, 1), np.int8),
               "issued_acceleration_mps2": np.zeros((121, 1), np.float32),
               "issued_target_speed_mps": np.zeros((121, 1), np.float32)}
@@ -208,6 +211,10 @@ def test_real_source_loader_keeps_recorded_training_split_and_never_opens_valida
     assert sets[0]._loader.entries == [entries[0]]
     assert sets[0][0]["states"].shape == (241, 1, 7)
     assert doc["episodes"][1]["split_role"] == "val"
+    # Real loader positions store a tick index, NOT seconds or time since warmup.
+    assert sets[0].positions == [(0, 0)]
+    record = state(world=entries[0]["world"])
+    assert O.onestep_jobs(sets, [record]) == [(0, 0, f"0:{entries[0]['episode']}:0")]
 
 
 @pytest.fixture
@@ -515,6 +522,14 @@ def test_real_base_producer_is_used_with_strict_checkpoint_and_global_state_rest
             return item
 
     cfg = TrainConfig.from_legacy_flat(p.backend.config)
+    original_forward = p.model.forward
+    forward_calls = []
+
+    def wrapped_forward(*args, **kwargs):
+        forward_calls.append(True)
+        return original_forward(*args, **kwargs)
+
+    p.model.forward = wrapped_forward
     before = producer.G.copy()
     producer.G["test_sentinel"] = "restore me"
     try:
@@ -525,6 +540,7 @@ def test_real_base_producer_is_used_with_strict_checkpoint_and_global_state_rest
         assert {"gapF", "vLF", "dacc", "ddec"} <= set(cols)
         assert producer.G["test_sentinel"] == "restore me"
         assert O.state_digest(p.model.state_dict()) == digest
+        assert p.model.forward is wrapped_forward and len(forward_calls) == 3 * 240
         report = O.analyze_onestep(packed, cols)
         assert report["off"]["all_lane1"]["bias"]["n"] > 5
         assert O.state_digest(p.model.state_dict()) == digest
@@ -536,6 +552,8 @@ def test_real_base_producer_is_used_with_strict_checkpoint_and_global_state_rest
 def test_cli_default_and_missing_asset_never_writes_a_report(workspace):
     args = ["--checkpoint", "absent.pt", "--train-root", "train", "--states", "states.json", "--out", "out"]
     assert O.build_parser().parse_args(args).config == "c4_wm_v10round12c.toml"
+    assert O.build_parser().parse_args(args).workers == 1
+    assert not O.build_parser().parse_args(args).one_step_panel
     with pytest.raises(FileNotFoundError, match="missing required asset"):
         O.main(args)
     assert not (workspace / "out").exists()
@@ -550,4 +568,310 @@ def test_linux_limits_set_nice19_and_single_torch_thread(monkeypatch):
     monkeypatch.setattr(os, "nice", lambda increment: priority.__setitem__(0, priority[0] + increment), raising=False)
     O.cpu_limits()
     assert priority == [19] and torch.get_num_threads() == 1
+    assert torch.get_num_interop_threads() == 1
     assert os.environ["CUDA_VISIBLE_DEVICES"] == ""
+
+
+@pytest.mark.parametrize("workers", [0, 5, -1, 1.5, True])
+def test_worker_bounds_apply_to_python_api(workers):
+    with pytest.raises(ValueError, match="1..4"):
+        list(O._execute(lambda job: pytest.fail("must validate first"), [0], {}, workers))
+
+
+@pytest.mark.parametrize("workers", ["0", "5", "-1", "1.5"])
+def test_worker_bounds_apply_to_cli(workers):
+    with pytest.raises(SystemExit) as exc:
+        O.build_parser().parse_args(["--checkpoint", "x", "--train-root", "x", "--states", "x",
+                                    "--out", "x", "--workers", workers])
+    assert exc.value.code == 2
+
+
+def test_parallel_requires_linux_without_falling_back_to_spawn(monkeypatch):
+    monkeypatch.setattr(O.sys, "platform", "win32")
+    monkeypatch.setattr(O.multiprocessing, "get_context", lambda *a: pytest.fail("no spawn fallback"))
+    with pytest.raises(ValueError, match="Linux fork"):
+        list(O._execute(lambda job: job, [0], {}, 2))
+
+
+def panel_dataset(entries, positions, times):
+    def episode(index):
+        return SimpleNamespace(array=lambda name: times[index] if name == "time_s" else None)
+
+    return SimpleNamespace(positions=positions, _loader=SimpleNamespace(entries=entries, episode=episode))
+
+
+def test_explicit_panel_matches_world_and_array_time_in_record_order():
+    records = [state(1), state(0)]
+    entries = [{"episode": "arbitrary_name_a", "world": state(0)["world"]},
+               {"episode": "arbitrary_name_b", "world": state(1)["world"]}]
+    # Tick 2 means t=300, not t=1; tick 0 at t=299 must not be selected.
+    ds = panel_dataset(entries, [(0, 0), (0, 2), (1, 2)], [np.array([299., 299.5, 300.])] * 2)
+    assert O.onestep_jobs([ds], records) == [(0, 2, "0:arbitrary_name_b:2"), (0, 1, "0:arbitrary_name_a:1")]
+    # Default is still a fixed-RNG choice of one window per episode, in episode order.
+    rng = np.random.default_rng(O.RNG_SEED)
+    pick = int(rng.choice([0, 1]))
+    assert O.onestep_jobs([ds]) == [(0, pick, f"0:arbitrary_name_a:{pick}"), (0, 2, "0:arbitrary_name_b:2")]
+    # Metadata-world is supported, but dataset world comes from the entry itself.
+    r = records[0].copy()
+    r["meta"] = {"world": r.pop("world")}
+    assert O.onestep_jobs([ds], [r])[0][1] == 2
+
+
+def test_panel_refuses_missing_ambiguous_wrong_branch_and_duplicate_matches():
+    world = state()["world"]
+    entry = {"episode": "a", "world": world, "arm": "native"}
+    ds = panel_dataset([entry], [(0, 0)], [np.array([300.])])
+    for record in (state(world="unknown"), state(episode="wrong"), state(arm="wrong"),
+                   state(initial_state={"time_s": 300.5, "vehicles": []})):
+        with pytest.raises(ValueError, match="exactly one TRAIN window"):
+            O.onestep_jobs([ds], [record])
+    with pytest.raises(ValueError, match="duplicate"):
+        O.onestep_jobs([ds], [state(), state()])
+    other = panel_dataset([{**entry, "episode": "b", "arm": "branch"}], [(0, 0)], [np.array([300.])])
+    with pytest.raises(ValueError, match="found 2"):
+        O.onestep_jobs([ds, other], [state()])
+    assert O.onestep_jobs([ds, other], [state(episode="b", arm="branch")]) == [(1, 0, "1:b:0")]
+
+
+def test_merge_zone_occupancy_and_speed_use_valid_hdv_rows_strict_boundaries():
+    pos = np.tile([0., 75.439, 75.44, -0.01, 10., 10., 10., 10.], (3, 1))
+    speed = np.tile([2., 8., 20., 20., 20., 20., 20., 20.], (3, 1))
+    lanes = np.tile([0., 1., 0., 1., 2., 0., 1., 0.], (3, 1))
+    mask = np.ones_like(pos, bool)
+    mask[1:, 5] = False
+    speed[1:, 6] = np.nan
+    # Last slot is a CAV, lane 2 is a ramp HDV, slot 6 is invalid.
+    cav = [False] * 7 + [True]
+    m = O.rollout_metrics(pos, speed, lanes, mask, cav, [5] * 8)
+    assert m["merge_zone_hdv_rows"] == 4
+    assert m["merge_zone_mean_hdv_count"] == 2
+    assert m["merge_zone_mean_speed_mps"] == 5
+    mask[2, :2] = False  # empty frame still contributes to the time-mean denominator
+    m = O.rollout_metrics(pos, speed, lanes, mask, cav, [5] * 8)
+    assert m["merge_zone_hdv_rows"] == 2 and m["merge_zone_mean_hdv_count"] == 1
+    assert m["merge_zone_mean_speed_mps"] == 5
+    mask[1:, :2] = False
+    m = O.rollout_metrics(pos, speed, lanes, mask, cav, [5] * 8)
+    assert m["merge_zone_mean_hdv_count"] == 0
+    assert O.json_safe(m)["merge_zone_mean_speed_mps"] is None
+
+
+@pytest.fixture(params=["reversed", "fork"])
+def parallel_pool(request, monkeypatch):
+    """Force worst-case completion ordering on every OS; also use real fork on Linux."""
+    if request.param == "fork":
+        if not sys.platform.startswith("linux"):
+            pytest.skip("real fork integration requires Linux")
+        return
+    monkeypatch.setattr(O.sys, "platform", "linux")
+
+    class Pool:
+        def __init__(self, *, processes, initializer):
+            assert 1 < processes <= 4 and initializer is O.cpu_limits
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def imap_unordered(self, function, jobs, *, chunksize):
+            assert chunksize == 1
+            for job in reversed(jobs):
+                # Job queues contain only descriptors, never datasets or closures.
+                assert pickle.loads(pickle.dumps(job)) == job
+                yield function(job)
+
+    def get_context(method):
+        assert method == "fork"
+        return SimpleNamespace(Pool=Pool)
+
+    monkeypatch.setattr(O.multiprocessing, "get_context", get_context)
+
+
+@pytest.mark.parametrize("workers", [2, 4])
+def test_parallel_onestep_exact_rows_crn_order_and_bootstrap(monkeypatch, parallel_pool, workers):
+    from tools.r10b_checks import run_onestep as producer
+    import random
+
+    model = SimpleNamespace(state_dict=lambda: {}, arm=None, forward=lambda: None)
+    original_forward = model.forward
+    p = SimpleNamespace(model=model, backend=SimpleNamespace(config={}))
+    ds = panel_dataset([{"episode": "a"}, {"episode": "b"}], [(0, 0), (1, 0)], [])
+    cols = producer.COLS + producer.BASE_COLS
+    ci = {name: i for i, name in enumerate(cols)}
+    monkeypatch.setattr(O, "set_arm", lambda m, arm: setattr(m, "arm", arm))
+
+    def one_window(job):
+        arm = model.arm
+        arr = np.zeros((6, len(cols)), np.float32)
+        arr[:, ci["lane"]], arr[:, ci["v"]], arr[:, ci["gapF"]] = 1, 10, 70
+        arr[:, ci["rec"]] = -2
+        # RNG-dependent fixed geometry proves the per-arm seed reset as well.
+        arr[:, ci["s"]] = random.random() + np.random.random() + torch.rand(()).item()
+        arr[:, ci["fin"]] = job[1] + list(O.ARMS).index(arm)
+        del model.forward  # exactly the BASE producer's wrapper-removal behavior
+        return job[2], {arm: (arr, {})}
+
+    monkeypatch.setattr(producer, "one_window", one_window)
+    before = producer.G.copy()
+    serial = O.run_onestep(p, None, [ds])
+    events = []
+    parallel = O.run_onestep(p, None, [ds], workers=workers, progress=events.append)
+    assert parallel[1:] == serial[1:]
+    for arm in O.ARMS:
+        np.testing.assert_array_equal(parallel[0][arm], serial[0][arm])
+    assert O.json_safe(O.analyze_onestep(*parallel[:2])) == O.json_safe(O.analyze_onestep(*serial[:2]))
+    assert len(events) == 6 and {e["state"] for e in events} == {0, 1}
+    assert events[-1]["completed"] == events[-1]["total"] == 6
+    assert producer.G == before and model.forward is original_forward and O._FORK == {}
+
+
+@pytest.mark.parametrize("workers", [2, 4])
+def test_parallel_rollouts_exact_pairing_order_and_cluster_bootstrap(monkeypatch, parallel_pool, workers):
+    from wms.eval.predictor import RolloutFlags
+    import random
+
+    capture = {}
+
+    class Predictor:
+        flags = RolloutFlags()
+
+        def __init__(self):
+            self.model = SimpleNamespace(arm=None)
+
+        def predict_states(self, record, controllers, horizon, seed):
+            assert seed == self.flags.lane_seed and horizon == 120
+            assert "last" not in capture
+            draw = random.random() + np.random.random() + torch.rand(()).item()
+            speed = draw + list(O.ARMS).index(self.model.arm)
+            capture["last"] = {"positions": torch.full((1, 240, 1), float(record["seed"] % 10)),
+                               "speeds": torch.full((1, 240, 1), speed),
+                               "lanes": torch.ones(1, 240, 1),
+                               "masks": torch.ones(1, 240, 1, dtype=torch.bool)}
+
+    monkeypatch.setattr(O, "set_arm", lambda m, arm: setattr(m, "arm", arm))
+    records = [state(i) for i in range(5)]
+    p = Predictor()
+    serial = O.run_rollouts(p, capture, records)
+    events = []
+    parallel = O.run_rollouts(p, capture, records, workers=workers, progress=events.append)
+    assert O.json_safe(parallel) == O.json_safe(serial)
+    assert len(events) == 30 and events[-1]["completed"] == events[-1]["total"] == 30
+    assert all(e["phase"] == "rollout" and "metrics" in e and not set(O.ARMS) & e.keys() for e in events)
+    assert parallel["state_cluster_run_mean"]["emergency_minus_off"]["merge_zone_mean_speed_mps"]["mean"] == pytest.approx(1)
+    assert O._FORK == {}
+
+
+def test_onestep_restores_wrappers_and_globals_on_failure(monkeypatch):
+    from tools.r10b_checks import run_onestep as producer
+
+    def forward():
+        return None
+
+    model = SimpleNamespace(forward=forward)
+    before = producer.G.copy()
+    monkeypatch.setattr(O, "set_arm", lambda *a: None)
+    monkeypatch.setattr(O, "seed_all", lambda *a: None)
+
+    def fail(job):
+        del model.forward
+        raise RuntimeError("inference failed")
+
+    monkeypatch.setattr(producer, "one_window", fail)
+    context = dict(predictor=SimpleNamespace(model=model), sets=[], cfg=None, settings=None)
+    with pytest.raises(RuntimeError, match="inference failed"):
+        list(O._execute(O._onestep_job, [(0, "off", (0, 0, "w"))], context, 1))
+    assert model.forward is forward and producer.G == before and O._FORK == {}
+
+
+def test_compressed_npz_roundtrip_and_disk_budget_before_write(workspace, monkeypatch):
+    packed = {arm: np.arange(24, dtype=np.float32).reshape(8, 3) for arm in O.ARMS}
+    total = O.save_onestep(workspace, packed, ["a", "b", "c"])
+    assert total == sum(p.stat().st_size for p in workspace.glob("*.npz")) < O.MAX_NPZ_BYTES
+    for arm in O.ARMS:
+        with np.load(workspace / f"onestep_{arm}.npz", allow_pickle=False) as data:
+            np.testing.assert_array_equal(data["rows"], packed[arm])
+            assert list(data["cols"]) == ["a", "b", "c"]
+    out = workspace / "too_small"
+    out.mkdir()
+    monkeypatch.setattr(O, "MAX_NPZ_BYTES", 1)
+    with pytest.raises(ValueError, match="disk budget"):
+        O.save_onestep(out, packed, ["a", "b", "c"])
+    assert list(out.iterdir()) == []
+    # The budget is combined across arms, rather than a per-file ceiling.
+    monkeypatch.setattr(O, "MAX_NPZ_BYTES", (workspace / "onestep_off.npz").stat().st_size * 2 - 1)
+    with pytest.raises(ValueError, match="disk budget"):
+        O.save_onestep(out, packed, ["a", "b", "c"])
+    assert [p.name for p in out.iterdir()] == ["onestep_off.npz"]
+
+
+def test_provenance_verifies_pinned_model_and_fingerprints_tooling(monkeypatch):
+    provenance = O.source_provenance()
+    assert provenance["model_src_pin_verified"]
+    assert provenance["model_src_git_tree"] == O.MODEL_SRC_TREE
+    assert provenance["tooling_overlay_sha256"]["tools/r13e_checks/offline.py"] == O.file_digest(Path(O.__file__))
+    # A mismatch must be fatal even if checkpoint bytes still match.
+    monkeypatch.setattr(O, "MODEL_SRC_TREE", "0" * 40)
+    with pytest.raises(ValueError, match="model sources differ from pinned"):
+        O.source_provenance()
+
+
+@pytest.mark.parametrize("interrupt", [False, True])
+def test_main_persists_flushed_progress_and_npz_before_rollouts(checkpoint, monkeypatch, interrupt):
+    from wms.config import load
+
+    path, _ = checkpoint
+    workspace = path.parent
+    out = workspace / "out"
+    config = workspace / "config.toml"
+    config.write_text("", encoding="utf-8")
+    records = [state(i) for i in range(48)]
+    write_json(workspace / "states.json", records)
+    write_json(workspace / O.MANIFEST, {})
+    monkeypatch.setattr(O, "cpu_limits", lambda: None)
+    monkeypatch.setattr(load, "load_train_config", lambda *a: "cfg")
+    monkeypatch.setattr(O, "source_provenance", lambda: {"model_revision": O.MODEL_REVISION})
+    monkeypatch.setattr(O, "train_manifests", lambda *a: ([], {r["world"]: "train" for r in records}))
+    monkeypatch.setattr(O, "train_datasets", lambda *a: "sets")
+
+    def jobs(sets, panel):
+        assert sets == "sets" and panel == records
+        return [(0, 0, "panel_window")]
+
+    monkeypatch.setattr(O, "onestep_jobs", jobs)
+
+    def journal():
+        return [json.loads(line) for line in (out / "progress.jsonl").read_text().splitlines()]
+
+    def one_step(predictor, cfg, sets, *, workers, records, progress):
+        assert workers == 1 and cfg == "cfg" and sets == "sets" and len(records) == 48
+        progress({"phase": "one_step", "state": 0, "arm": "off", "rows": 1})
+        assert [e["phase"] for e in journal()] == ["start", "one_step"]  # still open; flush required
+        return {arm: np.zeros((1, 1), np.float32) for arm in O.ARMS}, ["win"], ["panel_window"]
+
+    def rollouts(predictor, capture, selected, *, workers, progress):
+        assert workers == 1 and selected == records
+        assert len(list(out.glob("*.npz"))) == 3
+        progress({"phase": "rollout", "state": 0, "replicate": 0, "arm": "off", "metrics": {"n": 240}})
+        assert journal()[-1]["metrics"] == {"n": 240}
+        if interrupt:
+            raise RuntimeError("interrupted")
+        return {"test": "rollouts"}
+
+    monkeypatch.setattr(O, "run_onestep", one_step)
+    monkeypatch.setattr(O, "analyze_onestep", lambda *a: {"test": "one_step"})
+    monkeypatch.setattr(O, "run_rollouts", rollouts)
+    args = ["--checkpoint", str(path), "--train-root", str(workspace), "--states", str(workspace / "states.json"),
+            "--out", str(out), "--config", str(config), "--one-step-panel"]
+    if interrupt:
+        with pytest.raises(RuntimeError, match="interrupted"):
+            O.main(args)
+        assert not (out / "report.json").exists()
+    else:
+        assert O.main(args) == 0
+        report = json.loads((out / "report.json").read_text())
+        assert report["one_step_panel"] and report["workers"] == 1 and report["strict_exact_weights"]
+        assert report["one_step_windows"] == ["panel_window"]
+        assert report["npz_bytes"] < O.MAX_NPZ_BYTES and report["provenance"]["model_revision"] == O.MODEL_REVISION
+    assert journal()[-1]["phase"] == "rollout" and len(list(out.glob("*.npz"))) == 3

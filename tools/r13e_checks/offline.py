@@ -5,9 +5,10 @@ Example (all paths must be inside this workspace)::
     python tools/r13e_checks/offline.py --checkpoint runs/example/wm_s.pt \
         --train-root data_ops/train --states _out/train_states.json.gz --out _out/r13e
 
-Writes report.json and the BASE producer's one-step NPZ tables. No training, SUMO,
-checkpoint rewriting, or result substitution. Runs serially (one CPU worker/thread);
-on Linux the process must successfully set nice=19. Missing assets are fatal.
+Writes report.json, a flushed progress.jsonl, and compressed one-step NPZ tables.
+No training, SUMO, checkpoint rewriting, or result substitution. Uses 1..4 CPU
+workers, one thread each, nice=19 on Linux. Parallel execution requires Linux fork.
+--one-step-panel explicitly uses the supplied states instead of one window per episode.
 """
 from __future__ import annotations
 
@@ -15,15 +16,19 @@ import argparse
 import dataclasses
 import gzip
 import hashlib
+import io
 import json
+import multiprocessing
 import os
 from pathlib import Path
 import re
 import sys
+import time
 
 # Set these before importing numpy/torch, including in direct CLI invocation.
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
-for _key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+for _key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+             "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "BLIS_NUM_THREADS"):
     os.environ[_key] = "1"
 
 import numpy as np  # noqa: E402
@@ -48,6 +53,10 @@ POST_S, STUCK_S, STUCK_SPEED = 6.0, 60.0, 1.0
 MERGE_END_M, DELAY_END_M, V_REF = 75.44, 500.0, 31.29
 BOOT, RNG_SEED = 1000, 130013
 MANIFEST = "C4_EPISODES_MANIFEST.json"
+MODEL_REVISION = "8c7ff0a19cfae59a50eebcd3146f7bcce51c5b37"
+MODEL_SRC_TREE = "04f5160ee221475ea48b14fb710161f7f0bcd199"
+MAX_NPZ_BYTES = 64 * 1024**2  # combined compressed tables; no raw rollout tensors on disk
+_FORK = {}  # parent-loaded closures/model/datasets inherited by fork, never sent through a queue
 DEFINITIONS = {
     "bias": "predicted final acceleration minus recorded next-row acceleration, m/s^2",
     "classes": "BASE row_classes: lane-1 HDV transitions; braking rec<-1; free road 5<v<20 "
@@ -87,6 +96,10 @@ DEFINITIONS = {
              "in all lanes with s<500. Regions: upstream s<0, merge 0<=s<75.44, downstream "
              "75.44<=s<500. Report each region, total and exposure veh-s; invalid rows excluded "
              "and counted separately. This is not travel-time delay, and model exits end exposure",
+    "merge_zone": "valid present post-step HDVs only, lanes 0 or 1, 0<=s<75.44 m; t0 excluded. "
+                  "merge_zone_mean_hdv_count is vehicle-rows divided by all post-step frames "
+                  "(empty frames count as zero). merge_zone_mean_speed_mps is the row-weighted "
+                  "mean speed over those HDV rows (null if empty); invalid rows and CAVs excluded",
     "pairing": "all three pairwise contrasts, later arm minus earlier; identical state/window "
                "and Python/numpy/torch/lane seeds; each snapshot has two distinct deterministic seeds",
 }
@@ -266,6 +279,8 @@ def cpu_limits():
             raise RuntimeError("R13E requires Linux nice=19")
     import torch
     torch.set_num_threads(1)
+    if torch.get_num_interop_threads() != 1:
+        torch.set_num_interop_threads(1)
 
 
 def file_digest(path):
@@ -368,42 +383,133 @@ def train_datasets(cfg, docs):
     return sets
 
 
-def run_onestep(predictor, cfg, sets):
+def onestep_jobs(sets, records=None):
+    """Default sampling is unchanged; an explicit panel matches real episode times."""
+    from wms.eval.normalize import initial_frame
+
+    jobs = []
+    candidates = []
+    for si, ds in enumerate(sets):
+        by_episode = {}
+        times = {}
+        for index, (episode, tick) in enumerate(ds.positions):
+            by_episode.setdefault(episode, []).append(index)
+            if records is not None:
+                entry = ds._loader.entries[episode]
+                if episode not in times:
+                    times[episode] = ds._loader.episode(episode).array("time_s")
+                candidates.append((entry, float(times[episode][tick]), si, index))
+        if records is None:
+            rng = np.random.default_rng(RNG_SEED + si)
+            for episode, indices in sorted(by_episode.items()):
+                index = int(rng.choice(indices))
+                jobs.append((si, index, f"{si}:{ds._loader.entries[episode]['episode']}:{index}"))
+    if records is not None:
+        used = set()
+        for record in records:
+            world = record.get("world", (record.get("meta") or {}).get("world"))
+            t0 = initial_frame(record)["time_s"]
+            matches = [(entry, si, index) for entry, ts, si, index in candidates
+                       if entry["world"] == world and np.isclose(ts, t0, atol=1e-6, rtol=0)]
+            # A world can have multiple collected branches. Use supplied episode/arm
+            # identity when present, never pick an arbitrary branch or nearest time.
+            for key in ("episode", "arm"):
+                value = record.get(key, (record.get("meta") or {}).get(key))
+                if value is not None:
+                    matches = [m for m in matches if m[0].get(key) == value]
+            if len(matches) != 1:
+                raise ValueError(f"one-step panel needs exactly one TRAIN window for {world}@{t0}: "
+                                 f"found {len(matches)}")
+            entry, si, index = matches[0]
+            if (si, index) in used:
+                raise ValueError("duplicate one-step panel window")
+            used.add((si, index))
+            jobs.append((si, index, f"{si}:{entry['episode']}:{index}"))
+    if not jobs:
+        raise ValueError("no TRAIN one-step windows")
+    return jobs
+
+
+def validate_workers(workers):
+    if isinstance(workers, bool) or not isinstance(workers, int) or not 1 <= workers <= 4:
+        raise ValueError("workers must be an integer in 1..4")
+    if workers > 1 and not sys.platform.startswith("linux"):
+        raise ValueError("parallel R13E requires Linux fork")
+
+
+def _execute(function, jobs, context, workers):
+    """Only small job descriptors/results are pickled; the parent does no Pool work."""
+    validate_workers(workers)
+    previous = _FORK.copy()
+    try:
+        _FORK.clear()
+        _FORK.update(context)
+        if workers == 1:
+            for job in jobs:
+                yield function(job)
+        else:
+            with multiprocessing.get_context("fork").Pool(
+                    processes=workers, initializer=cpu_limits) as pool:
+                yield from pool.imap_unordered(function, jobs, chunksize=1)
+    finally:
+        _FORK.clear()
+        _FORK.update(previous)
+
+
+def _completed(progress, **event):
+    print("R13E " + json.dumps(json_safe(event), allow_nan=False), flush=True)
+    if progress is not None:
+        progress(event)
+
+
+def _onestep_job(task):
+    from tools.r10b_checks import run_onestep as producer
+
+    win, arm, job = task
+    model = _FORK["predictor"].model
+    old = producer.G.copy()
+    forward = model.__dict__.get("forward")
+    had_forward = "forward" in model.__dict__
+    try:
+        producer.G.clear()
+        producer.G.update(sets=_FORK["sets"], n_steps=int(HORIZON_S / DT_S),
+                          replay_present="filled", base_cols=True)
+        set_arm(model, arm)
+        seed_all(RNG_SEED + win)
+        producer.G["arms"] = {arm: (_FORK["cfg"], _FORK["settings"], model, {"strict": True})}
+        _, result = producer.one_window(job)
+        arr = result[arm][0]
+        arr[:, producer.COLS.index("win")] = win
+        if state_digest(model.state_dict()) != _FORK["weights"]:
+            raise ValueError("model weights changed during one-step inference")
+        return win, arm, arr
+    finally:
+        # BASE deletes its temporary model.forward. Restore any incoming monkey
+        # wrapper as well, including on exceptions and between fork worker jobs.
+        if had_forward:
+            model.forward = forward
+        else:
+            model.__dict__.pop("forward", None)
+        producer.G.clear()
+        producer.G.update(old)
+
+
+def run_onestep(predictor, cfg, sets, *, workers=1, records=None, progress=None):
     """Use the BASE producer verbatim, supplying an already strictly loaded model."""
     from tools.r10b_checks import run_onestep as producer
     from wms.config.train import TrainConfig
     from wms.train.settings import TrainSettings
 
-    model = predictor.model
     settings = TrainSettings.from_config(TrainConfig.from_legacy_flat(predictor.backend.config))
-    jobs = []
-    for si, ds in enumerate(sets):
-        by_episode = {}
-        for index, (episode, _tick) in enumerate(ds.positions):
-            by_episode.setdefault(episode, []).append(index)
-        rng = np.random.default_rng(RNG_SEED + si)
-        for episode, indices in sorted(by_episode.items()):
-            index = int(rng.choice(indices))
-            jobs.append((si, index, f"{si}:{ds._loader.entries[episode]['episode']}:{index}"))
-    if not jobs:
-        raise ValueError("no TRAIN one-step windows")
-    rows = {arm: [] for arm in ARMS}
-    old = producer.G.copy()
-    try:
-        producer.G.clear()
-        producer.G.update(sets=sets, n_steps=int(HORIZON_S / DT_S), replay_present="filled", base_cols=True)
-        for win, job in enumerate(jobs):
-            for arm in ARMS:
-                set_arm(model, arm)
-                seed_all(RNG_SEED + win)
-                producer.G["arms"] = {arm: (cfg, settings, model, {"strict": True})}
-                _, result = producer.one_window(job)
-                arr = result[arm][0]
-                arr[:, producer.COLS.index("win")] = win
-                rows[arm].append(arr)
-    finally:
-        producer.G.clear()
-        producer.G.update(old)
+    jobs = onestep_jobs(sets, records)
+    tasks = [(win, arm, job) for win, job in enumerate(jobs) for arm in ARMS]
+    rows = {arm: [None] * len(jobs) for arm in ARMS}
+    context = dict(predictor=predictor, cfg=cfg, settings=settings, sets=sets,
+                   weights=state_digest(predictor.model.state_dict()))
+    for completed, (win, arm, arr) in enumerate(_execute(_onestep_job, tasks, context, workers), 1):
+        rows[arm][win] = arr
+        _completed(progress, phase="one_step", completed=completed, total=len(tasks),
+                   state=win, window=jobs[win][2], arm=arm, rows=len(arr))
     cols = producer.COLS + producer.BASE_COLS
     packed = {arm: np.concatenate(values) for arm, values in rows.items()}
     # Geometry, supervision, and clustering must be identical across interventions.
@@ -511,6 +617,12 @@ def rollout_metrics(pos, speed, lane, present, is_cav, lengths):
                "overlap_pair_steps": overlaps, "invalid_hdv_rows": int(invalid.sum()),
                "bad_acceleration_rows": int(bad_acc.sum()), "blowup": bool(invalid.any() or bad_acc.any())}
     valid_hdv = rows & ~invalid
+    merge_zone = (valid_hdv & np.isin(lane[1:], (0, 1))
+                  & (pos[1:] >= 0) & (pos[1:] < MERGE_END_M))
+    metrics.update(merge_zone_hdv_rows=int(merge_zone.sum()),
+                   merge_zone_mean_hdv_count=float(merge_zone.sum() / len(merge_zone)),
+                   merge_zone_mean_speed_mps=float(speed[1:][merge_zone].mean())
+                   if merge_zone.any() else float("nan"))
     zone = valid_hdv & (lane[1:] == 2) & (pos[1:] >= 0) & (pos[1:] <= MERGE_END_M)
     wait = np.zeros(pos.shape[1])
     stuck_rows, max_wait = 0, 0.0
@@ -578,35 +690,55 @@ def insertion_metrics(pos, lane, present, hdv, finite_acc, acceleration):
     return result
 
 
-def run_rollouts(predictor, capture, records):
+def _rollout_job(task):
     from wms.eval.rollout_inputs import t0_vehicles
 
-    result = []
-    for index, record in enumerate(records):
-        t0, ids, kin, cav = t0_vehicles(record)
-        for replicate in range(N_SEEDS):
-            seed = RNG_SEED + N_SEEDS * index + replicate
-            pair = {"state": index, "key": record.get("key"), "world": record.get("world"),
-                    "t0_s": t0, "replicate": replicate, "seed": seed, "vehicles": len(ids)}
-            for arm in ARMS:
-                set_arm(predictor.model, arm)
-                seed_all(seed)
-                predictor.flags = dataclasses.replace(predictor.flags, lane_seed=seed)
-                capture.pop("last", None)
-                predictor.predict_states(record, {**record.get("cav_controllers", {}),
-                                          "arm": str(record.get("arm", "native"))}, HORIZON_S, seed)
-                raw = capture["last"]
-                arrays = []
-                for name, initial in (("positions", kin[:, 0]), ("speeds", kin[:, 4]),
-                                      ("lanes", kin[:, 1:4].argmax(-1)), ("masks", np.ones(len(ids), bool))):
-                    arr = raw[name].detach().cpu().numpy()
-                    if arr.shape != (1, int(HORIZON_S / DT_S), len(ids)):
-                        raise ValueError(f"unexpected captured {name} shape {arr.shape}")
-                    arrays.append(np.concatenate((initial[None], arr[0]), axis=0))
-                pair[arm] = rollout_metrics(*arrays, cav, kin[:, 6])
-            result.append(pair)
-    if not result:
+    index, replicate, arm = task
+    predictor, capture = _FORK["predictor"], _FORK["capture"]
+    record = _FORK["records"][index]
+    t0, ids, kin, cav = t0_vehicles(record)
+    seed = RNG_SEED + N_SEEDS * index + replicate
+    pair = {"state": index, "key": record.get("key"), "world": record.get("world"),
+            "t0_s": t0, "replicate": replicate, "seed": seed, "vehicles": len(ids)}
+    set_arm(predictor.model, arm)
+    seed_all(seed)
+    predictor.flags = dataclasses.replace(predictor.flags, lane_seed=seed)
+    capture.pop("last", None)
+    predictor.predict_states(record, {**record.get("cav_controllers", {}),
+                              "arm": str(record.get("arm", "native"))}, HORIZON_S, seed)
+    raw = capture["last"]
+    arrays = []
+    for name, initial in (("positions", kin[:, 0]), ("speeds", kin[:, 4]),
+                          ("lanes", kin[:, 1:4].argmax(-1)), ("masks", np.ones(len(ids), bool))):
+        arr = raw[name].detach().cpu().numpy()
+        if arr.shape != (1, int(HORIZON_S / DT_S), len(ids)):
+            raise ValueError(f"unexpected captured {name} shape {arr.shape}")
+        arrays.append(np.concatenate((initial[None], arr[0]), axis=0))
+    metrics = rollout_metrics(*arrays, cav, kin[:, 6])
+    if _FORK["weights"] is not None and state_digest(predictor.model.state_dict()) != _FORK["weights"]:
+        raise ValueError("model weights changed during rollout inference")
+    return pair, arm, metrics
+
+
+def run_rollouts(predictor, capture, records, *, workers=1, progress=None):
+    if not records:
         raise ValueError("no TRAIN rollout states")
+    tasks = [(index, replicate, arm) for index in range(len(records))
+             for replicate in range(N_SEEDS) for arm in ARMS]
+    result = [None] * (len(records) * N_SEEDS)
+    context = dict(predictor=predictor, capture=capture, records=records,
+                   weights=state_digest(predictor.model.state_dict())
+                   if hasattr(predictor.model, "state_dict") else None)
+    for completed, (pair, arm, metrics) in enumerate(_execute(_rollout_job, tasks, context, workers), 1):
+        slot = pair["state"] * N_SEEDS + pair["replicate"]
+        if result[slot] is None:
+            result[slot] = pair.copy()
+        result[slot][arm] = metrics
+        _completed(progress, phase="rollout", completed=completed, total=len(tasks),
+                   **pair, arm=arm, metrics=metrics)
+    # Restore the original state/replicate/arm ordering before *any* resampling.
+    result = [{**{k: v for k, v in r.items() if k not in ARMS},
+               **{arm: r[arm] for arm in ARMS}} for r in result]
     summary = {}
     groups = np.array([r["state"] for r in result])
     for arm in (*ARMS, *CONTRASTS):
@@ -650,11 +782,73 @@ def build_parser():
     parser.add_argument("--states", required=True)
     parser.add_argument("--out", required=True, help="new output directory")
     parser.add_argument("--config", default="c4_wm_v10round12c.toml")
+    parser.add_argument("--workers", type=int, choices=range(1, 5), default=1,
+                        help="CPU workers (1..4, default 1); >1 requires Linux fork")
+    parser.add_argument("--one-step-panel", action="store_true",
+                        help="use the supplied TRAIN states' world/t0 windows for one-step replay")
     return parser
+
+
+def source_provenance():
+    """Verify the pinned src Git tree without requiring .git in a deployed archive.
+
+    Source text is LF-canonicalized so the same archive and a Windows checkout
+    have the same Git tree. Only Python bytecode/cache directories are ignored.
+    Tooling overlays are fingerprinted separately and may differ from the pin.
+    """
+    def git_hash(kind, data):
+        return hashlib.sha1(kind + b" " + str(len(data)).encode() + b"\0" + data).digest()
+
+    def tree(directory):
+        entries = []
+        for path in directory.iterdir():
+            if path.name == "__pycache__" or path.suffix in (".pyc", ".pyo"):
+                continue
+            path = checked_path(path)
+            if path.is_dir():
+                digest = tree(path)
+                if digest is None:
+                    continue
+                mode, sort_name = b"40000", path.name + "/"
+            else:
+                data = path.read_bytes()
+                if path.suffix in (".py", ".json"):
+                    data = data.replace(b"\r\n", b"\n")
+                digest = git_hash(b"blob", data)
+                mode, sort_name = b"100644", path.name
+            entries.append((sort_name.encode(), mode + b" " + path.name.encode() + b"\0" + digest))
+        return git_hash(b"tree", b"".join(row for _, row in sorted(entries))) if entries else None
+
+    actual = tree(checked_path(ROOT / "src"))
+    actual = actual.hex() if actual is not None else None
+    if actual != MODEL_SRC_TREE:
+        raise ValueError(f"model sources differ from pinned {MODEL_REVISION}: src tree {actual}")
+    tooling = [Path(__file__), ROOT / "tools/wm_eval_common.py",
+               ROOT / "tools/r10_attribution.py", ROOT / "tools/r10b_courtesy_offline.py",
+               ROOT / "tools/r10b_checks/run_onestep.py", ROOT / "tools/r12_checks/base_calibration.py",
+               ROOT / "tools/r10b_checks/analyze.py"]
+    return {"model_revision": MODEL_REVISION, "model_src_git_tree": actual,
+            "model_src_pin_verified": True, "source_newlines": "LF-canonicalized",
+            "tooling_overlay_sha256": {p.relative_to(ROOT).as_posix(): file_digest(p) for p in tooling}}
+
+
+def save_onestep(out, packed, cols):
+    """Bound disk use before writing each compressed table (no uncompressed temp)."""
+    total = 0
+    for arm, rows in packed.items():
+        with io.BytesIO() as buffer:
+            np.savez_compressed(buffer, rows=rows, cols=np.array(cols))
+            size = buffer.tell()
+            if total + size > MAX_NPZ_BYTES:
+                raise ValueError("compressed one-step tables exceed the 64 MiB disk budget")
+            (out / f"onestep_{arm}.npz").write_bytes(buffer.getbuffer())
+            total += size
+    return total
 
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
+    validate_workers(args.workers)
     # Validate every supplied spelling before reading even the first input.
     for path in (args.checkpoint, *args.train_root, args.states, args.out, args.config):
         guard_text(path)
@@ -672,20 +866,40 @@ def main(argv=None):
     from wms.config.load import load_train_config
 
     cfg = load_train_config(config, ["runtime.device=cpu"])
+    provenance = source_provenance()
     docs, worlds = train_manifests(roots)
     records = load_train_states(states, worlds)
     before = file_digest(checkpoint)
     predictor, capture, weights = load_exact_predictor(checkpoint)
     physics = dataclasses.asdict(predictor.model.physics)
     set_arm(predictor.model, "off")  # fail early if main-agent physics is absent
-    packed, cols, windows = run_onestep(predictor, cfg, train_datasets(cfg, docs))
-    one_step = analyze_onestep(packed, cols)
-    rolls = run_rollouts(predictor, capture, records)
+    sets = train_datasets(cfg, docs)
+    panel = records if args.one_step_panel else None
+    onestep_jobs(sets, panel)  # fail before creating output if panel cannot be matched
+    out.mkdir(parents=True)
+    started = time.monotonic()
+    with (out / "progress.jsonl").open("x", encoding="utf-8") as journal:
+        def progress(event):
+            journal.write(json.dumps(json_safe({"elapsed_s": time.monotonic() - started, **event}),
+                                     allow_nan=False) + "\n")
+            journal.flush()
+
+        progress({"phase": "start", "workers": args.workers, "provenance": provenance,
+                  "checkpoint_sha256": before, "state_dict_sha256": weights,
+                  "states_sha256": file_digest(states), "one_step_panel": args.one_step_panel})
+        packed, cols, windows = run_onestep(predictor, cfg, sets, workers=args.workers,
+                                          records=panel, progress=progress)
+        npz_bytes = save_onestep(out, packed, cols)
+        one_step = analyze_onestep(packed, cols)
+        del packed
+        rolls = run_rollouts(predictor, capture, records, workers=args.workers, progress=progress)
     if state_digest(predictor.model.state_dict()) != weights or file_digest(checkpoint) != before:
         raise ValueError("checkpoint/model weights changed during inference")
     report = {"status": "complete", "checkpoint": str(checkpoint), "checkpoint_sha256": before,
               "state_dict_sha256": weights, "strict_exact_weights": True,
-              "device": "cpu", "workers": 1, "threads": 1,
+              "device": "cpu", "workers": args.workers, "threads": 1,
+              "multiprocessing_start_method": "fork" if args.workers > 1 else None,
+              "provenance": provenance, "one_step_panel": args.one_step_panel, "npz_bytes": npz_bytes,
               "linux_nice": 19 if sys.platform.startswith("linux") else None,
               "config": str(config), "train_roots": [str(p) for p in roots],
               "train_manifest_sha256": [file_digest(p / MANIFEST) for p in roots],
@@ -695,9 +909,6 @@ def main(argv=None):
                "base_physics": physics, "override_only": ["emergency_braking", "secure_gap_veto"],
                "definitions": DEFINITIONS,
               "one_step_windows": windows, "one_step": one_step, "rollouts": rolls}
-    out.mkdir(parents=True)
-    for arm, rows in packed.items():
-        np.savez_compressed(out / f"onestep_{arm}.npz", rows=rows, cols=np.array(cols))
     (out / "report.json").write_text(json.dumps(json_safe(report), indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(f"R13E complete: {out / 'report.json'}")
     return 0

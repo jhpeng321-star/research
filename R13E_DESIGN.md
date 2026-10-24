@@ -2,12 +2,13 @@
 
 ## Status and provenance
 
-Engineering implementation complete; **empirical acceptance and deployment are blocked**.
+Engineering implementation complete; **offline measurement is complete; deployment still requires the reviewed fixes**.
 Merged `c4/v10r13c` tip `eb75010c6a2a7ef66eebc3282e03f50e37d4b202` into
-`c4/v10r13e`. No training, GPU operation, remote command, or process signaling was performed.
-The final workspace-only execution policy prevents accessing the earlier external
-GAPACC/harness/checkpoint references or appending external registration. No deadline
-or operational readiness claim substitutes for those missing checks.
+`c4/v10r13e`. The subsequent owner-authorized CPU study on gpuR is recorded in
+**R13E_OFFLINE.md** with committed JSON evidence and the appended external preregistration.
+No training or GPU operation was launched. The pinned gs is NOT GAPACC-equivalent
+(120/256 same-event decisions differ); BASE-1 rejects all three arms on the strict
+train-role panel. The mechanism descriptions below document the pinned implementation.
 
 ## Mechanisms and constants
 
@@ -43,25 +44,26 @@ ungated. The labeled rollout straight-through surrogate multiplies willingness b
 `sigmoid(log(gap/required)/tau)`, reusing the existing learned positive pivot scale;
 its FD certificate is for that continuous surrogate, not the hard veto.
 
-This is the documented internal SUMO-style secure-gap form. **Exact equivalence to
-the external GAPACC `gs` implementation is unverified** until that source is made
-available. No fixed driver types, forced merges, timers, gap padding, or mass floors
+This is the documented internal SUMO-style secure-gap form. **It is NOT equivalent to
+external GAPACC `gs`, which omits the learned s0 term** (see R13E_OFFLINE.md).
+No fixed driver types, forced merges, timers, gap padding, or mass floors
 were introduced. Offline diagnostic cutoffs below never enter model decisions.
 
 ## Offline study and verification
 
-Empirical arms: **off: unmeasured; emergency: unmeasured; emergency+gs: unmeasured**.
-All corresponding CIs are unavailable. The local preflight fails on missing
-`runs/c4_wm_v10_round12c/wm_s.pt`; no synthetic result is reported as S-R12C evidence.
+Empirical arms: **off / emergency / emergency+gs complete** on gpuR, with all three
+paired contrasts and 95% state-bootstrap CIs. The original historical panel is
+validation-role; a preregistered strict train-role 48-state replacement was used.
+The checkpoint remains unchanged. Tables, BASE verdicts and provenance are in R13E_OFFLINE.md.
 
 `tools/r13e_checks/offline.py` prepares 48 unique TRAIN states × 2 seeds × 120 s,
-three CRN arms, one CPU worker/thread, Linux nice19. It checks strict checkpoint
+three CRN arms, one to four one-thread CPU workers, Linux nice19. It checks strict checkpoint
 identity and TRAIN provenance, emits BASE one-step NPZ evidence, and computes
 1,000-draw paired 95% snapshot-cluster CIs with both seeds kept together. Metrics:
 overlap pair-steps, TTC<1.5 s, realized a<−3 rows, HDV-inserter/follower braking
 within six seconds after insertion, ramp waiting>60 s below 1 m/s, merges/run,
 speed-deficit delay by region, and blowups. Definitions/denominators are in the report.
-Formal empirical BASE verdicts remain pending along with the rollout study.
+Formal empirical BASE verdicts: all arms reject BASE-1 and pass BASE-2/3/5 on that panel.
 
 CPU verification: R13E suite 160 passed, plus the added baseline-integrity test;
 regressions 279 passed, two real-data tests skipped. The Windows WSL Bash lookup
