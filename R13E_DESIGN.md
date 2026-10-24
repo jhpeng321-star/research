@@ -176,3 +176,8 @@ triggered by the weight-0 telemetry `merge_pivot_on_diagnostic_nll = inf` (also 
 the passed 13C smoke). Keys containing `_on_diagnostic_` are now exempt; all optimized metrics/losses must
 still be finite. Re-verdict of the preserved failed-smoke artifacts with the fix: ok. Failed artifacts were moved
 to `r13e_superseded_d5ff39b1_gatefinite/` on gpuR and the run was re-registered (REGISTRATION.md addendum).
+
+Sanity final (all 12 states, both 13E arms; base arm 1,800 s timeouts on 4/12 states): exact-stop .085/.117
+(SUMO .006); discharge 16.4/16.6 (15.4); merges/min 120-300 s 4.6/6.1 (6.3); late merges 5.3/5.4 (6.7);
+overlap pair-s 95/99 (76); TTC<1.5 121/134 (15); follower post-insertion hard brake 1.4%/5.9% (0%); stuck .33/.17.
+E+gs+yieldG under-merges mid-horizon (gs starvation risk); E+yieldG matches merge rate with more hard braking.
