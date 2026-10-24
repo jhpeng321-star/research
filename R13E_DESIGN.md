@@ -146,3 +146,27 @@ Implementation:
   Fallback `c4_wm_v10round13e_fb{,_stage_b}.toml`: identical with `secure_gap_veto=false`
   (`--variant fb`, separate run/check/lock names). `scripts/round13e_gate.sh` refuses smoke/launch
   (exit 5) while `nvidia-smi` lists any compute process; `--wait` polls every 60 s; never signals.
+
+### Integration evidence (2026-10-25, code d5ff39b1; no training)
+
+- Tests (Windows, rl_driving, `--basetemp` in worktree): R13E/R13Y suites 236 passed, 4 Linux-only skipped;
+  regressions (r13c_contract, r12c_physics_only, r12_base, r12_checks, r13a, r13f, r10b) 90 passed,
+  2 skipped (R12_SLOW). Flags-off bit identity vs the actual 13C tip passes. gpuR smoke pytest: 240 passed.
+- gs equivalence: synthetic 4,096/4,096 + 25/25 valid edge cases identical (fp32/fp64); recorded insertions of
+  the first 12 TRAIN-panel states: 66 events, 0 decision differences (gpuR `diag_emerg/gs_events_small_d5ff39b1.json`).
+- 300 s inference sanity (S-R12C checkpoint, gpuR CPU, 4 workers, nice 19; first 12 R13E TRAIN-panel states,
+  1 seed, entries queue; `diag_r13e_sanity/run300`): 11 states complete for both 13E arms (mean [state CI]):
+
+| metric | SUMO | E+gs+yieldG | E+yieldG |
+|---|---|---|---|
+| lane-1 exact-stop share 120-300 s | .006 | .082 [.043,.129] | .125 [.069,.184] |
+| lane-1 discharge veh/min 120-300 s | 15.1 | 15.7 | 15.9 |
+| ramp merges 240-300 s (late) | 6.7 | 4.5 | 4.5 |
+| ramp merges/min 120-300 s | 6.2 | 4.6 | 6.2 |
+| overlap pair-s | 74 | 101 | 105 |
+| TTC<1.5 pair-s | 14 | 123 | 137 |
+| HDV post-insertion follower hard brake % | 0.0 | 1.5 | 6.0 |
+| ramp stuck roster cars | 0 | .36 | .18 |
+
+  Flags-off base on the 7 states where it finished (3 base arms hit the 1,800 s timeout): overlap 2,624 pair-s,
+  exact-stop .099, hard-brake 4.9%. No column freeze (COMBO300 Egsy stop share .76) with the pass rule.
