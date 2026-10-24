@@ -218,7 +218,16 @@ def check_checkpoints(smoke_dir: Path, rows: list[dict], init_checkpoint: Path, 
             raise ValueError(f"{name}: checkpoint history does not match smoke log")
         if set(saved) - set(NEW_KEYS) != set(before) or not set(NEW_KEYS) <= set(saved) or set(before) & set(NEW_KEYS):
             raise ValueError(f"{name}: tensor set differs from init + {list(NEW_KEYS)}")
-        changed = [key for key in before if not torch.equal(saved[key], before[key])]
+        # The round-12 init transform residual_accel_reinit zeroes row 0 of the two residual accel
+        # read-out tensors after loading the round-9 checkpoint; frozen comparison uses the
+        # transformed expectation (row 0 exactly 0 is asserted separately below).
+        expected = dict(before)
+        for suffix in ("weight", "bias"):
+            key = f"{ACCEL_HEAD}.{suffix}"
+            transformed = before[key].clone()
+            transformed[0] = 0.0
+            expected[key] = transformed
+        changed = [key for key in before if not torch.equal(saved[key], expected[key])]
         bad = [key for key in changed if key.startswith(frozen) or key.startswith("merge_pivot")]
         if bad:
             raise ValueError(f"{name}: tensors that must stay frozen changed: {sorted(bad)[:5]}")
