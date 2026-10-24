@@ -2087,6 +2087,19 @@ class WmSModel(nn.Module):
             callback_state = {**state, "physics_step_index": k_steps}
             if self.merge_pivot is not None:
                 callback_state["merge_pivot_native_accel"] = out["accel_mps2"]
+            # The controller's consequence guard needs learned settings even when
+            # the WM's own optional 13E veto is off. Never infer from driver labels.
+            if driver_params is not None:
+                inferred = ({name: out["driver_parameters"][..., i]
+                             for i, name in enumerate(PARAMETER_NAMES)}
+                            if "driver_parameters" in out else {})
+                inferred.update(driver_params)
+                if all(name in inferred for name in PARAMETER_NAMES):
+                    callback_state["inferred_driver_parameters"] = torch.stack(
+                        [inferred[name] for name in PARAMETER_NAMES], -1)
+            elif "driver_parameters" in out:
+                callback_state["inferred_driver_parameters"] = out["driver_parameters"]
+            callback_state["inferred_idm_delta"] = self.physics.idm()[4]
             if self.physics.secure_gap_veto:
                 settings = driver_params
                 if settings is None:

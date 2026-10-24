@@ -143,9 +143,8 @@ def main(argv=None):
         lane_section = dict(raw["lanes"])
         enabled = lane_section.pop("enabled", True)
         lane_rules = LaneRules.from_mapping(lane_section) if enabled else None
-        if (lane_rules is not None and not lane_rules.secure_gap_hook
-                and all(getattr(model.physics, "secure_gap_veto", False) for model in models)):
-            lane_rules = replace(lane_rules, secure_gap_hook="wms.control.lanes:secure_gap_gs")
+        # 13E's second tier is explicitly opt-in for policy CAVs, independently
+        # of the WM's native lane physics. CAVCUTIN uses inferred follower b.
         trainer = Policy14Trainer(models, policy, GroupSignal(RsuGroupEncoder()),
                                   ScaledTeamCritic(entry_backlog=True,
                                       value_scale=float(switches["critic_value_scale"])), train,
@@ -202,6 +201,7 @@ def main(argv=None):
                        ensemble_epistemic_available=len(models) > 1,
                        deployment_calibration_supported=False,
                        lane_mask_hook=lane_rules.secure_gap_hook if lane_rules else None,
+                       consequence_mask=lane_rules.consequence_mask if lane_rules else False,
                        synthetic_start_states=args.smoke)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as error:
         summary["error"] = f"{type(error).__name__}: {error}"

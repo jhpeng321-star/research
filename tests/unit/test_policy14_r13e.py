@@ -280,10 +280,15 @@ def test_callback_receives_inferred_settings_and_explicit_settings_take_preceden
         for key, name in (("secure_gap_T_s", "time_headway"),
                           ("secure_gap_b_mps2", "decel"), ("secure_gap_s0_m", "min_gap")):
             assert torch.equal(received[-1][key], expected[name])
+            assert torch.equal(received[-1]["inferred_driver_parameters"][..., PARAMETER_NAMES.index(name)],
+                               expected[name])
         assert not any(key.startswith("secure_gap_") for key in state)
     m.physics.secure_gap_veto = False
     native_step(m, state, cav_controller=controller)
     assert not any(key.startswith("secure_gap_") for key in received[-1])
+    assert received[-1]["inferred_idm_delta"] == m.physics.idm()[4]
+    for name, value in drivers().items():
+        assert torch.equal(received[-1]["inferred_driver_parameters"][..., PARAMETER_NAMES.index(name)], value)
 
 
 def test_emergency_envelope_gradcheck_and_bounded_infeasible_state():

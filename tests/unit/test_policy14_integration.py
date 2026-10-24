@@ -97,6 +97,38 @@ def test_bridge_masks_forced_merges_and_applies_native_cap_symmetrically(monkeyp
     assert torch.equal(seen[0], state["present"] & state["is_cav"])
 
 
+def test_launch_defaults_enable_available_guards_and_supplied_train_accel_box():
+    from wms.control.dreamer import DreamerConfig
+    from wms.control.lanes import LaneRules
+    from wms.control.train_cli import _read_config
+    config = _read_config("configs/c4_policy14.toml")
+    trainer = DreamerConfig(**config["trainer"])
+    rules = LaneRules.from_mapping({k: v for k, v in config["lanes"].items() if k != "enabled"})
+    assert rules.consequence_mask and rules.secure_gap_hook == ""
+    assert trainer.low_penetration_horizon_cap and trainer.wm_safety_report_only
+    assert config["policy"]["accel_max_mps2"] == config["counterfactual"]["native_accel_max_mps2"] == 1.2
+
+
+def test_consequence_mask_cannot_be_bypassed_by_forced_ramp_merge():
+    from wms.control.policy14 import controller_factory
+    from wms.control.lanes import LaneRules
+    from wms.control.policy import CavPolicy, RsuGroupEncoder
+    from wms.control.train_cli import GroupSignal
+    from wms.model.driver_encoder import PARAMETER_NAMES
+    state = probe_state()
+    state["s_m"][0, 2] = -10.
+    state["v_mps"][0, 2] = 15.
+    defaults = dict(v0=30., time_headway=1.2, min_gap=2., accel=1.2, decel=.8)
+    state["inferred_driver_parameters"] = torch.tensor(
+        [defaults.get(name, 1.) for name in PARAMETER_NAMES]).expand(1, 4, -1).clone()
+    state["inferred_idm_delta"] = 4
+    rules = LaneRules(consequence_mask=True, gap_base_m=0., gap_time_s=0., closing_time_s=0.,
+                      rear_gap_base_m=0., rear_gap_time_s=0., rear_closing_time_s=0.)
+    controller = controller_factory(CavPolicy(lane_head=True), GroupSignal(RsuGroupEncoder()),
+                                    lambda state, action, **kwargs: action, lane_rules=rules)
+    assert controller(state)[0, 0, 1].item() == 2
+
+
 def test_courtesy_repair_keeps_previous_acceleration_history_derivative():
     from wms.model.follower_courtesy import follower_courtesy_pairs
     from wms.physics.config import PhysicsConfig

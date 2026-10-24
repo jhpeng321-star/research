@@ -36,9 +36,14 @@ actor_gradient_audit = true
 checkpoint_every = 100
 validation_every = 100
 policy_lane_actions = true
+low_penetration_horizon_cap = true
+wm_safety_report_only = true
 
 [policy]
-accel_max_mps2 = 1.5
+# ROBUST TRAIN acceleration endpoints supplied in the engineering brief.
+# The shared actor/executor lower endpoint is -3.0 m/s^2. Empirical lane-rate
+# and hold-length limits still require the exact ROBUST TRAIN artifacts.
+accel_max_mps2 = 1.2
 lane_control = "learned"
 init_zero_accel = false
 
@@ -52,7 +57,9 @@ ttc_pairs = "cav_follower"
 
 [lanes]
 enabled = true
-# Empty hook preserves the existing mask; 13E can plug in module:function.
+# CAVCUTIN consequence tier is ON. The additional 13E tier stays opt-in for CAVs.
+consequence_mask = true
+# Empty hook disables the optional 13E tier; it can plug in module:function.
 # Explicit gs requires inferred per-slot T,b, NOT hidden driver truth.
 secure_gap_hook = ""
 
@@ -66,7 +73,7 @@ cover_group_members = false
 group_max_size = 3
 group_state_fraction = 0.0
 # Same nominal direct cap and execution projection for the native reference.
-native_accel_max_mps2 = 1.5
+native_accel_max_mps2 = 1.2
 curriculum_updates = [0]
 w_all = [1.0]
 w_individual = [0.0]

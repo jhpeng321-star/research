@@ -180,6 +180,9 @@ class DreamerConfig:
     # Extra autograd passes for weighted actor-loss components, plus pre-safety
     # acceleration saturation/entropy in m/s^2. False adds no diagnostic graph work.
     actor_gradient_audit: bool = False
+    # POLICY14 evidence guards; legacy trainers retain their original behaviour.
+    low_penetration_horizon_cap: bool = False
+    wm_safety_report_only: bool = False
 
     def __post_init__(self):
         if (isinstance(self.real_return_mix, bool)
@@ -235,7 +238,8 @@ class DreamerConfig:
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
                      "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
-                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions"):
+                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions",
+                     "low_penetration_horizon_cap", "wm_safety_report_only"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if self.entrance_zone_native and not (
@@ -723,6 +727,23 @@ class DreamerTrainer:
                         "lane_entropy_target": float(self.config.lane_entropy_target)})
         return out
 
+    def _imagination_config(self, batch):
+        """Cap low-support starts using observed present-CAV share, never metadata.
+
+        A mixed batch conservatively shares its shortest allowed horizon so every
+        ensemble/counterfactual row stays paired. Empty roads count as zero share;
+        imagined entries cannot retroactively extend the start-state horizon.
+        """
+        cfg = self.config
+        if cfg.low_penetration_horizon_cap:
+            present = batch.state["present"].bool()
+            cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
+            low = cav_count * 10 <= present.sum(-1)
+            if bool(low.any()):
+                max_steps = math.floor(60.0 / (STEPS_PER_CONTROL * PHYSICS_DT_S))
+                cfg = replace(cfg, horizon=min(cfg.horizon, max_steps))
+        return cfg
+
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
@@ -741,7 +762,7 @@ class DreamerTrainer:
         members and all counterfactual rows of that start.  ``future_seed`` fixes the draws
         (default: from the config seed and the update count).  Off: nothing changes.
         """
-        cfg = self.config
+        cfg = self._imagination_config(batch)
         forbidden = {"cav_teacher", "lane_teacher", "action_timeline", "present_seq", "is_cav_seq",
                      "junction_seq", "truncation_steps", "cav_controller"}
         if forbidden.intersection(batch.rollout_kwargs):
@@ -1096,6 +1117,7 @@ class DreamerTrainer:
             zone_base = zone_masks[..., :n_base, :]
             zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                "imagination_horizon_s": cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
                 **({"action_audit": {name: torch.stack([m[name] for m in member_action_audit])
                                      for name in member_action_audit[0]}}
                    if member_action_audit else {}),
@@ -1115,6 +1137,10 @@ class DreamerTrainer:
         value = float(mean_cost)
         if not math.isfinite(value):
             raise ValueError("nonfinite safety cost")
+        if self.config.wm_safety_report_only:
+            self._lagrange_pre_cap = self.lagrange_multiplier
+            self._lagrange_capped = False
+            return self.lagrange_multiplier
         budget = self.config.ttc_budget if budget is None else float(budget)
         current = self.lagrange_multiplier
         decay = float(getattr(self.config, "lagrange_decay", 0.0))
@@ -1143,6 +1169,9 @@ class DreamerTrainer:
         native-referenced starts (over the absolute ones only when no start has a base row)."""
         cfg = self.config
         if cfg.ttc_budget_mode == "absolute":
+            if cfg.wm_safety_report_only:
+                return mean_cost.detach().new_zeros(()), mean_cost.detach(), None, {
+                    "wm_safety_report_only": True, "ttc_penalty_report": float(mean_cost.detach())}
             return mean_cost, mean_cost.detach(), None, {}
         n_base = imagined["n_base"]
         per_row = imagined["costs"].mean((0, 1))                 # [N]
@@ -1164,6 +1193,9 @@ class DreamerTrainer:
         if bool(native.any()):
             extra["ttc_native_cost"] = float((reference[native] - float(cfg.ttc_native_margin)).mean())
             extra["ttc_policy_cost_native_starts"] = float(policy_cost.detach()[native].mean())
+        if cfg.wm_safety_report_only:
+            extra.update(wm_safety_report_only=True, ttc_penalty_report=float(penalty.detach()))
+            penalty = penalty.detach().new_zeros(())
         return penalty, dual_value, 0.0, extra
 
     def _return_scale(self, returns):
@@ -1347,7 +1379,7 @@ class DreamerTrainer:
     def _entry_slots(self, batch, generator=None):
         if not self.config.imagine_entries:
             return batch
-        horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+        horizon_s = self._imagination_config(batch).horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
         if self.config.entry_queue_state:
             return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator,
                                     queue_state=True)
@@ -1477,6 +1509,7 @@ class DreamerTrainer:
         if any(flag is not None for flag in flags):
             extra["group_rich_fraction"] = mean_or_none(float(bool(f)) for f in flags)
         metrics = {"update": self.update_count, "returns": float(returns.detach().mean()),
+                   "imagination_horizon_s": imagined["imagination_horizon_s"],
                    **({"credit_profile": imagined["credit_profile"]} if profile_due else {}),
                    "reward": float(imagined["rewards"][..., :n_base].detach().mean()),
                    **extra,

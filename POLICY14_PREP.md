@@ -47,10 +47,11 @@ hashes are recorded. Start-data configuration is separate from WM configuration.
 
 The default-off 13E emergency-braking and secure-gap runtime was ported from
 `39b2e866`, preserving R13C temporal variants and checkpoint tensors. A pluggable
-lane veto augments the existing mask; all-13E ensembles automatically use inferred
-T,b,min-gap checks. Other ensembles retain the existing mask unless explicitly
-configured. Forced ramp merges are masked too; reference commands share caps and
-projection. Actual SUMO command parity still needs its future probe.
+lane veto augments the existing mask. The additional 13E inferred T,b,min-gap tier
+is now explicitly opt-in for policy CAVs even with an all-13E ensemble; CAVCUTIN
+uses the learned follower response instead. Forced ramp merges are masked too;
+reference commands share caps and projection. Actual SUMO command parity still
+needs its future probe.
 
 ## CPU smoke evidence
 
@@ -77,6 +78,45 @@ The separate scratch free-road actor learned -0.4635→+1.3553 m/s² and reduced
 Compact retained evidence: `POLICY14_SMOKE.json`; full logs/checkpoints: ignored `runs/`.
 
 ## Launch and remaining risks
+
+### Guard follow-up — 2026-10-25 (partial; not Oct 26 launch-ready)
+
+- **CAVCUTIN ON:** `lanes.consequence_mask=true` adds a veto to the existing
+  geometry/gap/dwell mask. Compute the nearest new follower's **unclipped** IDM
+  acceleration after insertion using its WM driver-encoder settings and require
+  `a_F >= -b_F`; reject leader/follower body overlap. Missing/invalid inferred
+  settings fail closed. WM callbacks export those settings independently of the
+  WM's 13E flag, without changing checkpoint tensors or emergency-braking physics.
+  Recheck simultaneous proposals, propagate cancelled leavers, and apply the
+  same guard to forced ramp merges. The optional 13E hook defaults off for CAVs.
+- **Available ROBUST pieces ON:** the supplied TRAIN acceleration endpoints are
+  implemented through the existing actor/executor bounds `[-3.0,+1.2] m/s²`,
+  with the native counterfactual ceiling also `+1.2`. These endpoints come from
+  the engineering brief, **not a new quantile derivation from local data**.
+  `trainer.low_penetration_horizon_cap=true` caps imagination at 60 s when
+  `10 * observed_present_CAV_count <= observed_present_vehicle_count` at t0.
+  Empty roads count as zero share; padding is ignored; a mixed batch shares its
+  shortest horizon to preserve paired counterfactuals. Config/world labels and
+  imagined arrivals do not determine penetration. Entries use the same horizon.
+  `trainer.wm_safety_report_only=true` logs WM TTC costs/excess but removes their
+  actor gradient and dual update. SUMO safety qualification remains outstanding.
+  Launch preflight requires these switches and matching acceleration ceilings.
+- **Blocked ROBUST remainder:** no local ROBUST.md, exact 10 s action-feature
+  implementation, TRAIN reference windows/normalisation/kNN definition, or
+  empirical lane-rate/hold-length maxima are available. Do not claim an exact
+  `relu(D/1.76-1)` penalty, a `D>2.55` untrusted treatment, or data-derived lane
+  limits: none is implemented. The brief's named outside-workspace authorization
+  conflicts with its later explicit no-outside-read execution rule. This session
+  stayed inside the worktree; external registry append is also pending. Resolve
+  that scope conflict or stage the exact evidence here before completing ROBUST.
+- **Verified partial build:** 287 CPU tests pass (all four `test_policy14_*`
+  modules plus `test_c4_dreamer.py` and `test_dreamer_loop.py`); Ruff, Bash syntax
+  and launcher smoke dry-run pass. Re-run the CPU CLI command above with output
+  `runs/policy14_guard_final_smoke`: two updates pass with CAVCUTIN, the supplied
+  acceleration bounds, the horizon-cap flag and report-only WM safety enabled.
+  Actor losses 5.29027/6.18075; critic losses 4.30478/3.45093; gradients finite.
+  Independent accrued J 61.483139→61.483597 veh-s: no efficacy claim.
+  Compact evidence: `POLICY14_GUARD_SMOKE.json`. No GPU training or SUMO ran.
 
 `scripts/policy14_launch.sh WM_CKPT WM_CONFIG REAL_RETURNS --qualification FILE`
 targets gpuR's new `policy14_stage` directory, earliest Oct 26. Inspect with

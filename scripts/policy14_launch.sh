@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # POLICY14 staging launcher. Foreground, sequential, from scratch; LF only.
+# Partial guard preparation: exact ROBUST support/lane-action limits remain
+# blocked on evidence availability; see POLICY14_PREP.md before launch.
 set -Eeuo pipefail
 
 die() { printf 'REFUSED: %s\n' "$*" >&2; exit 2; }
@@ -196,6 +198,11 @@ try:
     require(type(trainer.get("batch_size")) is int and trainer["batch_size"] in (1, 2), "batch_size must be 1 or 2")
     require(trainer.get("horizon") == 10, "horizon must be 10 control seconds")
     require(trainer.get("checkpoint_imagination") is True, "checkpoint_imagination must be true")
+    require(raw.get("lanes", {}).get("consequence_mask") is True, "CAVCUTIN consequence mask must be enabled")
+    require(trainer.get("low_penetration_horizon_cap") is True, "observed low-penetration cap must be enabled")
+    require(trainer.get("wm_safety_report_only") is True, "WM safety must remain report-only")
+    require(raw.get("policy", {}).get("accel_max_mps2") == 1.2, "TRAIN acceleration ceiling must be 1.2")
+    require(cf.get("native_accel_max_mps2") == 1.2, "native reference must share the TRAIN acceleration ceiling")
     require(cf.get("max_starts") == 1, "counterfactual.max_starts must be 1")
     require(trainer.get("credit_profile_every", 0) == 0, "disable memory-spiking credit profiling")
     require(type(run.get("threads")) is int and 1 <= run["threads"] <= threads <= 8, "run.threads must be <= THREADS <= 8")

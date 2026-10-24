@@ -201,3 +201,87 @@ def test_gs_ignores_absent_padding_and_does_not_mutate_state_or_need_driver_trut
     apply_lane_choices(x, torch.tensor([[LANE_RIGHT, LANE_STAY, LANE_STAY]]), mask, rules)
     for key in x:
         torch.testing.assert_close(x[key], before[key], equal_nan=True)
+
+
+def consequence_state(s, lane, v=None, cav=None, *, b=2., headway=1.2):
+    from wms.model.driver_encoder import PARAMETER_NAMES
+    x = state(s, lane, v, cav)
+    defaults = dict(v0=30., time_headway=headway, min_gap=2., accel=1.2, decel=b)
+    x["inferred_driver_parameters"] = torch.tensor(
+        [defaults.get(name, 1.) for name in PARAMETER_NAMES]).expand(1, len(s), -1).clone()
+    x["inferred_idm_delta"] = 4
+    return x
+
+
+def consequence_rules(**kwargs):
+    # Isolate the consequence threshold from independently calibrated legacy gaps.
+    return LaneRules(consequence_mask=True, gap_base_m=0., gap_time_s=0., closing_time_s=0.,
+                     rear_gap_base_m=0., rear_gap_time_s=0., rear_closing_time_s=0., **kwargs)
+
+
+@pytest.mark.parametrize("ego_lane,choice", [(0, LANE_RIGHT), (1, LANE_LEFT), (2, LANE_LEFT)])
+def test_consequence_uses_new_followers_learned_b_and_unclipped_idm(ego_lane, choice):
+    from wms.model.driver_encoder import PARAMETER_NAMES
+    ego_s = 25. if ego_lane == 2 else -500.
+    x = consequence_state([ego_s, ego_s - 35.], [ego_lane, 1 if ego_lane == 2 else 1 - ego_lane],
+                          v=[10., 15.], cav=[True, False], b=.8)
+    rules = consequence_rules()
+    assert not lane_feasibility(x, rules=rules)[0, 0, choice]
+    # Change only the new follower's learned comfortable deceleration.
+    x["inferred_driver_parameters"][0, 1, PARAMETER_NAMES.index("decel")] = 4.
+    assert lane_feasibility(x, rules=rules)[0, 0, choice]
+
+
+@pytest.mark.parametrize("other_s", [-500., -497., -503.])
+def test_consequence_forbids_leader_and_follower_overlap_even_with_stale_mask(other_s):
+    x = consequence_state([-500., other_s], [0, 1], cav=[True, False])
+    stale = torch.ones(1, 2, 3, dtype=torch.bool)
+    new_lane, changed = apply_lane_choices(x, torch.tensor([[LANE_RIGHT, LANE_STAY]]),
+                                          stale, consequence_rules())
+    assert not changed.any() and torch.equal(new_lane, x["lane"])
+
+
+def test_consequence_rechecks_final_simultaneous_proposals():
+    x = consequence_state([-500., -450.], [0, 0], headway=9.)
+    rules = consequence_rules()
+    mask = lane_feasibility(x, rules=rules)
+    assert mask[..., LANE_RIGHT].all()  # Destination empty before proposals.
+    lane, changed = apply_lane_choices(x, torch.full((1, 2), LANE_RIGHT), mask, rules)
+    assert changed.tolist() == [[True, False]] and lane.tolist() == [[1, 0]]
+
+
+def test_consequence_propagates_cancelled_leaver_back_into_destination_gap():
+    x = consequence_state([-500., -497., -493.], [0, 1, 0], cav=[True, True, False])
+    stale = torch.ones(1, 3, 3, dtype=torch.bool)
+    lane, changed = apply_lane_choices(x, torch.tensor([[LANE_RIGHT, LANE_LEFT, LANE_STAY]]),
+                                       stale, consequence_rules())
+    assert not changed.any() and torch.equal(lane, x["lane"])
+
+
+def test_consequence_missing_parameters_fails_closed_and_padding_is_ignored():
+    x = state([-500.], [0])
+    assert lane_feasibility(x)[0, 0, LANE_RIGHT]
+    with pytest.raises(ValueError, match="inferred_driver_parameters"):
+        lane_feasibility(x, rules=consequence_rules())
+    x = consequence_state([-500., 0.], [0, -1])
+    x["present"][0, 1] = False
+    x["inferred_driver_parameters"][0, 1] = float("nan")
+    assert lane_feasibility(x, rules=consequence_rules())[0, 0, LANE_RIGHT]
+    x["inferred_driver_parameters"][0, 0, 4] = float("nan")
+    with pytest.raises(ValueError, match="decel"):
+        lane_feasibility(x, rules=consequence_rules())
+
+
+@pytest.mark.parametrize("value", [1, 0, "true", None])
+def test_consequence_flag_is_strict_boolean(value):
+    with pytest.raises(ValueError, match="consequence_mask"):
+        LaneRules.from_mapping({"consequence_mask": value})
+
+
+def test_consequence_roundtrip_and_optional_second_tier():
+    x = consequence_state([-500.], [0])
+    rules = consequence_rules()
+    assert LaneRules.from_mapping(asdict(rules)) == rules
+    assert rules.secure_gap_hook == "" and lane_feasibility(x, rules=rules)[0, 0, LANE_RIGHT]
+    with pytest.raises(ValueError, match="secure_gap_T_s"):
+        lane_feasibility(x, rules=replace(rules, secure_gap_hook=GS_HOOK))

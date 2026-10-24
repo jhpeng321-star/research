@@ -170,11 +170,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         previous_mask = mask
         lane = _merge_lane({**state, "lane": lane_now}, mask)
         if mask_forced_merge and lane_rules is not None:
-            from .lanes import lane_feasibility
+            from .lanes import apply_lane_choices, lane_feasibility
             # The old bridge's forced ramp merge bypassed the learned head's veto.
             forced = (lane_now == 2) & (lane == 1)
-            permitted = lane_feasibility({**state, "lane": lane_now}, ages, lane_rules)[..., 1]
-            lane = torch.where(forced & ~permitted, lane_now, lane)
+            forced_state = {**state, "lane": lane_now}
+            feasible = lane_feasibility(forced_state, ages, lane_rules)
+            lane, _ = apply_lane_choices(forced_state, forced.long(), feasible,
+                                         lane_rules, acting=forced)
         command_accel = held
         ceiling = policy_max
         if native_in_use:

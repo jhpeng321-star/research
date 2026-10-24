@@ -22,6 +22,8 @@ Feasibility (``lane_feasibility``), all from the state the safety layer already 
   ones when ``None``); an overlapping (alongside) vehicle blocks the change.  The defaults were
   calibrated against SUMO's acceptance of ``changeLane`` requests (``LANECAL_NOTES.md``).
 * Dwell: at least ``dwell_s`` since this CAV's previous lane change.
+* Optional ``consequence_mask`` checks the new follower's unclipped IDM response
+  against its own WM-inferred comfortable deceleration and forbids overlap.
 * Optional ``LaneRules.secure_gap_hook = "module:function"``: a callable
   ``hook(state, other_lane, target) -> bool Tensor[B,K]`` may only veto the existing
   gap mask. It is re-run against proposed simultaneous lanes at execution; stay
@@ -66,9 +68,14 @@ class LaneRules:
     rear_gap_time_s: Optional[float] = 1.25   # x speed of the follower
     rear_closing_time_s: Optional[float] = 6.0  # x closing speed (follower faster than ego)
     secure_gap_hook: str = ""    # optional module:function, resolved only when checking gaps
+    consequence_mask: bool = False  # CAVCUTIN: inferred new-follower IDM >= -b_F
 
     def __post_init__(self):
         for name, value in asdict(self).items():
+            if name == "consequence_mask":
+                if not isinstance(value, bool):
+                    raise ValueError("lane rule consequence_mask must be a boolean")
+                continue
             if name == "secure_gap_hook":
                 if not isinstance(value, str):
                     raise ValueError("lane rule secure_gap_hook must be a module:function string")
@@ -96,10 +103,10 @@ class LaneRules:
         unknown = set(raw) - set(cls.__dataclass_fields__)
         if unknown:
             raise ValueError(f"unknown lane rule keys: {sorted(unknown)}")
-        if set(raw) - {"secure_gap_hook"} and not any(k.startswith("rear_") for k in raw):
+        if set(raw) - {"secure_gap_hook", "consequence_mask"} and not any(k.startswith("rear_") for k in raw):
             # legacy payload (before LANECAL, symmetric rule): keep the symmetric semantics
             raw.update(rear_gap_base_m=None, rear_gap_time_s=None, rear_closing_time_s=None)
-        return cls(**{k: (v if k == "secure_gap_hook" or v is None else float(v))
+        return cls(**{k: (v if k in ("secure_gap_hook", "consequence_mask") or v is None else float(v))
                       for k, v in raw.items()})
 
 
@@ -134,6 +141,49 @@ def _target_gap_ok(s, v, length, valid, other_lane, target, rules: LaneRules) ->
     front_ok = torch.isinf(front_gap) | (front_gap >= need_front)
     rear_ok = torch.isinf(rear_gap) | (rear_gap >= need_rear)
     return front_ok & rear_ok
+
+
+def consequence_gap_ok(state: Mapping[str, Tensor], other_lane: Tensor, target: Tensor) -> Tensor:
+    """CAVCUTIN consequence veto, using only the WM's inferred IDM parameters.
+
+    Judge the nearest new follower's *unclipped* IDM response to insertion against
+    its own learned comfortable deceleration. Clipping at -b before comparison
+    would make this check vacuous. Ego must not overlap its new leader or follower.
+    Emergency braking and the optional 13E secure-gap tier are separate rules.
+    """
+    from wms.model.driver_encoder import PARAMETER_NAMES
+    from wms.physics.idm import IDMParams, idm_accel
+
+    _, _, valid, s, v, length = _kinematics(state)
+    values = state.get("inferred_driver_parameters")
+    if (not isinstance(values, Tensor) or not values.is_floating_point()
+            or values.shape != (*s.shape, len(PARAMETER_NAMES)) or values.device != s.device):
+        raise ValueError("consequence mask requires inferred_driver_parameters floating [B,K,9]")
+    params = {name: values[..., PARAMETER_NAMES.index(name)]
+              for name in ("v0", "time_headway", "min_gap", "accel", "decel")}
+    for name, value in params.items():
+        if not bool((torch.isfinite(value[valid]) & (value[valid] > 0)).all()):
+            raise ValueError(f"consequence mask requires finite positive inferred {name}")
+        params[name] = torch.where(valid, value, torch.ones_like(value))
+    delta = state.get("inferred_idm_delta")
+    if isinstance(delta, bool) or not isinstance(delta, (int, float)) or not math.isfinite(delta) or delta <= 0:
+        raise ValueError("consequence mask requires inferred_idm_delta from WM physics")
+    if not bool((torch.isfinite(s[valid]) & torch.isfinite(state["v_mps"][valid])
+                 & (state["v_mps"][valid] >= 0) & torch.isfinite(length[valid])
+                 & (length[valid] > 0)).all()):
+        raise ValueError("consequence mask requires finite kinematics and positive lengths")
+    ds = s[:, None, :] - s[:, :, None]
+    other = ~torch.eye(s.shape[-1], dtype=torch.bool, device=s.device)[None]
+    in_target = valid[:, None, :] & (other_lane[:, None, :] == target[:, :, None]) & other
+    inf = torch.full_like(ds, math.inf)
+    front_gap = torch.where(in_target & (ds >= 0), ds - length[:, None, :], inf).amin(-1)
+    rear_gap, rear_idx = torch.where(in_target & (ds < 0), -ds - length[:, :, None], inf).min(-1)
+    follower = {name: value.gather(-1, rear_idx) for name, value in params.items()}
+    response = idm_accel(v.gather(-1, rear_idx), v, rear_gap,
+                         IDMParams.from_driver_params(follower, delta=delta),
+                         accel_min=-math.inf, accel_max=math.inf)
+    return ((front_gap >= 0) & (rear_gap >= 0)
+            & (torch.isinf(rear_gap) | (response >= -follower["decel"])))
 
 
 def _secure_gap_ok(state, other_lane, target, rules: LaneRules) -> Tensor:
@@ -243,6 +293,9 @@ def lane_feasibility(state: Mapping[str, Tensor], dwell_age_s: Optional[Tensor] 
     if rules.secure_gap_hook:
         left = left & _secure_gap_ok(state, lane, lane - 1, rules)
         right = right & _secure_gap_ok(state, lane, lane + 1, rules)
+    if rules.consequence_mask:
+        left = left & consequence_gap_ok(state, lane, lane - 1)
+        right = right & consequence_gap_ok(state, lane, lane + 1)
     return torch.stack((torch.ones_like(cav), left, right), -1)
 
 
@@ -251,9 +304,9 @@ def apply_lane_choices(state: Mapping[str, Tensor], choice: Tensor, feasible: Te
                        ) -> tuple[Tensor, Tensor]:
     """Execute feasible choices; returns ``(new_lane [B,K] long, changed [B,K] bool)``.
 
-    Simultaneous changes are re-checked against everyone's PROPOSED lanes (one
-    conservative pass: a changer whose target gap is violated by another changer is
-    cancelled), so two CAVs never merge into the same gap in one tick.
+    Simultaneous changes are re-checked against everyone's PROPOSED lanes. Legacy
+    rules use one conservative pass; the consequence tier also propagates cancelled
+    leavers back into occupied gaps until no further cancellation is needed.
     """
     present, lane, valid, s, v, length = _kinematics(state)
     choice = choice.long().clamp(0, N_LANE_CHOICES - 1)
@@ -263,11 +316,21 @@ def apply_lane_choices(state: Mapping[str, Tensor], choice: Tensor, feasible: Te
         want = want & acting.bool()
     delta = torch.tensor(LANE_DELTA, device=lane.device)[choice]
     target = lane + delta
-    proposed = torch.where(want, target, lane)
-    ok = _target_gap_ok(s, v, length, valid, proposed, target, rules)
-    if rules.secure_gap_hook:
-        ok = ok & _secure_gap_ok(state, proposed, target, rules)
-    changed = want & ok
+    changed = want
+    # With the consequence tier, cancellations are propagated to a fixed point:
+    # a cancelled leaver can reappear in an accepted changer's destination gap.
+    # Only remove proposals, so this terminates in at most K cancellation rounds.
+    for _ in range(s.shape[-1] + 1 if rules.consequence_mask else 1):
+        proposed = torch.where(changed, target, lane)
+        ok = _target_gap_ok(s, v, length, valid, proposed, target, rules)
+        if rules.secure_gap_hook:
+            ok = ok & _secure_gap_ok(state, proposed, target, rules)
+        if rules.consequence_mask:
+            ok = ok & consequence_gap_ok(state, proposed, target)
+        accepted = changed & ok
+        if torch.equal(accepted, changed):
+            break
+        changed = accepted
     return torch.where(changed, target, lane), changed
 
 

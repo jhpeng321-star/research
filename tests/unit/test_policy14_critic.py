@@ -98,6 +98,52 @@ def test_switch_defaults_and_valid_endpoints():
         assert DreamerConfig(real_return_mix=mix, actor_gradient_audit=True).real_return_mix == mix
 
 
+@pytest.mark.parametrize("cavs,present,expected", [(1, 10, 60), (1, 9, 90), (0, 0, 60),
+                                                 (0, 10, 60), (2, 20, 60), (3, 20, 90)])
+def test_observed_start_penetration_cap_ignores_metadata_and_absent_cavs(cavs, present, expected):
+    from wms.control.start_states import StartBatch
+    trainer = _trainer(horizon=90, low_penetration_horizon_cap=True)
+    state = D._state(1)
+    state["present"] = torch.arange(21)[None] < present
+    state["is_cav"] = (torch.arange(21)[None] < cavs) | (torch.arange(21)[None] >= present)
+    batch = StartBatch(state, metadata=[{"world": "synthetic_p40"}])
+    assert trainer._imagination_config(batch).horizon == expected
+    assert trainer.config.horizon == 90
+    trainer.config.low_penetration_horizon_cap = False
+    assert trainer._imagination_config(batch).horizon == 90
+
+
+def test_low_penetration_cap_applies_to_rollout_and_preserves_pairing():
+    from wms.control.start_states import StartBatch
+    trainer = _trainer(horizon=90, low_penetration_horizon_cap=True)
+    # Zero-CAV start: observed zero share, despite a misleading config-world label.
+    state = D._state(1)
+    state["is_cav"].zero_()
+    batch = StartBatch(state, metadata=[{"world": "synthetic_p40"}])
+    with torch.no_grad():
+        imagined = trainer.imagine(batch, deterministic=True)
+    assert imagined["rewards"].shape[1] == 60
+    assert imagined["imagination_horizon_s"] == 60.
+    assert len(trainer.world_models[0].commands) == 120
+    assert trainer.config.horizon == 90
+
+
+@pytest.mark.parametrize("mode", ["absolute", "native_relative"])
+def test_wm_safety_report_only_has_no_actor_gradient_or_dual_update(mode):
+    trainer = _trainer(wm_safety_report_only=True, ttc_budget_mode=mode,
+                       lagrange_init=.5, lagrange_max=2., lagrange_decay=.1)
+    costs = torch.tensor([[[20.]]], requires_grad=True)
+    imagined = {"costs": costs, "n_base": 1}
+    penalty, dual, budget, metrics = trainer._safety_terms(imagined, costs.mean())
+    assert penalty == 0 and not penalty.requires_grad
+    assert metrics["wm_safety_report_only"] and metrics["ttc_penalty_report"] > 0
+    assert trainer.update_lagrange(dual, budget) == .5
+    assert not trainer._lagrange_capped
+    trainer.config.wm_safety_report_only = False
+    penalty, _, _, _ = trainer._safety_terms(imagined, costs.mean())
+    assert penalty > 0 and torch.autograd.grad(penalty, costs)[0].abs().sum() > 0
+
+
 def test_provider_is_explicit_and_disabled_provider_never_runs():
     with pytest.raises(ValueError, match="requires a real_return_provider"):
         _trainer(real_return_mix=0.1)
