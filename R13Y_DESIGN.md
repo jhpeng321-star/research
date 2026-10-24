@@ -57,10 +57,12 @@ verification. Keep the flag off pending that gate.
 
 Verification: 81 CPU tests pass (2 legacy fixture/config cases deselected);
 2,238 tensors are byte-identical against the tip, including eight short rollouts.
+Post-study change only repositions a default-omission entry for clean 13E merging;
+config and byte-identity checks pass again.
 
 ## Merge into round 13E
 
-Cherry-pick this branch's final commit into `c4/v10r13e`. Preserve 13E's emergency
+Merge `c4/v10r13y` into `c4/v10r13e`. Preserve 13E's emergency
 baseline and secure-gap veto when resolving shared model/config hunks. Set
 `model.mainline_merge_yield_learnable=true` before construction/optimizer setup;
 include `merge_yield.*` in core recalibration's trainable parameters. Legacy

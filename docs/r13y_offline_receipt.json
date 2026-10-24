@@ -3,6 +3,7 @@
   "status": "partial",
   "branch": "c4/v10r13y",
   "base_commit": "eb75010c6a2a7ef66eebc3282e03f50e37d4b202",
+  "offline_study_commit": "d4a3062d3854846f5a7028732a5930afa0b90041",
   "checkpoint_sha256": "c76c338dea6355f85cfaee63cdb9077fb129ed25db0ab582d77eda2961822091",
   "remote_results": "/root/autodl-tmp/c4/v5/diag_yield/r13y_offline_final",
   "remote_code": "/root/autodl-tmp/c4/v5/diag_yield/code_final",
@@ -23,7 +24,8 @@
     "arms": ["off", "yield", "yield+emergency9"],
     "no_training_gpu_or_sumo_launch": true,
     "cav_position_check": "All 360 runs passed max recorded-CAV position error <= 0.001 m.",
-    "local_model_config_and_harness_sha256_match_manifest": true
+    "local_model_and_harness_sha256_match_manifest": true,
+    "poststudy_metadata_only_change": "The same legacy_flat.py default-omission tuple entry was moved away from the 13E insertion site. No flag mapping/default or model/harness behavior changed. All 10 config tests and the 2238-tensor byte-identity comparison passed again after this edit."
   },
   "verification": {
     "command": "sh scripts/r13y_verify.sh",
