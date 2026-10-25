@@ -1,0 +1,286 @@
+{
+ "label": "EXPLORATORY (registered gate unchanged)",
+ "wm": "13E stage-B FINAL b2 wm_s.pt sha256 952ec059...84c8, R14 physics",
+ "results": {
+  "r14": {
+   "set1": {
+    "pulse_p/follower@5": {
+     "n_clear": 7,
+     "worlds": 7,
+     "sign_rate": 0.2857142857142857,
+     "sign_ci": [
+      0.0,
+      0.7142857142857143
+     ],
+     "majority_null_rate": 0.7142857142857143,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "pulse_p/follower@10": {
+     "n_clear": 6,
+     "worlds": 5,
+     "sign_rate": 0.16666666666666666,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "pulse_m/follower@5": {
+     "n_clear": 17,
+     "worlds": 10,
+     "sign_rate": 0.7058823529411765,
+     "sign_ci": [
+      0.5,
+      0.8823529411764706
+     ],
+     "majority_null_rate": 0.8823529411764706,
+     "sign_verdict": "FAIL"
+    },
+    "pulse_m/follower@10": {
+     "n_clear": 18,
+     "worlds": 10,
+     "sign_rate": 0.8333333333333334,
+     "sign_ci": [
+      0.5908422459893048,
+      1.0
+     ],
+     "majority_null_rate": 0.5555555555555556,
+     "sign_verdict": "PASS"
+    },
+    "gap_open/follower@10": {
+     "n_clear": 6,
+     "worlds": 6,
+     "sign_rate": 0.6666666666666666,
+     "sign_ci": [
+      0.3333333333333333,
+      1.0
+     ],
+     "majority_null_rate": 0.8333333333333334,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "gap_open/follower@30": {
+     "n_clear": 5,
+     "worlds": 5,
+     "sign_rate": 0.8,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "target_dv_sign_agree@2": {
+     "pulse_p": "1/7",
+     "pulse_m": "17/18"
+    },
+    "gap_open_ramp_dmerge_wm_mean": -1.238095238095238,
+    "gap_open_ramp_dmerge_sumo_mean": 7.333333333333333,
+    "n_wm_events": 699
+   },
+   "set2": {
+    "pulse_p/follower@5": {
+     "n_clear": 7,
+     "worlds": 7,
+     "sign_rate": 0.2857142857142857,
+     "sign_ci": [
+      0.0,
+      0.7142857142857143
+     ],
+     "majority_null_rate": 0.7142857142857143,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "pulse_p/follower@10": {
+     "n_clear": 6,
+     "worlds": 5,
+     "sign_rate": 0.16666666666666666,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "pulse_m/follower@5": {
+     "n_clear": 17,
+     "worlds": 10,
+     "sign_rate": 0.7647058823529411,
+     "sign_ci": [
+      0.5333333333333333,
+      0.9444444444444444
+     ],
+     "majority_null_rate": 0.8823529411764706,
+     "sign_verdict": "PASS"
+    },
+    "pulse_m/follower@10": {
+     "n_clear": 18,
+     "worlds": 10,
+     "sign_rate": 0.7777777777777778,
+     "sign_ci": [
+      0.55,
+      1.0
+     ],
+     "majority_null_rate": 0.5555555555555556,
+     "sign_verdict": "PASS"
+    },
+    "gap_open/follower@10": {
+     "n_clear": 6,
+     "worlds": 6,
+     "sign_rate": 0.6666666666666666,
+     "sign_ci": [
+      0.3333333333333333,
+      1.0
+     ],
+     "majority_null_rate": 0.8333333333333334,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "gap_open/follower@30": {
+     "n_clear": 5,
+     "worlds": 5,
+     "sign_rate": 0.6,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "target_dv_sign_agree@2": {
+     "pulse_p": "0/7",
+     "pulse_m": "17/18"
+    },
+    "gap_open_ramp_dmerge_wm_mean": -1.7142857142857142,
+    "gap_open_ramp_dmerge_sumo_mean": 7.333333333333333,
+    "n_wm_events": 699
+   }
+  },
+  "r16": {
+   "set1": {
+    "pulse_p/follower@5": {
+     "n_clear": 7,
+     "worlds": 7,
+     "sign_rate": 0.2857142857142857,
+     "sign_ci": [
+      0.0,
+      0.5714285714285714
+     ],
+     "majority_null_rate": 0.7142857142857143,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "pulse_p/follower@10": {
+     "n_clear": 6,
+     "worlds": 5,
+     "sign_rate": 0.3333333333333333,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "pulse_m/follower@5": {
+     "n_clear": 17,
+     "worlds": 10,
+     "sign_rate": 0.7647058823529411,
+     "sign_ci": [
+      0.6,
+      0.9333333333333333
+     ],
+     "majority_null_rate": 0.8823529411764706,
+     "sign_verdict": "PASS"
+    },
+    "pulse_m/follower@10": {
+     "n_clear": 18,
+     "worlds": 10,
+     "sign_rate": 0.8333333333333334,
+     "sign_ci": [
+      0.7,
+      1.0
+     ],
+     "majority_null_rate": 0.5555555555555556,
+     "sign_verdict": "PASS"
+    },
+    "gap_open/follower@10": {
+     "n_clear": 6,
+     "worlds": 6,
+     "sign_rate": 0.6666666666666666,
+     "sign_ci": [
+      0.3333333333333333,
+      1.0
+     ],
+     "majority_null_rate": 0.8333333333333334,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "gap_open/follower@30": {
+     "n_clear": 5,
+     "worlds": 5,
+     "sign_rate": 0.6,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "target_dv_sign_agree@2": {
+     "pulse_p": "2/7",
+     "pulse_m": "17/18"
+    },
+    "gap_open_ramp_dmerge_wm_mean": -2.523809523809524,
+    "gap_open_ramp_dmerge_sumo_mean": 7.333333333333333,
+    "n_wm_events": 699
+   },
+   "set2": {
+    "pulse_p/follower@5": {
+     "n_clear": 7,
+     "worlds": 7,
+     "sign_rate": 0.2857142857142857,
+     "sign_ci": [
+      0.0,
+      0.5714285714285714
+     ],
+     "majority_null_rate": 0.7142857142857143,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "pulse_p/follower@10": {
+     "n_clear": 6,
+     "worlds": 5,
+     "sign_rate": 0.3333333333333333,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "pulse_m/follower@5": {
+     "n_clear": 17,
+     "worlds": 10,
+     "sign_rate": 0.8823529411764706,
+     "sign_ci": [
+      0.6923076923076923,
+      1.0
+     ],
+     "majority_null_rate": 0.8823529411764706,
+     "sign_verdict": "PASS"
+    },
+    "pulse_m/follower@10": {
+     "n_clear": 18,
+     "worlds": 10,
+     "sign_rate": 0.8888888888888888,
+     "sign_ci": [
+      0.75,
+      1.0
+     ],
+     "majority_null_rate": 0.5555555555555556,
+     "sign_verdict": "PASS"
+    },
+    "gap_open/follower@10": {
+     "n_clear": 6,
+     "worlds": 6,
+     "sign_rate": 0.6666666666666666,
+     "sign_ci": [
+      0.3333333333333333,
+      1.0
+     ],
+     "majority_null_rate": 0.8333333333333334,
+     "sign_verdict": "INCONCLUSIVE"
+    },
+    "gap_open/follower@30": {
+     "n_clear": 5,
+     "worlds": 5,
+     "sign_rate": 0.6,
+     "sign_ci": null,
+     "majority_null_rate": null,
+     "sign_verdict": "REPORT-ONLY"
+    },
+    "target_dv_sign_agree@2": {
+     "pulse_p": "1/7",
+     "pulse_m": "17/18"
+    },
+    "gap_open_ramp_dmerge_wm_mean": -0.9047619047619045,
+    "gap_open_ramp_dmerge_sumo_mean": 7.333333333333333,
+    "n_wm_events": 699
+   }
+  }
+ }
+}
