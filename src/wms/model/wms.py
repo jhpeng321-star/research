@@ -609,6 +609,10 @@ class WmSModel(nn.Module):
                            driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
         """MOBIL plus mandatory-merge baseline lane logits ``[B, K, 3]``."""
         kin = state_kin(state)
+        if getattr(self.physics, "lane_change_secure_gap", False):
+            # R14 D1: HDV mainline changes need learned-parameter gs secure gaps (CAVs exempt).
+            return mobil_merge_logits(kin, state_present(state, kin), self.physics, driver_params,
+                                      is_cav=state.get("is_cav"))
         return mobil_merge_logits(kin, state_present(state, kin), self.physics, driver_params)
 
     def _physics_step(self, state: dict[str, Tensor],

@@ -132,6 +132,7 @@ class TrainSettings:
     # R13E opt-in physics, mirrored for flat training-config validation.
     emergency_braking: bool = False
     secure_gap_veto: bool = False
+    lane_change_secure_gap: bool = False
     # R13Y learned merge yield (model switch), mirrored for flat training-config validation.
     mainline_merge_yield_learnable: bool = False
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
@@ -917,6 +918,8 @@ class TrainSettings:
         _require(isinstance(self.follower_courtesy_off, bool), "follower_courtesy_off must be a boolean")
         _require(isinstance(self.emergency_braking, bool), "emergency_braking must be a boolean")
         _require(isinstance(self.secure_gap_veto, bool), "secure_gap_veto must be a boolean")
+        _require(isinstance(self.lane_change_secure_gap, bool),
+                 "lane_change_secure_gap must be a boolean")
         _require(isinstance(self.mainline_merge_yield_learnable, bool),
                  "mainline_merge_yield_learnable must be a boolean")
         _require(isinstance(self.residual_head_rescale, bool),

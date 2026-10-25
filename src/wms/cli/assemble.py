@@ -122,6 +122,7 @@ def build_physics(cfg: TrainConfig, resolver: Optional[Resolver] = None):
     integration = {"stop_time_integration": cfg.physics.stop_time_integration,
                    "emergency_braking": cfg.physics.emergency_braking,
                    "secure_gap_veto": cfg.physics.secure_gap_veto,
+                   "lane_change_secure_gap": bool(cfg.physics.lane_change_secure_gap),
                    "emergency_decel_mps2": cfg.physics.emergency_decel_mps2,
                    "exit_at_road_end": bool(cfg.physics.exit_at_road_end),
                    "merge_end_wait": bool(cfg.physics.merge_end_wait),

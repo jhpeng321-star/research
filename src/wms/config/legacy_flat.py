@@ -273,6 +273,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "emergency_decel_mps2": "physics.emergency_decel_mps2",
     "emergency_braking": "physics.emergency_braking",
     "secure_gap_veto": "physics.secure_gap_veto",
+    "lane_change_secure_gap": "physics.lane_change_secure_gap",
     "exit_at_road_end": "physics.exit_at_road_end",
     "lane_conflict_resolve": "model.lane_conflict_resolve",
     # V6MERGE (opt-in lane-end interaction rules)
@@ -419,6 +420,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "residual_accel_off", "follower_courtesy_off",
     "emergency_braking",
     "secure_gap_veto",
+    "lane_change_secure_gap",
     # R12 BASE CALIBRATION
     "driver_param_init", "residual_accel_reinit", "recorded_replay_present",
     "batch_size_per_stage",
