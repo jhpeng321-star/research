@@ -60,10 +60,10 @@ pairs300 keeps .15.
 - 1.69 = 0.6277 / 0.3723, which gives equal draw mass to both halves of the evaluation grid.
 - The training receipt logs the realized draw fraction.
 
-**Loader check** (cpuN, `loader_check.json`):
-- TRAIN windows come only from TRAIN-role worlds.
+**Loader check** (cpuN, `evidence_r14/lowpen_loader_check.json`):
+- All six pack x horizon builds take TRAIN windows only from TRAIN-role worlds; val stays val; no world is shared with v5.
 - native: 1975 / 1525 windows at 120 / 300 s.
-- 2.7% of windows have realized share above 0.15.
+- 2.7-7% of windows have realized share above 0.15.
 
 **Staging: not on gpuR.**
 - Moved 8 diagnosis dirs (1.5 GB, sha256 verified) to cpuN `~/c4/archive_gpuR_diag/`.
