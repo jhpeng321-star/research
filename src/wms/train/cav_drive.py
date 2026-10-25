@@ -120,6 +120,28 @@ class TimelineControllers:
         return min(cfg.acceleration_max_mps2,
                    max(cfg.acceleration_min_mps2, float(target) - float(v[b, k])))
 
+    def _native_accel(self, state: Mapping[str, torch.Tensor]) -> torch.Tensor:
+        """Physics-baseline acceleration with the SAME learned driver settings as the WM step.
+
+        R13E emergency braking (learned min-gap) and the learned mainline yield (T, b, a, v0)
+        need per-slot driver settings; the WM step supplies them to its callbacks as
+        ``inferred_driver_parameters`` [B,K,9]. With every such flag off the call is the
+        legacy ``physics_accel(state)`` (bit-identical)."""
+        model = self.model
+        needs = (getattr(model, "mainline_merge_yield_learnable", False)
+                 or getattr(model.physics, "emergency_braking", False)
+                 or getattr(model.physics, "secure_gap_veto", False))
+        values = state.get("inferred_driver_parameters")
+        if not needs or values is None:
+            if needs and getattr(model, "mainline_merge_yield_learnable", False):
+                raise ValueError("learned mainline yield needs inferred_driver_parameters in the "
+                                 "CAV callback state")
+            return model.physics_accel(state)
+        from wms.model.driver_encoder import PARAMETER_NAMES
+
+        params = {name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)}
+        return model.physics_accel(state, params)
+
     @torch.no_grad()
     def __call__(self, state: Mapping[str, torch.Tensor]) -> torch.Tensor:
         model = self.model
@@ -128,7 +150,7 @@ class TimelineControllers:
         cav = state["is_cav"].bool() & state["present"].bool()
         # Native handback remains native at each physics tick.
         native = state.get("merge_pivot_native_accel")
-        accel = (model.physics_accel(state) if native is None else native).detach().clone()
+        accel = (self._native_accel(state) if native is None else native).detach().clone()
         boundary = self.step_index % 2 == 0
         control = self.step_index // 2
         if control >= self.ids.shape[1]:

@@ -34,9 +34,12 @@ def probe_state(device="cpu", *, free=False):
             "is_cav": tensor(cav, torch.bool), "entry_queue": tensor([3. if not free else 0.]).reshape(1)}
 
 
-def action_cost(model, action, *, free=False, n_steps=4):
-    """First one-second CAV impulse, paired stochastic futures, no teacher path."""
-    state = probe_state(action.device, free=free)
+def action_cost(model, action, *, free=False, n_steps=4, state=None):
+    """First one-second CAV impulse, paired stochastic futures, no teacher path.
+
+    ``state`` (default: the standard probe scene) lets a probe use a different synthetic start.
+    """
+    state = probe_state(action.device, free=free) if state is None else state
     tick = 0
     def controller(current):
         nonlocal tick
@@ -63,15 +66,16 @@ def action_cost(model, action, *, free=False, n_steps=4):
     return cost
 
 
-def _fd(model):
+def _fd(model, state=None, n_steps=4):
     a = torch.tensor(.2, device=next(model.parameters()).device, requires_grad=True)
-    cost = action_cost(model, a)
+    cost = action_cost(model, a, state=state, n_steps=n_steps)
     grad = float(torch.autograd.grad(cost, a)[0])
     differences = []
     with torch.no_grad():
         for eps in (.04, .02):
-            fd = float((action_cost(model, a.detach() + eps)
-                        - action_cost(model, a.detach() - eps)) / (2 * eps))
+            fd = float((action_cost(model, a.detach() + eps, state=state, n_steps=n_steps)
+                        - action_cost(model, a.detach() - eps, state=state, n_steps=n_steps))
+                       / (2 * eps))
             differences.append({"epsilon_mps2": eps, "finite_difference": fd,
                                 "absolute_error": abs(grad - fd),
                                 "passed": abs(grad - fd) <= 0.0002 + .05 * abs(fd)})
@@ -133,6 +137,40 @@ def gradient_probe(model):
             "courtesy_probe_injected_output_weights": zero_head,
             "courtesy_probe_training_model_modified": False,
             "gradient_decay": 1.0, "fixed_lane_event_regime_only": True}
+
+
+def r13e_probe_state(device="cpu"):
+    """Closing-follower scene: a slow policy CAV (lane 1) with a fast HDV 20 m behind it, so the
+    13E emergency envelope binds on the HDV follower and the CAV action moves its gap (the
+    pathwise adjoint through the envelope is then exercised). A far leader keeps the CAV free."""
+    def tensor(row, dtype=torch.float32):
+        return torch.tensor([row], dtype=dtype, device=device)
+    n = 3
+    return {"s_m": tensor([100., 80., 230.]), "v_mps": tensor([8., 22., 20.]),
+            "a_mps2": tensor([0.] * n), "lane": tensor([1, 1, 1], torch.long),
+            "length_m": tensor([5.] * n), "present": tensor([True] * n, torch.bool),
+            "is_cav": tensor([True, False, False], torch.bool), "entry_queue": tensor([0.]).reshape(1)}
+
+
+def gradient_probe_13e(model, n_steps=4):
+    """dJ/d(CAV accel) autograd vs central FD with the 13E flags the model actually carries.
+
+    Only meaningful when emergency braking, the secure-gap veto or the learned yield is on
+    (the CLI runs it then). The CAV's execution cap is on ("idm") so the enveloped baseline
+    feeds the CAV plant, exactly as in training. A disposable copy is used.
+    """
+    diagnostic = copy.deepcopy(model).eval().requires_grad_(False)
+    diagnostic.grad_decay_per_step = 1.0
+    diagnostic.checkpoint_forward = False
+    diagnostic.cav_exec_cap = "idm"
+    device = next(diagnostic.parameters()).device
+    result = _fd(diagnostic, state=r13e_probe_state(device), n_steps=n_steps)
+    result["flags"] = {
+        "emergency_braking": bool(getattr(diagnostic.physics, "emergency_braking", False)),
+        "secure_gap_veto": bool(getattr(diagnostic.physics, "secure_gap_veto", False)),
+        "mainline_merge_yield_learnable": bool(getattr(diagnostic, "mainline_merge_yield_learnable",
+                                                       False))}
+    return result
 
 
 def free_road_probe(model):

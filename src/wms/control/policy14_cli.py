@@ -114,11 +114,17 @@ def main(argv=None):
         output = candidate
         provider = NPZRealReturnProvider(args.real_returns, seed=args.seed)
         models, receipts = load_members(args.wm_ckpt, args.wm_config, args.device)
-        from .policy14_probes import free_road_probe, gradient_probe
+        from .policy14_probes import free_road_probe, gradient_probe, gradient_probe_13e
         from .dreamer import _restore_rng, _rng_state
         rng = _rng_state(torch.device(args.device))
         try:
             probes = {"gradient": gradient_probe(models[0])} if switches["fd_gate"] else {}
+            if switches["fd_gate"] and any(
+                    getattr(m.physics, "emergency_braking", False)
+                    or getattr(m.physics, "secure_gap_veto", False)
+                    or getattr(m, "mainline_merge_yield_learnable", False) for m in models[:1]):
+                # POLICY14E: autograd vs FD of dJ/d(CAV accel) through the 13E envelope / gs / yield.
+                probes["gradient_13e"] = gradient_probe_13e(models[0])
             if switches["free_road_gate"]:
                 probes["free_road"] = free_road_probe(models[0])
         finally:
