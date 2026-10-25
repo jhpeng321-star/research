@@ -230,7 +230,8 @@ def main():
     loop.check_registration(cfg)
     if args.check_only:
         print(json.dumps({"verified": True, "code_sha": arm["code_sha"],
-                          "source_files": len(arm["source_files"]), "sim_s_per_cycle": loop.collect_sim_s(cfg)}))
+                          "source_files": len(arm["source_files"]), "sim_s_per_cycle": loop.collect_sim_s(cfg),
+                          **fetch_verdict(cfg)}))
         return 0
     if fcntl is None:
         raise RuntimeError("waiter requires Linux flock")
@@ -254,7 +255,8 @@ def main():
                     loop.write_atomic(arm_dir / "EXPIRED.json", {"t": loop.now(), "verdict": verdict})
                     return 2
                 if not chain_finished(arm, arm["round14b_summary"]):
-                    say("waiting_round14b_chain")
+                    say("waiting_round14b_chain", verdict_ready=verdict.get("ready", False),
+                        verdict_reason=verdict.get("reason"))
                 elif not timely_verdict(verdict, deadline):
                     say("waiting_qualification", reason=verdict.get("reason"))
                 else:
