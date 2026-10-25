@@ -38,7 +38,7 @@ def export(commit):
                 "tests/unit", "baselines/circles/adapter.json", "pyproject.toml",
                 "assets/research/highway_merge_shepherd_long/osm.net.xml.gz"]
     names = git("ls-tree", "-r", "--name-only", commit, "--", *prefixes).decode().splitlines()
-    files = {}
+    selected = []
     for name in names:
         if any(token in name.lower() for token in TOKENS):
             continue
@@ -47,7 +47,18 @@ def export(commit):
         if Path(name).suffix not in (".py", ".json", ".toml", ".sh", ".gz"):
             continue
         # No SUMO vehicle/driver assignment XML is opened or exported.
-        files[name] = git("show", f"{commit}:{name}")
+        selected.append(name)
+    # One Git batch avoids thousands of slow subprocess startups on Windows.
+    objects = subprocess.check_output(["git", "cat-file", "--batch"], cwd=ROOT,
+                                      input="".join(f"{commit}:{name}\n" for name in selected).encode())
+    source = io.BytesIO(objects)
+    files = {}
+    for name in selected:
+        header = source.readline().decode().split()
+        if len(header) != 3 or header[1] != "blob":
+            raise RuntimeError(f"not a regular committed source file: {name}")
+        files[name] = source.read(int(header[2]))
+        assert source.read(1) == b"\n"
     manifest = {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
