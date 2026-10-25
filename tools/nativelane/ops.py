@@ -12,7 +12,7 @@ from remote import remote
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def stage(baseline=False, harness=False):
+def stage(baseline=False, harness=False, host="cpuX"):
     # Export only executable source/configs; never traverse data or assignment files.
     names = subprocess.check_output([
         "git", "ls-files", "--cached", "--others", "--exclude-standard", "--",
@@ -34,7 +34,7 @@ def stage(baseline=False, harness=False):
             ti = tarfile.TarInfo(name)
             ti.size = len(data)
             t.addfile(ti, io.BytesIO(data))
-    print(remote("cpuX", '''
+    print(remote(host, '''
 import io,tarfile,sys,json
 from pathlib import Path
 p=Path.home()/'nativelane'; assert p.parent.is_dir(); p.mkdir(exist_ok=True)
@@ -48,7 +48,45 @@ print(json.dumps({'staged':str(r)}))
 
 
 if __name__ == "__main__":
-    if "--status" in sys.argv:
+    if "--watch" in sys.argv:
+        import base64
+        import json
+        receipt = json.loads((ROOT / "tools/nativelane/REARM_PACKAGE.json").read_text())
+        registered = Path("E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md").read_text(encoding="utf-8")
+        assert receipt["registration_sha256"] in registered, "append conditional source amendment before installing watcher"
+        watch = subprocess.check_output(["git", "show", f"{receipt['code_sha']}:tools/nativelane/watch.py"], cwd=ROOT)
+        req = {"watch": base64.b64encode(watch).decode(), "package_sha256": receipt["package_sha256"]}
+        output = remote("gpuR", '''
+import os,subprocess,json,time,sys
+from pathlib import Path
+req=json.load(sys.stdin); a=Path('/root/autodl-tmp/c4/v5/main14_arm'); assert a.is_dir()
+assert not any((a/n).exists() for n in ['LAUNCHED.json','WAIT_OWNER.json','STOP_ARM','EXPIRED.json'])
+code="import base64;exec(base64.b64decode('"+req['watch']+"'))"
+proc=subprocess.Popen(['setsid','nohup','/root/miniconda3/bin/python','-c',code,req['package_sha256']],
+ cwd=a,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+ env={**os.environ,'PYTHONUNBUFFERED':'1','PYTHONDONTWRITEBYTECODE':'1'})
+time.sleep(2); assert proc.poll() is None
+f=Path('/proc/'+str(proc.pid)+'/stat').read_text().rsplit(')',1)[1].split()
+print(json.dumps({'pid':proc.pid,'start_ticks':f[19],'session':int(f[3]),'ppid':int(f[1]),'package_sha256':req['package_sha256'],'armed_directory_writes':0}))
+''', json.dumps(req).encode())
+        print(output.decode())
+        (ROOT / "tools/nativelane/WATCHER.json").write_bytes(output)
+        print(remote("cpuX", "import sys;from pathlib import Path;p=Path.home()/'nativelane';assert p.is_dir();(p/'GPU_WATCHER.json').write_bytes(sys.stdin.buffer.read());print('watcher receipt stored')", output).decode())
+    elif "--test-adoption-link" in sys.argv:
+        host = "gpuB" if "--gpuB" in sys.argv else "cpuX"
+        print(remote(host, '''
+import subprocess,json
+from pathlib import Path
+p=Path.home()/'nativelane'; assert p.parent.is_dir(); p.mkdir(exist_ok=True)
+key=subprocess.check_output(['ssh-keyscan','-T','10','-p','53897','-t','ed25519','connect.westb.seetacloud.com'],stderr=subprocess.DEVNULL)
+fp=subprocess.check_output(['ssh-keygen','-lf','-'],input=key).decode()
+assert 'SHA256:liZ36vNCsNcNdXeWs4f+g5ZIhPM/ZihP834vxs8Ulqc' in fp,fp
+known=p/'gpuR_known_hosts'; known.write_bytes(key)
+argv=['ssh','-p','53897','-o','BatchMode=yes','-o','ConnectTimeout=10','-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+str(known),'root@connect.westb.seetacloud.com','true']
+r=subprocess.run(argv,capture_output=True,text=True)
+print(json.dumps({'rc':r.returncode,'stderr':r.stderr,'fingerprint':fp}))
+''', timeout=60000).decode())
+    elif "--status" in sys.argv:
         print(remote("cpuX", '''
 import json
 from pathlib import Path
@@ -68,6 +106,31 @@ if (p/'driver.log').exists():
  out['recent_events']=lines[-8:]
 print(json.dumps(out,indent=1))
 ''').decode())
+    elif "--pause-qual-fix" in sys.argv:
+        print(remote("cpuX", '''
+import os,json,time,signal,shutil
+from pathlib import Path
+p=Path.home()/'nativelane'; rec=json.loads((p/'qual_retry.pid.json').read_text())
+def alive(rec):
+ try:
+  f=Path('/proc/'+str(rec['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
+  return f[19]==rec['start_ticks'] and f[0]!='Z'
+ except FileNotFoundError: return False
+if alive(rec): os.kill(rec['pid'],signal.SIGTERM)
+children=[json.loads(f.read_text()) for f in (p/'logs').glob('qual_*.pid.json')]
+until=time.time()+240
+while any(alive(r) for r in children):
+ assert time.time()<until,'own qualification children still completing'
+ time.sleep(2)
+archive=p/'superseded_tickmask_attempt1'; assert not archive.exists(); archive.mkdir()
+for name in ['pulse','c9']:
+ f=p/'on'/name
+ if f.exists(): f.rename(archive/('on_'+name))
+for f in (p/'done').glob('qual_*_on_*.json'): f.rename(archive/f.name)
+for f in (p/'logs').glob('qual_*_on_*'): shutil.copyfile(f,archive/f.name)
+(p/'qual_retry.pid.json').rename(archive/'qual_retry.pid.json')
+print(json.dumps({'paused':True,'archived_on':str(archive),'off_successes_retained':True}))
+''', timeout=300000).decode())
     elif "--qual-retry" in sys.argv:
         print(remote("cpuX", '''
 import os,subprocess,json,time,signal
@@ -80,7 +143,7 @@ rec=json.loads((p/'finish.pid.json').read_text())
 fields=Path('/proc/'+str(rec['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
 assert fields[19]==rec['start_ticks'] and fields[0]!='Z'
 os.kill(rec['pid'],signal.SIGTERM)
-(p/'finish.pid.json').rename(p/'finish_install1.pid.json')
+(p/'finish.pid.json').rename(p/('finish_install_'+str(rec['pid'])+'.pid.json'))
 with (p/'qual_retry.log').open('ab') as log:
  proc=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','-c',"import sys;sys.path.insert(0,'tools/nativelane');import drive as D;import os;os.nice(19);D.qual()"],
   cwd=p/'repo',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
@@ -121,4 +184,5 @@ time.sleep(2)
 print(json.dumps({'pid':proc.pid,'running':proc.poll() is None}))
 ''').decode())
     else:
-        stage("--baseline" in sys.argv, "--harness" in sys.argv)
+        stage("--baseline" in sys.argv, "--harness" in sys.argv,
+              "gpuB" if "--gpuB" in sys.argv else "cpuX")

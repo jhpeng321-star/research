@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -45,17 +44,11 @@ def main():
         D.qual()
     D.run("decision_complete", [sys.executable, "tools/nativelane/analyze.py"], measurement=False)
     decision = json.loads((ROOT / "DECISION.json").read_text())
-    # A conditional, hash-pinned adoption package may be installed before the laptop cutoff.
-    package = ROOT / "ADOPTION_PACKAGE.json"
+    # gpuR already has the documented cpuX key; its watcher reads this decision
+    # and fetches the immutable package without a laptop or a reverse SSH key.
     if decision.get("adopt") and time.time() < D.DEADLINE:
-        if package.exists():
-            with (ROOT / "logs/adopt.log").open("ab") as log:
-                proc = subprocess.run([sys.executable, "tools/nativelane/adopt.py", "--execute"],
-                                      cwd=D.REPO, env=D.ENV, stdin=subprocess.DEVNULL,
-                                      stdout=log, stderr=subprocess.STDOUT, check=False)
-            D.write(ROOT / "ADOPTION_EXIT.json", {"rc": proc.returncode, "time": time.time()})
-        else:
-            D.write(ROOT / "ADOPTION_WAIT_OWNER.json", {"reason": "no registered adoption package installed", "time": time.time()})
+        D.write(ROOT / "ADOPTION_READY.json", {"time": time.time(), "decision": "DECISION.json",
+                "executor": "hash-pinned gpuR in-memory watcher; no laptop or cpuX->gpuR key required"})
     if time.time() < D.DEADLINE and not (ROOT / "STOP").exists():
         D.run("c1_ranking", [sys.executable, "tools/nativelane/c1.py"])
     D.write(ROOT / "FINISHED.json", {"time": time.time(), "adopt": decision.get("adopt", False)})

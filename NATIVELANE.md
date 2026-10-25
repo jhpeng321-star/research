@@ -21,14 +21,17 @@ The bridge takes those lane targets instead of overwriting them with “stay”.
 The longitudinal learned native-CAV head remains the native plant. Policy-acting
 CAVs retain their lane head. Entrance-zone release and all/base/group/flip ownership
 are recomputed from the current observed/predicted state, without driver labels.
-No retraining or new behavioural thresholds.
+No retraining or new behavioural thresholds. Flag-ON policy checkpoints also
+carry the lane switch into confidence-gate/real-credit imagination; their
+arm dispatcher preserves native lane and ramp delegation across batched arms.
 
-Files: `src/wms/control/{bridge,dreamer,policy14,policy14_cli}.py` and
+Files: `src/wms/control/{bridge,dreamer,policy14,policy14_cli,policy,confident_gate}.py` and
 `src/wms/model/{cav,wms}.py`; regression cases in `tests/unit/test_native_lane.py`.
 
 ## Verification before inference
 
-- cpuX integrated CPU suite: **351 passed**.
+- cpuX initial integrated CPU suite: **351 passed**; final expanded suite on
+  gpuB: **365 passed**, including calibration dispatch and adoption-rule vetoes.
 - Flags OFF versus `01f590e9`: **55/55 tensor bit identities** under legacy
   ramp behaviour and **55/55** under LOOP14C `wm_law`, including sampled and
   deterministic policy/all/counterfactual rows.
@@ -51,6 +54,10 @@ No new SUMO or evaluation-seed outcomes.
   The copied FINAL needs the committed stage-B physics config explicitly;
   startup failures from its absent adjacent sidecar are retained in logs and
   retried without changing the checkpoint or scoring rule.
+  The pre-forward native mask now receives the execution tick, so scripted
+  pulse targets release to native after 3 s consistently in lane inference and
+  execution. Superseded ON tapes from the missing-tick harness are retained in
+  `superseded_tickmask_attempt1/`; ON qualification is rerun, OFF successes retained.
 - C1 PI u_same native/PI ranking is secondary, entries OFF and inherited
   snapshot-history/longitudinal plant retained; run only if required work finishes.
 - Paired whole-world percentile bootstrap: 2,000 resamples, seed 0.
@@ -63,7 +70,8 @@ means no adoption. Other metrics remain descriptive.
 
 ## Detached continuation and owner handoff
 
-cpuX `~/nativelane`: driver **PID/SID 156201**, `setsid nohup`, numerical
+cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **170110**,
+continuation **170198**, `setsid nohup`, numerical
 threads=1, nice19, CPU only. MAPPO pool <=6 plus qualification pool <=6;
 secondary C1 uses <=12 only after those pools exit. New inference is barred
 after **09:00 UTC+8**. Only receipt-owned PID incarnations are inspected.
@@ -73,11 +81,16 @@ Durable outputs: `driver.log`, `finish.log`, `CHECKS.json`, `QUAL_TASKS.json`,
 `DECISION.json`, `RESULT.md`, `NATIVE_LANE_COUNTS.json`, `QUAL_NATIVE_LANE.json`,
 optional `C1_RANKING.json`, per-unit tapes and logs under `off/`, `on/`, `logs/`.
 The continuation retries only missing infrastructure-task markers and reruns the
-registered analysis. A registered, hash-pinned adoption package is required for
-any unattended MAIN14 change; otherwise it writes `ADOPTION_WAIT_OWNER.json`.
+registered analysis. A registered, hash-pinned adoption package and a gpuR
+in-memory watcher handle conditional adoption without a reverse SSH key. The
+watcher reads cpuX using gpuR's existing key and writes **no armed file** unless
+the scientific adoption rule has passed. Polling logs and its PID receipt live
+on cpuX. Required prearm tests/smoke finish before `STOP_ARM` is touched.
 
 If adopted before 09:00, MAIN14 amendment must preserve its newer allocator and
 readiness fixes, use only documented `main14_arm/STOP_ARM`, preserve the previous
 installation, append the registration amendment before re-arm, pass integrated
 tests plus a two-update real-WM CPU prearm smoke, and retain every existing launch
-gate. If not adopted, incomplete, already launched or late: arm untouched.
+gate. The later MAIN14 readiness/allocator changes have been retained by
+cherry-picking their committed fixes onto this branch. If not adopted,
+incomplete, already launched or late: arm untouched.

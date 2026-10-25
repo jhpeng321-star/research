@@ -15,6 +15,9 @@ import analyze_b as A  # noqa: E402
 import coopbehav as CB  # noqa: E402
 import qual_analyze as Q  # noqa: E402
 
+Q.RNG_SEED = 0
+Q.NBOOT = 2000
+
 
 def save(name, doc):
     p = ROOT / name
@@ -89,6 +92,16 @@ def qualification():
     tasks = json.loads((ROOT / "QUAL_TASKS.json").read_text())
     assert tasks["complete"], tasks
     sp, sc = [str(Path.home() / f"c4/runs/{s}") for s in ("pulse", "coop")]
+    for tag in ("off", "on"):
+        for k in range(6):
+            for job in sorted((Path(sp) / "jobs").glob("s*_t300")):
+                for tape in job.glob("traj__*.npz"):
+                    assert (ROOT / tag / "pulse/wm" / f"k{k}" / job.name / tape.name).is_file(), "missing pulse tape"
+            var = "as_is" if k == 0 else f"as_is_k{k}"
+            for job in sorted((Path(sc) / "jobs").glob("s*_t300")):
+                if (job / "traj__A__noop.npz").exists():
+                    for name in ("traj__A__noop.npz", "traj__A__interv.npz"):
+                        assert (ROOT / tag / "c9/wm" / var / job.name / name).is_file(), "missing gap-open tape"
     tol = json.loads((Path.home() / "actqual/reg/TOLERANCES_v2.json").read_text())
     sumo = Q.add_contrasts(Q.pulse_events(sp)) + [r for r in Q.c9_events(sc) if r["item"] == "gap_open"]
     units = ("pulse_m/follower@5", "pulse_m/follower@10", "gap_open/follower@10", "gap_open/follower@30")
@@ -120,6 +133,16 @@ def parity():
     checks = json.loads((ROOT / "CHECKS.json").read_text())
     assert checks["passed"]
     result = {"synthetic_bit_identity": checks["bitid"], "historical_off": {}}
+    for tag in ("off", "on"):
+        for suite, expected, horizon in (("coop", 33, 60), ("c", 12, 300)):
+            units = sorted((ROOT / tag / f"wm_{suite}").glob("w*_t*.json"))
+            assert len(units) == expected
+            for p in units:
+                unit = json.loads(p.read_text())
+                assert "error" not in unit and unit.get("finite") is True, p.name
+                for name in ("delay", "source_wait"):
+                    values = np.asarray(unit["J"][f"{name}@{horizon}"])
+                    assert values.shape == (4, 2) and np.isfinite(values).all(), p.name
     for suite, expected in (("coop", 33), ("c", 12)):
         bad, n = [], 0
         for p in sorted((ROOT / f"off/wm_{suite}").glob("w*_t*.npz")):

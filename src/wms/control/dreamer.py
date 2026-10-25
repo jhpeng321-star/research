@@ -1797,6 +1797,10 @@ class DreamerTrainer:
                     if self._tilt_sampler is not None else {})}
         if coopw:
             payload["coopw"] = coopw
+        lane_switches = getattr(self.controller_factory, "ramp_merge", {})
+        if lane_switches.get("native_lane_change", False):
+            payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
+                                                **lane_switches}
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):

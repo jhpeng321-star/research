@@ -100,3 +100,43 @@ def test_native_rule_requires_a_learned_structured_first_passage_model():
     state = wm_scene(2., True)
     with pytest.raises(ValueError, match="first-passage"):
         m.step(state, cav_controller=controller(torch.zeros_like(state["present"])))
+
+
+def test_preforward_native_ownership_receives_the_same_tick_as_execution():
+    m = model()
+    state = wm_scene(2., True)
+    c = controller(torch.zeros_like(state["present"]))
+    prior, ticks = c.native_lane_mask, []
+
+    def mask(st):
+        ticks.append(int(st["physics_step_index"]))
+        return prior(st)
+    c.native_lane_mask = mask
+    with patch.object(m, "forward", side_effect=fixed_forward):
+        m.step(state, k_steps=8, cav_controller=c,
+               lane_uniform=torch.full_like(state["s_m"], .5))
+    assert ticks == [8]
+
+
+def test_gate_checkpoint_metadata_preserves_native_mask_and_merge_delegation(tmp_path):
+    from wms.control.confident_gate import ArmImagination
+    from wms.control.policy import CavPolicy, RsuGroupEncoder, load_policy_components
+    p, enc = CavPolicy(lane_head=True), RsuGroupEncoder()
+    kwargs = {"native_lane_change": True, "native_ramp_merge": "wm_law",
+              "symmetric_exec_cap": True, "mask_forced_merge": True}
+    path = tmp_path / "policy.pt"
+    torch.save({"format": "c4_dreamer/2", "policy": p.state_dict(),
+                "group_encoder": enc.state_dict(), "wm_controller_kwargs": kwargs}, path)
+    policy, encoder, rules, _ = load_policy_components(path)
+    m = model()
+    state = {k: v.float() if v.is_floating_point() else v for k, v in wm_scene(2., True).items()}
+    imagine = ArmImagination([m], policy, encoder, lane_rules=rules, horizon_s=1.)
+    with patch.object(m, "forward", wraps=m.forward) as seen, \
+            patch.object(m, "_apply_merge_pivot", wraps=m._apply_merge_pivot) as merging:
+        result = imagine.arms_J(state, [None, torch.zeros(3, dtype=torch.bool)])
+    assert result.shape == (1, 2, 1) and torch.isfinite(result).all()
+    mask = seen.call_args_list[0].args[0][WM_LANE_KEY]
+    assert not mask[0].any() and mask[1].tolist() == [True, False, False]
+    assert merging.call_args_list[0].kwargs["delegated"][1, 0]
+    hold = ArmImagination([m], policy, encoder, reference="hold")
+    assert not hold.controller_kwargs["native_lane_change"]

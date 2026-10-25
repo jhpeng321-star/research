@@ -1649,7 +1649,8 @@ class WmSModel(nn.Module):
                 raise ValueError("native_lane_change requires a structured first-passage WM")
             if self.rollout_mode not in ("driver_params", "hybrid") and not self.long_history:
                 raise ValueError("native_lane_change requires observation-inferred driver settings")
-            state = {**state, cav_motion.WM_LANE_KEY: native_lane_mask(state)}
+            state = {**state, cav_motion.WM_LANE_KEY: native_lane_mask(
+                {**state, "physics_step_index": k_steps})}
         forward_kwargs = dict(
             k_steps=k_steps, history=history, history_mask=history_mask,
             driver_history=driver_history, driver_history_mask=driver_history_mask,
