@@ -1,0 +1,573 @@
+{
+ "threads": 2,
+ "torch": "2.12.1+cpu",
+ "episodes": [
+  "../timing_data/w969824m2400p40t300__native",
+  "../timing_data/w969826m2400p40t300__native"
+ ],
+ "t_s": 330.0,
+ "median_wall_s": {
+  "fleet|H10|K1": 1.3985165445001257,
+  "fleet|H10|K4": 2.5372408124994763,
+  "fleet|H10|K8": 5.527226351000536,
+  "fleet|H20|K1": 2.452757998499692,
+  "fleet|H20|K4": 4.208262003000527,
+  "fleet|H20|K8": 10.839407277500868,
+  "fleet|H30|K1": 3.419942850499865,
+  "fleet|H30|K4": 6.960318912500043,
+  "fleet|H30|K8": 12.133054065499891
+ },
+ "max_wall_s": {
+  "fleet|H10|K1": 2.0609718980012985,
+  "fleet|H10|K4": 3.3370312020015263,
+  "fleet|H10|K8": 6.188850915999865,
+  "fleet|H20|K1": 3.3553336860004492,
+  "fleet|H20|K4": 5.39295347100051,
+  "fleet|H20|K8": 12.062978181998915,
+  "fleet|H30|K1": 3.5091229859990563,
+  "fleet|H30|K4": 10.221966480001356,
+  "fleet|H30|K8": 15.702333134999208
+ },
+ "rows": [
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 2.0609718980012985
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 1.898627476000911
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 1.36648310199962
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 1.2096806560002733
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 1.308020894000947
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 1.4305499870006315
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 3.3370312020015263
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 2.900851528998828
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 2.3868122620006034
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 2.4985215769993374
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 2.536710440999741
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 2.5377711839992116
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 6.021723209998527
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 6.188850915999865
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 5.893236368001453
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 5.161216333999619
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 3.57792979199985
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 10.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 3.635703844998716
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 2.1703559739999037
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 2.180888558999868
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 2.7246274379995157
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.3553336860004492
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 2.042042893999678
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.1853553539986024
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 5.373178001998895
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 5.39295347100051
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 4.304647266000757
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 4.111876740000298
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 3.98151412200059
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 4.01947371300048
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 7.446715060001225
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 7.251147003000369
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 10.25056522200066
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 12.062978181998915
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 11.957523397999466
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 20.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 11.428249333001077
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.4439419669997733
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.5091229859990563
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.436181664999822
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.4037040359999082
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.399022220999541
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 1,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 2,
+   "wall_s": 3.358977889000016
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 6.629496247000134
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 9.838940802999787
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 10.221966480001356
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 7.2911415779999516
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 6.004110090998438
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 4,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 5,
+   "wall_s": 6.150944219998564
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 11.152649065999867
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 11.76427309599967
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 80,
+   "cavs": 30,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 10.529613114000313
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 12.513165955000659
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 15.702333134999208
+  },
+  {
+   "unit": "fleet",
+   "horizon_s": 30.0,
+   "K": 8,
+   "slots": 82,
+   "cavs": 35,
+   "units": 1,
+   "arms": 9,
+   "wall_s": 12.501835035000113
+  }
+ ]
+}
