@@ -81,12 +81,15 @@ if [ "$MODE" = smoke ]; then
     disk_guard 2000
     CUDA_VISIBLE_DEVICES= "${GATE[@]}" preflight --root "$L" --offline-report "$OFFLINE"
     # pytest is not in the gpuB env: a private --target install (R16_PYLIB) is APPENDED to the path.
+    # Deselected: the 13E-vs-13C-tip identity test (its git-less subprocess needs pytest in the base
+    # env; unrelated to R16). R16 flags-off identity vs the r14b tip: tools/r16_checks/bit_identity.py (git).
     CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
         PYTHONPATH="$PYTHONPATH:${R16_PYLIB:-$L/diag_r16/pylib}" \
         nice -n 10 "$PYTHON" -B -m pytest -q -p no:cacheprovider --noconftest \
         tests/test_r16_ramp_speed_adapt.py tests/test_r16_gate.py \
         tests/test_r13e_emergency.py tests/test_r13e_secure_gap.py tests/test_r13y_yield.py \
         tests/test_r14_lane_secure_gap.py tests/test_r14_lowshare.py tests/test_loop14_emergency_onset.py \
+        -k "not test_both_flags_off_is_bit_identical_to_actual_13c_tip_forward_and_rollout" \
         --basetemp "$L/runs/${TAG}_gate_core_tests"
     train_verdict a "$A" "$CK" "$L/runs/smoke_${TAG}_a" "$L/smoke_${TAG}_a.log" "$L/smoke_${TAG}_a.gate.json" 0 \
         --set 'curriculum.stage_steps=[2]' --set selection.val_max_windows=4 --set curriculum.max_hours=1.5
