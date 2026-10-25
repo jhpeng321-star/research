@@ -77,9 +77,9 @@ def oracle_margin(g, d):
     """Independent pair calculation: ramp=0, target follower=1, target leader=2."""
     v, vf, vl = g["v"][0, 0], g["v_f"][0, 0], g["v_l"][0, 0]
     b = d["decel"][0]
-    rf = d["min_gap"][0, 1] + vf * d["time_headway"][0, 1] + F.relu(
+    rf = vf * d["time_headway"][0, 1] + F.relu(
         vf**2 / (2 * b[1]) - v**2 / (2 * b[0]))
-    rl = d["min_gap"][0, 0] + v * d["time_headway"][0, 0] + F.relu(
+    rl = v * d["time_headway"][0, 0] + F.relu(
         v**2 / (2 * b[0]) - vl**2 / (2 * b[2]))
     return torch.minimum((g["gap_f"][0, 0] / rf).log(), (g["gap_l"][0, 0] / rl).log())
 
@@ -227,7 +227,7 @@ def test_rollout_veto_and_ungated_replay_boundary(speed, accepted, hybrid):
     assert native_step(m, state)["merge_pivot_committed"][0, 0]
 
 
-def test_secure_gap_uses_min_gap_asymmetric_braking_and_neighbor_indices():
+def test_secure_gap_is_gapacc_without_s0_asymmetric_braking_and_neighbor_indices():
     state, d, net = scene(), drivers(), FirstPassageNet().double()
     kin = state_kin(state)
     g = geometry(kin, state["present"], PhysicsConfig())
@@ -240,9 +240,11 @@ def test_secure_gap_uses_min_gap_asymmetric_braking_and_neighbor_indices():
     kin[..., 4] = 0.
     kin[0, 1, 0], kin[0, 2, 0] = 23.5, 37.
     g = geometry(kin, state["present"], PhysicsConfig())
-    assert net.secure_gap_margin(g, d)[0, 0] == 0.  # both exactly at their learned s0
-    d["min_gap"][0, 1] += .1
-    assert net.secure_gap_margin(g, d)[0, 0] < 0.
+    # R13E review B3: GAPACC gs has no standstill term, so a stopped pair always passes
+    # and the learned min-gap never enters the decision.
+    assert net.secure_gap_margin(g, d)[0, 0] == torch.inf
+    d["min_gap"][0, 1] += 100.
+    assert net.secure_gap_margin(g, d)[0, 0] == torch.inf
 
 
 @pytest.mark.parametrize("speed", [8., 15.])
@@ -254,7 +256,9 @@ def test_secure_gap_st_has_finite_driver_and_state_credit_on_accepted_and_reject
     c, margin = net(g), net.secure_gap_margin(g, d)
     tau = c.new_tensor(2.)
     st = hard_st(c, tau, torch.zeros_like(c), 1., g["eligible"], secure_gap_margin=margin)
-    grads = torch.autograd.grad(st[0, 0], [kin, *d.values()])
+    # B3: gs has no s0 term, so min_gap legitimately gets no gradient.
+    used = [d["time_headway"], d["decel"]]
+    grads = torch.autograd.grad(st[0, 0], [kin, *used])
     assert all(torch.isfinite(grad).all() and grad.abs().sum() > 0 for grad in grads)
     # Finite differences certify the labeled smooth estimator, not the hard veto.
     def smooth(t):
@@ -278,10 +282,11 @@ def test_callback_receives_inferred_settings_and_explicit_settings_take_preceden
         native_step(m, state, explicit, cav_controller=controller)
         expected = drivers() if explicit is None else explicit
         for key, name in (("secure_gap_T_s", "time_headway"),
-                          ("secure_gap_b_mps2", "decel"), ("secure_gap_s0_m", "min_gap")):
+                          ("secure_gap_b_mps2", "decel")):
             assert torch.equal(received[-1][key], expected[name])
             assert torch.equal(received[-1]["inferred_driver_parameters"][..., PARAMETER_NAMES.index(name)],
                                expected[name])
+        assert "secure_gap_s0_m" not in received[-1]  # B3: gs has no s0 term
         assert not any(key.startswith("secure_gap_") for key in state)
     m.physics.secure_gap_veto = False
     native_step(m, state, cav_controller=controller)

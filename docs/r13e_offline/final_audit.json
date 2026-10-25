@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "source_provenance": {
+    "model_revision": "8c7ff0a19cfae59a50eebcd3146f7bcce51c5b37",
+    "model_src_git_tree": "04f5160ee221475ea48b14fb710161f7f0bcd199",
+    "model_src_pin_verified": true,
+    "source_newlines": "LF-canonicalized",
+    "tooling_overlay_sha256": {
+      "tools/r13e_checks/offline.py": "f62b561657748444ecf066a42619cc7cc1068a0d2a7c65ac0724000a6f8a1cc9",
+      "tools/wm_eval_common.py": "7c1fdcbeb1021f134ef5cc2672b35b657c7c8e8fce7b6782d5191dbfac1142db",
+      "tools/r10_attribution.py": "aeb916a1041a08009048dee1eedfbe07a1332ae1f9521f1cdec3d782618263f4",
+      "tools/r10b_courtesy_offline.py": "dd78ad944d4cf6bcabf00243c1b8f23a9d55432a48aea363cc442ccf3f29fa68",
+      "tools/r10b_checks/run_onestep.py": "3e319891bfab7c947aeb2d861da51ab09c11761c32836c471e851c9c50cb5a6f",
+      "tools/r12_checks/base_calibration.py": "f720beaa9460ee358d2e04547f00bafdf9b2c7619f4bddf42c75c7952b44d58c",
+      "tools/r10b_checks/analyze.py": "09b25dd41873196e01dcc1eaa9147d1fcfa6d82d729ae58571bc635af2daaf6a"
+    }
+  },
+  "checkpoint_unchanged": true,
+  "round9_same_replay_geometry": true,
+  "emergency_vs_emergency_gs_one_step_arrays_exact": true,
+  "base_and_rollout_windows_identical": true,
+  "one_step_windows": 48,
+  "paired_state_seed_rows": 96,
+  "npz_rows": {
+    "off": 423329,
+    "emergency": 423329,
+    "emergency+gs": 423329,
+    "r9": 423329
+  },
+  "cuda_initialized": false,
+  "evidence_sha256": {
+    "report.json": "03961739ac948619473dee83ae63165cbf5121c839f4555af0e41b24e2b8009b",
+    "base_checks.json": "d83025c6c350db869681921b6aec4ec10f1d2321283a6ea8c5102338eee3a508",
+    "gs_equivalence.json": "924b32fc0dac1744adabff692277ef3e80c3ccbacf6398615d3f3a77eff66518",
+    "linux_tests.log": "d393fff3972e143c934a964e6672cf001a617814b62d0c5097ad11fb0de12794",
+    "POSTPROCESS_COMPLETE.json": "c7e0213fcad55f24b83735bd5bf2da05cf3a97b1e7d2ec30f354cbb2e2e2bb6f"
+  },
+  "npz_sha256": {
+    "off": "39711aa84211e681c46e9e1f101a987c56371789e67d09a7a7e2d9eaf793fa38",
+    "emergency": "3e42b5aec65244995139f70ed202a11a55bebe24ea5837e379a8f1cb48e540bf",
+    "emergency+gs": "3e42b5aec65244995139f70ed202a11a55bebe24ea5837e379a8f1cb48e540bf",
+    "r9": "f72703518f94193b1c4ef91c7becfc17338dce712ee58ae38a3eb61f523b21e9"
+  },
+  "postprocess_script_sha256": "2e72c8836f5de036718fcec00b3502f3c8c02a88cf1f0a1530ea65311ed2ca54",
+  "gs_comparator_sha256": "04aadba1e332eace930e29bc386e3f91266230e1dfa7cee1813121aeda09ce8f"
+}

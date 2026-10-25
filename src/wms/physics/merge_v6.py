@@ -16,6 +16,7 @@ from .idm import IDMParams, idm_accel
 from .mobil import (anticipated_kin, impatient_margins, merge_end_blocked, merge_end_waiting,
                     secure_gaps)
 from .neighbours import _CLOSED_ROAD_FREE_GAP_M, MIN_GAP_M, lane_of
+from .secure_gap import secure_gap_need, secure_gap_ok
 
 
 def _pair_neighbours(s: Tensor, v: Tensor, length: Tensor, cand: Tensor, free: float
@@ -113,7 +114,11 @@ def zone_mergers(kin: Tensor, present: Tensor, physics: PhysicsConfig,
 def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: PhysicsConfig,
                          params: IDMParams, driver_decel: Optional[Tensor] = None,
                          blocked: Optional[Tensor] = None,
-                         impatience: Optional[Tensor] = None) -> Tensor:
+                         impatience: Optional[Tensor] = None, *,
+                         learned_decel: Optional[Tensor] = None,
+                         learned_distance: Optional[Tensor] = None,
+                         return_selected: bool = False,
+                         return_influence: bool = False):
     """``accel`` with each blocked merger acting as a virtual leader of its lane-1 follower.
 
     Merger ``j`` (:func:`wms.physics.mobil.merge_end_blocked`) is seen by the NEAREST present
@@ -143,12 +148,23 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
 
     V8WM3 ``impatience`` (level ``[B, K]``, ``None`` = legacy): the merger masks use the
     impatience-relaxed merge feasibility (the same as the lane-change mask).
+
+    R13Y optional ``learned_decel`` / ``learned_distance`` (both required together):
+    positive live shared tensors. Lane-end scope only, with a continuous range gate
+    sigmoid((distance - front separation) / follower learned s0), and the follower's
+    learned s0 as virtual clearance reserve. Only the discrete nearest-pair/mask is
+    detached; no continuous state or parameter is detached. ``return_selected`` also
+    returns the pair mask so the caller can compose competing acceleration caps.
+    Omitting these arguments preserves the legacy operator exactly.
     """
     p = physics
+    learned = learned_distance is not None
+    if learned != (learned_decel is not None):
+        raise ValueError("learned yield needs both distance and deceleration")
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
     if blocked is None:
         blocked = merge_end_blocked(kin, present, p, impatience)      # mergers j  [B, K]
-    zone = getattr(p, "mainline_merge_yield_scope", "lane_end") == "zone"
+    zone = not learned and getattr(p, "mainline_merge_yield_scope", "lane_end") == "zone"
     if zone:
         in_zone = zone_mergers(kin, present, p, impatience)
         blocked = blocked | in_zone
@@ -158,8 +174,9 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
         follower = present & (lane_of(kin) == p.merge_target_lane)    # followers i [B, K]
         ds = sd.unsqueeze(-2) - sd.unsqueeze(-1)                      # [B, i, j] = s_j - s_i
         gap = ds - ld.unsqueeze(-2)                                   # i front -> j rear
-        eligible = (follower.unsqueeze(-1) & blocked.unsqueeze(-2) & (gap > 0.0)
-                    & (ds <= p.mainline_merge_yield_distance_m))
+        eligible = follower.unsqueeze(-1) & blocked.unsqueeze(-2) & (gap > 0.0)
+        if not learned:
+            eligible = eligible & (ds <= p.mainline_merge_yield_distance_m)
         inf = torch.full_like(ds, float("inf"))
         dist = torch.where(eligible, gap, inf)
         # Only the immediate follower of each merger yields ...
@@ -170,18 +187,41 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
         has = torch.isfinite(best)
     # Differentiable [B, K] gap to the selected merger (follower front -> merger rear).
     best = s.gather(-1, index) - length.gather(-1, index) - s
+    if learned:
+        # R13E pass rule (COMBO300 hold deadlock): the follower yields only while it is
+        # still OUTSIDE the secure gap to its merger, measured from the yield's own
+        # virtual leader (merger rear minus the follower's learned s0; SUMO compares
+        # gap - minGap with the secure gap). Inside it, the yield releases and the
+        # follower may pass. Same learned-parameter GAPACC gs law as the insertion veto
+        # (wms.physics.secure_gap); no new constants. A discrete mask, like the pairing.
+        with torch.no_grad():
+            def per_slot(value):
+                return torch.as_tensor(value, dtype=v.dtype, device=v.device).expand_as(v)
+            decel = per_slot(params.b_comf)
+            need = secure_gap_need(v, v.gather(-1, index), per_slot(params.time_headway),
+                                   decel, decel.gather(-1, index))
+            has = has & secure_gap_ok(best - per_slot(params.s0), need)
     # The virtual leader stands the road's minimum gap s0 behind the merger's rear: a follower
     # that stops for it leaves the merger's standstill secure follower gap (s0 + T*0 + 0), so
     # yielding can never itself block the merge (deadlock when the driver's own s0 < road s0).
-    s0_road = p.idm()[3]
+    s0_road = params.s0 if learned else p.idm()[3]
     virtual_gap = torch.where(has, best - s0_road, torch.full_like(best, p.free_road_gap_m))
     virtual_v = torch.where(has, v.gather(-1, index), v)
     virtual = idm_accel(v, virtual_v, virtual_gap, params,
                         accel_min=p.accel_min_mps2, accel_max=p.accel_max_mps2)
-    virtual = virtual.clamp(-p.mainline_merge_yield_decel_mps2, 0.0)
+    if learned:
+        virtual = torch.maximum(virtual.clamp_max(0.0), -learned_decel)
+    else:
+        virtual = virtual.clamp(-p.mainline_merge_yield_decel_mps2, 0.0)
     if driver_decel is not None:
         virtual = torch.maximum(virtual, -driver_decel)
     out = torch.where(has, torch.minimum(accel, virtual), accel)
+    if learned:
+        # Continuous counterpart of the old <= distance cutoff. The transition
+        # scale is a learned driver setting, not a new hand-set threshold.
+        ds_live = s.gather(-1, index) - s
+        weight = torch.sigmoid((learned_distance - ds_live) / params.s0)
+        out = torch.where(has, accel + weight * (out - accel), accel)
     if zone:
         with torch.no_grad():
             sd, ld, vd = s.detach(), length.detach(), v.detach()
@@ -196,4 +236,8 @@ def mainline_merge_yield(kin: Tensor, present: Tensor, accel: Tensor, physics: P
         if driver_decel is not None:
             brake = torch.maximum(brake, -driver_decel)
         out = torch.where(pull, torch.minimum(out, brake), out)
-    return out
+    if return_influence:
+        if not learned:
+            raise ValueError("continuous influence is available only for learned yield")
+        return out, has, weight
+    return (out, has) if return_selected else out

@@ -253,18 +253,8 @@ def secure_gap_gs(state: Mapping[str, Tensor], other_lane: Tensor, target: Tenso
     need_front = headway * v + (stopping - stopping.gather(-1, front_idx)).clamp_min(0)
     need_rear = ((headway * v).gather(-1, rear_idx)
                  + (stopping.gather(-1, rear_idx) - stopping).clamp_min(0))
-    # Actual 13E also retains the inferred follower's minimum bumper gap. The
-    # standalone GAPACC formula omits it; use it when the WM explicitly supplies
-    # that setting, without substituting a driver-type constant.
-    if "secure_gap_s0_m" in state:
-        s0 = state["secure_gap_s0_m"]
-        if (not isinstance(s0, Tensor) or s0.shape != s.shape or s0.device != s.device
-                or not s0.is_floating_point()
-                or not bool((torch.isfinite(s0[valid]) & (s0[valid] >= 0)).all())):
-            raise ValueError("gs requires finite nonnegative inferred secure_gap_s0_m [B,K]")
-        s0 = torch.where(valid, s0, torch.zeros_like(s0))
-        need_front = need_front + s0
-        need_rear = need_rear + s0.gather(-1, rear_idx)
+    # R13E review B3: the WM's gs is exactly this GAPACC law (no standstill/s0 term), so the
+    # policy's lane mask and the WM's merge veto accept and reject identical gaps.
     return ((torch.isinf(front_gap) | (front_gap >= need_front))
             & (torch.isinf(rear_gap) | (rear_gap >= need_rear)))
 

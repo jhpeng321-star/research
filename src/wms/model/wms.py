@@ -23,7 +23,7 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
-from wms.physics.accel import baseline_accel
+from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
 from wms.physics.mobil import (MASKED_LOGIT, merge_end_blocked, merge_impatience_level,
@@ -280,6 +280,10 @@ class WmSModel(nn.Module):
         # Diagnostic (never part of a checkpoint, default off = no extra output): emit the pre-gate
         # temporal acceleration as ``temporal_accel_pregate_mps2`` (tools/r13m_lane_bias_init.py).
         self.diag_emit_temporal = False
+        self.mainline_merge_yield_learnable = False
+        self.merge_yield = None
+        if spec.mainline_merge_yield_learnable:
+            self.enable_mainline_merge_yield_learnable()
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
 
@@ -438,6 +442,22 @@ class WmSModel(nn.Module):
                 hidden=int(getattr(spec, "follower_courtesy_hidden", 32)), embed_dim=embed,
                 version=int(getattr(spec, "follower_courtesy_version", 1)))
 
+    def enable_mainline_merge_yield_learnable(self) -> None:
+        """Enable R13Y on a loaded legacy core; call before building an optimizer.
+
+        Native configurations use ModelSpec; this hook supports offline old-checkpoint
+        comparisons. Creation is deterministic and leaves the legacy RNG stream alone.
+        """
+        if (self.black_box or not self.physics.lane_learnable
+                or self.physics_step is not None
+                or not (self.rollout_mode in ("driver_params", "hybrid") or self.long_history)):
+            raise ValueError("learnable mainline yield needs a learned-driver lane_learnable core")
+        if self.merge_yield is None:
+            from .merge_yield import LearnedMergeYield
+            like = next(self.parameters())
+            self.merge_yield = LearnedMergeYield().to(device=like.device, dtype=like.dtype)
+        self.mainline_merge_yield_learnable = True
+
     @property
     def _tracks_courtesy_zone(self) -> bool:
         """R11: the rollout / replay carries the ramp cars' merge-zone time (courtesy v2 input)."""
@@ -508,6 +528,11 @@ class WmSModel(nn.Module):
             # boundary/heterogeneity tensors; w has no role in the strict law.
             state_dict = state_dict.copy()
             state_dict.pop("merge_pivot.w_raw")
+        if self.merge_yield is not None and not any(
+                key.startswith("merge_yield.") for key in state_dict):
+            state_dict = state_dict.copy()
+            state_dict.update({f"merge_yield.{key}": value.detach().clone()
+                               for key, value in self.merge_yield.state_dict().items()})
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -560,10 +585,25 @@ class WmSModel(nn.Module):
                                self.physics.max_gap_steps)
 
     def physics_accel(self, state: dict[str, Tensor],
-                      driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
-        """Physics-baseline acceleration ``[B, K]``."""
+                      driver_params: Optional[dict[str, Tensor]] = None, *,
+                      emergency_envelope: bool = True) -> Tensor:
+        """Physics-baseline acceleration ``[B, K]``.
+
+        R13E: the emergency envelope is applied last (after the learned yield cap);
+        ``emergency_envelope=False`` returns the un-enveloped composition input.
+        """
         kin = state_kin(state)
-        return baseline_accel(kin, state_present(state, kin), self.physics, driver_params)
+        present = state_present(state, kin)
+        accel = baseline_accel(kin, present, self.physics, driver_params,
+                               emergency_envelope=False)
+        if self.mainline_merge_yield_learnable:
+            accel, _ = self.merge_yield(kin, present, accel, self.physics, driver_params,
+                                        is_cav=state.get("is_cav"),
+                                        merge_wait_s=state.get("merge_wait_s"))
+        if emergency_envelope and self.physics.emergency_braking:
+            accel = torch.where(present, apply_emergency_envelope(
+                kin, present, accel, self.physics, driver_params), torch.zeros_like(accel))
+        return accel
 
     def mobil_merge_logits(self, state: dict[str, Tensor],
                            driver_params: Optional[dict[str, Tensor]] = None) -> Tensor:
@@ -572,10 +612,23 @@ class WmSModel(nn.Module):
         return mobil_merge_logits(kin, state_present(state, kin), self.physics, driver_params)
 
     def _physics_step(self, state: dict[str, Tensor],
-                      driver_params: Optional[dict[str, Tensor]] = None
+                      driver_params: Optional[dict[str, Tensor]] = None, *,
+                      emergency_envelope: bool = True
                       ) -> tuple[Tensor, Tensor]:
-        """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics."""
+        """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics.
+
+        ``emergency_envelope=False`` (R13E forward) omits the emergency envelope so the
+        caller can apply it once to the final composed acceleration.
+        """
+        env = emergency_envelope
         if self.physics_step is None:
+            if self.mainline_merge_yield_learnable:
+                # Keep the unconstrained baseline for residual/courtesy composition.
+                # The virtual-leader cap is applied ONCE after those terms below.
+                kin = state_kin(state)
+                return (baseline_accel(kin, state_present(state, kin), self.physics, driver_params,
+                                       emergency_envelope=env),
+                        self.mobil_merge_logits(state, driver_params))
             # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
             impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
             if (self.physics.merge_end_wait or self.physics.mainline_merge_yield) \
@@ -587,22 +640,23 @@ class WmSModel(nn.Module):
                 if impatience is None:
                     blocked = merge_end_blocked(kin, present, self.physics)
                     return (baseline_accel(kin, present, self.physics, driver_params,
-                                           merge_blocked=blocked),
+                                           merge_blocked=blocked, emergency_envelope=env),
                             mobil_merge_logits(kin, present, self.physics, driver_params,
                                                merge_blocked=blocked))
                 blocked = merge_end_blocked(kin, present, self.physics, impatience)
                 return (baseline_accel(kin, present, self.physics, driver_params,
-                                       merge_blocked=blocked, impatience=impatience),
+                                       merge_blocked=blocked, impatience=impatience,
+                                       emergency_envelope=env),
                         mobil_merge_logits(kin, present, self.physics, driver_params,
                                            merge_blocked=blocked, impatience=impatience))
             if impatience is not None:
                 kin = state_kin(state)
                 present = state_present(state, kin)
                 return (baseline_accel(kin, present, self.physics, driver_params,
-                                       impatience=impatience),
+                                       impatience=impatience, emergency_envelope=env),
                         mobil_merge_logits(kin, present, self.physics, driver_params,
                                            impatience=impatience))
-            return (self.physics_accel(state, driver_params),
+            return (self.physics_accel(state, driver_params, emergency_envelope=env),
                     self.mobil_merge_logits(state, driver_params))
         result = self.physics_step(state)
         if not isinstance(result, Mapping) or "accel_mps2" not in result:
@@ -907,13 +961,29 @@ class WmSModel(nn.Module):
             raise ValueError("k_steps must be scalar or [B,K]")
 
         encoded = None
+        final_envelope = bool(getattr(self.physics, "emergency_braking", False))             and self.physics_step is None
         if self.rollout_mode in ("driver_params", "hybrid") or self.long_history:
             encoded, driver_embedding, driver_params = self._encode_drivers(
                 kin, present, driver_history, driver_history_mask, history, history_mask,
                 driver_defaults, driver_params, driver_embedding)
-            physics, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params)
+            physics, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params,
+                                                    emergency_envelope=not final_envelope)
         else:
-            physics, lane_base = self._physics_step({**state, "veh_kin": kin})
+            physics, lane_base = self._physics_step({**state, "veh_kin": kin},
+                                                    emergency_envelope=not final_envelope)
+        # R13E review B2: the emergency envelope bounds the FINAL pre-clamp acceleration
+        # (after residual, courtesy and yield). ``physics`` stays the un-enveloped
+        # composition input; the reported physics baseline is enveloped as before.
+        physics_reported = physics
+        if final_envelope:
+            physics_reported = torch.where(present, apply_emergency_envelope(
+                kin, present, physics, self.physics, driver_params), torch.zeros_like(physics))
+
+        yield_bound = yield_selected = yield_weight = None
+        if self.mainline_merge_yield_learnable:
+            yield_bound, yield_selected, yield_weight = self.merge_yield(
+                kin, present, physics, self.physics, driver_params, is_cav=is_cav,
+                merge_wait_s=state.get("merge_wait_s"), return_influence=True)
 
         conditioning = (driver_embedding
                         if self.rollout_mode == "hybrid" or self.long_history else None)
@@ -1103,6 +1173,17 @@ class WmSModel(nn.Module):
                             "accel_pre_courtesy_mps2": accel.detach()}
             if not self.follower_courtesy_off:
                 accel = accel + offset
+        if yield_bound is not None:
+            # Courtesy repair A and the physics yield are competing constraints:
+            # the stronger deceleration wins; never sum two yielding offsets.
+            # Retain the uninfluenced share of a positive correction: otherwise
+            # even a zero-weight distant pair would cap it at the raw baseline.
+            yield_bound = yield_bound + (1.0 - yield_weight) * (accel - physics).clamp_min(0.0)
+            accel = torch.where(yield_selected, torch.minimum(accel, yield_bound), accel)
+        if final_envelope:
+            # Once, on the final composed acceleration; d/d(accel) in [0, 1].
+            accel = torch.where(present, apply_emergency_envelope(
+                kin, present, accel, self.physics, driver_params), accel)
         if self.rollout_mode != "driver_params":
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
@@ -1146,9 +1227,9 @@ class WmSModel(nn.Module):
             lane_logits = self.lane_change_head(driver_embedding, context, feasible_actions)
             lane_probabilities = torch.softmax(lane_logits, dim=-1)
 
-        result = {"physics_accel_mps2": physics, "accel_mps2": accel,
+        result = {"physics_accel_mps2": physics_reported, "accel_mps2": accel,
                   "raw_residual_mps2": raw_residual,
-                  "accel_delta_mps2": accel - physics, "lane_logits": lane_logits,
+                  "accel_delta_mps2": accel - physics_reported, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
         if self.diag_emit_temporal:
@@ -1741,7 +1822,8 @@ class WmSModel(nn.Module):
             if driver_params is None:
                 driver_params = {name: out["driver_parameters"][..., i]
                                  for i, name in enumerate(PARAMETER_NAMES)}
-            # Recorded likelihood and courtesy intent retain the ungated boundary.
+            # Explicit rollout opt-in: recorded likelihood and courtesy intent keep
+            # calling the original ungated boundary, even when this flag is on.
             c = self.merge_pivot(geo, driver_params)
             veto_margin = self.merge_pivot.secure_gap_margin(geo, driver_params)
         params = self.merge_pivot.params()
@@ -2079,8 +2161,9 @@ class WmSModel(nn.Module):
         lifecycle state; an all-false ``cav`` mask applies no override.
         With ``exec_cap`` the callback state carries it under ``cav.EXEC_CAP_KEY``; command
         executors apply it to their commanded slots (``cav.apply_exec_cap``), teachers ignore it.
-        R13E secure-gap callbacks also receive per-slot T, b and s0 from the supplied
-        rollout driver settings, or the inferred settings when not supplied.
+        Policy14: the callback also receives the rollout's learned per-slot driver settings
+        (``inferred_driver_parameters``, plus the 13E gs inputs T and b when the WM veto is on),
+        the same ones the WM step uses, so the policy's lane mask and the WM agree.
         """
         callback_teacher = None
         if cav_controller is not None:
@@ -2105,9 +2188,9 @@ class WmSModel(nn.Module):
                 if settings is None:
                     settings = {name: out["driver_parameters"][..., i]
                                 for i, name in enumerate(PARAMETER_NAMES)}
+                # R13E gs (review B3) has no standstill term: T and b only.
                 for key, name in (("secure_gap_T_s", "time_headway"),
-                                  ("secure_gap_b_mps2", "decel"),
-                                  ("secure_gap_s0_m", "min_gap")):
+                                  ("secure_gap_b_mps2", "decel")):
                     callback_state[key] = settings[name]
             if exec_cap is not None:
                 callback_state[cav_motion.EXEC_CAP_KEY] = exec_cap

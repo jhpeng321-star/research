@@ -2,7 +2,7 @@
 
 No driver types or fitted behavioural cutoffs: both braking capabilities are the
 plant limit, the decision interval is the physics step, and the standstill gap
-is the existing inferred IDM parameter. This mirrors SUMO's stopping-distance
+is the existing inferred IDM parameter.  This mirrors SUMO's stopping-distance
 safe-speed principle, not its discrete Euler implementation.
 """
 from __future__ import annotations
@@ -24,22 +24,24 @@ def safe_accel(v: Tensor, leader_v: Tensor, gap: Tensor, nominal_accel: Tensor,
       dt*(v+u)/2 + u**2/(2*B) + dt*u/2 <= gap-s0 + vl**2/(2*B).
     The last term is a half-step reaction distance: it bounds the excess of the
     unchanged, speed-clipped trapezoidal plant's stopping sum over the ballistic
-    integral (including the final partial stopping tick). No integrator change
+    integral (including the final partial stopping tick).  No integrator change
     or empirically chosen safety margin is needed.
     Also bound this step's displacement using the leader's exact ballistic stop
-    trajectory. The latter matters when the leader stops within this step.
+    trajectory.  The latter matters when the leader stops within this step.
     States outside the feasible braking envelope receive best-effort full braking.
     """
     b = emergency_decel
     half_step_speed = b * dt
     budget = gap - min_gap + leader_v.square() / (2.0 * b) - v * dt / 2.0
-    # Avoid sqrt(0)'s derivative without changing any positive solution.
+    # At/below this discriminant no nonnegative next speed is feasible.  Clamping
+    # here avoids the sqrt(0) derivative without changing any positive solution.
     root = (half_step_speed**2 + 2.0 * b * budget).clamp_min(half_step_speed**2)
     stop_speed = root.sqrt() - half_step_speed
     leader_next = (leader_v - b * dt).clamp_min(0.0)
     leader_travel = (leader_v.square() - leader_next.square()) / (2.0 * b)
     step_speed = 2.0 * (gap - min_gap + leader_travel) / dt - v
-    # Numerical smoothing only: sqrt(machine epsilon) times the plant deceleration.
+    # The only smoothing scale is numerical: sqrt(machine epsilon) times the
+    # plant's one-step speed change (speed), or plant deceleration (acceleration).
     width = math.sqrt(torch.finfo(v.dtype).eps) * b
     speed_width = width * dt
     upper_speed = -speed_width * torch.logaddexp(-stop_speed / speed_width,
@@ -51,9 +53,9 @@ def safe_accel(v: Tensor, leader_v: Tensor, gap: Tensor, nominal_accel: Tensor,
 
 def leader_inputs(kin: Tensor, present: Tensor,
                   physics: PhysicsConfig) -> tuple[Tensor, Tensor, Tensor]:
-    """True unfloored bumper gaps and real-leader mask, including the lane end.
+    """True (unfloored) bumper gaps and real-leader mask, including the lane end.
 
-    The old IDM free-road surrogate and 0.3 m floor must not create a phantom
+    The old IDM's free-road surrogate and 0.3 m floor must not create a phantom
     braking target or hide an actual overlap in this envelope.
     """
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]

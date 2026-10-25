@@ -252,6 +252,7 @@ class PhysicsConfig:
     # R13E: ballistic safe-speed envelope; no new network/checkpoint tensors.
     emergency_braking: bool = False
     # R13E: rollout-only two-sided secure gaps from learned per-slot driver settings.
+    # No new network tensors; absent/off keeps the original pivot bit-identical.
     secure_gap_veto: bool = False
     # V6MERGE (2026-10-16): opt-in lane-end interaction rules; absent = legacy execution.
     merge_end_wait: bool = False

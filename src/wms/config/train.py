@@ -38,7 +38,7 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
                               "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain",
-                              "secure_gap_veto")
+                              "emergency_braking", "secure_gap_veto")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -56,7 +56,7 @@ class PhysicsOptions:
     emergency_decel_mps2: Optional[float] = None
     emergency_braking: bool = False
     secure_gap_veto: bool = False
-    """R13E: rollout veto using learned driver T, b and min-gap; replay is ungated."""
+    """R13E: first-passage rollout veto using learned driver T, b and min-gap; replay is ungated."""
     exit_at_road_end: bool = True
     """Plain-bug fix (default true): rollouts remove vehicles past 553.33 m.  False reproduces
     pre-fix results bit-identically (``wms.physics.config.PhysicsConfig.exit_at_road_end``)."""
@@ -251,6 +251,8 @@ class ModelConfig:
     # follower_courtesy_off = the courtesy offset is an exact 0.  Part of the checkpoint.
     residual_accel_off: bool = False
     follower_courtesy_off: bool = False
+    # R13Y (default false = no new parameter): learn the mainline merge-yield rule.
+    mainline_merge_yield_learnable: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -449,6 +451,8 @@ class ModelConfig:
                 "model.temporal_accel_reinit has no effect with model.temporal_accel_off")
         require(isinstance(self.residual_accel_off, bool), "model.residual_accel_off must be a boolean")
         require(isinstance(self.follower_courtesy_off, bool), "model.follower_courtesy_off must be a boolean")
+        require(isinstance(self.mainline_merge_yield_learnable, bool),
+                "model.mainline_merge_yield_learnable must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
