@@ -390,6 +390,9 @@ FLAT_TO_PATH: dict[str, str] = {
     "replay_merge_oversample": "data.replay.merge_oversample",
     "replay_cav_follower_oversample": "data.replay.cav_follower_oversample",
     "replay_brake_oversample": "data.replay.brake_oversample",
+    "replay_low_share_oversample": "data.replay.low_share_oversample",
+    "replay_low_share_max": "data.replay.low_share_max",
+    "replay_low_share_min_stage_s": "data.replay.low_share_min_stage_s",
     "replay_error_max_boost": "data.replay.error_max_boost",
     "replay_error_alpha": "data.replay.error_alpha",
     "replay_error_decay": "data.replay.error_decay",
@@ -539,6 +542,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "replay_brake_oversample",
     "replay_error_max_boost", "replay_error_alpha", "replay_error_decay",
     "replay_probe_windows", "replay_refresh_every",
+    # R14 D3 low-CAV-share replay weight
+    "replay_low_share_oversample", "replay_low_share_max", "replay_low_share_min_stage_s",
     # R13Y (separate insertion site for conflict-free 13E integration)
     "mainline_merge_yield_learnable",
 )

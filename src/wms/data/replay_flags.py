@@ -139,6 +139,21 @@ def window_replay_flags(record: dict, *, merge_end_m: float = MERGE_ZONE_END_M,
     return merge_zone, cav_follower
 
 
+def window_cav_share(record: dict) -> float:
+    """R14 D3: realized CAV share of the window's FIRST row (present CAVs / present slots).
+
+    Sampling bookkeeping only (never a model input).  A window without CAV labels or
+    without any present slot fails closed (it cannot be classified)."""
+    present = np.asarray(record["present"], dtype=bool)
+    is_cav = record.get("is_cav")
+    if is_cav is None or present.ndim != 2 or not present[0].any():
+        raise ReplayRefusal("low-share replay flag needs is_cav and a present first row")
+    cav = np.asarray(is_cav, dtype=bool)
+    if cav.shape != present.shape:
+        raise ReplayRefusal("low-share replay flag: is_cav shape differs from present")
+    return float((present[0] & cav[0]).sum() / present[0].sum())
+
+
 def replay_flags(records: Iterable[dict], *, merge_end_m: float = MERGE_ZONE_END_M,
                  merge_zone_s1_m: float = MERGE_ZONE_S1_M) -> dict:
     """``(merge_zone, cav_follower, brake_event)`` bool arrays over an iterable of records."""
@@ -156,29 +171,38 @@ def replay_flags(records: Iterable[dict], *, merge_end_m: float = MERGE_ZONE_END
 
 def compute_replay_flags(dataset, *, progress: Optional[int] = None,
                          merge_end_m: float = MERGE_ZONE_END_M,
-                         merge_zone_s1_m: float = MERGE_ZONE_S1_M) -> dict:
+                         merge_zone_s1_m: float = MERGE_ZONE_S1_M,
+                         low_share_max: Optional[float] = None) -> dict:
     """Scan a dataset window by window and return the flag arrays + counts.
 
     ``progress`` (windows) prints a stderr line every that many windows (0/None = quiet).
+    R14 D3 ``low_share_max`` (default ``None`` = not computed, output unchanged): also flag
+    windows whose first-row realized CAV share is <= ``low_share_max``.
     """
     n = len(dataset)
     merge = np.zeros(n, dtype=bool)
     follower = np.zeros(n, dtype=bool)
     brake = np.zeros(n, dtype=bool)
+    low = np.zeros(n, dtype=bool) if low_share_max is not None else None
     for i in range(n):
         record = dataset[i]
         m, f = window_replay_flags(record, merge_end_m=merge_end_m,
                                    merge_zone_s1_m=merge_zone_s1_m)
         merge[i], follower[i] = m, f
         brake[i] = window_brake_event(record)
-    return {"merge_zone": merge, "cav_follower": follower, "brake_event": brake,
-            "merge_end_m": float(merge_end_m), "merge_zone_s1_m": float(merge_zone_s1_m),
-            "n_windows": n, "n_merge_zone": int(merge.sum()),
-            "n_cav_follower": int(follower.sum()), "n_brake_event": int(brake.sum()),
-            "n_both": int((merge & follower).sum())}
+        if low is not None:
+            low[i] = window_cav_share(record) <= float(low_share_max)
+    out = {"merge_zone": merge, "cav_follower": follower, "brake_event": brake,
+           "merge_end_m": float(merge_end_m), "merge_zone_s1_m": float(merge_zone_s1_m),
+           "n_windows": n, "n_merge_zone": int(merge.sum()),
+           "n_cav_follower": int(follower.sum()), "n_brake_event": int(brake.sum()),
+           "n_both": int((merge & follower).sum())}
+    if low is not None:
+        out.update(low_share=low, n_low_share=int(low.sum()), low_share_max=float(low_share_max))
+    return out
 
 
 __all__ = ["REPLAY_SCHEMA", "RAMP_LANE", "BRAKE_EVENT_ACCEL_MPS2",
            "BRAKE_EVENT_MAX_GAP_M", "MERGE_ZONE_END_M", "MERGE_ZONE_S1_M", "ReplayRefusal",
-           "window_replay_flags", "window_brake_event", "replay_flags",
+           "window_replay_flags", "window_brake_event", "window_cav_share", "replay_flags",
            "compute_replay_flags"]

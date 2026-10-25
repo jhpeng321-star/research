@@ -328,7 +328,10 @@ def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
     from ..data.replay_flags import compute_replay_flags
     from ..train.replay import PriorityReplayDataset
 
-    flags = compute_replay_flags(train, merge_end_m=float(replay_cfg.merge_zone_end_m))
+    low = float(getattr(replay_cfg, "low_share_oversample", 1.0)) > 1.0
+    flags = compute_replay_flags(
+        train, merge_end_m=float(replay_cfg.merge_zone_end_m),
+        **({"low_share_max": float(replay_cfg.low_share_max)} if low else {}))
     replay = PriorityReplayDataset(
         train, merge_zone=flags["merge_zone"], cav_follower=flags["cav_follower"],
         brake_event=flags["brake_event"],
@@ -337,11 +340,15 @@ def _wrap_replay(train: Any, replay_cfg: Any, curriculum: tuple) -> Any:
         brake_oversample=float(replay_cfg.brake_oversample),
         error_alpha=float(replay_cfg.error_alpha),
         error_decay=float(replay_cfg.error_decay),
-        error_max_boost=float(replay_cfg.error_max_boost))
+        error_max_boost=float(replay_cfg.error_max_boost),
+        **({"low_share": flags["low_share"],
+            "low_share_oversample": float(replay_cfg.low_share_oversample),
+            "low_share_min_stage_s": float(replay_cfg.low_share_min_stage_s)} if low else {}))
     replay.receipt["replay"]["scan"] = {k: flags[k] for k in
                                         ("n_windows", "n_merge_zone", "n_cav_follower",
                                          "n_brake_event", "n_both", "merge_end_m",
-                                         "merge_zone_s1_m")}
+                                         "merge_zone_s1_m", "n_low_share", "low_share_max")
+                                        if k in flags}
     replay.receipt["replay"]["stage_sampling"] = replay.describe_stages(curriculum)
     print(f"priority replay: {flags['n_merge_zone']} merge-zone / "
           f"{flags['n_cav_follower']} CAV-follower / {flags['n_brake_event']} brake-event "

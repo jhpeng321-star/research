@@ -1,3 +1,4 @@
+# ruff: noqa: E741, F841  (verbatim copy of the COMBO300 / LONGDIAG analysis code)
 """S-LONGDIAG mechanism metrics from compact 1 s trajectories (longdiag_roll.py output).
 
 Per file (one pair x arm x variant, or the SUMO stream) and per 60 s interval:

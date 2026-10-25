@@ -41,7 +41,9 @@ class PriorityReplayDataset(Dataset):
                  brake_event=None, merge_oversample: float = 1.0,
                  cav_oversample: float = 1.0, brake_oversample: float = 1.0,
                  error_alpha: float = 1.0, error_decay: float = 0.9,
-                 error_max_boost: float = 8.0) -> None:
+                 error_max_boost: float = 8.0, low_share=None,
+                 low_share_oversample: float = 1.0,
+                 low_share_min_stage_s: float = 120.0) -> None:
         n = len(dataset)
         merge = np.asarray(merge_zone, dtype=bool)
         follower = np.asarray(cav_follower, dtype=bool)
@@ -52,12 +54,28 @@ class PriorityReplayDataset(Dataset):
         for name, value in (("merge_oversample", merge_oversample),
                             ("cav_oversample", cav_oversample),
                             ("brake_oversample", brake_oversample),
+                            ("low_share_oversample", low_share_oversample),
                             ("error_alpha", error_alpha),
                             ("error_max_boost", error_max_boost)):
             if not math.isfinite(float(value)) or float(value) < 1.0:
                 raise ReplayRefusal(f"replay {name} must be finite and >= 1")
         if not (0.0 <= float(error_decay) < 1.0):
             raise ReplayRefusal("replay error_decay must be in [0, 1)")
+        # R14 D3: stage-dependent low-CAV-share multiplier (None / 1 = OFF, unchanged).
+        if float(low_share_oversample) > 1.0:
+            if low_share is None:
+                raise ReplayRefusal("low_share_oversample > 1 needs the low-share flags")
+            low = np.asarray(low_share, dtype=bool)
+            if low.shape != (n,):
+                raise ReplayRefusal("low-share flags must give one bool per window")
+            if not (math.isfinite(float(low_share_min_stage_s))
+                    and float(low_share_min_stage_s) >= 0.0):
+                raise ReplayRefusal("low_share_min_stage_s must be finite and >= 0")
+        else:
+            low = None
+        self.low_share = low
+        self.low_share_oversample = float(low_share_oversample)
+        self.low_share_min_stage_s = float(low_share_min_stage_s)
         self.dataset = dataset
         self.merge_zone, self.cav_follower, self.brake_event = merge, follower, brake
         self.merge_oversample = float(merge_oversample)
@@ -80,6 +98,10 @@ class PriorityReplayDataset(Dataset):
             "error_alpha": self.error_alpha, "error_decay": self.error_decay,
             "error_max_boost": self.error_max_boost,
             "error_weighted_windows": 0}
+        if low is not None:
+            self.receipt["replay"].update(
+                n_low_share=int(low.sum()), low_share_oversample=self.low_share_oversample,
+                low_share_min_stage_s=self.low_share_min_stage_s)
 
     def __len__(self) -> int:
         return len(self.dataset)
@@ -122,9 +144,17 @@ class PriorityReplayDataset(Dataset):
         boost[~self._error_seen] = 1.0
         return boost
 
+    def stage_multiplier(self, stage_s: float) -> np.ndarray:
+        """R14 D3: low-CAV-share multiplier of stages with unroll >= low_share_min_stage_s."""
+        if self.low_share is None or float(stage_s) < self.low_share_min_stage_s:
+            return np.ones(len(self), dtype=np.float64)
+        return np.where(self.low_share, self.low_share_oversample, 1.0)
+
     def stage_weights(self, stage_s: float) -> list[float]:
         weights = (self.base_stage_weights(stage_s) * self.static_multiplier()
                    * self.error_multiplier())
+        if self.low_share is not None:
+            weights = weights * self.stage_multiplier(stage_s)
         total = float(weights.sum())
         if not math.isfinite(total) or total <= 0.0:
             weights = np.ones(len(self), dtype=np.float64)
@@ -169,7 +199,15 @@ class PriorityReplayDataset(Dataset):
         for stage in stages_s:
             static = self.static_multiplier()
             n = len(self)
-            rows.append({"stage_s": float(stage), "n_windows": n,
+            extra = {}
+            if self.low_share is not None:
+                before = self.base_stage_weights(stage) * static
+                after = before * self.stage_multiplier(stage)
+                extra = {"low_share_draw_fraction": round(
+                             float(after[self.low_share].sum() / after.sum()), 4),
+                         "low_share_draw_fraction_before": round(
+                             float(before[self.low_share].sum() / before.sum()), 4)}
+            rows.append({**extra,"stage_s": float(stage), "n_windows": n,
                          "merge_draw_fraction": round(
                              float((static[self.merge_zone]).sum() / static.sum()), 4),
                          "cav_follower_draw_fraction": round(

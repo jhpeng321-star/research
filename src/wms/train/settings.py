@@ -302,6 +302,10 @@ class TrainSettings:
     replay_merge_oversample: float = 1.0
     replay_cav_follower_oversample: float = 1.0
     replay_brake_oversample: float = 1.0
+    # R14 D3 low-CAV-share replay weight (default 1 = OFF)
+    replay_low_share_oversample: float = 1.0
+    replay_low_share_max: float = 0.15
+    replay_low_share_min_stage_s: float = 120.0
     replay_error_max_boost: float = 8.0
     replay_error_alpha: float = 1.0
     replay_error_decay: float = 0.9
@@ -815,8 +819,11 @@ class TrainSettings:
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
-                     self.replay_brake_oversample,
+                     self.replay_brake_oversample, self.replay_low_share_oversample,
                      self.replay_error_max_boost, self.replay_error_alpha))
+                 and 0.0 < float(self.replay_low_share_max) < 1.0
+                 and math.isfinite(float(self.replay_low_share_min_stage_s))
+                 and float(self.replay_low_share_min_stage_s) >= 0.0
                  and math.isfinite(float(self.brake_follow_weight))
                  and float(self.brake_follow_weight) >= 1.0
                  and math.isfinite(float(self.brake_follow_cav_weight))

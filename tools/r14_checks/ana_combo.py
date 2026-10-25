@@ -1,3 +1,4 @@
+# ruff: noqa: E741, F841  (verbatim copy of the COMBO300 / LONGDIAG analysis code)
 """S-COMBO300 analysis of compact 1 s rollouts (combo_roll.py output; SUMO stream = pNN_{ref,act}_sumo.npz).
 usage: python ana_combo.py DIR [--arms base,E,Egs,Egsy,y]  -> prints markdown tables; writes DIR/ana_tables.json"""
 from __future__ import annotations
