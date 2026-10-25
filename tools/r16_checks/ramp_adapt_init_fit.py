@@ -6,7 +6,8 @@ paths are refused.  No WM rollout, no SUMO, no vType/truth files.
 
 Rows: every ramp HDV (lane 2, ``0 <= s <= 75.44`` m, not a CAV) at 1 s sampling after the 300 s
 warm-up whose identity is present on the next row, with a lane-1 vehicle at or ahead of its front.
-Target: the recorded acceleration of the next row.  Physics: the WM baseline for a ramp car (IDM
+Target: the recorded speed 1 s later (the plant clamps speed at 0, so standing rows are not
+penalised for the IDM's negative acceleration at standstill).  Physics: the WM baseline for a ramp car (IDM
 with the same-lane leader or the standing lane-end obstacle, bounded by -b) and the R16 virtual
 target-lane leader term, both with the driver population CENTRE of the 13E checkpoint (learned
 encoder centre, physical mode; no per-driver labels).  Fitted by grid least squares:
@@ -98,10 +99,11 @@ def episode(args):
         rec = np.asarray(kin[t + 2, :, 5])                  # accel over the next 1 s row pair
         rec1 = np.asarray(kin[t + 1, :, 5])
         lane_next = np.asarray(kin[t + 2, :, 1:4]).argmax(-1)
+        vnext = np.asarray(kin[t + 2, :, 4])
         for i in np.nonzero(ramp)[0]:
             out.append((s[i], v[i], gap_b[i], v_b[i], float(has_t[i]),
                         gap_t[i] if has_t[i] else np.nan, v[ti[i]] if has_t[i] else np.nan,
-                        0.5 * (rec[i] + rec1[i]), float(lane_next[i] != 2)))
+                        0.5 * (rec[i] + rec1[i]), float(lane_next[i] != 2), vnext[i]))
     # descriptive: merge events (lane 2 -> 1) of HDVs after warm-up
     oh_all = np.asarray(kin[:, :, 1:4])
     lane_all = np.where(oh_all.sum(-1) > 0, oh_all.argmax(-1), -1)
@@ -113,7 +115,7 @@ def episode(args):
               & (vid_all[t + 1] == vid_all[t]) & (cav_all[t] == 0))
         for i in np.nonzero(ev)[0]:
             merges.append((END - float(kin[t, i, 0]), float(kin[t, i, 4])))
-    return np.asarray(out, np.float64).reshape(-1, 9), np.asarray(merges, np.float64).reshape(-1, 2)
+    return np.asarray(out, np.float64).reshape(-1, 10), np.asarray(merges, np.float64).reshape(-1, 2)
 
 
 def population_centre(ckpt: str) -> dict:
@@ -148,22 +150,26 @@ def main():
         parts = list(ex.map(episode, [(p,) for p in eps], chunksize=4))
     rows = np.concatenate([p[0] for p in parts])
     merges = np.concatenate([p[1] for p in parts])
-    s, v, gap_b, v_b, has_t, gap_t, v_t, rec, merged = rows.T
+    s, v, gap_b, v_b, has_t, gap_t, v_t, rec, merged, vnext = rows.T
     c = centre
     a_base = idm(v, v_b, gap_b, c["v0"], c["T"], c["s0"], c["a"], c["b"])
-    sel = (has_t > 0) & np.isfinite(rec)
+    sel = (has_t > 0) & np.isfinite(rec) & np.isfinite(vnext)
+
+    def speed(acc, idx):          # predicted speed 1 s ahead (the plant never goes below 0)
+        return np.maximum(v[idx] + acc, 0.0)
+
     d_end = END - s
-    base_err = rec - a_base
+    base_err = vnext - np.maximum(v + a_base, 0.0)
     best = None
     grid = {"lookahead_m": np.arange(5.0, 155.0, 5.0), "strength": np.arange(0.05, 1.0, 0.05),
-            "headway_scale": np.array([0.5, 0.75, 1.0, 1.25, 1.5, 2.0])}
+            "headway_scale": np.array([0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0])}
     for kappa in grid["headway_scale"]:
         a_v = idm(v[sel], v_t[sel], gap_t[sel], c["v0"], kappa * c["T"], c["s0"], c["a"], c["b"])
         dlt = np.minimum(a_v - a_base[sel], 0.0)
         for D in grid["lookahead_m"]:
             g = 1.0 / (1.0 + np.exp(-(D - d_end[sel]) / c["s0"]))
             for w in grid["strength"]:
-                err = rec[sel] - (a_base[sel] + w * g * dlt)
+                err = vnext[sel] - speed(a_base[sel] + w * g * dlt, sel)
                 mse = float(np.mean(err ** 2))
                 if best is None or mse < best[0]:
                     best = (mse, float(D), float(w), float(kappa))
@@ -184,14 +190,17 @@ def main():
             "base_mean": float(a_base[sel][m].mean()) if m.any() else None,
             "fit_mean": float(pred[m].mean()) if m.any() else None,
             "v_minus_vlead1_med": float(np.median(rel[m])) if m.any() else None,
-            "rmse_base": float(np.sqrt(np.mean((rec[sel][m] - a_base[sel][m]) ** 2))) if m.any() else None,
-            "rmse_fit": float(np.sqrt(np.mean((rec[sel][m] - pred[m]) ** 2))) if m.any() else None}
+            "vnext_med": float(np.median(vnext[sel][m])) if m.any() else None,
+            "rmse_v_base": float(np.sqrt(np.mean(base_err[sel][m] ** 2))) if m.any() else None,
+            "rmse_v_fit": float(np.sqrt(np.mean((vnext[sel][m] - speed(pred, sel)[m]) ** 2)))
+            if m.any() else None}
     doc = {"study": "S-RAMPSPEED R16 init fit (TRAIN rows, numpy, no rollout)",
            "checkpoint_sha256": ck_sha, "population_centre": centre, "episodes": len(eps),
            "rows_ramp_zone": int(len(rows)), "rows_with_lane1_leader": int(sel.sum()),
            "fit": {"lookahead_m": D, "strength": w, "headway_scale": kappa},
+           "objective": "1 s-ahead speed (plant clamp at 0), squared error, rows with a lane-1 leader",
            "rmse_base": float(np.sqrt(mse0)), "rmse_fit": float(np.sqrt(best[0])),
-           "rmse_fit_half0": float(np.sqrt(np.mean((rec[sel][half] - pred[half]) ** 2))),
+           "rmse_fit_half0": float(np.sqrt(np.mean((vnext[sel][half] - speed(pred, sel)[half]) ** 2))),
            "rmse_base_half0": float(np.sqrt(np.mean(base_err[sel][half] ** 2))),
            "by_distance_to_end": by,
            "sumo_train_merges": {"n": int(len(merges)),
