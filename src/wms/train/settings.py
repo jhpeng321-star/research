@@ -132,6 +132,7 @@ class TrainSettings:
     # R13E opt-in physics, mirrored for flat training-config validation.
     emergency_braking: bool = False
     secure_gap_veto: bool = False
+    lane_change_secure_gap: bool = False
     # R13Y learned merge yield (model switch), mirrored for flat training-config validation.
     mainline_merge_yield_learnable: bool = False
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
@@ -301,6 +302,10 @@ class TrainSettings:
     replay_merge_oversample: float = 1.0
     replay_cav_follower_oversample: float = 1.0
     replay_brake_oversample: float = 1.0
+    # R14 D3 low-CAV-share replay weight (default 1 = OFF)
+    replay_low_share_oversample: float = 1.0
+    replay_low_share_max: float = 0.15
+    replay_low_share_min_stage_s: float = 120.0
     replay_error_max_boost: float = 8.0
     replay_error_alpha: float = 1.0
     replay_error_decay: float = 0.9
@@ -814,8 +819,11 @@ class TrainSettings:
         _require(isinstance(self.replay_enabled, bool)
                  and all(math.isfinite(float(x)) and float(x) >= 1.0 for x in (
                      self.replay_merge_oversample, self.replay_cav_follower_oversample,
-                     self.replay_brake_oversample,
+                     self.replay_brake_oversample, self.replay_low_share_oversample,
                      self.replay_error_max_boost, self.replay_error_alpha))
+                 and 0.0 < float(self.replay_low_share_max) < 1.0
+                 and math.isfinite(float(self.replay_low_share_min_stage_s))
+                 and float(self.replay_low_share_min_stage_s) >= 0.0
                  and math.isfinite(float(self.brake_follow_weight))
                  and float(self.brake_follow_weight) >= 1.0
                  and math.isfinite(float(self.brake_follow_cav_weight))
@@ -917,6 +925,8 @@ class TrainSettings:
         _require(isinstance(self.follower_courtesy_off, bool), "follower_courtesy_off must be a boolean")
         _require(isinstance(self.emergency_braking, bool), "emergency_braking must be a boolean")
         _require(isinstance(self.secure_gap_veto, bool), "secure_gap_veto must be a boolean")
+        _require(isinstance(self.lane_change_secure_gap, bool),
+                 "lane_change_secure_gap must be a boolean")
         _require(isinstance(self.mainline_merge_yield_learnable, bool),
                  "mainline_merge_yield_learnable must be a boolean")
         _require(isinstance(self.residual_head_rescale, bool),

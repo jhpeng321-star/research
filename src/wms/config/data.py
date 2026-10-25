@@ -129,6 +129,14 @@ class ReplayConfig:
     merge_zone_end_m: float = 40.0
     cav_follower_oversample: float = 1.0
     brake_oversample: float = 1.0
+    #: R14 D3 (default 1 = OFF, bit-identical): sampling multiplier of LOW-CAV-SHARE windows
+    #: (realized CAV share of the window's first row <= ``low_share_max``) in curriculum
+    #: stages with unroll >= ``low_share_min_stage_s``.  The value is data-derived (R14_DESIGN.md:
+    #: window-count ratio of high- to low-share TRAIN windows); the share cut separates the
+    #: <= 10 % design levels from the 20 % level at their midpoint.  Sampling only, no model input.
+    low_share_oversample: float = 1.0
+    low_share_max: float = 0.15
+    low_share_min_stage_s: float = 120.0
     error_max_boost: float = 8.0
     error_alpha: float = 1.0
     error_decay: float = 0.9
@@ -143,6 +151,12 @@ class ReplayConfig:
                     f"data.replay.{name} must be finite and >= 1")
         require(is_finite(self.merge_zone_end_m) and self.merge_zone_end_m > 0.0,
                 "data.replay.merge_zone_end_m must be finite and positive")
+        require(is_finite(self.low_share_oversample) and self.low_share_oversample >= 1.0,
+                "data.replay.low_share_oversample must be finite and >= 1")
+        require(is_finite(self.low_share_max) and 0.0 < self.low_share_max < 1.0,
+                "data.replay.low_share_max must be in (0, 1)")
+        require(is_finite(self.low_share_min_stage_s) and self.low_share_min_stage_s >= 0.0,
+                "data.replay.low_share_min_stage_s must be finite and >= 0")
         require(is_finite(self.error_decay) and 0.0 <= self.error_decay < 1.0,
                 "data.replay.error_decay must be in [0, 1)")
         require(int(self.probe_windows) >= 0, "data.replay.probe_windows must be >= 0")

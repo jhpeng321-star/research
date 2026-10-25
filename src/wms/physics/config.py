@@ -254,6 +254,9 @@ class PhysicsConfig:
     # R13E: rollout-only two-sided secure gaps from learned per-slot driver settings.
     # No new network tensors; absent/off keeps the original pivot bit-identical.
     secure_gap_veto: bool = False
+    # R14 D1: HDV mainline lane changes also need the R13E gs secure gaps (learned T, b) to the
+    # new leader and follower (lane logit mask, lane_learnable only).  Off = bit-identical.
+    lane_change_secure_gap: bool = False
     # V6MERGE (2026-10-16): opt-in lane-end interaction rules; absent = legacy execution.
     merge_end_wait: bool = False
     merge_end_wait_distance_m: float = MERGE_END_WAIT_DISTANCE_M
@@ -300,6 +303,10 @@ class PhysicsConfig:
             raise ValueError("secure_gap_veto must be a boolean")
         if not isinstance(self.emergency_braking, bool):
             raise ValueError("emergency_braking must be a boolean")
+        if not isinstance(self.lane_change_secure_gap, bool):
+            raise ValueError("lane_change_secure_gap must be a boolean")
+        if self.lane_change_secure_gap and not self.lane_learnable:
+            raise ValueError("lane_change_secure_gap requires lane_learnable")
         if self.emergency_braking:
             if not (math.isfinite(self.dt_s) and self.dt_s > 0.0
                     and math.isfinite(self.accel_min_mps2) and self.accel_min_mps2 < 0.0):
@@ -429,7 +436,8 @@ class PhysicsConfig:
                 if k in known and k not in ("merge_cal", "lane_rule", "lane_gap_rule",
                                             "gap_stopped_relax", "stop_time_integration",
                                             "emergency_decel_mps2", "emergency_braking",
-                                            "secure_gap_veto", "merge_end_wait",
+                                            "secure_gap_veto", "lane_change_secure_gap",
+                                            "merge_end_wait",
                                             "mainline_merge_yield", "forced_window_mode",
                                             "mainline_merge_yield_scope", "merge_impatience",
                                             "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain")

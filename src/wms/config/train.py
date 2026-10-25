@@ -38,7 +38,7 @@ PHYSICS_MODE_KEYS = {"forced_window_mode": ("deterministic", "hazard"),
 #: V8WM ``physics.inference``: boolean switches that may differ at inference ...
 PHYSICS_INFERENCE_SWITCHES = ("merge_end_wait", "mainline_merge_yield", "gap_stopped_relax",
                               "merge_impatience", "lane_learnable", "ramp_lane_end_stop", "ramp_risk_retain",
-                              "emergency_braking", "secure_gap_veto")
+                              "emergency_braking", "secure_gap_veto", "lane_change_secure_gap")
 #: ... plus the numeric override keys (and the V8WM2 mode keys).
 PHYSICS_INFERENCE_KEYS = PHYSICS_INFERENCE_SWITCHES + PHYSICS_OVERRIDE_KEYS \
     + tuple(PHYSICS_MODE_KEYS)
@@ -56,6 +56,8 @@ class PhysicsOptions:
     emergency_decel_mps2: Optional[float] = None
     emergency_braking: bool = False
     secure_gap_veto: bool = False
+    lane_change_secure_gap: bool = False
+    """R14 D1: HDV mainline lane changes need learned-parameter gs secure gaps (lane_learnable)."""
     """R13E: first-passage rollout veto using learned driver T, b and min-gap; replay is ungated."""
     exit_at_road_end: bool = True
     """Plain-bug fix (default true): rollouts remove vehicles past 553.33 m.  False reproduces
@@ -105,6 +107,10 @@ class PhysicsOptions:
                 "physics.secure_gap_veto must be a boolean")
         require(isinstance(self.emergency_braking, bool),
                 "physics.emergency_braking must be a boolean")
+        require(isinstance(self.lane_change_secure_gap, bool),
+                "physics.lane_change_secure_gap must be a boolean")
+        require(not self.lane_change_secure_gap or bool(self.lane_learnable),
+                "physics.lane_change_secure_gap requires physics.lane_learnable")
         require(not self.emergency_braking or self.emergency_decel_mps2 is None,
                 "physics.emergency_braking cannot combine with legacy emergency_decel_mps2")
         require(self.emergency_decel_mps2 is None or (
