@@ -31,7 +31,7 @@ Files: `src/wms/control/{bridge,dreamer,policy14,policy14_cli,policy,confident_g
 ## Verification before inference
 
 - cpuX initial integrated CPU suite: **351 passed**; final expanded suite on
-  gpuB: **365 passed**, including calibration dispatch and adoption-rule vetoes.
+  gpuB: **366 passed**, including calibration dispatch and adoption-rule vetoes.
 - Flags OFF versus `01f590e9`: **55/55 tensor bit identities** under legacy
   ramp behaviour and **55/55** under LOOP14C `wm_law`, including sampled and
   deterministic policy/all/counterfactual rows.
@@ -58,6 +58,10 @@ No new SUMO or evaluation-seed outcomes.
   pulse targets release to native after 3 s consistently in lane inference and
   execution. Superseded ON tapes from the missing-tick harness are retained in
   `superseded_tickmask_attempt1/`; ON qualification is rerun, OFF successes retained.
+  A second structural regression ensures a native mainline insertion competes
+  with a ramp merge exactly like an HDV, rather than inheriting policy-command
+  reservation priority. Superseded ON 60 s/qualification tapes are retained at
+  `superseded_priority_attempt2/` and rerun before any decision; OFF is unchanged.
 - C1 PI u_same native/PI ranking is secondary, entries OFF and inherited
   snapshot-history/longitudinal plant retained; run only if required work finishes.
 - Paired whole-world percentile bootstrap: 2,000 resamples, seed 0.
@@ -70,9 +74,10 @@ means no adoption. Other metrics remain descriptive.
 
 ## Detached continuation and owner handoff
 
-cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **170110**,
-continuation **170198**, `setsid nohup`, numerical
+cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **178756**,
+continuation **178826**, `setsid nohup`, numerical
 threads=1, nice19, CPU only. MAPPO pool <=6 plus qualification pool <=6;
+after qualification completes, its six slots may transfer to the MAPPO pool (<=12 total).
 secondary C1 uses <=12 only after those pools exit. New inference is barred
 after **09:00 UTC+8**. Only receipt-owned PID incarnations are inspected.
 
@@ -94,3 +99,9 @@ tests plus a two-update real-WM CPU prearm smoke, and retain every existing laun
 gate. The later MAIN14 readiness/allocator changes have been retained by
 cherry-picking their committed fixes onto this branch. If not adopted,
 incomplete, already launched or late: arm untouched.
+
+The initial conditional package at `18008a5f` and watcher 652131 were superseded
+before any decision or MAIN14 write, following the mainline-priority regression.
+That package is retained on cpuX as `rearm_package_superseded_72a0db3862dd.tar.gz`.
+The source/config/registration hashes of its replacement are registered before
+installing the replacement watcher; scientific adoption criteria are unchanged.

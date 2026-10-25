@@ -1834,12 +1834,19 @@ class WmSModel(nn.Module):
                               fixed_target=fixed_target, route_shift=route_shift)
 
     def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform,
-                           driver_params=None, delegated=None):
+                            driver_params=None, delegated=None):
         kin = state_kin(state)
         present = state_present(state, kin)
+        geometry_delegated = delegated
+        native_lane = state.get(cav_motion.WM_LANE_KEY)
+        if native_lane is not None:
+            # A native mainline insertion competes like an HDV insertion, rather
+            # than gaining the immutable occupancy/priority of a policy command.
+            geometry_delegated = (native_lane.bool() if delegated is None else
+                                  delegated.bool() | native_lane.bool())
         geo = self.pivot_decision_geometry(state, out["accel_mps2"],
                                            next_s=next_s, next_v=next_v,
-                                           fixed_next_lane=next_lane, delegated=delegated)
+                                           fixed_next_lane=next_lane, delegated=geometry_delegated)
         own = present & out.get("lane_decider_mask", out["hdv_mask"]).bool()
         if delegated is not None:
             # LOOP14C: delegated ramp CAVs merge by the same learned law (own driver settings).

@@ -48,7 +48,28 @@ print(json.dumps({'staged':str(r)}))
 
 
 if __name__ == "__main__":
-    if "--watch" in sys.argv:
+    if "--archive-package" in sys.argv:
+        print(remote("cpuX", '''
+from pathlib import Path
+import hashlib,json
+p=Path.home()/'nativelane'; f=p/'rearm_package.tar.gz'; h=hashlib.sha256(f.read_bytes()).hexdigest()
+target=p/('rearm_package_superseded_'+h[:12]+'.tar.gz'); assert not target.exists(); f.rename(target)
+print(json.dumps({'retained':str(target),'sha256':h}))
+''').decode())
+    elif "--stop-watch" in sys.argv:
+        import json
+        rec = json.loads((ROOT / "tools/nativelane/WATCHER.json").read_text())
+        print(remote("gpuR", '''
+import json,sys,os,signal
+from pathlib import Path
+r=json.load(sys.stdin); a=Path('/root/autodl-tmp/c4/v5/main14_arm')
+assert not (a/'nativelane_adoption_package').exists(), 'adoption already active'
+f=Path('/proc/'+str(r['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
+assert f[19]==r['start_ticks'] and f[0]!='Z'
+os.kill(r['pid'],signal.SIGTERM)
+print(json.dumps({'stopped_own_watcher':r['pid'],'armed_files_untouched':True}))
+''', json.dumps(rec).encode()).decode())
+    elif "--watch" in sys.argv:
         import base64
         import json
         receipt = json.loads((ROOT / "tools/nativelane/REARM_PACKAGE.json").read_text())
@@ -122,15 +143,24 @@ until=time.time()+240
 while any(alive(r) for r in children):
  assert time.time()<until,'own qualification children still completing'
  time.sleep(2)
-archive=p/'superseded_tickmask_attempt1'; assert not archive.exists(); archive.mkdir()
+archive=p/ARCHIVE; assert not archive.exists(); archive.mkdir()
 for name in ['pulse','c9']:
  f=p/'on'/name
  if f.exists(): f.rename(archive/('on_'+name))
 for f in (p/'done').glob('qual_*_on_*.json'): f.rename(archive/f.name)
 for f in (p/'logs').glob('qual_*_on_*'): shutil.copyfile(f,archive/f.name)
 (p/'qual_retry.pid.json').rename(archive/'qual_retry.pid.json')
+if PRIORITY:
+ source=p/'on/wm_coop'; units=[]
+ for f in sorted(source.glob('w*_t*.json')):
+  d=json.loads(f.read_text()); units.append(d['world']+'@'+str(int(d['t0'])))
+ assert len(units)==33
+ source.rename(archive/'wm_coop')
+ (p/'done/mappo_coop_on.json').rename(archive/'mappo_coop_on.done.json')
+ (p/'REPAIR_ON60.json').write_text(json.dumps({'units':','.join(units),'reason':'native mainline insertion priority must match HDV geometry','archive':str(archive)},indent=1))
 print(json.dumps({'paused':True,'archived_on':str(archive),'off_successes_retained':True}))
-''', timeout=300000).decode())
+'''.replace("ARCHIVE", repr("superseded_priority_attempt2" if "--priority-fix" in sys.argv else "superseded_tickmask_attempt1"))
+   .replace("PRIORITY", repr("--priority-fix" in sys.argv)), timeout=300000).decode())
     elif "--qual-retry" in sys.argv:
         print(remote("cpuX", '''
 import os,subprocess,json,time,signal

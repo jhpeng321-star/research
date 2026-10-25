@@ -118,6 +118,29 @@ def test_preforward_native_ownership_receives_the_same_tick_as_execution():
     assert ticks == [8]
 
 
+def test_native_mainline_insertion_competes_with_ramp_exactly_like_hdv():
+    m = model()
+    state = wm_scene(2., True)
+    state["lane"] = torch.tensor([[0, 2, 1]])
+    state["s_m"][0, 1] = state["s_m"][0, 0]
+    outputs = []
+
+    def forward(st, **kw):
+        out = fixed_forward(st, **kw)
+        out["lane_logits"][0, 0] = out["lane_logits"].new_tensor([-20., 20., -20.])
+        out["lane_sample"][:] = False
+        out["lane_decider_mask"] = st["present"]
+        return out
+
+    for human in (True, False):
+        st = {**state, "is_cav": torch.zeros_like(state["is_cav"])} if human else state
+        c = None if human else controller(torch.zeros_like(state["present"]))
+        with patch.object(m, "forward", side_effect=forward):
+            outputs.append(m.step(st, cav_controller=c, lane_uniform=torch.full_like(st["s_m"], .5)))
+    for key in ("next_lane", "merge_pivot_eligible", "merge_pivot_committed", "merge_pivot_c"):
+        assert torch.equal(outputs[0][key], outputs[1][key]), key
+
+
 def test_gate_checkpoint_metadata_preserves_native_mask_and_merge_delegation(tmp_path):
     from wms.control.confident_gate import ArmImagination
     from wms.control.policy import CavPolicy, RsuGroupEncoder, load_policy_components

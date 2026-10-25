@@ -19,8 +19,29 @@ if mode == "mappo":
         return original(*args, **kwargs)
     P.make_controller_factory = factory
     import importlib.util
+    import json
+    import subprocess
     import time
     from datetime import datetime
+    task_root = Path.home() / "nativelane"
+    repair = task_root / "REPAIR_ON60.json"
+    if on and "--horizon" in sys.argv and sys.argv[sys.argv.index("--horizon") + 1] == "300" and repair.exists():
+        request = json.loads(repair.read_text())
+        argv = [sys.executable, str(Path(__file__).resolve()), "mappo", tool,
+                "--repo", str(ROOT), "--source", str(Path.home() / "mappodiag/src_bsrc"),
+                "--units", request["units"], "--horizon", "60", "--samples", "4", "--workers", "6",
+                "--pad-max", "64", "--wm", str(Path.home() / "mappodiag/wm_13e_b2.pt"),
+                "--wm-config", "configs/c4_wm_v10round13e_stage_b.toml",
+                "--mappo", str(Path.home() / "coopmeas/mappo_v5_final.pt"),
+                "--out", str(task_root / "on/wm_coop")]
+        subprocess.run(argv, check=True)
+        results = [json.loads(p.read_text()) for p in (task_root / "on/wm_coop").glob("w*_t*.json")]
+        assert len(results) == 33 and all("error" not in r and r.get("finite") is True for r in results)
+        repair.rename(task_root / "REPAIR_ON60_DONE.json")
+    # Once the qualification pool has fully exited, use the released six slots.
+    q = task_root / "QUAL_TASKS.json"
+    if q.exists() and json.loads(q.read_text()).get("complete") and "--workers" in sys.argv:
+        sys.argv[sys.argv.index("--workers") + 1] = "12"
     spec = importlib.util.spec_from_file_location("nativelane_mappo_tool", tool)
     M = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = M
