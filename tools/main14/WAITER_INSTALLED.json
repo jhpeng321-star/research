@@ -1,0 +1,22 @@
+{
+ "pid": 649530,
+ "session": 649530,
+ "ppid": 1,
+ "start_ticks": "4157854547",
+ "log": "/root/autodl-tmp/c4/v5/main14_autolaunch.log",
+ "stop_marker": "/root/autodl-tmp/c4/v5/main14_arm/STOP_ARM",
+ "verified_at": "2026-10-25T18:13:11.948930+00:00",
+ "state": "S",
+ "stdin": "/dev/null",
+ "stdout": "/root/autodl-tmp/c4/v5/main14_autolaunch.log",
+ "stderr": "/root/autodl-tmp/c4/v5/main14_autolaunch.log",
+ "flock_held": true,
+ "check_only": {
+  "verified": true,
+  "code_sha": "d7083a9cc19e837ecae631a7f10870455c655818",
+  "source_files": 1858,
+  "sim_s_per_cycle": 29133,
+  "ready": false,
+  "reason": "14b qualification verdict absent"
+ }
+}

@@ -87,14 +87,54 @@ by deployment. cpuX links the already-tested local fixture directory for simulat
 ## Verification and operational receipt
 
 The first integrated local run passed **333 tests** (pytest printed its complete success
-summary; the harness timed out during process teardown). The focused additions and the
-gpuR deployment checks are recorded in the final operational receipt below.
+summary; the harness timed out during process teardown). Final focused MAIN14 tests: **13 passed**.
+The complete deployed gpuR CPU suite passed **336 tests**; the pre-arm real-13E-b2 CPU smoke
+completed two policy updates. The first manual panel-build command omitted the two dataset
+environment variables and failed before any training; the second command used the registered
+environment and froze the panel successfully. Its sha256 is
+**3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e**, identical to coop-OFF.
 Ruff passed for the changed integration Python files. The launch repeats tests/smoke after
 the real prerequisites are satisfied; pre-arm checks do not bypass that gate.
 
 Deployment and arm evidence: `tools/main14/deployment_receipt.json`,
 `tools/main14/REGISTERED.json`, gpuR `main14_arm/{ARMED,WAITER_INSTALLED}.json`.
 The actual selected base is recorded later in `BASE_SELECTION.json` / `LAUNCHED.json`.
+
+### Armed operational receipt (02:12 UTC+8, before the 05:30 deadline)
+
+- Waiter **PID/SID 649530**, actual **PPID 1**, start ticks **4157854547**;
+  `setsid nohup` confirmed. It is waiting for the protected round-14b chain and the cpuX verdict.
+- Final runtime code **d7083a9cc19e837ecae631a7f10870455c655818** adds readiness diagnostics
+  to the check-only output/wait log. It was re-staged before arming after the tested
+  **01f590e9** version; the fail-closed source check caught an overlapping pre-arm installation,
+  and the final consistent source/config/registration check passes.
+- Actual registration sha256 **f1a852becdf5f9484f0068f4a5e1995e41691da644d920b039f92e7ee9b60316**;
+  registered config sha256 **023c3cc05aff76959fe29d25dab0e290afd857dd0bcb5babde8cac81384a901d**.
+  `tools/main14/REGISTERED.json` and `deployment_receipt.json` capture the final pre-arm copy.
+- Both hosts verified all **1,858** exported files; gpuR uses about 31 MB of the initially
+  2.5 GB free, leaving about **2.48 GB decimal / 2.31 GiB**. Final liveness, source checks,
+  panel hash, no-launch state, and log tail are in `tools/main14/ARMING_RECEIPT.json`.
+
+### Waiter installation verified — 02:13 UTC+8
+
+Runtime commit **d7083a9cc19e837ecae631a7f10870455c655818** adds live verdict readiness
+to `--check-only` and to the chain-wait log. It was exported to both hosts before arming;
+the refreshed registration SHA is
+`f1a852becdf5f9484f0068f4a5e1995e41691da644d920b039f92e7ee9b60316`.
+The registered config SHA remains unchanged. The focused MAIN14 suite passed **13 tests on gpuR**.
+
+Installed using `python tools/main14/deploy.py arm`, which executes
+`setsid nohup /root/miniconda3/bin/python /root/autodl-tmp/c4/v5/repo_main14/scripts/c4/main14_autolaunch.py --arm /root/autodl-tmp/c4/v5/main14_arm/ARMED.json`
+with stdin `/dev/null` and stdout/stderr appended to `main14_autolaunch.log`.
+
+After the installing SSH session exited, PID **649530** was alive/sleeping, PPID **1**,
+session **649530**, start ticks **4157854547**; `/proc` file descriptors confirmed the
+documented redirections and an independent nonblocking flock attempt confirmed its lock
+was held. `waiter.pid` and `WAITER_INSTALLED.json` agree. Check-only verified all **1,858**
+source files and reported `ready=false`, reason **14b qualification verdict absent**.
+The log records both the arm event and waiting for round14b with that verdict reason;
+neither `WAIT_OWNER.json` nor `LAUNCHED.json` existed. Receipt:
+`tools/main14/WAITER_INSTALLED.json`. No launch or process signal was issued.
 
 ## Monitor / stop
 
