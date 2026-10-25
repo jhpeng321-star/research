@@ -274,6 +274,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "emergency_braking": "physics.emergency_braking",
     "secure_gap_veto": "physics.secure_gap_veto",
     "lane_change_secure_gap": "physics.lane_change_secure_gap",
+    "emergency_onset": "physics.emergency_onset",
     "exit_at_road_end": "physics.exit_at_road_end",
     "lane_conflict_resolve": "model.lane_conflict_resolve",
     # V6MERGE (opt-in lane-end interaction rules)
@@ -488,6 +489,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_end_wait", "mainline_merge_yield", "lane_learnable", "ramp_lane_end_stop",
     "ramp_risk_retain",
     "mainline_lane_mode", "mainline_courtesy_zone_m",
+    "emergency_onset",
     # V7FT
     "merge_loss_speed_weight",
     "merge_loss_discharge_weight",

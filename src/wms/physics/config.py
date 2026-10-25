@@ -79,6 +79,8 @@ LANE_PHYSICAL_MARGIN_M = 0.0
 #: moves allowed are the learned lane-1 -> lane-0 courtesy overtakes of HDVs inside the approach
 #: zone upstream of the merge (no lane-0 -> 1 returns, no overtake elsewhere, no CAV change).
 MAINLINE_LANE_MODES = ("free", "courtesy")
+#: LOOP14 ``emergency_onset``: "plant" = R13E (default), "driver_b" = learned comfortable b.
+EMERGENCY_ONSETS = ("plant", "driver_b")
 #: V10LANEOPT ``courtesy`` zone: this many metres upstream of the acceleration-lane end
 #: (``merge_zone_s1_m``, model frame) where a lane-1 HDV overtake (1 -> 0) is still a learned
 #: decision.  Default 0-300 m before the merge end; 0 disables the courtesy draw (merges only).
@@ -257,6 +259,10 @@ class PhysicsConfig:
     # R14 D1: HDV mainline lane changes also need the R13E gs secure gaps (learned T, b) to the
     # new leader and follower (lane logit mask, lane_learnable only).  Off = bit-identical.
     lane_change_secure_gap: bool = False
+    # LOOP14 (S-TTC): onset of the R13E envelope.  "plant" (default) = 13E (plan with the plant
+    # limit B = -accel_min); "driver_b" = plan with each driver's learned comfortable decel b and
+    # brake harder only when the plant-limit plan demands it (SUMO maximumSafeFollowSpeed).
+    emergency_onset: str = "plant"
     # V6MERGE (2026-10-16): opt-in lane-end interaction rules; absent = legacy execution.
     merge_end_wait: bool = False
     merge_end_wait_distance_m: float = MERGE_END_WAIT_DISTANCE_M
@@ -307,6 +313,10 @@ class PhysicsConfig:
             raise ValueError("lane_change_secure_gap must be a boolean")
         if self.lane_change_secure_gap and not self.lane_learnable:
             raise ValueError("lane_change_secure_gap requires lane_learnable")
+        if self.emergency_onset not in EMERGENCY_ONSETS:
+            raise ValueError(f"emergency_onset must be one of {EMERGENCY_ONSETS}: {self.emergency_onset!r}")
+        if self.emergency_onset != "plant" and not self.emergency_braking:
+            raise ValueError("emergency_onset='driver_b' requires emergency_braking")
         if self.emergency_braking:
             if not (math.isfinite(self.dt_s) and self.dt_s > 0.0
                     and math.isfinite(self.accel_min_mps2) and self.accel_min_mps2 < 0.0):

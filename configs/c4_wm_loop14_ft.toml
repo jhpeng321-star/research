@@ -5,6 +5,7 @@
 #     emergency / secure-gap physics stay FROZEN; trainable = residual (non-lane), follower
 #     courtesy and the learned merge yield (R13Y scalars, stage-A lr scale);
 #   * courtesy is NOT fresh-zeroed (a continuation, not a new stage B);
+#   * S-TTC physics.emergency_onset = "driver_b" ON (envelope planned with learned b);
 #   * R14 D1 lane_change_secure_gap ON (first loop update) and R14 D3 low-share sources +
 #     low_share_oversample 1.69 (unchanged);
 #   * the collected policy/native pairs (WMS_DATA_LOOP14_PAIRS) join the TRAIN mix at 0.15,
@@ -47,6 +48,9 @@ emergency_braking = true
 secure_gap_veto = true
 # R14 D1: HDV mainline lane changes need the same learned-parameter gs.
 lane_change_secure_gap = true
+# LOOP14 / S-TTC (TTC.md): the emergency envelope plans with each driver's LEARNED comfortable
+# decel b and brakes harder only when the plant-limit plan demands it (plant -9 = hard floor).
+emergency_onset = "driver_b"
 merge_end_wait = false
 ramp_lane_end_stop = true
 ramp_risk_retain = true
