@@ -164,6 +164,10 @@ class WmSTrainer:
         torch.manual_seed(int(s.seed))
         random.seed(int(s.seed))
         self.device = torch.device(s.device)
+        # Shared-GPU guard: env C4_GPU_MEM_FRACTION caps this process's CUDA memory (unset = unchanged).
+        frac = os.environ.get("C4_GPU_MEM_FRACTION")
+        if frac and self.device.type == "cuda":
+            torch.cuda.set_per_process_memory_fraction(float(frac), self.device)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):

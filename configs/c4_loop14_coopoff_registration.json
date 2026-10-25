@@ -1,0 +1,12 @@
+{"id": "C4-LOOP14-COOPOFF-20261026", "status": "registered", "split": "TRAIN",
+ "arm": "cooperation credit OFF (ablation reference): counterfactual w_all = 1, w_individual = w_group = w_coop = w_team = 0; configs/c4_policy14_loop14c.toml (LOOP14C (2) native_ramp_merge = wm_law + (3) native_cav = head; (1) policy_ramp_merge off)",
+ "acknowledged_by": "<filled at launch>",
+ "seed_block": [968500, 968627], "exclude": [],
+ "seed_evidence": "<filled at launch>",
+ "sources": {"initial_wm": "runs/c4_wm_v10_round13e_b2/wm_s.pt", "initial_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+             "initial_wm_config": "configs/c4_wm_v10round13e_stage_b.toml", "policy0": "trained from scratch in cycle 0 (no adopted policy)",
+             "policy_config_sha256": "<filled at launch>", "code_sha": "<filled at launch>"},
+ "comparators": "previous accepted WM (same flags/panel; loop14 accept.py); SUMO native arm per pair (same saved state); coop-ON main arm C4-LOOP14-20261026 (968100-968227) when launched",
+ "budget": {"max_cycles": 4, "policy_updates_per_cycle": 150, "sim_s_per_cycle": 30000, "sim_s_total": 120000,
+            "gpu_h_policy_per_cycle": 3, "gpu_h_wm_per_cycle": 1.5, "wm_steps_per_cycle": 40},
+ "stop": {"consecutive_wm_rejects": 2, "max_branch_incidents_per_cycle": 0}}
