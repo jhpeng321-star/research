@@ -109,6 +109,10 @@ EXEC_CAP_MODES = ("off", "idm", "idm_normal",
 EXEC_CAP_ENV = "WMS_CAV_EXEC_CAP"
 #: Key under which the model hands the per-slot ceiling ``[B, K]`` to its CAV callback.
 EXEC_CAP_KEY = "cav_exec_cap_mps2"
+#: LOOP14C: [B, K] bool written BY a CAV callback into the (mutable) callback state: ramp-lane CAV
+#: slots whose on-ramp merge the callback delegates to the WM's own HDV merge law (merge_pivot
+#: first-passage + optional secure-gap veto).  Absent = no delegation (legacy behaviour).
+WM_MERGE_KEY = "cav_wm_merge_law"
 
 
 def check_exec_cap_mode(mode) -> str:

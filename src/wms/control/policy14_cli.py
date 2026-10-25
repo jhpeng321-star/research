@@ -15,7 +15,7 @@ from .contract import RewardWeights
 from .dreamer import DreamerConfig
 from .lanes import LaneRules
 from .objective14 import authoritative_reward
-from .policy14 import Policy14Trainer, SmokeSampler, controller_factory, independent_score
+from .policy14 import Policy14Trainer, SmokeSampler, independent_score, make_controller_factory
 from .real_returns14 import NPZRealReturnProvider, ScaledTeamCritic, warm_start_real_critic
 from .start_states import checked_path
 from .train_cli import GroupSignal, _load_starts, _read_config, policy_settings
@@ -154,6 +154,15 @@ def main(argv=None):
         lane_section = dict(raw["lanes"])
         enabled = lane_section.pop("enabled", True)
         lane_rules = LaneRules.from_mapping(lane_section) if enabled else None
+        # LOOP14C ramp merges (default off = legacy forced 6 m rule for every CAV).
+        ramp_merge = {"policy_ramp_merge": switches.get("policy_ramp_merge", False),
+                      "native_ramp_merge": switches.get("native_ramp_merge", "gap6")}
+        factory = make_controller_factory(**ramp_merge)
+        if ramp_merge["policy_ramp_merge"] and lane_rules is None:
+            raise ValueError("policy14.policy_ramp_merge needs [lanes] enabled")
+        if ramp_merge["native_ramp_merge"] == "wm_law" and any(
+                getattr(m, "merge_pivot", None) is None for m in models):
+            raise ValueError("policy14.native_ramp_merge='wm_law' needs first-passage WM members")
         # 13E's second tier is explicitly opt-in for policy CAVs, independently
         # of the WM's native lane physics. CAVCUTIN uses inferred follower b.
         trainer = Policy14Trainer(models, policy, GroupSignal(RsuGroupEncoder()),
@@ -161,7 +170,7 @@ def main(argv=None):
                                       value_scale=float(switches["critic_value_scale"])), train,
                                   observation_builder=build_observations,
                                   reward_fn=authoritative_reward, safety=safe_accel,
-                                  controller_factory=controller_factory, config=cfg,
+                                  controller_factory=factory, config=cfg,
                                   reward_weights=RewardWeights(**raw["reward"]),
                                   device=args.device, output_dir=output, lane_rules=lane_rules,
                                   counterfactual=CounterfactualConfig(**raw["counterfactual"]),
@@ -182,6 +191,8 @@ def main(argv=None):
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
         warmup = warm_start_real_critic(trainer, updates=warm_updates)
+        if ramp_merge != {"policy_ramp_merge": False, "native_ramp_merge": "gap6"}:
+            summary["ramp_merge"] = ramp_merge
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,
                        wm_members=receipts, probes=probes, critic_warmup=warmup, resumed_from=resumed)
         # Independent development starts and paired draws, scored without a critic tail.

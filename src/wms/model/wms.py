@@ -1746,12 +1746,17 @@ class WmSModel(nn.Module):
                 next_s, next_v, pinned = pivot.ramp_lane_end_stop(
                     state_kin(state), next_s, next_v, present, self.physics)
             next_lane = self._apply_merge_pivot(state, out, next_s, next_v, next_lane,
-                                               lane_uniform, driver_params)
+                                               lane_uniform, driver_params,
+                                               delegated=out.get(cav_motion.WM_MERGE_KEY))
             if pinned is not None:
                 release = pinned & (next_lane != int(self.physics.merge_lane))
                 next_s = torch.where(release, free_s, next_s)
                 next_v = torch.where(release, free_v, next_v)
 
+        if (self.merge_pivot is None and cav_motion.WM_MERGE_KEY in out
+                and bool(out[cav_motion.WM_MERGE_KEY].any())):
+            raise ValueError("a CAV callback delegated ramp merges to the WM merge law, which "
+                             "needs merge_decision='first_passage'")
         if self.merge_pivot is None and (self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics)
                 or getattr(self.physics, "lane_learnable", False)):
             # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there
@@ -1782,7 +1787,7 @@ class WmSModel(nn.Module):
         return out
 
     def pivot_decision_geometry(self, state, accel, *, next_s=None, next_v=None,
-                                fixed_next_lane=None, route_shift=None):
+                                fixed_next_lane=None, route_shift=None, delegated=None):
         """P1 LC substep shared by deployment and recorded causal replay.
 
         Decision is after the single trapezoid/stop-time longitudinal update and
@@ -1803,19 +1808,26 @@ class WmSModel(nn.Module):
             moved[..., 0], moved[..., 4], _ = pivot.ramp_lane_end_stop(
                 kin, moved[..., 0], moved[..., 4], present, self.physics, route_shift)
         cav = state.get("is_cav", torch.zeros_like(present)).bool()
+        # LOOP14C ``delegated``: CAV slots whose ramp merge follows the HDV law (decision makers,
+        # never immutable target occupancy).  None keeps the legacy CAV exclusion exactly.
+        decider = ~cav if delegated is None else ~cav | delegated.bool()
+        fixed = cav if delegated is None else cav & ~delegated.bool()
         fixed_target = (None if fixed_next_lane is None else
-                        present & cav & (fixed_next_lane == int(self.physics.merge_target_lane)))
-        return pivot.geometry(moved, present, self.physics, decision_mask=~cav,
+                        present & fixed & (fixed_next_lane == int(self.physics.merge_target_lane)))
+        return pivot.geometry(moved, present, self.physics, decision_mask=decider,
                               fixed_target=fixed_target, route_shift=route_shift)
 
     def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform,
-                           driver_params=None):
+                           driver_params=None, delegated=None):
         kin = state_kin(state)
         present = state_present(state, kin)
         geo = self.pivot_decision_geometry(state, out["accel_mps2"],
                                            next_s=next_s, next_v=next_v,
-                                           fixed_next_lane=next_lane)
+                                           fixed_next_lane=next_lane, delegated=delegated)
         own = present & out["hdv_mask"].bool()
+        if delegated is not None:
+            # LOOP14C: delegated ramp CAVs merge by the same learned law (own driver settings).
+            own = own | (present & delegated.bool())
         ramp_lane, target_lane = int(self.physics.merge_lane), int(self.physics.merge_target_lane)
         ramp = own & (state["lane"].long() == ramp_lane)
         geo["eligible"] = geo["eligible"] & own
@@ -2205,6 +2217,10 @@ class WmSModel(nn.Module):
                 callback_state = {**callback_state, "action_id": action_id,
                                   "action_command": action_command}
             callback_teacher = cav_controller(callback_state)
+            # LOOP14C: ramp CAVs whose merge the callback hands to the WM's HDV merge law.
+            delegated = callback_state.get(cav_motion.WM_MERGE_KEY)
+            if delegated is not None:
+                out[cav_motion.WM_MERGE_KEY] = delegated.bool() & cav
         entrant = state.get("entrant")
         if entrant is None:
             cav_base, cav_new = cav, torch.zeros_like(cav)

@@ -12,6 +12,25 @@ def controller_factory(*args, **kwargs):
     return make_cav_controller(*args, **kwargs, symmetric_exec_cap=True, mask_forced_merge=True)
 
 
+def make_controller_factory(policy_ramp_merge: bool = False, native_ramp_merge: str = "gap6"):
+    """LOOP14C ramp-merge switches (``[policy14]`` keys of the same names).  Both off returns the
+    unchanged :func:`controller_factory` object (bit-identical legacy path)."""
+    if not isinstance(policy_ramp_merge, bool):
+        raise ValueError("policy14.policy_ramp_merge must be a boolean")
+    if native_ramp_merge not in ("gap6", "wm_law"):
+        raise ValueError("policy14.native_ramp_merge must be 'gap6' or 'wm_law'")
+    if not policy_ramp_merge and native_ramp_merge == "gap6":
+        return controller_factory
+
+    def factory(*args, **kwargs):
+        return make_cav_controller(*args, **kwargs, symmetric_exec_cap=True,
+                                   mask_forced_merge=True, policy_ramp_merge=policy_ramp_merge,
+                                   native_ramp_merge=native_ramp_merge)
+    factory.ramp_merge = {"policy_ramp_merge": policy_ramp_merge,
+                          "native_ramp_merge": native_ramp_merge}
+    return factory
+
+
 class Policy14Trainer(DreamerTrainer):
     """Team pathwise acceleration credit plus sampled per-CAV categorical credit.
 

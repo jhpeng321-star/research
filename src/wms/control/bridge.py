@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Callable, Mapping, Optional
+from typing import Callable, Mapping, MutableMapping, Optional
 
 import torch
 from torch import Tensor
@@ -52,7 +52,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         native_accel_max: Optional[float] = None,
                         zone: Optional[Callable[[Mapping[str, Tensor]], Tensor]] = None,
                         symmetric_exec_cap: bool = False,
-                        mask_forced_merge: bool = False) -> CavController:
+                        mask_forced_merge: bool = False,
+                        policy_ramp_merge: bool = False,
+                        native_ramp_merge: str = "gap6") -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -81,12 +83,29 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     (a wrapper function may expose it as an attribute), else the legacy 1.5.  Native CAVs of
     counterfactual rows use ``native_accel_max`` (default ``NATIVE_CAV_ACCEL_MAX_MPS2``).  A
     safety layer without an ``accel_max`` keyword is called unchanged.
+
+    LOOP14C ramp merges (both default off = the legacy forced 6 m rule for every CAV):
+
+    * ``policy_ramp_merge``: policy-acting CAVs are never auto-merged; a ramp CAV reaches
+      lane 1 only through its own lane head (``left`` inside the merge zone), filtered by the
+      same feasibility / consequence / optional secure-gap tiers as mainline changes.  Needs
+      ``lane_rules``.
+    * ``native_ramp_merge = "wm_law"``: every CAV whose ramp merge is still automatic (non-acting
+      CAVs; also acting ones when ``policy_ramp_merge`` is off) stays on the ramp in this callback
+      and is handed to the WM's HDV merge law (``state[WM_MERGE_KEY]``, requires a mutable
+      callback state and a first-passage WM); ``"gap6"`` keeps the fixed-threshold
+      :func:`_merge_lane`.
     """
+    if native_ramp_merge not in ("gap6", "wm_law"):
+        raise ValueError("native_ramp_merge must be 'gap6' or 'wm_law'")
+    if policy_ramp_merge and lane_rules is None:
+        raise ValueError("policy_ramp_merge needs lane_rules (the lane head is the only merge path)")
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
     cav_module = import_module("wms.model.cav")
     direct_command_motion = cav_module.direct_command_motion
     apply_exec_cap = cav_module.apply_exec_cap
+    wm_merge_key = cav_module.WM_MERGE_KEY
     if (act_mask is not None or zone is not None) and native is None:
         raise ValueError("act_mask / zone requires a native CAV behaviour")
     from .safety import with_accel_max
@@ -168,7 +187,16 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             held = torch.where(mask & previous_mask, held, torch.zeros_like(held))
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
-        lane = _merge_lane({**state, "lane": lane_now}, mask)
+        # LOOP14C: CAVs whose ramp merge is automatic (all, unless the head owns acting CAVs).
+        auto = mask & ~acting if policy_ramp_merge else mask
+        if native_ramp_merge == "wm_law":
+            # Stay on the ramp here; the WM's HDV merge law decides (and may veto) the crossing.
+            if not isinstance(state, MutableMapping):
+                raise TypeError("native_ramp_merge='wm_law' needs a mutable callback state")
+            state[wm_merge_key] = auto & (lane_now == 2)
+            lane = lane_now
+        else:
+            lane = _merge_lane({**state, "lane": lane_now}, auto)
         if mask_forced_merge and lane_rules is not None:
             from .lanes import apply_lane_choices, lane_feasibility
             # The old bridge's forced ramp merge bypassed the learned head's veto.
