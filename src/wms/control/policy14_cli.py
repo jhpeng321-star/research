@@ -91,6 +91,10 @@ def main(argv=None):
                              "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
     parser.add_argument("--critic-warmup-updates", type=int, default=None,
                         help="override policy14.critic_warmup_updates (e.g. on fresh current-policy returns)")
+    parser.add_argument("--real-credit", default=None,
+                        help="S-SUMOCREDIT: TRAIN REAL_CREDIT.json (wms.control.real_credit14 fit); scales the "
+                             "individual/group/coop/team counterfactual weights by the measured real-vs-imagined "
+                             "credit multipliers in [0, 1] (absent = off, unchanged)")
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -176,6 +180,12 @@ def main(argv=None):
                                   counterfactual=CounterfactualConfig(**raw["counterfactual"]),
                                   real_return_provider=provider)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        if args.real_credit:
+            from .real_credit14 import load_multipliers
+            trainer.credit_multipliers = load_multipliers(checked_path(args.real_credit))
+            summary["real_credit"] = {"file": str(args.real_credit),
+                                      "sha256": hashlib.sha256(checked_path(args.real_credit).read_bytes()).hexdigest(),
+                                      "multipliers": dict(trainer.credit_multipliers)}
         resumed = None
         if args.resume:
             import os

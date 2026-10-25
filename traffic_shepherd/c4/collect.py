@@ -37,6 +37,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1", "sealed")
 
@@ -112,23 +113,31 @@ def run_job(job: dict) -> dict:
         if opts.get("policy_pairs"):
             from traffic_shepherd.c4.policy_pairs import (decision_times, load_pair_policy_factory,
                                                           run_policy_pair_job)
-            key = ("pairs", opts["policy"])
+            extras = None
+            if opts.get("sumocredit"):              # S-SUMOCREDIT extras (absent = unchanged)
+                from traffic_shepherd.c4.sumocredit import PairExtras
+                extras = PairExtras(**opts["sumocredit"])
+            key = ("pairs", opts["policy"]) if extras is None else ("pairs", opts["policy"], "wm")
             if key not in _POLICIES:
                 _POLICIES[key] = load_pair_policy_factory(
-                    opts["policy"], opts.get("settings_wm_ckpt"), opts.get("settings_wm_config"))
+                    opts["policy"], opts.get("settings_wm_ckpt"), opts.get("settings_wm_config"),
+                    **({} if extras is None else {"need_wm": extras.needs_wm}))
             times = decision_times(opts["warmup"], opts["branch_first"] or opts["warmup"] + 60,
                                    opts["branch_cadence"], opts["branch_points"])
             result = run_policy_pair_job(
                 env, policy_factory=_POLICIES[key], seed=job["seed"], demand_vph=job["demand"],
                 penetration=job["penetration"], warmup_s=opts["warmup"], times=times,
                 branch_h=opts["branch_horizon"], episode_dir=out,
-                branch_root=Path(job["branch_dir"]), meta=meta, policy_ckpt=opts["policy"])
+                branch_root=Path(job["branch_dir"]), meta=meta, policy_ckpt=opts["policy"],
+                **({} if extras is None else {"extras": extras}))
             summary = result["summary"]
             b = result["branches"]
             record.update(n_branches=b["n_branches"], branch_collisions=b["collisions"],
                           branch_teleports=b["teleports"], branch_wall_s=b["branch_wall_s"],
                           base_wall_s=b["base_wall_s"], pair_dJ=b["pair_dJ"],
                           pair_sim_seconds=b["sim_s"])
+            if "sumocredit" in b:
+                record.update(sumocredit=b["sumocredit"])
         elif opts["policy"] == "generic_random":
             from traffic_shepherd.c4.genrand import run_genrand_job
             branch_root = (Path(job["branch_dir"]) if opts.get("branch_cadence", 0) > 0
@@ -194,6 +203,11 @@ def plan_jobs(args) -> list[dict]:
                 branch_points=getattr(args, "branch_points", 1),
                 settings_wm_ckpt=getattr(args, "settings_wm_ckpt", None),
                 settings_wm_config=getattr(args, "settings_wm_config", None))
+    extras = sumocredit_options(args)
+    if extras is not None:
+        if not opts["policy_pairs"]:
+            raise SystemExit("the S-SUMOCREDIT extras (--credit-horizon/--gate-*) need --policy-pairs")
+        opts["sumocredit"] = extras
     if opts["policy_pairs"]:
         from traffic_shepherd.c4.baselines import BASELINES
         from traffic_shepherd.c4.policy_pairs import check_registered_seeds
@@ -219,6 +233,23 @@ def plan_jobs(args) -> list[dict]:
             job["branch_dir"] = str(out / "branches" / policy_tag(args.policy) / jid)
         jobs.append(job)
     return jobs
+
+
+def sumocredit_options(args) -> Optional[dict]:
+    """``PairExtras`` fields from the CLI, or None when every S-SUMOCREDIT flag is off."""
+    from dataclasses import asdict
+    if not (getattr(args, "credit_horizon", 0) or getattr(args, "gate_horizon", 0)
+            or getattr(args, "gate_table", None)):
+        return None
+    from traffic_shepherd.c4.sumocredit import PairExtras
+    extras = PairExtras(credit_horizon=args.credit_horizon, credit_group_max=args.credit_group_max,
+                        credit_flips=args.credit_flips, credit_imagine=not args.no_credit_imagine,
+                        gate_horizon=args.gate_horizon, gate_unit=args.gate_unit,
+                        gate_reference=args.gate_reference, gate_state=args.gate_state,
+                        gate_max_units=args.gate_max_units, gate_table=args.gate_table,
+                        gate_decision_period=args.gate_decision_period,
+                        n_driver_samples=args.gate_driver_samples, seed=args.sumocredit_seed)
+    return asdict(extras)
 
 
 def plan_cases(seeds, demands, pens, plan: str = "product", pen_weights=None) -> list[tuple]:
@@ -328,6 +359,24 @@ def main(argv=None) -> int:
     ap.add_argument("--settings-wm-config", default=None)
     ap.add_argument("--registration", default=None,
                     help="policy pairs: registered fresh TRAIN seed block (JSON), required")
+    sc = ap.add_argument_group("S-SUMOCREDIT extras of --policy-pairs (all off by default)")
+    sc.add_argument("--credit-horizon", type=int, default=0,
+                    help="real-credit arms ONLY:i/GROUP/FLIP:i of this many seconds (0 = off)")
+    sc.add_argument("--credit-group-max", type=int, default=3)
+    sc.add_argument("--credit-flips", type=int, default=0)
+    sc.add_argument("--no-credit-imagine", action="store_true",
+                    help="skip the imagined counterpart of the credit arms")
+    sc.add_argument("--gate-horizon", type=int, default=0,
+                    help="gate-calibration arms of this many seconds (0 = off)")
+    sc.add_argument("--gate-unit", choices=("fleet", "group", "cav"), default="fleet")
+    sc.add_argument("--gate-reference", choices=("hold", "native"), default="hold")
+    sc.add_argument("--gate-state", choices=("belief", "oracle"), default="belief")
+    sc.add_argument("--gate-max-units", type=int, default=4)
+    sc.add_argument("--gate-table", default=None,
+                    help="TRAIN reliability table: adds the gated policy arm (branch horizon)")
+    sc.add_argument("--gate-decision-period", type=float, default=5.0)
+    sc.add_argument("--gate-driver-samples", type=int, default=1)
+    sc.add_argument("--sumocredit-seed", type=int, default=0)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     if any(tok in str(args.out).lower() for tok in FORBIDDEN):
@@ -394,6 +443,11 @@ def main(argv=None) -> int:
                "pair_sim_seconds": sum(r.get("pair_sim_seconds", 0) for r in ok),
                "pair_dJ": {k: v for r in ok for k, v in (r.get("pair_dJ") or {}).items()},
                "host_cpus": os.cpu_count(), "finished_utc": _now()}
+    extra = [r["sumocredit"] for r in ok if r.get("sumocredit")]
+    if extra:                                     # S-SUMOCREDIT (key absent when off)
+        summary["sumocredit"] = {"jobs": len(extra), "sim_s": sum(e["sim_s"] for e in extra),
+                                 "files": {k: sum(e["files"].get(k, 0) for e in extra)
+                                           for k in ("gate", "gated", "credit")}}
     (out / "COLLECT_SUMMARY.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     print(json.dumps(summary, indent=1), flush=True)
     return 0 if len(ok) == len(records) else 1

@@ -108,20 +108,26 @@ class PairPolicy:
 
 
 def load_pair_policy_factory(policy_ckpt: str, wm_ckpt: Optional[str], wm_config: Optional[str],
-                             *, device: str = "cpu") -> Callable[[], PairPolicy]:
-    """Factory of fresh :class:`PairPolicy` objects (one per arm; networks/WM shared)."""
+                             *, device: str = "cpu", need_wm: bool = False) -> Callable[[], PairPolicy]:
+    """Factory of fresh :class:`PairPolicy` objects (one per arm; networks/WM shared).
+
+    ``need_wm`` (S-SUMOCREDIT extras: gate / credit imagination) loads the accepted WM even when
+    the lane mask needs no learned settings; ``make.models`` / ``make.components`` expose the WM
+    members and ``(policy, group_encoder, lane_rules)``."""
     from wms.control.policy import PolicyExecutor, load_policy_components
     import os
 
     policy, encoder, rules, _ = load_policy_components(policy_ckpt, device=device)
     needs_settings = bool(rules is not None and (rules.consequence_mask or rules.secure_gap_hook))
     settings = None
-    if needs_settings:
+    models = None
+    if needs_settings or need_wm:
         if not (wm_ckpt and wm_config):
-            raise ValueError("the policy's lane mask needs learned settings: pass the accepted WM "
-                             "(--settings-wm-ckpt/--settings-wm-config)")
+            raise ValueError("the policy's lane mask / the S-SUMOCREDIT extras need the accepted "
+                             "WM (--settings-wm-ckpt/--settings-wm-config)")
         from wms.control.policy14_cli import load_members
         models, _ = load_members([wm_ckpt], [wm_config], device)
+    if needs_settings:
         settings = WmSettings(models[0], secure_gap_tier=bool(rules.secure_gap_hook))
     deterministic = os.environ.get("C4_POLICY_STOCHASTIC") != "1"
 
@@ -131,6 +137,8 @@ def load_pair_policy_factory(policy_ckpt: str, wm_ckpt: Optional[str], wm_config
         return PairPolicy(exe, settings)
 
     make.needs_settings = needs_settings
+    make.models = models
+    make.components = (policy, encoder, rules)
     return make
 
 
@@ -154,8 +162,13 @@ def entry_backlog_at(env, now: float) -> list[int]:
 def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: int,
                         demand_vph: int, penetration: float, warmup_s: int, times: list[int],
                         branch_h: int, episode_dir: Path, branch_root: Path,
-                        meta: Optional[dict] = None, policy_ckpt: str = "") -> dict:
-    """Native base + POLICY/B arms from every saved state (module docstring)."""
+                        meta: Optional[dict] = None, policy_ckpt: str = "",
+                        extras=None) -> dict:
+    """Native base + POLICY/B arms from every saved state (module docstring).
+
+    ``extras`` (S-SUMOCREDIT, :class:`traffic_shepherd.c4.sumocredit.PairExtras`; default None =
+    unchanged): gate calibration, the gated policy arm and real-credit arms run after the POLICY/B
+    arms of every point; their ledgers go to separate JSONL files (no branch episodes)."""
     from .branching import load_state, prepare_branch_mode, save_state
     from .genrand import PREHISTORY_S, MemoryRecorder, _jsonable, _snapshot, _world, write_branch_episode
     from .recorder import write_json
@@ -172,6 +185,7 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
     base_rec = env.recorder
     state_dir = branch_root / "_states"
     saved = []
+    belief = extras.base_belief(policy_factory) if extras is not None else None
     while True:
         now = int(round(env.now))
         if now in times:
@@ -181,10 +195,15 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
             saved.append({"t_s": now, "path": path, "snap": _snapshot(env),
                           "i_k": len(base_rec.frames) - 1,
                           "entry_backlog": entry_backlog_at(env, env.now)})
+            if belief is not None:
+                from wms.control.confident_gate import clone_belief_source
+                saved[-1]["belief"] = clone_belief_source(belief)
         state, info = env.step(None)
         if info["done"]:
             base_summary = info["summary"]
             break
+        if belief is not None:
+            belief.observe(env)
     if [p["t_s"] for p in saved] != list(times):
         raise RuntimeError(f"base episode did not reach every decision time {times}")
     base_wall = time.monotonic() - t0
@@ -194,8 +213,11 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
     world = _world(seed, demand_vph, penetration, warmup_s)
     world_meta = {k: v for k, v in meta.items() if k != "loop14"}
     branches, t_branch = [], time.monotonic()
+    marks = extras.marks(branch_h) if extras is not None else ()
+    extra_out = []
     for point in saved:
         t_k = point["t_s"]
+        prefix = {}
         for kind, tag in ARMS:
             load_state(env, point["path"], point["snap"])
             prepare_branch_mode(env)
@@ -209,7 +231,7 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
             ledger = {"speed_deficit_vehicle_seconds": 0.0, "source_wait_vehicle_seconds": 0.0,
                       "ttc_below_3_vehicle_seconds": 0.0, "arrivals": 0}
             w0 = time.monotonic()
-            for _ in range(int(branch_h)):
+            for step in range(int(branch_h)):
                 if fn is None:
                     st, info = env.step(None)
                 else:
@@ -223,6 +245,9 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
                 totals["lane_completed"] += int(info["lane_commands"].get("completed", 0))
                 for key in ledger:
                     ledger[key] += iv.get(key, 0)
+                if step + 1 in marks:              # S-SUMOCREDIT: in-memory prefix ledgers only
+                    from .sumocredit import prefix_record
+                    prefix[(kind, step + 1)] = prefix_record(ledger, totals)
             env.recorder = None
             ledger["J_vehicle_seconds"] = (ledger["speed_deficit_vehicle_seconds"]
                                            + ledger["source_wait_vehicle_seconds"])
@@ -250,6 +275,9 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
                                        summary=bsum)
             branches.append({"t_s": t_k, "arm": kind, "pair_key": pair_key, **totals,
                              "J": ledger["J_vehicle_seconds"], "wall_s": bsum["wall_s"], **out})
+        if extras is not None:
+            extra_out.append(extras.run_point(env, point, prefix, policy_factory=policy_factory,
+                                              seed=seed, world=world, branch_h=branch_h))
         point["path"].unlink(missing_ok=True)      # own scratch state file
     env.close()
     if state_dir.exists() and not any(state_dir.iterdir()):
@@ -266,6 +294,9 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
              # SUMO policy-minus-native J per pair (negative = the policy is better)
              "pair_dJ": {k: v["POLICY"] - v["B"] for k, v in pairs.items() if len(v) == 2}}
     branch_root.mkdir(parents=True, exist_ok=True)
+    if extras is not None:
+        block["sumocredit"] = extras.write(branch_root, extra_out)
+        block["sim_s"] += block["sumocredit"]["sim_s"]
     write_json(branch_root / "BRANCHES_COMPLETE.json", _jsonable(block))
     return {"summary": base_summary, "branches": block}
 

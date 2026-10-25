@@ -1,0 +1,14 @@
+{
+  "id": "S-SUMOCREDIT-SMOKE-20261025",
+  "status": "registered",
+  "split": "TRAIN",
+  "seed_block": [967600, 967602],
+  "exclude": [[964000, 964199], [968000, 968227]],
+  "purpose": "mechanics smoke of the S-SUMOCREDIT confident gate + real-credit extras (not efficacy evidence)",
+  "budget_sim_s": 2000,
+  "planned_sim_s": 1862,
+  "host": "cpuX ~/sumocredit (<= 2 SUMO processes; 1 collect worker)",
+  "code_branch": "c4/sumocredit",
+  "inputs": {"policy": "v8_u600.pt (E:/agent-work/c4-loop14c-scratch/qual/policy)",
+             "wm": "13E stage-A wm_s.pt (E:/agent-work/c4-loop14c-scratch/qual/ck, md5 dbe4d52b)"}
+}

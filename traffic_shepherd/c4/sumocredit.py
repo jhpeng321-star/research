@@ -1,0 +1,368 @@
+"""S-SUMOCREDIT extras of the LOOP14 policy-pair collection (``collect --policy-pairs``).
+
+All three are opt-in (``PairExtras`` fields default off) and run AFTER the unchanged POLICY / B
+arms of every saved decision state, each arm in a fresh SUMO process loaded from the same state
+file (same SUMO RNG = common random numbers).  Nothing here writes branch episodes: the WM
+fine-tune data and the critic returns of the loop are untouched; results go to
+``GATE_CALIBRATION.jsonl``, ``GATED_ARMS.jsonl`` and ``SUMOCREDIT_POINTS.jsonl`` in the job's
+branch directory (gathered by ``wms.control.real_credit14 gather``).
+
+1. **Gate calibration** (``gate_horizon > 0``): at the decision state the RSU belief (a
+   ``BeliefSource`` fed during the native base episode, copied at the save) or the oracle state is
+   imagined (``wms.control.confident_gate``: REF + PLAN_u arms); SUMO then runs the same arms for
+   ``gate_horizon`` s: REF (every CAV on the reference: ``hold`` = safety-filtered a = 0 / ``native``)
+   and PLAN_u (unit u on the policy, everyone else on the reference).  One record per unit:
+   ``(raw imagined score, SUMO J_plan, SUMO J_ref)``; the fleet PLAN arm and the native REF arm
+   reuse the POLICY / B prefixes when ``gate_horizon <= branch_horizon``.
+2. **Gated arm** (``gate_table``): the policy behind the calibrated 0.8 gate for ``branch_horizon``
+   s (``GatedSumoPolicy``); compared with the ungated POLICY arm and native B of the same state.
+3. **Real credit** (``credit_horizon > 0``): the close CAV group G (``branching.select_group``,
+   at most ``credit_group_max``) and arms ONLY:i, GROUP and ``credit_flips`` FLIP:i (B and ALL =
+   the B / POLICY prefixes); optionally imagined from the oracle state (reference = learned
+   native head) for the trainer's credit correction (``wms.control.real_credit14``).
+"""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Optional
+
+import numpy as np
+
+
+def prefix_record(ledger: dict, totals: dict) -> dict:
+    return {"J": float(ledger["speed_deficit_vehicle_seconds"] + ledger["source_wait_vehicle_seconds"]),
+            "road": float(ledger["speed_deficit_vehicle_seconds"]),
+            "source": float(ledger["source_wait_vehicle_seconds"]),
+            "collisions": int(totals["collisions"]), "teleports": int(totals["teleports"]),
+            "dropped_vehicle_steps": int(totals["dropped_vehicle_steps"])}
+
+
+def _valid(rec: Optional[dict]) -> bool:
+    return bool(rec) and not (rec["collisions"] or rec["teleports"] or rec["dropped_vehicle_steps"])
+
+
+@dataclass
+class PairExtras:
+    credit_horizon: int = 0
+    credit_group_max: int = 3
+    credit_flips: int = 0
+    credit_imagine: bool = True
+    gate_horizon: int = 0
+    gate_unit: str = "fleet"
+    gate_reference: str = "hold"
+    gate_state: str = "belief"
+    gate_max_units: int = 4
+    gate_table: Optional[str] = None
+    gate_decision_period: float = 5.0
+    n_driver_samples: int = 1
+    seed: int = 0
+
+    def __post_init__(self):
+        from wms.control.confident_gate import REFERENCES, UNITS
+        if self.gate_unit not in UNITS or self.gate_reference not in REFERENCES:
+            raise ValueError("unknown gate unit / reference")
+        if self.gate_state not in ("belief", "oracle"):
+            raise ValueError("gate_state must be belief or oracle")
+        for name in ("credit_horizon", "gate_horizon", "credit_group_max", "credit_flips",
+                     "gate_max_units"):
+            if int(getattr(self, name)) < 0:
+                raise ValueError(f"{name} must be >= 0")
+        if self.credit_horizon and self.credit_group_max < 2:
+            raise ValueError("credit_group_max must be >= 2 (a group has two or more CAVs)")
+        if self.gate_table and not self.gate_horizon and not Path(self.gate_table).is_file():
+            raise ValueError("gate_table not found")
+
+    @property
+    def active(self) -> bool:
+        return bool(self.credit_horizon or self.gate_horizon or self.gate_table)
+
+    @property
+    def needs_wm(self) -> bool:
+        return bool(self.gate_horizon or self.gate_table or (self.credit_horizon and self.credit_imagine))
+
+    def marks(self, branch_h: int) -> set:
+        return {int(h) for h in (self.credit_horizon, self.gate_horizon) if 0 < int(h) <= int(branch_h)}
+
+    def sim_s_per_point(self, branch_h: int) -> int:
+        """Upper bound of the extra SUMO seconds per decision point (the budget charge)."""
+        total = 0
+        g, c = int(self.gate_horizon), int(self.credit_horizon)
+        if g:
+            ref = 0 if (self.gate_reference == "native" and g <= branch_h) else g
+            plans = 0 if (self.gate_unit == "fleet" and g <= branch_h) else (
+                (1 if self.gate_unit == "fleet" else int(self.gate_max_units)) * g)
+            total += ref + plans
+        if self.gate_table:
+            total += int(branch_h)
+        if c:
+            total += (int(self.credit_group_max) + 1 + int(self.credit_flips)) * c
+            total += 0 if c <= branch_h else 2 * c
+        return total
+
+    # ------------------------------------------------------------------ helpers
+    def base_belief(self, policy_factory):
+        if not ((self.gate_horizon or self.gate_table) and self.gate_state == "belief"):
+            return None
+        from wms.control.deploy import BeliefSource
+        return BeliefSource(policy_factory.models[0])
+
+    def _source(self, policy_factory, point):
+        from wms.control.confident_gate import clone_belief_source
+        from wms.control.deploy import OracleSource
+        if self.gate_state == "oracle":
+            return OracleSource(policy_factory.models[0])
+        return clone_belief_source(point["belief"])
+
+    def _imagination(self, policy_factory, reference, horizon):
+        from wms.control.confident_gate import ArmImagination
+        policy, encoder, rules = policy_factory.components
+        return ArmImagination(policy_factory.models, policy, encoder, lane_rules=rules,
+                              reference=reference, horizon_s=float(horizon),
+                              n_driver_samples=int(self.n_driver_samples), seed=int(self.seed))
+
+    @staticmethod
+    def _hold(policy_factory):
+        from wms.control.obs import CommandMemory
+        from wms.control.policy import PolicyExecutor
+        policy, _, rules = policy_factory.components
+        return PolicyExecutor(policy, None, lane_rules=rules, hold=True, memory=CommandMemory())
+
+    @staticmethod
+    def _load(env, point, horizon):
+        from .branching import load_state, prepare_branch_mode
+        load_state(env, point["path"], point["snap"])
+        prepare_branch_mode(env)
+        env.end_s = max(env.end_s, point["t_s"] + int(horizon) + 1)
+        env.recorder = None
+
+    def _run_arm(self, env, point, horizon, step_fn=None, observe=None) -> dict:
+        self._load(env, point, horizon)
+        st = env.state()
+        totals = {"collisions": 0, "teleports": 0, "dropped_vehicle_steps": 0}
+        ledger = {"speed_deficit_vehicle_seconds": 0.0, "source_wait_vehicle_seconds": 0.0}
+        for _ in range(int(horizon)):
+            if step_fn is None:
+                st, info = env.step(None)
+            else:
+                accel, kw = step_fn(env, st)
+                st, info = env.step(accel, **kw)
+            iv = info["interval"]
+            totals["collisions"] += int(iv.get("collision_involvements", 0))
+            totals["teleports"] += int(iv.get("starting_teleports", 0))
+            totals["dropped_vehicle_steps"] += int(iv.get("dropped_vehicle_steps", 0))
+            for key in ledger:
+                ledger[key] += iv.get(key, 0)
+            if observe is not None:
+                observe(env)
+        out = prefix_record(ledger, totals)
+        out["sim_s"] = int(horizon)
+        return out
+
+    @staticmethod
+    def _members_step(fn, members, hold=None):
+        """Members on the policy; the other CAVs released (``hold`` None) or held (a = 0, stay)."""
+        from .branching import member_mask
+
+        def step(env, st):
+            accel, lanes = fn(env, st) if fn is not None else (None, None)
+            mask = member_mask(env, members)
+            cav = env.frame.present & env.frame.is_cav
+            out = np.full((1, env.k), np.nan)
+            if accel is not None:
+                out[0, mask] = np.asarray(accel)[0, mask]
+            kw = {}
+            lane_out = None
+            if lanes is not None:
+                lane_out = np.full((1, env.k), -1, dtype=np.int64)
+                lane_out[0, mask] = np.asarray(lanes)[0, mask]
+            if hold is not None:
+                closed = cav & ~mask
+                h_acc, _ = hold(st, with_lanes=True)
+                out[0, closed] = np.asarray(h_acc)[0, closed]
+                if lane_out is None:
+                    lane_out = np.full((1, env.k), -1, dtype=np.int64)
+            if lane_out is not None:
+                kw["lanes"] = lane_out
+            return out, kw
+        return step
+
+    # ------------------------------------------------------------------ point
+    def run_point(self, env, point, prefix, *, policy_factory, seed, world, branch_h) -> dict:
+        out = {"t_s": point["t_s"], "seed": int(seed), "world": world, "sim_s": 0}
+        t0 = time.monotonic()
+        if self.gate_horizon:
+            out["gate"] = self._gate_calibration(env, point, prefix, policy_factory, seed, branch_h)
+            out["sim_s"] += out["gate"]["sim_s"]
+        if self.gate_table:
+            out["gated"] = self._gated_arm(env, point, prefix, policy_factory, seed, branch_h)
+            out["sim_s"] += out["gated"]["sim_s"]
+        if self.credit_horizon:
+            out["credit"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h)
+            out["sim_s"] += out["credit"]["extra_sim_s"]
+        out["wall_s"] = time.monotonic() - t0
+        return out
+
+    def _gate_calibration(self, env, point, prefix, policy_factory, seed, branch_h) -> dict:
+        import torch
+
+        from wms.control.confident_gate import RECORD_SCHEMA, compact_slot_ids, gate_units
+        from wms.control.deploy import compact_inputs
+        g = int(self.gate_horizon)
+        self._load(env, point, g)
+        source = self._source(policy_factory, point)
+        raw_inputs, info = source.inputs(env)
+        inputs, keep = compact_inputs(raw_inputs)
+        st = inputs.pop("state")
+        units = gate_units(st, self.gate_unit)[: (1 if self.gate_unit == "fleet" else int(self.gate_max_units))]
+        rec = {"schema": RECORD_SCHEMA, "split": "TRAIN", "seed": int(seed), "t_s": point["t_s"],
+               "unit": self.gate_unit, "reference": self.gate_reference, "horizon_s": float(g),
+               "state_source": self.gate_state, "units": [], "sim_s": 0,
+               "source": {k: info.get(k) for k in ("n_present", "n_cav", "coverage")}}
+        if not units:
+            return rec
+        k = st["s_m"].shape[1]
+        members = [torch.zeros(k, dtype=torch.bool)]
+        for u in units:
+            if self.gate_unit == "fleet":
+                members.append(None)
+            else:
+                m = torch.zeros(k, dtype=torch.bool)
+                m[u] = True
+                members.append(m)
+        imag = self._imagination(policy_factory, self.gate_reference, g)
+        J = imag.arms_J(st, members, key=f"cal:{seed}:{point['t_s']}", **inputs)
+        diff = J[:, :1] - J[:, 1:]
+        tracker = getattr(source, "tracker", None)
+        hold = self._hold(policy_factory) if self.gate_reference == "hold" else None
+        # SUMO reference arm
+        if self.gate_reference == "native" and ("B", g) in prefix:
+            ref = prefix[("B", g)]
+        else:
+            ref = self._run_arm(env, point, g, self._members_step(None, frozenset(), hold=hold))
+            rec["sim_s"] += g
+        for j, u in enumerate(units):
+            ids = compact_slot_ids(source.name, env, tracker, keep, u)
+            if self.gate_unit == "fleet" and ("POLICY", g) in prefix:
+                plan = prefix[("POLICY", g)]
+            elif self.gate_unit == "fleet":
+                plan = self._run_arm(env, point, g, self._members_step(policy_factory(), None))
+                rec["sim_s"] += g
+            else:
+                plan = self._run_arm(env, point, g, self._members_step(policy_factory(), frozenset(ids),
+                                                                       hold=hold))
+                rec["sim_s"] += g
+            rec["units"].append({"members": sorted(ids), "raw": float(diff[:, j].mean()),
+                                 "raw_sd": float(diff[:, j].std()) if diff[:, j].numel() > 1 else None,
+                                 "imagined_J_ref": float(J[:, 0].mean()),
+                                 "imagined_J_plan": float(J[:, j + 1].mean()),
+                                 "sumo_J_ref": ref["J"], "sumo_J_plan": plan["J"],
+                                 "sumo_road_ref": ref["road"], "sumo_road_plan": plan["road"],
+                                 "valid": _valid(ref) and _valid(plan)})
+        return rec
+
+    def _gated_arm(self, env, point, prefix, policy_factory, seed, branch_h) -> dict:
+        from wms.control.confident_gate import ConfidentGate, GatedSumoPolicy, ReliabilityTable
+        table = ReliabilityTable.load(self.gate_table)
+        meta = table.meta
+        imag = self._imagination(policy_factory, meta["reference"], float(meta["horizon_s"]))
+        gate = ConfidentGate(imag, table, unit=meta["unit"], state_source=meta["state_source"])
+        plan = policy_factory()
+        hold = self._hold(policy_factory) if meta["reference"] == "hold" else None
+        if meta["state_source"] != self.gate_state:
+            raise ValueError("the gate table's state source differs from --gate-state")
+        source = self._source(policy_factory, point)
+        gp = GatedSumoPolicy(plan, gate, source, decision_period_s=float(self.gate_decision_period),
+                             hold_fn=hold, memory=plan.executor.memory)
+
+        def step(env, st):
+            accel, lanes = gp(env, st)
+            return accel, ({} if lanes is None else {"lanes": lanes})
+        res = self._run_arm(env, point, int(branch_h), step, observe=gp.observe)
+        pol, nat = prefix.get(("POLICY", int(branch_h))), prefix.get(("B", int(branch_h)))
+        return {"schema": "c4_gated_arm/1", "split": "TRAIN", "seed": int(seed), "t_s": point["t_s"],
+                "horizon_s": int(branch_h), "gated": res, "policy_J": None if pol is None else pol["J"],
+                "native_J": None if nat is None else nat["J"], "gate": gp.summary(),
+                "decisions": gp.decisions, "table": str(self.gate_table), "sim_s": int(branch_h)}
+
+    def _credit(self, env, point, prefix, policy_factory, seed, world, branch_h) -> dict:
+        import torch
+
+        from wms.control.real_credit14 import POINT_SCHEMA
+
+        from .branching import select_group
+        c = int(self.credit_horizon)
+        self._load(env, point, c)
+        f = env.frame
+        ids = env.builder.vehicle_ids
+        s_by_vid = {}
+        for slot in np.flatnonzero(f.present & f.is_cav).tolist():
+            vi = int(f.vid_index[slot])
+            if vi >= 0 and int(f.lane[slot]) >= 0:
+                s_by_vid[ids[vi]] = float(f.s[slot])
+        group = select_group(s_by_vid, max_size=int(self.credit_group_max))
+        rec = {"schema": POINT_SCHEMA, "split": "TRAIN", "seed": int(seed), "world": world,
+               "t_s": point["t_s"], "horizon_s": c, "group": group, "flips": [], "sumo": None,
+               "sumo_road": None, "imagined": None, "collisions": 0, "teleports": 0, "extra_sim_s": 0}
+        if not group:
+            return rec
+        rng = np.random.default_rng([int(seed), int(point["t_s"]), 0x5C]) if self.credit_flips else None
+        flips = (sorted(rng.choice(group, size=min(int(self.credit_flips), len(group)), replace=False).tolist())
+                 if rng is not None else [])
+        rec["flips"] = flips
+        arms = {"B": frozenset(), "ALL": None, **{f"ONLY:{v}": frozenset([v]) for v in group},
+                "GROUP": frozenset(group), **{f"FLIP:{v}": frozenset(group) - {v} for v in flips}}
+        if self.credit_imagine:
+            from wms.control.deploy import OracleSource, compact_inputs
+            raw, _ = OracleSource(policy_factory.models[0]).inputs(env)
+            inputs, keep = compact_inputs(raw)
+            st = inputs.pop("state")
+            slot_vid = {}
+            for j, slot in enumerate(keep.tolist()):
+                vi = int(f.vid_index[slot])
+                slot_vid[j] = ids[vi] if vi >= 0 else None
+            k = st["s_m"].shape[1]
+            masks = []
+            for name, members in arms.items():
+                if members is None:
+                    masks.append(None)
+                else:
+                    masks.append(torch.tensor([slot_vid[j] in members for j in range(k)], dtype=torch.bool))
+            imag = self._imagination(policy_factory, "native", c)
+            J = imag.arms_J(st, masks, key=f"credit:{seed}:{point['t_s']}", **inputs)
+            rec["imagined"] = {name: float(J[:, a].mean()) for a, name in enumerate(arms)}
+        sumo, road = {}, {}
+        for name, members in arms.items():
+            key = {"B": ("B", c), "ALL": ("POLICY", c)}.get(name)
+            if key is not None and key in prefix:
+                res = prefix[key]
+            else:
+                step = None if name == "B" else self._members_step(policy_factory(), members)
+                res = self._run_arm(env, point, c, step)
+                rec["extra_sim_s"] += c
+            sumo[name], road[name] = res["J"], res["road"]
+            rec["collisions"] += res["collisions"]
+            rec["teleports"] += res["teleports"]
+        rec["sumo"], rec["sumo_road"] = sumo, road
+        return rec
+
+    # ------------------------------------------------------------------ output
+    def write(self, branch_root: Path, points: list) -> dict:
+        from .genrand import _jsonable
+        branch_root = Path(branch_root)
+        files = {"gate": "GATE_CALIBRATION.jsonl", "gated": "GATED_ARMS.jsonl",
+                 "credit": "SUMOCREDIT_POINTS.jsonl"}
+        counts = {}
+        for key, name in files.items():
+            rows = [p[key] for p in points if key in p]
+            if not rows:
+                continue
+            with (branch_root / name).open("x", encoding="utf-8") as stream:
+                for row in rows:
+                    stream.write(json.dumps(_jsonable(row), allow_nan=False) + "\n")
+            counts[key] = len(rows)
+        return {"schema": "c4_sumocredit_extras/1", "options": asdict(self), "files": counts,
+                "sim_s": int(sum(p["sim_s"] for p in points)),
+                "wall_s": float(sum(p["wall_s"] for p in points))}
