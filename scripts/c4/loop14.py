@@ -141,7 +141,53 @@ def check_registration(cfg) -> dict:
 def collect_sim_s(cfg) -> int:
     c = cfg["collect"]
     base = int(c["branch_first"]) + (int(c["branch_points"]) - 1) * int(c["branch_cadence"]) + 1
-    return int(c["worlds_per_cycle"]) * (base + int(c["branch_points"]) * 2 * int(c["branch_horizon"]))
+    extra = int(c["branch_points"]) * sumocredit_sim_s_per_point(c) if c.get("sumocredit") else 0
+    return int(c["worlds_per_cycle"]) * (base + int(c["branch_points"]) * 2 * int(c["branch_horizon"])
+                                         + extra)
+
+
+# ------------------------------------------------------------------ S-SUMOCREDIT (flag-gated)
+SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "--credit-group-max",
+                    "credit_flips": "--credit-flips", "gate_horizon": "--gate-horizon",
+                    "gate_unit": "--gate-unit", "gate_reference": "--gate-reference",
+                    "gate_state": "--gate-state", "gate_max_units": "--gate-max-units",
+                    "gate_candidates": "--gate-candidates",
+                    "gate_decision_period": "--gate-decision-period",
+                    "gate_driver_samples": "--gate-driver-samples", "seed": "--sumocredit-seed"}
+
+
+def sumocredit_sim_s_per_point(c) -> int:
+    """Upper bound of the extra SUMO seconds per decision point (= traffic_shepherd.c4.sumocredit
+    .sim_s_per_point; the gated arms are charged whenever gated_arm is on, also before a table
+    exists: GATED, plus GATED_K when gate_candidates > 1)."""
+    x, h = c["sumocredit"], int(c["branch_horizon"])
+    total = 0
+    g, cr = int(x.get("gate_horizon", 0)), int(x.get("credit_horizon", 0))
+    k = int(x.get("gate_candidates", 1))
+    if g:
+        unit = x.get("gate_unit", "fleet")
+        total += 0 if (x.get("gate_reference", "native") == "native" and g <= h) else g
+        n_units = 1 if unit == "fleet" else int(x.get("gate_max_units", 4))
+        total += n_units * k * g - (g if (unit == "fleet" and g <= h) else 0)
+    if x.get("gated_arm"):
+        total += h * (2 if k > 1 else 1)
+    if cr:
+        total += (int(x.get("credit_group_max", 3)) + 1 + int(x.get("credit_flips", 0))) * cr
+        total += 0 if cr <= h else 2 * cr
+    return total
+
+
+def sumocredit_args(cfg, state) -> list:
+    x = cfg["collect"].get("sumocredit")
+    if not x:
+        return []
+    out = []
+    for key, flag in SUMOCREDIT_FLAGS.items():
+        if key in x:
+            out += [flag, str(x[key])]
+    if x.get("credit_imagine") is False:
+        out.append("--no-credit-imagine")
+    return out
 
 
 def check_budget(cfg, reg, state) -> None:
@@ -331,6 +377,8 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
         argv += ["--critic-warmup-updates", str(int(p.get("critic_warmup_updates_resume", 0)))]
     if p.get("smoke"):
         argv.append("--smoke")
+    if p.get("real_credit") and state.get("real_credit"):        # S-SUMOCREDIT (flag-gated)
+        argv += ["--real-credit", state["real_credit"]]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),
@@ -409,6 +457,13 @@ def run_collect(cfg, state, ph, root) -> dict:
         src = Path(acc["checkpoint"]).with_name(sidecar)
         if src.is_file():
             sync(cfg, "gpu", str(src), "cpu", f"{inputs}/wm/{sidecar}", log)
+    sc_args = sumocredit_args(cfg, state)
+    if sc_args and cfg["collect"]["sumocredit"].get("gated_arm") and state.get("gate_table"):
+        sync(cfg, "gpu", state["gate_table"], "cpu", f"{inputs}/GATE_TABLE.json", log)
+        sc_args += ["--gate-table", f"{inputs}/GATE_TABLE.json"]
+        if int(cfg["collect"]["sumocredit"].get("gate_candidates", 1)) > 1 and state.get("gate_mean_table"):
+            sync(cfg, "gpu", state["gate_mean_table"], "cpu", f"{inputs}/GATE_MEAN_TABLE.json", log)
+            sc_args += ["--gate-mean-table", f"{inputs}/GATE_MEAN_TABLE.json"]
     reg_copy = f"{inputs}/REGISTRATION.json"
     sync(cfg, "gpu", cfg["registration"], "cpu", reg_copy, log)
     if Path(acc["config"]).suffix == ".json":
@@ -426,7 +481,7 @@ def run_collect(cfg, state, ph, root) -> dict:
             "--warmup", str(c["warmup"]), "--horizon", str(c["branch_first"]),
             "--branch-first", str(c["branch_first"]), "--branch-cadence", str(c["branch_cadence"]),
             "--branch-points", str(c["branch_points"]), "--branch-horizon", str(c["branch_horizon"]),
-            "--workers", str(c["workers"]), "--out", f"{work}/collect"]
+            "--workers", str(c["workers"]), "--out", f"{work}/collect", *sc_args]
     if c.get("no_physics_log", True):
         argv.append("--no-physics-log")
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
@@ -446,7 +501,9 @@ def run_collect(cfg, state, ph, root) -> dict:
             "episodes": summary["episodes_complete"], "branches": summary.get("branches"),
             "pair_sim_seconds": summary.get("pair_sim_seconds"),
             "branch_collisions": summary.get("branch_collisions"), "branch_teleports": summary.get("branch_teleports"),
-            "sumo_pairs": len(deltas), "sumo_mean_policy_minus_native_J": (sum(deltas) / len(deltas)) if deltas else None}
+            "sumo_pairs": len(deltas), "sumo_mean_policy_minus_native_J": (sum(deltas) / len(deltas)) if deltas else None,
+            **({"sumocredit": summary.get("sumocredit"), "gate_table_used": "--gate-table" in sc_args}
+               if sc_args else {})}
 
 
 def run_convert(cfg, state, ph, root) -> dict:
@@ -478,10 +535,65 @@ def run_convert(cfg, state, ph, root) -> dict:
     sync(cfg, "cpu", remote_ret, "gpu", str(local_ret), log)
     sync(cfg, "cpu", remote_ret[:-4] + ".receipt.json", "gpu", str(local_ret.with_suffix(".receipt.json")), log)
     manifest = read_json(local_conv / "C4_EPISODES_MANIFEST.json")
-    return {**info, "pairs": str(local_conv), "returns": str(local_ret), "returns_sha256": sha256(local_ret),
-            "episodes": len(manifest["episodes"]),
-            "pair_groups": len({e.get("pair_key") for e in manifest["episodes"] if e.get("pair_key")}),
-            "targets": read_json(local_ret.with_suffix(".receipt.json"))["targets"]}
+    out = {**info, "pairs": str(local_conv), "returns": str(local_ret), "returns_sha256": sha256(local_ret),
+           "episodes": len(manifest["episodes"]),
+           "pair_groups": len({e.get("pair_key") for e in manifest["episodes"] if e.get("pair_key")}),
+           "targets": read_json(local_ret.with_suffix(".receipt.json"))["targets"]}
+    if cfg["collect"].get("sumocredit"):
+        out["sumocredit"] = convert_sumocredit(cfg, state, work, tag, env, log, root)
+    return out
+
+
+def convert_sumocredit(cfg, state, work, tag, env, log, root) -> dict:
+    """Gather this cycle's gate/credit records (cpu), then refit on ALL cycles so far (gpu host):
+    the gate reliability table and the real-credit multipliers used by the next cycle."""
+    h, g = host(cfg, "cpu"), host(cfg, "gpu")
+    x = cfg["collect"]["sumocredit"]
+    remote_credit, remote_gate = f"{work}/sumocredit_points_{tag}.jsonl", f"{work}/gate_records_{tag}.jsonl"
+    gather = [h["python"], "-m", "wms.control.real_credit14", "gather", "--collect-root", f"{work}/collect",
+              "--out-credit", remote_credit, "--out-gate", remote_gate]
+    if run_cmd(h, gather, env=env, log=log, timeout_s=1800) != 0:
+        raise RuntimeError("S-SUMOCREDIT gather failed")
+    sc = root / "sumocredit"
+    local_credit, local_gate = sc / f"points_{tag}.jsonl", sc / f"gate_{tag}.jsonl"
+    if local_credit.exists() or local_gate.exists():
+        raise Refused("S-SUMOCREDIT records already exist locally (never reused)")
+    sync(cfg, "cpu", remote_credit, "gpu", str(local_credit), log)
+    sync(cfg, "cpu", remote_gate, "gpu", str(local_gate), log)
+    genv = {"PYTHONPATH": os.pathsep.join([str(Path(g["code_root"]) / "src"), g["code_root"]]),
+            "C4_ALLOWED_ROOTS": os.pathsep.join([cfg["loop_root"]])}
+    out = {"points_file": str(local_credit), "gate_file": str(local_gate)}
+    credit_files = sorted(str(p) for p in sc.glob("points_*.jsonl") if p.stat().st_size > 0)
+    if credit_files and int(x.get("credit_horizon", 0)):
+        target = sc / f"REAL_CREDIT_{tag}.json"
+        fit = [g["python"], "-m", "wms.control.real_credit14", "fit", "--points", *credit_files,
+               "--out", str(target), "--cycle-budget-sim-s", str(collect_sim_s(cfg))]
+        if run_cmd(g, fit, env=genv, log=log, timeout_s=1800) != 0:
+            raise RuntimeError("S-SUMOCREDIT credit fit failed")
+        doc = read_json(target)
+        state["real_credit"] = str(target)
+        out.update(real_credit=str(target), multipliers=doc["multipliers"], credit_points=doc["points"])
+    gate_files = sorted(str(p) for p in sc.glob("gate_*.jsonl") if p.stat().st_size > 0)
+    comparisons = [("reference", "gate_table", "GATE_TABLE")]
+    if int(x.get("gate_candidates", 1)) > 1:
+        comparisons.append(("mean", "gate_mean_table", "GATE_MEAN_TABLE"))
+    for comparison, key, stem in (comparisons if gate_files and int(x.get("gate_horizon", 0)) else []):
+        target = sc / f"{stem}_{tag}.json"
+        fit = [g["python"], "-m", "wms.control.confident_gate", "--records", *gate_files, "--out", str(target),
+               "--unit", x.get("gate_unit", "fleet"), "--reference", x.get("gate_reference", "native"),
+               "--horizon", str(float(x["gate_horizon"])), "--state-source", x.get("gate_state", "belief"),
+               "--comparison", comparison]
+        code = run_cmd(g, fit, env=genv, log=log, timeout_s=1800)
+        prefix = "gate" if comparison == "reference" else "gate_mean"
+        if code == 0 and target.is_file():
+            state[key] = str(target)
+            meta = read_json(target)["meta"]
+            out.update({key: str(target), f"{prefix}_n": meta.get("n"),
+                        f"{prefix}_brier": meta.get("brier_in_sample"),
+                        f"{prefix}_blocks_open": meta.get("blocks_at_or_above_threshold")})
+        else:
+            out[f"{key}_error"] = f"fit exit {code} (the gated arms keep the previous table, if any)"
+    return out
 
 
 def run_wm_ft(cfg, state, ph, root) -> dict:

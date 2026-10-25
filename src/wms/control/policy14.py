@@ -41,8 +41,13 @@ class Policy14Trainer(DreamerTrainer):
     """
 
     marginal_lane_weight = 0.25
+    #: S-SUMOCREDIT: ``{individual, group, coop, team}`` multipliers in [0, 1] from real SUMO credit
+    #: (``wms.control.real_credit14``); None = off (the weights are passed through untouched).
+    credit_multipliers = None
 
     def actor_objective(self, imagined, scale, weights, *, gradient_components=None):
+        if self.credit_multipliers:
+            weights = {k: v * float(self.credit_multipliers.get(k, 1.0)) for k, v in weights.items()}
         loss, extra = super().actor_objective(imagined, scale, weights,
                                               gradient_components=gradient_components)
         variants, lanes = imagined.get("variants"), imagined.get("lanes")

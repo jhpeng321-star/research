@@ -51,7 +51,7 @@ from torch import Tensor
 
 _RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re.I)
 BASELINES = ("native", "damping", "pi", "wall")
-CONTROLLERS = (*BASELINES, "policy", "policy_check")
+CONTROLLERS = (*BASELINES, "policy", "policy_check", "policy_gate")
 ALIASES = {"c4_policy": "policy", "c4_policy_rsu_check": "policy_check"}
 #: Check candidates (owner 2026-10-12 late): direct-output only, all executed through the policy path.
 CANDIDATES = ("policy", "policy_group_0", "policy_group_1", "policy_sample_0", "policy_sample_1",
@@ -333,7 +333,8 @@ def run(args) -> dict:
     policy_fn = models = checker = source = dwell = None
     exec_fns: dict[str, Callable] = {}
     streams, stream_noise = [], {}
-    if controller in ("policy", "policy_check"):
+    gated = None
+    if controller in ("policy", "policy_check", "policy_gate"):
         if not args.policy:
             raise SystemExit("--policy <checkpoint> is required for policy controllers")
         from .contract import CONTROL_DT_S
@@ -385,6 +386,51 @@ def run(args) -> dict:
                              embedding_noise_std=args.embedding_noise_std)
         source = (OracleSource(models[0]) if args.state == "oracle"
                   else BeliefSource(models[0], propagator=args.belief_propagator))
+    if controller == "policy_gate":
+        # S-SUMOCREDIT confident deployment (owner rule 2026-10-18): the policy acts only where the
+        # calibrated P(J_plan < J_reference | state) >= 0.8, else the table's reference.
+        from .confident_gate import ArmImagination, ConfidentGate, GatedSumoPolicy, ReliabilityTable
+        from .obs import CommandMemory
+
+        if not (args.wm_ckpt and args.gate_table):
+            raise SystemExit("policy_gate needs --wm-ckpt and a TRAIN --gate-table")
+        table = ReliabilityTable.load(checked(args.gate_table))
+        meta = table.meta
+        if meta["state_source"] != args.state:
+            raise SystemExit(f"the gate table was calibrated on the {meta['state_source']} state, "
+                             f"not --state {args.state}")
+        models = _load_world_models(args.wm_ckpt, device, getattr(args, "cav_exec_cap", None))
+        imagination = ArmImagination(models, policy_fn.policy, policy_fn.group_encoder,
+                                     lane_rules=policy_fn.lane_rules, reference=meta["reference"],
+                                     horizon_s=float(meta["horizon_s"]),
+                                     n_driver_samples=args.n_driver_samples,
+                                     driver_noise_scale=args.driver_noise_scale,
+                                     embedding_noise_std=args.embedding_noise_std, seed=args.checker_seed)
+        mean_table = (ReliabilityTable.load(checked(args.gate_mean_table))
+                      if (args.gate_candidates > 1 and args.gate_mean_table) else None)
+        gate = ConfidentGate(imagination, table, unit=meta["unit"], state_source=args.state,
+                             n_candidates=args.gate_candidates, mean_table=mean_table,
+                             seed=args.checker_seed)
+        source = (OracleSource(models[0]) if args.state == "oracle"
+                  else BeliefSource(models[0], propagator=args.belief_propagator))
+        hold_exec = (make_exec_fn(policy_fn.policy, None, device=device, lane_rules=policy_fn.lane_rules,
+                                  hold=True, memory=CommandMemory())
+                     if meta["reference"] == "hold" else None)
+        ages_now = {}
+
+        def plan_fn(env, state):
+            return policy_fn(state, with_lanes=True, dwell_age=ages_now.get("ages"))
+
+        def sample_fn(stream, env):
+            # A learned-policy sample replaying the imagined candidate's noise (SumoNoise, by id).
+            from .confident_gate import SumoNoise
+            exe = make_exec_fn(policy_fn.policy, policy_fn.group_encoder, device=device,
+                               lane_rules=policy_fn.lane_rules, deterministic=False,
+                               noise_fn=SumoNoise(stream, env), memory=policy_fn.memory)
+            return lambda env, state: exe(state, with_lanes=True, dwell_age=ages_now.get("ages"))
+        gated = GatedSumoPolicy(plan_fn, gate, source, decision_period_s=args.decision_period,
+                                hold_fn=hold_exec, memory=policy_fn.memory,
+                                sample_fn=sample_fn if args.gate_candidates > 1 else None)
 
     env = CavSumoEnv(k_slots=args.k, ttc=not args.no_ttc, physics_log=not args.no_physics_log)
     env_mode = controller if controller in BASELINES else "direct"
@@ -457,11 +503,19 @@ def run(args) -> dict:
             accel = lanes = None
             if controller == "policy":
                 executed = "policy"
+            elif gated is not None:
+                executed = "policy_gate"
             elif checker is not None:
                 executed = choice
             else:
                 executed = controller
-            if executed in exec_fns:
+            if gated is not None:
+                ages_now["ages"] = ages
+                n_before = len(gated.decisions)
+                accel, lanes = gated(env, state)
+                for record in gated.decisions[n_before:]:
+                    _dump(decisions, record)
+            elif executed in exec_fns:
                 # Every policy-path candidate: direct accelerations + lane commands.
                 accel, lanes = exec_fns[executed](state, with_lanes=True, dwell_age=ages)
             state, info = env.step(accel, lanes=lanes)
@@ -523,6 +577,8 @@ def run(args) -> dict:
         "episode_summary": summary, "collisions": None if summary is None else summary["collisions"],
         "teleports": None if summary is None else summary["teleports"],
         "wall_seconds": time.monotonic() - started, "finished_utc": _now(), "notes": notes}
+    if gated is not None:                      # S-SUMOCREDIT (key absent for other controllers)
+        result["gate"] = {**gated.summary(), "table": args.gate_table}
     (out / "DEPLOY_SUMMARY.json").write_text(json.dumps(_jsonable(result), indent=1, allow_nan=False),
                                              encoding="utf-8")
     return result
@@ -568,6 +624,15 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--k", type=int, default=192)
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--no-physics-log", action="store_true")
+    ap.add_argument("--gate-table", default=None,
+                    help="policy_gate: TRAIN reliability table (wms.control.confident_gate); its unit, "
+                         "reference, horizon and state source are used (owner threshold 0.8)")
+    ap.add_argument("--gate-candidates", type=int, default=1,
+                    help="policy_gate: K learned-policy candidates (deterministic mean + K-1 own samples, "
+                         "odd independent / even correlated noise); 1 = gate-only")
+    ap.add_argument("--gate-mean-table", default=None,
+                    help="policy_gate K > 1: TRAIN sample-vs-mean reliability table (without it no sample "
+                         "can replace the mean plan)")
     ap.add_argument("--cav-exec-cap", choices=("off", "idm", "idm_normal", "idm_normal:textbook",
                              "idm_normal:legacy"), default=None,
                     help="WM imagination execution cap of commanded CAVs (EXECCAP_NOTES.md); "
