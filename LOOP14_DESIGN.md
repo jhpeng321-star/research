@@ -67,7 +67,7 @@ Review if SUMO's mean policy−native J is above 0 for 2 cycles. The deployment 
 | wm_ft | 40 steps, ≤ 1.5 GPU-h |
 | check | 24 windows, CPU, ≤ 2 h |
 
-Over 4 cycles: ≤ 120,000 sim-s and 64 seeds.
+4 cycles: ≤ 120,000 sim-s, 64 seeds.
 
 ## Registration template
 
