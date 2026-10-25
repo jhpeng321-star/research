@@ -203,10 +203,23 @@ def check_offline(report_path):
     for key, spec in doc.get("analyses", {}).items():
         again = ana_r14.analyze(str(workspace_path(base / spec["dir"])), spec["horizon_s"], list(OFFLINE_ARMS),
                                 spec["tags"])
-        require(json.loads(json.dumps(again, allow_nan=False)) == spec["result"],
+        require(same_tree(json.loads(json.dumps(again, allow_nan=False)), spec["result"]),
                 f"R14 offline analysis differs from evidence: {key}")
     require({"panel120", "pairs300"} <= set(doc.get("analyses", {})), "R14 offline analyses missing")
     return doc
+
+
+def same_tree(left, right, rel=1e-9):
+    """Structural equality; floats within ``rel`` (cross-platform last-ULP reduction order)."""
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(same_tree(left[k], right[k], rel) for k in left)
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(same_tree(a, b, rel) for a, b in zip(left, right))
+    if isinstance(left, float) or isinstance(right, float):
+        return (isinstance(left, (int, float)) and isinstance(right, (int, float))
+                and not isinstance(left, bool) and not isinstance(right, bool)
+                and math.isclose(left, right, rel_tol=rel, abs_tol=rel))
+    return left == right
 
 
 # ------------------------------------------------------------------ source

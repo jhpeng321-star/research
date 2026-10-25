@@ -135,3 +135,11 @@ def test_shell_syntax_and_lesson_wiring():
     assert "WMS_DATA_LOWPEN_NATIVE" in text and "runs/c4_wm_v10_round13e_b/wm_s.pt" in text
     for forbidden in ("pkill", "killall", "pgrep -f", "kill -9", "kill -TERM"):
         assert forbidden not in text
+
+
+def test_offline_tree_comparison_tolerates_ulps_only():
+    a = {"x": [1.0, 2.0, None], "n": 3, "s": "k"}
+    assert r14.same_tree(a, {"x": [1.0 + 1e-13, 2.0, None], "n": 3, "s": "k"})
+    assert not r14.same_tree(a, {"x": [1.0 + 1e-6, 2.0, None], "n": 3, "s": "k"})
+    assert not r14.same_tree(a, {"x": [1.0, 2.0], "n": 3, "s": "k"})
+    assert not r14.same_tree(a, {"x": [1.0, 2.0, None], "n": 4, "s": "k"})
