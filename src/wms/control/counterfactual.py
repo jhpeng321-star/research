@@ -80,6 +80,20 @@ class CounterfactualConfig:
     w_coop: list = field(default_factory=lambda: [0.0, 0.5])
     w_team: list = field(default_factory=lambda: [0.0, 0.5])
     w_all: list = field(default_factory=lambda: [0.25, 1.0])
+    # S-COOPW (COOPW.md; every default keeps c4/loop14c bit-identical).
+    # "absolute": the curriculum position is the trainer's update_count (legacy); "first_update":
+    # update_count minus the update at which this trainer first trained with this config (saved in
+    # the checkpoint), so an adopted / resumed policy still starts the ramp at zero.
+    curriculum_anchor: str = "absolute"
+    # Training-start tilt {feature: weight} (wms.control.coopw.TiltSampler: accept a target draw
+    # with probability prod(1 + w_f f) / max); None = legacy ``group_state_fraction`` path.
+    # Needs group_state_fraction = 0.
+    start_tilt: Optional[dict] = None
+    # Validation starts from the target (uniform-window) distribution instead of oversampled.
+    validation_uniform: bool = False
+    # Per-update coverage / oversampling log, and the unit-term gradient-norm audit cadence.
+    coop_audit: bool = False
+    term_grad_audit_every: int = 0
 
     def __post_init__(self):
         for name in ("n_individual", "n_group", "n_flip", "group_min_size", "group_max_size",
@@ -120,6 +134,20 @@ class CounterfactualConfig:
             raise ValueError("w_coop > 0 needs cover_group_members = true (C_G needs every D_i)")
         if any(self.w_team) and self.n_flip < 1:
             raise ValueError("w_team > 0 needs n_flip >= 1 (M_i needs the flip-one rows)")
+        if self.curriculum_anchor not in ("absolute", "first_update"):
+            raise ValueError("curriculum_anchor must be 'absolute' or 'first_update'")
+        if self.start_tilt is not None:
+            from .coopw import TiltSampler
+            TiltSampler(dict(self.start_tilt))                 # validates names and weights
+            if float(self.group_state_fraction) != 0.0:
+                raise ValueError("start_tilt needs group_state_fraction = 0")
+            self.start_tilt = {str(k): float(v) for k, v in dict(self.start_tilt).items()}
+        for name in ("validation_uniform", "coop_audit"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
+        value = self.term_grad_audit_every
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError("term_grad_audit_every must be a nonnegative integer")
 
     def weights(self, update: int) -> dict:
         """Piecewise-linear curriculum at ``update`` (held beyond the end knots).

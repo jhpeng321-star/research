@@ -578,8 +578,18 @@ class DreamerTrainer:
     def __init__(self, world_models, policy, group_encoder, critic, start_states, *,
                  observation_builder, reward_fn, safety, controller_factory=None, config=None,
                  reward_weights=None, device="cpu", output_dir=None, lane_rules=None,
-                 counterfactual=None, real_return_provider: RealReturnProvider | None = None):
+                 counterfactual=None, real_return_provider: RealReturnProvider | None = None,
+                 uncertainty=None, exploration=None, horizon=None):
         self.config = config or DreamerConfig()
+        # S-COOPW [exploration] (wms.control.coopw.ExplorationConfig; None/disabled = unchanged).
+        self.exploration = exploration if exploration is not None and exploration.enabled else None
+        # S-COOPW [horizon] (wms.control.coopw.HorizonConfig; gate resolved by HorizonConfig.bind).
+        self.horizon_curriculum = horizon if horizon is not None and horizon.enabled else None
+        # S-COOPW [uncertainty] (wms.control.coopw.UncertaintyConfig; None/disabled = unchanged).
+        self.uncertainty = uncertainty if uncertainty is not None and uncertainty.enabled else None
+        self._training_imagination = False
+        self.coop_anchor = None
+        self._last_start_info = None
         self.real_return_provider = real_return_provider
         self._check_real_return_provider(self.config)
         # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
@@ -649,6 +659,10 @@ class DreamerTrainer:
         self.validation_states = None
         self._pending_validation_state = None
         self.output_dir = checked_path(output_dir) if output_dir is not None else None
+        self._tilt_sampler = None
+        if self.counterfactual.enabled and self.counterfactual.start_tilt is not None:
+            from .coopw import TiltSampler
+            self._tilt_sampler = TiltSampler(self.counterfactual.start_tilt)
 
     def _check_real_return_provider(self, config):
         if self.real_return_provider is not None and not callable(self.real_return_provider):
@@ -735,6 +749,17 @@ class DreamerTrainer:
         imagined entries cannot retroactively extend the start-state horizon.
         """
         cfg = self.config
+        if self._training_imagination and self.horizon_curriculum is not None:
+            # S-COOPW gated horizon curriculum: medium/high observed CAV share only (the low-share
+            # test below keeps the base horizon for <= 10 % shares).
+            present = batch.state["present"].bool()
+            cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
+            if not bool((cav_count * 10 <= present.sum(-1)).any()):
+                h = self.horizon_curriculum
+                seconds = h.horizons_s[h.stage(self._curriculum_position(advance=False))]
+                steps = int(round(seconds / (STEPS_PER_CONTROL * PHYSICS_DT_S)))
+                if steps > cfg.horizon:
+                    cfg = replace(cfg, horizon=steps)
         if cfg.low_penetration_horizon_cap:
             present = batch.state["present"].bool()
             cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
@@ -742,7 +767,24 @@ class DreamerTrainer:
             if bool(low.any()):
                 max_steps = math.floor(60.0 / (STEPS_PER_CONTROL * PHYSICS_DT_S))
                 cfg = replace(cfg, horizon=min(cfg.horizon, max_steps))
+        if self._training_imagination and self.uncertainty is not None:
+            # S-COOPW: sampled driver futures + the pessimism curriculum, training imagination only.
+            u = self.uncertainty
+            cfg = replace(cfg, future_samples=u.future_samples,
+                          future_driver_scale=u.driver_noise_scale,
+                          uncertainty_weight=u.weight(self._curriculum_position(advance=False)))
         return cfg
+
+    def _curriculum_position(self, advance=True):
+        """Counterfactual (and uncertainty) curriculum position: ``update_count`` (legacy) or, with
+        ``curriculum_anchor = "first_update"``, the updates since this config first trained."""
+        if self.counterfactual.curriculum_anchor != "first_update":
+            return self.update_count
+        if self.coop_anchor is None:
+            if not advance:
+                return 0
+            self.coop_anchor = self.update_count
+        return self.update_count - self.coop_anchor
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False):
@@ -792,6 +834,17 @@ class DreamerTrainer:
         need_bridge = self.controller_factory is not None and (
             self.use_lanes or act_mask is not None or zone_fn is not None)
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
+        # S-COOPW correlated exploration: training imagination only, stochastic, CRN path.
+        explore = None
+        if (crn and not deterministic and self._training_imagination and self.exploration is not None):
+            from .coopw import exploration_plan
+            rho = self.exploration.rho_at(self._curriculum_position(advance=False))
+            if rho > 0.0:
+                radius = self.exploration.radius_m or self.counterfactual.group_radius_m
+                gid, shared = exploration_plan(
+                    batch.state, radius, cfg.horizon, self.exploration.persistence_steps,
+                    torch.Generator().manual_seed(3_000_017 * (self.update_count + 1)))
+                explore = (gid, shared, rho)
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
         from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
@@ -855,6 +908,12 @@ class DreamerTrainer:
                     if crn:
                         from .policy import PolicyNoise, draw_policy_noise
                         noise = draw_policy_noise((n_base, obs.cav_mask.shape[-1]), device=self.device)
+                        if explore is not None:
+                            from .coopw import correlate
+                            gid, shared, rho = explore
+                            noise = PolicyNoise(correlate(noise.accel, gid, shared[min(
+                                step // STEPS_PER_CONTROL, shared.shape[0] - 1)], rho),
+                                noise.lane_gumbel)
                         kwargs["noise"] = PolicyNoise(noise.accel.index_select(0, index),
                                                       noise.lane_gumbel.index_select(0, index))
                     held_out = policy_call(obs, signal, deterministic=deterministic, **kwargs)
@@ -1128,6 +1187,8 @@ class DreamerTrainer:
                 "action_mask": masks, "lanes": lanes, "variants": variants, "n_base": n_base,
                 "entrance_zone": zone_masks, "entrance_zone_fraction": zone_fraction,
                 "n_members": len(self.world_models), "n_futures": n_futures,
+                "uncertainty_weight": cfg.uncertainty_weight,
+                **({"exploration_rho": explore[2]} if explore is not None else {}),
                 "components": {key: torch.stack([c[key] for c in member_components])
                                for key in member_components[0]}}
 
@@ -1277,9 +1338,10 @@ class DreamerTrainer:
                                         dtype=rewards.dtype)
         sources = {"reward": (rewards, torch.zeros_like(values)),
                    "critic": (torch.zeros_like(rewards), values)}
-        if self.config.uncertainty_weight > 0:
+        uncertainty_weight = imagined.get("uncertainty_weight", self.config.uncertainty_weight)
+        if uncertainty_weight > 0:
             sources["uncertainty"] = (
-                -self.config.uncertainty_weight * imagined["disagreement"].unsqueeze(0).expand_as(rewards),
+                -uncertainty_weight * imagined["disagreement"].unsqueeze(0).expand_as(rewards),
                 torch.zeros_like(values))
         for name, (reward, value) in sources.items():
             credit = torch.stack([lambda_returns(r, v, self.config.gamma, self.config.lambda_)
@@ -1347,10 +1409,57 @@ class DreamerTrainer:
                         for name, rows in sorted(table.items())}
         return out
 
-    def _sample_starts(self, sampler):
+    def _coopw_metrics(self, imagined, batch, variants, scale):
+        """S-COOPW logs (empty unless switched on): row coverage, oversampling, curriculum
+        position, pessimism weight, and every ``term_grad_audit_every`` updates the unit-weight
+        gradient norms of the objective terms (``coopw.term_objectives``)."""
+        cf, out = self.counterfactual, {}
+        if cf.enabled and cf.coop_audit:
+            from .coopw import coverage
+            out["cf_coverage"] = coverage(variants, batch.state)
+            out["cf_curriculum_position"] = self._curriculum_position()
+            if self._last_start_info is not None:
+                out["start_oversampling"] = self._last_start_info
+            if self.uncertainty is not None:
+                out["uncertainty_weight_effective"] = imagined.get("uncertainty_weight")
+                out["n_futures"] = imagined.get("n_futures")
+            if self.exploration is not None:
+                out["exploration_rho"] = imagined.get("exploration_rho", 0.0)
+            if self.horizon_curriculum is not None:
+                out["imagination_horizon_stage"] = self.horizon_curriculum.stage(
+                    self._curriculum_position(advance=False))
+        every = cf.term_grad_audit_every if cf.enabled else 0
+        if every and (self.update_count + 1) % every == 0 and variants is not None and variants.groups:
+            from .coopw import term_gradient_norms, term_objectives
+            terms, values = term_objectives(imagined, scale, self.config.lane_pg_weight)
+            parameters = [p for p in self.actor_parameters if p.requires_grad]
+            out["cf_term_grad_norms"] = term_gradient_norms(terms, parameters)
+            out["cf_term_values"] = values
+        return out
+
+    def _sample_starts(self, sampler, validation=False):
         """Group-rich oversampling (``group_state_fraction`` of the batch satisfies
-        :func:`wms.control.counterfactual.group_rich`) when the sampler supports it."""
+        :func:`wms.control.counterfactual.group_rich`) when the sampler supports it.
+        S-COOPW: ``validation_uniform`` draws VAL starts from the target distribution;
+        ``start_tilt`` tilts TRAINING starts (``coopw.TiltSampler``, observable features)."""
         cf = self.counterfactual
+        if validation and cf.enabled and cf.validation_uniform:
+            return sampler.sample(self.config.batch_size, device=self.device)
+        if not validation and self._tilt_sampler is not None:
+            from .coopw import start_features
+            horizon_s = self.config.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+
+            def features(batch):
+                state = {k: v[:1] for k, v in batch.state.items()
+                         if torch.is_tensor(v) and v.ndim >= 1 and v.shape[0] == batch.state["s_m"].shape[0]}
+                queue = batch.entry_queue[0] if batch.entry_queue is not None else None
+                return start_features(state, cf, horizon_s, entry_queue=queue,
+                                      lane_rules=self.lane_rules)
+            generator = torch.Generator().manual_seed(2_000_003 * (self.update_count + 1))
+            batch, self._last_start_info = self._tilt_sampler.draw(
+                sampler, self.config.batch_size, self.device, features,
+                max_tries=cf.max_group_tries, generator=generator)
+            return batch
         if cf.enabled and cf.group_state_fraction > 0 and hasattr(sampler, "sample_where"):
             return sampler.sample_where(self.config.batch_size, device=self.device,
                                         predicate=lambda state: group_rich(state, cf),
@@ -1379,11 +1488,16 @@ class DreamerTrainer:
     def _entry_slots(self, batch, generator=None):
         if not self.config.imagine_entries:
             return batch
-        horizon_s = self._imagination_config(batch).horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+        horizon_steps = self._imagination_config(batch).horizon
+        horizon_s = horizon_steps * STEPS_PER_CONTROL * PHYSICS_DT_S
+        pad_max = self.config.entry_pad_max
+        if (self._training_imagination and self.horizon_curriculum is not None
+                and horizon_steps > self.config.horizon):
+            # S-COOPW: a staged horizon gets its stage's entrant-slot cap (COOPW.md).
+            pad_max = max(pad_max, self.horizon_curriculum.pad_cap(horizon_s))
         if self.config.entry_queue_state:
-            return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator,
-                                    queue_state=True)
-        return with_entry_slots(batch, horizon_s, self.config.entry_pad_max, generator)
+            return with_entry_slots(batch, horizon_s, pad_max, generator, queue_state=True)
+        return with_entry_slots(batch, horizon_s, pad_max, generator)
 
     @staticmethod
     def _wait_metrics(imagined):
@@ -1412,20 +1526,26 @@ class DreamerTrainer:
         self.critic.train()
         # Entry seeds from a per-update generator: enabling entries leaves the global RNG stream
         # (variant choice, policy noise) unchanged, and a resumed run draws the same seeds.
-        batch = self._entry_slots(self._sample_starts(self.start_states),
-                                  torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
-        variants = (build_variants(batch.state, self.counterfactual)
-                    if self.counterfactual.enabled else None)
         profile_due = (self.config.credit_profile_every > 0
                        and (self.update_count + 1) % self.config.credit_profile_every == 0)
-        imagined = self.imagine(batch, variants=variants, **({"credit_profile": True}
-                                                            if profile_due else {}))
+        # S-COOPW switches (uncertainty futures, correlated exploration, horizon stage) act on
+        # this training imagination only; unset they change nothing.
+        self._training_imagination = True
+        try:
+            batch = self._entry_slots(self._sample_starts(self.start_states),
+                                      torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
+            variants = (build_variants(batch.state, self.counterfactual)
+                        if self.counterfactual.enabled else None)
+            imagined = self.imagine(batch, variants=variants, **({"credit_profile": True}
+                                                                if profile_due else {}))
+        finally:
+            self._training_imagination = False
         imagined["penetration_buckets"] = self._penetration_buckets(batch)
         n_base, n_rows = imagined["n_base"], imagined["returns"].shape[-1]
         all_returns = imagined["returns"]
         returns = all_returns[..., :n_base]
         scale = self._return_scale(returns)
-        weights = self.counterfactual.weights(self.update_count)
+        weights = self.counterfactual.weights(self._curriculum_position())
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
         audit_components = {} if self.config.actor_gradient_audit else None
@@ -1447,6 +1567,7 @@ class DreamerTrainer:
             extra["actor_grad_norms"] = self._actor_gradient_norms(
                 imagined, scale, weights, audit_components)
             extra["action_audit"] = self._action_audit_metrics(imagined)
+        extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
         # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
@@ -1572,7 +1693,8 @@ class DreamerTrainer:
                 generator = torch.Generator().manual_seed(12345)
                 entry_generator = torch.Generator().manual_seed(54321)
                 for batch_index in range(batches):
-                    batch = self._entry_slots(self._sample_starts(sampler), entry_generator)
+                    batch = self._entry_slots(self._sample_starts(sampler, validation=True),
+                                              entry_generator)
                     variants = build_variants(batch.state, cf, generator) if cf.enabled else None
                     # Fixed sampled futures (same worlds at every validation) when enabled.
                     imagined = self.imagine(batch, deterministic=True, variants=variants,
@@ -1668,6 +1790,11 @@ class DreamerTrainer:
                    "validation_sampler": (self.validation_states.state_dict()
                                           if hasattr(self.validation_states, "state_dict") else None),
                    "sampler": self.start_states.state_dict() if hasattr(self.start_states, "state_dict") else None}
+        coopw = {**({"anchor": self.coop_anchor} if self.coop_anchor is not None else {}),
+                 **({"tilt_sampler": self._tilt_sampler.state_dict()}
+                    if self._tilt_sampler is not None else {})}
+        if coopw:
+            payload["coopw"] = coopw
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
@@ -1727,6 +1854,11 @@ class DreamerTrainer:
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)
+        coopw = payload.get("coopw") or {}
+        if self.counterfactual.curriculum_anchor == "first_update" and "anchor" in coopw:
+            self.coop_anchor = int(coopw["anchor"])
+        if self._tilt_sampler is not None and "tilt_sampler" in coopw:
+            self._tilt_sampler.load_state_dict(coopw["tilt_sampler"])
         if loop_refresh and payload["world_model_ids"] != self.world_model_ids:
             # Validation scores on a refreshed WM are not comparable with the old WM's: the new run
             # directory keeps its own policy_best*.pt (selected on this WM only).

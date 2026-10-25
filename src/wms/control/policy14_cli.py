@@ -163,6 +163,18 @@ def main(argv=None):
         if ramp_merge["native_ramp_merge"] == "wm_law" and any(
                 getattr(m, "merge_pivot", None) is None for m in models):
             raise ValueError("policy14.native_ramp_merge='wm_law' needs first-passage WM members")
+        # S-COOPW [uncertainty] / [exploration] / [horizon] (absent = unchanged; COOPW.md).
+        coopw = {}
+        from . import coopw as coopw_module
+        for section, cls in (("uncertainty", "UncertaintyConfig"), ("exploration", "ExplorationConfig"),
+                             ("horizon", "HorizonConfig")):
+            if section in raw:
+                coopw[section] = getattr(coopw_module, cls)(**raw[section])
+                if section == "horizon":
+                    summary["horizon_gate"] = coopw[section].bind(
+                        [r["checkpoint_sha256"] for r in receipts])
+                if coopw[section].enabled:
+                    summary[section] = coopw[section].as_dict()
         # 13E's second tier is explicitly opt-in for policy CAVs, independently
         # of the WM's native lane physics. CAVCUTIN uses inferred follower b.
         trainer = Policy14Trainer(models, policy, GroupSignal(RsuGroupEncoder()),
@@ -174,7 +186,8 @@ def main(argv=None):
                                   reward_weights=RewardWeights(**raw["reward"]),
                                   device=args.device, output_dir=output, lane_rules=lane_rules,
                                   counterfactual=CounterfactualConfig(**raw["counterfactual"]),
-                                  real_return_provider=provider)
+                                  real_return_provider=provider,
+                                  **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
         resumed = None
         if args.resume:
