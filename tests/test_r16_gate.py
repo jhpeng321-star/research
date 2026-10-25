@@ -3,7 +3,25 @@ from dataclasses import replace
 
 import pytest
 
+from wms.train import round13e_gate as g13
 from wms.train import round16_gate as g
+
+_MUTATED = ("VARIANT", "TAG", "RUN", "GS", "FLAG_KEYS", "operational_root", "check_configs", "check_init",
+            "YIELD_TENSORS")
+
+
+@pytest.fixture(autouse=True)
+def restore_13e_gate_globals():
+    """install() re-points round13e_gate module globals; restore them for later test modules."""
+    saved = {k: getattr(g13, k) for k in _MUTATED if hasattr(g13, k)}
+    variants, configs = dict(g13.VARIANTS), dict(g13.CONFIGS)
+    yield
+    for k, v in saved.items():
+        setattr(g13, k, v)
+    g13.VARIANTS.clear()
+    g13.VARIANTS.update(variants)
+    g13.CONFIGS.clear()
+    g13.CONFIGS.update(configs)
 
 
 def test_configs_are_r14_plus_exactly_the_registered_r16_changes():
@@ -42,11 +60,11 @@ def _report(tmp_path, before, new):
     path.write_bytes(b"x")
     return path, {"sha256": hashlib.sha256(b"x").hexdigest(), "loaded": sorted(before),
                   "new_in_model": sorted(new), "expanded": [], "shape_mismatch": [],
-                  "unused_from_checkpoint": []}
+                  "unused_from_checkpoint": [], "follower_courtesy_init": "checkpoint"}
 
 
 def test_init_check_a_requires_exactly_the_three_new_ramp_tensors(tmp_path):
-    before = ["driver_encoder.head.0.weight", "merge_yield.log_decel"]
+    before = ["driver_encoder.head.0.weight", "merge_yield.log_decel", "merge_yield.log_distance"]
     path, report = _report(tmp_path, before, g.RAMP_TENSORS)
     g.check_init(report, before, path, "a")
     _, bad = _report(tmp_path, before, g.RAMP_TENSORS[:2])
@@ -56,6 +74,16 @@ def test_init_check_a_requires_exactly_the_three_new_ramp_tensors(tmp_path):
         g.check_init(report, [*before, g.RAMP_TENSORS[0]], path, "a")
 
 
-def test_launch_is_refused():
-    with pytest.raises(SystemExit, match="preparation only"):
+def test_launch_subcommand_points_to_the_script():
+    with pytest.raises(SystemExit, match="round16_gpuB.sh"):
         g.main(["launch"])
+
+
+def test_install_repoints_the_13e_verdict_machinery():
+    m = g.install()
+    assert m.TAG == "r16" and m.RUN == "c4_wm_v10_round16" and m.check_init is g.check_init
+    assert set(g.RAMP_TENSORS) <= set(m.YIELD_TENSORS)
+    from wms.cli.assemble import build_model, build_physics
+    cfg = g.check_configs()["a"]
+    names = m.allowed_trainables(build_model(cfg, build_physics(cfg)), cfg, "a")
+    assert set(g.RAMP_TENSORS) <= set(names)

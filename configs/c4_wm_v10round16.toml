@@ -4,7 +4,7 @@
 #     adaptation of ramp HDVs to the target-lane leader; three shared scalars whose TRAIN-fitted
 #     INITIALIZATION is src/wms/model/ramp_speed_adapt_init.json; trained here),
 #   optim.lr_scale."ramp_speed_adapt" = 1000 (the shared-scalar scale of merge_yield),
-#   model.init_from = the R14 stage-B FINAL (pending its verdict; round16_gate refuses anything else),
+#   (init = the 13E stage-B FINAL b2, exactly as R14 A: R16 A and R14 A differ ONLY in the ramp term),
 #   new name / output.  NOT LAUNCHED: preparation only (R16_DESIGN.md).
 schema_version = 2
 name = "WM-S-C4-V10ROUND16"
@@ -20,8 +20,8 @@ merge_pivot_state_st = true
 checkpoint_forward = true
 merge_negotiation = false
 driver_param_mode = "physical"
-# S-RAMPSPEED: init = the R14 stage-B FINAL (R14 = 13E b2 + D1/D3/driver_b recalibrated).
-init_from = "runs/c4_wm_v10_round14_b/wm_s.pt"
+# S-RAMPSPEED: init = the 13E stage-B FINAL (resumed b2), as R14 A (R16 runs in parallel with R14 on gpuB).
+init_from = "runs/c4_wm_v10_round13e_b2/wm_s.pt"
 driver_param_init = "checkpoint"
 residual_accel_reinit = false
 follower_courtesy_init_zero = false

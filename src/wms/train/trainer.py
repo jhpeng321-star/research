@@ -164,6 +164,11 @@ class WmSTrainer:
         torch.manual_seed(int(s.seed))
         random.seed(int(s.seed))
         self.device = torch.device(s.device)
+        # R16 (shared GPU, runtime only; unset = unchanged): cap this process's CUDA memory so it
+        # OOMs itself before starving a co-located job (env WMS_GPU_MEM_FRACTION, e.g. 0.40).
+        fraction = os.environ.get("WMS_GPU_MEM_FRACTION")
+        if fraction and self.device.type == "cuda":
+            torch.cuda.set_per_process_memory_fraction(float(fraction), self.device)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):
