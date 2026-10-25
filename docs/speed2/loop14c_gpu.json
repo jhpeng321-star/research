@@ -1,0 +1,164 @@
+{
+  "torch": "2.8.0+cu128",
+  "device": "cuda",
+  "synthetic": true,
+  "threads": 1,
+  "relative_denominator_floor": 1e-08,
+  "slots": 595,
+  "present": 100,
+  "pid": 23538,
+  "affinity": [
+    0,
+    1
+  ],
+  "nice": 19,
+  "source_sha256": {
+    "tools/speed2_measure.py": "ea0faddb83ec36662f232e36ae01a39abf5701a50027d482caaa9a8b806777df",
+    "src/wms/core/speed_flags.py": "3788709dba389c4596b96ac77bb2c2c2f63240b7c101b1fa12ab465a5ba2b3fb",
+    "src/wms/model/residual_net.py": "aa19391573e52fe7c52f9cdb34b736245afd63c0f51349cf1aebc5ed9625c153",
+    "src/wms/model/merge_pivot.py": "47a47d7885b624ef09343568e3af743d92817615c76f10958eec70407506c105",
+    "src/wms/model/wms.py": "06ae163fff381c96b082986dff2418ea99b8dba0ab5a4b9ca855e3bc5d68d177",
+    "src/wms/train/cav_drive.py": "25cc25f2c40347b2d0fa94291ad177ce0a66e54cbfdc7c5771db7825efff3784",
+    "src/wms/train/losses/merge_pivot.py": "21ecb04d16a70ea78ca6e4c9a236db72ee2cad250cd1a4160b5c5de992bb0d0b",
+    "src/wms/data/history.py": "b9e4e50a5bd18a3379c957b8847275f973da2a98b50fa5b01d03f94b92f354ce",
+    "src/wms/control/bridge.py": "c91234cf269851694346133e706974646ffe2dd651e3f46617e41edf9edda2d4",
+    "src/wms/control/dreamer.py": "284ca52304640e24a38d4e208e7bcb2e7c7e55fbc49b0a59ae39a11b382df0f4"
+  },
+  "policy": {
+    "slots": 96,
+    "present": 24,
+    "control_horizon": 10,
+    "off": {
+      "median_s": 7.9968656077980995,
+      "samples_s": [
+        7.9968656077980995
+      ]
+    },
+    "native_ramp_merge": "wm_law",
+    "native_cav": "head",
+    "audit_thinned": {
+      "median_s": 3.2370426431298256,
+      "samples_s": [
+        3.2370426431298256
+      ]
+    },
+    "exact_flags": {
+      "median_s": 2.787971194833517,
+      "samples_s": [
+        2.787971194833517
+      ]
+    },
+    "compact_and_exact": {
+      "median_s": 2.7046413756906986,
+      "samples_s": [
+        2.7046413756906986
+      ]
+    },
+    "comparisons": {
+      "audit_thinned": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 0.0,
+          "max_rel": 0.0,
+          "bit_equal": true
+        }
+      },
+      "exact_flags": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 0.0,
+          "max_rel": 0.0,
+          "bit_equal": true
+        }
+      },
+      "compact_and_exact": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 7.450580596923828e-09,
+            "max_rel": 1.1637854635980127e-07,
+            "bit_equal": false
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 1.4901161193847656e-08,
+          "max_rel": 0.25934263347959785,
+          "bit_equal": false
+        }
+      }
+    },
+    "counterfactual_rows": 4
+  },
+  "peak_reserved_bytes": 171966464
+}

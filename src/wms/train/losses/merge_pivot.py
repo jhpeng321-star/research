@@ -14,6 +14,7 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor
 
+from wms.core import speed_flags
 from wms.model.merge_pivot import (advance_longitudinal, geometry, hybrid_log_masses,
                                   log_event_mass, log_survival, ramp_lane_end_stop, close_risk)
 
@@ -226,12 +227,15 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
     scenes = getattr(inp, "merge_pivot_scene", None)
     if scenes is not None:
         rows = []
+        batched = _batch_replay_enabled(model) and len(scenes) > 1
         for b, scene in enumerate(scenes):
             values = vars(inp).copy()
             for key in ("states", "present", "is_cav", "hist", "hist_mask",
                         "observed_hist", "observed_hist_mask", "controller_id"):
                 val = values.get(key)
                 values[key] = None if val is None else val[b:b + 1]
+            if batched and values.get("continuity") is not None:
+                values["continuity"] = values["continuity"][b:b + 1]
             values["merge_pivot_scene"] = None
             if scene is not None:
                 for key in ("states", "present", "is_cav", "continuity"):
@@ -253,7 +257,16 @@ def build_recorded_geometry(model, inp, targets: UnrollTargets) -> dict[str, Ten
                 values["action_timeline"] = {
                     key: val if key == "control_dt_s" else val[b:b + 1]
                     for key, val in inp.action_timeline.items()}
+            if batched:
+                rows.append(values)
+                continue
             rows.append(build_recorded_geometry(model, SimpleNamespace(**values), targets))
+        if batched:
+            merged = _stack_scene_rows(rows)
+            if merged is not None:
+                return build_recorded_geometry(model, merged, targets)
+            rows = [build_recorded_geometry(model, SimpleNamespace(**values), targets)
+                    for values in rows]
         return {key: torch.cat([row[key] for row in rows]) for key in rows[0]}
 
     from wms.model import cav as cav_motion
@@ -425,6 +438,8 @@ def build_pre_window_history(model, inp, cfg: MergePivotConfig) -> list[Optional
     if len(prefixes) != len(inp.states):
         raise ValueError("merge_pivot_prefix needs one raw prefix per batch row")
     result = []
+    batched = _batch_replay_enabled(model)
+    deferred = []
     for b, prefix in enumerate(prefixes):
         if prefix is None:
             result.append(None)
@@ -488,10 +503,154 @@ def build_pre_window_history(model, inp, cfg: MergePivotConfig) -> list[Optional
                                  hist=None, hist_mask=None, observed_hist=observed,
                                  observed_hist_mask=observed_mask, action_timeline=timeline,
                                  controller_id=None)
+        if batched:
+            deferred.append((len(result), source, h))
+            result.append(None)
+            continue
         geo = build_recorded_geometry(model, source, SimpleNamespace(n_steps=h))
         result.append(certify_pre_window(rec, present, cont, geo, cfg,
                                          retain=bool(getattr(model.physics, "ramp_risk_retain", False))))
+    if deferred:
+        retain = bool(getattr(model.physics, "ramp_risk_retain", False))
+        for (index, source, h), geo in zip(deferred, _batched_prefix_geometry(
+                model, [(source, h) for _, source, h in deferred])):
+            result[index] = certify_pre_window(source.states, source.present, source.continuity,
+                                               geo, cfg, retain=retain)
     return result
+
+
+#: Attributes of a replay input that :func:`build_recorded_geometry` reads per batch row.
+_ROW_KEYS = ("states", "present", "is_cav", "continuity", "hist", "hist_mask",
+             "observed_hist", "observed_hist_mask", "controller_id")
+
+
+def _batch_replay_enabled(model) -> bool:
+    # Frozen replay is no-grad, but may still be in training mode. Batching stochastic
+    # dropout would assign different random masks to rows; preserve its legacy calls.
+    return speed_flags.enabled("batch_replay") and not any(
+        isinstance(module, torch.nn.modules.dropout._DropoutNd) and module.training and module.p > 0
+        for module in model.modules())
+
+
+def _stack_scene_rows(rows: list) -> Optional[SimpleNamespace]:
+    """S-SPEED2 ``batch_replay``: one batched replay input from per-row scene inputs.
+
+    Every row has the same window length and slot count, so the per-row inputs are
+    concatenated along the batch axis.  ``None`` (fall back to per-row replays) when the
+    rows are not uniformly shaped, timelines are mixed with missing ones, or a progress /
+    observer hook expects per-row calls.
+    """
+    first = rows[0]
+    if any(row.get("replay_progress") is not None or row.get("replay_observer") is not None
+           for row in rows):
+        return None
+    merged = dict(first)
+    for key in _ROW_KEYS:
+        values = [row.get(key) for row in rows]
+        if all(value is None for value in values):
+            merged[key] = None
+            continue
+        if not all(torch.is_tensor(value) for value in values):
+            return None
+        if len({tuple(value.shape[1:]) for value in values}) != 1:
+            return None
+        merged[key] = torch.cat(values)
+    timelines = [row.get("action_timeline") for row in rows]
+    if all(timeline is None for timeline in timelines):
+        merged["action_timeline"] = None
+    else:
+        if any(timeline is None for timeline in timelines):
+            return None
+        keys = set(timelines[0])
+        if any(set(timeline) != keys for timeline in timelines):
+            return None
+        stacked = {}
+        for key in keys:
+            values = [timeline[key] for timeline in timelines]
+            if key == "control_dt_s":
+                if len({float(value) for value in values}) != 1:
+                    return None
+                stacked[key] = values[0]
+                continue
+            if not all(torch.is_tensor(value) for value in values):
+                return None
+            if len({tuple(value.shape[1:]) for value in values}) != 1:
+                return None
+            stacked[key] = torch.cat(values)
+        merged["action_timeline"] = stacked
+    merged["merge_pivot_scene"] = None
+    return SimpleNamespace(**merged)
+
+
+def _pad_rows(value: Tensor, steps: int, slots: int, *, slot_dim: int = 2, fill=0) -> Tensor:
+    """Pad ``[1, T, K, ...]`` (or ``[1, K, ...]`` with ``slot_dim=1``) to ``steps`` x ``slots``."""
+    shape = list(value.shape)
+    if slot_dim == 2:
+        shape[1] = steps
+    shape[slot_dim] = slots
+    out = value.new_full(shape, fill)
+    out[tuple(slice(0, n) for n in value.shape)] = value
+    return out
+
+
+def _batched_prefix_geometry(model, items: list) -> list:
+    """S-SPEED2 ``batch_replay``: the ragged pre-window replays of a batch in lockstep.
+
+    Rows are padded to the longest prefix and the widest scene with ABSENT slots/ticks
+    (present / continuity / CAV all False), so a padded tick never touches a real row and
+    each row's first ``h`` steps and ``k`` slots are its own replay.  Rows are grouped by
+    which optional inputs they carry; a group of one is replayed exactly as before.
+    """
+    groups: dict = {}
+    for i, (source, _) in enumerate(items):
+        timeline = source.action_timeline
+        key = (None if timeline is None else tuple(sorted(timeline)),
+               source.observed_hist is None)
+        groups.setdefault(key, []).append(i)
+    out: list = [None] * len(items)
+    for members in groups.values():
+        if len(members) == 1:
+            source, h = items[members[0]]
+            out[members[0]] = build_recorded_geometry(model, source, SimpleNamespace(n_steps=h))
+            continue
+        sources = [items[i][0] for i in members]
+        lengths = [items[i][1] for i in members]
+        widths = [int(src.states.shape[2]) for src in sources]
+        steps, slots = max(lengths), max(widths)
+        merged = dict(
+            states=torch.cat([_pad_rows(src.states, steps + 1, slots) for src in sources]),
+            present=torch.cat([_pad_rows(src.present, steps + 1, slots, fill=False)
+                               for src in sources]),
+            is_cav=torch.cat([_pad_rows(src.is_cav, steps + 1, slots, fill=False)
+                              for src in sources]),
+            continuity=torch.cat([_pad_rows(src.continuity, steps, slots, fill=False)
+                                  for src in sources]),
+            hist=None, hist_mask=None, observed_hist=None, observed_hist_mask=None,
+            action_timeline=None, controller_id=None)
+        if sources[0].observed_hist is not None:
+            merged["observed_hist"] = torch.cat([
+                _pad_rows(src.observed_hist, 0, slots, slot_dim=1) for src in sources])
+            merged["observed_hist_mask"] = torch.cat([
+                _pad_rows(src.observed_hist_mask, 0, slots, slot_dim=1, fill=False)
+                for src in sources])
+        if sources[0].action_timeline is not None:
+            # One control column per 1 s: enough columns for every padded tick.
+            columns = max(max(int(src.action_timeline["controller"].shape[1]) for src in sources),
+                          (steps - 1) // 2 + 1)
+            timeline = {"control_dt_s": sources[0].action_timeline.get("control_dt_s", 1.0)}
+            for key, value in sources[0].action_timeline.items():
+                if key == "control_dt_s":
+                    continue
+                fill = False if value.dtype == torch.bool else 0
+                timeline[key] = torch.cat([_pad_rows(src.action_timeline[key], columns, slots,
+                                                     fill=fill) for src in sources])
+            merged["action_timeline"] = timeline
+        geo = build_recorded_geometry(model, SimpleNamespace(**merged),
+                                      SimpleNamespace(n_steps=steps))
+        for j, (i, h, k) in enumerate(zip(members, lengths, widths)):
+            out[i] = {key: (value[j:j + 1, :h, :k] if value.ndim >= 3 else value[j:j + 1, :h])
+                      for key, value in geo.items()}
+    return out
 
 
 def certify_pre_window(rec, present, cont, geo, cfg, retain=False):

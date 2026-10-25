@@ -658,8 +658,14 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
                  identity: Optional[Tensor] = None, retain: Optional[Tensor] = None,
                   uniform: Optional[Tensor] = None, w: Optional[Tensor] = None,
                   epsilon_uniform: Optional[Tensor] = None,
-                  quadrature_order: int = 32) -> dict[str, Tensor]:
+                  quadrature_order: int = 32,
+                  diagnostics: bool = True) -> dict[str, Tensor]:
     """Advance persistent latent, exact maximum and absorbing risk lifecycle.
+
+    S-SLOWROLL / S-SPEED2: ``diagnostics=False`` skips the hybrid quadrature that only
+    produces the ``logS`` / ``event_mass`` / ``cdf`` diagnostics (returned as NaN).  It
+    re-integrates each at-risk slot's whole boundary history every step (O(A^2) per step,
+    O(A^3) per waiting car) and never feeds ``cross``, ``z``, ``epsilon`` or any RNG.
 
     ``ramp`` is risk membership, NOT instantaneous physical eligibility (the
     latter is encoded by c=-inf).  Leaving risk after starting is terminal.
@@ -752,6 +758,12 @@ def update_state(c: Tensor, tau: Tensor, ramp: Tensor, present: Tensor, *,
     history = carry.get("history", c.new_empty((*c.shape, 0)))
     history = torch.where(keep.unsqueeze(-1), history, torch.full_like(history, -torch.inf))
     history = torch.cat((history, torch.where(active, c, torch.full_like(c, -torch.inf)).unsqueeze(-1)), -1)
+    if not diagnostics:
+        nan = torch.full_like(c, torch.nan, dtype=torch.float64)
+        result.update(epsilon=epsilon, rng_seed=seed, rng_generation=generation,
+                      decision_step=counter, history=history,
+                      logS=nan, event_mass=nan.clone(), cdf=nan.clone())
+        return result
     logS = carry.get("logS", torch.zeros_like(c, dtype=torch.float64))
     event_mass = torch.zeros_like(c, dtype=torch.float64)
     if bool(active.any()):
