@@ -1,6 +1,8 @@
 {
   "_comment": "LOOP14 production template (LOOP14_DESIGN.md). Replace REPO_SHA, POLICY0 and the cpuN rsync target before init. Orchestrator runs on gpuR from the staged code root; collection/convert run on cpuN over ssh. Never edit after init (the registration sha is pinned).",
   "loop_id": "C4-LOOP14-20261026",
+  "registration_template": "configs/c4_loop14_registration.json",
+  "seed_block": [968100, 968227],
   "loop_root": "/root/autodl-tmp/c4/v5/loop14",
   "registration": "/root/autodl-tmp/c4/v5/loop14_REGISTRATION.json",
   "hosts": {
