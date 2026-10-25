@@ -143,12 +143,17 @@ def parity():
                 for name in ("delay", "source_wait"):
                     values = np.asarray(unit["J"][f"{name}@{horizon}"])
                     assert values.shape == (4, 2) and np.isfinite(values).all(), p.name
+                with np.load(p.with_suffix(".npz")) as z:
+                    assert z["s_m"].shape[1] == horizon + 1, "actual elapsed horizon mismatch"
     for suite, expected in (("coop", 33), ("c", 12)):
         bad, n = [], 0
         for p in sorted((ROOT / f"off/wm_{suite}").glob("w*_t*.npz")):
             prior = Path.home() / f"mappodiag/wm_{suite}" / p.name
             with np.load(p) as a, np.load(prior) as b:
-                if any(not np.array_equal(a[k], b[k], equal_nan=True) for k in a.files):
+                if a["s_m"].shape[1] != b["s_m"].shape[1]:
+                    bad.append({"unit": p.name, "reason": "old training low-share cap shortened the requested horizon",
+                                "actual_new_seconds": a["s_m"].shape[1] - 1, "actual_old_seconds": b["s_m"].shape[1] - 1})
+                elif any(not np.array_equal(a[k], b[k], equal_nan=True) for k in a.files):
                     bad.append(p.name)
             n += 1
         assert n == expected
@@ -201,7 +206,15 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        if "--qual-only" in sys.argv:
+            q = qualification()
+            save("QUAL_NATIVE_LANE.json", q)
+            print(json.dumps({"complete": q["complete"], "pass_to_fail": q["pass_to_fail"],
+                              "units": {tag: {s: {u: d.get("sign_verdict") for u, d in x.items()}
+                                        for s, x in q[tag].items()} for tag in ("off", "on")}}), flush=True)
+        else:
+            main()
     except Exception as exc:
-        save("DECISION.json", {"adopt": False, "reason": "incomplete required evidence", "error": repr(exc), "time": time.time()})
+        save("QUAL_ANALYSIS_FAILED.json" if "--qual-only" in sys.argv else "DECISION.json",
+             {"adopt": False, "reason": "incomplete required evidence", "error": repr(exc), "time": time.time()})
         raise

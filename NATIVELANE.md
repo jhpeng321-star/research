@@ -6,6 +6,10 @@ Implemented on `c4/nativelane`, starting at requested `01f590e9`.
 **No adoption decision yet; gpuR MAIN14 arm remains untouched.**
 This report is committed before the 05:30 laptop deadline; the server continuation
 will write the completed scientific decision and operational receipt independently.
+All **228/228** exploratory qualification jobs have finished. There is **no
+PASS→FAIL sign-unit transition**: pulse_m @5/@10 remains PASS in both seed sets;
+gap_open @10 remains INCONCLUSIVE in set1 and FAIL in set2; @30 is REPORT-ONLY.
+See [qualification evidence](docs/nativelane/QUAL_NATIVE_LANE.json).
 
 ## Inference switch
 
@@ -62,6 +66,11 @@ No new SUMO or evaluation-seed outcomes.
   with a ramp merge exactly like an HDV, rather than inheriting policy-command
   reservation priority. Superseded ON 60 s/qualification tapes are retained at
   `superseded_priority_attempt2/` and rerun before any decision; OFF is unchanged.
+  The shared C1 audit then identified three old C/300 s low-share runs as only
+  60 s long. This task disables that training-only cap in its measurement
+  launcher for both arms, archives short OFF outputs in `superseded_short_clock/`,
+  repairs precisely the short starts, and requires 301/61 1-Hz frames for every
+  300/60 s measurement. Main-loop training defaults/curriculum stay as registered.
 - C1 PI u_same native/PI ranking is secondary, entries OFF and inherited
   snapshot-history/longitudinal plant retained; run only if required work finishes.
 - Paired whole-world percentile bootstrap: 2,000 resamples, seed 0.
@@ -78,6 +87,10 @@ cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **178756**,
 continuation **178826**, `setsid nohup`, numerical
 threads=1, nice19, CPU only. MAPPO pool <=6 plus qualification pool <=6;
 after qualification completes, its six slots may transfer to the MAPPO pool (<=12 total).
+Qualification has exited; detached repair driver **198518** now uses those six
+slots as two 3-worker pools (fixed ON/60 s and the three true OFF/300 s repairs)
+beside the original 6-worker long-rollout pool. ON/300 s waits for these exact
+PID-incarnation receipts before taking up to 12 slots; no pools overlap above 12.
 secondary C1 uses <=12 only after those pools exit. New inference is barred
 after **09:00 UTC+8**. Only receipt-owned PID incarnations are inspected.
 
@@ -105,3 +118,11 @@ before any decision or MAIN14 write, following the mainline-priority regression.
 That package is retained on cpuX as `rearm_package_superseded_72a0db3862dd.tar.gz`.
 The source/config/registration hashes of its replacement are registered before
 installing the replacement watcher; scientific adoption criteria are unchanged.
+
+Current conditional runtime is **1619544e**; package SHA256 starts `5bc09110`,
+registration SHA256 starts `760f02c5`, config SHA256 starts `37bff3d1`.
+gpuR watcher **652555**, start ticks **4158465013**, independently verified PPID 1,
+SID 652555, nice19, `/dev/null` stdio. `WATCHER_VERIFIED.json` proves original
+arm SHA256 `5c237f95...` and waiter 649847 are untouched. Watcher events are on
+cpuX `gpuR_watch.jsonl`; final installation/failure receipts will be `ADOPTED.json`
+or `ADOPTION_FAILED.json` there, with full evidence retained on gpuR if attempted.

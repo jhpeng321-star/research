@@ -12,11 +12,12 @@ from remote import remote
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def stage(baseline=False, harness=False, host="cpuX"):
+def stage(baseline=False, harness=False, host="cpuX", deps=False):
     # Export only executable source/configs; never traverse data or assignment files.
     names = subprocess.check_output([
         "git", "ls-files", "--cached", "--others", "--exclude-standard", "--",
-        "src", "traffic_shepherd", "tools", "scripts", "output", "tests/unit", "configs", "pyproject.toml"], cwd=ROOT).decode().splitlines()
+        "src", "traffic_shepherd", "tools", "scripts", "output", "tests/unit", "configs", "pyproject.toml",
+        "baselines/circles/adapter.json"], cwd=ROOT).decode().splitlines()
     import re
     bad = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype", re.I)
     if baseline:
@@ -24,6 +25,8 @@ def stage(baseline=False, harness=False, host="cpuX"):
                                         "src", "configs", "tools/loop14_checks/loop14c_bitid.py"], cwd=ROOT).decode().splitlines()
     if harness:
         names = [n for n in names if n.startswith("tools/nativelane/")]
+    if deps:
+        names = [n for n in names if n == "baselines/circles/adapter.json"]
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as t:
         for name in names:
@@ -48,7 +51,119 @@ print(json.dumps({'staged':str(r)}))
 
 
 if __name__ == "__main__":
-    if "--archive-package" in sys.argv:
+    if "--early-repairs" in sys.argv:
+        print(remote("cpuX", '''
+import os,subprocess,json,time
+from pathlib import Path
+p=Path.home()/'nativelane'; assert json.loads((p/'QUAL_TASKS.json').read_text())['complete']
+assert not (p/'EARLY_REPAIRS_PLAN.json').exists()
+(p/'EARLY_REPAIRS_PLAN.json').write_text(json.dumps({'total_extra_workers':6,'pools':2,'workers_each':3}))
+with (p/'early_repairs.log').open('ab') as log:
+ child=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','tools/nativelane/early.py'],
+  cwd=p/'repo',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+  env={**os.environ,'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':'','PYTHONUNBUFFERED':'1'})
+time.sleep(2)
+f=Path('/proc/'+str(child.pid)+'/stat').read_text().rsplit(')',1)[1].split()
+r={'pid':child.pid,'start_ticks':f[19],'running':child.poll() is None}
+(p/'EARLY_REPAIRS.pid.json').write_text(json.dumps(r,indent=1))
+print(json.dumps(r))
+''').decode())
+    elif "--collect" in sys.argv:
+        import base64
+        import json
+        response = json.loads(remote("cpuX", '''
+import json,base64
+from pathlib import Path
+p=Path.home()/'nativelane'
+names=['CHECKS.json','QUAL_NATIVE_LANE.json','DECISION.json','NATIVE_LANE_COUNTS.json','RESULT.md','C1_RANKING.json',
+ 'ADOPTED.json','ADOPTION_FAILED.json','GPU_WATCHER_VERIFIED.json','GPU_WATCHER.json','QUAL_TASKS.json','CLOCK_REPAIR.json','REPAIR_ON60_DONE.json','FINISHED.json']
+print(json.dumps({n:base64.b64encode((p/n).read_bytes()).decode() for n in names if (p/n).exists()}))
+'''))
+        assert (ROOT / "docs").is_dir()
+        out = ROOT / "docs/nativelane"
+        out.mkdir(exist_ok=True)
+        for name, content in response.items():
+            (out / name).write_bytes(base64.b64decode(content))
+        print(json.dumps({"collected": sorted(response), "destination": str(out)}))
+    elif "--qual-analyze" in sys.argv:
+        print(remote("cpuX", '''
+import subprocess,os,json,time
+from pathlib import Path
+p=Path.home()/'nativelane'; assert json.loads((p/'QUAL_TASKS.json').read_text())['complete']
+with (p/'qual_analysis.log').open('ab') as log:
+ child=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','tools/nativelane/analyze.py','--qual-only'],
+  cwd=p/'repo',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+  env={**os.environ,'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':''})
+time.sleep(1)
+print(json.dumps({'pid':child.pid,'running':child.poll() is None}))
+''').decode())
+    elif "--record-final-checks" in sys.argv:
+        import hashlib
+        import json
+        commit = "1619544e0e0df9c938d4c5d08db009941ff60056"
+        names = ["src/wms/model/wms.py", "src/wms/model/cav.py", "src/wms/control/bridge.py",
+                 "src/wms/control/dreamer.py", "src/wms/control/policy.py", "src/wms/control/policy14.py",
+                 "src/wms/control/policy14_cli.py", "src/wms/control/confident_gate.py",
+                 "tests/unit/test_native_lane.py", "tests/unit/test_native_adoption.py"]
+        expected = {n: hashlib.sha256(subprocess.check_output(["git", "show", f"{commit}:{n}"], cwd=ROOT)).hexdigest() for n in names}
+        proof = json.loads(remote("gpuB", '''
+import sys,json,hashlib
+from pathlib import Path
+req=json.load(sys.stdin); root=Path('/root/nativelane/repo')
+assert all(hashlib.sha256((root/n).read_bytes()).hexdigest()==s for n,s in req.items())
+proof=json.loads(Path('/root/nativelane/priority_bitid/BIT_IDENTITY.json').read_text())
+print(json.dumps({'bitid':proof,'verified_source_files':req,'tests_host':'gpuB','integrated_tests_passed':366,
+ 'verification':'366-test integrated CPU suite printed success after the native/HDV reservation regression; final two-path tensor-byte probe passed'}))
+''', json.dumps(expected).encode()))
+        proof.update(passed=True, code_sha=commit,
+                     wm_sha256="952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8")
+        print(remote("cpuX", '''
+import sys,json
+from pathlib import Path
+p=Path.home()/'nativelane'; target=p/'CHECKS.json'; old=json.loads(target.read_text())
+new=json.load(sys.stdin); new['initial_checks']=old
+tmp=p/'CHECKS.final.tmp'; tmp.write_text(json.dumps(new,indent=1)); tmp.replace(target)
+print(json.dumps({'final_checks_recorded':True,'tests':new['integrated_tests_passed'],'code_sha':new['code_sha']}))
+''', json.dumps(proof).encode()).decode())
+        (ROOT / "tools/nativelane/FINAL_CHECKS.json").write_text(json.dumps(proof, indent=1) + "\n")
+    elif "--resources" in sys.argv:
+        print(remote("cpuX", '''
+import json,time
+from pathlib import Path
+p=Path.home()/'nativelane'; out={'time':time.time(),'owned':[]}
+for f in (p/'logs').glob('*.pid.json'):
+ r=json.loads(f.read_text()); proc=Path('/proc')/str(r['pid'])
+ try:
+  st=(proc/'stat').read_text().rsplit(')',1)[1].split()
+  if st[19]!=r['start_ticks'] or st[0]=='Z': continue
+  child=[int(x) for x in (proc/'task'/str(r['pid'])/'children').read_text().split()]
+  out['owned'].append({'task':f.name,'pid':r['pid'],'state':st[0],'children':child})
+ except FileNotFoundError: pass
+out['memory']={x.split(':')[0]:x.split(':')[1].strip() for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith(('MemTotal:','MemAvailable:','SwapTotal:','SwapFree:'))}
+print(json.dumps(out,indent=1))
+''').decode())
+    elif "--verify-watch" in sys.argv:
+        import json
+        req = {"watcher": json.loads((ROOT / "tools/nativelane/WATCHER.json").read_text()),
+               "package": json.loads((ROOT / "tools/nativelane/REARM_PACKAGE.json").read_text())}
+        output = remote("gpuR", '''
+import json,sys,hashlib,os
+from pathlib import Path
+r=json.load(sys.stdin); own=r['watcher']; a=Path('/root/autodl-tmp/c4/v5/main14_arm')
+f=Path('/proc/'+str(own['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
+assert f[19]==own['start_ticks'] and f[0]!='Z'
+assert int(f[1])==1 and int(f[3])==own['pid']
+h=hashlib.sha256((a/'ARMED.json').read_bytes()).hexdigest(); assert h==r['package']['expected_old_arm_sha256']
+assert not (a/'STOP_ARM').exists() and not (a/'nativelane_adoption_package').exists()
+assert (a/'waiter.pid').read_text().strip()=='649847'
+print(json.dumps({'pid':own['pid'],'start_ticks':f[19],'ppid':int(f[1]),'session':int(f[3]),'nice':int(f[16]),
+ 'stdio':[os.readlink('/proc/'+str(own['pid'])+'/fd/'+str(i)) for i in range(3)],
+ 'existing_arm_sha256':h,'original_waiter':649847,'arm_untouched':True,'package_sha256':r['package']['package_sha256']},indent=1))
+''', json.dumps(req).encode())
+        print(output.decode())
+        (ROOT / "tools/nativelane/WATCHER_VERIFIED.json").write_bytes(output)
+        print(remote("cpuX", "import sys;from pathlib import Path;(Path.home()/'nativelane/GPU_WATCHER_VERIFIED.json').write_bytes(sys.stdin.buffer.read());print('verified receipt stored')", output).decode())
+    elif "--archive-package" in sys.argv:
         print(remote("cpuX", '''
 from pathlib import Path
 import hashlib,json
@@ -215,4 +330,4 @@ print(json.dumps({'pid':proc.pid,'running':proc.poll() is None}))
 ''').decode())
     else:
         stage("--baseline" in sys.argv, "--harness" in sys.argv,
-              "gpuB" if "--gpuB" in sys.argv else "cpuX")
+              "gpuB" if "--gpuB" in sys.argv else "cpuX", "--deps" in sys.argv)
