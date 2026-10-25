@@ -134,7 +134,7 @@ def _load_starts(data, models, seed, entries=False):
         raise ValueError("ensemble members must use the same observed-history specification")
     history_s, history_stride_s = history_specs.pop()
     split_kwargs = dict(
-        val_fraction=float(data.get("val_fraction", 0.1)), seed=seed,
+        val_fraction=float(data.get("val_fraction", 0.1)), seed=int(data.get("split_seed", seed)),
         excluded_penetrations=tuple(data.get("excluded_penetrations", [])),
         relabel=bool(data.get("relabel_cavs", False)),
         target_penetration=float(data.get("target_penetration", 0.2)))

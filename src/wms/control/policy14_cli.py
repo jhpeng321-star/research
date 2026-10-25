@@ -160,6 +160,8 @@ def main(argv=None):
                              "(paired per start) instead of the single rescore start")
     parser.add_argument("--gate-panel-dump", default=None,
                         help="build the gate panel (VAL starts, panel seed 965150, n 16), write it there, exit")
+    parser.add_argument("--horizon-gate", default=None,
+                        help="WM-sha-bound COOPW horizon receipt for the current accepted loop WM")
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -170,6 +172,8 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if args.horizon_gate:
+            raw["horizon"] = {**raw["horizon"], "gate_file": str(checked_path(args.horizon_gate))}
         switches = raw["policy14"]
         cfg = DreamerConfig(**raw["trainer"])
         if not switches["authoritative_j"] and cfg.real_return_mix:
