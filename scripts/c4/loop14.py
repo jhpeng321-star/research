@@ -331,6 +331,8 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
         argv += ["--critic-warmup-updates", str(int(p.get("critic_warmup_updates_resume", 0)))]
     if p.get("smoke"):
         argv.append("--smoke")
+    # S-GPUB-LOOP: extra policy14_cli arguments (e.g. ["--gate-panel", "<frozen panel JSON>"]); none by default.
+    argv += [str(x) for x in p.get("extra_args", [])]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),

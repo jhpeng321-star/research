@@ -1,10 +1,10 @@
 {
-  "_comment": "C4-LOOP14-COOPOFF-20261026 (GPUB_LOOP.md): loop14 coop-OFF arm. Orchestrator + policy + wm_ft + check on gpuB (shared GPU: memory-headroom guard, C4_GPU_MEM_FRACTION 0.41, <= 4 CPU threads); collect + convert on cpuX over ssh (<= 16 SUMO workers). REPO_SHA is filled into a copy at launch (the copy is what init pins); never edit after init. Attempt 1 (loop14_coopoff, code bbe6244a) failed the policy readiness FD gate on CUDA before any update (0 sim-s); attempt 2 runs the same gates on a CPU copy (C4_PROBES_DEVICE=cpu).",
+  "_comment": "C4-LOOP14-COOPOFF-20261026 (GPUB_LOOP.md): loop14 coop-OFF arm. Orchestrator + policy + wm_ft + check on gpuB (shared GPU: memory-headroom guard, C4_GPU_MEM_FRACTION 0.41, <= 4 CPU threads); collect + convert on cpuX over ssh (<= 16 SUMO workers). REPO_SHA is filled into a copy at launch (the copy is what init pins); never edit after init. Attempt 1 (loop14_coopoff, code bbe6244a) failed the policy readiness FD gate on CUDA before any update (0 sim-s); attempt 2 runs the same gates on a CPU copy (C4_PROBES_DEVICE=cpu) and stopped at the update-10 signal gate scored on ONE rescore start; attempt 3 (main/owner decision 10-26) scores that gate on a frozen 16-start VAL panel (--gate-panel), everything else unchanged.",
   "loop_id": "C4-LOOP14-COOPOFF-20261026",
   "registration_template": "configs/c4_loop14_coopoff_registration.json",
   "seed_block": [968500, 968627],
-  "loop_root": "/root/autodl-tmp/c4/v5/loop14_coopoff_a2",
-  "registration": "/root/autodl-tmp/c4/v5/loop14_coopoff_a2_REGISTRATION.json",
+  "loop_root": "/root/autodl-tmp/c4/v5/loop14_coopoff_a3",
+  "registration": "/root/autodl-tmp/c4/v5/loop14_coopoff_a3_REGISTRATION.json",
   "hosts": {
     "gpu": {"python": "/root/miniconda3/bin/python", "code_root": "/root/autodl-tmp/c4/v5/repo_gpubloop_REPO_SHA"},
     "cpu": {"python": "/home/ubuntu/c4/venv/bin/python", "code_root": "/home/ubuntu/c4/repo-gpubloop-REPO_SHA",
@@ -20,6 +20,7 @@
     "threads": 2,
     "timeout_h": 3.0,
     "critic_warmup_updates_resume": 8,
+    "extra_args": ["--gate-panel", "/root/autodl-tmp/c4/v5/policy14_stage/loop14_coopoff_gate_panel.json"],
     "initial_real_returns": "/root/autodl-tmp/c4/v5/policy14_stage/policy14_native_returns.npz",
     "allowed_roots": ["/root/autodl-tmp/c4/v5/runs", "/root/autodl-tmp/c4/v5/policy14_stage",
                       "/root/autodl-tmp/c4/v5/data/v5_native_q", "/root/autodl-tmp/c4/v5/data/genrand_plain_q"],

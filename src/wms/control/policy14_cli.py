@@ -67,6 +67,65 @@ def load_members(checkpoints, configs, device):
     return models, receipts
 
 
+# --- S-GPUB-LOOP (10-26, main/owner decision): update-10 signal gate on a FROZEN rescore panel ---
+# The default gate compares the independent rescore of ONE start (rescore batch = batch_size 1)
+# at update 10 vs update 0, which cannot resolve a ~0.3 change of J ~ 750.  With --gate-panel the
+# SAME criterion form (independent, critic-free J; update-10 must be better, i.e. lower, than
+# update 0) is evaluated on a frozen panel of VAL start windows of the same TRAIN start corpus,
+# paired per start.  Off (default) = the old gate, bit-identical.  The per-update 1-start rescore
+# (entropy annealing, rescores.jsonl) is unchanged either way; panel scoring restores all RNG.
+GATE_PANEL_SCHEMA = "policy14_gate_panel/1"
+
+
+def _json_meta(meta):
+    return {str(k): v for k, v in sorted(meta.items())
+            if not str(k).startswith("_") and isinstance(v, (str, int, float, bool))}
+
+
+def build_gate_panel(val, n=16, seed=965150):
+    """Stratified (round-robin over sorted penetrations) VAL windows; own generator."""
+    generator = torch.Generator().manual_seed(int(seed))
+    orders = {}
+    for penetration in val.penetrations:
+        group = sorted(val.groups[penetration])
+        orders[penetration] = [group[i] for i in torch.randperm(len(group), generator=generator).tolist()]
+    picked, cursor = [], {p: 0 for p in val.penetrations}
+    while len(picked) < n:
+        progressed = False
+        for penetration in val.penetrations:
+            if len(picked) < n and cursor[penetration] < len(orders[penetration]):
+                picked.append(orders[penetration][cursor[penetration]])
+                cursor[penetration] += 1
+                progressed = True
+        if not progressed:
+            raise ValueError(f"VAL has fewer than {n} start windows")
+    return {"schema": GATE_PANEL_SCHEMA, "n": n, "panel_seed": int(seed),
+            "selection": "VAL subset of the TRAIN start corpus (split_start_states, run seed); "
+                         "round-robin over sorted penetrations, torch.randperm(panel_seed) per group",
+            "starts": [{"index": int(i), "meta": _json_meta(val.metadata[i])} for i in picked]}
+
+
+def load_gate_panel(path, val):
+    doc = json.loads(checked_path(path).read_text(encoding="utf-8"))
+    if doc.get("schema") != GATE_PANEL_SCHEMA or not doc.get("starts"):
+        raise ValueError("gate panel: wrong schema or empty")
+    for start in doc["starts"]:
+        index = int(start["index"])
+        if index not in val.metadata or _json_meta(val.metadata[index]) != start["meta"]:
+            raise ValueError(f"gate panel start {index} does not match this VAL corpus (frozen list differs)")
+        world = str(start["meta"].get("world", start["meta"].get("world_id", "")))
+        match = re.search(r"w(\d+)m", world)
+        if match and 964000 <= int(match[1]) <= 964199:
+            raise ValueError("gate panel contains an excluded evaluation seed")
+    return doc
+
+
+def score_gate_panel(trainer, val, panel, device):
+    """Independent (critic-free) J per panel start; independent_score restores every RNG."""
+    return [independent_score(trainer, val._batch([val._load(int(s["index"]))], device))["J"]
+            for s in panel["starts"]]
+
+
 def check_train_seeds(sampler):
     for meta in sampler.metadata.values():
         world = str(meta.get("world", meta.get("world_id", "")))
@@ -92,6 +151,11 @@ def main(argv=None):
                              "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
     parser.add_argument("--critic-warmup-updates", type=int, default=None,
                         help="override policy14.critic_warmup_updates (e.g. on fresh current-policy returns)")
+    parser.add_argument("--gate-panel", default=None,
+                        help="S-GPUB-LOOP: frozen gate-panel JSON; the update-10 signal gate is scored on it "
+                             "(paired per start) instead of the single rescore start")
+    parser.add_argument("--gate-panel-dump", default=None,
+                        help="build the gate panel (VAL starts, panel seed 965150, n 16), write it there, exit")
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -156,6 +220,18 @@ def main(argv=None):
             train, val = _load_starts(raw["data"], models, args.seed, entries=True)
             check_train_seeds(train)
             check_train_seeds(val)
+        if args.gate_panel_dump:
+            text = json.dumps(build_gate_panel(val), indent=1, sort_keys=True) + "\n"
+            dump = checked_path(args.gate_panel_dump)
+            if dump.exists():
+                raise ValueError("gate panel dump exists (never overwritten)")
+            dump.write_text(text, encoding="utf-8")
+            summary.update(status="panel_dumped", gate_panel_dump=str(dump),
+                           gate_panel_sha256=hashlib.sha256(text.encode()).hexdigest())
+            (output / "RUN_SUMMARY.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+            print(json.dumps(summary))
+            return 0
+        gate_panel = load_gate_panel(args.gate_panel, val) if args.gate_panel else None
         from .policy import CavPolicy, RsuGroupEncoder
         from .obs import build_observations
         from .safety import safe_accel
@@ -214,6 +290,11 @@ def main(argv=None):
         initial_score = before
         updates = []
         summary.update(updates=updates, independent_score_before=initial_score)
+        if gate_panel is not None:
+            panel_before = score_gate_panel(trainer, val, gate_panel, args.device)
+            summary["gate_panel"] = {"file": str(args.gate_panel), "n": len(panel_before),
+                                     "sha256": hashlib.sha256(checked_path(args.gate_panel).read_bytes()).hexdigest(),
+                                     "J_before": panel_before}
         for _ in range(args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
@@ -235,8 +316,23 @@ def main(argv=None):
                 with (output / "rescores.jsonl").open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps({"update": trainer.update_count, **after}, allow_nan=False) + "\n")
             updates.append(metrics)
-            if (not args.smoke and trainer.update_count == int(switches["signal_gate_updates"])
-                    and before["J"] >= initial_score["J"]):
+            gate_failed = False
+            if not args.smoke and trainer.update_count == int(switches["signal_gate_updates"]):
+                if gate_panel is not None:
+                    panel_after = score_gate_panel(trainer, val, gate_panel, args.device)
+                    deltas = [a - b for a, b in zip(panel_after, panel_before)]
+                    mean_delta = sum(deltas) / len(deltas)
+                    gate_failed = mean_delta >= 0.0
+                    summary["gate_panel"].update(
+                        J_after=panel_after, delta_per_start=deltas, mean_J_before=sum(panel_before) / len(deltas),
+                        mean_J_after=sum(panel_after) / len(deltas), mean_delta=mean_delta,
+                        n_improved=sum(d < 0 for d in deltas), update=trainer.update_count,
+                        passed=not gate_failed)
+                    (output / "gate_panel_result.json").write_text(
+                        json.dumps(summary["gate_panel"], indent=1, allow_nan=False), encoding="utf-8")
+                else:
+                    gate_failed = before["J"] >= initial_score["J"]
+            if gate_failed:
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("early signal gate: independently rescored J did not decrease; stop before scaling")
         trainer.save_checkpoint(output / "policy_latest.pt")
