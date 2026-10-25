@@ -1012,6 +1012,8 @@ class DreamerTrainer:
                 step += 1
                 return torch.stack((position, state["lane"].to(speed.dtype), speed, accel), -1)
 
+            if external_callback is not None and hasattr(external_callback, "native_lane_mask"):
+                controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
             # Plain-bug fix: imagined vehicles leave at the road end (same gate as evaluation

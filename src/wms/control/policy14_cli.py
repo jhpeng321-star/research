@@ -253,11 +253,15 @@ def main(argv=None):
         lane_rules = LaneRules.from_mapping(lane_section) if enabled else None
         # LOOP14C ramp merges (default off = legacy forced 6 m rule for every CAV).
         ramp_merge = {"policy_ramp_merge": switches.get("policy_ramp_merge", False),
-                      "native_ramp_merge": switches.get("native_ramp_merge", "gap6")}
+                       "native_ramp_merge": switches.get("native_ramp_merge", "gap6")}
+        if not isinstance(switches.get("native_lane_change", False), bool):
+            raise ValueError("policy14.native_lane_change must be a boolean")
+        if switches.get("native_lane_change", False):
+            ramp_merge["native_lane_change"] = switches["native_lane_change"]
         factory = make_controller_factory(**ramp_merge)
         if ramp_merge["policy_ramp_merge"] and lane_rules is None:
             raise ValueError("policy14.policy_ramp_merge needs [lanes] enabled")
-        if ramp_merge["native_ramp_merge"] == "wm_law" and any(
+        if (ramp_merge["native_ramp_merge"] == "wm_law" or ramp_merge.get("native_lane_change")) and any(
                 getattr(m, "merge_pivot", None) is None for m in models):
             raise ValueError("policy14.native_ramp_merge='wm_law' needs first-passage WM members")
         # S-COOPW [uncertainty] / [exploration] / [horizon] (absent = unchanged; COOPW.md).
