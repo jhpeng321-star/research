@@ -6,10 +6,10 @@ Implemented on `c4/nativelane`, starting at requested `01f590e9`.
 **No adoption decision yet; gpuR MAIN14 arm remains untouched.**
 This report is committed before the 05:30 laptop deadline; the server continuation
 will write the completed scientific decision and operational receipt independently.
-All **228/228** exploratory qualification jobs have finished. There is **no
-PASS→FAIL sign-unit transition**: pulse_m @5/@10 remains PASS in both seed sets;
-gap_open @10 remains INCONCLUSIVE in set1 and FAIL in set2; @30 is REPORT-ONLY.
-See [qualification evidence](docs/nativelane/QUAL_NATIVE_LANE.json).
+The previous **228/228** exploratory qualification jobs had **no PASS→FAIL
+sign-unit transition**; that receipt is retained as prior-order evidence.
+ON qualification is being repeated after the final longitudinal/lane-substep
+ordering regression; it must finish before any adoption decision.
 
 ## Inference switch
 
@@ -35,7 +35,7 @@ Files: `src/wms/control/{bridge,dreamer,policy14,policy14_cli,policy,confident_g
 ## Verification before inference
 
 - cpuX initial integrated CPU suite: **351 passed**; final expanded suite on
-  gpuB: **366 passed**, including calibration dispatch and adoption-rule vetoes.
+  gpuB: **367 passed**, including calibration dispatch and adoption-rule vetoes.
 - Flags OFF versus `01f590e9`: **55/55 tensor bit identities** under legacy
   ramp behaviour and **55/55** under LOOP14C `wm_law`, including sampled and
   deterministic policy/all/counterfactual rows.
@@ -66,6 +66,11 @@ No new SUMO or evaluation-seed outcomes.
   with a ramp merge exactly like an HDV, rather than inheriting policy-command
   reservation priority. Superseded ON 60 s/qualification tapes are retained at
   `superseded_priority_attempt2/` and rerun before any decision; OFF is unchanged.
+  Final sequencing regression: native head and safety execute in the current
+  lane, then the HDV lane proposal is committed/vetoed. This prevents a proposed
+  (possibly cancelled) native change from affecting the head one substep early.
+  Superseded ON tapes are retained at `superseded_longitudinal_attempt3/`; all
+  affected ON starts/samples rerun. Default-OFF trajectories remain exact.
   The shared C1 audit then identified three old C/300 s low-share runs as only
   60 s long. This task disables that training-only cap in its measurement
   launcher for both arms, archives short OFF outputs in `superseded_short_clock/`,
@@ -83,14 +88,16 @@ means no adoption. Other metrics remain descriptive.
 
 ## Detached continuation and owner handoff
 
-cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **178756**,
-continuation **178826**, `setsid nohup`, numerical
+cpuX `~/nativelane`: driver **PID/SID 156201**, qualification retry **213000**
+(3 workers), continuation **213054**, `setsid nohup`, numerical
 threads=1, nice19, CPU only. MAPPO pool <=6 plus qualification pool <=6;
 after qualification completes, its six slots may transfer to the MAPPO pool (<=12 total).
-Qualification has exited; detached repair driver **198518** now uses those six
-slots as two 3-worker pools (fixed ON/60 s and the three true OFF/300 s repairs)
-beside the original 6-worker long-rollout pool. ON/300 s waits for these exact
-PID-incarnation receipts before taking up to 12 slots; no pools overlap above 12.
+Detached repair driver **198518** retains the valid three true OFF/300 s repairs.
+The superseded ON/60 s pool has finished and is archived; the released three
+slots run final ON qualification beside the 6-worker original OFF long-rollout
+pool and 3-worker clock-repair pool (<=12 total). ON/300 s waits for the exact
+repair PID incarnation, repairs ON/60 s, and takes 12 slots only after qualification
+exits; otherwise it stays at <=6. No pools overlap above 12.
 secondary C1 uses <=12 only after those pools exit. New inference is barred
 after **09:00 UTC+8**. Only receipt-owned PID incarnations are inspected.
 
@@ -119,10 +126,10 @@ That package is retained on cpuX as `rearm_package_superseded_72a0db3862dd.tar.g
 The source/config/registration hashes of its replacement are registered before
 installing the replacement watcher; scientific adoption criteria are unchanged.
 
-Current conditional runtime is **1619544e**; package SHA256 starts `5bc09110`,
-registration SHA256 starts `760f02c5`, config SHA256 starts `37bff3d1`.
-gpuR watcher **652555**, start ticks **4158465013**, independently verified PPID 1,
-SID 652555, nice19, `/dev/null` stdio. `WATCHER_VERIFIED.json` proves original
-arm SHA256 `5c237f95...` and waiter 649847 are untouched. Watcher events are on
-cpuX `gpuR_watch.jsonl`; final installation/failure receipts will be `ADOPTED.json`
-or `ADOPTION_FAILED.json` there, with full evidence retained on gpuR if attempted.
+Conditional runtime 1619544e and watcher 652555 were also retired before any
+MAIN14 write when the final sequencing regression was added. That package is
+retained as `rearm_package_superseded_5bc09110ba9e.tar.gz`. Its verified receipt
+proved original arm SHA256 `5c237f95...` and waiter 649847 remained untouched.
+The replacement source/config/registration is pinned before installing its watcher.
+Watcher events are on cpuX `gpuR_watch.jsonl`; final installation/failure receipts
+will be `ADOPTED.json` or `ADOPTION_FAILED.json` there, with full gpuR evidence.

@@ -105,7 +105,7 @@ def mappo():
         assert run(f"analyze_{tag}", argv) == 0
 
 
-def qual():
+def qual(workers=6):
     tasks = []
     for k in range(6):
         for suite in ("pulse", "coop"):
@@ -127,7 +127,7 @@ def qual():
                         argv += ["--variant", "as_is", "--tests", "A", "--horizon", "120",
                                  "--suffix", "" if k == 0 else f"_k{k}"]
                     tasks.append((f"qual_{suite}_{tag}_k{k}_{job.name}", argv, on))
-    with F.ThreadPoolExecutor(6) as pool:
+    with F.ThreadPoolExecutor(workers) as pool:
         results = list(pool.map(lambda x: run(*x), tasks))
     write(ROOT / "QUAL_TASKS.json", {"expected": len(tasks), "complete": all(rc == 0 for rc in results),
                                      "failed": [tasks[i][0] for i, rc in enumerate(results) if rc]})

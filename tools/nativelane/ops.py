@@ -51,7 +51,61 @@ print(json.dumps({'staged':str(r)}))
 
 
 if __name__ == "__main__":
-    if "--early-repairs" in sys.argv:
+    if "--pause-long-order" in sys.argv:
+        print(remote("cpuX", '''
+import os,json,time,signal
+from pathlib import Path
+p=Path.home()/'nativelane'
+def ident(pid):
+ try:
+  f=Path('/proc/'+str(pid)+'/stat').read_text().rsplit(')',1)[1].split()
+  return None if f[0]=='Z' else f[19]
+ except FileNotFoundError: return None
+owned=[]
+for path in [p/'logs/repair_on60_early.pid.json',p/'preview.pid.json']:
+ if not path.exists(): continue
+ rec=json.loads(path.read_text())
+ if ident(rec['pid'])!=rec['start_ticks']: continue
+ proc=Path('/proc')/str(rec['pid'])
+ for raw in (proc/'task'/str(rec['pid'])/'children').read_text().split():
+  pid=int(raw); st=Path('/proc/'+raw+'/stat').read_text().rsplit(')',1)[1].split()
+  if int(st[1])==rec['pid'] and st[0]!='Z': owned.append({'pid':pid,'start_ticks':st[19]})
+ owned.append(rec)
+for rec in owned:
+ if ident(rec['pid'])==rec['start_ticks']: os.kill(rec['pid'],signal.SIGTERM)
+until=time.time()+60
+while any(ident(r['pid'])==r['start_ticks'] for r in owned):
+ assert time.time()<until; time.sleep(1)
+archive=p/'superseded_longitudinal_attempt3'; assert not archive.exists(); archive.mkdir()
+for folder in ['pulse','c9','wm_coop']:
+ f=p/'on'/folder
+ if f.exists(): f.rename(archive/('on_'+folder))
+for f in (p/'done').glob('qual_*_on_*.json'): f.rename(archive/f.name)
+for name in ['qual_retry.pid.json','preview.pid.json','QUAL_NATIVE_LANE.json','PRIMARY60_PREVIEW.json']:
+ f=p/name
+ if f.exists(): f.rename(archive/name)
+f=p/'done/repair_on60_early.json'
+if f.exists(): f.rename(archive/'repair_on60_early.done.json')
+(p/'QUAL_TASKS.json').write_text(json.dumps({'expected':228,'complete':False,'failed':[],
+ 'reason':'rerun ON with current-lane native longitudinal execution before HDV lane substep'}))
+print(json.dumps({'paused_own':owned,'archive':str(archive),'off_data_retained':True}))
+''').decode())
+    elif "--preview" in sys.argv:
+        print(remote("cpuX", '''
+import os,subprocess,json,time
+from pathlib import Path
+p=Path.home()/'nativelane'; assert not (p/'preview.pid.json').exists()
+with (p/'preview.log').open('ab') as log:
+ child=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','tools/nativelane/preview.py'],
+  cwd=p/'repo',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+  env={**os.environ,'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':'','PYTHONUNBUFFERED':'1'})
+time.sleep(1)
+f=Path('/proc/'+str(child.pid)+'/stat').read_text().rsplit(')',1)[1].split()
+r={'pid':child.pid,'start_ticks':f[19],'running':child.poll() is None}
+(p/'preview.pid.json').write_text(json.dumps(r,indent=1))
+print(json.dumps(r))
+''').decode())
+    elif "--early-repairs" in sys.argv:
         print(remote("cpuX", '''
 import os,subprocess,json,time
 from pathlib import Path
@@ -76,7 +130,7 @@ import json,base64
 from pathlib import Path
 p=Path.home()/'nativelane'
 names=['CHECKS.json','QUAL_NATIVE_LANE.json','DECISION.json','NATIVE_LANE_COUNTS.json','RESULT.md','C1_RANKING.json',
- 'ADOPTED.json','ADOPTION_FAILED.json','GPU_WATCHER_VERIFIED.json','GPU_WATCHER.json','QUAL_TASKS.json','CLOCK_REPAIR.json','REPAIR_ON60_DONE.json','FINISHED.json']
+ 'ADOPTED.json','ADOPTION_FAILED.json','GPU_WATCHER_VERIFIED.json','GPU_WATCHER.json','QUAL_TASKS.json','CLOCK_REPAIR.json','REPAIR_ON60_DONE.json','FINISHED.json','PRIMARY60_PREVIEW.json']
 print(json.dumps({n:base64.b64encode((p/n).read_bytes()).decode() for n in names if (p/n).exists()}))
 '''))
         assert (ROOT / "docs").is_dir()
@@ -100,7 +154,7 @@ print(json.dumps({'pid':child.pid,'running':child.poll() is None}))
     elif "--record-final-checks" in sys.argv:
         import hashlib
         import json
-        commit = "1619544e0e0df9c938d4c5d08db009941ff60056"
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT).decode().strip()
         names = ["src/wms/model/wms.py", "src/wms/model/cav.py", "src/wms/control/bridge.py",
                  "src/wms/control/dreamer.py", "src/wms/control/policy.py", "src/wms/control/policy14.py",
                  "src/wms/control/policy14_cli.py", "src/wms/control/confident_gate.py",
@@ -112,8 +166,8 @@ from pathlib import Path
 req=json.load(sys.stdin); root=Path('/root/nativelane/repo')
 assert all(hashlib.sha256((root/n).read_bytes()).hexdigest()==s for n,s in req.items())
 proof=json.loads(Path('/root/nativelane/priority_bitid/BIT_IDENTITY.json').read_text())
-print(json.dumps({'bitid':proof,'verified_source_files':req,'tests_host':'gpuB','integrated_tests_passed':366,
- 'verification':'366-test integrated CPU suite printed success after the native/HDV reservation regression; final two-path tensor-byte probe passed'}))
+print(json.dumps({'bitid':proof,'verified_source_files':req,'tests_host':'gpuB','integrated_tests_passed':367,
+ 'verification':'367-test integrated CPU suite printed success after longitudinal/lane ordering and reservation regressions; final two-path tensor-byte probe passed'}))
 ''', json.dumps(expected).encode()))
         proof.update(passed=True, code_sha=commit,
                      wm_sha256="952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8")
@@ -290,7 +344,7 @@ assert fields[19]==rec['start_ticks'] and fields[0]!='Z'
 os.kill(rec['pid'],signal.SIGTERM)
 (p/'finish.pid.json').rename(p/('finish_install_'+str(rec['pid'])+'.pid.json'))
 with (p/'qual_retry.log').open('ab') as log:
- proc=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','-c',"import sys;sys.path.insert(0,'tools/nativelane');import drive as D;import os;os.nice(19);D.qual()"],
+ proc=subprocess.Popen(['setsid','nohup','/home/ubuntu/c4/venv/bin/python','-c',"import sys;sys.path.insert(0,'tools/nativelane');import drive as D;import os;os.nice(19);D.qual(WORKERS)"],
   cwd=p/'repo',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
   env={**os.environ,'PYTHONUNBUFFERED':'1','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':''})
 time.sleep(2)
@@ -298,7 +352,7 @@ fields=Path('/proc/'+str(proc.pid)+'/stat').read_text().rsplit(')',1)[1].split()
 record={'pid':proc.pid,'start_ticks':fields[19],'running':proc.poll() is None}
 (p/'qual_retry.pid.json').write_text(json.dumps(record,indent=1))
 print(json.dumps(record))
-''').decode())
+'''.replace("WORKERS", "3" if "--three" in sys.argv else "6")).decode())
     elif "--finish" in sys.argv:
         print(remote("cpuX", '''
 import os,subprocess,json,time

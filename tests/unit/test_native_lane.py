@@ -62,6 +62,30 @@ def test_native_lane_moves_policy_lane_stays_and_native_acceleration_is_retained
     assert out[..., 3].tolist() == [[0., .3, 0.]]
 
 
+def test_native_head_and_safety_run_before_the_native_lane_substep():
+    state = wm_scene(2., True)
+    state["lane"][:] = 1
+    state["is_cav"][:] = True
+    state[WM_LANE_TARGET_KEY] = torch.zeros_like(state["lane"])
+    seen = []
+
+    def head(st):
+        seen.append(st["lane"].clone())
+        return st["lane"].to(st["s_m"].dtype)
+
+    def safety(st, accel, accel_max=None):
+        seen.append(st["lane"].clone())
+        return accel
+
+    c = make_cav_controller(ScriptedLanes(accel=.3), group, safety,
+                            act_mask=torch.tensor([[False, True, False]]), native=head,
+                            native_lane_change=True, native_ramp_merge="wm_law")
+    result = c(state)
+    assert all(x.tolist() == [[1, 1, 1]] for x in seen)
+    assert result[..., 1].long().tolist() == [[0, 1, 0]]
+    assert result[..., 3].tolist() == [[1., .3, 1.]]
+
+
 def test_native_forward_lane_logits_and_carry_match_hdv_but_not_longitudinal_mask():
     m = model()
     state = {k: v.float() if v.is_floating_point() else v for k, v in wm_scene(2., True).items()}

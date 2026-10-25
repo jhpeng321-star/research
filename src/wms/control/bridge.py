@@ -230,12 +230,18 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                                          lane_rules, acting=forced)
         command_accel = held
         ceiling = policy_max
+        motion_lane = lane
+        if native_lane_change:
+            # The WM's HDV lane substep follows longitudinal execution. Native
+            # CAVs keep the learned head/safety evaluation in their CURRENT lane;
+            # their proposed HDV lane may still be cancelled by final conflicts.
+            motion_lane = torch.where(native_lanes, state["lane"], lane)
         if native_in_use:
-            command_accel = torch.where(acting, held, native({**state, "lane": lane}))
+            command_accel = torch.where(acting, held, native({**state, "lane": motion_lane}))
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
                                   torch.full_like(held, native_max))
-        executed = safety({**state, "lane": lane}, command_accel, accel_max=ceiling)
+        executed = safety({**state, "lane": motion_lane}, command_accel, accel_max=ceiling)
         # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
         # physics step (and may be refused), so the command must be safe in BOTH the lane the
         # CAV is leaving and the target lane.  Without this, imagination credited a change
