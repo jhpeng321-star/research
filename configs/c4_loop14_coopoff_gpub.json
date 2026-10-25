@@ -1,10 +1,10 @@
 {
-  "_comment": "C4-LOOP14-COOPOFF-20261026 (GPUB_LOOP.md): loop14 coop-OFF arm. Orchestrator + policy + wm_ft + check on gpuB (shared GPU: memory-headroom guard, C4_GPU_MEM_FRACTION 0.41, <= 4 CPU threads); collect + convert on cpuX over ssh (<= 16 SUMO workers). REPO_SHA is filled into a copy at launch (the copy is what init pins); never edit after init.",
+  "_comment": "C4-LOOP14-COOPOFF-20261026 (GPUB_LOOP.md): loop14 coop-OFF arm. Orchestrator + policy + wm_ft + check on gpuB (shared GPU: memory-headroom guard, C4_GPU_MEM_FRACTION 0.41, <= 4 CPU threads); collect + convert on cpuX over ssh (<= 16 SUMO workers). REPO_SHA is filled into a copy at launch (the copy is what init pins); never edit after init. Attempt 1 (loop14_coopoff, code bbe6244a) failed the policy readiness FD gate on CUDA before any update (0 sim-s); attempt 2 runs the same gates on a CPU copy (C4_PROBES_DEVICE=cpu).",
   "loop_id": "C4-LOOP14-COOPOFF-20261026",
   "registration_template": "configs/c4_loop14_coopoff_registration.json",
   "seed_block": [968500, 968627],
-  "loop_root": "/root/autodl-tmp/c4/v5/loop14_coopoff",
-  "registration": "/root/autodl-tmp/c4/v5/loop14_coopoff_REGISTRATION.json",
+  "loop_root": "/root/autodl-tmp/c4/v5/loop14_coopoff_a2",
+  "registration": "/root/autodl-tmp/c4/v5/loop14_coopoff_a2_REGISTRATION.json",
   "hosts": {
     "gpu": {"python": "/root/miniconda3/bin/python", "code_root": "/root/autodl-tmp/c4/v5/repo_gpubloop_REPO_SHA"},
     "cpu": {"python": "/home/ubuntu/c4/venv/bin/python", "code_root": "/home/ubuntu/c4/repo-gpubloop-REPO_SHA",
@@ -25,7 +25,7 @@
                       "/root/autodl-tmp/c4/v5/data/v5_native_q", "/root/autodl-tmp/c4/v5/data/genrand_plain_q"],
     "env": {"WMS_DATA_V5_NATIVE_Q": "/root/autodl-tmp/c4/v5/data/v5_native_q",
             "WMS_DATA_GENRAND_PLAIN_Q": "/root/autodl-tmp/c4/v5/data/genrand_plain_q",
-            "C4_GPU_MEM_FRACTION": "0.41"}
+            "C4_GPU_MEM_FRACTION": "0.41", "C4_PROBES_DEVICE": "cpu"}
   },
   "collect": {
     "work_root": "/home/ubuntu/c4/loop14_coopoff",

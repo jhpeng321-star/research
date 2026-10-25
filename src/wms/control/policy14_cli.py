@@ -128,16 +128,23 @@ def main(argv=None):
         from .policy14_probes import free_road_probe, gradient_probe, gradient_probe_13e
         from .dreamer import _restore_rng, _rng_state
         rng = _rng_state(torch.device(args.device))
+        probe_models, probe_device = models, args.device
+        if os.environ.get("C4_PROBES_DEVICE") == "cpu" and args.device != "cpu":
+            # S-GPUB-LOOP (10-26): the readiness gates are float32 finite differences validated on
+            # CPU; on CUDA a single float32 step in J flips the isolated-courtesy FD check of 13E b2
+            # (CPU passes).  Opt-in: the same gates and tolerances on a CPU copy of the same weights.
+            probe_models, _ = load_members(args.wm_ckpt, args.wm_config, "cpu")
+            probe_device = "cpu"
         try:
-            probes = {"gradient": gradient_probe(models[0])} if switches["fd_gate"] else {}
+            probes = {"gradient": gradient_probe(probe_models[0])} if switches["fd_gate"] else {}
             if switches["fd_gate"] and any(
                     getattr(m.physics, "emergency_braking", False)
                     or getattr(m.physics, "secure_gap_veto", False)
-                    or getattr(m, "mainline_merge_yield_learnable", False) for m in models[:1]):
+                    or getattr(m, "mainline_merge_yield_learnable", False) for m in probe_models[:1]):
                 # POLICY14E: autograd vs FD of dJ/d(CAV accel) through the 13E envelope / gs / yield.
-                probes["gradient_13e"] = gradient_probe_13e(models[0])
+                probes["gradient_13e"] = gradient_probe_13e(probe_models[0])
             if switches["free_road_gate"]:
-                probes["free_road"] = free_road_probe(models[0])
+                probes["free_road"] = free_road_probe(probe_models[0])
         finally:
             _restore_rng(rng, torch.device(args.device))
         random.seed(args.seed)
@@ -199,7 +206,8 @@ def main(argv=None):
         if ramp_merge != {"policy_ramp_merge": False, "native_ramp_merge": "gap6"}:
             summary["ramp_merge"] = ramp_merge
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,
-                       wm_members=receipts, probes=probes, critic_warmup=warmup, resumed_from=resumed)
+                       wm_members=receipts, probes=probes, probe_device=probe_device,
+                       critic_warmup=warmup, resumed_from=resumed)
         # Independent development starts and paired draws, scored without a critic tail.
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
