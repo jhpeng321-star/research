@@ -76,7 +76,7 @@ With n <= 4 the tables reach at most 0.75, so the gate stayed closed (abstained)
 
 ## Tests
 
-`test_sumocredit.py` + `test_sumocredit_kcheck.py` (23 tests) cover tables, K eligibility on synthetic beliefs, noise replay, executor mixing, real-WmSModel imagination, credit math, loop wiring and flag-off pass-through (identical weights object, unchanged 29,776 charge). Related suites (deploy, rsu, futures, genrand, sumo, dreamer loop, loop14, loop14c, policy14*, infrav5, ...): 454 passed.
+`test_sumocredit.py` + `test_sumocredit_kcheck.py` (23 tests) cover tables, K eligibility on synthetic beliefs, noise replay, executor mixing, real-WmSModel imagination, credit math, loop wiring and flag-off pass-through (identical weights object, unchanged 29,776 charge). Related suites: 454 passed.
 
 ## Caveats
 
