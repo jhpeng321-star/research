@@ -3,9 +3,9 @@
 # Mechanics only: calibration/credit records, fits, the gated loop arm and deploy policy_gate end to end.
 set -euo pipefail
 ROOT=$HOME/sumocredit
-CODE=$ROOT/code
+CODE=${SC_CODE:-$ROOT/code}
 IN=$ROOT/inputs
-OUT=$ROOT/out
+OUT=${SC_OUT:-$ROOT/out}
 PY=$HOME/c4/venv/bin/python
 export PYTHONPATH=$CODE/src:$CODE
 export C4_ALLOWED_ROOTS=$ROOT
