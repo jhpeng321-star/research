@@ -37,7 +37,6 @@ import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1", "sealed")
 
@@ -235,7 +234,7 @@ def plan_jobs(args) -> list[dict]:
     return jobs
 
 
-def sumocredit_options(args) -> Optional[dict]:
+def sumocredit_options(args) -> dict | None:
     """``PairExtras`` fields from the CLI, or None when every S-SUMOCREDIT flag is off."""
     from dataclasses import asdict
     if not (getattr(args, "credit_horizon", 0) or getattr(args, "gate_horizon", 0)
@@ -247,6 +246,7 @@ def sumocredit_options(args) -> Optional[dict]:
                         gate_horizon=args.gate_horizon, gate_unit=args.gate_unit,
                         gate_reference=args.gate_reference, gate_state=args.gate_state,
                         gate_max_units=args.gate_max_units, gate_table=args.gate_table,
+                        gate_candidates=args.gate_candidates, gate_mean_table=args.gate_mean_table,
                         gate_decision_period=args.gate_decision_period,
                         n_driver_samples=args.gate_driver_samples, seed=args.sumocredit_seed)
     return asdict(extras)
@@ -369,11 +369,16 @@ def main(argv=None) -> int:
     sc.add_argument("--gate-horizon", type=int, default=0,
                     help="gate-calibration arms of this many seconds (0 = off)")
     sc.add_argument("--gate-unit", choices=("fleet", "group", "cav"), default="fleet")
-    sc.add_argument("--gate-reference", choices=("hold", "native"), default="hold")
+    sc.add_argument("--gate-reference", choices=("hold", "native"), default="native")
     sc.add_argument("--gate-state", choices=("belief", "oracle"), default="belief")
     sc.add_argument("--gate-max-units", type=int, default=4)
     sc.add_argument("--gate-table", default=None,
                     help="TRAIN reliability table: adds the gated policy arm (branch horizon)")
+    sc.add_argument("--gate-candidates", type=int, default=1,
+                    help="K learned-policy candidates (mean + K-1 samples) in calibration and the "
+                         "GATED_K arm; 1 = gate-only")
+    sc.add_argument("--gate-mean-table", default=None,
+                    help="TRAIN sample-vs-mean reliability table (needed for a sample to replace the mean)")
     sc.add_argument("--gate-decision-period", type=float, default=5.0)
     sc.add_argument("--gate-driver-samples", type=int, default=1)
     sc.add_argument("--sumocredit-seed", type=int, default=0)

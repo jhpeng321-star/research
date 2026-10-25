@@ -139,6 +139,8 @@ def load_pair_policy_factory(policy_ckpt: str, wm_ckpt: Optional[str], wm_config
     make.needs_settings = needs_settings
     make.models = models
     make.components = (policy, encoder, rules)
+    make.settings = settings
+    make.device = device
     return make
 
 

@@ -151,23 +151,26 @@ SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "-
                     "credit_flips": "--credit-flips", "gate_horizon": "--gate-horizon",
                     "gate_unit": "--gate-unit", "gate_reference": "--gate-reference",
                     "gate_state": "--gate-state", "gate_max_units": "--gate-max-units",
+                    "gate_candidates": "--gate-candidates",
                     "gate_decision_period": "--gate-decision-period",
                     "gate_driver_samples": "--gate-driver-samples", "seed": "--sumocredit-seed"}
 
 
 def sumocredit_sim_s_per_point(c) -> int:
-    """Upper bound of the extra SUMO seconds per decision point (= PairExtras.sim_s_per_point; the
-    gated arm is charged whenever gated_arm is on, also before a table exists)."""
+    """Upper bound of the extra SUMO seconds per decision point (= traffic_shepherd.c4.sumocredit
+    .sim_s_per_point; the gated arms are charged whenever gated_arm is on, also before a table
+    exists: GATED, plus GATED_K when gate_candidates > 1)."""
     x, h = c["sumocredit"], int(c["branch_horizon"])
     total = 0
     g, cr = int(x.get("gate_horizon", 0)), int(x.get("credit_horizon", 0))
+    k = int(x.get("gate_candidates", 1))
     if g:
-        ref = 0 if (x.get("gate_reference", "hold") == "native" and g <= h) else g
         unit = x.get("gate_unit", "fleet")
-        plans = 0 if (unit == "fleet" and g <= h) else (1 if unit == "fleet" else int(x.get("gate_max_units", 4))) * g
-        total += ref + plans
+        total += 0 if (x.get("gate_reference", "native") == "native" and g <= h) else g
+        n_units = 1 if unit == "fleet" else int(x.get("gate_max_units", 4))
+        total += n_units * k * g - (g if (unit == "fleet" and g <= h) else 0)
     if x.get("gated_arm"):
-        total += h
+        total += h * (2 if k > 1 else 1)
     if cr:
         total += (int(x.get("credit_group_max", 3)) + 1 + int(x.get("credit_flips", 0))) * cr
         total += 0 if cr <= h else 2 * cr
@@ -458,6 +461,9 @@ def run_collect(cfg, state, ph, root) -> dict:
     if sc_args and cfg["collect"]["sumocredit"].get("gated_arm") and state.get("gate_table"):
         sync(cfg, "gpu", state["gate_table"], "cpu", f"{inputs}/GATE_TABLE.json", log)
         sc_args += ["--gate-table", f"{inputs}/GATE_TABLE.json"]
+        if int(cfg["collect"]["sumocredit"].get("gate_candidates", 1)) > 1 and state.get("gate_mean_table"):
+            sync(cfg, "gpu", state["gate_mean_table"], "cpu", f"{inputs}/GATE_MEAN_TABLE.json", log)
+            sc_args += ["--gate-mean-table", f"{inputs}/GATE_MEAN_TABLE.json"]
     reg_copy = f"{inputs}/REGISTRATION.json"
     sync(cfg, "gpu", cfg["registration"], "cpu", reg_copy, log)
     if Path(acc["config"]).suffix == ".json":
@@ -568,19 +574,25 @@ def convert_sumocredit(cfg, state, work, tag, env, log, root) -> dict:
         state["real_credit"] = str(target)
         out.update(real_credit=str(target), multipliers=doc["multipliers"], credit_points=doc["points"])
     gate_files = sorted(str(p) for p in sc.glob("gate_*.jsonl") if p.stat().st_size > 0)
-    if gate_files and int(x.get("gate_horizon", 0)):
-        target = sc / f"GATE_TABLE_{tag}.json"
+    comparisons = [("reference", "gate_table", "GATE_TABLE")]
+    if int(x.get("gate_candidates", 1)) > 1:
+        comparisons.append(("mean", "gate_mean_table", "GATE_MEAN_TABLE"))
+    for comparison, key, stem in (comparisons if gate_files and int(x.get("gate_horizon", 0)) else []):
+        target = sc / f"{stem}_{tag}.json"
         fit = [g["python"], "-m", "wms.control.confident_gate", "--records", *gate_files, "--out", str(target),
-               "--unit", x.get("gate_unit", "fleet"), "--reference", x.get("gate_reference", "hold"),
-               "--horizon", str(float(x["gate_horizon"])), "--state-source", x.get("gate_state", "belief")]
+               "--unit", x.get("gate_unit", "fleet"), "--reference", x.get("gate_reference", "native"),
+               "--horizon", str(float(x["gate_horizon"])), "--state-source", x.get("gate_state", "belief"),
+               "--comparison", comparison]
         code = run_cmd(g, fit, env=genv, log=log, timeout_s=1800)
+        prefix = "gate" if comparison == "reference" else "gate_mean"
         if code == 0 and target.is_file():
-            state["gate_table"] = str(target)
+            state[key] = str(target)
             meta = read_json(target)["meta"]
-            out.update(gate_table=str(target), gate_n=meta.get("n"), gate_brier=meta.get("brier_in_sample"),
-                       gate_blocks_open=meta.get("blocks_at_or_above_threshold"))
+            out.update({key: str(target), f"{prefix}_n": meta.get("n"),
+                        f"{prefix}_brier": meta.get("brier_in_sample"),
+                        f"{prefix}_blocks_open": meta.get("blocks_at_or_above_threshold")})
         else:
-            out["gate_table_error"] = f"fit exit {code} (gated arm keeps the previous table, if any)"
+            out[f"{key}_error"] = f"fit exit {code} (the gated arms keep the previous table, if any)"
     return out
 
 

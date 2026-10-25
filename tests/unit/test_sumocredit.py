@@ -88,6 +88,14 @@ def test_calibration_rows_refuse_eval_seeds_and_non_train():
 
 
 # ------------------------------------------------------------------ gate logic on synthetic beliefs
+def test_gated_arm_marks_branch_horizon_prefix():
+    from traffic_shepherd.c4.sumocredit import PairExtras
+    assert PairExtras().marks(300) == set()
+    assert PairExtras(credit_horizon=30, gate_horizon=20).marks(300) == {20, 30}
+    assert PairExtras(gate_table="T.json").marks(300) == {300}
+    assert PairExtras(credit_horizon=400).marks(300) == set()
+
+
 def test_units_fleet_group_cav():
     st = _state([0, 100, 1000, 1100, 3000, 50], [1, 1, 1, 0, 1, 1], [True, True, True, True, True, False])
     assert cg.gate_units(st, "fleet") == [[4, 3, 2, 1, 0]]
@@ -126,7 +134,8 @@ def test_gate_opens_only_calibrated_units_and_logs_rate():
     assert d.raw == [10.0, 1.0, -20.0]
     assert [p >= cg.GATE_PROBABILITY for p in d.probability] == d.open == [True, False, False]
     assert d.open_slots == [4]
-    assert imag.members[0].sum() == 0 and imag.members[1].tolist() == [False, False, False, False, True]
+    assert imag.members[0].sum() == 0 and imag.members[1][0].tolist() == [False, False, False, False, True]
+    assert imag.members[1][1] is None                              # K = 1: the deterministic mean plan
     s = gate.summary()
     assert s["units"] == 3 and s["units_open"] == 1 and s["unit_open_rate"] == pytest.approx(1 / 3)
     assert s["threshold"] == 0.8
@@ -149,7 +158,8 @@ def test_gate_with_no_cavs_is_closed():
 class FakeEnv:
     def __init__(self, ids):
         self.now = 400.0
-        self.frame = SimpleNamespace(vid_index=np.arange(len(ids)))
+        self.frame = SimpleNamespace(vid_index=np.arange(len(ids)), present=np.ones(len(ids), bool),
+                                     is_cav=np.array([not v.startswith("h") for v in ids]))
         self.builder = SimpleNamespace(vehicle_ids=list(ids))
 
 
@@ -256,11 +266,13 @@ def test_slope_multiplier_recovers_scale_and_never_flips_or_amplifies():
     for t in ("all", "individual", "group", "coop"):
         fit = rc.slope_multiplier(pairs[t])
         assert fit["estimated"] and fit["slope"] == pytest.approx(0.5)
-        assert fit["multiplier"] == pytest.approx(0.5)             # SE 0: no shrinkage
+        assert fit["multiplier"] == pytest.approx(0.5)             # SE 0: the slope itself
     assert rc.slope_multiplier(rc.pairs_by_type(_points(-1.0))["group"])["multiplier"] == 0.0
     assert rc.slope_multiplier(rc.pairs_by_type(_points(3.0))["group"])["multiplier"] == 1.0
     noisy = rc.slope_multiplier(rc.pairs_by_type(_points(0.5, noise=40.0))["group"])
-    assert 0.0 <= noisy["multiplier"] <= 1.0 and noisy["shrinkage"] < 1.0
+    assert noisy["multiplier"] == pytest.approx(min(1.0, max(0.0, noisy["slope"] + 1.96 * noisy["slope_se"])))
+    vague = rc.slope_multiplier(rc.pairs_by_type(_points(0.5, n=4, noise=400.0))["group"])
+    assert vague["multiplier"] == 1.0                             # imprecise: weight unchanged
     assert rc.slope_multiplier([(1.0, 2.0, 0)]) == {**rc.slope_multiplier([(1.0, 2.0, 0)]), "multiplier": 1.0,
                                                     "estimated": False}
 
@@ -313,7 +325,10 @@ def test_loop_collect_unchanged_without_sumocredit_and_charge_matches_extras():
     cfg = json.loads((ROOT / "configs/c4_loop14_gpur.json").read_text(encoding="utf-8"))
     assert loop.collect_sim_s(cfg) == 29_776                        # the registered loop budget
     assert loop.sumocredit_args(cfg, {}) == []
-    for x in ({"gate_horizon": 20}, {"gate_horizon": 20, "gate_reference": "native"},
+    for x in ({"gate_horizon": 20}, {"gate_horizon": 20, "gate_reference": "hold"},
+              {"gate_horizon": 20, "gate_candidates": 8},
+              {"gate_horizon": 20, "gate_candidates": 4, "gate_unit": "cav", "gate_reference": "hold"},
+              {"gate_horizon": 20, "gate_candidates": 8, "gated_arm": True},
               {"gate_horizon": 20, "gate_unit": "group", "gate_max_units": 3},
               {"gate_horizon": 400, "gate_unit": "fleet"}, {"credit_horizon": 60, "credit_flips": 1},
               {"credit_horizon": 400}, {"gate_horizon": 30, "gated_arm": True, "credit_horizon": 120}):
@@ -352,3 +367,74 @@ def test_collect_cli_flags_off_adds_no_options(tmp_path):
         collect.plan_jobs = real_plan
     with pytest.raises(SystemExit):
         collect.main([a for a in base if a != "--policy-pairs"] + ["--gate-horizon", "20"])
+
+
+def test_loop_wires_extras_into_collect_policy_and_convert(tmp_path, monkeypatch):
+    from . import test_loop14 as t14
+    loop = t14.loop
+    reg = t14._registration(tmp_path)
+    cfg_path = t14._config(tmp_path, reg)
+    doc = json.loads(cfg_path.read_text())
+    doc["collect"]["sumocredit"] = {"gate_horizon": 20, "gate_unit": "group", "credit_horizon": 30,
+                                    "credit_flips": 1, "gated_arm": True}
+    doc["policy"]["real_credit"] = True
+    cfg_path.write_text(json.dumps(doc))
+    pol = tmp_path / "pol.pt"
+    pol.write_bytes(b"p")
+    assert t14._main("init", "--config", cfg_path, "--adopt-policy", pol) == 0
+    seen = {}
+
+    def fake_run(h, argv, *, env, log, timeout_s, cwd=None):
+        if "traffic_shepherd.c4.collect" in argv:
+            seen["collect"] = list(argv)
+            return 1
+        return 0
+    monkeypatch.setattr(loop, "run_cmd", fake_run)
+    monkeypatch.setattr(loop, "sync", lambda *a, **k: None)
+    # a gate table from an earlier cycle is staged and passed
+    state_file = tmp_path / "loop" / loop.STATE
+    st = json.loads(state_file.read_text())
+    st["gate_table"] = str(tmp_path / "GATE_TABLE.json")
+    st["real_credit"] = str(tmp_path / "REAL_CREDIT.json")
+    state_file.write_text(json.dumps(st))
+    assert t14._main("run", "--config", cfg_path, "collect") == 3
+    argv = seen["collect"]
+    assert argv[argv.index("--gate-horizon") + 1] == "20" and argv[argv.index("--credit-flips") + 1] == "1"
+    assert argv[argv.index("--gate-table") + 1].endswith("GATE_TABLE.json")
+    per_point = loop.sumocredit_sim_s_per_point(doc["collect"])
+    assert per_point == (0 + 4 * 1 * 20) + 300 + (3 + 1 + 1) * 30     # native REF = the B prefix
+    assert json.loads(state_file.read_text())["sim_s_charged"] == 3 * (121 + 600 + per_point)
+    cfg = loop.load_config(cfg_path)
+    argv, _ = loop.policy_cmd(cfg, json.loads(state_file.read_text()), tmp_path / "pol_out")
+    assert argv[argv.index("--real-credit") + 1].endswith("REAL_CREDIT.json")
+    doc["policy"]["real_credit"] = False
+    argv, _ = loop.policy_cmd({**cfg, "policy": doc["policy"]}, json.loads(state_file.read_text()),
+                              tmp_path / "pol_out")
+    assert "--real-credit" not in argv
+
+    # convert: gather on the cpu host, refit on every cycle's records on the gpu host
+    root = tmp_path / "loop"
+    calls = []
+
+    def fake_fit(h, argv, *, env, log, timeout_s, cwd=None):
+        calls.append(list(argv))
+        if "real_credit14" in " ".join(argv) and "fit" in argv:
+            out = Path(argv[argv.index("--out") + 1])
+            out.write_text(json.dumps({"multipliers": {"individual": 1.0}, "points": 5}))
+        if "confident_gate" in " ".join(argv):
+            out = Path(argv[argv.index("--out") + 1])
+            out.write_text(json.dumps({"meta": {"n": 9, "brier_in_sample": 0.2,
+                                                "blocks_at_or_above_threshold": 0}}))
+        return 0
+
+    def fake_sync(cfg, a, src, b, dst, log):
+        Path(dst).parent.mkdir(parents=True, exist_ok=True)
+        Path(dst).write_text('{"x": 1}\n')
+    monkeypatch.setattr(loop, "run_cmd", fake_fit)
+    monkeypatch.setattr(loop, "sync", fake_sync)
+    state = json.loads(state_file.read_text())
+    out = loop.convert_sumocredit(cfg, state, "/cpu/work", "c00", {}, root / "logs" / "x.log", root)
+    assert "gather" in calls[0] and out["multipliers"] == {"individual": 1.0} and out["gate_n"] == 9
+    assert state["real_credit"].endswith("REAL_CREDIT_c00.json") and state["gate_table"].endswith("GATE_TABLE_c00.json")
+    with pytest.raises(loop.Refused):
+        loop.convert_sumocredit(cfg, state, "/cpu/work", "c00", {}, root / "logs" / "x.log", root)

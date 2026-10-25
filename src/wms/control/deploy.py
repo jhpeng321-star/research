@@ -406,7 +406,11 @@ def run(args) -> dict:
                                      n_driver_samples=args.n_driver_samples,
                                      driver_noise_scale=args.driver_noise_scale,
                                      embedding_noise_std=args.embedding_noise_std, seed=args.checker_seed)
-        gate = ConfidentGate(imagination, table, unit=meta["unit"], state_source=args.state)
+        mean_table = (ReliabilityTable.load(checked(args.gate_mean_table))
+                      if (args.gate_candidates > 1 and args.gate_mean_table) else None)
+        gate = ConfidentGate(imagination, table, unit=meta["unit"], state_source=args.state,
+                             n_candidates=args.gate_candidates, mean_table=mean_table,
+                             seed=args.checker_seed)
         source = (OracleSource(models[0]) if args.state == "oracle"
                   else BeliefSource(models[0], propagator=args.belief_propagator))
         hold_exec = (make_exec_fn(policy_fn.policy, None, device=device, lane_rules=policy_fn.lane_rules,
@@ -416,8 +420,17 @@ def run(args) -> dict:
 
         def plan_fn(env, state):
             return policy_fn(state, with_lanes=True, dwell_age=ages_now.get("ages"))
+
+        def sample_fn(stream, env):
+            # A learned-policy sample replaying the imagined candidate's noise (SumoNoise, by id).
+            from .confident_gate import SumoNoise
+            exe = make_exec_fn(policy_fn.policy, policy_fn.group_encoder, device=device,
+                               lane_rules=policy_fn.lane_rules, deterministic=False,
+                               noise_fn=SumoNoise(stream, env), memory=policy_fn.memory)
+            return lambda env, state: exe(state, with_lanes=True, dwell_age=ages_now.get("ages"))
         gated = GatedSumoPolicy(plan_fn, gate, source, decision_period_s=args.decision_period,
-                                hold_fn=hold_exec, memory=policy_fn.memory)
+                                hold_fn=hold_exec, memory=policy_fn.memory,
+                                sample_fn=sample_fn if args.gate_candidates > 1 else None)
 
     env = CavSumoEnv(k_slots=args.k, ttc=not args.no_ttc, physics_log=not args.no_physics_log)
     env_mode = controller if controller in BASELINES else "direct"
@@ -614,6 +627,12 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--gate-table", default=None,
                     help="policy_gate: TRAIN reliability table (wms.control.confident_gate); its unit, "
                          "reference, horizon and state source are used (owner threshold 0.8)")
+    ap.add_argument("--gate-candidates", type=int, default=1,
+                    help="policy_gate: K learned-policy candidates (deterministic mean + K-1 own samples, "
+                         "odd independent / even correlated noise); 1 = gate-only")
+    ap.add_argument("--gate-mean-table", default=None,
+                    help="policy_gate K > 1: TRAIN sample-vs-mean reliability table (without it no sample "
+                         "can replace the mean plan)")
     ap.add_argument("--cav-exec-cap", choices=("off", "idm", "idm_normal", "idm_normal:textbook",
                              "idm_normal:legacy"), default=None,
                     help="WM imagination execution cap of commanded CAVs (EXECCAP_NOTES.md); "

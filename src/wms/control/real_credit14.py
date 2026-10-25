@@ -16,9 +16,12 @@ reference = learned native head, common random numbers), giving imagined D_X.
 Correction fed to the trainer (``Policy14Trainer.credit_multipliers``, flag-gated): for every
 credit type X the OLS slope ``b_X`` of real on imagined D_X across points estimates how much of
 an imagined credit gradient is real (E[D_real | D_imag] ~ a + b D_imag => grad E[D_real] ~
-b grad D_imag).  Its weight is set by the measured sampling variance only: posterior-mean
-shrinkage ``m_X = b_X * b_X^2 / (b_X^2 + SE_X^2)`` clipped to [0, 1] (never amplifies, never flips a
-sign).  No estimate (n < 3 or no imagined spread) leaves the weight unchanged (multiplier 1).
+b grad D_imag).  Its weight is set by the measured sampling variance only: the multiplier is the
+one-sided 97.5 % UPPER confidence bound of the slope, ``m_X = clip(b_X + 1.96 SE_X, 0, 1)`` (1.96 =
+the deployment check's confidence_z).  So the WM credit is only scaled down where SUMO
+significantly contradicts its scale (an imprecise slope leaves m = 1), it is never amplified and
+never sign-flipped (a significantly negative slope gives 0).  No estimate (n < 3 or no imagined
+spread) leaves the weight unchanged (multiplier 1).
 """
 from __future__ import annotations
 
@@ -35,6 +38,8 @@ TYPES = ("all", "individual", "group", "coop", "team")
 #: credit types whose actor weight the correction may scale (``all`` = the main objective, reported)
 CORRECTED = ("individual", "group", "coop", "team")
 EVAL_SEEDS = (964000, 964199)
+#: two-sided 95 % normal quantile (wms.control.deploy --confidence-z default)
+CONFIDENCE_Z = 1.96
 
 
 def credit_terms(J: Mapping[str, float], group: Sequence[str], flips: Sequence[str] = ()) -> dict:
@@ -82,7 +87,7 @@ def pairs_by_type(points: Sequence[Mapping]) -> dict:
 
 
 def slope_multiplier(pairs: Sequence[tuple]) -> dict:
-    """OLS slope of real on imagined credit and its variance-shrunk multiplier in [0, 1]."""
+    """OLS slope of real on imagined credit; multiplier = clip(upper 97.5 % bound, 0, 1)."""
     n = len(pairs)
     out = {"n": n, "slope": None, "slope_se": None, "intercept": None, "corr": None,
            "multiplier": 1.0, "estimated": False}
@@ -99,10 +104,10 @@ def slope_multiplier(pairs: Sequence[tuple]) -> dict:
     intercept = float(y.mean() - slope * x.mean())
     resid = y - intercept - slope * x
     se = float(math.sqrt(float((resid ** 2).sum()) / (n - 2) / sxx))
-    shrink = slope * slope / (slope * slope + se * se) if (slope or se) else 0.0
-    out.update(slope=slope, slope_se=se, intercept=intercept, shrinkage=shrink,
+    upper = slope + CONFIDENCE_Z * se
+    out.update(slope=slope, slope_se=se, intercept=intercept, slope_upper=upper,
                corr=(float(np.corrcoef(x, y)[0, 1]) if x.std() > 0 and y.std() > 0 else None),
-               multiplier=float(min(1.0, max(0.0, slope * shrink))), estimated=True)
+               multiplier=float(min(1.0, max(0.0, upper))), estimated=True)
     return out
 
 
