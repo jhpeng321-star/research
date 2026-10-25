@@ -49,6 +49,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "follower_courtesy_off": "model.follower_courtesy_off",
     # R13Y LEARNABLE MAINLINE MERGE-YIELD RULE
     "mainline_merge_yield_learnable": "model.mainline_merge_yield_learnable",
+    # R16 LEARNABLE RAMP SPEED ADAPTATION
+    "ramp_speed_adapt_learnable": "model.ramp_speed_adapt_learnable",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -548,6 +550,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "replay_low_share_oversample", "replay_low_share_max", "replay_low_share_min_stage_s",
     # R13Y (separate insertion site for conflict-free 13E integration)
     "mainline_merge_yield_learnable",
+    # R16 S-RAMPSPEED
+    "ramp_speed_adapt_learnable",
 )
 
 

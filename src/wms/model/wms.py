@@ -284,6 +284,12 @@ class WmSModel(nn.Module):
         self.merge_yield = None
         if spec.mainline_merge_yield_learnable:
             self.enable_mainline_merge_yield_learnable()
+        # R16 (S-RAMPSPEED): learned ramp-HDV speed adaptation to the target lane (default off:
+        # no module, tensors, RNG draws or forward operations).
+        self.ramp_speed_adapt_learnable = False
+        self.ramp_speed_adapt = None
+        if getattr(spec, "ramp_speed_adapt_learnable", False):
+            self.enable_ramp_speed_adapt_learnable()
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
 
@@ -458,6 +464,21 @@ class WmSModel(nn.Module):
             self.merge_yield = LearnedMergeYield().to(device=like.device, dtype=like.dtype)
         self.mainline_merge_yield_learnable = True
 
+    def enable_ramp_speed_adapt_learnable(self, init=None) -> None:
+        """Enable R16 on a (loaded legacy) core; call before building an optimizer.
+
+        ``init`` optionally overrides the TRAIN-fitted initialization (offline comparisons).
+        Creation is deterministic and leaves the legacy RNG stream alone.
+        """
+        if (self.black_box or self.physics_step is not None
+                or not (self.rollout_mode in ("driver_params", "hybrid") or self.long_history)):
+            raise ValueError("ramp speed adaptation needs a learned-driver structured core")
+        if self.ramp_speed_adapt is None or init is not None:
+            from .ramp_speed_adapt import LearnedRampSpeedAdapt
+            like = next(self.parameters())
+            self.ramp_speed_adapt = LearnedRampSpeedAdapt(init).to(device=like.device, dtype=like.dtype)
+        self.ramp_speed_adapt_learnable = True
+
     @property
     def _tracks_courtesy_zone(self) -> bool:
         """R11: the rollout / replay carries the ramp cars' merge-zone time (courtesy v2 input)."""
@@ -533,6 +554,12 @@ class WmSModel(nn.Module):
             state_dict = state_dict.copy()
             state_dict.update({f"merge_yield.{key}": value.detach().clone()
                                for key, value in self.merge_yield.state_dict().items()})
+        if self.ramp_speed_adapt is not None and not any(
+                key.startswith("ramp_speed_adapt.") for key in state_dict):
+            # R16: a pre-R16 core starts from the TRAIN-fitted initialization.
+            state_dict = state_dict.copy()
+            state_dict.update({f"ramp_speed_adapt.{key}": value.detach().clone()
+                               for key, value in self.ramp_speed_adapt.state_dict().items()})
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -1184,6 +1211,14 @@ class WmSModel(nn.Module):
             # even a zero-weight distant pair would cap it at the raw baseline.
             yield_bound = yield_bound + (1.0 - yield_weight) * (accel - physics).clamp_min(0.0)
             accel = torch.where(yield_selected, torch.minimum(accel, yield_bound), accel)
+        ramp_adapt_weight = None
+        if self.ramp_speed_adapt_learnable:
+            # R16: ramp HDVs relax toward the target-lane leader along the acceleration lane
+            # (deceleration-only virtual-leader bound; acceptance stays with the merge pivot).
+            if driver_params is None:
+                raise ValueError("ramp speed adaptation requires learned driver parameters")
+            accel, _, ramp_adapt_weight = self.ramp_speed_adapt(
+                kin, present, accel, self.physics, driver_params, learned=learned)
         if final_envelope:
             # Once, on the final composed acceleration; d/d(accel) in [0, 1].
             accel = torch.where(present, apply_emergency_envelope(
@@ -1236,6 +1271,8 @@ class WmSModel(nn.Module):
                   "accel_delta_mps2": accel - physics_reported, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
+        if ramp_adapt_weight is not None:
+            result["ramp_speed_adapt_weight"] = ramp_adapt_weight
         if self.diag_emit_temporal:
             result["temporal_accel_pregate_mps2"] = temporal_accel
         if temporal_residual_state is not None:

@@ -137,6 +137,8 @@ class TrainSettings:
     emergency_onset: str = "plant"
     # R13Y learned merge yield (model switch), mirrored for flat training-config validation.
     mainline_merge_yield_learnable: bool = False
+    # R16 learned ramp speed adaptation (model switch), mirrored for flat validation.
+    ramp_speed_adapt_learnable: bool = False
     # R12 BASE CALIBRATION (all default = round 11 behaviour)
     driver_param_init: str = "checkpoint"
     residual_accel_reinit: bool = False
@@ -933,6 +935,8 @@ class TrainSettings:
                  "emergency_onset must be 'plant' or 'driver_b'")
         _require(isinstance(self.mainline_merge_yield_learnable, bool),
                  "mainline_merge_yield_learnable must be a boolean")
+        _require(isinstance(self.ramp_speed_adapt_learnable, bool),
+                 "ramp_speed_adapt_learnable must be a boolean")
         _require(isinstance(self.residual_head_rescale, bool),
                  "residual_head_rescale must be a boolean")
         _require(self.temporal_residual_mode in ("direct", "slow"),

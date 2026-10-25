@@ -164,6 +164,9 @@ class ModelSpec:
     # R13Y: learned shared virtual-leader yield on the lane_learnable core only.
     # No module, tensors, RNG draws or forward operations when disabled.
     mainline_merge_yield_learnable: bool = False
+    # R16 (S-RAMPSPEED): learned ramp-HDV speed adaptation to the target-lane leader (three shared
+    # scalars, wms.model.ramp_speed_adapt).  No module, tensors or forward operations when disabled.
+    ramp_speed_adapt_learnable: bool = False
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -184,7 +187,7 @@ class ModelSpec:
                      "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
                      "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table",
                      "residual_accel_off", "follower_courtesy_off",
-                     "mainline_merge_yield_learnable"):
+                     "mainline_merge_yield_learnable", "ramp_speed_adapt_learnable"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:
