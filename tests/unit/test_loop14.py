@@ -164,6 +164,61 @@ def test_failed_phase_needs_retry_and_new_attempt_dir(tmp_path, monkeypatch):
     assert st["cycles"][0]["phases"]["policy"]["status"] == "done"
 
 
+def test_remote_disk_guard_probes_missing_root_and_fails_closed(tmp_path, monkeypatch):
+    import shlex
+    import subprocess
+
+    cfg = {"guards": {"min_free_gb": 0}}
+    h = {"ssh": ["ssh", "cpuX"], "python": sys.executable}
+    missing = tmp_path / "new work" / "nested"
+    real_run = subprocess.run
+
+    def remote(argv, **kwargs):
+        assert argv[:2] == ["ssh", "cpuX"]
+        return real_run(shlex.split(argv[2]), **kwargs)
+
+    monkeypatch.setattr(loop.subprocess, "run", remote)
+    assert loop.disk_guard(cfg, h, str(missing), 0)["free_gb"] > 0
+    assert not missing.exists()
+    for result in (SimpleNamespace(returncode=1, stdout=""),
+                   SimpleNamespace(returncode=0, stdout=""),
+                   SimpleNamespace(returncode=0, stdout="-1")):
+        monkeypatch.setattr(loop.subprocess, "run", lambda *a, **k: result)
+        with pytest.raises(loop.Refused):
+            loop.disk_guard(cfg, h, str(missing), 0)
+
+
+@pytest.mark.parametrize("direction", ["push", "pull"])
+def test_remote_sync_creates_nested_destination_parent(tmp_path, monkeypatch, direction):
+    import shutil
+    import subprocess
+
+    cfg = {"hosts": {"gpu": {"code_root": str(tmp_path)},
+                     "cpu": {"code_root": str(tmp_path), "ssh": ["ssh", "cpuX"],
+                             "rsync_target": "cpuX"}}}
+    src = tmp_path / "source.pt"
+    src.write_bytes(b"checkpoint")
+    dst = tmp_path / "new" / "inputs" / "wm" / "wm_s.pt"
+
+    real_run = subprocess.run
+
+    def fake_rsync(argv, **kwargs):
+        assert argv[0] == "rsync" and dst.parent.is_dir()
+        shutil.copy2(src, dst)
+        return SimpleNamespace(returncode=0)
+
+    def mkdir_remote(h, argv, **kwargs):
+        assert h["ssh"] == ["ssh", "cpuX"]
+        assert argv[-1] == str(dst)
+        return real_run(argv, check=False).returncode
+
+    monkeypatch.setattr(loop, "run_cmd", mkdir_remote)
+    monkeypatch.setattr(loop.subprocess, "run", fake_rsync)
+    sides = ("gpu", "cpu") if direction == "push" else ("cpu", "gpu")
+    loop.sync(cfg, sides[0], str(src), sides[1], str(dst), tmp_path / "logs" / "sync.log")
+    assert dst.read_bytes() == b"checkpoint"
+
+
 def test_seed_allocation_recorded_before_collection(tmp_path, monkeypatch):
     cfg = _config(tmp_path, _registration(tmp_path))
     pol = tmp_path / "pol.pt"

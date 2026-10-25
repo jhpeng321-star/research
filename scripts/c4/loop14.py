@@ -249,6 +249,15 @@ def sync(cfg, src_host: str, src: str, dst_host: str, dst: str, log: Path) -> No
     rsh = " ".join(map(shlex.quote, remote.get("rsync_ssh", ["ssh"])))
     a = f"{target}:{src}" if s.get("ssh") else src
     b = f"{target}:{dst}" if d.get("ssh") else dst
+    # rsync creates the final directory, but not missing intermediate parents.
+    # This also covers pulls of summaries, converted data and return receipts.
+    if d.get("ssh"):
+        mk = [d["python"], "-c", "import pathlib,sys; pathlib.Path(sys.argv[1]).parent.mkdir(parents=True, exist_ok=True)", dst]
+        if run_cmd(d, mk, env={}, log=log, timeout_s=120) != 0:
+            raise RuntimeError(f"could not create rsync destination parent: {dst}")
+    else:
+        Path(dst).parent.mkdir(parents=True, exist_ok=True)
+    log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as stream:
         code = subprocess.run(["rsync", "-a", "--partial", "-e", rsh, a, b], stdout=stream,
                               stderr=subprocess.STDOUT, check=False, timeout=3 * 3600).returncode
@@ -277,11 +286,22 @@ def gpu_guard(cfg, h: dict) -> dict:
 def disk_guard(cfg, h: dict, path: str, need_gb: float) -> dict:
     floor = float(cfg["guards"]["min_free_gb"])
     if h.get("ssh"):
-        proc = subprocess.run([*h["ssh"], f"df -Pk {shlex.quote(path)} | tail -1"], capture_output=True,
-                              text=True, timeout=60, check=False)
+        # Like the local branch, probe the nearest existing ancestor.  A new
+        # work_root need not exist yet; a df|tail pipeline hid df errors and
+        # produced an IndexError before the first collection could create it.
+        script = ("import pathlib,shutil,sys; p=pathlib.Path(sys.argv[1]); "
+                  "exec('while not p.exists():\\n p=p.parent'); print(shutil.disk_usage(p).free)")
+        command = " ".join(map(shlex.quote, [h["python"], "-c", script, path]))
+        proc = subprocess.run([*h["ssh"], command], capture_output=True,
+                               text=True, timeout=60, check=False)
         if proc.returncode != 0:
-            raise Refused("remote df failed (fail closed)")
-        free_gb = int(proc.stdout.split()[3]) / 1024 ** 2
+            raise Refused("remote disk query failed (fail closed)")
+        try:
+            free_gb = int(proc.stdout.strip()) / 1024 ** 3
+            if free_gb < 0:
+                raise ValueError("negative free space")
+        except ValueError as error:
+            raise Refused("remote disk query returned invalid free space (fail closed)") from error
     else:
         probe = Path(path)
         while not probe.exists():
