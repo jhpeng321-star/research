@@ -168,7 +168,8 @@ class WmSTrainer:
         # OOMs itself before starving a co-located job (env WMS_GPU_MEM_FRACTION, e.g. 0.40).
         fraction = os.environ.get("WMS_GPU_MEM_FRACTION")
         if fraction and self.device.type == "cuda":
-            torch.cuda.set_per_process_memory_fraction(float(fraction), self.device)
+            index = self.device.index if self.device.index is not None else torch.cuda.current_device()
+            torch.cuda.set_per_process_memory_fraction(float(fraction), index)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):
