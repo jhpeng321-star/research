@@ -80,7 +80,9 @@ if [ "$MODE" = smoke ]; then
     fresh "$L/smoke_${TAG}.complete.json" "$L/runs/${TAG}_gate_core_tests"
     disk_guard 2000
     CUDA_VISIBLE_DEVICES= "${GATE[@]}" preflight --root "$L" --offline-report "$OFFLINE"
+    # pytest is not in the gpuB env: a private --target install (R16_PYLIB) is APPENDED to the path.
     CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+        PYTHONPATH="$PYTHONPATH:${R16_PYLIB:-$L/diag_r16/pylib}" \
         nice -n 10 "$PYTHON" -B -m pytest -q -p no:cacheprovider --noconftest \
         tests/test_r16_ramp_speed_adapt.py tests/test_r16_gate.py \
         tests/test_r13e_emergency.py tests/test_r13e_secure_gap.py tests/test_r13y_yield.py \
