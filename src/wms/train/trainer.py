@@ -167,7 +167,9 @@ class WmSTrainer:
         # Shared-GPU guard: env C4_GPU_MEM_FRACTION caps this process's CUDA memory (unset = unchanged).
         frac = os.environ.get("C4_GPU_MEM_FRACTION")
         if frac and self.device.type == "cuda":
-            torch.cuda.set_per_process_memory_fraction(float(frac), self.device)
+            # The allocator API requires an explicit index (unlike model.to("cuda")).
+            index = self.device.index if self.device.index is not None else torch.cuda.current_device()
+            torch.cuda.set_per_process_memory_fraction(float(frac), index)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):
