@@ -25,6 +25,7 @@ from tools.main14.verdict_snapshot import digest  # noqa: E402
 
 TESTS = ["test_coopw.py", "test_sumocredit.py", "test_sumocredit_kcheck.py",
          "test_gate_panel.py", "test_loop14.py", "test_loop14c.py", "test_main14.py",
+         "train/test_gpu_memory_cap.py",
          "test_policy14_integration.py", "test_policy14_critic.py", "test_policy14_lanes.py",
          "test_policy14e.py", "test_policy14_r13e.py"]
 
