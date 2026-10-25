@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import re
 from dataclasses import asdict, replace
@@ -114,6 +115,11 @@ def main(argv=None):
         if not 1 <= threads <= 8:
             raise ValueError("threads must be in 1..8")
         torch.set_num_threads(threads)
+        # Shared-GPU guard (as train_cli): env C4_GPU_MEM_FRACTION caps this process's CUDA
+        # memory so it OOMs itself before starving a co-located run.  Unset = unchanged.
+        frac = os.environ.get("C4_GPU_MEM_FRACTION")
+        if frac and args.device == "cuda" and torch.cuda.is_available():
+            torch.cuda.set_per_process_memory_fraction(float(frac))
         candidate = checked_path(args.output_dir)
         candidate.mkdir(parents=True, exist_ok=False)
         output = candidate
@@ -178,7 +184,6 @@ def main(argv=None):
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
         resumed = None
         if args.resume:
-            import os
             resume = checked_path(args.resume)
             # Same ensemble size, possibly a refreshed (accepted) WM: dreamer.load_checkpoint's
             # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
