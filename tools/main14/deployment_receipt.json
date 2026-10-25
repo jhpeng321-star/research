@@ -1,13 +1,19 @@
 {
  "schema": "main14_arm/1",
- "code_sha": "d7083a9cc19e837ecae631a7f10870455c655818",
+ "code_sha": "fe7b5146ca1aa712bd6a4503e421c31866e7b738",
  "registration": "/root/autodl-tmp/c4/v5/main14_REGISTRATION.json",
- "registration_sha256": "f1a852becdf5f9484f0068f4a5e1995e41691da644d920b039f92e7ee9b60316",
+ "registration_sha256": "0ae350b1dda839449943f3fdc7ffa2880b4b1cc0c34bea2c7f88460d88ff734c",
  "config": "/root/autodl-tmp/c4/v5/main14_config.json",
  "config_sha256": "023c3cc05aff76959fe29d25dab0e290afd857dd0bcb5babde8cac81384a901d",
  "round14b_start_ticks": "4156214467",
  "round14b_summary": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round14_b/RUN_SUMMARY.json",
  "verdict_deadline": "2026-10-26T13:00:00+08:00",
- "exported_files": 1858,
- "bundle_bytes": 5823421
+ "exported_files": 1862,
+ "bundle_bytes": 5825943,
+ "gate_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+ "gate_panel_starts": 16,
+ "prearm_unit_tests": 340,
+ "prearm_real_wm_smoke": "completed; 2 CPU updates, 13E b2; zero SUMO",
+ "free_bytes": 2478583808,
+ "registered_code_sha": "fe7b5146ca1aa712bd6a4503e421c31866e7b738"
 }

@@ -1,0 +1,41 @@
+{
+ "captured_epoch": 1792952548.052972,
+ "pid": 649847,
+ "ppid": 1,
+ "session": 649847,
+ "start_ticks": "4157893583",
+ "code_sha": "fe7b5146ca1aa712bd6a4503e421c31866e7b738",
+ "registration_sha256": "0ae350b1dda839449943f3fdc7ffa2880b4b1cc0c34bea2c7f88460d88ff734c",
+ "state": "S",
+ "fds": {
+  "0": "/dev/null",
+  "1": "/root/autodl-tmp/c4/v5/main14_autolaunch.log",
+  "2": "/root/autodl-tmp/c4/v5/main14_autolaunch.log"
+ },
+ "flock_held": true,
+ "config_sha256": "023c3cc05aff76959fe29d25dab0e290afd857dd0bcb5babde8cac81384a901d",
+ "source_verification": {
+  "verified": true,
+  "code_sha": "fe7b5146ca1aa712bd6a4503e421c31866e7b738",
+  "source_files": 1862,
+  "sim_s_per_cycle": 29133,
+  "ready": false,
+  "reason": "14b qualification verdict absent"
+ },
+ "gate_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+ "free_bytes": 2478567424,
+ "launch_record_exists": false,
+ "loop_state_exists": false,
+ "wait_owner": false,
+ "expired": false,
+ "prearm_smoke_status": "completed",
+ "installed_record": {
+  "pid": 649847,
+  "session": 649847,
+  "ppid": 649844,
+  "start_ticks": "4157893583",
+  "log": "/root/autodl-tmp/c4/v5/main14_autolaunch.log",
+  "stop_marker": "/root/autodl-tmp/c4/v5/main14_arm/STOP_ARM"
+ },
+ "log_tail": "{\"t\": \"2026-10-25T18:12:38Z\", \"event\": \"armed\", \"pid\": 649530, \"code_sha\": \"d7083a9cc19e837ecae631a7f10870455c655818\", \"deadline\": \"2026-10-26T13:00:00+08:00\"}\n{\"t\": \"2026-10-25T18:12:39Z\", \"event\": \"waiting_round14b_chain\", \"verdict_ready\": false, \"verdict_reason\": \"14b qualification verdict absent\"}\n{\"t\": \"2026-10-25T18:14:40Z\", \"event\": \"waiting_round14b_chain\", \"verdict_ready\": false, \"verdict_reason\": \"14b qualification verdict absent\"}\n{\"t\": \"2026-10-25T18:16:40Z\", \"event\": \"disarmed_by_marker\"}\n{\"t\": \"2026-10-25T18:19:09Z\", \"event\": \"armed\", \"pid\": 649847, \"code_sha\": \"fe7b5146ca1aa712bd6a4503e421c31866e7b738\", \"deadline\": \"2026-10-26T13:00:00+08:00\"}\n{\"t\": \"2026-10-25T18:19:09Z\", \"event\": \"waiting_round14b_chain\", \"verdict_ready\": false, \"verdict_reason\": \"14b qualification verdict absent\"}\n{\"t\": \"2026-10-25T18:21:10Z\", \"event\": \"waiting_round14b_chain\", \"verdict_ready\": false, \"verdict_reason\": \"14b qualification verdict absent\"}\n"
+}

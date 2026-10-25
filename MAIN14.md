@@ -1,5 +1,10 @@
 # MAIN14 — cooperation-ON loop, 2026-10-26
 
+**Current arm (02:19 UTC+8): PID/SID 649847, PPID 1**, runtime **fe7b5146**, source checks PASS.
+Waiter is server-resident and waiting for round-14b and its qualification; no loop training has
+started. This installation includes the final CUDA allocator fix; the earlier PID 649530 is
+gracefully stopped and its complete installation retained as `main14_arm_install1`.
+
 ## Integration
 
 Branch `c4/main14`, worktree `E:/agent-work/c4-main14`, starts at `c4/loop14c` **77d9e574**.
@@ -15,6 +20,9 @@ Branch `c4/main14`, worktree `E:/agent-work/c4-main14`, starts at `c4/loop14c` *
 - Cherry-picked **edc64d78** as **94a9eadf**: the executor's collect fixes became available
   early (01:48). Remote disk guards probe an existing ancestor; rsync creates destination
   parents for pushes and pulls. The extra gpuB operation scripts are not part of this arm's launch.
+- Cherry-picked the later WM startup fix **d0aeff75** as **b79ff39a**: resolve a bare CUDA
+  device to its current logical index before setting the allocator memory fraction. Four
+  allocator regressions join the mandatory launch test suite (runtime **fe7b5146**).
 
 The interrupted `c4/coopw` work was inspected read-only: modified measurement profiling,
 untracked `COOPW.md`, and `_scratch/`. The document still contains `{UNC}`, `{COST}`,
@@ -88,7 +96,8 @@ by deployment. cpuX links the already-tested local fixture directory for simulat
 
 The first integrated local run passed **333 tests** (pytest printed its complete success
 summary; the harness timed out during process teardown). Final focused MAIN14 tests: **13 passed**.
-The complete deployed gpuR CPU suite passed **336 tests**; the pre-arm real-13E-b2 CPU smoke
+The final deployed gpuR CPU suite passed **340 tests**, including the four late allocator
+regressions; the final focused local suite passed **17**. The pre-arm real-13E-b2 CPU smoke
 completed two policy updates. The first manual panel-build command omitted the two dataset
 environment variables and failed before any training; the second command used the registered
 environment and froze the panel successfully. Its sha256 is
@@ -100,7 +109,7 @@ Deployment and arm evidence: `tools/main14/deployment_receipt.json`,
 `tools/main14/REGISTERED.json`, gpuR `main14_arm/{ARMED,WAITER_INSTALLED}.json`.
 The actual selected base is recorded later in `BASE_SELECTION.json` / `LAUNCHED.json`.
 
-### Armed operational receipt (02:12 UTC+8, before the 05:30 deadline)
+### Historical first installation (02:12 UTC+8; gracefully replaced before any launch)
 
 - Waiter **PID/SID 649530**, actual **PPID 1**, start ticks **4157854547**;
   `setsid nohup` confirmed. It is waiting for the protected round-14b chain and the cpuX verdict.
@@ -115,7 +124,7 @@ The actual selected base is recorded later in `BASE_SELECTION.json` / `LAUNCHED.
   2.5 GB free, leaving about **2.48 GB decimal / 2.31 GiB**. Final liveness, source checks,
   panel hash, no-launch state, and log tail are in `tools/main14/ARMING_RECEIPT.json`.
 
-### Waiter installation verified — 02:13 UTC+8
+### Historical first waiter verification — 02:13 UTC+8
 
 Runtime commit **d7083a9cc19e837ecae631a7f10870455c655818** adds live verdict readiness
 to `--check-only` and to the chain-wait log. It was exported to both hosts before arming;
@@ -135,6 +144,27 @@ source files and reported `ready=false`, reason **14b qualification verdict abse
 The log records both the arm event and waiting for round14b with that verdict reason;
 neither `WAIT_OWNER.json` nor `LAUNCHED.json` existed. Receipt:
 `tools/main14/WAITER_INSTALLED.json`. No launch or process signal was issued.
+
+### Final waiter installation — 02:19 UTC+8
+
+When `d0aeff75` landed, MAIN14 PID 649530 was gracefully stopped using its own `STOP_ARM`
+marker, then verified exited by exact start ticks. No PID was signalled. Its arm directory,
+original registration/config and full pre-arm outputs remain in `main14_arm_install1`.
+The frozen panel and successful pre-arm smoke receipt were preserved. There had been no
+loop initialisation, seed allocation, SUMO collection or GPU policy training.
+
+Runtime **fe7b5146ca1aa712bd6a4503e421c31866e7b738** includes the allocator fix and its launch
+test gate. Both hosts verified all **1,862** exported files; **340 tests passed on gpuR**.
+Revised registration was written and appended to the shared register before re-arming:
+sha256 **0ae350b1dda839449943f3fdc7ffa2880b4b1cc0c34bea2c7f88460d88ff734c**.
+Config sha256 stays **023c3cc05aff76959fe29d25dab0e290afd857dd0bcb5babde8cac81384a901d**;
+the base rule, deadline, seeds, exclusions, budgets and all behavioural/acceptance rules are unchanged.
+
+**PID/SID 649847, PPID 1, start ticks 4157893583**, installed with `setsid nohup` at 02:19:09.
+Final source/config/registration check passes; the log says `waiting_round14b_chain` and
+`14b qualification verdict absent`. No launch/state/WAIT_OWNER/EXPIRED marker exists.
+The frozen 16-start panel remains byte-identical to coop-OFF. Free disk is **2,478,567,424 bytes**.
+Current receipts are `tools/main14/{REGISTERED,deployment_receipt,WAITER_INSTALLED,ARMING_RECEIPT}.json`.
 
 ## Monitor / stop
 
