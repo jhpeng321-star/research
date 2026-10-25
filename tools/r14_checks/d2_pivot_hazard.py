@@ -51,7 +51,7 @@ def main():
     res = {}
     for arm in ["sumo"] + arms:
         R = []
-        for f in sorted(glob.glob(os.path.join(d, f"p*_*_{arm}*.npz"))):
+        for f in sorted(glob.glob(os.path.join(d, f"p*_*_{arm}.npz" if arm == "sumo" else f"p*_*_{arm}_k*.npz"))):
             z = np.load(f)
             R += rows(z["S"].astype(float), z["L"].astype(int), z["V"].astype(float))
         R = np.array(R, float)

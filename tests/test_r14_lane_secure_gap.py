@@ -247,3 +247,21 @@ def test_fd_gradients_unchanged_on_feasible_rows_and_accel():
             assert torch.isclose((fp - fm) / (2 * h), g[idx], rtol=1e-5, atol=1e-7)
     for a, b in zip(outs[False], outs[True]):
         assert torch.equal(a, b)
+
+
+def test_flags_off_bit_identity_against_13e_launch_sources():
+    """Subprocess export of the real 13E launch code (65cc714e); skipped without Git objects."""
+    import shutil
+    import subprocess
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    if not (root / ".git").exists() or shutil.which("git") is None or subprocess.run(
+            ["git", "cat-file", "-e", "65cc714e0e73c532583c61f1bbf0ea7d1d6f6b98^{commit}"], cwd=root,
+            capture_output=True).returncode:
+        pytest.skip("needs the Git object database with the 13E launch commit")
+    import sys
+    sys.path.insert(0, str(root / "tools/r14_checks"))
+    import bit_identity
+    report = bit_identity.run_check()
+    assert report["status"] == "PASS" and report["cases"] == 6
+    assert min(report["tensor_comparisons"].values()) > 1000

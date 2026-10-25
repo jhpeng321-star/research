@@ -36,7 +36,23 @@ def test_config_check_rejects_any_other_difference(monkeypatch):
         r14.check_configs()
 
 
-def test_install_points_the_13e_verdicts_at_r14():
+@pytest.fixture
+def restore_13e_gate():
+    """install() re-points round13e_gate globals; restore them for later 13E tests."""
+    g = r14.g
+    saved = {k: v for k, v in vars(g).items() if not k.startswith("__")}
+    variants = {k: dict(v) for k, v in g.VARIANTS.items()}
+    configs = dict(g.CONFIGS)
+    yield g
+    for k, v in saved.items():
+        setattr(g, k, v)
+    g.VARIANTS.clear()
+    g.VARIANTS.update(variants)
+    g.CONFIGS.clear()
+    g.CONFIGS.update(configs)
+
+
+def test_install_points_the_13e_verdicts_at_r14(restore_13e_gate):
     g = r14.install()
     assert (g.TAG, g.RUN) == ("r14", "c4_wm_v10_round14")
     assert g.CONFIGS == r14.CONFIGS and g.FLAG_KEYS == r14.FLAG_KEYS
