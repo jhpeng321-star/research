@@ -77,7 +77,7 @@ def stage():
 import io,json,pathlib,sys,tarfile,hashlib
 root=pathlib.Path(sys.argv[1]); assert root.parent.is_dir(), 'parent missing'
 arm=pathlib.Path('/root/autodl-tmp/c4/v5/main14_arm')
-if arm.is_dir() and (arm/'waiter.pid').exists():
+if str(root).startswith('/root/') and arm.is_dir() and (arm/'waiter.pid').exists():
  p=(arm/'waiter.pid').read_text().strip()
  assert not pathlib.Path('/proc/'+p).exists(), 'already armed; refuse source mutation'
 root.mkdir(exist_ok=True)
