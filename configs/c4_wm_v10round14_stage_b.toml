@@ -36,6 +36,9 @@ emergency_braking = true
 secure_gap_veto = true
 # R14 D1: HDV mainline lane changes need the same learned-parameter gs.
 lane_change_secure_gap = true
+# S-R14B (S-TTC, c4/loop14 68366f88): plan the emergency envelope with each driver's learned
+# comfortable decel b (plant limit stays the -9 floor; SUMO maximumSafeFollowSpeed onset).
+emergency_onset = "driver_b"
 merge_end_wait = false
 ramp_lane_end_stop = true
 ramp_risk_retain = true

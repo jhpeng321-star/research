@@ -5,13 +5,16 @@
 #   --registration-template --offline-report PATH   print the exact registration_r14.json body
 #   --smoke --offline-report PATH      A 2x120 from 13E B FINAL, then B 2x120+2x300 from A smoke FINAL
 #   --launch-a --offline-report PATH   production A (after both smoke verdicts)
-#   --launch-b --offline-report PATH   A production verdict + A MIDRUN CONTINUE, re-smoke B from A FINAL, B
-#   --chain --offline-report PATH      --launch-a, wait for A to exit, then --launch-b (same rules)
-# Lesson applied (13E): stage B never waits for A's slow POSTRUN check. A's postrun keeps running
-# in parallel with B; B's own MIDRUN check requires A postrun == CONTINUE before it measures and
-# stops B otherwise (fail closed).  --wait: poll the GPU guard instead of refusing (exit 5).
-# The GPU guard and disk guard never signal any process. Invoke from the PREPARED copy only.
-# init = 13E stage-B FINAL, accepted only with BOTH 13E B checks CONTINUE (round14_gate.py).
+#   --launch-b --offline-report PATH   A production verdict only (CPU), then B from A FINAL
+#   --chain --offline-report PATH      --launch-a, then --launch-b as soon as A training exits
+# S-R14B (timing request + 13E lesson): B never waits for A's checks.  A's midrun AND postrun run
+# in parallel with B; `round14_gate watch --name a` SIGTERMs the owned B (pidfd) only on a REAL A
+# STOP; measurement errors are recorded, never signalled.  `watch --name b2` (armed by
+# scripts/round14b_autochain.sh) does the same for the 13E b2 postrun.  Every launch writes its
+# pid + start ticks, then re-runs launch-guard (no marker) before exec.  --wait: poll the GPU
+# guard instead of refusing (exit 5).  The GPU and disk guards never signal any process.
+# Invoke from the PREPARED repo_r14b_<sha8> copy only.  init = the resumed 13E stage-B FINAL (b2),
+# accepted with b2 RUN_SUMMARY.json + the 13E B midrun recheck CONTINUE (round14_gate.py).
 set -eu -o pipefail -o noclobber
 REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$REPO"
@@ -60,12 +63,15 @@ gpu_guard() {
         sleep 60
     done
 }
-# Disk guard: checkpoints of a run need space on the run filesystem (operational, never deletes).
+# Disk guard: space on the run filesystem (operational, never deletes).  Expected S-R14B use
+# (13E measured): core-test basetemp ~0.5 GB, smokes 2 x 15 MB, runs 2 x ~20 MB, check work ~0.45 GB per
+# stage (postrun one-step tables), watch records < 1 MB: ~1.5 GB from the smoke on, ~0.5 GB
+# from the B launch on.  Thresholds keep >= 0.5 GB margin above that (MB).
 disk_guard() {
-    local FREE_KB
+    local NEED_MB=$1 FREE_KB
     FREE_KB=$(df -Pk "$L" | awk 'NR==2 {print $4}')
-    [ "${FREE_KB:-0}" -ge $(( ${R14_MIN_FREE_GB:-2} * 1024 * 1024 )) ] || {
-        echo "disk guard: < ${R14_MIN_FREE_GB:-2} GB free on $L; refusing $MODE" >&2; exit 6; }
+    [ "${FREE_KB:-0}" -ge $(( NEED_MB * 1024 )) ] || {
+        echo "disk guard: < ${NEED_MB} MB free on $L; refusing $MODE" >&2; exit 6; }
 }
 
 "${GATE[@]}" config
@@ -73,21 +79,17 @@ if [ "$MODE" = config ]; then exit 0; fi
 if [ "$MODE" = prepare ]; then exec "${GATE[@]}" prepare; fi
 [ -n "$OFFLINE" ] || { echo "$MODE requires --offline-report" >&2; exit 2; }
 L=/root/autodl-tmp/c4/v5
-CK=$L/runs/c4_wm_v10_round13e_b/wm_s.pt
+CK=$L/runs/c4_wm_v10_round13e_b2/wm_s.pt
 EVIDENCE=(--root "$L" --init-checkpoint "$CK" --offline-report "$OFFLINE")
 if [ "$MODE" = registration-template ]; then exec "${GATE[@]}" registration-template "${EVIDENCE[@]}"; fi
 if [ "$MODE" = chain ]; then
-    # Explicit operator chain: A production, then B with the same gates as --launch-b.
+    # Explicit operator chain: A production, then B immediately (A's checks run in parallel).
     bash "$REPO/scripts/round14_gate.sh" --launch-a --offline-report "$OFFLINE" $([ "$WAIT" = 1 ] && echo --wait) || exit $?
-    for ((i=0; i<240; i++)); do
-        [ -f "$L/chk_${TAG}/a/midrun/RESULT.json" ] && break
-        sleep 60
-    done
     exec bash "$REPO/scripts/round14_gate.sh" --launch-b --offline-report "$OFFLINE" --wait
 fi
 "${GATE[@]}" registered "${EVIDENCE[@]}"
 gpu_guard
-disk_guard
+if [ "$MODE" = smoke ]; then disk_guard 2000; fi
 ulimit -n 65536
 export OMP_NUM_THREADS=12 WMS_JAM_WORKERS=12 WMS_LATEST_EVERY=20
 export WMS_DATA_V5_NATIVE="$L/data/v5_native" WMS_DATA_GENRAND_PLAIN="$L/data/genrand_plain"
@@ -124,6 +126,7 @@ if [ "$MODE" = smoke ]; then
         tests/test_r13e_emergency.py tests/test_r13e_secure_gap.py tests/test_r13e_plan.py \
         tests/test_r13y_yield.py tests/test_r13y_config.py \
         tests/test_r14_lane_secure_gap.py tests/test_r14_lowshare.py tests/test_r14_gate.py \
+        tests/test_loop14_emergency_onset.py \
         --basetemp "$REPO/runs/${TAG}_gate_core_tests"
     gpu_guard
     smoke a "$A" "$CK" a
@@ -139,13 +142,14 @@ for artifact in "$OUT" "$L/production_${TAG}_$STAGE.log" "$L/chk_${TAG}/$STAGE";
     [ ! -e "$artifact" ] && [ ! -L "$artifact" ] || { echo "prior production artifact: $artifact" >&2; exit 4; }
 done
 gpu_guard
-disk_guard
+if [ "$STAGE" = a ]; then disk_guard 1500; else disk_guard 1000; fi
 mkdir "$L/.round${TAG#r}_production_$STAGE.lock"
 if [ "$STAGE" = a ]; then
     CONFIG=$A; INIT=$CK
 else
+    # S-R14B timing request: no B re-smoke from A FINAL (the both-stage smoke ran B from A's
+    # smoke FINAL; A FINAL passed the strict production verdict in production-ready).
     CONFIG=$B; INIT=$L/runs/${RUN}_a/wm_s.pt
-    smoke b "$B" "$INIT" b_final
 fi
 # Arm both checks BEFORE exec, against this PID and its start ticks (13E). The postrun check of
 # A outlives A and runs in parallel with B; B's midrun check consumes its RESULT.
@@ -167,7 +171,17 @@ for CHECK in midrun postrun; do
     test -f "$READY"
     kill -0 "$WAITER"
 done
+if [ "$STAGE" = b ]; then
+    # Real-STOP watcher for A's parallel midrun/postrun checks (signals only the owned B).
+    CUDA_VISIBLE_DEVICES= nohup nice -n 19 "$PYTHON" -B -u -m wms.train.round14_gate watch --root "$L" --name a \
+        > "$L/chk_${TAG}/a_watch.log" 2>&1 < /dev/null &
+    printf '%s\n' "$!" > "$L/chk_${TAG}/a_watch.pid"
+fi
 printf '%s\n' "$$" > "$L/production_${TAG}_$STAGE.pid"
+printf '%s\n' "$START_TICKS" > "$L/production_${TAG}_$STAGE.ticks"
 date -Is > "$L/production_${TAG}_$STAGE.start"
+# Pid/ticks are visible to the watchers BEFORE this last guard, so a STOP racing the launch is
+# either seen here (refuse) or by the watcher's kill window (SIGTERM after exec).
+"${GATE[@]}" launch-guard --root "$L" --stage "$STAGE"
 exec "$PYTHON" -B -u -m wms train --config "$CONFIG" --mode run --out "$OUT" \
     "${COMMON[@]}" --set "model.init_from=$INIT" > "$L/production_${TAG}_$STAGE.log" 2>&1

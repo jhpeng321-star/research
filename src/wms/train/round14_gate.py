@@ -11,9 +11,15 @@ globals (tag, run, configs, flag keys, source allowlist).  R14-specific parts:
   stage B starts from R14 A FINAL;
 * stop rule: 13E's paired thresholds, reference = 13E stage-B FINAL evaluated with the SAME
   R14 switches (emergency, gs, learned yield, lane-change secure gap) in the same invocation;
-* lesson from 13E: B production needs A's production verdict and A's MIDRUN CONTINUE only.
-  A's slow postrun check runs in parallel with B; B's own midrun check requires A's postrun
-  RESULT to be CONTINUE before it measures (fail closed: anything else stops B).
+* S-R14B (2026-10-25): ``physics.emergency_onset = "driver_b"`` (S-TTC, c4/loop14 68366f88) ON
+  in both stages and in the same-flags reference.  Init = the RESUMED 13E stage-B FINAL
+  ``runs/c4_wm_v10_round13e_b2/wm_s.pt``, accepted once b2 has RUN_SUMMARY.json and the 13E
+  stage-B midrun RECHECK said CONTINUE; the slow b2 postrun is NOT awaited.
+* stage gate (timing request): B starts as soon as A training ends (A production verdict, CPU
+  only).  A's midrun AND postrun run in parallel with B.
+* ``watch --name b2`` / ``watch --name a``: a REAL STOP in the 13E b2 postrun (stops A or B) or in
+  an A check (stops B) writes a marker and SIGTERMs the owned production via pidfd; launches
+  refuse after it.  Lesson (13E B): measurement errors are recorded as ERROR, never signalled.
 """
 from __future__ import annotations
 
@@ -37,7 +43,13 @@ CONFIGS = {"a": ROOT / "configs/c4_wm_v10round14.toml",
            "b": ROOT / "configs/c4_wm_v10round14_stage_b.toml"}
 REFERENCE = {"a": ROOT / "configs/c4_wm_v10round13e.toml",
              "b": ROOT / "configs/c4_wm_v10round13e_stage_b.toml"}
-INIT_REL = "runs/c4_wm_v10_round13e_b/wm_s.pt"
+INIT_REL = "runs/c4_wm_v10_round13e_b2/wm_s.pt"
+#: S-R14B: the resumed 13E stage-B run and its checks (owned by S-R13E; read only here).
+B_RUN, B2_RUN = "runs/c4_wm_v10_round13e_b", "runs/c4_wm_v10_round13e_b2"
+B_RECHECK = "chk_r13e/b/midrun_recheck/RESULT.json"
+B2_POSTRUN = "chk_r13e/b2/postrun/RESULT.json"
+B2_STOP_MARKER = "B2_POSTRUN_STOP.json"   # under chk_r14/, written once by b2watch
+ONSET = "driver_b"
 SOURCE_MANIFEST = "R14_SOURCE.json"
 LOWPEN_DIR = "data/lowpen_20261025"
 #: S-LOWPEN-20261025 RECEIPT.md manifest sha256 (packs copied unchanged).
@@ -53,30 +65,38 @@ SOURCES = (("native_v5", "v5_native", 0.4694, False), ("lowpen_native", "lowpen_
            ("lowpen_genrand_branch", "lowpen_genrand_branch", 0.0176, False),
            ("pairs300", "pairs300", 0.15, True))
 LOW_SHARE = {"low_share_oversample": 1.69, "low_share_max": 0.15, "low_share_min_stage_s": 120.0}
-FLAG_KEYS = ("emergency_braking", "secure_gap_veto", "lane_change_secure_gap")
-STOP_RULE = {"baseline": "S-R13E stage-B FINAL", "paired_same_panel": True,
+FLAG_KEYS = ("emergency_braking", "secure_gap_veto", "lane_change_secure_gap", "emergency_onset")
+STOP_RULE = {"baseline": "S-R13E stage-B FINAL (resumed b2: runs/c4_wm_v10_round13e_b2/wm_s.pt)",
+             "paired_same_panel": True,
              "baseline_flags": "same_as_candidate: physics.emergency_braking, physics.secure_gap_veto, "
-                               "physics.lane_change_secure_gap, model.mainline_merge_yield_learnable",
+                               "physics.lane_change_secure_gap, physics.emergency_onset, "
+                               "model.mainline_merge_yield_learnable",
              "full_road_lane1_hdv_a_lt_minus3_share_ratio_gt": 2.0,
              "all_lane1_onestep_mae_delta_gt_mps2": 0.1,
-             "measurement_error": "STOP", "signal": "owned production pidfd SIGTERM only",
-             "stage_gate": "B needs A production verdict + A midrun CONTINUE; A postrun runs in "
-                           "parallel and must be CONTINUE before B's midrun measures (else STOP B)"}
+             "measurement_error": "ERROR recorded, never signals training",
+             "signal": "owned production pidfd SIGTERM only",
+             "stage_gate": "B starts as soon as A training ends (A production verdict, CPU only); "
+                           "A midrun AND postrun run in parallel with B; a real A STOP SIGTERMs B "
+                           "(awatch); A check ERROR is recorded only",
+             "init_gate": "b2 RUN_SUMMARY.json + 13E B midrun recheck CONTINUE (b2 postrun not awaited)",
+             "b2_postrun": "STOP => SIGTERM the owned R14 production and refuse later launches; "
+                           "ERROR/CONTINUE recorded only"}
 R14_SOURCE = ("configs/c4_wm_v10round14.toml", "configs/c4_wm_v10round14_stage_b.toml",
               "scripts/round14_gate.sh", "src/wms/train/round14_gate.py",
               "tests/test_r14_lane_secure_gap.py", "tests/test_r14_lowshare.py", "tests/test_r14_gate.py",
               "tools/r14_checks/ana_r14.py", "tools/r14_checks/mech.py", "tools/r14_checks/roll_r14.py",
-              "tools/r14_checks/sanity_roll.py", "tools/r14_checks/offline_report.py")
+              "tools/r14_checks/sanity_roll.py", "tools/r14_checks/offline_report.py",
+              "tests/test_loop14_emergency_onset.py", "scripts/round14b_autochain.sh")
 REQUIRED_SOURCE = tuple(dict.fromkeys(g.REQUIRED_SOURCE + R14_SOURCE))
 BASELINE_COMMIT = "65cc714e0e73c532583c61f1bbf0ea7d1d6f6b98"   # S-R13E launch code
 BASELINE_DIR = ".r14_baseline"
 OFFLINE_ARMS = ("13E", "13EL")
-#: 13E stage-B production schedule (13C recipe): 40 steps at 120 s, then 60 at 300 s.
-R13E_B_HISTORY = [120.0] * 40 + [300.0] * 60
+#: S-R13E stage-B resume (b2): the remaining 60 steps at 300 s from B's stage120 checkpoint.
+B2_HISTORY = [300.0] * 60
 
 
 def operational_root():
-    if ROOT.parent == REMOTE_ROOT and re.fullmatch(r"repo_r14_[0-9a-f]{8}", ROOT.name):
+    if ROOT.parent == REMOTE_ROOT and re.fullmatch(r"repo_r14b_[0-9a-f]{8}", ROOT.name):
         return REMOTE_ROOT
     return ROOT
 
@@ -112,6 +132,7 @@ def expected_config(stage):
     name = NAME if stage == "a" else f"{NAME}-STAGE-B"
     ref = load_train_config(REFERENCE[stage], [f"name={name}", f"model.init_from={init}",
                                                "physics.lane_change_secure_gap=true",
+                                               f"physics.emergency_onset={ONSET}",
                                                f"runtime.out_dir=runs/{RUN}_{stage}"])
     cfg = load_train_config(CONFIGS[stage])
     sources = tuple(replace(ref.data.c4_sources[0], name=n, path=p, mix_ratio=r, paired=pr)
@@ -127,6 +148,7 @@ def check_configs():
         require(cfg == expected, f"R14 stage {stage.upper()} differs from 13E + the registered R14 changes")
         require(cfg.physics.lane_change_secure_gap is True and cfg.physics.lane_learnable is True,
                 "R14 D1 lane-change secure gap must be ON (lane_learnable)")
+        require(cfg.physics.emergency_onset == ONSET, "S-R14B emergency_onset must be driver_b")
         require(cfg.physics.emergency_braking is True and cfg.physics.secure_gap_veto is True
                 and cfg.model.mainline_merge_yield_learnable is True, "13E switches must be ON")
         require(math.isclose(sum(s.mix_ratio for s in cfg.data.c4_sources), 1.0, abs_tol=1e-9),
@@ -164,20 +186,23 @@ def check_init(report, before, checkpoint, stage):
 
 # ------------------------------------------------------------------ evidence
 def check_13e_b(root, checkpoint):
-    """The 13E stage-B FINAL must exist, be complete, and have passed BOTH 13E B checks."""
+    """S-R14B init: the resumed 13E stage-B FINAL (b2) with RUN_SUMMARY.json, whose 40-step
+    stage120 parent passed the 13E B midrun RECHECK (CONTINUE).  The slow b2 postrun is not
+    awaited, but a b2 postrun STOP (or the b2watch STOP marker) refuses any R14 launch."""
     root, checkpoint = workspace_path(root), workspace_path(checkpoint)
-    require(checkpoint == root / INIT_REL, "init must be the 13E stage-B FINAL")
-    workspace_path(root / "runs/c4_wm_v10_round13e_b/RUN_SUMMARY.json")
+    require(checkpoint == root / INIT_REL, "init must be the resumed 13E stage-B FINAL (b2)")
+    workspace_path(root / B2_RUN / "RUN_SUMMARY.json")
+    require(not b2_stopped(root), "13E b2 postrun said STOP (R14 launches refused)")
+    recheck = read_json(root / B_RECHECK)
+    require(recheck.get("decision") == "CONTINUE", "13E B midrun recheck is not CONTINUE")
+    parent = recheck.get("checkpoints", {}).get("r10b", {}).get("sha256")
+    require(parent == digest(root / B_RUN / "wm_s_stage120.pt")
+            and read_json(root / B2_RUN / "INIT_FROM.json").get("sha256") == parent,
+            "b2 does not resume from the rechecked 13E B stage120 checkpoint")
     sha = digest(checkpoint)
-    for mode in ("midrun", "postrun"):
-        result = read_json(root / f"chk_r13e/b/{mode}/RESULT.json")
-        require(result.get("decision") == "CONTINUE", f"13E B {mode} check is not CONTINUE")
-    post = read_json(root / "chk_r13e/b/postrun/RESULT.json")
-    require(post.get("checkpoints", {}).get("r10b", {}).get("sha256") == sha,
-            "13E B postrun did not measure this FINAL")
     payload, loaded = g.strict_checkpoint(checkpoint)
-    require([r.get("stage_s") for r in payload.get("history") or []] == R13E_B_HISTORY,
-            "init is not the complete 100-step 13E stage-B FINAL")
+    require([r.get("stage_s") for r in payload.get("history") or []] == B2_HISTORY,
+            "init is not the complete 60-step 13E b2 FINAL")
     from wms.cli.assemble import build_physics
     require(asdict(loaded.model.physics) == asdict(build_physics(load_train_config(REFERENCE["b"]))),
             "init inference physics differs from the 13E stage-B recipe")
@@ -235,7 +260,7 @@ def prepare():
             "uncommitted source dependency: commit tested sources before preparing")
     subprocess.run(["git", "diff", "--quiet", "--no-ext-diff", "--no-textconv", sha, "--", *names],
                    cwd=ROOT, check=True)
-    target = REMOTE_ROOT / f"repo_r14_{sha[:8]}"
+    target = REMOTE_ROOT / f"repo_r14b_{sha[:8]}"
     require(not target.exists() and not target.is_symlink(), "prepared repo already exists")
     target.mkdir()
     files = g.export_sources(sha, names, target)
@@ -248,10 +273,10 @@ def prepare():
 
 
 def check_source():
-    require(operational_root() == REMOTE_ROOT, "launch requires the prepared repo_r14_<sha8> copy")
+    require(operational_root() == REMOTE_ROOT, "launch requires the prepared repo_r14b_<sha8> copy")
     doc = read_json(ROOT / SOURCE_MANIFEST)
     sha = doc.get("commit", "")
-    require(re.fullmatch(r"[0-9a-f]{40}", sha) and ROOT.name == f"repo_r14_{sha[:8]}",
+    require(re.fullmatch(r"[0-9a-f]{40}", sha) and ROOT.name == f"repo_r14b_{sha[:8]}",
             "archive source identity mismatch")
     files = doc.get("files", {})
     require(isinstance(files, dict) and all(g.source_name_allowed(n) for n in files)
@@ -287,6 +312,22 @@ def registration_expected(root, checkpoint, offline_report):
             "init": INIT_REL, "init_sha256": init_sha, "offline_sha256": digest(offline_report),
             "lowpen_manifest_sha256": LOWPEN, "stop_rule": STOP_RULE, "check_dir": f"chk_{TAG}",
             "outputs": {s: f"runs/{RUN}_{s}" for s in ("a", "b")}}
+
+
+def register(root, checkpoint, offline_report):
+    expected = registration_expected(root, checkpoint, offline_report)
+    root = workspace_path(root)
+    write_once(root / f"registration_{TAG}.json", expected)
+    recheck = read_json(root / B_RECHECK)
+    write_once(root / f"registration_{TAG}_launch_record.json", {
+        "registration_sha256": digest(root / f"registration_{TAG}.json"),
+        "init": INIT_REL, "init_sha256": expected["init_sha256"],
+        "b2_run_summary_sha256": digest(root / B2_RUN / "RUN_SUMMARY.json"),
+        "b_midrun_recheck": {"decision": recheck.get("decision"), "sha256": digest(root / B_RECHECK)},
+        "b2_postrun_at_registration": (read_json(root / B2_POSTRUN).get("decision")
+                                       if (root / B2_POSTRUN).is_file() else None),
+        "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+    return expected
 
 
 def check_registration(root, checkpoint, offline_report):
@@ -332,7 +373,8 @@ def preflight(root, checkpoint, offline_report):
 
 
 def production_ready(root, checkpoint, offline_report, stage):
-    """B: A production verdict + A MIDRUN CONTINUE (A postrun is NOT awaited; it gates B's midrun)."""
+    """S-R14B: B needs the A production verdict only (A's midrun and postrun run in parallel
+    with B and are watched by ``watch --name a``); any b2 / A real STOP refuses the launch."""
     registration = check_registration(root, checkpoint, offline_report)
     root, checkpoint = workspace_path(root), workspace_path(checkpoint)
     smoke_a = root / f"runs/smoke_{TAG}_a/wm_s.pt"
@@ -342,36 +384,14 @@ def production_ready(root, checkpoint, offline_report, stage):
     require(receipt == {"registration": registration, "a_sha256": digest(smoke_a),
                         "b_sha256": digest(root / f"runs/smoke_{TAG}_b/wm_s.pt")},
             "both-stage smoke receipt identity mismatch")
+    launch_guard(root, stage)
     if stage == "b":
         g.artifact_verdict(root, "a", checkpoint, production=True)
-        result = read_json(root / f"chk_{TAG}/a/midrun/RESULT.json")
-        require(result.get("decision") == "CONTINUE"
-                and result.get("registration_sha256") == digest(root / f"registration_{TAG}.json")
-                and result.get("checkpoints", {}).get("r10b", {}).get("sha256")
-                == digest(root / f"runs/{RUN}_a/wm_s_stage120.pt"),
-                "A midrun check missing/failed or checkpoint identity mismatch")
         return {"ok": True, "init_checkpoint": str(root / f"runs/{RUN}_a/wm_s.pt")}
     return {"ok": True, "init_checkpoint": str(checkpoint)}
 
 
 # ------------------------------------------------------------------ waiter
-A_POSTRUN_WAIT_S = 6 * 3600
-
-
-def a_postrun_continue(root):
-    """B midrun precondition: A's parallel postrun finished with CONTINUE (polls, fail closed)."""
-    path = root / f"chk_{TAG}/a/postrun/RESULT.json"
-    deadline = time.time() + A_POSTRUN_WAIT_S
-    while not path.is_file():
-        require(time.time() < deadline, "A postrun RESULT never appeared (fail closed)")
-        time.sleep(30)
-    result = read_json(path)
-    require(result.get("decision") == "CONTINUE", f"A postrun decision {result.get('decision')} (stop B)")
-    require(result.get("checkpoints", {}).get("r10b", {}).get("sha256") == digest(root / f"runs/{RUN}_a/wm_s.pt"),
-            "A postrun did not measure A FINAL")
-    return result
-
-
 def make_waiter(r13c, args):
     stage = args.stage
     install()
@@ -380,9 +400,12 @@ def make_waiter(r13c, args):
 
     class Waiter(Base):
         def measure(self, checkpoint):
-            if stage == "b" and self.mode == "midrun":
-                self.a_postrun = a_postrun_continue(self.root)
-            return measure_r14(self, r13c, checkpoint)
+            try:
+                return measure_r14(self, r13c, checkpoint)
+            except Exception as exc:
+                # Lesson (13E B): a measurement error is recorded, never converted into a STOP.
+                return {"decision": "ERROR", "reasons": [
+                    f"measurement error (recorded, no signal): {type(exc).__name__}: {exc}"]}
 
         def snapshot(self, src, name):
             src = workspace_path(src)
@@ -404,7 +427,9 @@ def make_waiter(r13c, args):
 
         def command(self, script, *values):
             if Path(str(script)).name == "run_onestep.py":
-                values += ("--arm-set", "r9=physics.lane_change_secure_gap=false")
+                # The as-trained round-9 context arm runs all-OFF: no D1 mask, plant onset.
+                values += ("--arm-set", "r9=physics.lane_change_secure_gap=false",
+                           "--arm-set", "r9=physics.emergency_onset=plant")
             return Base.command(self, script, *values)
 
         def execute(self):
@@ -483,7 +508,6 @@ def measure_r14(self, r13c, checkpoint):
             "checkpoints": checkpoints, "provenance": provenance, "one_step": mae,
             "one_step_windows": done.get("windows") or read_json(os_dir / "ONESTEP_DONE.json")["windows"],
             "full_road_60s_hard_brakes": brakes,
-            "a_postrun": getattr(self, "a_postrun", {}).get("decision"),
             "registration": read_json(registration), "registration_sha256": digest(registration)}
 
 
@@ -502,18 +526,153 @@ def wait_registered(args):
     return waiter.execute()
 
 
+# ------------------------------------------------------------------ STOP watchers
+WATCH_POLL_S = 60
+WATCH_MAX_S = 30 * 3600
+KILL_WINDOW_S = 15 * 60
+#: name -> (watched RESULT files, R14 stages a real STOP terminates, marker under chk_r14/).
+WATCHES = {"b2": ((B2_POSTRUN,), ("a", "b"), B2_STOP_MARKER),
+           "a": ((f"chk_{TAG}/a/midrun/RESULT.json", f"chk_{TAG}/a/postrun/RESULT.json"), ("b",),
+                 "A_CHECK_STOP.json")}
+
+
+def real_stop(result):
+    """A rule-breach STOP.  Inherited 13C waiters label wait/measurement failures in midrun mode
+    as STOP with 'measurement error' reasons; those are recorded only (lesson 13E B)."""
+    reasons = [str(r) for r in result.get("reasons") or []]
+    return result.get("decision") == "STOP" and not (
+        reasons and all(r.startswith("measurement error") for r in reasons))
+
+
+def watch_stopped(root, name):
+    """True when the watch ``name`` has a marker or an already-written real-STOP RESULT."""
+    root = Path(root)
+    results, _, marker = WATCHES[name]
+    if (root / f"chk_{TAG}" / marker).exists():
+        return True
+    for rel in results:
+        path = root / rel
+        try:
+            if path.is_file() and real_stop(read_json(path)):
+                return True
+        except Exception:
+            continue  # unreadable evidence is recorded by the watcher, never a stop
+    return False
+
+
+def b2_stopped(root):
+    return watch_stopped(root, "b2")
+
+
+def launch_guard(root, stage):
+    """Refuse a launch after a real STOP of its parents (b2 for A and B; A checks for B)."""
+    require(not watch_stopped(root, "b2"), "13E b2 postrun said STOP (R14 launches refused)")
+    if stage == "b":
+        require(not watch_stopped(root, "a"), "R14 A check said STOP (B launch refused)")
+    return {"ok": True}
+
+
+def owned_productions(root, r13c, stages):
+    """R14 productions this chain launched (pid + start-ticks files written before exec)."""
+    out = []
+    for stage in stages:
+        pid_file = root / f"production_{TAG}_{stage}.pid"
+        ticks_file = root / f"production_{TAG}_{stage}.ticks"
+        if not (pid_file.is_file() and ticks_file.is_file()):
+            continue
+        try:
+            out.append((stage, r13c.ProductionProcess(int(pid_file.read_text().strip()),
+                                                      root / f"runs/{RUN}_{stage}",
+                                                      int(ticks_file.read_text().strip()))))
+        except Exception:
+            continue  # gone or invalid: nothing owned to signal
+    return out
+
+
+def stop_watch(root, r13c, name, *, poll=None, max_s=None, kill_window=None):
+    """Watch the RESULT files of ``name``.  Each RESULT is recorded once.  A real STOP writes the
+    marker (refuses later launches), then SIGTERMs the owned live R14 productions of the watched
+    stages via pidfd for ``kill_window`` seconds (covers a launch racing the marker).  ERROR,
+    CONTINUE, unreadable or missing RESULTs are recorded only and never signal."""
+    poll = WATCH_POLL_S if poll is None else poll
+    max_s = WATCH_MAX_S if max_s is None else max_s
+    kill_window = KILL_WINDOW_S if kill_window is None else kill_window
+    root = Path(root)
+    results, stages, marker = WATCHES[name]
+    (root / f"chk_{TAG}").mkdir(exist_ok=True)
+    pending, stop, records = list(results), None, []
+    deadline = time.time() + max_s
+    while pending and stop is None:
+        for rel in list(pending):
+            path = root / rel
+            if not path.is_file():
+                continue
+            time.sleep(min(poll, 5))  # the waiter writes RESULT.json in one call; let it settle
+            try:
+                result = read_json(path)
+                doc = {"result": rel, "decision": result.get("decision"), "reasons": result.get("reasons"),
+                       "real_stop": real_stop(result), "result_sha256": digest(path)}
+            except Exception as exc:
+                doc = {"result": rel, "decision": "UNREADABLE", "real_stop": False,
+                       "error": f"{type(exc).__name__}: {exc}"}
+            doc["seen"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+            records.append(doc)
+            pending.remove(rel)
+            if doc["real_stop"]:
+                stop = doc
+                break
+        if pending and stop is None:
+            if time.time() >= deadline:
+                records.append({"pending": pending, "note": "RESULT never appeared (recorded only)"})
+                break
+            time.sleep(poll)
+    record = root / f"chk_{TAG}/{name}_watch.json"
+    if stop is None:
+        write_once(record, {"watch": name, "records": records, "action": "none (recorded only)"})
+        return 0
+    write_once(root / f"chk_{TAG}" / marker, stop)
+    signals = []
+    end = time.time() + kill_window
+    while True:
+        for stage, process in owned_productions(root, r13c, stages):
+            if process.is_production():
+                signals.append({"stage": stage, "pid": process.pid, "signal": process.terminate()})
+        if time.time() >= end:
+            break
+        time.sleep(min(poll, 10))
+    write_once(record, {"watch": name, "records": records, "signals": signals,
+                        "action": f"real STOP: marker {marker}; owned {'/'.join(stages)} productions signalled"})
+    return 0
+
+
+def load_r13c():
+    import importlib.util
+    path = workspace_path(ROOT / "scripts/round13c_waiter.py")
+    spec = importlib.util.spec_from_file_location("r14_watch_waiter", path)
+    r13c = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(r13c)
+    return r13c
+
+
 def main(argv=None):
     install()
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("config")
     sub.add_parser("prepare")
-    for command in ("registered", "registration-template", "production-ready", "smoke-complete", "preflight"):
+    for command in ("registered", "registration-template", "register", "production-ready", "smoke-complete",
+                    "preflight"):
         cmd = sub.add_parser(command)
         for flag in ("root", "init-checkpoint", "offline-report"):
             cmd.add_argument("--" + flag, required=True)
         if command == "production-ready":
             cmd.add_argument("--stage", choices=("a", "b"), required=True)
+    watch = sub.add_parser("watch")
+    watch.add_argument("--root", required=True)
+    watch.add_argument("--name", required=True, choices=tuple(WATCHES))
+    guard = sub.add_parser("launch-guard")
+    guard.add_argument("--root", required=True)
+    guard.add_argument("--stage", required=True, choices=("a", "b"))
     waiter = sub.add_parser("waiter")
     for flag in ("root", "ready"):
         waiter.add_argument("--" + flag, required=True)
@@ -537,9 +696,19 @@ def main(argv=None):
             result = prepare()
         elif args.command == "waiter":
             return wait_registered(args)
+        elif args.command == "watch":
+            check_source()
+            return stop_watch(workspace_path(args.root), load_r13c(), args.name)
+        elif args.command == "launch-guard":
+            result = launch_guard(workspace_path(args.root), args.stage)
         elif args.command == "registered":
             result = {"ok": True, "registration": check_registration(
                 args.root, args.init_checkpoint, args.offline_report)}
+        elif args.command == "register":
+            # S-R14B auto-launch: write the registration (init sha known only once b2 ended)
+            # exactly once, plus a launch record of the evidence state at that moment.
+            result = {"ok": True, "registration": register(args.root, args.init_checkpoint,
+                                                           args.offline_report)}
         elif args.command == "registration-template":
             # Prints the exact document an operator must write as registration_r14.json.
             result = {"ok": True, "registration": registration_expected(

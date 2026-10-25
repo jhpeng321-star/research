@@ -44,7 +44,7 @@ def test_validation_and_default_omitted():
     assert PhysicsConfig().emergency_onset == "plant"
     cfg = load_train_config("configs/c4_wm_v10round13e_stage_b.toml")
     assert "emergency_onset" not in cfg.to_legacy_flat()           # old configs/fingerprints unchanged
-    ft = load_train_config("configs/c4_wm_loop14_ft.toml", ['model.init_from="x.pt"'])
+    ft = load_train_config("configs/c4_wm_v10round14.toml")   # S-R14B: ON in the round-14 configs
     assert ft.physics.emergency_onset == "driver_b" and ft.to_legacy_flat()["emergency_onset"] == "driver_b"
 
 
