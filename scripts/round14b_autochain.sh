@@ -24,9 +24,11 @@ mkdir "$L/.round14b_autochain.lock"
 printf '%s\n' "$$" > "$L/.round14b_autochain.lock/pid"
 "$PY" -B -m wms.train.round14_gate config
 
+# Start ticks of a live PID; "gone" when absent or a zombie/dead (Z/X; review #1).
 ticks() { "$PY" -B -c 'import pathlib,sys
-try: print(pathlib.Path("/proc/"+sys.argv[1]+"/stat").read_text().rsplit(")",1)[1].split()[19])
-except FileNotFoundError: print("gone")' "$1"; }
+try: f = pathlib.Path("/proc/"+sys.argv[1]+"/stat").read_text().rsplit(")",1)[1].split()
+except FileNotFoundError: f = None
+print("gone" if f is None or f[0] in ("Z", "X") else f[19])' "$1"; }
 log "waiting for b2 training PID $B2_PID (ticks $B2_TICKS) to exit"
 for ((i=0; i<16*60; i++)); do
     [ "$(ticks "$B2_PID")" = "$B2_TICKS" ] || break
@@ -44,6 +46,8 @@ mkdir -p "$L/chk_r14"
 CUDA_VISIBLE_DEVICES= nohup nice -n 19 "$PY" -B -u -m wms.train.round14_gate watch --root "$L" --name b2 \
     > "$L/chk_r14/b2_watch.log" 2>&1 < /dev/null &
 printf '%s\n' "$!" > "$L/chk_r14/b2_watch.pid"
+for ((i=0; i<120; i++)); do [ -f "$L/chk_r14/b2_watch_ready.json" ] && break; sleep 1; done
+[ -f "$L/chk_r14/b2_watch_ready.json" ] || { log "b2 STOP watcher did not arm; stop (fail closed)"; exit 12; }
 log "production A then B"
 bash "$REPO/scripts/round14_gate.sh" --chain --offline-report "$OFFLINE" --wait
 log "chain finished (B production exited)"

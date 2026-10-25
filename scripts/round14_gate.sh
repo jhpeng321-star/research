@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # S-R14 gate (patterned on round13e_gate.sh). No arguments: CPU config validation only.
 # Future operator commands (separate, explicit):
-#   --prepare                          git archive HEAD -> repo_r14_<sha8>; no training
+#   --prepare                          git archive HEAD -> repo_r14b_<sha8>; no training
 #   --registration-template --offline-report PATH   print the exact registration_r14.json body
-#   --smoke --offline-report PATH      A 2x120 from 13E B FINAL, then B 2x120+2x300 from A smoke FINAL
+#   --smoke --offline-report PATH      A 2x120 from 13E b2 FINAL, then B 2x120+2x300 from A smoke FINAL
 #   --launch-a --offline-report PATH   production A (after both smoke verdicts)
 #   --launch-b --offline-report PATH   A production verdict only (CPU), then B from A FINAL
 #   --chain --offline-report PATH      --launch-a, then --launch-b as soon as A training exits
@@ -65,8 +65,8 @@ gpu_guard() {
 }
 # Disk guard: space on the run filesystem (operational, never deletes).  Expected S-R14B use
 # (13E measured): core-test basetemp ~0.5 GB, smokes 2 x 15 MB, runs 2 x ~20 MB, check work ~0.45 GB per
-# stage (postrun one-step tables), watch records < 1 MB: ~1.5 GB from the smoke on, ~0.5 GB
-# from the B launch on.  Thresholds keep >= 0.5 GB margin above that (MB).
+# stage (postrun one-step tables), watch records < 1 MB: ~1.5 GB from the smoke on, ~1.0 GB
+# from each launch on (both stages' checks may still be pending).  Thresholds in MB.
 disk_guard() {
     local NEED_MB=$1 FREE_KB
     FREE_KB=$(df -Pk "$L" | awk 'NR==2 {print $4}')
@@ -142,7 +142,7 @@ for artifact in "$OUT" "$L/production_${TAG}_$STAGE.log" "$L/chk_${TAG}/$STAGE";
     [ ! -e "$artifact" ] && [ ! -L "$artifact" ] || { echo "prior production artifact: $artifact" >&2; exit 4; }
 done
 gpu_guard
-if [ "$STAGE" = a ]; then disk_guard 1500; else disk_guard 1000; fi
+if [ "$STAGE" = a ]; then disk_guard 1500; else disk_guard 1500; fi  # B: A + B checks still to come
 mkdir "$L/.round${TAG#r}_production_$STAGE.lock"
 if [ "$STAGE" = a ]; then
     CONFIG=$A; INIT=$CK
@@ -151,8 +151,8 @@ else
     # smoke FINAL; A FINAL passed the strict production verdict in production-ready).
     CONFIG=$B; INIT=$L/runs/${RUN}_a/wm_s.pt
 fi
-# Arm both checks BEFORE exec, against this PID and its start ticks (13E). The postrun check of
-# A outlives A and runs in parallel with B; B's midrun check consumes its RESULT.
+# Arm both checks BEFORE exec, against this PID and its start ticks (13E). A's checks outlive A
+# and run in parallel with B; `watch --name a` (armed below for B) acts on their RESULTs.
 START_TICKS=$("$PYTHON" -B -c 'import pathlib,sys; print(pathlib.Path("/proc/"+sys.argv[1]+"/stat").read_text().rsplit(")",1)[1].split()[19])' "$$")
 mkdir -p "$L/chk_${TAG}/$STAGE"
 for CHECK in midrun postrun; do
@@ -176,6 +176,8 @@ if [ "$STAGE" = b ]; then
     CUDA_VISIBLE_DEVICES= nohup nice -n 19 "$PYTHON" -B -u -m wms.train.round14_gate watch --root "$L" --name a \
         > "$L/chk_${TAG}/a_watch.log" 2>&1 < /dev/null &
     printf '%s\n' "$!" > "$L/chk_${TAG}/a_watch.pid"
+    for ((i=0; i<120; i++)); do [ -f "$L/chk_${TAG}/a_watch_ready.json" ] && break; sleep 1; done
+    test -f "$L/chk_${TAG}/a_watch_ready.json"   # fail closed: no B without its STOP watcher
 fi
 printf '%s\n' "$$" > "$L/production_${TAG}_$STAGE.pid"
 printf '%s\n' "$START_TICKS" > "$L/production_${TAG}_$STAGE.ticks"

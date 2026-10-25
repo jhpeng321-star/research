@@ -7,8 +7,7 @@ globals (tag, run, configs, flag keys, source allowlist).  R14-specific parts:
 * recipe: the 13E stage A / stage B configs plus EXACTLY three registered differences per stage:
   ``physics.lane_change_secure_gap = true`` (D1), the seven-source data mix with the S-LOWPEN
   packs (D3) and ``data.replay.low_share_oversample = 1.69`` (D3); new names / init / outputs;
-* init: the 13E stage-B FINAL (A) whose own 13E midrun AND postrun checks said CONTINUE;
-  stage B starts from R14 A FINAL;
+* init: S-R14B uses the resumed 13E stage-B FINAL (b2; see below); stage B starts from R14 A FINAL;
 * stop rule: 13E's paired thresholds, reference = 13E stage-B FINAL evaluated with the SAME
   R14 switches (emergency, gs, learned yield, lane-change secure gap) in the same invocation;
 * S-R14B (2026-10-25): ``physics.emergency_onset = "driver_b"`` (S-TTC, c4/loop14 68366f88) ON
@@ -499,8 +498,15 @@ def measure_r14(self, r13c, checkpoint):
     if (done.get("n_states"), done.get("k"), done.get("steps")) != (24, 1, 120):
         raise ValueError("invalid rollout completion receipt")
     brakes = r13c.hard_brakes(roll, ("r10b", "r12c", "r9"))
-    reasons = r13c.stop_reasons(brakes["r10b"]["share"], brakes["r12c"]["share"],
-                                mae["r10b"]["mae"], mae["r12c"]["mae"])
+    cand = (brakes["r10b"]["share"], mae["r10b"]["mae"])
+    ref = (brakes["r12c"]["share"], mae["r12c"]["mae"])
+    if all(math.isfinite(x) for x in ref) and not all(math.isfinite(x) for x in cand):
+        # Review #7: the same-panel reference measured fine, the candidate did not: a diverged
+        # candidate is a rule breach (STOP), not a measurement error.
+        reasons = ["candidate paired measurement non-finite on a finite same-panel reference (diverged)"]
+    else:
+        reasons = r13c.stop_reasons(brakes["r10b"]["share"], brakes["r12c"]["share"],
+                                    mae["r10b"]["mae"], mae["r12c"]["mae"])
     registration = workspace_path(self.root / f"registration_{TAG}.json")
     return {"decision": "STOP" if reasons else "CONTINUE", "reasons": reasons,
             "labels": {"r10b": f"R14 {self.stage_label} candidate",
@@ -528,6 +534,7 @@ def wait_registered(args):
 
 # ------------------------------------------------------------------ STOP watchers
 WATCH_POLL_S = 60
+WATCH_READ_TRIES = 10
 WATCH_MAX_S = 30 * 3600
 KILL_WINDOW_S = 15 * 60
 #: name -> (watched RESULT files, R14 stages a real STOP terminates, marker under chk_r14/).
@@ -600,7 +607,9 @@ def stop_watch(root, r13c, name, *, poll=None, max_s=None, kill_window=None):
     root = Path(root)
     results, stages, marker = WATCHES[name]
     (root / f"chk_{TAG}").mkdir(exist_ok=True)
-    pending, stop, records = list(results), None, []
+    write_once(root / f"chk_{TAG}/{name}_watch_ready.json", {"watch": name, "pid": os.getpid(),
+                                                           "results": list(results), "stages": list(stages)})
+    pending, stop, records, tries = list(results), None, [], {}
     deadline = time.time() + max_s
     while pending and stop is None:
         for rel in list(pending):
@@ -613,6 +622,9 @@ def stop_watch(root, r13c, name, *, poll=None, max_s=None, kill_window=None):
                 doc = {"result": rel, "decision": result.get("decision"), "reasons": result.get("reasons"),
                        "real_stop": real_stop(result), "result_sha256": digest(path)}
             except Exception as exc:
+                tries[rel] = tries.get(rel, 0) + 1
+                if tries[rel] < WATCH_READ_TRIES:   # review #4: maybe half-written; retry
+                    continue
                 doc = {"result": rel, "decision": "UNREADABLE", "real_stop": False,
                        "error": f"{type(exc).__name__}: {exc}"}
             doc["seen"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
