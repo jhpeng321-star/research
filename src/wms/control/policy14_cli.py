@@ -86,6 +86,11 @@ def main(argv=None):
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--compact", action="store_true", help="print status/summary path only")
+    parser.add_argument("--resume", default=None,
+                        help="LOOP14: continue a c4_dreamer/3 trainer checkpoint (policy, critic, "
+                             "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
+    parser.add_argument("--critic-warmup-updates", type=int, default=None,
+                        help="override policy14.critic_warmup_updates (e.g. on fresh current-policy returns)")
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -162,9 +167,23 @@ def main(argv=None):
                                   counterfactual=CounterfactualConfig(**raw["counterfactual"]),
                                   real_return_provider=provider)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
-        warmup = warm_start_real_critic(trainer, updates=int(switches["critic_warmup_updates"]))
+        resumed = None
+        if args.resume:
+            import os
+            resume = checked_path(args.resume)
+            # Same ensemble size, possibly a refreshed (accepted) WM: dreamer.load_checkpoint's
+            # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
+            os.environ["WMS_LOOP_REFRESH"] = "1"
+            trainer.load_checkpoint(resume)
+            resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
+                       "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+        warm_updates = (int(switches["critic_warmup_updates"]) if args.critic_warmup_updates is None
+                        else int(args.critic_warmup_updates))
+        if warm_updates < 0:
+            raise ValueError("critic warm-up updates must be >= 0")
+        warmup = warm_start_real_critic(trainer, updates=warm_updates)
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,
-                       wm_members=receipts, probes=probes, critic_warmup=warmup)
+                       wm_members=receipts, probes=probes, critic_warmup=warmup, resumed_from=resumed)
         # Independent development starts and paired draws, scored without a critic tail.
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
@@ -203,7 +222,7 @@ def main(argv=None):
                        real_returns_file=str(provider.path), real_return_source=provider.provenance["source_kind"],
                        real_return_targets=int(provider._returns.numel()),
                        independent_score_before=initial_score, independent_score=before,
-                       actor_from_scratch=True,
+                       actor_from_scratch=resumed is None, resumed_from=resumed,
                        ensemble_epistemic_available=len(models) > 1,
                        deployment_calibration_supported=False,
                        lane_mask_hook=lane_rules.secure_gap_hook if lane_rules else None,

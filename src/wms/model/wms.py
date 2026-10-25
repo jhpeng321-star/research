@@ -2187,11 +2187,14 @@ class WmSModel(nn.Module):
             elif "driver_parameters" in out:
                 callback_state["inferred_driver_parameters"] = out["driver_parameters"]
             callback_state["inferred_idm_delta"] = self.physics.idm()[4]
-            if self.physics.secure_gap_veto:
-                settings = driver_params
-                if settings is None:
-                    settings = {name: out["driver_parameters"][..., i]
-                                for i, name in enumerate(PARAMETER_NAMES)}
+            settings = driver_params
+            if settings is None and "driver_parameters" in out:
+                settings = {name: out["driver_parameters"][..., i]
+                            for i, name in enumerate(PARAMETER_NAMES)}
+            # LOOP14 fix: a step output without learned settings (e.g. the merge-pivot
+            # recorded-geometry pass of a timeline-command window) exports no gs inputs;
+            # a consumer that needs them fails closed on the missing keys.
+            if self.physics.secure_gap_veto and settings is not None:
                 # R13E gs (review B3) has no standstill term: T and b only.
                 for key, name in (("secure_gap_T_s", "time_headway"),
                                   ("secure_gap_b_mps2", "decel")):
