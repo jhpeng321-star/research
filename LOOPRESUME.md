@@ -167,3 +167,41 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
   Compact local receipt `tools/loopresume/receipts_c1collect/RESULT.json`.
   **Renewed collection authority consumed: OPERATIONAL_PAUSED; main decides
   repair/further attempt and accounting. No additional launch is armed.**
+
+## S-C1COLLECT2 — exact asset repair; preflight checker failed, OPERATIONAL_PAUSED (2026-10-27 05:47 UTC+8)
+
+- Main05:45 amendment appended to shared register and loop events/registration:
+  cycle1 attempt allowance **73,866** (+2,841), included long-credit15,000,
+  total210,000, no refunds; same13 reservations968157–968169 and policy64f70af4...
+  preserved. One conditional canary-first collection allowed only after parity and
+  both preflights PASS. **No canary/remainder dispatched; no launch armed.**
+- Successful cycle0 receipts968144/cpuP and968145/cpuQ identify the original
+  `restart20261026/runtime`. Compared all accessible runtime/input trees, including
+  symlinked assets; installed **480 missing permissible files/312,914bytes per CPU**
+  from identical originals with SHA verification. CIRCLES modelSHA
+  `762fde0763c693c0e88f41b98b22fc0a11135a312b78c4c567e6211a3035ccee`,
+  baseline sidecars and PI dependencies restored. Source-overlay differences retained;
+  protected paths/route assignments pruned, template checked by same-original
+  filesystem identity only; generated runs/bytecode excluded. Identical CPU parity
+  receiptSHA`0796259a7b69a9e096e660e21756c5f992db41543746332ef7ea931db0b4b0a2`.
+- **cpuP preflight FAIL; cpuQ NOT RUN after fail-stop.** Collector import completed;
+  adapter/model/network hashes verified. Checker then incorrectly demanded
+  `/home/ubuntu/c4/main14/restart20261026/runtime_c1/assets/research/migration_manifest.json`.
+  That file is absent in both original/successor runtimes on both CPUs, but is
+  **unused by this adapter's ordinary direct network path**. This failure is a
+  checker bug, not proof of another collector-required missing asset. ONNX and
+  learned-policy loads were not reached. No corrected preflight/retry performed.
+- **Charged139,540/210,000 unchanged; additional0; remaining70,460.** Cyclecharged
+  36,933/73,866; included long-credit7,800/15,000. Guard unavailable; convert/WM1/
+  check pending. Main priority inactive because collection never launched. SSH argv
+  fix was already installed. WM0 coordinator62645/start841871931 live; trainer62910
+  no longer live at observation; neither was signalled or altered by this task.
+- gpuA `C1COLLECT2_RESULT.json` SHA
+  `1a77f0837f2c9942194183640313e2eb978a28475966dd254cf23c779bac58aa`;
+  registrationSHA`45b05c95741957f2459a16786fe00c343574c48f0c1b9e05e1e995600e09292e`.
+  Source/preflight/parity receipts and old state/pause/register retained; compact
+  local `tools/loopresume/receipts_c1collect2/RESULT.json`. **OPERATIONAL_PAUSED;
+  main decision required before corrected preflight/launch.** No push.
+- Handoff integrity check PASS: `python -B -m tools.loopresume.verify_c1collect2`
+  verifies source syntax/SHA, remote result/register/state bindings, unchanged charges
+  and the paused driver; it does not rerun preflight or simulation.
