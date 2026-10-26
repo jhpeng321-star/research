@@ -1,0 +1,35 @@
+[
+  {
+    "checkpoint": "seeded_initialization",
+    "n": 372,
+    "deterministic_mean": -0.7499287724494934,
+    "deterministic_std": 0.012985093519091606,
+    "deterministic_min": -0.7756605744361877,
+    "deterministic_max": -0.707321047782898,
+    "negative_fraction": 1.0,
+    "latent_mean": 0.07158736139535904,
+    "latent_sigma_mean": 0.9527594447135925
+  },
+  {
+    "checkpoint": "policy_000100.pt",
+    "n": 372,
+    "deterministic_mean": -0.43438950181007385,
+    "deterministic_std": 0.10996527224779129,
+    "deterministic_min": -0.6976492404937744,
+    "deterministic_max": -0.21851181983947754,
+    "negative_fraction": 1.0,
+    "latent_mean": 0.22614747285842896,
+    "latent_sigma_mean": 1.0027319192886353
+  },
+  {
+    "checkpoint": "policy_latest.pt",
+    "n": 372,
+    "deterministic_mean": -0.3672201931476593,
+    "deterministic_std": 0.13874784111976624,
+    "deterministic_min": -0.6996561884880066,
+    "deterministic_max": -0.10422956943511963,
+    "negative_fraction": 1.0,
+    "latent_mean": 0.2606554329395294,
+    "latent_sigma_mean": 1.0170466899871826
+  }
+]
