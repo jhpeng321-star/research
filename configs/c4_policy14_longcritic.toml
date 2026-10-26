@@ -13,3 +13,7 @@ native_warmup_updates = 100
 long_persistence = true
 persistence_curriculum_updates = [0, 150]
 persistence_seconds = [30.0, 60.0]
+
+[real_share]
+enabled = true
+updates = 20

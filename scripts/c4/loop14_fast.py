@@ -83,8 +83,12 @@ def _world(loop, cfg, state, ph, root, item, box, attempt):
     if loop.long_group_sim_s(cfg):
         c = one["collect"]
         point = (int(item["index"]) + int(state["cycles"][-1]["cycle"])) % int(c["branch_points"])
-        c["sumocredit"] = {**c.get("sumocredit", {}), "long_group_horizon": 300,
-                           "long_group_time": int(c["branch_first"]) + point * int(c["branch_cadence"])}
+        time_s = int(c['branch_first']) + point * int(c['branch_cadence'])
+        c["sumocredit"] = {**c.get("sumocredit", {}),
+                           'long_group_horizon': 300 if c.get('long_group', {}).get('enabled') else 0,
+                           'long_group_time': time_s,
+                           'long_single_horizon': 300 if c.get('long_single_hold', {}).get('enabled') else 0,
+                           'long_single_time': time_s}
     receipt = loop.run_collect(one, copy.deepcopy(state), {**ph, "attempt": attempt}, local,
                                _seeds=[item["seed"]])
     h = loop.host(one, "cpu")
@@ -165,7 +169,8 @@ def collect(loop, cfg, state, ph, root):
         pending.append((item, box, attempt))
     charge = per_world * len(pending)
     long_per_world = loop.long_group_sim_s(cfg) // int(cfg["collect"]["worlds_per_cycle"])
-    long_charged = sum(row.get("long_group_sim_s_charged", 0) for row in charges if row["cycle"] == k)
+    long_charged = sum(row.get('long_credit_sim_s_charged', row.get("long_group_sim_s_charged", 0))
+                       for row in charges if row["cycle"] == k)
     if long_charged + long_per_world * len(pending) > 8000:
         raise loop.Refused("long GROUP attempts exceed 8,000 additional sim-s/cycle (no refunds)")
     if doc["charged"] + charge > reg["budget"]["sim_s_per_cycle"]:
@@ -177,7 +182,10 @@ def collect(loop, cfg, state, ph, root):
         doc["attempts"][str(item["seed"])] = attempt
         loop.append(root / "seed_ledger.jsonl", {"cycle": k, "seed": item["seed"], "host": box,
                     "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt",
-                    **({"long_group_sim_s_charged": long_per_world} if long_per_world else {})})
+                    **({"long_credit_sim_s_charged": long_per_world,
+                        "long_group_sim_s_charged": 300 if cfg['collect'].get('long_group', {}).get('enabled') else 0,
+                        "long_single_sim_s_charged": 300 if cfg['collect'].get('long_single_hold', {}).get('enabled') else 0}
+                       if long_per_world else {})})
     doc["charged"] += charge
     state["sim_s_charged"] += charge
     loop.save_state(cfg, state)
@@ -253,6 +261,13 @@ def convert(loop, cfg, state, ph, root):
            "episodes": len(episodes), "pair_groups": len({e["pair_key"] for e in episodes}),
            "targets": loop.read_json(returns.with_suffix(".receipt.json"))["targets"],
            "durable_world_artifacts": [w["artifact"] for w in worlds]}
+    if cfg['policy'].get('longcritic'):
+        native = root/'returns'/f'native_returns_{tag}.npz'
+        native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', str(target),
+                      '--output', str(native), '--kind', 'B']
+        if loop.run_cmd(h, native_cmd, env=env, log=log, timeout_s=3600):
+            raise RuntimeError('merged native B real-return export failed')
+        out.update(native_returns=str(native), native_returns_sha256=loop.sha256(native))
     if cfg["collect"].get("sumocredit") or loop.long_group_sim_s(cfg):
         local = copy.deepcopy(cfg)
         local["hosts"]["cpu"] = local["hosts"]["gpu"]

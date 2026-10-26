@@ -299,11 +299,12 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
     if extras is not None:
         block["sumocredit"] = extras.write(branch_root, extra_out)
         block["sim_s"] += block["sumocredit"]["sim_s"]
-        if extras.long_group_horizon:
+        if extras.long_group_horizon or extras.long_single_horizon:
             for p in extra_out:
-                rec = p.get("credit_long", {})
-                block["collisions"] += rec.get("extra_collisions", 0)
-                block["teleports"] += rec.get("extra_teleports", 0)
+                for key in ('credit_long', 'single_long'):
+                    rec = p.get(key, {})
+                    block["collisions"] += rec.get("extra_collisions", 0)
+                    block["teleports"] += rec.get("extra_teleports", 0)
     write_json(branch_root / "BRANCHES_COMPLETE.json", _jsonable(block))
     return {"summary": base_summary, "branches": block}
 

@@ -1,0 +1,66 @@
+{
+  "selected_share": 1.0,
+  "source_sha256": "6756b3cb8a5295e8385cec3fbca9f4b5c2e64924c8074673e2b54f7e86f82cfa",
+  "initial_critic_sha256": "a73c381eb6f53fc842a4e2da0ac5071b753b6309828e7c69f23b6548339d2efd",
+  "policy_sha256": "fa2427772a49e9462c0be3172e402c515616a15e2930a263e1eafeacb23a0d5d",
+  "wm_ids": [
+    "eeb54557d5704c903ae089d8e979b6733634314feec2668ad7fba98930a62ec0"
+  ],
+  "updates_per_candidate": 20,
+  "fit_worlds": [
+    968129,
+    968130,
+    968131,
+    968132,
+    968133,
+    968134,
+    968136,
+    968139,
+    968140,
+    968141
+  ],
+  "development_worlds": [
+    968135,
+    968137,
+    968138
+  ],
+  "worlds": [
+    968135,
+    968137,
+    968138
+  ],
+  "candidates": {
+    "0.3": {
+      "mse_raw": 194130308.81051055,
+      "delta_mean": 0.0,
+      "delta_upper95": 0.0,
+      "eligible": true
+    },
+    "0.5": {
+      "mse_raw": 153744453.95129982,
+      "delta_mean": -40385854.85921073,
+      "delta_upper95": -21329693.070061784,
+      "eligible": true
+    },
+    "0.7": {
+      "mse_raw": 133019761.81389414,
+      "delta_mean": -61110546.99661642,
+      "delta_upper95": -26271864.053405717,
+      "eligible": true
+    },
+    "0.9": {
+      "mse_raw": 124436527.63294871,
+      "delta_mean": -69693781.17756185,
+      "delta_upper95": -21599708.002108067,
+      "eligible": true
+    },
+    "1.0": {
+      "mse_raw": 123192370.0600565,
+      "delta_mean": -70937938.75045408,
+      "delta_upper95": -16976055.960190505,
+      "eligible": true
+    }
+  },
+  "rule": "largest share with paired world-bootstrap upper95(MSE_share-MSE_0.3)<=0",
+  "selected_critic_sha256": "1cfd9b2766ff5b74991101988049ce92826528a819529c491965f05560391212"
+}

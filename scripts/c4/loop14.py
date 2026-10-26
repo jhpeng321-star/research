@@ -167,15 +167,17 @@ def collect_sim_s(cfg) -> int:
 
 
 def long_group_sim_s(cfg):
-    """Reserve one full 300 s GROUP per world, never count reused prefixes twice."""
+    """Combined long-credit reserve (historical helper name retained for compatibility)."""
     c = cfg["collect"]
     x = c.get("long_group", {})
-    if not x.get("enabled", False):
+    single = c.get('long_single_hold', {})
+    if not x.get("enabled", False) and not single.get('enabled', False):
         return 0
-    if (x.get("enabled") is not True or int(c["branch_horizon"]) < 300
+    if (any(type(v.get('enabled', False)) is not bool for v in (x, single))
+            or int(c["branch_horizon"]) < 300
             or not fast_enabled(cfg, "two_box") or int(c["branch_points"]) < 1):
-        raise Refused("long GROUP requires two_box, >=1 point and existing >=300 s branches")
-    total = 300 * int(c["worlds_per_cycle"])
+        raise Refused("long credit requires boolean flags, two_box, >=1 point and existing >=300 s branches")
+    total = 300 * int(c["worlds_per_cycle"]) * (bool(x.get('enabled')) + bool(single.get('enabled')))
     if total > 8000:
         raise Refused("long GROUP primary reserve exceeds 8,000 sim-s/cycle")
     return total
@@ -184,6 +186,7 @@ def long_group_sim_s(cfg):
 # ------------------------------------------------------------------ S-SUMOCREDIT (flag-gated)
 SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "--credit-group-max",
                     "long_group_horizon": "--long-group-horizon", "long_group_time": "--long-group-time",
+                    "long_single_horizon": "--long-single-horizon", "long_single_time": "--long-single-time",
                     "credit_flips": "--credit-flips", "gate_horizon": "--gate-horizon",
                     "gate_unit": "--gate-unit", "gate_reference": "--gate-reference",
                     "gate_state": "--gate-state", "gate_max_units": "--gate-max-units",
@@ -436,6 +439,11 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
         argv.append("--smoke")
     if p.get("real_credit") and state.get("real_credit"):        # S-SUMOCREDIT (flag-gated)
         argv += ["--real-credit", state["real_credit"]]
+    if p.get('longcritic'):
+        native = state.get('native_real_returns') or p.get('initial_native_returns')
+        if not native:
+            raise Refused('longcritic requires paired native B real-return export')
+        argv += ['--longcritic-native-returns', native]
     # S-GPUB-LOOP: extra policy14_cli arguments (e.g. ["--gate-panel", "<frozen panel JSON>"]); none by default.
     argv += [str(x) for x in p.get("extra_args", [])]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
@@ -619,6 +627,16 @@ def run_convert(cfg, state, ph, root) -> dict:
            "targets": read_json(local_ret.with_suffix(".receipt.json"))["targets"]}
     if cfg["collect"].get("sumocredit"):
         out["sumocredit"] = convert_sumocredit(cfg, state, work, tag, env, log, root)
+    if cfg['policy'].get('longcritic'):
+        remote_native = f'{work}/native_returns_{tag}.npz'
+        native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', remote_conv,
+                      '--output', remote_native, '--kind', 'B']
+        if run_cmd(h, native_cmd, env=env, log=log, timeout_s=3600):
+            raise RuntimeError('native B real-return export failed')
+        native = root/'returns'/f'native_returns_{tag}.npz'
+        sync(cfg, 'cpu', remote_native, 'gpu', str(native), log)
+        sync(cfg, 'cpu', remote_native[:-4]+'.receipt.json', 'gpu', str(native.with_suffix('.receipt.json')), log)
+        out.update(native_returns=str(native), native_returns_sha256=sha256(native))
     return out
 
 
@@ -852,6 +870,10 @@ def run_phase(cfg, name, *, dry_run=False) -> int:
                     "sim_s_charged_total": state["sim_s_charged"]}
         # The policy continues on the ACCEPTED WM with this cycle's current-policy SUMO returns.
         state["real_returns"] = decision["real_returns_next"]
+        converted = state['cycles'][-1]['phases']['convert']['receipt']
+        if converted.get('native_returns'):
+            state['native_real_returns'] = converted['native_returns']
+            decision['native_real_returns_next'] = converted['native_returns']
         stops = []
         if state["consecutive_rejects"] >= int(reg["stop"].get("consecutive_wm_rejects", 2)):
             stops.append(f"{state['consecutive_rejects']} consecutive WM rejections")

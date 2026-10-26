@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
 from dataclasses import dataclass, field, replace
@@ -95,12 +96,15 @@ def difference_loss(critic, native_critic, states, delta, weight, scale):
 class LongCritic:
     def __init__(self, trainer, config, native_provider, wm_sha256s):
         self.config = config
-        if trainer.config.real_return_mix != 1 or trainer.config.gamma != 1:
-            raise ValueError("longcritic requires real_return_mix=1 and gamma=1 (no WM level targets)")
+        if trainer.config.real_return_mix <= 0 or trainer.config.gamma != 1:
+            raise ValueError("longcritic requires real_return_mix>0 and gamma=1 (no WM level targets)")
         if native_provider.provenance["source_kind"] != "native":
             raise ValueError("longcritic anchor must contain real native returns")
         if not bool((native_provider.provenance["horizon_s"] >= max(config.horizons_s)).all()):
             raise ValueError("longcritic native anchor must cover every configured difference horizon")
+        real_meta = getattr(trainer.real_return_provider, 'provenance', {})
+        if 'horizon_s' in real_meta and set(real_meta['horizon_s'].tolist()) != set(native_provider.provenance['horizon_s'].tolist()):
+            raise ValueError('real policy and native anchor continuation horizons must match')
         self.provider = native_provider
         self.native_critic = copy.deepcopy(trainer.critic)
         self.optimizer = torch.optim.Adam(self.native_critic.parameters(), lr=trainer.config.critic_lr)
@@ -110,12 +114,15 @@ class LongCritic:
                         "target": "V_policy(s)-stop(V_native_real(s)) = shrunk WM reward difference",
                         "native_horizons_s": sorted(set(native_provider.provenance["horizon_s"].tolist())),
                         "tail_assumption": "after selected horizon, residual policy-native advantage is zero"}
+        self.receipt['native_source_sha256'] = (hashlib.sha256(native_provider.path.read_bytes()).hexdigest()
+                                               if hasattr(native_provider, 'path') else None)
+        seed_meta = native_provider.provenance.get('seeds')
+        self.receipt['native_fit_seeds'] = sorted(set(seed_meta.tolist())) if seed_meta is not None else None
         if config.reliability_file:
             try:
                 path = checked_path(config.reliability_file)
                 doc = json.loads(path.read_text(encoding="utf-8"))
                 self.weights = reliability_weights(doc, wm_sha256s)
-                import hashlib
                 self.receipt.update(source=str(path), source_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                                     wm_sha256=doc.get("wm_sha256"), metric_rule=doc.get("rule"))
             except (OSError, ValueError) as error:
@@ -131,10 +138,11 @@ class LongCritic:
                                 critic_optimizer=self.optimizer, real_return_provider=self.provider,
                                 device=trainer.device)
         receipt = warm_start_real_critic(proxy, self.config.native_warmup_updates)
+        self.native_critic.eval().requires_grad_(False)
         self.warm = True
         return receipt
 
-    def loss(self, trainer, batch, scale):
+    def targets(self, trainer, batch):
         active = [h for h in self.config.horizons_s if self.weights.get(h, 0) > 0]
         metrics = {"longcritic_weights": self.weights, "longcritic_active": False}
         if not active or trainer.update_count % self.config.every:
@@ -180,11 +188,18 @@ class LongCritic:
             trainer.config = old
             trainer._training_imagination, trainer.horizon_curriculum = training, curriculum
             _restore_rng(rng, trainer.device)
+        metrics.update(longcritic_active=True, longcritic_horizon_s=h,
+                       longcritic_delta=float(delta.mean()), longcritic_weight=float(weight.mean()))
+        return (states, delta, weight), metrics
+
+    def loss(self, trainer, batch, scale):
+        target, metrics = self.targets(trainer, batch)
+        if target is None:
+            return None, metrics
+        states, delta, weight = target
         loss = difference_loss(trainer.critic, self.native_critic, states, delta, weight,
                                max(scale, trainer.config.real_return_scale))
-        metrics.update(longcritic_active=True, longcritic_horizon_s=h,
-                       longcritic_delta=float(delta.mean()), longcritic_weight=float(weight.mean()),
-                       longcritic_loss=float(loss.detach()))
+        metrics['longcritic_loss'] = float(loss.detach())
         return loss, metrics
 
     def state_dict(self):
@@ -192,6 +207,16 @@ class LongCritic:
                 "warm": self.warm, "receipt": self.receipt}
 
     def load_state_dict(self, doc):
+        prior = doc.get('receipt', {})
+        if (prior.get('native_source_sha256') != self.receipt.get('native_source_sha256')
+                or prior.get('native_fit_seeds') != self.receipt.get('native_fit_seeds')
+                or prior.get('native_horizons_s') != self.receipt.get('native_horizons_s')):
+            self.receipt['anchor_reset'] = 'native returns or continuation horizon changed; rewarm only fitting worlds'
+            self.warm = False
+            self.native_critic.requires_grad_(True)
+            return
         self.native_critic.load_state_dict(doc["native_critic"])
         self.optimizer.load_state_dict(doc["optimizer"])
         self.warm = bool(doc["warm"])
+        if self.warm:
+            self.native_critic.eval().requires_grad_(False)

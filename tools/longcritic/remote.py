@@ -19,7 +19,7 @@ def ssh(host, source):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("action", choices=["probe", "stage", "deps", "tests", "evidence", "inventory", "bitid", "lint"])
+    ap.add_argument("action", choices=["probe", "stage", "deps", "tests", "evidence", "inventory", "inventory_a", "benchmark", "pull_cost", "final_launch", "final_status", "final_pull", "bitid", "lint"])
     args = ap.parse_args()
     if args.action == "probe":
         r = ssh("gpuA", "import torch, pathlib\nprint(torch.__version__)\n"
@@ -30,7 +30,7 @@ def main():
         # Source-only explicit roots: no archive, no data, no binary checkpoints.
         selected = [p for p in files if p.split('/')[0] in
                     {"src", "traffic_shepherd", "scripts", "tests", "configs", "tools"}
-                    and Path(p).suffix in {".py", ".toml", ".json"}
+                    and (Path(p).suffix in {".py", ".toml", ".json"} or p == 'tools/longcritic/TRANSFER_RECEIPT.txt')
                     and (ROOT / p).is_file() and not (ROOT / p).is_symlink()
                     and not any(x in p.lower() for x in
                                 ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1"))]
@@ -62,14 +62,14 @@ def main():
                 "PYTHONDONTWRITEBYTECODE='1',C4_GPU_MEM_FRACTION='0.3')\n"
                 f"sys.path[:0]=['{REMOTE}/deps','src','.']\nimport torch; torch.set_num_threads(4)\n"
                 "import pytest\nsys.exit(pytest.main(['-q','-ra','-p','no:cacheprovider',"
-                "'tests/unit/test_longcritic.py','tests/unit/test_coopw.py',"
+                "'tests/unit/test_longcritic.py','tests/unit/test_longcritic_followup.py','tests/unit/test_coopw.py',"
                 "'tests/unit/test_policy14_critic.py','tests/unit/test_sumocredit.py',"
                 "'tests/unit/test_sumocredit_kcheck.py','tests/unit/test_fastloop.py',"
                 "'tests/unit/test_c4_dreamer.py','tests/unit/test_loop14.py','tests/unit/test_loop14c.py',"
                 "'tests/unit/test_policy14_integration.py','tests/unit/test_policy14e.py',"
                 "'tests/unit/test_policy14_lanes.py']))\n")
     elif args.action == "bitid":
-        names = subprocess.check_output(["git", "diff", "--name-only", "d6a426c6"], cwd=ROOT, text=True).splitlines()
+        names = subprocess.check_output(["git", "diff", "--diff-filter=M", "--name-only", "d6a426c6"], cwd=ROOT, text=True).splitlines()
         originals = {name: subprocess.check_output(["git", "show", f"d6a426c6:{name}"], cwd=ROOT).decode()
                      for name in names if name.endswith('.py')}
         snapshot = '''import importlib.util,pathlib,sys,torch
@@ -118,10 +118,73 @@ torch.save(out,sys.argv[1])
     elif args.action == "lint":
         names = subprocess.check_output(["git", "diff", "--name-only", "d6a426c6"], cwd=ROOT, text=True).splitlines()
         names += ['src/wms/control/longcritic.py','tests/unit/test_longcritic.py','tools/longcritic/remote.py',
-                  'tools/longcritic/benchmark.py']
+                  'tools/longcritic/benchmark.py','src/wms/control/real_share.py',
+                  'tests/unit/test_longcritic_followup.py','tools/longcritic/prepare_inputs.py',
+                  'tools/longcritic/prepare_policy.py','tools/longcritic/prepare_native.py']
         r = ssh("gpuA", "import subprocess,os,sys\n"
                 f"os.chdir('{REMOTE}/runtime')\nos.environ['PYTHONPATH']='{REMOTE}/deps'\n"
                 f"sys.exit(subprocess.call([sys.executable,'-m','ruff','check','--no-cache','--select','E4,E7,E9,F','--per-file-ignores','traffic_shepherd/c4/collect.py:E402',*{[n for n in names if n.endswith('.py')]!r}]))\n")
+    elif args.action == 'final_launch':
+        r = ssh('gpuA', "import pathlib,os,subprocess,sys,json\n"
+                f"root=pathlib.Path('{REMOTE}'); assert root.is_dir(); assert not (root/'BENCHMARK_FINAL_LAUNCH.json').exists()\n"
+                "env={**os.environ,'OMP_NUM_THREADS':'4','MKL_NUM_THREADS':'4','OPENBLAS_NUM_THREADS':'4',"
+                "'PYTHONDONTWRITEBYTECODE':'1','C4_GPU_MEM_FRACTION':'0.3','WMS_SPEED_PIVOT_DIAG_OFF':'1','WMS_SPEED_GRAD_AUDIT_EVERY':'10',"
+                f"'PYTHONPATH':'{REMOTE}/runtime/src:{REMOTE}/runtime','C4_ALLOWED_ROOTS':'/root/autodl-tmp/c4/v5:{REMOTE}',"
+                f"'WMS_DATA_V5_NATIVE_Q':'{REMOTE}/data/v5_native_q','WMS_DATA_GENRAND_PLAIN_Q':'{REMOTE}/data/genrand_plain_q'}}\n"
+                "argv=[sys.executable,'-B','tools/longcritic/benchmark.py','--transfer-receipt','tools/longcritic/TRANSFER_RECEIPT.txt',"
+                "'--wm-ckpt','/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/wm_s.pt',"
+                "'--wm-config','/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/config.resolved.json',"
+                "'--native-returns',str(root/'paired_native_returns.npz'),"
+                "'--reliability','tools/longcritic/reliability_r16.json','--calibrate-share',"
+                "'--real-returns',str(root/'current_real_returns.npz'),'--policy-state',str(root/'COLLECTED_POLICY_STATE.pt'),"
+                "'--output',str(root/'COST_FINAL.json')]\n"
+                "with (root/'final_benchmark.log').open('xb') as log:\n"
+                " p=subprocess.Popen(argv,cwd=root/'runtime',env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)\n"
+                "receipt={'pid':p.pid,'start_ticks':pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().split()[21],'argv':argv}\n"
+                "(root/'BENCHMARK_FINAL_LAUNCH.json').write_text(json.dumps(receipt,indent=2)); print(json.dumps(receipt))\n")
+        if r.returncode == 0:
+            (ROOT/'tools/longcritic/BENCHMARK_FINAL_LAUNCH.json').write_text(r.stdout, encoding='utf-8')
+    elif args.action == 'final_status':
+        r = ssh('gpuA', "import pathlib,json\n"
+                f"root=pathlib.Path('{REMOTE}'); d=json.loads((root/'BENCHMARK_FINAL_LAUNCH.json').read_text())\n"
+                "p=pathlib.Path('/proc/'+str(d['pid'])+'/stat'); live=p.exists() and p.read_text().split()[21]==d['start_ticks']\n"
+                "print(json.dumps({'own_pid_live':live,'result_exists':(root/'COST_FINAL.json').exists()}))\n"
+                "print((root/'final_benchmark.log').read_text()[-2000:])\n")
+    elif args.action == 'final_pull':
+        r = ssh('gpuA', "import pathlib,json\n"
+                f"root=pathlib.Path('{REMOTE}'); print(json.dumps({{n:json.loads((root/n).read_text()) for n in ['COST_FINAL.json','REAL_SHARE_MEASURED.json']}}))\n")
+        if r.returncode == 0:
+            for name, doc in json.loads(r.stdout).items():
+                (ROOT/'tools/longcritic'/name).write_text(json.dumps(doc, indent=2), encoding='utf-8')
+    elif args.action == 'pull_cost':
+        r = ssh('gpuA', f"from pathlib import Path\nprint(Path('{REMOTE}/COST_INITIAL.json').read_text())\n")
+        if r.returncode == 0:
+            (ROOT/'tools/longcritic/COST_INITIAL.json').write_text(r.stdout, encoding='utf-8')
+    elif args.action == "benchmark":
+        r = ssh("gpuA", "import os,subprocess,sys\n"
+                f"os.chdir('{REMOTE}/runtime')\n"
+                f"os.environ.update(PYTHONPATH='{REMOTE}/runtime/src:{REMOTE}/runtime',C4_ALLOWED_ROOTS='/root/autodl-tmp/c4/v5:{REMOTE}',"
+                f"WMS_DATA_V5_NATIVE_Q='{REMOTE}/data/v5_native_q',"
+                f"WMS_DATA_GENRAND_PLAIN_Q='{REMOTE}/data/genrand_plain_q',"
+                "OMP_NUM_THREADS='4',MKL_NUM_THREADS='4',OPENBLAS_NUM_THREADS='4',C4_GPU_MEM_FRACTION='0.3',PYTHONDONTWRITEBYTECODE='1')\n"
+                "sys.exit(subprocess.call([sys.executable,'-B','tools/longcritic/benchmark.py',"
+                "'--transfer-receipt','tools/longcritic/TRANSFER_RECEIPT.txt',"
+                "'--wm-ckpt','/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/wm_s.pt',"
+                "'--wm-config','/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round16_b/config.resolved.json',"
+                "'--native-returns','/root/autodl-tmp/c4/v5/policy14_stage/policy14_native_returns.npz',"
+                "'--reliability','tools/longcritic/reliability_r16.json',"
+                f"'--output','{REMOTE}/COST_INITIAL.json']))\n")
+    elif args.action == "inventory_a":
+        r = ssh("gpuA", "import pathlib,json,os\n"
+                "root=pathlib.Path('/root/autodl-tmp/c4/v5')\n"
+                "print('DATA_DIRS',[p.name for p in (root/'data').iterdir() if not any(t in p.name.lower() for t in ['sealed','holdout','heldout','cal_split','chunk5','j4b','inc1'])])\n"
+                "for rel in ['runs/c4_wm_v10_round16_b','policy14_stage','data/v5_native_q','data/genrand_plain_q']:\n"
+                " p=root/rel; print(str(p),p.is_dir())\n"
+                " if p.is_dir() and not rel.startswith('data'): print([x.name for x in p.iterdir()])\n"
+                "os.environ.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')\n"
+                "import numpy as np\np=root/'policy14_stage/policy14_native_returns.npz'\n"
+                "if p.exists():\n"
+                " with np.load(p,allow_pickle=False) as d: print(json.dumps({k:d[k].tolist() for k in ['source_kind','seeds','horizon_s']}))\n")
     elif args.action == "inventory":
         r = ssh("gpuR", "import pathlib,json\n"
                 "p=pathlib.Path('/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/CONFIG.json')\n"
@@ -140,7 +203,7 @@ torch.save(out,sys.argv[1])
     else:
         print(r.stdout, end="")
     print(r.stderr, end="")
-    if args.action in ("tests", "evidence", "bitid", "lint"):
+    if args.action in ("tests", "evidence", "bitid", "lint", "benchmark"):
         (ROOT / "tools/longcritic" / (args.action + ".log")).write_text(r.stdout + r.stderr, encoding="utf-8")
     raise SystemExit(r.returncode)
 

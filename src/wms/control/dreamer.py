@@ -1595,7 +1595,7 @@ class DreamerTrainer:
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
         mix = self.config.real_return_mix
         imagined_loss = None
-        if mix < 1:
+        if mix < 1 and self.longcritic is None:
             predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
                                                     for state in states[:-1]])
                                        for states in imagined["states"]])
@@ -1624,7 +1624,7 @@ class DreamerTrainer:
         if self.longcritic is not None:
             auxiliary, long_metrics = self.longcritic.loss(self, starts, scale)
             if auxiliary is not None:
-                critic_loss = critic_loss + auxiliary
+                critic_loss = critic_loss + (1 - mix) * auxiliary
             extra.update(long_metrics)
         self.critic_optimizer.zero_grad(set_to_none=True)
         critic_loss.backward()

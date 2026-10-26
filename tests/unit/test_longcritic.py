@@ -69,8 +69,6 @@ class ToyValue(nn.Module):
 
 @pytest.mark.parametrize("persistent", [False, True])
 def test_delayed_payoff_changes_short_horizon_actor_only_with_longcritic(persistent):
-    # Sparse real native observations cannot identify the investment derivative.
-    # Cost now, repayment at t=200; actor sees only 10 s plus the learned critic.
     outcomes = {}
     for enabled in (False, True):
         critic, native = ToyValue(), ToyValue()
@@ -213,7 +211,7 @@ def test_optin_config_preserves_main_native_lane_and_imagination_contract():
     from wms.control.train_cli import _read_config
     old = _read_config("configs/c4_policy14_main14_nativelane.toml")
     new = _read_config("configs/c4_policy14_longcritic.toml")
-    assert {k: v for k, v in new.items() if k not in ("longcritic", "exploration")} == {
+    assert {k: v for k, v in new.items() if k not in ("longcritic", "exploration", 'real_share')} == {
         k: v for k, v in old.items() if k != "exploration"}
     assert new["policy14"]["native_lane_change"] is True
     assert new["horizon"] == old["horizon"]
@@ -254,9 +252,14 @@ def _real_wm_trainer():
 def test_real_wm_longcritic_target_is_no_grad_paired_and_checkpointed(tmp_path, monkeypatch):
     from wms.control.longcritic import LongCritic
     trainer, model, provider = _real_wm_trainer()
+    mismatched = copy.copy(provider)
+    mismatched.provenance = {'source_kind': 'native', 'horizon_s': np.array([600.])}
+    with pytest.raises(ValueError, match='horizons must match'):
+        LongCritic(trainer, LongCriticConfig(enabled=True, horizons_s=[60], native_warmup_updates=1),
+                   mismatched, ['synthetic'])
     auxiliary = LongCritic(trainer, LongCriticConfig(enabled=True, horizons_s=[60], native_warmup_updates=1),
                            provider, ["synthetic"])
-    auxiliary.weights = {60: .4}  # Synthetic evidence, never a production setting.
+    auxiliary.weights = {60: .4}
     auxiliary.warmup(trainer)
     trainer.longcritic = auxiliary
     config_before = trainer.config
@@ -274,3 +277,7 @@ def test_real_wm_longcritic_target_is_no_grad_paired_and_checkpointed(tmp_path, 
     before = copy.deepcopy(auxiliary.native_critic.state_dict())
     trainer.load_checkpoint(target)
     assert all(torch.equal(v, auxiliary.native_critic.state_dict()[k]) for k, v in before.items())
+    changed = copy.deepcopy(payload['longcritic'])
+    changed['receipt']['native_fit_seeds'] = [1]
+    auxiliary.load_state_dict(changed)
+    assert not auxiliary.warm and all(p.requires_grad for p in auxiliary.native_critic.parameters())

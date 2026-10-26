@@ -67,6 +67,7 @@ def sim_s_per_point(x: dict, branch_h: int) -> int:
         total += (int(x.get("credit_group_max", 3)) + 1 + int(x.get("credit_flips", 0))) * c
         total += 0 if c <= h else 2 * c
     total += int(x.get("long_group_horizon", 0))  # worst-case selected point; B/ALL must exist
+    total += int(x.get('long_single_horizon', 0))
     return total
 
 
@@ -89,6 +90,8 @@ class PairExtras:
     seed: int = 0
     long_group_horizon: int = 0
     long_group_time: int = 0
+    long_single_horizon: int = 0
+    long_single_time: int = 0
 
     def __post_init__(self):
         from wms.control.confident_gate import REFERENCES, UNITS
@@ -108,10 +111,13 @@ class PairExtras:
             raise ValueError("gate_mean_table needs the reference gate_table")
         if self.long_group_horizon not in (0, 300) or self.long_group_time < 0:
             raise ValueError("long GROUP horizon must be 0/OFF or 300 s, time >= 0")
+        if self.long_single_horizon not in (0, 300) or self.long_single_time < 0:
+            raise ValueError('long single horizon must be 0/OFF or 300 s, time >= 0')
 
     @property
     def active(self) -> bool:
-        return bool(self.credit_horizon or self.gate_horizon or self.gate_table or self.long_group_horizon)
+        return bool(self.credit_horizon or self.gate_horizon or self.gate_table
+                    or self.long_group_horizon or self.long_single_horizon)
 
     @property
     def needs_wm(self) -> bool:
@@ -120,7 +126,7 @@ class PairExtras:
 
     def marks(self, branch_h: int) -> set:
         hs = [self.credit_horizon, self.gate_horizon, branch_h if self.gate_table else 0,
-              self.long_group_horizon]
+              self.long_group_horizon, self.long_single_horizon]
         return {int(h) for h in hs if 0 < int(h) <= int(branch_h)}
 
     def sim_s_per_point(self, branch_h: int) -> int:
@@ -254,6 +260,11 @@ class PairExtras:
             out["credit_long"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h,
                                                horizon=self.long_group_horizon, group_only=True)
             out["sim_s"] += out["credit_long"]["extra_sim_s"]
+        if self.long_single_horizon and int(point['t_s']) == self.long_single_time:
+            if branch_h < 300 or ('B', 300) not in prefix:
+                raise ValueError('long single requires the existing 300 s native prefix')
+            out['single_long'] = self._single_hold(env, point, prefix, seed, world)
+            out['sim_s'] += out['single_long']['extra_sim_s']
         out["wall_s"] = time.monotonic() - t0
         return out
 
@@ -441,6 +452,43 @@ class PairExtras:
         return rec
 
     # ------------------------------------------------------------------ output
+    def _single_hold(self, env, point, prefix, seed, world):
+        from wms.control.contract import MERGE_S0_M
+        from wms.control.real_credit14 import POINT_SCHEMA
+        self._load(env, point, 300)
+        frame = env.frame
+        ids = env.builder.vehicle_ids
+        candidates = []
+        for slot in np.flatnonzero(frame.present & frame.is_cav).tolist():
+            vi = int(frame.vid_index[slot])
+            if vi >= 0 and int(frame.lane[slot]) in (0, 1) and float(frame.s[slot]) < MERGE_S0_M:
+                candidates.append((-float(frame.s[slot]), str(ids[vi])))
+        rec = {'schema': POINT_SCHEMA, 'split': 'TRAIN', 'seed': int(seed), 'world': world,
+               't_s': point['t_s'], 'horizon_s': 300, 'single_hold': True, 'group': [], 'flips': [],
+               'selected_vehicle': None, 'sumo': None, 'imagined': None,
+               'collisions': 0, 'teleports': 0, 'extra_sim_s': 0}
+        if not candidates:
+            rec['skipped'] = 'no upstream mainline CAV'
+            return rec
+        _, vehicle = min(candidates)
+        rec['selected_vehicle'] = vehicle
+        # Constant zero acceleration on one stable vehicle ID, everyone else
+        # released to native SUMO. This is an offline credit probe, not an actor action.
+        def hold(env, state):
+            return np.zeros((1, env.k)), None
+        step = self._members_step(hold, frozenset([vehicle]))
+        result = self._run_arm(env, point, 300, step)
+        base = prefix[('B', 300)]
+        rec.update(sumo={'B': base['J'], 'SINGLE_HOLD': result['J']},
+                   sumo_road={'B': base['road'], 'SINGLE_HOLD': result['road']},
+                   source_wait={'B': base['source'], 'SINGLE_HOLD': result['source']},
+                   D_hold=base['J'] - result['J'], extra_sim_s=result['sim_s'],
+                   collisions=base['collisions'] + result['collisions'],
+                   teleports=base['teleports'] + result['teleports'],
+                   extra_collisions=result['collisions'], extra_teleports=result['teleports'],
+                   dropped_vehicle_steps=base.get('dropped_vehicle_steps', 0) + result.get('dropped_vehicle_steps', 0))
+        return rec
+
     def write(self, branch_root: Path, points: list) -> dict:
         from .genrand import _jsonable
         branch_root = Path(branch_root)
@@ -451,6 +499,7 @@ class PairExtras:
             rows = [p[key] for p in points if key in p]
             if key == "credit":
                 rows += [p["credit_long"] for p in points if "credit_long" in p]
+                rows += [p['single_long'] for p in points if 'single_long' in p]
             if not rows:
                 continue
             with (branch_root / name).open("x", encoding="utf-8") as stream:
