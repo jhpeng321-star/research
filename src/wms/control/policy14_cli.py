@@ -461,10 +461,11 @@ def main(argv=None):
             (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
             summary["recommended_updates_per_cycle"] = chosen - native_start_update
         summary.update(status="completed", seed=args.seed, smoke=args.smoke, device=args.device,
-                       updates=updates, critic_warmup=warmup, config=asdict(cfg),
+                       updates=updates, critic_warmup=warmup, config=asdict(trainer.config),
                        wm_members=receipts, probes=probes,
                        real_returns_file=str(provider.path), real_return_source=provider.provenance["source_kind"],
-                       real_return_targets=int(provider._returns.numel()),
+                       real_return_targets=(int(provider.indices.size) if hasattr(provider, 'indices')
+                                            else int(provider._returns.numel())),
                        independent_score_before=initial_score, independent_score=before,
                        actor_from_scratch=resumed is None, resumed_from=resumed,
                        ensemble_epistemic_available=len(models) > 1,
@@ -472,7 +473,7 @@ def main(argv=None):
                        lane_mask_hook=lane_rules.secure_gap_hook if lane_rules else None,
                        consequence_mask=lane_rules.consequence_mask if lane_rules else False,
                        synthetic_start_states=args.smoke)
-    except (OSError, ValueError, RuntimeError, KeyError, TypeError) as error:
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError, AttributeError) as error:
         summary["error"] = f"{type(error).__name__}: {error}"
     if output is not None:
         (output / "RUN_SUMMARY.json").write_text(json.dumps(summary, indent=2, allow_nan=False), encoding="utf-8")

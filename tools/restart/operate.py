@@ -27,7 +27,7 @@ def remote(host, source, timeout=900):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=['authorize', 'qviews', 'returns', 'collectors', 'status'])
+    p.add_argument('action', choices=['authorize', 'qviews', 'returns', 'collectors', 'collector-readiness', 'registration', 'status'])
     a = p.parse_args()
     if a.action == 'authorize':
         remote('gpuA', f'''import pathlib,json,datetime
@@ -57,19 +57,28 @@ print(json.dumps(stage('local','/root/autodl-tmp/c4/longcritic','local',{INPUTS+
 p=pathlib.Path({INPUTS+'/longcritic/current_real_returns.npz'!r})
 assert hashlib.sha256(p.read_bytes()).hexdigest()=='6756b3cb8a5295e8385cec3fbca9f4b5c2e64924c8074673e2b54f7e86f82cfa'
 ''')
-    elif a.action == 'collectors':
-        remote('gpuA', f'''import sys,json
+    elif a.action in ('collectors', 'collector-readiness'):
+        if a.action == 'collectors':
+            remote('gpuA', f'''import sys,json
 sys.path[:0]=[{RUNTIME!r}]
 from tools.resumeprep.boxstage import stage
 for host in ('cpuP','cpuQ'):
  print(json.dumps({{'host':host,**stage('local',{RUNTIME!r},host,{CPU!r},['src','traffic_shepherd','configs','scripts','tools'])}}),flush=True)
+''')
+        else:
+            remote('gpuA', f'''import pathlib,json,datetime
+p=pathlib.Path({RELEASE!r})/'OPERATIONS_C3.jsonl'
+with p.open('a') as f: f.write(json.dumps({{'t':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+ 'error':'collector readiness ModuleNotFoundError: output','host':'cpuP','attempt_failed':1,
+ 'repair':'link existing approved output fixture modules, alongside baselines/assets/scenarios; no SUMO',
+ 'retry':1,'retry_limit':3}})+'\\n')
 ''')
         for host in ('cpuP', 'cpuQ'):
             remote(host, f'''import pathlib,os,sys,json
 root=pathlib.Path({CPU!r}); old=pathlib.Path('/home/ubuntu/c4/main14/mainr16/runtime')
 assert root.is_dir() and old.is_dir()
 links={{}}
-for name in ('baselines','assets','scenarios'):
+for name in ('baselines','assets','scenarios','output'):
  source=old/name; target=root/name
  assert source.is_dir(),str(source)
  if target.is_symlink(): assert target.resolve()==source.resolve()
@@ -81,6 +90,21 @@ from traffic_shepherd.c4.collector_readiness import check_runtime_dependencies,c
 from traffic_shepherd.config import load_config
 receipt={{'fixture_links':links,'dependencies':check_runtime_dependencies(),'controller':check_controller_assets(load_config())}}
 (root.parent/'READINESS.json').write_text(json.dumps(receipt,indent=1)); print(json.dumps(receipt))
+''')
+    elif a.action == 'registration':
+        remote('gpuA', f'''import pathlib,sys,json,copy
+sys.path[:0]=[{RUNTIME+'/scripts/c4'!r},{RUNTIME!r},{RUNTIME+'/src'!r}]
+import loop14 as loop
+arm=pathlib.Path({RELEASE+'/arm'!r}); cfg=loop.load_config(arm/'CONFIG.json'); state=loop.load_state(cfg)
+reg=loop.read_json(cfg['registration'])
+reg['gates']['failure']='Scientific native identity/native-relative veto/smoke behavior/update10/native-gate failure: WAIT_OWNER; owner continuation3 permits three recorded fixes/retries per non-scientific setup/staging/SSH/fixture error; E below300MB pauses'
+reg['sources']['superseded_restart_sources']=copy.deepcopy(reg['sources'])
+reg['sources'].update(code_sha='6e458c8b8b4448c0ea519f129365d1bfe6c7e27c',config_sha256=loop.sha256(arm/'CONFIG.json'))
+loop.write_atomic(pathlib.Path(cfg['registration']),reg)
+state['registration_sha256']=loop.sha256(cfg['registration']); loop.save_state(cfg,state)
+print(json.dumps({{'config_sha256':loop.sha256(arm/'CONFIG.json'),'registration_sha256':state['registration_sha256'],
+ 'source_overlay_sha256':loop.sha256(arm.parent/'SOURCE_OVERLAY.json'),'charged':state['sim_s_charged'],
+ 'loop_root':cfg['loop_root'],'retry_limit':cfg['resumeprep']['operational_retries_per_error']}}))
 ''')
     else:
         remote('gpuA', f'''import pathlib,json,subprocess
