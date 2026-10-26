@@ -1,6 +1,7 @@
 """Verify only registered mechanics artifacts/observable arrays; zero simulator calls."""
 from __future__ import annotations
 import copy
+import argparse
 import hashlib
 import json
 import os
@@ -22,13 +23,17 @@ from wms.control.nativeinit import sumo_residual_commands, verify_collection_gat
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--observations', action='store_true')
+    args = parser.parse_args()
     torch.set_num_threads(1)
     cfg = loop.read_json(ARM/'CONFIG.json')
     main_state = loop.load_state(cfg)
     mini = Path(cfg.get('resumeprep', {}).get('mini_root', ARM/'mini'))
     state = loop.read_json(mini/'loop/LOOP14_STATE.json')
     phases = state['cycles'][0]['phases']
-    if any(phases[p]['status'] != 'done' for p in ('policy', 'collect', 'convert', 'wm_ft')):
+    complete = all(phases[p]['status'] == 'done' for p in ('policy', 'collect', 'convert', 'wm_ft'))
+    if not complete and not args.observations:
         raise RuntimeError('mini phases incomplete; no mechanics PASS')
     expected_total = 87399 + 1922 * (1 + cfg.get('resumeprep', {}).get('smoke_setup_retry', {}).get('retry_number', 0))
     if state['sim_s_charged'] != 1922 or main_state['sim_s_charged'] != expected_total:
@@ -104,15 +109,17 @@ def main():
                     finite = np.isfinite(command.residual)
                     if lanes is not None or np.any(command.residual[finite] != 0):
                         raise RuntimeError('scientific native initialization command identity failed')
-                    residuals = {str(j): float(v) for j, v in enumerate(command.residual[0]) if np.isfinite(v)}
+                    live = (st['present'] & st['is_cav'])[0].numpy()
+                    residuals = {str(j): float(v) for j, v in enumerate(command.residual[0]) if live[j]}
                     if sumo_residual_commands(object(), residuals, command.accel_min, command.accel_max):
                         raise RuntimeError('zero initialization added SUMO commands')
-                    zero_count += int(finite.sum())
+                    zero_count += int(live.sum())
         if set(paired) != {'B', 'POLICY'}:
             raise RuntimeError('incomplete mechanics pair')
         if any(not np.array_equal(paired['B'][k], paired['POLICY'][k]) for k in ('kin', 'present', 'vid')):
             raise RuntimeError('scientific mechanics saved-state pairing failed')
-    result = {'status': 'PASS', 'registration': 'S-C0DIAG-SMOKE-1', 'charged_sim_s': 1922,
+    result = {'status': 'OBSERVATIONS_ONLY' if args.observations else 'PASS',
+              'mini_complete': complete, 'registration': 'S-C0DIAG-SMOKE-1', 'charged_sim_s': 1922,
               'total_charged_sim_s': main_state['sim_s_charged'], 'rows': rows,
               'wm_update_zero_native_identity_starts': len(initial['delta_per_start']),
               'rejected_checkpoint_blocked': loop.read_json(ARM/'READINESS.json')['rejected_checkpoint_blocked'],
@@ -122,7 +129,7 @@ def main():
               'native_gate': {'checkpoint_sha256': gate['checkpoint_sha256'], 'mean_delta': gate['mean_delta']},
               'efficacy_certification': False,
               'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
-    loop.write_atomic(ARM/'SMOKE_RESULT.json', result)
+    loop.write_atomic(ARM/('SMOKE_OBSERVATIONS.json' if args.observations else 'SMOKE_RESULT.json'), result)
     print(json.dumps(result))
 
 

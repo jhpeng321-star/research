@@ -1,0 +1,131 @@
+{
+ "status": "SCIENTIFIC_WAIT_OWNER",
+ "guard": {
+  "t": "2026-10-26T17:23:33Z",
+  "status": "SCIENTIFIC_WAIT_OWNER",
+  "driver": {
+   "pid": 56713,
+   "start_ticks": "841410018"
+  },
+  "driver_same_incarnation": false,
+  "policy": {
+   "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c00/policy_latest.pt",
+   "sha256": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5",
+   "source": "cycle 0",
+   "trained_on_wm_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2"
+  },
+  "wm": {
+   "checkpoint": "/root/autodl-tmp/c4/restart20261026_inputs/core/main14_loop/mainr16_base/wm_s_best.pt",
+   "config": "/root/autodl-tmp/c4/restart20261026_inputs/core/main14_loop/mainr16_base/config.resolved.json",
+   "sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+   "source": "S-MAINR16 owner-selected round16 FINAL, cpuQ provenance copy"
+  },
+  "updates": 30,
+  "update10": {
+   "passed": true,
+   "mean_delta": -0.03383159637451172,
+   "n_improved": 16
+  },
+  "native_gate": {
+   "passed": true,
+   "mean_delta": -0.09655570983886719,
+   "selected_update": 30
+  },
+  "real_guard": {
+   "schema": "nativeinit_smoke/1",
+   "world_deltas": [
+    -2729.8745020260394,
+    665.1673625283479,
+    -1434.149217511338,
+    -1488.871470862192
+   ],
+   "mean_delta": -1246.9319569678055,
+   "ci95": [
+    -2405.943180897364,
+    126.65765418071294
+   ],
+   "margin": 0.0,
+   "passed": false,
+   "verdict": "inconclusive"
+  },
+  "real_guard_units": "mean per-world policy-minus-native J; each world sums two300s starts",
+  "sim_s_charged": 102607,
+  "stopped": "native smoke inconclusive",
+  "dispatched_worlds": [
+   968144,
+   968145,
+   968147,
+   968146
+  ],
+  "undispatched_reserved_worlds": [
+   968148,
+   968149,
+   968150,
+   968151,
+   968152,
+   968153,
+   968154,
+   968155,
+   968156
+  ],
+  "main_collection_charged": 11364
+ },
+ "current_state_sha256": "95202320d9948ae6bf18db2864f0c4ae9c197a65acc8a7bbea89f272f9beb3bf",
+ "mirror": {
+  "t": "2026-10-26T17:22:05Z",
+  "host": "cpuP",
+  "root": "/home/ubuntu/c4/main14/restart20261026/mirror",
+  "sha256": {
+   "state": "95202320d9948ae6bf18db2864f0c4ae9c197a65acc8a7bbea89f272f9beb3bf",
+   "base": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+   "policy": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5"
+  },
+  "restore_state": "/home/ubuntu/c4/main14/restart20261026/mirror/arm/PORTABLE_STATE.json",
+  "path_remap": {
+   "/root/autodl-tmp/c4/restart20261026/arm": "/home/ubuntu/c4/main14/restart20261026/mirror/arm",
+   "/root/autodl-tmp/c4/restart20261026_inputs/core/main14_loop/mainr16_base": "/home/ubuntu/c4/main14/restart20261026/mirror/base",
+   "/root/autodl-tmp/c4/restart20261026/runtime": "/home/ubuntu/c4/main14/restart20261026/runtime"
+  },
+  "datasets": "original full TRAIN corpora retained on gpuR; mirror is checkpoint+loop state/artifacts"
+ },
+ "mini_wm_receipt": {
+  "disk": {
+   "path": "/root/autodl-tmp/c4/restart20261026/arm/mini_retry1/loop",
+   "free_gb": 11.556,
+   "need_gb": 0.3,
+   "floor_gb": 1.5
+  },
+  "gpu": {
+   "compute_apps": [
+    "35584, /root/miniconda3/bin/python, 5046 MiB"
+   ],
+   "shared_main_fraction": 0.4,
+   "free_mib": 43455.0,
+   "owned_mib": 0,
+   "headroom_mib": 2048
+  },
+  "out": "/root/autodl-tmp/c4/restart20261026/arm/mini_retry1/loop/wm/c00",
+  "candidate": "/root/autodl-tmp/c4/restart20261026/arm/mini_retry1/loop/wm/c00/wm_s.pt",
+  "candidate_sha256": "10a903be9da03d4fa0a7dcb8e92325ddcb9ea106e0a6b01cd257b38c783ec70a",
+  "init_from_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+  "train_log_rows": 2,
+  "exit": 0
+ },
+ "mini_step_seconds": [
+  264.1552206836641,
+  284.38912981934845
+ ],
+ "mini_steps_finite": true,
+ "scientific_failure_retried": false,
+ "source_commit": "daac879c59b9570bf7d10ec5b840aa028305cfa4",
+ "own_driver_pid": {
+  "pid": 56713,
+  "start_ticks": "841410018"
+ },
+ "own_auto_pid": {
+  "pid": 47015,
+  "start_ticks": "841200902",
+  "script_sha256": "30d93c15f37470b39f137e1b8efc29c95c5f9134a199200e8718557185e1b945",
+  "scope": "MINI_PASS + mechanics validation -> official detached launch -> first gates + portable own-arm mirror"
+ }
+}

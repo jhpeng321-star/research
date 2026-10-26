@@ -27,7 +27,7 @@ def remote(host, source, timeout=900):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=['authorize', 'qviews', 'returns', 'collectors', 'collector-readiness', 'registration', 'refresh-prearm', 'mini-policy-detached', 'seed-recheck', 'smoke-detached', 'diagnose-mask', 'mini-status', 'progress', 'record-repairs', 'status'])
+    p.add_argument('action', choices=['authorize', 'qviews', 'returns', 'collectors', 'collector-readiness', 'registration', 'refresh-prearm', 'mini-policy-detached', 'seed-recheck', 'smoke-detached', 'diagnose-mask', 'mini-status', 'wm-progress', 'wm-config', 'profile-wm', 'wait-mini', 'queue-auto', 'auto-status', 'wait-first-gates', 'final-stop', 'final-evidence', 'check-mirror', 'progress', 'record-repairs', 'status'])
     a = p.parse_args()
     if a.action == 'authorize':
         remote('gpuA', f'''import pathlib,json,datetime
@@ -164,7 +164,9 @@ print(json.dumps({'smoke_seeds':[968142,968143],'unused_in_live_predecessor':Tru
 ''')
         receipt = json.loads(raw)
         remote('gpuA', f'''import pathlib,json,datetime
-p=pathlib.Path({RELEASE+'/arm/SMOKE_LIVE_SEED_RECHECK.json'!r}); assert not p.exists()
+p=pathlib.Path({RELEASE+'/arm/SMOKE_LIVE_SEED_RECHECK.json'!r})
+if p.exists():
+ old=p.with_name(p.name+'.before_retry1'); assert not old.exists(); p.rename(old)
 d={receipt!r}; d['t']=datetime.datetime.now(datetime.timezone.utc).isoformat(); p.write_text(json.dumps(d)); print(json.dumps(d))
 ''')
     elif a.action == 'smoke-detached':
@@ -172,7 +174,11 @@ d={receipt!r}; d['t']=datetime.datetime.now(datetime.timezone.utc).isoformat(); 
 arm=pathlib.Path({RELEASE+'/arm'!r}); receipt=arm/'MINI_SMOKE_PID.json'; assert not receipt.exists()
 assert json.loads((arm/'SMOKE_LIVE_SEED_RECHECK.json').read_text())['unused_in_live_predecessor']
 ack=json.loads((arm/'SHARED_SMOKE_HASHES_APPENDED.json').read_text()); assert ack['bindings_sha256']==hashlib.sha256((arm/'SMOKE_BINDINGS.json').read_bytes()).hexdigest()
-with (arm/'mini_smoke.detached.log').open('xb') as log:
+logpath=arm/'mini_smoke.detached.log'
+if logpath.exists():
+ assert (arm/'MINI_SMOKE_PID.json.before_junction_fix').exists()
+ old=arm/'mini_smoke.detached.log.before_retry1'; assert not old.exists(); logpath.rename(old)
+with logpath.open('xb') as log:
  p=subprocess.Popen([sys.executable,'-B',{RUNTIME+'/tools/resumeprep/control.py'!r},'mini','--arm',str(arm)],
   start_new_session=True,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
 token=pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().rsplit(')',1)[1].split()[19]
@@ -219,7 +225,7 @@ p=pathlib.Path({RELEASE+'/arm/SMOKE_MASK_DIAGNOSIS.json'!r}); p.write_text(json.
 ''')
     elif a.action == 'mini-status':
         remote('gpuA', f'''import pathlib,json
-arm=pathlib.Path({RELEASE+'/arm'!r}); s=json.loads((arm/'mini/loop/LOOP14_STATE.json').read_text()); parent=json.loads((arm/'loop/LOOP14_STATE.json').read_text())
+arm=pathlib.Path({RELEASE+'/arm'!r}); cfg=json.loads((arm/'CONFIG.json').read_text()); mini=pathlib.Path(cfg.get('resumeprep',{{}}).get('mini_root',str(arm/'mini'))); s=json.loads((mini/'loop/LOOP14_STATE.json').read_text()); parent=json.loads((arm/'loop/LOOP14_STATE.json').read_text())
 d={{'phases':{{k:{{n:v.get(n) for n in ('status','attempt','error','receipt') if n in v}} for k,v in s['cycles'][0]['phases'].items()}},
  'mini_charged':s['sim_s_charged'],'total_charged':parent['sim_s_charged'],'mini_pass':(arm/'MINI_PASS.json').exists()}}
 receipt=arm/'MINI_SMOKE_PID.json'
@@ -230,6 +236,177 @@ if receipt.exists():
 log=arm/'mini_smoke.detached.log'
 if log.exists(): d['log_tail']=log.read_text()[-3000:]
 print(json.dumps(d))
+''')
+    elif a.action == 'wm-progress':
+        remote('gpuA', f'''import pathlib,json,datetime
+arm=pathlib.Path({RELEASE+'/arm'!r}); cfg=json.loads((arm/'CONFIG.json').read_text()); mini=pathlib.Path(cfg.get('resumeprep',{{}}).get('mini_root',str(arm/'mini')))
+s=json.loads((mini/'loop/LOOP14_STATE.json').read_text()); ph=s['cycles'][0]['phases']['wm_ft']; out=mini/'loop/wm/c00'
+d={{'t':datetime.datetime.now(datetime.timezone.utc).isoformat(),'phase':ph,'checkpoint_exists':(out/'wm_s.pt').exists(),'mini_pass':(arm/'MINI_PASS.json').exists()}}
+p=out/'train_log.jsonl'
+if p.exists():
+ rows=[json.loads(x) for x in p.read_text().splitlines()]; d['rows']=len(rows)
+ if rows:
+  d['last']={{k:rows[-1].get(k) for k in ('step','loss','grad_norm','finite','seconds','cuda_peak_mb')}}
+  d['step_seconds']=[r.get('seconds') for r in rows]
+v=out/'val_log.jsonl'
+if v.exists():
+ vals=[json.loads(x) for x in v.read_text().splitlines()]
+ d['validation_rows']=len(vals)
+ d['validation_horizons']=[r.get('horizon_s') for r in vals]
+pid=s['cycles'][0]['phases']['wm_ft'].get('pid'); proc=pathlib.Path('/proc')/str(pid)
+if (proc/'stat').exists():
+ d['owned_coordinator']=pid; d['owned_children']=(proc/'task'/str(pid)/'children').read_text()
+ children=[]
+ for child in d['owned_children'].split():
+  cp=pathlib.Path('/proc')/child
+  if (cp/'stat').exists():
+   fields=(cp/'stat').read_text().rsplit(')',1)[1].split()
+   children.append({{'pid':int(child),'start_ticks':fields[19],'state':fields[0],'cpu_ticks':[fields[11],fields[12]],
+    'status':[x for x in (cp/'status').read_text().splitlines() if x.startswith(('VmRSS:','VmSwap:','Threads:'))],
+    'wchan':(cp/'wchan').read_text(),'io':(cp/'io').read_text()}})
+ d['children_detail']=children
+print(json.dumps(d))
+''')
+    elif a.action == 'wait-mini':
+        remote('gpuA', f'''import pathlib,json,time
+arm=pathlib.Path({RELEASE+'/arm'!r}); pid=json.loads((arm/'MINI_SMOKE_PID.json').read_text()); cfg=json.loads((arm/'CONFIG.json').read_text()); mini=pathlib.Path(cfg['resumeprep']['mini_root'])
+for _ in range(60):
+ if (arm/'MINI_PASS.json').exists(): break
+ p=pathlib.Path('/proc/'+str(pid['pid'])+'/stat')
+ if not p.exists(): break
+ f=p.read_text().rsplit(')',1)[1].split()
+ if f[19]!=pid['start_ticks'] or f[0]=='Z': break
+ time.sleep(10)
+s=json.loads((mini/'loop/LOOP14_STATE.json').read_text())
+print(json.dumps({{'mini_pass':(arm/'MINI_PASS.json').exists(),'phases':{{k:v['status'] for k,v in s['cycles'][0]['phases'].items()}},
+ 'wm':s['cycles'][0]['phases']['wm_ft'],'log_tail':(arm/'mini_smoke.detached.log').read_text()[-2000:]}}))
+''', timeout=650)
+    elif a.action == 'queue-auto':
+        subprocess.run(['scp', str(ROOT/'tools/restart/auto_restart.py'), 'gpuA:'+RELEASE+'/auto_restart.py'], check=True)
+        remote('gpuA', f'''import pathlib,json,subprocess,sys,hashlib
+root=pathlib.Path({RELEASE!r}); arm=root/'arm'; assert not (arm/'AUTO_PID.json').exists()
+with (arm/'auto_restart.log').open('xb') as log:
+ p=subprocess.Popen([sys.executable,'-B',str(root/'auto_restart.py')],start_new_session=True,
+  stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
+token=pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().rsplit(')',1)[1].split()[19]
+d={{'pid':p.pid,'start_ticks':token,'script_sha256':hashlib.sha256((root/'auto_restart.py').read_bytes()).hexdigest(),
+ 'scope':'MINI_PASS + mechanics validation -> official detached launch -> first gates + portable own-arm mirror'}}
+(arm/'AUTO_PID.json').write_text(json.dumps(d)); print(json.dumps(d))
+''')
+    elif a.action in ('auto-status', 'wait-first-gates'):
+        remote('gpuA', f'''import pathlib,json,time
+arm=pathlib.Path({RELEASE+'/arm'!r})
+for _ in range({360 if a.action == 'wait-first-gates' else 1}):
+ first=arm/'FIRST_GATES.json'
+ if first.exists() and json.loads(first.read_text()).get('real_guard') is not None and (arm/'MIRROR_RECEIPT.json').exists(): break
+ if (arm/'AUTO_BLOCKED.json').exists() or (arm/'WAIT_OWNER.json').exists(): break
+ if {a.action == 'auto-status'!r}: break
+ time.sleep(10)
+d={{}}
+for name in ('MINI_PASS.json','SMOKE_RESULT.json','PID.json','AUTO_PID.json','FIRST_GATES.json','MIRROR_RECEIPT.json','WAIT_OWNER.json','AUTO_BLOCKED.json'):
+ p=arm/name
+ if p.exists():
+  row=json.loads(p.read_text())
+  if name in ('PID.json','AUTO_PID.json'):
+   st=pathlib.Path('/proc/'+str(row['pid'])+'/stat')
+   if st.exists():
+    f=st.read_text().rsplit(')',1)[1].split(); row['same_incarnation']=f[19]==row['start_ticks']; row['process_state']=f[0]
+   else: row['same_incarnation']=False
+  if name=='SMOKE_RESULT.json': row={{k:v for k,v in row.items() if k!='rows'}}
+  d[name]=row
+p=arm/'auto_restart.log'
+if p.exists(): d['auto_log_tail']=p.read_text()[-1600:]
+p=arm/'loop/LOOP14_STATE.json'
+if p.exists():
+ s=json.loads(p.read_text()); d['main_phase']={{k:v['status'] for k,v in s['cycles'][-1]['phases'].items()}}
+ ph=s['cycles'][-1]['phases']['policy']; out=pathlib.Path(ph.get('receipt',{{}}).get('out',str(arm/'loop/policy/c00')))
+ u=out/'updates.jsonl'
+ if u.exists(): d['main_recorded_updates']=len(u.read_text().splitlines())
+print(json.dumps(d))
+''', timeout=3700)
+    elif a.action == 'wm-config':
+        remote('gpuA', f'''import pathlib,json
+root=pathlib.Path({RELEASE+'/arm/mini_retry1/loop/wm/c00'!r})
+for name in ('train_config.json','config.resolved.json'):
+ p=root/name
+ if p.exists():
+  d=json.loads(p.read_text()); d=d.get('config',d)
+  print(json.dumps({{'file':name,'batch_size':d.get('batch_size'),'val_max_windows':d.get('val_max_windows'),
+   'selection':d.get('selection'),'optim':d.get('optim'),'selection_horizons_s':d.get('selection_horizons_s'),
+   'val_all_horizons':d.get('val_all_horizons'),'select_by_long_horizon':d.get('select_by_long_horizon')}}))
+''')
+    elif a.action == 'profile-wm':
+        remote('gpuA', f'''import pathlib,json,subprocess,sys,os
+root=pathlib.Path({RELEASE!r}); assert root.is_dir(); target=root/'profiler'
+p=pathlib.Path('/proc/37793/stat'); assert p.exists()
+f=p.read_text().rsplit(')',1)[1].split(); assert f[19]=='840958791' and f[1]=='37473', 'not the exact owned WM child'
+if not (target/'bin/py-spy').exists():
+ subprocess.run([sys.executable,'-m','pip','install','--no-cache-dir','--no-deps','--target',str(target),'py-spy'],check=True,env={{**os.environ,'OMP_NUM_THREADS':'1'}})
+result=subprocess.run([str(target/'bin/py-spy'),'dump','--pid','37793','--nonblocking','--full-filenames'],text=True,capture_output=True)
+(root/'WM_STACK.txt').write_text(result.stdout+result.stderr)
+print(result.stdout+result.stderr); print(json.dumps({{'read_only_profile_exit':result.returncode,'owned_pid':37793,'start_ticks':'840958791'}}))
+''', timeout=180)
+    elif a.action == 'final-stop':
+        remote('gpuA', f'''import pathlib,json,sys,datetime
+sys.path[:0]=[{RUNTIME+'/scripts/c4'!r},{RUNTIME!r},{RUNTIME+'/src'!r}]
+import loop14 as loop
+from wms.control.nativeinit import verify_collection_gate
+arm=pathlib.Path({RELEASE+'/arm'!r}); cfg=loop.load_config(arm/'CONFIG.json'); state=loop.load_state(cfg)
+j=loop.read_json(pathlib.Path(cfg['loop_root'])/'worlds_c00.json'); guard=j['native_smoke']; pid=loop.read_json(arm/'PID.json')
+p=pathlib.Path('/proc/'+str(pid['pid'])+'/stat'); assert not p.exists() or p.read_text().rsplit(')',1)[1].split()[0]=='Z'
+assert state['stopped']=='native smoke inconclusive' and not guard['passed']
+current_attempts=[c['seed'] for c in j['cases'] if str(c['seed']) in j['attempts']]
+assert len(j['worlds'])==4 and len(current_attempts)==4 and j['charged']==11364 and state['sim_s_charged']==102607
+gate=verify_collection_gate(state['policy']); panel=loop.read_json(pathlib.Path(state['policy']['checkpoint']).with_name('gate_panel_result.json'))
+receipt={{'t':loop.now(),'status':'SCIENTIFIC_WAIT_OWNER','driver':pid,'driver_same_incarnation':False,
+ 'policy':state['policy'],'wm':state['accepted_wm'],'updates':30,
+ 'update10':{{'passed':panel['passed'],'mean_delta':panel['mean_delta'],'n_improved':panel['n_improved']}},
+ 'native_gate':{{'passed':gate['passed'],'mean_delta':gate['mean_delta'],'selected_update':gate['update']}},
+ 'real_guard':guard,'real_guard_units':'mean per-world policy-minus-native J; each world sums two300s starts',
+ 'sim_s_charged':state['sim_s_charged'],'stopped':state['stopped'],
+ 'dispatched_worlds':[w['case']['seed'] for w in j['worlds'].values()],
+ 'undispatched_reserved_worlds':[c['seed'] for c in j['cases'] if str(c['seed']) not in j['worlds']],
+ 'main_collection_charged':j['charged']}}
+loop.write_atomic(arm/'FIRST_GATES.json',receipt)
+print(json.dumps(receipt))
+''')
+    elif a.action == 'final-evidence':
+        remote('gpuA', f'''import pathlib,json,sys,importlib.util,datetime
+sys.path[:0]=[{RUNTIME+'/scripts/c4'!r},{RUNTIME!r},{RUNTIME+'/src'!r}]
+import loop14 as loop
+arm=pathlib.Path({RELEASE+'/arm'!r}); cfg=loop.load_config(arm/'CONFIG.json'); state=loop.load_state(cfg)
+source_sha=loop.sha256(loop.state_path(cfg)); mirror=loop.read_json(arm/'MIRROR_RECEIPT.json')
+if mirror['sha256']['state']!=source_sha:
+ spec=importlib.util.spec_from_file_location('own_final_mirror',arm.parent/'auto_restart.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+ assert not m.live(loop.read_json(arm/'AUTO_PID.json')) and not m.live(loop.read_json(arm/'PID.json'))
+ m.mirror(cfg,state); mirror=loop.read_json(arm/'MIRROR_RECEIPT.json')
+assert mirror['sha256']['state']==source_sha
+wm=pathlib.Path(cfg['resumeprep']['mini_root'])/'loop/wm/c00'
+log=[json.loads(x) for x in (wm/'train_log.jsonl').read_text().splitlines()]
+wm_receipt=loop.read_json(pathlib.Path(cfg['resumeprep']['mini_root'])/'loop/LOOP14_STATE.json')['cycles'][0]['phases']['wm_ft']['receipt']
+d={{'status':'SCIENTIFIC_WAIT_OWNER','guard':loop.read_json(arm/'FIRST_GATES.json'),
+ 'current_state_sha256':source_sha,'mirror':mirror,'mini_wm_receipt':wm_receipt,
+ 'mini_step_seconds':[r['seconds'] for r in log], 'mini_steps_finite':all(r['finite'] for r in log),
+ 'scientific_failure_retried':False,'source_commit':'daac879c59b9570bf7d10ec5b840aa028305cfa4',
+ 'own_driver_pid':loop.read_json(arm/'PID.json'),'own_auto_pid':loop.read_json(arm/'AUTO_PID.json')}}
+loop.write_atomic(arm/'RESTART_FINAL.json',d)
+with (arm.parent/'OPERATIONS_C3.jsonl').open('a') as f:
+ for row in [{{'error':'initial offline junction diagnosis inspected t360 with no junction present','repair':'use existing native junction frames; no new SUMO','retry':1}},
+  {{'error':'read-only py-spy ownPID37793 denied by container ptrace permissions','repair':'no privilege changes; retained finite logs and waited for full validation','retry':0}},
+  {{'error':'final-report assertion counted historical cycle0 attempts as current','repair':'filter attempt keys to successor cases; no state/charge/world changes','retry':1}}]:
+  f.write(json.dumps({{'t':loop.now(),'diagnostic_only':True,**row}})+'\\n')
+print(json.dumps(d))
+''', timeout=900)
+    elif a.action == 'check-mirror':
+        remote('cpuP', '''import pathlib,json,hashlib
+root=pathlib.Path('/home/ubuntu/c4/main14/restart20261026/mirror'); arm=root/'arm'
+d=json.loads((arm/'RESTART_FINAL.json').read_text()); expected=d['mirror']['sha256']
+assert json.loads((arm/'FIRST_GATES.json').read_text())==d['guard']
+for path,key in ((arm/'PORTABLE_STATE.json','state'),(arm/'loop/LOOP14_STATE.json','state'),
+                 (arm/'loop/policy/c00/policy_latest.pt','policy'),(root/'base/wm_s_best.pt','base')):
+ assert hashlib.sha256(path.read_bytes()).hexdigest()==expected[key],str(path)
+assert json.loads((arm/'PORTABLE_STATE.json').read_text())['stopped']=='native smoke inconclusive'
+print(json.dumps({'status':'PASS','mirror':'cpuP','current_and_portable_state_match':True,'policy_base_hashes_match':True,'scientific_stop_preserved':True}))
 ''')
     elif a.action == 'registration':
         remote('gpuA', f'''import pathlib,sys,json,copy
