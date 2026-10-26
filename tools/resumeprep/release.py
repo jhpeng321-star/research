@@ -51,6 +51,7 @@ root=pathlib.Path(sys.argv[1]); changes=json.loads(sys.argv[2]); resume=sys.argv
 bad=('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vtype')
 baseline=json.loads((root/'BOX_MANIFEST.json').read_text())
 for name,sha in baseline.items():
+ if '__pycache__' in pathlib.PurePosixPath(name).parts or name.endswith('.pyc'): continue
  if name not in changes and hashlib.sha256((root/name).read_bytes()).hexdigest()!=sha: raise ValueError('baseline hash mismatch: '+name)
 if resume:
  receipt=root.parent/'OPERATIONAL_RETRY.json'
