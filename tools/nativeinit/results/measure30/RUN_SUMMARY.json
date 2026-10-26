@@ -1,0 +1,347 @@
+{
+  "status": "failed",
+  "uncertainty": {
+    "enabled": true,
+    "future_samples": 2,
+    "driver_noise_scale": 1.0,
+    "curriculum_updates": [
+      0.0,
+      10.0,
+      150.0
+    ],
+    "weights": [
+      0.1,
+      0.1,
+      0.1
+    ]
+  },
+  "exploration": {
+    "enabled": true,
+    "curriculum_updates": [
+      0.0,
+      10.0,
+      150.0
+    ],
+    "rho": [
+      0.0,
+      0.0,
+      0.5
+    ],
+    "persistence_steps": 4.0,
+    "radius_m": null
+  },
+  "horizon_gate": {
+    "gate_file": "/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/horizon_gate_current.json",
+    "allowed_stage": 2,
+    "wm_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+    "rule": "horizon h PASS iff WM sign agreement of dJ(arm - B) t0-HDV delay at h >= threshold; threshold = lower 95% group-bootstrap bound of the sign agreement at the base horizon of the registering WM",
+    "verdicts": {
+      "10": "BASE",
+      "30": "PASS",
+      "60": "PASS"
+    }
+  },
+  "horizon": {
+    "enabled": true,
+    "horizons_s": [
+      10.0,
+      30.0,
+      60.0
+    ],
+    "curriculum_updates": [
+      0.0,
+      150.0,
+      300.0
+    ],
+    "gate_file": "/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/horizon_gate_current.json",
+    "entry_pad_max": [
+      32,
+      83,
+      149
+    ],
+    "allowed_stage": 2
+  },
+  "ramp_merge": {
+    "policy_ramp_merge": false,
+    "native_ramp_merge": "wm_law",
+    "native_lane_change": true
+  },
+  "seed": 965140,
+  "smoke": false,
+  "device": "cuda",
+  "wm_members": [
+    {
+      "checkpoint": "/root/main14_loop/mainr16_base/wm_s_best.pt",
+      "config": "/root/main14_loop/mainr16_base/config.resolved.json",
+      "checkpoint_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+      "config_sha256": "d218190193dcab5881b307c8dab7165b16bd3f6d618baae7d909268607e78bf1",
+      "courtesy_state_grad": true,
+      "courtesy_intent": "pivot",
+      "courtesy_off": false,
+      "physics": {
+        "dt_s": 0.5,
+        "open_road": true,
+        "exit_at_road_end": true,
+        "sumo_fidelity": false,
+        "sumo_idm": true,
+        "speed_factor": 1.0,
+        "speed_limit_mps": 31.29,
+        "free_road_gap_m": 250.0,
+        "max_gap_steps": 240,
+        "accel_min_mps2": -9.0,
+        "accel_max_mps2": 3.0,
+        "lane_gap_m": 5.0,
+        "lane_incentive_mps": 0.4,
+        "lane_safe_gap_m": 6.0,
+        "merge_zone_s0_m": 0.0,
+        "merge_zone_s1_m": 75.44,
+        "merge_lane": 2,
+        "merge_target_lane": 1,
+        "mobil_threshold_mps2": 0.1,
+        "b_safe_base_mps2": 4.0,
+        "b_safe_end_mps2": 6.0,
+        "merge_cal": false,
+        "t_lead_base_s": 1.0,
+        "t_lead_end_s": 0.1,
+        "b_accept_base_mps2": 4.0,
+        "b_accept_end_mps2": 6.0,
+        "gap_floor_m": 0.3,
+        "u_yield": 0.35,
+        "yield_lookahead_m": 120.0,
+        "b_yield_max_mps2": 1.75,
+        "yield_min_speed_mps": 2.5,
+        "yield_min_merger_speed_mps": 3.5,
+        "end_obstacle_range_m": 25.0,
+        "lane_rule": "mobil",
+        "lane_gap_rule": "fixed",
+        "gap_s0_lead_m": 1.0,
+        "gap_t_lead_s": 0.2,
+        "gap_b_lead_mps2": 3.0,
+        "gap_s0_follow_m": 0.5,
+        "gap_t_follow_s": 0.6,
+        "gap_b_follow_mps2": 6.0,
+        "gap_overlap_margin_m": 0.5,
+        "gap_anticipation_s": 0.5,
+        "gap_stopped_relax": false,
+        "gap_stopped_speed_mps": 1.0,
+        "gap_stopped_min_m": 0.5,
+        "stop_time_integration": false,
+        "emergency_decel_mps2": null,
+        "emergency_braking": true,
+        "secure_gap_veto": true,
+        "lane_change_secure_gap": true,
+        "emergency_onset": "driver_b",
+        "merge_end_wait": false,
+        "merge_end_wait_distance_m": 25.0,
+        "merge_end_wait_speed_mps": 2.0,
+        "mainline_merge_yield": true,
+        "mainline_merge_yield_distance_m": 60.0,
+        "mainline_merge_yield_decel_mps2": 2.0,
+        "forced_window_mode": "deterministic",
+        "forced_window_min_hazard": 0.02,
+        "mainline_merge_yield_scope": "lane_end",
+        "merge_end_wait_s0_follow_m": null,
+        "merge_end_wait_t_follow_s": null,
+        "merge_impatience": false,
+        "merge_impatience_distance_m": 25.0,
+        "merge_impatience_speed_mps": 1.0,
+        "merge_impatience_hazard_tau_s": 25.0,
+        "merge_impatience_gap_tau_s": 25.0,
+        "merge_impatience_s0_min_m": 0.5,
+        "merge_impatience_t_min_s": 0.1,
+        "lane_learnable": true,
+        "ramp_lane_end_stop": true,
+        "ramp_risk_retain": true,
+        "lane_physical_margin_m": 0.0,
+        "mainline_lane_mode": "courtesy",
+        "mainline_courtesy_zone_m": 300.0,
+        "entry_learned": false
+      }
+    }
+  ],
+  "probes": {
+    "gradient": {
+      "exact_checkpoint": {
+        "J": 12.164283752441406,
+        "autograd": -0.05525418370962143,
+        "differences": [
+          {
+            "epsilon_mps2": 0.04,
+            "finite_difference": -0.05526542663574219,
+            "absolute_error": 1.1242926120758057e-05,
+            "passed": true
+          },
+          {
+            "epsilon_mps2": 0.02,
+            "finite_difference": -0.055217742919921875,
+            "absolute_error": 3.644078969955444e-05,
+            "passed": true
+          }
+        ]
+      },
+      "checkpoint_courtesy_off": false,
+      "checkpoint_courtesy_zero_output_head": false,
+      "courtesy_probe": {
+        "J": 12.164283752441406,
+        "autograd": -0.05525418370962143,
+        "differences": [
+          {
+            "epsilon_mps2": 0.04,
+            "finite_difference": -0.05526542663574219,
+            "absolute_error": 1.1242926120758057e-05,
+            "passed": true
+          },
+          {
+            "epsilon_mps2": 0.02,
+            "finite_difference": -0.055217742919921875,
+            "absolute_error": 3.644078969955444e-05,
+            "passed": true
+          }
+        ]
+      },
+      "courtesy_adjoint_contribution": 0.0006731972098350525,
+      "isolated_courtesy_fd": [
+        {
+          "epsilon_mps2": 0.04,
+          "autograd": 0.0006732121109962463,
+          "finite_difference": 0.000667572021484375,
+          "passed": true
+        },
+        {
+          "epsilon_mps2": 0.02,
+          "autograd": 0.0006732121109962463,
+          "finite_difference": 0.0007390975952148438,
+          "passed": true
+        }
+      ],
+      "courtesy_probe_injected_output_weights": false,
+      "courtesy_probe_training_model_modified": false,
+      "gradient_decay": 1.0,
+      "fixed_lane_event_regime_only": true
+    },
+    "gradient_13e": {
+      "J": 3.4382967948913574,
+      "autograd": -0.08682331442832947,
+      "differences": [
+        {
+          "epsilon_mps2": 0.04,
+          "finite_difference": -0.08682310581207275,
+          "absolute_error": 2.086162567138672e-07,
+          "passed": true
+        },
+        {
+          "epsilon_mps2": 0.02,
+          "finite_difference": -0.08682012557983398,
+          "absolute_error": 3.1888484954833984e-06,
+          "passed": true
+        }
+      ],
+      "flags": {
+        "emergency_braking": true,
+        "secure_gap_veto": true,
+        "mainline_merge_yield_learnable": true
+      }
+    },
+    "free_road": {
+      "passed": true,
+      "updates": 12,
+      "before": {
+        "action_mps2": -0.46348071098327637,
+        "J": 0.7554365992546082
+      },
+      "after": {
+        "action_mps2": 1.3553245067596436,
+        "J": 0.7118411064147949
+      },
+      "objective": "negative_unshaped_J",
+      "demonstrations": false
+    }
+  },
+  "probe_device": "cpu",
+  "critic_warmup": {
+    "updates": 32,
+    "batch_size": 1,
+    "real_return_scale": 10000.0,
+    "first_mse_raw": 3867797248.3965454,
+    "first_mse_scaled": 38.67797088623047,
+    "last_mse_raw": 1385618033.261963,
+    "last_mse_scaled": 13.856180191040039,
+    "last_grad_norm": 59.197017669677734,
+    "finite": true
+  },
+  "resumed_from": null,
+  "updates": [],
+  "independent_score_before": {
+    "J": 721.064208984375,
+    "road_delay": 527.064208984375,
+    "source_wait": 194.0,
+    "native_relative_gain": 0.01092529296875,
+    "hdv_hard_brake_seconds": 1.5,
+    "critic_tail_included": false
+  },
+  "native_curve": [
+    {
+      "schema": "nativeinit_panel/1",
+      "update": 0,
+      "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "policy_J": [
+        127.65249633789062,
+        253.36947631835938,
+        621.4779052734375,
+        983.3652954101562,
+        3172.91796875,
+        177.45655822753906,
+        1189.24755859375,
+        181.794189453125,
+        1987.1905517578125,
+        1890.061279296875,
+        343.5281677246094,
+        865.2265625,
+        933.7825317382812,
+        2073.064697265625,
+        548.470458984375,
+        2776.79150390625
+      ],
+      "native_J": [
+        127.60894012451172,
+        253.36947631835938,
+        621.3988647460938,
+        983.3652954101562,
+        3172.91796875,
+        177.45655822753906,
+        1189.24755859375,
+        181.79421997070312,
+        1987.1905517578125,
+        1890.506103515625,
+        343.4128723144531,
+        865.4115600585938,
+        933.6337280273438,
+        2073.064697265625,
+        548.470458984375,
+        2776.79150390625
+      ],
+      "delta_per_start": [
+        0.04355621337890625,
+        0.0,
+        0.07904052734375,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -3.0517578125e-05,
+        0.0,
+        -0.44482421875,
+        0.11529541015625,
+        -0.18499755859375,
+        0.1488037109375,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_delta": -0.015197277069091797,
+      "passed": false,
+      "critic_tail_included": false
+    }
+  ],
+  "error": "ValueError: update-zero native identity failed on frozen panel"
+}

@@ -158,40 +158,58 @@ def collect(loop, cfg, state, ph, root):
         attempt = doc["attempts"].get(key, 0) + 1
         box = item["box"] if attempt % 2 else ("cpuQ" if item["box"] == "cpuP" else "cpuP")
         pending.append((item, box, attempt))
-    charge = per_world * len(pending)
-    if doc["charged"] + charge > reg["budget"]["sim_s_per_cycle"]:
-        raise loop.Refused("world retries exceed registered per-cycle sim-s (failed attempts stay charged)")
-    if state["sim_s_charged"] + charge > reg["budget"]["sim_s_total"]:
-        raise loop.Refused("world retries exceed total sim-s")
-    # Journal attempted worlds before starting any SSH/SUMO. A crash here is overcharged, never undercharged.
-    for item, box, attempt in pending:
-        doc["attempts"][str(item["seed"])] = attempt
-        loop.append(root / "seed_ledger.jsonl", {"cycle": k, "seed": item["seed"], "host": box,
-                    "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt"})
-    doc["charged"] += charge
-    state["sim_s_charged"] += charge
-    loop.save_state(cfg, state)
-    loop.write_atomic(journal, doc)
-    failures = []
-    # One pool per box enforces a total worker cap even when failover shifts all worlds.
-    cap = int(cfg["fastloop"]["workers_per_box"])
-    with ThreadPoolExecutor(max_workers=cap) as p, ThreadPoolExecutor(max_workers=cap) as q:
-        futures = {(p if box == "cpuP" else q).submit(_world, loop, cfg, state, ph, root, item, box, attempt): item
-                   for item, box, attempt in pending}
-        for future in as_completed(futures):
-            item = futures[future]
-            try:
-                doc["worlds"][str(item["seed"])] = future.result()
-                incidents = sum((w["collect"].get("branch_collisions") or 0) +
-                                (w["collect"].get("branch_teleports") or 0) for w in doc["worlds"].values())
-                if incidents > int(reg["stop"].get("max_branch_incidents_per_cycle", 0)):
-                    state["stopped"] = "SUMO safety incident in completed world (including partial cycle)"
-                loop.save_state(cfg, state)
-            except Exception as error:
-                failures.append(f"{item['seed']}: {type(error).__name__}: {error}")
+    native_init = bool(cfg["policy"].get("native_init"))
+    smoke_seeds = {c["seed"] for c in doc["cases"][:4]}
+    batches = ([p for p in pending if p[0]["seed"] in smoke_seeds],
+               [p for p in pending if p[0]["seed"] not in smoke_seeds]) if native_init else (pending,)
+    if native_init and doc.get("native_smoke", {}).get("passed") is False:
+        raise loop.Refused("registered native smoke failed; scientific stop, no collection retry")
+    for batch_index, batch in enumerate(batches):
+        charge = per_world * len(batch)
+        if doc["charged"] + charge > reg["budget"]["sim_s_per_cycle"]:
+            raise loop.Refused("world retries exceed registered per-cycle sim-s (failed attempts stay charged)")
+        if state["sim_s_charged"] + charge > reg["budget"]["sim_s_total"]:
+            raise loop.Refused("world retries exceed total sim-s")
+        # Only this batch is charged/dispatched; the remainder cannot race the smoke decision.
+        for item, box, attempt in batch:
+            doc["attempts"][str(item["seed"])] = attempt
+            loop.append(root / "seed_ledger.jsonl", {"cycle": k, "seed": item["seed"], "host": box,
+                        "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt"})
+        doc["charged"] += charge
+        state["sim_s_charged"] += charge
+        loop.save_state(cfg, state)
+        loop.write_atomic(journal, doc)
+        failures = []
+        cap = int(cfg["fastloop"]["workers_per_box"])
+        with ThreadPoolExecutor(max_workers=cap) as p, ThreadPoolExecutor(max_workers=cap) as q:
+            futures = {(p if box == "cpuP" else q).submit(_world, loop, cfg, state, ph, root, item, box, attempt): item
+                       for item, box, attempt in batch}
+            for future in as_completed(futures):
+                item = futures[future]
+                try:
+                    doc["worlds"][str(item["seed"])] = future.result()
+                    incidents = sum((w["collect"].get("branch_collisions") or 0) +
+                                    (w["collect"].get("branch_teleports") or 0) for w in doc["worlds"].values())
+                    if incidents > int(reg["stop"].get("max_branch_incidents_per_cycle", 0)):
+                        state["stopped"] = "SUMO safety incident in completed world (including partial cycle)"
+                    loop.save_state(cfg, state)
+                except Exception as error:
+                    failures.append(f"{item['seed']}: {type(error).__name__}: {error}")
+                loop.write_atomic(journal, doc)
+        if failures:
+            raise RuntimeError("worlds incomplete; retry collect resumes on peer: " + "; ".join(failures))
+        if native_init and batch_index == 0:
+            from wms.control.nativeinit import artifact_world_delta, smoke_guard
+            smoke = [doc["worlds"][str(c["seed"])] for c in doc["cases"][:4]]
+            doc["native_smoke"] = smoke_guard([
+                artifact_world_delta(w["artifact"], int(cfg["collect"]["branch_points"])) for w in smoke])
             loop.write_atomic(journal, doc)
-    if failures:
-        raise RuntimeError("worlds incomplete; retry collect resumes on peer: " + "; ".join(failures))
+            if not doc["native_smoke"]["passed"]:
+                state["stopped"] = "native smoke " + doc["native_smoke"]["verdict"]
+                loop.save_state(cfg, state)
+                raise loop.Refused(state["stopped"])
+        if native_init and state.get("stopped"):
+            raise loop.Refused(state["stopped"])
     worlds = [doc["worlds"][str(item["seed"])] for item in doc["cases"]]
     return {"journal": str(journal), "worlds": worlds, "seeds": [c["seed"] for c in doc["cases"]],
             "sim_s_charged": doc["charged"], "branch_collisions": sum(w["collect"].get("branch_collisions") or 0 for w in worlds),

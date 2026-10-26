@@ -125,6 +125,9 @@ def load_config(path) -> dict:
         fast_module().validate(cfg, Refused)
         if fast_enabled(cfg, "repoint"):
             cfg["hosts"]["cpu"] = dict(cfg["hosts"]["cpuP"])
+    if cfg["policy"].get("native_init"):
+        if not fast_enabled(cfg, "two_box") or int(cfg["collect"]["worlds_per_cycle"]) < 4:
+            raise Refused("native-init requires two-box collection with a four-world smoke barrier")
     return cfg
 
 
@@ -422,6 +425,8 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
         argv += ["--real-credit", state["real_credit"]]
     # S-GPUB-LOOP: extra policy14_cli arguments (e.g. ["--gate-panel", "<frozen panel JSON>"]); none by default.
     argv += [str(x) for x in p.get("extra_args", [])]
+    if p.get("native_init"):
+        argv.append("--native-init")
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),
@@ -476,6 +481,14 @@ def allocate_seeds(cfg, state, reg, root) -> list[int]:
 
 
 def run_collect(cfg, state, ph, root, *, _seeds=None) -> dict:
+    if cfg["policy"].get("native_init") and _seeds is None:
+        from wms.control.nativeinit import verify_collection_gate
+        receipt = verify_collection_gate(state["policy"])
+        collection_wm = state.get("policy_wm", state["accepted_wm"]) if fast_enabled(cfg, "overlap_policy") else state["accepted_wm"]
+        if receipt.get("wm_sha256") != [collection_wm["sha256"]]:
+            raise Refused("native gate was scored on a different WM")
+        if receipt.get("wm_config_sha256") != [sha256(collection_wm["config"])]:
+            raise Refused("native gate was scored with different WM/physics configuration")
     if fast_enabled(cfg, "two_box") and _seeds is None:
         return fast_module().collect(sys.modules[__name__], cfg, state, ph, root)
     reg = check_registration(cfg)

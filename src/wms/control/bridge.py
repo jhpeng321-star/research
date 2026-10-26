@@ -113,6 +113,11 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         raise ValueError("native_lane_change must be a boolean")
     if policy_ramp_merge and lane_rules is None:
         raise ValueError("policy_ramp_merge needs lane_rules (the lane head is the only merge path)")
+    residual_mode = bool(getattr(policy, "residual_on_native", False))
+    if residual_mode:
+        if native is None or not native_lane_change or lane_rules is not None:
+            raise ValueError("native residual needs native command, native lanes, no policy lane rules")
+        policy_ramp_merge = False
     # The WM dependency is needed only when constructing the rollout bridge;
     # importing standalone observation/policy/safety modules for SUMO is light.
     cav_module = import_module("wms.model.cav")
@@ -127,7 +132,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                        else getattr(policy, "accel_max", ACCEL_MAX_MPS2))
     native_max = float(native_accel_max if native_accel_max is not None
                        else NATIVE_CAV_ACCEL_MAX_MPS2)
-    native_in_use = act_mask is not None or zone is not None
+    native_in_use = act_mask is not None or zone is not None or residual_mode
+    if residual_mode:
+        policy_max = native_max  # identical reference envelope, including exactly-zero residual
     # Motion clamp (float): the largest ceiling in use; per-slot ceilings go through target_v.
     motion_max = policy_max if not native_in_use else max(policy_max, native_max)
     dwell = None
@@ -143,6 +150,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
 
     def native_lane_mask(state):
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
+        if residual_mode:
+            return mask
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
         if zone is not None:
             acting = acting & ~zone(state).to(mask.device).bool()
@@ -179,8 +188,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             if last_command is None or last_command.shape != state["s_m"].shape:
                 last_command = last_intent = torch.zeros_like(state["s_m"])
             obs = build_observations({
-                **state, "cmd_accel_mps2": torch.where(known, last_command, torch.zeros_like(last_command)),
-                "lane_intent": torch.where(known, last_intent, torch.zeros_like(last_intent))})
+                **state, "cmd_accel_mps2": (torch.zeros_like(last_command) if residual_mode else
+                    torch.where(known, last_command, torch.zeros_like(last_command))),
+                "lane_intent": (torch.zeros_like(last_intent) if residual_mode else
+                    torch.where(known, last_intent, torch.zeros_like(last_intent)))})
             signal = group_encoder(obs, state["s_m"], build_rsu_field(state))
             if lane_rules is not None:
                 from .lanes import apply_lane_choices, lane_feasibility
@@ -207,7 +218,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             held = torch.where(mask & previous_mask, held, torch.zeros_like(held))
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
-        native_lanes = mask & ~acting
+        native_lanes = mask if residual_mode else mask & ~acting
         if native_lane_change:
             targets = state.get(cav_module.WM_LANE_TARGET_KEY)
             if targets is None:
@@ -243,7 +254,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             # their proposed HDV lane may still be cancelled by final conflicts.
             motion_lane = torch.where(native_lanes, state["lane"], lane)
         if native_in_use:
-            command_accel = torch.where(acting, held, native({**state, "lane": motion_lane}))
+            baseline = native({**state, "lane": motion_lane})
+            if residual_mode:
+                from .nativeinit import compose_native
+                command_accel = compose_native(baseline, torch.where(acting, held, 0.0),
+                                              ACCEL_MIN_MPS2, native_max)
+            else:
+                command_accel = torch.where(acting, held, baseline)
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
                                   torch.full_like(held, native_max))

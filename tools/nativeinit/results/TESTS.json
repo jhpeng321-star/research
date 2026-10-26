@@ -1,0 +1,16 @@
+{
+ "status": "PASS",
+ "passed": 352,
+ "failed": 0,
+ "skipped": 0,
+ "seconds": 18.42,
+ "host": "gpuR",
+ "runtime": "/root/autodl-tmp/c4/nativeinit_s1/runtime_verified",
+ "baseline": "/root/autodl-tmp/c4/nativeinit_s1/baseline",
+ "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src:. NATIVEINIT_BASELINE=/root/autodl-tmp/c4/nativeinit_s1/baseline OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /root/miniconda3/bin/python -m pytest -q -p no:cacheprovider tests/unit/test_nativeinit.py tests/unit/test_gate_panel.py tests/unit/test_native_lane.py tests/unit/test_loop14c.py tests/unit/test_c4_dreamer.py tests/unit/test_fastloop.py tests/unit/test_policy14_integration.py tests/unit/test_policy14_critic.py tests/unit/test_policy14_lanes.py tests/unit/test_policy14_r13e.py tests/unit/test_policy14e.py tests/unit/test_sumocredit.py",
+ "scope": "CPU-only synthetic verification; no simulator construction, SUMO, seed allocation or main-loop modification",
+ "flag_off": "Three updates: exact actor/group/critic/target tensors, both optimizer states, metrics except wall time and torch RNG; original mainstart sources versus delivered implementation. Also exact stochastic/deterministic actor, executor and bridge outputs.",
+ "native_init": "Strict and hybrid merge laws, IDM and learned native head: both arms identical every physics tick. Real frozen16-panel initial J also exactly equal.",
+ "executor": "Actual CavSumoEnv._control_tick with mocked TraCI: native and zero-residual trajectories/action ledgers identical; nonzero residual recomposed at both half-second ticks and recorded as direct control.",
+ "smoke": "Mock collection fails after first four worlds with remaining worlds neither dispatched nor charged; passing smoke permits remainder; failed receipt prevents scientific retry."
+}

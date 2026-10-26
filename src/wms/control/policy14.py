@@ -113,7 +113,7 @@ class SmokeSampler:
         self.draws = state["draws"]
 
 
-def independent_score(trainer, batch, seed=965149):
+def independent_score(trainer, batch, seed=965149, *, native_reference=False):
     """Rescore exact accrued road+source J, WITHOUT critic/entropy/constraints."""
     from .counterfactual import build_variants
     from .dreamer import _restore_rng, _rng_state
@@ -130,13 +130,24 @@ def independent_score(trainer, batch, seed=965149):
             components = imagined["components"]
             road = components["delay"].sum(1).mean(0)
             source = components["source_wait"].sum(1).mean(0)
+            if native_reference:
+                # Identical reduction geometry per row, independent of batch alignment.
+                def totals(values):
+                    return torch.stack([values[..., r].contiguous().sum(1).mean(0)
+                                        for r in range(values.shape[-1])])
+                road, source = totals(components["delay"]), totals(components["source_wait"])
             j = road + source
             gains = [float(j[base] - j[start]) for start, base in variants.base_row.items()]
             hdv = components["hdv_hard_brake_seconds"].sum(1).mean(0)
-            return {"J": float(j[:n].mean()), "road_delay": float(road[:n].mean()),
+            result = {"J": float(j[:n].mean()), "road_delay": float(road[:n].mean()),
                     "source_wait": float(source[:n].mean()),
                     "native_relative_gain": sum(gains) / len(gains) if gains else None,
                     "hdv_hard_brake_seconds": float(hdv[:n].mean()),
                     "critic_tail_included": False}
+            if native_reference:
+                if set(variants.base_row) != set(range(n)):
+                    raise ValueError("native acceptance requires a paired native row for every start")
+                result["native_J"] = float(torch.stack([j[variants.base_row[i]] for i in range(n)]).mean())
+            return result
     finally:
         _restore_rng(rng, trainer.device)
