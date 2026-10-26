@@ -47,7 +47,8 @@ def bundle():
     for name in dict.fromkeys(names):
         if any(t in name.lower() for t in BLOCK):
             continue
-        if not (name.startswith(prefixes) or name in ('pyproject.toml', 'tests/conftest.py', 'tests/test_speed2_flags.py',
+        if not (name.startswith(prefixes) or (name.startswith('tools/') and Path(name).suffix == '.py')
+                or name in ('pyproject.toml', 'tests/conftest.py', 'tests/test_speed2_flags.py',
                  'tests/test_merge_pivot_training.py', 'tests/test_merge_pivot_pre_window.py', 'scripts/round13c_waiter.py')):
             continue
         if Path(name).suffix not in ('.py', '.toml', '.json', '.onnx'):

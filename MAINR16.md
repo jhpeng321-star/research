@@ -1,6 +1,107 @@
-# S-MAINR16 — cpuQ checkpoint staged; WAIT_OWNER after prearm invocation failure
+# S-MAINR16 — round-16 fast loop running unattended
 
-## Current continuation receipt — 2026-10-26 16:36 UTC+8
+## Current verified receipt — 2026-10-26 17:33 UTC+8
+
+**RUNNING_UNATTENDED on gpuR. Cycle0 policy, collection and conversion completed; WM-FT is running.**
+The owner explicitly directed continuation from the invocation wait and permitted one
+documented further non-scientific repair. Direction and corrected command were recorded
+in shared `REGISTRATION.md` and the actual successor registration **before migration/launch**.
+`WAIT_OWNER.json` was archived as `WAIT_OWNER.pre_invocation_direction.json`; failed
+smoke log/output and predecessor JSONs remain preserved. No current WAIT_OWNER is present.
+
+### Launch, model and gates
+
+- Corrected real-round16/native-lane **2-update CPU synthetic prearm PASS**. Synthetic
+  invocation omits `--gate-panel`/`--horizon-gate`; the panel SHA was independently checked:
+  `3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e`.
+  The real policy retained **both** arguments and all existing gates.
+- Detached **setsid nohup** driver **93301 / start4163133431 / PPID1 / SID93301**, exclusive
+  `driver.lock` held. Trainer **93306 / start4163133681** completed **150/150 updates**:
+  **16:52:29–17:23:37 UTC+8**, from scratch in `/root/main14_loop/policy/c00.a2`.
+  Initial/final independent J **749.6661 → 742.3964** (training signal, not SUMO acceptance).
+- Frozen update10 **PASS**, **16/16 improved**, mean paired ΔJ **−1.2936811447**.
+  Result: `policy/c00.a2/gate_panel_result.json`.
+- Base checkpoint SHA256 **`5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2`**,
+  staged from the provenance-verified cpuQ copy at `/root/main14_loop/mainr16_base/`.
+  New policy SHA256 **`fa2427772a49e9462c0be3172e402c515616a15e2930a263e1eafeacb23a0d5d`**.
+  Superseded13E policy `63219be4…` remains on disk/hash-verified and was never collected.
+- Round16 horizon recomputed on **96 TRAIN groups / 192 pairs**, completed **17:31:00**.
+  Sign agreement at10/30/60s **0.92105 / 0.94737 / 0.95263**;
+  **30s PASS,60s PASS** versus the unchanged registered threshold **0.8684210526**.
+  Receipt is SHA-bound to round16. Cycle0 used10s as scheduled; longer horizons still
+  require the original curriculum positions and model-specific receipts.
+
+### Both-box collection and accounting
+
+Actual collector/SUMO processes and policy episode files were observed on **both boxes**
+at17:25: cpuP **7** one-world workers, cpuQ **6** (configured cap7 each, absolute cap12).
+Example collector incarnations: cpuP **364472/start2091193** (world968139), cpuQ
+**346390/start2091419** (world968134). They completed normally; no process was signalled.
+
+Collection **17:23:43–17:28:51** completed **13/13 worlds** (cpuP7,cpuQ6), **52 branches**,
+zero failures, zero branch collisions/teleports. Fresh seeds **968129–968141**, from the
+registered block and disjoint from all prior allocations. Per-world raw/converted/hash
+artifacts are retained on both CPUs and gpuR. Conversion finished **17:29:02**:
+**52 episodes /26 pair groups /26 current-policy real-return targets**;
+returns SHA256 `6756b3cb8a5295e8385cec3fbca9f4b5c2e64924c8074673e2b54f7e86f82cfa`.
+
+Total **87,399 charged /28,353 actual sim-s** after collection0:
+prior startup failures **58,266 charged /0 actual**, fresh restart **29,133 charged /28,353 actual**.
+No refund. Actual `pair_sim_seconds` already includes the base trajectory and all
+policy/native/calibration/credit branches; `simulated_seconds` must not be added again.
+cpuP actual15,117; cpuQ actual13,236. Hard total **210,000**, remaining charged allowance
+**122,601**. Existing acceptance/rejection/incident/budget/four-cycle stops continue.
+The driver entered exclusive-GPU WM-FT at17:29:02 using the prepared round16-preserving
+40-step config. No new scientific loss/package was enabled.
+
+### Recorded single deployment repair
+
+Initial horizon measurement lacked deployed `tools.r10_attribution`. The registered
+safe fallback kept policy0 at10s. The owner-authorized **single repair** installed a
+215-file missing check-helper Python dependency closure on all three hosts and taught
+the attribution loader to decode the existing nested resolved-JSON schema using the
+same config class/overrides as TOML. Strict real-checkpoint loading found **zero new or
+unused tensors**; a focused resolved-JSON regression passed with exact loaded weights.
+The earlier **463 integrated CPU tests** remain passing; this adds one focused test.
+
+Every original registered source byte was verified unchanged. Supplemental manifest
+**`dd9ebbff1cf2df2d44697ab9b19a9a6f8ea22022621aacae2d5cc37a3fd278ec`** is in
+`runtime/CHECK_DEPENDENCIES.json` on each host. The failed horizon receipt was archived
+as `horizon_<round16-sha>.deployment_failure.json`; retry **93610/start4163180599**
+completed successfully and published the measured receipt atomically. Its PID is no
+longer needed. Live registration/config remained pinned during policy execution.
+The final observer accepts completed world summaries after short-lived collectors exit;
+both boxes had finished by the final snapshot, stronger evidence than live process counts.
+
+Active registration SHA256 **`34d4c61bb05526f76c146880502b5e8b5db51dc2ea4c4633620b14142334965b`**;
+config SHA256 **`50abcea3fabda8458d07ce18fe0e6ab7680cf03fce0012a6ac8a5c5bafb1fead`**;
+original integrated source manifest **`69a67f3e4c67247dbd8021a4710ba7187e6417856f20b980fe885e5a542effdb`**.
+Source/state migration retains prior cycle/policy histories and append-only seed/charge
+ledgers; prior journal is `worlds_c00.superseded_13e.json`.
+
+### Monitor and stop
+
+Receipts: `tools/mainstart/mainr16_resume/{INVOCATION_AUTHORIZED,PREARM,MIGRATED,LAUNCH,
+CHECK_DEPENDENCY_PREFLIGHT,COLLECTOR_PROGRESS,FINAL_RUNNING}.json` plus dependency manifests.
+All remote arm paths are under gpuR **`/root/autodl-tmp/c4/v5/mainstart/mainr16/restart`**.
+Loop outputs remain on `/root/main14_loop`; verified output free12,116,144,128 bytes,
+scratch free2,265,960,448 bytes at17:33. The retained earlier failure sections below
+are historical receipts, superseded by this running status.
+
+```bash
+A=/root/autodl-tmp/c4/v5/mainstart/mainr16/restart
+P=/root/miniconda3/bin/python
+$P "$A/runtime/scripts/c4/loop14.py" status --config "$A/CONFIG.json"
+cat "$A/PID.json" "$A/FINAL_RUNNING.json"
+tail -F "$A/driver.log" /root/main14_loop/wm/c00.log
+cat "$A/HORIZON_REPAIRED.json"
+# Cooperative stop after the current owned phase:
+touch "$A/STOP_ARM" /root/main14_loop/STOP_DRIVER
+# For an actively running owned policy only, update-boundary stop (c00 is already complete):
+touch /root/main14_loop/policy/c00.a2/STOP
+```
+
+## Historical continuation receipt — 2026-10-26 16:36 UTC+8
 
 **WAIT_OWNER. Checkpoint staging succeeded; no cycle-0 migration or launch occurred.**
 My prearm command incorrectly combined synthetic `--smoke` with the frozen `--gate-panel`

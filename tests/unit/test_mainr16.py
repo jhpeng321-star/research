@@ -46,3 +46,23 @@ def test_restart_preserves_charges_and_attempt_paths_without_adopting_old_policy
     with pytest.raises(ValueError):
         module.restarted_state(state, registration='reg', registration_sha256='sha',
             base={}, initial_returns='native.npz', phases=phases)
+
+
+def test_horizon_loader_accepts_resolved_config_without_changing_model(tmp_path):
+    import json
+    import torch
+    from tools.r10_attribution import load_model, build_model, build_physics
+    from wms.config.schema import to_mapping
+
+    preset = 'configs/c4_wm_v10round16_stage_b.toml'
+    cfg = load_train_config(preset, ['runtime.device=cpu', 'data.entries_v2=false'])
+    model = build_model(cfg, build_physics(cfg))
+    checkpoint = tmp_path / 'wm.pt'
+    torch.save({'model': model.state_dict()}, checkpoint)
+    resolved = tmp_path / 'config.resolved.json'
+    resolved.write_text(json.dumps({'config': to_mapping(cfg)}))
+    a, _settings, loaded, report = load_model(str(resolved), str(checkpoint))
+    assert not report['new'] and not report['unused']
+    assert a.model.ramp_speed_adapt_learnable and a.physics == cfg.physics
+    for name, tensor in model.state_dict().items():
+        assert torch.equal(tensor, loaded.state_dict()[name]), name
