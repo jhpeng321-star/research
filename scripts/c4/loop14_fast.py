@@ -188,14 +188,16 @@ def collect(loop, cfg, state, ph, root):
         raise loop.Refused("registered native smoke failed; scientific stop, no collection retry")
     for batch_index, batch in enumerate(batches):
         charge = per_world * len(batch)
-        if long_charged + long_per_world * len(batch) > 8000:
-            raise loop.Refused("long credit attempts exceed 8,000 additional sim-s/cycle (no refunds)")
-        if doc["charged"] + charge > reg["budget"]["sim_s_per_cycle"]:
+        long_cap = reg.get('collection', {}).get('cycle_long_attempt_allowances', {}).get(str(k), 8000)
+        cycle_cap = reg['budget'].get('cycle_attempt_allowances', {}).get(str(k), reg['budget']['sim_s_per_cycle'])
+        if long_charged + long_per_world * len(batch) > long_cap:
+            raise loop.Refused(f"long credit attempts exceed {long_cap} additional sim-s/cycle (no refunds)")
+        if doc["charged"] + charge > cycle_cap:
             raise loop.Refused("world retries exceed registered per-cycle sim-s (failed attempts stay charged)")
         if state["sim_s_charged"] + charge > reg["budget"]["sim_s_total"]:
             raise loop.Refused("world retries exceed total sim-s")
-        # Only this batch is charged/dispatched; the remainder cannot race the smoke decision.
-        for item, box, attempt in batch:
+        # Charge each submission before dispatch; canaries never pre-charge the remainder.
+        def charge_world(item, box, attempt):
             doc["attempts"][str(item["seed"])] = attempt
             loop.append(root / "seed_ledger.jsonl", {"cycle": k, "seed": item["seed"], "host": box,
                         "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt",
@@ -203,16 +205,38 @@ def collect(loop, cfg, state, ph, root):
                             "long_group_sim_s_charged": 300 if cfg['collect'].get('long_group', {}).get('enabled') else 0,
                             "long_single_sim_s_charged": 300 if cfg['collect'].get('long_single_hold', {}).get('enabled') else 0}
                            if long_per_world else {})})
-        long_charged += long_per_world * len(batch)
-        doc["charged"] += charge
-        state["sim_s_charged"] += charge
-        loop.save_state(cfg, state)
-        loop.write_atomic(journal, doc)
+            doc['charged'] += per_world
+            state['sim_s_charged'] += per_world
+            loop.save_state(cfg, state)
+            loop.write_atomic(journal, doc)
         failures = []
         cap = int(cfg["fastloop"]["workers_per_box"])
         with ThreadPoolExecutor(max_workers=cap) as p, ThreadPoolExecutor(max_workers=cap) as q:
-            futures = {(p if box == "cpuP" else q).submit(_world, loop, cfg, state, ph, root, item, box, attempt): item
-                       for item, box, attempt in batch}
+            futures = {}
+            canary = cfg['collect'].get('startup_canary', {})
+            ordered = list(batch)
+            if canary.get('cycle') == k and batch_index == 0:
+                # One startup world per box, sequentially verified before any remainder.
+                from tools.loopresume.c1collect_box import wait_canary
+                selected = []
+                for box_name in ('cpuP', 'cpuQ'):
+                    selected.append(next(v for v in ordered if v[1] == box_name))
+                ordered = selected + [v for v in ordered if v not in selected]
+            else:
+                selected = []
+            for item, box, attempt in ordered:
+                if canary.get('cycle') == k:
+                    allowed = canary['next_attempts'][str(item['seed'])]
+                    if attempt != allowed:
+                        raise RuntimeError('S-C1COLLECT single renewed attempt already consumed')
+                charge_world(item, box, attempt)
+                future = (p if box == 'cpuP' else q).submit(_world, loop, cfg, state, ph, root, item, box, attempt)
+                futures[future] = item
+                if (item, box, attempt) in selected:
+                    proof = wait_canary(loop, cfg, item, box, attempt, future)
+                    doc.setdefault('startup_canaries', {})[box] = proof
+                    loop.write_atomic(journal, doc)
+                    loop.append(root/'cycle_ledger.jsonl', {'event': 'S-C1COLLECT_canary_verified', **proof})
             for future in as_completed(futures):
                 item = futures[future]
                 try:
@@ -225,6 +249,7 @@ def collect(loop, cfg, state, ph, root):
                 except Exception as error:
                     failures.append(f"{item['seed']}: {type(error).__name__}: {error}")
                 loop.write_atomic(journal, doc)
+        long_charged += long_per_world * len(batch)
         if failures:
             raise RuntimeError("worlds incomplete; retry collect resumes on peer: " + "; ".join(failures))
         if native_init and batch_index == 0:

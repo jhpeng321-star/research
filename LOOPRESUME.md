@@ -122,4 +122,48 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
 - Registration/events append-only; authoritative GPU receipts
   `C1FIX_{SOURCE,TESTS,RECOVERY,VERIFIED,COLLECTION_BLOCKED}.json`, repaired current
   `C1_STATUS.json`; CPU `C1FIX_COLLECTOR_REPAIR.json`. Compact local result:
-  `tools/loopresume/receipts_c1fix/RESULT.json`. No push.
+   `tools/loopresume/receipts_c1fix/RESULT.json`. No push.
+
+## S-C1COLLECT — amendment installed; single canary failed, OPERATIONAL_PAUSED (2026-10-27 05:34 UTC+8)
+
+- Installed main05:20 owner act-on-recommendation amendment prospectively in the
+  shared append-only register and loop registration/events: **cycle1 attempt
+  allowance71,025; included long-credit allowance15,000; total210,000 unchanged**.
+  Same13 reservations968157–968169, no refunds, existing SHA-bound policy/native
+  veto and four-world HARMFUL-only guard retained. The historical **34,092charged
+  sim-s lost to12 pre-SUMO failures** remain explicit, including7,200long-credit.
+- Added serial per-box startup barriers and per-submission accounting. Exactly
+  **ONE world** dispatched: seed968158 oncpuP, world attempt4 (peer alternation),
+  2,841charged including600long-credit. Driver73820/start843042499 ran
+  21:30:10–21:30:23Z; worker623495 exited. **No cpuQ canary or remaining world
+  dispatched. No active main collector on either box; no simulation retry.**
+- Actual collector blocker: missing
+  `runtime_c1/baselines/circles/model.onnx`. Trace reaches `env.reset` line205
+  after successful SUMO startup/TraCI setup, but before recorder initialization
+  or stepping. Summary: **0simulated seconds,0branches,0completed episodes**.
+  This is a failure before first verified outputs, not proof of working SUMO
+  collection. The earlier adapter/network/template repair was insufficient.
+- A separate orchestration error passed configured SSH argv as a scalar to the
+  startup probe. Driver's recorded phase error is therefore TypeError; the
+  worker's retained traceback independently identifies the missing model.
+  Probe transport corrected offline after pause, with no redispatch. Original
+  sources/tests/logs retained. Prelaunch67testsPASS; final **69testsPASS8.88s**,
+  including SSH argv, sequential canary/no-remainder, charge-before-dispatch,
+  cycle-scoped allowance and failure-propagation checks. RuffPASS.
+- **Charged139,540/210,000; remaining70,460.** Cyclecharged36,933/71,025;
+  long-credit7,800/15,000 (included in total). **Real-SUMO per-world policy-minus-
+  native delta (veh-s, entrance waiting included), mean,95%CI and guard verdict
+  are UNAVAILABLE:** no completed paired starts. Imagination gate remains the
+  historical16/16PASS/-0.383744, not a real-SUMO guard result.
+- Main priority predicate was active while collect status wasrunning for13s;
+  it is nowinactive after failure. No claim that a watcher sampled that short
+  window. Convert/WM1/check remainpending. Independent WM0 coordinator62645/
+  start841871931 and trainer62910/start841872654 verifiedlive and untouched.
+- Authoritative receipt `gpuA:/root/autodl-tmp/c4/restart20261026/C1COLLECT_RESULT.json`,
+  SHA256`b266ac4b557e6a9791a2d65e7aff718c883b977989d800b2f50a9c79363fc54f`;
+  `C1COLLECT_{SOURCE,TESTS,BINDINGS,LAUNCH,ATTEMPT,FINAL_TESTS}.json`,
+  `arm/driver_c1collect.log`, CPU retained `c01.a4/collect/collect_log.jsonl`.
+  Final registrationSHA`24bd54391a61c85f873ba3a91a4f49ecc6d34d7f42b1bbe8be194161669b35c4`.
+  Compact local receipt `tools/loopresume/receipts_c1collect/RESULT.json`.
+  **Renewed collection authority consumed: OPERATIONAL_PAUSED; main decides
+  repair/further attempt and accounting. No additional launch is armed.**
