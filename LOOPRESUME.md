@@ -90,3 +90,36 @@ Reproduce the local handoff checks with:
 `python -B tools/loopresume/verify_receipts.py`.
 Read current main progress with `python -B tools/loopresume/operate.py status`;
 the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA.
+
+## S-C1FIX — policy recovered; collection deployment/allowance pause (2026-10-27 05:04 UTC+8)
+
+- Driver64792 was healthy and had automatically replayed from cycle0 in `c01.a2`.
+  It was never signalled/restarted. Cooperatively stopped only that owned replay,
+  retaining its files; existing retry logic launched `c01.a3` from original best
+  full checkpoint170/SHA`2463e550...`. Config-only policy cap is now0.65 (~30.8GiB),
+  leaving7.1GiB even at the WM's full0.20cap. Original WM62645/62910 untouched.
+- **150 logical updates completed through180; native-relative gate PASS,16/16
+  improved, mean deltaJ=-0.3837442398**, unchanged10s frozen panel/WM/config vetoes.
+  Selected checkpoint `arm/loop/policy/c01.a3/policy_latest.pt`, SHA256
+  `64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c`.
+  Retained original140updates through170 and reran171–180; no repeated warmup/share
+  selection, no bit-identical uninterrupted-run claim. **72 pre-retry tests PASS;
+  final73 PASS** including an explicit pre-training corpus-SHA veto; Ruff PASS.
+- **Collection did launch on both CPUs, but all12 dispatched world jobs failed
+  before SUMO**: missing successor-runtime `baselines/circles/adapter.json`.
+  First failed worker PIDs cpuP589756/589471, cpuQ582909/583052; **none active**.
+  Identical original adapter now installed on both (SHA`8a925e9e...`); missing
+  network/template metadata links repaired without opening scenario assignments.
+  This is deployment preflight only, not a successful collector run.
+- Automatic attempts1–3 retained34,092charged sim-s/7,200long-credit sim-s.
+  Driver exited naturally `OPERATIONAL_PAUSED` at04:59:13; cycle caps36,933/8,000
+  cannot fund another four-world dispatch. **136,699/210,000 charged**,0completed
+  cycle1worlds; convert/WM1 pending, independent WM0 remains autonomous.
+  Owner amendment is required before further dispatch: same13worlds, no refunds,
+  cycle attempt allowance>=71,025 and long-credit allowance>=15,000 would fund
+  one complete remaining collection at173,632total; these increases are **not installed**.
+  **ETA blocked pending that amendment.**
+- Registration/events append-only; authoritative GPU receipts
+  `C1FIX_{SOURCE,TESTS,RECOVERY,VERIFIED,COLLECTION_BLOCKED}.json`, repaired current
+  `C1_STATUS.json`; CPU `C1FIX_COLLECTOR_REPAIR.json`. Compact local result:
+  `tools/loopresume/receipts_c1fix/RESULT.json`. No push.

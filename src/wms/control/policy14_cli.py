@@ -188,6 +188,8 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        from .policy14_recovery import load_recovery
+        recovery = load_recovery(raw, args)
         if args.native_init:
             from .nativeinit import PANEL_SHA256
             if args.smoke or not args.gate_panel:
@@ -213,9 +215,12 @@ def main(argv=None):
         torch.set_num_threads(threads)
         # Shared-GPU guard (as train_cli): env C4_GPU_MEM_FRACTION caps this process's CUDA
         # memory so it OOMs itself before starving a co-located run.  Unset = unchanged.
-        frac = os.environ.get("C4_GPU_MEM_FRACTION")
+        frac = raw.get('run', {}).get('gpu_memory_fraction', os.environ.get("C4_GPU_MEM_FRACTION"))
         if frac and args.device == "cuda" and torch.cuda.is_available():
+            if not 0 < float(frac) <= 1:
+                raise ValueError('GPU memory fraction must be in (0, 1]')
             torch.cuda.set_per_process_memory_fraction(float(frac))
+        summary['gpu_memory_fraction'] = float(frac) if frac else None
         candidate = checked_path(args.output_dir)
         candidate.mkdir(parents=True, exist_ok=False)
         output = candidate
@@ -376,8 +381,10 @@ def main(argv=None):
             resume = checked_path(args.resume)
             # Same ensemble size, possibly a refreshed (accepted) WM: dreamer.load_checkpoint's
             # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
-            os.environ["WMS_LOOP_REFRESH"] = "1"
+            os.environ["WMS_LOOP_REFRESH"] = "0" if recovery else "1"
             trainer.load_checkpoint(resume)
+            if recovery and trainer.update_count != recovery['saved_update']:
+                raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
                        "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
         if defer_install:
@@ -404,7 +411,13 @@ def main(argv=None):
             if not trainer.longcritic.warm:
                 summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
             summary["longcritic"] = trainer.longcritic.receipt
-        if share_cfg.enabled:
+        if recovery:
+            summary['real_share'] = recovery['prior']['real_share']
+            if trainer.config.real_return_mix != summary['real_share']['selected_share']:
+                raise ValueError('operational recovery fixed share mismatch')
+            summary['operational_recovery'] = {k: v for k, v in recovery.items()
+                                               if k not in ('prior', 'curve', 'updates')}
+        elif share_cfg.enabled:
             if args.smoke:
                 raise ValueError('real-share selection requires real TRAIN starts')
             summary['real_share'] = calibrate_share(trainer, provider, share_dev,
@@ -419,23 +432,35 @@ def main(argv=None):
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
         initial_score = before
-        updates = []
+        updates = list(recovery['updates']) if recovery else []
         summary.update(updates=updates, independent_score_before=initial_score)
-        native_curve = []
-        native_start_update = trainer.update_count
+        native_curve = list(recovery['curve']) if recovery else []
+        native_start_update = recovery['phase_start'] if recovery else trainer.update_count
         if args.native_init:
             initial_native = score_native_panel(trainer, val, gate_panel, args.device)
-            native_curve.append(initial_native)
+            if not recovery:
+                native_curve.append(initial_native)
             summary["native_curve"] = native_curve
             if not args.resume and any(d != 0.0 for d in initial_native["delta_per_start"]):
                 raise ValueError("update-zero native identity failed on frozen panel")
             if args.resume and initial_native["passed"]:
                 trainer.save_checkpoint(output / "policy_native_best.pt")
+            if recovery:
+                # Keep the original eligible best byte-for-byte until a better
+                # measured checkpoint appears. Re-scoring still applies the veto.
+                import shutil
+                shutil.copyfile(args.resume, output / 'policy_native_best.pt')
+                if not initial_native['passed']:
+                    raise RuntimeError('native-relative recovery checkpoint veto')
         if gate_panel is not None:
             panel_before = score_gate_panel(trainer, val, gate_panel, args.device)
             summary["gate_panel"] = {"file": str(args.gate_panel), "n": len(panel_before),
                                      "sha256": hashlib.sha256(checked_path(args.gate_panel).read_bytes()).hexdigest(),
-                                     "J_before": panel_before}
+                                      "J_before": panel_before}
+        if recovery:
+            summary['gate_panel'] = recovery['prior']['gate_panel']
+            (output / 'gate_panel_result.json').write_text(json.dumps(summary['gate_panel'], indent=1))
+            (output / 'native_curve.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in native_curve))
         for _ in range(args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")

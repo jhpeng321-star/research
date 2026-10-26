@@ -1,0 +1,17 @@
+# Owner-delegated S-LOOPRESUME-C1-FALLBACK: same pinned corpus/share as cycle0.
+extends = "c4_policy14_restart.toml"
+
+[run]
+# S-C1FIX: ~30.8 GiB policy; even the WM's full 0.20 cap leaves >6 GiB.
+gpu_memory_fraction = 0.65
+operational_recovery = "/root/autodl-tmp/c4/restart20261026/C1FIX_RECOVERY.json"
+
+[real_share]
+enabled = true
+fixed_share = 1.0
+
+[paircrit]
+enabled = false
+
+[breakdown]
+enabled = false
