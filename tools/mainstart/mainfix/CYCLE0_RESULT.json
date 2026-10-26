@@ -1,0 +1,4665 @@
+{
+ "method": {
+  "draws": 5000,
+  "rng_seed": 20261026,
+  "cluster": "paired traffic world; both starts retained",
+  "cost_difference": "treatment-reference",
+  "gain": "native-policy"
+ },
+ "pooled": {
+  "worlds": 13,
+  "starts": 26,
+  "metrics": [
+   {
+    "metric": "total_delay",
+    "native": 578391.0624800627,
+    "policy": 1197367.8977695436,
+    "cost_difference": 618976.8352894809,
+    "cost_difference_ci95": [
+     503848.28249207,
+     739343.5790825036
+    ],
+    "gain": -618976.8352894809,
+    "gain_ci95": [
+     -739343.5790825036,
+     -503848.28249207
+    ]
+   },
+   {
+    "metric": "onroad_delay",
+    "native": 257401.36029106265,
+    "policy": 460993.69558054354,
+    "cost_difference": 203592.3352894809,
+    "cost_difference_ci95": [
+     128253.03685382512,
+     272841.9681732176
+    ],
+    "gain": -203592.3352894809,
+    "gain_ci95": [
+     -272841.9681732176,
+     -128253.03685382512
+    ]
+   },
+   {
+    "metric": "source_wait",
+    "native": 320989.70218900003,
+    "policy": 736374.202189,
+    "cost_difference": 415384.49999999994,
+    "cost_difference_ci95": [
+     316265.4750000001,
+     504587.49999999994
+    ],
+    "gain": -415384.49999999994,
+    "gain_ci95": [
+     -504587.49999999994,
+     -316265.4750000001
+    ]
+   },
+   {
+    "metric": "throughput",
+    "native": 4912.0,
+    "policy": 2062.0,
+    "cost_difference": -2850.0,
+    "cost_difference_ci95": [
+     -3397.05,
+     -2316.9500000000007
+    ],
+    "gain": 2850.0,
+    "gain_ci95": [
+     2316.9500000000007,
+     3397.05
+    ]
+   },
+   {
+    "metric": "hard_brakes",
+    "native": 182.5,
+    "policy": 319.5,
+    "cost_difference": 137.0,
+    "cost_difference_ci95": [
+     9.0,
+     291.5124999999998
+    ],
+    "gain": -137.0,
+    "gain_ci95": [
+     -291.5124999999998,
+     -9.0
+    ]
+   },
+   {
+    "metric": "ttc_exposure",
+    "native": 5390.0,
+    "policy": 10287.0,
+    "cost_difference": 4897.0,
+    "cost_difference_ci95": [
+     2667.0,
+     7529.049999999999
+    ],
+    "gain": -4897.0,
+    "gain_ci95": [
+     -7529.049999999999,
+     -2667.0
+    ]
+   },
+   {
+    "metric": "collisions",
+    "native": 0.0,
+    "policy": 0.0,
+    "cost_difference": 0.0,
+    "cost_difference_ci95": [
+     0.0,
+     0.0
+    ],
+    "gain": -0.0,
+    "gain_ci95": [
+     -0.0,
+     -0.0
+    ]
+   },
+   {
+    "metric": "teleports",
+    "native": 0.0,
+    "policy": 0.0,
+    "cost_difference": 0.0,
+    "cost_difference_ci95": [
+     0.0,
+     0.0
+    ],
+    "gain": -0.0,
+    "gain_ci95": [
+     -0.0,
+     -0.0
+    ]
+   }
+  ],
+  "normalization": {
+   "delay_per_requested": {
+    "native": 38.38793804208288,
+    "policy": 79.46956247226014,
+    "difference": 41.081624430177264,
+    "gain": -41.081624430177264,
+    "ci95": [
+     33.41263196389771,
+     49.12735423119486
+    ],
+    "gain_ci95": [
+     -49.12735423119486,
+     -33.41263196389771
+    ]
+   },
+   "road_per_requested": {
+    "native": 17.083783121461646,
+    "policy": 30.5962497896425,
+    "difference": 13.512466668180851,
+    "gain": -13.512466668180851,
+    "ci95": [
+     8.301403472238787,
+     18.62878653570097
+    ],
+    "gain_ci95": [
+     -18.62878653570097,
+     -8.301403472238787
+    ]
+   },
+   "source_per_requested": {
+    "native": 21.304154920621226,
+    "policy": 48.87331268261764,
+    "difference": 27.56915776199641,
+    "gain": -27.56915776199641,
+    "ci95": [
+     21.518990861172828,
+     33.146667095335275
+    ],
+    "gain_ci95": [
+     -33.146667095335275,
+     -21.518990861172828
+    ]
+   },
+   "arrivals_per_hour": {
+    "native": 2267.0769230769233,
+    "policy": 951.6923076923077,
+    "difference": -1315.3846153846152,
+    "gain": 1315.3846153846152,
+    "ci95": [
+     -1567.8692307692306,
+     -1069.3615384615389
+    ],
+    "gain_ci95": [
+     1069.3615384615389,
+     1567.8692307692306
+    ]
+   }
+  },
+  "population_sum": 15067.0,
+  "horizon_sum": 7800.0,
+  "equal_world_mean_delay_difference": 47613.60271457545,
+  "equal_world_mean_per_requested_difference": 41.26847097235001
+ },
+ "worlds": [
+  {
+   "seed": 968129,
+   "demand": 1900,
+   "penetration": 0.05,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 17393.927713480436,
+     "policy": 45633.44060737433,
+     "cost_difference": 28239.512893893894,
+     "cost_difference_ci95": null,
+     "gain": -28239.512893893894,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 15022.81537348044,
+     "policy": 13204.328267374327,
+     "cost_difference": -1818.487106106113,
+     "cost_difference_ci95": null,
+     "gain": 1818.487106106113,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 2371.1123399999988,
+     "policy": 32429.11234,
+     "cost_difference": 30058.0,
+     "cost_difference_ci95": null,
+     "gain": -30058.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 393.0,
+     "policy": 286.0,
+     "cost_difference": -107.0,
+     "cost_difference_ci95": null,
+     "gain": 107.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 22.0,
+     "policy": 12.5,
+     "cost_difference": -9.5,
+     "cost_difference_ci95": null,
+     "gain": 9.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 347.0,
+     "policy": 392.5,
+     "cost_difference": 45.5,
+     "cost_difference_ci95": null,
+     "gain": -45.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 16.644906902852092,
+     "policy": 43.66836421758309,
+     "difference": 27.023457314731,
+     "gain": -27.023457314731,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 14.375899878928651,
+     "policy": 12.63572083002328,
+     "difference": -1.7401790489053715,
+     "gain": 1.7401790489053715,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 2.269007023923444,
+     "policy": 31.03264338755981,
+     "difference": 28.763636363636362,
+     "gain": -28.763636363636362,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2358.0,
+     "policy": 1716.0,
+     "difference": -642.0,
+     "gain": 642.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1045.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 28239.512893893894,
+   "equal_world_mean_per_requested_difference": 27.023457314731
+  },
+  {
+   "seed": 968130,
+   "demand": 1900,
+   "penetration": 0.1,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 8153.433722986982,
+     "policy": 39267.73039848397,
+     "cost_difference": 31114.296675496986,
+     "cost_difference_ci95": null,
+     "gain": -31114.296675496986,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 7605.860801986983,
+     "policy": 38703.15747748397,
+     "cost_difference": 31097.296675496986,
+     "cost_difference_ci95": null,
+     "gain": -31097.296675496986,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 547.5729209999998,
+     "policy": 564.5729209999998,
+     "cost_difference": 17.0,
+     "cost_difference_ci95": null,
+     "gain": -17.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 344.0,
+     "policy": 139.0,
+     "cost_difference": -205.0,
+     "cost_difference_ci95": null,
+     "gain": 205.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 10.5,
+     "policy": 49.0,
+     "cost_difference": 38.5,
+     "cost_difference_ci95": null,
+     "gain": -38.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 136.0,
+     "policy": 1339.5,
+     "cost_difference": 1203.5,
+     "cost_difference_ci95": null,
+     "gain": -1203.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 8.29443918920344,
+     "policy": 39.946826448101696,
+     "difference": 31.652387258898255,
+     "gain": -31.652387258898255,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 7.737396543221752,
+     "policy": 39.3724898041546,
+     "difference": 31.635093260932845,
+     "gain": -31.635093260932845,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 0.5570426459816885,
+     "policy": 0.5743366439471006,
+     "difference": 0.017293997965412006,
+     "gain": -0.017293997965412006,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2064.0,
+     "policy": 834.0,
+     "difference": -1230.0,
+     "gain": 1230.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 983.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 31114.296675496986,
+   "equal_world_mean_per_requested_difference": 31.652387258898255
+  },
+  {
+   "seed": 968131,
+   "demand": 1900,
+   "penetration": 0.2,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 19867.620265659185,
+     "policy": 74998.40309969736,
+     "cost_difference": 55130.782834038175,
+     "cost_difference_ci95": null,
+     "gain": -55130.782834038175,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 15952.613872659183,
+     "policy": 36328.896706697364,
+     "cost_difference": 20376.282834038182,
+     "cost_difference_ci95": null,
+     "gain": -20376.282834038182,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 3915.0063930000006,
+     "policy": 38669.50639299999,
+     "cost_difference": 34754.499999999985,
+     "cost_difference_ci95": null,
+     "gain": -34754.499999999985,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 374.0,
+     "policy": 120.0,
+     "cost_difference": -254.0,
+     "cost_difference_ci95": null,
+     "gain": 254.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 4.0,
+     "policy": 17.5,
+     "cost_difference": 13.5,
+     "cost_difference_ci95": null,
+     "gain": -13.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 316.0,
+     "policy": 606.5,
+     "cost_difference": 290.5,
+     "cost_difference_ci95": null,
+     "gain": -290.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 19.401972915682798,
+     "policy": 73.2406280270482,
+     "difference": 53.838655111365405,
+     "gain": -53.838655111365405,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 15.578724485018734,
+     "policy": 35.477438190134144,
+     "difference": 19.898713705115412,
+     "gain": -19.898713705115412,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 3.823248430664063,
+     "policy": 37.76318983691405,
+     "difference": 33.939941406249986,
+     "gain": -33.939941406249986,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2244.0,
+     "policy": 720.0,
+     "difference": -1524.0,
+     "gain": 1524.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1024.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 55130.782834038175,
+   "equal_world_mean_per_requested_difference": 53.838655111365405
+  },
+  {
+   "seed": 968132,
+   "demand": 1900,
+   "penetration": 0.4,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 24716.38427196158,
+     "policy": 91604.76284472717,
+     "cost_difference": 66888.37857276559,
+     "cost_difference_ci95": null,
+     "gain": -66888.37857276559,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 13116.294441961574,
+     "policy": 33953.17301472717,
+     "cost_difference": 20836.878572765592,
+     "cost_difference_ci95": null,
+     "gain": -20836.878572765592,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 11600.089830000004,
+     "policy": 57651.58983,
+     "cost_difference": 46051.49999999999,
+     "cost_difference_ci95": null,
+     "gain": -46051.49999999999,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 378.0,
+     "policy": 64.0,
+     "cost_difference": -314.0,
+     "cost_difference_ci95": null,
+     "gain": 314.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 1.5,
+     "policy": 6.0,
+     "cost_difference": 4.5,
+     "cost_difference_ci95": null,
+     "gain": -4.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 218.5,
+     "policy": 507.0,
+     "cost_difference": 288.5,
+     "cost_difference_ci95": null,
+     "gain": -288.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 23.05632861190446,
+     "policy": 85.45220414620071,
+     "difference": 62.39587553429626,
+     "gain": -62.39587553429626,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 12.235349292874602,
+     "policy": 31.672736021200716,
+     "difference": 19.43738672832611,
+     "gain": -19.43738672832611,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 10.820979319029854,
+     "policy": 53.779468124999994,
+     "difference": 42.95848880597014,
+     "gain": -42.95848880597014,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2268.0,
+     "policy": 384.0,
+     "difference": -1884.0,
+     "gain": 1884.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1072.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 66888.37857276559,
+   "equal_world_mean_per_requested_difference": 62.39587553429626
+  },
+  {
+   "seed": 968133,
+   "demand": 2100,
+   "penetration": 0.05,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 37212.4329292563,
+     "policy": 65121.58924846067,
+     "cost_difference": 27909.15631920437,
+     "cost_difference_ci95": null,
+     "gain": -27909.15631920437,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 31540.246498256296,
+     "policy": 47871.402817460665,
+     "cost_difference": 16331.156319204369,
+     "cost_difference_ci95": null,
+     "gain": -16331.156319204369,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 5672.186431000001,
+     "policy": 17250.186430999995,
+     "cost_difference": 11577.999999999993,
+     "cost_difference_ci95": null,
+     "gain": -11577.999999999993,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 376.0,
+     "policy": 245.0,
+     "cost_difference": -131.0,
+     "cost_difference_ci95": null,
+     "gain": 131.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 30.0,
+     "policy": 91.0,
+     "cost_difference": 61.0,
+     "cost_difference_ci95": null,
+     "gain": -61.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 563.5,
+     "policy": 1528.5,
+     "cost_difference": 965.0,
+     "cost_difference_ci95": null,
+     "gain": -965.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 34.51988212361438,
+     "policy": 60.409637521763145,
+     "difference": 25.889755398148765,
+     "gain": -25.889755398148765,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 29.2581136347461,
+     "policy": 44.40760929263512,
+     "difference": 15.149495657889025,
+     "gain": -15.149495657889025,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 5.261768488868276,
+     "policy": 16.00202822912801,
+     "difference": 10.740259740259733,
+     "gain": -10.740259740259733,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2256.0,
+     "policy": 1470.0,
+     "difference": -786.0,
+     "gain": 786.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1078.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 27909.15631920437,
+   "equal_world_mean_per_requested_difference": 25.889755398148765
+  },
+  {
+   "seed": 968134,
+   "demand": 2100,
+   "penetration": 0.1,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 26063.58972577854,
+     "policy": 60072.103339551904,
+     "cost_difference": 34008.513613773364,
+     "cost_difference_ci95": null,
+     "gain": -34008.513613773364,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 22256.922634778537,
+     "policy": 36536.43624855191,
+     "cost_difference": 14279.513613773372,
+     "cost_difference_ci95": null,
+     "gain": -14279.513613773372,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 3806.6670910000003,
+     "policy": 23535.667090999992,
+     "cost_difference": 19728.999999999993,
+     "cost_difference_ci95": null,
+     "gain": -19728.999999999993,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 368.0,
+     "policy": 203.0,
+     "cost_difference": -165.0,
+     "cost_difference_ci95": null,
+     "gain": 165.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 11.5,
+     "policy": 39.0,
+     "cost_difference": 27.5,
+     "cost_difference_ci95": null,
+     "gain": -27.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 498.5,
+     "policy": 1165.0,
+     "cost_difference": 666.5,
+     "cost_difference_ci95": null,
+     "gain": -666.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 23.999622215265692,
+     "policy": 55.315012283196964,
+     "difference": 31.315390067931276,
+     "gain": -31.315390067931276,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 20.494403899427752,
+     "policy": 33.64312730069236,
+     "difference": 13.148723401264615,
+     "gain": -13.148723401264615,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 3.5052183158379377,
+     "policy": 21.671884982504597,
+     "difference": 18.16666666666666,
+     "gain": -18.16666666666666,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2208.0,
+     "policy": 1218.0,
+     "difference": -990.0000000000001,
+     "gain": 990.0000000000001,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1086.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 34008.513613773364,
+   "equal_world_mean_per_requested_difference": 31.315390067931276
+  },
+  {
+   "seed": 968135,
+   "demand": 2100,
+   "penetration": 0.2,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 35320.67601645249,
+     "policy": 92769.79037096513,
+     "cost_difference": 57449.11435451264,
+     "cost_difference_ci95": null,
+     "gain": -57449.11435451264,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 24600.528862452484,
+     "policy": 40124.14321696512,
+     "cost_difference": 15523.61435451264,
+     "cost_difference_ci95": null,
+     "gain": -15523.61435451264,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 10720.147154000002,
+     "policy": 52645.647154000006,
+     "cost_difference": 41925.5,
+     "cost_difference_ci95": null,
+     "gain": -41925.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 357.0,
+     "policy": 100.0,
+     "cost_difference": -257.0,
+     "cost_difference_ci95": null,
+     "gain": 257.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 19.5,
+     "policy": 9.5,
+     "cost_difference": -10.0,
+     "cost_difference_ci95": null,
+     "gain": 10.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 589.0,
+     "policy": 772.5,
+     "cost_difference": 183.5,
+     "cost_difference_ci95": null,
+     "gain": -183.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 31.64935126922266,
+     "policy": 83.1270523037322,
+     "difference": 51.477701034509536,
+     "gain": -51.477701034509536,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 22.043484643774626,
+     "policy": 35.95353334853505,
+     "difference": 13.91004870476043,
+     "gain": -13.91004870476043,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 9.60586662544803,
+     "policy": 47.17351895519714,
+     "difference": 37.5676523297491,
+     "gain": -37.5676523297491,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2142.0,
+     "policy": 600.0,
+     "difference": -1542.0,
+     "gain": 1542.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1116.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 57449.11435451264,
+   "equal_world_mean_per_requested_difference": 51.477701034509536
+  },
+  {
+   "seed": 968136,
+   "demand": 2100,
+   "penetration": 0.4,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 44185.07659722459,
+     "policy": 115945.85562987239,
+     "cost_difference": 71760.77903264778,
+     "cost_difference_ci95": null,
+     "gain": -71760.77903264778,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 20675.9406152246,
+     "policy": 46164.71964787236,
+     "cost_difference": 25488.779032647763,
+     "cost_difference_ci95": null,
+     "gain": -25488.779032647763,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 23509.135981999993,
+     "policy": 69781.13598200002,
+     "cost_difference": 46272.00000000003,
+     "cost_difference_ci95": null,
+     "gain": -46272.00000000003,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 391.0,
+     "policy": 69.0,
+     "cost_difference": -322.0,
+     "cost_difference_ci95": null,
+     "gain": 322.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 6.5,
+     "policy": 3.5,
+     "cost_difference": -3.0,
+     "cost_difference_ci95": null,
+     "gain": 3.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 451.0,
+     "policy": 582.0,
+     "cost_difference": 131.0,
+     "cost_difference_ci95": null,
+     "gain": -131.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 38.255477573354625,
+     "policy": 100.38602219036571,
+     "difference": 62.13054461701107,
+     "gain": -62.13054461701107,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 17.901247285908745,
+     "policy": 39.96945424058213,
+     "difference": 22.06820695467339,
+     "gain": -22.06820695467339,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 20.35423028744588,
+     "policy": 60.41656794978357,
+     "difference": 40.06233766233769,
+     "gain": -40.06233766233769,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2346.0,
+     "policy": 414.0,
+     "difference": -1931.9999999999998,
+     "gain": 1931.9999999999998,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1155.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 71760.77903264778,
+   "equal_world_mean_per_requested_difference": 62.13054461701107
+  },
+  {
+   "seed": 968137,
+   "demand": 2400,
+   "penetration": 0.05,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 55144.889542935605,
+     "policy": 94187.1591583862,
+     "cost_difference": 39042.2696154506,
+     "cost_difference_ci95": null,
+     "gain": -39042.2696154506,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 17483.74404893557,
+     "policy": 24648.51366438617,
+     "cost_difference": 7164.769615450601,
+     "cost_difference_ci95": null,
+     "gain": -7164.769615450601,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 37661.14549400004,
+     "policy": 69538.64549400003,
+     "cost_difference": 31877.499999999985,
+     "cost_difference_ci95": null,
+     "gain": -31877.499999999985,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 388.0,
+     "policy": 230.0,
+     "cost_difference": -158.0,
+     "cost_difference_ci95": null,
+     "gain": 158.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 19.0,
+     "policy": 38.0,
+     "cost_difference": 19.0,
+     "cost_difference_ci95": null,
+     "gain": -19.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 359.5,
+     "policy": 551.0,
+     "cost_difference": 191.5,
+     "cost_difference_ci95": null,
+     "gain": -191.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 44.47168511527065,
+     "policy": 75.95738641805339,
+     "difference": 31.48570130278274,
+     "gain": -31.48570130278274,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 14.099793587851265,
+     "policy": 19.877833600311426,
+     "difference": 5.7780400124601625,
+     "gain": -5.7780400124601625,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 30.371891527419386,
+     "policy": 56.079552817741956,
+     "difference": 25.70766129032257,
+     "gain": -25.70766129032257,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2328.0,
+     "policy": 1380.0,
+     "difference": -947.9999999999999,
+     "gain": 947.9999999999999,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1240.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 39042.2696154506,
+   "equal_world_mean_per_requested_difference": 31.48570130278274
+  },
+  {
+   "seed": 968138,
+   "demand": 2400,
+   "penetration": 0.1,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 79994.4563617141,
+     "policy": 118048.2215684036,
+     "cost_difference": 38053.76520668951,
+     "cost_difference_ci95": null,
+     "gain": -38053.76520668951,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 23987.448351714065,
+     "policy": 30404.713558403557,
+     "cost_difference": 6417.265206689492,
+     "cost_difference_ci95": null,
+     "gain": -6417.265206689492,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 56007.00801000003,
+     "policy": 87643.50801000005,
+     "cost_difference": 31636.500000000022,
+     "cost_difference_ci95": null,
+     "gain": -31636.500000000022,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 357.0,
+     "policy": 185.0,
+     "cost_difference": -172.0,
+     "cost_difference_ci95": null,
+     "gain": 172.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 28.0,
+     "policy": 29.5,
+     "cost_difference": 1.5,
+     "cost_difference_ci95": null,
+     "gain": -1.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 423.5,
+     "policy": 680.0,
+     "cost_difference": 256.5,
+     "cost_difference_ci95": null,
+     "gain": -256.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 62.349537304531644,
+     "policy": 92.00952577428184,
+     "difference": 29.659988469750203,
+     "gain": -29.659988469750203,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 18.69637439728298,
+     "policy": 23.698139951990303,
+     "difference": 5.00176555470732,
+     "gain": -5.00176555470732,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 43.65316290724866,
+     "policy": 68.31138582229154,
+     "difference": 24.658222915042884,
+     "gain": -24.658222915042884,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2142.0,
+     "policy": 1110.0,
+     "difference": -1032.0,
+     "gain": 1032.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1283.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 38053.76520668951,
+   "equal_world_mean_per_requested_difference": 29.659988469750203
+  },
+  {
+   "seed": 968139,
+   "demand": 2400,
+   "penetration": 0.2,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 63675.960012238815,
+     "policy": 127122.8161261423,
+     "cost_difference": 63446.85611390348,
+     "cost_difference_ci95": null,
+     "gain": -63446.85611390348,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 21755.036495238834,
+     "policy": 45028.892609142276,
+     "cost_difference": 23273.856113903443,
+     "cost_difference_ci95": null,
+     "gain": -23273.856113903443,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 41920.92351699999,
+     "policy": 82093.92351700002,
+     "cost_difference": 40173.00000000003,
+     "cost_difference_ci95": null,
+     "gain": -40173.00000000003,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 392.0,
+     "policy": 80.0,
+     "cost_difference": -312.0,
+     "cost_difference_ci95": null,
+     "gain": 312.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 11.0,
+     "policy": 11.5,
+     "cost_difference": 0.5,
+     "cost_difference_ci95": null,
+     "gain": -0.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 438.0,
+     "policy": 904.5,
+     "cost_difference": 466.5,
+     "cost_difference_ci95": null,
+     "gain": -466.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 51.31020146030525,
+     "policy": 102.43579059318476,
+     "difference": 51.12558913287952,
+     "gain": -51.12558913287952,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 17.530246974406797,
+     "policy": 36.28436149004212,
+     "difference": 18.75411451563533,
+     "gain": -18.75411451563533,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 33.77995448589846,
+     "policy": 66.15142910314265,
+     "difference": 32.37147461724418,
+     "gain": -32.37147461724418,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2352.0,
+     "policy": 480.0,
+     "difference": -1872.0,
+     "gain": 1872.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1241.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 63446.85611390348,
+   "equal_world_mean_per_requested_difference": 51.12558913287952
+  },
+  {
+   "seed": 968140,
+   "demand": 2400,
+   "penetration": 0.4,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 74863.90060331805,
+     "policy": 148554.62923999262,
+     "cost_difference": 73690.72863667457,
+     "cost_difference_ci95": null,
+     "gain": -73690.72863667457,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 23604.673845318088,
+     "policy": 50282.40248199271,
+     "cost_difference": 26677.72863667462,
+     "cost_difference_ci95": null,
+     "gain": -26677.72863667462,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 51259.22675799997,
+     "policy": 98272.2267579999,
+     "cost_difference": 47012.999999999935,
+     "cost_difference_ci95": null,
+     "gain": -47012.999999999935,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 397.0,
+     "policy": 77.0,
+     "cost_difference": -320.0,
+     "cost_difference_ci95": null,
+     "gain": 320.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 7.5,
+     "policy": 2.0,
+     "cost_difference": -5.5,
+     "cost_difference_ci95": null,
+     "gain": 5.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 570.5,
+     "policy": 635.5,
+     "cost_difference": 65.0,
+     "cost_difference_ci95": null,
+     "gain": -65.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 56.75807475611679,
+     "policy": 112.62670905230677,
+     "difference": 55.86863429618997,
+     "gain": -55.86863429618997,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 17.895886160210832,
+     "policy": 38.121609159964144,
+     "difference": 20.225722999753312,
+     "gain": -20.225722999753312,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 38.86218859590596,
+     "policy": 74.50509989234261,
+     "difference": 35.642911296436644,
+     "gain": -35.642911296436644,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2382.0,
+     "policy": 462.0,
+     "difference": -1920.0,
+     "gain": 1920.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1319.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 73690.72863667457,
+   "equal_world_mean_per_requested_difference": 55.86863429618997
+  },
+  {
+   "seed": 968141,
+   "demand": 2700,
+   "penetration": 0.05,
+   "starts": 2,
+   "worlds": 1,
+   "metrics": [
+    {
+     "metric": "total_delay",
+     "native": 91798.71471705602,
+     "policy": 124041.39613748601,
+     "cost_difference": 32242.681420429988,
+     "cost_difference_ci95": null,
+     "gain": -32242.681420429988,
+     "gain_ci95": null
+    },
+    {
+     "metric": "onroad_delay",
+     "native": 19799.23444905601,
+     "policy": 17742.915869485914,
+     "cost_difference": -2056.3185795700956,
+     "cost_difference_ci95": null,
+     "gain": 2056.3185795700956,
+     "gain_ci95": null
+    },
+    {
+     "metric": "source_wait",
+     "native": 71999.48026800001,
+     "policy": 106298.48026800007,
+     "cost_difference": 34299.00000000006,
+     "cost_difference_ci95": null,
+     "gain": -34299.00000000006,
+     "gain_ci95": null
+    },
+    {
+     "metric": "throughput",
+     "native": 397.0,
+     "policy": 264.0,
+     "cost_difference": -133.0,
+     "cost_difference_ci95": null,
+     "gain": 133.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "hard_brakes",
+     "native": 11.5,
+     "policy": 10.5,
+     "cost_difference": -1.0,
+     "cost_difference_ci95": null,
+     "gain": 1.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "ttc_exposure",
+     "native": 479.0,
+     "policy": 622.5,
+     "cost_difference": 143.5,
+     "cost_difference_ci95": null,
+     "gain": -143.5,
+     "gain_ci95": null
+    },
+    {
+     "metric": "collisions",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    },
+    {
+     "metric": "teleports",
+     "native": 0.0,
+     "policy": 0.0,
+     "cost_difference": 0.0,
+     "cost_difference_ci95": null,
+     "gain": -0.0,
+     "gain_ci95": null
+    }
+   ],
+   "normalization": {
+    "delay_per_requested": {
+     "native": 64.4201506786358,
+     "policy": 87.04659378069194,
+     "difference": 22.626443102056133,
+     "gain": -22.626443102056133,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "road_per_requested": {
+     "native": 13.894199613372638,
+     "policy": 12.451169031218186,
+     "difference": -1.4430305821544531,
+     "gain": 1.4430305821544531,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "source_per_requested": {
+     "native": 50.525951065263165,
+     "policy": 74.59542474947374,
+     "difference": 24.069473684210568,
+     "gain": -24.069473684210568,
+     "ci95": null,
+     "gain_ci95": null
+    },
+    "arrivals_per_hour": {
+     "native": 2382.0,
+     "policy": 1584.0,
+     "difference": -798.0,
+     "gain": 798.0,
+     "ci95": null,
+     "gain_ci95": null
+    }
+   },
+   "population_sum": 1425.0,
+   "horizon_sum": 600.0,
+   "equal_world_mean_delay_difference": 32242.681420429988,
+   "equal_world_mean_per_requested_difference": 22.626443102056133
+  }
+ ],
+ "strata": {
+  "penetration": {
+   "0.05": {
+    "worlds": 4,
+    "starts": 8,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 201549.96490272836,
+      "policy": 328983.5851517072,
+      "cost_difference": 127433.62024897881,
+      "cost_difference_ci95": [
+       112297.33842619651,
+       145366.32174024568
+      ],
+      "gain": -127433.62024897881,
+      "gain_ci95": [
+       -145366.32174024568,
+       -112297.33842619651
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 83846.0403697283,
+      "policy": 103467.16061870707,
+      "cost_difference": 19621.12024897877,
+      "cost_difference_ci95": [
+       -7749.611371352425,
+       47174.98185150699
+      ],
+      "gain": -19621.12024897877,
+      "gain_ci95": [
+       -47174.98185150699,
+       7749.611371352425
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 117703.92453300006,
+      "policy": 225516.4245330001,
+      "cost_difference": 107812.50000000004,
+      "cost_difference_ci95": [
+       66611.49999999997,
+       132955.0000000002
+      ],
+      "gain": -107812.50000000004,
+      "gain_ci95": [
+       -132955.0000000002,
+       -66611.49999999997
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1554.0,
+      "policy": 1025.0,
+      "cost_difference": -529.0,
+      "cost_difference_ci95": [
+       -605.0,
+       -454.0
+      ],
+      "gain": 529.0,
+      "gain_ci95": [
+       454.0,
+       605.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 82.5,
+      "policy": 152.0,
+      "cost_difference": 69.5,
+      "cost_difference_ci95": [
+       -21.0,
+       182.0
+      ],
+      "gain": -69.5,
+      "gain_ci95": [
+       -182.0,
+       21.0
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1749.0,
+      "policy": 3094.5,
+      "cost_difference": 1345.5,
+      "cost_difference_ci95": [
+       328.0,
+       3038.5
+      ],
+      "gain": -1345.5,
+      "gain_ci95": [
+       -3038.5,
+       -328.0
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 42.094813054036834,
+      "policy": 68.71002196150944,
+      "difference": 26.6152089074726,
+      "gain": -26.6152089074726,
+      "ci95": [
+       23.49014232240298,
+       30.22842125167906
+      ],
+      "gain_ci95": [
+       -30.22842125167906,
+       -23.49014232240298
+      ]
+     },
+     "road_per_requested": {
+      "native": 17.511704337871407,
+      "policy": 21.6096826689029,
+      "difference": 4.097978331031489,
+      "gain": -4.097978331031489,
+      "ci95": [
+       -1.5687472411644585,
+       11.02476790173101
+      ],
+      "gain_ci95": [
+       -11.02476790173101,
+       1.5687472411644585
+      ]
+     },
+     "source_per_requested": {
+      "native": 24.583108716165427,
+      "policy": 47.100339292606535,
+      "difference": 22.51723057644111,
+      "gain": -22.51723057644111,
+      "ci95": [
+       14.888578453285644,
+       27.296710526315806
+      ],
+      "gain_ci95": [
+       -27.296710526315806,
+       -14.888578453285644
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2331.0,
+      "policy": 1537.5,
+      "difference": -793.5,
+      "gain": 793.5,
+      "ci95": [
+       -907.5,
+       -681.0
+      ],
+      "gain_ci95": [
+       681.0,
+       907.5
+      ]
+     }
+    },
+    "population_sum": 4788.0,
+    "horizon_sum": 2400.0,
+    "equal_world_mean_delay_difference": 31858.40506224471,
+    "equal_world_mean_per_requested_difference": 26.75633927942966
+   },
+   "0.1": {
+    "worlds": 3,
+    "starts": 6,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 114211.47981047962,
+      "policy": 217388.05530643946,
+      "cost_difference": 103176.57549595984,
+      "cost_difference_ci95": [
+       93342.89002649096,
+       114161.29562006856
+      ],
+      "gain": -103176.57549595984,
+      "gain_ci95": [
+       -114161.29562006856,
+       -93342.89002649096
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 53850.231788479585,
+      "policy": 105644.30728443943,
+      "cost_difference": 51794.07549595985,
+      "cost_difference_ci95": [
+       19251.79562006847,
+       93291.89002649096
+      ],
+      "gain": -51794.07549595985,
+      "gain_ci95": [
+       -93291.89002649096,
+       -19251.79562006847
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 60361.24802200003,
+      "policy": 111743.74802200004,
+      "cost_difference": 51382.500000000015,
+      "cost_difference_ci95": [
+       51.0,
+       94909.50000000006
+      ],
+      "gain": -51382.500000000015,
+      "gain_ci95": [
+       -94909.50000000006,
+       -51.0
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1069.0,
+      "policy": 527.0,
+      "cost_difference": -542.0,
+      "cost_difference_ci95": [
+       -615.0,
+       -495.0
+      ],
+      "gain": 542.0,
+      "gain_ci95": [
+       495.0,
+       615.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 50.0,
+      "policy": 117.5,
+      "cost_difference": 67.5,
+      "cost_difference_ci95": [
+       4.5,
+       115.5
+      ],
+      "gain": -67.5,
+      "gain_ci95": [
+       -115.5,
+       -4.5
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1058.0,
+      "policy": 3184.5,
+      "cost_difference": 2126.5,
+      "cost_difference_ci95": [
+       769.5,
+       3610.5
+      ],
+      "gain": -2126.5,
+      "gain_ci95": [
+       -3610.5,
+       -769.5
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 34.072637174964086,
+      "policy": 64.85323845657501,
+      "difference": 30.78060128161093,
+      "gain": -30.78060128161093,
+      "ci95": [
+       29.65998846975021,
+       31.65238725889826
+      ],
+      "gain_ci95": [
+       -31.65238725889826,
+       -29.65998846975021
+      ]
+     },
+     "road_per_requested": {
+      "native": 16.065104948830424,
+      "policy": 31.516798115882885,
+      "difference": 15.451693167052461,
+      "gain": -15.451693167052461,
+      "ci95": [
+       5.001765554707319,
+       31.635093260932845
+      ],
+      "gain_ci95": [
+       -31.635093260932845,
+       -5.001765554707319
+      ]
+     },
+     "source_per_requested": {
+      "native": 18.00753222613366,
+      "policy": 33.336440340692135,
+      "difference": 15.328908114558477,
+      "gain": -15.328908114558477,
+      "ci95": [
+       0.017293997965412006,
+       24.658222915042884
+      ],
+      "gain_ci95": [
+       -24.658222915042884,
+       -0.017293997965412006
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2138.0,
+      "policy": 1054.0,
+      "difference": -1084.0,
+      "gain": 1084.0,
+      "ci95": [
+       -1230.0,
+       -990.0000000000001
+      ],
+      "gain_ci95": [
+       990.0000000000001,
+       1230.0
+      ]
+     }
+    },
+    "population_sum": 3352.0,
+    "horizon_sum": 1800.0,
+    "equal_world_mean_delay_difference": 34392.191831986616,
+    "equal_world_mean_per_requested_difference": 30.875921932193247
+   },
+   "0.2": {
+    "worlds": 3,
+    "starts": 6,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 118864.25629435049,
+      "policy": 294891.0095968048,
+      "cost_difference": 176026.7533024543,
+      "cost_difference_ci95": [
+       165392.3485021145,
+       190340.56834171046
+      ],
+      "gain": -176026.7533024543,
+      "gain_ci95": [
+       -190340.56834171046,
+       -165392.3485021145
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 62308.1792303505,
+      "policy": 121481.93253280477,
+      "cost_difference": 59173.75330245427,
+      "cost_difference_ci95": [
+       46570.84306353792,
+       69821.56834171031
+      ],
+      "gain": -59173.75330245427,
+      "gain_ci95": [
+       -69821.56834171031,
+       -46570.84306353792
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 56556.07706399999,
+      "policy": 173409.077064,
+      "cost_difference": 116853.00000000003,
+      "cost_difference_ci95": [
+       104263.49999999997,
+       125776.50000000001
+      ],
+      "gain": -116853.00000000003,
+      "gain_ci95": [
+       -125776.50000000001,
+       -104263.49999999997
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1123.0,
+      "policy": 300.0,
+      "cost_difference": -823.0,
+      "cost_difference_ci95": [
+       -936.0,
+       -762.0
+      ],
+      "gain": 823.0,
+      "gain_ci95": [
+       762.0,
+       936.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 34.5,
+      "policy": 38.5,
+      "cost_difference": 4.0,
+      "cost_difference_ci95": [
+       -30.0,
+       40.5
+      ],
+      "gain": -4.0,
+      "gain_ci95": [
+       -40.5,
+       30.0
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1343.0,
+      "policy": 2283.5,
+      "cost_difference": 940.5,
+      "cost_difference_ci95": [
+       550.5,
+       1399.5
+      ],
+      "gain": -940.5,
+      "gain_ci95": [
+       -1399.5,
+       -550.5
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 35.15653838933762,
+      "policy": 87.22005607713837,
+      "difference": 52.06351768780074,
+      "gain": -52.06351768780074,
+      "ci95": [
+       51.12558913287952,
+       53.8386551113654
+      ],
+      "gain_ci95": [
+       -53.8386551113654,
+       -51.12558913287952
+      ]
+     },
+     "road_per_requested": {
+      "native": 18.42892021010071,
+      "policy": 35.93076975238236,
+      "difference": 17.501849542281654,
+      "gain": -17.501849542281654,
+      "ci95": [
+       13.91004870476043,
+       19.898713705115412
+      ],
+      "gain_ci95": [
+       -19.898713705115412,
+       -13.91004870476043
+      ]
+     },
+     "source_per_requested": {
+      "native": 16.72761817923691,
+      "policy": 51.28928632475599,
+      "difference": 34.561668145519086,
+      "gain": -34.561668145519086,
+      "ci95": [
+       32.37147461724418,
+       37.56765232974911
+      ],
+      "gain_ci95": [
+       -37.56765232974911,
+       -32.37147461724418
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2246.0,
+      "policy": 600.0,
+      "difference": -1646.0,
+      "gain": 1646.0,
+      "ci95": [
+       -1872.0,
+       -1524.0
+      ],
+      "gain_ci95": [
+       1524.0,
+       1872.0
+      ]
+     }
+    },
+    "population_sum": 3381.0,
+    "horizon_sum": 1800.0,
+    "equal_world_mean_delay_difference": 58675.58443415144,
+    "equal_world_mean_per_requested_difference": 52.147315092918156
+   },
+   "0.4": {
+    "worlds": 3,
+    "starts": 6,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 143765.3614725042,
+      "policy": 356105.24771459214,
+      "cost_difference": 212339.88624208793,
+      "cost_difference_ci95": [
+       200665.1357182968,
+       221072.18591002375
+      ],
+      "gain": -212339.88624208793,
+      "gain_ci95": [
+       -221072.18591002375,
+       -200665.1357182968
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 57396.90890250426,
+      "policy": 130400.29514459224,
+      "cost_difference": 73003.38624208797,
+      "cost_difference_ci95": [
+       62510.635718296784,
+       80033.18591002387
+      ],
+      "gain": -73003.38624208797,
+      "gain_ci95": [
+       -80033.18591002387,
+       -62510.635718296784
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 86368.45256999996,
+      "policy": 225704.9525699999,
+      "cost_difference": 139336.49999999994,
+      "cost_difference_ci95": [
+       138154.49999999997,
+       141038.9999999998
+      ],
+      "gain": -139336.49999999994,
+      "gain_ci95": [
+       -141038.9999999998,
+       -138154.49999999997
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1166.0,
+      "policy": 210.0,
+      "cost_difference": -956.0,
+      "cost_difference_ci95": [
+       -966.0,
+       -942.0
+      ],
+      "gain": 956.0,
+      "gain_ci95": [
+       942.0,
+       966.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 15.5,
+      "policy": 11.5,
+      "cost_difference": -4.0,
+      "cost_difference_ci95": [
+       -16.5,
+       13.5
+      ],
+      "gain": 4.0,
+      "gain_ci95": [
+       -13.5,
+       16.5
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1240.0,
+      "policy": 1724.5,
+      "cost_difference": 484.5,
+      "cost_difference_ci95": [
+       195.0,
+       865.5
+      ],
+      "gain": -484.5,
+      "gain_ci95": [
+       -865.5,
+       -195.0
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 40.54296713832606,
+      "policy": 100.42449174128375,
+      "difference": 59.88152460295768,
+      "gain": -59.88152460295768,
+      "ci95": [
+       55.86863429618998,
+       62.39587553429627
+      ],
+      "gain_ci95": [
+       -62.39587553429627,
+       -55.86863429618998
+      ]
+     },
+     "road_per_requested": {
+      "native": 16.18638152918902,
+      "policy": 36.77391290033622,
+      "difference": 20.5875313711472,
+      "gain": -20.5875313711472,
+      "ci95": [
+       19.437386728326114,
+       22.068206954673382
+      ],
+      "gain_ci95": [
+       -22.068206954673382,
+       -19.437386728326114
+      ]
+     },
+     "source_per_requested": {
+      "native": 24.356585609137046,
+      "policy": 63.65057884094752,
+      "difference": 39.293993231810475,
+      "gain": -39.293993231810475,
+      "ci95": [
+       35.642911296436644,
+       42.95848880597014
+      ],
+      "gain_ci95": [
+       -42.95848880597014,
+       -35.642911296436644
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2332.0,
+      "policy": 420.0,
+      "difference": -1912.0,
+      "gain": 1912.0,
+      "ci95": [
+       -1931.9999999999998,
+       -1884.0
+      ],
+      "gain_ci95": [
+       1884.0,
+       1931.9999999999998
+      ]
+     }
+    },
+    "population_sum": 3546.0,
+    "horizon_sum": 1800.0,
+    "equal_world_mean_delay_difference": 70779.96208069597,
+    "equal_world_mean_per_requested_difference": 60.13168481583242
+   }
+  },
+  "demand": {
+   "1900": {
+    "worlds": 4,
+    "starts": 8,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 70131.36597408818,
+      "policy": 251504.33695028283,
+      "cost_difference": 181372.97097619466,
+      "cost_difference_ci95": [
+       118707.61913878175,
+       244038.32281360752
+      ],
+      "gain": -181372.97097619466,
+      "gain_ci95": [
+       -244038.32281360752,
+       -118707.61913878175
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 51697.58449008818,
+      "policy": 122189.55546628282,
+      "cost_difference": 70491.97097619464,
+      "cost_difference_ci95": [
+       15381.417254447253,
+       113668.17286052913
+      ],
+      "gain": -70491.97097619464,
+      "gain_ci95": [
+       -113668.17286052913,
+       -15381.417254447253
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 18433.781484000003,
+      "policy": 129314.78148399999,
+      "cost_difference": 110880.99999999999,
+      "cost_difference_ci95": [
+       34805.499999999985,
+       168212.49999999994
+      ],
+      "gain": -110880.99999999999,
+      "gain_ci95": [
+       -168212.49999999994,
+       -34805.499999999985
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1489.0,
+      "policy": 609.0,
+      "cost_difference": -880.0,
+      "cost_difference_ci95": [
+       -1147.0,
+       -575.0
+      ],
+      "gain": 880.0,
+      "gain_ci95": [
+       575.0,
+       1147.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 38.0,
+      "policy": 85.0,
+      "cost_difference": 47.0,
+      "cost_difference_ci95": [
+       -15.0,
+       120.0
+      ],
+      "gain": -47.0,
+      "gain_ci95": [
+       -120.0,
+       15.0
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1017.5,
+      "policy": 2845.5,
+      "cost_difference": 1828.0,
+      "cost_difference_ci95": [
+       427.0,
+       3899.0
+      ],
+      "gain": -1828.0,
+      "gain_ci95": [
+       -3899.0,
+       -427.0
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 17.005665852106738,
+      "policy": 60.985532723152964,
+      "difference": 43.979866871046234,
+      "gain": -43.979866871046234,
+      "ci95": [
+       29.267164481948164,
+       58.21524876278805
+      ],
+      "gain_ci95": [
+       -58.21524876278805,
+       -29.267164481948164
+      ]
+     },
+     "road_per_requested": {
+      "native": 12.53578673377502,
+      "policy": 29.628893178051122,
+      "difference": 17.093106444276103,
+      "gain": -17.093106444276103,
+      "ci95": [
+       3.6561486224024846,
+       28.383180452438832
+      ],
+      "gain_ci95": [
+       -28.383180452438832,
+       -3.6561486224024846
+      ]
+     },
+     "source_per_requested": {
+      "native": 4.4698791183317175,
+      "policy": 31.356639545101842,
+      "difference": 26.886760426770124,
+      "gain": -26.886760426770124,
+      "ci95": [
+       8.760508431915426,
+       39.47723539075333
+      ],
+      "gain_ci95": [
+       -39.47723539075333,
+       -8.760508431915426
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2233.5,
+      "policy": 913.4999999999999,
+      "difference": -1320.0,
+      "gain": 1320.0,
+      "ci95": [
+       -1720.5,
+       -862.5
+      ],
+      "gain_ci95": [
+       862.5,
+       1720.5
+      ]
+     }
+    },
+    "population_sum": 4124.0,
+    "horizon_sum": 2400.0,
+    "equal_world_mean_delay_difference": 45343.242744048664,
+    "equal_world_mean_per_requested_difference": 43.72759380482273
+   },
+   "2100": {
+    "worlds": 4,
+    "starts": 8,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 142781.77526871194,
+      "policy": 333909.3385888501,
+      "cost_difference": 191127.56332013817,
+      "cost_difference_ci95": [
+       123835.33986595548,
+       258419.78677432082
+      ],
+      "gain": -191127.56332013817,
+      "gain_ci95": [
+       -258419.78677432082,
+       -123835.33986595548
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 99073.6386107119,
+      "policy": 170696.70193085005,
+      "cost_difference": 71623.06332013814,
+      "cost_difference_ci95": [
+       59169.69716052449,
+       91989.95145245592
+      ],
+      "gain": -71623.06332013814,
+      "gain_ci95": [
+       -91989.95145245592,
+       -59169.69716052449
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 43708.136657999996,
+      "policy": 163212.636658,
+      "cost_difference": 119504.5,
+      "cost_difference_ci95": [
+       62613.99999999998,
+       176395.0000000001
+      ],
+      "gain": -119504.5,
+      "gain_ci95": [
+       -176395.0000000001,
+       -62613.99999999998
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1492.0,
+      "policy": 617.0,
+      "cost_difference": -875.0,
+      "cost_difference_ci95": [
+       -1158.0,
+       -592.0
+      ],
+      "gain": 875.0,
+      "gain_ci95": [
+       592.0,
+       1158.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 67.5,
+      "policy": 143.0,
+      "cost_difference": 75.5,
+      "cost_difference_ci95": [
+       -26.0,
+       180.0
+      ],
+      "gain": -75.5,
+      "gain_ci95": [
+       -180.0,
+       26.0
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 2102.0,
+      "policy": 4048.0,
+      "cost_difference": 1946.0,
+      "cost_difference_ci95": [
+       629.0,
+       3263.0
+      ],
+      "gain": -1946.0,
+      "gain_ci95": [
+       -3263.0,
+       -629.0
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 32.19431234920224,
+      "policy": 75.28959156456598,
+      "difference": 43.09527921536374,
+      "gain": -43.09527921536374,
+      "ci95": [
+       28.61260163261448,
+       56.89559374159419
+      ],
+      "gain_ci95": [
+       -56.89559374159419,
+       -28.61260163261448
+      ]
+     },
+     "road_per_requested": {
+      "native": 22.339039145594565,
+      "policy": 38.48854609489291,
+      "difference": 16.149506949298342,
+      "gain": -16.149506949298342,
+      "ci95": [
+       13.53457219268211,
+       20.080757793594394
+      ],
+      "gain_ci95": [
+       -20.080757793594394,
+       -13.53457219268211
+      ]
+     },
+     "source_per_requested": {
+      "native": 9.855273203607666,
+      "policy": 36.801045469673056,
+      "difference": 26.94577226606539,
+      "gain": -26.94577226606539,
+      "ci95": [
+       14.467190388170051,
+       38.83641567591371
+      ],
+      "gain_ci95": [
+       -38.83641567591371,
+       -14.467190388170051
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2238.0,
+      "policy": 925.5,
+      "difference": -1312.5,
+      "gain": 1312.5,
+      "ci95": [
+       -1737.0,
+       -888.0
+      ],
+      "gain_ci95": [
+       888.0,
+       1737.0
+      ]
+     }
+    },
+    "population_sum": 4435.0,
+    "horizon_sum": 2400.0,
+    "equal_world_mean_delay_difference": 47781.890830034536,
+    "equal_world_mean_per_requested_difference": 42.70334777940016
+   },
+   "2400": {
+    "worlds": 4,
+    "starts": 8,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 273679.2065202066,
+      "policy": 487912.8260929247,
+      "cost_difference": 214233.6195727181,
+      "cost_difference_ci95": [
+       154192.0696442802,
+       274275.16950115614
+      ],
+      "gain": -214233.6195727181,
+      "gain_ci95": [
+       -274275.16950115614,
+       -154192.0696442802
+      ]
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 86830.90274120655,
+      "policy": 150364.5223139247,
+      "cost_difference": 63533.61957271816,
+      "cost_difference_ci95": [
+       27164.069644280185,
+       99903.16950115614
+      ],
+      "gain": -63533.61957271816,
+      "gain_ci95": [
+       -99903.16950115614,
+       -27164.069644280185
+      ]
+     },
+     {
+      "metric": "source_wait",
+      "native": 186848.30377900004,
+      "policy": 337548.303779,
+      "cost_difference": 150699.99999999997,
+      "cost_difference_ci95": [
+       127028.0,
+       174371.99999999994
+      ],
+      "gain": -150699.99999999997,
+      "gain_ci95": [
+       -174371.99999999994,
+       -127028.0
+      ]
+     },
+     {
+      "metric": "throughput",
+      "native": 1534.0,
+      "policy": 572.0,
+      "cost_difference": -962.0,
+      "cost_difference_ci95": [
+       -1264.0,
+       -660.0
+      ],
+      "gain": 962.0,
+      "gain_ci95": [
+       660.0,
+       1264.0
+      ]
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 65.5,
+      "policy": 81.0,
+      "cost_difference": 15.5,
+      "cost_difference_ci95": [
+       -15.0,
+       57.5
+      ],
+      "gain": -15.5,
+      "gain_ci95": [
+       -57.5,
+       15.0
+      ]
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 1791.5,
+      "policy": 2771.0,
+      "cost_difference": 979.5,
+      "cost_difference_ci95": [
+       451.5,
+       1591.0
+      ],
+      "gain": -979.5,
+      "gain_ci95": [
+       -1591.0,
+       -451.5
+      ]
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": [
+       0.0,
+       0.0
+      ],
+      "gain": -0.0,
+      "gain_ci95": [
+       -0.0,
+       -0.0
+      ]
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 53.8420630572903,
+      "policy": 95.98914540486419,
+      "difference": 42.14708234757389,
+      "gain": -42.14708234757389,
+      "ci95": [
+       30.557286889472888,
+       53.569369043194556
+      ],
+      "gain_ci95": [
+       -53.569369043194556,
+       -30.557286889472888
+      ]
+     },
+     "road_per_requested": {
+      "native": 17.082609234941284,
+      "policy": 29.58184582213746,
+      "difference": 12.499236587196176,
+      "gain": -12.499236587196176,
+      "ci95": [
+       5.383287682179981,
+       19.512337793194558
+      ],
+      "gain_ci95": [
+       -19.512337793194558,
+       -5.383287682179981
+      ]
+     },
+     "source_per_requested": {
+      "native": 36.759453822349016,
+      "policy": 66.40729958272674,
+      "difference": 29.647845760377724,
+      "gain": -29.647845760377724,
+      "ci95": [
+       25.173999207292905,
+       34.05703124999999
+      ],
+      "gain_ci95": [
+       -34.05703124999999,
+       -25.173999207292905
+      ]
+     },
+     "arrivals_per_hour": {
+      "native": 2301.0,
+      "policy": 858.0,
+      "difference": -1443.0,
+      "gain": 1443.0,
+      "ci95": [
+       -1895.9999999999998,
+       -990.0000000000001
+      ],
+      "gain_ci95": [
+       990.0000000000001,
+       1895.9999999999998
+      ]
+     }
+    },
+    "population_sum": 5083.0,
+    "horizon_sum": 2400.0,
+    "equal_world_mean_delay_difference": 53558.40489317954,
+    "equal_world_mean_per_requested_difference": 42.03497830040061
+   },
+   "2700": {
+    "worlds": 1,
+    "starts": 2,
+    "metrics": [
+     {
+      "metric": "total_delay",
+      "native": 91798.71471705602,
+      "policy": 124041.39613748601,
+      "cost_difference": 32242.681420429988,
+      "cost_difference_ci95": null,
+      "gain": -32242.681420429988,
+      "gain_ci95": null
+     },
+     {
+      "metric": "onroad_delay",
+      "native": 19799.23444905601,
+      "policy": 17742.915869485914,
+      "cost_difference": -2056.3185795700956,
+      "cost_difference_ci95": null,
+      "gain": 2056.3185795700956,
+      "gain_ci95": null
+     },
+     {
+      "metric": "source_wait",
+      "native": 71999.48026800001,
+      "policy": 106298.48026800007,
+      "cost_difference": 34299.00000000006,
+      "cost_difference_ci95": null,
+      "gain": -34299.00000000006,
+      "gain_ci95": null
+     },
+     {
+      "metric": "throughput",
+      "native": 397.0,
+      "policy": 264.0,
+      "cost_difference": -133.0,
+      "cost_difference_ci95": null,
+      "gain": 133.0,
+      "gain_ci95": null
+     },
+     {
+      "metric": "hard_brakes",
+      "native": 11.5,
+      "policy": 10.5,
+      "cost_difference": -1.0,
+      "cost_difference_ci95": null,
+      "gain": 1.0,
+      "gain_ci95": null
+     },
+     {
+      "metric": "ttc_exposure",
+      "native": 479.0,
+      "policy": 622.5,
+      "cost_difference": 143.5,
+      "cost_difference_ci95": null,
+      "gain": -143.5,
+      "gain_ci95": null
+     },
+     {
+      "metric": "collisions",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": null,
+      "gain": -0.0,
+      "gain_ci95": null
+     },
+     {
+      "metric": "teleports",
+      "native": 0.0,
+      "policy": 0.0,
+      "cost_difference": 0.0,
+      "cost_difference_ci95": null,
+      "gain": -0.0,
+      "gain_ci95": null
+     }
+    ],
+    "normalization": {
+     "delay_per_requested": {
+      "native": 64.4201506786358,
+      "policy": 87.04659378069194,
+      "difference": 22.626443102056133,
+      "gain": -22.626443102056133,
+      "ci95": null,
+      "gain_ci95": null
+     },
+     "road_per_requested": {
+      "native": 13.894199613372638,
+      "policy": 12.451169031218186,
+      "difference": -1.4430305821544531,
+      "gain": 1.4430305821544531,
+      "ci95": null,
+      "gain_ci95": null
+     },
+     "source_per_requested": {
+      "native": 50.525951065263165,
+      "policy": 74.59542474947374,
+      "difference": 24.069473684210568,
+      "gain": -24.069473684210568,
+      "ci95": null,
+      "gain_ci95": null
+     },
+     "arrivals_per_hour": {
+      "native": 2382.0,
+      "policy": 1584.0,
+      "difference": -798.0,
+      "gain": 798.0,
+      "ci95": null,
+      "gain_ci95": null
+     }
+    },
+    "population_sum": 1425.0,
+    "horizon_sum": 600.0,
+    "equal_world_mean_delay_difference": 32242.681420429988,
+    "equal_world_mean_per_requested_difference": 22.626443102056133
+   }
+  }
+ },
+ "points": [
+  {
+   "pair_key": "w968129m1900p05t300@t360",
+   "seed": 968129,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 11424.149515047673,
+    "onroad_delay": 9391.974265047673,
+    "source_wait": 2032.17525,
+    "throughput": 196,
+    "hard_brakes": 10.5,
+    "ttc_exposure": 253.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 436,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 24195.799393105197,
+    "onroad_delay": 7216.624143105192,
+    "source_wait": 16979.175250000004,
+    "throughput": 145,
+    "hard_brakes": 9.0,
+    "ttc_exposure": 248.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 436,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968129m1900p05t300@t660",
+   "seed": 968129,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 5969.778198432765,
+    "onroad_delay": 5630.841108432766,
+    "source_wait": 338.937089999999,
+    "throughput": 197,
+    "hard_brakes": 11.5,
+    "ttc_exposure": 93.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 609,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 21437.641214269133,
+    "onroad_delay": 5987.704124269136,
+    "source_wait": 15449.937089999996,
+    "throughput": 141,
+    "hard_brakes": 3.5,
+    "ttc_exposure": 144.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 609,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968130m1900p10t300@t360",
+   "seed": 968130,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 4612.400770479193,
+    "onroad_delay": 4490.056980479193,
+    "source_wait": 122.34378999999996,
+    "throughput": 183,
+    "hard_brakes": 5.0,
+    "ttc_exposure": 122.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 399,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 23792.643458395403,
+    "onroad_delay": 23670.299668395404,
+    "source_wait": 122.34378999999996,
+    "throughput": 51,
+    "hard_brakes": 20.5,
+    "ttc_exposure": 796.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 399,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968130m1900p10t300@t660",
+   "seed": 968130,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 3541.032952507789,
+    "onroad_delay": 3115.803821507789,
+    "source_wait": 425.2291309999999,
+    "throughput": 161,
+    "hard_brakes": 5.5,
+    "ttc_exposure": 13.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 584,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 15475.086940088562,
+    "onroad_delay": 15032.857809088562,
+    "source_wait": 442.2291309999999,
+    "throughput": 88,
+    "hard_brakes": 28.5,
+    "ttc_exposure": 543.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 584,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968131m1900p20t300@t360",
+   "seed": 968131,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 7799.127436403676,
+    "onroad_delay": 6265.1543374036755,
+    "source_wait": 1533.973099000001,
+    "throughput": 184,
+    "hard_brakes": 0.5,
+    "ttc_exposure": 112.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 416,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 32302.647243827174,
+    "onroad_delay": 18836.174144827175,
+    "source_wait": 13466.473098999997,
+    "throughput": 78,
+    "hard_brakes": 7.0,
+    "ttc_exposure": 287.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 416,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968131m1900p20t300@t660",
+   "seed": 968131,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 12068.492829255507,
+    "onroad_delay": 9687.459535255508,
+    "source_wait": 2381.0332939999994,
+    "throughput": 190,
+    "hard_brakes": 3.5,
+    "ttc_exposure": 204.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 608,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 42695.755855870186,
+    "onroad_delay": 17492.72256187019,
+    "source_wait": 25203.033293999993,
+    "throughput": 42,
+    "hard_brakes": 10.5,
+    "ttc_exposure": 319.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 608,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968132m1900p40t300@t360",
+   "seed": 968132,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 10721.876156544813,
+    "onroad_delay": 6102.614322544814,
+    "source_wait": 4619.261833999999,
+    "throughput": 187,
+    "hard_brakes": 0.5,
+    "ttc_exposure": 71.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 448,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 42748.88464439621,
+    "onroad_delay": 14127.622810396213,
+    "source_wait": 28621.261833999994,
+    "throughput": 36,
+    "hard_brakes": 6.0,
+    "ttc_exposure": 209.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 448,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968132m1900p40t300@t660",
+   "seed": 968132,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 13994.508115416767,
+    "onroad_delay": 7013.680119416761,
+    "source_wait": 6980.827996000005,
+    "throughput": 191,
+    "hard_brakes": 1.0,
+    "ttc_exposure": 147.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 624,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 48855.87820033096,
+    "onroad_delay": 19825.550204330953,
+    "source_wait": 29030.327996000004,
+    "throughput": 28,
+    "hard_brakes": 0.0,
+    "ttc_exposure": 298.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 624,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968133m2100p05t300@t360",
+   "seed": 968133,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 14213.371170466315,
+    "onroad_delay": 13849.449652466314,
+    "source_wait": 363.9215180000005,
+    "throughput": 175,
+    "hard_brakes": 4.0,
+    "ttc_exposure": 269.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 432,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 26349.842316727205,
+    "onroad_delay": 25914.920798727206,
+    "source_wait": 434.9215180000004,
+    "throughput": 104,
+    "hard_brakes": 41.0,
+    "ttc_exposure": 806.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 432,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968133m2100p05t300@t660",
+   "seed": 968133,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 22999.061758789983,
+    "onroad_delay": 17690.79684578998,
+    "source_wait": 5308.264913000001,
+    "throughput": 201,
+    "hard_brakes": 26.0,
+    "ttc_exposure": 294.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 646,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 38771.74693173346,
+    "onroad_delay": 21956.482018733463,
+    "source_wait": 16815.264912999995,
+    "throughput": 141,
+    "hard_brakes": 50.0,
+    "ttc_exposure": 722.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 646,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968134m2100p10t300@t360",
+   "seed": 968134,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 7094.662388881456,
+    "onroad_delay": 6642.244500881455,
+    "source_wait": 452.4178880000011,
+    "throughput": 179,
+    "hard_brakes": 1.0,
+    "ttc_exposure": 198.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 438,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 24447.376112440197,
+    "onroad_delay": 23039.958224440197,
+    "source_wait": 1407.4178880000013,
+    "throughput": 76,
+    "hard_brakes": 19.5,
+    "ttc_exposure": 688.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 438,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968134m2100p10t300@t660",
+   "seed": 968134,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 18968.927336897083,
+    "onroad_delay": 15614.678133897083,
+    "source_wait": 3354.249202999999,
+    "throughput": 189,
+    "hard_brakes": 10.5,
+    "ttc_exposure": 300.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 648,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 35624.7272271117,
+    "onroad_delay": 13496.478024111711,
+    "source_wait": 22128.249202999992,
+    "throughput": 127,
+    "hard_brakes": 19.5,
+    "ttc_exposure": 477.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 648,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968135m2100p20t300@t360",
+   "seed": 968135,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 13608.318314031134,
+    "onroad_delay": 10804.870221031133,
+    "source_wait": 2803.448093000001,
+    "throughput": 179,
+    "hard_brakes": 6.5,
+    "ttc_exposure": 281.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 448,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 36219.13912523919,
+    "onroad_delay": 14891.691032239189,
+    "source_wait": 21327.448093000003,
+    "throughput": 74,
+    "hard_brakes": 4.5,
+    "ttc_exposure": 443.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 448,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968135m2100p20t300@t660",
+   "seed": 968135,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 21712.357702421352,
+    "onroad_delay": 13795.658641421353,
+    "source_wait": 7916.699061,
+    "throughput": 178,
+    "hard_brakes": 13.0,
+    "ttc_exposure": 307.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 668,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 56550.65124572594,
+    "onroad_delay": 25232.45218472594,
+    "source_wait": 31318.199061,
+    "throughput": 26,
+    "hard_brakes": 5.0,
+    "ttc_exposure": 329.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 668,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968136m2100p40t300@t360",
+   "seed": 968136,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 18139.514772757193,
+    "onroad_delay": 9904.708153757198,
+    "source_wait": 8234.806618999995,
+    "throughput": 172,
+    "hard_brakes": 3.5,
+    "ttc_exposure": 286.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 467,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 52192.56332222527,
+    "onroad_delay": 20611.25670322526,
+    "source_wait": 31581.306619000014,
+    "throughput": 29,
+    "hard_brakes": 3.0,
+    "ttc_exposure": 279.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 467,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968136m2100p40t300@t660",
+   "seed": 968136,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 26045.5618244674,
+    "onroad_delay": 10771.232461467405,
+    "source_wait": 15274.329362999995,
+    "throughput": 219,
+    "hard_brakes": 3.0,
+    "ttc_exposure": 164.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 688,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 63753.29230764711,
+    "onroad_delay": 25553.4629446471,
+    "source_wait": 38199.82936300001,
+    "throughput": 40,
+    "hard_brakes": 0.5,
+    "ttc_exposure": 302.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 688,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968137m2400p05t300@t360",
+   "seed": 968137,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 22910.182719087075,
+    "onroad_delay": 9258.434591087072,
+    "source_wait": 13651.748128000001,
+    "throughput": 215,
+    "hard_brakes": 14.5,
+    "ttc_exposure": 197.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 502,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 44040.322000936954,
+    "onroad_delay": 17694.57387293695,
+    "source_wait": 26345.748128,
+    "throughput": 126,
+    "hard_brakes": 37.5,
+    "ttc_exposure": 423.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 502,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968137m2400p05t300@t660",
+   "seed": 968137,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 32234.706823848534,
+    "onroad_delay": 8225.309457848496,
+    "source_wait": 24009.397366000037,
+    "throughput": 173,
+    "hard_brakes": 4.5,
+    "ttc_exposure": 162.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 738,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 50146.83715744925,
+    "onroad_delay": 6953.939791449218,
+    "source_wait": 43192.897366000034,
+    "throughput": 104,
+    "hard_brakes": 0.5,
+    "ttc_exposure": 127.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 738,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968138m2400p10t300@t360",
+   "seed": 968138,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 30795.243230268956,
+    "onroad_delay": 9079.943571268957,
+    "source_wait": 21715.299658999997,
+    "throughput": 172,
+    "hard_brakes": 14.0,
+    "ttc_exposure": 174.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 529,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 42284.01456340846,
+    "onroad_delay": 8496.714904408464,
+    "source_wait": 33787.299659,
+    "throughput": 131,
+    "hard_brakes": 11.0,
+    "ttc_exposure": 234.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 529,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968138m2400p10t300@t660",
+   "seed": 968138,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 49199.21313144514,
+    "onroad_delay": 14907.504780445108,
+    "source_wait": 34291.70835100003,
+    "throughput": 185,
+    "hard_brakes": 14.0,
+    "ttc_exposure": 249.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 754,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 75764.20700499514,
+    "onroad_delay": 21907.998653995095,
+    "source_wait": 53856.20835100005,
+    "throughput": 54,
+    "hard_brakes": 18.5,
+    "ttc_exposure": 446.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 754,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968139m2400p20t300@t360",
+   "seed": 968139,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 25954.543050911765,
+    "onroad_delay": 10377.282346911767,
+    "source_wait": 15577.260704,
+    "throughput": 190,
+    "hard_brakes": 3.5,
+    "ttc_exposure": 173.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 500,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 55650.57776938849,
+    "onroad_delay": 19682.81706538847,
+    "source_wait": 35967.760704000015,
+    "throughput": 54,
+    "hard_brakes": 9.5,
+    "ttc_exposure": 378.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 500,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968139m2400p20t300@t660",
+   "seed": 968139,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 37721.41696132705,
+    "onroad_delay": 11377.754148327065,
+    "source_wait": 26343.662812999988,
+    "throughput": 202,
+    "hard_brakes": 7.5,
+    "ttc_exposure": 264.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 741,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 71472.2383567538,
+    "onroad_delay": 25346.075543753803,
+    "source_wait": 46126.162812999995,
+    "throughput": 26,
+    "hard_brakes": 2.0,
+    "ttc_exposure": 526.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 741,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968140m2400p40t300@t360",
+   "seed": 968140,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 29947.8651085934,
+    "onroad_delay": 11205.770092593415,
+    "source_wait": 18742.095015999985,
+    "throughput": 174,
+    "hard_brakes": 6.5,
+    "ttc_exposure": 316.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 532,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 60870.706295153206,
+    "onroad_delay": 18939.111279153243,
+    "source_wait": 41931.59501599996,
+    "throughput": 51,
+    "hard_brakes": 2.0,
+    "ttc_exposure": 289.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 532,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968140m2400p40t300@t660",
+   "seed": 968140,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 44916.03549472465,
+    "onroad_delay": 12398.903752724671,
+    "source_wait": 32517.131741999983,
+    "throughput": 223,
+    "hard_brakes": 1.0,
+    "ttc_exposure": 254.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 787,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 87683.9229448394,
+    "onroad_delay": 31343.291202839464,
+    "source_wait": 56340.63174199994,
+    "throughput": 26,
+    "hard_brakes": 0.0,
+    "ttc_exposure": 346.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 787,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968141m2700p05t300@t360",
+   "seed": 968141,
+   "warmup_s": 360.0,
+   "native": {
+    "total_delay": 34040.57926267529,
+    "onroad_delay": 10186.407911675286,
+    "source_wait": 23854.171351000005,
+    "throughput": 184,
+    "hard_brakes": 6.0,
+    "ttc_exposure": 291.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 566,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 46893.87742412909,
+    "onroad_delay": 8074.706073129053,
+    "source_wait": 38819.17135100003,
+    "throughput": 129,
+    "hard_brakes": 0.5,
+    "ttc_exposure": 270.0,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 566,
+    "horizon": 300.0
+   }
+  },
+  {
+   "pair_key": "w968141m2700p05t300@t660",
+   "seed": 968141,
+   "warmup_s": 660.0,
+   "native": {
+    "total_delay": 57758.13545438074,
+    "onroad_delay": 9612.826537380724,
+    "source_wait": 48145.30891700002,
+    "throughput": 213,
+    "hard_brakes": 5.5,
+    "ttc_exposure": 187.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 859,
+    "horizon": 300.0
+   },
+   "policy": {
+    "total_delay": 77147.51871335691,
+    "onroad_delay": 9668.209796356861,
+    "source_wait": 67479.30891700005,
+    "throughput": 135,
+    "hard_brakes": 10.0,
+    "ttc_exposure": 352.5,
+    "collisions": 0,
+    "teleports": 0,
+    "population": 859,
+    "horizon": 300.0
+   }
+  }
+ ],
+ "credit_points": [
+  {
+   "seed": 968130,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.185",
+    "mainline.183"
+   ],
+   "D_i_gain": {
+    "mainline.185": -9.682383261813811,
+    "mainline.183": -7.93366073868259
+   },
+   "D_G_gain": -14.485486705750588,
+   "C_G_gain": 3.130557294745813,
+   "D_i_cost_difference": {
+    "mainline.185": 9.682383261813811,
+    "mainline.183": 7.93366073868259
+   },
+   "D_G_cost_difference": 14.485486705750588,
+   "C_G_cost_interaction": -3.130557294745813,
+   "arms": {
+    "B": 425.2946103186678,
+    "ALL": 484.0431291160724,
+    "ONLY:mainline.185": 434.97699358048163,
+    "ONLY:mainline.183": 433.2282710573504,
+    "GROUP": 439.7800970244184
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968130,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.293",
+    "ramp.64"
+   ],
+   "D_i_gain": {
+    "mainline.293": -24.00096880689182,
+    "ramp.64": -0.009369670383932771
+   },
+   "D_G_gain": -24.010324842159093,
+   "C_G_gain": 1.363511665886108e-05,
+   "D_i_cost_difference": {
+    "mainline.293": 24.00096880689182,
+    "ramp.64": 0.009369670383932771
+   },
+   "D_G_cost_difference": 24.010324842159093,
+   "C_G_cost_interaction": -1.363511665886108e-05,
+   "arms": {
+    "B": 262.6884160961754,
+    "ALL": 310.88283860094873,
+    "ONLY:mainline.293": 286.6893849030672,
+    "ONLY:ramp.64": 262.6977857665593,
+    "GROUP": 286.6987409383345
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968131,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.112",
+    "ramp.38",
+    "mainline.109"
+   ],
+   "D_i_gain": {
+    "mainline.112": -6.847557729541563,
+    "ramp.38": -3.3090719965406947,
+    "mainline.109": -3.434272154038638
+   },
+   "D_G_gain": -9.417848876520793,
+   "C_G_gain": 4.173053003600103,
+   "D_i_cost_difference": {
+    "mainline.112": 6.847557729541563,
+    "ramp.38": 3.3090719965406947,
+    "mainline.109": 3.434272154038638
+   },
+   "D_G_cost_difference": 9.417848876520793,
+   "C_G_cost_interaction": -4.173053003600103,
+   "arms": {
+    "B": 368.5929271358946,
+    "ALL": 574.4244057865088,
+    "ONLY:mainline.112": 375.4404848654362,
+    "ONLY:ramp.38": 371.9019991324353,
+    "ONLY:mainline.109": 372.02719928993326,
+    "GROUP": 378.0107760124154
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968131,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.269",
+    "mainline.253",
+    "ramp.58"
+   ],
+   "D_i_gain": {
+    "mainline.269": -2.772027312452792,
+    "mainline.253": -30.902555785041386,
+    "ramp.58": 0.0
+   },
+   "D_G_gain": -33.70249602107879,
+   "C_G_gain": -0.027912923584608507,
+   "D_i_cost_difference": {
+    "mainline.269": 2.772027312452792,
+    "mainline.253": 30.902555785041386,
+    "ramp.58": -0.0
+   },
+   "D_G_cost_difference": 33.70249602107879,
+   "C_G_cost_interaction": 0.027912923584608507,
+   "arms": {
+    "B": 1189.1047211690352,
+    "ALL": 1412.5964718141665,
+    "ONLY:mainline.269": 1191.876748481488,
+    "ONLY:mainline.253": 1220.0072769540766,
+    "ONLY:ramp.58": 1189.1047211690352,
+    "GROUP": 1222.807217190114
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968132,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "ramp.33",
+    "mainline.140",
+    "mainline.138"
+   ],
+   "D_i_gain": {
+    "ramp.33": -26.645626383904414,
+    "mainline.140": -8.922481761534073,
+    "mainline.138": -3.7978208734721193
+   },
+   "D_G_gain": -40.17154833075051,
+   "C_G_gain": -0.8056193118399051,
+   "D_i_cost_difference": {
+    "ramp.33": 26.645626383904414,
+    "mainline.140": 8.922481761534073,
+    "mainline.138": 3.7978208734721193
+   },
+   "D_G_cost_difference": 40.17154833075051,
+   "C_G_cost_interaction": 0.8056193118399051,
+   "arms": {
+    "B": 845.9057135516022,
+    "ALL": 1127.036683815724,
+    "ONLY:ramp.33": 872.5513399355066,
+    "ONLY:mainline.140": 854.8281953131362,
+    "ONLY:mainline.138": 849.7035344250743,
+    "GROUP": 886.0772618823527
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968132,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "ramp.58",
+    "mainline.291",
+    "ramp.57"
+   ],
+   "D_i_gain": {
+    "ramp.58": -12.370693133869509,
+    "mainline.291": -4.20929643527279,
+    "ramp.57": -64.0800495479125
+   },
+   "D_G_gain": -79.57450062582484,
+   "C_G_gain": 1.0855384912299542,
+   "D_i_cost_difference": {
+    "ramp.58": 12.370693133869509,
+    "mainline.291": 4.20929643527279,
+    "ramp.57": 64.0800495479125
+   },
+   "D_G_cost_difference": 79.57450062582484,
+   "C_G_cost_interaction": -1.0855384912299542,
+   "arms": {
+    "B": 1422.1805404831487,
+    "ALL": 1755.8814884238661,
+    "ONLY:ramp.58": 1434.5512336170182,
+    "ONLY:mainline.291": 1426.3898369184215,
+    "ONLY:ramp.57": 1486.2605900310612,
+    "GROUP": 1501.7550411089735
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968133,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.134",
+    "mainline.127"
+   ],
+   "D_i_gain": {
+    "mainline.134": -3.847270717409174,
+    "mainline.127": 1.5786207011385613
+   },
+   "D_G_gain": 4.177347853450783,
+   "C_G_gain": 6.4459978697213955,
+   "D_i_cost_difference": {
+    "mainline.134": 3.847270717409174,
+    "mainline.127": -1.5786207011385613
+   },
+   "D_G_cost_difference": -4.177347853450783,
+   "C_G_cost_interaction": -6.4459978697213955,
+   "arms": {
+    "B": 848.8542849654168,
+    "ALL": 895.2017244990145,
+    "ONLY:mainline.134": 852.701555682826,
+    "ONLY:mainline.127": 847.2756642642782,
+    "GROUP": 844.676937111966
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968133,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.250",
+    "mainline.234",
+    "mainline.225"
+   ],
+   "D_i_gain": {
+    "mainline.250": -2.4285058534819655,
+    "mainline.234": -5.645054463307133,
+    "mainline.225": -7.210247864172743
+   },
+   "D_G_gain": -8.330200332022287,
+   "C_G_gain": 6.953607848939555,
+   "D_i_cost_difference": {
+    "mainline.250": 2.4285058534819655,
+    "mainline.234": 5.645054463307133,
+    "mainline.225": 7.210247864172743
+   },
+   "D_G_cost_difference": 8.330200332022287,
+   "C_G_cost_interaction": -6.953607848939555,
+   "arms": {
+    "B": 2148.6896443410346,
+    "ALL": 2241.7444256243293,
+    "ONLY:mainline.250": 2151.1181501945166,
+    "ONLY:mainline.234": 2154.3346988043418,
+    "ONLY:mainline.225": 2155.8998922052074,
+    "GROUP": 2157.019844673057
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968134,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.175",
+    "mainline.171"
+   ],
+   "D_i_gain": {
+    "mainline.175": -5.67204615773835,
+    "mainline.171": -6.887049240231363
+   },
+   "D_G_gain": -11.08722205880531,
+   "C_G_gain": 1.4718733391644037,
+   "D_i_cost_difference": {
+    "mainline.175": 5.67204615773835,
+    "mainline.171": 6.887049240231363
+   },
+   "D_G_cost_difference": 11.08722205880531,
+   "C_G_cost_interaction": -1.4718733391644037,
+   "arms": {
+    "B": 541.8102847128303,
+    "ALL": 583.1387154008632,
+    "ONLY:mainline.175": 547.4823308705686,
+    "ONLY:mainline.171": 548.6973339530616,
+    "GROUP": 552.8975067716356
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968134,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.287",
+    "mainline.257",
+    "ramp.85"
+   ],
+   "D_i_gain": {
+    "mainline.287": -6.033972287474171,
+    "mainline.257": -9.86911755048186,
+    "ramp.85": -62.52055655194954
+   },
+   "D_G_gain": -70.49010982825757,
+   "C_G_gain": 7.933536561647998,
+   "D_i_cost_difference": {
+    "mainline.287": 6.033972287474171,
+    "mainline.257": 9.86911755048186,
+    "ramp.85": 62.52055655194954
+   },
+   "D_G_cost_difference": 70.49010982825757,
+   "C_G_cost_interaction": -7.933536561647998,
+   "arms": {
+    "B": 1315.4123102837275,
+    "ALL": 1454.5674467383133,
+    "ONLY:mainline.287": 1321.4462825712017,
+    "ONLY:mainline.257": 1325.2814278342094,
+    "ONLY:ramp.85": 1377.932866835677,
+    "GROUP": 1385.902420111985
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968135,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.127",
+    "ramp.37",
+    "mainline.135"
+   ],
+   "D_i_gain": {
+    "mainline.127": -2.1150181266356185,
+    "ramp.37": -33.33286997013602,
+    "mainline.135": -5.615235853014951
+   },
+   "D_G_gain": -38.00438360293822,
+   "C_G_gain": 3.058740346848367,
+   "D_i_cost_difference": {
+    "mainline.127": 2.1150181266356185,
+    "ramp.37": 33.33286997013602,
+    "mainline.135": 5.615235853014951
+   },
+   "D_G_cost_difference": 38.00438360293822,
+   "C_G_cost_interaction": -3.058740346848367,
+   "arms": {
+    "B": 793.2492452201001,
+    "ALL": 940.2043560882889,
+    "ONLY:mainline.127": 795.3642633467357,
+    "ONLY:ramp.37": 826.5821151902361,
+    "ONLY:mainline.135": 798.864481073115,
+    "GROUP": 831.2536288230383
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968135,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.286",
+    "mainline.284",
+    "mainline.281"
+   ],
+   "D_i_gain": {
+    "mainline.286": -10.3455341362544,
+    "mainline.284": -11.9755818900735,
+    "mainline.281": -15.351876727231229
+   },
+   "D_G_gain": -17.623901536614767,
+   "C_G_gain": 20.049091216944362,
+   "D_i_cost_difference": {
+    "mainline.286": 10.3455341362544,
+    "mainline.284": 11.9755818900735,
+    "mainline.281": 15.351876727231229
+   },
+   "D_G_cost_difference": 17.623901536614767,
+   "C_G_cost_interaction": -20.049091216944362,
+   "arms": {
+    "B": 1519.2207641261477,
+    "ALL": 1731.22939309118,
+    "ONLY:mainline.286": 1529.5662982624021,
+    "ONLY:mainline.284": 1531.1963460162212,
+    "ONLY:mainline.281": 1534.572640853379,
+    "GROUP": 1536.8446656627625
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968136,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.131",
+    "ramp.34",
+    "mainline.128"
+   ],
+   "D_i_gain": {
+    "mainline.131": -7.81776636902714,
+    "ramp.34": -2.0991777109761642,
+    "mainline.128": -26.687028842390873
+   },
+   "D_G_gain": -36.10907034701086,
+   "C_G_gain": 0.49490257538332116,
+   "D_i_cost_difference": {
+    "mainline.131": 7.81776636902714,
+    "ramp.34": 2.0991777109761642,
+    "mainline.128": 26.687028842390873
+   },
+   "D_G_cost_difference": 36.10907034701086,
+   "C_G_cost_interaction": -0.49490257538332116,
+   "arms": {
+    "B": 1220.3839023971277,
+    "ALL": 1604.030204562851,
+    "ONLY:mainline.131": 1228.2016687661549,
+    "ONLY:ramp.34": 1222.4830801081039,
+    "ONLY:mainline.128": 1247.0709312395186,
+    "GROUP": 1256.4929727441386
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968136,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "ramp.66",
+    "ramp.65",
+    "ramp.63"
+   ],
+   "D_i_gain": {
+    "ramp.66": -15.888556568841977,
+    "ramp.65": -37.36057942778143,
+    "ramp.63": -23.902710652176665
+   },
+   "D_G_gain": -48.76429891853377,
+   "C_G_gain": 28.387547730266306,
+   "D_i_cost_difference": {
+    "ramp.66": 15.888556568841977,
+    "ramp.65": 37.36057942778143,
+    "ramp.63": 23.902710652176665
+   },
+   "D_G_cost_difference": 48.76429891853377,
+   "C_G_cost_interaction": -28.387547730266306,
+   "arms": {
+    "B": 2665.2596741953325,
+    "ALL": 3036.5582334686305,
+    "ONLY:ramp.66": 2681.1482307641745,
+    "ONLY:ramp.65": 2702.620253623114,
+    "ONLY:ramp.63": 2689.162384847509,
+    "GROUP": 2714.0239731138663
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968137,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.165",
+    "mainline.162"
+   ],
+   "D_i_gain": {
+    "mainline.165": -20.411713280318054,
+    "mainline.162": -13.458398761280023
+   },
+   "D_G_gain": -22.352349315292486,
+   "C_G_gain": 11.517762726305591,
+   "D_i_cost_difference": {
+    "mainline.165": 20.411713280318054,
+    "mainline.162": 13.458398761280023
+   },
+   "D_G_cost_difference": 22.352349315292486,
+   "C_G_cost_interaction": -11.517762726305591,
+   "arms": {
+    "B": 2500.6463523237035,
+    "ALL": 2547.6839431900985,
+    "ONLY:mainline.165": 2521.0580656040215,
+    "ONLY:mainline.162": 2514.1047510849835,
+    "GROUP": 2522.998701638996
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968137,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.343",
+    "mainline.340"
+   ],
+   "D_i_gain": {
+    "mainline.343": -10.144832327564927,
+    "mainline.340": -6.190188477500669
+   },
+   "D_G_gain": -14.74600852229105,
+   "C_G_gain": 1.5890122827745472,
+   "D_i_cost_difference": {
+    "mainline.343": 10.144832327564927,
+    "mainline.340": 6.190188477500669
+   },
+   "D_G_cost_difference": 14.74600852229105,
+   "C_G_cost_interaction": -1.5890122827745472,
+   "arms": {
+    "B": 2367.735702396913,
+    "ALL": 2436.4260649658618,
+    "ONLY:mainline.343": 2377.880534724478,
+    "ONLY:mainline.340": 2373.9258908744137,
+    "GROUP": 2382.481710919204
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968138,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "ramp.64",
+    "ramp.62",
+    "mainline.305"
+   ],
+   "D_i_gain": {
+    "ramp.64": -0.003792630697716959,
+    "ramp.62": -0.42244701844356314,
+    "mainline.305": -7.583186189330263
+   },
+   "D_G_gain": -7.459139146258167,
+   "C_G_gain": 0.5502866922133762,
+   "D_i_cost_difference": {
+    "ramp.64": 0.003792630697716959,
+    "ramp.62": 0.42244701844356314,
+    "mainline.305": 7.583186189330263
+   },
+   "D_G_cost_difference": 7.459139146258167,
+   "C_G_cost_interaction": -0.5502866922133762,
+   "arms": {
+    "B": 4338.481229586033,
+    "ALL": 4404.43178209339,
+    "ONLY:ramp.64": 4338.485022216731,
+    "ONLY:ramp.62": 4338.9036766044765,
+    "ONLY:mainline.305": 4346.064415775363,
+    "GROUP": 4345.940368732291
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968139,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.132",
+    "ramp.37",
+    "mainline.129"
+   ],
+   "D_i_gain": {
+    "mainline.132": -7.520318097441304,
+    "ramp.37": -5.582138041257167,
+    "mainline.129": -13.986965711619632
+   },
+   "D_G_gain": -37.014539943142154,
+   "C_G_gain": -9.92511809282405,
+   "D_i_cost_difference": {
+    "mainline.132": 7.520318097441304,
+    "ramp.37": 5.582138041257167,
+    "mainline.129": 13.986965711619632
+   },
+   "D_G_cost_difference": 37.014539943142154,
+   "C_G_cost_interaction": 9.92511809282405,
+   "arms": {
+    "B": 2323.3442161627754,
+    "ALL": 2595.4236110177735,
+    "ONLY:mainline.132": 2330.8645342602167,
+    "ONLY:ramp.37": 2328.9263542040326,
+    "ONLY:mainline.129": 2337.331181874395,
+    "GROUP": 2360.3587561059176
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968139,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.311",
+    "mainline.310",
+    "mainline.309"
+   ],
+   "D_i_gain": {
+    "mainline.311": -2.924293666299036,
+    "mainline.310": -6.479687990108232,
+    "mainline.309": -8.865507278907444
+   },
+   "D_G_gain": -6.650421160516089,
+   "C_G_gain": 11.619067774798623,
+   "D_i_cost_difference": {
+    "mainline.311": 2.924293666299036,
+    "mainline.310": 6.479687990108232,
+    "mainline.309": 8.865507278907444
+   },
+   "D_G_cost_difference": 6.650421160516089,
+   "C_G_cost_interaction": -11.619067774798623,
+   "arms": {
+    "B": 2972.9147337725076,
+    "ALL": 3177.369764031576,
+    "ONLY:mainline.311": 2975.8390274388066,
+    "ONLY:mainline.310": 2979.394421762616,
+    "ONLY:mainline.309": 2981.780241051415,
+    "GROUP": 2979.5651549330237
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968140,
+   "t_s": 360,
+   "horizon_s": 30,
+   "group": [
+    "mainline.145",
+    "ramp.36",
+    "mainline.126"
+   ],
+   "D_i_gain": {
+    "mainline.145": -8.06855223392995,
+    "ramp.36": 1.9160943929109635,
+    "mainline.126": -13.861627221432627
+   },
+   "D_G_gain": -23.259410101763933,
+   "C_G_gain": -3.24532503931232,
+   "D_i_cost_difference": {
+    "mainline.145": 8.06855223392995,
+    "ramp.36": -1.9160943929109635,
+    "mainline.126": 13.861627221432627
+   },
+   "D_G_cost_difference": 23.259410101763933,
+   "C_G_cost_interaction": 3.24532503931232,
+   "arms": {
+    "B": 2392.1957282948906,
+    "ALL": 2708.516921921712,
+    "ONLY:mainline.145": 2400.2642805288206,
+    "ONLY:ramp.36": 2390.2796339019797,
+    "ONLY:mainline.126": 2406.0573555163232,
+    "GROUP": 2415.4551383966545
+   },
+   "flips": {}
+  },
+  {
+   "seed": 968140,
+   "t_s": 660,
+   "horizon_s": 30,
+   "group": [
+    "mainline.287",
+    "mainline.297",
+    "mainline.284"
+   ],
+   "D_i_gain": {
+    "mainline.287": -4.658199985698047,
+    "mainline.297": -88.60982865098777,
+    "mainline.284": -10.587748549663502
+   },
+   "D_G_gain": -99.44229773845109,
+   "C_G_gain": 4.413479447898226,
+   "D_i_cost_difference": {
+    "mainline.287": 4.658199985698047,
+    "mainline.297": 88.60982865098777,
+    "mainline.284": 10.587748549663502
+   },
+   "D_G_cost_difference": 99.44229773845109,
+   "C_G_cost_interaction": -4.413479447898226,
+   "arms": {
+    "B": 3830.063665310061,
+    "ALL": 4438.426402466101,
+    "ONLY:mainline.287": 3834.721865295759,
+    "ONLY:mainline.297": 3918.6734939610487,
+    "ONLY:mainline.284": 3840.6514138597245,
+    "GROUP": 3929.505963048512
+   },
+   "flips": {}
+  }
+ ],
+ "credit_points_total": 26,
+ "credit_points_missing": 5,
+ "credit_summary": {
+  "D_i_gain": {
+   "worlds": 11,
+   "mean": -12.101929693611801,
+   "ci95": [
+    -15.59111651340848,
+    -8.51888161644583
+   ]
+  },
+  "D_G_gain": {
+   "worlds": 11,
+   "mean": -29.36260678394499,
+   "ci95": [
+    -40.51321168547893,
+    -18.70814456946437
+   ]
+  },
+  "C_G_gain": {
+   "worlds": 11,
+   "mean": 4.519108189193232,
+   "ci95": [
+    2.033219191180578,
+    7.519486319875367
+   ]
+  }
+ },
+ "missing_credit_points": [
+  {
+   "seed": 968129,
+   "t_s": 360
+  },
+  {
+   "seed": 968129,
+   "t_s": 660
+  },
+  {
+   "seed": 968138,
+   "t_s": 360
+  },
+  {
+   "seed": 968141,
+   "t_s": 360
+  },
+  {
+   "seed": 968141,
+   "t_s": 660
+  }
+ ],
+ "source_sha256": {
+  "CYCLE0_INPUTS.json": "dabb3de4334b80e57fad13d09cb0bf5d10ecc8c667091bedbff667d194f49e89",
+  "CYCLE0_SAFETY.json": "ed3b135bc54b6fc7b11c567eea00d6312685144f4f84e32cae2e94c41c6fa446"
+ }
+}

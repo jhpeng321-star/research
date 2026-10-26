@@ -1,6 +1,35 @@
-# S-MAINR16 — round-16 fast loop running unattended
+# S-MAINR16 — round-16 fast loop
 
-## Current verified receipt — 2026-10-26 17:33 UTC+8
+## S-MAINFIX current receipt — 2026-10-26 19:05 UTC+8
+
+**WAIT_OWNER.** The driver recorded its WM timeout at18:59:03 after5,400s;
+attempt1 ended with18 finite training rows and no final checkpoint. Exact recorded
+driver93301/trainer94892 are no longer live; no S-MAINFIX signal was sent.
+The owner's timeout4.5h / training-safe SPEED2 / WM-check-policy overlap decisions
+were appended verbatim to shared `REGISTRATION.md` before operational changes.
+The subsequent local staging invocation hit Windows `WinError206` (command too long)
+before SSH process creation. Counting timeout plus invocation as the second
+non-scientific failure, the owner stop rule was applied without retry.
+
+Original `restart/WAIT_OWNER.json` remains; supplemental
+`restart/MAINFIX_WAIT_OWNER.json` and local `tools/mainstart/mainfix/WAIT_OWNER.json`
+record the stop. Remote source/config/state remain unchanged: timeout1.5h,
+overlapOFF, WM accelerationOFF, round16 accepted,87,399 charged sim-s. No new
+background PID, seed or SUMO second. Explicit owner direction is needed to repair
+staging, test the new concurrency path, apply the operational amendment and use
+official `loop14.py retry ... wm_ft`.
+
+Cycle0 real-SUMO extraction is complete in `CYCLE0_RESULT.md`: all13 worlds/26
+paired300s starts, raw and normalized delay, entrance/on-road decomposition,
+throughput, hard brakes, TTC, incidents,5,000-draw world CIs and CAV/demand strata.
+Policy−native total delay **+618,976.835veh-s [503,848.282,739,343.579]**;
+gain native−policy **−618,976.835veh-s**, worse in13/13 worlds.
+Actual30s credit arms exist at21/26 points across11 worlds; gain means
+D_i **−12.102**, D_G **−29.363**, C_G **+4.519veh-s**. Positive synergy does not
+offset the negative group benefit versus native. Hash-bound inputs, safety
+reconstruction and machine-readable results are in `tools/mainstart/mainfix/`.
+
+## Historical running receipt — 2026-10-26 17:33 UTC+8
 
 **RUNNING_UNATTENDED on gpuR. Cycle0 policy, collection and conversion completed; WM-FT is running.**
 The owner explicitly directed continuation from the invocation wait and permitted one
