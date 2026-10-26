@@ -1,4 +1,81 @@
-# S-MAINR16 — round-16 integration; WAIT_OWNER before checkpoint staging
+# S-MAINR16 — cpuQ checkpoint staged; WAIT_OWNER after prearm invocation failure
+
+## Current continuation receipt — 2026-10-26 16:36 UTC+8
+
+**WAIT_OWNER. Checkpoint staging succeeded; no cycle-0 migration or launch occurred.**
+My prearm command incorrectly combined synthetic `--smoke` with the frozen `--gate-panel`
+argument. `load_gate_panel` requires real sampler metadata; `SmokeSampler` has none, so it
+exited before the first optimizer update with
+`AttributeError: 'SmokeSampler' object has no attribute 'metadata'`.
+The owner's any-failure stop rule was applied immediately; the corrected smoke was not retried.
+
+The owner explicitly authorized substituting cpuQ's copy for the unreachable gpuB source.
+The substitution was appended to the shared registration **before any restart launch** and
+recorded in the successor loop registration JSON. The original verbatim decisions remain.
+The checkpoint is now on gpuR at **`/root/main14_loop/mainr16_base/wm_s_best.pt`**:
+
+- SHA256 **`5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2`**
+  matches cpuQ's copy-time `~/autopilot_r10/runs/r16/provenance/SOURCE_SHA256.json`, where
+  it is recorded as the original gpuB round-16 stage-B FINAL `wm_s.pt`.
+- `physics.json` SHA256
+  `7d3ec19c04e418e61078ea673db702cb12d7765bf4a4e58a3b26f63f5eaa48b1`;
+  `config.resolved.json` SHA256
+  `d218190193dcab5881b307c8dab7165b16bd3f6d618baae7d909268607e78bf1`.
+  Both match the provenance SHA256s. All three files also match `ck/md5.txt`.
+- `RUN_SUMMARY.json`, `TRAIN_RECEIPT.json`, `INIT_FROM.json` were copied from the sibling
+  `r16/provenance/` directory, and each matches SOURCE_SHA256. Provenance records
+  `lane_calib.json` as absent on gpuB; no calibration sidecar was invented.
+
+Successor arm directory **`/root/autodl-tmp/c4/v5/mainstart/mainr16/restart`** contains
+`REGISTRATION.json`, `CONFIG.json`, `ARMED.json`, `STAGED_BASE.json`, `TESTS.json`,
+`prearm_smoke.log`, and **`WAIT_OWNER.json`**. Its registration is a prepared,
+**uninstalled** snapshot: SHA256
+`4a2596fd8cdc4522d9b7651185ce869fd0e7eb815ff9c1f829fa02d31ae31c6d`;
+config SHA256 `50abcea3fabda8458d07ce18fe0e6ab7680cf03fce0012a6ac8a5c5bafb1fead`.
+It records the **210,000 total** and the restart's arithmetic cycle0 combined allowance
+**87,399 = 58,266 prior + 29,133 fresh**, without refund or automatic retry.
+
+The same integrated round-16/native-lane/FASTLOOP runtime was deployed and SHA-verified to
+gpuR `restart/runtime` and both CPU collector roots
+`/home/ubuntu/c4/main14/mainr16/runtime`. Source manifest SHA256:
+**`69a67f3e4c67247dbd8021a4710ba7187e6417856f20b980fe885e5a542effdb`**.
+Both CPU boxes pass the real frozen-model/ONNX/SUMO-version/reset-import readiness probes.
+**463 integrated CPU tests PASS, zero skips**, including a new pure restart regression
+that preserves charges/seeds/history, clears adoption of the old policy, preserves attempt
+numbers for distinct output paths, and rejects a scientifically stopped loop.
+
+The live `LOOP14_STATE.json` remains byte-identical to the previous task's snapshot:
+**58,266 charged / 0 actual**, no new seeds or SUMO seconds. The old policy's SHA256 was
+reverified. Staging/model prearm reached no training updates. `MIGRATED.json` and
+`LAUNCH.json` do not exist. Driver/trainer/collector PIDs from this continuation: **none**.
+Update-10 and both-box collection are not verified because no productive run started.
+Final output free bytes **12,745,072,640**; scratch free bytes **2,274,299,904**.
+
+Local continuation receipts and source: `tools/mainstart/mainr16_resume/` and
+`tools/mainstart/mainr16_resume.py`; state migration helper:
+`scripts/c4/mainr16_restart.py`. The prepared migration archives the failed world journal,
+retains append-only seed/charge ledgers, retains the superseded policy/cycle history, clears
+policy adoption, and starts the new policy in `policy/c00.a2`. It was unit-tested but has
+not been applied remotely.
+
+The invocation correction is prepared locally: remove `--gate-panel` and `--horizon-gate`
+from **synthetic prearm only**, hash-check the unchanged frozen panel separately, and keep
+both arguments for the real policy and update-10 gate. The helper refuses prearm/migration/
+launch while the new WAIT_OWNER receipt exists. No productive policy/scientific gate changed.
+Further execution requires owner direction out of WAIT_OWNER.
+
+Read-only monitoring on gpuR:
+```bash
+A=/root/autodl-tmp/c4/v5/mainstart/mainr16/restart
+cat "$A/WAIT_OWNER.json"
+cat "$A/prearm_smoke.log"
+cat /root/main14_loop/LOOP14_STATE.json
+```
+No process needs stopping. For a later authorized launch, the scoped cooperative stop
+markers are `$A/STOP_ARM`, `/root/main14_loop/STOP_DRIVER`, and the new policy's
+`/root/main14_loop/policy/c00.a2/STOP` update-boundary marker. These were not written.
+
+## Original integration receipt — preserved history
 
 **Status at 2026-10-26 16:24 UTC+8: WAIT_OWNER; cycle 0 was not restarted.**
 The read-only gpuB prerequisite probe failed with
