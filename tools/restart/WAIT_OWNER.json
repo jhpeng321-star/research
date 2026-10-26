@@ -1,0 +1,39 @@
+{
+  "task": "S-RESTART",
+  "date": "2026-10-26",
+  "status": "WAIT_OWNER",
+  "reason": "Second operational failure during local worktree setup: ENOSPC on checkout, then ENOSPC on sparse-index recovery",
+  "continuation_operational_failures": 2,
+  "retry_available": false,
+  "branch": "c4/restart",
+  "base_commit": "1aee086ecb667c69895c157b9ce9e01bb308801c",
+  "merged": false,
+  "loop_registration_json_installed": false,
+  "remote_mutations": false,
+  "owned_remote_pids": [],
+  "smoke": {
+    "id": "S-C0DIAG-SMOKE-1",
+    "status": "NOT_RUN",
+    "registered_sim_s": 1922,
+    "new_charged_sim_s": 0,
+    "seeds_require_live_recheck": [968142, 968143]
+  },
+  "main": {
+    "status": "NOT_LAUNCHED",
+    "host_planned": "gpuA",
+    "new_cycle": 0,
+    "round": 16,
+    "base_wm_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+    "rejected_policy_sha256": "fa2427772a49e9462c0be3172e402c515616a15e2930a263e1eafeacb23a0d5d",
+    "imagination_horizon_ceiling_s": 60,
+    "longwm_loss_enabled": false,
+    "historical_charged_sim_s_supplied": 87399,
+    "total_charged_sim_s_cap": 210000
+  },
+  "integrated_tests": "NOT_RUN",
+  "prearm": "NOT_RUN",
+  "mini_pass": "NOT_RUN",
+  "documentation_only_recovery": "Removed only task-created incomplete worktree; recreated no-checkout worktree, initialized index without -u, selected documentation-only sparse paths",
+  "local_free_bytes_after_cleanup": 3772416,
+  "resume_requires": "Disk capacity repair and explicit new continuation authorization after second operational failure"
+}
