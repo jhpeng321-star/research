@@ -257,3 +257,63 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
   `arm/driver_c1collect3.log` and `c1collect3_before/` retain deployment and failed
   transition history. Compact local receipt:`tools/loopresume/receipts_c1collect3/RESULT.json`.
   Verify without dispatch: `python -B -m tools.loopresume.verify_c1collect3`.
+
+## S-C1COLLECT4 — remaining nine running; detached WM/check continuation (2026-10-27 06:29 UTC+8)
+
+- Installed main06:20 exact-shortfall amendment prospectively in append-only shared
+  `REGISTRATION.md`, loop registration/amendments, C1events and cycle ledger:
+  included cycle1 long-credit **15,000 -> 15,600 (+600)**, cycleallowance73,866,
+  total210,000 unchanged, no refunds. Policy64f70af4... and all native/WM/config
+  vetoes, four completed artifacts, original four-world **PASS** guard retained:
+  mean-1612.380634veh-s,95%CI[-3034.651022,-418.186574].
+- Narrow remote-only orchestration repair skips canary selection for the empty
+  completed-bootstrap batch; consumed canary/attempt bindings retained. **Exactly
+  nine worlds968161–968169 dispatched once**,22:25:21Z; no bootstrap redispatch.
+  Detached driver **80364/start843373550** live. At22:27:19Z collectors cpuP
+  **680115/680062/679776/679975/679220**, cpuQ **671328/671847/672084/671803**;
+  **both boxes verified collecting with actual owned SUMO descendants and1,323
+  finite/increasing frames0–661s**. Proof worlds968165/cpuP and968162/cpuQ,
+  SUMO682402/start6791283 and674109/start6791230. Main-priority predicate **active**;
+  evidence does not claim an independently observed peer-watcher sample.
+- At22:28:56Z **8/13 worlds complete**, collectionrunning, convert/WM1/checkpending.
+  **176,473/210,000 charged**, +25,569, remaining33,527; cycle73,866/73,866;
+  includedlong-credit15,600/15,600. Every world charged before dispatch; all failure
+  charges retained. No new science gate, process signal or peer-process modification.
+- Driver automatically continues **convert -> reconcile completed/ACCEPTed WM0 ->
+  existing next-boundary decision -> wm_ft -> unchanged check**. No actor launched
+  by this continuation. WM0 candidate0044eddb... SHAverified; resolved40-step WM
+  recipe validationPASS, all7data roots present, acceptance entrypoint present,
+  10.318GiB free. Historical40steps summed8,531.35s (~2h22m). **Estimated collection
+  end06:32–06:40; WM1fine-tune end09:00–09:30 UTC+8**, plus subsequent unchanged
+  acceptance check. Estimates are not completion receipts.
+- One durable non-scientific operational retry maximum across this continuation;
+  **unused** at observation. Official fresh-attempt recovery preserves outputs/
+  charges; accounting/scientific/provenance/safety refusals fail closed. Full cycle
+  and long allowances are now consumed, so additional simulation is not fundable
+  under these cycle caps. **77testsPASS8.95s**, including exact nine-world resume,
+  ledger-before-dispatch, one-retry and refusal/scientific no-retry regressions;
+  initial offline fixture-budget failure/source/log retained. RuffPASS.
+- gpuA receipts under `restart20261026/C1COLLECT4_{SOURCE,TESTS,BINDINGS,LAUNCH,
+  ATTEMPT,RUNNING,CONTINUATION,STATUS,RESULT}.json`; originals in`c1collect4_before/`.
+  Source manifestSHA`66866c8cbe53f0900cac95d910755fbac9a59d923af87eac22990a41bcf9b17b`;
+  initial registrationSHA`3b78b63ccb4f50b0b02c794e9e087157afebf88f7142a6aa34962d1061fef0ac`;
+  runningSHA`120a585fc3eeb3b4f78f3687dc186eb3f4dd7b02aae5175bc2d36e2f8382cf9d`;
+  resultSHA`fe3157e056ebb2281461911a4017aeec4d8f297de459c0768277bfa48648669d`.
+  Compact local`tools/loopresume/receipts_c1collect4/RESULT.json`; no-dispatch handoff
+  check`python -B -m tools.loopresume.verify_c1collect4`; live phases/proofs via
+  `python -B -m tools.loopresume.c1collect4 status`. Local commit follows; no push.
+
+- **06:33UTC+8 progress supersedes the running-collection snapshot:** all13worlds
+  completed22:29:54Z (**06:29:54UTC+8**), convertcompleted22:30:05Z. Driver80364
+  automatically reconciled accepted WM0 and entered WM1 at22:30:05Z; exact owned
+  trainer **81201/start843401980** live at22:32:39Z,171tensors loaded without new,
+  mismatched/unused tensors or unmatched freeze prefixes. First optimizer step
+  stillpending at that observation; unchanged check ispending and automatic after
+  WM1. **WM1 endETA09:00–09:30UTC+8** retained. No operational retry consumed.
+  CPU main-priority predicate is nowinactive during GPU-only WM; it was verified
+  active on both collecting boxes and reactivates forcheck. Charge176,473 and
+  includedlong-credit15,600 unchanged. Post-boundary registrationSHA
+  `1a6cf335fd34571bc28bdc6a125f44b1fadd594228bd3711e77f3517d9934c99`;
+  gpuA`C1COLLECT4_PROGRESS.json`SHA
+  `c38f89b29be12d09ac4b3c011180a1b95e9f8b07580cde8a3a447e5ab858a246`,
+  compact local`tools/loopresume/receipts_c1collect4/PROGRESS.json`.
