@@ -171,7 +171,7 @@ def read_points(paths: Sequence) -> list[dict]:
                 raise ValueError(f"evaluation seed {seed} in real-credit data")
             if p.get("split") != "TRAIN":
                 raise ValueError("real-credit points must be TRAIN")
-            if p.get("collisions", 0) or p.get("teleports", 0):
+            if p.get("collisions", 0) or p.get("teleports", 0) or p.get("dropped_vehicle_steps", 0):
                 continue                  # a SUMO incident makes the ledger non-authoritative
             points.append(p)
     return points

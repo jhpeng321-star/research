@@ -589,6 +589,7 @@ class DreamerTrainer:
         # S-COOPW [uncertainty] (wms.control.coopw.UncertaintyConfig; None/disabled = unchanged).
         self.uncertainty = uncertainty if uncertainty is not None and uncertainty.enabled else None
         self._training_imagination = False
+        self.longcritic = None  # S-LONGCRITIC: injected only by an enabled run section.
         self.coop_anchor = None
         self._last_start_info = None
         self.real_return_provider = real_return_provider
@@ -796,7 +797,7 @@ class DreamerTrainer:
         return self.update_count - self.coop_anchor
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
-                credit_profile=False):
+                credit_profile=False, difference_only=False):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -852,7 +853,8 @@ class DreamerTrainer:
             if rho > 0.0:
                 radius = self.exploration.radius_m or self.counterfactual.group_radius_m
                 gid, shared = exploration_plan(
-                    batch.state, radius, cfg.horizon, self.exploration.persistence_steps,
+                    batch.state, radius, cfg.horizon, self.exploration.persistence_at(
+                        self._curriculum_position(advance=False)),
                     torch.Generator().manual_seed(3_000_017 * (self.update_count + 1)))
                 explore = (gid, shared, rho)
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
@@ -1169,7 +1171,14 @@ class DreamerTrainer:
         for e, states in enumerate(member_states):
             # Freeze critic weights, not state derivatives: the terminal bootstrap
             # must provide analytic actor credit through the imagined WM trajectory.
-            values = torch.stack([value_call(state) for state in states])
+            # Long no-grad target construction consumes raw paired rewards only.
+            # Avoid hundreds of irrelevant target-critic calls/bootstraps there.
+            if difference_only:
+                if torch.is_grad_enabled():
+                    raise ValueError("difference_only imagination must run under no_grad")
+                values = rewards.new_zeros((len(states), rewards.shape[-1]))
+            else:
+                values = torch.stack([value_call(state) for state in states])
             member_values.append(values)
             returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
         masks = torch.stack([torch.stack([state["present"] & state["is_cav"]
@@ -1549,7 +1558,8 @@ class DreamerTrainer:
         # this training imagination only; unset they change nothing.
         self._training_imagination = True
         try:
-            batch = self._entry_slots(self._sample_starts(self.start_states),
+            starts = self._sample_starts(self.start_states)
+            batch = self._entry_slots(starts,
                                       torch.Generator().manual_seed(1_000_003 * (self.update_count + 1)))
             variants = (build_variants(batch.state, self.counterfactual)
                         if self.counterfactual.enabled else None)
@@ -1599,7 +1609,7 @@ class DreamerTrainer:
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
         mix = self.config.real_return_mix
         imagined_loss = None
-        if mix < 1:
+        if mix < 1 and self.longcritic is None:
             predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
                                                     for state in states[:-1]])
                                        for states in imagined["states"]])
@@ -1625,6 +1635,11 @@ class DreamerTrainer:
                           "real_return_mean": float(real_batch.returns.mean()),
                           "real_return_count": real_batch.returns.numel(),
                           "real_return_units": real_batch.units})
+        if self.longcritic is not None:
+            auxiliary, long_metrics = self.longcritic.loss(self, starts, scale)
+            if auxiliary is not None:
+                critic_loss = critic_loss + (1 - mix) * auxiliary
+            extra.update(long_metrics)
         self.critic_optimizer.zero_grad(set_to_none=True)
         critic_loss.backward()
         critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), self.config.grad_clip,
@@ -1814,6 +1829,8 @@ class DreamerTrainer:
                     if self._tilt_sampler is not None else {})}
         if coopw:
             payload["coopw"] = coopw
+        if self.longcritic is not None:
+            payload["longcritic"] = self.longcritic.state_dict()
         lane_switches = getattr(self.controller_factory, "ramp_merge", {})
         if lane_switches.get("native_lane_change", False):
             payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
@@ -1865,6 +1882,8 @@ class DreamerTrainer:
         self._init_entropy_temperature()
         for name in ("critic", "target_critic", "actor_optimizer", "critic_optimizer"):
             getattr(self, name).load_state_dict(payload[name])
+        if self.longcritic is not None and "longcritic" in payload:
+            self.longcritic.load_state_dict(payload["longcritic"])
         for key, parameter, optimizer_name, label in (
                 ("log_alpha", self.log_alpha, "alpha_optimizer", "entropy"),
                 ("log_lane_alpha", self.log_lane_alpha, "lane_alpha_optimizer", "lane entropy")):

@@ -1,0 +1,17 @@
+{
+  "schema": "coopw_horizon_gate/1",
+  "wm_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+  "source_sha256": "9ddb32143a16bea2df5dafd157bcbd86a806fc316824717db9f3d6c12e1c55aa",
+  "rule": "Copied measured 60 s t0-HDV policy-arm-minus-native proxy; 95% group bootstrap. No 120-300 s evidence.",
+  "horizons": {
+    "60": {
+      "n_groups": 96,
+      "n_pairs": 192,
+      "sign_agreement": 0.9526315789473684,
+      "sign_ci95": [0.9202127659574468, 0.9789473684210527],
+      "pearson": 0.7744415474620118,
+      "pearson_ci95": [0.6780079349162066, 0.8586189315855557],
+      "verdict": "PASS"
+    }
+  }
+}

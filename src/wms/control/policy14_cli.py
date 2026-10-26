@@ -172,6 +172,8 @@ def main(argv=None):
                         help="WM-sha-bound COOPW horizon receipt for the current accepted loop WM")
     parser.add_argument("--native-init", action="store_true",
                         help="S-NATIVEINIT-1: native residual actor, paired native gate/learning curve")
+    parser.add_argument("--longcritic-reliability", default=None)
+    parser.add_argument("--longcritic-native-returns", default=None)
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -214,6 +216,11 @@ def main(argv=None):
         candidate.mkdir(parents=True, exist_ok=False)
         output = candidate
         provider = NPZRealReturnProvider(args.real_returns, seed=args.seed)
+        from .real_share import RealShareConfig, split_provider, exclude_development_starts, calibrate_share
+        share_cfg = RealShareConfig(**raw.get('real_share', {}))
+        share_dev = None
+        if share_cfg.enabled:
+            provider, share_dev = split_provider(provider)
         models, receipts = load_members(args.wm_ckpt, args.wm_config, args.device)
         from .policy14_probes import free_road_probe, gradient_probe, gradient_probe_13e
         from .dreamer import _restore_rng, _rng_state
@@ -246,6 +253,8 @@ def main(argv=None):
             train, val = _load_starts(raw["data"], models, args.seed, entries=True)
             check_train_seeds(train)
             check_train_seeds(val)
+            if share_dev is not None:
+                train = exclude_development_starts(train, set(share_dev.provenance['seeds'].tolist()))
         if args.gate_panel_dump:
             text = json.dumps(build_gate_panel(val), indent=1, sort_keys=True) + "\n"
             dump = checked_path(args.gate_panel_dump)
@@ -317,6 +326,18 @@ def main(argv=None):
                                   real_return_provider=provider,
                                   **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        from .longcritic import LongCritic, LongCriticConfig
+        long_cfg = LongCriticConfig(**raw.get("longcritic", {}))
+        if long_cfg.enabled:
+            long_cfg.reliability_file = args.longcritic_reliability or long_cfg.reliability_file
+            long_cfg.native_returns = args.longcritic_native_returns or long_cfg.native_returns
+            if not long_cfg.native_returns:
+                raise ValueError("longcritic requires a separate real native-return anchor")
+            native_provider = NPZRealReturnProvider(long_cfg.native_returns, seed=args.seed)
+            if share_cfg.enabled:
+                native_provider, _ = split_provider(native_provider)
+            trainer.longcritic = LongCritic(trainer, long_cfg, native_provider,
+                [r["checkpoint_sha256"] for r in receipts])
         if args.real_credit:
             from .real_credit14 import load_multipliers
             trainer.credit_multipliers = load_multipliers(checked_path(args.real_credit))
@@ -337,6 +358,16 @@ def main(argv=None):
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
         warmup = warm_start_real_critic(trainer, updates=warm_updates)
+        if trainer.longcritic is not None:
+            if not trainer.longcritic.warm:
+                summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
+            summary["longcritic"] = trainer.longcritic.receipt
+        if share_cfg.enabled:
+            if args.smoke:
+                raise ValueError('real-share selection requires real TRAIN starts')
+            summary['real_share'] = calibrate_share(trainer, provider, share_dev,
+                policy_sha256=resumed['sha256'] if resumed else None, config=share_cfg)
+            (output / 'REAL_SHARE.json').write_text(json.dumps(summary['real_share'], indent=2), encoding='utf-8')
         if ramp_merge != {"policy_ramp_merge": False, "native_ramp_merge": "gap6"}:
             summary["ramp_merge"] = ramp_merge
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,

@@ -104,6 +104,9 @@ class ExplorationConfig:
     rho: list = field(default_factory=lambda: [0.0])
     persistence_steps: float = 4.0
     radius_m: Optional[float] = None
+    long_persistence: bool = False
+    persistence_curriculum_updates: list = field(default_factory=lambda: [0, 150])
+    persistence_seconds: list = field(default_factory=lambda: [30.0, 60.0])
 
     def __post_init__(self):
         xs = [float(x) for x in self.curriculum_updates]
@@ -117,9 +120,21 @@ class ExplorationConfig:
         if self.radius_m is not None and not (math.isfinite(self.radius_m) and self.radius_m > 0):
             raise ValueError("exploration radius_m must be positive")
         self.curriculum_updates, self.rho = xs, ys
+        px, py = self.persistence_curriculum_updates, self.persistence_seconds
+        if (not isinstance(self.long_persistence, bool) or not px or len(px) != len(py)
+                or any(not math.isfinite(x) for x in px)
+                or any(b <= a for a, b in zip(px, px[1:]))
+                or any(not math.isfinite(y) or not 30 <= y <= 60 for y in py)):
+            raise ValueError("long exploration persistence requires increasing knots and 30..60 seconds")
 
     def rho_at(self, position: int) -> float:
         return _interp(self.curriculum_updates, self.rho, position)
+
+    def persistence_at(self, position: int) -> float:
+        if not self.long_persistence:
+            return self.persistence_steps
+        from .contract import CONTROL_DT_S
+        return _interp(self.persistence_curriculum_updates, self.persistence_seconds, position) / CONTROL_DT_S
 
     def as_dict(self) -> dict:
         return asdict(self)
