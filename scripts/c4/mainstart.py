@@ -72,6 +72,16 @@ def choose_swap(reference, candidates, choose_base, strict_ratio):
     return selected, decisions
 
 
+def improves_selected_base(chosen, previous, strict_ratio):
+    """Do not reset an accepted fine-tune back to an already adopted external FINAL."""
+    if chosen is None:
+        return False
+    if not previous:
+        return True
+    return (chosen['actual_sha256'] != previous['sha256']
+            and strict_ratio(chosen['qualification']) < previous['strict_ttc_ratio'])
+
+
 def remote_json(host, python, script, args=()):
     command = ' '.join(map(shlex.quote, [python, '-c', script, *args]))
     p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', host, command],
@@ -144,11 +154,13 @@ def boundary_swap(cfg, state, arm_dir, loop, verdict):
                                'qualification': qualification})
         chosen, record['decisions'] = choose_swap(ref, candidates, verdict.choose_base, verdict.strict_ratio)
         record.update(package_sha256=loop.sha256(package), reason='registered no-new-FAIL / strict-TTC comparison')
-        if chosen and chosen['actual_sha256'] != state['accepted_wm']['sha256']:
+        if improves_selected_base(chosen, state.get('mainstart_selected_base'), verdict.strict_ratio):
             if not Path(loop.guard(chosen['config'])).is_file():
                 raise RuntimeError('selected FINAL config missing')
             state['accepted_wm'] = {'checkpoint': chosen['checkpoint'], 'config': chosen['config'],
                                     'sha256': chosen['actual_sha256'], 'source': f"boundary swap {chosen['label']}"}
+            state['mainstart_selected_base'] = {'sha256': chosen['actual_sha256'], 'label': chosen['label'],
+                                                'strict_ttc_ratio': verdict.strict_ratio(chosen['qualification'])}
             loop.save_state(cfg, state)
             record.update(decision='swap', selected=chosen['label'], accepted_wm=state['accepted_wm'])
     loop.write_atomic(receipt, record)
@@ -164,6 +176,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--arm', default=str(ARM / 'ARMED.json'))
     p.add_argument('--check-only', action='store_true')
+    p.add_argument('--resume', action='store_true')
     args = p.parse_args()
     arm = loop.read_json(args.arm)
     arm_dir = Path(args.arm).parent
@@ -240,6 +253,15 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         loop.write_atomic(arm_dir / 'PID.json', {'pid': os.getpid(), 'sid': os.getsid(0), **identity(os.getpid())})
         try:
+            if args.resume:
+                state = loop.load_state(cfg)
+                if (arm_dir / 'WAIT_OWNER.json').exists() or state.get('stopped') or loop._phase(state)['status'] != 'pending':
+                    raise RuntimeError('continuation requires a successful phase boundary, no stop/failure')
+                loop.write_atomic(arm_dir / 'CONTINUED.json', {'t': loop.now(), 'pid': os.getpid(),
+                                  'next': loop._phase(state)['name'], 'registration_sha256': state['registration_sha256'],
+                                  'wrapper_sha256': arm['wrapper_sha256']})
+                drive(cfg, arm_dir)
+                return
             if loop.disk_guard(cfg, loop.host(cfg, 'gpu'), cfg['loop_root'], 0)['free_gb'] < 6:
                 raise RuntimeError('launch output filesystem has less than 6 GiB free')
             if loop.sha256(cfg['wm']['initial_wm']) != BASE_SHA:

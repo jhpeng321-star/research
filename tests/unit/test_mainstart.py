@@ -69,6 +69,15 @@ def test_incomplete_verdict_does_not_authorise_swap():
     assert 'missing' in decisions[0]['error']
 
 
+def test_later_boundaries_preserve_finetunes_of_already_adopted_base():
+    previous = {'sha256': 'abc', 'strict_ttc_ratio': 0.9}
+    assert not start.improves_selected_base(candidate(), previous, verdict.strict_ratio)
+    assert not start.improves_selected_base({**candidate('round16', 0.95), 'actual_sha256': 'new'},
+                                          previous, verdict.strict_ratio)
+    assert start.improves_selected_base({**candidate('round16', 0.8), 'actual_sha256': 'better'},
+                                      previous, verdict.strict_ratio)
+
+
 def test_unready_collect_does_not_enter_phase_or_touch_seeds(monkeypatch):
     calls = []
 

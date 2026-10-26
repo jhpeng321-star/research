@@ -150,5 +150,39 @@ print(json.dumps(receipt))
     print(out)
 
 
+def continuation():
+    request = {'wrapper': base64.b64encode((ROOT / 'scripts/c4/mainstart.py').read_bytes()).decode(),
+               'supervisor': base64.b64encode((OUT / 'continue.py').read_bytes()).decode(),
+               'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()}
+    out = remote('gpuR', r'''
+import json,base64,pathlib,subprocess,os,time,sys,hashlib
+q=json.load(sys.stdin); a=pathlib.Path('/root/autodl-tmp/c4/v5/mainstart'); assert a.is_dir()
+assert not (a/'CONTINUATION_REQUEST.json').exists()
+old=json.loads((a/'PID.json').read_text()); assert old['pid']==822919
+f=pathlib.Path('/proc/'+str(old['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
+assert f[19]==old['start_ticks']
+state=json.loads(pathlib.Path('/root/main14_loop/LOOP14_STATE.json').read_text())
+assert state['cycles'][0]['phases']['policy']['status']=='running' and state['sim_s_charged']==0
+assert not (a/'WAIT_OWNER.json').exists()
+wrapper=base64.b64decode(q['wrapper']); (a/'mainstart_v2.py').write_bytes(wrapper)
+(a/'continue.py').write_bytes(base64.b64decode(q['supervisor']))
+arm=json.loads((a/'ARMED.json').read_text()); arm['wrapper_sha256']=hashlib.sha256(wrapper).hexdigest(); arm['wrapper_code_sha']=q['commit']
+(a/'ARMED_V2.json').write_text(json.dumps(arm,indent=1)+'\n')
+request={'previous_pid':old['pid'],'previous_start_ticks':old['start_ticks'],'wrapper_sha256':arm['wrapper_sha256'],'commit':q['commit']}
+(a/'CONTINUATION_REQUEST.json').write_text(json.dumps(request,indent=1))
+with (a/'continuation.log').open('ab') as log:
+ p=subprocess.Popen(['setsid','nohup','/root/miniconda3/bin/python','-u',str(a/'continue.py')],
+ stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,cwd=a,
+ env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'})
+time.sleep(3); assert p.poll() is None
+# Own driver's documented phase-boundary marker; the active policy child is never interrupted.
+(a/'STOP_ARM').touch()
+f=pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().rsplit(')',1)[1].split()
+print(json.dumps({**request,'supervisor_pid':p.pid,'supervisor_sid':int(f[3]),'supervisor_start_ticks':f[19]}))
+''', json.dumps(request).encode())
+    (OUT / 'CONTINUATION_REQUEST.json').write_text(out)
+    print(out)
+
+
 if __name__ == '__main__':
-    {'prepare': prepare, 'launch': launch, 'handoff': handoff}[sys.argv[1]]()
+    {'prepare': prepare, 'launch': launch, 'handoff': handoff, 'continuation': continuation}[sys.argv[1]]()
