@@ -207,6 +207,10 @@ class PairExtras:
             f = box["fn"]
             accel, lanes = f(env, st) if f is not None else (None, None)
             mask = member_mask(env, members)
+            if getattr(accel, "native_residual", False):
+                if hold is not None or lanes is not None:
+                    raise ValueError("native residual credit requires the native reference and native lanes")
+                return accel.subset(mask), {}
             cav = env.frame.present & env.frame.is_cav
             out = np.full((1, env.k), np.nan)
             if accel is not None:

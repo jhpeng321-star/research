@@ -126,6 +126,14 @@ def score_gate_panel(trainer, val, panel, device):
             for s in panel["starts"]]
 
 
+def score_native_panel(trainer, val, panel, device):
+    from .nativeinit import panel_gate
+    scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device),
+                                native_reference=True) for s in panel["starts"]]
+    return panel_gate([s["J"] for s in scores], [s["native_J"] for s in scores],
+                      update=trainer.update_count)
+
+
 def check_train_seeds(sampler):
     for meta in sampler.metadata.values():
         world = str(meta.get("world", meta.get("world_id", "")))
@@ -162,6 +170,8 @@ def main(argv=None):
                         help="build the gate panel (VAL starts, panel seed 965150, n 16), write it there, exit")
     parser.add_argument("--horizon-gate", default=None,
                         help="WM-sha-bound COOPW horizon receipt for the current accepted loop WM")
+    parser.add_argument("--native-init", action="store_true",
+                        help="S-NATIVEINIT-1: native residual actor, paired native gate/learning curve")
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -172,6 +182,14 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if args.native_init:
+            from .nativeinit import PANEL_SHA256
+            if args.smoke or not args.gate_panel:
+                raise ValueError("native-init requires the real frozen TRAIN panel, not synthetic --smoke")
+            if hashlib.sha256(checked_path(args.gate_panel).read_bytes()).hexdigest() != PANEL_SHA256:
+                raise ValueError("native-init panel SHA mismatch")
+            if args.max_updates > 150 or args.max_updates % 10:
+                raise ValueError("native-init measures every 10 updates, maximum inherited cap150")
         if args.horizon_gate:
             raw["horizon"] = {**raw["horizon"], "gate_file": str(checked_path(args.horizon_gate))}
         switches = raw["policy14"]
@@ -246,11 +264,14 @@ def main(argv=None):
         from .counterfactual import CounterfactualConfig
         settings = policy_settings(raw)
         policy = CavPolicy(accel_max=settings["accel_max"],
-                           lane_head=settings.get("lane_control") != "native",
-                           init_zero_accel=settings.get("init_zero_accel", False))
+                           lane_head=False if args.native_init else settings.get("lane_control") != "native",
+                           init_zero_accel=False if args.native_init else settings.get("init_zero_accel", False),
+                           residual_on_native=args.native_init)
         lane_section = dict(raw["lanes"])
         enabled = lane_section.pop("enabled", True)
         lane_rules = LaneRules.from_mapping(lane_section) if enabled else None
+        if args.native_init:
+            lane_rules = None
         # LOOP14C ramp merges (default off = legacy forced 6 m rule for every CAV).
         ramp_merge = {"policy_ramp_merge": switches.get("policy_ramp_merge", False),
                        "native_ramp_merge": switches.get("native_ramp_merge", "gap6")}
@@ -258,6 +279,12 @@ def main(argv=None):
             raise ValueError("policy14.native_lane_change must be a boolean")
         if switches.get("native_lane_change", False):
             ramp_merge["native_lane_change"] = switches["native_lane_change"]
+        if args.native_init:
+            if not raw["counterfactual"].get("enabled"):
+                raise ValueError("native-init requires paired native counterfactuals")
+            if raw["counterfactual"].get("native_cav", "idm") not in ("idm", "head"):
+                raise ValueError("native-init requires the native head or IDM reference")
+            ramp_merge.update(policy_ramp_merge=False, native_lane_change=True, native_ramp_merge="wm_law")
         factory = make_controller_factory(**ramp_merge)
         if ramp_merge["policy_ramp_merge"] and lane_rules is None:
             raise ValueError("policy14.policy_ramp_merge needs [lanes] enabled")
@@ -321,6 +348,16 @@ def main(argv=None):
         initial_score = before
         updates = []
         summary.update(updates=updates, independent_score_before=initial_score)
+        native_curve = []
+        native_start_update = trainer.update_count
+        if args.native_init:
+            initial_native = score_native_panel(trainer, val, gate_panel, args.device)
+            native_curve.append(initial_native)
+            summary["native_curve"] = native_curve
+            if not args.resume and any(d != 0.0 for d in initial_native["delta_per_start"]):
+                raise ValueError("update-zero native identity failed on frozen panel")
+            if args.resume and initial_native["passed"]:
+                trainer.save_checkpoint(output / "policy_native_best.pt")
         if gate_panel is not None:
             panel_before = score_gate_panel(trainer, val, gate_panel, args.device)
             summary["gate_panel"] = {"file": str(args.gate_panel), "n": len(panel_before),
@@ -347,6 +384,14 @@ def main(argv=None):
                 with (output / "rescores.jsonl").open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps({"update": trainer.update_count, **after}, allow_nan=False) + "\n")
             updates.append(metrics)
+            if args.native_init and trainer.update_count % 10 == 0:
+                native_result = score_native_panel(trainer, val, gate_panel, args.device)
+                native_curve.append(native_result)
+                with (output / "native_curve.jsonl").open("a", encoding="utf-8") as stream:
+                    stream.write(json.dumps(native_result, allow_nan=False) + "\n")
+                from .nativeinit import select_update
+                if select_update(native_curve) == trainer.update_count:
+                    trainer.save_checkpoint(output / "policy_native_best.pt")
             gate_failed = False
             if not args.smoke and trainer.update_count == int(switches["signal_gate_updates"]):
                 if gate_panel is not None:
@@ -367,6 +412,21 @@ def main(argv=None):
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("early signal gate: independently rescored J did not decrease; stop before scaling")
         trainer.save_checkpoint(output / "policy_latest.pt")
+        if args.native_init:
+            from .nativeinit import select_update
+            import shutil
+            chosen = select_update(native_curve)
+            if chosen is None:
+                raise RuntimeError("no trained checkpoint is <= native on all16 starts; keep native")
+            shutil.copyfile(output / "policy_native_best.pt", output / "policy_latest.pt")
+            selected = next(r for r in native_curve if r["update"] == chosen)
+            receipt = {**selected, "checkpoint_sha256": hashlib.sha256(
+                (output / "policy_latest.pt").read_bytes()).hexdigest(),
+                "wm_sha256": [r["checkpoint_sha256"] for r in receipts],
+                "wm_config_sha256": [r["config_sha256"] for r in receipts],
+                "selection": "earliest minimum eligible measured mean delta", "measured_through": trainer.update_count}
+            (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
+            summary["recommended_updates_per_cycle"] = chosen - native_start_update
         summary.update(status="completed", seed=args.seed, smoke=args.smoke, device=args.device,
                        updates=updates, critic_warmup=warmup, config=asdict(cfg),
                        wm_members=receipts, probes=probes,

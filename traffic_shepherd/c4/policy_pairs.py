@@ -118,6 +118,9 @@ def load_pair_policy_factory(policy_ckpt: str, wm_ckpt: Optional[str], wm_config
     import os
 
     policy, encoder, rules, _ = load_policy_components(policy_ckpt, device=device)
+    if getattr(policy, "residual_on_native", False):
+        from wms.control.nativeinit import verify_collection_gate
+        verify_collection_gate({"checkpoint": policy_ckpt})
     needs_settings = bool(rules is not None and (rules.consequence_mask or rules.secure_gap_hook))
     settings = None
     models = None

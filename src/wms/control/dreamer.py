@@ -642,10 +642,18 @@ class DreamerTrainer:
         self.target_critic = copy.deepcopy(critic).to(self.device).eval().requires_grad_(False)
         self.start_states = start_states
         self.observation_builder, self.reward_fn, self.safety = observation_builder, reward_fn, safety
+        if getattr(self.policy, "residual_on_native", False):
+            from .nativeinit import paired_reward
+            self.reward_fn = paired_reward(reward_fn)
         self.controller_factory = controller_factory
+        if getattr(self.policy, "residual_on_native", False) and controller_factory is None:
+            raise ValueError("native residual requires the native-aware bridge controller factory")
         self.reward_weights = reward_weights or RewardWeights()
         self.actor_parameters = list(dict.fromkeys(
             list(self.policy.parameters()) + list(self.group_encoder.parameters())))
+        if getattr(self.policy, "residual_on_native", False):
+            self.group_encoder.requires_grad_(False)
+            self.actor_parameters = [p for p in self.actor_parameters if p.requires_grad]
         self.actor_optimizer = torch.optim.Adam(self.actor_parameters, lr=self.config.actor_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.config.critic_lr)
         # V6EXPLORE entropy temperatures (default off: None targets keep the fixed weights).
@@ -833,7 +841,8 @@ class DreamerTrainer:
         zone_fn = (make_entrance_zone_fn(cfg.entrance_zone_main_m, cfg.entrance_zone_ramp_m)
                    if cfg.entrance_zone_native else None)
         need_bridge = self.controller_factory is not None and (
-            self.use_lanes or act_mask is not None or zone_fn is not None)
+            self.use_lanes or act_mask is not None or zone_fn is not None
+            or getattr(self.policy, "residual_on_native", False))
         crn = act_mask is not None and bool(getattr(self.policy, "supports_noise", False))
         # S-COOPW correlated exploration: training imagination only, stochastic, CRN path.
         explore = None
@@ -942,6 +951,7 @@ class DreamerTrainer:
                     raise RuntimeError("controller factory did not sample an initial policy command")
                 return held_out
             policy_proxy.accel_max = policy_max
+            policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()
@@ -951,7 +961,7 @@ class DreamerTrainer:
                 extra = {}
                 if self.use_lanes:
                     extra["lane_rules"] = self.lane_rules
-                if act_mask is not None or zone_fn is not None:
+                if act_mask is not None or zone_fn is not None or policy_proxy.residual_on_native:
                     extra["native"] = native
                     if _accepts(self.controller_factory, "native_accel_max"):
                         extra["native_accel_max"] = native_max
@@ -1017,6 +1027,10 @@ class DreamerTrainer:
                 controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
+            if getattr(self.policy, "residual_on_native", False):
+                from .nativeinit import pair_merge_streams
+                pair_merge_streams(initial, index, n_base,
+                                   (self.update_count if future_seed is None else future_seed) + sample_index)
             # Plain-bug fix: imagined vehicles leave at the road end (same gate as evaluation
             # and training); physics.exit_at_road_end=false keeps old replays bit-identical.
             exit_s = road_end_exit_bound(getattr(model, "physics", None))
@@ -1804,10 +1818,14 @@ class DreamerTrainer:
         if lane_switches.get("native_lane_change", False):
             payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
                                                 **lane_switches}
+        if getattr(self.policy, "residual_on_native", False):
+            payload["residual_on_native"] = True
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
         payload = torch.load(checked_path(path), map_location=self.device, weights_only=True)
+        if bool(payload.get("residual_on_native", False)) != bool(getattr(self.policy, "residual_on_native", False)):
+            raise ValueError("cannot resume across absolute/native-residual action semantics")
         if payload.get("format") not in READABLE_FORMATS:
             raise ValueError(f"expected a {' or '.join(READABLE_FORMATS)} checkpoint")
         if not policy_only and payload["format"] != CHECKPOINT_FORMAT:

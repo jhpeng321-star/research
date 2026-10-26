@@ -79,7 +79,7 @@ class CavPolicy(nn.Module):
 
     def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True, *,
                  accel_min: float = ACCEL_MIN_MPS2, accel_max: float = POLICY_ACCEL_MAX_MPS2,
-                 init_zero_accel: bool = False) -> None:
+                 init_zero_accel: bool = False, residual_on_native: bool = False) -> None:
         super().__init__()
         self.register_buffer("accel_bounds", torch.zeros(2, dtype=torch.float64))
         self.init_zero_accel = bool(init_zero_accel)
@@ -100,6 +100,15 @@ class CavPolicy(nn.Module):
             nn.init.zeros_(self.lane_head[-1].bias)
         if self.init_zero_accel:
             self.init_zero_mean_accel()
+        self.residual_on_native = bool(residual_on_native)
+        if self.residual_on_native:
+            if lane_head or init_zero_accel:
+                raise ValueError("native residual requires lane_head=False, init_zero_accel=False")
+            self.requires_grad_(False)
+            self.residual_head = nn.Linear(2 * hidden_dim + GROUP_SIGNAL_DIM, 1)
+            nn.init.zeros_(self.residual_head.weight)
+            nn.init.zeros_(self.residual_head.bias)
+            self.lane_control = "native"
 
     def init_zero_mean_accel(self) -> None:
         """V6EXPLORE: neutral zero-mean initial acceleration (call on a FRESH actor only).
@@ -168,6 +177,17 @@ class CavPolicy(nn.Module):
                                     obs.report_mask.reshape(b * k, -1)).reshape(b, k, -1)
         signal = torch.where(obs.cav_mask[..., None], group_signal, torch.zeros_like(group_signal))
         features = torch.cat((own, context, signal), -1)
+        if self.residual_on_native:
+            # A deterministic residual: exploration/entropy cannot perturb update zero.
+            # Frozen random features; ONLY the residual head receives actor gradients.
+            radius = min(-self.accel_min, self.accel_max)
+            residual = radius * torch.tanh(self.residual_head(features.detach()).squeeze(-1))
+            residual = torch.where(obs.cav_mask, residual, torch.zeros_like(residual))
+            zeros = residual * 0.0
+            if lane_mask is None:
+                return residual, zeros
+            return PolicyOutput(residual, torch.zeros_like(residual, dtype=torch.long),
+                                zeros, zeros, zeros, zeros, torch.ones_like(residual, dtype=torch.long))
         mean, log_std = self.head(features).unbind(-1)
         std = log_std.clamp(-5.0, 1.0).exp()
         distribution = Normal(mean, std)
@@ -412,6 +432,9 @@ class PolicyExecutor:
         self.deterministic, self.noise_fn, self.hold, self.device = deterministic, noise_fn, hold, device
         # Data-collection exploration (Dreamer loop): extra N(0, sigma) on the commanded accel before safety.
         self.extra_accel_noise = float(extra_accel_noise)
+        self.residual_on_native = bool(getattr(policy, "residual_on_native", False))
+        if self.residual_on_native and self.extra_accel_noise:
+            raise ValueError("external acceleration noise would break native initialization")
         self.dwell = dwell if dwell is not None else LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)
         # Last commanded accel / lane intent of every CAV, relayed in the other CAVs' reports.
         self.memory = memory if memory is not None else CommandMemory()
@@ -437,7 +460,13 @@ class PolicyExecutor:
         with torch.no_grad():
             state = {k: (v.to(self.device) if torch.is_tensor(v) else v) for k, v in state.items()}
             ages = dwell_age if dwell_age is not None else self.dwell.step(state)
-            obs = build_observations(self.memory.augment(state))
+            observed = self.memory.augment(state)
+            if self.residual_on_native:
+                # Native decisions aren't observable as prospective commands in SUMO.
+                # Use the same explicit absent-command/intent convention in imagination.
+                zeros = torch.zeros_like(state["s_m"])
+                observed = {**observed, "cmd_accel_mps2": zeros, "lane_intent": zeros}
+            obs = build_observations(observed)
             lane = state["lane"].long()
             new_lane, changed = lane, torch.zeros_like(obs.cav_mask)
             intent = torch.zeros_like(state["s_m"])
@@ -458,6 +487,13 @@ class PolicyExecutor:
                 else:
                     accel, _ = self.policy(obs, signal, deterministic=self.deterministic, **kwargs)
             accel = accel.float()
+            if self.residual_on_native:
+                from .nativeinit import NativeResidualCommand
+                residual = accel.cpu().numpy().astype(np.float64)
+                residual[~obs.cav_mask.cpu().numpy()] = np.nan
+                command = NativeResidualCommand(residual, self.accel_min, self.accel_max)
+                # Composition belongs to the physics-tick executor, not this 1s actor.
+                return (command, None) if with_lanes else command
             if self.extra_accel_noise > 0.0 and not self.hold:
                 accel = (accel + self.extra_accel_noise * torch.randn_like(accel)).clamp(
                     self.accel_min, self.accel_max)
@@ -490,7 +526,10 @@ def load_policy_components(path, *, device: str = "cpu"):
         raise ValueError(f"expected a {' or '.join(CHECKPOINT_FORMATS)} checkpoint")
     state = upgrade_policy_state(payload["policy"])
     lane_head = any(key.startswith("lane_head.") for key in state)
-    policy, encoder = CavPolicy(lane_head=lane_head), RsuGroupEncoder()
+    residual = bool(payload.get("residual_on_native", False))
+    if any(key.startswith("residual_head.") for key in state) != residual:
+        raise ValueError("native-residual checkpoint metadata/weights disagree")
+    policy, encoder = CavPolicy(lane_head=lane_head, residual_on_native=residual), RsuGroupEncoder()
     if payload.get("lane_control") == "native":
         if lane_head:
             raise ValueError("lane_control='native' checkpoint must not carry a lane head")
@@ -499,12 +538,15 @@ def load_policy_components(path, *, device: str = "cpu"):
     check_payload_accel_bounds(policy, payload)
     if "wm_controller_kwargs" in payload:
         policy.wm_controller_kwargs = dict(payload["wm_controller_kwargs"])
+    if residual:
+        policy.native_reference = dict(payload.get("counterfactual", {}))
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
              for k, v in payload["group_encoder"].items()}
     encoder.load_state_dict(group)
     policy.eval()
     encoder.eval()
-    return policy.to(device), encoder.to(device), LaneRules.from_mapping(payload.get("lane_rules")), payload
+    rules = None if residual else LaneRules.from_mapping(payload.get("lane_rules"))
+    return policy.to(device), encoder.to(device), rules, payload
 
 
 def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
@@ -514,6 +556,9 @@ def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
     import os
 
     policy, encoder, rules, _ = load_policy_components(path, device=device)
+    if policy.residual_on_native:
+        from .nativeinit import verify_collection_gate
+        verify_collection_gate({"checkpoint": str(path)})
     # Dreamer-loop data collection (exploration): C4_POLICY_STOCHASTIC=1 samples from the policy instead of
     # its mean; C4_POLICY_ACCEL_NOISE=<sigma> adds extra Gaussian accel noise (m/s^2). Deployment default: off.
     if os.environ.get("C4_POLICY_STOCHASTIC") == "1":

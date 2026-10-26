@@ -190,6 +190,14 @@ class ArmImagination:
         self.policy, self.group_encoder, self.lane_rules = policy, group_encoder, lane_rules
         self.reference, self.horizon_s = reference, float(horizon_s)
         self.native = reference_native(reference, head_path)
+        if getattr(policy, "residual_on_native", False):
+            if reference != "native":
+                raise ValueError("native residual cannot use a hold reference")
+            from .counterfactual import native_fn
+            spec = policy.native_reference
+            self.native = native_fn(spec["native_cav"], a_max=spec["native_accel_max_mps2"],
+                                    head_path=spec.get("native_cav_head_path"))
+            self.lane_rules = None
         self.n_samples = int(n_driver_samples)
         self.driver_noise_scale, self.embedding_noise_std = driver_noise_scale, embedding_noise_std
         self.seed = int(seed)
@@ -219,6 +227,7 @@ class ArmImagination:
                                     draw.lane_gumbel.expand(rows, -1, -1).to(obs.own.device))
                 return policy(obs, signal, **{**kwargs, "deterministic": False, "noise": noise})
         actor.accel_max = policy_accel_bounds(policy)[1]
+        actor.residual_on_native = bool(getattr(policy, "residual_on_native", False))
         return actor
 
     def _controller(self, member: Optional[Tensor], rows: int, stream=None, ids=None):
@@ -227,6 +236,9 @@ class ArmImagination:
         lane = {} if self.lane_rules is None else {"lane_rules": self.lane_rules}
         actor = self._actor(stream, ids)
         if member is None:
+            if actor.residual_on_native:
+                return make_cav_controller(actor, self.group_encoder, safe_accel, native=self.native,
+                                           **self.controller_kwargs)
             return make_cav_controller(actor, self.group_encoder, safe_accel, **lane, **self.controller_kwargs)
         act = member.bool()[None].expand(rows, -1).clone()
         return make_cav_controller(actor, self.group_encoder, safe_accel, **lane, act_mask=act,
@@ -254,6 +266,11 @@ class ArmImagination:
         k = state["s_m"].shape[1]
         bstate = {name: (_repeat(v, batch) if torch.is_tensor(v) and v.ndim else v)
                   for name, v in state.items()}
+        if getattr(self.policy, "residual_on_native", False):
+            from .nativeinit import pair_merge_streams
+            # Arm-major rows: share each future's stream across all candidate arms.
+            pair_merge_streams(bstate, torch.arange(self.n_samples, device=state["s_m"].device).repeat(n_arm),
+                               self.n_samples, self.seed)
         hist = dict(history=history, history_mask=history_mask, driver_history=driver_history,
                     driver_history_mask=driver_history_mask)
         for h, m in (("history", "history_mask"), ("driver_history", "driver_history_mask")):

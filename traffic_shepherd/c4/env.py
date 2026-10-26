@@ -411,6 +411,15 @@ class CavSumoEnv:
     def _control_tick(self, accel_by_slot, fallback: str = "native", lanes=None,
                       fallback_ids=None) -> dict:
         api = self.api
+        residual_command = accel_by_slot if getattr(accel_by_slot, "native_residual", False) else None
+        residuals = None
+        if residual_command is not None:
+            if self.mode != "direct" or lanes is not None or fallback != "native":
+                raise CavEnvError("native residual requires direct mode, native fallback and native lanes")
+            residuals = self._accel_by_vehicle(residual_command.residual)
+            # Zero residuals remain ordinary native ownership. Nonzero commands are
+            # also recorded as direct actions, then recomposed each physics tick below.
+            accel_by_slot = None
         now = self.now
         if abs(now - round(now)) > 1e-6:
             raise CavEnvError(f"SUMO time {now} is off the 1 s control grid")
@@ -460,7 +469,12 @@ class CavSumoEnv:
             records = self.ownership.step(frames, now_s=now, live_ids=live)
         elif mode == "direct":
             self.ownership.wall_accel_max_mps2 = self.direct_accel_max_mps2
-            requested = self._accel_by_vehicle(accel_by_slot)
+            if residuals is not None:
+                from wms.control.nativeinit import sumo_residual_commands
+                requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
+                                                   residual_command.accel_min, residual_command.accel_max)
+            else:
+                requested = self._accel_by_vehicle(accel_by_slot)
             wall = {v: a for v, a in requested.items()
                     if v in live_cavs and math.isfinite(a)}
             # CAVs without a finite direct command: SUMO native (default) or the frozen
@@ -541,6 +555,11 @@ class CavSumoEnv:
         info_interval = Counter()
         source_wait_steps = []
         for substep in range(2):
+            if residuals is not None and in_window:
+                from wms.control.nativeinit import execute_sumo_residual
+                live_now = set(api.vehicle.getIDList()) & self.cav_ids
+                execute_sumo_residual(api, {v: a for v, a in residuals.items() if v in live_now},
+                                      residual_command.accel_min, residual_command.accel_max)
             api.simulationStep()
             after = self.now
             if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
