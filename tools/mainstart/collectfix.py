@@ -38,7 +38,10 @@ def receipt(name, text):
 def bundle():
     names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard'], cwd=ROOT).decode().splitlines()
     prefixes = ('src/', 'traffic_shepherd/', 'configs/', 'scripts/c4/', 'tools/loop14_checks/',
-                'tools/main14/', 'tools/fastloop/', 'tools/coopw/', 'tools/nativelane/adopt.py', 'tests/unit/', 'baselines/circles/')
+                'tools/main14/', 'tools/fastloop/', 'tools/coopw/', 'tools/nativelane/adopt.py', 'tests/unit/', 'baselines/circles/',
+                'output/controller_verification_v1/', 'output/controller_verification_v2/',
+                'output/controller_verification_v3/', 'output/controller_verification_v4/',
+                'output/controller_verification_v7/')
     files = {}
     for name in dict.fromkeys(names):
         if any(t in name.lower() for t in BLOCK):
@@ -47,6 +50,8 @@ def bundle():
                  'tests/test_merge_pivot_training.py', 'tests/test_merge_pivot_pre_window.py', 'scripts/round13c_waiter.py')):
             continue
         if Path(name).suffix not in ('.py', '.toml', '.json', '.onnx'):
+            continue
+        if name.startswith('output/') and Path(name).suffix != '.py':
             continue
         p = ROOT / name
         files[name] = p.read_bytes() if p.is_file() else subprocess.check_output(['git', 'show', ':' + name], cwd=ROOT)
@@ -68,7 +73,7 @@ def stage():
         target = A if host == 'gpuR' else CPU
         parent = '/root/autodl-tmp/c4/v5/mainstart' if host == 'gpuR' else '/home/ubuntu/c4/main14'
         code = f'''
-import pathlib,tarfile,io,sys,json,hashlib
+import pathlib,tarfile,io,sys,json,hashlib,os
 parent=pathlib.Path({parent!r}); assert parent.is_dir()
 a=pathlib.Path({target!r}); a.mkdir(exist_ok=True)
 assert not (a/'PID.json').exists(), 'never mutate an installed driver'
@@ -91,14 +96,16 @@ for name in ('scenarios','assets'):
  assert p.resolve()==(base/name).resolve()
 sys.path[:0]=[str(r/'src'),str(r)]
 from traffic_shepherd.config import load_config
-from traffic_shepherd.c4.collector_readiness import check_controller_assets
+from traffic_shepherd.c4.collector_readiness import check_controller_assets,check_runtime_dependencies
 c=load_config(); assert c.network_path.is_file() and c.scenario_template_path.is_file()
 controller=check_controller_assets(c)
+os.environ['PATH']='/home/ubuntu/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/home/ubuntu/.local/bin'
+runtime=check_runtime_dependencies()
 import torch,numpy,libsumo,traci,sumolib
 ready={{'source_manifest_sha256':doc['sha256'],'source_files':doc['files'],
- 'fixture_verified_without_new_sumo':True,'controller':controller,'new_sumo_sim_s':0}}
+ 'fixture_verified_without_new_sumo':True,'controller':controller,'runtime':runtime,'new_sumo_sim_s':0}}
 (a/'COLLECTION_READY.json').write_text(json.dumps(ready,indent=1))
-print(json.dumps({{'host':{host!r},'controller':controller,'ready':True}}))
+print(json.dumps({{'host':{host!r},'controller':controller,'runtime':runtime,'ready':True}}))
 '''
         receipt('STAGE_' + host + '.jsonl', remote(host, code, payload, timeout=300))
     receipt('SOURCE.json', json.dumps({'source_manifest_sha256': digest, 'bytes': len(payload)}, indent=1))
@@ -169,6 +176,7 @@ for box,h in cfg['mainstart']['collect_hosts'].items():
 cfg['hosts']['cpu']=copy.deepcopy(cfg['hosts']['cpuP'])
 cfg['collect'].update(work_root={CPU!r}+'/work',workers=7)
 cfg['collect']['env']['CUDA_VISIBLE_DEVICES']=''
+cfg['collect']['env']['PATH']='/home/ubuntu/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/home/ubuntu/.local/bin'
 cfg['fastloop']={{'speed2_policy':True,'two_box':True,'spot_resume':True,'overlap_policy':False,
  'cpu_checks':False,'repoint':False,'base_three':False,'boxes':['cpuP','cpuQ'],'workers_per_box':7}}
 cfg['collectfix']=True
@@ -281,12 +289,19 @@ def progress():
 import pathlib,json,sys,subprocess,shlex
 a=pathlib.Path({A!r}); root=pathlib.Path('/root/main14_loop')
 state=json.loads((root/'LOOP14_STATE.json').read_text()); journal=json.loads((root/'worlds_c00.json').read_text())
-pid=json.loads((a/'PID.json').read_text()); fields=pathlib.Path('/proc/'+str(pid['pid'])+'/stat').read_text().rsplit(')',1)[1].split()
-assert fields[19]==pid['start_ticks']
-doc={{'driver':{{**pid,'ppid':int(fields[1]),'sid':int(fields[3])}},'phase':state['cycles'][-1]['phases']['collect'],
+pid=json.loads((a/'PID.json').read_text()); stat=pathlib.Path('/proc/'+str(pid['pid'])+'/stat')
+fields=stat.read_text().rsplit(')',1)[1].split() if stat.exists() else None
+live=bool(fields and fields[0]!='Z' and fields[19]==pid['start_ticks'])
+doc={{'driver':{{**pid,'live':live,'ppid':int(fields[1]) if fields else None,'sid':int(fields[3]) if fields else None}},'phase':state['cycles'][-1]['phases']['collect'],
  'charged_sim_s':state['sim_s_charged'],'seeds_used':state['seeds_used'],'world_attempts':journal['attempts'],
- 'worlds_complete':len(journal['worlds']),'journal_charged':journal['charged'],'boxes':{{}}}}
-probe="""import pathlib,json,os
+ 'worlds_complete':len(journal['worlds']),'journal_charged':journal['charged'],'boxes':{{}},'attempt_summaries':[]}}
+for p in sorted((root/'worlds/c00').glob('w*.a1/collect/c00_a1_COLLECT_SUMMARY.json')):
+ s=json.loads(p.read_text()); doc['attempt_summaries'].append({{'path':str(p),
+ 'simulated_seconds':s['simulated_seconds'],'pair_sim_seconds':s['pair_sim_seconds'],
+ 'episodes_complete':s['episodes_complete'],'episodes_failed':s['episodes_failed']}})
+doc['actual_sim_s_attempt2']=sum(s['simulated_seconds']+s['pair_sim_seconds'] for s in doc['attempt_summaries'])
+doc['budget_exhausted']=journal['charged']>=json.loads((a/'REGISTRATION.json').read_text())['budget']['sim_s_per_cycle']
+probe=r"""import pathlib,json,os
 root=pathlib.Path('/home/ubuntu/c4/main14/collectfix')
 rows=[]
 for p in pathlib.Path('/proc').iterdir():
@@ -296,12 +311,12 @@ for p in pathlib.Path('/proc').iterdir():
   if 'base64.b64decode' in cmd or '-c import pathlib,json,os' in cmd: continue
   if str(root) not in cmd: continue
   f=(p/'stat').read_text().rsplit(')',1)[1].split()
-  rows.append({'pid':int(p.name),'ppid':int(f[1]),'start_ticks':f[19],'cpu_ticks':int(f[11])+int(f[12]),'cmd':cmd[:500]})
+  rows.append(dict(pid=int(p.name),ppid=int(f[1]),start_ticks=f[19],cpu_ticks=int(f[11])+int(f[12]),cmd=cmd[:500]))
  except (OSError,PermissionError): pass
 files=[]
 for p in (root/'work').glob('w*/C4-LOOP14-COOPON-20261026/c00/collect/episodes/policy/*/episode.npz'):
- files.append({'path':str(p),'bytes':p.stat().st_size})
-print(json.dumps({'processes':rows,'recorded_episodes':files}))
+ files.append(dict(path=str(p),bytes=p.stat().st_size))
+print(json.dumps(dict(processes=rows,recorded_episodes=files)))
 """
 for box in ('cpuP','cpuQ'):
  cmd=shlex.join(['/home/ubuntu/miniconda3/bin/python','-c',probe])
@@ -314,12 +329,47 @@ doc['driver_log_tail']=(a/'driver.log').read_text()[-4000:]
     receipt('PROGRESS.json', remote('gpuR', code, timeout=180))
 
 
+def audit():
+    """Append honest failure accounting; never changes charge, phase, registration or budget."""
+    code = f'''
+import pathlib,json,sys
+a=pathlib.Path({A!r}); root=pathlib.Path('/root/main14_loop')
+sys.path[:0]=[str(a/'runtime/scripts/c4'),str(a/'runtime'),str(a/'runtime/src')]
+import loop14 as loop
+state=loop.load_state(loop.load_config(a/'CONFIG.json')); progress=json.loads((a/'PROGRESS.json').read_text())
+assert state['cycles'][0]['phases']['collect']['status']=='failed' and state['sim_s_charged']==58266
+assert len(progress['attempt_summaries'])==13 and progress['actual_sim_s_attempt2']==0
+doc={{'event':'accounting_audit','id':'S-COLLECTFIX','cycle':0,'attempts':2,
+ 'charged_sim_s':58266,'actual_sim_s':0,'seeds_consumed':state['seeds_used'],
+ 'retry_worlds':list(range(968116,968129)),'failed_worlds':13,'completed_worlds':0,
+ 'refund':False,'cycle_budget_cap':58266,'additional_full_retry_charge_sim_s':29133,
+ 'blocker':'cycle0 reserve exhausted; additional retry needs owner budget amendment',
+ 'attempt2_causes':{{'cpuP':'missing output.controller_verification_v7 and its transitive source modules',
+ 'cpuQ':'SUMO binary absent from noninteractive SSH PATH'}},
+ 'correction':'isolated preflight_v2 includes transitive modules and explicit interpreter bin PATH; both real reset-import and SUMO--version probes pass without seed or simulator start',
+ 'verification':'421 integrated tests and one-world mechanics dry run PASS, zero actual SUMO; no further live retry attempted'}}
+assert not (a/'ACCOUNTING_AFTER_RETRY.json').exists()
+loop.write_atomic(a/'ACCOUNTING_AFTER_RETRY.json',doc); loop.append(root/'cycle_ledger.jsonl',doc)
+print(json.dumps(doc))
+'''
+    receipt('ACCOUNTING_AFTER_RETRY.json', remote('gpuR', code))
+
+
 def main():
+    global A, R, CPU, OUT
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=('stage', 'tests', 'dry-run', 'prepare', 'install', 'launch', 'progress'))
+    p.add_argument('action', choices=('stage', 'tests', 'dry-run', 'prepare', 'install', 'launch', 'progress', 'audit'))
+    p.add_argument('--preflight-v2', action='store_true', help='isolated verification only, preserves exhausted live attempt')
     args = p.parse_args()
+    if args.preflight_v2:
+        if args.action not in ('stage', 'tests', 'dry-run'):
+            p.error('preflight-v2 cannot arm, migrate or launch a live loop')
+        A += '/preflight_v2'
+        R = A + '/runtime'
+        CPU += '/preflight_v2'
+        OUT = OUT / 'preflight_v2'
     {'stage': stage, 'tests': tests, 'dry-run': dry_run, 'prepare': prepare,
-     'install': install, 'launch': launch, 'progress': progress}[args.action]()
+     'install': install, 'launch': launch, 'progress': progress, 'audit': audit}[args.action]()
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from traffic_shepherd.c4.collector_readiness import check_controller_assets
+from traffic_shepherd.c4.collector_readiness import check_controller_assets, check_runtime_dependencies
 
 
 def test_missing_and_corrupt_model_refuse_before_onnx(tmp_path):
@@ -30,6 +30,25 @@ def test_readiness_constructs_session_and_propagates_missing_dependency(tmp_path
         raise ImportError('onnxruntime')
     with pytest.raises(ImportError):
         check_controller_assets(config, missing)
+
+
+def test_missing_sumo_binary_refuses_without_simulator_start(monkeypatch):
+    import traffic_shepherd.c4.collector_readiness as readiness
+    monkeypatch.setattr(readiness.shutil, 'which', lambda _: None)
+    monkeypatch.setattr(readiness.subprocess, 'run', lambda *a, **k: pytest.fail('no simulator invocation'))
+    with pytest.raises(RuntimeError, match='SUMO binary'):
+        check_runtime_dependencies()
+
+
+def test_missing_eager_reset_import_refuses_before_environment_creation(monkeypatch):
+    import traffic_shepherd.c4.collector_readiness as readiness
+    monkeypatch.setattr(readiness.shutil, 'which', lambda _: '/sumo')
+    monkeypatch.setattr(readiness.subprocess, 'run', lambda *a, **k: SimpleNamespace(stdout='SUMO version'))
+    def missing(name):
+        raise ModuleNotFoundError('output.controller_verification_v7')
+    monkeypatch.setattr(readiness.importlib, 'import_module', missing)
+    with pytest.raises(ModuleNotFoundError, match='controller_verification_v7'):
+        check_runtime_dependencies()
 
 
 def test_two_box_adoption_retains_legacy_charge_and_never_reuses_old_seeds(tmp_path, monkeypatch):

@@ -92,8 +92,9 @@ def remote_json(host, python, script, args=()):
 
 
 READINESS = """
-import hashlib,json,pathlib,shutil,sys
+import hashlib,json,pathlib,shutil,sys,os
 root=pathlib.Path(sys.argv[1]); expected=sys.argv[2]
+os.environ.update(json.loads(sys.argv[3]))
 receipt=root.parent/'COLLECTION_READY.json'
 assert receipt.is_file(), 'collector readiness receipt absent'
 r=json.loads(receipt.read_text()); assert r['source_manifest_sha256']==expected
@@ -104,13 +105,14 @@ assert r['fixture_verified_without_new_sumo'] is True
 import torch,numpy,libsumo,traci,sumolib
 from traffic_shepherd.config import load_config
 c=load_config(); assert c.network_path.is_file() and c.scenario_template_path.is_file()
-from traffic_shepherd.c4.collector_readiness import check_controller_assets
+from traffic_shepherd.c4.collector_readiness import check_controller_assets,check_runtime_dependencies
 controller=check_controller_assets(c)
+runtime=check_runtime_dependencies()
 mem=dict(x.split(':',1) for x in pathlib.Path('/proc/meminfo').read_text().splitlines())
 available=int(mem['MemAvailable'].split()[0])*1024
 workers=min(12,max(0,int((available-12*1024**3)/(1.8*1024**3))))
 assert workers>=1, 'insufficient RAM headroom alongside scoring'
-print(json.dumps({'ready':True,'workers':workers,'available_bytes':available,'controller':controller,'receipt':r}))
+print(json.dumps({'ready':True,'workers':workers,'available_bytes':available,'controller':controller,'runtime':runtime,'receipt':r}))
 """
 
 
@@ -124,7 +126,7 @@ def collection_ready(cfg, arm, loop):
         script = "import sys; sys.path[:0]=[sys.argv[1]+'/src',sys.argv[1]];\n" + READINESS
         try:
             ready = remote_json(alias, h['python'], script,
-                                (h['code_root'], arm['native_source_manifest_sha256']))
+                                (h['code_root'], arm['native_source_manifest_sha256'], json.dumps(cfg['collect'].get('env', {}))))
             loop.disk_guard(cfg, h, cfg['collect']['work_root'], 13 * 60 / 1024)
             if two_box:
                 cap = int(cfg['fastloop']['workers_per_box'])

@@ -2,6 +2,34 @@
 
 ## S-COLLECTFIX (2026-10-26, owner13:30)
 
+**Current status: BLOCKED / WAIT_OWNER after the explicit retry. Collection is not progressing.**
+Implementation commit `a5b76fcf` integrated the gated FASTLOOP changes. Detached driver87024
+(SID87024/start4161998640) invoked the official retry at13:43:25; it exited at13:43:54 after
+all13 fresh worlds failed before simulation time advanced. cpuP then exposed missing
+`output.controller_verification_v7` transitive modules; cpuQ lacked SUMO on its noninteractive
+SSH PATH. The original and retry outputs are retained. `PROGRESS.json` confirms no owned
+collector processes or completed worlds remain on either box.
+
+**Final accounting: 58,266 charged / 0 actual sim-s; 26 consumed seeds968103–968128; no refund.**
+The cycle0 combined cap58,266 is exhausted. Another full journal retry would charge29,133
+and requires an owner-approved cycle0 budget amendment (at least87,399 combined); none was
+inferred or applied. The existing total cap233,064 still applies. The loop stays failed,
+with its policy/WM hashes preserved and no automatic retry.
+
+The follow-up fix includes the three required `output/controller_verification_*` source
+modules, pins collector PATH to the interpreter bin, checks the actual SUMO executable
+(`--version`, no simulation), and exercises eager reset controller imports before allocation.
+It is staged separately under `mainstart/collectfix/preflight_v2/runtime` and CPU
+`~/c4/main14/collectfix/preflight_v2/runtime`, preserving the failed release. Both hosts pass
+real model/ONNX/SUMO-version/reset-import probes, **421 integrated CPU tests PASS, zero skips**,
+and the one-world synthetic mechanics dry run passes again with **0 actual SUMO seconds**.
+Latest source manifest SHA256 **80729af793dcda78835a38ed7e72e080be6c5e5b3e89d323b6ccc4f736edd170**.
+No live arm/state was repointed to this preflight-only release. Before any owner-authorized
+next retry, migrate its tested source/config/PATH hashes into a new recorded amendment and
+keep the existing world journal968116–968128 (peer replay, not fresh allocation).
+
+### First repair / explicitly authorized retry history
+
 Cycle0 policy completed150 updates at13:18. Collection attempt1 failed before the first
 SUMO step: all13 reset tracebacks name missing `baselines/circles/model.onnx`. The original
 source-only deployment omitted that binary; PROJ diagnostics were warnings, not this failure.
@@ -17,7 +45,7 @@ The append-only S-COLLECTFIX registration enables deterministic alternating cpuP
 collection, **7 one-world workers/box**, numerical threads1, resumable per-world artifacts,
 and SAFE SPEED2 for subsequent policy phases only. Other FASTLOOP switches remain false.
 The registered combined caps are **58,266 sim-s/cycle / 233,064 total**, including attempt1;
-all scientific gates and base-boundary rules remain fixed. The first explicit retry uses
+all scientific gates and base-boundary rules remain fixed. The first explicit retry used
 fresh eligible worlds968116–968128; later journal retries reuse only their own missing worlds.
 The accounting regression reconciles original batch charges as well as new world charges.
 
