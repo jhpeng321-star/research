@@ -46,6 +46,8 @@ def test_validation_and_default_omitted():
     assert "emergency_onset" not in cfg.to_legacy_flat()           # old configs/fingerprints unchanged
     ft = load_train_config("configs/c4_wm_loop14_ft.toml", ['model.init_from="x.pt"'])
     assert ft.physics.emergency_onset == "driver_b" and ft.to_legacy_flat()["emergency_onset"] == "driver_b"
+    r14 = load_train_config("configs/c4_wm_v10round14.toml")
+    assert r14.physics.emergency_onset == "driver_b"
 
 
 def test_plant_default_is_the_r13e_envelope_bit_for_bit():

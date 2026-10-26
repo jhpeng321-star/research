@@ -16,7 +16,8 @@ merge_pivot_state_st = true
 checkpoint_forward = true
 merge_negotiation = false
 driver_param_mode = "physical"
-init_from = "runs/c4_wm_v10_round13e_b/wm_s.pt"
+# S-R14B: the 13E stage-B FINAL is the resumed b2 run (REGISTRATION.md S-R13E stage-B resume).
+init_from = "runs/c4_wm_v10_round13e_b2/wm_s.pt"
 driver_param_init = "checkpoint"
 residual_accel_reinit = false
 follower_courtesy_init_zero = false
@@ -36,6 +37,9 @@ emergency_braking = true
 secure_gap_veto = true
 # R14 D1: HDV mainline lane changes need the same learned-parameter gs.
 lane_change_secure_gap = true
+# S-R14B (S-TTC, c4/loop14 68366f88): plan the emergency envelope with each driver's learned
+# comfortable decel b (plant limit stays the -9 floor; SUMO maximumSafeFollowSpeed onset).
+emergency_onset = "driver_b"
 merge_end_wait = false
 ramp_lane_end_stop = true
 ramp_risk_retain = true

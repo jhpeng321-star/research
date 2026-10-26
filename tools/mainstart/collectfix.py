@@ -41,7 +41,8 @@ def bundle():
                 'tools/main14/', 'tools/fastloop/', 'tools/coopw/', 'tools/nativelane/adopt.py', 'tests/unit/', 'baselines/circles/',
                 'output/controller_verification_v1/', 'output/controller_verification_v2/',
                 'output/controller_verification_v3/', 'output/controller_verification_v4/',
-                'output/controller_verification_v7/')
+                'output/controller_verification_v7/', 'tests/test_r16_',
+                'tests/test_loop14_emergency_onset.py')
     files = {}
     for name in dict.fromkeys(names):
         if any(t in name.lower() for t in BLOCK):

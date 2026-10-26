@@ -267,6 +267,8 @@ class ModelConfig:
     follower_courtesy_off: bool = False
     # R13Y (default false = no new parameter): learn the mainline merge-yield rule.
     mainline_merge_yield_learnable: bool = False
+    # R16 (default false = no new parameter): learned ramp-HDV speed adaptation to the target lane.
+    ramp_speed_adapt_learnable: bool = False
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -467,6 +469,8 @@ class ModelConfig:
         require(isinstance(self.follower_courtesy_off, bool), "model.follower_courtesy_off must be a boolean")
         require(isinstance(self.mainline_merge_yield_learnable, bool),
                 "model.mainline_merge_yield_learnable must be a boolean")
+        require(isinstance(self.ramp_speed_adapt_learnable, bool),
+                "model.ramp_speed_adapt_learnable must be a boolean")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:

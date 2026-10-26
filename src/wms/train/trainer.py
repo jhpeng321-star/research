@@ -164,12 +164,16 @@ class WmSTrainer:
         torch.manual_seed(int(s.seed))
         random.seed(int(s.seed))
         self.device = torch.device(s.device)
-        # Shared-GPU guard: env C4_GPU_MEM_FRACTION caps this process's CUDA memory (unset = unchanged).
-        frac = os.environ.get("C4_GPU_MEM_FRACTION")
+        # Both launch lines cap the same allocator; the stricter configured cap wins.
+        fractions = [float(value) for name in ("C4_GPU_MEM_FRACTION", "WMS_GPU_MEM_FRACTION")
+                     if (value := os.environ.get(name))]
+        if any(not 0.0 < value <= 1.0 for value in fractions):
+            raise ValueError("GPU memory fractions must be in (0, 1]")
+        frac = min(fractions) if fractions else None
         if frac and self.device.type == "cuda":
             # The allocator API requires an explicit index (unlike model.to("cuda")).
             index = self.device.index if self.device.index is not None else torch.cuda.current_device()
-            torch.cuda.set_per_process_memory_fraction(float(frac), index)
+            torch.cuda.set_per_process_memory_fraction(frac, index)
         self.model = model.to(self.device)
         if (self.model.history_s != s.history_s or (
                 s.history_s is not None and self.model.history_stride_s != s.history_stride_s)):

@@ -24,6 +24,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = "65cc714e0e73c532583c61f1bbf0ea7d1d6f6b98"   # S-R13E launch code
+#: S-R14B: R14_BIT_BASE=<commit> compares against another base (e.g. the c4/v10r14 tip).
+BASE = os.environ.get("R14_BIT_BASE", BASE)
 HELPERS = ("tests/test_r10b_courtesy.py", "tests/test_r11_courtesy.py")
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
              "truth", "vtype")
@@ -169,6 +171,8 @@ def snapshot(source: Path, output: Path, *, explicit_off: bool = False) -> None:
                 changes["emergency_braking"] = False
                 changes["secure_gap_veto"] = False
                 changes["lane_change_secure_gap"] = False
+                if hasattr(model.physics, "emergency_onset"):
+                    changes["emergency_onset"] = "plant"   # S-R14B explicit default
             model.physics = replace(model.physics, **changes)
             batch = sequence(n=9, cav=True)
             # Exercise actual leaders, an absent slot, a ramp obstacle, and CAV execution.
@@ -221,6 +225,8 @@ def _lane_cases(explicit_off: bool) -> dict:
                                 emergency_braking=True, secure_gap_veto=True)
         if explicit_off:
             physics = replace(physics, lane_change_secure_gap=False)
+            if hasattr(physics, "emergency_onset"):
+                physics = replace(physics, emergency_onset="plant")   # S-R14B explicit default
         torch.manual_seed(1414)
         model = WmSModel(ModelSpec(rollout_mode=mode, lane_model="hazard_v5", lane_decision="sample",
                                    merge_decision="first_passage", merge_passage_law="hybrid",
