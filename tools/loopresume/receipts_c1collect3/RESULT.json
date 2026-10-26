@@ -1,0 +1,87 @@
+{
+  "id": "S-C1COLLECT3",
+  "observed_utc": "2026-10-26T22:12:22Z",
+  "status": "OPERATIONAL_PAUSED",
+  "preflight": {"cpuP": "PASS", "cpuQ": "PASS"},
+  "collector_import_onnx_and_learned_policy_load_both_pass": true,
+  "manifest_sha256": "fe722b8941f50ff23463f3d673d0e07fa5e826c2a6e85ea46eac8108167f7fcb",
+  "manifest_git_blob": "dd6dc191f0de71d6056a0ccb820a808ab77fe403",
+  "manifest_bytes_per_cpu": 198743,
+  "checker_change": "Only collector-resolved direct-path assets are required; manifest installed separately, not required by the unused migration fallback.",
+  "driver": {"pid": 77914, "start_ticks": "843255163", "started_utc": "2026-10-26T22:05:37Z", "exited_utc": "2026-10-26T22:09:46Z"},
+  "driver_live": false,
+  "zero_dispatch_driver_repair": "Initial driver 77640/start843244579 refused the historical failed phase before charge/dispatch; archived and corrected to call retry() once inside the driver. 72 tests passed before successor launch.",
+  "canary": {
+    "box": "cpuP", "seed": 968160, "attempt": 4,
+    "verified_utc": "2026-10-26T22:06:23Z", "verified": true,
+    "collector_pid_at_verification": 657684,
+    "frames": 1323, "sim_seconds": 661.0, "time_range_s": [0.0, 661.0],
+    "summary_sha256": "ddf652f7aab1d43764de02d45e6f0e4ac97fe1f8b2f8e46d03492b7815050076"
+  },
+  "new_world_attempts": [
+    {"seed": 968160, "box": "cpuP", "attempt": 4, "charged": 2841, "included_long_credit": 600, "dispatch_utc": "2026-10-26T22:05:37Z"},
+    {"seed": 968157, "box": "cpuQ", "attempt": 4, "charged": 2841, "included_long_credit": 600, "dispatch_utc": "2026-10-26T22:06:23Z"},
+    {"seed": 968158, "box": "cpuQ", "attempt": 5, "charged": 2841, "included_long_credit": 600, "dispatch_utc": "2026-10-26T22:06:23Z"},
+    {"seed": 968159, "box": "cpuQ", "attempt": 4, "charged": 2841, "included_long_credit": 600, "dispatch_utc": "2026-10-26T22:06:23Z"}
+  ],
+  "completed_worlds": [968157, 968158, 968159, 968160],
+  "postcanary_bootstrap_worlds_dispatched": 3,
+  "remaining_nine_dispatched": false,
+  "active_main_collectors_at_final_observation": 0,
+  "charged_total": 150904,
+  "additional_charged": 11364,
+  "total_cap": 210000,
+  "remaining": 59096,
+  "cycle_charged": 48297,
+  "cycle_attempt_allowance": 73866,
+  "long_credit_charged_included": 10200,
+  "long_credit_attempt_allowance": 15000,
+  "projected_long_credit_for_all13": 15600,
+  "long_credit_shortfall_for_all13": 600,
+  "collection_verified_running_both_cpus": true,
+  "main_priority_active_during_collection": true,
+  "main_priority_active_at_final_observation": false,
+  "priority_basis": "Existing watcher predicate: any main collect/check phase running; no claim of an observed peer-watcher sample.",
+  "guard": {
+    "schema": "nativeinit_smoke/1",
+    "world_deltas": [-1508.8321838655174, -54.63803732555789, -1259.7764290552996, -3626.2758867917273],
+    "mean_delta": -1612.3806342595256,
+    "ci95": [-3034.65102235762, -418.1865739605478],
+    "margin": 0.0, "passed": true, "verdict": "pass"
+  },
+  "per_world_policy_minus_native_veh_s": {
+    "968157": -1508.8321838655174,
+    "968158": -54.63803732555789,
+    "968159": -1259.7764290552996,
+    "968160": -3626.2758867917273
+  },
+  "exact_collection_refusal": "long credit attempts exceed 15000 additional sim-s/cycle (no refunds)",
+  "phase_status": {"policy": "done", "collect": "pending", "convert": "pending", "wm_ft": "pending", "check": "pending"},
+  "simulation_retry_armed": false,
+  "next_action": "Main decision required for included long-credit cap 15600 (+600) to fund the remaining nine. Preserve four completed artifacts and PASS guard; no launch armed. Future resume must account for the already-consumed canary rather than select a canary from an empty completed-bootstrap batch.",
+  "source": {
+    "tools/loopresume/c1collect3.py": "93aeac3541696713df08cf174076e62bcbf4927c87acc6ffc758d5d2b5851015",
+    "tools/loopresume/c1collect3_cpu.py": "a017fe52ab1e7282f9af66abecbd4146133439e2b4a0443e6e0f9aaa35af43d8",
+    "tools/loopresume/c1collect3_patch.py": "2bbd87a4487c8737b3aae3c04aa2f82447e2f810cb5b19a75edfb482627ce148",
+    "tools/loopresume/c1collect3_box.py": "f82aab0583a4c3f5ab321f261d13cf7f22d5f97f04a7ac7eb637a80bee9148cc",
+    "tests/unit/test_c1collect3.py": "2a75d2b1cac8badb7e00b009b0e9eeb894aa10165c3c00375cdc6f9854241d23",
+    "scripts/c4/loop14_fast.py": "8d4ac73a3fc0eb502247ab4dda4bf8ed15cfce38ab79ecaa053abd33e61bcd0b"
+  },
+  "tests": {
+    "t": "2026-10-26T22:05:28Z", "exit": 0, "passed": 72, "seconds": 8.87,
+    "source_sha256": "c4a0b9917ef2049d26b92f7c8f800fcb0130a3dade37481ab970fb1810deb5c3",
+    "log_sha256": "2077a871f00d38ec367f9679a3a86432205e35ea8dcecad4c92f0acad430f8a6"
+  },
+  "source_manifest_sha256": "c4a0b9917ef2049d26b92f7c8f800fcb0130a3dade37481ab970fb1810deb5c3",
+  "bindings_sha256": "ca3b3af250f9f2b273d53c03f39501e5cf6b91125ba62d913924aae9c4fd3c3b",
+  "registration_sha256": "44a95b56934b0f596c103e933fc0dc8728c935e94fff598a893fedd30ddb97f3",
+  "config_sha256": "e2b43ab2937bf813631fb33fb82d34c5f1d7a5e7d8961cbb7318192d7574786f",
+  "preflight_sha256": {
+    "cpuP": "c8f5bb5e4496a147236aecf71c4a5c881e08d4b02083dd1defab6ca4a0d40273",
+    "cpuQ": "c8f5bb5e4496a147236aecf71c4a5c881e08d4b02083dd1defab6ca4a0d40273"
+  },
+  "running_evidence_sha256": "077c8defab98737a9981e8c7a6a5dad2e2bd9a987de1ed7411573b311cb1e52f",
+  "wm0_exact_incarnations_observed_only": {"62645": null, "62910": null},
+  "remote_result": "gpuA:/root/autodl-tmp/c4/restart20261026/C1COLLECT3_RESULT.json",
+  "remote_result_sha256": "c37ba32bb426fdbc252af832f0e5e6ad6841856c4e8821ab55183d6846b84122"
+}

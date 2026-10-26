@@ -205,3 +205,55 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
 - Handoff integrity check PASS: `python -B -m tools.loopresume.verify_c1collect2`
   verifies source syntax/SHA, remote result/register/state bindings, unchanged charges
   and the paused driver; it does not rerun preflight or simulation.
+
+## S-C1COLLECT3 — preflights/canary/early guard PASS; long-credit cap pause (2026-10-27 06:12 UTC+8)
+
+- Installed identical original `assets/research/migration_manifest.json` on BOTH
+  CPU successor runtimes: git blob`dd6dc191f0de71d6056a0ccb820a808ab77fe403`,
+  198,743bytes/box, SHA256`fe722b8941f50ff23463f3d673d0e07fa5e826c2a6e85ea46eac8108167f7fcb`.
+  Corrected preflight checks collector-resolved direct-path assets; the unused
+  legacy migration fallback is no longer an artificial dependency. **cpuP PASS,
+  cpuQ PASS**, including collector import, CIRCLES ONNX CPU-session load and exact
+  native-residual learned-policy load. No SUMO execution/charge during preflight;
+  protected template checked by original-file identity only. Both receiptSHA
+  `c8f5bb5e4496a147236aecf71c4a5c881e08d4b02083dd1defab6ca4a0d40273`.
+- Main06:00 authority retained cycleallowance73,866, includedlong-credit15,000,
+  total210,000/no refunds and all13 reservations968157–968169. Bound one cpuP
+  startup barrier through a narrow remote-only configurable-box overlay; local
+  pre-existing source changes retained. Initial driver77640/start843244579 refused
+  the old failed phase **before any charge/dispatch**; archived its source/claim/
+  PID/log/pause, corrected the driver to enter through `retry()` once, and rebound
+  source/tests/register. **72testsPASS8.87s**, including one-canary/no-remainder
+  barriers, charge-before-dispatch and the failed-phase driver transition. RuffPASS.
+- Successor driver **77914/start843255163**,22:05:37–22:09:46Z. Exactly ONE
+  canary: **968160/cpuP/worldattempt4**, verified22:06:23Z with1,323 finite,
+  increasing frames through661sim-s and an owned live SUMO descendant. Only then
+  dispatched968157/cpuQ/a4,968158/cpuQ/a5,968159/cpuQ/a4. All **four completed**;
+  numerical output verified on both CPUs. Main-priority predicate was active during
+  collection; retained `C1COLLECT3_RUNNING.json` SHA`077c8defab98737a9981e8c7a6a5dad2e2bd9a987de1ed7411573b311cb1e52f`.
+- **Real-SUMO four-world early guard PASS**, policy-minus-native veh-s including
+  entrance waiting, summing both paired starts/world:968157 **-1508.832184**,
+  968158 **-54.638037**,968159 **-1259.776429**,968160 **-3626.275887**;
+  mean **-1612.380634**,95%CI **[-3034.651022,-418.186574]**. Original bootstrap,
+  zero margin, confidence procedure and HARMFUL-only stopping rule retained.
+- **OPERATIONAL_PAUSED**, exact driver refusal:
+  `long credit attempts exceed 15000 additional sim-s/cycle (no refunds)`.
+  Historical7,800 + new2,400 = **10,200** included long-credit; remainingnine need
+  5,400, projecting **15,600**,600 above the unchanged15,000 cap. This is an
+  accounting blocker after successful collection/guard, not preflight/canary failure.
+  **No remainingnine dispatched; no active main collector or driver; no retry armed.**
+  Main priority is nowinactive; convert/WM1/check remainpending behind collection.
+- **150,904/210,000 charged**, additional11,364, remaining59,096; cycle48,297/73,866.
+  Main decision is needed for included long-creditallowance15,600(+600); total cap
+  need not increase. Preserve the four completed artifacts and PASS guard. A future
+  authorized resume must handle the consumed canary/empty completed-bootstrap batch
+  rather than blindly selecting another startup canary. No policy/WM/veto changes,
+  process signals, restricted-file reads, eval seeds or push. WM0 exact PIDs62645/
+  62910 no longer live at final observation; neither was signalled by this task.
+- Authoritative `gpuA:/root/autodl-tmp/c4/restart20261026/C1COLLECT3_RESULT.json`
+  SHA`c37ba32bb426fdbc252af832f0e5e6ad6841856c4e8821ab55183d6846b84122`;
+  final registrationSHA`44a95b56934b0f596c103e933fc0dc8728c935e94fff598a893fedd30ddb97f3`.
+  `C1COLLECT3_{PREFLIGHT,SOURCE,PATCH,BINDINGS,RECOVERY_SOURCE,RECOVERY_TESTS,RECOVERY_BINDINGS,LAUNCH,ATTEMPT,RUNNING,STATUS}.json`,
+  `arm/driver_c1collect3.log` and `c1collect3_before/` retain deployment and failed
+  transition history. Compact local receipt:`tools/loopresume/receipts_c1collect3/RESULT.json`.
+  Verify without dispatch: `python -B -m tools.loopresume.verify_c1collect3`.
