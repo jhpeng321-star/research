@@ -93,6 +93,22 @@ def append(path: Path, doc) -> None:
         stream.write(json.dumps({"t": now(), **doc}) + "\n")
 
 
+def fast_enabled(cfg, flag):
+    return cfg.get("fastloop", {}).get(flag, False) is True
+
+
+def fast_module():
+    # Keep the orchestrator stdlib-only, including when imported by standalone tests.
+    import importlib.util
+    root = str(Path(__file__).resolve().parents[2])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    spec = importlib.util.spec_from_file_location("loop14_fast", Path(__file__).with_name("loop14_fast.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 # ------------------------------------------------------------------ config / registration
 def load_config(path) -> dict:
     cfg = read_json(path)
@@ -105,6 +121,10 @@ def load_config(path) -> dict:
     for host in ("gpu", "cpu"):
         if host not in cfg["hosts"]:
             raise Refused(f"config needs hosts.{host}")
+    if cfg.get("fastloop"):
+        fast_module().validate(cfg, Refused)
+        if fast_enabled(cfg, "repoint"):
+            cfg["hosts"]["cpu"] = dict(cfg["hosts"]["cpuP"])
     return cfg
 
 
@@ -196,7 +216,8 @@ def check_budget(cfg, reg, state) -> None:
         raise Refused("policy.updates_per_cycle exceeds the registered budget")
     if collect_sim_s(cfg) > b["sim_s_per_cycle"]:
         raise Refused(f"collection {collect_sim_s(cfg)} sim-s exceeds the registered per-cycle budget")
-    if state["sim_s_charged"] + collect_sim_s(cfg) > b["sim_s_total"] and _phase(state)["name"] == "collect":
+    if (not fast_enabled(cfg, "two_box") and state["sim_s_charged"] + collect_sim_s(cfg) > b["sim_s_total"]
+            and _phase(state)["name"] == "collect"):
         raise Refused("registered total SUMO budget exhausted")
     if float(cfg["policy"]["timeout_h"]) > b["gpu_h_policy_per_cycle"] or float(cfg["wm"]["timeout_h"]) > b["gpu_h_wm_per_cycle"]:
         raise Refused("phase timeouts exceed the registered GPU-hour budget")
@@ -405,6 +426,10 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),
            **p.get("env", {})}
+    if fast_enabled(cfg, "speed2_policy"):
+        env.update({"WMS_SPEED_" + name: "0" for name in
+                    ("COMPACT_SLOTS", "BATCH_REPLAY", "FAST_CAV_DRIVE", "FAST_LONG_HISTORY", "FAST_MERGE_LANE")})
+        env.update(WMS_SPEED_PIVOT_DIAG_OFF="1", WMS_SPEED_GRAD_AUDIT_EVERY="10")
     return argv, env
 
 
@@ -424,6 +449,8 @@ def run_policy(cfg, state, ph, root) -> dict:
     last = summary["updates"][-1] if summary.get("updates") else {}
     state["policy"] = {"checkpoint": str(ckpt), "sha256": sha256(ckpt), "source": f"cycle {state['cycles'][-1]['cycle']}",
                        "trained_on_wm_sha256": state["accepted_wm"]["sha256"]}
+    if fast_enabled(cfg, "overlap_policy"):
+        state["policy_wm"] = dict(state["accepted_wm"])
     return {**info, "out": str(out), "exit": code, "policy_sha256": state["policy"]["sha256"],
             "updates": len(summary.get("updates", [])), "resumed_from": summary.get("resumed_from"),
             "independent_J_before": (summary.get("independent_score_before") or {}).get("J"),
@@ -448,7 +475,9 @@ def allocate_seeds(cfg, state, reg, root) -> list[int]:
     return seeds
 
 
-def run_collect(cfg, state, ph, root) -> dict:
+def run_collect(cfg, state, ph, root, *, _seeds=None) -> dict:
+    if fast_enabled(cfg, "two_box") and _seeds is None:
+        return fast_module().collect(sys.modules[__name__], cfg, state, ph, root)
     reg = check_registration(cfg)
     c, h = cfg["collect"], host(cfg, "cpu")
     k = state["cycles"][-1]["cycle"]
@@ -457,20 +486,22 @@ def run_collect(cfg, state, ph, root) -> dict:
     work = f"{c['work_root']}/{cfg['loop_id']}/c{k:02d}" + (f".a{ph['attempt']}" if ph["attempt"] > 1 else "")
     need_gb = float(c.get("raw_mb_per_world", 60)) * int(c["worlds_per_cycle"]) / 1024
     info = {"disk": disk_guard(cfg, h, c["work_root"], need_gb)}
-    seeds = allocate_seeds(cfg, state, reg, root)
+    seeds = allocate_seeds(cfg, state, reg, root) if _seeds is None else _seeds
     sim_s = collect_sim_s(cfg)
     # Record the allocation and the charge BEFORE any SUMO starts (never re-allocated).
-    append(root / "seed_ledger.jsonl", {"cycle": k, "attempt": ph["attempt"], "seeds": seeds,
-                                        "block": reg["seed_block"], "host": "cpu", "sim_s_charged": sim_s})
-    state["seeds_used"] += seeds
-    state["sim_s_charged"] += sim_s
-    save_state(cfg, state)
+    if _seeds is None:
+        append(root / "seed_ledger.jsonl", {"cycle": k, "attempt": ph["attempt"], "seeds": seeds,
+                                            "block": reg["seed_block"], "host": "cpu", "sim_s_charged": sim_s})
+        state["seeds_used"] += seeds
+        state["sim_s_charged"] += sim_s
+        save_state(cfg, state)
     inputs = f"{work}/inputs"
     log = root / "logs" / f"c{k:02d}_collect.log"
     mk = [h["python"], "-c", "import pathlib,sys; pathlib.Path(sys.argv[1]).mkdir(parents=True, exist_ok=False)", inputs]
     if run_cmd(h, mk, env={}, log=log, timeout_s=120) != 0:
         raise RuntimeError("could not create the (new) collection directory")
-    acc, pol = state["accepted_wm"], state["policy"]
+    acc = state.get("policy_wm", state["accepted_wm"]) if fast_enabled(cfg, "overlap_policy") else state["accepted_wm"]
+    pol = state["policy"]
     staged = {}
     for name, src in (("policy.pt", pol["checkpoint"]), ("wm/wm_s.pt", acc["checkpoint"])):
         sync(cfg, "gpu", src, "cpu", f"{inputs}/{name}", log)
@@ -495,6 +526,13 @@ def run_collect(cfg, state, ph, root) -> dict:
         # TOML configs 'extends' siblings: use the collector code root's copy of the same file
         # (the code roots are deployed from the same commit; LOOP14_DESIGN.md).
         wm_cfg = str(Path(h["code_root"]) / "configs" / Path(acc["config"]).name)
+    if _seeds is not None:
+        verify = [h["python"], "-c", "import hashlib,json,sys,pathlib; "
+                  "assert all(hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==expected "
+                  "for p,expected in json.loads(sys.argv[1]))",
+                  json.dumps([[staged["policy.pt"], pol["sha256"]], [staged["wm/wm_s.pt"], acc["sha256"]]])]
+        if run_cmd(h, verify, env={}, log=log, timeout_s=120) != 0:
+            raise RuntimeError("staged policy/WM hash mismatch")
     argv = [h["python"], "-m", "traffic_shepherd.c4.collect", "--policy-pairs", "--policy", staged["policy.pt"],
             "--settings-wm-ckpt", staged["wm/wm_s.pt"], "--settings-wm-config", wm_cfg,
             "--registration", reg_copy, "--seeds", ",".join(map(str, seeds)),
@@ -529,6 +567,8 @@ def run_collect(cfg, state, ph, root) -> dict:
 
 
 def run_convert(cfg, state, ph, root) -> dict:
+    if fast_enabled(cfg, "two_box"):
+        return fast_module().convert(sys.modules[__name__], cfg, state, ph, root)
     h, k = host(cfg, "cpu"), state["cycles"][-1]["cycle"]
     col = state["cycles"][-1]["phases"]["collect"]["receipt"]
     work = col["work"]
@@ -632,6 +672,12 @@ def run_wm_ft(cfg, state, ph, root) -> dict:
         sets += ["--set", item]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "WMS_DATA_LOOP14_PAIRS": conv["pairs"], **w.get("env", {})}
+    if fast_enabled(cfg, "speed2_policy"):
+        # Explicitly defeat inherited policy-only settings, including SSH shell inheritance.
+        from_flags = ("COMPACT_SLOTS", "BATCH_REPLAY", "FAST_CAV_DRIVE", "FAST_LONG_HISTORY",
+                      "PIVOT_DIAG_OFF", "FAST_MERGE_LANE")
+        env.update({"WMS_SPEED_" + name: "0" for name in from_flags})
+        env["WMS_SPEED_GRAD_AUDIT_EVERY"] = "1"
     log = out.with_name(out.name + ".log")
     base = [h["python"], "-m", "wms", "train", "--config", w["config"], "--out", str(out), *sets]
     # Fail closed on the resolved config before training (``--mode preflight`` predates c4_base
@@ -681,6 +727,8 @@ def validate_steps(h, env, w, sets, log) -> int:
 
 
 def run_check(cfg, state, ph, root) -> dict:
+    if fast_enabled(cfg, "cpu_checks"):
+        return fast_module().check(sys.modules[__name__], cfg, state, ph, root)
     ch, h = cfg["check"], host(cfg, "gpu")
     k = state["cycles"][-1]["cycle"]
     ft = state["cycles"][-1]["phases"]["wm_ft"]["receipt"]
@@ -701,6 +749,10 @@ def run_check(cfg, state, ph, root) -> dict:
     if not (out / "ACCEPT.json").is_file():
         raise RuntimeError(f"acceptance produced no verdict (exit {code})")
     verdict = read_json(out / "ACCEPT.json")
+    return apply_verdict(cfg, state, ft, verdict, code, out, k)
+
+
+def apply_verdict(cfg, state, ft, verdict, code, out, k):
     accepted = code == 0 and verdict.get("decision") == "ACCEPT"
     previous = dict(state["accepted_wm"])
     if accepted:
@@ -747,6 +799,8 @@ def run_phase(cfg, name, *, dry_run=False) -> int:
             print(" ".join(map(shlex.quote, map(str, argv))))
         return 0
     ph.update(status="running", attempt=ph["attempt"] + 1, started=now(), pid=os.getpid())
+    if fast_enabled(cfg, "two_box"):
+        ph["coordinator_start"] = fast_module().process_token(os.getpid()) if os.name == "posix" else None
     save_state(cfg, state)
     k = state["cycles"][-1]["cycle"]
     try:
@@ -793,6 +847,8 @@ def run_phase(cfg, name, *, dry_run=False) -> int:
             state["stopped"] = "; ".join(stops)
         else:
             state["cycles"].append(new_cycle(k + 1))
+            if fast_enabled(cfg, "overlap_policy"):
+                fast_module().promote(sys.modules[__name__], cfg, state, root)
         decision["stopped"] = state["stopped"]
         append(root / "cycle_ledger.jsonl", decision)
     if name == "collect":
@@ -812,6 +868,10 @@ def retry(cfg, name) -> int:
     ph = state["cycles"][-1]["phases"][name]
     if ph["status"] not in ("failed", "running"):
         raise Refused(f"{name} is {ph['status']}; only a failed/dead phase can be retried")
+    if ph["status"] == "running" and fast_enabled(cfg, "two_box"):
+        token = ph.get("coordinator_start")
+        if token is None or fast_module().process_token(ph["pid"]) == token:
+            raise Refused("cannot retry a live/unverified coordinator incarnation")
     ph.update(status="pending", previous_error=ph.get("error"))
     save_state(cfg, state)
     append(Path(cfg["loop_root"]) / "cycle_ledger.jsonl",

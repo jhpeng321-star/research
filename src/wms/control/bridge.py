@@ -7,6 +7,7 @@ from typing import Callable, Mapping, MutableMapping, Optional
 import torch
 from torch import Tensor
 
+from wms.core import speed_flags
 from wms.core.constants import DEFAULT_LENGTH_M
 from .contract import (ACCEL_MAX_MPS2, ACCEL_MIN_MPS2, MERGE_S0_M, MERGE_S1_M,
                        NATIVE_CAV_ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, CavController,
@@ -30,7 +31,12 @@ def _merge_lane(state: Mapping[str, Tensor], cav_mask: Tensor) -> Tensor:
     assigned = lane
     # K is small in the slot representation. Each iteration handles one ego
     # per batch, keeping all kinematics/device operations in Torch.
-    for i in range(s.shape[1]):
+    egos = s.shape[1]
+    if speed_flags.enabled("fast_merge_lane") and egos and s.shape[0]:
+        # S-SPEED2: candidates sort first; a non-candidate ego never merges, so every
+        # iteration past the largest per-row candidate count rewrites its own lane (no-op).
+        egos = int(candidates.sum(1).max())
+    for i in range(egos):
         ego = order[:, i:i + 1]
         ds = s - s.gather(1, ego)
         target = present & (assigned == 1)

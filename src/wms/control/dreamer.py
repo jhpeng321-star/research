@@ -24,6 +24,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
+from wms.core import speed_flags
 from wms.physics.batched import road_end_exit_bound
 
 from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
@@ -1566,8 +1567,10 @@ class DreamerTrainer:
         actor_loss = (objective - entropy_weight * entropy + lagrange_term)
         if audit_components is not None:
             audit_components.update(constraint=lagrange_term, entropy=-entropy_weight * entropy)
-            extra["actor_grad_norms"] = self._actor_gradient_norms(
-                imagined, scale, weights, audit_components)
+            # S-SPEED2 grad_audit_every: diagnostic only (never read by the update).
+            if self.update_count % speed_flags.every("grad_audit_every") == 0:
+                extra["actor_grad_norms"] = self._actor_gradient_norms(
+                    imagined, scale, weights, audit_components)
             extra["action_audit"] = self._action_audit_metrics(imagined)
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)

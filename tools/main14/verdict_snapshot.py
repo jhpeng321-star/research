@@ -62,7 +62,42 @@ def choose_base(reference, candidate):
     r13, r14 = strict_ratio(reference), strict_ratio(candidate)
     return {"base": "14b" if not new_fails and r14 <= r13 else "13e_b2",
             "new_reaction_fails": new_fails, "strict_ttc_ratio": {"13e": r13, "14b": r14},
-            "rule": "no new HDV-reaction sign/magnitude FAIL and strict all-pair TTC ratio <= 13E"}
+             "rule": "no new HDV-reaction sign/magnitude FAIL and strict all-pair TTC ratio <= 13E"}
+
+
+def choose_three(documents):
+    """All three complete verdicts required; eligibility always compares against 13E."""
+    order = ("13e_b2", "14b", "16")
+    reference = reaction_items(documents["13e_b2"])
+    ratios, failures = {}, {}
+    for label in order:
+        items = reaction_items(documents[label])
+        if set(reference) - set(items):
+            raise ValueError(f"{label}: missing reference reaction items")
+        failures[label] = sorted(k for k, v in items.items() if v == "FAIL" and reference.get(k) != "FAIL")
+        ratios[label] = strict_ratio(documents[label])
+    eligible = [label for label in order if not failures[label]]
+    best = min(eligible, key=lambda label: (ratios[label], -order.index(label)))
+    return {"base": best, "strict_ttc_ratio": ratios, "new_reaction_fails": failures,
+            "rule": "no new FAIL vs 13E; minimum strict all-pair TTC ratio; tie -> newer round"}
+
+
+def snapshot_three(spec):
+    docs, hashes, checkpoints, mtimes = {}, {}, {}, []
+    for label in ("13e_b2", "14b", "16"):
+        item = spec[label]
+        path = Path(item["verdict"]).expanduser()
+        checkpoint = Path(item["checkpoint"]).expanduser()
+        for p in (path, checkpoint):
+            if any(t in str(p).lower() for t in ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1", "hetdata_truth", "vtype")):
+                raise ValueError("restricted scoring path")
+        docs[label] = select_label(json.loads(path.read_text()), item["label"])
+        hashes[label] = digest(path)
+        checkpoints[label] = digest(checkpoint)
+        mtimes.append(path.stat().st_mtime)
+    return {"ready": True, **choose_three(docs), "verdict_sha256": hashes, "checkpoint_sha256": checkpoints,
+            "reference_checkpoint_sha256": checkpoints["13e_b2"], "verdict_mtime": max(mtimes),
+            "qualifications": docs}
 
 
 def snapshot(home=None):
@@ -87,7 +122,11 @@ def snapshot(home=None):
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--three-spec")
+    args = parser.parse_args()
     try:
-        print(json.dumps(snapshot()))
+        print(json.dumps(snapshot_three(json.loads(args.three_spec)) if args.three_spec else snapshot()))
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(json.dumps({"ready": False, "reason": f"incomplete scoring: {error}"}))

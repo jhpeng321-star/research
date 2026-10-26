@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import sys
 import time
@@ -86,7 +87,10 @@ def run(argv, cfg, arm_dir, label, timeout=7200, env=None):
 
 def fetch_verdict(cfg):
     cpu = cfg["hosts"]["cpu"]
-    argv = [*cpu["ssh"], f"{cpu['python']} {cpu['code_root']}/tools/main14/verdict_snapshot.py"]
+    command = f"{cpu['python']} {cpu['code_root']}/tools/main14/verdict_snapshot.py"
+    if loop.fast_enabled(cfg, "base_three"):
+        command += " --three-spec " + shlex.quote(json.dumps(cfg["fastloop"]["verdict_candidates"]))
+    argv = [*cpu["ssh"], command]
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=90, check=False)
         if proc.returncode:
@@ -130,6 +134,14 @@ def retire_pair_cache(cfg, completed, arm_dir):
         raise RuntimeError("pair cache is not an owned MAIN14 output")
     if not local.exists():
         return
+    if loop.fast_enabled(cfg, "two_box"):
+        worlds = completed["phases"]["collect"]["receipt"]["worlds"]
+        if not all(loop.fast_module().artifact_valid(w["artifact"]) for w in worlds):
+            raise RuntimeError("durable world archive missing/corrupt")
+        loop.write_atomic(arm_dir / f"CACHE_ARCHIVE_c{completed['cycle']:02d}.json",
+                          {"local": str(local), "retained_worlds": worlds, "verified_at": loop.now()})
+        shutil.rmtree(local)
+        return
     files = {}
     for p in local.rglob("*"):
         loop.guard(p)
@@ -153,6 +165,8 @@ def retire_pair_cache(cfg, completed, arm_dir):
 
 
 def drive(cfg, arm_dir):
+    if loop.fast_enabled(cfg, "overlap_policy"):
+        return loop.fast_module().drive(loop, sys.modules[__name__], cfg, arm_dir)
     while True:
         if (arm_dir / "STOP_ARM").exists() or (Path(cfg["loop_root"]) / "STOP_DRIVER").exists():
             say("graceful_stop")
@@ -185,16 +199,25 @@ def launch(cfg, arm, verdict, arm_dir):
     fallback_sha = loop.read_json(cfg["registration"])["sources"]["fallback_wm_sha256"]
     if digest(Path(fallback)) != fallback_sha or verdict["reference_checkpoint_sha256"] != fallback_sha:
         raise RuntimeError("13E b2 FINAL sha mismatch")
-    if verdict["base"] == "14b":
+    if loop.fast_enabled(cfg, "base_three"):
+        for label, model in cfg["fastloop"]["base_models"].items():
+            if digest(Path(model["checkpoint"])) != verdict["checkpoint_sha256"][label]:
+                raise RuntimeError(f"{label} scored checkpoint does not match deployed FINAL")
+        selected = cfg["fastloop"]["base_models"][verdict["base"]]
+        cfg["wm"]["initial_wm"] = selected["checkpoint"]
+        cfg["wm"]["initial_wm_config"] = selected["config"]
+    elif verdict["base"] == "14b":
         cfg["wm"]["initial_wm"] = str(v5 / "runs/c4_wm_v10_round14_b/wm_s.pt")
         cfg["wm"]["initial_wm_config"] = str(v5 / "runs/c4_wm_v10_round14_b/config.resolved.json")
-    if digest(v5 / "runs/c4_wm_v10_round14_b/wm_s.pt") != verdict["scored_checkpoint_sha256"]:
+    if not loop.fast_enabled(cfg, "base_three") and digest(v5 / "runs/c4_wm_v10_round14_b/wm_s.pt") != verdict["scored_checkpoint_sha256"]:
         raise RuntimeError("14b scored checkpoint does not match gpuR FINAL")
     loop.write_atomic(arm_dir / "BASE_SELECTION.json", verdict)
-    launch_config = v5 / "main14_launch_config.json"
+    launch_config = arm_dir / "launch_config.json" if cfg.get("fastloop") else v5 / "main14_launch_config.json"
     loop.write_atomic(launch_config, cfg)
-    run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--basetemp", "/tmp/main14_pytest_launch",
-         *[f"tests/unit/{t}" for t in TESTS]], cfg, arm_dir, "unit_tests",
+    test_tmp = str(arm_dir / "pytest_launch") if cfg.get("fastloop") else "/tmp/main14_pytest_launch"
+    run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--basetemp", test_tmp,
+         *[f"tests/unit/{t}" for t in TESTS],
+         *(["tests/unit/test_fastloop.py", "tests/test_speed2_flags.py"] if cfg.get("fastloop") else [])], cfg, arm_dir, "unit_tests",
         env={**environment(cfg, arm_dir), "CUDA_VISIBLE_DEVICES": ""})
     base_args = [sys.executable, "-m", "wms.control.policy14_cli", "--config", cfg["policy"]["config"],
                  "--wm-ckpt", cfg["wm"]["initial_wm"], "--wm-config", cfg["wm"]["initial_wm_config"],

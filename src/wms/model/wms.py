@@ -23,6 +23,7 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
+from wms.core import speed_flags
 from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
@@ -1879,7 +1880,12 @@ class WmSModel(nn.Module):
                                       retain=(geo["ramp_open"] & own if getattr(
                                           self.physics, "ramp_risk_retain", False) else None),
                                       w=params["w"].detach() if hybrid else None,
-                                      quadrature_order=self.spec.merge_quadrature_order)
+                                      quadrature_order=self.spec.merge_quadrature_order,
+                                      # S-SLOWROLL plain attribute (no state_dict entry) or the
+                                      # S-SPEED2 ``pivot_diag_off`` switch: skip the diagnostics.
+                                      diagnostics=bool(getattr(
+                                          self, "merge_pivot_rollout_diagnostics", True))
+                                      and not speed_flags.enabled("pivot_diag_off"))
         crossing = updated["cross"] & ramp
         # Analytically scored, pre-willingness opportunities own their intervals.
         # Competing learned mainline insertions cannot make E depend on other z.
