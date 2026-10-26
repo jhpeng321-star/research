@@ -99,3 +99,25 @@ def test_unready_collect_does_not_enter_phase_or_touch_seeds(monkeypatch):
     assert not start.collection_ready(cfg, {'native_source_manifest_sha256': 'sha'}, Loop())['ready']
     assert cfg['hosts']['cpu'] == 'original'
     assert calls == ['cpuP', 'cpuQ']
+
+
+@pytest.mark.parametrize('q_workers', [0, 6, 12])
+def test_two_box_readiness_checks_both_and_preserves_pinned_caps(monkeypatch, q_workers):
+    calls = []
+    def ready(host, *args):
+        calls.append(host)
+        return {'ready': True, 'workers': 12 if host == 'cpuP' else q_workers}
+    class Loop:
+        class Refused(Exception):
+            pass
+        def disk_guard(self, *args):
+            return {}
+    cfg = {'mainstart': {'collect_hosts': {h: {'python': '/py', 'code_root': '/code'}
+                                          for h in ('cpuP', 'cpuQ')}},
+           'collect': {'workers': 12, 'work_root': '/collect'}, 'hosts': {'cpu': 'original'},
+           'fastloop': {'two_box': True, 'workers_per_box': 7}}
+    monkeypatch.setattr(start, 'remote_json', ready)
+    result = start.collection_ready(cfg, {'native_source_manifest_sha256': 'sha'}, Loop())
+    assert result['ready'] == (q_workers >= 7)
+    assert calls == ['cpuP', 'cpuQ']
+    assert cfg['hosts']['cpu'] == 'original' and cfg['fastloop']['workers_per_box'] == 7

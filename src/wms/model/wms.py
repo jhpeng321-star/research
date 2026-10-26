@@ -23,6 +23,7 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
+from wms.core import speed_flags
 from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
@@ -958,6 +959,8 @@ class WmSModel(nn.Module):
         # Structured WM-S learns HDVs only and teacher-forces CAVs; the black-box
         # variant treats every present vehicle as a learned mover.
         learned = present if self.black_box else (present & ~is_cav)
+        native_lane = state.get(cav_motion.WM_LANE_KEY)
+        lane_learned = learned if native_lane is None else learned | (present & native_lane.bool())
         k = torch.as_tensor(k_steps, device=kin.device, dtype=torch.long)
         if k.ndim == 0:
             k = k.expand(b, slots)
@@ -975,6 +978,9 @@ class WmSModel(nn.Module):
         else:
             physics, lane_base = self._physics_step({**state, "veh_kin": kin},
                                                     emergency_envelope=not final_envelope)
+        if native_lane is not None and getattr(self.physics, "lane_change_secure_gap", False):
+            lane_base = self.mobil_merge_logits(
+                {**state, "veh_kin": kin, "is_cav": is_cav & ~native_lane.bool()}, driver_params)
         # R13E review B2: the emergency envelope bounds the FINAL pre-clamp acceleration
         # (after residual, courtesy and yield). ``physics`` stays the un-enveloped
         # composition input; the reported physics baseline is enveloped as before.
@@ -1002,7 +1008,7 @@ class WmSModel(nn.Module):
             # head's current probability, so the lane-v5 pass runs first (forward values
             # are unchanged; frozen dropout / deterministic features make the reorder exact).
             v5_precomputed = self._lane_v5_forward(
-                kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
+                kin, present, lane_learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask, merge_wait=state.get("merge_wait_s"))
             with torch.no_grad():
                 merge_target = int(getattr(self.physics, "merge_target_lane", 1))
@@ -1195,7 +1201,7 @@ class WmSModel(nn.Module):
             lane_logits, v5_acc, v5_sample, v5_hazard = v5_precomputed
         elif getattr(self, "lane_v5", None) is not None:
             lane_logits, v5_acc, v5_sample, v5_hazard = self._lane_v5_forward(
-                kin, present, learned, lane_base, lane_age, lane_v5_acc, driver_history,
+                kin, present, lane_learned, lane_base, lane_age, lane_v5_acc, driver_history,
                 driver_history_mask, merge_wait=state.get("merge_wait_s"))
         elif self.lane_hazard is not None:
             # WMLANE A: the dedicated hazard model replaces the residual lane delta;
@@ -1207,7 +1213,7 @@ class WmSModel(nn.Module):
                 blocked_now = update_blocked(
                     lane_blocked, blocked_indicator(kin, present, self.physics, driver_params))
             lane_logits, _ = hazard_lane_logits(
-                self.lane_hazard, kin, present, learned, lane_base, self.physics,
+                self.lane_hazard, kin, present, lane_learned, lane_base, self.physics,
                 driver_params, driver_embedding, lane_age,
                 **self._hazard_switches(blocked_now, rollout=True))
         else:
@@ -1236,6 +1242,8 @@ class WmSModel(nn.Module):
                   "accel_delta_mps2": accel - physics_reported, "lane_logits": lane_logits,
                   "gate": gate, "residual_log_sigma": base["accel_log_sigma"],
                   "hdv_mask": learned}
+        if native_lane is not None:
+            result["lane_decider_mask"] = lane_learned
         if self.diag_emit_temporal:
             result["temporal_accel_pregate_mps2"] = temporal_accel
         if temporal_residual_state is not None:
@@ -1636,6 +1644,14 @@ class WmSModel(nn.Module):
         LANEFIX ``lane_decision='sample'``: learned slots draw their lane from the masked
         categorical with ``lane_uniform [B, K]`` (``None``: from the global torch RNG).
         """
+        native_lane_mask = getattr(cav_controller, "native_lane_mask", None)
+        if native_lane_mask is not None:
+            if self.black_box or self.merge_pivot is None:
+                raise ValueError("native_lane_change requires a structured first-passage WM")
+            if self.rollout_mode not in ("driver_params", "hybrid") and not self.long_history:
+                raise ValueError("native_lane_change requires observation-inferred driver settings")
+            state = {**state, cav_motion.WM_LANE_KEY: native_lane_mask(
+                {**state, "physics_step_index": k_steps})}
         forward_kwargs = dict(
             k_steps=k_steps, history=history, history_mask=history_mask,
             driver_history=driver_history, driver_history_mask=driver_history_mask,
@@ -1660,6 +1676,7 @@ class WmSModel(nn.Module):
                              use_reentrant=False, preserve_rng_state=self.training)
         else:
             out = self.forward(state, **forward_kwargs)
+        lane_deciders = out.get("lane_decider_mask", out["hdv_mask"])
 
         s, v = state["s_m"], state["v_mps"]
         present = state_present(state, state_kin(state))
@@ -1681,12 +1698,12 @@ class WmSModel(nn.Module):
             if lane_uniform is None:
                 lane_uniform = torch.rand(present.shape, device=present.device)
             choice = sample_lane_choice(out["lane_logits"], out["lane_feasible"],
-                                        out.get("lane_sample", out["hdv_mask"]), lane_uniform)
+                                        out.get("lane_sample", lane_deciders), lane_uniform)
             if self._mainline_mode in ("budget", "budget_prop"):
                 # V8LANE population-matched overtake / return decisions (lv5.budget_choice).
                 choice, out["lane_v5_budget"] = lv5.budget_choice(
                     choice, out["lane_logits"], out["lane_feasible"], state["lane"].long(),
-                    out["hdv_mask"], state.get("lane_v5_budget"), lane_uniform,
+                    lane_deciders, state.get("lane_v5_budget"), lane_uniform,
                     self._mainline_mode)
         else:
             choice = out["lane_logits"].argmax(-1)
@@ -1818,13 +1835,20 @@ class WmSModel(nn.Module):
                               fixed_target=fixed_target, route_shift=route_shift)
 
     def _apply_merge_pivot(self, state, out, next_s, next_v, next_lane, uniform,
-                           driver_params=None, delegated=None):
+                            driver_params=None, delegated=None):
         kin = state_kin(state)
         present = state_present(state, kin)
+        geometry_delegated = delegated
+        native_lane = state.get(cav_motion.WM_LANE_KEY)
+        if native_lane is not None:
+            # A native mainline insertion competes like an HDV insertion, rather
+            # than gaining the immutable occupancy/priority of a policy command.
+            geometry_delegated = (native_lane.bool() if delegated is None else
+                                  delegated.bool() | native_lane.bool())
         geo = self.pivot_decision_geometry(state, out["accel_mps2"],
                                            next_s=next_s, next_v=next_v,
-                                           fixed_next_lane=next_lane, delegated=delegated)
-        own = present & out["hdv_mask"].bool()
+                                           fixed_next_lane=next_lane, delegated=geometry_delegated)
+        own = present & out.get("lane_decider_mask", out["hdv_mask"]).bool()
         if delegated is not None:
             # LOOP14C: delegated ramp CAVs merge by the same learned law (own driver settings).
             own = own | (present & delegated.bool())
@@ -1856,7 +1880,12 @@ class WmSModel(nn.Module):
                                       retain=(geo["ramp_open"] & own if getattr(
                                           self.physics, "ramp_risk_retain", False) else None),
                                       w=params["w"].detach() if hybrid else None,
-                                      quadrature_order=self.spec.merge_quadrature_order)
+                                      quadrature_order=self.spec.merge_quadrature_order,
+                                      # S-SLOWROLL plain attribute (no state_dict entry) or the
+                                      # S-SPEED2 ``pivot_diag_off`` switch: skip the diagnostics.
+                                      diagnostics=bool(getattr(
+                                          self, "merge_pivot_rollout_diagnostics", True))
+                                      and not speed_flags.enabled("pivot_diag_off"))
         crossing = updated["cross"] & ramp
         # Analytically scored, pre-willingness opportunities own their intervals.
         # Competing learned mainline insertions cannot make E depend on other z.
@@ -2184,6 +2213,8 @@ class WmSModel(nn.Module):
         callback_teacher = None
         if cav_controller is not None:
             callback_state = {**state, "physics_step_index": k_steps}
+            if cav_motion.WM_LANE_KEY in state:
+                callback_state[cav_motion.WM_LANE_TARGET_KEY] = next_lane
             if self.merge_pivot is not None:
                 callback_state["merge_pivot_native_accel"] = out["accel_mps2"]
             # The controller's consequence guard needs learned settings even when

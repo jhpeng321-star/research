@@ -17,7 +17,7 @@ import sys
 import time
 
 V5 = Path('/root/autodl-tmp/c4/v5')
-CODE = V5 / 'repo_main14'
+CODE = Path(os.environ.get('C4_MAINSTART_CODE', str(V5 / 'repo_main14')))
 BASE_SHA = '952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8'
 ARM = V5 / 'mainstart'
 
@@ -104,16 +104,20 @@ assert r['fixture_verified_without_new_sumo'] is True
 import torch,numpy,libsumo,traci,sumolib
 from traffic_shepherd.config import load_config
 c=load_config(); assert c.network_path.is_file() and c.scenario_template_path.is_file()
+from traffic_shepherd.c4.collector_readiness import check_controller_assets
+controller=check_controller_assets(c)
 mem=dict(x.split(':',1) for x in pathlib.Path('/proc/meminfo').read_text().splitlines())
 available=int(mem['MemAvailable'].split()[0])*1024
 workers=min(12,max(0,int((available-12*1024**3)/(1.8*1024**3))))
 assert workers>=1, 'insufficient RAM headroom alongside scoring'
-print(json.dumps({'ready':True,'workers':workers,'available_bytes':available,'receipt':r}))
+print(json.dumps({'ready':True,'workers':workers,'available_bytes':available,'controller':controller,'receipt':r}))
 """
 
 
 def collection_ready(cfg, arm, loop):
     errors = {}
+    two_box = cfg.get('fastloop', {}).get('two_box') is True
+    boxes = {}
     for alias in ('cpuP', 'cpuQ'):
         h = dict(cfg['mainstart']['collect_hosts'][alias])
         # Import paths are explicit; no startup shell files or assignment files are opened here.
@@ -122,11 +126,19 @@ def collection_ready(cfg, arm, loop):
             ready = remote_json(alias, h['python'], script,
                                 (h['code_root'], arm['native_source_manifest_sha256']))
             loop.disk_guard(cfg, h, cfg['collect']['work_root'], 13 * 60 / 1024)
+            if two_box:
+                cap = int(cfg['fastloop']['workers_per_box'])
+                if not 1 <= cap <= 12 or int(ready['workers']) < cap:
+                    raise RuntimeError('registered two-box cap exceeds scoring-safe RAM/worker allowance')
+                boxes[alias] = {'host': alias, **ready}
+                continue
             cfg['hosts']['cpu'] = h
             cfg['collect']['workers'] = min(12, int(ready['workers']))
             return {'host': alias, **ready}
         except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired, loop.Refused) as error:
             errors[alias] = str(error)
+    if two_box and len(boxes) == 2:
+        return {'ready': True, 'hosts': boxes, 'workers_per_box': cfg['fastloop']['workers_per_box']}
     return {'ready': False, 'errors': errors}
 
 
@@ -177,6 +189,7 @@ def main():
     p.add_argument('--arm', default=str(ARM / 'ARMED.json'))
     p.add_argument('--check-only', action='store_true')
     p.add_argument('--resume', action='store_true')
+    p.add_argument('--retry-collect', action='store_true', help='owner-authorized official collect retry, then continue')
     args = p.parse_args()
     arm = loop.read_json(args.arm)
     arm_dir = Path(args.arm).parent
@@ -230,7 +243,8 @@ def main():
                     time.sleep(120)
                     continue
                 loop.write_atomic(directory / f'COLLECT_HOST_c{cycle:02d}.json', ready)
-                loop.write_atomic(V5 / 'main14_launch_config.json', config)
+                if not config.get('collectfix'):
+                    loop.write_atomic(V5 / 'main14_launch_config.json', config)
             auto.say('phase_start', cycle=cycle, phase=phase)
             code = loop.run_phase(config, phase)
             if code == 5:
@@ -253,6 +267,26 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         loop.write_atomic(arm_dir / 'PID.json', {'pid': os.getpid(), 'sid': os.getsid(0), **identity(os.getpid())})
         try:
+            if args.retry_collect:
+                state = loop.load_state(cfg)
+                ph = loop._phase(state)
+                if state.get('stopped') or ph['name'] != 'collect' or ph['status'] != 'failed':
+                    raise RuntimeError('owner retry requires failed collect and no scientific stop')
+                ready = collection_ready(cfg, arm, loop)
+                loop.write_atomic(arm_dir / 'COLLECT_READINESS.json', {'t': loop.now(), **ready})
+                if not ready['ready']:
+                    raise RuntimeError('retry collector readiness failed; no charge')
+                loop.write_atomic(arm_dir / 'COLLECT_HOST_c00.json', ready)
+                owner_wait = arm_dir / 'WAIT_OWNER.json'
+                if owner_wait.exists():
+                    owner_wait.rename(arm_dir / 'WAIT_OWNER_before_retry.json')
+                command = [sys.executable, str(CODE / 'scripts/c4/loop14.py'), 'retry', '--config', arm['config'], 'collect']
+                auto.say('official_retry', argv=command)
+                code = subprocess.run(command, cwd=CODE, check=False).returncode
+                if code != 0:
+                    raise RuntimeError(f'official collect retry exit {code}; no automatic retry')
+                drive(cfg, arm_dir)
+                return
             if args.resume:
                 state = loop.load_state(cfg)
                 if (arm_dir / 'WAIT_OWNER.json').exists() or state.get('stopped') or loop._phase(state)['status'] != 'pending':

@@ -1,0 +1,462 @@
+{
+  "torch": "2.8.0+cu128",
+  "device": "cuda",
+  "synthetic": true,
+  "threads": 1,
+  "relative_denominator_floor": 1e-08,
+  "slots": 595,
+  "present": 100,
+  "pid": 22734,
+  "affinity": [
+    0,
+    1
+  ],
+  "nice": 19,
+  "source_sha256": {
+    "tools/speed2_measure.py": "dd6e54752952abb099af27579d1464021649f4c900eb1a4ee41db53a3ba93210",
+    "src/wms/core/speed_flags.py": "3788709dba389c4596b96ac77bb2c2c2f63240b7c101b1fa12ab465a5ba2b3fb",
+    "src/wms/model/residual_net.py": "1a7dbc3c967bc144dcb5943a6212708fc131198dab6b1cecacee7a7a35e93315",
+    "src/wms/model/merge_pivot.py": "47a47d7885b624ef09343568e3af743d92817615c76f10958eec70407506c105",
+    "src/wms/model/wms.py": "06ae163fff381c96b082986dff2418ea99b8dba0ab5a4b9ca855e3bc5d68d177",
+    "src/wms/train/cav_drive.py": "25cc25f2c40347b2d0fa94291ad177ce0a66e54cbfdc7c5771db7825efff3784",
+    "src/wms/train/losses/merge_pivot.py": "21ecb04d16a70ea78ca6e4c9a236db72ee2cad250cd1a4160b5c5de992bb0d0b",
+    "src/wms/data/history.py": "b9e4e50a5bd18a3379c957b8847275f973da2a98b50fa5b01d03f94b92f354ce",
+    "src/wms/control/bridge.py": "c91234cf269851694346133e706974646ffe2dd651e3f46617e41edf9edda2d4",
+    "src/wms/control/dreamer.py": "284ca52304640e24a38d4e208e7bcb2e7c7e55fbc49b0a59ae39a11b382df0f4"
+  },
+  "net": {
+    "off": {
+      "median_s": 0.0164455808699131,
+      "samples_s": [
+        0.0164455808699131,
+        0.020165398716926575,
+        0.013948086649179459,
+        0.016922928392887115,
+        0.013305731117725372
+      ]
+    },
+    "on": {
+      "median_s": 0.010405302047729492,
+      "samples_s": [
+        0.010641679167747498,
+        0.014846228063106537,
+        0.010405302047729492,
+        0.010125692933797836,
+        0.010255333036184311
+      ]
+    },
+    "outputs": {
+      "accel_delta_mps2": {
+        "max_abs": 2.384185791015625e-07,
+        "max_rel": 3.4397930161882393e-06,
+        "bit_equal": false
+      },
+      "accel_log_sigma": {
+        "max_abs": 1.6391277313232422e-07,
+        "max_rel": 5.799224229490215e-05,
+        "bit_equal": false
+      },
+      "lane_logit_delta": {
+        "max_abs": 2.086162567138672e-07,
+        "max_rel": 5.0869299812348806e-05,
+        "bit_equal": false
+      },
+      "attn": {
+        "max_abs": 2.2351741790771484e-08,
+        "max_rel": 3.4421969422689185e-07,
+        "bit_equal": false
+      }
+    },
+    "loss": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+    },
+    "gradients": {
+      "max_abs": 5.960464477539063e-08,
+      "max_rel": 0.09073346518562175,
+      "bit_equal": false
+    }
+  },
+  "peak_reserved_bytes": 1174405120,
+  "kernels": {
+    "fast_long_history": {
+      "off": {
+        "median_s": 0.009837530553340912,
+        "samples_s": [
+          0.009837530553340912,
+          0.009729646146297455,
+          0.009754590690135956,
+          0.010005548596382141,
+          0.010024834424257278
+        ]
+      },
+      "on": {
+        "median_s": 0.0009892359375953674,
+        "samples_s": [
+          0.0009464509785175323,
+          0.0008872486650943756,
+          0.0012172125279903412,
+          0.0009892359375953674,
+          0.001008305698633194
+        ]
+      },
+      "difference": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    },
+    "fast_merge_lane": {
+      "off": {
+        "median_s": 0.10430776700377464,
+        "samples_s": [
+          0.10389779508113861,
+          0.10532886534929276,
+          0.10430776700377464,
+          0.10590413212776184,
+          0.10414803773164749
+        ]
+      },
+      "on": {
+        "median_s": 0.0003712959587574005,
+        "samples_s": [
+          0.000486571341753006,
+          0.0003712959587574005,
+          0.0004007667303085327,
+          0.0002933219075202942,
+          0.0002797134220600128
+        ]
+      },
+      "difference": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    },
+    "fast_cav_drive": {
+      "off": {
+        "median_s": 0.01460253819823265,
+        "samples_s": [
+          0.012851051986217499,
+          0.013692259788513184,
+          0.01460253819823265,
+          0.015998438000679016,
+          0.022845078259706497
+        ]
+      },
+      "on": {
+        "median_s": 0.0018741190433502197,
+        "samples_s": [
+          0.0018741190433502197,
+          0.0018440000712871552,
+          0.0015297606587409973,
+          0.002039548009634018,
+          0.001966085284948349
+        ]
+      },
+      "difference": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    }
+  },
+  "train": {
+    "physics_steps": 240,
+    "stage_s": 120.0,
+    "truncation_steps": 1,
+    "off": {
+      "median_s": 26.95021292194724,
+      "samples_s": [
+        26.95021292194724
+      ]
+    },
+    "on": {
+      "median_s": 22.690953217446804,
+      "samples_s": [
+        22.690953217446804
+      ]
+    },
+    "loss": {
+      "max_abs": 0.0001220703125,
+      "max_rel": 7.039254897684782e-08,
+      "bit_equal": false
+    },
+    "gradients": {
+      "max_abs": 5.960464477539063e-08,
+      "max_rel": 0.0044075706507648435,
+      "bit_equal": false
+    }
+  },
+  "replay": {
+    "prefix_lengths": [
+      8,
+      12,
+      16,
+      10
+    ],
+    "prefix_widths": [
+      595,
+      531,
+      560,
+      580
+    ],
+    "off": {
+      "median_s": 0.9678292386233807,
+      "samples_s": [
+        0.9678292386233807,
+        0.9766408056020737,
+        0.9522087685763836
+      ]
+    },
+    "on": {
+      "median_s": 0.5924299098551273,
+      "samples_s": [
+        0.5966339968144894,
+        0.5897488780319691,
+        0.5924299098551273
+      ]
+    },
+    "difference": {
+      "max_abs": 9.5367431640625e-07,
+      "max_rel": 9.564849103027581e-08,
+      "bit_equal": false
+    }
+  },
+  "pivot": {
+    "waiting_history_steps": 240,
+    "ramp_slots": 3,
+    "off": {
+      "median_s": 0.039882443845272064,
+      "samples_s": [
+        0.03485005721449852,
+        0.04775223881006241,
+        0.039882443845272064
+      ]
+    },
+    "on": {
+      "median_s": 0.0012446679174900055,
+      "samples_s": [
+        0.001031525433063507,
+        0.0012528449296951294,
+        0.0012446679174900055
+      ]
+    },
+    "nondiagnostic_carry_difference": {
+      "max_abs": 0.0,
+      "max_rel": 0.0,
+      "bit_equal": true
+    }
+  },
+  "rollout": {
+    "physics_steps": 600,
+    "horizon_s": 300.0,
+    "off": {
+      "median_s": 16.454801585525274,
+      "samples_s": [
+        16.454801585525274
+      ]
+    },
+    "diag_off": {
+      "median_s": 15.810603089630604,
+      "samples_s": [
+        15.810603089630604
+      ]
+    },
+    "diag_off_compact": {
+      "median_s": 14.466336440294981,
+      "samples_s": [
+        14.466336440294981
+      ]
+    },
+    "diagnostics_only_difference": {
+      "positions": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "speeds": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "accel": {
+        "max_abs": 0.0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "lanes": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "masks": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    },
+    "compact_difference": {
+      "positions": {
+        "max_abs": 0.0009765625,
+        "max_rel": 0.00010831889081455805,
+        "bit_equal": false
+      },
+      "speeds": {
+        "max_abs": 6.866455078125e-05,
+        "max_rel": 0.0001152179924416997,
+        "bit_equal": false
+      },
+      "accel": {
+        "max_abs": 6.091594696044922e-05,
+        "max_rel": 1.0235294117647058,
+        "bit_equal": false
+      },
+      "lanes": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      },
+      "masks": {
+        "max_abs": 0,
+        "max_rel": 0.0,
+        "bit_equal": true
+      }
+    }
+  },
+  "policy": {
+    "slots": 96,
+    "present": 24,
+    "control_horizon": 10,
+    "off": {
+      "median_s": 7.485782820731401,
+      "samples_s": [
+        7.485782820731401
+      ]
+    },
+    "audit_thinned": {
+      "median_s": 2.6793419010937214,
+      "samples_s": [
+        2.6793419010937214
+      ]
+    },
+    "exact_flags": {
+      "median_s": 2.32967134937644,
+      "samples_s": [
+        2.32967134937644
+      ]
+    },
+    "compact_and_exact": {
+      "median_s": 2.4019133299589157,
+      "samples_s": [
+        2.4019133299589157
+      ]
+    },
+    "comparisons": {
+      "audit_thinned": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 0.0,
+          "max_rel": 0.0,
+          "bit_equal": true
+        }
+      },
+      "exact_flags": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 0.0,
+          "max_rel": 0.0,
+          "bit_equal": true
+        }
+      },
+      "compact_and_exact": {
+        "metrics": {
+          "actor_loss": {
+            "max_abs": 2.2351741790771484e-08,
+            "max_rel": 3.123819456563707e-07,
+            "bit_equal": false
+          },
+          "critic_loss": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "actor_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "critic_grad_norm": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          },
+          "returns": {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "bit_equal": true
+          }
+        },
+        "weights": {
+          "max_abs": 3.141448701171612e-08,
+          "max_rel": 1.2500202324461323,
+          "bit_equal": false
+        }
+      }
+    },
+    "counterfactual_rows": 4
+  }
+}

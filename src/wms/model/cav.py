@@ -113,6 +113,8 @@ EXEC_CAP_KEY = "cav_exec_cap_mps2"
 #: slots whose on-ramp merge the callback delegates to the WM's own HDV merge law (merge_pivot
 #: first-passage + optional secure-gap veto).  Absent = no delegation (legacy behaviour).
 WM_MERGE_KEY = "cav_wm_merge_law"
+WM_LANE_KEY = "cav_wm_lane_law"
+WM_LANE_TARGET_KEY = "cav_wm_lane_target"
 
 
 def check_exec_cap_mode(mode) -> str:

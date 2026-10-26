@@ -1,0 +1,8 @@
+{
+ "host": "gpuR",
+ "status": "PASS",
+ "cuda_visible_devices": "",
+ "stdout": "........................................................................ [ 17%]\n........................................................................ [ 35%]\n........................................................................ [ 53%]\n........................................................................ [ 71%]\n........................................................................ [ 89%]\n............................................                             [100%]\n=============================== warnings summary ===============================\n../../miniconda3/lib/python3.12/site-packages/_pytest/config/__init__.py:1464\n  /root/miniconda3/lib/python3.12/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: cache_dir\n  \n    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n404 passed, 1 warning in 22.75s\n",
+ "stderr": "",
+ "new_sumo_sim_s": 0
+}

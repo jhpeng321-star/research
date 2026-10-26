@@ -497,6 +497,8 @@ def load_policy_components(path, *, device: str = "cpu"):
         policy.lane_control = "native"     # V7POL: PolicyExecutor issues no lane commands
     policy.load_state_dict(state)          # bounds: stored buffer, else legacy [-3, 1.5]
     check_payload_accel_bounds(policy, payload)
+    if "wm_controller_kwargs" in payload:
+        policy.wm_controller_kwargs = dict(payload["wm_controller_kwargs"])
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
              for k, v in payload["group_encoder"].items()}
     encoder.load_state_dict(group)

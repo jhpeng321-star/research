@@ -193,8 +193,12 @@ class ArmImagination:
         self.n_samples = int(n_driver_samples)
         self.driver_noise_scale, self.embedding_noise_std = driver_noise_scale, embedding_noise_std
         self.seed = int(seed)
+        if controller_kwargs is None:
+            controller_kwargs = getattr(policy, "wm_controller_kwargs", None)
         self.controller_kwargs = dict(controller_kwargs or {"symmetric_exec_cap": True,
-                                                            "mask_forced_merge": True})
+                                                             "mask_forced_merge": True})
+        if reference == "hold" and self.controller_kwargs.get("native_lane_change"):
+            self.controller_kwargs["native_lane_change"] = False
         self.calls = 0
 
     def _actor(self, stream=None, ids=None):
@@ -285,11 +289,23 @@ class ArmImagination:
 
             def dispatch(predicted, controllers=controllers):
                 motions = []
+                delegated = []
                 for index, controller in enumerate(controllers):
                     subset = _slice_state(predicted, index * n, (index + 1) * n, batch)
                     motions.append(controller(subset))
+                    if self.controller_kwargs.get("native_lane_change"):
+                        from wms.model.cav import WM_MERGE_KEY
+                        delegated.append(subset.get(WM_MERGE_KEY, torch.zeros_like(subset["present"])))
+                if delegated:
+                    predicted[WM_MERGE_KEY] = torch.cat(delegated, dim=0)
                 return torch.cat(motions, dim=0)
 
+            if self.controller_kwargs.get("native_lane_change"):
+                def native_lane_mask(predicted, controllers=controllers):
+                    return torch.cat([controller.native_lane_mask(_slice_state(
+                        predicted, index * n, (index + 1) * n, batch))
+                        for index, controller in enumerate(controllers)], dim=0)
+                dispatch.native_lane_mask = native_lane_mask
             lanes = arm_major_lane_uniform([model], n_arm, n, steps, k,
                                            torch.Generator().manual_seed(call_seed ^ 0x5A5A))
             rollout = model.rollout(dict(bstate), n_steps=steps, cav_teacher=None,

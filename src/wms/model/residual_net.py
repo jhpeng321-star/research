@@ -28,6 +28,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+from wms.core import speed_flags
 from wms.physics.state import KIN_F
 
 #: Kinematics-only input fields, in column order of ``veh_kin``.
@@ -349,6 +350,84 @@ class HdvResidualNet(nn.Module):
                 cav_flag: Optional[Tensor] = None,
                 conditioning: Optional[Tensor] = None,
                 courtesy: Optional[Tensor] = None) -> dict:
+        """One residual prediction (S-SPEED2 ``compact_slots``: present slots only)."""
+        # Changing the slot shape changes dropout's RNG consumption and mask assignment.
+        # Keep the original stochastic operator whenever training dropout is active.
+        if (speed_flags.enabled("compact_slots") and kin.dim() == 3
+                and not any(block.ffn[2].training and block.ffn[2].p > 0 for block in self.blocks)):
+            return self._forward_compact(kin, kin_mask, cav_flag=cav_flag,
+                                         conditioning=conditioning, courtesy=courtesy)
+        return self._forward_dense(kin, kin_mask, cav_flag=cav_flag,
+                                   conditioning=conditioning, courtesy=courtesy)
+
+    def _forward_compact(self, kin: Tensor, kin_mask: Tensor, *,
+                         cav_flag: Optional[Tensor] = None,
+                         conditioning: Optional[Tensor] = None,
+                         courtesy: Optional[Tensor] = None) -> dict:
+        """S-SPEED2: :meth:`_forward_dense` on the present slots, scattered back.
+
+        Every row keeps its present slots in slot order, padded to ``P + 1`` columns with
+        absent slots (at least one per row).  A present slot only attends to present
+        neighbours, so its outputs and gradients are the dense ones up to float
+        reassociation.  Absent slots get exactly what the dense network gives them: zero
+        deltas / attention and the network's absent-row ``accel_log_sigma``, which is taken
+        from the row's own padding column (same layers, same weights).
+        """
+        mask = kin_mask.bool()
+        b, k = mask.shape
+        # Preserve the dense API's shape errors and its ignored optional inputs.
+        if ((self.courtesy_proj is not None and courtesy is not None
+             and tuple(courtesy.shape) != (b, k, COURTESY_F))
+                or (self.cond_proj is not None and conditioning is not None
+                    and (conditioning.shape[:2] != mask.shape
+                         or conditioning.shape[-1] != self.cfg.conditioning_dim))):
+            return self._forward_dense(kin, kin_mask, cav_flag=cav_flag,
+                                       conditioning=conditioning, courtesy=courtesy)
+        width = int(mask.sum(1).max()) + 1 if b else k + 1
+        if width >= k:           # no width reduction: avoid sorting/scattering a full grid
+            return self._forward_dense(kin, kin_mask, cav_flag=cav_flag,
+                                       conditioning=conditioning, courtesy=courtesy)
+        # Stable sort: present slots first, each group in slot order.
+        idx = torch.argsort((~mask).to(torch.int8), dim=1, stable=True)[:, :width]
+
+        def take(value: Optional[Tensor]) -> Optional[Tensor]:
+            if value is None or not torch.is_tensor(value):
+                return value
+            if value.dim() == 2:
+                return value.gather(1, idx)
+            return value.gather(1, idx.unsqueeze(-1).expand(-1, -1, value.shape[-1]))
+
+        out = self._forward_dense(
+            take(kin), take(kin_mask),
+            cav_flag=take(cav_flag) if self.cfg.use_cav_flag and kin.shape[-1] == KIN_F else None,
+            conditioning=take(conditioning) if self.cond_proj is not None else None,
+            courtesy=take(courtesy) if self.courtesy_proj is not None else None)
+
+        def put(value: Tensor, fill: Optional[Tensor] = None) -> Tensor:
+            shape = (b, k, *value.shape[2:])
+            full = (value.new_zeros(shape) if fill is None
+                    else fill.reshape(b, 1, *value.shape[2:]).expand(shape).clone())
+            index = idx.reshape(b, width, *([1] * (value.dim() - 2))).expand_as(value)
+            return full.scatter(1, index, value)
+
+        sigma = out["accel_log_sigma"]
+        result = {"accel_delta_mps2": put(out["accel_delta_mps2"]),
+                  "accel_log_sigma": put(sigma, sigma[:, -1]),
+                  "lane_logit_delta": put(out["lane_logit_delta"])}
+        attn = out["attn"]
+        if attn is not None:
+            h = attn.shape[1]
+            cols = attn.new_zeros(b, h, width, k).scatter(
+                3, idx[:, None, None, :].expand(b, h, width, width), attn)
+            attn = attn.new_zeros(b, h, k, k).scatter(
+                2, idx[:, None, :, None].expand(b, h, width, k), cols)
+        result["attn"] = attn
+        return result
+
+    def _forward_dense(self, kin: Tensor, kin_mask: Tensor, *,
+                       cav_flag: Optional[Tensor] = None,
+                       conditioning: Optional[Tensor] = None,
+                       courtesy: Optional[Tensor] = None) -> dict:
         """One residual prediction.
 
         ``kin`` is ``[B, K, 7]``, ``kin_mask`` the ``[B, K]`` occupied slots;

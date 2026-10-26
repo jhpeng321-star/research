@@ -1,5 +1,44 @@
 # S-MAINSTART — main coop-ON policy started on 13E
 
+## S-COLLECTFIX (2026-10-26, owner13:30)
+
+Cycle0 policy completed150 updates at13:18. Collection attempt1 failed before the first
+SUMO step: all13 reset tracebacks name missing `baselines/circles/model.onnx`. The original
+source-only deployment omitted that binary; PROJ diagnostics were warnings, not this failure.
+**29,133 sim-s charged / 0 actual sim-s; seeds968103–968115 remain consumed, no refund.**
+
+Integrated FASTLOOP72300236/native-lane/SPEED2/mainstart code passes **419 CPU tests, zero
+skips**. The documented **one-world mechanics dry run** passes real conversion/merge/return
+export with a synthetic collector endpoint, **0 SUMO seconds**. Both CPU runtimes now contain
+the unchanged frozen model SHA762fde0763c693c0e88f41b98b22fc0a11135a312b78c4c567e6211a3035ccee;
+readiness checks its digest and actual ONNX session construction before allocation.
+
+The append-only S-COLLECTFIX registration enables deterministic alternating cpuP/cpuQ
+collection, **7 one-world workers/box**, numerical threads1, resumable per-world artifacts,
+and SAFE SPEED2 for subsequent policy phases only. Other FASTLOOP switches remain false.
+The registered combined caps are **58,266 sim-s/cycle / 233,064 total**, including attempt1;
+all scientific gates and base-boundary rules remain fixed. The first explicit retry uses
+fresh eligible worlds968116–968128; later journal retries reuse only their own missing worlds.
+The accounting regression reconciles original batch charges as well as new world charges.
+
+Scoped runtime/arm: gpuR `/root/autodl-tmp/c4/v5/mainstart/collectfix/` (`runtime/`, `CONFIG.json`,
+`REGISTRATION.json`, `ARMED.json`, `driver.log`, `PID.json`, `ACCOUNTING.json`); CPU owned root
+`/home/ubuntu/c4/main14/collectfix/`. Original failures and predecessor registration are retained.
+Local code/deployment/test receipts: `tools/mainstart/collectfix.py`, `tools/mainstart/collectfix/`.
+The amendment was appended **before** registration migration/retry. See launch/progress receipts
+below for the detached runtime's observed state.
+
+```bash
+A=/root/autodl-tmp/c4/v5/mainstart/collectfix
+/root/miniconda3/bin/python "$A/runtime/scripts/c4/loop14.py" status --config "$A/CONFIG.json"
+tail -F "$A/driver.log"
+cat "$A/PID.json" "$A/PROGRESS.json"
+# Explicit owner retry used by the detached wrapper:
+/root/miniconda3/bin/python "$A/runtime/scripts/c4/loop14.py" retry --config "$A/CONFIG.json" collect
+# Graceful stop of this successor:
+touch "$A/STOP_ARM" /root/main14_loop/STOP_DRIVER
+```
+
 **2026-10-26 12:21 UTC+8 verification:** cycle-0 policy is running on gpuR, **17/150 updates**;
 the frozen update-10 gate **passed, 16/16 starts improved, mean delta J −1.0110969543**.
 Driver **822919**, trainer **823090**. Base is **13E b2 FINAL**, native-lane **ON**.

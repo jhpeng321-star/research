@@ -24,6 +24,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
+from wms.core import speed_flags
 from wms.physics.batched import road_end_exit_bound
 
 from .contract import ACCEL_MAX_MPS2, PHYSICS_DT_S, STEPS_PER_CONTROL, RewardWeights
@@ -1012,6 +1013,8 @@ class DreamerTrainer:
                 step += 1
                 return torch.stack((position, state["lane"].to(speed.dtype), speed, accel), -1)
 
+            if external_callback is not None and hasattr(external_callback, "native_lane_mask"):
+                controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
             # Plain-bug fix: imagined vehicles leave at the road end (same gate as evaluation
@@ -1564,8 +1567,10 @@ class DreamerTrainer:
         actor_loss = (objective - entropy_weight * entropy + lagrange_term)
         if audit_components is not None:
             audit_components.update(constraint=lagrange_term, entropy=-entropy_weight * entropy)
-            extra["actor_grad_norms"] = self._actor_gradient_norms(
-                imagined, scale, weights, audit_components)
+            # S-SPEED2 grad_audit_every: diagnostic only (never read by the update).
+            if self.update_count % speed_flags.every("grad_audit_every") == 0:
+                extra["actor_grad_norms"] = self._actor_gradient_norms(
+                    imagined, scale, weights, audit_components)
             extra["action_audit"] = self._action_audit_metrics(imagined)
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
@@ -1795,6 +1800,10 @@ class DreamerTrainer:
                     if self._tilt_sampler is not None else {})}
         if coopw:
             payload["coopw"] = coopw
+        lane_switches = getattr(self.controller_factory, "ramp_merge", {})
+        if lane_switches.get("native_lane_change", False):
+            payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
+                                                **lane_switches}
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
