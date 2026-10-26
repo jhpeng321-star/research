@@ -497,7 +497,11 @@ class PolicyExecutor:
             if self.residual_on_native:
                 from .nativeinit import NativeResidualCommand
                 residual = accel.cpu().numpy().astype(np.float64)
-                residual[~obs.cav_mask.cpu().numpy()] = np.nan
+                # A typed residual uses ZERO for native abstention. The absolute
+                # executor's NaN absence sentinel is not a residual action: live
+                # CAVs on junction lanes are deliberately outside obs.cav_mask.
+                # Keep any genuinely nonfinite ACTING output for strict rejection.
+                residual[~obs.cav_mask.cpu().numpy()] = 0.0
                 command = NativeResidualCommand(residual, self.accel_min, self.accel_max)
                 # Composition belongs to the physics-tick executor, not this 1s actor.
                 return (command, None) if with_lanes else command

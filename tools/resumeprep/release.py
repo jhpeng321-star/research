@@ -69,7 +69,8 @@ if seen!=set(changes): raise ValueError('incomplete overlay')
 (root.parent/'SOURCE_OVERLAY.json').write_text(json.dumps(changes,sort_keys=True))
 print(json.dumps({'verified_baseline':len(baseline),'verified_overlays':len(seen),'overlay_manifest_sha256':hashlib.sha256(json.dumps(changes,sort_keys=True).encode()).hexdigest()}))
 '''
-    command=['ssh',a.host,shlex.join(['/root/miniconda3/bin/python','-c',script,runtime,json.dumps(manifest),'1' if a.resume_baseline else '0'])]
+    python = '/home/ubuntu/miniconda3/bin/python' if a.host in ('cpuP', 'cpuQ') else '/root/miniconda3/bin/python'
+    command=['ssh',a.host,shlex.join([python,'-c',script,runtime,json.dumps(manifest),'1' if a.resume_baseline else '0'])]
     subprocess.run(command,input=payload.getvalue(),check=True)
     print(json.dumps({'host':a.host,'runtime':runtime,'overlays':names,
                       'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()}))

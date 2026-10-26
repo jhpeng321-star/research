@@ -116,3 +116,71 @@ def test_revised_authority_three_retries_and_no_scientific_retry(tmp_path, monke
     with pytest.raises(loop.Refused, match='scientific refusal'):
         resume.phase(loop, cfg, 'collect', tmp_path)
     assert loop.load_state(cfg)['cycles'][0]['phases']['collect']['attempt'] == 1
+
+
+def test_typed_residual_junction_abstention_is_zero_but_nonfinite_action_still_refuses():
+    import torch
+    import numpy as np
+    from wms.control.policy import CavPolicy, PolicyExecutor, RsuGroupEncoder
+    from wms.control.nativeinit import sumo_residual_commands
+    from wms.control.train_cli import GroupSignal
+    spec = importlib.util.spec_from_file_location('junction_fixture', ROOT/'tests/unit/test_nativeinit.py')
+    fixture = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fixture)
+    state = fixture.scene()
+    state['lane'][0, 0] = -1  # present CAV, junction => intentionally unobserved
+    policy = CavPolicy(lane_head=False, residual_on_native=True)
+    with torch.no_grad():
+        policy.residual_head.bias.fill_(.1)
+    command, lanes = PolicyExecutor(policy, GroupSignal(RsuGroupEncoder()))(state, with_lanes=True)
+    assert lanes is None
+    assert command.residual[0, 0] == 0.0
+    assert command.residual[0, 3] > 0.0  # the observed CAV still receives the learned action
+    assert sumo_residual_commands(object(), {'junction': command.residual[0, 0]}, -3., 1.2) == {}
+    with pytest.raises(ValueError, match='nonfinite residual'):
+        sumo_residual_commands(object(), {'acting': np.nan}, -3., 1.2)
+
+
+def test_registered_setup_retry_retains_failed_charge_and_never_double_dispatches(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location('retry_fixture', ROOT/'tests/unit/test_resumeprep.py')
+    fixture = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fixture)
+    from tools.resumeprep import control
+    cfg = fixture.config(tmp_path)
+    cfg['wm']['extra_set'] = []
+    arm = tmp_path/'arm'
+    arm.mkdir()
+    repair = {'classification': 'junction_absence_sentinel', 'retry_number': 1, 'checkpoint_sha256': 'p'}
+    cfg['resumeprep'].update(mini_root=str(arm/'mini_retry1'), smoke_setup_retry=repair)
+    reg = loop.read_json(cfg['registration'])
+    reg['budget']['sim_s_total'] = 210000
+    reg['smoke_setup_retry'] = repair
+    loop.write_atomic(Path(cfg['registration']), reg)
+    state = loop.read_json(loop.state_path(cfg))
+    state.update(registration_sha256=loop.sha256(cfg['registration']), sim_s_charged=1922,
+                 seeds_used=[968142, 968143])
+    loop.save_state(cfg, state)
+    (Path(cfg['loop_root'])/'seed_ledger.jsonl').write_text(json.dumps(
+        {'event': 'smoke_reservation', 'sim_s_charged': 1922, 'seeds': [968142, 968143]})+'\n')
+    monkeypatch.setattr(control, 'fingerprint', lambda cfg: {'source': 'fixed', 'config': 'c'})
+    loop.write_atomic(arm/'PREARM.json', {'status': 'PASS', 'source': 'fixed', 'config': 'c'})
+    calls = []
+    def runner(one, current, ph, where):
+        name = loop._phase(current)['name']
+        calls.append(name)
+        if name == 'policy':
+            current['policy'] = {'checkpoint': 'eligible', 'sha256': 'p'}
+        elif name == 'collect':
+            assert loop.load_state(cfg)['sim_s_charged'] == 3844
+        return {'ok': True}
+    for phase in ('policy', 'collect', 'convert', 'wm_ft'):
+        monkeypatch.setitem(loop.RUNNERS, phase, runner)
+    control.mini(cfg, arm, policy_only=True)
+    loop.write_atomic(arm/'SHARED_SMOKE_HASHES_APPENDED.json', {'bindings_sha256': loop.sha256(arm/'SMOKE_BINDINGS.json')})
+    control.mini(cfg, arm)
+    assert calls == ['policy', 'collect', 'convert', 'wm_ft']
+    assert loop.load_state(cfg)['sim_s_charged'] == 3844
+    assert loop.load_state(cfg)['seeds_used'] == [968142, 968143]
+    with pytest.raises(loop.Refused, match='already charged'):
+        control.mini(cfg, arm)
+    assert loop.load_state(cfg)['sim_s_charged'] == 3844

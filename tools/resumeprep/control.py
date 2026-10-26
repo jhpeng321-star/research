@@ -143,7 +143,7 @@ def mini(cfg, arm, policy_only=False):
     if loop.read_json(arm/'PREARM.json') != {'status':'PASS',**bind}:
         raise loop.Refused('new configuration requires prearm')
     one = copy.deepcopy(cfg)
-    root = arm/'mini'
+    root = Path(cfg.get('resumeprep', {}).get('mini_root', arm/'mini'))
     one.update(loop_root=str(root/'loop'),registration=str(root/'REGISTRATION.json'))
     one['fastloop']['overlap_policy'] = False
     one['policy']['updates_per_cycle'] = 10
@@ -152,6 +152,8 @@ def mini(cfg, arm, policy_only=False):
     one['collect'].pop('sumocredit',None)
     one['collect'].pop('long_group',None)
     one['collect'].pop('long_single_hold',None)
+    if cfg.get('resumeprep', {}).get('smoke_setup_retry'):
+        one['collect']['work_root'] += '/smoke_retry'+str(cfg['resumeprep']['smoke_setup_retry']['retry_number'])
     one['wm']['extra_set'] += ['curriculum.stage_steps=[2]']
     reg = copy.deepcopy(loop.read_json(cfg['registration']))
     reg.update(seed_block=[968142,968143],exclude=[])
@@ -175,10 +177,18 @@ def mini(cfg, arm, policy_only=False):
         if code != 0:
             raise loop.Refused('mini policy gate failed; no SUMO authorized')
     # Atomic parent-state/ledger operations under the same driver lock used by launch.
+    mini_state = loop.load_state(one)
     state = loop.load_state(cfg)
     rows = [json.loads(x) for x in (Path(cfg['loop_root'])/'seed_ledger.jsonl').read_text().splitlines()]
     used = set(state['seeds_used']) | {s for row in rows for s in row.get('seeds',[])} | {row['seed'] for row in rows if 'seed' in row}
-    if used & {968142,968143} or state['sim_s_charged']+1922>loop.read_json(cfg['registration'])['budget']['sim_s_total']:
+    repair = cfg.get('resumeprep', {}).get('smoke_setup_retry')
+    retry_ok = bool(repair and repair.get('classification') == 'junction_absence_sentinel'
+                    and 1 <= repair.get('retry_number', 0) <= 3
+                    and repair.get('checkpoint_sha256') == mini_state['policy']['sha256']
+                    and root.name == 'mini_retry'+str(repair['retry_number'])
+                    and loop.read_json(cfg['registration']).get('smoke_setup_retry') == repair)
+    if ((used & {968142,968143} and not retry_ok)
+            or state['sim_s_charged']+1922>loop.read_json(cfg['registration'])['budget']['sim_s_total']):
         raise loop.Refused('registered smoke seeds consumed or total cap exhausted')
     candidate = loop.load_state(one)['policy']
     gate = None
@@ -189,7 +199,11 @@ def mini(cfg, arm, policy_only=False):
                 gate.get('wm_config_sha256') != [loop.sha256(state['accepted_wm']['config'])]):
             raise loop.Refused('mini gate WM provenance mismatch before reservation')
     bindings = {**bind, 'policy':candidate, 'wm':state['accepted_wm'],
-                'native_gate':gate,'panel_sha256':PANEL_SHA,'sim_s':1922,'seeds':[968142,968143]}
+                 'native_gate':gate,'panel_sha256':PANEL_SHA,'sim_s':1922,'seeds':[968142,968143]}
+    if repair:
+        if not retry_ok:
+            raise loop.Refused('unregistered mechanics setup retry')
+        bindings['setup_retry'] = repair
     if gate is not None:
         bindings['native_gate_sha256'] = loop.sha256(Path(candidate['checkpoint']).with_name('native_gate_result.json'))
     loop.write_atomic(arm/'SMOKE_BINDINGS.json', bindings)
@@ -200,11 +214,14 @@ def mini(cfg, arm, policy_only=False):
         raise loop.Refused('append SMOKE_BINDINGS hashes to shared registration before dispatch')
     if loop.read_json(arm/'SHARED_SMOKE_HASHES_APPENDED.json').get('bindings_sha256') != loop.sha256(arm/'SMOKE_BINDINGS.json'):
         raise loop.Refused('shared registration acknowledgment has stale bindings')
+    if (root/'PARENT_CHARGED.json').exists():
+        raise loop.Refused('this mechanics attempt already charged; no automatic replay')
     loop.append(Path(cfg['loop_root'])/'seed_ledger.jsonl',{'event':'smoke_reservation','cycle':0,
                 'seeds':[968142,968143],'sim_s_charged':1922,'registration':'S-C0DIAG-SMOKE-1'})
-    state['seeds_used'] += [968142,968143]
+    state['seeds_used'] += [s for s in (968142,968143) if s not in state['seeds_used']]
     state['sim_s_charged'] += 1922
     loop.save_state(cfg,state)
+    loop.write_atomic(root/'PARENT_CHARGED.json', {'charged': 1922, 'total_charged': state['sim_s_charged']})
     for phase in ('collect','convert','wm_ft'):
         original = loop.RUNNERS['collect']
         if phase == 'collect' and cfg['policy'].get('native_init'):
