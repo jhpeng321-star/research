@@ -1,0 +1,11 @@
+{
+ "provenance": "Selected records transcribed exactly from tools/nativeinit/trace.py first invocation stdout; the initial TRACE_ZERO.json pathname was later reused by the paired-stream trace. This is an excerpt, not the complete initial trace.",
+ "base_row": 1,
+ "n_rows": 5,
+ "records": [
+  {"tick": 0, "state_differences": {}, "motion_maxdiff": 0.0, "command_maxdiff": 0.0},
+  {"tick": 1, "state_differences": {"merge_pivot_epsilon": 3.6815061569213867, "merge_pivot_rng_seed": 218}, "motion_maxdiff": 0.0, "command_maxdiff": 0.0},
+  {"tick": 12, "state_differences": {"lane": 1, "courtesy_zone_s": 12.5, "lane_age": 1011.0, "merge_pivot_terminal": 1, "merge_pivot_epsilon": 2.1101512908935547, "merge_pivot_rng_seed": 218, "merge_pivot_lane_weights": 1.0, "cav_wm_lane_target": 1, "merge_pivot_native_accel": 0.23461204767227173, "cav_exec_cap_mps2": 0.5604435801506042}, "motion_maxdiff": 1.0, "command_maxdiff": 0.005065321922302246}
+ ],
+ "finding": "Native/policy commands match before an unpaired hybrid-merge draw changes the lanes; sharing per-start stream keys removes this divergence."
+}
