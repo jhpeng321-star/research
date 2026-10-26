@@ -190,4 +190,15 @@ def verify_collection_gate(policy):
     checked = panel_gate(receipt["policy_J"], receipt["native_J"], update=receipt["update"])
     if not checked["passed"] or checked["update"] <= 0:
         raise ValueError("no accepted trained checkpoint; keep native")
+    if policy.get('breakdown_required') and 'breakdown' not in receipt:
+        raise ValueError('missing required breakdown veto')
+    if 'breakdown' in receipt:
+        risk = receipt['breakdown']
+        delta = np.asarray(risk.get('policy_minus_native'), float)
+        if (delta.shape != (16, 3) or not np.isfinite(delta).all() or (delta > 0).any()
+                or not risk.get('passed') or not risk.get('calibration_qualified')
+                or risk.get('horizons_s') != [60, 120, 300]
+                or not risk.get('rule_sha256')
+                or risk.get('source_policy_sha256') != receipt['checkpoint_sha256']):
+            raise ValueError('missing/failing breakdown native-relative veto')
     return receipt

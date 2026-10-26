@@ -192,7 +192,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                     torch.where(known, last_command, torch.zeros_like(last_command))),
                 "lane_intent": (torch.zeros_like(last_intent) if residual_mode else
                     torch.where(known, last_intent, torch.zeros_like(last_intent)))})
-            signal = group_encoder(obs, state["s_m"], build_rsu_field(state))
+            signal = (group_encoder(obs, state) if getattr(group_encoder, 'requires_state', False)
+                      else group_encoder(obs, state["s_m"], build_rsu_field(state)))
             if lane_rules is not None:
                 from .lanes import apply_lane_choices, lane_feasibility
                 lane_mask = lane_feasibility(state, ages, lane_rules)

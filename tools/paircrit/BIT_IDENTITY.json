@@ -1,0 +1,11 @@
+{
+  "parent": "6e458c8b8b4448c0ea519f129365d1bfe6c7e27c",
+  "exact_tensors": 337,
+  "updates_per_case": 2,
+  "cases": [
+    "plain",
+    "real_wm_coop"
+  ],
+  "rngs": "torch,numpy,python",
+  "metrics": "exact, excluding wall_time_s"
+}

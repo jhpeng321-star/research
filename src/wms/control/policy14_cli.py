@@ -174,6 +174,8 @@ def main(argv=None):
                         help="S-NATIVEINIT-1: native residual actor, paired native gate/learning curve")
     parser.add_argument("--longcritic-reliability", default=None)
     parser.add_argument("--longcritic-native-returns", default=None)
+    parser.add_argument('--paircrit-receipt', default=None)
+    parser.add_argument('--paircrit-policy-sha256', default=None)
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -326,11 +328,32 @@ def main(argv=None):
                                   real_return_provider=provider,
                                   **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        from .paircrit import PairCriticConfig, BreakdownConfig, install
+        pair_cfg = PairCriticConfig(**raw.get('paircrit', {}))
+        risk_cfg = BreakdownConfig(**raw.get('breakdown', {}))
+        if pair_cfg.enabled:
+            pair_cfg.policy_returns = args.real_returns
+            pair_cfg.native_returns = args.longcritic_native_returns or pair_cfg.native_returns
+            pair_cfg.pairing_receipt = args.paircrit_receipt or pair_cfg.pairing_receipt
+            pair_cfg.policy_sha256 = args.paircrit_policy_sha256 or pair_cfg.policy_sha256
+            pair_cfg.reliability_file = args.longcritic_reliability or pair_cfg.reliability_file
+        if pair_cfg.enabled and share_cfg.enabled:
+            raise ValueError('paired regression replaces absolute real-share selection; set real_share.enabled=false')
+        defer_install = False
+        if args.resume and (pair_cfg.enabled or risk_cfg.enabled):
+            prior = torch.load(checked_path(args.resume), map_location='cpu', weights_only=True)
+            defer_install = 'paircrit' not in prior and 'breakdown' not in prior
+            del prior
+        if not defer_install:
+            install(trainer, pair_cfg, risk_cfg, [r['checkpoint_sha256'] for r in receipts])
+            if pair_cfg.enabled and not args.smoke:
+                trainer.start_states = exclude_development_starts(
+                    trainer.start_states, trainer.paircrit.provider.development_seeds)
         if args.native_init and getattr(trainer.exploration, 'long_persistence', False):
             policy.residual_persistent_exploration = True
         from .longcritic import LongCritic, LongCriticConfig
         long_cfg = LongCriticConfig(**raw.get("longcritic", {}))
-        if long_cfg.enabled:
+        if long_cfg.enabled and not pair_cfg.enabled:
             long_cfg.reliability_file = args.longcritic_reliability or long_cfg.reliability_file
             long_cfg.native_returns = args.longcritic_native_returns or long_cfg.native_returns
             if not long_cfg.native_returns:
@@ -355,11 +378,26 @@ def main(argv=None):
             trainer.load_checkpoint(resume)
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
                        "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+        if defer_install:
+            # Explicit boundary migration: restore the accepted actor first,
+            # then reset only the newly introduced value/feature optimizers.
+            install(trainer, pair_cfg, risk_cfg, [r['checkpoint_sha256'] for r in receipts])
+            resumed['paircrit_boundary_reset'] = True
+        if pair_cfg.enabled and not args.smoke:
+            trainer.start_states = exclude_development_starts(
+                trainer.start_states, trainer.paircrit.provider.development_seeds)
+        if risk_cfg.enabled:
+            if not args.native_init or not trainer.breakdown_receipt.get('calibration_qualified', False):
+                raise ValueError('breakdown deployment requires native-init and an independently qualified calibration')
+            # Fresh boundary calibration wins over a prior checkpoint's frozen head.
+            trainer.group_encoder.risk.load_state_dict(trainer.breakdown_receipt['head'])
+            trainer.critic.risk.load_state_dict(trainer.breakdown_receipt['head'])
         warm_updates = (int(switches["critic_warmup_updates"]) if args.critic_warmup_updates is None
                         else int(args.critic_warmup_updates))
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
-        warmup = warm_start_real_critic(trainer, updates=warm_updates)
+        warmup = (trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
+                  else warm_start_real_critic(trainer, updates=warm_updates))
         if trainer.longcritic is not None:
             if not trainer.longcritic.warm:
                 summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
@@ -458,6 +496,32 @@ def main(argv=None):
                 "wm_sha256": [r["checkpoint_sha256"] for r in receipts],
                 "wm_config_sha256": [r["config_sha256"] for r in receipts],
                 "selection": "earliest minimum eligible measured mean delta", "measured_through": trainer.update_count}
+            if risk_cfg.enabled:
+                from .paircrit import breakdown_gate, load_risk
+                # Keep the feature head frozen inside the actor. A separate,
+                # external gate head can be qualified against the exact selected
+                # candidate without changing its weights/hash or creating a
+                # checkpoint -> calibration -> checkpoint hash dependency cycle.
+                if not risk_cfg.gate_checkpoint:
+                    raise RuntimeError('candidate-specific external risk calibration required')
+                gate_head, gate_risk = load_risk(risk_cfg.gate_checkpoint, receipt['checkpoint_sha256'])
+                if (not gate_risk.get('calibration_qualified')
+                        or gate_risk['rule_sha256'] != trainer.breakdown_receipt['rule_sha256']):
+                    raise RuntimeError('unqualified or different-rule candidate risk gate')
+                gate_head = gate_head.to(args.device)
+                risk_results = [breakdown_gate(gate_head,
+                    val._batch([val._load(int(s['index']))], args.device).state)
+                    for s in gate_panel['starts']]
+                risk_result = {'horizons_s': [60, 120, 300], 'margin': 0.,
+                    'policy_minus_native': [r['policy_minus_native'][0] for r in risk_results],
+                    'passed': all(r['passed'] for r in risk_results), 'predictive_only': True,
+                    'calibration_qualified': gate_risk['calibration_qualified'],
+                    'rule_sha256': gate_risk['rule_sha256'],
+                    'source_policy_sha256': gate_risk['policy_checkpoint_sha256']}
+                receipt['breakdown'] = risk_result
+                receipt['passed'] = receipt['passed'] and risk_result['passed']
+                if not receipt['passed']:
+                    raise RuntimeError('breakdown native-relative veto; keep native')
             (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
             summary["recommended_updates_per_cycle"] = chosen - native_start_update
         summary.update(status="completed", seed=args.seed, smoke=args.smoke, device=args.device,
