@@ -162,6 +162,8 @@ def main(argv=None):
                         help="build the gate panel (VAL starts, panel seed 965150, n 16), write it there, exit")
     parser.add_argument("--horizon-gate", default=None,
                         help="WM-sha-bound COOPW horizon receipt for the current accepted loop WM")
+    parser.add_argument("--longcritic-reliability", default=None)
+    parser.add_argument("--longcritic-native-returns", default=None)
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -290,6 +292,16 @@ def main(argv=None):
                                   real_return_provider=provider,
                                   **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        from .longcritic import LongCritic, LongCriticConfig
+        long_cfg = LongCriticConfig(**raw.get("longcritic", {}))
+        if long_cfg.enabled:
+            long_cfg.reliability_file = args.longcritic_reliability or long_cfg.reliability_file
+            long_cfg.native_returns = args.longcritic_native_returns or long_cfg.native_returns
+            if not long_cfg.native_returns:
+                raise ValueError("longcritic requires a separate real native-return anchor")
+            trainer.longcritic = LongCritic(trainer, long_cfg,
+                NPZRealReturnProvider(long_cfg.native_returns, seed=args.seed),
+                [r["checkpoint_sha256"] for r in receipts])
         if args.real_credit:
             from .real_credit14 import load_multipliers
             trainer.credit_multipliers = load_multipliers(checked_path(args.real_credit))
@@ -310,6 +322,10 @@ def main(argv=None):
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
         warmup = warm_start_real_critic(trainer, updates=warm_updates)
+        if trainer.longcritic is not None:
+            if not trainer.longcritic.warm:
+                summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
+            summary["longcritic"] = trainer.longcritic.receipt
         if ramp_merge != {"policy_ramp_merge": False, "native_ramp_merge": "gap6"}:
             summary["ramp_merge"] = ramp_merge
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,

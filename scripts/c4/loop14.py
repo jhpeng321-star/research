@@ -163,11 +163,27 @@ def collect_sim_s(cfg) -> int:
     base = int(c["branch_first"]) + (int(c["branch_points"]) - 1) * int(c["branch_cadence"]) + 1
     extra = int(c["branch_points"]) * sumocredit_sim_s_per_point(c) if c.get("sumocredit") else 0
     return int(c["worlds_per_cycle"]) * (base + int(c["branch_points"]) * 2 * int(c["branch_horizon"])
-                                         + extra)
+                                         + extra) + long_group_sim_s(cfg)
+
+
+def long_group_sim_s(cfg):
+    """Reserve one full 300 s GROUP per world, never count reused prefixes twice."""
+    c = cfg["collect"]
+    x = c.get("long_group", {})
+    if not x.get("enabled", False):
+        return 0
+    if (x.get("enabled") is not True or int(c["branch_horizon"]) < 300
+            or not fast_enabled(cfg, "two_box") or int(c["branch_points"]) < 1):
+        raise Refused("long GROUP requires two_box, >=1 point and existing >=300 s branches")
+    total = 300 * int(c["worlds_per_cycle"])
+    if total > 8000:
+        raise Refused("long GROUP primary reserve exceeds 8,000 sim-s/cycle")
+    return total
 
 
 # ------------------------------------------------------------------ S-SUMOCREDIT (flag-gated)
 SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "--credit-group-max",
+                    "long_group_horizon": "--long-group-horizon", "long_group_time": "--long-group-time",
                     "credit_flips": "--credit-flips", "gate_horizon": "--gate-horizon",
                     "gate_unit": "--gate-unit", "gate_reference": "--gate-reference",
                     "gate_state": "--gate-state", "gate_max_units": "--gate-max-units",
@@ -177,8 +193,8 @@ SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "-
 
 
 def sumocredit_sim_s_per_point(c) -> int:
-    """Upper bound of the extra SUMO seconds per decision point (= traffic_shepherd.c4.sumocredit
-    .sim_s_per_point; the gated arms are charged whenever gated_arm is on, also before a table
+    """Upper bound of the short-arm extra SUMO seconds per decision point. Long GROUP
+    is reserved once per world separately; gated arms are charged whenever gated_arm is on, before a table
     exists: GATED, plus GATED_K when gate_candidates > 1)."""
     x, h = c["sumocredit"], int(c["branch_horizon"])
     total = 0
@@ -610,7 +626,7 @@ def convert_sumocredit(cfg, state, work, tag, env, log, root) -> dict:
     """Gather this cycle's gate/credit records (cpu), then refit on ALL cycles so far (gpu host):
     the gate reliability table and the real-credit multipliers used by the next cycle."""
     h, g = host(cfg, "cpu"), host(cfg, "gpu")
-    x = cfg["collect"]["sumocredit"]
+    x = cfg["collect"].get("sumocredit", {})
     remote_credit, remote_gate = f"{work}/sumocredit_points_{tag}.jsonl", f"{work}/gate_records_{tag}.jsonl"
     gather = [h["python"], "-m", "wms.control.real_credit14", "gather", "--collect-root", f"{work}/collect",
               "--out-credit", remote_credit, "--out-gate", remote_gate]
@@ -626,7 +642,7 @@ def convert_sumocredit(cfg, state, work, tag, env, log, root) -> dict:
             "C4_ALLOWED_ROOTS": os.pathsep.join([cfg["loop_root"]])}
     out = {"points_file": str(local_credit), "gate_file": str(local_gate)}
     credit_files = sorted(str(p) for p in sc.glob("points_*.jsonl") if p.stat().st_size > 0)
-    if credit_files and int(x.get("credit_horizon", 0)):
+    if credit_files and (int(x.get("credit_horizon", 0)) or long_group_sim_s(cfg)):
         target = sc / f"REAL_CREDIT_{tag}.json"
         fit = [g["python"], "-m", "wms.control.real_credit14", "fit", "--points", *credit_files,
                "--out", str(target), "--cycle-budget-sim-s", str(collect_sim_s(cfg))]

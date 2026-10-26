@@ -80,6 +80,11 @@ def _world(loop, cfg, state, ph, root, item, box, attempt):
     one["collect"].update(worlds_per_cycle=1, workers=1, demands=item["demand"],
                           penetrations=item["penetration"], pen_weights="1",
                           work_root=cfg["collect"]["work_root"] + f"/w{item['seed']}")
+    if loop.long_group_sim_s(cfg):
+        c = one["collect"]
+        point = (int(item["index"]) + int(state["cycles"][-1]["cycle"])) % int(c["branch_points"])
+        c["sumocredit"] = {**c.get("sumocredit", {}), "long_group_horizon": 300,
+                           "long_group_time": int(c["branch_first"]) + point * int(c["branch_cadence"])}
     receipt = loop.run_collect(one, copy.deepcopy(state), {**ph, "attempt": attempt}, local,
                                _seeds=[item["seed"]])
     h = loop.host(one, "cpu")
@@ -159,6 +164,10 @@ def collect(loop, cfg, state, ph, root):
         box = item["box"] if attempt % 2 else ("cpuQ" if item["box"] == "cpuP" else "cpuP")
         pending.append((item, box, attempt))
     charge = per_world * len(pending)
+    long_per_world = loop.long_group_sim_s(cfg) // int(cfg["collect"]["worlds_per_cycle"])
+    long_charged = sum(row.get("long_group_sim_s_charged", 0) for row in charges if row["cycle"] == k)
+    if long_charged + long_per_world * len(pending) > 8000:
+        raise loop.Refused("long GROUP attempts exceed 8,000 additional sim-s/cycle (no refunds)")
     if doc["charged"] + charge > reg["budget"]["sim_s_per_cycle"]:
         raise loop.Refused("world retries exceed registered per-cycle sim-s (failed attempts stay charged)")
     if state["sim_s_charged"] + charge > reg["budget"]["sim_s_total"]:
@@ -167,7 +176,8 @@ def collect(loop, cfg, state, ph, root):
     for item, box, attempt in pending:
         doc["attempts"][str(item["seed"])] = attempt
         loop.append(root / "seed_ledger.jsonl", {"cycle": k, "seed": item["seed"], "host": box,
-                    "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt"})
+                    "attempt": attempt, "sim_s_charged": per_world, "event": "world_attempt",
+                    **({"long_group_sim_s_charged": long_per_world} if long_per_world else {})})
     doc["charged"] += charge
     state["sim_s_charged"] += charge
     loop.save_state(cfg, state)
@@ -243,7 +253,7 @@ def convert(loop, cfg, state, ph, root):
            "episodes": len(episodes), "pair_groups": len({e["pair_key"] for e in episodes}),
            "targets": loop.read_json(returns.with_suffix(".receipt.json"))["targets"],
            "durable_world_artifacts": [w["artifact"] for w in worlds]}
-    if cfg["collect"].get("sumocredit"):
+    if cfg["collect"].get("sumocredit") or loop.long_group_sim_s(cfg):
         local = copy.deepcopy(cfg)
         local["hosts"]["cpu"] = local["hosts"]["gpu"]
         out["sumocredit"] = loop.convert_sumocredit(local, state, str(merged_work), tag, env, log, root)

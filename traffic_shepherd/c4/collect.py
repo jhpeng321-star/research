@@ -238,7 +238,7 @@ def sumocredit_options(args) -> dict | None:
     """``PairExtras`` fields from the CLI, or None when every S-SUMOCREDIT flag is off."""
     from dataclasses import asdict
     if not (getattr(args, "credit_horizon", 0) or getattr(args, "gate_horizon", 0)
-            or getattr(args, "gate_table", None)):
+            or getattr(args, "gate_table", None) or getattr(args, "long_group_horizon", 0)):
         return None
     from traffic_shepherd.c4.sumocredit import PairExtras
     extras = PairExtras(credit_horizon=args.credit_horizon, credit_group_max=args.credit_group_max,
@@ -248,7 +248,9 @@ def sumocredit_options(args) -> dict | None:
                         gate_max_units=args.gate_max_units, gate_table=args.gate_table,
                         gate_candidates=args.gate_candidates, gate_mean_table=args.gate_mean_table,
                         gate_decision_period=args.gate_decision_period,
-                        n_driver_samples=args.gate_driver_samples, seed=args.sumocredit_seed)
+                        n_driver_samples=args.gate_driver_samples, seed=args.sumocredit_seed,
+                        long_group_horizon=getattr(args, "long_group_horizon", 0),
+                        long_group_time=getattr(args, "long_group_time", 0))
     return asdict(extras)
 
 
@@ -363,6 +365,8 @@ def main(argv=None) -> int:
     sc.add_argument("--credit-horizon", type=int, default=0,
                     help="real-credit arms ONLY:i/GROUP/FLIP:i of this many seconds (0 = off)")
     sc.add_argument("--credit-group-max", type=int, default=3)
+    sc.add_argument("--long-group-horizon", type=int, default=0)
+    sc.add_argument("--long-group-time", type=int, default=0)
     sc.add_argument("--credit-flips", type=int, default=0)
     sc.add_argument("--no-credit-imagine", action="store_true",
                     help="skip the imagined counterpart of the credit arms")

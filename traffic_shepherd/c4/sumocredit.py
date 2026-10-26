@@ -66,6 +66,7 @@ def sim_s_per_point(x: dict, branch_h: int) -> int:
     if c:
         total += (int(x.get("credit_group_max", 3)) + 1 + int(x.get("credit_flips", 0))) * c
         total += 0 if c <= h else 2 * c
+    total += int(x.get("long_group_horizon", 0))  # worst-case selected point; B/ALL must exist
     return total
 
 
@@ -86,6 +87,8 @@ class PairExtras:
     gate_decision_period: float = 5.0
     n_driver_samples: int = 1
     seed: int = 0
+    long_group_horizon: int = 0
+    long_group_time: int = 0
 
     def __post_init__(self):
         from wms.control.confident_gate import REFERENCES, UNITS
@@ -103,17 +106,21 @@ class PairExtras:
             raise ValueError("credit_group_max must be >= 2 (a group has two or more CAVs)")
         if self.gate_mean_table and not self.gate_table:
             raise ValueError("gate_mean_table needs the reference gate_table")
+        if self.long_group_horizon not in (0, 300) or self.long_group_time < 0:
+            raise ValueError("long GROUP horizon must be 0/OFF or 300 s, time >= 0")
 
     @property
     def active(self) -> bool:
-        return bool(self.credit_horizon or self.gate_horizon or self.gate_table)
+        return bool(self.credit_horizon or self.gate_horizon or self.gate_table or self.long_group_horizon)
 
     @property
     def needs_wm(self) -> bool:
-        return bool(self.gate_horizon or self.gate_table or (self.credit_horizon and self.credit_imagine))
+        return bool(self.gate_horizon or self.gate_table
+                    or ((self.credit_horizon or self.long_group_horizon) and self.credit_imagine))
 
     def marks(self, branch_h: int) -> set:
-        hs = [self.credit_horizon, self.gate_horizon, branch_h if self.gate_table else 0]
+        hs = [self.credit_horizon, self.gate_horizon, branch_h if self.gate_table else 0,
+              self.long_group_horizon]
         return {int(h) for h in hs if 0 < int(h) <= int(branch_h)}
 
     def sim_s_per_point(self, branch_h: int) -> int:
@@ -240,6 +247,13 @@ class PairExtras:
         if self.credit_horizon:
             out["credit"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h)
             out["sim_s"] += out["credit"]["extra_sim_s"]
+        if self.long_group_horizon and int(point["t_s"]) == self.long_group_time:
+            if (branch_h < self.long_group_horizon or any(
+                    (arm, self.long_group_horizon) not in prefix for arm in ("B", "POLICY"))):
+                raise ValueError("long GROUP requires existing 300 s B/ALL prefixes")
+            out["credit_long"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h,
+                                               horizon=self.long_group_horizon, group_only=True)
+            out["sim_s"] += out["credit_long"]["extra_sim_s"]
         out["wall_s"] = time.monotonic() - t0
         return out
 
@@ -353,13 +367,14 @@ class PairExtras:
             out["sim_s"] += h
         return out
 
-    def _credit(self, env, point, prefix, policy_factory, seed, world, branch_h) -> dict:
+    def _credit(self, env, point, prefix, policy_factory, seed, world, branch_h, *,
+                horizon=None, group_only=False) -> dict:
         import torch
 
         from wms.control.real_credit14 import POINT_SCHEMA
 
         from .branching import select_group
-        c = int(self.credit_horizon)
+        c = int(self.credit_horizon if horizon is None else horizon)
         self._load(env, point, c)
         f = env.frame
         ids = env.builder.vehicle_ids
@@ -380,6 +395,10 @@ class PairExtras:
         rec["flips"] = flips
         arms = {"B": frozenset(), "ALL": None, **{f"ONLY:{v}": frozenset([v]) for v in group},
                 "GROUP": frozenset(group), **{f"FLIP:{v}": frozenset(group) - {v} for v in flips}}
+        if group_only:
+            arms = {k: arms[k] for k in ("B", "ALL", "GROUP")}
+            rec["flips"] = []
+            rec["long_group"] = True
         if self.credit_imagine:
             from wms.control.deploy import OracleSource, compact_inputs
             raw, _ = OracleSource(policy_factory.models[0]).inputs(env)
@@ -408,9 +427,16 @@ class PairExtras:
                 step = None if name == "B" else self._members_step(policy_factory(), members)
                 res = self._run_arm(env, point, c, step)
                 rec["extra_sim_s"] += c
+                if group_only:
+                    rec["extra_collisions"] = rec.get("extra_collisions", 0) + res["collisions"]
+                    rec["extra_teleports"] = rec.get("extra_teleports", 0) + res["teleports"]
             sumo[name], road[name] = res["J"], res["road"]
             rec["collisions"] += res["collisions"]
             rec["teleports"] += res["teleports"]
+            if res.get("dropped_vehicle_steps", 0):
+                # Existing reader excludes incident records; an incomplete fleet
+                # also invalidates long differences, without hiding its charge.
+                rec["dropped_vehicle_steps"] = rec.get("dropped_vehicle_steps", 0) + res["dropped_vehicle_steps"]
         rec["sumo"], rec["sumo_road"] = sumo, road
         return rec
 
@@ -423,6 +449,8 @@ class PairExtras:
         counts = {}
         for key, name in files.items():
             rows = [p[key] for p in points if key in p]
+            if key == "credit":
+                rows += [p["credit_long"] for p in points if "credit_long" in p]
             if not rows:
                 continue
             with (branch_root / name).open("x", encoding="utf-8") as stream:
