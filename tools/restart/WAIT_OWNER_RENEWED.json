@@ -1,0 +1,26 @@
+{
+  "task": "S-RESTART",
+  "continuation": "owner renewed after ENOSPC, minimal laptop disk",
+  "status": "WAIT_OWNER",
+  "reason": "Second non-scientific invocation/deployment failure: integrated test invocation omitted mandatory NATIVEINIT_BASELINE after the source-staging SSH recovery consumed the one operational retry",
+  "operational_failures": [
+    {"phase": "source overlay", "exit": 255, "repair": "single verified overlay stream", "retry": "recovered"},
+    {"phase": "integrated tests invocation", "exit": 1, "repair": "prepared baseline staging + environment correction; NOT EXECUTED"}
+  ],
+  "source_commit": "7c9b9b26f62a450f6d2ed163e25ce0adc9d108e6",
+  "merged": ["c4/nativeinit", "c4/resumeprep", "c4/longcritic"],
+  "integrated_tests": {"passed": 397, "failed": 4, "duration_s": 18.85, "failure": "missing NATIVEINIT_BASELINE fixture environment", "scientific_comparison_pass": false},
+  "release": "gpuA:/root/autodl-tmp/c4/restart20261026",
+  "baseline_verified_files": 1072,
+  "overlay_verified_files": 91,
+  "core_snapshot_verified_files": 16,
+  "loop_registration_json_installed": false,
+  "prearm": "NOT_RUN",
+  "smoke": {"id": "S-C0DIAG-SMOKE-1", "status": "NOT_RUN", "new_charged_sim_s": 0, "seeds_not_allocated_by_task": [968142, 968143]},
+  "main": "NOT_LAUNCHED",
+  "owned_detached_pids": [],
+  "historical_charged_sim_s": 87399,
+  "total_sim_s_cap": 210000,
+  "retry_available_in_this_continuation": false,
+  "requires": "explicit new continuation authority, corrected complete integrated test invocation, then original registration/prearm/smoke/launch gates"
+}
