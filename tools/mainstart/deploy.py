@@ -129,5 +129,26 @@ print(json.dumps(receipt))
     print(out)
 
 
+def handoff():
+    content = (OUT / 'handoff.py').read_bytes()
+    out = remote('gpuR', r'''
+import json,base64,pathlib,subprocess,os,time,sys,hashlib
+a=pathlib.Path('/root/autodl-tmp/c4/v5/mainstart'); assert a.is_dir()
+assert not (a/'HANDOFF_PID.json').exists()
+data=base64.b64decode(sys.stdin.buffer.read()); (a/'handoff.py').write_bytes(data)
+with (a/'handoff.log').open('ab') as log:
+ p=subprocess.Popen(['setsid','nohup','/root/miniconda3/bin/python','-u',str(a/'handoff.py')],
+ stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,cwd=a,
+ env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'})
+time.sleep(3); assert p.poll() is None
+f=pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().rsplit(')',1)[1].split()
+receipt={'pid':p.pid,'sid':int(f[3]),'start_ticks':f[19],'source_sha256':hashlib.sha256(data).hexdigest()}
+(a/'HANDOFF_INSTALLED.json').write_text(json.dumps(receipt,indent=1))
+print(json.dumps(receipt))
+''', base64.b64encode(content))
+    (OUT / 'HANDOFF_INSTALLED.json').write_text(out)
+    print(out)
+
+
 if __name__ == '__main__':
-    {'prepare': prepare, 'launch': launch}[sys.argv[1]]()
+    {'prepare': prepare, 'launch': launch, 'handoff': handoff}[sys.argv[1]]()

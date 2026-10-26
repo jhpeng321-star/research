@@ -1,0 +1,116 @@
+{
+ "id": "C4-LOOP14-COOPON-20261026",
+ "status": "registered",
+ "split": "TRAIN",
+ "acknowledged_by": "owner-approved TASK S-MAIN-COOPON, 2026-10-26 (UTC+8)",
+ "seed_block": [
+  968100,
+  968227
+ ],
+ "exclude": [
+  [
+   968100,
+   968102
+  ]
+ ],
+ "sources": {
+  "initial_wm_rule": "13E b2 FINAL now; S-MAINSTART later-boundary eligibility rule",
+  "fallback_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+  "policy0": "from scratch; policy optimisation seed 965140 + cycle; fixed start split seed 965140",
+  "code_sha": "9cc39f15c7d63bdea302423e93a5e6735680ba4b",
+  "config_sha256": "8f3c72cd5a9b27b91f1418a75858ad067ab1dc7d4f17b2c232e91fbc7a108fc7",
+  "source_manifest_sha256": "a580ae2b8f3956d5c39862adc28c728cd252ce3cb0ab5b487e7aa5e32d8d4239"
+ },
+ "comparators": "previous accepted WM (same registered flags and fixed panel); real SUMO native B per pair",
+ "budget": {
+  "max_cycles": 4,
+  "policy_updates_per_cycle": 150,
+  "sim_s_per_cycle": 30000,
+  "sim_s_total": 120000,
+  "gpu_h_policy_per_cycle": 3,
+  "gpu_h_wm_per_cycle": 1.5,
+  "wm_steps_per_cycle": 40
+ },
+ "stop": {
+  "consecutive_wm_rejects": 2,
+  "max_branch_incidents_per_cycle": 0
+ },
+ "collection": {
+  "host": "cpuP",
+  "workers_max": 12,
+  "worlds_per_cycle": 13,
+  "charged_sim_s_per_cycle": 29133,
+  "charged_sim_s_four_cycles": 116532,
+  "gate_candidates": 8,
+  "gate_horizon": 10,
+  "credit_horizon": 30,
+  "gate_threshold": 0.8,
+  "gated_arm": false,
+  "note": "collect ungated POLICY/B plus calibration and real-credit arms; fit both K=8 deployment tables; calibrated gated evaluation supported separately",
+  "fallback": "cpuQ"
+ },
+ "gates": {
+  "update_10": "frozen 16-start VAL panel from TRAIN corpus; paired mean delta J < 0",
+  "horizon": "10 -> 30 -> 60 s at curriculum positions 0/150/300; WM-sha-bound paired-difference gate, fixed 13E b2 measured lower-bound threshold; missing/failing receipt keeps 10 s",
+  "before_launch": "S-MAINSTART: source/hash checks; exact PAIRFT concurrency only; integrated tests and2-update real-WM CPU smoke; frozen panel;>=6GiB output space",
+  "verdict_deadline": "superseded for initial launch by S-MAINSTART",
+  "failure": "log, write WAIT_OWNER, no automatic retry or substitute run"
+ },
+ "resources": {
+  "gpu": "gpuR RTX4090 24 GB",
+  "cuda_memory_fraction": 0.45,
+  "policy_batch": 1,
+  "driver_futures": 2,
+  "checkpoint_imagination": true,
+  "policy_threads": 2,
+  "wm_threads": 4,
+  "check_workers": 4,
+  "disk_floor_gib": 1.5,
+  "disk_plan": "verify cpuX archive then retire only this arm's completed-cycle converted pair cache",
+  "loop_output": "/root/main14_loop"
+ },
+ "smoke": {
+  "host": "gpuR",
+  "device": "cpu",
+  "policy_updates": 2,
+  "synthetic_starts": true,
+  "real_selected_wm": true,
+  "new_sumo_sim_s": 0
+ },
+ "registered_at": "2026-10-25T20:58:40.852465+00:00",
+ "native_lane_amendment": {
+  "registration": "S-NATIVELANE-1",
+  "flag": "policy14.native_lane_change=true",
+  "conditional": "Install only after all registered 13E FINAL paired evidence is complete and adoption rule passes before 09:00; no PASS->FAIL exploratory pulse_m/gap_open sign unit; tests and real-WM 2-update CPU prearm smoke pass before documented disarm",
+  "deadline": "2026-10-26T09:00:00+08:00",
+  "new_sumo_sim_s": 0,
+  "preserved": "base selection, frozen gate panel, seeds/exclusions, budgets, acceptance/incident/update-10 stops, readiness and allocator fixes",
+  "failure": "Do not disarm on failed/incomplete/late scientific or prearm evidence; no autonomous retry after operational failure"
+ },
+ "mainstart_amendment": {
+  "id": "S-MAINSTART",
+  "owner_request": "2026-10-26 ~12:00 UTC+8: start policy while scores pending",
+  "reason": "cpuX scoring host spot reclaimed; owner requested immediate start",
+  "initial_base": "13E b2 FINAL",
+  "initial_base_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+  "collect_host": "cpuP",
+  "fallback_host": "cpuQ",
+  "sumo_workers_max": 12,
+  "collect_wait": "Readiness/code/fixture/RAM checks before phase entry or seed charge",
+  "later_base_swap": "cycle>=1 unstarted policy boundary only; best eligible of 14b/round16 by lower strict TTC ratio, tie14b; no new aggregate/per-set HDV reaction sign/late-sign/magnitude FAIL versus13E and strict TTC ratio<=13E; FINAL SHA must match scored SHA; record every decision",
+  "native_lane_change": true,
+  "speed2": "OFF; fastloop changes uncommitted at launch",
+  "policy_cuda_memory_fraction": 0.45,
+  "pairft_incarnations": {
+   "717015": "4161293097",
+   "718536": "4161359689"
+  },
+  "wm_gpu_guard": "exclusive, unchanged; waits if any CUDA process remains",
+  "loop_output": "/root/main14_loop",
+  "output_free_bytes_before_launch": 12780822528,
+  "scratch_free_bytes_after_archive": 2536873984,
+  "storage": "Protected scratch occupancy prevents6GB safely; output filesystem has>=6GiB;1.5GiB phase floor retained",
+  "wrapper_code_sha": "b9a9b5e029f9bfc124332d7f7b695f162d334adb",
+  "registered_at": "2026-10-26T04:10:55.896552+00:00"
+ }
+}
