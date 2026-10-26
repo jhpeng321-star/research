@@ -1,0 +1,210 @@
+{
+ "time": "2026-10-26T04:21:36Z",
+ "original_waiter": null,
+ "original_stop_marker": true,
+ "source_verified": 1879,
+ "registration_sha256": "8f80a023e2fdb230808be13a3f046694013bae5b7a7e92d0654bcec09817c6ea",
+ "driver": {
+  "pid": 822919,
+  "ppid": 1,
+  "sid": 822919,
+  "start_ticks": "4161444784",
+  "state": "S",
+  "stdio": {
+   "0": "/dev/null",
+   "1": "/root/autodl-tmp/c4/v5/mainstart/driver.log",
+   "2": "/root/autodl-tmp/c4/v5/mainstart/driver.log"
+  },
+  "env": {}
+ },
+ "trainer": {
+  "pid": 823090,
+  "ppid": 822919,
+  "sid": 822919,
+  "start_ticks": "4161450603",
+  "state": "S",
+  "stdio": {
+   "0": "/dev/null",
+   "1": "/root/main14_loop/policy/c00.log",
+   "2": "/root/main14_loop/policy/c00.log"
+  },
+  "env": {
+   "OMP_NUM_THREADS": "2",
+   "MKL_NUM_THREADS": "2",
+   "C4_GPU_MEM_FRACTION": "0.45"
+  }
+ },
+ "continuation": {
+  "pid": 875528,
+  "ppid": 1,
+  "sid": 875528,
+  "start_ticks": "4161499060",
+  "state": "S",
+  "stdio": {
+   "0": "/dev/null",
+   "1": "/root/autodl-tmp/c4/v5/mainstart/continuation.log",
+   "2": "/root/autodl-tmp/c4/v5/mainstart/continuation.log"
+  },
+  "env": {}
+ },
+ "handoff": null,
+ "driver_lock_held": true,
+ "launch": {
+  "t": "2026-10-26T04:11:59Z",
+  "pid": 822919,
+  "config": "/root/autodl-tmp/c4/v5/main14_launch_config.json",
+  "config_sha256": "597ddad7f658f3fe6e89eaf034b73a56260094e90a38be5b8a9248132eefe7c7",
+  "registration_sha256": "8f80a023e2fdb230808be13a3f046694013bae5b7a7e92d0654bcec09817c6ea",
+  "base": "13e_b2",
+  "wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+  "gate_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e"
+ },
+ "smoke": {
+  "status": "completed",
+  "updates": 2
+ },
+ "integrated_tests": "358 passed, 1 warning in 10.81s",
+ "policy_updates": 17,
+ "last_update": {
+  "update": 17,
+  "actor_loss": -0.9472789168357849,
+  "critic_loss": 5.421464920043945,
+  "imagination_horizon_s": 10.0,
+  "n_futures": 2,
+  "wall_time_s": 22.723304115235806
+ },
+ "gate_panel_result": {
+  "file": "/root/autodl-tmp/c4/v5/mainstart/gate_panel.json",
+  "n": 16,
+  "sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+  "J_before": [
+   131.8164520263672,
+   267.9964599609375,
+   678.95703125,
+   1081.27783203125,
+   3202.42919921875,
+   193.1720733642578,
+   1225.68603515625,
+   230.8381805419922,
+   1994.162841796875,
+   1910.6632080078125,
+   375.79022216796875,
+   967.0303955078125,
+   956.669189453125,
+   2094.844970703125,
+   568.9942016601562,
+   2836.97509765625
+  ],
+  "J_after": [
+   131.60748291015625,
+   267.447021484375,
+   677.4254760742188,
+   1079.252685546875,
+   3201.869873046875,
+   192.68417358398438,
+   1224.6038818359375,
+   228.7947235107422,
+   1994.0347900390625,
+   1910.04150390625,
+   375.0373840332031,
+   964.0439453125,
+   956.3554077148438,
+   2094.330078125,
+   568.343994140625,
+   2835.25341796875
+  ],
+  "delta_per_start": [
+   -0.2089691162109375,
+   -0.5494384765625,
+   -1.53155517578125,
+   -2.025146484375,
+   -0.559326171875,
+   -0.4878997802734375,
+   -1.0821533203125,
+   -2.04345703125,
+   -0.1280517578125,
+   -0.6217041015625,
+   -0.752838134765625,
+   -2.9864501953125,
+   -0.31378173828125,
+   -0.514892578125,
+   -0.65020751953125,
+   -1.7216796875
+  ],
+  "mean_J_before": 1169.831461906433,
+  "mean_J_after": 1168.8203649520874,
+  "mean_delta": -1.0110969543457031,
+  "n_improved": 16,
+  "update": 10,
+  "passed": true
+ },
+ "state": {
+  "schema": "loop14_state/1",
+  "loop_id": "C4-LOOP14-COOPON-20261026",
+  "created": "2026-10-26T04:11:59Z",
+  "registration": "/root/autodl-tmp/c4/v5/main14_REGISTRATION.json",
+  "registration_sha256": "8f80a023e2fdb230808be13a3f046694013bae5b7a7e92d0654bcec09817c6ea",
+  "accepted_wm": {
+   "checkpoint": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round13e_b2/wm_s.pt",
+   "config": "/root/autodl-tmp/c4/v5/runs/c4_wm_v10_round13e_b2/config.resolved.json",
+   "sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+   "source": "initial"
+  },
+  "policy": null,
+  "real_returns": "/root/autodl-tmp/c4/v5/policy14_stage/policy14_native_returns.npz",
+  "sim_s_charged": 0,
+  "seeds_used": [],
+  "consecutive_rejects": 0,
+  "stopped": null,
+  "cycles": [
+   {
+    "cycle": 0,
+    "phases": {
+     "policy": {
+      "status": "running",
+      "attempt": 1,
+      "started": "2026-10-26T04:11:59Z",
+      "pid": 822919
+     },
+     "collect": {
+      "status": "pending",
+      "attempt": 0
+     },
+     "convert": {
+      "status": "pending",
+      "attempt": 0
+     },
+     "wm_ft": {
+      "status": "pending",
+      "attempt": 0
+     },
+     "check": {
+      "status": "pending",
+      "attempt": 0
+     }
+    }
+   }
+  ]
+ },
+ "collector": {
+  "host": "cpuP",
+  "ready": true,
+  "workers": 12,
+  "available_bytes": 41393946624,
+  "receipt": {
+   "source_files_verified": 1879,
+   "fixture_verified_without_new_sumo": true,
+   "dependencies": {
+    "torch": "2.12.1+cpu",
+    "numpy": "2.2.6",
+    "network": "/home/ubuntu/c4/main14/runtime/assets/research/highway_merge_shepherd_long/osm.net.xml.gz",
+    "template": "/home/ubuntu/aq_code/code_r13e_65cc714e/scenarios/idm/driver_routes.rou.xml"
+   }
+  }
+ },
+ "scratch_free_bytes": 2509844480,
+ "output_free_bytes": 12759285760,
+ "cuda": "823090, /root/miniconda3/bin/python, 3068 MiB\n823269, /root/miniconda3/bin/python, 4018 MiB\n",
+ "wait_owner_exists": false,
+ "continuation_requested": true
+}

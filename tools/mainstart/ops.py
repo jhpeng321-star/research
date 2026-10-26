@@ -159,6 +159,47 @@ print(json.dumps({'archives':records,'free':shutil.disk_usage(root).free}))
         out = remote('gpuR', code, json.dumps(relative).encode(), timeout=1200)
         (ROOT / 'tools/mainstart/ARCHIVE_RECEIPT.jsonl').write_text(out)
         print(out)
+    elif action == 'capture':
+        code = r'''
+import json,pathlib,sys,os,shutil,subprocess,fcntl,importlib.util,hashlib
+v=pathlib.Path('/root/autodl-tmp/c4/v5'); a=v/'mainstart'; r=pathlib.Path('/root/main14_loop')
+sys.path[:0]=[str(v/'repo_main14/scripts/c4'),str(v/'repo_main14'),str(v/'repo_main14/src')]
+import main14_autolaunch as auto
+import loop14 as loop
+spec=importlib.util.spec_from_file_location('mainstart_capture',a/'mainstart_v2.py'); start=importlib.util.module_from_spec(spec); spec.loader.exec_module(start)
+arm=loop.read_json(a/'ARMED.json'); auto.verify_source(arm)
+def read(name): return loop.read_json(a/name)
+def process(pid):
+ p=pathlib.Path('/proc/'+str(pid))
+ if not p.exists(): return None
+ f=(p/'stat').read_text().rsplit(')',1)[1].split()
+ return {'pid':pid,'ppid':int(f[1]),'sid':int(f[3]),'start_ticks':f[19],'state':f[0],
+ 'stdio':{str(i):os.readlink(p/'fd'/str(i)) for i in range(3)},
+ 'env':{x.split('=',1)[0]:x.split('=',1)[1] for x in (p/'environ').read_bytes().decode().split('\0') if x.split('=',1)[0] in ('C4_GPU_MEM_FRACTION','OMP_NUM_THREADS','MKL_NUM_THREADS','OPENBLAS_NUM_THREADS')}}
+state=loop.read_json(r/'LOOP14_STATE.json'); cfg=loop.read_json(a/'CONFIG.json')
+rows=[json.loads(x) for x in (r/'policy/c00/updates.jsonl').read_text().splitlines()]
+latest=rows[-1]
+with (a/'driver.lock').open('r+') as f:
+ try: fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB); locked=False; fcntl.flock(f,fcntl.LOCK_UN)
+ except BlockingIOError: locked=True
+ready=start.collection_ready(cfg,arm,loop)
+if ready.get('ready'): ready['receipt']={'source_files_verified':len(ready['receipt']['source_files']),'fixture_verified_without_new_sumo':ready['receipt']['fixture_verified_without_new_sumo'],'dependencies':ready['receipt']['dependencies']}
+doc={'time':loop.now(),'original_waiter':process(657216),'original_stop_marker':(v/'main14_arm/STOP_ARM').exists(),
+ 'source_verified':len(arm['source_files']),'registration_sha256':loop.sha256(v/'main14_REGISTRATION.json'),
+ 'driver':process(822919),'trainer':process(823090),'continuation':process(read('CONTINUATION_REQUEST.json')['supervisor_pid']) if (a/'CONTINUATION_REQUEST.json').exists() and 'supervisor_pid' in read('CONTINUATION_REQUEST.json') else process(read('CONTINUATION_WAITER.json')['pid']),
+ 'handoff':process(read('HANDOFF_PID.json')['pid']),'driver_lock_held':locked,
+ 'launch':read('LAUNCHED.json'),'smoke':{'status':loop.read_json(a/'smoke/RUN_SUMMARY.json')['status'],'updates':len(loop.read_json(a/'smoke/RUN_SUMMARY.json')['updates'])},
+ 'integrated_tests':(a/'unit_tests.log').read_text().splitlines()[-1],
+ 'policy_updates':len(rows),'last_update':{k:latest.get(k) for k in ('update','actor_loss','critic_loss','imagination_horizon_s','n_futures','wall_time_s')},
+ 'gate_panel_result':loop.read_json(r/'policy/c00/gate_panel_result.json'),
+ 'state':state,'collector':ready,'scratch_free_bytes':shutil.disk_usage(v).free,'output_free_bytes':shutil.disk_usage(r).free,
+ 'cuda':subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,process_name,used_memory','--format=csv,noheader'],text=True),
+ 'wait_owner_exists':(a/'WAIT_OWNER.json').exists(),'continuation_requested':(a/'STOP_ARM').exists()}
+print(json.dumps(doc,indent=1))
+'''
+        out = remote('gpuR', code, timeout=180)
+        (ROOT / 'tools/mainstart/EVIDENCE.json').write_text(out)
+        print(out)
 
 
 if __name__ == '__main__':
