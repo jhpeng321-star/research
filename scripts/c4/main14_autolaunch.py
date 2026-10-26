@@ -165,6 +165,9 @@ def retire_pair_cache(cfg, completed, arm_dir):
 
 
 def drive(cfg, arm_dir):
+    if cfg.get('resumeprep', {}).get('enabled'):
+        import loop14_resume
+        return loop14_resume.drive(loop, sys.modules[__name__], cfg, arm_dir)
     if loop.fast_enabled(cfg, "overlap_policy"):
         return loop.fast_module().drive(loop, sys.modules[__name__], cfg, arm_dir)
     while True:

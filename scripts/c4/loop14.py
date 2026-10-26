@@ -249,6 +249,24 @@ def run_cmd(h: dict, argv, *, env: dict, log: Path, timeout_s: float, cwd=None) 
         else:
             full, proc_env = [str(a) for a in argv], {**os.environ, **{k: str(v) for k, v in env.items()}}
         try:
+            if not h.get('ssh') and env.get('C4_RESUMEPREP_OWN_CHILDREN') == '1':
+                import loop14_resume
+                with subprocess.Popen(full, cwd=cwd, env=proc_env, stdout=stream,
+                                      stderr=subprocess.STDOUT) as proc:
+                    loop14_resume.child(proc, fast_module().process_token(proc.pid))
+                    try:
+                        return proc.wait(timeout=timeout_s)
+                    except subprocess.TimeoutExpired:
+                        proc.terminate()
+                        try:
+                            proc.wait(timeout=30)
+                        except subprocess.TimeoutExpired:
+                            proc.kill()
+                            proc.wait()
+                        stream.write(f'# {now()} TIMEOUT own child {proc.pid}\n')
+                        return 124
+                    finally:
+                        loop14_resume.release(proc)
             return subprocess.run(full, cwd=None if h.get("ssh") else cwd, env=proc_env, stdout=stream,
                                   stderr=subprocess.STDOUT, timeout=timeout_s, check=False).returncode
         except subprocess.TimeoutExpired:
@@ -302,6 +320,29 @@ def gpu_guard(cfg, h: dict) -> dict:
     if proc.returncode != 0:
         raise Refused(f"GPU query exit {proc.returncode} (fail closed)")
     busy = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    if cfg.get('resumeprep', {}).get('enabled'):
+        import loop14_resume
+        busy = [line for line in busy if not loop14_resume.owns(
+            int(line.split(',')[0]), fast_module().process_token(int(line.split(',')[0])))]
+        if busy and cfg['resumeprep'].get('shared_gpu'):
+            if h.get('ssh'):
+                raise Refused('shared GPU guard must run locally on the GPU box')
+            fractions = [float(cfg[key].get('env', {}).get('C4_GPU_MEM_FRACTION', '1')) for key in ('policy','wm')]
+            if min(fractions) <= 0 or sum(fractions) > 0.400001:
+                raise Refused('shared GPU budget requires combined main fractions <=0.40')
+            memory = subprocess.run(['nvidia-smi','--query-gpu=memory.free,memory.total','--format=csv,noheader,nounits'],
+                                    capture_output=True,text=True,timeout=60,check=False)
+            if memory.returncode or len(memory.stdout.strip().splitlines()) != 1:
+                raise Refused('shared GPU memory query failed')
+            free, total = [float(x) for x in memory.stdout.strip().split(',')]
+            if total < 47000:
+                raise Refused('shared main/R17 plan requires the 48GB gpuA')
+            owned_mib = sum(float(line.split(',')[-1].strip().split()[0]) for line in proc.stdout.splitlines()
+                            if line.strip() and line.strip() not in busy)
+            if free + owned_mib < sum(fractions)*total + 2048:
+                raise GpuBusy('shared GPU lacks reserved combined-main budget plus 2GiB headroom')
+            return {'compute_apps':proc.stdout.splitlines(),'shared_main_fraction':sum(fractions),
+                    'free_mib':free,'owned_mib':owned_mib,'headroom_mib':2048}
     if busy:
         raise GpuBusy(f"GPU busy: {busy}")
     return {"gpu_query": query, "compute_apps": 0}
@@ -431,6 +472,8 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),
            **p.get("env", {})}
+    if cfg.get('resumeprep', {}).get('enabled'):
+        env['C4_RESUMEPREP_OWN_CHILDREN'] = '1'
     if fast_enabled(cfg, "speed2_policy"):
         env.update({"WMS_SPEED_" + name: "0" for name in
                     ("COMPACT_SLOTS", "BATCH_REPLAY", "FAST_CAV_DRIVE", "FAST_LONG_HISTORY", "FAST_MERGE_LANE")})
@@ -691,6 +734,9 @@ def run_wm_ft(cfg, state, ph, root) -> dict:
                       "PIVOT_DIAG_OFF", "FAST_MERGE_LANE")
         env.update({"WMS_SPEED_" + name: "0" for name in from_flags})
         env["WMS_SPEED_GRAD_AUDIT_EVERY"] = "1"
+    if cfg.get('resumeprep', {}).get('enabled'):
+        env.update(C4_RESUMEPREP_OWN_CHILDREN='1', WMS_SPEED_PIVOT_DIAG_OFF='1',
+                   WMS_SPEED_FAST_CAV_DRIVE='1', WMS_SPEED_FAST_LONG_HISTORY='1')
     log = out.with_name(out.name + ".log")
     base = [h["python"], "-m", "wms", "train", "--config", w["config"], "--out", str(out), *sets]
     # Fail closed on the resolved config before training (``--mode preflight`` predates c4_base

@@ -1,0 +1,52 @@
+{
+ "task": "S-RESUMEPREP",
+ "base": "1aee086ecb667c69895c157b9ce9e01bb308801c",
+ "status": "prepared_only",
+ "nativeinit_dependency": "93426d22; merge and integrated native tests required by RUNBOOK before execution",
+ "tests": {
+  "host": "gpuR",
+  "runtime": "/root/resumeprep_verify/runtime",
+  "command": "PYTHONPATH=src:. CUDA_VISIBLE_DEVICES= python -m pytest -q -p no:cacheprovider --basetemp /root/resumeprep_verify/pytest5 tests/unit/test_resumeprep.py tests/unit/test_loop14.py tests/unit/test_fastloop.py tests/unit/test_main14.py",
+  "result": "65 passed in 9.95s; zero skips",
+  "log": "/root/resumeprep_verify/tests5.log",
+  "ruff": "PASS",
+  "diff_check": "PASS"
+ },
+ "stage": {
+  "regular_files": 1072,
+  "baseline_manifest": "e30057b699b9d44ed58e6b84a42d83596da49ea47b7b63644e3c4f13996d7545",
+  "collector_package_manifest": "c42a9676463b58d2fa5b8248431680d8986d4d9f9f7633d8bd8d8ccc7d15edaf",
+  "method": "source/extraction on box; regular-file SHA verification; per-file source overlays",
+  "initial_attempts": "disk-full full checkout and large Windows-relayed transfer attempts retained; recovered with sparse checkout and box-local staging"
+ },
+ "probes": {
+  "workload": "matched synthetic inputs; real round16 checkpoint and identical actual policy/FT configs; no production-throughput extrapolation",
+  "gpuR_policy_median_s": 7.835857018828392,
+  "gpuA_policy_median_s": 8.616237411275506,
+  "gpuR_wm_step_s": 60.774292670190334,
+  "gpuA_wm_step_s": 57.77119477652013,
+  "policy_repetitions_after_warmup": 3,
+  "wm_repetitions_after_warmup": 1,
+  "max_cuda_reserved_bytes": 2036334592,
+  "observed_gpuR_owned_process_mib": 2406,
+  "gpuR_final_pid": {"pid": 103758, "start_ticks": "4164481490", "exited": true},
+  "gpuA_final_pid": {"pid": 18071, "start_ticks": "839853666", "exited": true},
+  "scratch": "/root/resumeprep_probe",
+  "failed_probes": "probe1 CPU-only CLI smoke invocation; probe2 allowed-root and synthetic history input failures; logs retained on both boxes",
+  "signals_sent": 0
+ },
+ "host_plan": "newer owner 20:34: gpuA main plus round17, gpuR coop-off; main fractions .20+.20, round17 .50; 48GB/free-memory guard and real mini required",
+ "gpuA_inputs": "WM roots checked present; policy q-views missing, exact guarded source-box staging commands supplied",
+ "smoke": {"id": "S-C0DIAG-SMOKE-1", "seeds": [968142, 968143], "registered_sim_s": 1922, "run": false, "charged": false},
+ "live_unchanged": {
+  "state_sha256": "0e82cb5edcf0dbc937721a1ca083ac01f0adc8b154e6480c6df5397bea712a3e",
+  "config_sha256": "50abcea3fabda8458d07ce18fe0e6ab7680cf03fce0012a6ac8a5c5bafb1fead",
+  "registration_sha256": "34d4c61bb05526f76c146880502b5e8b5db51dc2ea4c4633620b14142334965b",
+  "wait_owner_present": true,
+  "charged_sim_s": 87399,
+  "actual_sim_s": 28353
+ },
+ "cpu_writes": 0,
+ "new_sumo": 0,
+ "push": false
+}

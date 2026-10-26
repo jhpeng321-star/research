@@ -141,7 +141,9 @@ def collect(loop, cfg, state, ph, root):
     # A live loop can adopt two-box scheduling after an already-charged single-box failure.
     # Include ALL original batch charges as well as world charges, even after a stale-state crash.
     charges = [row for row in ledger if "sim_s_charged" in row]
-    doc["charged"] = sum(row["sim_s_charged"] for row in charges if row["cycle"] == k)
+    current = ledger[int(state.get('resumeprep_prior_ledger_rows', 0)):]
+    doc["charged"] = sum(row["sim_s_charged"] for row in current if row.get('cycle') == k
+                         and 'sim_s_charged' in row and row.get('event') != 'smoke_reservation')
     state["sim_s_charged"] = max(state["sim_s_charged"], sum(row["sim_s_charged"] for row in charges))
     for row in attempts:
         if row["cycle"] == k:
@@ -279,6 +281,8 @@ def overlap(loop, cfg, state, root):
                     "real_returns_sha256": loop.sha256(snapshot["real_returns"]),
                     "real_credit": snapshot.get("real_credit"), "launched_after_cycle": k - 1,
                     "returns_lag": "latest completed cycle at launch; current collection unavailable"}
+    if cfg.get('resumeprep', {}).get('enabled'):
+        dependencies['returns_lag'] = 'completed conversion at launch; accepted WM frozen independently'
     credit = snapshot.get("real_credit")
     if credit:
         dependencies["real_credit_sha256"] = loop.sha256(credit)
@@ -287,8 +291,11 @@ def overlap(loop, cfg, state, root):
         if flag in args:
             path = args[args.index(flag) + 1]
             dependencies[flag.removeprefix("--")] = {"path": path, "sha256": loop.sha256(path)}
-    receipt = loop.run_policy(cfg, snapshot, {"attempt": 1}, root)
-    doc = {"cycle": k, "dependencies": dependencies, "policy": snapshot["policy"], "receipt": receipt}
+    attempt = cfg.get('resumeprep', {}).get('overlap_attempt', 1)
+    loop.write_atomic(root / f'overlap_c{k:02d}.a{attempt}.launch.json',
+                      {'cycle': k, 'dependencies': dependencies, 'attempt': attempt})
+    receipt = loop.run_policy(cfg, snapshot, {"attempt": attempt}, root)
+    doc = {"cycle": k, "dependencies": dependencies, "policy": snapshot["policy"], "receipt": receipt, 'attempt': attempt}
     loop.write_atomic(root / f"overlap_c{k:02d}.json", doc)
     return doc
 
