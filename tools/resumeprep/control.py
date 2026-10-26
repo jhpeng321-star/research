@@ -124,6 +124,11 @@ def prearm(cfg, arm):
     synthetic['policy'].update(smoke=True, updates_per_cycle=2)
     synthetic['policy']['device'] = 'cpu'
     synthetic['policy']['native_init'] = False
+    if cfg['policy'].get('longcritic'):
+        # Synthetic prearm checks mechanics only; real longcritic/share selection
+        # is exercised in mini-policy with the unchanged production config.
+        synthetic['policy']['config'] = 'configs/c4_policy14_main14_nativelane.toml'
+        synthetic['policy']['longcritic'] = False
     synthetic['policy']['extra_args'] = []
     argv, env = loop.policy_cmd(synthetic,state,arm/'prearm')
     code = loop.run_cmd(loop.host(cfg,'gpu'),argv,env=env,log=arm/'prearm.log',timeout_s=600)
@@ -145,10 +150,13 @@ def mini(cfg, arm, policy_only=False):
     one['collect'].update(worlds_per_cycle=2, demands='1900',penetrations='0.05,0.4',pen_weights='1,1',
                           branch_points=1,branch_first=360,branch_horizon=300,warmup=300)
     one['collect'].pop('sumocredit',None)
+    one['collect'].pop('long_group',None)
+    one['collect'].pop('long_single_hold',None)
     one['wm']['extra_set'] += ['curriculum.stage_steps=[2]']
     reg = copy.deepcopy(loop.read_json(cfg['registration']))
     reg.update(seed_block=[968142,968143],exclude=[])
     reg['budget'].update(max_cycles=1,sim_s_per_cycle=1922,sim_s_total=1922,wm_steps_per_cycle=2)
+    reg['budget']['policy_updates_per_cycle'] = 10
     if not root.exists():
         root.mkdir()
         loop.write_atomic(root/'REGISTRATION.json',reg)

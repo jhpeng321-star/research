@@ -1,0 +1,11 @@
+# S-RESTART owner-approved measured share1.0; never load the rejected actor.
+extends = "c4_policy14_longcritic.toml"
+
+[real_share]
+bootstrap_receipt = "tools/longcritic/REAL_SHARE_MEASURED.json"
+
+[horizon]
+horizons_s = [10, 30, 60]
+
+[policy14]
+policy_ramp_merge = true

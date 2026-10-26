@@ -181,7 +181,14 @@ class CavPolicy(nn.Module):
             # A deterministic residual: exploration/entropy cannot perturb update zero.
             # Frozen random features; ONLY the residual head receives actor gradients.
             radius = min(-self.accel_min, self.accel_max)
-            residual = radius * torch.tanh(self.residual_head(features.detach()).squeeze(-1))
+            latent = self.residual_head(features.detach()).squeeze(-1)
+            if (getattr(self, 'residual_persistent_exploration', False)
+                    and not deterministic and noise is not None):
+                # Training-only multiplicative actor-latent exploration uses the
+                # existing group AR(1) plan. Zero head stays EXACTLY zero for all
+                # draws; no external acceleration is added to native commands.
+                latent = latent * (1.0 + noise.accel.to(latent))
+            residual = radius * torch.tanh(latent)
             residual = torch.where(obs.cav_mask, residual, torch.zeros_like(residual))
             zeros = residual * 0.0
             if lane_mask is None:

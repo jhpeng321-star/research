@@ -326,6 +326,8 @@ def main(argv=None):
                                   real_return_provider=provider,
                                   **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        if args.native_init and getattr(trainer.exploration, 'long_persistence', False):
+            policy.residual_persistent_exploration = True
         from .longcritic import LongCritic, LongCriticConfig
         long_cfg = LongCriticConfig(**raw.get("longcritic", {}))
         if long_cfg.enabled:

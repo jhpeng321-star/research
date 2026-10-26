@@ -20,6 +20,7 @@ SEED = 965140
 class RealShareConfig:
     enabled: bool = False
     updates: int = 20
+    bootstrap_receipt: str | None = None
 
     def __post_init__(self):
         if not isinstance(self.enabled, bool) or type(self.updates) is not int or self.updates != 20:
@@ -126,7 +127,29 @@ def calibrate_share(trainer, fit, dev, *, policy_sha256, config=None):
                'initial_critic_sha256': tensor_digest(trainer.critic), 'policy_sha256': policy_sha256,
                'wm_ids': trainer.world_model_ids, 'updates_per_candidate': cfg.updates,
                'fit_worlds': sorted(set(fit.provenance['seeds'].tolist())),
-               'development_worlds': sorted(set(dev.provenance['seeds'].tolist()))}
+                'development_worlds': sorted(set(dev.provenance['seeds'].tolist()))}
+    if cfg.bootstrap_receipt and policy_sha256 is None:
+        # Owner explicitly approved the measured1.0 share for the NEW scratch
+        # residual actor. Reuse only its pinned real-target evidence, never its
+        # rejected actor/critic tensors. This is an off-policy critic bootstrap,
+        # not a new claim that these are the fresh actor's real outcomes.
+        import json
+        from .start_states import checked_path
+        path = checked_path(cfg.bootstrap_receipt)
+        evidence = json.loads(path.read_text())
+        row = evidence.get('candidates', {}).get('1.0', {})
+        if (evidence.get('selected_share') != 1.0 or not row.get('eligible')
+                or not np.isfinite(row.get('delta_upper95', np.nan)) or row['delta_upper95'] > 0
+                or evidence.get('source_sha256') != receipt['source_sha256']
+                or evidence.get('policy_sha256') != source.provenance.get('policy_checkpoint')
+                or evidence.get('fit_worlds') != receipt['fit_worlds']
+                or evidence.get('development_worlds') != receipt['development_worlds']):
+            raise ValueError('registered real-share bootstrap evidence is stale/mismatched')
+        trainer.config = replace(trainer.config, real_return_mix=1.0)
+        return {**receipt, 'selected_share': 1.0, 'offpolicy_bootstrap': True,
+                'selection_evidence_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                'selection_source_policy': evidence['policy_sha256'],
+                'actor_adopted': False, 'critic_adopted': False}
     if (source.provenance['source_kind'] != 'current_policy'
             or source.provenance.get('policy_checkpoint') != policy_sha256):
         receipt['refused'] = 'real targets are not of the pinned current policy; keep 0.3'

@@ -519,6 +519,12 @@ def run_policy(cfg, state, ph, root) -> dict:
     if code != 0 or summary.get("status") != "completed" or not ckpt.is_file():
         raise RuntimeError(f"policy phase failed (exit {code}): {summary.get('error')}")
     last = summary["updates"][-1] if summary.get("updates") else {}
+    if cfg['policy'].get('native_init'):
+        from wms.control.nativeinit import verify_collection_gate
+        gate = verify_collection_gate({'checkpoint': str(ckpt)})
+        if (gate.get('wm_sha256') != [state['accepted_wm']['sha256']] or
+                gate.get('wm_config_sha256') != [sha256(state['accepted_wm']['config'])]):
+            raise Refused('native-relative gate WM/config provenance mismatch before policy adoption')
     state["policy"] = {"checkpoint": str(ckpt), "sha256": sha256(ckpt), "source": f"cycle {state['cycles'][-1]['cycle']}",
                        "trained_on_wm_sha256": state["accepted_wm"]["sha256"]}
     if fast_enabled(cfg, "overlap_policy"):
