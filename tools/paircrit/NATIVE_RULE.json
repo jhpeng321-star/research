@@ -1,0 +1,12 @@
+{
+  "schema": "paircrit_breakdown_rule/1",
+  "method": "native_log1p_speed_otsu",
+  "definition": "first entry into native lower-speed Otsu class; operational congestion proxy",
+  "source_sha256": "9a5cdd1bf874fc9270f79570a6ef1bdc9cefa26cc6b3297f8c6654b42ef3feba",
+  "boundary_mps": 5.590301496934885,
+  "between_class_variance": 0.19835897938338853,
+  "n": 11953,
+  "lower_class_fraction": 0.5355977578850498,
+  "physical_bistability_identified": false,
+  "gaussian_identification_refused": "native data do not identify two ordered speed regimes"
+}

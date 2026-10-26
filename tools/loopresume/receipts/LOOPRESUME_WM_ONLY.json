@@ -1,0 +1,37 @@
+{
+ "t": "2026-10-26T18:15:06Z",
+ "status": "wm_ft_running",
+ "charged": 102607,
+ "converted_outputs": {
+  "pairs": "/root/autodl-tmp/c4/restart20261026/arm/loop/data/pairs_c00.a1",
+  "returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c00.a1.npz",
+  "native_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/native_returns_c00.a1.npz",
+  "targets": 8,
+  "episodes": 16,
+  "pair_groups": 8,
+  "pairing_not_fit_eligible": true,
+  "pairing_proof": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/pairing_c00.a1.json"
+ },
+ "actor_launch_blocked": true,
+ "state_sha256_before": "0e9e1a1426ef756e18c5b4d2e5d961fbb6730c67a3ab012df25d85059d217966",
+ "confidence_recalibration": {
+  "points_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/points_c00.wm_only.jsonl",
+  "gate_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/gate_c00.wm_only.jsonl",
+  "real_credit": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/REAL_CREDIT_c00.wm_only.json",
+  "multipliers": {
+   "individual": 1.0,
+   "group": 1.0,
+   "coop": 1.0,
+   "team": 1.0
+  },
+  "credit_points": 16,
+  "gate_table": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/GATE_TABLE_c00.wm_only.json",
+  "gate_n": 64,
+  "gate_brier": 0.00151010701545779,
+  "gate_blocks_open": 1,
+  "gate_mean_table": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/GATE_MEAN_TABLE_c00.wm_only.json",
+  "gate_mean_n": 56,
+  "gate_mean_brier": 0.0002972651605231867,
+  "gate_mean_blocks_open": 0
+ }
+}

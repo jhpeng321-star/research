@@ -339,6 +339,7 @@ class _Recompute:
 
     def __init__(self, fn, enabled, preserve_rng=False):
         self.fn, self.enabled, self.preserve_rng = fn, bool(enabled), bool(preserve_rng)
+        self.requires_state = getattr(fn, 'requires_state', False)
 
     def __call__(self, *args, **kwargs):
         if self.enabled and torch.is_grad_enabled():
@@ -590,6 +591,7 @@ class DreamerTrainer:
         self.uncertainty = uncertainty if uncertainty is not None and uncertainty.enabled else None
         self._training_imagination = False
         self.longcritic = None  # S-LONGCRITIC: injected only by an enabled run section.
+        self.paircrit = None  # S-PAIRCRIT: default-OFF signed cost-advantage regression.
         self.coop_anchor = None
         self._last_start_info = None
         self.real_return_provider = real_return_provider
@@ -1179,6 +1181,11 @@ class DreamerTrainer:
                 values = rewards.new_zeros((len(states), rewards.shape[-1]))
             else:
                 values = torch.stack([value_call(state) for state in states])
+                if self.paircrit is not None and variants is not None:
+                    # Native continuation has identically zero advantage. Its
+                    # absolute value/gradient must never re-enter paired credit.
+                    from .counterfactual import KIND_BASE
+                    values = torch.where((variants.row_kind != KIND_BASE)[None, :], values, 0.)
             member_values.append(values)
             returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
         masks = torch.stack([torch.stack([state["present"] & state["is_cav"]
@@ -1546,7 +1553,7 @@ class DreamerTrainer:
 
     def update(self):
         started = time.perf_counter()
-        real_batch = self._real_return_batch()
+        real_batch = self._real_return_batch() if self.paircrit is None else None
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
@@ -1609,7 +1616,7 @@ class DreamerTrainer:
         # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
         mix = self.config.real_return_mix
         imagined_loss = None
-        if mix < 1 and self.longcritic is None:
+        if mix < 1 and self.longcritic is None and self.paircrit is None:
             predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
                                                     for state in states[:-1]])
                                        for states in imagined["states"]])
@@ -1618,7 +1625,10 @@ class DreamerTrainer:
             # advantage scale when real-return scaling was explicitly requested.
             critic_scale = max(scale, self.config.real_return_scale)
             imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
-        if real_batch is None:
+        if self.paircrit is not None:
+            critic_loss, pair_metrics = self.paircrit.loss(self, starts, scale)
+            extra.update(pair_metrics)
+        elif real_batch is None:
             critic_loss = imagined_loss
         else:
             real_predictions = self.critic(real_batch.states)
@@ -1831,6 +1841,10 @@ class DreamerTrainer:
             payload["coopw"] = coopw
         if self.longcritic is not None:
             payload["longcritic"] = self.longcritic.state_dict()
+        if self.paircrit is not None:
+            payload['paircrit'] = self.paircrit.state_dict()
+        if hasattr(self, 'breakdown_receipt'):
+            payload['breakdown'] = self.breakdown_receipt
         lane_switches = getattr(self.controller_factory, "ramp_merge", {})
         if lane_switches.get("native_lane_change", False):
             payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
@@ -1884,6 +1898,10 @@ class DreamerTrainer:
             getattr(self, name).load_state_dict(payload[name])
         if self.longcritic is not None and "longcritic" in payload:
             self.longcritic.load_state_dict(payload["longcritic"])
+        if (self.paircrit is None) != ('paircrit' not in payload):
+            raise ValueError('absolute/paired checkpoint mismatch; fresh boundary fit required')
+        if self.paircrit is not None:
+            self.paircrit.load_state_dict(payload['paircrit'])
         for key, parameter, optimizer_name, label in (
                 ("log_alpha", self.log_alpha, "alpha_optimizer", "entropy"),
                 ("log_lane_alpha", self.log_lane_alpha, "lane_alpha_optimizer", "lane entropy")):

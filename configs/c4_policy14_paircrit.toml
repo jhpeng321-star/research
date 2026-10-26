@@ -1,0 +1,9 @@
+# S-PAIRCRIT candidate only. Flags deliberately OFF; see PAIRCRIT.md amendment.
+extends = "c4_policy14_restart.toml"
+
+[paircrit]
+enabled = false
+warmup_updates = 100
+
+[breakdown]
+enabled = false

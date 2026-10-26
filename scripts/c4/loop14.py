@@ -465,16 +465,33 @@ def init(cfg, args) -> int:
 
 
 # ------------------------------------------------------------------ phase commands
+def measured_policy_updates(cfg, state):
+    """The first cycle-1 phase measures 150; later phases use its bound recommendation."""
+    cap = int(cfg['policy']['updates_per_cycle'])
+    if not cfg.get('loopresume', {}).get('measured_update_selection') or state['cycles'][-1]['cycle'] <= 1:
+        return cap
+    checkpoint = Path(state['policy']['checkpoint'])
+    from wms.control.nativeinit import verify_collection_gate
+    verify_collection_gate(state['policy'])
+    summary = read_json(checkpoint.with_name('RUN_SUMMARY.json'))
+    selected = summary.get('recommended_updates_per_cycle')
+    if summary.get('status') != 'completed' or not isinstance(selected, int) or selected < 0 or selected % 10:
+        raise Refused('missing measured native-relative update recommendation')
+    return max(10, min(cap, selected))
+
+
 def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
     p, h = cfg["policy"], host(cfg, "gpu")
     k = state["cycles"][-1]["cycle"]
     acc = state["accepted_wm"]
+    if p.get('breakdown') and not p.get('native_init'):
+        raise Refused('breakdown veto requires native-init acceptance')
     if not state.get("real_returns"):
         raise Refused("no real-return file for the critic (policy.initial_real_returns)")
     argv = [h["python"], "-m", "wms.control.policy14_cli", "--config", p["config"],
             "--wm-ckpt", acc["checkpoint"], "--wm-config", acc["config"],
             "--real-returns", state["real_returns"], "--device", p["device"],
-            "--seed", str(int(p["seed"]) + k), "--max-updates", str(int(p["updates_per_cycle"])),
+            "--seed", str(int(p["seed"]) + k), "--max-updates", str(measured_policy_updates(cfg, state)),
             "--output-dir", str(out), "--compact"]
     if state.get("policy"):
         argv += ["--resume", state["policy"]["checkpoint"]]
@@ -483,11 +500,16 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
         argv.append("--smoke")
     if p.get("real_credit") and state.get("real_credit"):        # S-SUMOCREDIT (flag-gated)
         argv += ["--real-credit", state["real_credit"]]
-    if p.get('longcritic'):
+    if p.get('longcritic') or p.get('paircrit'):
         native = state.get('native_real_returns') or p.get('initial_native_returns')
         if not native:
             raise Refused('longcritic requires paired native B real-return export')
         argv += ['--longcritic-native-returns', native]
+    if p.get('paircrit'):
+        pairing = state.get('pairing_receipt') or p.get('initial_pairing_receipt')
+        if not pairing or not (state.get('policy') or {}).get('sha256'):
+            raise Refused('paircrit requires an accepted policy and its current paired cohort')
+        argv += ['--paircrit-receipt', pairing, '--paircrit-policy-sha256', state['policy']['sha256']]
     # S-GPUB-LOOP: extra policy14_cli arguments (e.g. ["--gate-panel", "<frozen panel JSON>"]); none by default.
     argv += [str(x) for x in p.get("extra_args", [])]
     if p.get("native_init"):
@@ -521,12 +543,17 @@ def run_policy(cfg, state, ph, root) -> dict:
     last = summary["updates"][-1] if summary.get("updates") else {}
     if cfg['policy'].get('native_init'):
         from wms.control.nativeinit import verify_collection_gate
-        gate = verify_collection_gate({'checkpoint': str(ckpt)})
+        gate_policy = {'checkpoint': str(ckpt)}
+        if cfg['policy'].get('breakdown'):
+            gate_policy['breakdown_required'] = True
+        gate = verify_collection_gate(gate_policy)
         if (gate.get('wm_sha256') != [state['accepted_wm']['sha256']] or
                 gate.get('wm_config_sha256') != [sha256(state['accepted_wm']['config'])]):
             raise Refused('native-relative gate WM/config provenance mismatch before policy adoption')
     state["policy"] = {"checkpoint": str(ckpt), "sha256": sha256(ckpt), "source": f"cycle {state['cycles'][-1]['cycle']}",
                        "trained_on_wm_sha256": state["accepted_wm"]["sha256"]}
+    if cfg['policy'].get('breakdown'):
+        state['policy']['breakdown_required'] = True
     if fast_enabled(cfg, "overlap_policy"):
         state["policy_wm"] = dict(state["accepted_wm"])
     return {**info, "out": str(out), "exit": code, "policy_sha256": state["policy"]["sha256"],
@@ -694,7 +721,7 @@ def run_convert(cfg, state, ph, root) -> dict:
            "targets": read_json(local_ret.with_suffix(".receipt.json"))["targets"]}
     if cfg["collect"].get("sumocredit"):
         out["sumocredit"] = convert_sumocredit(cfg, state, work, tag, env, log, root)
-    if cfg['policy'].get('longcritic'):
+    if cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit'):
         remote_native = f'{work}/native_returns_{tag}.npz'
         native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', remote_conv,
                       '--output', remote_native, '--kind', 'B']
@@ -704,6 +731,15 @@ def run_convert(cfg, state, ph, root) -> dict:
         sync(cfg, 'cpu', remote_native, 'gpu', str(native), log)
         sync(cfg, 'cpu', remote_native[:-4]+'.receipt.json', 'gpu', str(native.with_suffix('.receipt.json')), log)
         out.update(native_returns=str(native), native_returns_sha256=sha256(native))
+        if cfg['policy'].get('paircrit'):
+            remote_pairing = f'{work}/pairing_{tag}.json'
+            pair_cmd = [h['python'], '-m', 'wms.control.paircrit_export', '--source', remote_conv,
+                '--policy-returns', remote_ret, '--native-returns', remote_native, '--output', remote_pairing]
+            if run_cmd(h, pair_cmd, env=env, log=log, timeout_s=3600):
+                raise RuntimeError('paired common-start receipt export failed')
+            pairing = root/'returns'/f'pairing_{tag}.json'
+            sync(cfg, 'cpu', remote_pairing, 'gpu', str(pairing), log)
+            out.update(pairing_receipt=str(pairing), pairing_receipt_sha256=sha256(pairing))
     return out
 
 
@@ -944,6 +980,9 @@ def run_phase(cfg, name, *, dry_run=False) -> int:
         if converted.get('native_returns'):
             state['native_real_returns'] = converted['native_returns']
             decision['native_real_returns_next'] = converted['native_returns']
+        if converted.get('pairing_receipt'):
+            state['pairing_receipt'] = converted['pairing_receipt']
+            decision['pairing_receipt_next'] = converted['pairing_receipt']
         stops = []
         if state["consecutive_rejects"] >= int(reg["stop"].get("consecutive_wm_rejects", 2)):
             stops.append(f"{state['consecutive_rejects']} consecutive WM rejections")

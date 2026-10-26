@@ -1,0 +1,15 @@
+# S-LOOPRESUME: authorized cycle-0 -> 1 paired-advantage boundary.
+extends = "c4_policy14_paircrit.toml"
+
+[paircrit]
+enabled = true
+warmup_updates = 100
+
+[longcritic]
+enabled = false
+
+[real_share]
+enabled = false
+
+[breakdown]
+enabled = false

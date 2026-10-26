@@ -349,7 +349,8 @@ class TeamCritic(nn.Module):
         nonempty = mask.any(1)
         if self.entry_backlog:
             nonempty = nonempty | (backlog > 0).any(-1)
-        return torch.where(nonempty, value, torch.zeros_like(value))
+        return torch.where(nonempty if value.ndim == 1 else nonempty[:, None],
+                           value, torch.zeros_like(value))
 
 
 CHECKPOINT_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", "c4_dreamer/3")
@@ -480,7 +481,8 @@ class PolicyExecutor:
             if self.hold:
                 accel = torch.zeros_like(state["s_m"])
             else:
-                signal = self.group_encoder(obs, state["s_m"], build_rsu_field(state))
+                signal = (self.group_encoder(obs, state) if getattr(self.group_encoder, 'requires_state', False)
+                          else self.group_encoder(obs, state["s_m"], build_rsu_field(state)))
                 noise = None if self.noise_fn is None else self.noise_fn(tuple(obs.cav_mask.shape))
                 kwargs = {} if noise is None else {"noise": noise}
                 if with_lanes and self.has_lane_head:
@@ -551,6 +553,11 @@ def load_policy_components(path, *, device: str = "cpu"):
         policy.wm_controller_kwargs = dict(payload["wm_controller_kwargs"])
     if residual:
         policy.native_reference = dict(payload.get("counterfactual", {}))
+    if 'breakdown' in payload:
+        from .paircrit import RiskGroupSignal
+        from .breakdown import BreakdownHead
+        risk = BreakdownHead().eval().requires_grad_(False)
+        encoder = RiskGroupSignal(encoder, risk)
     group = {k[len("encoder."):] if k.startswith("encoder.") else k: v
              for k, v in payload["group_encoder"].items()}
     encoder.load_state_dict(group)
@@ -566,10 +573,16 @@ def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
     -> (accel, lane targets)).  ``exe.policy`` / ``exe.group_encoder`` expose the networks."""
     import os
 
-    policy, encoder, rules, _ = load_policy_components(path, device=device)
+    policy, encoder, rules, payload = load_policy_components(path, device=device)
     if policy.residual_on_native:
         from .nativeinit import verify_collection_gate
-        verify_collection_gate({"checkpoint": str(path)})
+        gate_policy = {"checkpoint": str(path)}
+        if 'breakdown' in payload:
+            gate_policy['breakdown_required'] = True
+        receipt = verify_collection_gate(gate_policy)
+        if 'breakdown' in payload and (receipt.get('breakdown', {}).get('rule_sha256')
+                                      != payload['breakdown']['rule_sha256']):
+            raise ValueError('risk checkpoint/gate provenance mismatch')
     # Dreamer-loop data collection (exploration): C4_POLICY_STOCHASTIC=1 samples from the policy instead of
     # its mean; C4_POLICY_ACCEL_NOISE=<sigma> adds extra Gaussian accel noise (m/s^2). Deployment default: off.
     if os.environ.get("C4_POLICY_STOCHASTIC") == "1":

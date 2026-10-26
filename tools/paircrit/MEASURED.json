@@ -1,0 +1,194 @@
+{
+  "schema": "paircrit_measurement/1",
+  "new_sumo_sim_s": 0,
+  "device": "cpu",
+  "threads": 4,
+  "source_sha256s": {
+    "src/wms/control/paircrit.py": "b6500dcf6b60656e958d9647caa4bc270dc7b9affb1bc834633d120727a5f964",
+    "src/wms/control/breakdown.py": "695f7f52e3a8fd9bfd97dd82900af2a4fda1cec0fec3bc93559b1ef97ff67f6a",
+    "tools/paircrit/measure.py": "093a30463ddff6540621e6934ff63e264afa5bf901374aef1f3e566ea864c54e",
+    "PAIRING.json": "5ed63b880ddb45213e15d3ba884fe334881d9341f605d4655670dead4310f2dd",
+    "policy_returns.npz": "6756b3cb8a5295e8385cec3fbca9f4b5c2e64924c8074673e2b54f7e86f82cfa",
+    "native_returns.npz": "60369a85ed48b6e52076d7d501cab54d76958843bc82a8987c9572868e95e210"
+  },
+  "rule": {
+    "schema": "paircrit_breakdown_rule/1",
+    "method": "native_log1p_speed_otsu",
+    "definition": "first entry into native lower-speed Otsu class; operational congestion proxy",
+    "source_sha256": "9a5cdd1bf874fc9270f79570a6ef1bdc9cefa26cc6b3297f8c6654b42ef3feba",
+    "boundary_mps": 5.590301496934885,
+    "between_class_variance": 0.19835897938338853,
+    "n": 11953,
+    "lower_class_fraction": 0.5355977578850498,
+    "physical_bistability_identified": false,
+    "gaussian_identification_refused": "native data do not identify two ordered speed regimes"
+  },
+  "rule_sha256": "8d44ea587c7e3685533df77637f6eb4752eb5fdd3a48868d008fd7b9b58391e8",
+  "policy_sha256": "fa2427772a49e9462c0be3172e402c515616a15e2930a263e1eafeacb23a0d5d",
+  "fit_worlds": [
+    968129,
+    968130,
+    968131,
+    968132,
+    968133,
+    968134,
+    968136,
+    968139,
+    968140,
+    968141
+  ],
+  "calibration_worlds": [
+    968135
+  ],
+  "test_worlds": [
+    968137,
+    968138
+  ],
+  "critic_development_worlds": [
+    968135,
+    968137,
+    968138
+  ],
+  "critic_updates": 200,
+  "risk_updates": 400,
+  "old_absolute_all": {
+    "n": 26,
+    "rmse": 16614.88859691089,
+    "r2": 0.1921218086389792,
+    "spearman": 0.859145299145299,
+    "sign_accuracy": 1.0,
+    "bias": 2533.768505257939,
+    "prediction_sd": 2497.994555509168,
+    "actual_sd": 18485.214371242502
+  },
+  "old_absolute_development": {
+    "n": 6,
+    "rmse": 11398.898782772738,
+    "r2": 0.21053654489167994,
+    "spearman": 0.6,
+    "sign_accuracy": 1.0,
+    "bias": -1168.2902350424895,
+    "prediction_sd": 2430.1014106705757,
+    "actual_sd": 12829.120426009129
+  },
+  "matched_absolute_development": {
+    "n": 6,
+    "rmse": 6516.978896877386,
+    "r2": 0.7419529695522034,
+    "spearman": 0.6,
+    "sign_accuracy": 1.0,
+    "bias": 1100.139126936677,
+    "prediction_sd": 14675.083843128526,
+    "actual_sd": 12829.120426009129
+  },
+  "paired_development": {
+    "n": 6,
+    "rmse": 5516.852385881178,
+    "r2": 0.41639668872063795,
+    "spearman": 0.7714285714285715,
+    "sign_accuracy": 1.0,
+    "bias": 2501.875202328709,
+    "prediction_sd": 3860.0396237511195,
+    "actual_sd": 7221.584379213301
+  },
+  "zero_advantage_development": {
+    "n": 6,
+    "rmse": 23558.345584849576,
+    "r2": -9.642032882544784,
+    "spearman": null,
+    "sign_accuracy": 0.0,
+    "bias": -22424.191529442123,
+    "prediction_sd": 0.0,
+    "actual_sd": 7221.584379213301
+  },
+  "zero_advantage_all": {
+    "n": 26,
+    "rmse": 25514.45464520251,
+    "r2": -6.729274898906143,
+    "spearman": null,
+    "sign_accuracy": 0.0,
+    "bias": -23806.80135728773,
+    "prediction_sd": 0.0,
+    "actual_sd": 9177.341934173483
+  },
+  "initially_low_starts": [
+    15,
+    15
+  ],
+  "risk_test": {
+    "native_60": {
+      "brier": 0.24515119194984436,
+      "n": 2,
+      "uncalibrated_brier": 0.053971145302057266
+    },
+    "native_120": {
+      "brier": 0.0,
+      "n": 2,
+      "uncalibrated_brier": 0.007664958946406841
+    },
+    "native_300": {
+      "brier": 0.0,
+      "n": 2,
+      "uncalibrated_brier": 0.0009049118380062282
+    },
+    "policy_60": {
+      "brier": 0.24629122018814087,
+      "n": 2,
+      "uncalibrated_brier": 0.0912875309586525
+    },
+    "policy_120": {
+      "brier": 0.0,
+      "n": 2,
+      "uncalibrated_brier": 0.00514169642701745
+    },
+    "policy_300": {
+      "brier": 0.0,
+      "n": 2,
+      "uncalibrated_brier": 0.0013154803309589624
+    }
+  },
+  "event_difference_test": {
+    "60": {
+      "n": 2,
+      "rmse": 0.0012355808897835054,
+      "r2": null,
+      "spearman": null,
+      "sign_accuracy": 0.0,
+      "bias": -0.0011530518531799316,
+      "prediction_sd": 0.00044399499893188477,
+      "actual_sd": 0.0
+    },
+    "120": {
+      "n": 2,
+      "rmse": 0.0,
+      "r2": null,
+      "spearman": null,
+      "sign_accuracy": 1.0,
+      "bias": 0.0,
+      "prediction_sd": 0.0,
+      "actual_sd": 0.0
+    },
+    "300": {
+      "n": 2,
+      "rmse": 0.0,
+      "r2": null,
+      "spearman": null,
+      "sign_accuracy": 1.0,
+      "bias": 0.0,
+      "prediction_sd": 0.0,
+      "actual_sd": 0.0
+    }
+  },
+  "probability_difference_identified": false,
+  "calibration_qualification": {
+    "qualified": false,
+    "reason": "fewer than three independent scoring worlds per output",
+    "n_worlds": 2
+  },
+  "note": "single deterministic future per state; observed event-difference skill is not conditional probability-difference skill",
+  "wm_event_weights": [
+    0.0,
+    0.0,
+    0.0
+  ]
+}

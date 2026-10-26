@@ -110,6 +110,14 @@ def _world(loop, cfg, state, ph, root, item, box, attempt):
             "hashes_sha256": _hash(dst / "HASHES.json")}
 
 
+def smoke_stops(cfg, cycle, result):
+    """Prospective collection decision; never relabel an inconclusive CI PASS."""
+    effective = cfg.get('collect', {}).get('native_smoke_harmful_only_from_cycle')
+    if effective is not None and cycle >= int(effective):
+        return result['verdict'] == 'harmful'
+    return not result['passed']
+
+
 def collect(loop, cfg, state, ph, root):
     """Durable per-world journal. retry collect retains successes and replays lost worlds.
 
@@ -176,7 +184,7 @@ def collect(loop, cfg, state, ph, root):
     smoke_seeds = {c["seed"] for c in doc["cases"][:4]}
     batches = ([p for p in pending if p[0]["seed"] in smoke_seeds],
                [p for p in pending if p[0]["seed"] not in smoke_seeds]) if native_init else (pending,)
-    if native_init and doc.get("native_smoke", {}).get("passed") is False:
+    if native_init and doc.get("native_smoke") and smoke_stops(cfg, k, doc['native_smoke']):
         raise loop.Refused("registered native smoke failed; scientific stop, no collection retry")
     for batch_index, batch in enumerate(batches):
         charge = per_world * len(batch)
@@ -225,7 +233,13 @@ def collect(loop, cfg, state, ph, root):
             doc["native_smoke"] = smoke_guard([
                 artifact_world_delta(w["artifact"], int(cfg["collect"]["branch_points"])) for w in smoke])
             loop.write_atomic(journal, doc)
-            if not doc["native_smoke"]["passed"]:
+            if not smoke_stops(cfg, k, doc['native_smoke']):
+                doc['native_smoke_collection'] = {
+                    'continues': True, 'cycle': k,
+                    'rule': ('harmful_only' if cfg['collect'].get('native_smoke_harmful_only_from_cycle') is not None
+                             and k >= cfg['collect']['native_smoke_harmful_only_from_cycle'] else 'upper_ci_nonpositive')}
+                loop.write_atomic(journal, doc)
+            if smoke_stops(cfg, k, doc['native_smoke']):
                 state["stopped"] = "native smoke " + doc["native_smoke"]["verdict"]
                 loop.save_state(cfg, state)
                 raise loop.Refused(state["stopped"])
@@ -282,13 +296,20 @@ def convert(loop, cfg, state, ph, root):
            "episodes": len(episodes), "pair_groups": len({e["pair_key"] for e in episodes}),
            "targets": loop.read_json(returns.with_suffix(".receipt.json"))["targets"],
            "durable_world_artifacts": [w["artifact"] for w in worlds]}
-    if cfg['policy'].get('longcritic'):
+    if cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit'):
         native = root/'returns'/f'native_returns_{tag}.npz'
         native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', str(target),
                       '--output', str(native), '--kind', 'B']
         if loop.run_cmd(h, native_cmd, env=env, log=log, timeout_s=3600):
             raise RuntimeError('merged native B real-return export failed')
         out.update(native_returns=str(native), native_returns_sha256=loop.sha256(native))
+        if cfg['policy'].get('paircrit'):
+            pairing = root/'returns'/f'pairing_{tag}.json'
+            pair_cmd = [h['python'], '-m', 'wms.control.paircrit_export', '--source', str(target),
+                '--policy-returns', str(returns), '--native-returns', str(native), '--output', str(pairing)]
+            if loop.run_cmd(h, pair_cmd, env=env, log=log, timeout_s=3600):
+                raise RuntimeError('paired common-start receipt export failed')
+            out.update(pairing_receipt=str(pairing), pairing_receipt_sha256=loop.sha256(pairing))
     if cfg["collect"].get("sumocredit") or loop.long_group_sim_s(cfg):
         local = copy.deepcopy(cfg)
         local["hosts"]["cpu"] = local["hosts"]["gpu"]
@@ -300,6 +321,12 @@ def overlap(loop, cfg, state, root):
     """Runs in an owned thread, never writes shared LOOP14_STATE. One-cycle stale inputs are explicit."""
     snapshot = copy.deepcopy(state)
     k = state["cycles"][-1]["cycle"] + 1
+    if cfg['policy'].get('paircrit'):
+        converted = state['cycles'][-1]['phases']['convert'].get('receipt', {})
+        if not all(converted.get(key) for key in ('returns', 'native_returns', 'pairing_receipt')):
+            raise loop.Refused('paired overlap must wait for completed current-policy conversion')
+        snapshot.update(real_returns=converted['returns'], native_real_returns=converted['native_returns'],
+                        pairing_receipt=converted['pairing_receipt'])
     snapshot["cycles"] = [loop.new_cycle(k)]
     snapshot["policy_wm"] = copy.deepcopy(snapshot["accepted_wm"])
     dependencies = {"wm": snapshot["accepted_wm"], "resume_policy": snapshot["policy"],
@@ -309,6 +336,12 @@ def overlap(loop, cfg, state, root):
                     "returns_lag": "latest completed cycle at launch; current collection unavailable"}
     if cfg.get('resumeprep', {}).get('enabled'):
         dependencies['returns_lag'] = 'completed conversion at launch; accepted WM frozen independently'
+    if cfg['policy'].get('paircrit'):
+        dependencies.update(native_real_returns=snapshot['native_real_returns'],
+            native_real_returns_sha256=loop.sha256(snapshot['native_real_returns']),
+            pairing_receipt=snapshot['pairing_receipt'],
+            pairing_receipt_sha256=loop.sha256(snapshot['pairing_receipt']),
+            returns_lag='same completed current-policy CRN cohort for both arms')
     credit = snapshot.get("real_credit")
     if credit:
         dependencies["real_credit_sha256"] = loop.sha256(credit)
@@ -346,6 +379,10 @@ def promote(loop, cfg, state, root):
     wm = doc["dependencies"]["wm"]
     if loop.sha256(wm["checkpoint"]) != wm["sha256"]:
         raise loop.Refused("overlap WM hash changed")
+    if cfg['policy'].get('paircrit'):
+        for key in ('real_returns', 'native_real_returns', 'pairing_receipt'):
+            if loop.sha256(doc['dependencies'][key]) != doc['dependencies'][key + '_sha256']:
+                raise loop.Refused('paired overlap dependency hash changed')
     state["policy"] = doc["policy"]
     state["policy_wm"] = wm
     state["cycles"][-1]["phases"]["policy"].update(status="done", attempt=1,
@@ -375,7 +412,9 @@ def drive(loop, waiter, cfg, arm_dir):
             phase = loop._phase(state)["name"]
             if phase == "policy":
                 waiter.prepare_horizon(cfg, state, arm_dir)
-            if phase in ("collect", "convert") and future is None:
+            overlap_ready = (phase == 'wm_ft' if cfg['policy'].get('paircrit')
+                             else phase in ('collect', 'convert'))
+            if overlap_ready and future is None:
                 reg = loop.check_registration(cfg)
                 target = root / f"overlap_c{k+1:02d}.json"
                 if k + 1 < reg["budget"]["max_cycles"] and not target.exists():
@@ -389,7 +428,8 @@ def drive(loop, waiter, cfg, arm_dir):
                         shutil.copy2(args[i], dst)
                         args[i] = str(dst)
                     future = pool.submit(overlap, loop, frozen, state, root)
-            if phase == "wm_ft" and future is not None:
+            join_phase = 'check' if cfg['policy'].get('paircrit') else 'wm_ft'
+            if phase == join_phase and future is not None:
                 future.result()  # failure closes the driver before WM training
                 future = None
             code = loop.run_phase(cfg, phase)

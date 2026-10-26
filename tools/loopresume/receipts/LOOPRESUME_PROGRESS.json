@@ -1,0 +1,36 @@
+{
+ "t": "2026-10-26T18:23:01.080513+00:00",
+ "status": "WM_RUNNING_CYCLE1_BLOCKED",
+ "charged": 102607,
+ "new_sim_s": 0,
+ "cycle1_launched": false,
+ "collectors_started": false,
+ "wm_coordinator": {
+  "pid": 62645,
+  "start_ticks": "841871931",
+  "t": "2026-10-26T18:15:05Z",
+  "task": "S-LOOPRESUME independent cycle0 WM/check only",
+  "script_sha256": "32fd991c8659c691e8f935610498565c6f9678dfd23cb6a65820a5a425c11d66"
+ },
+ "wm_coordinator_live": true,
+ "wm_rows": 1,
+ "wm_last": {
+  "step": 1,
+  "loss": 181.57534959425328,
+  "finite": true,
+  "grad_norm": 81.53729248046875,
+  "seconds": 242.6231820061803,
+  "cuda_peak_mb": 1888.70654296875
+ },
+ "accepted_wm": {
+  "checkpoint": "/root/autodl-tmp/c4/restart20261026_inputs/core/main14_loop/mainr16_base/wm_s_best.pt",
+  "config": "/root/autodl-tmp/c4/restart20261026_inputs/core/main14_loop/mainr16_base/config.resolved.json",
+  "sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+  "source": "S-MAINR16 owner-selected round16 FINAL, cpuQ provenance copy"
+ },
+ "overlap_configured": true,
+ "paircrit_configured": true,
+ "updates_configured": 150,
+ "amendment_sha256": "049abecbf6063ad5ecef2dcc4d95eaa60d91c11e51b41c5771ae3a9f2ca43403",
+ "shared_state_unchanged_during_independent_wm": true
+}

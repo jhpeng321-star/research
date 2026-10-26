@@ -173,6 +173,8 @@ def _drive(loop, waiter, cfg, arm):
                 waiter.prepare_horizon(cfg, state, arm)
             if (loop.fast_enabled(cfg, 'overlap_policy') and name == 'wm_ft' and future is None
                     and k + 1 < loop.check_registration(cfg)['budget']['max_cycles']
+                    and state['sim_s_charged'] + loop.collect_sim_s(cfg)
+                        <= loop.check_registration(cfg)['budget']['sim_s_total']
                     and not (root / f'overlap_c{k+1:02d}.json').exists()):
                 waiter.prepare_horizon(cfg, state, arm)
                 frozen = copy.deepcopy(cfg)

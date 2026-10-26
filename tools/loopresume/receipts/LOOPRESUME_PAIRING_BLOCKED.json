@@ -1,0 +1,30 @@
+{
+ "t": "2026-10-26T18:14:28Z",
+ "status": "OPERATIONAL_PAUSED_NO_PAIRED_FITTING_WORLDS",
+ "partition_rule": "sha256(965140:world_seed) % 5 == 0 -> development",
+ "partition_remainders": {
+  "968144": 0,
+  "968145": 0,
+  "968146": 0,
+  "968147": 0
+ },
+ "fit_worlds": 0,
+ "development_worlds": 4,
+ "real_pairs": 8,
+ "charged": 102607,
+ "converted_outputs": {
+  "pairs": "/root/autodl-tmp/c4/restart20261026/arm/loop/data/pairs_c00.a1",
+  "returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c00.a1.npz",
+  "native_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/native_returns_c00.a1.npz",
+  "targets": 8,
+  "episodes": 16,
+  "pair_groups": 8,
+  "pairing_not_fit_eligible": true,
+  "pairing_proof": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/pairing_c00.a1.json"
+ },
+ "scientific_threshold_or_partition_changed": false,
+ "export_retries_exhausted": 3,
+ "cycle1_launched": false,
+ "next_action_requires_owner": "authorize a prospective fitting-data/partition amendment; current development worlds remain excluded",
+ "independent_wm_authority": "TASK S-LOOPRESUME: fine-tune on four completed worlds, core frozen, same acceptance"
+}

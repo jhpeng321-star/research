@@ -1,0 +1,76 @@
+{
+  "schema": "loopresume_amendment/1",
+  "id": "S-LOOPRESUME",
+  "authority": "main decision 2026-10-27 ~02:00 UTC+8; act-on-recommendation",
+  "applies_to_both_arms": true,
+  "cycle0": {
+    "collection_closed_as_is": true,
+    "policy_sha256": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5",
+    "collected_worlds": [968144, 968145, 968146, 968147],
+    "reserved_unconsumed_worlds": [968148, 968149, 968150, 968151, 968152, 968153, 968154, 968155, 968156],
+    "guard_verdict_retained": "inconclusive",
+    "guard_mean": -1246.9319569678055,
+    "guard_ci95": [-2405.943180897364, 126.65765418071294],
+    "wm_ft": "four completed worlds only; core frozen; 40 steps; unchanged acceptance"
+  },
+  "future_guard": {
+    "effective_from_cycle": 1,
+    "worlds": 4,
+    "stops_only_if": "harmful: policy-minus-native J CI lower bound > 0",
+    "inconclusive_continues": true,
+    "margin": 0,
+    "bootstrap_draws": 5000,
+    "bootstrap_seed": 20261026,
+    "ci": 0.95,
+    "unit": "whole world, sum of both paired 300s starts"
+  },
+  "policy": {
+    "cycle1_new_updates": 150,
+    "measure_every": 10,
+    "selection": "earliest minimum eligible measured native-relative frozen16-panel J, every start <= native",
+    "panel_clock_s": 10,
+    "phase_relative_update10_progress_gate": true,
+    "later_updates": "selected new update count on the 10-update grid, minimum10, maximum150",
+    "native_relative_gate": "unchanged checkpoint/WM/config SHA-bound veto before adoption and collection",
+    "native_init": true,
+    "mappo_initialization": false,
+    "horizon_ceiling_s": 60
+  },
+  "paircrit": {
+    "enabled_from_cycle": 1,
+    "source": "c4/paircrit f8374e1fbc6c1c1b58cb5d7faae09b2db81ace8b",
+    "warmup_updates": 100,
+    "longcritic": false,
+    "absolute_real_share_selection": false,
+    "requires": "current accepted-policy 300s POLICY/B common-start exports and SHA-bound pairing proof; development worlds excluded from fitting/imagination",
+    "monitor": "fit/development paired RMSE before/after warmup and on next real cohort; zero-difference baseline; native-relative gate; revert next boundary if accuracy worsens",
+    "wm_assistance": "measured R16 60s reliability only; 120/300s zero",
+    "breakdown": false,
+    "conformal_ranges": false
+  },
+  "confidence_gate": {
+    "e3_belief_open": "324/324",
+    "e3_oracle_open": "324/324",
+    "recalibration": "existing conversion/table fitting on each cycle's real pairs; report sample counts/Brier/open blocks",
+    "different_gate_rule_enabled": false,
+    "gated_collection": false
+  },
+  "evidence": {
+    "E3": "12 paired worlds; warmup300/intervention160; ours-native +38[-132,+291], ours-MAPPO +19[-176,+143] veh-s; share5/10/20/40% -95/+55/+7/+187; zero collisions; inconclusive",
+    "E4": "H60 ALL savings native +24[2.3,50.4], MAPPO +15.7[2.0,33.5] veh-s; cooperation contrast +2.0[-0.16,6.1] inconclusive"
+  },
+  "execution": {
+    "main_host": "gpuA",
+    "collectors": ["cpuP", "cpuQ"],
+    "overlap_policy": true,
+    "charged_before": 102607,
+    "charged_sim_s_cap": 210000,
+    "primary_sim_s_per_cycle": 36933,
+    "combined_long_attempt_cap": 8000,
+    "operational_retries_per_error": 3,
+    "readiness": "integrated offline tests and original completed end-to-end mechanics MINI_PASS; no additional SUMO smoke allocated",
+    "scientific_wait_owner": ["native identity", "native-relative gate", "harmful guard"],
+    "budget_or_resource_exhaustion": "operational pause",
+    "twin_mirroring": "twin reads this artifact itself; no direct contact"
+  }
+}
