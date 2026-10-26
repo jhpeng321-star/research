@@ -592,6 +592,11 @@ def run_collect(cfg, state, ph, root, *, _seeds=None) -> dict:
     for name, src in (("policy.pt", pol["checkpoint"]), ("wm/wm_s.pt", acc["checkpoint"])):
         sync(cfg, "gpu", src, "cpu", f"{inputs}/{name}", log)
         staged[name] = f"{inputs}/{name}"
+    if cfg['policy'].get('native_init'):
+        # The native-aware collector loader independently validates this exact
+        # receipt beside policy.pt. Policy/WM bytes alone are not deployable.
+        gate = Path(pol['checkpoint']).with_name('native_gate_result.json')
+        sync(cfg, 'gpu', str(gate), 'cpu', f'{inputs}/native_gate_result.json', log)
     for sidecar in ("physics.json", "TRAIN_RECEIPT.json", "lane_calib.json"):
         src = Path(acc["checkpoint"]).with_name(sidecar)
         if src.is_file():

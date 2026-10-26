@@ -19,18 +19,19 @@ def main():
     p.add_argument('--source-runtime',default='/root/autodl-tmp/c4/v5/mainstart/mainr16/restart/runtime')
     p.add_argument('--release',default='/root/resumeprep_release')
     p.add_argument('--resume-baseline', action='store_true')
+    p.add_argument('--update-overlays', action='store_true')
     a=p.parse_args()
     for x in (a.source_runtime,a.release):
         checked(x)
     # Existing own probe directory already verified. The helper itself is small;
     # baseline archive creation/extraction both run on the box.
-    if not a.resume_baseline:
+    if not (a.resume_baseline or a.update_overlays):
         subprocess.run(['scp',str(Path(__file__).with_name('boxstage.py')),a.source_host+':/root/resumeprep_probe/boxstage.py'],check=True)
     runtime=a.release+'/runtime'
     cmd=['/root/miniconda3/bin/python','/root/resumeprep_probe/boxstage.py','--source-host','local',
          '--source-root',a.source_runtime,'--dest-host',('local' if a.host==a.source_host else a.host),'--dest-root',runtime,
          'src','traffic_shepherd','configs','scripts','tools','tests']
-    if not a.resume_baseline:
+    if not (a.resume_baseline or a.update_overlays):
         subprocess.run(['ssh',a.source_host,shlex.join(cmd)],check=True)
     names=subprocess.check_output(['git','diff','--name-only','--diff-filter=ACMRT',BASE,'HEAD'],text=True).splitlines()
     # One bounded source-only overlay stream avoids one fragile SSH session/file.

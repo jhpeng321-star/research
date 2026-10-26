@@ -27,9 +27,16 @@ def main():
     manifest = {}
     for name in ('v5_native_q', 'genrand_plain_q'):
         root = DATA/name
-        for base, dirs, files in os.walk(root, followlinks=False):
+        for base, dirs, files in os.walk(root, followlinks=True):
             dirs[:] = [d for d in dirs if not any(b in d.lower() for b in BAD)]
+            for directory in dirs:
+                resolved = (Path(base)/directory).resolve(strict=True)
+                safe(resolved)
+                if not resolved.is_relative_to(DATA):
+                    raise ValueError('q-view directory escapes TRAIN data root')
             for name in files:
+                if any(b in name.lower() for b in BAD):
+                    continue
                 p = Path(base)/name
                 safe(p)
                 target = p.resolve(strict=True)
@@ -42,25 +49,42 @@ def main():
                         h.update(block)
                 manifest[str(p.relative_to(DATA))] = {
                     'sha256': h.hexdigest(), 'target': str(target.relative_to(DATA)), 'size': target.stat().st_size}
+    if not manifest:
+        raise ValueError('empty q-view manifest')
     script = '''import pathlib,json,sys,hashlib
-root=pathlib.Path(sys.argv[1]); root.mkdir(parents=True,exist_ok=False)
+root=pathlib.Path(sys.argv[1]); root.mkdir(parents=True,exist_ok=True)
 data=pathlib.Path('/root/autodl-tmp/c4/v5/data'); manifest=json.load(sys.stdin); missing=[]; verified={}
 bad=('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vtype')
+mp=root/'QVIEW_MANIFEST.json'
+if mp.exists() and json.loads(mp.read_text())!=manifest: raise ValueError('source manifest changed on retry')
+mp.write_text(json.dumps(manifest,sort_keys=True))
+def digest(path):
+ resolved=path.resolve(strict=True)
+ if not resolved.is_relative_to(data) and not resolved.is_relative_to(root): raise ValueError('q target escape')
+ if any(b in str(resolved).lower() for b in bad): raise ValueError('restricted q target')
+ if resolved not in verified:
+  h=hashlib.sha256()
+  with resolved.open('rb') as stream:
+   for block in iter(lambda:stream.read(1<<20),b''): h.update(block)
+  verified[resolved]=h.hexdigest()
+ return verified[resolved]
 for name,row in manifest.items():
  if any(b in (name+'/'+row['target']).lower() for b in bad): raise ValueError('restricted path')
  dst=root/name; candidate=data/row['target']; dst.parent.mkdir(parents=True,exist_ok=True)
+ if dst.is_file():
+  if digest(dst)!=row['sha256']: raise ValueError('partial q destination SHA mismatch: '+name)
+  continue
+ if not candidate.is_file():
+  parts=pathlib.PurePosixPath(row['target']).parts
+  if parts[0] in ('v5_native_q','genrand_plain_q'):
+   alternative=data/parts[0][:-2]/pathlib.PurePosixPath(*parts[1:])
+   if alternative.is_file() and digest(alternative)==row['sha256']: candidate=alternative
  if candidate.is_file():
   resolved=candidate.resolve(strict=True)
   if not resolved.is_relative_to(data) or any(b in str(resolved).lower() for b in bad): raise ValueError('q target escape')
-  if resolved not in verified:
-   h=hashlib.sha256()
-   with resolved.open('rb') as stream:
-    for block in iter(lambda:stream.read(1<<20),b''): h.update(block)
-   verified[resolved]=h.hexdigest()
-  if verified[resolved]!=row['sha256']: raise ValueError('existing-array SHA mismatch: '+name)
+  if digest(resolved)!=row['sha256']: raise ValueError('existing-array SHA mismatch: '+name)
   dst.symlink_to(resolved)
  else: missing.append(name)
-(root/'QVIEW_MANIFEST.json').write_text(json.dumps(manifest,sort_keys=True))
 print(json.dumps({'missing':missing,'verified_links':len(manifest)-len(missing),'missing_bytes':sum(manifest[n]['size'] for n in missing)}))
 '''
     result = subprocess.run(['ssh', 'gpuA', shlex.join(['/root/miniconda3/bin/python', '-c', script, dest])],

@@ -90,3 +90,29 @@ def test_residual_persistent_exploration_keeps_exact_zero_init():
     assert not torch.equal(p(obs, signal, noise=a)[0], p(obs, signal, noise=b)[0])
     assert torch.equal(p(obs, signal, noise=a, deterministic=True)[0],
                        p(obs, signal, noise=b, deterministic=True)[0])
+
+
+def test_revised_authority_three_retries_and_no_scientific_retry(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location('resume_fixture', ROOT/'tests/unit/test_resumeprep.py')
+    fixture = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fixture)
+    import loop14_resume as resume
+    cfg = fixture.config(tmp_path)
+    cfg['resumeprep']['operational_retries_per_error'] = 3
+    calls = []
+    def policy(*args):
+        calls.append(1)
+        if len(calls) <= 3:
+            raise OSError('temporary connection failure')
+        return {'ok': True}
+    monkeypatch.setitem(loop.RUNNERS, 'policy', policy)
+    assert resume.phase(loop, cfg, 'policy', tmp_path) == 0
+    assert len(calls) == 4
+    journal = loop.read_json(tmp_path/'OPERATIONAL_RETRIES.json')
+    assert len(next(iter(journal['errors'].values()))) == 3
+    def collect(*args):
+        raise RuntimeError('update-zero native identity failed')
+    monkeypatch.setitem(loop.RUNNERS, 'collect', collect)
+    with pytest.raises(loop.Refused, match='scientific refusal'):
+        resume.phase(loop, cfg, 'collect', tmp_path)
+    assert loop.load_state(cfg)['cycles'][0]['phases']['collect']['attempt'] == 1

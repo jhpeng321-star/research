@@ -42,6 +42,7 @@ def prepare():
     cfg['collect'].update(work_root=CPU_ROOT+'/work', long_group={'enabled': True},
                           long_single_hold={'enabled': True})
     cfg['wm']['env']['OPENBLAS_NUM_THREADS'] = '4'
+    cfg['resumeprep']['operational_retries_per_error'] = 3
     reg = loop.read_json(cfg['registration'])
     reg['budget'].update(policy_updates_per_cycle=30, sim_s_per_cycle=36933,
                          sim_s_total=210000, gpu_h_wm_per_cycle=4.5, wm_steps_per_cycle=40)
@@ -65,7 +66,7 @@ def prepare():
         'long_combined_attempt_cap_sim_s': 8000, 'overlap_policy': True,
         'wm_timeout_h': 4.5, 'wm_max_hours': 4.5,
         'smoke': 'S-C0DIAG-SMOKE-1', 'smoke_seeds': [968142, 968143], 'smoke_sim_s': 1922,
-        'operational_retry': 'one per renewed continuation; source overlay SSH recovery already consumed',
+        'operational_retry': 'owner continuation3: three fixes/retries per NON-scientific error; scientific failure or E below300MB stops',
     }
     loop.write_atomic(Path(cfg['registration']), reg)
     state.update(real_returns=p['initial_real_returns'], native_real_returns=p['initial_native_returns'],
@@ -79,8 +80,9 @@ def prepare():
         raise loop.Refused('restart horizon receipt WM mismatch')
     loop.write_atomic(ARM/'horizon_gate_current.json', horizon)
     loop.write_atomic(ARM/f'horizon_{control.BASE_SHA}.json', horizon)
-    # Carry setup's already-consumed operational retry into the runtime guard.
-    shutil.copy2(RELEASE/'OPERATIONAL_RETRY.json', ARM/'OPERATIONAL_RETRY.json')
+    # Prior continuation receipts remain history, not an active retry veto after
+    # the owner's explicit expanded continuation3 authority.
+    shutil.copy2(RELEASE/'OPERATIONAL_RETRY.json', ARM/'LEGACY_OPERATIONAL_RETRY.json')
     if loop.collect_sim_s(cfg) != 36933:
         raise loop.Refused('restart primary sim-s mismatch')
     loop.load_config(ARM/'CONFIG.json')

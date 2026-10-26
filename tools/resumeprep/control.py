@@ -166,8 +166,14 @@ def mini(cfg, arm, policy_only=False):
         raise loop.Refused('mini config changed')
     # Gate rejection in this phase happens before any seed reservation/charge.
     mini_state = loop.load_state(one)
-    if mini_state['cycles'][0]['phases']['policy']['status'] != 'done' and loop.run_phase(one,'policy') != 0:
-        raise loop.Refused('mini policy gate failed; no SUMO authorized')
+    if mini_state['cycles'][0]['phases']['policy']['status'] != 'done':
+        if cfg.get('resumeprep', {}).get('operational_retries_per_error') == 3:
+            import loop14_resume
+            code = loop14_resume.phase(loop, one, 'policy', root)
+        else:
+            code = loop.run_phase(one, 'policy')
+        if code != 0:
+            raise loop.Refused('mini policy gate failed; no SUMO authorized')
     # Atomic parent-state/ledger operations under the same driver lock used by launch.
     state = loop.load_state(cfg)
     rows = [json.loads(x) for x in (Path(cfg['loop_root'])/'seed_ledger.jsonl').read_text().splitlines()]
@@ -284,7 +290,9 @@ def main():
             try:
                 waiter.drive(cfg,a.arm)
             except Exception as error:
-                loop.write_atomic(a.arm/'WAIT_OWNER.json',{'t':loop.now(),'error':str(error)})
+                import loop14_resume
+                name = 'OPERATIONAL_PAUSED.json' if isinstance(error, loop14_resume.OperationalPaused) else 'WAIT_OWNER.json'
+                loop.write_atomic(a.arm/name,{'t':loop.now(),'error':str(error)})
                 raise
 
 
