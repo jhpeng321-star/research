@@ -146,7 +146,7 @@ cal=build_source({(E3).as_posix()!r},'calibration'); val=build_source({(E3).as_p
 assert len(cal.groups)==36 and len(val.groups)==36
 # (5) e3 evaluator plumbing smoke on WM2 (CPU, one group, 20 steps)
 from tools.r10_attribution import load_model
-cfg2,settings,model=load_model(str(rt/'configs/c4_wm_loop14_r16_ft.toml'),str(p/'wm2/wm_s.pt'),
+cfg2,settings,model,_rep=load_model(str(rt/'configs/c4_wm_loop14_r16_ft.toml'),str(p/'wm2/wm_s.pt'),
  ('data.entries_v2=true','loss.paired_diff.couple_randomness=true'))
 import torch
 doc=__import__('e3_score').evaluate(model,settings,{(E3).as_posix()!r},'calibration',
