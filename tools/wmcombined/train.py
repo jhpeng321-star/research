@@ -120,7 +120,7 @@ def train(variant, dry_run=False):
         assert not rep['shape_mismatch'] and not rep['expanded'], rep['shape_mismatch'][:3]
         missing = [k for k in payload['model'] if k not in own]
         assert not missing, missing[:3]
-        delta = max(float((own[k].float()-v.float()).abs().max())
+        delta = max(float((own[k].float()-v.to(own[k].device).float()).abs().max())
                     for k, v in payload['model'].items())
         assert delta == 0.0, f'init_from is not exactly WM2 (max |delta| {delta})'
         write(('dryrun' if dry_run else variant)+'/INIT_PROOF.json',
