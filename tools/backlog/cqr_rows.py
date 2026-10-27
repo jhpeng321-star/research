@@ -12,6 +12,10 @@ reconciled to the authoritative ledger.
          each arm uses its own checkpoint (sha bound by the E3 provenance).  Rows carry the
          registered E3 role ('calibration'/'validation') so no E3 fit world is ever used.
 
+Efficiency (documented deviation, verified): ONE 300 s rollout per pair; the 60/120/180 s rows are
+prefixes of the same K=8 coupled futures (production fits only the 300 s horizon).  ``--verify N``
+additionally runs N explicit separate 120 s rollouts and records the prefix-vs-separate comparison.
+
 Usage (one shard, one process):
   python cqr_rows.py --tasks loop,e3 --box cpuP --shard 0 --nshards 8 --threads 4 --out DIR
 """
@@ -166,7 +170,13 @@ def e3_tasks(box):
     by_pair = {}
     for e in man["episodes"]:
         by_pair.setdefault(e["pair_key"], {})[e["arm"]] = e
-    for k, (pk, arms) in enumerate(sorted(by_pair.items())):
+    # Any completed prefix is role-balanced: hash-ranked worlds, calibration/validation alternating.
+    rank = lambda pk: hashlib.sha256(("S-BACKLOG-E3ORDER:" + pk).encode()).hexdigest()
+    per_role = {role: sorted((pk for pk, arms in by_pair.items() if arms["native"]["role_e3"] == role), key=rank)
+                for role in ("calibration", "validation")}
+    order = [pk for pair in zip(per_role["calibration"], per_role["validation"]) for pk in pair]
+    for k, pk in enumerate(order):
+        arms = by_pair[pk]
         for arm in ("ours_c1", "coopoff_c1"):
             ckpt, sha = E3_POLICY[arm]
             if arms[arm]["policy_sha256"] != sha:
@@ -176,6 +186,10 @@ def e3_tasks(box):
                           "data": str(data), "ckpt": ckpt, "sha": sha,
                           "native_ep": arms["native"]["episode"], "arm_ep": arms[arm]["episode"]})
     return tasks
+
+
+def task_id(t):
+    return f"{t['kind']}:{t.get('cycle', t.get('arm'))}:{t.get('pair_key', t['i'])}:{t['i']}"
 
 
 def main():
@@ -188,6 +202,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=0, help="smoke: stop after N tasks")
     ap.add_argument("--horizons", default="")
+    ap.add_argument("--verify", type=int, default=0, help="explicit separate 120 s runs for the first N tasks")
     ap.add_argument("--loop-parity", type=int, default=-1,
                     help="process only loop tasks whose global index has this parity (two-box split)")
     a = ap.parse_args()
@@ -201,6 +216,7 @@ def main():
         tasks += [t for n, t in enumerate(lt) if a.loop_parity < 0 or n % 2 == a.loop_parity]
     if "e3" in a.tasks:
         tasks += e3_tasks(a.box)
+    verify_ids = {task_id(t) for t in tasks[:a.verify]}
     mine = [t for n, t in enumerate(tasks) if n % a.nshards == a.shard]
     if a.limit:
         mine = mine[:a.limit]
@@ -209,11 +225,11 @@ def main():
     if target.exists():
         done = {json.loads(l)["task"] for l in target.read_text().splitlines() if l.strip()}
     trainer = build_trainer(a.threads)
-    from wms.control.long_credit import frozen_imagination, pair_rows
+    from wms.control.long_credit import frozen_imagination, pair_benefit_curve
     cache = {}
     with frozen_imagination(trainer) as old, target.open("a") as sink:
         for t in mine:
-            tid = f"{t['kind']}:{t.get('cycle', t.get('arm'))}:{t.get('pair_key', t['i'])}:{t['i']}"
+            tid = task_id(t)
             if tid in done:
                 continue
             start_time = time.time()
@@ -239,7 +255,21 @@ def main():
                 assert loader.entries[native_row]["episode"] == t["native_ep"]
                 curves = [curve_file[t["arm_ep"]], curve_file[t["native_ep"]]]
                 world, role = t["world"], t["role"]
-            rows = pair_rows(trainer, old, sampler, policy_row, t["i"], world, curves, horizons, full_window=True)
+            diff = pair_benefit_curve(trainer, old, sampler, policy_row, t["i"], 300)         # [K, 300]
+            trusted = TRUSTED_S
+            gap = curves[1] - curves[0]                                                        # real, per 0.5 s tick
+            rows = []
+            for h in horizons:
+                rows.append({"world": world, "horizon_s": h,
+                             "samples": diff[:, trusted:h].sum(1).tolist() if h > trusted else [0.0] * diff.shape[0],
+                             "real_benefit": float(gap[2 * trusted:2 * h].sum()) if h > trusted else 0.0,
+                             "samples_full": diff[:, :h].sum(1).tolist(), "real_full": float(gap[:2 * h].sum())})
+            check = None
+            if tid in verify_ids:
+                sep = pair_benefit_curve(trainer, old, sampler, policy_row, t["i"], 120)      # explicit 120 s run
+                check = {"separate_120_tail": sep[:, trusted:].sum(1).tolist(),
+                         "prefix_120_tail": diff[:, trusted:120].sum(1).tolist(),
+                         "separate_120_full": sep.sum(1).tolist(), "prefix_120_full": diff[:, :120].sum(1).tolist()}
             for r in rows:
                 r.update(task=tid, kind=t["kind"], cycle=t.get("cycle"), arm=t.get("arm"),
                          pair_key=loader.entries[policy_row]["pair_key"], role=role,

@@ -270,33 +270,40 @@ def frozen_imagination(trainer):
         _restore_rng(rng, trainer.device)
 
 
+def pair_benefit_curve(trainer, old, sampler, policy_row, index, horizon):
+    """K=8 current-policy paired futures of one real start -> ``[K, horizon]`` per-control-step
+    (1 s) native-minus-policy benefit increments ((policy - native) rewards)."""
+    from .counterfactual import Variants, KIND_ALL, KIND_BASE, acting_cavs
+    h = horizon
+    trainer.config = replace(old, horizon=int(h), future_samples=K,
+        future_driver_scale=1., uncertainty_weight=0., low_penetration_horizon_cap=False,
+        entry_pad_max=max(old.entry_pad_max, math.ceil(old.entry_pad_max * h / old.horizon)))
+    start = sampler._batch([sampler._load(policy_row)], trainer.device)
+    with torch.no_grad():
+        start = trainer._entry_slots(start, torch.Generator().manual_seed(710003 + index))
+        cav = acting_cavs(start.state)
+        variants = Variants(torch.tensor([0, 0], device=trainer.device),
+            torch.cat((cav, torch.zeros_like(cav))),
+            torch.tensor([KIND_ALL, KIND_BASE], device=trainer.device), 1, {0: 1}, {}, [])
+        image = trainer.imagine(start, variants=variants, deterministic=True, difference_only=True)
+    return image['rewards'][:, :, 0] - image['rewards'][:, :, 1]
+
+
 def pair_rows(trainer, old, sampler, policy_row, index, world, curves, horizons, full_window=False):
     """K=8 current-policy paired futures of one real pair -> CQR rows (one per horizon).
 
     ``curves`` = (policy per-tick cost [600], native per-tick cost [600]) real vehicle-second clocks.
     ``real_benefit`` / ``samples`` cover the beyond-trusted tail ``[trusted, h)``; with ``full_window``
     the rows also carry ``samples_full`` / ``real_full`` over ``[0, h)`` (native minus action)."""
-    from .counterfactual import Variants, KIND_ALL, KIND_BASE, acting_cavs
     rows = []
     for h in horizons:
-        trainer.config = replace(old, horizon=int(h), future_samples=K,
-            future_driver_scale=1., uncertainty_weight=0., low_penetration_horizon_cap=False,
-            entry_pad_max=max(old.entry_pad_max, math.ceil(old.entry_pad_max * h / old.horizon)))
-        start = sampler._batch([sampler._load(policy_row)], trainer.device)
-        with torch.no_grad():
-            start = trainer._entry_slots(start, torch.Generator().manual_seed(710003 + index))
-            cav = acting_cavs(start.state)
-            variants = Variants(torch.tensor([0, 0], device=trainer.device),
-                torch.cat((cav, torch.zeros_like(cav))),
-                torch.tensor([KIND_ALL, KIND_BASE], device=trainer.device), 1, {0: 1}, {}, [])
-            image = trainer.imagine(start, variants=variants, deterministic=True, difference_only=True)
+        diff = pair_benefit_curve(trainer, old, sampler, policy_row, index, h)
         trusted = trainer.long_credit_trusted_s
-        benefit = (image['rewards'][:, trusted:, 0] - image['rewards'][:, trusted:, 1]).sum(1)
+        benefit = diff[:, trusted:].sum(1)
         real = float((curves[1][2*trusted:int(2*h)] - curves[0][2*trusted:int(2*h)]).sum())
         row = {'world': world, 'horizon_s': h, 'samples': benefit.cpu().tolist(), 'real_benefit': real}
         if full_window:
-            full = (image['rewards'][:, :, 0] - image['rewards'][:, :, 1]).sum(1)
-            row.update(samples_full=full.cpu().tolist(),
+            row.update(samples_full=diff.sum(1).cpu().tolist(),
                        real_full=float((curves[1][:int(2*h)] - curves[0][:int(2*h)]).sum()))
         rows.append(row)
     return rows
