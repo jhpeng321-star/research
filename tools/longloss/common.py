@@ -52,6 +52,17 @@ def environment():
 
 
 def mirror():
+    # Mirror failures (e.g. gpuA rental end/gateway outage) must never kill training or
+    # scoring; they are recorded and the next mirror retries. Results remain on gpuR.
+    try:
+        _mirror()
+        return True
+    except Exception as exc:
+        event(mirror_error=repr(exc))
+        return False
+
+
+def _mirror():
     # No delete flags; inputs/runtime stay on gpuR, result artifacts go to gpuA.
     cmd = "/root/miniconda3/bin/python -c \"from pathlib import Path; import shutil; p=Path('/root/autodl-tmp/c4'); assert p.is_dir(); assert shutil.disk_usage(p).free>3.25*2**30; (p/'longloss20261027').mkdir(exist_ok=True)\""
     subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', 'gpuA', cmd],

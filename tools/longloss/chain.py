@@ -42,7 +42,8 @@ def main():
         write('RUNNING.json', {'pid': os.getpid(), 'start_ticks': token, 'started': now(),
               'session': os.getsid(0), 'ppid': os.getppid(), 'stdin': os.readlink('/proc/self/fd/0')})
         mirror()
-        assert run([sys.executable, '-B', str(OUT/'code/prepare.py')], 'prepare', 1800) == 0
+        if not (OUT/'DESIGN.json').is_file():
+            assert run([sys.executable, '-B', str(OUT/'code/prepare.py')], 'prepare', 1800) == 0
         design = json.loads((OUT/'DESIGN.json').read_text())
         mirror()
         for variant in ('frozen', 'deep'):
@@ -66,16 +67,9 @@ def main():
     finally:
         receipt = {'id': 'S-LONGLOSSTEST-1', 'status': status, 'finished': now(),
                    'pid': os.getpid(), 'error': error, 'results': results}
-        try:
-            mirror()
-            receipt['mirror'] = 'complete'
-        except Exception as exc:
-            receipt['mirror_error'] = repr(exc)
+        receipt['mirror'] = 'complete' if mirror() else 'failed_see_EVENTS'
         write('DONE.json', receipt)
-        try:
-            mirror()
-        except Exception as exc:
-            event(done_mirror_error=repr(exc))
+        mirror()
 
 
 if __name__ == '__main__':
