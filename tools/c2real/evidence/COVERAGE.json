@@ -1,0 +1,323 @@
+{
+  "cycles": {
+    "0": {
+      "registered_worlds": 13,
+      "collected_worlds": 4,
+      "directories": [
+        "w968144.a1",
+        "w968145.a1",
+        "w968146.a1",
+        "w968147.a1"
+      ],
+      "missing_worlds": [
+        968148,
+        968149,
+        968150,
+        968151,
+        968152,
+        968153,
+        968154,
+        968155,
+        968156
+      ],
+      "failed_attempts_without_paired_outcomes": {},
+      "conversions": {
+        "c00.a1": {
+          "policy_starts": 8,
+          "native_starts": 8,
+          "tapes": 16
+        },
+        "c00.a2": {
+          "policy_starts": 8,
+          "native_starts": 8,
+          "tapes": 16
+        },
+        "c00.a3": {
+          "policy_starts": 8,
+          "native_starts": 8,
+          "tapes": 16
+        },
+        "c00.a4": {
+          "policy_starts": 8,
+          "native_starts": 8,
+          "tapes": 16
+        }
+      },
+      "duplicate_conversion_retries": 3,
+      "credit_record_horizons": {
+        "30": 8,
+        "300": 8
+      },
+      "matched_ALL_B_prediction_horizons": {
+        "30": 6,
+        "300": 3
+      },
+      "gate_candidate_record_horizons": {
+        "10.0": 8
+      }
+    },
+    "1": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "directories": [
+        "w968157.a1",
+        "w968157.a2",
+        "w968157.a3",
+        "w968157.a4",
+        "w968158.a1",
+        "w968158.a2",
+        "w968158.a3",
+        "w968158.a4",
+        "w968158.a5",
+        "w968159.a1",
+        "w968159.a2",
+        "w968159.a3",
+        "w968159.a4",
+        "w968160.a1",
+        "w968160.a2",
+        "w968160.a3",
+        "w968160.a4",
+        "w968161.a1",
+        "w968162.a1",
+        "w968163.a1",
+        "w968164.a1",
+        "w968165.a1",
+        "w968166.a1",
+        "w968167.a1",
+        "w968168.a1",
+        "w968169.a1"
+      ],
+      "missing_worlds": [],
+      "failed_attempts_without_paired_outcomes": {
+        "w968157.a1": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968157.a2": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968157.a3": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968158.a1": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968158.a2": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968158.a3": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968158.a4": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968159.a1": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968159.a2": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968159.a3": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968160.a1": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968160.a2": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        },
+        "w968160.a3": {
+          "episodes_failed": 1,
+          "pair_sim_seconds": 0,
+          "branches": 0
+        }
+      },
+      "conversions": {
+        "c01.a1": {
+          "policy_starts": 26,
+          "native_starts": 26,
+          "tapes": 52
+        }
+      },
+      "duplicate_conversion_retries": 0,
+      "credit_record_horizons": {
+        "30": 26,
+        "300": 26
+      },
+      "matched_ALL_B_prediction_horizons": {
+        "30": 19,
+        "300": 9
+      },
+      "gate_candidate_record_horizons": {
+        "10.0": 26
+      }
+    },
+    "2": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "directories": [
+        "w968170.a1",
+        "w968171.a1",
+        "w968172.a1",
+        "w968173.a1",
+        "w968174.a1",
+        "w968175.a1",
+        "w968176.a1",
+        "w968177.a1",
+        "w968178.a1",
+        "w968179.a1",
+        "w968180.a1",
+        "w968181.a1",
+        "w968182.a1"
+      ],
+      "missing_worlds": [],
+      "failed_attempts_without_paired_outcomes": {},
+      "conversions": {
+        "c02.a1": {
+          "policy_starts": 26,
+          "native_starts": 26,
+          "tapes": 52
+        }
+      },
+      "duplicate_conversion_retries": 0,
+      "credit_record_horizons": {
+        "30": 26,
+        "300": 26
+      },
+      "matched_ALL_B_prediction_horizons": {
+        "30": 21,
+        "300": 8
+      },
+      "gate_candidate_record_horizons": {
+        "10.0": 26
+      }
+    }
+  },
+  "source": "existing main arm/loop only",
+  "new_simulations": 0,
+  "new_predictions": 0,
+  "cycle1_cycle2_worlds_disjoint": true,
+  "wm60_status": "unavailable: no collected 60s predictions in main credit/gate records",
+  "c00_status": "four collected worlds; a1-a4 duplicate policy AND native conversions",
+  "input_hashes": {
+    "c2real/CENSUS.json": "a0e4634e1fd6596fd73d693b6690b0e907365a0d76558ae8241caa1a33456568",
+    "arm/loop/worlds_c00.json": "84009f04e9f13ae894dbb21965f5a3e0cb8b9a3f09d31f227197ee9af67e8fd7",
+    "arm/loop/worlds/c00/w968144.a1/artifact/SUMOCREDIT_POINTS.jsonl": "de5c42a8b318c72c54415cfcd4ef1d939f8a2b9ff13b5cbcb2cd4a11aae27dfd",
+    "arm/loop/worlds/c00/w968144.a1/artifact/GATE_CALIBRATION.jsonl": "3ccfae5d10565edeb4344d607e6c8bd568feb2585dd9ee49b7a2fd115c4bec74",
+    "arm/loop/worlds/c00/w968145.a1/artifact/SUMOCREDIT_POINTS.jsonl": "0058a389f0c4b8ee75942307cacd2b1fed0db84ba99180ea95a504341f7482c5",
+    "arm/loop/worlds/c00/w968145.a1/artifact/GATE_CALIBRATION.jsonl": "ec6655e32ab0cc1c22cbfb11345024803cafc6cb3c5bcc5354d5ed6d1a0374c3",
+    "arm/loop/worlds/c00/w968147.a1/artifact/SUMOCREDIT_POINTS.jsonl": "f7bb21b27eeaa7370be4bf60eb03f34e01539f98a3c3af674bef38b6d0d26841",
+    "arm/loop/worlds/c00/w968147.a1/artifact/GATE_CALIBRATION.jsonl": "d2b9ad42670eb6cbe618e47e7751a5dcde65458e288c9a4fb6370e7bd22c84d4",
+    "arm/loop/worlds/c00/w968146.a1/artifact/SUMOCREDIT_POINTS.jsonl": "d71bac4088537f008f84b58e3ed18677017284f8c29e5322c04977d8c7e3f550",
+    "arm/loop/worlds/c00/w968146.a1/artifact/GATE_CALIBRATION.jsonl": "680d6c00db8db70b362f39ed00b52447abedf308ff3e2c053a19f39dce55901f",
+    "arm/loop/returns/returns_c00.a1.receipt.json": "b9d85518071159699ab255de752bbc08037fb39ac1ae74835083258915a17268",
+    "arm/loop/returns/native_returns_c00.a1.receipt.json": "293fba144ff44ff16f6f2fcdf98e24b009e26518ff80c4cef54b1795ec217cd6",
+    "arm/loop/data/pairs_c00.a1/C4_EPISODES_MANIFEST.json": "5f78910c3f989c1d985b986c5cecc010834285c8a6bc3a979c0cd750c5529c58",
+    "arm/loop/returns/returns_c00.a2.receipt.json": "87e48829cbf390d7f5716e4900e9e11dbb02c7f50b37c831f425bded641e0f23",
+    "arm/loop/returns/native_returns_c00.a2.receipt.json": "26834c8c92f18e23db74c041260e252c287e19889354d560f85e734056feacd9",
+    "arm/loop/data/pairs_c00.a2/C4_EPISODES_MANIFEST.json": "5f78910c3f989c1d985b986c5cecc010834285c8a6bc3a979c0cd750c5529c58",
+    "arm/loop/returns/returns_c00.a3.receipt.json": "a90963c0b069aea7cf550025c926028d6934ca0a8f5f13a00e26d356adb1b5ee",
+    "arm/loop/returns/native_returns_c00.a3.receipt.json": "c01654873c4a0ac3d5413639ac0873713a61976c514b4c38ec528287a2ca7bb3",
+    "arm/loop/data/pairs_c00.a3/C4_EPISODES_MANIFEST.json": "5f78910c3f989c1d985b986c5cecc010834285c8a6bc3a979c0cd750c5529c58",
+    "arm/loop/returns/returns_c00.a4.receipt.json": "7253d5c78d7ddd7f298119b0d00f3274441d70c79e3d79723f52b957585f8d8f",
+    "arm/loop/returns/native_returns_c00.a4.receipt.json": "e8ef85c92e454aba645f7788134b9cf7931a9fd2557f28ea1d5efb23b4711204",
+    "arm/loop/data/pairs_c00.a4/C4_EPISODES_MANIFEST.json": "5f78910c3f989c1d985b986c5cecc010834285c8a6bc3a979c0cd750c5529c58",
+    "arm/loop/worlds_c01.json": "35b664fb4e308e032fa0816a50f80b038c101fa618a6ed7e609edc0fbdd56d72",
+    "arm/loop/worlds/c01/w968157.a1/collect/c01_a1_COLLECT_SUMMARY.json": "64440828a82c2217c90844c0fdc9ebdd0fc381baa5352a5508fc04c6c4f95601",
+    "arm/loop/worlds/c01/w968157.a2/collect/c01_a2_COLLECT_SUMMARY.json": "69e0fabe12a99d31e8091fa1df9ea89cf88abbc8892ca07df30d7acc69f5bd0e",
+    "arm/loop/worlds/c01/w968157.a3/collect/c01_a3_COLLECT_SUMMARY.json": "b2652e3ba48ad0917c7a80d1f81c333ac7c12ef8724352de147eb04635681e61",
+    "arm/loop/worlds/c01/w968158.a1/collect/c01_a1_COLLECT_SUMMARY.json": "932756f42a2ff350228e6d8f73d255da87f345db6a37e0b9472c9f54ef60c2ad",
+    "arm/loop/worlds/c01/w968158.a2/collect/c01_a2_COLLECT_SUMMARY.json": "257004c94ca2ccad81ebaf1d2801ac6fc4560b93e0c77653ddaf244809e98200",
+    "arm/loop/worlds/c01/w968158.a3/collect/c01_a3_COLLECT_SUMMARY.json": "3a2f906577a2d6a112280bd53eccbc4a37450dbd66d8a823cc6fe22e5288ce79",
+    "arm/loop/worlds/c01/w968158.a4/collect/c01_a4_COLLECT_SUMMARY.json": "08aec20eafbcfb995c4fe8b3a8e4eb1625f5f63dce59643d8eaeec93d7cc982e",
+    "arm/loop/worlds/c01/w968159.a1/collect/c01_a1_COLLECT_SUMMARY.json": "eda5d9f2b9ead6108a06c1e79cbeec7fab871aeb096a23835a5a2594923afce5",
+    "arm/loop/worlds/c01/w968159.a2/collect/c01_a2_COLLECT_SUMMARY.json": "303f36f9c62f61bf6bb6155d6f594b7c6bc857ba30e17720abc9455d380af768",
+    "arm/loop/worlds/c01/w968159.a3/collect/c01_a3_COLLECT_SUMMARY.json": "cf3597cd47dc64c7e69b7c9e5ac432262b1756f5fc616f784b9d4a372d974ada",
+    "arm/loop/worlds/c01/w968160.a1/collect/c01_a1_COLLECT_SUMMARY.json": "e39d5e87d633586bca1790ff7475f78a8ae42a7beeed73e8147b839fcfb2025c",
+    "arm/loop/worlds/c01/w968160.a2/collect/c01_a2_COLLECT_SUMMARY.json": "caa37f870fd542e84e157ced3a2f9230663998028063cd08594f8b3f79c85af9",
+    "arm/loop/worlds/c01/w968160.a3/collect/c01_a3_COLLECT_SUMMARY.json": "c439db85ee2d9d890ec2c4876bf9c36cbaa8bfb7a5f5613bdba593f14602907c",
+    "arm/loop/worlds/c01/w968157.a4/artifact/SUMOCREDIT_POINTS.jsonl": "53b8f92e719c248165083044e877aad3a8a2b5e06d0ac67607524bcf36b8ede9",
+    "arm/loop/worlds/c01/w968157.a4/artifact/GATE_CALIBRATION.jsonl": "df360ef81cf8baf9e289bb600d125b5102760fd2e35a3f109783739cb7f09477",
+    "arm/loop/worlds/c01/w968160.a4/artifact/SUMOCREDIT_POINTS.jsonl": "dae09171fe8c38bc7642db386b259ef1110266fc14759ccd677699bd5762cdc1",
+    "arm/loop/worlds/c01/w968160.a4/artifact/GATE_CALIBRATION.jsonl": "ee27939bde674f8c5865b13a17b4fbd1702a6311d34737875214c113278712fc",
+    "arm/loop/worlds/c01/w968158.a5/artifact/SUMOCREDIT_POINTS.jsonl": "fd724f906514689a9721049c22a53c8a8a4fae9de0c438b4513536af17084c6c",
+    "arm/loop/worlds/c01/w968158.a5/artifact/GATE_CALIBRATION.jsonl": "e201411d0e1205e7aad4faca6b74f37f96b994d4e03dd0c9b5f622c7f908becf",
+    "arm/loop/worlds/c01/w968159.a4/artifact/SUMOCREDIT_POINTS.jsonl": "421d172997515233a1a558d8d8d53b9bbc1df91f0985a0edd0b85f893f350ec9",
+    "arm/loop/worlds/c01/w968159.a4/artifact/GATE_CALIBRATION.jsonl": "2b8d58180a5581437d21490716d87fd19c99ffa455a573f6528592cc6a8da8df",
+    "arm/loop/worlds/c01/w968166.a1/artifact/SUMOCREDIT_POINTS.jsonl": "5fa4e6fcf46ebd25b97ef83e75bbdd52b3cba12796a75db8712becb8ef556847",
+    "arm/loop/worlds/c01/w968166.a1/artifact/GATE_CALIBRATION.jsonl": "a1196c8d02a930c71b1f04ab769e09b25cfeccd4ead77277d87a9c1403922a31",
+    "arm/loop/worlds/c01/w968162.a1/artifact/SUMOCREDIT_POINTS.jsonl": "48fecf894d811bc89e00cf25427c2a973c5b22ddb259a4adef178b417b01a9bd",
+    "arm/loop/worlds/c01/w968162.a1/artifact/GATE_CALIBRATION.jsonl": "c19f7be1927c7bba8fda271de046ffc7959f58edf456b743921cf0a33fad64b9",
+    "arm/loop/worlds/c01/w968161.a1/artifact/SUMOCREDIT_POINTS.jsonl": "5d41f5e92bb91f54609e067178e021b00fb4035b5e468e12858fc8e2fceeedd3",
+    "arm/loop/worlds/c01/w968161.a1/artifact/GATE_CALIBRATION.jsonl": "56407e76e2bf0fb178d075346b74cf00d0d4425065135f3c50b6a705f02f8c64",
+    "arm/loop/worlds/c01/w968165.a1/artifact/SUMOCREDIT_POINTS.jsonl": "fb92f5f15d106f21e8969cb73ca9dc8ae908ea135553e75deb661455cb12880f",
+    "arm/loop/worlds/c01/w968165.a1/artifact/GATE_CALIBRATION.jsonl": "2542b84851b08c9d59ca34db93eca401974f77adccd446a3be53651a8f80da0c",
+    "arm/loop/worlds/c01/w968169.a1/artifact/SUMOCREDIT_POINTS.jsonl": "4040dd6d7d2c26532e5c8d6a370b54b2970fda37ee8f72f458514dc4a34b31ab",
+    "arm/loop/worlds/c01/w968169.a1/artifact/GATE_CALIBRATION.jsonl": "1123602fb29c745777b334f5f331f3d78a61427fda1444027998127ee154e7e2",
+    "arm/loop/worlds/c01/w968168.a1/artifact/SUMOCREDIT_POINTS.jsonl": "de2deb8250ebafe1fa3ac7056a0971c64826e84ee41dad7ed6fc4a4c3dbd81cb",
+    "arm/loop/worlds/c01/w968168.a1/artifact/GATE_CALIBRATION.jsonl": "6806e7d419c047e08d92bf67cf619abcff94f7219629dda2d719da439b443588",
+    "arm/loop/worlds/c01/w968163.a1/artifact/SUMOCREDIT_POINTS.jsonl": "e9b31406bb9f0967ff971750ca45fcd93df5173dd1b4a4cd2a49e65409c44ce3",
+    "arm/loop/worlds/c01/w968163.a1/artifact/GATE_CALIBRATION.jsonl": "e2eb0ac837a4145c0f84f753aac3f8ef075e2f5757ab376acb9b8b3215f01393",
+    "arm/loop/worlds/c01/w968164.a1/artifact/SUMOCREDIT_POINTS.jsonl": "d9e2f057f11fabf7722ed11bb99053e85dc2a859ab3ffafcfcfbd79dc6ded356",
+    "arm/loop/worlds/c01/w968164.a1/artifact/GATE_CALIBRATION.jsonl": "83d7ad35fbc2a7897ed55704be496ab9e5b71493c68a57f698e0e38c90256d4e",
+    "arm/loop/worlds/c01/w968167.a1/artifact/SUMOCREDIT_POINTS.jsonl": "59f01b28ac008e8de4578897a54f00d5e49630c8916782b1209265afff2b53ab",
+    "arm/loop/worlds/c01/w968167.a1/artifact/GATE_CALIBRATION.jsonl": "aa2d91473b4d9faae56234ecc10cfd72a2632504eb2e283c6da839a51a1e6d51",
+    "arm/loop/returns/returns_c01.a1.receipt.json": "8082c9f3071345ed3a6a327c16815d9ebdb983d97b2253c830b27cc12f7b8512",
+    "arm/loop/returns/native_returns_c01.a1.receipt.json": "ac9c5070458f4e747660ef6f927fa58d350b5d5ab3841283c8eced3d95792ac6",
+    "arm/loop/data/pairs_c01.a1/C4_EPISODES_MANIFEST.json": "def3ab3ff9a7cbc006da21b8b61b6f7a89f4fbf4c5fc85835dec7cd5a2a37e5a",
+    "arm/loop/worlds_c02.json": "5f2a49148800baff06ed1900fe3d1f2df13358de99bbeb6e0cf65e6b0366c6dd",
+    "arm/loop/worlds/c02/w968170.a1/artifact/SUMOCREDIT_POINTS.jsonl": "e75c4b2ecd3b5f301335fa4e63035988ff7fa28b11366537146f6532210e89a8",
+    "arm/loop/worlds/c02/w968170.a1/artifact/GATE_CALIBRATION.jsonl": "45c7d7f0932dff52cd80cd7b237798e38a9be0d8e7a1a371b12b88e0bbae8802",
+    "arm/loop/worlds/c02/w968171.a1/artifact/SUMOCREDIT_POINTS.jsonl": "d7997a54e400ae77efd64fd1f9ed24968c8ca5b8b84bd65fe0026797168dbb1e",
+    "arm/loop/worlds/c02/w968171.a1/artifact/GATE_CALIBRATION.jsonl": "68c925e835dd7fe1e3830baef05b308a9a3cdd67d856ed6f2f23954b2f6d313b",
+    "arm/loop/worlds/c02/w968172.a1/artifact/SUMOCREDIT_POINTS.jsonl": "ac73e8b82efa68adc30600fbec5f43fc0c902ce16244b7cb208503e674b81a86",
+    "arm/loop/worlds/c02/w968172.a1/artifact/GATE_CALIBRATION.jsonl": "05f8cb8e9640f8a759a74046e5362426cbe295f9c0a685c023449eea7e3bd8fb",
+    "arm/loop/worlds/c02/w968173.a1/artifact/SUMOCREDIT_POINTS.jsonl": "99c299f1817bfa6cb1f35c10e9db783636c60813bd1c037c63bd10aecdb7222a",
+    "arm/loop/worlds/c02/w968173.a1/artifact/GATE_CALIBRATION.jsonl": "6aaa6bf079c0739b20efadf25281374c0df7d3ba60bf0e82ac7c17d7ba5f3917",
+    "arm/loop/worlds/c02/w968175.a1/artifact/SUMOCREDIT_POINTS.jsonl": "56b2684463650220808ea21af4f64dd15afce9c898dac118ad68c55d54db6db6",
+    "arm/loop/worlds/c02/w968175.a1/artifact/GATE_CALIBRATION.jsonl": "c6a5fb26b0f8bdaf3c13c2fd838b06e93e63920bd4beaff1d8c4a046c34fadc1",
+    "arm/loop/worlds/c02/w968174.a1/artifact/SUMOCREDIT_POINTS.jsonl": "23de42df1de9fd3d06b0b1fb48a07a2a5bbe98d8e3ee58381d38632c9f3ed4db",
+    "arm/loop/worlds/c02/w968174.a1/artifact/GATE_CALIBRATION.jsonl": "1e1b7d39c5c171c4dd2163c5be09451e22bdd8a3c7af1fd63bc490a70d204322",
+    "arm/loop/worlds/c02/w968178.a1/artifact/SUMOCREDIT_POINTS.jsonl": "89fc4d9e8d3004e4e1741e07aba9c81a913a32e818978f81fe17dbc69c66bbd5",
+    "arm/loop/worlds/c02/w968178.a1/artifact/GATE_CALIBRATION.jsonl": "9f5d8c7f93af7e2f98687534e0ae7c59e78fd8406dfa5fe22d923b8089c21707",
+    "arm/loop/worlds/c02/w968182.a1/artifact/SUMOCREDIT_POINTS.jsonl": "c75f8dbedcead679acbfecd1c1fdda0104e93920804d4f6cf1343fa4e130cfee",
+    "arm/loop/worlds/c02/w968182.a1/artifact/GATE_CALIBRATION.jsonl": "70a32e7c1bafc22024fedb42f0ed9e5b29bc0fd8309dda5e34abc80139d72e46",
+    "arm/loop/worlds/c02/w968179.a1/artifact/SUMOCREDIT_POINTS.jsonl": "7b21f9cd3e8e812eb3f747e39c1fde5a641372a50b4b59c154b8a73f4e0ed1a2",
+    "arm/loop/worlds/c02/w968179.a1/artifact/GATE_CALIBRATION.jsonl": "bdd2c23c00985ea6dfb4a6bad2d6cfeb32394a40b829208655e6a61935db80e4",
+    "arm/loop/worlds/c02/w968176.a1/artifact/SUMOCREDIT_POINTS.jsonl": "8a9b790758dee853c5cc1050d26e428eb110226dcf1639ce5812e4ab587d9ede",
+    "arm/loop/worlds/c02/w968176.a1/artifact/GATE_CALIBRATION.jsonl": "427a565e1b9c7da9ed2ee319c4b259af860716720dfbab4b2521808335424dfe",
+    "arm/loop/worlds/c02/w968177.a1/artifact/SUMOCREDIT_POINTS.jsonl": "7679c86cac7c95ad6300434fd5b8c044f63bde4e40930b8b63ed3ac66389cad7",
+    "arm/loop/worlds/c02/w968177.a1/artifact/GATE_CALIBRATION.jsonl": "bd58dacff9665fe47cb8e99e617e2ff66e2e5c4c84ca8f9fadf5df66ba496091",
+    "arm/loop/worlds/c02/w968180.a1/artifact/SUMOCREDIT_POINTS.jsonl": "a6dc6af72d7a2fb44db47d9e862fefc94bb4a811a3b54e1f61802d6ce786b90f",
+    "arm/loop/worlds/c02/w968180.a1/artifact/GATE_CALIBRATION.jsonl": "67944586ec059c93b860178c64236cf6ffcd374929ae730f4b648dd0781e9b03",
+    "arm/loop/worlds/c02/w968181.a1/artifact/SUMOCREDIT_POINTS.jsonl": "39639a9db8d40ff7ae6e3fa0b4c1c49b33b0c7727adaedf7abaf876efcc5577b",
+    "arm/loop/worlds/c02/w968181.a1/artifact/GATE_CALIBRATION.jsonl": "263601c980759a691c0184240a137dc3d9999e0a867b37945a9c1ee8c4c0320a",
+    "arm/loop/returns/returns_c02.a1.receipt.json": "cce1b3bfab2105f5d4418f2e2b896912bec72391e3c86fe4cd3ba6ccbb72f253",
+    "arm/loop/returns/native_returns_c02.a1.receipt.json": "83d0f2cfc51cd9321fc29b044c698d20d74e85dbff4beaeee05d5bb8d013853c",
+    "arm/loop/data/pairs_c02.a1/C4_EPISODES_MANIFEST.json": "08e02b73d424178d3a925d4c7f7557dcc3c23b68f7708181d748a362d846ae47"
+  },
+  "source_sha256": "d9833a310348325481408c4918ddb35e8a64269d03bff823e5b23e067bedc6de"
+}

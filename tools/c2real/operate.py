@@ -26,6 +26,7 @@ def stage():
     if (ROOT/'tools/c2real/imagine.py').exists():
         paths['imagine.py'] = ROOT/'tools/c2real/imagine.py'
     paths['verify.py'] = ROOT/'tools/c2real/verify.py'
+    paths['coverage.py'] = ROOT/'tools/c2real/coverage.py'
     payload = {n: base64.b64encode(p.read_bytes()).decode() for n, p in paths.items()}
     reg = REGISTER.read_text(encoding='utf-8').split('## S-C2REAL-1', 1)[1]
     execute(f'''import pathlib,base64,hashlib,json,os
@@ -69,7 +70,7 @@ if p.exists():print('LOG',p.read_text()[-2000:])
 
 def fetch():
     names = ['C2REAL.csv', 'RESULTS.json', 'CENSUS.json', 'INPUTS.json', 'VERIFIED.json',
-             'AUTHORITY.md', 'coopbehav.py', 'thresholds.json']
+              'AUTHORITY.md', 'coopbehav.py', 'thresholds.json', 'COVERAGE.json']
     code = f'''import pathlib,base64,json,os
 os.nice(19);r=pathlib.Path({REMOTE!r});print(json.dumps({{n:base64.b64encode((r/n).read_bytes()).decode() for n in {names!r} if (r/n).exists()}}))'''
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', 'gpuA',
@@ -94,7 +95,16 @@ print(p.stdout);print(p.stderr);raise SystemExit(p.returncode)
 ''')
 
 
+def coverage():
+    execute(f'''import os,subprocess,pathlib
+r=pathlib.Path({REMOTE!r});assert r.is_dir()
+env={{**os.environ,'CUDA_VISIBLE_DEVICES':'','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}}
+p=subprocess.run(['/usr/bin/nice','-n','19','/root/miniconda3/bin/python','-B',str(r/'coverage.py')],env=env,capture_output=True,text=True)
+print(p.stdout);print(p.stderr);raise SystemExit(p.returncode)
+''')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['stage', 'run', 'status', 'fetch', 'verify'])
+    parser.add_argument('action', choices=['stage', 'run', 'status', 'fetch', 'verify', 'coverage'])
     globals()[parser.parse_args().action]()
