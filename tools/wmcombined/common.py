@@ -17,6 +17,7 @@ OUT = Path('/root/autodl-tmp/c4/wmcombined20261027')
 OLD = Path('/root/autodl-tmp/c4/longloss20261027')
 E3 = Path('/root/autodl-tmp/c4/e3data')
 GPUA_WM2 = '/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt'
+WM2 = OUT/'wm2/wm_s.pt'
 WM2_SHA256 = 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
 RT = OUT/'runtime'
 CONFIG = RT/'configs/c4_wm_combined.toml'

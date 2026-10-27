@@ -93,6 +93,12 @@ def main():
             assert run([sys.executable, '-B', str(OUT/'code/prepare.py')], 'prepare',
                        1800) == 0
         assert sha256(OUT/'wm2/wm_s.pt') == WM2_SHA256
+        if not (OUT/'combined/wm_s.pt').is_file():
+            write('STATE.json', {'phase': 'training', 'variant': 'combined', 't': now()})
+            code = run([sys.executable, '-B', str(OUT/'code/train.py'), 'combined'],
+                       'combined_train', 13500)  # backstop; SIGALRM enforces 12600 s
+            event(stage='combined_train_done', exit=code)
+            mirror()
         best = OUT/'combined/wm_s.pt'
         final = OUT/'combined/wm_s_final.pt'
         initial = OUT/'combined/wm_s_initial.pt'
