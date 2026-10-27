@@ -200,6 +200,8 @@ def long_group_sim_s(cfg):
 SUMOCREDIT_FLAGS = {"credit_horizon": "--credit-horizon", "credit_group_max": "--credit-group-max",
                     "long_group_horizon": "--long-group-horizon", "long_group_time": "--long-group-time",
                     "long_single_horizon": "--long-single-horizon", "long_single_time": "--long-single-time",
+                    "probe_slot": "--probe-slot", "probe_calibration": "--probe-calibration",
+                    "probe_role": "--probe-role",
                     "credit_flips": "--credit-flips", "gate_horizon": "--gate-horizon",
                     "gate_unit": "--gate-unit", "gate_reference": "--gate-reference",
                     "gate_state": "--gate-state", "gate_max_units": "--gate-max-units",

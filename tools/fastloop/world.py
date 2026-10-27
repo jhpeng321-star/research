@@ -50,6 +50,18 @@ def build(work, split_seed, val_frac):
         entry["source"] = "@artifact/summaries/" + str(index)
     manifest_path.write_text(json.dumps(manifest, indent=1))
     gather(work / "collect", out / "SUMOCREDIT_POINTS.jsonl", out / "GATE_CALIBRATION.jsonl")
+    probe_files = sorted((work / "collect/branches").glob("*/*/PROBE_POINTS.jsonl"))
+    if probe_files:
+        from traffic_shepherd.c4.probe import correction_report
+        rows = [json.loads(line) for path in probe_files for line in path.read_text().splitlines()]
+        (out / "PROBE_POINTS.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+        (out / "PROBE_REPORT.json").write_text(json.dumps(correction_report(rows), indent=2))
+    selections = sorted((work / "collect/branches").glob("*/*/PROBE_SELECTION.jsonl"))
+    if selections:
+        (out / "PROBE_SELECTION.jsonl").write_text("".join(p.read_text() for p in selections))
+    probes = work / "collect/probe_branches"
+    if probes.exists() and any(probes.iterdir()):
+        convert([probes], out / "probes", val_frac=val_frac, split_seed=split_seed)
     hashes = {p.relative_to(out).as_posix(): digest(p) for p in sorted(out.rglob("*")) if p.is_file()}
     (out / "HASHES.json").write_text(json.dumps(hashes, sort_keys=True))
     verify(out)

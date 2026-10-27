@@ -239,7 +239,7 @@ def sumocredit_options(args) -> dict | None:
     from dataclasses import asdict
     if not (getattr(args, "credit_horizon", 0) or getattr(args, "gate_horizon", 0)
             or getattr(args, "gate_table", None) or getattr(args, "long_group_horizon", 0)
-            or getattr(args, 'long_single_horizon', 0)):
+            or getattr(args, 'long_single_horizon', 0) or getattr(args, "probe_slot", "")):
         return None
     from traffic_shepherd.c4.sumocredit import PairExtras
     extras = PairExtras(credit_horizon=args.credit_horizon, credit_group_max=args.credit_group_max,
@@ -253,7 +253,10 @@ def sumocredit_options(args) -> dict | None:
                         long_group_horizon=getattr(args, "long_group_horizon", 0),
                         long_group_time=getattr(args, "long_group_time", 0),
                         long_single_horizon=getattr(args, 'long_single_horizon', 0),
-                        long_single_time=getattr(args, 'long_single_time', 0))
+                         long_single_time=getattr(args, 'long_single_time', 0),
+                         probe_slot=getattr(args, "probe_slot", ""),
+                         probe_calibration=getattr(args, "probe_calibration", None),
+                         probe_role=getattr(args, "probe_role", ""))
     return asdict(extras)
 
 
@@ -372,6 +375,9 @@ def main(argv=None) -> int:
     sc.add_argument("--long-group-time", type=int, default=0)
     sc.add_argument('--long-single-horizon', type=int, default=0)
     sc.add_argument('--long-single-time', type=int, default=0)
+    sc.add_argument('--probe-slot', choices=('single', 'group'), default='')
+    sc.add_argument('--probe-calibration')
+    sc.add_argument('--probe-role', choices=('collection', 'guard'), default='')
     sc.add_argument("--credit-flips", type=int, default=0)
     sc.add_argument("--no-credit-imagine", action="store_true",
                     help="skip the imagined counterpart of the credit arms")

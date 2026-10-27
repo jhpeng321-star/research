@@ -144,6 +144,9 @@ def load_pair_policy_factory(policy_ckpt: str, wm_ckpt: Optional[str], wm_config
     make.components = (policy, encoder, rules)
     make.settings = settings
     make.device = device
+    if need_wm:
+        import hashlib
+        make.wm_sha256 = hashlib.sha256(Path(wm_ckpt).read_bytes()).hexdigest()
     return make
 
 
@@ -220,6 +223,7 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
     branches, t_branch = [], time.monotonic()
     marks = extras.marks(branch_h) if extras is not None else ()
     extra_out = []
+    world_collision = bool(base_summary.get("collisions", 0))
     for point in saved:
         t_k = point["t_s"]
         prefix = {}
@@ -280,9 +284,19 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
                                        summary=bsum)
             branches.append({"t_s": t_k, "arm": kind, "pair_key": pair_key, **totals,
                              "J": ledger["J_vehicle_seconds"], "wall_s": bsum["wall_s"], **out})
+            if extras is not None and getattr(extras, "probe_slot", ""):
+                world_collision = world_collision or bool(totals["collisions"])
+                if kind == "B":
+                    point.update(native_meta=bmeta, native_episode=branch_root / f"t{t_k:04d}_{tag}",
+                                 base_recorder=base_rec,
+                                 probe_root=branch_root.parents[2] / "probe_branches" / branch_root.name)
         if extras is not None:
+            if world_collision:
+                extras._probe_stopped = True
             extra_out.append(extras.run_point(env, point, prefix, policy_factory=policy_factory,
                                               seed=seed, world=world, branch_h=branch_h))
+            world_collision = world_collision or any(
+                r.get("collisions", 0) for r in extra_out[-1].values() if isinstance(r, dict))
         point["path"].unlink(missing_ok=True)      # own scratch state file
     env.close()
     if state_dir.exists() and not any(state_dir.iterdir()):
@@ -304,7 +318,7 @@ def run_policy_pair_job(env, *, policy_factory: Callable[[], PairPolicy], seed: 
         block["sim_s"] += block["sumocredit"]["sim_s"]
         if extras.long_group_horizon or extras.long_single_horizon:
             for p in extra_out:
-                for key in ('credit_long', 'single_long'):
+                for key in ('credit_long', 'single_long', 'probe'):
                     rec = p.get(key, {})
                     block["collisions"] += rec.get("extra_collisions", 0)
                     block["teleports"] += rec.get("extra_teleports", 0)

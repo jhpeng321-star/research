@@ -89,6 +89,17 @@ def _world(loop, cfg, state, ph, root, item, box, attempt):
                            'long_group_time': time_s,
                            'long_single_horizon': 300 if c.get('long_single_hold', {}).get('enabled') else 0,
                            'long_single_time': time_s}
+    from traffic_shepherd.c4.probe import world_options
+    # The first four native-smoke worlds are guard worlds for their whole collection.
+    probe = world_options(cfg["collect"], index=int(item["index"]),
+                          cycle=int(state["cycles"][-1]["cycle"]),
+                          guard=bool(cfg["policy"].get("native_init") and int(item["index"]) < 4))
+    if probe:
+        # Stage only this immutable calibration file to this world's existing work root.
+        remote = one["collect"]["work_root"] + "/probe_cqr.json"
+        loop.sync(one, "gpu", probe["probe_calibration"], "cpu", remote, local / "probe_cqr_sync.log")
+        probe["probe_calibration"] = remote
+        one["collect"]["sumocredit"].update(probe)
     receipt = loop.run_collect(one, copy.deepcopy(state), {**ph, "attempt": attempt}, local,
                                _seeds=[item["seed"]])
     h = loop.host(one, "cpu")
@@ -301,6 +312,13 @@ def convert(loop, cfg, state, ph, root):
         extra.mkdir(parents=True)
         for name in ("SUMOCREDIT_POINTS.jsonl", "GATE_CALIBRATION.jsonl"):
             shutil.copy2(artifact / name, extra / name)
+        if (artifact / "PROBE_POINTS.jsonl").exists():
+            shutil.copy2(artifact / "PROBE_POINTS.jsonl", extra / "PROBE_POINTS.jsonl")
+    if cfg["collect"].get("probe", {}).get("enabled"):
+        from traffic_shepherd.c4.probe import correction_report
+        rows = [json.loads(line) for w in worlds if (Path(w["artifact"]) / "PROBE_POINTS.jsonl").exists()
+                for line in (Path(w["artifact"]) / "PROBE_POINTS.jsonl").read_text().splitlines()]
+        loop.write_atomic(root / f"PROBE_REPORT_c{k:02d}.json", correction_report(rows))
     if len({e["k_slots"] for e in episodes}) != 1:
         raise RuntimeError("world artifacts disagree on slot count")
     manifest = {**manifest, "episodes": episodes, "n_episodes": len(episodes),

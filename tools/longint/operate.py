@@ -35,7 +35,7 @@ def remote(code, data=None, timeout=30):
 
 def stage():
     files = subprocess.check_output(['git', 'ls-files', '--cached', '--others',
-        '--exclude-standard', 'src', 'tests/unit', 'configs', 'scripts/c4', 'tools',
+        '--exclude-standard', 'src', 'tests/unit', 'configs', 'scripts/c4', 'tools', 'traffic_shepherd',
         'pyproject.toml', 'LOOPLONG.md', 'LONGMEM.md', 'PROBE.md', 'GROUPGRAD.md'],
         cwd=ROOT, text=True).splitlines()
     files = sorted({f for f in files if not any(t in f.lower() for t in BAD)
@@ -94,7 +94,8 @@ print(json.dumps({{'files':len(manifest),'free_bytes':shutil.disk_usage(root).fr
 def tests(name, full=False):
     assert name.replace('-', '').isalnum()
     targets = ['tests/unit'] if full else ['tests/unit/test_longmem.py',
-        'tests/unit/test_looplong.py', 'tests/unit/test_policy14_integration.py']
+        'tests/unit/test_looplong.py', 'tests/unit/test_policy14_integration.py',
+        'tests/unit/test_probe.py']
     remote(f'''import pathlib,subprocess,os,json,time
 r=pathlib.Path({RUNTIME!r}); assert r.is_dir()
 name={name!r}; receipt=r/(name+'.json'); assert not receipt.exists()
