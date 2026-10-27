@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "shard": 1,
+  "worlds": 114,
+  "arm_worlds": 456,
+  "source_files_verified": 543,
+  "source_manifest_sha256": "b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193",
+  "detector_sha256": "452d44a78a1c1280aa0fd6f3d9f58a7498d35432ac4158706ba40a922a04c9f4",
+  "thresholds_sha256": "9119cd77d27889c9546cfaacd91af5a3f7f89beda3a5b6616e988aa67860701f",
+  "charges": {
+    "baseline": {
+      "charged_sim_s": 205200,
+      "n_attempts": 228,
+      "actual_sim_s": 205200
+    },
+    "policy": {
+      "charged_sim_s": 102600,
+      "n_attempts": 114,
+      "actual_sim_s": 102600
+    },
+    "coopoff": {
+      "charged_sim_s": 108000,
+      "n_attempts": 120,
+      "actual_sim_s": 102600
+    }
+  },
+  "max_conservation_residual_vs": 0.0001321136878686957,
+  "predecessors_exited": [
+    {
+      "pid": 825898,
+      "start_ticks": "9770420",
+      "sid": 825898,
+      "output": "/home/ubuntu/e3long/main/e3long_coopoff/shard1"
+    },
+    {
+      "pid": 835541,
+      "sid": 835541,
+      "start_ticks": "9901074"
+    },
+    {
+      "pid": 879906,
+      "sid": 879906,
+      "start_ticks": "10258296"
+    }
+  ],
+  "no_new_simulation": true
+}

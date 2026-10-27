@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "paired_worlds": 228,
+  "arm_worlds": 912,
+  "clocks": [
+    120,
+    300,
+    600
+  ],
+  "bootstrap_draws": 5000,
+  "scalar_primary_reproduction": true,
+  "sign_reversal_all_scopes": true,
+  "on_off_all_recorded_outcomes_exactly_equal": true,
+  "production_charged_sim_s": 826200,
+  "production_actual_sim_s": 820800,
+  "n_estimates": 15960,
+  "per_world_rows": 2736,
+  "report_external_copies_byte_identical": true,
+  "completion_scripts_bound_to_authority": true,
+  "mirror": {
+    "status": "PASS",
+    "coordinator_exited": true,
+    "files_verified": {
+      "cpuP": 459,
+      "cpuQ": 465
+    },
+    "all_complete_coopoff_results_clocks_ledgers_mirrored": true
+  }
+}

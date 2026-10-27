@@ -119,3 +119,15 @@ R9_GATE2.md text eol=lf
 # S-LONGHZN frozen source and numerical evidence retain their SHA-bound bytes.
 /tools/longhzn/evidence/* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /LONGHZN.md -text
+
+# S-E5DONE completion authority and numerical evidence hash exact artifact bytes.
+/tools/autonomy_e5/receipts_done/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/tools/autonomy_e5/analysis_ops.py -text
+/tools/autonomy_e5/analyze_shard.py -text
+/tools/autonomy_e5/done_ops.py -text
+/tools/autonomy_e5/done_runner.py -text
+/tools/autonomy_e5/remote_done.py -text
+/tools/autonomy_e5/identity_audit.py -text
+/tools/autonomy_e5/telemetry_audit.py -text
+/tools/autonomy_e5/summarize.py -text
+/tools/autonomy_e5/verify_report.py -text

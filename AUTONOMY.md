@@ -181,3 +181,44 @@ world-cluster CI, missing-world/CRN fail-closed behavior).
 - Local proof snapshots: `tools/autonomy_e5/receipts_fix/`
   `{cpuP,cpuQ,gpuA}_resume_verified.json`; historical `VERIFIED.json` retained.
   Ten focused E5/E5FIX tests PASS; focused fatal-error Ruff checks PASS.
+
+## S-E5DONE — full 228-world cycle-1 analysis complete (2026-10-27)
+
+- The16:00 MAIN completion amendment already existed. The prior session completed
+  the six remaining cpuQ seeds973217/219/221/223/225/227 exactly once; final
+  cpuQ108,000charged/102,600actualsim-s, cpuP102,600/102,600. This fresh session
+  dispatched **zero simulations**. E5 total210,600charged/205,200actual; historical
+  six pre-SUMO failures/5,400charges retained. Policy415,800/615,600charged;
+  production826,200/1,026,000charged (820,800actual).
+- All228matched native/ON/OFF/MAPPO worlds,19/cell, all120/300/600s clocks,
+  543source hashes/host, bound inputs, unique charges, standalone outputs and
+  source/road/group conservation PASS (maximum residual0.000132114veh-s).
+  All924E5scientific JSON/ledger files match gpuA's mirror; owned simulation
+  predecessors and completion coordinator exited.
+- **ON−OFF total delay including entrance waiting:0[0,0]veh-s at every clock,
+  in every cell and every world.** Reverse OFF−ON saved-delay is also0[0,0].
+  All228observable trajectory NPZ pairs are byte-identical. Deployment summaries
+  bind distinct correct checkpoint paths; CPU loading matches stored tensors;
+  residual-head parameters differ, as do requested/issued commands in all228worlds
+  (maximum acceleration difference0.004012585m/s²). Plant/executor cause of equal
+  realised trajectories is unresolved; no general objective-equivalence claim.
+- Both policies minus native at120/300/600s:−67.2[−100.5,−34.6] /
+  −323.2[−505.5,−135.1] /−970.0[−1491.7,−446.3]veh-s/world. Minus MAPPO:
+  −0.7[−23.0,+22.4] /+162.6[−8.0,+333.6] /+938.7[+454.9,+1430.4].
+  Fixed5000paired whole-world bootstrap draws within12cells, seed20261027;
+  pointwise CIs. Throughput2263.7veh/h both, native2247.5, MAPPO2283.7;
+  zero collisions/teleports/overflow over912arm-worlds.
+- Frozen COOPMEAS452d44a7/thresholds9119cd77, no refit. At600s, ON=OFF rates
+  (events/CAV-hour): multi-CAV slowing0.122, side-by-side0.022, metering0.539,
+  lane-vacate1.993 (ramp-present subset1.463); corresponding native0.456/0.087/
+  1.492/1.997(1.461), MAPPO0.649/0.193/3.891/0.669(0.443).
+  Counts/exposures and paired CIs for all arms/clocks/cells are in CSV.
+  Tapes start300.5s: feature warm-in/left-censoring explicitly disclosed;
+  whole-policy behaviour associations are not causal cooperation evidence.
+- Paper outputs: `E:/research-dense/docs/paper_results/E5_COOPOFF_C1.md`,
+  `E5_COOPOFF_C1.csv`, `E5_COOPOFF_C1_worlds.csv`; committed byte-identical
+  copies,2,736world-clock rows,15,960estimates, source/input SHA256 manifests,
+  scalar independent primary-bootstrap verification and provenance audits under
+  `tools/autonomy_e5/receipts_done/`. Reproduce with
+  `python -B -m tools.autonomy_e5.summarize` then
+  `python -B -m tools.autonomy_e5.verify_report`.
