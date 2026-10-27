@@ -81,7 +81,7 @@ def configure(trainer, doc, raw, output):
             trainer.start_states = exclude_development_starts(
                 trainer.start_states, trainer.looplong_real_credit.excluded_worlds)
         if target > trainer.long_credit_trusted_s:
-            from .long_credit import fit_from_loop
+            from .long_credit import fit_from_loop, MissingCostClocks
             path = checked_path(doc['source_policy_checkpoint'])
             if digest(path) != doc['source_policy_sha256']:
                 raise ValueError('CQR source policy changed')
@@ -89,6 +89,7 @@ def configure(trainer, doc, raw, output):
             policy_state = copy.deepcopy(trainer.policy.state_dict())
             group_state = copy.deepcopy(trainer.group_encoder.state_dict())
             modes = trainer.policy.training, trainer.group_encoder.training
+            refusal = None
             try:
                 trainer.policy.load_state_dict(payload['policy'])
                 trainer.group_encoder.load_state_dict(payload['group_encoder'])
@@ -97,11 +98,31 @@ def configure(trainer, doc, raw, output):
                 trainer.long_credit = fit_from_loop(trainer, doc['pairs'], doc['pairing_receipt'],
                     doc['policy_returns'], doc['native_returns'], doc['source_policy_sha256'],
                     doc['wm']['sha256'], [h for h in hs if h > trainer.long_credit_trusted_s], doc['wm']['config'])
+            except MissingCostClocks as error:
+                refusal = {'schema': 'looplong_cqr_refusal/1', 'qualified': False, 'reason': str(error),
+                           'rule': 'no CQR -> zero beyond-trusted credit; imagination capped at the '
+                                   'trusted gate horizon (never raw K-sample spread)',
+                           'trusted_horizon_s': trainer.long_credit_trusted_s, 'requested_horizon_s': target,
+                           'pairs': doc['pairs'], 'wm_sha256': doc['wm']['sha256']}
             finally:
                 trainer.policy.load_state_dict(policy_state)
                 trainer.group_encoder.load_state_dict(group_state)
                 trainer.policy.train(modes[0])
                 trainer.group_encoder.train(modes[1])
+            if refusal is not None:
+                artifact = Path(output) / f"CQR_{doc['wm']['sha256'][:16]}_REFUSED.json"
+                with artifact.open('x', encoding='utf-8') as stream:
+                    json.dump(refusal, stream, indent=1)
+                trainer.long_credit = None
+                trainer.long_credit_refusal = {**refusal, 'artifact_sha256': digest(artifact)}
+                if trainer.horizon_curriculum is not None:
+                    kept = [h for h in hs if h <= trainer.long_credit_trusted_s]
+                    trainer.horizon_curriculum = HorizonConfig(enabled=True, horizons_s=kept,
+                        curriculum_updates=knots[:len(kept)], entry_pad_max=pads[:len(kept)],
+                        gate_file=doc['gate_file'])
+                    trainer.horizon_curriculum.bind([doc['wm']['sha256']])
+                trainer.looplong_boundary = doc
+                return _finish(trainer, flags, raw, doc)
             artifact = Path(output) / f"CQR_{doc['wm']['sha256'][:16]}.json"
             with artifact.open('x', encoding='utf-8') as stream:
                 json.dump(trainer.long_credit, stream, indent=1, allow_nan=False)
@@ -121,6 +142,11 @@ def configure(trainer, doc, raw, output):
                 beyond_gate_rule='paired CQR; unqualified/off-policy pessimistic-only')
         else:
             trainer.long_credit = None
+    return _finish(trainer, flags, raw, doc)
+
+
+def _finish(trainer, flags, raw, doc):
+    from .coopw import ExplorationConfig
     if flags.get('exploration'):
         section = dict(raw.get('exploration', {}))
         section.update(enabled=True, long_persistence=True)

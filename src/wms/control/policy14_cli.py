@@ -499,6 +499,14 @@ def main(argv=None):
             raw['_looplong_physics'] = receipts[0]['physics']
             configure(trainer, long_boundary, raw, output)
             summary['looplong_initial_boundary'] = long_boundary
+            cqr = getattr(trainer, 'long_credit', None)
+            summary['looplong_long_credit'] = (
+                getattr(trainer, 'long_credit_refusal', None) if cqr is None else
+                {'artifact_sha256': cqr.get('artifact_sha256'),
+                 'horizons': {h: {k: m.get(k) for k in ('qualified', 'correction_scale', 'rank', 'validation')}
+                              for h, m in cqr['horizons'].items()}})
+            (output / 'LOOPLONG_CREDIT.json').write_text(
+                json.dumps(summary['looplong_long_credit'], indent=1, default=str), encoding='utf-8')
         elif args.wm_swap_file:
             raise ValueError('hot swap requires looplong boundary')
         for _ in range(args.max_updates):

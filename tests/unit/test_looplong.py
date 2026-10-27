@@ -642,3 +642,29 @@ def test_batched_vjps_support_checkpointed_r16_first_passage_graph(monkeypatch):
         assert (serial is None) == (batched is None)
         if serial is not None:
             torch.testing.assert_close(serial, batched, rtol=1e-5, atol=1e-6)
+
+
+def test_missing_real_cost_clocks_give_zero_beyond_trusted_credit(tmp_path, monkeypatch):
+    from wms.control.looplong import configure, digest
+    from wms.control import long_credit, looplong_real
+    path, doc = boundary_files(tmp_path)
+    doc.update(imagination_horizon_s=120, source_policy_checkpoint=str(tmp_path / 'actor.pt'),
+               flags={'auto_horizon': True, 'long_credit': True})
+    policy, group = torch.nn.Linear(1, 1), torch.nn.Linear(1, 1)
+    torch.save({'policy': policy.state_dict(), 'group_encoder': group.state_dict()}, doc['source_policy_checkpoint'])
+    doc['source_policy_sha256'] = digest(doc['source_policy_checkpoint'])
+    trainer = SimpleNamespace(config=SimpleNamespace(entry_pad_max=32, horizon=10),
+        device=torch.device('cpu'), update_count=383, policy=policy, group_encoder=group,
+        _curriculum_position=lambda advance=False: 383)
+    monkeypatch.setattr(looplong_real.RealPairCredit, 'from_boundary',
+                        lambda _: SimpleNamespace(excluded_worlds=set()))
+
+    def fit(*args):
+        raise long_credit.MissingCostClocks('converted real pairs have no entry_backlog clocks')
+    monkeypatch.setattr(long_credit, 'fit_from_loop', fit)
+    doc.update(pairs='pairs', pairing_receipt='proof', policy_returns='policy', native_returns='native')
+    configure(trainer, doc, {}, tmp_path)
+    assert trainer.long_credit is None and trainer.long_credit_requested
+    assert trainer.long_credit_refusal['qualified'] is False
+    assert trainer.horizon_curriculum.horizons_s == [10, 60]
+    assert list(tmp_path.glob('CQR_*_REFUSED.json'))

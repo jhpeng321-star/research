@@ -21,6 +21,10 @@ K = 8
 ALPHA = .2
 
 
+class MissingCostClocks(ValueError):
+    """Converted real pairs lack per-tick source-queue clocks: no CQR can be fitted."""
+
+
 def conditional_scales(mean, width, model):
     bins = np.searchsorted(model.get('condition_edges', []), mean / width, side='left')
     return (np.asarray(model.get('conditional_lower', [model['lower_scale']]))[bins],
@@ -290,6 +294,8 @@ def fit_from_loop(trainer, source, pairing, policy_returns, native_returns, poli
                 loader = pairs.dataset._loader
                 ep_index, tick = loader.index[row]
                 ep = loader.episode(ep_index)
+                if not ep.has('entry_backlog'):
+                    raise MissingCostClocks('converted real pairs have no entry_backlog clocks')
                 kin = ep.array('veh_kin')[tick + 1:tick + 601]
                 mask = ep.array('veh_mask')[tick + 1:tick + 601]
                 queue = ep.array('entry_backlog')[tick:tick + 600]
