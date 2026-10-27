@@ -99,3 +99,21 @@ redirection. E5 was deliberately left unlaunched in this deadline window because
 the complete live runner/priority and end-to-end detached self-analysis preflight
 has not been exercised. Three offline analysis regressions pass (contrast sign,
 world-cluster CI, missing-world/CRN fail-closed behavior).
+
+## S-E5RUN — launched, first-batch failure; WAIT_OWNER (~14:48 UTC+8)
+
+- Main GO/amendment appended to the authoritative REGISTRATION.md before SUMO;
+  both543-file/input/gate preflights and8dispatcher pause checks passed.
+- Canary973000 PASS/reused once. Transport JSON repair preserved exited gpuA
+  102196; successor **103399/start846363018** exited WAIT_OWNER after cpuQ's
+  first6jobs failed before SUMO: detached SSH PATH omitted installed SUMO.
+- cpuP **844872/start9770169** remains detached and safely stale-mirror-paused at
+  an empty batch boundary:19successful worlds,17,100charged=actualsim-s. cpuQ
+  **825898/start9770420** failed/exited:6failed reservations,5,400charged/0actual.
+  Total22,500charged/17,100actual;182,700unspent. No simulation retry.
+- cpuP CRN/clocks/conservation and first7 mirrored result hashes PASS. Receipts:
+  gpuA `e5/FAILURE_RECEIPT.json`; CPUs `operations_e5/FAILURE_RECEIPT.json`,
+  cpuP `operations_e5/FIRST_BATCH_VERIFIED.json`. No complete `e5/RESULTS.json`;
+  **ETA blocked pending new main amendment** for the six charged pre-SUMO failures.
+- Seven focused regressions PASS. Explicit detached-PATH/SUMO-presence fix is
+  local only; do not rerun prepare/launch/resume against these retained attempts.

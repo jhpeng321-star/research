@@ -64,7 +64,7 @@ for shard in ({0 if host == 'cpuP' else 1},):
   results=L.E.read(r/'main'/phase/('shard'+str(shard))/'RESULTS.json')
   assert len(results)==114*len(arms) and all(x['ok'] for x in results)
 go=dict(experiment=L.ID,task='S-E5-COOPOFF-C1',go=True,latest_native_gate_passing=True,
- issued_by='main owner approval13:25',phase='policy',arms=['ours'],arm_alias='ours-coopoff',
+  issued_by='main TASK S-E5RUN 2026-10-27 14:20 act-on-recommendation GO',phase='policy',arms=['ours'],arm_alias='ours-coopoff',
  cap_sim_s=205200,worlds=228,production_seeds=[973000,973227],workers_per_box=6,
  input_hashes=h,source_manifest_sha256=ns['SOURCE'],design_sha256=L.canonical_sha(L.plan()),
  operational_adapter_sha256=L.E.digest(runner),markdown_registration_sha256={markdown_sha!r},

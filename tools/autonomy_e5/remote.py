@@ -22,7 +22,7 @@ def ssh(box, source, timeout=120):
                        text=True, capture_output=True, timeout=timeout)
     if p.returncode:
         raise RuntimeError(f'{box}: {p.stderr[-4000:]} {p.stdout[-1000:]}')
-    return json.loads(p.stdout.splitlines()[-1])
+    return json.loads(p.stdout)
 
 
 def pull(box):
@@ -35,16 +35,18 @@ def pull(box):
 
 
 def start(box, shard, canary=False):
-    return ssh(box, f"""import pathlib,json,sys,subprocess,os
+    return ssh(box, f"""import pathlib,json,sys,subprocess,os,shutil
 r=pathlib.Path({CPU!r}); op=r/'operations_e5'; inputs=r/'inputs/coopoff_cycle1'
 assert json.loads((op/'PREFLIGHT.json').read_text())['status']=='PREPARED_NOT_LAUNCHED'
+path='/home/ubuntu/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/home/ubuntu/.local/bin'
+assert shutil.which('sumo',path=path), 'SUMO absent from explicit detached PATH'
 out=r/'main/e3long_coopoff'/('shard'+str({shard})); op.mkdir(exist_ok=True); out.parent.mkdir(parents=True,exist_ok=True)
 argv=[sys.executable,'-B','-u',str(op/'e5_runner.py'),'--inputs',str(inputs/'INPUTS.json'),
  '--main-go',str(inputs/'GO_E5.json'),'--out',str(out),'--shard',{str(shard)!r},'--workers','6','--phase','policy']
 if {canary!r}: argv.append('--canary')
 name='CANARY_PID.json' if {canary!r} else 'MAIN_PID.json'; assert not (op/name).exists()
 with (op/(name+'.log')).open('xb') as log:
- p=subprocess.Popen(argv,cwd=r/'runtime',env={{**os.environ,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1',
+  p=subprocess.Popen(argv,cwd=r/'runtime',env={{**os.environ,'PATH':path,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1',
   'MKL_NUM_THREADS':'1'}},stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 d={{'pid':p.pid,'start_ticks':pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().rsplit(')',1)[1].split()[19],
  'sid':os.getsid(p.pid),'output':str(out)}}
@@ -115,8 +117,9 @@ def drive():
     try:
         for box in ('cpuP', 'cpuQ'):
             heartbeat(box)
-        canary = start('cpuP', 0, True)
-        atomic(R/'CANARY_PID.json', canary)
+        if not (R/'CANARY_PID.json').exists():
+            canary = start('cpuP', 0, True)
+            atomic(R/'CANARY_PID.json', canary)
         while True:
             state = heartbeat('cpuP')
             pull('cpuP')
@@ -155,22 +158,48 @@ proof={{'passed':True,'canary_seed':973000,'charged_sim_s':900}}
         raise
 
 
-def launch():
-    assert not (R/'PID.json').exists()
+def launch(resume=False):
+    if resume:
+        old = json.loads((R/'PID.json').read_text())
+        proc = Path('/proc')/str(old['pid'])
+        if proc.exists():
+            stat = (proc/'stat').read_text().rsplit(')', 1)[1].split()
+            assert stat[19] != old['start_ticks'] or stat[0] == 'Z', 'owned coordinator still live'
+        assert json.loads((R/'STATUS.json').read_text())['status'] == 'WAIT_OWNER'
+        assert (R/'CANARY_PID.json').exists()
+        assert not (R/'PID.before_transport_repair.json').exists(), 'one operational repair only'
+    else:
+        assert not (R/'PID.json').exists()
     # All readiness proof must exist on both boxes BEFORE any detached child is started.
     for box in ('cpuP', 'cpuQ'):
-        doc = ssh(box, f"""import pathlib,json,hashlib,runpy,sys,os
+        doc = ssh(box, f"""import pathlib,json,hashlib,runpy,sys,os,shutil
 r=pathlib.Path({CPU!r}); op=r/'operations_e5'; inputs=r/'inputs/coopoff_cycle1'
+assert shutil.which('sumo',path='/home/ubuntu/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/home/ubuntu/.local/bin')
 sys.path[:0]=[str(r/'runtime'),str(r/'runtime/src'),str(r/'operations')]; os.chdir(r/'runtime')
 proof=json.loads((op/'PREFLIGHT.json').read_text())
+dispatch=json.loads((op/'DISPATCH_PREFLIGHT.json').read_text())
+assert dispatch['status']=='PASS' and dispatch['no_SUMO'] and dispatch['source_files_verified']==543
+assert dispatch['go_sha256']==proof['go_sha256']
 assert hashlib.sha256((op/'e5_runner.py').read_bytes()).hexdigest()==proof['runner_sha256']
 assert hashlib.sha256((inputs/'GO_E5.json').read_bytes()).hexdigest()==proof['go_sha256']
 ns=runpy.run_path(str(op/'e5_runner.py'))
 ns['validate'](json.loads((inputs/'INPUTS.json').read_text()),json.loads((inputs/'GO_E5.json').read_text()))
-assert not (op/'MAIN_PID.json').exists() and not (op/'CANARY_PID.json').exists()
+assert not (op/'MAIN_PID.json').exists()
+if not {resume!r}: assert not (op/'CANARY_PID.json').exists()
+elif {box!r}=='cpuP':
+ state=json.loads((op/'RUNNER_STATUS.json').read_text()); assert state['status']=='canary_complete'
+ out=r/'main/e3long_coopoff/shard0'
+ rows=json.loads((out/'RESULTS.json').read_text()); ledger=[json.loads(s) for s in (out/'budget.jsonl').read_text().splitlines()]
+ assert len(rows)==len(ledger)==1 and rows[0]['ok'] and rows[0]['job']['seed']==973000
+ assert ledger==[dict(id='s973000_ours',sim_s=900)]
 print(json.dumps(proof))
 """)
         assert doc['status'] == 'PREPARED_NOT_LAUNCHED' and doc['charged_sim_s'] == 0
+    if resume:
+        for name in ('PID.json', 'STATUS.json', 'driver.log'):
+            (R/name).rename(R/(name+'.before_transport_repair'))
+        # Preserve a fixed marker independently of the archived original filename.
+        atomic(R/'PID.before_transport_repair.json', old)
     with (R/'driver.log').open('xb') as log:
         p = subprocess.Popen([sys.executable, '-B', '-u', str(Path(__file__)), 'drive'],
                              start_new_session=True, stdin=subprocess.DEVNULL,
@@ -183,5 +212,8 @@ print(json.dumps(proof))
 
 
 if __name__ == '__main__':
-    assert sys.argv[1] in ('drive', 'launch')
-    globals()[sys.argv[1]]()
+    assert sys.argv[1] in ('drive', 'launch', 'resume')
+    if sys.argv[1] == 'resume':
+        launch(resume=True)
+    else:
+        globals()[sys.argv[1]]()
