@@ -46,6 +46,8 @@ def tape_dir(work_root: Path, entry: dict, cycle: str):
         return None
     hits = sorted(world.glob(f"*/{cycle}*/collect/branches/policy/{base.name}/t{t_k:04d}_{tag}"))
     hits = [h for h in hits if (h / "episode.npz").is_file()]
+    if not hits:
+        return None                                  # tape lives on the other host (union is checked at merge)
     if len(hits) != 1:
         raise SystemExit(f"REFUSED: {len(hits)} tapes for {base.name} t{t_k} {tag}: {hits}")
     return hits[0]
