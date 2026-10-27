@@ -231,3 +231,20 @@ def test_cqr_rows_may_carry_explicit_roles_and_default_is_unchanged():
     assert model["fit_worlds"] == sorted(f"a{i}" for i in range(8))
     assert model["calibration_worlds"] == sorted(f"b{i}" for i in range(6))
     assert model["validation"]["worlds"] == sorted(f"c{i}" for i in range(4))
+
+
+def test_e3_road_increments_follow_the_e3long_cohort_convention():
+    """S-E3DATA raw tapes: cohort = slots present at k; an exiting or slot-reused vehicle keeps its
+    k speed (this convention reproduces the authoritative road_delay_vs; the loop14 form does not)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("e3_build", ROOT / "tools/backlog/e3_build.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    present = np.array([[1, 1], [1, 1], [0, 1], [1, 1]], bool)       # slot 0 exits after k=1, reused at k=3
+    vid = np.array([[5, 6], [5, 6], [-1, 6], [9, 6]], np.int32)
+    v = np.array([[10., 31.29], [20., 31.29], [0., 15.645], [31.29, 31.29]])
+    inc = mod.e3_road_increments(present, vid, v, 0, 3)
+    dt, lim = mod.DT, mod.SPEED_LIMIT
+    expect = np.array([[dt * (1 - 20. / lim), 0.], [dt * (1 - 20. / lim), dt * .5],     # k=1->2: exit keeps v[1]
+                       [0., dt * 0.]])                                                 # k=2: slot 0 absent
+    np.testing.assert_allclose(inc, expect, atol=1e-12)
