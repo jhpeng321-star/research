@@ -101,7 +101,8 @@ def train(variant, dry_run=False):
         val_dir.mkdir()
         _, original_val, _ = build_datasets(
             val_cfg, val_dir,
-            resolver=lambda n: Path(design['validation_sources'].get(n, n)))
+            resolver=lambda n: Path(design['validation_sources'].get(
+                n, design['sources'].get(n, n))))
         assert original_val is not None
         head = getattr(inputs.model, 'mainline_residual', None)
         assert head is not None, 'mainline interaction residual did not build'
