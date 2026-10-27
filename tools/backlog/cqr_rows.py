@@ -274,7 +274,8 @@ def main():
                 r.update(task=tid, kind=t["kind"], cycle=t.get("cycle"), arm=t.get("arm"),
                          pair_key=loader.entries[policy_row]["pair_key"], role=role,
                          wm_sha256=WM_SHA, actor_sha256=t["sha"])
-            sink.write(json.dumps({"task": tid, "seconds": time.time() - start_time, "rows": rows}) + "\n")
+            sink.write(json.dumps({"task": tid, "seconds": time.time() - start_time, "rows": rows,
+                                   "diff300": np.round(diff.numpy(), 4).tolist(), "verify": check}) + "\n")
             sink.flush()
             print(f"{tid} {time.time() - start_time:.0f}s", flush=True)
 
