@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "start_pairs": 60,
+  "worlds": 30,
+  "tapes": 120,
+  "behaviour_start_rows": 480,
+  "input_files_verified": 772,
+  "nice": 19,
+  "numerical_threads": 1,
+  "gpu_compute": false,
+  "simulation_calls": 0,
+  "analysis_pid": {
+    "pid": 116550,
+    "start_ticks": "847075860",
+    "task": "S-C2REAL-1 analysis",
+    "sid": 116550
+  },
+  "source_sha256": "10771b5c3b6519eb5588e1511e0c64e78cea5342b3ffc5841a6955b7aee6ddef",
+  "csv_sha256": "6bdfe731cc49afc57268722cd8440729d5a87f01a31578897793820209a65a5b",
+  "results_sha256": "0a03a563ea483a07b8909ece888cfc34b82a29142c9ce95f01982921832fffec",
+  "own_analysis_exited": true,
+  "tests": [
+    "pairing/accounting/clocks",
+    "three guard reproductions",
+    "world bootstrap",
+    "unpaired cycle contrast",
+    "frozen behaviour pooled ratios",
+    "same-start prediction residuals/correlation",
+    "all input hashes"
+  ]
+}

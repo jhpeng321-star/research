@@ -1,0 +1,1364 @@
+{
+  "cycles": {
+    "0": {
+      "registered_worlds": 13,
+      "collected_worlds": 4,
+      "missing": [
+        968148,
+        968149,
+        968150,
+        968151,
+        968152,
+        968153,
+        968154,
+        968155,
+        968156
+      ],
+      "checkpoint": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5",
+      "worlds": {
+        "968144": {
+          "case": {
+            "index": 0,
+            "seed": 968144,
+            "demand": "1900",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c00/w968144.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968144",
+              "free_gb": 18.616,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968144/C4-LOOP14-COOPON-20261026/c00",
+            "seeds": [
+              968144
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2301,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -1364.9372510130197,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 440,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "04aa9b00a8d4f08ccbaa500df4f437cc2c524114da3155e2242569eaa1e45da5"
+        },
+        "968145": {
+          "case": {
+            "index": 1,
+            "seed": 968145,
+            "demand": "1900",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c00/w968145.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968145",
+              "free_gb": 11.336,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968145/C4-LOOP14-COOPON-20261026/c00",
+            "seeds": [
+              968145
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2811,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 332.58368126417395,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 950,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "049bb90b781ca7ad1e5231b5fd58093dafc30f78fb6191818c59c625fc6c3edd"
+        },
+        "968147": {
+          "case": {
+            "index": 3,
+            "seed": 968147,
+            "demand": "1900",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c00/w968147.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968147",
+              "free_gb": 11.336,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968147/C4-LOOP14-COOPON-20261026/c00",
+            "seeds": [
+              968147
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -744.435735431096,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "20aef18c654f119f477d1e8f85ff80276121cdd8c564c0c98adf3c5ecb6f7263"
+        },
+        "968146": {
+          "case": {
+            "index": 2,
+            "seed": 968146,
+            "demand": "1900",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c00/w968146.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968146",
+              "free_gb": 18.616,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968146/C4-LOOP14-COOPON-20261026/c00",
+            "seeds": [
+              968146
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -717.074608755669,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "d9706e866a21ed0912d0ccb5edf32dc1573293b7f6de2d5de750cd3207e032be"
+        }
+      }
+    },
+    "1": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "missing": [],
+      "checkpoint": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+      "worlds": {
+        "968157": {
+          "case": {
+            "index": 0,
+            "seed": 968157,
+            "demand": "1900",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuQ",
+          "attempt": 4,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968157.a4/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968157",
+              "free_gb": 9.102,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968157/C4-LOOP14-COOPON-20261026/c01.a4",
+            "seeds": [
+              968157
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2301,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -754.4160919327587,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 440,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "22b992ad3b477bc33859e7b3219e7a0acbc9616f466f7d83bff694b69c8f8555"
+        },
+        "968160": {
+          "case": {
+            "index": 3,
+            "seed": 968160,
+            "demand": "1900",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuP",
+          "attempt": 4,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968160.a4/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968160",
+              "free_gb": 16.036,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968160/C4-LOOP14-COOPON-20261026/c01.a4",
+            "seeds": [
+              968160
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -1813.1379433958637,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "c3c2132addaa2b9dd1796208447ce322ebb75c8a4c084cc8336f4734bb90d582"
+        },
+        "968158": {
+          "case": {
+            "index": 1,
+            "seed": 968158,
+            "demand": "1900",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 5,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968158.a5/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968158",
+              "free_gb": 9.102,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968158/C4-LOOP14-COOPON-20261026/c01.a5",
+            "seeds": [
+              968158
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -27.319018662778944,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "ef0e6eb52adbecf163c544b729e97996cc4bb365638cda8a831edfdec3519e93"
+        },
+        "968159": {
+          "case": {
+            "index": 2,
+            "seed": 968159,
+            "demand": "1900",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuQ",
+          "attempt": 4,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968159.a4/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968159",
+              "free_gb": 9.102,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968159/C4-LOOP14-COOPON-20261026/c01.a4",
+            "seeds": [
+              968159
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -629.8882145276498,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "afc0e32daeeb671798fa7b0ad0d9ed2571d8467cf51e1373c4937af9a3e1abcc"
+        },
+        "968166": {
+          "case": {
+            "index": 9,
+            "seed": 968166,
+            "demand": "2400",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968166.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968166",
+              "free_gb": 8.988,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968166/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968166
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2391,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -1740.3057101525883,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 530,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "939d3dfdc4ec5f70f304aeca664e60a9b77b0f4448633244b4725515d51580d0"
+        },
+        "968162": {
+          "case": {
+            "index": 5,
+            "seed": 968162,
+            "demand": "2100",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968162.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968162",
+              "free_gb": 8.988,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968162/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968162
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2421,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -878.0927427542774,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 560,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "b263e9e7f8ef8deed2c1f1cae154d97a91ee33ca3ff613405975b4fbe25b2fe6"
+        },
+        "968161": {
+          "case": {
+            "index": 4,
+            "seed": 968161,
+            "demand": "2100",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968161.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968161",
+              "free_gb": 15.99,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968161/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968161
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2301,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 299.97415203757737,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 440,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "43dc279fd8d124b97c96b3afc1d7fae9fd083dee470a8d832a8c28eb5ecd2995"
+        },
+        "968165": {
+          "case": {
+            "index": 8,
+            "seed": 968165,
+            "demand": "2400",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968165.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968165",
+              "free_gb": 15.99,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968165/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968165
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2691,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -365.08644439184536,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 830,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "7e2bc8dd2d29cbbe344e44fc1c13b2a33b9ceeb5be2600d8c1d64a576a3a81aa"
+        },
+        "968169": {
+          "case": {
+            "index": 12,
+            "seed": 968169,
+            "demand": "2700",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968169.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968169",
+              "free_gb": 15.99,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968169/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968169
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2811,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 871.49672872663,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 950,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "ca0ce039ed1ea8cfeecb2eed327386d73d8bcd5ee63af5354496c74ab18bc41b"
+        },
+        "968168": {
+          "case": {
+            "index": 11,
+            "seed": 968168,
+            "demand": "2400",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968168.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968168",
+              "free_gb": 8.988,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968168/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968168
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 856.7573605151701,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "ee71ea23d41b9cdf5e8d289b91301631bf6ab9a59b5a67958ac0213d26b57344"
+        },
+        "968163": {
+          "case": {
+            "index": 6,
+            "seed": 968163,
+            "demand": "2100",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968163.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968163",
+              "free_gb": 15.99,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968163/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968163
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 1582.1870510068866,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "b8e627633e3ac1a9d5c23a9ac24be8e30db803ea3e3e348ebdb39c7afed8932b"
+        },
+        "968164": {
+          "case": {
+            "index": 7,
+            "seed": 968164,
+            "demand": "2100",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968164.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968164",
+              "free_gb": 8.988,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968164/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968164
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 1501.9437185628813,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "d8335a3620ff1b560b253e755a8877239138de1fe1d1982a7a003fa2d900fd6f"
+        },
+        "968167": {
+          "case": {
+            "index": 10,
+            "seed": 968167,
+            "demand": "2400",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c01/w968167.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968167",
+              "free_gb": 15.99,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968167/C4-LOOP14-COOPON-20261026/c01",
+            "seeds": [
+              968167
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 1781.9215652745079,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "eccb52f7331b21e7d85d101573a33dc8d13848183dba62b084d8cc54d5fbad9c"
+        }
+      }
+    },
+    "2": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "missing": [],
+      "checkpoint": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128",
+      "worlds": {
+        "968170": {
+          "case": {
+            "index": 0,
+            "seed": 968170,
+            "demand": "1900",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968170.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968170",
+              "free_gb": 5.956,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968170/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968170
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2391,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 1306.087955130764,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 530,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "19fb3be2678065807a3fea8fde0c8e67b3abafad22d366dd1cdc975ead3df533"
+        },
+        "968171": {
+          "case": {
+            "index": 1,
+            "seed": 968171,
+            "demand": "1900",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968171.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968171",
+              "free_gb": 5.852,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968171/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968171
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2391,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -131.91911005469274,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 530,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "0691a167b16b59a81f02ce05f593409616f1730108460aab4f4df8abba1f73ec"
+        },
+        "968172": {
+          "case": {
+            "index": 2,
+            "seed": 968172,
+            "demand": "1900",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968172.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968172",
+              "free_gb": 5.922,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968172/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968172
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -723.8581103370598,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "d94e68adb09810c86295c5c6cafb7f32974af460ee5c3dffffd3c56092186dc4"
+        },
+        "968173": {
+          "case": {
+            "index": 3,
+            "seed": 968173,
+            "demand": "1900",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968173.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968173",
+              "free_gb": 5.818,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968173/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968173
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -2002.7962509257386,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "7423fee033b83fe03431dce53c8967e1975379b47cf4fcd09f4a4091e2ad1833"
+        },
+        "968175": {
+          "case": {
+            "index": 5,
+            "seed": 968175,
+            "demand": "2100",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968175.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968175",
+              "free_gb": 5.784,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968175/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968175
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2781,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 163.39541013169946,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 920,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "a19a0da973ab1dfddab92591f7b7963c9307b517a61984f2555ae60dce9cd4cd"
+        },
+        "968174": {
+          "case": {
+            "index": 4,
+            "seed": 968174,
+            "demand": "2100",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968174.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968174",
+              "free_gb": 5.888,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968174/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968174
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2121,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 283.6015890794606,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 260,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "976a8e3dba994eec18962671425e7dd553f968a5a33d428d7bb9eccceece98a7"
+        },
+        "968178": {
+          "case": {
+            "index": 8,
+            "seed": 968178,
+            "demand": "2400",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968178.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968178",
+              "free_gb": 5.888,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968178/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968178
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2421,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 414.2901491930161,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 560,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "2bcd345073ae8a2e90602580b750345025d98cd5667378234eaeea2c2c9e1ebe"
+        },
+        "968182": {
+          "case": {
+            "index": 12,
+            "seed": 968182,
+            "demand": "2700",
+            "penetration": "0.05",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968182.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968182",
+              "free_gb": 5.888,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968182/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968182
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2391,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -250.87849512315734,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 530,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "af89eaf56fb72ffca2301486ecb158dd96b841df66c6f6df2a38ddddc3abf145"
+        },
+        "968179": {
+          "case": {
+            "index": 9,
+            "seed": 968179,
+            "demand": "2400",
+            "penetration": "0.1",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968179.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968179",
+              "free_gb": 5.784,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968179/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968179
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -15.420116342404071,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "6428c192dde7bf968f3ae1104430868478916dfbdf667f2e31b64e11a79a6f2d"
+        },
+        "968176": {
+          "case": {
+            "index": 6,
+            "seed": 968176,
+            "demand": "2100",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968176.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968176",
+              "free_gb": 5.888,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968176/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968176
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -139.11542213922894,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "e655794f7176f27a10bed649662461cd5e456729ca08f18e24eae998ffa91fac"
+        },
+        "968177": {
+          "case": {
+            "index": 7,
+            "seed": 968177,
+            "demand": "2100",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968177.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968177",
+              "free_gb": 5.784,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968177/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968177
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -3206.4163456815986,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "37815ed3049d3f66d29a57efaf35191ec84d1fd3c92e0454ff7fd9d710bcc6e1"
+        },
+        "968180": {
+          "case": {
+            "index": 10,
+            "seed": 968180,
+            "demand": "2400",
+            "penetration": "0.2",
+            "box": "cpuP"
+          },
+          "box": "cpuP",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968180.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968180",
+              "free_gb": 5.888,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968180/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968180
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": 2733.272086656083,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "10a908f8461b8c63c426937ff1b132abf24b448ebb0964031ea8d2cbd75317c4"
+        },
+        "968181": {
+          "case": {
+            "index": 11,
+            "seed": 968181,
+            "demand": "2400",
+            "penetration": "0.4",
+            "box": "cpuQ"
+          },
+          "box": "cpuQ",
+          "attempt": 1,
+          "artifact": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds/c02/w968181.a1/artifact",
+          "collect": {
+            "disk": {
+              "path": "/home/ubuntu/c4/main14/restart20261026/work/w968181",
+              "free_gb": 5.784,
+              "need_gb": 0.059,
+              "floor_gb": 1.5
+            },
+            "work": "/home/ubuntu/c4/main14/restart20261026/work/w968181/C4-LOOP14-COOPON-20261026/c02",
+            "seeds": [
+              968181
+            ],
+            "sim_s_charged": 2841,
+            "exit": 0,
+            "episodes": 1,
+            "branches": 4,
+            "pair_sim_seconds": 2841,
+            "branch_collisions": 0,
+            "branch_teleports": 0,
+            "sumo_pairs": 2,
+            "sumo_mean_policy_minus_native_J": -1846.2681192456039,
+            "sumocredit": {
+              "jobs": 1,
+              "sim_s": 980,
+              "files": {
+                "gate": 2,
+                "gated": 0,
+                "credit": 4
+              }
+            },
+            "gate_table_used": false
+          },
+          "hashes_sha256": "7a37345da4f848dafbc0d3d32fc3952463bb3652cf62a38398e58d92712c6c54"
+        }
+      }
+    }
+  },
+  "c00_conversion_retries_identical": true,
+  "selected_tags": [
+    "c00.a4",
+    "c01.a1",
+    "c02.a1"
+  ]
+}

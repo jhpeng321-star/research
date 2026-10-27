@@ -1,0 +1,244 @@
+{
+  "bootstrap": {
+    "draws": 5000,
+    "seed": 20261027,
+    "cluster": "world",
+    "interval": "pointwise percentile95"
+  },
+  "pooled": {
+    "level": "estimate",
+    "metric": "pooled_mean_start_policy_minus_native_J300",
+    "value": -174.128476109606,
+    "ci_low": -620.4962913688078,
+    "ci_high": 271.74793930551624,
+    "n_worlds": 30,
+    "cycle": "all"
+  },
+  "cycles": [
+    {
+      "level": "estimate",
+      "metric": "mean_start_policy_minus_native_J300",
+      "value": -623.4659784839027,
+      "ci_low": -1202.971590448682,
+      "ci_high": 63.32882709035647,
+      "n_worlds": 4,
+      "cycle": 0,
+      "horizon_s": 300
+    },
+    {
+      "level": "estimate",
+      "metric": "mean_start_policy_minus_native_J300",
+      "value": 52.77187771583777,
+      "ci_low": -589.3609911622797,
+      "ci_high": 675.7700828032237,
+      "n_worlds": 13,
+      "cycle": 1,
+      "horizon_s": 300
+    },
+    {
+      "level": "estimate",
+      "metric": "mean_start_policy_minus_native_J300",
+      "value": -262.7711368968047,
+      "ci_low": -1060.596354930802,
+      "ci_high": 511.58965043261384,
+      "n_worlds": 13,
+      "cycle": 2,
+      "horizon_s": 300
+    }
+  ],
+  "cycle2_minus_cycle1": {
+    "level": "contrast",
+    "metric": "cycle2_minus_cycle1_mean_start_J300",
+    "value": -315.5430146126425,
+    "ci_low": -1320.8523509238807,
+    "ci_high": 718.1748226971281,
+    "n_worlds": 26,
+    "pairing": "unpaired_across_cycles"
+  },
+  "metering": [
+    {
+      "level": "behaviour_contrast",
+      "metric": "metering",
+      "value": 0.18691948475910014,
+      "ci_low": -0.32085521955498114,
+      "ci_high": 0.6827112615662434,
+      "units": "events/CAV-hour",
+      "contrast": "cycle2_minus_cycle1_policy_native_effect",
+      "pairing": "unpaired_across_cycles"
+    },
+    {
+      "level": "behaviour_contrast",
+      "metric": "multi_slow",
+      "value": 0.12827925579645844,
+      "ci_low": -0.24743196739999848,
+      "ci_high": 0.43806564580435864,
+      "units": "events/CAV-hour",
+      "contrast": "cycle2_minus_cycle1_policy_native_effect",
+      "pairing": "unpaired_across_cycles"
+    },
+    {
+      "level": "behaviour_contrast",
+      "metric": "side_by_side",
+      "value": -0.0564736864388239,
+      "ci_low": -0.2472536665216949,
+      "ci_high": 0.07296225369416191,
+      "units": "events/CAV-hour",
+      "contrast": "cycle2_minus_cycle1_policy_native_effect",
+      "pairing": "unpaired_across_cycles"
+    },
+    {
+      "level": "behaviour_contrast",
+      "metric": "vacate",
+      "value": 0.5433431238838902,
+      "ci_low": -0.07695155906071652,
+      "ci_high": 1.0927485711510958,
+      "units": "events/CAV-hour",
+      "contrast": "cycle2_minus_cycle1_policy_native_effect",
+      "pairing": "unpaired_across_cycles"
+    }
+  ],
+  "wm_existing": [
+    {
+      "cycle": 1,
+      "available_starts": 19,
+      "bias": {
+        "level": "estimate",
+        "metric": "WM30_real_minus_predicted_bias",
+        "value": 0.6992597866337359,
+        "ci_low": -4.238602294362867,
+        "ci_high": 6.267288651918294,
+        "n_worlds": 11,
+        "cycle": 1,
+        "horizon_s": 30
+      },
+      "pearson": 0.4489609971393683,
+      "spearman": 0.44912280701754387,
+      "predicted_mean": -6.354052819703755,
+      "realised_mean": -5.522285525754482,
+      "horizon_s": 30,
+      "pearson_ci": [
+        0.21136004430737249,
+        0.6814038064860619
+      ],
+      "spearman_ci": [
+        0.06264058961268285,
+        0.7503091006452072
+      ]
+    },
+    {
+      "cycle": 1,
+      "available_starts": 9,
+      "bias": {
+        "level": "estimate",
+        "metric": "WM300_real_minus_predicted_bias",
+        "value": 1085.6372564396495,
+        "ci_low": 58.096134354245706,
+        "ci_high": 2094.2962528249345,
+        "n_worlds": 9,
+        "cycle": 1,
+        "horizon_s": 300
+      },
+      "pearson": -0.4528148054052468,
+      "spearman": -0.5333333333333333,
+      "predicted_mean": -441.8729878001743,
+      "realised_mean": 643.7642686394753,
+      "horizon_s": 300,
+      "pearson_ci": [
+        -0.8687057352721329,
+        0.09080594474216397
+      ],
+      "spearman_ci": [
+        -0.9266055045871558,
+        0.30370941558441356
+      ]
+    },
+    {
+      "cycle": 2,
+      "available_starts": 21,
+      "bias": {
+        "level": "estimate",
+        "metric": "WM30_real_minus_predicted_bias",
+        "value": 4.635402663115726,
+        "ci_low": 0.7392130285008462,
+        "ci_high": 8.505924168458193,
+        "n_worlds": 13,
+        "cycle": 2,
+        "horizon_s": 30
+      },
+      "pearson": 0.35046470190428464,
+      "spearman": 0.512987012987013,
+      "predicted_mean": -11.576193321318854,
+      "realised_mean": -6.494594130863989,
+      "horizon_s": 30,
+      "pearson_ci": [
+        0.07807865509525244,
+        0.8491086159072676
+      ],
+      "spearman_ci": [
+        0.018987731365682846,
+        0.8352636929603489
+      ]
+    },
+    {
+      "cycle": 2,
+      "available_starts": 8,
+      "bias": {
+        "level": "estimate",
+        "metric": "WM300_real_minus_predicted_bias",
+        "value": -742.7872141543858,
+        "ci_low": -1933.130092804364,
+        "ci_high": 461.4212002454133,
+        "n_worlds": 8,
+        "cycle": 2,
+        "horizon_s": 300
+      },
+      "pearson": 0.1598150339007308,
+      "spearman": -0.07142857142857144,
+      "predicted_mean": -382.98589611053467,
+      "realised_mean": -1125.7731102649204,
+      "horizon_s": 300,
+      "pearson_ci": [
+        -0.8979211866238651,
+        0.7758988487410318
+      ],
+      "spearman_ci": [
+        -0.8461538461538464,
+        0.7534246575342466
+      ]
+    }
+  ],
+  "wm60": {
+    "status": "no existing horizon-matched60s ALL/B predictions located; 10s selection panel is different starts",
+    "note": "30/300s credit observations are eligibility-selected subsets of the paired starts"
+  },
+  "census": {
+    "0": {
+      "registered_worlds": 13,
+      "collected_worlds": 4,
+      "missing": [
+        968148,
+        968149,
+        968150,
+        968151,
+        968152,
+        968153,
+        968154,
+        968155,
+        968156
+      ],
+      "checkpoint": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5"
+    },
+    "1": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "missing": [],
+      "checkpoint": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+    },
+    "2": {
+      "registered_worlds": 13,
+      "collected_worlds": 13,
+      "missing": [],
+      "checkpoint": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128"
+    }
+  }
+}
