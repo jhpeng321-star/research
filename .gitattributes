@@ -115,3 +115,7 @@ R9_GATE2.md text eol=lf
 /src/wms/control/policy14_cli.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /src/wms/control/policy14_recovery.py -text
 /tests/unit/test_policy14_recovery.py -text
+
+# S-LONGHZN frozen source and numerical evidence retain their SHA-bound bytes.
+/tools/longhzn/evidence/* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/LONGHZN.md -text
