@@ -52,7 +52,7 @@ def main() -> int:
         print(f"REFUSED: episode set differs: missing={sorted(set(want) - set(parts))} "
               f"extra={sorted(set(parts) - set(want))}", file=sys.stderr)
         return 4
-    entries, same, added, changed = [], 0, 0, []
+    entries, same, added, changed, meta_changed = [], 0, 0, [], 0
     for oe in orig["episodes"]:
         root, ne = parts[oe["episode"]]
         src = root / ne["dir"]
@@ -62,7 +62,9 @@ def main() -> int:
             if not f.is_file():
                 continue
             rel = f.relative_to(out).as_posix()
-            if rel in osums:
+            if f.name == "episode.json":
+                meta_changed += 1       # per-episode metadata: gains ``queue_arrays`` (checked: only that key)
+            elif rel in osums:
                 if sha256(f) == osums[rel]:
                     same += 1
                 else:
@@ -78,7 +80,7 @@ def main() -> int:
         return 5
     manifest = {**{k: v for k, v in orig.items() if k != "episodes"}, "episodes": entries,
                 "backlog_reexport": {"task": "S-BACKLOG", "n_episodes": len(entries),
-                                     "files_identical_to_original": same, "files_added": added,
+                                     "files_identical_to_original": same, "files_added": added, "episode_json_with_queue_arrays": meta_changed,
                                      "still_waiting_total": sum(e["queue_arrays"]["still_waiting_at_end"]
                                                                 for e in entries),
                                      "j_receipt_checks": sum(1 for _ in entries)}}
@@ -86,7 +88,7 @@ def main() -> int:
     sums = {p.relative_to(out).as_posix(): sha256(p) for p in sorted(out.rglob("*"))
             if p.is_file() and p.name != "SHA256SUMS.json"}
     (out / "SHA256SUMS.json").write_text(json.dumps(sums, indent=1, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"out": str(out), "episodes": len(entries), "identical": same, "added": added}))
+    print(json.dumps({"out": str(out), "episodes": len(entries), "identical": same, "added": added, "episode_json": meta_changed}))
     return 0
 
 
