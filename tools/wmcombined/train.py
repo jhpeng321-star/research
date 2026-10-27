@@ -96,7 +96,7 @@ def train(variant, dry_run=False):
         assert paired_receipt['n_groups'] == 46 + 156, paired_receipt
         assert paired_receipt['horizon_steps'] == 600, paired_receipt
         # Selection must use the E3DATA calibration worlds (36), never fit/validation.
-        val_cfg = load_train_config(CONFIG, base+['loss.paired_diff.enabled=false'])
+        val_cfg = load_train_config(CONFIG, base+['loss.paired_diff.weight=0.0'])
         val_dir = dest/'original_validation'
         val_dir.mkdir()
         _, original_val, _ = build_datasets(
