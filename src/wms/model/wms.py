@@ -1164,12 +1164,14 @@ class WmSModel(nn.Module):
         accel_delta = (torch.zeros_like(physics) if self.rollout_mode == "driver_params"
                        else residual_delta + temporal_accel)
         mainline_delta = None
-        if self.mainline_residual is not None and self.rollout_mode != "driver_params":
+        if (self.mainline_residual is not None and self.rollout_mode != "driver_params"
+                and not self.residual_accel_off):
             # S-RAMPFIX: learned mainline interaction offset joins the combined learned
             # correction BEFORE the gate / soft bound / cap / plant clamp (gated and
             # bounded exactly like the existing residual; zero at init; the CAV ``learned``
             # mask downstream excludes CAV slots and the head masks to mainline geometry).
-            # driver_params keeps its exact no-residual contract.
+            # driver_params keeps its exact no-residual contract; the R12C physics-only arm
+            # (residual_accel_off) zeroes this emission like every other residual one.
             mainline_mask = mainline_lane_mask(kin, present, self.physics)
             mainline_out = self.mainline_residual(
                 mainline_interaction_features(kin, present, self.physics), mainline_mask)
