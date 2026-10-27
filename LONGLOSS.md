@@ -1,6 +1,6 @@
 # S-LONGLOSSTEST-1 — offline long-run paired-loss test
 
-Preparation on `c4/longloss`, from `c4/looplong@6a0f5dff`. No launch yet.
+Preparation on `c4/longloss`, from `c4/looplong@6a0f5dff`. LAUNCHED (see below).
 Target: gpuR `/root/autodl-tmp/c4/longloss20261027`, mirrored autonomously to
 the same path on gpuA; terminal `DONE.json`. Zero new simulation.
 
@@ -41,3 +41,25 @@ chain, no laptop dependency; per-variant failures retained and terminal receipt
 mirrored. Training ETA <=6 h total plus fixed scoring; actual launch ETA follows.
 
 Results pending; main reads them after this launch-only handoff.
+
+## Launch (2026-10-27 20:17:51 UTC+8, Claude subagent after Sol freezes)
+
+- gpuR chain PID **162979**, start ticks **4173005841**; verified ppid 1, own session
+  162979, stdin `/dev/null` (`LAUNCH.json`, `RUNNING.json`). Training child (frozen)
+  PID 163010 (`CHILD.json`). Code hashes in remote `STAGING.json`; the code was
+  re-synced after the 12:08 UTC preflight with operational-only fixes (commits
+  5a12aa02 and successor): mirror failures non-fatal (gpuA rental ends 23:09 tonight),
+  the SIGALRM 10800 s cap can never be swallowed by mirror, prepare skipped if
+  DESIGN.json exists, outer hard backstop 12600 s. No design change.
+- Prepare: 100 loop episodes (c00/c01/c02 pair proofs 8/26/26 pairs, hashes in
+  DESIGN.json); new cycle-2 validation seeds 968177, 968178; paired batches 46 groups /
+  92 windows, horizon 600 ticks, fraction 0.25. WM1 init loaded 171 tensors, 0 mismatch;
+  92 trainable tensors (frozen list).
+- Step-0 validation (fixed 16 windows, 120 s): mean_position 225.439 (assembly +
+  step-0 validation ~9 min).
+- Remote paths: gpuR and gpuA `/root/autodl-tmp/c4/longloss20261027`
+  (`PROGRESS.json`, `EVENTS.jsonl`, `frozen/train_log.jsonl`, `frozen/TRAINING.json`,
+  `frozen_gate.json`, `frozen/RESULTS.json`, `RESULTS.json`, `DONE.json`).
+- Timing reference: S-WMDEEPTEST horizon gate ~63 min per checkpoint, accept ~11 min.
+  WM1 gate reused from S-WMDEEPTEST (copied `wm1_gate.json`). gpuR rental ends
+  2026-10-28 04:19 UTC+8; the deep variant may not finish before that unless renewed.
