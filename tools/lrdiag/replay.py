@@ -120,7 +120,7 @@ def configure(model,variant):
         original=model._encode_drivers
         def default_params(self,kin,present,*args,**kwargs):
             encoded,embedding,params=original(kin,present,*args,**kwargs)
-            defaults=self._default_driver_parameters(kin,*kin.shape[:2])
+            defaults=self._default_driver_parameters(kin,*kin.shape[:2]).clone()
             enc=self.driver_encoder
             if enc.driver_param_mode=='physical':
                 defaults[...,:5]=enc.physical_lower+(enc.physical_upper-enc.physical_lower)*enc.centre_logits.sigmoid()
@@ -133,7 +133,9 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     import sys
     sys.path[:0]=[str(HOME/'runtime'),str(HOME/'runtime/src')]
     import torch
-    torch.set_num_threads(1); torch.set_num_interop_threads(1)
+    torch.set_num_threads(1)
+    if not getattr(run,'_threads_set',False):
+        torch.set_num_interop_threads(1);run._threads_set=True
     from tools.r10_attribution import load_model
     from wms.data.collate import collate
     from wms.train.inputs import prepare_inputs
@@ -171,10 +173,11 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     kwargs={}
     if model._samples_lanes: kwargs['lane_uniform']=inp.paired_random.uniform('lane',range(steps))
     # Lightweight yielding hook once each model step, scanning /proc every 10 s.
-    original=model.forward; last=[0.]; calls=[0]
+    original=model.forward; last=[0.]; calls=[0]; class_frames=[]
     def forward(*a,**k):
         if time.monotonic()-last[0]>10:
             yielding(); last[0]=time.monotonic()
+        class_frames.append(a[0]['is_cav'].detach().cpu().numpy().copy())
         out=original(*a,**k); calls[0]+=1
         if calls[0]%100==0:print(json.dumps({'forward_steps':calls[0],'elapsed_s':time.monotonic()-start}),flush=True)
         return out
@@ -198,7 +201,8 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     real_lane=state[...,1:4].argmax(-1)
     real_mask=arr(inp.present_seq[:,:steps+1]).astype(bool)
     # Actual class membership follows entrant state, not fixed slot labels.
-    cav=np.concatenate([cav0[:,None],arr(roll['is_cav_seq']).astype(bool)],1) if 'is_cav_seq' in roll else None
+    assert len(class_frames)==steps
+    cav=np.concatenate([cav0[:,None],np.stack(class_frames,1)],1).astype(bool)
     # Stable original slots have recorded class membership; post-t0 synthetic
     # entries cannot be identity-matched to recorded vehicles. Timeline uses
     # original t0 cohort only, with t0 regions/classes fixed, avoiding that bias.
@@ -211,14 +215,21 @@ def run(gi,draw,variant,steps=600,panel='e3'):
         delay={str(h):[delay_proxy(speed[b],mask[b],sel,h),
                        delay_proxy(real_v[b],real_mask[b],sel,h)]
                for h in (120,300) if h<=steps*.5}
-        wm_bins=speed_bins(speed[b],mask[b],pos[b],lane[b],np.broadcast_to(cav0[b],mask[b].shape))
-        real_bins=speed_bins(real_v[b],real_mask[b],state[b,...,0],real_lane[b],
-                             arr(inp.is_cav[b,:steps+1]).astype(bool))
+        wm_bins=speed_bins(speed[b],mask[b],pos[b],lane[b],cav[b])
         entry=next(e for e in manifest['episodes'] if e['world']==out['world'] and e['arm']==arm)
         raw=data_root/entry['dir']
-        warm=np.load(safe(raw/'veh_kin.npy'),mmap_mode='r')[:121]
-        warm_mask=np.load(safe(raw/'veh_mask.npy'),mmap_mode='r')[:121].astype(bool)
-        warm_cav=np.load(safe(raw/'is_cav.npy'),mmap_mode='r')[:121].astype(bool)
+        raw_time=np.load(safe(raw/'time_s.npy'),mmap_mode='r')
+        t0=int(np.searchsorted(raw_time,entry['warmup_s']))
+        raw_kin=np.load(safe(raw/'veh_kin.npy'),mmap_mode='r')
+        raw_mask=np.load(safe(raw/'veh_mask.npy'),mmap_mode='r')
+        raw_cav=np.load(safe(raw/'is_cav.npy'),mmap_mode='r')
+        full=raw_kin[t0:t0+steps+1]
+        full_mask=raw_mask[t0:t0+steps+1].astype(bool)&(full[...,1:4].sum(-1)>0)
+        real_bins=speed_bins(full[...,4],full_mask,full[...,0],full[...,1:4].argmax(-1),
+                             raw_cav[t0:t0+steps+1].astype(bool))
+        warm=raw_kin[t0-120:t0+1]
+        warm_mask=raw_mask[t0-120:t0+1].astype(bool)&(warm[...,1:4].sum(-1)>0)
+        warm_cav=raw_cav[t0-120:t0+1].astype(bool)
         warm_bins=speed_bins(warm[...,4],warm_mask,warm[...,0],warm[...,1:4].argmax(-1),warm_cav)
         collapse={}
         if steps==600:
@@ -241,8 +252,12 @@ def run(gi,draw,variant,steps=600,panel='e3'):
         # Common original identities, continuous per-vehicle paired-speed signal.
         # Full traces are retained only for baseline, to limit disk use.
         out['arms'][arm]={'delay':delay,'breakdown':collapse,'timeline':timeline,
+                         'speed_bins_real_scope':'full observed traffic, valid mapped road lanes',
                          'speed_bins_real':real_bins,'speed_bins_wm':wm_bins}
-    if variant=='baseline' and panel=='e3':
+    if steps<600:
+        out['smoke_state']={'v':speed[:,-1].tolist(),'s':pos[:,-1].tolist(),
+                            'lane':lane[:,-1].tolist(),'mask':mask[:,-1].tolist()}
+    if variant=='baseline' and panel=='e3' and steps==600:
         path=HOME/'traces'/f'g{gi:02d}_k{draw}.npz'; path.parent.mkdir(exist_ok=True)
         np.savez_compressed(path,speed=speed[:,:,:192],mask=mask[:,:,:192],
             pos=pos[:,:,:192],lane=lane[:,:,:192],real_speed=real_v[:,:,:192],
@@ -256,11 +271,43 @@ def main():
     ap.add_argument('--draw',type=int,default=0); ap.add_argument('--variant',choices=VARIANTS,default='baseline')
     ap.add_argument('--steps',type=int,default=600)
     ap.add_argument('--panel',choices=('e3','pairs300'),default='e3'); a=ap.parse_args()
+    # Supported inference-only gather/network/scatter optimization; no model
+    # weights/physics/inputs change. Verify dense-vs-compact on identical draws.
+    import fcntl
+    lock=(HOME/'COMPACT_CHECK.lock').open('a')
+    with lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        if not (HOME/'COMPACT_CHECK.json').exists():
+            os.environ['WMS_SPEED_COMPACT_SLOTS']='0'
+            dense=run(0,0,'baseline',20)
+            os.environ['WMS_SPEED_COMPACT_SLOTS']='1'
+            compact=run(0,0,'baseline',20)
+            delta={}
+            for k in ('v','s'):
+                x=np.array(dense['smoke_state'][k]);y=np.array(compact['smoke_state'][k])
+                delta[k]=float(np.max(np.abs(x-y)))
+                assert np.allclose(x,y,rtol=1e-5,atol=1e-4),(k,delta[k])
+            assert dense['smoke_state']['lane']==compact['smoke_state']['lane']
+            assert dense['smoke_state']['mask']==compact['smoke_state']['mask']
+            dump(HOME/'COMPACT_CHECK.json',{'status':'PASS','steps':20,'max_absolute_difference':delta,
+                'dense_seconds':dense['seconds'],'compact_seconds':compact['seconds'],
+                'method':'existing WMS_SPEED_COMPACT_SLOTS, masked attention gather/scatter only'})
+        fcntl.flock(lock,fcntl.LOCK_UN)
+    os.environ['WMS_SPEED_COMPACT_SLOTS']='1'
     out=run(a.group,a.draw,a.variant,a.steps,a.panel)
     prefix='' if a.panel=='e3' else 'p300_'
     p=HOME/'results'/f'{prefix}g{a.group:02d}_{a.variant}_k{a.draw}_s{a.steps}.json'
     dump(p,out)
     print(json.dumps({'result':str(p),'seconds':out['seconds']}),flush=True)
+    if a.steps==600 and a.panel=='e3' and not (HOME/'evidence/CONTROLLER_COVERAGE.json').exists():
+        owner=json.loads((HOME/'OWNER.json').read_text())
+        if owner['parity']==0:
+            with (HOME/'OBSERVABLE.lock').open('a') as f:
+                try:fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                except BlockingIOError:return
+                if not (HOME/'evidence/CONTROLLER_COVERAGE.json').exists():
+                    from observables import main as audit
+                    audit(HOME,HOME/'evidence')
 
 
 if __name__=='__main__': main()

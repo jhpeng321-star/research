@@ -66,6 +66,34 @@ def aggregate(root,out,allow_partial=False):
               'counts':{v:sum(d['variant']==v for d in docs) for v in VARIANTS}}
     (out/'COVERAGE.json').write_text(json.dumps(coverage,indent=1))
     rows=[]; draws=[]; timeline=[]; raw_breakdown=[]; world_breakdown=[]; confusion=[]
+    # The production training loader exposes a t0 cohort, NOT full future traffic.
+    # Breakdown sensors must read the full converted recordings including arrivals.
+    # Recompute both detectors here, also standardizing the detector implementation
+    # across analysis plumbing revisions without rerunning model trajectories.
+    from replay import safe,regions,breakdown
+    manifest=json.loads(safe(root/'e3data/C4_EPISODES_MANIFEST.json').read_text())
+    sensor_cache={}
+    def sensor(world,arm):
+        key=(world,arm)
+        if key in sensor_cache:return sensor_cache[key]
+        e=next(e for e in manifest['episodes'] if e['world']==world.split('@')[0] and e['arm']==arm)
+        assert e['e3data_split']=='validation'
+        p=root/'e3data'/e['dir']
+        t=np.load(safe(p/'time_s.npy'),mmap_mode='r')
+        t0=int(np.searchsorted(t,e['warmup_s']));assert t0>=120
+        a=np.load(safe(p/'veh_kin.npy'),mmap_mode='r')[t0-120:t0+601]
+        m=np.load(safe(p/'veh_mask.npy'),mmap_mode='r')[t0-120:t0+601].astype(bool)
+        lane=a[...,1:4].argmax(-1);m=m&(a[...,1:4].sum(-1)>0)
+        result={}
+        for region,reg in regions(a[...,0],lane).items():
+            if region not in ('upstream','merge'):continue
+            vals=[]
+            for start in range(0,720,20):
+                keep=(m&reg)[start:start+20]
+                vals.append(float(a[start:start+20,:,4][keep].mean()) if keep.any() else None)
+            result[region]=vals
+        sensor_cache[key]=result
+        return result
     for (world,v),group in sorted(bins.items()):
         if len(group)!=8:continue
         assert {d['draw'] for d in group}==set(range(8))
@@ -98,7 +126,10 @@ def aggregate(root,out,allow_partial=False):
         if v=='baseline':
             for arm in ('native',*ARMS):
                 for region in ('upstream','merge'):
-                    records=[d['arms'][arm]['breakdown'][region] for d in group]
+                    observed=sensor(world,arm)[region]
+                    real_detector=breakdown(observed)
+                    records=[{'real':real_detector,'wm':breakdown(observed[:6]+d['arms'][arm]['speed_bins_wm'][region+'/all']['speed'])}
+                             for d in group]
                     real=records[0]['real']
                     assert all(r['real']==real for r in records)
                     valid=[r['wm']['event'] for r in records if r['wm']['event'] is not None]
@@ -108,10 +139,12 @@ def aggregate(root,out,allow_partial=False):
                     onset=float(np.median(times)) if pred and times else None
                     rt=real['onset_s'] if real['event'] else None
                     err=onset-rt if onset is not None and rt is not None else None
+                    event_steps=[r['wm']['drop_mps'] for r in records if r['wm']['event']]
                     world_breakdown.append({'world':world,'arm':arm,'region':region,
                         'real_event':real['event'],'wm_event_majority':pred,'wm_event_probability':p,
                         'real_onset_s':rt,'wm_onset_s':onset,'onset_error_s':err,
                         'real_step_mps':real.get('drop_mps'),'real_BIC_improvement':real.get('bic_improvement'),
+                        'wm_event_step_mean_mps':float(np.mean(event_steps)) if event_steps else None,
                         'real_preexisting':real.get('preexisting',False)})
                     for d,r in zip(group,records):
                         raw_breakdown.append({'world':world,'arm':arm,'region':region,'draw':d['draw'],
@@ -169,6 +202,10 @@ def aggregate(root,out,allow_partial=False):
                        onset_bias_s=float(np.mean(es)) if es else None,
                        real_occurrence=sum(r['real_event'] for r in known)/len(known),
                        wm_occurrence=sum(r['wm_event_majority'] for r in known)/len(known))
+            steps=[r['real_step_mps'] for r in known if r['real_event']]
+            wsteps=[r['wm_event_step_mean_mps'] for r in known if r['wm_event_majority']]
+            row['real_event_step_mean_mps']=float(np.mean(steps)) if steps else None
+            row['wm_event_step_mean_mps']=float(np.mean(wsteps)) if wsteps else None
             confusion.append(row)
     tl_summary=[]
     for arm in ARMS:
@@ -184,9 +221,39 @@ def aggregate(root,out,allow_partial=False):
                         'real_dJ_bin':np.mean([r['real_dJ_bin'] for r in a]),
                         'paired_error_bin':np.mean([r['paired_error_bin'] for r in a]),
                         'cumulative_error':np.mean(list(cum.values()))})
+    regional=[];horizon_curve=[]
+    for arm in ARMS:
+        for region in ('upstream','merge','ramp','downstream'):
+            for cls in ('CAV','HDV'):
+                for h in (120,300):
+                    groups=[]
+                    for w in worlds:
+                        rs=[r for r in timeline if r['world']==w and r['arm']==arm and r['region']==region
+                            and r['class']==cls and r['bin_end_s']<=h]
+                        if len(rs)==h//10:groups.append([sum(r['wm_dJ_bin'] for r in rs),sum(r['real_dJ_bin'] for r in rs)])
+                    if len(groups)!=36:continue
+                    a=np.array(groups);err=a[:,0]-a[:,1]
+                    boots=err[draws_idx].mean(1);lo,hi=interval(boots)
+                    regional.append({'arm':arm,'region':region,'class':cls,'horizon_s':h,'n_worlds':36,
+                        'wm_dJ':a[:,0].mean(),'real_dJ':a[:,1].mean(),'paired_error':err.mean(),
+                        'paired_error_lo95':lo,'paired_error_hi95':hi})
+        for h in range(10,301,10):
+            pairs=[]
+            for w in worlds:
+                rs=[r for r in timeline if r['world']==w and r['arm']==arm and r['class']=='HDV' and r['bin_end_s']<=h]
+                if len(rs)==4*h//10:pairs.append([sum(r['wm_dJ_bin'] for r in rs),sum(r['real_dJ_bin'] for r in rs)])
+            if len(pairs)!=36:continue
+            a=np.array(pairs);point=metrics(a)
+            row={'arm':arm,'horizon_s':h,'n_worlds':36,**point}
+            # Error timeline is descriptive; avoid selecting a significance-based
+            # onset across the 30 correlated time points.
+            lo,hi=interval((a[:,0]-a[:,1])[draws_idx].mean(1))
+            row['bias_lo95']=lo;row['bias_hi95']=hi
+            horizon_curve.append(row)
     for name,data in [('ablation_worlds',rows),('ablation_draws',draws),('ablation_summary',pooled),
         ('within_world_slopes',within),('timeline_worlds',timeline),('timeline_summary',tl_summary),
-        ('breakdown_worlds',world_breakdown),('breakdown_draws',raw_breakdown),('breakdown_confusion',confusion)]:
+        ('breakdown_worlds',world_breakdown),('breakdown_draws',raw_breakdown),('breakdown_confusion',confusion),
+        ('regional_summary',regional),('horizon_curve',horizon_curve)]:
         write_csv(out/(name+'.csv'),data)
     # Numerical accounting check: regional HDV errors recover the gate objective.
     accounting=[]
@@ -200,6 +267,7 @@ def aggregate(root,out,allow_partial=False):
              'max_delay_accounting_error':max(accounting) if accounting else None,
              'scope':'E3 validation ONLY; K means before world statistics; OLS includes intercept',
              'detector':'BIC downward step+trend vs constant/linear; no speed threshold; majority > 0.5',
+             'breakdown_sensor':'full recorded traffic including arrivals, valid mapped road lanes; not the training t0-cohort mask',
              'timeline':'t0 cohort, dynamic trajectory regions; absent/exited vehicles have zero delay'}
     (out/'SUMMARY.json').write_text(json.dumps(clean(summary),indent=1,allow_nan=False))
     return summary

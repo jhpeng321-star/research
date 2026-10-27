@@ -25,6 +25,7 @@ def main():
     for sub in ('results','logs','traces'): (ROOT/sub).mkdir(exist_ok=True)
     env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',
         OPENBLAS_NUM_THREADS='1',PYTHONDONTWRITEBYTECODE='1',
+        MALLOC_MMAP_THRESHOLD_='16777216',MALLOC_ARENA_MAX='2',WMS_SPEED_FAST_MERGE_LANE='1',
         WMS_SPEED_PIVOT_DIAG_OFF='1',WMS_SPEED_BATCH_REPLAY='1',WMS_SPEED_FAST_CAV_DRIVE='1',
         WMS_SPEED_FAST_LONG_HISTORY='1',WMS_LOOPLONG_SPEED='1')
     # Baseline first; one full panel before later stochastic draws.

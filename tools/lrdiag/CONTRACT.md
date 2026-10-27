@@ -42,7 +42,8 @@ diagnostics only. If not validation worlds, label them non-verdict and never use
 their numbers to support the final verdict. Multi-controller paired trajectories
 are not isolated speed-pulse interventions and cannot prove string stability.
 
-CPU jobs run nice 19, <=24 owned workers per host, with explicit owned PID
+CPU jobs initially ran nice 19, then (before any full-horizon result) nice 10
+because of severe analysis contention; <=24 owned workers per host, with explicit owned PID
 receipts and a collection-yield guard. Never signal another job. Source gpuR and
 gpuA are read-only. Reject prohibited path components and evaluation seeds before
 opening data. Preserve source hashes and use allowlisted converted arrays only.
