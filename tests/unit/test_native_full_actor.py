@@ -113,3 +113,14 @@ def test_paired_branch_windows_expose_manifest_world_metadata():
     explicit = SimpleNamespace(records=[{"meta": {"world_id": "w1m2400p20t300"}}], _loader=loader,
                                positions=[(0, 0)])
     assert penetration_of(_metadata(explicit, 0)) == 0.2
+
+
+def test_zero_individual_real_credit_scales_coop_down_instead_of_tripping_guard():
+    t = trainer(True, True)
+    t.counterfactual = replace(t.counterfactual, curriculum_updates=[0, 1], w_individual=[1., 1.],
+                               w_group=[1., 1.], w_coop=[1., 1.], w_team=[1., 1.], w_all=[1., 1.])
+    t.credit_multipliers = {"individual": 0.0, "group": 1.0, "coop": 1.0, "team": 1.0}
+    row = t.update()
+    assert row["credit_coop_capped_by_individual"] == {"coop_before": 1.0, "coop_after": 0.0}
+    t.credit_multipliers = {"individual": 1.0, "group": 1.0, "coop": 1.0, "team": 1.0}
+    assert "credit_coop_capped_by_individual" not in t.update()

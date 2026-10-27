@@ -52,10 +52,20 @@ class Policy14Trainer(DreamerTrainer):
     credit_multipliers = None
 
     def actor_objective(self, imagined, scale, weights, *, gradient_components=None):
+        capped = None
         if self.credit_multipliers:
             weights = {k: v * float(self.credit_multipliers.get(k, 1.0)) for k, v in weights.items()}
+            # C_G = D_G - sum_i D_i puts -w_coop on every member's individual benefit.
+            # A multiplier that only scales individual credit down must not leave a net
+            # negative individual weight (anti-gaming guard): the coop term is scaled down
+            # with it, never amplified. Inactive whenever individual >= coop.
+            if weights.get("coop", 0.0) > weights.get("individual", 0.0):
+                capped = {"coop_before": weights["coop"], "coop_after": weights["individual"]}
+                weights = {**weights, "coop": weights["individual"]}
         loss, extra = super().actor_objective(imagined, scale, weights,
                                               gradient_components=gradient_components)
+        if capped is not None:
+            extra["credit_coop_capped_by_individual"] = capped
         variants, lanes = imagined.get("variants"), imagined.get("lanes")
         terms, marginal_values = [], []
         if (variants is not None and lanes is not None and self.marginal_lane_weight
