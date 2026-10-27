@@ -37,3 +37,11 @@ Three bugs on real data were fixed, each with a test:
 - Status `C3_POLICY_RUNNING`, then `WAIT_MAIN_C3_COLLECT`. `STOP_DRIVER` is kept; no SUMO collection is dispatched.
 - Probes are not enabled (`probe_cqr.json` is missing).
 - The converter must export `entry_backlog` clocks before the CQR or probes can qualify.
+
+## S-C3RESUME — MAIN06:20 operational recovery registered (2026-10-28)
+- Read LONGINT/AUTONOMY and live gpuA status first. c03.a4 failed CUDA OOM after saved update514; GPU idle (1 MiB). Original state/attempt/checkpoints retained; charged213406/280000.
+- Append-only prospective MAIN amendment installed in authoritative REGISTRATION.md and remote registration/state rebound to `d8b5fde5`; failed-attempt and retry events appended to both ledgers. Recovery receipt: `arm/loop/longint/c3resume/RECOVERY.json`; u514 SHA `1c3dbff0`, WM2 `b8797242`.
+- Same150-update phase381–530: full trainer/Adam/RNG recovery,16 remaining updates; full original curve and progress gate retained. Actual eligible saved best is u490 (`b06efb13`), rather than the preliminary u460 observation; unchanged selector remains authoritative.
+- Memory-only retry: start microbatch1, checkpoint segment8 (was16), both host offloads ON, expandable segments, cap0.92. Boundary GC/unused allocator-cache reclamation changes allocation lifetime only. Per-update finite/allocator checks and5s owned-process GPU-memory sampling are required before collection.
+- Recovery/LONGMEM focused suite:33 passed; one temp-path workspace refusal passed when rerun with workspace-local basetemp (34 distinct checks passed).
+- New bounded coordinator `tools/longint/resume_c3.py` runs only policy retry → unchanged gate → registered zero-charge preflight/canary/guard collection → conversion → `WAIT_MAIN_C3_WMFT`, preserving STOP_DRIVER. MAIN explicitly authorized collection conditional on the gate; probes remain OFF.
