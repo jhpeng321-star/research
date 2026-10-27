@@ -73,3 +73,36 @@ Results pending; main reads them after this launch-only handoff.
   The selected `frozen/wm_s.pt` is therefore the step-0 save of WM1 weights; the
   registered rule is applied unchanged (no re-selection), so its horizon-gate score is
   a WM1 re-score. Scoring started 13:27:48 UTC.
+
+## LONGLOSS-frozen scored; deep variant cancelled; gpuR released (22:47 UTC+8)
+
+Selected checkpoint = WM1 weights (best_step 0), so the gate reproduces WM1 exactly:
+sign agreement 10/30/60/90/120/180/300 s = .926/.916/.927/.896/.708/.646/.667
+(threshold .868; short signs pass); paired dJ mean signed error 120 s 254.51
+(SD 230.7), 300 s 443.12 (SD 539.9) veh-s, identical to WM1. accept.py: ACCEPT
+(no reasons; candidate equals reference).
+
+- Original registered rule: **does_not_help** (300 s |bias| reduction 0.0, CI [0, 0]).
+- Owner-amended rule (registered 21:38 before any score; `tools/longloss/amended.py`,
+  remote `frozen/AMENDED.json`): **does_not_help** — (a) 0.0 [0, 0]; (b) mean
+  120/180/300 s sign agreement .674 -> .674, change 0 [0, 0].
+- 300 s metering slope (OLS of WM-predicted on real paired dJ, world bootstrap):
+  WM1 = candidate = 0.192 [0.018, 0.396] — WM1 compresses 300 s paired effects to
+  about 1/5 of their real size. Per-world slopes (16 worlds with >=3 pairs) median
+  0.433, range -2.32..2.10 (too few pairs per world to be individually reliable).
+- Reading: under the registered 120 s position selection every long-loss update made
+  the 120 s fit worse, so selection returned WM1. The test shows the long loss as
+  wired cannot pass this selection within 15 updates (2 long-WM batches at paired
+  fraction .25); it does NOT measure what the long loss does to 300 s bias. Under the
+  owner's long-horizon priority, future tests should select on a long-horizon criterion.
+- Context (S-WMDEEPTEST DEEP under the amended rule, same tool): (a) -18.1
+  [-66.6, 15.7], (b) +.017 [-.004, .044] -> does_not_help.
+- LONGLOSS-deep: NOT run. On main's instruction (superseded by the combined test) the
+  own chain PID 162979 was stopped by SIGINT (start ticks verified) 3 min into deep
+  assembly; it terminated its own child 168220 and wrote `DONE.json` (status
+  "failed" = KeyboardInterrupt by design, results.frozen complete) plus `RELEASE.json`.
+  GPU 0 MiB after release. Mirrored to gpuA.
+- Still running (CPU only, CUDA hidden, no GPU): UNREGISTERED DIAGNOSTIC horizon gate
+  of the step-15 latest frozen checkpoint, gpuR PID 168157 (start ticks 4173876569),
+  output `diag_step15/gate.json`, ETA ~23:50 UTC+8; score with
+  `python tools/longloss/amended.py wm1_gate.json diag_step15/gate.json`. Not a verdict.
