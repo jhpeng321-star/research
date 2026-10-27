@@ -1,0 +1,25 @@
+{
+ "False": {
+  "seconds_per_step": 17.126533673996164,
+  "step_seconds": [
+   17.137333121994743,
+   17.115734225997585
+  ],
+  "profile_top": "         20156707 function calls (19196963 primitive calls) in 34.171 seconds\n\n   Ordered by: cumulative time\n   List reduced from 556 to 12 due to restriction <12>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        2    0.001    0.001   34.166   17.083 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       24    0.001    0.000   31.909    1.330 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       24    9.188    0.383   31.908    1.329 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.000    0.000   28.361   14.181 /home/ubuntu/looplong/src/wms/train/longwm.py:89(gradient_parity)\n       22    0.001    0.000   28.360    1.289 /home/ubuntu/looplong/src/wms/train/longwm.py:90(norm)\n       22    0.001    0.000   28.223    1.283 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n        2    0.000    0.000   25.279   12.639 /home/ubuntu/looplong/src/wms/train/longwm.py:119(<dictcomp>)\n   290804    1.346    0.000   22.484    0.000 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/checkpoint.py:1149(unpack_hook)\n     3120    0.009    0.000   20.990    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_compile.py:42(inner)\n732984/3120    2.246    0.000   20.979    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_dynamo/eval_frame.py:1275(_fn)\n     3120    0.261    0.000   20.385    0.007 /home/ubuntu/looplong/src/wms/model/wms.py:942(forward)\n     2880    0.007    0.000   19.009    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/checkpoint.py:1132(_run_fn_with_dynamo_disabled)\n\n\n"
+ },
+ "True": {
+  "seconds_per_step": 11.258182780002244,
+  "step_seconds": [
+   11.30626858100004,
+   11.210096979004447
+  ],
+  "profile_top": "         12491254 function calls (11921888 primitive calls) in 22.438 seconds\n\n   Ordered by: cumulative time\n   List reduced from 511 to 12 due to restriction <12>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        2    0.001    0.001   22.434   11.217 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       14    0.000    0.000   20.567    1.469 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       14    6.981    0.499   20.566    1.469 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.003    0.001   17.273    8.636 /home/ubuntu/looplong/src/wms/train/longwm.py:89(gradient_parity)\n       12    0.001    0.000   17.211    1.434 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n       12    0.000    0.000   17.209    1.434 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_vmap_internals.py:224(wrapped)\n       12    0.000    0.000   17.206    1.434 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:515(vjp)\n   187894    0.859    0.000   13.467    0.000 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/checkpoint.py:1149(unpack_hook)\n     1920    0.006    0.000   12.963    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_compile.py:42(inner)\n427674/1920    1.304    0.000   12.955    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_dynamo/eval_frame.py:1275(_fn)\n     1920    0.165    0.000   12.584    0.007 /home/ubuntu/looplong/src/wms/model/wms.py:942(forward)\n     1680    0.004    0.000   11.309    0.007 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/utils/checkpoint.py:1132(_run_fn_with_dynamo_disabled)\n\n\n"
+ },
+ "objective_checkpoint_close_rng_equal": true,
+ "checkpoint_max_absolute_difference": 0.0,
+ "physics_steps": 120,
+ "batch_size": 2,
+ "optimizer_steps_per_arm": 2,
+ "vjp_lanes": 2,
+ "checkpoint_forward": true
+}

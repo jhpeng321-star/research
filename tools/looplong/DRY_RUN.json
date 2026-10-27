@@ -2,7 +2,7 @@
  "kind": "synthetic_cpu_engineering_only",
  "wm_updates": [
   {
-   "seconds": 5.429466322995722,
+   "seconds": 4.022801243001595,
    "loss": 244.36276245117188,
    "longwm": {
     "base_gradient_norm": 2.5699791460639365,
@@ -52,7 +52,7 @@
    }
   },
   {
-   "seconds": 4.48091134999413,
+   "seconds": 4.084463178005535,
    "loss": 244.36871337890625,
    "longwm": {
     "base_gradient_norm": 2.572561318811631,
@@ -105,8 +105,8 @@
  "policy_updates": [
   {
    "update": 1,
-   "actor_loss": -0.15641669929027557,
-   "critic_loss": 0.49059268832206726,
+   "actor_loss": -0.12874121963977814,
+   "critic_loss": 0.0,
    "imagination_horizon_s": 90.0,
    "exploration_persistence_s": 30.0,
    "exploration_correlated_active": true,
@@ -115,8 +115,8 @@
   },
   {
    "update": 2,
-   "actor_loss": -0.13576266169548035,
-   "critic_loss": 0.4106258749961853,
+   "actor_loss": -0.11197225749492645,
+   "critic_loss": 0.0,
    "imagination_horizon_s": 90.0,
    "exploration_persistence_s": 30.2,
    "exploration_correlated_active": true,
@@ -125,8 +125,8 @@
   },
   {
    "update": 3,
-   "actor_loss": -0.153558149933815,
-   "critic_loss": 0.5124468803405762,
+   "actor_loss": -0.1302245408296585,
+   "critic_loss": 0.0,
    "imagination_horizon_s": 90.0,
    "exploration_persistence_s": 30.4,
    "exploration_correlated_active": true,
@@ -136,8 +136,8 @@
  ],
  "acceptance_rollout_probe": {
   "seconds": {
-   "False": 1.5910522769991076,
-   "True": 1.6790905160014518
+   "False": 1.392971804991248,
+   "True": 1.3876532919966849
   },
   "window_decodes": {
    "False": 4,
@@ -147,35 +147,96 @@
   "scope": "rollout/safety kernels only; not a production acceptance verdict"
  },
  "speed_probe": {
-  "decode_off": 0.02720503500313498,
-  "decode_on": 0.0028350740030873567
+  "decode_off": 0.023911050011520274,
+  "decode_on": 0.0024704030074644834
  },
  "actual_ft_speed": {
   "False": {
-   "seconds": 1.6851170010049827,
+   "seconds": 1.575921309995465,
+   "step_seconds": [
+    1.575921309995465
+   ],
    "rollout_calls": 2
   },
   "True": {
-   "seconds": 1.1821550609893166,
+   "seconds": 1.2286689430038678,
+   "step_seconds": [
+    1.2286689430038678
+   ],
    "rollout_calls": 1
   },
-  "objective_checkpoint_rng_byte_equal": true
+  "objective_checkpoint_rng_byte_equal": true,
+  "physics_steps": 120,
+  "truncation_steps": 120,
+  "batch_size": 2,
+  "courtesy": false,
+  "optimizer_steps_per_arm": 1
+ },
+ "tbptt_ft_speed": {
+  "False": {
+   "seconds": 4.618743200000608,
+   "step_seconds": [
+    4.618743200000608,
+    4.691945997008588,
+    4.5890563699940685
+   ],
+   "rollout_calls": 12
+  },
+  "True": {
+   "seconds": 4.562645254001836,
+   "step_seconds": [
+    4.562645254001836,
+    4.646650094000506,
+    4.488758546998724
+   ],
+   "rollout_calls": 12
+  },
+  "objective_checkpoint_rng_byte_equal": true,
+  "physics_steps": 240,
+  "truncation_steps": 120,
+  "batch_size": 2,
+  "courtesy": true,
+  "optimizer_steps_per_arm": 3
+ },
+ "longwm_ft_speed": {
+  "False": {
+   "seconds_per_step": 4.234086825999839,
+   "step_seconds": [
+    4.20026138999674,
+    4.2679122620029375
+   ],
+   "profile_top": "         257870 function calls (240154 primitive calls) in 8.400 seconds\n\n   Ordered by: cumulative time\n   List reduced from 367 to 12 due to restriction <12>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        2    0.002    0.001    8.396    4.198 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       24    0.001    0.000    7.181    0.299 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       24    7.180    0.299    7.180    0.299 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.000    0.000    6.341    3.171 /home/ubuntu/looplong/src/wms/train/longwm.py:89(gradient_parity)\n       22    0.001    0.000    6.340    0.288 /home/ubuntu/looplong/src/wms/train/longwm.py:90(norm)\n       22    0.001    0.000    6.221    0.283 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n        2    0.000    0.000    5.337    2.668 /home/ubuntu/looplong/src/wms/train/longwm.py:119(<dictcomp>)\n        2    0.013    0.006    1.070    0.535 /home/ubuntu/looplong/src/wms/model/wms.py:2324(rollout)\n      240    0.016    0.000    0.972    0.004 /home/ubuntu/looplong/src/wms/model/wms.py:1654(step)\n        2    0.000    0.000    0.962    0.481 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_tensor.py:576(backward)\n        2    0.000    0.000    0.962    0.481 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:253(backward)\n      240    0.014    0.000    0.917    0.004 /home/ubuntu/looplong/src/wms/model/wms.py:942(forward)\n\n\n"
+  },
+  "True": {
+   "seconds_per_step": 3.441658363008173,
+   "step_seconds": [
+    3.4635986370121827,
+    3.4197180890041636
+   ],
+   "profile_top": "         258678 function calls (240830 primitive calls) in 6.816 seconds\n\n   Ordered by: cumulative time\n   List reduced from 414 to 12 due to restriction <12>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        2    0.002    0.001    6.812    3.406 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       14    0.000    0.000    5.756    0.411 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       14    5.755    0.411    5.755    0.411 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.003    0.001    4.891    2.445 /home/ubuntu/looplong/src/wms/train/longwm.py:89(gradient_parity)\n       12    0.001    0.000    4.827    0.402 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n       12    0.001    0.000    4.825    0.402 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_vmap_internals.py:224(wrapped)\n       12    0.000    0.000    4.821    0.402 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:515(vjp)\n        2    0.013    0.006    0.965    0.483 /home/ubuntu/looplong/src/wms/model/wms.py:2324(rollout)\n        2    0.000    0.000    0.935    0.468 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_tensor.py:576(backward)\n        2    0.000    0.000    0.935    0.468 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:253(backward)\n      240    0.015    0.000    0.870    0.004 /home/ubuntu/looplong/src/wms/model/wms.py:1654(step)\n      240    0.014    0.000    0.815    0.003 /home/ubuntu/looplong/src/wms/model/wms.py:942(forward)\n\n\n"
+  },
+  "objective_checkpoint_close_rng_equal": true,
+  "checkpoint_max_absolute_difference": 0.0,
+  "physics_steps": 120,
+  "batch_size": 2,
+  "optimizer_steps_per_arm": 2,
+  "vjp_lanes": 2
  },
  "memory": {
-  "reference_gib_60s_k2": 12.086,
+  "reference_gib_60s_k2": 36.512,
   "gpu_marketed_gb": 48,
   "allocator_cap_gib": 30.793,
   "linear_projection_gib_k8": {
-   "120": 96.688,
-   "300": 241.72
+   "120": 292.09600000000006,
+   "300": 730.24
   },
   "linear_projection_gib_k2": {
-   "120": 24.172,
-   "300": 60.43
+   "120": 73.02400000000002,
+   "300": 182.56
   },
   "assumption": "same batch/rows/checkpointing; linear time and sample graphs; excludes entrant growth",
   "qualification": "projection only; no GPU allocation or resource qualification"
  },
- "profile_top": "         1564921 function calls (1527736 primitive calls) in 11.175 seconds\n\n   Ordered by: cumulative time\n   List reduced from 4974 to 15 due to restriction <15>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.059    0.059   11.182   11.182 /home/ubuntu/looplong/tools/looplong/dry_run.py:56(tiny_ft)\n        2    0.002    0.001    9.832    4.916 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       24    0.001    0.000    8.346    0.348 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       24    8.345    0.348    8.345    0.348 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.000    0.000    7.408    3.704 /home/ubuntu/looplong/src/wms/train/longwm.py:87(gradient_parity)\n       22    0.001    0.000    7.407    0.337 /home/ubuntu/looplong/src/wms/train/longwm.py:88(norm)\n       22    0.001    0.000    7.331    0.333 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n        2    0.000    0.000    6.100    3.050 /home/ubuntu/looplong/src/wms/train/longwm.py:95(<dictcomp>)\n        2    0.015    0.008    1.381    0.690 /home/ubuntu/looplong/src/wms/model/wms.py:2324(rollout)\n   3632/3    0.012    0.000    1.266    0.422 <frozen importlib._bootstrap>:1022(_find_and_load)\n    847/3    0.003    0.000    1.266    0.422 <frozen importlib._bootstrap>:987(_find_and_load_unlocked)\n    818/3    0.003    0.000    1.266    0.422 <frozen importlib._bootstrap>:664(_load_unlocked)\n    805/3    0.002    0.000    1.266    0.422 <frozen importlib._bootstrap_external>:877(exec_module)\n    983/5    0.001    0.000    1.265    0.253 <frozen importlib._bootstrap>:233(_call_with_frames_removed)\n        3    0.000    0.000    1.265    0.422 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_compile.py:42(inner)\n\n\n",
+ "profile_top": "         1565380 function calls (1528195 primitive calls) in 9.153 seconds\n\n   Ordered by: cumulative time\n   List reduced from 4974 to 15 due to restriction <15>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.048    0.048    9.159    9.159 /home/ubuntu/looplong/tools/looplong/dry_run.py:56(tiny_ft)\n        2    0.002    0.001    8.035    4.018 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       24    0.001    0.000    6.951    0.290 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       24    6.950    0.290    6.950    0.290 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.000    0.000    6.118    3.059 /home/ubuntu/looplong/src/wms/train/longwm.py:89(gradient_parity)\n       22    0.001    0.000    6.118    0.278 /home/ubuntu/looplong/src/wms/train/longwm.py:90(norm)\n       22    0.001    0.000    6.034    0.274 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n        2    0.000    0.000    5.142    2.571 /home/ubuntu/looplong/src/wms/train/longwm.py:119(<dictcomp>)\n   3632/3    0.009    0.000    1.046    0.349 <frozen importlib._bootstrap>:1022(_find_and_load)\n    847/3    0.003    0.000    1.046    0.349 <frozen importlib._bootstrap>:987(_find_and_load_unlocked)\n    818/3    0.003    0.000    1.046    0.349 <frozen importlib._bootstrap>:664(_load_unlocked)\n    805/3    0.002    0.000    1.046    0.349 <frozen importlib._bootstrap_external>:877(exec_module)\n    983/5    0.001    0.000    1.046    0.209 <frozen importlib._bootstrap>:233(_call_with_frames_removed)\n        3    0.000    0.000    1.045    0.348 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_compile.py:42(inner)\n        1    0.000    0.000    1.044    1.044 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/optim/adam.py:35(__init__)\n\n\n",
  "cuda_used": false
 }

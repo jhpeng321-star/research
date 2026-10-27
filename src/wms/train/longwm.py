@@ -5,6 +5,8 @@ Scales and weights follow c4/longwm@908c6f50, not behavioral constants.
 """
 from __future__ import annotations
 
+import os
+
 import torch
 import torch.nn.functional as F
 
@@ -91,8 +93,30 @@ def gradient_parity(base, components, parameters):
         grads = torch.autograd.grad(loss, parameters, allow_unused=True, retain_graph=True)
         return sum(float(g.detach().double().square().sum()) for g in grads if g is not None) ** .5
 
-    base_norm = norm(base)
-    norms = {n: norm(v) for n, v in components.items()}
+    losses = [base, *components.values()]
+    if os.environ.get('WMS_LOOPLONG_SPEED') == '1':
+        # Exact per-term VJPs, two at a time: retain the registered norm/parity
+        # rule while amortizing traversal of the shared long rollout graph.
+        # Two lanes bound temporary adjoint memory independently of term count.
+        measured = [0.] * len(losses)
+        active_losses = [(i, loss) for i, loss in enumerate(losses) if loss.requires_grad]
+        for offset in range(0, len(active_losses), 2):
+            block = active_losses[offset:offset + 2]
+            vector = torch.stack([loss for _, loss in block])
+            grads = torch.autograd.grad(vector, parameters, grad_outputs=torch.eye(
+                len(block), device=vector.device, dtype=vector.dtype),
+                is_grads_batched=True, allow_unused=True, retain_graph=True)
+            square = torch.zeros(len(block), device=vector.device, dtype=torch.float64)
+            for grad in grads:
+                if grad is not None:
+                    square += grad.detach().double().reshape(len(block), -1).square().sum(1)
+            for (index, _), value in zip(block, square.sqrt().tolist()):
+                measured[index] = value
+        base_norm, *values = measured
+        norms = dict(zip(components, values))
+    else:
+        base_norm = norm(base)
+        norms = {n: norm(v) for n, v in components.items()}
     active = sum(v > 0 for v in norms.values())
     weights = {n: base_norm / (active * v) if active and v > 0 else 0. for n, v in norms.items()}
     if not all(torch.isfinite(torch.tensor(w)) for w in weights.values()):

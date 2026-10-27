@@ -106,6 +106,7 @@ def actual_ft_speed_probe(*, steps=120, truncation=120, courtesy=False, repeats=
         settings = TrainSettings(device='cpu', threads=1, truncation_steps=truncation,
             state_noise_std_m=0., state_noise_std_mps=0.,
             paired_diff_weight=1., paired_diff_return_weight=1.,
+            follower_courtesy=courtesy,
             follower_courtesy_weight=9.067 if courtesy else 0.,
             follower_courtesy_contrast=courtesy, follower_courtesy_absolute_weight=4.525 if courtesy else 0.)
         runner = UnrollRunner(m, settings, build_loss(settings, physics=m.physics),
@@ -142,8 +143,50 @@ def actual_ft_speed_probe(*, steps=120, truncation=120, courtesy=False, repeats=
     assert logs[False] == logs[True] and torch.equal(rngs[False], rngs[True])
     os.environ.pop('WMS_LOOPLONG_SPEED', None)
     return {**timings, 'objective_checkpoint_rng_byte_equal': True,
-            'physics_steps': steps, 'truncation_steps': truncation,
-            'batch_size': 2, 'courtesy': courtesy, 'optimizer_steps_per_arm': repeats}
+             'physics_steps': steps, 'truncation_steps': truncation,
+             'batch_size': 2, 'courtesy': courtesy, 'optimizer_steps_per_arm': repeats}
+
+
+def longwm_speed_probe(*, checkpoint=False):
+    """Profile the new long loss, including all registered gradient-parity VJPs."""
+    timings, states, losses, rngs = {}, {}, {}, {}
+    for on in (False, True):
+        os.environ['WMS_LOOPLONG_SPEED'] = str(int(on))
+        m = model()
+        m.checkpoint_forward = checkpoint
+        settings = TrainSettings(device='cpu', threads=1, longwm_enabled=True,
+            truncation_steps=120, state_noise_std_m=0., state_noise_std_mps=0.)
+        runner = UnrollRunner(m, settings, build_loss(settings, physics=m.physics),
+                              projection=None, device=torch.device('cpu'))
+        optimizer = torch.optim.Adam([p for p in m.parameters() if p.requires_grad], lr=3e-5)
+        profile = cProfile.Profile()
+        rows = []
+        for _ in range(2):
+            optimizer.zero_grad(set_to_none=True)
+            start = time.perf_counter()
+            profile.enable()
+            row = runner.run(batch(), unroll_steps=120, backward=True)
+            optimizer.step()
+            profile.disable()
+            rows.append(time.perf_counter() - start)
+        stream = io.StringIO()
+        pstats.Stats(profile, stream=stream).sort_stats('cumtime').print_stats(12)
+        timings[str(on)] = {'seconds_per_step': float(np.median(rows)),
+                            'step_seconds': rows, 'profile_top': stream.getvalue()}
+        states[on] = copy.deepcopy(m.state_dict())
+        losses[on] = row['loss']
+        rngs[on] = torch.get_rng_state()
+    error = max(float((v - states[True][n]).abs().max())
+                for n, v in states[False].items() if v.is_floating_point())
+    assert all(torch.allclose(v, states[True][n], rtol=1e-5, atol=1e-7)
+               for n, v in states[False].items())
+    assert np.isclose(losses[False], losses[True], rtol=1e-5, atol=1e-7)
+    assert torch.equal(rngs[False], rngs[True])
+    os.environ.pop('WMS_LOOPLONG_SPEED', None)
+    return {**timings, 'objective_checkpoint_close_rng_equal': True,
+            'checkpoint_max_absolute_difference': error, 'physics_steps': 120,
+            'batch_size': 2, 'optimizer_steps_per_arm': 2, 'vjp_lanes': 2,
+            'checkpoint_forward': checkpoint}
 
 
 def acceptance_probe():
@@ -182,7 +225,7 @@ def acceptance_probe():
 def memory_projection():
     # Rough total-memory scaling; static allocations and entrant growth are unknown.
     base = 36.512
-    return {'reference_gib_60s_k2': base, 'gpu_marketed_gb': 48, 'allocator_cap_gib': 43.58,
+    return {'reference_gib_60s_k2': base, 'gpu_marketed_gb': 48, 'allocator_cap_gib': 30.793,
         'linear_projection_gib_k8': {str(h): base * h / 60 * 8 / 2 for h in (120, 300)},
         'linear_projection_gib_k2': {str(h): base * h / 60 for h in (120, 300)},
         'assumption': 'same batch/rows/checkpointing; linear time and sample graphs; excludes entrant growth',
@@ -242,7 +285,8 @@ def main():
               'policy_updates': policy_probe(),
               'acceptance_rollout_probe': acceptance_probe(),
               'speed_probe': speed_probe(), 'actual_ft_speed': actual_ft_speed_probe(),
-              'tbptt_ft_speed': actual_ft_speed_probe(steps=240, truncation=120, courtesy=True, repeats=3),
+               'tbptt_ft_speed': actual_ft_speed_probe(steps=240, truncation=120, courtesy=True, repeats=3),
+               'longwm_ft_speed': longwm_speed_probe(),
               'memory': memory_projection(),
               'profile_top': stream.getvalue(), 'cuda_used': False}
     out = Path('tools/looplong/DRY_RUN.json')
@@ -251,4 +295,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--checkpoint-parity', action='store_true')
+    args = parser.parse_args()
+    if args.checkpoint_parity:
+        torch.set_num_threads(1)
+        result = longwm_speed_probe(checkpoint=True)
+        Path('tools/looplong/CHECKPOINT_SPEED.json').write_text(json.dumps(result, indent=1))
+        print(json.dumps(result, indent=1))
+    else:
+        main()
