@@ -63,3 +63,13 @@ Results pending; main reads them after this launch-only handoff.
 - Timing reference: S-WMDEEPTEST horizon gate ~63 min per checkpoint, accept ~11 min.
   WM1 gate reused from S-WMDEEPTEST (copied `wm1_gate.json`). gpuR rental ends
   2026-10-28 04:19 UTC+8; the deep variant may not finish before that unless renewed.
+
+## LONGLOSS-frozen training outcome (21:27 UTC+8)
+
+- 15 updates (2 paired/long-WM batches; long-WM terms finite, e.g. step 4 base grad
+  norm 449.9), step wall 128-439 s (paired 300 s batches ~437 s), peak CUDA ~6.1 GB.
+- Fixed 16-window 120 s validation mean_position: step0 225.439, step5 235.673,
+  step10 237.237, step15 245.161 -> `validation_early_stop` (patience 3), best_step 0.
+  The selected `frozen/wm_s.pt` is therefore the step-0 save of WM1 weights; the
+  registered rule is applied unchanged (no re-selection), so its horizon-gate score is
+  a WM1 re-score. Scoring started 13:27:48 UTC.
