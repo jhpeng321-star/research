@@ -117,3 +117,67 @@ world-cluster CI, missing-world/CRN fail-closed behavior).
   **ETA blocked pending new main amendment** for the six charged pre-SUMO failures.
 - Seven focused regressions PASS. Explicit detached-PATH/SUMO-presence fix is
   local only; do not rerun prepare/launch/resume against these retained attempts.
+
+## S-E5FIX — cpuQ repaired and verified; detached continuation (~15:06 UTC+8)
+
+- Main15:00 amendment appended to authoritative REGISTRATION.md BEFORE repair
+  SUMO, with copies/hash-bound `FIX_AUTHORITY.json` on both CPUs and gpuA.
+  All six historical pre-SUMO failures and5,400charges retained, no refunds.
+- cpuQ detached zero-charge preflight **834420/start9894233** PASS: explicit
+  `SUMO_HOME=/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo` and its
+  `bin` first on PATH, matching working cpuP; SUMO1.27.1 resolves, CIRCLES ONNX
+  and policy CPU load,543source hashes, original GO/input/native gate PASS.
+- ONE cpuQ canary973001 **834772/start9897148** PASS,900new charged sim-s.
+  Reused as the first of six authorized one-time repairs; all six now verified
+  CRN/clocks/conservation/zero incidents, six result SHA256s match gpuA mirror.
+  Original failed `jobs/` retained; repair results in `shard1/retry_jobs/` and
+  distinct `.e5fix1` ledger attempt IDs preserve every charge and original job.
+- Detached gpuA coordinator **104810/start846490743**, SID104810/PPID1;
+  adopted existing cpuP **844872/start9770169** and new cpuQ remainder
+  **835541/start9901074**, SID835541/PPID1; stdinDEVNULL verified. No signals.
+  cpuP resumed only AFTER cpuQ canary proof. Both retain six nice19/one-thread
+  workers, original box-local collection/load/owned-YIELD/stale-mirror guards;
+  live main cycle-2 (~16:15) collection keeps priority.
+- At15:06:31 snapshot: cpuP25results/27,900charged, cpuQ6results/16,200charged
+  (includes historical failures and next in-flight reservations), total44,100,
+  161,100remaining. First repaired-world maximum wall52.02s. Estimated registered
+  work boundary **15:25–15:40 UTC+8**, extended by any live-priority pause.
+- **Budget arithmetic stop:**209missing worlds needed188,100new sim-s, but main
+  authorized182,700. Hard205,200total/102,600per-box caps therefore allow only
+  **222/228successful worlds**, leaving six; no top-up is authorized. The detached
+  coordinator writes `FIX_BUDGET_RECEIPT.json`/`WAIT_OWNER_BUDGET` with exact
+  missing worlds and5,400additional sim-s needed, without incomplete-panel
+  inference. Original self-analysis remains armed for a genuinely complete228
+  panel, writing `e5/RESULTS.json` only after full pairing/accounting checks.
+- Inspect gpuA `e5/{FIX_PID,FIX_CHILDREN,FIX_STATUS,FIX_VERIFIED}.json` and
+  `fix_driver.log`; cpuQ `operations_e5/{FIX_PREFLIGHT,FIX_CANARY_VERIFIED,
+  FIX_REMAINDER_PID,FIX_RUNNER_STATUS,FIX_VERIFIED}.json`. Old PID/status/logs
+  preserved. Canonical new code `tools/autonomy_e5/{fix_runner,remote_fix,
+  fix_ops}.py`;10focused tests PASS, focused Ruff checks PASS. Do not rerun
+  original prepare/launch/resume or repeat any S-E5FIX attempt.
+
+### S-E5FIX fresh-session verification — WAIT_OWNER_BUDGET (15:41 UTC+8)
+
+- The authoritative REGISTRATION.md already contains the15:00 amendment and
+  15:06 execution receipt. Repair, preflight, one canary, six one-time repairs
+  and detached continuation finished before this session's read-only checks.
+- Final cpuP **114/114** successful worlds,102,600charged=actualsim-s; cpuQ
+  **108/114**,102,600charged/97,200actualsim-s. Total **222/228**,205,200charged,
+  199,800actual; exactly182,700new charges after the original22,500. All six
+  original cpuQ failures/5,400charges remain; every repair has exactly one
+  `.e5fix1` charge, and canary973001 is reused without another attempt.
+- Rechecked every successful result against native/coopON observable initial
+  hashes,120/300/600s clocks, conservation, zero dropped steps/collisions/
+  teleports, unique ledger charges and its per-job result file: **PASS**.
+  All **222result SHA256s** match gpuA's mirror, including all108cpuQ outputs.
+- gpuA `e5/FIX_STATUS.json` and `FIX_BUDGET_RECEIPT.json`, plus both CPUs'
+  `operations_e5/FIX_FINAL.json`, report **WAIT_OWNER_BUDGET**. Missing cpuQ
+  seeds: **973217,973219,973221,973223,973225,973227**. Completion requires
+  **5,400additional sim-s**, outside current authority. `e5/RESULTS.json` is
+  absent; no incomplete-panel inference was produced.
+- Receipt-bound cpuP844872, cpuQ835541 and gpuA104810 have exited. No simulation,
+  launch, heartbeat refresh, control edit or signal was issued in this session;
+  loop collections retain priority. Further dispatch requires new main authority.
+- Local proof snapshots: `tools/autonomy_e5/receipts_fix/`
+  `{cpuP,cpuQ,gpuA}_resume_verified.json`; historical `VERIFIED.json` retained.
+  Ten focused E5/E5FIX tests PASS; focused fatal-error Ruff checks PASS.
