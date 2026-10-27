@@ -107,7 +107,7 @@ print(json.dumps({{'files':len(manifest),'free_bytes':shutil.disk_usage(root).fr
 
 def tests(name, full=False):
     assert name.replace('-', '').isalnum()
-    targets = ['tests/unit'] if full else ['tests/unit/test_longmem.py',
+    targets = ['tests/unit', '--continue-on-collection-errors'] if full else ['tests/unit/test_longmem.py',
         'tests/unit/test_looplong.py', 'tests/unit/test_policy14_integration.py',
         'tests/unit/test_probe.py', 'tests/unit/test_native_full_actor.py',
         'tests/unit/test_nativeinit.py']
