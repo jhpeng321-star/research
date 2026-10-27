@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-27",
+  "host": "cpuP",
+  "torch": "2.12.1+cpu",
+  "threads": 1,
+  "nice": 15,
+  "fixture": "synthetic recurrent frozen WM; starts=1, slots=8, members=2, activation_width=4096",
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src nice -n 15 python scripts/longmem_bench.py --batch 1 --width 4096",
+  "memory_command_suffix": " --tensor-memory",
+  "method": "Fresh child per point. Unprofiled elapsed time and ru_maxrss; separate CPU Kineto allocation/free event scan for peak live tensor bytes. Profiler RSS/time excluded from timings. All flags default OFF. Enabled cases use microbatch=1 and both host-offload flags=true.",
+  "verification": {
+    "pytest": "22 passed in 17.17s; CPU only; tests/unit/test_longmem.py",
+    "gradient_tolerance": {"atol": 0.000002, "rtol": 0.00002},
+    "wheel": "wms-0.1.0-py3-none-any.whl",
+    "wheel_sha256": "78e153b52ae26b129ac08023a5654793b6bc63de1a9eb88ba70bf20f1cfc6c63",
+    "build": "python -m pip wheel --no-deps --no-build-isolation --no-cache-dir . -w /home/ubuntu/longmem/wheels",
+    "ruff": "All checks passed on dreamer.py, imagination_memory.py, test_longmem.py and longmem_bench.py"
+  },
+  "rows": [
+    {
+      "horizon_s": 30,
+      "baseline": {"tensor_peak_mib": 30.3727, "seconds": 0.1991, "peak_rss_mib": 347.56},
+      "segment_8": {"tensor_peak_mib": 2.6553, "seconds": 0.4794, "peak_rss_mib": 336.33},
+      "segment_16": {"tensor_peak_mib": 4.6168, "seconds": 0.4707, "peak_rss_mib": 328.21},
+      "actor_loss_all_paths": 0.8128941655158997
+    },
+    {
+      "horizon_s": 60,
+      "baseline": {"tensor_peak_mib": 60.7448, "seconds": 0.3896, "peak_rss_mib": 392.63},
+      "segment_8": {"tensor_peak_mib": 2.7973, "seconds": 0.9407, "peak_rss_mib": 357.84},
+      "segment_16": {"tensor_peak_mib": 4.7235, "seconds": 0.9308, "peak_rss_mib": 367.78},
+      "actor_loss_all_paths": 0.894702136516571
+    },
+    {
+      "horizon_s": 120,
+      "baseline": {"tensor_peak_mib": 121.4889, "seconds": 0.8607, "peak_rss_mib": 482.2},
+      "segment_8": {"tensor_peak_mib": 3.0811, "seconds": 1.9451, "peak_rss_mib": 413.34},
+      "segment_16": {"tensor_peak_mib": 4.9315, "seconds": 1.9032, "peak_rss_mib": 389.36},
+      "actor_loss_all_paths": 0.7130028009414673
+    },
+    {
+      "horizon_s": 300,
+      "baseline": {"tensor_peak_mib": 303.7211, "seconds": 2.1932, "peak_rss_mib": 750.13},
+      "segment_8": {"tensor_peak_mib": 3.9325, "seconds": 4.9467, "peak_rss_mib": 436.9},
+      "segment_16": {"tensor_peak_mib": 5.5548, "seconds": 5.0439, "peak_rss_mib": 530.19},
+      "actor_loss_all_paths": 2.65741229057312
+    }
+  ],
+  "projection": {
+    "status": "Modeled, not GPU measured or a production-fit certification",
+    "anchor": "gpuA reported 36.5 GiB at 60 seconds; gpuR coop-off peak unmeasured",
+    "legacy_gib": "36.5 * horizon_s / 60",
+    "optimized_gib": "4 + (36.5 - 4) * tensor_peak_mib / 60.7448",
+    "assumptions": "4 GiB fixed resident allowance; same padding/future/variant geometry; synthetic tensor ratios transfer to production. Host offload enabled. Increasing entrant padding, actor/WM architecture, host RAM, PCIe latency, allocator reserve and auxiliary critic work are not calibrated.",
+    "gpuA_48GB": {"segment_physics_steps": 16, "gib_by_horizon": [6.47, 6.53, 6.64, 6.97]},
+    "gpuR_24GB": {"segment_physics_steps": 8, "gib_by_horizon": [5.42, 5.50, 5.65, 6.10]}
+  }
+}
