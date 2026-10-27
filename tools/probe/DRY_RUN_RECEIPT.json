@@ -1,0 +1,23 @@
+{
+  "schema": "c4_probe_dry_run_receipt/1",
+  "host": "cpuP",
+  "directory": "~/probe",
+  "full_receipt": "~/probe/DRY_RUN.json",
+  "cycle": 1,
+  "seed": 968157,
+  "state_t_s": 360.0,
+  "observed_vehicles": 61,
+  "wm_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+  "policy_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "futures": 8,
+  "single_candidates": 10,
+  "single_uncertain_negative_mean": 1,
+  "group_candidates": 0,
+  "selected": null,
+  "reason": "unavailable real-pair CQR; original arm retained",
+  "wall_s": 346.7848672840046,
+  "sumo_sim_s": 0,
+  "initial_unbatched_attempt": "foreground SSH timed out after 600s; no simulator",
+  "threads": 1,
+  "nice": 19
+}

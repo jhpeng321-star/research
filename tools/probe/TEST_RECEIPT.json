@@ -1,0 +1,21 @@
+{
+  "schema": "c4_probe_test_receipt/1",
+  "host": "cpuP",
+  "directory": "~/probe",
+  "simulator_started": false,
+  "suite": [
+    "tests/unit/test_probe.py",
+    "tests/unit/test_sumocredit.py",
+    "tests/unit/test_sumocredit_kcheck.py",
+    "tests/unit/test_fastloop.py",
+    "tests/unit/test_loop14.py",
+    "tests/unit/test_c4_genrand.py"
+  ],
+  "suite_result_before_final_artifact_test": "87 passed, 2 existing warnings in 8.02s",
+  "final_artifact_integration_test": "test_world_artifact_exports_probes_as_separate_hashed_training_source: 1 passed in 0.83s",
+  "unique_passing_tests": 88,
+  "ruff": "passed on new/modified files; collect.py existing E402 import-order exceptions excluded",
+  "collection_gate": "No real-pair CQR artifact was supplied; live enable remains OFF and rejects unavailable calibration",
+  "long_credit_reserve_sim_s": 7800,
+  "extra_sim_s": 0
+}

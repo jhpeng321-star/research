@@ -92,6 +92,9 @@ class PairExtras:
     long_group_time: int = 0
     long_single_horizon: int = 0
     long_single_time: int = 0
+    probe_slot: str = ""
+    probe_calibration: Optional[str] = None
+    probe_role: str = ""
 
     def __post_init__(self):
         from wms.control.confident_gate import REFERENCES, UNITS
@@ -113,6 +116,11 @@ class PairExtras:
             raise ValueError("long GROUP horizon must be 0/OFF or 300 s, time >= 0")
         if self.long_single_horizon not in (0, 300) or self.long_single_time < 0:
             raise ValueError('long single horizon must be 0/OFF or 300 s, time >= 0')
+        if self.probe_slot:
+            if (self.probe_slot not in ("single", "group") or self.probe_role != "collection"
+                    or not self.probe_calibration or self.long_group_horizon != 300
+                    or self.long_single_horizon != 300 or self.long_single_time != self.long_group_time):
+                raise ValueError("probe needs collection role, calibration and both co-located existing long slots")
 
     @property
     def active(self) -> bool:
@@ -121,13 +129,13 @@ class PairExtras:
 
     @property
     def needs_wm(self) -> bool:
-        return bool(self.gate_horizon or self.gate_table
+        return bool(self.probe_slot or self.gate_horizon or self.gate_table
                     or ((self.credit_horizon or self.long_group_horizon) and self.credit_imagine))
 
     def marks(self, branch_h: int) -> set:
         hs = [self.credit_horizon, self.gate_horizon, branch_h if self.gate_table else 0,
               self.long_group_horizon, self.long_single_horizon]
-        return {int(h) for h in hs if 0 < int(h) <= int(branch_h)}
+        return {int(h) for h in hs if 0 < int(h) <= int(branch_h)} | ({60, 120, 300} if self.probe_slot else set())
 
     def sim_s_per_point(self, branch_h: int) -> int:
         return sim_s_per_point(asdict(self), branch_h)
@@ -248,6 +256,15 @@ class PairExtras:
     def run_point(self, env, point, prefix, *, policy_factory, seed, world, branch_h) -> dict:
         out = {"t_s": point["t_s"], "seed": int(seed), "world": world, "sim_s": 0}
         t0 = time.monotonic()
+        probe = None
+        probe_due = bool(self.probe_slot and int(point["t_s"]) == self.long_group_time)
+        if probe_due and not getattr(self, "_probe_stopped", False):
+            # A collision in any earlier arm of this world suppresses all probes.
+            if any(r.get("collisions", 0) for r in prefix.values()):
+                self._probe_stopped = True
+            else:
+                from .probe_runtime import choose
+                probe = choose(self, env, point, policy_factory, seed, world)
         if self.gate_horizon:
             out["gate"] = self._gate_calibration(env, point, prefix, policy_factory, seed, branch_h)
             out["sim_s"] += out["gate"]["sim_s"]
@@ -257,14 +274,34 @@ class PairExtras:
         if self.credit_horizon:
             out["credit"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h)
             out["sim_s"] += out["credit"]["extra_sim_s"]
-        if self.long_group_horizon and int(point["t_s"]) == self.long_group_time:
+        if self.probe_slot:
+            def collision(value):
+                return isinstance(value, dict) and (value.get("collisions", 0)
+                    or any(collision(v) for v in value.values() if isinstance(v, dict)))
+            if collision(out):
+                self._probe_stopped = True
+            if getattr(self, "_probe_stopped", False):
+                probe = None
+        if probe_due and probe is not None:
+            from .probe_runtime import execute
+            out["probe"] = execute(self, env, point, prefix, policy_factory, probe, seed, world)
+            out["sim_s"] += out["probe"]["extra_sim_s"]
+        if probe_due:
+            out["probe_selection"] = {"world": world, "t_s": point["t_s"], "slot": self.probe_slot,
+                                      "selected": probe is not None,
+                                      "reason": (None if probe is not None else
+                                                 "world collision" if getattr(self, "_probe_stopped", False)
+                                                 else getattr(self, "_probe_skip_reason", "no eligible CAV"))}
+        if (self.long_group_horizon and int(point["t_s"]) == self.long_group_time
+                and not (probe is not None and self.probe_slot == "group")):
             if (branch_h < self.long_group_horizon or any(
                     (arm, self.long_group_horizon) not in prefix for arm in ("B", "POLICY"))):
                 raise ValueError("long GROUP requires existing 300 s B/ALL prefixes")
             out["credit_long"] = self._credit(env, point, prefix, policy_factory, seed, world, branch_h,
                                                horizon=self.long_group_horizon, group_only=True)
             out["sim_s"] += out["credit_long"]["extra_sim_s"]
-        if self.long_single_horizon and int(point['t_s']) == self.long_single_time:
+        if (self.long_single_horizon and int(point['t_s']) == self.long_single_time
+                and not (probe is not None and self.probe_slot == "single")):
             if branch_h < 300 or ('B', 300) not in prefix:
                 raise ValueError('long single requires the existing 300 s native prefix')
             out['single_long'] = self._single_hold(env, point, prefix, seed, world)
@@ -497,7 +534,8 @@ class PairExtras:
         from .genrand import _jsonable
         branch_root = Path(branch_root)
         files = {"gate": "GATE_CALIBRATION.jsonl", "gated": "GATED_ARMS.jsonl",
-                 "credit": "SUMOCREDIT_POINTS.jsonl"}
+                 "credit": "SUMOCREDIT_POINTS.jsonl", "probe": "PROBE_POINTS.jsonl",
+                 "probe_selection": "PROBE_SELECTION.jsonl"}
         counts = {}
         for key, name in files.items():
             rows = [p[key] for p in points if key in p]
@@ -510,6 +548,10 @@ class PairExtras:
                 for row in rows:
                     stream.write(json.dumps(_jsonable(row), allow_nan=False) + "\n")
             counts[key] = len(rows)
+        if self.probe_slot:
+            from .probe import correction_report
+            (branch_root / "PROBE_REPORT.json").write_text(json.dumps(
+                correction_report([p["probe"] for p in points if "probe" in p]), indent=2))
         return {"schema": "c4_sumocredit_extras/1", "options": asdict(self), "files": counts,
                 "sim_s": int(sum(p["sim_s"] for p in points)),
                 "wall_s": float(sum(p["wall_s"] for p in points))}
