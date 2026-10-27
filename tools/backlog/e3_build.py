@@ -28,7 +28,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from wms.data.c4_episodes import exact_entry_backlog, read_requests  # noqa: E402
+from wms.data.c4_episodes import cav_entry_counter, exact_entry_backlog, read_requests  # noqa: E402
 
 DT = 0.5
 SPEED_LIMIT = 31.29
@@ -97,7 +97,13 @@ def main() -> int:
         if not np.array_equal(t_all[i0:i0 + len(conv_t)], conv_t):
             print(f"REFUSED: converted grid is not a slice of the raw tape for {e['episode']}", file=sys.stderr)
             return 4
-        backlog = queue["entry_backlog"][i0:i0 + len(conv_t)].astype(np.float32)
+        sl = slice(i0, i0 + len(conv_t))
+        backlog = queue["entry_backlog"][sl].astype(np.float32)
+        request_counter = queue["request_counter"][sl].astype(np.float32)
+        cav_counter = cav_entry_counter(
+            t_all, vid, present, np.asarray(ep["is_cav"], bool),
+            np.asarray(ep.get("lane_carry", ep["lane"]), np.int64),
+            ep.get("entry_first_seen_s"), ep.get("entry_first_entrance"))[sl]
         # E3-long window clocks from t0
         t0 = float(e["branch"]["t0_s"])
         tick = int(np.searchsorted(t_all, t0 - 1e-6))
@@ -128,6 +134,8 @@ def main() -> int:
                 continue
             os.link(f, dst / f.name)                      # byte-identical converted arrays
         np.save(dst / "entry_backlog.npy", backlog, allow_pickle=False)
+        np.save(dst / "request_counter.npy", request_counter, allow_pickle=False)
+        np.save(dst / "entry_cav_counter.npy", cav_counter, allow_pickle=False)
         entry = {**e, "queue_arrays": {"source": "scenario/requests.rou.xml", **qstats,
                                        "e3_clock_reconciliation": {k: v for k, v in rec.items()
                                                                     if k.startswith("h")}},
