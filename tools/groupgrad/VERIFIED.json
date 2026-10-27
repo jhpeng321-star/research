@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "report_words": 417,
+  "cpu_gradient_assertions": "PASS",
+  "source_equivalence": "7 core deployed/unit ASTs match; paircrit traced separately",
+  "checkpoint_census": "4 exact SHA prefixes, init reconstruction, modules and optimizer steps PASS",
+  "no_production_changes": true,
+  "files": {
+    "GROUPGRAD.md": "fc17ba33b9a7706a3fc2dbd97187b719ae5c37c8bcc04ea32672ae88be102802",
+    "checkpoint_deltas.json": "5574bed67069a3b04f487033208dd4e830e193dba9a23af1642e85302ecff286",
+    "diagnosis.json": "24321a96b5b2c12ad955ea176af948e9d6f34ef6faaeffb1aa6bd32bd99c5899",
+    "inputs.json": "e3e572f23a045ec3115b8ccd5dcf389d9df527c057cf6fb452a7644fa27ed3b3",
+    "logs.json": "d89acdeb44e5cfc39996785eab17d4583aa25397274bc8cd4c576ceb31470f75",
+    "log_summary.json": "180ea40e62af7526c45d25b3b0e16ee45020714ff5da60ac3e4289dda9f14ce4"
+  }
+}
