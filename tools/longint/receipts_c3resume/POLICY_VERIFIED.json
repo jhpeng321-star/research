@@ -1,0 +1,34 @@
+{
+  "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/c3resume/r2/POLICY_VERIFIED.json",
+  "task": "S-C3RESUME",
+  "phase_start_update": 380,
+  "resumed_update": 514,
+  "finite_updates": [515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530],
+  "cap_bytes": 46797168312.32,
+  "peak_allocated_bytes": 16778883072,
+  "peak_reserved_bytes": 17219715072,
+  "sampled_process_peak_bytes": 17666408448,
+  "sample_interval_s": 5,
+  "saved_curriculum_updates": [0, 380, 463],
+  "memory_segment": 8,
+  "native_gate": {
+    "passed": true,
+    "n": 16,
+    "selected_update": 530,
+    "measured_through": 530,
+    "selected_phase_updates": 150,
+    "panel_horizon_s": 10,
+    "mean_delta": -0.833653450012207,
+    "delta_per_start": [-0.1459197998046875, -0.565185546875, -0.687255859375, -2.01055908203125, -0.169921875, -0.291259765625, -1.4058837890625, -1.97052001953125, -0.0928955078125, -0.65625, -0.415191650390625, -2.0994873046875, -0.23052978515625, -0.47900390625, -0.65447998046875, -1.464111328125],
+    "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+    "selection": "earliest minimum eligible measured mean delta"
+  },
+  "policy_checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c03.a6/policy_latest.pt",
+  "policy_sha256": "0978aa7288cf9e36a0b61949b1e236b3fe48a0d220dada64f67a4797f969dc5e",
+  "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+  "wm_config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+  "preflight": {
+    "cpuP": {"status": "PASS", "charged_sim_s": 0, "sumo_started": false},
+    "cpuQ": {"status": "PASS", "charged_sim_s": 0, "sumo_started": false}
+  }
+}
