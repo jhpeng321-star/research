@@ -38,7 +38,7 @@ class RealPairCredit:
 
         policy = NPZRealReturnProvider(doc['policy_returns'])
         native = NPZRealReturnProvider(doc['native_returns'])
-        PairedProvider(policy, native, doc['pairing_receipt'], doc['source_policy_sha256'])
+        provider = PairedProvider(policy, native, doc['pairing_receipt'], doc['source_policy_sha256'])
         proof = json.loads(checked_path(doc['pairing_receipt']).read_text())
         cfg = load_train_config(str(checked_path(doc['wm']['config'])))
         pairs = PairedBranchSource(checked_path(doc['pairs']), horizon_steps=600,
@@ -48,7 +48,12 @@ class RealPairCredit:
             arm_kinds=('B', 'POLICY'))
         groups = {g['pair_key']: g for g in pairs.groups}
         records = []
+        from .long_credit import world_role
+        eligible = set(provider.fit_indices.tolist())
         for i, item in enumerate(proof['pairs']):
+            # CQR calibration/validation worlds never supply actor gradients.
+            if i not in eligible or world_role(item['seed']) != 'fit':
+                continue
             if item['horizon_s'] != 300:
                 raise ValueError('direct credit requires real paired 300s returns')
             group = groups[item['pair_key']]
@@ -56,7 +61,12 @@ class RealPairCredit:
             p = next(r for r in group['rows'][1:] if
                 pairs.dataset._loader.entries[r]['branch']['kind'] == 'POLICY')
             records.append((p, b, float(policy._returns[i] - native._returns[i])))
-        return cls(StartStateSampler(pairs.dataset), pairs, records)
+        if not records:
+            raise ValueError('no world-disjoint fitting pairs for direct real credit')
+        result = cls(StartStateSampler(pairs.dataset), pairs, records)
+        result.excluded_worlds = {int(item['seed']) for item in proof['pairs']
+                                  if world_role(item['seed']) != 'fit'}
+        return result
 
     def loss(self, trainer, scale):
         from .obs import build_observations

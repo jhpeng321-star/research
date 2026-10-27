@@ -438,3 +438,67 @@ def test_zero_acceleration_metering_hold_is_counted_against_paired_native():
     result = hold_metrics(image)
     assert result['metering_like_holds_ge30s'] == 2
     assert result['metering_like_max_hold_s'] == 60
+
+
+def test_conditional_cqr_preserves_old_development_partition():
+    import hashlib
+    for world in range(100):
+        if int(hashlib.sha256(f'965140:{world}'.encode()).hexdigest(), 16) % 5 == 0:
+            assert world_role(world) == 'validation'
+    model = fit_cqr(rows(), {})['horizons']['120']
+    assert model['condition_edges'] and len(model['conditional_lower']) > 1
+
+
+def test_missing_fit_worlds_is_unqualified_not_a_fake_finite_bound():
+    model = fit_cqr([r for r in rows() if world_role(r['world']) == 'validation'], {})['horizons']['120']
+    assert model['correction_scale'] is None and not model['qualified']
+
+
+def test_calibrated_extension_is_separate_from_trusted_gate(tmp_path, monkeypatch):
+    from wms.control.looplong import configure
+    from wms.control import long_credit, looplong_real
+    from wms.control.coopw import HorizonConfig
+    path, doc = boundary_files(tmp_path)
+    doc.update(imagination_horizon_s=120, source_policy_checkpoint=str(tmp_path / 'actor.pt'),
+               flags={'auto_horizon': True, 'long_credit': True})
+    policy, group = torch.nn.Linear(1, 1), torch.nn.Linear(1, 1)
+    torch.save({'policy': policy.state_dict(), 'group_encoder': group.state_dict()}, doc['source_policy_checkpoint'])
+    from wms.control.looplong import digest
+    doc['source_policy_sha256'] = digest(doc['source_policy_checkpoint'])
+    trainer = SimpleNamespace(config=SimpleNamespace(entry_pad_max=32, horizon=10),
+        device=torch.device('cpu'), update_count=383, policy=policy, group_encoder=group,
+        _curriculum_position=lambda advance=False: 383)
+    monkeypatch.setattr(looplong_real.RealPairCredit, 'from_boundary',
+                        lambda _: SimpleNamespace(excluded_worlds=set()))
+    calls = []
+    def fit(*args):
+        calls.append(args[-2])
+        return {'horizons': {'120': {'qualified': False, 'correction_scale': None}}}
+    monkeypatch.setattr(long_credit, 'fit_from_loop', fit)
+    doc.update(pairs='pairs', pairing_receipt='proof', policy_returns='policy', native_returns='native')
+    configure(trainer, doc, {}, tmp_path)
+    assert calls == [[120]] and trainer.long_credit_trusted_s == 60
+    assert trainer.long_credit_on_policy and trainer.long_credit_bound_update == 383
+    assert isinstance(trainer.horizon_curriculum, HorizonConfig)
+    assert trainer.horizon_curriculum.horizons_s == [10, 60, 120]
+    assert trainer.horizon_curriculum.allowed_stage == 2
+    assert trainer.horizon_curriculum.gate_record['trusted_horizon_s'] == 60
+
+
+def test_updated_actor_and_unvalidated_cooperation_are_pessimistic_only():
+    trainer = SimpleNamespace(long_credit={'horizons': {'120': {
+        'qualified': True, 'lower_scale': 0., 'upper_scale': 0., 'correction_scale': 0.}}},
+        long_credit_trusted_s=90, long_credit_on_policy=True,
+        long_credit_bound_update=10, update_count=10)
+    rewards = torch.zeros(8, 120, 3)
+    rewards[:, 90:, :2] = 1.
+    image = {'imagination_horizon_s': 120, 'rewards': rewards, 'n_base': 1,
+             'deterministic_policy': True}
+    args = (image, rewards, torch.tensor([2, 2, 2]), torch.tensor([True, True, False]), torch.ones(3))
+    result = pessimistic_difference(trainer, *args)
+    assert result[..., 0].min() == 30 and result[..., 1:].count_nonzero() == 0
+    image['deterministic_policy'] = False
+    assert pessimistic_difference(trainer, *args).count_nonzero() == 0
+    image['deterministic_policy'] = True
+    trainer.update_count += 1
+    assert pessimistic_difference(trainer, *args).count_nonzero() == 0

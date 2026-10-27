@@ -1,7 +1,8 @@
 """Default-off K=8 paired long credit with world-split, spread-scaled CQR.
 
-Pinball fits are intercept-only quantile regressions of standardized paired
-errors. The scale feature is the observed K-sample interquantile width; a world-
+Pinball fits are conditional quantiles of standardized paired errors, partitioned
+by fitting-world empirical quantiles of paired mean/width. The scale feature is
+the observed K-sample interquantile width; a world-
 max finite-sample correction follows S-CQR/S-GATECAL (80% intervals). Neither
 spread nor an encoder vote is treated as calibrated confidence by itself.
 """
@@ -20,7 +21,16 @@ K = 8
 ALPHA = .2
 
 
+def conditional_scales(mean, width, model):
+    bins = np.searchsorted(model.get('condition_edges', []), mean / width, side='left')
+    return (np.asarray(model.get('conditional_lower', [model['lower_scale']]))[bins],
+            np.asarray(model.get('conditional_upper', [model['upper_scale']]))[bins])
+
+
 def world_role(world):
+    # Preserve the already registered paired-critic development exclusion.
+    if int(hashlib.sha256(('965140:' + str(world)).encode()).hexdigest(), 16) % 5 == 0:
+        return 'validation'
     return ('fit', 'calibration', 'validation')[int(hashlib.sha256(
         ('LOOPLONG-2:' + str(world)).encode()).hexdigest(), 16) % 3]
 
@@ -35,8 +45,9 @@ def validate_model(worlds, mean, width, real, model):
     unique = sorted(set(worlds))
     if model['correction_scale'] is None or not unique:
         return {'qualified': False, 'world_coverage': None, 'ranking_lower95': None}
-    lo = mean + (model['lower_scale'] - model['correction_scale']) * width
-    hi = mean + (model['upper_scale'] + model['correction_scale']) * width
+    lower, upper = conditional_scales(mean, width, model)
+    lo = mean + (lower - model['correction_scale']) * width
+    hi = mean + (upper + model['correction_scale']) * width
     center = (lo + hi) / 2
     coverage, ranking = [], []
     for world in unique:
@@ -80,20 +91,38 @@ def fit_cqr(rows, binding):
         worlds = np.asarray([str(r['world']) for r in subset])
         roles = np.asarray([world_role(w) for w in worlds])
         fit, cal = roles == 'fit', roles == 'calibration'
-        if not fit.any() or not cal.any():
-            raise ValueError('CQR needs disjoint fitting and calibration worlds')
         mean, width = sample_location_width([r['samples'] for r in subset])
         real = np.asarray([r['real_benefit'] for r in subset], float)
         if not np.isfinite(real).all():
             raise ValueError('nonfinite CQR outcome')
+        if not fit.any() or not cal.any():
+            models[str(int(horizon))] = {'lower_scale': 0., 'upper_scale': 0.,
+                'correction_scale': None, 'qualified': False,
+                'reason': 'no disjoint fitting/calibration worlds'}
+            continue
         residual = (real - mean) / width
         weights = np.array([1. / sum(worlds[fit] == w) for w in worlds[fit]])
         lo, hi = [weighted_quantile(residual[fit], weights, q) for q in (.1, .9)]
-        scores = np.maximum(mean + lo * width - real, real - mean - hi * width) / width
+        # The partitions and pinball minimizers see fitting worlds only. This
+        # corrects conditional WM bias; raw K spread alone never sets the bound.
+        count = min(4, max(1, int(math.sqrt(len(set(worlds[fit]))))))
+        edges = np.unique([weighted_quantile((mean / width)[fit], weights, q)
+                           for q in np.arange(1, count) / count])
+        bins = np.searchsorted(edges, mean / width, side='left')
+        lower, upper = [], []
+        for b in range(len(edges) + 1):
+            selected = bins[fit] == b
+            values = residual[fit][selected]
+            lower.append(weighted_quantile(values, weights[selected], .1) if len(values) else lo)
+            upper.append(weighted_quantile(values, weights[selected], .9) if len(values) else hi)
+        conditional = {'condition_edges': edges.tolist(), 'conditional_lower': lower,
+                       'conditional_upper': upper, 'lower_scale': lo, 'upper_scale': hi}
+        qlo, qhi = conditional_scales(mean, width, conditional)
+        scores = np.maximum(mean + qlo * width - real, real - mean - qhi * width) / width
         world_scores = [float(scores[cal & (worlds == w)].max()) for w in sorted(set(worlds[cal]))]
         rank = math.ceil((len(world_scores) + 1) * (1 - ALPHA))
         correction = max(0., sorted(world_scores)[rank - 1]) if rank <= len(world_scores) else None
-        model = {'lower_scale': lo, 'upper_scale': hi,
+        model = {**conditional,
             'correction_scale': correction, 'fit_worlds': sorted(set(worlds[fit])),
             'calibration_worlds': sorted(set(worlds[cal])), 'rank': rank,
             'qualified': False}
@@ -102,9 +131,9 @@ def fit_cqr(rows, binding):
                                              width[validation], real[validation], model)
         model['qualified'] = model['validation']['qualified']
         models[str(int(horizon))] = model
-    return {'schema': 'looplong_cqr/2', 'k': K, 'alpha': ALPHA,
+    return {'schema': 'looplong_cqr/3', 'k': K, 'alpha': ALPHA,
             'binding': binding, 'horizons': models,
-            'rule': 'world-weighted pinball residual/width; disjoint world-max CQR finite rank'}
+            'rule': 'fit-only conditional pinball residual/width; disjoint world-max CQR finite rank'}
 
 
 def bounded_difference(difference, model, coefficients):
@@ -121,8 +150,12 @@ def bounded_difference(difference, model, coefficients):
     mean = difference.mean(0)
     width = (torch.quantile(difference, .9, dim=0) -
              torch.quantile(difference, .1, dim=0)).clamp_min(torch.finfo(difference.dtype).eps)
-    lo = mean + (model['lower_scale'] - model['correction_scale']) * width
-    hi = mean + (model['upper_scale'] + model['correction_scale']) * width
+    bins = torch.bucketize((mean / width).detach().contiguous(),
+                           mean.new_tensor(model.get('condition_edges', [])))
+    lower = mean.new_tensor(model.get('conditional_lower', [model['lower_scale']]))[bins]
+    upper = mean.new_tensor(model.get('conditional_upper', [model['upper_scale']]))[bins]
+    lo = mean + (lower - model['correction_scale']) * width
+    hi = mean + (upper + model['correction_scale']) * width
     bound = torch.where(coefficients >= 0, lo, hi)
     if not model['qualified']:
         # Finite but unvalidated bounds may only penalize, never reward an
@@ -142,6 +175,12 @@ def pessimistic_difference(trainer, imagined, difference, base, has_base, coeffi
     model = artifact['horizons'].get(str(h))
     if model is None:
         raise ValueError('no horizon-matched loop CQR model')
+    if (not getattr(trainer, 'long_credit_on_policy', False) or
+            trainer.update_count != getattr(trainer, 'long_credit_bound_update', None)
+            or not imagined.get('deterministic_policy', False)):
+        # Calibration replays the deterministic collection actor. Exploratory
+        # actions have no matching real labels, even before the first update.
+        model = {**model, 'qualified': False}
     if not bool(has_base[:imagined['n_base']].all()):
         raise ValueError('long credit requires paired native rows for every policy start')
     rewards = imagined['rewards']
@@ -156,7 +195,13 @@ def pessimistic_difference(trainer, imagined, difference, base, has_base, coeffi
     # interval (not uncalibrated shorter suffixes or TD-lambda shrinkage) as the
     # long component of every decision's advantage.
     long_benefit = paired(long.sum(1, keepdim=True))
-    return paired(short_returns) + bounded_difference(long_benefit, model, coefficients).expand_as(difference)
+    bound = bounded_difference(long_benefit, model, coefficients)
+    # Only POLICY/B contrasts were validated. ONLY/GROUP/FLIP/NOT cannot
+    # inherit that qualification without their own real probe pairs.
+    pessimistic = bounded_difference(long_benefit, {**model, 'qualified': False}, coefficients)
+    eligible = torch.arange(difference.shape[-1], device=difference.device) < imagined['n_base']
+    bound = torch.where(eligible, bound, pessimistic)
+    return paired(short_returns) + bound.expand_as(difference)
 
 
 def hold_metrics(imagined):

@@ -33,6 +33,11 @@ def validate(cfg, refusal):
         raise refusal('hot swap requires owned-child overlap coordinator')
     if enabled(cfg, 'long_credit') and not enabled(cfg, 'auto_horizon'):
         raise refusal('long credit requires registered auto horizon')
+    horizon = section.get('imagination_horizon_s')
+    if horizon is not None and (type(horizon) is not int or horizon not in HORIZONS):
+        raise refusal('looplong imagination horizon must be a registered whole-second stage')
+    if horizon is not None and not enabled(cfg, 'long_credit'):
+        raise refusal('beyond-gate imagination requires calibrated long credit')
 
 
 def active(cfg, state, flag):
@@ -130,6 +135,8 @@ def boundary_descriptor(loop, cfg, state, boundary):
         'policy_returns': converted.get('returns'), 'native_returns': converted.get('native_returns'),
         'source_policy_sha256': state['policy']['sha256'],
         'source_policy_checkpoint': state['policy']['checkpoint'],
+        'imagination_horizon_s': max(boundary['horizon_s'],
+            cfg['looplong'].get('imagination_horizon_s', boundary['horizon_s'])),
         'threshold_sha256': cfg['looplong']['threshold_sha256']}
 
 

@@ -190,15 +190,26 @@ def memory_projection():
 
 
 def policy_probe():
-    """Three 90s toy-WM updates with eight distinct WM members, real trainer path."""
+    """Three 90s toy-WM updates with genuine K=8 driver draws, real trainer path."""
     import importlib.util
     root = Path(__file__).resolve().parents[2]
     spec = importlib.util.spec_from_file_location('looplong_coop_fixture', root / 'tests/unit/test_coopw.py')
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
     from wms.control.coopw import ExplorationConfig
+    class SampledCommandWM(helper.CommandWM):
+        def encode_drivers(self, state, **kwargs):
+            return None, torch.zeros_like(state['s_m'])[..., None], None
+
+        def rollout(self, state, **kwargs):
+            gain = self.gain
+            self.gain = gain + kwargs['driver_embedding'][..., 0] * .01
+            try:
+                return super().rollout(state, **kwargs)
+            finally:
+                self.gain = gain
     trainer = helper.trainer_for(helper.hdv_speed_reward,
-        models=[helper.CommandWM(gain=.01*(i+1)) for i in range(8)], horizon=90,
+        models=[SampledCommandWM(gain=.04)], horizon=90,
         cf={'n_group': 0, 'n_flip': 0}, low_penetration_horizon_cap=False)
     trainer.policy = helper.NoisePolicy()
     trainer.actor_parameters = list(trainer.policy.parameters()) + list(trainer.group_encoder.parameters())

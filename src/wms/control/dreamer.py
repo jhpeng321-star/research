@@ -1218,6 +1218,7 @@ class DreamerTrainer:
             zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
                 "imagination_horizon_s": cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
+                "deterministic_policy": deterministic,
                 **({"action_audit": {name: torch.stack([m[name] for m in member_action_audit])
                                      for name in member_action_audit[0]}}
                    if member_action_audit else {}),
@@ -1519,7 +1520,10 @@ class DreamerTrainer:
             out['long_credit_cqr_sha256'] = artifact.get('artifact_sha256')
             out['long_credit_k'] = imagined['rewards'].shape[0]
             out['long_credit_finite_rank'] = artifact['horizons'].get(h, {}).get('qualified', False)
-            out['long_credit_off_policy_after_update'] = True
+            out['long_credit_off_policy_after_update'] = (
+                not getattr(self, 'long_credit_on_policy', False) or
+                self.update_count != getattr(self, 'long_credit_bound_update', None))
+            out['long_credit_exploratory_unqualified'] = not imagined.get('deterministic_policy', False)
         if getattr(self, 'looplong_logging', False):
             from .long_credit import hold_metrics
             out.update(hold_metrics(imagined))

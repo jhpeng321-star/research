@@ -11,7 +11,8 @@ import loop14  # noqa: E402
 import loop14_long  # noqa: E402
 
 
-def prepare(base, output, pairs300, threshold, *, enable=False, coop_credit=True):
+def prepare(base, output, pairs300, threshold, *, enable=False, coop_credit=True,
+            imagination_horizon_s=None):
     cfg = loop14.load_config(base)
     threshold = Path(loop14.guard(threshold))
     registered = loop14.read_json(threshold)
@@ -22,6 +23,8 @@ def prepare(base, output, pairs300, threshold, *, enable=False, coop_credit=True
         'threshold_sha256': hashlib.sha256(threshold.read_bytes()).hexdigest(),
         'groups': registered.get('groups', 96), 'panel_seed': registered.get('panel_seed', 20261026),
         'coop_credit': coop_credit}
+    if imagination_horizon_s is not None:
+        cfg['looplong']['imagination_horizon_s'] = imagination_horizon_s
     if enable:
         cfg.setdefault('fastloop', {})['overlap_policy'] = True
         cfg.setdefault('resumeprep', {})['enabled'] = True
@@ -38,9 +41,11 @@ def main():
         ap.add_argument('--' + name, required=True)
     ap.add_argument('--enable', action='store_true')
     ap.add_argument('--coop-credit', choices=('on', 'off'), default='on')
+    ap.add_argument('--imagination-horizon-s', type=int, choices=loop14_long.HORIZONS)
     args = ap.parse_args()
     prepare(args.base, args.out, args.pairs300, args.threshold,
-            enable=args.enable, coop_credit=args.coop_credit == 'on')
+            enable=args.enable, coop_credit=args.coop_credit == 'on',
+            imagination_horizon_s=args.imagination_horizon_s)
     print(json.dumps({'prepared': args.out, 'enabled': args.enable, 'no_phase_launched': True}))
 
 

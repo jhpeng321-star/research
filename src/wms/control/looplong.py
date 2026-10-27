@@ -33,6 +33,12 @@ def read_boundary(path, *, swap=False):
         raise ValueError('looplong short horizon numbers failed')
     if doc['horizon_s'] > 10 and gate['horizons'].get(str(doc['horizon_s']), {}).get('verdict') != 'PASS':
         raise ValueError('looplong selected horizon did not pass')
+    target = doc.get('imagination_horizon_s', doc['horizon_s'])
+    if (type(target) is not int or target not in (10, 30, 60, 90, 120, 180, 300)
+            or target < doc['horizon_s']):
+        raise ValueError('invalid looplong imagination horizon')
+    if target > doc['horizon_s'] and not doc['flags'].get('long_credit'):
+        raise ValueError('beyond-gate imagination requires calibrated long credit')
     if gate.get('threshold_source', {}).get('sha256') != doc['threshold_sha256']:
         raise ValueError('looplong threshold binding mismatch')
     if swap:
@@ -49,15 +55,15 @@ def read_boundary(path, *, swap=False):
 def configure(trainer, doc, raw, output):
     from .coopw import HorizonConfig, ExplorationConfig
     flags = doc['flags']
-    target = doc['horizon_s']
+    target = doc.get('imagination_horizon_s', doc['horizon_s'])
     hs = [10]
     if flags.get('auto_horizon'):
-        previous, target = doc['previous_horizon_s'], doc['horizon_s']
-        hs = sorted({10, previous, target})
+        previous = doc['previous_horizon_s']
+        hs = sorted({10, previous, doc['horizon_s'], target})
         position = max(1, trainer._curriculum_position(advance=False))
         inherited = raw.get('horizon', {}).get('curriculum_updates', [0, 150])
         spacing = max(1, int(inherited[-1] - inherited[-2])) if len(inherited) > 1 else 150
-        knots = [0] + ([position] if len(hs) >= 2 else []) + ([position + spacing] if len(hs) == 3 else [])
+        knots = [0] + [position + spacing * i for i in range(len(hs) - 1)]
         base_pad = trainer.config.entry_pad_max
         pads = [max(base_pad, math.ceil(base_pad * h / trainer.config.horizon)) for h in hs]
         trainer.horizon_curriculum = HorizonConfig(enabled=True, horizons_s=hs,
@@ -70,6 +76,10 @@ def configure(trainer, doc, raw, output):
         trainer.long_credit_trusted_s = int(doc['horizon_s'])
         from .looplong_real import RealPairCredit
         trainer.looplong_real_credit = RealPairCredit.from_boundary(doc)
+        if trainer.looplong_real_credit.excluded_worlds:
+            from .real_share import exclude_development_starts
+            trainer.start_states = exclude_development_starts(
+                trainer.start_states, trainer.looplong_real_credit.excluded_worlds)
         if target > trainer.long_credit_trusted_s:
             from .long_credit import fit_from_loop
             path = checked_path(doc['source_policy_checkpoint'])
@@ -96,6 +106,19 @@ def configure(trainer, doc, raw, output):
             with artifact.open('x', encoding='utf-8') as stream:
                 json.dump(trainer.long_credit, stream, indent=1, allow_nan=False)
             trainer.long_credit['artifact_sha256'] = digest(artifact)
+            # Qualification belongs to the frozen collection actor, not its
+            # subsequent updates (or a fresh candidate initialized elsewhere).
+            trainer.long_credit_on_policy = all(
+                torch.equal(value, payload[name][key])
+                for name, module in (('policy', trainer.policy), ('group_encoder', trainer.group_encoder))
+                for key, value in module.state_dict().items())
+            trainer.long_credit_bound_update = trainer.update_count
+            # This explicit bounded extension does not relabel a failed gate
+            # PASS. Every beyond-gate contribution now passes through CQR.
+            trainer.horizon_curriculum.allowed_stage = len(hs) - 1
+            trainer.horizon_curriculum.gate_record.update(
+                allowed_stage=len(hs) - 1, trusted_horizon_s=trainer.long_credit_trusted_s,
+                beyond_gate_rule='paired CQR; unqualified/off-policy pessimistic-only')
         else:
             trainer.long_credit = None
     if flags.get('exploration'):
