@@ -321,14 +321,15 @@ def convert(loop, cfg, state, ph, root):
            "episodes": len(episodes), "pair_groups": len({e["pair_key"] for e in episodes}),
            "targets": loop.read_json(returns.with_suffix(".receipt.json"))["targets"],
            "durable_world_artifacts": [w["artifact"] for w in worlds]}
-    if cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit'):
+    if (cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit') or
+            loop.long_module().needs_pair_proof(cfg, state)):
         native = root/'returns'/f'native_returns_{tag}.npz'
         native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', str(target),
                       '--output', str(native), '--kind', 'B']
         if loop.run_cmd(h, native_cmd, env=env, log=log, timeout_s=3600):
             raise RuntimeError('merged native B real-return export failed')
         out.update(native_returns=str(native), native_returns_sha256=loop.sha256(native))
-        if cfg['policy'].get('paircrit'):
+        if cfg['policy'].get('paircrit') or loop.long_module().needs_pair_proof(cfg, state):
             pairing = root/'returns'/f'pairing_{tag}.json'
             pair_cmd = [h['python'], '-m', 'wms.control.paircrit_export', '--source', str(target),
                 '--policy-returns', str(returns), '--native-returns', str(native), '--output', str(pairing)]
@@ -346,13 +347,26 @@ def overlap(loop, cfg, state, root):
     """Runs in an owned thread, never writes shared LOOP14_STATE. One-cycle stale inputs are explicit."""
     snapshot = copy.deepcopy(state)
     k = state["cycles"][-1]["cycle"] + 1
-    if cfg['policy'].get('paircrit'):
+    if cfg['policy'].get('paircrit') or loop.long_module().needs_pair_proof(cfg, state):
         converted = state['cycles'][-1]['phases']['convert'].get('receipt', {})
         if not all(converted.get(key) for key in ('returns', 'native_returns', 'pairing_receipt')):
             raise loop.Refused('paired overlap must wait for completed current-policy conversion')
         snapshot.update(real_returns=converted['returns'], native_real_returns=converted['native_returns'],
                         pairing_receipt=converted['pairing_receipt'])
     snapshot["cycles"] = [loop.new_cycle(k)]
+    if loop.long_module().enabled(cfg):
+        converted = state['cycles'][-1]['phases']['convert'].get('receipt', {})
+        snapshot['looplong_cohort'] = {
+            'pairs': converted.get('pairs'), 'pairing_receipt': converted.get('pairing_receipt'),
+            'policy_returns': converted.get('returns'), 'native_returns': converted.get('native_returns'),
+            'source_policy_sha256': state['policy']['sha256'],
+            'source_policy_checkpoint': state['policy']['checkpoint']}
+        if not snapshot.get('looplong_boundary') and loop.long_module().active(cfg, state, 'auto_horizon'):
+            boundary = loop.long_module().initial_boundary(loop, cfg, state,
+                snapshot['accepted_wm'], root, k)
+            if not boundary['short_nonregression']:
+                raise loop.Refused('starting accepted WM fails short horizon nonregression')
+            snapshot['looplong_boundary'] = loop.long_module().boundary_descriptor(loop, cfg, state, boundary)
     snapshot["policy_wm"] = copy.deepcopy(snapshot["accepted_wm"])
     dependencies = {"wm": snapshot["accepted_wm"], "resume_policy": snapshot["policy"],
                     "real_returns": snapshot["real_returns"],
@@ -361,7 +375,7 @@ def overlap(loop, cfg, state, root):
                     "returns_lag": "latest completed cycle at launch; current collection unavailable"}
     if cfg.get('resumeprep', {}).get('enabled'):
         dependencies['returns_lag'] = 'completed conversion at launch; accepted WM frozen independently'
-    if cfg['policy'].get('paircrit'):
+    if cfg['policy'].get('paircrit') or loop.long_module().needs_pair_proof(cfg, state):
         dependencies.update(native_real_returns=snapshot['native_real_returns'],
             native_real_returns_sha256=loop.sha256(snapshot['native_real_returns']),
             pairing_receipt=snapshot['pairing_receipt'],
@@ -379,6 +393,8 @@ def overlap(loop, cfg, state, root):
     loop.write_atomic(root / f'overlap_c{k:02d}.a{attempt}.launch.json',
                       {'cycle': k, 'dependencies': dependencies, 'attempt': attempt})
     receipt = loop.run_policy(cfg, snapshot, {"attempt": attempt}, root)
+    if loop.long_module().enabled(cfg):
+        dependencies['wm'] = snapshot.get('policy_wm', snapshot['accepted_wm'])
     doc = {"cycle": k, "dependencies": dependencies, "policy": snapshot["policy"], "receipt": receipt, 'attempt': attempt}
     loop.write_atomic(root / f"overlap_c{k:02d}.json", doc)
     return doc
@@ -404,12 +420,14 @@ def promote(loop, cfg, state, root):
     wm = doc["dependencies"]["wm"]
     if loop.sha256(wm["checkpoint"]) != wm["sha256"]:
         raise loop.Refused("overlap WM hash changed")
-    if cfg['policy'].get('paircrit'):
+    if cfg['policy'].get('paircrit') or loop.long_module().needs_pair_proof(cfg, state):
         for key in ('real_returns', 'native_real_returns', 'pairing_receipt'):
             if loop.sha256(doc['dependencies'][key]) != doc['dependencies'][key + '_sha256']:
                 raise loop.Refused('paired overlap dependency hash changed')
     state["policy"] = doc["policy"]
     state["policy_wm"] = wm
+    if loop.long_module().enabled(cfg):
+        state['looplong_policy_horizon_s'] = doc['receipt'].get('looplong_policy_horizon_s', 10)
     state["cycles"][-1]["phases"]["policy"].update(status="done", attempt=1,
             receipt={**doc["receipt"], "overlap": str(path), "trained_on_wm": wm,
                      "accepted_wm_at_promotion": state["accepted_wm"], "dependencies": doc["dependencies"]})
@@ -437,8 +455,9 @@ def drive(loop, waiter, cfg, arm_dir):
             phase = loop._phase(state)["name"]
             if phase == "policy":
                 waiter.prepare_horizon(cfg, state, arm_dir)
-            overlap_ready = (phase == 'wm_ft' if cfg['policy'].get('paircrit')
-                             else phase in ('collect', 'convert'))
+            paired_overlap = (cfg['policy'].get('paircrit') or loop.long_module().needs_pair_proof(cfg, state))
+            overlap_ready = (phase == 'wm_ft' if paired_overlap
+                              else phase in ('collect', 'convert'))
             if overlap_ready and future is None:
                 reg = loop.check_registration(cfg)
                 target = root / f"overlap_c{k+1:02d}.json"
@@ -453,8 +472,9 @@ def drive(loop, waiter, cfg, arm_dir):
                         shutil.copy2(args[i], dst)
                         args[i] = str(dst)
                     future = pool.submit(overlap, loop, frozen, state, root)
-            join_phase = 'check' if cfg['policy'].get('paircrit') else 'wm_ft'
-            if phase == join_phase and future is not None:
+            join_phase = 'check' if paired_overlap else 'wm_ft'
+            hot_swap = loop.long_module().active(cfg, state, 'hot_swap')
+            if phase == join_phase and future is not None and not hot_swap:
                 future.result()  # failure closes the driver before WM training
                 future = None
             code = loop.run_phase(cfg, phase)
@@ -464,6 +484,13 @@ def drive(loop, waiter, cfg, arm_dir):
             if code not in (0, 4):
                 raise RuntimeError(f"fastloop {phase} exit {code}; use the loop's explicit retry command")
             if phase == "check":
+                if hot_swap and future is not None:
+                    future.result()  # accepted WM descriptor was published during check
+                    future = None
+                    promoted = loop.load_state(cfg)
+                    if promoted['cycles'][-1]['cycle'] == k + 1:
+                        promote(loop, cfg, promoted, root)
+                        loop.save_state(cfg, promoted)
                 after = loop.load_state(cfg)
                 completed = next(c for c in after["cycles"] if c["cycle"] == k)
                 waiter.retire_pair_cache(cfg, completed, arm_dir)
@@ -516,6 +543,8 @@ def check(loop, cfg, state, ph, root):
            "CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
            "OPENBLAS_NUM_THREADS": "1", "WMS_DATA_LOOP14_PAIRS": f"{work}/pairs",
            "C4_ALLOWED_ROOTS": ":".join([work, *cfg["fastloop"]["check_roots"]])}
+    if loop.long_module().active(cfg, state, 'speed'):
+        env['WMS_LOOPLONG_SPEED'] = '1'
     code = loop.run_cmd(h, argv, env=env, log=log, timeout_s=cfg["check"]["timeout_h"] * 3600)
     out = loop.out_dir(root / "checks", f"c{k:02d}", ph["attempt"])
     loop.sync(cfg, box, f"{work}/verdict/", "gpu", str(out), log)

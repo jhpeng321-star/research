@@ -239,6 +239,7 @@ class TrainSettings:
     # C4 WM v2 loss (2026-10-13, WMLOSS_NOTES.md): aggregate-consistency loss (0 = off) and
     # the adaptive entry pad / uncapped backlog of the training entry process.
     aggregate_weight: float = 0.0
+    longwm_enabled: bool = False
     aggregate_field_weight: float = 1.0
     aggregate_reward_weight: float = 1.0
     aggregate_flow_weight: float = 0.0

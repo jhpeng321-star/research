@@ -785,6 +785,9 @@ class DreamerTrainer:
             cfg = replace(cfg, future_samples=u.future_samples,
                           future_driver_scale=u.driver_noise_scale,
                           uncertainty_weight=u.weight(self._curriculum_position(advance=False)))
+        if (self._training_imagination and getattr(self, 'long_credit_requested', False)
+                and cfg.horizon > getattr(self, 'long_credit_trusted_s', 60)):
+            cfg = replace(cfg, future_samples=8, future_driver_scale=1., uncertainty_weight=0.)
         return cfg
 
     def _curriculum_position(self, advance=True):
@@ -1175,8 +1178,8 @@ class DreamerTrainer:
             # must provide analytic actor credit through the imagined WM trajectory.
             # Long no-grad target construction consumes raw paired rewards only.
             # Avoid hundreds of irrelevant target-critic calls/bootstraps there.
-            if difference_only:
-                if torch.is_grad_enabled():
+            if difference_only or getattr(self, 'long_credit_requested', False):
+                if difference_only and torch.is_grad_enabled():
                     raise ValueError("difference_only imagination must run under no_grad")
                 values = rewards.new_zeros((len(states), rewards.shape[-1]))
             else:
@@ -1187,7 +1190,12 @@ class DreamerTrainer:
                     from .counterfactual import KIND_BASE
                     values = torch.where((variants.row_kind != KIND_BASE)[None, :], values, 0.)
             member_values.append(values)
-            returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
+            if getattr(self, 'long_credit_requested', False):
+                # Accrued finite-horizon WM credit only. Neither TD mixing nor
+                # terminal values may carry a real 300s target into imagination.
+                returns.append(torch.flip(torch.flip(rewards[e], (0,)).cumsum(0), (0,)))
+            else:
+                returns.append(lambda_returns(adjusted[e], values, cfg.gamma, cfg.lambda_))
         masks = torch.stack([torch.stack([state["present"] & state["is_cav"]
                                          for state in states[:-1]]) for states in member_states])
         if act_mask is not None:
@@ -1328,6 +1336,9 @@ class DreamerTrainer:
         has_base = base != torch.arange(n_rows, device=returns.device)
         # R_r - B_r for rows whose start has a base row (B constant w.r.t. the actor), else R_r.
         difference = returns - torch.where(has_base, returns[..., base].detach(), torch.zeros_like(returns))
+        if getattr(self, 'long_credit', None) is not None:
+            from .long_credit import pessimistic_difference
+            difference = pessimistic_difference(self, imagined, difference, base, has_base, coefficients)
         loss = -(difference.mean((0, 1)) * coefficients).sum() / scale
         extra = {}
         if variants is not None and variants.base_row:
@@ -1336,7 +1347,7 @@ class DreamerTrainer:
         if lanes is not None:
             advantage = difference.detach() / scale
             values = imagined.get("values")
-            if values is not None:
+            if values is not None and not getattr(self, 'long_credit_requested', False) and getattr(self, 'long_credit', None) is None:
                 advantage[..., :n_base] = (returns[..., :n_base] - values[:, :-1, :n_base]).detach() / scale
             active = lanes["lane_active"]                 # [E,H,N,K]
             joint = (lanes["lane_log_prob"] * active.to(returns.dtype)).sum(-1)   # [E,H,N]
@@ -1388,6 +1399,61 @@ class DreamerTrainer:
             norms[name] = math.sqrt(sum(float(g.detach().double().square().sum())
                                         for g in grads if g is not None))
         return norms
+
+    def _critic_step(self, imagined, starts, returns, real_batch, scale, n_base, n_rows, extra):
+        if getattr(self, 'long_credit_requested', False):
+            # Preserve checkpoint/optimizer compatibility, but keep the critic
+            # OFF: no baseline has qualified within-world ranking evidence.
+            extra.update(critic_bootstrap=False, critic_baseline=False)
+            return returns.new_zeros(()), returns.new_zeros(())
+        return self._legacy_critic_step(imagined, starts, returns, real_batch, scale, n_base, n_rows, extra)
+
+    def _legacy_critic_step(self, imagined, starts, returns, real_batch, scale, n_base, n_rows, extra):
+        mix = self.config.real_return_mix
+        imagined_loss = None
+        if mix < 1 and self.longcritic is None and self.paircrit is None:
+            predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
+                                                    for state in states[:-1]])
+                                       for states in imagined['states']])
+            critic_scale = max(scale, self.config.real_return_scale)
+            imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
+        if self.paircrit is not None:
+            critic_loss, pair_metrics = self.paircrit.loss(self, starts, scale)
+            extra.update(pair_metrics)
+        elif real_batch is None:
+            critic_loss = imagined_loss
+        else:
+            real_predictions = self.critic(real_batch.states)
+            if real_predictions.shape != real_batch.returns.shape:
+                raise ValueError('real critic predictions must have shape [B], matching real returns')
+            real_scale = max(scale, self.config.real_return_scale)
+            real_loss = ((real_predictions - real_batch.returns.to(real_predictions)) / real_scale).square().mean()
+            critic_loss = mix * real_loss
+            if imagined_loss is not None:
+                critic_loss = critic_loss + (1 - mix) * imagined_loss
+            extra.update(real_return_mix=mix, critic_real_loss=float(real_loss.detach()),
+                         critic_imagined_loss=float(imagined_loss.detach()) if imagined_loss is not None else None,
+                         real_return_mean=float(real_batch.returns.mean()),
+                         real_return_count=real_batch.returns.numel(), real_return_units=real_batch.units)
+        if self.longcritic is not None:
+            auxiliary, long_metrics = self.longcritic.loss(self, starts, scale)
+            if auxiliary is not None:
+                critic_loss = critic_loss + (1 - mix) * auxiliary
+            extra.update(long_metrics)
+        self.critic_optimizer.zero_grad(set_to_none=True)
+        critic_loss.backward()
+        critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), self.config.grad_clip,
+                                              error_if_nonfinite=True)
+        self.critic_optimizer.step()
+        with torch.no_grad():
+            for target, source in zip(self.target_critic.parameters(), self.critic.parameters()):
+                target.lerp_(source, self.config.target_tau)
+            for target, source in zip(self.target_critic.buffers(), self.critic.buffers()):
+                if target.is_floating_point():
+                    target.lerp_(source, self.config.target_tau)
+                else:
+                    target.copy_(source)
+        return critic_loss, critic_norm
 
     def _action_audit_metrics(self, imagined):
         """Policy commands BEFORE safety/caps, only actively controlled all-CAV rows.
@@ -1447,6 +1513,21 @@ class DreamerTrainer:
         position, pessimism weight, and every ``term_grad_audit_every`` updates the unit-weight
         gradient norms of the objective terms (``coopw.term_objectives``)."""
         cf, out = self.counterfactual, {}
+        if getattr(self, 'long_credit', None) is not None:
+            artifact = self.long_credit
+            h = str(int(imagined['imagination_horizon_s']))
+            out['long_credit_cqr_sha256'] = artifact.get('artifact_sha256')
+            out['long_credit_k'] = imagined['rewards'].shape[0]
+            out['long_credit_finite_rank'] = artifact['horizons'].get(h, {}).get('qualified', False)
+            out['long_credit_off_policy_after_update'] = True
+        if getattr(self, 'looplong_logging', False):
+            from .long_credit import hold_metrics
+            out.update(hold_metrics(imagined))
+            position = self._curriculum_position(advance=False)
+            out['exploration_persistence_s'] = (self.exploration.persistence_at(position)
+                if self.exploration else 0.)
+            out['exploration_correlated_active'] = (self.exploration is not None
+                and self.exploration.rho_at(position) > 0)
         if cf.enabled and cf.coop_audit:
             from .coopw import coverage
             out["cf_coverage"] = coverage(variants, batch.state)
@@ -1553,7 +1634,8 @@ class DreamerTrainer:
 
     def update(self):
         started = time.perf_counter()
-        real_batch = self._real_return_batch() if self.paircrit is None else None
+        real_batch = (self._real_return_batch() if self.paircrit is None and
+                      not getattr(self, 'long_credit_requested', False) else None)
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
@@ -1586,6 +1668,10 @@ class DreamerTrainer:
         objective, extra = self.actor_objective(
             imagined, scale, weights,
             **({"gradient_components": audit_components} if audit_components is not None else {}))
+        if getattr(self, 'looplong_real_credit', None) is not None:
+            direct, receipt = self.looplong_real_credit.loss(self, scale)
+            objective = objective + direct
+            extra.update(receipt)
         # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
         # (V7POL: floored at alpha_min).
         entropy_weight = self._temperature(self.log_alpha, self.config.entropy_weight)
@@ -1613,56 +1699,8 @@ class DreamerTrainer:
         self.actor_optimizer.step()
         # V6EXPLORE: dual steps on the entropy temperature(s), logged with the entropy above.
         extra.update(self._alpha_update(imagined, entropy))
-        # The critic estimates the value of the all-CAV policy: fit it on the all-CAV rows.
-        mix = self.config.real_return_mix
-        imagined_loss = None
-        if mix < 1 and self.longcritic is None and self.paircrit is None:
-            predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
-                                                    for state in states[:-1]])
-                                       for states in imagined["states"]])
-            # Real and imagined targets share raw value units, including scaled
-            # critics. Do not amplify imagined regression by a short-rollout
-            # advantage scale when real-return scaling was explicitly requested.
-            critic_scale = max(scale, self.config.real_return_scale)
-            imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
-        if self.paircrit is not None:
-            critic_loss, pair_metrics = self.paircrit.loss(self, starts, scale)
-            extra.update(pair_metrics)
-        elif real_batch is None:
-            critic_loss = imagined_loss
-        else:
-            real_predictions = self.critic(real_batch.states)
-            if real_predictions.shape != real_batch.returns.shape:
-                raise ValueError("real critic predictions must have shape [B], matching real returns")
-            real_scale = max(scale, self.config.real_return_scale)
-            real_loss = ((real_predictions - real_batch.returns.to(real_predictions)) / real_scale).square().mean()
-            critic_loss = mix * real_loss
-            if imagined_loss is not None:
-                critic_loss = critic_loss + (1 - mix) * imagined_loss
-            extra.update({"real_return_mix": mix, "critic_real_loss": float(real_loss.detach()),
-                          "critic_imagined_loss": (float(imagined_loss.detach())
-                                                   if imagined_loss is not None else None),
-                          "real_return_mean": float(real_batch.returns.mean()),
-                          "real_return_count": real_batch.returns.numel(),
-                          "real_return_units": real_batch.units})
-        if self.longcritic is not None:
-            auxiliary, long_metrics = self.longcritic.loss(self, starts, scale)
-            if auxiliary is not None:
-                critic_loss = critic_loss + (1 - mix) * auxiliary
-            extra.update(long_metrics)
-        self.critic_optimizer.zero_grad(set_to_none=True)
-        critic_loss.backward()
-        critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), self.config.grad_clip,
-                                              error_if_nonfinite=True)
-        self.critic_optimizer.step()
-        with torch.no_grad():
-            for target, source in zip(self.target_critic.parameters(), self.critic.parameters()):
-                target.lerp_(source, self.config.target_tau)
-            for target, source in zip(self.target_critic.buffers(), self.critic.buffers()):
-                if target.is_floating_point():
-                    target.lerp_(source, self.config.target_tau)
-                else:
-                    target.copy_(source)
+        critic_loss, critic_norm = self._critic_step(
+            imagined, starts, returns, real_batch, scale, n_base, n_rows, extra)
         self.update_lagrange(dual_value, dual_budget)
         self.update_count += 1
         selected = imagined["actions"][..., :n_base, :].detach()[imagined["action_mask"][..., :n_base, :]]
@@ -1843,6 +1881,11 @@ class DreamerTrainer:
             payload["longcritic"] = self.longcritic.state_dict()
         if self.paircrit is not None:
             payload['paircrit'] = self.paircrit.state_dict()
+        if getattr(self, 'looplong_boundary', None) is not None:
+            payload['looplong'] = {'boundary': self.looplong_boundary,
+                'cqr': getattr(self, 'long_credit', None),
+                'horizon': self.horizon_curriculum.as_dict() if self.horizon_curriculum else None,
+                'exploration': self.exploration.as_dict() if self.exploration else None}
         if hasattr(self, 'breakdown_receipt'):
             payload['breakdown'] = self.breakdown_receipt
         lane_switches = getattr(self.controller_factory, "ramp_merge", {})

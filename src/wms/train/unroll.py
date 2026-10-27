@@ -10,6 +10,7 @@ a per-chunk mean, is logged as the mean over chunks.
 from __future__ import annotations
 
 import contextlib
+import os
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Optional
 
@@ -151,10 +152,16 @@ class UnrollRunner:
         if share and backward:
             raise ValueError("loss-share logging is a forward-only diagnostic (backward=False)")
         cfg = self.settings
+        longwm = (cfg.longwm_enabled and 'pair_ref' in batch
+                  and 'loop14_pairs' in batch.get('mix_source', []))
+        if longwm and int(batch['states'].shape[1]) < int(unroll_steps) + 1:
+            raise ValueError('longwm request exceeds actual recorded future')
         pair_loss = self.composer.paired_diff
         return_on = (pair_loss is not None and pair_loss.return_enabled and "pair_ref" in batch)
         pair_reference = None
-        if return_on and torch.is_grad_enabled() and not _pair_probe:
+        full_pair_graph = longwm or (os.environ.get('WMS_LOOPLONG_SPEED') == '1' and
+            int(truncation_steps or cfg.truncation_steps) >= int(unroll_steps))
+        if return_on and torch.is_grad_enabled() and not _pair_probe and not full_pair_graph:
             # The derivative of Huber/ranking is evaluated at the WHOLE return, while
             # replay retains only one TBPTT chunk's graph. Restore RNG for exact replay.
             devices = [self.device.index or 0] if self.device.type == "cuda" else []
@@ -232,6 +239,9 @@ class UnrollRunner:
                 acc.sums[name] = torch.zeros((), dtype=torch.float64, device=self.device)
         noisy = backward or _rate_probe or _probe_training
         chunk = max(1, int(truncation_steps if truncation_steps else cfg.truncation_steps))
+        if longwm:
+            chunk = targets.n_steps
+        longwm_receipt = None
         n_chunks = max(1, (targets.n_steps + chunk - 1) // chunk)
         probe_chunk = self._share_probe_chunk(targets.n_steps, chunk)
         current = inp.initial
@@ -297,6 +307,18 @@ class UnrollRunner:
                 ctx = LossContext(pred=roll, current=current, targets=targets, c0=c0, c1=c1,
                                   rate_reference=rate_reference)
                 breakdown = self.composer(ctx)
+                if longwm and (backward or targets.n_steps * targets.dt_s >= 60.):
+                    from .longwm import consistency_components, gradient_parity
+                    components = consistency_components(ctx, batch)
+                    weights, longwm_receipt = gradient_parity(
+                        breakdown.total, components, parameters) if backward else (
+                        {n: 0. for n in components}, {'raw_losses': {
+                            n: float(v.detach()) for n, v in components.items()}})
+                    longwm_receipt['feature_scales'] = ctx.cache['longwm_feature_scales']
+                    for name, value in components.items():
+                        weighted = value * weights[name]
+                        breakdown.terms['longwm_' + name] = TermValue(weighted)
+                        breakdown.total = breakdown.total + weighted
                 if _window_probe:
                     # V10HORIZON: per-window mean positional (Huber) error for priority replay.
                     masked = ctx.pos_huber.detach() * ctx.m
@@ -376,6 +398,8 @@ class UnrollRunner:
                 if pair_grads is not None else None)
         if _pair_probe:
             record["_paired_return_difference"] = pair_difference
+        if longwm_receipt is not None:
+            record['longwm'] = longwm_receipt
         if prior is not None:
             self._apply_driver_prior(prior, driver_leaves, record)
         if backward and driver_leaves is not None:

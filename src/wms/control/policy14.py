@@ -58,7 +58,8 @@ class Policy14Trainer(DreamerTrainer):
                                               gradient_components=gradient_components)
         variants, lanes = imagined.get("variants"), imagined.get("lanes")
         terms, marginal_values = [], []
-        if variants is not None and lanes is not None and self.marginal_lane_weight:
+        if (variants is not None and lanes is not None and self.marginal_lane_weight
+                and not getattr(self, 'long_credit_requested', False)):
             for group in variants.groups:
                 row = group["row"]
                 for slot, baseline in group["flips"].items():

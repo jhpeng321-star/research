@@ -97,6 +97,14 @@ def fast_enabled(cfg, flag):
     return cfg.get("fastloop", {}).get(flag, False) is True
 
 
+def long_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('loop14_long', Path(__file__).with_name('loop14_long.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def fast_module():
     # Keep the orchestrator stdlib-only, including when imported by standalone tests.
     import importlib.util
@@ -125,6 +133,8 @@ def load_config(path) -> dict:
         fast_module().validate(cfg, Refused)
         if fast_enabled(cfg, "repoint"):
             cfg["hosts"]["cpu"] = dict(cfg["hosts"]["cpuP"])
+    if cfg.get('looplong'):
+        long_module().validate(cfg, Refused)
     if cfg["policy"].get("native_init"):
         if not fast_enabled(cfg, "two_box") or int(cfg["collect"]["worlds_per_cycle"]) < 4:
             raise Refused("native-init requires two-box collection with a four-world smoke barrier")
@@ -514,6 +524,8 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
     argv += [str(x) for x in p.get("extra_args", [])]
     if p.get("native_init"):
         argv.append("--native-init")
+    if long_module().enabled(cfg):
+        argv += long_module().policy_args(sys.modules[__name__], cfg, state, out)
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "OMP_NUM_THREADS": p.get("threads", 2), "MKL_NUM_THREADS": p.get("threads", 2),
            "C4_ALLOWED_ROOTS": os.pathsep.join(p.get("allowed_roots", []) + [cfg["loop_root"]]),
@@ -529,6 +541,15 @@ def policy_cmd(cfg, state, out: Path) -> tuple[list, dict]:
 
 def run_policy(cfg, state, ph, root) -> dict:
     h = host(cfg, "gpu")
+    long = long_module()
+    if (long.enabled(cfg, 'auto_horizon') and
+            state['cycles'][-1]['cycle'] >= cfg['looplong'].get('enable_cycle', 3) and
+            (state.get('looplong_boundary', {}).get('wm', {}).get('sha256') != state['accepted_wm']['sha256'])):
+        boundary = long.initial_boundary(sys.modules[__name__], cfg, state,
+            state['accepted_wm'], root, state['cycles'][-1]['cycle'])
+        if not boundary['short_nonregression']:
+            raise Refused('accepted WM fails looplong short horizon nonregression')
+        state['looplong_boundary'] = long.boundary_descriptor(sys.modules[__name__], cfg, state, boundary)
     info = {"disk": disk_guard(cfg, h, cfg["loop_root"], 0.2)}
     if cfg["policy"]["device"] == "cuda":
         info["gpu"] = gpu_guard(cfg, h)
@@ -540,6 +561,11 @@ def run_policy(cfg, state, ph, root) -> dict:
     ckpt = out / "policy_latest.pt"
     if code != 0 or summary.get("status") != "completed" or not ckpt.is_file():
         raise RuntimeError(f"policy phase failed (exit {code}): {summary.get('error')}")
+    if long_module().enabled(cfg) and summary.get('looplong_final_boundary'):
+        final = summary['looplong_final_boundary']
+        if sha256(final['wm']['checkpoint']) != final['wm']['sha256']:
+            raise Refused('hot-swapped WM hash changed')
+        state['accepted_wm'] = dict(final['wm'])  # owned overlap snapshot only
     last = summary["updates"][-1] if summary.get("updates") else {}
     if cfg['policy'].get('native_init'):
         from wms.control.nativeinit import verify_collection_gate
@@ -552,6 +578,11 @@ def run_policy(cfg, state, ph, root) -> dict:
             raise Refused('native-relative gate WM/config provenance mismatch before policy adoption')
     state["policy"] = {"checkpoint": str(ckpt), "sha256": sha256(ckpt), "source": f"cycle {state['cycles'][-1]['cycle']}",
                        "trained_on_wm_sha256": state["accepted_wm"]["sha256"]}
+    if long_module().enabled(cfg):
+        state['looplong_policy_horizon_s'] = max(
+            (r.get('imagination_horizon_s', 10) for r in summary.get('updates', [])), default=10)
+        for swap in summary.get('wm_swaps', []):
+            append(root / 'cycle_ledger.jsonl', {'cycle': state['cycles'][-1]['cycle'], **swap})
     if cfg['policy'].get('breakdown'):
         state['policy']['breakdown_required'] = True
     if fast_enabled(cfg, "overlap_policy"):
@@ -560,7 +591,9 @@ def run_policy(cfg, state, ph, root) -> dict:
             "updates": len(summary.get("updates", [])), "resumed_from": summary.get("resumed_from"),
             "independent_J_before": (summary.get("independent_score_before") or {}).get("J"),
             "independent_J_after": (summary.get("independent_score") or {}).get("J"),
-            "last_actor_loss": last.get("actor_loss"), "last_critic_loss": last.get("critic_loss")}
+            "last_actor_loss": last.get("actor_loss"), "last_critic_loss": last.get("critic_loss"),
+            **({'looplong_policy_horizon_s': state['looplong_policy_horizon_s']}
+               if long_module().enabled(cfg) else {})}
 
 
 def allocate_seeds(cfg, state, reg, root) -> list[int]:
@@ -721,7 +754,8 @@ def run_convert(cfg, state, ph, root) -> dict:
            "targets": read_json(local_ret.with_suffix(".receipt.json"))["targets"]}
     if cfg["collect"].get("sumocredit"):
         out["sumocredit"] = convert_sumocredit(cfg, state, work, tag, env, log, root)
-    if cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit'):
+    if (cfg['policy'].get('longcritic') or cfg['policy'].get('paircrit') or
+            long_module().needs_pair_proof(cfg, state)):
         remote_native = f'{work}/native_returns_{tag}.npz'
         native_cmd = [h['python'], '-m', 'wms.control.loop14_returns', '--source', remote_conv,
                       '--output', remote_native, '--kind', 'B']
@@ -731,7 +765,7 @@ def run_convert(cfg, state, ph, root) -> dict:
         sync(cfg, 'cpu', remote_native, 'gpu', str(native), log)
         sync(cfg, 'cpu', remote_native[:-4]+'.receipt.json', 'gpu', str(native.with_suffix('.receipt.json')), log)
         out.update(native_returns=str(native), native_returns_sha256=sha256(native))
-        if cfg['policy'].get('paircrit'):
+        if cfg['policy'].get('paircrit') or long_module().needs_pair_proof(cfg, state):
             remote_pairing = f'{work}/pairing_{tag}.json'
             pair_cmd = [h['python'], '-m', 'wms.control.paircrit_export', '--source', remote_conv,
                 '--policy-returns', remote_ret, '--native-returns', remote_native, '--output', remote_pairing]
@@ -800,6 +834,8 @@ def run_wm_ft(cfg, state, ph, root) -> dict:
     k = state["cycles"][-1]["cycle"]
     conv = state["cycles"][-1]["phases"]["convert"]["receipt"]
     info = {"disk": disk_guard(cfg, h, cfg["loop_root"], float(w.get("need_gb", 0.3)))}
+    if long_module().needs_pair_proof(cfg, state):
+        info['looplong_pairing_sha256'] = long_module().verify_pairs(sys.modules[__name__], state, conv)
     if w["device"] == "cuda":
         info["gpu"] = gpu_guard(cfg, h)
     out = out_dir(root / "wm", f"c{k:02d}", ph["attempt"])
@@ -807,8 +843,12 @@ def run_wm_ft(cfg, state, ph, root) -> dict:
             "--set", f"runtime.device={json.dumps(w['device'])}"]
     for item in w.get("extra_set", []):
         sets += ["--set", item]
+    for item in long_module().wm_sets(cfg, state):
+        sets += ['--set', item]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "WMS_DATA_LOOP14_PAIRS": conv["pairs"], **w.get("env", {})}
+    if long_module().active(cfg, state, 'speed'):
+        env['WMS_LOOPLONG_SPEED'] = '1'
     if fast_enabled(cfg, "speed2_policy"):
         # Explicitly defeat inherited policy-only settings, including SSH shell inheritance.
         from_flags = ("COMPACT_SLOTS", "BATCH_REPLAY", "FAST_CAV_DRIVE", "FAST_LONG_HISTORY",
@@ -883,6 +923,8 @@ def run_check(cfg, state, ph, root) -> dict:
             "--workers", str(ch.get("workers", 1))]
     env = {"PYTHONPATH": os.pathsep.join([str(Path(h["code_root"]) / "src"), h["code_root"]]),
            "CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": 1, "MKL_NUM_THREADS": 1, **ch.get("env", {})}
+    if long_module().active(cfg, state, 'speed'):
+        env['WMS_LOOPLONG_SPEED'] = '1'
     if ch.get("nice", True) and os.name == "posix" and not h.get("ssh"):
         argv = ["nice", "-n", "19", *argv]
     code = run_cmd(h, argv, env=env, log=out.with_name(out.name + ".log"), timeout_s=3600 * float(ch["timeout_h"]))
@@ -894,11 +936,20 @@ def run_check(cfg, state, ph, root) -> dict:
 
 def apply_verdict(cfg, state, ft, verdict, code, out, k):
     accepted = code == 0 and verdict.get("decision") == "ACCEPT"
+    boundary = None
+    if accepted and long_module().active(cfg, state, 'auto_horizon'):
+        boundary = long_module().check_candidate(sys.modules[__name__], cfg, state, ft, out)
+        if not boundary['short_nonregression']:
+            accepted = False
+            verdict = {**verdict, 'reasons': [*(verdict.get('reasons') or []),
+                       'registered 10/30/60s horizon nonregression failed']}
     previous = dict(state["accepted_wm"])
     if accepted:
         state["accepted_wm"] = {"checkpoint": ft["candidate"], "config": cfg["wm"]["config"],
                                 "sha256": ft["candidate_sha256"], "source": f"cycle {k}"}
         state["consecutive_rejects"] = 0
+        if boundary:
+            long_module().publish(sys.modules[__name__], cfg, state, boundary, out)
     else:
         state["consecutive_rejects"] += 1
     roll = verdict.get("rollout", {})

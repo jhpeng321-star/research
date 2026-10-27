@@ -41,6 +41,7 @@ the target.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -177,6 +178,12 @@ def lane1_rows(targets: UnrollTargets, target_lane: int = 1) -> Tensor:
 
 def replay_outputs(model: Any, targets: UnrollTargets) -> dict[str, Tensor]:
     """Detached replay outputs (shared cut-in replay when present, else a no-grad replay)."""
+    # The targets and model weights are unchanged between TBPTT chunks. Only
+    # cache detached replay, scoped to this runner invocation, never across steps.
+    cache_key = 'looplong_courtesy_replay'
+    speed = os.environ.get('WMS_LOOPLONG_SPEED') == '1'
+    if speed and cache_key in targets.prepared:
+        return targets.prepared[cache_key]
     shared = targets.prepared.get(SHARED_KEY)
     if shared is not None and all(key in shared for key in REPLAY_KEYS):
         return {**shared, "_shared": True}
@@ -186,7 +193,10 @@ def replay_outputs(model: Any, targets: UnrollTargets) -> dict[str, Tensor]:
     if missing:
         raise RuntimeError(f"follower courtesy replay is missing model outputs {missing}; "
                            "is model.follower_courtesy enabled?")
-    return {**collected, "_shared": False}
+    result = {**collected, "_shared": False}
+    if speed:
+        targets.prepared[cache_key] = result
+    return result
 
 
 class FollowerCourtesyLoss(UnrollTerm):

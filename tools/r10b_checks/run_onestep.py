@@ -26,7 +26,7 @@ import time
 
 for _k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
     os.environ.setdefault(_k, "1")
-import numpy as np
+import numpy as np  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -101,9 +101,14 @@ def one_window(job):
     from wms.train.losses.follower_courtesy import REPLAY_KEYS
     si, i, name_win = job
     out = {}
+    # Both arms read identical observable records. Decode/collate once; model-
+    # dependent encoding and target construction remain separate and unchanged.
+    shared_batch = None
+    if os.environ.get('WMS_LOOPLONG_SPEED') == '1':
+        shared_batch = collate([G['sets'][si][i]])
     for arm, (cfg, settings, model, _rep) in G["arms"].items():
         ds = G["sets"][si]
-        batch = collate([ds[i]])
+        batch = shared_batch if shared_batch is not None else collate([ds[i]])
         inp = prepare_inputs(batch, model, settings, torch.device("cpu"), G["n_steps"])
         tg = build_targets(inp, batch, settings, float(model.physics.dt_s), torch.device("cpu"),
                            physics=model.physics)

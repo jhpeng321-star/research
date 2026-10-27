@@ -1,0 +1,181 @@
+{
+ "kind": "synthetic_cpu_engineering_only",
+ "wm_updates": [
+  {
+   "seconds": 5.429466322995722,
+   "loss": 244.36276245117188,
+   "longwm": {
+    "base_gradient_norm": 2.5699791460639365,
+    "gradient_norms": {
+     "density": 0.0002372067082427948,
+     "paired_density": 8.971711190177854e-07,
+     "speed": 4.741057897676663e-06,
+     "paired_speed": 6.748912213317998e-09,
+     "queue": 0.00017033078984597606,
+     "paired_queue": 3.057686340809906e-07,
+     "flow": 0.025954430209510954,
+     "paired_flow": 0.0002335232953553579,
+     "delay": 7.346964784200259e-05,
+     "paired_delay": 2.0676358071384239e-07
+    },
+    "weights": {
+     "density": 1083.4344294485188,
+     "paired_density": 286453.6197818679,
+     "speed": 54206.87115682229,
+     "paired_speed": 38079901.83947653,
+     "queue": 1508.816549484609,
+     "paired_queue": 840497.9646745626,
+     "flow": 9.901890063925087,
+     "paired_flow": 1100.523672446956,
+     "delay": 3498.014787808306,
+     "paired_delay": 1242955.4262850324
+    },
+    "raw_losses": {
+     "density": 0.009518418461084366,
+     "paired_density": 1.8766118955682032e-05,
+     "speed": 0.000176382323843427,
+     "paired_speed": 8.055359757008773e-08,
+     "queue": 0.009311656467616558,
+     "paired_queue": 3.2334964998881333e-06,
+     "flow": 0.5649882555007935,
+     "paired_flow": 0.0025112994480878115,
+     "delay": 0.0030159861780703068,
+     "paired_delay": 5.529630470846314e-06
+    },
+    "feature_scales": {
+     "density": 2.1136786937713623,
+     "speed": 30.333465576171875,
+     "queue": 0.001593750319443643,
+     "flow": 1.251875638961792,
+     "delay": 50.46553421020508
+    }
+   }
+  },
+  {
+   "seconds": 4.48091134999413,
+   "loss": 244.36871337890625,
+   "longwm": {
+    "base_gradient_norm": 2.572561318811631,
+    "gradient_norms": {
+     "density": 0.0002373702593233943,
+     "paired_density": 8.975786448413837e-07,
+     "speed": 4.745622475224625e-06,
+     "paired_speed": 6.755918547708875e-09,
+     "queue": 0.00017061935779499136,
+     "paired_queue": 3.059421203594915e-07,
+     "flow": 0.025959288390758388,
+     "paired_flow": 0.000233560725955385,
+     "delay": 7.353491432161747e-05,
+     "paired_delay": 2.0693088891838942e-07
+    },
+    "weights": {
+     "density": 1083.7757544456158,
+     "paired_density": 286611.2438833974,
+     "speed": 54209.14394775712,
+     "paired_speed": 38078631.36070609,
+     "queue": 1507.7781044649732,
+     "paired_queue": 840865.3623073513,
+     "flow": 9.909983972162632,
+     "paired_flow": 1101.4528698215488,
+     "delay": 3498.4215899947826,
+     "paired_delay": 1243198.3123728873
+    },
+    "raw_losses": {
+     "density": 0.0095183365046978,
+     "paired_density": 1.8766462744679302e-05,
+     "speed": 0.00017638059216551483,
+     "paired_speed": 8.0559921400436e-08,
+     "queue": 0.00931171141564846,
+     "paired_queue": 3.2328825909644365e-06,
+     "flow": 0.5649840831756592,
+     "paired_flow": 0.0025113399606198072,
+     "delay": 0.0030159633606672287,
+     "paired_delay": 5.5294240155490115e-06
+    },
+    "feature_scales": {
+     "density": 2.1136786937713623,
+     "speed": 30.333465576171875,
+     "queue": 0.001593750319443643,
+     "flow": 1.251875638961792,
+     "delay": 50.46553421020508
+    }
+   }
+  }
+ ],
+ "policy_updates": [
+  {
+   "update": 1,
+   "actor_loss": -0.15641669929027557,
+   "critic_loss": 0.49059268832206726,
+   "imagination_horizon_s": 90.0,
+   "exploration_persistence_s": 30.0,
+   "exploration_correlated_active": true,
+   "metering_like_holds_ge30s": 0,
+   "metering_like_sampled_starts": 8
+  },
+  {
+   "update": 2,
+   "actor_loss": -0.13576266169548035,
+   "critic_loss": 0.4106258749961853,
+   "imagination_horizon_s": 90.0,
+   "exploration_persistence_s": 30.2,
+   "exploration_correlated_active": true,
+   "metering_like_holds_ge30s": 0,
+   "metering_like_sampled_starts": 8
+  },
+  {
+   "update": 3,
+   "actor_loss": -0.153558149933815,
+   "critic_loss": 0.5124468803405762,
+   "imagination_horizon_s": 90.0,
+   "exploration_persistence_s": 30.4,
+   "exploration_correlated_active": true,
+   "metering_like_holds_ge30s": 0,
+   "metering_like_sampled_starts": 8
+  }
+ ],
+ "acceptance_rollout_probe": {
+  "seconds": {
+   "False": 1.5910522769991076,
+   "True": 1.6790905160014518
+  },
+  "window_decodes": {
+   "False": 4,
+   "True": 2
+  },
+  "metrics_identical": true,
+  "scope": "rollout/safety kernels only; not a production acceptance verdict"
+ },
+ "speed_probe": {
+  "decode_off": 0.02720503500313498,
+  "decode_on": 0.0028350740030873567
+ },
+ "actual_ft_speed": {
+  "False": {
+   "seconds": 1.6851170010049827,
+   "rollout_calls": 2
+  },
+  "True": {
+   "seconds": 1.1821550609893166,
+   "rollout_calls": 1
+  },
+  "objective_checkpoint_rng_byte_equal": true
+ },
+ "memory": {
+  "reference_gib_60s_k2": 12.086,
+  "gpu_marketed_gb": 48,
+  "allocator_cap_gib": 30.793,
+  "linear_projection_gib_k8": {
+   "120": 96.688,
+   "300": 241.72
+  },
+  "linear_projection_gib_k2": {
+   "120": 24.172,
+   "300": 60.43
+  },
+  "assumption": "same batch/rows/checkpointing; linear time and sample graphs; excludes entrant growth",
+  "qualification": "projection only; no GPU allocation or resource qualification"
+ },
+ "profile_top": "         1564921 function calls (1527736 primitive calls) in 11.175 seconds\n\n   Ordered by: cumulative time\n   List reduced from 4974 to 15 due to restriction <15>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.059    0.059   11.182   11.182 /home/ubuntu/looplong/tools/looplong/dry_run.py:56(tiny_ft)\n        2    0.002    0.001    9.832    4.916 /home/ubuntu/looplong/src/wms/train/unroll.py:140(run)\n       24    0.001    0.000    8.346    0.348 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/graph.py:869(_engine_run_backward)\n       24    8.345    0.348    8.345    0.348 {method 'run_backward' of 'torch._C._EngineBase' objects}\n        2    0.000    0.000    7.408    3.704 /home/ubuntu/looplong/src/wms/train/longwm.py:87(gradient_parity)\n       22    0.001    0.000    7.407    0.337 /home/ubuntu/looplong/src/wms/train/longwm.py:88(norm)\n       22    0.001    0.000    7.331    0.333 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/autograd/__init__.py:390(grad)\n        2    0.000    0.000    6.100    3.050 /home/ubuntu/looplong/src/wms/train/longwm.py:95(<dictcomp>)\n        2    0.015    0.008    1.381    0.690 /home/ubuntu/looplong/src/wms/model/wms.py:2324(rollout)\n   3632/3    0.012    0.000    1.266    0.422 <frozen importlib._bootstrap>:1022(_find_and_load)\n    847/3    0.003    0.000    1.266    0.422 <frozen importlib._bootstrap>:987(_find_and_load_unlocked)\n    818/3    0.003    0.000    1.266    0.422 <frozen importlib._bootstrap>:664(_load_unlocked)\n    805/3    0.002    0.000    1.266    0.422 <frozen importlib._bootstrap_external>:877(exec_module)\n    983/5    0.001    0.000    1.265    0.253 <frozen importlib._bootstrap>:233(_call_with_frames_removed)\n        3    0.000    0.000    1.265    0.422 /home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/_compile.py:42(inner)\n\n\n",
+ "cuda_used": false
+}
