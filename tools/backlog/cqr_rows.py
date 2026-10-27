@@ -202,6 +202,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=0, help="smoke: stop after N tasks")
     ap.add_argument("--horizons", default="")
+    ap.add_argument("--max-h", type=int, default=300, help="rollout length / largest row horizon (s)")
     ap.add_argument("--verify", type=int, default=0, help="explicit separate 120 s runs for the first N tasks")
     ap.add_argument("--loop-parity", type=int, default=-1,
                     help="process only loop tasks whose global index has this parity (two-box split)")
@@ -255,11 +256,11 @@ def main():
                 assert loader.entries[native_row]["episode"] == t["native_ep"]
                 curves = [curve_file[t["arm_ep"]], curve_file[t["native_ep"]]]
                 world, role = t["world"], t["role"]
-            diff = pair_benefit_curve(trainer, old, sampler, policy_row, t["i"], 300)         # [K, 300]
+            diff = pair_benefit_curve(trainer, old, sampler, policy_row, t["i"], a.max_h)     # [K, max_h]
             trusted = TRUSTED_S
             gap = curves[1] - curves[0]                                                        # real, per 0.5 s tick
             rows = []
-            for h in horizons:
+            for h in [x for x in horizons if x <= a.max_h]:
                 rows.append({"world": world, "horizon_s": h,
                              "samples": diff[:, trusted:h].sum(1).tolist() if h > trusted else [0.0] * diff.shape[0],
                              "real_benefit": float(gap[2 * trusted:2 * h].sum()) if h > trusted else 0.0,
@@ -275,7 +276,7 @@ def main():
                          pair_key=loader.entries[policy_row]["pair_key"], role=role,
                          wm_sha256=WM_SHA, actor_sha256=t["sha"])
             sink.write(json.dumps({"task": tid, "seconds": time.time() - start_time, "rows": rows,
-                                   "diff300": np.round(diff.numpy(), 4).tolist(), "verify": check}) + "\n")
+                                   "diff_max_h": a.max_h, "diff300": np.round(diff.numpy(), 4).tolist(), "verify": check}) + "\n")
             sink.flush()
             print(f"{tid} {time.time() - start_time:.0f}s", flush=True)
 
