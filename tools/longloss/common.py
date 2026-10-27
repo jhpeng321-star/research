@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
+import time
 
 OUT = Path('/root/autodl-tmp/c4/longloss20261027')
 OLD = Path('/root/autodl-tmp/c4/wmdeep20261027')
@@ -53,7 +53,7 @@ def environment():
 
 def mirror():
     # No delete flags; inputs/runtime stay on gpuR, result artifacts go to gpuA.
-    cmd = "python -c \"from pathlib import Path; import shutil; p=Path('/root/autodl-tmp/c4'); assert p.is_dir(); assert shutil.disk_usage(p).free>3.25*2**30; (p/'longloss20261027').mkdir(exist_ok=True)\""
+    cmd = "/root/miniconda3/bin/python -c \"from pathlib import Path; import shutil; p=Path('/root/autodl-tmp/c4'); assert p.is_dir(); assert shutil.disk_usage(p).free>3.25*2**30; (p/'longloss20261027').mkdir(exist_ok=True)\""
     subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', 'gpuA', cmd],
                    check=True, timeout=35)
     subprocess.run(['rsync', '-a', '--exclude=inputs', '--exclude=views',
@@ -70,8 +70,18 @@ def run(argv, label, timeout=43200):
         token = Path(f'/proc/{p.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
         write('CHILD.json', {'pid': p.pid, 'start_ticks': token, 'stage': label, 'argv': argv})
         try:
-            code = p.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
+            deadline = time.monotonic()+timeout
+            while True:
+                disk()
+                remaining = deadline-time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(argv, timeout)
+                try:
+                    code = p.wait(timeout=min(10, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
+        except BaseException as exc:
             # Popen object is our own unreaped child, never a name-based signal.
             p.terminate()
             try:
@@ -79,6 +89,8 @@ def run(argv, label, timeout=43200):
             except subprocess.TimeoutExpired:
                 p.kill()
                 p.wait()
+            if not isinstance(exc, subprocess.TimeoutExpired):
+                raise
             code = 124
     event(stage=label, exit=code)
     return code

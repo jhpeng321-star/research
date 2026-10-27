@@ -22,7 +22,8 @@ def main():
     entries, provenance = [], []
     with tarfile.open(fileobj=sys.stdout.buffer, mode='w|gz') as tar:
         def blob(name, data):
-            info = tarfile.TarInfo(name); info.size = len(data)
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
             tar.addfile(info, io.BytesIO(data))
         for cycle in ('c00.a1', 'c01.a1', 'c02.a1'):
             root = BASE/'data'/('pairs_'+cycle)
