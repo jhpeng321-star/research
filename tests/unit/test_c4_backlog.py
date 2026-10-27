@@ -201,4 +201,5 @@ def test_foreign_summary_without_branch_keeps_v9entry(tmp_path):
     entry = C4.convert_episode(tape, tmp_path / "src")
     clocks = entry["queue_arrays"]
     assert "pair_cost_reconciliation" not in clocks
-    assert clocks["queue_unknown"] == 3 and clocks["n_requests"] == 4
+    # v3 (due 9.0, never on the tape) is the only pre-start unknown request
+    assert clocks["queue_unknown"] == 1 and clocks["n_requests"] == 4
