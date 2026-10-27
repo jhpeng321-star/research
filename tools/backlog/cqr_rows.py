@@ -188,6 +188,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=0, help="smoke: stop after N tasks")
     ap.add_argument("--horizons", default="")
+    ap.add_argument("--loop-parity", type=int, default=-1,
+                    help="process only loop tasks whose global index has this parity (two-box split)")
     a = ap.parse_args()
     horizons = tuple(int(x) for x in a.horizons.split(",")) if a.horizons else HORIZONS
     os.nice(10)
@@ -195,7 +197,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     tasks = []
     if "loop" in a.tasks:
-        tasks += loop_tasks()
+        lt = loop_tasks()
+        tasks += [t for n, t in enumerate(lt) if a.loop_parity < 0 or n % 2 == a.loop_parity]
     if "e3" in a.tasks:
         tasks += e3_tasks(a.box)
     mine = [t for n, t in enumerate(tasks) if n % a.nshards == a.shard]
