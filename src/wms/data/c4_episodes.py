@@ -91,6 +91,12 @@ EXTRA_ARRAYS = ("requested_acceleration_mps2", "lane_command_target", "lane_requ
 #: The window loader turns them into ``record["entry_queue"]`` (:func:`queue_features`).
 QUEUE_ARRAYS = ("entry_backlog", "request_counter", "entry_cav_counter")
 REQUESTS_FILE = "scenario/requests.rou.xml"
+#: LOOP14 paired-branch summaries (``traffic_shepherd.c4.policy_pairs``) beside a raw tape;
+#: carrying the authoritative J ledger the S-BACKLOG cost clocks must reconcile to.
+PAIR_SUMMARY_SCHEMA = "c4_loop14_pair_summary/1"
+#: ``traffic_shepherd.c4.env.SPEED_LIMIT_MPS``: the speed-deficit normalisation of both the
+#: env ledger and ``wms.control.long_credit``'s reconciliation (not a tunable).
+SPEED_LIMIT_MPS = 31.29
 
 
 class C4EpisodeRefusal(TrainDataRefusal):
@@ -287,6 +293,105 @@ def episode_queue_arrays(time_s: np.ndarray, vid: np.ndarray, present: np.ndarra
     return {"entry_backlog": backlog, "request_counter": counter}, stats
 
 
+def pair_requests_path(src: Path, meta: dict) -> Optional[Path]:
+    """V9ENTRY request schedule of a paired-branch tape (S-BACKLOG).
+
+    The tape's own ``scenario/requests.rou.xml`` when present; otherwise the schedule of the
+    branch's BASE episode (``meta["branch"]["base_episode"]``, recorded by
+    ``traffic_shepherd.c4.policy_pairs`` on the collection host).  Only the request file is
+    ever opened; the restricted siblings beside it are not touched."""
+    own = Path(src) / REQUESTS_FILE
+    if own.is_file():
+        return own
+    base = (meta.get("branch") or {}).get("base_episode")
+    if not base:
+        return None
+    candidate = Path(str(base)) / REQUESTS_FILE
+    refuse_restricted(str(candidate), what="branch base episode requests")
+    return candidate if candidate.is_file() else None
+
+
+def exact_entry_backlog(time_s: np.ndarray, vid: np.ndarray, present: np.ndarray,
+                        vehicle_ids: Sequence[str], req_names: Sequence[str],
+                        req_depart: np.ndarray, req_entrance: np.ndarray,
+                        first_seen_s: Optional[np.ndarray] = None) -> tuple[np.ndarray, dict]:
+    """S-BACKLOG exact per-tick entrance-waiting clocks for paired-branch tapes.
+
+    ``entry_backlog[t, e]`` is the MEAN number of requested-but-not-inserted vehicles at
+    entrance ``e`` over the physics interval ``[t, t + 0.5)``, i.e. the waiting-time integral
+    of the interval divided by ``dt`` (fractional when a request departs mid-interval).  A
+    request waits from its continuous ``depart_s`` until its insertion tick, which is the
+    vehicle's first occupied tick on THIS tape (``entry_first_seen_s`` covers insertions
+    before the tape start; the paired recorder computed it over the base prefix plus the arm
+    branch, so times are arm-local); a due request never present on the tape is still waiting
+    at the tape end.  With the env's RequestLedger conventions (``metrics.py``: newly due
+    requests accrue from their departure time, insertion events at tick boundaries), summing
+    these clocks over a branch window reproduces the ledger's
+    ``source_wait_vehicle_seconds`` exactly, which ``wms.control.long_credit`` requires.
+    ``request_counter`` (demand counts) is returned unchanged in convention."""
+    time_s = np.asarray(time_s, np.float64)
+    t_count = len(time_s)
+    first: dict[int, float] = {}
+    if first_seen_s is not None:
+        for v, ts in enumerate(np.asarray(first_seen_s, np.float64).tolist()):
+            if math.isfinite(ts):
+                first[v] = float(ts)
+    for t in range(t_count):
+        for v in np.asarray(vid)[t][np.asarray(present, bool)[t]].tolist():
+            if v >= 0 and v not in first:
+                first[v] = float(time_s[t])
+    by_name = {str(n): first[v] for v, n in enumerate(vehicle_ids) if v in first}
+    # Never seen on this arm's tape -> never inserted within it (still waiting at the end).
+    ins = np.asarray([by_name.get(str(n), np.inf) for n in req_names], np.float64)
+    dep = np.asarray(req_depart, np.float64)
+    ent = np.asarray(req_entrance, np.int64)
+    backlog = np.zeros((t_count, N_ENTRANCES), np.float32)
+    counter = np.zeros((t_count, N_ENTRANCES, COUNTER_BINS), np.float32)
+    for t in range(t_count):
+        now = float(time_s[t])
+        waiting = np.maximum(0.0, np.minimum(ins, now + DT_S) - np.maximum(dep, now))
+        for e in range(N_ENTRANCES):
+            backlog[t, e] = float(waiting[ent == e].sum() / DT_S)
+        age = now - dep
+        keep = (dep <= now + 1e-9) & (age < COUNTER_BINS * COUNTER_BIN_S)
+        if keep.any():
+            np.add.at(counter[t], (ent[keep], np.floor(np.clip(age[keep], 0.0, None)
+                                                        / COUNTER_BIN_S).astype(np.int64)), 1.0)
+    stats = {"n_requests": int(len(req_names)),
+             "still_waiting_at_end": int((np.isposinf(ins) & (dep <= float(time_s[-1]))).sum()),
+             "requests_without_tape_vehicle": int(sum(str(n) not in by_name for n in req_names))}
+    return {"entry_backlog": backlog, "request_counter": counter}, stats
+
+
+def pair_cost_reconciliation(arrays: dict, summary: dict) -> dict:
+    """S-BACKLOG: per-tick road + source-wait clocks vs the branch summary's authoritative J.
+
+    Mirrors ``wms.control.long_credit``'s check (same expression order, same tolerances):
+    ``costs = .5 * ((1 - v/31.29)+ * mask).sum() + .5 * backlog.sum()`` over the branch
+    window must equal the ledger's ``speed_deficit + source_wait`` vehicle-seconds."""
+    times = np.asarray(arrays["time_s"], np.float64)
+    tick = int(np.searchsorted(times, float(summary["warmup_s"]) - 1e-6))
+    if tick >= len(times) or abs(float(times[tick]) - float(summary["warmup_s"])) > 1e-6:
+        raise C4EpisodeRefusal("no exact branch-start tick for pair cost reconciliation")
+    n = int(round(float(summary["horizon_s"]) / DT_S))
+    if tick + n + 1 > len(times):
+        raise C4EpisodeRefusal("branch window shorter than the pair horizon")
+    kin = np.asarray(arrays["veh_kin"][tick + 1:tick + 1 + n])
+    mask = np.asarray(arrays["veh_mask"][tick + 1:tick + 1 + n])
+    queue = np.asarray(arrays["entry_backlog"][tick:tick + n])
+    costs = .5 * ((np.maximum(0., 1. - kin[..., 4] / SPEED_LIMIT_MPS) * mask).sum(-1)
+                  + queue.sum(-1)).sum()
+    ledger = summary["ledger"]
+    j = float(ledger["speed_deficit_vehicle_seconds"]) + float(ledger["source_wait_vehicle_seconds"])
+    if not np.isclose(costs, j, rtol=1e-6, atol=1e-3):
+        raise C4EpisodeRefusal(
+            f"entry_backlog cost clocks do not reconcile to the authoritative J: "
+            f"{costs!r} vs {j!r} ({summary.get('schema')})")
+    return {"tick": tick, "horizon_s": float(summary["horizon_s"]),
+            "clock_costs_vs": j, "difference": float(costs - j),
+            "rule": "np.isclose(costs, J, rtol=1e-6, atol=1e-3), long_credit convention"}
+
+
 def cav_entry_counter(time_s, vid, present, is_cav, lane_carry, first_seen_s=None,
                       first_entrance=None) -> np.ndarray:
     """``[T,2,30]`` CAV insertion counts, binned exactly as :func:`episode_counter` (whose CAV
@@ -367,12 +472,28 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     for key, value in arrays.items():
         np.save(out / f"{key}.npy", value, allow_pickle=False)
     queue_stats = None
-    if (src / REQUESTS_FILE).is_file() and "vehicle_ids" in ep:      # V9ENTRY
-        names, depart, entrance = read_requests(src / REQUESTS_FILE)
-        queue, queue_stats = episode_queue_arrays(
-            arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
-            [str(x) for x in ep["vehicle_ids"]], names, depart, entrance,
-            ep.get("entry_first_seen_s"))
+    pair_clocks = None
+    requests = pair_requests_path(src, meta) if "vehicle_ids" in ep else None    # S-BACKLOG
+    if requests is not None:
+        names, depart, entrance = read_requests(requests)
+        summary_path = src / "summary.json"
+        if summary_path.is_file():
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            if summary.get("schema") != PAIR_SUMMARY_SCHEMA:
+                raise C4EpisodeRefusal(f"{src}: summary is not a {PAIR_SUMMARY_SCHEMA} pair tape")
+            # Exact paired-branch clocks (reconciled to the ledger below, fail closed).
+            queue, queue_stats = exact_entry_backlog(
+                arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+                [str(x) for x in ep["vehicle_ids"]], names, depart, entrance,
+                ep.get("entry_first_seen_s"))
+            pair_clocks = pair_cost_reconciliation({**arrays, **queue}, summary)
+            pair_clocks.update(requests_sha256=_sha256(requests),
+                               summary_sha256=_sha256(summary_path))
+        else:
+            queue, queue_stats = episode_queue_arrays(          # V9ENTRY (non-pair episodes)
+                arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
+                [str(x) for x in ep["vehicle_ids"]], names, depart, entrance,
+                ep.get("entry_first_seen_s"))
         for key, value in queue.items():
             np.save(out / f"{key}.npy", value, allow_pickle=False)
         np.save(out / "entry_cav_counter.npy", cav_entry_counter(
@@ -397,6 +518,8 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     }
     if queue_stats is not None:
         entry["queue_arrays"] = {"source": REQUESTS_FILE, **queue_stats}
+        if pair_clocks is not None:
+            entry["queue_arrays"]["pair_cost_reconciliation"] = pair_clocks
     if isinstance(meta.get("branch"), dict):        # paired-branch group (genrand)
         entry["branch"] = meta["branch"]
         entry["pair_key"] = meta["branch"].get("pair_key")
