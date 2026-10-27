@@ -40,6 +40,8 @@ from .start_states import StartBatch, checked_path
 # last commanded acceleration and lane intent (older actors load with zero weights on them).
 CHECKPOINT_FORMAT = "c4_dreamer/3"
 READABLE_FORMATS = ("c4_dreamer/1", "c4_dreamer/2", CHECKPOINT_FORMAT)
+MEMORY_CONFIG_FIELDS = ("imagination_microbatch", "imagination_checkpoint_segment",
+                        "imagination_offload_futures", "imagination_offload_saved_tensors")
 
 
 @dataclass
@@ -86,6 +88,14 @@ class DreamerConfig:
     # policy / group encoder / safety / native / reward / target-critic calls) during backward
     # instead of storing their activations.  Values and gradients are unchanged; ~1 extra forward.
     checkpoint_imagination: bool = True
+    # LONGMEM: default-off exact full-objective VJP replay, in start microbatches.
+    imagination_microbatch: int = 0
+    # Physics steps per checkpoint segment; zero disables segmented checkpointing.
+    imagination_checkpoint_segment: int = 0
+    # Keep replay's constant random futures on the host between forward/backward.
+    imagination_offload_futures: bool = False
+    # Host-spill saved autograd tensors as well (useful when the effective batch is one).
+    imagination_offload_saved_tensors: bool = False
     # Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from the
     # observed pre-t0 entry history of each start window (TorchEntryProcessV2); arrivals that find
     # no safe gap at the entrance queue (uncapped backlog) and are charged as source waiting by
@@ -186,6 +196,13 @@ class DreamerConfig:
     wm_safety_report_only: bool = False
 
     def __post_init__(self):
+        for name in ("imagination_microbatch", "imagination_checkpoint_segment"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name} must be a nonnegative integer")
+        for name in ("imagination_offload_futures", "imagination_offload_saved_tensors"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
         if (isinstance(self.real_return_mix, bool)
                 or not isinstance(self.real_return_mix, (int, float))
                 or not math.isfinite(self.real_return_mix) or not 0 <= self.real_return_mix <= 1):
@@ -802,7 +819,8 @@ class DreamerTrainer:
         return self.update_count - self.coop_anchor
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
-                credit_profile=False, difference_only=False):
+                credit_profile=False, difference_only=False, _memory_replay=False,
+                _memory_config=None, _memory_full_batch=None, _memory_start_index=None):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -819,7 +837,16 @@ class DreamerTrainer:
         members and all counterfactual rows of that start.  ``future_seed`` fixes the draws
         (default: from the config seed and the update count).  Off: nothing changes.
         """
-        cfg = self._imagination_config(batch)
+        cfg = _memory_config or self._imagination_config(batch)
+        memory = (cfg.imagination_microbatch or cfg.imagination_checkpoint_segment
+                  or cfg.imagination_offload_futures or cfg.imagination_offload_saved_tensors)
+        if memory and torch.is_grad_enabled() and not _memory_replay:
+            from .imagination_memory import memory_imagine
+            if credit_profile:
+                raise ValueError("LONGMEM requires credit_profile_every=0 (internal-action diagnostic)")
+            return memory_imagine(self, batch, cfg, deterministic=deterministic,
+                                  variants=variants, future_seed=future_seed,
+                                  difference_only=difference_only)
         forbidden = {"cav_teacher", "lane_teacher", "action_timeline", "present_seq", "is_cav_seq",
                      "junction_seq", "truncation_steps", "cav_controller"}
         if forbidden.intersection(batch.rollout_kwargs):
@@ -858,11 +885,15 @@ class DreamerTrainer:
             if rho > 0.0:
                 radius = self.exploration.radius_m or self.counterfactual.group_radius_m
                 gid, shared = exploration_plan(
-                    batch.state, radius, cfg.horizon, self.exploration.persistence_at(
+                    (_memory_full_batch or batch).state, radius, cfg.horizon,
+                    self.exploration.persistence_at(
                         self._curriculum_position(advance=False)),
                     torch.Generator().manual_seed(3_000_017 * (self.update_count + 1)))
+                if _memory_start_index is not None:
+                    gid = gid.index_select(0, _memory_start_index)
+                    shared = shared.index_select(1, _memory_start_index)
                 explore = (gid, shared, rho)
-        recompute = cfg.checkpoint_imagination and torch.is_grad_enabled()
+        recompute = cfg.checkpoint_imagination and torch.is_grad_enabled() and not memory
         from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
                                       a_max=self.counterfactual.native_accel_max_mps2,
@@ -1078,9 +1109,15 @@ class DreamerTrainer:
                     model.cav_exec_cap = cfg.cav_exec_cap
                 if decay_switch:
                     model.grad_decay_per_step = cfg.imagination_grad_decay
-                roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
-                                     cav_controller=controller, cav_teacher=None,
-                                     truncation_steps=None, **member_kwargs)
+                if cfg.imagination_checkpoint_segment and torch.is_grad_enabled():
+                    from .imagination_memory import segmented_rollout
+                    roll = segmented_rollout(
+                        model, initial, cfg.horizon * STEPS_PER_CONTROL,
+                        cfg.imagination_checkpoint_segment, controller, member_kwargs)
+                else:
+                    roll = model.rollout(initial, n_steps=cfg.horizon * STEPS_PER_CONTROL,
+                                         cav_controller=controller, cav_teacher=None,
+                                         truncation_steps=None, **member_kwargs)
             finally:
                 if switch:
                     model.checkpoint_forward = previous_switch
@@ -1413,11 +1450,17 @@ class DreamerTrainer:
         mix = self.config.real_return_mix
         imagined_loss = None
         if mix < 1 and self.longcritic is None and self.paircrit is None:
-            predictions = torch.stack([torch.stack([self.critic(_detach(_rows(state, n_base, n_rows)))
-                                                    for state in states[:-1]])
-                                       for states in imagined['states']])
             critic_scale = max(scale, self.config.real_return_scale)
-            imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
+            if (self.config.imagination_microbatch or self.config.imagination_checkpoint_segment
+                    or self.config.imagination_offload_futures
+                    or self.config.imagination_offload_saved_tensors):
+                from .imagination_memory import memory_critic_loss
+                imagined_loss = memory_critic_loss(self, imagined, returns, critic_scale)
+            else:
+                predictions = torch.stack([torch.stack([
+                    self.critic(_detach(_rows(state, n_base, n_rows))) for state in states[:-1]])
+                    for states in imagined['states']])
+                imagined_loss = ((predictions - returns.detach()) / critic_scale).square().mean()
         if self.paircrit is not None:
             critic_loss, pair_metrics = self.paircrit.loss(self, starts, scale)
             extra.update(pair_metrics)
@@ -1901,6 +1944,13 @@ class DreamerTrainer:
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
+        # Memory is execution geometry: an explicitly enabled runtime request may
+        # be applied to an old full-resume checkpoint without changing its objective.
+        memory_request = {name: getattr(self.config, name) for name in MEMORY_CONFIG_FIELDS}
+        if any(memory_request.values()):
+            memory_request["credit_profile_every"] = self.config.credit_profile_every
+        else:
+            memory_request = {}
         payload = torch.load(checked_path(path), map_location=self.device, weights_only=True)
         if bool(payload.get("residual_on_native", False)) != bool(getattr(self.policy, "residual_on_native", False)):
             raise ValueError("cannot resume across absolute/native-residual action semantics")
@@ -1938,6 +1988,8 @@ class DreamerTrainer:
         if policy_only:
             return
         self.config = DreamerConfig(**payload["config"])
+        if memory_request:
+            self.config = replace(self.config, **memory_request)
         self.reward_weights = RewardWeights(**payload["reward_weights"])
         # V6EXPLORE: the loaded config may activate targets the run config did not have.
         self._init_entropy_temperature()
