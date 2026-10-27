@@ -95,19 +95,6 @@ def train(variant, dry_run=False):
         assert paired_receipt['mode'] == 'c4-paired-branches-concat', paired_receipt
         assert paired_receipt['n_groups'] == 46 + 156, paired_receipt
         assert paired_receipt['horizon_steps'] == 600, paired_receipt
-        # wm_s_initial must equal WM2 EXACTLY (the accept.py identity reference).
-        payload = torch.load(str(WM2), map_location='cpu', weights_only=True)
-        own = inputs.model.state_dict()
-        missing = [k for k in payload['model'] if k not in own]
-        shape_mismatch = [k for k, v in payload['model'].items() if own[k].shape != v.shape]
-        assert not missing and not shape_mismatch, (missing[:3], shape_mismatch[:3])
-        delta = max(float((own[k].float()-v.float()).abs().max())
-                    for k, v in payload['model'].items())
-        assert delta == 0.0, f'init_from is not exactly WM2 (max |delta| {delta})'
-        write(variant+'/INIT_PROOF.json', {'wm2_tensors': len(payload['model']),
-                                           'model_tensors': len(own),
-                                           'max_abs_delta': delta,
-                                           'new_tensors': sorted(set(own)-set(payload['model']))})
         # Selection must use the E3DATA calibration worlds (36), never fit/validation.
         val_cfg = load_train_config(CONFIG, base)
         val_dir = dest/'original_validation'
@@ -122,14 +109,22 @@ def train(variant, dry_run=False):
         assert float(last.weight.detach().abs().sum()) == 0.0 \
             and float(last.bias.detach().abs().sum()) == 0.0, \
             'mainline head must be exactly zero at init (identity contract)'
-        if dry_run:
-            write('dryrun/PREFLIGHT_ASSEMBLE.json', {
-                'paired_batches': paired_receipt, 'validation_windows': len(original_val),
-                't': __import__('common').now(), 'free_gib': disk()})
-            return
         trainer = WmSTrainer(cfg, inputs.model, inputs.train,
                              val_dataset=original_val, out_dir=dest)
         trainer.set_stage_lr(3e-5)
+        # wm_s_initial must equal WM2 EXACTLY (init_from is applied by the trainer).
+        payload = torch.load(str(WM2), map_location='cpu', weights_only=True)
+        own = inputs.model.state_dict()
+        rep = trainer.init_report
+        assert not rep['shape_mismatch'] and not rep['expanded'], rep['shape_mismatch'][:3]
+        missing = [k for k in payload['model'] if k not in own]
+        assert not missing, missing[:3]
+        delta = max(float((own[k].float()-v.float()).abs().max())
+                    for k, v in payload['model'].items())
+        assert delta == 0.0, f'init_from is not exactly WM2 (max |delta| {delta})'
+        write(('dryrun' if dry_run else variant)+'/INIT_PROOF.json',
+              {'wm2_tensors': len(payload['model']), 'model_tensors': len(own),
+               'max_abs_delta': delta, 'new_tensors': sorted(set(own)-set(payload['model']))})
         names = trainer.optimizer_groups['trainable_tensor_names']
         groups = {g['prefix']: g for g in trainer.optimizer_groups['groups']}
         assert any(n.startswith('mainline_residual') for n in names) \
@@ -139,6 +134,12 @@ def train(variant, dry_run=False):
         frozen_deep = ('merge_core', 'merge_pivot', 'ramp_speed_adapt',
                        'driver_encoder', 'driver_updater', 'residual_net.lane')
         assert not any(n.startswith(frozen_deep) for n in names)
+        if dry_run:
+            write('dryrun/PREFLIGHT_ASSEMBLE.json', {
+                'paired_batches': paired_receipt, 'validation_windows': len(original_val),
+                'optimizer_groups': [g['prefix'] for g in trainer.optimizer_groups['groups']],
+                't': __import__('common').now(), 'free_gib': disk()})
+            return
         write(variant+'/OPTIMIZER.json', {**trainer.optimizer_groups,
               'actual_stage_learning_rates': [g['lr'] for g in trainer.optimizer.param_groups],
               'longwm_sets': sets, 'variant_overrides': variant_overrides(variant),
