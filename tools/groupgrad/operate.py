@@ -9,11 +9,12 @@ ROOT = Path(__file__).resolve().parents[2]
 REMOTE = '/root/autodl-tmp/c4/restart20261026'
 
 
-def ssh(host, code):
+def ssh(host, code, quiet=False):
     python = '/root/miniconda3/bin/python' if host == 'gpuA' else '/home/ubuntu/miniconda3/bin/python'
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', host,
                              python + ' -B -'], input=code, text=True, capture_output=True, timeout=90)
-    print(result.stdout, end='')
+    if not quiet:
+        print(result.stdout, end='')
     if result.stderr:
         print(result.stderr)
     result.check_returncode()
@@ -22,12 +23,14 @@ def ssh(host, code):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['inventory', 'cpu', 'bindings', 'paths', 'copy', 'setup', 'peek'])
+    parser.add_argument('action', choices=['inventory', 'cpu', 'bindings', 'paths', 'copy', 'setup', 'peek', 'logs'])
     parser.add_argument('--only', default='metadata')
     args = parser.parse_args()
     if args.action == 'copy':
         files = {f'checkpoints/{label}.pt': f'{REMOTE}/arm/loop/policy/{rel}/policy_native_best.pt'
                  for label, rel in [('c00', 'c00'), ('c01_on', 'c01.a3'), ('c02', 'c02.h60b.r2')]}
+        files['checkpoints/starts.pt'] = f'{REMOTE}/arm/loop/returns/returns_c01.a1.npz'
+        files['checkpoints/nativehead.pt'] = f'{REMOTE}/runtime_c1/configs/native_cav_head_v5.json'
         for phase in ('c00', 'c01.a3', 'c02.h60b.r2'):
             for name in ('RUN_SUMMARY.json', 'updates.jsonl', 'native_gate_result.json'):
                 files[f'metadata/{phase}_{name}'] = f'{REMOTE}/arm/loop/policy/{phase}/{name}'
@@ -40,7 +43,6 @@ def main():
                  (k == f'checkpoints/{args.only}.pt' if args.only != 'metadata' else
                   not k.startswith('checkpoints/') and not k.endswith('updates.jsonl'))}
         if args.only != 'metadata':
-            import tempfile
             parent = Path('E:/Temp/opencode')
             assert parent.is_dir()
             for rel, source in files.items():
@@ -81,6 +83,20 @@ receipt['checkpoints/c01_off.pt']={{'source':str(src),'sha256':hashlib.sha256(p.
 prior=json.loads((r/'inputs.json').read_text()) if (r/'inputs.json').exists() else {{}}; prior.update(receipt)
 (r/'inputs.json').write_text(json.dumps(prior,indent=2)); print(json.dumps(receipt,indent=2))
 ''')
+    elif args.action == 'logs':
+        code = f'''import pathlib,json,hashlib
+r=pathlib.Path({REMOTE!r}); out={{}}
+keys=['update','actor_loss','actor_grad_norm','actor_norm','return_scale','cf_weights','cf_term_grad_norms','cf_coverage','cf_curriculum_position','actor_grad_norms','action_audit','n_futures','imagination_horizon_s']
+for phase in ['c00','c01','c01.a2','c01.a3','c02','c02.h60','c02.h60b','c02.h60b.r2']:
+ p=r/'arm/loop/policy'/phase/'updates.jsonl'
+ if not p.exists(): continue
+ rows=[json.loads(s) for s in p.read_text().splitlines() if s.strip()]
+ out[phase]={{'source':str(p),'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'n':len(rows),'keys':list(rows[-1]) if rows else [],'rows':[{{k:v for k,v in x.items() if k in keys}} for x in rows]}}
+print(json.dumps(out))
+'''
+        text = ssh('gpuA', code, quiet=True)
+        (ROOT/'tools/groupgrad/logs.json').write_text(text, encoding='utf-8')
+        print({k: v['n'] for k,v in json.loads(text).items()})
     elif args.action == 'setup':
         ssh('cpuP', '''import pathlib,tarfile,json,torch,os
 r=pathlib.Path.home()/'groupgrad'; assert r.is_dir(); dest=r/'runtime'; dest.mkdir(exist_ok=True)

@@ -1,4 +1,5 @@
 """CPU checkpoint census; reconstruct native-init with its registered RNG seed."""
+# ruff: noqa: E402 -- CUDA visibility and isolated source path precede torch imports.
 import hashlib
 import json
 import os

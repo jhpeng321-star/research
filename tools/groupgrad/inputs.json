@@ -78,5 +78,13 @@
   "checkpoints/c02.pt": {
     "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/policy_native_best.pt",
     "sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128"
+  },
+  "checkpoints/starts.pt": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c01.a1.npz",
+    "sha256": "72a00305f34bc09d66f76fe3f20d0fab24c16f516b3f792a3bac62807c517e7b"
+  },
+  "checkpoints/nativehead.pt": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/configs/native_cav_head_v5.json",
+    "sha256": "4c351a4281abc5e0eb08b59612e175ab60bd75715f5e94241b3a440691fcda00"
   }
 }
