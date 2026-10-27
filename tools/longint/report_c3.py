@@ -11,27 +11,42 @@ def report():
     state = loop.load_state(cfg)
     phases = state['cycles'][-1]['phases']
     assert state['cycles'][-1]['cycle'] == 3
-    assert all(phases[p]['status'] == 'done' for p in ('policy', 'collect', 'convert'))
+    status = loop.read_json(REL / 'AUTONOMY_STATUS.json')['status']
+    harmful_stop = status == 'C3_COLLECT_STOPPED' and state.get('stopped') == 'native smoke harmful'
+    assert phases['policy']['status'] == 'done'
+    if not harmful_stop:
+        assert all(phases[p]['status'] == 'done' for p in ('collect', 'convert'))
+        assert status == 'WAIT_MAIN_C3_WMFT'
+    else:
+        assert phases['convert']['status'] == 'pending'
     assert all(phases[p]['status'] == 'pending' for p in ('wm_ft', 'check'))
     assert (ARM / 'loop/STOP_DRIVER').exists()
-    assert loop.read_json(REL / 'AUTONOMY_STATUS.json')['status'] == 'WAIT_MAIN_C3_WMFT'
     journal = loop.read_json(ARM / 'loop/worlds_c03.json')
-    assert len(journal['cases']) == len(journal['worlds']) == 13
+    completed = 4 if harmful_stop else 13
+    assert len(journal['cases']) == 13 and len(journal['worlds']) == completed
     assert not cfg['collect'].get('probe', {}).get('enabled', False)
     rows = [json.loads(x) for x in (ARM / 'loop/seed_ledger.jsonl').read_text().splitlines()]
     charges = [r for r in rows if r.get('cycle') == 3 and r.get('event') == 'world_attempt']
-    assert len(charges) == 13
-    assert len({(r['seed'], r['attempt']) for r in charges}) == 13
+    assert len(charges) == completed
+    assert len({(r['seed'], r['attempt']) for r in charges}) == completed
     assert all(r['attempt'] == 1 and not 964000 <= r['seed'] <= 964199 for r in charges)
-    assert sum(r['sim_s_charged'] for r in charges) == 36933
-    assert state['sim_s_charged'] == 250339 <= 280000
+    charged = sum(r['sim_s_charged'] for r in charges)
+    assert charged == completed * 2841
+    assert state['sim_s_charged'] == 213406 + charged <= 280000
     from tools.fastloop.world import verify
     from wms.control.nativeinit import artifact_world_delta, smoke_guard
     worlds, behavior_exports = [], []
-    for case in journal['cases']:
+    for case in journal['cases'][:completed]:
         receipt = journal['worlds'][str(case['seed'])]
         root = Path(receipt['artifact'])
-        verify(root)
+        files = verify(root)
+        for name in files:
+            if any(token in name.lower() for token in ('coopmeas', 'behaviour', 'behavior')):
+                path = root / name
+                loop.guard(path)
+                behavior_exports.append({'seed': case['seed'], 'source': str(path),
+                    'sha256': files[name], 'value': loop.read_json(path) if path.suffix == '.json' else
+                    'non-JSON collector behavior export; retained at source'})
         delta = artifact_world_delta(root, int(cfg['collect']['branch_points']))
         worlds.append({'seed': case['seed'], 'demand': case['demand'],
                        'penetration': case['penetration'], 'box': receipt['box'],
@@ -54,10 +69,10 @@ def report():
                                              'source': str(path), 'key': key, 'value': summary[key]})
     guard = smoke_guard([w['policy_minus_native_veh_s'] for w in worlds[:4]])
     assert guard == journal['native_smoke']
-    assert guard['verdict'] != 'harmful'
+    assert (guard['verdict'] == 'harmful') == harmful_stop
     verified = loop.read_json(OUT / 'POLICY_VERIFIED.json')
-    result = {'task': 'S-C3RESUME', 'status': 'WAIT_MAIN_C3_WMFT',
-        'policy': verified, 'charged_before': 213406, 'new_charged': 36933,
+    result = {'task': 'S-C3RESUME', 'status': status,
+        'policy': verified, 'charged_before': 213406, 'new_charged': charged,
         'charged_total': state['sim_s_charged'], 'remaining': 280000 - state['sim_s_charged'],
         'guard': {**guard, 'worlds': worlds[:4],
                   'units': 'policy - native veh-s; road speed-deficit + entrance waiting; sum of two paired starts/world',
@@ -66,7 +81,7 @@ def report():
         'worlds': worlds, 'probes': False, 'behavior_exports': behavior_exports,
         'behavior_availability': 'exported' if behavior_exports else
             'COOPMEAS behavior rates are not exported by this registered collector',
-        'conversion': phases['convert']['receipt'],
+        'conversion': phases['convert'].get('receipt'),
         'preflight': loop.read_json(REL / 'AUTONOMY_PREFLIGHT.json'),
         'wm_ft_started': False}
     target = OUT / 'RESULTS.json'
