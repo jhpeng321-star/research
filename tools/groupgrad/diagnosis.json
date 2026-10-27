@@ -1,0 +1,434 @@
+{
+  "device": "cpu",
+  "num_threads": 1,
+  "baseline": {
+    "candidate": false,
+    "actor_optimizer_parameters": 137,
+    "group_requires_grad": false,
+    "updates": [
+      {
+        "scale": 3.5998114347457886,
+        "weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "n_rows": 9,
+        "n_groups": 1,
+        "weighted_term_grad_norms": {
+          "all": 0.16236963164283186,
+          "individual": 1.4450896749126603,
+          "group": 1.6074591620613405,
+          "team": 1.6724065648204351,
+          "coop": 2.1532847641608475e-08
+        },
+        "coop_terms_combined_grad_norm": 4.72495538788212,
+        "total_objective_grad_norm": 4.887325043500526,
+        "coop_to_total_grad_ratio": 0.9667773978253531,
+        "all_to_total_cosine": 0.9999999999999979,
+        "first_step_adam_delta_difference_max": 3.1704124576570434e-09,
+        "gradient_decomposition_max_error": 1.0834997610231767e-07,
+        "group_grad_norm": 0.0,
+        "residual_grad_norm": 4.887325043500526,
+        "actor_grad_norm": 4.887325286865234,
+        "actor_loss": 0.0,
+        "group_changed": 0
+      },
+      {
+        "scale": 3.59799659371376,
+        "weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "n_rows": 9,
+        "n_groups": 1,
+        "weighted_term_grad_norms": {
+          "all": 0.08020360316320013,
+          "individual": 0.7139234623571123,
+          "group": 0.7940156402829204,
+          "team": 0.8259684083194494,
+          "coop": 0.00011265107051484685
+        },
+        "coop_terms_combined_grad_norm": 2.3337960775892315,
+        "total_objective_grad_norm": 2.4139993642603854,
+        "coop_to_total_grad_ratio": 0.9667757631345827,
+        "all_to_total_cosine": 0.9999999999687809,
+        "first_step_adam_delta_difference_max": 4.616836696672325e-09,
+        "gradient_decomposition_max_error": 2.3096799850463867e-07,
+        "group_grad_norm": 0.0,
+        "residual_grad_norm": 2.4139993642603854,
+        "actor_grad_norm": 2.413999319076538,
+        "actor_loss": -0.0007168842712417245,
+        "group_changed": 0
+      }
+    ]
+  },
+  "candidate": {
+    "candidate": true,
+    "actor_optimizer_parameters": 69201,
+    "group_requires_grad": true,
+    "updates": [
+      {
+        "scale": 3.5998114347457886,
+        "weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "n_rows": 9,
+        "n_groups": 1,
+        "weighted_term_grad_norms": {
+          "all": 0.16236963164283186,
+          "individual": 1.4450896749126603,
+          "group": 1.6074591620613405,
+          "team": 1.6724065648204351,
+          "coop": 2.1532847641608475e-08
+        },
+        "coop_terms_combined_grad_norm": 4.72495538788212,
+        "total_objective_grad_norm": 4.887325043500526,
+        "coop_to_total_grad_ratio": 0.9667773978253531,
+        "all_to_total_cosine": 0.9999999999999979,
+        "first_step_adam_delta_difference_max": 3.1704124576570434e-09,
+        "gradient_decomposition_max_error": 1.0834997610231767e-07,
+        "group_grad_norm": 0.0,
+        "residual_grad_norm": 4.887325043500526,
+        "actor_grad_norm": 4.887325286865234,
+        "actor_loss": 0.0,
+        "group_changed": 0
+      },
+      {
+        "scale": 3.59799659371376,
+        "weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "n_rows": 9,
+        "n_groups": 1,
+        "weighted_term_grad_norms": {
+          "all": 0.08020324263617258,
+          "individual": 0.7139209519496432,
+          "group": 0.7940120796620844,
+          "team": 0.8259639698886029,
+          "coop": 0.00011336563188814147
+        },
+        "coop_terms_combined_grad_norm": 2.333784855236372,
+        "total_objective_grad_norm": 2.4139880827852425,
+        "coop_to_total_grad_ratio": 0.9667756323567545,
+        "all_to_total_cosine": 0.9999999999686451,
+        "first_step_adam_delta_difference_max": 3.4591130627787126e-05,
+        "gradient_decomposition_max_error": 4.486969373829197e-08,
+        "group_grad_norm": 0.0011685672611459724,
+        "residual_grad_norm": 2.413987799944313,
+        "actor_grad_norm": 2.4139881134033203,
+        "actor_loss": -0.0007168842712417245,
+        "group_changed": 26
+      }
+    ]
+  },
+  "residuals": {
+    "n_starts": 26,
+    "cohort": "all converted cycle1 starts",
+    "starts_sha256": "72a00305f34bc09d66f76fe3f20d0fab24c16f516b3f792a3bac62807c517e7b",
+    "stats": {
+      "native_head": {
+        "n": 410,
+        "mean_abs": 0.25778613248612825,
+        "median_abs": 0.07861215621232986,
+        "p95_abs": 1.094222068786621,
+        "max_abs": 2.5786263942718506,
+        "mean": 0.08897224717387339
+      },
+      "c00": {
+        "n": 410,
+        "mean_abs": 0.01047405943887808,
+        "median_abs": 0.010126715525984764,
+        "p95_abs": 0.01581285148859024,
+        "max_abs": 0.016827989369630814,
+        "mean": 0.01047405943887808
+      },
+      "c01_on": {
+        "n": 410,
+        "mean_abs": 0.04639612943524631,
+        "median_abs": 0.04487953707575798,
+        "p95_abs": 0.06809784471988678,
+        "max_abs": 0.07214441895484924,
+        "mean": 0.04639612943524631
+      },
+      "c01_off": {
+        "n": 410,
+        "mean_abs": 0.04339549972380443,
+        "median_abs": 0.04187660664319992,
+        "p95_abs": 0.06531412154436111,
+        "max_abs": 0.06922219693660736,
+        "mean": 0.04339549972380443
+      },
+      "c02": {
+        "n": 410,
+        "mean_abs": 0.10257274478946517,
+        "median_abs": 0.09948120266199112,
+        "p95_abs": 0.15358787775039673,
+        "max_abs": 0.16288821399211884,
+        "mean": 0.10257274478946517
+      },
+      "recorded_accel": {
+        "n": 410,
+        "mean_abs": 0.29611681309781,
+        "median_abs": 0.08253563940525055,
+        "p95_abs": 1.168339729309082,
+        "max_abs": 2.5735416412353516,
+        "mean": 0.09612622447473369
+      }
+    },
+    "on_minus_off": {
+      "n": 410,
+      "mean_abs": 0.0030006297114418775,
+      "median_abs": 0.003051361069083214,
+      "p95_abs": 0.0034556312020868063,
+      "max_abs": 0.0036729052662849426,
+      "mean": 0.0030006297114418775
+    },
+    "group_signal_zero_ablation_delta": {
+      "c00": {
+        "n": 410,
+        "mean_abs": 0.0009284369715648453,
+        "median_abs": 0.0009900415316224098,
+        "p95_abs": 0.0013879552716389298,
+        "max_abs": 0.001497127115726471,
+        "mean": 0.0009282241586777495
+      },
+      "c01_on": {
+        "n": 410,
+        "mean_abs": 0.004270312682975356,
+        "median_abs": 0.0047175101935863495,
+        "p95_abs": 0.006088572554290295,
+        "max_abs": 0.0065903440117836,
+        "mean": 0.004270312682975356
+      },
+      "c01_off": {
+        "n": 410,
+        "mean_abs": 0.0038866350654421784,
+        "median_abs": 0.004209510982036591,
+        "p95_abs": 0.0057700383476912975,
+        "max_abs": 0.006205592304468155,
+        "mean": 0.0038855485163810776
+      },
+      "c02": {
+        "n": 410,
+        "mean_abs": 0.009093330945910477,
+        "median_abs": 0.009755395352840424,
+        "p95_abs": 0.013461991213262081,
+        "max_abs": 0.014513403177261353,
+        "mean": 0.009091987124666936
+      }
+    }
+  },
+  "source_receipt": {
+    "policy": {
+      "unit_sha256": "b32dd8c74d14f06427f0cc008b996a69733977a541ee3f0649bef159b644e4fb",
+      "deployed_sha256": "b32dd8c74d14f06427f0cc008b996a69733977a541ee3f0649bef159b644e4fb",
+      "full_ast_equal": true,
+      "deployed_key_lines": [
+        {
+          "line": 107,
+          "text": "self.requires_grad_(False)"
+        },
+        {
+          "line": 183,
+          "text": "radius = min(-self.accel_min, self.accel_max)"
+        },
+        {
+          "line": 184,
+          "text": "latent = self.residual_head(features.detach()).squeeze(-1)"
+        },
+        {
+          "line": 191,
+          "text": "residual = radius * torch.tanh(latent)"
+        },
+        {
+          "line": 559,
+          "text": "risk = BreakdownHead().eval().requires_grad_(False)"
+        }
+      ]
+    },
+    "dreamer": {
+      "unit_sha256": "f9a908218dbf177674ae0f422256e723485a7b36ff65163c5cc70bc96775945d",
+      "deployed_sha256": "f9a908218dbf177674ae0f422256e723485a7b36ff65163c5cc70bc96775945d",
+      "full_ast_equal": true,
+      "deployed_key_lines": [
+        {
+          "line": 623,
+          "text": "model.requires_grad_(False)"
+        },
+        {
+          "line": 645,
+          "text": "self.target_critic = copy.deepcopy(critic).to(self.device).eval().requires_grad_(False)"
+        },
+        {
+          "line": 655,
+          "text": "self.actor_parameters = list(dict.fromkeys("
+        },
+        {
+          "line": 658,
+          "text": "self.group_encoder.requires_grad_(False)"
+        },
+        {
+          "line": 659,
+          "text": "self.actor_parameters = [p for p in self.actor_parameters if p.requires_grad]"
+        },
+        {
+          "line": 660,
+          "text": "self.actor_optimizer = torch.optim.Adam(self.actor_parameters, lr=self.config.actor_lr)"
+        },
+        {
+          "line": 736,
+          "text": "alpha_loss = -(self.log_alpha * (self.config.entropy_target - entropy.detach()))"
+        },
+        {
+          "line": 746,
+          "text": "lane_alpha_loss = -(self.log_lane_alpha *"
+        },
+        {
+          "line": 1286,
+          "text": "\"ttc_penalty\": float(penalty.detach())}"
+        },
+        {
+          "line": 1291,
+          "text": "extra.update(wm_safety_report_only=True, ttc_penalty_report=float(penalty.detach()))"
+        },
+        {
+          "line": 1292,
+          "text": "penalty = penalty.detach().new_zeros(())"
+        },
+        {
+          "line": 1331,
+          "text": "loss = -(difference.mean((0, 1)) * coefficients).sum() / scale"
+        },
+        {
+          "line": 1343,
+          "text": "pg_loss = -((joint * advantage).mean((0, 1)) * coefficients).sum()"
+        }
+      ]
+    },
+    "policy14": {
+      "unit_sha256": "a10ac947b9996cfcb022123b5155ff5a63dcd50e9f84b27c18f630afbd87fa40",
+      "deployed_sha256": "59e5db0f49e6532defc803fcbd59b882b84a796effce7c163a8de2b40a8cad28",
+      "full_ast_equal": true,
+      "deployed_key_lines": [
+        {
+          "line": 52,
+          "text": "credit_multipliers = None"
+        },
+        {
+          "line": 55,
+          "text": "if self.credit_multipliers:"
+        },
+        {
+          "line": 56,
+          "text": "weights = {k: v * float(self.credit_multipliers.get(k, 1.0)) for k, v in weights.items()}"
+        }
+      ]
+    },
+    "counterfactual": {
+      "unit_sha256": "1c82199296dc706b8448bf22433d97a027a9869c860f7681b1d0b9ceb8d5bd6b",
+      "deployed_sha256": "1c82199296dc706b8448bf22433d97a027a9869c860f7681b1d0b9ceb8d5bd6b",
+      "full_ast_equal": true,
+      "deployed_key_lines": []
+    },
+    "coopw": {
+      "unit_sha256": "cec6f823eaf85bcff3c3492692d0ec84c029bef7f36f61300ba0142ae46e82c4",
+      "deployed_sha256": "dd10d05839880f6de031497e85adf79646e98f022cc4361d64492f9d185faf8d",
+      "full_ast_equal": true,
+      "deployed_key_lines": []
+    },
+    "paircrit": {
+      "unit_sha256": "add2fc89d5ea67bd9d2f5692e2270fc9e0e4bef83a8c441e892dc2d034c7b887",
+      "deployed_sha256": "2c798617be68b3e92122f0f8630c8e0a99a4f39ff99758585f20325e01ce6966",
+      "full_ast_equal": false,
+      "deployed_key_lines": [
+        {
+          "line": 118,
+          "text": "self.base, self.paired, self.risk = base, paired, risk"
+        },
+        {
+          "line": 243,
+          "text": "return head.eval().requires_grad_(False), doc"
+        },
+        {
+          "line": 255,
+          "text": "trainer.actor_parameters = list(trainer.policy.parameters()) + ["
+        },
+        {
+          "line": 257,
+          "text": "trainer.actor_optimizer = torch.optim.Adam(trainer.actor_parameters, lr=trainer.config.actor_lr)"
+        },
+        {
+          "line": 259,
+          "text": "trainer.target_critic = copy.deepcopy(trainer.critic).eval().requires_grad_(False)"
+        }
+      ]
+    },
+    "longcritic": {
+      "unit_sha256": "5125859963c60e233899abfabffde53aa667fd19d3619ffd0e89179a2a895088",
+      "deployed_sha256": "de1a2e6bb3e4adf1d1a8f1de5c8c148926e662cd6126d71ed3523b5acfc1b906",
+      "full_ast_equal": true,
+      "deployed_key_lines": [
+        {
+          "line": 109,
+          "text": "self.native_critic = copy.deepcopy(trainer.critic)"
+        },
+        {
+          "line": 110,
+          "text": "self.optimizer = torch.optim.Adam(self.native_critic.parameters(), lr=trainer.config.critic_lr)"
+        },
+        {
+          "line": 136,
+          "text": "proxy = SimpleNamespace(config=trainer.config, critic=self.native_critic,"
+        },
+        {
+          "line": 137,
+          "text": "target_critic=copy.deepcopy(self.native_critic),"
+        },
+        {
+          "line": 141,
+          "text": "self.native_critic.eval().requires_grad_(False)"
+        },
+        {
+          "line": 200,
+          "text": "loss = difference_loss(trainer.critic, self.native_critic, states, delta, weight,"
+        },
+        {
+          "line": 206,
+          "text": "return {\"native_critic\": self.native_critic.state_dict(), \"optimizer\": self.optimizer.state_dict(),"
+        },
+        {
+          "line": 216,
+          "text": "self.native_critic.requires_grad_(True)"
+        },
+        {
+          "line": 218,
+          "text": "self.native_critic.load_state_dict(doc[\"native_critic\"])"
+        },
+        {
+          "line": 222,
+          "text": "self.native_critic.eval().requires_grad_(False)"
+        }
+      ]
+    },
+    "bridge": {
+      "unit_sha256": "555356bbdf4b01e0af2e1b303631eb67774094e6badc8bf3ae5628ec41817162",
+      "deployed_sha256": "555356bbdf4b01e0af2e1b303631eb67774094e6badc8bf3ae5628ec41817162",
+      "full_ast_equal": true,
+      "deployed_key_lines": []
+    }
+  }
+}

@@ -1,0 +1,2006 @@
+{
+  "c00": {
+    "n": 30,
+    "first": {
+      "update": 1,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 0.0,
+        "group": 0.0,
+        "coop": 0.0,
+        "team": 0.0,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 0.28016154957484274,
+        "critic": 0.020792691311490172,
+        "uncertainty": 0.011768562482095322
+      },
+      "action_audit": {
+        "active_actions": 906,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 45,
+        "cav_in_group_fraction": 0.06666666666666667
+      },
+      "cf_curriculum_position": 0,
+      "n_futures": 2,
+      "actor_loss": 0.0,
+      "actor_grad_norm": 0.24947378039360046,
+      "return_scale": 1690.90625
+    },
+    "last": {
+      "update": 30,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 1.2078571428571427,
+        "group": 1.3435714285714286,
+        "coop": 1.2078571428571427,
+        "team": 1.397857142857143,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 320,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 16,
+        "cav_in_group_fraction": 0.1875
+      },
+      "cf_curriculum_position": 29,
+      "n_futures": 2,
+      "actor_loss": 1.7651740336077637e-06,
+      "actor_grad_norm": 0.001601525815203786,
+      "return_scale": 1523.858670162921
+    },
+    "scale": {
+      "n": 30,
+      "min": 1523.858670162921,
+      "median": 1571.2284296026519,
+      "max": 1690.90625
+    },
+    "actor_grad_norm": {
+      "n": 30,
+      "min": 0.0005788733251392841,
+      "median": 0.04424369242042303,
+      "max": 3.0167922973632812
+    },
+    "group_update_fraction": 1.0,
+    "team_update_fraction": 0.8,
+    "audited_terms": [
+      {
+        "update": 25,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 0.89,
+          "group": 0.99,
+          "coop": 0.89,
+          "team": 1.03,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 879,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 43,
+          "cav_in_group_fraction": 0.06976744186046512
+        },
+        "cf_curriculum_position": 24,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 3.018822760987803,
+          "individual": 0.0007396829902319652,
+          "group": 0.0007396829902319652,
+          "team": 0.0007396823862337375,
+          "coop": 2.412235244278764e-11,
+          "uncertainty": 1.9671375644494618
+        },
+        "actor_loss": 0.0010684591252356768,
+        "actor_grad_norm": 3.0167922973632812,
+        "return_scale": 1561.6165090253344
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 1,
+      "min": 7.990648790157675e-12,
+      "median": 7.990648790157675e-12,
+      "max": 7.990648790157675e-12
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 3,
+        "min": 0.00517616323742541,
+        "median": 0.059248317100369936,
+        "max": 0.28016154957484274
+      },
+      "critic": {
+        "n": 3,
+        "min": 0.002844748650687155,
+        "median": 0.005791487125707198,
+        "max": 0.020792691311490172
+      },
+      "uncertainty": {
+        "n": 3,
+        "min": 0.00010422953019604495,
+        "median": 0.002349355850135374,
+        "max": 0.011768562482095322
+      },
+      "constraint": {
+        "n": 3,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 3,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c01": {
+    "n": 144,
+    "first": {
+      "update": 31,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 1.2714285714285714,
+        "group": 1.4142857142857144,
+        "coop": 1.2714285714285714,
+        "team": 1.4714285714285715,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 0.0035269716377490344,
+        "critic": 0.005675465124503339,
+        "uncertainty": 4.911318279914701e-05
+      },
+      "action_audit": {
+        "active_actions": 98,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 4,
+        "cav_in_group_fraction": 0.75
+      },
+      "cf_curriculum_position": 30,
+      "n_futures": 2,
+      "actor_loss": -0.0001030900384648703,
+      "actor_grad_norm": 0.0022692023776471615,
+      "return_scale": 1530.0100053362912
+    },
+    "last": {
+      "update": 174,
+      "imagination_horizon_s": 30.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 895,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 16,
+        "cav_in_group_fraction": 0.125
+      },
+      "cf_curriculum_position": 173,
+      "n_futures": 2,
+      "actor_loss": -0.0011906183790415525,
+      "actor_grad_norm": 0.018944185227155685,
+      "return_scale": 1650.3593458368123
+    },
+    "scale": {
+      "n": 144,
+      "min": 1182.8947232542487,
+      "median": 1337.8280319486767,
+      "max": 1650.3593458368123
+    },
+    "actor_grad_norm": {
+      "n": 144,
+      "min": 0.0,
+      "median": 0.08215747401118279,
+      "max": 1737.4140625
+    },
+    "group_update_fraction": 0.9444444444444444,
+    "team_update_fraction": 0.6458333333333334,
+    "audited_terms": [
+      {
+        "update": 50,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 2.4792857142857145,
+          "group": 2.757857142857143,
+          "coop": 2.4792857142857145,
+          "team": 2.8692857142857147,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 120,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            2
+          ],
+          "team_groups": 0,
+          "rows_individual": 2,
+          "rows_flip": 0,
+          "rows_total": 5,
+          "acting_cavs": 6,
+          "cav_in_group_fraction": 0.3333333333333333
+        },
+        "cf_curriculum_position": 49,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.0019193261570567227,
+          "individual": 3.663032271976321e-05,
+          "group": 3.663032271976321e-05,
+          "coop": 6.109025088627679e-13,
+          "uncertainty": 0.0011522956044416224
+        },
+        "actor_loss": 9.272638635593466e-06,
+        "actor_grad_norm": 0.001764000509865582,
+        "return_scale": 1455.7760438709483
+      },
+      {
+        "update": 75,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 4.0685714285714285,
+          "group": 4.525714285714286,
+          "coop": 4.0685714285714285,
+          "team": 4.708571428571429,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 558,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 26,
+          "cav_in_group_fraction": 0.11538461538461539
+        },
+        "cf_curriculum_position": 74,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.01417119071124101,
+          "individual": 0.0004188733948115024,
+          "group": 0.0004186309044579086,
+          "team": 0.00041838881492545975,
+          "coop": 2.466213725974823e-07,
+          "uncertainty": 0.0013061662891219283
+        },
+        "actor_loss": -0.00026995345251634717,
+        "actor_grad_norm": 0.0192087572067976,
+        "return_scale": 1377.0851948662093
+      },
+      {
+        "update": 100,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 5.657857142857143,
+          "group": 6.293571428571429,
+          "coop": 5.657857142857143,
+          "team": 6.5478571428571435,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 687,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 33,
+          "cav_in_group_fraction": 0.09090909090909091
+        },
+        "cf_curriculum_position": 99,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.055489898867376514,
+          "individual": 0.00023362224924419097,
+          "group": 0.00023362224924419097,
+          "team": 0.00023362206061713746,
+          "coop": 2.6345271117161886e-12,
+          "uncertainty": 0.036993224288727165
+        },
+        "actor_loss": -0.0002597230195533484,
+        "actor_grad_norm": 0.05962156876921654,
+        "return_scale": 1281.3947753022076
+      },
+      {
+        "update": 125,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 7.247142857142857,
+          "group": 8.061428571428573,
+          "coop": 7.247142857142857,
+          "team": 8.387142857142857,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 222,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 13,
+          "cav_in_group_fraction": 0.23076923076923078
+        },
+        "cf_curriculum_position": 124,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.003064003780243555,
+          "individual": 0.00020701266605340548,
+          "group": 0.00020700095293274743,
+          "team": 0.00020698836129584152,
+          "coop": 9.510332348299891e-08,
+          "uncertainty": 0.002252760888808678
+        },
+        "actor_loss": -5.173373574507423e-05,
+        "actor_grad_norm": 0.0042687878012657166,
+        "return_scale": 1216.803200383234
+      },
+      {
+        "update": 150,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 8.836428571428572,
+          "group": 9.829285714285716,
+          "coop": 8.836428571428572,
+          "team": 10.226428571428572,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 678,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 34,
+          "cav_in_group_fraction": 0.08823529411764706
+        },
+        "cf_curriculum_position": 149,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.8145160276939364,
+          "individual": 0.0010187624642440673,
+          "group": 0.0010187624642440673,
+          "team": 0.0010187621195579914,
+          "coop": 6.135054700427275e-12,
+          "uncertainty": 0.11275946302704495
+        },
+        "actor_loss": -0.0383455790579319,
+        "actor_grad_norm": 0.8417065739631653,
+        "return_scale": 1213.4426756369794
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 5,
+      "min": 7.532147301995868e-12,
+      "median": 3.1829009708260525e-10,
+      "max": 3.103890540090627e-05
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 15,
+        "min": 0.0009046524613055076,
+        "median": 0.0959080401456388,
+        "max": 12.636794950544463
+      },
+      "critic": {
+        "n": 15,
+        "min": 0.0006240609587036018,
+        "median": 0.009982466807614353,
+        "max": 0.30861721738188297
+      },
+      "uncertainty": {
+        "n": 15,
+        "min": 4.911318279914701e-05,
+        "median": 0.002693787139206098,
+        "max": 1.1117240778162722
+      },
+      "constraint": {
+        "n": 15,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 15,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c01.a2": {
+    "n": 45,
+    "first": {
+      "update": 31,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 1.2714285714285714,
+        "group": 1.4142857142857144,
+        "coop": 1.2714285714285714,
+        "team": 1.4714285714285715,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 0.0035269716377490344,
+        "critic": 0.005675465124503339,
+        "uncertainty": 4.911318279914701e-05
+      },
+      "action_audit": {
+        "active_actions": 98,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 4,
+        "cav_in_group_fraction": 0.75
+      },
+      "cf_curriculum_position": 30,
+      "n_futures": 2,
+      "actor_loss": -0.0001030900384648703,
+      "actor_grad_norm": 0.0022692023776471615,
+      "return_scale": 1530.0100053362912
+    },
+    "last": {
+      "update": 75,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 4.0685714285714285,
+        "group": 4.525714285714286,
+        "coop": 4.0685714285714285,
+        "team": 4.708571428571429,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 558,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 26,
+        "cav_in_group_fraction": 0.11538461538461539
+      },
+      "cf_curriculum_position": 74,
+      "n_futures": 2,
+      "cf_term_grad_norms": {
+        "all": 0.01417119071124101,
+        "individual": 0.0004188733948115024,
+        "group": 0.0004186309044579086,
+        "team": 0.00041838881492545975,
+        "coop": 2.466213725974823e-07,
+        "uncertainty": 0.0013061662891219283
+      },
+      "actor_loss": -0.00026995345251634717,
+      "actor_grad_norm": 0.0192087572067976,
+      "return_scale": 1377.0851948662093
+    },
+    "scale": {
+      "n": 45,
+      "min": 1377.0851948662093,
+      "median": 1449.025378069091,
+      "max": 1530.4192412204284
+    },
+    "actor_grad_norm": {
+      "n": 45,
+      "min": 0.00028790420037694275,
+      "median": 0.0480545274913311,
+      "max": 0.9530525803565979
+    },
+    "group_update_fraction": 0.9333333333333333,
+    "team_update_fraction": 0.6666666666666666,
+    "audited_terms": [
+      {
+        "update": 50,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 2.4792857142857145,
+          "group": 2.757857142857143,
+          "coop": 2.4792857142857145,
+          "team": 2.8692857142857147,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 120,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            2
+          ],
+          "team_groups": 0,
+          "rows_individual": 2,
+          "rows_flip": 0,
+          "rows_total": 5,
+          "acting_cavs": 6,
+          "cav_in_group_fraction": 0.3333333333333333
+        },
+        "cf_curriculum_position": 49,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.0019193261570567227,
+          "individual": 3.663032271976321e-05,
+          "group": 3.663032271976321e-05,
+          "coop": 6.109025088627679e-13,
+          "uncertainty": 0.0011522956044416224
+        },
+        "actor_loss": 9.272638635593466e-06,
+        "actor_grad_norm": 0.001764000509865582,
+        "return_scale": 1455.7760438709483
+      },
+      {
+        "update": 75,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 4.0685714285714285,
+          "group": 4.525714285714286,
+          "coop": 4.0685714285714285,
+          "team": 4.708571428571429,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 558,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 26,
+          "cav_in_group_fraction": 0.11538461538461539
+        },
+        "cf_curriculum_position": 74,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.01417119071124101,
+          "individual": 0.0004188733948115024,
+          "group": 0.0004186309044579086,
+          "team": 0.00041838881492545975,
+          "coop": 2.466213725974823e-07,
+          "uncertainty": 0.0013061662891219283
+        },
+        "actor_loss": -0.00026995345251634717,
+        "actor_grad_norm": 0.0192087572067976,
+        "return_scale": 1377.0851948662093
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 2,
+      "min": 3.1829009708260525e-10,
+      "median": 8.701664107572786e-06,
+      "max": 1.740300992504849e-05
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 5,
+        "min": 0.0035269716377490344,
+        "median": 0.05079068172157867,
+        "max": 0.9789762183597079
+      },
+      "critic": {
+        "n": 5,
+        "min": 0.0009555781054776643,
+        "median": 0.005675465124503339,
+        "max": 0.0208686925480054
+      },
+      "uncertainty": {
+        "n": 5,
+        "min": 4.911318279914701e-05,
+        "median": 0.0027459746338835372,
+        "max": 0.005234123300863387
+      },
+      "constraint": {
+        "n": 5,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 5,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c01.a3": {
+    "n": 10,
+    "first": {
+      "update": 171,
+      "imagination_horizon_s": 30.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 2.1684061231466947,
+        "critic": 0.010118280345632221,
+        "uncertainty": 0.11786228805754592
+      },
+      "action_audit": {
+        "active_actions": 2054,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 37,
+        "cav_in_group_fraction": 0.08108108108108109
+      },
+      "cf_curriculum_position": 170,
+      "n_futures": 2,
+      "actor_loss": -0.0026814835146069527,
+      "actor_grad_norm": 2.294440746307373,
+      "return_scale": 1591.8682038475526
+    },
+    "last": {
+      "update": 180,
+      "imagination_horizon_s": 30.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 979,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 15,
+        "cav_in_group_fraction": 0.13333333333333333
+      },
+      "cf_curriculum_position": 179,
+      "n_futures": 2,
+      "actor_loss": -0.00409401161596179,
+      "actor_grad_norm": 0.12048125267028809,
+      "return_scale": 1720.7012696523525
+    },
+    "scale": {
+      "n": 10,
+      "min": 1591.8682038475526,
+      "median": 1675.5398554524945,
+      "max": 1720.7012696523525
+    },
+    "actor_grad_norm": {
+      "n": 10,
+      "min": 0.018944185227155685,
+      "median": 2.2818914651870728,
+      "max": 17.37560272216797
+    },
+    "group_update_fraction": 1.0,
+    "team_update_fraction": 0.7,
+    "audited_terms": [
+      {
+        "update": 175,
+        "imagination_horizon_s": 30.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 2427,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 41,
+          "cav_in_group_fraction": 0.07317073170731707
+        },
+        "cf_curriculum_position": 174,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 17.347211703271668,
+          "individual": 0.0010184756380074993,
+          "group": 0.0010189479512868788,
+          "team": 0.0010194243072529324,
+          "coop": 4.7865393497506e-07,
+          "uncertainty": 2.6787094137727223
+        },
+        "actor_loss": -0.004257995635271072,
+        "actor_grad_norm": 17.37560272216797,
+        "return_scale": 1672.655947690946
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 1,
+      "min": 2.759255741859577e-08,
+      "median": 2.759255741859577e-08,
+      "max": 2.759255741859577e-08
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 1,
+        "min": 2.1684061231466947,
+        "median": 2.1684061231466947,
+        "max": 2.1684061231466947
+      },
+      "critic": {
+        "n": 1,
+        "min": 0.010118280345632221,
+        "median": 0.010118280345632221,
+        "max": 0.010118280345632221
+      },
+      "uncertainty": {
+        "n": 1,
+        "min": 0.11786228805754592,
+        "median": 0.11786228805754592,
+        "max": 0.11786228805754592
+      },
+      "constraint": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c02": {
+    "n": 53,
+    "first": {
+      "update": 181,
+      "imagination_horizon_s": 30.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 0.21566281618475747,
+        "critic": 0.0011808039517776745,
+        "uncertainty": 0.018144344451766513
+      },
+      "action_audit": {
+        "active_actions": 422,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 8,
+        "cav_in_group_fraction": 0.25
+      },
+      "cf_curriculum_position": 180,
+      "n_futures": 2,
+      "actor_loss": 0.9498438239097595,
+      "actor_grad_norm": 0.19740085303783417,
+      "return_scale": 1710.549773465842
+    },
+    "last": {
+      "update": 233,
+      "imagination_horizon_s": 30.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 2021,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 35,
+        "cav_in_group_fraction": 0.08571428571428572
+      },
+      "cf_curriculum_position": 232,
+      "n_futures": 2,
+      "actor_loss": -0.0924426019191742,
+      "actor_grad_norm": 1.1573476791381836,
+      "return_scale": 2186.9019199607465
+    },
+    "scale": {
+      "n": 53,
+      "min": 1710.549773465842,
+      "median": 1994.100311292037,
+      "max": 2203.31979472686
+    },
+    "actor_grad_norm": {
+      "n": 53,
+      "min": 1.0215443353445153e-06,
+      "median": 0.2886804938316345,
+      "max": 3149.18212890625
+    },
+    "group_update_fraction": 0.9056603773584906,
+    "team_update_fraction": 0.6226415094339622,
+    "audited_terms": [
+      {
+        "update": 200,
+        "imagination_horizon_s": 30.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 879,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 15,
+          "cav_in_group_fraction": 0.2
+        },
+        "cf_curriculum_position": 199,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.254864439893442,
+          "individual": 0.00034256761478805846,
+          "group": 0.0003424571419272919,
+          "team": 0.0003423470407115792,
+          "coop": 1.224444307642543e-07,
+          "uncertainty": 0.043179888817908435
+        },
+        "actor_loss": 1.9424628019332886,
+        "actor_grad_norm": 0.24828605353832245,
+        "return_scale": 1911.5766020257288
+      },
+      {
+        "update": 225,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 100,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            2
+          ],
+          "team_groups": 0,
+          "rows_individual": 2,
+          "rows_flip": 0,
+          "rows_total": 5,
+          "acting_cavs": 5,
+          "cav_in_group_fraction": 0.4
+        },
+        "cf_curriculum_position": 224,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.0009077585499798794,
+          "individual": 0.00017138205562566177,
+          "group": 0.00017138231713941988,
+          "coop": 2.646486513784126e-10,
+          "uncertainty": 0.00017508310915411116
+        },
+        "actor_loss": 7.218481063842773,
+        "actor_grad_norm": 0.004019655287265778,
+        "return_scale": 2143.8450542951177
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 2,
+      "min": 2.91540797257463e-07,
+      "median": 3.8598521795670036e-07,
+      "max": 4.804296386559378e-07
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 6,
+        "min": 0.010210743396346042,
+        "median": 0.30676920858655865,
+        "max": 10.010751223615303
+      },
+      "critic": {
+        "n": 6,
+        "min": 0.00020307596572424465,
+        "median": 0.000348110491171499,
+        "max": 0.0013201520475265584
+      },
+      "uncertainty": {
+        "n": 6,
+        "min": 0.0006515747367639448,
+        "median": 0.024180262955502258,
+        "max": 0.9036822816738668
+      },
+      "constraint": {
+        "n": 6,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 6,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c02.h60": {
+    "n": 16,
+    "first": {
+      "update": 234,
+      "imagination_horizon_s": 10.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 64,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 4,
+        "cav_in_group_fraction": 0.5
+      },
+      "cf_curriculum_position": 233,
+      "n_futures": 2,
+      "actor_loss": 9.203917503356934,
+      "actor_grad_norm": 0.001309479703195393,
+      "return_scale": 2182.106357792385
+    },
+    "last": {
+      "update": 249,
+      "imagination_horizon_s": 60.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 2737,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 25,
+        "cav_in_group_fraction": 0.12
+      },
+      "cf_curriculum_position": 248,
+      "n_futures": 2,
+      "actor_loss": 4.640817165374756,
+      "actor_grad_norm": 92.6462631225586,
+      "return_scale": 2652.10593566858
+    },
+    "scale": {
+      "n": 16,
+      "min": 2182.106357792385,
+      "median": 2495.037255579042,
+      "max": 2652.10593566858
+    },
+    "actor_grad_norm": {
+      "n": 16,
+      "min": 0.0008798360941000283,
+      "median": 11.465060710906982,
+      "max": 246.78395080566406
+    },
+    "group_update_fraction": 0.9375,
+    "team_update_fraction": 0.625,
+    "audited_terms": [],
+    "synergy_to_all_unit_norm": null,
+    "actor_credit_components": {
+      "reward": {
+        "n": 1,
+        "min": 28.30560192996613,
+        "median": 28.30560192996613,
+        "max": 28.30560192996613
+      },
+      "critic": {
+        "n": 1,
+        "min": 0.0021159182336790193,
+        "median": 0.0021159182336790193,
+        "max": 0.0021159182336790193
+      },
+      "uncertainty": {
+        "n": 1,
+        "min": 1.8590002413719438,
+        "median": 1.8590002413719438,
+        "max": 1.8590002413719438
+      },
+      "constraint": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c02.h60b": {
+    "n": 1,
+    "first": {
+      "update": 241,
+      "imagination_horizon_s": 60.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 28.30560192996613,
+        "critic": 0.0021159182336790193,
+        "uncertainty": 1.8590002413719438
+      },
+      "action_audit": {
+        "active_actions": 1802,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 16,
+        "cav_in_group_fraction": 0.125
+      },
+      "cf_curriculum_position": 240,
+      "n_futures": 2,
+      "actor_loss": 8.201672554016113,
+      "actor_grad_norm": 30.162778854370117,
+      "return_scale": 2462.565791322766
+    },
+    "last": {
+      "update": 241,
+      "imagination_horizon_s": 60.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "actor_grad_norms": {
+        "constraint": 0.0,
+        "entropy": 0.0,
+        "reward": 28.30560192996613,
+        "critic": 0.0021159182336790193,
+        "uncertainty": 1.8590002413719438
+      },
+      "action_audit": {
+        "active_actions": 1802,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          2
+        ],
+        "team_groups": 0,
+        "rows_individual": 2,
+        "rows_flip": 0,
+        "rows_total": 5,
+        "acting_cavs": 16,
+        "cav_in_group_fraction": 0.125
+      },
+      "cf_curriculum_position": 240,
+      "n_futures": 2,
+      "actor_loss": 8.201672554016113,
+      "actor_grad_norm": 30.162778854370117,
+      "return_scale": 2462.565791322766
+    },
+    "scale": {
+      "n": 1,
+      "min": 2462.565791322766,
+      "median": 2462.565791322766,
+      "max": 2462.565791322766
+    },
+    "actor_grad_norm": {
+      "n": 1,
+      "min": 30.162778854370117,
+      "median": 30.162778854370117,
+      "max": 30.162778854370117
+    },
+    "group_update_fraction": 1.0,
+    "team_update_fraction": 0.0,
+    "audited_terms": [],
+    "synergy_to_all_unit_norm": null,
+    "actor_credit_components": {
+      "reward": {
+        "n": 1,
+        "min": 28.30560192996613,
+        "median": 28.30560192996613,
+        "max": 28.30560192996613
+      },
+      "critic": {
+        "n": 1,
+        "min": 0.0021159182336790193,
+        "median": 0.0021159182336790193,
+        "max": 0.0021159182336790193
+      },
+      "uncertainty": {
+        "n": 1,
+        "min": 1.8590002413719438,
+        "median": 1.8590002413719438,
+        "max": 1.8590002413719438
+      },
+      "constraint": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "c02.h60b.r2": {
+    "n": 142,
+    "first": {
+      "update": 242,
+      "imagination_horizon_s": 60.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 2517,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 20,
+        "cav_in_group_fraction": 0.15
+      },
+      "cf_curriculum_position": 241,
+      "n_futures": 2,
+      "actor_loss": 6.648650169372559,
+      "actor_grad_norm": 2.021332025527954,
+      "return_scale": 2527.5087198353176
+    },
+    "last": {
+      "update": 383,
+      "imagination_horizon_s": 60.0,
+      "cf_weights": {
+        "individual": 8.9,
+        "group": 9.9,
+        "coop": 8.9,
+        "team": 10.3,
+        "all": 1.0
+      },
+      "action_audit": {
+        "active_actions": 6041,
+        "action_unit": "m/s^2",
+        "entropy_nats": -0.0,
+        "entropy_effective_width_mps2": 1.0,
+        "lower_bound_mps2": -3.0,
+        "upper_bound_mps2": 1.2,
+        "saturation_margin_mps2": 0.042,
+        "saturation_low_fraction": 0.0,
+        "saturation_high_fraction": 0.0,
+        "saturation_fraction": 0.0
+      },
+      "cf_coverage": {
+        "cf_starts": 1,
+        "n_groups": 1,
+        "group_sizes": [
+          3
+        ],
+        "team_groups": 1,
+        "rows_individual": 3,
+        "rows_flip": 3,
+        "rows_total": 9,
+        "acting_cavs": 46,
+        "cav_in_group_fraction": 0.06521739130434782
+      },
+      "cf_curriculum_position": 382,
+      "n_futures": 2,
+      "actor_loss": 2.681586980819702,
+      "actor_grad_norm": 102.42152404785156,
+      "return_scale": 4693.7159649733185
+    },
+    "scale": {
+      "n": 142,
+      "min": 2527.5087198353176,
+      "median": 3754.936904758386,
+      "max": 4693.7159649733185
+    },
+    "actor_grad_norm": {
+      "n": 142,
+      "min": 6.841021968284622e-05,
+      "median": 3.7525562047958374,
+      "max": 41806.33984375
+    },
+    "group_update_fraction": 0.971830985915493,
+    "team_update_fraction": 0.676056338028169,
+    "audited_terms": [
+      {
+        "update": 250,
+        "imagination_horizon_s": 60.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 5235,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 39,
+          "cav_in_group_fraction": 0.07692307692307693
+        },
+        "cf_curriculum_position": 249,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 80.28907327610145,
+          "individual": 0.00041861737944632634,
+          "group": 0.00042105980728259244,
+          "team": 0.00042067372422115265,
+          "coop": 2.535100655261275e-06,
+          "uncertainty": 22.81024664941103
+        },
+        "actor_loss": 7.765067100524902,
+        "actor_grad_norm": 80.27962493896484,
+        "return_scale": 2741.364143890016
+      },
+      {
+        "update": 275,
+        "imagination_horizon_s": 60.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 3489,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 36,
+          "cav_in_group_fraction": 0.08333333333333333
+        },
+        "cf_curriculum_position": 274,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 3.647225908410646,
+          "individual": 0.0005318462764302916,
+          "group": 0.0006389573723395454,
+          "team": 0.0007474575829899617,
+          "coop": 0.00011170535404381896,
+          "uncertainty": 4.138374453835916
+        },
+        "actor_loss": 0.3316051661968231,
+        "actor_grad_norm": 3.6603171825408936,
+        "return_scale": 3341.2097149000583
+      },
+      {
+        "update": 300,
+        "imagination_horizon_s": 60.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 4931,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 40,
+          "cav_in_group_fraction": 0.075
+        },
+        "cf_curriculum_position": 299,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.1448961362432706,
+          "individual": 3.567733151195639e-05,
+          "group": 3.2906601388964235e-05,
+          "team": 3.0308107800028515e-05,
+          "coop": 3.5727360556379794e-06,
+          "uncertainty": 0.11656349840285585
+        },
+        "actor_loss": 0.04094655066728592,
+        "actor_grad_norm": 0.14460116624832153,
+        "return_scale": 3681.0428571519205
+      },
+      {
+        "update": 325,
+        "imagination_horizon_s": 60.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 1243,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            2
+          ],
+          "team_groups": 0,
+          "rows_individual": 2,
+          "rows_flip": 0,
+          "rows_total": 5,
+          "acting_cavs": 12,
+          "cav_in_group_fraction": 0.16666666666666666
+        },
+        "cf_curriculum_position": 324,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.35289189853625624,
+          "individual": 0.001029783399405424,
+          "group": 0.0010299559346159727,
+          "coop": 4.314883356481969e-07,
+          "uncertainty": 0.04501940601373883
+        },
+        "actor_loss": 2.9432029724121094,
+        "actor_grad_norm": 0.36523252725601196,
+        "return_scale": 3989.9222942581837
+      },
+      {
+        "update": 350,
+        "imagination_horizon_s": 60.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 2295,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            2
+          ],
+          "team_groups": 0,
+          "rows_individual": 2,
+          "rows_flip": 0,
+          "rows_total": 5,
+          "acting_cavs": 20,
+          "cav_in_group_fraction": 0.1
+        },
+        "cf_curriculum_position": 349,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 109.29010836966833,
+          "individual": 0.00020601892739350005,
+          "group": 0.00020580963595885483,
+          "coop": 2.644089930233099e-07,
+          "uncertainty": 121.89766659487539
+        },
+        "actor_loss": 2.8065173625946045,
+        "actor_grad_norm": 109.29261779785156,
+        "return_scale": 4285.015400469349
+      },
+      {
+        "update": 375,
+        "imagination_horizon_s": 10.0,
+        "cf_weights": {
+          "individual": 8.9,
+          "group": 9.9,
+          "coop": 8.9,
+          "team": 10.3,
+          "all": 1.0
+        },
+        "action_audit": {
+          "active_actions": 100,
+          "action_unit": "m/s^2",
+          "entropy_nats": -0.0,
+          "entropy_effective_width_mps2": 1.0,
+          "lower_bound_mps2": -3.0,
+          "upper_bound_mps2": 1.2,
+          "saturation_margin_mps2": 0.042,
+          "saturation_low_fraction": 0.0,
+          "saturation_high_fraction": 0.0,
+          "saturation_fraction": 0.0
+        },
+        "cf_coverage": {
+          "cf_starts": 1,
+          "n_groups": 1,
+          "group_sizes": [
+            3
+          ],
+          "team_groups": 1,
+          "rows_individual": 3,
+          "rows_flip": 3,
+          "rows_total": 9,
+          "acting_cavs": 5,
+          "cav_in_group_fraction": 0.6
+        },
+        "cf_curriculum_position": 374,
+        "n_futures": 2,
+        "cf_term_grad_norms": {
+          "all": 0.00024672271157829347,
+          "individual": 0.0002273362530013248,
+          "group": 0.00022947965826958488,
+          "team": 0.0002316234073636325,
+          "coop": 2.1553284177630814e-06,
+          "uncertainty": 0.00029710746671774216
+        },
+        "actor_loss": 4.46622371673584,
+        "actor_grad_norm": 0.006946176756173372,
+        "return_scale": 4518.761328138685
+      }
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 6,
+      "min": 2.419331419536704e-09,
+      "median": 1.2939971008554025e-05,
+      "max": 0.008735833049075105
+    },
+    "actor_credit_components": {
+      "reward": {
+        "n": 14,
+        "min": 0.013508757273958541,
+        "median": 0.5587322641308761,
+        "max": 803.7374885916934
+      },
+      "critic": {
+        "n": 14,
+        "min": 4.32135568412981e-06,
+        "median": 0.000570769436653102,
+        "max": 0.04620350672187229
+      },
+      "uncertainty": {
+        "n": 14,
+        "min": 0.0008645439749792132,
+        "median": 0.05600289031962448,
+        "max": 66.39204919362307
+      },
+      "constraint": {
+        "n": 14,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "entropy": {
+        "n": 14,
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "canonical_c01": {
+    "n_updates": 150,
+    "audited_updates": [
+      50,
+      75,
+      100,
+      125,
+      150,
+      175
+    ],
+    "synergy_to_all_unit_norm": {
+      "n": 6,
+      "min": 7.532147301995868e-12,
+      "median": 1.3955423757839187e-08,
+      "max": 3.103890540090627e-05
+    },
+    "n_group_updates": 142,
+    "n_team_updates": 97
+  }
+}
