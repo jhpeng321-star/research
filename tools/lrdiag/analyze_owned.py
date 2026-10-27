@@ -40,10 +40,15 @@ def collection():
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('mode',choices=('partial','complete','pairs','pulses','figures','verify'))
+    ap=argparse.ArgumentParser();ap.add_argument('mode',choices=('partial','complete','pairs','pulses','figures','verify','plotdeps','inputs'))
     a=ap.parse_args();assert ROOT.is_dir()
     out=ROOT/'evidence'
-    if a.mode in ('partial','complete'):
+    if a.mode=='inputs':cmd=[sys.executable,str(ROOT/'inputs_verify.py')]
+    elif a.mode=='plotdeps':
+        cmd=[sys.executable,'-m','pip','install','--target',str(ROOT/'plotdeps'),'--only-binary=:all:',
+             '--no-deps','matplotlib','contourpy','cycler','fonttools','kiwisolver','packaging',
+             'pillow','pyparsing','python-dateutil','six']
+    elif a.mode in ('partial','complete'):
         cmd=[sys.executable,str(ROOT/'summarize.py'),'--root',str(ROOT),'--out',str(out)]
         if a.mode=='partial':cmd.append('--partial')
     elif a.mode in ('pairs','pulses'):
@@ -71,7 +76,7 @@ def main():
             receipt['paused_owned_children']=paused_children
         while collection():time.sleep(10)
         env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1',
-                 PYTHONDONTWRITEBYTECODE='1')
+                 PYTHONDONTWRITEBYTECODE='1',PIP_CACHE_DIR=str(ROOT/'pipcache'),PIP_NO_INPUT='1',PIP_DISABLE_PIP_VERSION_CHECK='1')
         with (ROOT/('stats_'+a.mode+'.log')).open('a') as f:
             child=subprocess.Popen(['nice','-n','10',*cmd],cwd=ROOT,env=env,
                 stdin=subprocess.DEVNULL,stdout=f,stderr=subprocess.STDOUT)

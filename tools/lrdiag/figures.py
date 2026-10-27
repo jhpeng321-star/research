@@ -11,12 +11,15 @@ def load(root,name):
 
 def main(root):
     import os
+    import sys
     os.environ['MPLCONFIGDIR']=str(root.parent/'mplconfig')
+    if (root.parent/'plotdeps').is_dir():sys.path.insert(0,str(root.parent/'plotdeps'))
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     def save(fig,name):
-        fig.savefig(root/(name+'.svg'))
+        svg=root/(name+'.svg');fig.savefig(svg)
+        svg.write_text('\n'.join(line.rstrip() for line in svg.read_text().splitlines())+'\n')
         fig.savefig(root/(name+'.png'),dpi=150)
     plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False,
                          'svg.fonttype':'none','figure.facecolor':'white'})
@@ -35,7 +38,7 @@ def main(root):
                             label=label if i==0 else None)
         ax.axhline(1,color='black',lw=1,ls='--',label='Ideal slope = 1')
         ax.set_xticks(range(6),labels);ax.set_ylabel('Predicted-on-real paired dJ OLS slope (unitless)')
-        ax.set_xlabel('Longitudinal switch-off ablation');ax.set_title('Which WM component suppresses 300 s controller effects?')
+        ax.set_xlabel('Longitudinal switch-off ablation');ax.set_title('300 s controller-effect calibration under longitudinal ablations')
         ax.legend(frameon=False,ncol=3);fig.text(.02,.01,caption+' Error bars: 95% world bootstrap.',fontsize=8)
         fig.tight_layout(rect=(0,.06,1,1));save(fig,'ablation_slopes');plt.close(fig)
     timeline=load(root,'timeline_summary.csv')

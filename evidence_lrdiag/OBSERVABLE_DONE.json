@@ -1,0 +1,10 @@
+{
+ "status": "complete",
+ "version": 2,
+ "role": "validation",
+ "worlds": 36,
+ "episodes": 108,
+ "source": "full raw converted arrays, not t0-cohort loader masks",
+ "code_evidence": "src/wms/train/inputs.py:_device_timeline defaults synthetic entrant columns to native",
+ "interpretation": "Coverage establishes a replay confound, not the causal share of paired-error bias."
+}

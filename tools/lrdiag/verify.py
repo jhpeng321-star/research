@@ -30,6 +30,10 @@ def outputs(root):
     assert not c['partial'] and c['complete_worlds']==36 and c['n_results']==1728,c
     full=json.loads((root/'FULLFIELD_COVERAGE.json').read_text())
     assert full['status']=='complete' and full['worlds_complete']==36 and full['n_results']==288,full
+    pairs=json.loads((root/'PAIRS_COVERAGE.json').read_text())
+    assert pairs['results']==pairs['expected']==2304 and pairs['K']==8,pairs
+    pulse=json.loads((root/'PULSE_COVERAGE.json').read_text())
+    assert pulse['n_draws']==96 and pulse['n_worlds']==12 and pulse['validation_overlap']==0,pulse
     counts={}
     for name,n in [('ablation_worlds.csv',864),('ablation_draws.csv',6912),
                    ('within_world_slopes.csv',432),('timeline_worlds.csv',17280),
@@ -42,11 +46,15 @@ def outputs(root):
         counts[name]=len(rows)
     assert summary['max_delay_accounting_error']<.002
     assert full['max_class_delay_accounting_error']<.005
+    from inputs_verify import check
+    inputs=check(root.parent,root)
     report={'status':'PASS','counts':counts,'checks':[
         '36 validation worlds x 6 variants x K8 complete',
         'world bootstrap, never draw bootstrap',
         'regional HDV paired errors sum to horizon-gate dJ error',
-        'pulse and pairs300 excluded from E3 verdict statistics'],
+        'pulse and pairs300 excluded from E3 verdict statistics',
+        'staged model/code/array SHA256 and validation-role fences verified'],
+        'inputs':inputs,
         'sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in sorted(root.iterdir()) if p.suffix in ('.csv','.json','.png','.svg') and p.name!='VERIFIED.json'}}
     (root/'VERIFIED.json').write_text(json.dumps(report,indent=1))
