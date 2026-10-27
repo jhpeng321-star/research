@@ -68,13 +68,16 @@ def test_zero_residual_is_exact_even_with_stochastic_requests_and_gradients_are_
 
 @pytest.mark.parametrize("kind", ["idm", "head"])
 @pytest.mark.parametrize("law", ["strict", "hybrid"])
-def test_initial_full_wm_rollout_is_bit_identical_to_native_arm(kind, law):
+@pytest.mark.parametrize("full_actor", [False, True])
+def test_initial_full_wm_rollout_is_bit_identical_to_native_arm(kind, law, full_actor):
     torch.manual_seed(17)
     model = WmSModel(ModelSpec(rollout_mode="driver_params", lane_model="hazard_v5",
                               merge_decision="first_passage", lane_decision="sample",
                               merge_passage_law=law),
                      physics=PhysicsConfig(secure_gap_veto=True)).eval().requires_grad_(False)
     p, enc = networks()
+    p.configure_native_training(group=full_actor, trunk=full_actor)
+    enc.requires_grad_(full_actor)
     state = {k: v.expand(2, -1).clone() for k, v in scene().items()}
     pair_merge_streams(state, torch.tensor([0, 0]), 1, 965149)
     active = torch.zeros_like(state["is_cav"])

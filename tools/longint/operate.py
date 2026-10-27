@@ -47,7 +47,14 @@ def stage():
     files += subprocess.check_output(['git', 'ls-files', 'src/wms/model/*.json'],
                                      cwd=ROOT, text=True).splitlines()
     files = sorted(set(files))
-    missing = [f for f in files if not (ROOT / f).is_file()]
+    # Unmodified tracked files come from the index (canonical LF bytes, so hash
+    # bindings such as WM configs match the deployed loop); only modified or
+    # untracked files are read from disk, with Windows CRLF normalised to LF.
+    dirty = set(subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], cwd=ROOT,
+                                        text=True).splitlines())
+    dirty |= set(subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'],
+                                         cwd=ROOT, text=True).splitlines())
+    missing = [f for f in files if not (ROOT / f).is_file() or f not in dirty]
     blobs = {}
     if missing:
         raw = subprocess.check_output(['git', 'cat-file', '--batch'], cwd=ROOT,
@@ -64,7 +71,14 @@ def stage():
     with tarfile.open(fileobj=payload, mode='w:gz') as archive:
         for f in files:
             assert not any(t in f.lower() for t in BAD)
-            data = (ROOT / f).read_bytes() if (ROOT / f).is_file() else blobs[f]
+            data = blobs[f] if f in blobs else (ROOT / f).read_bytes().replace(b'\r\n', b'\n')
+            manifest[f] = hashlib.sha256(data).hexdigest()
+            entry = tarfile.TarInfo(f)
+            entry.size = len(data)
+            archive.addfile(entry, io.BytesIO(data))
+        for name in ('policy', 'bridge', 'dreamer'):
+            f = 'baseline/src/wms/control/' + name + '.py'
+            data = subprocess.check_output(['git', 'show', 'a2fc2c18^:src/wms/control/' + name + '.py'], cwd=ROOT)
             manifest[f] = hashlib.sha256(data).hexdigest()
             entry = tarfile.TarInfo(f)
             entry.size = len(data)
@@ -95,27 +109,65 @@ def tests(name, full=False):
     assert name.replace('-', '').isalnum()
     targets = ['tests/unit'] if full else ['tests/unit/test_longmem.py',
         'tests/unit/test_looplong.py', 'tests/unit/test_policy14_integration.py',
-        'tests/unit/test_probe.py']
-    remote(f'''import pathlib,subprocess,os,json,time
+        'tests/unit/test_probe.py', 'tests/unit/test_native_full_actor.py',
+        'tests/unit/test_nativeinit.py']
+    code = f'''import pathlib,subprocess,os,json,time
 r=pathlib.Path({RUNTIME!r}); assert r.is_dir()
 name={name!r}; receipt=r/(name+'.json'); assert not receipt.exists()
 env={{**os.environ,'PYTHONPATH':str(r/'src')+':'+str(r), 'CUDA_VISIBLE_DEVICES':'',
- 'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}}
+ 'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1',
+ 'NATIVEINIT_BASELINE':str(r/'baseline'), 'PATH':'/usr/bin:/bin'}}
+import shutil
+assert shutil.which('sumo',path=env['PATH']) is None
 start=time.time()
 with (r/(name+'.log')).open('xb') as log:
  p=subprocess.run(['/root/miniconda3/bin/python','-B','-m','pytest','-q',
   *{targets!r},'--basetemp='+str(r/('pytest-'+name))],cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT)
 doc={{'exit':p.returncode,'seconds':time.time()-start,'targets':{targets!r}}}
 receipt.write_text(json.dumps(doc,indent=2)); print(json.dumps(doc)); print((r/(name+'.log')).read_text())
-''', timeout=200)
+'''
+    if not full:
+        remote(code, timeout=200)
+    else:
+        remote(f'''import pathlib,subprocess,json
+r=pathlib.Path({RUNTIME!r}); name={name!r}
+assert not (r/(name+'.pid.json')).exists() and not (r/(name+'.json')).exists()
+with (r/(name+'.driver.log')).open('xb') as log:
+ p=subprocess.Popen(['/root/miniconda3/bin/python','-B','-c',{code!r}],cwd=r,
+  stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+doc={{'pid':p.pid,'start_ticks':pathlib.Path('/proc/'+str(p.pid)+'/stat').read_text().split()[21]}}
+(r/(name+'.pid.json')).write_text(json.dumps(doc)); print(json.dumps(doc))
+''')
+
+
+def status(name=None):
+    if name:
+        assert name.replace('-', '').isalnum()
+        remote(f'''import pathlib,json
+r=pathlib.Path({RUNTIME!r}); name={name!r}
+for suffix in ('.pid.json','.json','.driver.log','.log'):
+ p=r/(name+suffix)
+ if p.exists(): print(p.name,p.read_text()[-16000:])
+''')
+    else:
+        remote(f'''import pathlib,shutil,json
+r=pathlib.Path({RELEASE!r})
+for f in ('AUTONOMY_STATUS.json','AUTONOMY_HOLD_C3_VERIFIED.json','AUTONOMY_HOLD_C3.json'):
+ p=r/f
+ if p.exists(): print(f,p.read_text())
+p=r/'arm/loop/wm/c02.log'; print('WM2 log',p.read_text()[-2000:])
+print('free bytes',shutil.disk_usage(r).free)
+''')
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('action', choices=['stage', 'tests', 'full-tests'])
+    ap.add_argument('action', choices=['stage', 'tests', 'full-tests', 'status', 'test-status'])
     ap.add_argument('--name', default='merge-longmem')
     args = ap.parse_args()
     if args.action == 'stage':
         stage()
+    elif args.action in ('status', 'test-status'):
+        status(args.name if args.action == 'test-status' else None)
     else:
         tests(args.name, args.action == 'full-tests')

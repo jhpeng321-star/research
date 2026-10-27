@@ -191,6 +191,9 @@ class DreamerConfig:
     # Extra autograd passes for weighted actor-loss components, plus pre-safety
     # acceleration saturation/entropy in m/s^2. False adds no diagnostic graph work.
     actor_gradient_audit: bool = False
+    # Native residual representation learning; independent, default-off switches.
+    native_residual_train_group: bool = False
+    native_residual_train_trunk: bool = False
     # POLICY14 evidence guards; legacy trainers retain their original behaviour.
     low_penetration_horizon_cap: bool = False
     wm_safety_report_only: bool = False
@@ -213,6 +216,9 @@ class DreamerConfig:
             raise ValueError("real_return_scale must be a finite positive number")
         if not isinstance(self.actor_gradient_audit, bool):
             raise ValueError("actor_gradient_audit must be a boolean")
+        for name in ("native_residual_train_group", "native_residual_train_trunk"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be a boolean")
         for name in ("batch_size", "horizon"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -672,8 +678,12 @@ class DreamerTrainer:
         self.actor_parameters = list(dict.fromkeys(
             list(self.policy.parameters()) + list(self.group_encoder.parameters())))
         if getattr(self.policy, "residual_on_native", False):
-            self.group_encoder.requires_grad_(False)
+            self.policy.configure_native_training(group=self.config.native_residual_train_group,
+                                                  trunk=self.config.native_residual_train_trunk)
+            self.group_encoder.requires_grad_(self.config.native_residual_train_group)
             self.actor_parameters = [p for p in self.actor_parameters if p.requires_grad]
+        elif self.config.native_residual_train_group or self.config.native_residual_train_trunk:
+            raise ValueError("native residual training flags require native residual semantics")
         self.actor_optimizer = torch.optim.Adam(self.actor_parameters, lr=self.config.actor_lr)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.config.critic_lr)
         # V6EXPLORE entropy temperatures (default off: None targets keep the fixed weights).
@@ -975,7 +985,7 @@ class DreamerTrainer:
                         record["credit_action"] = held_out[0]
                         record["credit_mask"] = acting
                     record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
-                    if cfg.actor_gradient_audit:
+                    if cfg.actor_gradient_audit or getattr(self.policy, "residual_on_native", False):
                         record["audit_action"] = held_out[0].detach()
                         record["audit_log_prob"] = log_prob.detach()
                         record["audit_acting"] = acting.detach()
@@ -1195,7 +1205,7 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
-            if cfg.actor_gradient_audit:
+            if cfg.actor_gradient_audit or getattr(self.policy, "residual_on_native", False):
                 member_action_audit.append({name: torch.stack([record[name] for record in records])
                                             for name in ("audit_action", "audit_log_prob",
                                                          "audit_acting")})
@@ -1739,6 +1749,27 @@ class DreamerTrainer:
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
+        if getattr(self.policy, "residual_on_native", False):
+            modules = {"residual_head": self.policy.residual_head,
+                       "own_encoder": self.policy.own_encoder,
+                       "report_encoder": self.policy.report_encoder,
+                       "attention": self.policy.attention, "group_encoder": self.group_encoder}
+            extra["actor_module_grad_norms"] = {
+                name: math.sqrt(sum(float(p.grad.detach().double().square().sum())
+                                    for p in module.parameters() if p.grad is not None))
+                for name, module in modules.items()}
+            lrs = {id(p): g["lr"] for g in self.actor_optimizer.param_groups for p in g["params"]}
+            extra["actor_module_lr"] = {
+                name: sorted({lrs[id(p)] for p in module.parameters() if id(p) in lrs})
+                for name, module in modules.items()}
+            audit = imagined.get("action_audit")
+            if audit is not None:
+                residual = audit["audit_action"][..., :n_base, :][audit["audit_acting"][..., :n_base, :]]
+                extra["physical_residual_mps2"] = {
+                    "count": residual.numel(),
+                    "mean_abs": float(residual.abs().mean()) if residual.numel() else 0.,
+                    "max_abs": float(residual.abs().max()) if residual.numel() else 0.,
+                    "rms": float(residual.square().mean().sqrt()) if residual.numel() else 0.}
         # clip_grad_norm_ returns the PRE-clip norm (logged below), including when V6
         # raises the imagination decay above the WM value. Keep the existing clip only.
         actor_norm = nn.utils.clip_grad_norm_(self.actor_parameters, self.config.grad_clip,
@@ -1947,6 +1978,9 @@ class DreamerTrainer:
         # Memory is execution geometry: an explicitly enabled runtime request may
         # be applied to an old full-resume checkpoint without changing its objective.
         memory_request = {name: getattr(self.config, name) for name in MEMORY_CONFIG_FIELDS}
+        training_request = {name: getattr(self.config, name) for name in
+                            ("native_residual_train_group", "native_residual_train_trunk")
+                            if getattr(self.config, name)}
         if any(memory_request.values()):
             memory_request["credit_profile_every"] = self.config.credit_profile_every
         else:
@@ -1990,6 +2024,32 @@ class DreamerTrainer:
         self.config = DreamerConfig(**payload["config"])
         if memory_request:
             self.config = replace(self.config, **memory_request)
+        if training_request:
+            self.config = replace(self.config, **training_request)
+        if getattr(self.policy, "residual_on_native", False):
+            self.policy.configure_native_training(group=self.config.native_residual_train_group,
+                                                  trunk=self.config.native_residual_train_trunk)
+            self.group_encoder.requires_grad_(self.config.native_residual_train_group)
+            self.actor_parameters = [p for p in list(self.policy.parameters()) +
+                                     list(self.group_encoder.parameters()) if p.requires_grad]
+            self.actor_optimizer = torch.optim.Adam(self.actor_parameters, lr=self.config.actor_lr)
+            old = copy.deepcopy(payload["actor_optimizer"])
+            old_cfg = payload["config"]
+            if (not old_cfg.get("native_residual_train_group", False)
+                    and not old_cfg.get("native_residual_train_trunk", False)
+                    and len(self.actor_parameters) != 2):
+                # Legacy optimizer is exactly the two head tensors. Keep its Adam
+                # moments/step; the newly trainable random features start empty.
+                assert len(old["param_groups"]) == 1 and len(old["param_groups"][0]["params"]) == 2
+                fresh = self.actor_optimizer.state_dict()
+                ids = {id(p): i for i, p in enumerate(self.actor_parameters)}
+                head_ids = [ids[id(p)] for p in self.policy.residual_head.parameters()]
+                fresh["state"] = {new: old["state"][prior] for prior, new in
+                                  zip(old["param_groups"][0]["params"], head_ids) if prior in old["state"]}
+                fresh["param_groups"][0].update({k: v for k, v in old["param_groups"][0].items()
+                                                  if k not in ("params", "lr")})
+                payload["actor_optimizer"] = fresh
+                self.native_training_migration = "legacy head Adam retained; new features fresh Adam"
         self.reward_weights = RewardWeights(**payload["reward_weights"])
         # V6EXPLORE: the loaded config may activate targets the run config did not have.
         self._init_entropy_temperature()

@@ -1,0 +1,19 @@
+# S-LONGINT cycle-3 policy phase (main 2026-10-27 18:45). Same scientific base as
+# the cycle-2 phase; the looplong boundary sets horizon/long credit at runtime.
+extends = "c4_policy14_c2h60.toml"
+
+[run]
+gpu_memory_fraction = 0.92
+operational_recovery = ""
+
+[trainer]
+# S-GROUPGRAD root-cause fix: train the full actor; zero-initialised residual
+# output keeps the initial policy exactly native. Per-module lr = actor_lr.
+native_residual_train_group = true
+native_residual_train_trunk = true
+# S-LONGMEM memory strategy (gpuA, 48 GB, cap 0.92).
+imagination_microbatch = 1
+imagination_checkpoint_segment = 16
+imagination_offload_futures = true
+imagination_offload_saved_tensors = true
+credit_profile_every = 0

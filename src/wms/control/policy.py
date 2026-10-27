@@ -101,6 +101,8 @@ class CavPolicy(nn.Module):
         if self.init_zero_accel:
             self.init_zero_mean_accel()
         self.residual_on_native = bool(residual_on_native)
+        self.native_residual_train_group = False
+        self.native_residual_train_trunk = False
         if self.residual_on_native:
             if lane_head or init_zero_accel:
                 raise ValueError("native residual requires lane_head=False, init_zero_accel=False")
@@ -109,6 +111,17 @@ class CavPolicy(nn.Module):
             nn.init.zeros_(self.residual_head.weight)
             nn.init.zeros_(self.residual_head.bias)
             self.lane_control = "native"
+
+    def configure_native_training(self, *, group=False, trunk=False):
+        """Opt-in learned representations; the zero output keeps native identity."""
+        if (group or trunk) and not self.residual_on_native:
+            raise ValueError("native residual training flags require a native-residual actor")
+        self.native_residual_train_group = bool(group)
+        self.native_residual_train_trunk = bool(trunk)
+        if self.residual_on_native:
+            # The unused absolute/lane heads remain frozen.
+            for module in (self.own_encoder, self.report_encoder, self.attention):
+                module.requires_grad_(trunk)
 
     def init_zero_mean_accel(self) -> None:
         """V6EXPLORE: neutral zero-mean initial acceleration (call on a FRESH actor only).
@@ -179,9 +192,12 @@ class CavPolicy(nn.Module):
         features = torch.cat((own, context, signal), -1)
         if self.residual_on_native:
             # A deterministic residual: exploration/entropy cannot perturb update zero.
-            # Frozen random features; ONLY the residual head receives actor gradients.
+            own = own if self.native_residual_train_trunk else own.detach()
+            context = context if self.native_residual_train_trunk else context.detach()
+            signal = signal if self.native_residual_train_group else signal.detach()
+            features = torch.cat((own, context, signal), -1)
             radius = min(-self.accel_min, self.accel_max)
-            latent = self.residual_head(features.detach()).squeeze(-1)
+            latent = self.residual_head(features).squeeze(-1)
             if (getattr(self, 'residual_persistent_exploration', False)
                     and not deterministic and noise is not None):
                 # Training-only multiplicative actor-latent exploration uses the

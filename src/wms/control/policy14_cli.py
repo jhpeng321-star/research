@@ -447,6 +447,13 @@ def main(argv=None):
         summary.update(seed=args.seed, smoke=args.smoke, device=args.device,
                        wm_members=receipts, probes=probes, probe_device=probe_device,
                        critic_warmup=warmup, resumed_from=resumed)
+        if args.native_init:
+            summary["native_actor_training"] = {
+                "group": trainer.config.native_residual_train_group,
+                "trunk": trainer.config.native_residual_train_trunk,
+                "per_module_lr": trainer.config.actor_lr,
+                "trainable_parameters": sum(p.numel() for p in trainer.actor_parameters),
+                "migration": getattr(trainer, "native_training_migration", None)}
         # Independent development starts and paired draws, scored without a critic tail.
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
@@ -540,6 +547,13 @@ def main(argv=None):
                 with (output / "rescores.jsonl").open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps({"update": trainer.update_count, **after}, allow_nan=False) + "\n")
             updates.append(metrics)
+            # Durable per-update telemetry (module gradients, residual size, memory)
+            # so a long phase can be audited before RUN_SUMMARY exists.
+            if args.device.startswith('cuda') and torch.cuda.is_available():
+                metrics.setdefault('cuda_peak_allocated_bytes', torch.cuda.max_memory_allocated())
+                metrics.setdefault('cuda_peak_reserved_bytes', torch.cuda.max_memory_reserved())
+            with (output / "updates.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps({"t": __import__("time").time(), **metrics}, default=str) + "\n")
             if args.native_init and trainer.update_count % 10 == 0:
                 native_result = score_native_panel(trainer, val, gate_panel, args.device)
                 native_curve.append(native_result)
