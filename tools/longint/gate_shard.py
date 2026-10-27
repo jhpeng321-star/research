@@ -69,8 +69,10 @@ def worker(out, shard, shards):
         print(json.dumps({'group': g, 'seconds': row['elapsed_s']}), flush=True)
 
 
-def combine(out):
+def combine(out, threshold=None, name='HORIZON_GATE_WM2.json'):
     spec = json.loads((out / 'SPEC.json').read_text())
+    if threshold:  # same registered value; bind the original registered bytes
+        spec['threshold'] = threshold
     gate = load_gate()
     rows = [json.loads(p.read_text()) for p in sorted((out / 'rows').glob('*.json'))]
     n = rows[0]['n_panel']
@@ -102,7 +104,7 @@ def combine(out):
            'rows': [{'pair_key': r['pair_key'], 'arms': r['arms'], 'dJ': r['dJ']} for r in rows],
            'execution': {'task': 'S-LONGINT', 'sharded_registered_source_sha256':
                          gate.sha256(CODE / 'tools/coopw/horizon_gate.py'), 'shards': spec['shards']}}
-    target = out / 'HORIZON_GATE_WM2.json'
+    target = out / name
     with target.open('x', encoding='utf-8') as stream:
         json.dump(doc, stream, indent=1)
     print(json.dumps({k: v for k, v in doc.items() if k != 'rows'}, indent=1))
@@ -139,6 +141,6 @@ if __name__ == '__main__':
     if mode == 'worker':
         worker(Path(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     elif mode == 'combine':
-        combine(Path(sys.argv[2]))
+        combine(Path(sys.argv[2]), *sys.argv[3:5])
     else:
         sys.exit(launch(Path(sys.argv[2]), *sys.argv[3:7], int(sys.argv[7])))

@@ -52,7 +52,9 @@ def prepare(gate):
     p['extra_args'] = args
     p['updates_per_cycle'] = 150
     cfg['loopresume'] = {**cfg['loopresume'], 'measured_update_selection': False}
-    threshold = CODE / 'configs/coopw_horizon_gate_13E_b2.json'
+    # The registered threshold bytes (c479b2de) are the original deployed copy.
+    threshold = REL / 'runtime_c1/configs/coopw_horizon_gate_13E_b2.json'
+    assert sha(threshold).startswith('c479b2de')
     cfg['looplong'] = {'enabled': True, 'wm_loss': False, 'auto_horizon': True, 'long_credit': True,
                        'speed': True, 'hot_swap': True, 'exploration': True, 'enable_cycle': 3,
                        'pairs300': '/root/autodl-tmp/c4/v5/data/pairs300', 'threshold': str(threshold),
