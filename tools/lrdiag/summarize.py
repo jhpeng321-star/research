@@ -22,6 +22,7 @@ def clean(obj):
 
 def write_csv(path,rows):
     if not rows:return
+    rows=[dict(r,world_id=str(r['world']).split('@')[0]) if 'world' in r else r for r in rows]
     fields=list(dict.fromkeys(k for r in rows for k in r))
     with path.open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(clean(rows))
@@ -35,10 +36,16 @@ def slope(x,y):
 def metrics(a):
     a=np.asarray(a,float); y,x=a[:,0],a[:,1]; e=y-x
     keep=x!=0
-    return {'bias':float(e.mean()),'mae':float(abs(e).mean()),
+    sx=float(x.std());sy=float(y.std());beta=slope(x,y)
+    corr=float(np.corrcoef(x,y)[0,1]) if sx>0 and sy>0 else np.nan
+    ratio=sy/sx if sx>0 else np.nan
+    if np.isfinite(corr) and np.isfinite(beta):assert abs(beta-corr*ratio)<1e-8
+    return {'bias':float(e.mean()),'mae':float(abs(e).mean()),'rmse':float(np.sqrt(np.mean(e*e))),
             'real_mean':float(x.mean()),'wm_mean':float(y.mean()),
             'sign':float(np.mean(np.sign(y[keep])==np.sign(x[keep]))) if keep.any() else np.nan,
-            'slope':slope(x,y)}
+            'slope':beta,'pearson':corr,'sd_ratio':ratio,
+            'wm_sd':sy,'real_sd':sx,'mean_abs_ratio':float(abs(y).mean()/abs(x).mean()) if abs(x).mean()>0 else np.nan,
+            'intercept':float(y.mean()-beta*x.mean()) if np.isfinite(beta) else np.nan}
 
 
 def interval(vals):
@@ -66,6 +73,7 @@ def aggregate(root,out,allow_partial=False):
               'counts':{v:sum(d['variant']==v for d in docs) for v in VARIANTS}}
     (out/'COVERAGE.json').write_text(json.dumps(coverage,indent=1))
     rows=[]; draws=[]; timeline=[]; raw_breakdown=[]; world_breakdown=[]; confusion=[]
+    absolute=[];ablation_regions=[]
     # The production training loader exposes a t0 cohort, NOT full future traffic.
     # Breakdown sensors must read the full converted recordings including arrivals.
     # Recompute both detectors here, also standardizing the detector implementation
@@ -98,6 +106,13 @@ def aggregate(root,out,allow_partial=False):
         if len(group)!=8:continue
         assert {d['draw'] for d in group}==set(range(8))
         group=sorted(group,key=lambda d:d['draw'])
+        for arm in ('native',*ARMS):
+            for h in ('120','300'):
+                a=np.array([d['arms'][arm]['delay'][h] for d in group])
+                assert np.ptp(a[:,1])<1e-8
+                y,x=a.mean(0)
+                absolute.append({'world':world,'variant':v,'arm':arm,'horizon_s':int(h),
+                    'wm_J':y,'real_J':x,'error':y-x,'wm_sd_K':a[:,0].std(ddof=1),'cohort':'t0_HDV'})
         for arm in ARMS:
             for h in ('120','300'):
                 pairs=[]
@@ -113,16 +128,23 @@ def aggregate(root,out,allow_partial=False):
                     'wm_dJ':y,'real_dJ':x,'paired_bias':y-x,'wm_sd_K':a[:,0].std(ddof=1),
                     'sign_agreement':float(np.sign(y)==np.sign(x)) if x!=0 else None,
                     'paired_ratio_not_regression':y/x if x!=0 else None})
-            if v=='baseline':
-                for idx,(region,cls,end,*_) in enumerate(group[0]['arms'][arm]['timeline']):
-                    a=[]
-                    for d in group:
-                        p=np.array(d['arms'][arm]['timeline'][idx][3:5])
-                        n=np.array(d['arms']['native']['timeline'][idx][3:5]);a.append(p-n)
-                    a=np.array(a); y,x=a.mean(0)
+            meta=group[0]['arms'][arm]['timeline']
+            diff=np.array([[t[3:5] for t in d['arms'][arm]['timeline']] for d in group])-np.array(
+                [[t[3:5] for t in d['arms']['native']['timeline']] for d in group])
+            mean=diff.mean(0);sd=diff[:,:,0].std(0,ddof=1)
+            for idx,(region,cls,end,*_) in enumerate(meta):
+                y,x=mean[idx]
+                if v=='baseline':
                     timeline.append({'world':world,'arm':arm,'region':region,'class':cls,
                         'bin_end_s':end,'wm_dJ_bin':y,'real_dJ_bin':x,'paired_error_bin':y-x,
-                        'wm_sd_K':a[:,0].std(ddof=1)})
+                        'wm_sd_K':sd[idx]})
+            for region in ('upstream','merge','ramp','downstream'):
+                for cls in ('CAV','HDV'):
+                    for h in (120,300):
+                        select=[i for i,t in enumerate(meta) if t[0]==region and t[1]==cls and t[2]<=h]
+                        y,x=mean[select].sum(0)
+                        ablation_regions.append({'world':world,'variant':v,'arm':arm,'region':region,
+                            'class':cls,'horizon_s':h,'wm_dJ':y,'real_dJ':x,'paired_error':y-x})
         if v=='baseline':
             for arm in ('native',*ARMS):
                 for region in ('upstream','merge'):
@@ -140,11 +162,13 @@ def aggregate(root,out,allow_partial=False):
                     rt=real['onset_s'] if real['event'] else None
                     err=onset-rt if onset is not None and rt is not None else None
                     event_steps=[r['wm']['drop_mps'] for r in records if r['wm']['event']]
+                    draw_errors=[r['wm']['onset_s']-rt for r in records if r['wm']['event'] and rt is not None]
                     world_breakdown.append({'world':world,'arm':arm,'region':region,
                         'real_event':real['event'],'wm_event_majority':pred,'wm_event_probability':p,
                         'real_onset_s':rt,'wm_onset_s':onset,'onset_error_s':err,
                         'real_step_mps':real.get('drop_mps'),'real_BIC_improvement':real.get('bic_improvement'),
                         'wm_event_step_mean_mps':float(np.mean(event_steps)) if event_steps else None,
+                        'onset_MAE_conditional_draw_s':float(np.mean(np.abs(draw_errors))) if draw_errors else None,
                         'real_preexisting':real.get('preexisting',False)})
                     for d,r in zip(group,records):
                         raw_breakdown.append({'world':world,'arm':arm,'region':region,'draw':d['draw'],
@@ -202,6 +226,22 @@ def aggregate(root,out,allow_partial=False):
                        onset_bias_s=float(np.mean(es)) if es else None,
                        real_occurrence=sum(r['real_event'] for r in known)/len(known),
                        wm_occurrence=sum(r['wm_event_majority'] for r in known)/len(known))
+            # A majority classifier can miss every rare event even when event
+            # probabilities are calibrated. Hypothesis tests use expected
+            # occurrence, with world clustering; confusion remains majority-based.
+            row['wm_expected_occurrence']=float(np.mean([r['wm_event_probability'] for r in known]))
+            row['expected_occurrence_gap']=row['wm_expected_occurrence']-row['real_occurrence']
+            row['event_brier']=float(np.mean([(r['wm_event_probability']-r['real_event'])**2 for r in known]))
+            ws=sorted({r['world'] for r in known});rng=np.random.default_rng(20261028)
+            grouped=[[r for r in known if r['world']==w] for w in ws]
+            gaps=[]
+            for _ in range(2000):
+                sample=[r for i in rng.integers(0,len(ws),len(ws)) for r in grouped[i]]
+                gaps.append(np.mean([r['wm_event_probability']-r['real_event'] for r in sample]))
+            row['expected_occurrence_gap_lo95'],row['expected_occurrence_gap_hi95']=interval(gaps)
+            de=[r['onset_MAE_conditional_draw_s'] for r in known if r['onset_MAE_conditional_draw_s'] is not None]
+            row['onset_conditional_draw_n_worlds']=len(de)
+            row['onset_MAE_conditional_draw_s']=float(np.mean(de)) if de else None
             steps=[r['real_step_mps'] for r in known if r['real_event']]
             wsteps=[r['wm_event_step_mean_mps'] for r in known if r['wm_event_majority']]
             row['real_event_step_mean_mps']=float(np.mean(steps)) if steps else None
@@ -250,10 +290,21 @@ def aggregate(root,out,allow_partial=False):
             lo,hi=interval((a[:,0]-a[:,1])[draws_idx].mean(1))
             row['bias_lo95']=lo;row['bias_hi95']=hi
             horizon_curve.append(row)
+    abreg_summary=[]
+    keys=sorted({(r['variant'],r['arm'],r['region'],r['class'],r['horizon_s']) for r in ablation_regions})
+    for key in keys:
+        v,arm,region,cls,h=key
+        rs=[r for r in ablation_regions if (r['variant'],r['arm'],r['region'],r['class'],r['horizon_s'])==key]
+        if len(rs)!=36:continue
+        err=np.array([r['paired_error'] for r in rs]);lo,hi=interval(err[draws_idx].mean(1))
+        abreg_summary.append({'variant':v,'arm':arm,'region':region,'class':cls,'horizon_s':h,'n_worlds':36,
+            'wm_dJ':np.mean([r['wm_dJ'] for r in rs]),'real_dJ':np.mean([r['real_dJ'] for r in rs]),
+            'paired_error':err.mean(),'paired_error_lo95':lo,'paired_error_hi95':hi})
     for name,data in [('ablation_worlds',rows),('ablation_draws',draws),('ablation_summary',pooled),
         ('within_world_slopes',within),('timeline_worlds',timeline),('timeline_summary',tl_summary),
         ('breakdown_worlds',world_breakdown),('breakdown_draws',raw_breakdown),('breakdown_confusion',confusion),
-        ('regional_summary',regional),('horizon_curve',horizon_curve)]:
+        ('regional_summary',regional),('horizon_curve',horizon_curve),('arm_delays',absolute),
+        ('ablation_regions_worlds',ablation_regions),('ablation_regions_summary',abreg_summary)]:
         write_csv(out/(name+'.csv'),data)
     # Numerical accounting check: regional HDV errors recover the gate objective.
     accounting=[]
@@ -270,29 +321,62 @@ def aggregate(root,out,allow_partial=False):
              'breakdown_sensor':'full recorded traffic including arrivals, valid mapped road lanes; not the training t0-cohort mask',
              'timeline':'t0 cohort, dynamic trajectory regions; absent/exited vehicles have zero delay'}
     (out/'SUMMARY.json').write_text(json.dumps(clean(summary),indent=1,allow_nan=False))
+    coverage_path=out/'recorded_controller_coverage.csv'
+    if coverage_path.exists():
+        with coverage_path.open(newline='') as f:exposure=list(csv.DictReader(f))
+        if exposure and 'post_t0_direct_cav_vehicle_seconds' in exposure[0]:
+            cover=[]
+            for arm in ARMS:
+                for region in ('upstream','merge','ramp','downstream'):
+                    for lo,hi in ((0,60),(60,120),(120,300)):
+                        rs=[r for r in exposure if r['arm']==arm and r['region']==region and lo<int(r['bin_end_s'])<=hi]
+                        ws=sorted({r['world'] for r in rs});a=np.array([
+                            [sum(float(r['post_t0_direct_cav_vehicle_seconds']) for r in rs if r['world']==w),
+                             sum(float(r['direct_cav_vehicle_seconds']) for r in rs if r['world']==w)] for w in ws])
+                        if len(ws)!=36 or a[:,1].sum()==0:continue
+                        num,den=a.sum(0);sums=a[draws_idx].sum(1)
+                        ratios=sums[sums[:,1]>0,0]/sums[sums[:,1]>0,1];low,high=interval(ratios)
+                        cover.append({'role':'validation','arm':arm,'region':region,'window_start_s':lo,
+                            'window_end_s':hi,'n_worlds':36,'post_t0_direct_cav_seconds':num,'direct_cav_seconds':den,
+                            'post_t0_direct_fraction':num/den,'fraction_lo95':low,'fraction_hi95':high,
+                            'interpretation':'pooled recorded vehicle-time; missing-input exposure, not causal share of WM bias'})
+            write_csv(out/'controller_coverage_summary.csv',cover)
     return summary
 
 
 def waves(root,out):
     """Paired-controller signal growth: descriptive, not an isolated pulse gain."""
-    data=[]
+    data=[];signal_sums={}
     for p in sorted((root/'traces').glob('g*_k*.npz')):
         g=int(p.name[1:3]);k=int(p.stem.rsplit('k',1)[1])
         result=root/'results'/f'g{g:02d}_baseline_k{k}_s600.json'
         if not result.exists():continue
-        d=json.loads(result.read_text());a=np.load(p,allow_pickle=False)
+        d=json.loads(result.read_text())
+        # NPZ access decompresses a member each time. Cache once, rather than
+        # decompressing full 300 s arrays again in every 10 s bin.
+        with np.load(p,allow_pickle=False) as z:
+            a={key:z[key] for key in ('speed','mask','real_speed','real_mask','cav0','m0')}
         if a['speed'].shape[1]!=601:continue
         for b,arm in enumerate(ARMS,1):
             cohort=a['m0'][b]&a['m0'][0]&~a['cav0'][b]&~a['cav0'][0]
             assert np.allclose(a['real_speed'][b,0,cohort],a['real_speed'][0,0,cohort])
+            z=np.where(a['mask'],a['speed'],31.29)
+            dv=(z[b,1:]-z[0,1:])[:,cohort]
+            key=(d['pair_key'],arm)
+            if key not in signal_sums:signal_sums[key]=[np.zeros_like(dv,dtype=float),0]
+            assert signal_sums[key][0].shape==dv.shape
+            signal_sums[key][0]+=dv;signal_sums[key][1]+=1
             for start in range(0,600,20):
                 row={'world':d['pair_key'],'arm':arm,'draw':k,'bin_end_s':(start//20+1)*10}
+                row['n_t0_hdv']=int(cohort.sum())
                 for label,vkey,mkey in [('wm','speed','mask'),('real','real_speed','real_mask')]:
                     v=a[vkey][:,start+1:start+21];m=a[mkey][:,start+1:start+21]
                     common=m[b]&m[0]&cohort
                     dv=v[b]-v[0]
                     row[label+'_rms_dv_mps']=float(np.sqrt(np.mean(dv[common]**2))) if common.any() else None
                     row[label+'_n_vehicle_ticks']=int(common.sum())
+                    row[label+'_native_alive_fraction']=float(m[0][:,cohort].mean()) if cohort.any() else None
+                    row[label+'_arm_alive_fraction']=float(m[b][:,cohort].mean()) if cohort.any() else None
                     # Fixed-cohort speed-deficit signal: exits imputed at free speed.
                     z=np.where(m,v,31.29)
                     row[label+'_cohort_rms_dv_mps']=float(np.sqrt(np.mean((z[b,:,cohort]-z[0,:,cohort])**2))) if cohort.any() else None
@@ -305,9 +389,16 @@ def waves(root,out):
         if len(rs)!=8:continue
         row={'world':w,'arm':arm,'bin_end_s':t,'K':8}
         for label in ('wm','real'):
-            for key in ('rms_dv_mps','cohort_rms_dv_mps','n_vehicle_ticks'):
+            for key in ('rms_dv_mps','cohort_rms_dv_mps','n_vehicle_ticks','native_alive_fraction','arm_alive_fraction'):
                 vals=[r[label+'_'+key] for r in rs if r[label+'_'+key] is not None]
                 row[label+'_'+key]=float(np.mean(vals)) if vals else None
+                if key=='rms_dv_mps':row[label+'_common_support_draws']=len(vals)
+        total,n=signal_sums[w,arm]
+        assert n==8
+        mean_signal=total/n;start=(t//10-1)*20
+        row['wm_mean_signal_cohort_rms_dv_mps']=float(np.sqrt(np.mean(mean_signal[start:start+20]**2))) if mean_signal.shape[1] else None
+        if row['wm_mean_signal_cohort_rms_dv_mps'] is not None:
+            assert row['wm_mean_signal_cohort_rms_dv_mps']<=row['wm_cohort_rms_dv_mps']+1e-5
         rows.append(row)
     write_csv(out/'paired_signal_worlds.csv',rows)
     summary=[]
@@ -316,16 +407,47 @@ def waves(root,out):
             rs=[r for r in rows if r['arm']==arm and r['bin_end_s']==t]
             if not rs:continue
             row={'arm':arm,'bin_end_s':t,'n_worlds':len(rs)}
-            for k in ('wm_rms_dv_mps','real_rms_dv_mps','wm_cohort_rms_dv_mps','real_cohort_rms_dv_mps'):
+            for k in ('wm_rms_dv_mps','real_rms_dv_mps','wm_cohort_rms_dv_mps','real_cohort_rms_dv_mps','wm_mean_signal_cohort_rms_dv_mps',
+                      'wm_native_alive_fraction','real_native_alive_fraction','wm_arm_alive_fraction','real_arm_alive_fraction'):
                 vals=[r[k] for r in rs if r[k] is not None];row[k]=np.mean(vals) if vals else None
+                row[k+'_n_worlds']=len(vals)
             summary.append(row)
     write_csv(out/'paired_signal_summary.csv',summary)
+
+
+def numerical_controls(root,out):
+    rows=[]
+    for f in sorted((root/'dense_reference/results').glob('*_s600.json')):
+        other=root/'results'/f.name
+        if not other.exists():continue
+        a=json.loads(f.read_text());b=json.loads(other.read_text())
+        assert a['role']==b['role']=='validation' and a['variant']==b['variant']=='baseline'
+        for arm in a['arms']:
+            for h in ('120','300'):
+                old=np.array(a['arms'][arm]['delay'][h]);new=np.array(b['arms'][arm]['delay'][h])
+                assert old[1]==new[1]
+                row={'scope':'numerical_control_only','world':a['pair_key'],'draw':a['draw'],
+                     'arm':arm,'horizon_s':int(h),'dense_J':old[0],'compact_J':new[0],
+                     'absolute_J_change':new[0]-old[0]}
+                if arm!='native':
+                    nd=np.array(a['arms']['native']['delay'][h]);nc=np.array(b['arms']['native']['delay'][h])
+                    row['paired_dJ_change']=(new[0]-nc[0])-(old[0]-nd[0])
+                rows.append(row)
+    write_csv(out/'numerical_parity.csv',rows)
+    if rows:
+        (out/'NUMERICS.json').write_text(json.dumps({'scope':'numerical_control_only','rows':len(rows),
+            'n_world_draw_units':len(rows)//6,
+            'max_absolute_J_change':max(abs(r['absolute_J_change']) for r in rows),
+            'max_paired_dJ_change':max(abs(r['paired_dJ_change']) for r in rows if 'paired_dJ_change' in r),
+            'method':'existing present-slot attention compaction; all final K8 variants use the same path'},indent=1))
 
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--root',type=Path,required=True)
     ap.add_argument('--out',type=Path,required=True);ap.add_argument('--partial',action='store_true');a=ap.parse_args()
-    result=aggregate(a.root,a.out,a.partial);waves(a.root,a.out)
+    result=aggregate(a.root,a.out,a.partial);waves(a.root,a.out);numerical_controls(a.root,a.out)
+    from fullfield import evaluate as fullfield
+    fullfield(a.root,a.out)
     print(json.dumps(result['coverage']))
 
 

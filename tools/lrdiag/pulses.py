@@ -83,8 +83,9 @@ def run(seed,draw):
     tapes={name:np.load(safe(jobs/f'traj__{name}.npz'),allow_pickle=False) for name in names}
     initial=tapes['nopulse'];present=initial['present'][0]
     # Explicitly verify slot alignment instead of assuming compacted index equivalence.
-    assert np.allclose(s[0,0,present],initial['s'][0,present],atol=1e-3)
-    assert np.allclose(v[0,0,present],initial['v'][0,present],atol=1e-4)
+    valid_initial=present&(initial['lane'][0]>=0)
+    assert np.allclose(s[0,0,valid_initial],initial['s'][0,valid_initial],atol=1e-3)
+    assert np.allclose(v[0,0,valid_initial],initial['v'][0,valid_initial],atol=1e-4)
     rows=[];signals=[]
     for b,name in enumerate(names[1:],1):
         ti=int(name.rsplit('t',1)[1]);target=rec['targets'][ti]['target_slot']

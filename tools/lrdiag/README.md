@@ -24,12 +24,22 @@ was appended before analysis. `CONTRACT.md` gives estimands and caveats.
    the recorded qualification pulses (cpuP only) and the pairs300 K8 ablations.
    They do not overlap 24-worker phases. Pulse sources are the existing
    ~/c4/runs/pulse/{jobs,src/all} on cpuP, 969824–969835, 30 s tapes.
+   Before pairs300 jobs, the same 24-worker pool completes baseline full-road
+   class-output upgrades. Same WM2 and K8 seeds; old scalar J and all-class
+   speed/count bins must reproduce. Original JSONs and hashes are retained;
+   original trace NPZs are not rewritten. This supplies a full-traffic timeline
+   alongside the gate's fixed-t0-cohort timeline, without conflating cohort exits
+   with perturbation damping.
 5. Gather only task-owned results/traces and receipts from both CPUs into a
    task-owned root; the parity halves have disjoint result filenames. Run:
    `python summarize.py --root ROOT --out EVIDENCE`, then `pairs_summary.py`
    and `pulse_summary.py` with the same flags. `figures.py EVIDENCE` renders the
    CSV figures. `verify.py --evidence EVIDENCE` checks complete E3 K8 coverage,
    change-point invariants and regional accounting against the gate objective.
+   `gather.py` merges CPUQ's disjoint parity into CPUP with SHA checks and atomic
+   writes, including explicitly hash-bound metadata upgrades. `analyze_owned.py`
+   runs reducers while pausing/resuming one verified owned model job, keeping
+   at most 24 active CPU workers and yielding to collection.
 
 All reported verdict statistics come from E3 validation. K8 means are formed
 before statistics; CIs resample worlds. E3 arm-specific pooled slopes use OLS

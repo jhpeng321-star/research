@@ -42,6 +42,15 @@ diagnostics only. If not validation worlds, label them non-verdict and never use
 their numbers to support the final verdict. Multi-controller paired trajectories
 are not isolated speed-pulse interventions and cannot prove string stability.
 
+Occurrence inference uses mean K8 event probabilities, not the frequency of
+majority decisions; the requested confusion table separately uses majority >0.5.
+Low predicted-on-real slope is decomposed into Pearson correlation times the
+SD ratio, rather than interpreted as a physical perturbation gain. Paired-speed
+signals retain both mean path RMS and RMS of the mean response, with survival
+support. The full-road region/class timeline includes arrivals and is distinct
+from the gate's t0-cohort objective; baseline metadata-only repeats must preserve
+the original J and all-class speed/count series. No extra K draws are pooled.
+
 CPU jobs initially ran nice 19, then (before any full-horizon result) nice 10
 because of severe analysis contention; <=24 owned workers per host, with explicit owned PID
 receipts and a collection-yield guard. Never signal another job. Source gpuR and

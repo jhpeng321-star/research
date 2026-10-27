@@ -55,11 +55,12 @@ def speed_bins(v,mask,pos,lane,cav):
     for r,region in regions(pos,lane).items():
         for cls,sel in [('all',np.ones_like(mask)),('CAV',cav),('HDV',~cav)]:
             keep=mask&region&sel
-            vals=[]; counts=[]
+            vals=[]; counts=[]; delays=[]
             for t in range(0,len(v)-1,20):
                 k=keep[t:t+20]; n=int(k.sum()); counts.append(n)
                 vals.append(float(v[t:t+20][k].mean()) if n else None)
-            out[r+'/'+cls]={'speed':vals,'count':counts}
+                delays.append(float(np.maximum(0,1-v[t:t+20][k]/31.29).sum()*.5))
+            out[r+'/'+cls]={'speed':vals,'count':counts,'delay_veh_s':delays}
     return out
 
 
@@ -206,7 +207,7 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     # Stable original slots have recorded class membership; post-t0 synthetic
     # entries cannot be identity-matched to recorded vehicles. Timeline uses
     # original t0 cohort only, with t0 regions/classes fixed, avoiding that bias.
-    out={'world':g['pair_key'].split('@')[0],'pair_key':g['pair_key'],'draw':draw,'group_index':gi,
+    out={'world':g['pair_key'].split('@')[0],'pair_key':g['pair_key'],'draw':draw,'group_index':gi,'fullfield_version':2,
          'variant':variant,'steps':steps,'panel':panel,
          'role':'validation' if panel=='e3' else 'diagnostic','seconds':time.monotonic()-start,
          'load_report':report,'arms':{},'source_receipt':source.receipt}
@@ -257,7 +258,7 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     if steps<600:
         out['smoke_state']={'v':speed[:,-1].tolist(),'s':pos[:,-1].tolist(),
                             'lane':lane[:,-1].tolist(),'mask':mask[:,-1].tolist()}
-    if variant=='baseline' and panel=='e3' and steps==600:
+    if variant=='baseline' and panel=='e3' and steps==600 and os.environ.get('LRDIAG_TRACE_OFF')!='1':
         path=HOME/'traces'/f'g{gi:02d}_k{draw}.npz'; path.parent.mkdir(exist_ok=True)
         np.savez_compressed(path,speed=speed[:,:,:192],mask=mask[:,:,:192],
             pos=pos[:,:,:192],lane=lane[:,:,:192],real_speed=real_v[:,:,:192],
@@ -266,11 +267,50 @@ def run(gi,draw,variant,steps=600,panel='e3'):
     return out
 
 
+def fullfield_upgrade(reference,p,new):
+    """Assert the metadata-only rerun preserves both rewards and full-field means."""
+    old=json.loads(reference.read_text());max_j=0.;max_speed=0.
+    assert old['role']==new['role']=='validation' and old['variant']==new['variant']=='baseline'
+    for arm in ARMS:
+        for h in ('120','300'):
+            x=np.array(old['arms'][arm]['delay'][h]);y=np.array(new['arms'][arm]['delay'][h])
+            max_j=max(max_j,float(abs(x-y).max()))
+            assert np.allclose(x,y,rtol=1e-7,atol=.001),(p,arm,h,x,y)
+        for region in ('upstream','merge','ramp','downstream'):
+            a=old['arms'][arm]['speed_bins_wm'][region+'/all'];b=new['arms'][arm]['speed_bins_wm'][region+'/all']
+            x=np.array([np.nan if v is None else v for v in a['speed']]);y=np.array([np.nan if v is None else v for v in b['speed']])
+            assert np.allclose(x,y,rtol=1e-6,atol=1e-5,equal_nan=True),(p,arm,region)
+            if np.isfinite(x-y).any():max_speed=max(max_speed,float(np.nanmax(abs(x-y))))
+            assert a['count']==b['count'],(p,arm,region,'counts')
+    return {'scope':'fullfield_metadata_upgrade','file':p.name,
+        'old_sha256':hashlib.sha256(reference.read_bytes()).hexdigest(),
+        'max_absolute_J_difference':max_j,'max_fullfield_speed_difference_mps':max_speed,
+        'note':'same WM2/seeds/commands; full-road CAV/HDV and delay outputs added; original traces retained'}
+
+
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--group',type=int,required=True)
     ap.add_argument('--draw',type=int,default=0); ap.add_argument('--variant',choices=VARIANTS,default='baseline')
     ap.add_argument('--steps',type=int,default=600)
-    ap.add_argument('--panel',choices=('e3','pairs300'),default='e3'); a=ap.parse_args()
+    ap.add_argument('--panel',choices=('e3','pairs300'),default='e3')
+    ap.add_argument('--upgrade-fullfield',action='store_true');a=ap.parse_args()
+    prefix='' if a.panel=='e3' else 'p300_'
+    p=HOME/'results'/f'{prefix}g{a.group:02d}_{a.variant}_k{a.draw}_s{a.steps}.json'
+    reference=None
+    if a.upgrade_fullfield:
+        assert a.panel=='e3' and a.variant=='baseline' and a.steps==600 and p.exists()
+        reference=HOME/'baseline_before_fullfield'/p.name
+        reference.parent.mkdir(exist_ok=True)
+        if not reference.exists():
+            tmp=reference.with_suffix('.json.tmp');tmp.write_bytes(p.read_bytes());tmp.replace(reference)
+        current=json.loads(p.read_text())
+        if current.get('fullfield_version',0)>=2:
+            receipt=fullfield_upgrade(reference,p,current)
+            receipt['new_sha256']=hashlib.sha256(p.read_bytes()).hexdigest()
+            dump(HOME/'fullclass_upgrades'/p.name,receipt)
+            print('full-field outputs already complete',p.name,flush=True)
+            return
+        os.environ['LRDIAG_TRACE_OFF']='1'
     # Supported inference-only gather/network/scatter optimization; no model
     # weights/physics/inputs change. Verify dense-vs-compact on identical draws.
     import fcntl
@@ -295,9 +335,11 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_UN)
     os.environ['WMS_SPEED_COMPACT_SLOTS']='1'
     out=run(a.group,a.draw,a.variant,a.steps,a.panel)
-    prefix='' if a.panel=='e3' else 'p300_'
-    p=HOME/'results'/f'{prefix}g{a.group:02d}_{a.variant}_k{a.draw}_s{a.steps}.json'
+    receipt=fullfield_upgrade(reference,p,out) if reference is not None else None
     dump(p,out)
+    if receipt is not None:
+        receipt['new_sha256']=hashlib.sha256(p.read_bytes()).hexdigest()
+        dump(HOME/'fullclass_upgrades'/p.name,receipt)
     print(json.dumps({'result':str(p),'seconds':out['seconds']}),flush=True)
     if a.steps==600 and a.panel=='e3' and not (HOME/'evidence/CONTROLLER_COVERAGE.json').exists():
         owner=json.loads((HOME/'OWNER.json').read_text())
@@ -308,6 +350,13 @@ def main():
                 if not (HOME/'evidence/CONTROLLER_COVERAGE.json').exists():
                     from observables import main as audit
                     audit(HOME,HOME/'evidence')
+    if a.panel=='pairs300' and json.loads((HOME/'PAIRS_OWNER.json').read_text())['parity']==0:
+        from pulse_retry import one
+        one()
 
 
-if __name__=='__main__': main()
+if __name__=='__main__':
+    import signal
+    def interrupt(signum,frame):raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM,interrupt)
+    main()

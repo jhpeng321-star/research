@@ -28,15 +28,20 @@ def outputs(root):
     summary=json.loads((root/'SUMMARY.json').read_text())
     c=summary['coverage']
     assert not c['partial'] and c['complete_worlds']==36 and c['n_results']==1728,c
+    full=json.loads((root/'FULLFIELD_COVERAGE.json').read_text())
+    assert full['status']=='complete' and full['worlds_complete']==36 and full['n_results']==288,full
     counts={}
     for name,n in [('ablation_worlds.csv',864),('ablation_draws.csv',6912),
                    ('within_world_slopes.csv',432),('timeline_worlds.csv',17280),
                    ('breakdown_worlds.csv',216),('breakdown_draws.csv',1728),
-                   ('paired_signal_worlds.csv',2160)]:
+                   ('paired_signal_worlds.csv',2160),('arm_delays.csv',1296),
+                   ('ablation_regions_worlds.csv',6912),('ablation_regions_summary.csv',192),
+                   ('fullfield_timeline_worlds.csv',17280),('fullfield_timeline_summary.csv',480)]:
         with (root/name).open(newline='') as f: rows=list(csv.DictReader(f))
         assert len(rows)==n,(name,len(rows),n)
         counts[name]=len(rows)
     assert summary['max_delay_accounting_error']<.002
+    assert full['max_class_delay_accounting_error']<.005
     report={'status':'PASS','counts':counts,'checks':[
         '36 validation worlds x 6 variants x K8 complete',
         'world bootstrap, never draw bootstrap',
