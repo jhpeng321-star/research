@@ -203,3 +203,31 @@ def test_foreign_summary_without_branch_keeps_v9entry(tmp_path):
     assert "pair_cost_reconciliation" not in clocks
     # v3 (due 9.0, never on the tape) is the only pre-start unknown request
     assert clocks["queue_unknown"] == 1 and clocks["n_requests"] == 4
+
+
+def test_cqr_rows_may_carry_explicit_roles_and_default_is_unchanged():
+    """E3DATA pairs keep their registered split: an explicit row ``role`` overrides the hashed one."""
+    from wms.control.long_credit import fit_cqr, world_role
+    rng = np.random.default_rng(3)
+
+    def make(worlds, role=None):
+        out = []
+        for w in worlds:
+            for rep in range(2):
+                base = float(rng.normal())
+                row = {"world": w, "horizon_s": 120, "samples": (base + rng.normal(size=8) * .1).tolist(),
+                       "real_benefit": base + float(rng.normal()) * .1 + rep}
+                if role:
+                    row["role"] = role
+                out.append(row)
+        return out
+
+    plain = make([f"w{i}" for i in range(30)])
+    assert fit_cqr(plain, {})["horizons"]["120"]["fit_worlds"] == sorted(
+        {r["world"] for r in plain if world_role(r["world"]) == "fit"})
+    explicit = (make([f"a{i}" for i in range(8)], "fit") + make([f"b{i}" for i in range(6)], "calibration")
+                + make([f"c{i}" for i in range(4)], "validation"))
+    model = fit_cqr(explicit, {})["horizons"]["120"]
+    assert model["fit_worlds"] == sorted(f"a{i}" for i in range(8))
+    assert model["calibration_worlds"] == sorted(f"b{i}" for i in range(6))
+    assert model["validation"]["worlds"] == sorted(f"c{i}" for i in range(4))
