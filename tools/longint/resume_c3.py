@@ -16,6 +16,9 @@ ARM = REL / 'arm'
 ROOT = REL / 'runtime_longint'
 OUT = ARM / 'loop/longint/c3resume'
 CONFIG = ARM / 'CONFIG_C3_RESUME.json'
+if os.environ.get('C3RESUME_GENERATION') == '2':
+    OUT = OUT / 'r2'
+    CONFIG = ARM / 'CONFIG_C3_RESUME_R2.json'
 TASK = 'S-C3RESUME'
 
 
@@ -148,6 +151,55 @@ def entry(argv):
     return main(argv)
 
 
+def repair(markdown_sha):
+    """Keep the stopped re-anchored attempt; retry the original514, never its515+."""
+    loop = setup()
+    held = locks()
+    assert held and OUT.name == 'r2' and not OUT.exists()
+    cfg = loop.load_config(ARM / 'CONFIG_C3_RESUME.json')
+    state = loop.load_state(cfg)
+    ph = state['cycles'][-1]['phases']['policy']
+    assert ph['status'] == 'failed' and ph['attempt'] == 5
+    assert 'own-run STOP requested' in ph['error']
+    for name in ('PID.json', 'TRAINER_PID.json'):
+        old = loop.read_json(OUT.parent / name)
+        assert loop.fast_module().process_token(old['pid']) != str(old['start_ticks'])
+    assert state['sim_s_charged'] == 213406
+    OUT.mkdir()
+    loop.write_atomic(OUT / 'BEFORE.json', {'config': cfg, 'state': state,
+        'registration': loop.read_json(cfg['registration'])})
+    config = ROOT / 'configs/c4_policy14_c3resume_r2.toml'
+    assert not config.exists()
+    config.write_text('extends = "c4_policy14_c3longint.toml"\n[run]\n'
+        + 'operational_recovery = ' + json.dumps(str(OUT / 'RECOVERY.json')) + '\n'
+        + '[trainer]\nimagination_checkpoint_segment = 8\n')
+    recovery = loop.read_json(OUT.parent / 'RECOVERY.json')
+    recovery.update(config=str(config), config_sha256=sha(config),
+                    retry_outputs=[str(ARM / 'loop/policy/c03.a6')])
+    loop.write_atomic(OUT / 'RECOVERY.json', recovery)
+    cfg['policy']['config'] = str(config)
+    loop.write_atomic(CONFIG, cfg)
+    reg = loop.read_json(cfg['registration'])
+    amendment = {'id': TASK + '_SCHEDULE_FIX', 't': loop.now(),
+        'authority': 'main 2026-10-28 06:20 fix-and-retry rule',
+        'markdown_registration_sha256': markdown_sha,
+        'invalid_attempt': copy.deepcopy(ph), 'invalid_reason': 're-anchored horizon schedule',
+        'resume_checkpoint': recovery['checkpoint'], 'resume_sha256': recovery['checkpoint_sha256'],
+        'saved_schedule': [0, 380, 463], 'target_update': 530,
+        'recovery_sha256': sha(OUT / 'RECOVERY.json'), 'config_sha256': sha(CONFIG),
+        'changed_source_sha256': {name: sha(ROOT / name) for name in (
+            'src/wms/control/policy14_cli.py', 'src/wms/control/policy14_recovery.py')},
+        'discard_invalid_attempt_from_selection': True, 'new_sim_s': 0,
+        'collection_and_stop_authority': 'unchanged S-C3RESUME'}
+    assert not any(a.get('id') == amendment['id'] for a in reg['amendments'])
+    reg['amendments'].append(amendment)
+    loop.write_atomic(Path(cfg['registration']), reg)
+    state['registration_sha256'] = sha(cfg['registration'])
+    loop.save_state(cfg, state)
+    event(loop, 'schedule_fix_registered', **amendment)
+    print(json.dumps(amendment))
+
+
 def configure_collect(loop):
     remote = module('c3resume_autonomy', REL / 'autonomy/remote.py')
     remote.R, remote.A, remote.ROOT, remote.loop = REL, ARM, ROOT, loop
@@ -198,6 +250,8 @@ def verify_policy(loop, cfg):
     for r in rows:
         assert all(math.isfinite(r[k]) for k in (
             'actor_loss', 'critic_loss', 'actor_grad_norm', 'critic_grad_norm'))
+        assert r['imagination_horizon_s'] in (10, 90), 'same-phase90s schedule must not re-anchor'
+    assert doc['looplong_recovery']['horizon']['curriculum_updates'] == [0, 380, 463]
     cap = torch.cuda.get_device_properties(0).total_memory * 0.92
     peak_reserved = max(r['cuda_peak_reserved_bytes'] for r in rows)
     peak_allocated = max(r['cuda_peak_allocated_bytes'] for r in rows)
@@ -273,6 +327,8 @@ if __name__ == '__main__':
     action = sys.argv[1]
     if action == 'prepare':
         prepare(sys.argv[2])
+    elif action == 'repair':
+        repair(sys.argv[2])
     elif action == 'start':
         start()
     elif action == 'drive':

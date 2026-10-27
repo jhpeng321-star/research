@@ -497,7 +497,11 @@ def main(argv=None):
             if [r['checkpoint_sha256'] for r in receipts] != [long_boundary['wm']['sha256']]:
                 raise ValueError('looplong loaded WM mismatch')
             raw['_looplong_physics'] = receipts[0]['physics']
-            configure(trainer, long_boundary, raw, output)
+            if recovery:
+                from .policy14_recovery import restore_looplong
+                summary['looplong_recovery'] = restore_looplong(trainer, long_boundary, recovery, output)
+            else:
+                configure(trainer, long_boundary, raw, output)
             summary['looplong_initial_boundary'] = long_boundary
             cqr = getattr(trainer, 'long_credit', None)
             summary['looplong_long_credit'] = (

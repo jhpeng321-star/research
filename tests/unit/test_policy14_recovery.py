@@ -146,3 +146,62 @@ def test_phase_length_checked_before_recovery_remainder(monkeypatch, tmp_path):
                      '--seed', '965142', '--max-updates', '150', '--native-init',
                      '--gate-panel', str(panel), '--compact']) == 1
     assert 'reached trainer' in printed[-1]['error']
+
+
+@pytest.fixture
+def long_resume(tmp_path, monkeypatch):
+    import torch
+    from wms.control.coopw import ExplorationConfig, GATE_SCHEMA
+    from wms.control.dreamer import _rng_state
+    from wms.control.looplong_real import RealPairCredit
+    monkeypatch.setattr(recovery, 'checked_path', Path)
+    monkeypatch.setattr('wms.control.start_states.checked_path', Path)
+    monkeypatch.setattr(RealPairCredit, 'from_boundary', lambda d: SimpleNamespace(excluded_worlds=[]))
+    gate = tmp_path / 'gate.json'
+    gate.write_text(json.dumps({'schema': GATE_SCHEMA, 'wm_sha256': 'frozen-wm',
+        'horizons': {str(h): {'verdict': 'PASS'} for h in (10, 60, 90)}}))
+    boundary = {'wm': {'sha256': 'frozen-wm'}, 'horizon_s': 90, 'flags': {'long_credit': True}}
+    horizon = {'enabled': True, 'horizons_s': [10., 60., 90.],
+        'curriculum_updates': [0., 380., 463.], 'entry_pad_max': [32, 192, 288],
+        'gate_file': str(gate), 'allowed_stage': 2}
+    refusal = tmp_path / 'CQR_frozen-wm_REFUSED.json'
+    refusal.write_text('{"qualified": false, "reason": "missing clocks"}')
+    payload = {'update_count': 514, 'sampler': None, 'rng': _rng_state(torch.device('cpu')),
+        'looplong': {'boundary': boundary, 'cqr': None, 'horizon': horizon,
+                     'exploration': ExplorationConfig(enabled=True, long_persistence=True).as_dict()}}
+    path = tmp_path / 'policy_000514.pt'
+    torch.save(payload, path)
+    receipt = {'checkpoint': str(path), 'checkpoint_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'saved_update': 514, 'prior': {'looplong_long_credit': {'qualified': False,
+            'reason': 'missing clocks', 'artifact_sha256': hashlib.sha256(refusal.read_bytes()).hexdigest()}}}
+    out = tmp_path / 'retry'
+    out.mkdir()
+    return SimpleNamespace(device=torch.device('cpu')), boundary, receipt, out, payload, gate
+
+
+def test_looplong_recovery_preserves_90s_schedule_rng_and_credit_refusal(long_resume):
+    import torch
+    trainer, boundary, receipt, out, payload, _ = long_resume
+    torch.rand(10)
+    proof = recovery.restore_looplong(trainer, boundary, receipt, out)
+    assert proof['horizon'] == payload['looplong']['horizon']
+    assert trainer.horizon_curriculum.stage(514) == 2
+    assert trainer.horizon_curriculum.horizons_s[trainer.horizon_curriculum.stage(514)] == 90
+    assert torch.equal(torch.get_rng_state(), payload['rng']['torch'])
+    assert trainer.long_credit is None and trainer.long_credit_refusal['qualified'] is False
+    assert (out / 'CQR_frozen-wm_REFUSED.json').read_bytes() == (out.parent / 'CQR_frozen-wm_REFUSED.json').read_bytes()
+
+
+def test_looplong_recovery_changed_gate_refused(long_resume):
+    trainer, boundary, receipt, out, _, gate = long_resume
+    data = json.loads(gate.read_text())
+    data['horizons']['90']['verdict'] = 'FAIL'
+    gate.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='trusted horizon gate changed'):
+        recovery.restore_looplong(trainer, boundary, receipt, out)
+
+
+def test_looplong_recovery_boundary_change_refused(long_resume):
+    trainer, boundary, receipt, out, _, _ = long_resume
+    with pytest.raises(ValueError, match='saved boundary mismatch'):
+        recovery.restore_looplong(trainer, {**boundary, 'horizon_s': 60}, receipt, out)

@@ -64,3 +64,62 @@ def load_recovery(raw, args):
     args.critic_warmup_updates = 0
     return {**receipt, 'prior': summary, 'curve': curve, 'phase_start': start,
             'updates': [u for u in summary['updates'] if u['update'] <= saved]}
+
+
+def restore_looplong(trainer, boundary, receipt, output):
+    """A same-phase restart restores its schedule; it is not a fresh WM boundary.
+
+    In particular, calling looplong.configure again would move the 90s knot from
+    update463 to597 when resuming at514. Reuse the saved, SHA-bound refusal too,
+    rather than re-fitting/qualifying credit on data which may since have changed.
+    """
+    import shutil
+    import torch
+    from .coopw import ExplorationConfig, HorizonConfig
+    from .dreamer import _restore_rng
+    from .looplong_real import RealPairCredit
+
+    path = checked_path(receipt['checkpoint'])
+    if hashlib.sha256(path.read_bytes()).hexdigest() != receipt['checkpoint_sha256']:
+        raise ValueError('looplong recovery checkpoint hash mismatch')
+    payload = torch.load(path, map_location='cpu', weights_only=True)
+    saved = payload.get('looplong')
+    if (not saved or saved['boundary'] != boundary
+            or payload['update_count'] != receipt['saved_update']):
+        raise ValueError('looplong recovery saved boundary mismatch')
+    # Qualified-CQR checkpoints need additional on/off-policy state, which older
+    # checkpoint schemas did not persist. Never silently invent it on recovery.
+    if saved.get('cqr') is not None:
+        raise ValueError('qualified CQR same-phase recovery state is not persisted')
+    horizon = dict(saved['horizon'])
+    allowed = horizon.pop('allowed_stage')
+    trainer.horizon_curriculum = HorizonConfig(**horizon)
+    trainer.horizon_curriculum.bind([boundary['wm']['sha256']])
+    if trainer.horizon_curriculum.allowed_stage != allowed:
+        raise ValueError('looplong recovery trusted horizon gate changed')
+    trainer.exploration = ExplorationConfig(**saved['exploration']) if saved['exploration'] else None
+    trainer.long_credit_requested = bool(boundary['flags'].get('long_credit'))
+    trainer.long_credit_trusted_s = int(boundary['horizon_s'])
+    trainer.looplong_real_credit = RealPairCredit.from_boundary(boundary)
+    if trainer.looplong_real_credit.excluded_worlds:
+        from .real_share import exclude_development_starts
+        trainer.start_states = exclude_development_starts(
+            trainer.start_states, trainer.looplong_real_credit.excluded_worlds)
+        if payload['sampler'] is not None:
+            trainer.start_states.load_state_dict(payload['sampler'])
+    trainer.long_credit = None
+    refusal = receipt['prior']['looplong_long_credit']
+    if refusal.get('qualified') is not False:
+        raise ValueError('looplong recovery requires the original unqualified credit receipt')
+    source = path.parent / f"CQR_{boundary['wm']['sha256'][:16]}_REFUSED.json"
+    if hashlib.sha256(checked_path(source).read_bytes()).hexdigest() != refusal['artifact_sha256']:
+        raise ValueError('looplong recovery original credit refusal hash mismatch')
+    shutil.copyfile(source, output / source.name)
+    trainer.long_credit_refusal = dict(refusal)
+    trainer.looplong_boundary = boundary
+    trainer.looplong_logging = True
+    _restore_rng(payload['rng'], trainer.device)
+    return {'checkpoint_sha256': receipt['checkpoint_sha256'],
+            'horizon': trainer.horizon_curriculum.as_dict(),
+            'exploration': trainer.exploration.as_dict() if trainer.exploration else None,
+            'credit_refusal_sha256': refusal['artifact_sha256'], 'rng_restored': True}
