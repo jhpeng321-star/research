@@ -1,0 +1,32 @@
+{
+ "task": "S-C2PREP",
+ "observed_utc": "2026-10-27T03:39:38Z",
+ "verification": "PASS",
+ "status": "SUPERSEDED_BY_S-C2H60",
+ "wm1_check": "ACCEPT",
+ "wm1_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+ "horizon_used_s": 30,
+ "updates_completed": 53,
+ "checkpoint_update": 233,
+ "checkpoint_sha256": "ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283",
+ "final_native_gate": "NOT_PRODUCED: main superseded before completion",
+ "progress_gate": {"update": 190, "passed": true, "mean_delta": -0.010866641998291016},
+ "latest_native_panel": {"update": 230, "passed": true, "mean_delta": -0.42615699768066406, "adoptable_receipt": false},
+ "paircrit_at_update233": {
+  "fit_n": 22, "fit_rmse": 1449.157793560375, "fit_zero_rmse": 1497.1784353298794,
+  "development_n": 4, "development_rmse": 1997.1447192366788, "development_zero_rmse": 1971.1435598817752,
+  "source_policy_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "off_policy_after_actor_update": true
+ },
+ "own_driver": {"pid": 85784, "start_ticks": "844014193", "live": false},
+ "own_actor": {"pid": 90493, "start_ticks": "844953642", "live": false},
+ "successor_observed": {"task": "S-C2H60", "coordinator_pid": 91911, "start_ticks": "845196315", "horizon_s": 60, "gate": "pending"},
+ "budget": {"charged": 176473, "cap": 210000, "remaining": 33527, "collection_need": 36933, "projected_total": 213406, "additional_cap_needed": 3406},
+ "collection_dispatched": false,
+ "offline_tests_passed": 74,
+ "source_manifest_sha256": "8e08c5e5afe090e8e29926b9625d772a0ab861aaae6d82555c4b9d5b06e0afcb",
+ "tests_log_sha256": "a415a723ba7d4de526fab069cf37679f19378d84f17cfbff1acf33cf9d4f1cea",
+ "selection_sha256": "fa7dc33a59415b89f6d696b4004fec43ba9d4fc9cf58afca0715680dfcf7a42d",
+ "remote_receipt": "gpuA:/root/autodl-tmp/c4/restart20261026/C2PREP_SUPERSEDED.json",
+ "remote_receipt_sha256": "918c2b7e9057cafc0f7117f82f239afc8a6b75dbf8c106868224e148dc23dd89"
+}

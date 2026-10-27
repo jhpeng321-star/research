@@ -182,7 +182,7 @@ def test_failed_attempts_remain_charged_and_long_cap_stops_dispatch(tmp_path, mo
     rows = [json.loads(s) for s in (root / "seed_ledger.jsonl").read_text().splitlines()]
     before = sum(r.get("long_group_sim_s_charged", 0) for r in rows)
     assert before == 7200
-    with pytest.raises(loop.Refused, match="8,000"):
+    with pytest.raises(loop.Refused, match=r"8,?000"):
         fast.collect(loop, cfg, state, {"attempt": 9}, root)
     assert state["sim_s_charged"] == sum(r.get("sim_s_charged", 0) for r in rows)
 

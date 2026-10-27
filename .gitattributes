@@ -99,3 +99,10 @@ R9_GATE2.md text eol=lf
 /tools/loopresume/verify_c2h60.py -text
 /tools/loopresume/receipts_c2h60/*.json -text
 /tests/unit/test_c2h60.py -text
+
+# Preserve the registered S-C2PREP source and superseded handoff bytes.
+/tools/loopresume/c2prep*.py -text
+/tools/loopresume/observe_c2prep.py -text
+/tools/loopresume/verify_c2prep.py -text
+/tools/loopresume/receipts_c2prep/*.json -text
+/tests/unit/test_c2prep.py -text

@@ -385,3 +385,47 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
   Coordinator91911/actor91912 live,176473charged and allCPU phasespending.
   Append-only shared registration and loop events updated. Local commit follows;
   no push. Exit with detached phase running; completion/native verdict pending.
+
+## S-C2PREP — prepared/verified; superseded by S-C2H60 (2026-10-27 11:40 UTC+8)
+
+- Prospective main08:05 amendment appended to shared register and loop JSON:
+  C1checkpoint64f70af4, cap0.65, paired criticON100warmup, breakdown/conformalOFF;
+  only the60s curriculum knot changes300->190 (verified update180/anchor0),
+  retaining fixed10s scoring and all original native/WM/config/panel vetoes.
+  **74unit/integration checks PASS7.73s; RuffPASS.** Stale8,000-vs8000 test-message
+  assertion repaired; failed test/source receipts retained. Original WM/check
+  driver80364/trainer81201 were never signalled or modified.
+- **WM1 unchanged check ACCEPT02:12:10Z**, candidateSHA
+  `5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e`;
+  paired-difference error170.211vs255.496veh-s, sign66.67%vs62.5%. Current-WM
+  horizon gate30/60PASS. Three isolated60s updates finite:119.889/50.440/62.559s,
+  peak7.816GiBallocated/9.316GiBreserved under30.793GiBcap. Registered max-time
+  projection17983s>10800s selected30s fallback before fullphase;30s smoke
+  58.341/30.295/29.977s, peak3.080/4.072GiB, projection+smokes9257sfits.
+- Detached **85784/start844014193**, actor**90493/start844953642**, started fullphase
+  02:48:42Z. Completed53newupdates181–233 on acceptedWM1; phase-update10progress
+  gatePASS, mean-0.010866642. Latest measured native panel at230PASS16/16,
+  mean-0.426156998; **no final deployment gate/selected adoption was produced**.
+  New main11:20 **S-C2H60** cooperatively STOPped the30s actor at03:21:20Z;
+  checkpoint saved233, both own processes exited03:21:37Z. Original outputs intact:
+  `arm/loop/policy/c02/policy_latest.pt`, SHA
+  `ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283`.
+- Paired labels retain11fitting/2developmentworlds (22/4starts), C1policy source.
+  Fit/development RMSE beforewarmup1497.178/1971.144; after100warmup1443.975/
+  2040.975; independent CPU-only checkpoint233diagnostics1449.158/1997.145.
+  Zero-difference baselines1497.178/1971.144: fit improves, development isworse.
+  Diagnostics are off-policy after actor updates; retain registered next-boundary
+  monitoring, no unilateral reversion/calibration enabled.
+- **SUPERSEDED_BY_S-C2H60**, not a scientific gate failure or completed budget stop.
+  Separate successor91911/start845196315 (actor91912/start845196330),60s,
+  nowowns continuation; no successor process/state/config changed by this task.
+  **176473/210000charged,33527remaining; no C2collection.** Exact nextcollection
+  need36933, projected213406, **additional cap3406**. Successor finalgate/policy
+  completion and WAIT_OWNER_BUDGET remain its responsibility.
+- Authoritative `gpuA:/root/autodl-tmp/c4/restart20261026/C2PREP_SUPERSEDED.json`
+  SHA`918c2b7e9057cafc0f7117f82f239afc8a6b75dbf8c106868224e148dc23dd89`;
+  compact local`tools/loopresume/receipts_c2prep/SUPERSEDED.json`. Source manifest
+  `8e08c5e5afe090e8e29926b9625d772a0ab861aaae6d82555c4b9d5b06e0afcb`.
+  No-dispatch verification:`python -B -m tools.loopresume.verify_c2prep`.
+  Original standby85660 was replaced childlessly before WMcompletion to enforce
+  non-resource-smoke fail-closed handling. Local task commit only; no push.
