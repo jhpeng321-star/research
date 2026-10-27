@@ -1,0 +1,82 @@
+{
+  "metadata/c00_RUN_SUMMARY.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c00/RUN_SUMMARY.json",
+    "sha256": "4add8b3e8c36293577685f84ef0678e86a92661840fae6f679a37ce4cf68511e"
+  },
+  "metadata/c00_native_gate_result.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c00/native_gate_result.json",
+    "sha256": "1e4c29aa026a5f01c8044630e2db5f1f48c7a6e1955d1622a060818dfa90a9f2"
+  },
+  "metadata/c01.a3_RUN_SUMMARY.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c01.a3/RUN_SUMMARY.json",
+    "sha256": "969a176617772e4dc8270fbe34c858ee65d8747d0db391a2f230fca1a50c05e6"
+  },
+  "metadata/c01.a3_native_gate_result.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c01.a3/native_gate_result.json",
+    "sha256": "3cce980feacf34e55db8e0c9178553f58330ff885996479e4e53f8f67b990a0f"
+  },
+  "metadata/c02.h60b.r2_RUN_SUMMARY.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/RUN_SUMMARY.json",
+    "sha256": "498cea98619d8c2c8085d9ca3604f1d93476baf8c4399238449ffdf41f8225dc"
+  },
+  "metadata/c02.h60b.r2_native_gate_result.json": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/native_gate_result.json",
+    "sha256": "e4f1729d2d4edf1fd9ea0f77e38e102f52c45cdddf7904ee712b4106b4a7395b"
+  },
+  "deployed/policy.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/policy.py",
+    "sha256": "b32dd8c74d14f06427f0cc008b996a69733977a541ee3f0649bef159b644e4fb"
+  },
+  "deployed/dreamer.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/dreamer.py",
+    "sha256": "f9a908218dbf177674ae0f422256e723485a7b36ff65163c5cc70bc96775945d"
+  },
+  "deployed/policy14.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/policy14.py",
+    "sha256": "59e5db0f49e6532defc803fcbd59b882b84a796effce7c163a8de2b40a8cad28"
+  },
+  "deployed/policy14_cli.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/policy14_cli.py",
+    "sha256": "351318e0fe62bf401f3f03b6fceb6ac9a1aad21a0753c00e46b2cd2ab9981411"
+  },
+  "deployed/counterfactual.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/counterfactual.py",
+    "sha256": "1c82199296dc706b8448bf22433d97a027a9869c860f7681b1d0b9ceb8d5bd6b"
+  },
+  "deployed/coopw.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/coopw.py",
+    "sha256": "dd10d05839880f6de031497e85adf79646e98f022cc4361d64492f9d185faf8d"
+  },
+  "deployed/paircrit.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/paircrit.py",
+    "sha256": "2c798617be68b3e92122f0f8630c8e0a99a4f39ff99758585f20325e01ce6966"
+  },
+  "deployed/longcritic.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/longcritic.py",
+    "sha256": "de1a2e6bb3e4adf1d1a8f1de5c8c148926e662cd6126d71ed3523b5acfc1b906"
+  },
+  "deployed/bridge.py": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/src/wms/control/bridge.py",
+    "sha256": "555356bbdf4b01e0af2e1b303631eb67774094e6badc8bf3ae5628ec41817162"
+  },
+  "deployed/c4_policy14_c1_fallback.toml": {
+    "source": "/root/autodl-tmp/c4/restart20261026/runtime_c1/configs/c4_policy14_c1_fallback.toml",
+    "sha256": "66d6044a379de1593f5e2c6758a35ab5df83067029c9b2eb82073cf67fc77a18"
+  },
+  "checkpoints/c01_off.pt": {
+    "source": "/home/ubuntu/e3long/inputs/coopoff_cycle1/policy_latest.pt",
+    "sha256": "e1fa4881bbc5c89d05298e979d98b23284308331ad1bbb12f9608fa67e105675"
+  },
+  "checkpoints/c00.pt": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c00/policy_native_best.pt",
+    "sha256": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5"
+  },
+  "checkpoints/c01_on.pt": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c01.a3/policy_native_best.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+  },
+  "checkpoints/c02.pt": {
+    "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/policy_native_best.pt",
+    "sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128"
+  }
+}
