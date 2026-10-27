@@ -34,7 +34,11 @@ def variant_overrides(variant):
     assert variant == 'combined'
     return ['model.mainline_interaction_residual=true', 'model.mainline_residual_hidden=64',
             'optim.lane_v5_long=true', 'optim.lane_v5_long_lr_scale=0.05',
-            'loss.longwm_extra_paired="e3_pairs"']
+            'loss.longwm_extra_paired="e3_pairs"',
+            # Measured 178 s/step at 300 s unroll: at the loop default 0.25 only ~12 of ~50
+            # affordable updates would be paired (S-LONGLOSSTEST had 2 of 15). 0.75 keeps
+            # some ordinary anchoring while making the long-run paired loss the main signal.
+            'loss.paired_diff.fraction=0.75']
 
 
 def apply_lr_scales(overrides, extra):
@@ -219,7 +223,8 @@ def train(variant, dry_run=False):
                       'remaining_s': CAP_S-(time.monotonic()-start)})
                 if len(history) % SELECT_EVERY == 0:
                     select_long(len(history))
-                    diagnostic_120s(len(history))
+                    if len(history) % (3*SELECT_EVERY) == 0:
+                        diagnostic_120s(len(history))
                     mirror()
                     if stale >= SELECT_PATIENCE:
                         reason, stop = 'long_selection_early_stop', True
