@@ -25,9 +25,11 @@ The delay objective is the existing horizon-gate t0-HDV delay proxy, arm-native,
 not source-inclusive full-fleet travel time. All five ablations share initial
 states, commands and randomness with baseline. Population-default ablation must
 replace inferred physical driver parameters while preserving learned embeddings.
-Residual-off means the longitudinal learned acceleration residual only; courtesy,
-learned lanes and learned merge remain. Other switches remove just their named
-longitudinal contribution.
+Residual-off means pure longitudinal IDM physics with inferred driver settings:
+zero the attention/temporal acceleration residual, courtesy, yield and ramp
+adaptation; learned lanes and learned merge remain. Other switches remove just
+their named longitudinal contribution. This clarification was made before any
+full-horizon scoring (only a 10 s plumbing smoke had run).
 
 At a single world there is one observation per arm contrast: a within-world
 regression slope for MAPPO-native alone is unidentifiable. Save its predicted/real
