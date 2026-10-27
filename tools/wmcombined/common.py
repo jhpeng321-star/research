@@ -47,7 +47,7 @@ def event(**kw):
 
 def disk():
     free = shutil.disk_usage(OUT).free/2**30
-    if free < 3.25:
+    if free < 2.5:
         raise RuntimeError(f'disk stop: {free:.3f} GiB free')
     return free
 

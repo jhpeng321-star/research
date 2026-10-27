@@ -27,7 +27,7 @@ def remote(host, source, timeout=120):
 
 def state():
     remote('gpuR', f'''import pathlib,json,shutil,subprocess
-p=pathlib.Path({str(OUT)!r}); old=pathlib.Path({str(OLD)!r}); e3=pathlib.Path({str(E3)!r})
+p=pathlib.Path({(OUT).as_posix()!r}); old=pathlib.Path({(OLD).as_posix()!r}); e3=pathlib.Path({(E3).as_posix()!r})
 print('WMCOMBINED_EXISTS',p.exists(),'DISK_GIB',round(shutil.disk_usage(e3.parent).free/2**30,3))
 print('LONGLOSS_DONE',(old/'DONE.json').is_file(),'E3_OK',e3.is_dir(),
       'E3_SPLIT',(e3/'SPLIT.json').is_file())
@@ -62,7 +62,7 @@ def stage():
             (ROOT/'tools/longloss'/name).read_bytes()).decode()
     encoded = base64.b64encode(json.dumps(payload).encode()).decode()
     remote('gpuR', f'''import base64,json,pathlib,shutil,hashlib,os
-p=pathlib.Path({str(OUT)!r});old=pathlib.Path({str(OLD)!r});e3=pathlib.Path({str(E3)!r})
+p=pathlib.Path({(OUT).as_posix()!r});old=pathlib.Path({(OLD).as_posix()!r});e3=pathlib.Path({(E3).as_posix()!r})
 assert p.parent.is_dir() and not p.exists(),'existing task directory; inspect instead of duplicate staging'
 assert (old/'DONE.json').is_file(),'S-LONGLOSSTEST DONE.json missing (wait condition)'
 assert (old/'DESIGN.json').is_file() and e3.is_dir(),'longloss/e3data inputs missing'
@@ -92,7 +92,7 @@ def sync():
                for p in sorted((ROOT/'tools/wmcombined').glob('*.py'))}
     encoded = base64.b64encode(json.dumps(payload).encode()).decode()
     remote('gpuR', f'''import pathlib,base64,json,hashlib
-p=pathlib.Path({str(OUT)!r})
+p=pathlib.Path({(OUT).as_posix()!r})
 assert p.is_dir() and not (p/'LAUNCH.lock').exists(),'never replace running code'
 d=json.loads((p/'STAGING.json').read_text())
 for name,b64 in json.loads(base64.b64decode({encoded!r})).items():
@@ -105,7 +105,7 @@ print('PRELAUNCH_CODE_SYNCED')
 
 def preflight():
     remote('gpuR', f'''import os,sys,pathlib,json,ast
-p=pathlib.Path({str(OUT)!r});rt=p/'runtime'
+p=pathlib.Path({(OUT).as_posix()!r});rt=p/'runtime'
 os.environ['CUDA_VISIBLE_DEVICES']=''
 sys.path[:0]=[str(p/'code'),str(rt/'src'),str(rt)]
 from guard import install,safe
@@ -138,25 +138,25 @@ assert float(last.weight.detach().abs().sum())==0.0 and float(last.bias.detach()
 import importlib.util
 spec=importlib.util.spec_from_file_location('acc',rt/'tools/loop14_checks/accept.py')
 acc=importlib.util.module_from_spec(spec);spec.loader.exec_module(acc)
-_,_,wm2=acc.load_arm(rt/'configs/c4_wm_loop14_r16_ft.toml',{str(OUT/'wm2/wm_s.pt')!r})
+_,_,wm2=acc.load_arm(rt/'configs/c4_wm_loop14_r16_ft.toml',{(OUT/'wm2/wm_s.pt').as_posix()!r})
 del wm2
 # (4) E3 paired sources build for BOTH held-out roles (never 'fit')
 from e3_score import build_source
-cal=build_source({str(E3)!r},'calibration'); val=build_source({str(E3)!r},'validation')
+cal=build_source({(E3).as_posix()!r},'calibration'); val=build_source({(E3).as_posix()!r},'validation')
 assert len(cal.groups)==36 and len(val.groups)==36
 # (5) e3 evaluator plumbing smoke on WM2 (CPU, one group, 20 steps)
 from tools.r10_attribution import load_model
 cfg2,settings,model=load_model(str(rt/'configs/c4_wm_loop14_r16_ft.toml'),str(p/'wm2/wm_s.pt'),
  ('data.entries_v2=true','loss.paired_diff.couple_randomness=true'))
 import torch
-doc=__import__('e3_score').evaluate(model,settings,{str(E3)!r},'calibration',
+doc=__import__('e3_score').evaluate(model,settings,{(E3).as_posix()!r},'calibration',
  torch.device('cpu'),indexes=[0],steps=20,horizons=(10.,))
 h=doc['horizons']['10'];assert h['n_pairs']==3 and h['n_groups']==1
 import math
 assert all(math.isfinite(v) for v in (h['mean_signed_error'],h['mae']))
 # (6) verdict-tool bootstrap identity on the reference format
 from paired_statistics import bias,compare
-ref=json.loads((pathlib.Path({str(OLD)!r})/'wm1_gate.json').read_text())
+ref=json.loads((pathlib.Path({(OLD).as_posix()!r})/'wm1_gate.json').read_text())
 r=compare(ref,ref)
 assert r['absolute_300s_bias_reduction']==0 and r['reduction_ci95']==[0.,0.]
 assert len(ref['rows'])==48 and r['n_worlds']==20
@@ -174,7 +174,7 @@ print((p/'PREFLIGHT.json').read_text())
 def prepare():
     # Detached-free, bounded, CPU: stage inputs (WM2 fetch + receipts) before launch.
     remote('gpuR', f'''import pathlib,sys,subprocess,os
-p=pathlib.Path({str(OUT)!r});assert p.is_dir() and (p/'STAGING.json').is_file()
+p=pathlib.Path({(OUT).as_posix()!r});assert p.is_dir() and (p/'STAGING.json').is_file()
 assert not (p/'DESIGN.json').exists(),'already prepared'
 sys.path.insert(0,str(p/'code'))
 from guard import install
@@ -191,7 +191,7 @@ raise SystemExit(r.returncode)
 def dryrun():
     # Full assemble + optimizer-contract check on CPU (no checkpoints, no training).
     remote('gpuR', f'''import pathlib,sys,subprocess,os
-p=pathlib.Path({str(OUT)!r});assert (p/'DESIGN.json').is_file(),'prepare first'
+p=pathlib.Path({(OUT).as_posix()!r});assert (p/'DESIGN.json').is_file(),'prepare first'
 sys.path.insert(0,str(p/'code'))
 from guard import install
 install()
@@ -206,7 +206,7 @@ raise SystemExit(r.returncode)
 
 def launch():
     remote('gpuR', f'''import pathlib,subprocess,os,sys,json
-p=pathlib.Path({str(OUT)!r});assert (p/'PREFLIGHT.json').is_file()
+p=pathlib.Path({(OUT).as_posix()!r});assert (p/'PREFLIGHT.json').is_file()
 assert not any((p/n).exists() for n in ['LAUNCH.json','RUNNING.json','DONE.json'])
 sys.path.insert(0,str(p/'code'))
 from common import environment,write,disk,now
@@ -224,7 +224,7 @@ print((p/'LAUNCH.json').read_text())
 
 def verify():
     remote('gpuR', f'''import pathlib,json,os,subprocess
-p=pathlib.Path({str(OUT)!r})
+p=pathlib.Path({(OUT).as_posix()!r})
 if not (p/'LAUNCH.json').is_file():
  print('NOT_LAUNCHED');raise SystemExit
 r=json.loads((p/'LAUNCH.json').read_text());pid=r['pid']
@@ -244,7 +244,7 @@ if tl.exists():print('TRAIN_TAIL',tl.read_text()[-1500:])
 print(subprocess.run(['nvidia-smi','--query-gpu=memory.used,utilization.gpu','--format=csv,noheader'],capture_output=True,text=True).stdout)
 ''', timeout=45)
     remote('gpuA', f'''import pathlib
-p=pathlib.Path({str(OUT)!r})
+p=pathlib.Path({(OUT).as_posix()!r})
 for n in ['LAUNCH.json','RUNNING.json','PREFLIGHT.json','DONE.json','RESULTS.json']:
  q=p/n
  if q.is_file():print('MIRROR',n,q.read_text()[:1500])
