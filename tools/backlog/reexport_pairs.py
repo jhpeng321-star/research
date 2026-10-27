@@ -33,15 +33,22 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def tape_dir(work_root: Path, entry: dict, cycle: str) -> Path:
-    base = entry["branch"]["base_episode"]
-    job = Path(base).name
-    world_dir = Path(base).parents[2].name        # .../work/<wXXXXXX>/C4-.../c02/collect/episodes
-    arm = entry["arm"]                             # loop14_pairs_b0360_native
-    tag = arm.rsplit("_", 1)[1]                    # native | policy
+def tape_dir(work_root: Path, entry: dict, cycle: str):
+    """Branch tape of one manifest entry on THIS host, or None when its world lives elsewhere.
+
+    The cycle directory may be a retry attempt (``c01.a4``): all ``<cycle>*`` siblings are
+    searched and exactly one tape must match (fail closed otherwise)."""
+    base = Path(entry["branch"]["base_episode"])   # .../work/<wXXXXXX>/C4-.../<cycle>/collect/episodes/policy/<job>
+    tag = entry["arm"].rsplit("_", 1)[1]            # native | policy
     t_k = int(entry["branch"]["branch_t_s"])
-    return (work_root / world_dir / "C4-LOOP14-COOPON-20261026" / cycle
-            / "collect" / "branches" / "policy" / job / f"t{t_k:04d}_{tag}")
+    world = work_root / base.parents[5].name        # host-local rebase of the recorded absolute path
+    if not world.is_dir():
+        return None
+    hits = sorted(world.glob(f"*/{cycle}*/collect/branches/policy/{base.name}/t{t_k:04d}_{tag}"))
+    hits = [h for h in hits if (h / "episode.npz").is_file()]
+    if len(hits) != 1:
+        raise SystemExit(f"REFUSED: {len(hits)} tapes for {base.name} t{t_k} {tag}: {hits}")
+    return hits[0]
 
 
 def main() -> int:
@@ -69,15 +76,15 @@ def main() -> int:
         print(f"REFUSED: {out} exists (never overwritten)", file=sys.stderr)
         return 2
     work_root = Path(args.work_root)
-    entries, j_checks = [], 0
+    entries, j_checks, skipped = [], 0, 0
     for src_entry in original["episodes"]:
         if only and int(src_entry["seed"]) not in only:
             continue
         kind = src_entry["branch"]["kind"]
         tape = tape_dir(work_root, src_entry, args.cycle)
-        if not (tape / "episode.npz").is_file():
-            print(f"REFUSED: tape missing on this host: {tape}", file=sys.stderr)
-            return 3
+        if tape is None:
+            skipped += 1                              # world held by the other collection host
+            continue
         entry = convert_episode(tape, out)
         rec = entry["queue_arrays"].get("pair_cost_reconciliation")
         if rec is None:
@@ -110,7 +117,8 @@ def main() -> int:
                                      "cycle": args.cycle, "n_episodes": len(entries),
                                      "j_receipt_checks": j_checks,
                                      "original_manifest_episodes": len(original["episodes"]),
-                                     "worlds": sorted(only) if only else "all"}}
+                                     "worlds": sorted(only) if only else "all",
+                                     "skipped_other_host_entries": skipped}}
     (out / "C4_EPISODES_MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
     sums = {}
     for p in sorted(out.rglob("*")):
@@ -118,7 +126,7 @@ def main() -> int:
             rel = p.relative_to(out).as_posix()
             sums[rel] = sha256(p)
     (out / "SHA256SUMS.json").write_text(json.dumps(sums, indent=1, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"out": str(out), "episodes": len(entries), "j_checks": j_checks,
+    print(json.dumps({"out": str(out), "episodes": len(entries), "j_checks": j_checks, "skipped": skipped,
                       "still_waiting_total": sum(e["queue_arrays"]["still_waiting_at_end"]
                                                  for e in entries)}))
     return 0
