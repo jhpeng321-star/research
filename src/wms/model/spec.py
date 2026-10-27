@@ -167,6 +167,13 @@ class ModelSpec:
     # R16 (S-RAMPSPEED): learned ramp-HDV speed adaptation to the target-lane leader (three shared
     # scalars, wms.model.ramp_speed_adapt).  No module, tensors or forward operations when disabled.
     ramp_speed_adapt_learnable: bool = False
+    # S-RAMPFIX (default OFF = bit-identical, no new tensor): learned mainline-HDV interaction
+    # residual (wms.model.mainline_residual).  One zero-initialised acceleration offset per
+    # mainline slot (upstream + merge zone), conditioned on local interaction state, added to
+    # the combined learned accel_delta BEFORE the existing gate / bounds / clamp.
+    mainline_interaction_residual: bool = False
+    # Width of the mainline residual MLP (no architecture change elsewhere).
+    mainline_residual_hidden: int = 64
 
     def __post_init__(self) -> None:
         if (not isinstance(self.follower_courtesy_version, int)
@@ -187,9 +194,17 @@ class ModelSpec:
                      "follower_courtesy_rollout_grad", "follower_courtesy_state_grad",
                      "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table",
                      "residual_accel_off", "follower_courtesy_off",
-                     "mainline_merge_yield_learnable", "ramp_speed_adapt_learnable"):
+                     "mainline_merge_yield_learnable", "ramp_speed_adapt_learnable",
+                     "mainline_interaction_residual"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
+        if not isinstance(self.mainline_residual_hidden, int) \
+                or isinstance(self.mainline_residual_hidden, bool) \
+                or self.mainline_residual_hidden < 1:
+            raise ValueError("mainline_residual_hidden must be an integer >= 1")
+        if self.mainline_interaction_residual and self.black_box:
+            raise ValueError("mainline_interaction_residual needs the structured WM-S "
+                             "(black_box off)")
         if not isinstance(self.follower_courtesy_hidden, int)                 or isinstance(self.follower_courtesy_hidden, bool)                 or self.follower_courtesy_hidden < 1:
             raise ValueError("follower_courtesy_hidden must be an integer >= 1")
         if self.follower_courtesy and self.black_box:

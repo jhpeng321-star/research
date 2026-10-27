@@ -152,6 +152,10 @@ class TrainSettings:
     # learning rate for parameters whose names start with the prefix (longest prefix wins).
     freeze_prefixes: tuple[str, ...] = ()
     lr_scale: Optional[Mapping[str, float]] = None
+    # S-RAMPFIX lane_v5_long (default OFF = bit-identical): unfreeze the existing lane_v5
+    # network with its own parameter group at lane_v5_long_lr_scale (no architecture change).
+    lane_v5_long: bool = False
+    lane_v5_long_lr_scale: float = 0.05
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
@@ -560,9 +564,13 @@ class TrainSettings:
                  "freeze_prefixes must not contain duplicates")
         _require(self.lr_scale is None or (
             all(isinstance(prefix, str) and prefix for prefix in self.lr_scale)
-            and all(math.isfinite(float(scale)) and float(scale) > 0
+            and all(math.isfinite(float(scale)) and scale > 0
                     for scale in self.lr_scale.values())),
             "lr_scale must map non-empty prefixes to positive finite multipliers")
+        _require(isinstance(self.lane_v5_long, bool), "lane_v5_long must be a boolean")
+        _require(math.isfinite(float(self.lane_v5_long_lr_scale))
+                 and float(self.lane_v5_long_lr_scale) > 0.0,
+                 "lane_v5_long_lr_scale must be finite and positive")
         _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
                  "flip_rate_weight must be finite and non-negative")
         _require(math.isfinite(self.flip_rate_allowance)

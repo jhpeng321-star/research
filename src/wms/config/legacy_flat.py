@@ -51,6 +51,12 @@ FLAT_TO_PATH: dict[str, str] = {
     "mainline_merge_yield_learnable": "model.mainline_merge_yield_learnable",
     # R16 LEARNABLE RAMP SPEED ADAPTATION
     "ramp_speed_adapt_learnable": "model.ramp_speed_adapt_learnable",
+    # S-RAMPFIX LEARNED MAINLINE INTERACTION RESIDUAL
+    "mainline_interaction_residual": "model.mainline_interaction_residual",
+    "mainline_residual_hidden": "model.mainline_residual_hidden",
+    # S-RAMPFIX LANE_V5 LONG-RUN PARAMETER GROUP
+    "lane_v5_long": "optim.lane_v5_long",
+    "lane_v5_long_lr_scale": "optim.lane_v5_long_lr_scale",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -554,6 +560,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "mainline_merge_yield_learnable",
     # R16 S-RAMPSPEED
     "ramp_speed_adapt_learnable",
+    # S-RAMPFIX (default OFF = bit-identical receipts/configs)
+    "mainline_interaction_residual", "mainline_residual_hidden",
+    "lane_v5_long", "lane_v5_long_lr_scale",
 )
 
 

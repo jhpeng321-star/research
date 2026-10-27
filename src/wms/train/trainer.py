@@ -184,9 +184,26 @@ class WmSTrainer:
         self.composer = build_loss(s, physics=self.model.physics)
         self.runner = UnrollRunner(self.model, s, self.composer, projection=projection,
                                    device=self.device)
+        # S-RAMPFIX lane_v5_long (default OFF = bit-identical optimizer): unfreeze the
+        # existing lane_v5 network with its own parameter group at its own lr scale.
+        freeze, scale = tuple(s.freeze_prefixes), dict(s.lr_scale or {})
+        if s.lane_v5_long:
+            for name, parameter in self.model.named_parameters():
+                if name.startswith("lane_v5"):
+                    parameter.requires_grad_(True)
+            freeze = tuple(p for p in freeze if p != "lane_v5")
+            scale["lane_v5"] = float(s.lane_v5_long_lr_scale)
         self.optimizer, self.optimizer_groups = build_optimizer(
             self.model, lr=s.lr, weight_decay=s.weight_decay,
-            freeze_prefixes=tuple(s.freeze_prefixes), lr_scale=s.lr_scale)
+            freeze_prefixes=freeze, lr_scale=scale or None)
+        if s.lane_v5_long:
+            # Receipt annotation only (flag-off reports keep the exact legacy shape).
+            self.optimizer_groups["lane_v5_long"] = {
+                "lr_scale": float(s.lane_v5_long_lr_scale),
+                "trainable": all(any(n.startswith("lane_v5")
+                                     for n in self.optimizer_groups["trainable_tensor_names"])
+                                 for n, p in self.model.named_parameters()
+                                 if n.startswith("lane_v5") and p.numel() > 0)}
         print("WM-S optimizer groups: " + json.dumps(self.optimizer_groups, sort_keys=True),
               file=sys.stderr)
         self.dataset, self.val_dataset = dataset, val_dataset

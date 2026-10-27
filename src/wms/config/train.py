@@ -269,6 +269,14 @@ class ModelConfig:
     mainline_merge_yield_learnable: bool = False
     # R16 (default false = no new parameter): learned ramp-HDV speed adaptation to the target lane.
     ramp_speed_adapt_learnable: bool = False
+    # S-RAMPFIX (default false = no new parameter, bit-identical): learned mainline-HDV
+    # interaction residual (wms.model.mainline_residual).  One zero-initialised
+    # acceleration offset per mainline slot (upstream + merge zone) conditioned on local
+    # interaction state, added to the combined learned accel_delta before the existing
+    # gate / bounds / clamp; trainable as its own optimizer parameter group.
+    mainline_interaction_residual: bool = False
+    # Width of the mainline residual MLP.
+    mainline_residual_hidden: int = 64
     checkpoint_residual: bool = False
     checkpoint_step: bool = False
     checkpoint_forward: bool = False
@@ -471,6 +479,12 @@ class ModelConfig:
                 "model.mainline_merge_yield_learnable must be a boolean")
         require(isinstance(self.ramp_speed_adapt_learnable, bool),
                 "model.ramp_speed_adapt_learnable must be a boolean")
+        require(isinstance(self.mainline_interaction_residual, bool),
+                "model.mainline_interaction_residual must be a boolean")
+        require(isinstance(self.mainline_residual_hidden, int)
+                and not isinstance(self.mainline_residual_hidden, bool)
+                and self.mainline_residual_hidden >= 1,
+                "model.mainline_residual_hidden must be an integer >= 1")
         require(isinstance(self.lane_v5_extra_features, bool),
                 "model.lane_v5_extra_features must be a boolean")
         if self.lane_v5_extra_features:
@@ -1543,6 +1557,13 @@ class OptimConfig:
     """R5TOOLS: parameter-name prefixes excluded from training (``requires_grad=False``)."""
     lr_scale: Optional[dict[str, float]] = None
     """R5TOOLS: parameter-name prefix -> multiplier of the stage learning rate (None = off)."""
+    lane_v5_long: bool = False
+    """S-RAMPFIX (default false = bit-identical): unfreeze the existing lane_v5 network for
+    long-run fine-tuning (no architecture change).  Removes ``lane_v5`` from
+    ``freeze_prefixes``, sets ``requires_grad=True`` on its tensors and puts them in their
+    own optimizer group scaled by ``lane_v5_long_lr_scale``."""
+    lane_v5_long_lr_scale: float = 0.05
+    """Stage-learning-rate multiplier of the lane_v5 group when ``lane_v5_long`` is on."""
 
     def __post_init__(self) -> None:
         require(self.batch_size >= 1, "optim.batch_size must be positive")
@@ -1559,6 +1580,9 @@ class OptimConfig:
                         and is_finite(scale) and scale > 0.0
                         for prefix, scale in self.lr_scale.items()),
                     "optim.lr_scale needs non-empty prefixes and positive finite multipliers")
+        require(isinstance(self.lane_v5_long, bool), "optim.lane_v5_long must be a boolean")
+        require(is_finite(self.lane_v5_long_lr_scale) and self.lane_v5_long_lr_scale > 0.0,
+                "optim.lane_v5_long_lr_scale must be finite and positive")
         if self.batch_size_per_stage is not None:
             require(len(self.batch_size_per_stage) >= 1
                     and all(int(x) >= 1 for x in self.batch_size_per_stage),
