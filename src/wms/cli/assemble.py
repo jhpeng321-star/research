@@ -363,13 +363,29 @@ def _jam_min(data: Any, key: str = "jam_min_fraction") -> dict:
     return {key: value} if value > 0.0 else {}
 
 
+def _longwm_paired_sources(loss: Any, data: Any) -> tuple[list[Any], Any]:
+    """S-WMCOMBINED: the longwm paired pool = loop14_pairs (+ ``longwm_extra_paired``).
+
+    Returns ``(sources, extra)``; ``extra`` is None in the default bit-identical mode
+    where the pool is exactly ``loop14_pairs`` as before.
+    """
+    names = ('loop14_pairs',)
+    extra = getattr(loss, 'longwm_extra_paired', None)
+    if extra:
+        names = names + (str(extra),)
+    sources = [src for src in data.c4_sources if src.name in names]
+    if len(sources) != len(names):
+        raise ConfigError(f'loop longwm requires the paired c4 sources {names}')
+    return sources, extra
+
+
 def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str], str], *,
                     horizon: int, pack_k: Optional[int], heldout: Any, curriculum: tuple
                     ) -> tuple[Any, Any]:
     """PAIRLOSS: mix ``data.c4_sources`` and (``loss.paired_diff`` on) wrap paired batches."""
     from ..data.c4_episodes import build_c4_datasets, read_source_manifest
-    from ..data.c4_pairs import (PairedBatchDataset, PairedBranchSource, add_c4_sources,
-                                 mix_c4_sources, world_roles)
+    from ..data.c4_pairs import (ConcatPairedSource, PairedBatchDataset, PairedBranchSource,
+                                  add_c4_sources, mix_c4_sources, world_roles)
 
     data = cfg.data
     roots = {src.name: path(src.path) for src in data.c4_sources}
@@ -421,16 +437,14 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                                        "overridden_to_val": overridden}
     pair = cfg.loss.paired_diff
     paired = [src for src in data.c4_sources if src.paired]
+    extra_paired = None
     if cfg.loss.longwm_enabled:
         # Preserve ordinary replay shares; replace the paired-batch source with
         # THIS cycle's real POLICY/B tapes, never historical diagnostic pairs.
-        paired = [src for src in data.c4_sources if src.name == 'loop14_pairs']
-        if len(paired) != 1:
-            raise ConfigError('loop longwm requires loop14_pairs')
+        paired, extra_paired = _longwm_paired_sources(cfg.loss, data)
     if (pair.enabled or cfg.loss.longwm_enabled) and paired:
-        if len(paired) > 1:
+        if len(paired) > 1 and not (cfg.loss.longwm_enabled and extra_paired):
             raise ConfigError("loss.paired_diff supports one paired c4 source")
-        src = paired[0]
         # Stage mode retains the full curriculum horizon for eligibility/window switching;
         # fixed mode keeps the original constructor call and branch-length cap.
         pair_kwargs = dict(common)
@@ -438,8 +452,9 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
             pair_kwargs['arm_kinds'] = ('B', 'POLICY')
         if pair.horizon_mode == "stage":
             pair_kwargs.update(horizon_mode="stage", horizon_steps=_horizon_steps(cfg))
-        source = PairedBranchSource(
-            roots[src.name], name=src.name, **pair_kwargs)
+        sources = [PairedBranchSource(roots[s.name], name=s.name, **pair_kwargs)
+                   for s in paired]
+        source = sources[0] if len(sources) == 1 else ConcatPairedSource(sources)
         if cfg.loss.longwm_enabled:
             if source.horizon < 600 or any(not g['has_native_ref'] for g in source.groups):
                 raise ConfigError('loop longwm needs complete real paired 300s native-reference tapes')
@@ -449,7 +464,7 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                                    batch_size=int(cfg.optim.batch_size),
                                    seed=int(cfg.runtime.seed))
         print(f"paired batches: {source.receipt['n_groups']} groups / "
-              f"{source.receipt['n_windows']} windows from c4_sources[{src.name}], horizon "
+              f"{source.receipt['n_windows']} windows from c4_sources[{source.name}], horizon "
               f"{source.horizon} steps, fraction {float(pair.fraction)}", file=sys.stderr)
     return train, val
 

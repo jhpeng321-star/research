@@ -1395,6 +1395,11 @@ class LossConfig:
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
     longwm_enabled: bool = False
+    longwm_extra_paired: Optional[str] = None
+    """S-WMCOMBINED: name of ONE additional ``data.c4_sources`` entry whose real paired
+    branches join the loop longwm paired pool (``None`` = off, bit-identical: the paired
+    batches then come from ``loop14_pairs`` alone, exactly as before).  The named source
+    must exist, be paired, and never contribute ordinary replay windows on its own."""
     agg_delay: AggDelayConfig = field(default_factory=AggDelayConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)

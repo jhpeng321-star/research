@@ -197,6 +197,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_event_max_weight": "loss.lane_event.max_weight",
     "aggregate_weight": "loss.aggregate.weight",
     "longwm_enabled": "loss.longwm_enabled",
+    "longwm_extra_paired": "loss.longwm_extra_paired",
     "aggregate_field_weight": "loss.aggregate.field_weight",
     "aggregate_reward_weight": "loss.aggregate.reward_weight",
     "aggregate_flow_weight": "loss.aggregate.flow_weight",
@@ -465,7 +466,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "driver_update_rate", "driver_reveal_prob", "driver_reveal_max_s",
     "lane_event_weight", "lane_event_gamma", "lane_event_max_weight",
     "aggregate_weight", "aggregate_field_weight", "aggregate_reward_weight",
-    "longwm_enabled",
+    "longwm_enabled", "longwm_extra_paired",
     "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
     "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
     # A5 long-horizon aggregate delay loss
