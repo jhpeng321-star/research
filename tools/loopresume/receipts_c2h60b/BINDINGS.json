@@ -1,0 +1,107 @@
+{
+ "t": "2026-10-27T04:55:07Z",
+ "source": {
+  "tools/loopresume/c2h60b.py": "c1c0b475cd5b1a662712644e476b00e88c9690904d791aa89dded588e2659c30",
+  "tools/loopresume/c2h60b_box.py": "cce3d768ed7b65efbf9990f2ea57a3a0b725ab29385ee89bd2d64e387b2fc7d4",
+  "configs/c4_policy14_c2h60b.toml": "3d00d7e5a45e5c7219c0e79b5c26c986eced210837719536922e5691272f03f1",
+  "src/wms/control/policy14_cli.py": "351318e0fe62bf401f3f03b6fceb6ac9a1aad21a0753c00e46b2cd2ab9981411",
+  "src/wms/control/policy14_recovery.py": "b639787276a1fe729652c32fb065557d2cdf561cc2e9688ffc7b5f668dc1b406",
+  "tests/unit/test_policy14_recovery.py": "cd3330a607343784639fee511e2f30c7097bed85df80c355af23ac186f66fb39",
+  "tools/loopresume/c2h60_box.py": "84064e065d95640817f4dcf4352c1d3e378ec075be19422eb9f55122d92ecb8e",
+  "configs/c4_policy14_c2h60.toml": "cde5ed8c809559d04840b938b212f3a3ffec11cce80f589816145784717bc02e",
+  "configs/c4_policy14_c2prep.toml": "e9b1b8181e9972fa684880fd81cb762b6a597be0036d72d4007972e916284694",
+  "src/wms/control/paircrit.py": "2c798617be68b3e92122f0f8630c8e0a99a4f39ff99758585f20325e01ce6966"
+ },
+ "tests": {
+  "t": "2026-10-27T04:54:51Z",
+  "exit": 0,
+  "source_sha256": "cdbbed49de8bffda32d8818bc233ad9723227c6a70f1cd7d36a502dde3555dc1",
+  "log_sha256": "551ca9742fd9a423dcc35e3c396a8d1624f24b95042378906be3ebc90619ba82"
+ },
+ "amendment": {
+  "id": "S-C2H60B",
+  "t": "2026-10-27T04:55:07Z",
+  "authority": "main2026-10-27 12:45 fix-and-retry",
+  "markdown_registration_sha256": "0107403ebcfc8540d4c79420a530e6fbfd52121192994c873833fbf5e7207ee4",
+  "failed_processes": [
+   {
+    "pid": 91911,
+    "start_ticks": "845196315",
+    "t": "2026-10-27T03:29:09Z",
+    "task": "S-C2H60",
+    "bindings_sha256": "b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5"
+   },
+   {
+    "pid": 91912,
+    "start_ticks": "845196330"
+   },
+   {
+    "pid": 94910,
+    "start_ticks": "845679494",
+    "t": "2026-10-27T04:49:40Z",
+    "task": "S-C2H60B",
+    "bindings_sha256": "c6cd5849ae4688047b08986cf27680dc6ce341b5c6862b89398acdad7d853731"
+   },
+   {
+    "pid": 94911,
+    "start_ticks": "845679510"
+   }
+  ],
+  "failed_summary_sha256": "bfc163c414f29048dd411c2b7f3dd02f0969ef4ca4f4f35768e49d2edb3ab5d1",
+  "failure": "allocator-cap CUDA OOM; operational",
+  "saved_checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b/policy_latest.pt",
+  "saved_checkpoint_sha256": "d5d2f28060a927b1d0b692eb9b2397f40c9231c6e6d24af9e7edd7fda7c1d77b",
+  "saved_update": 241,
+  "retained_updates": 8,
+  "original_unsaved_updates_replayed": [
+   241,
+   249
+  ],
+  "original_phase_start": 233,
+  "original_phase_end": 383,
+  "logical_updates": 150,
+  "remaining_updates": 142,
+  "gpu_cap": 0.92,
+  "allocator": "expandable_segments:True",
+  "batch_starts": 1,
+  "checkpoint_every_update": true,
+  "warmup_repeated": false,
+  "share_selection_repeated": false,
+  "horizon_s": 60,
+  "paircrit": true,
+  "native_gate": "unchanged",
+  "charged": 176473,
+  "cap": 210000,
+  "after_gate": "WAIT_OWNER_BUDGET unless owner-approved SHA-bound registered raise",
+  "fallback": "if resource OOM persists, record/reduce starts batch; never horizon"
+ },
+ "recovery_sha256": "53a12d160137e9c3a65260e11df713d1a7c1198c7bd1c6533b65740d033c3c6a",
+ "previous_resume": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60/policy_native_best.pt",
+ "failed_processes": [
+  {
+   "pid": 91911,
+   "start_ticks": "845196315",
+   "t": "2026-10-27T03:29:09Z",
+   "task": "S-C2H60",
+   "bindings_sha256": "b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5"
+  },
+  {
+   "pid": 91912,
+   "start_ticks": "845196330"
+  },
+  {
+   "pid": 94910,
+   "start_ticks": "845679494",
+   "t": "2026-10-27T04:49:40Z",
+   "task": "S-C2H60B",
+   "bindings_sha256": "c6cd5849ae4688047b08986cf27680dc6ce341b5c6862b89398acdad7d853731"
+  },
+  {
+   "pid": 94911,
+   "start_ticks": "845679510"
+  }
+ ],
+ "wm_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+ "gate_sha256": "0cf99a3355cb9350561073c5834748725c26541b9621de31e7c03676c139b989",
+ "pairing_source_policy_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+}

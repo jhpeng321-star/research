@@ -1,0 +1,6 @@
+# Same scientific phase; durable per-update saves are enabled by the recovery receipt.
+extends = "c4_policy14_c2h60.toml"
+
+[run]
+gpu_memory_fraction = 0.92
+operational_recovery = "/root/autodl-tmp/c4/restart20261026/C2H60B_RECOVERY.json"

@@ -429,3 +429,84 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
   No-dispatch verification:`python -B -m tools.loopresume.verify_c2prep`.
   Original standby85660 was replaced childlessly before WMcompletion to enforce
   non-resource-smoke fail-closed handling. Local task commit only; no push.
+
+## S-C2H60B — operational OOM recovery (main 2026-10-27 12:45 UTC+8 authority)
+
+- Original91911/91912 failed03:51:26Z after logged249: allocator0.65 allowed
+  30.79GiB,30.38GiBallocated,16.16GiBphysicallyfree. This is an operational failure;
+  the11:43 short12.1GiBplateau was historical, not a later peak/memory guarantee.
+  Complete original30s and failed60s outputs/charges/source/logs remain on disk.
+- Latest original full60s checkpoint was **240**, `c02.h60/policy_native_best.pt`,
+  SHA`21c04bdc0f3821c4c05e9ce0bf85db919848fb39ca57d2cfff1fd80082ceead4`.
+  Preserve7logicalupdates234–240 and nativecurve233/240; unsaved241–249 are replayed
+  with their failed-attempt rows retained, never double-counted. Same original
+  **150logicalupdates234–383**, not a new150-updatephase. Cap is now**0.92** in
+  both TOML/environment; `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` explicit.
+  Batchstarts unchanged; if resourceOOM persists, register a starts-batch reduction
+  before retry, retain60s. Per-update full saves and allocated/reserved peak telemetry
+  are operational additions. Pairedcritic/partition/C1source64f70af4, acceptedWM1
+  5257a64c, low-sharemask, native16panel/10sclock/selection/vetoes stay bound.
+- First94725startup rejected143remaining as a non-multiple of10 before output/CUDA;
+  validator now checks original150phase length. Artifacts `c2h60b_no_actor/` retained.
+  Next94910/94911 was proactively STOPped through its own `c02.h60b/STOP`, saving
+  replay241 and exiting naturally04:53:08Z. Same-phase recovery must retain original
+  phase-start233 progress baseline when saved240 precedes phasegate243; baseline
+  handling corrected, predicate/panel/clock unchanged. No process signals.
+- **Actual successor warm state241**, `arm/loop/policy/c02.h60b/policy_latest.pt`,
+  SHA`d5d2f28060a927b1d0b692eb9b2397f40c9231c6e6d24af9e7edd7fda7c1d77b`;
+  all8logicalupdates234–241 retained, **142remaining242–383**. Separate original
+  native-best240 kept byte-for-byte. Full actor/group/critic/target/optimizers/duals/
+  RNG/samplers/pairedstate restored; no repeated warmup, target reset or share fit.
+  No bit-identical uninterrupted-run claim. Own administrativeSTOP summary and
+  originalOOM cause independently SHA-bound; all prior source/launch/memory receipts
+  archived in `c2h60b_gate_baseline_stop/`.
+- Detached coordinator **95283/start845712191**, actor **95284/start845712207**,
+  started04:55:07Z (**12:55:07UTC+8**), output `arm/loop/policy/c02.h60b.r2`,
+  driverlog `arm/driver_c2h60b.log`. **72offlinechecksPASS3.86s**, RuffPASS;
+  source manifestSHA`cdbbed49de8bffda32d8818bc233ad9723227c6a70f1cd7d36a502dde3555dc1`,
+  bindingSHA`0d76a70f9cfd2850cc37b6a8a497f4b993b8721c4d397c991582ab62cf5519d9`.
+  Five-second own-PID watcher `C2H60B_MEMORY.jsonl`; allocator lifetime telemetry
+  `c02.h60b.r2/cuda_peaks.jsonl`. Fresh>=15finiteupdates AND>=20min watch required
+  before verified handoff; initial05:03:44Z snapshot6newupdates242–247 is provisional.
+- After383 the driver automatically verifies the unchanged native-relative gate,
+  adopts only its best eligible checkpoint, then **WAIT_OWNER_BUDGET** at
+  **176473/210000charged**. Collection36933 would project213406; no dispatch under
+  current cap. Only owner-approved Markdown raise prospectively bound through
+  `S-C2H60_OWNER_BUDGET_RAISE` permits canary-first collect->convert->wm_ft->check.
+  Registration/loop events append-only. Progress:
+  `python -B -m tools.loopresume.c2h60b progress`; read-only handoff verifier:
+  `python -B -m tools.loopresume.verify_c2h60b`. Verification/ETA receipt follows.
+- **13:19UTC+8 verification PASS:**17fresh updates242–258 finite (25logical phase
+  updates including retained8); **1447.416s/24.12min**,287five-second own-PID samples.
+  The previously failing update250 completed. Observed process peak **37388MiB =
+  36.512GiB**; allocator lifetime peaks **37201868800bytes =34.647GiB allocated**,
+  **38757466112bytes =36.096GiB reserved**, under0.92cap (~43.58GiB). NoOOM;
+  batchstarts remains1, no batch/horizon reduction. This is an observed peak,
+  not a guarantee about later starts. Watcher remains detached with the driver.
+  Measured **42.177logicalupdates/hour**,85.355s/update including startup/scoring
+  and the large250update; **phase-end ETA~16:17UTC+8/08:17Z2026-10-27**, allow~1h
+  start/workload variability, then finalnativegate/budgetstop. Original progress
+  gate243PASS16/16, mean-0.042008400 vs233; finaldeploymentgate stillpending.
+- At13:22, full per-update checkpoint260was verified saved: SHA
+  `ddfecfc3b62a560bd4afe3efd0b46e32c3f67f6763142f0b6b04d199d9d1ec3b`,19newupdates
+  (18actual60s/1inherited10smask), stage2; nativecurve250/260PASS, mean delta
+  -0.505407810/-0.542551517. These are intermediate critic-free panel measurements,
+  not finalreal-SUMO evidence. Exact coordinator95283/actor95284 incarnations live;
+  176473charged, allCPUphasespending. VerifiedreceiptSHA
+  `9bb56469bd12153f36ddb2b34182284061608fd1c91869c8c4fb77d12e116516`;
+  compact source/tests/recovery/bindings/launch/verification/Markdown snapshots in
+  `tools/loopresume/receipts_c2h60b/`. Read-only handoff verifierPASS;72tests/RuffPASS.
+  Scoped attributes retain exact transported source bytes; WindowsCRLF is explicit.
+  Shared registration and loop verification events appended; localcommit follows,
+  no push. Final native-relative gate ->WAIT_OWNER_BUDGET remains automatic.
+- Concurrent main append records owner approval210000->280000 for main/twin.
+  At05:26:02Z remote cap is still210000,charged176473, with no installed
+  `S-C2H60_OWNER_BUDGET_RAISE`. An independently authorized autonomy task is preparing
+  that binding; the driver rechecks after its final native gate and follows the
+  registered owner authorization if then installed. This task did not dispatch SUMO.
+- Final13:28:30snapshot: **25freshfiniteupdates242–266**,33logicalphaseupdates;
+  **1999.23s/33.32min**,396memorysamples, same36.512GiBprocess/34.647allocated/
+  36.096reserved peaks, both ownPIDs live. Rate**44.940updates/h**,80.107s/update;
+  central endpoint383ETA**16:05UTC+8/08:05Z**, allow~1hworkloadvariation. Compact
+  `receipts_c2h60b/CURRENT.json` retains this later observation separately from the
+  SHA-bound13:19verification; the native gate/budget decision is still pending.

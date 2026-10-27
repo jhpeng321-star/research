@@ -69,3 +69,80 @@ def test_native_gate_cannot_be_disabled(case):
     args.native_init = False
     with pytest.raises(ValueError, match='identity mismatch'):
         recovery.load_recovery(raw, args)
+
+
+def test_non_round_phase_start_without_share_selection(case):
+    raw, args, files = case
+    prior = json.loads(Path(files['summary']).read_text())
+    source_sha = prior.pop('real_share')['source_sha256']
+    prior['resumed_from']['update_count'] = 233
+    prior['native_curve'] = [dict(prior['native_curve'][-1], update=240)]
+    prior['updates'] = [{'update': u} for u in range(234, 250)]
+    Path(files['summary']).write_text(json.dumps(prior))
+    path = Path(raw['run']['operational_recovery'])
+    receipt = json.loads(path.read_text())
+    receipt.update(saved_update=240, real_returns_sha256=source_sha,
+                   summary_sha256=hashlib.sha256(Path(files['summary']).read_bytes()).hexdigest())
+    path.write_text(json.dumps(receipt))
+    result = recovery.load_recovery(raw, args)
+    assert args.max_updates == 143 and result['phase_start'] == 233
+    assert [r['update'] for r in result['updates']] == list(range(234, 241))
+
+
+def test_missing_returns_binding_without_share_refused(case):
+    raw, args, files = case
+    prior = json.loads(Path(files['summary']).read_text())
+    prior.pop('real_share')
+    Path(files['summary']).write_text(json.dumps(prior))
+    path = Path(raw['run']['operational_recovery'])
+    receipt = json.loads(path.read_text())
+    receipt['summary_sha256'] = hashlib.sha256(Path(files['summary']).read_bytes()).hexdigest()
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='returns hash mismatch'):
+        recovery.load_recovery(raw, args)
+
+
+def test_saved_stop_retains_latest_state_and_separate_native_best(case):
+    raw, args, files = case
+    summary_path = Path(files['summary'])
+    cause = summary_path.with_name('cause.json')
+    cause.write_bytes(summary_path.read_bytes())
+    prior = json.loads(summary_path.read_text())
+    prior['error'] = 'RuntimeError: own-run STOP requested; checkpoint saved'
+    prior['resumed_from'] = {'checkpoint': 'best170.pt', 'update_count': 170}
+    prior['updates'] = [{'update': u} for u in range(31, 172)]
+    summary_path.write_text(json.dumps(prior))
+    path = Path(raw['run']['operational_recovery'])
+    receipt = json.loads(path.read_text())
+    receipt.update(saved_update=171, best_update=170, best_checkpoint=files['checkpoint'],
+                   best_checkpoint_sha256=receipt['checkpoint_sha256'], cause_summary=str(cause),
+                   cause_summary_sha256=hashlib.sha256(cause.read_bytes()).hexdigest(),
+                   summary_sha256=hashlib.sha256(summary_path.read_bytes()).hexdigest())
+    path.write_text(json.dumps(receipt))
+    args.resume = 'best170.pt'
+    result = recovery.load_recovery(raw, args)
+    assert args.max_updates == 9 and result['phase_start'] == 30
+    assert result['updates'][-1]['update'] == 171 and result['curve'][-1]['update'] == 170
+
+
+def test_phase_length_checked_before_recovery_remainder(monkeypatch, tmp_path):
+    from wms.control import nativeinit, policy14_cli as cli
+    panel = tmp_path / 'panel.json'
+    panel.write_text('{}')
+    monkeypatch.setattr(cli, 'checked_path', Path)
+    monkeypatch.setattr(nativeinit, 'PANEL_SHA256', hashlib.sha256(panel.read_bytes()).hexdigest())
+    monkeypatch.setattr(cli, '_read_config', lambda _: {'policy14': {}, 'trainer': {}})
+    def load(raw, args):
+        args.max_updates = 143
+        return {'phase_updates': 150}
+    monkeypatch.setattr(recovery, 'load_recovery', load)
+    def reached_config(**kwargs):
+        raise ValueError('reached trainer after original phase-length validation')
+    monkeypatch.setattr(cli, 'DreamerConfig', reached_config)
+    printed = []
+    monkeypatch.setattr('builtins.print', lambda text: printed.append(json.loads(text)))
+    assert cli.main(['--config', 'unused.toml', '--wm-ckpt', 'unused.pt', '--wm-config', 'unused.toml',
+                     '--real-returns', 'unused.npz', '--output-dir', str(tmp_path / 'out'),
+                     '--seed', '965142', '--max-updates', '150', '--native-init',
+                     '--gate-panel', str(panel), '--compact']) == 1
+    assert 'reached trainer' in printed[-1]['error']

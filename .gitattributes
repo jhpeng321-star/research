@@ -106,3 +106,12 @@ R9_GATE2.md text eol=lf
 /tools/loopresume/verify_c2prep.py -text
 /tools/loopresume/receipts_c2prep/*.json -text
 /tests/unit/test_c2prep.py -text
+
+# S-C2H60B recovery transport hashes exact local bytes, including existing endings.
+/configs/c4_policy14_c2h60b.toml -text
+/tools/loopresume/c2h60b*.py -text
+/tools/loopresume/verify_c2h60b.py -text
+/tools/loopresume/receipts_c2h60b/* -text
+/src/wms/control/policy14_cli.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/src/wms/control/policy14_recovery.py -text
+/tests/unit/test_policy14_recovery.py -text

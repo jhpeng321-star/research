@@ -196,7 +196,8 @@ def main(argv=None):
                 raise ValueError("native-init requires the real frozen TRAIN panel, not synthetic --smoke")
             if hashlib.sha256(checked_path(args.gate_panel).read_bytes()).hexdigest() != PANEL_SHA256:
                 raise ValueError("native-init panel SHA mismatch")
-            if args.max_updates > 150 or args.max_updates % 10:
+            phase_updates = recovery['phase_updates'] if recovery else args.max_updates
+            if phase_updates > 150 or phase_updates % 10:
                 raise ValueError("native-init measures every 10 updates, maximum inherited cap150")
         if args.horizon_gate:
             raw["horizon"] = {**raw["horizon"], "gate_file": str(checked_path(args.horizon_gate))}
@@ -405,16 +406,24 @@ def main(argv=None):
                         else int(args.critic_warmup_updates))
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
-        warmup = (trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
+        # Same-phase recovery restores the full critic/target/optimizer state;
+        # even a zero-step warmup would reset the restored target critic.
+        warmup = (recovery['prior']['critic_warmup'] if recovery else
+                  trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
                   else warm_start_real_critic(trainer, updates=warm_updates))
         if trainer.longcritic is not None:
             if not trainer.longcritic.warm:
                 summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
             summary["longcritic"] = trainer.longcritic.receipt
         if recovery:
-            summary['real_share'] = recovery['prior']['real_share']
-            if trainer.config.real_return_mix != summary['real_share']['selected_share']:
-                raise ValueError('operational recovery fixed share mismatch')
+            if 'real_share' in recovery['prior']:
+                summary['real_share'] = recovery['prior']['real_share']
+                if trainer.config.real_return_mix != summary['real_share']['selected_share']:
+                    raise ValueError('operational recovery fixed share mismatch')
+            elif share_cfg.enabled:
+                raise ValueError('operational recovery missing enabled share selection')
+            if recovery.get('checkpoint_every_update'):
+                trainer.config = replace(trainer.config, checkpoint_every=1)
             summary['operational_recovery'] = {k: v for k, v in recovery.items()
                                                if k not in ('prior', 'curve', 'updates')}
         elif share_cfg.enabled:
@@ -449,7 +458,7 @@ def main(argv=None):
                 # Keep the original eligible best byte-for-byte until a better
                 # measured checkpoint appears. Re-scoring still applies the veto.
                 import shutil
-                shutil.copyfile(args.resume, output / 'policy_native_best.pt')
+                shutil.copyfile(recovery.get('best_checkpoint', args.resume), output / 'policy_native_best.pt')
                 if not initial_native['passed']:
                     raise RuntimeError('native-relative recovery checkpoint veto')
         if gate_panel is not None:
@@ -459,6 +468,9 @@ def main(argv=None):
                                       "J_before": panel_before}
         if recovery:
             summary['gate_panel'] = recovery['prior']['gate_panel']
+            # A saved checkpoint can precede the original phase-update10 gate.
+            # Replaying that gate must still compare against the original phase start.
+            panel_before = list(summary['gate_panel']['J_before'])
             (output / 'gate_panel_result.json').write_text(json.dumps(summary['gate_panel'], indent=1))
             (output / 'native_curve.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in native_curve))
         for _ in range(args.max_updates):
@@ -466,6 +478,12 @@ def main(argv=None):
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("own-run STOP requested; checkpoint saved")
             metrics = trainer.update()
+            if recovery and recovery.get('checkpoint_every_update') and args.device.startswith('cuda'):
+                metrics['cuda_peak_allocated_bytes'] = torch.cuda.max_memory_allocated()
+                metrics['cuda_peak_reserved_bytes'] = torch.cuda.max_memory_reserved()
+                with (output / 'cuda_peaks.jsonl').open('a', encoding='utf-8') as stream:
+                    stream.write(json.dumps({k: metrics[k] for k in (
+                        'update', 'cuda_peak_allocated_bytes', 'cuda_peak_reserved_bytes')}) + '\n')
             if not all(np.isfinite(metrics[k]) for k in ("actor_loss", "critic_loss", "actor_grad_norm", "critic_grad_norm")):
                 raise ValueError("nonfinite update")
             if switches["independent_rescore"]:
