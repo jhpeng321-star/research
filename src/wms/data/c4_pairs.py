@@ -69,7 +69,8 @@ class PairedBranchSource:
                  k_slots: Optional[int] = None, heldout=None,
                  role_of: Optional[dict] = None, role: str = "train",
                   junction_fix: str = "off", command_known: bool = False, name: str = "paired",
-                  horizon_mode: str = "fixed", merge_pivot_history: bool = False):
+                   horizon_mode: str = "fixed", merge_pivot_history: bool = False,
+                   arm_kinds=None):
         if horizon_mode not in ("fixed", "stage"):
             raise ValueError("paired horizon_mode must be fixed or stage")
         self.horizon_mode = horizon_mode
@@ -79,7 +80,8 @@ class PairedBranchSource:
             raise C4EpisodeRefusal(f"paired source has K={doc['k_slots']} slots, packs K={k_slots}")
         roles = role_of or {}
         entries = [e for e in doc["episodes"] if e.get("pair_key")
-                   and roles.get(e["world"], e.get("split_role")) == role]
+                   and roles.get(e["world"], e.get("split_role")) == role
+                   and (arm_kinds is None or e.get('branch', {}).get('kind') in arm_kinds)]
         if not doc.get("allow_designed", False):
             bad = [e["episode"] for e in entries
                    if set(e.get("controllers_used", ())) - {"native", "direct"}]
@@ -206,6 +208,8 @@ class PairedBranchSource:
             rec["pair_group"] = int(group)
             rec["pair_ref"] = int(base_row)
             rec["mix_source"] = self.name
+            if getattr(self, 'longwm_pair', False):
+                rec['longwm_pair'] = True
             out.append(rec)
         return out
 

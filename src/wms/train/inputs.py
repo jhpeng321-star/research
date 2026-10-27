@@ -339,7 +339,8 @@ def build_targets(inputs: UnrollInputs, batch: Mapping[str, Any], settings: Trai
     denom = (weights * hdv_mask.to(weights.dtype)).sum().clamp_min(1.0)
     road = None
     if (settings.aggregate_weight > 0.0 or getattr(settings, "merge_loss_on", False)
-            or getattr(settings, "agg_delay_on", False)):
+            or getattr(settings, "agg_delay_on", False)
+            or getattr(settings, "longwm_enabled", False)):
         # Aggregate loss (C4) / merge loss (V7FT) / agg-delay loss (A5): recorded on-road
         # presence -- the full road (incl. arrivals) when the entry process runs and the windows
         # carry it, else the t0 cohort.

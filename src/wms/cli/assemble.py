@@ -421,17 +421,29 @@ def _add_c4_sources(cfg: TrainConfig, train: Any, val: Any, path: Callable[[str]
                                        "overridden_to_val": overridden}
     pair = cfg.loss.paired_diff
     paired = [src for src in data.c4_sources if src.paired]
-    if pair.enabled and paired:
+    if cfg.loss.longwm_enabled:
+        # Preserve ordinary replay shares; replace the paired-batch source with
+        # THIS cycle's real POLICY/B tapes, never historical diagnostic pairs.
+        paired = [src for src in data.c4_sources if src.name == 'loop14_pairs']
+        if len(paired) != 1:
+            raise ConfigError('loop longwm requires loop14_pairs')
+    if (pair.enabled or cfg.loss.longwm_enabled) and paired:
         if len(paired) > 1:
             raise ConfigError("loss.paired_diff supports one paired c4 source")
         src = paired[0]
         # Stage mode retains the full curriculum horizon for eligibility/window switching;
         # fixed mode keeps the original constructor call and branch-length cap.
         pair_kwargs = dict(common)
+        if cfg.loss.longwm_enabled:
+            pair_kwargs['arm_kinds'] = ('B', 'POLICY')
         if pair.horizon_mode == "stage":
             pair_kwargs.update(horizon_mode="stage", horizon_steps=_horizon_steps(cfg))
         source = PairedBranchSource(
             roots[src.name], name=src.name, **pair_kwargs)
+        if cfg.loss.longwm_enabled:
+            if source.horizon < 600 or any(not g['has_native_ref'] for g in source.groups):
+                raise ConfigError('loop longwm needs complete real paired 300s native-reference tapes')
+            source.longwm_pair = True
         train = PairedBatchDataset(train, source, fraction=float(pair.fraction),
                                    groups=int(pair.groups), max_arms=int(pair.max_arms),
                                    batch_size=int(cfg.optim.batch_size),

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import contextlib
 import math
+import os
 from dataclasses import dataclass, replace
 from functools import partial
 from typing import Callable, Mapping, Optional
@@ -2452,6 +2453,13 @@ class WmSModel(nn.Module):
         # a second time during recomputation.
         step_checkpoint = (self.checkpoint_step and self.training
                            and torch.is_grad_enabled() and cav_controller is None)
+        if self.checkpoint_forward and os.environ.get('WMS_LOOPLONG_SPEED') == '1':
+            # Keep the learned forward activation checkpoint, avoiding a second
+            # nested checkpoint over the integrator/pivot. Besides redundant
+            # recomputation, the outer checkpoint would replay random pivot
+            # stream allocation inside batched gradient-parity VJPs. Retain
+            # these physical-state operations instead; objective/RNG unchanged.
+            step_checkpoint = False
         fixed_driver_params = driver_params
         fixed_driver_embedding = driver_embedding
         initial_driver_embedding = driver_embedding

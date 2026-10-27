@@ -638,6 +638,15 @@ class C4WindowLoader:
         return {"states": states, "present": alive, "is_cav": is_cav}
 
     def __call__(self, index: int) -> dict:
+        import os
+        if os.environ.get('WMS_LOOPLONG_SPEED') == '1':
+            from .window_cache import WindowCache
+            if not hasattr(self, '_window_cache'):
+                self._window_cache = WindowCache()
+            return self._window_cache.get(index, lambda: self._decode(index))
+        return self._decode(index)
+
+    def _decode(self, index: int) -> dict:
         from wms.data.pack_history import entry_features, prior_history
 
         e, tick = self.index[index]

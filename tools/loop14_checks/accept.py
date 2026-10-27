@@ -263,6 +263,33 @@ def onestep(args, out: Path) -> dict:
 
 
 def rollouts(arms, sets, panel_idx) -> dict:
+    if os.environ.get('WMS_LOOPLONG_SPEED') == '1':
+        # Window-major evaluation decodes each immutable observable record once
+        # for both arms. Per-arm window order, seeds, model work and sums are
+        # unchanged; at most one record is live, irrespective of panel size.
+        stats = {name: {'n': 0, 'hard': 0, 'blowup_runs': 0, 'overlap_pair_steps': 0,
+                        'ttc_lt_1_5_rows': 0, 'ttc_eligible_rows': 0} for name in arms}
+        for w, (si, idx) in enumerate(panel_idx):
+            record = sets[si][idx]
+            for name, (_cfg, settings, model) in arms.items():
+                r = free_rollout(model, settings, record, ROLL_STEPS, SEED0 + w)
+                dn, dh = lane1_hard_brake(r)
+                s = safety_metrics(r)
+                row = stats[name]
+                row['n'] += dn
+                row['hard'] += dh
+                row['blowup_runs'] += int(s['blowup'])
+                for k in ('overlap_pair_steps', 'ttc_lt_1_5_rows', 'ttc_eligible_rows'):
+                    row[k] += int(s[k])
+        result = {}
+        for name, row in stats.items():
+            n, hard = row.pop('n'), row.pop('hard')
+            if n == 0:
+                raise ValueError('empty lane-1 rollout panel')
+            result[name] = {'lane1_transitions': n, 'lane1_a_lt_minus3': hard,
+                'hard_brake_share': hard/n, **row,
+                'ttc_lt_1_5_share': row['ttc_lt_1_5_rows']/row['ttc_eligible_rows'] if row['ttc_eligible_rows'] else 0.}
+        return result
     out = {}
     for name, (_cfg, settings, model) in arms.items():
         n = hard = 0

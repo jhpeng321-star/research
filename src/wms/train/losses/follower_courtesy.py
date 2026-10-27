@@ -41,6 +41,7 @@ the target.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -177,16 +178,33 @@ def lane1_rows(targets: UnrollTargets, target_lane: int = 1) -> Tensor:
 
 def replay_outputs(model: Any, targets: UnrollTargets) -> dict[str, Tensor]:
     """Detached replay outputs (shared cut-in replay when present, else a no-grad replay)."""
+    # The targets and model weights are unchanged between TBPTT chunks. Only
+    # cache detached replay, scoped to this runner invocation, never across steps.
+    cache_key = 'looplong_courtesy_replay'
+    speed = os.environ.get('WMS_LOOPLONG_SPEED') == '1'
+    if speed and cache_key in targets.prepared:
+        return targets.prepared[cache_key]
     shared = targets.prepared.get(SHARED_KEY)
     if shared is not None and all(key in shared for key in REPLAY_KEYS):
         return {**shared, "_shared": True}
+    device = targets.states.device
+    rng = torch.get_rng_state() if speed else None
+    cuda_rng = torch.cuda.get_rng_state(device) if speed and device.type == 'cuda' else None
     with torch.no_grad():
         _, collected = one_step_replay(model, targets, collect=REPLAY_KEYS)
     missing = [key for key in REPLAY_KEYS if key not in collected]
     if missing:
         raise RuntimeError(f"follower courtesy replay is missing model outputs {missing}; "
                            "is model.follower_courtesy enabled?")
-    return {**collected, "_shared": False}
+    result = {**collected, "_shared": False}
+    # A stochastic replay (e.g. training dropout) must still consume fresh
+    # draws per chunk. Do not cache it or change the original objective/RNG.
+    deterministic = speed and torch.equal(rng, torch.get_rng_state())
+    if cuda_rng is not None:
+        deterministic = deterministic and torch.equal(cuda_rng, torch.cuda.get_rng_state(device))
+    if deterministic:
+        targets.prepared[cache_key] = result
+    return result
 
 
 class FollowerCourtesyLoss(UnrollTerm):
@@ -256,6 +274,16 @@ class FollowerCourtesyLoss(UnrollTerm):
     def _control_shift(self, model: Any, targets: UnrollTargets, out: dict, rows: Tensor,
                        rec_all: Tensor) -> Tensor:
         """R11: kernel-matched control residual ``r_hat`` for every supervised partner row."""
+        # All inputs are detached and unchanged within one optimizer step.
+        # Repeating the full-horizon matching in every TBPTT chunk changes
+        # neither the objective nor its gradient. Never retain it across steps.
+        cache_key = 'looplong_courtesy_control_shift'
+        speed = os.environ.get('WMS_LOOPLONG_SPEED') == '1'
+        if speed and cache_key in targets.prepared:
+            cached_out, shift, stats = targets.prepared[cache_key]
+            if cached_out is out:
+                self.last_stats.update(stats)
+                return shift
         ctrl = lane1_rows(targets, self.config.target_lane) & ~out["courtesy_applies"].bool()
         kin, _, _, _, _, _ = _recorded(targets)
         # R12 fix D: matching geometry (own-lane leader) sees the replay state's presence.
@@ -267,13 +295,16 @@ class FollowerCourtesyLoss(UnrollTerm):
         finite = torch.isfinite(resid_ctrl)
         shift, neff = matched_control_residual(phi[rows].float(), phi[ctrl][finite].float(),
                                                resid_ctrl[finite])
-        self.last_stats.update(
-            contrast_n_controls=int(finite.sum()),
+        stats = dict(contrast_n_controls=int(finite.sum()),
             contrast_shift_mean=float(shift.mean()) if shift.numel() else 0.0,
             contrast_neff_median=float(neff.median()) if neff.numel() else 0.0,
             contrast_control_resid_mean=float(resid_ctrl[finite].mean()) if bool(finite.any())
             else 0.0)
-        return shift.to(rec_all.dtype)
+        self.last_stats.update(stats)
+        shift = shift.to(rec_all.dtype)
+        if speed:
+            targets.prepared[cache_key] = out, shift, stats
+        return shift
 
 
 def follower_courtesy_terms(config: FollowerCourtesyConfig) -> list[UnrollTerm]:

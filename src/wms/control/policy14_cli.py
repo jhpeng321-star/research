@@ -176,6 +176,8 @@ def main(argv=None):
     parser.add_argument("--longcritic-native-returns", default=None)
     parser.add_argument('--paircrit-receipt', default=None)
     parser.add_argument('--paircrit-policy-sha256', default=None)
+    parser.add_argument('--looplong-boundary', default=None)
+    parser.add_argument('--wm-swap-file', default=None)
     parser.add_argument('--phase-relative-signal-gate', action='store_true',
                         help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
     args = parser.parse_args(argv)
@@ -188,6 +190,12 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if args.looplong_boundary:
+            from .looplong import read_boundary
+            prepared = read_boundary(args.looplong_boundary)
+            if prepared.get('coop_credit') is False:
+                for name in ('w_individual', 'w_group', 'w_coop', 'w_team'):
+                    raw['counterfactual'][name] = [0.] * len(raw['counterfactual'][name])
         from .policy14_recovery import load_recovery
         recovery = load_recovery(raw, args)
         if args.native_init:
@@ -406,12 +414,14 @@ def main(argv=None):
                         else int(args.critic_warmup_updates))
         if warm_updates < 0:
             raise ValueError("critic warm-up updates must be >= 0")
-        # Same-phase recovery restores the full critic/target/optimizer state;
-        # even a zero-step warmup would reset the restored target critic.
-        warmup = (recovery['prior']['critic_warmup'] if recovery else
-                  trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
-                  else warm_start_real_critic(trainer, updates=warm_updates))
-        if trainer.longcritic is not None:
+        if args.looplong_boundary and prepared['flags'].get('long_credit'):
+            trainer.long_credit_requested = True
+            warmup = {'updates': 0, 'reason': 'looplong critic OFF; direct real-pair share 1.0'}
+        else:
+            warmup = (recovery['prior']['critic_warmup'] if recovery else
+                      trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
+                      else warm_start_real_critic(trainer, updates=warm_updates))
+        if trainer.longcritic is not None and not getattr(trainer, 'long_credit_requested', False):
             if not trainer.longcritic.warm:
                 summary["longcritic_native_warmup"] = trainer.longcritic.warmup(trainer)
             summary["longcritic"] = trainer.longcritic.receipt
@@ -426,7 +436,7 @@ def main(argv=None):
                 trainer.config = replace(trainer.config, checkpoint_every=1)
             summary['operational_recovery'] = {k: v for k, v in recovery.items()
                                                if k not in ('prior', 'curve', 'updates')}
-        elif share_cfg.enabled:
+        elif share_cfg.enabled and not getattr(trainer, 'long_credit_requested', False):
             if args.smoke:
                 raise ValueError('real-share selection requires real TRAIN starts')
             summary['real_share'] = calibrate_share(trainer, provider, share_dev,
@@ -473,10 +483,40 @@ def main(argv=None):
             panel_before = list(summary['gate_panel']['J_before'])
             (output / 'gate_panel_result.json').write_text(json.dumps(summary['gate_panel'], indent=1))
             (output / 'native_curve.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in native_curve))
+        long_boundary = None
+        if args.looplong_boundary:
+            from .looplong import read_boundary, configure
+            long_boundary = read_boundary(args.looplong_boundary)
+            if [r['checkpoint_sha256'] for r in receipts] != [long_boundary['wm']['sha256']]:
+                raise ValueError('looplong loaded WM mismatch')
+            raw['_looplong_physics'] = receipts[0]['physics']
+            configure(trainer, long_boundary, raw, output)
+            summary['looplong_initial_boundary'] = long_boundary
+        elif args.wm_swap_file:
+            raise ValueError('hot swap requires looplong boundary')
         for _ in range(args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("own-run STOP requested; checkpoint saved")
+            if long_boundary and args.wm_swap_file:
+                from .looplong import maybe_swap
+                swapped = maybe_swap(trainer, args.wm_swap_file, long_boundary, raw, output, load_members)
+                if swapped:
+                    long_boundary, receipts, event = swapped
+                    models = trainer.world_models
+                    # Scores from different WMs cannot compete for selection.
+                    # Rescore the same frozen panel and restart the curve on the
+                    # new WM; all actor/optimizer/phase counters are preserved.
+                    native_curve.clear()
+                    initial_native = score_native_panel(trainer, val, gate_panel, args.device)
+                    native_curve.append(initial_native)
+                    if initial_native['passed']:
+                        trainer.save_checkpoint(output / 'policy_native_best.pt')
+                    if gate_panel is not None:
+                        panel_before = score_gate_panel(trainer, val, gate_panel, args.device)
+                    before = independent_score(trainer, rescore_batch)
+                    initial_score = before
+                    summary.setdefault('wm_swaps', []).append(event)
             metrics = trainer.update()
             if recovery and recovery.get('checkpoint_every_update') and args.device.startswith('cuda'):
                 metrics['cuda_peak_allocated_bytes'] = torch.cuda.max_memory_allocated()
@@ -530,6 +570,8 @@ def main(argv=None):
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("early signal gate: independently rescored J did not decrease; stop before scaling")
         trainer.save_checkpoint(output / "policy_latest.pt")
+        if long_boundary:
+            summary['looplong_final_boundary'] = long_boundary
         if args.native_init:
             from .nativeinit import select_update
             import shutil

@@ -1380,6 +1380,7 @@ class LossConfig:
     lane_event: LaneEventConfig = field(default_factory=LaneEventConfig)
     traffic: TrafficLossConfig = field(default_factory=TrafficLossConfig)
     aggregate: AggregateLossConfig = field(default_factory=AggregateLossConfig)
+    longwm_enabled: bool = False
     agg_delay: AggDelayConfig = field(default_factory=AggDelayConfig)
     paired_diff: PairedDiffLossConfig = field(default_factory=PairedDiffLossConfig)
     driver_prior: DriverPriorConfig = field(default_factory=DriverPriorConfig)
