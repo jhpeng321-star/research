@@ -156,6 +156,12 @@ class TrainSettings:
     # network with its own parameter group at lane_v5_long_lr_scale (no architecture change).
     lane_v5_long: bool = False
     lane_v5_long_lr_scale: float = 0.05
+    # S-RAMPFIX / S-WMCOMBINED model + data switches mirrored on the flat settings (default
+    # values are omitted from the flat dict, so default behaviour is unchanged): the model
+    # itself is built from the model spec; these carry the resolved config into settings.
+    mainline_interaction_residual: bool = False
+    mainline_residual_hidden: int = 64
+    longwm_extra_paired: Optional[str] = None
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
