@@ -63,7 +63,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def build_trainer(threads):
+def build_trainer(threads, device="cpu"):
     """Policy14Trainer on CPU, constructed exactly like ``policy14_cli.main`` (native-init actor,
     full-actor flags, WM2 as the single ensemble member) but with no data pack: the start sampler
     is supplied per pair source."""
@@ -85,7 +85,7 @@ def build_trainer(threads):
     raw = _read_config(POLICY_CONFIG)
     sw = raw["policy14"]
     cfg = replace(DreamerConfig(**raw["trainer"]), real_return_mix=0.0)
-    models, receipts = cli.load_members([str(WM_CKPT)], [WM_CONFIG], "cpu")
+    models, receipts = cli.load_members([str(WM_CKPT)], [WM_CONFIG], device)
     assert receipts[0]["checkpoint_sha256"] == WM_SHA, receipts[0]["checkpoint_sha256"]
     settings = policy_settings(raw)
     policy = CavPolicy(accel_max=settings["accel_max"], lane_head=False, init_zero_accel=False,
@@ -100,7 +100,7 @@ def build_trainer(threads):
                               ScaledTeamCritic(entry_backlog=True, value_scale=float(sw["critic_value_scale"])),
                               None, observation_builder=build_observations, reward_fn=authoritative_reward,
                               safety=safe_accel, controller_factory=factory, config=cfg,
-                              reward_weights=RewardWeights(**raw["reward"]), device="cpu", output_dir=None,
+                              reward_weights=RewardWeights(**raw["reward"]), device=device, output_dir=None,
                               lane_rules=None, counterfactual=CounterfactualConfig(**raw["counterfactual"]),
                               real_return_provider=None, **coopw)
     trainer.long_credit_requested = True
@@ -202,6 +202,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=0, help="smoke: stop after N tasks")
     ap.add_argument("--horizons", default="")
+    ap.add_argument("--device", default="cpu", help="cpu (validated) or cuda (same code path, NOT yet exercised)")
     ap.add_argument("--max-h", type=int, default=300, help="rollout length / largest row horizon (s)")
     ap.add_argument("--verify", type=int, default=0, help="explicit separate 120 s runs for the first N tasks")
     ap.add_argument("--loop-parity", type=int, default=-1,
@@ -225,7 +226,7 @@ def main():
     done = set()
     if target.exists():
         done = {json.loads(l)["task"] for l in target.read_text().splitlines() if l.strip()}
-    trainer = build_trainer(a.threads)
+    trainer = build_trainer(a.threads, a.device)
     from wms.control.long_credit import frozen_imagination, pair_benefit_curve
     cache = {}
     with frozen_imagination(trainer) as old, target.open("a") as sink:
@@ -276,7 +277,7 @@ def main():
                          pair_key=loader.entries[policy_row]["pair_key"], role=role,
                          wm_sha256=WM_SHA, actor_sha256=t["sha"])
             sink.write(json.dumps({"task": tid, "seconds": time.time() - start_time, "rows": rows,
-                                   "diff_max_h": a.max_h, "diff300": np.round(diff.numpy(), 4).tolist(), "verify": check}) + "\n")
+                                   "diff_max_h": a.max_h, "diff300": np.round(diff.cpu().numpy(), 4).tolist(), "verify": check}) + "\n")
             sink.flush()
             print(f"{tid} {time.time() - start_time:.0f}s", flush=True)
 
