@@ -98,3 +98,18 @@ def test_legacy_head_adam_migration_and_full_restart(tmp_path):
 def test_flags_are_strict_booleans():
     with pytest.raises(ValueError, match="boolean"):
         replace(DreamerConfig(), native_residual_train_trunk=1)
+
+
+def test_paired_branch_windows_expose_manifest_world_metadata():
+    from types import SimpleNamespace
+
+    from wms.control.start_states import _eligible, _metadata, penetration_of
+    loader = SimpleNamespace(entries=[{"world": "w968170m1900p05t300", "split_role": "train",
+                                       "pair_key": "w968170m1900p05t300@t360", "episode": "e0"}])
+    dataset = SimpleNamespace(records=[{}], _loader=loader, positions=[(0, 720)])
+    meta = _metadata(dataset, 0)
+    assert meta["world_id"] == "w968170m1900p05t300" and _eligible(meta)
+    assert penetration_of(meta) == 0.05
+    explicit = SimpleNamespace(records=[{"meta": {"world_id": "w1m2400p20t300"}}], _loader=loader,
+                               positions=[(0, 0)])
+    assert penetration_of(_metadata(explicit, 0)) == 0.2

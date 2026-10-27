@@ -61,7 +61,15 @@ def _metadata(dataset, index):
     if loader is not None and hasattr(loader, "corpus"):
         return dict(loader.corpus.meta(loader.kept_orig[index]))
     record = dataset.records[index] if hasattr(dataset, "records") else dataset[index]
-    return dict(record.get("meta", {}))
+    meta = dict(record.get("meta", {}))
+    if (not (meta.get("world_id") or meta.get("world")) and loader is not None
+            and hasattr(loader, "entries") and hasattr(dataset, "positions")):
+        # Paired-branch windows (wms.data.c4_pairs) carry provenance only in the
+        # source manifest entry of their episode; records are placeholders.
+        entry = loader.entries[dataset.positions[index][0]]
+        meta.update(world_id=str(entry["world"]), split=str(entry.get("split_role", "TRAIN")),
+                    pair_key=str(entry.get("pair_key", "")), episode=str(entry.get("episode", "")))
+    return meta
 
 
 def _eligible(meta):

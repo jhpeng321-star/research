@@ -147,7 +147,10 @@ def run():
     loop.run_cmd = run_cmd
     set_status('C3_POLICY_RUNNING', config=str(CONFIG), config_sha256=sha(CONFIG))
     try:
-        code = loop.run_phase(loop.load_config(CONFIG), 'policy')
+        cfg = loop.load_config(CONFIG)
+        current = loop.load_state(cfg)['cycles'][-1]['phases']['policy']['status']
+        # A failed attempt is retried into a new attempt directory (never overwritten).
+        code = loop.retry(cfg, 'policy') if current == 'failed' else loop.run_phase(cfg, 'policy')
     except Exception as error:  # noqa: BLE001 - recorded, chain stays held
         code = 99
         print(f'{type(error).__name__}: {error}', flush=True)
@@ -159,14 +162,14 @@ def run():
     return code
 
 
-def start():
-    log = (OUT / 'c3_policy.driver.log').open('x')
+def start(tag='a1'):
+    log = (OUT / f'c3_policy.{tag}.driver.log').open('x')
     child = subprocess.Popen([sys.executable, '-B', __file__, 'run'], cwd=CODE, stdin=subprocess.DEVNULL,
                              stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
                              env={**os.environ, 'PYTHONPATH': f'{CODE}/src:{CODE}'})
     ticks = Path(f'/proc/{child.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
     doc = {'task': TASK, 'pid': child.pid, 'start_ticks': ticks, 't': now(), 'config': str(CONFIG)}
-    with (OUT / 'C3_POLICY_PID.json').open('x') as stream:
+    with (OUT / f'C3_POLICY_PID.{tag}.json').open('x') as stream:
         json.dump(doc, stream)
     print(json.dumps(doc))
 
@@ -178,6 +181,6 @@ if __name__ == '__main__':
     elif mode == 'prepare':
         prepare(sys.argv[2])
     elif mode == 'start':
-        start()
+        start(*sys.argv[2:3])
     elif mode == 'run':
         sys.exit(run())
