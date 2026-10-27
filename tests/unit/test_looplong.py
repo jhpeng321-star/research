@@ -20,8 +20,8 @@ from wms.data.window_cache import WindowCache  # noqa: E402
 
 
 def rows():
-    return [{'world': w, 'horizon_s': 120, 'samples': list(np.arange(8.) + w),
-             'real_benefit': float(w + 1.)} for w in range(40)]
+    return [{'world': w, 'horizon_s': 120, 'samples': list(np.arange(8.) + w + delta),
+             'real_benefit': float(w + 1. + delta)} for w in range(40) for delta in (-10., 10.)]
 
 
 def test_flags_default_off():
@@ -502,3 +502,143 @@ def test_updated_actor_and_unvalidated_cooperation_are_pessimistic_only():
     image['deterministic_policy'] = True
     trainer.update_count += 1
     assert pessimistic_difference(trainer, *args).count_nonzero() == 0
+
+
+def test_between_world_levels_and_correct_signs_cannot_qualify_action_ranking():
+    from wms.control.long_credit import validate_model
+    worlds = np.repeat(np.arange(1, 7), 2)
+    # Almost-perfect between-world correlation; all policy/native signs right,
+    # but the model reverses EVERY within-world action-effect ordering.
+    real = worlds * 100. + np.tile([-1., 1.], 6)
+    mean = worlds * 100. + np.tile([1., -1.], 6)
+    model = {'lower_scale': -3., 'upper_scale': 3., 'correction_scale': 0.}
+    result = validate_model(worlds, mean, np.ones(12), real, model)
+    assert result['world_coverage'] == 1 and result['ranking_lower95'] == 0
+    assert not result['qualified']
+    singleton = validate_model(worlds[::2], mean[::2], np.ones(6), real[::2], model)
+    assert singleton['ranking_lower95'] is None and not singleton['qualified']
+
+
+def test_batched_parity_preserves_weights_and_final_gradient(monkeypatch):
+    from wms.train.longwm import gradient_parity
+    results = []
+    for on in ('0', '1'):
+        monkeypatch.setenv('WMS_LOOPLONG_SPEED', on)
+        p = torch.tensor([.2, -.7, 1.3], dtype=torch.float64, requires_grad=True)
+        unused = torch.ones(2, dtype=torch.float64, requires_grad=True)
+        shared = p.sin().exp()
+        base = shared.sum().square()
+        components = {'a': shared.square().mean(), 'b': (shared[0] - shared[1]).square(),
+                      'constant': p.new_tensor(1.), 'zero': (shared * 0.).sum()}
+        weights, receipt = gradient_parity(base, components, [p, unused])
+        loss = base + sum(weights[k] * v for k, v in components.items())
+        loss.backward()
+        results.append((weights, receipt['gradient_norms'], p.grad))
+        assert weights['constant'] == weights['zero'] == 0 and unused.grad is None
+    assert results[0][0] == pytest.approx(results[1][0], rel=1e-12)
+    assert results[0][1] == pytest.approx(results[1][1], rel=1e-12)
+    torch.testing.assert_close(results[0][2], results[1][2], rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize('stochastic', [False, True])
+def test_courtesy_replay_cache_preserves_stochastic_draws(monkeypatch, stochastic):
+    from wms.train.losses import follower_courtesy as courtesy
+    monkeypatch.setenv('WMS_LOOPLONG_SPEED', '1')
+    calls = []
+    def replay(*args, **kwargs):
+        calls.append(1)
+        value = torch.rand(1) if stochastic else torch.ones(1)
+        return None, {key: value for key in courtesy.REPLAY_KEYS}
+    monkeypatch.setattr(courtesy, 'one_step_replay', replay)
+    targets = SimpleNamespace(states=torch.zeros(1), prepared={})
+    first = courtesy.replay_outputs(None, targets)
+    second = courtesy.replay_outputs(None, targets)
+    assert len(calls) == (2 if stochastic else 1)
+    assert (first is second) is not stochastic
+
+
+def test_validation_outcomes_never_refit_conditional_quantiles():
+    baseline = fit_cqr(rows(), {})['horizons']['120']
+    altered = [dict(row, real_benefit=-1e9) if world_role(row['world']) == 'validation'
+               else row for row in rows()]
+    model = fit_cqr(altered, {})['horizons']['120']
+    for key in ('condition_edges', 'conditional_lower', 'conditional_upper', 'correction_scale'):
+        assert baseline[key] == model[key]
+    assert baseline['qualified'] and not model['qualified']
+
+
+@pytest.mark.parametrize('benefit', [-100., 100.])
+def test_direct_real_300s_credit_moves_toward_beneficial_observed_contrast(benefit):
+    from wms.control.looplong_real import secant_loss
+    action = torch.tensor([[.3, .1]], requires_grad=True)
+    native = torch.zeros_like(action)
+    loss, count = secant_loss(action, native, torch.tensor([[-.5, 3.]]),
+        torch.tensor([benefit]), torch.tensor([[True, False]]), 10.)
+    loss.backward()
+    assert count == 1 and action.grad[0, 0] == pytest.approx(benefit / 5.)
+    assert action.grad[0, 1] == 0  # unobserved/uncontrolled rows get no credit
+    action.grad.zero_()
+    loss, count = secant_loss(action, native, torch.zeros_like(action),
+        torch.tensor([benefit]), torch.ones_like(action, dtype=torch.bool), 10.)
+    loss.backward()
+    assert count == 0 and torch.isfinite(loss) and action.grad.count_nonzero() == 0
+
+
+def test_batched_vjps_support_checkpointed_r16_first_passage_graph(monkeypatch):
+    from tools.looplong.dry_run import batch
+    from dataclasses import replace
+    from wms.model.history import LONG_HISTORY_F
+    from wms.cli.assemble import build_model, build_physics
+    from wms.config.load import load_train_config
+    from wms.train.inputs import prepare_inputs
+    from wms.train.settings import TrainSettings
+    from wms.train.longwm import gradient_parity
+    cfg = load_train_config(str(ROOT / 'configs/c4_wm_loop14_r16_ft.toml'))
+    # Exercise the production architecture/physics switches with synthetic
+    # parameters, without resolving or opening any traffic assets.
+    cfg = replace(cfg, model=replace(cfg.model, physics_params=None))
+    m = build_model(cfg, build_physics(cfg, resolver=lambda _: pytest.fail('asset read')))
+    m.checkpoint_forward = True
+    for name, p in m.named_parameters():
+        p.requires_grad_(not name.startswith(tuple(cfg.optim.freeze_prefixes)))
+    settings = TrainSettings.from_config(cfg)
+    probe = batch(4)
+    probe['states'][..., 1] = 0.
+    probe['states'][..., 2] = 1.
+    probe['states'][:, :, 0, 2] = 0.
+    probe['states'][:, :, 0, 3] = 1.
+    probe['states'][..., 0] = (torch.tensor([-10., -25., -55.])[None, None, :]
+                                 + torch.arange(5)[None, :, None] * 6.)
+    probe['cav_teacher'][..., 0] = probe['states'][..., 0]
+    probe['cav_teacher'][..., 1] = probe['states'][..., 1:4].argmax(-1).float()
+    probe['driver_hist'] = torch.zeros(2, 3, m.driver_history_len, LONG_HISTORY_F)
+    probe['driver_hist_mask'] = torch.zeros(2, 3, m.driver_history_len, dtype=torch.bool)
+    inp = prepare_inputs(probe, m, settings, torch.device('cpu'), 4)
+    parameters = [p for p in m.parameters() if p.requires_grad]
+    initial_rng = torch.get_rng_state()
+    results = []
+    for on in ('0', '1'):
+        monkeypatch.setenv('WMS_LOOPLONG_SPEED', on)
+        torch.set_rng_state(initial_rng)
+        roll = m.rollout(inp.initial, n_steps=4, cav_teacher=inp.teacher,
+            present_seq=inp.present_seq, is_cav_seq=inp.is_cav,
+            history=inp.hist, history_mask=inp.hist_mask,
+            driver_history=inp.observed_hist, driver_history_mask=inp.observed_hist_mask)
+        base = roll['positions'].square().mean()
+        terms = {'speed': roll['speeds'].square().mean(),
+                 'paired': (roll['speeds'][1] - roll['speeds'][0]).square().mean()}
+        rng = torch.get_rng_state()
+        weights, _ = gradient_parity(base, terms, parameters)
+        loss = base + sum(weights[k] * value for k, value in terms.items())
+        grads = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+        assert torch.equal(rng, torch.get_rng_state())
+        assert any(g is not None for g in grads)
+        assert all(torch.isfinite(g).all() for g in grads if g is not None)
+        assert any(bool(g.abs().sum() > 0) for g in grads if g is not None)
+        results.append((weights, grads, roll['positions'].detach(), rng))
+    assert results[0][0] == pytest.approx(results[1][0], rel=1e-5, abs=1e-7)
+    assert torch.equal(results[0][2], results[1][2]) and torch.equal(results[0][3], results[1][3])
+    for serial, batched in zip(results[0][1], results[1][1]):
+        assert (serial is None) == (batched is None)
+        if serial is not None:
+            torch.testing.assert_close(serial, batched, rtol=1e-5, atol=1e-6)

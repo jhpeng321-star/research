@@ -36,11 +36,11 @@ def world_role(world):
 
 
 def validate_model(worlds, mean, width, real, model):
-    """Untouched-world coverage and paired policy/native action ranking.
+    """Untouched-world coverage and WITHIN-world paired-benefit ranking.
 
-    Each contrast ranks two actions at the SAME real saved start (native is
-    zero). World-cluster resampling prevents between-world levels supplying
-    ranking evidence. No validation label changes a fitted quantile/correction.
+    Compare paired action effects only within a world, never absolute levels
+    across worlds. Single-contrast worlds supply no ranking evidence. No
+    validation label changes a fitted quantile/correction.
     """
     unique = sorted(set(worlds))
     if model['correction_scale'] is None or not unique:
@@ -53,10 +53,13 @@ def validate_model(worlds, mean, width, real, model):
     for world in unique:
         mask = worlds == world
         coverage.append(bool(((lo[mask] <= real[mask]) & (real[mask] <= hi[mask])).all()))
-        informative = mask & (real != 0)
+        actual, predicted = real[mask], center[mask]
+        dr = actual[:, None] - actual[None, :]
+        dp = predicted[:, None] - predicted[None, :]
+        informative = np.triu(np.ones(dr.shape, dtype=bool), 1) & (dr != 0)
         if informative.any():
-            ranking.append(float(((np.sign(center[informative]) == np.sign(real[informative]))
-                                  * 1. + (center[informative] == 0) * .5).mean()))
+            ranking.append(float(((np.sign(dp[informative]) == np.sign(dr[informative]))
+                                  * 1. + (dp[informative] == 0) * .5).mean()))
     lower = None
     if len(ranking) >= 2:
         rng = np.random.default_rng(20261027)
@@ -66,7 +69,7 @@ def validate_model(worlds, mean, width, real, model):
     return {'qualified': covered >= 1 - ALPHA and lower is not None and lower > .5,
             'world_coverage': covered, 'ranking_lower95': lower,
             'ranking_worlds': len(ranking), 'worlds': unique,
-            'ranking': 'same-start policy versus native; world-cluster lower95 > chance'}
+            'ranking': 'within-world paired-benefit ordering; world-cluster lower95 > chance'}
 
 
 def weighted_quantile(values, weights, q):
