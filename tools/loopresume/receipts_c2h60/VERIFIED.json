@@ -1,0 +1,1518 @@
+{
+  "sha256": "155ae0f95939f898ab5863db0f4667ef8c3fbcdec5d655f8d64e42f023d35172",
+  "document": {
+    "t": "2026-10-27T03:43:24Z",
+    "verified": true,
+    "updates": 12,
+    "last_update": 245,
+    "phase10_gate": {
+      "file": "/root/autodl-tmp/c4/restart20261026/arm/gate_panel.json",
+      "n": 16,
+      "sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "J_before": [
+        127.5708999633789,
+        253.07981872558594,
+        621.1075439453125,
+        982.6427612304688,
+        3176.725830078125,
+        177.6992645263672,
+        1189.0711669921875,
+        180.4301300048828,
+        1986.922607421875,
+        1889.353759765625,
+        343.6108703613281,
+        864.185791015625,
+        934.105712890625,
+        2073.0126953125,
+        548.1415405273438,
+        2775.9638671875
+      ],
+      "J_after": [
+        127.56600189208984,
+        253.05169677734375,
+        621.0682373046875,
+        982.5387573242188,
+        3176.7158203125,
+        177.6858367919922,
+        1189.045654296875,
+        180.32583618164062,
+        1986.91796875,
+        1889.3187255859375,
+        343.587890625,
+        864.0658569335938,
+        934.0938720703125,
+        2072.981689453125,
+        548.11083984375,
+        2775.87744140625
+      ],
+      "delta_per_start": [
+        -0.0048980712890625,
+        -0.0281219482421875,
+        -0.039306640625,
+        -0.10400390625,
+        -0.010009765625,
+        -0.013427734375,
+        -0.0255126953125,
+        -0.1042938232421875,
+        -0.004638671875,
+        -0.0350341796875,
+        -0.022979736328125,
+        -0.11993408203125,
+        -0.0118408203125,
+        -0.031005859375,
+        -0.03070068359375,
+        -0.08642578125
+      ],
+      "mean_J_before": 1132.7265162467957,
+      "mean_J_after": 1132.6845078468323,
+      "mean_delta": -0.042008399963378906,
+      "n_improved": 16,
+      "update": 243,
+      "phase_update": 10,
+      "passed": true
+    },
+    "charged": 176473,
+    "pending": [
+      "collect",
+      "convert",
+      "wm_ft",
+      "check"
+    ],
+    "source": {
+      "configs/c4_policy14_c2h60.toml": "cde5ed8c809559d04840b938b212f3a3ffec11cce80f589816145784717bc02e",
+      "tools/loopresume/c2h60.py": "92dd54d7cd34046414c302d07d47837abfa37b2161317fe896619a3d0082fb16",
+      "tools/loopresume/c2h60_box.py": "84064e065d95640817f4dcf4352c1d3e378ec075be19422eb9f55122d92ecb8e",
+      "tests/unit/test_c2h60.py": "4dee228780f4a4e780ce0ce342addcfe9df6954ffd1de9112a2a48e69a487068"
+    },
+    "memory_samples": [
+      {
+        "t": "2026-10-27T03:34:30Z",
+        "unix": 1793072070.8030274,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 238,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:34:40Z",
+        "unix": 1793072080.8435247,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:34:50Z",
+        "unix": 1793072090.883924,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:35:00Z",
+        "unix": 1793072100.942685,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:35:10Z",
+        "unix": 1793072110.9847014,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:35:21Z",
+        "unix": 1793072121.0087855,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:35:31Z",
+        "unix": 1793072131.0909703,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 239,
+        "horizon_s": 10.0
+      },
+      {
+        "t": "2026-10-27T03:35:41Z",
+        "unix": 1793072141.1519957,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:35:51Z",
+        "unix": 1793072151.2114434,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:01Z",
+        "unix": 1793072161.2518075,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:11Z",
+        "unix": 1793072171.291668,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:21Z",
+        "unix": 1793072181.350835,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:31Z",
+        "unix": 1793072191.4342263,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:41Z",
+        "unix": 1793072201.4950256,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:36:51Z",
+        "unix": 1793072211.536487,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:01Z",
+        "unix": 1793072221.580093,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:11Z",
+        "unix": 1793072231.6204147,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:21Z",
+        "unix": 1793072241.6595023,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:31Z",
+        "unix": 1793072251.69936,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 9498,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:41Z",
+        "unix": 1793072261.7405584,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 10108,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:37:51Z",
+        "unix": 1793072271.7866673,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 11454,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:01Z",
+        "unix": 1793072281.8281386,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12246,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:11Z",
+        "unix": 1793072291.8862152,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 240,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:21Z",
+        "unix": 1793072301.9285884,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:31Z",
+        "unix": 1793072311.9756083,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:42Z",
+        "unix": 1793072322.036654,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:38:52Z",
+        "unix": 1793072332.1020112,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:02Z",
+        "unix": 1793072342.1631186,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:12Z",
+        "unix": 1793072352.2222033,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 241,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:22Z",
+        "unix": 1793072362.281853,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:32Z",
+        "unix": 1793072372.3628614,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:42Z",
+        "unix": 1793072382.4416323,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:39:52Z",
+        "unix": 1793072392.4831457,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:02Z",
+        "unix": 1793072402.5437832,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:12Z",
+        "unix": 1793072412.5858552,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 242,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:22Z",
+        "unix": 1793072422.6502094,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:32Z",
+        "unix": 1793072432.7098088,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:42Z",
+        "unix": 1793072442.7527454,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:40:52Z",
+        "unix": 1793072452.7960482,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:02Z",
+        "unix": 1793072462.8538465,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:12Z",
+        "unix": 1793072472.895521,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:22Z",
+        "unix": 1793072482.9537542,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:32Z",
+        "unix": 1793072492.9952905,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:43Z",
+        "unix": 1793072503.054948,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:41:53Z",
+        "unix": 1793072513.1353128,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 243,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:03Z",
+        "unix": 1793072523.1771934,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:13Z",
+        "unix": 1793072533.260708,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:23Z",
+        "unix": 1793072543.3441598,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:33Z",
+        "unix": 1793072553.4234548,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:43Z",
+        "unix": 1793072563.4651966,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:42:53Z",
+        "unix": 1793072573.5316803,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 244,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:43:03Z",
+        "unix": 1793072583.5728,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 245,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:43:13Z",
+        "unix": 1793072593.617774,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 245,
+        "horizon_s": 60.0
+      },
+      {
+        "t": "2026-10-27T03:43:23Z",
+        "unix": 1793072603.6615381,
+        "child": {
+          "pid": 91912,
+          "start_ticks": "845196330"
+        },
+        "used_memory_mib": 12376,
+        "update": 245,
+        "horizon_s": 60.0
+      }
+    ],
+    "receipts": {
+      "C2H60_SOURCE.json": {
+        "sha256": "5096e2d9f6f0fc5142616f626b3d25f1ddab592365f55e75ef70048153f27e63",
+        "document": {
+          "configs/c4_policy14_c2h60.toml": "cde5ed8c809559d04840b938b212f3a3ffec11cce80f589816145784717bc02e",
+          "tools/loopresume/c2h60.py": "92dd54d7cd34046414c302d07d47837abfa37b2161317fe896619a3d0082fb16",
+          "tools/loopresume/c2h60_box.py": "84064e065d95640817f4dcf4352c1d3e378ec075be19422eb9f55122d92ecb8e",
+          "tests/unit/test_c2h60.py": "4dee228780f4a4e780ce0ce342addcfe9df6954ffd1de9112a2a48e69a487068"
+        }
+      },
+      "C2H60_TESTS.json": {
+        "sha256": "958e0c5f771ac7285cd1ffe256c1455f832d186c73c967961a8d4ba45d655d20",
+        "document": {
+          "t": "2026-10-27T03:28:50Z",
+          "exit": 0,
+          "source_sha256": "5096e2d9f6f0fc5142616f626b3d25f1ddab592365f55e75ef70048153f27e63",
+          "log_sha256": "083be91b832b6e81588623e985922fc9da5f9d64e005982dd7644bc6f924aede"
+        }
+      },
+      "C2H60_BINDINGS.json": {
+        "sha256": "b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5",
+        "document": {
+          "t": "2026-10-27T03:29:08Z",
+          "source": {
+            "configs/c4_policy14_c2h60.toml": "cde5ed8c809559d04840b938b212f3a3ffec11cce80f589816145784717bc02e",
+            "tools/loopresume/c2h60.py": "92dd54d7cd34046414c302d07d47837abfa37b2161317fe896619a3d0082fb16",
+            "tools/loopresume/c2h60_box.py": "84064e065d95640817f4dcf4352c1d3e378ec075be19422eb9f55122d92ecb8e",
+            "tests/unit/test_c2h60.py": "4dee228780f4a4e780ce0ce342addcfe9df6954ffd1de9112a2a48e69a487068"
+          },
+          "tests": {
+            "t": "2026-10-27T03:28:50Z",
+            "exit": 0,
+            "source_sha256": "5096e2d9f6f0fc5142616f626b3d25f1ddab592365f55e75ef70048153f27e63",
+            "log_sha256": "083be91b832b6e81588623e985922fc9da5f9d64e005982dd7644bc6f924aede"
+          },
+          "amendment": {
+            "id": "S-C2H60",
+            "t": "2026-10-27T03:29:08Z",
+            "authority": "main2026-10-27 11:20 act-on-recommendation",
+            "markdown_registration_sha256": "89a1bf93a76896a7285077867aa42b26803ece206e6bd1327090fd74534959cf",
+            "warm_start": {
+              "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/policy_latest.pt",
+              "sha256": "ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283",
+              "update": 233,
+              "resumable": true,
+              "choice": "latest30s C2 full checkpoint; C1fallback unnecessary"
+            },
+            "superseded": {
+              "coordinator": {
+                "pid": 85784,
+                "start_ticks": "844014193",
+                "t": "2026-10-27T00:12:07Z",
+                "task": "S-C2PREP",
+                "bindings_sha256": "413a88d1a640ef5a0046c874ece6178f8f021ba8082f801ae4c4ed0da24bc25e"
+              },
+              "child": {
+                "pid": 90493,
+                "start_ticks": "844953642"
+              },
+              "update": 233,
+              "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/policy_latest.pt",
+              "checkpoint_sha256": "ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283",
+              "out": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02",
+              "summary_sha256": "0b795aa1d35c5fb2e1fe9d1d8d09832d4d88af20396d9079e76363c756e80343",
+              "retained": true
+            },
+            "horizon_s": 60,
+            "logical_updates": 150,
+            "curriculum_updates": [
+              0,
+              150,
+              233
+            ],
+            "low_share_mask": "unchanged",
+            "paircrit": true,
+            "gpu_cap": 0.65,
+            "time_limit_waived": true,
+            "native_gate": "unchanged frozen16/10s earliest eligible minimum; phase-relative10progress",
+            "after_gate": "WAIT_OWNER_BUDGET unless SHA-bound owner-approved registered budget raise",
+            "charged": 176473,
+            "cap": 210000,
+            "collection_need": 36933
+          },
+          "warm_start": {
+            "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/policy_latest.pt",
+            "sha256": "ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283",
+            "update": 233,
+            "resumable": true,
+            "choice": "latest30s C2 full checkpoint; C1fallback unnecessary"
+          },
+          "superseded": {
+            "coordinator": {
+              "pid": 85784,
+              "start_ticks": "844014193",
+              "t": "2026-10-27T00:12:07Z",
+              "task": "S-C2PREP",
+              "bindings_sha256": "413a88d1a640ef5a0046c874ece6178f8f021ba8082f801ae4c4ed0da24bc25e"
+            },
+            "child": {
+              "pid": 90493,
+              "start_ticks": "844953642"
+            },
+            "update": 233,
+            "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/policy_latest.pt",
+            "checkpoint_sha256": "ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283",
+            "out": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02",
+            "summary_sha256": "0b795aa1d35c5fb2e1fe9d1d8d09832d4d88af20396d9079e76363c756e80343",
+            "retained": true
+          },
+          "wm_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+          "gate_sha256": "0cf99a3355cb9350561073c5834748725c26541b9621de31e7c03676c139b989",
+          "pairing_source_policy_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+        }
+      },
+      "C2H60_LAUNCH.json": {
+        "sha256": "9264590431cbfcc58daa841ea74d4d0f018c3ac66be5aaf60868d0781cd3fbfb",
+        "document": {
+          "pid": 91911,
+          "start_ticks": "845196315",
+          "t": "2026-10-27T03:29:09Z",
+          "task": "S-C2H60",
+          "bindings_sha256": "b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5"
+        }
+      },
+      "C2H60_STOP_REQUEST.json": {
+        "sha256": "2cef4e906c9ec677ede7f7a94a013ad8df2a58d545f082b3d0f91f6423f7e1f5",
+        "document": {
+          "event": "S-C2H60_cooperative_stop_requested",
+          "t": "2026-10-27T03:21:20Z",
+          "authority": "main 2026-10-27 11:20 act-on-recommendation",
+          "coordinator": {
+            "pid": 85784,
+            "start_ticks": "844014193",
+            "t": "2026-10-27T00:12:07Z",
+            "task": "S-C2PREP",
+            "bindings_sha256": "413a88d1a640ef5a0046c874ece6178f8f021ba8082f801ae4c4ed0da24bc25e"
+          },
+          "child": {
+            "pid": 90493,
+            "start_ticks": "844953642"
+          },
+          "stop_path": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/STOP",
+          "reason": "60s main amendment; preserve superseded30s phase"
+        }
+      },
+      "C2H60_OBSERVATION.json": {
+        "sha256": "eca5dfd704fad8f26a62bc87cf3026d5edc33685d94b89fb4dfd157d74aefe43",
+        "document": {
+          "t": "2026-10-27T03:42:22Z",
+          "updates": 11,
+          "last_update": 244,
+          "horizon_counts": {
+            "10": 2,
+            "60": 9
+          },
+          "finite_losses_and_gradients": true,
+          "training_mean_seconds": 55.74961208416657,
+          "observed_wall_seconds_per_update": 72.15596344254233,
+          "updates_per_hour": 49.891926158905406,
+          "eta_utc": "2026-10-27T06:29:32.549297+00:00",
+          "remaining_hours": 2.786021921809273,
+          "memory_samples_updates5plus": 47,
+          "memory_mib_min": 9498,
+          "memory_mib_max": 12376,
+          "memory_samples": [
+            {
+              "t": "2026-10-27T03:34:30Z",
+              "unix": 1793072070.8030274,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 238,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:34:40Z",
+              "unix": 1793072080.8435247,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:34:50Z",
+              "unix": 1793072090.883924,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:35:00Z",
+              "unix": 1793072100.942685,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:35:10Z",
+              "unix": 1793072110.9847014,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:35:21Z",
+              "unix": 1793072121.0087855,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:35:31Z",
+              "unix": 1793072131.0909703,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 239,
+              "horizon_s": 10.0
+            },
+            {
+              "t": "2026-10-27T03:35:41Z",
+              "unix": 1793072141.1519957,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:35:51Z",
+              "unix": 1793072151.2114434,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:01Z",
+              "unix": 1793072161.2518075,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:11Z",
+              "unix": 1793072171.291668,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:21Z",
+              "unix": 1793072181.350835,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:31Z",
+              "unix": 1793072191.4342263,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:41Z",
+              "unix": 1793072201.4950256,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:36:51Z",
+              "unix": 1793072211.536487,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:01Z",
+              "unix": 1793072221.580093,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:11Z",
+              "unix": 1793072231.6204147,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:21Z",
+              "unix": 1793072241.6595023,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:31Z",
+              "unix": 1793072251.69936,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 9498,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:41Z",
+              "unix": 1793072261.7405584,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 10108,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:37:51Z",
+              "unix": 1793072271.7866673,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 11454,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:01Z",
+              "unix": 1793072281.8281386,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12246,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:11Z",
+              "unix": 1793072291.8862152,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 240,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:21Z",
+              "unix": 1793072301.9285884,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:31Z",
+              "unix": 1793072311.9756083,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:42Z",
+              "unix": 1793072322.036654,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:38:52Z",
+              "unix": 1793072332.1020112,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:02Z",
+              "unix": 1793072342.1631186,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:12Z",
+              "unix": 1793072352.2222033,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 241,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:22Z",
+              "unix": 1793072362.281853,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:32Z",
+              "unix": 1793072372.3628614,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:42Z",
+              "unix": 1793072382.4416323,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:39:52Z",
+              "unix": 1793072392.4831457,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:02Z",
+              "unix": 1793072402.5437832,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:12Z",
+              "unix": 1793072412.5858552,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 242,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:22Z",
+              "unix": 1793072422.6502094,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:32Z",
+              "unix": 1793072432.7098088,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:42Z",
+              "unix": 1793072442.7527454,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:40:52Z",
+              "unix": 1793072452.7960482,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:02Z",
+              "unix": 1793072462.8538465,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:12Z",
+              "unix": 1793072472.895521,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:22Z",
+              "unix": 1793072482.9537542,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:32Z",
+              "unix": 1793072492.9952905,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:43Z",
+              "unix": 1793072503.054948,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:41:53Z",
+              "unix": 1793072513.1353128,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 243,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:42:03Z",
+              "unix": 1793072523.1771934,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 244,
+              "horizon_s": 60.0
+            },
+            {
+              "t": "2026-10-27T03:42:13Z",
+              "unix": 1793072533.260708,
+              "child": {
+                "pid": 91912,
+                "start_ticks": "845196330"
+              },
+              "used_memory_mib": 12376,
+              "update": 244,
+              "horizon_s": 60.0
+            }
+          ],
+          "last_metrics": {
+            "actor_loss": 3.8094520568847656,
+            "critic_loss": 5.6987879004567235e-05,
+            "actor_grad_norm": 12.651504516601562,
+            "critic_grad_norm": 0.03756013512611389
+          },
+          "gate": {
+            "file": "/root/autodl-tmp/c4/restart20261026/arm/gate_panel.json",
+            "n": 16,
+            "sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+            "J_before": [
+              127.5708999633789,
+              253.07981872558594,
+              621.1075439453125,
+              982.6427612304688,
+              3176.725830078125,
+              177.6992645263672,
+              1189.0711669921875,
+              180.4301300048828,
+              1986.922607421875,
+              1889.353759765625,
+              343.6108703613281,
+              864.185791015625,
+              934.105712890625,
+              2073.0126953125,
+              548.1415405273438,
+              2775.9638671875
+            ],
+            "J_after": [
+              127.56600189208984,
+              253.05169677734375,
+              621.0682373046875,
+              982.5387573242188,
+              3176.7158203125,
+              177.6858367919922,
+              1189.045654296875,
+              180.32583618164062,
+              1986.91796875,
+              1889.3187255859375,
+              343.587890625,
+              864.0658569335938,
+              934.0938720703125,
+              2072.981689453125,
+              548.11083984375,
+              2775.87744140625
+            ],
+            "delta_per_start": [
+              -0.0048980712890625,
+              -0.0281219482421875,
+              -0.039306640625,
+              -0.10400390625,
+              -0.010009765625,
+              -0.013427734375,
+              -0.0255126953125,
+              -0.1042938232421875,
+              -0.004638671875,
+              -0.0350341796875,
+              -0.022979736328125,
+              -0.11993408203125,
+              -0.0118408203125,
+              -0.031005859375,
+              -0.03070068359375,
+              -0.08642578125
+            ],
+            "mean_J_before": 1132.7265162467957,
+            "mean_J_after": 1132.6845078468323,
+            "mean_delta": -0.042008399963378906,
+            "n_improved": 16,
+            "update": 243,
+            "phase_update": 10,
+            "passed": true
+          },
+          "coordinator": {
+            "pid": 91911,
+            "start_ticks": "845196315",
+            "t": "2026-10-27T03:29:09Z",
+            "task": "S-C2H60",
+            "bindings_sha256": "b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5"
+          },
+          "child": {
+            "pid": 91912,
+            "start_ticks": "845196330"
+          },
+          "coordinator_live": true,
+          "child_live": true,
+          "charged": 176473
+        }
+      }
+    },
+    "registration_sha256": "0ee89874c6a73fe014e7d659e0667ca5609ad8efd919382e73932e755bb4238e",
+    "effective_config": {
+      "run": {
+        "seed": 965140,
+        "threads": 2,
+        "updates": 600,
+        "validation_batches": 1,
+        "gpu_memory_fraction": 0.65
+      },
+      "horizon": {
+        "enabled": true,
+        "horizons_s": [
+          10,
+          30,
+          60
+        ],
+        "curriculum_updates": [
+          0,
+          150,
+          233
+        ],
+        "entry_pad_max": [
+          32,
+          83,
+          149
+        ],
+        "gate_file": "configs/coopw_horizon_gate_13E_b2.json"
+      },
+      "paircrit": {
+        "enabled": true,
+        "warmup_updates": 100
+      },
+      "exploration": {
+        "enabled": true,
+        "curriculum_updates": [
+          0,
+          10,
+          150
+        ],
+        "rho": [
+          0.0,
+          0.0,
+          0.5
+        ],
+        "persistence_steps": 4.0,
+        "long_persistence": true,
+        "persistence_curriculum_updates": [
+          0,
+          150
+        ],
+        "persistence_seconds": [
+          30.0,
+          60.0
+        ]
+      }
+    },
+    "prerequisite_config_sha256": "e9b1b8181e9972fa684880fd81cb762b6a597be0036d72d4007972e916284694"
+  },
+  "markdown_registration": {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "sha256": "7c924dae35904a368406b6f77caa40a42e06de3117ba8e27dd09c165ffa19c56",
+    "amendment": "## S-C2H60 \u2014 prospective main cycle-2 60 s amendment (2026-10-27 11:20 authority)\n\n- Authority: TASK S-C2H60, main act-on-recommendation. Supersedes ONLY S-C2PREP's time-based 30 s resource selection and three-hour policy timeout. Time is not a scientific horizon criterion. Accepted WM1 SHA256 `5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e` already passes the unchanged 60 s horizon gate: sign agreement0.963157895,95%CI[0.935483871,0.989361702], threshold0.868421053; isolated60s smoke was finite and fit memory (peakallocated8392049664bytes). E3LONG_DIAG motivates testing longer fleet consequences; this is not evidence of a policy benefit.\n- Cooperatively stop ONLY coordinator85784/start844014193's exact child90493/start844953642 by its documented output-scoped `arm/loop/policy/c02/STOP` path; policy14_cli saves `policy_latest.pt` at the next update boundary and exits, allowing the coordinator to exit naturally. Preserve the complete30s directory, curves, summaries, checkpoints, logs and original selection receipts. At inspection03:18:57Z it had completed229, subsequently230; final superseded update/checkpoint SHA and resumability will be appended BEFORE replacement launch.\n- Warm start from the latest cooperatively saved full30s cycle2checkpoint if resumable; otherwise use cycle1SHA`64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c`, recording the actual choice and reason. Restore actor/critic/optimizers/duals/RNG/samplers under the existing loader. Keep the paired critic ON and preserve its existing C1paired-return provenance/partition. Curriculum30->60s at the first replacement update boundary; measure **150 logical new updates at60s** with registered low-share masking retained. GPU cap **0.65**. No time-based horizon fallback or three-hour timeout.\n- Keep the best eligible native-relative checkpoint using the unchanged earliest minimum/all16frozen starts selection, fixed10s scoring, phase-relative update10 signal gate and all checkpoint/WM/config/panel vetoes. Retain all superseded30s measurements as history; they do not count toward the150new60s updates. Source/config/registration/start-checkpoint bindings and live finite-loss/memory/rate/ETA evidence follow in loop events and S-C2H60 receipts.\n- After the150update phase, apply the unchanged native-relative gate, then **WAIT_OWNER_BUDGET**: main charged176473/210000,remaining33527; full cycle2collection36933 would project213406 (shortfall3406). No refund, new seed cohort or simulation dispatch under the present cap. Only an explicit owner-approved budget raise recorded in this Markdown register and bound into loop registration may enable canary-first collection -> convert -> wm_ft -> unchanged check. Otherwise collection and its successors remain pending. No MAPPO initialization, new behavioural threshold or peer-process action.\n- **S-C2H60 exact supersession/start binding, before launch:** documented STOP requested03:21:20Z; child90493 saved/exited and coordinator85784 exited naturally03:21:37Z. Final superseded30s update **233** (53new sinceC1update180), full `c4_dreamer/3` checkpoint `gpuA:/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02/policy_latest.pt`, SHA256 **`ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283`**. CPU weights-only load confirms full actor/group/critic/target/optimizers/duals/RNG/sampler/paired state; anchor0. This checkpoint is the actual warm start; C1fallback is unnecessary. All30s outputs retained. Replacement curriculum knots[0,150,233], horizons[10,30,60], pads[32,83,149]: first new update234 is60s stage2, with unchanged10s low-share mask;150logical new updates through383. Paired-return labels remain correctly bound to sourceC1SHA64f70af4, not relabelled to the233actor. Existing100critic warmup setting retained; no actor reset or MAPPO initialization. Detached60s coordinator has no policy wall-time cutoff; historical30s timeout is not applied.\n- **S-C2H60 operational/launch receipt11:29UTC+8:** first coordinator91792 exited before creating any actor/output because exclusive log creation caught a `Path.with_suffix` collision with existing `c02.log`; original30s log was untouched. All initial source/test/binding/log/state records retained in `c2h60_attempt1_no_actor/`. Corrected append-full-name log path, repeated required offline checks **60PASS3.77s**, sourceSHA`5096e2d9f6f0fc5142616f626b3d25f1ddab592365f55e75ef70048153f27e63`, testlogSHA`083be91b832b6e81588623e985922fc9da5f9d64e005982dd7644bc6f924aede`. Detached successor **91911/start845196315**, owned actor **91912/start845196330**, started03:29:09Z, output `arm/loop/policy/c02.h60`, bindingSHA`b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5`. No simulation/extra charge or scientific retry. Native-relative gate and budget stop automatic; update10/rate/memory verification pending.\n- 11:36 main: main cycle-2 60 s phase running (coordinator 91911, actor 91912, warm start ckpt 233). Coop-off twin: stopped own S-COOPOFF-C2 client (it mirrored the superseded 30 s fallback); S-COOPOFF-C2H60 dispatched to mirror the 60 s amendment.\n\n## S-COOPOFF-C2H60 \u2014 prospective mirrored amendment (main 2026-10-27 11:40 authority)\n\n- Registered BEFORE the replacement policy phase. Supersedes S-COOPOFF-C2's three-hour time projection and policy cutoff: time is waived and is not a scientific horizon criterion. Use60s iff the twin's OWN accepted WM1 `aa73d20f78c89a22838f034b03734d9e991aa5ab7707d854157a044a3b0af692` passes its unchanged96-group horizon gate at60s; otherwise use the largest passing registered horizon and retain the reason. No substitution of main's WM gate. Verify own60s allocator fit beside aggregate GPU use; resource failure pauses rather than silently substituting a time-based30s phase.\n- Own driver145709/start4169783491 remains in its WM1 horizon measurement; cycle2policy is pending, so there is no30s policy checkpoint to supersede. Its own `arm/STOP_ARM` and `arm/loop/STOP_DRIVER` markers are set. A preserved-source resource-smoke entry adapter honors STOP_ARM before actor construction; the in-flight horizon child continues unchanged and the superseded coordinator exits before any smoke/policy launch. No process signals. Preserve all source, state, logs, selections and stop receipts. Once its exact incarnation exits, archive/retire only these own stop markers under the driver lock.\n- Warm start = own accepted C1 full checkpoint `e1fa4881bbc5c89d05298e979d98b23284308331ad1bbb12f9608fa67e105675`, update180/anchor0. Restore actor/critic/optimizers/duals/RNG/samplers using the existing loader. Curriculum30->60 at the first new update: knots[0,150,180], horizons[10,30,60], entrant pads[32,83,149];150logical new updates181\u2013330 in60s stage, inherited10s low-share masking retained. Paired critic ON/100warmup and exact C1paired-return provenance/11fitting/2development partition retained. No MAPPO initialization or hand-set behavioural thresholds. The only scientific twin difference remains four cooperation-credit schedules zero; w_all1 and exploration unchanged.\n- Keep the best eligible native-relative checkpoint with unchanged earliest minimum/all16frozen starts, fixed10s scoring, phase-relative update10signal gate, checkpoint/WM/config/panel vetoes. gpuR24GB policy cap0.70/WM0.20 retained, productive phases serialized, aggregate free-memory reserve plus2GiB headroom. Three isolated production updates verify memory/finite gradients at selected horizon, never adopted; no time-based fallback or productive-policy timeout. Record exact gate/config/source/start bindings, >=10finite-update verification, memory/rate and ETA.\n- After native-relative PASS, continue detached canary-first collection cpuP then cpuQ -> convert ->40-step wm_ft ->unchanged check, stop before C3actor. <=7workers/box (absolute8), nice19, main > coop-off > GATECAL/E3-long; query main read-only before CPU phases/each world. HARMFUL-only four-world guard unchanged; INCONCLUSIVE is not PASS. Existing maximum2operational attempts, charge-before-dispatch and no scientific retry retained.\n- Budget remains210000charged,133418retained/76582remaining. Next13seeds968558\u2013968570; cohort36933(includedlong7800) projects170351. Cycle2attempt allowance73866/includedlong15600 subordinate to total210000, historical failed charges/seeds preserved; no refunds. Collection is authorized in this twin because it fits its own budget. Append-only shared acknowledgement and arm JSON precede launch. Scope/rules remain those of S-COOPOFF-C1/C2; gpuA read-only, own paths/PID incarnations only, no restricted data/evaluation seeds or push.\n"
+  }
+}

@@ -1,0 +1,8 @@
+# S-C2H60: main 2026-10-27 11:20. Full checkpoint233 is the30s curriculum.
+extends = "c4_policy14_c2prep.toml"
+
+[horizon]
+# First replacement update234 uses stage60; existing low-share mask stays active.
+horizons_s = [10, 30, 60]
+curriculum_updates = [0, 150, 233]
+entry_pad_max = [32, 83, 149]

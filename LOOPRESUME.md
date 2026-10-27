@@ -317,3 +317,71 @@ the independent WM's authoritative progress is `LOOPRESUME_WM_ONLY.json` on gpuA
   gpuA`C1COLLECT4_PROGRESS.json`SHA
   `c38f89b29be12d09ac4b3c011180a1b95e9f8b07580cde8a3a447e5ab858a246`,
   compact local`tools/loopresume/receipts_c1collect4/PROGRESS.json`.
+
+## S-C2H60 — 60 s cycle-2 replacement (2026-10-27 11:20 UTC+8 authority)
+
+- Main waived S-C2PREP's three-hour time projection. Accepted WM1 SHA
+  `5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e`
+  passes the unchanged60s horizon gate: sign0.963157895,95%CI
+  [0.935483871,0.989361702], threshold0.868421053. Original60s smoke was
+  finite and used7.816GiB allocated. Time does not select the scientific horizon.
+- Cooperatively stopped only coordinator85784/start844014193's child90493/
+  start844953642 through `arm/loop/policy/c02/STOP` at03:21:20Z. Child saved
+  and coordinator exited naturally03:21:37Z, final update**233**. Entire30s
+  phase,53new updates since180, curves/log/checkpoints and original resource
+  receipts remain on disk, superseded. Actual full resumable warm start:
+  `arm/loop/policy/c02/policy_latest.pt`, SHA256
+  `ed0d4242493ba3012d440db484cb837ee785836fed31cfbd41e1e613fcc5e283`.
+  C1fallback64f70af4 was unnecessary. Persisted anchor0; no actor reset.
+- Detached coordinator**91911/start845196315**, child**91912/start845196330**,
+  started03:29:09Z (**11:29:09UTC+8**). Output `arm/loop/policy/c02.h60`,
+  log `c02.h60.log`; coordinator log `arm/driver_c2h60.log`. Config
+  `configs/c4_policy14_c2h60.toml` has knots[0,150,233], pads[32,83,149]:
+  new234–383 are150logical updates under gate-qualified60s stage2, retaining
+  the original10s low-share mask. Paired criticON, existing100critic warmup,
+  correct C1paired-label source64f70af4/partition, cap0.65, no time cutoff.
+- Unchanged frozen16 native-relative scoring at10s, phase-relative update10
+  progress gate, earliest eligible minimum checkpoint selection and all
+  WM/config/panel/checkpoint vetoes remain active. WM1 is explicitly bound as
+  `policy_wm` for eventual gated adoption. Final native-relative gate remains
+  pending while training runs.
+- Automatic post-phase stop **WAIT_OWNER_BUDGET**: charged176473/210000,
+  remaining33527; full collection36933 projects213406, shortfall3406. Collection/
+  convert/wm_ft/check remain pending. A future owner-approved Markdown budget
+  raise must also be prospectively bound into the loop registration, using
+  amendment ID `S-C2H60_OWNER_BUDGET_RAISE`, `owner_approved=true`,
+  `collection_authorized=true`, the matching raised `sim_s_total` and
+  `markdown_registration_sha256`; the coordinator rechecks that registration
+  after the native gate. Only then does it enable serial two-box canary-first
+  collection -> convert -> wm_ft -> unchanged check. No automatic refund/retry.
+- First coordinator91792 exited before any actor/output on exclusive log-path
+  collision with existing `c02.log`; original30s log untouched. Archived source/
+  binding/tests/state/log in `c2h60_attempt1_no_actor/`; append-full-name fix
+  applied, then **60offline testsPASS3.77s**, RuffPASS. No scientific retry or
+  simulation charge. SourceSHA
+  `5096e2d9f6f0fc5142616f626b3d25f1ddab592365f55e75ef70048153f27e63`;
+  bindingSHA`b999ef1b0e41bcb35a87fac0e2aa91ada46571e26273d23684bfad84f25783e5`.
+- Live progress: `python -B -m tools.loopresume.c2h60 progress`.
+  No-dispatch handoff verifier: `python -B -m tools.loopresume.verify_c2h60`.
+  Compact verified receipt goes to `tools/loopresume/receipts_c2h60/VERIFIED.json`;
+  authoritative receipts are `gpuA:/root/autodl-tmp/c4/restart20261026/C2H60_*.json`
+  and10s own-PID memory samples `C2H60_MEMORY.jsonl`. Registration/events are
+  append-only. Existing S-C2PREP local work remains present; task commit includes
+  its unchanged small config prerequisite, not its broader unfinished edits.
+- **11:43UTC+8 live verification PASS:**12new updates234–245,10actual60s
+  rollouts plus2original low-share10s masks, all under60s stage2. All actor/
+  critic losses and gradient norms finite. Unchanged phase-update10 progress
+  gate at243 **PASS16/16**, mean10s-panel J change **-0.042008400** relative to
+  warm start; this is not the final native-relative/real-SUMO verdict. Own-PID
+  memory afterupdate5 ranged9498–12376MiB and plateaued **12376MiB(12.086GiB)**
+  for more than3minutes through verification, below0.65allocator cap; no OOM.
+  Measured rate **49.89updates/hour**,72.16s/logical update including startup/
+  scoring (training-only mean55.75s). **Phase-end ETA2026-10-27 ~14:30UTC+8
+  (06:30Z), allow ~30min variability**, then native gate and budget stop.
+  Authoritative `C2H60_VERIFIED.json` SHA
+  `155ae0f95939f898ab5863db0f4667ef8c3fbcdec5d655f8d64e42f023d35172`;
+  local compact receipt includes prospective Markdown amendment, source/tests/
+  launch/stop/checkpoint hashes, own-PID memory samples and progress gate.
+  Coordinator91911/actor91912 live,176473charged and allCPU phasespending.
+  Append-only shared registration and loop events updated. Local commit follows;
+  no push. Exit with detached phase running; completion/native verdict pending.

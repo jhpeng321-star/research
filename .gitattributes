@@ -90,3 +90,12 @@ src/wms/train/round9_gate.py text eol=lf
 tests/test_round9_gate*.py text eol=lf
 R9_GATE2.md text eol=lf
 .gitattributes text eol=lf
+
+# Preserve SHA-bound S-C2H60 source and receipt bytes on Windows checkouts.
+/configs/c4_policy14_c2h60.toml -text
+/configs/c4_policy14_c2prep.toml -text
+/tools/loopresume/c2h60.py -text
+/tools/loopresume/c2h60_box.py -text
+/tools/loopresume/verify_c2h60.py -text
+/tools/loopresume/receipts_c2h60/*.json -text
+/tests/unit/test_c2h60.py -text
