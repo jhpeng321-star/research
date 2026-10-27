@@ -1,6 +1,7 @@
 """Explicit task-only transport; all numerical analysis runs on gpuA CPU."""
 import argparse
 import base64
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -27,6 +28,7 @@ def stage():
         paths['imagine.py'] = ROOT/'tools/c2real/imagine.py'
     paths['verify.py'] = ROOT/'tools/c2real/verify.py'
     paths['coverage.py'] = ROOT/'tools/c2real/coverage.py'
+    paths['report.md'] = ROOT/'docs/paper_results/C2REAL.md'
     payload = {n: base64.b64encode(p.read_bytes()).decode() for n, p in paths.items()}
     reg = REGISTER.read_text(encoding='utf-8').split('## S-C2REAL-1', 1)[1]
     execute(f'''import pathlib,base64,hashlib,json,os
@@ -83,6 +85,9 @@ os.nice(19);r=pathlib.Path({REMOTE!r});print(json.dumps({{n:base64.b64encode((r/
     paper = Path('E:/research-dense/docs/paper_results')
     assert paper.is_dir()
     (paper/'C2REAL.csv').write_bytes((dest/'C2REAL.csv').read_bytes())
+    branch_paper = ROOT/'docs/paper_results'
+    assert branch_paper.is_dir()
+    (branch_paper/'C2REAL.csv').write_bytes((dest/'C2REAL.csv').read_bytes())
     print('Fetched task numerical evidence to tools/c2real/evidence')
 
 
@@ -104,7 +109,25 @@ print(p.stdout);print(p.stderr);raise SystemExit(p.returncode)
 ''')
 
 
+def delivery():
+    evidence = ROOT/'tools/c2real/evidence'
+    verified = json.loads((evidence/'VERIFIED.json').read_text(encoding='utf-8'))
+    assert verified['status'] == 'PASS' and verified['report_words'] <= 400
+    checked = {}
+    for folder in (ROOT/'docs/paper_results', Path('E:/research-dense/docs/paper_results')):
+        for name, key in [('C2REAL.md', 'report_sha256'), ('C2REAL.csv', 'csv_sha256')]:
+            path = folder/name
+            sha = hashlib.sha256(path.read_bytes()).hexdigest()
+            assert sha == verified[key], str(path)
+            checked[str(path)] = sha
+    receipt = dict(status='PASS', files=checked, report_words=verified['report_words'],
+                   numerical_verification='gpuA CPU nice19, one numerical thread',
+                   verified_receipt_sha256=hashlib.sha256((evidence/'VERIFIED.json').read_bytes()).hexdigest())
+    (evidence/'DELIVERY.json').write_text(json.dumps(receipt, indent=2), encoding='utf-8')
+    print(json.dumps(receipt, indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['stage', 'run', 'status', 'fetch', 'verify', 'coverage'])
+    parser.add_argument('action', choices=['stage', 'run', 'status', 'fetch', 'verify', 'coverage', 'delivery'])
     globals()[parser.parse_args().action]()

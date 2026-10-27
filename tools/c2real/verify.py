@@ -51,8 +51,18 @@ def main():
     assert np.isclose(vectors[2].mean()-vectors[1].mean(),contrast['value'])
     beh=[r for r in rows if r['level']=='behaviour_start']
     assert len(beh)==480
+    behaviour_worlds={}
     for c in range(3):
         for metric in ('metering','multi_slow','side_by_side','vacate'):
+            worlds=sorted({r['world'] for r in beh if r['cycle']==str(c)})
+            grouped=np.zeros((len(worlds),2,2))
+            for r in beh:
+                if r['cycle']==str(c) and r['metric']==metric:
+                    grouped[worlds.index(r['world']),int(r['arm']=='policy')]+=[int(r['count']),float(r['exposure_cav_h'])]
+            behaviour_worlds[c,metric]=grouped
+            indices=np.random.default_rng(20261027).integers(0,len(worlds),(5000,len(worlds)))
+            sums=grouped[indices].sum(1)
+            rates=sums[:,:,0]/sums[:,:,1]
             raw={}
             for arm in ('native','policy'):
                 selected=[r for r in beh if r['cycle']==str(c) and r['metric']==metric and r['arm']==arm]
@@ -64,9 +74,21 @@ def main():
                          and r['metric']==metric and r['arm']==arm)
                 assert np.isclose(rate,float(est['value']))
                 assert float(est['ci_low'])<=rate<=float(est['ci_high'])
+                bounds=np.quantile(rates[:,int(arm=='policy')],[.025,.975])
+                assert np.allclose(bounds,[float(est['ci_low']),float(est['ci_high'])])
             est=next(r for r in rows if r['level']=='behaviour_estimate' and r['cycle']==str(c)
                      and r['metric']==metric and r['arm']=='policy_minus_native')
             assert np.isclose(raw['policy']-raw['native'],float(est['value']))
+            assert np.allclose(np.quantile(rates[:,1]-rates[:,0],[.025,.975]),
+                               [float(est['ci_low']),float(est['ci_high'])])
+    for est in result['metering']:
+        rng=np.random.default_rng(20261027)
+        draws=[]
+        for c in (2,1):
+            x=behaviour_worlds[c,est['metric']]
+            sums=x[rng.integers(0,len(x),(5000,len(x)))].sum(1)
+            draws.append(sums[:,1,0]/sums[:,1,1]-sums[:,0,0]/sums[:,0,1])
+        assert np.allclose(np.quantile(draws[0]-draws[1],[.025,.975]),[est['ci_low'],est['ci_high']])
     for stat in result['wm_existing']:
         c,h=stat['cycle'],stat['horizon_s']
         rr=[r for r in rows if r['level']=='wm_start' and r['cycle']==str(c) and r['horizon_s']==str(h)]
@@ -87,6 +109,18 @@ def main():
         assert path.resolve().is_relative_to(ROOT.resolve())
         assert hashlib.sha256(path.read_bytes()).hexdigest()==sha,name
     assert inputs['c2real/thresholds.json'].startswith('9119cd77')
+    coverage=json.loads((HOME/'COVERAGE.json').read_text())
+    assert coverage['cycle1_cycle2_worlds_disjoint']
+    assert coverage['source_sha256']==hashlib.sha256((HOME/'coverage.py').read_bytes()).hexdigest()
+    for name,sha in coverage['input_hashes'].items():
+        assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==sha,name
+    report=(HOME/'report.md').read_text()
+    assert len(report.split())<=400, len(report.split())
+    normalized=report.replace('\N{MINUS SIGN}','-')
+    for stat in result['cycles']+[result['pooled'],result['cycle2_minus_cycle1']]:
+        phrase=f"{stat['value']:,.0f} [{stat['ci_low']:,.0f},{stat['ci_high']:+,.0f}]"
+        assert phrase in normalized,phrase
+    assert all(phrase in normalized for phrase in ('unpaired','unidentified at 60 s','bias CI unavailable'))
     owned=json.loads((HOME/'PID.json').read_text())
     proc=Path('/proc')/str(owned['pid'])/'stat'
     if proc.exists():
@@ -97,10 +131,16 @@ def main():
                  simulation_calls=0,analysis_pid=owned,
                  source_sha256=hashlib.sha256(source).hexdigest(),
                  csv_sha256=hashlib.sha256((HOME/'C2REAL.csv').read_bytes()).hexdigest(),
-                 results_sha256=hashlib.sha256((HOME/'RESULTS.json').read_bytes()).hexdigest(),
+                  results_sha256=hashlib.sha256((HOME/'RESULTS.json').read_bytes()).hexdigest(),
+                  verification_source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                  coverage_sha256=hashlib.sha256((HOME/'COVERAGE.json').read_bytes()).hexdigest(),
+                  report_sha256=hashlib.sha256((HOME/'report.md').read_bytes()).hexdigest(),
+                  report_words=len(report.split()),coverage_input_files_verified=len(coverage['input_hashes']),
                  own_analysis_exited=True,tests=['pairing/accounting/clocks','three guard reproductions',
                     'world bootstrap','unpaired cycle contrast','frozen behaviour pooled ratios',
-                    'same-start prediction residuals/correlation','all input hashes'])
+                     'same-start prediction residuals/correlation','all input hashes',
+                     'all behaviour rate and unpaired contrast bootstrap CIs','coverage input hashes',
+                     'report word count and rounded real-effect CIs'])
     (HOME/'VERIFIED.json').write_text(json.dumps(receipt,indent=2))
     print(json.dumps(receipt))
 
