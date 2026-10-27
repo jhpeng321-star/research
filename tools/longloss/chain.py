@@ -50,7 +50,7 @@ def main():
             disk()
             write('STATE.json', {'phase': 'training', 'variant': variant, 't': now()})
             code = run([sys.executable, '-B', str(OUT/'code/train.py'), variant],
-                       variant+'_train', 10920)
+                       variant+'_train', 12600)  # hard backstop; SIGALRM enforces 10800 s
             mirror()
             if (OUT/variant/'wm_s.pt').is_file():
                 write('STATE.json', {'phase': 'scoring', 'variant': variant, 't': now()})

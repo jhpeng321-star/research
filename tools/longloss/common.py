@@ -57,6 +57,8 @@ def mirror():
     try:
         _mirror()
         return True
+    except TimeoutError:
+        raise  # SIGALRM training-cap signal must never be swallowed here
     except Exception as exc:
         event(mirror_error=repr(exc))
         return False
