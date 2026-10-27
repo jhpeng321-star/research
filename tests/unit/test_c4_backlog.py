@@ -185,3 +185,20 @@ def test_missing_everywhere_leaves_v9entry_path_untouched(tmp_path):
     entry = C4.convert_episode(tape, tmp_path / "src")
     assert "queue_arrays" not in entry
     assert not (tmp_path / "src" / entry["dir"] / "entry_backlog.npy").exists()
+
+
+def test_foreign_summary_without_branch_keeps_v9entry(tmp_path):
+    """Requests + a non-pair summary but no branch meta (e3-style tape): V9ENTRY
+    integer-count clocks, never the reconciled pair path, never a refusal."""
+    tape, _ = _pair_tape(tmp_path)
+    arrays = _tape_arrays()
+    _requests_xml(tape)
+    meta = dict(schema="c4_sumo_episode/1", seed=4107, demand_vph=2700, penetration=0.2,
+                warmup_s=T0, horizon_s=6.0, controller="direct", k_slots=K)
+    np.savez_compressed(tape / "episode.npz", meta_json=np.asarray(json.dumps(meta)), **arrays)
+    (tape / "manifest.json").write_text(json.dumps({**meta, "status": "complete"}))
+    (tape / "summary.json").write_text(json.dumps({"schema": "c4_sumo_episode_summary/1"}))
+    entry = C4.convert_episode(tape, tmp_path / "src")
+    clocks = entry["queue_arrays"]
+    assert "pair_cost_reconciliation" not in clocks
+    assert clocks["queue_unknown"] == 3 and clocks["n_requests"] == 4

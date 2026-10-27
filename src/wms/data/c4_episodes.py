@@ -477,10 +477,12 @@ def convert_episode(src: Path, dst_root: Path, *, allow_designed: bool = False) 
     if requests is not None:
         names, depart, entrance = read_requests(requests)
         summary_path = src / "summary.json"
-        if summary_path.is_file():
+        pair_tape = isinstance(meta.get("branch"), dict) and summary_path.is_file()
+        if pair_tape:
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
             if summary.get("schema") != PAIR_SUMMARY_SCHEMA:
-                raise C4EpisodeRefusal(f"{src}: summary is not a {PAIR_SUMMARY_SCHEMA} pair tape")
+                raise C4EpisodeRefusal(f"{src}: paired branch but summary is not a "
+                                       f"{PAIR_SUMMARY_SCHEMA} tape")
             # Exact paired-branch clocks (reconciled to the ledger below, fail closed).
             queue, queue_stats = exact_entry_backlog(
                 arrays["time_s"], arrays["vid"], arrays["veh_mask"].astype(bool),
