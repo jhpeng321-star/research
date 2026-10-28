@@ -24,7 +24,7 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.utils.checkpoint import checkpoint
 
-from wms.core import speed_flags
+from wms.core import fastpath, speed_flags
 from wms.physics.accel import apply_emergency_envelope, baseline_accel
 from wms.physics.config import PhysicsConfig
 from wms.physics.lane_conflict import resolve_lane_conflicts
@@ -677,8 +677,8 @@ class WmSModel(nn.Module):
 
     def _physics_step(self, state: dict[str, Tensor],
                       driver_params: Optional[dict[str, Tensor]] = None, *,
-                      emergency_envelope: bool = True
-                      ) -> tuple[Tensor, Tensor]:
+                      emergency_envelope: bool = True, lane_logits: bool = True
+                      ) -> tuple[Tensor, Optional[Tensor]]:
         """Baseline ``(accel, lane logits)`` from the injected backend or in-module physics.
 
         ``emergency_envelope=False`` (R13E forward) omits the emergency envelope so the
@@ -690,9 +690,11 @@ class WmSModel(nn.Module):
                 # Keep the unconstrained baseline for residual/courtesy composition.
                 # The virtual-leader cap is applied ONCE after those terms below.
                 kin = state_kin(state)
+                # S-WMSPEED: ``lane_logits=False`` (caller overwrites them) skips the pure,
+                # RNG-free MOBIL pass whose result would be discarded.
                 return (baseline_accel(kin, state_present(state, kin), self.physics, driver_params,
                                        emergency_envelope=env),
-                        self.mobil_merge_logits(state, driver_params))
+                        self.mobil_merge_logits(state, driver_params) if lane_logits else None)
             # V8WM3 merge_impatience: the carried lane-end waiting time (None = legacy paths).
             impatience = merge_impatience_level(state.get("merge_wait_s"), self.physics)
             if (self.physics.merge_end_wait or self.physics.mainline_merge_yield) \
@@ -1032,8 +1034,14 @@ class WmSModel(nn.Module):
             encoded, driver_embedding, driver_params = self._encode_drivers(
                 kin, present, driver_history, driver_history_mask, history, history_mask,
                 driver_defaults, driver_params, driver_embedding)
+            # S-WMSPEED (exact): with a native-lane CAV mask and secure-gap lane changes the
+            # baseline lane logits are recomputed just below; do not build them twice.
+            replaced = (native_lane is not None
+                        and getattr(self.physics, "lane_change_secure_gap", False)
+                        and fastpath.dedupe_mobil())
             physics, lane_base = self._physics_step({**state, "veh_kin": kin}, driver_params,
-                                                    emergency_envelope=not final_envelope)
+                                                    emergency_envelope=not final_envelope,
+                                                    lane_logits=not replaced)
         else:
             physics, lane_base = self._physics_step({**state, "veh_kin": kin},
                                                     emergency_envelope=not final_envelope)

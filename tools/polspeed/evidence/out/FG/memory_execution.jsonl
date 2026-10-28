@@ -1,0 +1,26 @@
+{"t": 1793197065.9977763, "event": "full_forward_start", "update": 180, "allocated_bytes": 14932992, "reserved_bytes": 385875968}
+{"t": 1793197261.3804562, "event": "full_forward_done", "update": 180, "tape_draws": 1548, "allocated_bytes": 201255424, "reserved_bytes": 1577058304}
+{"t": 1793197261.5523198, "event": "future_start", "update": 180, "start": 0, "future": 0, "allocated_bytes": 221139456, "reserved_bytes": 1577058304}
+{"t": 1793197305.7126296, "event": "future_forward_done", "update": 180, "start": 0, "future": 0, "allocated_bytes": 797256192, "reserved_bytes": 1688207360}
+{"t": 1793197341.8985083, "event": "future_vjp_done", "update": 180, "start": 0, "future": 0, "allocated_bytes": 735767552, "reserved_bytes": 12209618944}
+{"t": 1793197342.1469216, "event": "future_start", "update": 180, "start": 0, "future": 1, "allocated_bytes": 565656064, "reserved_bytes": 12209618944}
+{"t": 1793197380.7962346, "event": "future_forward_done", "update": 180, "start": 0, "future": 1, "allocated_bytes": 1141772800, "reserved_bytes": 12209618944}
+{"t": 1793197418.4383247, "event": "future_vjp_done", "update": 180, "start": 0, "future": 1, "allocated_bytes": 736141312, "reserved_bytes": 12257853440}
+{"t": 1793197418.7216527, "event": "future_start", "update": 180, "start": 0, "future": 2, "allocated_bytes": 565656576, "reserved_bytes": 12257853440}
+{"t": 1793197457.096738, "event": "future_forward_done", "update": 180, "start": 0, "future": 2, "allocated_bytes": 1141773312, "reserved_bytes": 12257853440}
+{"t": 1793197494.317572, "event": "future_vjp_done", "update": 180, "start": 0, "future": 2, "allocated_bytes": 736141824, "reserved_bytes": 12257853440}
+{"t": 1793197494.5724707, "event": "future_start", "update": 180, "start": 0, "future": 3, "allocated_bytes": 565656576, "reserved_bytes": 12257853440}
+{"t": 1793197539.1501787, "event": "future_forward_done", "update": 180, "start": 0, "future": 3, "allocated_bytes": 1141773312, "reserved_bytes": 12257853440}
+{"t": 1793197580.5382543, "event": "future_vjp_done", "update": 180, "start": 0, "future": 3, "allocated_bytes": 736141824, "reserved_bytes": 12264144896}
+{"t": 1793197580.8322563, "event": "future_start", "update": 180, "start": 0, "future": 4, "allocated_bytes": 565656576, "reserved_bytes": 12264144896}
+{"t": 1793197619.4212582, "event": "future_forward_done", "update": 180, "start": 0, "future": 4, "allocated_bytes": 1141773312, "reserved_bytes": 12264144896}
+{"t": 1793197655.3621807, "event": "future_vjp_done", "update": 180, "start": 0, "future": 4, "allocated_bytes": 736141824, "reserved_bytes": 12276727808}
+{"t": 1793197655.6253865, "event": "future_start", "update": 180, "start": 0, "future": 5, "allocated_bytes": 565656576, "reserved_bytes": 12276727808}
+{"t": 1793197693.2426717, "event": "future_forward_done", "update": 180, "start": 0, "future": 5, "allocated_bytes": 1141773312, "reserved_bytes": 12276727808}
+{"t": 1793197728.623611, "event": "future_vjp_done", "update": 180, "start": 0, "future": 5, "allocated_bytes": 736141824, "reserved_bytes": 12289310720}
+{"t": 1793197728.8778594, "event": "future_start", "update": 180, "start": 0, "future": 6, "allocated_bytes": 565656576, "reserved_bytes": 12289310720}
+{"t": 1793197776.8613114, "event": "future_forward_done", "update": 180, "start": 0, "future": 6, "allocated_bytes": 1141773312, "reserved_bytes": 12289310720}
+{"t": 1793197818.9464753, "event": "future_vjp_done", "update": 180, "start": 0, "future": 6, "allocated_bytes": 736141824, "reserved_bytes": 12299796480}
+{"t": 1793197819.2212455, "event": "future_start", "update": 180, "start": 0, "future": 7, "allocated_bytes": 565656576, "reserved_bytes": 12299796480}
+{"t": 1793197870.5381012, "event": "future_forward_done", "update": 180, "start": 0, "future": 7, "allocated_bytes": 1141773312, "reserved_bytes": 12299796480}
+{"t": 1793197911.1363933, "event": "future_vjp_done", "update": 180, "start": 0, "future": 7, "allocated_bytes": 736141824, "reserved_bytes": 12314476544}

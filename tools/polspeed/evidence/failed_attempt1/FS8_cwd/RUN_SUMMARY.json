@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "gpu_memory_fraction": 0.25,
+  "diagnostic_grad_audit_every": 25,
+  "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/policy14_cli.py\", line 275, in main\n    train, val = _load_starts(raw[\"data\"], models, args.seed, entries=True)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/train_cli.py\", line 124, in _load_starts\n    source_config = checked_path(data.get(\"wm_config\", \"configs/r5b.toml\"))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/start_states.py\", line 30, in checked_path\n    raise ValueError(f\"path is outside workspace: {value}\")\nValueError: path is outside workspace: configs/c4_policy14_starts.toml\n",
+  "error": "ValueError: path is outside workspace: configs/c4_policy14_starts.toml"
+}

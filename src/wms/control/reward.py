@@ -35,6 +35,66 @@ _CLOSING_EPS_MPS = 0.01
 _FREE_SPEED_FLOOR_MPS = 10.0      # V8POL: time-gap speed floor of the free-road test
 
 
+def _cvar_bisection_eager(values: Tensor, present: Tensor, weight: Tensor,
+                          count: Tensor) -> Tensor:
+    """Detached 32-step bisection for the CVaR threshold eta (pure, RNG-free, no sync)."""
+    tau = _CVAR_TEMPERATURE_S
+    tail = 1.0 - _CVAR_ALPHA
+    any_present = present.any(-1)
+    lo = torch.where(present, values, torch.full_like(values, float("inf"))).amin(-1)
+    hi = torch.where(present, values, torch.full_like(values, -float("inf"))).amax(-1)
+    lo = torch.where(any_present, lo, torch.zeros_like(lo)) - 10.0 * tau
+    hi = torch.where(any_present, hi, torch.zeros_like(hi)) + 10.0 * tau
+    for _ in range(32):
+        eta = 0.5 * (lo + hi)
+        mass = torch.where(present, weight * torch.sigmoid((values - eta[:, None]) / tau),
+                           torch.zeros_like(values)).sum(-1) / count
+        lo = torch.where(mass > tail, eta, lo)
+        hi = torch.where(mass > tail, hi, eta)
+    return 0.5 * (lo + hi)
+
+
+#: S-POLSPEED ``WMS_SPEED_GRAPH_CVAR``: one captured CUDA graph per input geometry.
+_CVAR_GRAPHS: dict = {}
+
+
+def _cvar_bisection(values: Tensor, present: Tensor, weight: Tensor, count: Tensor) -> Tensor:
+    """Eager bisection, or (opt-in, CUDA only) a replay of the SAME kernels on the SAME shapes.
+
+    The ~360 tiny launches of the bisection dominate the paired (row-local, [1,K]) reward.
+    A CUDA graph replays exactly the captured kernels with identical launch geometry and
+    inputs copied into static buffers, so eta is bit-identical; the bisection is detached,
+    deterministic and draws no random numbers. Python dispatch modes (the LONGMEM random
+    tape) are bypassed only for these non-random ops.
+    """
+    from wms.core import speed_flags
+    if (not values.is_cuda or not speed_flags.enabled("graph_cvar")
+            or torch.cuda.is_current_stream_capturing() or torch.is_grad_enabled()):
+        return _cvar_bisection_eager(values, present, weight, count)
+    from torch.utils._python_dispatch import _disable_current_modes
+    inputs = (values, present, weight, count)
+    key = tuple((tuple(t.shape), t.dtype, tuple(t.stride())) for t in inputs) + (values.device,)
+    with _disable_current_modes():
+        entry = _CVAR_GRAPHS.get(key)
+        if entry is None:
+            static = tuple(t.clone() for t in inputs)
+            current = torch.cuda.current_stream(values.device)
+            side = torch.cuda.Stream(values.device)
+            side.wait_stream(current)
+            with torch.cuda.stream(side):
+                _cvar_bisection_eager(*static)          # warm-up outside capture
+            current.wait_stream(side)
+            graph = torch.cuda.CUDAGraph()
+            with torch.cuda.graph(graph, capture_error_mode="thread_local"):
+                out = _cvar_bisection_eager(*static)
+            entry = _CVAR_GRAPHS[key] = (graph, static, out)
+        graph, static, out = entry
+        for dst, src in zip(static, inputs):
+            dst.copy_(src)
+        graph.replay()
+        return out.clone()
+
+
 def _soft_cvar(delay: Tensor, present: Tensor, weight: Tensor | None = None) -> Tensor:
     """Bias-corrected, softplus Rockafellar--Uryasev upper-tail CVaR.
 
@@ -58,19 +118,7 @@ def _soft_cvar(delay: Tensor, present: Tensor, weight: Tensor | None = None) -> 
     tau = _CVAR_TEMPERATURE_S
     tail = 1.0 - _CVAR_ALPHA
     with torch.no_grad():
-        values = delay.detach()
-        any_present = present.any(-1)
-        lo = torch.where(present, values, torch.full_like(values, float("inf"))).amin(-1)
-        hi = torch.where(present, values, torch.full_like(values, -float("inf"))).amax(-1)
-        lo = torch.where(any_present, lo, torch.zeros_like(lo)) - 10.0 * tau
-        hi = torch.where(any_present, hi, torch.zeros_like(hi)) + 10.0 * tau
-        for _ in range(32):
-            eta = 0.5 * (lo + hi)
-            mass = torch.where(present, weight * torch.sigmoid((values - eta[:, None]) / tau),
-                               torch.zeros_like(values)).sum(-1) / count
-            lo = torch.where(mass > tail, eta, lo)
-            hi = torch.where(mass > tail, hi, eta)
-        eta = 0.5 * (lo + hi)
+        eta = _cvar_bisection(delay.detach(), present, weight, count)
     excess = tau * F.softplus((delay - eta[:, None]) / tau)
     excess = torch.where(present, weight * excess, torch.zeros_like(excess)).sum(-1) / count
     entropy = -_CVAR_ALPHA * math.log(_CVAR_ALPHA) - tail * math.log(tail)
