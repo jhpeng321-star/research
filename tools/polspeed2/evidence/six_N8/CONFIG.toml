@@ -1,0 +1,12 @@
+extends = "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_8e75184392b3/POLICY.toml"
+[trainer]
+imagination_checkpoint_segment = 1
+[counterfactual]
+curriculum_updates = [0,1]
+n_individual = 0
+cover_group_members = false
+w_individual = [0.0,0.0]
+w_coop = [0.0,0.0]
+w_group = [18.8,18.8]
+w_all = [1.0,1.0]
+w_team = [10.3,10.3]

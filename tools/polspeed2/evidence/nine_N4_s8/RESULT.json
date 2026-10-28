@@ -1,0 +1,53 @@
+{
+  "name": "nine_N4_s8",
+  "returncode": 1,
+  "elapsed_s": 128.65581226348877,
+  "peak_total_gpu_mib": 17726,
+  "peak_total_gpu_fraction": 0.36072446072446074,
+  "peak_owned_gpu_mib": 7466,
+  "peak_owned_gpu_fraction": 0.15193325193325194,
+  "peak_external_gpu_mib": 10210,
+  "worker_diagnostics_contain_out_of_memory": true,
+  "worker_peaks": [
+    {
+      "path": "future_workers/801b19e49bbe457394dfb6463caa1d4b/0/memory.json",
+      "peak_allocated": 1268965376,
+      "peak_reserved": 1344274432
+    },
+    {
+      "path": "future_workers/801b19e49bbe457394dfb6463caa1d4b/1/memory.json",
+      "peak_allocated": 1268965376,
+      "peak_reserved": 1346371584
+    },
+    {
+      "path": "future_workers/801b19e49bbe457394dfb6463caa1d4b/2/memory.json",
+      "peak_allocated": 1268965376,
+      "peak_reserved": 1346371584
+    },
+    {
+      "path": "future_workers/801b19e49bbe457394dfb6463caa1d4b/3/memory.json",
+      "peak_allocated": 1268965376,
+      "peak_reserved": 1344274432
+    },
+    {
+      "path": "future_workers/f6eb346754924015a86715b094da0431/0/memory.json",
+      "peak_allocated": 700161024,
+      "peak_reserved": 734003200
+    },
+    {
+      "path": "future_workers/f6eb346754924015a86715b094da0431/1/memory.json",
+      "peak_allocated": 637085184,
+      "peak_reserved": 696254464
+    },
+    {
+      "path": "future_workers/f6eb346754924015a86715b094da0431/2/memory.json",
+      "peak_allocated": 658110464,
+      "peak_reserved": 710934528
+    },
+    {
+      "path": "future_workers/f6eb346754924015a86715b094da0431/3/memory.json",
+      "peak_allocated": 679135744,
+      "peak_reserved": 723517440
+    }
+  ]
+}

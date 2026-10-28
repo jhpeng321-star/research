@@ -1,133 +1,259 @@
-# S-POLSPEED2 — ordered parallel future execution
+# S-POLSPEED2 — exact parallel candidate-A policy updates
 
-Branch: `c4/polspeed2`, based on `c4/polspeed` `f6dea57b`.
-Owned remote output: `/root/autodl-tmp/c4/polspeed2_20261028`.
+Branch `c4/polspeed2`, based on `c4/polspeed` **f6dea57b**. Task output:
+`/root/autodl-tmp/c4/polspeed2_20261028` on gpuA. Measurements: October 28–29, 2026.
 
-Initial gpuA inspection, 2026-10-28 23:09:03 server time: RTX 4090 D,
-49,140 MiB total, 1 MiB used, no compute processes. Aggregate cap: 0.60
-(29,484 MiB including the coordinator and worker CUDA contexts).
+## Result and recommendation
 
-Measurements in progress. **N=2, original nine-row geometry: 454.188 s/update,
-24,882 MiB owned GPU peak (50.63%), 2.24x versus 1,018 s; projected 150 updates
-18.92 h.** Last-row parity includes all **158 logged leaves**, including the
-independent rescore: zero differences against both the dry run and S-POLSPEED
-FGA. The initial 151-leaf trainer-only comparator was corrected to select the
-later CLI row, matching S-POLSPEED's comparison procedure.
-The six-row algebra preserves the mathematical objective; floating-point and
-telemetry parity are measured separately from unchanged-row parallelism.
+**Qualified strict-exact recipe: FGA + four replay workers + parallel no-grad
+forward + checkpoint segment 2, original nine rows. Update 181 takes
+350.756 s: 2.90x faster than 1,018 s, or 2.25x faster than FGA's 788.2 s.**
 
-## Six-row measured parity (not bitwise-equivalent to nine rows)
+* All **158 logged leaves**, including the independent rescore, are bitwise
+  identical to both the original dry run and S-POLSPEED FGA. Timing and CUDA
+  memory keys are excluded exactly as in the original comparison.
+* All **157 actor/group-encoder/Adam tensors** are byte-identical between the
+  N2 and N4 nine-row executions. CPU/CUDA tests additionally compare full
+  gradients and optimizer state against serial execution.
+* Sampled owned GPU peak: **19,394 MiB / 49,140 MiB = 39.47%**, below the 60%
+  aggregate ownership cap, including coordinator and worker contexts.
+* 150 updates: **14.61 h of update time**, approximately **15.94 h including
+  observed startup/rescore/panel overhead**. This is a projection, not a
+  measured 150-update training run.
 
-The imported `db05c3e0` preset is opt-in. It has the same real-arithmetic
-objective, but changes CUDA row/reduction geometry. Actual update 181:
+The six-row preset is integrated, but is **not bitwise-equivalent on the real
+update**. Its measured differences and faster timings are reported separately
+below. Keep the original nine-row geometry for strict-exact adoption.
 
-* Serial FGA + six rows: **746.248 s**, owned peak **8,256 MiB**.
-* N2 FGA + six rows: **440.823 s**, owned peak **17,068 MiB**; **bitwise
-  identical to serial six rows on all 158 logged leaves and 157 actor/Adam
-  tensors**. Projection: 18.37 h / 150 updates.
-* Versus the original nine-row reference: **61 logged differences**. Some
-  are intentional coverage/weight/decomposition changes; others are rounding.
-  Actor loss absolute difference **7.778406143e-6** (relative **2.584392546e-4**);
-  return mean **9.765625e-4**; gradient norm **9.765625e-3** (relative
-  **4.210985180e-7**); pessimistic credit **1.067352295e-2**.
-* Updated policy max absolute difference **2.808678801e-6**; group encoder
-  **1.117587090e-6**; Adam state **9.536743164e-7**. **101 of 157 tensors**
-  differ. Near-zero attention biases can have large relative errors, so a
-  blanket small relative tolerance is unsupported. Independent rescore leaves
-  are bitwise equal on this update.
+## Qualified activation
 
-These are tight **observed update-181 bounds**, not a universal error guarantee
-over future updates. Full key/tensor differences are retained in
-`tools/polspeed2/evidence/REPORT.json`. Strict bitwise adoption uses the original
-nine-row recipe; six-row selection remains a separate explicit opt-in.
+All production execution flags default OFF: worker count defaults to 1,
+parallel forward to false, and VJP slots default to the worker count. The
+six-row preset requires explicit config selection.
 
-## Execution design
+Keep the original microbatch 1 and both offloads enabled. Apply the following
+memory-only override to the resolved candidate-A config:
 
-`WMS_SPEED_FUTURE_WORKERS=N` (integer 1–8, default 1) opts into independent
-Python processes for per-future replay plus VJP. Each worker has a frozen
-snapshot of the same actor/WM and its own RNG, tape, mutable rollout switches,
-saved-tensor hooks, controller closures, allocator and CUDA-graph cache.
-No actor optimizer or dataset is sent to a worker. The coordinator retains
-the complete full-K outer graph and passes its VJP vectors into each replay.
-Returned gradients are added in the original `(start, future)` order, using
-the same device/dtype elementwise additions as the serial implementation.
-CPU gradient transport is lossless. Hash-randomized reward-dictionary ordering
-is handled by matching the coordinator's TreeSpec, not worker leaf positions.
-The final future's spill counters are returned to preserve serial telemetry.
+```toml
+[trainer]
+imagination_checkpoint_segment = 2
+```
 
-`WMS_SPEED_PARALLEL_FORWARD=1` additionally distributes the no-grad futures.
-It preserves the original row geometry instead of enlarging GEMMs. Workers
-record a shared setup tape prefix plus one future segment each; the coordinator
-reassembles these in future order and runs the unchanged aggregation with
-cached futures. The original future-0 advanced RNG state is restored. This
-keeps global RNG consumption and the full-K risk/uncertainty reductions.
+Use the existing FGA flags plus these execution settings:
 
-`WMS_SPEED_FUTURE_VJP_SLOTS=M` (default N, no additional gating) optionally
-keeps N replay forwards concurrent but permits only M live recompute/backwards.
-Measured on the actual nine-row update: a replay forward reserves 855,638,016
-bytes, versus 12,132,024,320 bytes peak for backward. This permits a four-worker
-pipeline without changing segment 8 or row geometry: two peak-sized backwards
-plus two small forward graphs. Workers use the lower
-`WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION` before their VJP, acquire an atomic
-owned-directory token, raise their allocator limit, compute the VJP, free the
-graph/cache, lower the limit, then release the token. Unexpected retained GPU
-storage fails closed without releasing a high-memory token.
+```sh
+WMS_SPEED_FUTURE_WORKERS=4
+WMS_SPEED_PARALLEL_FORWARD=1
+WMS_SPEED_FUTURE_VJP_SLOTS=4
+WMS_SPEED_FUTURE_MEMORY_FRACTION=.10
+WMS_SPEED_FORWARD_MEMORY_FRACTION=.04
+WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION=.022
+C4_GPU_MEM_FRACTION=.10
+OMP_NUM_THREADS=2
+MKL_NUM_THREADS=2
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-All flags are default off. Existing segment checkpointing and all eight FGA
-flags remain available. `pip install '.[parallel-futures]'` installs the optional
-cloudpickle dependency; only trusted owned snapshots are deserialized.
+WMS_SPEED_GRAPH_CVAR=1
+WMS_SPEED_ASYNC_SPILL=1
+WMS_WMSPEED_DEDUPE_MOBIL=1
+WMS_WMSPEED_MOBIL_LAZY_SAFE=1
+WMS_SPEED_PIVOT_DIAG_OFF=1
+WMS_SPEED_FAST_MERGE_LANE=1
+WMS_SPEED_FAST_CAV_DRIVE=1
+WMS_SPEED_FAST_LONG_HISTORY=1
+WMS_SPEED_GRAD_AUDIT_EVERY=25
+```
 
-## Memory / lifecycle
+Install the optional dependency with `pip install '.[parallel-futures]'`
+(cloudpickle 3.1.2 was used). Main's adoption receipt/launcher must record the
+new segment size and aggregate multi-process memory budget; its existing
+segment-8 assertions are described in `POLSPEED.md`.
 
-`WMS_SPEED_FUTURE_MEMORY_FRACTION` bounds each replay worker's CUDA allocator;
-`WMS_SPEED_FORWARD_MEMORY_FRACTION` bounds each no-grad worker (default .04).
-Before spawning, the coordinator releases unused cached blocks and rejects a
-budget above .60 of device memory, counting its current reserved pool, the
-phase-specific allocator limits, and 768 MiB per worker **and coordinator** for
-contexts/libraries. The benchmark samples nvidia-smi every two seconds,
-attributes allocations using the owned PID receipts, and records owned and
-whole-device peaks separately. A recipe-specific launch budget accounts for
-other workloads; owned usage above .60 or less than 512 MiB physical headroom
-requests owned STOPs.
+## Measurements on the same update 181
 
-Worker PIDs, execution traces, logs, peak allocator measurements and STOP files
-are under each run's `future_workers/<uuid>/`. Pool shutdown writes its STOP
-file and waits for its own workers. Large transport scratch files are removed
-after use; per-future gradient results and execution receipts are retained.
-`touch /root/autodl-tmp/c4/polspeed2_20261028/STOP` stops the owned benchmark
-cooperatively; individual CLI runs also accept their own output-directory STOP.
-Linux workers also create their pool STOP if their recorded parent disappears.
-Windows venv launchers can insert an intermediate parent; automatic reparenting
-detection is therefore Linux-only. Normal STOP shutdown is supported on both.
+Inputs: optimization seed 965140, original C1 `c01.a3` resume at update 180,
+WM `c03.a2`, original resolved candidate-A POLICY/BOUNDARY/HORIZON_AUTHORITY,
+1 start, K8 futures, 90 s / 180 WM steps, entrants on. FGA is enabled throughout.
+Every completed run stops after update 181 using its own STOP file.
 
-The benchmark invokes the registered two-update CLI dry run and writes an owned
-STOP immediately after update 181. Thus exit status 1 / `own-run STOP requested;
-checkpoint saved` is the expected completed-one-update outcome. No second
-update runs. Startup native/gate scorers can reuse previously **measured**
-results keyed by actor tensors, WM identity, panel, full scoring configuration
-and row preset; those scorers restore all RNG and do not affect training.
+### Original nine-row geometry
 
-An initial conservative monitor stopped an owned attempt because it counted
-an unrelated workload against the .60 limit. Its incomplete output and STOP
-are preserved under `failed_shared_monitor/`; measured worker allocator peaks
-were 11,837,503,488 bytes each. Completed N2 used the corrected owned-PID
-monitor and stayed below .60 even while whole-device usage reached 61.69%.
+* **N2, segment 8:** **454.188 s**, **24,882 MiB owned peak (50.63%)**;
+  all 158 reference leaves bitwise equal. Projection: **18.92 h** update-only,
+  **20.22 h** including estimated scoring overhead.
+* **N4, segment 2:** **350.756 s**, **19,394 MiB (39.47%)**;
+  all 158 reference leaves and all 157 N2 actor/Adam tensors bitwise equal.
+  Projection: **14.61 h / 15.94 h**, respectively.
+* **N8, segment 1, per-worker cap .045:** incomplete; CUDA allocator OOM
+  diagnostics from several workers, and a peer exit `-9` was observed.
+  Owned sampled peak **20,812 MiB**. No completed-update timing or exactness
+  claim. CUDA reported substantial physical free memory: the per-process
+  allocator cap was binding.
+* **N8, segment 1, cap .055:** incomplete; owned sampled peak **20,836 MiB**.
+  Full diagnostics are in the corresponding evidence directory.
+* The tested gated N8 recipes were also incomplete: caps `(active, idle)`
+  `(.09,.018)`, `(.088,.024)` and `(.084,.028)`, with four VJP slots and
+  segment 2. Sampled owned peaks were **13,766**, **13,762** and **14,354 MiB**.
+  They have no completed-update timing or parity claim. N4 is the largest
+  **qualified strict-exact** worker count in this task.
 
-## Local qualification
+### Equivalent six-row preset + FGA
 
-Python 3.13, torch 2.15.0+cpu, cloudpickle 3.1.2, OMP/MKL=2:
+Preset imported from auditfix commit `24928e9d` as **db05c3e0**:
+`configs/c4_policy14_c4prep_sixrow.toml`. For the registered three-member group,
+the real-arithmetic objective is
+`D_all + 49.7 D_G - 10.3 sum_i D_(G\i)`. Individual and coop weights become zero,
+group becomes 18.8, and the three zero-coefficient individual rows are removed.
 
-* Parallel replay-only and parallel-forward+replay tests: bitwise equality of
-  loss, returns, actor gradients, updated parameters, Adam state and RNG.
-* New parallel / imported six-row / two resume tests: 7 passed, 2 CUDA skips.
-* Remaining LONGMEM suite: 23 passed, 2 CUDA skips. Its two checkpoint tests
-  initially failed the temporary-output allowlist and passed after setting
-  `C4_ALLOWED_ROOTS=E:/Temp` (included in the seven-pass command above).
-* The first combined local test command exceeded the 120-second harness
-  timeout; the subsequent LONGMEM command completed in 118 seconds.
-* Gated four-worker CPU qualification plus imported preset: 6 passed, 3 CUDA
-  skips. Additional gated replay + Linux orphan-STOP tests: 2 passed locally.
-* gpuA torch 2.8.0+cu128: initial replay/parallel-forward/preset suite 7 passed
-  in 37.92 s. Updated suite: 9 passed, one allocator-device-index API failure;
-  explicit CUDA index fixed it, and the gated CUDA retest passed in 15.11 s.
-* Last-row/missing-key/signed-zero report qualification: 2 passed locally.
+* **Serial, segment 8:** **746.248 s**, **8,256 MiB owned peak**.
+* **N2, segment 8:** **440.823 s**, **17,068 MiB**; 150-update time **18.37 h**.
+* **N4, segment 2:** **286.974 s**, **13,718 MiB**; **11.96 h** update-only,
+  approximately **13.21 h** including scoring.
+* **N8, segment 1:** **231.420 s**, **21,474 MiB**; **9.64 h** update-only.
+
+All three parallel six-row runs are bitwise equal to **serial six rows** on
+all 158 logged leaves and all 157 actor/Adam tensors. Thus process parallelism
+and the tested checkpoint sizes add **zero** observed numerical error within
+the same row geometry.
+
+### Six rows versus the original reference: observed bounds
+
+There are **61 logged differences** and **101 differing tensors out of 157**.
+Some logged changes are intentional coverage/weight/decomposition changes:
+dead individual-row diagnostics cannot retain their original interpretation
+after those rows are removed. Other changes are floating-point rounding caused
+by changing CUDA row/reduction geometry.
+
+Observed numerical differences, identical across the completed six-row modes:
+
+* Actor loss: **7.778406143e-6 absolute**, **2.584392546e-4 relative**.
+* Return mean: **9.765625e-4 absolute**; return scale: **6.103509804e-7**.
+* Actor gradient norm: **9.765625e-3 absolute**, **4.210985180e-7 relative**.
+* Pessimistic paired credit: **1.067352295e-2 absolute**.
+* Updated policy maximum absolute difference: **2.808678801e-6**.
+* Group encoder maximum absolute difference: **1.117587090e-6**.
+* Adam state maximum absolute difference: **9.536743164e-7**.
+* Independent rescore leaves: **bitwise equal** on update 181.
+
+These are tight **observed update-181 bounds**, not a universal guarantee for
+future updates. Near-zero attention biases can have large relative errors;
+a blanket small relative tolerance is unsupported. The imported synthetic
+preset test establishes algebraic/tolerance parity, not real-update bitwise
+parity. Full key/tensor differences are retained in `evidence/REPORT.json`.
+
+## Implementation and exactness
+
+`src/wms/control/parallel_futures.py` starts independent Python processes with
+owned snapshots of the actor/WM, input batch, random tape, cached futures and
+outer VJP vectors. No start-state sampler/dataset or actor optimizer is sent
+to a worker. Each
+worker has independent RNG, mutable rollout switches, checkpoint/controller
+state, saved-tensor hooks, allocator and FGA CUDA-graph cache.
+
+The complete full-K outer objective remains in the coordinator. Workers replay
+one active future while the other seven remain cached constants. Returned
+parameter gradients are added in original **(start, future)** order; workers
+do not pre-sum their contributions. CPU gradient transport preserves bytes.
+The coordinator performs the original direct real-pair term, clipping and Adam
+step. No new critic/value credit is introduced.
+
+The no-grad pass also distributes futures, preserving each future's original
+row geometry. It records a shared setup-tape prefix plus one segment per
+future, then concatenates those segments in future order. Original future-0
+advanced RNG state is restored. The unchanged full-K aggregation consumes the
+reassembled cache. This avoids enlarging GEMMs along the row axis.
+
+For equal per-future VJPs, the serial recurrence
+`A_0 = g_0; A_k = float32(A_(k-1) + g_k)` is identical in the coordinator.
+Byte copies introduce no floating-point arithmetic. Hash-randomized reward
+dictionary ordering is aligned through the coordinator's TreeSpec, not worker
+leaf positions. Final-future spill counters are returned to preserve telemetry.
+Claims are qualified on gpuA/update 181; cross-device bitwise identity is not
+asserted.
+
+Measured phase times, including process/snapshot/transport overhead:
+
+* Nine rows N2: **110.535 s no-grad + 340.346 s replay/VJP + 3.307 s other**.
+* Nine rows N4: **83.352 s + 262.449 s + 4.955 s**.
+* Six rows N4: **71.341 s + 212.387 s + 3.245 s**.
+
+## Memory and VJP-slot experiments
+
+Initial `nvidia-smi`, 2026-10-28 23:09:03: RTX 4090 D, **49,140 MiB total**, 1 MiB
+used, no compute processes. Later, other workloads came and went. Timings are
+single-update measurements under that shared load, not isolated repeat means.
+
+The coordinator releases unused cached blocks before spawning and rejects a
+budget above .60, accounting for current coordinator reservation, worker
+allocator limits and **768 MiB per worker and coordinator** for contexts and
+libraries. The benchmark samples NVML/nvidia-smi every two seconds and
+attributes allocations through the owned PID receipts. Owned and whole-device
+peaks are distinct: e.g. N2 owned 50.63% while whole-device usage reached 61.69%.
+Per-worker exact allocator peaks are also retained in `memory.json`.
+
+Optional `WMS_SPEED_FUTURE_VJP_SLOTS=M` bounds simultaneous large backwards;
+default M=N adds no gating. Gated workers use
+`WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION` before the VJP, acquire an owned
+directory token, raise their allocator cap, compute, free the graph/cache,
+lower the cap, then release the token. CPU/CUDA unit tests cover this path.
+
+The observed **end-of-forward** reservation of 855,638,016 bytes is **not** a
+bound on transient forward peak. Trials using idle fraction .018 failed a
+324 MiB WM allocation before reaching the VJP; N8 idle-.024 and idle-.028 trials
+also did not complete. These incomplete gated recipes have no update-time or parity
+claim and are not the qualified N4 recommendation. Their receipts/diagnostics
+are preserved rather than counted as speed results.
+
+An initial monitor conservatively counted another workload against the owned
+.60 cap and stopped an attempt. A later N4 attempt was stopped when other
+workloads drove physical headroom low. Incomplete attempts and their STOPs
+are preserved under `failed_shared_monitor/` and `failed_physical_headroom/`.
+The corrected runner budgets the specific recipe against current use and
+requests owned STOPs above .60 owned usage or below 512 MiB physical headroom.
+Other processes were not signalled.
+
+## Projection, verification and artifacts
+
+Update-only projections use `150 * wall_time_s`, consistent with POLSPEED.
+The end-to-end estimate additionally includes 150 observed post-update
+rescores, 15 native panels, one phase-update10 gate panel, and uncached startup.
+Panel cost is estimated from the measured initial native+gate pair after
+subtracting a matching cached startup. It assumes all 150 updates are allowed
+to complete; changing scenes, load and future actor behavior are not modeled.
+
+Verification already completed:
+
+* Original LONGMEM suite: **25 CPU passes, 2 CUDA skips** across the full run
+  and two checkpoint-test reruns with the temporary-output allowlist corrected.
+* Parallel/preset CUDA qualification: initial **7 passed in 37.92 s**.
+* Expanded qualification: 9 passed and one allocator-device-index API failure;
+  explicit CUDA index fixed it; the gated CUDA retest passed in **15.11 s**.
+* Local gated replay and Linux orphan-STOP checks passed; last-row selection,
+  missing-None/signed-zero parity and peer-OOM diagnostics: **3 passed**.
+* Final expanded CUDA/CPU/report qualification: **13 passed in 55.87 s** on
+  gpuA (`qualification5.log`), including both gated CPU/CUDA cases and the
+  report/lifecycle checks.
+
+The comparator selects the **last** row for update 181: the trainer writes
+first, then the CLI appends independent rescore fields. The initial 151-leaf
+trainer-only comparator was corrected to all 158 leaves and all completed
+runs were re-compared against both reference logs.
+
+Worker PIDs/traces/STOPs live under `out/<recipe>/future_workers/<uuid>/`.
+`one_update.py` uses the CLI's registered two-update dry run and writes an
+owned STOP immediately after update 181; exit 1 with `own-run STOP requested;
+checkpoint saved` is the expected completed-one-update outcome. Linux orphan
+workers create their pool STOP if their recorded parent disappears. Windows
+venv launchers can insert an intermediate parent, so that detection is Linux-only.
+
+Repeatable tools: `benchmark.py`, `finalize_evidence.py`, `summarize_report.py`
+and `stop_owned.py` under `tools/polspeed2/`. `stop_owned.py` writes only task-owned
+STOPs and verifies recorded PIDs/GPU allocations, without signals/name matching.
+Committed compact evidence is under `tools/polspeed2/evidence/`; large transport
+snapshots are removed after use, while checkpoints and per-future gradient
+tensors remain in the owned gpuA output.
+
+Final STOP verification: **58 owned pools stopped, zero live recorded owned
+PIDs, zero owned GPU allocations**. `STOP_RECEIPT.json` records the exact PID
+set and checks. Only task-owned STOP files were written; no signals or
+process-name matching were used.

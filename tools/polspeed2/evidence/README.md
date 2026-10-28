@@ -10,7 +10,7 @@ candidate-A dry run; `FGA181.json` is the last update-181 row of S-POLSPEED FGA.
 The last row matters: the trainer writes first, then the CLI appends its
 independent rescore. Timing/memory keys alone are excluded from metric parity.
 
-Per-run configs, environment/argv receipts, update logs, host memory samples,
-worker traces and STOP receipts are included. Large transport snapshots,
+Per-run configs, environment/argv receipts, update logs, GPU memory samples,
+worker traces, a post-run host-memory snapshot and STOP receipts are included. Large transport snapshots,
 per-future gradient tensors and policy checkpoints remain on gpuA.
 See `POLSPEED2.md` for the recommendation and the six-row rounding caveat.

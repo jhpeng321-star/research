@@ -1523,5 +1523,17 @@
       "peak_allocated": 874768384,
       "peak_reserved": 935329792
     }
-  ]
+  ],
+  "phase_seconds": {
+    "no_grad_full_forward": 93.83840942382812,
+    "replay_and_ordered_vjp": 344.21837973594666,
+    "other_update": 2.766158102080226
+  },
+  "post_update_scoring_seconds_estimate": 12.922304393723607,
+  "scoring_projection": {
+    "uncached_startup_seconds": 368.02831053733826,
+    "estimated_panel_seconds": 171.0282872915268,
+    "estimated_per_update_post_seconds": 12.922304393723607,
+    "projected_150_end_to_end_hours": 19.768407959871823
+  }
 }

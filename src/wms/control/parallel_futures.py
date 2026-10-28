@@ -53,8 +53,9 @@ def parent_alive(root):
 class VJPGate:
     """Keep replay forwards concurrent while bounding live large recomputations.
 
-    One measured 9-row replay forward reserves <.86 GB, versus 12.14 GB for
-    recompute/backward. A worker raises its allocator limit only while owning
+    One measured 9-row replay ends below .86 GB reserved, but its transient
+    forward peak is higher. Limits must cover that peak, not the end value.
+    A worker raises its allocator limit only while owning
     one atomic directory token. It frees its graph/cache and lowers the limit
     BEFORE releasing the token. No arithmetic, shapes or checkpoint changes.
     """

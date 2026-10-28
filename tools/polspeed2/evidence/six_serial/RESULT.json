@@ -1502,5 +1502,17 @@
     "differences": [],
     "n_diff": 0
   },
-  "worker_peaks": []
+  "worker_peaks": [],
+  "phase_seconds": {
+    "no_grad_full_forward": 183.0171880722046,
+    "replay_and_ordered_vjp": 562.519597530365,
+    "other_update": 0.7116032745689154
+  },
+  "post_update_scoring_seconds_estimate": 9.751338133588433,
+  "scoring_projection": {
+    "uncached_startup_seconds": 368.02831053733826,
+    "estimated_panel_seconds": 171.0282872915268,
+    "estimated_per_update_post_seconds": 9.751338133588433,
+    "projected_150_end_to_end_hours": 32.362344433003
+  }
 }
