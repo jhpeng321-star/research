@@ -223,7 +223,10 @@ def _vjp(trainer, common, task, gate=None):
             _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
             _memory_start_index=starts, _memory_row_index=rows,
             _memory_future_cache=common['cache'], _memory_active_future=future)
-        _trace_memory(trainer, 'future_forward_done', start=start, future=future)
+        peaks = ({'forward_peak_allocated_bytes': torch.cuda.max_memory_allocated(trainer.device),
+                  'forward_peak_reserved_bytes': torch.cuda.max_memory_reserved(trainer.device)}
+                 if trainer.device.type == 'cuda' else {})
+        _trace_memory(trainer, 'future_forward_done', start=start, future=future, **peaks)
         # Dict construction can use hash-randomized sets (reward components).
         # Match the coordinator's output paths, never the worker's dict order.
         leaves = common['spec'].flatten_up_to(result)

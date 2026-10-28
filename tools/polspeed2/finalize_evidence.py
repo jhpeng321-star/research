@@ -150,4 +150,7 @@ with tarfile.open(BASE/'evidence.tar.gz', 'w:gz') as archive:
 print(json.dumps({name: dict(s_per_update=r.get('s_per_update'),
     parity=r.get('parity', {}).get('bitwise_identical'),
     leaves=r.get('parity', {}).get('compared_leaves'),
-    diffs=r.get('parity', {}).get('n_diff')) for name, r in report.items()}, indent=2))
+    diffs=r.get('parity', {}).get('n_diff'),
+    actor_adam_exact_to_nine_N2=r.get('nine_N2_state_parity', {}).get('bitwise_identical'),
+    actor_adam_exact_to_six_serial=r.get('six_serial_state_parity', {}).get('bitwise_identical'))
+    for name, r in report.items()}, indent=2))
