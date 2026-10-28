@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import tarfile
+import uuid
 
 import torch
 from benchmark import BASE, RT, RESOLVED, VARIANTS, compare, update_row
@@ -44,8 +45,8 @@ def state_parity(reference, actual):
                 differences=diffs, n_diff=len(diffs))
 
 
-export = BASE/'evidence'
-export.mkdir(exist_ok=True)
+export = BASE/'evidence_exports'/uuid.uuid4().hex
+export.mkdir(parents=True)
 reference = update_row(RESOLVED/'DRY_RUN/A/updates.jsonl')
 (export/'reference181.json').write_text(json.dumps(reference, indent=2))
 fga_path = Path('/root/autodl-tmp/c4/polspeed20261028/out/FGA/updates.jsonl')
