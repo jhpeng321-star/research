@@ -1,7 +1,7 @@
 """Genuine K8 current-WM futures on historical paired starts; no simulator.
 
-Only authoritative 300s totals are available without queue clocks. Missing
-request histories are NOT silently replaced by insertion rates: preflight
+Corrected C0-C2 exports are hash-bound when available. Missing C3 request
+histories are NOT silently replaced by insertion rates: exhaustive preflight
 records them and refuses launch-compatible fitting until supplied.
 """
 import argparse
@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import sys
 
-from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, read, safe, sha, write_new
+from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, dataset, read, safe, sha, write_new
 
 sys.path[:0] = [str(CODE / 'src'), str(CODE)]
 
@@ -21,8 +21,8 @@ def inventory():
     import numpy as np
     accepted()
     cycles, blockers = [], []
-    for cycle in (1, 2, 3):
-        root = REL / f'arm/loop/data/pairs_c{cycle:02}.a1'
+    for cycle in (0, 1, 2, 3):
+        root = dataset(cycle)
         proof_path = REL / f'arm/loop/returns/pairing_c{cycle:02}.a1.json'
         proof = read(proof_path)
         actor, digest = ACTORS[cycle]
@@ -47,7 +47,7 @@ def inventory():
             queues = z['state__entry_backlog'].tolist()
         if any(e['missing_observable_arrays'] for e in episodes):
             blockers.append(f'C{cycle} missing recorded demand/CAV history and per-tick queue clocks; t0 backlog alone does not identify demand')
-        cycles.append({'cycle': cycle, 'actor': str(actor), 'actor_sha256': digest,
+        cycles.append({'cycle': cycle, 'dataset': str(root), 'actor': str(actor), 'actor_sha256': digest,
                        'actor_verified': actor_ok, 'pairing_sha256': sha(proof_path),
                        'manifest_sha256': sha(manifest_path), 'pairs': len(proof['pairs']),
                        'start_backlogs': queues, 'episodes': episodes})
@@ -73,7 +73,6 @@ def replay(entrant, dest):
     from wms.control.safety import safe_accel
     from wms.control.start_states import StartStateSampler
     from wms.data.c4_pairs import PairedBranchSource
-    from tools.antiexploit.offline import calibrate
 
     proof = inventory()
     write_new(dest / 'INPUTS.json', proof)
@@ -87,8 +86,8 @@ def replay(entrant, dest):
     models, _ = load_members([str(WM)], [str(WM_CONFIG)], 'cuda')
     data_cfg = load_train_config(str(WM_CONFIG))
     payload = None
-    for cycle in (1, 2, 3):
-        source = REL / f'arm/loop/data/pairs_c{cycle:02}.a1'
+    for cycle in (0, 1, 2, 3):
+        source = dataset(cycle)
         pairs = PairedBranchSource(source, horizon_steps=600,
             history_s=data_cfg.data.history_s, history_stride_s=data_cfg.data.history_stride_s,
             entries_v2=True, junction_fix=data_cfg.data.junction_fix,
@@ -111,7 +110,8 @@ def replay(entrant, dest):
         trainer._training_imagination = False
         signature = inference_signature(cfg)
         if payload is None:
-            payload = {'world_model_ids': trainer.world_model_ids, 'inference_signature': signature, 'rows': []}
+            payload = {'world_model_ids': trainer.world_model_ids, 'inference_signature': signature,
+                       'training_cycles': [0, 1, 2], 'validation_cycles': [3], 'rows': []}
         assert payload['world_model_ids'] == trainer.world_model_ids
         pairing = read(REL / f'arm/loop/returns/pairing_c{cycle:02}.a1.json')
         groups = {g['pair_key']: g for g in pairs.groups}
@@ -169,6 +169,8 @@ def replay(entrant, dest):
                 print(json.dumps({'cycle': cycle, 'pair': i, 'horizon': actual, 'K': len(samples)}), flush=True)
                 del image
     write_new(dest / 'PAIRED_FUTURES.json', payload)
+    # This CPU-only module hides CUDA at import; import only AFTER GPU inference.
+    from tools.antiexploit.offline import calibrate
     calibrate(dest / 'PAIRED_FUTURES.json', dest / 'ANCHOR.json')
 
 

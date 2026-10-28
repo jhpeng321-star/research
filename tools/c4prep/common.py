@@ -14,12 +14,26 @@ WM_CONFIG = CODE / 'configs/c4_wm_loop14_r16_ft.toml'
 GATE = REL / 'arm/loop/checks/c03.a2/HORIZON_GATE.json'
 BAD = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype', re.I)
 ACTORS = {
+    0: (REL / 'arm/loop/policy/c00/policy_latest.pt',
+        '1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5'),
     1: (REL / 'arm/loop/policy/c01.a3/policy_latest.pt',
         '64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c'),
     2: (REL / 'arm/loop/policy/c02.h60b.r2/policy_latest.pt',
         '44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128'),
     3: (REL / 'arm/loop/policy/c03.a6/policy_latest.pt',
         '0978aa7288cf9e36a0b61949b1e236b3fe48a0d220dada64f67a4797f969dc5e')}
+
+
+def dataset(cycle):
+    """Bind verified corrected exports without overwriting original datasets."""
+    corrected = OUT / f'backlog_import_v2/cpuP/pairs_c{cycle:02}.a1.backlog'
+    if corrected.is_dir():
+        proof = read(OUT / 'backlog_import_v2/IMPORT.json')
+        binding = next(x for x in proof['datasets'] if x['cycle'] == cycle)
+        assert str(corrected) == binding['root']
+        assert sha(corrected / 'C4_EPISODES_MANIFEST.json') == binding['manifest_sha256']
+        return corrected
+    return REL / f'arm/loop/data/pairs_c{cycle:02}.a1'
 
 
 def safe(path):

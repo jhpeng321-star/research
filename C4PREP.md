@@ -41,6 +41,20 @@ logged per update.24 prep/backlog/credit tests PASS;51 looplong tests PASS,
 2 skip absent local evidence helper. See `evidence/PREP2_REAL_CREDIT.json`.
 These CPU checks are not a real two-update GPU receipt.
 
+### PREP2 paired inference path correction
+
+Fitting now binds the imported C0–C2 exports and C0 collection actor SHA1b9949cc
+alongside C1–C3, all86 starts/172episodes. C0's4 worlds968144–968147 are
+disjoint from C3's13 worlds968183–968195 and prospectively join C1/C2 fitting;
+C3 remains validation-only. The inference path refuses before CUDA when C3
+clocks are missing. A CPU-only fitting-module import that hid CUDA prematurely
+was moved after GPU inference. The fit report now counts genuinely beneficial
+validation starts retained by mean, q90, and q90+anchor, explicitly reporting
+whether all useful deviations are suppressed (null if none are observed).
+33 anti-exploitation/prep/credit checks PASS, including disjoint C0 admission,
+validation leakage refusal and suppression reporting. These checks do not
+constitute empirical fitting or a measured useful-deviation verdict.
+
 ## Registered scope (retained from initial receipt)
 
 Prepare parallel gpuA cycle-4 candidates A (cycle1 c01.a3, SHA64f70af4)
