@@ -264,3 +264,16 @@ Exact effective8.9/8.9 and60%focus retained. Interval rate3.404updates/h;
 150-update projection is~44h including this slow exact K8 execution, not a
 completed phase claim. RESUME_REAL_DRY_PASS.json committed BEFORE detached
 launch, which must resume ORIGINAL64f70af4/C1 (never the scratch actor).
+
+## FULL A DETACHED — awaiting ten UNIQUE finite phase updates
+
+Dry PASS committed31290088 before start. Full150-update A coordinator428847/
+start856893514 detached11:58:40UTC, ORIGINAL C1SHA64f70af4, config31bbbff8,
+source8e751843. Final fit/config/dry/memory bindings appended to loop JSON
+BEFORE dispatch; no scientific settings/gates/budget fields changed. All prior
+attempts and scratch outputs retained. RESUME_POLICY_DISPATCH.json records this
+dispatch. Own source-bound remote coordinator samples memory, enforces06:00,
+and sets AUTONOMY C4A_RUNNING only after>=10UNIQUE finite updates plus required
+module/credit/memory evidence and unchanged phase signal gate PASS. No premature
+C4A_RUNNING claim. Read-only local watcher24280 polls>=300s through cpuP with
+Windows child consoles suppressed; no extra dispatch or SUMO is armed.

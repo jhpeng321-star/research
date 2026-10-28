@@ -1,0 +1,22 @@
+{
+  "task": "S-C4LAUNCH",
+  "status": "C4A_LAUNCHED_AWAITING_TEN_UNIQUE_FINITE_UPDATES",
+  "source_commit": "8e75184392b3ce47fb2d05dc72f23fd1902e96a2",
+  "resolved": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_8e75184392b3",
+  "coordinator_pid": 428847,
+  "coordinator_start_ticks": "856893514",
+  "started_utc": "2026-10-28T11:58:40.985759+00:00",
+  "config_sha256": "31bbbff88ebbc3dbca441a06092a5828609b055c407343a1037ea87863c8d996",
+  "dry_pass_commit_before_launch": "31290088",
+  "original_actor_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "uses_scratch_actor": false,
+  "new_updates": 150,
+  "prelaunch_loop_decision_appended": true,
+  "native_anchor": false,
+  "pessimistic_credit": "q10/K8 ON",
+  "horizon_s": 90,
+  "gpu_memory_fraction": 0.45,
+  "self_monitoring_and_deadline_enforcement": true,
+  "autonomy_C4A_RUNNING_claimed": false,
+  "new_sim_s": 0
+}
