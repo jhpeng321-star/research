@@ -20,6 +20,53 @@ from torch.utils.checkpoint import checkpoint
 from .counterfactual import Variants, expand_rows
 
 
+@contextmanager
+def _saved_tensor_spill(trainer):
+    """Spill activations, sharing repeated immutable parameter-storage copies.
+
+    save_on_cpu copies the same WM/actor matrix on every use. At K8/90s this
+    can exhaust host RAM despite segment checkpointing. Persistent storages
+    already owned by the trainer can safely share a CPU snapshot per version
+    and view geometry; transient activations retain the original copy semantics.
+    """
+    persistent = {}
+    modules = [*trainer.world_models, trainer.policy, trainer.group_encoder, trainer.critic]
+    for module in modules:
+        for tensor in (*module.parameters(), *module.buffers()):
+            storage = tensor.untyped_storage()
+            persistent[(tensor.device, storage.data_ptr())] = storage
+    copies = {}
+    pin = trainer.device.type == 'cuda'
+    stats = {'copied_bytes': 0, 'copies': 0, 'reuses': 0}
+    trainer.memory_spill_stats = stats
+
+    def pack(tensor):
+        if tensor.device.type == 'cpu':
+            return tensor.device, tensor
+        storage = tensor.untyped_storage()
+        key = None
+        if (tensor.device, storage.data_ptr()) in persistent:
+            key = (tensor.device, storage.data_ptr(), tensor._version, tensor.storage_offset(),
+                   tuple(tensor.shape), tuple(tensor.stride()), tensor.dtype)
+            if key in copies:
+                stats['reuses'] += 1
+                return tensor.device, copies[key]
+        cpu = torch.empty_like(tensor, device='cpu', pin_memory=pin)
+        cpu.copy_(tensor.detach())
+        stats['copies'] += 1
+        stats['copied_bytes'] += tensor.numel() * tensor.element_size()
+        if key is not None:
+            copies[key] = cpu
+        return tensor.device, cpu
+
+    def unpack(packed):
+        device, cpu = packed
+        return cpu.to(device, non_blocking=pin)
+
+    with torch.autograd.graph.saved_tensors_hooks(pack, unpack):
+        yield
+
+
 def _select(value, indices, total):
     return expand_rows(value, indices, total)
 
@@ -157,7 +204,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                         batch, kwargs["variants"], start, min(total, start + micro))
                     replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
                     _restore_rng(ctx.before, trainer.device)
-                    spill = (torch.autograd.graph.save_on_cpu(pin_memory=trainer.device.type == "cuda")
+                    spill = (_saved_tensor_spill(trainer)
                              if cfg.imagination_offload_saved_tensors else nullcontext())
                     with torch.enable_grad(), replay, spill:
                         result = trainer.imagine(small, **{**kwargs, "variants": variants},

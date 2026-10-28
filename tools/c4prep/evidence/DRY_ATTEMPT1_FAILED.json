@@ -1,0 +1,21 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "89f0119f8d3c1959342d36cb5a25cd89dd4a34c9",
+  "resolved": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_89f0119f8d3c",
+  "coordinator_pid": 353727,
+  "coordinator_start_ticks": "855201015",
+  "worker_pid": 353733,
+  "completed_updates": 0,
+  "run_summary_exists": false,
+  "worker_exit_code": null,
+  "last_observed_rss_bytes": 84660244480,
+  "sampled_gpu_peak_bytes": 5026873344,
+  "own_cgroup_memory_max_bytes": 96636764160,
+  "own_cgroup_reported_oom_kill": 0,
+  "cause": "abrupt worker disappearance; host spill approached cgroup limit; exact kill cause unconfirmed",
+  "own_output_files": ["policy_native_best.pt", "LOOPLONG_CREDIT.json"],
+  "passed": false,
+  "policy_launched": false,
+  "new_sim_s": 0,
+  "signals_sent": 0
+}

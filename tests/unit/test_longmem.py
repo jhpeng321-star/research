@@ -12,6 +12,29 @@ from wms.control.dreamer import DreamerConfig, DreamerTrainer, MEMORY_CONFIG_FIE
 from wms.control.start_states import StartBatch
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason='CUDA saved-storage sharing proof')
+def test_saved_spill_shares_parameter_views_without_changing_gradients():
+    from wms.control.imagination_memory import _saved_tensor_spill
+    torch.cuda.set_per_process_memory_fraction(.45)
+    torch.manual_seed(4101)
+    model = nn.Linear(64, 64, bias=False).cuda()
+    initial = torch.randn(2, 64, device='cuda', requires_grad=True)
+    owner = SimpleNamespace(world_models=[model], policy=model, group_encoder=model,
+                            critic=model, device=torch.device('cuda'))
+    def run(context):
+        with context:
+            x = initial
+            for _ in range(8):
+                x = torch.tanh(model(x))
+            loss = x.square().sum()
+            return torch.autograd.grad(loss, (initial, model.weight))
+    expected = run(torch.autograd.graph.save_on_cpu(pin_memory=True))
+    actual = run(_saved_tensor_spill(owner))
+    for a, b in zip(actual, expected):
+        torch.testing.assert_close(a, b, rtol=0, atol=0)
+    assert owner.memory_spill_stats['reuses'] >= 7
+
+
 def scene(batch=3, slots=4):
     pos = torch.arange(slots).float()[None].expand(batch, -1) * 30 + 200
     return dict(s_m=pos.clone(), v_mps=torch.full_like(pos, 10.),

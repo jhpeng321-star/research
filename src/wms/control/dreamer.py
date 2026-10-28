@@ -1813,6 +1813,8 @@ class DreamerTrainer:
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
         actor_loss.backward()
+        if hasattr(self, 'memory_spill_stats'):
+            extra['memory_spill'] = dict(self.memory_spill_stats)
         if getattr(self.policy, "residual_on_native", False):
             modules = {"residual_head": self.policy.residual_head,
                        "own_encoder": self.policy.own_encoder,

@@ -30,3 +30,20 @@ sampling supersedes the inherited rejection tilt, only for training draws.
 MAIN policy uses registered full weights8.9/9.9/8.9/10.3/all1 from the first
 update, guarded real individual/coop8.9/8.9. FD/free-road probes are alsoOFF.
 Candidate-A isolated locking permits the separately owned WM gate to finish.
+
+## Real dry-run attempt1 retained, failed before a completed update
+
+Source89f0119f, coordinator353727/start855201015, worker353733 disappeared
+without RUN_SUMMARY or updates.jsonl. Only initial native-best and long-credit
+receipts exist. Last observed RSS84,660,244,480bytes approached the container's
+96,636,764,160byte limit; sampled GPU peak5,026,873,344bytes remained below0.45.
+The cgroup reports0 OOM-kills, so the exact termination cause is unconfirmed.
+No signal sent, no policy phase launched. Original runtime/output retained.
+
+Operational memory refinement preserves microbatch1/segment8/both host
+offloads and all objectives/draws: repeated persistent WM/actor parameter
+storage snapshots now share one host copy per tensor version/view geometry.
+Transient activations keep original spill semantics; source storage remains
+owned by the trainer, preventing pointer reuse. A versioned cache cannot reuse
+snapshots after in-place mutations. CUDA gradient parity and existing exact
+LONGMEM tests are required before a fresh immutable two-update attempt.

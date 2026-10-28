@@ -232,6 +232,9 @@ def run(config, dry):
                         stream.write(json.dumps(sample) + '\n')
             time.sleep(5)
     results = []
+    write_new(root / 'CHILD_EXITS.json', [{'candidate': item['name'], 'pid': child.pid,
+        'exit': child.returncode, 'summary_exists': (output / 'RUN_SUMMARY.json').exists()}
+        for item, child, output in children])
     for item, child, output in children:
         summary = read(output / 'RUN_SUMMARY.json')
         updates = summary.get('updates', [])

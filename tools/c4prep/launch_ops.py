@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('amend', 'inspect', 'fit', 'fit-status', 'fit-fallback', 'checks', 'prepare', 'dry', 'status', 'start', 'verify'))
+    parser.add_argument('action', choices=('amend', 'inspect', 'fit', 'fit-status', 'fit-fallback', 'checks', 'prepare', 'dry', 'diagnose', 'status', 'start', 'verify'))
     args = parser.parse_args()
     if args.action == 'amend':
         authority = (ROOT / 'tools/c4prep/evidence/MAIN_1500.json').read_text()
