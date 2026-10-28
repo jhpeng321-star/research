@@ -70,6 +70,7 @@ class EpisodeRecorder:
         self._actions = gzip.open(self.out / "run" / "action_timeline.jsonl.gz", "xt",
                                   encoding="utf-8", compresslevel=3)
         self.manifest: dict = {"schema": EPISODE_SCHEMA, "status": "running"}
+        self._execution = None
 
     @property
     def scenario_dir(self) -> Path:
@@ -111,8 +112,20 @@ class EpisodeRecorder:
         self.lane_controls.append(lane_target)
         self.lane_requests.append(lane_req)
 
+    def on_execution(self, time_s: float, commands: dict) -> None:
+        """Same-step native base, residual request and realisation physics ledger."""
+        if self._execution is None:
+            self._execution = gzip.open(self.out / "run" / "residual_execution.jsonl.gz", "xt",
+                                        encoding="utf-8", compresslevel=3)
+        for vid, command in sorted(commands.items()):
+            detail = command if isinstance(command, dict) else {"legacy_command_mps2":float(command)}
+            self._execution.write(json.dumps({"schema": "residual_execution/2",
+                "timestamp_s": float(time_s), "vehicle_id": vid,
+                "duration_s": .5, "speed_mode": 27, **detail},
+                allow_nan=False)+"\n")
+
     def _close_streams(self) -> None:
-        for stream in (self._physics, self._actions):
+        for stream in (self._physics, self._actions, self._execution):
             if stream is not None and not stream.closed:
                 stream.close()
 

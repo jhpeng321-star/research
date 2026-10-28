@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "E:\agent-work\c4-execparity\tools\execparity\sumo_operate.py", line 146, in <module>
+    main()
+    ~~~~^^
+  File "E:\agent-work\c4-execparity\tools\execparity\sumo_operate.py", line 132, in main
+    run_host('cpuP', 'canary')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "E:\agent-work\c4-execparity\tools\execparity\sumo_operate.py", line 80, in run_host
+    assert not log_path.exists() and not events_path.exists()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

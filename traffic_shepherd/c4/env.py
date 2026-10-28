@@ -412,6 +412,8 @@ class CavSumoEnv:
                       fallback_ids=None) -> dict:
         api = self.api
         residual_command = accel_by_slot if getattr(accel_by_slot, "native_residual", False) else None
+        from wms.control.execution import enabled as execution_parity_enabled
+        residual_parity = residual_command is not None and execution_parity_enabled()
         residuals = None
         if residual_command is not None:
             if self.mode != "direct" or lanes is not None or fallback != "native":
@@ -471,8 +473,25 @@ class CavSumoEnv:
             self.ownership.wall_accel_max_mps2 = self.direct_accel_max_mps2
             if residuals is not None:
                 from wms.control.nativeinit import sumo_residual_commands
-                requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
-                                                   residual_command.accel_min, residual_command.accel_max)
+                if residual_parity:
+                    from wms.control.execution import mode as execution_mode
+                    if execution_mode() == 2:
+                        # Always-commanded: the ledger carries the issued absolute
+                        # acceleration for every designated CAV, zero residual included.
+                        from wms.control.alwayscmd import commands as always_commands
+                        requested = always_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
+                                                    residual_command.accel_min, residual_command.accel_max)
+                    else:
+                        from wms.control.continuous import require_same_step_backend
+                        if any(a != 0. for v,a in residuals.items() if v in live_cavs):
+                            require_same_step_backend(api)
+                        # Permission ledger only. Actual absolute execution is known
+                        # after the native solver and belongs in the physics ledger.
+                        requested = {v:a for v,a in residuals.items() if v in live_cavs and a != 0.}
+                else:
+                    requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
+                                                   residual_command.accel_min, residual_command.accel_max,
+                                                   parity=residual_parity)
             else:
                 requested = self._accel_by_vehicle(accel_by_slot)
             wall = {v: a for v, a in requested.items()
@@ -502,7 +521,8 @@ class CavSumoEnv:
                     self.pi_session, self._direct_pi = None, False
                 native = live_cavs - set(wall) if fallback == "native" else restricted
                 records = self.ownership.step(frames, now_s=now, live_ids=live,
-                                              wall_commands=wall, native_ids=native)
+                                              wall_commands=wall, native_ids=native,
+                                              **({"defer_wall": True} if residual_parity else {}))
             # Policy lane control: only CAVs with a finite direct command AND a lanes tensor.
             policy_cavs = set(wall) if lanes is not None else set()
             self._lane_control(policy_cavs, live)
@@ -555,15 +575,34 @@ class CavSumoEnv:
         info_interval = Counter()
         source_wait_steps = []
         for substep in range(2):
+            execution_before = None
             if residuals is not None and in_window:
-                from wms.control.nativeinit import execute_sumo_residual
                 live_now = set(api.vehicle.getIDList()) & self.cav_ids
-                execute_sumo_residual(api, {v: a for v, a in residuals.items() if v in live_now},
-                                      residual_command.accel_min, residual_command.accel_max)
+                if residual_parity:
+                    commands = self.ownership.execute_residual(
+                        residuals, residual_command.accel_min, residual_command.accel_max,
+                        now_s=now+substep*.5, live_ids=live_now)
+                    if self.recorder is not None:
+                        execution_before = {v: float(api.vehicle.getSpeed(v))
+                                            for v in live_now if v in residuals}
+                else:
+                    from wms.control.nativeinit import execute_sumo_residual
+                    execute_sumo_residual(api, {v: a for v, a in residuals.items() if v in live_now},
+                                          residual_command.accel_min, residual_command.accel_max)
             api.simulationStep()
             after = self.now
             if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
                 raise CavEnvError("SUMO physics time grid mismatch")
+            if execution_before is not None:
+                from wms.control.execution import mode as execution_mode
+                if execution_mode() == 2:
+                    from wms.control.alwayscmd import completed_rows
+                    rows = completed_rows(api, execution_before, residuals, commands)
+                else:
+                    from wms.control.continuous import completed_execution_rows
+                    rows = completed_execution_rows(api, execution_before, residuals, commands,
+                                                    residual_command.accel_min, residual_command.accel_max)
+                self.recorder.on_execution(now+substep*.5, rows)
             sub = self._after_physics(after, actions, now, commanded)
             source_wait_steps.append(float(sub.get("source_wait_vehicle_seconds", 0.0)))
             info_interval.update(sub)

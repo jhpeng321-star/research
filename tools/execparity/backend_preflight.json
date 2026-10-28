@@ -1,0 +1,13 @@
+{
+  "schema": "execparity_backend_preflight/1",
+  "required_contract": "native_relative_same_step/1",
+  "extension_methods_available": {
+    "getNativeResidualContract": false,
+    "setNativeAccelerationResidual": false
+  },
+  "stock_cached_getter_source_sha256": "90c3c3a3156e72fc905a601e95543009129603cab6ad24d1d3ef6bb243f1e549",
+  "simulator_started": false,
+  "connected_to_simulator": false,
+  "passed": false,
+  "status": "BLOCKED_SAME_STEP_NATIVE_RESIDUAL_BACKEND_MISSING"
+}

@@ -316,7 +316,7 @@ def _load_world_models(paths, device, cav_exec_cap=None):
             for p in paths]
 
 
-def run(args) -> dict:
+def run(args, *, observer=None) -> dict:
     """One episode; returns the deploy summary (also written to ``<out>/DEPLOY_SUMMARY.json``)."""
     from traffic_shepherd.c4.env import CavSumoEnv
 
@@ -342,7 +342,11 @@ def run(args) -> dict:
         from .policy import load_policy_fn
         from .rsu_check import NoiseStream, perturbed_group, zero_group
 
-        policy_fn = load_policy_fn(str(checked(args.policy)), device=device)
+        policy_fn = load_policy_fn(str(checked(args.policy)), device=device,
+            **({"execution_authority": checked(args.execution_authority)}
+               if getattr(args,"execution_authority",None) else {}),
+            **({"execution_parity_receipt": checked(args.execution_parity_receipt)}
+               if getattr(args,"execution_parity_receipt",None) else {}))
         rules = policy_fn.lane_rules
         # One dwell clock and one command memory (last commanded accel / lane intent relayed in
         # the CAV reports) per episode, shared by every executed candidate (same CAVs).
@@ -432,7 +436,16 @@ def run(args) -> dict:
                                 hold_fn=hold_exec, memory=policy_fn.memory,
                                 sample_fn=sample_fn if args.gate_candidates > 1 else None)
 
-    env = CavSumoEnv(k_slots=args.k, ttc=not args.no_ttc, physics_log=not args.no_physics_log)
+    from .execution import enabled as execution_parity_enabled, verify_authority, verify_parity
+    if execution_parity_enabled() and policy_fn is not None and policy_fn.residual_on_native:
+        if getattr(args, "population", "legacy3") != "textbook":
+            raise ValueError("candidate-A execution parity requires explicit --population textbook")
+        authority = getattr(args, "execution_authority", None)
+        parity_receipt = getattr(args, "execution_parity_receipt", None)
+        verify_authority(None if authority is None else checked(authority), args.policy)
+        verify_parity(None if parity_receipt is None else checked(parity_receipt))
+    env = CavSumoEnv(k_slots=args.k, ttc=not args.no_ttc, physics_log=not args.no_physics_log,
+                     population=getattr(args, "population", "legacy3"))
     env_mode = controller if controller in BASELINES else "direct"
     hook = None
     if isinstance(source, BeliefSource):
@@ -454,6 +467,8 @@ def run(args) -> dict:
         state = env.reset(seed=args.seed, demand_vph=args.demand, penetration=args.penetration,
                           warmup_s=args.warmup, horizon_s=args.horizon, controller=env_mode,
                           episode_dir=out / "episode", meta=meta, warmup_hook=hook)
+        if observer is not None:
+            observer.start(env)
         choice, next_decision, segment = "policy", -math.inf, None
         while True:
             now = env.now
@@ -519,6 +534,8 @@ def run(args) -> dict:
                 # Every policy-path candidate: direct accelerations + lane commands.
                 accel, lanes = exec_fns[executed](state, with_lanes=True, dwell_age=ages)
             state, info = env.step(accel, lanes=lanes)
+            if observer is not None:
+                observer.update(info)
             executed_ticks[executed] += 1
             lane_commands.update(info.get("lane_commands", {}))
             if segment is not None:
@@ -579,6 +596,8 @@ def run(args) -> dict:
         "wall_seconds": time.monotonic() - started, "finished_utc": _now(), "notes": notes}
     if gated is not None:                      # S-SUMOCREDIT (key absent for other controllers)
         result["gate"] = {**gated.summary(), "table": args.gate_table}
+    if observer is not None and status == "complete":
+        result["measurement"] = observer.finish()
     (out / "DEPLOY_SUMMARY.json").write_text(json.dumps(_jsonable(result), indent=1, allow_nan=False),
                                              encoding="utf-8")
     return result
@@ -624,6 +643,11 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--k", type=int, default=192)
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--no-physics-log", action="store_true")
+    ap.add_argument("--population", choices=("textbook", "legacy3"), default="legacy3")
+    ap.add_argument("--execution-authority", default=None,
+                    help="SHA-bound recorded-state residual authority receipt for opt-in parity")
+    ap.add_argument("--execution-parity-receipt", default=None,
+                    help="passing recorded-acceleration receipt bound to the learned executor")
     ap.add_argument("--gate-table", default=None,
                     help="policy_gate: TRAIN reliability table (wms.control.confident_gate); its unit, "
                          "reference, horizon and state source are used (owner threshold 0.8)")

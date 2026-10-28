@@ -1,0 +1,888 @@
+{
+  "schema": "execparity_ledger/1",
+  "worlds": {
+    "977000": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977000,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1666,
+          "controller_native": 0,
+          "requested_finite": 1666,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 1648,
+          "changed_lane": 5
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977000,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1677,
+          "controller_native": 1677,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 9
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977000,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1674,
+          "controller_native": 0,
+          "requested_finite": 1674,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 665,
+          "realised_not_issued_0p01": 1574,
+          "changed_lane": 9
+        }
+      }
+    },
+    "977002": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977002,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1798,
+          "controller_native": 0,
+          "requested_finite": 1798,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 1,
+          "realised_not_issued_0p01": 1770,
+          "changed_lane": 12
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977002,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1918,
+          "controller_native": 1918,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 13
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977002,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 1898,
+          "controller_native": 0,
+          "requested_finite": 1898,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 573,
+          "realised_not_issued_0p01": 1740,
+          "changed_lane": 12
+        }
+      }
+    },
+    "977004": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977004,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 5507,
+          "controller_native": 0,
+          "requested_finite": 5507,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 5424,
+          "changed_lane": 25
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977004,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 5927,
+          "controller_native": 5927,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 22
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977004,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 5495,
+          "controller_native": 0,
+          "requested_finite": 5495,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 981,
+          "realised_not_issued_0p01": 5278,
+          "changed_lane": 40
+        }
+      }
+    },
+    "977006": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977006,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 9967,
+          "controller_native": 0,
+          "requested_finite": 9967,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 1,
+          "realised_not_issued_0p01": 9817,
+          "changed_lane": 63
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977006,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 9484,
+          "controller_native": 9484,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 58
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977006,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 10213,
+          "controller_native": 0,
+          "requested_finite": 10213,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 2444,
+          "realised_not_issued_0p01": 9558,
+          "changed_lane": 117
+        }
+      }
+    },
+    "977008": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977008,
+          "demand_vph": 2700,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 7225,
+          "controller_native": 0,
+          "requested_finite": 7225,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 7149,
+          "changed_lane": 54
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977008,
+          "demand_vph": 2700,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 8063,
+          "controller_native": 8063,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 48
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977008,
+          "demand_vph": 2700,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 7052,
+          "controller_native": 0,
+          "requested_finite": 7052,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 1468,
+          "realised_not_issued_0p01": 6495,
+          "changed_lane": 56
+        }
+      }
+    },
+    "977010": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977010,
+          "demand_vph": 2400,
+          "penetration": 0.4,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 18257,
+          "controller_native": 0,
+          "requested_finite": 18257,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 1,
+          "realised_not_issued_0p01": 17994,
+          "changed_lane": 118
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977010,
+          "demand_vph": 2400,
+          "penetration": 0.4,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 20128,
+          "controller_native": 20128,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 133
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977010,
+          "demand_vph": 2400,
+          "penetration": 0.4,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 18634,
+          "controller_native": 0,
+          "requested_finite": 18634,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 4892,
+          "realised_not_issued_0p01": 17608,
+          "changed_lane": 157
+        }
+      }
+    },
+    "977012": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977012,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2830,
+          "controller_native": 0,
+          "requested_finite": 2830,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 2,
+          "realised_not_issued_0p01": 2808,
+          "changed_lane": 17
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977012,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2953,
+          "controller_native": 2953,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 13
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977012,
+          "demand_vph": 1900,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2733,
+          "controller_native": 0,
+          "requested_finite": 2733,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 615,
+          "realised_not_issued_0p01": 2616,
+          "changed_lane": 21
+        }
+      }
+    },
+    "977014": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977014,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2636,
+          "controller_native": 0,
+          "requested_finite": 2636,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 2603,
+          "changed_lane": 16
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977014,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2681,
+          "controller_native": 2681,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 8
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977014,
+          "demand_vph": 2700,
+          "penetration": 0.05,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 2636,
+          "controller_native": 0,
+          "requested_finite": 2636,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 301,
+          "realised_not_issued_0p01": 2594,
+          "changed_lane": 15
+        }
+      }
+    },
+    "977016": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977016,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 4561,
+          "controller_native": 0,
+          "requested_finite": 4561,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 4501,
+          "changed_lane": 44
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977016,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 4913,
+          "controller_native": 4913,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 29
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977016,
+          "demand_vph": 2400,
+          "penetration": 0.1,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 4959,
+          "controller_native": 0,
+          "requested_finite": 4959,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 937,
+          "realised_not_issued_0p01": 4575,
+          "changed_lane": 50
+        }
+      }
+    },
+    "977018": {
+      "ours": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977018,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 10688,
+          "controller_native": 0,
+          "requested_finite": 10688,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 2,
+          "realised_not_issued_0p01": 10558,
+          "changed_lane": 76
+        }
+      },
+      "native": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977018,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "native",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 12230,
+          "controller_native": 12230,
+          "requested_finite": 0,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 0,
+          "realised_not_issued_0p01": 0,
+          "changed_lane": 86
+        }
+      },
+      "mappo": {
+        "metadata": {
+          "schema": "c4_sumo_episode/1",
+          "seed": 977018,
+          "demand_vph": 1900,
+          "penetration": 0.2,
+          "warmup_s": 300.0,
+          "horizon_s": 600.0,
+          "controller": "direct",
+          "k_slots": 192,
+          "cav_speed_mode": 27,
+          "dt_s": 0.5,
+          "control_dt_s": 1.0
+        },
+        "counts": {
+          "stable_cav_ticks": 10615,
+          "controller_native": 0,
+          "requested_finite": 10615,
+          "native_with_finite_request": 0,
+          "issued_not_requested_0p01": 2254,
+          "realised_not_issued_0p01": 10049,
+          "changed_lane": 95
+        }
+      }
+    }
+  },
+  "equal_world_bootstrap": {
+    "ours": {
+      "controller_native": {
+        "n": 0,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "native_with_finite_request": {
+        "n": 0,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "issued_not_requested_0p01": {
+        "n": 7,
+        "denominator": "requested_finite",
+        "mean": 0.00016051176596973,
+        "ci95": [
+          2.6465162719507104e-05,
+          0.0003301668111547846
+        ]
+      },
+      "realised_not_issued_0p01": {
+        "n": 64272,
+        "denominator": "requested_finite",
+        "mean": 0.9872965960838691,
+        "ci95": [
+          0.9859315040990929,
+          0.9888434798569281
+        ]
+      },
+      "changed_lane": {
+        "n": 430,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.006330779675405571,
+        "ci95": [
+          0.005275279248731049,
+          0.007362480688137895
+        ]
+      }
+    },
+    "native": {
+      "controller_native": {
+        "n": 69974,
+        "denominator": "stable_cav_ticks",
+        "mean": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "native_with_finite_request": {
+        "n": 0,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "issued_not_requested_0p01": {
+        "n": 0,
+        "denominator": "requested_finite",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "realised_not_issued_0p01": {
+        "n": 0,
+        "denominator": "requested_finite",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "changed_lane": {
+        "n": 419,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.005485369991239776,
+        "ci95": [
+          0.00461965581094907,
+          0.006233052897487502
+        ]
+      }
+    },
+    "mappo": {
+      "controller_native": {
+        "n": 0,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "native_with_finite_request": {
+        "n": 0,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "issued_not_requested_0p01": {
+        "n": 15130,
+        "denominator": "requested_finite",
+        "mean": 0.23281823774455868,
+        "ci95": [
+          0.19008286092178917,
+          0.2816599905192917
+        ]
+      },
+      "realised_not_issued_0p01": {
+        "n": 62087,
+        "denominator": "requested_finite",
+        "mean": 0.9429848531882108,
+        "ci95": [
+          0.9311172749417981,
+          0.9560468641879011
+        ]
+      },
+      "changed_lane": {
+        "n": 572,
+        "denominator": "stable_cav_ticks",
+        "mean": 0.007920717110086219,
+        "ci95": [
+          0.006838213470356068,
+          0.009120088579866651
+        ]
+      }
+    }
+  }
+}

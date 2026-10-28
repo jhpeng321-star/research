@@ -1,0 +1,147 @@
+{
+  "schema": "execparity2_base_validation/1",
+  "shared_module": "wms.control.sumo_idm",
+  "law": "SUMO 1.27.1 MSCFModel_IDM::_v on cav_typical (a=1.2, b=2.0, T=1.2, s0=2.0, delta=4, speedFactor=1.0; iterations=2 at dt=0.5; NUMERICAL_EPS=1e-10); legacy double-minGap base gap convention; allowed speed = lane limit (mainline 31.29 / ramp 22.22 / merge connector 26.75 via pre-junction lane)",
+  "worlds": {
+    "s977001_alwaysx": {
+      "n_rows": 10761,
+      "base_exact_fraction": 0.9995353591673636,
+      "base_minus_sumo_base": {
+        "n": 10761,
+        "mean": 3.049903462155354e-08,
+        "rmse": 1.8534986806834158e-06,
+        "mae": 3.049903462155354e-08,
+        "q00_05_50_95_100": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0001333041810163138
+        ]
+      },
+      "executed_speed_exact_fraction": 0.955301551900381,
+      "executed_speed_accel_error": {
+        "n": 10761,
+        "mean": 0.006108340579516234,
+        "rmse": 0.05037235540957826,
+        "mae": 0.006332115831477951,
+        "q00_05_50_95_100": [
+          -1.2000000476837158,
+          -1.6310383088580238e-06,
+          3.345869248327915e-09,
+          1.8816174431890431e-06,
+          1.7798073536895558
+        ]
+      }
+    },
+    "s977002_alwaysx": {
+      "n_rows": 5435,
+      "base_exact_fraction": 1.0,
+      "base_minus_sumo_base": {
+        "n": 5435,
+        "mean": 0.0,
+        "rmse": 0.0,
+        "mae": 0.0,
+        "q00_05_50_95_100": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "executed_speed_exact_fraction": 0.909475620975161,
+      "executed_speed_accel_error": {
+        "n": 5435,
+        "mean": 0.010177266749029053,
+        "rmse": 0.07788788528083676,
+        "mae": 0.012175165403081048,
+        "q00_05_50_95_100": [
+          -1.2000000476837158,
+          -1.7598492888737383e-06,
+          1.4220070010395602e-08,
+          0.0038687598371752296,
+          0.8777005906276258
+        ]
+      }
+    },
+    "s977003_alwaysx": {
+      "n_rows": 16691,
+      "base_exact_fraction": 1.0,
+      "base_minus_sumo_base": {
+        "n": 16691,
+        "mean": 0.0,
+        "rmse": 0.0,
+        "mae": 0.0,
+        "q00_05_50_95_100": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "executed_speed_exact_fraction": 0.9506919896950452,
+      "executed_speed_accel_error": {
+        "n": 16691,
+        "mean": 0.007174074721578555,
+        "rmse": 0.05900067277940459,
+        "mae": 0.007956998831668482,
+        "q00_05_50_95_100": [
+          -1.2000000476837158,
+          -1.6847614254800192e-06,
+          1.3754934968801535e-08,
+          1.8578051843576304e-06,
+          1.1722855568842903
+        ]
+      }
+    }
+  },
+  "jobs": {
+    "s977001_alwaysx": {
+      "execution_log_sha256": "1ffffa13ab4af5960d0f8935732e8af15a2202aef8b84d2014ce7d7c7b6a8382",
+      "episode_sha256": "9bd9c63c4c71fceb8b3525fbfa9daf61e51d0c07d40e1fa4630c33ac7b693ead"
+    },
+    "s977002_alwaysx": {
+      "execution_log_sha256": "13461b1e8e8669d5e5a74d168020d409632758ecd2aab0ee4aa8d212aa6823a4",
+      "episode_sha256": "9acf4e5f5295e325cfac301fc2d6eea90f1567705627e8ed950c67ef6f7c10a5"
+    },
+    "s977003_alwaysx": {
+      "execution_log_sha256": "706782f2bae7814bdcf64a48b1d665c6ff25f3b345f7109e007d6a3439d46588",
+      "episode_sha256": "ac64decdd5cc1de6d811a01747e2e41af160244b4eff9501f3f617be4d147227"
+    }
+  },
+  "pooled": {
+    "n_rows": 32887,
+    "base_exact_fraction_1e-9": 0.9998479642411895,
+    "base_minus_sumo_base": {
+      "n": 32887,
+      "mean": 9.979630600618412e-09,
+      "rmse": 1.060245573035512e-06,
+      "mae": 9.979630600618412e-09,
+      "q00_05_50_95_100": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0001333041810163138
+      ]
+    },
+    "executed_speed_exact_fraction_1e-6": 0.9453887554352783,
+    "executed_speed_accel_error": {
+      "n": 32887,
+      "mean": 0.007321670536534642,
+      "rmse": 0.05999638408947229,
+      "mae": 0.008122424968153324,
+      "q00_05_50_95_100": [
+        -1.2000000476837158,
+        -1.6800062212496414e-06,
+        1.1216725548379713e-08,
+        1.8848076408062294e-06,
+        1.7798073536895558
+      ]
+    }
+  },
+  "measured_real_sumo": true,
+  "new_sumo_sim_s": 0
+}

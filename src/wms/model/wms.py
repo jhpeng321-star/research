@@ -2228,6 +2228,18 @@ class WmSModel(nn.Module):
         the supplied ``driver_params``, else those encoded in this forward, else defaults.
         """
         mode = cav_motion.check_exec_cap_mode(self.cav_exec_cap)
+        from wms.control.execution import enabled as execution_parity_enabled
+        if execution_parity_enabled():
+            if mode != "idm":
+                raise ValueError("execution parity requires learned-driver cav_exec_cap='idm'")
+            params = driver_params
+            if params is None and "driver_parameters" in out:
+                params = {name: out["driver_parameters"][..., i]
+                          for i, name in enumerate(PARAMETER_NAMES)}
+            if params is None:
+                raise ValueError("execution parity requires learned driver parameters")
+            from wms.control.execution import inferred_follow_cap
+            return inferred_follow_cap(state, params, dt=self.physics.dt_s)
         if mode.startswith("idm_normal"):
             return self._exec_cap_normal(state, cav_motion.exec_cap_settings(mode))
         if mode != "idm":

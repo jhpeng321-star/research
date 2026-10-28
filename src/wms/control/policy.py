@@ -551,6 +551,8 @@ def load_policy_components(path, *, device: str = "cpu"):
     from .lanes import LaneRules
 
     payload = torch.load(path, map_location=device, weights_only=True)
+    from .execution import check_contract
+    check_contract(payload)
     if payload.get("format") not in CHECKPOINT_FORMATS:
         raise ValueError(f"expected a {' or '.join(CHECKPOINT_FORMATS)} checkpoint")
     state = upgrade_policy_state(payload["policy"])
@@ -583,7 +585,8 @@ def load_policy_components(path, *, device: str = "cpu"):
     return policy.to(device), encoder.to(device), rules, payload
 
 
-def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
+def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu",
+                   execution_authority=None, execution_parity_receipt=None):
     """Deployment :class:`PolicyExecutor` from a C4 trainer checkpoint (``c4_dreamer/1`` or
     ``/2``); used by the SUMO runner (``exe(state)`` -> accel, ``exe(state, with_lanes=True)``
     -> (accel, lane targets)).  ``exe.policy`` / ``exe.group_encoder`` expose the networks."""
@@ -593,6 +596,10 @@ def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu"):
     if policy.residual_on_native:
         from .nativeinit import verify_collection_gate
         gate_policy = {"checkpoint": str(path)}
+        if execution_authority is not None:
+            gate_policy["execution_authority"] = execution_authority
+        if execution_parity_receipt is not None:
+            gate_policy["execution_parity_receipt"] = execution_parity_receipt
         if 'breakdown' in payload:
             gate_policy['breakdown_required'] = True
         receipt = verify_collection_gate(gate_policy)

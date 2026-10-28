@@ -69,7 +69,7 @@ class NativeResidualCommand:
         return NativeResidualCommand(residual, self.accel_min, self.accel_max)
 
 
-def sumo_native_accel(api, vehicle_id, dt=0.5):
+def sumo_native_accel(api, vehicle_id, dt=0.5, *, parity=False):
     """Query SUMO's own car-following model, never the WM twin or a type file.
 
     This is a car-following COMMAND, not an oracle for the next realized speed:
@@ -86,23 +86,37 @@ def sumo_native_accel(api, vehicle_id, dt=0.5):
     else:
         lead_id, gap = leader
         target = float(vehicle.getFollowSpeed(
-            vehicle_id, speed, float(gap) + float(vehicle.getMinGap(vehicle_id)),
+            vehicle_id, speed, float(gap) + (0.0 if parity else float(vehicle.getMinGap(vehicle_id))),
             float(vehicle.getSpeed(lead_id)), float(vehicle.getDecel(lead_id)), lead_id))
     target = min(target, float(vehicle.getAllowedSpeed(vehicle_id)))
     return (max(0.0, target) - speed) / dt
 
 
-def sumo_residual_commands(api, residuals, lo, hi, *, dt=0.5):
-    """Prospective absolute commands for the observable collection action ledger."""
+def sumo_residual_commands(api, residuals, lo, hi, *, dt=0.5, parity=False):
+    """Historical switch-path composer and corrected-gap cap-only diagnostic.
+
+    `parity=True` is the retained historical diagnostic, NOT the combined path.
+    Continuous production goes through continuous.write_residuals instead.
+    """
     composed = {}
     for vid, residual in residuals.items():
         if not np.isfinite(residual):
             raise ValueError("nonfinite residual for a designated CAV")
         if residual == 0.0:
             continue
-        baseline = sumo_native_accel(api, vid, dt)
+        baseline = sumo_native_accel(api, vid, dt, parity=parity)
         upper = min(float(hi), float(api.vehicle.getAccel(vid)))
-        composed[vid] = float(np.clip(baseline + residual, min(lo, baseline), max(upper, baseline)))
+        if parity:
+            from .execution import ACCEL_MAX, SPEED_MODE
+            if int(api.vehicle.getSpeedMode(vid)) != SPEED_MODE:
+                raise ValueError("execution parity requires speedMode27")
+            # getFollowSpeed already adds minGap internally for IDM: passing
+            # gap+minGap (legacy) double-counts it and overstates the safe cap.
+            command = min(baseline + min(residual, 0.), baseline, upper, ACCEL_MAX)
+            composed[vid] = max(command, min(float(lo), baseline),
+                                -float(api.vehicle.getSpeed(vid))/float(dt))
+        else:
+            composed[vid] = float(np.clip(baseline + residual, min(lo, baseline), max(upper, baseline)))
     return composed
 
 
@@ -183,6 +197,14 @@ def artifact_world_delta(artifact, expected_starts):
 def verify_collection_gate(policy):
     """SHA-bind acceptance to the exact checkpoint before any seed charge/dispatch."""
     checkpoint = Path(policy["checkpoint"])
+    from .execution import enabled as execution_parity_enabled
+    if execution_parity_enabled():
+        import os
+        from .execution import verify_authority, verify_parity
+        verify_authority(policy.get("execution_authority") or os.environ.get("C4_EXECUTION_AUTHORITY",
+                         str(checkpoint.with_name("execution_authority.json"))), checkpoint)
+        verify_parity(policy.get("execution_parity_receipt") or os.environ.get("C4_EXECUTION_PARITY_RECEIPT",
+                      str(checkpoint.with_name("execution_parity.json"))))
     receipt = json.loads(checkpoint.with_name("native_gate_result.json").read_text())
     if (receipt.get("checkpoint_sha256") != hashlib.sha256(checkpoint.read_bytes()).hexdigest()
             or receipt.get("panel_sha256") != PANEL_SHA256 or not receipt.get("passed")):
