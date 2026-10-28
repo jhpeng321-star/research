@@ -12,6 +12,7 @@ def watch(wait=0):
     status = json.loads((REL / 'AUTONOMY_STATUS.json').read_text())
     result = {k: status.get(k) for k in ('t', 'status', 'charged', 'reason', 'exit')}
     state = json.loads((ARM / 'loop/LOOP14_STATE.json').read_text())
+    result['charged'] = state['sim_s_charged']
     result['phases'] = {k: v['status'] for k, v in state['cycles'][-1]['phases'].items()}
     policy = state['cycles'][-1]['phases']['policy']
     directory = ARM / 'loop/policy' / ('c03.a' + str(policy['attempt']))

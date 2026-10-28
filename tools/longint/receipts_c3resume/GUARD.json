@@ -1,0 +1,22 @@
+{
+  "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/worlds_c03.json",
+  "schema": "nativeinit_smoke/1",
+  "units": "policy minus native veh-s, including entrance waiting; sum of two paired 300s starts per world",
+  "worlds": [
+    {"seed": 968183, "policy_minus_native_veh_s": -2208.3984962787035},
+    {"seed": 968184, "policy_minus_native_veh_s": -687.2084824342746},
+    {"seed": 968185, "policy_minus_native_veh_s": 1787.9814940323668},
+    {"seed": 968186, "policy_minus_native_veh_s": -651.1102880142171}
+  ],
+  "world_deltas": [-2208.3984962787035, -687.2084824342746, 1787.9814940323668, -651.1102880142171],
+  "mean_delta": -439.6839431737071,
+  "ci95": [-1819.076444212582, 1169.1839999157064],
+  "margin": 0.0,
+  "passed": false,
+  "verdict": "inconclusive",
+  "collection_decision": "continue under the prospectively registered HARMFUL-only rule",
+  "bootstrap_draws": 5000,
+  "bootstrap_unit": "whole paired world",
+  "bootstrap_seed": 20261026,
+  "probes": false
+}
