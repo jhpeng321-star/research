@@ -1,0 +1,23 @@
+{
+  "schema": "c4launch_authority/1",
+  "task": "S-C4LAUNCH",
+  "authority": "MAIN2026-10-28T15:00",
+  "candidate": "A",
+  "wm_sha256": "41e18f09b6060a1f4e4039f02655fcbcd497e32a360cffb71be716fffeaadc84",
+  "trusted_horizon_s": 90,
+  "horizon_authority": "inherited WM2 registered gate; NOT WM3 gate PASS",
+  "next_boundary": "re-evaluate with corrected entrant-ON gate",
+  "entrant_control": true,
+  "deterministic_crn": true,
+  "fit_cycles": [0, 1, 2],
+  "training_cycles": [0, 1],
+  "validation_cycles": [2],
+  "fit_budget_s": 3600,
+  "fallback": "native_anchor OFF; q10/K8 pessimistic_credit ON",
+  "actor_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "focus_fraction": 0.6,
+  "focus_cells": {"penetrations": [0.2, 0.4], "demands": [2400, 2700]},
+  "updates": 150,
+  "gpu_memory_fraction": 0.45,
+  "new_sim_s": 0
+}
