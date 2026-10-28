@@ -396,6 +396,14 @@ def main(argv=None):
             # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
             os.environ["WMS_LOOP_REFRESH"] = "0" if recovery else "1"
             trainer.load_checkpoint(resume)
+            bench_starts = os.environ.get("POLSPEED_BENCH_STARTS", "")
+            if bench_starts:
+                # S-POLSPEED BENCHMARK ONLY (default unset): a full resume restores the
+                # checkpoint's batch_size; this measures the cost of N starts per update.
+                n = int(bench_starts)
+                trainer.config = replace(trainer.config, batch_size=n)
+                trainer.counterfactual = replace(trainer.counterfactual, max_starts=n)
+                summary['polspeed_bench_starts'] = n
             if recovery and trainer.update_count != recovery['saved_update']:
                 raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
