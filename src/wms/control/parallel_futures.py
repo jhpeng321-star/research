@@ -60,6 +60,8 @@ class VJPGate:
     """
     def __init__(self, trainer, root):
         self.trainer, self.root, self.token = trainer, root, None
+        self.device_index = (trainer.device.index if trainer.device.index is not None
+                             else torch.cuda.current_device()) if trainer.device.type == 'cuda' else None
         self.low = float(os.environ.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
         self.high = float(os.environ.get('WMS_SPEED_FUTURE_MEMORY_FRACTION', '.10'))
 
@@ -79,7 +81,7 @@ class VJPGate:
                 time.sleep(.02)
         if self.trainer.device.type == 'cuda':
             torch.cuda.empty_cache()
-            torch.cuda.set_per_process_memory_fraction(self.high, self.trainer.device)
+            torch.cuda.set_per_process_memory_fraction(self.high, self.device_index)
 
     def release(self):
         if self.token is None:
@@ -92,7 +94,7 @@ class VJPGate:
             if torch.cuda.memory_reserved(self.trainer.device) > self.low * total:
                 # Keep the token until this worker exits, freeing its resources.
                 raise RuntimeError('VJP worker retained more than its idle memory budget')
-            torch.cuda.set_per_process_memory_fraction(self.low, self.trainer.device)
+            torch.cuda.set_per_process_memory_fraction(self.low, self.device_index)
         self.token.rmdir()
         self.token = None
 
