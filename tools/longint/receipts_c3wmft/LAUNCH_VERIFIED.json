@@ -1,0 +1,23 @@
+{
+  "task": "S-C3WMFT",
+  "observed_utc": "2026-10-28T01:28:48.982911+00:00",
+  "base_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+  "recipe_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+  "config_sha256": "de12435895ca25f4f28e69bd69f64c8d74885d27986c456729a0ced6b7e675d3",
+  "script_sha256": "7de92c843390e58bee745791cba3ac83932138877469b7703ebfe4a98d052dc5",
+  "coordinator": {"pid": 275075, "start_ticks": "853050293", "sid": 275075, "ppid": 1},
+  "trainer": {"pid": 275090, "start_ticks": "853050536", "sid": 275090, "ppid": 275075},
+  "stdin": "/dev/null",
+  "gpu_memory_fraction": 0.6,
+  "operational_retry": 1,
+  "output": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c03.a2",
+  "early_steps": [
+    {"step": 1, "loss": 174.97810287433862, "grad_norm": 59.36756134033203},
+    {"step": 2, "loss": 265.5043363090865, "grad_norm": 25.834415435791016}
+  ],
+  "optimization_metrics_finite": true,
+  "original_attempt_retained": true,
+  "original_failure": "monitor misclassified infinite diagnostic NLL as nonfinite optimization",
+  "charged": 264544,
+  "after_check": "WAIT_MAIN_C4"
+}
