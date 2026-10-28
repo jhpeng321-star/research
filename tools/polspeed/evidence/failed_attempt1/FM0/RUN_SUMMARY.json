@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "gpu_memory_fraction": 0.3,
+  "diagnostic_grad_audit_every": 25,
+  "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/policy14_cli.py\", line 275, in main\n    train, val = _load_starts(raw[\"data\"], models, args.seed, entries=True)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/train_cli.py\", line 125, in _load_starts\n    source = from_mapping(TrainConfig, _read_config(source_config))\n                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/control/train_cli.py\", line 34, in _read_config\n    raw = load(path)\n          ^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/restart20261026/runtime_c4prep_8e75184392b3/src/wms/core/toml.py\", line 44, in load\n    with open(path, \"r\", encoding=\"utf-8\") as stream:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/root/autodl-tmp/c4/polspeed20261028/configs/c4_policy14_starts.toml'\n",
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: '/root/autodl-tmp/c4/polspeed20261028/configs/c4_policy14_starts.toml'"
+}
