@@ -131,3 +131,33 @@ def test_execution_log_uses_completed_same_step_base_and_records_actual_response
     assert row["same_step_no_traci_speed_mps"] == 9.6
     assert row["issued_acceleration_before_safe_cap_mps2"] == pytest.approx(-.79)
     assert row["realised_acceleration_mps2"] == pytest.approx(-.79)
+
+
+def test_proxy_parity_report_cannot_authorise_deployment(tmp_path,monkeypatch):
+    import json
+    from wms.control.execution import verify_parity
+    monkeypatch.setenv("C4_EXECUTION_DRIVER",str(tmp_path/"driver.json"))
+    path = tmp_path/"proxy.json"
+    path.write_text(json.dumps({"schema":"execparity_continuous_recorded_state/1",
+                               "passed":True,"proxy_within_native_head_error":True}))
+    with pytest.raises(ValueError,match="failing"):
+        verify_parity(path)
+
+
+def test_authority_is_bound_to_the_execution_contract(tmp_path,monkeypatch):
+    import hashlib,json
+    from wms.control import execution
+    policy = tmp_path/"policy.pt"
+    policy.write_bytes(b"checkpoint")
+    hashes = {"native/episode.npz":"a"*64}
+    monkeypatch.setattr(execution,"contract",lambda:{"executor":"one"})
+    receipt = authority_guard([.1],executed_delta=[.01],
+        checkpoint_sha256=hashlib.sha256(policy.read_bytes()).hexdigest(),
+        recordings_sha256=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest())
+    receipt["recordings"] = hashes
+    path = tmp_path/"authority.json"
+    path.write_text(json.dumps(receipt))
+    assert execution.verify_authority(path,policy)["passed"]
+    monkeypatch.setattr(execution,"contract",lambda:{"executor":"two"})
+    with pytest.raises(ValueError,match="stale"):
+        execution.verify_authority(path,policy)

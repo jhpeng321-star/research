@@ -1,0 +1,30 @@
+{
+  "schema": "execparity_authority/2",
+  "checkpoint_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "recordings_sha256": "9f37e089ec5b38eb219c0f6d2a6f6ce04d1700d14b8c5733a65d2ecb9452f3dd",
+  "acting_ticks": 70228,
+  "capped_or_native_fraction": 0.255268553853164,
+  "maximum_fraction": 0.95,
+  "passed": true,
+  "execution_contract": {
+    "schema": "execparity_contract/2",
+    "executor": "native_relative_same_step/1",
+    "driver_sha256": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "accel_max_mps2": 1.2,
+    "decel_mode": "speedMode27 bit2 disabled",
+    "speed_mode": 27,
+    "imagination_soft_safe_accel": false
+  },
+  "recordings": {
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977000_native\\deploy\\episode\\episode.npz": "6398a52d4a63f9c12ddc21e4cc845038f168fb2a010de92d8e496157783f27fa",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977002_native\\deploy\\episode\\episode.npz": "5013abb0241648f6766b62c38f5390c43141bf4905d38314711259869350f532",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977004_native\\deploy\\episode\\episode.npz": "8a9fe328a11ee3f0ba6950e840f3564579872b3e7e07c7be1bbdfb2eb3866017",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977006_native\\deploy\\episode\\episode.npz": "396154994dbae3b92754bf22c47c1d10f6082e0b3382ccdef5d921f37ebb5bf4",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977008_native\\deploy\\episode\\episode.npz": "cd8fbf9b0e911e7475d94428a824c3c2ce132bbe700657097f579aaf275dc2d1",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977010_native\\deploy\\episode\\episode.npz": "c14750e6ef0ae894e869a5f8c2f5a4b9dae3aaf245f0f444fd21445a61622e98",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977012_native\\deploy\\episode\\episode.npz": "a365bacc9a46939540cfee40d478aca888e508f56783bf1bb7664cf64aa73819",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977014_native\\deploy\\episode\\episode.npz": "e747eac2032efdbb4104a34b2e0bbbdafed2e5409ac56dd5f6808f4ae8bc37fb",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977016_native\\deploy\\episode\\episode.npz": "10aef4f1cdef3f3a67f073a453f1d28de20db9f71f9a04cd06df21c51324ea08",
+    "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977018_native\\deploy\\episode\\episode.npz": "233c332b77d2d71560fb3e96fad2da3927de0d477c4a49f1bf5678bfae0b664f"
+  }
+}

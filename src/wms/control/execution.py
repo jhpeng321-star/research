@@ -174,7 +174,9 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed
     receipt = {"schema": schema, "checkpoint_sha256": checkpoint_sha256,
                "recordings_sha256": recordings_sha256, "acting_ticks": len(r),
                "capped_or_native_fraction": fraction, "maximum_fraction": CAP_REJECT_FRACTION,
-               "passed": fraction <= CAP_REJECT_FRACTION}
+                "passed": fraction <= CAP_REJECT_FRACTION}
+    if executed_delta is not None:
+        receipt["execution_contract"] = contract()
     return receipt
 
 
@@ -189,6 +191,7 @@ def verify_authority(path, checkpoint):
     fraction = receipt.get("capped_or_native_fraction", float("nan"))
     hashes = receipt.get("recordings", {})
     if (receipt.get("schema") != "execparity_authority/2" or not receipt.get("passed")
+            or receipt.get("execution_contract") != contract()
             or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
             or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION
             or receipt.get("checkpoint_sha256") != hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()

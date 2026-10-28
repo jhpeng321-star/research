@@ -127,6 +127,9 @@ and AST-identical frozen BranchController/BranchTracker ports. It is not a
 closed-loop trajectory canary. Earlier session CPU receipts report 16 execution
 unit tests passing. No task-owned local worker or remote task dispatch receipt
 was found on recovery. These results must not be relabelled continuous-law proof.
+The cap-only **pooled** acceptance gate actually FAILS: C1 RMSE 0.170708,
+MAPPO 0.200415 versus native-head 0.198964 m/s². Passing world-mean comparisons
+cannot replace this registered pooled criterion. No parameters were retuned.
 
 ## 3. Combined law: CPU implementation PASS, stock-SUMO backend BLOCKED
 
@@ -165,7 +168,7 @@ to stale `getSpeedWithoutTraCI`, `slowDown`, or absolute `setAcceleration`.
 Nonzero deployment on the frozen binary fails before a longitudinal write.
 This is a built CPU contract/fixture, **not a completed SUMO backend**.
 
-CPU checks: 25 execution tests PASS, including 10,000 independent scalar/tensor
+CPU checks: 27 execution tests PASS, including 10,000 independent scalar/tensor
 cases, useful positive/negative gradients below the cap, zero gradients when
 capped, bit-exact zero/native trajectories with LC yielding, signed-zero tensor
 identity, tiny-residual continuity, sole-writer/fallback, and stock-API refusal.
@@ -177,3 +180,49 @@ The completed-step execution logger additionally records requested residual,
 same-step no-TraCI speed (read after stepping), issued acceleration before safety,
 actual speed-difference acceleration and accepted/native ownership. Its own
 regression PASSes; it does not mistake residuals for absolute issued acceleration.
+
+## 4. New-law recorded-state sensitivity and authority guard
+
+`continuous_results.json` uses the ten **native** recordings, every tenth
+post-warmup decision and all stable CAVs: 6,998 rows. The actor sees only the
+pre-command state; the observed native next acceleration is an offline target,
+never an input. The target scalar backend and differentiable WM law share the
+same TRAIN-inferred follow cap. Thus this checks head-replacement sensitivity
+and algebra, **not the unobserved true SUMO cap or a new-law SUMO trajectory**.
+
+* Prediction minus native-based executable **proxy**: bias −0.00331, RMSE
+  **0.170964**, MAE 0.056481 m/s²; p05/median/p95 −0.13531/0/+0.13070,
+  min/max −1.55054/+2.84717.
+* Raw native-head error on the same rows: RMSE **0.198964**, MAE 0.090911.
+  Equal-world mean proxy RMSE 0.18316 [0.15948,0.20628], versus head
+  0.20896 [0.18524,0.23094]; fixed 5,000-draw world bootstrap, seed20261028.
+* Feasibility projection is material: WM head projection RMSE0.14277; projection
+  of recorded native acceleration onto the inferred envelope RMSE0.15099, worst
+  −6.01172 m/s². This exposes inferred-cap/geometry error. It must not be hidden
+  by the shared-cap proxy comparison, which can cancel common model error.
+* `c1_continuous_authority_full.json` evaluates **all** post-warmup control ticks
+  in those ten tapes: 70,228 acting CAV rows, **25.5269%** fully clipped/inert in
+  the WM-based counterfactual law; 74.4731% retain some longitudinal effect.
+  This is a model-based authority admission PASS, not measured SUMO authority.
+
+The `>95%` rule is unchanged. The combined guard counts *zero executed residual
+effect* after composing with the feasible native base, rather than rejecting
+positive residuals by sign. Positive residuals can now use available headroom;
+negative residuals may themselves be clipped. Receipt schema2 binds checkpoint,
+recordings, driver SHA and execution contract. Exactly95% is admitted; >95%
+refused. `verify_parity` independently refuses old cap-path receipts and new-law
+proxy reports, even if someone changes their `passed` boolean. It requires a
+real combined-law measurement and zero/native identity. Installed stock-TraCI
+introspection in `backend_preflight.json` confirms the required extension methods
+are absent without opening a simulator connection or spawning SUMO.
+
+Reproduce (preserve the existing SUMO-tools PYTHONPATH when adding `src;.`):
+
+```text
+python tools/execparity/continuous_replay.py --data _execparity_data --policy <audit>/cpuP/e3final/inputs/policy_latest.pt --driver configs/execparity_cav_idm_v1.json --out tools/execparity/continuous_results.json --authority tools/execparity/c1_continuous_authority.json
+python tools/execparity/guard.py --policy <candidate.pt> --driver configs/execparity_cav_idm_v1.json --episode <recorded episode.npz> [--episode ...] --out <execution_authority.json>
+python tools/execparity/preflight.py --out <backend_preflight.json>
+```
+
+The last command intentionally exits2 for stock TraCI. No report in this branch
+currently authorizes combined-law SUMO deployment.

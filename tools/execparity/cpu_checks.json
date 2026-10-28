@@ -1,0 +1,17 @@
+{
+  "schema": "execparity_cpu_checks/1",
+  "execution_tests": {"passed": 27, "failed": 0, "elapsed_s": 3.69},
+  "selected_regression_run": {"passed": 81, "failed_missing_onnxruntime": 1, "deselected_simulator_or_dispatch": 8},
+  "missing_dependency_case_rerun_in_existing_miniconda": {"passed": 1, "failed": 0},
+  "zero_residual_native_unit_fixture_bit_identity": true,
+  "tiny_residual_continuity_in_same_step_fixture": true,
+  "stock_cached_getter_discontinuity_counterexample_passed": true,
+  "historical_cap_path_recorded_acceptance_passed": false,
+  "continuous_shared_cap_proxy_within_native_head_band": true,
+  "continuous_real_sumo_parity_measured": false,
+  "same_step_backend_available": false,
+  "real_sumo_dispatch_preconditions_met": false,
+  "sumo_allocations": 0,
+  "charged_sim_s": 0,
+  "actual_sim_s": 0
+}
