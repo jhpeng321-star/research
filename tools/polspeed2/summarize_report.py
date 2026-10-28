@@ -12,6 +12,8 @@ for name, result in report.items():
     summary = {k: result.get(k) for k in ('s_per_update', 'peak_owned_gpu_mib', 'projected_150_hours')}
     summary['parity'] = {k: result.get('parity', {}).get(k) for k in
                          ('compared_leaves', 'bitwise_identical', 'n_diff')}
+    summary['phase_seconds'] = result.get('phase_seconds')
+    summary['scoring_projection'] = result.get('scoring_projection')
     summary['important_metric_differences'] = [d for d in result.get('parity', {}).get('differences', [])
                                                if d['key'] in interest]
     for field in ('six_serial_parity', 'nine_N2_state_parity', 'six_serial_state_parity'):

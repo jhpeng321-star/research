@@ -21,7 +21,7 @@ if '--wait' in sys.argv:
         if (base/'STOP').exists():
             raise SystemExit(0)
         time.sleep(5)
-variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8', 'nine_N4_s8']
+variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8', 'nine_N8_gate', 'nine_N4_s8']
 remaining = []
 for name in variants:
     path = base/'out'/name

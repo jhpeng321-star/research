@@ -335,13 +335,13 @@ def _main(root, index):
                           else _forward(trainer, common, task))
                 torch.save(result, path.with_suffix('.pt'))
                 del result
+            except BaseException:
+                path.with_suffix('.error').write_text(traceback.format_exc())
+            finally:
                 if trainer.device.type == 'cuda':
                     (directory / 'memory.json').write_text(json.dumps({
                         'peak_allocated': torch.cuda.max_memory_allocated(),
                         'peak_reserved': torch.cuda.max_memory_reserved()}))
-            except BaseException:
-                path.with_suffix('.error').write_text(traceback.format_exc())
-            finally:
                 if gate is not None:
                     gate.release()
             path.with_suffix('.done').touch()
