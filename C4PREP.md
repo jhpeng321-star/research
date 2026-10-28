@@ -13,6 +13,20 @@ but registered horizon output remains absent and shared boundary remains WM2.
 READY_C4A requires measured compatible horizon, fitted/validated artifacts and
 successful real finite/memory dry-run evidence. No full phase is authorized.
 
+### PREP2 backlog integration receipt
+
+Merged c4/backlog08d1c1e5. Imported the existing C0–C2 corrected exports to
+gpuA `arm/loop/c4prep/backlog_import_v2/cpuP/pairs_c0*.a1.backlog`:
+120episodes/60pairs, all1680 original arrays SHA-verified and hardlinked into
+new roots; new clock arrays and metadata transferred with hashes. Originals
+remain intact. Compact receipt `tools/c4prep/evidence/PREP2_BACKLOG.json`.
+Both CPU hosts were audited: all52 C3 branch tapes lack complete queue/request
+clocks and have only episode.npz/manifest.json/summary.json beside them.
+The merged converter still opens `scenario/requests.rou.xml`, a type-assignment
+input prohibited here. No such file was opened. C3 re-export therefore requires
+an allowed observable request-clock export; aggregate return totals cannot
+replace it. The prior empty import-v1 timeout directory is preserved.
+
 ## Registered scope (retained from initial receipt)
 
 Prepare parallel gpuA cycle-4 candidates A (cycle1 c01.a3, SHA64f70af4)

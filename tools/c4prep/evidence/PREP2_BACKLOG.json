@@ -1,0 +1,17 @@
+{
+ "task": "S-C4PREP2",
+ "merged_backlog_tip": "08d1c1e5350a7a55de3ae3c0c6a82a9750f7f376",
+ "remote_receipt": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/backlog_import_v2/IMPORT.json",
+ "cpuP_bundle_sha256": "3eec9830b1551dd55ad248f920fb977eb71a12a0f7fd110593c67f9985e73933",
+ "cpuQ_bundle_sha256": "74f7ce55dfea6db0352adbed58161851574e856610c3a68a83658c5bc060f646",
+ "cycles_0_1_2_episodes": [16, 52, 52],
+ "original_arrays_sha_verified_and_linked": 1680,
+ "cycles_0_1_2_pairs": 60,
+ "cycle3_tapes_audited_both_hosts": 52,
+ "cycle3_tapes_with_complete_clocks": 0,
+ "cycle3_reexport_complete": false,
+ "blocker": "Merged converter reads scenario/requests.rou.xml (vehicle/type assignment input forbidden by task); no permitted request-clock sidecar found beside any of the 52 C3 branch tapes. Aggregate summary totals do not identify per-tick demand. No prohibited file was opened.",
+ "prior_transport_attempt": "backlog_import_v1 directory created empty before 60s local timeout; preserved. Smaller xz clock-only transfer completed in fresh v2.",
+ "originals_preserved": true,
+ "new_sim_s": 0
+}
