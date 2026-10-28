@@ -54,6 +54,35 @@ def test_configs_share_flags_except_entrant_and_its_artifact():
     assert not a['uncertainty']['enabled'] and not a['probe']['enabled']
 
 
+def test_prep2_descriptor_contains_only_a_and_never_hold(monkeypatch):
+    monkeypatch.setattr(launch, 'read', lambda p: {'commit': 'test-source'})
+    doc = launch.descriptor(True)
+    assert doc['hold_move'] is False and doc['entrant_control'] is True
+    assert doc['candidates'] == [{'name': 'A', 'checkpoint': str(common.ACTORS[1][0]),
+                                  'sha256': common.ACTORS[1][1]}]
+
+
+def test_pending_entrant_authority_is_on_only():
+    receipt = dict(task='S-C4PREP2', final=False, verdict='PENDING',
+                   authority='MAIN2026-10-28T14:25', selected_entrant_control=True)
+    launch.check_entrant_receipt(receipt, True)
+    with pytest.raises(AssertionError):
+        launch.check_entrant_receipt(receipt, False)
+    with pytest.raises(AssertionError):
+        launch.check_entrant_receipt({**receipt, 'authority': 'unregistered'}, True)
+
+
+def test_a_arguments_are_real_gpu_bounded_and_bind_credit():
+    doc = {'policy_config': '/source/POLICY.toml', 'gate': '/source/GATE.json',
+           'boundary': '/source/BOUNDARY.json', 'real_credit': '/source/REAL_CREDIT.json'}
+    args = launch.arguments(doc, {'checkpoint': str(common.ACTORS[1][0])}, '/output', dry=True)
+    assert args[args.index('--resume') + 1] == str(common.ACTORS[1][0])
+    assert args[args.index('--prep-dry-run-updates') + 1] == '2'
+    assert args[args.index('--device') + 1] == 'cuda' and '--smoke' not in args
+    assert args[args.index('--real-credit') + 1] == doc['real_credit']
+    assert args[args.index('--max-updates') + 1] == '150'
+
+
 @pytest.mark.parametrize('bounded,expected', [(True, 2), (False, 3)])
 def test_cli_scratch_bound_and_normal_path(tmp_path, monkeypatch, bounded, expected):
     import wms.control.policy14_cli as cli

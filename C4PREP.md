@@ -1,4 +1,4 @@
-# S-C4PREP-1 — build verified; empirical preparation BLOCKED (2026-10-28)
+# S-C4PREP-1 / S-C4PREP2 — candidate A build verified; empirical preparation BLOCKED
 
 ## S-C4PREP2 prospective amendment (MAIN14:25)
 
@@ -102,7 +102,7 @@ Real finite/memory dry-run receipts remain blocked as detailed below.
 
 ## Implemented preparation
 
-- `tools/c4prep/launch.py`: two parallel, separately resumed candidates A/B;
+- `tools/c4prep/launch.py`: candidate A ONLY, c01.a3, HOLD OFF;
   isolated outputs and owned PID/start-tick receipts; five-second owned-process
   GPU-memory sampling; allocator/process-memory verification against cap0.45.
   Final WM/gate, source, actor, anchor and entrant bindings are checked before
@@ -123,7 +123,7 @@ Real finite/memory dry-run receipts remain blocked as detailed below.
   verified source bytes from gpuA's existing runtime without modifying it;
   only source deltas cross SSH. No WM checkpoint is copied.
 
-## Measured receipts and blockers
+## Initial S-C4PREP receipts (historical; PREP2 amendments above supersede)
 
 gpuA root: `/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep`.
 `CURRENT_RUNTIME.json` identifies the immutable runtime; `STAGING_*.json`
@@ -160,40 +160,45 @@ merge and launch readiness remain BLOCKED**. GPU use was1MiB at the receipt;
 charged264544/280000 and STOP_DRIVER remain unchanged. No preparation compute
 coordinator, SUMO or full policy job is running from this task.
 
-## Exact one-command MAIN launch per mode (not executed; prerequisites required)
+## Exact one-command MAIN launch for A (NOT executed; currently BLOCKED)
 
-Run from `E:/agent-work/c4-c4prep` after final integration and verified dry runs:
+Run from `E:/agent-work/c4-c4prep` only after the prerequisites below and the
+real A two-update receipt succeed:
 
 ```text
-python -B tools/c4prep/main_launch.py --entrant off
-python -B tools/c4prep/main_launch.py --entrant on
+python -B tools/c4prep/main_launch.py --candidate A --entrant on
 ```
 
-Each command resolves the current immutable runtime, validates the corresponding
-`resolved_OFF/CONFIG.json` or `resolved_ON/CONFIG.json`, and detaches ONE owned
-coordinator for the TWO parallel A/B candidates. MAIN selects ONE mode from the
-final entrant verdict. Missing resolved configs, calibrated active horizons,
-final entrant integration or matching dry-run receipts refuse launch.
+This resolves the current immutable runtime and `resolved_A_ON/CONFIG.json`,
+then detaches one coordinator for A alone. The launch guard requires exactly
+two verified scratch updates, nonzero guarded coop, finite metrics, compatible
+WM3/entrant signatures, validated active-horizon anchor and memory<=cap0.45.
+Missing prerequisites refuse before dispatch. Candidate B is separately owned.
+16 A-launch/control-path tests PASS; fatal-error Ruff PASS. Staging now includes
+the learned native-head JSON needed for real c01.a3 rollouts and uses xz deltas.
 
 ## Remaining prerequisite sequence (no automatic retry/dispatch armed)
 
-1. Obtain allowed observable queue/request/CAV clocks for C1–C3 without reading
+1. Obtain allowed observable queue/request/CAV clocks for C3 without reading
    restricted route assignments; export a fresh immutable paired dataset and
    preserve original observable arrays, pair hashes and real-J reconciliation.
-2. Re-merge final `c4/entrant`, bind its final verdict/main choice, stage a NEW
-   immutable source snapshot, and resolve its WM3 gate compatibility separately
-   for ON/OFF. Never assign the OFF gate to ON by assumption.
+2. Bind the latest committed `c4/entrant` and its verdict. MAIN14:25 explicitly
+   permits ON with verdict PENDING: receipt task=S-C4PREP2, final=false,
+   authority=MAIN2026-10-28T14:25, verdict=PENDING,
+   selected_entrant_control=true, merged_source_commit=<staged source>.
+   A completed adoption uses task=S-ENTRANTFIX/final=true instead. Neither
+   substitutes for an entrant-ON-compatible measured WM3 horizon gate.
 3. Generate genuine paired K8 futures at every active horizon using each
    historical collection actor, current WM3 and matched causal inputs/CRNs.
-   Fit C1/C2; validate disjoint C3 with5000 world-bootstrap draws,
+   Fit C0/C1/C2; validate disjoint C3 with5000 world-bootstrap draws,
    seed20261028. No enablement when its interval excludes zero. No claim that
    an interval including zero proves unbiasedness.
-4. `launch.py prepare --config CONFIG_<MODE>.json --anchor <artifact>
+4. `launch.py prepare --config CONFIG_ON.json --anchor <artifact>
    --entrant-final-receipt <integration-receipt>` creates exclusive resolved
-   config/boundary files. The integration receipt must bind `task=S-ENTRANTFIX`,
-   `final=true`, the final merged/staged `merged_source_commit`, and MAIN's
-   `selected_entrant_control`; it does not replace the underlying final verdict.
-5. Run `launch.py dry-run --config <resolved config>` separately for each mode.
-   Only two scratch updates per candidate are permitted; retain finite metrics,
-   effective flags and measured memory in `DRY_RUN_VERIFIED.json`. Both candidates
-   must pass before the corresponding MAIN launch command is usable.
+   config/boundary files under resolved_A_ON, including SHA-bound REAL_CREDIT
+   and raw/registered/effective weight knots.
+5. Run `launch.py dry-run --config <resolved_A_ON/CONFIG.json>` for A alone.
+   Only two scratch updates are permitted; retain finite metrics, effective
+   flags, nonzero guarded real coop and measured memory in DRY_RUN_VERIFIED.json.
+   Set READY_C4A only after all empirical evidence passes. Until then no
+   readiness claim, full policy dispatch or automatic retry is armed.

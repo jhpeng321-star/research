@@ -27,7 +27,8 @@ def main():
                                     'scripts/c4', 'scripts/round13c_waiter.py', 'pyproject.toml'],
                                     cwd=ROOT, text=True).splitlines()
     names = [n for n in names if not BAD.search(n) and
-             (n.endswith(('.py', '.toml')) or n.startswith('src/wms/model/') and n.endswith('.json'))]
+             (n.endswith(('.py', '.toml')) or n.startswith('src/wms/model/') and n.endswith('.json')
+              or n == 'configs/native_cav_head_v5.json')]
     data = io.BytesIO()
     manifest = {}
     blobs = subprocess.check_output(['git', 'cat-file', '--batch'], cwd=ROOT,
@@ -42,7 +43,7 @@ def main():
                              'gpuA', command], capture_output=True, check=True, timeout=25)
     existing = json.loads(source.stdout)
     transferred = 0
-    with tarfile.open(fileobj=data, mode='w:gz') as archive:
+    with tarfile.open(fileobj=data, mode='w:xz') as archive:
         for name in names:
             header = stream.readline().split()
             assert header[1] == b'blob'
@@ -71,7 +72,7 @@ if r.exists():
   assert hashlib.sha256((r/name).read_bytes()).hexdigest()==digest
 else:
  r.mkdir()
- with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as archive:
+  with tarfile.open(fileobj=io.BytesIO(raw),mode='r:*') as archive:
   for item in archive:
    name=pathlib.PurePosixPath(item.name)
    assert item.isfile() and not name.is_absolute() and '..' not in name.parts

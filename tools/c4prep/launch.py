@@ -1,4 +1,4 @@
-"""Prepare and explicitly launch two isolated candidates; never dispatch SUMO.
+"""Prepare and explicitly launch candidate A only; never dispatch SUMO.
 
 This task invokes inventory/prepare/dry-run only. `launch` is a later MAIN
 command and refuses unresolved inputs or absent matching two-update receipts.
@@ -24,12 +24,23 @@ def descriptor(entrant):
             'source_commit': read(CODE / 'SOURCE.json')['commit'],
             'runtime': str(CODE), 'wm': str(WM), 'wm_sha256': WM_SHA,
             'wm_config': str(WM_CONFIG), 'gate': str(GATE),
-            'candidates': [{'name': name, 'checkpoint': str(ACTORS[cycle][0]),
-                            'sha256': ACTORS[cycle][1]} for name, cycle in (('A', 1), ('B', 3))],
+            'hold_move': False,
+            'candidates': [{'name': 'A', 'checkpoint': str(ACTORS[1][0]), 'sha256': ACTORS[1][1]}],
             'base_toml': str(CODE / f'configs/c4_policy14_c4prep_{mode}.toml'),
             'updates': 150, 'gpu_memory_fraction': .45,
             'probes': False, 'critic_bootstrap': False,
-            'ready': False, 'blockers': ['final entrant merge/verdict, registered WM3 gate, validated anchor and dry-run receipts required']}
+            'ready': False, 'blockers': ['entrant adoption/authorized pending-ON binding, registered WM3 gate, validated anchor and real A dry-run receipt required']}
+
+
+def check_entrant_receipt(final, entrant):
+    """A pending scientific verdict may use the explicit MAIN14:25 ON repair authority."""
+    adopted = final.get('task') == 'S-ENTRANTFIX' and final.get('final') is True
+    pending_on = (final.get('task') == 'S-C4PREP2' and final.get('final') is False
+                  and final.get('authority') == 'MAIN2026-10-28T14:25'
+                  and final.get('verdict') == 'PENDING'
+                  and final.get('selected_entrant_control') is True and entrant is True)
+    assert adopted or pending_on, 'entrant adoption or explicit pending-ON repair authority required'
+    assert final['selected_entrant_control'] == entrant
 
 
 def templates():
@@ -51,10 +62,20 @@ def prepare(config, anchor, entrant_receipt):
     entrant = template['entrant_control']
     horizon, gate = qualified_gate(entrant)
     final = read(entrant_receipt)
-    assert final['task'] == 'S-ENTRANTFIX' and final['final'] is True
+    check_entrant_receipt(final, entrant)
     assert final['merged_source_commit'] == read(CODE / 'SOURCE.json')['commit'], 're-merge final entrant tip and restage'
     raw = _read_config(template['base_toml'])
     cfg = DreamerConfig(**raw['trainer'])
+    assert cfg.real_credit_individual_floor and cfg.entrant_control == entrant
+    from wms.control.counterfactual import CounterfactualConfig
+    from wms.control.policy14 import guarded_real_credit_weights
+    from wms.control.real_credit14 import load_multipliers
+    real_credit = REL / 'arm/loop/sumocredit/REAL_CREDIT_c03.a1.json'
+    multipliers = load_multipliers(real_credit)
+    cf = CounterfactualConfig(**raw['counterfactual'])
+    effective_weights = [guarded_real_credit_weights(cf.weights(k), multipliers,
+                        individual_floor=True)[1] for k in cf.curriculum_updates]
+    assert effective_weights[-1]['effective']['coop'] > 0
     artifact = read(anchor)
     assert artifact['schema'] == 'antiexploit_anchor/1'
     assert artifact['inference_signature'] == inference_signature(cfg)
@@ -82,12 +103,13 @@ def prepare(config, anchor, entrant_receipt):
         native_returns=str(REL / 'arm/loop/returns/native_returns_c03.a1.npz'),
         source_policy_checkpoint=str(ACTORS[3][0]), source_policy_sha256=ACTORS[3][1])
     boundary['flags']['hot_swap'] = False
+    boundary['coop_credit'] = True
     mode = 'ON' if entrant else 'OFF'
-    dest = OUT / f'resolved_{mode}'
+    dest = OUT / f'resolved_A_{mode}'
     assert not dest.exists(), 'use a new source snapshot/output revision after any failed preparation'
     dest.mkdir()
     write_new(dest / 'BOUNDARY.json', boundary)
-    # Both arms use a single-stage, trusted horizon from their first update.
+    # A uses the measured trusted horizon from its first update.
     # Per-penetration safety capping remains authoritative in the trainer.
     text = (f'extends = {json.dumps(template["base_toml"])}\n\n[trainer]\n'
             f'native_anchor_calibration = {json.dumps(str(safe(anchor).resolve()))}\n'
@@ -99,8 +121,10 @@ def prepare(config, anchor, entrant_receipt):
     result = {**template, 'ready': True, 'blockers': [], 'trusted_horizon_s': horizon,
               'anchor': str(anchor), 'anchor_sha256': sha(anchor),
               'entrant_receipt': str(entrant_receipt), 'entrant_receipt_sha256': sha(entrant_receipt),
-              'gate_sha256': sha(GATE), 'policy_config': str(dest / 'POLICY.toml'),
-              'boundary': str(dest / 'BOUNDARY.json')}
+               'gate_sha256': sha(GATE), 'policy_config': str(dest / 'POLICY.toml'),
+               'boundary': str(dest / 'BOUNDARY.json'),
+               'real_credit': str(real_credit), 'real_credit_sha256': sha(real_credit),
+               'real_credit_weight_knots': effective_weights}
     result['policy_config_sha256'] = sha(result['policy_config'])
     result['boundary_sha256'] = sha(result['boundary'])
     write_new(dest / 'CONFIG.json', result)
@@ -112,9 +136,13 @@ def validate(config, *, launching=False):
     if not doc.get('ready'):
         raise ValueError('; '.join(doc['blockers']))
     assert doc['source_commit'] == read(CODE / 'SOURCE.json')['commit']
+    assert doc['hold_move'] is False
+    assert len(doc['candidates']) == 1 and doc['candidates'][0]['name'] == 'A'
+    assert doc['candidates'][0]['sha256'] == ACTORS[1][1]
+    check_entrant_receipt(read(doc['entrant_receipt']), doc['entrant_control'])
     horizon, _ = qualified_gate(doc['entrant_control'])
     assert horizon == doc['trusted_horizon_s']
-    for key in ('anchor', 'entrant_receipt', 'gate', 'policy_config', 'boundary'):
+    for key in ('anchor', 'entrant_receipt', 'gate', 'policy_config', 'boundary', 'real_credit'):
         assert sha(doc[key]) == doc[key + '_sha256']
     for item in doc['candidates']:
         assert sha(item['checkpoint']) == item['sha256']
@@ -124,6 +152,8 @@ def validate(config, *, launching=False):
         assert read(doc['entrant_receipt'])['selected_entrant_control'] == doc['entrant_control']
         receipt = read(Path(config).parent / 'DRY_RUN_VERIFIED.json')
         assert receipt['config_sha256'] == sha(config) and receipt['passed']
+        assert len(receipt['results']) == 1 and receipt['results'][0]['candidate'] == 'A'
+        assert receipt['results'][0]['updates'] == 2 and receipt['results'][0]['real_coop_verified']
     return doc
 
 
@@ -136,7 +166,7 @@ def arguments(doc, item, output, dry):
         '--paircrit-policy-sha256', ACTORS[3][1],
         '--gate-panel', str(REL / 'arm/gate_panel.json'), '--horizon-gate', doc['gate'],
         '--looplong-boundary', doc['boundary'], '--native-init', '--phase-relative-signal-gate',
-        '--real-credit', str(REL / 'arm/loop/sumocredit/REAL_CREDIT_c03.a1.json'),
+        '--real-credit', doc['real_credit'],
         '--critic-warmup-updates', '0', '--resume', item['checkpoint'],
         '--device', 'cuda', '--seed', '965140', '--max-updates', '150',
         '--output-dir', str(output), '--compact']
@@ -200,14 +230,21 @@ def run(config, dry):
         memory_ok = 0 < max(peaks, default=0) <= .45 * total_bytes and 0 < process_peak <= .45 * total_bytes
         flags_ok = (cfg.get('future_samples') == 8 and cfg.get('native_anchor') is True
                     and cfg.get('pessimistic_credit') is True
-                    and cfg.get('entrant_control') == doc['entrant_control'])
+                    and cfg.get('entrant_control') == doc['entrant_control']
+                    and cfg.get('real_credit_individual_floor') is True
+                    and not cfg.get('hold_move', False))
+        coop_ok = bool(updates) and all(
+            r.get('real_credit_weights', {}).get('effective', {}).get('coop', 0.) > 0
+            and r['real_credit_weights']['effective']['individual'] >= r['real_credit_weights']['effective']['coop']
+            for r in updates)
         passed = (child.returncode == 0 and (not dry or
                   summary['status'] == 'completed_dry_run' and len(updates) == 2)
-                  and memory_ok and flags_ok)
+                   and memory_ok and flags_ok and coop_ok)
         results.append({'candidate': item['name'], 'exit': child.returncode, 'passed': passed,
                         'updates': len(updates), 'peak_reserved_bytes': max(peaks, default=0),
                         'sampled_process_peak_bytes': process_peak,
-                        'memory_within_cap': memory_ok, 'effective_flags_verified': flags_ok,
+                         'memory_within_cap': memory_ok, 'effective_flags_verified': flags_ok,
+                         'real_coop_verified': coop_ok,
                         'summary_sha256': sha(output / 'RUN_SUMMARY.json')})
     receipt = {'config_sha256': sha(config), 'passed': all(r['passed'] for r in results),
                'dry_run': dry, 'results': results, 'process_memory_samples': len(samples),
