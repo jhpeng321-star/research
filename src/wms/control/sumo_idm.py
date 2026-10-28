@@ -88,13 +88,11 @@ def follow_speed(gap2pred, speed, leader_speed, allowed_speed, *,
     ``respect_min_gap``); ``allowed_speed`` is ``desSpeed`` (the lane's
     ``getVehicleMaxSpeed``). Bitwise-identical to :func:`follow_speed_scalar`.
     """
-    import torch
     p = dict(CAV_PARAMS if params is None else params)
     a, b, tau, gap0 = (float(p[k]) for k in ("accel", "decel", "time_headway", "min_gap"))
     delta = float(p.get("delta", 4.0))
     iterations = _iterations(dt)
     two_sqrt_ab = 2. * math.sqrt(a * b)
-    step = float(dt) / iterations
     eps = float(NUMERICAL_EPS)
     v = speed
     gap = gap2pred + (gap0 if respect_min_gap else 0.)

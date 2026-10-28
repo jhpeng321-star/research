@@ -24,7 +24,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT), str(Path(__file__).resolve().parent)]
 
-from replay import sha, states_from_episode, summary
+from replay import states_from_episode, summary
 from wms.control.alwayscmd import executed, inferred_base, inferred_cap
 from wms.control.native_cav import head_native_accel, leader_gap_dv
 
@@ -120,13 +120,13 @@ def main():
         "classification": ("frame leader == recorded executor leader (bumper gap within "
                            f"{GAP_TOL_M} m, leader speed within {SPEED_TOL_MPS} m/s)"),
         "leader_matched": {"n_rows": n_m, "fraction": n_m / (n_m + n_x),
-                           **{f"imagined_minus_realised": summary(np.array(groups["matched"]["imagined"])),
+                           **{"imagined_minus_realised": summary(np.array(groups["matched"]["imagined"])),
                               "mirror_from_issued_minus_realised": summary(np.array(groups["matched"]["mirror"])),
                               "base_minus_sumo_base": summary(np.array(groups["matched"]["base"])),
                               "head_minus_realised": summary(np.array(groups["matched"]["head"]))}},
         "leader_mismatched": {"n_rows": n_x, "fraction": n_x / (n_m + n_x),
                               "phantom_frame_leader_closer": phantom_gap,
-                              **{f"imagined_minus_realised": summary(np.array(groups["mismatched"]["imagined"])),
+                              **{"imagined_minus_realised": summary(np.array(groups["mismatched"]["imagined"])),
                                  "mirror_from_issued_minus_realised": summary(np.array(groups["mismatched"]["mirror"])),
                                  "base_minus_sumo_base": summary(np.array(groups["mismatched"]["base"])),
                                  "head_minus_realised": summary(np.array(groups["mismatched"]["head"]))}},

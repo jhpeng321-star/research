@@ -8,7 +8,6 @@ the C++ formula, (b) the executor-side TraCI conventions it must reproduce,
 (c) bitwise tensor/scalar identity of the shared law, (d) the residual-0 CTRL0
 path and the speedMode-27 cap composition. CPU only; no SUMO import.
 """
-import json
 import math
 from types import SimpleNamespace
 
@@ -63,9 +62,9 @@ def test_follow_speed_is_an_exact_transcription_of_sumo_idm_v():
     vl = rng.uniform(0., 33., n)
     gap = rng.uniform(0.05, 400., n)
     des = rng.uniform(20., 31.29, n)
-    got = np.array([sumo_idm.follow_speed_scalar(g, x, l, d) for g, x, l, d in
+    got = np.array([sumo_idm.follow_speed_scalar(g, x, w, d) for g, x, w, d in
                     zip(gap, v, vl, des)])
-    want = np.array([cpp_v(g, x, l, d) for g, x, l, d in zip(gap, v, vl, des)])
+    want = np.array([cpp_v(g, x, w, d) for g, x, w, d in zip(gap, v, vl, des)])
     assert np.max(np.abs(got - want)) < 1e-10
 
 
