@@ -77,7 +77,7 @@ credit, residual stats, J; timing/memory keys excluded).
 | **FG** (same flags, clean 1-start run) | 0.25 | **845.7** | 11.89 GB (12.31 reserved) | **bitwise identical, all 158 leaves incl. independent_J** |
 
 | **FGA** = FG + `WMS_SPEED_ASYNC_SPILL=1` | 0.25 | **788.2** | 11.89 GB (12.21 reserved) | **bitwise identical, all 158 leaves** |
-| FGA_S2: FGA, 2 starts (`POLSPEED_BENCH_STARTS=2`, benchmark-only), microbatch 1 | 0.25 | full fwd 265.4 s; replay 74 s per (start, future) -> projected ~1470 s/update (~735 s per start) | ~12.4 GB reserved | n/a (different recipe) |
+| FGA_S2: FGA, 2 starts (`POLSPEED_BENCH_STARTS=2`, benchmark-only), microbatch 1 | 0.25 | full fwd 265.4 s; replay 68-74 s per (start, future) -> projected ~1370-1470 s/update (~700 s per start) | ~12.4 GB reserved | n/a (different recipe) |
 
 Projection (not measured): 4 starts with microbatch 1 ~ 400 + 32 x 74 ~ 2800 s/update
 (~700 s per start). Time per start barely improves because microbatch 1 replays every
