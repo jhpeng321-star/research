@@ -1,5 +1,6 @@
 """CPU, synthetic traffic only: signs, exact OFF, actual continuation/VJP/resume."""
 from dataclasses import replace
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -9,6 +10,7 @@ import pytest
 import torch
 
 from tools.gated300.cct1 import compute
+from tools.gated300.cct2 import compute as compute_cct2
 from wms.control import gated300
 from wms.control.counterfactual import CounterfactualConfig, build_variants, row_coefficients
 from wms.control.dreamer import _rng_state, _restore_rng
@@ -54,6 +56,24 @@ def enable(t, path, **options):
     return gated300.install(t, dict(enabled=True, cct1_file=path, **options), ['a' * 64])
 
 
+def cct2_authority(tmp_path, hg=120, **extra):
+    rows = [dict(world=i, dJ={str(h): ([-200., -100.] if h == hg else [0., -100.])
+                              for h in gated300.SIGMA}) for i in range(12)]
+    document = dict(entrant_control=False, deterministic_crn=True, rows=rows)
+    result = compute_cct2(dict(role='pairs300', wm_sha256='a' * 64, **document),
+                          dict(role='validation', wm_sha256='a' * 64, **document))
+    assert result['H_G'] == hg
+    result.update(extra)
+    path = tmp_path / f'WM_CCT2_{hg}_{len(extra)}.json'
+    path.write_text(json.dumps(result))
+    return str(path)
+
+
+def enable_gain_only(t, path, **options):
+    return gated300.install(t, dict(enabled=True, mode='gain_only', cct2_file=path, **options),
+                            ['a' * 64])
+
+
 def test_sign_gate_both_tails_strict_threshold_and_only_on_gradients():
     # Columns: benefit, harm, below threshold, benefit with bad q10, harm with bad q90.
     samples = torch.tensor([[100., -100., 82.44, -10., 10.]] * 2
@@ -65,6 +85,80 @@ def test_sign_gate_both_tails_strict_threshold_and_only_on_gradients():
     result.sum().backward()
     assert torch.equal(samples.grad[:, :2], torch.ones(8, 2))
     assert torch.count_nonzero(samples.grad[:, 2:]) == 0
+
+
+def test_gain_only_gate_keeps_confident_gain_direction_only():
+    # Columns: gain, harm, exactly at margin, gain with bad q10, harm with bad q90.
+    samples = torch.tensor([[100., -100., 82.44, -10., 10.]] * 2
+                           + [[200., -200., 82.44, 200., -200.]] * 6, requires_grad=True)
+    result, on, agreement, _ = gated300.gate(samples, 41.22, gain_only=True)
+    assert on.tolist() == [True, False, False, False, False]  # harm gets no credit
+    assert agreement.tolist() == [True, False, True, False, False]  # margin keeps sign only
+    assert gated300.gate(samples, 41.22)[1].tolist() == [True, True, False, False, False]
+    result.sum().backward()
+    assert torch.equal(samples.grad[:, :1], torch.ones(8, 1))
+    assert torch.count_nonzero(samples.grad[:, 1:]) == 0
+
+
+@pytest.mark.parametrize('mode', ['disabled', 'off', 'missing', 'hg0'])
+def test_gain_only_off_and_untrusted_are_bitwise_identical_updates(tmp_path, mode):
+    baseline, actual = trainer(), trainer()
+    if mode == 'off':
+        gated300.install(actual, dict(enabled=False, mode='gain_only',
+                                      cct2_file=str(tmp_path / 'unused.json')), ['a' * 64])
+    elif mode == 'missing':
+        enable_gain_only(actual, str(tmp_path / 'missing.json'))
+    else:
+        enable_gain_only(actual, cct2_authority(tmp_path, hg=0))
+    assert not gated300.active(actual)
+    torch.manual_seed(119)
+    expected = baseline.update()
+    rng = torch.get_rng_state()
+    torch.manual_seed(119)
+    result = actual.update()
+    for key in expected.keys() - {'wall_time_s'}:
+        fixture.assert_tree_close(expected[key], result[key], atol=0, rtol=0)
+    for x, y in zip(baseline.actor_parameters, actual.actor_parameters):
+        assert torch.equal(x, y) and torch.equal(x.grad, y.grad)
+    fixture.assert_tree_close(baseline.actor_optimizer.state_dict(), actual.actor_optimizer.state_dict(), 0, 0)
+    assert torch.equal(rng, torch.get_rng_state())
+
+
+def test_gain_only_binds_cct2_authority_and_credits_predicted_gains(tmp_path):
+    t = trainer()
+    original = t.reward_fn
+    def flipped(*args):  # Treated rows then predict gain instead of harm.
+        out = original(*args)
+        return {**out, 'reward': -out['reward']}
+    t.reward_fn = flipped
+    path = cct2_authority(tmp_path, 120)
+    receipt = enable_gain_only(t, path)
+    assert receipt['H_G'] == 120 and receipt['H_long'] == 120 and gated300.active(t)
+    assert receipt['artifact_sha256'] == hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    t.config = replace(t.config, horizon=90)
+    t._training_imagination = True
+    torch.manual_seed(29)
+    result = t.update()
+    assert result['gated300_rows_on_share'] > 0 and result['gated300_long_credit'] != 0
+    assert result['gated300_horizon_s'] == 120
+
+
+def test_gain_only_binding_refuses_wrong_wm_panels_and_tampered_h_g(tmp_path):
+    t = trainer()
+    for extra, message in [({'wm_sha256': 'b' * 64}, 'authority'),
+                           ({'panels': ['pairs300']}, 'authority'),
+                           ({'policy_authorized': False}, 'authority'),
+                           ({'schema': 'gated300_cct2/2'}, 'authority'),
+                           ({'H_G': 300}, 'largest passing'),
+                           ({'entrant_control': True}, 'entrant')]:
+        with pytest.raises(ValueError, match=message):
+            enable_gain_only(t, cct2_authority(tmp_path, 120, **extra))
+    with pytest.raises(ValueError, match='mode'):
+        gated300.install(t, dict(enabled=True, mode='both'), ['a' * 64])
+    enable_gain_only(t, cct2_authority(tmp_path))
+    t.world_model_ids = ['different']
+    with pytest.raises(ValueError, match='WM changed'):
+        gated300.active(t)
 
 
 @pytest.mark.parametrize('mode', ['absent', 'off', 'missing', 'hc0', 'hc90'])

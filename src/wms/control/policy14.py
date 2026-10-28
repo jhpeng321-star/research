@@ -185,7 +185,8 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                 result['score_horizon_s'] = imagined['imagination_horizon_s']
                 if 'gated300_long_difference' in imagined:
                     long = imagined['gated300_long_difference'][:, 0, :n]
-                    gated, on, agreement, median = gate(long, SIGMA[imagined['gated300_horizon_s']])
+                    gated, on, agreement, median = gate(long, SIGMA[imagined['gated300_horizon_s']],
+                        gain_only=trainer.gated300['config'].get('mode') == 'gain_only')
                     gain = float(torch.quantile(gated, .1, dim=0).mean())
                     weighted = trainer.gated300['config']['w_long'] * gain
                     long_j = imagined['gated300_long_J']
