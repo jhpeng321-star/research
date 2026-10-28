@@ -21,6 +21,10 @@ def remote(source, data, timeout=60):
     command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
         f'import base64;exec(base64.b64decode({encoded!r}))'])
     ssh = ['ssh']
+    if os.environ.get('C4_SSH_HOSTNAME'):
+        ssh += ['-o', 'HostName=' + os.environ['C4_SSH_HOSTNAME'],
+                '-o', 'HostKeyAlias=[connect.bjb1.seetacloud.com]:11000',
+                '-o', 'StrictHostKeyChecking=yes']
     if os.environ.get('C4_SSH_JUMP'):
         ssh += ['-J', os.environ['C4_SSH_JUMP']]
     result = subprocess.run([*ssh, '-v', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',

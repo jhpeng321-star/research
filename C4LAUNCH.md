@@ -239,3 +239,13 @@ attention751.33, mean|residual|0.055965m/s2, mean−q10 credit346.3602,
 effective individual/coop8.9/8.9,90s. GPU reserved12,201,230,336bytes and sampled
 process12,650,020,864bytes, host~13.76GB. Second scratch update running.
 Receipt RESUME_FIRST_REAL_UPDATE.json; this is1of2, not a dry PASS/full launch.
+
+Last confirmed11:18:35UTC: first unique update181 finite, second update's
+future5 starting, host13.8GB/GPU12.65GB stable. Three subsequent cpuP-relay
+status refusals at>=300s spacing and a direct refusal leave completion UNKNOWN.
+Stopped only local read-only watcher37624 after verifying its exact creation
+time/command; remote compute untouched. TCP DNS to1.1.1.1 is still intercepted
+to Clash fake172.19.0.17; independent DNS-over-HTTPS returns106.120.183.117.
+Optional per-command C4_SSH_HOSTNAME override retains the ORIGINAL pinned host
+alias and strict host-key checking. This does not edit keys/global routing or
+peer processes. Route test remains pending after a fresh>=300s backoff.

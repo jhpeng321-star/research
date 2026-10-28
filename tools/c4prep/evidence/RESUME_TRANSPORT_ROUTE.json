@@ -1,0 +1,15 @@
+{
+  "task": "S-C4LAUNCH",
+  "last_confirmed_compute": "8e751843 worker403814, one actual finite update181; second update future5 in progress at11:18:35UTC",
+  "subsequent_status": "three cpuP-relay refusals at >=300s spacing, then direct refusal after >=300s; remote completion unknown",
+  "stopped_local_read_only_watcher": {"pid": 37624, "creation_local": "2026-10-28T18:41:46+08:00", "command_and_creation_verified": true},
+  "remote_compute_signalled": false,
+  "dns_check": "Explicit TCP query to1.1.1.1 still intercepted:172.19.0.17",
+  "independent_dns_url": "https://dns.google/resolve?name=connect.bjb1.seetacloud.com&type=A",
+  "independent_dns_cname": "gtm-adl-bjb1-connect.seetacloud.com.",
+  "independent_dns_public_ipv4": "106.120.183.117",
+  "next_route_test": "one-command HostName override, original [connect.bjb1.seetacloud.com]:11000 HostKeyAlias, StrictHostKeyChecking=yes; no credentials/global config changes",
+  "route_test_success_claimed": false,
+  "policy_launch_claimed": false,
+  "new_sim_s": 0
+}

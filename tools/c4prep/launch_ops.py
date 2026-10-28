@@ -26,6 +26,10 @@ def main():
         source = 'import sys\nsys.argv=["launch_remote",' + repr(args.action) + ']\n'
         source += (ROOT / 'tools/c4prep/launch_remote.py').read_text()
     ssh = ['ssh']
+    if os.environ.get('C4_SSH_HOSTNAME'):
+        ssh += ['-o', 'HostName=' + os.environ['C4_SSH_HOSTNAME'],
+                '-o', 'HostKeyAlias=[connect.bjb1.seetacloud.com]:11000',
+                '-o', 'StrictHostKeyChecking=yes']
     if os.environ.get('C4_SSH_JUMP'):
         ssh += ['-J', os.environ['C4_SSH_JUMP']]
     result = subprocess.run([*ssh, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
