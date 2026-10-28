@@ -61,6 +61,29 @@ def subset_validation(model, rows, role_of):
         "n_worlds": len(set(worlds.tolist())), "n_rows": len(rows)}
 
 
+def ranking_mean(model, rows):
+    """Point estimate of the within-world paired-benefit ordering agreement used by validate_model
+    (same centre and tie rule); None without an informative world."""
+    from wms.control.long_credit import conditional_scales, sample_location_width
+    if not rows or model.get("correction_scale") is None:
+        return None
+    worlds = np.asarray([str(r["world"]) for r in rows])
+    mean, width = sample_location_width([r["samples"] for r in rows])
+    real = np.asarray([r["real_benefit"] for r in rows], float)
+    lower, upper = conditional_scales(mean, width, model)
+    centre = ((mean + (lower - model["correction_scale"]) * width)
+              + (mean + (upper + model["correction_scale"]) * width)) / 2
+    out = []
+    for w in sorted(set(worlds.tolist())):
+        m = worlds == w
+        dr = real[m][:, None] - real[m][None, :]
+        dp = centre[m][:, None] - centre[m][None, :]
+        info = np.triu(np.ones(dr.shape, dtype=bool), 1) & (dr != 0)
+        if info.any():
+            out.append(float(((np.sign(dp[info]) == np.sign(dr[info])) * 1. + (dp[info] == 0) * .5).mean()))
+    return {"mean_agreement": float(np.mean(out)) if out else None, "worlds": len(out)}
+
+
 def fit_variant(name, rows, role_override):
     from wms.control.long_credit import fit_cqr, world_role
     sel = []
@@ -86,6 +109,7 @@ def fit_variant(name, rows, role_override):
                       "validation_worlds": len(v.get("worlds", [])) if v else 0,
                       "world_coverage": v.get("world_coverage"), "ranking_lower95": v.get("ranking_lower95"),
                       "ranking_worlds": v.get("ranking_worlds"),
+                      "ranking_mean": ranking_mean(model, val_rows),
                       "validation_loop_subset": subset_validation(model, loop_val, None),
                       "validation_e3_subset": subset_validation(model, e3_val, None),
                       "reason": model.get("reason")}
