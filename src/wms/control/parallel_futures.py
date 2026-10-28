@@ -7,6 +7,7 @@ owned trusted tensors/models only. Workers exit cooperatively through STOP.
 from __future__ import annotations
 
 import json
+import gc
 import os
 from pathlib import Path
 import subprocess
@@ -27,6 +28,61 @@ def worker_count():
 
 def parallel_forward():
     return os.environ.get('WMS_SPEED_PARALLEL_FORWARD', '') == '1'
+
+
+def vjp_slots():
+    count = worker_count()
+    raw = os.environ.get('WMS_SPEED_FUTURE_VJP_SLOTS', str(count))
+    if not raw.isdigit() or not 1 <= int(raw) <= count:
+        raise ValueError('WMS_SPEED_FUTURE_VJP_SLOTS must be in [1, workers]')
+    return int(raw)
+
+
+class VJPGate:
+    """Keep replay forwards concurrent while bounding live large recomputations.
+
+    One measured 9-row replay forward reserves <.86 GB, versus 12.14 GB for
+    recompute/backward. A worker raises its allocator limit only while owning
+    one atomic directory token. It frees its graph/cache and lowers the limit
+    BEFORE releasing the token. No arithmetic, shapes or checkpoint changes.
+    """
+    def __init__(self, trainer, root):
+        self.trainer, self.root, self.token = trainer, root, None
+        self.low = float(os.environ.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
+        self.high = float(os.environ.get('WMS_SPEED_FUTURE_MEMORY_FRACTION', '.10'))
+
+    def acquire(self):
+        while self.token is None:
+            if (self.root/'STOP').exists():
+                raise RuntimeError('own worker STOP requested while waiting for VJP slot')
+            for index in range(vjp_slots()):
+                token = self.root/'vjp_slots'/str(index)
+                try:
+                    token.mkdir()
+                except FileExistsError:
+                    continue
+                self.token = token
+                break
+            if self.token is None:
+                time.sleep(.02)
+        if self.trainer.device.type == 'cuda':
+            torch.cuda.empty_cache()
+            torch.cuda.set_per_process_memory_fraction(self.high, self.trainer.device)
+
+    def release(self):
+        if self.token is None:
+            return
+        if self.trainer.device.type == 'cuda':
+            # Called outside _vjp, after its graph-bearing frame has returned.
+            gc.collect()
+            torch.cuda.empty_cache()
+            total = torch.cuda.get_device_properties(self.trainer.device).total_memory
+            if torch.cuda.memory_reserved(self.trainer.device) > self.low * total:
+                # Keep the token until this worker exits, freeing its resources.
+                raise RuntimeError('VJP worker retained more than its idle memory budget')
+            torch.cuda.set_per_process_memory_fraction(self.low, self.trainer.device)
+        self.token.rmdir()
+        self.token = None
 
 
 def _snapshot(trainer):
@@ -52,6 +108,7 @@ class FuturePool:
         self.root.mkdir(parents=True)
         self.processes, self.logs = [], []
         env = dict(os.environ)
+        env['WMS_SPEED_POOL_KIND'] = common['kind']
         if common['kind'] == 'forward':
             env['WMS_SPEED_FUTURE_MEMORY_FRACTION'] = env.get(
                 'WMS_SPEED_FORWARD_MEMORY_FRACTION', '0.04')
@@ -61,10 +118,15 @@ class FuturePool:
             fraction = float(env.get('WMS_SPEED_FUTURE_MEMORY_FRACTION', '0.10'))
             # CUDA contexts/libraries are outside the allocator fraction. Reserve
             # 768 MiB per worker in addition to the coordinator's current pool.
-            bound = torch.cuda.memory_reserved(trainer.device) + worker_count() * (
-                total * fraction + 768 * 1024**2)
+            slots = vjp_slots() if common['kind'] == 'backward' else worker_count()
+            low = float(env.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
+            if not 0 < low <= fraction <= .6:
+                raise ValueError('memory fractions must satisfy 0 < idle <= active <= .6')
+            bound = torch.cuda.memory_reserved(trainer.device) + total * (
+                slots * fraction + (worker_count() - slots) * low) + worker_count() * 768 * 1024**2
             if bound > .60 * total:
                 raise ValueError(f'parallel memory budget exceeds 60%: {bound / total:.3f}')
+        (self.root/'vjp_slots').mkdir()
         with (self.root / 'trainer.pkl').open('wb') as stream:
             cloudpickle.dump(_snapshot(trainer), stream)
         torch.save(common, self.root / 'common.pt')
@@ -124,7 +186,7 @@ class FuturePool:
         self.close()
 
 
-def _vjp(trainer, common, task):
+def _vjp(trainer, common, task, gate=None):
     from contextlib import nullcontext
     from .dreamer import _restore_rng
     from .imagination_memory import (_RandomTape, _subset, _saved_tensor_spill,
@@ -156,6 +218,8 @@ def _vjp(trainer, common, task):
                 vectors.append(_slice_shape(vector, value.shape, starts, rows, total, n_rows))
         if replay.position != len(common['tape']):
             raise RuntimeError('LONGMEM random call trace shortened during parallel replay')
+        if gate is not None:
+            gate.acquire()
         grads = torch.autograd.grad(outputs, parameters, vectors, allow_unused=True)
         _trace_memory(trainer, 'future_vjp_done', start=start, future=future)
     # CPU transport preserves bytes. Coordinator copies to its device before addition.
@@ -230,6 +294,9 @@ def _main(root, index):
     root, directory = Path(root), Path(root) / index
     # Configure allocator BEFORE deserializing any CUDA tensors.
     fraction = float(os.environ.get('WMS_SPEED_FUTURE_MEMORY_FRACTION', '0.10'))
+    gated = os.environ.get('WMS_SPEED_POOL_KIND') == 'backward' and vjp_slots() < worker_count()
+    if gated:
+        fraction = float(os.environ.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
     if not 0 < fraction <= .6:
         raise ValueError('worker memory fraction must be in (0,.6]')
     if torch.cuda.is_available():
@@ -238,6 +305,7 @@ def _main(root, index):
         trainer = cloudpickle.load(stream)
     trainer.output_dir = directory
     common = torch.load(root / 'common.pt', weights_only=False)
+    gate = VJPGate(trainer, root) if gated else None
     completed = set()
     while not (root / 'STOP').exists():
         ready = sorted(directory.glob('*.ready'), key=lambda p: int(p.stem))
@@ -248,7 +316,7 @@ def _main(root, index):
                 continue
             try:
                 task = json.loads(path.with_suffix('.json').read_text())
-                result = (_vjp(trainer, common, task) if common['kind'] == 'backward'
+                result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'
                           else _forward(trainer, common, task))
                 torch.save(result, path.with_suffix('.pt'))
                 del result
@@ -258,6 +326,9 @@ def _main(root, index):
                         'peak_reserved': torch.cuda.max_memory_reserved()}))
             except BaseException:
                 path.with_suffix('.error').write_text(traceback.format_exc())
+            finally:
+                if gate is not None:
+                    gate.release()
             path.with_suffix('.done').touch()
             completed.add(path.stem)
         time.sleep(.05)

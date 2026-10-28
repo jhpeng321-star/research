@@ -10,6 +10,15 @@ from tests.unit.test_longmem import trainer, assert_tree_close
 @pytest.mark.parametrize('forward', [False, True])
 @pytest.mark.parametrize('device', ['cpu', 'cuda'])
 def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward, device):
+    _check_parallel(tmp_path, monkeypatch, forward, device)
+
+
+@pytest.mark.parametrize('device', ['cpu', 'cuda'])
+def test_gated_vjps_preserve_full_update(tmp_path, monkeypatch, device):
+    _check_parallel(tmp_path, monkeypatch, True, device, workers=4, slots=2)
+
+
+def _check_parallel(tmp_path, monkeypatch, forward, device, workers=2, slots=None):
     if device == 'cuda' and not torch.cuda.is_available():
         pytest.skip('CUDA unavailable')
     pytest.importorskip('cloudpickle')
@@ -29,7 +38,9 @@ def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward, 
     torch.manual_seed(561)
     expected = serial.update()
     rng = torch.get_rng_state()
-    monkeypatch.setenv('WMS_SPEED_FUTURE_WORKERS', '2')
+    monkeypatch.setenv('WMS_SPEED_FUTURE_WORKERS', str(workers))
+    if slots is not None:
+        monkeypatch.setenv('WMS_SPEED_FUTURE_VJP_SLOTS', str(slots))
     monkeypatch.setenv('WMS_SPEED_PARALLEL_FORWARD', '1' if forward else '0')
     torch.manual_seed(561)
     actual = parallel.update()
@@ -46,8 +57,13 @@ def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward, 
 
 
 def test_invalid_worker_count_rejected(monkeypatch):
-    from wms.control.parallel_futures import worker_count
+    from wms.control.parallel_futures import worker_count, vjp_slots
     for value in ('0', '9', '-1', '2.5', 'abc'):
         monkeypatch.setenv('WMS_SPEED_FUTURE_WORKERS', value)
         with pytest.raises(ValueError):
             worker_count()
+    monkeypatch.setenv('WMS_SPEED_FUTURE_WORKERS', '4')
+    for value in ('0', '5', '2.5', 'abc'):
+        monkeypatch.setenv('WMS_SPEED_FUTURE_VJP_SLOTS', value)
+        with pytest.raises(ValueError):
+            vjp_slots()

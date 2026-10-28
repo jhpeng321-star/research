@@ -17,6 +17,8 @@ FGA = ('GRAPH_CVAR ASYNC_SPILL PIVOT_DIAG_OFF FAST_MERGE_LANE '
        'FAST_CAV_DRIVE FAST_LONG_HISTORY').split()
 VARIANTS = {
     'nine_N2': (2, 8, '.245', False),
+    'nine_N4': (4, 8, '.24', False, 2),
+    'nine_N8': (8, 1, '.055', False),
     'six_N2': (2, 8, '.20', True),
     'six_N4': (4, 2, '.10', True),
     'six_N8': (8, 1, '.05', True),
@@ -80,7 +82,9 @@ def update_row(path):
 
 
 def run(name):
-    n, segment, fraction, six = VARIANTS[name]
+    recipe = VARIANTS[name]
+    n, segment, fraction, six = recipe[:4]
+    slots = recipe[4] if len(recipe) > 4 else n
     used, total = gpu()
     if used + total * .60 + 1024 > total:
         raise RuntimeError(f'gpuA has {used} MiB in use; refusing benchmark without re-budgeting')
@@ -107,6 +111,7 @@ def run(name):
         WMS_SPEED_GRAD_AUDIT_EVERY='25', WMS_SPEED_FUTURE_WORKERS=str(n),
         WMS_SPEED_PARALLEL_FORWARD='1' if n > 1 else '0',
         WMS_SPEED_FUTURE_MEMORY_FRACTION=fraction, WMS_SPEED_FORWARD_MEMORY_FRACTION='.04',
+        WMS_SPEED_FUTURE_VJP_SLOTS=str(slots), WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION='.022',
         POLSPEED_CACHE_STARTUP='1',
         WMS_WMSPEED_DEDUPE_MOBIL='1', WMS_WMSPEED_MOBIL_LAZY_SAFE='1')
     env.update({f'WMS_SPEED_{flag}': '1' for flag in FGA})
