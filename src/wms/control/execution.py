@@ -23,6 +23,28 @@ def enabled():
     return value == "1"
 
 
+def contract():
+    """Portable checkpoint binding; flag-off payloads retain their original shape."""
+    import hashlib
+    from pathlib import Path
+    if not enabled():
+        return None
+    driver = os.environ.get("C4_EXECUTION_DRIVER")
+    if not driver:
+        raise ValueError("candidate-A parity requires a frozen C4_EXECUTION_DRIVER fit")
+    load_learned_driver(driver)
+    return {"schema":"execparity_contract/1","executor":"sumo_idm_mode27_v1",
+            "driver_sha256":hashlib.sha256(Path(driver).read_bytes()).hexdigest(),
+            "accel_max_mps2":ACCEL_MAX,"decel_mode":"speedMode27 bit2 disabled",
+            "speed_mode":SPEED_MODE,"imagination_soft_safe_accel":False}
+
+
+def check_contract(payload):
+    stored = payload.get("execution_contract")
+    if stored is not None and stored != contract():
+        raise ValueError("checkpoint execution contract differs from current flags/learned driver")
+
+
 def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX, *, force_zero=False):
     """Exact command/cap algebra given the prospective SUMO follow-speed ceiling.
 
@@ -157,4 +179,26 @@ def verify_authority(path, checkpoint):
             or not hashes or receipt.get("recordings_sha256") != hashlib.sha256(
                 json.dumps(hashes, sort_keys=True).encode()).hexdigest()):
         raise ValueError("missing/stale/failing execution-authority replay receipt")
+    return receipt
+
+
+def verify_parity(path):
+    """The opt-in deployment cannot bypass a failed recorded-acceleration gate."""
+    import hashlib
+    import json
+    from pathlib import Path
+    if path is None:
+        raise ValueError("execution parity requires --execution-parity-receipt")
+    receipt = json.loads(Path(path).read_text(encoding="utf-8"))
+    driver = os.environ.get("C4_EXECUTION_DRIVER")
+    native_rmse = receipt.get("native_arm_head_error",{}).get("rmse",float("nan"))
+    errors = receipt.get("error",{})
+    residual_rmse = receipt.get("c1_residual_execution_error",{}).get("rmse",float("nan"))
+    if (receipt.get("schema") != "execparity_recorded_acceleration/1"
+            or not receipt.get("passed") or not driver or len(receipt.get("worlds",{}))<10
+            or receipt.get("driver_sha256") != hashlib.sha256(Path(driver).read_bytes()).hexdigest()
+            or set(errors)!={"ours","mappo"} or not 0.<=residual_rmse<=native_rmse
+            or not all(0.<=value.get("rmse",float("nan"))<=native_rmse for value in errors.values())):
+        raise ValueError("missing/stale/failing recorded-acceleration parity receipt")
+    load_learned_driver(driver)
     return receipt

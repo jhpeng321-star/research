@@ -115,3 +115,15 @@ speed patches. No true driver settings or assignment files are used.
 Implementation, final CPU replay gate, runtime ports and the registered control
 design follow in subsequent commits. Driver artifact and fitting method are
 committed **before** their first E3 replay; no evaluation-based parameter tuning.
+
+### Recovery checkpoint: cap-mirroring prototype (superseded by combined decision)
+
+The recovered implementation and JSON receipts are preserved as an engineering
+checkpoint. `parity_results.json` tests the **old switch-path** recordings, not the
+owner's later continuous law: world-mean RMSE C1 0.1530 [0.1177,0.1902], MAPPO
+0.1568 [0.1189,0.1991], native head 0.2090 [0.1852,0.2309] m/s². The runtime
+canary replays 600 MAPPO ticks/6,664 CAV rows with bit-identical commands/lanes
+and AST-identical frozen BranchController/BranchTracker ports. It is not a
+closed-loop trajectory canary. Earlier session CPU receipts report 16 execution
+unit tests passing. No task-owned local worker or remote task dispatch receipt
+was found on recovery. These results must not be relabelled continuous-law proof.

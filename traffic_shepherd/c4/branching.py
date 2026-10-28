@@ -302,6 +302,7 @@ class BranchTracker:
     def __init__(self, env, *, record_trajectory: bool = True, reward_fn: Optional[Callable] = None):
         self.env = env
         self.t0 = env.now
+        self.t_end = self.t0
         self.counters = Counter()
         self.reward_sums = Counter()
         self.fair_steps = []
@@ -322,7 +323,8 @@ class BranchTracker:
         self.counters.update(info["interval"])
         raw = env.history.raw(3)
         ids = env.builder.vehicle_ids
-        now = env.now
+        now = float(info["time_s"])
+        self.t_end = now
         for j in (0, 1):
             kin0, m0, id0 = raw["kin"][j], raw["mask"][j], raw["vid_index"][j]
             kin1, m1, id1 = raw["kin"][j + 1], raw["mask"][j + 1], raw["vid_index"][j + 1]
@@ -346,7 +348,7 @@ class BranchTracker:
                                                        for s in present}))
 
     def finish(self) -> dict:
-        t_end = self.env.now
+        t_end = self.t_end
         per_vehicle = dict(self.delay_by_vid)
         source_by_vid = {}
         for vid, depart in self.waiting.items():
@@ -415,6 +417,8 @@ def split_output(out):
         accel, lane = out
     else:
         accel = out
+    if getattr(accel, "native_residual", False):
+        return accel, None  # typed residual is not an absolute acceleration array
     return _np(accel).astype(np.float64).reshape(1, -1), (None if lane is None
                                                           else _np(lane).reshape(1, -1))
 
@@ -475,6 +479,8 @@ class BranchController:
                           "fallback_ids": None if members is None else frozenset(members)}
         accel, lane = split_output(fn(state))
         mask = member_mask(env, members)
+        if getattr(accel, "native_residual", False):
+            return accel.subset(mask), {}  # zero residual releases non-members to native SUMO
         out = np.full(accel.shape, np.nan)
         out[0, mask] = accel[0, mask]
         kwargs = {}

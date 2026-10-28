@@ -59,7 +59,8 @@ class CommandOwnership:
 
     def step(self, frames: Mapping, *, now_s: float, live_ids,
              wall_commands: Mapping[str, float] | None = None, native_ids=(),
-             record_callback: Callable[[CommandRecord], None] | None = None) -> list[CommandRecord]:
+             record_callback: Callable[[CommandRecord], None] | None = None,
+             defer_wall: bool = False) -> list[CommandRecord]:
         """Notify optional stateful adapters after each completed vehicle decision.
 
         A callback receives an already persisted command record, after any writer
@@ -118,8 +119,16 @@ class CommandOwnership:
                 owner = "native"
             elif v in wall:
                 reason = frame_problem(frame, now_s, self.controller.config)
-                a, target = (None, None) if reason else direct_target(
-                    frame, wall[v], self.controller.config, self.wall_accel_max_mps2)
+                if defer_wall:
+                    # Residual execution is committed by THIS owner at each physics
+                    # step. No slowDown may precede or compete with setAcceleration.
+                    # The timeline schema requires an equivalent nonbinding
+                    # speed ceiling. None serialises as zero (a false stop).
+                    # No speed-target command is issued on this deferred path.
+                    a, target = (None, None) if reason else (wall[v], frame.allowed_speed_mps)
+                else:
+                    a, target = (None, None) if reason else direct_target(
+                        frame, wall[v], self.controller.config, self.wall_accel_max_mps2)
                 decision = DampingDecision(command_acceleration_mps2=a, target_speed_mps=target,
                                            fallback_reason=reason or ("infeasible_speed_bounds" if a is None else None))
                 owner = "wall"
@@ -134,7 +143,8 @@ class CommandOwnership:
                     del self._owned[v]
                     released = True
             else:
-                self.api.vehicle.slowDown(v, decision.target_speed_mps, self.controller.config.control_dt_s)
+                if not (defer_wall and owner == "wall"):
+                    self.api.vehicle.slowDown(v, decision.target_speed_mps, self.controller.config.control_dt_s)
                 self._owned[v] = owner
             row = CommandRecord(v, now_s, owner, decision.network_output_mps2, wall.get(v),
                 decision.command_acceleration_mps2, decision.target_speed_mps, decision.fallback_reason,
@@ -145,6 +155,26 @@ class CommandOwnership:
                 record_callback(row)
         self._time = now_s
         return records
+
+    def execute_residual(self, residuals, lo, hi, *, now_s, live_ids, dt=.5):
+        """Single longitudinal writer for opt-in residual physics ticks.
+
+        A failed/stale sensor decision remains native: only the accepted wall
+        ownership set may be recomposed. No caller can resurrect a fallback CAV.
+        Returned commands are the actual setAcceleration values, not slowDown's
+        derived ledger. SUMO's later realised acceleration remains in the tape.
+        """
+        from wms.control.nativeinit import sumo_residual_commands
+        allowed = set(live_ids) & self.cav_ids
+        authorised = {v: r for v, r in residuals.items()
+                      if v in allowed and self._owned.get(v) == "wall"
+                      and self._last[v].timestamp_s <= now_s
+                      < self._last[v].timestamp_s + self.controller.config.control_dt_s}
+        commands = sumo_residual_commands(self.api, authorised, lo, hi, dt=dt, parity=True)
+        for v, command in commands.items():
+            self.api.vehicle.setSpeed(v, -1)
+            self.api.vehicle.setAcceleration(v, command, dt)
+        return commands
 
     def record_response(self, vehicle_id: str, *, timestamp_s: float,
                         speed_mps: float, acceleration_mps2: float) -> ResponseRecord:

@@ -304,6 +304,11 @@ class MemoryRecorder:
     def on_frame(self, frame, row=None) -> None:
         self.frames.append(frame)
 
+    def on_execution(self, time_s, commands):
+        if not hasattr(self, "executions"):
+            self.executions = []
+        self.executions.append((float(time_s), dict(commands)))
+
     def on_control(self, time_s, frame, decisions, vehicle_ids, lane_commands=None,
                    lane_requests=None) -> None:
         from .recorder import control_row
@@ -365,6 +370,11 @@ def write_branch_episode(out_dir: Path, *, base_recorder, i_k: int, branch: Memo
     write_json(out_dir / "summary.json", summary)
     manifest = {"schema": "c4_sumo_episode/1", "status": "complete", **meta}
     write_json(out_dir / "manifest.json", manifest)
+    if getattr(branch, "executions", None):
+        write_json(out_dir / "residual_execution.json", {"schema": "residual_execution/1",
+            "writer": "CommandOwnership", "duration_s": .5, "speed_mode": 27,
+            "steps": [{"timestamp_s": t, "commands_mps2": commands}
+                      for t, commands in branch.executions]})
     return {"dir": str(out_dir), "n_states": len(frames), "n_control": len(controls)}
 
 

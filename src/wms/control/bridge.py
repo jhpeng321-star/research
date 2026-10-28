@@ -114,6 +114,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     if policy_ramp_merge and lane_rules is None:
         raise ValueError("policy_ramp_merge needs lane_rules (the lane head is the only merge path)")
     residual_mode = bool(getattr(policy, "residual_on_native", False))
+    from .execution import enabled as execution_parity_enabled
+    execution_parity = residual_mode and execution_parity_enabled()
     if residual_mode:
         if native is None or not native_lane_change or lane_rules is not None:
             raise ValueError("native residual needs native command, native lanes, no policy lane rules")
@@ -135,6 +137,9 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     native_in_use = act_mask is not None or zone is not None or residual_mode
     if residual_mode:
         policy_max = native_max  # identical reference envelope, including exactly-zero residual
+    if execution_parity:
+        from .execution import ACCEL_MAX
+        policy_max = min(float(getattr(policy, "accel_max", ACCEL_MAX)), ACCEL_MAX)
     # Motion clamp (float): the largest ceiling in use; per-slot ceilings go through target_v.
     motion_max = policy_max if not native_in_use else max(policy_max, native_max)
     dwell = None
@@ -272,7 +277,16 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             command_accel = torch.where(mask, command_accel, torch.zeros_like(command_accel))
             ceiling = torch.where(acting, torch.full_like(held, policy_max),
                                   torch.full_like(held, native_max))
+            if execution_parity:
+                ceiling = torch.where(acting & (held != 0.), torch.full_like(held, policy_max),
+                                      torch.full_like(held, native_max))
         executed = safety({**state, "lane": motion_lane}, command_accel, accel_max=ceiling)
+        if execution_parity:
+            from .execution import executed_residual
+            native_executed = safety({**state, "lane": motion_lane}, baseline,
+                                     accel_max=native_max)
+            executed = torch.where(acting, executed_residual(
+                state, held, native_executed, ACCEL_MIN_MPS2, policy_max), native_executed)
         # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
         # physics step (and may be refused), so the command must be safe in BOTH the lane the
         # CAV is leaving and the target lane.  Without this, imagination credited a change
@@ -296,11 +310,21 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         target_v = v + ceiling * PHYSICS_DT_S
         # EXECCAP_NOTES.md: with the WM's cav_exec_cap on, policy-driven CAVs realise at most the
         # SUMO-consistent ceiling (identity when off; native counterfactual CAVs are not capped).
-        executed = apply_exec_cap(state, executed, mask if symmetric_exec_cap else acting)
+        if not execution_parity:
+            executed = apply_exec_cap(state, executed, mask if symmetric_exec_cap else acting)
         command = torch.stack((executed, target_v), -1)
         next_s, next_v, applied, _ = direct_command_motion(
             s, v, command, PHYSICS_DT_S,
             ACCEL_MIN_MPS2, motion_max)
+        if execution_parity:
+            # speedMode27 disables bit-2 comfortable-decel clipping; a binding
+            # safe-speed cap may legitimately brake harder than the policy bound.
+            # E3's default SUMO update is semi-implicit Euler, not ballistic.
+            commanded = acting & (held != 0.)
+            parity_v = (v + executed * PHYSICS_DT_S).clamp_min(0.)
+            next_s = torch.where(commanded, s + parity_v * PHYSICS_DT_S, next_s)
+            next_v = torch.where(commanded, parity_v, next_v)
+            applied = torch.where(commanded, (parity_v-v)/PHYSICS_DT_S, applied)
         return torch.stack((next_s, lane.to(next_s.dtype), next_v, applied), -1)
 
     if native_lane_change:

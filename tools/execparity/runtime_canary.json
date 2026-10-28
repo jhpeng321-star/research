@@ -1,0 +1,17 @@
+{
+  "schema": "execparity_runtime_canary/1",
+  "mappo_sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564",
+  "source_policy_sha256": "4e7c930150ee6f0a12df38182edf2f2d5e78123903d2c7a01eda7d967ffe05d5",
+  "candidate_policy_sha256": "0d9bad6f12a28b0fd82aa9de4f28b83ee2f3725b3deaf1726b57793165e55c6b",
+  "mappo_sampled_ticks": 600,
+  "mappo_cav_rows": 6664,
+  "commands_and_lanes_bit_identical": true,
+  "native_releases_without_command": true,
+  "e3_runtime_ports_ast_identical": {
+    "split_output": true,
+    "BranchController": true,
+    "BranchTracker": true
+  },
+  "sumo_trajectory_canary_run": false,
+  "passed": true
+}

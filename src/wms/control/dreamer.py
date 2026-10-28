@@ -2056,6 +2056,10 @@ class DreamerTrainer:
                                                 **lane_switches}
         if getattr(self.policy, "residual_on_native", False):
             payload["residual_on_native"] = True
+            from .execution import contract as execution_contract
+            contract = execution_contract()
+            if contract is not None:
+                payload["execution_contract"] = contract
         torch.save(payload, path)
 
     def load_checkpoint(self, path, *, policy_only=False):
@@ -2076,6 +2080,8 @@ class DreamerTrainer:
         else:
             memory_request = {}
         payload = torch.load(checked_path(path), map_location=self.device, weights_only=True)
+        from .execution import check_contract
+        check_contract(payload)
         if bool(payload.get("residual_on_native", False)) != bool(getattr(self.policy, "residual_on_native", False)):
             raise ValueError("cannot resume across absolute/native-residual action semantics")
         if payload.get("format") not in READABLE_FORMATS:
