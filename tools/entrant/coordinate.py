@@ -17,7 +17,7 @@ def atomic(path,obj):
 def work(unit):
     import run
     group,draw,variant,steps,panel,repeat=unit
-    target=HOME/'results_v3'/f'{panel}_g{group:02d}_{variant}_k{draw}_s{steps}.json'
+    target=HOME/'results_v4'/f'{panel}_g{group:02d}_{variant}_k{draw}_s{steps}.json'
     if target.exists():return {'reused':str(target)}
     try:
         result=run.run(group,draw,variant,steps,panel)
@@ -44,7 +44,7 @@ def main():
     os.nice(10)
     import run
     run.setup()
-    for d in ('results_v3','errors'):(HOME/d).mkdir(exist_ok=True)
+    for d in ('results_v4','errors'):(HOME/d).mkdir(exist_ok=True)
     import fcntl
     with (HOME/('CANARY.lock' if a.canary else 'QUEUE.lock')).open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)

@@ -19,8 +19,12 @@
   rows never observe another arm. Callbacks persist across ticks/chunks. Entry CAV
   slots are virgin-only and never reused, preserving identity/history continuity.
 - `loop14_checks/accept.free_rollout` / horizon_gate: the old harness prepared
-  entries but did **not pass them into rollout**. ON forwards them; OFF preserves
-  frozen evidence. This is an additional horizon-contract difference to disclose.
+  no entries: the attribution loader/dataset builder explicitly disabled them,
+  and free_rollout also omitted the entry argument. ON restores both observable
+  input construction and entry delivery; OFF preserves frozen evidence. This is
+  an additional horizon-contract difference to disclose. Single-row gate rollouts
+  receive identity-keyed lane/arrival/merge CRNs. CLI exposes fixed K/seed streams
+  and post-load ramp adaptation overrides without dropping checkpoint tensors.
 - `eval/predictor`: entries formerly used hold-speed callbacks and queue mode forced
   HDVs. ON requires an explicit same-arm feedback callback and retains observable
   queue CAV shares. No silent fallback for an unsupported arm.
@@ -38,8 +42,9 @@ is shared with the policy bridge. Unsupported direct arms fail explicitly.
 Converted C4/pack loaders carry a separate `entry_feat_control`, derived only from
 observable pre-t0 insertions and transmitted CAV identity. OFF continues to use the
 unchanged legacy features; ON selects these features when queue shares are absent.
-The controller bridge reports executed recorded t0 commands to entrant observations,
-and keeps its ordinary entrant command history. Both merge-owner masks are preserved.
+The controller bridge reports recorded t0 commands and executed lane intents on
+the ordinary one-second communication clock, never discarded feedback actions.
+Entrants keep ordinary bridge history. Both merge-owner masks are preserved.
 
 `deterministic_crn` additionally keys imagination's no-queue candidate identities
 across counterfactuals and offsets arrival/lane draws by K-sample index. OFF retains

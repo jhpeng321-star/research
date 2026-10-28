@@ -229,3 +229,99 @@ def test_imagination_entry_crns_are_identity_keyed_and_draw_specific():
     assert not legacy.couple_draws
     assert first.couple_draws and first._pair_seeds == [123, 123]
     assert second._pair_seeds == [1000126, 1000126]
+
+
+def test_horizon_loader_restores_entries_and_observable_features(monkeypatch):
+    from tools.loop14_checks import accept
+    from tools import r10_attribution
+    from wms.config.load import load_train_config
+    from wms.data import c4_episodes
+    cfg = load_train_config('configs/c4_wm_loop14_r16_ft.toml', ['data.entrant_control=true'])
+    _, settings = fixture()
+    settings = replace(settings, entrant_control=True, entries_v2=False)
+    monkeypatch.setattr(torch, 'load', lambda *a, **k: {'model': {}})
+    monkeypatch.setattr(r10_attribution, 'load_model', lambda *a, **k:
+                        (cfg, settings, SimpleNamespace(), {'new': [], 'unused': []}))
+    cfg, restored, _ = accept.load_arm('configs/c4_wm_loop14_r16_ft.toml', 'unit_wm.pt')
+    assert cfg.data.entries_v2 and restored.entries_v2
+    calls = []
+    def build(*a, **kw):
+        calls.append(kw);return {'train': 'observable_entry_dataset'}
+    monkeypatch.setattr(c4_episodes, 'build_c4_datasets', build)
+    assert accept.build_sets(cfg, ['unit_data'], 2) == ['observable_entry_dataset']
+    assert calls[0]['entries_v2'] is True
+
+
+def test_horizon_on_forwards_real_entry_process_and_stable_crns():
+    from tools.loop14_checks import accept
+    model, settings = fixture()
+    raw = batch()
+    record = {k: v[0].numpy() for k, v in raw.items() if torch.is_tensor(v)}
+    record['action_timeline'] = {k: v[0].numpy() if torch.is_tensor(v) else v
+                                 for k, v in raw['action_timeline'].items()}
+    record.update(slot_index=np.zeros_like(record['present'], dtype=np.int64),
+                  vehicle_ids=np.array([1000001]), meta={'arm': 'native', 'pair_key': 'unit_world@t0'})
+    captured = []
+    def rollout(initial, n_steps, **kwargs):
+        captured.append((initial, kwargs))
+        return {key: initial[field][:, None].expand(-1, n_steps, -1).clone()
+                for key, field in [('positions', 's_m'), ('speeds', 'v_mps'),
+                                   ('lanes', 'lane'), ('masks', 'present')]}
+    model.rollout = rollout;model._samples_lanes = True
+    accept.free_rollout(model, settings, record, 2, 123)
+    assert 'entries' not in captured[-1][1]  # frozen OFF contract
+    accept.free_rollout(model, replace(settings, entrant_control=True), record, 2, 123)
+    first = captured[-1]
+    assert first[1]['entries'].couple_draws and first[1]['entries'].queues[0].cav_share[0] == 1
+    assert 'merge_pivot_rng_seed' in first[0] and 'lane_uniform' in first[1]
+    torch.randn(99)
+    accept.free_rollout(model, replace(settings, entrant_control=True), record, 2, 123)
+    assert torch.equal(first[0]['merge_pivot_rng_seed'], captured[-1][0]['merge_pivot_rng_seed'])
+    assert torch.equal(first[1]['lane_uniform'], captured[-1][1]['lane_uniform'])
+
+
+def test_recorded_neighbour_command_reports_use_the_ordinary_decision_clock():
+    seen = []
+    count = [0]
+    def recorded(st):
+        count[0] += 1
+        return torch.full((1, 2, 4), float(count[0]))
+    def feedback(st):
+        seen.append(float(st['cmd_accel_mps2'][0, 0]))
+        return torch.zeros(1, 2, 4)
+    controller = EntrantControllers(recorded, feedback)
+    state = dict(s_m=torch.zeros(1, 2), present=torch.ones(1, 2, dtype=torch.bool),
+                 is_cav=torch.ones(1, 2, dtype=torch.bool), entrant=torch.tensor([[False, True]]))
+    for _ in range(4): controller(state)
+    assert seen == [0., 1., 1., 3.]
+
+
+def test_bridge_reports_recorded_t0_intent_not_discarded_feedback_intent(monkeypatch):
+    from wms.control import bridge
+    from wms.control.lanes import LaneRules
+    from wms.control.policy import PolicyOutput
+    seen = []
+    original = bridge.build_observations
+    def observe(state):
+        seen.append(state['lane_intent'].clone())
+        return original(state)
+    monkeypatch.setattr(bridge, 'build_observations', observe)
+    def actor(obs, signal, lane_mask):
+        z = torch.zeros_like(obs.cav_mask, dtype=torch.float32)
+        return PolicyOutput(z, torch.ones_like(obs.cav_mask, dtype=torch.long),
+                            z, z, z, z, lane_mask.sum(-1))
+    actor.accel_max = 2.6
+    callback = bridge.make_cav_controller(actor,
+        lambda obs, pos, field: pos.new_zeros((*pos.shape, 8)),
+        lambda state, a, **kw: a, lane_rules=LaneRules())
+    state = dict(s_m=torch.tensor([[-500., -300.]]), v_mps=torch.full((1, 2), 10.),
+        a_mps2=torch.zeros(1, 2), length_m=torch.full((1, 2), 5.),
+        lane=torch.ones(1, 2, dtype=torch.long), present=torch.ones(1, 2, dtype=torch.bool),
+        is_cav=torch.ones(1, 2, dtype=torch.bool), cmd_accel_mps2=torch.zeros(1, 2),
+        lane_intent=torch.zeros(1, 2), external_command_mask=torch.tensor([[True, False]]))
+    state['physics_step_index'] = 0
+    callback(state)
+    state['physics_step_index'] = 2
+    callback(state)
+    assert seen[0].tolist() == [[0., 0.]]
+    assert seen[1].tolist() == [[0., -1.]]

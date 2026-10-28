@@ -102,7 +102,7 @@ def main():
         scientific=lambda r:{k:v for k,v in r.items() if k!='seconds'}
         assert scientific(result)==scientific(again),'identical weights did not rescore identically'
         result['repeat_identical']=True
-    dest=HOME/'results_v3';dest.mkdir(exist_ok=True)
+    dest=HOME/'results_v4';dest.mkdir(exist_ok=True)
     path=dest/f'{a.panel}_g{a.group:02d}_{a.variant}_k{a.draw}_s{a.steps}.json'
     tmp=path.with_suffix('.tmp');tmp.write_text(json.dumps(result,allow_nan=False));tmp.replace(path)
     print(json.dumps({'result':str(path),'seconds':result['seconds'],

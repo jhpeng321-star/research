@@ -12,4 +12,6 @@ for arm,s in specs().items():
     d=torch.load(s['checkpoint'],weights_only=True,map_location='cpu')
     keys=('format','residual_on_native','lane_control','wm_controller_kwargs','counterfactual','lane_rules','accel_bounds')
     print(arm,{k:d[k] for k in keys if k in d})
+    print(arm,'has_lane_head',any(k.startswith('lane_head.') for k in d['policy']))
+    print(arm,'lane_head_nonzero',{k:int(v.count_nonzero()) for k,v in d['policy'].items() if k.startswith('lane_head.2.')})
 ''')

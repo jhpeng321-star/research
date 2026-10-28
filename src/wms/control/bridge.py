@@ -188,14 +188,17 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             if last_command is None or last_command.shape != state["s_m"].shape:
                 last_command = last_intent = torch.zeros_like(state["s_m"])
             observed_command = last_command
+            observed_intent = last_intent
             if "external_command_mask" in state:
                 observed_command = torch.where(state["external_command_mask"].bool(),
                                                 state["cmd_accel_mps2"], last_command)
+                observed_intent = torch.where(state["external_command_mask"].bool(),
+                                               state["lane_intent"], last_intent)
             obs = build_observations({
                 **state, "cmd_accel_mps2": (torch.zeros_like(last_command) if residual_mode else
                     torch.where(known, observed_command, torch.zeros_like(last_command))),
                 "lane_intent": (torch.zeros_like(last_intent) if residual_mode else
-                    torch.where(known, last_intent, torch.zeros_like(last_intent)))})
+                    torch.where(known, observed_intent, torch.zeros_like(last_intent)))})
             signal = (group_encoder(obs, state) if getattr(group_encoder, 'requires_state', False)
                       else group_encoder(obs, state["s_m"], build_rsu_field(state)))
             if lane_rules is not None:

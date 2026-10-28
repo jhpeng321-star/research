@@ -26,7 +26,7 @@ def gather(host, destination, receipts_only=False):
 import hashlib,io,json,sys,tarfile,time
 from pathlib import Path
 p=Path.home()/'entrant';assert p.is_dir();skip=json.load(sys.stdin)
-files=[] if ONLY else list((p/'results_v3').glob('*_s600.json'))
+files=[] if ONLY else list((p/'results_v4').glob('*_s600.json'))
 if not ONLY:
     files += list((p/'results').glob('e3_g01_*_k0_s600.json'))
     files += list((p/'results_v2').glob('e3_g01_*_k0_s600.json'))

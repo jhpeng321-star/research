@@ -49,7 +49,8 @@ def stage(host):
               'src/wms/data/pack_history.py', 'src/wms/data/c4_episodes.py',
               'src/wms/data/dataset.py', 'src/wms/control/start_states.py',
               'src/wms/control/bridge.py', 'traffic_shepherd/c4/genrand.py',
-             'tools/wmcombined/e3_score.py', 'tools/loop14_checks/accept.py',
+              'tools/wmcombined/e3_score.py', 'tools/loop14_checks/accept.py',
+              'tools/coopw/horizon_gate.py',
              'tools/lrdiag/replay.py', 'tests/unit/test_entrant.py']
     files += [str(p.relative_to(ROOT)).replace('\\', '/') for p in (ROOT/'tools/entrant').glob('*.py')]
     stream = io.BytesIO()
@@ -61,6 +62,12 @@ def stage(host):
 import hashlib, io, json, shutil, sys, tarfile
 from pathlib import Path
 p=Path.home()/'entrant'; assert p.parent.is_dir(); p.mkdir(exist_ok=True)
+for name in ('OWNER.json','PAIRS_OWNER.json'):
+    f=p/name
+    if not f.exists():continue
+    owner=json.loads(f.read_text());stat=Path('/proc')/str(owner['pid'])/'stat'
+    if stat.exists() and stat.read_text().split()[21]==owner['start_ticks']:
+        raise RuntimeError('numeric runtime is immutable while an owned queue is live')
 bad=('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth')
 runtime=p/'runtime'
 for name in ('e3data','pairs300','wm2'):

@@ -6,8 +6,8 @@ import sys
 import tarfile
 from remote import ROOT, ssh
 
-files = ['src/wms/control/entrant.py', 'src/wms/control/dreamer.py',
-         'src/wms/eval/predictor.py', 'tests/unit/test_entrant.py']
+files = ['src/wms/control/entrant.py', 'src/wms/control/bridge.py', 'src/wms/control/dreamer.py',
+         'src/wms/eval/predictor.py', 'tools/loop14_checks/accept.py', 'tests/unit/test_entrant.py']
 stream = io.BytesIO()
 with tarfile.open(fileobj=stream, mode='w:gz') as tar:
     for name in files:
@@ -26,11 +26,16 @@ with tarfile.open(fileobj=io.BytesIO(sys.stdin.buffer.read()),mode='r:gz') as ta
 os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1')
 sys.path[:0]=[str(runtime),str(runtime/'src')]
 import wms.control
-for short in ('entrant','dreamer'):
+for short in ('bridge','entrant','dreamer'):
     name='wms.control.'+short
     spec=importlib.util.spec_from_file_location(name,snapshot/f'src/wms/control/{short}.py')
     module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module)
     setattr(wms.control,short,module)
+import tools.loop14_checks
+name='tools.loop14_checks.accept'
+spec=importlib.util.spec_from_file_location(name,snapshot/'tools/loop14_checks/accept.py')
+module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module)
+tools.loop14_checks.accept=module
 compile((snapshot/'src/wms/eval/predictor.py').read_text(),str(snapshot/'src/wms/eval/predictor.py'),'exec')
 import pytest
 os.chdir(runtime)

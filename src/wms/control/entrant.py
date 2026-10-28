@@ -13,6 +13,8 @@ class EntrantControllers:
     def __init__(self, recorded, feedback):
         self.recorded, self.feedback = recorded, feedback
         self.last_recorded = None
+        self.last_intent = None
+        self.step_index = 0
 
     def __call__(self, state):
         from wms.model.cav import WM_MERGE_KEY
@@ -25,8 +27,15 @@ class EntrantControllers:
         observed["external_command_mask"] = ~mask.bool()
         observed["cmd_accel_mps2"] = (torch.zeros_like(state["s_m"])
                                      if self.last_recorded is None else self.last_recorded)
+        observed["lane_intent"] = (torch.zeros_like(state["s_m"])
+                                   if self.last_intent is None else self.last_intent)
         new = self.feedback(observed)
-        self.last_recorded = old[..., 3].detach().clone()
+        # Match the ordinary bridge's one-second communication clock. Discarded
+        # feedback lane requests must never become reports by recorded t0 cars.
+        if self.step_index % 2 == 0:
+            self.last_recorded = old[..., 3].detach().clone()
+            self.last_intent = (old[..., 1]-state["lane"]).detach().clone() if "lane" in state else torch.zeros_like(state["s_m"])
+        self.step_index += 1
         mask = mask.bool() & state["present"].bool() & state["is_cav"].bool()
         new_merge = observed.get(WM_MERGE_KEY, torch.zeros_like(mask))
         state[WM_MERGE_KEY] = (old_merge & ~mask) | (new_merge & mask)

@@ -16,7 +16,7 @@ for f in sorted(p.glob('*.json')):
         value['live_same_incarnation']=stat.exists() and stat.read_text().split()[21]==value.get('start_ticks')
     if isinstance(value,list): value={'items':len(value),'last':value[-1] if value else None}
     print(f.name,json.dumps(value))
-for name in ('results','results_v2','results_v3','errors'):
+for name in ('results','results_v2','results_v3','results_v4','errors'):
     files=list((p/name).glob('*.json'))
     print(name,len(files))
     if name=='errors':

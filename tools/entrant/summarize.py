@@ -30,7 +30,7 @@ def load(raw, panel, variants, partial=False):
     bins = defaultdict(dict)
     hashes = {}
     for host in ('cpuP', 'cpuQ'):
-        for path in sorted((raw/host/'results_v3').glob(f'{panel}_*_s600.json')):
+        for path in sorted((raw/host/'results_v4').glob(f'{panel}_*_s600.json')):
             doc = json.loads(path.read_text())
             if doc['variant'] not in variants:
                 continue
