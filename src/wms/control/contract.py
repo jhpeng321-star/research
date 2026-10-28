@@ -60,9 +60,9 @@ MERGE_S1_M = 75.44
 #: ``:1780739017_0_0`` (ramp -> merge-edge accel lane),
 #: ``:1780739017_1_0`` / ``:1780739017_1_1`` (mainline entry -> merge edge),
 #: ``:13638027693_0_0`` / ``:13638027693_0_1`` (merge edge -> exit edge).
-from wms.physics.lane_chain import (MERGE_CONNECTOR_ENTRY_LEN_M,  # noqa: E402  (re-export)
-                                    MERGE_CONNECTOR_EXIT_LEN_M,
-                                    MERGE_CONNECTOR_RAMP_LEN_M)
+from wms.physics.lane_chain import MERGE_CONNECTOR_ENTRY_LEN_M as MERGE_CONNECTOR_ENTRY_LEN_M  # noqa: E402,F401
+from wms.physics.lane_chain import MERGE_CONNECTOR_EXIT_LEN_M as MERGE_CONNECTOR_EXIT_LEN_M  # noqa: E402,F401
+from wms.physics.lane_chain import MERGE_CONNECTOR_RAMP_LEN_M as MERGE_CONNECTOR_RAMP_LEN_M  # noqa: E402,F401
 assert MERGE_S1_M == 75.44  # network attribute; keep in lockstep with lane_chain
 
 #: Own-CAV observation features (order is the contract).

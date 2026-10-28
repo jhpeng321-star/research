@@ -146,8 +146,6 @@ def test_ramp_ego_leader_gains_the_ramp_connector_length(monkeypatch):
     """The measured 00:20 anatomy: SUMO leader gap = frame gap + 2.93 m."""
     rows = [(-10., 12., 2, False, 2), (3., 8., 2, False, 2)]
     state = _state(rows)
-    torch.manual_seed(0)
-    import os
     from wms.control.native_cav import leader_gap_dv
     legacy = float(leader_gap_dv(state)[0][0, 0])
     assert legacy == pytest.approx(3. - (-10.) - 5.)       # 8.0 m corridor gap
