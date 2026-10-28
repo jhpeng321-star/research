@@ -3,15 +3,32 @@ from pathlib import Path
 import json
 import subprocess
 import sys
+import time
 
 base = Path('/root/autodl-tmp/c4/polspeed2_20261028')
 assert base.is_dir() and not (base/'STOP').exists()
-variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8']
+if '--wait' in sys.argv:
+    pid = int((base/'COORDINATOR_PID').read_text())
+    print('waiting for owned coordinator', pid, flush=True)
+    stat = Path(f'/proc/{pid}/stat')
+    while True:
+        try:
+            state = stat.read_text().rsplit(')', 1)[1].split()[0]
+        except FileNotFoundError:
+            break
+        if state == 'Z':
+            break
+        if (base/'STOP').exists():
+            raise SystemExit(0)
+        time.sleep(5)
+variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8', 'nine_N4_s8']
 remaining = []
 for name in variants:
     path = base/'out'/name
     if path.exists():
-        assert 's_per_update' in json.loads((path/'RESULT.json').read_text())
+        result = json.loads((path/'RESULT.json').read_text())
+        assert ('s_per_update' in result or
+                'CUDA out of memory' in (path/'console.log').read_text())
     else:
         remaining.append(name)
 assert remaining

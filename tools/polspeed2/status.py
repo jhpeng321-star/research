@@ -2,14 +2,17 @@
 from pathlib import Path
 import json
 import subprocess
+import sys
 
 base = Path('/root/autodl-tmp/c4/polspeed2_20261028')
-for filename in ('qualification.log', 'qualification3.log', 'suite.log', 'remaining.log'):
+if '--export' in sys.argv:
+    subprocess.run([sys.executable, str(Path(__file__).with_name('finalize_evidence.py'))], check=True)
+for filename in ('qualification.log', 'qualification3.log', 'qualification4.log', 'suite.log', 'remaining.log'):
     path = base / filename
     print('\n###', path, flush=True)
     if path.exists():
         lines = path.read_text(errors='replace').splitlines()
-        for line in lines[-60:]:
+        for line in lines[-(3 if filename.startswith('qualification') else 20):]:
             if line.startswith('{'):
                 try:
                     row = json.loads(line)

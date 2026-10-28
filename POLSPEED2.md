@@ -9,10 +9,37 @@ Initial gpuA inspection, 2026-10-28 23:09:03 server time: RTX 4090 D,
 
 Measurements in progress. **N=2, original nine-row geometry: 454.188 s/update,
 24,882 MiB owned GPU peak (50.63%), 2.24x versus 1,018 s; projected 150 updates
-18.92 h.** The initial comparator saw 151 trainer leaves; final qualification
-also compares the later CLI row with independent rescore quantities.
+18.92 h.** Last-row parity includes all **158 logged leaves**, including the
+independent rescore: zero differences against both the dry run and S-POLSPEED
+FGA. The initial 151-leaf trainer-only comparator was corrected to select the
+later CLI row, matching S-POLSPEED's comparison procedure.
 The six-row algebra preserves the mathematical objective; floating-point and
 telemetry parity are measured separately from unchanged-row parallelism.
+
+## Six-row measured parity (not bitwise-equivalent to nine rows)
+
+The imported `db05c3e0` preset is opt-in. It has the same real-arithmetic
+objective, but changes CUDA row/reduction geometry. Actual update 181:
+
+* Serial FGA + six rows: **746.248 s**, owned peak **8,256 MiB**.
+* N2 FGA + six rows: **440.823 s**, owned peak **17,068 MiB**; **bitwise
+  identical to serial six rows on all 158 logged leaves and 157 actor/Adam
+  tensors**. Projection: 18.37 h / 150 updates.
+* Versus the original nine-row reference: **61 logged differences**. Some
+  are intentional coverage/weight/decomposition changes; others are rounding.
+  Actor loss absolute difference **7.778406143e-6** (relative **2.584392546e-4**);
+  return mean **9.765625e-4**; gradient norm **9.765625e-3** (relative
+  **4.210985180e-7**); pessimistic credit **1.067352295e-2**.
+* Updated policy max absolute difference **2.808678801e-6**; group encoder
+  **1.117587090e-6**; Adam state **9.536743164e-7**. **101 of 157 tensors**
+  differ. Near-zero attention biases can have large relative errors, so a
+  blanket small relative tolerance is unsupported. Independent rescore leaves
+  are bitwise equal on this update.
+
+These are tight **observed update-181 bounds**, not a universal error guarantee
+over future updates. Full key/tensor differences are retained in
+`tools/polspeed2/evidence/REPORT.json`. Strict bitwise adoption uses the original
+nine-row recipe; six-row selection remains a separate explicit opt-in.
 
 ## Execution design
 
@@ -101,4 +128,6 @@ Python 3.13, torch 2.15.0+cpu, cloudpickle 3.1.2, OMP/MKL=2:
 * Gated four-worker CPU qualification plus imported preset: 6 passed, 3 CUDA
   skips. Additional gated replay + Linux orphan-STOP tests: 2 passed locally.
 * gpuA torch 2.8.0+cu128: initial replay/parallel-forward/preset suite 7 passed
-  in 37.92 s. Updated gated-worker qualification is logged separately.
+  in 37.92 s. Updated suite: 9 passed, one allocator-device-index API failure;
+  explicit CUDA index fixed it, and the gated CUDA retest passed in 15.11 s.
+* Last-row/missing-key/signed-zero report qualification: 2 passed locally.

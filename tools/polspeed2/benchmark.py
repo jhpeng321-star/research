@@ -17,8 +17,9 @@ FGA = ('GRAPH_CVAR ASYNC_SPILL PIVOT_DIAG_OFF FAST_MERGE_LANE '
        'FAST_CAV_DRIVE FAST_LONG_HISTORY').split()
 VARIANTS = {
     'nine_N2': (2, 8, '.245', False),
-    'nine_N4': (4, 8, '.237', False, 2, '.018'),
-    'nine_N8': (8, 1, '.055', False),
+    'nine_N4': (4, 2, '.10', False),
+    'nine_N4_s8': (4, 8, '.237', False, 2, '.018'),
+    'nine_N8': (8, 1, '.045', False),
     'six_N2': (2, 8, '.20', True),
     'six_N4': (4, 2, '.10', True),
     'six_N8': (8, 1, '.05', True),
