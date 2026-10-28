@@ -11,8 +11,20 @@ import base64
 import shlex
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'tools/longint'))
-from operate import remote
+
+
+def remote(source, data, timeout=60):
+    """One fresh SSH call; retry decisions remain explicit and >=60s apart."""
+    encoded = base64.b64encode(source.encode()).decode()
+    command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
+        f'import base64;exec(base64.b64decode({encoded!r}))'])
+    result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+        '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
+        'gpuA', command], input=data, capture_output=True, timeout=timeout)
+    print(result.stdout.decode(), end='')
+    print(result.stderr.decode(), end='', file=sys.stderr)
+    if result.returncode:
+        raise SystemExit(result.returncode)
 
 BAD = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype', re.I)
 
@@ -35,13 +47,9 @@ def main():
         input=''.join(f'HEAD:{name}\n' for name in names).encode())
     stream = io.BytesIO(blobs)
     base = '/root/autodl-tmp/c4/restart20261026/runtime_longint'
-    code = f'import pathlib;print((pathlib.Path({base!r})/"SOURCE.json").read_text())'
-    encoded = base64.b64encode(code.encode()).decode()
-    command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
-                          f'import base64;exec(base64.b64decode({encoded!r}))'])
-    source = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
-                             'gpuA', command], capture_output=True, check=True, timeout=25)
-    existing = json.loads(source.stdout)
+    # A full compressed source-only bundle avoids a separate manifest SSH probe.
+    # No datasets/checkpoints enter this allowlisted archive.
+    existing = {}
     transferred = 0
     with tarfile.open(fileobj=data, mode='w:xz') as archive:
         for name in names:
