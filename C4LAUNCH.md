@@ -184,3 +184,10 @@ No qualification timeout, no lingering qualifier; full receipts/logs retained.
 Compact `tools/c4prep/evidence/RESUME_GPU_QUALIFIED.json` committed before dry.
 Streamed full-K VJP repair is now GPU-verified/activated in that runtime.
 No real dry-update PASS or full phase claimed yet; MAIN17:00 deadline stands.
+
+Real two-update dry run detached09:53:46UTC, own coordinator391354/start856144075,
+worker391362; isolated resolved_A_MAIN1500_cf1e9eda5f8f. Preparation verified
+actual registered/effective individual/coop8.9/8.9, anchorOFF/q10-K8ON/90s.
+Initial09:56:07UTC worker alive, hostRSS1.81GB, GPU0.81GB;0updates yet, still
+initial scoring. Deadline/host+GPU self-monitoring active. Dispatch receipt
+`tools/c4prep/evidence/RESUME_DRY_DISPATCH.json`; no full phase dispatched.

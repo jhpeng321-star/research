@@ -1,0 +1,20 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "cf1e9eda5f8f006f77b2ee17d757333356553d88",
+  "resolved": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_cf1e9eda5f8f",
+  "coordinator": {"pid": 391354, "start_ticks": "856144075", "t": "2026-10-28T09:53:46.597525+00:00"},
+  "worker_pid": 391362,
+  "worker_alive_at_utc": "2026-10-28T09:56:07.722179+00:00",
+  "initial_worker_rss_bytes": 1809072128,
+  "initial_sampled_gpu_peak_bytes": 809500672,
+  "registered_individual_coop_weights": [8.9, 8.9],
+  "native_anchor": false,
+  "pessimistic_credit": "q10/K8 ON",
+  "trusted_horizon_s": 90,
+  "authorized_scratch_updates": 2,
+  "completed_scratch_updates_at_receipt": 0,
+  "full_policy_launched": false,
+  "self_monitoring": true,
+  "deadline": "2026-10-29T06:00:00+08:00",
+  "new_sim_s": 0
+}
