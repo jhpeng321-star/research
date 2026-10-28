@@ -215,7 +215,7 @@ class HorizonConfig:
         self.allowed_stage = 0
         self.gate_record = None
 
-    def bind(self, wm_sha256s) -> dict:
+    def bind(self, wm_sha256s, wm_config_sha256s=None) -> dict:
         """Resolve the gate for the loaded WM checkpoints; returns the record logged by the CLI."""
         self.allowed_stage, record = 0, {"gate_file": self.gate_file, "allowed_stage": 0}
         if not self.enabled or len(self.horizons_s) == 1 or not self.gate_file:
@@ -245,6 +245,9 @@ class HorizonConfig:
         if doc.get('schema') == 'c4launch_measured_horizon/1':
             from .auditfix_authority import measured_gate
             gate = measured_gate(doc, wm_sha256s)
+            if (wm_config_sha256s is not None and
+                    set(wm_config_sha256s) != {doc['wm_config_sha256']}):
+                raise ValueError('measured authority / loaded WM config mismatch')
             self.allowed_stage = max(i for i, h in enumerate(self.horizons_s)
                                      if h <= doc['trusted_horizon_s'])
             record.update(allowed_stage=self.allowed_stage, wm_sha256=doc['wm_sha256'],

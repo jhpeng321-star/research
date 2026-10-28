@@ -344,7 +344,8 @@ def main(argv=None):
                 coopw[section] = getattr(coopw_module, cls)(**raw[section])
                 if section == "horizon":
                     summary["horizon_gate"] = coopw[section].bind(
-                        [r["checkpoint_sha256"] for r in receipts])
+                        [r["checkpoint_sha256"] for r in receipts],
+                        wm_config_sha256s=[r['config_sha256'] for r in receipts])
                 if coopw[section].enabled:
                     summary[section] = coopw[section].as_dict()
         # 13E's second tier is explicitly opt-in for policy CAVs, independently

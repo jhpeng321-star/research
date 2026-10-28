@@ -136,7 +136,10 @@ enable its separately gated credit. Template pair/return paths, flags and
 curriculum inputs are reused; this builder changes no horizon or sampler.
 
 All nested artifact hashes are verified on every authority read. Acceptance and
-WM-config binding are checked on initial launch as well as swaps. Outputs use
+WM-config binding are checked on initial launch as well as swaps. The CLI supplies
+actual loaded config hashes to `HorizonConfig.bind`, including when no boundary
+argument was supplied, so a valid authority for a different inference config
+cannot grant the loaded trainer a horizon. Outputs use
 exclusive creation, so a previous boundary/authority is never overwritten.
 CCT-1 reported sigma/threshold/sign/coverage/missed-harm metrics, per-horizon
 verdicts, contiguous H_C and world-bootstrap metadata are checked against the

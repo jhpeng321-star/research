@@ -57,8 +57,10 @@ def test_new_wm_measured_authority_binds_boundary_and_horizon(tmp_path, monkeypa
     assert read_boundary(args.out, swap=True) == result
     h = HorizonConfig(enabled=True, horizons_s=[10, 90, 120, 300],
                       curriculum_updates=[0, 1, 2, 3], gate_file=str(args.authority_out))
-    assert h.bind([digest(args.wm_ckpt)])['measured_gate']
+    assert h.bind([digest(args.wm_ckpt)], [digest(args.wm_config)])['measured_gate']
     assert h.allowed_stage == 1  # CCT never relabels raw120/300 credit PASS.
+    with pytest.raises(ValueError, match='loaded WM config mismatch'):
+        h.bind([digest(args.wm_ckpt)], ['cc' * 32])
     with pytest.raises(ValueError, match='NEW files'):
         build(args)
     with pytest.raises(ValueError, match='WM mismatch'):
