@@ -20,7 +20,9 @@ def main():
     dirty = subprocess.check_output(['git', 'diff', 'HEAD', '--name-only'], cwd=ROOT, text=True)
     if dirty.strip():
         raise ValueError('commit source changes before staging')
-    names = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', 'HEAD'],
+    names = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', 'HEAD', '--',
+                                    'src', 'tools', 'configs', 'tests/unit', 'traffic_shepherd',
+                                    'scripts/c4', 'scripts/round13c_waiter.py', 'pyproject.toml'],
                                     cwd=ROOT, text=True).splitlines()
     names = [n for n in names if not BAD.search(n) and
              (n.endswith(('.py', '.toml')) or n.startswith('src/wms/model/') and n.endswith('.json'))]
