@@ -51,7 +51,10 @@ def _saved_tensor_spill(trainer):
             if key in copies:
                 stats['reuses'] += 1
                 return tensor.device, copies[key]
-        cpu = torch.empty_like(tensor, device='cpu', pin_memory=pin)
+        # Match save_on_cpu's contiguous host layout as well as its values;
+        # preserving a transposed weight stride can select a different GEMM.
+        cpu = torch.empty(tensor.size(), dtype=tensor.dtype, layout=tensor.layout,
+                          device='cpu', pin_memory=pin)
         cpu.copy_(tensor.detach())
         stats['copies'] += 1
         stats['copied_bytes'] += tensor.numel() * tensor.element_size()
