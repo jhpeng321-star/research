@@ -1,0 +1,27 @@
+{
+  "schema": "execparity_backend_timing/1",
+  "inspected_source": "eclipse-sumo/sumo v1_27_1",
+  "sources": [
+    "https://raw.githubusercontent.com/eclipse-sumo/sumo/v1_27_1/src/libsumo/Vehicle.cpp",
+    "https://raw.githubusercontent.com/eclipse-sumo/sumo/v1_27_1/src/microsim/MSVehicle.cpp"
+  ],
+  "getter_chain": [
+    "Vehicle::getSpeedWithoutTraCI -> MSVehicle::getSpeedWithoutTraciInfluence",
+    "getSpeedWithoutTraciInfluence -> myInfluencer->getOriginalSpeed(), or current myState.mySpeed",
+    "processTraCISpeedControl -> setOriginalSpeed(vNext), then influenceSpeed(...)"
+  ],
+  "timing": "originalSpeed is assigned inside executeMove, before the TraCI speed influence; a query between simulation steps observes the completed step, not the upcoming native speed",
+  "stock_same_step_native_residual_setter": false,
+  "cpu_counterexample": {
+    "current_speed_mps": 10.0,
+    "cached_no_traci_speed_mps": 10.0,
+    "upcoming_native_yield_speed_mps": 9.6,
+    "residual_mps2": 1e-8,
+    "cached_getter_command_mps2": 1e-8,
+    "true_native_acceleration_mps2": -0.8,
+    "zero_limit_jump_mps2": 0.8
+  },
+  "production_status": "BLOCKED: frozen stock SUMO cannot supply the required same-step hook",
+  "new_sumo_sim_s": 0,
+  "new_allocations": 0
+}

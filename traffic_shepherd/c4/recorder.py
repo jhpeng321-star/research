@@ -118,9 +118,10 @@ class EpisodeRecorder:
             self._execution = gzip.open(self.out / "run" / "residual_execution.jsonl.gz", "xt",
                                         encoding="utf-8", compresslevel=3)
         for vid, command in sorted(commands.items()):
-            self._execution.write(json.dumps({"schema": "residual_execution/1",
-                "timestamp_s": float(time_s), "vehicle_id": vid, "writer": "CommandOwnership",
-                "command_mps2": float(command), "duration_s": .5, "speed_mode": 27},
+            detail = command if isinstance(command, dict) else {"legacy_command_mps2":float(command)}
+            self._execution.write(json.dumps({"schema": "residual_execution/2",
+                "timestamp_s": float(time_s), "vehicle_id": vid,
+                "duration_s": .5, "speed_mode": 27, **detail},
                 allow_nan=False)+"\n")
 
     def _close_streams(self) -> None:

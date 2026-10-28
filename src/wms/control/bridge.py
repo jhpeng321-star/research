@@ -283,8 +283,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         executed = safety({**state, "lane": motion_lane}, command_accel, accel_max=ceiling)
         if execution_parity:
             from .execution import executed_residual
-            native_executed = safety({**state, "lane": motion_lane}, baseline,
-                                     accel_max=native_max)
+            from .continuous import project_native
+            native_executed = project_native(state, baseline)
             executed = torch.where(acting, executed_residual(
                 state, held, native_executed, ACCEL_MIN_MPS2, policy_max), native_executed)
         # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
@@ -293,7 +293,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         # with an acceleration only the target lane allowed (the old-lane leader was ignored
         # for one tick), over-crediting CAV lane changes.  Only changed slots are affected.
         changed_now = log_entry.get("lane_changed") if log_entry is not None else None
-        if changed_now is not None and bool(changed_now.any()):
+        if not execution_parity and changed_now is not None and bool(changed_now.any()):
             old_lane_safe = safety({**state, "lane": state["lane"]}, command_accel,
                                    accel_max=ceiling)
             executed = torch.where(changed_now, torch.minimum(executed, old_lane_safe), executed)
@@ -320,7 +320,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             # speedMode27 disables bit-2 comfortable-decel clipping; a binding
             # safe-speed cap may legitimately brake harder than the policy bound.
             # E3's default SUMO update is semi-implicit Euler, not ballistic.
-            commanded = acting & (held != 0.)
+            commanded = mask
             parity_v = (v + executed * PHYSICS_DT_S).clamp_min(0.)
             next_s = torch.where(commanded, s + parity_v * PHYSICS_DT_S, next_s)
             next_v = torch.where(commanded, parity_v, next_v)

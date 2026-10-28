@@ -473,7 +473,15 @@ class CavSumoEnv:
             self.ownership.wall_accel_max_mps2 = self.direct_accel_max_mps2
             if residuals is not None:
                 from wms.control.nativeinit import sumo_residual_commands
-                requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
+                if residual_parity:
+                    from wms.control.continuous import require_same_step_backend
+                    if any(a != 0. for v,a in residuals.items() if v in live_cavs):
+                        require_same_step_backend(api)
+                    # Permission ledger only. Actual absolute execution is known
+                    # after the native solver and belongs in the physics ledger.
+                    requested = {v:a for v,a in residuals.items() if v in live_cavs and a != 0.}
+                else:
+                    requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
                                                    residual_command.accel_min, residual_command.accel_max,
                                                    parity=residual_parity)
             else:
@@ -559,6 +567,7 @@ class CavSumoEnv:
         info_interval = Counter()
         source_wait_steps = []
         for substep in range(2):
+            execution_before = None
             if residuals is not None and in_window:
                 live_now = set(api.vehicle.getIDList()) & self.cav_ids
                 if residual_parity:
@@ -566,7 +575,8 @@ class CavSumoEnv:
                         residuals, residual_command.accel_min, residual_command.accel_max,
                         now_s=now+substep*.5, live_ids=live_now)
                     if self.recorder is not None:
-                        self.recorder.on_execution(now+substep*.5, commands)
+                        execution_before = {v: float(api.vehicle.getSpeed(v))
+                                            for v in live_now if v in residuals}
                 else:
                     from wms.control.nativeinit import execute_sumo_residual
                     execute_sumo_residual(api, {v: a for v, a in residuals.items() if v in live_now},
@@ -575,6 +585,11 @@ class CavSumoEnv:
             after = self.now
             if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
                 raise CavEnvError("SUMO physics time grid mismatch")
+            if execution_before is not None:
+                from wms.control.continuous import completed_execution_rows
+                rows = completed_execution_rows(api, execution_before, residuals, commands,
+                                                residual_command.accel_min, residual_command.accel_max)
+                self.recorder.on_execution(now+substep*.5, rows)
             sub = self._after_physics(after, actions, now, commanded)
             source_wait_steps.append(float(sub.get("source_wait_vehicle_seconds", 0.0)))
             info_interval.update(sub)

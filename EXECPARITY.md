@@ -127,3 +127,53 @@ and AST-identical frozen BranchController/BranchTracker ports. It is not a
 closed-loop trajectory canary. Earlier session CPU receipts report 16 execution
 unit tests passing. No task-owned local worker or remote task dispatch receipt
 was found on recovery. These results must not be relabelled continuous-law proof.
+
+## 3. Combined law: CPU implementation PASS, stock-SUMO backend BLOCKED
+
+`C4_EXECUTION_PARITY=1` now selects the **combined**, native-relative law. The
+old cap-mirroring algebra remains only as `executed_switch_residual` for historical
+replay. New checkpoints bind `execparity_contract/2`; old cap-only receipts cannot
+authorize combined-law deployment.
+
+The same-step definition is `a_exec = max(-v/dt, min(a_safe, 1.2,
+max(min(-3, a_native), a_native + residual)))`, with `dt=0.5 s`. At exactly zero
+there is no deployment write and native is returned bit-exactly. The lower
+envelope preserves native emergency braking because speedMode27's comfortable
+deceleration bit is OFF. The WM head is projected onto the same feasible envelope
+for **both** native and policy rows, so head infeasibility cannot create a
+zero-residual switch. Projection error is reported separately. No acting-path
+soft `safe_accel` or second `apply_exec_cap` is credited. Imagination uses SUMO's
+semi-implicit Euler update and the frozen TRAIN-learned IDM safe-follow cap.
+
+**Critical timing finding:** stock SUMO 1.27.1's `getSpeedWithoutTraCI()` is not a
+prospective native-speed oracle. `Vehicle::getSpeedWithoutTraCI` calls
+`MSVehicle::getSpeedWithoutTraciInfluence`, which reads the influencer's cached
+`originalSpeed`. That cache is assigned by `processTraCISpeedControl(vSafe,vNext)`
+*inside executeMove*, just before speed advice is applied. A pre-step query reads
+the completed step. A step listener runs too late. Neither the direct cached
+speed nor an extrapolation guarantees the upcoming LC-yield speed. Example:
+current/cache=10 m/s, upcoming native yield=9.6 m/s. Zero releases to −0.8 m/s²;
+cached-base +epsilon requests approximately 0: the discontinuity remains 0.8.
+Source links and the deterministic counterexample are in `backend_timing.json`.
+
+Consequently `continuous.write_residuals` requires an explicit **same-step backend
+extension**, `native_relative_same_step/1`, whose setter applies the residual
+after native CF/LC speed computation and before mode27 safety. These extension
+methods are deliberately documented as **absent from stock TraCI**. The sole
+CommandOwnership writer sends the residual to that boundary; it never falls back
+to stale `getSpeedWithoutTraCI`, `slowDown`, or absolute `setAcceleration`.
+Nonzero deployment on the frozen binary fails before a longitudinal write.
+This is a built CPU contract/fixture, **not a completed SUMO backend**.
+
+CPU checks: 25 execution tests PASS, including 10,000 independent scalar/tensor
+cases, useful positive/negative gradients below the cap, zero gradients when
+capped, bit-exact zero/native trajectories with LC yielding, signed-zero tensor
+identity, tiny-residual continuity, sole-writer/fallback, and stock-API refusal.
+Broader selected nativeinit/execcap/deploy/branching regressions: 81 PASS; the
+remaining CIRCLES test initially lacked `onnxruntime` in the test venv and PASSed
+separately under the existing Miniconda environment. Eight simulator/dispatch
+tests were deliberately excluded. No SUMO was invoked.
+The completed-step execution logger additionally records requested residual,
+same-step no-TraCI speed (read after stepping), issued acceleration before safety,
+actual speed-difference acceleration and accepted/native ownership. Its own
+regression PASSes; it does not mistake residuals for absolute issued acceleration.

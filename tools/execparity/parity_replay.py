@@ -15,7 +15,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from replay import ROOT, executor, sha, states_from_episode, summary
-from wms.control.execution import inferred_follow_cap, executed_residual
+from wms.control.execution import inferred_follow_cap, executed_switch_residual as executed_residual
 from wms.control.native_cav import head_native_accel
 from wms.data.history import long_history_features
 from wms.eval.backend import load_backend

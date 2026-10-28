@@ -164,17 +164,13 @@ class CommandOwnership:
         Returned commands are the actual setAcceleration values, not slowDown's
         derived ledger. SUMO's later realised acceleration remains in the tape.
         """
-        from wms.control.nativeinit import sumo_residual_commands
+        from wms.control.continuous import write_residuals
         allowed = set(live_ids) & self.cav_ids
         authorised = {v: r for v, r in residuals.items()
                       if v in allowed and self._owned.get(v) == "wall"
                       and self._last[v].timestamp_s <= now_s
                       < self._last[v].timestamp_s + self.controller.config.control_dt_s}
-        commands = sumo_residual_commands(self.api, authorised, lo, hi, dt=dt, parity=True)
-        for v, command in commands.items():
-            self.api.vehicle.setSpeed(v, -1)
-            self.api.vehicle.setAcceleration(v, command, dt)
-        return commands
+        return write_residuals(self.api, authorised, lo, hi, dt=dt)
 
     def record_response(self, vehicle_id: str, *, timestamp_s: float,
                         speed_mps: float, acceleration_mps2: float) -> ResponseRecord:

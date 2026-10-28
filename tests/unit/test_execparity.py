@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from wms.control.execution import (authority_guard, executed_residual, idm_follow_speed,
+from wms.control.execution import (authority_guard, executed_switch_residual as executed_residual, idm_follow_speed,
                                    verify_authority, verify_parity)
 from wms.control.nativeinit import NativeResidualCommand, sumo_residual_commands
 from wms.model.cav import EXEC_CAP_KEY
@@ -66,6 +66,8 @@ class Vehicle:
     def setSpeed(self, *args): self.calls.append(("setSpeed",*args))
     def setAcceleration(self, *args): self.calls.append(("setAcceleration",*args))
     def slowDown(self, *args): self.calls.append(("slowDown",*args))
+    def getNativeResidualContract(self): return "native_relative_same_step/1"
+    def setNativeAccelerationResidual(self, *args): self.calls.append(("nativeResidual",*args))
 
 
 def frame(vid):
@@ -86,8 +88,8 @@ def test_single_owner_never_overwrites_fallback_and_has_no_slowdown():
     for now in (300.,300.5):
         cmd = own.execute_residual({"accepted":.04,"missing":.04},-3.,1.2,
                                    now_s=now,live_ids={"accepted","missing"})
-        assert cmd == pytest.approx({"accepted":.3})
-    assert [r[0] for r in api.vehicle.calls] == ["setSpeed","setAcceleration"]*2
+        assert cmd == pytest.approx({"accepted":.04})
+    assert [r[0] for r in api.vehicle.calls] == ["nativeResidual"]*2
     assert all(r[1] == "accepted" for r in api.vehicle.calls)
     assert own.execute_residual({"accepted":.04},-3.,1.2,now_s=301.,live_ids={"accepted"}) == {}
 
@@ -109,7 +111,7 @@ def test_guard_threshold_empty_nonfinite_and_sha_binding(tmp_path):
     common = dict(checkpoint_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
                   recordings_sha256=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest())
     assert authority_guard([.1]*96+[-.1]*4,**common)["passed"] is False
-    receipt = authority_guard([.1]*95+[-.1]*5,**common)
+    receipt = authority_guard([.1]*95+[-.1]*5,executed_delta=[0.]*95+[-.1]*5,**common)
     assert receipt["passed"] is True
     receipt["recordings"] = hashes
     path = tmp_path / "receipt.json"
@@ -137,7 +139,7 @@ def test_deploy_population_is_explicitly_selectable():
     assert args.population == "textbook"
 
 
-def test_bridge_executes_cap_without_imagination_only_safe_accel(monkeypatch):
+def test_bridge_continuous_positive_residual_has_authority_without_soft_safety(monkeypatch):
     from .test_nativeinit import scene, networks
     from wms.control.bridge import make_cav_controller
     from wms.model.cav import WM_LANE_TARGET_KEY
@@ -154,9 +156,9 @@ def test_bridge_executes_cap_without_imagination_only_safe_accel(monkeypatch):
                                      native_lane_change=True)
     out = controller(st)
     acting = st["present"] & st["is_cav"] & (st["lane"] >= 0)
-    torch.testing.assert_close(out[...,3][acting],torch.full_like(out[...,3][acting],.3))
+    torch.testing.assert_close(out[...,3][acting],torch.full_like(out[...,3][acting],1.2*float(np.tanh(.05))))
     out[...,3][acting].sum().backward()
-    assert p.residual_head.bias.grad.item() == 0.
+    assert p.residual_head.bias.grad.item() > 0.
 
 
 def test_observer_port_and_population_forwarding_without_simulator(tmp_path,monkeypatch):

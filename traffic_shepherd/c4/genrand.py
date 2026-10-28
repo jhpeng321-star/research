@@ -371,9 +371,9 @@ def write_branch_episode(out_dir: Path, *, base_recorder, i_k: int, branch: Memo
     manifest = {"schema": "c4_sumo_episode/1", "status": "complete", **meta}
     write_json(out_dir / "manifest.json", manifest)
     if getattr(branch, "executions", None):
-        write_json(out_dir / "residual_execution.json", {"schema": "residual_execution/1",
+        write_json(out_dir / "residual_execution.json", {"schema": "residual_execution/2",
             "writer": "CommandOwnership", "duration_s": .5, "speed_mode": 27,
-            "steps": [{"timestamp_s": t, "commands_mps2": commands}
+            "steps": [{"timestamp_s": t, "vehicles": commands}
                       for t, commands in branch.executions]})
     return {"dir": str(out_dir), "n_states": len(frames), "n_control": len(controls)}
 

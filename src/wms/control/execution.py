@@ -33,7 +33,7 @@ def contract():
     if not driver:
         raise ValueError("candidate-A parity requires a frozen C4_EXECUTION_DRIVER fit")
     load_learned_driver(driver)
-    return {"schema":"execparity_contract/1","executor":"sumo_idm_mode27_v1",
+    return {"schema":"execparity_contract/2","executor":"native_relative_same_step/1",
             "driver_sha256":hashlib.sha256(Path(driver).read_bytes()).hexdigest(),
             "accel_max_mps2":ACCEL_MAX,"decel_mode":"speedMode27 bit2 disabled",
             "speed_mode":SPEED_MODE,"imagination_soft_safe_accel":False}
@@ -45,7 +45,13 @@ def check_contract(payload):
         raise ValueError("checkpoint execution contract differs from current flags/learned driver")
 
 
-def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX, *, force_zero=False):
+def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX):
+    """Owner's combined law; native must be a feasible same-step prediction."""
+    from .continuous import native_relative
+    return native_relative(state, residual, native, lo, hi)
+
+
+def executed_switch_residual(state, residual, native, lo=-3., hi=ACCEL_MAX, *, force_zero=False):
     """Exact command/cap algebra given the prospective SUMO follow-speed ceiling.
 
     The ceiling is recomputed each physics step. In imagination it is inferred
@@ -143,7 +149,7 @@ def load_learned_driver(path):
     return values
 
 
-def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256):
+def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed_delta=None):
     """Fail-closed pre-SUMO receipt for the registered >95% cap/inertness rule.
 
     On this cap+residual path every positive residual is completely capped; exact
@@ -154,8 +160,18 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256):
     r = np.asarray(residuals, float).reshape(-1)
     if not len(r) or not np.isfinite(r).all() or not checkpoint_sha256 or not recordings_sha256:
         raise ValueError("authority guard requires finite acting rows and bound inputs")
-    fraction = float((r >= 0.).mean())
-    receipt = {"schema": "execparity_authority/1", "checkpoint_sha256": checkpoint_sha256,
+    if executed_delta is None:
+        fraction = float((r >= 0.).mean())
+        schema = "execparity_authority/1"  # retained switch-path diagnostic only
+    else:
+        d = np.asarray(executed_delta, float).reshape(-1)
+        if d.shape != r.shape or not np.isfinite(d).all():
+            raise ValueError("authority guard needs paired finite executed residual effects")
+        # Fully capped means no change from the same feasible native base.
+        # Zero residuals are also inert; partial clipping still has authority.
+        fraction = float((d == 0.).mean())
+        schema = "execparity_authority/2"
+    receipt = {"schema": schema, "checkpoint_sha256": checkpoint_sha256,
                "recordings_sha256": recordings_sha256, "acting_ticks": len(r),
                "capped_or_native_fraction": fraction, "maximum_fraction": CAP_REJECT_FRACTION,
                "passed": fraction <= CAP_REJECT_FRACTION}
@@ -172,7 +188,7 @@ def verify_authority(path, checkpoint):
     receipt = json.loads(Path(path).read_text(encoding="utf-8"))
     fraction = receipt.get("capped_or_native_fraction", float("nan"))
     hashes = receipt.get("recordings", {})
-    if (receipt.get("schema") != "execparity_authority/1" or not receipt.get("passed")
+    if (receipt.get("schema") != "execparity_authority/2" or not receipt.get("passed")
             or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
             or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION
             or receipt.get("checkpoint_sha256") != hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
@@ -194,10 +210,13 @@ def verify_parity(path):
     native_rmse = receipt.get("native_arm_head_error",{}).get("rmse",float("nan"))
     errors = receipt.get("error",{})
     residual_rmse = receipt.get("c1_residual_execution_error",{}).get("rmse",float("nan"))
-    if (receipt.get("schema") != "execparity_recorded_acceleration/1"
-            or not receipt.get("passed") or not driver or len(receipt.get("worlds",{}))<10
+    if (receipt.get("schema") != "execparity_continuous_acceleration/1"
+            or receipt.get("backend_contract") != "native_relative_same_step/1"
+            or receipt.get("measured_real_sumo") is not True
+            or receipt.get("zero_native_identity") is not True
+            or not receipt.get("passed") or not driver or not receipt.get("worlds")
             or receipt.get("driver_sha256") != hashlib.sha256(Path(driver).read_bytes()).hexdigest()
-            or set(errors)!={"ours","mappo"} or not 0.<=residual_rmse<=native_rmse
+            or set(errors)!={"ours"} or not 0.<=residual_rmse<=native_rmse
             or not all(0.<=value.get("rmse",float("nan"))<=native_rmse for value in errors.values())):
         raise ValueError("missing/stale/failing recorded-acceleration parity receipt")
     load_learned_driver(driver)
