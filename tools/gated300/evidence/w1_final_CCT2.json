@@ -1,0 +1,293 @@
+{
+  "schema": "gated300_cct2/1",
+  "wm_sha256": "3f6b41297c398695627e0aa81c577737beaeb24e56fb23a2fe948f14015d6b86",
+  "panels": [
+    "pairs300",
+    "validation"
+  ],
+  "policy_authorized": true,
+  "H_G": 300,
+  "horizons": {
+    "90": {
+      "sigma": 25.38,
+      "threshold": 50.76,
+      "n_pairs": 204,
+      "n_worlds": 56,
+      "n_gain": 10,
+      "n_gain_sign": 10,
+      "gain_sign_agreement": 0.9,
+      "gain_sign_ci95": [
+        0.5,
+        1.0
+      ],
+      "wrong_gain_mean_abs_real": 78.13546752929688,
+      "verdict": "FAIL",
+      "harm": {
+        "n_harm": 112,
+        "n_harm_sign": 112,
+        "harm_sign_agreement": 0.8571428571428571,
+        "wrong_harm_mean_abs_real": 61.940711975097656
+      },
+      "panels": {
+        "pairs300": {
+          "sigma": 25.38,
+          "threshold": 50.76,
+          "n_pairs": 96,
+          "n_worlds": 20,
+          "n_gain": 0,
+          "n_gain_sign": 0,
+          "gain_sign_agreement": null,
+          "gain_sign_ci95": [
+            null,
+            null
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 84,
+            "n_harm_sign": 84,
+            "harm_sign_agreement": 0.9166666666666666,
+            "wrong_harm_mean_abs_real": 59.19260951450893
+          }
+        },
+        "validation": {
+          "sigma": 25.38,
+          "threshold": 50.76,
+          "n_pairs": 108,
+          "n_worlds": 36,
+          "n_gain": 10,
+          "n_gain_sign": 10,
+          "gain_sign_agreement": 0.9,
+          "gain_sign_ci95": [
+            0.5,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 78.13546752929688,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 28,
+            "n_harm_sign": 28,
+            "harm_sign_agreement": 0.6785714285714286,
+            "wrong_harm_mean_abs_real": 64.078125
+          }
+        }
+      }
+    },
+    "120": {
+      "sigma": 41.22,
+      "threshold": 82.44,
+      "n_pairs": 204,
+      "n_worlds": 56,
+      "n_gain": 10,
+      "n_gain_sign": 10,
+      "gain_sign_agreement": 1.0,
+      "gain_sign_ci95": [
+        1.0,
+        1.0
+      ],
+      "wrong_gain_mean_abs_real": 0.0,
+      "verdict": "FAIL",
+      "harm": {
+        "n_harm": 107,
+        "n_harm_sign": 107,
+        "harm_sign_agreement": 0.6542056074766355,
+        "wrong_harm_mean_abs_real": 109.19484071473818
+      },
+      "panels": {
+        "pairs300": {
+          "sigma": 41.22,
+          "threshold": 82.44,
+          "n_pairs": 96,
+          "n_worlds": 20,
+          "n_gain": 1,
+          "n_gain_sign": 1,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 81,
+            "n_harm_sign": 81,
+            "harm_sign_agreement": 0.7037037037037037,
+            "wrong_harm_mean_abs_real": 120.81742350260417
+          }
+        },
+        "validation": {
+          "sigma": 41.22,
+          "threshold": 82.44,
+          "n_pairs": 108,
+          "n_worlds": 36,
+          "n_gain": 9,
+          "n_gain_sign": 9,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 26,
+            "n_harm_sign": 26,
+            "harm_sign_agreement": 0.5,
+            "wrong_harm_mean_abs_real": 87.73776479867789
+          }
+        }
+      }
+    },
+    "180": {
+      "sigma": 42.11,
+      "threshold": 84.22,
+      "n_pairs": 204,
+      "n_worlds": 56,
+      "n_gain": 26,
+      "n_gain_sign": 26,
+      "gain_sign_agreement": 1.0,
+      "gain_sign_ci95": [
+        1.0,
+        1.0
+      ],
+      "wrong_gain_mean_abs_real": 0.0,
+      "verdict": "PASS",
+      "harm": {
+        "n_harm": 108,
+        "n_harm_sign": 108,
+        "harm_sign_agreement": 0.6203703703703703,
+        "wrong_harm_mean_abs_real": 231.95516744474085
+      },
+      "panels": {
+        "pairs300": {
+          "sigma": 42.11,
+          "threshold": 84.22,
+          "n_pairs": 96,
+          "n_worlds": 20,
+          "n_gain": 8,
+          "n_gain_sign": 8,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 77,
+            "n_harm_sign": 77,
+            "harm_sign_agreement": 0.6623376623376623,
+            "wrong_harm_mean_abs_real": 247.2824472280649
+          }
+        },
+        "validation": {
+          "sigma": 42.11,
+          "threshold": 84.22,
+          "n_pairs": 108,
+          "n_worlds": 36,
+          "n_gain": 18,
+          "n_gain_sign": 18,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 31,
+            "n_harm_sign": 31,
+            "harm_sign_agreement": 0.5161290322580645,
+            "wrong_harm_mean_abs_real": 205.38788248697918
+          }
+        }
+      }
+    },
+    "300": {
+      "sigma": 43.91,
+      "threshold": 87.82,
+      "n_pairs": 204,
+      "n_worlds": 56,
+      "n_gain": 28,
+      "n_gain_sign": 28,
+      "gain_sign_agreement": 1.0,
+      "gain_sign_ci95": [
+        1.0,
+        1.0
+      ],
+      "wrong_gain_mean_abs_real": 0.0,
+      "verdict": "PASS",
+      "harm": {
+        "n_harm": 99,
+        "n_harm_sign": 99,
+        "harm_sign_agreement": 0.6767676767676768,
+        "wrong_harm_mean_abs_real": 417.4069633483887
+      },
+      "panels": {
+        "pairs300": {
+          "sigma": 43.91,
+          "threshold": 87.82,
+          "n_pairs": 96,
+          "n_worlds": 20,
+          "n_gain": 10,
+          "n_gain_sign": 10,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 71,
+            "n_harm_sign": 71,
+            "harm_sign_agreement": 0.7183098591549296,
+            "wrong_harm_mean_abs_real": 449.3916381835937
+          }
+        },
+        "validation": {
+          "sigma": 43.91,
+          "threshold": 87.82,
+          "n_pairs": 108,
+          "n_worlds": 36,
+          "n_gain": 18,
+          "n_gain_sign": 18,
+          "gain_sign_agreement": 1.0,
+          "gain_sign_ci95": [
+            1.0,
+            1.0
+          ],
+          "wrong_gain_mean_abs_real": 0.0,
+          "verdict": "FAIL",
+          "harm": {
+            "n_harm": 28,
+            "n_harm_sign": 28,
+            "harm_sign_agreement": 0.5714285714285714,
+            "wrong_harm_mean_abs_real": 364.0991719563802
+          }
+        }
+      }
+    }
+  },
+  "bootstrap": {
+    "unit": "world",
+    "draws": 2000,
+    "seed": 0,
+    "ci": 0.95
+  },
+  "pass_rule": "|G_h| >= 20 and sign agreement on G_h >= 0.8",
+  "h_g_rule": "largest passing h of 120/180/300; no contiguous-prefix requirement",
+  "zero_real_rule": "exclude from sign counts only; |G_h| uses all confident-gain pairs",
+  "sources": {
+    "pairs300": {
+      "path": "E:/agent-work/c4-overnight-w4/tools/overnight_w4/evidence/W1/LONG_pairs300.json",
+      "sha256": "76aa974bc73f625a28707b96f506d840bc4b8396f1b9069feacb249bf35f3cc2"
+    },
+    "validation": {
+      "path": "E:/agent-work/c4-overnight-w4/tools/overnight_w4/evidence/W1/LONG_validation.json",
+      "sha256": "6f7a4d02af0263dcc9fd46e7ddb8c1d5bbb602be8558b1ef5cb4bafd7adc504a"
+    }
+  },
+  "entrant_control": true,
+  "deterministic_crn": null
+}

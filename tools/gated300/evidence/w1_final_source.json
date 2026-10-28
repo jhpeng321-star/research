@@ -1,0 +1,21 @@
+{
+  "wm_sha256": "3f6b41297c398695627e0aa81c577737beaeb24e56fb23a2fe948f14015d6b86",
+  "role": "informational only; W1 not adopted; no trainer authority consumed",
+  "remote_root": "gpuR:/root/autodl-tmp/c4/overnight20261028/W1_PAIRED/LONG",
+  "local_root": "E:/agent-work/c4-overnight-w4/tools/overnight_w4/evidence/W1",
+  "panels": {
+    "pairs300": {
+      "remote_path": "/root/autodl-tmp/c4/overnight20261028/W1_PAIRED/LONG/pairs300.json",
+      "local_path": "E:/agent-work/c4-overnight-w4/tools/overnight_w4/evidence/W1/LONG_pairs300.json",
+      "remote_sha256": "76aa974bc73f625a28707b96f506d840bc4b8396f1b9069feacb249bf35f3cc2",
+      "local_sha256": "76aa974bc73f625a28707b96f506d840bc4b8396f1b9069feacb249bf35f3cc2"
+    },
+    "validation": {
+      "remote_path": "/root/autodl-tmp/c4/overnight20261028/W1_PAIRED/LONG/validation.json",
+      "local_path": "E:/agent-work/c4-overnight-w4/tools/overnight_w4/evidence/W1/LONG_validation.json",
+      "remote_sha256": "6f7a4d02af0263dcc9fd46e7ddb8c1d5bbb602be8558b1ef5cb4bafd7adc504a",
+      "local_sha256": "6f7a4d02af0263dcc9fd46e7ddb8c1d5bbb602be8558b1ef5cb4bafd7adc504a"
+    }
+  },
+  "verification": "local copies byte-identical to gpuR originals (one read-only ssh ls+sha256sum transaction, 2026-10-29); cct2.py ran read-only on the local copies"
+}
