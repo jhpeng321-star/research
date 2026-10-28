@@ -23,6 +23,8 @@ def test_unresolved_config_cannot_dispatch(tmp_path, monkeypatch):
         launch.run(path, dry=True)
     with pytest.raises(ValueError, match='WM3 gate pending'):
         launch.run(path, dry=False)
+    with pytest.raises(ValueError, match='WM3 gate pending'):
+        launch.start(path)
 
 
 @pytest.mark.parametrize('token', ['sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth', 'vtype'])

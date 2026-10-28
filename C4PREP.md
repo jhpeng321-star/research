@@ -1,4 +1,4 @@
-# S-C4PREP-1 — resume receipts (2026-10-28)
+# S-C4PREP-1 — build verified; empirical preparation BLOCKED (2026-10-28)
 
 ## Registered scope (retained from initial receipt)
 
@@ -43,4 +43,97 @@ copies or cross-recipe ensemble disagreement.
 Preparation, genuine offline inference/fitting and two-update checks only.
 No SUMO or full policy phase is authorized here. Shared chain stop/budget
 markers and peer runtimes/processes remain under their respective owners.
-Launch commands and measured finite/memory receipts are pending preparation.
+Real finite/memory dry-run receipts remain blocked as detailed below.
+
+## Implemented preparation
+
+- `tools/c4prep/launch.py`: two parallel, separately resumed candidates A/B;
+  isolated outputs and owned PID/start-tick receipts; five-second owned-process
+  GPU-memory sampling; allocator/process-memory verification against cap0.45.
+  Final WM/gate, source, actor, anchor and entrant bindings are checked before
+  dispatch. No collection, WM-FT or shared chain-state mutation path.
+- `configs/c4_policy14_c4prep_{on,off}.toml`: same150-update budget,
+  microbatch1/segment8/both host offloads, full residual actor training,
+  q10/K8/native anchor, uncertainty's old std term OFF; probes OFF.
+  Looplong supplies direct real credit and disables critic bootstrap. The
+  frozen native-relative panel/selector and signal gate remain unchanged.
+- `policy14_cli --prep-dry-run-updates 2`: two actual scratch update calls,
+  finite checks and memory telemetry, then STOP with `completed_dry_run` and
+  no adoption receipt. Full-phase invocation still uses150 updates.
+- `tools/c4prep/calibrate.py`: exhaustive observable-input preflight and
+  guarded genuine current-WM paired inference/fitting path. The inference path
+  has NOT run: missing clocks refuse before any GPU inference. No fitted scale
+  or empirical unbiasedness verdict exists.
+- Immutable exact-byte source snapshots are SHA verified. Staging reuses
+  verified source bytes from gpuA's existing runtime without modifying it;
+  only source deltas cross SSH. No WM checkpoint is copied.
+
+## Measured receipts and blockers
+
+gpuA root: `/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep`.
+`CURRENT_RUNTIME.json` identifies the immutable runtime; `STAGING_*.json`
+preserves each staging receipt. Existing peer processes are not discovered or
+signalled. Neither failed large-upload attempt created a runtime or compute job.
+
+`INPUT_PREFLIGHT_1.json` SHA
+`e320e30e2e6f515cda15d3ada50826f63ace5df9edd41149b8b1bb5da0df1870`:
+all78paired starts/156episodes inspected; all three historical actor SHAs
+verified; all156 live episodes lack the complete recorded queue/request/CAV
+clock set. Start backlogs and full300s real-return totals exist, but do not
+identify pre-t0 requested demand or partial-horizon source-inclusive costs.
+C1/C2 backlog re-exports exist separately; they cannot supply C3 validation.
+The prior backlog reconstruction requires `scenario/requests.rou.xml`, a
+route/type-assignment input prohibited by this task; it was NOT opened.
+Read-only cpuP/cpuQ observable-tape checks both failed at SSH connection close.
+
+The first corrected isolated CPU suite passed **13/13** in1.39s, including
+normal-path preservation, the exact two-update stop, configuration parity,
+restricted-path refusal and unresolved-input refusal before dispatch. This is
+control-path verification with test doubles, NOT the requested real GPU dry run.
+Local fatal-error Ruff passed. The laptop has no torch; authoritative tests run
+on gpuA with CUDA hidden. Earlier failing test/setup receipts remain preserved.
+
+WM3's registered gate remains incomplete, and the final entrant tip/verdict
+has not landed (current committed tip875cc443; peer uncommitted work preserved).
+Therefore **anchor fitting, both real two-update GPU/memory checks, final entrant
+merge and launch readiness remain BLOCKED**. GPU use was1MiB at the receipt;
+charged264544/280000 and STOP_DRIVER remain unchanged. No preparation compute
+coordinator, SUMO or full policy job is running from this task.
+
+## Exact one-command MAIN launch per mode (not executed; prerequisites required)
+
+Run from `E:/agent-work/c4-c4prep` after final integration and verified dry runs:
+
+```text
+python -B tools/c4prep/main_launch.py --entrant off
+python -B tools/c4prep/main_launch.py --entrant on
+```
+
+Each command resolves the current immutable runtime, validates the corresponding
+`resolved_OFF/CONFIG.json` or `resolved_ON/CONFIG.json`, and detaches ONE owned
+coordinator for the TWO parallel A/B candidates. MAIN selects ONE mode from the
+final entrant verdict. Missing resolved configs, calibrated active horizons,
+final entrant integration or matching dry-run receipts refuse launch.
+
+## Remaining prerequisite sequence (no automatic retry/dispatch armed)
+
+1. Obtain allowed observable queue/request/CAV clocks for C1–C3 without reading
+   restricted route assignments; export a fresh immutable paired dataset and
+   preserve original observable arrays, pair hashes and real-J reconciliation.
+2. Re-merge final `c4/entrant`, bind its final verdict/main choice, stage a NEW
+   immutable source snapshot, and resolve its WM3 gate compatibility separately
+   for ON/OFF. Never assign the OFF gate to ON by assumption.
+3. Generate genuine paired K8 futures at every active horizon using each
+   historical collection actor, current WM3 and matched causal inputs/CRNs.
+   Fit C1/C2; validate disjoint C3 with5000 world-bootstrap draws,
+   seed20261028. No enablement when its interval excludes zero. No claim that
+   an interval including zero proves unbiasedness.
+4. `launch.py prepare --config CONFIG_<MODE>.json --anchor <artifact>
+   --entrant-final-receipt <integration-receipt>` creates exclusive resolved
+   config/boundary files. The integration receipt must bind `task=S-ENTRANTFIX`,
+   `final=true`, the final merged/staged `merged_source_commit`, and MAIN's
+   `selected_entrant_control`; it does not replace the underlying final verdict.
+5. Run `launch.py dry-run --config <resolved config>` separately for each mode.
+   Only two scratch updates per candidate are permitted; retain finite metrics,
+   effective flags and measured memory in `DRY_RUN_VERIFIED.json`. Both candidates
+   must pass before the corresponding MAIN launch command is usable.

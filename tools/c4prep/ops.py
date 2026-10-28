@@ -42,10 +42,33 @@ def query(source, host='gpuA'):
         raise SystemExit(p.returncode)
 
 
+def runtime(entry, args):
+    assert entry in ('calibrate', 'launch')
+    # Preparation transport intentionally cannot dispatch a full policy phase.
+    assert args and args[0] in ('preflight', 'templates', 'validate', 'prepare')
+    remote(f'''import pathlib,json,os,subprocess
+r=pathlib.Path('/root/autodl-tmp/c4/restart20261026')
+code=pathlib.Path(json.loads((r/'arm/loop/c4prep/CURRENT_RUNTIME.json').read_text())['runtime'])
+env={{**os.environ,'PYTHONPATH':str(code/'src')+':'+str(code),
+ 'C4_ALLOWED_ROOTS':'/root/autodl-tmp/c4','OMP_NUM_THREADS':'1',
+ 'OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}}
+p=subprocess.run(['/root/miniconda3/bin/python','-B',str(code/'tools/c4prep/{entry}.py'),*{args!r}],
+ cwd=code,env=env,timeout=25)
+raise SystemExit(p.returncode)
+''', timeout=35)
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('action', choices=['inspect', 'query'])
+    ap.add_argument('action', choices=['inspect', 'query', 'runtime'])
     ap.add_argument('--source')
     ap.add_argument('--host', default='gpuA')
+    ap.add_argument('--entry', choices=('calibrate', 'launch'))
+    ap.add_argument('--args', nargs=argparse.REMAINDER, default=[])
     a = ap.parse_args()
-    inspect() if a.action == 'inspect' else query(a.source, a.host)
+    if a.action == 'inspect':
+        inspect()
+    elif a.action == 'query':
+        query(a.source, a.host)
+    else:
+        runtime(a.entry, a.args)

@@ -45,7 +45,9 @@ def prepare(config, anchor, entrant_receipt):
     from wms.control.antiexploit import inference_signature
     from wms.control.dreamer import DreamerConfig
     from wms.control.train_cli import _read_config
-    template = read(config)
+    # A pending descriptor selects a mode; resolve against the CURRENT final
+    # source snapshot, never a superseded pre-entrant runtime's TOML path.
+    template = descriptor(read(config)['entrant_control'])
     entrant = template['entrant_control']
     horizon, gate = qualified_gate(entrant)
     final = read(entrant_receipt)
@@ -154,6 +156,8 @@ def run(config, dry):
            'C4_GPU_MEM_FRACTION': '0.45', 'PYTHONPATH': f'{CODE}/src:{CODE}',
            'C4_ALLOWED_ROOTS': '/root/autodl-tmp/c4',
            'OMP_NUM_THREADS': '2', 'MKL_NUM_THREADS': '2', 'OPENBLAS_NUM_THREADS': '2'}
+    total_bytes = int(subprocess.check_output(['nvidia-smi', '--query-gpu=memory.total',
+        '--format=csv,noheader,nounits'], text=True).strip()) * 1024**2
     children, samples = [], []
     with contextlib.ExitStack() as stack:
         lock = stack.enter_context((OUT / 'candidates.lock').open('a'))
@@ -191,10 +195,19 @@ def run(config, dry):
         summary = read(output / 'RUN_SUMMARY.json')
         updates = summary.get('updates', [])
         peaks = [r.get('cuda_peak_reserved_bytes', 0) for r in updates]
+        process_peak = max((r['bytes'] for r in samples if r['pid'] == child.pid), default=0)
+        cfg = summary.get('config', {})
+        memory_ok = 0 < max(peaks, default=0) <= .45 * total_bytes and 0 < process_peak <= .45 * total_bytes
+        flags_ok = (cfg.get('future_samples') == 8 and cfg.get('native_anchor') is True
+                    and cfg.get('pessimistic_credit') is True
+                    and cfg.get('entrant_control') == doc['entrant_control'])
         passed = (child.returncode == 0 and (not dry or
-                  summary['status'] == 'completed_dry_run' and len(updates) == 2))
+                  summary['status'] == 'completed_dry_run' and len(updates) == 2)
+                  and memory_ok and flags_ok)
         results.append({'candidate': item['name'], 'exit': child.returncode, 'passed': passed,
                         'updates': len(updates), 'peak_reserved_bytes': max(peaks, default=0),
+                        'sampled_process_peak_bytes': process_peak,
+                        'memory_within_cap': memory_ok, 'effective_flags_verified': flags_ok,
                         'summary_sha256': sha(output / 'RUN_SUMMARY.json')})
     receipt = {'config_sha256': sha(config), 'passed': all(r['passed'] for r in results),
                'dry_run': dry, 'results': results, 'process_memory_samples': len(samples),
@@ -204,9 +217,24 @@ def run(config, dry):
     return 0 if receipt['passed'] else 1
 
 
+def start(config):
+    """Later MAIN dispatch: one detached coordinator, exclusive owned receipt."""
+    validate(config, launching=True)
+    parent = Path(config).parent
+    with (parent / 'MAIN_LAUNCH.json').open('x') as receipt:
+        with (parent / 'MAIN_LAUNCH.log').open('x') as log:
+            child = subprocess.Popen([sys.executable, '-B', __file__, 'launch', '--config', str(config)],
+                cwd=CODE, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
+                start_new_session=True)
+        ticks = Path(f'/proc/{child.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
+        doc = {'pid': child.pid, 'start_ticks': ticks, 'config_sha256': sha(config), 't': now()}
+        json.dump(doc, receipt, indent=1)
+    print(json.dumps(doc))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=('templates', 'prepare', 'dry-run', 'launch', 'validate'))
+    p.add_argument('action', choices=('templates', 'prepare', 'dry-run', 'launch', 'start', 'validate'))
     p.add_argument('--config')
     p.add_argument('--anchor')
     p.add_argument('--entrant-final-receipt')
@@ -217,5 +245,7 @@ if __name__ == '__main__':
         prepare(a.config, a.anchor, a.entrant_final_receipt)
     elif a.action in ('dry-run', 'launch'):
         raise SystemExit(run(a.config, a.action == 'dry-run'))
+    elif a.action == 'start':
+        start(a.config)
     else:
         validate(a.config)
