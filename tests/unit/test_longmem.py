@@ -255,10 +255,15 @@ def test_streamed_critic_preserves_frozen_parameters():
         assert_tree_close(x, y)
 
 
-@pytest.mark.parametrize("lane,residual,entries,samples", [(True, False, True, 2),
-                                                   (False, True, False, 2),
-                                                   (False, True, False, 8)])
-def test_production_actor_bridge_futures_and_entries(lane, residual, entries, samples):
+@pytest.mark.parametrize("lane,residual,entries,samples,device", [
+    (True, False, True, 2, "cpu"),
+    (False, True, False, 2, "cpu"),
+    (False, True, False, 8, "cpu"),
+    (False, True, True, 8, "cpu"),
+    pytest.param(False, True, True, 8, "cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA production K8 VJP proof")),
+])
+def test_production_actor_bridge_futures_and_entries(lane, residual, entries, samples, device):
     from wms.control.bridge import make_cav_controller
     from wms.control.lanes import LaneRules
     from wms.control.obs import build_observations
@@ -278,8 +283,14 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
             hist = EntranceHistory.defaults()
             hist.rate[:] = .5
             starts.batch.entry_feat = torch.tensor(np.stack([hist.to_features()] * 3)).float()
+        starts.batch.state = {k: v.to(device) for k, v in starts.batch.state.items()}
+        if starts.batch.entry_feat is not None:
+            starts.batch.entry_feat = starts.batch.entry_feat.to(device)
         cfg = DreamerConfig(batch_size=3, horizon=3, imagine_entries=entries, entry_pad_max=2,
                             source_wait_grad=entries,
+                            entrant_control=entries,
+                            native_residual_train_group=residual,
+                            native_residual_train_trunk=residual,
                             future_samples=samples, pessimistic_credit=samples == 8,
                             future_driver_scale=.05, future_accel_noise=True,
                             imagination_microbatch=micro, imagination_checkpoint_segment=segment,
@@ -289,26 +300,34 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
                          grad_decay_per_step=.9, **({"lane_model": "hazard_v5",
                          "merge_decision": "first_passage", "lane_decision": "sample",
                          "merge_passage_law": "hybrid"} if residual else {}))
+        policy = CavPolicy(hidden_dim=8, n_heads=2, lane_head=lane, residual_on_native=residual)
+        if residual:
+            # Model an already-trained residual checkpoint so the first update
+            # exercises trunk/group VJPs instead of the zero-init head boundary.
+            with torch.no_grad():
+                policy.residual_head.weight.normal_(std=.01)
         return DreamerTrainer(
             [WmSModel(spec)],
-            CavPolicy(hidden_dim=8, n_heads=2, lane_head=lane, residual_on_native=residual),
+            policy,
             RsuGroupEncoder(hidden_dim=8, n_heads=2), Critic(), starts,
             observation_builder=build_observations, reward_fn=queue_reward,
             safety=lambda state, command, **kw: command, config=cfg,
             controller_factory=(partial(make_cav_controller, native_lane_change=True,
                                         native_ramp_merge="wm_law", symmetric_exec_cap=True)
                                 if residual else make_cav_controller),
-            lane_rules=LaneRules() if lane else None,
-            counterfactual=CounterfactualConfig(enabled=True, max_starts=2, n_individual=2,
+            lane_rules=LaneRules() if lane else None, device=device,
+            counterfactual=CounterfactualConfig(enabled=True, max_starts=3 if samples == 8 else 2, n_individual=2,
                                                 group_min_size=2, group_radius_m=100))
 
     baseline, memory = make(0, 0), make(2, 3)
+    from wms.control.dreamer import _rng_state, _restore_rng
     torch.manual_seed(313)
+    before = _rng_state(memory.device)
     a = baseline.update()
-    rng = torch.get_rng_state()
-    torch.manual_seed(313)
+    rng = _rng_state(memory.device)
+    _restore_rng(before, memory.device)
     b = memory.update()
-    assert torch.equal(rng, torch.get_rng_state())
+    assert_tree_close(rng, _rng_state(memory.device), atol=0, rtol=0)
     for key in ("actor_loss", "critic_loss", "actor_grad_norm", "critic_grad_norm", "returns"):
         assert_tree_close(a[key], b[key])
     for left, right in ((baseline.actor_parameters, memory.actor_parameters),
@@ -316,6 +335,13 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
         for x, y in zip(left, right):
             assert_tree_close(x.grad, y.grad)
             assert_tree_close(x, y)
+    assert_tree_close(baseline.actor_optimizer.state_dict(), memory.actor_optimizer.state_dict())
+    assert_tree_close(baseline.critic_optimizer.state_dict(), memory.critic_optimizer.state_dict())
+    assert_tree_close(baseline.target_critic.state_dict(), memory.target_critic.state_dict())
+    if residual:
+        for module in (memory.group_encoder, memory.policy.own_encoder,
+                       memory.policy.report_encoder, memory.policy.residual_head):
+            assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in module.parameters())
 
 
 @pytest.mark.parametrize("field,value", [("imagination_microbatch", -1),

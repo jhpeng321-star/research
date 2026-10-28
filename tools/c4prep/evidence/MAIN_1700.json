@@ -1,0 +1,18 @@
+{
+  "task": "S-C4LAUNCH",
+  "authority": "MAIN2026-10-28T17:00",
+  "deadline": "2026-10-29T06:00:00+08:00",
+  "completion_attempts": 1,
+  "deadline_requires": "candidate A running with >=10 finite updates; otherwise stop and record DEFERRED",
+  "native_anchor": false,
+  "pessimistic_credit": true,
+  "quantile": 0.1,
+  "k": 8,
+  "fit_decision": "retain launch_fit_v1/FIT_DECISION.json; do not repeat fit",
+  "wm_sha256": "41e18f09b6060a1f4e4039f02655fcbcd497e32a360cffb71be716fffeaadc84",
+  "trusted_horizon_s": 90,
+  "configuration": "retain MAIN2026-10-28T15:00 settings and unchanged native-relative gates",
+  "transport_refusal_backoff_s": 300,
+  "remote_poll_interval_s": 120,
+  "new_sim_s": 0
+}

@@ -8,7 +8,8 @@ r = Path('/root/autodl-tmp/c4/restart20261026')
 out = r / 'arm/loop/c4prep'
 # JSON is transported as reviewed source, not recovered from peer paths.
 authority = json.loads(sys.argv[1])
-path = out / 'MAIN_1500.json'
+filename = 'MAIN_1700.json' if authority['authority'] == 'MAIN2026-10-28T17:00' else 'MAIN_1500.json'
+path = out / filename
 if path.exists():
     assert json.loads(path.read_text()) == authority
 else:

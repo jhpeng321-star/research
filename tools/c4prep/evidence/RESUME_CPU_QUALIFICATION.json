@@ -1,0 +1,13 @@
+{
+  "task": "S-C4LAUNCH",
+  "recovered_head": "2b2a5dbf",
+  "environment": "isolated local Python3.13 / torch2.14.1+cpu",
+  "command": "python -B -m pytest -q -o addopts= --basetemp E:/Temp/opencode/c4launch-local-3 tests/unit/test_c4launch.py tests/unit/test_c4prep.py tests/unit/test_antiexploit.py tests/unit/test_longmem.py",
+  "passed": 60,
+  "cuda_skipped": 2,
+  "elapsed_s": 109.54,
+  "covers": ["production K8/q10 full residual actor", "entrant ON", "per-module nonzero gradients", "gradient/update/optimizer/target parity", "whole RNG-state parity"],
+  "gpu_qualification": false,
+  "completed_real_dry_updates": 0,
+  "policy_launched": false
+}

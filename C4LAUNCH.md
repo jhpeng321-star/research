@@ -95,3 +95,20 @@ commitd2ca68fb reduces staging to one fresh non-multiplexed source-only SSH
 transaction, but both bounded attempts still closed. The streamed VJP remains
 unverified and its activation is not confirmed. No background retry is armed.
 Final compact snapshot: `tools/c4prep/evidence/LAUNCH_BLOCKED_FINAL.json`.
+
+## MAIN17:00 recovery — one attempt, deadline 2026-10-29 06:00 UTC+8
+
+Recovered clean HEAD2b2a5dbf and read registration/receipts before any dispatch.
+The measured anchorOFF/q10-K8ON decision stands; no fitting repeated.
+Initial status and later diagnostic SSH calls closed; >=300s refusal backoff
+and >=120s remote polling apply. No new remote operation is confirmed.
+
+Local CPU verification now uses an isolated Python3.13/torch CPU environment.
+The previously unrun K8 fixture omitted a native pair for its third start;
+corrected the synthetic fixture to pair every start as production requires.
+Full production residual group/trunk training, nonzero synthetic trained head,
+entrantON case, optimizer/target state and whole RNG-state parity are covered.
+Complete requested CPU suite:60PASS/2CUDA-only skips in109.54s. These are
+not GPU qualification or real training updates. CUDA full-actor K8 remains pending.
+Qualification now detaches into source-bound CPU/CUDA stages with durable logs
+and PID/results, removing the brittle35s SSH-bound qualification timeout.

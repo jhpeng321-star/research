@@ -77,32 +77,29 @@ elif action == 'fit-fallback':
     os.kill(child['pid'], signal.SIGTERM)
     print(json.dumps(decision))
 elif action == 'prepare':
+    checks = read(out / ('CHECKS_' + pointer['commit'][:12] + '.json'))
+    assert checks['source_commit'] == pointer['commit'] and checks['passed']
+    assert read(out / 'MAIN_1700.json')['authority'] == 'MAIN2026-10-28T17:00'
     from launch_a import prepare
     prepare()
 elif action == 'checks':
-    env = {**os.environ, 'CUDA_VISIBLE_DEVICES': ''}
-    result = subprocess.run([sys.executable, '-B', '-m', 'pytest', '-q',
-        '--basetemp', str(out / ('launch_checks_' + pointer['commit'][:12])),
-        'tests/unit/test_c4launch.py', 'tests/unit/test_c4prep.py', 'tests/unit/test_antiexploit.py',
-        'tests/unit/test_longmem.py'], cwd=code, env=env, timeout=35,
-        capture_output=True, text=True)
-    print(result.stdout, end='')
-    print(result.stderr, end='', file=sys.stderr)
-    write_new(out / ('CHECKS_' + pointer['commit'][:12] + '.json'),
-        {'source_commit': pointer['commit'], 'exit': result.returncode,
-         'stdout': result.stdout, 'stderr': result.stderr, 'cuda_hidden': True})
-    if result.returncode == 0:
-        gpu = subprocess.run([sys.executable, '-B', '-m', 'pytest', '-q',
-            'tests/unit/test_longmem.py::test_saved_spill_shares_parameter_views_without_changing_gradients'],
-            cwd=code, env=os.environ, timeout=15, capture_output=True, text=True)
-        print(gpu.stdout, end='')
-        print(gpu.stderr, end='', file=sys.stderr)
-        write_new(out / ('GPU_COPY_CHECK_' + pointer['commit'][:12] + '.json'),
-            {'source_commit': pointer['commit'], 'exit': gpu.returncode,
-             'stdout': gpu.stdout, 'stderr': gpu.stderr})
-        if gpu.returncode:
-            raise SystemExit(gpu.returncode)
-    raise SystemExit(result.returncode)
+    name = 'CHECK_COORDINATOR_' + pointer['commit'][:12]
+    assert not (out / (name + '_PID.json')).exists(), 'qualification already dispatched; inspect checks-status'
+    print(json.dumps(spawn([sys.executable, '-B', str(code / 'tools/c4prep/check_coordinator.py')], out, name)))
+elif action == 'checks-status':
+    name = 'CHECK_COORDINATOR_' + pointer['commit'][:12]
+    receipt = read(out / (name + '_PID.json'))
+    result = {'t': now(), 'source_commit': pointer['commit'], 'alive': owned_alive(receipt)}
+    final = out / ('CHECKS_' + pointer['commit'][:12] + '.json')
+    if final.exists():
+        result['receipt'] = read(final)
+    root = out / ('launch_checks_' + pointer['commit'][:12])
+    for stage in ('CPU', 'CUDA'):
+        for suffix in ('_RESULT.json', '.log'):
+            path = root / (stage + suffix)
+            if path.exists():
+                result[stage + suffix] = read(path) if suffix.endswith('json') else path.read_text()[-10000:]
+    print(json.dumps(result))
 elif action == 'dry':
     print(json.dumps(spawn([sys.executable, '-B', str(code / 'tools/c4prep/launch.py'),
         'dry-run', '--config', str(resolved / 'CONFIG.json')], resolved, 'DRY_COORDINATOR')))
@@ -119,7 +116,20 @@ elif action == 'diagnose':
             result[name] = path.read_text()[-7000:]
     root = resolved / 'DRY_RUN/A'
     result['owned_output_files'] = [{'name': p.name, 'bytes': p.stat().st_size}
-        for p in root.iterdir() if p.is_file()]
+        for p in root.iterdir() if p.is_file()] if root.exists() else []
+    result['prior_attempts'] = {}
+    for revision in ('89f0119f8d3c', '1f5cc6aaffec'):
+        prior = out / ('resolved_A_MAIN1500_' + revision)
+        item = {}
+        for name in ('DRY_COORDINATOR.log', 'DRY_RUN/A.log', 'DRY_RUN/CHILD_EXITS.json',
+                     'DRY_RUN/A/RUN_SUMMARY.json', 'DRY_RUN/A_PID.json'):
+            path = prior / name
+            if path.exists():
+                item[name] = path.read_text()[-10000:]
+        receipt = prior / 'DRY_RUN/A_PID.json'
+        if receipt.exists():
+            item['owned_worker_alive'] = owned_alive(read(receipt))
+        result['prior_attempts'][revision] = item
     print(json.dumps(result))
 elif action == 'start':
     from launch import start, validate
