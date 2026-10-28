@@ -32,6 +32,11 @@ EXCEPTIONS = {
     "data/corpus.py": {"legacy": "adapter around the vendored IdeaACorpus pack reader (ARCHITECTURE_V4 1.4, decision 7)"},
     "data/pack_history.py": {"model": "entries-v2 feature builder is the one sanctioned data->model edge (lazy import)"},
     "model/factory.py": {"legacy": "lazy construction of the black-box baselines kept only to score old checkpoints"},
+    # S-INTEGRATE: S-EXECPARITY2's WM mirror lazily imports the shared execution
+    # law (wms.control.execution.enabled/inferred_follow_cap) inside _exec_cap so
+    # imagination and the deployment executor share ONE law module. Lazy, default
+    # inert (flag off = bit-identical); the sole sanctioned model->control edge.
+    "model/wms.py": {"control": "lazy shared execution-law ceiling for commanded CAVs (S-EXECPARITY2 shared-law binding)"},
 }
 
 

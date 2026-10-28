@@ -128,3 +128,24 @@ def imagined_cooperation(*args, **kwargs):
     ensure_wms_importable()
     from wms.control.coop_imagine import imagined_cooperation as fn
     return fn(*args, **kwargs)
+
+
+def execution_mode():
+    """``wms.control.execution.mode()`` value (lazy; residual execution-law selection)."""
+    ensure_wms_importable()
+    from wms.control.execution import mode
+    return mode()
+
+
+def residual_writer(mode):
+    """``write_residuals`` of the selected execution law (lazy).
+
+    ``mode`` 2 selects the always-commanded law (``wms.control.alwayscmd``);
+    otherwise the continuous law (``wms.control.continuous``).
+    """
+    ensure_wms_importable()
+    if mode == 2:
+        from wms.control.alwayscmd import write_residuals as fn
+    else:
+        from wms.control.continuous import write_residuals as fn
+    return fn
