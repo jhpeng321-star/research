@@ -509,6 +509,9 @@ def main(argv=None):
             long_boundary = read_boundary(args.looplong_boundary)
             if [r['checkpoint_sha256'] for r in receipts] != [long_boundary['wm']['sha256']]:
                 raise ValueError('looplong loaded WM mismatch')
+            if [r['config_sha256'] for r in receipts] != [
+                    hashlib.sha256(checked_path(long_boundary['wm']['config']).read_bytes()).hexdigest()]:
+                raise ValueError('looplong loaded WM config mismatch')
             raw['_looplong_physics'] = receipts[0]['physics']
             if recovery:
                 from .policy14_recovery import restore_looplong

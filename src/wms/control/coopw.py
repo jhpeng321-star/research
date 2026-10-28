@@ -242,6 +242,18 @@ class HorizonConfig:
                 trusted_horizon_s=90, verdicts={k: v['verdict'] for k, v in gate['horizons'].items()})
             self.gate_record = record
             return record
+        if doc.get('schema') == 'c4launch_measured_horizon/1':
+            from .auditfix_authority import measured_gate
+            gate = measured_gate(doc, wm_sha256s)
+            self.allowed_stage = max(i for i, h in enumerate(self.horizons_s)
+                                     if h <= doc['trusted_horizon_s'])
+            record.update(allowed_stage=self.allowed_stage, wm_sha256=doc['wm_sha256'],
+                          authority=doc['schema'], measured_gate=True, trusted_horizon_s=90,
+                          measured_gate_sha256=doc['measured_gate_sha256'],
+                          cct1_sha256=doc['cct1_sha256'],
+                          verdicts={k: v.get('verdict') for k, v in gate['horizons'].items()})
+            self.gate_record = record
+            return record
         if doc.get("schema") != GATE_SCHEMA or doc.get("wm_sha256") not in set(wm_sha256s):
             record["refused"] = "gate schema / WM checkpoint mismatch"
             self.gate_record = record
