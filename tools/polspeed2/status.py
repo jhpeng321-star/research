@@ -7,7 +7,8 @@ import sys
 base = Path('/root/autodl-tmp/c4/polspeed2_20261028')
 if '--export' in sys.argv:
     subprocess.run([sys.executable, str(Path(__file__).with_name('finalize_evidence.py'))], check=True)
-for filename in ('qualification.log', 'qualification3.log', 'qualification4.log', 'suite.log', 'remaining.log'):
+for filename in ('qualification.log', 'qualification3.log', 'qualification4.log', 'qualification5.log',
+                 'suite.log', 'remaining.log'):
     path = base / filename
     print('\n###', path, flush=True)
     if path.exists():

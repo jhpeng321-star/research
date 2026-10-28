@@ -23,6 +23,7 @@ VARIANTS = {
     'nine_N8_full': (8, 1, '.055', False),
     'nine_N8_gate': (8, 2, '.09', False, 4, '.018'),
     'nine_N8_gate24': (8, 2, '.088', False, 4, '.024'),
+    'nine_N8_gate28': (8, 2, '.084', False, 4, '.028'),
     'six_N2': (2, 8, '.20', True),
     'six_N4': (4, 2, '.10', True),
     'six_N8': (8, 1, '.05', True),

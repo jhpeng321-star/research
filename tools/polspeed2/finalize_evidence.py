@@ -141,7 +141,8 @@ source_files += list((RT/'tools/polspeed2').glob('*.py'))
 (export/'SOURCE_HASHES.json').write_text(json.dumps({str(p.relative_to(RT)):
     hashlib.sha256(p.read_bytes()).hexdigest() for p in source_files}, indent=2))
 (export/'REPORT.json').write_text(json.dumps(report, indent=2))
-for filename in ('qualification.log', 'qualification2.log', 'qualification3.log', 'qualification4.log'):
+for filename in ('qualification.log', 'qualification2.log', 'qualification3.log', 'qualification4.log',
+                 'qualification5.log', 'STOP_RECEIPT.json', 'HOST_MEMORY.json'):
     source = BASE/filename
     if source.exists():
         shutil.copyfile(source, export/filename)
