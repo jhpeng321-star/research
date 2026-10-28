@@ -52,6 +52,14 @@ def _saved_tensor_spill(trainer):
             persistent[(tensor.device, storage.data_ptr())] = storage
     copies = {}
     pin = trainer.device.type == 'cuda'
+    # S-POLSPEED ``WMS_SPEED_ASYNC_SPILL``: enqueue the device->pinned-host copy on the
+    # current stream instead of blocking the host once per saved tensor. Same bytes: the
+    # caching host allocator records the copy's stream event before a pinned block is
+    # reused, the source block cannot be reused by later kernels before the stream-ordered
+    # copy has read it, and the host buffer is only ever read back by a stream-ordered
+    # host->device copy in ``unpack``. Default OFF.
+    from wms.core import speed_flags
+    async_copy = pin and speed_flags.enabled("async_spill")
     stats = {'copied_bytes': 0, 'copies': 0, 'reuses': 0}
     trainer.memory_spill_stats = stats
 
@@ -70,7 +78,7 @@ def _saved_tensor_spill(trainer):
         # preserving a transposed weight stride can select a different GEMM.
         cpu = torch.empty(tensor.size(), dtype=tensor.dtype, layout=tensor.layout,
                           device='cpu', pin_memory=pin)
-        cpu.copy_(tensor.detach())
+        cpu.copy_(tensor.detach(), non_blocking=async_copy)
         stats['copies'] += 1
         stats['copied_bytes'] += tensor.numel() * tensor.element_size()
         if key is not None:

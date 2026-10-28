@@ -36,6 +36,8 @@ rollout/backward, including checkpoint recomputation. Evidence: ``SPEED2.md``.
 * ``graph_cvar`` (``WMS_SPEED_GRAPH_CVAR``, S-POLSPEED): the detached 32-step CVaR bisection
   of the team reward replays one captured CUDA graph per input geometry instead of ~360
   eager launches. Same kernels, shapes and inputs: bit-identical. CPU/grad paths unchanged.
+* ``async_spill`` (``WMS_SPEED_ASYNC_SPILL``, S-POLSPEED): LONGMEM saved-tensor spill copies
+  device->pinned host with ``non_blocking=True`` (no host sync per saved tensor). Same bytes.
 """
 from __future__ import annotations
 
@@ -51,6 +53,7 @@ FLAGS = {
     "fast_merge_lane": "WMS_SPEED_FAST_MERGE_LANE",
     "grad_audit_every": "WMS_SPEED_GRAD_AUDIT_EVERY",
     "graph_cvar": "WMS_SPEED_GRAPH_CVAR",
+    "async_spill": "WMS_SPEED_ASYNC_SPILL",
 }
 
 
