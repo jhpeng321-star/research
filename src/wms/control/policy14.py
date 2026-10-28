@@ -142,12 +142,17 @@ class SmokeSampler:
 
 
 def independent_score(trainer, batch, seed=965149, *, native_reference=False):
-    """Rescore exact accrued road+source J, WITHOUT critic/entropy/constraints."""
+    """Rescore accrued road+source J; optional matched-horizon CCT-1 paired score.
+
+    No critic/entropy/constraints. With long credit, J_dense and J_long retain
+    physical costs and J is the explicitly labelled dense + gated-long score.
+    """
     from .counterfactual import build_variants
     from .dreamer import _restore_rng, _rng_state
+    from .gated300 import scoring, gate, SIGMA
     rng = _rng_state(trainer.device)
     try:
-        with torch.no_grad():
+        with torch.no_grad(), scoring(trainer) as matched_horizon:
             torch.manual_seed(seed)
             batch = trainer._entry_slots(batch, torch.Generator().manual_seed(seed))
             variants = build_variants(batch.state, trainer.counterfactual,
@@ -176,6 +181,24 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                 if set(variants.base_row) != set(range(n)):
                     raise ValueError("native acceptance requires a paired native row for every start")
                 result["native_J"] = float(torch.stack([j[variants.base_row[i]] for i in range(n)]).mean())
+            if matched_horizon:
+                result['score_horizon_s'] = imagined['imagination_horizon_s']
+                if 'gated300_long_difference' in imagined:
+                    long = imagined['gated300_long_difference'][:, 0, :n]
+                    gated, on, agreement, median = gate(long, SIGMA[imagined['gated300_horizon_s']])
+                    gain = float(torch.quantile(gated, .1, dim=0).mean())
+                    weighted = trainer.gated300['config']['w_long'] * gain
+                    long_j = imagined['gated300_long_J']
+                    result.update(J_dense=result['J'], long_horizon_s=imagined['gated300_horizon_s'],
+                        J_long=float(long_j[:n].mean()),
+                        native_J_long=float(torch.stack([long_j[variants.base_row[i]] for i in range(n)]).mean()),
+                        long_gated_gain=gain, long_rows_on_share=float(on.float().mean()),
+                        long_mean_abs_dJ=float(median.abs().mean()),
+                        long_sign_agreement=float(agreement.float().mean()),
+                        score_rule='J_dense - w_long * q10(gated paired improvement at H_long)')
+                    result['J'] -= weighted
+                    if result['native_relative_gain'] is not None:
+                        result['native_relative_gain'] += weighted
             return result
     finally:
         _restore_rng(rng, trainer.device)

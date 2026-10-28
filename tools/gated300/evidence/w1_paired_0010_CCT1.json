@@ -1,0 +1,180 @@
+{
+  "schema": "gated300_cct1/1",
+  "wm_sha256": "8a04b7d7e9551c6ddf81e2330c0d9a2bf10c8adb2d34dca3e8253a36d64d6d4e",
+  "panel": "calibration",
+  "policy_authorized": false,
+  "H_C": 0,
+  "horizons": {
+    "90": {
+      "sigma": 25.38,
+      "threshold": 50.76,
+      "n_pairs": 108,
+      "n_worlds": 36,
+      "n_confident": 42,
+      "n_confident_sign": 42,
+      "n_wrong": 12,
+      "coverage": 0.3888888888888889,
+      "sign_agreement": 0.7142857142857143,
+      "sign_ci95": [
+        0.4871621621621621,
+        0.9117647058823529
+      ],
+      "wrong_mean_abs_real": 28.435328165690105,
+      "verdict": "FAIL",
+      "all_pairs_sign_agreement": 0.696969696969697
+    },
+    "120": {
+      "sigma": 41.22,
+      "threshold": 82.44,
+      "n_pairs": 108,
+      "n_worlds": 36,
+      "n_confident": 48,
+      "n_confident_sign": 48,
+      "n_wrong": 14,
+      "coverage": 0.4444444444444444,
+      "sign_agreement": 0.7083333333333334,
+      "sign_ci95": [
+        0.5,
+        0.884642857142857
+      ],
+      "wrong_mean_abs_real": 24.657771519252233,
+      "verdict": "FAIL",
+      "all_pairs_sign_agreement": 0.6213592233009708
+    },
+    "180": {
+      "sigma": 42.11,
+      "threshold": 84.22,
+      "n_pairs": 108,
+      "n_worlds": 36,
+      "n_confident": 54,
+      "n_confident_sign": 54,
+      "n_wrong": 12,
+      "coverage": 0.5,
+      "sign_agreement": 0.7777777777777778,
+      "sign_ci95": [
+        0.5882033248081842,
+        0.9268403547671841
+      ],
+      "wrong_mean_abs_real": 97.09212239583333,
+      "verdict": "FAIL",
+      "all_pairs_sign_agreement": 0.7222222222222222
+    },
+    "300": {
+      "sigma": 43.91,
+      "threshold": 87.82,
+      "n_pairs": 108,
+      "n_worlds": 36,
+      "n_confident": 55,
+      "n_confident_sign": 55,
+      "n_wrong": 10,
+      "coverage": 0.5092592592592593,
+      "sign_agreement": 0.8181818181818182,
+      "sign_ci95": [
+        0.6666666666666666,
+        0.9375240384615383
+      ],
+      "wrong_mean_abs_real": 362.25755004882814,
+      "verdict": "FAIL",
+      "all_pairs_sign_agreement": 0.7407407407407407
+    }
+  },
+  "bootstrap": {
+    "unit": "world",
+    "draws": 2000,
+    "seed": 0,
+    "ci": 0.95
+  },
+  "zero_real_rule": "exclude from sign counts only; coverage uses all pairs",
+  "source_sha256": "44b8f9e3831033ab2a00023daebd95ee1fe1b2b7000fd399e574d942f43a4f29",
+  "entrant_control": true,
+  "deterministic_crn": null,
+  "samples": 1,
+  "wm_config_sha256": null,
+  "legacy_threshold": 0.868421052631579,
+  "legacy_horizons": {
+    "10": {
+      "sign_agreement": 0.20253164556962025,
+      "sign_ci95": [
+        0.12086919104991395,
+        0.28950428396572814
+      ],
+      "mean_signed_error": 0.1765882350780346,
+      "error_sd": 0.4475153738438394,
+      "mae": 0.30209177511709706,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "30": {
+      "sign_agreement": 0.53125,
+      "sign_ci95": [
+        0.3894590643274854,
+        0.6764780154486036
+      ],
+      "mean_signed_error": 0.8387059458979854,
+      "error_sd": 5.732970578244268,
+      "mae": 3.178276945043493,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "60": {
+      "sign_agreement": 0.5151515151515151,
+      "sign_ci95": [
+        0.3684210526315789,
+        0.6509433962264151
+      ],
+      "mean_signed_error": 6.858244154188368,
+      "error_sd": 29.820409667561524,
+      "mae": 20.073896478723597,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "90": {
+      "sign_agreement": 0.696969696969697,
+      "sign_ci95": [
+        0.5454051383399209,
+        0.8302234359483613
+      ],
+      "mean_signed_error": 26.786337817156756,
+      "error_sd": 82.31006398572879,
+      "mae": 59.14846392031069,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "120": {
+      "sign_agreement": 0.6213592233009708,
+      "sign_ci95": [
+        0.46296296296296297,
+        0.7604538690476188
+      ],
+      "mean_signed_error": 41.7380564654315,
+      "error_sd": 130.64451467940077,
+      "mae": 99.0246897096987,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "180": {
+      "sign_agreement": 0.7222222222222222,
+      "sign_ci95": [
+        0.5925925925925926,
+        0.8425925925925926
+      ],
+      "mean_signed_error": 41.7683878298159,
+      "error_sd": 203.8187605153394,
+      "mae": 149.3506307248716,
+      "n_pairs": 108,
+      "n_groups": 36
+    },
+    "300": {
+      "sign_agreement": 0.7407407407407407,
+      "sign_ci95": [
+        0.6201388888888889,
+        0.8518518518518519
+      ],
+      "mean_signed_error": 63.88099260683413,
+      "error_sd": 363.96720443129556,
+      "mae": 213.9515732659234,
+      "n_pairs": 108,
+      "n_groups": 36
+    }
+  }
+}
