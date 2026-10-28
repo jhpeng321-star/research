@@ -88,3 +88,10 @@ no C4A_RUNNING claim, no automatic retry, no SUMO/new charge, no signals/push.
 5. Poll `... launch_ops.py status` at>=60s. Only after>=10 finite updates and
    successful gate/gradient/residual/credit-gap/memory evidence use
    `... launch_ops.py verify` to record C4A_RUNNING and preserve peer status.
+
+Final transport receipt: one transient successful status at08:25:58UTC again
+confirmed source1f5cc6aa/worker362856 exited/0updates. Subsequent staging failed;
+commitd2ca68fb reduces staging to one fresh non-multiplexed source-only SSH
+transaction, but both bounded attempts still closed. The streamed VJP remains
+unverified and its activation is not confirmed. No background retry is armed.
+Final compact snapshot: `tools/c4prep/evidence/LAUNCH_BLOCKED_FINAL.json`.
