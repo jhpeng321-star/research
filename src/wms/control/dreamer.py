@@ -1809,6 +1809,8 @@ class DreamerTrainer:
             **({"gradient_components": audit_components} if audit_components is not None else {}))
         if getattr(self, 'looplong_real_credit', None) is not None:
             direct, receipt = self.looplong_real_credit.loss(self, scale)
+            from .looplong_real import direct_gradient_norm
+            extra['direct_real_credit_grad_norm'] = direct_gradient_norm(direct, self.actor_parameters)
             objective = objective + direct
             extra.update(receipt)
         # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set

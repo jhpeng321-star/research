@@ -10,6 +10,18 @@ qualification; no policy restart or WM adoption performed.
 | F1 full resume replaces TOML trainer/reward/lr | New-phase full resume keeps resolved TOML dataclasses and optimizer rates, preserves Adam moments/counters, logs every difference, rejects every unapproved difference before loading weights. | `--new-phase --resume C1.pt`, repeat `--resume-allow SECTION.KEY`; default OFF | `tests/unit/test_auditfix_resume.py` (2 pass) |
 | F2 zero-weight individual rows | Equivalent six-row config preset: individual=coop=0, group=18.8, cover_group_members=false; registered all/team terms and weight meanings unchanged. | Select `configs/c4_policy14_c4prep_sixrow.toml`; opt-in | `tests/unit/test_auditfix_sixrow.py`: fixed-seed loss/full actor gradient parity, mean and q10/K8 |
 | F8 different WM cannot use inherited WM3 authority | New measured-authority schema binds exact WM/config, ACCEPT, registered threshold, measured gate and same-source pairs300 CCT-1; builder writes NEW authority/BOUNDARY files. Actual loaded config hash checked too. | Supply new `--horizon-gate` and `--looplong-boundary` files; opt-in | `tests/unit/test_auditfix_authority.py` (8 pass): accepts new WM, rejects stale/mutated bindings, failed short gate, REJECT, wrong panel/threshold; dense cap remains90s |
+| F6 direct real-pair gradient unreported | Every update with direct credit logs `direct_real_credit_grad_norm`, the L2 gradient of the actual scaled direct term over trainable actor/group parameters, before clipping. | Diagnostic whenever direct credit is active; no objective/coefficient change | `tests/unit/test_auditfix_direct_grad.py`: analytic secant norm, untouched .grad/RNG, identical two-step Adam result |
+
+## Direct real-pair gradient telemetry
+
+`direct_real_credit_grad_norm` is separate from the imagination-only diagnostic
+gradient shares and is emitted on **every** active direct-credit update, independent
+of `grad_audit_every`. Its units include the current `return_scale` and any
+coefficient already applied by the direct-loss provider. Compare against the
+existing pre-clip `actor_grad_norm` with care: component vectors can cancel, so
+norm ratios are not additive gradient shares. `autograd.grad(retain_graph=True)`
+does not accumulate `.grad` or make another optimizer step. Direct credit's
+ON/OFF/coefficient decision remains with S-EXPLOIT/S-LOOPPATCH.
 
 ## New-WM measured authority: exact commands
 
