@@ -22,10 +22,11 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def write(path, doc):
+def write(path, doc, *, replace=False):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('x') as f:
+    mode = 'w' if replace or path.name.endswith('PREFLIGHT.json') else 'x'
+    with path.open(mode) as f:
         json.dump(doc, f, indent=1, allow_nan=False)
         f.write('\n')
 
