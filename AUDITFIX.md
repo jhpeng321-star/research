@@ -15,6 +15,30 @@ qualification; no policy restart or WM adoption performed.
 | F11 set-but-inactive config | Startup stderr warnings identify configured keys bypassed by the current CLI/native/long-credit/focus mode; summary stores `inactive_config`. | Always diagnostic; mode-aware | `tests/unit/test_auditfix_warnings.py`: all audited sections and active-mode negative check |
 | F12 resumed C1 can win final selection silently | Final summary and native-gate receipt contain `phase_selection` with `resumed_baseline_selected`, `selected_new_phase_update`, selected update/source and phase-update count; baseline selection emits stderr warning. | Always diagnostic; registered selector unchanged | `tests/unit/test_auditfix_selection.py`: C1 wins explicitly, new-update case unflagged |
 | F9 q10 docstring says per-start | Corrected to per-(suffix time,start); metrics are t0-only. No computation change. | Documentation only | Original `tests/audit/test_polaudit_t.py::test_q10_selects_the_bad_tail_and_only_those_futures_get_gradient` |
+| F13 CAV report command/intent/age zero | Documented residual actor's explicit zero-command/intent and default zero-age convention; checked deployment `PolicyExecutor` feeds the same values even with nonzero command memory. | Documentation/qualification only | `tests/unit/test_auditfix_observations.py`: real bridge/executor report parity and ordinary builder explicit-value support |
+
+## CAV reports: what deployment actually feeds
+
+In native-residual **WM imagination**, `bridge.make_cav_controller` zeroes report
+`cmd_accel_mps2` and `lane_intent` even if recorded/external command memory exists.
+It calls `build_observations` without `report_age_s`, so reports have age0.
+These are absent prospective-command/intent features, not claims that native
+actions or packet latency are physically zero.
+
+The current deployment **actor interface**, `policy.PolicyExecutor.__call__`,
+also overwrites memory-augmented command/intent with zeros for residual policies
+before calling the same builder without report ages. Thus all three actor
+features match imagination. Its `dwell_age` parameter is **lane dwell age**, not
+CAV report age. Ordinary absolute policies/MAPPO may use previous command/intent
+memory; the builder supports explicit nonzero report ages, but the residual
+training/deployment callers do not supply them. The CPU regression uses the
+actual bridge and executor and nonzero memory to verify this convention.
+
+`deploy.py` may augment observer state with memory for other controllers; the
+residual executor still suppresses those two actor features. This documents the
+actor-input contract only. It does not qualify the legacy deploy/collector's
+residual execution path; the independent deployment audit and S-EXECPARITY own
+those execution/observer repairs.
 
 ## q10: registered intent and actual reduction
 

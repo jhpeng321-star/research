@@ -76,6 +76,9 @@ def build_observations(state: Mapping[str, Tensor], report_age_s: Optional[Tenso
     ages. Only presence, CAV identity and geometry affect discrete membership.
     Optional ``state["cmd_accel_mps2"]`` / ``state["lane_intent"]`` [B,K] (the reporting CAV's
     previous command, see :class:`CommandMemory`) fill the last two report features (else 0).
+    Native-residual imagination (bridge) and deployment (PolicyExecutor) explicitly
+    suppress both fields to zero. Both call this builder without report_age_s,
+    so actor reports have age zero; this is not a simulated latency model.
     """
     present = state["present"].bool()
     lane = state["lane"].long()
