@@ -870,6 +870,11 @@ class DreamerTrainer:
         (default: from the config seed and the update count).  Off: nothing changes.
         """
         cfg = _memory_config or self._imagination_config(batch)
+        from . import gated300
+        gated_rollout = gated300.requested_rollout(self)
+        dense_steps = self._imagination_config(batch).horizon if gated_rollout else cfg.horizon
+        if _memory_config is None:
+            cfg = gated300.rollout_config(self, cfg)
         memory = (cfg.imagination_microbatch or cfg.imagination_checkpoint_segment
                   or cfg.imagination_offload_futures or cfg.imagination_offload_saved_tensors)
         if memory and torch.is_grad_enabled() and not _memory_replay:
@@ -1286,7 +1291,7 @@ class DreamerTrainer:
             # must provide analytic actor credit through the imagined WM trajectory.
             # Long no-grad target construction consumes raw paired rewards only.
             # Avoid hundreds of irrelevant target-critic calls/bootstraps there.
-            if difference_only or getattr(self, 'long_credit_requested', False):
+            if difference_only or getattr(self, 'long_credit_requested', False) or gated_rollout:
                 if difference_only and torch.is_grad_enabled():
                     raise ValueError("difference_only imagination must run under no_grad")
                 values = rewards.new_zeros((len(states), rewards.shape[-1]))
@@ -1298,7 +1303,7 @@ class DreamerTrainer:
                     from .counterfactual import KIND_BASE
                     values = torch.where((variants.row_kind != KIND_BASE)[None, :], values, 0.)
             member_values.append(values)
-            if getattr(self, 'long_credit_requested', False):
+            if getattr(self, 'long_credit_requested', False) or gated_rollout:
                 # Accrued finite-horizon WM credit only. Neither TD mixing nor
                 # terminal values may carry a real 300s target into imagination.
                 returns.append(torch.flip(torch.flip(rewards[e], (0,)).cumsum(0), (0,)))
@@ -1324,7 +1329,7 @@ class DreamerTrainer:
             cav = cav[..., :n_base, :]
             zone_base = zone_masks[..., :n_base, :]
             zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
-        return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+        result = {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
                 **({'antiexploit_commands': {name: torch.stack([m[name] for m in member_anchor])
                                              for name in ('deviation', 'mask')}} if member_anchor else {}),
                 "imagination_horizon_s": cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
@@ -1342,7 +1347,8 @@ class DreamerTrainer:
                 "uncertainty_weight": cfg.uncertainty_weight,
                 **({"exploration_rho": explore[2]} if explore is not None else {}),
                 "components": {key: torch.stack([c[key] for c in member_components])
-                               for key in member_components[0]}}
+                                for key in member_components[0]}}
+        return gated300.prefix(self, result, dense_steps) if gated_rollout else result
 
     def update_lagrange(self, mean_cost, budget=None):
         """Dual ascent ``lambda += dual_lr * (mean_cost - budget)`` (budget default ``ttc_budget``;
@@ -1457,15 +1463,25 @@ class DreamerTrainer:
             difference, anchor, anti_metrics = actor_terms(self, imagined, difference, coefficients, scale,
                                                          raw_difference=paired_difference)
         loss = -(difference.mean((0, 1)) * coefficients).sum() / scale
+        dense_loss = loss
+        gated_metrics = {}
+        if 'gated300_long_difference' in imagined:
+            from .gated300 import actor_term
+            long_term, gated_metrics = actor_term(self, imagined, coefficients, difference, scale)
+            loss = loss + long_term
+            if gradient_components is not None:
+                gradient_components['gated300_long'] = long_term
         if self.config.pessimistic_credit or self.config.native_anchor:
             loss = loss + anchor
             if gradient_components is not None:
                 gradient_components['native_anchor'] = anchor
-                gradient_components['paired_risk_credit'] = loss - anchor
+                gradient_components['paired_risk_credit'] = (
+                    dense_loss if 'gated300_long_difference' in imagined else loss - anchor)
         extra = {}
         if variants is not None and variants.base_row:
             extra = DreamerTrainer._cooperation_metrics(imagined, variants, weights)
         extra.update(anti_metrics)
+        extra.update(gated_metrics)
         lanes = imagined.get("lanes")
         if lanes is not None:
             advantage = difference.detach() / scale
@@ -1529,7 +1545,7 @@ class DreamerTrainer:
         return norms
 
     def _critic_step(self, imagined, starts, returns, real_batch, scale, n_base, n_rows, extra):
-        if getattr(self, 'long_credit_requested', False):
+        if getattr(self, 'long_credit_requested', False) or 'gated300_long_difference' in imagined:
             # Preserve checkpoint/optimizer compatibility, but keep the critic
             # OFF: no baseline has qualified within-world ranking evidence.
             extra.update(critic_bootstrap=False, critic_baseline=False)
@@ -1748,6 +1764,13 @@ class DreamerTrainer:
                 and horizon_steps > self.config.horizon):
             # S-COOPW: a staged horizon gets its stage's entrant-slot cap (COOPW.md).
             pad_max = max(pad_max, self.horizon_curriculum.pad_cap(horizon_s))
+        from .gated300 import requested_rollout, rollout_config
+        if requested_rollout(self):
+            long_cfg = rollout_config(self, self._imagination_config(batch))
+            long_s = long_cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+            # Reserve entrants once for the continuation, not separately per horizon.
+            pad_max = max(pad_max, math.ceil(pad_max * long_s / max(horizon_s, 1.)))
+            horizon_s = long_s
         if self.config.entry_queue_state:
             return with_entry_slots(batch, horizon_s, pad_max, generator, queue_state=True)
         return with_entry_slots(batch, horizon_s, pad_max, generator)
@@ -1773,8 +1796,9 @@ class DreamerTrainer:
 
     def update(self):
         started = time.perf_counter()
+        from .gated300 import active as gated300_active
         real_batch = (self._real_return_batch() if self.paircrit is None and
-                      not getattr(self, 'long_credit_requested', False) else None)
+                      not getattr(self, 'long_credit_requested', False) and not gated300_active(self) else None)
         self.policy.train()
         self.group_encoder.train()
         self.critic.train()
@@ -2050,6 +2074,8 @@ class DreamerTrainer:
                 'exploration': self.exploration.as_dict() if self.exploration else None}
         if hasattr(self, 'breakdown_receipt'):
             payload['breakdown'] = self.breakdown_receipt
+        if hasattr(self, 'gated300'):
+            payload['gated300'] = self.gated300
         lane_switches = getattr(self.controller_factory, "ramp_merge", {})
         if lane_switches.get("native_lane_change", False):
             payload["wm_controller_kwargs"] = {"symmetric_exec_cap": True, "mask_forced_merge": True,
@@ -2185,4 +2211,6 @@ class DreamerTrainer:
             else:
                 self.start_states.load_state_dict(payload["sampler"])
         self._pending_validation_state = payload.get("validation_sampler")
+        from .gated300 import checkpoint_restore
+        checkpoint_restore(self, payload)
         _restore_rng(payload["rng"], self.device)

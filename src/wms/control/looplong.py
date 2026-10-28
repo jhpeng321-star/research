@@ -162,6 +162,12 @@ def _finish(trainer, flags, raw, doc):
             raise ValueError('registered correlated exploration is not active at this boundary')
         trainer.looplong_logging = True
     trainer.looplong_boundary = doc
+    # Independent CCT-1 section survives auto_horizon's legacy 90s override.
+    # Rebinding also makes an accepted-WM swap consume THAT WM's artifact.
+    section = raw.get('long_credit', getattr(trainer, 'gated300', {}).get('config', {}))
+    if section:
+        from .gated300 import install
+        install(trainer, section, [doc['wm']['sha256']])
 
 
 def maybe_swap(trainer, path, current, raw, output, load_members):

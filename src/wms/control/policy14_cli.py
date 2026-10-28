@@ -130,8 +130,17 @@ def score_native_panel(trainer, val, panel, device):
     from .nativeinit import panel_gate
     scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device),
                                 native_reference=True) for s in panel["starts"]]
-    return panel_gate([s["J"] for s in scores], [s["native_J"] for s in scores],
-                      update=trainer.update_count)
+    result = panel_gate([s["J"] for s in scores], [s["native_J"] for s in scores],
+                        update=trainer.update_count)
+    if scores and 'score_horizon_s' in scores[0]:
+        result['matched_horizon_scores'] = scores
+        horizons = [s['score_horizon_s'] for s in scores]
+        result['panel_horizons_s'] = horizons
+        result['panel_horizon_s'] = horizons[0] if len(set(horizons)) == 1 else None
+        long_horizons = [s.get('long_horizon_s') for s in scores]
+        if any(h is not None for h in long_horizons):
+            result['panel_long_horizons_s'] = long_horizons
+    return result
 
 
 def check_train_seeds(sampler):
@@ -348,6 +357,8 @@ def main(argv=None):
                                   real_return_provider=provider,
                                   **coopw)
         trainer.marginal_lane_weight = float(switches["sampled_marginal_lane_weight"])
+        # Separate section: historical C1 [trainer] restoration cannot erase it.
+        trainer._gated300_explicit = 'long_credit' in raw and not recovery
         from .paircrit import PairCriticConfig, BreakdownConfig, install
         pair_cfg = PairCriticConfig(**raw.get('paircrit', {}))
         risk_cfg = BreakdownConfig(**raw.get('breakdown', {}))
@@ -414,6 +425,11 @@ def main(argv=None):
             # Fresh boundary calibration wins over a prior checkpoint's frozen head.
             trainer.group_encoder.risk.load_state_dict(trainer.breakdown_receipt['head'])
             trainer.critic.risk.load_state_dict(trainer.breakdown_receipt['head'])
+        from .gated300 import install as install_gated300, active as gated300_active
+        long_section = raw.get('long_credit', getattr(trainer, 'gated300', {}).get('config', {}))
+        if long_section:
+            summary['long_credit'] = install_gated300(
+                trainer, long_section, [r['checkpoint_sha256'] for r in receipts])
         warm_updates = (int(switches["critic_warmup_updates"]) if args.critic_warmup_updates is None
                         else int(args.critic_warmup_updates))
         if warm_updates < 0:
@@ -421,6 +437,9 @@ def main(argv=None):
         if args.looplong_boundary and prepared['flags'].get('long_credit'):
             trainer.long_credit_requested = True
             warmup = {'updates': 0, 'reason': 'looplong critic OFF; direct real-pair share 1.0'}
+        elif gated300_active(trainer):
+            trainer.long_credit_requested = True
+            warmup = {'updates': 0, 'reason': 'CCT-1 long credit is critic-free'}
         else:
             warmup = (recovery['prior']['critic_warmup'] if recovery else
                       trainer.paircrit.warmup(trainer, pair_cfg.warmup_updates) if pair_cfg.enabled
@@ -458,6 +477,18 @@ def main(argv=None):
                 "per_module_lr": trainer.config.actor_lr,
                 "trainable_parameters": sum(p.numel() for p in trainer.actor_parameters),
                 "migration": getattr(trainer, "native_training_migration", None)}
+        # Opt-in scores must resolve the SAME looplong curriculum before the first
+        # frozen-panel baseline (otherwise the phase gate compares 10s with 90s).
+        early_long_config = bool(long_section.get('score_training_horizon') and args.looplong_boundary)
+        if early_long_config:
+            from .looplong import configure
+            if [r['checkpoint_sha256'] for r in receipts] != [prepared['wm']['sha256']]:
+                raise ValueError('looplong loaded WM mismatch')
+            if recovery:
+                from .policy14_recovery import restore_looplong
+                summary['looplong_recovery'] = restore_looplong(trainer, prepared, recovery, output)
+            else:
+                configure(trainer, prepared, raw, output)
         # Independent development starts and paired draws, scored without a critic tail.
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
@@ -501,7 +532,9 @@ def main(argv=None):
             if [r['checkpoint_sha256'] for r in receipts] != [long_boundary['wm']['sha256']]:
                 raise ValueError('looplong loaded WM mismatch')
             raw['_looplong_physics'] = receipts[0]['physics']
-            if recovery:
+            if early_long_config:
+                pass
+            elif recovery:
                 from .policy14_recovery import restore_looplong
                 summary['looplong_recovery'] = restore_looplong(trainer, long_boundary, recovery, output)
             else:
@@ -661,7 +694,7 @@ def main(argv=None):
             summary["recommended_updates_per_cycle"] = chosen - native_start_update
             receipt.update(phase_start_update=native_start_update,
                            selected_phase_updates=chosen-native_start_update,
-                           panel_horizon_s=trainer.config.horizon)
+                           panel_horizon_s=selected.get('panel_horizon_s', trainer.config.horizon))
             (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
         if trainer.paircrit is not None:
             summary['paircrit_monitor'] = trainer.paircrit.diagnostics(trainer)
