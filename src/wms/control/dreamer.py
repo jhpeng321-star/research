@@ -1410,13 +1410,15 @@ class DreamerTrainer:
         has_base = base != torch.arange(n_rows, device=returns.device)
         # R_r - B_r for rows whose start has a base row (B constant w.r.t. the actor), else R_r.
         difference = returns - torch.where(has_base, returns[..., base].detach(), torch.zeros_like(returns))
+        paired_difference = difference
         if getattr(self, 'long_credit', None) is not None:
             from .long_credit import pessimistic_difference
             difference = pessimistic_difference(self, imagined, difference, base, has_base, coefficients)
         anti_metrics, anchor = {}, returns.new_zeros(())
         if self.config.pessimistic_credit or self.config.native_anchor:
             from .antiexploit import actor_terms
-            difference, anchor, anti_metrics = actor_terms(self, imagined, difference, coefficients, scale)
+            difference, anchor, anti_metrics = actor_terms(self, imagined, difference, coefficients, scale,
+                                                         raw_difference=paired_difference)
         loss = -(difference.mean((0, 1)) * coefficients).sum() / scale
         if self.config.pessimistic_credit or self.config.native_anchor:
             loss = loss + anchor
@@ -2022,6 +2024,11 @@ class DreamerTrainer:
         training_request = {name: getattr(self.config, name) for name in
                             ("native_residual_train_group", "native_residual_train_trunk")
                             if getattr(self.config, name)}
+        anti_request = {}
+        if self.config.pessimistic_credit or self.config.native_anchor:
+            anti_request = {name: getattr(self.config, name) for name in
+                ('pessimistic_credit', 'native_anchor', 'native_anchor_calibration',
+                 'future_samples', 'uncertainty_weight')}
         if any(memory_request.values()):
             memory_request["credit_profile_every"] = self.config.credit_profile_every
         else:
@@ -2067,6 +2074,8 @@ class DreamerTrainer:
             self.config = replace(self.config, **memory_request)
         if training_request:
             self.config = replace(self.config, **training_request)
+        if anti_request:
+            self.config = replace(self.config, **anti_request)
         if getattr(self.policy, "residual_on_native", False):
             self.policy.configure_native_training(group=self.config.native_residual_train_group,
                                                   trunk=self.config.native_residual_train_trunk)
