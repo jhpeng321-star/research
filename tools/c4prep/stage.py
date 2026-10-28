@@ -7,6 +7,8 @@ import re
 import subprocess
 import sys
 import tarfile
+import base64
+import shlex
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/longint'))
@@ -31,6 +33,15 @@ def main():
     blobs = subprocess.check_output(['git', 'cat-file', '--batch'], cwd=ROOT,
         input=''.join(f'HEAD:{name}\n' for name in names).encode())
     stream = io.BytesIO(blobs)
+    base = '/root/autodl-tmp/c4/restart20261026/runtime_longint'
+    code = f'import pathlib;print((pathlib.Path({base!r})/"SOURCE.json").read_text())'
+    encoded = base64.b64encode(code.encode()).decode()
+    command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
+                          f'import base64;exec(base64.b64decode({encoded!r}))'])
+    source = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+                             'gpuA', command], capture_output=True, check=True, timeout=25)
+    existing = json.loads(source.stdout)
+    transferred = 0
     with tarfile.open(fileobj=data, mode='w:gz') as archive:
         for name in names:
             header = stream.readline().split()
@@ -38,6 +49,9 @@ def main():
             blob = stream.read(int(header[2]))
             assert stream.read(1) == b'\n'
             manifest[name] = hashlib.sha256(blob).hexdigest()
+            if existing.get(name) == manifest[name]:
+                continue
+            transferred += 1
             info = tarfile.TarInfo(name)
             info.size = len(blob)
             archive.addfile(info, io.BytesIO(blob))
@@ -48,6 +62,7 @@ def main():
     runtime = f'/root/autodl-tmp/c4/restart20261026/runtime_c4prep_{commit[:12]}'
     remote(f'''import pathlib,sys,tarfile,io,json,hashlib
 r=pathlib.Path({runtime!r}); assert r.parent.is_dir()
+base=pathlib.Path({base!r})
 raw=sys.stdin.buffer.read({len(data.getvalue())})
 assert hashlib.sha256(raw).hexdigest()=={hashlib.sha256(data.getvalue()).hexdigest()!r}
 if r.exists():
@@ -62,7 +77,15 @@ else:
    assert item.isfile() and not name.is_absolute() and '..' not in name.parts
    target=r/item.name; target.parent.mkdir(parents=True,exist_ok=True)
    with target.open('xb') as out: out.write(archive.extractfile(item).read())
-print(json.dumps({{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)}}}))
+ manifest=json.loads((r/'SOURCE.json').read_text())['files']
+ for name,digest in manifest.items():
+  target=r/name
+  if not target.exists():
+   blob=(base/name).read_bytes(); assert hashlib.sha256(blob).hexdigest()==digest
+   target.parent.mkdir(parents=True,exist_ok=True)
+   with target.open('xb') as out: out.write(blob)
+  assert hashlib.sha256(target.read_bytes()).hexdigest()==digest
+print(json.dumps({{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)},'transferred':{transferred}}}))
 ''', data.getvalue(), timeout=60)
 
 

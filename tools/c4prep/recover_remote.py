@@ -19,6 +19,7 @@ for rel in ('AUTONOMY_STATUS.json', 'arm/loop/longint/c3wmft/check_repair1/STATU
     if p.is_file():
         print(rel, p.read_text())
 for rel in ('arm/loop/c4prep', 'runtime_c4prep', 'arm/loop/checks/c03.a2',
+            'runtime_c4prep_f8876452b752', 'runtime_c4prep_a066568a4bdd',
             'arm/loop/longint/c3wmft/check_repair1'):
     p = safe(R / rel)
     print('directory', rel, [q.name for q in p.iterdir() if not BAD.search(q.name)] if p.is_dir() else None)
