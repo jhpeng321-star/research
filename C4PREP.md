@@ -1,5 +1,18 @@
 # S-C4PREP-1 — build verified; empirical preparation BLOCKED (2026-10-28)
 
+## S-C4PREP2 prospective amendment (MAIN14:25)
+
+Authoritative append-only registration now includes the S-C4PREP-1 amendment
+for backlog integration/cycle3 re-export, genuine WM3 K8 cycle0–3 fitting,
+world-disjoint validation, and candidate A ONLY. Candidate A resumes c01.a3,
+HOLD OFF, entrant ON while the final entrant verdict is pending, empirical
+anti-exploitation ON, nonzero guarded real coop per AMENDMENT2. Only two real
+scratch GPU updates are authorized. Candidate B is separately owned.
+Initial receipt: entrant committed tip875cc443 still pending; WM3 ACCEPT exists
+but registered horizon output remains absent and shared boundary remains WM2.
+READY_C4A requires measured compatible horizon, fitted/validated artifacts and
+successful real finite/memory dry-run evidence. No full phase is authorized.
+
 ## Registered scope (retained from initial receipt)
 
 Prepare parallel gpuA cycle-4 candidates A (cycle1 c01.a3, SHA64f70af4)
