@@ -61,6 +61,8 @@ def test_cli_scratch_bound_and_normal_path(tmp_path, monkeypatch, bounded, expec
                            critic_warmup_updates=0)
     for section in ('paircrit', 'longcritic', 'real_share', 'breakdown'):
         raw[section] = {'enabled': False}
+    for section in ('uncertainty', 'exploration', 'horizon'):
+        raw.pop(section, None)
     raw['trainer']['real_return_mix'] = 0.
     raw['trainer']['imagine_entries'] = False
     saved = []
@@ -76,7 +78,8 @@ def test_cli_scratch_bound_and_normal_path(tmp_path, monkeypatch, bounded, expec
         def save_checkpoint(self, path):
             saved.append(str(path))
     monkeypatch.setattr(cli, '_read_config', lambda path: raw)
-    monkeypatch.setattr(cli, 'load_members', lambda *args: ([SimpleNamespace()], [{}]))
+    monkeypatch.setattr(cli, 'load_members', lambda *args: ([SimpleNamespace()],
+                        [{'checkpoint_sha256': '0' * 64, 'config_sha256': '0' * 64}]))
     monkeypatch.setattr(cli, 'Policy14Trainer', Trainer)
     monkeypatch.setattr(cli, 'NPZRealReturnProvider', lambda *args, **kwargs:
                         SimpleNamespace(path='fake.npz', provenance={'source_kind': 'test'}, indices=np.arange(1)))

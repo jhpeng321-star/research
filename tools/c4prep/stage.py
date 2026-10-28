@@ -85,6 +85,11 @@ else:
    target.parent.mkdir(parents=True,exist_ok=True)
    with target.open('xb') as out: out.write(blob)
   assert hashlib.sha256(target.read_bytes()).hexdigest()==digest
+out=r.parent/'arm/loop/c4prep'; assert out.parent.is_dir();out.mkdir(exist_ok=True)
+receipt={{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)},'transferred':{transferred}}}
+path=out/('STAGING_'+{commit[:12]!r}+'.json')
+if not path.exists(): path.write_text(json.dumps(receipt,indent=1))
+tmp=out/'CURRENT_RUNTIME.tmp'; tmp.write_text(json.dumps(receipt,indent=1));tmp.replace(out/'CURRENT_RUNTIME.json')
 print(json.dumps({{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)},'transferred':{transferred}}}))
 ''', data.getvalue(), timeout=60)
 
