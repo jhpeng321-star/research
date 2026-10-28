@@ -203,14 +203,26 @@ class DreamerConfig:
     pessimistic_credit: bool = False
     native_anchor: bool = False
     native_anchor_calibration: Optional[str] = None
+    # S-EXPLOIT: epistemic protection and diagnostics; independent default-OFF.
+    exploit_ensemble_pessimism: bool = False
+    exploit_monitor: bool = False
+    exploit_stop_on_conflict: bool = False
+    exploit_head_rmse_mps2: float = 0.0
+    exploit_disable_direct_credit: bool = False
     # S-C4PREP AMENDMENT2: preserve a registered, nonzero individual baseline
     # when real-credit multipliers would otherwise erase cooperation entirely.
     real_credit_individual_floor: bool = False
 
     def __post_init__(self):
-        for name in ('pessimistic_credit', 'native_anchor', 'real_credit_individual_floor'):
+        for name in ('pessimistic_credit', 'native_anchor', 'real_credit_individual_floor',
+                     'exploit_ensemble_pessimism', 'exploit_monitor', 'exploit_stop_on_conflict',
+                     'exploit_disable_direct_credit'):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f'{name} must be a boolean')
+        if (self.exploit_ensemble_pessimism or self.exploit_monitor) and not self.pessimistic_credit:
+            raise ValueError('exploit safeguards require pessimistic_credit=true')
+        if self.exploit_stop_on_conflict and not self.exploit_ensemble_pessimism:
+            raise ValueError('exploit_stop_on_conflict requires ensemble pessimism')
         if self.pessimistic_credit or self.native_anchor:
             if self.future_samples != 8:
                 raise ValueError('anti-exploit requires future_samples=8')
@@ -1838,11 +1850,14 @@ class DreamerTrainer:
             imagined, scale, weights,
             **({"gradient_components": audit_components} if audit_components is not None else {}))
         if getattr(self, 'looplong_real_credit', None) is not None:
-            direct, receipt = self.looplong_real_credit.loss(self, scale)
-            from .looplong_real import direct_gradient_norm
-            extra['direct_real_credit_grad_norm'] = direct_gradient_norm(direct, self.actor_parameters)
-            objective = objective + direct
-            extra.update(receipt)
+            if self.config.exploit_disable_direct_credit:
+                extra.update(exploit_direct_credit_disabled=True, direct_real_credit_grad_norm=0.0)
+            else:
+                direct, receipt = self.looplong_real_credit.loss(self, scale)
+                from .looplong_real import direct_gradient_norm
+                extra['direct_real_credit_grad_norm'] = direct_gradient_norm(direct, self.actor_parameters)
+                objective = objective + direct
+                extra.update(receipt)
         # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
         # (V7POL: floored at alpha_min).
         entropy_weight = self._temperature(self.log_alpha, self.config.entropy_weight)
@@ -2110,6 +2125,11 @@ class DreamerTrainer:
             anti_request = {name: getattr(self.config, name) for name in
                 ('pessimistic_credit', 'native_anchor', 'native_anchor_calibration',
                  'future_samples', 'uncertainty_weight', 'entrant_control', 'deterministic_crn')}
+            # These runtime requests must survive historical C1 full resume.
+            from .exploit import FIELDS
+            anti_request.update({name: getattr(self.config, name) for name in FIELDS})
+        elif self.config.exploit_disable_direct_credit:
+            anti_request['exploit_disable_direct_credit'] = True
         if any(memory_request.values()):
             memory_request["credit_profile_every"] = self.config.credit_profile_every
         else:
