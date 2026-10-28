@@ -1,0 +1,18 @@
+{"t": 1793198576.4108255, "event": "full_forward_start", "update": 180, "allocated_bytes": 16394240, "reserved_bytes": 385875968}
+{"t": 1793198841.7705271, "event": "full_forward_done", "update": 180, "tape_draws": 1548, "allocated_bytes": 388233728, "reserved_bytes": 3133145088}
+{"t": 1793198841.9398441, "event": "future_start", "update": 180, "start": 0, "future": 0, "allocated_bytes": 418123264, "reserved_bytes": 3133145088}
+{"t": 1793198881.872888, "event": "future_forward_done", "update": 180, "start": 0, "future": 0, "allocated_bytes": 994240512, "reserved_bytes": 3147825152}
+{"t": 1793198916.0187466, "event": "future_vjp_done", "update": 180, "start": 0, "future": 0, "allocated_bytes": 942757376, "reserved_bytes": 12431917056}
+{"t": 1793198916.2913418, "event": "future_start", "update": 180, "start": 0, "future": 1, "allocated_bytes": 762647040, "reserved_bytes": 12431917056}
+{"t": 1793198952.7749078, "event": "future_forward_done", "update": 180, "start": 0, "future": 1, "allocated_bytes": 1338764288, "reserved_bytes": 12431917056}
+{"t": 1793198987.239411, "event": "future_vjp_done", "update": 180, "start": 0, "future": 1, "allocated_bytes": 943131136, "reserved_bytes": 12467568640}
+{"t": 1793198987.5858316, "event": "future_start", "update": 180, "start": 0, "future": 2, "allocated_bytes": 762647552, "reserved_bytes": 12467568640}
+{"t": 1793199018.9135504, "event": "future_forward_done", "update": 180, "start": 0, "future": 2, "allocated_bytes": 1338764800, "reserved_bytes": 12467568640}
+{"t": 1793199054.210557, "event": "future_vjp_done", "update": 180, "start": 0, "future": 2, "allocated_bytes": 943131648, "reserved_bytes": 12467568640}
+{"t": 1793199054.5146382, "event": "future_start", "update": 180, "start": 0, "future": 3, "allocated_bytes": 762647552, "reserved_bytes": 12467568640}
+{"t": 1793199086.312118, "event": "future_forward_done", "update": 180, "start": 0, "future": 3, "allocated_bytes": 1338764800, "reserved_bytes": 12467568640}
+{"t": 1793199121.4006393, "event": "future_vjp_done", "update": 180, "start": 0, "future": 3, "allocated_bytes": 943131648, "reserved_bytes": 12469665792}
+{"t": 1793199121.6992824, "event": "future_start", "update": 180, "start": 0, "future": 4, "allocated_bytes": 762647552, "reserved_bytes": 12469665792}
+{"t": 1793199153.740414, "event": "future_forward_done", "update": 180, "start": 0, "future": 4, "allocated_bytes": 1338764800, "reserved_bytes": 12469665792}
+{"t": 1793199189.4641662, "event": "future_vjp_done", "update": 180, "start": 0, "future": 4, "allocated_bytes": 943131648, "reserved_bytes": 12480151552}
+{"t": 1793199189.766458, "event": "future_start", "update": 180, "start": 0, "future": 5, "allocated_bytes": 762647552, "reserved_bytes": 12480151552}
