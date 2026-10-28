@@ -156,13 +156,18 @@ def main(argv=None):
     parser.add_argument("--compact", action="store_true", help="print status/summary path only")
     parser.add_argument("--resume", default=None,
                         help="LOOP14: continue a c4_dreamer/3 trainer checkpoint (policy, critic, "
-                             "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
+                              "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
+    parser.add_argument('--new-phase', action='store_true',
+                        help='full resume with TOML trainer/reward/rates; refuse unapproved differences')
+    parser.add_argument('--resume-allow', action='append', default=[], metavar='SECTION.KEY',
+                        help='approve one exact new-phase checkpoint/TOML difference (repeatable)')
     parser.add_argument("--critic-warmup-updates", type=int, default=None,
                         help="override policy14.critic_warmup_updates (e.g. on fresh current-policy returns)")
     parser.add_argument("--real-credit", default=None,
                         help="S-SUMOCREDIT: TRAIN REAL_CREDIT.json (wms.control.real_credit14 fit); scales the "
                              "individual/group/coop/team counterfactual weights by the measured real-vs-imagined "
-                             "credit multipliers in [0, 1] (absent = off, unchanged)")
+                              "credit multipliers in [0, 1]; errors if guards make every knot unchanged "
+                              "(absent = off, unchanged)")
     parser.add_argument("--gate-panel", default=None,
                         help="S-GPUB-LOOP: frozen gate-panel JSON; the update-10 signal gate is scored on it "
                              "(paired per start) instead of the single rescore start")
@@ -192,6 +197,8 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if (args.new_phase and not args.resume) or (args.resume_allow and not args.new_phase):
+            raise ValueError('--new-phase requires --resume; --resume-allow requires --new-phase')
         if args.looplong_boundary:
             from .looplong import read_boundary
             prepared = read_boundary(args.looplong_boundary)
@@ -200,6 +207,8 @@ def main(argv=None):
                     raw['counterfactual'][name] = [0.] * len(raw['counterfactual'][name])
         from .policy14_recovery import load_recovery
         recovery = load_recovery(raw, args)
+        if args.new_phase and recovery:
+            raise ValueError('new-phase migration cannot be combined with operational recovery')
         if args.native_init:
             from .nativeinit import PANEL_SHA256
             if args.smoke or not args.gate_panel:
@@ -213,6 +222,10 @@ def main(argv=None):
             raw["horizon"] = {**raw["horizon"], "gate_file": str(checked_path(args.horizon_gate))}
         switches = raw["policy14"]
         cfg = DreamerConfig(**raw["trainer"])
+        from .auditfix_diagnostics import warn_unused_settings
+        summary['inactive_config'] = warn_unused_settings(
+            raw, native_init=args.native_init,
+            boundary=prepared if args.looplong_boundary else None)
         if not switches["authoritative_j"] and cfg.real_return_mix:
             raise ValueError("real negative-J returns require authoritative_j")
         if cfg.gamma != 1.0 or cfg.imagination_grad_decay != 1.0:
@@ -331,7 +344,8 @@ def main(argv=None):
                 coopw[section] = getattr(coopw_module, cls)(**raw[section])
                 if section == "horizon":
                     summary["horizon_gate"] = coopw[section].bind(
-                        [r["checkpoint_sha256"] for r in receipts])
+                        [r["checkpoint_sha256"] for r in receipts],
+                        wm_config_sha256s=[r['config_sha256'] for r in receipts])
                 if coopw[section].enabled:
                     summary[section] = coopw[section].as_dict()
         # 13E's second tier is explicitly opt-in for policy CAVs, independently
@@ -395,11 +409,15 @@ def main(argv=None):
             # Same ensemble size, possibly a refreshed (accepted) WM: dreamer.load_checkpoint's
             # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
             os.environ["WMS_LOOP_REFRESH"] = "0" if recovery else "1"
-            trainer.load_checkpoint(resume)
+            trainer.load_checkpoint(resume, new_phase=args.new_phase, resume_allow=args.resume_allow)
+            summary['resume_config'] = trainer.resume_config_receipt
             if recovery and trainer.update_count != recovery['saved_update']:
                 raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
-                       "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+                        "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+        if args.real_credit:
+            from .auditfix_diagnostics import require_real_credit_effect
+            summary['real_credit']['guarded_knots'] = require_real_credit_effect(trainer)
         if defer_install:
             # Explicit boundary migration: restore the accepted actor first,
             # then reset only the newly introduced value/feature optimizers.
@@ -500,6 +518,9 @@ def main(argv=None):
             long_boundary = read_boundary(args.looplong_boundary)
             if [r['checkpoint_sha256'] for r in receipts] != [long_boundary['wm']['sha256']]:
                 raise ValueError('looplong loaded WM mismatch')
+            if [r['config_sha256'] for r in receipts] != [
+                    hashlib.sha256(checked_path(long_boundary['wm']['config']).read_bytes()).hexdigest()]:
+                raise ValueError('looplong loaded WM config mismatch')
             raw['_looplong_physics'] = receipts[0]['physics']
             if recovery:
                 from .policy14_recovery import restore_looplong
@@ -523,6 +544,10 @@ def main(argv=None):
             # MAIN's exact cell mixture supersedes the inherited rejection tilt.
             trainer._tilt_sampler = None
         summary['effective_config_before_updates'] = asdict(trainer.config)
+        summary['effective_reward_before_updates'] = asdict(trainer.reward_weights)
+        if args.new_phase and (trainer.config != cfg or
+                              trainer.reward_weights != RewardWeights(**raw['reward'])):
+            raise ValueError('new-phase effective trainer/reward differs from resolved TOML')
         for _ in range(args.prep_dry_run_updates or args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
@@ -625,6 +650,9 @@ def main(argv=None):
             chosen = select_update(native_curve)
             if chosen is None:
                 raise RuntimeError("no trained checkpoint is <= native on all16 starts; keep native")
+            from .auditfix_diagnostics import report_phase_selection
+            summary['phase_selection'] = report_phase_selection(
+                chosen, native_start_update, resumed=resumed is not None)
             shutil.copyfile(output / "policy_native_best.pt", output / "policy_latest.pt")
             selected = next(r for r in native_curve if r["update"] == chosen)
             receipt = {**selected, "checkpoint_sha256": hashlib.sha256(
@@ -660,8 +688,9 @@ def main(argv=None):
                     raise RuntimeError('breakdown native-relative veto; keep native')
             summary["recommended_updates_per_cycle"] = chosen - native_start_update
             receipt.update(phase_start_update=native_start_update,
-                           selected_phase_updates=chosen-native_start_update,
-                           panel_horizon_s=trainer.config.horizon)
+                            selected_phase_updates=chosen-native_start_update,
+                            panel_horizon_s=trainer.config.horizon,
+                            phase_selection=summary['phase_selection'])
             (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
         if trainer.paircrit is not None:
             summary['paircrit_monitor'] = trainer.paircrit.diagnostics(trainer)

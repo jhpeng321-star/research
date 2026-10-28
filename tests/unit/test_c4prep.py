@@ -154,6 +154,7 @@ def test_cli_scratch_bound_and_normal_path(tmp_path, monkeypatch, bounded, expec
     class Trainer:
         def __init__(self, *args, config, **kwargs):
             self.config = config
+            self.reward_weights = kwargs['reward_weights']
             self.update_count = 0
             self.paircrit = self.longcritic = None
         def update(self):

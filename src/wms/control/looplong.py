@@ -25,6 +25,15 @@ def read_boundary(path, *, swap=False):
         raise ValueError('looplong WM/gate binding changed')
     gate = json.loads(checked_path(doc['gate_file']).read_text())
     inherited = gate.get('schema') == 'c4launch_inherited_horizon/1'
+    if gate.get('schema') == 'c4launch_measured_horizon/1':
+        from .auditfix_authority import measured_gate
+        wrapper = gate
+        gate = measured_gate(wrapper, [wm['sha256']])
+        if doc['horizon_s'] != 90 or doc.get('imagination_horizon_s', 90) != 90:
+            raise ValueError('measured dense authority must stay exactly90s')
+        if (doc.get('cct1_sha256') != wrapper['cct1_sha256'] or
+                doc.get('cct1_file') != wrapper['cct1_file']):
+            raise ValueError('boundary CCT-1 binding mismatch')
     if inherited:
         from .c4launch_authority import inherited_gate
         wrapper = gate

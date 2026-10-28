@@ -8,10 +8,25 @@ for the deterministic native-residual actor. Zero contrasts supply no gradient.
 from __future__ import annotations
 
 import json
+import math
 
 import torch
 
 from .start_states import checked_path
+
+
+def direct_gradient_norm(loss, parameters):
+    """L2 norm of this update's scaled direct term, before global clipping.
+
+    autograd.grad does not write .grad; retain the graph for the single optimizer
+    backward. Diagnostic only: no parameter, optimizer or RNG mutation.
+    """
+    parameters = [p for p in parameters if p.requires_grad]
+    if not parameters or not loss.requires_grad:
+        return 0.
+    grads = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+    return math.sqrt(sum(float(g.detach().double().square().sum())
+                         for g in grads if g is not None))
 
 
 def secant_loss(action, native, contrast, benefit, mask, scale):
