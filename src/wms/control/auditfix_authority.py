@@ -13,10 +13,36 @@ from .start_states import checked_path
 
 SCHEMA = 'c4launch_measured_horizon/1'
 LEGACY_THRESHOLD = 0.868421052631579  # unchanged registered 13E-b2 lower bound
+CCT_SIGMA = {90: 25.38, 120: 41.22, 180: 42.11, 300: 43.91}
 
 
 def digest(path):
     return hashlib.sha256(checked_path(path).read_bytes()).hexdigest()
+
+
+def verify_cct_receipt(cct):
+    """Validate reported CCT-1 metrics, not fit/recompute or activate long credit."""
+    if cct.get('bootstrap') != dict(unit='world', draws=2000, seed=0, ci=.95):
+        raise ValueError('CCT-1 requires the registered world-bootstrap report')
+    contiguous, prefix = 0, True
+    for horizon, sigma in CCT_SIGMA.items():
+        row = cct.get('horizons', {}).get(str(horizon), {})
+        sign, coverage, wrong = (row.get(k) for k in
+                                 ('sign_agreement', 'coverage', 'wrong_mean_abs_real'))
+        if (row.get('sigma') != sigma or row.get('threshold') != 2 * sigma or
+                (sign is not None and (type(sign) not in (int, float) or
+                                       not math.isfinite(sign) or not 0 <= sign <= 1)) or
+                any(type(x) not in (int, float) or not math.isfinite(x)
+                    for x in (coverage, wrong)) or not 0 <= coverage <= 1 or wrong < 0):
+            raise ValueError('incomplete/invalid CCT-1 registered metrics')
+        passed = sign is not None and sign >= .80 and coverage >= .25 and wrong <= 2 * sigma
+        if row.get('verdict') != ('PASS' if passed else 'FAIL'):
+            raise ValueError('CCT-1 reported verdict disagrees with registered metrics')
+        prefix = prefix and passed
+        if prefix:
+            contiguous = horizon
+    if cct.get('H_C') != contiguous:
+        raise ValueError('CCT-1 H_C disagrees with contiguous passing prefix')
 
 
 def measured_gate(doc, wm_sha256s):
@@ -61,6 +87,7 @@ def measured_gate(doc, wm_sha256s):
             raise ValueError('CCT-1 / measured gate inference mismatch')
     if gate.get('entrant_control') is not doc.get('entrant_control'):
         raise ValueError('measured gate entrant setting mismatch')
+    verify_cct_receipt(cct)
     # H_C is reported, not interpreted as dense horizon authority here.
     return gate
 

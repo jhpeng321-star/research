@@ -9,7 +9,7 @@ qualification; no policy restart or WM adoption performed.
 | --- | --- | --- | --- |
 | F1 full resume replaces TOML trainer/reward/lr | New-phase full resume keeps resolved TOML dataclasses and optimizer rates, preserves Adam moments/counters, logs every difference, rejects every unapproved difference before loading weights. | `--new-phase --resume C1.pt`, repeat `--resume-allow SECTION.KEY`; default OFF | `tests/unit/test_auditfix_resume.py` (2 pass) |
 | F2 zero-weight individual rows | Equivalent six-row config preset: individual=coop=0, group=18.8, cover_group_members=false; registered all/team terms and weight meanings unchanged. | Select `configs/c4_policy14_c4prep_sixrow.toml`; opt-in | `tests/unit/test_auditfix_sixrow.py`: fixed-seed loss/full actor gradient parity, mean and q10/K8 |
-| F8 different WM cannot use inherited WM3 authority | New measured-authority schema binds exact WM/config, ACCEPT, registered threshold, measured gate and same-source pairs300 CCT-1; builder writes NEW authority/BOUNDARY files. Actual loaded config hash checked too. | Supply new `--horizon-gate` and `--looplong-boundary` files; opt-in | `tests/unit/test_auditfix_authority.py` (8 pass): accepts new WM, rejects stale/mutated bindings, failed short gate, REJECT, wrong panel/threshold; dense cap remains90s |
+| F8 different WM cannot use inherited WM3 authority | New measured-authority schema binds exact WM/config, ACCEPT, registered threshold, measured gate and same-source pairs300 CCT-1; builder writes NEW authority/BOUNDARY files. Actual loaded config hash checked too. | Supply new `--horizon-gate` and `--looplong-boundary` files; opt-in | `tests/unit/test_auditfix_authority.py` (11 pass): accepts new WM, rejects stale/mutated bindings, failed short gate, REJECT, wrong panel/threshold/incomplete CCT; even H_C=300 leaves dense cap90s |
 | F6 direct real-pair gradient unreported | Every update with direct credit logs `direct_real_credit_grad_norm`, the L2 gradient of the actual scaled direct term over trainable actor/group parameters, before clipping. | Diagnostic whenever direct credit is active; no objective/coefficient change | `tests/unit/test_auditfix_direct_grad.py`: analytic secant norm, untouched .grad/RNG, identical two-step Adam result |
 | F10 `--real-credit` silently no-op | Fail startup if supplied multipliers leave every configured weight knot unchanged after the existing guards, or counterfactuals are disabled; report guarded knots for useful files. | Explicit `--real-credit`; omit it for the audited unchanged-credit run | `tests/unit/test_auditfix_real_credit.py`: candidate-A no-op refusal and useful multiplier semantics |
 | F11 set-but-inactive config | Startup stderr warnings identify configured keys bypassed by the current CLI/native/long-credit/focus mode; summary stores `inactive_config`. | Always diagnostic; mode-aware | `tests/unit/test_auditfix_warnings.py`: all audited sections and active-mode negative check |
@@ -138,6 +138,9 @@ curriculum inputs are reused; this builder changes no horizon or sampler.
 All nested artifact hashes are verified on every authority read. Acceptance and
 WM-config binding are checked on initial launch as well as swaps. Outputs use
 exclusive creation, so a previous boundary/authority is never overwritten.
+CCT-1 reported sigma/threshold/sign/coverage/missed-harm metrics, per-horizon
+verdicts, contiguous H_C and world-bootstrap metadata are checked against the
+registered definition; incomplete headers alone cannot serve as authority.
 
 ## Six-row preset
 
