@@ -649,6 +649,9 @@ def main(argv=None):
             chosen = select_update(native_curve)
             if chosen is None:
                 raise RuntimeError("no trained checkpoint is <= native on all16 starts; keep native")
+            from .auditfix_diagnostics import report_phase_selection
+            summary['phase_selection'] = report_phase_selection(
+                chosen, native_start_update, resumed=resumed is not None)
             shutil.copyfile(output / "policy_native_best.pt", output / "policy_latest.pt")
             selected = next(r for r in native_curve if r["update"] == chosen)
             receipt = {**selected, "checkpoint_sha256": hashlib.sha256(
@@ -684,8 +687,9 @@ def main(argv=None):
                     raise RuntimeError('breakdown native-relative veto; keep native')
             summary["recommended_updates_per_cycle"] = chosen - native_start_update
             receipt.update(phase_start_update=native_start_update,
-                           selected_phase_updates=chosen-native_start_update,
-                           panel_horizon_s=trainer.config.horizon)
+                            selected_phase_updates=chosen-native_start_update,
+                            panel_horizon_s=trainer.config.horizon,
+                            phase_selection=summary['phase_selection'])
             (output / "native_gate_result.json").write_text(json.dumps(receipt, indent=1), encoding="utf-8")
         if trainer.paircrit is not None:
             summary['paircrit_monitor'] = trainer.paircrit.diagnostics(trainer)

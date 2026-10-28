@@ -2,6 +2,19 @@
 import sys
 
 
+def report_phase_selection(chosen, phase_start, *, resumed):
+    """Keep the registered selector, but explicitly identify a retained resume baseline."""
+    baseline = resumed and chosen <= phase_start
+    row = dict(selected_update=chosen, phase_start_update=phase_start,
+               selected_phase_updates=chosen - phase_start,
+               resumed_baseline_selected=baseline, selected_new_phase_update=chosen > phase_start,
+               source='resumed_phase_start' if baseline else 'new_phase_update')
+    if baseline:
+        print(f'WARNING: selection retained the resumed baseline at update {chosen}; '
+              'no newly trained phase checkpoint was selected', file=sys.stderr, flush=True)
+    return row
+
+
 def warn_unused_settings(raw, *, native_init=False, boundary=None):
     """Report configured values bypassed by this CLI's actual mode, before setup."""
     rows = []

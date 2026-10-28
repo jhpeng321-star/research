@@ -13,6 +13,17 @@ qualification; no policy restart or WM adoption performed.
 | F6 direct real-pair gradient unreported | Every update with direct credit logs `direct_real_credit_grad_norm`, the L2 gradient of the actual scaled direct term over trainable actor/group parameters, before clipping. | Diagnostic whenever direct credit is active; no objective/coefficient change | `tests/unit/test_auditfix_direct_grad.py`: analytic secant norm, untouched .grad/RNG, identical two-step Adam result |
 | F10 `--real-credit` silently no-op | Fail startup if supplied multipliers leave every configured weight knot unchanged after the existing guards, or counterfactuals are disabled; report guarded knots for useful files. | Explicit `--real-credit`; omit it for the audited unchanged-credit run | `tests/unit/test_auditfix_real_credit.py`: candidate-A no-op refusal and useful multiplier semantics |
 | F11 set-but-inactive config | Startup stderr warnings identify configured keys bypassed by the current CLI/native/long-credit/focus mode; summary stores `inactive_config`. | Always diagnostic; mode-aware | `tests/unit/test_auditfix_warnings.py`: all audited sections and active-mode negative check |
+| F12 resumed C1 can win final selection silently | Final summary and native-gate receipt contain `phase_selection` with `resumed_baseline_selected`, `selected_new_phase_update`, selected update/source and phase-update count; baseline selection emits stderr warning. | Always diagnostic; registered selector unchanged | `tests/unit/test_auditfix_selection.py`: C1 wins explicitly, new-update case unflagged |
+
+## Final-selection baseline flag
+
+The registered earliest-minimum selector is preserved. If C1/update180 wins,
+`RUN_SUMMARY.json` and `native_gate_result.json` now explicitly say
+`phase_selection.resumed_baseline_selected=true`,
+`selected_new_phase_update=false`, `source=resumed_phase_start`, and zero
+`selected_phase_updates`. A stderr warning says that no newly trained phase
+checkpoint was selected. A completed optimizer phase is not thereby evidence of
+a newly selected candidate. Operational recovery uses the original phase start.
 
 ## Startup inactive-setting warnings
 
