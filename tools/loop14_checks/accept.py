@@ -174,9 +174,13 @@ def free_rollout(model, settings, record, n_steps, seed) -> dict:
     from wms.train.inputs import prepare_inputs
 
     batch = collate([record])
-    inp = prepare_inputs(batch, model, settings, torch.device("cpu"), n_steps)
-    torch.manual_seed(seed)
-    with torch.no_grad():
+    from wms.train.scoring_random import scoring_rng
+    with scoring_rng(seed, "cpu"):
+        inp = prepare_inputs(batch, model, settings, torch.device("cpu"), n_steps)
+    # Frozen checks historically omitted the prepared entry process. Keep that
+    # exact OFF contract; the explicit continuity arm must actually insert births.
+    entry_kwargs = {"entries": inp.entries} if settings.entrant_control else {}
+    with torch.no_grad(), scoring_rng(seed, "cpu"):
         roll = model.rollout(
             inp.initial, n_steps=inp.n_steps,
             cav_teacher=None if inp.teacher is None else inp.teacher[:, :inp.n_steps + 1],
@@ -184,7 +188,7 @@ def free_rollout(model, settings, record, n_steps, seed) -> dict:
             history=inp.hist, history_mask=inp.hist_mask, controller_id=inp.controller_id,
             action_timeline=inp.action_timeline, cav_controller=inp.cav_controller,
             driver_history=inp.observed_hist, driver_history_mask=inp.observed_hist_mask,
-            lane_seed=int(seed))
+            lane_seed=int(seed), **entry_kwargs)
     s0, v0 = inp.initial["s_m"][0].numpy(), inp.initial["v_mps"][0].numpy()
     lane0 = inp.initial["lane"][0].numpy() if "lane" in inp.initial else inp.states[0, 0, :, 1:4].argmax(-1).numpy()
     m0 = inp.present[0, 0].numpy()

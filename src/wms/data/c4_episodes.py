@@ -681,13 +681,15 @@ class C4WindowLoader:
                                        alive.shape).copy() & alive),
             "cav_teacher": teacher,
             "meta": {"source": "c4_episodes", "world": entry["world"], "arm": entry["arm"],
-                     "policy": entry.get("policy"), "episode": entry["episode"],
+                      "policy": entry.get("policy"), "episode": entry["episode"],
+                      "controller_branch": entry.get("branch"),
                      "tick": int(tick), "t0_s": float(ep.array("time_s")[tick]),
                      "pair_key": entry.get("pair_key")},
             "action_timeline": self.timeline(ep, tick, alive),
         }
         if self.entries_v2:
             record["entry_feat"] = entry_features(ep, {"tick": int(tick)})
+            record["entry_feat_control"] = entry_features(ep, {"tick": int(tick)}, observable_cav=True)
             if ep.has("entry_backlog") and ep.has("request_counter"):     # V9ENTRY
                 record["entry_queue"] = queue_features(ep, int(tick))
             record.update(road if road is not None else road_presence(ep, int(tick), h))

@@ -289,6 +289,8 @@ class DataConfig:
     #: same-step entrant (``wms.model.entries.EntranceQueue``).  Needs windows with
     #: ``entry_queue`` (C4 sources converted with V9ENTRY queue arrays).  Default off.
     entry_queue_state: bool = False
+    entrant_control: bool = False
+    entrant_controllers: Optional[dict] = None
     cav_drive: Literal["teacher", "closed_loop"] = "teacher"
     #: JUNCTIONFIX (JUNCTIONFIX_NOTES.md, :mod:`wms.data.junction_fix`): junction-transit rows of
     #: the pack windows.  "off" = legacy (lane clipped to 0, frozen s); "ffill" = evaluation

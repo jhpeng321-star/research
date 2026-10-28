@@ -40,6 +40,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
     if all("entry_feat" in r for r in records):
         out["entry_feat"] = torch.as_tensor(
             np.stack([r["entry_feat"] for r in records]), dtype=torch.float32)
+    if all("entry_feat_control" in r for r in records):
+        out["entry_feat_control"] = torch.as_tensor(
+            np.stack([r["entry_feat_control"] for r in records]), dtype=torch.float32)
     if all("entry_queue" in r for r in records):      # V9ENTRY
         out["entry_queue"] = torch.as_tensor(
             np.stack([r["entry_queue"] for r in records]), dtype=torch.float32)
@@ -74,6 +77,9 @@ def collate(records: list[dict]) -> dict[str, Tensor | list]:
         if all(r.get("meta", {}).get("pair_key") is not None for r in records):
             out["pair_key"] = [r["meta"]["pair_key"] for r in records]
     out["identities"] = [r.get("identities") for r in records]
+    if all(r.get("meta", {}).get("arm") is not None for r in records):
+        out["arm_names"] = [r["meta"]["arm"] for r in records]
+        out["controller_branches"] = [r["meta"].get("controller_branch") for r in records]
     if all(r.get('longwm_pair') for r in records):
         out['mix_source'] = [r['mix_source'] for r in records]
     if any("merge_pivot_prefix" in r for r in records):

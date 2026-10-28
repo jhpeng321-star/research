@@ -130,7 +130,7 @@ def configure(model,variant):
         model._encode_drivers=types.MethodType(default_params,model)
 
 
-def run(gi,draw,variant,steps=600,panel='e3'):
+def run(gi,draw,variant,steps=600,panel='e3',horizons=(120,300)):
     import sys
     sys.path[:0]=[str(HOME/'runtime'),str(HOME/'runtime/src')]
     import torch
@@ -215,7 +215,7 @@ def run(gi,draw,variant,steps=600,panel='e3'):
         sel=m0[b]&~cav0[b]
         delay={str(h):[delay_proxy(speed[b],mask[b],sel,h),
                        delay_proxy(real_v[b],real_mask[b],sel,h)]
-               for h in (120,300) if h<=steps*.5}
+               for h in horizons if h<=steps*.5}
         wm_bins=speed_bins(speed[b],mask[b],pos[b],lane[b],cav[b])
         entry=next(e for e in manifest['episodes'] if e['world']==out['world'] and e['arm']==arm)
         raw=data_root/entry['dir']

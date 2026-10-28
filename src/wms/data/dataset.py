@@ -746,6 +746,7 @@ class _PackWindowLoader:
             result["action_timeline"] = {**timeline, "command_known": known}
         if self.entries_v2:
             result["entry_feat"] = entry_features(corpus, item)
+            result["entry_feat_control"] = entry_features(corpus, item, observable_cav=True)
             result.update(road if road is not None
                           else road_presence(corpus, int(item["tick"]), horizon - 1))
         if self.history_s is not None:

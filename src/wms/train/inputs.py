@@ -72,7 +72,9 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
     from wms.model.entries import EntranceHistory, EntryConfig, TorchEntryProcessV2
 
     b_n, k_n = int(present.shape[0]), int(present.shape[2])
-    feat = batch["entry_feat"].to(device).cpu().numpy()
+    feat_key = "entry_feat_control" if settings.entrant_control else "entry_feat"
+    # Explicit caller-supplied features (e.g. deployment) may already contain CAV shares.
+    feat = batch.get(feat_key, batch["entry_feat"]).to(device).cpu().numpy()
     if feat.shape[1] != EntranceHistory.defaults().to_features().size:
         raise ValueError("entry_feat has an unexpected width")
     histories = [EntranceHistory.from_features(feat[b]) for b in range(b_n)]
@@ -91,7 +93,8 @@ def make_entry_process(settings: TrainSettings, batch: Mapping[str, Any], presen
         # The entrant CAV share is NOT applied in WM training: teacher-forced training rollouts
         # have no CAV controller, and an entrant CAV would run the native hold-speed motion
         # (WMS.step: ``hold_teacher``) - a stop-speed entrant would then block the entrance.
-        queues = [dataclasses.replace(EntranceQueue.from_vector(row), cav_share=None)
+        queues = [dataclasses.replace(EntranceQueue.from_vector(row), **(
+                      {} if settings.entrant_control else {"cav_share": None}))
                   for row in batch["entry_queue"].detach().cpu().numpy()]
         queue_kw = {"queues": queues}
         horizon_s = max(steps, 1) * dt_s
@@ -178,7 +181,7 @@ class UnrollInputs:
 
 
 def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings,
-                   device: torch.device, unroll_steps: int) -> UnrollInputs:
+                   device: torch.device, unroll_steps: int, *, entrant_controller=None) -> UnrollInputs:
     """Move ``batch`` to ``device`` and derive the t0 state, entries and CAV drive."""
     states = batch["states"].to(device).float()
     present = batch["present"].to(device).bool()
@@ -241,6 +244,26 @@ def prepare_inputs(batch: Mapping[str, Any], model: Any, settings: TrainSettings
             raise ValueError("closed_loop CAV driving requires structured WM-S")
         cav_controller = TimelineControllers(model, timeline)
         teacher = None
+    if settings.entrant_control and entries is not None:
+        if cav_controller is None:
+            raise ValueError("entrant_control requires closed-loop CAV driving")
+        from wms.control.entrant import EntrantControllers, inferred_timeline
+        if entrant_controller is None and (settings.entrant_controllers or
+                                           any(batch.get("controller_branches", []))):
+            from wms.control.entrant import feedback_from_specs
+            entrant_controller = feedback_from_specs(
+                settings.entrant_controllers or {}, batch.get("arm_names"), model, timeline,
+                states.shape[2] - entries.train_pad, device,
+                branches=batch.get("controller_branches"))
+        if entrant_controller is None:
+            original_slots = states.shape[2] - entries.train_pad
+            plan = inferred_timeline(timeline, original_slots)
+            entrant_timeline = dict(timeline)
+            entrant_timeline["controller"] = torch.cat((
+                timeline["controller"][..., :original_slots],
+                plan.expand(-1, -1, entries.train_pad)), -1)
+            entrant_controller = TimelineControllers(model, entrant_timeline)
+        cav_controller = EntrantControllers(cav_controller, entrant_controller)
     if getattr(model, "merge_decision", None) == "first_passage":
         # S-FIX9: WmSModel.step now honours a supplied cav_teacher on the first_passage
         # path (eval replay of the recorded arm).  Training never replayed the recorded

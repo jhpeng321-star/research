@@ -396,6 +396,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_core_sigma_fit": "loss.merge_core.sigma_fit",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
+    "entrant_control": "data.entrant_control",
+    "entrant_controllers": "data.entrant_controllers",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
     "replay_enabled": "data.replay.enabled",
     "replay_merge_oversample": "data.replay.merge_oversample",
@@ -550,6 +552,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_core_sigma_reg_weight", "merge_core_sigma_fit",
     # V9ENTRY
     "entry_queue_state",
+    "entrant_control",
+    "entrant_controllers",
     # V10HORIZON
     "replay_enabled", "replay_merge_oversample", "replay_cav_follower_oversample",
     "replay_brake_oversample",

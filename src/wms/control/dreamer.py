@@ -155,6 +155,8 @@ class DreamerConfig:
     # credit (EntryConfig.fresh_no_credit).  Needs start windows with ``entry_queue``
     # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
     entry_queue_state: bool = False
+    entrant_control: bool = False  # explicit continuity contract; ALL already controls births
+    deterministic_crn: bool = False  # pair merge streams for every actor, including MAPPO
     # V9NOYIELD (2026-10-18; default empty = bit-identical): PhysicsConfig field -> value
     # overrides applied to EVERY PhysicsConfig holder of each frozen WM member right after it is
     # loaded (same holder-walk as tools/wm_eval_common.py / coop_cl_noyield.py), so the imagined
@@ -239,7 +241,8 @@ class DreamerConfig:
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
                      "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
-                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions",
+                     "entry_queue_state", "entrant_control", "deterministic_crn",
+                     "entrance_zone_native", "policy_lane_actions",
                      "low_penetration_horizon_cap", "wm_safety_report_only"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
@@ -1034,7 +1037,7 @@ class DreamerTrainer:
                 controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
-            if getattr(self.policy, "residual_on_native", False):
+            if cfg.deterministic_crn or getattr(self.policy, "residual_on_native", False):
                 from .nativeinit import pair_merge_streams
                 pair_merge_streams(initial, index, n_base,
                                    (self.update_count if future_seed is None else future_seed) + sample_index)
@@ -1604,6 +1607,8 @@ class DreamerTrainer:
         return out
 
     def _entry_slots(self, batch, generator=None):
+        if self.config.entrant_control and batch.entry_feat_control is not None:
+            batch = replace(batch, entry_feat=batch.entry_feat_control)
         if not self.config.imagine_entries:
             return batch
         horizon_steps = self._imagination_config(batch).horizon

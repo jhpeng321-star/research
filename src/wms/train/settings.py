@@ -281,6 +281,8 @@ class TrainSettings:
     entry_pad_max: int = 256
     entry_insert_rule: str = "v2"  # ENTRYFIX/V6ENTRY: "v2" | "sumo_like" | "sumo_like_v2"
     entry_queue_state: bool = False  # V9ENTRY: recorded t0 backlog + demand-rate arrivals
+    entrant_control: bool = False  # S-ENTRANTFIX: observable CAV births keep their arm controller
+    entrant_controllers: Optional[dict] = None  # explicit arm -> frozen feedback interface
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
     controller_hygiene: str = "off"  # DATAHYG: data-side only (wms.data.controller_hygiene)
     # LANEFIX (2026-10-14, default OFF): model switches mirrored for validation; the
@@ -479,6 +481,7 @@ class TrainSettings:
     merge_core_sigma_fit: float = 0.0
 
     def __post_init__(self) -> None:
+        _require(isinstance(self.entrant_control, bool), "entrant_control must be boolean")
         _require(self.emergency_decel_mps2 is None or (
             not isinstance(self.emergency_decel_mps2, bool)
             and math.isfinite(float(self.emergency_decel_mps2))

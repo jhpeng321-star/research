@@ -45,6 +45,7 @@ class RolloutFlags:
     #: V9ENTRY (default off): entries v2 seeded with the recorded SUMO entrance backlog and demand
     #: (``wms.eval.entry_queue``; sumo_like_v2 insertion, HDV entrants).  Needs entries_v2.
     entry_queue_state: bool = False
+    entrant_control: bool = False
     #: WALLFIX (default off): insert wall members that enter after t0 as exogenous
     #: teacher-forced CAV slots at their recorded first appearance.  The recorded member
     #: paths must be present in ``state['wall_member_paths']`` (a rebuilt wall export).
@@ -167,7 +168,8 @@ class WmsPredictor:
                 raise PredictorError("physics.entry_learned requires entries_v2=True")
             if self.flags.entry_queue_state:
                 proc, n_pad, self.entry_queue_info = entry_process_queue(
-                    state, t0_s, horizon_s, seed, kin, tools, learned_entry=learned)
+                    state, t0_s, horizon_s, seed, kin, tools, learned_entry=learned,
+                    entrant_control=self.flags.entrant_control)
             elif self.flags.entries_v2:
                 proc, n_pad = entry_process_v2(state, t0_s, horizon_s, seed, kin, tools,
                                                learned_entry=learned)
@@ -240,6 +242,13 @@ class WmsPredictor:
                     1, n_pad, driver_history_mask.shape[2], dtype=torch.bool)), dim=1)
         lane_kwargs = ({"lane_seed": int(self.flags.lane_seed)}
                        if getattr(self.model, "_samples_lanes", False) else {})
+        entrant_callback = self.model.hold_teacher if entries_on else None
+        if self.flags.entrant_control and entries_on:
+            from wms.control.entrant import EntrantControllers
+            feedback = controllers.get("entrant_controller")
+            if not callable(feedback):
+                raise PredictorError("entrant_control requires the same-arm entrant_controller callback")
+            entrant_callback = EntrantControllers(self.model.hold_teacher, feedback)
         with torch.no_grad():
             lane_teacher = None
             if self.flags.diag_recorded_lanes:
@@ -250,7 +259,7 @@ class WmsPredictor:
             if teacher is None:
                 roll = self.model.rollout(
                     initial, n_steps=n_steps, k0=0,
-                    cav_controller=(self.model.hold_teacher
+                    cav_controller=(entrant_callback or self.model.hold_teacher
                                     if (bool(is_cav.any()) or entries_on) else None),
                     present_seq=present_seq, entries=proc,
                     driver_history=driver_history, driver_history_mask=driver_history_mask,
@@ -261,7 +270,7 @@ class WmsPredictor:
                 roll = self.model.rollout(
                     initial, n_steps=n_steps, k0=0, cav_teacher=teacher,
                     present_seq=present_seq, junction_seq=junction_seq,
-                    cav_controller=self.model.hold_teacher if entries_on else None,
+                    cav_controller=entrant_callback,
                     entries=proc, driver_history=driver_history,
                     driver_history_mask=driver_history_mask, controller_id=None,
                     action_timeline=action_timeline, projection=self.backend.projection,

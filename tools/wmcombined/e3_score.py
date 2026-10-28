@@ -66,7 +66,7 @@ def group_rows(source, group_index):
 
 
 def rollout_dj(model, settings, source, indexes, device, groups_per_batch=12,
-               steps=STEPS, horizons=HORIZONS):
+                steps=STEPS, horizons=HORIZONS, entrant_controller_factory=None, samples=1):
     """Batched coupled rollouts -> {pair_key: {'arm_names': [...], 'dj': {h: rows}}}.
 
     ``dj[h]`` rows follow ``[reference, *arms]``: ``[wm_delay, real_delay]`` per row.
@@ -76,6 +76,19 @@ def rollout_dj(model, settings, source, indexes, device, groups_per_batch=12,
     from wms.data.collate import collate
     from tools.wm_eval_common import delay_proxy
     from wms.train.inputs import prepare_inputs
+
+    if samples < 1:
+        raise ValueError('samples must be positive')
+    if samples > 1:
+        from dataclasses import replace
+        from wms.train.scoring_random import sample_seed
+        draws = [rollout_dj(model, replace(settings, seed=sample_seed(settings.seed, k)),
+                    source, indexes, device, groups_per_batch, steps, horizons,
+                    entrant_controller_factory, samples=1) for k in range(samples)]
+        return {key: {'arm_names': draws[0][key]['arm_names'],
+                      'dj': {h: np.asarray([d[key]['dj'][h] for d in draws]).mean(0).tolist()
+                             for h in draws[0][key]['dj']},
+                      'draw_dj': [d[key]['dj'] for d in draws]} for key in draws[0]}
 
     was_training = model.training
     model.eval()
@@ -91,13 +104,19 @@ def rollout_dj(model, settings, source, indexes, device, groups_per_batch=12,
                     gi, [ref] + [r for _, r in arms], base_row=base))
                 layout.append((key, base, [a for a, _ in arms]))
             batch = collate(records)
-            inp = prepare_inputs(batch, model, settings, device, steps)
+            from wms.train.scoring_random import scoring_rng, bind_merge_crn
+            feedback = (None if entrant_controller_factory is None else
+                        entrant_controller_factory(records, model, device))
+            with scoring_rng(settings.seed, device):
+                inp = prepare_inputs(batch, model, settings, device, steps,
+                                     entrant_controller=feedback)
+            bind_merge_crn(inp)
             pr = inp.paired_random
             assert pr is not None, 'coupled randomness off (config must set it)'
             kwargs = {}
             if getattr(model, '_samples_lanes', False):
                 kwargs['lane_uniform'] = pr.uniform('lane', range(steps))
-            with torch.no_grad():
+            with torch.no_grad(), scoring_rng(settings.seed, device):
                 roll = model.rollout(
                     inp.initial, n_steps=steps, k0=0,
                     cav_teacher=None if inp.teacher is None else inp.teacher[:, :steps + 1],
@@ -132,12 +151,12 @@ def rollout_dj(model, settings, source, indexes, device, groups_per_batch=12,
 
 
 def evaluate(model, settings, root, role, device, wm_sha=None, threshold=None,
-             indexes=None, steps=STEPS, horizons=HORIZONS):
+              indexes=None, steps=STEPS, horizons=HORIZONS, samples=1):
     source = build_source(root, role)
     indexes = list(range(len(source.groups))) if indexes is None else list(indexes)
     horizons = tuple(h for h in horizons if h <= steps*DT_S + 1e-9)
     rolled = rollout_dj(model, settings, source, indexes, device,
-                        steps=steps, horizons=horizons)
+                        steps=steps, horizons=horizons, samples=samples)
     rows = []
     for gi in indexes:
         key, _, arms = group_rows(source, gi)
@@ -151,6 +170,11 @@ def evaluate(model, settings, root, role, device, wm_sha=None, threshold=None,
                      'dJ': diff})
     doc = _summarize(rows, role, root, wm_sha, threshold)
     doc['source_receipt'] = source.receipt
+    doc['samples'] = samples
+    doc['seed'] = settings.seed
+    doc['entrant_control'] = settings.entrant_control
+    if samples > 1:
+        doc['sample_delays'] = {k: v['draw_dj'] for k, v in rolled.items()}
     return doc
 
 
@@ -260,9 +284,23 @@ def main(argv=None) -> int:
                                            'runtime/configs/coopw_horizon_gate_13E_b2.json')
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--out', required=True)
+    ap.add_argument('--samples', type=int, default=8)
+    ap.add_argument('--seed', type=int, default=140014)
+    ap.add_argument('--entrant-control', action='store_true', default=None)
+    ap.add_argument('--entrant-controllers', help='JSON arm -> hash-bound feedback specification')
+    ap.add_argument('--ramp-speed-adapt', choices=('on', 'off'))
     args = ap.parse_args(argv)
     import torch
     cfg, settings, model = load_for_scoring(args.wm_config, args.wm_ckpt)
+    from dataclasses import replace
+    updates = {'seed': args.seed}
+    if args.entrant_control is not None:
+        updates['entrant_control'] = args.entrant_control
+    if args.entrant_controllers:
+        updates['entrant_controllers'] = json.loads(Path(args.entrant_controllers).read_text())
+    settings = replace(settings, **updates)
+    if args.ramp_speed_adapt is not None:
+        model.ramp_speed_adapt_learnable = args.ramp_speed_adapt == 'on'
     device = torch.device(args.device)
     if device.type == 'cuda':
         torch.cuda.set_per_process_memory_fraction(.85)
@@ -273,7 +311,7 @@ def main(argv=None) -> int:
     if args.threshold:
         threshold = json.loads(Path(args.threshold).read_text())['threshold']
     doc = evaluate(model, settings, args.pairs, args.role, device,
-                   wm_sha=sha256(args.wm_ckpt), threshold=threshold)
+                   wm_sha=sha256(args.wm_ckpt), threshold=threshold, samples=args.samples)
     Path(args.out).write_text(json.dumps(doc, indent=1))
     slim = {k: v for k, v in doc.items() if k != 'rows'}
     print(json.dumps(slim, indent=1))
