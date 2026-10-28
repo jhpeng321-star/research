@@ -15,6 +15,9 @@ REL = Path('/root/autodl-tmp/c4/restart20261026')
 ARM = REL / 'arm'
 ROOT = REL / 'runtime_longint'
 OUT = ARM / 'loop/longint/c3wmft'
+RETRY = os.environ.get('C3WMFT_RETRY') == '1'
+if RETRY:
+    OUT = OUT / 'retry1'
 CONFIG = ARM / 'CONFIG_C3_WMFT.json'
 TASK = 'S-C3WMFT'
 WM2 = 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
@@ -116,6 +119,50 @@ def finite_numbers(value):
     return True
 
 
+def training_finite(row):
+    """Use the trainer's optimization contract, not possibly undefined diagnostics."""
+    loss = row.get('loss')
+    grad = row.get('grad_norm')
+    return (isinstance(loss, (int, float)) and math.isfinite(loss)
+            and row.get('finite') is not False
+            and (grad is None or isinstance(grad, (int, float)) and math.isfinite(grad)))
+
+
+def repair(markdown_sha):
+    loop = setup()
+    held = locks()
+    assert held and RETRY and not OUT.exists()
+    cfg = loop.load_config(CONFIG)
+    state = loop.load_state(cfg)
+    ph = state['cycles'][-1]['phases']['wm_ft']
+    assert ph['status'] == 'failed' and ph['attempt'] == 1
+    assert state['sim_s_charged'] == 264544 and state['accepted_wm']['sha256'] == WM2
+    for name in ('PID.json', 'CHILDREN.jsonl'):
+        for line in (OUT.parent / name).read_text().splitlines() if name.endswith('jsonl') else [(OUT.parent / name).read_text()]:
+            old = json.loads(line)
+            assert loop.fast_module().process_token(old['pid']) != str(old['start_ticks'])
+    rows = training_rows(ARM / 'loop/wm/c03/train_log.jsonl')
+    assert len(rows) == 2 and all(training_finite(row) for row in rows)
+    assert rows[1]['merge_pivot_on_diagnostic_nll'] == float('inf')
+    gpu_idle()
+    OUT.mkdir()
+    authority = {'id': TASK + '_MONITOR_REPAIR', 't': loop.now(),
+        'markdown_registration_sha256': markdown_sha, 'config_sha256': sha(CONFIG),
+        'script_sha256': sha(__file__), 'failed_attempt': ph,
+        'diagnosis': 'undefined diagnostic NLL falsely classified as nonfinite optimization',
+        'first_two_optimization_metrics_finite': True, 'retry': 1,
+        'base_sha256': WM2, 'new_sim_s': 0, 'after_check': 'WAIT_MAIN_C4'}
+    loop.write_atomic(OUT / 'AUTHORITY.json', authority)
+    reg = loop.read_json(cfg['registration'])
+    assert not any(a.get('id') == authority['id'] for a in reg['amendments'])
+    reg['amendments'].append(authority)
+    loop.write_atomic(Path(cfg['registration']), reg)
+    state['registration_sha256'] = sha(cfg['registration'])
+    loop.save_state(cfg, state)
+    event(loop, 'MONITOR_OPERATIONAL_FAILURE_CORRECTED', **authority)
+    print(json.dumps(authority))
+
+
 def training_rows(path):
     if not path.is_file():
         return []
@@ -155,10 +202,10 @@ def install(loop):
             while child.poll() is None:
                 assert loop.fast_module().process_token(child.pid) in (None, token)
                 rows = training_rows(target / 'train_log.jsonl')
-                good = all(finite_numbers(row) and isinstance(row.get('loss'), (int, float)) for row in rows)
+                good = all(training_finite(row) for row in rows)
                 if rows and not early:
                     receipt = {'t': loop.now(), 'pid': child.pid, 'rows': len(rows),
-                               'all_metrics_finite': good, 'first_rows': rows[:3]}
+                               'optimization_metrics_finite': good, 'first_rows': rows[:3]}
                     loop.write_atomic(OUT / (target.name + '_FIRST_FINITE.json'), receipt)
                     event(loop, 'FIRST_STEPS_FINITE', rows=len(rows), finite=good, pid=child.pid)
                     early = True
@@ -173,9 +220,11 @@ def install(loop):
             rows = training_rows(target / 'train_log.jsonl')
             loop.write_atomic(OUT / (target.name + '_TRAIN_VERIFIED.json'), {
                 'exit': child.returncode, 'rows': len(rows),
-                'all_metrics_finite': all(finite_numbers(row) for row in rows),
+                'optimization_metrics_finite': all(training_finite(row) for row in rows),
+                'nonfinite_diagnostics': [{k: str(v) for k, v in row.items()
+                    if isinstance(v, float) and not math.isfinite(v)} for row in rows],
                 'elapsed_s': time.monotonic() - started})
-            if not all(finite_numbers(row) for row in rows):
+            if not all(training_finite(row) for row in rows):
                 raise ValueError('nonfinite scientific training metrics; no retry')
             return child.returncode
 
@@ -221,8 +270,8 @@ def run():
     install(loop)
     try:
         status(loop, 'C3_WMFT_RUNNING')
-        code = loop.run_phase(cfg, 'wm_ft')
-        if code == 3:
+        code = loop.retry(cfg, 'wm_ft') if RETRY else loop.run_phase(cfg, 'wm_ft')
+        if code == 3 and not RETRY:
             failed = loop.load_state(cfg)['cycles'][-1]['phases']['wm_ft']
             loop.write_atomic(OUT / 'FAILED_FT_ATTEMPT1.json', failed)
             error = failed.get('error', '')
@@ -278,6 +327,8 @@ def launch():
 if __name__ == '__main__':
     if sys.argv[1] == 'prepare':
         prepare(sys.argv[2])
+    elif sys.argv[1] == 'repair':
+        repair(sys.argv[2])
     elif sys.argv[1] == 'launch':
         launch()
     elif sys.argv[1] == 'run':

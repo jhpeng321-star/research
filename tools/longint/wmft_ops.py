@@ -12,7 +12,7 @@ SCRIPT = RUNTIME + '/tools/longint/wmft_c3.py'
 REGISTRATION = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 
 
-def stage():
+def stage(repair=False):
     data = (ROOT / 'tools/longint/wmft_c3.py').read_bytes().replace(b'\r\n', b'\n')
     # Verify the production scientific code/recipe; never replace it for this task.
     names = ['scripts/c4/loop14.py', 'scripts/c4/loop14_long.py',
@@ -26,7 +26,12 @@ for name,digest in {expected!r}.items():
  p=r/name; assert hashlib.sha256(p.read_bytes()).hexdigest()==digest, name
 gate=hashlib.sha256((r/'tools/coopw/horizon_gate.py').read_bytes()).hexdigest()
 assert gate.startswith('e9aac75f'), gate
-p=pathlib.Path({SCRIPT!r}); assert p.parent.is_dir() and not p.exists()
+p=pathlib.Path({SCRIPT!r}); assert p.parent.is_dir()
+if {repair!r}:
+ old=p.read_bytes(); digest=hashlib.sha256(old).hexdigest()
+ assert digest=='60e5221a8f16ed63ac412ae9232227a62d8aca60577201cda33d7c8d9cc249b0'
+ backup=p.with_name(p.name+'.'+digest+'.before'); assert not backup.exists(); backup.write_bytes(old)
+else: assert not p.exists()
 data=sys.stdin.buffer.read({len(data)}); assert hashlib.sha256(data).hexdigest()=={hashlib.sha256(data).hexdigest()!r}
 p.write_bytes(data)
 print(json.dumps({{'staged':str(p),'sha256':hashlib.sha256(data).hexdigest(),'scientific_sources_verified':{expected!r}}}))
@@ -35,10 +40,14 @@ print(json.dumps({{'staged':str(p),'sha256':hashlib.sha256(data).hexdigest(),'sc
 
 def execute(mode):
     digest = hashlib.sha256(REGISTRATION.read_bytes()).hexdigest()
-    remote(f'''import subprocess
-args=['/root/miniconda3/bin/python','-B',{SCRIPT!r},{mode!r}]
-if {mode!r}=='prepare': args.append({digest!r})
-subprocess.run(args,check=True)
+    retry = mode in ('repair', 'launch-retry')
+    command = 'launch' if mode == 'launch-retry' else mode
+    remote(f'''import subprocess,os
+args=['/root/miniconda3/bin/python','-B',{SCRIPT!r},{command!r}]
+if {command!r} in ('prepare','repair'): args.append({digest!r})
+env={{**os.environ}}
+if {retry!r}: env['C3WMFT_RETRY']='1'
+subprocess.run(args,check=True,env=env)
 ''', timeout=50)
 
 
@@ -57,7 +66,7 @@ attempt=ph['attempt']; name='c03'+('' if attempt<=1 else '.a'+str(attempt))
 d=r/'arm/loop/wm'/name
 p=d/'train_log.jsonl'
 if p.is_file():
- lines=p.read_text().splitlines(); print('training_rows',len(lines)); print('last_training',lines[-1])
+ lines=p.read_text().splitlines(); print('training_rows',len(lines)); print('last_training',lines[-1] if lines else None)
 p=d.with_name(d.name+'.log')
 if p.is_file(): print('training_log_tail',p.read_text()[-2500:])
 print('gpu',subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,used_memory','--format=csv,noheader,nounits'],text=True))
@@ -68,18 +77,18 @@ def poll(wait):
     time.sleep(wait)
     remote(f'''import pathlib,json,datetime
 o=pathlib.Path({OUT!r}); r=pathlib.Path({RELEASE!r})
+if (o/'retry1/PID.json').exists(): o=o/'retry1'
 s=json.loads((o/'STATUS.json').read_text()); state=json.loads((r/'arm/loop/LOOP14_STATE.json').read_text())
 p=state['cycles'][-1]['phases']; a=p['wm_ft']['attempt']; n='c03'+('' if a<=1 else '.a'+str(a))
 f=r/'arm/loop/wm'/n/'train_log.jsonl'
 rows=[json.loads(line) for line in f.read_text().splitlines()] if f.is_file() else []
 doc={{'now':datetime.datetime.now(datetime.timezone.utc).isoformat(),'status':s['status'],
- 'phases':{{k:v['status'] for k,v in p.items()}},'attempt':a,'rows':len(rows),
+ 'attempt':a,'rows':len(rows),
  'last':{{k:v for k,v in (rows[-1] if rows else {{}}).items() if k in ('step','loss','grad_norm','elapsed_s','horizon_s')}}}}
-for name in ('PID.json','c03_FIRST_FINITE.json','c03_TRAIN_VERIFIED.json','RESULTS.json','ERROR.json'):
+for name in ('c03_TRAIN_VERIFIED.json','RESULTS.json','ERROR.json'):
  f=o/name
  if f.is_file():
   d=json.loads(f.read_text())
-  if name=='c03_FIRST_FINITE.json': d.pop('first_rows',None)
   doc[name]=d
 f=o/'PID.json'; d=json.loads(f.read_text()); proc=pathlib.Path('/proc')/str(d['pid'])
 doc['coordinator_live']=proc.exists() and (proc/'stat').read_text().split()[21]==d['start_ticks']
@@ -91,12 +100,15 @@ print(json.dumps(doc))
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=['stage', 'prepare', 'launch', 'status', 'poll'])
+    ap.add_argument('action', choices=['stage', 'prepare', 'launch', 'status', 'poll',
+                                     'repair-stage', 'repair', 'launch-retry'])
     ap.add_argument('--wait', type=int, default=0)
     args = ap.parse_args()
     action = args.action
     if action == 'stage':
         stage()
+    elif action == 'repair-stage':
+        stage(repair=True)
     elif action == 'status':
         status()
     elif action == 'poll':

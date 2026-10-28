@@ -86,3 +86,24 @@ def test_nonfinite_is_not_retried(harness):
     with pytest.raises(RuntimeError, match='no retry'):
         mod.run()
     assert calls == ['wm_ft']
+
+
+def test_undefined_diagnostic_does_not_invalidate_finite_optimization(harness):
+    mod = harness[0]
+    assert mod.training_finite({'loss': 265.5, 'grad_norm': 25.83, 'finite': True,
+                               'merge_pivot_on_diagnostic_nll': float('inf')})
+    assert not mod.training_finite({'loss': float('nan'), 'grad_norm': 25.83, 'finite': True})
+    assert not mod.training_finite({'loss': 265.5, 'grad_norm': float('inf'), 'finite': True})
+    assert not mod.training_finite({'loss': 265.5, 'grad_norm': 25.83, 'finite': False})
+
+
+def test_replacement_cannot_trigger_a_third_attempt(harness, monkeypatch):
+    mod, phases, codes, calls, _, statuses, events = harness
+    monkeypatch.setattr(mod, 'RETRY', True)
+    codes['retry'] = 3
+    phases['wm_ft']['error'] = 'RuntimeError: operational failure again'
+    with pytest.raises(AssertionError, match='fine-tune exit 3'):
+        mod.run()
+    assert calls == ['retry:wm_ft']
+    assert events == []
+    assert statuses[-1] == 'C3_WMFT_OPERATIONAL_PAUSED'
