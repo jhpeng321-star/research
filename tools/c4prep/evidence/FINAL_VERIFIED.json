@@ -1,0 +1,49 @@
+{
+ "task": "S-C4PREP-1",
+ "status": "BUILD_VERIFIED_EMPIRICAL_PREPARATION_BLOCKED",
+ "tested_source_commit": "36a0baec4267e4882a20e2db1a0b916c7b7ad25b",
+ "remote_runtime": "/root/autodl-tmp/c4/restart20261026/runtime_c4prep_36a0baec4267",
+ "source_files_verified": 1180,
+ "cpu_tests": {
+  "exit": 0,
+  "passed": 13,
+  "seconds": 1.33,
+  "log_sha256": "7686df86725b79215adde82b9b6c7728e1e42010cb4b115f0447d00ea308763f",
+  "scope": "control-path tests, not real GPU dry runs"
+ },
+ "input_preflight": {
+  "path": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/INPUT_PREFLIGHT_1.json",
+  "sha256": "e320e30e2e6f515cda15d3ada50826f63ace5df9edd41149b8b1bb5da0df1870",
+  "paired_starts": 78,
+  "episodes": 156,
+  "missing_complete_clock_set": 156,
+  "all_historical_actor_shas_verified": true,
+  "ready": false
+ },
+ "config_descriptors": {
+  "ON": {"ready": false, "sha256": "ffdec532e8f89876a3eef8f0806031b789c3c945ad3547f8296bacafe24ac686"},
+  "OFF": {"ready": false, "sha256": "dba8b8a8427e7db768887b7d1eb759983fbb92f40af31e3c2b89bcaa9c4fc869"}
+ },
+ "wm3_sha256": "41e18f09b6060a1f4e4039f02655fcbcd497e32a360cffb71be716fffeaadc84",
+ "wm3_acceptance": "ACCEPT",
+ "wm3_horizon_gate_complete": false,
+ "entrant_tip_merged": "875cc4438ce4344e3189c430f5f650ce929ab858",
+ "entrant_final_verdict_pending": true,
+ "anchor_fitted": false,
+ "genuine_k8_inference_jobs": 0,
+ "real_gpu_dry_runs": 0,
+ "full_policy_dispatches": 0,
+ "sumo_dispatches": 0,
+ "old_wm_checkpoint_copies": 0,
+ "owned_background_compute": 0,
+ "charged": 264544,
+ "registered_cap": 280000,
+ "stop_driver_preserved": true,
+ "observed_gpu_used": "1 MiB",
+ "blockers": [
+  "Allowed observable queue/request/CAV clocks for the registered C1-C3 paired data are missing; t0 backlog alone does not identify demand",
+  "Registered WM3 horizon gate is incomplete",
+  "Final entrant tip/verdict and its WM3 gate compatibility must be merged/bound",
+  "No fitted validated anchor or real two-update finite/memory receipts exist"
+ ]
+}

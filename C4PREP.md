@@ -93,6 +93,11 @@ control-path verification with test doubles, NOT the requested real GPU dry run.
 Local fatal-error Ruff passed. The laptop has no torch; authoritative tests run
 on gpuA with CUDA hidden. Earlier failing test/setup receipts remain preserved.
 
+Final source `36a0baec4267` was restaged with1180 verified files; the updated
+13-check suite passed in1.33s (log SHA
+`7686df86725b79215adde82b9b6c7728e1e42010cb4b115f0447d00ea308763f`).
+Compact local receipt: `tools/c4prep/evidence/FINAL_VERIFIED.json`.
+
 WM3's registered gate remains incomplete, and the final entrant tip/verdict
 has not landed (current committed tip875cc443; peer uncommitted work preserved).
 Therefore **anchor fitting, both real two-update GPU/memory checks, final entrant
