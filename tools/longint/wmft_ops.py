@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import subprocess
 import time
 
 from tools.longint.operate import ROOT, RUNTIME, RELEASE, remote
@@ -76,11 +77,42 @@ print('gpu',subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,used
 ''', timeout=40)
 
 
+def check_repair(action):
+    helper = subprocess.check_output(['git', 'show', ':scripts/round13c_waiter.py'], cwd=ROOT)
+    helper_sha = hashlib.sha256(helper).hexdigest()
+    script = RUNTIME + '/tools/longint/wmft_check_repair.py'
+    if action == 'check-stage':
+        names = ['tools/longint/wmft_check_repair.py', 'tests/unit/test_c3wmft_check_repair.py']
+        files = {name: (ROOT / name).read_bytes().replace(b'\r\n', b'\n') for name in names}
+        files['scripts/round13c_waiter.py'] = helper
+        payload = {name: base64.b64encode(data).decode() for name, data in files.items()}
+        data = json.dumps(payload).encode()
+        remote(f'''import pathlib,json,base64,hashlib,sys
+r=pathlib.Path({RUNTIME!r})
+payload=sys.stdin.buffer.read({len(data)})
+assert hashlib.sha256(payload).hexdigest()=={hashlib.sha256(data).hexdigest()!r}
+for name,encoded in json.loads(payload).items():
+ p=r/name; assert p.parent.is_dir() and not p.exists(), name
+ data=base64.b64decode(encoded); p.write_bytes(data)
+ print(json.dumps({{'staged':name,'sha256':hashlib.sha256(data).hexdigest()}}))
+''', data, timeout=30)
+        return
+    digest = hashlib.sha256(REGISTRATION.read_bytes()).hexdigest()
+    mode = 'prepare' if action == 'check-prepare' else 'launch'
+    remote(f'''import subprocess,os
+env={{**os.environ,'PYTHONPATH':{RUNTIME!r},'PYTHONDONTWRITEBYTECODE':'1'}}
+args=['/root/miniconda3/bin/python','-B',{script!r},{mode!r}]
+if {mode!r}=='prepare': args += [{digest!r},{helper_sha!r}]
+subprocess.run(args,check=True,env=env)
+''', timeout=40)
+
+
 def poll(wait):
     time.sleep(wait)
     remote(f'''import pathlib,json,datetime
 o=pathlib.Path({OUT!r}); r=pathlib.Path({RELEASE!r})
 if (o/'retry1/PID.json').exists(): o=o/'retry1'
+if (pathlib.Path({OUT!r})/'check_repair1/PID.json').exists(): o=pathlib.Path({OUT!r})/'check_repair1'
 s=json.loads((o/'STATUS.json').read_text()); state=json.loads((r/'arm/loop/LOOP14_STATE.json').read_text())
 p=state['cycles'][-1]['phases']; a=p['wm_ft']['attempt']; n='c03'+('' if a<=1 else '.a'+str(a))
 f=r/'arm/loop/wm'/n/'train_log.jsonl'
@@ -95,7 +127,8 @@ for name in ('c03_TRAIN_VERIFIED.json','RESULTS.json','ERROR.json'):
   doc[name]=d
 f=o/'PID.json'; d=json.loads(f.read_text()); proc=pathlib.Path('/proc')/str(d['pid'])
 doc['coordinator_live']=proc.exists() and (proc/'stat').read_text().split()[21]==d['start_ticks']
-g=r/'arm/loop/checks/c03/gate_shards/rows'
+ca=p['check']['attempt']; cn='c03'+('' if ca<=1 else '.a'+str(ca))
+g=r/'arm/loop/checks'/cn/'gate_shards/rows'
 if g.is_dir(): doc['gate_groups']=len(list(g.glob('*.json')))
 print(json.dumps(doc))
 ''', timeout=30)
@@ -104,7 +137,8 @@ print(json.dumps(doc))
 def collect():
     """Fetch bounded final numerical receipts and independently verify the stop."""
     code = f'''import pathlib,json,hashlib,base64,math,datetime
-r=pathlib.Path({RELEASE!r}); o=pathlib.Path({OUT!r}); final=o/'retry1'
+r=pathlib.Path({RELEASE!r}); o=pathlib.Path({OUT!r}); retry=o/'retry1'; final=retry
+if (o/'check_repair1/RESULTS.json').is_file(): final=o/'check_repair1'
 s=json.loads((r/'arm/loop/LOOP14_STATE.json').read_text()); p=s['cycles'][-1]['phases']
 result=json.loads((final/'RESULTS.json').read_text())
 assert json.loads((r/'AUTONOMY_STATUS.json').read_text())['status']=='WAIT_MAIN_C4'
@@ -119,17 +153,23 @@ assert all(row.get('finite') is not False and math.isfinite(row['loss']) and mat
 wm_sha=hashlib.sha256(pathlib.Path(ft['candidate']).read_bytes()).hexdigest()
 assert wm_sha==ft['candidate_sha256']==result['wm3_sha256']
 assert ft['init_from_sha256']=='b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
-for directory in (o,final):
+for directory in dict.fromkeys((o,retry,final)):
  d=json.loads((directory/'PID.json').read_text()); proc=pathlib.Path('/proc')/str(d['pid'])
  assert not proc.exists() or (proc/'stat').read_text().split()[21]!=d['start_ticks']
- for line in (directory/'CHILDREN.jsonl').read_text().splitlines():
+ children=directory/'CHILDREN.jsonl'
+ for line in children.read_text().splitlines() if children.is_file() else []:
   d=json.loads(line); proc=pathlib.Path('/proc')/str(d['pid'])
   assert not proc.exists() or (proc/'stat').read_text().split()[21]!=d['start_ticks']
 paths={{'initial_AUTHORITY.json':o/'AUTHORITY.json','initial_PID.json':o/'PID.json',
  'initial_ERROR.json':o/'ERROR.json','initial_FAILED_FT_ATTEMPT1.json':o/'FAILED_FT_ATTEMPT1.json',
- 'retry_AUTHORITY.json':final/'AUTHORITY.json','retry_PID.json':final/'PID.json',
- 'retry_STATUS.json':final/'STATUS.json','retry_TRAIN_VERIFIED.json':final/(out.name+'_TRAIN_VERIFIED.json'),
+ 'retry_AUTHORITY.json':retry/'AUTHORITY.json','retry_PID.json':retry/'PID.json',
+ 'retry_STATUS.json':retry/'STATUS.json','retry_TRAIN_VERIFIED.json':retry/(out.name+'_TRAIN_VERIFIED.json'),
  'RESULTS.json':final/'RESULTS.json','ACCEPT.json':pathlib.Path(check['out'])/'ACCEPT.json'}}
+if final!=retry:
+ paths.update({{'check_repair_AUTHORITY.json':final/'AUTHORITY.json',
+ 'check_repair_PID.json':final/'PID.json','check_repair_STATUS.json':final/'STATUS.json',
+ 'check_repair_BEFORE.json':final/'BEFORE.json','incomplete_RESULTS.json':retry/'RESULTS.json',
+ 'incomplete_ACCEPT.json':r/'arm/loop/checks/c03/ACCEPT.json'}})
 gp=pathlib.Path(check['out'])/'HORIZON_GATE.json'
 if gp.is_file():
  gate=json.loads(gp.read_text()); assert gate['wm_sha256']==wm_sha
@@ -163,7 +203,8 @@ print(json.dumps({{name:{{'data':base64.b64encode(path.read_bytes()).decode(),'s
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('action', choices=['stage', 'prepare', 'launch', 'status', 'poll',
-                                     'repair-stage', 'repair', 'launch-retry', 'collect'])
+                                     'repair-stage', 'repair', 'launch-retry', 'collect',
+                                     'check-stage', 'check-prepare', 'check-launch'])
     ap.add_argument('--wait', type=int, default=0)
     args = ap.parse_args()
     action = args.action
@@ -177,5 +218,7 @@ if __name__ == '__main__':
         poll(args.wait)
     elif action == 'collect':
         collect()
+    elif action.startswith('check-'):
+        check_repair(action)
     else:
         execute(action)
