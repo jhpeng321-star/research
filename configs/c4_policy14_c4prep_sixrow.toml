@@ -1,0 +1,15 @@
+# S-AUDITFIX opt-in algebraically equivalent candidate-A credit geometry.
+# Resolve the inherited anchor/path placeholders as for c4prep_on before launch.
+# Registered meanings unchanged: 8.9*D_i + 8.9*(D_G-sum D_i) + 9.9*D_G
+# = 18.8*D_G. Team/all terms stay exactly as registered.
+extends = "c4_policy14_c4prep_on.toml"
+
+[counterfactual]
+curriculum_updates = [0, 1]
+n_individual = 0
+cover_group_members = false
+w_individual = [0.0, 0.0]
+w_coop = [0.0, 0.0]
+w_group = [18.8, 18.8]
+w_all = [1.0, 1.0]
+w_team = [10.3, 10.3]
