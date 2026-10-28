@@ -13,11 +13,12 @@ import cqr_rows as C  # noqa: E402
 
 box, parity = sys.argv[1], int(sys.argv[2])
 kept = {int(x) for x in sys.argv[3].split(",") if x}
-tasks = [t for n, t in enumerate(C.loop_tasks()) if n % 2 == parity] + C.e3_tasks(box)
+loop = [t for n, t in enumerate(C.loop_tasks()) if n % 2 == parity]
+tasks = loop + C.e3_tasks(box)
 done = set()
 for f in (Path.home() / "backlog/rows2").glob("rows_*.jsonl"):
     done |= {json.loads(l)["task"] for l in f.read_text().splitlines() if l.strip()}
-owned = {C.task_id(t) for n, t in enumerate(tasks) if n % 16 in kept}
+owned = {C.task_id(t) for n, t in enumerate(tasks) if n % 16 in kept and n < len(loop)}
 for t in tasks:
     tid = C.task_id(t)
     if tid not in done and tid not in owned:
