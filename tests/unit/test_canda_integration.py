@@ -97,6 +97,8 @@ def test_candA_config_resolves_with_monitors_on():
     assert long['enabled'] is True and long['mode'] == 'gain_only'
     assert long['cct2_file'] == 'authority/CCT2_{wm_sha256}.json'
     assert long['score_training_horizon'] is False
+    # S-INTEGRATE2: imagination-mirror leader rule ON (C4_SUMO_LEADER_RULE=1 launch env)
+    assert raw['execution']['leader_rule'] is True
     # the six-row preset is NOT in the candidate-A chain
     chain = {str(p) for p in [CANDA_CONFIG]}
     text = CANDA_CONFIG.read_text(encoding='utf-8')
@@ -323,13 +325,17 @@ def test_authority_binds_and_refuses_on_mismatch(tmp_path, monkeypatch):
     args = SimpleNamespace(root=str(ROOT), wm_ckpt=str(wm), wm_config=str(wmc),
                            cct2=str(cct2), out=str(out), cct1=None, actor=None,
                            actor_checkpoint=None, learned_mix=False, mix_module=None,
-                           parity_receipt=str(receipt), leader_rule_status='OPEN_SLOT',
+                           parity_receipt=str(receipt), leader_rule_status=None,
                            leader_rule_commit=None, allow_dirty=True)
     doc = authority.build(args)
     assert doc['actor_c1_sha256'] == '64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c'
     assert doc['long_credit']['H_G'] == 300 and doc['new_phase'] is True
     assert doc['monitors']['exploit_monitor'] is True
-    assert doc['leader_rule']['status'] == 'OPEN_SLOT'  # execparity3 slot clearly marked
+    # S-INTEGRATE2: the execparity3 slot is BOUND (source hashes + receipt), not OPEN
+    assert doc['leader_rule']['status'] == 'bound-with-receipt'
+    assert doc['leader_rule']['commit'] == 'a6a1894d'
+    for name in authority.LEADER_RULE_FILES:
+        assert doc['leader_rule']['files'][name] == doc['runtime_manifest'][name]
     v_args = SimpleNamespace(root=str(ROOT), authority=str(out))
     assert authority.verify(v_args)['verified'] is True
     # any mismatch refuses: tamper the WM checkpoint
@@ -339,10 +345,20 @@ def test_authority_binds_and_refuses_on_mismatch(tmp_path, monkeypatch):
     wm.write_bytes(b'wm-bytes')
     # tamper an execution-law source hash in the manifest
     stored = json.loads(out.read_text(encoding='utf-8'))
+    real_law = stored['runtime_manifest']['src/wms/control/sumo_idm.py']
     stored['runtime_manifest']['src/wms/control/sumo_idm.py'] = '0' * 64
     out.write_text(json.dumps(stored), encoding='utf-8')
     with pytest.raises(ValueError, match='runtime manifest mismatch'):
         authority.verify(v_args)
+    stored['runtime_manifest']['src/wms/control/sumo_idm.py'] = real_law
+    # tamper a leader-rule source hash: the bound slot must refuse
+    real_hash = stored['leader_rule']['files']['src/wms/physics/lane_chain.py']
+    stored['leader_rule']['files']['src/wms/physics/lane_chain.py'] = '0' * 64
+    out.write_text(json.dumps(stored), encoding='utf-8')
+    with pytest.raises(ValueError, match='leader rule source mismatch'):
+        authority.verify(v_args)
+    stored['leader_rule']['files']['src/wms/physics/lane_chain.py'] = real_hash
+    out.write_text(json.dumps(stored), encoding='utf-8')
     # learned mix without a mix-qualified CCT-2 refuses (ERRSRC mix on WM2 only)
     mix_cct2 = tmp_path / 'CCT2_mix.json'
     _write_cct2(mix_cct2, wm_sha, hg=300, mix=False)
@@ -350,7 +366,7 @@ def test_authority_binds_and_refuses_on_mismatch(tmp_path, monkeypatch):
                                cct2=str(mix_cct2), out=str(tmp_path / 'mix_authority.json'),
                                cct1=None, actor=None, actor_checkpoint=None,
                                learned_mix=True, mix_module='src/wms/control/entrant.py',
-                               parity_receipt=None, leader_rule_status='OPEN_SLOT',
+                               parity_receipt=None, leader_rule_status=None,
                                leader_rule_commit=None, allow_dirty=True)
     with pytest.raises(ValueError, match='mix-qualified'):
         authority.build(mix_args)

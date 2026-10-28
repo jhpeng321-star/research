@@ -17,6 +17,18 @@
 # probes/critic bootstrap/exec-cap overrides).
 extends = "c4_policy14_c4prep_on.toml"
 
+[execution]
+# S-EXECPARITY3 (merged): imagination (mode 2) identifies leaders by SUMO's
+# lane/link rule - launch env MUST export C4_SUMO_LEADER_RULE=1 (see
+# tools/candA/COMMANDS.md). The mode-2 parity receipt
+# tools/execparity/alwayscmd3_execution_parity.json was measured with the rule
+# ON in the mirror (pooled executed RMSE 0.146538 <= head band 0.160312,
+# re-confirmed bitwise on this tree). The deployment executor path is
+# unchanged (SUMO getLeader itself); flag OFF stays the frozen legacy
+# default everywhere else. authority.py binds this flag plus the leader-rule
+# source hashes.
+leader_rule = true
+
 [run]
 gpu_memory_fraction = 0.45
 

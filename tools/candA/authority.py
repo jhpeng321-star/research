@@ -8,8 +8,10 @@ One template, fail-closed on ANY mismatch. ``build`` records:
 * the chosen WM checkpoint sha256 + WM config sha256 + learned-mix flag state,
 * CCT-1 (informational) and CCT-2 (gain-only long credit) authority files,
 * the always-commanded execution law + shared sumo_idm mirror source hashes,
-* the c4/execparity3 leader-rule slot (OPEN until a passing parity receipt and
-  merged leader rule exist), and
+* the c4/execparity3 SUMO lane/link leader rule (BOUND since S-INTEGRATE2:
+  source hashes of lane_chain/sumo_leader/neighbours/contract, the
+  candidate-A config's execution.leader_rule = true binding, and the merged
+  commit), and
 * the mode-2 execution parity receipt (wms.control.execution.verify_parity).
 
 ``verify`` recomputes every binding against the tree and refuses on mismatch.
@@ -48,6 +50,11 @@ MANIFEST_FILES = [
     'traffic_shepherd/c4/wms_glue.py', 'traffic_shepherd/c4/env.py',
     'traffic_shepherd/c4/recorder.py',
 ]
+# S-EXECPARITY3 leader rule (imagination mirror; deployment path unchanged).
+LEADER_RULE_FILES = ['src/wms/physics/lane_chain.py', 'src/wms/control/sumo_leader.py',
+                     'src/wms/physics/neighbours.py', 'src/wms/control/contract.py']
+LEADER_RULE_SOURCE_COMMIT = 'a6a1894d'  # c4/execparity3 tip merged into c4/candA-int
+MANIFEST_FILES += LEADER_RULE_FILES
 
 
 def sha256(path: Path) -> str:
@@ -139,6 +146,11 @@ def build(args) -> dict:
     if actor != C1_ACTOR_SHA256:
         raise ValueError(f'C1 actor sha mismatch: {actor}')
     chain = resolve_chain(root, CONFIG_CHAIN[0])
+    from wms.core.toml import load as _toml_load
+    if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
+        raise ValueError('candidate-A config must bind execution.leader_rule = true: the '
+                         'mode-2 parity receipt is only valid with C4_SUMO_LEADER_RULE=1 '
+                         'in the imagination mirror (deployment path unchanged)')
     manifest = {name: sha256(root / name) for name in MANIFEST_FILES}
     doc = dict(schema=SCHEMA, source_commit=commit, runtime_root=str(root),
                config_chain={name: sha256(root / name) for name in chain},
@@ -160,8 +172,14 @@ def build(args) -> dict:
                               'shared_base': 'src/wms/control/sumo_idm.py',
                               'sole_writer': 'traffic_shepherd/ownership.py',
                               'accel_max_mps2': 1.2, 'speed_mode': 27},
-               leader_rule={'source': 'c4/execparity3', 'status': args.leader_rule_status,
-                            'commit': args.leader_rule_commit or ''},
+                leader_rule={'source': 'c4/execparity3',
+                             'status': args.leader_rule_status or 'OPEN_SLOT',
+                             'commit': args.leader_rule_commit or LEADER_RULE_SOURCE_COMMIT,
+                             'env': 'C4_SUMO_LEADER_RULE=1 (imagination mirror only; '
+                                    'deployment executor path unchanged)',
+                             'config_flag': 'configs/c4_policy14_candA.toml '
+                                            '[execution] leader_rule = true',
+                             'files': {name: manifest[name] for name in LEADER_RULE_FILES}},
                runtime_manifest=manifest)
     if args.learned_mix and not args.mix_module:
         raise ValueError('--learned-mix requires --mix-module (errsrc inference path) '
@@ -180,7 +198,9 @@ def build(args) -> dict:
         verify_parity(args.parity_receipt)  # raises on missing/stale/failing receipt
         doc['parity_receipt'] = str(Path(args.parity_receipt).resolve())
         doc['parity_receipt_sha256'] = sha256(Path(args.parity_receipt))
-        doc['leader_rule']['status'] = args.leader_rule_status or 'bound-with-receipt'
+        doc['leader_rule']['status'] = (args.leader_rule_status
+                                        if args.leader_rule_status not in (None, 'OPEN_SLOT')
+                                        else 'bound-with-receipt')
     if args.out:
         out = Path(args.out)
         if out.exists():
@@ -202,6 +222,19 @@ def verify(args) -> dict:
     for name, digest in doc['runtime_manifest'].items():
         if not (root / name).is_file() or sha256(root / name) != digest:
             raise ValueError(f'runtime manifest mismatch: {name}')
+    leader = doc.get('leader_rule', {})
+    if leader.get('status') == 'OPEN_SLOT' or not leader.get('files'):
+        raise ValueError('leader-rule slot OPEN: the merged c4/execparity3 sources and a '
+                         'passing mode-2 receipt must be bound (S-INTEGRATE2)')
+    for name, digest in leader['files'].items():
+        if not (root / name).is_file() or sha256(root / name) != digest:
+            raise ValueError(f'leader rule source mismatch: {name}')
+    if any(name not in doc['runtime_manifest'] for name in LEADER_RULE_FILES):
+        raise ValueError('leader-rule files lost from the runtime manifest')
+    from wms.core.toml import load as _toml_load
+    if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
+        raise ValueError('candidate-A config lost execution.leader_rule = true '
+                         '(imagination mirror leader rule)')
     chain = resolve_chain(root, CONFIG_CHAIN[0])
     for name, digest in doc['config_chain'].items():
         if sha256(root / name) != digest:
@@ -256,7 +289,9 @@ def main(argv=None):
     build_p.add_argument('--learned-mix', action='store_true')
     build_p.add_argument('--mix-module', default=None)
     build_p.add_argument('--parity-receipt', default=None)
-    build_p.add_argument('--leader-rule-status', default='OPEN_SLOT')
+    build_p.add_argument('--leader-rule-status', default=None,
+                         help='override the recorded leader-rule status '
+                              '(default: bound-with-receipt once the mode-2 receipt passes)')
     build_p.add_argument('--leader-rule-commit', default=None)
     build_p.add_argument('--allow-dirty', action='store_true')
     verify_p = sub.add_parser('verify', parents=[common])
