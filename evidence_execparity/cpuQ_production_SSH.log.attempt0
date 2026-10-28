@@ -1,0 +1,18 @@
+pj_obj_create: Cannot find proj.db
+pj_obj_create: Cannot find proj.db
+pj_obj_create: Cannot find proj.db
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 1, in <module>
+  File "<string>", line 18, in <module>
+  File "/home/ubuntu/execparity/always0020/tools/execparity/sumo_worker.py", line 171, in <module>
+    main()
+  File "/home/ubuntu/execparity/always0020/tools/execparity/sumo_worker.py", line 96, in main
+    ack = json.loads(sys.stdin.readline())
+  File "/home/ubuntu/miniconda3/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/home/ubuntu/miniconda3/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/home/ubuntu/miniconda3/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
