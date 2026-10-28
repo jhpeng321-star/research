@@ -1,6 +1,39 @@
-# S-EXECPARITY real-SUMO verification — BLOCKED, not dispatched
+# S-EXECPARITY real-SUMO verification
 
-## Status and accounting
+## Status and accounting (00:20 law; updated 2026-10-29 01:26 local)
+
+**Superseded status preserved below.** The 00:20 MAIN DECISION
+(REGISTRATION.md) replaced the continuous law with the EXACT ALWAYS-COMMANDED
+law (`C4_EXECUTION_PARITY=2`, contract `always_commanded_ctrl0/1`): every CAV
+commanded every tick through the single CommandOwnership writer (CTRL0 path,
+residual kept), executed accel = speedMode-27 safe-speed cap of
+(base + residual), accel 1.2; imagination mirrors the identical envelope. This
+needs no same-step TraCI hook, so the former blocker is void.
+
+Registered adapted check (same 7,200 sim-s cap, 4 scientific + ≤4 charged infra
+retries): (i) `s977000_always0` byte-identical to stored S-CTRLARM CTRL0
+`jobs/s977000_ctrl0` (metrics JSON + traj_base.npz + episode.npz +
+cumulative JSONs); (ii) C1 `alwaysx` on 977001 (cpuQ), 977002 (cpuP), 977003
+(cpuQ) with per-tick ledgers (residual, base law, issued, speed-before,
+leader gap/speed); (iii) offline replay via
+`tools/execparity/alwayscmd_replay.py` — PASS = pooled imagination executed-accel
+RMSE ≤ pooled WM native-head RMSE on the same rows AND canary bit identity;
+the gate receipt (schema `execparity_always_commanded_acceleration/1`) is
+written only on PASS.
+
+Dispatch state: canary monitor local PID 29400 (`tools/execparity/sumo_operate.py
+canary`), remote worker cpuP PID 3410593 nice 19 single-thread, staged source
+worker sha `ccbad268…`, adapter sha `19f4f869…`, frozen runtime manifest
+`b3c031ad` verified (543 files), inputs SHA-bound. Worker waits for host load
+≤ 8 before each allocation; the charge (`S-EXECPARITY ALLOC`) is appended to
+the authoritative REGISTRATION.md and ACKed before any SUMO step. Three local
+restarts occurred BEFORE any allocation (session freeze + staging assert);
+nothing was charged. Allocation then production (both hosts) proceed
+automatically under the same guard; production requires the canary's
+`bit_identical` from its local COMPLETE event. Offline replay and this report
+are updated after the runs. cpuP/cpuQ nice 19, never touching peer jobs.
+
+## Superseded: blocked status of the continuous-law design (23:40–00:20)
 
 Owner approval: authoritative `runs/active/C4-V7FT-20261017/REGISTRATION.md`,
 2026-10-28 23:50. Separate maximum **7,200 charged sim-s**, eight900s allocations:
