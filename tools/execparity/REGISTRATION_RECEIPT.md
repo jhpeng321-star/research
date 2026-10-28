@@ -26,3 +26,16 @@ Task allocations=0; charged=0; actual=0; cap remaining=7200sim-s. No retry,
 simulation, training, GPU dispatch, background coordinator or automatic waiter
 was created. S-CTRLARM's separately completed21600sim-s panel was referenced,
 not repeated. No task charge was appended because no allocation started.
+
+## 00:20 always-commanded phase (2026-10-29)
+
+Owner 00:20 MAIN DECISION superseded the continuous law. Implemented the EXACT
+ALWAYS-COMMANDED law (mode 2, contract always_commanded_ctrl0/1) with CTRL0
+bit-identity tests; ran the adapted registered SUMO check within the 7,200
+sim-s cap: 4 scientific jobs charged 3,600 total (ALLOC before each START),
+0 retry charges. Canary bit-identical to stored CTRL0; per-tick ledgers
+collected; offline imagination replay FAILS the registered band (0.2556 vs
+0.1603 RMSE) - no deployment receipt, candidate-A mode-2 enable refused.
+Completion entry appended to the authoritative REGISTRATION.md; report
+published to docs/paper_results/EXECPARITY_SUMO.md (worktree and
+E:/research-dense). Commits 8f00cc9d..9168ea27.
