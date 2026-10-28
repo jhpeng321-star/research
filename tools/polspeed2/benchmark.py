@@ -30,6 +30,22 @@ def gpu():
     return [int(x.strip()) for x in text.strip().split(',')]
 
 
+def owned_memory(out, parent_pid):
+    pids = {parent_pid}
+    for receipt in (out/'future_workers').glob('*/PIDS.json'):
+        pids.update(json.loads(receipt.read_text()))
+    text = subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid,used_memory',
+                                    '--format=csv,noheader,nounits'], text=True)
+    owned, external = 0, 0
+    for line in text.strip().splitlines():
+        pid, memory = (int(x.strip()) for x in line.split(','))
+        if pid in pids:
+            owned += memory
+        else:
+            external += memory
+    return owned, external
+
+
 def flatten(value, prefix=''):
     if isinstance(value, dict):
         for key, item in value.items():
@@ -66,7 +82,7 @@ def update_row(path):
 def run(name):
     n, segment, fraction, six = VARIANTS[name]
     used, total = gpu()
-    if used > total * .05:
+    if used + total * .60 + 1024 > total:
         raise RuntimeError(f'gpuA has {used} MiB in use; refusing benchmark without re-budgeting')
     out = BASE / 'out' / name
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -113,25 +129,30 @@ def run(name):
         process = subprocess.Popen(cmd, env=env, cwd=RT, stdin=subprocess.DEVNULL,
                                    stdout=log, stderr=subprocess.STDOUT)
         (launch/'PID').write_text(str(process.pid))
-        peak = used
+        peak, peak_owned, peak_external = used, 0, 0
         while process.poll() is None:
             used, total = gpu()
+            owned, external = owned_memory(out, process.pid)
             peak = max(used, peak)
-            memory.write(json.dumps(dict(t=time.time(), used_mib=used, total_mib=total))+'\n')
+            peak_owned, peak_external = max(owned, peak_owned), max(external, peak_external)
+            memory.write(json.dumps(dict(t=time.time(), used_mib=used, owned_mib=owned,
+                                          external_mib=external, total_mib=total))+'\n')
             memory.flush()
-            if (BASE/'STOP').exists() or used > total * .6:
+            if (BASE/'STOP').exists() or owned > total * .6 or used > total * .95:
                 if out.exists():
                     (out/'STOP').touch()
                 for pool in (out/'future_workers').glob('*'):
                     (pool/'STOP').touch()
-                if used > total * .6:
+                if owned > total * .6 or used > total * .95:
                     (BASE/'STOP').touch()
             time.sleep(2)
     out.mkdir(exist_ok=True)
     for filename in ('LAUNCH.json', 'console.log', 'gpu_memory.jsonl', 'PID'):
         shutil.copyfile(launch/filename, out/filename)
     result = dict(name=name, returncode=process.returncode, elapsed_s=time.time()-receipt['started'],
-                  peak_total_gpu_mib=peak, peak_total_gpu_fraction=peak/total)
+                  peak_total_gpu_mib=peak, peak_total_gpu_fraction=peak/total,
+                  peak_owned_gpu_mib=peak_owned, peak_owned_gpu_fraction=peak_owned/total,
+                  peak_external_gpu_mib=peak_external)
     if (out/'updates.jsonl').exists():
         row = update_row(out/'updates.jsonl')
         reference = update_row(RESOLVED/'DRY_RUN/A/updates.jsonl')
