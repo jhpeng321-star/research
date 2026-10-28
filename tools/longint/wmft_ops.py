@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import time
 
 from tools.longint.operate import ROOT, RUNTIME, RELEASE, remote
 
@@ -63,13 +64,42 @@ print('gpu',subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,used
 ''', timeout=40)
 
 
+def poll(wait):
+    time.sleep(wait)
+    remote(f'''import pathlib,json,datetime
+o=pathlib.Path({OUT!r}); r=pathlib.Path({RELEASE!r})
+s=json.loads((o/'STATUS.json').read_text()); state=json.loads((r/'arm/loop/LOOP14_STATE.json').read_text())
+p=state['cycles'][-1]['phases']; a=p['wm_ft']['attempt']; n='c03'+('' if a<=1 else '.a'+str(a))
+f=r/'arm/loop/wm'/n/'train_log.jsonl'
+rows=[json.loads(line) for line in f.read_text().splitlines()] if f.is_file() else []
+doc={{'now':datetime.datetime.now(datetime.timezone.utc).isoformat(),'status':s['status'],
+ 'phases':{{k:v['status'] for k,v in p.items()}},'attempt':a,'rows':len(rows),
+ 'last':{{k:v for k,v in (rows[-1] if rows else {{}}).items() if k in ('step','loss','grad_norm','elapsed_s','horizon_s')}}}}
+for name in ('PID.json','c03_FIRST_FINITE.json','c03_TRAIN_VERIFIED.json','RESULTS.json','ERROR.json'):
+ f=o/name
+ if f.is_file():
+  d=json.loads(f.read_text())
+  if name=='c03_FIRST_FINITE.json': d.pop('first_rows',None)
+  doc[name]=d
+f=o/'PID.json'; d=json.loads(f.read_text()); proc=pathlib.Path('/proc')/str(d['pid'])
+doc['coordinator_live']=proc.exists() and (proc/'stat').read_text().split()[21]==d['start_ticks']
+g=r/'arm/loop/checks/c03/gate_shards/rows'
+if g.is_dir(): doc['gate_groups']=len(list(g.glob('*.json')))
+print(json.dumps(doc))
+''', timeout=30)
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=['stage', 'prepare', 'launch', 'status'])
-    action = ap.parse_args().action
+    ap.add_argument('action', choices=['stage', 'prepare', 'launch', 'status', 'poll'])
+    ap.add_argument('--wait', type=int, default=0)
+    args = ap.parse_args()
+    action = args.action
     if action == 'stage':
         stage()
     elif action == 'status':
         status()
+    elif action == 'poll':
+        poll(args.wait)
     else:
         execute(action)
