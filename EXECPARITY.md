@@ -9,6 +9,17 @@ preserve the audit and the superseded continuous-law analysis; section 7 is
 the authoritative 00:20 path and its measured result. Full details:
 `docs/paper_results/EXECPARITY_SUMO.md`.
 
+**Follow-up S-EXECPARITY2 (02:40 dispatch, branch `c4/execparity2`):
+imagination now executes commanded CAVs through the deployment executor's OWN
+exact function** — the shared module `wms.control.sumo_idm` (SUMO 1.27.1
+`MSCFModel_IDM::_v` on the designed `cav_typical` parameters, legacy gap
+convention, lane speed limits, exact speedMode-27 cap) — verified bitwise
+against the executor's own recorded base law (99.985 % of rows; RMSE 1.6e-6 on
+leader-matched rows, where imagination executes at 0.0576 vs the 0.1603 band).
+The registered pooled criterion still FAILS (0.2679 vs 0.1603) and no receipt
+exists: 95.6 % of the remaining squared error is the WM frame's leader
+identification for mid-merge vehicles (state, not law). See `EXECPARITY2.md`.
+
 Branch `c4/execparity`, based on deployment audit `f6531d94`. CPU only; **zero SUMO
 executions and zero new sim-s**. Read-only exact-file copies from cpuP, no scenario,
 route, assignment or restricted-split data. Input SHA-256s are committed in
