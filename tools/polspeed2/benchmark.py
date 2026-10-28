@@ -109,7 +109,7 @@ def run(name):
                    initial_gpu_mib=used, gpu_total_mib=total, started=time.time())
     (launch/'LAUNCH.json').write_text(json.dumps(receipt, indent=2))
     with (launch/'console.log').open('w') as log, (launch/'gpu_memory.jsonl').open('w') as memory:
-        process = subprocess.Popen(cmd, env=env, cwd=BASE, stdin=subprocess.DEVNULL,
+        process = subprocess.Popen(cmd, env=env, cwd=RT, stdin=subprocess.DEVNULL,
                                    stdout=log, stderr=subprocess.STDOUT)
         (launch/'PID').write_text(str(process.pid))
         peak = used
