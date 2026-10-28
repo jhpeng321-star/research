@@ -52,6 +52,18 @@ MAX_REPORTS = 16            # nearest other-CAV reports per CAV (padded, masked)
 N_LANES = 3
 MERGE_S0_M = 0.0
 MERGE_S1_M = 75.44
+#: Internal junction-connector lane lengths of the registered merge network
+#: (assets/research/highway_merge_shepherd_long/osm.net.xml.gz, net version 1.20).
+#: The WM corridor coordinate ``s`` is continuous across each junction, so these
+#: physical lengths are NOT part of ``s``; SUMO's lane/link-based leader search
+#: does traverse them.  Pure network attributes (like SPEED_LIMIT_MPS), never
+#: hand-tuned: ``:1780739017_0_0`` (ramp -> merge-edge lane 0 / phys 2),
+#: ``:1780739017_1_0`` and ``:1780739017_1_1`` (mainline entry -> merge edge,
+#: both mainline lanes), ``:13638027693_0_0`` and ``:13638027693_0_1``
+#: (merge edge -> exit edge, both mainline lanes).
+MERGE_CONNECTOR_RAMP_LEN_M = 2.93
+MERGE_CONNECTOR_ENTRY_LEN_M = 3.00
+MERGE_CONNECTOR_EXIT_LEN_M = 8.00
 
 #: Own-CAV observation features (order is the contract).
 OWN_FEATURES = (

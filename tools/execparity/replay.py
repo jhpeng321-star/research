@@ -29,6 +29,9 @@ def states_from_episode(z):
                     "is_cav": torch.as_tensor((z["is_cav"][i] & p)[None], dtype=torch.bool),
                     "lane": torch.as_tensor(z["lane"][i][None].astype(np.int64)),
                     "junction": torch.as_tensor(z["junction"][i][None], dtype=torch.bool),
+                    "lane_carry": torch.as_tensor(
+                        (z["lane_carry"][i] if "lane_carry" in z else z["lane"][i]
+                         )[None].astype(np.int64)),
                     "length_m": torch.full((1, len(p)), 5., dtype=torch.float32)})
         return out
     return state
