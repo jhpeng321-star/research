@@ -121,7 +121,7 @@ def main():
     files = []
     for p in a.rows:
         p = Path(p)
-        files += sorted(p.glob("rows_*.jsonl")) if p.is_dir() else [p]
+        files += sorted(p.glob("*.jsonl")) if p.is_dir() else [p]
     rows = load_rows(files)
     kinds = {k: sum(1 for r in rows if r["kind"] == k and r["horizon_s"] == 300) for k in ("loop", "e3")}
     result = {"schema": "backlog_cqr_qualification/1", "wm_sha256": WM_SHA, "rows_files":
