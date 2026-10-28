@@ -186,3 +186,20 @@ def generic_random_feedback(branch, *, device="cpu"):
     actor.accel_max = algorithm.high
     return make_cav_controller(actor, encoder, safe_accel, lane_rules=LaneRules(),
                                native_ramp_merge="wm_law", mask_forced_merge=True)
+
+
+def evaluation_feedback(controllers, arm, model, timeline, original_slots, steps, total_slots):
+    """Resolve an evaluation arm from an explicit callback/spec or native metadata."""
+    feedback = controllers.get("entrant_controller")
+    if callable(feedback):
+        return feedback
+    if timeline is None:
+        if arm not in ("native", "NATIVE", "B") and "entrant_controller_spec" not in controllers:
+            raise ValueError("entrant_control requires the same-arm entrant controller algorithm")
+        timeline = dict(controller=torch.zeros(1, (steps+1)//2, total_slots, dtype=torch.long),
+            acceleration_mps2=torch.zeros(1, (steps+1)//2, total_slots),
+            target_speed_mps=torch.zeros(1, (steps+1)//2, total_slots))
+    specs = ({arm: controllers["entrant_controller_spec"]}
+             if "entrant_controller_spec" in controllers else {})
+    return feedback_from_specs(specs, [arm], model, timeline, original_slots, "cpu",
+                               branches=[controllers.get("controller_branch")])

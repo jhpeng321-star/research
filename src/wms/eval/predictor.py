@@ -244,10 +244,12 @@ class WmsPredictor:
                        if getattr(self.model, "_samples_lanes", False) else {})
         entrant_callback = self.model.hold_teacher if entries_on else None
         if self.flags.entrant_control and entries_on:
-            from wms.control.entrant import EntrantControllers
-            feedback = controllers.get("entrant_controller")
-            if not callable(feedback):
-                raise PredictorError("entrant_control requires the same-arm entrant_controller callback")
+            from wms.control.entrant import EntrantControllers, evaluation_feedback
+            try:
+                feedback = evaluation_feedback(controllers, arm, self.model, action_timeline,
+                                                 len(ids), n_steps, len(ids)+n_pad)
+            except ValueError as exc:
+                raise PredictorError(str(exc)) from exc
             entrant_callback = EntrantControllers(self.model.hold_teacher, feedback)
         with torch.no_grad():
             lane_teacher = None

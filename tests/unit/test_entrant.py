@@ -189,3 +189,43 @@ def test_generic_random_feedback_uses_recorded_algorithm_and_branch_seed():
     # must still be the bound (and the unobstructed leader's delivered command).
     assert np.all(actual[..., 3].numpy() <= expected + 1e-6)
     assert actual[0, 1, 3].item() == pytest.approx(expected[0, 1], abs=1e-6)
+
+
+def test_evaluation_native_resolves_algorithm_and_unknown_direct_arm_fails_closed():
+    from wms.control.entrant import evaluation_feedback
+    model, _ = fixture()
+    cb = evaluation_feedback({}, 'native', model, None, 1, 2, 3)
+    assert isinstance(cb, RowControllers)
+    assert (cb.callbacks[0].ids == CONTROLLERS.index('native')).all()
+    with pytest.raises(ValueError, match='same-arm'):
+        evaluation_feedback({}, 'unknown_policy', model, None, 1, 2, 3)
+
+
+def test_imagination_selects_observed_cav_features_only_when_enabled():
+    from wms.control.dreamer import DreamerConfig, DreamerTrainer
+    from wms.control.start_states import StartBatch
+    model, settings = fixture()
+    inp = prepare_inputs(batch(), model, settings, torch.device('cpu'), 2)
+    legacy = EntranceHistory.defaults()
+    observed = replace(legacy, cav_share=np.ones(2))
+    starts = StartBatch(inp.initial, entry_feat=torch.tensor(legacy.to_features())[None],
+                        entry_feat_control=torch.tensor(observed.to_features())[None])
+    for on in (False, True):
+        cfg = DreamerConfig(imagine_entries=True, entrant_control=on, horizon=2)
+        trainer = SimpleNamespace(config=cfg, _imagination_config=lambda _: cfg,
+                                  _training_imagination=False, horizon_curriculum=None)
+        ready = DreamerTrainer._entry_slots(trainer, starts, torch.Generator().manual_seed(1))
+        assert ready.entry_spec['histories'][0].cav_share.tolist() == ([1., 1.] if on else [0., 0.])
+    assert EntranceHistory.from_features(starts.entry_feat[0].numpy()).cav_share.tolist() == [0., 0.]
+
+
+def test_imagination_entry_crns_are_identity_keyed_and_draw_specific():
+    from wms.control.dreamer import _entry_process
+    history = EntranceHistory.defaults()
+    spec = dict(histories=[history], seeds=[123], k0=1)
+    legacy = _entry_process(spec, [0, 0], 4)
+    first = _entry_process(spec, [0, 0], 4, couple_draws=True)
+    second = _entry_process(spec, [0, 0], 4, couple_draws=True, sample_index=1)
+    assert not legacy.couple_draws
+    assert first.couple_draws and first._pair_seeds == [123, 123]
+    assert second._pair_seeds == [1000126, 1000126]

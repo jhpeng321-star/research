@@ -17,6 +17,29 @@ def ssh(host, source, data=None):
     return subprocess.run(['ssh', '-o', 'BatchMode=yes', host, command], input=data, check=True)
 
 
+def detach(host, name, source):
+    """Launch one named task-owned operation with immediate PID-incarnation receipt."""
+    assert name.replace('_', '').isalnum()
+    payload = base64.b64encode(source.encode()).decode()
+    ssh(host, '''
+import base64,json,subprocess,time
+from pathlib import Path
+p=Path.home()/'entrant';assert p.is_dir()
+receipt=p/(NAME+'_LAUNCH.json')
+if receipt.exists():
+    old=json.loads(receipt.read_text());stat=Path('/proc')/str(old['pid'])/'stat'
+    if stat.exists() and stat.read_text().split()[21]==old['start_ticks']:
+        raise RuntimeError('named owned operation already running')
+log=(p/(NAME+'.log')).open('ab')
+child=subprocess.Popen([str(Path.home()/'miniconda3/bin/python'),'-u','-c',
+    base64.b64decode(PAYLOAD).decode()],stdin=subprocess.DEVNULL,stdout=log,
+    stderr=subprocess.STDOUT,start_new_session=True)
+r={'pid':child.pid,'start_ticks':Path(f'/proc/{child.pid}/stat').read_text().split()[21],
+   'started':time.time(),'operation':NAME}
+receipt.write_text(json.dumps(r));print(json.dumps(r))
+'''.replace('NAME', repr(name)).replace('PAYLOAD', repr(payload)))
+
+
 def stage(host):
     files = ['src/wms/control/entrant.py', 'src/wms/control/dreamer.py',
              'src/wms/train/inputs.py', 'src/wms/train/settings.py',

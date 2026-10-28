@@ -40,3 +40,8 @@ observable pre-t0 insertions and transmitted CAV identity. OFF continues to use 
 unchanged legacy features; ON selects these features when queue shares are absent.
 The controller bridge reports executed recorded t0 commands to entrant observations,
 and keeps its ordinary entrant command history. Both merge-owner masks are preserved.
+
+`deterministic_crn` additionally keys imagination's no-queue candidate identities
+across counterfactuals and offsets arrival/lane draws by K-sample index. OFF retains
+the original streams. Evaluation accepts explicit callbacks or hash-bound specs;
+unambiguous native arms resolve automatically, unsupported direct arms fail closed.
