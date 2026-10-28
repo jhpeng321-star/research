@@ -852,7 +852,8 @@ class DreamerTrainer:
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False, difference_only=False, _memory_replay=False,
                 _memory_config=None, _memory_full_batch=None, _memory_start_index=None,
-                _memory_future_cache=None, _memory_active_future=None, _memory_row_index=None):
+                _memory_future_cache=None, _memory_active_future=None, _memory_row_index=None,
+                _memory_collect_future=None):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -974,9 +975,14 @@ class DreamerTrainer:
         collections = dict(states=member_states, rewards=member_rewards, costs=member_costs,
             entropy=member_entropy, actions=member_actions, components=member_components,
             lanes=member_lanes, zone=member_zone, action_audit=member_action_audit, anchor=member_anchor)
+        if _memory_collect_future is not None:
+            from .imagination_memory import _current_tape
+            _memory_future_cache['tape_prefix'] = _current_tape().position
         # Common random numbers: disagreement must measure WM differences, not action noise.
         for future_index, (model_index, sample_index) in enumerate(
                 [(e, s) for e in range(len(self.world_models)) for s in range(n_futures)]):
+            if _memory_collect_future is not None and future_index != _memory_collect_future:
+                continue
             if _memory_active_future is not None and future_index != _memory_active_future:
                 from .imagination_memory import replay_cached_future
                 total_rows = _memory_future_cache['items'][0]['payload']['rewards'].shape[1]
