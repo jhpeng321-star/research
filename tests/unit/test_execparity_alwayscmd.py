@@ -8,10 +8,10 @@ import pytest
 import torch
 
 from wms.control.alwayscmd import (BACKEND_CONTRACT, commands, completed_rows, executed,
-                                   inferred_base, scalar_executed, write_residuals)
-from wms.control.execution import contract, inferred_follow_cap, mode
+                                   inferred_base, inferred_cap, scalar_executed,
+                                   write_residuals)
+from wms.control.execution import contract, mode
 from wms.control.nativeinit import sumo_native_accel
-from wms.model.cav import EXEC_CAP_KEY
 
 
 class Domain:
@@ -131,10 +131,10 @@ def test_sole_writer_commands_every_cav_including_exact_zero():
 
 
 DRIVER_VALUES = dict(accel=1.15, decel=2.4, time_headway=1.35, min_gap=2.2, v0=29.)
-
-
-def params_tensor(shape, dtype=torch.float64):
-    return {k: torch.full(shape, v, dtype=dtype) for k, v in DRIVER_VALUES.items()}
+# S-EXECPARITY2: the imagination base law is the EXACT shared executor function
+# (wms.control.sumo_idm); a learned driver artifact is no longer consulted, so
+# DRIVER_VALUES is accepted-and-ignored by scalar_executed in the identity tests
+# below purely to pin the legacy call shape.
 
 
 @pytest.fixture
@@ -172,15 +172,17 @@ def test_imagination_law_matches_independent_scalar_formula(explicit_geometry):
     explicit_geometry["dv"] = (torch.tensor(v_np, dtype=dtype)
                                - torch.tensor(leader_np, dtype=dtype))[None]
     explicit_geometry["has"] = torch.tensor(has_np)[None]
-    params = params_tensor((1, n), dtype)
-    state[EXEC_CAP_KEY] = inferred_follow_cap(state, params)
-    tensor_out = executed(state, torch.tensor(r_np, dtype=dtype)[None], params=params)[0].numpy()
+    tensor_out = executed(state, torch.tensor(r_np, dtype=dtype)[None])[0].numpy()
     scalar_out = np.array([
         scalar_executed(v_np[i], leader_np[i] if has_np[i] else v_np[i],
                         gap_np[i] if has_np[i] else float("inf"), r_np[i], DRIVER_VALUES,
-                        ramp_gap=(max(MERGE_S1_M - s_np[i], 0.) if lane_np[i] == 2 else None))
+                        ramp_gap=(max(MERGE_S1_M - s_np[i], 0.) if lane_np[i] == 2 else None),
+                        lane=int(lane_np[i]), s_m=s_np[i])
         for i in range(n)])
-    assert np.max(np.abs(tensor_out - scalar_out)) < 2e-9
+    # same shared law, batched tensor kernels vs 0-dim evaluation: agree to
+    # <5e-9 even on extreme-deceleration rows (vectorized pow), bitwise on most
+    assert np.max(np.abs(tensor_out - scalar_out)) < 5e-9
+    assert float((tensor_out == scalar_out).mean()) > .9
 
 
 def test_zero_is_the_ctrl0_law_and_capped_positive_residual_has_zero_gradient(explicit_geometry):
@@ -193,13 +195,12 @@ def test_zero_is_the_ctrl0_law_and_capped_positive_residual_has_zero_gradient(ex
     st = {"v_mps": v, "s_m": torch.tensor([[500., 500., 500.]], dtype=dtype),
           "lane": torch.tensor([[1, 1, 1]]), "present": torch.ones(1, n, dtype=torch.bool),
           "length_m": torch.full((1, n), 5., dtype=dtype)}
-    params = params_tensor((1, n), dtype)
-    st[EXEC_CAP_KEY] = inferred_follow_cap(st, params)
-    base = inferred_base(st, params)
-    zero = executed(st, torch.zeros_like(v), params=params)
-    torch.testing.assert_close(zero, torch.maximum(torch.minimum(base, st[EXEC_CAP_KEY]), -v / .5))
+    base = inferred_base(st)
+    cap = inferred_cap(st)
+    zero = executed(st, torch.zeros_like(v))
+    torch.testing.assert_close(zero, torch.maximum(torch.minimum(base, cap), -v / .5))
     r = torch.tensor([[-.5, -.2, .5]], dtype=dtype, requires_grad=True)
-    out = executed(st, r, params=params)
+    out = executed(st, r)
     out_value = out.detach().clone()
     out.sum().backward()
     # row 0 (leader): braking residual with headroom -> strictly below the CTRL0 law
@@ -219,12 +220,10 @@ def test_tiny_residual_continuity_both_sides_of_zero(explicit_geometry):
           "s_m": torch.tensor([[400., 120.]], dtype=dtype),
           "lane": torch.tensor([[1, 2]]), "present": torch.ones(1, 2, dtype=torch.bool),
           "length_m": torch.full((1, 2), 5., dtype=dtype)}
-    params = params_tensor((1, 2), dtype)
-    st[EXEC_CAP_KEY] = inferred_follow_cap(st, params)
-    zero = executed(st, torch.zeros((1, 2), dtype=dtype), params=params)
+    zero = executed(st, torch.zeros((1, 2), dtype=dtype))
     for eps in (1e-2, 1e-5, 1e-8):
         for sign in (1., -1.):
-            tiny = executed(st, torch.full((1, 2), sign * eps, dtype=dtype), params=params)
+            tiny = executed(st, torch.full((1, 2), sign * eps, dtype=dtype))
             assert torch.max(torch.abs(tiny - zero)) <= eps * (1. + 1e-9)
 
 

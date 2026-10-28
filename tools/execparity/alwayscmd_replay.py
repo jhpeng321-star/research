@@ -6,6 +6,14 @@ imagination mirror ``wms.control.alwayscmd.executed`` and reports the executed
 acceleration error against SUMO's realised acceleration, the issued-command
 shortfall SUMO's own speedMode-27 cap produced, and the WM native-head error on
 the same rows. PASS = pooled executed RMSE <= pooled native-head RMSE.
+
+S-EXECPARITY2: the imagination mirror now executes commanded CAVs through the
+SAME shared exact law as the deployment executor
+(``wms.control.sumo_idm``: SUMO 1.27.1 ``MSCFModel_IDM::_v`` on the designed
+``cav_typical`` parameters, legacy gap convention, lane speed limits, exact
+safe-speed cap). ``mirror_from_issued`` additionally replays SUMO's own issued
+command through the shared cap only, isolating the cap/state residual error
+from the base-law error.
 """
 from __future__ import annotations
 
@@ -24,10 +32,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT), str(Path(__file__).resolve().parent)]
 
 from replay import sha, states_from_episode, summary
-from wms.control.alwayscmd import BACKEND_CONTRACT, executed, inferred_base
-from wms.control.execution import inferred_follow_cap
+from wms.control.alwayscmd import (BACKEND_CONTRACT, executed, inferred_base,
+                                   inferred_cap)
 from wms.control.native_cav import head_native_accel
-from wms.model.cav import EXEC_CAP_KEY
 
 torch.set_num_threads(1)
 
@@ -78,15 +85,15 @@ def world_rows(job):
         residual = torch.zeros_like(st["v_mps"])
         residual[0, local] = float(r["residual_mps2"])
         with torch.no_grad():
-            st[EXEC_CAP_KEY] = inferred_follow_cap(st, None)
             head = float(head_native_accel(st)[0, local])
             base = float(inferred_base(st, None)[0, local])
-            cap = float(st[EXEC_CAP_KEY][0, local])
+            cap = float(inferred_cap(st)[0, local])
             imag = float(executed(st, residual)[0, local])
+        mirror = max(-v0 / .5, min(float(r["issued_mps2"]), cap))
         out.append(dict(t_s=t, k=k, speed=v0, residual=float(r["residual_mps2"]),
                         sumo_base=float(r["base_law_mps2"]), issued=float(r["issued_mps2"]),
                         realised=realised, imagined=imag, head=head,
-                        inferred_base=base, cap=cap))
+                        inferred_base=base, cap=cap, mirror=mirror))
     return out, sha(tape_path)
 
 
@@ -107,17 +114,18 @@ def main():
     worlds, hashes = {}, {}
     pooled = {k: [] for k in ("imagined_minus_realised", "issued_minus_realised",
                               "head_minus_realised", "inferred_minus_sumo_base",
-                              "residual", "realised")}
+                              "mirror_minus_realised", "residual", "realised")}
     for job in jobs:
         rows, tape_sha = world_rows(job)
         assert rows, f"no stable rows replayed for {job.name}"
         arr = {k: np.array([r[k] for r in rows]) for k in
                ("imagined", "issued", "realised", "head", "inferred_base",
-                "sumo_base", "residual", "cap")}
+                "sumo_base", "residual", "cap", "mirror")}
         err = arr["imagined"] - arr["realised"]
         iss = arr["issued"] - arr["realised"]
         head_err = arr["head"] - arr["realised"]
         base_err = arr["inferred_base"] - arr["sumo_base"]
+        mirror_err = arr["mirror"] - arr["realised"]
         worlds[job.name] = {
             "n_rows": len(rows),
             "row_cadence_s": float(np.diff(np.unique([r["t_s"] for r in rows])).min()),
@@ -125,6 +133,8 @@ def main():
             "issued_minus_realised": summary(iss),
             "head_minus_realised": summary(head_err),
             "inferred_base_minus_sumo_base": summary(base_err),
+            "mirror_from_issued_minus_realised": summary(mirror_err),
+            "base_exact_fraction_1e-9": float((np.abs(base_err) < 1e-9).mean()),
             "residual": summary(arr["residual"]),
             "realised": summary(arr["realised"]),
             "issued_at_or_below_realised": float((iss <= 1e-3).mean()),
@@ -137,6 +147,7 @@ def main():
         for key, values in (("imagined_minus_realised", err), ("issued_minus_realised", iss),
                             ("head_minus_realised", head_err),
                             ("inferred_minus_sumo_base", base_err),
+                            ("mirror_minus_realised", mirror_err),
                             ("residual", arr["residual"]), ("realised", arr["realised"])):
             pooled[key].extend(values.tolist())
         print(job.name, len(rows), flush=True)
@@ -150,8 +161,9 @@ def main():
                           "ci95": np.quantile(x[draws].mean(1), [.025, .975]).tolist()}
     pooled_out = {k: summary(v) for k, v in pooled.items()}
     result = {
-        "schema": "execparity_alwayscmd_replay/1",
+        "schema": "execparity_alwayscmd_replay/2",
         "backend_contract": BACKEND_CONTRACT,
+        "imagination_base_law": "exact_shared_executor_law/sumo_idm/1",
         "driver_sha256": sha(args.driver),
         "decision": "00:20",
         "worlds": worlds, "jobs": hashes, "pooled": pooled_out,
@@ -162,7 +174,8 @@ def main():
         "measured_real_sumo": True,
         "limitations": [
             "log cadence is the composer call grid; realised uses tape first-substep speed difference",
-            "ramp lane-end stop uses the tape frame; allowed-speed clamp uses the learned v0",
+            "allowed speed uses the registered lane limits (mainline 31.29 / ramp 22.22);",
+            "junction-internal connector speed (26.75) and foe yielding are not observable in a WM frame",
             "native head is an approximate reference band, not an executor",
         ],
     }
@@ -184,6 +197,9 @@ def main():
             "native_arm_head_error": {"rmse": pooled_out["head_minus_realised"]["rmse"]},
             "c1_residual_execution_error": {"rmse": pooled_out["imagined_minus_realised"]["rmse"]},
             "error": {"ours": {"rmse": pooled_out["imagined_minus_realised"]["rmse"]}},
+            "imagination_base_law": result["imagination_base_law"],
+            "shared_module_sha256": hashlib.sha256(
+                (ROOT / "src/wms/control/sumo_idm.py").read_bytes()).hexdigest(),
             "decision": "00:20",
             "report": str(args.out),
         }

@@ -5,9 +5,15 @@ single CommandOwnership writer - the S-CTRLARM CTRL0 path with the policy's
 residual kept instead of forced to zero. There is no native release at
 residual 0: the deterministic base law (SUMO's own car-following command,
 ``sumo_native_accel``) is issued plus the residual, and SUMO then applies its
-speedMode-27 safe-speed cap and the 1.2 m/s^2 acceleration bound. Imagination
-mirrors the same law with the identical envelope algebra, an inferred base law
-and an inferred follow cap from the TRAIN-learned IDM driver artifact.
+speedMode-27 safe-speed cap and the 1.2 m/s^2 acceleration bound.
+
+S-EXECPARITY2 (02:40): imagination executes commanded CAVs through the SAME
+function as the deployment executor. ``inferred_base``/``executed`` call the
+shared exact law of :mod:`wms.control.sumo_idm` (SUMO 1.27.1
+``MSCFModel_IDM::_v`` on the designed ``cav_typical`` vType parameters, the
+frozen legacy gap convention and lane speed limits) with the WM state of the
+CAV and its leader, then the same safe-speed cap formula and bounds. The
+TRAIN-learned IDM driver mirror is retired from this path.
 
 Residual 0 is bit-identical to CTRL0 by construction: the composer returns the
 unclipped base law exactly as S-CTRLARM ``forced_base_commands`` did. The
@@ -65,116 +71,92 @@ def write_residuals(api, residuals, lo, hi, *, dt=0.5):
     return composed
 
 
-def _driver_params(state, params):
-    """Same parameter source as ``execution.inferred_follow_cap``."""
-    import os
-    import torch
-    fitted = os.environ.get("C4_EXECUTION_DRIVER")
-    if fitted:
-        from .execution import load_learned_driver
-        values = load_learned_driver(fitted)
-        v = state["v_mps"]
-        return {key: torch.full_like(v, value) for key, value in values.items()}
-    if params is None:
-        raise ValueError("always-commanded imagination needs learned driver parameters")
-    return params
+def _wm_geometry(state):
+    """The WM frame's own speed, leader bumper gap, leader speed and presence."""
+    from .native_cav import leader_gap_dv
+    v = state["v_mps"]
+    gap, dv, has = leader_gap_dv(state)
+    return v, gap, v - dv, has
 
 
 def inferred_base(state, params=None, *, dt=0.5):
-    """Mirror of ``sumo_native_accel`` under the learned IDM driver.
+    """EXACT executor base law for a commanded CAV (S-EXECPARITY2, 02:40).
 
-    The frozen base law passes the bumper gap plus minGap to ``getFollowSpeed``
-    while the IDM adds minGap internally; that legacy convention is mirrored
-    here by adding the learned min_gap once more before the single-add
-    ``idm_follow_speed``. ``getAllowedSpeed`` is mirrored by the learned v0.
+    Calls the SAME shared function as the deployment executor's law
+    (:func:`wms.control.nativeinit.sumo_native_accel` -> SUMO 1.27.1
+    ``MSCFModel_IDM::_v`` on the designed ``cav_typical`` vType parameters):
+    :func:`wms.control.sumo_idm.base_accel` with the WM state of the CAV and
+    its leader, the frozen legacy double-minGap gap convention and the lane
+    ``allowed_speed``. ``params`` (learned driver artifact values) is accepted
+    for signature compatibility and deliberately ignored - the base law is the
+    executor's own function and parameters, never a learned mirror.
     """
-    import torch
-    from .execution import idm_follow_speed
-    from .native_cav import leader_gap_dv
-    params = _driver_params(state, params)
-    v = state["v_mps"]
-    gap, dv, has = leader_gap_dv(state)
-    gap = torch.where(has, gap, torch.full_like(gap, float("inf")))
-    legacy_gap = gap + params["min_gap"].to(v)
-    target = idm_follow_speed(v, v - dv, legacy_gap, params, dt=dt)
-    target = torch.minimum(target, params["v0"].to(v))
-    return (target.clamp_min(0.) - v) / dt
+    from . import sumo_idm
+    v, gap, leader_speed, has = _wm_geometry(state)
+    allowed = sumo_idm.allowed_speed(state["lane"], state["s_m"])
+    return sumo_idm.base_accel(v, leader_speed, gap, allowed,
+                               has_leader=has, dt=dt)
+
+
+def inferred_cap(state, *, dt=0.5):
+    """EXACT speedMode-27 executed-speed ceiling from the WM frame."""
+    from . import sumo_idm
+    v, gap, leader_speed, has = _wm_geometry(state)
+    allowed = sumo_idm.allowed_speed(state["lane"], state["s_m"])
+    return sumo_idm.safe_speed_cap(v, leader_speed, gap, allowed,
+                                   has_leader=has, lane=state["lane"],
+                                   s_m=state["s_m"], dt=dt)
 
 
 def executed(state, residual, lo=-3., hi=1.2, *, dt=0.5, params=None):
     """Imagination mirror of the always-commanded executed acceleration.
 
-    ``issued = clip(base + r, min(lo, base), max(min(hi, 1.2), base))`` with the
-    inferred base law, then the speedMode-27 outcome ``min(issued, follow cap)``
-    floored by the nonnegative-speed bound. Residual 0 yields the executed
-    CTRL0 law ``max(-v/dt, min(base, cap))``; the WM head is NOT the base. A
-    positive residual beyond the cap keeps exactly zero gradient.
+    ``issued = clip(base + r, min(lo, base), max(min(hi, 1.2), base))`` with
+    the EXACT shared executor base law, then the SUMO speedMode-27 outcome
+    ``max(-v/dt, min(issued, cap))`` with the exact shared safe-speed cap
+    formula and bounds (single-minGap follow speed, lane-2 dead-end stop,
+    accel/allowedSpeed ceiling): the single shared composed law
+    :func:`wms.control.sumo_idm.executed_accel` evaluated on the WM state of
+    the CAV and its leader. The WM head is NOT the base and
+    ``state[EXEC_CAP_KEY]`` is NOT consulted: imagination executes commanded
+    CAVs through the executor's own function. Residual 0 yields the executed
+    CTRL0 law; a positive residual beyond the cap keeps exactly zero gradient.
     """
-    import torch
-    from wms.model.cav import EXEC_CAP_KEY
-    v = state["v_mps"]
-    base = inferred_base(state, params, dt=dt)
-    if EXEC_CAP_KEY in state:
-        cap = state[EXEC_CAP_KEY].to(residual)
-    else:
-        from .execution import inferred_follow_cap
-        cap = inferred_follow_cap(state, _driver_params(state, params), dt=dt)
-    upper = torch.maximum(base, torch.full_like(base, min(float(hi), 1.2)))
-    lower = torch.minimum(base, torch.full_like(base, float(lo)))
-    issued = torch.minimum(torch.maximum(base + residual, lower), upper)
-    return torch.maximum(torch.minimum(issued, cap), -v / dt)
+    from . import sumo_idm
+    v, gap, leader_speed, has = _wm_geometry(state)
+    allowed = sumo_idm.allowed_speed(state["lane"], state["s_m"])
+    return sumo_idm.executed_accel(v, leader_speed, gap, allowed, residual,
+                                   float(lo), float(hi), has_leader=has,
+                                   lane=state["lane"], s_m=state["s_m"], dt=dt)
 
 
-def scalar_executed(speed, leader_speed, gap, residual, params, lo=-3., hi=1.2, *,
-                    dt=0.5, has_leader=True, ramp_gap=None, allowed_speed=None):
+def scalar_executed(speed, leader_speed, gap, residual, params=None, lo=-3., hi=1.2, *,
+                    dt=0.5, has_leader=True, ramp_gap=None, allowed_speed=None,
+                    prev_lane=None, lane=None, s_m=None):
     """Independent scalar mirror of :func:`executed` for fixtures and offline replay.
 
-    ``params`` maps accel/decel/time_headway/min_gap/v0 to plain floats. The
-    follow cap uses the single-minGap convention plus the lane-end stop and the
-    learned v0/accel/1.2 bounds, exactly like ``inferred_follow_cap``; the base
-    law uses the legacy double-add convention plus the v0 clamp.
+    ``gap`` is the WM-frame bumper gap of the CAV's leader; ``params`` is
+    accepted and ignored (the law is the executor's own). ``allowed_speed``
+    defaults to the lane/position rule (or ``prev_lane`` for junction rows);
+    ``ramp_gap`` (if finite) applies the lane-2 dead-end stop exactly like the
+    tensor path. Evaluates the SAME shared composed law through
+    :func:`wms.control.sumo_idm.executed_accel_scalar`, so it is bitwise
+    identical to the tensor path by construction.
     """
-    values = [speed, leader_speed, residual, lo, hi, dt]
-    if not all(math.isfinite(float(x)) for x in values) or dt <= 0:
-        raise ValueError("finite always-commanded execution inputs required")
-    a, b, tau, gap0, v0 = (float(params[k]) for k in
-                           ("accel", "decel", "time_headway", "min_gap", "v0"))
-    if allowed_speed is not None:
-        v0 = min(v0, float(allowed_speed))
-    # matches torch.finfo(float64).eps used by execution.idm_follow_speed's clamp_min
-    eps = 2.220446049250313e-16
-
-    def idm_speed(v, vl, g, respect_min_gap):
-        # Branch-by-branch mirror of execution.idm_follow_speed (dt=.5 -> 2 substeps).
-        iterations = max(1, int(float(dt) / .25 + .5))
-        step = float(dt) / iterations
-        out, gap_now = v, g
-        for _ in range(iterations):
-            desired = max(0., out * tau + out * (out - vl) / (2. * math.sqrt(max(a * b, eps))))
-            if respect_min_gap:
-                desired += gap0
-            accel = a * (1. - (out / max(v0, eps)) ** 4
-                         - (desired / max(gap_now, eps)) ** 2)
-            out = max(0., out + accel * step)
-            gap_now = gap_now - max(0., out - vl) * step
-        return out
-
-    if has_leader:
-        cap_target = idm_speed(speed, float(leader_speed), float(gap), True)
-        base_target = idm_speed(speed, float(leader_speed), float(gap) + gap0, True)
+    from . import sumo_idm
+    if allowed_speed is None:
+        if lane is not None:
+            allowed = sumo_idm.allowed_speed_scalar(lane, s_m if s_m is not None else 0.,
+                                                    prev_lane=prev_lane)
+        else:
+            from .contract import SPEED_LIMIT_MPS
+            allowed = float(SPEED_LIMIT_MPS)
     else:
-        cap_target = idm_speed(speed, float(speed), float("inf"), True)
-        base_target = idm_speed(speed, float(speed), float("inf"), True)
-    if ramp_gap is not None and math.isfinite(float(ramp_gap)):
-        stop = idm_speed(speed, 0., float(ramp_gap), False)
-        cap_target = min(cap_target, stop, float(ramp_gap) / dt)
-    cap_target = min(cap_target, v0)
-    cap = min((cap_target - speed) / dt, a, 1.2)
-    base = (max(0., min(base_target, v0)) - speed) / dt
-    upper = max(base, min(float(hi), 1.2))
-    lower = min(base, float(lo))
-    issued = min(max(base + float(residual), lower), upper)
-    return max(-speed / dt, min(issued, cap))
+        allowed = float(allowed_speed)
+    return sumo_idm.executed_accel_scalar(speed, leader_speed, gap, allowed,
+                                          residual, float(lo), float(hi),
+                                          has_leader=has_leader, ramp_gap=ramp_gap,
+                                          dt=dt)
 
 
 def completed_rows(api, before, residuals, issued, *, dt=0.5):
