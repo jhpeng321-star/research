@@ -67,3 +67,12 @@ def test_invalid_worker_count_rejected(monkeypatch):
         monkeypatch.setenv('WMS_SPEED_FUTURE_VJP_SLOTS', value)
         with pytest.raises(ValueError):
             vjp_slots()
+
+
+def test_orphan_workers_request_owned_stop(tmp_path, monkeypatch):
+    from wms.control.parallel_futures import parent_alive
+    monkeypatch.setattr('wms.control.parallel_futures._REPARENTING', True)
+    monkeypatch.setenv('WMS_SPEED_FUTURE_PARENT_PID', '98765')
+    monkeypatch.setattr('os.getppid', lambda: 1)
+    assert not parent_alive(tmp_path)
+    assert (tmp_path/'STOP').exists()

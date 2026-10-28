@@ -18,6 +18,9 @@ import uuid
 
 import torch
 
+# Windows venv launchers may insert an intermediate parent process.
+_REPARENTING = os.name != 'nt'
+
 
 def worker_count():
     raw = os.environ.get('WMS_SPEED_FUTURE_WORKERS', '1')
@@ -38,6 +41,15 @@ def vjp_slots():
     return int(raw)
 
 
+def parent_alive(root):
+    """Linux reparents orphan workers; stop this owned pool without signals."""
+    expected = os.environ.get('WMS_SPEED_FUTURE_PARENT_PID')
+    if _REPARENTING and expected and os.getppid() != int(expected):
+        (root/'STOP').touch()
+        return False
+    return True
+
+
 class VJPGate:
     """Keep replay forwards concurrent while bounding live large recomputations.
 
@@ -53,7 +65,7 @@ class VJPGate:
 
     def acquire(self):
         while self.token is None:
-            if (self.root/'STOP').exists():
+            if not parent_alive(self.root) or (self.root/'STOP').exists():
                 raise RuntimeError('own worker STOP requested while waiting for VJP slot')
             for index in range(vjp_slots()):
                 token = self.root/'vjp_slots'/str(index)
@@ -109,6 +121,7 @@ class FuturePool:
         self.processes, self.logs = [], []
         env = dict(os.environ)
         env['WMS_SPEED_POOL_KIND'] = common['kind']
+        env['WMS_SPEED_FUTURE_PARENT_PID'] = str(os.getpid())
         if common['kind'] == 'forward':
             env['WMS_SPEED_FUTURE_MEMORY_FRACTION'] = env.get(
                 'WMS_SPEED_FORWARD_MEMORY_FRACTION', '0.04')
@@ -123,7 +136,7 @@ class FuturePool:
             if not 0 < low <= fraction <= .6:
                 raise ValueError('memory fractions must satisfy 0 < idle <= active <= .6')
             bound = torch.cuda.memory_reserved(trainer.device) + total * (
-                slots * fraction + (worker_count() - slots) * low) + worker_count() * 768 * 1024**2
+                slots * fraction + (worker_count() - slots) * low) + (worker_count() + 1) * 768 * 1024**2
             if bound > .60 * total:
                 raise ValueError(f'parallel memory budget exceeds 60%: {bound / total:.3f}')
         (self.root/'vjp_slots').mkdir()
@@ -307,7 +320,7 @@ def _main(root, index):
     common = torch.load(root / 'common.pt', weights_only=False)
     gate = VJPGate(trainer, root) if gated else None
     completed = set()
-    while not (root / 'STOP').exists():
+    while parent_alive(root) and not (root / 'STOP').exists():
         ready = sorted(directory.glob('*.ready'), key=lambda p: int(p.stem))
         for path in ready:
             if (root / 'STOP').exists():
