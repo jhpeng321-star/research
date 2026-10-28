@@ -27,3 +27,25 @@ THREE times (no-grad full forward, grad replay forward, checkpoint recompute in 
 (Python + per-op dispatch + host syncs), not GPU-bound. `imagination_microbatch=1` is a
 no-op here (1 start = full batch); the "one future at a time" replay (offload_futures)
 plus segment checkpointing is what triples the simulation.
+
+## 2. Where the per-step time goes (py-spy on OWN benchmark processes)
+
+Own benchmark workers call `prctl(PR_SET_PTRACER_ANY)` on themselves, so py-spy works
+on them (not on any other process). Profiles: `tools/polspeed/prof/*.raw`
+(`python tools/polspeed/agg.py <raw>`). Startup imagination (no-grad, same `imagine`):
+`rollout/step` 64 %, post-rollout reward 30 % of which `_soft_cvar` 23 % SELF. The reward
+is evaluated ROW BY ROW on purpose (`nativeinit.paired_reward`: row-local reduction
+geometry so identical rows give identical J) and each call runs a 32-step detached
+bisection (~360 tiny CUDA launches). Under LONGMEM every aten op additionally goes
+through the Python `_RandomTape.__torch_dispatch__` (39 % inclusive in the full-forward
+sample). Remaining time: MOBIL lane logits (9-16 %), merge-pivot geometry, srcgrad queue
+surrogate (per-step, per-entrance small-op chains). Everything is launch/Python-bound.
+
+## 3. Memory facts measured tonight
+
+* `imagination_checkpoint_segment = 0` + spill OFF (one future graph live, no recompute):
+  **OOM at cap 0.30 (14.21 GiB allowed, 13.79 GiB allocated)** during the FIRST future's
+  replay forward (`failed_attempt1/FM0_oom_cap030`). One 90 s future graph alone needs
+  > 14 GiB, so an all-8-futures single graph (no checkpoint) needs > ~110 GiB: the
+  "batched K8 with grad, no recompute" variant cannot fit in 0.5 x 48 GB, nor in 48 GB.
+* Segment checkpointing therefore stays; tested fast variants keep segment 8.
