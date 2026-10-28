@@ -1,5 +1,17 @@
 # S-LRDIAG-1 live handoff (not the final report)
 
+Latest checkpoint: **93b6f409** contains LRDIAG.md (520 words at that point) and
+the complete primary E3 CSV/figure package. Both CPU input audits passed all2151
+staged-file SHA checks. All288 full-class output upgrades passed with exactly0
+J/speed/count difference; fullfield timeline is complete (36 worlds/288 draws),
+class-delay accounting max7.25e-5veh-s. Pulse repairs are now COMPLETE96/96 with
+zero retry failures; pulse aggregation passed (29952 amplitudes/1152 chain gains),
+world gain tables and supplemental figure inspected. Only pairs300 remains
+running (recent P647+ / Q743+ pool completions out of1296 each, includes144 upgrades).
+Direct SSH banner handshakes began timing out; authorized `-J gpuR` / SCP
+`-o ProxyJump=gpuR` works without GPU use or project writes. `gather.py --jump`
+supports this route. See latest progress receipts rather than old counts below.
+
 ## Rules and location
 - E:/agent-work/c4-lrdiag, c4/lrdiag, base b74837d0. Commits so far: 95b829ad, 535946d8, 0b31d9e7; later tool additions are being checkpointed.
 - Analysis only: no SUMO, training, GPU inference, push, reset/clean/stash. All model inference CPU on cpuP/cpuQ under ~/lrdiag, <=24 active workers, collection yield. Own explicit PID/start-token/parent checks only.

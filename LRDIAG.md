@@ -1,6 +1,6 @@
 # S-LRDIAG — long-run response diagnosis
 
-**Status:** E3 validation analysis complete; supplemental pulse/pairs300 jobs are finishing.
+**Status:** E3 validation analysis complete; supplemental pulse/pairs300 analysis is continuing.
 
 [CSV/figures](evidence_lrdiag/) · [definitions and reproduction](tools/lrdiag/README.md).
 
@@ -24,4 +24,4 @@ WM2 `b8797242`, **36 E3 validation worlds**, native/MAPPO/ours, matched warmup-e
 2. **Missing controller continuity:** synthetic entrant CAVs receive native commands. Post-t0 arrivals supply **99.6%** of MAPPO’s recorded upstream direct-control vehicle-time during 120–300 s. This is missing-input exposure, not an identified causal share of bias.
 3. **Phase/survival errors**, rather than uniformly decaying perturbations.
 
-**One learned candidate:** flag-gated `ramp_response_v2`, a signed gap-/CAV-action/history-conditioned ramp-acceleration residual replacing the rigid brake-only adapter. Restore entrant identity/action continuity before fitting; use E3 fit worlds, calibration selection, validation verdict. **Quick offline check:** a recorded-ramp longitudinal-acceleration oracle, with CAV/entry exposure matched and learned lanes/merge retained; test 300 s correlation, paired bias and upstream error recovery. No global wave-gain increase is justified.
+**One learned candidate:** flag-gated `ramp_response_v2`, a signed gap-/CAV-action/history-conditioned ramp-acceleration residual replacing the rigid brake-only adapter. Restore entrant identity/action continuity before fitting; use E3 fit worlds, calibration selection, validation verdict. **Proposed quick offline check:** a recorded-ramp longitudinal-acceleration oracle, with CAV/entry exposure matched and learned lanes/merge retained; test 300 s correlation, paired bias and upstream error recovery. No global wave-gain increase is justified.

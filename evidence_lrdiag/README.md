@@ -23,6 +23,11 @@ three arms, WM2 b8797242, K=8. Supplemental filenames beginning `pairs300_` or
   `horizon_curve.csv`: absolute t0-HDV values and regional attribution.
 - `COVERAGE.json`, `FULLFIELD_COVERAGE.json`, `NUMERICS.json`,
   `INPUTS_VERIFIED.json`, `VERIFIED.json`: completion, invariants and SHA receipts.
+- `pulse_amplitude_*`, `pulse_signal_draws.csv`, `pulse_gain_*`: 12 recorded
+  qualification worlds, 30 s, K=8; amplitude along the initial following platoon,
+  adjacent-vehicle / per-100 m gains and positive-amplitude log fits. World gains
+  use median over K, then targets within world; support and exact-zero counts are
+  retained. These worlds are outside E3 validation and are not verdict evidence.
 
 Methods, execution guards and reproduction commands: `tools/lrdiag/README.md`
 and `CONTRACT.md`. Primary J uses the registered speed-deficit proxy, not full-fleet

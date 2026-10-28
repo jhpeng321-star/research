@@ -1,6 +1,7 @@
 """Merge disjoint task-owned CPUQ parity results into CPUP, via local SSH pipes."""
 import base64
 import subprocess
+import sys
 
 EXPORT=r'''
 from pathlib import Path
@@ -91,9 +92,11 @@ def command(code):
 
 
 if __name__=='__main__':
-    index=subprocess.check_output(['ssh','-o','BatchMode=yes','cpuP','python3 -c '+command(INDEX)])
-    src=subprocess.Popen(['ssh','-o','BatchMode=yes','-o','ServerAliveInterval=15','cpuQ',
+    ssh=['ssh','-o','BatchMode=yes','-o','ServerAliveInterval=15']
+    if '--jump' in sys.argv:ssh+=['-J','gpuR']
+    index=subprocess.check_output([*ssh,'cpuP','python3 -c '+command(INDEX)])
+    src=subprocess.Popen([*ssh,'cpuQ',
         '/home/ubuntu/miniconda3/bin/python -c '+command(EXPORT)],stdin=subprocess.PIPE,stdout=subprocess.PIPE)
     src.stdin.write(index);src.stdin.close()
-    dst=subprocess.run(['ssh','-o','BatchMode=yes','-o','ServerAliveInterval=15','cpuP','python3 -c '+command(IMPORT)],stdin=src.stdout)
+    dst=subprocess.run([*ssh,'cpuP','python3 -c '+command(IMPORT)],stdin=src.stdout)
     src.stdout.close();assert src.wait()==0 and dst.returncode==0
