@@ -48,7 +48,7 @@ def charge(host, job):
                     registration_sha256=hashlib.sha256(REG.read_bytes()).hexdigest())
 
 
-def run_host(host, mode):
+def run_host(host, mode, only=None):
     # A single connected stream per host. No background launcher or remote poll;
     # the remote worker blocks for a durable local registration ACK for each job.
     names = ['tools/execparity/alwayscmd_adapter.py', 'tools/execparity/sumo_worker.py']
@@ -68,7 +68,7 @@ os.environ.update(OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='
  C4_ALLOWED_ROOTS='/home/ubuntu/e3final:/home/ubuntu/execparity',
  SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo',
  PATH='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin:/home/ubuntu/c4/venv/bin:/home/ubuntu/miniconda3/bin:/usr/bin:/bin')
-sys.argv=['sumo_worker.py',{mode!r},{host!r}]
+sys.argv=['sumo_worker.py',{mode!r},{host!r}]+([{only!r}] if {only!r} else [])
 source=r/'tools/execparity/sumo_worker.py'
 exec(compile(source.read_text(),str(source),'exec'),dict(__name__='__main__',__file__=str(source)))
 '''
@@ -125,11 +125,16 @@ exec(compile(source.read_text(),str(source),'exec'),dict(__name__='__main__',__f
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('canary', 'production'))
+    parser.add_argument('mode', choices=('canary', 'production', 'resume'))
+    parser.add_argument('--host', choices=('cpuP', 'cpuQ'))
+    parser.add_argument('--only', help='resume a single registered job id after an uncharged interruption')
     args = parser.parse_args()
     assert EVIDENCE.is_dir() and REG.is_file()
     if args.mode == 'canary':
         run_host('cpuP', 'canary')
+    elif args.mode == 'resume':
+        assert args.host and args.only, 'resume needs --host and --only'
+        run_host(args.host, 'production', only=args.only)
     else:
         canary = json.loads((EVIDENCE / 's977000_always0.json').read_text())
         assert canary['identity']['bit_identical']

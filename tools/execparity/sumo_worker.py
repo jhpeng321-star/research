@@ -44,17 +44,23 @@ def verify_sources():
     return len(entries)
 
 
-def jobs_for(mode, host):
+def jobs_for(mode, host, only=None):
     if mode == 'canary':
         assert host == 'cpuP'
-        return [dict(id='s977000_always0', seed=977000, arm='always0')]
-    shard = 0 if host == 'cpuP' else 1
-    seeds = {977002} if shard == 0 else {977001, 977003}
-    return [dict(id=f's{seed}_alwaysx', seed=seed, arm='alwaysx') for seed in sorted(seeds)]
+        jobs = [dict(id='s977000_always0', seed=977000, arm='always0')]
+    else:
+        shard = 0 if host == 'cpuP' else 1
+        seeds = {977002} if shard == 0 else {977001, 977003}
+        jobs = [dict(id=f's{seed}_alwaysx', seed=seed, arm='alwaysx') for seed in sorted(seeds)]
+    if only is not None:
+        jobs = [j for j in jobs if j['id'] == only]
+        assert jobs, f'job {only} not registered for {mode}/{host}'
+    return jobs
 
 
 def main():
-    mode, host = sys.argv[1:]
+    mode, host = sys.argv[1:3]
+    only = sys.argv[3] if len(sys.argv) > 3 else None
     assert mode in ('canary', 'production') and host in ('cpuP', 'cpuQ')
     lock = (OWN / 'RUN.lock').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -73,7 +79,7 @@ def main():
     shard = 0 if host == 'cpuP' else 1
     base = R / f'main/e3final/shard{shard}/jobs'
     jobs = []
-    for spec in jobs_for(mode, host):
+    for spec in jobs_for(mode, host, only):
         stored = json.loads((base / f"s{spec['seed']}_ours/result.json").read_text())
         j = dict(stored['job'])
         j.update(id=spec['id'], arm=spec['arm'])
@@ -82,7 +88,7 @@ def main():
         jobs.append(j)
     preflight = dict(mode=mode, host=host, pid=os.getpid(), nice=19, threads=1,
                      source_manifest_sha256=SOURCE, verified_source_files=verified,
-                     input_hashes=bindings, load=os.getloadavg(), jobs=jobs,
+                     input_hashes=bindings, load=os.getloadavg(), jobs=jobs, only=only,
                      adapter_sha256=adapter,
                      worker_sha256=sha(__file__), time=time.time())
     write(OWN / f'{mode}_PREFLIGHT.json', preflight)
