@@ -166,3 +166,10 @@ One local receipt-bound transport monitor may retry the same immutable source
 at>=300s after refusal and poll detached qualification at>=120s, stopping on
 qualification result/error or MAIN17:00's deadline. It cannot dispatch dry or
 policy; no peer process signalling or SUMO path exists.
+
+Source dde58943 staged successfully (1217SHA-verified files,12transferred)
+at09:46:04UTC and detached qualifier389499/start856097866 completed normally
+at09:46:56UTC, CPU stageFAIL. The qualifier's CPU/tmp parent did not exist;
+pytest's basetemp setup failed. Original logs/results retained, CUDA not run.
+Operational fix creates each CPU/CUDA stage parent before pytest. No dry or
+policy was dispatched; the local transport monitor terminated on this failure.

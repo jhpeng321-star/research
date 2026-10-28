@@ -1,0 +1,20 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "dde58943d668e7fd7fcb6b8f2a11dd271689367b",
+  "staged_files": 1217,
+  "transferred_files": 12,
+  "coordinator_pid": 389499,
+  "coordinator_start_ticks": "856097866",
+  "coordinator_alive_at_receipt": false,
+  "cpu_exit": 1,
+  "cpu_timed_out": false,
+  "cpu_elapsed_s": 51.48305443301797,
+  "cpu_finished_utc": "2026-10-28T09:46:56.015519+00:00",
+  "cause": "pytest basetemp CPU/tmp parent absent; operational qualifier setup error",
+  "fix": "exclusive-create each stage parent before pytest",
+  "cuda_stage_ran": false,
+  "remote_logs": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/launch_checks_dde58943d668",
+  "local_full_receipt": "E:/Temp/opencode/c4launch_transport_recovery_v1_RESULT.json",
+  "dry_or_policy_launched": false,
+  "transport_monitor_exited": true
+}

@@ -23,6 +23,8 @@ def main():
     ]
     results = []
     for name, tests, env, timeout in stages:
+        # pytest creates basetemp itself, but requires its parent to exist.
+        (root / name).mkdir(exist_ok=False)
         started = time.monotonic()
         argv = [sys.executable, '-B', '-m', 'pytest', '-q', '-o', 'addopts=',
                 '--basetemp', str(root / name / 'tmp'), *tests]
