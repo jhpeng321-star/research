@@ -1,0 +1,18 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "cf1e9eda5f8f006f77b2ee17d757333356553d88",
+  "runtime": "/root/autodl-tmp/c4/restart20261026/runtime_c4prep_cf1e9eda5f8f",
+  "passed": true,
+  "coordinator_pid": 390414,
+  "coordinator_start_ticks": "856121033",
+  "coordinator_alive_at_receipt": false,
+  "cpu": {"passed": 65, "cuda_only_skipped": 2, "exit": 0, "elapsed_s": 53.48697446659207},
+  "cuda": {"passed": 2, "exit": 0, "elapsed_s": 29.757295994088054},
+  "proofs": ["complete original LONGMEM suite", "production full residual actor K8/q10 with entrant ON", "gradient/update/optimizer/whole RNG equivalence", "strict CUDA saved-tensor copy gradient equivalence", "historical C1 full-resume registered credit/entrant/CRN preservation"],
+  "finished_utc": "2026-10-28T09:51:19.453689+00:00",
+  "remote_receipt": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/CHECKS_cf1e9eda5f8f.json",
+  "remote_logs": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/launch_checks_cf1e9eda5f8f",
+  "real_dry_updates": 0,
+  "policy_launched": false,
+  "new_sim_s": 0
+}

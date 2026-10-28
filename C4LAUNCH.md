@@ -173,3 +173,14 @@ at09:46:56UTC, CPU stageFAIL. The qualifier's CPU/tmp parent did not exist;
 pytest's basetemp setup failed. Original logs/results retained, CUDA not run.
 Operational fix creates each CPU/CUDA stage parent before pytest. No dry or
 policy was dispatched; the local transport monitor terminated on this failure.
+
+## GPU-qualified recovery source cf1e9eda — two real dry updates next
+
+Fresh immutable cf1e9eda staged1217verified files (1delta). Own qualifier
+390414/start856121033 completed09:51:19UTC:65CPU testsPASS/2CUDA-only skips,
+then2CUDA testsPASS (production full residual actor K8/q10/entrantON exact
+gradient/update/optimizer/whole RNG parity and strict saved-copy parity).
+No qualification timeout, no lingering qualifier; full receipts/logs retained.
+Compact `tools/c4prep/evidence/RESUME_GPU_QUALIFIED.json` committed before dry.
+Streamed full-K VJP repair is now GPU-verified/activated in that runtime.
+No real dry-update PASS or full phase claimed yet; MAIN17:00 deadline stands.
