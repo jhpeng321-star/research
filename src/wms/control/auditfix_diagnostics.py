@@ -1,4 +1,46 @@
 """Training audit startup/selection diagnostics; no training objective changes."""
+import sys
+
+
+def warn_unused_settings(raw, *, native_init=False, boundary=None):
+    """Report configured values bypassed by this CLI's actual mode, before setup."""
+    rows = []
+
+    def add(section, keys, reason):
+        keys = sorted(set(keys) & set(raw.get(section, {})))
+        if keys:
+            row = dict(section=section, keys=keys, reason=reason)
+            rows.append(row)
+            print(f"WARNING: inactive config [{section}] {', '.join(keys)}: {reason}",
+                  file=sys.stderr, flush=True)
+
+    flags = (boundary or {}).get('flags', {})
+    long_credit = flags.get('long_credit', False)
+    if flags.get('auto_horizon'):
+        add('horizon', ('horizons_s', 'curriculum_updates', 'entry_pad_max', 'gate_file'),
+            'boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused')
+    if 'uncertainty' in raw and not raw['uncertainty'].get('enabled', False):
+        add('uncertainty', set(raw['uncertainty']) - {'enabled'},
+            'uncertainty.enabled=false; trainer future_samples is a separate setting')
+    if native_init:
+        add('lanes', raw.get('lanes', {}), 'native-init uses WM native lane rules')
+        add('policy', ('lane_control', 'init_zero_accel'), 'native-init constructs the native residual actor')
+        add('policy14', ('policy_ramp_merge', 'sampled_marginal_lane_weight',
+                         'entropy_floor', 'entropy_decay_on_improvement'),
+            'native-init forces native lanes and deterministic residuals (no lane credit/entropy)')
+    if long_credit:
+        add('policy14', ('critic_warmup_updates', 'critic_value_scale'),
+            'long credit disables critic warmup and value updates')
+        add('trainer', ('real_return_mix',), 'critic step is disabled under long credit')
+        if raw.get('paircrit', {}).get('enabled'):
+            add('paircrit', raw['paircrit'],
+                'setup may still load artifacts, but its value critic supplies no long-credit update')
+    if raw.get('data', {}).get('focus_cell_fraction') is not None:
+        add('counterfactual', ('start_tilt',), 'exact focus-cell sampling replaces rejection tilt')
+    add('counterfactual', ('validation_uniform',), 'policy14 CLI does not call trainer.validate')
+    add('run', ('seed', 'updates', 'validation_batches'),
+        'CLI --seed/--max-updates take precedence; no trainer.validate call')
+    return rows
 
 
 def require_real_credit_effect(trainer):

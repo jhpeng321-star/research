@@ -222,6 +222,10 @@ def main(argv=None):
             raw["horizon"] = {**raw["horizon"], "gate_file": str(checked_path(args.horizon_gate))}
         switches = raw["policy14"]
         cfg = DreamerConfig(**raw["trainer"])
+        from .auditfix_diagnostics import warn_unused_settings
+        summary['inactive_config'] = warn_unused_settings(
+            raw, native_init=args.native_init,
+            boundary=prepared if args.looplong_boundary else None)
         if not switches["authoritative_j"] and cfg.real_return_mix:
             raise ValueError("real negative-J returns require authoritative_j")
         if cfg.gamma != 1.0 or cfg.imagination_grad_decay != 1.0:

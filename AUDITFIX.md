@@ -12,6 +12,18 @@ qualification; no policy restart or WM adoption performed.
 | F8 different WM cannot use inherited WM3 authority | New measured-authority schema binds exact WM/config, ACCEPT, registered threshold, measured gate and same-source pairs300 CCT-1; builder writes NEW authority/BOUNDARY files. Actual loaded config hash checked too. | Supply new `--horizon-gate` and `--looplong-boundary` files; opt-in | `tests/unit/test_auditfix_authority.py` (8 pass): accepts new WM, rejects stale/mutated bindings, failed short gate, REJECT, wrong panel/threshold; dense cap remains90s |
 | F6 direct real-pair gradient unreported | Every update with direct credit logs `direct_real_credit_grad_norm`, the L2 gradient of the actual scaled direct term over trainable actor/group parameters, before clipping. | Diagnostic whenever direct credit is active; no objective/coefficient change | `tests/unit/test_auditfix_direct_grad.py`: analytic secant norm, untouched .grad/RNG, identical two-step Adam result |
 | F10 `--real-credit` silently no-op | Fail startup if supplied multipliers leave every configured weight knot unchanged after the existing guards, or counterfactuals are disabled; report guarded knots for useful files. | Explicit `--real-credit`; omit it for the audited unchanged-credit run | `tests/unit/test_auditfix_real_credit.py`: candidate-A no-op refusal and useful multiplier semantics |
+| F11 set-but-inactive config | Startup stderr warnings identify configured keys bypassed by the current CLI/native/long-credit/focus mode; summary stores `inactive_config`. | Always diagnostic; mode-aware | `tests/unit/test_auditfix_warnings.py`: all audited sections and active-mode negative check |
+
+## Startup inactive-setting warnings
+
+Warnings name keys, not just whole sections: boundary auto-horizon replaces the
+TOML stage/pad/gate schedule (last-knot spacing is still read); disabled uncertainty
+fields are distinct from trainer K; native-init overrides lane/actor initialization,
+lane credit and entropy knobs; long credit bypasses critic warmup/value/real-return
+mix and paircrit's value updates; focus replaces start_tilt; validation_uniform
+and run validation_batches have no validate call; CLI seed/updates win. Paircrit
+artifacts can still be loaded during setup, which the warning explicitly notes.
+This is reporting only, without altering mode decisions or sampling.
 
 ## `--real-credit`
 
