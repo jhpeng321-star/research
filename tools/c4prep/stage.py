@@ -61,7 +61,7 @@ def main():
         info.size = len(blob)
         archive.addfile(info, io.BytesIO(blob))
     runtime = f'/root/autodl-tmp/c4/restart20261026/runtime_c4prep_{commit[:12]}'
-    remote(f'''import pathlib,sys,tarfile,io,json,hashlib
+    install = f'''import pathlib,sys,tarfile,io,json,hashlib
 r=pathlib.Path({runtime!r}); assert r.parent.is_dir()
 base=pathlib.Path({base!r})
 raw=sys.stdin.buffer.read({len(data.getvalue())})
@@ -72,7 +72,7 @@ if r.exists():
   assert hashlib.sha256((r/name).read_bytes()).hexdigest()==digest
 else:
  r.mkdir()
-  with tarfile.open(fileobj=io.BytesIO(raw),mode='r:*') as archive:
+ with tarfile.open(fileobj=io.BytesIO(raw),mode='r:*') as archive:
   for item in archive:
    name=pathlib.PurePosixPath(item.name)
    assert item.isfile() and not name.is_absolute() and '..' not in name.parts
@@ -92,7 +92,9 @@ path=out/('STAGING_'+{commit[:12]!r}+'.json')
 if not path.exists(): path.write_text(json.dumps(receipt,indent=1))
 tmp=out/'CURRENT_RUNTIME.tmp'; tmp.write_text(json.dumps(receipt,indent=1));tmp.replace(out/'CURRENT_RUNTIME.json')
 print(json.dumps({{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)},'transferred':{transferred}}}))
-''', data.getvalue(), timeout=60)
+'''
+    compile(install, '<c4prep-stage-install>', 'exec')
+    remote(install, data.getvalue(), timeout=60)
 
 
 if __name__ == '__main__':

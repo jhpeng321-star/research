@@ -83,6 +83,36 @@ def test_a_arguments_are_real_gpu_bounded_and_bind_credit():
     assert args[args.index('--max-updates') + 1] == '150'
 
 
+def test_staging_installer_compiles_and_includes_native_head(monkeypatch):
+    import importlib.util
+    import io
+    import tarfile
+    spec = importlib.util.spec_from_file_location('c4prep_stage_test', ROOT / 'tools/c4prep/stage.py')
+    stage = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(stage)
+    def git(args, **kwargs):
+        if args[1] == 'rev-parse':
+            return '0' * 40
+        if args[1] == 'diff':
+            return ''
+        if args[1] == 'ls-tree':
+            return 'configs/native_cav_head_v5.json\n'
+        if args[1] == 'cat-file':
+            return b'000000 blob 2\n{}\n'
+        raise AssertionError(args)
+    monkeypatch.setattr(stage.subprocess, 'check_output', git)
+    monkeypatch.setattr(stage.subprocess, 'run', lambda *a, **kw: SimpleNamespace(stdout=b'{}'))
+    captured = []
+    def remote(source, blob, **kwargs):
+        compile(source, '<staging-test>', 'exec')
+        with tarfile.open(fileobj=io.BytesIO(blob), mode='r:*') as tar:
+            assert 'configs/native_cav_head_v5.json' in tar.getnames()
+        captured.append(source)
+    monkeypatch.setattr(stage, 'remote', remote)
+    stage.main()
+    assert len(captured) == 1
+
+
 @pytest.mark.parametrize('bounded,expected', [(True, 2), (False, 3)])
 def test_cli_scratch_bound_and_normal_path(tmp_path, monkeypatch, bounded, expected):
     import wms.control.policy14_cli as cli
