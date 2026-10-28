@@ -1,0 +1,160 @@
+"""Opt-in S-EXECPARITY executor; no simulator imports, learned driver parameters only.
+
+SUMO speedMode 27 = safe speed + maximum acceleration + junction/red-light checks;
+bit 2 (comfortable maximum deceleration) is OFF. Do not floor a safety cap at -3.
+The actor's lower bound limits deviations, not SUMO emergency stopping authority.
+"""
+from __future__ import annotations
+
+import os
+from functools import lru_cache
+import torch
+
+PARITY_ENV = "C4_EXECUTION_PARITY"
+ACCEL_MAX = 1.2
+SPEED_MODE = 27
+CAP_REJECT_FRACTION = .95  # task registration, not a fitted behavioural threshold
+
+
+def enabled():
+    value = os.environ.get(PARITY_ENV, "0")
+    if value not in ("0", "1"):
+        raise ValueError(f"{PARITY_ENV} must be 0 or 1")
+    return value == "1"
+
+
+def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX, *, force_zero=False):
+    """Exact command/cap algebra given the prospective SUMO follow-speed ceiling.
+
+    The ceiling is recomputed each physics step. In imagination it is inferred
+    from observable geometry and WM driver parameters; it is NOT the native head.
+    Exactly zero releases ownership, unless the registered executor-only control
+    explicitly requests force_zero. Positive residuals have exactly zero gradient.
+    """
+    from wms.model.cav import EXEC_CAP_KEY
+    if EXEC_CAP_KEY not in state:
+        raise ValueError("execution parity needs a per-physics-step SUMO follow-speed cap")
+    cap = state[EXEC_CAP_KEY].to(residual)
+    upper = min(float(hi), ACCEL_MAX)
+    command = cap + residual.clamp_max(0.)
+    command = torch.maximum(command, torch.minimum(cap, torch.full_like(cap, float(lo))))
+    command = torch.minimum(command, torch.full_like(cap, upper))
+    executed = torch.minimum(command, cap)
+    # speedMode 27 still enforces nonnegative speed, even when bit 2 is disabled.
+    executed = torch.maximum(executed, -state["v_mps"] / .5)
+    return executed if force_zero else torch.where(residual != 0., executed, native)
+
+
+def idm_follow_speed(speed, leader_speed, bumper_gap, params, *, dt=.5,
+                     respect_min_gap=True):
+    """Differentiable SUMO IDM::_v integration (two .25 s updates at dt=.5).
+
+    Algorithm: eclipse-sumo v1_24_0 MSCFModel_IDM.cpp::_v. All behavioural
+    parameters are supplied by the learned WM encoder; no driver table is used.
+    gap is the physical bumper-to-bumper gap from observable positions. SUMO's
+    internal gap2pred/getLeader gap excludes minGap; _v adds it back. With physical
+    geometry it is therefore already included and must not be added a second time.
+    Only IDM is supported, not Krauss/IDMM; junction constraints are separate.
+    """
+    iterations = max(1, int(float(dt) / .25 + .5))
+    a, b, tau, gap0, v0 = (params[k].to(speed) for k in
+                            ("accel", "decel", "time_headway", "min_gap", "v0"))
+    eps = torch.finfo(speed.dtype).eps
+    v, gap = speed, bumper_gap
+    for _ in range(iterations):
+        desired = (v*tau + v*(v-leader_speed)/(2.*(a*b).clamp_min(eps).sqrt())).clamp_min(0.)
+        if respect_min_gap:
+            desired = desired + gap0
+        accel = a*(1.-(v/v0.clamp_min(eps)).pow(4)-(desired/gap.clamp_min(eps)).square())
+        v = (v+accel*float(dt)/iterations).clamp_min(0.)
+        gap = gap - (v-leader_speed).clamp_min(0.)*float(dt)/iterations
+    return v
+
+
+def inferred_follow_cap(state, params, *, dt=.5):
+    """Prospective commanded-CAV ceiling from learned settings and current geometry.
+
+    Does not apply the WM's learned yielding patch or soft safe_accel: SUMO's
+    externally commanded path omits native lane-change speed patching. A ramp
+    lane-end stop is retained. Unobserved junction/stop state cannot be recovered
+    from old episode tapes; report that residual model error in replay tests.
+    """
+    from .native_cav import leader_gap_dv
+    from .contract import MERGE_S1_M
+    v = state["v_mps"]
+    fitted = os.environ.get("C4_EXECUTION_DRIVER")
+    if fitted:
+        values = load_learned_driver(fitted)
+        params = {key: torch.full_like(v, value) for key,value in values.items()}
+    gap, dv, has = leader_gap_dv(state)
+    gap = torch.where(has, gap, torch.full_like(gap, float("inf")))
+    target = idm_follow_speed(v, v-dv, gap, params, dt=dt)
+    ramp_gap = (MERGE_S1_M-state["s_m"]).clamp_min(0.)
+    stop = idm_follow_speed(v, torch.zeros_like(v), ramp_gap, params,
+                           dt=dt, respect_min_gap=False)
+    stop = torch.minimum(stop, ramp_gap/float(dt))
+    target = torch.where(state["lane"] == 2, torch.minimum(target, stop), target)
+    target = torch.minimum(target, params["v0"].to(v))
+    cap = torch.minimum((target-v)/float(dt), params["accel"].to(v))
+    return torch.minimum(cap, torch.full_like(v, ACCEL_MAX))
+
+
+@lru_cache(maxsize=8)
+def load_learned_driver(path):
+    """Only a TRAIN-fitted, provenance-bearing IDM artifact is admissible."""
+    import json
+    from pathlib import Path
+    import re
+    p = Path(path)
+    if re.search(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype",
+                 str(p)+str(p.resolve()),re.I):
+        raise ValueError("prohibited driver artifact")
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    values = payload.get("parameters",{})
+    if (payload.get("schema") != "execparity_learned_idm/1"
+            or payload.get("fit_controller") != "direct"
+            or payload.get("evaluation_data_used") is not False
+            or not payload.get("fit_worlds") or not payload.get("score_worlds")
+            or set(values) != {"accel","decel","time_headway","min_gap","v0"}
+            or not all(isinstance(x,(float,int)) and 0. < x < float("inf") for x in values.values())):
+        raise ValueError("invalid learned execution-driver artifact")
+    return values
+
+
+def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256):
+    """Fail-closed pre-SUMO receipt for the registered >95% cap/inertness rule.
+
+    On this cap+residual path every positive residual is completely capped; exact
+    zeros release to native and also provide no learned longitudinal authority.
+    Evaluate all acting rows, never select rows by the realised outcome.
+    """
+    import numpy as np
+    r = np.asarray(residuals, float).reshape(-1)
+    if not len(r) or not np.isfinite(r).all() or not checkpoint_sha256 or not recordings_sha256:
+        raise ValueError("authority guard requires finite acting rows and bound inputs")
+    fraction = float((r >= 0.).mean())
+    receipt = {"schema": "execparity_authority/1", "checkpoint_sha256": checkpoint_sha256,
+               "recordings_sha256": recordings_sha256, "acting_ticks": len(r),
+               "capped_or_native_fraction": fraction, "maximum_fraction": CAP_REJECT_FRACTION,
+               "passed": fraction <= CAP_REJECT_FRACTION}
+    return receipt
+
+
+def verify_authority(path, checkpoint):
+    """Validate the replay receipt before constructing any deployment environment."""
+    import hashlib
+    import json
+    from pathlib import Path
+    if path is None:
+        raise ValueError("execution parity deployment requires --execution-authority replay receipt")
+    receipt = json.loads(Path(path).read_text(encoding="utf-8"))
+    fraction = receipt.get("capped_or_native_fraction", float("nan"))
+    hashes = receipt.get("recordings", {})
+    if (receipt.get("schema") != "execparity_authority/1" or not receipt.get("passed")
+            or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
+            or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION
+            or receipt.get("checkpoint_sha256") != hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
+            or not hashes or receipt.get("recordings_sha256") != hashlib.sha256(
+                json.dumps(hashes, sort_keys=True).encode()).hexdigest()):
+        raise ValueError("missing/stale/failing execution-authority replay receipt")
+    return receipt

@@ -84,5 +84,34 @@ python tools/execparity/replay.py --data _execparity_data --inputs <audit>/cpuP/
 python tools/execparity/ledger.py --data _execparity_data --out tools/execparity/ledger_results.json
 ```
 
-Execution-parity implementation, CPU replay gate, runtime ports and the proposed
-registered control design are described in the next committed steps.
+## 2. Learned executor identification (frozen before its E3 replay)
+
+The initial WM3 per-slot-settings prototype failed: C1 RMSE 0.965, MAPPO 0.834,
+native-head RMSE 0.199 m/s² (`parity_wm3_initial.json`). Its initial physical/net-gap
+conversion was also corrected: SUMO's internal/getLeader gap excludes minGap,
+whereas the WM frame supplies physical bumper-to-bumper distance. The latter must
+not receive minGap again. This failed prototype is retained, not called parity.
+
+The follow-up is **TRAIN-only system identification**, not E3 calibration: fit
+five positive IDM parameters to recorded `genrand_plain` direct commands and
+their next observed speed differences, using `min(issued_command, follow_cap)` as
+the observation law. This separates safe following from the native lane-change
+speed patches. No true driver settings or assignment files are used.
+
+* Existing native-head world partition reused: SHA1(world) modulo 10 <7 for fit,
+  otherwise score; only manifest `split_role=val` within the TRAIN corpus.
+* 120,760 direct CAV rows fit, 51,740 score, fixed every-tenth-second sampling;
+  whole-world split, source array and manifest hashes in the artifact.
+* LBFGS, unweighted acceleration MSE, deterministic CPU; no E3/E5 or 964000–964199
+  seeds admitted. Initial optimiser scalars are unit values, speed start from the
+  observed maximum; all returned driver settings are learned.
+* Frozen artifact: `configs/execparity_cav_idm_v1.json`; fit RMSE **0.2287**, score
+  RMSE **0.2323** m/s². This is not yet its E3 execution-parity acceptance result.
+* Rejected development fits are retained: `rejected_fit_v1.json` (uint8 extraction
+  indexing error), `rejected_fit_v2.json` (gap conversion), `native_fit.json`
+  (wrong identification target: native yielding contaminates following). None is
+  admitted by the runtime artifact loader or was tested to select on E3 outcomes.
+
+Implementation, final CPU replay gate, runtime ports and the registered control
+design follow in subsequent commits. Driver artifact and fitting method are
+committed **before** their first E3 replay; no evaluation-based parameter tuning.
