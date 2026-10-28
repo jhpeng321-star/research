@@ -90,6 +90,22 @@ def test_zero_residual_commands_are_bit_identical_to_ctrl0_forced_base():
             == json.dumps(reference, sort_keys=True).encode())
 
 
+def test_remote_adapter_law_copy_is_bit_identical_to_the_tested_module():
+    import importlib.util
+    from pathlib import Path
+    adapter_path = Path(__file__).resolve().parents[2] / "tools/execparity/alwayscmd_adapter.py"
+    spec = importlib.util.spec_from_file_location("alwayscmd_adapter", adapter_path)
+    adapter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(adapter)
+    rng = np.random.default_rng(20261029)
+    for trial in range(50):
+        api = SimpleNamespace(vehicle=domain())
+        residuals = {vid: float(choice) for vid, choice in
+                     zip(("free", "follow", "tight"), rng.choice(
+                         [0.0, 0.04, -0.4, 3.7, -4.1, 0.7], size=3))}
+        assert adapter.law_commands(api, residuals, -3., 1.2) == commands(api, residuals, -3., 1.2)
+
+
 def test_nonzero_residual_uses_the_frozen_legacy_envelope_exactly():
     api = SimpleNamespace(vehicle=domain())
     for vid in ("free", "follow", "tight"):
