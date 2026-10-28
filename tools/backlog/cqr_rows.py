@@ -203,6 +203,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="smoke: stop after N tasks")
     ap.add_argument("--horizons", default="")
     ap.add_argument("--device", default="cpu", help="cpu (validated) or cuda (same code path, NOT yet exercised)")
+    ap.add_argument("--task-file", default="", help="run exactly these task ids (one per line, in order)")
     ap.add_argument("--max-h", type=int, default=300, help="rollout length / largest row horizon (s)")
     ap.add_argument("--verify", type=int, default=0, help="explicit separate 120 s runs for the first N tasks")
     ap.add_argument("--loop-parity", type=int, default=-1,
@@ -218,6 +219,10 @@ def main():
         tasks += [t for n, t in enumerate(lt) if a.loop_parity < 0 or n % 2 == a.loop_parity]
     if "e3" in a.tasks:
         tasks += e3_tasks(a.box)
+    if a.task_file:
+        order = [l.strip() for l in Path(a.task_file).read_text().splitlines() if l.strip()]
+        index = {task_id(t): t for t in tasks}
+        tasks = [index[x] for x in order]
     verify_ids = {task_id(t) for t in tasks[:a.verify]}
     mine = [t for n, t in enumerate(tasks) if n % a.nshards == a.shard]
     if a.limit:
