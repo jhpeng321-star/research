@@ -13,7 +13,7 @@ code = Path(pointer['runtime'])
 sys.path[:0] = [str(code / 'tools/c4prep'), str(code / 'src'), str(code)]
 os.environ.update(PYTHONPATH=f'{code}/src:{code}', C4_ALLOWED_ROOTS='/root/autodl-tmp/c4',
                   OMP_NUM_THREADS='2', OPENBLAS_NUM_THREADS='2', MKL_NUM_THREADS='2')
-from common import read, sha, write_new, now
+from common import complete_jsonl, read, sha, write_new, now
 
 action = sys.argv[1]
 fit = out / 'launch_fit_v1'
@@ -179,6 +179,9 @@ elif action in ('status', 'verify'):
                 result[mode]['sampled_memory'] = {'samples': len(samples), 'last': samples[-1],
                     'peak_bytes': max(row['bytes'] for row in samples)}
         row = result[mode].get('last')
+        trace = complete_jsonl(root / 'A/memory_execution.jsonl')
+        if trace:
+            item['memory_execution_tail'] = trace[-4:]
         if row:
             result[mode]['last'] = {k: row[k] for k in ('t', 'update', 'actor_loss', 'critic_loss',
                 'actor_grad_norm', 'critic_grad_norm', 'actor_module_grad_norms', 'physical_residual_mps2',

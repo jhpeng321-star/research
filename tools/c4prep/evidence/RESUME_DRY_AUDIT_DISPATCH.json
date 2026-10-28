@@ -1,0 +1,21 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "8e75184392b3ce47fb2d05dc72f23fd1902e96a2",
+  "resolved": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_8e75184392b3",
+  "coordinator_pid": 403793,
+  "coordinator_start_ticks": "856426714",
+  "started_utc": "2026-10-28T10:40:52.985057+00:00",
+  "diagnostic_grad_audit_every": 25,
+  "imagination_microbatch": 1,
+  "imagination_checkpoint_segment": 8,
+  "host_offloads": true,
+  "gpu_fraction": 0.45,
+  "native_anchor": false,
+  "q10_K8": true,
+  "trusted_horizon_s": 90,
+  "registered_effective_individual_coop": [8.9, 8.9],
+  "actual_scratch_updates_authorized": 2,
+  "completed_actual_updates_at_dispatch": 0,
+  "policy_launched": false,
+  "new_sim_s": 0
+}

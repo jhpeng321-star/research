@@ -225,3 +225,10 @@ updated parameters/Adam/target/RNG parity and nonzero actual module gradients.
 MEMORY_EXECUTION prospective loop amendment confirmed, SHA6fc435fb536ca519f655442e4fdb8486ffb3da8845bcb226aa0577de26213756.
 Existing cpuP SSH relay worked; qualifier403033/start856406773 exited normally.
 Receipt RESUME_AUDIT_CUDA_QUALIFIED.json committed before next actual dry run.
+
+Fresh two-real-update dry coordinator403793/start856426714 detached10:40:52UTC
+on8e751843 after qualified proof and loop amendment. Registered8.9/8.9 weights
+and all original scientific settings resolved successfully. Existing failed runs
+untouched, no phase dispatch. Receipt RESUME_DRY_AUDIT_DISPATCH.json; read-only
+watcher37624 uses the existing cpuP relay, >=150s polls/>=300s refusal backoff.
+Own execution-memory trace tails are now exposed by the batched status transport.
