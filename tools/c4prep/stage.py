@@ -56,7 +56,9 @@ def main(argv=None):
     # No datasets/checkpoints enter this allowlisted archive.
     existing = {}
     transferred = 0
-    with tarfile.open(fileobj=data, mode='w:xz') as archive:
+    # Fast source-only compression keeps local preparation bounded too; the
+    # remote installer already accepts either archive codec without a probe.
+    with tarfile.open(fileobj=data, mode='w:gz', compresslevel=1) as archive:
         for name in names:
             header = stream.readline().split()
             assert header[1] == b'blob'
@@ -120,6 +122,8 @@ else:
  runpy.run_path(str(r/'tools/c4prep/launch_remote.py'),run_name='__main__')
 '''
     compile(install, '<c4prep-stage-install>', 'exec')
+    print(json.dumps({'stage': 'bundle_ready', 'source_commit': commit,
+                      'files': len(manifest), 'bytes': len(data.getvalue())}), flush=True)
     remote(install, data.getvalue(), timeout=60)
 
 

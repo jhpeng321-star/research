@@ -104,7 +104,15 @@ elif action == 'dry':
     print(json.dumps(spawn([sys.executable, '-B', str(code / 'tools/c4prep/launch.py'),
         'dry-run', '--config', str(resolved / 'CONFIG.json')], resolved, 'DRY_COORDINATOR')))
 elif action == 'diagnose':
-    result = {'t': now(), 'meminfo': Path('/proc/meminfo').read_text().splitlines()[:5]}
+    result = {'t': now(), 'pointer': pointer,
+              'meminfo': Path('/proc/meminfo').read_text().splitlines()[:5]}
+    checks_name = 'CHECK_COORDINATOR_' + pointer['commit'][:12]
+    checks_pid = out / (checks_name + '_PID.json')
+    if checks_pid.exists():
+        result['checks_coordinator'] = {**read(checks_pid), 'alive': owned_alive(read(checks_pid))}
+    checks_result = out / ('CHECKS_' + pointer['commit'][:12] + '.json')
+    if checks_result.exists():
+        result['checks_result'] = read(checks_result)
     result['own_cgroup'] = Path('/proc/self/cgroup').read_text()
     for name in ('memory.max', 'memory.current', 'memory.events'):
         path = Path('/sys/fs/cgroup') / name

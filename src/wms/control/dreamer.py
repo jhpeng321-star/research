@@ -2063,13 +2063,14 @@ class DreamerTrainer:
         # be applied to an old full-resume checkpoint without changing its objective.
         memory_request = {name: getattr(self.config, name) for name in MEMORY_CONFIG_FIELDS}
         training_request = {name: getattr(self.config, name) for name in
-                            ("native_residual_train_group", "native_residual_train_trunk")
+                            ("native_residual_train_group", "native_residual_train_trunk",
+                             "real_credit_individual_floor")
                             if getattr(self.config, name)}
         anti_request = {}
         if self.config.pessimistic_credit or self.config.native_anchor:
             anti_request = {name: getattr(self.config, name) for name in
                 ('pessimistic_credit', 'native_anchor', 'native_anchor_calibration',
-                 'future_samples', 'uncertainty_weight')}
+                 'future_samples', 'uncertainty_weight', 'entrant_control', 'deterministic_crn')}
         if any(memory_request.values()):
             memory_request["credit_profile_every"] = self.config.credit_profile_every
         else:
@@ -2110,13 +2111,11 @@ class DreamerTrainer:
         self.group_encoder.load_state_dict(payload["group_encoder"])
         if policy_only:
             return
-        self.config = DreamerConfig(**payload["config"])
-        if memory_request:
-            self.config = replace(self.config, **memory_request)
-        if training_request:
-            self.config = replace(self.config, **training_request)
-        if anti_request:
-            self.config = replace(self.config, **anti_request)
+        # Preserve the explicitly requested C4 boundary atomically across a
+        # historical full-trainer resume (registered credit floor and entrant /
+        # CRN settings did not exist in C1). Same floor repair as 96a60687.
+        self.config = DreamerConfig(**{**payload["config"], **memory_request,
+                                      **training_request, **anti_request})
         if getattr(self.policy, "residual_on_native", False):
             self.policy.configure_native_training(group=self.config.native_residual_train_group,
                                                   trunk=self.config.native_residual_train_trunk)

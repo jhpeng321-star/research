@@ -136,3 +136,15 @@ source installation and detached qualification in that same SSH transaction,
 with an existing source-bound PID receipt preventing duplicate dispatch. Both
 installer modes compile and preserve native-head inclusion; operational suite
 22PASS. No auto dry/policy launch is attached to staging.
+
+Recovery09:31:04UTC confirms pointer still1f5cc6aa, no new qualifier PID;
+the staging timeout did not activate the repair or dispatch GPU work.
+Full-resume inspection found the independent C1-config overwrite defect noted
+by S-HOLD-1 commit96a60687. Adapted its atomic registered-floor restoration for
+A, additionally retaining the explicitly requested entrantON/deterministicCRN
+flags whenever the anti-exploit boundary is requested. No checkpoint weights,
+Adam state or settings changed. New historical-resume regressionPASS; both
+installer-mode testsPASS (3total). Full local repeat timed out under120s and is
+not claimed a new complete PASS; detached remote qualification remains required.
+Staging uses fast source-only gzip and a pre-SSH bundle receipt to distinguish
+local archive preparation from transport; no datasets/checkpoints are bundled.

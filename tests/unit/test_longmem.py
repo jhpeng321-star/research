@@ -360,6 +360,25 @@ def test_default_off():
     assert cfg.imagination_offload_saved_tensors is False
 
 
+def test_full_resume_preserves_requested_c4_credit_entrant_and_crn(tmp_path):
+    baseline = trainer()
+    path = tmp_path / 'historical.pt'
+    baseline.save_checkpoint(path)
+    requested = trainer(1, 8, True, future_samples=8, pessimistic_credit=True,
+                        real_credit_individual_floor=True, entrant_control=True,
+                        deterministic_crn=True)
+    requested.load_checkpoint(path)
+    for key in ('pessimistic_credit', 'real_credit_individual_floor',
+                'entrant_control', 'deterministic_crn'):
+        assert getattr(requested.config, key) is True
+    assert requested.config.future_samples == 8
+    assert requested.config.native_anchor is False
+    assert requested.config.imagination_microbatch == 1
+    assert requested.config.imagination_checkpoint_segment == 8
+    assert_tree_close(baseline.actor_optimizer.state_dict(), requested.actor_optimizer.state_dict())
+    assert_tree_close(baseline.critic_optimizer.state_dict(), requested.critic_optimizer.state_dict())
+
+
 def test_enable_memory_on_full_resume_of_legacy_checkpoint(tmp_path):
     baseline = trainer()
     baseline.update()
