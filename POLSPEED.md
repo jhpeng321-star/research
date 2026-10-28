@@ -49,3 +49,44 @@ surrogate (per-step, per-entrance small-op chains). Everything is launch/Python-
   > 14 GiB, so an all-8-futures single graph (no checkpoint) needs > ~110 GiB: the
   "batched K8 with grad, no recompute" variant cannot fit in 0.5 x 48 GB, nor in 48 GB.
 * Segment checkpointing therefore stays; tested fast variants keep segment 8.
+
+## 4. Exact variants measured on the SAME update (181, seed 965140, resume c01.a3)
+
+Determinism check: the live run and the earlier dry run produce bitwise-identical update
+181/182 metrics, so every variant is compared against `DRY_RUN/A/updates.jsonl` with
+`tools/polspeed/parity.py` (all 158 numeric leaves: losses, grad norms, per-module grads,
+credit, residual stats, J; timing/memory keys excluded).
+
+| variant (all segment 8, microbatch 1, offload_futures ON) | cap | s/update | peak alloc | parity |
+|---|---:|---:|---:|---|
+| live / dry reference (spill ON) | 0.45 | 1009-1018 | 11.9 GB | reference |
+| F: + existing bit-identical env flags (PIVOT_DIAG_OFF, FAST_MERGE_LANE, FAST_CAV_DRIVE, FAST_LONG_HISTORY) | 0.30 | 1022.7 (3 procs sharing GPU) | 11.89 GB | **bitwise identical (0 diffs)** |
+| FS8: F + saved-tensor spill OFF | 0.25 | OOM in first VJP (needs > 11.84 GiB) | - | - |
+
+F flags give no measurable gain (the hot spots are elsewhere). Spill OFF shortened the
+first future's replay forward 51.1 -> 42.8 s (-16 %) but needs more than 0.25 of the GPU.
+
+## 5. Restart procedure (main decides; nothing was restarted or stopped by S-POLSPEED)
+
+* There is NO resumable state of candidate A: the CLI writes `policy_latest.pt` only on an
+  own-run `STOP` file (checked at the start of each update) or at phase end, and
+  `policy_native_best.pt` at native-panel selections (every 10 updates). The run was
+  SIGTERMed after update 185, so the only files are `POLICY/A/policy_native_best.pt`
+  (= initial c01.a3 actor) and `updates.jsonl`. `policy14_recovery.load_recovery` only
+  accepts an operational recovery whose cause is a recorded CUDA OOM, so a speed restart
+  is a FRESH phase, not a resume. For future stops use `touch <output>/STOP` (graceful:
+  saves `policy_latest.pt` after the current update) rather than a signal.
+* Fresh restart from C1 64f70af4 on a different WM: `tools/c4prep/launch_a.py prepare`
+  builds `resolved_A_MAIN1500_<commit>` from `tools/c4prep/common.py` constants
+  `WM`, `WM_SHA`, `WM_CONFIG` (now c03.a2 / 41e18f09 / c4_wm_loop14_r16_ft.toml) and
+  `ACTORS[3]` (source actor). Change those constants (and the BOUNDARY `wm` entry they
+  feed; the CLI refuses a WM whose sha differs from `BOUNDARY.json`) for the adopted WM,
+  then the CLI's `--wm-ckpt/--wm-config/--resume` follow the same argv as `MAIN_LAUNCH`.
+* To use the speed flags: (a) env only, no config change: `WMS_SPEED_GRAPH_CVAR=1
+  WMS_WMSPEED_DEDUPE_MOBIL=1 WMS_WMSPEED_MOBIL_LAZY_SAFE=1` (+ the four F flags) with a
+  runtime built from branch `c4/polspeed`; (b) spill OFF additionally needs
+  `[trainer] imagination_offload_saved_tensors = false` and a cap > 0.25, which today
+  fails the launcher's hard-coded checks: `tools/c4prep/launch.py` `flags_ok`
+  (requires microbatch 1 / segment 8 / both offloads True / audit 25 and peak <= 0.45)
+  and `launch_a.py` asserts (segment 8 from `MEMORY_EXECUTION.json`). Amend
+  `MEMORY_EXECUTION.json` (objective_change false) and those two checks together.
