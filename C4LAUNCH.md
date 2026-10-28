@@ -249,3 +249,18 @@ to Clash fake172.19.0.17; independent DNS-over-HTTPS returns106.120.183.117.
 Optional per-command C4_SSH_HOSTNAME override retains the ORIGINAL pinned host
 alias and strict host-key checking. This does not edit keys/global routing or
 peer processes. Route test remains pending after a fresh>=300s backoff.
+
+## REAL TWO-UPDATE PASS — source8e751843, before full phase
+
+Public-IP pinned route also refused; after>=300s the existing cpuP relay
+recovered11:55:59UTC. Original dry worker403814 had completed normally by
+11:23:20UTC, exit0, actual unique181/182 BOTH90s, all finite/nonzero module
+gradients and all effective flags/credit/memory checksPASS. No redispatch.
+ConfigSHA31bbbff88ebbc3dbca441a06092a5828609b055c407343a1037ea87863c8d996,
+summarySHA2fc09d05c347f14b51834b347d114d475835442c22c93f6030d4f59707b4ad80.
+Mean|residual|0.057507m/s2, mean−q10 gap195.7121, group/trunk minima2.2300/
+4.5096, reserved12.203GB/process12.652GB, host high-water13,494,068KiB.
+Exact effective8.9/8.9 and60%focus retained. Interval rate3.404updates/h;
+150-update projection is~44h including this slow exact K8 execution, not a
+completed phase claim. RESUME_REAL_DRY_PASS.json committed BEFORE detached
+launch, which must resume ORIGINAL64f70af4/C1 (never the scratch actor).

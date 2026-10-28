@@ -29,7 +29,8 @@ def remote(source, data, timeout=60):
         ssh += ['-J', os.environ['C4_SSH_JUMP']]
     result = subprocess.run([*ssh, '-v', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
         '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
-        'gpuA', command], input=data, capture_output=True, timeout=timeout)
+        'gpuA', command], input=data, capture_output=True, timeout=timeout,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     print(result.stdout.decode(), end='')
     print(result.stderr.decode(), end='', file=sys.stderr)
     if result.returncode:

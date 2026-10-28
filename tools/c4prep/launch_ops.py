@@ -35,7 +35,8 @@ def main():
     result = subprocess.run([*ssh, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
         '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
         'gpuA', '/root/miniconda3/bin/python -B -'], input=source, text=True,
-        capture_output=True, timeout=45)
+        capture_output=True, timeout=45,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     print(result.stdout, end='')
     print(result.stderr, end='', file=sys.stderr)
     if result.returncode:
