@@ -197,8 +197,21 @@ class DreamerConfig:
     # POLICY14 evidence guards; legacy trainers retain their original behaviour.
     low_penetration_horizon_cap: bool = False
     wm_safety_report_only: bool = False
+    # S-ANTIEXPLOIT: fixed registered q10 paired reward credit; no dynamics changes.
+    pessimistic_credit: bool = False
+    native_anchor: bool = False
+    native_anchor_calibration: Optional[str] = None
 
     def __post_init__(self):
+        for name in ('pessimistic_credit', 'native_anchor'):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f'{name} must be a boolean')
+        if self.pessimistic_credit or self.native_anchor:
+            if self.future_samples != 8:
+                raise ValueError('anti-exploit requires future_samples=8')
+        if self.native_anchor and (not isinstance(self.native_anchor_calibration, str)
+                                   or not self.native_anchor_calibration):
+            raise ValueError('native_anchor requires a fitted calibration artifact')
         for name in ("imagination_microbatch", "imagination_checkpoint_segment"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
@@ -235,7 +248,7 @@ class DreamerConfig:
         for name, value in asdict(self).items():
             if name in ("cav_exec_cap", "entry_insert_rule", "imagination_grad_decay",
                         "entropy_target", "lane_entropy_target", "ttc_budget_mode",
-                        "lagrange_max", "wm_physics_overrides") or value is None:
+                         "lagrange_max", "wm_physics_overrides", "native_anchor_calibration") or value is None:
                 continue   # the string fields; the optional decay / entropy targets; the overrides
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
@@ -945,6 +958,7 @@ class DreamerTrainer:
         member_entropy, member_actions, member_components, member_lanes = [], [], [], []
         member_zone = []
         member_action_audit = []
+        member_anchor = []
         profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
@@ -985,6 +999,13 @@ class DreamerTrainer:
                         record["credit_action"] = held_out[0]
                         record["credit_mask"] = acting
                     record["entropy"] = -(log_prob * acting).sum(-1) / acting.sum(-1).clamp_min(1)
+                    if cfg.pessimistic_credit or cfg.native_anchor:
+                        # Actor-objective telemetry only; do not alter entrant control.
+                        if getattr(self.policy, 'residual_on_native', False):
+                            record['anchor_deviation'] = held_out[0]
+                            record['anchor_mask'] = acting.detach()
+                        elif cfg.native_anchor:
+                            raise ValueError('native_anchor requires a native-residual actor')
                     if cfg.actor_gradient_audit or getattr(self.policy, "residual_on_native", False):
                         record["audit_action"] = held_out[0].detach()
                         record["audit_log_prob"] = log_prob.detach()
@@ -1205,6 +1226,9 @@ class DreamerTrainer:
             member_states.append(physics_states[::STEPS_PER_CONTROL])
             member_entropy.append(torch.stack([record["entropy"] for record in records]))
             member_actions.append(torch.stack([record["action"] for record in records]))
+            if 'anchor_deviation' in records[0]:
+                member_anchor.append({name: torch.stack([record['anchor_' + name] for record in records])
+                                      for name in ('deviation', 'mask')})
             if cfg.actor_gradient_audit or getattr(self.policy, "residual_on_native", False):
                 member_action_audit.append({name: torch.stack([record[name] for record in records])
                                             for name in ("audit_action", "audit_log_prob",
@@ -1264,6 +1288,8 @@ class DreamerTrainer:
             zone_base = zone_masks[..., :n_base, :]
             zone_fraction = float((zone_base & cav).sum()) / max(1, int(cav.sum()))
         return {"rewards": rewards, "costs": costs, "returns": torch.stack(returns),
+                **({'antiexploit_commands': {name: torch.stack([m[name] for m in member_anchor])
+                                             for name in ('deviation', 'mask')}} if member_anchor else {}),
                 "imagination_horizon_s": cfg.horizon * STEPS_PER_CONTROL * PHYSICS_DT_S,
                 "deterministic_policy": deterministic,
                 **({"action_audit": {name: torch.stack([m[name] for m in member_action_audit])
@@ -1384,18 +1410,31 @@ class DreamerTrainer:
         has_base = base != torch.arange(n_rows, device=returns.device)
         # R_r - B_r for rows whose start has a base row (B constant w.r.t. the actor), else R_r.
         difference = returns - torch.where(has_base, returns[..., base].detach(), torch.zeros_like(returns))
+        paired_difference = difference
         if getattr(self, 'long_credit', None) is not None:
             from .long_credit import pessimistic_difference
             difference = pessimistic_difference(self, imagined, difference, base, has_base, coefficients)
+        anti_metrics, anchor = {}, returns.new_zeros(())
+        if self.config.pessimistic_credit or self.config.native_anchor:
+            from .antiexploit import actor_terms
+            difference, anchor, anti_metrics = actor_terms(self, imagined, difference, coefficients, scale,
+                                                         raw_difference=paired_difference)
         loss = -(difference.mean((0, 1)) * coefficients).sum() / scale
+        if self.config.pessimistic_credit or self.config.native_anchor:
+            loss = loss + anchor
+            if gradient_components is not None:
+                gradient_components['native_anchor'] = anchor
+                gradient_components['paired_risk_credit'] = loss - anchor
         extra = {}
         if variants is not None and variants.base_row:
             extra = DreamerTrainer._cooperation_metrics(imagined, variants, weights)
+        extra.update(anti_metrics)
         lanes = imagined.get("lanes")
         if lanes is not None:
             advantage = difference.detach() / scale
             values = imagined.get("values")
-            if values is not None and not getattr(self, 'long_credit_requested', False) and getattr(self, 'long_credit', None) is None:
+            if (values is not None and not self.config.pessimistic_credit
+                    and not getattr(self, 'long_credit_requested', False) and getattr(self, 'long_credit', None) is None):
                 advantage[..., :n_base] = (returns[..., :n_base] - values[:, :-1, :n_base]).detach() / scale
             active = lanes["lane_active"]                 # [E,H,N,K]
             joint = (lanes["lane_log_prob"] * active.to(returns.dtype)).sum(-1)   # [E,H,N]
@@ -1430,8 +1469,12 @@ class DreamerTrainer:
                                         dtype=rewards.dtype)
         sources = {"reward": (rewards, torch.zeros_like(values)),
                    "critic": (torch.zeros_like(rewards), values)}
+        if self.config.pessimistic_credit or self.config.native_anchor:
+            # Tail selection is nonlinear. Audit the actual paired risk term
+            # instead of mislabelling its pre-selection linear decomposition.
+            sources = {}
         uncertainty_weight = imagined.get("uncertainty_weight", self.config.uncertainty_weight)
-        if uncertainty_weight > 0:
+        if uncertainty_weight > 0 and not (self.config.pessimistic_credit or self.config.native_anchor):
             sources["uncertainty"] = (
                 -uncertainty_weight * imagined["disagreement"].unsqueeze(0).expand_as(rewards),
                 torch.zeros_like(values))
@@ -1981,6 +2024,11 @@ class DreamerTrainer:
         training_request = {name: getattr(self.config, name) for name in
                             ("native_residual_train_group", "native_residual_train_trunk")
                             if getattr(self.config, name)}
+        anti_request = {}
+        if self.config.pessimistic_credit or self.config.native_anchor:
+            anti_request = {name: getattr(self.config, name) for name in
+                ('pessimistic_credit', 'native_anchor', 'native_anchor_calibration',
+                 'future_samples', 'uncertainty_weight')}
         if any(memory_request.values()):
             memory_request["credit_profile_every"] = self.config.credit_profile_every
         else:
@@ -2026,6 +2074,8 @@ class DreamerTrainer:
             self.config = replace(self.config, **memory_request)
         if training_request:
             self.config = replace(self.config, **training_request)
+        if anti_request:
+            self.config = replace(self.config, **anti_request)
         if getattr(self.policy, "residual_on_native", False):
             self.policy.configure_native_training(group=self.config.native_residual_train_group,
                                                   trunk=self.config.native_residual_train_trunk)
