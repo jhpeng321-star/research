@@ -91,6 +91,7 @@ def run(name):
         WMS_SPEED_GRAD_AUDIT_EVERY='25', WMS_SPEED_FUTURE_WORKERS=str(n),
         WMS_SPEED_PARALLEL_FORWARD='1' if n > 1 else '0',
         WMS_SPEED_FUTURE_MEMORY_FRACTION=fraction, WMS_SPEED_FORWARD_MEMORY_FRACTION='.04',
+        POLSPEED_CACHE_STARTUP='1',
         WMS_WMSPEED_DEDUPE_MOBIL='1', WMS_WMSPEED_MOBIL_LAZY_SAFE='1')
     env.update({f'WMS_SPEED_{flag}': '1' for flag in FGA})
     cmd = [sys.executable, '-B', str(RT/'tools/polspeed2/one_update.py'), '--config', str(config),
