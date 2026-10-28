@@ -8,7 +8,7 @@ qualification; no policy restart or WM adoption performed.
 | Finding | Change | Flag / activation | CPU test |
 | --- | --- | --- | --- |
 | F1 full resume replaces TOML trainer/reward/lr | New-phase full resume keeps resolved TOML dataclasses and optimizer rates, preserves Adam moments/counters, logs every difference, rejects every unapproved difference before loading weights. | `--new-phase --resume C1.pt`, repeat `--resume-allow SECTION.KEY`; default OFF | `tests/unit/test_auditfix_resume.py` (2 pass) |
-| F2 zero-weight individual rows | Equivalent six-row config preset: individual=coop=0, group=18.8, cover_group_members=false; registered all/team terms and weight meanings unchanged. | Select `configs/c4_policy14_c4prep_sixrow.toml`; opt-in | `tests/unit/test_auditfix_sixrow.py`: fixed-seed loss/full actor gradient parity, mean and q10/K8 |
+| F2 zero-weight individual rows | Equivalent six-row config preset: individual=coop=0, group=18.8, cover_group_members=false; registered all/team terms and weight meanings unchanged. | Select `configs/c4_policy14_c4prep_sixrow.toml`; opt-in | `tests/unit/test_auditfix_sixrow.py`: synthetic fixed-seed loss/actor+group gradient parity, mean and q10/K8 |
 | F8 different WM cannot use inherited WM3 authority | New measured-authority schema binds exact WM/config, ACCEPT, registered threshold, measured gate and same-source pairs300 CCT-1; builder writes NEW authority/BOUNDARY files. Actual loaded config hash checked too. | Supply new `--horizon-gate` and `--looplong-boundary` files; opt-in | `tests/unit/test_auditfix_authority.py` (11 pass): accepts new WM, rejects stale/mutated bindings, failed short gate, REJECT, wrong panel/threshold/incomplete CCT; even H_C=300 leaves dense cap90s |
 | F6 direct real-pair gradient unreported | Every update with direct credit logs `direct_real_credit_grad_norm`, the L2 gradient of the actual scaled direct term over trainable actor/group parameters, before clipping. | Diagnostic whenever direct credit is active; no objective/coefficient change | `tests/unit/test_auditfix_direct_grad.py`: analytic secant norm, untouched .grad/RNG, identical two-step Adam result |
 | F10 `--real-credit` silently no-op | Fail startup if supplied multipliers leave every configured weight knot unchanged after the existing guards, or counterfactuals are disabled; report guarded knots for useful files. | Explicit `--real-credit`; omit it for the audited unchanged-credit run | `tests/unit/test_auditfix_real_credit.py`: candidate-A no-op refusal and useful multiplier semantics |
@@ -182,5 +182,49 @@ calibration/recovery must be resolved explicitly. It is not operational recovery
 ## Verification
 
 Local Python 3.13 / torch 2.15.0+cpu, isolated environment
-`E:/Temp/opencode/auditfix-venv`; `PYTHONUTF8=1`, `PYTHONPATH=src;.`.
-`python -m pytest tests/unit/test_auditfix_resume.py -q`: **2 passed**.
+`E:/Temp/opencode/auditfix-venv`; `PYTHONUTF8=1`, `PYTHONPATH=src;.`,
+`OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`,
+`C4_ALLOWED_ROOTS=E:/agent-work/c4-auditfix;E:/Temp/opencode`,
+`TEMP=TMP=E:/Temp/opencode`. Use the equivalent colon-separated path lists on
+Linux. All verification is CPU-only, synthetic/registered config inputs; zero
+SUMO, GPU jobs, remote operations or new scientific evidence.
+
+- **24 new CPU tests pass** across the eight `test_auditfix_*.py` files.
+- New tests + original training audit + anti-exploit regression: **51 passed**
+  (17.30s). The original audit remains an unchanged historical-behavior record;
+  in particular its legacy-resume reproduction still passes with new-phase OFF.
+  Its existing tensor-to-float diagnostic emits one harmless PyTorch warning.
+- Broader regression command below: **161 passed, 4 skipped** (160.93s).
+  Two skips require CUDA; two require absent local `tools/loop14_checks/accept.py`
+  simulation evidence. No skipped check is represented as qualified.
+- After the final loaded-config binding change: authority + COOPW + C4PREP
+  suites **50 passed** (8.96s), then the 51-test audit/new-fix suite passed again.
+- Fatal-error Ruff (`E9,F63,F7,F82`) passes on every changed Python file;
+  staged `git diff --check` passes.
+
+```sh
+python -m pytest tests/unit/test_longmem.py tests/unit/test_c4launch.py tests/unit/test_c4prep.py tests/unit/test_looplong.py tests/unit/test_policy14_recovery.py tests/unit/test_c4prep2_credit.py tests/unit/test_coopw.py tests/unit/test_c4_dreamer.py -q
+python -m pytest tests/unit/test_auditfix_resume.py tests/unit/test_auditfix_sixrow.py tests/unit/test_auditfix_authority.py tests/unit/test_auditfix_direct_grad.py tests/unit/test_auditfix_real_credit.py tests/unit/test_auditfix_warnings.py tests/unit/test_auditfix_selection.py tests/unit/test_auditfix_observations.py tests/audit/test_polaudit_t.py tests/unit/test_antiexploit.py -q
+```
+
+The two existing C4PREP CLI test doubles now retain the supplied reward dataclass
+so they model the trainer interface used by the new effective-reward telemetry;
+their scratch/normal-path assertions remain intact.
+
+## Integration surface
+
+Behavior-changing activation is explicit: `--new-phase`, selecting the six-row
+preset, or supplying the new measured authority/boundary. Remaining changes are
+diagnostics/documentation and refusal of an explicitly requested no-op file.
+Core commits: resume `25ad8053`, preset `24928e9d`, measured authority `72db105e`
+(hardened `65322776`, loaded-config check `93c8b120`), direct-gradient telemetry
+`a1c2663c`, real-credit refusal `1adb244d`, startup warnings `5ccc73e9`, baseline
+selection flag `42ad61b7`, q10 docs `44a5988e`, report-input parity `e64fdcef`.
+
+Additive helpers live in `phase_resume.py`, `auditfix_authority.py` and
+`auditfix_diagnostics.py`. Shared-file merge points are CLI argument/setup/summary
+hooks, Dreamer checkpoint restore and the direct-loss telemetry hook,
+HorizonConfig binding, and boundary verification. No S-GATED300/S-EXPLOIT/
+S-LOOPPATCH/S-POLSPEED implementation is imported or modified by this branch;
+their selection horizon, curriculum, credit coefficient/ON-OFF, execution and
+performance decisions remain integration-owned.
