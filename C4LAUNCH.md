@@ -277,3 +277,10 @@ and sets AUTONOMY C4A_RUNNING only after>=10UNIQUE finite updates plus required
 module/credit/memory evidence and unchanged phase signal gate PASS. No premature
 C4A_RUNNING claim. Read-only local watcher24280 polls>=300s through cpuP with
 Windows child consoles suppressed; no extra dispatch or SUMO is armed.
+
+Midpoint13:37:37UTC snapshot: actual phase181–185 (5UNIQUE), worker428853
+alive, all finite, module minima group1.5644/own3.1505/report0.5881/attention1.6387/
+head49.2385. Mean|residual|0.057859m/s2, mean−q10gap119.2254; GPU reserved12.640GB,
+sampledprocess13.088GB, currenthost19.125GB. Rate3.498updates/h, remaining145
+training-update projection~41.45h. Gate remains scheduled at phase10/global190;
+C4A_RUNNING verification awaits that boundary. RESUME_POLICY_FIVE_UPDATES.json.
