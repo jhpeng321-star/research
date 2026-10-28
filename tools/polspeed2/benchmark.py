@@ -88,7 +88,7 @@ def run(name):
         WMS_SPEED_FUTURE_MEMORY_FRACTION=fraction, WMS_SPEED_FORWARD_MEMORY_FRACTION='.04',
         WMS_WMSPEED_DEDUPE_MOBIL='1', WMS_WMSPEED_MOBIL_LAZY_SAFE='1')
     env.update({f'WMS_SPEED_{flag}': '1' for flag in FGA})
-    cmd = [sys.executable, '-B', '-m', 'wms.control.policy14_cli', '--config', str(config),
+    cmd = [sys.executable, '-B', str(RT/'tools/polspeed2/one_update.py'), '--config', str(config),
         '--wm-ckpt', str(LOOP/'wm/c03.a2/wm_s.pt'), '--wm-config', str(RT/'configs/c4_wm_loop14_r16_ft.toml'),
         '--real-returns', str(LOOP/'returns/returns_c03.a1.npz'),
         '--longcritic-native-returns', str(LOOP/'returns/native_returns_c03.a1.npz'),
@@ -99,7 +99,7 @@ def run(name):
         '--looplong-boundary', str(RESOLVED/'BOUNDARY.json'), '--native-init', '--phase-relative-signal-gate',
         '--real-credit', str(LOOP/'sumocredit/REAL_CREDIT_c03.a1.json'), '--critic-warmup-updates', '0',
         '--resume', str(LOOP/'policy/c01.a3/policy_latest.pt'), '--device', 'cuda', '--seed', '965140',
-        '--max-updates', '150', '--output-dir', str(out), '--compact', '--prep-dry-run-updates', '1']
+        '--max-updates', '150', '--output-dir', str(out), '--compact', '--prep-dry-run-updates', '2']
     receipt = dict(name=name, argv=cmd, env={k:v for k,v in env.items() if k.startswith(('WMS_', 'C4_', 'OMP_', 'MKL_', 'PYTORCH_'))},
                    initial_gpu_mib=used, gpu_total_mib=total, started=time.time())
     (out/'LAUNCH.json').write_text(json.dumps(receipt, indent=2))
