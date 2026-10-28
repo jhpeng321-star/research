@@ -7,7 +7,7 @@ import tarfile
 import uuid
 
 import torch
-from benchmark import BASE, RT, RESOLVED, VARIANTS, compare, update_row
+from benchmark import BASE, RT, RESOLVED, VARIANTS, compare, update_row, memory_failure
 
 
 def trace(directory):
@@ -95,6 +95,8 @@ for name in VARIANTS:
     if not (out/'RESULT.json').exists():
         continue
     result = json.loads((out/'RESULT.json').read_text())
+    if 's_per_update' not in result:
+        result['worker_diagnostics_contain_out_of_memory'] = memory_failure(out)
     if (out/'updates.jsonl').exists():
         row = update_row(out/'updates.jsonl')
         timing_summary(out, row, result)

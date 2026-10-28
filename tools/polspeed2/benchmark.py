@@ -20,6 +20,7 @@ VARIANTS = {
     'nine_N4': (4, 2, '.10', False),
     'nine_N4_s8': (4, 8, '.237', False, 2, '.018'),
     'nine_N8': (8, 1, '.045', False),
+    'nine_N8_full': (8, 1, '.055', False),
     'nine_N8_gate': (8, 2, '.09', False, 4, '.018'),
     'six_N2': (2, 8, '.20', True),
     'six_N4': (4, 2, '.10', True),
@@ -83,6 +84,12 @@ def update_row(path):
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     # Trainer writes first; CLI appends the same update with independent_J.
     return [row for row in rows if row.get('update') == 181][-1]
+
+
+def memory_failure(out):
+    paths = [out/'console.log', *out.glob('future_workers/*/[0-7]/*.error')]
+    return any(path.exists() and 'out of memory' in path.read_text(errors='replace').lower()
+               for path in paths)
 
 
 def run(name):
@@ -177,7 +184,7 @@ def run(name):
             result['six_serial_parity'] = compare(update_row(BASE/'out/six_serial/updates.jsonl'), row)
     (out/'RESULT.json').write_text(json.dumps(result, indent=2))
     print(json.dumps(result), flush=True)
-    if 's_per_update' not in result and 'CUDA out of memory' not in (out/'console.log').read_text():
+    if 's_per_update' not in result and not memory_failure(out):
         raise RuntimeError(f'{name} failed before a measured update; see {out}')
 
 

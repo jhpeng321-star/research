@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import time
+from benchmark import memory_failure
 
 base = Path('/root/autodl-tmp/c4/polspeed2_20261028')
 assert base.is_dir() and not (base/'STOP').exists()
@@ -21,14 +22,13 @@ if '--wait' in sys.argv:
         if (base/'STOP').exists():
             raise SystemExit(0)
         time.sleep(5)
-variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8', 'nine_N8_gate', 'nine_N4_s8']
+variants = ['six_N2', 'six_N4', 'six_N8', 'nine_N4', 'nine_N8', 'nine_N8_gate', 'nine_N8_full', 'nine_N4_s8']
 remaining = []
 for name in variants:
     path = base/'out'/name
     if path.exists():
         result = json.loads((path/'RESULT.json').read_text())
-        assert ('s_per_update' in result or
-                'CUDA out of memory' in (path/'console.log').read_text())
+        assert 's_per_update' in result or memory_failure(path)
     else:
         remaining.append(name)
 assert remaining

@@ -174,7 +174,9 @@ class FuturePool:
             while not ready.exists():
                 for process in self.processes:
                     if process.poll() is not None:
-                        raise RuntimeError(f'future worker exited ({process.returncode}); see {self.root}')
+                        errors = sorted(self.root.glob('[0-7]/*.error'))
+                        detail = '\n' + errors[0].read_text() if errors else ''
+                        raise RuntimeError(f'future worker exited ({process.returncode}); see {self.root}{detail}')
                 time.sleep(.05)
             error = directory / f'{index}.error'
             if error.exists():
