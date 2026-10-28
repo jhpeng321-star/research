@@ -2058,7 +2058,12 @@ class DreamerTrainer:
             payload["residual_on_native"] = True
         torch.save(payload, path)
 
-    def load_checkpoint(self, path, *, policy_only=False):
+    def load_checkpoint(self, path, *, policy_only=False, new_phase=False, resume_allow=()):
+        if (new_phase or resume_allow) and policy_only:
+            raise ValueError('new-phase migration requires full resume')
+        if resume_allow and not new_phase:
+            raise ValueError('resume_allow requires new_phase')
+        requested_config, requested_reward = self.config, self.reward_weights
         # Memory is execution geometry: an explicitly enabled runtime request may
         # be applied to an old full-resume checkpoint without changing its objective.
         memory_request = {name: getattr(self.config, name) for name in MEMORY_CONFIG_FIELDS}
@@ -2083,7 +2088,17 @@ class DreamerTrainer:
         if not policy_only and payload["format"] != CHECKPOINT_FORMAT:
             raise ValueError(f"full resume requires a {CHECKPOINT_FORMAT} checkpoint (use policy_only)")
         if not policy_only:
-            self._check_real_return_provider(DreamerConfig(**payload["config"]))
+            from .phase_resume import resume_diff, authorize_new_phase
+            diff = resume_diff(requested_config, requested_reward, payload)
+            if new_phase:
+                authorize_new_phase(diff, resume_allow)
+            self.resume_config_receipt = {'new_phase': new_phase, 'differences': diff,
+                                          'approved': sorted(resume_allow)}
+            if diff:
+                print('[resume-config] ' + json.dumps(self.resume_config_receipt, sort_keys=True),
+                      flush=True)
+            self._check_real_return_provider(requested_config if new_phase else
+                                             DreamerConfig(**payload["config"]))
         loop_refresh = os.environ.get("WMS_LOOP_REFRESH", "") == "1"
         if not policy_only and (payload["ensemble_size"] != len(self.world_models) or
                                 (payload["world_model_ids"] != self.world_model_ids
@@ -2114,8 +2129,9 @@ class DreamerTrainer:
         # Preserve the explicitly requested C4 boundary atomically across a
         # historical full-trainer resume (registered credit floor and entrant /
         # CRN settings did not exist in C1). Same floor repair as 96a60687.
-        self.config = DreamerConfig(**{**payload["config"], **memory_request,
-                                      **training_request, **anti_request})
+        self.config = (requested_config if new_phase else
+                       DreamerConfig(**{**payload["config"], **memory_request,
+                                        **training_request, **anti_request}))
         if getattr(self.policy, "residual_on_native", False):
             self.policy.configure_native_training(group=self.config.native_residual_train_group,
                                                   trunk=self.config.native_residual_train_trunk)
@@ -2140,7 +2156,7 @@ class DreamerTrainer:
                                                   if k not in ("params", "lr")})
                 payload["actor_optimizer"] = fresh
                 self.native_training_migration = "legacy head Adam retained; new features fresh Adam"
-        self.reward_weights = RewardWeights(**payload["reward_weights"])
+        self.reward_weights = requested_reward if new_phase else RewardWeights(**payload["reward_weights"])
         # V6EXPLORE: the loaded config may activate targets the run config did not have.
         self._init_entropy_temperature()
         for name in ("critic", "target_critic", "actor_optimizer", "critic_optimizer"):
@@ -2164,6 +2180,9 @@ class DreamerTrainer:
             with torch.no_grad():
                 parameter.copy_(payload[key].to(parameter.device))
             getattr(self, optimizer_name).load_state_dict(payload[optimizer_name])
+        if new_phase:
+            from .phase_resume import restore_requested_rates
+            restore_requested_rates(self)
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)

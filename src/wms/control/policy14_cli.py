@@ -156,7 +156,11 @@ def main(argv=None):
     parser.add_argument("--compact", action="store_true", help="print status/summary path only")
     parser.add_argument("--resume", default=None,
                         help="LOOP14: continue a c4_dreamer/3 trainer checkpoint (policy, critic, "
-                             "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
+                              "optimisers, duals) on the supplied (accepted) WM; the WM stays frozen")
+    parser.add_argument('--new-phase', action='store_true',
+                        help='full resume with TOML trainer/reward/rates; refuse unapproved differences')
+    parser.add_argument('--resume-allow', action='append', default=[], metavar='SECTION.KEY',
+                        help='approve one exact new-phase checkpoint/TOML difference (repeatable)')
     parser.add_argument("--critic-warmup-updates", type=int, default=None,
                         help="override policy14.critic_warmup_updates (e.g. on fresh current-policy returns)")
     parser.add_argument("--real-credit", default=None,
@@ -192,6 +196,8 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if (args.new_phase and not args.resume) or (args.resume_allow and not args.new_phase):
+            raise ValueError('--new-phase requires --resume; --resume-allow requires --new-phase')
         if args.looplong_boundary:
             from .looplong import read_boundary
             prepared = read_boundary(args.looplong_boundary)
@@ -200,6 +206,8 @@ def main(argv=None):
                     raw['counterfactual'][name] = [0.] * len(raw['counterfactual'][name])
         from .policy14_recovery import load_recovery
         recovery = load_recovery(raw, args)
+        if args.new_phase and recovery:
+            raise ValueError('new-phase migration cannot be combined with operational recovery')
         if args.native_init:
             from .nativeinit import PANEL_SHA256
             if args.smoke or not args.gate_panel:
@@ -395,7 +403,8 @@ def main(argv=None):
             # Same ensemble size, possibly a refreshed (accepted) WM: dreamer.load_checkpoint's
             # loop-refresh path restores policy/critic/optimisers/duals and resets best scores.
             os.environ["WMS_LOOP_REFRESH"] = "0" if recovery else "1"
-            trainer.load_checkpoint(resume)
+            trainer.load_checkpoint(resume, new_phase=args.new_phase, resume_allow=args.resume_allow)
+            summary['resume_config'] = trainer.resume_config_receipt
             if recovery and trainer.update_count != recovery['saved_update']:
                 raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
@@ -523,6 +532,10 @@ def main(argv=None):
             # MAIN's exact cell mixture supersedes the inherited rejection tilt.
             trainer._tilt_sampler = None
         summary['effective_config_before_updates'] = asdict(trainer.config)
+        summary['effective_reward_before_updates'] = asdict(trainer.reward_weights)
+        if args.new_phase and (trainer.config != cfg or
+                              trainer.reward_weights != RewardWeights(**raw['reward'])):
+            raise ValueError('new-phase effective trainer/reward differs from resolved TOML')
         for _ in range(args.prep_dry_run_updates or args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
