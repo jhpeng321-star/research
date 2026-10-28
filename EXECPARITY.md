@@ -1,10 +1,10 @@
 # S-EXECPARITY — recorded-state verification and opt-in execution parity
 
-**Status: production / approved SUMO check BLOCKED.** Combined-law CPU reference
-and27tests PASS; stock SUMO lacks the required same-step native residual hook.
-The old cap-only recorded acceptance FAILS for MAPPO. New-law shared-cap proxy
-results are not real parity. No new SUMO allocation was made. See sections3–6
-and `docs/paper_results/EXECPARITY_SUMO.md` before attempting candidate-A launch.
+**Status: 00:20 EXACT ALWAYS-COMMANDED law implemented and dispatched for the
+registered SUMO check (cap 7,200 sim-s, 0 charged so far).** Sections 1–6
+preserve the audit and the superseded continuous-law analysis. Section 7 is the
+authoritative 00:20 production path. See
+`docs/paper_results/EXECPARITY_SUMO.md` for the live check status.
 
 Branch `c4/execparity`, based on deployment audit `f6531d94`. CPU only; **zero SUMO
 executions and zero new sim-s**. Read-only exact-file copies from cpuP, no scenario,
@@ -367,3 +367,53 @@ same-step backend must be resolved; the conditional SUMO check is still blocked.
   implementation. Replacing it with a stale cache would not be a combined fix.
 
 No option has yet demonstrated the requested real new-law parity on this branch.
+
+## 7. 00:20 EXACT ALWAYS-COMMANDED law (authoritative production path)
+
+REGISTRATION.md 00:20 MAIN DECISION supersedes the continuous-law instruction
+(section 3) because stock SUMO exposes no same-step native-residual hook. The
+adopted law: **every designated CAV is commanded every tick through the single
+CommandOwnership writer** — exactly the S-CTRLARM CTRL0 `forced_base_commands`
+path with the policy's residual kept instead of forced to zero. Issued accel =
+`clip(sumo_native_accel(base) + residual, min(-3, base), max(min(1.2,
+getAccel), base))` (residual 0 returns the unclipped base bit-identically to
+CTRL0); SUMO then applies its speedMode-27 safe-speed cap. Imagination mirrors
+the identical envelope with the TRAIN-learned IDM driver artifact as the base
+and follow cap (`wms.control.alwayscmd.executed`); the WM head is NOT the base.
+A positive residual beyond the cap has zero effect and zero gradient.
+
+* Implementation: `src/wms/control/alwayscmd.py` (law + imagination mirror +
+  independent scalar formula), `tools/execparity/alwayscmd_adapter.py` (frozen
+  E3-final external wrapper; scoped composer + loader, byte-identical law copy),
+  `src/wms/control/execution.py` mode `2` + `verify_parity` gate for schema
+  `execparity_always_commanded_acceleration/1`.
+* CPU tests: `tests/unit/test_execparity_alwayscmd.py` (12) + replay-mapping
+  tests (2) PASS — residual-0 == CTRL0 bit identity, sole-writer commanding
+  every CAV including exact zero, frozen legacy envelope, imagination/scalar
+  formula identity, capped-positive-residual zero gradient, tiny-residual
+  continuity both sides of zero, checkpoint contract binding, receipt gating.
+* Registered SUMO check (00:20, same 7,200 cap): canary `s977000_always0` must
+  be byte-identical to stored S-CTRLARM CTRL0; then C1 under the law on
+  977001–977003 with per-tick ledgers; then offline replay (iii) with
+  `tools/execparity/alwayscmd_replay.py`, PASS = pooled executed-accel RMSE ≤
+  pooled native-head RMSE on the same rows AND canary bit identity. Plan:
+  `tools/execparity/sumo_plan_0020.json`.
+
+### Enable for candidate A (training and deployment)
+
+```powershell
+$env:C4_EXECUTION_PARITY = '2'
+$env:C4_EXECUTION_DRIVER = '<absolute path>/configs/execparity_cav_idm_v1.json'
+$env:C4_POLICY_STOCHASTIC = '0'
+$env:C4_POLICY_ACCEL_NOISE = '0'
+```
+
+`policy14_cli` keeps its section-5 command shape (the flag selects execution
+inside the existing path); deploy additionally requires
+`--execution-parity-receipt <always_commanded_acceleration receipt>` produced
+by the offline replay from measured SUMO runs — `verify_parity` refuses
+anything else in mode 2, including all continuous/cap receipts. Default remains
+OFF; values other than 0/1/2 fail. Checkpoints saved in mode 2 bind contract
+`execparity_contract/2` executor `always_commanded_ctrl0/1`; loading with a
+different flag/driver fails. Backup 1 (MAPPO absolute command) still needs its
+own adapter at the same writer boundary before any enable command exists.
