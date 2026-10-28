@@ -2,7 +2,7 @@
 
 S-EXECPARITY3: with ``C4_SUMO_LEADER_RULE=1`` (default OFF) the neighbour
 search runs in the lane-chain coordinate of
-:func:`wms.control.sumo_leader.chain_s` (corridor ``s`` plus the registered
+:func:`wms.physics.lane_chain.chain_s` (corridor ``s`` plus the registered
 network's hidden junction-connector lengths), matching SUMO's lane/link-based
 leader rule: no phantom corridor-projected leaders between the ramp and the
 accel lane or across the mainline junctions, and junction-transit slots (empty
@@ -29,7 +29,7 @@ def lane_of(kin: Tensor) -> Tensor:
 
 def _sumo_link_geometry(kin: Tensor):
     """Chain coordinates and junction-transit mask for the SUMO leader rule."""
-    from wms.control.sumo_leader import chain_s
+    from .lane_chain import chain_s
     lane = lane_of(kin)
     # Empty lane one-hot = junction transit (traffic_shepherd.c4.state.Frame.kin);
     # SUMO-wise such a slot is on a connector, not on lane 0 (argmax of zeros).
@@ -44,7 +44,7 @@ def lane_neighbour(kin: Tensor, present: Tensor, query_lane: Tensor,
 
     Missing neighbours yield the free-road gap and the vehicle's own speed.
     """
-    from wms.control.sumo_leader import leader_rule_enabled
+    from .lane_chain import leader_rule_enabled
     if not leader_rule_enabled():
         s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
         lane = lane_of(kin)
@@ -90,11 +90,11 @@ def lead_neighbour(kin: Tensor, present: Tensor,
     ``MERGE_S1 + RAMP_CONNECTOR`` so the obstacle competes with chain-coordinate
     leader gaps on the ego's own path (the ramp reaches it THROUGH the
     connector)."""
-    from wms.control.sumo_leader import leader_rule_enabled
+    from .lane_chain import leader_rule_enabled
     lane = lane_of(kin)
     gap, lead_v = lane_neighbour(kin, present, lane, physics, ahead=True)
     if leader_rule_enabled():
-        from wms.control.contract import MERGE_CONNECTOR_RAMP_LEN_M
+        from .lane_chain import MERGE_CONNECTOR_RAMP_LEN_M
         chain_lane, chain, _ = _sumo_link_geometry(kin)
         end_gap = (float(physics.merge_zone_s1_m) + float(MERGE_CONNECTOR_RAMP_LEN_M)
                    - chain).clamp_min(MIN_GAP_M)

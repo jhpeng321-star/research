@@ -7,87 +7,47 @@ projected every vehicle onto the corridor ``s`` coordinate and took the nearest
 same-frame-lane vehicle ahead in ``s``.  Because ``s`` is continuous across the
 merge junctions while the physical lanes are not, that projection manufactures
 PHANTOM leaders (S-EXECPARITY2 decomposition: 5.14 % of replay rows, 95.6 % of
-the pooled squared error; ramp/merging vehicles placed 0.1-2 m ahead of an ego
-whose SUMO leader is ~9 m away or absent):
+the pooled squared error - in truth dominated by the hidden junction connectors:
+ramp egos whose SUMO leader gap = frame gap + the 2.93 m ramp connector, and
+mainline egos misled by the 3.00/8.00 m entry/exit connectors, plus mid-merge
+vehicles at 0-2 m corridor projections whose SUMO leader is ~9 m away or
+absent):
 
 * an ego on the accel lane (frame lane 2, ``s >= 0``) must NOT see ramp
   vehicles (frame lane 2, ``s < 0``): they are upstream across the junction;
-* a ramp ego's leader ACROSS the ramp connector is further away by the
-  connector's physical length (the corridor coordinate hides it); the same
-  holds on the mainline across the entry and exit junctions;
+* a ramp ego's leader ACROSS the ramp connector is 2.93 m further than the
+  corridor projection says; the same holds on the mainline across the entry
+  (3.00 m) and exit (8.00 m) junctions;
 * junction-transit vehicles (no frame lane) are ON a connector: they lead the
-  vehicles still on the connector's upstream lane, and nobody upstream of the
-  junction leads them.
+  vehicles still on the connector's upstream lane, and nobody on another lane
+  leads from them.
 
 The rule implemented here restores SUMO's semantics from observable/geometric
 information only (frame lane, ``s``, junction flag, optional ``lane_carry`` and
-the registered network's connector lengths): every vehicle is mapped to a
-monotone lane-chain coordinate ``c`` (corridor ``s`` plus the hidden connector
-lengths of the junctions upstream of it), and the leader is the nearest vehicle
-ahead in ``c`` on the same physical lane.  On this network each frame lane is a
-strictly linear chain (mainline lanes: entry edge -> :1780739017_1_* -> merge
-edge -> :13638027693_0_* -> exit edge; ramp: -> :1780739017_0_0 -> accel lane,
-a dead end), so chain order == SUMO's link order for through traffic.  No truth
-driver types, no vType files, no hand-set behavioural thresholds.
+the registered network's connector lengths - see
+:mod:`wms.physics.lane_chain`): every vehicle is mapped to a monotone
+lane-chain coordinate ``c`` and the leader is the nearest vehicle ahead in
+``c`` on the same physical lane.  On this network each frame lane is a strictly
+linear chain (mainline lanes: entry edge -> :1780739017_1_* -> merge edge ->
+:13638027693_0_* -> exit edge; ramp: -> :1780739017_0_0 -> accel lane, a dead
+end), so chain order == SUMO's link order for through traffic.  No truth driver
+types, no vType files, no hand-set behavioural thresholds.
 
 Default OFF: :func:`leader_gap_dv_sumo` then calls the frozen legacy
 :func:`wms.control.native_cav.leader_gap_dv` unchanged (bitwise), and
 ``wms.physics.neighbours.lane_neighbour`` keeps its legacy body.
+
+Measured on the 00:20 recordings (leader agreement vs the executor's logged
+``getLeader``): mismatches fall 1,675/32,617 rows (5.14 %) -> 450 (1.38 %),
+with zero previously-matched rows broken; the residual is dominated by
+far leaders beyond SUMO's own brakeGap-based getLeader search budget (MSVehicle.cpp:
+``dist == 0 -> brakeGap(speed) + minGap``) and junction-internal connector
+rows - both unobservable in a WM frame and benign for the executed law.
 """
 from __future__ import annotations
 
-import os
-
-#: Environment flag enabling the SUMO lane/link leader rule (default OFF).
-LEADER_RULE_ENV = "C4_SUMO_LEADER_RULE"
-_TRUTHY = ("1", "true", "yes", "on")
-
-
-def leader_rule_enabled(env=None) -> bool:
-    """Whether the SUMO lane/link leader rule is enabled (read per call)."""
-    source = os.environ if env is None else env
-    return str(source.get(LEADER_RULE_ENV, "")).strip().lower() in _TRUTHY
-
-
-def chain_s(lane, s_m):
-    """Lane-chain coordinate ``c`` of a modelled (non-junction) vehicle.
-
-    ``lane``: long tensor/array of frame lanes (0/1/2, anything else -> no
-    shift); ``s_m``: corridor coordinate.  Returns ``c`` with the same dtype as
-    ``s_m``: the corridor ``s`` plus the connector lengths of the junctions the
-    vehicle is downstream of (entry connector for ``s > 0`` on lanes 0/1, exit
-    connector for ``s > MERGE_S1_M`` on lanes 0/1, ramp connector for
-    ``s > 0`` on lane 2).  Pure :mod:`wms.control.contract` geometry.
-    """
-    import torch
-    from .contract import (MERGE_CONNECTOR_ENTRY_LEN_M, MERGE_CONNECTOR_EXIT_LEN_M,
-                           MERGE_CONNECTOR_RAMP_LEN_M, MERGE_S1_M)
-    s = torch.as_tensor(s_m)
-    lane_t = torch.as_tensor(lane).long()
-    entry = (lane_t != 2) & (s > 0.)
-    exit_ = (lane_t != 2) & (s > float(MERGE_S1_M))
-    ramp = (lane_t == 2) & (s > 0.)
-    return s + (entry.to(s) * float(MERGE_CONNECTOR_ENTRY_LEN_M)
-                + exit_.to(s) * float(MERGE_CONNECTOR_EXIT_LEN_M)
-                + ramp.to(s) * float(MERGE_CONNECTOR_RAMP_LEN_M))
-
-
-def junction_chain_s(lane_carry, s_m):
-    """Chain coordinate of a junction-transit vehicle (observable lower bound).
-
-    A junction vehicle sits on an internal connector; its observable frame
-    state is the carried last modelled (lane, s).  It is placed at the ENTRY of
-    the connector ahead of that position - the geometric lower bound of its
-    true chain position (conservative for an upstream ego: never overstates the
-    gap).  Lanes 0/1/2 all reach chain coordinate 0.0 at the merge junction and
-    ENTRY+MERGE_S1 at the exit junction, so the bound is lane-independent.
-    """
-    import torch
-    from .contract import (MERGE_CONNECTOR_ENTRY_LEN_M, MERGE_S1_M)
-    s = torch.as_tensor(s_m)
-    return torch.where(s <= 0., torch.zeros_like(s),
-                       torch.full_like(s, float(MERGE_CONNECTOR_ENTRY_LEN_M
-                                                 + MERGE_S1_M)))
+from wms.physics.lane_chain import (LEADER_RULE_ENV, chain_s, junction_chain_s,
+                                    leader_rule_enabled)  # noqa: F401  (re-export)
 
 
 def leader_gap_dv_sumo(state):
