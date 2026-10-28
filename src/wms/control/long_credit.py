@@ -8,6 +8,7 @@ spread nor an encoder vote is treated as calibrated confidence by itself.
 """
 from __future__ import annotations
 
+import contextlib
 from dataclasses import replace
 import hashlib
 import math
@@ -96,7 +97,9 @@ def fit_cqr(rows, binding):
     for horizon in sorted({r['horizon_s'] for r in rows}):
         subset = [r for r in rows if r['horizon_s'] == horizon]
         worlds = np.asarray([str(r['world']) for r in subset])
-        roles = np.asarray([world_role(w) for w in worlds])
+        # S-BACKLOG: rows may carry an explicit fit/calibration/validation ``role`` (E3DATA pairs keep
+        # their own registered split); absent -> the unchanged hashed world role.
+        roles = np.asarray([str(r.get('role') or world_role(w)) for r, w in zip(subset, worlds)])
         fit, cal = roles == 'fit', roles == 'calibration'
         mean, width = sample_location_width([r['samples'] for r in subset])
         real = np.asarray([r['real_benefit'] for r in subset], float)
@@ -250,6 +253,62 @@ def hold_metrics(imagined):
             'metering_like_definition': definition}
 
 
+@contextlib.contextmanager
+def frozen_imagination(trainer):
+    """No-grad, uncurriculumed, unpenalised trainer state for paired K=8 futures (restored on exit)."""
+    from .dreamer import _rng_state, _restore_rng
+    old, curriculum, training = trainer.config, trainer.horizon_curriculum, trainer._training_imagination
+    uncertainty = trainer.uncertainty
+    rng = _rng_state(trainer.device)
+    try:
+        trainer.horizon_curriculum, trainer.uncertainty = None, None
+        trainer._training_imagination = False
+        yield old
+    finally:
+        trainer.config, trainer.horizon_curriculum = old, curriculum
+        trainer._training_imagination, trainer.uncertainty = training, uncertainty
+        _restore_rng(rng, trainer.device)
+
+
+def pair_benefit_curve(trainer, old, sampler, policy_row, index, horizon):
+    """K=8 current-policy paired futures of one real start -> ``[K, horizon]`` per-control-step
+    (1 s) native-minus-policy benefit increments ((policy - native) rewards)."""
+    from .counterfactual import Variants, KIND_ALL, KIND_BASE, acting_cavs
+    h = horizon
+    trainer.config = replace(old, horizon=int(h), future_samples=K,
+        future_driver_scale=1., uncertainty_weight=0., low_penetration_horizon_cap=False,
+        entry_pad_max=max(old.entry_pad_max, math.ceil(old.entry_pad_max * h / old.horizon)))
+    start = sampler._batch([sampler._load(policy_row)], trainer.device)
+    with torch.no_grad():
+        start = trainer._entry_slots(start, torch.Generator().manual_seed(710003 + index))
+        cav = acting_cavs(start.state)
+        variants = Variants(torch.tensor([0, 0], device=trainer.device),
+            torch.cat((cav, torch.zeros_like(cav))),
+            torch.tensor([KIND_ALL, KIND_BASE], device=trainer.device), 1, {0: 1}, {}, [])
+        image = trainer.imagine(start, variants=variants, deterministic=True, difference_only=True)
+    return image['rewards'][:, :, 0] - image['rewards'][:, :, 1]
+
+
+def pair_rows(trainer, old, sampler, policy_row, index, world, curves, horizons, full_window=False):
+    """K=8 current-policy paired futures of one real pair -> CQR rows (one per horizon).
+
+    ``curves`` = (policy per-tick cost [600], native per-tick cost [600]) real vehicle-second clocks.
+    ``real_benefit`` / ``samples`` cover the beyond-trusted tail ``[trusted, h)``; with ``full_window``
+    the rows also carry ``samples_full`` / ``real_full`` over ``[0, h)`` (native minus action)."""
+    rows = []
+    for h in horizons:
+        diff = pair_benefit_curve(trainer, old, sampler, policy_row, index, h)
+        trusted = trainer.long_credit_trusted_s
+        benefit = diff[:, trusted:].sum(1)
+        real = float((curves[1][2*trusted:int(2*h)] - curves[0][2*trusted:int(2*h)]).sum())
+        row = {'world': world, 'horizon_s': h, 'samples': benefit.cpu().tolist(), 'real_benefit': real}
+        if full_window:
+            row.update(samples_full=diff.sum(1).cpu().tolist(),
+                       real_full=float((curves[1][:int(2*h)] - curves[0][:int(2*h)]).sum()))
+        rows.append(row)
+    return rows
+
+
 def fit_from_loop(trainer, source, pairing, policy_returns, native_returns, policy_sha, wm_sha,
                   horizons, wm_config):
     """No-grad current-policy K futures from causal real starts; no future commands as inputs.
@@ -261,8 +320,6 @@ def fit_from_loop(trainer, source, pairing, policy_returns, native_returns, poli
     from .paircrit import PairedProvider
     from .real_returns14 import NPZRealReturnProvider
     from .start_states import StartStateSampler
-    from .counterfactual import Variants, KIND_ALL, KIND_BASE, acting_cavs
-    from .dreamer import _rng_state, _restore_rng
     from wms.data.c4_pairs import PairedBranchSource
     from wms.config.load import load_train_config
 
@@ -277,13 +334,8 @@ def fit_from_loop(trainer, source, pairing, policy_returns, native_returns, poli
         arm_kinds=('B', 'POLICY'))
     sampler = StartStateSampler(pairs.dataset)
     by_key = {g['pair_key']: g for g in pairs.groups}
-    old, curriculum, training = trainer.config, trainer.horizon_curriculum, trainer._training_imagination
-    uncertainty = trainer.uncertainty
-    rng = _rng_state(trainer.device)
     rows = []
-    try:
-        trainer.horizon_curriculum, trainer.uncertainty = None, None
-        trainer._training_imagination = False
+    with frozen_imagination(trainer) as old:
         for i, item in enumerate(proof['pairs']):
             group = by_key[item['pair_key']]
             native_row = group['rows'][0]
@@ -305,27 +357,7 @@ def fit_from_loop(trainer, source, pairing, policy_returns, native_returns, poli
                 if not np.isclose(costs.sum(), -float(target), rtol=1e-6, atol=1e-3):
                     raise ValueError('recorded cost clocks do not reconcile to authoritative J')
                 curves.append(costs)
-            for h in horizons:
-                trainer.config = replace(old, horizon=int(h), future_samples=K,
-                    future_driver_scale=1., uncertainty_weight=0., low_penetration_horizon_cap=False,
-                    entry_pad_max=max(old.entry_pad_max, math.ceil(old.entry_pad_max * h / old.horizon)))
-                start = sampler._batch([sampler._load(policy_row)], trainer.device)
-                with torch.no_grad():
-                    start = trainer._entry_slots(start, torch.Generator().manual_seed(710003 + i))
-                    cav = acting_cavs(start.state)
-                    variants = Variants(torch.tensor([0, 0], device=trainer.device),
-                        torch.cat((cav, torch.zeros_like(cav))),
-                        torch.tensor([KIND_ALL, KIND_BASE], device=trainer.device), 1, {0: 1}, {}, [])
-                    image = trainer.imagine(start, variants=variants, deterministic=True, difference_only=True)
-                trusted = trainer.long_credit_trusted_s
-                benefit = (image['rewards'][:, trusted:, 0] - image['rewards'][:, trusted:, 1]).sum(1)
-                real = float((curves[1][2*trusted:int(2*h)] - curves[0][2*trusted:int(2*h)]).sum())
-                rows.append({'world': item['seed'], 'horizon_s': h,
-                             'samples': benefit.cpu().tolist(), 'real_benefit': real})
-    finally:
-        trainer.config, trainer.horizon_curriculum = old, curriculum
-        trainer._training_imagination, trainer.uncertainty = training, uncertainty
-        _restore_rng(rng, trainer.device)
+            rows += pair_rows(trainer, old, sampler, policy_row, i, item['seed'], curves, horizons)
     binding = {'wm_sha256': wm_sha, 'policy_sha256': policy_sha,
                'pairs_sha256': hashlib.sha256(checked_path(pairing).read_bytes()).hexdigest(),
                 'objective': 'source_integral_plus_road_delay',
