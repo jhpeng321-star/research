@@ -13,6 +13,8 @@ for out in sorted((base/'out').glob('*')):
     print('\n###', out.name, flush=True)
     for filename in ('console.log', 'memory_execution.jsonl', 'RESULT.json'):
         path = out / filename
+        if not path.exists():
+            path = base/'launch'/out.name/filename
         if path.exists():
             lines = path.read_text(errors='replace').splitlines()
             print(filename, '\n'.join(lines[-12:]), flush=True)

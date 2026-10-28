@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import struct
+import shutil
 import subprocess
 import sys
 import time
@@ -68,7 +69,11 @@ def run(name):
     if used > total * .05:
         raise RuntimeError(f'gpuA has {used} MiB in use; refusing benchmark without re-budgeting')
     out = BASE / 'out' / name
-    out.mkdir(parents=True, exist_ok=False)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        raise FileExistsError(out)
+    launch = BASE / 'launch' / name
+    launch.mkdir(parents=True, exist_ok=False)
     config = BASE / f'{name}.toml'
     lines = [f'extends = "{RESOLVED}/POLICY.toml"', '[trainer]',
              f'imagination_checkpoint_segment = {segment}']
@@ -102,11 +107,11 @@ def run(name):
         '--max-updates', '150', '--output-dir', str(out), '--compact', '--prep-dry-run-updates', '2']
     receipt = dict(name=name, argv=cmd, env={k:v for k,v in env.items() if k.startswith(('WMS_', 'C4_', 'OMP_', 'MKL_', 'PYTORCH_'))},
                    initial_gpu_mib=used, gpu_total_mib=total, started=time.time())
-    (out/'LAUNCH.json').write_text(json.dumps(receipt, indent=2))
-    with (out/'console.log').open('w') as log, (out/'gpu_memory.jsonl').open('w') as memory:
+    (launch/'LAUNCH.json').write_text(json.dumps(receipt, indent=2))
+    with (launch/'console.log').open('w') as log, (launch/'gpu_memory.jsonl').open('w') as memory:
         process = subprocess.Popen(cmd, env=env, cwd=BASE, stdin=subprocess.DEVNULL,
                                    stdout=log, stderr=subprocess.STDOUT)
-        (out/'PID').write_text(str(process.pid))
+        (launch/'PID').write_text(str(process.pid))
         peak = used
         while process.poll() is None:
             used, total = gpu()
@@ -114,12 +119,16 @@ def run(name):
             memory.write(json.dumps(dict(t=time.time(), used_mib=used, total_mib=total))+'\n')
             memory.flush()
             if (BASE/'STOP').exists() or used > total * .6:
-                (out/'STOP').touch()
+                if out.exists():
+                    (out/'STOP').touch()
                 for pool in (out/'future_workers').glob('*'):
                     (pool/'STOP').touch()
                 if used > total * .6:
                     (BASE/'STOP').touch()
             time.sleep(2)
+    out.mkdir(exist_ok=True)
+    for filename in ('LAUNCH.json', 'console.log', 'gpu_memory.jsonl', 'PID'):
+        shutil.copyfile(launch/filename, out/filename)
     result = dict(name=name, returncode=process.returncode, elapsed_s=time.time()-receipt['started'],
                   peak_total_gpu_mib=peak, peak_total_gpu_fraction=peak/total)
     if (out/'updates.jsonl').exists():
@@ -131,6 +140,8 @@ def run(name):
             result['six_serial_parity'] = compare(update_row(BASE/'out/six_serial/updates.jsonl'), row)
     (out/'RESULT.json').write_text(json.dumps(result, indent=2))
     print(json.dumps(result), flush=True)
+    if 's_per_update' not in result and 'CUDA out of memory' not in (out/'console.log').read_text():
+        raise RuntimeError(f'{name} failed before a measured update; see {out}')
 
 
 if __name__ == '__main__':
