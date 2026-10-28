@@ -62,6 +62,18 @@ credit, residual stats, J; timing/memory keys excluded).
 | live / dry reference (spill ON) | 0.45 | 1009-1018 | 11.9 GB | reference |
 | F: + existing bit-identical env flags (PIVOT_DIAG_OFF, FAST_MERGE_LANE, FAST_CAV_DRIVE, FAST_LONG_HISTORY) | 0.30 | 1022.7 (3 procs sharing GPU) | 11.89 GB | **bitwise identical (0 diffs)** |
 | FS8: F + saved-tensor spill OFF | 0.25 | OOM in first VJP (needs > 11.84 GiB) | - | - |
+| FS8G: FS8 + GRAPH_CVAR + WMSPEED MOBIL | 0.25 | OOM in first VJP; full fwd 194.9 s, replay fwd 29.9 s | - | - |
+| FG_S2 run (= FG: F + GRAPH_CVAR + DEDUPE_MOBIL + MOBIL_LAZY_SAFE, spill ON; see note) | 0.25 | **841.4** (incl. 30 s blocking py-spy) | 11.89 GB | **all 153 training leaves bitwise identical**; only `independent_J.*` differ (rescore batch drawn with batch_size 2, see note) |
+
+Note: `[trainer] batch_size = 2` + `[counterfactual] max_starts = 2` did NOT give two starts:
+a full `--resume` restores the checkpoint's DreamerConfig (only memory/anti-exploit/
+training-group fields are re-applied, `DreamerTrainer.load_checkpoint`), so the trainer
+kept batch_size 1, while the CLI's independent rescore batch used the raw config (2 starts).
+Measuring/using 2 or 4 starts needs `batch_size` added to the resume re-application
+(a recipe change, main decides). Not measured tonight.
+
+Phase timing (s): full no-grad fwd 291.6 (F) -> 195.4 (FG); replay fwd per future
+45-53 (F) -> 38-44 (FG) -> 29.9 (spill OFF, FS8G); VJP per future 37-41 (F) -> 36-38 (FG).
 
 F flags give no measurable gain (the hot spots are elsewhere). Spill OFF shortened the
 first future's replay forward 51.1 -> 42.8 s (-16 %) but needs more than 0.25 of the GPU.
