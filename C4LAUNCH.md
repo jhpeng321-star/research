@@ -232,3 +232,10 @@ and all original scientific settings resolved successfully. Existing failed runs
 untouched, no phase dispatch. Receipt RESUME_DRY_AUDIT_DISPATCH.json; read-only
 watcher37624 uses the existing cpuP relay, >=150s polls/>=300s refusal backoff.
 Own execution-memory trace tails are now exposed by the batched status transport.
+
+First ACTUAL unique dry update181 completed (timestamp1793185543.097754):
+finite actorloss0.03010/critic0, groupgrad712.30, own-trunk1405.98/report274.76/
+attention751.33, mean|residual|0.055965m/s2, mean−q10 credit346.3602,
+effective individual/coop8.9/8.9,90s. GPU reserved12,201,230,336bytes and sampled
+process12,650,020,864bytes, host~13.76GB. Second scratch update running.
+Receipt RESUME_FIRST_REAL_UPDATE.json; this is1of2, not a dry PASS/full launch.
