@@ -1,0 +1,14 @@
+{
+ "scope": "supplemental_non_verdict",
+ "n_worlds": 12,
+ "world_seeds": [
+  969824,
+  969835
+ ],
+ "K": 8,
+ "horizon_s": 30,
+ "n_draws": 96,
+ "WM": "WM2",
+ "validation_overlap": 0,
+ "caveat": "These worlds are outside E3 validation. They cannot establish the verdict. Finite-time nonlinear pulse gains, not asymptotic linear string-stability eigenvalues."
+}

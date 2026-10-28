@@ -119,14 +119,29 @@ def main(argv=None) -> int:
                     help="derive the threshold from THIS WM's base-horizon lower 95 %% bound")
     ap.add_argument("--threshold", default=None, help="registered gate JSON (threshold source)")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--samples", type=int, default=1, help="fixed K CRN draws (legacy: 1)")
+    ap.add_argument("--deterministic-crn", action="store_true")
+    ap.add_argument("--entrant-control", action="store_true")
+    ap.add_argument("--entrant-controllers", help="JSON arm -> hash-bound feedback specification")
+    ap.add_argument("--ramp-speed-adapt", choices=("on", "off"))
     args = ap.parse_args(argv)
     if args.register == (args.threshold is not None):
         ap.error("exactly one of --register / --threshold")
+    if args.samples < 1:
+        ap.error("--samples must be positive")
     import torch
     torch.set_num_threads(int(__import__("os").environ.get("OMP_NUM_THREADS", "2")))
     acc = _accept()
     acc.check_roots([args.pairs])
     cfg, settings, model = acc.load_arm(args.wm_config, args.wm_ckpt)
+    from dataclasses import replace
+    if args.entrant_control:
+        cfg = replace(cfg, data=replace(cfg.data, entrant_control=True, entries_v2=True))
+        settings = replace(settings, entrant_control=True, entries_v2=True)
+    if args.entrant_controllers:
+        settings = replace(settings, entrant_controllers=json.loads(acc.guard(args.entrant_controllers).read_text()))
+    if args.ramp_speed_adapt is not None:
+        model.ramp_speed_adapt_learnable = args.ramp_speed_adapt == "on"
     horizons = sorted(args.horizons)
     steps = int(round(horizons[-1] / DT_S))
     ds = acc.build_sets(cfg, [args.pairs], steps)[0]
@@ -138,11 +153,15 @@ def main(argv=None) -> int:
     for g, (key, group) in enumerate(panel):
         runs = {}
         for name, index in [("B", group["B"])] + [(f"SEED{j}", i) for j, i in enumerate(group["SEED"])]:
-            r = acc.free_rollout(model, settings, ds[index], steps, SEED0 + 7919 * g)
-            sel = r["t0_present"] & ~r["is_cav"]
-            runs[name] = {h: (acc.hdv_delay(r["speed"], r["mask"], sel, int(round(h / DT_S))),
-                              acc.hdv_delay(r["rec_speed"], r["rec_mask"], sel, int(round(h / DT_S))))
-                          for h in horizons}
+            draws = []
+            for draw in range(args.samples):
+                r = acc.free_rollout(model, settings, ds[index], steps,
+                    SEED0 + 7919 * g + 1000003 * draw, deterministic_crn=args.deterministic_crn)
+                sel = r["t0_present"] & ~r["is_cav"]
+                draws.append({h: (acc.hdv_delay(r["speed"], r["mask"], sel, int(round(h / DT_S))),
+                                  acc.hdv_delay(r["rec_speed"], r["rec_mask"], sel, int(round(h / DT_S))))
+                              for h in horizons})
+            runs[name] = {h: np.asarray([d[h] for d in draws]).mean(0).tolist() for h in horizons}
         for h in horizons:
             per_h[h].append([(runs[a][h][0] - runs["B"][h][0], runs[a][h][1] - runs["B"][h][1])
                              for a in runs if a != "B"])
@@ -172,6 +191,9 @@ def main(argv=None) -> int:
                             and entry["sign_agreement"] >= threshold else "FAIL")
     results[base]["verdict"] = "BASE"
     doc = {"schema": SCHEMA, "wm_sha256": sha256(args.wm_ckpt), "wm_config_sha256": sha256(args.wm_config),
+           "samples": args.samples, "entrant_control": settings.entrant_control,
+           "deterministic_crn": args.deterministic_crn or settings.entrant_control,
+           "ramp_speed_adapt": model.ramp_speed_adapt_learnable,
            "pairs_root": str(args.pairs), "panel_seed": args.panel_seed, "groups": len(panel),
            "rule": ("horizon h PASS iff WM sign agreement of dJ(arm - B) t0-HDV delay at h >= "
                     "threshold; threshold = lower 95% group-bootstrap bound of the sign agreement "

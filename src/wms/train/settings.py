@@ -152,6 +152,16 @@ class TrainSettings:
     # learning rate for parameters whose names start with the prefix (longest prefix wins).
     freeze_prefixes: tuple[str, ...] = ()
     lr_scale: Optional[Mapping[str, float]] = None
+    # S-RAMPFIX lane_v5_long (default OFF = bit-identical): unfreeze the existing lane_v5
+    # network with its own parameter group at lane_v5_long_lr_scale (no architecture change).
+    lane_v5_long: bool = False
+    lane_v5_long_lr_scale: float = 0.05
+    # S-RAMPFIX / S-WMCOMBINED model + data switches mirrored on the flat settings (default
+    # values are omitted from the flat dict, so default behaviour is unchanged): the model
+    # itself is built from the model spec; these carry the resolved config into settings.
+    mainline_interaction_residual: bool = False
+    mainline_residual_hidden: int = 64
+    longwm_extra_paired: Optional[str] = None
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None
@@ -271,6 +281,8 @@ class TrainSettings:
     entry_pad_max: int = 256
     entry_insert_rule: str = "v2"  # ENTRYFIX/V6ENTRY: "v2" | "sumo_like" | "sumo_like_v2"
     entry_queue_state: bool = False  # V9ENTRY: recorded t0 backlog + demand-rate arrivals
+    entrant_control: bool = False  # S-ENTRANTFIX: observable CAV births keep their arm controller
+    entrant_controllers: Optional[dict] = None  # explicit arm -> frozen feedback interface
     junction_fix: str = "off"  # JUNCTIONFIX: data-side only (wms.data.junction_fix)
     controller_hygiene: str = "off"  # DATAHYG: data-side only (wms.data.controller_hygiene)
     # LANEFIX (2026-10-14, default OFF): model switches mirrored for validation; the
@@ -469,6 +481,7 @@ class TrainSettings:
     merge_core_sigma_fit: float = 0.0
 
     def __post_init__(self) -> None:
+        _require(isinstance(self.entrant_control, bool), "entrant_control must be boolean")
         _require(self.emergency_decel_mps2 is None or (
             not isinstance(self.emergency_decel_mps2, bool)
             and math.isfinite(float(self.emergency_decel_mps2))
@@ -560,9 +573,13 @@ class TrainSettings:
                  "freeze_prefixes must not contain duplicates")
         _require(self.lr_scale is None or (
             all(isinstance(prefix, str) and prefix for prefix in self.lr_scale)
-            and all(math.isfinite(float(scale)) and float(scale) > 0
+            and all(math.isfinite(float(scale)) and scale > 0
                     for scale in self.lr_scale.values())),
             "lr_scale must map non-empty prefixes to positive finite multipliers")
+        _require(isinstance(self.lane_v5_long, bool), "lane_v5_long must be a boolean")
+        _require(math.isfinite(float(self.lane_v5_long_lr_scale))
+                 and float(self.lane_v5_long_lr_scale) > 0.0,
+                 "lane_v5_long_lr_scale must be finite and positive")
         _require(math.isfinite(self.flip_rate_weight) and self.flip_rate_weight >= 0,
                  "flip_rate_weight must be finite and non-negative")
         _require(math.isfinite(self.flip_rate_allowance)

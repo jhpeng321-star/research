@@ -1,0 +1,108 @@
+# S-LONGLOSSTEST-1 — offline long-run paired-loss test
+
+Preparation on `c4/longloss`, from `c4/looplong@6a0f5dff`. LAUNCHED (see below).
+Target: gpuR `/root/autodl-tmp/c4/longloss20261027`, mirrored autonomously to
+the same path on gpuA; terminal `DONE.json`. Zero new simulation.
+
+## Prospective design
+
+Start each variant independently from WM1 SHA256
+`5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e`.
+Reuse S-WMDEEPTEST-1's exact world split, 48-group scoring panel, loop-world
+acceptance panel and original thresholds. Globally exclude its 25 scoring seeds
+from fitting. WM1's historical exposure remains acknowledged.
+
+LONGLOSS-frozen first, then LONGLOSS-deep sequentially, each <=3 h including
+assembly/validation, <=400 updates; same fixed16-window position validation,
+every5steps, patience3, strict minimum, step0 eligible. Use the loop's real
+cycle0/1/2 POLICY/B 300s tapes and paired-return provenance. New cycle2 worlds
+are assigned prospectively by a fixed hash, with validation never used to fit.
+Inherited scoring worlds remain unchanged.
+
+Enable exactly the looplong WM hook: longwm loss ON, complete300s graph,
+600tick truncation, batch2, coupled paired randomness, stage paired horizon.
+These required changes from DEEP's120s/batch4 are explicit; this tests the wired
+LONGLOSS package, not an objective-only matched ablation. Keep original replay
+shares and paired-batch fraction. Deep additionally unfreezes lane_v5,
+merge_core, merge_pivot, ramp_speed_adapt, driver_encoder, driver_updater,
+residual_net.lane at1.5e-6; residual1.5e-5, existing courtesy/yield rates retained.
+Use the speed-fixed trainer from6a0f5dff, learned driver settings only.
+
+Original horizon_gate at10/30/60/90/120/180/300s and accept.py follow training.
+Report signed paired-dJ mean error and centered SD at120/300s. Primary improvement
+is abs(WM1 mean300s error)-abs(candidate mean300s error), paired world-cluster
+bootstrap95% percentile CI,2000 draws seed0, retaining all starts/arms per world.
+Verdict **helps** only if improvement>0, its CI lower bound>0, and sign agreement
+at each10/30/60s meets the unchanged threshold. Acceptance reported separately;
+missing endpoints give unavailable. No automatic adoption.
+
+CUDA allocator cap0.85; disk floor3GiB (stop trigger3.25GiB). Detached own-PID
+chain, no laptop dependency; per-variant failures retained and terminal receipt
+mirrored. Training ETA <=6 h total plus fixed scoring; actual launch ETA follows.
+
+Results pending; main reads them after this launch-only handoff.
+
+## Launch (2026-10-27 20:17:51 UTC+8, Claude subagent after Sol freezes)
+
+- gpuR chain PID **162979**, start ticks **4173005841**; verified ppid 1, own session
+  162979, stdin `/dev/null` (`LAUNCH.json`, `RUNNING.json`). Training child (frozen)
+  PID 163010 (`CHILD.json`). Code hashes in remote `STAGING.json`; the code was
+  re-synced after the 12:08 UTC preflight with operational-only fixes (commits
+  5a12aa02 and successor): mirror failures non-fatal (gpuA rental ends 23:09 tonight),
+  the SIGALRM 10800 s cap can never be swallowed by mirror, prepare skipped if
+  DESIGN.json exists, outer hard backstop 12600 s. No design change.
+- Prepare: 100 loop episodes (c00/c01/c02 pair proofs 8/26/26 pairs, hashes in
+  DESIGN.json); new cycle-2 validation seeds 968177, 968178; paired batches 46 groups /
+  92 windows, horizon 600 ticks, fraction 0.25. WM1 init loaded 171 tensors, 0 mismatch;
+  92 trainable tensors (frozen list).
+- Step-0 validation (fixed 16 windows, 120 s): mean_position 225.439 (assembly +
+  step-0 validation ~9 min).
+- Remote paths: gpuR and gpuA `/root/autodl-tmp/c4/longloss20261027`
+  (`PROGRESS.json`, `EVENTS.jsonl`, `frozen/train_log.jsonl`, `frozen/TRAINING.json`,
+  `frozen_gate.json`, `frozen/RESULTS.json`, `RESULTS.json`, `DONE.json`).
+- Timing reference: S-WMDEEPTEST horizon gate ~63 min per checkpoint, accept ~11 min.
+  WM1 gate reused from S-WMDEEPTEST (copied `wm1_gate.json`). gpuR rental ends
+  2026-10-28 04:19 UTC+8; the deep variant may not finish before that unless renewed.
+
+## LONGLOSS-frozen training outcome (21:27 UTC+8)
+
+- 15 updates (2 paired/long-WM batches; long-WM terms finite, e.g. step 4 base grad
+  norm 449.9), step wall 128-439 s (paired 300 s batches ~437 s), peak CUDA ~6.1 GB.
+- Fixed 16-window 120 s validation mean_position: step0 225.439, step5 235.673,
+  step10 237.237, step15 245.161 -> `validation_early_stop` (patience 3), best_step 0.
+  The selected `frozen/wm_s.pt` is therefore the step-0 save of WM1 weights; the
+  registered rule is applied unchanged (no re-selection), so its horizon-gate score is
+  a WM1 re-score. Scoring started 13:27:48 UTC.
+
+## LONGLOSS-frozen scored; deep variant cancelled; gpuR released (22:47 UTC+8)
+
+Selected checkpoint = WM1 weights (best_step 0), so the gate reproduces WM1 exactly:
+sign agreement 10/30/60/90/120/180/300 s = .926/.916/.927/.896/.708/.646/.667
+(threshold .868; short signs pass); paired dJ mean signed error 120 s 254.51
+(SD 230.7), 300 s 443.12 (SD 539.9) veh-s, identical to WM1. accept.py: ACCEPT
+(no reasons; candidate equals reference).
+
+- Original registered rule: **does_not_help** (300 s |bias| reduction 0.0, CI [0, 0]).
+- Owner-amended rule (registered 21:38 before any score; `tools/longloss/amended.py`,
+  remote `frozen/AMENDED.json`): **does_not_help** — (a) 0.0 [0, 0]; (b) mean
+  120/180/300 s sign agreement .674 -> .674, change 0 [0, 0].
+- 300 s metering slope (OLS of WM-predicted on real paired dJ, world bootstrap):
+  WM1 = candidate = 0.192 [0.018, 0.396] — WM1 compresses 300 s paired effects to
+  about 1/5 of their real size. Per-world slopes (16 worlds with >=3 pairs) median
+  0.433, range -2.32..2.10 (too few pairs per world to be individually reliable).
+- Reading: under the registered 120 s position selection every long-loss update made
+  the 120 s fit worse, so selection returned WM1. The test shows the long loss as
+  wired cannot pass this selection within 15 updates (2 long-WM batches at paired
+  fraction .25); it does NOT measure what the long loss does to 300 s bias. Under the
+  owner's long-horizon priority, future tests should select on a long-horizon criterion.
+- Context (S-WMDEEPTEST DEEP under the amended rule, same tool): (a) -18.1
+  [-66.6, 15.7], (b) +.017 [-.004, .044] -> does_not_help.
+- LONGLOSS-deep: NOT run. On main's instruction (superseded by the combined test) the
+  own chain PID 162979 was stopped by SIGINT (start ticks verified) 3 min into deep
+  assembly; it terminated its own child 168220 and wrote `DONE.json` (status
+  "failed" = KeyboardInterrupt by design, results.frozen complete) plus `RELEASE.json`.
+  GPU 0 MiB after release. Mirrored to gpuA.
+- Still running (CPU only, CUDA hidden, no GPU): UNREGISTERED DIAGNOSTIC horizon gate
+  of the step-15 latest frozen checkpoint, gpuR PID 168157 (start ticks 4173876569),
+  output `diag_step15/gate.json`, ETA ~23:50 UTC+8; score with
+  `python tools/longloss/amended.py wm1_gate.json diag_step15/gate.json`. Not a verdict.

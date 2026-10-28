@@ -306,6 +306,8 @@ def save_checkpoint(path: str | Path, model: WmSModel, cfg: Any, *,
         flat["mainline_merge_yield_learnable"] = True
     if getattr(model, "ramp_speed_adapt_learnable", False):
         flat["ramp_speed_adapt_learnable"] = True
+    if getattr(model, "mainline_residual", None) is not None:
+        flat["mainline_interaction_residual"] = True
     payload: dict[str, Any] = {"format": CHECKPOINT_FORMAT, "model": model.state_dict(),
                                "config": flat}
     if history is not None:

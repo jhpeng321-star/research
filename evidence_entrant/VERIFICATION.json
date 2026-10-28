@@ -1,0 +1,8 @@
+{
+  "unit_tests": {"passed": 17, "failed": 0, "host": "cpuP", "snapshot_sha256": "3b3e2ee7195ec84442b35139de3dcde5ef0d778dcb1c434c5f85da0872dd980f"},
+  "off_full_horizon_identity": {"steps": 600, "all_arm_science_identical": true, "old_receipt_sha256": "9f732028c56bee6279aa0f9abdee9c32578b75ce7412d9600ffb964d1e95d786", "new_receipt_sha256": "1fcc4f4ad2e9e98131fef5d41108896079a013e2bb8657b87ad26910aae4d461"},
+  "superseded_v3_on_repeat": {"host": "cpuQ", "file": "e3_g01_entrant_on_k0_s600.json", "repeat_identical": true},
+  "original_lrdiag_parity": {"world_group": 1, "draw": 0, "variant": "baseline", "all_arm_primary_delays_timelines_sensors_breakdown_identical": true},
+  "off_aggregation_reproduction": {"groups": 36, "K": 8, "pooled_300s_slope": 0.05754641926772159, "ramp_adapt_off_slope": 0.3731859729832952, "pooled_300s_MAE": 217.9538484679328, "ramp_adapt_off_MAE": 166.9842211405436},
+  "scoring_runtime": "V3 is superseded after correcting recorded-neighbour lane-intent and one-second command-history reports. V4 retains unchanged OFF evidence and re-scores affected ON combinations."
+}

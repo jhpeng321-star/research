@@ -64,7 +64,7 @@ def prior_history(corpus: PackCorpus, tick: int, present_now: np.ndarray, *,
     return out.numpy(), mask.numpy()
 
 
-def entry_features(corpus: PackCorpus, item: dict) -> np.ndarray:
+def entry_features(corpus: PackCorpus, item: dict, *, observable_cav: bool = False) -> np.ndarray:
     """Observed pre-t0 entry-history feature vector for the entries-v2 trainer.
 
     Reads only the window's t0 ``counter`` and its pre-t0 ``veh_kin``/``veh_mask``/
@@ -82,7 +82,14 @@ def entry_features(corpus: PackCorpus, item: dict) -> np.ndarray:
     kin = np.asarray(corpus.array("veh_kin")[lo:tick + 1], np.float32)
     mask = np.asarray(corpus.array("veh_mask")[lo:tick + 1]).astype(bool)
     tm = (np.asarray(corpus.array("target_mask")[lo:tick], bool)
-          if tick > lo else np.zeros((0, kin.shape[1]), bool))
+           if tick > lo else np.zeros((0, kin.shape[1]), bool))
+    cav = None
+    if observable_cav:
+        # These are transmitted CAV identities in the observation arrays, not driver types.
+        cav = (np.asarray(corpus.array("veh_step")[lo:tick + 1, :, 7]) > .5
+               if isinstance(corpus, PackCorpus) else
+               np.asarray(corpus.array("is_cav")[lo:tick + 1], bool))
+    cav_entries = [[], []]
     times: list = []
     entrance: list = []
     speed: list = []
@@ -99,6 +106,8 @@ def entry_features(corpus: PackCorpus, item: dict) -> np.ndarray:
             if ln not in (0, 1, 2):
                 continue
             e = 0 if ln in (0, 1) else 1
+            if cav is not None and j > 0:  # left boundary is a snapshot, not an insertion
+                cav_entries[e].append(bool(cav[j, k]))
             v_self = float(kin[j, k, 4])
             same_lane = pres & (lanes_j == ln)
             idx = np.flatnonzero(same_lane)
@@ -126,4 +135,6 @@ def entry_features(corpus: PackCorpus, item: dict) -> np.ndarray:
         lane=(np.asarray(lane_obs, np.int64) if lane_obs else None),
         gap=np.asarray(gaps, np.float64),
         gap_entrance=np.asarray(gap_ent, np.int64), t0_s=float(tick) * 0.5)
+    if observable_cav:
+        history.cav_share = np.asarray([np.mean(x) if x else 0. for x in cav_entries])
     return history.to_features().astype(np.float32)

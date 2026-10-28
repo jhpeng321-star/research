@@ -1,0 +1,5 @@
+# Preserve generated artifact bytes for the SHA256 verification receipts.
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.json -text
+*.svg -text
+*.png binary

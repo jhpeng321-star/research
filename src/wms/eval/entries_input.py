@@ -126,7 +126,8 @@ def entry_process_v2(state: Mapping[str, Any], t0_s: float, horizon_s: float, se
 
 
 def entry_process_queue(state: Mapping[str, Any], t0_s: float, horizon_s: float, seed: int,
-                        kin: np.ndarray, tools: RolloutTools, learned_entry: Any = None):
+                        kin: np.ndarray, tools: RolloutTools, learned_entry: Any = None,
+                        entrant_control: bool = False):
     """V9ENTRY queue mode: the observed-history process (:func:`entry_process_v2`) seeded with the
     recorded SUMO entrance backlog and driven at the recorded demand
     (:mod:`wms.eval.entry_queue`), inserted by SUMO's saturated-entrance rule (``sumo_like_v2``,
@@ -142,7 +143,8 @@ def entry_process_queue(state: Mapping[str, Any], t0_s: float, horizon_s: float,
 
     mod = _entries(tools)
     vec, source = state_entry_queue(state, t0_s)
-    queue = dataclasses.replace(mod.EntranceQueue.from_vector(vec), cav_share=None)
+    queue = dataclasses.replace(mod.EntranceQueue.from_vector(vec), **(
+        {} if entrant_control else {"cav_share": None}))
     history = _entry_history(state, t0_s, kin, tools)
     demand = mod.with_queue_demand(history, queue)
     expected = float(np.sum(demand.rate)) * float(horizon_s) \

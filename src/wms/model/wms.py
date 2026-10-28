@@ -57,6 +57,8 @@ from .follower_courtesy import (INTENT_SOURCES, ZONE_STATE_KEY, FollowerCourtesy
 from .merge_frailty import MergeFrailtyNet, update_frailty_state
 from . import merge_pivot as pivot
 from .merge_threshold import MergeThresholdNet, update_threshold_state
+from .mainline_residual import (MainlineInteractionResidual,
+                                mainline_interaction_features, mainline_lane_mask)
 from .residual_bound import bounded_accel_correction, bounded_value
 from .residual_net import HdvConfig, HdvResidualNet, courtesy_features
 from .spec import ModelSpec
@@ -292,6 +294,11 @@ class WmSModel(nn.Module):
         self.ramp_speed_adapt = None
         if getattr(spec, "ramp_speed_adapt_learnable", False):
             self.enable_ramp_speed_adapt_learnable()
+        # S-RAMPFIX (default OFF): learned mainline-HDV interaction residual.  No module,
+        # tensors, RNG draws or forward operations when disabled.
+        self.mainline_residual = None
+        if bool(getattr(spec, "mainline_interaction_residual", False)):
+            self.enable_mainline_residual(int(getattr(spec, "mainline_residual_hidden", 64)))
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
 
@@ -481,6 +488,23 @@ class WmSModel(nn.Module):
             self.ramp_speed_adapt = LearnedRampSpeedAdapt(init).to(device=like.device, dtype=like.dtype)
         self.ramp_speed_adapt_learnable = True
 
+    def enable_mainline_residual(self, hidden: int = 64) -> None:
+        """Enable the S-RAMPFIX mainline interaction residual on a core; call before
+        building an optimizer.
+
+        Creation is deterministic (zero-initialised read-out, exact no-op until
+        trained) and leaves the legacy RNG stream alone, so a loaded WM1 core can
+        be extended offline without touching any existing weight.
+        """
+        if self.black_box or self.physics_step is not None:
+            raise ValueError("mainline interaction residual needs the structured in-module "
+                             "physics core")
+        if self.mainline_residual is None:
+            like = next(self.parameters())
+            self.mainline_residual = MainlineInteractionResidual(
+                hidden=hidden).to(device=like.device, dtype=like.dtype)
+
+
     @property
     def _tracks_courtesy_zone(self) -> bool:
         """R11: the rollout / replay carries the ramp cars' merge-zone time (courtesy v2 input)."""
@@ -562,6 +586,13 @@ class WmSModel(nn.Module):
             state_dict = state_dict.copy()
             state_dict.update({f"ramp_speed_adapt.{key}": value.detach().clone()
                                for key, value in self.ramp_speed_adapt.state_dict().items()})
+        if self.mainline_residual is not None and not any(
+                key.startswith("mainline_residual.") for key in state_dict):
+            # S-RAMPFIX: a pre-RAMPFIX core (WM1) starts from the zero-initialised head,
+            # an exact no-op until trained.
+            state_dict = state_dict.copy()
+            state_dict.update({f"mainline_residual.{key}": value.detach().clone()
+                               for key, value in self.mainline_residual.state_dict().items()})
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     # ------------------------------------------------------------------ physics
@@ -1132,6 +1163,20 @@ class WmSModel(nn.Module):
             residual_delta = torch.zeros_like(residual_delta)
         accel_delta = (torch.zeros_like(physics) if self.rollout_mode == "driver_params"
                        else residual_delta + temporal_accel)
+        mainline_delta = None
+        if (self.mainline_residual is not None and self.rollout_mode != "driver_params"
+                and not self.residual_accel_off):
+            # S-RAMPFIX: learned mainline interaction offset joins the combined learned
+            # correction BEFORE the gate / soft bound / cap / plant clamp (gated and
+            # bounded exactly like the existing residual; zero at init; the CAV ``learned``
+            # mask downstream excludes CAV slots and the head masks to mainline geometry).
+            # driver_params keeps its exact no-residual contract; the R12C physics-only arm
+            # (residual_accel_off) zeroes this emission like every other residual one.
+            mainline_mask = mainline_lane_mask(kin, present, self.physics)
+            mainline_out = self.mainline_residual(
+                mainline_interaction_features(kin, present, self.physics), mainline_mask)
+            mainline_delta = mainline_out["accel_delta_mps2"]
+            accel_delta = accel_delta + mainline_delta
         raw_residual = gate * accel_delta
         correction = bounded_accel_correction(
             gate * accel_delta, soft_bound_pos=self.residual_soft_bound_mps2,
@@ -1282,6 +1327,10 @@ class WmSModel(nn.Module):
             result["lane_decider_mask"] = lane_learned
         if ramp_adapt_weight is not None:
             result["ramp_speed_adapt_weight"] = ramp_adapt_weight
+        if mainline_delta is not None:
+            # The APPLIED contribution (gate included): exactly zero at k=0 and wherever
+            # the head is masked, so the log never overstates the correction.
+            result["mainline_residual_mps2"] = gate * mainline_delta
         if self.diag_emit_temporal:
             result["temporal_accel_pregate_mps2"] = temporal_accel
         if temporal_residual_state is not None:

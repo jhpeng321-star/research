@@ -1,0 +1,27 @@
+"""Read task-owned receipts and PID incarnations without scanning processes."""
+import sys
+from remote import ssh
+
+ssh(sys.argv[1], '''
+import json
+from pathlib import Path
+p=Path.home()/'entrant'
+print('EXISTS',p.is_dir())
+print('MEMORY',[line for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith(('MemAvailable:','MemTotal:'))])
+for f in sorted(p.glob('*.json')):
+    if f.name=='SOURCE.json': continue
+    value=json.loads(f.read_text())
+    if isinstance(value,dict) and 'pid' in value:
+        stat=Path('/proc')/str(value['pid'])/'stat'
+        value['live_same_incarnation']=stat.exists() and stat.read_text().split()[21]==value.get('start_ticks')
+    if isinstance(value,list): value={'items':len(value),'last':value[-1] if value else None}
+    print(f.name,json.dumps(value))
+for name in ('results','results_v2','results_v3','results_v4','errors'):
+    files=list((p/name).glob('*.json'))
+    print(name,len(files))
+    if name=='errors':
+        for f in files[-3:]: print(f.name,f.read_text())
+for name in ('canary.log','queue.log'):
+    f=p/name
+    if f.exists(): print(name,f.read_text()[-1800:])
+''')

@@ -214,6 +214,55 @@ class PairedBranchSource:
         return out
 
 
+class ConcatPairedSource:
+    """S-WMCOMBINED: several real PairedBranchSources as ONE paired pool (CRN-safe).
+
+    Group identities stay globally unique (``<name>#<pair_key>`` and one global
+    ``pair_group`` id per group) so coupled paired randomness keys never collide or
+    couple across sources; each group's arm rows remain child-local.  Exposes the
+    PairedBatchDataset / longwm surface of a single PairedBranchSource.
+    """
+
+    def __init__(self, sources: Sequence["PairedBranchSource"]):
+        sources = list(sources)
+        if not sources:
+            raise ValueError("ConcatPairedSource needs at least one source")
+        modes = {getattr(s, "horizon_mode", "fixed") for s in sources}
+        if len(modes) != 1:
+            raise ValueError("paired concat horizon_mode mismatch")
+        self.sources = sources
+        self.name = "+".join(s.name for s in sources)
+        self.horizon_mode = modes.pop()
+        self.horizon = min(int(s.horizon) for s in sources)
+        self.groups: list[dict] = []
+        for si, s in enumerate(sources):
+            for gi, g in enumerate(s.groups):
+                self.groups.append({**g, "src": si, "local": gi,
+                                    "pair_key": f"{s.name}#{g['pair_key']}"})
+        if len({g["pair_key"] for g in self.groups}) != len(self.groups):
+            raise ValueError("paired concat pair_key collision")
+        self.longwm_pair = all(getattr(s, "longwm_pair", False) for s in sources)
+        self.receipt = {
+            "mode": "c4-paired-branches-concat", "name": self.name,
+            "sources": [s.receipt for s in sources],
+            "horizon_mode": self.horizon_mode, "horizon_steps": self.horizon,
+            "n_groups": len(self.groups),
+            "n_windows": sum(len(g["rows"]) for g in self.groups),
+            "groups_with_native_reference":
+                int(sum(bool(g["has_native_ref"]) for g in self.groups)),
+        }
+
+    def group_records(self, group: int, rows: Sequence[int], *, base_row: int,
+                      horizon_steps: Optional[int] = None) -> list[dict]:
+        g = self.groups[int(group)]
+        records = self.sources[g["src"]].group_records(
+            g["local"], rows, base_row=base_row, horizon_steps=horizon_steps)
+        for rec in records:
+            rec["pair_group"] = int(group)
+            rec["pair_key"] = g["pair_key"]
+        return records
+
+
 class _HorizonWindowLoader:
     """Lazy loaders per requested horizon; no episode arrays are copied or padded."""
 

@@ -165,6 +165,8 @@ class DreamerConfig:
     # credit (EntryConfig.fresh_no_credit).  Needs start windows with ``entry_queue``
     # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
     entry_queue_state: bool = False
+    entrant_control: bool = False  # explicit continuity contract; ALL already controls births
+    deterministic_crn: bool = False  # pair merge streams for every actor, including MAPPO
     # V9NOYIELD (2026-10-18; default empty = bit-identical): PhysicsConfig field -> value
     # overrides applied to EVERY PhysicsConfig holder of each frozen WM member right after it is
     # loaded (same holder-walk as tools/wm_eval_common.py / coop_cl_noyield.py), so the imagined
@@ -275,7 +277,8 @@ class DreamerConfig:
             raise ValueError("ttc_budget_mode must be 'absolute' or 'native_relative'")
         for name in ("checkpoint_imagination", "imagine_entries", "future_accel_noise",
                      "source_wait_grad", "critic_entry_backlog", "lagrange_scaled",
-                     "entry_queue_state", "entrance_zone_native", "policy_lane_actions",
+                     "entry_queue_state", "entrant_control", "deterministic_crn",
+                     "entrance_zone_native", "policy_lane_actions",
                      "low_penetration_horizon_cap", "wm_safety_report_only"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
@@ -575,7 +578,8 @@ def _queue_surrogate_fn(state, new_mask, pending_before, hist, entry_s, entry_cf
     return queue_surrogate(state, present, pending_before, hist, entry_s, entry_cfg, PHYSICS_DT_S)[0]
 
 
-def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=None):
+def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=None, *,
+                   couple_draws: bool = False, sample_index: int = 0):
     from wms.model.entries import EntryConfig, TorchEntryProcessV2
 
     pool = np.zeros((len(rows), n_slots), dtype=bool)
@@ -585,7 +589,8 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=N
     # (arrival times and candidate identities keyed by (row seed, entrance, index), as in WM paired
     # training).  A shared row seed alone loses CRN as soon as one row defers an insertion; with a
     # standing backlog every arrival-count difference becomes a queue (source-wait) difference.
-    extra = {} if queues is None else {"queues": [queues[r] for r in rows], "couple_draws": True}
+    extra = ({"couple_draws": True} if couple_draws else {}) if queues is None else {
+        "queues": [queues[r] for r in rows], "couple_draws": True}
     cfg = (EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule,
                        learned_entry=learned_entry) if queues is None else
            EntryConfig(max_pending=10 ** 9, insert_rule=insert_rule, fresh_no_credit=True,
@@ -594,7 +599,7 @@ def _entry_process(spec, rows, n_slots, insert_rule: str = "v2", learned_entry=N
     return TorchEntryProcessV2(histories=[spec["histories"][r] for r in rows],
                                dt_s=PHYSICS_DT_S, seed=0, batch=len(rows),
                                cfg=cfg, pool=pool,
-                               row_seeds=[spec["seeds"][r] for r in rows], **extra)
+                                row_seeds=[spec["seeds"][r] + 1000003 * sample_index for r in rows], **extra)
 
 
 def _same_groups(sampler, state):
@@ -1096,7 +1101,7 @@ class DreamerTrainer:
                 controller.native_lane_mask = external_callback.native_lane_mask
             initial = {key: value.clone() if torch.is_tensor(value) else value
                        for key, value in start_state.items()}
-            if getattr(self.policy, "residual_on_native", False):
+            if cfg.deterministic_crn or getattr(self.policy, "residual_on_native", False):
                 from .nativeinit import pair_merge_streams
                 pair_merge_streams(initial, index, n_base,
                                    (self.update_count if future_seed is None else future_seed) + sample_index)
@@ -1110,8 +1115,17 @@ class DreamerTrainer:
                     initial["s_m"], float(exit_s)))
             recorder = None
             member_kwargs = {**rollout_kwargs, **future}
-            if lane_uniform is not None:
-                member_kwargs["lane_uniform"] = lane_uniform
+            sample_lanes = lane_uniform
+            if cfg.deterministic_crn and sample_index:
+                sample_lanes = lane_uniform_draws(
+                    self.world_models, n_base, cfg.horizon * STEPS_PER_CONTROL,
+                    batch.state["s_m"].shape[1],
+                    (self.update_count if future_seed is None else future_seed) + 1000003 * sample_index,
+                    device=self.device)
+                if sample_lanes is not None and index is not None:
+                    sample_lanes = expand_rows(sample_lanes, index, n_base)
+            if sample_lanes is not None:
+                member_kwargs["lane_uniform"] = sample_lanes
             if entry_spec is not None:
                 learned = None
                 if bool(getattr(getattr(model, "physics", None), "entry_learned", False)):
@@ -1121,7 +1135,9 @@ class DreamerTrainer:
                 recorder = _EntryRecorder(_entry_process(entry_spec, entry_rows,
                                                          initial["s_m"].shape[1],
                                                          cfg.entry_insert_rule,
-                                                         learned_entry=learned))
+                                                          learned_entry=learned,
+                                                          couple_draws=cfg.deterministic_crn,
+                                                          sample_index=sample_index if cfg.deterministic_crn else 0))
                 member_kwargs = {**member_kwargs, "entries": recorder}
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
@@ -1700,6 +1716,8 @@ class DreamerTrainer:
         return out
 
     def _entry_slots(self, batch, generator=None):
+        if self.config.entrant_control and batch.entry_feat_control is not None:
+            batch = replace(batch, entry_feat=batch.entry_feat_control)
         if not self.config.imagine_entries:
             return batch
         horizon_steps = self._imagination_config(batch).horizon

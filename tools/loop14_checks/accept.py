@@ -126,12 +126,26 @@ def load_arm(config, ckpt, *, reference=False):
     allowed_new = YIELD_TENSORS if reference else frozenset()
     if set(report["new"]) - allowed_new or report["unused"]:
         raise ValueError(f"{ckpt}: not an exact load under the candidate config "
-                         f"(new={report['new'][:5]}, unused={report['unused'][:5]})")
+                          f"(new={report['new'][:5]}, unused={report['unused'][:5]})")
+    if settings.entrant_control:
+        # The attribution loader forces entries_v2=false for its one-step task.
+        # Restore the opt-in rollout contract after the identical strict WM load.
+        from dataclasses import replace
+        cfg = replace(cfg, data=replace(cfg.data, entries_v2=True))
+        settings = replace(settings, entries_v2=True)
     model.loop14_new_tensors = sorted(report["new"])
     return cfg, settings, model
 
 
 def build_sets(cfg, roots, horizon_steps):
+    if cfg.data.entrant_control:
+        from wms.data.c4_episodes import build_c4_datasets
+        return [build_c4_datasets(str(guard(root)), horizon_steps=horizon_steps,
+            history_s=cfg.data.history_s, history_stride_s=cfg.data.history_stride_s,
+            entries_v2=True, stride_s=30., k_slots=None, role_of=None,
+            junction_fix=cfg.data.junction_fix, command_known=True,
+            merge_pivot_history=cfg.model.merge_decision == "first_passage")["train"]
+            for root in roots]
     from tools.r10_attribution import datasets
     return datasets(cfg, [str(guard(r)) for r in roots], horizon_steps, 30.0)
 
@@ -167,16 +181,31 @@ def resolve_panel(sets, roots, panel) -> list[tuple[int, int]]:
     return out
 
 
-def free_rollout(model, settings, record, n_steps, seed) -> dict:
+def free_rollout(model, settings, record, n_steps, seed, *, deterministic_crn=False) -> dict:
     """WM rollout from a recorded window: recorded CAV commands (timeline), t0 roster."""
     import torch
     from wms.data.collate import collate
     from wms.train.inputs import prepare_inputs
 
     batch = collate([record])
-    inp = prepare_inputs(batch, model, settings, torch.device("cpu"), n_steps)
-    torch.manual_seed(seed)
-    with torch.no_grad():
+    coupled = deterministic_crn or settings.entrant_control
+    if coupled:
+        from dataclasses import replace
+        settings = replace(settings, seed=int(seed), paired_diff_couple_randomness=True)
+        batch["pair_ref"] = torch.zeros(1, dtype=torch.long)
+        batch["pair_key"] = [record["meta"]["pair_key"]]
+    from wms.train.scoring_random import scoring_rng, bind_merge_crn
+    with scoring_rng(seed, "cpu"):
+        inp = prepare_inputs(batch, model, settings, torch.device("cpu"), n_steps)
+    lane_kwargs = {"lane_seed": int(seed)}
+    if coupled:
+        bind_merge_crn(inp)
+        if getattr(model, "_samples_lanes", False):
+            lane_kwargs = {"lane_uniform": inp.paired_random.uniform("lane", range(n_steps))}
+    # Frozen checks historically omitted the prepared entry process. Keep that
+    # exact OFF contract; the explicit continuity arm must actually insert births.
+    entry_kwargs = {"entries": inp.entries} if settings.entrant_control else {}
+    with torch.no_grad(), scoring_rng(seed, "cpu"):
         roll = model.rollout(
             inp.initial, n_steps=inp.n_steps,
             cav_teacher=None if inp.teacher is None else inp.teacher[:, :inp.n_steps + 1],
@@ -184,7 +213,7 @@ def free_rollout(model, settings, record, n_steps, seed) -> dict:
             history=inp.hist, history_mask=inp.hist_mask, controller_id=inp.controller_id,
             action_timeline=inp.action_timeline, cav_controller=inp.cav_controller,
             driver_history=inp.observed_hist, driver_history_mask=inp.observed_hist_mask,
-            lane_seed=int(seed))
+            **lane_kwargs, **entry_kwargs)
     s0, v0 = inp.initial["s_m"][0].numpy(), inp.initial["v_mps"][0].numpy()
     lane0 = inp.initial["lane"][0].numpy() if "lane" in inp.initial else inp.states[0, 0, :, 1:4].argmax(-1).numpy()
     m0 = inp.present[0, 0].numpy()

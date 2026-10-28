@@ -51,6 +51,12 @@ FLAT_TO_PATH: dict[str, str] = {
     "mainline_merge_yield_learnable": "model.mainline_merge_yield_learnable",
     # R16 LEARNABLE RAMP SPEED ADAPTATION
     "ramp_speed_adapt_learnable": "model.ramp_speed_adapt_learnable",
+    # S-RAMPFIX LEARNED MAINLINE INTERACTION RESIDUAL
+    "mainline_interaction_residual": "model.mainline_interaction_residual",
+    "mainline_residual_hidden": "model.mainline_residual_hidden",
+    # S-RAMPFIX LANE_V5 LONG-RUN PARAMETER GROUP
+    "lane_v5_long": "optim.lane_v5_long",
+    "lane_v5_long_lr_scale": "optim.lane_v5_long_lr_scale",
     # R12 BASE CALIBRATION
     "driver_param_init": "model.driver_param_init",
     "residual_accel_reinit": "model.residual_accel_reinit",
@@ -191,6 +197,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "lane_event_max_weight": "loss.lane_event.max_weight",
     "aggregate_weight": "loss.aggregate.weight",
     "longwm_enabled": "loss.longwm_enabled",
+    "longwm_extra_paired": "loss.longwm_extra_paired",
     "aggregate_field_weight": "loss.aggregate.field_weight",
     "aggregate_reward_weight": "loss.aggregate.reward_weight",
     "aggregate_flow_weight": "loss.aggregate.flow_weight",
@@ -389,6 +396,8 @@ FLAT_TO_PATH: dict[str, str] = {
     "merge_core_sigma_fit": "loss.merge_core.sigma_fit",
     # V9ENTRY (entrance-queue state of the training entry process)
     "entry_queue_state": "data.entry_queue_state",
+    "entrant_control": "data.entrant_control",
+    "entrant_controllers": "data.entrant_controllers",
     # V10HORIZON (prioritised mixed replay: merge-zone / CAV-follower / high-error windows)
     "replay_enabled": "data.replay.enabled",
     "replay_merge_oversample": "data.replay.merge_oversample",
@@ -459,7 +468,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "driver_update_rate", "driver_reveal_prob", "driver_reveal_max_s",
     "lane_event_weight", "lane_event_gamma", "lane_event_max_weight",
     "aggregate_weight", "aggregate_field_weight", "aggregate_reward_weight",
-    "longwm_enabled",
+    "longwm_enabled", "longwm_extra_paired",
     "aggregate_flow_weight", "aggregate_bin_s", "aggregate_every_steps",
     "aggregate_horizon_start_s", "aggregate_horizon_full_s", "aggregate_cell_temp_m",
     # A5 long-horizon aggregate delay loss
@@ -543,6 +552,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "merge_core_sigma_reg_weight", "merge_core_sigma_fit",
     # V9ENTRY
     "entry_queue_state",
+    "entrant_control",
+    "entrant_controllers",
     # V10HORIZON
     "replay_enabled", "replay_merge_oversample", "replay_cav_follower_oversample",
     "replay_brake_oversample",
@@ -554,6 +565,9 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "mainline_merge_yield_learnable",
     # R16 S-RAMPSPEED
     "ramp_speed_adapt_learnable",
+    # S-RAMPFIX (default OFF = bit-identical receipts/configs)
+    "mainline_interaction_residual", "mainline_residual_hidden",
+    "lane_v5_long", "lane_v5_long_lr_scale",
 )
 
 
