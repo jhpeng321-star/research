@@ -250,6 +250,7 @@ def test_equivalent_six_row_gate_loss_and_gradients():
 def test_longmem_exact_full_k_gate_update_and_resume(tmp_path, monkeypatch):
     # Short recurrent graph for exhaustive replay/resume equality; the independent
     # continuation test above exercises the real 240-physics-step geometry.
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
     monkeypatch.setattr(gated300, 'STEP_S', 30.)
     baseline, memory = trainer(), trainer(memory=True)
     baseline.config = replace(baseline.config, horizon=2)
@@ -328,7 +329,8 @@ def test_looplong_configure_keeps_separate_long_horizon_config(tmp_path, monkeyp
     assert gated300.rollout_config(t, t.config).horizon == 120
 
 
-def test_resume_binding_change_refused_and_explicit_off_takes_precedence(tmp_path):
+def test_resume_binding_change_refused_and_explicit_off_takes_precedence(tmp_path, monkeypatch):
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
     original = trainer()
     path = authority(tmp_path)
     enable(original, path)

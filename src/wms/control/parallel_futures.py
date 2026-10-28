@@ -125,6 +125,12 @@ class FuturePool:
         env = dict(os.environ)
         env['WMS_SPEED_POOL_KIND'] = common['kind']
         env['WMS_SPEED_FUTURE_PARENT_PID'] = str(os.getpid())
+        # Source-tree runs (pytest pythonpath=src / editable installs) are not
+        # inherited by the worker subprocess; pass the package import root
+        # explicitly. Operational only: no arithmetic or task payload change.
+        src_root = str(Path(__file__).resolve().parents[2])
+        parts = [src_root] + ([env['PYTHONPATH']] if env.get('PYTHONPATH') else [])
+        env['PYTHONPATH'] = os.pathsep.join(dict.fromkeys(parts))
         if common['kind'] == 'forward':
             env['WMS_SPEED_FUTURE_MEMORY_FRACTION'] = env.get(
                 'WMS_SPEED_FORWARD_MEMORY_FRACTION', '0.04')
