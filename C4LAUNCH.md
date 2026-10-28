@@ -129,3 +129,10 @@ phase-relative signal gate and full gradient/memory verification. It cannot
 auto-launch policy after the dry run; the measured dry receipt must first be
 committed locally. Live JSONL readers ignore unfinished last writes while still
 rejecting complete corruption. Operational unit checks21PASS; fatal-error RuffPASS.
+
+Transport continues intermittent: next immutable staging attempt again closed,
+no qualification dispatch confirmed. `stage.py --checks` now batches immutable
+source installation and detached qualification in that same SSH transaction,
+with an existing source-bound PID receipt preventing duplicate dispatch. Both
+installer modes compile and preserve native-head inclusion; operational suite
+22PASS. No auto dry/policy launch is attached to staging.

@@ -9,6 +9,7 @@ import sys
 import tarfile
 import base64
 import shlex
+import argparse
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -29,7 +30,11 @@ def remote(source, data, timeout=60):
 BAD = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype', re.I)
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--checks', action='store_true',
+                        help='detach source-bound qualification in the same SSH transaction')
+    args = parser.parse_args(argv)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     dirty = subprocess.check_output(['git', 'diff', 'HEAD', '--name-only'], cwd=ROOT, text=True)
     if dirty.strip():
@@ -100,6 +105,19 @@ path=out/('STAGING_'+{commit[:12]!r}+'.json')
 if not path.exists(): path.write_text(json.dumps(receipt,indent=1))
 tmp=out/'CURRENT_RUNTIME.tmp'; tmp.write_text(json.dumps(receipt,indent=1));tmp.replace(out/'CURRENT_RUNTIME.json')
 print(json.dumps({{'runtime':str(r),'commit':{commit!r},'files':{len(manifest)},'transferred':{transferred}}}))
+'''
+    if args.checks:
+        install += f'''\nimport runpy
+from datetime import datetime
+authority=json.loads((out/'MAIN_1700.json').read_text())
+assert authority['authority']=='MAIN2026-10-28T17:00'
+assert datetime.now().astimezone()<datetime.fromisoformat(authority['deadline'])
+receipt=out/('CHECK_COORDINATOR_'+{commit[:12]!r}+'_PID.json')
+if receipt.exists():
+ print(json.dumps({{'qualification_already_dispatched':json.loads(receipt.read_text())}}))
+else:
+ sys.argv=['launch_remote','checks']
+ runpy.run_path(str(r/'tools/c4prep/launch_remote.py'),run_name='__main__')
 '''
     compile(install, '<c4prep-stage-install>', 'exec')
     remote(install, data.getvalue(), timeout=60)

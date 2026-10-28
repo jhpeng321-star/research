@@ -92,7 +92,8 @@ def test_a_arguments_are_real_gpu_bounded_and_bind_credit():
     assert args[args.index('--max-updates') + 1] == '150'
 
 
-def test_staging_installer_compiles_and_includes_native_head(monkeypatch):
+@pytest.mark.parametrize('checks', [False, True])
+def test_staging_installer_compiles_and_includes_native_head(monkeypatch, checks):
     import importlib.util
     import io
     import tarfile
@@ -118,7 +119,7 @@ def test_staging_installer_compiles_and_includes_native_head(monkeypatch):
             assert 'configs/native_cav_head_v5.json' in tar.getnames()
         captured.append(source)
     monkeypatch.setattr(stage, 'remote', remote)
-    stage.main()
+    stage.main(['--checks'] if checks else [])
     assert len(captured) == 1
 
 
