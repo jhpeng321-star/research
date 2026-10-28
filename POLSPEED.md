@@ -65,6 +65,8 @@ credit, residual stats, J; timing/memory keys excluded).
 | FS8G: FS8 + GRAPH_CVAR + WMSPEED MOBIL | 0.25 | OOM in first VJP; full fwd 194.9 s, replay fwd 29.9 s | - | - |
 | FG_S2 run (= FG: F + GRAPH_CVAR + DEDUPE_MOBIL + MOBIL_LAZY_SAFE, spill ON; see note) | 0.25 | **841.4** (incl. 30 s blocking py-spy) | 11.89 GB | **all 153 training leaves bitwise identical**; only `independent_J.*` differ (rescore batch drawn with batch_size 2, see note) |
 
+| **FG** (same flags, clean 1-start run) | 0.25 | **845.7** | 11.89 GB (12.31 reserved) | **bitwise identical, all 158 leaves incl. independent_J** |
+
 Note: `[trainer] batch_size = 2` + `[counterfactual] max_starts = 2` did NOT give two starts:
 a full `--resume` restores the checkpoint's DreamerConfig (only memory/anti-exploit/
 training-group fields are re-applied, `DreamerTrainer.load_checkpoint`), so the trainer
