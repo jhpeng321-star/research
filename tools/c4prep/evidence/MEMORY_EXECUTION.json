@@ -1,0 +1,23 @@
+{
+  "schema": "c4launch_memory_execution/1",
+  "task": "S-C4LAUNCH",
+  "authority": "MAIN2026-10-28T17:00",
+  "amendment": "reuse_qualified_B_read_only_gradient_audit_cadence",
+  "deadline": "2026-10-29T06:00:00+08:00",
+  "failed_source_commit": "cf1e9eda5f8f006f77b2ee17d757333356553d88",
+  "failure": "actual dry worker391362 CUDA allocator OOM before a completed update",
+  "reused_proof_commit": "9afba5bce3d34255e5c512807e45ce70d3d9a6b5",
+  "qualified_B_delivery_commit": "8ddc33c9",
+  "grad_audit_every": 25,
+  "cadence_source": "existing registered counterfactual term_grad_audit_every=25; diagnostics only",
+  "imagination_checkpoint_segment": 8,
+  "imagination_microbatch": 1,
+  "imagination_offload_futures": true,
+  "imagination_offload_saved_tensors": true,
+  "gpu_memory_fraction": 0.45,
+  "objective_change": false,
+  "per_update_module_gradient_norms": true,
+  "preserved": "K8/q10, all futures/starts/counterfactual rows, gradients/RNG, WM3, 90s, entrant ON, full c01.a3 actor, weights, optimizer step, focus distribution, gates",
+  "requirement": "production full-actor K8 microbatch1 audit-thinning CPU/CUDA gradient/update/optimizer/RNG parity before a fresh real two-update attempt",
+  "new_sim_s": 0
+}

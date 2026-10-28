@@ -263,7 +263,7 @@ def test_streamed_critic_preserves_frozen_parameters():
     pytest.param(False, True, True, 8, "cuda", marks=pytest.mark.skipif(
         not torch.cuda.is_available(), reason="CUDA production K8 VJP proof")),
 ])
-def test_production_actor_bridge_futures_and_entries(lane, residual, entries, samples, device):
+def test_production_actor_bridge_futures_and_entries(lane, residual, entries, samples, device, monkeypatch):
     from wms.control.bridge import make_cav_controller
     from wms.control.lanes import LaneRules
     from wms.control.obs import build_observations
@@ -288,6 +288,7 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
             starts.batch.entry_feat = starts.batch.entry_feat.to(device)
         cfg = DreamerConfig(batch_size=3, horizon=3, imagine_entries=entries, entry_pad_max=2,
                             source_wait_grad=entries,
+                            actor_gradient_audit=entries and samples == 8,
                             entrant_control=entries,
                             native_residual_train_group=residual,
                             native_residual_train_trunk=residual,
@@ -306,7 +307,7 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
             # exercises trunk/group VJPs instead of the zero-init head boundary.
             with torch.no_grad():
                 policy.residual_head.weight.normal_(std=.01)
-        return DreamerTrainer(
+        result = DreamerTrainer(
             [WmSModel(spec)],
             policy,
             RsuGroupEncoder(hidden_dim=8, n_heads=2), Critic(), starts,
@@ -318,15 +319,22 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries, sa
             lane_rules=LaneRules() if lane else None, device=device,
             counterfactual=CounterfactualConfig(enabled=True, max_starts=3 if samples == 8 else 2, n_individual=2,
                                                 group_min_size=2, group_radius_m=100))
+        if entries and samples == 8:
+            result.update_count = 180  # historical C1 resume; 25-update audit is not due
+        return result
 
-    baseline, memory = make(0, 0), make(2, 3)
+    baseline, memory = make(0, 0), make(1 if samples == 8 else 2, 3)
     from wms.control.dreamer import _rng_state, _restore_rng
     torch.manual_seed(313)
     before = _rng_state(memory.device)
+    monkeypatch.setenv('WMS_SPEED_GRAD_AUDIT_EVERY', '1')
     a = baseline.update()
     rng = _rng_state(memory.device)
     _restore_rng(before, memory.device)
+    monkeypatch.setenv('WMS_SPEED_GRAD_AUDIT_EVERY', '25')
     b = memory.update()
+    if entries and samples == 8:
+        assert 'actor_grad_norms' in a and 'actor_grad_norms' not in b
     assert_tree_close(rng, _rng_state(memory.device), atol=0, rtol=0)
     for key in ("actor_loss", "critic_loss", "actor_grad_norm", "critic_grad_norm", "returns"):
         assert_tree_close(a[key], b[key])

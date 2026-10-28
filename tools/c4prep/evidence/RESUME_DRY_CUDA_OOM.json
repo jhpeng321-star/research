@@ -1,0 +1,22 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "cf1e9eda5f8f006f77b2ee17d757333356553d88",
+  "config_sha256": "714670629a2c6a4ec16bab8280a20443a7cc2dcd720c292a63a521f3398f15ef",
+  "coordinator_pid": 391354,
+  "worker_pid": 391362,
+  "worker_alive": false,
+  "exit": 1,
+  "completed_actual_updates": 0,
+  "dry_passed": false,
+  "cause": "CUDA allocator OutOfMemoryError requesting324MiB;21.32GiB allocator allowance,20.79GiB PyTorch allocated",
+  "sampled_gpu_peak_bytes": 23290970112,
+  "last_sampled_host_high_water_kib": 14162716,
+  "summary_sha256": "98b1b1587622cdce26cbe9502aeb8f559f7b621382c896eb21b9a017c6fb3d13",
+  "last_receipt_utc": "2026-10-28T10:17:04.428227+00:00",
+  "preserved_remote_root": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/resolved_A_MAIN1500_cf1e9eda5f8f/DRY_RUN",
+  "next_operational_fix": "reuse S-HOLD-1's proven read-only gradient-audit period25; keep microbatch1/segment8/host offloads and all learning settings",
+  "receipt_fix": "count unique timestamped CLI completion rows, not both trainer and CLI duplicate writes",
+  "local_watcher_exited": true,
+  "policy_launched": false,
+  "new_sim_s": 0
+}

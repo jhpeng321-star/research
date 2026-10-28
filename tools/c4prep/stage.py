@@ -10,6 +10,7 @@ import tarfile
 import base64
 import shlex
 import argparse
+import os
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -19,7 +20,10 @@ def remote(source, data, timeout=60):
     encoded = base64.b64encode(source.encode()).decode()
     command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
         f'import base64;exec(base64.b64decode({encoded!r}))'])
-    result = subprocess.run(['ssh', '-v', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+    ssh = ['ssh']
+    if os.environ.get('C4_SSH_JUMP'):
+        ssh += ['-J', os.environ['C4_SSH_JUMP']]
+    result = subprocess.run([*ssh, '-v', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
         '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
         'gpuA', command], input=data, capture_output=True, timeout=timeout)
     print(result.stdout.decode(), end='')

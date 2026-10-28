@@ -22,6 +22,14 @@ def test_live_jsonl_ignores_unfinished_record_but_refuses_complete_corruption(tm
         common.complete_jsonl(path)
 
 
+def test_update_receipt_counts_unique_cli_completions_not_raw_duplicate_writes(tmp_path):
+    path = tmp_path / 'owned_updates.jsonl'
+    rows = [{'update': 101}, {'update': 101, 't': 1},
+            {'update': 102}, {'update': 102, 't': 2}, {'update': 103}]
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    assert common.completed_updates(path) == [{'update': 101, 't': 1}, {'update': 102, 't': 2}]
+
+
 def test_unresolved_config_cannot_dispatch(tmp_path, monkeypatch):
     path = tmp_path / 'config.json'
     path.write_text(json.dumps({'ready': False, 'blockers': ['WM3 gate pending']}))

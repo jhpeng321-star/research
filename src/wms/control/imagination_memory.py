@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import copy
 import inspect
+import json
+import time
 from contextlib import contextmanager, nullcontext
 from dataclasses import replace
 
@@ -18,6 +20,19 @@ from torch.utils._pytree import tree_flatten, tree_unflatten, tree_map
 from torch.utils.checkpoint import checkpoint
 
 from .counterfactual import Variants, expand_rows
+
+
+def _trace_memory(trainer, event, **details):
+    """Owned execution diagnostics; no synchronization, RNG or objective changes."""
+    if trainer.output_dir is None:
+        return
+    trainer.output_dir.mkdir(parents=True, exist_ok=True)
+    record = {'t': time.time(), 'event': event, 'update': trainer.update_count, **details}
+    if trainer.device.type == 'cuda':
+        record.update(allocated_bytes=torch.cuda.memory_allocated(trainer.device),
+                      reserved_bytes=torch.cuda.memory_reserved(trainer.device))
+    with (trainer.output_dir / 'memory_execution.jsonl').open('a') as stream:
+        stream.write(json.dumps(record) + '\n')
 
 
 @contextmanager
@@ -203,6 +218,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
     class Replay(torch.autograd.Function):
         @staticmethod
         def forward(ctx, *params):
+            _trace_memory(trainer, 'full_forward_start')
             ctx.set_materialize_grads(False)
             ctx.params = params
             ctx.tape = []
@@ -211,6 +227,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             with _RandomTape(ctx.tape, offload=cfg.imagination_offload_futures):
                 result = trainer.imagine(batch, **kwargs, _memory_replay=True, _memory_config=cfg,
                                          _memory_full_batch=batch, _memory_future_cache=ctx.futures)
+            _trace_memory(trainer, 'full_forward_done', tape_draws=len(ctx.tape))
             leaves, spec = tree_flatten(result)
             slots = [i for i, v in enumerate(leaves) if torch.is_tensor(v)]
             ctx.slots = slots
@@ -234,6 +251,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                         batch, kwargs["variants"], start, min(total, start + micro))
                     futures = range(len(ctx.futures['items'])) if ctx.futures is not None else (None,)
                     for future in futures:
+                        _trace_memory(trainer, 'future_start', start=start, future=future)
                         replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
                         _restore_rng(ctx.before, trainer.device)
                         spill = (_saved_tensor_spill(trainer)
@@ -243,6 +261,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                                 _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
                                 _memory_start_index=starts, _memory_row_index=rows,
                                 _memory_future_cache=ctx.futures, _memory_active_future=future)
+                            _trace_memory(trainer, 'future_forward_done', start=start, future=future)
                             leaves, _ = tree_flatten(result)
                             # Full-K topology/reductions are retained, with one future graph live.
                             outputs, vectors = [], []
@@ -255,6 +274,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                             if replay.position != len(ctx.tape):
                                 raise RuntimeError("LONGMEM random call trace shortened during replay")
                             grads = torch.autograd.grad(outputs, ctx.params, vectors, allow_unused=True)
+                            _trace_memory(trainer, 'future_vjp_done', start=start, future=future)
                         for i, grad in enumerate(grads):
                             if grad is not None:
                                 accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad

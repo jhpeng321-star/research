@@ -191,3 +191,29 @@ actual registered/effective individual/coop8.9/8.9, anchorOFF/q10-K8ON/90s.
 Initial09:56:07UTC worker alive, hostRSS1.81GB, GPU0.81GB;0updates yet, still
 initial scoring. Deadline/host+GPU self-monitoring active. Dispatch receipt
 `tools/c4prep/evidence/RESUME_DRY_DISPATCH.json`; no full phase dispatched.
+
+## Measured dry CUDA OOM — reuse completed B operational proof
+
+Worker391362 exited1 with0actual updates by10:17:04UTC. This time the retained
+RUN_SUMMARY reports CUDA allocatorOOM (324MiB request,21.32GiB allowance,
+20.79GiB allocated). Host high-water14,162,716KiB; sampledGPUpeak23,290,970,112
+bytes exceeded the strict process cap. Original output/failed dry receipt kept.
+Receipt `tools/c4prep/evidence/RESUME_DRY_CUDA_OOM.json`; no full phase.
+
+Fresh S-HOLD-1 delivery8ddc33c9 already proves two actual90s/K8 updates using
+the same streamed core at segment8 and registered read-only component-gradient
+diagnostic period25 (9afba5bc exact loss/gradient/Adam/RNG proof;12.47GB peak
+reserved). Reuse that completed operational repair: explicit env period25;
+actual per-module optimizer gradients remain logged every update. Segment1 was
+considered locally but is NOT activated; microbatch1/segment8/both offloads stay.
+New A production microbatch1/K8 proof compares auditsON vs period25 on full
+actor/entrantON, including optimizer/RNG; remote qualification required before
+fresh dry. Local operational tests25PASS; long new parity proof still pending.
+
+Fixed receipt accounting discovered before launch: trainer and CLI both append
+metrics to updates.jsonl, so verification/deadline/rate now use only UNIQUE
+timestamped CLI completions. Ten writes cannot be counted as ten updates.
+Added owned memory execution trace and preserved exception traceback/effective
+configuration for diagnosis. Existing optional `ssh -J cpuP gpuA` relay from B's
+handoff is supported via C4_SSH_JUMP without key/config or peer-job changes.
+MEMORY_EXECUTION.json must be appended to registration/loop state before retry.

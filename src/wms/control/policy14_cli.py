@@ -232,6 +232,8 @@ def main(argv=None):
                 raise ValueError('GPU memory fraction must be in (0, 1]')
             torch.cuda.set_per_process_memory_fraction(float(frac))
         summary['gpu_memory_fraction'] = float(frac) if frac else None
+        from wms.core import speed_flags
+        summary['diagnostic_grad_audit_every'] = speed_flags.every('grad_audit_every')
         candidate = checked_path(args.output_dir)
         candidate.mkdir(parents=True, exist_ok=False)
         output = candidate
@@ -520,6 +522,7 @@ def main(argv=None):
                 float(raw['data']['focus_cell_fraction']))
             # MAIN's exact cell mixture supersedes the inherited rejection tilt.
             trainer._tilt_sampler = None
+        summary['effective_config_before_updates'] = asdict(trainer.config)
         for _ in range(args.prep_dry_run_updates or args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
@@ -676,6 +679,8 @@ def main(argv=None):
                        consequence_mask=lane_rules.consequence_mask if lane_rules else False,
                        synthetic_start_states=args.smoke)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError, AttributeError) as error:
+        import traceback
+        summary['traceback'] = traceback.format_exc()
         summary["error"] = f"{type(error).__name__}: {error}"
     if output is not None:
         (output / "RUN_SUMMARY.json").write_text(json.dumps(summary, indent=2, allow_nan=False), encoding="utf-8")

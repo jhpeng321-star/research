@@ -60,6 +60,19 @@ def complete_jsonl(path):
             if line.endswith('\n')]
 
 
+def completed_updates(path):
+    """CLI emits a timestamped completion after the trainer's raw metric write.
+
+    Count unique completed optimizer updates, never those two writes as two
+    updates, and retain timestamps for phase rate/ETA.
+    """
+    rows = {}
+    for row in complete_jsonl(path):
+        if 't' in row and 'update' in row:
+            rows[row['update']] = row
+    return list(rows.values())
+
+
 def write_new(path, doc):
     p = safe(path)
     p.parent.mkdir(parents=True, exist_ok=True)

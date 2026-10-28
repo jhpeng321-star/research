@@ -13,7 +13,7 @@ import sys
 import time
 from datetime import datetime
 
-from common import (ACTORS, CODE, GATE, OUT, REL, WM, WM_CONFIG, WM_SHA, complete_jsonl,
+from common import (ACTORS, CODE, GATE, OUT, REL, WM, WM_CONFIG, WM_SHA, completed_updates,
                     now, qualified_gate, read, safe, sha, write_new)
 
 sys.path[:0] = [str(CODE / 'src'), str(CODE)]
@@ -154,6 +154,8 @@ def validate(config, *, launching=False):
         assert decision['native_anchor'] == doc['native_anchor']
         assert doc['pessimistic_credit'] is True
         assert sha(doc['fit_decision']) == doc['fit_decision_sha256']
+        if 'memory_execution' in doc:
+            assert sha(doc['memory_execution']) == doc['memory_execution_sha256']
     else:
         horizon, _ = qualified_gate(doc['entrant_control'])
     assert horizon == doc['trusted_horizon_s']
@@ -200,6 +202,7 @@ def run(config, dry):
     env = {**os.environ, **read(REL / 'arm/CONFIG_C3_LONGINT.json')['policy']['env'],
            'C4_GPU_MEM_FRACTION': '0.45', 'PYTHONPATH': f'{CODE}/src:{CODE}',
            'C4_ALLOWED_ROOTS': '/root/autodl-tmp/c4',
+           'WMS_SPEED_GRAD_AUDIT_EVERY': '25',
            'OMP_NUM_THREADS': '2', 'MKL_NUM_THREADS': '2', 'OPENBLAS_NUM_THREADS': '2'}
     total_bytes = int(subprocess.check_output(['nvidia-smi', '--query-gpu=memory.total',
         '--format=csv,noheader,nounits'], text=True).strip()) * 1024**2
@@ -222,7 +225,8 @@ def run(config, dry):
             children.append((item, child, output))
             ticks = Path(f'/proc/{child.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
             write_new(root / (item['name'] + '_PID.json'),
-                      {'pid': child.pid, 'start_ticks': ticks, 'argv': argv, 't': now()})
+                      {'pid': child.pid, 'start_ticks': ticks, 'argv': argv, 't': now(),
+                       'diagnostic_grad_audit_every': 25})
         while any(child.poll() is None for _, child, _ in children):
             result = subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid,used_memory',
                                                '--format=csv,noheader,nounits'], text=True)
@@ -248,7 +252,7 @@ def run(config, dry):
                 deadline = datetime.fromisoformat(read(OUT / 'MAIN_1700.json')['deadline'])
                 for _, child, output in children:
                     path = output / 'updates.jsonl'
-                    rows = complete_jsonl(path)
+                    rows = completed_updates(path)
                     import math
                     ten_finite = len(rows) >= 10 and all(all(math.isfinite(row[k]) for k in
                         ('actor_loss', 'critic_loss', 'actor_grad_norm', 'critic_grad_norm')) for row in rows)
@@ -294,8 +298,13 @@ def run(config, dry):
                     and cfg.get('entrant_control') == doc['entrant_control']
                     and cfg.get('real_credit_individual_floor') is True
                     and cfg.get('deterministic_crn') is True
-                    and cfg.get('native_residual_train_group') is True
-                    and cfg.get('native_residual_train_trunk') is True
+                     and cfg.get('native_residual_train_group') is True
+                     and cfg.get('native_residual_train_trunk') is True
+                     and cfg.get('imagination_microbatch') == 1
+                     and cfg.get('imagination_checkpoint_segment') == 8
+                     and cfg.get('imagination_offload_futures') is True
+                     and cfg.get('imagination_offload_saved_tensors') is True
+                     and summary.get('diagnostic_grad_audit_every') == 25
                     and not cfg.get('hold_move', False))
         import math
         finite_ok = bool(updates) and all(all(math.isfinite(row[k]) for k in
@@ -305,7 +314,10 @@ def run(config, dry):
         coop_ok = bool(updates) and all(
             r.get('real_credit_weights', {}).get('effective', {}).get('coop', 0.) > 0
             and r['real_credit_weights']['effective']['individual'] >= r['real_credit_weights']['effective']['coop']
-            for r in updates)
+             for r in updates)
+        if doc.get('authority') == 'MAIN2026-10-28T15:00':
+            coop_ok = coop_ok and all(r['real_credit_weights']['effective']['individual'] ==
+                                     r['real_credit_weights']['effective']['coop'] == 8.9 for r in updates)
         passed = (child.returncode == 0 and (not dry or
                   summary['status'] == 'completed_dry_run' and len(updates) == 2)
                     and memory_ok and flags_ok and coop_ok and finite_ok and gradients_ok)

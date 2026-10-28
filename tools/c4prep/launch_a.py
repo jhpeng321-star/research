@@ -5,7 +5,7 @@ from pathlib import Path
 import statistics
 import time
 
-from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, complete_jsonl, now, read, sha, write_new
+from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, complete_jsonl, completed_updates, now, read, sha, write_new
 
 DEST = OUT / ('resolved_A_MAIN1500_' + read(CODE / 'SOURCE.json')['commit'][:12])
 
@@ -58,6 +58,11 @@ def prepare():
     from wms.control.dreamer import DreamerConfig
     raw = _read_config(DEST / 'POLICY.toml')
     cfg = DreamerConfig(**raw['trainer'])
+    memory_amendment = OUT / 'MEMORY_EXECUTION.json'
+    execution = read(memory_amendment)
+    assert execution['objective_change'] is False
+    assert cfg.imagination_checkpoint_segment == execution['imagination_checkpoint_segment'] == 8
+    assert execution['grad_audit_every'] == 25
     assert cfg.entrant_control and cfg.deterministic_crn and cfg.real_credit_individual_floor
     assert cfg.native_residual_train_group and cfg.native_residual_train_trunk
     assert not getattr(cfg, 'hold_move', False) and cfg.future_samples == 8 and cfg.pessimistic_credit
@@ -87,6 +92,7 @@ def prepare():
     doc = {**descriptor(True), 'authority': 'MAIN2026-10-28T15:00', 'ready': True, 'blockers': [],
         'trusted_horizon_s': 90, 'native_anchor': enabled, 'pessimistic_credit': True,
         'fit_decision': str(fit), 'entrant_receipt': str(entrant), 'gate': str(gate_path),
+        'memory_execution': str(memory_amendment), 'memory_execution_sha256': sha(memory_amendment),
         'policy_config': str(DEST / 'POLICY.toml'), 'boundary': str(DEST / 'BOUNDARY.json'),
         'real_credit': str(credit), 'real_credit_weight_knots': weights}
     if enabled:
@@ -117,7 +123,7 @@ def status(verify=False):
             item.update(pid=receipt['pid'], alive=bool(values and values[19] == receipt['start_ticks'] and values[0] != 'Z'))
         updates = root / 'A/updates.jsonl'
         if updates.exists():
-            rows = complete_jsonl(updates)
+            rows = completed_updates(updates)
             item.update(updates=len(rows), last=rows[-1] if rows else None)
             if rows:
                 item['finite'] = all(all(math.isfinite(row[k]) for k in

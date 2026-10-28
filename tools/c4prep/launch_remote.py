@@ -149,6 +149,8 @@ elif action == 'start':
         'config': str(config), 'config_sha256': sha(config),
         'dry_run_receipt_sha256': sha(resolved / 'DRY_RUN_VERIFIED.json'),
         'fit_decision_sha256': doc['fit_decision_sha256'], 'new_sim_s': 0}
+    if 'memory_execution_sha256' in doc:
+        decision['memory_execution_sha256'] = doc['memory_execution_sha256']
     write_new(resolved / 'PRELAUNCH_DECISION.json', decision)
     state_path = r / 'arm/loop/LOOP14_STATE.json'
     state = read(state_path)
