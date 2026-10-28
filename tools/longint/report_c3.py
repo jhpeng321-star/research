@@ -7,7 +7,8 @@ from tools.longint.resume_c3 import ARM, CONFIG, OUT, REL, event, setup, sha
 
 def report():
     loop = setup()
-    cfg = loop.load_config(CONFIG)
+    repaired = (ARM / 'CONFIG_C3_DISK_REPAIR.json').exists()
+    cfg = loop.load_config(ARM / 'CONFIG_C3_DISK_REPAIR.json' if repaired else CONFIG)
     state = loop.load_state(cfg)
     phases = state['cycles'][-1]['phases']
     assert state['cycles'][-1]['cycle'] == 3
@@ -27,11 +28,14 @@ def report():
     assert not cfg['collect'].get('probe', {}).get('enabled', False)
     rows = [json.loads(x) for x in (ARM / 'loop/seed_ledger.jsonl').read_text().splitlines()]
     charges = [r for r in rows if r.get('cycle') == 3 and r.get('event') == 'world_attempt']
-    assert len(charges) == completed
-    assert len({(r['seed'], r['attempt']) for r in charges}) == completed
-    assert all(r['attempt'] == 1 and not 964000 <= r['seed'] <= 964199 for r in charges)
+    retained_failures = 5 if repaired else 0
+    assert len(charges) == completed + retained_failures
+    assert len({(r['seed'], r['attempt']) for r in charges}) == len(charges)
+    assert all(r['attempt'] in (1, 2) and not 964000 <= r['seed'] <= 964199 for r in charges)
+    assert {r['seed'] for r in charges if r['attempt'] == 2} == (
+        {968187, 968189, 968191, 968193, 968195} if repaired else set())
     charged = sum(r['sim_s_charged'] for r in charges)
-    assert charged == completed * 2841
+    assert charged == (completed + retained_failures) * 2841
     assert state['sim_s_charged'] == 213406 + charged <= 280000
     from tools.fastloop.world import verify
     from wms.control.nativeinit import artifact_world_delta, smoke_guard
@@ -50,6 +54,7 @@ def report():
         delta = artifact_world_delta(root, int(cfg['collect']['branch_points']))
         worlds.append({'seed': case['seed'], 'demand': case['demand'],
                        'penetration': case['penetration'], 'box': receipt['box'],
+                       'attempt': receipt['attempt'],
                        'policy_minus_native_veh_s': delta,
                        'hashes_sha256': sha(root / 'HASHES.json')})
         manifest = loop.read_json(root / 'pairs/C4_EPISODES_MANIFEST.json')
@@ -79,11 +84,18 @@ def report():
                   'collection_decision': 'continue unless harmful; inconclusive is not relabelled pass',
                   'bootstrap': '5000 paired whole-world draws, seed20261026, percentile95CI'},
         'worlds': worlds, 'probes': False, 'behavior_exports': behavior_exports,
+        'retained_failed_pre_sumo_attempts': retained_failures,
+        'retained_failed_charges': retained_failures * 2841,
         'behavior_availability': 'exported' if behavior_exports else
             'COOPMEAS behavior rates are not exported by this registered collector',
         'conversion': phases['convert'].get('receipt'),
         'preflight': loop.read_json(REL / 'AUTONOMY_PREFLIGHT.json'),
         'wm_ft_started': False}
+    if repaired:
+        result['collection_repair'] = loop.read_json(OUT / 'collect_disk/AUTHORITY.json')
+        result['disk_preflight'] = loop.read_json(OUT / 'collect_disk/DISK_PREFLIGHT.json')
+        result['disk_dedup'] = {k: v for k, v in loop.read_json(
+            OUT / 'collect_disk/CPUQ_DISK_DEDUP.json').items() if k != 'changes'}
     target = OUT / 'RESULTS.json'
     assert not target.exists()
     loop.write_atomic(target, result)

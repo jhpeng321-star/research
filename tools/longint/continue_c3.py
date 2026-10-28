@@ -98,11 +98,13 @@ def prepare(markdown_sha):
     assert not any(missing.values())
     assert {c['seed'] for c in journal['cases'] if str(c['seed']) not in journal['worlds']} == FAILED
     cfg['fastloop']['workers_per_box'] = 1
-    cfg['fastloop']['boxes'] = ['cpuQ']
+    # Keep the canonical two-box schema; preflight selects the healthy subset.
+    cfg['fastloop']['boxes'] = ['cpuP', 'cpuQ']
     cfg['collect_disk_repair'] = {'pending': sorted(FAILED), 'healthy_box': 'cpuQ',
         'retained_failed_charges': 14205, 'new_reserve': 14205, 'projected_total': 264544,
         'raw_mb_per_world': cfg['collect']['raw_mb_per_world'], 'input_mb_per_world': 8,
         'serial_conversion_temp_mb': 64, 'after_convert': 'WAIT_MAIN_C3_WMFT'}
+    loop.fast_module().validate(cfg, loop.Refused)
     loop.write_atomic(CONFIG, cfg)
     repair = {'id': 'S-C3RESUME_COLLECT_DISK_REPAIR', 't': loop.now(),
         'authority': 'main 2026-10-28 06:20 fix-and-retry',
@@ -183,16 +185,46 @@ def drive():
         raise
 
 
-def start():
+def repair_schema():
     loop = base.setup()
-    assert not (OUT / 'PID.json').exists()
-    with (OUT / 'driver.log').open('x') as log:
+    held = base.locks()
+    assert held
+    old = loop.read_json(OUT / 'PID.json')
+    assert loop.fast_module().process_token(old['pid']) != str(old['start_ticks'])
+    cfg = loop.read_json(CONFIG)
+    loop.write_atomic(OUT / 'CONFIG.before_schema_fix.json', cfg)
+    assert cfg['fastloop']['boxes'] == ['cpuQ']
+    cfg['fastloop']['boxes'] = ['cpuP', 'cpuQ']
+    loop.fast_module().validate(cfg, loop.Refused)
+    state = loop.read_json(ARM / 'loop/LOOP14_STATE.json')
+    assert state['sim_s_charged'] == 250339
+    loop.write_atomic(CONFIG, cfg)
+    reg = loop.read_json(cfg['registration'])
+    amendment = {'id': 'S-C3RESUME_COLLECT_DISK_SCHEMA_FIX', 't': loop.now(),
+        'reason': 'startup-only host-list validation; no phase or simulation was dispatched',
+        'config_sha256': base.sha(CONFIG), 'script_sha256': base.sha(__file__),
+        'healthy_subset_selection': 'cpuQ only, enforced by zero-charge preflight', 'new_sim_s': 0}
+    assert not any(a.get('id') == amendment['id'] for a in reg['amendments'])
+    reg['amendments'].append(amendment)
+    loop.write_atomic(Path(cfg['registration']), reg)
+    state['registration_sha256'] = base.sha(cfg['registration'])
+    loop.save_state(cfg, state)
+    base.event(loop, 'disk_schema_fix', **amendment)
+    loop.load_config(CONFIG)
+    print(json.dumps(amendment))
+
+
+def start(tag=''):
+    loop = base.setup()
+    assert tag in ('', '.retry2')
+    assert not (OUT / ('PID' + tag + '.json')).exists()
+    with (OUT / ('driver' + tag + '.log')).open('x') as log:
         child = subprocess.Popen([sys.executable, '-B', __file__, 'drive'], cwd=ROOT,
             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
             env={**os.environ, 'PYTHONPATH': str(ROOT / 'src') + ':' + str(ROOT)})
     receipt = {'pid': child.pid, 'start_ticks': loop.fast_module().process_token(child.pid),
                'sid': os.getsid(child.pid), 'task': 'S-C3RESUME_DISK_REPAIR'}
-    loop.write_atomic(OUT / 'PID.json', receipt)
+    loop.write_atomic(OUT / ('PID' + tag + '.json'), receipt)
     print(json.dumps(receipt))
 
 
@@ -201,5 +233,9 @@ if __name__ == '__main__':
         prepare(sys.argv[2])
     elif sys.argv[1] == 'start':
         start()
+    elif sys.argv[1] == 'repair-schema':
+        repair_schema()
+    elif sys.argv[1] == 'start2':
+        start('.retry2')
     elif sys.argv[1] == 'drive':
         sys.exit(drive())

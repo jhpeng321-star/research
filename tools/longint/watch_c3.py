@@ -32,7 +32,9 @@ def watch(wait=0):
         result['worlds_done'] = len(doc['worlds'])
         result['guard'] = doc.get('native_smoke')
     if status['status'].endswith('STOPPED') or status['status'] == 'OPERATIONAL_PAUSED':
-        result['error'] = policy.get('error')
+        phase = 'collect' if 'COLLECT' in status['status'] else 'convert' if 'CONVERT' in status['status'] else 'policy'
+        detail = state['cycles'][-1]['phases'][phase]
+        result['error'] = status.get('reason') or detail.get('refused') or detail.get('error') or state.get('stopped')
     print(json.dumps(result))
 
 
