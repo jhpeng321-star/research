@@ -72,4 +72,5 @@ see "Verification" at the end.
 
 ## Verification
 - `tests/audit/test_polaudit_t.py`: 11 passed (CPU).
-- Existing: test_antiexploit + test_c4prep2_credit + nativeinit/entrant/looplong: 96 passed, 15 failed for local-environment reasons only (missing baseline-source env, `tools.*` not importable, workspace root, GBK decode); see second run below.
+- Existing: test_antiexploit + test_c4prep2_credit + nativeinit/entrant/looplong: 96 passed, 15 failed for local-environment reasons only (missing baseline-source env, `tools.*` not importable, workspace root, GBK decode).
+- With PYTHONUTF8=1, C4_ALLOWED_ROOTS and repo root on PYTHONPATH: test_longmem + test_c4launch + test_c4prep + test_looplong + test_policy14_recovery = 116 passed, 4 skipped (CUDA-only), 901 s CPU. CUDA parity not re-run.
