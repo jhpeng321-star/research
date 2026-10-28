@@ -166,7 +166,8 @@ def main(argv=None):
     parser.add_argument("--real-credit", default=None,
                         help="S-SUMOCREDIT: TRAIN REAL_CREDIT.json (wms.control.real_credit14 fit); scales the "
                              "individual/group/coop/team counterfactual weights by the measured real-vs-imagined "
-                             "credit multipliers in [0, 1] (absent = off, unchanged)")
+                              "credit multipliers in [0, 1]; errors if guards make every knot unchanged "
+                              "(absent = off, unchanged)")
     parser.add_argument("--gate-panel", default=None,
                         help="S-GPUB-LOOP: frozen gate-panel JSON; the update-10 signal gate is scored on it "
                              "(paired per start) instead of the single rescore start")
@@ -408,7 +409,10 @@ def main(argv=None):
             if recovery and trainer.update_count != recovery['saved_update']:
                 raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
-                       "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+                        "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+        if args.real_credit:
+            from .auditfix_diagnostics import require_real_credit_effect
+            summary['real_credit']['guarded_knots'] = require_real_credit_effect(trainer)
         if defer_install:
             # Explicit boundary migration: restore the accepted actor first,
             # then reset only the newly introduced value/feature optimizers.
