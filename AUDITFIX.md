@@ -8,6 +8,21 @@ qualification; no policy restart or WM adoption performed.
 | Finding | Change | Flag / activation | CPU test |
 | --- | --- | --- | --- |
 | F1 full resume replaces TOML trainer/reward/lr | New-phase full resume keeps resolved TOML dataclasses and optimizer rates, preserves Adam moments/counters, logs every difference, rejects every unapproved difference before loading weights. | `--new-phase --resume C1.pt`, repeat `--resume-allow SECTION.KEY`; default OFF | `tests/unit/test_auditfix_resume.py` (2 pass) |
+| F2 zero-weight individual rows | Equivalent six-row config preset: individual=coop=0, group=18.8, cover_group_members=false; registered all/team terms and weight meanings unchanged. | Select `configs/c4_policy14_c4prep_sixrow.toml`; opt-in | `tests/unit/test_auditfix_sixrow.py`: fixed-seed loss/full actor gradient parity, mean and q10/K8 |
+
+## Six-row preset
+
+Resolve `configs/c4_policy14_c4prep_sixrow.toml` with the same input/anchor
+preparation as its inherited candidate-A base. It pins the live registered
+candidate-A weights at both knots `[0,1]`, as in the audited resolved TOML.
+Alternatively copy its `[counterfactual]` overrides into that resolved restart
+TOML. This removes exactly
+the three dead individual rows for the registered three-member group (9 to 6),
+without changing the objective. The formula remains
+`D_all + 49.7*D_G - 10.3*sum_i D_(G\i)`. Other group sizes retain the same algebra;
+six rows is the three-member case, not a forced group size or sampling change.
+Do not apply nontrivial real-credit multipliers to this rewritten parameterization
+and claim equivalence to multipliers applied to the original weights.
 
 ## New-phase resume
 
