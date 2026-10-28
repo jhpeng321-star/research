@@ -1,0 +1,6 @@
+# S-C4PREP-1. MAIN selects this only after the final entrant verdict/gate.
+extends = "c4_policy14_c4prep_off.toml"
+
+[trainer]
+entrant_control = true
+native_anchor_calibration = "UNRESOLVED_C4PREP_ANCHOR_ON"

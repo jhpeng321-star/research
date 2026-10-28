@@ -179,7 +179,9 @@ def main(argv=None):
     parser.add_argument('--looplong-boundary', default=None)
     parser.add_argument('--wm-swap-file', default=None)
     parser.add_argument('--phase-relative-signal-gate', action='store_true',
-                        help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
+                         help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
+    parser.add_argument('--prep-dry-run-updates', type=int, choices=(2,), default=None,
+                        help='S-C4PREP: stop after exactly two scratch updates; no adoption receipt')
     args = parser.parse_args(argv)
     summary, output = {"status": "failed"}, None
     try:
@@ -513,7 +515,7 @@ def main(argv=None):
                 json.dumps(summary['looplong_long_credit'], indent=1, default=str), encoding='utf-8')
         elif args.wm_swap_file:
             raise ValueError('hot swap requires looplong boundary')
-        for _ in range(args.max_updates):
+        for _ in range(args.prep_dry_run_updates or args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("own-run STOP requested; checkpoint saved")
@@ -595,6 +597,17 @@ def main(argv=None):
             if gate_failed:
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("early signal gate: independently rescored J did not decrease; stop before scaling")
+        if args.prep_dry_run_updates:
+            # Scratch updates are not eligible for phase selection or deployment.
+            # Keep initial scoring/probes and the actual actor update unchanged.
+            summary.update(status='completed_dry_run', updates=updates,
+                           dry_run_updates=args.prep_dry_run_updates,
+                           config=asdict(trainer.config), deployment_authorized=False,
+                           wm_members=receipts, resumed_from=resumed)
+            (output / 'RUN_SUMMARY.json').write_text(
+                json.dumps(summary, indent=2, allow_nan=False), encoding='utf-8')
+            print(json.dumps({'status': summary['status'], 'summary_path': str(output / 'RUN_SUMMARY.json')}))
+            return 0
         trainer.save_checkpoint(output / "policy_latest.pt")
         if long_boundary:
             summary['looplong_final_boundary'] = long_boundary

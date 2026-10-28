@@ -1,0 +1,33 @@
+# S-C4PREP-1. Identical candidate flags; only the actor resume differs.
+extends = "c4_policy14_c3longint.toml"
+
+[run]
+gpu_memory_fraction = 0.45
+operational_recovery = ""
+
+[trainer]
+imagination_microbatch = 1
+imagination_checkpoint_segment = 8
+imagination_offload_futures = true
+imagination_offload_saved_tensors = true
+native_residual_train_group = true
+native_residual_train_trunk = true
+future_samples = 8
+uncertainty_weight = 0.0
+pessimistic_credit = true
+native_anchor = true
+# Preparation resolves this to a validated, signature-matched immutable artifact.
+native_anchor_calibration = "UNRESOLVED_C4PREP_ANCHOR_OFF"
+entrant_control = false
+deterministic_crn = true
+checkpoint_every = 1
+
+[counterfactual]
+max_starts = 1
+
+[uncertainty]
+enabled = false
+future_samples = 8
+
+[probe]
+enabled = false
