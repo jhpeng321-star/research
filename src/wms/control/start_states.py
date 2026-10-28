@@ -133,6 +133,13 @@ class StartStateSampler:
                 self.source_groups[penetration] = sorted(by_source.items())
 
     def _draw_index(self):
+        if getattr(self, 'focus_cells', None):
+            cells, remainder, fraction = self.focus_cells
+            if float(torch.rand((), generator=self.generator)) < fraction:
+                group = cells[int(torch.randint(len(cells), (), generator=self.generator))]
+            else:
+                group = remainder
+            return group[int(torch.randint(len(group), (), generator=self.generator))]
         penetration = self.penetrations[int(torch.randint(
             len(self.penetrations), (), generator=self.generator))]
         group = self.groups[penetration]
@@ -144,6 +151,24 @@ class StartStateSampler:
                                        dtype=torch.double)
                 group = parts[int(torch.multinomial(weights, 1, generator=self.generator))][1]
         return group[int(torch.randint(len(group), (), generator=self.generator))]
+
+    def configure_focus_cells(self, fraction):
+        """MAIN C4: exact mass on four registered cells, then remaining windows."""
+        if not 0 < fraction < 1:
+            raise ValueError('focus fraction must be between zero and one')
+        cells = {(m, p): [] for m in (2400, 2700) for p in (20, 40)}
+        rest = []
+        for group in self.groups.values():
+            for index in group:
+                meta = self.metadata[index]
+                match = re.search(r'm(\d+)p(\d+)', str(meta.get('world_id', meta.get('world', ''))))
+                key = tuple(map(int, match.groups())) if match else None
+                (cells[key] if key in cells else rest).append(index)
+        if not rest or any(not rows for rows in cells.values()):
+            raise ValueError('registered focus cells or remaining starts absent')
+        self.focus_cells = (list(cells.values()), rest, float(fraction))
+        return {'fraction': fraction, 'cell_windows': {f'm{m}p{p}': len(v) for (m, p), v in cells.items()},
+                'remaining_windows': len(rest)}
 
     def _load(self, index):
         record = self.dataset[index]

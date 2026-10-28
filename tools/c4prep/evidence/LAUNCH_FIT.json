@@ -1,0 +1,21 @@
+{
+  "task": "S-C4LAUNCH",
+  "runtime_commit": "5a86c667dad961ff9d0f31ba33c6ea34bc601d4e",
+  "remote": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/launch_fit_v1",
+  "coordinator_pid": 350365,
+  "coordinator_start_ticks": "855123141",
+  "coordinator_alive": false,
+  "exit": 0,
+  "native_anchor": false,
+  "pessimistic_credit": true,
+  "quantile": 0.1,
+  "k": 8,
+  "reason": "measured pilot projects beyond authorized 3600s fit budget",
+  "elapsed_s": 319.30827443115413,
+  "projected_s": 10217.864781796932,
+  "completed_genuine_k8_rows": 7,
+  "allowed_cycles": [0, 1, 2],
+  "fitted_scale": null,
+  "new_sim_s": 0,
+  "signals_sent": 0
+}

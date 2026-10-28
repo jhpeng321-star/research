@@ -24,9 +24,16 @@ def read_boundary(path, *, swap=False):
     if digest(wm['checkpoint']) != wm['sha256'] or digest(doc['gate_file']) != doc['gate_sha256']:
         raise ValueError('looplong WM/gate binding changed')
     gate = json.loads(checked_path(doc['gate_file']).read_text())
-    if gate['wm_sha256'] != wm['sha256'] or not doc['short_nonregression']:
+    inherited = gate.get('schema') == 'c4launch_inherited_horizon/1'
+    if inherited:
+        from .c4launch_authority import inherited_gate
+        wrapper = gate
+        gate = inherited_gate(wrapper, [wm['sha256']])
+        if doc['horizon_s'] != 90 or doc.get('imagination_horizon_s') != 90:
+            raise ValueError('MAIN inherited horizon must stay exactly90s')
+    if (not inherited and gate['wm_sha256'] != wm['sha256']) or not doc['short_nonregression']:
         raise ValueError('looplong WM/short gate mismatch')
-    if gate.get('wm_config_sha256') != digest(wm['config']):
+    if not inherited and gate.get('wm_config_sha256') != digest(wm['config']):
         raise ValueError('looplong WM config binding mismatch')
     if not all(gate['horizons'].get(str(h), {}).get('sign_agreement', -1) >= gate['threshold']
                for h in (10, 30, 60)):

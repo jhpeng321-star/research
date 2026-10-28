@@ -52,9 +52,39 @@ elif action == 'fit-status':
     if (fit / 'replay.log').exists():
         result['log_tail'] = (fit / 'replay.log').read_text()[-6000:]
     print(json.dumps(result))
+elif action == 'fit-fallback':
+    from datetime import datetime, timezone
+    import signal
+    coordinator = read(fit / 'COORDINATOR_PID.json')
+    child = read(fit / 'REPLAY_PID.json')
+    assert owned_alive(coordinator) and owned_alive(child)
+    proof = read(fit / 'INPUTS.json')
+    assert [c['cycle'] for c in proof['cycles']] == [0, 1, 2]
+    rows = [read(p) for p in (fit / 'rows').glob('c[012]_*_h*.json')]
+    elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(child['t'])).total_seconds()
+    simulated = sum(row['horizon_s'] for row in rows)
+    total = sum(c['pairs'] for c in proof['cycles']) * 160
+    projected = elapsed * total / simulated
+    assert len(rows) >= 3 and projected > 3600
+    decision = {'native_anchor': False, 'pessimistic_credit': True, 'quantile': .1, 'k': 8,
+        'cycles': [0, 1, 2], 'fitted_scale': None, 'completed_rows': len(rows),
+        'elapsed_s': elapsed, 'projected_s': projected, 'budget_s': 3600,
+        'reason': 'measured genuine K8 pilot projects beyond authorized 3600s fit budget',
+        'owned_replay_pid': child['pid'], 'owned_start_ticks': child['start_ticks']}
+    write_new(fit / 'FIT_DECISION.json', decision)
+    # Only the live, receipt-bound owned replay child is signalled.
+    assert owned_alive(child)
+    os.kill(child['pid'], signal.SIGTERM)
+    print(json.dumps(decision))
 elif action == 'prepare':
     from launch_a import prepare
     prepare()
+elif action == 'checks':
+    env = {**os.environ, 'CUDA_VISIBLE_DEVICES': ''}
+    result = subprocess.run([sys.executable, '-B', '-m', 'pytest', '-q',
+        'tests/unit/test_c4launch.py', 'tests/unit/test_c4prep.py', 'tests/unit/test_antiexploit.py'],
+        cwd=code, env=env, timeout=35)
+    raise SystemExit(result.returncode)
 elif action == 'dry':
     print(json.dumps(spawn([sys.executable, '-B', str(code / 'tools/c4prep/launch.py'),
         'dry-run', '--config', str(resolved / 'CONFIG.json')], resolved, 'DRY_COORDINATOR')))

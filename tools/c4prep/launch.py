@@ -38,8 +38,10 @@ def check_entrant_receipt(final, entrant):
     pending_on = (final.get('task') == 'S-C4PREP2' and final.get('final') is False
                   and final.get('authority') == 'MAIN2026-10-28T14:25'
                   and final.get('verdict') == 'PENDING'
-                  and final.get('selected_entrant_control') is True and entrant is True)
-    assert adopted or pending_on, 'entrant adoption or explicit pending-ON repair authority required'
+                   and final.get('selected_entrant_control') is True and entrant is True)
+    main_on = (final.get('task') == 'S-C4LAUNCH' and final.get('authority') == 'MAIN2026-10-28T15:00'
+               and final.get('selected_entrant_control') is True and entrant is True)
+    assert adopted or pending_on or main_on, 'entrant adoption or explicit pending-ON repair authority required'
     assert final['selected_entrant_control'] == entrant
 
 
@@ -140,9 +142,18 @@ def validate(config, *, launching=False):
     assert len(doc['candidates']) == 1 and doc['candidates'][0]['name'] == 'A'
     assert doc['candidates'][0]['sha256'] == ACTORS[1][1]
     check_entrant_receipt(read(doc['entrant_receipt']), doc['entrant_control'])
-    horizon, _ = qualified_gate(doc['entrant_control'])
+    if doc.get('authority') == 'MAIN2026-10-28T15:00':
+        from wms.control.c4launch_authority import inherited_gate
+        inherited_gate(read(doc['gate']), [WM_SHA])
+        horizon = 90
+        decision = read(doc['fit_decision'])
+        assert decision['native_anchor'] == doc['native_anchor']
+        assert doc['pessimistic_credit'] is True
+        assert sha(doc['fit_decision']) == doc['fit_decision_sha256']
+    else:
+        horizon, _ = qualified_gate(doc['entrant_control'])
     assert horizon == doc['trusted_horizon_s']
-    for key in ('anchor', 'entrant_receipt', 'gate', 'policy_config', 'boundary', 'real_credit'):
+    for key in ('entrant_receipt', 'gate', 'policy_config', 'boundary', 'real_credit') + (('anchor',) if doc.get('native_anchor', True) else ()):
         assert sha(doc[key]) == doc[key + '_sha256']
     for item in doc['candidates']:
         assert sha(item['checkpoint']) == item['sha256']
@@ -192,7 +203,7 @@ def run(config, dry):
     with contextlib.ExitStack() as stack:
         lock = stack.enter_context((OUT / 'candidates.lock').open('a'))
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if not dry:
+        if not dry and doc.get('authority') != 'MAIN2026-10-28T15:00':
             for name in ('autonomy.lock', 'driver.lock', 'cycle1.lock'):
                 handle = stack.enter_context((REL / 'arm' / name).open('a'))
                 fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -228,23 +239,32 @@ def run(config, dry):
         process_peak = max((r['bytes'] for r in samples if r['pid'] == child.pid), default=0)
         cfg = summary.get('config', {})
         memory_ok = 0 < max(peaks, default=0) <= .45 * total_bytes and 0 < process_peak <= .45 * total_bytes
-        flags_ok = (cfg.get('future_samples') == 8 and cfg.get('native_anchor') is True
+        flags_ok = (cfg.get('future_samples') == 8 and cfg.get('native_anchor') is doc.get('native_anchor', True)
                     and cfg.get('pessimistic_credit') is True
                     and cfg.get('entrant_control') == doc['entrant_control']
                     and cfg.get('real_credit_individual_floor') is True
+                    and cfg.get('deterministic_crn') is True
+                    and cfg.get('native_residual_train_group') is True
+                    and cfg.get('native_residual_train_trunk') is True
                     and not cfg.get('hold_move', False))
+        import math
+        finite_ok = bool(updates) and all(all(math.isfinite(row[k]) for k in
+            ('actor_loss', 'critic_loss', 'actor_grad_norm', 'critic_grad_norm')) for row in updates)
+        gradients_ok = bool(updates) and all(all(row.get('actor_module_grad_norms', {}).get(k, 0) > 0
+            for k in ('group_encoder', 'own_encoder', 'report_encoder', 'attention', 'residual_head')) for row in updates)
         coop_ok = bool(updates) and all(
             r.get('real_credit_weights', {}).get('effective', {}).get('coop', 0.) > 0
             and r['real_credit_weights']['effective']['individual'] >= r['real_credit_weights']['effective']['coop']
             for r in updates)
         passed = (child.returncode == 0 and (not dry or
                   summary['status'] == 'completed_dry_run' and len(updates) == 2)
-                   and memory_ok and flags_ok and coop_ok)
+                    and memory_ok and flags_ok and coop_ok and finite_ok and gradients_ok)
         results.append({'candidate': item['name'], 'exit': child.returncode, 'passed': passed,
                         'updates': len(updates), 'peak_reserved_bytes': max(peaks, default=0),
                         'sampled_process_peak_bytes': process_peak,
                          'memory_within_cap': memory_ok, 'effective_flags_verified': flags_ok,
-                         'real_coop_verified': coop_ok,
+                          'real_coop_verified': coop_ok,
+                          'finite_verified': finite_ok, 'module_gradients_verified': gradients_ok,
                         'summary_sha256': sha(output / 'RUN_SUMMARY.json')})
     receipt = {'config_sha256': sha(config), 'passed': all(r['passed'] for r in results),
                'dry_run': dry, 'results': results, 'process_memory_samples': len(samples),

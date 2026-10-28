@@ -515,6 +515,11 @@ def main(argv=None):
                 json.dumps(summary['looplong_long_credit'], indent=1, default=str), encoding='utf-8')
         elif args.wm_swap_file:
             raise ValueError('hot swap requires looplong boundary')
+        if raw.get('data', {}).get('focus_cell_fraction') is not None:
+            summary['start_focus'] = trainer.start_states.configure_focus_cells(
+                float(raw['data']['focus_cell_fraction']))
+            # MAIN's exact cell mixture supersedes the inherited rejection tilt.
+            trainer._tilt_sampler = None
         for _ in range(args.prep_dry_run_updates or args.max_updates):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
