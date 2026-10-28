@@ -55,6 +55,28 @@ whether all useful deviations are suppressed (null if none are observed).
 validation leakage refusal and suppression reporting. These checks do not
 constitute empirical fitting or a measured useful-deviation verdict.
 
+### PREP2 authoritative measured boundary — 2026-10-28 14:42 UTC+8
+
+Source `c0f4d2302b7f` staged as a NEW immutable runtime with1208 files all
+SHA-verified,167 transferred, including the learned native-head JSON.
+`INPUT_PREFLIGHT_PREP2_v1.json` SHA
+`a450c676aa6be1b12daee6382ff7e3b912250880f6e3d96903427893dc733024`
+verifies all4 historical actors and86pairs/172episodes: C0/C1/C2 have0 missing
+clock episodes; C3 has52/52 missing. WM3 horizon JSON is still absent,40/96
+groups logged; no trusted horizon is inferred. Entrant tip remains875cc443,
+verdict pending; ON is the explicit preparation choice under MAIN14:25.
+The unresolved A descriptor's dry-run path was exercised and REFUSED BEFORE
+SPAWN. **0 real GPU updates,0 fitted scales, no measured useful-deviation
+suppression verdict.** GPU was1MiB. This refusal is not a GPU dry-run PASS.
+Live AUTONOMY retains peer status C3_WM3_ACCEPTANCE_RUNNING and now carries
+`c4a_preparation.status=BLOCKED_C4A, ready=false` with the full receipt path;
+setting READY_C4A would be false. All shared budget/stop/process state is intact.
+Remote full receipt `arm/loop/c4prep/PREP2_VERIFIED_v1.json`; compact committed
+receipt `tools/c4prep/evidence/PREP2_VERIFIED.json`.95 distinct CPU checks PASS,
+2 looplong checks skip unavailable local evidence helper; fatal-error Ruff PASS.
+No background retry/fitting/training is armed. The one-command launch below
+is ready as a guarded interface, but empirical launch readiness is BLOCKED.
+
 ## Registered scope (retained from initial receipt)
 
 Prepare parallel gpuA cycle-4 candidates A (cycle1 c01.a3, SHA64f70af4)
