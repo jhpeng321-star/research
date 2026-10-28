@@ -8,13 +8,22 @@ from tests.unit.test_longmem import trainer, assert_tree_close
 
 
 @pytest.mark.parametrize('forward', [False, True])
-def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward):
+@pytest.mark.parametrize('device', ['cpu', 'cuda'])
+def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward, device):
+    if device == 'cuda' and not torch.cuda.is_available():
+        pytest.skip('CUDA unavailable')
     pytest.importorskip('cloudpickle')
     serial = trainer(1, 2, True, horizon=2, batch=1, counterfactual=True, real_world=True,
                      future_samples=8, pessimistic_credit=True, uncertainty_weight=0.)
     from wms.model import WmSModel, ModelSpec
     serial.world_models = [WmSModel(ModelSpec(rollout_mode='driver_params',
                                              history_hidden=8, k_hidden=8)).eval().requires_grad_(False)]
+    if device == 'cuda':
+        serial.device = torch.device('cuda')
+        for module in [*serial.world_models, serial.policy, serial.group_encoder,
+                       serial.critic, serial.target_critic]:
+            module.to(device)
+        serial.start_states.batch.state = {k: v.to(device) for k, v in serial.start_states.batch.state.items()}
     parallel = copy.deepcopy(serial)
     parallel.output_dir = tmp_path
     torch.manual_seed(561)
@@ -25,7 +34,7 @@ def test_parallel_update_matches_serial_bitwise(tmp_path, monkeypatch, forward):
     torch.manual_seed(561)
     actual = parallel.update()
     assert torch.equal(rng, torch.get_rng_state())
-    for key in ('actor_loss', 'returns', 'actor_grad_norm', 'critic_loss'):
+    for key in ('actor_loss', 'returns', 'actor_grad_norm', 'critic_loss', 'memory_spill'):
         assert_tree_close(expected[key], actual[key], atol=0, rtol=0)
     for x, y in zip(serial.actor_parameters, parallel.actor_parameters):
         torch.testing.assert_close(x.grad, y.grad, atol=0, rtol=0)

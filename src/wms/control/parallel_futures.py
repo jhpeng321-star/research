@@ -159,7 +159,8 @@ def _vjp(trainer, common, task):
         grads = torch.autograd.grad(outputs, parameters, vectors, allow_unused=True)
         _trace_memory(trainer, 'future_vjp_done', start=start, future=future)
     # CPU transport preserves bytes. Coordinator copies to its device before addition.
-    return [None if g is None else g.detach().cpu() for g in grads]
+    return {'grads': [None if g is None else g.detach().cpu() for g in grads],
+            'spill': getattr(trainer, 'memory_spill_stats', None)}
 
 
 def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, grad_outputs, spec):
@@ -172,11 +173,13 @@ def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, gr
              for start in range(0, total, micro) for future in range(len(cache['items']))]
     accumulated = [None] * len([p for p in trainer.actor_parameters if p.requires_grad])
     with FuturePool(trainer, common) as pool:
-        for task, grads in zip(tasks, pool.map(tasks)):
-            for i, grad in enumerate(grads):
+        for task, result in zip(tasks, pool.map(tasks)):
+            for i, grad in enumerate(result['grads']):
                 if grad is not None:
                     grad = grad.to(trainer.device)
                     accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
+            if result['spill'] is not None:
+                trainer.memory_spill_stats = result['spill']
             _trace_memory(trainer, 'parallel_future_collected', start=task[0], future=task[2])
     return tuple(accumulated)
 
@@ -239,6 +242,8 @@ def _main(root, index):
     while not (root / 'STOP').exists():
         ready = sorted(directory.glob('*.ready'), key=lambda p: int(p.stem))
         for path in ready:
+            if (root / 'STOP').exists():
+                break
             if path.stem in completed:
                 continue
             try:
