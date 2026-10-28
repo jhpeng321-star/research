@@ -1,10 +1,13 @@
 # S-EXECPARITY — recorded-state verification and opt-in execution parity
 
-**Status: 00:20 EXACT ALWAYS-COMMANDED law implemented and dispatched for the
-registered SUMO check (cap 7,200 sim-s, 0 charged so far).** Sections 1–6
-preserve the audit and the superseded continuous-law analysis. Section 7 is the
-authoritative 00:20 production path. See
-`docs/paper_results/EXECPARITY_SUMO.md` for the live check status.
+**Status: 00:20 registered real-SUMO check COMPLETE — canary PASS, parity
+FAIL.** 4 jobs / 3,600 of 7,200 sim-s charged. `s977000_always0` is
+byte-identical to stored CTRL0 (execution mechanism exact); imagination
+executed-accel RMSE 0.2556 exceeds the native-head band 0.1603 pooled and in
+every world, so `verify_parity` keeps mode-2 deployment refused. Sections 1–6
+preserve the audit and the superseded continuous-law analysis; section 7 is
+the authoritative 00:20 path and its measured result. Full details:
+`docs/paper_results/EXECPARITY_SUMO.md`.
 
 Branch `c4/execparity`, based on deployment audit `f6531d94`. CPU only; **zero SUMO
 executions and zero new sim-s**. Read-only exact-file copies from cpuP, no scenario,
@@ -392,14 +395,22 @@ A positive residual beyond the cap has zero effect and zero gradient.
   every CAV including exact zero, frozen legacy envelope, imagination/scalar
   formula identity, capped-positive-residual zero gradient, tiny-residual
   continuity both sides of zero, checkpoint contract binding, receipt gating.
-* Registered SUMO check (00:20, same 7,200 cap): canary `s977000_always0` must
-  be byte-identical to stored S-CTRLARM CTRL0; then C1 under the law on
-  977001–977003 with per-tick ledgers; then offline replay (iii) with
-  `tools/execparity/alwayscmd_replay.py`, PASS = pooled executed-accel RMSE ≤
-  pooled native-head RMSE on the same rows AND canary bit identity. Plan:
-  `tools/execparity/sumo_plan_0020.json`.
+* Registered SUMO check (00:20, same 7,200 cap): COMPLETE — 4 × 900 = 3,600
+  charged, 0 retries. (i) canary `s977000_always0` **bit-identical** to stored
+  S-CTRLARM CTRL0 (metrics + cumulative JSONs + traj_base.npz + episode.npz);
+  (ii) C1 `alwaysx` on 977001–977003 with 32,617 per-tick ledger rows at 0.5 s
+  cadence; (iii) offline replay `tools/execparity/alwayscmd_replay_results.json`
+  **FAILS** the registered criterion: imagination executed-accel RMSE 0.2556
+  (world 0.2884/0.2419/0.2366) vs native-head 0.1603 (0.1586/0.1898/0.1506);
+  nearly unbiased (mean +0.011) with heavy tails (min −11.38). SUMO's
+  speedMode-27 cap still removes most commanded headroom (issued ≤ realised on
+  only ~0.05% of rows; issued−realised mean +0.165), and the TRAIN-learned IDM
+  base law is the dominant error source (RMSE 0.154 vs SUMO's own base). No
+  gate receipt exists; candidate-A mode-2 enable stays refused. Improving the
+  base law requires a new TRAIN-only fit registered separately — nothing was
+  retuned on these evaluation worlds.
 
-### Enable for candidate A (training and deployment)
+### Enable for candidate A (training and deployment) — currently BLOCKED by the parity gate
 
 ```powershell
 $env:C4_EXECUTION_PARITY = '2'
@@ -412,8 +423,13 @@ $env:C4_POLICY_ACCEL_NOISE = '0'
 inside the existing path); deploy additionally requires
 `--execution-parity-receipt <always_commanded_acceleration receipt>` produced
 by the offline replay from measured SUMO runs — `verify_parity` refuses
-anything else in mode 2, including all continuous/cap receipts. Default remains
-OFF; values other than 0/1/2 fail. Checkpoints saved in mode 2 bind contract
-`execparity_contract/2` executor `always_commanded_ctrl0/1`; loading with a
-different flag/driver fails. Backup 1 (MAPPO absolute command) still needs its
-own adapter at the same writer boundary before any enable command exists.
+anything else in mode 2, including all continuous/cap receipts. **That receipt
+does not exist: the measured replay FAILED (see above), so there is currently
+no valid enable command for candidate A under mode 2.** The flag syntax above
+is the exact wiring for when a passing receipt exists (e.g. after a registered
+TRAIN-only base-law refit, re-scored offline against these same recorded runs
+without new SUMO charges). Default remains OFF; values other than 0/1/2 fail.
+Checkpoints saved in mode 2 bind contract `execparity_contract/2` executor
+`always_commanded_ctrl0/1`; loading with a different flag/driver fails.
+Backup 1 (MAPPO absolute command) still needs its own adapter at the same
+writer boundary before any enable command exists.

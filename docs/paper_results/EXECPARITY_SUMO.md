@@ -1,6 +1,63 @@
 # S-EXECPARITY real-SUMO verification
 
-## Status and accounting (00:20 law; updated 2026-10-29 01:26 local)
+## Result (00:20 always-commanded check; executed 2026-10-29 02:0x–02:3x local)
+
+**Canary (i) PASS; per-tick logging (ii) complete; offline parity (iii) FAIL.**
+4 scientific jobs × 900 sim-s = **3,600 of 7,200 cap charged, 0 retry charges**;
+each charge (`S-EXECPARITY ALLOC`) appended to REGISTRATION.md before its
+START. Frozen runtime `b3c031ad` (543 files verified before and after each
+job), C1 `64f70af4`, driver `f70c2aaf`, nice 19, one thread, no peer touched.
+
+1. **s977000_always0 (cpuP):** `bit_identical = true` — metrics JSON,
+   cumulative 120/300/600 JSONs, traj_base.npz and episode.npz hashes all
+   equal stored S-CTRLARM CTRL0 `jobs/s977000_ctrl0`. Residual 0 through the
+   always-commanded writer reproduces CTRL0 exactly in real SUMO (wall 15.3 s).
+2. **s977001/977003 (cpuQ), s977002 (cpuP) alwaysx:** all ok, 900 sim-s each,
+   per-tick ledgers at 0.5 s cadence: **32,617 stable post-warmup CAV rows**
+   (10,695 / 5,387 / 16,535).
+3. **Offline replay (iii)** (`alwayscmd_replay_results.json`): imagination
+   executed-accel RMSE **0.2556** (pooled; world means 0.2884 / 0.2419 /
+   0.2366; bootstrap 0.2556 [0.2366, 0.2884]) vs the WM native-head band
+   **0.1603** (world 0.1586 / 0.1898 / 0.1506; bootstrap 0.1663 [0.1506,
+   0.1898]). **Registered criterion executed-RMSE ≤ head-RMSE FAILS pooled and
+   in every world.** No deployment receipt written; `verify_parity` keeps
+   refusing mode-2 deployment.
+
+Structure of the mismatch (`pooled`, n = 32,617):
+
+* issued − realised: mean **+0.165**, q50 +0.074, q95 +0.816, max +3.17 —
+  SUMO's speedMode-27 safe-speed cap still removes most of the commanded
+  headroom: issued ≤ realised on only ~0.05% of rows. A positive residual
+  beyond the cap keeps zero effect; the mechanism BLOCKER-1 described persists
+  by design under this law (now measured on the new-law runs themselves).
+* imagination error is nearly unbiased (mean +0.011, MAE 0.096) with heavy
+  tails (q05 −0.170, q95 +0.216, min −11.38): emergency-braking / leader-
+  geometry mismatches dominate the RMSE.
+* inferred IDM base vs SUMO's own `sumo_native_accel` base: mean −0.021,
+  RMSE **0.154** — the TRAIN-learned base law is the dominant error source;
+  the WM's learned native head (a richer MLP) predicts the executed
+  acceleration better than the IDM mirror. Improving it requires a new
+  TRAIN-only fit registered separately; nothing was retuned here.
+
+**Conclusion.** The always-commanded execution mechanism is exact and verified
+in real SUMO (single writer, CTRL0 bit-identity, per-tick ledgers), but
+imagination does not yet match the executor within the WM's own native-head
+error band. Candidate A must NOT enable `C4_EXECUTION_PARITY=2` as a
+parity-verified path; `verify_parity` enforces this automatically. Options for
+the owner: (a) register a TRAIN-only refit of the base law (e.g. head-based
+base or better IDM fit), then repeat only the offline replay against these
+same recorded runs (no new SUMO charge); (b) accept the 0.26 m/s² mirror error
+as a known model gap and proceed with explicit owner acknowledgment, not via
+the current gate.
+
+Accounting detail: the local launcher was killed once mid-stream (session
+tooling) after 977001/977002 had already completed charged; 977003 was
+re-dispatched via the single-job resume path (`sumo_operate.py resume --host
+cpuQ --only s977003_alwaysx`, commit `368710a8`) and charged once. Three
+further local restarts happened before any allocation. 0 of the 4 allowed
+infrastructure retries were charged; remaining cap 3,600 sim-s is left unused.
+
+## Superseded: dispatch status during the run (01:26 snapshot)
 
 **Superseded status preserved below.** The 00:20 MAIN DECISION
 (REGISTRATION.md) replaced the continuous law with the EXACT ALWAYS-COMMANDED
