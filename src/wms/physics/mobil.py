@@ -6,6 +6,8 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor
 
+from wms.core import fastpath
+
 from .config import PhysicsConfig
 from .idm import IDMParams, idm_accel
 from .merge_cal import merge_cal_target_logit, merge_urgency
@@ -493,6 +495,14 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     in_zone = (s >= p.merge_zone_s0_m) & (s <= p.merge_zone_s1_m)
     b_safe = p.b_safe_base_mps2 + (p.b_safe_end_mps2 - p.b_safe_base_mps2) * urgency
     logits = torch.full((*s.shape, 3), MASKED_LOGIT, dtype=kin.dtype, device=kin.device)
+    learnable = bool(getattr(p, "lane_learnable", False))
+    # S-WMSPEED (exact): with ``lane_learnable`` the behavioural ``safe`` below is always
+    # overwritten by the physical envelope, so skip those pure, RNG-free gap tests and build
+    # the target-independent anticipated configuration / exemption once.
+    lazy = learnable and fastpath.mobil_lazy_safe()
+    if lazy:
+        kin_a = anticipated_kin(kin, float(p.dt_s))
+        exempt = mid_change_exempt(p, mid_change, lane_age)
     for target in range(3):
         target_lane = torch.full_like(lane, target)
         gap_l, lv_l = lane_neighbour(kin, present, target_lane, p, ahead=True)
@@ -506,7 +516,9 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                                             else torch.zeros_like(in_zone))
         no_to_ramp = torch.full_like(lane, target) != p.merge_lane
         forced = (lane == p.merge_lane) & (target == p.merge_target_lane)
-        if p.lane_gap_rule == "speed":
+        if lazy:
+            pass
+        elif p.lane_gap_rule == "speed":
             if impatience is not None and target == p.merge_target_lane:
                 # V8WM3: only the ramp merge (lane 2 -> 1) is relaxed; any other car into
                 # this target keeps the legacy rule.
@@ -521,12 +533,13 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
                 safe = safe | (stopped & stopped_merge_gap_safe(kin, present, target_lane, p))
         else:
             safe = (gap_l >= min_gap) & (gap_f >= min_gap) & (a_follow >= -b_safe)
-        if getattr(p, "lane_learnable", False):
+        if learnable:
             # V10UNBLOCK: the physics lane logits use the strictly physical envelope instead of
             # every behavioural veto above (speed-gap margins, stopped relax, impatience).
             # V10ENVFIX: a target-lane body that is itself mid-lane-change does not block.
-            kin_a = anticipated_kin(kin, float(p.dt_s))
-            exempt = mid_change_exempt(p, mid_change, lane_age)
+            if not lazy:
+                kin_a = anticipated_kin(kin, float(p.dt_s))
+                exempt = mid_change_exempt(p, mid_change, lane_age)
             safe = ~body_overlap(kin_a, present, target_lane,
                                  float(getattr(p, "lane_physical_margin_m", 0.0)), exempt)
             if getattr(p, "lane_change_secure_gap", False):
