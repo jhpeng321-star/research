@@ -3,7 +3,7 @@
   "checkpoint_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
   "recordings_sha256": "5d2bf182e3c961dbf0701bf567d1c579d3c9d6dd5dab9b425550d13a769ad63d",
   "acting_ticks": 6998,
-  "capped_or_native_fraction": 0.2535010002857959,
+  "capped_or_native_fraction": 0.4601314661331809,
   "maximum_fraction": 0.95,
   "passed": true,
   "execution_contract": {
@@ -15,6 +15,9 @@
     "speed_mode": 27,
     "imagination_soft_safe_accel": false
   },
+  "cap_definition": "any_envelope_clipping_or_zero",
+  "fully_capped_fraction": 0.2535010002857959,
+  "partially_capped_fraction": 0.20663046584738498,
   "recordings": {
     "e3final\\main\\e3final\\shard0\\jobs\\s977000_native\\deploy\\episode\\episode.npz": "6398a52d4a63f9c12ddc21e4cc845038f168fb2a010de92d8e496157783f27fa",
     "e3final\\main\\e3final\\shard0\\jobs\\s977002_native\\deploy\\episode\\episode.npz": "5013abb0241648f6766b62c38f5390c43141bf4905d38314711259869350f532",

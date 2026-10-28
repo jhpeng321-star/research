@@ -111,7 +111,8 @@ def test_cached_no_traci_speed_is_not_next_native_and_leaves_a_switch():
 
 def test_continuous_guard_measures_effect_not_residual_sign():
     common = dict(checkpoint_sha256="a"*64,recordings_sha256="b"*64)
-    assert authority_guard([.1]*100,executed_delta=[.02]*100,**common)["passed"]
+    assert authority_guard([.1]*100,executed_delta=[.1]*100,**common)["passed"]
+    assert not authority_guard([.1]*100,executed_delta=[.02]*100,**common)["passed"]
     assert not authority_guard([-.1]*100,executed_delta=[0.]*96+[-.1]*4,**common)["passed"]
 
 
@@ -151,7 +152,7 @@ def test_authority_is_bound_to_the_execution_contract(tmp_path,monkeypatch):
     policy.write_bytes(b"checkpoint")
     hashes = {"native/episode.npz":"a"*64}
     monkeypatch.setattr(execution,"contract",lambda:{"executor":"one"})
-    receipt = authority_guard([.1],executed_delta=[.01],
+    receipt = authority_guard([.1],executed_delta=[.1],
         checkpoint_sha256=hashlib.sha256(policy.read_bytes()).hexdigest(),
         recordings_sha256=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest())
     receipt["recordings"] = hashes

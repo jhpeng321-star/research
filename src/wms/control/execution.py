@@ -149,12 +149,15 @@ def load_learned_driver(path):
     return values
 
 
-def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed_delta=None):
-    """Fail-closed pre-SUMO receipt for the registered >95% cap/inertness rule.
+def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed_delta=None,
+                    capped=None):
+    """Fail-closed pre-SUMO receipt for the registered >95% clipping rule.
 
-    On this cap+residual path every positive residual is completely capped; exact
-    zeros release to native and also provide no learned longitudinal authority.
-    Evaluate all acting rows, never select rows by the realised outcome.
+    Combined mode counts partial AND full envelope clipping, plus zero requests;
+    clipping indicators come from the prospective feasible bounds. Full zero
+    effect is reported separately. Without executed_delta this retains only the
+    historical sign-based switch-path diagnostic, never a deployment receipt.
+    Evaluate all acting rows, never select by the realised outcome.
     """
     import numpy as np
     r = np.asarray(residuals, float).reshape(-1)
@@ -167,9 +170,10 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed
         d = np.asarray(executed_delta, float).reshape(-1)
         if d.shape != r.shape or not np.isfinite(d).all():
             raise ValueError("authority guard needs paired finite executed residual effects")
-        # Fully capped means no change from the same feasible native base.
-        # Zero residuals are also inert; partial clipping still has authority.
-        fraction = float((d == 0.).mean())
+        cap = np.asarray(capped, bool).reshape(-1) if capped is not None else np.abs(d) < np.abs(r)
+        if cap.shape != r.shape:
+            raise ValueError("authority guard needs paired clipping indicators")
+        fraction = float((cap | (r == 0.)).mean())
         schema = "execparity_authority/2"
     receipt = {"schema": schema, "checkpoint_sha256": checkpoint_sha256,
                "recordings_sha256": recordings_sha256, "acting_ticks": len(r),
@@ -177,6 +181,9 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed
                 "passed": fraction <= CAP_REJECT_FRACTION}
     if executed_delta is not None:
         receipt["execution_contract"] = contract()
+        receipt["cap_definition"] = "any_envelope_clipping_or_zero"
+        receipt["fully_capped_fraction"] = float(((d == 0.) & (r != 0.)).mean())
+        receipt["partially_capped_fraction"] = float((cap & (d != 0.)).mean())
     return receipt
 
 
@@ -191,6 +198,7 @@ def verify_authority(path, checkpoint):
     fraction = receipt.get("capped_or_native_fraction", float("nan"))
     hashes = receipt.get("recordings", {})
     if (receipt.get("schema") != "execparity_authority/2" or not receipt.get("passed")
+            or receipt.get("cap_definition") != "any_envelope_clipping_or_zero"
             or receipt.get("execution_contract") != contract()
             or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
             or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION

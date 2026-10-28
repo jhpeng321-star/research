@@ -113,7 +113,7 @@ class EpisodeRecorder:
         self.lane_requests.append(lane_req)
 
     def on_execution(self, time_s: float, commands: dict) -> None:
-        """Actual physics-step setAcceleration ledger for opt-in execution parity."""
+        """Same-step native base, residual request and realisation physics ledger."""
         if self._execution is None:
             self._execution = gzip.open(self.out / "run" / "residual_execution.jsonl.gz", "xt",
                                         encoding="utf-8", compresslevel=3)

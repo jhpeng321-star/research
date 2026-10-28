@@ -3,7 +3,7 @@
   "checkpoint_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
   "recordings_sha256": "9f37e089ec5b38eb219c0f6d2a6f6ce04d1700d14b8c5733a65d2ecb9452f3dd",
   "acting_ticks": 70228,
-  "capped_or_native_fraction": 0.255268553853164,
+  "capped_or_native_fraction": 0.4610696588255397,
   "maximum_fraction": 0.95,
   "passed": true,
   "execution_contract": {
@@ -15,6 +15,9 @@
     "speed_mode": 27,
     "imagination_soft_safe_accel": false
   },
+  "cap_definition": "any_envelope_clipping_or_zero",
+  "fully_capped_fraction": 0.255268553853164,
+  "partially_capped_fraction": 0.2058011049723757,
   "recordings": {
     "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977000_native\\deploy\\episode\\episode.npz": "6398a52d4a63f9c12ddc21e4cc845038f168fb2a010de92d8e496157783f27fa",
     "E:\\agent-work\\c4-execparity\\_execparity_data\\e3final\\main\\e3final\\shard0\\jobs\\s977002_native\\deploy\\episode\\episode.npz": "5013abb0241648f6766b62c38f5390c43141bf4905d38314711259869350f532",

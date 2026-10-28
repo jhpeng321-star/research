@@ -161,8 +161,9 @@ class CommandOwnership:
 
         A failed/stale sensor decision remains native: only the accepted wall
         ownership set may be recomposed. No caller can resurrect a fallback CAV.
-        Returned commands are the actual setAcceleration values, not slowDown's
-        derived ledger. SUMO's later realised acceleration remains in the tape.
+        Returned values are residuals accepted by the same-step backend, not
+        absolute acceleration forecasts. The completed-step physics ledger records
+        its native base, composed request and actual realised acceleration.
         """
         from wms.control.continuous import write_residuals
         allowed = set(live_ids) & self.cav_ids

@@ -16,7 +16,7 @@ import torch
 
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from replay import executor, sha, states_from_episode, summary
-from wms.control.continuous import native_relative, project_native, scalar_native_relative
+from wms.control.continuous import native_relative, project_native, scalar_native_relative, residual_cap_mask
 from wms.control.execution import authority_guard, contract, inferred_follow_cap
 from wms.control.native_cav import head_native_accel
 from wms.model.cav import EXEC_CAP_KEY
@@ -33,14 +33,14 @@ def main():
     os.environ["C4_POLICY_ACCEL_NOISE"] = "0"
     exe,_ = executor(args.policy)
     results,hashes = {},{}
-    all_error,all_head,all_r,all_delta,all_project,all_target_project = [],[],[],[],[],[]
+    all_error,all_head,all_r,all_delta,all_project,all_target_project,all_caps = [],[],[],[],[],[],[]
     for seed in range(977000,977020,2):
         path = args.data/f"e3final/main/e3final/shard0/jobs/s{seed}_native/deploy/episode/episode.npz"
         hashes[str(path.relative_to(args.data))] = sha(path)
         with np.load(path,allow_pickle=False) as tape:
             z = dict(tape)
         state_at = states_from_episode(z)
-        errors,heads,residuals,deltas,projections,target_projections = [],[],[],[],[],[]
+        errors,heads,residuals,deltas,projections,target_projections,caps = [],[],[],[],[],[],[]
         for t in z["control_time_s"]:
             if t<300 or int(round(t-300))%10:
                 continue
@@ -61,6 +61,7 @@ def main():
                 base = project_native(st,head)
                 target_base = project_native(st,torch.as_tensor(real[None],dtype=torch.float32))
                 predicted = native_relative(st,r,base)
+                cap_mask = residual_cap_mask(st,r,base)
             v = st["v_mps"][0].numpy()
             cap = st[EXEC_CAP_KEY][0].numpy()
             reference = np.array([scalar_native_relative(float(vv),float(vv)+.5*float(aa),
@@ -72,14 +73,17 @@ def main():
             deltas.extend((predicted-base)[0].numpy()[valid].tolist())
             projections.extend((base-head)[0].numpy()[valid].tolist())
             target_projections.extend((target_base[0].numpy()-real)[valid].tolist())
+            caps.extend(cap_mask[0].numpy()[valid].tolist())
         results[str(seed)] = {"n":len(errors),"prediction_minus_proxy":summary(errors),
             "head_minus_recorded_native":summary(heads),
             "wm_native_projection":summary(projections),
             "recorded_native_projection":summary(target_projections),
             "fully_capped_or_zero_fraction":float((np.asarray(deltas)==0.).mean()),
+            "any_capped_or_zero_fraction":float((np.asarray(caps)|(np.asarray(residuals)==0.)).mean()),
             "positive_residual_fraction":float((np.asarray(residuals)>0.).mean())}
         for dest,source in ((all_error,errors),(all_head,heads),(all_r,residuals),
-                            (all_delta,deltas),(all_project,projections),(all_target_project,target_projections)):
+                            (all_delta,deltas),(all_project,projections),(all_target_project,target_projections),
+                            (all_caps,caps)):
             dest.extend(source)
         print(seed,len(errors),flush=True)
     rng = np.random.default_rng(20261028)
@@ -96,13 +100,14 @@ def main():
         "native_head_error":summary(all_head),"wm_native_projection":summary(all_project),
         "recorded_native_projection":summary(all_target_project),"world_bootstrap":intervals,
         "fully_capped_or_zero_fraction":float((np.asarray(all_delta)==0.).mean()),
+        "any_capped_or_zero_fraction":float((np.asarray(all_caps)|(np.asarray(all_r)==0.)).mean()),
         "proxy_within_native_head_error":summary(all_error)["rmse"]<=summary(all_head)["rmse"],
         "measured_real_sumo":False,"deployment_passed":False,
         "limitations":["target uses observed native next speed only OFFLINE, never an actor feature",
             "shared TRAIN-inferred cap is not a measured SUMO cap; shared model error cancels",
             "old tapes cannot validate new-law realised acceleration or backend timing",
             "frozen stock SUMO lacks the same-step native-residual setter"]}
-    authority = authority_guard(all_r,executed_delta=all_delta,checkpoint_sha256=sha(args.policy),
+    authority = authority_guard(all_r,executed_delta=all_delta,capped=all_caps,checkpoint_sha256=sha(args.policy),
         recordings_sha256=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest())
     authority["recordings"] = hashes
     authority["sampling"] = result["sampling"]

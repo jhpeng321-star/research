@@ -93,7 +93,11 @@ def sumo_native_accel(api, vehicle_id, dt=0.5, *, parity=False):
 
 
 def sumo_residual_commands(api, residuals, lo, hi, *, dt=0.5, parity=False):
-    """Prospective absolute commands for the observable collection action ledger."""
+    """Historical switch-path composer and corrected-gap cap-only diagnostic.
+
+    `parity=True` is the retained historical diagnostic, NOT the combined path.
+    Continuous production goes through continuous.write_residuals instead.
+    """
     composed = {}
     for vid, residual in residuals.items():
         if not np.isfinite(residual):

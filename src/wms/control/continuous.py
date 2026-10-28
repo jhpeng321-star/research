@@ -67,6 +67,16 @@ def scalar_native_relative(speed, native_speed, cap_accel, residual, lo=-3., hi=
                              max(min(lo, native), native+residual)))
 
 
+def residual_cap_mask(state, residual, native, lo=-3., hi=1.2, *, dt=.5):
+    """Any envelope clipping, including partial clipping; no numeric tolerance."""
+    from wms.model.cav import EXEC_CAP_KEY
+    upper = torch.minimum(state[EXEC_CAP_KEY].to(residual),
+                          torch.full_like(residual,min(float(hi),1.2)))
+    lower = torch.maximum(torch.minimum(native,torch.full_like(native,float(lo))),
+                          -state["v_mps"]/dt)
+    return (residual > upper-native) | (residual < lower-native)
+
+
 def require_same_step_backend(api):
     """No built-in SUMO/TraCI version currently supplies this extension.
 

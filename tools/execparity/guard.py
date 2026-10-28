@@ -13,7 +13,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from replay import executor, sha, states_from_episode
 from wms.control.execution import authority_guard
-from wms.control.continuous import native_relative, project_native
+from wms.control.continuous import native_relative, project_native, residual_cap_mask
 from wms.control.execution import inferred_follow_cap
 from wms.control.native_cav import head_native_accel
 from wms.model.cav import EXEC_CAP_KEY
@@ -36,7 +36,7 @@ def main():
     exe, _ = executor(args.policy)
     if not exe.residual_on_native:
         raise ValueError("this guard is for the native-residual execution path")
-    values, deltas, hashes = [], [], {}
+    values, deltas, caps, hashes = [], [], [], {}
     for path in args.episode:
         assert path.name == "episode.npz"
         with np.load(path, allow_pickle=False) as tape:
@@ -58,12 +58,14 @@ def main():
                 st[EXEC_CAP_KEY] = inferred_follow_cap(st,None)
                 base = project_native(st,head_native_accel(st))
                 delta = native_relative(st,r,base)-base
+                cap = residual_cap_mask(st,r,base)
             mask = (st["is_cav"] & (st["lane"] >= 0)).numpy()
             values.extend(r[mask].tolist())
             deltas.extend(delta[mask].tolist())
+            caps.extend(cap[mask].tolist())
     receipt = authority_guard(values, checkpoint_sha256=sha(args.policy),
         recordings_sha256=hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
-        executed_delta=deltas)
+        executed_delta=deltas, capped=caps)
     receipt["recordings"] = hashes
     assert args.out.parent.is_dir()
     args.out.write_text(json.dumps(receipt, indent=2)+"\n")
