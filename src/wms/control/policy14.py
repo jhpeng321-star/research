@@ -37,6 +37,24 @@ def make_controller_factory(policy_ramp_merge: bool = False, native_ramp_merge: 
     return factory
 
 
+def guarded_real_credit_weights(weights, multipliers, *, individual_floor=False):
+    """Measured multipliers plus the registered individual-baseline guard.
+
+    The optional floor is the unscaled imagination individual weight, never a
+    new numerical threshold. Coop is only reduced; group/team are untouched.
+    """
+    raw = {k: v * float(multipliers.get(k, 1.0)) for k, v in weights.items()}
+    effective = dict(raw)
+    if individual_floor:
+        effective['individual'] = max(effective.get('individual', 0.),
+                                      weights.get('individual', 0.))
+    if effective.get('coop', 0.) > effective.get('individual', 0.):
+        effective['coop'] = effective.get('individual', 0.)
+    return effective, {'registered': dict(weights), 'multipliers': dict(multipliers),
+                       'raw': raw, 'effective': effective,
+                       'individual_floor': individual_floor}
+
+
 class Policy14Trainer(DreamerTrainer):
     """Team pathwise acceleration credit plus sampled per-CAV categorical credit.
 
@@ -53,19 +71,18 @@ class Policy14Trainer(DreamerTrainer):
 
     def actor_objective(self, imagined, scale, weights, *, gradient_components=None):
         capped = None
+        credit_receipt = None
         if self.credit_multipliers:
-            weights = {k: v * float(self.credit_multipliers.get(k, 1.0)) for k, v in weights.items()}
-            # C_G = D_G - sum_i D_i puts -w_coop on every member's individual benefit.
-            # A multiplier that only scales individual credit down must not leave a net
-            # negative individual weight (anti-gaming guard): the coop term is scaled down
-            # with it, never amplified. Inactive whenever individual >= coop.
-            if weights.get("coop", 0.0) > weights.get("individual", 0.0):
-                capped = {"coop_before": weights["coop"], "coop_after": weights["individual"]}
-                weights = {**weights, "coop": weights["individual"]}
+            weights, credit_receipt = guarded_real_credit_weights(weights, self.credit_multipliers,
+                individual_floor=getattr(self.config, 'real_credit_individual_floor', False))
+            if credit_receipt['raw'].get('coop', 0.) != weights.get('coop', 0.):
+                capped = {'coop_before': credit_receipt['raw']['coop'], 'coop_after': weights['coop']}
         loss, extra = super().actor_objective(imagined, scale, weights,
                                               gradient_components=gradient_components)
         if capped is not None:
             extra["credit_coop_capped_by_individual"] = capped
+        if credit_receipt is not None:
+            extra['real_credit_weights'] = credit_receipt
         variants, lanes = imagined.get("variants"), imagined.get("lanes")
         terms, marginal_values = [], []
         if (variants is not None and lanes is not None and self.marginal_lane_weight

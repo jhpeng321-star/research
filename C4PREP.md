@@ -27,6 +27,20 @@ input prohibited here. No such file was opened. C3 re-export therefore requires
 an allowed observable request-clock export; aggregate return totals cannot
 replace it. The prior empty import-v1 timeout directory is preserved.
 
+### PREP2 AMENDMENT2 real-credit correction
+
+Live `REAL_CREDIT_c03.a1.json` multipliers are individual0.4010838191,
+group1/coop1/team1. With registered weights8.9/9.9/8.9/10.3 (all1), raw
+individual is3.569645990 and raw coop8.9; the previous guard would cap coop
+to3.569645990. This differs from C2's zero-individual case.
+The opt-in `real_credit_individual_floor` floors individual at its registered
+imagination8.9 before the unchanged coop<=individual guard: effective weights
+8.9/9.9/8.9/10.3/all1. Coop is never amplified, and no numerical floor is invented.
+The flag defaults OFF and is ON for C4; raw/registered/effective weights are
+logged per update.24 prep/backlog/credit tests PASS;51 looplong tests PASS,
+2 skip absent local evidence helper. See `evidence/PREP2_REAL_CREDIT.json`.
+These CPU checks are not a real two-update GPU receipt.
+
 ## Registered scope (retained from initial receipt)
 
 Prepare parallel gpuA cycle-4 candidates A (cycle1 c01.a3, SHA64f70af4)

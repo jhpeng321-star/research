@@ -203,9 +203,12 @@ class DreamerConfig:
     pessimistic_credit: bool = False
     native_anchor: bool = False
     native_anchor_calibration: Optional[str] = None
+    # S-C4PREP AMENDMENT2: preserve a registered, nonzero individual baseline
+    # when real-credit multipliers would otherwise erase cooperation entirely.
+    real_credit_individual_floor: bool = False
 
     def __post_init__(self):
-        for name in ('pessimistic_credit', 'native_anchor'):
+        for name in ('pessimistic_credit', 'native_anchor', 'real_credit_individual_floor'):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f'{name} must be a boolean')
         if self.pessimistic_credit or self.native_anchor:

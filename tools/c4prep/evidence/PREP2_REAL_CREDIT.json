@@ -1,0 +1,13 @@
+{
+ "task": "S-C4PREP2",
+ "source": "/root/autodl-tmp/c4/restart20261026/arm/loop/sumocredit/REAL_CREDIT_c03.a1.json",
+ "measured_multipliers": {"individual": 0.40108381909949953, "group": 1.0, "coop": 1.0, "team": 1.0},
+ "registered_weights": {"individual": 8.9, "group": 9.9, "coop": 8.9, "team": 10.3, "all": 1.0},
+ "raw_multiplied_weights": {"individual": 3.569645989985546, "group": 9.9, "coop": 8.9, "team": 10.3, "all": 1.0},
+ "old_guard_effective_coop": 3.569645989985546,
+ "amendment2_effective_weights": {"individual": 8.9, "group": 9.9, "coop": 8.9, "team": 10.3, "all": 1.0},
+ "rule": "Floor multiplied individual at its registered imagination counterpart, then cap multiplied coop at effective individual. Coop never amplified; other terms unchanged. New flag defaults OFF; C4 enables it.",
+ "verification": {"prep_backlog_credit_tests_passed": 24, "looplong_tests_passed": 51, "looplong_tests_skipped_missing_local_helper": 2},
+ "verification_repairs": "Initial CLI test temp roots were outside workspace; corrected basetemp. Looplong locale test failed under GBK; rerun with UTF-8 passed. Earlier broad run hit 60s tool timeout; retained output, no GPU job involved.",
+ "real_gpu_dry_run": "NOT_RUN"
+}
