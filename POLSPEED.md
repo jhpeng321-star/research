@@ -115,8 +115,13 @@ first future's replay forward 51.1 -> 42.8 s (-16 %) but needs more than 0.25 of
   feed; the CLI refuses a WM whose sha differs from `BOUNDARY.json`) for the adopted WM,
   then the CLI's `--wm-ckpt/--wm-config/--resume` follow the same argv as `MAIN_LAUNCH`.
 * To use the speed flags: (a) env only, no config change: `WMS_SPEED_GRAPH_CVAR=1
-  WMS_WMSPEED_DEDUPE_MOBIL=1 WMS_WMSPEED_MOBIL_LAZY_SAFE=1` (+ the four F flags) with a
-  runtime built from branch `c4/polspeed`; (b) spill OFF additionally needs
+  WMS_SPEED_ASYNC_SPILL=1 WMS_WMSPEED_DEDUPE_MOBIL=1 WMS_WMSPEED_MOBIL_LAZY_SAFE=1
+  WMS_SPEED_PIVOT_DIAG_OFF=1 WMS_SPEED_FAST_MERGE_LANE=1 WMS_SPEED_FAST_CAV_DRIVE=1
+  WMS_SPEED_FAST_LONG_HISTORY=1` with a runtime built from branch `c4/polspeed` (merge it
+  into the launch source so `SOURCE.json` names the commit). The worker env is built in
+  `tools/c4prep/launch.py` (`env = {**os.environ, ...policy env..., WMS_SPEED_GRAD_AUDIT_EVERY
+  25, OMP/MKL 2}`): add the eight flags there (or export them in the coordinator's env)
+  and record them in the launch receipt; nothing in `flags_ok` changes; (b) spill OFF additionally needs
   `[trainer] imagination_offload_saved_tensors = false` and a cap > 0.25, which today
   fails the launcher's hard-coded checks: `tools/c4prep/launch.py` `flags_ok`
   (requires microbatch 1 / segment 8 / both offloads True / audit 25 and peak <= 0.45)
