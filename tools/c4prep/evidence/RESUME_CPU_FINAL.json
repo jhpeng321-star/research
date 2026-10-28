@@ -1,0 +1,15 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "789d03d3149be4183fd8de5407264fb6dbb9cf1c",
+  "environment": "local isolated Python3.13 / torch2.14.1+cpu; CUDA hidden; numerical threads2",
+  "exit": 0,
+  "passed": 63,
+  "cuda_only_skipped": 2,
+  "pytest_elapsed_s": 149.92,
+  "coordinator_elapsed_s": 151.59918590000598,
+  "covers": ["production full-actor K8/q10 gradient/update/optimizer/RNG parity", "entrant ON", "historical full-resume flag preservation", "complete LONGMEM and launch/anti-exploitation suite"],
+  "separate_delta_installer_proofs": {"passed": 4, "source_commit": "3f75867879f49b7c98e0b4daf1192dfb3886b708"},
+  "gpu_qualified": false,
+  "real_dry_updates": 0,
+  "policy_launched": false
+}

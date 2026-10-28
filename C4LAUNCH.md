@@ -156,3 +156,13 @@ every installed file is SHA-verified against the new full manifest. Previous
 runtime is read-only; qualification dispatch remains one-shot/source-bound.
 All four full/delta × stage-only/stage+checks installer proofsPASS; verbose SSH
 will identify whether any next failure is pre-authentication or during transfer.
+
+Detached local complete CPU qualification on789d03d3 succeeded:63PASS,
+2CUDA-only skips,149.92s; exact core VJP and resume repairs now fully CPU-verified.
+Receipt `tools/c4prep/evidence/RESUME_CPU_FINAL.json`. Next delta179,967bytes
+failed BEFORE SSH key exchange (TCP connects, no authentication or transfer),
+so payload size is not the refusal cause and no qualifier was dispatched.
+One local receipt-bound transport monitor may retry the same immutable source
+at>=300s after refusal and poll detached qualification at>=120s, stopping on
+qualification result/error or MAIN17:00's deadline. It cannot dispatch dry or
+policy; no peer process signalling or SUMO path exists.
