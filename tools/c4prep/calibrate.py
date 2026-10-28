@@ -10,18 +10,19 @@ import json
 import os
 from pathlib import Path
 import sys
+import time
 
 from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, dataset, read, safe, sha, write_new
 
 sys.path[:0] = [str(CODE / 'src'), str(CODE)]
 
 
-def inventory():
+def inventory(cycles_to_use=(0, 1, 2, 3)):
     """Examine every registered pair, not just a representative episode."""
     import numpy as np
     accepted()
     cycles, blockers = [], []
-    for cycle in (0, 1, 2, 3):
+    for cycle in cycles_to_use:
         root = dataset(cycle)
         proof_path = REL / f'arm/loop/returns/pairing_c{cycle:02}.a1.json'
         proof = read(proof_path)
@@ -57,7 +58,7 @@ def inventory():
             'no_inference_performed': True, 'no_sumo': True}
 
 
-def replay(entrant, dest):
+def replay(entrant, dest, launch_bounded=False):
     """Use exact queue-aware policy imagination and recorded real costs."""
     import numpy as np
     import torch
@@ -74,7 +75,10 @@ def replay(entrant, dest):
     from wms.control.start_states import StartStateSampler
     from wms.data.c4_pairs import PairedBranchSource
 
-    proof = inventory()
+    begun = time.monotonic()
+    cycles = (0, 1, 2) if launch_bounded else (0, 1, 2, 3)
+    horizons = (10, 60, 90) if launch_bounded else (10, 30, 60, 90, 120, 180, 300)
+    proof = inventory(cycles)
     write_new(dest / 'INPUTS.json', proof)
     if not proof['ready']:
         write_new(dest / 'BLOCKED.json', {'blockers': proof['blockers'], 'inference_jobs': 0})
@@ -86,7 +90,9 @@ def replay(entrant, dest):
     models, _ = load_members([str(WM)], [str(WM_CONFIG)], 'cuda')
     data_cfg = load_train_config(str(WM_CONFIG))
     payload = None
-    for cycle in (0, 1, 2, 3):
+    completed_seconds = 0
+    total_seconds = sum(c['pairs'] for c in proof['cycles']) * sum(horizons)
+    for cycle in cycles:
         source = dataset(cycle)
         pairs = PairedBranchSource(source, horizon_steps=600,
             history_s=data_cfg.data.history_s, history_stride_s=data_cfg.data.history_stride_s,
@@ -111,7 +117,8 @@ def replay(entrant, dest):
         signature = inference_signature(cfg)
         if payload is None:
             payload = {'world_model_ids': trainer.world_model_ids, 'inference_signature': signature,
-                       'training_cycles': [0, 1, 2], 'validation_cycles': [3], 'rows': []}
+                        'training_cycles': [0, 1] if launch_bounded else [0, 1, 2],
+                        'validation_cycles': [2] if launch_bounded else [3], 'rows': []}
         assert payload['world_model_ids'] == trainer.world_model_ids
         pairing = read(REL / f'arm/loop/returns/pairing_c{cycle:02}.a1.json')
         groups = {g['pair_key']: g for g in pairs.groups}
@@ -135,7 +142,7 @@ def replay(entrant, dest):
                 assert len(costs) == 600 and np.isclose(costs.sum(), -float(target), rtol=1e-6, atol=1e-3)
                 curves.append(costs)
             seen_horizons = set()
-            for h in (10, 30, 60, 90, 120, 180, 300):
+            for h in horizons:
                 seed = 710003 + 100003 * cycle + 1009 * h + i
                 trainer.config = replace(cfg, horizon=h, entry_pad_max=max(32, (32*h+9)//10))
                 torch.manual_seed(seed)
@@ -166,12 +173,31 @@ def replay(entrant, dest):
                           'actor_sha256': ACTORS[cycle][1], 'seed': seed}
                 write_new(dest / f'rows/c{cycle}_{i:02}_h{actual}.json', result)
                 payload['rows'].append(result)
+                completed_seconds += actual
                 print(json.dumps({'cycle': cycle, 'pair': i, 'horizon': actual, 'K': len(samples)}), flush=True)
                 del image
+                elapsed = time.monotonic() - begun
+                projected = elapsed * total_seconds / completed_seconds
+                if launch_bounded and (elapsed >= 3600 or (actual >= 90 and projected > 3600)):
+                    write_new(dest / 'FIT_DECISION.json', {'native_anchor': False,
+                        'pessimistic_credit': True, 'quantile': .1, 'k': 8,
+                        'reason': 'measured pilot projects beyond authorized 3600s fit budget',
+                        'elapsed_s': elapsed, 'projected_s': projected,
+                        'completed_rows': len(payload['rows']), 'cycles': list(cycles),
+                        'fitted_scale': None})
+                    return
     write_new(dest / 'PAIRED_FUTURES.json', payload)
     # This CPU-only module hides CUDA at import; import only AFTER GPU inference.
     from tools.antiexploit.offline import calibrate
     calibrate(dest / 'PAIRED_FUTURES.json', dest / 'ANCHOR.json')
+    if launch_bounded:
+        artifact = read(dest / 'ANCHOR.json')
+        enabled = all(artifact['horizons'].get(str(h), {}).get('validated') for h in horizons)
+        write_new(dest / 'FIT_DECISION.json', {'native_anchor': enabled,
+            'pessimistic_credit': True, 'quantile': .1, 'k': 8,
+            'reason': 'world-disjoint C0/C1-fit C2-validation completed' if enabled else 'fit unqualified',
+            'elapsed_s': time.monotonic() - begun, 'cycles': list(cycles),
+            'anchor': str(dest / 'ANCHOR.json') if enabled else None})
 
 
 if __name__ == '__main__':
@@ -179,6 +205,7 @@ if __name__ == '__main__':
     p.add_argument('action', choices=('preflight', 'replay'))
     p.add_argument('--entrant', choices=('on', 'off'), default='off')
     p.add_argument('--output', required=True)
+    p.add_argument('--launch-bounded', action='store_true')
     a = p.parse_args()
     target = safe(a.output)
     if a.action == 'preflight':
@@ -186,4 +213,4 @@ if __name__ == '__main__':
         write_new(target, doc)
         print(json.dumps({k: v for k, v in doc.items() if k != 'cycles'}))
     else:
-        replay(a.entrant == 'on', target)
+        replay(a.entrant == 'on', target, a.launch_bounded)
