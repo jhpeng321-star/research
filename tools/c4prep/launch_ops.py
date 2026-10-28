@@ -20,6 +20,7 @@ def main():
         source = 'import sys\nsys.argv=["launch_remote",' + repr(args.action) + ']\n'
         source += (ROOT / 'tools/c4prep/launch_remote.py').read_text()
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+        '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
         'gpuA', '/root/miniconda3/bin/python -B -'], input=source, text=True,
         capture_output=True, timeout=45)
     print(result.stdout, end='')

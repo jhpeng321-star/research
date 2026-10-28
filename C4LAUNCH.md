@@ -63,3 +63,28 @@ boundaries and final RNG state are retained. This bounds graph memory across
 futures while keeping microbatch1/segment8/both offloadsON. Require existing
 LONGMEM gradient/optimizer/RNG proofs plus a production residual-actor K8/q10
 case before another real dry attempt. No full policy phase has launched.
+
+## Current boundary: BLOCKED_C4LAUNCH_MEMORY_AND_SSH
+
+Last successful status08:13:49UTC confirms worker362856 not alive and no
+completed dry updates. Subsequent status, diagnostic and staging connections
+close; verbose fresh non-multiplexed SSH confirms TCP connects but the provider
+closes before key exchange. No credential/source/process workaround was used.
+Staging a19deb5e failed at the initial source query BEFORE installation, so the
+streamed-future repair remains local, committed and **unverified/unactivated**.
+`tools/c4prep/evidence/LAUNCH_BLOCKED.json` binds the boundary. No full launch,
+no C4A_RUNNING claim, no automatic retry, no SUMO/new charge, no signals/push.
+
+### Resume only after gpuA transport recovers
+
+1. `python -B tools/c4prep/stage.py` — immutable NEW source revision.
+2. `python -B tools/c4prep/launch_ops.py checks` — must pass complete LONGMEM,
+   production K8/q10 gradient/optimizer/RNG equivalence and CUDA copy proofs.
+3. `python -B tools/c4prep/launch_ops.py prepare`, then `... launch_ops.py dry`.
+   Preserve previous attempts; require actual two-update finite/nonzero-module
+   gradient/credit/memory PASS, and commit the measured receipt before step4.
+4. `python -B tools/c4prep/launch_ops.py start` — appends final anchor/config/
+   dry-run bindings to loop JSON BEFORE detaching A, with unchanged gates.
+5. Poll `... launch_ops.py status` at>=60s. Only after>=10 finite updates and
+   successful gate/gradient/residual/credit-gap/memory evidence use
+   `... launch_ops.py verify` to record C4A_RUNNING and preserve peer status.
