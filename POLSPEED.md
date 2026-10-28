@@ -1,6 +1,15 @@
 # S-POLSPEED — candidate A policy-training speed (engineering, zero SUMO)
 
-Status: IN PROGRESS (incremental commits; gpuA rental may end 2026-10-28 23:09 UTC+8).
+Status: DONE for tonight (gpuA rental may end 2026-10-28 23:09 UTC+8).
+
+**TL;DR.** One update = 1 start x K8 futures x 180 WM steps, each future simulated 3x
+(no-grad full forward, grad replay, checkpoint recompute); launch/Python-bound (GPU 0-13 %).
+Fastest exact variant that fits the 0.25 cap: env flags on runtime `c4/polspeed`
+(`WMS_SPEED_GRAPH_CVAR=1 WMS_SPEED_ASYNC_SPILL=1 WMS_WMSPEED_DEDUPE_MOBIL=1
+WMS_WMSPEED_MOBIL_LAZY_SAFE=1` + the 4 existing F flags), NO config change:
+**1018 -> 788 s/update (1.29x), bitwise identical on all 158 logged leaves of update 181,
+same 11.9 GB peak.** 150 updates: 42.4 h -> 32.8 h. Batched-K8-with-grad does not fit
+(one 90 s future graph alone needs > 14 GiB).
 
 ## 1. Non-invasive profile of the live run (worker 428853)
 
@@ -67,6 +76,15 @@ credit, residual stats, J; timing/memory keys excluded).
 
 | **FG** (same flags, clean 1-start run) | 0.25 | **845.7** | 11.89 GB (12.31 reserved) | **bitwise identical, all 158 leaves incl. independent_J** |
 
+| **FGA** = FG + `WMS_SPEED_ASYNC_SPILL=1` | 0.25 | **788.2** | 11.89 GB (12.21 reserved) | **bitwise identical, all 158 leaves** |
+| FGA_S2: FGA, 2 starts (`POLSPEED_BENCH_STARTS=2`, benchmark-only), microbatch 1 | 0.25 | full fwd 265.4 s; replay 74 s per (start, future) -> projected ~1470 s/update (~735 s per start) | ~12.4 GB reserved | n/a (different recipe) |
+
+Projection (not measured): 4 starts with microbatch 1 ~ 400 + 32 x 74 ~ 2800 s/update
+(~700 s per start). Time per start barely improves because microbatch 1 replays every
+(start, future) separately; microbatch 0 would batch starts inside each replay (almost free in
+time when launch-bound) but multiplies replay memory (~11 GB per start with spill ON), so
+2 starts would need ~0.46 cap and 4 starts do not fit 0.5.
+
 Note: `[trainer] batch_size = 2` + `[counterfactual] max_starts = 2` did NOT give two starts:
 a full `--resume` restores the checkpoint's DreamerConfig (only memory/anti-exploit/
 training-group fields are re-applied, `DreamerTrainer.load_checkpoint`), so the trainer
@@ -104,3 +122,20 @@ first future's replay forward 51.1 -> 42.8 s (-16 %) but needs more than 0.25 of
   (requires microbatch 1 / segment 8 / both offloads True / audit 25 and peak <= 0.45)
   and `launch_a.py` asserts (segment 8 from `MEMORY_EXECUTION.json`). Amend
   `MEMORY_EXECUTION.json` (objective_change false) and those two checks together.
+
+## 6. Recommendation and follow-ups
+
+* Restart with FGA flags (env only; runtime = this branch). Exactness: bitwise on the real
+  update; unit tests `tests/test_polspeed_graph_cvar.py` (6, CUDA bit-equality incl. reward
+  gradient) and `tests/test_polspeed_async_spill.py` (CPU+CUDA bit-equality) pass on gpuA.
+  The WMSPEED MOBIL flags are ported unchanged from `c4/wmspeed` (fastpath.py/wms.py/mobil.py).
+* Spill OFF (`imagination_offload_saved_tensors = false`) is also exact (same values, no
+  copies) and cut replay forward 38-44 -> 30 s, but needs > 0.25 of the GPU (OOM at 11.84
+  GiB in the first VJP); untested at 0.4-0.5 tonight. Expected extra ~70-100 s/update.
+* Big wins left need engineering: (a) run the 8 per-future VJP replays in parallel worker
+  processes (each needs only the cached forward + its grad vector; sum gradients in future
+  order = exact); GPU is mostly idle and 3 concurrent processes slowed each other <20 %;
+  (b) true K-batching of futures into the row axis (one rollout launch stream for 8 futures;
+  exact only up to GEMM reassociation); (c) the per-op Python `_RandomTape` dispatch costs
+  ~8-10 % self time.
+* Independent arms/seeds can share one GPU nearly for free (launch-bound).
