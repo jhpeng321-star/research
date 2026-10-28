@@ -1,0 +1,19 @@
+{
+  "task": "S-C4LAUNCH",
+  "source_commit": "8e75184392b3ce47fb2d05dc72f23fd1902e96a2",
+  "passed": true,
+  "coordinator_pid": 403033,
+  "coordinator_start_ticks": "856406773",
+  "coordinator_alive_at_receipt": false,
+  "cpu": {"passed": 66, "cuda_only_skipped": 2, "exit": 0, "elapsed_s": 64.45682941563427},
+  "cuda": {"passed": 2, "exit": 0, "elapsed_s": 38.02042063511908},
+  "proof": "production full residual actor/entrantON/K8/q10, microbatch1; auditON baseline vs period25 streamed update: matching loss, parameter gradients, updated weights, Adam/target states and whole RNG; per-module gradients nonzero",
+  "finished_utc": "2026-10-28T10:39:16.082456+00:00",
+  "memory_execution_loop_amendment_present": true,
+  "memory_execution_sha256": "6fc435fb536ca519f655442e4fdb8486ffb3da8845bcb226aa0577de26213756",
+  "remote_logs": "/root/autodl-tmp/c4/restart20261026/arm/loop/c4prep/launch_checks_8e75184392b3",
+  "transport": "existing cpuP SSH relay; no key/global config/peer-job changes",
+  "real_dry_updates": 0,
+  "policy_launched": false,
+  "new_sim_s": 0
+}

@@ -217,3 +217,11 @@ Added owned memory execution trace and preserved exception traceback/effective
 configuration for diagnosis. Existing optional `ssh -J cpuP gpuA` relay from B's
 handoff is supported via C4_SSH_JUMP without key/config or peer-job changes.
 MEMORY_EXECUTION.json must be appended to registration/loop state before retry.
+
+New immutable8e751843 qualified10:39:16UTC:66CPU testsPASS/2CUDA-only skips,
+then2CUDA testsPASS. This includes production full-actor K8/q10/entrantON,
+microbatch1, auditON baseline versus period25 streamed replay: loss/gradients/
+updated parameters/Adam/target/RNG parity and nonzero actual module gradients.
+MEMORY_EXECUTION prospective loop amendment confirmed, SHA6fc435fb536ca519f655442e4fdb8486ffb3da8845bcb226aa0577de26213756.
+Existing cpuP SSH relay worked; qualifier403033/start856406773 exited normally.
+Receipt RESUME_AUDIT_CUDA_QUALIFIED.json committed before next actual dry run.
