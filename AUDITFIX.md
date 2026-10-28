@@ -14,6 +14,24 @@ qualification; no policy restart or WM adoption performed.
 | F10 `--real-credit` silently no-op | Fail startup if supplied multipliers leave every configured weight knot unchanged after the existing guards, or counterfactuals are disabled; report guarded knots for useful files. | Explicit `--real-credit`; omit it for the audited unchanged-credit run | `tests/unit/test_auditfix_real_credit.py`: candidate-A no-op refusal and useful multiplier semantics |
 | F11 set-but-inactive config | Startup stderr warnings identify configured keys bypassed by the current CLI/native/long-credit/focus mode; summary stores `inactive_config`. | Always diagnostic; mode-aware | `tests/unit/test_auditfix_warnings.py`: all audited sections and active-mode negative check |
 | F12 resumed C1 can win final selection silently | Final summary and native-gate receipt contain `phase_selection` with `resumed_baseline_selected`, `selected_new_phase_update`, selected update/source and phase-update count; baseline selection emits stderr warning. | Always diagnostic; registered selector unchanged | `tests/unit/test_auditfix_selection.py`: C1 wins explicitly, new-update case unflagged |
+| F9 q10 docstring says per-start | Corrected to per-(suffix time,start); metrics are t0-only. No computation change. | Documentation only | Original `tests/audit/test_polaudit_t.py::test_q10_selects_the_bad_tail_and_only_those_futures_get_gradient` |
+
+## q10: registered intent and actual reduction
+
+**Documentation fix, no code/behavior change.** `tail_credit` ranks K8 joint,
+signed, CRN-paired row credits independently at every `(suffix time, start)`;
+the actor loss averages those quantiles. It does not select one bad future pair
+at t0 and freeze it for all subsequent suffix returns. At K8/q0.10, the two
+lowest futures receive0.3/0.7 interpolation weight. Reported mean/pessimistic
+credit metrics use t0, not the temporal average.
+
+REGISTRATION.md S-ANTIEXPLOIT-1 (12:00, lines3512–3515) registers lower paired
+reward-advantage q0.10/K8, linear interpolation, and no outcome-selected q;
+it does **not** prescribe a single t0 ranking reused across suffix times.
+The existing per-suffix reduction applies that registered pessimistic paired
+advantage intent to the existing suffix-return loss. Calling it simply
+"per start" was incomplete. A t0-only/reused-ranking objective would be a
+scientific behavior change requiring a separate decision; none is made here.
 
 ## Final-selection baseline flag
 
