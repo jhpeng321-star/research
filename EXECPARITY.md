@@ -1,5 +1,11 @@
 # S-EXECPARITY — recorded-state verification and opt-in execution parity
 
+**Status: production / approved SUMO check BLOCKED.** Combined-law CPU reference
+and27tests PASS; stock SUMO lacks the required same-step native residual hook.
+The old cap-only recorded acceptance FAILS for MAPPO. New-law shared-cap proxy
+results are not real parity. No new SUMO allocation was made. See sections3–6
+and `docs/paper_results/EXECPARITY_SUMO.md` before attempting candidate-A launch.
+
 Branch `c4/execparity`, based on deployment audit `f6531d94`. CPU only; **zero SUMO
 executions and zero new sim-s**. Read-only exact-file copies from cpuP, no scenario,
 route, assignment or restricted-split data. Input SHA-256s are committed in
@@ -203,12 +209,17 @@ and algebra, **not the unobserved true SUMO cap or a new-law SUMO trajectory**.
 * `c1_continuous_authority_full.json` evaluates **all** post-warmup control ticks
   in those ten tapes: 70,228 acting CAV rows, **25.5269%** fully clipped/inert in
   the WM-based counterfactual law; 74.4731% retain some longitudinal effect.
-  This is a model-based authority admission PASS, not measured SUMO authority.
+  Another20.5801% are partially clipped: **46.1069% have any clipping**, which is
+  the stricter fraction used for the95% admission rule. This is a model-based
+  authority admission PASS, not measured SUMO authority.
 
-The `>95%` rule is unchanged. The combined guard counts *zero executed residual
-effect* after composing with the feasible native base, rather than rejecting
-positive residuals by sign. Positive residuals can now use available headroom;
-negative residuals may themselves be clipped. Receipt schema2 binds checkpoint,
+The `>95%` rule is unchanged. The combined guard counts **any envelope clipping
+(partial or full), plus exactly-zero/native requests**, after composing with the
+feasible native base, rather than rejecting positive residuals by sign. It
+reports partial and fully clipped fractions separately and computes the clip
+indicator from the envelope bounds without an arbitrary numeric tolerance.
+Positive residuals can now use available headroom; negative residuals may
+themselves be clipped. Receipt schema2 binds checkpoint,
 recordings, driver SHA and execution contract. Exactly95% is admitted; >95%
 refused. `verify_parity` independently refuses old cap-path receipts and new-law
 proxy reports, even if someone changes their `passed` boolean. It requires a
@@ -226,3 +237,133 @@ python tools/execparity/preflight.py --out <backend_preflight.json>
 
 The last command intentionally exits2 for stock TraCI. No report in this branch
 currently authorizes combined-law SUMO deployment.
+
+## 5. Candidate-A enable contract and integration boundaries
+
+**Not production-ready:** there is no valid current command that enables the
+owner's combined law on the frozen stock-SUMO binary. Do not pass the CPU proxy
+as the real parity receipt. The following is the exact flag/CLI wiring for
+integration and CPU qualification; a real same-step backend and the registered
+real-SUMO receipt remain prerequisites for deployment.
+
+In the candidate-A process environment (training **and** deployment):
+
+```powershell
+$env:C4_EXECUTION_PARITY = '1'
+$env:C4_EXECUTION_DRIVER = '<absolute path>/configs/execparity_cav_idm_v1.json'
+$env:C4_POLICY_STOCHASTIC = '0'
+$env:C4_POLICY_ACCEL_NOISE = '0'
+```
+
+Default is `C4_EXECUTION_PARITY=0`; other values fail. The driver artifact SHA is
+`f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2`.
+Retain candidate-A's registered WM/config, `cav_exec_cap="idm"`, native head,
+native lanes,1s decision/0.5s physics, data/credit/selection settings and explicit
+resume. `policy14_cli` needs no new CLI switch: the environment selects execution
+inside its existing `--native-init` path. Its command shape is:
+
+```text
+python -m wms.control.policy14_cli --config <resolved-A/POLICY.toml> --wm-ckpt <adopted-WM.pt> --wm-config <matching-WM.toml> --real-returns <registered-real-returns> --resume <original-C1.pt> --native-init --device <registered-device> --seed <registered-training-seed> --max-updates 150 --output-dir <fresh-phase-dir> <existing registered boundary/credit/qualification arguments>
+```
+
+This is enable syntax, not a training launch or a new scientific registration.
+An original legacy C1 can migrate into the new phase; saved residual checkpoints
+carry execution-contract schema2, and loading them with a different flag/driver
+fails. Do not resume cap-only schema1 checkpoints as combined-law checkpoints.
+Inspect effective settings after C1 resume; the independent S-AUDITFIX trainer
+config/horizon fixes remain separate merge prerequisites.
+
+For eventual deployment, retain the frozen per-world arguments and add:
+
+```text
+python -m wms.control.deploy --controller policy --policy <candidate.pt> --population textbook --execution-authority <candidate-execution_authority.json> --execution-parity-receipt <real-combined-execution_parity.json> <frozen seed/demand/penetration/warmup/horizon/out arguments>
+```
+
+The usual checkpoint-bound native acceptance receipt is still required by
+`load_policy_fn`. Offline authority admission must be generated for the exact
+candidate, not reused from C1. Collection/loop callers pass `execution_authority`
+and `execution_parity_receipt` in their policy record or use
+`C4_EXECUTION_AUTHORITY` / `C4_EXECUTION_PARITY_RECEIPT`; direct deploy uses the
+explicit CLI paths. New SUMO verification cannot bootstrap itself using a fake
+production PASS: its eventual approved canary wrapper must remain isolated from
+production gates and bind the real backend/source/inputs before its first charge.
+
+The frozen E3 runtime ports are implemented on this branch for integration into
+`c4/c4prep`; no peer worktree or live runtime was modified. Merge touchpoints:
+`bridge.py` execution block (keep POLSPEED batching/shape semantics),
+`WmSModel._exec_cap`, checkpoint contract load/save hooks (retain AUDITFIX config
+restoration), and env/ownership/recorder (retain LOOPPATCH callbacks and ledgers).
+No objective, critic, long-credit/gated300 rule or driver artifact was retuned.
+Native/MAPPO deployment use the flag-OFF frozen path; retain the existing CPU
+canary receipt and require actual trajectory canaries before adopting new code.
+
+### Backup1 is an additional, explicit integration blocker
+
+`c4/mappores` currently adds a cooperation residual to a **frozen absolute MAPPO
+command**, not to the native-head base. Its adapter/checkpoint format is not in
+this worktree, and `C4_EXECUTION_PARITY=1` alone does **not** port it. There is no
+honest ready-to-run backup1 enable command yet. Keep its actor and group encoder
+frozen and preserve its lane path; integrate its total desired longitudinal
+command at the same-step native-relative backend boundary, mirror that exact
+conversion/cap in its WM controller, then regenerate source-bound zero-residual
+MAPPO identity and full-actor CPU/GPU qualification receipts. Reuse the environment,
+driver and real-parity/authority gates above only after that adapter is implemented.
+Its old build7/90s launch is not combined-law qualification. See peer
+`E:/agent-work/c4-mappores/MAPPORES.md`; this task neither changes nor dispatches it.
+
+## 6. Zero-learning control: reuse completed S-CTRLARM, do not duplicate
+
+On the **legacy switch path**, residual exactly0 releases to native, so it is not
+the same-executor control. A valid executor-only arm must force residual0 through
+the *original* composition/ownership/setAcceleration path, including its original
+base-law quirks, bounds, native lanes and mode27. Then C1−CTRL0 isolates learned
+residuals from the switch, and CTRL0−native measures the execution change. Merely
+using the corrected new cap law would introduce another treatment.
+
+The smallest useful exploratory design would reuse stored native/C1/MAPPO for
+three prespecified worlds977000–977002 and add only those three CTRL0 runs:
+2,700sim-s, or3,600 including a900s native runtime canary. A one-world900s control
+is mechanically informative but cannot support world-level uncertainty. All use
+300s warmup+600s intervention and paired equal-world contrasts.
+
+**This work is already finished by S-CTRLARM:** owner22:58 amended panel
+977000–977022 plus native977000 canary,24allocations,21,600charged/actual sim-s.
+Do not rerun the proposed subset or charge this task for that peer work. Its
+scoped CTRL0 forces the exact frozen C1 residual to0 without native release;
+543scientific source files remained byte-identical to `b3c031ad`.
+
+Peer report `E:/agent-work/c4-ctrlarm/CTRLARM.md` and published
+`E:/research-dense/docs/paper_results/CTRLARM.md`:600s ours−CTRL0 **−45.71
+[−464.12,+342.63] veh-s**, CTRL0−native **−1,956.53 [−4,086.66,+144.50]**,
+MAPPO−CTRL0 **−623.95 [−2,044.25,+664.51]**;23equal-weight worlds,2,000paired
+world-bootstrap draws,seed0. All intervals include0: no incremental learned
+benefit or equivalence is established on that reused subset. Only2/23complete
+metric payloads were identical; avoid the stronger claim that C1 is universally
+inert. These subset numbers do not replace the full E3 −1,093.9veh-s estimate.
+
+On a genuine **continuous** path, residual0 is native by construction and unit
+fixture: no separate execution-only arm is needed beyond an actual zero/native
+identity canary. The owner23:50 four-job scientific design costs3,600sim-s with
+another3,600reserved for at most four infrastructure retries. Worlds977001–003
+can compare continuous C1 against their stored native references;977000 is the
+byte-identity zero canary. Full design, matching requirements and current
+**0allocations/0charged/0actual** accounting are in
+`docs/paper_results/EXECPARITY_SUMO.md`. No new dispatch is armed. The missing
+same-step backend must be resolved; the conditional SUMO check is still blocked.
+
+### Which option actually meets the requirement?
+
+* **Imagination mirrors the legacy cap:** exact clipping algebra is possible
+  given the true same-state cap, but positive residuals above that cap remain
+  meaningless and the zero/nonzero native-ownership switch remains. Our inferred
+  cap is not exact, and the retained MAPPO pooled acceptance fails. This option
+  is neither the owner's chosen production law nor a demonstrated parity PASS.
+* **Continuous relative to the same-step native speed, plus mirrored imagination:**
+  algebraically preserves yielding, zero identity and useful residual gradients
+  wherever safety leaves headroom. Scalar/tensor and deployment-writer fixtures
+  establish that contract. Actual parity still includes WM head/cap error; the
+  stock cached getter cannot implement the same-step contract. A native-residual
+  hook inside SUMO, with its matching client interface, is the concrete missing
+  implementation. Replacing it with a stale cache would not be a combined fix.
+
+No option has yet demonstrated the requested real new-law parity on this branch.

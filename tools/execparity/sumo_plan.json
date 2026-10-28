@@ -1,0 +1,40 @@
+{
+  "schema": "execparity_approved_sumo_plan/1",
+  "authority": "REGISTRATION.md owner 2026-10-28 23:50",
+  "status": "BLOCKED_SAME_STEP_BACKEND_MISSING",
+  "automatic_dispatch_armed": false,
+  "runtime_manifest_prefix": "b3c031ad",
+  "checkpoint_sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c",
+  "driver_sha256": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+  "flag": "C4_EXECUTION_PARITY=1",
+  "required_backend_contract": "native_relative_same_step/1",
+  "population": "textbook",
+  "warmup_s": 300,
+  "intervention_s": 600,
+  "nice": 19,
+  "numerical_threads": 1,
+  "hosts": ["cpuP", "cpuQ"],
+  "max_task_workers_per_host": 1,
+  "scientific_jobs": [
+    {"world": 977000, "arm": "zero_continuous", "cost_sim_s": 900, "allocated": false},
+    {"world": 977001, "arm": "c1_continuous", "cost_sim_s": 900, "allocated": false},
+    {"world": 977002, "arm": "c1_continuous", "cost_sim_s": 900, "allocated": false},
+    {"world": 977003, "arm": "c1_continuous", "cost_sim_s": 900, "allocated": false}
+  ],
+  "demand_and_penetration": "copy each world's existing E3-final metadata exactly",
+  "max_infrastructure_retries": 4,
+  "retry_cost_sim_s": 900,
+  "cap_charged_sim_s": 7200,
+  "allocations_made": 0,
+  "charged_sim_s": 0,
+  "actual_sim_s": 0,
+  "charge_before_start": "unique allocation and cumulative charge in authoritative REGISTRATION.md",
+  "acceptance": [
+    "zero_continuous 977000 NPZ files and frozen metrics byte-identical to stored native",
+    "C1 continuous imagined executed acceleration RMSE <= native-head error on the same new recorded states"
+  ],
+  "not_authorised_as_retry": "extra MAPPO scientific canary or other worlds/arms",
+  "ssh_min_poll_s": 60,
+  "ssh_refusal_backoff_s": 300,
+  "efficacy_claim": false
+}
