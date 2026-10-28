@@ -1,0 +1,17 @@
+{
+  "task": "S-C4LAUNCH",
+  "remote_t": "2026-10-28T09:12:45.839392+00:00",
+  "main_1700_loop_amendment_present": true,
+  "main_1700_sha256": "8835c2a201b388f20eff5c0ed184c70b1d4ea848098b3daabe2ea035c126e46b",
+  "prior_workers": [
+    {"pid": 353733, "alive": false, "summary_exists": false, "worker_traceback": false},
+    {"pid": 362856, "alive": false, "exit": -9, "summary_exists": false, "worker_traceback": false}
+  ],
+  "memory_current_bytes": 18723098624,
+  "memory_max_bytes": 96636764160,
+  "memory_events": {"low": 0, "high": 140722, "max": 0, "oom": 0, "oom_kill": 0},
+  "diagnosis": "Second worker SIGKILL confirmed; exact killer/cause unconfirmed. Coordinator exception was a subsequent missing-summary read.",
+  "subsequent_stage": "SSH connection closed; source activation not confirmed",
+  "new_gpu_jobs_confirmed": 0,
+  "new_sim_s": 0
+}

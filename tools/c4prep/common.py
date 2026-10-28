@@ -51,6 +51,15 @@ def read(path):
     return json.loads(safe(path).read_text())
 
 
+def complete_jsonl(path):
+    """Read only durably terminated records while an owned writer is active."""
+    p = safe(path)
+    if not p.exists():
+        return []
+    return [json.loads(line) for line in p.read_text().splitlines(keepends=True)
+            if line.endswith('\n')]
+
+
 def write_new(path, doc):
     p = safe(path)
     p.parent.mkdir(parents=True, exist_ok=True)

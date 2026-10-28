@@ -11,8 +11,9 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+from datetime import datetime
 
-from common import (ACTORS, CODE, GATE, OUT, REL, WM, WM_CONFIG, WM_SHA,
+from common import (ACTORS, CODE, GATE, OUT, REL, WM, WM_CONFIG, WM_SHA, complete_jsonl,
                     now, qualified_gate, read, safe, sha, write_new)
 
 sys.path[:0] = [str(CODE / 'src'), str(CODE)]
@@ -143,6 +144,9 @@ def validate(config, *, launching=False):
     assert doc['candidates'][0]['sha256'] == ACTORS[1][1]
     check_entrant_receipt(read(doc['entrant_receipt']), doc['entrant_control'])
     if doc.get('authority') == 'MAIN2026-10-28T15:00':
+        recovery = read(OUT / 'MAIN_1700.json')
+        assert recovery['authority'] == 'MAIN2026-10-28T17:00'
+        assert datetime.now().astimezone() < datetime.fromisoformat(recovery['deadline']), 'MAIN17:00 deadline reached'
         from wms.control.c4launch_authority import inherited_gate
         inherited_gate(read(doc['gate']), [WM_SHA])
         horizon = 90
@@ -227,15 +231,58 @@ def run(config, dry):
                 pid, mib = line.split(',')
                 if int(pid) in owned:
                     sample = {'t': now(), 'pid': int(pid), 'bytes': int(mib) * 1024**2}
+                    proc = Path(f'/proc/{int(pid)}/status')
+                    if proc.exists():
+                        fields = dict(line.split(':', 1) for line in proc.read_text().splitlines() if ':' in line)
+                        for key in ('VmRSS', 'VmHWM', 'VmSize', 'Threads'):
+                            if key in fields:
+                                sample[key] = fields[key].strip()
+                    for name in ('memory.current', 'memory.events'):
+                        path = Path('/sys/fs/cgroup') / name
+                        if path.exists():
+                            sample[name] = path.read_text().strip()
                     samples.append(sample)
                     with (root / 'gpu_memory.jsonl').open('a') as stream:
                         stream.write(json.dumps(sample) + '\n')
+            if doc.get('authority') == 'MAIN2026-10-28T15:00':
+                deadline = datetime.fromisoformat(read(OUT / 'MAIN_1700.json')['deadline'])
+                for _, child, output in children:
+                    path = output / 'updates.jsonl'
+                    rows = complete_jsonl(path)
+                    import math
+                    ten_finite = len(rows) >= 10 and all(all(math.isfinite(row[k]) for k in
+                        ('actor_loss', 'critic_loss', 'actor_grad_norm', 'critic_grad_norm')) for row in rows)
+                    if datetime.now().astimezone() >= deadline and (dry or not ten_finite) and child.poll() is None:
+                        write_new(parent / 'DEFERRED.json', {'status': 'DEFERRED', 'task': 'S-C4LAUNCH',
+                            'reason': 'MAIN17:00 deadline without running candidate A and >=10 finite updates',
+                            'updates': len(rows), 'dry': dry, 'owned_pid': child.pid, 't': now()})
+                        child.terminate()  # unreaped direct child, never a peer/inferred PID
+                        try:
+                            child.wait(timeout=30)
+                        except subprocess.TimeoutExpired:
+                            child.kill()  # same unreaped direct child only
+                            child.wait(timeout=30)
+                    gate = output / 'gate_panel_result.json'
+                    if (not dry and ten_finite and gate.exists() and read(gate).get('passed')
+                            and not (parent / 'RUNNING_VERIFIED.json').exists()):
+                        from launch_a import status
+                        try:
+                            status(verify=True)
+                        except (AssertionError, KeyError, ValueError) as exc:
+                            error = parent / 'RUNNING_VERIFY_ERROR.json'
+                            if not error.exists():
+                                write_new(error, {'t': now(), 'error': repr(exc)})
             time.sleep(5)
     results = []
     write_new(root / 'CHILD_EXITS.json', [{'candidate': item['name'], 'pid': child.pid,
         'exit': child.returncode, 'summary_exists': (output / 'RUN_SUMMARY.json').exists()}
         for item, child, output in children])
     for item, child, output in children:
+        if not (output / 'RUN_SUMMARY.json').exists():
+            results.append({'candidate': item['name'], 'exit': child.returncode, 'passed': False,
+                            'error': 'worker exited without RUN_SUMMARY; retained logs and CHILD_EXITS',
+                            'summary_exists': False})
+            continue
         summary = read(output / 'RUN_SUMMARY.json')
         updates = summary.get('updates', [])
         peaks = [r.get('cuda_peak_reserved_bytes', 0) for r in updates]

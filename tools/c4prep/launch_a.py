@@ -5,7 +5,7 @@ from pathlib import Path
 import statistics
 import time
 
-from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, now, read, sha, write_new
+from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, complete_jsonl, now, read, sha, write_new
 
 DEST = OUT / ('resolved_A_MAIN1500_' + read(CODE / 'SOURCE.json')['commit'][:12])
 
@@ -117,7 +117,7 @@ def status(verify=False):
             item.update(pid=receipt['pid'], alive=bool(values and values[19] == receipt['start_ticks'] and values[0] != 'Z'))
         updates = root / 'A/updates.jsonl'
         if updates.exists():
-            rows = [json.loads(line) for line in updates.read_text().splitlines()]
+            rows = complete_jsonl(updates)
             item.update(updates=len(rows), last=rows[-1] if rows else None)
             if rows:
                 item['finite'] = all(all(math.isfinite(row[k]) for k in
@@ -137,14 +137,22 @@ def status(verify=False):
         if summary.exists():
             doc = read(summary)
             item.update(summary_status=doc['status'], error=doc.get('error'), start_focus=doc.get('start_focus'))
+        gate = root / 'A/gate_panel_result.json'
+        if gate.exists():
+            item['signal_gate'] = read(gate)
+        native = root / 'A/native_curve.jsonl'
+        native_rows = complete_jsonl(native)
+        if native_rows:
+            item['native_panel'] = native_rows[-1]
         result[mode] = item
     if verify:
         item = result['POLICY']
         assert item['updates'] >= 10 and item['finite'] and item['alive']
+        assert item.get('signal_gate', {}).get('passed') is True, 'phase-relative signal gate not yet passed'
         assert all(v > 0 for v in item['module_gradient_min'].values())
         assert math.isfinite(item['mean_abs_residual_mps2']) and math.isfinite(item['mean_minus_pessimistic_credit'])
         memory = DEST / 'POLICY/gpu_memory.jsonl'
-        samples = [json.loads(line) for line in memory.read_text().splitlines()]
+        samples = complete_jsonl(memory)
         total = int(subprocess_total())
         peak = max(row['bytes'] for row in samples)
         assert 0 < peak <= .45 * total and 0 < item['peak_reserved_bytes'] <= .45 * total
@@ -152,7 +160,10 @@ def status(verify=False):
             source_commit=read(CODE / 'SOURCE.json')['commit'], sampled_process_peak_bytes=peak,
             native_anchor=read(DEST / 'CONFIG.json')['native_anchor'])
         receipt = DEST / 'RUNNING_VERIFIED.json'
-        write_new(receipt, result)
+        if receipt.exists():
+            assert read(receipt)['source_commit'] == result['source_commit']
+        else:
+            write_new(receipt, result)
         status_path = REL / 'AUTONOMY_STATUS.json'
         current = read(status_path)
         current.setdefault('peer_status_at_c4a_launch', {k: v for k, v in current.items() if k != 'c4a_preparation'})

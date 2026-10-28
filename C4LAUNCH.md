@@ -112,3 +112,20 @@ Complete requested CPU suite:60PASS/2CUDA-only skips in109.54s. These are
 not GPU qualification or real training updates. CUDA full-actor K8 remains pending.
 Qualification now detaches into source-bound CPU/CUDA stages with durable logs
 and PID/results, removing the brittle35s SSH-bound qualification timeout.
+
+Recovered one successful batched SSH at09:12:45UTC: MAIN17:00 appended to
+loop JSON (authority SHA8835c2a201b388f20eff5c0ed184c70b1d4ea848098b3daabe2ea035c126e46b).
+Both prior workers are dead. Second CHILD_EXITS records exit-9/SIGKILL;
+worker log has no traceback, RUN_SUMMARY absent. Coordinator's traceback is
+the later missing-summary read, not the worker's cause. cgroup current18.72GB,
+max96.64GB, high140722, oom0/oom_kill0; killer identity remains unconfirmed.
+Next source stage was refused; >=300s backoff resumed, no GPU job dispatched.
+
+Operational monitoring now records own-worker hostRSS/high-water/cgroup pressure
+with GPU samples and retains failed receipts when a summary is missing. The
+detached coordinator enforces MAIN17:00's deadline against its own unreaped child,
+and self-records C4A_RUNNING only after>=10finite updates plus the existing
+phase-relative signal gate and full gradient/memory verification. It cannot
+auto-launch policy after the dry run; the measured dry receipt must first be
+committed locally. Live JSONL readers ignore unfinished last writes while still
+rejecting complete corruption. Operational unit checks21PASS; fatal-error RuffPASS.
