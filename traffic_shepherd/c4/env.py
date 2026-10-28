@@ -474,12 +474,20 @@ class CavSumoEnv:
             if residuals is not None:
                 from wms.control.nativeinit import sumo_residual_commands
                 if residual_parity:
-                    from wms.control.continuous import require_same_step_backend
-                    if any(a != 0. for v,a in residuals.items() if v in live_cavs):
-                        require_same_step_backend(api)
-                    # Permission ledger only. Actual absolute execution is known
-                    # after the native solver and belongs in the physics ledger.
-                    requested = {v:a for v,a in residuals.items() if v in live_cavs and a != 0.}
+                    from wms.control.execution import mode as execution_mode
+                    if execution_mode() == 2:
+                        # Always-commanded: the ledger carries the issued absolute
+                        # acceleration for every designated CAV, zero residual included.
+                        from wms.control.alwayscmd import commands as always_commands
+                        requested = always_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
+                                                    residual_command.accel_min, residual_command.accel_max)
+                    else:
+                        from wms.control.continuous import require_same_step_backend
+                        if any(a != 0. for v,a in residuals.items() if v in live_cavs):
+                            require_same_step_backend(api)
+                        # Permission ledger only. Actual absolute execution is known
+                        # after the native solver and belongs in the physics ledger.
+                        requested = {v:a for v,a in residuals.items() if v in live_cavs and a != 0.}
                 else:
                     requested = sumo_residual_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
                                                    residual_command.accel_min, residual_command.accel_max,
@@ -586,9 +594,14 @@ class CavSumoEnv:
             if abs(after - (now + (substep + 1) * 0.5)) > 1e-6:
                 raise CavEnvError("SUMO physics time grid mismatch")
             if execution_before is not None:
-                from wms.control.continuous import completed_execution_rows
-                rows = completed_execution_rows(api, execution_before, residuals, commands,
-                                                residual_command.accel_min, residual_command.accel_max)
+                from wms.control.execution import mode as execution_mode
+                if execution_mode() == 2:
+                    from wms.control.alwayscmd import completed_rows
+                    rows = completed_rows(api, execution_before, residuals, commands)
+                else:
+                    from wms.control.continuous import completed_execution_rows
+                    rows = completed_execution_rows(api, execution_before, residuals, commands,
+                                                    residual_command.accel_min, residual_command.accel_max)
                 self.recorder.on_execution(now+substep*.5, rows)
             sub = self._after_physics(after, actions, now, commanded)
             source_wait_steps.append(float(sub.get("source_wait_vehicle_seconds", 0.0)))

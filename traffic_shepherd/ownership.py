@@ -161,16 +161,21 @@ class CommandOwnership:
 
         A failed/stale sensor decision remains native: only the accepted wall
         ownership set may be recomposed. No caller can resurrect a fallback CAV.
-        Returned values are residuals accepted by the same-step backend, not
-        absolute acceleration forecasts. The completed-step physics ledger records
-        its native base, composed request and actual realised acceleration.
+        Mode 1 returns same-step-backend residuals; mode 2 (always-commanded)
+        returns the issued absolute accelerations, zero-residual CAVs included.
+        The completed-step physics ledger records the base law, composed
+        request and actual realised acceleration.
         """
-        from wms.control.continuous import write_residuals
+        from wms.control.execution import mode as execution_mode
         allowed = set(live_ids) & self.cav_ids
         authorised = {v: r for v, r in residuals.items()
                       if v in allowed and self._owned.get(v) == "wall"
                       and self._last[v].timestamp_s <= now_s
                       < self._last[v].timestamp_s + self.controller.config.control_dt_s}
+        if execution_mode() == 2:
+            from wms.control.alwayscmd import write_residuals
+            return write_residuals(self.api, authorised, lo, hi, dt=dt)
+        from wms.control.continuous import write_residuals
         return write_residuals(self.api, authorised, lo, hi, dt=dt)
 
     def record_response(self, vehicle_id: str, *, timestamp_s: float,

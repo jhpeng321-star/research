@@ -16,11 +16,17 @@ SPEED_MODE = 27
 CAP_REJECT_FRACTION = .95  # task registration, not a fitted behavioural threshold
 
 
-def enabled():
+def mode():
+    """0 flag-OFF (frozen legacy switch path), 1 combined native-relative law,
+    2 the 00:20 EXACT ALWAYS-COMMANDED law (CTRL0 path, no native release)."""
     value = os.environ.get(PARITY_ENV, "0")
-    if value not in ("0", "1"):
-        raise ValueError(f"{PARITY_ENV} must be 0 or 1")
-    return value == "1"
+    if value not in ("0", "1", "2"):
+        raise ValueError(f"{PARITY_ENV} must be 0, 1 or 2")
+    return int(value)
+
+
+def enabled():
+    return mode() != 0
 
 
 def contract():
@@ -33,10 +39,12 @@ def contract():
     if not driver:
         raise ValueError("candidate-A parity requires a frozen C4_EXECUTION_DRIVER fit")
     load_learned_driver(driver)
-    return {"schema":"execparity_contract/2","executor":"native_relative_same_step/1",
-            "driver_sha256":hashlib.sha256(Path(driver).read_bytes()).hexdigest(),
-            "accel_max_mps2":ACCEL_MAX,"decel_mode":"speedMode27 bit2 disabled",
-            "speed_mode":SPEED_MODE,"imagination_soft_safe_accel":False}
+    executor = ("native_relative_same_step/1" if mode() == 1
+                else "always_commanded_ctrl0/1")
+    return {"schema": "execparity_contract/2", "executor": executor,
+            "driver_sha256": hashlib.sha256(Path(driver).read_bytes()).hexdigest(),
+            "accel_max_mps2": ACCEL_MAX, "decel_mode": "speedMode27 bit2 disabled",
+            "speed_mode": SPEED_MODE, "imagination_soft_safe_accel": False}
 
 
 def check_contract(payload):
@@ -46,7 +54,15 @@ def check_contract(payload):
 
 
 def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX):
-    """Owner's combined law; native must be a feasible same-step prediction."""
+    """Dispatch on the execution mode.
+
+    Mode 1 (combined): native must be a feasible same-step prediction.
+    Mode 2 (always-commanded): ``native`` is unused - the base law is the
+    deterministic inferred mirror of ``sumo_native_accel``, never the WM head.
+    """
+    if mode() == 2:
+        from .alwayscmd import executed as always_executed
+        return always_executed(state, residual, lo, hi)
     from .continuous import native_relative
     return native_relative(state, residual, native, lo, hi)
 
@@ -218,9 +234,24 @@ def verify_parity(path):
         raise ValueError("execution parity requires --execution-parity-receipt")
     receipt = json.loads(Path(path).read_text(encoding="utf-8"))
     driver = os.environ.get("C4_EXECUTION_DRIVER")
-    native_rmse = receipt.get("native_arm_head_error",{}).get("rmse",float("nan"))
-    errors = receipt.get("error",{})
-    residual_rmse = receipt.get("c1_residual_execution_error",{}).get("rmse",float("nan"))
+    native_rmse = receipt.get("native_arm_head_error", {}).get("rmse", float("nan"))
+    errors = receipt.get("error", {})
+    residual_rmse = receipt.get("c1_residual_execution_error", {}).get("rmse", float("nan"))
+    if mode() == 2:
+        # 00:20 law: real-SUMO measurement, CTRL0 zero identity and executed-accel
+        # error inside the WM native-head band on the same states.
+        if (receipt.get("schema") != "execparity_always_commanded_acceleration/1"
+                or receipt.get("backend_contract") != "always_commanded_ctrl0/1"
+                or receipt.get("measured_real_sumo") is not True
+                or receipt.get("zero_ctrl0_identity") is not True
+                or not receipt.get("passed") or not driver or not receipt.get("worlds")
+                or receipt.get("driver_sha256") != hashlib.sha256(Path(driver).read_bytes()).hexdigest()
+                or set(errors) != {"ours"} or not 0. <= residual_rmse <= native_rmse
+                or not all(0. <= value.get("rmse", float("nan")) <= native_rmse
+                           for value in errors.values())):
+            raise ValueError("missing/stale/failing always-commanded parity receipt")
+        load_learned_driver(driver)
+        return receipt
     if (receipt.get("schema") != "execparity_continuous_acceleration/1"
             or receipt.get("backend_contract") != "native_relative_same_step/1"
             or receipt.get("measured_real_sumo") is not True
