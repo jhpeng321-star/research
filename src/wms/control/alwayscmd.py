@@ -72,10 +72,16 @@ def write_residuals(api, residuals, lo, hi, *, dt=0.5):
 
 
 def _wm_geometry(state):
-    """The WM frame's own speed, leader bumper gap, leader speed and presence."""
-    from .native_cav import leader_gap_dv
+    """The WM frame's own speed, leader bumper gap, leader speed and presence.
+
+    S-EXECPARITY3: under ``C4_SUMO_LEADER_RULE=1`` the leader follows SUMO's
+    lane/link rule (:func:`wms.control.sumo_leader.leader_gap_dv_sumo`); with
+    the flag off (default) this is the frozen legacy
+    :func:`wms.control.native_cav.leader_gap_dv` bitwise.
+    """
+    from .sumo_leader import leader_gap_dv_sumo
     v = state["v_mps"]
-    gap, dv, has = leader_gap_dv(state)
+    gap, dv, has = leader_gap_dv_sumo(state)
     return v, gap, v - dv, has
 
 

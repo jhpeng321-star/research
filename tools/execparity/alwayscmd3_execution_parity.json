@@ -1,0 +1,28 @@
+{
+  "schema": "execparity_always_commanded_acceleration/1",
+  "backend_contract": "always_commanded_ctrl0/1",
+  "measured_real_sumo": true,
+  "zero_ctrl0_identity": true,
+  "passed": true,
+  "worlds": [
+    "977001",
+    "977002",
+    "977003"
+  ],
+  "driver_sha256": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+  "native_arm_head_error": {
+    "rmse": 0.16031176181392923
+  },
+  "c1_residual_execution_error": {
+    "rmse": 0.1465382036679278
+  },
+  "error": {
+    "ours": {
+      "rmse": 0.1465382036679278
+    }
+  },
+  "imagination_base_law": "exact_shared_executor_law/sumo_idm/1",
+  "shared_module_sha256": "9bc26f9e69aa6f4ab3b6c05df4add8cffe265fc200e5c12e2edf4f59da38cb63",
+  "decision": "00:20",
+  "report": "tools\\execparity\\alwayscmd3_replay_results.json"
+}

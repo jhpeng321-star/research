@@ -52,6 +52,18 @@ MAX_REPORTS = 16            # nearest other-CAV reports per CAV (padded, masked)
 N_LANES = 3
 MERGE_S0_M = 0.0
 MERGE_S1_M = 75.44
+#: Internal junction-connector lane lengths of the registered merge network
+#: (assets/research/highway_merge_shepherd_long/osm.net.xml.gz, net version 1.20),
+#: shared with the physics layer's lane-chain geometry
+#: (S-EXECPARITY3; single definition in :mod:`wms.physics.lane_chain`, itself a
+#: pure network attribute like SPEED_LIMIT_MPS - never hand-tuned):
+#: ``:1780739017_0_0`` (ramp -> merge-edge accel lane),
+#: ``:1780739017_1_0`` / ``:1780739017_1_1`` (mainline entry -> merge edge),
+#: ``:13638027693_0_0`` / ``:13638027693_0_1`` (merge edge -> exit edge).
+from wms.physics.lane_chain import MERGE_CONNECTOR_ENTRY_LEN_M as MERGE_CONNECTOR_ENTRY_LEN_M  # noqa: E402,F401
+from wms.physics.lane_chain import MERGE_CONNECTOR_EXIT_LEN_M as MERGE_CONNECTOR_EXIT_LEN_M  # noqa: E402,F401
+from wms.physics.lane_chain import MERGE_CONNECTOR_RAMP_LEN_M as MERGE_CONNECTOR_RAMP_LEN_M  # noqa: E402,F401
+assert MERGE_S1_M == 75.44  # network attribute; keep in lockstep with lane_chain
 
 #: Own-CAV observation features (order is the contract).
 OWN_FEATURES = (
