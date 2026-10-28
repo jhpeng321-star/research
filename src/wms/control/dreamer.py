@@ -851,7 +851,8 @@ class DreamerTrainer:
 
     def imagine(self, batch: StartBatch, deterministic=False, variants=None, future_seed=None,
                 credit_profile=False, difference_only=False, _memory_replay=False,
-                _memory_config=None, _memory_full_batch=None, _memory_start_index=None):
+                _memory_config=None, _memory_full_batch=None, _memory_start_index=None,
+                _memory_future_cache=None, _memory_active_future=None, _memory_row_index=None):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -970,9 +971,18 @@ class DreamerTrainer:
         profile = None
         rng = _rng_state(self.device)
         advanced_rng = None
+        collections = dict(states=member_states, rewards=member_rewards, costs=member_costs,
+            entropy=member_entropy, actions=member_actions, components=member_components,
+            lanes=member_lanes, zone=member_zone, action_audit=member_action_audit, anchor=member_anchor)
         # Common random numbers: disagreement must measure WM differences, not action noise.
-        for model_index, sample_index in [(e, s) for e in range(len(self.world_models))
-                                          for s in range(n_futures)]:
+        for future_index, (model_index, sample_index) in enumerate(
+                [(e, s) for e in range(len(self.world_models)) for s in range(n_futures)]):
+            if _memory_active_future is not None and future_index != _memory_active_future:
+                from .imagination_memory import replay_cached_future
+                total_rows = _memory_future_cache['items'][0]['payload']['rewards'].shape[1]
+                replay_cached_future(_memory_future_cache, future_index, collections,
+                                     _memory_row_index, total_rows)
+                continue
             model = self.world_models[model_index]
             future = {} if future_extras is None else future_extras[model_index][sample_index]
             _restore_rng(rng, self.device)
@@ -1257,7 +1267,15 @@ class DreamerTrainer:
             if self.use_lanes:
                 member_lanes.append({name: torch.stack([record[name] for record in records])
                                      for name in ("lane_log_prob", "lane_entropy", "lane_active",
-                                                  "lane_acting", "lane_changed")})
+                                                   "lane_acting", "lane_changed")})
+            if _memory_future_cache is not None and _memory_active_future is None:
+                from .imagination_memory import capture_future
+                capture_future(_memory_future_cache, collections)
+        if _memory_future_cache is not None:
+            if _memory_active_future is None:
+                _memory_future_cache['advanced_rng'] = advanced_rng
+            else:
+                advanced_rng = _memory_future_cache['advanced_rng']
         _restore_rng(advanced_rng, self.device)
         rewards, costs = torch.stack(member_rewards), torch.stack(member_costs)
         disagreement = ensemble_penalty(rewards, 1.0)

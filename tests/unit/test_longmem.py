@@ -255,9 +255,10 @@ def test_streamed_critic_preserves_frozen_parameters():
         assert_tree_close(x, y)
 
 
-@pytest.mark.parametrize("lane,residual,entries", [(True, False, True),
-                                                   (False, True, False)])
-def test_production_actor_bridge_futures_and_entries(lane, residual, entries):
+@pytest.mark.parametrize("lane,residual,entries,samples", [(True, False, True, 2),
+                                                   (False, True, False, 2),
+                                                   (False, True, False, 8)])
+def test_production_actor_bridge_futures_and_entries(lane, residual, entries, samples):
     from wms.control.bridge import make_cav_controller
     from wms.control.lanes import LaneRules
     from wms.control.obs import build_observations
@@ -279,7 +280,8 @@ def test_production_actor_bridge_futures_and_entries(lane, residual, entries):
             starts.batch.entry_feat = torch.tensor(np.stack([hist.to_features()] * 3)).float()
         cfg = DreamerConfig(batch_size=3, horizon=3, imagine_entries=entries, entry_pad_max=2,
                             source_wait_grad=entries,
-                            future_samples=2, future_driver_scale=.05, future_accel_noise=True,
+                            future_samples=samples, pessimistic_credit=samples == 8,
+                            future_driver_scale=.05, future_accel_noise=True,
                             imagination_microbatch=micro, imagination_checkpoint_segment=segment,
                             imagination_offload_futures=True if micro else False,
                             imagination_offload_saved_tensors=True if micro else False)

@@ -113,7 +113,7 @@ elif action == 'diagnose':
         path = Path('/sys/fs/cgroup') / name
         if path.exists():
             result[name] = path.read_text()
-    for name in ('DRY_COORDINATOR.log', 'DRY_RUN/A.log'):
+    for name in ('DRY_COORDINATOR.log', 'DRY_RUN/A.log', 'DRY_RUN/CHILD_EXITS.json'):
         path = resolved / name
         if path.exists():
             result[name] = path.read_text()[-7000:]

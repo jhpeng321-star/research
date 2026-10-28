@@ -47,3 +47,19 @@ Transient activations keep original spill semantics; source storage remains
 owned by the trainer, preventing pointer reuse. A versioned cache cannot reuse
 snapshots after in-place mutations. CUDA gradient parity and existing exact
 LONGMEM tests are required before a fresh immutable two-update attempt.
+
+Attempt2 source1f5cc6aa passed58CPU checks and the separate strict CUDA
+copy-parity check. Coordinator362850/start855400127, worker362856 again
+disappeared before a durable update; last GPU sample5,026,873,344bytes at
+08:10:34UTC. Status SSH intermittently closes; no peer workload was touched.
+Parameter-copy sharing alone did not make the full-K replay viable.
+
+The next execution refinement keeps the complete original K8 forward,
+quantile/cooperation/safety reductions and their global VJP, but replays one
+future graph at a time. Other futures retain detached original forward values;
+each active future still differentiates through full-K coupled reductions.
+Parameter VJPs sum before the single original optimizer step. Exact random-tape
+boundaries and final RNG state are retained. This bounds graph memory across
+futures while keeping microbatch1/segment8/both offloadsON. Require existing
+LONGMEM gradient/optimizer/RNG proofs plus a production residual-actor K8/q10
+case before another real dry attempt. No full policy phase has launched.

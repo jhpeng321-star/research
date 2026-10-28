@@ -14,7 +14,7 @@ from dataclasses import replace
 
 import torch
 from torch.utils._python_dispatch import TorchDispatchMode
-from torch.utils._pytree import tree_flatten, tree_unflatten
+from torch.utils._pytree import tree_flatten, tree_unflatten, tree_map
 from torch.utils.checkpoint import checkpoint
 
 from .counterfactual import Variants, expand_rows
@@ -72,6 +72,32 @@ def _saved_tensor_spill(trainer):
 
 def _select(value, indices, total):
     return expand_rows(value, indices, total)
+
+
+def _current_tape():
+    return next((mode for mode in torch.utils._python_dispatch._get_current_dispatch_mode_stack()
+                 if isinstance(mode, _RandomTape)), None)
+
+
+def capture_future(cache, collections):
+    """Keep detached forward values and exact stochastic trace boundary."""
+    tape = _current_tape()
+    payload = {name: tree_map(lambda x: x.detach() if torch.is_tensor(x) else x, values[-1])
+               for name, values in collections.items() if values}
+    cache['items'].append({'payload': payload, 'tape_end': tape.position})
+
+
+def replay_cached_future(cache, future, collections, rows, total_rows):
+    """Inactive futures remain constants; outer full-K VJP still sees all values."""
+    saved = cache['items'][future]
+    for name, value in saved['payload'].items():
+        axis = 0 if name == 'states' else 1
+        def select(tensor):
+            if torch.is_tensor(tensor) and tensor.ndim > axis and tensor.shape[axis] == total_rows:
+                return tensor.index_select(axis, rows.to(tensor.device))
+            return tensor
+        collections[name].append(tree_map(select, value))
+    _current_tape().position = saved['tape_end']
 
 
 def _subset(batch, variants, start, stop):
@@ -181,9 +207,10 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.params = params
             ctx.tape = []
             ctx.before = _rng_state(trainer.device)
+            ctx.futures = {'items': []} if cfg.imagination_offload_futures else None
             with _RandomTape(ctx.tape, offload=cfg.imagination_offload_futures):
                 result = trainer.imagine(batch, **kwargs, _memory_replay=True, _memory_config=cfg,
-                                         _memory_full_batch=batch)
+                                         _memory_full_batch=batch, _memory_future_cache=ctx.futures)
             leaves, spec = tree_flatten(result)
             slots = [i for i, v in enumerate(leaves) if torch.is_tensor(v)]
             ctx.slots = slots
@@ -205,31 +232,33 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                 for start in range(0, total, micro):
                     small, variants, starts, rows = _subset(
                         batch, kwargs["variants"], start, min(total, start + micro))
-                    replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
-                    _restore_rng(ctx.before, trainer.device)
-                    spill = (_saved_tensor_spill(trainer)
-                             if cfg.imagination_offload_saved_tensors else nullcontext())
-                    with torch.enable_grad(), replay, spill:
-                        result = trainer.imagine(small, **{**kwargs, "variants": variants},
-                                                 _memory_replay=True, _memory_config=cfg,
-                                                 _memory_full_batch=batch,
-                                                 _memory_start_index=starts)
-                        leaves, _ = tree_flatten(result)
-                        # Variants remain opaque pytree leaves, so the output topology is identical.
-                        outputs, vectors = [], []
-                        for slot, vector in zip(ctx.slots, grad_outputs):
-                            value = leaves[slot]
-                            if vector is not None and value.requires_grad:
-                                outputs.append(value)
-                                vectors.append(_slice_shape(vector, value.shape, starts, rows,
-                                                            total, n_rows))
-                        if replay.position != len(ctx.tape):
-                            raise RuntimeError("LONGMEM random call trace shortened during replay")
-                        grads = torch.autograd.grad(outputs, ctx.params, vectors, allow_unused=True)
-                    for i, grad in enumerate(grads):
-                        if grad is not None:
-                            accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
-                    del result, leaves, outputs, vectors, grads
+                    futures = range(len(ctx.futures['items'])) if ctx.futures is not None else (None,)
+                    for future in futures:
+                        replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
+                        _restore_rng(ctx.before, trainer.device)
+                        spill = (_saved_tensor_spill(trainer)
+                                 if cfg.imagination_offload_saved_tensors else nullcontext())
+                        with torch.enable_grad(), replay, spill:
+                            result = trainer.imagine(small, **{**kwargs, "variants": variants},
+                                _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
+                                _memory_start_index=starts, _memory_row_index=rows,
+                                _memory_future_cache=ctx.futures, _memory_active_future=future)
+                            leaves, _ = tree_flatten(result)
+                            # Full-K topology/reductions are retained, with one future graph live.
+                            outputs, vectors = [], []
+                            for slot, vector in zip(ctx.slots, grad_outputs):
+                                value = leaves[slot]
+                                if vector is not None and value.requires_grad:
+                                    outputs.append(value)
+                                    vectors.append(_slice_shape(vector, value.shape, starts, rows,
+                                                                total, n_rows))
+                            if replay.position != len(ctx.tape):
+                                raise RuntimeError("LONGMEM random call trace shortened during replay")
+                            grads = torch.autograd.grad(outputs, ctx.params, vectors, allow_unused=True)
+                        for i, grad in enumerate(grads):
+                            if grad is not None:
+                                accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
+                        del result, leaves, outputs, vectors, grads
             finally:
                 trainer._training_imagination = old_training
                 _restore_rng(after, trainer.device)
