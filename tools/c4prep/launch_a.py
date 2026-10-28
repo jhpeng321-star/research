@@ -7,7 +7,7 @@ import time
 
 from common import ACTORS, CODE, OUT, REL, WM, WM_CONFIG, WM_SHA, accepted, now, read, sha, write_new
 
-DEST = OUT / 'resolved_A_MAIN1500'
+DEST = OUT / ('resolved_A_MAIN1500_' + read(CODE / 'SOURCE.json')['commit'][:12])
 
 
 def prepare():
@@ -60,7 +60,7 @@ def prepare():
     cfg = DreamerConfig(**raw['trainer'])
     assert cfg.entrant_control and cfg.deterministic_crn and cfg.real_credit_individual_floor
     assert cfg.native_residual_train_group and cfg.native_residual_train_trunk
-    assert not cfg.hold_move and cfg.future_samples == 8 and cfg.pessimistic_credit
+    assert not getattr(cfg, 'hold_move', False) and cfg.future_samples == 8 and cfg.pessimistic_credit
     if enabled:
         from wms.control.antiexploit import inference_signature
         artifact = read(anchor_path)

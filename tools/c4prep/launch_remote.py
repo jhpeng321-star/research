@@ -17,7 +17,7 @@ from common import read, sha, write_new, now
 
 action = sys.argv[1]
 fit = out / 'launch_fit_v1'
-resolved = out / 'resolved_A_MAIN1500'
+resolved = out / ('resolved_A_MAIN1500_' + pointer['commit'][:12])
 
 
 def spawn(argv, root, name):
@@ -82,6 +82,7 @@ elif action == 'prepare':
 elif action == 'checks':
     env = {**os.environ, 'CUDA_VISIBLE_DEVICES': ''}
     result = subprocess.run([sys.executable, '-B', '-m', 'pytest', '-q',
+        '--basetemp', str(out / ('launch_checks_' + pointer['commit'][:12])),
         'tests/unit/test_c4launch.py', 'tests/unit/test_c4prep.py', 'tests/unit/test_antiexploit.py'],
         cwd=code, env=env, timeout=35)
     raise SystemExit(result.returncode)
