@@ -1,0 +1,42 @@
+{
+  "task": "S-C3RESUME",
+  "status": "WAIT_MAIN_C3_WMFT",
+  "completed_utc": "2026-10-28T00:53:58Z",
+  "verified_utc": "2026-10-28T00:55:44Z",
+  "results_source": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/c3resume/r2/RESULTS.json",
+  "results_sha256": "631de924708d7fa16cd70604f0ba9013d66d767a201dc53e8b4ac6d869c1d87c",
+  "registration_sha256": "57f6b333d94593a82370ff306094c79b39f48eec30fd5936e2389d30920916e5",
+  "seed_block": [968183, 968195],
+  "successful_worlds": 13,
+  "charged_attempts": 18,
+  "retained_failed_pre_sumo_seeds": [968187, 968189, 968191, 968193, 968195],
+  "salvaged_without_replay": [968188, 968190, 968192, 968194],
+  "prior_charged": 213406,
+  "cycle3_charged": 51138,
+  "retained_failed_charges": 14205,
+  "charged_total": 264544,
+  "cap": 280000,
+  "remaining": 15456,
+  "artifact_hashes_verified": 13,
+  "branch_collisions_and_teleports": 0,
+  "probes": false,
+  "conversion": {
+    "pairs": "/root/autodl-tmp/c4/restart20261026/arm/loop/data/pairs_c03.a1",
+    "episodes": 52,
+    "pair_groups": 26,
+    "targets": 26,
+    "returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c03.a1.npz",
+    "returns_sha256": "1b2d184df0ca9fb1cbbeed53c52dd607130dd3c28f1fa06e46afeca72f52a395",
+    "native_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/native_returns_c03.a1.npz",
+    "native_returns_sha256": "269b600e9684d7c39f1cf8b5ab4111b86fef216859dd89a742632bb1d0b69ec0",
+    "pairing_receipt": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/pairing_c03.a1.json",
+    "pairing_receipt_sha256": "777e89610c1c2c02586dff5dd8f691e4a6250bb643feb4d8ece91ce73261eba5"
+  },
+  "wm_ft_attempt": 0,
+  "check_attempt": 0,
+  "stop_driver_preserved": true,
+  "owned_exit_proofs": [
+    {"pid": 246217, "start_ticks": "852065504", "exited": true},
+    {"pid": 266633, "start_ticks": "852744813", "exited": true}
+  ]
+}

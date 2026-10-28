@@ -21,6 +21,7 @@ def report():
     else:
         assert phases['convert']['status'] == 'pending'
     assert all(phases[p]['status'] == 'pending' for p in ('wm_ft', 'check'))
+    assert all(phases[p]['attempt'] == 0 for p in ('wm_ft', 'check'))
     assert (ARM / 'loop/STOP_DRIVER').exists()
     journal = loop.read_json(ARM / 'loop/worlds_c03.json')
     completed = 4 if harmful_stop else 13
@@ -44,6 +45,7 @@ def report():
         receipt = journal['worlds'][str(case['seed'])]
         root = Path(receipt['artifact'])
         files = verify(root)
+        assert not any(name.startswith(('PROBE_', 'probes/')) for name in files)
         for name in files:
             if any(token in name.lower() for token in ('coopmeas', 'behaviour', 'behavior')):
                 path = root / name
@@ -90,7 +92,8 @@ def report():
             'COOPMEAS behavior rates are not exported by this registered collector',
         'conversion': phases['convert'].get('receipt'),
         'preflight': loop.read_json(REL / 'AUTONOMY_PREFLIGHT.json'),
-        'wm_ft_started': False}
+        'wm_ft_started': False, 'wm_ft_attempt': phases['wm_ft']['attempt'],
+        'check_attempt': phases['check']['attempt'], 'stop_driver_preserved': True}
     if repaired:
         result['collection_repair'] = loop.read_json(OUT / 'collect_disk/AUTHORITY.json')
         result['disk_preflight'] = loop.read_json(OUT / 'collect_disk/DISK_PREFLIGHT.json')
