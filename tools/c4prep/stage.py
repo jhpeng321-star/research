@@ -19,7 +19,7 @@ def remote(source, data, timeout=60):
     encoded = base64.b64encode(source.encode()).decode()
     command = shlex.join(['/root/miniconda3/bin/python', '-B', '-c',
         f'import base64;exec(base64.b64decode({encoded!r}))'])
-    result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+    result = subprocess.run(['ssh', '-v', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
         '-o', 'ControlMaster=no', '-o', 'ControlPath=none', '-o', 'ControlPersist=no',
         'gpuA', command], input=data, capture_output=True, timeout=timeout)
     print(result.stdout.decode(), end='')
@@ -34,6 +34,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checks', action='store_true',
                         help='detach source-bound qualification in the same SSH transaction')
+    parser.add_argument('--base-commit', help='reuse a receipt-confirmed immutable runtime without an SSH probe')
     args = parser.parse_args(argv)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     dirty = subprocess.check_output(['git', 'diff', 'HEAD', '--name-only'], cwd=ROOT, text=True)
@@ -55,6 +56,21 @@ def main(argv=None):
     # A full compressed source-only bundle avoids a separate manifest SSH probe.
     # No datasets/checkpoints enter this allowlisted archive.
     existing = {}
+    if args.base_commit:
+        assert re.fullmatch(r'[0-9a-f]{40}', args.base_commit), 'full receipt-bound source SHA required'
+        base = f'/root/autodl-tmp/c4/restart20261026/runtime_c4prep_{args.base_commit[:12]}'
+        old_names = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', args.base_commit, '--',
+            'src', 'tools', 'configs', 'tests/unit', 'traffic_shepherd', 'scripts/c4',
+            'scripts/round13c_waiter.py', 'pyproject.toml'], cwd=ROOT, text=True).splitlines()
+        old_names = [n for n in old_names if n in names]
+        old_blobs = io.BytesIO(subprocess.check_output(['git', 'cat-file', '--batch'], cwd=ROOT,
+            input=''.join(f'{args.base_commit}:{name}\n' for name in old_names).encode()))
+        for name in old_names:
+            header = old_blobs.readline().split()
+            assert header[1] == b'blob'
+            blob = old_blobs.read(int(header[2]))
+            assert old_blobs.read(1) == b'\n'
+            existing[name] = hashlib.sha256(blob).hexdigest()
     transferred = 0
     # Fast source-only compression keeps local preparation bounded too; the
     # remote installer already accepts either archive codec without a probe.
@@ -79,6 +95,8 @@ def main(argv=None):
     install = f'''import pathlib,sys,tarfile,io,json,hashlib
 r=pathlib.Path({runtime!r}); assert r.parent.is_dir()
 base=pathlib.Path({base!r})
+if {bool(args.base_commit)!r}:
+ assert json.loads((base/'SOURCE.json').read_text())['commit']=={args.base_commit!r}
 raw=sys.stdin.buffer.read({len(data.getvalue())})
 assert hashlib.sha256(raw).hexdigest()=={hashlib.sha256(data.getvalue()).hexdigest()!r}
 if r.exists():

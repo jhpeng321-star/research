@@ -148,3 +148,11 @@ installer-mode testsPASS (3total). Full local repeat timed out under120s and is
 not claimed a new complete PASS; detached remote qualification remains required.
 Staging uses fast source-only gzip and a pre-SSH bundle receipt to distinguish
 local archive preparation from transport; no datasets/checkpoints are bundled.
+
+The next full-source bundle (4,979,707bytes) prepared successfully but SSH closed.
+Added receipt-bound delta staging from the confirmed immutable1f5cc6aa runtime:
+local Git blobs determine unchanged bytes without a remote source probe, and
+every installed file is SHA-verified against the new full manifest. Previous
+runtime is read-only; qualification dispatch remains one-shot/source-bound.
+All four full/delta × stage-only/stage+checks installer proofsPASS; verbose SSH
+will identify whether any next failure is pre-authentication or during transfer.

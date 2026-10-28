@@ -93,7 +93,8 @@ def test_a_arguments_are_real_gpu_bounded_and_bind_credit():
 
 
 @pytest.mark.parametrize('checks', [False, True])
-def test_staging_installer_compiles_and_includes_native_head(monkeypatch, checks):
+@pytest.mark.parametrize('reuse_base', [False, True])
+def test_staging_installer_compiles_and_includes_native_head(monkeypatch, checks, reuse_base):
     import importlib.util
     import io
     import tarfile
@@ -116,10 +117,15 @@ def test_staging_installer_compiles_and_includes_native_head(monkeypatch, checks
     def remote(source, blob, **kwargs):
         compile(source, '<staging-test>', 'exec')
         with tarfile.open(fileobj=io.BytesIO(blob), mode='r:*') as tar:
-            assert 'configs/native_cav_head_v5.json' in tar.getnames()
+            assert ('configs/native_cav_head_v5.json' in tar.getnames()) is not reuse_base
+            manifest = json.loads(tar.extractfile('SOURCE.json').read())
+            assert 'configs/native_cav_head_v5.json' in manifest['files']
         captured.append(source)
     monkeypatch.setattr(stage, 'remote', remote)
-    stage.main(['--checks'] if checks else [])
+    args = ['--checks'] if checks else []
+    if reuse_base:
+        args += ['--base-commit', '1' * 40]
+    stage.main(args)
     assert len(captured) == 1
 
 
