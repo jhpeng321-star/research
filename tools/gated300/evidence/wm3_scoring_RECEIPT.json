@@ -1,0 +1,55 @@
+{
+ "task": "S-CCT2-INC WM3 verdict panels",
+ "smoke": false,
+ "wm_ckpt": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c03.a2/wm_s.pt",
+ "wm_sha256": "41e18f09b6060a1f4e4039f02655fcbcd497e32a360cffb71be716fffeaadc84",
+ "wm_config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+ "wm_config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+ "design_sha256": "b658c6b53aea256fa577512b2e208f9494e64447695fade16480d561b9a4b7f4",
+ "settings": {
+  "seed": 140014,
+  "entrant_control": true,
+  "entrant_controller_arms": [
+   "c00.a1:loop14_pairs_b0360_policy",
+   "c00.a1:loop14_pairs_b0660_policy",
+   "c01.a1:loop14_pairs_b0360_policy",
+   "c01.a1:loop14_pairs_b0660_policy",
+   "c02.a1:loop14_pairs_b0360_policy",
+   "c02.a1:loop14_pairs_b0660_policy",
+   "coopoff_c1",
+   "loop14_pairs_b0360_policy",
+   "loop14_pairs_b0660_policy",
+   "mappo",
+   "ours_c1"
+  ],
+  "samples": 1,
+  "overrides": "data.entries_v2=true, loss.paired_diff.couple_randomness=true"
+ },
+ "scorer": "W5_COMBINED/code score.evaluate (e3_score.rollout_dj, gpb=4)",
+ "gpu_fraction": 0.3,
+ "python": "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+ "torch": "2.8.0+cu128",
+ "started": 1793215518.8473244,
+ "validation": {
+  "groups": 36,
+  "steps": 600,
+  "wall_s": 1106.2579543590546,
+  "pairs_root": "/root/autodl-tmp/c4/e3data",
+  "role": "validation",
+  "sign300": 0.5833333333333334,
+  "out": "/root/autodl-tmp/c4/cct2inc20261029/WM3_validation.json",
+  "sha256": "2d46544ff9fc520e786952dc1bdeec817211da6beabaf4e33fcd3f5b9fdf1b2e"
+ },
+ "pairs300": {
+  "groups": 48,
+  "steps": 600,
+  "wall_s": 1183.8908157348633,
+  "pairs_root": "/root/autodl-tmp/c4/wmdeep20261027/score_pairs",
+  "role": "pairs300",
+  "sign300": 0.65625,
+  "out": "/root/autodl-tmp/c4/cct2inc20261029/WM3_pairs300.json",
+  "sha256": "deedba859961a241f087862c3de112513cbb8697c5935f9df1656f090322563d"
+ },
+ "finished": 1793217809.0035555,
+ "cuda_max_memory_allocated": 3045326336
+}

@@ -1,4 +1,7 @@
-"""CCT-1 bounded, critic-free paired credit. Every entry point is default OFF."""
+"""CCT-1 bounded, critic-free paired credit; 02:25 CCT-2 gain-only mode.
+
+Every entry point is default OFF; the registered CCT-1 mode is unchanged.
+"""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -15,22 +18,74 @@ from .counterfactual import baseline_index
 
 SIGMA = {90: 25.38, 120: 41.22, 180: 42.11, 300: 43.91}
 STEP_S = PHYSICS_DT_S * STEPS_PER_CONTROL
+CCT2_SCHEMA = 'gated300_cct2/1'
+H_G_HORIZONS = (120, 180, 300)
+MIN_GAIN = 20
 
 
 @dataclass
 class LongCreditConfig:
     enabled: bool = False
+    mode: str = 'cct1'  # Registered CCT-1 gate, or 02:25 CCT-2 'gain_only'.
     cct1_file: str = ''  # May contain {wm_sha256}, for accepted-WM swaps.
+    cct2_file: str = ''  # CCT-2 verdict authority; required by gain_only.
     w_long: float = 1.0  # Fixed prospectively; never tuned on observed outcomes.
     score_training_horizon: bool = False
 
     def __post_init__(self):
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')
-        if not isinstance(self.cct1_file, str):
-            raise ValueError('long_credit.cct1_file must be a path string')
+        if self.mode not in ('cct1', 'gain_only'):
+            raise ValueError('long_credit.mode must be cct1 or gain_only')
+        if not isinstance(self.cct1_file, str) or not isinstance(self.cct2_file, str):
+            raise ValueError('long_credit authority files must be path strings')
         if isinstance(self.w_long, bool) or not math.isfinite(self.w_long) or self.w_long < 0:
             raise ValueError('long_credit.w_long must be finite and nonnegative')
+
+
+def _install_gain_only(trainer, cfg, wm_sha256s, receipt):
+    """02:25 CCT-2: long credit only beyond H_G, never in the harm direction."""
+    if not cfg.cct2_file:
+        receipt['reason'] = 'missing CCT-2 file'
+        return
+    if len(wm_sha256s) != 1:
+        raise ValueError('CCT-2 requires a single WM-specific authority')
+    path = checked_path(cfg.cct2_file.format(wm_sha256=wm_sha256s[0]))
+    if not path.is_file():
+        receipt['reason'] = 'missing CCT-2 file'
+        return
+    raw = path.read_bytes()
+    doc = json.loads(raw)
+    if (doc.get('schema') != CCT2_SCHEMA
+            or doc.get('wm_sha256') != wm_sha256s[0]
+            or doc.get('panels') != ['pairs300', 'validation']
+            or doc.get('policy_authorized') is not True):
+        raise ValueError('gain-only long credit requires this WM\'s pooled CCT-2 verdict authority')
+    hg = doc.get('H_G')
+    if type(hg) is not int or hg not in (0, *H_G_HORIZONS):
+        raise ValueError('invalid CCT-2 H_G')
+    largest = 0
+    for horizon in H_G_HORIZONS:
+        row = doc.get('horizons', {}).get(str(horizon), {})
+        gain, agreement = (row.get(k) for k in ('n_gain', 'gain_sign_agreement'))
+        passed = (row.get('sigma') == SIGMA[horizon] and row.get('threshold') == 2 * SIGMA[horizon]
+                  and all(type(x) in (int, float) and math.isfinite(x) for x in (gain, agreement))
+                  and gain >= MIN_GAIN and .8 <= agreement <= 1
+                  and row.get('verdict') == 'PASS')
+        if passed:
+            largest = horizon
+    if hg != largest:
+        raise ValueError('CCT-2 H_G disagrees with the registered largest passing horizon')
+    if hg > 90:
+        if (doc.get('entrant_control') is not trainer.config.entrant_control
+                or doc.get('deterministic_crn') is False
+                or not trainer.config.deterministic_crn):
+            raise ValueError('CCT-2 entrant/CRN inference mismatch')
+        if trainer.config.future_samples != K or not trainer.config.pessimistic_credit:
+            raise ValueError('gain-only long credit requires existing q10/K8 machinery')
+        receipt['H_long'] = min(300, hg)
+    receipt.update(H_G=hg, artifact_sha256=hashlib.sha256(raw).hexdigest(),
+                   reason='active' if hg > 90 else 'H_G <= 90')
 
 
 def install(trainer, section, wm_sha256s):
@@ -38,49 +93,52 @@ def install(trainer, section, wm_sha256s):
     cfg = LongCreditConfig(**section)
     receipt = dict(config=asdict(cfg), wm_sha256s=list(wm_sha256s),
                    world_model_ids=list(trainer.world_model_ids), H_long=0, reason='disabled')
-    if cfg.enabled and cfg.cct1_file:
-        if len(wm_sha256s) != 1:
-            raise ValueError('CCT-1 requires a single WM-specific authority')
-        path = checked_path(cfg.cct1_file.format(wm_sha256=wm_sha256s[0]))
-        if path.is_file():
-            raw = path.read_bytes()
-            doc = json.loads(raw)
-            if (doc.get('schema') != 'gated300_cct1/1'
-                    or doc.get('wm_sha256') != wm_sha256s[0]
-                    or doc.get('panel') != 'pairs300' or doc.get('policy_authorized') is not True):
-                raise ValueError('long credit requires this WM\'s pairs300 CCT-1 verdict authority')
-            hc = doc.get('H_C')
-            if type(hc) is not int or hc not in (0, *SIGMA):
-                raise ValueError('invalid CCT-1 H_C')
-            contiguous = 0
-            for horizon, sigma in SIGMA.items():
-                row = doc.get('horizons', {}).get(str(horizon), {})
-                sign, coverage, wrong = (row.get(k) for k in
-                                         ('sign_agreement', 'coverage', 'wrong_mean_abs_real'))
-                passed = (row.get('sigma') == sigma and row.get('threshold') == 2 * sigma
-                          and all(type(x) in (int, float) and math.isfinite(x)
-                                  for x in (sign, coverage, wrong))
-                          and .8 <= sign <= 1 and .25 <= coverage <= 1 and 0 <= wrong <= 2 * sigma
-                          and row.get('verdict') == 'PASS')
-                if not passed:
-                    break
-                contiguous = horizon
-            if hc != contiguous:
-                raise ValueError('CCT-1 H_C disagrees with registered contiguous passing prefix')
-            if hc > 90:
-                if (doc.get('entrant_control') is not trainer.config.entrant_control
-                        or doc.get('deterministic_crn') is False
-                        or not trainer.config.deterministic_crn):
-                    raise ValueError('CCT-1 entrant/CRN inference mismatch')
-                if trainer.config.future_samples != K or not trainer.config.pessimistic_credit:
-                    raise ValueError('long credit requires existing q10/K8 machinery')
-                receipt['H_long'] = min(300, hc)
-            receipt.update(H_C=hc, artifact_sha256=hashlib.sha256(raw).hexdigest(),
-                           reason='active' if hc > 90 else 'H_C <= 90')
+    if cfg.enabled:
+        if cfg.mode == 'gain_only':
+            _install_gain_only(trainer, cfg, wm_sha256s, receipt)
+        elif cfg.cct1_file:
+            if len(wm_sha256s) != 1:
+                raise ValueError('CCT-1 requires a single WM-specific authority')
+            path = checked_path(cfg.cct1_file.format(wm_sha256=wm_sha256s[0]))
+            if path.is_file():
+                raw = path.read_bytes()
+                doc = json.loads(raw)
+                if (doc.get('schema') != 'gated300_cct1/1'
+                        or doc.get('wm_sha256') != wm_sha256s[0]
+                        or doc.get('panel') != 'pairs300' or doc.get('policy_authorized') is not True):
+                    raise ValueError('long credit requires this WM\'s pairs300 CCT-1 verdict authority')
+                hc = doc.get('H_C')
+                if type(hc) is not int or hc not in (0, *SIGMA):
+                    raise ValueError('invalid CCT-1 H_C')
+                contiguous = 0
+                for horizon, sigma in SIGMA.items():
+                    row = doc.get('horizons', {}).get(str(horizon), {})
+                    sign, coverage, wrong = (row.get(k) for k in
+                                             ('sign_agreement', 'coverage', 'wrong_mean_abs_real'))
+                    passed = (row.get('sigma') == sigma and row.get('threshold') == 2 * sigma
+                              and all(type(x) in (int, float) and math.isfinite(x)
+                                      for x in (sign, coverage, wrong))
+                              and .8 <= sign <= 1 and .25 <= coverage <= 1 and 0 <= wrong <= 2 * sigma
+                              and row.get('verdict') == 'PASS')
+                    if not passed:
+                        break
+                    contiguous = horizon
+                if hc != contiguous:
+                    raise ValueError('CCT-1 H_C disagrees with registered contiguous passing prefix')
+                if hc > 90:
+                    if (doc.get('entrant_control') is not trainer.config.entrant_control
+                            or doc.get('deterministic_crn') is False
+                            or not trainer.config.deterministic_crn):
+                        raise ValueError('CCT-1 entrant/CRN inference mismatch')
+                    if trainer.config.future_samples != K or not trainer.config.pessimistic_credit:
+                        raise ValueError('long credit requires existing q10/K8 machinery')
+                    receipt['H_long'] = min(300, hc)
+                receipt.update(H_C=hc, artifact_sha256=hashlib.sha256(raw).hexdigest(),
+                               reason='active' if hc > 90 else 'H_C <= 90')
+            else:
+                receipt['reason'] = 'missing CCT-1 file'
         else:
             receipt['reason'] = 'missing CCT-1 file'
-    elif cfg.enabled:
-        receipt['reason'] = 'missing CCT-1 file'
     trainer.gated300 = receipt
     return receipt
 
@@ -107,11 +165,13 @@ def rollout_config(trainer, cfg):
                    future_samples=K, uncertainty_weight=0.)
 
 
-def gate(improvement, sigma, eligible=None):
+def gate(improvement, sigma, eligible=None, gain_only=False):
     """K x ... paired improvements = -dJ. Gate decisions never carry a gradient.
 
     Improvement needs q10>0; harm needs q90<0. A negative coefficient does not
     reverse this test: it is applied after the paired treatment/native sign test.
+    Gain-only mode (02:25 CCT-2) keeps only rows whose median itself predicts
+    improvement beyond 2*sigma with q10>0: harm and below-margin rows are OFF.
     """
     if improvement.shape[0] != K:
         raise ValueError('confidence gate requires K=8 paired samples')
@@ -119,8 +179,12 @@ def gate(improvement, sigma, eligible=None):
     median = torch.quantile(samples, .5, dim=0)
     q10 = torch.quantile(samples, QUANTILE, dim=0)
     q90 = torch.quantile(samples, 1 - QUANTILE, dim=0)
-    agreement = ((median > 0) & (q10 > 0)) | ((median < 0) & (q90 < 0))
-    on = (median.abs() > 2 * sigma) & agreement & torch.isfinite(samples).all(0)
+    if gain_only:
+        agreement = (median > 0) & (q10 > 0)
+        on = (median > 2 * sigma) & agreement & torch.isfinite(samples).all(0)
+    else:
+        agreement = ((median > 0) & (q10 > 0)) | ((median < 0) & (q90 < 0))
+        on = (median.abs() > 2 * sigma) & agreement & torch.isfinite(samples).all(0)
     if eligible is not None:
         on = on & eligible
     # where (rather than multiply) also zeros nonfinite OFF samples.
@@ -167,7 +231,8 @@ def prefix(trainer, imagined, dense_steps):
 def actor_term(trainer, imagined, coefficients, dense_difference, scale):
     samples = imagined['gated300_long_difference']
     eligible = coefficients != 0
-    gated, on, agreement, median = gate(samples, SIGMA[imagined['gated300_horizon_s']], eligible)
+    gated, on, agreement, median = gate(samples, SIGMA[imagined['gated300_horizon_s']],
+        eligible, gain_only=trainer.gated300['config'].get('mode') == 'gain_only')
     # Reuse the signed JOINT q10 selector, including covariance/negative team rows.
     selected, _ = tail_credit(imagined, gated, coefficients, enabled=True)
     weight = trainer.gated300['config']['w_long']
