@@ -1,0 +1,95 @@
+Traceback (most recent call last):
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/parallel_futures.py", line 336, in _main
+    result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/parallel_futures.py", line 222, in _vjp
+    result = trainer.imagine(small, **{**kwargs, 'variants': variants},
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/dreamer.py", line 1180, in imagine
+    roll = segmented_rollout(
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/imagination_memory.py", line 432, in segmented_rollout
+    chunk = checkpoint(call, carry, use_reentrant=False, context_fn=contexts)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/_compile.py", line 53, in inner
+    return disable_fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py", line 929, in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/utils/checkpoint.py", line 495, in checkpoint
+    ret = function(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/imagination_memory.py", line 422, in call
+    return model.rollout(state, n_steps=count, k0=offset, cav_controller=controller,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/wms.py", line 2558, in rollout
+    else step_fn(current)
+         ^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/wms.py", line 1773, in step
+    out = self.forward(state, **forward_kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/wms.py", line 1123, in forward
+    base = self._residual_prediction(residual_kin, present, conditioning, courtesy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/wms.py", line 937, in _residual_prediction
+    return self.residual_net(kin, present, conditioning=conditioning,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/residual_net.py", line 360, in forward
+    return self._forward_dense(kin, kin_mask, cav_flag=cav_flag,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/residual_net.py", line 471, in _forward_dense
+    x, a = blk(x, mask, geo, courtesy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/residual_net.py", line 277, in forward
+    a, attn = self.attn(self.ln1(x), mask, geo, courtesy)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/residual_net.py", line 254, in forward
+    logits = logits + self._pair_bias(geo, courtesy)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/model/residual_net.py", line 227, in _pair_bias
+    bias = self.bias(feats)
+           ^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/container.py", line 244, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/activation.py", line 738, in forward
+    return F.gelu(input, approximate=self.approximate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/control/imagination_memory.py", line 199, in __torch_dispatch__
+    output = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/_ops.py", line 829, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 324.00 MiB. GPU 0 has a total capacity of 47.37 GiB of which 29.91 GiB is free. Process 502706 has 9.97 GiB memory in use. Process 509482 has 842.00 MiB memory in use. Process 510066 has 1.03 GiB memory in use. Process 510070 has 746.00 MiB memory in use. Process 510068 has 1.06 GiB memory in use. Including non-PyTorch memory, this process has 1.06 GiB memory in use. Process 510072 has 750.00 MiB memory in use. Process 510069 has 692.00 MiB memory in use. Process 510065 has 604.00 MiB memory in use. Process 510071 has 736.00 MiB memory in use. 873.18 MiB allowed; Of the allocated memory 626.62 MiB is allocated by PyTorch, and 45.38 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

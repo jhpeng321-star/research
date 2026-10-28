@@ -1,0 +1,83 @@
+{
+  "name": "nine_N8_full",
+  "returncode": 1,
+  "elapsed_s": 251.12548279762268,
+  "peak_total_gpu_mib": 31120,
+  "peak_total_gpu_fraction": 0.6332926332926333,
+  "peak_owned_gpu_mib": 20836,
+  "peak_owned_gpu_fraction": 0.424013024013024,
+  "peak_external_gpu_mib": 10210,
+  "worker_diagnostics_contain_out_of_memory": true,
+  "worker_peaks": [
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/0/memory.json",
+      "peak_allocated": 1249143296,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/1/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/2/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/3/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/4/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/5/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/6/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/a3685055310c42ab9c62294c36df66aa/7/memory.json",
+      "peak_allocated": 1251631616,
+      "peak_reserved": 1308622848
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/1/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2629828608
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/3/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2659188736
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/4/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2671771648
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/5/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2684354560
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/6/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2717908992
+    },
+    {
+      "path": "future_workers/ba979cb7e47f402dbf38733fd65c537f/7/memory.json",
+      "peak_allocated": 2437818368,
+      "peak_reserved": 2709520384
+    }
+  ]
+}

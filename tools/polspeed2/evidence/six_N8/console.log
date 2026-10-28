@@ -1,0 +1,6 @@
+[loop-refresh] resuming on new WM ids ['1eb73c3aba0549edb45d113572a256745a9342ee1b5170c5ae4f5ceedc429d84'] (was ['eeb54557d5704c903ae089d8e979b6733634314feec2668ad7fba98930a62ec0'])
+/root/autodl-tmp/c4/polspeed2_20261028/runtime/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  kin = torch.as_tensor(np.asarray(corpus.array("veh_kin")[lo:tick + 1], np.float32))
+startup score cache hit score_native_panel 593b7627bfbafdde791f3bdcf31e8b199307af3a828f144c36426b9fc4ad6a7d.json
+startup score cache hit score_gate_panel c94fca21924a52ff8b050f56ae775b771074a8ad6f3901b0477db15381687bb7.json
+{"status": "failed", "summary_path": "/root/autodl-tmp/c4/polspeed2_20261028/out/six_N8/RUN_SUMMARY.json", "error": "RuntimeError: own-run STOP requested; checkpoint saved"}

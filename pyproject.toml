@@ -11,6 +11,7 @@ dependencies = ["numpy", "torch"]
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+parallel-futures = ["cloudpickle>=3.1,<4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -228,3 +228,9 @@ HorizonConfig binding, and boundary verification. No S-GATED300/S-EXPLOIT/
 S-LOOPPATCH/S-POLSPEED implementation is imported or modified by this branch;
 their selection horizon, curriculum, credit coefficient/ON-OFF, execution and
 performance decisions remain integration-owned.
+
+## S-INTEGRATE note
+
+c4/polspeed2 imported only the six-row preset (3-CAV groups, 9 rows -> 6) from
+S-AUDITFIX; candidate A keeps the NINE-row exact path per MAIN 06:00 (i). The six-row
+preset remains available but is NOT used by the candidate-A config.

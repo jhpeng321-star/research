@@ -1,0 +1,1599 @@
+{
+  "name": "six_N8",
+  "returncode": 1,
+  "elapsed_s": 268.9311807155609,
+  "peak_total_gpu_mib": 31848,
+  "peak_total_gpu_fraction": 0.6481074481074481,
+  "peak_owned_gpu_mib": 21474,
+  "peak_owned_gpu_fraction": 0.436996336996337,
+  "peak_external_gpu_mib": 10204,
+  "s_per_update": 231.41959646902978,
+  "projected_150_hours": 9.642483186209574,
+  "parity": {
+    "compared_leaves": 158,
+    "bitwise_identical": false,
+    "n_diff": 61,
+    "differences": [
+      {
+        "key": "C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "D_all",
+        "reference": -34.5966796875,
+        "actual": -34.595703125,
+        "absolute": 0.0009765625,
+        "relative": 2.8227058458238066e-05
+      },
+      {
+        "key": "D_i",
+        "reference": 1.8470052083333333,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "I_i",
+        "reference": 2.4127604166666665,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "M_i",
+        "reference": 4.259765625,
+        "actual": 4.260416666666667,
+        "absolute": 0.0006510416666669627,
+        "relative": 0.00015281173594138976
+      },
+      {
+        "key": "action_stats.mean",
+        "reference": 0.09219561517238617,
+        "actual": 0.09219568967819214,
+        "absolute": 7.450580596923828e-08,
+        "relative": 8.081267815154898e-07
+      },
+      {
+        "key": "action_stats.std",
+        "reference": 0.4848850965499878,
+        "actual": 0.48488524556159973,
+        "absolute": 1.4901161193847656e-07,
+        "relative": 3.07313149456403e-07
+      },
+      {
+        "key": "actor_grad_norm",
+        "reference": 23190.822265625,
+        "actual": 23190.83203125,
+        "absolute": 0.009765625,
+        "relative": 4.2109851801956355e-07
+      },
+      {
+        "key": "actor_loss",
+        "reference": 0.03009761869907379,
+        "actual": 0.030089840292930603,
+        "absolute": 7.778406143188477e-06,
+        "relative": 0.0002584392546453466
+      },
+      {
+        "key": "actor_module_grad_norms.attention",
+        "reference": 751.3303660476556,
+        "actual": 751.3307860517003,
+        "absolute": 0.00042000404471309594,
+        "relative": 5.590134898108577e-07
+      },
+      {
+        "key": "actor_module_grad_norms.group_encoder",
+        "reference": 712.3022188823131,
+        "actual": 712.3024754265715,
+        "absolute": 0.0002565442583772892,
+        "relative": 3.60161963811307e-07
+      },
+      {
+        "key": "actor_module_grad_norms.own_encoder",
+        "reference": 1405.9811194730496,
+        "actual": 1405.9816067404904,
+        "absolute": 0.0004872674408034072,
+        "relative": 3.465674362078229e-07
+      },
+      {
+        "key": "actor_module_grad_norms.report_encoder",
+        "reference": 274.75674717376967,
+        "actual": 274.75689397236414,
+        "absolute": 0.00014679859447142007,
+        "relative": 5.342853908014607e-07
+      },
+      {
+        "key": "actor_module_grad_norms.residual_head",
+        "reference": 23123.367879707042,
+        "actual": 23123.376803585154,
+        "absolute": 0.008923878111090744,
+        "relative": 3.8592452075196667e-07
+      },
+      {
+        "key": "by_group_size.3.C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_group_size.3.D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "by_group_size.3.coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_penetration.p40.C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_penetration.p40.D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "by_penetration.p40.coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "cf_coverage.rows_individual",
+        "reference": 3,
+        "actual": 0,
+        "absolute": 3,
+        "relative": 1.0
+      },
+      {
+        "key": "cf_coverage.rows_total",
+        "reference": 9,
+        "actual": 6,
+        "absolute": 3,
+        "relative": 0.3333333333333333
+      },
+      {
+        "key": "cf_rows",
+        "reference": 8,
+        "actual": 5,
+        "absolute": 3,
+        "relative": 0.375
+      },
+      {
+        "key": "cf_weights.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "cf_weights.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "cf_weights.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "cost_ttc",
+        "reference": 0.4044957458972931,
+        "actual": 0.40449753403663635,
+        "absolute": 1.7881393432617188e-06,
+        "relative": 4.4206433730687776e-06
+      },
+      {
+        "key": "delay",
+        "reference": 64.99061584472656,
+        "actual": 64.99060821533203,
+        "absolute": 7.62939453125e-06,
+        "relative": 1.1739224858982562e-07
+      },
+      {
+        "key": "ensemble_disagreement",
+        "reference": 5.142552375793457,
+        "actual": 5.142542839050293,
+        "absolute": 9.5367431640625e-06,
+        "relative": 1.8544766231167559e-06
+      },
+      {
+        "key": "hard_brake",
+        "reference": 0.0026245831977576017,
+        "actual": 0.0026245827320963144,
+        "absolute": 4.656612873077393e-10,
+        "relative": 1.7742294765339966e-07
+      },
+      {
+        "key": "mean_paired_credit",
+        "reference": 269.2962341308594,
+        "actual": 269.304931640625,
+        "absolute": 0.008697509765625,
+        "relative": 3.229613996535134e-05
+      },
+      {
+        "key": "memory_spill.copied_bytes",
+        "reference": 6206505984,
+        "actual": 4137670656,
+        "absolute": 2068835328,
+        "relative": 0.3333333333333333
+      },
+      {
+        "key": "memory_spill.copies",
+        "reference": 87087,
+        "actual": 69813,
+        "absolute": 17274,
+        "relative": 0.19835337076716386
+      },
+      {
+        "key": "n_C_G",
+        "reference": 1,
+        "actual": 0,
+        "absolute": 1,
+        "relative": 1.0
+      },
+      {
+        "key": "native_anchor_feature",
+        "reference": 0.686008632183075,
+        "actual": 0.6860085725784302,
+        "absolute": 5.960464477539063e-08,
+        "relative": 8.68861439625208e-08
+      },
+      {
+        "key": "native_command_abs_deviation",
+        "reference": 0.055965062230825424,
+        "actual": 0.05596502125263214,
+        "absolute": 4.0978193283081055e-08,
+        "relative": 7.322102692224e-07
+      },
+      {
+        "key": "native_command_mse",
+        "reference": 0.004437573254108429,
+        "actual": 0.004437569994479418,
+        "absolute": 3.259629011154175e-09,
+        "relative": 7.345521582401641e-07
+      },
+      {
+        "key": "pessimistic_paired_credit",
+        "reference": -77.06398010253906,
+        "actual": -77.05330657958984,
+        "absolute": 0.01067352294921875,
+        "relative": 0.00013850209832163969
+      },
+      {
+        "key": "physical_residual_mps2.mean_abs",
+        "reference": 0.055965058505535126,
+        "actual": 0.05596502125263214,
+        "absolute": 3.725290298461914e-08,
+        "relative": 6.656457436015136e-07
+      },
+      {
+        "key": "physical_residual_mps2.rms",
+        "reference": 0.06661511212587357,
+        "actual": 0.06661508977413177,
+        "absolute": 2.2351741790771484e-08,
+        "relative": 3.3553560262026463e-07
+      },
+      {
+        "key": "real_credit_weights.effective.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.effective.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.effective.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.raw.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.raw.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.raw.individual",
+        "reference": 3.569645989985546,
+        "actual": 0.0,
+        "absolute": 3.569645989985546,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.registered.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.registered.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.registered.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "return_scale",
+        "reference": 1827.4654324929434,
+        "actual": 1827.4654318825924,
+        "absolute": 6.103509804233909e-07,
+        "relative": 3.339877020769572e-10
+      },
+      {
+        "key": "returns",
+        "reference": -7225.42529296875,
+        "actual": -7225.42431640625,
+        "absolute": 0.0009765625,
+        "relative": 1.351564040043869e-07
+      },
+      {
+        "key": "smooth",
+        "reference": 66.51798248291016,
+        "actual": 66.51800537109375,
+        "absolute": 2.288818359375e-05,
+        "relative": 3.440900469889368e-07
+      },
+      {
+        "key": "throughput",
+        "reference": 0.5445935130119324,
+        "actual": 0.5445936322212219,
+        "absolute": 1.1920928955078125e-07,
+        "relative": 2.18895856465609e-07
+      },
+      {
+        "key": "total_wait",
+        "reference": 152.91700744628906,
+        "actual": 152.91699981689453,
+        "absolute": 7.62939453125e-06,
+        "relative": 4.989238711024192e-08
+      },
+      {
+        "key": "ttc_excess",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_native_cost",
+        "reference": 0.3649524748325348,
+        "actual": 0.364952951669693,
+        "absolute": 4.76837158203125e-07,
+        "relative": 1.3065715896297087e-06
+      },
+      {
+        "key": "ttc_penalty",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_penalty_report",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_policy_cost_native_starts",
+        "reference": 0.4044957458972931,
+        "actual": 0.40449753403663635,
+        "absolute": 1.7881393432617188e-06,
+        "relative": 4.4206433730687776e-06
+      }
+    ]
+  },
+  "six_serial_parity": {
+    "compared_leaves": 158,
+    "bitwise_identical": true,
+    "n_diff": 0,
+    "differences": []
+  },
+  "phase_seconds": {
+    "no_grad_full_forward": 50.95682954788208,
+    "replay_and_ordered_vjp": 174.2560305595398,
+    "other_update": 6.206736361607909
+  },
+  "post_update_scoring_seconds_estimate": 11.123975718393922,
+  "scoring_projection": {
+    "uncached_startup_seconds": 368.02831053733826,
+    "estimated_panel_seconds": 171.0282872915268,
+    "estimated_per_update_post_seconds": 11.123975718393922,
+    "projected_150_end_to_end_hours": 10.968337982032034
+  },
+  "FGA_parity": {
+    "compared_leaves": 158,
+    "bitwise_identical": false,
+    "n_diff": 61,
+    "differences": [
+      {
+        "key": "C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "D_all",
+        "reference": -34.5966796875,
+        "actual": -34.595703125,
+        "absolute": 0.0009765625,
+        "relative": 2.8227058458238066e-05
+      },
+      {
+        "key": "D_i",
+        "reference": 1.8470052083333333,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "I_i",
+        "reference": 2.4127604166666665,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "M_i",
+        "reference": 4.259765625,
+        "actual": 4.260416666666667,
+        "absolute": 0.0006510416666669627,
+        "relative": 0.00015281173594138976
+      },
+      {
+        "key": "action_stats.mean",
+        "reference": 0.09219561517238617,
+        "actual": 0.09219568967819214,
+        "absolute": 7.450580596923828e-08,
+        "relative": 8.081267815154898e-07
+      },
+      {
+        "key": "action_stats.std",
+        "reference": 0.4848850965499878,
+        "actual": 0.48488524556159973,
+        "absolute": 1.4901161193847656e-07,
+        "relative": 3.07313149456403e-07
+      },
+      {
+        "key": "actor_grad_norm",
+        "reference": 23190.822265625,
+        "actual": 23190.83203125,
+        "absolute": 0.009765625,
+        "relative": 4.2109851801956355e-07
+      },
+      {
+        "key": "actor_loss",
+        "reference": 0.03009761869907379,
+        "actual": 0.030089840292930603,
+        "absolute": 7.778406143188477e-06,
+        "relative": 0.0002584392546453466
+      },
+      {
+        "key": "actor_module_grad_norms.attention",
+        "reference": 751.3303660476556,
+        "actual": 751.3307860517003,
+        "absolute": 0.00042000404471309594,
+        "relative": 5.590134898108577e-07
+      },
+      {
+        "key": "actor_module_grad_norms.group_encoder",
+        "reference": 712.3022188823131,
+        "actual": 712.3024754265715,
+        "absolute": 0.0002565442583772892,
+        "relative": 3.60161963811307e-07
+      },
+      {
+        "key": "actor_module_grad_norms.own_encoder",
+        "reference": 1405.9811194730496,
+        "actual": 1405.9816067404904,
+        "absolute": 0.0004872674408034072,
+        "relative": 3.465674362078229e-07
+      },
+      {
+        "key": "actor_module_grad_norms.report_encoder",
+        "reference": 274.75674717376967,
+        "actual": 274.75689397236414,
+        "absolute": 0.00014679859447142007,
+        "relative": 5.342853908014607e-07
+      },
+      {
+        "key": "actor_module_grad_norms.residual_head",
+        "reference": 23123.367879707042,
+        "actual": 23123.376803585154,
+        "absolute": 0.008923878111090744,
+        "relative": 3.8592452075196667e-07
+      },
+      {
+        "key": "by_group_size.3.C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_group_size.3.D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "by_group_size.3.coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_penetration.p40.C_G",
+        "reference": 3.62109375,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "by_penetration.p40.D_G",
+        "reference": 9.162109375,
+        "actual": 9.1630859375,
+        "absolute": 0.0009765625,
+        "relative": 0.00010657572205051689
+      },
+      {
+        "key": "by_penetration.p40.coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "cf_coverage.rows_individual",
+        "reference": 3,
+        "actual": 0,
+        "absolute": 3,
+        "relative": 1.0
+      },
+      {
+        "key": "cf_coverage.rows_total",
+        "reference": 9,
+        "actual": 6,
+        "absolute": 3,
+        "relative": 0.3333333333333333
+      },
+      {
+        "key": "cf_rows",
+        "reference": 8,
+        "actual": 5,
+        "absolute": 3,
+        "relative": 0.375
+      },
+      {
+        "key": "cf_weights.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "cf_weights.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "cf_weights.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "coop_positive_fraction",
+        "reference": 1.0,
+        "actual": null,
+        "absolute": null,
+        "relative": null
+      },
+      {
+        "key": "cost_ttc",
+        "reference": 0.4044957458972931,
+        "actual": 0.40449753403663635,
+        "absolute": 1.7881393432617188e-06,
+        "relative": 4.4206433730687776e-06
+      },
+      {
+        "key": "delay",
+        "reference": 64.99061584472656,
+        "actual": 64.99060821533203,
+        "absolute": 7.62939453125e-06,
+        "relative": 1.1739224858982562e-07
+      },
+      {
+        "key": "ensemble_disagreement",
+        "reference": 5.142552375793457,
+        "actual": 5.142542839050293,
+        "absolute": 9.5367431640625e-06,
+        "relative": 1.8544766231167559e-06
+      },
+      {
+        "key": "hard_brake",
+        "reference": 0.0026245831977576017,
+        "actual": 0.0026245827320963144,
+        "absolute": 4.656612873077393e-10,
+        "relative": 1.7742294765339966e-07
+      },
+      {
+        "key": "mean_paired_credit",
+        "reference": 269.2962341308594,
+        "actual": 269.304931640625,
+        "absolute": 0.008697509765625,
+        "relative": 3.229613996535134e-05
+      },
+      {
+        "key": "memory_spill.copied_bytes",
+        "reference": 6206505984,
+        "actual": 4137670656,
+        "absolute": 2068835328,
+        "relative": 0.3333333333333333
+      },
+      {
+        "key": "memory_spill.copies",
+        "reference": 87087,
+        "actual": 69813,
+        "absolute": 17274,
+        "relative": 0.19835337076716386
+      },
+      {
+        "key": "n_C_G",
+        "reference": 1,
+        "actual": 0,
+        "absolute": 1,
+        "relative": 1.0
+      },
+      {
+        "key": "native_anchor_feature",
+        "reference": 0.686008632183075,
+        "actual": 0.6860085725784302,
+        "absolute": 5.960464477539063e-08,
+        "relative": 8.68861439625208e-08
+      },
+      {
+        "key": "native_command_abs_deviation",
+        "reference": 0.055965062230825424,
+        "actual": 0.05596502125263214,
+        "absolute": 4.0978193283081055e-08,
+        "relative": 7.322102692224e-07
+      },
+      {
+        "key": "native_command_mse",
+        "reference": 0.004437573254108429,
+        "actual": 0.004437569994479418,
+        "absolute": 3.259629011154175e-09,
+        "relative": 7.345521582401641e-07
+      },
+      {
+        "key": "pessimistic_paired_credit",
+        "reference": -77.06398010253906,
+        "actual": -77.05330657958984,
+        "absolute": 0.01067352294921875,
+        "relative": 0.00013850209832163969
+      },
+      {
+        "key": "physical_residual_mps2.mean_abs",
+        "reference": 0.055965058505535126,
+        "actual": 0.05596502125263214,
+        "absolute": 3.725290298461914e-08,
+        "relative": 6.656457436015136e-07
+      },
+      {
+        "key": "physical_residual_mps2.rms",
+        "reference": 0.06661511212587357,
+        "actual": 0.06661508977413177,
+        "absolute": 2.2351741790771484e-08,
+        "relative": 3.3553560262026463e-07
+      },
+      {
+        "key": "real_credit_weights.effective.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.effective.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.effective.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.raw.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.raw.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.raw.individual",
+        "reference": 3.569645989985546,
+        "actual": 0.0,
+        "absolute": 3.569645989985546,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.registered.coop",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "real_credit_weights.registered.group",
+        "reference": 9.9,
+        "actual": 18.8,
+        "absolute": 8.9,
+        "relative": 0.4734042553191489
+      },
+      {
+        "key": "real_credit_weights.registered.individual",
+        "reference": 8.9,
+        "actual": 0.0,
+        "absolute": 8.9,
+        "relative": 1.0
+      },
+      {
+        "key": "return_scale",
+        "reference": 1827.4654324929434,
+        "actual": 1827.4654318825924,
+        "absolute": 6.103509804233909e-07,
+        "relative": 3.339877020769572e-10
+      },
+      {
+        "key": "returns",
+        "reference": -7225.42529296875,
+        "actual": -7225.42431640625,
+        "absolute": 0.0009765625,
+        "relative": 1.351564040043869e-07
+      },
+      {
+        "key": "smooth",
+        "reference": 66.51798248291016,
+        "actual": 66.51800537109375,
+        "absolute": 2.288818359375e-05,
+        "relative": 3.440900469889368e-07
+      },
+      {
+        "key": "throughput",
+        "reference": 0.5445935130119324,
+        "actual": 0.5445936322212219,
+        "absolute": 1.1920928955078125e-07,
+        "relative": 2.18895856465609e-07
+      },
+      {
+        "key": "total_wait",
+        "reference": 152.91700744628906,
+        "actual": 152.91699981689453,
+        "absolute": 7.62939453125e-06,
+        "relative": 4.989238711024192e-08
+      },
+      {
+        "key": "ttc_excess",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_native_cost",
+        "reference": 0.3649524748325348,
+        "actual": 0.364952951669693,
+        "absolute": 4.76837158203125e-07,
+        "relative": 1.3065715896297087e-06
+      },
+      {
+        "key": "ttc_penalty",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_penalty_report",
+        "reference": 0.0395432710647583,
+        "actual": 0.03954458236694336,
+        "absolute": 1.3113021850585938e-06,
+        "relative": 3.316009694806526e-05
+      },
+      {
+        "key": "ttc_policy_cost_native_starts",
+        "reference": 0.4044957458972931,
+        "actual": 0.40449753403663635,
+        "absolute": 1.7881393432617188e-06,
+        "relative": 4.4206433730687776e-06
+      }
+    ]
+  },
+  "nine_N2_state_parity": {
+    "bitwise_identical": false,
+    "compared_tensors": 157,
+    "differences": [
+      {
+        "key": "group_encoder.encoder.field_attention.in_proj_bias",
+        "max_absolute": 3.2015122997108847e-07,
+        "max_relative": 0.13549378966030637,
+        "relative_to_reference_max": 0.006403030351757214
+      },
+      {
+        "key": "group_encoder.encoder.field_attention.in_proj_weight",
+        "max_absolute": 1.4901161193847656e-08,
+        "max_relative": 4.557867243491646e-06,
+        "relative_to_reference_max": 9.732949284131847e-08
+      },
+      {
+        "key": "group_encoder.encoder.field_attention.out_proj.bias",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 1.4552023593486891e-07,
+        "relative_to_reference_max": 1.4551924066313992e-07
+      },
+      {
+        "key": "group_encoder.encoder.field_attention.out_proj.weight",
+        "max_absolute": 7.450580596923828e-09,
+        "max_relative": 3.1333307431132526e-07,
+        "relative_to_reference_max": 5.959528129330342e-08
+      },
+      {
+        "key": "group_encoder.encoder.field_input.0.weight",
+        "max_absolute": 7.450580596923828e-09,
+        "max_relative": 6.587338424116299e-08,
+        "relative_to_reference_max": 2.3570825427678486e-08
+      },
+      {
+        "key": "group_encoder.encoder.field_input.2.bias",
+        "max_absolute": 2.3283064365386963e-10,
+        "max_relative": 8.091135311696829e-08,
+        "relative_to_reference_max": 1.97322463612317e-09
+      },
+      {
+        "key": "group_encoder.encoder.field_input.2.weight",
+        "max_absolute": 1.4901161193847656e-08,
+        "max_relative": 1.013276968113187e-06,
+        "relative_to_reference_max": 1.1921107303973037e-07
+      },
+      {
+        "key": "group_encoder.encoder.head.0.weight",
+        "max_absolute": 1.1175870895385742e-06,
+        "max_relative": 0.00011472670141269794,
+        "relative_to_reference_max": 1.5635692533487745e-05
+      },
+      {
+        "key": "group_encoder.encoder.head.2.weight",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 8.48624701835711e-08,
+        "relative_to_reference_max": 1.4900267739930965e-08
+      },
+      {
+        "key": "group_encoder.encoder.input.weight",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 6.016940213816785e-08,
+        "relative_to_reference_max": 6.98176742157632e-09
+      },
+      {
+        "key": "group_encoder.encoder.set_block.attention.in_proj_bias",
+        "max_absolute": 6.97737618793326e-07,
+        "max_relative": 1.6148649423027974,
+        "relative_to_reference_max": 0.0139547588204474
+      },
+      {
+        "key": "group_encoder.encoder.set_block.attention.in_proj_weight",
+        "max_absolute": 5.327165126800537e-07,
+        "max_relative": 1.753512865664912e-05,
+        "relative_to_reference_max": 3.4787485924448e-06
+      },
+      {
+        "key": "group_encoder.encoder.set_block.attention.out_proj.bias",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 1.4552415362606534e-07,
+        "relative_to_reference_max": 1.4551918772353566e-07
+      },
+      {
+        "key": "group_encoder.encoder.set_block.attention.out_proj.weight",
+        "max_absolute": 7.450580596923828e-09,
+        "max_relative": 1.1737346817353855e-07,
+        "relative_to_reference_max": 5.961845026488776e-08
+      },
+      {
+        "key": "group_encoder.encoder.set_block.ffn.0.weight",
+        "max_absolute": 2.9802322387695312e-08,
+        "max_relative": 8.810962020516358e-06,
+        "relative_to_reference_max": 2.3835237490731072e-07
+      },
+      {
+        "key": "group_encoder.encoder.set_block.ffn.2.weight",
+        "max_absolute": 3.725290298461914e-09,
+        "max_relative": 4.2741426550674985e-07,
+        "relative_to_reference_max": 4.212393248477199e-08
+      },
+      {
+        "key": "group_encoder.encoder.set_block.norm1.bias",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 1.4551942065808248e-07,
+        "relative_to_reference_max": 1.4551919831145343e-07
+      },
+      {
+        "key": "group_encoder.encoder.set_block.norm2.bias",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 1.4551932536658682e-07,
+        "relative_to_reference_max": 1.4551920889937274e-07
+      },
+      {
+        "key": "optimizer.state.0.exp_avg",
+        "max_absolute": 2.9802322387695312e-08,
+        "max_relative": 0.0070923333130893974,
+        "relative_to_reference_max": 2.0475303456794295e-07
+      },
+      {
+        "key": "optimizer.state.0.exp_avg_sq",
+        "max_absolute": 6.984919309616089e-10,
+        "max_relative": 0.014134170076960448,
+        "relative_to_reference_max": 3.297022129612534e-07
+      },
+      {
+        "key": "optimizer.state.1.exp_avg",
+        "max_absolute": 3.725290298461914e-09,
+        "max_relative": 0.0002646174423203909,
+        "relative_to_reference_max": 1.7373047540910268e-07
+      },
+      {
+        "key": "optimizer.state.1.exp_avg_sq",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 0.0005292651665966572,
+        "relative_to_reference_max": 1.5824205733663584e-07
+      },
+      {
+        "key": "optimizer.state.10.exp_avg",
+        "max_absolute": 9.5367431640625e-07,
+        "max_relative": 6.605878595728284e-05,
+        "relative_to_reference_max": 2.1246450647628996e-07
+      },
+      {
+        "key": "optimizer.state.10.exp_avg_sq",
+        "max_absolute": 7.152557373046875e-07,
+        "max_relative": 2.1011501462439414e-06,
+        "relative_to_reference_max": 2.3536640743933588e-07
+      },
+      {
+        "key": "optimizer.state.11.exp_avg_sq",
+        "max_absolute": 4.76837158203125e-07,
+        "max_relative": 5.961175460344324e-08,
+        "relative_to_reference_max": 5.961175815700473e-08
+      },
+      {
+        "key": "optimizer.state.12.exp_avg",
+        "max_absolute": 3.6980054574087262e-09,
+        "max_relative": 0.0028514137694617744,
+        "relative_to_reference_max": 2.9248988234191786e-07
+      },
+      {
+        "key": "optimizer.state.12.exp_avg_sq",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 0.0056947327958510536,
+        "relative_to_reference_max": 4.5517323153535737e-07
+      },
+      {
+        "key": "optimizer.state.13.exp_avg",
+        "max_absolute": 1.3969838619232178e-09,
+        "max_relative": 7.342252437359785e-05,
+        "relative_to_reference_max": 2.451528981853047e-07
+      },
+      {
+        "key": "optimizer.state.13.exp_avg_sq",
+        "max_absolute": 5.684341886080801e-13,
+        "max_relative": 0.00014684922637849264,
+        "relative_to_reference_max": 1.7505377301799566e-07
+      },
+      {
+        "key": "optimizer.state.14.exp_avg",
+        "max_absolute": 7.8580342233181e-10,
+        "max_relative": 0.19850175082177623,
+        "relative_to_reference_max": 4.44201628844598e-07
+      },
+      {
+        "key": "optimizer.state.14.exp_avg_sq",
+        "max_absolute": 1.7053025658242404e-13,
+        "max_relative": 0.3576006140026883,
+        "relative_to_reference_max": 5.449214636481529e-07
+      },
+      {
+        "key": "optimizer.state.15.exp_avg",
+        "max_absolute": 8.149072527885437e-10,
+        "max_relative": 1.6143592296651499,
+        "relative_to_reference_max": 4.4179393329833063e-07
+      },
+      {
+        "key": "optimizer.state.15.exp_avg_sq",
+        "max_absolute": 1.5631940186722204e-13,
+        "max_relative": 0.9960292320658968,
+        "relative_to_reference_max": 4.5944760864620255e-07
+      },
+      {
+        "key": "optimizer.state.16.exp_avg",
+        "max_absolute": 1.367880031466484e-09,
+        "max_relative": 0.00037046099223170573,
+        "relative_to_reference_max": 3.5318847736269266e-07
+      },
+      {
+        "key": "optimizer.state.16.exp_avg_sq",
+        "max_absolute": 6.252776074688882e-13,
+        "max_relative": 0.0007406664265859542,
+        "relative_to_reference_max": 4.1685971692799857e-07
+      },
+      {
+        "key": "optimizer.state.17.exp_avg",
+        "max_absolute": 1.546140993013978e-09,
+        "max_relative": 2.9840275187719904e-05,
+        "relative_to_reference_max": 3.385911487754912e-07
+      },
+      {
+        "key": "optimizer.state.17.exp_avg_sq",
+        "max_absolute": 6.821210263296962e-13,
+        "max_relative": 5.975654892489905e-05,
+        "relative_to_reference_max": 3.2712550889825e-07
+      },
+      {
+        "key": "optimizer.state.18.exp_avg",
+        "max_absolute": 2.561137080192566e-09,
+        "max_relative": 1.309244803971599e-05,
+        "relative_to_reference_max": 6.367065001829663e-07
+      },
+      {
+        "key": "optimizer.state.18.exp_avg_sq",
+        "max_absolute": 1.2505552149377763e-12,
+        "max_relative": 2.6317102387448918e-05,
+        "relative_to_reference_max": 7.728866853967558e-07
+      },
+      {
+        "key": "optimizer.state.19.exp_avg",
+        "max_absolute": 8.149072527885437e-10,
+        "max_relative": 3.4561158075284788e-06,
+        "relative_to_reference_max": 2.6756392828491674e-07
+      },
+      {
+        "key": "optimizer.state.19.exp_avg_sq",
+        "max_absolute": 2.2737367544323206e-13,
+        "max_relative": 6.849589856344531e-06,
+        "relative_to_reference_max": 2.4512011804984886e-07
+      },
+      {
+        "key": "optimizer.state.2.exp_avg",
+        "max_absolute": 1.1175870895385742e-08,
+        "max_relative": 9.947386819712464e-05,
+        "relative_to_reference_max": 3.065422554704765e-07
+      },
+      {
+        "key": "optimizer.state.2.exp_avg_sq",
+        "max_absolute": 8.731149137020111e-11,
+        "max_relative": 0.0001989934201589615,
+        "relative_to_reference_max": 6.568849203308073e-07
+      },
+      {
+        "key": "optimizer.state.20.exp_avg",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 0.00015309110941556293,
+        "relative_to_reference_max": 4.463557397219338e-07
+      },
+      {
+        "key": "optimizer.state.20.exp_avg_sq",
+        "max_absolute": 1.5916157281026244e-12,
+        "max_relative": 0.000305960018467857,
+        "relative_to_reference_max": 9.139874484715094e-07
+      },
+      {
+        "key": "optimizer.state.21.exp_avg",
+        "max_absolute": 8.149072527885437e-10,
+        "max_relative": 6.772053361071664e-06,
+        "relative_to_reference_max": 2.799609622434248e-07
+      },
+      {
+        "key": "optimizer.state.21.exp_avg_sq",
+        "max_absolute": 2.2737367544323206e-13,
+        "max_relative": 1.352487156255997e-05,
+        "relative_to_reference_max": 2.683605945206939e-07
+      },
+      {
+        "key": "optimizer.state.22.exp_avg",
+        "max_absolute": 9.022187441587448e-10,
+        "max_relative": 0.0027479318902054544,
+        "relative_to_reference_max": 4.450369082028399e-07
+      },
+      {
+        "key": "optimizer.state.22.exp_avg_sq",
+        "max_absolute": 1.9895196601282805e-13,
+        "max_relative": 0.005488254678268283,
+        "relative_to_reference_max": 4.840794565253772e-07
+      },
+      {
+        "key": "optimizer.state.23.exp_avg",
+        "max_absolute": 2.3283064365386963e-10,
+        "max_relative": 2.610346628621827e-05,
+        "relative_to_reference_max": 2.258864263378152e-07
+      },
+      {
+        "key": "optimizer.state.23.exp_avg_sq",
+        "max_absolute": 5.684341886080802e-14,
+        "max_relative": 5.2038212274779106e-05,
+        "relative_to_reference_max": 5.350324537310622e-07
+      },
+      {
+        "key": "optimizer.state.24.exp_avg",
+        "max_absolute": 1.2223608791828156e-09,
+        "max_relative": 0.0012847871998406366,
+        "relative_to_reference_max": 4.349474745002723e-07
+      },
+      {
+        "key": "optimizer.state.24.exp_avg_sq",
+        "max_absolute": 3.410605131648481e-13,
+        "max_relative": 0.002567847389732576,
+        "relative_to_reference_max": 4.318233669699746e-07
+      },
+      {
+        "key": "optimizer.state.25.exp_avg",
+        "max_absolute": 6.984919309616089e-10,
+        "max_relative": 8.279927799029592e-06,
+        "relative_to_reference_max": 2.3110086050405408e-07
+      },
+      {
+        "key": "optimizer.state.25.exp_avg_sq",
+        "max_absolute": 1.7053025658242404e-13,
+        "max_relative": 1.6613986484521994e-05,
+        "relative_to_reference_max": 1.866731197490018e-07
+      },
+      {
+        "key": "optimizer.state.26.exp_avg",
+        "max_absolute": 7.275957614183426e-11,
+        "max_relative": 0.0006412039349166224,
+        "relative_to_reference_max": 3.6314119750458087e-07
+      },
+      {
+        "key": "optimizer.state.26.exp_avg_sq",
+        "max_absolute": 1.7763568394002505e-15,
+        "max_relative": 0.0012820597472856649,
+        "relative_to_reference_max": 4.4248742091228736e-07
+      },
+      {
+        "key": "optimizer.state.27.exp_avg",
+        "max_absolute": 5.820766091346741e-11,
+        "max_relative": 0.0005697028306581,
+        "relative_to_reference_max": 2.2626095513120817e-07
+      },
+      {
+        "key": "optimizer.state.27.exp_avg_sq",
+        "max_absolute": 1.3322676295501878e-15,
+        "max_relative": 0.0011389700073044652,
+        "relative_to_reference_max": 2.0130310208080306e-07
+      },
+      {
+        "key": "optimizer.state.28.exp_avg",
+        "max_absolute": 1.0186340659856796e-10,
+        "max_relative": 0.0015270805854122225,
+        "relative_to_reference_max": 3.527530612666556e-07
+      },
+      {
+        "key": "optimizer.state.28.exp_avg_sq",
+        "max_absolute": 5.329070518200751e-15,
+        "max_relative": 0.0030517745767938164,
+        "relative_to_reference_max": 6.390821076714884e-07
+      },
+      {
+        "key": "optimizer.state.29.exp_avg",
+        "max_absolute": 2.0372681319713593e-10,
+        "max_relative": 3.5293394089484206e-05,
+        "relative_to_reference_max": 2.485206806484402e-07
+      },
+      {
+        "key": "optimizer.state.29.exp_avg_sq",
+        "max_absolute": 1.4210854715202004e-14,
+        "max_relative": 7.042618244245546e-05,
+        "relative_to_reference_max": 2.1147007333676407e-07
+      },
+      {
+        "key": "optimizer.state.3.exp_avg",
+        "max_absolute": 4.6566128730773926e-09,
+        "max_relative": 3.7556698878838645e-06,
+        "relative_to_reference_max": 2.3233986973539927e-07
+      },
+      {
+        "key": "optimizer.state.3.exp_avg_sq",
+        "max_absolute": 1.4551915228366852e-11,
+        "max_relative": 7.64617954644689e-06,
+        "relative_to_reference_max": 3.6226587888328644e-07
+      },
+      {
+        "key": "optimizer.state.30.exp_avg",
+        "max_absolute": 7.275957614183426e-11,
+        "max_relative": 0.005774314706219634,
+        "relative_to_reference_max": 2.7295070521181905e-07
+      },
+      {
+        "key": "optimizer.state.30.exp_avg_sq",
+        "max_absolute": 2.6645352591003757e-15,
+        "max_relative": 0.011515243519365463,
+        "relative_to_reference_max": 3.7498122750229815e-07
+      },
+      {
+        "key": "optimizer.state.31.exp_avg",
+        "max_absolute": 2.9103830456733704e-10,
+        "max_relative": 0.1357009610106847,
+        "relative_to_reference_max": 2.3724839688885738e-07
+      },
+      {
+        "key": "optimizer.state.31.exp_avg_sq",
+        "max_absolute": 4.973799150320701e-14,
+        "max_relative": 0.25298710008069697,
+        "relative_to_reference_max": 3.305175442017638e-07
+      },
+      {
+        "key": "optimizer.state.32.exp_avg",
+        "max_absolute": 1.1641532182693481e-10,
+        "max_relative": 1.3946816752349914e-05,
+        "relative_to_reference_max": 3.0343766809972694e-07
+      },
+      {
+        "key": "optimizer.state.32.exp_avg_sq",
+        "max_absolute": 7.105427357601002e-15,
+        "max_relative": 2.7854383170991333e-05,
+        "relative_to_reference_max": 4.827351289672154e-07
+      },
+      {
+        "key": "optimizer.state.33.exp_avg",
+        "max_absolute": 3.92901711165905e-10,
+        "max_relative": 1.0902988338448099e-05,
+        "relative_to_reference_max": 2.2300897586349074e-07
+      },
+      {
+        "key": "optimizer.state.33.exp_avg_sq",
+        "max_absolute": 1.4210854715202004e-13,
+        "max_relative": 2.1772448879279688e-05,
+        "relative_to_reference_max": 4.578223806653917e-07
+      },
+      {
+        "key": "optimizer.state.34.exp_avg",
+        "max_absolute": 1.1175870895385742e-08,
+        "max_relative": 0.2623741029873416,
+        "relative_to_reference_max": 1.4333915831819592e-07
+      },
+      {
+        "key": "optimizer.state.34.exp_avg_sq",
+        "max_absolute": 6.548361852765083e-11,
+        "max_relative": 0.45590805587329947,
+        "relative_to_reference_max": 1.0772081522346947e-07
+      },
+      {
+        "key": "optimizer.state.35.exp_avg",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 6.818482894049867e-06,
+        "relative_to_reference_max": 1.576649319056984e-07
+      },
+      {
+        "key": "optimizer.state.35.exp_avg_sq",
+        "max_absolute": 2.2737367544323206e-12,
+        "max_relative": 1.3756638192063305e-05,
+        "relative_to_reference_max": 1.6291089712294142e-07
+      },
+      {
+        "key": "optimizer.state.36.exp_avg",
+        "max_absolute": 8.149072527885437e-09,
+        "max_relative": 0.00010689106320377788,
+        "relative_to_reference_max": 3.1683326061255637e-07
+      },
+      {
+        "key": "optimizer.state.36.exp_avg_sq",
+        "max_absolute": 2.9103830456733704e-11,
+        "max_relative": 0.00021362961128037287,
+        "relative_to_reference_max": 4.3994188367716627e-07
+      },
+      {
+        "key": "optimizer.state.37.exp_avg",
+        "max_absolute": 5.587935447692871e-09,
+        "max_relative": 2.7329714696909364e-07,
+        "relative_to_reference_max": 2.183759265872545e-07
+      },
+      {
+        "key": "optimizer.state.37.exp_avg_sq",
+        "max_absolute": 1.8189894035458565e-11,
+        "max_relative": 4.351085617617024e-07,
+        "relative_to_reference_max": 2.7780299611642524e-07
+      },
+      {
+        "key": "optimizer.state.4.exp_avg",
+        "max_absolute": 8.149072527885437e-09,
+        "max_relative": 0.001276378556431302,
+        "relative_to_reference_max": 3.3811856763236934e-07
+      },
+      {
+        "key": "optimizer.state.4.exp_avg_sq",
+        "max_absolute": 2.9103830456733704e-11,
+        "max_relative": 0.002551302422634511,
+        "relative_to_reference_max": 5.010393121080972e-07
+      },
+      {
+        "key": "optimizer.state.5.exp_avg",
+        "max_absolute": 5.587935447692871e-09,
+        "max_relative": 9.450651098972598e-07,
+        "relative_to_reference_max": 2.3112325826475585e-07
+      },
+      {
+        "key": "optimizer.state.5.exp_avg_sq",
+        "max_absolute": 1.4551915228366852e-11,
+        "max_relative": 1.7733182763834017e-06,
+        "relative_to_reference_max": 2.4894574588439783e-07
+      },
+      {
+        "key": "optimizer.state.6.exp_avg",
+        "max_absolute": 6.51925802230835e-09,
+        "max_relative": 0.007940314572824759,
+        "relative_to_reference_max": 3.856406802877893e-07
+      },
+      {
+        "key": "optimizer.state.6.exp_avg_sq",
+        "max_absolute": 2.1827872842550278e-11,
+        "max_relative": 0.015817633635199318,
+        "relative_to_reference_max": 7.638019975713642e-07
+      },
+      {
+        "key": "optimizer.state.7.exp_avg",
+        "max_absolute": 1.4901161193847656e-08,
+        "max_relative": 1.0846054899843884,
+        "relative_to_reference_max": 3.242302975380383e-07
+      },
+      {
+        "key": "optimizer.state.7.exp_avg_sq",
+        "max_absolute": 1.3096723705530167e-10,
+        "max_relative": 0.9928419103611733,
+        "relative_to_reference_max": 6.20054163798055e-07
+      },
+      {
+        "key": "optimizer.state.8.exp_avg",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 5.916263297381786e-06,
+        "relative_to_reference_max": 2.3935585987126604e-07
+      },
+      {
+        "key": "optimizer.state.8.exp_avg_sq",
+        "max_absolute": 2.2737367544323206e-12,
+        "max_relative": 1.1709073354400944e-05,
+        "relative_to_reference_max": 3.7546380104683814e-07
+      },
+      {
+        "key": "optimizer.state.9.exp_avg",
+        "max_absolute": 7.450580596923828e-09,
+        "max_relative": 3.179692903987456e-07,
+        "relative_to_reference_max": 2.7254274270799966e-07
+      },
+      {
+        "key": "optimizer.state.9.exp_avg_sq",
+        "max_absolute": 3.637978807091713e-11,
+        "max_relative": 5.936880444119368e-07,
+        "relative_to_reference_max": 4.867984163863357e-07
+      },
+      {
+        "key": "policy.attention.in_proj_bias",
+        "max_absolute": 2.8086788006476127e-06,
+        "max_relative": 1.0848265112926314,
+        "relative_to_reference_max": 0.05617357334485069
+      },
+      {
+        "key": "policy.attention.in_proj_weight",
+        "max_absolute": 7.078051567077637e-08,
+        "max_relative": 3.1189905466392175e-05,
+        "relative_to_reference_max": 4.622091925721134e-07
+      },
+      {
+        "key": "policy.attention.out_proj.bias",
+        "max_absolute": 7.275957614183426e-12,
+        "max_relative": 1.4551915595979162e-07,
+        "relative_to_reference_max": 1.4551914537187999e-07
+      },
+      {
+        "key": "policy.attention.out_proj.weight",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 1.5637803451575978e-07,
+        "relative_to_reference_max": 1.4897559612882742e-08
+      },
+      {
+        "key": "policy.own_encoder.0.weight",
+        "max_absolute": 4.470348358154297e-08,
+        "max_relative": 3.0466490719297596e-07,
+        "relative_to_reference_max": 1.6128156481825448e-07
+      },
+      {
+        "key": "policy.own_encoder.2.weight",
+        "max_absolute": 1.862645149230957e-09,
+        "max_relative": 1.1281406448429363e-07,
+        "relative_to_reference_max": 1.4905277261111183e-08
+      },
+      {
+        "key": "policy.report_encoder.0.weight",
+        "max_absolute": 2.9802322387695312e-08,
+        "max_relative": 1.140321718966572e-07,
+        "relative_to_reference_max": 1.0756804673960713e-07
+      },
+      {
+        "key": "policy.residual_head.weight",
+        "max_absolute": 4.656612873077393e-10,
+        "max_relative": 1.094069399885429e-07,
+        "relative_to_reference_max": 8.00913489890029e-08
+      }
+    ],
+    "n_diff": 101
+  },
+  "six_serial_state_parity": {
+    "bitwise_identical": true,
+    "compared_tensors": 157,
+    "differences": [],
+    "n_diff": 0
+  },
+  "worker_peaks": [
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/0/memory.json",
+      "peak_allocated": 838209536,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/1/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/2/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/3/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/4/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/5/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/6/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/1cd30731787e4730b33cb46d46dc28d2/7/memory.json",
+      "peak_allocated": 839868416,
+      "peak_reserved": 878706688
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/0/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2239758336
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/1/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2239758336
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/2/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2239758336
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/3/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2241855488
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/4/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2248146944
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/5/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2256535552
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/6/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2264924160
+    },
+    {
+      "path": "future_workers/32e32bfed65d45f2a7acfd5458feb4fa/7/memory.json",
+      "peak_allocated": 2045024768,
+      "peak_reserved": 2273312768
+    }
+  ]
+}

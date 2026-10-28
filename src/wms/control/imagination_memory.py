@@ -232,11 +232,20 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.tape = []
             ctx.before = _rng_state(trainer.device)
             ctx.futures = {'items': []} if cfg.imagination_offload_futures else None
-            with _RandomTape(ctx.tape, offload=cfg.imagination_offload_futures):
-                result = trainer.imagine(batch, **kwargs, _memory_replay=True, _memory_config=cfg,
-                                         _memory_full_batch=batch, _memory_future_cache=ctx.futures)
+            from .parallel_futures import worker_count, parallel_forward
+            if worker_count() > 1 and parallel_forward():
+                if ctx.futures is None:
+                    raise ValueError('parallel futures requires imagination_offload_futures')
+                from .parallel_futures import forward_futures
+                result, ctx.tape, ctx.futures = forward_futures(
+                    trainer, batch, cfg, kwargs, ctx.before)
+            else:
+                with _RandomTape(ctx.tape, offload=cfg.imagination_offload_futures):
+                    result = trainer.imagine(batch, **kwargs, _memory_replay=True, _memory_config=cfg,
+                                             _memory_full_batch=batch, _memory_future_cache=ctx.futures)
             _trace_memory(trainer, 'full_forward_done', tape_draws=len(ctx.tape))
             leaves, spec = tree_flatten(result)
+            ctx.spec = spec
             slots = [i for i, v in enumerate(leaves) if torch.is_tensor(v)]
             ctx.slots = slots
             structure.update(leaves=leaves, spec=spec, slots=slots)
@@ -253,6 +262,12 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             accumulated = [None] * len(ctx.params)
             try:
                 trainer._training_imagination = training
+                from .parallel_futures import worker_count, backward_futures
+                if worker_count() > 1:
+                    if ctx.futures is None:
+                        raise ValueError('parallel futures requires imagination_offload_futures')
+                    return backward_futures(trainer, batch, cfg, kwargs, ctx.tape,
+                                            ctx.before, ctx.futures, ctx.slots, grad_outputs, ctx.spec)
                 micro = cfg.imagination_microbatch or total
                 for start in range(0, total, micro):
                     small, variants, starts, rows = _subset(
