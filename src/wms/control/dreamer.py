@@ -1026,7 +1026,8 @@ class DreamerTrainer:
                     own = own_exploration_plan(
                         state_b["s_m"].shape[0], state_b["s_m"].shape[1], cfg.horizon,
                         self.exploration.persistence_at(self._curriculum_position(advance=False)),
-                        torch.Generator().manual_seed(5_000_011 * (self.update_count + 1)))
+                        torch.Generator().manual_seed(5_000_011 * (self.update_count + 1))
+                    ).to(state_b["s_m"].device)
                 if _memory_start_index is not None:
                     gid = gid.index_select(0, _memory_start_index)
                     shared = shared.index_select(1, _memory_start_index)
