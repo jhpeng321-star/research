@@ -172,3 +172,16 @@ nohup setsid ./stepZ.sh drylong  > /root/autodl-tmp/c4/candA_dry_184542ab_zs_lon
 nohup setsid ./stepZ.sh prodlong > /root/autodl-tmp/c4/candA_prod_184542ab_zs_long.log 2>&1 < /dev/null &   # production, 150 updates
 ```
 Dense-90 s fallback (only if no 300 s recipe fits): `./stepZ.sh dry` / `./stepZ.sh prod` as above (authority `CANDA_AUTHORITY_ZS_3ea624ff.json`).
+
+### Update 03:5x — ADDITIVE exploration (REGISTRATION 03:25 amendment)
+
+`[exploration] mode = "additive_accel"`, `additive_correlation = 0.5` (both configs; `latent` = retired multiplicative noise).
+The schedule value is now the noise STD in m/s^2 (0.10 -> 0.50 on global knots [180, 330]); eps is persistent AR(1)
+(persistence curriculum unchanged), marginal N(0, std^2) for every acting CAV, correlated with coefficient 0.5 inside a
+100 m chain (design constant - the amendment fixed the std and the radius, not the within-chain correlation), and ADDED
+to the policy residual before the executor cap (`policy.residual_additive_exploration`, training imagination only;
+outside the exploration plan the unit CRN draw is zeroed so nothing leaks into validation/scoring). Zero-start weights unchanged.
+Tests (tests/unit/test_zerostart.py): head gradient non-zero at zero init with exploration on (and exactly zero for the
+retired latent mode); std per schedule value, within-chain correlation, 100 m radius, persistence exp(-1/p); CRN-exact,
+training-only, m/s^2 scale in a real `imagine`. No new `--resume-allow` key (exploration is not part of the resume diff).
+`coopw.py` and `counterfactual.py` are now in the authority manifest.

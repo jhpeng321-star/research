@@ -107,14 +107,27 @@ class ExplorationConfig:
     long_persistence: bool = False
     persistence_curriculum_updates: list = field(default_factory=lambda: [0, 150])
     persistence_seconds: list = field(default_factory=lambda: [30.0, 60.0])
+    # S-ZEROSTART amendment (REGISTRATION 03:25).  "latent" (default, legacy bit-identical): rho is
+    # the within-group CORRELATION of unit-variance noise that multiplies the actor latent.
+    # "additive_accel": the schedule value is the noise STD in m/s^2; eps is persistent AR(1),
+    # spatially correlated inside a ``radius_m`` chain (within-group correlation
+    # ``additive_correlation``) and is ADDED to the policy residual before the executor cap, so it
+    # is non-zero (and braking perturbations are executed) even at a zeroed head.
+    mode: str = "latent"
+    additive_correlation: float = 0.5
 
     def __post_init__(self):
+        if self.mode not in ("latent", "additive_accel"):
+            raise ValueError("exploration.mode must be 'latent' or 'additive_accel'")
+        if not 0.0 <= float(self.additive_correlation) <= 1.0:
+            raise ValueError("exploration.additive_correlation must lie in [0, 1]")
         xs = [float(x) for x in self.curriculum_updates]
         ys = [float(y) for y in self.rho]
         if not xs or len(xs) != len(ys) or any(b <= a for a, b in zip(xs, xs[1:])):
             raise ValueError("exploration curriculum must be nonempty, equal length, increasing")
         if any(not 0.0 <= y <= 1.0 for y in ys):
-            raise ValueError("exploration rho must lie in [0, 1]")
+            raise ValueError("exploration rho must lie in [0, 1]" + (
+                "" if self.mode == "latent" else " (additive: std in m/s^2)"))
         if not math.isfinite(self.persistence_steps) or self.persistence_steps <= 0:
             raise ValueError("exploration persistence_steps must be positive")
         if self.radius_m is not None and not (math.isfinite(self.radius_m) and self.radius_m > 0):
@@ -159,6 +172,25 @@ def exploration_plan(state: Mapping[str, Tensor], radius_m: float, n_decisions: 
         shared[t] = a * shared[t - 1] + math.sqrt(1.0 - a * a) * torch.randn(
             b, max(1, n_groups), generator=generator)
     return gid.to(s.device), shared.to(s.device)
+
+
+def own_exploration_plan(b: int, k: int, n_decisions: int, persistence_steps: float, generator) -> Tensor:
+    """``own [D,B,K]``: per-slot persistent standard-normal AR(1) (additive exploration)."""
+    a = math.exp(-1.0 / float(persistence_steps))
+    own = torch.empty(max(1, n_decisions), b, k)
+    own[0] = torch.randn(b, k, generator=generator)
+    for t in range(1, own.shape[0]):
+        own[t] = a * own[t - 1] + math.sqrt(1.0 - a * a) * torch.randn(b, k, generator=generator)
+    return own
+
+
+def additive_noise(gid: Tensor, shared_t: Tensor, own_t: Tensor, std: float, corr: float) -> Tensor:
+    """Additive exploration eps [B,K] in m/s^2: marginal N(0, std^2) for every slot; slots of one
+    ``radius_m`` chain (gid >= 0) share the persistent component with correlation ``corr``."""
+    own_t = own_t.to(shared_t)
+    common = shared_t.gather(1, gid.clamp_min(0))
+    mixed = math.sqrt(corr) * common + math.sqrt(1.0 - corr) * own_t
+    return float(std) * torch.where(gid >= 0, mixed, own_t)
 
 
 def correlate(eps: Tensor, gid: Tensor, shared_t: Tensor, rho: float) -> Tensor:

@@ -394,7 +394,9 @@ def main(argv=None):
             if pair_cfg.enabled and not args.smoke:
                 trainer.start_states = exclude_development_starts(
                     trainer.start_states, trainer.paircrit.provider.development_seeds)
-        if args.native_init and getattr(trainer.exploration, 'long_persistence', False):
+        if args.native_init and getattr(trainer.exploration, 'mode', 'latent') == 'additive_accel':
+            policy.residual_additive_exploration = True      # S-ZEROSTART 03:25 amendment
+        elif args.native_init and getattr(trainer.exploration, 'long_persistence', False):
             policy.residual_persistent_exploration = True
         from .longcritic import LongCritic, LongCriticConfig
         long_cfg = LongCriticConfig(**raw.get("longcritic", {}))

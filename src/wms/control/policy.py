@@ -205,6 +205,12 @@ class CavPolicy(nn.Module):
                 # draws; no external acceleration is added to native commands.
                 latent = latent * (1.0 + noise.accel.to(latent))
             residual = radius * torch.tanh(latent)
+            if (getattr(self, 'residual_additive_exploration', False)
+                    and not deterministic and noise is not None):
+                # S-ZEROSTART additive exploration: persistent, spatially correlated eps in m/s^2
+                # (already scaled by the schedule std) is ADDED to the residual before the executor
+                # cap; training imagination only, never in deterministic/deployed calls.
+                residual = residual + noise.accel.to(residual)
             residual = torch.where(obs.cav_mask, residual, torch.zeros_like(residual))
             zeros = residual * 0.0
             if lane_mask is None:

@@ -79,6 +79,14 @@ rho = [0.10, 0.50]
 # S-ZEROSTART amendment: exploration groups chain CAVs within the registered 100 m sensing range
 # (was the counterfactual group_radius_m, 150 m), so nearby CAVs share the persistent perturbation.
 radius_m = 100.0
+# S-ZEROSTART 03:25 amendment (REGISTRATION): exploration is ADDITIVE on the executed residual. The
+# schedule value `rho` is now the noise STD in m/s^2 (0.10 -> 0.50); eps is persistent AR(1)
+# (persistence curriculum unchanged, 60 s at the global position >= 150), correlated inside a 100 m chain
+# with within-group correlation `additive_correlation` (a design constant, 0.5), marginal N(0, rho^2),
+# added to the policy residual BEFORE the cap, so braking perturbations are executed and the zeroed
+# head gets a non-zero gradient. mode = "latent" is the retired multiplicative latent noise.
+mode = "additive_accel"
+additive_correlation = 0.5
 
 [counterfactual]
 # S-ZEROSTART amendment (MAIN 2026-10-30 01:00, owner): cooperation-credit group = a RANDOM

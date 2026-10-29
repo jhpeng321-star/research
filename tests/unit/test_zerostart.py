@@ -11,6 +11,8 @@ config binds the zero start and the phase-relative exploration schedule.
 from pathlib import Path
 from types import SimpleNamespace
 
+import math
+
 import pytest
 import torch
 
@@ -334,3 +336,108 @@ def test_authority_binds_entry_config_chain_for_the_long300_variant():
     assert chain[0].endswith("candA_long300.toml") and all(c in chain for c in authority.CONFIG_CHAIN)
     assert authority._config_long_credit_enabled(ROOT, "configs/c4_policy14_candA_long300.toml") is True
     assert authority._config_long_credit_enabled(ROOT) is False
+
+
+# --------------------------------------------- 03:25 amendment: ADDITIVE exploration (m/s^2)
+def _following_geometry(k=6):
+    v = torch.tensor([[12., 9., 14., 13., 10., 0.]], dtype=torch.float32)[:, :k]
+    vl = v - 2.0
+    gap = torch.full_like(v, 80.0)
+    return v, vl, gap, torch.full_like(v, 31.29), torch.ones_like(v, dtype=torch.bool)
+
+
+def test_additive_exploration_gives_nonzero_head_gradient_at_zero_init_but_latent_mode_does_not():
+    from wms.control.policy import PolicyNoise
+    gen = torch.Generator().manual_seed(11)
+
+    def head_grad(additive, std):
+        trainer, st = loaded_trainer()
+        zero_residual_output(trainer)
+        policy, enc = trainer.policy, trainer.group_encoder
+        policy.residual_additive_exploration = bool(additive)
+        policy.residual_persistent_exploration = not additive
+        obs = build_observations(st)
+        signal = enc(obs, st["s_m"], None)
+        eps = std * torch.randn(1, 6, generator=gen) if additive else torch.randn(1, 6, generator=gen)
+        r = policy(obs, signal, deterministic=False, noise=PolicyNoise(eps, torch.zeros(1, 6, 3)))[0]
+        v, vl, gap, allowed, has = _following_geometry()
+        ex = sumo_idm.executed_accel(v, vl, gap, allowed, r, -3., 1.2, has_leader=has)
+        (-ex).sum().backward()
+        return float(policy.residual_head.weight.grad.abs().sum()), r
+
+    g_add, r_add = head_grad(True, 0.5)
+    assert float(r_add.abs().max()) > 0                       # perturbation executed from a zero head
+    assert g_add > 0.0                                        # non-zero gradient at zero init
+    g_lat, r_lat = head_grad(False, 0.5)
+    assert float(r_lat.abs().max()) == 0.0 and g_lat == 0.0   # the retired latent noise was inert
+
+
+def test_additive_noise_statistics_std_schedule_correlation_radius_and_persistence():
+    from wms.control.coopw import (ExplorationConfig, additive_noise, exploration_plan,
+                                   own_exploration_plan)
+    cfg = ExplorationConfig(enabled=True, curriculum_updates=[180, 330], rho=[0.10, 0.50],
+                            mode="additive_accel", radius_m=100.0, additive_correlation=0.5,
+                            long_persistence=True)
+    assert cfg.rho_at(180) == pytest.approx(0.10) and cfg.rho_at(330) == pytest.approx(0.50)
+    assert cfg.rho_at(255) == pytest.approx(0.30)
+    # 0-60-120 chain, 400-460 pair, 700 / 840 (140 m link, not grouped at 100 m)
+    positions = [0., 60., 120., 400., 460., 700., 840.]
+    n, steps, p = 6000, 6, 4.0
+    state1 = _cluster_state(positions)
+    state = {k: v.expand(n, -1).contiguous() for k, v in state1.items()}
+    gen = torch.Generator().manual_seed(2)
+    gid, shared = exploration_plan(state, cfg.radius_m, steps, p, gen)
+    own = own_exploration_plan(n, 7, steps, p, gen)
+    assert gid[0].tolist()[:5] == [0, 0, 0, 1, 1] and gid[0, 5] == -1 and gid[0, 6] == -1
+    for std in (0.10, 0.30, 0.50):
+        e = torch.stack([additive_noise(gid, shared[t], own[t], std, 0.5) for t in range(steps)])  # [D,B,K]
+        flat = e.reshape(-1, 7)
+        assert all(abs(float(flat[:, i].std()) - std) < 0.03 * std + 0.004 for i in range(7))   # std = schedule
+        assert abs(float(flat.mean())) < 0.01
+    e = torch.stack([additive_noise(gid, shared[t], own[t], 0.5, 0.5) for t in range(steps)])
+    flat = e.reshape(-1, 7)
+    c = torch.corrcoef(flat.T)
+    assert abs(float(c[0, 1]) - 0.5) < 0.03 and abs(float(c[1, 2]) - 0.5) < 0.03 and abs(float(c[3, 4]) - 0.5) < 0.03
+    assert abs(float(c[0, 3])) < 0.03 and abs(float(c[5, 6])) < 0.03 and abs(float(c[0, 5])) < 0.03   # radius 100 m
+    for slot in (0, 5):                                       # persistence: lag-1 autocorrelation exp(-1/p)
+        a, b = e[:-1, :, slot].reshape(-1), e[1:, :, slot].reshape(-1)
+        assert abs(float(torch.corrcoef(torch.stack([a, b]))[0, 1]) - math.exp(-1 / p)) < 0.03
+    with pytest.raises(ValueError):
+        ExplorationConfig(mode="bogus")
+
+
+def test_additive_exploration_in_imagination_is_crn_exact_training_only_and_in_mps2():
+    from tests.unit.test_coopw import ThetaPolicy, coop_reward, trainer_for
+    from wms.control.coopw import ExplorationConfig
+    from wms.control.counterfactual import build_variants
+
+    class AddPolicy(ThetaPolicy):
+        supports_noise = True
+
+        def forward(self, obs, signal, *, deterministic=False, noise=None):
+            eps = noise.accel if (noise is not None and not deterministic) else torch.zeros(obs.cav_mask.shape)
+            return torch.where(obs.cav_mask, self.theta + eps, torch.zeros_like(eps)), torch.zeros_like(eps)
+
+    def actions(std, training, deterministic=False, seed=3):
+        trainer = trainer_for(coop_reward(1.0, 1.0), cf=dict(group_max_size=3))
+        trainer.policy = AddPolicy(theta=0.0)
+        trainer.policy.residual_additive_exploration = True    # as set by policy14_cli for additive mode
+        trainer.exploration = ExplorationConfig(enabled=True, rho=[std], mode="additive_accel", radius_m=100.0)
+        torch.manual_seed(seed)
+        batch = trainer.start_states.sample(1)
+        variants = build_variants(batch.state, trainer.counterfactual, torch.Generator().manual_seed(0))
+        trainer._training_imagination = training
+        return trainer.imagine(batch, deterministic=deterministic, variants=variants)["actions"][0], variants
+
+    off, variants = actions(0.0, True)
+    on, _ = actions(0.4, True)
+    untouched, _ = actions(0.4, False)
+    torch.testing.assert_close(untouched, off)                                  # validation / rescore path
+    assert float(off.abs().max()) == 0.0                                        # no exploration -> no eps in the residual
+    torch.testing.assert_close(actions(0.4, True, deterministic=True)[0],
+                               actions(0.0, True, deterministic=True)[0])
+    assert not torch.equal(on[:, 0, :2], off[:, 0, :2])                         # close CAVs perturbed
+    assert not torch.equal(on[:, 0, 2], off[:, 0, 2])                           # lone CAV perturbed too (own component)
+    assert float(on[:, 0, :3].std()) < 0.8                                      # m/s^2 scale (std 0.4, not latent units)
+    for (start, slot), row in variants.individual_rows.items():                 # CRN exact across rows
+        torch.testing.assert_close(on[:, row, slot], on[:, start, slot])

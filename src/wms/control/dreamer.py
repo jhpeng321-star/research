@@ -939,10 +939,21 @@ class DreamerTrainer:
                     self.exploration.persistence_at(
                         self._curriculum_position(advance=False)),
                     torch.Generator().manual_seed(3_000_017 * (self.update_count + 1)))
+                own = None
+                if self.exploration.mode == "additive_accel":
+                    from .coopw import own_exploration_plan
+                    state_b = (_memory_full_batch or batch).state
+                    own = own_exploration_plan(
+                        state_b["s_m"].shape[0], state_b["s_m"].shape[1], cfg.horizon,
+                        self.exploration.persistence_at(self._curriculum_position(advance=False)),
+                        torch.Generator().manual_seed(5_000_011 * (self.update_count + 1)))
                 if _memory_start_index is not None:
                     gid = gid.index_select(0, _memory_start_index)
                     shared = shared.index_select(1, _memory_start_index)
-                explore = (gid, shared, rho)
+                    if own is not None:
+                        own = own.index_select(1, _memory_start_index)
+                explore = (gid, shared, rho) if own is None else (
+                    gid, shared, rho, own, self.exploration.additive_correlation)
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled() and not memory
         from wms.model.cav import apply_exec_cap
         native = _Recompute(native_fn(self.counterfactual.native_cav,
@@ -1021,7 +1032,18 @@ class DreamerTrainer:
                     if crn:
                         from .policy import PolicyNoise, draw_policy_noise
                         noise = draw_policy_noise((n_base, obs.cav_mask.shape[-1]), device=self.device)
-                        if explore is not None:
+                        if explore is not None and len(explore) == 5:
+                            # additive_accel: eps [n_base,K] in m/s^2 (std = rho), added to the residual
+                            from .coopw import additive_noise
+                            gid, shared, rho, own, corr = explore
+                            t = min(step // STEPS_PER_CONTROL, shared.shape[0] - 1)
+                            noise = PolicyNoise(additive_noise(gid, shared[t], own[t], rho, corr)
+                                                .to(noise.accel), noise.lane_gumbel)
+                        elif getattr(self.policy, 'residual_additive_exploration', False):
+                            # additive mode: outside the exploration plan (validation/scoring/rho 0)
+                            # the unit-variance CRN draw must NOT enter the residual (m/s^2).
+                            noise = PolicyNoise(torch.zeros_like(noise.accel), noise.lane_gumbel)
+                        elif explore is not None:
                             from .coopw import correlate
                             gid, shared, rho = explore
                             noise = PolicyNoise(correlate(noise.accel, gid, shared[min(
