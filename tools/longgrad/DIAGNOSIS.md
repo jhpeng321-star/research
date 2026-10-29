@@ -7,8 +7,14 @@ accounts for 99.59% of squared norm. Long/dense scalar-credit ratio is 82.73,
 and return scales are essentially identical (2418.276 / 2417.776).
 
 Only 1 of 5 nonzero-coefficient rows passes the detached gain-only gate. Which
-row/future/step caused the norm is not present in these receipts. The signed
+exact row index/future/step caused the norm is not present in these receipts. The signed
 joint q10 selector uses only two futures per start (interpolation weights .3/.7).
+One further deduction: gain-only accepts positive paired improvements, yet
+the logged weighted long credit is negative. With exactly one ON row, it must
+be a negative-coefficient flip-one row (-10.3), not ALL or the group row. Its
+exact index and the relative contributions of the two futures remain unknown.
+The current candidate-A config has since retired flip rows (n_flip=0, w_team=0),
+so the stopped-actor receipt is not a measurement of the current production rows.
 It multiplies by K=8, canceled by the subsequent mean over K; this is correct.
 Row coefficients already average over starts. Long sums the entire horizon;
 dense averages finite-horizon suffix returns. Neither an extra row-count nor

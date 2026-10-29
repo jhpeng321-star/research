@@ -126,9 +126,11 @@ def _snapshot(trainer):
             'device _training_imagination config counterfactual use_lanes lane_rules '
             'controller_factory observation_builder reward_fn reward_weights safety '
             'exploration update_count coop_anchor uncertainty long_credit_requested '
-            'long_credit_trusted_s paircrit').split()
+            'long_credit_trusted_s paircrit gated300 world_model_ids horizon_curriculum '
+            '_longgrad_phase').split()
     result = object.__new__(type(trainer))
     result.__dict__.update({k: getattr(trainer, k) for k in keys if hasattr(trainer, k)})
+    result._longgrad_optimizer_groups = [tuple(g['params']) for g in trainer.actor_optimizer.param_groups]
     result.output_dir = None
     return result
 
@@ -244,6 +246,10 @@ def _vjp(trainer, common, task, gate=None):
     _restore_rng(before, trainer.device)
     spill = _saved_tensor_spill(trainer) if cfg.imagination_offload_saved_tensors else nullcontext()
     parameters = tuple(p for p in trainer.actor_parameters if p.requires_grad)
+    from .longgrad import StateTrace, future_record
+    tracing = getattr(trainer, '_longgrad_phase', None) == 'long'
+    trace = StateTrace() if tracing else None
+    trainer._longgrad_state_trace = trace
     _trace_memory(trainer, 'future_start', start=start, future=future)
     _lm300_snapshot(trainer, 'start')
     with torch.enable_grad(), replay, spill:
@@ -272,7 +278,10 @@ def _vjp(trainer, common, task, gate=None):
         grads = torch.autograd.grad(outputs, parameters, vectors, allow_unused=True)
         _trace_memory(trainer, 'future_vjp_done', start=start, future=future)
     # CPU transport preserves bytes. Coordinator copies to its device before addition.
+    diagnostic = future_record(trainer, start, future, parameters, grads, trace) if tracing else None
+    trainer._longgrad_state_trace = None
     return {'grads': [None if g is None else g.detach().cpu() for g in grads],
+            'longgrad': diagnostic,
             'spill': getattr(trainer, 'memory_spill_stats', None)}
 
 
@@ -293,6 +302,8 @@ def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, gr
                     accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
             if result['spill'] is not None:
                 trainer.memory_spill_stats = result['spill']
+            if result.get('longgrad') is not None:
+                trainer._longgrad_futures.append(result['longgrad'])
             _trace_memory(trainer, 'parallel_future_collected', start=task[0], future=task[2])
     return tuple(accumulated)
 

@@ -348,7 +348,8 @@ def test_resume_binding_change_refused_and_explicit_off_takes_precedence(tmp_pat
     assert not gated300.active(off)
 
 
-def test_production_residual_actor_k8_entrants_full_modules_cpu(tmp_path, monkeypatch):
+@pytest.mark.parametrize('balance', [False, True])
+def test_production_residual_actor_k8_entrants_full_modules_cpu(tmp_path, monkeypatch, balance):
     from functools import partial
     from wms.control.bridge import make_cav_controller
     from wms.control.dreamer import DreamerConfig
@@ -366,6 +367,7 @@ def test_production_residual_actor_k8_entrants_full_modules_cpu(tmp_path, monkey
     hist.rate[:] = .5
     starts.batch.entry_feat = torch.tensor(hist.to_features()).float()[None]
     cfg = DreamerConfig(batch_size=1, horizon=2, imagine_entries=True, entry_pad_max=2,
+        long_grad_balance=balance,
         source_wait_grad=True, entrant_control=True, native_residual_train_group=True,
         native_residual_train_trunk=True, future_samples=8, pessimistic_credit=True,
         deterministic_crn=True, imagination_microbatch=1, imagination_checkpoint_segment=3,

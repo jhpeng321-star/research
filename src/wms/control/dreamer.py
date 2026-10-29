@@ -96,6 +96,12 @@ class DreamerConfig:
     imagination_offload_futures: bool = False
     # Host-spill saved autograd tensors as well (useful when the effective batch is one).
     imagination_offload_saved_tensors: bool = False
+    # S-LONGGRAD: optimizer preconditioning only; the registered loss is unchanged.
+    # Cap long-credit actor gradient norm at the dense-term norm before addition.
+    long_grad_balance: bool = False
+    # Explicit new-phase recovery of contaminated actor Adam history; not used
+    # during updates or ordinary resume. Model weights/update count are retained.
+    long_grad_reset_actor_adam: bool = False
     # Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from the
     # observed pre-t0 entry history of each start window (TorchEntryProcessV2); arrivals that find
     # no safe gap at the entrance queue (uncapped backlog) and are charged as source waiting by
@@ -233,7 +239,8 @@ class DreamerConfig:
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError(f"{name} must be a nonnegative integer")
-        for name in ("imagination_offload_futures", "imagination_offload_saved_tensors"):
+        for name in ("imagination_offload_futures", "imagination_offload_saved_tensors",
+                     "long_grad_balance", "long_grad_reset_actor_adam"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if (isinstance(self.real_return_mix, bool)
@@ -1199,6 +1206,9 @@ class DreamerTrainer:
 
             def controller(state):
                 nonlocal step, zone_now
+                trace = getattr(self, '_longgrad_state_trace', None)
+                if trace is not None:
+                    trace.watch(state, step)
                 mask = state["present"].bool() & state["is_cav"].bool()
                 if step % STEPS_PER_CONTROL == 0:
                     records.append({"mask": mask})
@@ -1635,6 +1645,14 @@ class DreamerTrainer:
                           "lane_entropy": float(lane_entropy.detach()),
                           "lane_change_rate": float(changed.sum() / acting.sum().clamp_min(1)),
                           "lane_decisions_with_options": int(active[..., :n_base, :].sum())})
+        if gradient_components is not None:
+            # Construct independently: loss - long_term would leave a cancelling
+            # long branch in backward and can lose precision in its scalar value.
+            dense_objective = dense_loss + anchor
+            if lanes is not None:
+                dense_objective = (dense_objective + self.config.lane_pg_weight * pg_loss
+                                   - lane_weight * lane_entropy)
+            gradient_components['_dense_objective'] = dense_objective
         return loss, extra
 
     def _actor_gradient_norms(self, imagined, scale, weights, components):
@@ -1667,6 +1685,8 @@ class DreamerTrainer:
         parameters = [p for p in self.actor_parameters if p.requires_grad]
         norms = {}
         for name, term in components.items():
+            if name.startswith('_'):
+                continue
             grads = (torch.autograd.grad(term, parameters, retain_graph=True, allow_unused=True)
                      if term.requires_grad and parameters else ())
             norms[name] = math.sqrt(sum(float(g.detach().double().square().sum())
@@ -1956,10 +1976,11 @@ class DreamerTrainer:
         weights = self.counterfactual.weights(self._curriculum_position())
         entropy = imagined["entropy"][..., :n_base].mean()
         mean_cost = imagined["costs"][..., :n_base].mean()
-        audit_components = {} if self.config.actor_gradient_audit else None
+        components = {}
+        audit_components = components if self.config.actor_gradient_audit else None
         objective, extra = self.actor_objective(
-            imagined, scale, weights,
-            **({"gradient_components": audit_components} if audit_components is not None else {}))
+            imagined, scale, weights, gradient_components=components)
+        direct_term = objective.new_zeros(())
         if getattr(self, 'looplong_real_credit', None) is not None:
             if self.config.exploit_disable_direct_credit:
                 extra.update(exploit_direct_credit_disabled=True, direct_real_credit_grad_norm=0.0)
@@ -1968,6 +1989,7 @@ class DreamerTrainer:
                 from .looplong_real import direct_gradient_norm
                 extra['direct_real_credit_grad_norm'] = direct_gradient_norm(direct, self.actor_parameters)
                 objective = objective + direct
+                direct_term = direct
                 extra.update(receipt)
         # V6EXPLORE: a learned entropy temperature replaces the fixed weight when a target is set
         # (V7POL: floored at alpha_min).
@@ -1988,7 +2010,10 @@ class DreamerTrainer:
             extra["action_audit"] = self._action_audit_metrics(imagined)
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
         self.actor_optimizer.zero_grad(set_to_none=True)
-        actor_loss.backward()
+        from .longgrad import actor_backward
+        dense_loss = (components['_dense_objective'] + direct_term
+                      - entropy_weight * entropy + lagrange_term)
+        extra.update(actor_backward(self, dense_loss, components.get('gated300_long'), actor_loss))
         if hasattr(self, 'memory_spill_stats'):
             extra['memory_spill'] = dict(self.memory_spill_stats)
         if getattr(self.policy, "residual_on_native", False):
@@ -2354,6 +2379,10 @@ class DreamerTrainer:
         if new_phase:
             from .phase_resume import restore_requested_rates
             restore_requested_rates(self)
+            if self.config.long_grad_reset_actor_adam:
+                count = len(self.actor_optimizer.state)
+                self.actor_optimizer.state.clear()
+                self.resume_config_receipt['actor_adam_reset'] = {'cleared_parameters': count}
         for name in ("update_count", "lagrange_multiplier", "return_low", "return_high", "best_validation"):
             setattr(self, name, payload[name])
         self.best_coop_validation = payload.get("best_coop_validation", -math.inf)

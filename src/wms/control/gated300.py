@@ -243,6 +243,10 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
     mask = eligible.expand_as(on)
     denom = mask.sum().clamp_min(1)
     metrics = dict(gated300_horizon_s=imagined['gated300_horizon_s'],
+        gated300_active_rows=on.detach().cpu().tolist(),
+        gated300_row_coefficients=coefficients.detach().cpu().tolist(),
+        gated300_row_kind=imagined['variants'].row_kind.detach().cpu().tolist(),
+        gated300_row_start=imagined['variants'].row_start.detach().cpu().tolist(),
         gated300_rows_on_share=float(on.sum() / denom),
         gated300_mean_abs_dJ_long=float(samples.detach().abs()[..., eligible].mean())
             if bool(mask.any()) else 0.,
@@ -254,7 +258,12 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
         gated300_long_credit_share=float(long_mass / (dense_mass + long_mass).clamp_min(1e-30)),
         gated300_dense_credit=float(dense_value), gated300_long_credit=float(long_value.detach()),
         gated300_w_long=weight)
-    return -long_value / scale, metrics
+    term = -long_value / scale
+    if samples.requires_grad:
+        # Stops at the replay OUTPUT: no WM replay or parameter VJP here.
+        vector, = torch.autograd.grad(term, samples, retain_graph=True)
+        metrics['gated300_long_output_cotangent'] = vector.detach().cpu().tolist()
+    return term, metrics
 
 
 @contextmanager

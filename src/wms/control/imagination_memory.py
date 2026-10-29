@@ -311,6 +311,10 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                         batch, kwargs["variants"], start, min(total, start + micro))
                     futures = range(len(ctx.futures['items'])) if ctx.futures is not None else (None,)
                     for future in futures:
+                        from .longgrad import StateTrace, future_record
+                        tracing = getattr(trainer, '_longgrad_phase', None) == 'long'
+                        trace = StateTrace() if tracing else None
+                        trainer._longgrad_state_trace = trace
                         _trace_memory(trainer, 'future_start', start=start, future=future)
                         _lm300_snapshot(trainer, 'start')
                         replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
@@ -340,8 +344,13 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                         for i, grad in enumerate(grads):
                             if grad is not None:
                                 accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
+                        if tracing:
+                            trainer._longgrad_futures.append(future_record(
+                                trainer, start, future, ctx.params, grads, trace))
+                        trainer._longgrad_state_trace = None
                         del result, leaves, outputs, vectors, grads
             finally:
+                trainer._longgrad_state_trace = None
                 trainer._training_imagination = old_training
                 _restore_rng(after, trainer.device)
             return tuple(accumulated)

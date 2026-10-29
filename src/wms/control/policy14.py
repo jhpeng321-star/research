@@ -101,6 +101,7 @@ class Policy14Trainer(DreamerTrainer):
             loss = loss + term
             if gradient_components is not None:
                 gradient_components["sampled_marginal_lane"] = term
+                gradient_components['_dense_objective'] = gradient_components['_dense_objective'] + term
         extra.update(sampled_marginals=len(terms), marginal_advantage=(
             sum(marginal_values) / len(marginal_values) if marginal_values else None))
         return loss, extra
