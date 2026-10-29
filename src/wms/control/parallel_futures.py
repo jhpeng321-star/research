@@ -22,8 +22,13 @@ import torch
 _REPARENTING = os.name != 'nt'
 
 
-def worker_count():
+def worker_count(kind=None):
+    """Worker processes. ``kind='forward'`` may be sized separately (S-LONGMEM300 memory
+    option ``WMS_SPEED_FORWARD_WORKERS``: the no-grad forward pool and the VJP pool have
+    different per-worker memory at 300 s); unset keeps the single registered count."""
     raw = os.environ.get('WMS_SPEED_FUTURE_WORKERS', '1')
+    if kind == 'forward' and os.environ.get('WMS_SPEED_FORWARD_WORKERS'):
+        raw = os.environ['WMS_SPEED_FORWARD_WORKERS']
     if not raw.isdigit() or not 1 <= int(raw) <= 8:
         raise ValueError('WMS_SPEED_FUTURE_WORKERS must be an integer in [1,8]')
     return int(raw)
@@ -31,6 +36,20 @@ def worker_count():
 
 def parallel_forward():
     return os.environ.get('WMS_SPEED_PARALLEL_FORWARD', '') == '1'
+
+
+def budget_cap():
+    """Aggregate allocator budget ceiling as a fraction of the device (default .60).
+
+    S-LONGMEM300 (memory/infrastructure only): a dedicated 24 GB card running the
+    300 s long credit needs a larger ceiling than the shared-card default. The
+    default and every arithmetic path are unchanged when the variable is unset.
+    """
+    raw = os.environ.get('WMS_SPEED_FUTURE_BUDGET_CAP', '.60')
+    value = float(raw)
+    if not .0 < value <= .95:
+        raise ValueError('WMS_SPEED_FUTURE_BUDGET_CAP must be in (0,.95]')
+    return value
 
 
 def vjp_slots():
@@ -134,26 +153,27 @@ class FuturePool:
         if common['kind'] == 'forward':
             env['WMS_SPEED_FUTURE_MEMORY_FRACTION'] = env.get(
                 'WMS_SPEED_FORWARD_MEMORY_FRACTION', '0.04')
+        pool_size = worker_count(common['kind'])
         if trainer.device.type == 'cuda':
             torch.cuda.empty_cache()
             total = torch.cuda.get_device_properties(trainer.device).total_memory
             fraction = float(env.get('WMS_SPEED_FUTURE_MEMORY_FRACTION', '0.10'))
             # CUDA contexts/libraries are outside the allocator fraction. Reserve
             # 768 MiB per worker in addition to the coordinator's current pool.
-            slots = vjp_slots() if common['kind'] == 'backward' else worker_count()
+            slots = vjp_slots() if common['kind'] == 'backward' else pool_size
             low = float(env.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
-            if not 0 < low <= fraction <= .6:
-                raise ValueError('memory fractions must satisfy 0 < idle <= active <= .6')
+            if not 0 < low <= fraction <= budget_cap():
+                raise ValueError('memory fractions must satisfy 0 < idle <= active <= budget cap')
             bound = torch.cuda.memory_reserved(trainer.device) + total * (
-                slots * fraction + (worker_count() - slots) * low) + (worker_count() + 1) * 768 * 1024**2
-            if bound > .60 * total:
-                raise ValueError(f'parallel memory budget exceeds 60%: {bound / total:.3f}')
+                slots * fraction + (pool_size - slots) * low) + (pool_size + 1) * 768 * 1024**2
+            if bound > budget_cap() * total:
+                raise ValueError(f'parallel memory budget exceeds {budget_cap():.0%}: {bound / total:.3f}')
         (self.root/'vjp_slots').mkdir()
         with (self.root / 'trainer.pkl').open('wb') as stream:
             cloudpickle.dump(_snapshot(trainer), stream)
         torch.save(common, self.root / 'common.pt')
         try:
-            for index in range(worker_count()):
+            for index in range(pool_size):
                 (self.root / str(index)).mkdir()
                 log = (self.root / f'worker{index}.log').open('w')
                 self.logs.append(log)
@@ -214,7 +234,7 @@ def _vjp(trainer, common, task, gate=None):
     from contextlib import nullcontext
     from .dreamer import _restore_rng
     from .imagination_memory import (_RandomTape, _subset, _saved_tensor_spill,
-                                     _slice_shape, _trace_memory)
+                                     _slice_shape, _trace_memory, _lm300_snapshot)
     batch, cfg, kwargs, before = (common[k] for k in ('batch', 'cfg', 'kwargs', 'before'))
     total = batch.state['s_m'].shape[0]
     n_rows = kwargs['variants'].n_rows if kwargs['variants'] is not None else total
@@ -225,6 +245,7 @@ def _vjp(trainer, common, task, gate=None):
     spill = _saved_tensor_spill(trainer) if cfg.imagination_offload_saved_tensors else nullcontext()
     parameters = tuple(p for p in trainer.actor_parameters if p.requires_grad)
     _trace_memory(trainer, 'future_start', start=start, future=future)
+    _lm300_snapshot(trainer, 'start')
     with torch.enable_grad(), replay, spill:
         result = trainer.imagine(small, **{**kwargs, 'variants': variants},
             _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
@@ -234,6 +255,7 @@ def _vjp(trainer, common, task, gate=None):
                   'forward_peak_reserved_bytes': torch.cuda.max_memory_reserved(trainer.device)}
                  if trainer.device.type == 'cuda' else {})
         _trace_memory(trainer, 'future_forward_done', start=start, future=future, **peaks)
+        _lm300_snapshot(trainer, 'forward_done')
         # Dict construction can use hash-randomized sets (reward components).
         # Match the coordinator's output paths, never the worker's dict order.
         leaves = common['spec'].flatten_up_to(result)
@@ -324,8 +346,8 @@ def _main(root, index):
     gated = os.environ.get('WMS_SPEED_POOL_KIND') == 'backward' and vjp_slots() < worker_count()
     if gated:
         fraction = float(os.environ.get('WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION', '.022'))
-    if not 0 < fraction <= .6:
-        raise ValueError('worker memory fraction must be in (0,.6]')
+    if not 0 < fraction <= budget_cap():
+        raise ValueError('worker memory fraction must be in (0,budget cap]')
     if torch.cuda.is_available():
         torch.cuda.set_per_process_memory_fraction(fraction)
     with (root / 'trainer.pkl').open('rb') as stream:

@@ -1,0 +1,20 @@
+# S-LONGMEM300 (owner option B, 2026-10-30 00:46): candidate-A FORK config with the registered
+# gain-only 300 s long credit ON. Memory/infrastructure qualification only - every credit,
+# K/q, weight, horizon, WM and authority binding is inherited unchanged from c4_policy14_candA.toml.
+# Differences vs the candidate-A phase-1 config:
+#   [long_credit] enabled = true  (mode gain_only, WM2+mix CCT-2 authority H_G = 300, w_long = 1.0)
+#   [policy14] zero_residual_output = false  (a fork starts from trained candidate-A weights;
+#                                              re-zeroing the head would erase them)
+# The memory segment is chosen by the qualified recipe (tools/longmem300/RECIPE.env); the value in
+# the inherited config (2) is the 90 s recipe and is overridden below only if the recipe says so.
+extends = "c4_policy14_candA.toml"
+
+[long_credit]
+enabled = true
+mode = "gain_only"
+cct2_file = "authority/CCT2_{wm_sha256}_mix.json"
+w_long = 1.0
+score_training_horizon = false
+
+[policy14]
+zero_residual_output = false

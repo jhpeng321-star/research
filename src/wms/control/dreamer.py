@@ -402,6 +402,86 @@ class _Recompute:
         return self.fn(*args, **kwargs)
 
 
+class _ImmediateHolder:
+    """Static (non-tensor) call structure for :class:`_ImmediateVJP`."""
+
+    def __init__(self, fn, args):
+        from torch.utils._pytree import tree_flatten
+        self.fn = fn
+        leaves, self.spec = tree_flatten(args)
+        self.leaves = list(leaves)
+        self.index = [i for i, leaf in enumerate(leaves) if torch.is_tensor(leaf)]
+        self.out_spec = None
+
+    def tensors(self):
+        return [self.leaves[i] for i in self.index]
+
+    def fill(self, tensors):
+        from torch.utils._pytree import tree_unflatten
+        leaves = list(self.leaves)
+        for i, tensor in zip(self.index, tensors):
+            leaves[i] = tensor
+        return tree_unflatten(leaves, self.spec)
+
+
+class _ImmediateVJP(torch.autograd.Function):
+    """Pure-call activation recompute whose backward runs INSIDE one autograd node.
+
+    S-LONGMEM300 (memory only, exact): ``checkpoint(use_reentrant=False)`` recomputes a frame when
+    its first saved tensor is unpacked but frees the recomputed tensors only when every node of the
+    frame has run. For the 600 per-step reward calls the engine unpacks hundreds of frames before the
+    pairwise-TTC branches execute (16 GiB of [K,K] intermediates at 300 s). Here the forward runs
+    under no_grad and the backward recomputes AND differentiates one call at a time, so at most one
+    call's intermediates are live. Same ops on the same inputs: values and gradients are unchanged.
+    """
+
+    @staticmethod
+    def forward(ctx, holder, *tensors):
+        from torch.utils._pytree import tree_flatten
+        out = holder.fn(*holder.fill(tensors))
+        flat, holder.out_spec = tree_flatten(out)
+        if not all(torch.is_tensor(x) for x in flat):
+            raise ValueError('immediate recompute supports tensor-only outputs')
+        ctx.holder = holder
+        ctx.save_for_backward(*tensors)
+        ctx.mark_non_differentiable(*(x for x in flat if not x.is_floating_point()))
+        return tuple(flat)
+
+    @staticmethod
+    def backward(ctx, *grads):
+        from torch.utils._pytree import tree_flatten
+        holder, saved = ctx.holder, ctx.saved_tensors
+        need = ctx.needs_input_grad[1:]
+        with torch.enable_grad(), torch.autograd.graph.saved_tensors_hooks(lambda t: t, lambda t: t):
+            inputs = [t.detach().requires_grad_(bool(n) and t.is_floating_point())
+                      for t, n in zip(saved, need)]
+            flat, _ = tree_flatten(holder.fn(*holder.fill(inputs)))
+            pairs = [(o, g) for o, g in zip(flat, grads) if g is not None and o.requires_grad]
+            wrt = [t for t in inputs if t.requires_grad]
+            found = (torch.autograd.grad([o for o, _ in pairs], wrt, [g for _, g in pairs],
+                                         allow_unused=True) if pairs and wrt else ())
+        it = iter(found)
+        return (None, *(next(it) if t.requires_grad else None for t in inputs))
+
+
+class _ImmediateRecompute:
+    """Drop-in for :class:`_Recompute` over a pure positional call (see :class:`_ImmediateVJP`)."""
+
+    def __init__(self, fn, enabled):
+        self.fn, self.enabled = fn, bool(enabled)
+        self.requires_state = getattr(fn, 'requires_state', False)
+
+    def __call__(self, *args, **kwargs):
+        if kwargs:
+            raise ValueError('immediate recompute takes positional arguments only')
+        if not (self.enabled and torch.is_grad_enabled()):
+            return self.fn(*args)
+        from torch.utils._pytree import tree_unflatten
+        holder = _ImmediateHolder(self.fn, args)
+        flat = _ImmediateVJP.apply(holder, *holder.tensors())
+        return tree_unflatten(list(flat), holder.out_spec)
+
+
 def _physics_holders(model):
     """Every ``(owner, attr)`` in the model graph that holds a PhysicsConfig instance.
 
@@ -958,7 +1038,15 @@ class DreamerTrainer:
         group_call = _Recompute(self.group_encoder, recompute)
         from .safety import with_accel_max
         safety_call = _Recompute(with_accel_max(self.safety), recompute)
-        reward_call = _Recompute(self.reward_fn, recompute)
+        # S-LONGMEM300 (memory only, default OFF, exact): the per-step reward/TTC cost builds [B,K,K]
+        # pairwise saved tensors OUTSIDE the WM segment checkpoints; in LONGMEM they were spilled to
+        # host RAM (hundreds of GB at 300 s). Recomputing the pure reward in backward keeps only its inputs.
+        _lm300 = os.environ.get('WMS_LM300_RECOMPUTE_REWARD', '')
+        if bool(memory) and torch.is_grad_enabled() and _lm300 == '2':
+            reward_call = _ImmediateRecompute(self.reward_fn, True)
+        else:
+            reward_call = _Recompute(self.reward_fn, recompute or (
+                bool(memory) and torch.is_grad_enabled() and _lm300 == '1'))
         observe_call = _Recompute(self.observation_builder, recompute)
         value_call = _Recompute(self.target_critic, recompute)
         surrogate_call = _Recompute(_queue_surrogate_fn, recompute)
