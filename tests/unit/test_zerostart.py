@@ -272,3 +272,47 @@ def test_candA_objective_is_all_plus_group_plus_synergy_and_updates_finitely():
     cf["group_min_size"] = 2
     trainer2 = trainer_for(coop_reward(k, 1.0), cf=cf)
     assert _math.isfinite(trainer2.update()["actor_loss"])
+
+
+def test_candA_objective_identity_synergy_decomposition_and_registered_comparison():
+    r"""Exact shipped objective, per start (D = row return - base return):
+
+        1.0*D_all + 9.9*D_G + 8.9*C_G + 8.9*sum_i D_i,   C_G = D_G - sum_{i in G} D_i   (synergy)
+      = 1.0*D_all + 18.8*D_G + 0*sum_{i in G} D_i + 8.9*sum_{i not in G} D_i
+
+    The registered weights (w_team 10.3, n_flip 3) additionally had the team term
+    10.3*sum_i M_i = 10.3*(3*D_G - sum_flip D_{G\i}) for |G| >= 3: +30.9 on D_G and -10.3 on each
+    flip row (the negative sub-team rows).  Only that team term is removed."""
+    from wms.control.counterfactual import CounterfactualConfig, build_variants, decompose, row_coefficients
+    cfg = _shipped_cf()
+    w = cfg.weights(10**6)
+    state = _cluster_state([0., 30., 60., 90., 120., 150., 700.])    # 6-chain + one far solo CAV
+    for seed in range(30):
+        v = build_variants(state, cfg, torch.Generator().manual_seed(seed))
+        g = torch.Generator().manual_seed(100 + seed)
+        j = torch.randn(v.n_rows, generator=g, dtype=torch.float64) * 10.
+        c = row_coefficients(v, w, v.n_rows, 1, dtype=torch.float64)
+        base = j[v.base_row[0]]
+        lhs = float((c * (j - base)).sum())
+        d = decompose(j, v)
+        (group,) = v.groups
+        members = {m for m in group["members"]}
+        d_group = d["D_G"][0]
+        sum_member = sum(j[v.individual_rows[(0, m)]] - base for m in members)
+        sum_other = sum(j[row] - base for (s, slot), row in v.individual_rows.items() if slot not in members)
+        c_g = d["C_G"][0]
+        assert c_g == pytest.approx(float(d_group - sum_member))
+        explicit = (1.0 * d["D_all"][0] + 9.9 * d_group + 8.9 * c_g
+                    + 8.9 * (float(sum_member) + float(sum_other)))
+        assert lhs == pytest.approx(explicit, rel=1e-9, abs=1e-8)
+        reduced = 1.0 * d["D_all"][0] + 18.8 * d_group + 8.9 * float(sum_other)
+        assert lhs == pytest.approx(reduced, rel=1e-9, abs=1e-8)
+    # registered (retired) objective: same plus 10.3*(3*D_G - sum_flip D_{G\i}) when |G| >= 3
+    legacy = CounterfactualConfig(**{**cfg.__dict__, "n_flip": 3, "w_team": [10.3, 10.3]})
+    big = [x for x in range(40) if len(build_variants(state, legacy, torch.Generator().manual_seed(x))
+                                       .groups[0]["members"]) >= 3][0]
+    v = build_variants(state, legacy, torch.Generator().manual_seed(big))
+    cl = row_coefficients(v, legacy.weights(10**6), v.n_rows, 1, dtype=torch.float64)
+    (group,) = v.groups
+    assert float(cl[group["row"]]) == pytest.approx(9.9 + 8.9 + 3 * 10.3)    # 49.7
+    assert all(float(cl[r]) == pytest.approx(-10.3) for r in group["flips"].values())
