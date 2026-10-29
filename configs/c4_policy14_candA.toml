@@ -61,6 +61,21 @@ focus_cell_fraction = 0.6
 [policy14]
 fd_gate = false
 free_road_gate = false
+# S-ZEROSTART (owner approved 2026-10-30 00:35, REGISTRATION.md): after C1 64f70af4 is loaded
+# the residual head's OUTPUT layer (weight and bias) is zeroed (trunk/encoders kept; the head's
+# stale Adam moments are cleared) so the initial residual is exactly 0 = the CTRL0 execution.
+# The stopped run's C1 residual (+0.01..+0.07 everywhere) sat 100% inside the safe-speed-cap
+# dead zone (zero executed effect, zero gradient). See src/wms/control/zerostart.py.
+zero_residual_output = true
+
+[exploration]
+# S-ZEROSTART exploration schedule: rho ramps 0.10 -> 0.50 over the 150-update phase, active from
+# phase update 0 (the inherited curriculum was [0, 10, 150] / [0, 0, 0.5]). The curriculum
+# position is the trainer's GLOBAL update_count (counterfactual curriculum_anchor is "legacy";
+# C1 resumes at update 180), so the phase-relative knots [0, 150] are written in global
+# coordinates [180, 330]. Persistence curriculum unchanged.
+curriculum_updates = [180, 330]
+rho = [0.10, 0.50]
 
 [counterfactual]
 # nine-row registered weights; guarded real credit floors individual at 8.9

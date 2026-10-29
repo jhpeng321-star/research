@@ -434,6 +434,14 @@ def main(argv=None):
                 raise ValueError('operational recovery checkpoint update mismatch')
             resumed = {"checkpoint": str(resume), "update_count": trainer.update_count,
                         "sha256": hashlib.sha256(resume.read_bytes()).hexdigest()}
+        if switches.get("zero_residual_output", False):
+            # S-ZEROSTART (registered 2026-10-30 00:35): the loaded native-residual actor's
+            # output layer is zeroed BEFORE any scoring/update (initial residual exactly 0).
+            if not (args.native_init and args.resume and args.new_phase):
+                raise ValueError("policy14.zero_residual_output requires --native-init --resume --new-phase")
+            from .zerostart import zero_residual_output
+            summary["zero_start"] = zero_residual_output(trainer)
+            print("[zero-start] " + json.dumps(summary["zero_start"]), flush=True)
         if args.real_credit:
             from .auditfix_diagnostics import require_real_credit_effect
             summary['real_credit']['guarded_knots'] = require_real_credit_effect(trainer)

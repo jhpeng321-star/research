@@ -78,7 +78,7 @@ def test_candA_config_resolves_with_monitors_on():
     assert cfg.pessimistic_credit is True and cfg.future_samples == 8
     assert cfg.entrant_control is True and cfg.deterministic_crn is True
     assert cfg.real_credit_individual_floor is True
-    assert cfg.imagination_microbatch == 1 and cfg.imagination_checkpoint_segment == 8
+    assert cfg.imagination_microbatch == 1 and cfg.imagination_checkpoint_segment == 2  # c31d6d70 memory-only recipe (POLSPEED2)
     assert cfg.imagination_offload_futures and cfg.imagination_offload_saved_tensors
     assert 'hold_move' not in raw['trainer']  # HOLD shelved; not in the chain
     # nine-row weights, 60% focus, dense 90s horizon, gates off
