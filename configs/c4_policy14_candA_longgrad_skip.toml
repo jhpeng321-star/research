@@ -1,0 +1,15 @@
+# Combined S-LONGGRAD + S-LONGSKIP continuation, serial co-located gpuA recipe.
+# Same extends depth as longgrad: another layer exceeds the config loader cap.
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.50
+
+[trainer]
+long_grad_balance = true
+long_grad_reset_actor_adam = true
+imagination_skip_zero_vjp = true
+imagination_replay_dense_prefix = true
+
+[policy14]
+zero_residual_output = false

@@ -160,6 +160,27 @@ def replay_cached_future(cache, future, collections, rows, total_rows):
     _current_tape().position = saved['tape_end']
 
 
+def restore_cached_tail(cache, future, collections, rows, dense_steps):
+    """Keep the exact live dense prefix and reuse the original detached tail.
+
+    Replay executes beyond the dense boundary (entries' next input state), but
+    only the trusted prefix needs a graph. All full-K output shapes stay fixed.
+    """
+    saved = cache['items'][future]
+    if _current_tape().position > saved['tape_end']:
+        raise RuntimeError('LONGSKIP replay exceeded original random trace')
+    cached = {name: [] for name in saved['payload']}
+    total_rows = saved['payload']['rewards'].shape[1]
+    replay_cached_future(cache, future, cached, rows, total_rows)
+    for name, values in cached.items():
+        live, tail = collections[name][-1], values[0]
+        if name == 'states':
+            collections[name][-1] = live[:dense_steps + 1] + tail[dense_steps + 1:]
+        else:
+            collections[name][-1] = tree_map(
+                lambda a, b: torch.cat((a[:dense_steps], b[dense_steps:]), 0), live, tail)
+
+
 def _subset(batch, variants, start, stop):
     total = batch.state["s_m"].shape[0]
     indices = torch.arange(start, stop, device=batch.state["s_m"].device)
@@ -267,6 +288,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.set_materialize_grads(False)
             ctx.params = params
             ctx.tape = []
+            ctx.support = {}
             ctx.before = _rng_state(trainer.device)
             ctx.futures = {'items': []} if cfg.imagination_offload_futures else None
             from .parallel_futures import worker_count, parallel_forward
@@ -294,23 +316,29 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
         def backward(ctx, *grad_outputs):
             after = _rng_state(trainer.device)
             old_training = trainer._training_imagination
-            total = batch.state["s_m"].shape[0]
-            n_rows = kwargs["variants"].n_rows if kwargs["variants"] is not None else total
-            accumulated = [None] * len(ctx.params)
             try:
                 trainer._training_imagination = training
-                from .parallel_futures import worker_count, backward_futures
-                if worker_count() > 1:
-                    if ctx.futures is None:
-                        raise ValueError('parallel futures requires imagination_offload_futures')
+                from .parallel_futures import backward_futures
+                if ctx.futures is not None:
                     return backward_futures(trainer, batch, cfg, kwargs, ctx.tape,
-                                            ctx.before, ctx.futures, ctx.slots, grad_outputs, ctx.spec)
+                                            ctx.before, ctx.futures, ctx.slots, grad_outputs, ctx.spec,
+                                            support=ctx.support)
+                # Non-offloaded execution has no per-future cache/geometry;
+                # preserve its original full replay path.
+                total = batch.state["s_m"].shape[0]
+                n_rows = kwargs["variants"].n_rows if kwargs["variants"] is not None else total
+                accumulated = [None] * len(ctx.params)
                 micro = cfg.imagination_microbatch or total
                 for start in range(0, total, micro):
                     small, variants, starts, rows = _subset(
                         batch, kwargs["variants"], start, min(total, start + micro))
                     futures = range(len(ctx.futures['items'])) if ctx.futures is not None else (None,)
                     for future in futures:
+                        began = time.perf_counter()
+                        from .longgrad import StateTrace, future_record
+                        tracing = getattr(trainer, '_longgrad_phase', None) == 'long'
+                        trace = StateTrace() if tracing else None
+                        trainer._longgrad_state_trace = trace
                         _trace_memory(trainer, 'future_start', start=start, future=future)
                         _lm300_snapshot(trainer, 'start')
                         replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
@@ -340,8 +368,16 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                         for i, grad in enumerate(grads):
                             if grad is not None:
                                 accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
+                        if tracing:
+                            trainer._longgrad_futures.append(future_record(
+                                trainer, start, future, ctx.params, grads, trace))
+                        trainer._longgrad_state_trace = None
+                        from .longskip import record_replay
+                        record_replay(trainer, start, future, cfg.horizon, cfg.horizon,
+                                      time.perf_counter() - began)
                         del result, leaves, outputs, vectors, grads
             finally:
+                trainer._longgrad_state_trace = None
                 trainer._training_imagination = old_training
                 _restore_rng(after, trainer.device)
             return tuple(accumulated)

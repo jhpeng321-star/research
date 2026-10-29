@@ -1,0 +1,15 @@
+# Opt-in S-LONGGRAD migration of the currently co-located serial long300 run.
+# Resume latest policy with --new-phase and the two exact trainer resume-allow keys.
+# Same depth as serial_coloc: one more extends layer exceeds the loader's cap.
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.50
+
+[trainer]
+long_grad_balance = true
+long_grad_reset_actor_adam = true
+
+[policy14]
+# This is a continuation of a trained policy, not another C1 zero start.
+zero_residual_output = false
