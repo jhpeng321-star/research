@@ -30,8 +30,8 @@ by floored closing speed, not gap; it is report-only in candidate A and not part
 of the long reward. Zero cotangents can nevertheless expose nonfinite internal
 Jacobians; finite receipts cannot exclude every state-specific dynamics bug.
 
-`PYTHONPATH=src;. .venv/Scripts/python tools/longgrad/diagnose.py --horizons
-10 30 60 90 120` runs an untrained hybrid WmSModel with its learned encoder, four
+`$env:PYTHONPATH='src;.'; .\.venv\Scripts\python.exe tools/longgrad/diagnose.py
+--horizons 10 30 60 90 120` runs an untrained hybrid WmSModel with its learned encoder, four
 synthetic slots (two HDVs), no entries, no production assets, no decay. Actor
 norms of synthetic summed reward are 12.9447, 128.594, 401.297, 674.002, 946.707. Mode 0
 and mode 2 values/norms match exactly at every horizon. Growth is approximately
