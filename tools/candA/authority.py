@@ -48,6 +48,7 @@ MANIFEST_FILES = [
     'src/wms/control/parallel_futures.py', 'src/wms/core/speed_flags.py',
     'src/wms/control/zerostart.py', 'src/wms/control/coopw.py', 'src/wms/control/counterfactual.py',
     'src/wms/control/imagination_memory.py', 'src/wms/control/longgrad.py',
+    'src/wms/control/longskip.py',
     'src/wms/model/residual_net.py',
     'traffic_shepherd/ownership.py', 'traffic_shepherd/c4/branching.py',
     'traffic_shepherd/c4/wms_glue.py', 'traffic_shepherd/c4/env.py',

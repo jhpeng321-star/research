@@ -36,6 +36,19 @@ def test_default_off_and_boolean_validation():
                 DreamerConfig(**{key: bad})
 
 
+def test_combined_preset_only_adds_exact_skip_flags_and_binds_source():
+    from pathlib import Path
+    from tools.candA.authority import MANIFEST_FILES, effective_config
+    from wms.control.train_cli import _read_config
+    root = Path(__file__).resolve().parents[2]
+    baseline = _read_config(root / 'configs/c4_policy14_candA_longgrad.toml')
+    combined = _read_config(root / 'configs/c4_policy14_candA_longgrad_skip.toml')
+    baseline['trainer'].update({key: True for key in FLAGS})
+    assert baseline == combined
+    assert effective_config(root, 'configs/c4_policy14_candA_longgrad_skip.toml') == combined
+    assert 'src/wms/control/longskip.py' in MANIFEST_FILES
+
+
 @pytest.mark.parametrize('flags', [(FLAGS[0],), (FLAGS[1],), FLAGS])
 @pytest.mark.parametrize('balance', [False, True])
 @pytest.mark.parametrize('gate_on', [False, True])
@@ -102,16 +115,27 @@ def test_actual_worker_vjp_and_forward_transport_bitwise(tmp_path, monkeypatch, 
         assert torch.equal(x.grad, y.grad) and torch.equal(x, y)
 
 
-def test_new_phase_requires_exact_skip_keys_and_plain_resume_restores(tmp_path, monkeypatch):
+@pytest.mark.parametrize('prior_longgrad', [False, True])
+def test_new_phase_requires_exact_skip_keys_and_plain_resume_restores(
+        tmp_path, monkeypatch, prior_longgrad):
     monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
-    old = make(tmp_path, monkeypatch, flags=(), balance=True, gate_on=False)
+    old = make(tmp_path, monkeypatch, flags=(), balance=prior_longgrad, gate_on=False)
+    old.config = replace(old.config, long_grad_reset_actor_adam=prior_longgrad)
     old.update()
     checkpoint = tmp_path / 'before.pt'
     old.save_checkpoint(checkpoint)
+    if not prior_longgrad:
+        historical = torch.load(checkpoint, weights_only=True)
+        for key in (*FLAGS, 'long_grad_balance', 'long_grad_reset_actor_adam'):
+            historical['config'].pop(key)  # actual pre-longgrad checkpoint defaults
+        torch.save(historical, checkpoint)
     new = make(tmp_path, monkeypatch, flags=FLAGS, balance=True, gate_on=False)
+    new.config = replace(new.config, long_grad_reset_actor_adam=True)
     with pytest.raises(ValueError, match='imagination_'):
         new.load_checkpoint(checkpoint, new_phase=True)
     allow = ['trainer.' + k for k in FLAGS]
+    if not prior_longgrad:
+        allow += ['trainer.long_grad_balance', 'trainer.long_grad_reset_actor_adam']
     new.load_checkpoint(checkpoint, new_phase=True, resume_allow=allow)
     assert set(new.resume_config_receipt['differences']) == set(allow)
     path = tmp_path / 'after.pt'

@@ -149,3 +149,182 @@ This is a supplied measurement, not a new CPU/GPU benchmark.
 * The initial no-grad 300 s forward is needed even with gate share zero: the
   gate and q10 decisions require all K full trajectories. It cannot be removed
   prospectively on the basis of a previous update's gate.
+
+### Implemented exact skips and boundary qualification
+
+Implementation/test commit: `3539e238`. Two independent **default-OFF** boolean
+trainer keys can be added to `configs/c4_policy14_candA_longgrad.toml`:
+
+```toml
+[trainer]
+imagination_skip_zero_vjp = true
+imagination_replay_dense_prefix = true
+```
+
+`configs/c4_policy14_candA_longgrad_skip.toml` is the combined preset: both flags
+plus `long_grad_balance=true`, `long_grad_reset_actor_adam=true`, the serial
+co-located 0.50 card fraction and `policy14.zero_residual_output=false`. It has
+the same inheritance depth as the existing longgrad preset (extending that
+preset again would exceed the loader's depth limit). Longskip source is included
+in `tools/candA/authority.py`'s runtime byte manifest.
+
+The planner checks **every output cotangent**, sliced to the actual start
+microbatch and future. None and exactly zero are inactive; there is no tolerance,
+row-share heuristic or threshold. A nonzero long-output cotangent keeps 300 s.
+Unknown nonzero output paths, shared disagreement cotangents and nonfinite
+cotangents conservatively keep full replay. The switches operate on the existing
+`imagination_offload_futures=true` cached-future path; other memory paths retain
+full replay. Serial and pooled VJPs share the planner and execution code.
+
+For zero total cotangent, the whole future replay/VJP is skipped. Parameter
+connectivity is remembered within this one forward's repeated backwards, so
+skipping does not replace unused `None` gradients with zeros (which would affect
+Adam). If connectivity is unknown and the current accumulator still has unused
+parameters, a conservative full replay establishes it. Thus a standalone first
+all-zero backward can still need support-discovery replay; normal dense replay
+establishes support before the balanced long pass. An all-OFF long pass then
+launches no VJP workers and replays no futures. ON rows alone are insufficient:
+only futures selected by the actual signed q10 cotangent run the long pass.
+
+For zero long but nonzero dense cotangent, the active WM runs only the necessary
+prefix; full-horizon random/exploration plans, CRN tape draws, row topology and
+output reductions stay unchanged. The original detached cached tail is reused.
+There is an important **next-state boundary**: with entries, reward transition
+t reads `recorder.states[t+1]`, the next callback's **post-insertion** WM input.
+Stopping exactly at 90 s would substitute a terminal state before those next
+insertions. Replay therefore executes **one extra physics step**, rounded up to
+a boundary shared by control steps and the original checkpoint segments:
+
+`physics_steps = ceil((dense_steps*2 + 1) / lcm(2, segment_or_1)) * lcm(2, segment_or_1)`.
+
+With production segment=2 and physics dt=.5 s, the logged replay horizon is
+**91 s**, not 90 s. Only the original first 90 s outputs/states have live credit;
+the rest is restored from the cached full forward. This also avoids replacing a
+nonterminal dense state by WM-specific terminal fields. Larger segments round
+up accordingly; if the boundary reaches the full horizon, no truncation occurs.
+There is no second no-grad trajectory to eliminate: the original full forward is
+already reused for inactive futures and now for the shortened active future's tail.
+
+### Per-update telemetry and update-181 projection
+
+`updates.jsonl` now includes `futures_replayed` (actual start-microbatch/future
+VJP executions **across all backward phases**, not unique future IDs),
+`replay_horizon_s` (records with `phase`, `start`, `future`, actual horizon, full
+horizon and host wall time), and `replay_seconds_saved_estimate`. Zero horizons
+identify fully skipped tasks. `grad_long_futures` contains only executed long
+VJPs; skipped zero futures have no state-adjoint trace. Existing dense/long norm,
+gate, coefficient and output-cotangent telemetry remains available.
+
+The saved-seconds field multiplies saved trajectory seconds by the same update's
+observed replay wall time per executed trajectory second. It is a **linear work
+estimate**, not a GPU timing measurement or parallel critical-path prediction;
+it is null if no replay was timed. Host timing does not force a CUDA synchronize.
+Unchanged full-forward/reduction/critic/launch overhead is not claimed as saved.
+
+Using the supplied update-181 **single-pass** profile (861 s forward, 357 s per
+full future), conservatively retaining all eight dense futures, no periodic
+extra gradient audit, and gate-OFF long cotangents:
+
+* Combined preset / balance ON: **8 x 91 s dense VJPs, zero long VJPs**.
+  Estimate `861 + 8*357*(91/300) = 1727 s/update` (**28.8 min**), approximately
+  **1981 s saved / 2.15x faster** than the measured 3708 s update. 150 updates
+  project to **72.0 h**, rather than 154.5 h. This is still above 24 h.
+* Without skips, the earlier balance-ON implementation's two full replay passes
+  would project to `861 + 16*357 = 6573 s/update`. Against that matched two-pass
+  baseline the estimated saving is **4846 s/update** (3.81x).
+* If `m` futures have nonzero long cotangent, balance ON projects to
+  **`1727 + 357*m` s/update**. For example `m=2` gives **2441 s / 40.7 min**,
+  or **101.7 h** for 150 updates. An ON-row share of .2 does **not** imply .2 of
+  futures: m is the union of selected futures across starts/rows and must be
+  read from the actual cotangents/telemetry.
+* Balance OFF retains its original third combined backward for bitwise legacy
+  arithmetic. With both skips and all long cotangents zero, dense and combined
+  each need eight 91 s VJPs: about **2594 s/update**, plus any extra audit work.
+
+These are extrapolations from the supplied production profile, not new timing or
+memory qualifications. The untouched 861 s no-grad forward is the limiting floor.
+
+### Latest-policy restart (instructions only)
+
+Use the owned STOP-between-updates mechanism and wait for its process to exit.
+Choose the **highest complete saved update**, considering both numbered policy
+checkpoints and a newer STOP-written `policy_latest.pt`; set `LATEST_POLICY` to
+that path, and `NEW_OUTPUT_DIR` to a fresh phase directory. Stage this runtime,
+including `longskip.py`, and regenerate the source/config byte manifest with
+`configs/c4_policy14_candA_longgrad_skip.toml` as entry. Keep the currently bound
+WM, reward/returns, gate/boundary, learned-driver/mix, execution and entry inputs.
+The historical C1 actor binding in the launch authority is provenance, **not**
+the policy checkpoint to resume.
+
+In the existing launcher's execution/speed/entry environment, use the same serial
+co-located recipe (`tools/candA/longmem300_serial_coloc.env`, mode-2 reward,
+pair-bias checkpointing, segment=2, K8). The following uses the existing
+`stepZ.sh` input paths; retain the current launcher's paths if it was relocated:
+
+```sh
+set -a
+. tools/candA/longmem300_serial_coloc.env
+set +a
+L=/root/autodl-tmp/c4/restart20261026/arm/loop
+RUNTIME=/root/autodl-tmp/c4/candA_184542ab_zs
+
+/root/miniconda3/bin/python -B -m wms.control.policy14_cli \
+  --config configs/c4_policy14_candA_longgrad_skip.toml \
+  --wm-ckpt "$L/wm/c02/wm_s.pt" \
+  --wm-config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml \
+  --real-returns "$L/returns/returns_c03.a1.npz" \
+  --longcritic-native-returns "$L/returns/native_returns_c03.a1.npz" \
+  --paircrit-receipt "$L/returns/pairing_c03.a1.json" \
+  --paircrit-policy-sha256 0978aa7288cf9e36a0b61949b1e236b3fe48a0d220dada64f67a4797f969dc5e \
+  --gate-panel /root/autodl-tmp/c4/restart20261026/arm/gate_panel.json \
+  --horizon-gate "$L/longint/gate_wm2/HORIZON_GATE_WM2_REG.json" \
+  --looplong-boundary "$RUNTIME/authority_gen/BOUNDARY_WM2.json" \
+  --critic-warmup-updates 0 --native-init --phase-relative-signal-gate \
+  --resume "$LATEST_POLICY" --new-phase \
+  --resume-allow trainer.long_grad_balance \
+  --resume-allow trainer.long_grad_reset_actor_adam \
+  --resume-allow trainer.imagination_skip_zero_vjp \
+  --resume-allow trainer.imagination_replay_dense_prefix \
+  --device cuda --seed 965140 --max-updates 10 \
+  --output-dir "$NEW_OUTPUT_DIR" --compact
+```
+
+Those **four** allow keys are the complete expected diff from the running
+pre-longgrad candidate-A checkpoint: missing historical keys default to false.
+If continuing a checkpoint that already has longgrad controls ON, only the two
+skip keys differ; omit the two unchanged longgrad allow keys (unused approvals
+are rejected). Actor Adam reset is inherited from the recovery preset: it runs
+only on explicit new-phase load, not ordinary resume. To retain Adam history,
+set `long_grad_reset_actor_adam=false` and omit its allow key when it then matches
+the checkpoint. If entropy or another saved trainer/reward setting differs,
+carry its exact checkpoint value into the requested config before migration.
+Do not reuse the original historical C1 allow-list. Plain resume restores saved
+skip flags and would lose this requested change. `zero_residual_output=false`
+protects the trained head and requires no trainer allow key. Ten additional
+updates meet native-init's multiple-of-ten requirement; extend after observing
+the first complete update.
+
+First update-181-like all-OFF receipt: expect eight dense records at 91 s and
+eight long records at zero; `futures_replayed=8`, finite identical scalar credit
+definitions, zero long norm, and unchanged dense scale/normalization. For ON
+updates, full 300 s long records must correspond to actual nonzero long output
+cotangents; dense records remain 91 s. Confirm Adam reset receipt, finite policy
+checkpoint and measured wall time before replacing the projection.
+
+### S-LONGSKIP CPU verification
+
+126 tests passed across `test_longskip.py` (34), `test_longgrad.py`,
+`test_gated300.py`, `test_longmem300_budget.py`, `test_longmem.py`, and
+`test_auditfix_resume.py`; two CUDA cases were explicitly deselected. Two existing
+resume tests initially rejected pytest's external temp root, then passed with
+an allowed root under `E:/Temp/opencode`. Six targeted worker/planner/zero/resume
+cases also passed after the fallback worker-budget refinement. Ruff passed.
+Preset/source-manifest resolution and the exact four-key pre-longgrad / two-key
+already-longgrad new-phase migrations were checked separately after packaging.
+Tests prove bitwise parameter gradients, actor parameters and Adam state vs
+flags OFF for both balance modes, gate ON/OFF, independent/combined flags and
+reward modes 0/2; unchanged scalar credit/gate/q10 and RNG; actual worker
+forward/VJP transport; checkpoint resume; and the real learned hybrid WM with
+native-residual trunk/group training, sampled futures/lanes, source-wait-gradient
+entries and the next-state boundary. Unknown output/nonfinite cotangent and
+unused-parameter cases are conservative. Only CPU/synthetic inputs were used.
