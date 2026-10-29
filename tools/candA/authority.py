@@ -136,9 +136,20 @@ def verify_cct2(doc: dict, wm: str, *, learned_mix: bool) -> int:
     return hg
 
 
-def _config_long_credit_enabled(root: Path) -> bool:
+def effective_config(root: Path, entry: str) -> dict:
+    """Fully merged config of ``entry`` (same deep-merge/extends order as train_cli._read_config)."""
+    from wms.config.schema import deep_merge
     from wms.core.toml import load as _toml_load
-    section = _toml_load(root / CONFIG_CHAIN[0]).get('long_credit', {})
+    merged: dict = {}
+    for name in reversed(resolve_chain(root, entry)):
+        table = dict(_toml_load(root / name))
+        table.pop('extends', None)
+        merged = deep_merge(merged, table)
+    return merged
+
+
+def _config_long_credit_enabled(root: Path, entry: str = CONFIG_CHAIN[0]) -> bool:
+    section = effective_config(root, entry).get('long_credit', {})
     enabled = section.get('enabled')
     if type(enabled) is not bool:
         raise ValueError('candidate-A config must declare long_credit.enabled as a bool')
@@ -155,17 +166,18 @@ def build(args) -> dict:
     actor = sha256(Path(args.actor)) if args.actor else C1_ACTOR_SHA256
     if actor != C1_ACTOR_SHA256:
         raise ValueError(f'C1 actor sha mismatch: {actor}')
-    chain = resolve_chain(root, CONFIG_CHAIN[0])
-    from wms.core.toml import load as _toml_load
-    zero_start = bool(_toml_load(root / CONFIG_CHAIN[0]).get('policy14', {}).get('zero_residual_output'))
-    if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
+    entry = getattr(args, 'entry_config', None) or CONFIG_CHAIN[0]
+    chain = resolve_chain(root, entry)
+    effective = effective_config(root, entry)
+    zero_start = bool(effective.get('policy14', {}).get('zero_residual_output'))
+    if effective.get('execution', {}).get('leader_rule') is not True:
         raise ValueError('candidate-A config must bind execution.leader_rule = true: the '
                          'mode-2 parity receipt is only valid with C4_SUMO_LEADER_RULE=1 '
                          'in the imagination mirror (deployment path unchanged)')
     # Declared credit mode must match the bound config bytes (fail-closed both
     # ways): gain_only requires long_credit.enabled = true; the registered
     # dense-90s phase 1 (23:25-rule second-phase deferral) requires false.
-    enabled_in_config = _config_long_credit_enabled(root)
+    enabled_in_config = _config_long_credit_enabled(root, entry)
     if args.dense_phase1 and enabled_in_config:
         raise ValueError('--dense-phase1 requires long_credit.enabled = false in the '
                          'candidate-A config (registered 23:25-rule second-phase deferral)')
@@ -173,7 +185,7 @@ def build(args) -> dict:
         raise ValueError('long_credit gain_only authority requires long_credit.enabled = '
                          'true; pass --dense-phase1 for the registered dense-90s phase 1')
     manifest = {name: sha256(root / name) for name in MANIFEST_FILES}
-    doc = dict(schema=SCHEMA, source_commit=commit, runtime_root=str(root),
+    doc = dict(schema=SCHEMA, source_commit=commit, runtime_root=str(root), entry_config=entry,
                config_chain={name: sha256(root / name) for name in chain},
                actor_c1_sha256=actor, actor_checkpoint=str(args.actor_checkpoint or ''),
                wm_sha256=wm, wm_checkpoint=str(wm_path), wm_config=str(wm_config),
@@ -265,16 +277,16 @@ def verify(args) -> dict:
             raise ValueError(f'leader rule source mismatch: {name}')
     if any(name not in doc['runtime_manifest'] for name in LEADER_RULE_FILES):
         raise ValueError('leader-rule files lost from the runtime manifest')
-    from wms.core.toml import load as _toml_load
-    if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
+    entry = doc.get('entry_config') or CONFIG_CHAIN[0]
+    effective = effective_config(root, entry)
+    if effective.get('execution', {}).get('leader_rule') is not True:
         raise ValueError('candidate-A config lost execution.leader_rule = true '
                          '(imagination mirror leader rule)')
     if 'zero_start' in doc:
-        from wms.core.toml import load as _toml_load2
-        flag = bool(_toml_load2(root / CONFIG_CHAIN[0]).get('policy14', {}).get('zero_residual_output'))
+        flag = bool(effective.get('policy14', {}).get('zero_residual_output'))
         if flag != bool(doc['zero_start']['enabled']):
             raise ValueError('zero-start flag diverges from the bound authority (policy14.zero_residual_output)')
-    chain = resolve_chain(root, CONFIG_CHAIN[0])
+    chain = resolve_chain(root, entry)
     for name, digest in doc['config_chain'].items():
         if sha256(root / name) != digest:
             raise ValueError(f'config chain mismatch: {name}')
@@ -282,7 +294,7 @@ def verify(args) -> dict:
         raise ValueError('config chain shape mismatch')
     # Declared credit mode stays consistent with the bound config bytes.
     mode = doc.get('long_credit', {}).get('mode', 'gain_only')
-    enabled_in_config = _config_long_credit_enabled(root)
+    enabled_in_config = _config_long_credit_enabled(root, entry)
     if mode == 'dense_90s_phase1' and enabled_in_config:
         raise ValueError('authority declares dense-90s phase 1 but the config enables '
                          'long credit; rebuild the authority')
@@ -350,6 +362,9 @@ def main(argv=None):
                               '(default: bound-with-receipt once the mode-2 receipt passes)')
     build_p.add_argument('--leader-rule-commit', default=None)
     build_p.add_argument('--allow-dirty', action='store_true')
+    build_p.add_argument('--entry-config', default=None,
+                         help='entry config (default configs/c4_policy14_candA.toml); a derived config '
+                              'extending it (e.g. candA_long300) is hash-bound down the whole chain')
     verify_p = sub.add_parser('verify', parents=[common])
     verify_p.add_argument('--authority', required=True)
     args = parser.parse_args(argv)

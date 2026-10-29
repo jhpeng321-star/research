@@ -316,3 +316,21 @@ def test_candA_objective_identity_synergy_decomposition_and_registered_compariso
     (group,) = v.groups
     assert float(cl[group["row"]]) == pytest.approx(9.9 + 8.9 + 3 * 10.3)    # 49.7
     assert all(float(cl[r]) == pytest.approx(-10.3) for r in group["flips"].values())
+
+
+def test_authority_binds_entry_config_chain_for_the_long300_variant():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("canda_authority", ROOT / "tools/candA/authority.py")
+    authority = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(authority)
+    dense = authority.effective_config(ROOT, "configs/c4_policy14_candA.toml")
+    long = authority.effective_config(ROOT, "configs/c4_policy14_candA_long300.toml")
+    assert dense["long_credit"]["enabled"] is False and long["long_credit"]["enabled"] is True
+    for cfg in (dense, long):          # everything else is inherited identically
+        assert cfg["policy14"]["zero_residual_output"] is True and cfg["execution"]["leader_rule"] is True
+        assert cfg["counterfactual"]["n_flip"] == 0 and cfg["exploration"]["radius_m"] == 100.0
+    assert long["long_credit"]["mode"] == "gain_only" and long["long_credit"]["cct2_file"].endswith("_mix.json")
+    chain = authority.resolve_chain(ROOT, "configs/c4_policy14_candA_long300.toml")
+    assert chain[0].endswith("candA_long300.toml") and all(c in chain for c in authority.CONFIG_CHAIN)
+    assert authority._config_long_credit_enabled(ROOT, "configs/c4_policy14_candA_long300.toml") is True
+    assert authority._config_long_credit_enabled(ROOT) is False

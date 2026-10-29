@@ -1,0 +1,16 @@
+# S-ZEROSTART long-credit variant of the combined candidate-A phase 1 (owner decision 2026-10-30:
+# the combined run includes the gain-only 300 s long credit; the <= 24 h projection condition is
+# dropped; checkpoint_every = 1 stays). Everything is inherited from c4_policy14_candA.toml (zero
+# start, exploration, random cooperation group, credit fix) except the long credit itself, which is
+# the registered 08:15 rule branch (a): WM2 + learned mix, CCT-2 H_G = 300 (mix-qualified authority
+# authority/CCT2_{wm_sha256}_mix.json). The 300 s memory recipe (parallel-futures fractions, budget
+# cap, checkpoint segment) is NOT in this file: it is the S-LONGMEM300 qualified recipe, exported in
+# tools/candA/longmem300.env and sourced by stepZ.sh drylong|prodlong.
+extends = "c4_policy14_candA.toml"
+
+[long_credit]
+enabled = true
+mode = "gain_only"
+cct2_file = "authority/CCT2_{wm_sha256}_mix.json"
+w_long = 1.0
+score_training_horizon = false

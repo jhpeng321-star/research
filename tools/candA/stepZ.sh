@@ -1,5 +1,5 @@
 #!/bin/bash
-# S-ZEROSTART: candidate-A phase 1 zero-start (dense 90 s). usage: stepZ.sh dry|prod
+# S-ZEROSTART: candidate-A phase 1 zero-start. usage: stepZ.sh dry|prod (dense 90 s) | drylong|prodlong (gain-only 300 s long credit + longmem300.env)
 # Identical to candA_prod_184542ab_p1 (stepB recipe: nine-row N4, fractions .10/.04/.022 x4 workers,
 # segment 2, cap 0.45, leader rule ON, mode-2 law, monitors ON, new-phase from C1 64f70af4)
 # except: zero-start (policy14.zero_residual_output), [exploration] rho 0.10->0.50 radius 100, random cooperation group U{2..6}, n_flip 0 + w_team 0 (config af8a8d8a -> see SOURCE.json commit).
@@ -20,13 +20,22 @@ export WMS_WMSPEED_DEDUPE_MOBIL=1 WMS_WMSPEED_MOBIL_LAZY_SAFE=1 WMS_SPEED_PIVOT_
 export WMS_SPEED_FAST_MERGE_LANE=1 WMS_SPEED_FAST_CAV_DRIVE=1 WMS_SPEED_FAST_LONG_HISTORY=1
 export WMS_SPEED_GRAD_AUDIT_EVERY=25
 L=/root/autodl-tmp/c4/restart20261026/arm/loop
-if [ "$MODE" = dry ]; then
-  EXTRA="--prep-dry-run-updates 2"; OUT=/root/autodl-tmp/c4/candA_dry_184542ab_zs
-else
-  EXTRA=""; OUT=/root/autodl-tmp/c4/candA_prod_184542ab_zs
-fi
+CONFIG=configs/c4_policy14_candA.toml
+EXTRA=""
+case "$MODE" in
+  dry)  EXTRA="--prep-dry-run-updates 2"; OUT=/root/autodl-tmp/c4/candA_dry_184542ab_zs ;;
+  prod) OUT=/root/autodl-tmp/c4/candA_prod_184542ab_zs ;;
+  drylong|prodlong)
+    # gain-only 300 s long credit variant: the S-LONGMEM300 qualified memory recipe (env file) is REQUIRED.
+    [ -f tools/candA/longmem300.env ] || { echo "missing tools/candA/longmem300.env (S-LONGMEM300 recipe)"; exit 2; }
+    CONFIG=configs/c4_policy14_candA_long300.toml
+    set -a; . tools/candA/longmem300.env; set +a
+    if [ "$MODE" = drylong ]; then EXTRA="--prep-dry-run-updates 2"; OUT=/root/autodl-tmp/c4/candA_dry_184542ab_zs_long
+    else OUT=/root/autodl-tmp/c4/candA_prod_184542ab_zs_long; fi ;;
+  *) echo "usage: stepZ.sh dry|prod|drylong|prodlong"; exit 2 ;;
+esac
 exec /root/miniconda3/bin/python -B -m wms.control.policy14_cli \
-  --config configs/c4_policy14_candA.toml \
+  --config $CONFIG \
   --wm-ckpt $L/wm/c02/wm_s.pt \
   --wm-config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml \
   --real-returns $L/returns/returns_c03.a1.npz \
