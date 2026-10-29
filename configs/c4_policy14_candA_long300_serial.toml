@@ -1,0 +1,6 @@
+# Serial 1-VJP-worker fallback of the long-credit variant (S-LONGMEM300 qualified recipe): identical to
+# c4_policy14_candA_long300.toml except the coordinator owns the card (gpu_memory_fraction 0.96).
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.96

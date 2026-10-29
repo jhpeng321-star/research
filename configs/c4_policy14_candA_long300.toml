@@ -14,3 +14,8 @@ mode = "gain_only"
 cct2_file = "authority/CCT2_{wm_sha256}_mix.json"
 w_long = 1.0
 score_training_horizon = false
+
+[run]
+# S-LONGMEM300 gpuA two-VJP-worker pool: the coordinator holds ~10% of the card (workers own the rest);
+# the serial fallback (tools/candA/longmem300_serial.env) needs 0.96 and a different config.
+gpu_memory_fraction = 0.10

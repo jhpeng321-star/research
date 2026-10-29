@@ -28,8 +28,8 @@ case "$MODE" in
   drylong|prodlong)
     # gain-only 300 s long credit variant: the S-LONGMEM300 qualified memory recipe (env file) is REQUIRED.
     [ -f tools/candA/longmem300.env ] || { echo "missing tools/candA/longmem300.env (S-LONGMEM300 recipe)"; exit 2; }
-    CONFIG=configs/c4_policy14_candA_long300.toml
-    set -a; . tools/candA/longmem300.env; set +a
+    CONFIG=${LM_CONFIG:-configs/c4_policy14_candA_long300.toml}
+    set -a; . ${LM_ENV:-tools/candA/longmem300.env}; set +a
     if [ "$MODE" = drylong ]; then EXTRA="--prep-dry-run-updates 2"; OUT=/root/autodl-tmp/c4/candA_dry_184542ab_zs_long
     else OUT=/root/autodl-tmp/c4/candA_prod_184542ab_zs_long; fi ;;
   *) echo "usage: stepZ.sh dry|prod|drylong|prodlong"; exit 2 ;;
