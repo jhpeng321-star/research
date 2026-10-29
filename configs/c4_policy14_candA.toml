@@ -45,6 +45,14 @@ exploit_ensemble_pessimism = false
 exploit_stop_on_conflict = false
 # S-AUDITFIX: per-update phase checkpoints (resume safety for --new-phase).
 checkpoint_every = 1
+# S-LAUNCHA 19:25 memory-only fix: POLSPEED2's qualified N4 activation requires
+# segment 2 ("Apply the following memory-only override to the resolved
+# candidate-A config"); this chain inherited c4prep_off's segment 8, and the
+# 19:1x dense-90 s attempt-5 VJP worker OOMed at fraction .10 (5.06 GiB used
+# vs 4.74 allowed) because of it. Segment 2 is the measured 350.756 s/update
+# bitwise-qualified recipe (VJP worker peaks 4.18/4.41 GiB < 4.74 cap);
+# microbatch 1 and both offloads stay as inherited.
+imagination_checkpoint_segment = 2
 
 [data]
 # exact 60% focus-cell start mixture (registered)

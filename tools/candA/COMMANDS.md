@@ -49,6 +49,10 @@ no launch.
 
 Registered dry recipe: FGA flags + N4 parallel futures, NINE-row exact path, update 181
 fixture equivalence already proved bitwise (158/158 leaves, tools/polspeed2/evidence/REPORT.json).
+The config carries POLSPEED2's memory-only activation override
+`[trainer] imagination_checkpoint_segment = 2` (S-LAUNCHA 19:25 fix: the inherited
+segment 8 OOMed a dense-90 s VJP worker at fraction .10; segment 2 is the measured
+bitwise-qualified recipe with VJP peaks 4.18/4.41 GiB under the .10 cap).
 
 ```sh
 cd /root/autodl-tmp/c4/candA_<commit12>
