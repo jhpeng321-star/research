@@ -29,10 +29,16 @@ L=/root/autodl-tmp/c4/restart20261026/arm/loop
   --wm-ckpt $L/wm/<CHOSEN_WM>/wm_s.pt --wm-config configs/c4_wm_loop14_r16_ft.toml \
   --cct2 authority/CCT2_<wm_sha256>.json --out $L/c4prep/CANDA_AUTHORITY.json \
   --actor $L/policy/c01.a3/policy_latest.pt \
-  --parity-receipt tools/execparity/alwayscmd3_execution_parity.json --allow-dirty=false
+  --parity-receipt tools/execparity/alwayscmd3_execution_parity.json --allow-dirty=false \
+  --dense-phase1
 /root/miniconda3/bin/python -B tools/candA/authority.py verify \
   --authority $L/c4prep/CANDA_AUTHORITY.json
 ```
+
+`--dense-phase1` (S-LAUNCHA 18:25 fallback, registered 23:25 rule) declares the
+phase-1 credit mode: dense 90 s only, the CCT-2 file staying bound as the
+REGISTERED SECOND-PHASE authority (requires `long_credit.enabled = false` in the
+config; `gain_only` builds require `= true` — fail-closed both ways).
 
 `verify` refuses on ANY mismatch (source commit, runtime manifest incl. the four leader-rule
 sources, config chain incl. `[execution] leader_rule = true`, C1 actor 64f70af4…, WM
@@ -79,8 +85,9 @@ nohup setsid /root/miniconda3/bin/python -B -m wms.control.policy14_cli \
 ```
 
 PASS = two UNIQUE finite 90 s/K8 updates, nonzero module gradients, effective 8.9/8.9,
-monitors on, direct credit disabled+flagged, long-credit receipt (H_G of the chosen WM or
-explicit dense-only reason), memory within cap. Commit the receipt BEFORE Step C.
+monitors on, direct credit disabled+flagged, long-credit receipt (H_G of the chosen WM,
+the declared dense-only phase-1 reason `dense_90s_phase1`, or another explicit dense-only
+reason), memory within cap. Commit the receipt BEFORE Step C.
 
 ## Step C — production launch (gpuA, 150 updates, ~15.9 h projected)
 

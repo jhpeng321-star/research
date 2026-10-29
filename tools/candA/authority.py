@@ -135,6 +135,15 @@ def verify_cct2(doc: dict, wm: str, *, learned_mix: bool) -> int:
     return hg
 
 
+def _config_long_credit_enabled(root: Path) -> bool:
+    from wms.core.toml import load as _toml_load
+    section = _toml_load(root / CONFIG_CHAIN[0]).get('long_credit', {})
+    enabled = section.get('enabled')
+    if type(enabled) is not bool:
+        raise ValueError('candidate-A config must declare long_credit.enabled as a bool')
+    return enabled
+
+
 def build(args) -> dict:
     root = Path(args.root).resolve()
     commit = source_commit(root)
@@ -151,6 +160,16 @@ def build(args) -> dict:
         raise ValueError('candidate-A config must bind execution.leader_rule = true: the '
                          'mode-2 parity receipt is only valid with C4_SUMO_LEADER_RULE=1 '
                          'in the imagination mirror (deployment path unchanged)')
+    # Declared credit mode must match the bound config bytes (fail-closed both
+    # ways): gain_only requires long_credit.enabled = true; the registered
+    # dense-90s phase 1 (23:25-rule second-phase deferral) requires false.
+    enabled_in_config = _config_long_credit_enabled(root)
+    if args.dense_phase1 and enabled_in_config:
+        raise ValueError('--dense-phase1 requires long_credit.enabled = false in the '
+                         'candidate-A config (registered 23:25-rule second-phase deferral)')
+    if not args.dense_phase1 and not enabled_in_config:
+        raise ValueError('long_credit gain_only authority requires long_credit.enabled = '
+                         'true; pass --dense-phase1 for the registered dense-90s phase 1')
     manifest = {name: sha256(root / name) for name in MANIFEST_FILES}
     doc = dict(schema=SCHEMA, source_commit=commit, runtime_root=str(root),
                config_chain={name: sha256(root / name) for name in chain},
@@ -165,9 +184,10 @@ def build(args) -> dict:
                monitors={'exploit_monitor': True, 'exploit_disable_direct_credit': True,
                          'exploit_ensemble_pessimism': False, 'exploit_stop_on_conflict': False,
                          'native_anchor': False},
-               dense_horizon_s=90, long_credit={'mode': 'gain_only',
-                                                'cct2_file': str(Path(args.cct2).resolve()),
-                                                'cct2_sha256': sha256(Path(args.cct2))},
+               dense_horizon_s=90, long_credit={'mode': ('dense_90s_phase1' if args.dense_phase1
+                                                         else 'gain_only'),
+                                                 'cct2_file': str(Path(args.cct2).resolve()),
+                                                 'cct2_sha256': sha256(Path(args.cct2))},
                execution_law={'mode': 2, 'backend_contract': 'always_commanded_ctrl0/1',
                               'shared_base': 'src/wms/control/sumo_idm.py',
                               'sole_writer': 'traffic_shepherd/ownership.py',
@@ -189,6 +209,16 @@ def build(args) -> dict:
     hg = verify_cct2(json.loads(Path(args.cct2).read_text(encoding='utf-8')), wm,
                      learned_mix=bool(args.learned_mix))
     doc['long_credit']['H_G'] = hg
+    if args.dense_phase1:
+        doc['long_credit']['phase2'] = {
+            'mode': 'gain_only', 'H_long': hg,
+            'rule': 'registered 23:25 MAIN pre-registration: A starts at 90 s; the long '
+                    'credit is added as a registered second phase once the speed work '
+                    'makes it fit the 24 h projection',
+            'projection_s_per_update': {'dense_90s': 350.756, 'H_long_180': 701.5,
+                                        'H_long_300': 1165.8},
+            'oom_receipt': 'gpuA candA_dry_f176d7ac9a28 attempt 3 (forward worker, '
+                           'fraction .04 = 1.89 GiB allowed, 300 s futures)'}
     doc['parity_receipt'] = ''
     if args.parity_receipt:
         os.environ.setdefault('C4_EXECUTION_PARITY', '2')
@@ -241,6 +271,18 @@ def verify(args) -> dict:
             raise ValueError(f'config chain mismatch: {name}')
     if set(chain) != set(doc['config_chain']):
         raise ValueError('config chain shape mismatch')
+    # Declared credit mode stays consistent with the bound config bytes.
+    mode = doc.get('long_credit', {}).get('mode', 'gain_only')
+    enabled_in_config = _config_long_credit_enabled(root)
+    if mode == 'dense_90s_phase1' and enabled_in_config:
+        raise ValueError('authority declares dense-90s phase 1 but the config enables '
+                         'long credit; rebuild the authority')
+    if mode == 'gain_only' and not enabled_in_config:
+        raise ValueError('authority declares gain_only long credit but the config runs '
+                         'dense; rebuild with --dense-phase1 (registered second-phase '
+                         'deferral) or re-enable long credit')
+    if mode not in ('dense_90s_phase1', 'gain_only'):
+        raise ValueError(f'unknown long-credit mode in authority: {mode}')
     if sha256(Path(doc['wm_checkpoint'])) != doc['wm_sha256']:
         raise ValueError('WM checkpoint mismatch')
     if sha256(Path(doc['wm_config'])) != doc['wm_config_sha256']:
@@ -288,6 +330,11 @@ def main(argv=None):
     build_p.add_argument('--actor-checkpoint', default=None)
     build_p.add_argument('--learned-mix', action='store_true')
     build_p.add_argument('--mix-module', default=None)
+    build_p.add_argument('--dense-phase1', action='store_true',
+                         help='declare the registered dense-90s phase 1 (23:25-rule '
+                              'second-phase deferral); requires long_credit.enabled = false '
+                              'in the candidate-A config, keeps the CCT-2 file bound as '
+                              'the registered phase-2 authority')
     build_p.add_argument('--parity-receipt', default=None)
     build_p.add_argument('--leader-rule-status', default=None,
                          help='override the recorded leader-rule status '

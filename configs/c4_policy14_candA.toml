@@ -79,7 +79,20 @@ entry_pad_max = [32, 288]
 # the trainer consumes the MIX-QUALIFIED authority (learned_mix_qualified=true,
 # sha f42cce0f...); mismatched file => startup refusal. Mix-OFF launches use
 # authority/CCT2_{wm_sha256}.json instead.
-enabled = true
+#
+# S-LAUNCHA 18:25 fallback (registered 23:25 MAIN rule: 24 h projection at
+# H_long, else "A starts at 90 s and the long credit is added as a registered
+# second phase once the speed work makes it fit"): PHASE 1 RUNS DENSE 90 s
+# ONLY. Arithmetic from the registered nine_N4 receipt (350.756 s/update at
+# 90 s; phases 83.352 forward + 262.449 VJP + 4.955 other): H_long=300 ->
+# 1165.8 s/update -> 48.6 h for 150 updates; H_long=180 -> 29.3 h; both > 24 h
+# regardless of memory (and the 300 s VJP worker peak ~4.18 GiB * 300/90 =
+# 13.9 GiB exceeds the parallel-pool 60% guard - attempt 3 OOM receipt). The
+# only CCT-2-passing horizons are 180/300, so no intermediate qualifies. The
+# mix-qualified authority below stays bound as the REGISTERED SECOND PHASE;
+# re-enable (enabled = true) only under a new registered amendment that fits
+# the 24 h rule.
+enabled = false
 mode = "gain_only"
 cct2_file = "authority/CCT2_{wm_sha256}_mix.json"
 w_long = 1.0

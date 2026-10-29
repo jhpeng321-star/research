@@ -92,10 +92,11 @@ def test_candA_config_resolves_with_monitors_on():
     horizon = raw['horizon']
     assert horizon['horizons_s'] == [10, 90] and horizon['entry_pad_max'] == [32, 288]
     assert horizon['curriculum_updates'] == [0, 1]
-    # gain-only long credit bound to the WM-hash CCT-2 file (placeholder)
+    # S-LAUNCHA 18:25 fallback (23:25 rule): phase 1 dense 90 s; the mix-qualified
+    # CCT-2 stays bound as the registered second-phase authority
     long = raw['long_credit']
-    assert long['enabled'] is True and long['mode'] == 'gain_only'
-    assert long['cct2_file'] == 'authority/CCT2_{wm_sha256}.json'
+    assert long['enabled'] is False and long['mode'] == 'gain_only'
+    assert long['cct2_file'] == 'authority/CCT2_{wm_sha256}_mix.json'
     assert long['score_training_horizon'] is False
     # S-INTEGRATE2: imagination-mirror leader rule ON (C4_SUMO_LEADER_RULE=1 launch env)
     assert raw['execution']['leader_rule'] is True
@@ -326,10 +327,14 @@ def test_authority_binds_and_refuses_on_mismatch(tmp_path, monkeypatch):
                            cct2=str(cct2), out=str(out), cct1=None, actor=None,
                            actor_checkpoint=None, learned_mix=False, mix_module=None,
                            parity_receipt=str(receipt), leader_rule_status=None,
-                           leader_rule_commit=None, allow_dirty=True)
+                           leader_rule_commit=None, allow_dirty=True, dense_phase1=True)
     doc = authority.build(args)
     assert doc['actor_c1_sha256'] == '64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c'
-    assert doc['long_credit']['H_G'] == 300 and doc['new_phase'] is True
+    # declared credit mode matches the bound config bytes (phase 1 dense 90 s;
+    # the CCT-2 file stays bound as the registered phase-2 authority)
+    assert doc['long_credit']['mode'] == 'dense_90s_phase1'
+    assert doc['long_credit']['H_G'] == 300 and doc['long_credit']['phase2']['H_long'] == 300
+    assert doc['new_phase'] is True
     assert doc['monitors']['exploit_monitor'] is True
     # S-INTEGRATE2: the execparity3 slot is BOUND (source hashes + receipt), not OPEN
     assert doc['leader_rule']['status'] == 'bound-with-receipt'
@@ -367,6 +372,17 @@ def test_authority_binds_and_refuses_on_mismatch(tmp_path, monkeypatch):
                                cct1=None, actor=None, actor_checkpoint=None,
                                learned_mix=True, mix_module='src/wms/control/entrant.py',
                                parity_receipt=None, leader_rule_status=None,
-                               leader_rule_commit=None, allow_dirty=True)
+                               leader_rule_commit=None, allow_dirty=True, dense_phase1=True)
     with pytest.raises(ValueError, match='mix-qualified'):
         authority.build(mix_args)
+    # gain_only declaration against the dense phase-1 config refuses (fail-closed
+    # both ways), and a tampered authority mode fails verify against the config
+    dense_refuses = SimpleNamespace(**{**vars(mix_args), 'learned_mix': False,
+                                       'dense_phase1': False})
+    with pytest.raises(ValueError, match='dense-phase1'):
+        authority.build(dense_refuses)
+    stored = json.loads(out.read_text(encoding='utf-8'))
+    stored['long_credit']['mode'] = 'gain_only'
+    out.write_text(json.dumps(stored), encoding='utf-8')
+    with pytest.raises(ValueError, match='long credit'):
+        authority.verify(v_args)
