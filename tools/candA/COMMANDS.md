@@ -1,12 +1,17 @@
-# S-INTEGRATE candidate-A gpuA commands (DO NOT RUN — MAIN executes after WM choice + parity receipt)
+# S-INTEGRATE candidate-A gpuA commands (DO NOT RUN — MAIN executes after the WM choice)
 
 Preconditions (all four, in order):
 1. Morning WM choice recorded (registered rule); WM checkpoint + config + CCT-2 file for that
    WM's sha256 exist (`authority/CCT2_<wm_sha256>.json`; WM2 `b8797242…` and WM3 `41e18f09…`
    are committed; any other WM needs S-CCT2-INC output first).
-2. A PASSING mode-2 execution parity receipt exists for the C1 actor under the always-commanded
-   law (ASTRA4 GO condition 1: pooled RMSE <= native-head band 0.160312 m/s^2). Until then
-   `tools/candA/authority.py verify` REFUSES; the c4/execparity3 leader-rule fix slot is OPEN.
+2. DONE (S-INTEGRATE2): the PASSING mode-2 execution parity receipt for the C1 actor under
+   the always-commanded law is committed at
+   `tools/execparity/alwayscmd3_execution_parity.json` (pooled executed RMSE 0.146538 <=
+   native-head band 0.160312, re-confirmed bitwise with `C4_SUMO_LEADER_RULE=1` on this
+   tree). The c4/execparity3 leader-rule slot is BOUND in `tools/candA/authority.py`
+   (source hashes + config `[execution] leader_rule = true` + the receipt); the launch env
+   below MUST keep `C4_SUMO_LEADER_RULE=1` — the receipt is only valid with the rule ON in
+   the imagination mirror (deployment executor path unchanged).
 3. This branch (c4/candA-int) staged on gpuA as an immutable source tree
    `/root/autodl-tmp/c4/candA_<commit12>` (SOURCE.json records the commit; `pip install
    '.[parallel-futures]'` for cloudpickle in the runtime env).
@@ -24,13 +29,15 @@ L=/root/autodl-tmp/c4/restart20261026/arm/loop
   --wm-ckpt $L/wm/<CHOSEN_WM>/wm_s.pt --wm-config configs/c4_wm_loop14_r16_ft.toml \
   --cct2 authority/CCT2_<wm_sha256>.json --out $L/c4prep/CANDA_AUTHORITY.json \
   --actor $L/policy/c01.a3/policy_latest.pt \
-  --parity-receipt <PASSING mode-2 receipt.json> --allow-dirty=false
+  --parity-receipt tools/execparity/alwayscmd3_execution_parity.json --allow-dirty=false
 /root/miniconda3/bin/python -B tools/candA/authority.py verify \
   --authority $L/c4prep/CANDA_AUTHORITY.json
 ```
 
-`verify` refuses on ANY mismatch (source commit, runtime manifest, config chain, C1 actor
-64f70af4…, WM sha/config, CCT-2 H_G, learned-mix binding, parity receipt). No verify -> no launch.
+`verify` refuses on ANY mismatch (source commit, runtime manifest incl. the four leader-rule
+sources, config chain incl. `[execution] leader_rule = true`, C1 actor 64f70af4…, WM
+sha/config, CCT-2 H_G, learned-mix binding, leader-rule slot, parity receipt). No verify ->
+no launch.
 
 ## Step B — exact 2-update GPU qualification (gpuA, ~12 min at 350.8 s/update)
 
@@ -45,6 +52,7 @@ export PYTHONPATH=$PWD/src:$PWD C4_ALLOWED_ROOTS=/root/autodl-tmp/c4 \
   WMS_DATA_V5_NATIVE_Q=/root/autodl-tmp/c4/restart20261026_inputs/data/v5_native_q \
   WMS_DATA_GENRAND_PLAIN_Q=/root/autodl-tmp/c4/restart20261026_inputs/data/genrand_plain_q \
   C4_EXECUTION_PARITY=2 C4_EXECUTION_DRIVER=/root/autodl-tmp/c4/execparity/fit_cav_idm_v1.json \
+  C4_SUMO_LEADER_RULE=1 \
   WMS_SPEED_FUTURE_WORKERS=4 WMS_SPEED_PARALLEL_FORWARD=1 WMS_SPEED_FUTURE_VJP_SLOTS=4 \
   WMS_SPEED_FUTURE_MEMORY_FRACTION=.10 WMS_SPEED_FORWARD_MEMORY_FRACTION=.04 \
   WMS_SPEED_REPLAY_FORWARD_MEMORY_FRACTION=.022 WMS_SPEED_GRAPH_CVAR=1 WMS_SPEED_ASYNC_SPILL=1 \
@@ -76,7 +84,9 @@ explicit dense-only reason), memory within cap. Commit the receipt BEFORE Step C
 
 ## Step C — production launch (gpuA, 150 updates, ~15.9 h projected)
 
-Identical to Step B except: drop `--prep-dry-run-updates`, write to the phase output dir:
+Identical to Step B (keep `C4_SUMO_LEADER_RULE=1` in the env — the parity receipt is only
+valid with the imagination leader rule ON) except: drop `--prep-dry-run-updates`, write to
+the phase output dir:
 
 ```sh
   … --max-updates 150 --output-dir /root/autodl-tmp/c4/candA_phase_<commit12> --compact \

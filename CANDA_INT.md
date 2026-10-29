@@ -3,6 +3,34 @@
 Worktree `E:/agent-work/c4-candA`, branch `c4/candA-int` off `c4/c4prep` (f5bbeec0).
 CPU only; zero SUMO, zero GPU, no push. Every step committed separately.
 
+## S-INTEGRATE2 (07:20 dispatch) — execparity3 merged, leader-rule slot BOUND
+
+`c4/execparity3` a6a1894d merged cleanly (merge commit; no conflicts). The leader
+rule is ON for the candidate-A imagination mirror only:
+`configs/c4_policy14_candA.toml` gains `[execution] leader_rule = true` (authority-
+checked at build AND verify; launch env must export `C4_SUMO_LEADER_RULE=1`, now in
+COMMANDS.md Steps B/C); the deployment executor path is unchanged and the flag
+default stays OFF everywhere else. **Receipt confirmed**: the committed mode-2
+receipt `tools/execparity/alwayscmd3_execution_parity.json` was re-measured on THIS
+tree with the flag ON — pooled executed RMSE 0.1465382036679278 ≤ head band
+0.16031176181392923, `passed: true`, driver/world/head fields bitwise-equal to the
+committed receipt (offline replay of the 00:20 recordings, CPU, zero SUMO).
+`tools/candA/authority.py` fills the OPEN slot: the four leader-rule sources
+(`lane_chain.py`, `sumo_leader.py`, `neighbours.py`, `contract.py`) joined the
+runtime manifest, `leader_rule` records status `bound-with-receipt`, commit
+a6a1894d, the env binding and the config flag; `verify` now refuses on an
+OPEN/broken leader-rule binding or a lost config flag. Dry mode (placeholder WM,
+real receipt): `verify` **passes end-to-end** (leader_rule `bound-with-receipt`),
+and the only remaining refusals are the WM/CCT-2 placeholders (placeholder WM vs
+the committed WM2 CCT-2 refuses with "CCT-2 must be this WM's … verdict
+authority"). Re-run counts: integration suite 11 passed; execparity suite
+(6 files) 69 passed; full `tests/unit` 36 failed + 2 collection errors = **38,
+ID-identical to the pre-merge bf21e195 run (== the c4prep baseline list, 0 new)**
+[this CPU env torch 2.12.1: 2851 passed/31 skipped; the archived 2813/27/38 was
+torch 2.14.1 — failure IDs equal]; `test_polspeed2_parallel.py` 5 passed + 3
+CUDA-only skips. COMMANDS.md updated (precondition 2 met, Step A binds the
+committed receipt, Steps B/C export the leader-rule flag).
+
 ## Deliverable 1 — integrated branch + CPU suites
 
 Merges (in order, conflicts resolved keeping every default-OFF flag OFF):
@@ -17,12 +45,9 @@ gain_only mode, WM-hash authority files, WM2/WM3 incumbent H_G=300 receipts) →
 → `c4/execparity2` 6b7e0d24 (always-commanded mode-2 law + shared `sumo_idm` mirror +
 e3final deploy fixes: residual-aware BranchController, deploy observer, --population
 textbook requirement). e3final deploy fixes verified delivered via execparity2
-(`traffic_shepherd/c4/branching.py` blob-identical to c4/e3final).
-
-**c4/execparity3 slot: OPEN.** Its tip still equals execparity2 (6b7e0d24), no
-EXECPARITY3.md, last measured parity FAIL (0.267858 > 0.160312). The authority template
-records `leader_rule.status = OPEN_SLOT`; GO condition (1) requires MAIN's passing mode-2
-parity receipt regardless.
+(`traffic_shepherd/c4/branching.py` blob-identical to c4/e3final) → `c4/execparity3`
+a6a1894d (S-INTEGRATE2: SUMO lane/link leader rule, default OFF; mode-2 parity
+receipt; leader-rule slot in the authority BOUND, see the S-INTEGRATE2 section).
 
 Integration repairs (committed): parallel-futures workers inherit the source-tree
 PYTHONPATH; ownership.py execution-law imports routed through the sanctioned
@@ -53,9 +78,11 @@ learned-mix flag state (mix ON requires a hash-bound errsrc inference module AND
 `learned_mix_qualified` CCT-2 file — refuses otherwise, implementing ASTRA blocker 3),
 CCT-1 (optional) + CCT-2 (H_G re-validated against the registered rule), execution-law
 hashes (sumo_idm, alwayscmd, sole writer ownership, deploy), the execparity3 leader-rule
-slot, and the mode-2 parity receipt (validated through `wms.control.execution.
-verify_parity`). `verify` recomputes everything and **refuses on any mismatch**; it also
-refuses when no passing parity receipt is bound (GO condition 1).
+binding (S-INTEGRATE2: four leader-rule source hashes in the manifest + config flag +
+commit a6a1894d; `verify` refuses an OPEN/broken slot), and the mode-2 parity receipt
+(validated through `wms.control.execution.verify_parity`). `verify` recomputes everything
+and **refuses on any mismatch**; it also refuses when no passing parity receipt is bound
+(GO condition 1).
 
 ## Deliverable 3 — candidate-A config (`configs/c4_policy14_candA.toml`)
 
@@ -63,6 +90,8 @@ Resolves the registered candidate-A POLICY.toml content: full actor from C1, ent
 deterministic CRN, q10/K8 pessimism, focus 0.6, nine-row weights 8.9/9.9/8.9/10.3/1.0,
 dense 90 s horizon (curriculum [0,1], pads [32,288]), guarded real credit floor,
 checkpoint_every=1, LONGMEM micro1/segment8/both offloads, anchor OFF (measured fallback),
+`[execution] leader_rule = true` (S-INTEGRATE2: imagination mirror ON via
+`C4_SUMO_LEADER_RULE=1` in the launch env; deployment path unchanged),
 monitors ON (`exploit_monitor`, `exploit_disable_direct_credit`; ensemble/STOP-conflict
 OFF), `[long_credit] gain_only` bound to `authority/CCT2_{wm_sha256}.json` (placeholder
 until the WM choice; missing file ⇒ dense 90 s only, mismatch ⇒ startup refusal).
@@ -76,9 +105,10 @@ bootstrap lower95 % > 0), sampled memory watch beyond the allocator cap.
 
 ## Deliverable 4 — exact GPU commands (NOT run)
 
-`tools/candA/COMMANDS.md`: step A authority build+verify (refuses without a passing
-parity receipt), step B exact 2-update qualification (FGA + N4 parallel futures, nine-row,
-`--resume` C1 `--new-phase --prep-dry-run-updates 2`, full registered flag set), step C
+`tools/candA/COMMANDS.md`: step A authority build+verify (binds the committed mode-2
+receipt; refuses without one), step B exact 2-update qualification (FGA + N4 parallel
+futures, nine-row, `--resume` C1 `--new-phase --prep-dry-run-updates 2`, full registered
+flag set + `C4_SUMO_LEADER_RULE=1` for the imagination mirror), step C
 production 150-update launch (identical minus the dry flag; STOP-file only; C4A_RUNNING
 only after ≥10 unique finite updates + evidence + signal gate, per S-C4LAUNCH).
 
@@ -95,5 +125,11 @@ native/CTRL0/MAPPO/ours-A(+A-LONGX); 2000-draw world-cluster bootstrap seed 0).
 
 ## Boundary
 
-Runtime is READY-TO-QUALIFY, not qualified: no GPU two-update receipt, no passing mode-2
-parity receipt (execparity3 slot OPEN), WM not yet chosen by MAIN. Nothing dispatched.
+S-INTEGRATE2 closed the execution slot: the mode-2 parity receipt is committed,
+bound and dry-verified with the leader rule ON in the mirror. Runtime is READY-TO-
+QUALIFY, not qualified: no GPU two-update receipt, WM not yet chosen by MAIN.
+Remaining placeholders (all MAIN-morning items, fail-closed in authority.py):
+the WM sha256 + its checkpoint/config binding at build time, the learned-mix flag
+state (OFF default; ON needs a hash-bound errsrc inference module + a
+mix-qualified CCT-2), and the CCT-2 file `authority/CCT2_{wm_sha256}.json` for
+the chosen WM. Nothing dispatched.
