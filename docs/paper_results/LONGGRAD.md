@@ -117,3 +117,35 @@ signal, not a reason to invent a floor. Rescore with the existing registered pan
 `test_longmem300_budget.py`, `test_longmem.py`, `test_auditfix_resume.py`; metadata
 follow-up: 6 passed. Ruff passed on the new module/tests/probe. Probe command:
 `$env:PYTHONPATH='src;.'; .\.venv\Scripts\python.exe tools/longgrad/diagnose.py --horizons 10 30 60 90 120`.
+
+## S-LONGSKIP — code diagnosis (2026-10-30)
+
+Starting point: `508ac026`. The supplied production update-181 measurement is
+3708 s/update: 861 s full no-grad K8/300 s forward plus eight approximately
+357 s replay/VJPs (rounding accounts for the small difference). Gate share was 0.
+This is a supplied measurement, not a new CPU/GPU benchmark.
+
+* `imagination_memory.memory_imagine.Replay.backward` unconditionally loops over
+  every cached future and calls `imagine` and `autograd.grad`; it only tests for
+  `None` cotangents, never exact zero. `parallel_futures.backward_futures` likewise
+  schedules every start-microbatch/future. Cached inactive futures are already
+  reused as constants, but the active future is always recomputed in full.
+* `longgrad.actor_backward` runs dense and long replay separately when balance is
+  ON; OFF diagnostics run both plus the original combined backward. An all-OFF
+  gain-only gate still has a differentiable long loss with zero output cotangent,
+  so it does not bypass the long pass. Gate-ON rows do not identify all live
+  futures: signed joint q10 and all other dense cotangents must also be checked.
+* `dreamer.imagine` runs one long trajectory per future, then `gated300.prefix`
+  slices rewards/actions/costs/states/etc. to the dense horizon. Crucially it
+  **rebuilds dense returns from prefix rewards**, using reverse cumsum, rather
+  than slicing the 300 s suffix returns. Values are zero in gated imagination;
+  there is no 90 s critic bootstrap or 90..300 s dense actor dependency. Long
+  credit is still the sum from t0..300 s, paired against detached native totals.
+* Exact prefix replay must keep original-horizon stochastic/exploration plans,
+  row geometry, checkpoint segment boundaries and full-K reductions. Cached
+  detached tails can restore the full collection shapes before the unchanged
+  prefix/long reductions. Shortening `cfg.horizon` globally would change random
+  draw shapes and is not a valid implementation.
+* The initial no-grad 300 s forward is needed even with gate share zero: the
+  gate and q10 decisions require all K full trajectories. It cannot be removed
+  prospectively on the basis of a previous update's gate.
