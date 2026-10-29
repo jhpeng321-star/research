@@ -66,6 +66,8 @@ def phase(trainer, name):
 def actor_backward(trainer, dense_loss, long_loss, total_loss):
     params = tuple(p for p in trainer.actor_parameters if p.requires_grad)
     trainer._longgrad_futures = []
+    if not hasattr(trainer, '_longskip_records'):
+        trainer._longskip_records = []
     if long_loss is None or not long_loss.requires_grad:
         total_loss.backward()
         dense = tuple(p.grad for p in params)
@@ -92,6 +94,8 @@ def actor_backward(trainer, dense_loss, long_loss, total_loss):
     metrics['grad_group_norms_combined'] = group_norms(trainer, params, (p.grad for p in params))
     metrics['grad_long_balance'] = trainer.config.long_grad_balance
     metrics['grad_long_futures'] = trainer._longgrad_futures
+    from .longskip import metrics as replay_metrics
+    metrics.update(replay_metrics(trainer))
     return metrics
 
 

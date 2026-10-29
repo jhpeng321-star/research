@@ -232,7 +232,7 @@ class FuturePool:
         self.close()
 
 
-def _vjp(trainer, common, task, gate=None):
+def _vjp(trainer, common, task, gate=None, *, transport=True):
     from contextlib import nullcontext
     from .dreamer import _restore_rng
     from .imagination_memory import (_RandomTape, _subset, _saved_tensor_spill,
@@ -240,7 +240,8 @@ def _vjp(trainer, common, task, gate=None):
     batch, cfg, kwargs, before = (common[k] for k in ('batch', 'cfg', 'kwargs', 'before'))
     total = batch.state['s_m'].shape[0]
     n_rows = kwargs['variants'].n_rows if kwargs['variants'] is not None else total
-    start, stop, future = task
+    start, stop, future = task[:3]
+    horizon = task[3] if len(task) > 3 else cfg.horizon
     small, variants, starts, rows = _subset(batch, kwargs['variants'], start, stop)
     replay = _RandomTape(common['tape'], (starts, rows, total, n_rows))
     _restore_rng(before, trainer.device)
@@ -252,11 +253,13 @@ def _vjp(trainer, common, task, gate=None):
     trainer._longgrad_state_trace = trace
     _trace_memory(trainer, 'future_start', start=start, future=future)
     _lm300_snapshot(trainer, 'start')
+    began = time.perf_counter()
     with torch.enable_grad(), replay, spill:
         result = trainer.imagine(small, **{**kwargs, 'variants': variants},
             _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
             _memory_start_index=starts, _memory_row_index=rows,
-            _memory_future_cache=common['cache'], _memory_active_future=future)
+            _memory_future_cache=common['cache'], _memory_active_future=future,
+            _memory_replay_horizon=horizon)
         peaks = ({'forward_peak_allocated_bytes': torch.cuda.max_memory_allocated(trainer.device),
                   'forward_peak_reserved_bytes': torch.cuda.max_memory_reserved(trainer.device)}
                  if trainer.device.type == 'cuda' else {})
@@ -280,31 +283,80 @@ def _vjp(trainer, common, task, gate=None):
     # CPU transport preserves bytes. Coordinator copies to its device before addition.
     diagnostic = future_record(trainer, start, future, parameters, grads, trace) if tracing else None
     trainer._longgrad_state_trace = None
-    return {'grads': [None if g is None else g.detach().cpu() for g in grads],
+    return {'grads': [None if g is None else g.detach().cpu() if transport else g.detach()
+                      for g in grads],
+            'elapsed': time.perf_counter() - began,
             'longgrad': diagnostic,
             'spill': getattr(trainer, 'memory_spill_stats', None)}
 
 
-def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, grad_outputs, spec):
+def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, grad_outputs, spec,
+                     support=None):
+    from contextlib import nullcontext
     from .imagination_memory import _trace_memory
+    from .longskip import replay_horizon, record_replay
     common = dict(kind='backward', batch=batch, cfg=cfg, kwargs=kwargs, tape=tape,
                   before=before, cache=cache, slots=slots, grad_outputs=grad_outputs, spec=spec)
     total = batch.state['s_m'].shape[0]
     micro = cfg.imagination_microbatch or total
-    tasks = [(start, min(total, start + micro), future)
-             for start in range(0, total, micro) for future in range(len(cache['items']))]
-    accumulated = [None] * len([p for p in trainer.actor_parameters if p.requires_grad])
-    with FuturePool(trainer, common) as pool:
-        for task, result in zip(tasks, pool.map(tasks)):
-            for i, grad in enumerate(result['grads']):
-                if grad is not None:
-                    grad = grad.to(trainer.device)
-                    accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
-            if result['spill'] is not None:
-                trainer.memory_spill_stats = result['spill']
-            if result.get('longgrad') is not None:
-                trainer._longgrad_futures.append(result['longgrad'])
-            _trace_memory(trainer, 'parallel_future_collected', start=task[0], future=task[2])
+    from .imagination_memory import _subset
+    tasks, skipped = [], []
+    for start in range(0, total, micro):
+        stop = min(total, start + micro)
+        _, _, _, rows = _subset(batch, kwargs['variants'], start, stop)
+        for future in range(len(cache['items'])):
+            horizon = replay_horizon(trainer, batch, cfg, cache, slots, grad_outputs,
+                                     spec, future, rows)
+            task = (start, stop, future, horizon)
+            (tasks if horizon else skipped).append(task)
+    params = [p for p in trainer.actor_parameters if p.requires_grad]
+    accumulated = [None] * len(params)
+    support = {} if support is None else support
+
+    def collect(task, result):
+        used = [g is not None for g in result['grads']]
+        if task[3] == cfg.horizon or all(used):
+            support[tuple(task[:3])] = used
+        for i, grad in enumerate(result['grads']):
+            if grad is not None:
+                grad = grad.to(trainer.device)
+                accumulated[i] = grad if accumulated[i] is None else accumulated[i] + grad
+        if result['spill'] is not None:
+            trainer.memory_spill_stats = result['spill']
+        if result.get('longgrad') is not None:
+            trainer._longgrad_futures.append(result['longgrad'])
+        record_replay(trainer, task[0], task[2], task[3], cfg.horizon, result['elapsed'])
+        _trace_memory(trainer, 'parallel_future_collected', start=task[0], future=task[2])
+
+    # Avoid creating workers for an empty long pass. Serial and pooled execution
+    # use the identical planner, VJP and ordered accumulation code.
+    context = FuturePool(trainer, common) if tasks and worker_count() > 1 else nullcontext()
+    with context as pool:
+        results = pool.map(tasks) if pool else (
+            _vjp(trainer, common, task, transport=False) for task in tasks)
+        for task, result in zip(tasks, results):
+            collect(task, result)
+    for task in skipped:
+        known = support.get(tuple(task[:3]))
+        if known is None and any(g is None for g in accumulated):
+            # Preserve None vs materialized zero (Adam semantics). A first-ever
+            # all-zero backward has no known parameter connectivity; conservatively
+            # execute it. A prior dense pass supplies support for the long pass.
+            fallback = (*task[:3], cfg.horizon)
+            if worker_count() > 1:
+                # A pool coordinator may have only a small allocator allowance;
+                # unknown-support fallbacks must obey the worker VJP budget too.
+                with FuturePool(trainer, common) as pool:
+                    collect(fallback, next(iter(pool.map([fallback]))))
+            else:
+                collect(fallback, _vjp(trainer, common, fallback, transport=False))
+            continue
+        if known is not None:
+            for i, used in enumerate(known):
+                if used and accumulated[i] is None:
+                    accumulated[i] = torch.zeros_like(params[i])
+        record_replay(trainer, task[0], task[2], 0, cfg.horizon, 0.)
+        _trace_memory(trainer, 'future_zero_vjp_skipped', start=task[0], future=task[2])
     return tuple(accumulated)
 
 
