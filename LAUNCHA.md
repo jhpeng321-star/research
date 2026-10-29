@@ -153,3 +153,22 @@ A reward on `D_G - sum D_i` alone (w_ind < w_coop) would put NEGATIVE coefficien
 (rewarding worse solo behaviour) and is refused by the guard / `row_coefficients`. If a larger group credit
 is wanted instead (D_G 49.7), or `w_group` 9.9 -> 0 so only the synergy and the individual solo rewards
 remain (D_G 8.9), say so: both are one-line config changes (`w_group`, `w_team`).
+
+### Update 02:2x — long-credit variant staged (owner: combined run includes gain-only 300 s; 24 h condition dropped)
+
+Runtime SOURCE commit now `3ea624ff` (tools/config only since 17028d5c; no bound source file changed).
+Authorities (gpuA `arm/loop/c4prep/`, both build + verify PASS): dense `CANDA_AUTHORITY_ZS_3ea624ff.json`
+(sha256 769e883a...), long-credit `CANDA_AUTHORITY_ZS_LONG_3ea624ff.json` (sha256 14810bb5...; built with
+`--entry-config configs/c4_policy14_candA_long300.toml`, no `--dense-phase1`; mode gain_only, H_G 300).
+`configs/c4_policy14_candA_long300.toml` (sha256 82865823...) = candA.toml + `[long_credit] enabled = true`
+(mix-qualified CCT-2, w_long 1.0). `authority.py` now binds the whole merged chain of the entry config.
+The 300 s MEMORY recipe is the only open slot: S-LONGMEM300 must supply `tools/candA/longmem300.env`
+(exported WMS_SPEED_* fractions / budget cap / any trainer override) - `stepZ.sh drylong|prodlong` refuses
+to run without it. If LONGMEM300 changes a bound file (e.g. parallel_futures.py), merge it, restage the file,
+update SOURCE.json and re-run both `authority.py build` + `verify` (the commands are in this section's history).
+```sh
+cd /root/autodl-tmp/c4/candA_184542ab_zs     # after: tools/candA/longmem300.env present, W8 SIGTERMed and exited
+nohup setsid ./stepZ.sh drylong  > /root/autodl-tmp/c4/candA_dry_184542ab_zs_long.log  2>&1 < /dev/null &   # 2-update qualification
+nohup setsid ./stepZ.sh prodlong > /root/autodl-tmp/c4/candA_prod_184542ab_zs_long.log 2>&1 < /dev/null &   # production, 150 updates
+```
+Dense-90 s fallback (only if no 300 s recipe fits): `./stepZ.sh dry` / `./stepZ.sh prod` as above (authority `CANDA_AUTHORITY_ZS_3ea624ff.json`).
