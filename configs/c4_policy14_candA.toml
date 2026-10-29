@@ -74,11 +74,13 @@ entry_pad_max = [32, 288]
 # 02:25 CCT-2 gain-only mode: long credit only for K8-median confident-gain rows
 # (predicted improvement < -2*sigma and q10 improvement > 0) up to H_G of the
 # WM named by the file. Harm/below-margin rows get dense 90 s credit only.
-# The file is chosen by the LOADED WM's sha256 (placeholder until the morning WM
-# choice); missing file => long credit disabled (dense 90 s), mismatched file =>
-# startup refusal. Mix-qualified CCT-2 required if learned-mix is layered on.
+# S-LAUNCHA 08:15 rule branch (a): WM2+learned-mix CCT-2 PASSED (H_G 300,
+# panels scored with the ERRSRC LearnedMix overlay, K1 contract) -> mix ON and
+# the trainer consumes the MIX-QUALIFIED authority (learned_mix_qualified=true,
+# sha f42cce0f...); mismatched file => startup refusal. Mix-OFF launches use
+# authority/CCT2_{wm_sha256}.json instead.
 enabled = true
 mode = "gain_only"
-cct2_file = "authority/CCT2_{wm_sha256}.json"
+cct2_file = "authority/CCT2_{wm_sha256}_mix.json"
 w_long = 1.0
 score_training_horizon = false
