@@ -1,0 +1,7 @@
+# Serial 1-VJP-worker long-credit variant CO-LOCATED with W8 on gpuA (MAIN 05:25): identical to
+# c4_policy14_candA_long300.toml except the coordinator/serial process owns 0.50 of the card (24.6 GB;
+# measured need 18.2 GB device), leaving W8's 0.45 cap untouched.
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.50
