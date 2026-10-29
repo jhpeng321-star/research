@@ -76,14 +76,31 @@ zero_residual_output = true
 # coordinates [180, 330]. Persistence curriculum unchanged.
 curriculum_updates = [180, 330]
 rho = [0.10, 0.50]
+# S-ZEROSTART amendment: exploration groups chain CAVs within the registered 100 m sensing range
+# (was the counterfactual group_radius_m, 150 m), so nearby CAVs share the persistent perturbation.
+radius_m = 100.0
 
 [counterfactual]
-# nine-row registered weights; guarded real credit floors individual at 8.9
+# S-ZEROSTART amendment (MAIN 2026-10-30 01:00, owner): cooperation-credit group = a RANDOM
+# group per start, size ~ U{2..6} acting CAVs (was always min(component, 3)); n_group stays 1;
+# spatial rule unchanged.
+group_max_size = 6
+group_size_sampling = "uniform"
+# S-ZEROSTART credit fix (MAIN/owner 2026-10-30 01:05; POLAUDIT_T finding 2, ASTRA_CROSSCHECK
+# major 7): the flip-one (G without i) rows carried -w_team = -10.3 each and so rewarded making
+# sub-teams WORSE.  w_team = 0 and n_flip = 0 (no flip rows are rolled out at all: ~3 fewer rows
+# per update).  Objective now: w_all*D_all + w_group*D_G + w_ind*sum(D_i) + w_coop*C_G with
+# C_G = D_G - sum_{i in G} D_i the SYNERGY of the group (group effect minus member effects); coefficients: all 1.0,
+# group row 9.9 + 8.9 = 18.8, member individual rows 8.9 - 8.9 = 0, other individual rows 8.9.
+# Every coefficient is >= 0 (see tests/unit/test_zerostart.py).
+n_flip = 0
+# (w_team = 0 below)
+# registered weights; guarded real credit floors individual at 8.9
 curriculum_updates = [0, 1]
 w_individual = [8.9, 8.9]
 w_group = [9.9, 9.9]
 w_coop = [8.9, 8.9]
-w_team = [10.3, 10.3]
+w_team = [0.0, 0.0]
 w_all = [1.0, 1.0]
 
 [horizon]

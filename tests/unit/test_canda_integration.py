@@ -85,7 +85,7 @@ def test_candA_config_resolves_with_monitors_on():
     cf = raw['counterfactual']
     assert cf['curriculum_updates'] == [0, 1]
     assert cf['w_individual'] == [8.9, 8.9] and cf['w_group'] == [9.9, 9.9]
-    assert cf['w_coop'] == [8.9, 8.9] and cf['w_team'] == [10.3, 10.3]
+    assert cf['w_coop'] == [8.9, 8.9] and cf['w_team'] == [0.0, 0.0]  # S-ZEROSTART 01:05: flip terms retired (n_flip 0)
     assert cf['w_all'] == [1.0, 1.0]
     assert raw['data']['focus_cell_fraction'] == 0.6
     assert raw['policy14']['fd_gate'] is False and raw['policy14']['free_road_gate'] is False

@@ -63,6 +63,11 @@ class CounterfactualConfig:
     group_min_size: int = 2
     group_max_size: int = 6
     cover_group_members: bool = True  # individual rows for every member of a sampled group
+    # S-ZEROSTART amendment (2026-10-30 01:00). "max" (default, legacy bit-identical): a chosen
+    # group is the window of min(len(component), group_max_size) members.  "uniform": per chosen
+    # group a size s ~ U{group_min_size..group_max_size} is drawn and the window has
+    # min(len(component), s) members, so training sees groups of every size 2..6.
+    group_size_sampling: str = "max"
     max_starts: int = 8              # counterfactual rows for at most this many starts per batch
     # "idm" (legacy simple IDM, the default), "hold" (a = 0), or "head" (the learned
     # native-CAV head of wms.control.native_cav fitted to TRAIN-val native episodes).
@@ -103,6 +108,8 @@ class CounterfactualConfig:
                 raise ValueError(f"{name} must be a nonnegative integer")
         if self.group_min_size < 2 or self.group_max_size < self.group_min_size:
             raise ValueError("need 2 <= group_min_size <= group_max_size")
+        if self.group_size_sampling not in ("max", "uniform"):
+            raise ValueError("group_size_sampling must be 'max' or 'uniform'")
         for name in ("group_radius_m", "congestion_speed_mps"):
             if not math.isfinite(getattr(self, name)) or getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be positive")
@@ -319,6 +326,10 @@ def build_variants(state: Mapping[str, Tensor], cfg: CounterfactualConfig, gener
         while components and len(chosen) < cfg.n_group:
             component = components.pop(_randint(len(components), generator))
             size = min(len(component), cfg.group_max_size)
+            if cfg.group_size_sampling == "uniform":
+                draw = cfg.group_min_size + _randint(cfg.group_max_size - cfg.group_min_size + 1,
+                                                     generator)
+                size = min(len(component), draw)
             offset = _randint(len(component) - size + 1, generator)
             chosen.append(component[offset:offset + size])
         singles = []
