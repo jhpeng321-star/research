@@ -59,6 +59,9 @@ IDM_DT_S = 0.5
 IDM_STEPPING_S = 0.25
 #: ``NUMERICAL_EPS`` (SUMO ``StdDefs.h``).
 NUMERICAL_EPS = 1e-10
+#: S-NANFIX: interaction gaps below this (m), and infinite gaps, are evaluated
+#: forward-exact but gradient-free (float32 DivBackward overflows near NUMERICAL_EPS).
+TINY_GAP_M = 1e-4
 #: Free-road stand-in gap of ``MSCFModel_IDM::freeSpeed`` (1e6 m).
 FREE_GAP_M = 1e6
 
@@ -88,6 +91,7 @@ def follow_speed(gap2pred, speed, leader_speed, allowed_speed, *,
     ``respect_min_gap``); ``allowed_speed`` is ``desSpeed`` (the lane's
     ``getVehicleMaxSpeed``). Bitwise-identical to :func:`follow_speed_scalar`.
     """
+    import torch
     p = dict(CAV_PARAMS if params is None else params)
     a, b, tau, gap0 = (float(p[k]) for k in ("accel", "decel", "time_headway", "min_gap"))
     delta = float(p.get("delta", 4.0))
@@ -100,9 +104,28 @@ def follow_speed(gap2pred, speed, leader_speed, allowed_speed, *,
         desired = (v * tau + v * (v - leader_speed) / two_sqrt_ab).clamp_min(0.)
         if respect_min_gap:
             desired = desired + gap0
-        g = gap.clamp_min(eps)
+        # S-NANFIX (finite gradients, forward bitwise unchanged). The interaction
+        # term ``desired^2 / (g*g)`` has two gradient hazards that are invisible in
+        # the forward value: (1) a free-road row passes ``gap == +inf``
+        # (``base_accel`` without a leader): forward ``x/inf == 0`` but the backward
+        # of ``g*g`` is ``(-0)*inf == NaN`` (this poisoned d/d(speed) of every
+        # free-road CAV and the first ``clip_grad_norm_``); (2) a (near-)zero gap
+        # (clamped at NUMERICAL_EPS = 1e-10) makes ``a/b/b`` overflow float32 in
+        # DivBackward, and ``0*inf`` is NaN even though the hard-brake branch is
+        # saturated by ``clamp_min(0)`` (zero true gradient). Double-where: rows with
+        # ``gap < TINY_GAP_M`` or an infinite gap take their forward value from an
+        # un-differentiated evaluation of the ORIGINAL expression (bitwise equal) and
+        # contribute exactly zero gradient; all other rows run the original ops on
+        # the original values through a finite denominator.
+        frozen = (gap < TINY_GAP_M) | torch.isinf(gap)
+        g = torch.where(frozen, torch.ones_like(gap), gap).clamp_min(eps)
         free = (v / allowed_speed.clamp_min(eps)).pow(delta)
-        accel = a * (1. - free - (desired * desired) / (g * g))
+        with torch.no_grad():
+            g_exact = gap.detach().clamp_min(eps)
+            d_exact = desired.detach()
+            frozen_ratio = (d_exact * d_exact) / (g_exact * g_exact)
+        interaction = torch.where(frozen, frozen_ratio, (desired * desired) / (g * g))
+        accel = a * (1. - free - interaction)
         v = (v + (accel * float(dt)) / iterations).clamp_min(0.)
         gap = gap - (((v - leader_speed) * float(dt)) / iterations).clamp_min(0.)
     return v.clamp_min(0.)
