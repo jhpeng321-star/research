@@ -31,9 +31,9 @@ of the long reward. Zero cotangents can nevertheless expose nonfinite internal
 Jacobians; finite receipts cannot exclude every state-specific dynamics bug.
 
 `PYTHONPATH=src;. .venv/Scripts/python tools/longgrad/diagnose.py --horizons
-10 30 60 90 120` runs an untrained real WmSModel with its learned encoder, four
+10 30 60 90 120` runs an untrained hybrid WmSModel with its learned encoder, four
 synthetic slots (two HDVs), no entries, no production assets, no decay. Actor
-norms of summed reward are 12.9452, 128.596, 401.302, 674.009, 946.716. Mode 0
+norms of synthetic summed reward are 12.9447, 128.594, 401.297, 674.002, 946.707. Mode 0
 and mode 2 values/norms match exactly at every horizon. Growth is approximately
 linear after 30 s, NOT the catastrophic production explosion. This scene does
 not reproduce the congested/entry/merge trained-WM trajectory. Do not claim

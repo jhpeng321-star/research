@@ -27,15 +27,21 @@ def probe(horizons):
     import os
     import torch
     from tests.unit.test_longmem import trainer
+    from wms.model.spec import ModelSpec
+    from wms.model.wms import WmSModel
 
     torch.set_num_threads(1)
     rows = []
     for horizon in horizons:
         for mode in ('0', '2'):
             os.environ['WMS_LM300_RECOMPUTE_REWARD'] = mode
-            # Real WM with its learned driver encoder; synthetic state only.
+            # Explicit hybrid mode: the fixture's default residual WM does NOT
+            # use inferred drivers. Use a learned (untrained) encoder, never a
+            # manually specified driver-parameter dictionary.
             t = trainer(1, 2, True, horizon=horizon, batch=1, slots=4, real_world=True,
                         imagination_grad_decay=1.)
+            t.world_models = [WmSModel(ModelSpec(history_hidden=8, k_hidden=8,
+                rollout_mode='hybrid')).eval().requires_grad_(False)]
             batch = t.start_states.sample(1, 'cpu')
             batch.state['is_cav'][:, -2:] = False
             t._training_imagination = True
