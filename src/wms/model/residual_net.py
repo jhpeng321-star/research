@@ -21,6 +21,7 @@ Switches:
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from typing import Optional
 
@@ -210,6 +211,18 @@ class _KinAttention(nn.Module):
             nn.init.zeros_(self.courtesy_bias.bias)
 
     def _pair_bias(self, geo: dict, courtesy: Optional[Tensor] = None) -> Tensor:
+        # S-LONGMEM300 (memory only, default OFF, exact): the [B,K,K,64] hidden activations of the
+        # pair-bias MLP dominate the saved-activation window of a 300 s imagination replay; this pure
+        # function is recomputed in backward instead of saved (no RNG, no dropout inside).
+        if (os.environ.get("WMS_LM300_PAIRBIAS_CKPT") == "1" and torch.is_grad_enabled()
+                and any(t.requires_grad for t in (*geo.values(), *self.parameters())
+                        if torch.is_tensor(t))):
+            from torch.utils.checkpoint import checkpoint
+            return checkpoint(self._pair_bias_impl, geo, courtesy,
+                              use_reentrant=False, preserve_rng_state=False)
+        return self._pair_bias_impl(geo, courtesy)
+
+    def _pair_bias_impl(self, geo: dict, courtesy: Optional[Tensor] = None) -> Tensor:
         s, lane, v = geo["s"], geo["lane"], geo["v"]
         ds = s[:, :, None] - s[:, None, :]
         dlane = lane[:, :, None] - lane[:, None, :]

@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import inspect
 import json
+import os
 import time
 from contextlib import contextmanager, nullcontext
 from dataclasses import replace
@@ -31,8 +32,44 @@ def _trace_memory(trainer, event, **details):
     if trainer.device.type == 'cuda':
         record.update(allocated_bytes=torch.cuda.memory_allocated(trainer.device),
                       reserved_bytes=torch.cuda.memory_reserved(trainer.device))
+        if os.environ.get('WMS_LM300_TRACE') == '1':
+            # S-LONGMEM300 diagnostics (default OFF, no arithmetic): per-phase CUDA peaks,
+            # host RSS and the saved-tensor spill counters; peaks reset after each event.
+            record.update(peak_allocated_bytes=torch.cuda.max_memory_allocated(trainer.device),
+                          peak_reserved_bytes=torch.cuda.max_memory_reserved(trainer.device))
+            torch.cuda.reset_peak_memory_stats(trainer.device)
+            try:
+                with open('/proc/self/status') as status:
+                    for line in status:
+                        if line.startswith(('VmRSS', 'VmHWM')):
+                            name, value = line.split(':')
+                            record['host_' + name.lower() + '_kb'] = int(value.split()[0])
+            except OSError:
+                pass
+            spill = getattr(trainer, 'memory_spill_stats', None)
+            if spill:
+                record['spill'] = dict(spill)
     with (trainer.output_dir / 'memory_execution.jsonl').open('a') as stream:
         stream.write(json.dumps(record) + '\n')
+
+
+def _lm300_snapshot(trainer, stage):
+    """S-LONGMEM300 diagnostics (env WMS_LM300_SNAPSHOT=<dir>, default OFF): CUDA allocator history
+    with Python stacks; a snapshot is dumped at stage 'forward_done' and on any CUDA OOM."""
+    root = os.environ.get('WMS_LM300_SNAPSHOT')
+    if not root or trainer.device.type != 'cuda':
+        return
+    os.makedirs(root, exist_ok=True)
+    tag = f'{os.getpid()}'
+    if stage == 'start' and not getattr(_lm300_snapshot, 'armed', False):
+        _lm300_snapshot.armed = True
+        torch.cuda.memory._record_memory_history(max_entries=300000, stacks='python')
+
+        def observer(device, alloc, device_alloc, device_free):
+            torch.cuda.memory._dump_snapshot(os.path.join(root, f'oom_{tag}.pickle'))
+        torch._C._cuda_attach_out_of_memory_observer(observer)
+    elif stage == 'forward_done' and getattr(_lm300_snapshot, 'armed', False):
+        torch.cuda.memory._dump_snapshot(os.path.join(root, f'fwd_{tag}.pickle'))
 
 
 @contextmanager
@@ -233,7 +270,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.before = _rng_state(trainer.device)
             ctx.futures = {'items': []} if cfg.imagination_offload_futures else None
             from .parallel_futures import worker_count, parallel_forward
-            if worker_count() > 1 and parallel_forward():
+            if worker_count('forward') > 1 and parallel_forward():
                 if ctx.futures is None:
                     raise ValueError('parallel futures requires imagination_offload_futures')
                 from .parallel_futures import forward_futures
@@ -275,6 +312,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                     futures = range(len(ctx.futures['items'])) if ctx.futures is not None else (None,)
                     for future in futures:
                         _trace_memory(trainer, 'future_start', start=start, future=future)
+                        _lm300_snapshot(trainer, 'start')
                         replay = _RandomTape(ctx.tape, (starts, rows, total, n_rows))
                         _restore_rng(ctx.before, trainer.device)
                         spill = (_saved_tensor_spill(trainer)
@@ -285,6 +323,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                                 _memory_start_index=starts, _memory_row_index=rows,
                                 _memory_future_cache=ctx.futures, _memory_active_future=future)
                             _trace_memory(trainer, 'future_forward_done', start=start, future=future)
+                            _lm300_snapshot(trainer, 'forward_done')
                             leaves, _ = tree_flatten(result)
                             # Full-K topology/reductions are retained, with one future graph live.
                             outputs, vectors = [], []
