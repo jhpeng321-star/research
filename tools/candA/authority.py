@@ -46,6 +46,7 @@ MANIFEST_FILES = [
     'src/wms/control/phase_resume.py', 'src/wms/control/gated300.py',
     'src/wms/control/exploit.py', 'src/wms/control/auditfix_authority.py',
     'src/wms/control/parallel_futures.py', 'src/wms/core/speed_flags.py',
+    'src/wms/control/zerostart.py',
     'traffic_shepherd/ownership.py', 'traffic_shepherd/c4/branching.py',
     'traffic_shepherd/c4/wms_glue.py', 'traffic_shepherd/c4/env.py',
     'traffic_shepherd/c4/recorder.py',
@@ -156,6 +157,7 @@ def build(args) -> dict:
         raise ValueError(f'C1 actor sha mismatch: {actor}')
     chain = resolve_chain(root, CONFIG_CHAIN[0])
     from wms.core.toml import load as _toml_load
+    zero_start = bool(_toml_load(root / CONFIG_CHAIN[0]).get('policy14', {}).get('zero_residual_output'))
     if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
         raise ValueError('candidate-A config must bind execution.leader_rule = true: the '
                          'mode-2 parity receipt is only valid with C4_SUMO_LEADER_RULE=1 '
@@ -181,6 +183,8 @@ def build(args) -> dict:
                learned_mix_module_sha256=(sha256(root / args.mix_module)
                                           if args.learned_mix and args.mix_module else ''),
                new_phase=True, checkpoint_every=1,
+               zero_start={'enabled': zero_start, 'module': 'src/wms/control/zerostart.py',
+                           'config_flag': 'policy14.zero_residual_output'},
                monitors={'exploit_monitor': True, 'exploit_disable_direct_credit': True,
                          'exploit_ensemble_pessimism': False, 'exploit_stop_on_conflict': False,
                          'native_anchor': False},
@@ -265,6 +269,11 @@ def verify(args) -> dict:
     if _toml_load(root / CONFIG_CHAIN[0]).get('execution', {}).get('leader_rule') is not True:
         raise ValueError('candidate-A config lost execution.leader_rule = true '
                          '(imagination mirror leader rule)')
+    if 'zero_start' in doc:
+        from wms.core.toml import load as _toml_load2
+        flag = bool(_toml_load2(root / CONFIG_CHAIN[0]).get('policy14', {}).get('zero_residual_output'))
+        if flag != bool(doc['zero_start']['enabled']):
+            raise ValueError('zero-start flag diverges from the bound authority (policy14.zero_residual_output)')
     chain = resolve_chain(root, CONFIG_CHAIN[0])
     for name, digest in doc['config_chain'].items():
         if sha256(root / name) != digest:
