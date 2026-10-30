@@ -1,7 +1,7 @@
 # S-CAPREL — owner-approved CPU build, 2026-10-30 14:00
 Shared-function SHA: `37bc2a57176ccb391c4c7755a284e32e6d834632` (S-DISTILL2 import ready).
 Base: `9613f956`; branch `c4/caprel`; SUMO parity re-check pending registration.
-Final code/test SHA: to be bound after the verified implementation commit.
+Final code/test SHA: `f65f70423864fd4882cbae4d03e2885e64081c9a` (239 CPU tests PASS).
 Final documentation/delivery SHA: `git log -1 --format=%H -- docs/paper_results/CAPREL.md`.
 
 ## Law and API
