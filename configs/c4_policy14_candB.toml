@@ -5,6 +5,8 @@ extends = "c4_policy14_candA_longgrad_skip.toml"
 [run]
 # Owner 15:00/R2: refuse optimizer entry without the hash-bound ranking receipt.
 rankcheck_required = true
+# ESLONG.md: two .24 forward workers + .40 coordinator cap fit the .90 budget.
+gpu_memory_fraction = 0.40
 
 [policy]
 # CAPREL.md: zero head is exactly CTRL0; braking has local authority.

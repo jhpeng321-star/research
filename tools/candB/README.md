@@ -68,3 +68,29 @@ source manifest, boundary and pairing hashes before scoring/updates. Candidate B
 requires the flag. Launch authority additionally binds actor/WM/config/qualification,
 rankcheck and the fresh cap-relative parity receipt. Requalification after any
 objective/mix/law change is mandatory; no old score baseline is relabelled.
+
+## Staging and prospective launch
+
+```sh
+# Local source-only archive. Optional `gpuA FRESH_RUNTIME` arguments only copy/extract.
+PYTHONPATH=src:. bash tools/candB/stage.sh /existing/dir/candB_SOURCE.tar.gz
+# In the staged immutable runtime, after matching requalification + ranking + parity:
+python -m tools.candB.authority build --wm "$WM" --wm-config "$WM_CONFIG" \
+ --current-policy "$CURRENT" --cct2 "$CCT2" --horizon-gate "$HGATE" \
+ --boundary authority_gen/BOUNDARY_WM2.json --pairing-receipt "$PAIRING" \
+ --real-returns "$RETURNS" --native-returns "$NATIVE_RETURNS" --gate-panel "$PANEL" \
+ --parity authority_gen/CAPREL_PARITY.json --rankcheck authority_gen/CANDB_RANKCHECK.json \
+ --out authority_gen/CANDB_AUTHORITY.json
+python -m tools.candB.authority verify authority_gen/CANDB_AUTHORITY.json
+RUNTIME=/root/autodl-tmp/c4/candB_SOURCE bash tools/candB/launch.sh /root/autodl-tmp/c4/candB_dry dry
+RUNTIME=/root/autodl-tmp/c4/candB_SOURCE bash tools/candB/launch.sh /root/autodl-tmp/c4/candB_pilot pilot
+```
+
+These commands are **not executed by S-INTEG**. Archive creation refuses dirty
+trees; LF bytes come from committed Git blobs and every staged file is hash-bound.
+All input artifacts (including real returns and gate panel) are verified. Launch
+refuses any running GPU compute PID, so it cannot overlap S-WMREQUAL. Two serial
+forward workers use `.24` each, one coordinator uses `.40`, future budget `.90`;
+memory/concurrency remain prospective, not GPU-qualified by the CPU suite.
+`dry` means two real-start optimizer updates (not a no-training validation).
+MAIN must apply the registered phase-10 raw-dJ monitoring rule and STOP if it fails.
