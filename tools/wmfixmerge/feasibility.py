@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import time
 
 from tools.wmfixmerge.data import digest, implementation_hashes, install_guard, safe
 
@@ -103,6 +104,48 @@ def probe(model, rollout, target, refs, scales, objective):
                 for n in ("J", "crossing") if n in component_norms))
 
 
+def panel_gate(rt, horizons=(120, 300)):
+    """WMFIX_REVIEW blocker 5: all-group/all-arm paired-J panel at verdict horizons.
+
+    Reports the zero-head inferred-admission paired J MAE and the upstream
+    teacher ceiling (recorded upstream substituted) per horizon, plus the
+    frozen-rerun noise of the shared-CRN pipeline.  launch additionally
+    requires the post-step panel to beat the pre-step panel beyond that noise.
+    """
+    import numpy as np
+    import torch
+    began = time.monotonic()
+    rows = []
+    for h in horizons:
+        for group in range(len(rt.source.groups)):
+            for arm in (0, 1):
+                with torch.no_grad():
+                    predicted, recorded, _, _ = rt.rollout(group, h, arm_index=arm)
+                initial = ((predicted[1, 0] - predicted[0, 0]) - (recorded[1, 0] - recorded[0, 0]))
+                corrected = predicted[:, 0] + recorded[:, 1] - predicted[:, 1]
+                teacher = (corrected[1] - corrected[0]) - (recorded[1, 0] - recorded[0, 0])
+                rows.append(dict(horizon=h, group=group, arm=arm,
+                                 initial=float(initial), teacher=float(teacher)))
+    with torch.no_grad():
+        first = rt.rollout(0, horizons[0], arm_index=0)[0]
+        second = rt.rollout(0, horizons[0], arm_index=0)[0]
+    noise = float((first - second).abs().max())
+    panel = {}
+    for h in horizons:
+        part = [r for r in rows if r["horizon"] == h]
+        if len(part) != 2 * len(rt.source.groups):
+            raise ValueError("incomplete gate panel")
+        panel[str(h)] = dict(
+            initial_paired_J_MAE=float(np.mean([abs(r["initial"]) for r in part])),
+            teacher_paired_J_MAE=float(np.mean([abs(r["teacher"]) for r in part])),
+            per_group={str(g): dict(
+                initial=float(np.mean([abs(r["initial"]) for r in part if r["group"] == g])),
+                teacher=float(np.mean([abs(r["teacher"]) for r in part if r["group"] == g])))
+                for g in range(len(rt.source.groups))},
+            rows=len(part))
+    return panel, rows, dict(frozen_rerun_noise=noise, seconds=round(time.monotonic() - began, 1))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--synthetic", action="store_true")
@@ -112,6 +155,8 @@ def main(argv=None):
     parser.add_argument("--controllers")
     parser.add_argument("--corrected-report")
     parser.add_argument("--harness-contract", help="independent corrected-scorer retarget/clock receipt")
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu",
+                        help="48-row gate panel is slow on CPU; cuda allowed for MAIN")
     parser.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     install_guard()
@@ -130,7 +175,9 @@ def main(argv=None):
                 if not getattr(args, key):
                     raise ValueError("missing --" + key.replace("_", "-"))
                 result[key + "_sha256"] = digest(getattr(args, key))
-            rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers)
+            rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, args.device)
+            result["device"] = args.device
+            before_panel, _, panel_receipt = panel_gate(rt)
             initial, target, refs, receipt = rt.rollout(0, 60)
             with torch.no_grad():
                 rt.learned_admission = False
@@ -139,19 +186,21 @@ def main(argv=None):
                 result["admission_ablation"] = dict(
                     ledger_only=ledger_only.tolist(), inferred_admission_zero_head=initial.detach().tolist(),
                     components=rt.doc["components"])
-            # Actual TRAIN teacher ceiling retains WM downstream and source errors.
-            with torch.no_grad():
-                corrected = initial[:, 0] + target[:, 1] - initial[:, 1]
-                result["teacher_upstream_J_paired_MAE"] = float(abs(
-                    (corrected - corrected[0])[1:] - (target[:, 0] - target[0, 0])[1:]).mean())
-                result["initial_J_paired_MAE"] = float(abs(
-                    (initial[:, 0] - initial[0, 0])[1:] - (target[:, 0] - target[0, 0])[1:]).mean())
                 result["source_contrast_error"] = ((initial[:, 2] - initial[0, 2]) -
                                                        (target[:, 2] - target[0, 2])).tolist()
             del initial
             result.update(probe(rt.model, lambda: rt.rollout(0, 60)[0], target.detach(), refs,
                                 rt.scales, lambda p, r, refs, s:
                                     paired_objective(p, r, refs, s, anchor_scales=rt.anchor_scales)))
+            after_panel, _, _ = panel_gate(rt)
+            noise = panel_receipt["frozen_rerun_noise"]
+            result["gate_panel"] = dict(before=before_panel, after=after_panel, **panel_receipt)
+            # Strengthened gate: teacher ceiling below initial at BOTH horizons and a
+            # post-step paired-J improvement beyond frozen-rerun noise at BOTH horizons.
+            result["gate_panel_ok"] = all(
+                before_panel[str(h)]["teacher_paired_J_MAE"] < before_panel[str(h)]["initial_paired_J_MAE"]
+                and after_panel[str(h)]["initial_paired_J_MAE"] <
+                before_panel[str(h)]["initial_paired_J_MAE"] - noise for h in (120, 300))
             result["receipt"] = receipt
             contract = {} if not args.harness_contract else json.loads(safe(args.harness_contract).read_text())
             matched = (contract.get("schema") == "wmfix_harness_contract/1" and
@@ -162,8 +211,7 @@ def main(argv=None):
                 contract.get("scorer_sha256") == digest("tools/wmrequal/score.py") and
                 contract.get("runtime_sha256") == digest("tools/wmfixmerge/runtime.py"))
             result["source_clock_match"] = matched
-            result["launch_ready"] = bool(result["passed"] and matched and
-                result["teacher_upstream_J_paired_MAE"] < result["initial_J_paired_MAE"])
+            result["launch_ready"] = bool(result["passed"] and matched and result["gate_panel_ok"])
             result["status"] = "PASS" if result["launch_ready"] else "BLOCKED"
             if args.harness_contract:
                 result["harness_contract_sha256"] = digest(args.harness_contract)

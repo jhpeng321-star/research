@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from tools.wmfixmerge.data import digest
-from tools.wmfixmerge.feasibility import synthetic
+from tools.wmfixmerge.feasibility import panel_gate, synthetic
 from tools.wmfixmerge.train import check_gates, export
 from wms.config.train import TrainConfig
 from wms.model.merge_response import freeze_except_response
@@ -30,6 +30,44 @@ def test_synthetic_probe_is_real_free_running_and_reduces_error():
     assert result["passed"] and result["finite_difference_ok"]
     assert result["after_step_loss"] < result["initial_loss"]
     assert result["frozen_bitwise"]
+
+
+class _StubRt:
+    """Two-row rollouts whose upstream term is the whole paired error."""
+
+    class _Source:
+        groups = list(range(12))
+
+    source = _Source()
+
+    def __init__(self, upstream_error):
+        self.upstream_error = upstream_error
+        self.calls = 0
+
+    def rollout(self, group, horizon, arm_index=0):
+        self.calls += 1
+        pred = torch.tensor([[0., 0., 0., 0., 0.],
+                             [self.upstream_error, self.upstream_error, 0., 0., 0.]])
+        rec = torch.tensor([[0., 0., 0., 0., 0.],
+                             [0., 0., 0., 0., 0.]])
+        return pred, rec, [0, 0], {}
+
+
+def test_panel_gate_covers_all_groups_arms_and_reports_teacher_ceiling():
+    rt = _StubRt(upstream_error=4.0)
+    panel, rows, receipt = panel_gate(rt)
+    assert receipt["frozen_rerun_noise"] == 0.0
+    assert len(rows) == 48  # 2 horizons x 12 groups x 2 arms
+    for h in ("120", "300"):
+        assert panel[h]["rows"] == 24
+        assert panel[h]["initial_paired_J_MAE"] == 4.0
+        # substituting the recorded upstream removes the whole error: teacher 0
+        assert panel[h]["teacher_paired_J_MAE"] == 0.0
+    assert rt.calls == 50  # 48 panel rollouts + frozen rerun pair
+    rt = _StubRt(upstream_error=0.0)
+    panel, _, receipt = panel_gate(rt)
+    # no headroom: teacher cannot be strictly below initial -> gate must fail downstream
+    assert panel["120"]["teacher_paired_J_MAE"] == panel["120"]["initial_paired_J_MAE"]
 
 
 def test_no_synthetic_or_unbound_launch_gate(tmp_path):

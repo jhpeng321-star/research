@@ -69,3 +69,16 @@
   production anchor_scales. Tests updated to the 5-component contract.
 - Combined rerun: wmfix 7-file set **51 passed** (30.25s); entryfix/v9entry/v9entry_eval
   **31 passed** (8.85s).
+
+## Review blockers 5/9 and data-need statement (resume session)
+- Panel A is now three-way: base (WM2 legacy entries) vs entry (zero-head WM2 with
+  conserve+learned admission, same seeds) vs candidate (head); gates stay base>candidate,
+  base>entry and entry>candidate attribution CIs reported (schema wmfix_validation/2).
+- Real feasibility gate strengthened per blocker 5: `panel_gate` covers all 12 groups x
+  both arms x {120,300}s, reports per-horizon paired-J MAE and upstream teacher ceiling,
+  measures frozen-rerun noise, and launch additionally requires the post-step panel to
+  beat the pre-step panel beyond that noise at both horizons (`gate_panel_ok`).
+  Feasibility accepts `--device cuda` for MAIN (48-rollout panel is slow on CPU).
+- WMFIX_DATA_NEED.md states the 24-contrast verdict and the owner options (reuse-first
+  allowlist, ~100k sim-s 36-world collection, or focused smaller head).
+- Verdict/zero-head tests updated; full wmfix set re-run below.
