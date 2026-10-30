@@ -298,3 +298,27 @@
 - WMFAST-B production S4 memory is explicitly UNMEASURED; its report estimates
   ~31.7GiB per worker vs current .28 (~13.4GiB) caps. Continuation must retain aggregate
   <=45GiB/allocator admission guards and choose a measured safe stack/pool recipe.
+
+### Recovered lean startup defect and repair preparation
+- At epoch1793379795 the original lean trainer exited naturally, return1:
+  `ValueError: native gate requires 16 finite paired costs`. **Zero optimizer rows;
+  no durable frozen baseline.** Sunk launch-to-exit3216.88s (53.61min).
+- Its saved initial independent K8/300s score survives in RUN_SUMMARY; four native
+  panel results were only in process memory and were not persisted by the prior
+  adapter. No completed baseline exists to continue or recompute. All output stays.
+- A three-case CPU gate test passes: exact four-cost shape/finite checks, all-start
+  noninferiority (one harmful start cannot average away), distinct unqualified schema.
+- Attempted safe-point receipt rescue was tested ONLY on an owned CPU subprocess;
+  the host refused ptrace. No pending call or debugger attachment reached the trainer.
+  gdb plus dependencies were installed without package upgrade/removal; rescue
+  helpers remain as failed-attempt evidence and are not dispatched again.
+- WMFAST-B merged at49b81f38. New operational files prepare: corrected four-start
+  startup with each score durably saved; reuse of the SAVED independent score only
+  after matching authority/config/seed/input/policy proof; original ES stack OFF
+  through update1, then own STOP and ordinary same-phase S2 continuation.
+- S2 uses one .50 forward worker because S4 (~31.7GiB projected) has no production
+  fit proof alongside coordinator and sampled peer (~5.8GiB). Aggregate admission
+  retains measured coordinator+worker caps+contexts+peers+growth <=45GiB/.90.
+- Continuation preserves full actor/group/critic/Adam/RNG/TRAIN sampler, original
+  phase origin191, frozen baseline bytes, phase10 R4 and the total150-update budget.
+  A failed R4, missing durable baseline, nonfinite receipt or zero updates refuses.
