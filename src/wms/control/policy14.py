@@ -165,7 +165,7 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
             components = imagined["components"]
             road = components["delay"].sum(1).mean(0)
             source = components["source_wait"].sum(1).mean(0)
-            if native_reference:
+            if native_reference or matched_horizon:
                 # Identical reduction geometry per row, independent of batch alignment.
                 def totals(values):
                     return torch.stack([values[..., r].contiguous().sum(1).mean(0)

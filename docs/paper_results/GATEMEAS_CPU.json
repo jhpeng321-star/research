@@ -1,0 +1,53 @@
+{
+  "schema": "gatemeas_cpu_receipt/1",
+  "base_commit": "9613f956",
+  "torch": "2.14.1+cpu",
+  "simulation_executed": false,
+  "verification": {
+    "integrated_cpu_suite": {"passed": 117, "deselected": 3, "seconds": 501.04},
+    "final_targeted_after_exact_row_law_fix": {"passed": 18, "seconds": 418.73},
+    "integrated_command": "python -m pytest tests/unit/test_gatemeas.py tests/unit/test_gated300.py tests/unit/test_gated300_cct1.py tests/unit/test_gated300_cct2.py tests/unit/test_gate_panel.py tests/unit/test_coopw.py tests/unit/test_antiexploit.py tests/unit/test_execparity_alwayscmd.py tests/unit/test_execparity3.py -q -k 'not production_residual_actor and not longmem_exact_full'",
+    "final_command": "python -m pytest tests/unit/test_gatemeas.py -q",
+    "environment": {"PYTHONPATH": "src;.", "CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"},
+    "deselection_note": "Three pre-existing expensive replay/production tests omitted; new shortened real-WM K8/K16 plus normal/memory-replay tests cover this feature.",
+    "ruff_changed_python": "PASS",
+    "git_diff_check": "PASS",
+    "resolved_config_loader": "PASS, 16-file inheritance chain"
+  },
+  "asserted_scoring_toy": {
+    "kind": "analytic reduction toy; no traffic efficacy or WM fidelity evidence",
+    "score_horizon_label_s": 90,
+    "J_raw_dense": 220.0,
+    "CTRL0_J_dense": 200.0,
+    "raw_gain_vs_CTRL0_dense": -20.0,
+    "long_horizon_label_s": 300,
+    "J_raw_long": 800.0,
+    "CTRL0_J_long": 1000.0,
+    "raw_gain_vs_CTRL0_long": 200.0,
+    "long_gated_gain": 200.0,
+    "composite_gated_score": 20.0,
+    "critic_tail_included": false
+  },
+  "asserted_zero_residual_identity": {
+    "kind": "untrained synthetic real-WM starts; compressed time geometry, not 300 s fidelity evidence",
+    "futures": [8, 16],
+    "memory_replay": [false, true],
+    "entrant_control": true,
+    "all_non_native_rows_long_difference_exactly_zero": true,
+    "raw_dJ_vs_CTRL0_dense": 0.0,
+    "raw_dJ_vs_CTRL0_long": 0.0,
+    "critic_calls": 0
+  },
+  "asserted_off_identity": ["metrics excluding wall time", "actor parameters", "gradients", "Adam state", "RNG state"],
+  "gate": {"sigma_300": 43.91, "strict_median_margin": 87.82, "strict_q10_minimum": 0.0},
+  "cost_example": {
+    "measured": false,
+    "native_K8_rows": 9,
+    "CTRL0_K16_rows": 10,
+    "forward_row_sim_seconds": 48000,
+    "forward_and_host_cache_factor": 2.2222222222222223,
+    "same_rows_K16_factor": 2.0,
+    "dense_prefix_futures": 16
+  },
+  "interim_preparation": {"world_count": 8, "arm_count": 2, "cap_sim_s": 14400, "charged_sim_s": 0, "exposure_audit_performed": false}
+}

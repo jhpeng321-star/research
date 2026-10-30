@@ -1197,8 +1197,12 @@ class DreamerTrainer:
             policy_proxy.accel_max = policy_max
             policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
             if gated300.measures_ctrl0(self):
-                from .counterfactual import KIND_CTRL0
-                policy_proxy.ctrl0_rows = variants.row_kind == KIND_CTRL0
+                from .counterfactual import KIND_CTRL0, KIND_BASE
+                # With CTRL0 credit, a non-intervened CAV (including an entrant)
+                # means residual zero under the same executor, not native release.
+                # The explicit dense learned-native baseline row is retained.
+                policy_proxy.ctrl0_rows = (variants.row_kind != KIND_BASE if
+                    gated_rollout and gated300.uses_ctrl0(self) else variants.row_kind == KIND_CTRL0)
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()

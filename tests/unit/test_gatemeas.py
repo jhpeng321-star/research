@@ -6,6 +6,7 @@ import torch
 from types import SimpleNamespace
 from dataclasses import replace
 import pytest
+import json
 
 from wms.control import gated300
 from wms.control.counterfactual import KIND_CTRL0, build_variants
@@ -48,7 +49,8 @@ def test_ctrl0_hook_and_long_pairing_toy():
 
 def test_explicit_default_off_bitwise_update():
     left, right = fixture.trainer(), fixture.trainer()
-    gated300.install(right, dict(ctrl0_reference=False), ['a' * 64])
+    gated300.install(right, dict(ctrl0_reference=False, k16=False, score_training_horizon=False), ['a' * 64])
+    right.counterfactual = replace(right.counterfactual, headroom_starts=False)
     torch.manual_seed(119)
     expected = left.update()
     rng = torch.get_rng_state()
@@ -209,3 +211,124 @@ def test_k16_full_imagination_cpu_no_critic(tmp_path, monkeypatch, memory):
     loss, _ = t.actor_objective(imagined, 1., t.counterfactual.weights(0), gradient_components=components)
     loss.backward()
     assert all(p.grad is None or torch.isfinite(p.grad).all() for p in t.actor_parameters)
+
+
+@pytest.mark.parametrize('memory', [False, True])
+@pytest.mark.parametrize('k16', [False, True])
+def test_real_wm_ctrl0_zero_identity_crn_entrants_and_cpu_update(tmp_path, monkeypatch, memory, k16):
+    from functools import partial
+    from wms.control.bridge import make_cav_controller
+    from wms.control.dreamer import DreamerConfig
+    from wms.control.obs import build_observations
+    from wms.control.policy import CavPolicy, RsuGroupEncoder
+    from wms.control.policy14 import Policy14Trainer, independent_score
+    from wms.model.entries import EntranceHistory
+    from wms.model.spec import ModelSpec
+    from wms.model.wms import WmSModel
+    monkeypatch.setenv('C4_EXECUTION_PARITY', '2')
+    monkeypatch.setenv('C4_SUMO_LEADER_RULE', '1')
+    monkeypatch.setenv('C4_EXECUTION_DRIVER', str(Path(__file__).resolve().parents[2] /
+                                               'configs/execparity_cav_idm_v1.json'))
+    monkeypatch.setattr(gated300, 'STEP_S', 60.)
+    torch.manual_seed(71)
+    starts = fixture.fixture.Starts(1, 4)
+    starts.batch.state['is_cav'][:, -1] = False
+    hist = EntranceHistory.defaults()
+    hist.rate[:] = .5
+    starts.batch.entry_feat = torch.tensor(hist.to_features()).float()[None]
+    cfg = DreamerConfig(batch_size=1, horizon=1, imagine_entries=True, entry_pad_max=2, cav_exec_cap='idm',
+        entrant_control=True, native_residual_train_group=True, native_residual_train_trunk=True,
+        future_samples=8, pessimistic_credit=True, deterministic_crn=True,
+        imagination_microbatch=int(memory), imagination_checkpoint_segment=2 if memory else 0,
+        imagination_offload_futures=memory, imagination_offload_saved_tensors=memory)
+    model = WmSModel(ModelSpec(history_hidden=8, k_hidden=8, rollout_mode='hybrid',
+        grad_decay_per_step=.9, lane_model='hazard_v5', merge_decision='first_passage',
+        lane_decision='sample', merge_passage_law='hybrid'))
+    policy = CavPolicy(hidden_dim=8, n_heads=2, lane_head=False, residual_on_native=True)
+    cf = fixture.trainer().counterfactual
+    cf.native_cav = 'head'
+    def reward(*args):
+        r = fixture.fixture.queue_reward(*args)
+        return dict(r, hdv_hard_brake_seconds=torch.zeros_like(r['reward']))
+    t = Policy14Trainer([model], policy, RsuGroupEncoder(hidden_dim=8, n_heads=2),
+        fixture.fixture.Critic(), starts, observation_builder=build_observations,
+        reward_fn=reward, safety=lambda state, command, **kw: command,
+        controller_factory=partial(make_cav_controller, native_lane_change=True,
+            native_ramp_merge='wm_law', symmetric_exec_cap=True), config=cfg, counterfactual=cf)
+    fixture.enable_gain_only(t, fixture.cct2_authority(tmp_path, 300, entrant_control=True),
+                            ctrl0_reference=True, score_training_horizon=True, k16=k16)
+    t.target_critic.forward = lambda *a: pytest.fail('CTRL0 long credit called critic')
+    measurements = []
+    original_imagine = t.imagine
+    def measured(*args, **kwargs):
+        out = original_imagine(*args, **kwargs)
+        measurements.append(out)
+        return out
+    t.imagine = measured
+    # The zero actor and reference have identical execution even after entries.
+    score = independent_score(t, starts.batch, native_reference=True)
+    assert score['raw_dJ_vs_CTRL0_dense'] == 0.
+    assert score['raw_dJ_vs_CTRL0_long'] == 0.
+    assert score['long_gated_gain'] == 0.
+    from wms.control.counterfactual import KIND_BASE
+    imagined = measurements[-1]
+    treatment = imagined['variants'].row_kind != KIND_BASE
+    assert not imagined['gated300_long_difference'][..., treatment].any()
+    t.imagine = original_imagine
+    # Nonzero actor exercises the complete autograd/replay row geometry too.
+    with torch.no_grad():
+        policy.residual_head.bias.fill_(-.1)
+    metrics = t.update()
+    assert metrics['entries'] and metrics['critic_loss'] == 0
+    assert torch.isfinite(torch.tensor(metrics['actor_loss']))
+
+
+def test_interim_prepare_is_zero_charge_and_hash_bound(tmp_path, monkeypatch, capsys):
+    from tools.candA import interim_a
+    checkpoint = tmp_path / 'candidate.pt'
+    checkpoint.write_bytes(b'checkpoint identity only; not parsed in prepare')
+    monkeypatch.setattr(interim_a, 'run', lambda *a: pytest.fail('prepare attempted simulation'))
+    assert interim_a.main([str(checkpoint)]) == 0
+    text = capsys.readouterr().out
+    assert interim_a.digest(checkpoint) in text and '14,400 sim-s' in text
+    plan = interim_a.plan()
+    assert len(plan['worlds']) == 8 and len({w['seed'] for w in plan['worlds']}) == 8
+    assert plan['episodes'] * (plan['warmup_s'] + plan['horizon_s']) == plan['cap_sim_s'] == 14400
+    assert plan['role'] == 'evaluation_only' and plan['arms'] == ['ours', 'CTRL0']
+    assert len({(w['demand_vph'], w['penetration']) for w in plan['worlds']}) == 4
+
+
+def test_interim_requires_exposure_audit_and_appended_checkpoint_registration(tmp_path, monkeypatch):
+    from tools.candA import interim_a
+    audit = tmp_path / 'audit.json'
+    audit.write_text(json.dumps(dict(schema='interim_exposure_audit/1', passed=False)))
+    with pytest.raises(ValueError, match='exposure audit'):
+        interim_a.validate_audit(audit)
+    monkeypatch.setattr(interim_a, 'validate_audit', lambda path: {})
+    checkpoint, registration = tmp_path / 'candidate.pt', tmp_path / 'registration.md'
+    checkpoint.write_bytes(b'checkpoint')
+    registration.write_text('not the registered checkpoint hash')
+    output = tmp_path / 'uncreated'
+    with pytest.raises(ValueError, match='append the exact'):
+        interim_a.run(checkpoint, output, audit, registration, None, None)
+    assert not output.exists()
+
+
+def test_300s_gate_keeps_strict_sigma_margin_and_q10_rule():
+    margin = 2 * gated300.SIGMA[300]
+    assert margin == 87.82
+    samples = torch.tensor([[margin, 100., -1.]] * 2 + [[margin, 100., 200.]] * 6)
+    _, on, _, _ = gated300.gate(samples, gated300.SIGMA[300], gain_only=True)
+    assert on.tolist() == [False, True, False]
+
+
+def test_old_checkpoint_long_receipt_defaults_remain_restorable(tmp_path):
+    t = fixture.trainer()
+    fixture.enable_gain_only(t, fixture.cct2_authority(tmp_path, 300))
+    old = dict(t.gated300, config=dict(t.gated300['config']))
+    old['config'].pop('ctrl0_reference')
+    old['config'].pop('k16')
+    other = fixture.trainer()
+    gated300.checkpoint_restore(other, dict(gated300=old))
+    assert other.gated300['H_long'] == 300
+    assert not other.gated300['config']['ctrl0_reference'] and not other.gated300['config']['k16']

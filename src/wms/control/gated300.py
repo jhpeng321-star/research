@@ -143,10 +143,10 @@ def install(trainer, section, wm_sha256s):
                 receipt['reason'] = 'missing CCT-1 file'
         else:
             receipt['reason'] = 'missing CCT-1 file'
-    trainer.gated300 = receipt
     if cfg.k16 and receipt['H_long']:
         if receipt['H_long'] != 300 or trainer.config.native_anchor or trainer.config.exploit_ensemble_pessimism:
             raise ValueError('K16 requires 300s single-WM credit without fitted K8 anchor/ensemble pessimism')
+    trainer.gated300 = receipt
     return receipt
 
 
@@ -265,11 +265,20 @@ def prefix(trainer, imagined, dense_steps):
     base = (reference_index(variants) if uses_ctrl0(trainer) else
             baseline_index(variants, rewards.shape[-1], device=rewards.device))
     totals = rewards.sum(1, keepdim=True)
+    if uses_ctrl0(trainer):
+        # Same contiguous reduction geometry for treatment/reference rows;
+        # storage alignment must not turn identical trajectories into fake gain.
+        totals = torch.stack([rewards[..., r].contiguous().sum(1, keepdim=True)
+                              for r in range(rewards.shape[-1])], -1)
     long_difference = totals - totals[..., base].detach()
     out = dict(imagined)
     components = imagined['components']
     long_cost = components['delay'] + components.get('source_wait', 0.)
     out['gated300_long_J'] = long_cost.detach().sum(1).mean(0)
+    if uses_ctrl0(trainer) or getattr(trainer, '_gated300_scoring', False):
+        out['gated300_long_J'] = torch.stack([
+            long_cost[..., r].detach().contiguous().sum(1).mean(0)
+            for r in range(long_cost.shape[-1])])
     for name in ('rewards', 'costs', 'entropy', 'actions', 'action_mask', 'disagreement',
                  'entrance_zone', 'values', 'returns'):
         value = out.get(name)
@@ -324,6 +333,10 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
         gated300_long_credit_share=float(long_mass / (dense_mass + long_mass).clamp_min(1e-30)),
         gated300_dense_credit=float(dense_value), gated300_long_credit=float(long_value.detach()),
         gated300_w_long=weight)
+    if 'gated300_reference' in imagined:
+        metrics['gated300_reference'] = imagined['gated300_reference']
+    if 'gated300_futures' in imagined:
+        metrics['gated300_futures'] = imagined['gated300_futures']
     term = -long_value / scale
     if samples.requires_grad:
         # Stops at the replay OUTPUT: no WM replay or parameter VJP here.
