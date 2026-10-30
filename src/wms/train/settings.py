@@ -162,6 +162,9 @@ class TrainSettings:
     mainline_interaction_residual: bool = False
     mainline_residual_hidden: int = 64
     longwm_extra_paired: Optional[str] = None
+    # WMFIX merge-response head: architecture flag carried into settings for
+    # candidate configs; the model itself is built from the model spec.
+    merge_response: bool = False
     driver_grad_across_chunks: bool = False
     history_features: int = 6
     history_s: Optional[float] = None

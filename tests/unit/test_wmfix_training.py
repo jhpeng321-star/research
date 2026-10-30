@@ -9,6 +9,7 @@ from tools.wmfixmerge.data import digest
 from tools.wmfixmerge.feasibility import panel_gate, synthetic
 from tools.wmfixmerge.train import check_gates, export
 from wms.config.train import TrainConfig
+from wms.train.settings import TrainSettings
 from wms.model.merge_response import freeze_except_response
 from wms.model.spec import ModelSpec
 from wms.model.wms import WmSModel
@@ -20,6 +21,8 @@ def test_opt_in_config_roundtrip_and_boolean_validation():
     cfg = replace(cfg, model=replace(cfg.model, merge_response=True))
     assert cfg.to_legacy_flat()["merge_response"] is True
     assert TrainConfig.from_legacy_flat(cfg.to_legacy_flat()).model.merge_response is True
+    # Candidate configs must survive the r10/load_for_scoring settings path.
+    assert TrainSettings.from_config(cfg).merge_response is True
     with pytest.raises(ValueError):
         ModelSpec(merge_response="false")
 
