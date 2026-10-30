@@ -1,0 +1,14 @@
+{
+ "measured_source": "2dcb6af5abaab84d63fb79d03fc6b7255bb141b2",
+ "test": "tests/unit/test_candb_rankcheck.py::test_host_sensor_frames_preserve_published_controller_commands",
+ "controllers": ["CIRCLES damping", "PI external-U"],
+ "devices_per_host": ["cpu", "cuda"],
+ "ticks": 12,
+ "state_persistence_and_leader_removal": true,
+ "comparison": "torch.equal on complete returned motion arrays at every tick",
+ "gpuA": {"passed": 4, "deselected": 14, "elapsed_s": 3.90},
+ "gpuR": {"passed": 4, "deselected": 14, "elapsed_s": 3.41},
+ "local_complete_focused_suite": {"passed": 16, "cuda_skipped": 2},
+ "no_optimizer_updates": true,
+ "no_sumo": true
+}

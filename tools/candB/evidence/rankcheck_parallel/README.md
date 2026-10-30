@@ -19,3 +19,21 @@
   verification used E:/Temp/opencode/auditfix-venv/Scripts/python.exe.
 - Deadline publication explicitly reports available starts/worlds/K per result.
   No training, SUMO, peer signals, cleanup, deletions or push.
+
+## Exact sensor-frame speed correction
+- The first PI/CIRCLES futures still exceeded the deadline plan: published
+  `_new_command` read GPU scalars for every CAV, even in fast_cav_drive mode.
+- Source2dcb6af5 adds default-OFF measurement-only --host-controller-sensors:
+  exact six-field host copies once per controller tick, same published controller.
+- Equivalence on live published PI and CIRCLES (12 ticks, leader removal, state
+  persistence): CPU+CUDA **4 passed** independently on gpuA and gpuR. Local full
+  focused suite **16 passed,2 CUDA skipped**; Ruff/diff PASS.
+- No whole arm existed in either slow job. Only owned965450/start874061826 and
+  441931/start4198711711 were stopped after exact incarnation checks; originals retained.
+- New source2dcb6af5 runtime candB_rankcheck_2dcb6af5_host_20261030 on both hosts;
+  CIRCLES967628/start874117116 on gpuA (.19), PI442305/start4198759397 on gpuR(.40).
+- Same TRAIN_STARTS.pt transported bytes and config/objective; no new start selection.
+- Fresh-zero B on source3cd6481e finished ONE full300s/K4 start, bitwise all/ref
+  scientific-state arrays; queued MAPPO proxy+partial may then run on that freed slot.
+- Loaded current candidate-A update191 output head is NONZERO; it is not asserted
+  bitwise CTRL0 by construction. It is outside the six requested baseline arms.

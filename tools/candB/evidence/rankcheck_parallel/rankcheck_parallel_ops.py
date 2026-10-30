@@ -10,13 +10,29 @@ BASE = Path('/root/autodl-tmp/c4')
 ROOT = BASE/'candB_rankcheck_d17274bd_parallel_20261030'
 if sys.argv[1] in ('export', 'launch-plan', 'queue', 'queue-worker'):
     ROOT = BASE/'candB_rankcheck_3cd6481e_plan_20261030'
+if sys.argv[1] in ('launch-host', 'verify-host'):
+    ROOT = BASE/'candB_rankcheck_2dcb6af5_host_20261030'
 OLD = BASE/'candB_rankcheck_05f7bfba_graph_20261030/measurement'
 def ticks(pid):
     return Path(f'/proc/{pid}/stat').read_text().split(') ')[1].split()[19]
 def write(path, value):
     with path.open('x') as f:
         json.dump(value, f, indent=1)
-if sys.argv[1] == 'queue':
+if sys.argv[1] == 'verify-host':
+    env = dict(os.environ, PYTHONPATH=str(ROOT/'src')+':'+str(ROOT))
+    subprocess.run([sys.executable, '-m', 'pytest', 'tests/unit/test_candb_rankcheck.py',
+        '-k', 'host_sensor_frames', '-q'], cwd=ROOT, env=env, check=True)
+elif sys.argv[1] == 'stop-slow':
+    out = BASE/'candB_rankcheck_3cd6481e_plan_20261030'/('measurement_'+sys.argv[2])
+    owned = json.loads((out/'OWNERSHIP.json').read_text())
+    pid = owned['pid']
+    assert ticks(pid) == str(owned['start_ticks'])
+    assert not (out/'RAW.json').exists(), 'retain completed arm; do not repeat it'
+    write(out/'OWNED_HOST_SENSOR_STOP.json', dict(**owned, stopped_unix=time.time(),
+        reason='Per-vehicle device sensor reads dominate runtime; exact host-sensor equivalence tested on CUDA'))
+    os.kill(pid, signal.SIGTERM)
+    print('Stopped exact owned slow controller', pid)
+elif sys.argv[1] == 'queue':
     with (ROOT/'QUEUE.log').open('x') as log:
         p = subprocess.Popen([sys.executable, __file__, 'queue-worker'], cwd=ROOT,
             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -57,7 +73,7 @@ elif sys.argv[1] == 'export':
     env = dict(os.environ, **command['environment'])
     env['PYTHONPATH'] = str(ROOT/'src')+':'+str(ROOT)
     subprocess.run(args, cwd=ROOT, env=env, check=True)
-elif sys.argv[1] in ('launch', 'launch-plan'):
+elif sys.argv[1] in ('launch', 'launch-plan', 'launch-host'):
     arm = sys.argv[2]
     out = ROOT/('measurement_'+arm+(sys.argv[3] if len(sys.argv) > 3 else ''))
     assert ROOT.is_dir() and not out.exists()
@@ -72,8 +88,10 @@ elif sys.argv[1] in ('launch', 'launch-plan'):
     args += ['--measurement-arms', *arm.split('+'), '--future-prefix', '4']
     if arm == 'candB_zero':
         args += ['--stop-after', '1']
-    if sys.argv[1] == 'launch-plan':
+    if sys.argv[1] in ('launch-plan', 'launch-host'):
         args += ['--input-starts', str(ROOT/'TRAIN_STARTS.pt')]
+    if sys.argv[1] == 'launch-host':
+        args += ['--host-controller-sensors']
     env = namespace['environment']()
     env['CUDA_VISIBLE_DEVICES'] = '0'
     if not Path(args[0]).exists():
