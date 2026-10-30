@@ -1,7 +1,8 @@
 # S-DISTILL2 — MAPPO-assisted WM warm-start building block (2026-10-30)
 
 ## Design and status
-- Branch `c4/distill2`, base `9613f956`; final implementation SHA recorded below after verification.
+- Branch `c4/distill2`, base `9613f956`; final implementation SHA `727a47de13028f24706f5bfe8df7185b9369566a`.
+- Documentation delivery SHA: `git log -1 --format=%H -- docs/paper_results/DISTILL.md`.
 - Frozen teacher `mappo_v5_final.pt` SHA `aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564`.
 - WM2 SHA `b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436`; explicit WM config required.
 - Execution: always-commanded mode 2, SUMO leader rule ON, existing learned newcomer mix ON.
@@ -30,7 +31,9 @@
   Requires existing W-verdict JSON rows: exactly 48 pairs300 keys and 36 validation keys; no new selection.
   Entries/endogenous exits are simulated; recorded future controls/presence are never imagination inputs.
 - No production representability, trained actor, or real-panel dJ is claimed: registered weights/corpora/panel
-  receipts are not staged here. SETUPAUDIT.md was absent at the last check; adoption remains audit-dependent.
+  receipts are not staged here. Read S-SETUPAUDIT (`b56444ab31d3fb52107e770dba30a311f0e72ede`) when it appeared.
+  Its verdict (b): intended mix-ON n=2 MAPPO−CTRL0 J300 +3278.14 veh-s; 98.88% longitudinal fit, lane mismatch.
+  Distillation alone is not supported as the remedy; use remains conditional on objective/support qualification.
 
 ## Training provenance and resources
 - Optimization seed: `965160`; smoke network seed `701` (synthetic only). No production traffic training run yet.
