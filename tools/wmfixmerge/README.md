@@ -7,7 +7,8 @@ No command here invokes SUMO. No training has been launched by the implementatio
 ## Inputs and fail-closed gates
 
 - TRAIN: `/root/autodl-tmp/c4/e3data`, only the 12 `SEEDS` in `data.py`, role **fit**,
-  native/ours_c1/coopoff_c1/mappo pairs at t300. No validation/pairs300/SPEEDHEAD fitting.
+  native/ours_c1/coopoff_c1 pairs at t300. Old lane-head MAPPO tapes are excluded after WMREQUAL3.
+  No validation/pairs300/SPEEDHEAD fitting. Final speed-only MAPPO remains required on SPEEDHEAD verdict B.
 - Base checkpoint: `/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt`,
   SHA256 `b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436`.
 - Config: `/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml`.
@@ -42,7 +43,7 @@ Astra's `REVIEW.json` must identify reviewer `Astra`, status `APPROVED`, and bin
 ## Exact eventual training command (MAIN only, after gates)
 
 ```bash
-timeout --signal=INT --kill-after=30s 21600s python -m tools.wmfixmerge.train --enable-merge-response --conserve-queue --learned-admission --device cuda --prepared /root/autodl-tmp/c4/wmfixmerge20261031/TRAIN_PREPARED.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --corrected-report /root/autodl-tmp/c4/wmfixmerge20261031/WMREQUAL3.md --feasibility /root/autodl-tmp/c4/wmfixmerge20261031/FEASIBILITY.json --review /root/autodl-tmp/c4/wmfixmerge20261031/REVIEW.json --out /root/autodl-tmp/c4/wmfixmerge20261031/train
+timeout --signal=INT --kill-after=30s 21570s python -m tools.wmfixmerge.train --enable-merge-response --conserve-queue --learned-admission --device cuda --prepared /root/autodl-tmp/c4/wmfixmerge20261031/TRAIN_PREPARED.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --corrected-report /root/autodl-tmp/c4/wmfixmerge20261031/WMREQUAL3.md --feasibility /root/autodl-tmp/c4/wmfixmerge20261031/FEASIBILITY.json --review /root/autodl-tmp/c4/wmfixmerge20261031/REVIEW.json --out /root/autodl-tmp/c4/wmfixmerge20261031/train
 ```
 
 The checked-in schedule and all three field/ledger/admission flags default OFF. Explicit CLI flags enable the run.
@@ -67,6 +68,7 @@ the time cap governs. Every-update checkpoints are more frequent than the reques
 provided the GPU microbenchmark confirms the estimate. A single CUDA update memory/time benchmark
 is a MAIN pre-launch requirement; CPU tests cannot certify the estimate. The external timeout preserves
 the last completed checkpoint if a single pathological update exceeds the internal reserve estimate.
+The timeout's 21,570 s signal plus at most 30 s grace keeps the hard process budget within 21,600 s.
 
 ## Verification completed locally
 
@@ -76,3 +78,45 @@ the strengthened gate's failure, and a conditional synthetic teacher's pass. The
 The corrected report was delivered and read before handoff (hash/retarget in WMFIX_DESIGN.md);
 it confirms that the upstream/source intervention error remains. Remote preparation, source-clock parity,
 real TRAIN gradient/optimizer feasibility and independent review are pending. **Current status: NOT LAUNCH READY.**
+
+## One-command post-training verdict
+
+MAIN must bind `verdict_plan.json` to exact frozen B/C1 producers and the existing canonical accept TRAIN panel.
+The driver refuses all scoring when either adapter or an input is missing; a zero exit/missing result never passes.
+It will not restart a directory with a persistent `RUN.json` (running or interrupted); reconcile it first.
+
+```bash
+python -m tools.wmfixmerge.verdict --plan tools/wmfixmerge/verdict_plan.json --train-dir /root/autodl-tmp/c4/wmfixmerge20261031/train --out /root/autodl-tmp/c4/wmfixmerge20261031/verdict --execute --device cuda
+```
+
+Default is dry-run; MAIN supplies an existing verdict output directory. The final immutable update from
+`FINAL.json` is primary, verified by hash; candidate_config.json must actually instantiate the head.
+A reuses this worktree's inherited WMREQUAL3 native-lane scorer, K8/mix ON with physical exits;
+it separately reports unmatched MAPPO diagnostics and all source/upstream/downstream/crossing contrasts.
+The source contract must bind its scorer/ownership hashes to the delivered corrected-harness contract.
+SAFETY calls the unmodified `tools/loop14_checks/accept.py` with its existing decision thresholds.
+Step0 is checked bitwise against original WM2 before being used as the same-config zero-head reference.
+
+### Required B/C1 producer contract (currently unbound — not verdict-ready)
+
+`stages.B` and `stages.C1` each need `producer = {script, files, args}`. `files` maps every frozen
+producer/dependency/cohort artifact path to SHA256, including the entry script. `args` is an argument
+list, with `{candidate}`, `{reference}`, `{config}`, `{out}`, `{binding}`, `{device}` expanded literally.
+The driver runs that Python script sequentially under the same restricted-input audit guard, retaining logs.
+Alternatively bind an existing receipt and its exact `sha256`; source provenance is still mandatory.
+The JSON result must carry `binding` equal to BINDING.json and `producer` equal to the registered producer object.
+No shell command string, automatic retry, unbound artifact reuse, or placeholder PASS is accepted.
+
+- B schema `wmfix_speedhead/1`: K8, mix ON, native_lanes, matched_t300_history_queue,
+  closed_loop_all_cavs=true. `rows` contains all 8 worlds × MAPPO/PI/CIRCLES × 300/600 s contrasts,
+  each with world/arm/horizon/real/base_draws[8]/candidate_draws[8]. `absolute` contains all four arms
+  (including CTRL0) over the same grid, with matching J and road/source component draws/real values.
+  Use the real final MAPPO export d9042cc5 and frozen CTRL0/PI/CIRCLES recipe from SPEEDHEAD;
+  update190 or recorded-command replay is not a substitute for the four closed-loop controllers.
+- C1 schema `wmfix_c1_regression/1`: reference_label=C1, canonical_cohort_sha256,
+  canonical_worlds={PI:[...],unseen_wall:[...]}, and exactly one aggregated error/blowup row per
+  original cohort world (base_error/candidate_error/base_blowups/candidate_blowups).
+  Preserve the original C1 estimand, history, walls and full deployed admission path; restricted source paths refuse.
+
+The exact B/C1 producers/cohort paths are not present in this worktree. Their bindings remain null intentionally.
+Thus the one-command orchestration and metric gates are implemented, but the full verdict cannot yet execute.

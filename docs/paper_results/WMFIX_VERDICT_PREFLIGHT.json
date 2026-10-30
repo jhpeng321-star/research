@@ -1,0 +1,22 @@
+{
+  "schema": "wmfix_verdict/1",
+  "status": "BLOCKED",
+  "passed": false,
+  "executed_stages": [],
+  "blockers": [
+    "FileNotFoundError: [Errno 2] No such file or directory: '\\\\root\\\\autodl-tmp\\\\c4\\\\wmfixmerge20261031\\\\train\\\\FINAL.json'",
+    "missing candidate",
+    "missing candidate_config",
+    "missing reference",
+    "missing base_config",
+    "missing controllers",
+    "missing corrected_report",
+    "missing harness_contract",
+    "missing validation_real",
+    "missing zero_reference",
+    "canonical accept.py fixed TRAIN roots/panel not bound",
+    "B exact frozen producer/receipt binding missing",
+    "C1 exact frozen producer/receipt binding missing"
+  ],
+  "panels": {}
+}

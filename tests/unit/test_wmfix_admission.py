@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import types
+import importlib.util
 from pathlib import Path
 
 import numpy as np
@@ -64,6 +65,16 @@ def test_invalid_bundle_or_nonphysical_pool_rejects():
     admission = LearnedAdmission(LearnedMix(params, torch.ones(1, 4, 1, dtype=torch.bool), 17, ["world"]))
     with pytest.raises(ValueError, match="nonphysical"):
         admission.candidate(0, 0, 0)
+
+
+def test_scorer_rejects_learned_admission_without_matching_mix_before_rollout(monkeypatch):
+    path = Path(__file__).resolve().parents[2] / "tools/wmrequal/score.py"
+    monkeypatch.syspath_prepend(str(path.parent))
+    spec = importlib.util.spec_from_file_location("wmfix_admission_score_test", path)
+    score = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(score)
+    with pytest.raises(ValueError, match="mix ON only"):
+        score.score_batch(None, None, None, None, None, None, None, None, False, learned_admission=True)
 
 
 def test_flag_off_actual_insert_and_rng_match_committed_entries():

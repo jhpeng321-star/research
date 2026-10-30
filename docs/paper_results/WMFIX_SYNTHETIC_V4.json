@@ -1,0 +1,56 @@
+{
+  "schema": "wmfix_feasibility/1",
+  "mode": "synthetic",
+  "device": "cpu",
+  "launch_ready": false,
+  "implementation_hashes": {
+    "src/wms/model/wms.py": "de3e6635cd6737e6710f3cdee9084c79a8b9a4d5bbd148d21099774bc66b469c",
+    "src/wms/model/entries.py": "00e2ce416ea7bf839ccefbe5ebb3c7911e8d197bacea76737a44cc2adc55c8a5",
+    "src/wms/model/merge_response.py": "55b1119a39f7a5885897ab4bce768a8aea7786f4b460ec522188d44967042039",
+    "src/wms/model/source_ledger.py": "cfb938b5c3458997709f95c59e864552b771316777b114051377cff586a804b4",
+    "src/wms/model/learned_admission.py": "d562341cd3d1eab99440e2b27b408e406cd210a51f1cf3ab22d3e60d8892800b",
+    "src/wms/train/merge_response.py": "529f89f25195db0a3038a35b90ca6f2c239bfb99846424bcc6e58a05e78603c2",
+    "tools/wmfixmerge/runtime.py": "9ac879cdb906686e155c75825b0d926297459d5013803e693f1f36d98e74f2f0",
+    "tools/wmfixmerge/train_config.json": "3f45a3bfa1a655f757abcd12a7e83e0fb4de45643144f887fb3cfe7811253b98",
+    "tools/wmrequal/score.py": "b639f77f9c7e099636ff385c3869fc05728a84aa9bb6c3ff4ebbc9a98a33a00d",
+    "tools/wmrequal/native_lanes.py": "db22c00de2b8a1b03efd3ee6716eb8378ef9ebf8ea62cc8a3c257ae23b1c7f53",
+    "src/wms/model/spec.py": "12e92b8b2bf36d09c351e4491cbe1294bffe76ecfc04331f6763209d37f6c0bf",
+    "src/wms/config/train.py": "428e0f2bdbbaf74e5abb0172ad2f2f06fbe30ba04bfbeb91138f9f482270d415",
+    "src/wms/config/legacy_flat.py": "36a91847d2eca0481c1249dbccd41cbe0fed41f8f5ae7b93e5a6032ff04ab530",
+    "tools/wmfixmerge/train.py": "5a0f2bc2b0c68f3e0773efb9c108daa569896897c6910ddf215b46b3233ac549",
+    "tools/wmfixmerge/feasibility.py": "d476db509cb4051bd6575ef2d1f4795f7e8bc38895a51db9121e1be8cbf8b867",
+    "tools/wmfixmerge/data.py": "83ef8cd0a5ebce49d37bdde005a5e003c3c267bcd177e0a0aeb964a5995bd0ff",
+    "tools/wmfixmerge/prepare.py": "02b48470deed380616ee9ff09dbb15c717f372512fd4cfdbc8e87461d11373a5"
+  },
+  "initial_loss": 9.148335084319115e-05,
+  "after_step_loss": 9.112023690249771e-05,
+  "initial_J_contrast_MAE": 0.008005380630493164,
+  "after_J_contrast_MAE": 0.00800323486328125,
+  "gradient_parameter": "merge_response.net.2.bias",
+  "gradient": -0.001049295999109745,
+  "finite_difference": -0.001047563273459673,
+  "finite_difference_ok": true,
+  "frozen_bitwise": true,
+  "optimizer_reduces": true,
+  "predicted": [
+    [
+      2.2103781700134277
+    ],
+    [
+      2.5916221141815186
+    ]
+  ],
+  "recorded": [
+    [
+      2.203002691268921
+    ],
+    [
+      2.592252016067505
+    ]
+  ],
+  "component_gradient_norms": {
+    "J": 0.007941000163555145
+  },
+  "passed": true,
+  "status": "SYNTHETIC_ONLY"
+}

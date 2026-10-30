@@ -67,6 +67,8 @@ def source_for(panel, real_rows):
 
 def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, smoke,
                 *, native_lanes=False, mix_modes=(False, True), learned_admission=False):
+    if learned_admission and tuple(mix_modes) != (True,):
+        raise ValueError("learned admission requires mix ON only so birth settings match admission")
     import numpy as np
     import torch
     from tools.errsrc.inference import LearnedMix

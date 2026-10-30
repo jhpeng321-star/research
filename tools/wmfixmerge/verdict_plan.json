@@ -1,0 +1,19 @@
+{
+  "schema": "wmfix_verdict_plan/1",
+  "reference": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+  "base_config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+  "controllers": "/root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json",
+  "corrected_report": "/root/autodl-tmp/c4/wmfixmerge20261031/WMREQUAL3.md",
+  "harness_contract": "/root/autodl-tmp/c4/wmfixmerge20261031/HARNESS_CONTRACT.json",
+  "validation_root": "/root/autodl-tmp/c4/e3data",
+  "validation_real": "/root/autodl-tmp/c4/wmrequal3_20261030/REAL.json",
+  "zero_reference": "/root/autodl-tmp/c4/wmfixmerge20261031/train/step_000000.pt",
+  "accept_panel": "/root/autodl-tmp/c4/wmfixmerge20261031/ACCEPT_PANEL.json",
+  "accept_roots": [],
+  "stages": {
+    "A": {"adapter": "corrected_validation"},
+    "B": {"adapter": "bound_external", "receipt": null, "sha256": null, "producer": null},
+    "C1": {"adapter": "bound_external", "receipt": null, "sha256": null, "producer": null},
+    "SAFETY": {"adapter": "canonical_accept"}
+  }
+}
