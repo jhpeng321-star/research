@@ -194,3 +194,5 @@ PID 865427, `tools/candA/stepL.sh <policy_latest of the stopped zs run = update 
 authority `CANDA_AUTHORITY_LGS_23fd0ce8.json` (sha256 9a3cd30b...), config `candA_longgrad_skip.toml` (8c0c5494...). Resume diff = the 4 approved keys only.
 First update 183: 1547 s (old 3732 s), dense futures 8 x ~77 s at replay horizon 61 s, long VJPs 0, grad norm 143 (old 13,658), rescored J unchanged 703.1053.
 Stop with `touch candA_prod_184542ab_lgs/STOP`. Full numbers: REGISTRATION.md 08:05 / 08:50.
+
+### KEYERR RELAUNCH 2026-10-30 12:09 — runtime `/root/autodl-tmp/c4/candA_keyerr` (SOURCE ebfe815d), PID 900867, `tools/candA/stepK.sh /root/autodl-tmp/c4/candA_prod_keyerr` (continuation from lgs policy_000189.pt, Adam/head preserved, phase origin 182, update-192 gate unchanged). Authority `CANDA_AUTHORITY_KEYERR_ebfe815d.json` (0cee7786...). Update 190: 760 s, finite, grad 1.3e-3, futures_replayed 8, rescored J unchanged 703.1053. See REGISTRATION.md 12:15 / 12:45.
