@@ -963,7 +963,7 @@ class DreamerTrainer:
                 credit_profile=False, difference_only=False, _memory_replay=False,
                 _memory_config=None, _memory_full_batch=None, _memory_start_index=None,
                 _memory_future_cache=None, _memory_active_future=None, _memory_row_index=None,
-                _memory_collect_future=None, _memory_replay_horizon=None):
+                _memory_collect_future=None, _memory_replay_horizon=None, _eslong_stack=None):
         """Imagined rollouts of ``batch`` (and, with ``variants``, of its counterfactual rows).
 
         With ``variants`` (:func:`wms.control.counterfactual.build_variants`) every row r
@@ -1063,19 +1063,21 @@ class DreamerTrainer:
                     gid, shared, rho, own, self.exploration.additive_correlation)
         recompute = cfg.checkpoint_imagination and torch.is_grad_enabled() and not memory
         from wms.model.cav import apply_exec_cap
-        native = _Recompute(native_fn(self.counterfactual.native_cav,
+        row_local = getattr(self, '_eslong_row_local', lambda fn: fn)
+        native = _Recompute(row_local(native_fn(self.counterfactual.native_cav,
                                       a_max=self.counterfactual.native_accel_max_mps2,
-                                      head_path=self.counterfactual.native_cav_head_path), recompute)
+                                       head_path=self.counterfactual.native_cav_head_path)), recompute)
         # Action bounds (ACCELCAP_NOTES.md): the policy's stored cap bounds its commands; native
         # counterfactual CAVs use the native (SUMO CAV) accel; safety layers without an
         # ``accel_max`` keyword are called unchanged.
         policy_max = float(getattr(self.policy, "accel_max", ACCEL_MAX_MPS2))
         native_max = float(self.counterfactual.native_accel_max_mps2)
         # Policy samples internally only without explicit (CRN) noise and when stochastic.
-        policy_call = _Recompute(self.policy, recompute, preserve_rng=not (crn or deterministic))
-        group_call = _Recompute(self.group_encoder, recompute)
+        policy_call = _Recompute(getattr(self, '_eslong_policy_call', self.policy), recompute,
+                                 preserve_rng=not (crn or deterministic))
+        group_call = _Recompute(getattr(self, '_eslong_group_call', self.group_encoder), recompute)
         from .safety import with_accel_max
-        safety_call = _Recompute(with_accel_max(self.safety), recompute)
+        safety_call = _Recompute(row_local(with_accel_max(self.safety)), recompute)
         # S-LONGMEM300 (memory only, default OFF, exact): the per-step reward/TTC cost builds [B,K,K]
         # pairwise saved tensors OUTSIDE the WM segment checkpoints; in LONGMEM they were spilled to
         # host RAM (hundreds of GB at 300 s). Recomputing the pure reward in backward keeps only its inputs.
@@ -1083,9 +1085,9 @@ class DreamerTrainer:
         if bool(memory) and torch.is_grad_enabled() and _lm300 == '2':
             reward_call = _ImmediateRecompute(self.reward_fn, True)
         else:
-            reward_call = _Recompute(self.reward_fn, recompute or (
+            reward_call = _Recompute(row_local(self.reward_fn), recompute or (
                 bool(memory) and torch.is_grad_enabled() and _lm300 == '1'))
-        observe_call = _Recompute(self.observation_builder, recompute)
+        observe_call = _Recompute(getattr(self, '_eslong_observe_call', self.observation_builder), recompute)
         value_call = _Recompute(self.target_critic, recompute)
         surrogate_call = _Recompute(_queue_surrogate_fn, recompute)
         futures_cfg = FuturesConfig.from_trainer(cfg)
@@ -1535,6 +1537,11 @@ class DreamerTrainer:
                 **({"exploration_rho": explore[2]} if explore is not None else {}),
                 "components": {key: torch.stack([c[key] for c in member_components])
                                 for key in member_components[0]}}
+        if _eslong_stack is not None:
+            from .eslong import split_outputs
+            outputs = split_outputs(result, *_eslong_stack,
+                                    getattr(self, '_eslong_side_policy_outputs', None))
+            return [gated300.prefix(self, out, dense_steps) if gated_rollout else out for out in outputs]
         return gated300.prefix(self, result, dense_steps) if gated_rollout else result
 
     def update_lagrange(self, mean_cost, budget=None):

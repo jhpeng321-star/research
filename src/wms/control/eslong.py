@@ -1,7 +1,9 @@
 """Default-OFF, head-only antithetic long credit. No rollout autograd here."""
 from contextlib import contextmanager, nullcontext
-from dataclasses import replace
+from dataclasses import fields, is_dataclass, replace
+from types import SimpleNamespace
 import math
+import os
 
 import torch
 
@@ -113,8 +115,199 @@ def future_tape(tape, cache, future):
     return tape[:prefix] + tape[begin:cache['items'][future]['tape_end']]
 
 
+def stack_sides():
+    """Execution-only, checkpoint-neutral switch. Zero retains the serial path."""
+    raw = os.environ.get('WMS_SPEED_ES_STACK_SIDES', '0')
+    if raw not in ('0', '2', '4'):
+        raise ValueError('WMS_SPEED_ES_STACK_SIDES must be 0, 2 or 4')
+    return int(raw)
+
+
+def stacked_variants(variants, sides, *, share_reference=False):
+    """Repeat ROWS, not starts: every side keeps the original stochastic plans.
+
+    Optional reference sharing is limited to native/CTRL0 rows with no actors.
+    Learned all-CAV/unperturbed treatment rows are never aliases of a perturbation.
+    """
+    from .counterfactual import KIND_BASE, KIND_CTRL0
+    original, owners, selections, shared = [], [], [], {}
+    for side in range(sides):
+        selection = []
+        for row in range(variants.n_rows):
+            reference = (share_reference and int(variants.row_kind[row]) in (KIND_BASE, KIND_CTRL0)
+                         and not bool(variants.act_mask[row].any()))
+            if not reference or row not in shared:
+                slot = len(original)
+                original.append(row)
+                owners.append(side)
+                if reference:
+                    shared[row] = slot
+            selection.append(shared[row] if reference else len(original) - 1)
+        selections.append(torch.tensor(selection, device=variants.row_start.device))
+    rows = variants.row_start.new_tensor(original)
+    # Side-specific base maps are restored before ANY credit reduction.
+    stacked = replace(variants, row_start=variants.row_start[rows],
+                      row_kind=variants.row_kind[rows], act_mask=variants.act_mask[rows])
+    return stacked, rows, owners, selections
+
+
+@contextmanager
+def row_heads(trainer, common, sides, selections, owners):
+    """Functional side heads with original actor/group kernel geometry.
+
+    Shape-dependent GEMM and CPU vectorized tanh tails otherwise change command
+    bits even with an unchanged dot product. Physics still runs ONE stacked set.
+    """
+    params = head_parameters(trainer)
+    values = []
+    for direction, sign in sides:
+        offset, tensors = 0, []
+        for p in params:
+            eps = common['directions'][direction][offset:offset + p.numel()].reshape_as(p).to(p)
+            tensors.append(p.detach() + sign * common['sigma'] * eps)
+            offset += p.numel()
+        values.append(tensors)
+
+    sources = [selection.new_tensor([r for r, slot in enumerate(selection.tolist())
+                                    if owners[slot] == side])
+               for side, selection in enumerate(selections)]
+
+    def map_structure(function, value):
+        if is_dataclass(value) and not isinstance(value, type):
+            return replace(value, **{f.name: map_structure(function, getattr(value, f.name))
+                                     for f in fields(value)})
+        if isinstance(value, SimpleNamespace):
+            return SimpleNamespace(**{k: map_structure(function, v) for k, v in vars(value).items()})
+        from torch.utils._pytree import tree_map
+        return tree_map(function, value)
+
+    def side_call(function, args, kwargs, side):
+        selection = selections[side]
+        def select(x):
+            return (x.index_select(0, selection.to(x.device))
+                    if torch.is_tensor(x) and x.ndim and x.shape[0] == len(owners) else x)
+        # Dataclass observations can also be nested inside positional arguments.
+        return function(*(map_structure(select, x) for x in args),
+                        **{k: map_structure(select, v) for k, v in kwargs.items()})
+
+    def merge(outputs):
+        from torch.utils._pytree import tree_map
+        def combine(*values):
+            if not torch.is_tensor(values[0]):
+                return values[0]
+            output = values[0].new_empty((len(owners), *values[0].shape[1:]))
+            for selection, source, value in zip(selections, sources, values):
+                output.index_copy_(0, selection[source], value.index_select(0, source))
+            return output
+        if is_dataclass(outputs[0]):
+            return replace(outputs[0], **{f.name: merge([getattr(x, f.name) for x in outputs])
+                                          for f in fields(outputs[0])})
+        if isinstance(outputs[0], SimpleNamespace):
+            return SimpleNamespace(**{k: merge([getattr(x, k) for x in outputs])
+                                      for k in vars(outputs[0])})
+        return tree_map(combine, *outputs)
+
+    telemetry = [[] for _ in sides]
+
+    def policy(*args, **kwargs):
+        outputs = []
+        for side, tensors in enumerate(values):
+            parameters = dict(zip(('residual_head.weight', 'residual_head.bias'), tensors))
+            def call(*a, **kw):
+                return torch.func.functional_call(trainer.policy, parameters, a, kw)
+            outputs.append(side_call(call, args, kwargs, side))
+            telemetry[side].append(outputs[-1])
+        return merge(outputs)
+
+    def grouped(function):
+        return lambda *a, **kw: merge([side_call(function, a, kw, s) for s in range(len(sides))])
+
+    hooks = dict(_eslong_policy_call=policy, _eslong_group_call=grouped(trainer.group_encoder),
+                 _eslong_observe_call=grouped(trainer.observation_builder),
+                 _eslong_row_local=grouped, _eslong_side_policy_outputs=telemetry)
+    saved = {key: getattr(trainer, key, None) for key in hooks}
+    trainer.__dict__.update(hooks)
+    try:
+        yield
+    finally:
+        for key, value in saved.items():
+            if value is None:
+                delattr(trainer, key)
+            else:
+                setattr(trainer, key, value)
+
+
+def split_outputs(result, variants, selections, telemetry=None):
+    """Restore original row layout BEFORE gated300 sums, references or quantiles."""
+    from torch.utils._pytree import tree_map
+    total = result['rewards'].shape[-1]
+    outputs = []
+    for side, rows in enumerate(selections):
+        def select(axis):
+            return lambda x: (x.index_select(axis, rows.to(x.device))
+                if torch.is_tensor(x) and x.ndim > axis and x.shape[axis] == total else x)
+        out = {}
+        for name, value in result.items():
+            if name == 'variants':
+                out[name] = variants
+            elif name == 'states':
+                out[name] = tree_map(select(0), value)
+            elif name == 'disagreement':
+                out[name] = tree_map(select(1), value)
+            else:
+                out[name] = tree_map(select(2), value)
+        if out.get('entrance_zone') is not None:
+            cav = torch.stack([torch.stack([s['present'] & s['is_cav'] for s in states[:-1]])
+                               for states in out['states']])[..., :out['n_base'], :]
+            zone = out['entrance_zone'][..., :out['n_base'], :]
+            out['entrance_zone_fraction'] = float((zone & cav).sum()) / max(1, int(cav.sum()))
+        if telemetry is not None:
+            # Shared physical reference rows still have SIDE-SPECIFIC unused
+            # actor predictions in diagnostics. Reconstruct those exact bytes;
+            # only the state/WM physics of an actor-free row may be shared.
+            commands = torch.stack([p[0] for p in telemetry[side]]).unsqueeze(0).detach()
+            if 'antiexploit_commands' in out:
+                out['antiexploit_commands']['deviation'] = commands
+            if 'action_audit' in out:
+                out['action_audit']['audit_action'] = commands
+                out['action_audit']['audit_log_prob'] = torch.stack([
+                    getattr(p, 'log_prob_accel', p[1]) for p in telemetry[side]]).unsqueeze(0).detach()
+        outputs.append(out)
+    return outputs
+
+
+@profiled('es_forward_stacked')
+def forward_stacked_task(trainer, common, task, *, full_output=False):
+    """S head perturbations, one future, original starts/tape and side-local credit."""
+    from .dreamer import _restore_rng
+    from .imagination_memory import _RandomTape
+    sides, future = task
+    batch, kwargs, cfg = (common[k] for k in ('batch', 'kwargs', 'cfg'))
+    variants = kwargs['variants']
+    total = batch.state['s_m'].shape[0]
+    # Sharing native rows is exact at the execution level for residual actors;
+    # arbitrary user policies may couple their rows, so retain their full layout.
+    share = bool(getattr(trainer.policy, 'residual_on_native', False))
+    stacked, rows, owners, selections = stacked_variants(variants, len(sides), share_reference=share)
+    tape = future_tape(common['tape'], common['cache'], future)
+    replay = _RandomTape(tape, (torch.arange(total), rows, total, variants.n_rows))
+    _restore_rng(common['before'], trainer.device)
+    with torch.no_grad(), row_heads(trainer, common, sides, selections, owners), replay:
+        outputs = trainer.imagine(batch, **{**kwargs, 'variants': stacked},
+            _memory_replay=True, _memory_config=cfg, _memory_full_batch=batch,
+            _memory_future_cache={'items': []}, _memory_collect_future=future,
+            _eslong_stack=(variants, selections))
+    if replay.position != len(tape):
+        raise RuntimeError('ES stacked antithetic CRN trace shortened')
+    if full_output:
+        return outputs
+    return [dict(samples=out['gated300_long_difference'].detach().cpu(),
+                 actions=out['actions'][:, 0, :total].detach().cpu(),
+                 mask=out['action_mask'][:, 0, :total].detach().cpu()) for out in outputs]
+
+
 @profiled('es_forward')
-def forward_task(trainer, common, task):
+def forward_task(trainer, common, task, *, full_output=False):
     """One perturbed future on the existing process-isolated forward workers."""
     from .dreamer import _restore_rng
     from .imagination_memory import _RandomTape
@@ -132,6 +325,8 @@ def forward_task(trainer, common, task):
             _memory_full_batch=batch, _memory_future_cache=cache, _memory_collect_future=future)
     if replay.position != len(tape):
         raise RuntimeError('ES antithetic CRN trace shortened')
+    if full_output:
+        return out
     # Transport only the credit and t0 executions; never keep M rollout caches.
     return dict(samples=out['gated300_long_difference'].detach().cpu(),
                 actions=out['actions'][:, 0, :total].detach().cpu(),
@@ -186,7 +381,12 @@ def gradient(trainer, imagined, weights, scale):
     common['cache'] = dict(tape_prefix=context['cache']['tape_prefix'],
         items=[dict(tape_end=item['tape_end']) for item in context['cache']['items']])
     count = len(context['cache']['items'])
-    tasks = [(i, sign, k) for i in range(m) for sign in (1, -1) for k in range(count)]
+    sides = [(i, sign) for i in range(m) for sign in (1, -1)]
+    stacking = stack_sides()
+    common['eslong_stack'] = bool(stacking)
+    tasks = ([(sides[start:start + stacking], k)
+              for start in range(0, len(sides), stacking) for k in range(count)] if stacking else
+             [(i, sign, k) for i, sign in sides for k in range(count)])
     coefficients = row_coefficients(imagined['variants'], weights,
         imagined['returns'].shape[-1], imagined['n_base'])
     after = _rng_state(trainer.device)
@@ -197,7 +397,18 @@ def gradient(trainer, imagined, weights, scale):
         pooled = trainer.device.type == 'cuda' or parallel_forward()
         manager = FuturePool(trainer, common) if pooled else nullcontext()
         with manager as pool:
-            results = iter(pool.map(tasks) if pool else (forward_task(trainer, common, t) for t in tasks))
+            function = forward_stacked_task if stacking else forward_task
+            results = pool.map(tasks) if pool else (function(trainer, common, t) for t in tasks)
+            if stacking:
+                # The pool yields groups in side-group/future order. Reconstruct
+                # the original direction/sign/future ordering without reductions.
+                groups, ordered = iter(results), []
+                for start in range(0, len(sides), stacking):
+                    futures = [next(groups) for _ in range(count)]
+                    ordered.extend(futures[k][s] for s in range(len(futures[0])) for k in range(count))
+                results = iter(ordered)
+            else:
+                results = iter(results)
             for _ in range(m):
                 sides = [[next(results) for _ in range(count)] for _ in range(2)]
                 samples = [torch.cat([r['samples'] for r in side]) for side in sides]
@@ -226,6 +437,8 @@ def gradient(trainer, imagined, weights, scale):
         eslong_perturbed_forwards=2 * m * count, eslong_forwards_per_update=(1 + 2 * m) * count,
         eslong_forward_workers=worker_count('forward') if pooled else 0,
         eslong_loss_differences=[float(d) for d in deltas])
+    if stacking:
+        metrics.update(eslong_stack_sides=stacking, eslong_stacked_forward_calls=len(tasks))
     return grads, metrics
 
 
