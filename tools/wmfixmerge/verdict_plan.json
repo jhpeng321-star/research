@@ -9,7 +9,9 @@
   "validation_real": "/root/autodl-tmp/c4/wmrequal3_20261030/REAL.json",
   "zero_reference": "/root/autodl-tmp/c4/wmfixmerge20261031/train/step_000000.pt",
   "accept_panel": "/root/autodl-tmp/c4/wmfixmerge20261031/ACCEPT_PANEL.json",
-  "accept_roots": [],
+  "accept_roots": [
+    "/root/autodl-tmp/c4/e3data"
+  ],
   "stages": {
     "A": {
       "adapter": "corrected_validation"
