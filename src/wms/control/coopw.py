@@ -516,6 +516,69 @@ class TiltSampler:
 
 
 # ------------------------------------------------------------------ term decomposition / audit
+def headroom_features(state, cfg, horizon_s, *, entry_queue=None, lane_rules=None):
+    """Initial observable pressure only; no metadata, futures, driver truth or outcomes.
+
+    Cells near the fixed merge interval or reaching it at current speed within
+    the training horizon contribute continuous speed deficit. No new threshold.
+    """
+    from .contract import SPEED_LIMIT_MPS
+    from .rsu_field import CELLS, build_rsu_field
+    features = start_features(state, cfg, horizon_s, entry_queue=entry_queue, lane_rules=lane_rules)
+    field_ = build_rsu_field(state)[0]
+    reachable = field_.new_tensor([lo <= MERGE_S1_M for lane, lo, hi in CELLS]).bool()
+    hi = field_.new_tensor([hi for lane, lo, hi in CELLS])
+    reachable &= hi + field_[:, 1] * float(horizon_s) >= MERGE_S0_M
+    main = field_.new_tensor([lane != RAMP_LANE for lane, lo, hi in CELLS]).bool()
+    cells = reachable & main & field_[:, 4].bool()
+    deficit = (1. - field_[:, 1] / SPEED_LIMIT_MPS).clamp(0., 1.)
+    onset = float(deficit[cells].mean()) if bool(cells.any()) else 0.
+    ramp = ~main
+    ramp_queue = float((field_[:, 3] * ramp).sum() / ramp.sum().clamp_min(1))
+    if entry_queue is not None and entry_queue.numel() >= 2:
+        backlog = float(entry_queue.reshape(-1)[1].clamp_min(0.))
+        ramp_queue = max(ramp_queue, backlog / (1. + backlog))
+    group = multi_cav_flags(state, cfg, horizon_s)['group']
+    pressure = 1. - (1. - onset) * (1. - ramp_queue)
+    features.update(headroom=float(group) * pressure, merge_speed_deficit=onset,
+                    ramp_queue_pressure=ramp_queue)
+    return features
+
+
+class HeadroomSampler(TiltSampler):
+    """Opt-in weight 1+headroom (1..2), on the existing start_focus proposal.
+
+    At most 2^-max_tries fallback probability; p/q is a running estimate.
+    """
+    def __init__(self):
+        super().__init__({'congested': 1.})
+
+    def multiplier(self, features):
+        return 1. + float(features['headroom'])
+
+    def draw(self, sampler, batch_size, device, features_fn, *, max_tries, generator):
+        captured = {}
+        def features(batch):
+            captured.update(features_fn(batch))
+            return captured
+        batch, receipt = super().draw(sampler, batch_size, device, features,
+                                     max_tries=max_tries, generator=generator)
+        receipt.update(sampler='observable_headroom/1',
+            headroom=captured['headroom'], merge_speed_deficit=captured['merge_speed_deficit'],
+            ramp_queue_pressure=captured['ramp_queue_pressure'], max_multiplier=2.,
+            fallback_probability_upper=2. ** -max(1, int(max_tries)),
+            importance_weight_is_running_estimate=True)
+        return batch, receipt
+
+    def state_dict(self):
+        return dict(super().state_dict(), headroom_starts=True)
+
+    def load_state_dict(self, state):
+        if state.get('headroom_starts') is True:
+            super().load_state_dict(state)
+
+
+# ------------------------------------------------------------------ term decomposition / audit
 def term_coefficients(variants: Optional[Variants], n_rows: int, n_starts: int, *, device=None,
                       dtype=torch.float32) -> dict:
     """Unit-weight row-coefficient vector of each objective term.  ``row_coefficients`` is linear

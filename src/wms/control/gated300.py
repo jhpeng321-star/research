@@ -34,6 +34,8 @@ class LongCreditConfig:
     estimator: str = 'pathwise'
     es_directions: int = 2
     es_sigma: float = 0.  # Auto: local command RMS matches current additive exploration std.
+    ctrl0_reference: bool = False
+    k16: bool = False  # 300 s only; shared trajectory also supplies K16 dense prefixes.
 
     def __post_init__(self):
         if self.estimator not in ('pathwise', 'antithetic'):
@@ -45,6 +47,8 @@ class LongCreditConfig:
             raise ValueError('long_credit.es_sigma must be finite and nonnegative')
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')
+        if type(self.ctrl0_reference) is not bool or type(self.k16) is not bool:
+            raise ValueError('long_credit.ctrl0_reference and k16 must be boolean')
         if self.mode not in ('cct1', 'gain_only'):
             raise ValueError('long_credit.mode must be cct1 or gain_only')
         if not isinstance(self.cct1_file, str) or not isinstance(self.cct2_file, str):
@@ -149,6 +153,9 @@ def install(trainer, section, wm_sha256s):
                 receipt['reason'] = 'missing CCT-1 file'
         else:
             receipt['reason'] = 'missing CCT-1 file'
+    if cfg.k16 and receipt['H_long']:
+        if receipt['H_long'] != 300 or trainer.config.native_anchor or trainer.config.exploit_ensemble_pessimism:
+            raise ValueError('K16 requires 300s single-WM credit without fitted K8 anchor/ensemble pessimism')
     trainer.gated300 = receipt
     return receipt
 
@@ -166,16 +173,68 @@ def requested_rollout(trainer):
                                or getattr(trainer, '_gated300_scoring', False))
 
 
+def uses_ctrl0(trainer):
+    return bool(getattr(trainer, 'gated300', {}).get('config', {}).get('ctrl0_reference', False))
+
+
+def measures_ctrl0(trainer):
+    from .execution import mode
+    return ((requested_rollout(trainer) and uses_ctrl0(trainer))
+            or (getattr(trainer, '_gated300_scoring', False)
+                and getattr(trainer.policy, 'residual_on_native', False) and mode() == 2))
+
+
+def score_position(trainer):
+    """Frozen curriculum position for one measurement phase, training stays live."""
+    live = trainer._curriculum_position(advance=False)
+    if getattr(trainer, '_gated300_scoring', False):
+        if not hasattr(trainer, '_gatemeas_score_position'):
+            trainer._gatemeas_score_position = live
+        return trainer._gatemeas_score_position
+    return live
+
+
+def add_ctrl0_reference(variants):
+    """Public S-ESLONG hook: add one zero-residual CRN row per start, without RNG use.
+
+    Dense base rows stay learned-native. Pass the returned variants to imagine;
+    reference_index gives the paired row for every treatment, including entrants.
+    """
+    from .counterfactual import KIND_CTRL0
+    if variants is None:
+        raise ValueError('CTRL0 reference needs counterfactual variants')
+    if bool((variants.row_kind == KIND_CTRL0).any()):
+        reference_index(variants)
+        return variants
+    n = variants.n_starts
+    return replace(variants,
+        row_start=torch.cat((variants.row_start, torch.arange(n, device=variants.row_start.device))),
+        act_mask=torch.cat((variants.act_mask, torch.zeros_like(variants.act_mask[:n]))),
+        row_kind=torch.cat((variants.row_kind, variants.row_kind.new_full((n,), KIND_CTRL0))))
+
+
+def reference_index(variants):
+    """Public S-ESLONG hook: CTRL0 index per row, for detached paired accrued credit."""
+    from .counterfactual import KIND_CTRL0
+    refs = {int(variants.row_start[r]): r for r in
+            torch.nonzero(variants.row_kind == KIND_CTRL0).flatten().tolist()}
+    if (set(refs) != set(range(variants.n_starts))
+            or int((variants.row_kind == KIND_CTRL0).sum()) != variants.n_starts):
+        raise ValueError('CTRL0 reference needs exactly one row for every start')
+    return variants.row_start.new_tensor([refs[int(s)] for s in variants.row_start])
+
+
 def rollout_config(trainer, cfg):
     if not requested_rollout(trainer):
         return cfg
     if cfg.horizon * STEP_S > 90:
         raise ValueError('gated300 dense horizon must be <= trusted 90s')
     return replace(cfg, horizon=int(trainer.gated300['H_long'] / STEP_S),
-                   future_samples=K, uncertainty_weight=0.)
+                   future_samples=16 if trainer.gated300['config'].get('k16', False) else K,
+                   uncertainty_weight=0.)
 
 
-def gate(improvement, sigma, eligible=None, gain_only=False):
+def gate(improvement, sigma, eligible=None, gain_only=False, *, sample_count=K):
     """K x ... paired improvements = -dJ. Gate decisions never carry a gradient.
 
     Improvement needs q10>0; harm needs q90<0. A negative coefficient does not
@@ -183,8 +242,8 @@ def gate(improvement, sigma, eligible=None, gain_only=False):
     Gain-only mode (02:25 CCT-2) keeps only rows whose median itself predicts
     improvement beyond 2*sigma with q10>0: harm and below-margin rows are OFF.
     """
-    if improvement.shape[0] != K:
-        raise ValueError('confidence gate requires K=8 paired samples')
+    if sample_count not in (K, 16) or improvement.shape[0] != sample_count:
+        raise ValueError(f'confidence gate requires K={sample_count} paired samples (8 default, 16 opt-in)')
     samples = improvement.detach()
     median = torch.quantile(samples, .5, dim=0)
     q10 = torch.quantile(samples, QUANTILE, dim=0)
@@ -213,8 +272,14 @@ def prefix(trainer, imagined, dense_steps):
     variants = imagined['variants']
     if variants is None or set(variants.base_row) != set(range(imagined['n_base'])):
         raise ValueError('long credit needs a paired native row for every start')
-    base = baseline_index(variants, rewards.shape[-1], device=rewards.device)
+    base = (reference_index(variants) if uses_ctrl0(trainer) else
+            baseline_index(variants, rewards.shape[-1], device=rewards.device))
     totals = rewards.sum(1, keepdim=True)
+    if uses_ctrl0(trainer):
+        # Same contiguous reduction geometry for treatment/reference rows;
+        # storage alignment must not turn identical trajectories into fake gain.
+        totals = torch.stack([rewards[..., r].contiguous().sum(1, keepdim=True)
+                              for r in range(rewards.shape[-1])], -1)
     long_difference = totals - totals[..., base].detach()
     # S-GATEMEAS seam: return reference totals with identical K/time/row geometry.
     reference = getattr(trainer, '_long_credit_reference', None)
@@ -227,6 +292,10 @@ def prefix(trainer, imagined, dense_steps):
     components = imagined['components']
     long_cost = components['delay'] + components.get('source_wait', 0.)
     out['gated300_long_J'] = long_cost.detach().sum(1).mean(0)
+    if uses_ctrl0(trainer) or getattr(trainer, '_gated300_scoring', False):
+        out['gated300_long_J'] = torch.stack([
+            long_cost[..., r].detach().contiguous().sum(1).mean(0)
+            for r in range(long_cost.shape[-1])])
     for name in ('rewards', 'costs', 'entropy', 'actions', 'action_mask', 'disagreement',
                  'entrance_zone', 'values', 'returns'):
         value = out.get(name)
@@ -242,6 +311,10 @@ def prefix(trainer, imagined, dense_steps):
     out.update(gated300_long_difference=long_difference,
                gated300_horizon_s=trainer.gated300['H_long'],
                imagination_horizon_s=dense_steps * STEP_S)
+    if uses_ctrl0(trainer):
+        out['gated300_reference'] = 'CTRL0'
+    if trainer.gated300['config'].get('k16', False):
+        out['gated300_futures'] = 16
     return out
 
 
@@ -249,9 +322,11 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
     samples = imagined['gated300_long_difference']
     eligible = coefficients != 0
     gated, on, agreement, median = gate(samples, SIGMA[imagined['gated300_horizon_s']],
-        eligible, gain_only=trainer.gated300['config'].get('mode') == 'gain_only')
+        eligible, gain_only=trainer.gated300['config'].get('mode') == 'gain_only',
+        sample_count=imagined.get('gated300_futures', K))
     # Reuse the signed JOINT q10 selector, including covariance/negative team rows.
-    selected, _ = tail_credit(imagined, gated, coefficients, enabled=True)
+    selected, _ = tail_credit(imagined, gated, coefficients, enabled=True,
+                              sample_count=imagined.get('gated300_futures', K))
     weight = trainer.gated300['config']['w_long']
     long_value = weight * (selected.mean((0, 1)) * coefficients).sum()
     dense_value = (dense_difference.mean((0, 1)) * coefficients).sum().detach()
@@ -275,12 +350,31 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
         gated300_long_credit_share=float(long_mass / (dense_mass + long_mass).clamp_min(1e-30)),
         gated300_dense_credit=float(dense_value), gated300_long_credit=float(long_value.detach()),
         gated300_w_long=weight)
+    if 'gated300_reference' in imagined:
+        metrics['gated300_reference'] = imagined['gated300_reference']
+    if 'gated300_futures' in imagined:
+        metrics['gated300_futures'] = imagined['gated300_futures']
     term = -long_value / scale
     if samples.requires_grad:
         # Stops at the replay OUTPUT: no WM replay or parameter VJP here.
         vector, = torch.autograd.grad(term, samples, retain_graph=True)
         metrics['gated300_long_output_cotangent'] = vector.detach().cpu().tolist()
     return term, metrics
+
+
+def cost_estimate(n_rows, n_starts=1, *, ctrl0_reference=False, k16=False):
+    """Arithmetic planning receipt, not a measured runtime or uncertainty calibration."""
+    if n_rows < 1 or n_starts < 1:
+        raise ValueError('cost estimate needs positive row/start counts')
+    rows = n_rows + (n_starts if ctrl0_reference else 0)
+    k = 16 if k16 else K
+    factor = rows / n_rows * k / K
+    return dict(rows=rows, futures=k, horizon_s=300,
+        forward_row_sim_seconds=rows * k * 300,
+        forward_and_host_cache_factor_vs_native_K8=factor,
+        dense_prefix_futures=k, per_future_live_graph_factor=rows / n_rows,
+        full_replay_upper_factor=factor, measured=False,
+        note='zero-VJP skips can reduce replay; shared WM bias and sigma_300 remain unchanged')
 
 
 @contextmanager

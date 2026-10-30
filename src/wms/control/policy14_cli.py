@@ -122,8 +122,11 @@ def load_gate_panel(path, val):
 
 def score_gate_panel(trainer, val, panel, device):
     """Independent (critic-free) J per panel start; independent_score restores every RNG."""
-    return [independent_score(trainer, val._batch([val._load(int(s["index"]))], device))["J"]
-            for s in panel["starts"]]
+    scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device))
+              for s in panel["starts"]]
+    if scores and 'composite_gated_score' in scores[0]:
+        trainer._gatemeas_panel_scores = scores
+    return [score['J'] for score in scores]
 
 
 def score_native_panel(trainer, val, panel, device):
@@ -534,6 +537,11 @@ def main(argv=None):
             else:
                 configure(trainer, prepared, raw, output)
         # Independent development starts and paired draws, scored without a critic tail.
+        if recovery and long_section.get('score_training_horizon'):
+            frozen = recovery['prior'].get('frozen_scoring_baseline')
+            if not frozen or frozen['long_credit'] != trainer.gated300['config']:
+                raise ValueError('matched scoring requires a new phase and new frozen baseline')
+            trainer._gatemeas_score_position = frozen['scoring_phase_position']
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
         initial_score = before
@@ -563,12 +571,29 @@ def main(argv=None):
                                      "sha256": hashlib.sha256(checked_path(args.gate_panel).read_bytes()).hexdigest(),
                                       "J_before": panel_before}
         if recovery:
+            if (long_section.get('score_training_horizon') and
+                    not recovery['prior'].get('frozen_scoring_baseline')):
+                raise ValueError('matched scoring requires a new phase and new frozen baseline')
             summary['gate_panel'] = recovery['prior']['gate_panel']
             # A saved checkpoint can precede the original phase-update10 gate.
             # Replaying that gate must still compare against the original phase start.
             panel_before = list(summary['gate_panel']['J_before'])
             (output / 'gate_panel_result.json').write_text(json.dumps(summary['gate_panel'], indent=1))
             (output / 'native_curve.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in native_curve))
+        if long_section.get('score_training_horizon'):
+            baseline = dict(schema='gatemeas_phase_baseline/1', update=trainer.update_count,
+                scoring_phase_position=trainer._gatemeas_score_position,
+                world_model_ids=list(trainer.world_model_ids),
+                long_credit=trainer.gated300['config'], independent=initial_score,
+                panel=getattr(trainer, '_gatemeas_panel_scores', None),
+                panel_sha256=summary.get('gate_panel', {}).get('sha256'),
+                comparison='composite J against this phase baseline; raw CTRL0 contrasts separate')
+            if recovery:
+                baseline = recovery['prior']['frozen_scoring_baseline']
+                trainer._gatemeas_score_position = baseline['scoring_phase_position']
+            summary['frozen_scoring_baseline'] = baseline
+            (output / 'frozen_scoring_baseline.json').write_text(
+                json.dumps(baseline, indent=1, allow_nan=False), encoding='utf-8')
         long_boundary = None
         if args.looplong_boundary:
             from .looplong import read_boundary, configure
@@ -601,7 +626,10 @@ def main(argv=None):
             summary['start_focus'] = trainer.start_states.configure_focus_cells(
                 float(raw['data']['focus_cell_fraction']))
             # MAIN's exact cell mixture supersedes the inherited rejection tilt.
-            trainer._tilt_sampler = None
+            if not trainer.counterfactual.headroom_starts:
+                trainer._tilt_sampler = None
+            else:
+                summary['start_focus']['headroom_tilt'] = 'observable_headroom/1; weight=1+headroom in [1,2]'
         summary['effective_config_before_updates'] = asdict(trainer.config)
         summary['effective_reward_before_updates'] = asdict(trainer.reward_weights)
         if args.new_phase and (trainer.config != cfg or
@@ -615,6 +643,8 @@ def main(argv=None):
                 from .looplong import maybe_swap
                 swapped = maybe_swap(trainer, args.wm_swap_file, long_boundary, raw, output, load_members)
                 if swapped:
+                    if hasattr(trainer, '_gatemeas_score_position'):
+                        del trainer._gatemeas_score_position
                     long_boundary, receipts, event = swapped
                     models = trainer.world_models
                     # Scores from different WMs cannot compete for selection.
@@ -630,6 +660,14 @@ def main(argv=None):
                     before = independent_score(trainer, rescore_batch)
                     initial_score = before
                     summary.setdefault('wm_swaps', []).append(event)
+                    if long_section.get('score_training_horizon'):
+                        baseline = dict(summary['frozen_scoring_baseline'],
+                            update=trainer.update_count, scoring_phase_position=trainer._gatemeas_score_position,
+                            world_model_ids=list(trainer.world_model_ids), independent=initial_score,
+                            panel=getattr(trainer, '_gatemeas_panel_scores', None))
+                        summary['frozen_scoring_baseline'] = baseline
+                        with (output / 'scoring_phase_swaps.jsonl').open('a', encoding='utf-8') as stream:
+                            stream.write(json.dumps(baseline, allow_nan=False) + '\n')
             metrics = trainer.update()
             if recovery and recovery.get('checkpoint_every_update') and args.device.startswith('cuda'):
                 metrics['cuda_peak_allocated_bytes'] = torch.cuda.max_memory_allocated()
@@ -681,7 +719,10 @@ def main(argv=None):
                         mean_J_after=sum(panel_after) / len(deltas), mean_delta=mean_delta,
                          n_improved=sum(d < 0 for d in deltas), update=trainer.update_count,
                         phase_update=gate_position,
-                        passed=not gate_failed)
+                         passed=not gate_failed)
+                    if long_section.get('score_training_horizon'):
+                        summary['gate_panel']['matched_horizon_scores_after'] = trainer._gatemeas_panel_scores
+                        summary['gate_panel']['matched_horizon_scores_before'] = summary['frozen_scoring_baseline']['panel']
                     (output / "gate_panel_result.json").write_text(
                         json.dumps(summary["gate_panel"], indent=1, allow_nan=False), encoding="utf-8")
                 else:

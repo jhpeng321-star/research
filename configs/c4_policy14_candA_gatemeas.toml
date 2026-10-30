@@ -1,0 +1,25 @@
+# S-GATEMEAS opt-in new phase; port of DEADZONE2's matched-horizon preset.
+# Same inheritance depth as longgrad_skip (loader has a depth cap).
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.50
+
+[trainer]
+long_grad_balance = true
+long_grad_reset_actor_adam = true
+imagination_skip_zero_vjp = true
+imagination_replay_dense_prefix = true
+
+[policy14]
+zero_residual_output = false
+
+[long_credit]
+ctrl0_reference = true
+score_training_horizon = true
+# Separate cost/noise ablation: explicitly enable to double the 300 s futures.
+k16 = false
+
+[counterfactual]
+# Keep the registered label-only start_focus proposal; apply observable pressure.
+headroom_starts = true

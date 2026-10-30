@@ -47,6 +47,7 @@ from .contract import ACCEL_MIN_MPS2, MERGE_S1_M, NATIVE_CAV_ACCEL_MAX_MPS2, SPE
 
 KIND_ALL, KIND_BASE, KIND_INDIVIDUAL, KIND_GROUP, KIND_FLIP = 0, 1, 2, 3, 4
 KIND_NAMES = ("all", "base", "individual", "group", "flip")
+KIND_CTRL0 = 5  # Optional measurement row; never a dense-credit baseline.
 WEIGHT_NAMES = ("individual", "group", "coop", "team", "all")
 
 
@@ -94,6 +95,7 @@ class CounterfactualConfig:
     # with probability prod(1 + w_f f) / max); None = legacy ``group_state_fraction`` path.
     # Needs group_state_fraction = 0.
     start_tilt: Optional[dict] = None
+    headroom_starts: bool = False  # Observable initial-state tilt on top of start_focus.
     # Validation starts from the target (uniform-window) distribution instead of oversampled.
     validation_uniform: bool = False
     # Per-update coverage / oversampling log, and the unit-term gradient-norm audit cadence.
@@ -149,7 +151,7 @@ class CounterfactualConfig:
             if float(self.group_state_fraction) != 0.0:
                 raise ValueError("start_tilt needs group_state_fraction = 0")
             self.start_tilt = {str(k): float(v) for k, v in dict(self.start_tilt).items()}
-        for name in ("validation_uniform", "coop_audit"):
+        for name in ("validation_uniform", "coop_audit", "headroom_starts"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         value = self.term_grad_audit_every

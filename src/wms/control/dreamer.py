@@ -233,7 +233,7 @@ class DreamerConfig:
         if self.exploit_stop_on_conflict and not self.exploit_ensemble_pessimism:
             raise ValueError('exploit_stop_on_conflict requires ensemble pessimism')
         if self.pessimistic_credit or self.native_anchor:
-            if self.future_samples != 8:
+            if self.future_samples not in (8, 16):
                 raise ValueError('anti-exploit requires future_samples=8')
         if self.native_anchor and (not isinstance(self.native_anchor_calibration, str)
                                    or not self.native_anchor_calibration):
@@ -826,6 +826,9 @@ class DreamerTrainer:
         if self.counterfactual.enabled and self.counterfactual.start_tilt is not None:
             from .coopw import TiltSampler
             self._tilt_sampler = TiltSampler(self.counterfactual.start_tilt)
+        if self.counterfactual.enabled and self.counterfactual.headroom_starts:
+            from .coopw import HeadroomSampler
+            self._tilt_sampler = HeadroomSampler()
 
     def _check_real_return_provider(self, config):
         if self.real_return_provider is not None and not callable(self.real_return_provider):
@@ -919,7 +922,8 @@ class DreamerTrainer:
             cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
             if not bool((cav_count * 10 <= present.sum(-1)).any()):
                 h = self.horizon_curriculum
-                seconds = h.horizons_s[h.stage(self._curriculum_position(advance=False))]
+                from .gated300 import score_position
+                seconds = h.horizons_s[h.stage(score_position(self))]
                 steps = int(round(seconds / (STEPS_PER_CONTROL * PHYSICS_DT_S)))
                 if steps > cfg.horizon:
                     cfg = replace(cfg, horizon=steps)
@@ -976,6 +980,11 @@ class DreamerTrainer:
         cfg = _memory_config or self._imagination_config(batch)
         from . import gated300
         gated_rollout = gated300.requested_rollout(self)
+        if gated300.measures_ctrl0(self):
+            from .execution import mode
+            if mode() != 2 or not getattr(self.policy, 'residual_on_native', False):
+                raise ValueError('CTRL0 reference requires mode-2 native-residual execution')
+            variants = gated300.add_ctrl0_reference(variants)
         dense_steps = self._imagination_config(batch).horizon if gated_rollout else cfg.horizon
         if _memory_config is None:
             cfg = gated300.rollout_config(self, cfg)
@@ -1196,6 +1205,13 @@ class DreamerTrainer:
             policy_proxy.accel_max = policy_max
             policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
             policy_proxy.residual_reference = getattr(self.policy, "residual_reference", "base")
+            if gated300.measures_ctrl0(self):
+                from .counterfactual import KIND_CTRL0, KIND_BASE
+                # With CTRL0 credit, a non-intervened CAV (including an entrant)
+                # means residual zero under the same executor, not native release.
+                # The explicit dense learned-native baseline row is retained.
+                policy_proxy.ctrl0_rows = (variants.row_kind != KIND_BASE if
+                    gated_rollout and gated300.uses_ctrl0(self) else variants.row_kind == KIND_CTRL0)
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()
@@ -1889,7 +1905,14 @@ class DreamerTrainer:
                 state = {k: v[:1] for k, v in batch.state.items()
                          if torch.is_tensor(v) and v.ndim >= 1 and v.shape[0] == batch.state["s_m"].shape[0]}
                 queue = batch.entry_queue[0] if batch.entry_queue is not None else None
-                return start_features(state, cf, horizon_s, entry_queue=queue,
+                feature_fn = start_features
+                if cf.headroom_starts:
+                    from .coopw import headroom_features
+                    feature_fn = headroom_features
+                    resolved = self._imagination_config(batch).horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+                else:
+                    resolved = horizon_s
+                return feature_fn(state, cf, resolved, entry_queue=queue,
                                       lane_rules=self.lane_rules)
             generator = torch.Generator().manual_seed(2_000_003 * (self.update_count + 1))
             batch, self._last_start_info = self._tilt_sampler.draw(

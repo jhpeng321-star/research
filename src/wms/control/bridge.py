@@ -290,6 +290,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             from .execution import executed_residual
             from .continuous import project_native
             native_executed = project_native(state, baseline)
+            ctrl0_rows = getattr(policy, 'ctrl0_rows', None)
+            if ctrl0_rows is not None:
+                # Applies to every present CAV, including new entrants, on this row.
+                # Same inferred cap/base/lane law as the actor; no learned-native release.
+                native_executed = torch.where(ctrl0_rows.to(mask.device)[:, None],
+                    executed_residual(state, torch.zeros_like(held), native_executed,
+                                      ACCEL_MIN_MPS2, policy_max), native_executed)
             executed = torch.where(acting, executed_residual(
                 state, held, native_executed, ACCEL_MIN_MPS2, policy_max,
                 residual_reference=residual_reference), native_executed)
