@@ -101,3 +101,29 @@
   arrays, anchor_scales discharge 104.553/road 5590.36, `ledger_checked:false`),
   `verify()` PASS on box; SHA256 `7bbd41f380b481858f5a2f07d08326a6cfafe899ad7425a5c55403e90f7ca572`.
 - Corrected report copied to the box (`6a692d83...`, byte-identical) for feasibility.
+
+## Zero-head panel incident + producer binding (resume session, 06:30-09:00)
+- PID 82309 (panel, code cfce510d, cap 0.25=11.8GiB) died at batch 11/36 with CUDA OOM:
+  a transient 10 GB peer plus the B pilot overlapped; its own allocator cap then clipped
+  a 4.09 GiB request. Immutable batches 0-10 retained; relaunched resumable as PID 100400
+  with --memory-fraction 0.35 and code-sha `71a986d7_resume_batch11` (zero-head_panel.py
+  diff vs cfce510d is restart-rename only). Schedule slip ~2 h recorded for MAIN.
+- Latent candidate-config break found and fixed while canary-ing the B worker:
+  `model.merge_response=true` reached `TrainSettings.from_flat` and was refused; the flag
+  is now a carried-and-ignored settings field (precedent: mainline_interaction_residual);
+  flat roundtrip contract unchanged, new assertion added (commit after 71a986d7).
+- B producer path complete and canary-verified end-to-end on gpuR:
+  `quartet_candidate.py` (frozen wm_worker/wm_gpu controllers + candidate tree overlay;
+  FIX bridge overlay for policy_native_lanes only; identical futures/dreamer/start_states
+  bytes verified) ran canary task (7,0) in 2.5 s / 3.5 GiB reserved with the zero-head
+  candidate (sha `c3e3faa4...`, config `a70830b3...`, never a verdict candidate).
+- Real SPEEDHEAD absolutes assembled from per-arm result.json training_objective on both
+  hosts (gpuA ctrl0_r1+mappo, gpuR ctrl0/pi/circles; empty superseded s963880_ctrl0
+  recorded): `real_speedhead.json` 32 arm-worlds, road+source=J exact, every
+  arm-minus-CTRL0 contrast cross-checked against the frozen SPEEDHEAD.md table (<=1 veh-s),
+  sha `68075787bb5ab65c4caf0acde8a0157a7573814d3cb40b14a83abc4e08827127`.
+- Base quartet wm_gpu_host_0230 (64 tasks + COMPLETE/IDENTITY) copied to gpuA
+  `speedhead_base/`; producer_b.py fail-closed checks verified (flag/identity mismatch
+  refused in a dry probe). verdict_plan.json now binds B (69 hash-bound closure files)
+  and C1 (producer_c1.py; cohort/runner remain GPU-host staging gaps and the driver
+  exits 2 with explicit blockers — design line: missing cohort/runtime blocks adoption).
