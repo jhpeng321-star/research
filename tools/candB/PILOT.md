@@ -455,3 +455,22 @@
   `initial_checkpoint=True` recovery, byte-identical baseline copy, exact
   two-file source-drift identity, R4 phase10. Being completed/tested next;
   empty pilot_wmfast_detail.py retained untracked, imported by nothing.
+
+## Owner03:00 retry tooling committed (CPU proof pending on gpuA runtime)
+- Committed retry chain: `pilot_retry.py` (+authority), `pilot_retry_launch.py`
+  (lean launcher specialized to S4 env: ES_STACK_SIDES=4, 1x.75 forward worker,
+  2x.24 VJP slots, PILOT_RETRY_AUTHORITY.json, admission>=46000MiB, no
+  --new-phase), `pilot_retry_supervise.py` (single exclusive dispatch, 600s
+  GPU sampling, own STOP/EXIT receipts, old WMFAST-root incarnation absence
+  asserted before dispatch), `pilot_retry_test.py` + `pilot_retry_cpu.py`
+  (CUDA-hidden harness; asserts return0 before dispatch).
+- CPU contracts include: real zero-progress `load_continuation(
+  initial_checkpoint=True)` (updates==[], saved==start==191 -> remaining150;
+  initial_checkpoint=False refuses), exact-two-file B-L source identity with
+  tamper refusals, launcher/authority S4+owner03:00 binding, zero-progress
+  `last_measured_score` fallback to `independent_score_before`, prepare_base/
+  adapter replacement-target exactness, and a REAL marker-wrapper multi-update
+  regression proving telemetry survives replay release WITHOUT any guard
+  (bitwise losses/grads/Adam/RNG vs bare core).
+- src drift vs the e113760f baseline runtime verified EXACTLY the two repaired
+  files (retry identity precondition).
