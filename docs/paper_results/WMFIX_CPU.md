@@ -87,3 +87,17 @@
 - Final complete verification (resume session): **86 passed**,17.95s over
   wmfixmerge/data/training/admission/contract/verdict/zero_head + entryfix + v9entry
   + v9entry_eval + wmrequal labels. Review-request addendum records items 1-10 status.
+
+## Resume session (06:00-): box preparation and gates
+- S-E3DATA FIT tapes carry NO recorded request ledgers (only v5/pairs300-style corpora
+  do). prepare.py now rebuilds Q0/due by the exact labels.py arithmetic (deterministic
+  request schedule + t300 counter/registry identity) with fail-closed checks: core
+  arrays mandatory, ledger presence corpus-uniform, Q0/rectangle identity vs recorded
+  labels asserted, paired due schedules must match; ledger corpora keep exact-equality
+  cross-checks (commit 6f9a232a; new synthetic test; wmfix set **81 passed** locally).
+- Staged tree synced to gpuA `/root/autodl-tmp/c4/wmfixmerge20261031` (hash-checked;
+  box CPU suite 50 passed, 2 git-history parity tests not runnable outside a repo).
+- `TRAIN_PREPARED.json` regenerated from the 12 FIT seeds (36 labels, 396 hash-bound
+  arrays, anchor_scales discharge 104.553/road 5590.36, `ledger_checked:false`),
+  `verify()` PASS on box; SHA256 `7bbd41f380b481858f5a2f07d08326a6cfafe899ad7425a5c55403e90f7ca572`.
+- Corrected report copied to the box (`6a692d83...`, byte-identical) for feasibility.
