@@ -194,6 +194,8 @@ def main(argv=None):
     parser.add_argument('--paircrit-receipt', default=None)
     parser.add_argument('--paircrit-policy-sha256', default=None)
     parser.add_argument('--looplong-boundary', default=None)
+    parser.add_argument('--rankcheck', default=None,
+                        help='hash-bound exact-objective pre-training ranking receipt')
     parser.add_argument('--wm-swap-file', default=None)
     parser.add_argument('--phase-relative-signal-gate', action='store_true',
                           help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
@@ -211,6 +213,8 @@ def main(argv=None):
         if args.smoke and (args.device != "cpu" or args.max_updates > 3):
             raise ValueError("smoke is CPU-only, at most three updates")
         raw = _read_config(args.config)
+        if raw.get('run', {}).get('rankcheck_required') and not args.rankcheck:
+            raise ValueError('candidate-B training requires --rankcheck before any updates')
         if (args.new_phase and not args.resume) or (args.resume_allow and not args.new_phase):
             raise ValueError('--new-phase requires --resume; --resume-allow requires --new-phase')
         if args.looplong_boundary:
@@ -546,6 +550,16 @@ def main(argv=None):
             if not frozen or frozen['long_credit'] != trainer.gated300['config']:
                 raise ValueError('matched scoring requires a new phase and new frozen baseline')
             trainer._gatemeas_score_position = frozen['scoring_phase_position']
+        if args.rankcheck:
+            from tools.candB.rankcheck import verify_receipt, sha256
+            ranked = json.loads(checked_path(args.rankcheck).read_text(encoding='utf-8'))
+            verify_receipt(ranked, raw, wm=receipts[0]['checkpoint_sha256'],
+                           wm_config=receipts[0]['config_sha256'], trainer=trainer)
+            for key, path in (('boundary_sha256', args.looplong_boundary),
+                              ('pairing_receipt_sha256', args.paircrit_receipt)):
+                if not path or ranked.get(key) != sha256(path):
+                    raise ValueError('ranking launch-input mismatch: '+key)
+            summary['rankcheck_sha256'] = sha256(args.rankcheck)
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
         initial_score = before

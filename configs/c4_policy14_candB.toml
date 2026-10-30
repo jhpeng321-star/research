@@ -2,6 +2,10 @@
 # Inherits the complete candA objective, starts, execution and memory recipe.
 extends = "c4_policy14_candA_longgrad_skip.toml"
 
+[run]
+# Owner 15:00/R2: refuse optimizer entry without the hash-bound ranking receipt.
+rankcheck_required = true
+
 [policy]
 # CAPREL.md: zero head is exactly CTRL0; braking has local authority.
 residual_reference = "ctrl0"
