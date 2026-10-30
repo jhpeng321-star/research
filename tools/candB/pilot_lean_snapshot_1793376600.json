@@ -1,0 +1,143 @@
+{
+ "epoch": 1793376598.756626,
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030",
+ "files": {
+  "GPU.jsonl": "{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793376578.5335195, \"total_MiB\": 49140, \"free_MiB\": 38277, \"used_MiB\": 10234, \"apps\": \"16680, 10224\"}\n",
+  "supervisor.log": "",
+  "trainer.log": "{\n \"label\": \"EXPLORATORY-LEAN\",\n \"source_commit\": \"38c7e22f3f9da3d81026833e3ca3429b6267f330\",\n \"authority_sha256\": \"f3fc51795a94927009dc2d865c2a89c47f0d49b982fd890a40545e96868f84ec\",\n \"recipe\": {\n  \"label\": \"EXPLORATORY-LEAN\",\n  \"owner_amendment\": \"2026-10-30 23:50 MAIN\",\n  \"original_panel_sha256\": \"3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e\",\n  \"panel_starts\": [\n   {\n    \"index\": 39780,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963552m1900p05t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 600,\n     \"world\": \"w963552m1900p05t300\"\n    }\n   },\n   {\n    \"index\": 45082,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963625m1900p10t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 2240,\n     \"world\": \"w963625m1900p10t300\"\n    }\n   },\n   {\n    \"index\": 35565,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963495m2400p20t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 900,\n     \"world\": \"w963495m2400p20t300\"\n    }\n   },\n   {\n    \"index\": 64945,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963904m2400p40t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 1700,\n     \"world\": \"w963904m2400p40t300\"\n    }\n   }\n  ],\n  \"panel_selection\": \"first4 of original ordered16\",\n  \"es_future_indices\": [\n   0,\n   1,\n   2,\n   3\n  ],\n  \"dense_futures\": 8,\n  \"scoring_futures\": 8,\n  \"es_selection\": \"first4 cached ORIGINAL K8 CRN plans; no resampling\",\n  \"environment\": {\n   \"WMS_SPEED_REUSE_PANEL\": \"1\",\n   \"WMS_SPEED_SKIP_GRAD_DIAGNOSTICS\": \"1\",\n   \"WMS_SPEED_PROFILE\": \"1\",\n   \"WMS_SPEED_RESCORE_EVERY\": \"5\",\n   \"WMS_SPEED_PILOT_FORWARD_POOL\": \"1\",\n   \"WMS_SPEED_PARALLEL_FORWARD\": \"1\",\n   \"WMS_SPEED_FORWARD_WORKERS\": \"2\",\n   \"WMS_SPEED_FORWARD_MEMORY_FRACTION\": \".28\",\n   \"WMS_SPEED_FUTURE_BUDGET_CAP\": \".90\"\n  },\n  \"fresh_zero_start\": true,\n  \"phase_update_limit\": 150,\n  \"R4_phase_update\": 10,\n  \"pool_memory_rule\": \"coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)\"\n }\n}\nWARNING: inactive config [horizon] curriculum_updates, entry_pad_max, gate_file, horizons_s: boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused\nWARNING: inactive config [uncertainty] curriculum_updates, future_samples, weights: uncertainty.enabled=false; trainer future_samples is a separate setting\nWARNING: inactive config [lanes] consequence_mask, enabled, secure_gap_hook: native-init uses WM native lane rules\nWARNING: inactive config [policy] init_zero_accel, lane_control: native-init constructs the native residual actor\nWARNING: inactive config [policy14] entropy_decay_on_improvement, entropy_floor, policy_ramp_merge, sampled_marginal_lane_weight: native-init forces native lanes and deterministic residuals (no lane credit/entropy)\nWARNING: inactive config [policy14] critic_value_scale, critic_warmup_updates: long credit disables critic warmup and value updates\nWARNING: inactive config [trainer] real_return_mix: critic step is disabled under long credit\nWARNING: inactive config [paircrit] enabled, warmup_updates: setup may still load artifacts, but its value critic supplies no long-credit update\nWARNING: inactive config [counterfactual] start_tilt: exact focus-cell sampling replaces rejection tilt\nWARNING: inactive config [counterfactual] validation_uniform: policy14 CLI does not call trainer.validate\nWARNING: inactive config [run] seed, updates, validation_batches: CLI --seed/--max-updates take precedence; no trainer.validate call\n[resume-config] {\"approved\": [\"trainer.entrant_learned_mix\"], \"differences\": {\"trainer.entrant_learned_mix\": {\"checkpoint\": false, \"requested\": true}}, \"new_phase\": true}\n[zero-start] {\"schema\": \"zero_residual_output/1\", \"before\": {\"weight_abs_max\": 0.0004859584732912481, \"bias\": [0.0004806678043678403]}, \"adam_state_cleared_tensors\": 0, \"after\": {\"weight_abs_max\": 0.0, \"bias\": [0.0]}}\n/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)\n  kin = torch.as_tensor(np.asarray(corpus.array(\"veh_kin\")[lo:tick + 1], np.float32))\n",
+  "RUN_SUMMARY.json": {
+   "status": "initializing",
+   "label": "EXPLORATORY-LEAN",
+   "deployment_authorized": false,
+   "source_commit": "38c7e22f3f9da3d81026833e3ca3429b6267f330",
+   "input_sha256": {
+    "wm": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "wm_config": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+    "current_policy": "560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c",
+    "current_policy_driver": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "cct2": "f42cce0f8e54c0e640a94f4524c5ecad03fbd105b22079cec79b5fe80d63350c",
+    "horizon_gate": "be0297ab09a988c5ced1a007432effdea36dfb80be4e86b33ac99605824fd152",
+    "boundary": "817e3f6df0c0e9862b644151ec1963aa56b0dbdab80fbb094a2d09efd4807fac",
+    "pairing_receipt": "777e89610c1c2c02586dff5dd8f691e4a6250bb643feb4d8ece91ce73261eba5",
+    "parity": "7cb5c6a7eaf681649b94b4e2b32e4f1af070c0a01d122aacbc8658f111a3b8fe",
+    "real_returns": "1b2d184df0ca9fb1cbbeed53c52dd607130dd3c28f1fa06e46afeca72f52a395",
+    "native_returns": "269b600e9684d7c39f1cf8b5ab4111b86fef216859dd89a742632bb1d0b69ec0",
+    "gate_panel": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e"
+   },
+   "lean_recipe": {
+    "label": "EXPLORATORY-LEAN",
+    "owner_amendment": "2026-10-30 23:50 MAIN",
+    "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+    "panel_starts": [
+     {
+      "index": 39780,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963552m1900p05t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 600,
+       "world": "w963552m1900p05t300"
+      }
+     },
+     {
+      "index": 45082,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963625m1900p10t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 2240,
+       "world": "w963625m1900p10t300"
+      }
+     },
+     {
+      "index": 35565,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963495m2400p20t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 900,
+       "world": "w963495m2400p20t300"
+      }
+     },
+     {
+      "index": 64945,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963904m2400p40t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 1700,
+       "world": "w963904m2400p40t300"
+      }
+     }
+    ],
+    "panel_selection": "first4 of original ordered16",
+    "es_future_indices": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "dense_futures": 8,
+    "scoring_futures": 8,
+    "es_selection": "first4 cached ORIGINAL K8 CRN plans; no resampling",
+    "environment": {
+     "WMS_SPEED_REUSE_PANEL": "1",
+     "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+     "WMS_SPEED_PROFILE": "1",
+     "WMS_SPEED_RESCORE_EVERY": "5",
+     "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+     "WMS_SPEED_PARALLEL_FORWARD": "1",
+     "WMS_SPEED_FORWARD_WORKERS": "2",
+     "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".28",
+     "WMS_SPEED_FUTURE_BUDGET_CAP": ".90"
+    },
+    "fresh_zero_start": true,
+    "phase_update_limit": 150,
+    "R4_phase_update": 10,
+    "pool_memory_rule": "coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)"
+   }
+  }
+ },
+ "owners": {
+  "OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 17854,
+   "start_ticks": "875679254",
+   "runtime": "/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030",
+   "epoch": 1793376578.4153323,
+   "same_incarnation": true,
+   "state": "S",
+   "cpu_ticks": 2,
+   "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean_supervise --root /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030 --python /root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python "
+  },
+  "TRAINER_OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 17859,
+   "start_ticks": "875679269",
+   "command": [
+    "bash",
+    "tools/candB/pilot_lean_launch.sh",
+    "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN",
+    "--exploratory-owner-20261030"
+   ],
+   "output": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN",
+   "epoch": 1793376578.5352132,
+   "admission": {
+    "epoch": 1793376578.5335195,
+    "total_MiB": 49140,
+    "free_MiB": 38277,
+    "used_MiB": 10234,
+    "apps": "16680, 10224"
+   },
+   "same_incarnation": true,
+   "state": "R",
+   "cpu_ticks": 1824,
+   "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN "
+  }
+ },
+ "rows": []
+}

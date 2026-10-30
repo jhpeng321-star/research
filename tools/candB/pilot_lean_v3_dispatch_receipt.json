@@ -1,0 +1,8 @@
+{
+ "action": "dispatch",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030",
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030",
+ "returncode": 0,
+ "stdout": "OWNERSHIP.json {\n \"label\": \"EXPLORATORY-LEAN\",\n \"pid\": 17854,\n \"start_ticks\": \"875679254\",\n \"runtime\": \"/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030\",\n \"epoch\": 1793376578.4153323\n}\nTRAINER_OWNERSHIP.json {\n \"label\": \"EXPLORATORY-LEAN\",\n \"pid\": 17859,\n \"start_ticks\": \"875679269\",\n \"command\": [\n  \"bash\",\n  \"tools/candB/pilot_lean_launch.sh\",\n  \"/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN\",\n  \"--exploratory-owner-20261030\"\n ],\n \"output\": \"/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN\",\n \"epoch\": 1793376578.5352132,\n \"admission\": {\n  \"epoch\": 1793376578.5335195,\n  \"total_MiB\": 49140,\n  \"free_MiB\": 38277,\n  \"used_MiB\": 10234,\n  \"apps\": \"16680, 10224\"\n }\n}\n",
+ "stderr": ""
+}

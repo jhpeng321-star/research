@@ -251,3 +251,22 @@
   perturbed ES and dense replays from the unperturbed executed-stat denominator.
   Worker transport/final acting-mask + lean/R4 contracts **7 CPU PASS**,1 previously
   passed heavy real-update proof deselected,1.30s. No baseline or updates discarded.
+
+## ACTIVE EXPLORATORY-LEAN runtime / fresh launch
+- Source **38c7e22f3f9da3d81026833e3ca3429b6267f330**,2573 committed LF files,
+  gpuA `/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030`.
+- Authority **f3fc51795a94927009dc2d865c2a89c47f0d49b982fd890a40545e96868f84ec**;
+  original WM/config/input/mix/parity/source identity independently PASS, plus
+  bound lean recipe. `pilot_lean_v3_prepare_receipt.json` retains panel identities.
+- **00:09:38 +08 Oct31** owned supervisor17854/start875679254 and trainer
+  **17859/start875679269**; same incarnations independently verified after SSH exit.
+  Admission38277MiB free, peer16680 uses10224MiB, untouched. Resource samples>=600s.
+- Run root `/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030`,
+  trainer output `pilot_EXPLORATORY-LEAN`; own root STOP prevents future work and
+  requests its trainer boundary STOP. Fresh zero output weight/bias exactly0.0,
+  default-OFF explicit authority and lean run-summary stamp verified in live log.
+- Startup and updates1-3 **PENDING** until actual receipts. Durable observer records
+  launch/every update, appends startup/update1-3/every5 to registration, commits
+  actual observations, and emits `pilot_lean_update3_ACK.json` only after phase3.
+- Dense/scoringK8 retained; only antithetic perturbed ES first4 CRNs. No shortened
+  long horizon (300s), new SUMO, rankcheck edit, peer signal, deletion or push.
