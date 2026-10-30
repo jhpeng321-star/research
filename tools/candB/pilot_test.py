@@ -72,3 +72,41 @@ def test_config_identity_refuses_mixed_law_or_k(monkeypatch):
     raw['trainer']['future_samples'] = 4
     with pytest.raises(ValueError, match='identity'):
         a.check_identity(raw)
+
+
+@pytest.mark.parametrize('dense,stopped', [(-1., False), (0., True)])
+def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatch, dense, stopped):
+    import torch
+    from wms.control import policy14_cli as cli
+    from wms.control.dreamer import DreamerTrainer
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
+    path = tmp_path/'authority.json'
+    path.write_text('{}')
+    out = tmp_path/'pilot_EXPLORATORY'
+    doc = dict(source_commit='commit', inputs={}, input_sha256={
+        k: 'hash' for k in ('current_policy', 'boundary', 'pairing_receipt')})
+    monkeypatch.setattr(a, 'verify', lambda *args, **kw: doc)
+    monkeypatch.setattr(pilot_cli, 'command', lambda *args: [])
+    monkeypatch.setattr(DreamerTrainer, 'update', lambda *args: dict(actor_loss=1.))
+    scores = iter([0.] + [dense]*10)
+    monkeypatch.setattr(cli, 'independent_score', lambda *args, **kw: dict(
+        raw_dJ_vs_CTRL0_dense=next(scores), raw_dJ_vs_CTRL0_long=0.))
+    batch = SimpleNamespace(state={'s_m': torch.zeros(1, 2)})
+    def fake_cli(args):
+        out.mkdir()
+        cli.independent_score(None, batch)
+        rows = []
+        for _ in range(10):
+            row = DreamerTrainer.update(None)
+            row['independent_J'] = cli.independent_score(None, batch)
+            rows.append(json.loads(json.dumps(row)))
+        assert all(row['label'] == 'EXPLORATORY' for row in rows)
+        assert rows[-1]['R4']['passed'] is not stopped
+        summary = json.loads(json.dumps(dict(status='completed', updates=rows)))
+        assert summary['label'] == 'EXPLORATORY' and not summary['deployment_authorized']
+        return 0
+    monkeypatch.setattr(cli, 'main', fake_cli)
+    old_install = gated300._install_gain_only
+    assert pilot_cli.run(path, str(out), 'pilot', exploratory=True) == 0
+    assert (out/'STOP').exists() is stopped
+    assert gated300._install_gain_only is old_install

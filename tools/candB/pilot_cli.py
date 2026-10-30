@@ -88,6 +88,9 @@ def run(path, output, mode, *, exploratory=False):
                 yield eslong.forward_task(self.trainer, self.common, task)
 
     def load(trainer, checkpoint, *a, **kw):
+        with Path(output, 'RUN_SUMMARY.json').open('w', encoding='utf-8') as stream:
+            json.dump(dict(status='initializing', label='EXPLORATORY', deployment_authorized=False,
+                source_commit=doc['source_commit'], input_sha256=doc['input_sha256']), stream, indent=1)
         current = os.environ['C4_EXECUTION_DRIVER']
         try:
             os.environ['C4_EXECUTION_DRIVER'] = doc['inputs']['current_policy_driver']

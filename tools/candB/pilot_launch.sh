@@ -27,7 +27,12 @@ PYTHON=${PYTHON:-/root/miniconda3/bin/python}
 AUTHORITY=${AUTHORITY:-authority_gen/PILOT_EXPLORATORY_AUTHORITY.json}
 "$PYTHON" -B -m tools.candB.pilot_authority --exploratory-owner-20261030 verify "$AUTHORITY"
 # One admission query per launch. Monitoring is >=10 minutes apart.
-FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits)
+if [[ -n ${PILOT_ADMISSION_FREE_MIB:-} ]]; then
+  "$PYTHON" -c 'import os,time; assert 0 <= time.time()-float(os.environ["PILOT_ADMISSION_EPOCH"]) < 60'
+  FREE=$PILOT_ADMISSION_FREE_MIB
+else
+  FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits)
+fi
 (( FREE >= 20500 ))
 exec "$PYTHON" -B -u -m tools.candB.pilot_cli --exploratory-owner-20261030 \
   --authority "$AUTHORITY" "$OUT" "$MODE"
