@@ -98,3 +98,14 @@
   fresh-pilot dispatch; it does not interrupt its dry trainer or baseline work.
 - Existing default-off authority, scientific runtime, staging and 112-test suite
   are complete. Only new pilot operational overlays are being prepared.
+- New owner2240 overlay CPU contract suite: **10 PASS**, CUDA hidden, 1.21s;
+  `pilot_cpu_2240_final.json`. Covers ordinary resume/no new-phase flags, strict
+  source specialization, saved phase-clock checks, bootstrap baseline reuse,
+  exclusive dispatch, finite receipt checks, memory fallback and boundary latching.
+- Continuation reuses the existing independently bound scientific runtime. New
+  `pilot_continue*` operational files are separately hashed; original source/input
+  manifest and authority are independently reverified before dispatch. Checkpoint
+  config (including any entropy annealing) is verified after full restoration.
+- Two-worker recipe: coordinator .40 + workers .24 each, aggregate .90 bound;
+  admit only without peers and >=43000MiB free. Actual route and seconds/update
+  are written per update. Original R4 phase10 comparison is unchanged.
