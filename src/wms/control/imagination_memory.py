@@ -431,6 +431,13 @@ def _controller_cells(controller):
         if not inspect.isfunction(fn) or id(fn) in seen:
             return
         seen.add(id(fn))
+        # Explicitly observational wrappers keep run-wide telemetry in shared
+        # closure cells. Snapshot/release ONLY the underlying physical controller;
+        # clearing wrapper cells would corrupt its factory and the next replay.
+        passthrough = getattr(fn, '_wms_checkpoint_passthrough', None)
+        if passthrough is not None:
+            visit(passthrough)
+            return
         for cell in fn.__closure__ or ():
             if id(cell) not in seen:
                 seen.add(id(cell))

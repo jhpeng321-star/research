@@ -432,3 +432,26 @@
   Owner03:00 now permits batching ON for repaired update1. New runtime/authority,
   explicit zero-progress full-state recovery and original phase10 R4 are required.
 - Full named-receipt/process audit: `pilot_recovery_0300_1793386792.json`.
+
+## Owner03:00 fresh-session recovery — exact B-L fix port committed
+- Working-tree src diffs verified BYTE-IDENTICAL to B-L c73498cd hunks
+  (blob hashes `5852f522..bed58b9e` imagination_memory passthrough,
+  `c7c0f397..1e285f78` policy14_recovery initial_checkpoint; only commit-header
+  text differed in the compared patches). No truncated tracked files (numstat
+  audit above holds; 6 small diffs, zero mass deletions).
+- Telemetry adapters (pilot_cli, pilot_lean, pilot_telemetry_2305) mark their
+  observational wrappers `measured._wms_checkpoint_passthrough = callback`;
+  `imagination_memory._controller_cells` then snapshots/releases ONLY the
+  underlying physical controller, fixing the update1 dense-VJP
+  `'NoneType' object is not subscriptable` at its single clearing site
+  (`release_controllers`, line 245).
+- New `pilot_replay_guard.py` (+ regression test): dense replay (serial _vjp and
+  parallel VJP worker snapshots) uses the bare core controller factory so
+  persistent telemetry closures never enter disposable replay graphs;
+  `pilot_wmfast4.run` now wraps its continuation in the guard.
+- Frozen-session untracked retry drafts (pilot_retry.py 03:02, retry authority,
+  replay guard, baseline_retry 02:54) audited: retry requires S4 stack, binds
+  PARENT/baseline744b30b8/checkpoint abae6464/seed965140, zero-progress
+  `initial_checkpoint=True` recovery, byte-identical baseline copy, exact
+  two-file source-drift identity, R4 phase10. Being completed/tested next;
+  empty pilot_wmfast_detail.py retained untracked, imported by nothing.

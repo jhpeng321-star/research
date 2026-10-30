@@ -70,6 +70,7 @@ def telemetry():
                         values = torch.stack((delta.min(), (-delta).clamp_min(0.).min(), result[:n, :, 3][mask].min()))
                         target['minima'] = values if target['minima'] is None else torch.minimum(target['minima'], values)
             return result
+        measured._wms_checkpoint_passthrough = callback
         return measured
 
     def score(trainer, batch, *args, **kwargs):

@@ -122,6 +122,7 @@ def run(path, output, mode, *, exploratory=False):
                         (-delta).clamp_min(0).sum(), delta.abs().sum(), delta.sum())).double()
                     capture['totals'] = values if capture['totals'] is None else capture['totals'] + values
             return result
+        measured._wms_checkpoint_passthrough = callback
         return measured
 
     def score(trainer, batch, *a, **kw):

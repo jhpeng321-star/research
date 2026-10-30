@@ -206,6 +206,7 @@ def run(path, output, *, exploratory=False):
                         minimum = delta.min()
                         capture['minima'] = minimum if capture['minima'] is None else torch.minimum(capture['minima'], minimum)
             return result
+        measured._wms_checkpoint_passthrough = callback
         return measured
 
     with ExitStack() as stack:

@@ -6,7 +6,7 @@ from .nativeinit import PANEL_SHA256, select_update
 from .start_states import checked_path
 
 
-def load_continuation(raw, args):
+def load_continuation(raw, args, *, initial_checkpoint=False):
     """Continue a completed checkpoint and the original phase clock in a fresh output."""
     import torch
     from dataclasses import asdict
@@ -25,9 +25,10 @@ def load_continuation(raw, args):
     saved = payload['update_count']
     start = prior.get('operational_recovery', {}).get('phase_start',
                                                     prior['resumed_from']['update_count'])
-    if (prior['status'] != 'failed' or prior['seed'] != args.seed
-            or not prior['updates'] or prior['updates'][-1]['update'] != saved
-            or not start < saved < start + args.max_updates):
+    progress = (not prior['updates'] and saved == start if initial_checkpoint else
+                bool(prior['updates']) and prior['updates'][-1]['update'] == saved
+                and start < saved < start + args.max_updates)
+    if (prior['status'] != 'failed' or prior['seed'] != args.seed or not progress):
         raise ValueError('same-phase continuation progress/seed mismatch')
     if not args.phase_relative_signal_gate:
         raise ValueError('same-phase continuation requires the original phase-relative gate')

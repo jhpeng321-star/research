@@ -3,10 +3,11 @@ import argparse
 from unittest.mock import patch
 
 from tools.candB import pilot_wmfast, pilot_wmfast_authority, pilot_wmfast4_authority
+from tools.candB.pilot_replay_guard import vjp_guard
 
 
 def run(path, output, parent, *, exploratory=False):
-    with patch.object(pilot_wmfast_authority, 'ENV', pilot_wmfast4_authority.ENV), patch.object(
+    with vjp_guard(), patch.object(pilot_wmfast_authority, 'ENV', pilot_wmfast4_authority.ENV), patch.object(
             pilot_wmfast_authority, 'recipe', pilot_wmfast4_authority.recipe):
         return pilot_wmfast.run(path, output, parent, exploratory=exploratory)
 
