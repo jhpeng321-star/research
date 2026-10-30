@@ -84,7 +84,7 @@ def test_config_identity_refuses_mixed_law_or_k(monkeypatch):
 @pytest.mark.parametrize('dense,stopped', [(-1., False), (0., True)])
 def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatch, dense, stopped):
     import torch
-    from wms.control import policy14_cli as cli
+    from wms.control import policy14_cli as cli, policy14, execution
     from wms.control.dreamer import DreamerTrainer
     monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
     path = tmp_path/'authority.json'
@@ -96,8 +96,23 @@ def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatc
     monkeypatch.setattr(pilot_cli, 'command', lambda *args: [])
     monkeypatch.setattr(DreamerTrainer, 'update', lambda *args: dict(actor_loss=1.))
     scores = iter([0.] + [dense]*10)
-    monkeypatch.setattr(cli, 'independent_score', lambda *args, **kw: dict(
-        raw_dJ_vs_CTRL0_dense=next(scores), raw_dJ_vs_CTRL0_long=0.))
+    # A large non-acting output must never enter final executed-residual stats.
+    def fake_controller(*args, **kw):
+        def callback(frame):
+            return torch.tensor([[[0., 0., 0., -1.], [0., 0., 0., -100.]]])
+        callback.native_lane_mask = lambda frame: frame['present']
+        return callback
+    monkeypatch.setattr(policy14, 'make_cav_controller', fake_controller)
+    monkeypatch.setattr(execution, 'executed_residual', lambda frame, *args, **kw: torch.zeros_like(frame['s_m']))
+    def fake_score(*args, **kw):
+        frame = dict(s_m=torch.zeros(1, 2), v_mps=torch.zeros(1, 2),
+            present=torch.ones(1, 2, dtype=torch.bool), is_cav=torch.ones(1, 2, dtype=torch.bool),
+            lane=torch.zeros(1, 2, dtype=torch.long))
+        callback = policy14.make_cav_controller(act_mask=torch.tensor([[True, False]]))
+        assert callback.native_lane_mask(frame).all()
+        callback(frame)
+        return dict(raw_dJ_vs_CTRL0_dense=next(scores), raw_dJ_vs_CTRL0_long=0.)
+    monkeypatch.setattr(cli, 'independent_score', fake_score)
     batch = SimpleNamespace(state={'s_m': torch.zeros(1, 2)})
     def fake_cli(args):
         out.mkdir()
@@ -108,6 +123,8 @@ def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatc
             row['independent_J'] = cli.independent_score(None, batch)
             rows.append(json.loads(json.dumps(row)))
         assert all(row['label'] == 'EXPLORATORY' for row in rows)
+        assert all(row['independent_J']['executed_residual']['count'] == 1 for row in rows)
+        assert all(row['independent_J']['executed_residual']['mean_braking'] == 1 for row in rows)
         assert rows[-1]['R4']['passed'] is not stopped
         summary = json.loads(json.dumps(dict(status='completed', updates=rows)))
         assert summary['label'] == 'EXPLORATORY' and not summary['deployment_authorized']

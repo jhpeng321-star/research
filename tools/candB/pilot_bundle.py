@@ -26,7 +26,7 @@ def main():
             return b''
         return result
     # Test fixture only: the existing allowlist omitted its CPU dependency.
-    bundle.ROOTS.append('tools/gated300/cct1.py')
+    bundle.ROOTS.extend(['tools/gated300/cct1.py', 'tools/gated300/cct2.py'])
     with patch.object(bundle.subprocess, 'check_output', committed_only):
         bundle.main()
 
