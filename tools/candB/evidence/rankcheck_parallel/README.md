@@ -37,3 +37,7 @@
   scientific-state arrays; queued MAPPO proxy+partial may then run on that freed slot.
 - Loaded current candidate-A update191 output head is NONZERO; it is not asserted
   bitwise CTRL0 by construction. It is outside the six requested baseline arms.
+- Reporting freeze registered for21:20 UTC+8, ten minutes before MAIN's deadline.
+  Exact recorded incarnations only via pidfd: gpuA own cutoff971121 and gpuR442928;
+  both ownership receipts retained. Completed arms survive, in-progress arms are
+  explicitly incomplete; no process-name signalling or peer lifecycle control.
