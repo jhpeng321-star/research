@@ -16,12 +16,18 @@ ARRAYS = ("time_s", "vid", "veh_mask", "veh_kin", "is_cav", "counter",
 COMPONENTS = ("J", "upstream", "source", "discharge", "road")
 IMPLEMENTATION_FILES = ("src/wms/model/wms.py", "src/wms/model/entries.py",
     "src/wms/model/merge_response.py", "src/wms/model/source_ledger.py",
-    "src/wms/model/learned_admission.py", "src/wms/train/merge_response.py",
+    "src/wms/model/learned_admission.py", "src/wms/control/entrant_mix.py",
+    "src/wms/train/merge_response.py", "src/wms/train/inputs.py",
+    "tools/errsrc/inference.py", "tools/wmrequal/labels.py",
     "tools/wmfixmerge/runtime.py", "tools/wmfixmerge/train_config.json",
     "tools/wmrequal/score.py", "tools/wmrequal/native_lanes.py",
     "src/wms/model/spec.py", "src/wms/config/train.py", "src/wms/config/legacy_flat.py",
     "tools/wmfixmerge/train.py", "tools/wmfixmerge/feasibility.py",
-    "tools/wmfixmerge/data.py", "tools/wmfixmerge/prepare.py", "src/wms/data/c4_pairs.py")
+    "tools/wmfixmerge/data.py", "tools/wmfixmerge/prepare.py", "src/wms/data/c4_pairs.py",
+    "tools/wmfixmerge/verdict.py", "tools/wmfixmerge/verdict_metrics.py",
+    "tools/wmfixmerge/verdict_panels.py", "tools/wmfixmerge/producer_runner.py",
+    "tools/wmfixmerge/harness_contract.py", "tools/wmfixmerge/zero_head_panel.py",
+    "tools/wmfixmerge/zero_head_compare.py", "tools/wmfixmerge/verdict_plan.json")
 
 
 def safe(path):
