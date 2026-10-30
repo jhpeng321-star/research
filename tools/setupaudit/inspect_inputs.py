@@ -22,6 +22,7 @@ def main():
     p.add_argument("--candidate", required=True)
     p.add_argument("--config", default="configs/c4_policy14_candA_longgrad_skip.toml")
     p.add_argument("--export")
+    p.add_argument("--n-starts", type=int, default=2)
     a = p.parse_args()
     assert allowed(a.candidate) and allowed(a.config)
     assert not a.export or allowed(a.export)
@@ -51,7 +52,7 @@ def main():
     if saved is not None:
         train.load_state_dict(saved)
     batches = []
-    for _ in range(2):
+    for _ in range(a.n_starts):
         b = train.sample(1, "cpu")
         assert all(allowed(m) for m in b.metadata)
         print("START", b.metadata, "CAV", int(b.state["is_cav"].sum()))
