@@ -1,4 +1,4 @@
-# S-PILOTB — EXPLORATORY (owner 2026-10-30 19:45)
+# S-PILOTB 鈥?EXPLORATORY (owner 2026-10-30 19:45)
 
 - Authority: shared `REGISTRATION.md:4999`; distinct exploratory receipt, never CCT-2/R2 PASS.
 - Coordination: only new `tools/candB/pilot_*` files and this report; S-RANKCHECK files untouched.
@@ -417,7 +417,7 @@
 
 - S-PILOTB EXPLORATORY-LEAN UPDATE1 FAILED epoch1793385850: TypeError: 'NoneType' object is not subscriptable in dense autograd backward; ZERO completed optimizer rows. Frozen baseline744b30b8 remains durable; all original outputs/startup scores retained. Trainer35928 and supervisor35923 exited naturally; old S2 waiter37982 and prepared S4 waiter60032 both refused the non-clean parent, no continuation trainer dispatched. S4 runtimeaf78fda7 authority07f5e05b and10 CPU contracts passed but S4 production not launched. Investigating a baseline-preserving recovery; NO baseline recomputation or completed-update claim. Full traceback/receipt `E:/agent-work/c4-candB/tools/candB/pilot_repaired_UPDATE1_FAILURE.json`.
 
-## Owner03:00 recovery — exact B-L replay fix / baseline-preserving retry
+## Owner03:00 recovery 鈥?exact B-L replay fix / baseline-preserving retry
 - Recovery epoch1793386792: original trainer35928, supervisor35923, S2 waiter37982
   and S4 waiter60032 are all independently absent. Neither continuation dispatched.
 - Baseline SHA256 **744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680**
@@ -433,7 +433,7 @@
   explicit zero-progress full-state recovery and original phase10 R4 are required.
 - Full named-receipt/process audit: `pilot_recovery_0300_1793386792.json`.
 
-## Owner03:00 fresh-session recovery — exact B-L fix port committed
+## Owner03:00 fresh-session recovery 鈥?exact B-L fix port committed
 - Working-tree src diffs verified BYTE-IDENTICAL to B-L c73498cd hunks
   (blob hashes `5852f522..bed58b9e` imagination_memory passthrough,
   `c7c0f397..1e285f78` policy14_recovery initial_checkpoint; only commit-header
@@ -485,7 +485,7 @@
 - **CPU PASS 17/17** (`pilot_RETRY_CPU_RESULT_1793390445.json`, 4.12s, CUDA
   hidden): retry_test(8) + replay_guard_test(2) + continue_test(7). Includes the
   real marker-wrapper multi-update regression (bitwise losses/grads/Adam/RNG vs
-  bare core WITHOUT any guard — the exact production failure topology), real
+  bare core WITHOUT any guard 鈥?the exact production failure topology), real
   zero-progress `load_continuation(initial_checkpoint=True)`, exact-two-file
   B-L identity with manifest/tamper refusals, launcher/authority contracts.
 - **B-L's own fix tests rerun in THEIR gpuR runtime** (read-only, CUDA hidden):
@@ -495,15 +495,15 @@
 - Parent re-verified: RUN_SUMMARY failed/TypeError/seed965140/rows0/zero_start/
   resumed191; `independent_score_before` present (4694.833); native_curve [191];
   gate_panel J_before4 passed-null; policy_native_best.pt abae6464...; frozen
-  baseline 744b30b8... — all retry bindings intact.
+  baseline 744b30b8... 鈥?all retry bindings intact.
 
 ## RETRY0300 ACTIVE LAUNCH (owner03:00, S4, baseline-preserving)
 - First dispatch (root candB_pilot_run_RETRY0300_20261031, trainer74312) refused
-  in <60s at lean env identity (launcher kept FUTURE_WORKERS=1; S4 binds 2) —
+  in <60s at lean env identity (launcher kept FUTURE_WORKERS=1; S4 binds 2) 鈥?
   AFTER authority/S4-stack/parent/identity/prepare_base all passed. Retained.
 - v5 runtime + corrected launcher (FUTURE_WORKERS=2/VJP_SLOTS=2); CPU PASS
   17/17 again (`pilot_RETRY_CPU_RESULT_1793391019.json`).
-- **04:11:21 +08** supervisor **75907/start877105928**, trainer **75912**;
+- **04:11:21 +08** supervisor **75907/start877105928**, trainer **75914/start877134322**;
   admission free48510MiB (peer-free, >=46000). Root
   `/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031`, output
   `pilot_EXPLORATORY-LEAN_RETRY0300`. Trainer passed env/authority/identity and
