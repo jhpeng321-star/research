@@ -282,3 +282,19 @@
 ### First actual scoring component timing
 - Initial independent K8 score: **660.889s wall / 696.490s CPU** (update191, fresh phase). This is NOT startup or seconds/update.
 - Exact trainer incarnation remains live at epoch1793377628.8688636; completed phase rows=[]; baseline durable=False. Startup/update1-3 and phase3 verification remain pending actual receipts; sole durable observer42388 remains responsible. `pilot_lean_FIRST_SCORE_ACK.json`.
+
+## Owner00:52 fresh-session recovery / WMFAST-B handoff
+- Recovered Git history/status and existing run receipts before any dispatch. At
+  epoch1793379086, original lean trainer17859/start875679269 and supervisor17854/
+  start875679254 remain the same live incarnations; **zero completed updates**,
+  frozen baseline not yet durable. Snapshot `pilot_lean_snapshot_1793379088.json`.
+- Sole local receipt observer42388/creation2026-10-31 00:10:44 independently verified
+  live with exact `tools.candB.pilot_lean_observe` command. No replacement dispatched.
+- Last existing supervisor GPU sample1793378979: free36904MiB; trainer6028MiB and
+  one5564MiB process. No additional nvidia query was issued during recovery.
+- Owner00:52 requests WMFAST-B9d7e7d8e at the first clean boundary AFTER durable
+  baseline and >=1 completed update. Preserve current startup; prepare a NEW runtime,
+  regenerated authority and ordinary same-phase adapter while it continues.
+- WMFAST-B production S4 memory is explicitly UNMEASURED; its report estimates
+  ~31.7GiB per worker vs current .28 (~13.4GiB) caps. Continuation must retain aggregate
+  <=45GiB/allocator admission guards and choose a measured safe stack/pool recipe.
