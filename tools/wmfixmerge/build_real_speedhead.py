@@ -58,11 +58,17 @@ def digest(path):
 def gather(root, out):
     root = Path(root)
     arms = {}
+    skipped = []
     for job in sorted((root / "jobs").iterdir()):
         if not job.is_dir() or not job.name.startswith("s9638"):
             continue
         seed, arm = job.name[1:7], job.name[8:]
         result = job / "result.json"
+        if not result.is_file():
+            # Superseded first attempts (e.g. 963880 ctrl0 before the _r1 rerun)
+            # never produced a receipt; recorded, never silently ignored.
+            skipped.append(job.name)
+            continue
         metrics = json.loads(result.read_text())["metrics"]
         objective = metrics.get("training_objective")
         if not objective or not all(h in objective for h in HORIZONS):
@@ -74,9 +80,10 @@ def gather(root, out):
         arms[key] = dict(source=str(result), sha256=digest(result), values=cell,
                          t0_s=float(metrics["t0_s"]))
     with open(out, "x") as stream:
-        json.dump(dict(schema="wmfix_real_speedhead_partial/1", root=str(root), arms=[
+        json.dump(dict(schema="wmfix_real_speedhead_partial/1", root=str(root),
+                       skipped_empty_jobs=skipped, arms=[
             dict(world=w, arm=a, **v) for (w, a), v in sorted(arms.items())]), stream, indent=1)
-    print(f"gathered {len(arms)} arm-worlds from {root}")
+    print(f"gathered {len(arms)} arm-worlds from {root}; skipped {skipped}")
 
 
 def merge(partials, out):
@@ -90,7 +97,9 @@ def merge(partials, out):
         for row in doc["arms"]:
             key = (int(row["world"]), row["arm"])
             if key in combined:
-                raise SystemExit(f"arm-world supplied twice: {key}")
+                if combined[key] != row:
+                    raise SystemExit(f"arm-world supplied twice with different values: {key}")
+                continue  # the identical rerun receipt exists on both hosts
             combined[key] = row
     # The frozen starts use the rerun ctrl0 tape for 963880 (make_starts _r1).
     for world in WORLDS:

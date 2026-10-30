@@ -10,10 +10,16 @@ from tools.wmfixmerge.verdict_metrics import c1, metric, speedhead, validation
 
 def test_default_plan_explicitly_blocks_unbound_adapters_and_missing_data(tmp_path):
     plan = json.loads(Path("tools/wmfixmerge/verdict_plan.json").read_text())
+    for stage in ("B", "C1"):
+        producer = plan["stages"][stage]["producer"]
+        assert producer and producer["script"] and producer["args"] \
+            and str(producer["script"]) in producer["files"]
     result = run(plan, "missing.pt", "missing.json", tmp_path, execute=True)
     assert result["status"] == "BLOCKED" and result["executed_stages"] == []
-    assert any("B exact frozen producer" in x for x in result["blockers"])
-    assert any("C1 exact frozen producer" in x for x in result["blockers"])
+    # The registered producer closures live on the GPU host; locally they must
+    # still block scoring (missing files), never silently pass.
+    assert any(stage in x and "closure missing/changed" in x
+               for x in result["blockers"] for stage in ("B", "C1"))
     assert not (tmp_path / "RUN.json").exists()
 
 
