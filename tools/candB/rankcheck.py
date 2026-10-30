@@ -375,7 +375,7 @@ def main(argv=None):
     signature = runtime_contract(trainer)
     from wms.core.speed_flags import active as speed_flags
     doc = dict(schema=SCHEMA, complete=False, passed=False, measure_only=a.measure_only,
-        launch_authorized=False, gpu_memory_fraction=a.gpu_memory_fraction,
+        launch_authorized=False, device=a.device, gpu_memory_fraction=a.gpu_memory_fraction,
         execution_speed_flags=speed_flags(),
         K=8, horizons_s=[90, 300],
         n_starts=a.n_starts, wm_sha256=WM_SHA, wm_config_sha256=sha256(a.wm_config),

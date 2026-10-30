@@ -115,7 +115,7 @@ def report(document, evidence, source_sha, final_sha):
               f'Tool decision: `{document["ranking_passed"]}` — {document["gate_reason"]}.',
               'Measurement-only receipt: passed=false, launch_authorized=false; historical mismatched CCT-2 is not upgraded. Full training qualification remains separate.',
               '## Execution and verification',
-              'Fresh immutable staging via tools/candB/stage.sh; one serial CUDA worker, allocator fraction.40; existing S-WMREQUAL PID938487 untouched. No other job signalled, no push/deletions.',
+              f'Fresh immutable staging via tools/candB/stage.sh on gpuA; serial {document.get("device", "cuda")} scoring, configured allocator cap.40 (CPU uses zero GPU memory); S-WMREQUAL PID938487 untouched. No other job signalled, no push/deletions.',
               'Checkpoint initialization verifies original CRLF driver bytes f70c2aaf; exact CRLF-to-LF equality restores committed driver16bd8278 for every rollout. Both full hashes are in the receipt.',
               f'Exact forward flags: `{document["execution_speed_flags"]}`; full argv/environment/source manifest and retained attempts are beside the raw evidence.',
               'Verification: 14 focused CPU tests pass, Ruff/diff checks pass; complete numerical summary independently recomputed from raw starts/futures before publication.',
