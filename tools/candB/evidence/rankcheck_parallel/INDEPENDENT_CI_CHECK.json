@@ -2,22 +2,22 @@
  "independent_world_bootstrap": "PASS",
  "draws": 5000,
  "seed": 20261030,
- "summary_sha256": "8f1c3bc9ae770e7e491b73096f110e730536ed48a4ffeb9304a779c5d4a56f82",
+ "summary_sha256": "08728301c7aff1464d24f143179ced4422f5985900a290f925b8c7a7f90b5718",
  "verified_inputs": {
-  "circles": "93495176cd21dcfdc6780c9b64fdd7f43c106bf538938d7c7ebe8432b1f4cb40",
+  "circles": "6b40db5361ba5849ad3e3282b5c6fdfdf2baa8ab8fc36680091176d82457b12e",
   "pi": "77bc1b1ee2340eb02fd5542e4abf4b8f8ac26bd0d75f71a146e0c9ec07988c5c",
-  "mappo": "3690c73b2435a3ff56d27e37e6087aaebd212518adf057c9703475291f93737d",
+  "mappo": "11bb75548afd415f93e400963cd72ff21a4418c1e751bb08e807bab8c9d22fd9",
   "mappo_proxy_tail": "912864d912d87a417d181fc8008f8a4ff198b496e37c148872682db53322e6b1",
   "mappo_speed_tail": "e56dd12139a7ae978c1651b53f445588e8c901e0a5afb24626f55b32ed827b76",
-  "pi_resume_gpu": "8df5806ab38a6b0b2441bc286864c74aa907c523b7d6137df7b8323c6ecc3f96"
+  "pi_resume_gpu": "9fef53b4b7144e3510346c1607ee96149466f0d2824e4c60e1ddfdc81b9549b2"
  },
  "per_arm_starts": {
-  "CIRCLES": 8,
-  "PI": 12,
-  "MAPPO_native_lanes": 5,
+  "CIRCLES": 10,
+  "PI": 13,
+  "MAPPO_native_lanes": 6,
   "MAPPO_speed_partial": 5,
-  "native": 12,
-  "CTRL0": 12
+  "native": 13,
+  "CTRL0": 13
  },
  "common_starts": 5,
  "no_rollouts": true

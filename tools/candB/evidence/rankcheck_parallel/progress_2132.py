@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -54,4 +55,9 @@ result = dict(time=datetime.now().astimezone().isoformat(), host=host,
               gpu_memory=subprocess.check_output(['nvidia-smi', '--query-gpu=memory.used,memory.total',
                                                   '--format=csv,noheader'], text=True).strip(),
               jobs=[inspect(path) for path in paths], read_only=True)
+if len(sys.argv) == 3:
+    assert re.fullmatch(r'SNAPSHOT_[A-Z0-9_]+\.json', sys.argv[2])
+    root = RESUME if host == 'R' else BASE / 'candB_rankcheck_2dcb6af5_host_20261030'
+    with (root / sys.argv[2]).open('x') as stream:
+        json.dump(result, stream, indent=1)
 print(json.dumps(result, indent=1))

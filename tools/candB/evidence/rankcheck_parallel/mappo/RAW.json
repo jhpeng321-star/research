@@ -3192,6 +3192,27 @@
      "long_credit": 0.0,
      "dense_horizon_s": 90.0,
      "elapsed_s": 574.5343497283757
+    },
+    "MAPPO_speed_partial": {
+     "J90": [
+      14488.580078125,
+      13726.6640625,
+      13957.6826171875,
+      13978.119140625
+     ],
+     "J300": [
+      58544.984375,
+      50739.7421875,
+      51753.1015625,
+      52161.8671875
+     ],
+     "objective_loss": -4119.48193359375,
+     "objective90_loss": -4119.48193359375,
+     "objective300_loss": -4119.48193359375,
+     "dense_credit": 4119.48193359375,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 741.1629817225039
     }
    },
    "paired_CTRL0": {
@@ -3226,6 +3247,110 @@
      54891.7890625,
      54868.5078125,
      54933.63671875
+    ]
+   }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963590m2400p20t300",
+     "arm": "generic_random",
+     "policy": "generic_random",
+     "episode": "w963590m2400p20t300__generic_random",
+     "controller_branch": null,
+     "tick": 1360,
+     "t0_s": 680.0,
+     "pair_key": null,
+     "start_source": "genrand_plain",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": false,
+     "high_demand": false,
+     "congested": true
+    },
+    "observed_share": 0.21348314606741572,
+    "observed_main_demand_vph": 2244.000005722046,
+    "m": 1.3234836276645732,
+    "tries": 1,
+    "importance_weight": 1.0147950364605764,
+    "ess_fraction": 0.9987468717745098,
+    "candidates": 7,
+    "target_base_rates": {
+     "multi_cav": 1.0,
+     "side_by_side": 0.8571428571428571,
+     "high_share": 0.42857142857142855,
+     "high_demand": 0.5714285714285714,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.3234836276645733,
+    "merge_speed_deficit": 0.24831514060497284,
+    "ramp_queue_pressure": 0.10000000149011612,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "MAPPO_native_lanes": {
+     "J90": [
+      7931.4658203125,
+      8491.708984375,
+      8505.1533203125,
+      9632.568359375
+     ],
+     "J300": [
+      29172.986328125,
+      34372.0703125,
+      34917.4921875,
+      39350.015625
+     ],
+     "objective_loss": 895.786376953125,
+     "objective90_loss": 895.786376953125,
+     "objective300_loss": 895.786376953125,
+     "dense_credit": -895.786376953125,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 699.2766052912921
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     7925.02734375,
+     8481.892578125,
+     8505.07421875,
+     9630.447265625
+    ],
+    "J300": [
+     28141.669921875,
+     35448.8984375,
+     35697.4921875,
+     39168.953125
+    ],
+    "objective_loss": 867.8440551757812,
+    "objective90_loss": 867.8440551757812,
+    "objective300_loss": 867.8440551757812,
+    "dense_credit": -867.8440551757812,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     7980.31884765625,
+     8549.2255859375,
+     8516.7119140625,
+     9591.91796875
+    ],
+    "J300": [
+     29332.7265625,
+     36006.4375,
+     34062.22265625,
+     41502.375
     ]
    }
   }
@@ -3579,6 +3704,82 @@
    171,
    171,
    171
+  ],
+  [
+   170,
+   165,
+   169,
+   169,
+   169,
+   169,
+   169
+  ],
+  [
+   172,
+   162,
+   172,
+   172,
+   172,
+   172,
+   172
+  ],
+  [
+   168,
+   159,
+   168,
+   168,
+   168,
+   168,
+   168
+  ],
+  [
+   169,
+   164,
+   171,
+   171,
+   171,
+   171,
+   171
+  ],
+  [
+   182,
+   174,
+   181,
+   181,
+   179,
+   181,
+   181,
+   181
+  ],
+  [
+   182,
+   179,
+   181,
+   181,
+   181,
+   181,
+   181,
+   182
+  ],
+  [
+   183,
+   181,
+   183,
+   183,
+   183,
+   183,
+   183,
+   183
+  ],
+  [
+   189,
+   183,
+   190,
+   190,
+   191,
+   190,
+   191,
+   190
   ]
  ]
 }
