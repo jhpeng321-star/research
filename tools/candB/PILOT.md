@@ -109,3 +109,15 @@
 - Two-worker recipe: coordinator .40 + workers .24 each, aggregate .90 bound;
   admit only without peers and >=43000MiB free. Actual route and seconds/update
   are written per update. Original R4 phase10 comparison is unchanged.
+- 22:47:28 +08: committed overlay1803793e staged as NEW pilot files only;
+  original da0bc366 source/authority independently PASS again. First stage verify
+  refused missing allowed-root environment before any dispatch (retained receipt);
+  corrected verification succeeded without altering any scientific source.
+- Exclusive same-phase controller **999762/start875186271** now waits on the
+  existing trainer. It will request own dry boundary STOP after the baseline is
+  durable, validate the finite first row/checkpoint, wait for the original
+  supervisor to exit, admit two workers with a >=600s GPU-query interval, and
+  ordinary-resume into `pilot_samephase_EXPLORATORY`. No fresh-zero pilot dispatch.
+- Staged overlay hashes and ACK: `pilot_deploy_2240_verified.json`; exact retained
+  run-root controller receipt `continue_OWNERSHIP.json`; stop future continuation
+  using OWN root `continue_STOP` (does not signal any peer PID).

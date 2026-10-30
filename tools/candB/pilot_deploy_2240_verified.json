@@ -1,0 +1,14 @@
+{
+ "label": "EXPLORATORY",
+ "source_commit": "1803793e813b03ba6f299ffa12e9837f074d579d",
+ "sha256": {
+  "pilot_handoff.py": "31c1c1e1a8431910f9a425dfbb86af0c383488a615653dcddce19746d727bf22",
+  "pilot_recipe.py": "88fc0ce7d129663d1cca24d015a94ef3297f838f203818303c20aa8a4a2d84a3",
+  "pilot_continue.py": "5bd94a8b2081f6d8e7b540b60eb3301438fa2feb2ec5f3eafff8238ba39827f4",
+  "pilot_continue_launch.sh": "e2c739f599fc43c17a0c607a9959102b9fe6d98ab9c395d04aa129af2f8ffcf3",
+  "pilot_continue_supervise.py": "31141be995bd3686835036b4f56b4ad6e4904045a539786e2e44fa444174c750"
+ },
+ "returncode": 0,
+ "stdout": "{\"label\": \"EXPLORATORY\", \"verified\": true, \"source_commit\": \"da0bc3663609024930d799af059c13f9dcf174d3\", \"authority_sha256\": \"187cd8d40aa3d6d1f6d9565f7b84ebd792c90a946a09ad147ee0ea56462b3179\"}\n{\n \"label\": \"EXPLORATORY\",\n \"pid\": 999762,\n \"start_ticks\": \"875186271\",\n \"utc\": \"2026-10-30T14:47:28.588408+00:00\",\n \"runtime\": \"/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030\"\n}\n\n",
+ "stderr": ""
+}
