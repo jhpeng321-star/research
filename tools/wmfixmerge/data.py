@@ -14,6 +14,14 @@ ARRAYS = ("time_s", "vid", "veh_mask", "veh_kin", "is_cav", "counter",
           "target_mask", "control_time_s", "controller", "issued_acceleration_mps2",
           "issued_target_speed_mps", "entry_backlog", "request_counter", "entry_cav_counter")
 COMPONENTS = ("J", "upstream", "source", "discharge", "road")
+IMPLEMENTATION_FILES = ("src/wms/model/wms.py", "src/wms/model/entries.py",
+    "src/wms/model/merge_response.py", "src/wms/model/source_ledger.py",
+    "src/wms/model/learned_admission.py", "src/wms/train/merge_response.py",
+    "tools/wmfixmerge/runtime.py", "tools/wmfixmerge/train_config.json",
+    "tools/wmrequal/score.py", "tools/wmrequal/native_lanes.py",
+    "src/wms/model/spec.py", "src/wms/config/train.py", "src/wms/config/legacy_flat.py",
+    "tools/wmfixmerge/train.py", "tools/wmfixmerge/feasibility.py",
+    "tools/wmfixmerge/data.py", "tools/wmfixmerge/prepare.py")
 
 
 def safe(path):
@@ -30,6 +38,11 @@ def digest(path):
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def implementation_hashes():
+    root = Path(__file__).resolve().parents[2]
+    return {name: digest(root / name) for name in IMPLEMENTATION_FILES}
 
 
 def select(root):

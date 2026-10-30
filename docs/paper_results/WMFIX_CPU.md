@@ -32,3 +32,15 @@
 - Real probe receipt is BLOCKED: registered prepared corpus is remote and absent locally.
 - WMREQUAL3.md checked again before this step: absent. Source-clock/retarget contract and Astra approval remain blocking.
 - Exact eventual launch, input roots, six-hour estimate and gate schemas: `tools/wmfixmerge/README.md`.
+
+## Learned-only admission audit amendment
+- Inherited `sumo_like_v2` selected stop-speed driver settings from textbook class tables before birth sampling.
+- New default-OFF `EntryConfig.learned_admission` instead uses the SAME entrance/ordinal-keyed
+  pre-t0 inferred-pool draw as `LearnedMix` assigns to that newborn's subsequent motion.
+- v0/headway/decel/min-gap are inferred; no truth/type assignment input or new behavioural threshold.
+- Inferred admission requires conserved queues and the physical sumo_like_v2 formula; hazard bundles reject.
+- Four new CPU tests cover exact candidate→newborn setting equality, actual insertion speed/conservation,
+  invalid settings/bundles, and actual OFF insertion/RNG parity against committed WM2 entries.
+- Targeted combined admission/verdict/entryfix/v9entry command: **38 passed** (66.70s).
+- Real feasibility now records ledger-only vs inferred-admission/zero-head outputs and separate J/crossing/source gradient norms.
+- Launch checks bind the implementation bytes to CPU evidence; all three opt-in flags are required.

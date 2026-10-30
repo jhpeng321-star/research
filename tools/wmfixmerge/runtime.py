@@ -16,6 +16,7 @@ class Runtime:
         if digest(checkpoint) != WM2_SHA:
             raise ValueError("base is not registered WM2")
         self.device = torch.device(device)
+        self.learned_admission = True
         self.config, settings, self.model = load_for_scoring(safe(config), safe(checkpoint))
         specs = json.loads(safe(controllers).read_text())
         specs = specs.get("controllers", specs)
@@ -89,6 +90,9 @@ class Runtime:
             return x.expand(len(records), *x.shape[1:]).clone()
         kw = {k: expand(v) for k, v in plan.items()}
         mix = LearnedMix(kw["driver_params"], inp.observed_hist_mask, 140014, [key] * len(records))
+        from wms.model.learned_admission import LearnedAdmission
+        if self.learned_admission:
+            inp.entries.cfg = replace(inp.entries.cfg, learned_admission=LearnedAdmission(mix))
         entries = TrackedEntries(inp.entries)
         with scoring_rng(140014, self.device):
             roll = self.model.rollout(inp.initial, n_steps=steps, entries=entries,

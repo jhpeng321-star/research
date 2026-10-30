@@ -168,8 +168,13 @@ class EntryConfig:
     learned_entry: object | None = None
     # WMFIX: exact due - inserted; default preserves legacy clipping and receipts.
     conserve_queue: bool = False
+    # WMFIX: opt-in candidate admission using the SAME inferred entrant settings.
+    learned_admission: object | None = None
 
     def __post_init__(self) -> None:
+        if self.learned_admission is not None and (not self.conserve_queue or
+                self.insert_rule != "sumo_like_v2" or self.learned_entry is not None):
+            raise ValueError("learned admission requires exact conservation/sumo_like_v2, no hazard bundle")
         if self.insert_rule not in INSERT_RULES:
             raise ValueError(f"insert_rule must be one of {INSERT_RULES}, got {self.insert_rule!r}")
         if self.sumo_lane_mode not in ("best_free", "any"):
@@ -965,8 +970,9 @@ class TorchEntryProcessV2(_EntryProcessBase):
                                     max(hist.speed_std[e], 1.0e-3)))
             u_gap = float(rng.normal(hist.gap_mean[e],
                                      max(hist.gap_std[e], 1.0e-3)))
-            vt = (int(rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
-                  if hist.vtype_share[e].sum() > 0 else 0)
+            vt = (0 if self.cfg.learned_admission is not None else
+                  (int(rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
+                   if hist.vtype_share[e].sum() > 0 else 0))
             if e == 0:
                 lanes_try = [1, 0] if u_lane < hist.lane_p1 else [0, 1]
             else:
@@ -975,7 +981,13 @@ class TorchEntryProcessV2(_EntryProcessBase):
             if self.cfg.insert_rule != "v2":
                 # Same random draws as v2 (common random numbers across rules); the
                 # speed ratio and the sampled required gap are not used.
-                placed = self._insert_sumo_like(work, b, e, lanes_try, cav, vt)
+                if self.cfg.learned_admission is not None:
+                    if not self.couple_draws:
+                        raise ValueError("learned admission requires identity-coupled candidate ordinals")
+                    placed = self.cfg.learned_admission.place(
+                        self, work, b, e, lanes_try, cav, int(self._candidate_index[b, e]) + attempt)
+                else:
+                    placed = self._insert_sumo_like(work, b, e, lanes_try, cav, vt)
             else:
                 placed = any(self._try_lane(work, b, e, ln, cav, u_sr, u_gap, vt)
                              for ln in lanes_try)

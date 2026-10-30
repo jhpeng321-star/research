@@ -66,7 +66,7 @@ def source_for(panel, real_rows):
 
 
 def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, smoke,
-                *, native_lanes=False, mix_modes=(False, True)):
+                *, native_lanes=False, mix_modes=(False, True), learned_admission=False):
     import numpy as np
     import torch
     from tools.errsrc.inference import LearnedMix
@@ -123,6 +123,9 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
     active=torch.tensor(mode_rows,device=device,dtype=torch.bool)
     def sampler(st,newborn,params):
         return mix(st,newborn & active[:,None],params)
+    if learned_admission:
+        from wms.model.learned_admission import LearnedAdmission
+        inp.entries.cfg = replace(inp.entries.cfg, conserve_queue=True, learned_admission=LearnedAdmission(mix))
     entries=Entries(inp.entries)
     with torch.no_grad(),scoring_rng(140014,device):
         roll=model.rollout(inp.initial,n_steps=steps,entries=entries,

@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 
-from tools.wmfixmerge.data import digest, install_guard, safe
+from tools.wmfixmerge.data import digest, implementation_hashes, install_guard, safe
 
 
 def synthetic():
@@ -51,6 +52,15 @@ def probe(model, rollout, target, refs, scales, objective):
     paired_j = lambda x: float(abs((x - x[refs_tensor])[:, 0] -
                                    (target - target[refs_tensor])[:, 0])[active].mean().detach())
     before_j = paired_j(before)
+    parameters = [p for p in model.parameters() if p.requires_grad]
+    component_norms = {}
+    for name, column in (("J", 0), ("source", 2), ("crossing", 3)):
+        if column >= before.shape[1]:
+            continue
+        component = (before - before[refs_tensor])[:, column][active].sum()
+        gradient = torch.autograd.grad(component, parameters, retain_graph=True, allow_unused=True)
+        squares = [g.detach().square().sum() for g in gradient if g is not None]
+        component_norms[name] = float(torch.stack(squares).sum().sqrt()) if squares else 0.
     loss.backward()
     candidates = [(float(p.grad.abs().max()), n, p) for n, p in model.named_parameters()
                   if p.requires_grad and p.grad is not None]
@@ -83,7 +93,10 @@ def probe(model, rollout, target, refs, scales, objective):
         gradient_parameter=name, gradient=analytic, finite_difference=fd, finite_difference_ok=fd_ok,
         frozen_bitwise=unchanged, optimizer_reduces=final < float(loss.detach()),
         predicted=before.detach().tolist(), recorded=target.detach().tolist(),
-        passed=fd_ok and unchanged and final < float(loss.detach()) and paired_j(after) < before_j)
+        component_gradient_norms=component_norms,
+        passed=fd_ok and unchanged and final < float(loss.detach()) and paired_j(after) < before_j and
+            all(math.isfinite(component_norms[n]) and component_norms[n] > 0
+                for n in ("J", "crossing") if n in component_norms))
 
 
 def main(argv=None):
@@ -101,7 +114,7 @@ def main(argv=None):
     import torch
     torch.set_num_threads(1)
     result = dict(schema="wmfix_feasibility/1", mode="synthetic" if args.synthetic else "real_train",
-                  device="cpu", launch_ready=False)
+                  device="cpu", launch_ready=False, implementation_hashes=implementation_hashes())
     try:
         if args.synthetic:
             result.update(synthetic())
@@ -115,6 +128,13 @@ def main(argv=None):
                 result[key + "_sha256"] = digest(getattr(args, key))
             rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers)
             initial, target, refs, receipt = rt.rollout(0, 60)
+            with torch.no_grad():
+                rt.learned_admission = False
+                ledger_only = rt.rollout(0, 60)[0]
+                rt.learned_admission = True
+                result["admission_ablation"] = dict(
+                    ledger_only=ledger_only.tolist(), inferred_admission_zero_head=initial.detach().tolist(),
+                    components=rt.doc["components"])
             # Actual TRAIN teacher ceiling retains WM downstream and source errors.
             with torch.no_grad():
                 corrected = initial[:, 0] + target[:, 1] - initial[:, 1]
@@ -135,6 +155,7 @@ def main(argv=None):
                 contract.get("prepared_sha256") == result["prepared_sha256"] and
                 contract.get("source_clock_match") is True and contract.get("residual_remains") is True and
                 contract.get("native_lanes_sha256") == digest("tools/wmrequal/native_lanes.py") and
+                contract.get("scorer_sha256") == digest("tools/wmrequal/score.py") and
                 contract.get("runtime_sha256") == digest("tools/wmfixmerge/runtime.py"))
             result["source_clock_match"] = matched
             result["launch_ready"] = bool(result["passed"] and matched and

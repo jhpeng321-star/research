@@ -21,7 +21,7 @@ This differs from RAMPFIX's local residual: pooled full-upstream state plus expl
 Due increments are counted before service, each successful insertion once; finite slot exhaustion retains backlog, never removes demand.
 Q0 must be recorded per entrance; no guessed split. Source rectangle timing matches corrected scorer exactly.
 Conservation alone does NOT force real intervention invariance; the discharge/admission response must pass the paired tests below.
-Physical admission remains the incumbent insertion law; field-induced motion feeds it through actual entrance gaps (no disconnected cost offset).
+Admission uses the incumbent physical stop-speed formula with inferred entrant settings; actual entrance gaps provide feedback (no cost offset).
 ## Supervision / exact source scope
 Pilot source: existing S-E3DATA FIT pairs only, seed allowlist
 973002,973053,973060,973083,973093,973123,973126,973133,973151,973160,973190,973224.
@@ -75,3 +75,9 @@ Record source-clock parity explicitly: recorded labels use left-boundary rectang
 This potential half-tick offset must be reconciled against WMREQUAL3 before the launch gate can pass; do not silently relabel it exact.
 Full TRAIN history/queue/request/counter equality is required; hash all production-loader arrays, not only state labels.
 The head checkpoint is exported as wm_s/1 with merge_response in its flat config; canonical reload and safety adapters must preserve it.
+Admission audit amendment: incumbent `sumo_like_v2` uses textbook per-class settings before the learned birth sampler runs.
+New default-OFF `EntryConfig.learned_admission` binds the candidate's entrance/ordinal to the SAME pre-t0 inferred pool draw as its later motion.
+Only geometric nominal length/lane limits remain fixed; v0/headway/decel/min-gap come from that learned draw, never a class table/type file.
+No new behavioural threshold, hazard loss, straight-through admission or extra trainable module; physical non-overlap and backlog retention remain exact.
+CPU feasibility records ledger-only vs inferred-admission/zero-head outputs separately, then tests the conditional head's own optimizer step.
+Canonical safety uses step0's exact legacy WM2 tensors under the candidate config; zero-shot/regression receipt must bind the full deployed admission path too.

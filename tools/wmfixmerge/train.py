@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import time
 
-from tools.wmfixmerge.data import WM2_SHA, digest, install_guard, safe
+from tools.wmfixmerge.data import WM2_SHA, digest, implementation_hashes, install_guard, safe
 
 
 def check_gates(args):
@@ -19,6 +19,8 @@ def check_gates(args):
     for key in ("prepared", "config", "checkpoint", "controllers", "corrected_report"):
         if feasibility.get(key + "_sha256") != digest(getattr(args, key)):
             raise ValueError("feasibility input changed: " + key)
+    if feasibility.get("implementation_hashes") != implementation_hashes():
+        raise ValueError("implementation changed after CPU feasibility")
     review = json.loads(safe(args.review).read_text())
     if review.get("reviewer") != "Astra" or review.get("status") != "APPROVED" \
             or review.get("feasibility_sha256") != digest(args.feasibility):
@@ -61,11 +63,12 @@ def main(argv=None):
     parser.add_argument("--schedule", default="tools/wmfixmerge/train_config.json")
     parser.add_argument("--enable-merge-response", action="store_true")
     parser.add_argument("--conserve-queue", action="store_true")
+    parser.add_argument("--learned-admission", action="store_true")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args(argv)
     install_guard()
-    if not args.enable_merge_response or not args.conserve_queue:
-        parser.error("both default-OFF flags must be explicitly enabled")
+    if not args.enable_merge_response or not args.conserve_queue or not args.learned_admission:
+        parser.error("all three default-OFF flags must be explicitly enabled")
     check_gates(args)  # Before torch/CUDA, model, or source opening.
     schedule = json.loads(safe(args.schedule).read_text())
     if schedule["max_seconds"] > 21600 or schedule["stages"] != [[60, 30], [120, 30], [300, 60]]:
@@ -91,7 +94,9 @@ def main(argv=None):
     frozen = {n: v.detach().cpu().clone() for n, v in rt.model.state_dict().items()
               if not n.startswith("merge_response.")}
     receipt = dict(optimizer_names=names, prepared_sha256=digest(args.prepared),
-                   feasibility_sha256=digest(args.feasibility), review_sha256=digest(args.review))
+                   feasibility_sha256=digest(args.feasibility), review_sha256=digest(args.review),
+                   implementation_hashes=implementation_hashes(),
+                   flags=dict(merge_response=True, conserve_queue=True, learned_admission=True))
     # A matching nested config is supplied to legacy scorers/accept.py; unknown tensors must reject.
     resolved = asdict(rt.config)
     resolved["model"]["merge_response"] = True

@@ -27,7 +27,7 @@ python -m tools.wmfixmerge.feasibility --prepared /root/autodl-tmp/c4/wmfixmerge
 ```
 
 `HARNESS_CONTRACT.json` is an independently checked `wmfix_harness_contract/1` receipt with
-`corrected_report_sha256`, `prepared_sha256`, `native_lanes_sha256`, `runtime_sha256`,
+`corrected_report_sha256`, `prepared_sha256`, `native_lanes_sha256`, `scorer_sha256`, `runtime_sha256`,
 `source_clock_match: true`, `residual_remains: true`, plus the actual clock-comparison evidence.
 This is needed because the inherited recorded labels use left-boundary source rectangles while the
 inherited WM scorer samples after insertion. A report's existence alone cannot certify their parity.
@@ -42,10 +42,14 @@ Astra's `REVIEW.json` must identify reviewer `Astra`, status `APPROVED`, and bin
 ## Exact eventual training command (MAIN only, after gates)
 
 ```bash
-timeout --signal=INT --kill-after=30s 21600s python -m tools.wmfixmerge.train --enable-merge-response --conserve-queue --device cuda --prepared /root/autodl-tmp/c4/wmfixmerge20261031/TRAIN_PREPARED.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --corrected-report /root/autodl-tmp/c4/wmfixmerge20261031/WMREQUAL3.md --feasibility /root/autodl-tmp/c4/wmfixmerge20261031/FEASIBILITY.json --review /root/autodl-tmp/c4/wmfixmerge20261031/REVIEW.json --out /root/autodl-tmp/c4/wmfixmerge20261031/train
+timeout --signal=INT --kill-after=30s 21600s python -m tools.wmfixmerge.train --enable-merge-response --conserve-queue --learned-admission --device cuda --prepared /root/autodl-tmp/c4/wmfixmerge20261031/TRAIN_PREPARED.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --corrected-report /root/autodl-tmp/c4/wmfixmerge20261031/WMREQUAL3.md --feasibility /root/autodl-tmp/c4/wmfixmerge20261031/FEASIBILITY.json --review /root/autodl-tmp/c4/wmfixmerge20261031/REVIEW.json --out /root/autodl-tmp/c4/wmfixmerge20261031/train
 ```
 
-The checked-in schedule and both model/ledger flags default OFF. Explicit CLI flags enable the run.
+The checked-in schedule and all three field/ledger/admission flags default OFF. Explicit CLI flags enable the run.
+Admission uses the SAME entrance/ordinal-keyed inferred pool draw as later entrant motion (no class-setting lookup).
+Physical stop-speed formula and geometric lane limits/nominal vehicle length remain; no new behavioural threshold.
+Real feasibility records ledger-only versus inferred-admission/zero-head ablations before the head's own optimizer step.
+The passing receipt binds implementation hashes; changing these files invalidates launch approval.
 Only `merge_response.*` (1,473 parameters) enter Adam, lr3e-4, FP32. Frozen buffers/parameters are
 checked on every export; canonical `load_checkpoint` must reload every tensor exactly.
 Each microbatch contains native plus one arm; cycle worlds then arm index, shared random futures,
