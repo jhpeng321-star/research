@@ -1,6 +1,6 @@
 """MAPPO actor = the C4 actor, executed exactly like ``wms.control.policy.PolicyExecutor``.
 
-Fairness by construction: MAPPO trains the SAME ``CavPolicy`` (lane head on, default sizes,
+Fairness by construction: MAPPO trains the SAME ``CavPolicy`` (lane head on by default,
 so ``wms.control.policy.load_policy_fn`` rebuilds it) and ``RsuGroupEncoder`` the C4 method
 trains, on the SAME inputs, with the SAME deployment step:
 
@@ -24,6 +24,11 @@ acceleration-head and lane-head outputs with forward hooks, so no actor code is 
 the joint per-CAV log-probability is ``log pi(accel) + log pi(lane | feasible)``.  Frames are
 compacted to their CAV slots first (the encoder is permutation-equivariant over the masked
 CAV set and the actor is per-slot, so this is exact; tested).
+
+``[policy] lane_control = "native"`` builds no lane head. Lane log-probability and
+entropy are zero (joint = accel only); the SUMO command has ``lanes=None``, leaving
+native laneChangeMode untouched. Lane observations and all longitudinal/reward
+machinery are retained.
 """
 
 from __future__ import annotations
@@ -61,13 +66,18 @@ _MID = (LEGACY_ACCEL_MAX_MPS2 + ACCEL_MIN_MPS2) / 2.0
 _HALF_LOG_2PI_E = 0.5 * (1.0 + math.log(2.0 * math.pi))
 
 
-def build_networks(accel_max: float = LEGACY_ACCEL_MAX_MPS2) -> tuple[CavPolicy, RsuGroupEncoder,
-                                                                      TeamCritic]:
+def build_networks(accel_max: float = LEGACY_ACCEL_MAX_MPS2, *,
+                   lane_control: str = "learned") -> tuple[CavPolicy, RsuGroupEncoder, TeamCritic]:
     """The C4 networks at their default sizes (the only sizes ``load_policy_fn`` rebuilds).
 
     ``accel_max``: the actor's action cap.  MAPPO keeps the LEGACY 1.5 unless the config sets
     ``[policy] accel_max_mps2`` (ACCELCAP_NOTES.md); a loaded state dict brings its own bound."""
-    return CavPolicy(lane_head=True, accel_max=accel_max), RsuGroupEncoder(), TeamCritic()
+    if lane_control not in ("learned", "native"):
+        raise ValueError("lane_control must be 'learned' or 'native'")
+    policy = CavPolicy(lane_head=lane_control == "learned", accel_max=accel_max)
+    if lane_control == "native":
+        policy.lane_control = "native"
+    return policy, RsuGroupEncoder(), TeamCritic()
 
 
 def policy_scale(policy) -> float:
@@ -148,6 +158,10 @@ class ActorStep:
                            torch.where(cav, intent, torch.zeros_like(intent)))
         command = torch.where(cav, safe, torch.full_like(safe, float("nan")))
         lanes = torch.where(changed, new_lane, torch.full_like(new_lane, -1))
+        # Even an all--1 tensor enables laneChangeMode 513 in CavSumoEnv. Native
+        # lanes MUST use None, exactly like PolicyExecutor/CTRL0/candidate A.
+        if getattr(self.policy, "lane_control", "learned") == "native":
+            lanes = None
         return {
             "state": {k: augmented[k] for k in STATE_KEYS if k in augmented},
             "lane_mask": mask, "cav_mask": cav, "latent": latent, "accel": out.accel,
@@ -211,6 +225,10 @@ def evaluate_actions(policy: CavPolicy, group_encoder: RsuGroupEncoder,
                              torch.zeros_like(mean))
     entropy_accel = torch.where(cav, _HALF_LOG_2PI_E + log_std.clamp(-5.0, 1.0),
                                 torch.zeros_like(mean))
+    if not policy.has_lane_head:
+        zeros = torch.zeros_like(logp_accel)
+        return {"index": index, "cav": cav, "logp_accel": logp_accel, "logp_lane": zeros,
+                "entropy_accel": entropy_accel, "entropy_lane": zeros}
     feasible = _feasible(mask_c, cav)
     options = feasible.sum(-1)
     logits = torch.where(feasible, heads["lane_logits"], torch.full_like(heads["lane_logits"], -1e9))
@@ -229,10 +247,12 @@ def export_payload(policy: CavPolicy, group_encoder: RsuGroupEncoder, lane_rules
     """Deploy actor in the ``c4_dreamer/3`` payload schema (policy, group_encoder, lane_rules),
     tagged ``trainer = "mappo"``; loads with ``wms.control.policy.load_policy_fn`` unchanged."""
     from wms.control.policy import accel_bounds_payload
-    payload = {"format": EXPORT_FORMAT, "trainer": "mappo", "lane_head": True,
+    payload = {"format": EXPORT_FORMAT, "trainer": "mappo", "lane_head": policy.has_lane_head,
                "lane_rules": asdict(lane_rules), **accel_bounds_payload(policy),
                "policy": {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()},
                "group_encoder": {k: v.detach().cpu().clone()
                                  for k, v in group_encoder.state_dict().items()}}
     payload.update(extra)
+    if getattr(policy, "lane_control", "learned") == "native":
+        payload["lane_control"] = "native"
     return payload

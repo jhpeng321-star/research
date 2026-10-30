@@ -227,11 +227,14 @@ class MappoTrainer:
     # ---------------------------------------------------------------- persistence
     def _spec(self) -> dict:
         return {**self.env_spec, "lane_rules": asdict(self.cfg.lane_rules),
+                "lane_control": getattr(self.policy, "lane_control", "learned"),
                 "reward_weights": asdict(self.weights)}
 
     def _checkpoint(self) -> dict:
         return {
             "format": CHECKPOINT_FORMAT,
+            "lane_control": getattr(self.policy, "lane_control", "learned"),
+            "lane_head": self.policy.has_lane_head,
             "iteration": self.iteration, "episode_index": self.episode_index,
             "episodes_done": self.episodes_done, "failures": self.failures,
             "policy": self.policy.state_dict(), "group_encoder": self.group_encoder.state_dict(),
@@ -354,6 +357,8 @@ class MappoTrainer:
             self.resume_info = {"skipped": skipped} if skipped else {}
             return False
         state, path = found
+        if state.get("lane_control", "learned") != getattr(self.policy, "lane_control", "learned"):
+            raise ValueError("resume lane_control differs from checkpoint; use a fresh --init-from run")
         self.iteration = state["iteration"]
         self.episode_index = state["episode_index"]
         self.episodes_done = state["episodes_done"]
@@ -400,7 +405,14 @@ class MappoTrainer:
             raise ValueError(f"{path}: neither a trainer checkpoint nor an exported actor")
         is_trainer = state.get("format") == CHECKPOINT_FORMAT and "critic" in state
         configured = getattr(self.policy, "accel_max", None)
-        self.policy.load_state_dict(state["policy"], strict=True)
+        policy_state = state["policy"]
+        removed = []
+        if getattr(self.policy, "lane_control", "learned") == "native":
+            removed = sorted(k for k in policy_state if k.startswith("lane_head."))
+            policy_state = {k: v for k, v in policy_state.items() if k not in removed}
+        # Only the independent lane branch may be removed; all retained weights
+        # still load strictly (no silent architecture/observation mismatch).
+        self.policy.load_state_dict(policy_state, strict=True)
         _warn_accel_override(path, configured, getattr(self.policy, "accel_max", None))
         self.group_encoder.load_state_dict(state["group_encoder"], strict=True)
         if is_trainer:
@@ -414,6 +426,7 @@ class MappoTrainer:
         else:
             alpha_note = "reset to fresh"
         record = {"path": str(path), "sha256": sha256_file(path),
+                  "lane_head_removed_keys": removed,
                   "kind": "trainer_checkpoint" if is_trainer else "exported_actor",
                   "source_iteration": state.get("iteration"),
                   "critic": "loaded" if is_trainer else "fresh",

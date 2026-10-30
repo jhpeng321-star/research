@@ -26,7 +26,7 @@ def load_policy_fn(path: Path | str, *, deterministic: bool = True, device: str 
     payload = torch.load(Path(path), map_location=device, weights_only=False)
     if payload.get("format") != "c4_mappo_trainer/2":
         return _load_c4(path, deterministic=deterministic, device=device)
-    policy, encoder, _ = build_networks()
+    policy, encoder, _ = build_networks(lane_control=payload.get("lane_control", "learned"))
     policy.load_state_dict(payload["policy"])
     encoder.load_state_dict(payload["group_encoder"])
     policy.eval()

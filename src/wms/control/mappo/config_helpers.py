@@ -39,6 +39,8 @@ def merge_override(cfg: dict, override: Mapping) -> dict:
             cfg.setdefault("env", {})["name"] = value
         elif key == "env_kwargs":
             cfg.setdefault("env", {})["kwargs"] = dict(value)
+        elif key == "lane_control":
+            cfg.setdefault("policy", {})[key] = value
         elif key in ppo_keys:
             cfg.setdefault("mappo", {})[key] = value
         elif key in rollout_keys:
@@ -82,14 +84,16 @@ def build_trainer(cfg: Mapping, *, workers: int, out_dir: Path | str, config_pat
     # Actor action cap (ACCELCAP_NOTES.md): LEGACY 1.5 unless ``[policy] accel_max_mps2`` is set
     # (a resumed / --init-from checkpoint brings its own stored bound).
     policy_section = dict(cfg.get("policy", {}))
-    unknown = set(policy_section) - {"accel_max_mps2"}
+    unknown = set(policy_section) - {"accel_max_mps2", "lane_control"}
     if unknown:
         raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
     accel_max = float(policy_section.get("accel_max_mps2", LEGACY_ACCEL_MAX_MPS2))
-    policy, encoder, critic = build_networks(accel_max=accel_max)
+    lane_control = policy_section.get("lane_control", "learned")
+    policy, encoder, critic = build_networks(accel_max=accel_max, lane_control=lane_control)
     meta = {"env": env_spec, "reward_weights": dataclasses.asdict(weights),
             "config_path": config_path, "smoke": smoke,
-            "actor": f"wms.control.policy.CavPolicy(lane_head=True, accel_max={accel_max})",
+            "actor": f"wms.control.policy.CavPolicy(lane_head={policy.has_lane_head}, accel_max={accel_max})",
+            "lane_control": lane_control,
             "accel_max_mps2": accel_max,
             "group_encoder": "wms.control.policy.RsuGroupEncoder",
             "critic": "wms.control.policy.TeamCritic",

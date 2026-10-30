@@ -7,6 +7,9 @@
 #   python -m wms.control.mappo.train --config configs/c4_mappo.toml --workers N --out DIR
 # Re-running with the same --out resumes.  See MAPPO_NOTES.md.
 
+[policy]
+lane_control = "learned"                  # existing behaviour; "native" = speed-only / SUMO lanes
+
 [mappo]                                  # PPO hyperparameters
 gamma = 0.99                             # per 1 s control step (= C4 trainer gamma)
 gae_lambda = 0.95

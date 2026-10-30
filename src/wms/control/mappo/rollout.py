@@ -262,7 +262,7 @@ def _worker_init(spec: dict) -> None:
 
 def _worker_deps(spec: Mapping) -> dict:
     if "actor" not in _WORKER:
-        policy, encoder, _ = build_networks()
+        policy, encoder, _ = build_networks(lane_control=spec.get("lane_control", "learned"))
         policy.eval()
         encoder.eval()
         _WORKER["actor"] = ActorStep(policy, encoder, LaneRules(**spec.get("lane_rules", {})))
