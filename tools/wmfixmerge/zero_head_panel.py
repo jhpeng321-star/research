@@ -116,6 +116,9 @@ def main():
             text=True).strip()
     except Exception:
         pass
+    stamp = time.strftime("%Y%m%dT%H%M%S")
+    if (out / "LAUNCH.json").is_file():
+        (out / "LAUNCH.json").rename(out / f"LAUNCH_{stamp}.json")
     with (out / "LAUNCH.json").open("x") as stream:
         json.dump(launch, stream, indent=2)
     print("OWN_PID", os.getpid(), "groups", hi - lo + 1, "steps 600", flush=True)
@@ -142,6 +145,8 @@ def main():
         print("BATCH", i, receipt["seconds"], receipt["peak_gpu_bytes"], flush=True)
         done.append(i)
     score.Entries = original_entries
+    if (out / "DONE.json").is_file():
+        (out / "DONE.json").rename(out / f"DONE_{stamp}.json")
     with (out / "DONE.json").open("x") as stream:
         json.dump(dict(pid=os.getpid(), completed=len(done), groups=done,
                        peak_gpu_bytes=torch.cuda.max_memory_allocated(),
