@@ -196,7 +196,9 @@ def load_training_starts(raw, model, seed):
 
 
 @torch.no_grad()
-def rollout(model, batch, feedback, *, horizon_s, seed, pad_max=288, draw=0):
+def rollout(model, batch, feedback, *, horizon_s, seed, pad_max=288, draw=0,
+            paired_batch=None, group_keys=None):
+    from dataclasses import replace
     from wms.control.dreamer import with_entry_slots, _entry_process, _EntryRecorder
     from wms.control.futures import lane_uniform_draws, HISTORY_KEYS
     from wms.control.nativeinit import pair_merge_streams
@@ -208,26 +210,41 @@ def rollout(model, batch, feedback, *, horizon_s, seed, pad_max=288, draw=0):
         raise ValueError(f"only observed pre-t0 history is allowed: {sorted(disallowed)}")
     if batch.entry_feat is None or batch.entry_queue is None:
         raise ValueError("WM distillation requires observed entry features and queue state")
+    if batch.entry_feat_control is not None:
+        batch = replace(batch, entry_feat=batch.entry_feat_control)
     batch = with_entry_slots(batch, horizon_s, pad_max,
                              torch.Generator().manual_seed(seed), queue_state=True)
     initial = {k: v.clone() for k, v in batch.state.items()}
-    pair_merge_streams(initial, None, len(batch.metadata), sample_seed(seed, draw))
+    pr = None
+    if paired_batch is not None:
+        # The exact identity-keyed streams used by wmcombined.e3_score / W-verdict.
+        import numpy as np
+        from wms.train.paired_random import PairedRandom
+        pr = PairedRandom.from_batch(paired_batch, seed=sample_seed(seed, draw),
+            device=initial["s_m"].device, pad=batch.entry_spec["pad"])
+        initial["merge_pivot_rng_seed"] = torch.as_tensor(
+            (pr._keys & np.uint64((1 << 52) - 1)).astype(np.int64), device=initial["s_m"].device)
+        batch.entry_spec["seeds"] = pr.row_seeds
+    else:
+        pair_merge_streams(initial, None, len(batch.metadata), sample_seed(seed, draw))
     steps = int(round(horizon_s / .5))
     history = {k: v for k, v in batch.rollout_kwargs.items() if k in HISTORY_KEYS}
     _, embedding, params = model.encode_drivers(initial, **history)
     observed = history.get("driver_history_mask")
     if params is None or observed is None:
         raise ValueError("learned mix requires pre-t0 inferred settings and observed history")
-    mix = LearnedMix(params, observed, sample_seed(seed, draw), list(range(len(batch.metadata))))
+    mix = LearnedMix(params, observed, sample_seed(seed, draw),
+                     list(range(len(batch.metadata))) if group_keys is None else group_keys)
     learned = None
     if model.physics.entry_learned:
         from wms.model.entry_learned import load_learned_entry
         learned = load_learned_entry()
     entries = _EntryRecorder(_entry_process(batch.entry_spec, list(range(len(batch.metadata))),
         initial["s_m"].shape[1], "sumo_like_v2", learned_entry=learned,
-        couple_draws=True, sample_index=draw))
-    lane = lane_uniform_draws([model], len(batch.metadata), steps, initial["s_m"].shape[1],
-                              sample_seed(seed, draw), device=initial["s_m"].device)
+        couple_draws=True, sample_index=draw if pr is None else 0))
+    lane = (pr.uniform("lane", range(steps)) if pr is not None and model._samples_lanes else
+            lane_uniform_draws([model], len(batch.metadata), steps, initial["s_m"].shape[1],
+                              sample_seed(seed, draw), device=initial["s_m"].device))
     kwargs = {} if lane is None else {"lane_uniform": lane}
     with scoring_rng(sample_seed(seed, draw), initial["s_m"].device):
         roll = model.rollout(initial, n_steps=steps, cav_teacher=None, cav_controller=feedback,
