@@ -1,0 +1,5 @@
+# S-CAPREL: same candidate-A recipe, opt-in CTRL0-relative residual execution.
+extends = "c4_policy14_candA_longgrad_skip.toml"
+
+[policy]
+residual_reference = "ctrl0"

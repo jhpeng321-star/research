@@ -416,6 +416,10 @@ class CavSumoEnv:
         residual_parity = residual_command is not None and execution_parity_enabled()
         residuals = None
         if residual_command is not None:
+            if getattr(residual_command, "residual_reference", "base") != "base":
+                from wms.control.execution import mode as execution_mode
+                if execution_mode() != 2:
+                    raise CavEnvError("ctrl0 residual_reference requires execution mode 2")
             if self.mode != "direct" or lanes is not None or fallback != "native":
                 raise CavEnvError("native residual requires direct mode, native fallback and native lanes")
             residuals = self._accel_by_vehicle(residual_command.residual)

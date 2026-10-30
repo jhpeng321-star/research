@@ -33,6 +33,8 @@ def contract(residual_reference="base"):
     """Portable checkpoint binding; flag-off payloads retain their original shape."""
     import hashlib
     from pathlib import Path
+    if residual_reference != "base" and (residual_reference != "ctrl0" or mode() != 2):
+        raise ValueError("ctrl0 residual_reference requires execution mode 2")
     if not enabled():
         return None
     driver = os.environ.get("C4_EXECUTION_DRIVER")
@@ -54,6 +56,8 @@ def contract(residual_reference="base"):
 
 def check_contract(payload):
     stored = payload.get("execution_contract")
+    if payload.get("residual_reference", "base") != "base" and stored is None:
+        raise ValueError("cap-relative checkpoint requires its execution contract")
     if stored is not None and stored != contract(payload.get("residual_reference", "base")):
         raise ValueError("checkpoint execution contract differs from current flags/learned driver")
 
@@ -204,7 +208,8 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed
                "capped_or_native_fraction": fraction, "maximum_fraction": CAP_REJECT_FRACTION,
                 "passed": fraction <= CAP_REJECT_FRACTION}
     if executed_delta is not None:
-        receipt["execution_contract"] = contract(residual_reference)
+        receipt["execution_contract"] = (contract() if residual_reference == "base"
+                                         else contract(residual_reference))
         receipt["cap_definition"] = "any_envelope_clipping_or_zero"
         receipt["fully_capped_fraction"] = float(((d == 0.) & (r != 0.)).mean())
         receipt["partially_capped_fraction"] = float((cap & (d != 0.)).mean())
@@ -219,11 +224,12 @@ def verify_authority(path, checkpoint, *, residual_reference="base"):
     if path is None:
         raise ValueError("execution parity deployment requires --execution-authority replay receipt")
     receipt = json.loads(Path(path).read_text(encoding="utf-8"))
+    expected_contract = contract() if residual_reference == "base" else contract(residual_reference)
     fraction = receipt.get("capped_or_native_fraction", float("nan"))
     hashes = receipt.get("recordings", {})
     if (receipt.get("schema") != "execparity_authority/2" or not receipt.get("passed")
             or receipt.get("cap_definition") != "any_envelope_clipping_or_zero"
-            or receipt.get("execution_contract") != contract(residual_reference)
+            or receipt.get("execution_contract") != expected_contract
             or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
             or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION
             or receipt.get("checkpoint_sha256") != hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()

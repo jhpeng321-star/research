@@ -6,6 +6,7 @@ import fcntl
 import gzip
 import hashlib
 import json
+import math
 import os
 import sys
 import time
@@ -61,6 +62,10 @@ def jobs_for(mode, host, only=None):
 def main():
     mode, host = sys.argv[1:3]
     reference = os.environ.get('C4_RESIDUAL_REFERENCE', 'base')
+    probe = os.environ.get('C4_CAPREL_PROBE_RESIDUAL')
+    if probe is not None:
+        probe = float(probe)
+        assert reference == 'ctrl0' and math.isfinite(probe)
     assert reference in ('base', 'ctrl0')
     if reference == 'ctrl0':
         # Fresh, explicitly staged attempt root; historical outputs are immutable.
@@ -78,6 +83,9 @@ def main():
     assert os.environ['C4_POLICY_STOCHASTIC'] == os.environ['C4_POLICY_ACCEL_NOISE'] == '0'
     verified = verify_sources()
     adapter = sha(OWN / 'tools/execparity/alwayscmd_adapter.py')
+    caprel_sources = ({name: sha(OWN / 'src/wms/control' / name)
+                      for name in ('residual.py', 'alwayscmd.py', 'sumo_idm.py')}
+                     if reference == 'ctrl0' else None)
     import e3final_runner as original
     original.SEEDS.verify()
     from traffic_shepherd.c4 import e3long as L
@@ -93,6 +101,8 @@ def main():
         j.update(id=spec['id'], arm=spec['arm'])
         if reference != 'base':
             j['residual_reference'] = reference
+        if probe is not None and j['arm'] == 'alwaysx':
+            j['probe_residual_mps2'] = probe
         assert j['seed'] == spec['seed'] and j['warmup'] == 300 and j['horizon'] == 600 and j['charge'] == 900
         assert not (OWN / 'jobs' / j['id']).exists(), 'existing attempt: no implicit retry'
         jobs.append(j)
@@ -100,7 +110,9 @@ def main():
                      source_manifest_sha256=SOURCE, verified_source_files=verified,
                      input_hashes=bindings, load=os.getloadavg(), jobs=jobs, only=only,
                      adapter_sha256=adapter,
-                     worker_sha256=sha(__file__), time=time.time())
+                      worker_sha256=sha(__file__), time=time.time())
+    if caprel_sources is not None:
+        preflight['caprel_source_sha256'] = caprel_sources
     write(OWN / f'{mode}_PREFLIGHT.json', preflight)
     emit('preflight', **preflight)
     for job in jobs:
@@ -130,7 +142,11 @@ def main():
             with (out / 'worker.log').open('w') as log, contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
                 result = run_e3(job, inputs, out, measurement=measurement, log_path=log_path)
             result.update(ok=True, job=job, wall_s=time.monotonic() - start,
-                          actual_sim_s=float(measurement.progress), started=started)
+                           actual_sim_s=float(measurement.progress), started=started)
+            if caprel_sources is not None:
+                assert all(sha(OWN / 'src/wms/control' / name) == digest
+                           for name, digest in caprel_sources.items())
+                result['caprel_source_sha256'] = caprel_sources
             assert result['actual_sim_s'] == result['sim_s'] == 900
             m = result['metrics']
             assert set(m['windows']) == {'120', '300', '600'}
@@ -170,6 +186,7 @@ def main():
                                  all(c['current'] == c['stored'] for c in comparisons.values()))
                 if reference != 'base':
                     identity['residual_reference'] = reference
+                    identity['caprel_source_sha256'] = caprel_sources
                 write(out / 'CTRL0_IDENTITY.json', identity)
                 assert identity['bit_identical'], 'ALWAYS0 != stored CTRL0: STOP, no production'
             verify_sources()

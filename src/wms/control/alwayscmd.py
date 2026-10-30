@@ -28,6 +28,14 @@ import math
 BACKEND_CONTRACT = "always_commanded_ctrl0/1"
 
 
+class _CaprelCommands(dict):
+    """Keep command-time provenance for the completed-step execution ledger."""
+
+    def __init__(self):
+        super().__init__()
+        self.base_law, self.ctrl0, self.cap = {}, {}, {}
+
+
 def command_cap(api, vid, *, dt=0.5):
     """Prospective mode-27 cap from live SUMO queries, never a completed-step cache.
 
@@ -75,21 +83,24 @@ def commands(api, residuals, lo, hi, *, dt=0.5, parity=None, residual_reference=
     from .nativeinit import sumo_native_accel
     if residual_reference not in ("base", "ctrl0"):
         raise ValueError("residual_reference must be 'base' or 'ctrl0'")
-    composed = {}
+    composed = _CaprelCommands() if residual_reference == "ctrl0" else {}
     for vid, residual in residuals.items():
         if not np.isfinite(residual):
             raise ValueError("nonfinite residual for a designated CAV")
         baseline = float(sumo_native_accel(api, vid, dt))
         if residual_reference == "ctrl0":
             from .residual import executed_from_residual
+            speed = float(api.vehicle.getSpeed(vid))
+            cap = command_cap(api, vid, dt=dt)
             value = executed_from_residual(
-                {"v_mps": float(api.vehicle.getSpeed(vid)), "base_mps2": baseline,
-                 "cap_mps2": command_cap(api, vid, dt=dt)}, float(residual),
+                {"v_mps": speed, "base_mps2": baseline, "cap_mps2": cap}, float(residual),
                 dict(residual_reference="ctrl0", lo=lo, hi=hi, dt=dt,
                      accel_max=float(api.vehicle.getAccel(vid))))
             # Preserve the original CTRL0 *write*, hence its bitwise realised
             # speed too (acceleration -> speed round trips need not be exact).
-            composed[vid] = baseline if residual == 0.0 else value
+            ctrl0 = max(-speed / dt, min(baseline, cap))
+            composed.base_law[vid], composed.ctrl0[vid], composed.cap[vid] = baseline, ctrl0, cap
+            composed[vid] = baseline if residual == 0.0 or value == ctrl0 else value
         elif residual == 0.0:
             composed[vid] = baseline
         else:
@@ -227,5 +238,8 @@ def completed_rows(api, before, residuals, issued, *, dt=0.5):
                      "issued_acceleration_mps2": None if command is None else float(command),
                      "speed_before_mps": v,
                      "realised_acceleration_mps2": (float(api.vehicle.getSpeed(vid)) - v) / dt,
-                     "writer": "always_commanded" if command is not None else "native"}
+                      "writer": "always_commanded" if command is not None else "native"}
+        if isinstance(issued, _CaprelCommands) and vid in issued:
+            rows[vid].update(base_law_mps2=issued.base_law[vid],
+                ctrl0_mps2=issued.ctrl0[vid], cap_mps2=issued.cap[vid], residual_reference="ctrl0")
     return rows

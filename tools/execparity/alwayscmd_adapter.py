@@ -51,6 +51,8 @@ def caprel_module():
     for name in ("residual", "sumo_idm", "alwayscmd"):
         key = f"wms.control.{name}"
         if key in sys.modules:
+            if Path(sys.modules[key].__file__).resolve() != (root / f"{name}.py").resolve():
+                raise ValueError("caprel overlay found a different execution-law module")
             continue
         spec = importlib.util.spec_from_file_location(key, root / f"{name}.py")
         module = importlib.util.module_from_spec(spec)
@@ -62,11 +64,14 @@ def caprel_module():
 class AlwaysCommanded:
     """Run the original C1 executor; keep its typed residual (or force exact zero)."""
 
-    def __init__(self, executor, *, force_zero):
+    def __init__(self, executor, *, force_zero, probe_residual=None):
         if not executor.residual_on_native:
             raise ValueError("always-commanded requires the native-residual C1 executor")
         self.executor = executor
         self.force_zero = force_zero
+        self.probe_residual = probe_residual
+        if probe_residual is not None and not np.isfinite(probe_residual):
+            raise ValueError("finite parity probe residual required")
 
     def __getattr__(self, name):
         return getattr(self.executor, name)
@@ -77,6 +82,8 @@ class AlwaysCommanded:
         if not isinstance(command, NativeResidualCommand) or lanes is not None:
             raise ValueError("always-commanded requires C1 typed residuals and native lanes")
         residual = np.zeros_like(command.residual) if self.force_zero else command.residual
+        if not self.force_zero and self.probe_residual is not None:
+            residual = np.full_like(residual, self.probe_residual)
         typed = NativeResidualCommand(residual, command.accel_min, command.accel_max)
         return (typed, lanes) if with_lanes else typed
 
@@ -126,7 +133,7 @@ def always_commanded_commands(api, residuals, lo, hi, *, dt=0.5):
 
 
 @contextmanager
-def arm_loader(arm, checkpoint, *, residual_reference="base"):
+def arm_loader(arm, checkpoint, *, residual_reference="base", probe_residual=None):
     """Scope the loader override to the always-commanded arms; other arms unchanged."""
     from wms.control import policy
     from wms.control import nativeinit
@@ -142,7 +149,8 @@ def arm_loader(arm, checkpoint, *, residual_reference="base"):
     def load(path, **kwargs):
         if str(path) != str(checkpoint):
             raise ValueError("always-commanded loader received a different checkpoint")
-        return AlwaysCommanded(original(path, **kwargs), force_zero=(arm == "always0"))
+        return AlwaysCommanded(original(path, **kwargs), force_zero=(arm == "always0"),
+                                probe_residual=probe_residual)
 
     policy.load_policy_fn = load
     nativeinit.sumo_residual_commands = always_commanded_commands
@@ -162,7 +170,8 @@ def run_e3(job, inputs, out, *, measurement, log_path=None):
         open_log(str(log_path))
     try:
         with arm_loader(job["arm"], inputs["policy"],
-                        residual_reference=job.get("residual_reference", "base")):
+                        residual_reference=job.get("residual_reference", "base"),
+                        probe_residual=job.get("probe_residual_mps2")):
             return original(job, inputs, out, measurement=measurement)
     finally:
         close_log()

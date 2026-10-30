@@ -469,6 +469,10 @@ class PolicyExecutor:
         # Data-collection exploration (Dreamer loop): extra N(0, sigma) on the commanded accel before safety.
         self.extra_accel_noise = float(extra_accel_noise)
         self.residual_on_native = bool(getattr(policy, "residual_on_native", False))
+        if getattr(policy, "residual_reference", "base") != "base":
+            from .execution import mode
+            if mode() != 2:
+                raise ValueError("ctrl0 residual_reference requires execution mode 2")
         if self.residual_on_native and self.extra_accel_noise:
             raise ValueError("external acceleration noise would break native initialization")
         self.dwell = dwell if dwell is not None else LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)

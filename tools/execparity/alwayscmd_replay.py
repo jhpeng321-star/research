@@ -60,6 +60,10 @@ def world_rows(job, *, residual_reference="base"):
     rows = log_rows(job / "execution_log.jsonl.gz")
     if any(r.get("residual_reference", "base") != residual_reference for r in rows):
         raise ValueError("execution log residual_reference differs from replay law")
+    if residual_reference == "ctrl0":
+        result = json.loads((job / "result.json").read_text(encoding="utf-8"))
+        if result.get("caprel_source_sha256") != caprel_sources():
+            raise ValueError("deployment/replay caprel source hashes differ")
     out = []
     for r in rows:
         t = float(r["t_s"])
@@ -97,6 +101,11 @@ def world_rows(job, *, residual_reference="base"):
                         realised=realised, imagined=imag, head=head,
                         inferred_base=base, cap=cap, mirror=mirror))
     return out, sha(tape_path)
+
+
+def caprel_sources():
+    return {name: sha(ROOT / "src/wms/control" / name)
+            for name in ("residual.py", "alwayscmd.py", "sumo_idm.py")}
 
 
 def main():
@@ -186,6 +195,8 @@ def main():
     if args.residual_reference == "ctrl0":
         if identity.get("residual_reference") != "ctrl0":
             raise ValueError("caprel requires a fresh cap-relative zero-identity canary")
+        if identity.get("caprel_source_sha256") != caprel_sources():
+            raise ValueError("caprel identity source binding differs from replay")
         result["residual_reference"] = "ctrl0"
     result["zero_ctrl0_identity"] = bool(identity.get("bit_identical") is True)
     result["passed"] = bool(result["pass_pooled_executed_rmse_within_head_rmse"]
@@ -212,9 +223,7 @@ def main():
         }
         if args.residual_reference == "ctrl0":
             receipt["residual_reference"] = "ctrl0"
-            receipt["caprel_source_sha256"] = {
-                name: sha(ROOT / "src/wms/control" / name)
-                for name in ("residual.py", "alwayscmd.py", "sumo_idm.py")}
+            receipt["caprel_source_sha256"] = caprel_sources()
         args.receipt.parent.mkdir(parents=True, exist_ok=True)
         args.receipt.write_text(json.dumps(receipt, indent=2, allow_nan=False) + "\n",
                                 encoding="utf-8")
