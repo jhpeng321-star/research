@@ -1,0 +1,18 @@
+{
+ "host": "gpuA",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_pilotlean_worker",
+ "start_epoch": 1793376487.8892138,
+ "seconds": 3.103564739227295,
+ "command": [
+  "-m",
+  "pytest",
+  "-q",
+  "tools/candB/pilot_lean_test.py",
+  "-k",
+  "not real_k4"
+ ],
+ "returncode": 0,
+ "remote_receipt": "PROBE_1793376487889150400.json",
+ "stdout": ".......                                                                  [100%]\n7 passed, 1 deselected in 1.30s\n",
+ "stderr": ""
+}

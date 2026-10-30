@@ -4,14 +4,14 @@ import json
 from pathlib import Path
 import subprocess
 
-RUNTIME='/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v2_20261030'
-ROOT='/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v2_20261030'
+RUNTIME='/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_v3_20261030'
+ROOT='/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030'
 PYTHON='/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python'
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=('prepare','dispatch','retire-waiting'))
+    parser.add_argument('action',choices=('prepare','dispatch','retire-waiting','retire-current-waiting'))
     args=parser.parse_args()
     code=f'''
 import hashlib,json,os,subprocess,time
@@ -21,8 +21,8 @@ if {args.action!r}=='retire-waiting': runtime=Path('/root/autodl-tmp/c4/candB_pi
 assert runtime.is_dir()
 env=dict(os.environ,PYTHONPATH='src:.',CUDA_VISIBLE_DEVICES='',C4_ALLOWED_ROOTS='/root/autodl-tmp/c4')
 os.chdir(runtime)
-if {args.action!r}=='retire-waiting':
-    old=Path('/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030')
+if {args.action!r} in ('retire-waiting','retire-current-waiting'):
+    old=root if {args.action!r}=='retire-current-waiting' else Path('/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030')
     assert not (old/'TRAINER_OWNERSHIP.json').exists()
     (old/'STOP').touch()
     owner=json.loads((old/'OWNERSHIP.json').read_text())
@@ -55,7 +55,7 @@ else:
 '''
     result=subprocess.run(['ssh','gpuA','/root/miniconda3/bin/python','-'],input=code,
         text=True,capture_output=True,timeout=90)
-    receipt=Path(__file__).with_name('pilot_lean_v2_'+args.action+'_receipt.json')
+    receipt=Path(__file__).with_name('pilot_lean_v3_'+args.action+'_receipt.json')
     with receipt.open('x') as stream:
         json.dump(dict(action=args.action,runtime=RUNTIME,root=ROOT,returncode=result.returncode,
             stdout=result.stdout,stderr=result.stderr),stream,indent=1)

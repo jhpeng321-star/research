@@ -15,6 +15,30 @@ def test_memory_bound_accounts_for_peers_and_contexts():
         lean.memory_bound(48*gib,7*gib,9.2*gib,2,.28)
 
 
+def test_worker_executed_stats_use_final_acting_ticks_and_transport(tmp_path,monkeypatch):
+    from tools.candB import pilot_lean_worker as worker
+    from wms.control import execution
+    import atexit
+    root=tmp_path/'EXPLORATORY-LEAN'/'future_workers'/'pool'
+    (root/'0').mkdir(parents=True)
+    monkeypatch.setattr(worker,'_state',dict(totals=None,minima=None,registered=False))
+    monkeypatch.setattr(atexit,'register',lambda *args: None)
+    monkeypatch.setenv('WMS_SPEED_FUTURE_PARENT_PID','test')
+    monkeypatch.setattr(worker.sys,'argv',['worker',str(root),'0'])
+    monkeypatch.setattr(execution,'executed_residual',lambda frame,*args,**kw: torch.zeros_like(frame['s_m']))
+    frame=dict(s_m=torch.zeros(1,2),v_mps=torch.zeros(1,2),present=torch.ones(1,2,dtype=torch.bool),
+        is_cav=torch.ones(1,2,dtype=torch.bool),lane=torch.zeros(1,2,dtype=torch.long))
+    result=torch.zeros(1,2,4); result[0,:,3]=torch.tensor([-1.,-100.])
+    worker.observe(frame,result,torch.tensor([[True,False]]))
+    worker.flush()
+    row=json.loads((root/'0'/'executed.json').read_text())
+    assert row['count']==row['nonzero']==1 and row['mean_braking']==1
+    assert row['min_executed_acceleration_mps2']==-1
+    total=worker.aggregate([dict(role='unperturbed_forward',workers=[dict(executed=row)]),
+        dict(role='perturbed_ES',workers=[dict(executed=dict(row,count=9999))])])
+    assert total['count']==1 and total['fraction_nonzero']==1
+
+
 def test_default_off_and_bad_recipe(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='explicit'):
         lean.run('unused', 'unused')

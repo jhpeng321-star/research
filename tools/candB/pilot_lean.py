@@ -9,6 +9,7 @@ import time
 from unittest.mock import patch
 
 from tools.candB import pilot_cli as base, pilot_lean_authority as authority
+from tools.candB import pilot_lean_worker
 
 
 def memory_bound(total, reserved, peer_bytes, workers, fraction):
@@ -65,6 +66,8 @@ def run(path, output, *, exploratory=False):
 
     class RetainedPool(real_pool):
         def __init__(self, trainer, common):
+            self.lean_role=('perturbed_ES' if common.get('eslong') else
+                ('unperturbed_forward' if common['kind']=='forward' else 'dense_backward'))
             if trainer.device.type == 'cuda':
                 torch.cuda.empty_cache()
                 samples = Path(output).parent/'GPU.jsonl'
@@ -106,8 +109,10 @@ def run(path, output, *, exploratory=False):
                 process.wait()
             for log in self.logs:
                 log.close()
-            state['workers'].append(dict(root=str(self.root), workers=[
-                dict(pid=p.pid, **json.loads((self.root / str(i) / 'memory.json').read_text()))
+            state['workers'].append(dict(root=str(self.root), role=self.lean_role, workers=[
+                dict(pid=p.pid, **json.loads((self.root / str(i) / 'memory.json').read_text()),
+                    executed=json.loads((self.root / str(i) / 'executed.json').read_text())
+                    if (self.root / str(i) / 'executed.json').exists() else None)
                 for i, p in enumerate(self.processes)
                 if (self.root / str(i) / 'memory.json').is_file()]))
 
@@ -146,6 +151,9 @@ def run(path, output, *, exploratory=False):
                             scope='coordinator training rollouts incl replay; final acting-CAV ticks',
                             count=count, fraction_nonzero=nonzero/max(1,count), mean_braking=brake/max(1,count),
                             min_delta_mps2=float(captured['minima'].cpu()))
+                    transported=pilot_lean_worker.aggregate(state['workers'])
+                    if transported is not None:
+                        metrics['executed_residual_training']=transported
                     trainer.save_checkpoint(Path(output, 'policy_latest.pt'))
                     return metrics
                 return patch.object(target, name, update)
@@ -181,6 +189,7 @@ def run(path, output, *, exploratory=False):
         @wraps(callback)
         def measured(frame):
             result = callback(frame)
+            pilot_lean_worker.observe(frame,result,kwargs.get('act_mask'))
             capture = state['capture']
             if capture is not None:
                 with torch.no_grad():

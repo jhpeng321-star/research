@@ -243,3 +243,11 @@
   45082/w963625m1900p10t300/2240;35565/w963495m2400p20t300/900;
   64945/w963904m2400p40t300/1700. Original panel SHA3eaa69a1 retained; only
   evaluation prefix reduced. Original K8/scoring/dense preserved, ES uses0..3.
+- v2 source41bd856f/authority09ca8154 verified and waiting supervisor16415
+  cooperatively retired BEFORE dispatch. During its admission wait, transport audit
+  found executed-tick telemetry must be flushed from isolated forward workers,
+  since the coordinator's replay cache has no physics callbacks. v3 adds only
+  read-only worker aggregate receipts, captured at graceful own-pool exit, excluding
+  perturbed ES and dense replays from the unperturbed executed-stat denominator.
+  Worker transport/final acting-mask + lean/R4 contracts **7 CPU PASS**,1 previously
+  passed heavy real-update proof deselected,1.30s. No baseline or updates discarded.

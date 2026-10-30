@@ -35,6 +35,9 @@ def main():
     waiting_sample=Path('/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030/GPU.jsonl')
     if waiting_sample.is_file():
         last=max(last,json.loads(waiting_sample.read_text().splitlines()[-1])['epoch'])
+    prior_v2=Path('/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v2_20261030/GPU.jsonl')
+    if prior_v2.is_file():
+        last=max(last,json.loads(prior_v2.read_text().splitlines()[-1])['epoch'])
     child = None
     while True:
         if (root/'STOP').exists():
