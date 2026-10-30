@@ -65,7 +65,8 @@ def source_for(panel, real_rows):
     return source,indexes
 
 
-def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, smoke):
+def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, smoke,
+                *, native_lanes=False, mix_modes=(False, True)):
     import numpy as np
     import torch
     from tools.errsrc.inference import LearnedMix
@@ -81,7 +82,7 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
         for draw in range(1 if smoke else 8):
             shared=len(base_refs)
             base_refs.append(len(records))
-            for mix in (False,True):
+            for mix in mix_modes:
                 block=len(records)
                 recs=source.group_records(gi,[ref]+[r for _,r in arms],base_row=block)
                 for (arm,_),rec in zip(arm_order,recs):
@@ -102,6 +103,9 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
     batch=collate(records)
     with scoring_rng(140014,device):
         inp=prepare_inputs(batch,model,settings,device,steps)
+    if native_lanes:
+        from tools.wmrequal.native_lanes import repair
+        inp.cav_controller = repair(inp.cav_controller)
     bind_merge_crn(inp)
     # K8 training driver/embedding uncertainty, drawn at start level and shared
     # across every arm and ON/OFF row; never independent per intervention.

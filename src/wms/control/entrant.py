@@ -44,7 +44,11 @@ class EntrantControllers:
     def native_lane_mask(self, state):
         mask = state.get("entrant", torch.zeros_like(state["present"])).bool()
         fn = getattr(self.feedback, "native_lane_mask", None)
-        return mask & (fn(state) if fn else torch.zeros_like(mask))
+        new = mask & (fn(state) if fn else torch.zeros_like(mask))
+        original = getattr(self.recorded, "native_lane_mask", None)
+        # Opt-in native timelines advertise original-slot ownership too. With
+        # the legacy TimelineControllers (no such method), preserve the old path.
+        return new if original is None else new | (~mask & original(state))
 
 
 class RowControllers:
