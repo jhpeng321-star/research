@@ -62,6 +62,7 @@ def runtime_contract(trainer):
         residual_reference=trainer.policy.residual_reference,
         horizon=horizon,
         exploration=trainer.exploration.as_dict(),
+        sampler_support_sha256=canonical(trainer.start_states.groups),
         long_credit_requested=trainer.long_credit_requested)
 
 
@@ -79,7 +80,10 @@ def verify_receipt(document, raw, *, wm, wm_config, trainer=None):
             raise ValueError('trained configuration differs from qualified runtime/objective')
         if not trainer.config.entrant_learned_mix or trainer.gated300['H_long'] != 300:
             raise ValueError('qualified mix/long-horizon execution is disconnected')
-    for name, digest in document.get('source_manifest', {}).items():
+    sources = document.get('source_manifest', {})
+    if not set(runtime_sources()).issubset(sources):
+        raise ValueError('ranking source manifest is incomplete')
+    for name, digest in sources.items():
         if sha256(name) != digest:
             raise ValueError('ranking source manifest mismatch: '+name)
     return document
@@ -244,6 +248,9 @@ def main(argv=None):
     del paths
     if sha256(a.wm) != WM_SHA or sha256(a.mappo) != MAPPO_SHA:
         raise ValueError('registered WM2/MAPPO checkpoint hash mismatch')
+    qualification = json.loads(safe_path(a.cct2).read_text())
+    if qualification.get('wm_config_sha256') != sha256(a.wm_config):
+        raise ValueError('WM qualification must bind the exact inference config SHA256')
     out = safe_path(a.out)
     if out.exists() or not out.parent.is_dir():
         raise ValueError('out must be a fresh file in an existing directory')
@@ -255,11 +262,15 @@ def main(argv=None):
     torch.manual_seed(965140)
     raw = _read_config(safe_path(a.config))
     raw['horizon']['gate_file'] = str(safe_path(a.horizon_gate))
+    from wms.control.looplong import configure, read_boundary
+    prepared = read_boundary(a.boundary)
+    if prepared.get('coop_credit') is False:
+        for key in ('w_individual', 'w_group', 'w_coop', 'w_team'):
+            raw['counterfactual'][key] = [0.] * len(raw['counterfactual'][key])
     if sha256(raw['long_credit']['cct2_file'].format(wm_sha256=WM_SHA)) != sha256(a.cct2):
         raise ValueError('explicit CCT-2 must equal the preset training authority')
     model = load_members([a.wm], [a.wm_config], a.device)[0][0]
     starts, _ = load_training_starts(raw, model, 965140)
-    starts.configure_focus_cells(raw['data']['focus_cell_fraction'])
     trainer = make_trainer(raw, model, a.current_policy, starts, device=a.device,
                            cct2=a.cct2, horizon_gate=a.horizon_gate)
     payload = torch.load(safe_path(a.current_policy), map_location='cpu', weights_only=False)
@@ -273,14 +284,16 @@ def main(argv=None):
                 if int(hashlib.sha256(f"965140:{int(row['seed'])}".encode()).hexdigest(), 16) % 5 == 0}
     trainer.start_states = exclude_development_starts(starts, excluded)
     from wms.control.dreamer import _same_groups
-    if payload.get('sampler') is not None and _same_groups(trainer.start_states, payload['sampler']):
+    sampler_restored = (payload.get('sampler') is not None
+                        and _same_groups(trainer.start_states, payload['sampler']))
+    if sampler_restored:
         trainer.start_states.load_state_dict(payload['sampler'])
-    from wms.control.looplong import configure, read_boundary
-    configure(trainer, read_boundary(a.boundary), raw, out.parent)
+    configure(trainer, prepared, raw, out.parent)
     if trainer.gated300['H_long'] != 300:
         raise ValueError('boundary rebind lost objective-qualified 300s credit')
     if trainer._tilt_sampler is not None and payload.get('coopw', {}).get('tilt_sampler'):
         trainer._tilt_sampler.load_state_dict(payload['coopw']['tilt_sampler'])
+    trainer.start_states.configure_focus_cells(raw['data']['focus_cell_fraction'])
     first_update = trainer.update_count
     teacher = load_policy_fn(a.mappo, device=a.device)
     signature = runtime_contract(trainer)
@@ -291,7 +304,8 @@ def main(argv=None):
         cct2_sha256=sha256(a.cct2), horizon_gate_sha256=sha256(a.horizon_gate),
         boundary_sha256=sha256(a.boundary), pairing_receipt_sha256=sha256(a.pairing_receipt),
         source_manifest={name: sha256(name) for name in runtime_sources()},
-        sampler_provenance=starts.distill_provenance, arms=list(ARMS), rows=[])
+        sampler_provenance=starts.distill_provenance, sampler_restored=sampler_restored,
+        arms=list(ARMS), rows=[])
     # Preserve full-horizon per-future physical J before prefix truncation.
     original_prefix = gated300.prefix
     original_rollout = model.rollout
@@ -316,6 +330,7 @@ def main(argv=None):
     original_factory = trainer.controller_factory
     saved_head = copy.deepcopy(trainer.policy.residual_head.state_dict())
     try:
+        _restore_rng(payload['rng'], trainer.device)
         trainer._training_imagination = True
         for index in range(a.n_starts):
             # Exactly the training sampler/headroom rejection path, prospective
@@ -377,6 +392,10 @@ def main(argv=None):
 
 
 def runtime_sources():
+    from pathlib import Path
+    staged = Path('SOURCE_MANIFEST.json')
+    if staged.is_file():
+        return sorted(json.loads(safe_path(staged).read_text()))
     from tools.candA.authority import MANIFEST_FILES, LEADER_RULE_FILES
     return sorted(set(MANIFEST_FILES + LEADER_RULE_FILES + [
         'src/wms/control/residual.py', 'src/wms/control/entrant_mix.py',

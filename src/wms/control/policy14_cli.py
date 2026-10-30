@@ -555,6 +555,8 @@ def main(argv=None):
             ranked = json.loads(checked_path(args.rankcheck).read_text(encoding='utf-8'))
             verify_receipt(ranked, raw, wm=receipts[0]['checkpoint_sha256'],
                            wm_config=receipts[0]['config_sha256'], trainer=trainer)
+            if not args.resume or ranked.get('current_policy_sha256') != sha256(args.resume):
+                raise ValueError('ranking initialization-checkpoint mismatch')
             for key, path in (('boundary_sha256', args.looplong_boundary),
                               ('pairing_receipt_sha256', args.paircrit_receipt)):
                 if not path or ranked.get(key) != sha256(path):

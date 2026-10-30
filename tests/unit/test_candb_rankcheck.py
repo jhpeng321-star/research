@@ -35,6 +35,25 @@ def test_owner_r2_gate_and_lane_on_evidence_cannot_substitute():
     assert rank.ranking_gate(summary)[0] is True
 
 
+def test_receipt_refuses_mix_config_runtime_and_source_drift(monkeypatch):
+    source = 'src/wms/control/policy.py'
+    monkeypatch.setattr(rank, 'runtime_sources', lambda: [source])
+    raw = dict(trainer=dict(entrant_learned_mix=True))
+    doc = dict(schema=rank.SCHEMA, complete=True, passed=True, n_starts=16, K=8,
+        horizons_s=[90, 300], mix_connected=True, config_sha256=rank.binding(raw),
+        wm_sha256='wm', wm_config_sha256='cfg', source_manifest={source: rank.sha256(source)},
+        runtime_contract=dict(mix=True))
+    assert rank.verify_receipt(doc, raw, wm='wm', wm_config='cfg') is doc
+    with pytest.raises(ValueError, match='mismatched'):
+        rank.verify_receipt(doc, dict(trainer=dict(entrant_learned_mix=False)), wm='wm', wm_config='cfg')
+    monkeypatch.setattr(rank, 'runtime_contract', lambda trainer: dict(mix=False))
+    with pytest.raises(ValueError, match='trained configuration'):
+        rank.verify_receipt(doc, raw, wm='wm', wm_config='cfg', trainer=object())
+    doc['source_manifest'][source] = 'changed'
+    with pytest.raises(ValueError, match='source manifest mismatch'):
+        rank.verify_receipt(doc, raw, wm='wm', wm_config='cfg')
+
+
 @pytest.mark.parametrize('arm', rank.ARMS[:5])
 def test_native_lane_comparators_use_live_bridge_and_exact_ctrl0(arm, monkeypatch):
     from wms.control.policy14 import SmokeSampler

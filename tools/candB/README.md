@@ -38,6 +38,8 @@ vehicles, road deficit + source waiting, CTRL0 reference, K8 paired joint q10.
 Historical t0-HDV/K1 qualification is refused, not upgraded by this tool.
 The existing objective contract and mix flag are checked before scoring; the
 WM rollout wrapper also checks that the actual birth sampler is connected.
+Qualification must also bind `wm_config_sha256`; a matching checkpoint alone
+does not qualify a different inference configuration.
 The same paired-return development exclusions, saved TRAIN sampler (if the
 groups still match), focus proposal, headroom rejection path, update-index
 entry/group/future seeds and boundary horizon regime are used. No VAL panel is
@@ -53,6 +55,8 @@ rows pass through the **actual** Policy14Trainer actor objective, scale=1;
 reported physical J is distinct from suffix/joint-q10/gain-gated training credit.
 J90 and J300 come from the same 300s rollout. Low-share dense training caps are
 retained and explicitly labelled `dense_horizon_s` in each raw row.
+The current head is evaluated under the candidate-B execution law; `candB_zero`
+uses the same loaded representations with only its output layer zeroed.
 
 Output: durable partial/final JSON plus `.json.txt` text table; raw per-future J,
 per-start objective loss/credits, actual mix assignments, full config/source/input

@@ -18,6 +18,10 @@ ENTRY = 'configs/c4_policy14_candB.toml'
 def inspect(inputs):
     raw = effective_config(Path.cwd(), ENTRY)
     raw['horizon']['gate_file'] = inputs['horizon_gate']
+    from wms.control.looplong import read_boundary
+    if read_boundary(inputs['boundary']).get('coop_credit') is False:
+        for key in ('w_individual', 'w_group', 'w_coop', 'w_team'):
+            raw['counterfactual'][key] = [0.] * len(raw['counterfactual'][key])
     if raw['trainer']['entrant_learned_mix'] is not True:
         raise ValueError('candidate B requires actual entrant mix')
     if sha256(inputs['wm']) != WM_SHA:
@@ -30,6 +34,8 @@ def inspect(inputs):
         if ranking.get(key) != sha256(inputs[name]):
             raise ValueError('ranking input mismatch: '+name)
     cct2 = json.loads(safe_path(inputs['cct2']).read_text())
+    if cct2.get('wm_config_sha256') != sha256(inputs['wm_config']):
+        raise ValueError('WM qualification inference-config mismatch')
     if verify_cct2(cct2, WM_SHA, learned_mix=True) != 300:
         raise ValueError('candidate B requires objective-qualified H_G=300')
     if cct2.get('objective_contract') != ranking['runtime_contract']['objective']:
