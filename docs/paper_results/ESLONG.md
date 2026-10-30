@@ -1,5 +1,5 @@
 # S-ESLONG — owner-approved CPU build, 2026-10-30
-Final tested code/config/test SHA: pending final verification commit.
+Final tested code/config/test SHA: `a94549ee93ba8052d4a53d998d19766589e76baa`.
 Delivery SHA: `git log -1 --format=%H -- docs/paper_results/ESLONG.md` (no self-hash).
 Worktree `E:/agent-work/c4-eslong`, branch `c4/eslong`, base `9613f956`.
 
