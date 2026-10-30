@@ -322,3 +322,18 @@
 - Continuation preserves full actor/group/critic/Adam/RNG/TRAIN sampler, original
   phase origin191, frozen baseline bytes, phase10 R4 and the total150-update budget.
   A failed R4, missing durable baseline, nonfinite receipt or zero updates refuses.
+
+### New runtime and CPU verification
+- New immutable runtime `/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031`,
+  sourcee113760fce3b9e10a0e604611675a3f46526c314,2609 LF source files independently hashed.
+  Initial transport reset left a directory without the manifest; existing archive
+  transport/extraction resumed and full manifest verification then PASS.
+- Regenerated/verified lean authoritycd0c9801 and WMFAST continuation authority1edba7a9;
+  original source/config/input/WM/mix/parity checks retained. Full receipts
+  `pilot_wmfast_prepare_receipt_1793380425.json` and subsequent status receipt.
+- **13 CPU PASS**,1.51s,CUDA hidden; actual source-specialized continuation compiles,
+  original phase/budget and R4 refusal, memory guard, four-start gate, and a real
+  saved-score reuse call proving NO forward occurs for the durable initial score.
+  Remote CPU_RESULT.json has return0; one SSH status timeout retained, CPU job not repeated.
+- Previous local observer42388 independently absent after recording the original exit;
+  prepare one successor for the repaired chain and its same-phase continuation.

@@ -1,0 +1,7 @@
+{
+ "action": "prepare",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031",
+ "returncode": 1,
+ "stdout": "",
+ "stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 7, in <module>\n  File \"/root/miniconda3/lib/python3.12/pathlib.py\", line 1027, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'SOURCE_MANIFEST.json'\n"
+}
