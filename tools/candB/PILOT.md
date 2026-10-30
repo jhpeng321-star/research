@@ -66,3 +66,15 @@
 - Final supervisor **970521 / start ticks874204998**, detached and same incarnation
   verified at20:13; start20:12:15+08. Admission sample free7571MiB, so **WAITING**,
   no dry/pilot child. Only this supervisor will admit its own dry/pilot processes.
+
+## Dry launch ACK / baseline in progress
+- **21:22:15 +08** admitted on gpuA at **21411MiB free**. Own dry trainer
+  **PID985766 / start ticks874675005**, same incarnation verified after disconnect.
+- Output: `/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY`.
+- `pilot_dry_start.log`: authority independently verified, explicit new-phase
+  entrant-mix migration, residual output weight/bias exactly **0.0** after reset.
+- 22:06 snapshot: alive, `RUN_SUMMARY.status=initializing`, EXPLORATORY label present;
+  paired frozen baseline still computing, **0 optimizer rows**. No update speed,
+  CUDA peak, ES acceptance or efficacy number is claimed before a completed update.
+- gpuA/gpuR checks continue at >=600s spacing; snapshots `pilot_observation_*.json`.
+  Local observer appended the dry launch ACK to shared REGISTRATION.md.
