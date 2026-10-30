@@ -3,7 +3,11 @@
 set -euo pipefail
 ARCHIVE=${1:?usage: stage.sh FRESH_ARCHIVE [gpuA FRESH_RUNTIME]}
 PYTHON=${PYTHON:-python}
-"$PYTHON" -m tools.candB.bundle "$ARCHIVE"
+if [[ -n ${CANDB_STAGE_COMMIT:-} ]]; then
+  "$PYTHON" -m tools.candB.bundle "$ARCHIVE" --commit "$CANDB_STAGE_COMMIT"
+else
+  "$PYTHON" -m tools.candB.bundle "$ARCHIVE"
+fi
 if [[ $# -gt 1 ]]; then
   [[ $# == 3 && $2 == gpuA && $3 == /root/autodl-tmp/c4/candB_* ]]
   RUNTIME=$3

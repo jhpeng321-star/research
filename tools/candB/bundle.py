@@ -21,13 +21,16 @@ BAD = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_trut
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('out', type=Path)
+    p.add_argument('--commit', help='explicit immutable Git commit; exclude all working-tree changes')
     a = p.parse_args()
     if a.out.exists() or not a.out.parent.is_dir():
         raise ValueError('archive must be fresh, with existing parent')
-    if subprocess.check_output(['git', 'status', '--porcelain']).strip():
+    if not a.commit and subprocess.check_output(['git', 'status', '--porcelain']).strip():
         raise ValueError('commit before source bundling')
-    commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-    names = subprocess.check_output(['git', 'ls-files', '--', *ROOTS], text=True).splitlines()
+    commit = subprocess.check_output(['git', 'rev-parse', '--verify',
+                                     (a.commit or 'HEAD')+'^{commit}'], text=True).strip()
+    names = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', commit,
+                                     '--', *ROOTS], text=True).splitlines()
     names = [name for name in names if not BAD.search(name)
              and not name.startswith(('tools/setupaudit/evidence/',))]
     manifest = {}
