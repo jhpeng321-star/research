@@ -16,7 +16,7 @@ def observe(host, root):
     code = code.replace("root/(mode+'_EXPLORATORY')",
         "root/('pilot_samephase_EXPLORATORY' if mode == 'pilot' else 'dry_EXPLORATORY')")
     code = code.replace("root/(mode+'.log')", "root/('continue.log' if mode == 'pilot' else 'dry.log')")
-    code = code.replace("'update_including_rescore_s','R4'", "'update_including_rescore_s','R4', 'pilot_recipe', 'eslong_forward_workers'")
+    code = code.replace("'update_including_rescore_s','R4'", "'update_including_rescore_s','R4', 'pilot_recipe', 'eslong_forward_workers', 'pilot_worker_memory', 'group_credit_terms', 'confident_group_gain_rows', 'D_G', 'C_G', 'D_i', 'D_all', 'gated300_active_rows', 'gated300_row_kind', 'gated300_row_start'")
     code = code.replace("'gate_panel_result.json')", "'gate_panel_result.json', 'CONTINUATION_PROOF.json')")
     code += "\n"
     result = subprocess.run(['ssh', host, '/root/miniconda3/bin/python', '-', root],

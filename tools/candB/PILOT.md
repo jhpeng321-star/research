@@ -171,3 +171,12 @@
 - Follow-up CPU verification **16 PASS** (`pilot_cpu_2305_budget.json`): adds
   acting-mask/final-acceleration minima preservation and original phase<=150 budget
   on ordinary continuation (149 remaining after phase1), never150 additional.
+- Budget revision33876924 independently staged before dispatch; exact before/after
+  hashes in `pilot_continue_BUDGET_2305.json`. Shared registration OWNER2305 ACK appended.
+- 23:12:48 +08: original dry runnable, CPU ticks696882 (progress+55090 ticks since
+  recovery); baseline still pending/zero rows. Supervisor's23:12 GPU poll free40909MiB.
+- New observer successor `pilot_watch_2305.py` cooperatively stops only the verified
+  prior local observer, waits on its exact Windows process handle, then assumes sole
+  telemetry/registration ownership. It saves all requested group/braking/worker peaks
+  into PILOT and per-update receipts, commits each actual update, and writes phase3
+  ACK only after phase3 is actually observed. It cannot dispatch a trainer.
