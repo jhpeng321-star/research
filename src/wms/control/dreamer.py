@@ -976,6 +976,11 @@ class DreamerTrainer:
         cfg = _memory_config or self._imagination_config(batch)
         from . import gated300
         gated_rollout = gated300.requested_rollout(self)
+        if gated_rollout and gated300.uses_ctrl0(self):
+            from .execution import mode
+            if mode() != 2 or not getattr(self.policy, 'residual_on_native', False):
+                raise ValueError('CTRL0 reference requires mode-2 native-residual execution')
+            variants = gated300.add_ctrl0_reference(variants)
         dense_steps = self._imagination_config(batch).horizon if gated_rollout else cfg.horizon
         if _memory_config is None:
             cfg = gated300.rollout_config(self, cfg)
@@ -1187,6 +1192,9 @@ class DreamerTrainer:
                 return held_out
             policy_proxy.accel_max = policy_max
             policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
+            if gated_rollout and gated300.uses_ctrl0(self):
+                from .counterfactual import KIND_CTRL0
+                policy_proxy.ctrl0_rows = variants.row_kind == KIND_CTRL0
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()

@@ -31,10 +31,13 @@ class LongCreditConfig:
     cct2_file: str = ''  # CCT-2 verdict authority; required by gain_only.
     w_long: float = 1.0  # Fixed prospectively; never tuned on observed outcomes.
     score_training_horizon: bool = False
+    ctrl0_reference: bool = False
 
     def __post_init__(self):
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')
+        if type(self.ctrl0_reference) is not bool:
+            raise ValueError('long_credit.ctrl0_reference must be boolean')
         if self.mode not in ('cct1', 'gain_only'):
             raise ValueError('long_credit.mode must be cct1 or gain_only')
         if not isinstance(self.cct1_file, str) or not isinstance(self.cct2_file, str):
@@ -156,6 +159,39 @@ def requested_rollout(trainer):
                                or getattr(trainer, '_gated300_scoring', False))
 
 
+def uses_ctrl0(trainer):
+    return bool(getattr(trainer, 'gated300', {}).get('config', {}).get('ctrl0_reference', False))
+
+
+def add_ctrl0_reference(variants):
+    """Public S-ESLONG hook: add one zero-residual CRN row per start, without RNG use.
+
+    Dense base rows stay learned-native. Pass the returned variants to imagine;
+    reference_index gives the paired row for every treatment, including entrants.
+    """
+    from .counterfactual import KIND_CTRL0
+    if variants is None:
+        raise ValueError('CTRL0 reference needs counterfactual variants')
+    if bool((variants.row_kind == KIND_CTRL0).any()):
+        reference_index(variants)
+        return variants
+    n = variants.n_starts
+    return replace(variants,
+        row_start=torch.cat((variants.row_start, torch.arange(n, device=variants.row_start.device))),
+        act_mask=torch.cat((variants.act_mask, torch.zeros_like(variants.act_mask[:n]))),
+        row_kind=torch.cat((variants.row_kind, variants.row_kind.new_full((n,), KIND_CTRL0))))
+
+
+def reference_index(variants):
+    """Public S-ESLONG hook: CTRL0 index per row, for detached paired accrued credit."""
+    from .counterfactual import KIND_CTRL0
+    refs = {int(variants.row_start[r]): r for r in
+            torch.nonzero(variants.row_kind == KIND_CTRL0).flatten().tolist()}
+    if set(refs) != set(range(variants.n_starts)):
+        raise ValueError('CTRL0 reference needs exactly one row for every start')
+    return variants.row_start.new_tensor([refs[int(s)] for s in variants.row_start])
+
+
 def rollout_config(trainer, cfg):
     if not requested_rollout(trainer):
         return cfg
@@ -203,7 +239,8 @@ def prefix(trainer, imagined, dense_steps):
     variants = imagined['variants']
     if variants is None or set(variants.base_row) != set(range(imagined['n_base'])):
         raise ValueError('long credit needs a paired native row for every start')
-    base = baseline_index(variants, rewards.shape[-1], device=rewards.device)
+    base = (reference_index(variants) if uses_ctrl0(trainer) else
+            baseline_index(variants, rewards.shape[-1], device=rewards.device))
     totals = rewards.sum(1, keepdim=True)
     long_difference = totals - totals[..., base].detach()
     out = dict(imagined)
@@ -225,6 +262,8 @@ def prefix(trainer, imagined, dense_steps):
     out.update(gated300_long_difference=long_difference,
                gated300_horizon_s=trainer.gated300['H_long'],
                imagination_horizon_s=dense_steps * STEP_S)
+    if uses_ctrl0(trainer):
+        out['gated300_reference'] = 'CTRL0'
     return out
 
 
@@ -286,5 +325,6 @@ def checkpoint_restore(trainer, payload):
         if saved['world_model_ids'] != trainer.world_model_ids:
             raise ValueError('refreshed WM needs an explicit new long_credit binding')
         receipt = install(trainer, saved['config'], saved['wm_sha256s'])
-        if receipt != saved:
+        normalized = dict(saved, config=asdict(LongCreditConfig(**saved['config'])))
+        if receipt != normalized:
             raise ValueError('CCT-1 binding changed on resume')

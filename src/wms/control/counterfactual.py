@@ -47,6 +47,7 @@ from .contract import ACCEL_MIN_MPS2, MERGE_S1_M, NATIVE_CAV_ACCEL_MAX_MPS2, SPE
 
 KIND_ALL, KIND_BASE, KIND_INDIVIDUAL, KIND_GROUP, KIND_FLIP = 0, 1, 2, 3, 4
 KIND_NAMES = ("all", "base", "individual", "group", "flip")
+KIND_CTRL0 = 5  # Optional measurement row; never a dense-credit baseline.
 WEIGHT_NAMES = ("individual", "group", "coop", "team", "all")
 
 
