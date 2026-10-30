@@ -3058,6 +3058,318 @@
      25910.2734375
     ]
    }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963400m2400p40t300",
+     "arm": "native",
+     "policy": "native",
+     "episode": "w963400m2400p40t300__native",
+     "controller_branch": null,
+     "tick": 1640,
+     "t0_s": 820.0,
+     "pair_key": null,
+     "start_source": "native_v5",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": true,
+     "high_demand": true,
+     "congested": true
+    },
+    "observed_share": 0.38144329896907214,
+    "observed_main_demand_vph": 2400.0000715255737,
+    "m": 1.3864490608598639,
+    "tries": 1,
+    "importance_weight": 0.9710620839135466,
+    "ess_fraction": 0.9985864021895977,
+    "candidates": 6,
+    "target_base_rates": {
+     "multi_cav": 1.0,
+     "side_by_side": 0.8333333333333334,
+     "high_share": 0.5,
+     "high_demand": 0.6666666666666666,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.38644906085986386,
+    "merge_speed_deficit": 0.3182767331600189,
+    "ramp_queue_pressure": 0.10000000149011612,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "CIRCLES": {
+     "J90": [
+      14957.42578125,
+      14259.505859375,
+      14485.939453125,
+      14272.126953125
+     ],
+     "J300": [
+      62069.046875,
+      57357.8828125,
+      57663.8671875,
+      56822.8515625
+     ],
+     "objective_loss": -3867.03857421875,
+     "objective90_loss": -3867.03857421875,
+     "objective300_loss": -3867.03857421875,
+     "dense_credit": 3867.03857421875,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 616.2033290546387
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     14424.064453125,
+     13730.53125,
+     13923.7470703125,
+     13908.396484375
+    ],
+    "J300": [
+     58699.6796875,
+     51651.96484375,
+     51583.44921875,
+     54410.73828125
+    ],
+    "objective_loss": -4141.1826171875,
+    "objective90_loss": -4141.1826171875,
+    "objective300_loss": -4141.1826171875,
+    "dense_credit": 4141.1826171875,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     14818.830078125,
+     14066.55859375,
+     14307.171875,
+     14236.181640625
+    ],
+    "J300": [
+     60275.12890625,
+     54891.7890625,
+     54868.5078125,
+     54933.63671875
+    ]
+   }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963590m2400p20t300",
+     "arm": "generic_random",
+     "policy": "generic_random",
+     "episode": "w963590m2400p20t300__generic_random",
+     "controller_branch": null,
+     "tick": 1360,
+     "t0_s": 680.0,
+     "pair_key": null,
+     "start_source": "genrand_plain",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": false,
+     "high_demand": false,
+     "congested": true
+    },
+    "observed_share": 0.21348314606741572,
+    "observed_main_demand_vph": 2244.000005722046,
+    "m": 1.3234836276645732,
+    "tries": 1,
+    "importance_weight": 1.0147950364605764,
+    "ess_fraction": 0.9987468717745098,
+    "candidates": 7,
+    "target_base_rates": {
+     "multi_cav": 1.0,
+     "side_by_side": 0.8571428571428571,
+     "high_share": 0.42857142857142855,
+     "high_demand": 0.5714285714285714,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.3234836276645733,
+    "merge_speed_deficit": 0.24831514060497284,
+    "ramp_queue_pressure": 0.10000000149011612,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "CIRCLES": {
+     "J90": [
+      8146.59765625,
+      8793.7001953125,
+      8659.560546875,
+      9759.330078125
+     ],
+     "J300": [
+      29477.287109375,
+      37409.91796875,
+      35907.46875,
+      41322.7109375
+     ],
+     "objective_loss": 1405.06396484375,
+     "objective90_loss": 1405.06396484375,
+     "objective300_loss": 1405.06396484375,
+     "dense_credit": -1405.06396484375,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 804.2029780820012
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     7925.02734375,
+     8481.892578125,
+     8505.07421875,
+     9630.447265625
+    ],
+    "J300": [
+     28141.669921875,
+     35448.8984375,
+     35697.4921875,
+     39168.953125
+    ],
+    "objective_loss": 867.8440551757812,
+    "objective90_loss": 867.8440551757812,
+    "objective300_loss": 867.8440551757812,
+    "dense_credit": -867.8440551757812,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     7980.31884765625,
+     8549.2255859375,
+     8516.7119140625,
+     9591.91796875
+    ],
+    "J300": [
+     29332.7265625,
+     36006.4375,
+     34062.22265625,
+     41502.375
+    ]
+   }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963764m2700p20t300",
+     "arm": "generic_random",
+     "policy": "generic_random",
+     "episode": "w963764m2700p20t300__generic_random",
+     "controller_branch": null,
+     "tick": 2140,
+     "t0_s": 1070.0,
+     "pair_key": null,
+     "start_source": "genrand_plain",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": false,
+     "high_demand": true,
+     "congested": true
+    },
+    "observed_share": 0.1590909090909091,
+    "observed_main_demand_vph": 2507.9999685287476,
+    "m": 1.2360468996298861,
+    "tries": 1,
+    "importance_weight": 1.0757580493255392,
+    "ess_fraction": 0.9981747890398394,
+    "candidates": 8,
+    "target_base_rates": {
+     "multi_cav": 1.0,
+     "side_by_side": 0.875,
+     "high_share": 0.375,
+     "high_demand": 0.625,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.23604689962988612,
+    "merge_speed_deficit": 0.1511632204055786,
+    "ramp_queue_pressure": 0.10000000149011612,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "CIRCLES": {
+     "J90": [
+      21524.7578125,
+      21399.9296875,
+      21792.6171875,
+      21000.98046875
+     ],
+     "J300": [
+      83410.734375,
+      86549.53125,
+      83833.015625,
+      82107.484375
+     ],
+     "objective_loss": 133.94374084472656,
+     "objective90_loss": 133.94374084472656,
+     "objective300_loss": 133.94374084472656,
+     "dense_credit": -133.94374084472656,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 945.9318046607077
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     21307.791015625,
+     21243.31640625,
+     21516.94921875,
+     20882.05078125
+    ],
+    "J300": [
+     83037.234375,
+     85432.5078125,
+     81648.953125,
+     81138.453125
+    ],
+    "objective_loss": 136.56727600097656,
+    "objective90_loss": 136.56727600097656,
+    "objective300_loss": 136.56727600097656,
+    "dense_credit": -136.56727600097656,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     21328.453125,
+     21278.828125,
+     21607.310546875,
+     20870.033203125
+    ],
+    "J300": [
+     81318.8359375,
+     85698.625,
+     82407.0546875,
+     81997.625
+    ]
+   }
   }
  ],
  "shard": true,
@@ -3226,6 +3538,118 @@
    183,
    183,
    182
+  ],
+  [
+   160,
+   165,
+   169,
+   169,
+   169,
+   169,
+   169
+  ],
+  [
+   160,
+   162,
+   172,
+   172,
+   172,
+   172,
+   172
+  ],
+  [
+   151,
+   159,
+   168,
+   168,
+   168,
+   168,
+   168
+  ],
+  [
+   161,
+   164,
+   171,
+   171,
+   171,
+   171,
+   171
+  ],
+  [
+   170,
+   174,
+   181,
+   181,
+   180,
+   179,
+   179,
+   181
+  ],
+  [
+   175,
+   179,
+   181,
+   181,
+   180,
+   181,
+   182,
+   182
+  ],
+  [
+   177,
+   181,
+   183,
+   183,
+   183,
+   183,
+   182,
+   183
+  ],
+  [
+   183,
+   183,
+   190,
+   190,
+   188,
+   189,
+   190,
+   190
+  ],
+  [
+   170,
+   172,
+   176,
+   176,
+   176,
+   176,
+   174
+  ],
+  [
+   171,
+   170,
+   178,
+   176,
+   177,
+   177,
+   176
+  ],
+  [
+   175,
+   178,
+   181,
+   183,
+   185,
+   181,
+   184
+  ],
+  [
+   169,
+   169,
+   173,
+   171,
+   171,
+   172,
+   171
   ]
  ]
 }

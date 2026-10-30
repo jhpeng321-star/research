@@ -34,11 +34,36 @@ def read(path):
     return json.loads(safe_path(path).read_text())
 
 
+def merge_completed(previous, completed, arm, directory, duplicates):
+    """An old prefix may finish its tail after MAIN prohibited stopping scorers.
+
+    Keep a fixed first-receipt priority, require exact scientific equality, and
+    never count a repeated TRAIN-plan index as additional independent evidence.
+    """
+    by_index = {r['index']: r for r in previous}
+    for row in completed:
+        if row['index'] in by_index:
+            original = by_index[row['index']]
+            assert original['metadata'] == row['metadata'], 'duplicate TRAIN metadata differs'
+            for name, metrics in (('value', METRICS), ('reference', METRICS),
+                                  ('native', ('J90', 'J300'))):
+                for metric in metrics:
+                    np.testing.assert_array_equal(original[name][metric], row[name][metric],
+                        err_msg=f'conflicting repeated {arm} index{row["index"]} {name}/{metric}')
+            duplicates.append(dict(arm=arm, index=row['index'], directory=directory,
+                                   scientific_arrays_equal=True))
+        else:
+            previous.append(row)
+            by_index[row['index']] = row
+    previous.sort(key=lambda row: row['index'])
+
+
 def analyze(root):
     inputs = {}
     rows = {}
     contracts = []
     plans = set()
+    duplicates = []
     for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail'):
         path = root/directory/'RAW.json'
         if not path.exists():
@@ -73,10 +98,7 @@ def analyze(root):
                     reference=reference, native=row['paired_native_physical']))
             if completed:
                 previous = rows.setdefault(arm, [])
-                assert not ({r['index'] for r in previous} & {r['index'] for r in completed}), (
-                    'duplicate completed TRAIN-plan arm indices')
-                previous.extend(completed)
-                previous.sort(key=lambda row: row['index'])
+                merge_completed(previous, completed, arm, directory, duplicates)
     assert rows, 'no completed diagnostic arms yet'
     assert len(plans) == 1 and all(c == contracts[0] for c in contracts)
     # Availability-only canonical reference; never choose by observed controller outcomes.
@@ -134,6 +156,8 @@ def analyze(root):
     return dict(schema='candB_rankcheck_deadline/1', complete=False, passed=False,
         launch_authorized=False, K=4, qualified_K=8, input_starts_sha256=next(iter(plans)),
         inputs=inputs, canonical_reference_arm=canonical, per_arm=summary,
+        completed_plan_indices={arm: [r['index'] for r in values] for arm, values in rows.items()},
+        verified_duplicates_not_counted=duplicates,
         native_actor_K8=native_actor, common_start_indices=sorted(common),
         common=common_stats, diagnostic_proxy_condition=diagnostic_gate,
         cross_host_CTRL0_max_abs_J300=cross_host_reference_max,
@@ -220,7 +244,8 @@ def report(result, final_sha, stamp):
         f'**R2 proxy clause: {outcome}. Full registered R2: NOT DEMONSTRATED (coverage incomplete; authorized K4 fallback disclosed); no matched real PI/CIRCLES/native-lane alternative establishes it.**',
         'Binding rule: `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md:4951-4956`. Point-estimate order/overlapping intervals alone do not establish the alternative.',
         '## Execution and verification',
-        'Fresh immutable staging via tools/candB/stage.sh. gpuA2x.19 plus disjoint tails2x.16 after peer release, live45000MiB total guard; gpuR.40. Own-PID/incarnation controls only; peers untouched; all attempts retained.',
+        'Fresh immutable staging via tools/candB/stage.sh. MAIN21:08: no new gpuA scorers; existing shards finish. Retired only exact owned obsolete21:20 cutoff supervisors. New scoring is gpuR-only,total<=22GB; peers untouched.',
+        'Recovered tail guard had already failed before signalling; historical45000MiB guard was ineffective (gpuA45713MiB at21:08). Repeated prefix/tail starts are exact-array verified and counted once; all attempts retained.',
         '16 CPU tests pass (2 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
         'Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.',
     ]
