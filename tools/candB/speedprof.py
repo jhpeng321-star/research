@@ -39,7 +39,8 @@ for mode in ('dry', 'pilot'):
         continue
     doc = {}
     for name in ('RUN_SUMMARY.json', 'frozen_scoring_baseline.json', 'gate_panel_result.json',
-                 'updates.jsonl', 'rescores.jsonl', 'memory_execution.jsonl', 'native_curve.jsonl'):
+                 'updates.jsonl', 'rescores.jsonl', 'memory_execution.jsonl', 'native_curve.jsonl',
+                 'speedprof_execution.jsonl'):
         path = stage/name
         if path.is_file():
             doc[name] = dict(bytes=path.stat().st_size, mtime=path.stat().st_mtime,

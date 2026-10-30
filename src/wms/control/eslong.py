@@ -5,6 +5,8 @@ import math
 
 import torch
 
+from .speedprof import profiled
+
 
 def active(trainer):
     from .gated300 import active as qualified
@@ -111,6 +113,7 @@ def future_tape(tape, cache, future):
     return tape[:prefix] + tape[begin:cache['items'][future]['tape_end']]
 
 
+@profiled('es_forward')
 def forward_task(trainer, common, task):
     """One perturbed future on the existing process-isolated forward workers."""
     from .dreamer import _restore_rng

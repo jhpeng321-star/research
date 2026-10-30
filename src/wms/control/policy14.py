@@ -6,6 +6,7 @@ import torch
 from .bridge import make_cav_controller
 from .dreamer import DreamerTrainer
 from .start_states import StartBatch
+from .speedprof import profiled
 
 
 def controller_factory(*args, **kwargs):
@@ -151,6 +152,7 @@ class SmokeSampler:
         self.draws = state["draws"]
 
 
+@profiled('independent_score')
 def independent_score(trainer, batch, seed=965149, *, native_reference=False):
     """Rescore accrued road+source J; optional matched-horizon CCT-1 paired score.
 

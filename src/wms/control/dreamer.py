@@ -35,6 +35,7 @@ from .entrance import DEFAULT_ENTRANCE_ZONE_M, make_entrance_zone_fn
 from .futures import FuturesConfig, SampledFutures, lane_uniform_draws
 from .real_returns14 import RealReturnBatch, RealReturnProvider
 from .start_states import StartBatch, checked_path
+from .speedprof import profiled, skip_grad_diagnostics
 
 # /2 (2026-10-12 late): lane head, lane rules, counterfactuals; /3: reports carry the other CAVs'
 # last commanded acceleration and lane intent (older actors load with zero weights on them).
@@ -1892,7 +1893,8 @@ class DreamerTrainer:
                 out["imagination_horizon_stage"] = self.horizon_curriculum.stage(
                     self._curriculum_position(advance=False))
         every = cf.term_grad_audit_every if cf.enabled else 0
-        if every and (self.update_count + 1) % every == 0 and variants is not None and variants.groups:
+        if (not skip_grad_diagnostics() and every and (self.update_count + 1) % every == 0
+                and variants is not None and variants.groups):
             from .coopw import term_gradient_norms, term_objectives
             terms, values = term_objectives(imagined, scale, self.config.lane_pg_weight)
             parameters = [p for p in self.actor_parameters if p.requires_grad]
@@ -1997,6 +1999,7 @@ class DreamerTrainer:
             out["total_wait_vs_native"] = sum(diffs) / len(diffs)
         return out
 
+    @profiled('optimizer_update')
     def update(self):
         started = time.perf_counter()
         self._longskip_records = []
@@ -2059,7 +2062,8 @@ class DreamerTrainer:
         if audit_components is not None:
             audit_components.update(constraint=lagrange_term, entropy=-entropy_weight * entropy)
             # S-SPEED2 grad_audit_every: diagnostic only (never read by the update).
-            if self.update_count % speed_flags.every("grad_audit_every") == 0:
+            if (not skip_grad_diagnostics()
+                    and self.update_count % speed_flags.every("grad_audit_every") == 0):
                 extra["actor_grad_norms"] = self._actor_gradient_norms(
                     imagined, scale, weights, audit_components)
             extra["action_audit"] = self._action_audit_metrics(imagined)
@@ -2249,6 +2253,7 @@ class DreamerTrainer:
             self.save_checkpoint(self.output_dir / "policy_latest.pt")
         return last
 
+    @profiled('checkpoint')
     def save_checkpoint(self, path):
         path = checked_path(path)
         from .policy import accel_bounds_payload

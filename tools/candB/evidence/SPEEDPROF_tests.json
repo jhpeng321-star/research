@@ -1,0 +1,16 @@
+{
+ "host": "gpuR",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_20261030",
+ "start_epoch": 1793371851.9943838,
+ "seconds": 129.1494755744934,
+ "command": [
+  "-m",
+  "pytest",
+  "-q",
+  "tests/unit/test_speedprof.py",
+  "tools/candB/pilot_test.py"
+ ],
+ "returncode": 0,
+ "stdout": ".....................                                                    [100%]\n21 passed in 127.32s (0:02:07)\n",
+ "stderr": ""
+}

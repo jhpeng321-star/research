@@ -51,6 +51,7 @@ MANIFEST_FILES = [
     'src/wms/control/imagination_memory.py', 'src/wms/control/longgrad.py',
     'src/wms/control/longskip.py',
     'src/wms/control/eslong.py',
+    'src/wms/control/speedprof.py',
     'src/wms/control/policy14_recovery.py', 'src/wms/model/wms.py',
     'tools/candA/stepK.sh',
     'src/wms/model/residual_net.py',

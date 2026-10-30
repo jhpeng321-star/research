@@ -155,7 +155,7 @@ def run(path, output, mode, *, exploratory=False):
         if isinstance(value, dict) and ('actor_loss' in value or 'status' in value):
             value = dict(value, label='EXPLORATORY', deployment_authorized=False,
                          exploratory_authority_sha256=authority.sha256(path))
-            if 'actor_loss' in value and 'independent_J' in value:
+            if 'actor_loss' in value:
                 value['update_including_rescore_s'] = time.monotonic()-state['began']
                 if value.get('phase_update') == 10:
                     score = value['independent_J']
@@ -177,7 +177,8 @@ def run(path, output, mode, *, exploratory=False):
                 (DreamerTrainer, 'update', update), (cli, 'independent_score', score),
                 (policy14, 'make_cav_controller', controller), (json, 'dumps', serialize)):
             stack.enter_context(patch.object(target, name, replacement))
-        stack.enter_context(patch.object(parallel_futures, 'FuturePool', SerialPool))
+        if os.environ.get('WMS_SPEED_PILOT_FORWARD_POOL') != '1':
+            stack.enter_context(patch.object(parallel_futures, 'FuturePool', SerialPool))
         return cli.main(args)
 
 
