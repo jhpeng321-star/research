@@ -1,0 +1,199 @@
+{
+ "torch": "2.8.0+cu128",
+ "device": "cuda",
+ "threads": 1,
+ "production_timing": false,
+ "panel_uncached": {
+  "samples": [
+   79.40233191102743,
+   79.389105707407,
+   79.29820408672094
+  ],
+  "median": 79.389105707407
+ },
+ "panel_reused": {
+  "samples": [
+   39.58445306122303,
+   39.55996963381767,
+   39.61655078828335
+  ],
+  "median": 39.58445306122303
+ },
+ "panel_exact": "bitwise J/native gate/full matched score receipts/RNG",
+ "score_one_start": {
+  "samples": [
+   2.468051254749298,
+   2.460852138698101,
+   2.460433416068554
+  ],
+  "median": 2.460852138698101
+ },
+ "score_profile_self": [
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<built-in method torch.where>",
+   "calls": 22361,
+   "self_s": 0.152709951,
+   "cumulative_s": 0.152709951
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/control/sumo_idm.py",
+   "line": 86,
+   "function": "follow_speed",
+   "calls": 480,
+   "self_s": 0.149589239,
+   "cumulative_s": 0.236476437
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/physics/lane_chain.py",
+   "line": 58,
+   "function": "chain_s",
+   "calls": 1299,
+   "self_s": 0.127731063,
+   "cumulative_s": 0.156323958
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<built-in method torch.isfinite>",
+   "calls": 4171,
+   "self_s": 0.096263395,
+   "cumulative_s": 0.096263395
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<method 'clamp_min' of 'torch._C.TensorBase' objects>",
+   "calls": 15710,
+   "self_s": 0.08693067,
+   "cumulative_s": 0.08693067
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<built-in method torch._C._nn.linear>",
+   "calls": 3924,
+   "self_s": 0.07445009200000001,
+   "cumulative_s": 0.07445009200000001
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/physics/neighbours.py",
+   "line": 41,
+   "function": "lane_neighbour",
+   "calls": 890,
+   "self_s": 0.072092258,
+   "cumulative_s": 0.302503992
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<method 'to' of 'torch._C.TensorBase' objects>",
+   "calls": 11370,
+   "self_s": 0.066644146,
+   "cumulative_s": 0.066644146
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<built-in method torch.zeros_like>",
+   "calls": 10578,
+   "self_s": 0.063831831,
+   "cumulative_s": 0.063831831
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/physics/mobil.py",
+   "line": 443,
+   "function": "mobil_merge_logits",
+   "calls": 80,
+   "self_s": 0.06054036,
+   "cumulative_s": 0.40370284700000003
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<built-in method torch.full_like>",
+   "calls": 9365,
+   "self_s": 0.057354944000000005,
+   "cumulative_s": 0.057354944000000005
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/physics/idm.py",
+   "line": 29,
+   "function": "idm_accel",
+   "calls": 640,
+   "self_s": 0.04764966,
+   "cumulative_s": 0.077269327
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/lane_v5.py",
+   "line": 248,
+   "function": "instant_features",
+   "calls": 80,
+   "self_s": 0.044443253,
+   "cumulative_s": 0.25018190100000004
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/control/execution.py",
+   "line": 104,
+   "function": "idm_follow_speed",
+   "calls": 160,
+   "self_s": 0.036828296,
+   "cumulative_s": 0.056278884
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/merge_pivot.py",
+   "line": 161,
+   "function": "geometry",
+   "calls": 80,
+   "self_s": 0.033821304,
+   "cumulative_s": 0.08078041200000001
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/wms.py",
+   "line": 1936,
+   "function": "_apply_merge_pivot",
+   "calls": 80,
+   "self_s": 0.033770760000000004,
+   "cumulative_s": 0.38411241
+  },
+  {
+   "file": "/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/lane_v5.py",
+   "line": 507,
+   "function": "update_acc",
+   "calls": 80,
+   "self_s": 0.032224622,
+   "cumulative_s": 0.07031248000000001
+  },
+  {
+   "file": "~",
+   "line": 0,
+   "function": "<method 'gather' of 'torch._C.TensorBase' objects>",
+   "calls": 4480,
+   "self_s": 0.031435621000000004,
+   "cumulative_s": 0.031435621000000004
+  }
+ ],
+ "score_profile_calls": 430729,
+ "score_profile_total_s": 2.709743515999998,
+ "wmspeed_master": {
+  "exact": "bitwise score",
+  "remaining_flags_policy_call_sites": 0,
+  "timing": {
+   "samples": [
+    2.460574820637703,
+    2.4512329176068306,
+    2.4598951935768127
+   ],
+   "median": 2.4598951935768127
+  }
+ },
+ "cuda_peak_reserved_bytes": 27262976,
+ "cuda_peak_allocated_bytes": 13647872,
+ "gradient_diagnostics": {
+  "on_seconds": 4.728652015328407,
+  "off_seconds": 1.5775888413190842,
+  "exact": "bitwise weights/gradients/Adam/ES pair gates",
+  "fixture": "short toy M2 K8, not production"
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "host": "gpuR",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_20261030",
+ "start_epoch": 1793373633.423258,
+ "seconds": 38.21483111381531,
+ "command": [
+  "-m",
+  "tools.candB.speedprof_kernels",
+  "--output",
+  "SPEEDPROF_KERNELS.json"
+ ],
+ "returncode": 0,
+ "remote_receipt": "PROBE_1793373633423197600.json",
+ "stdout": "{\n \"device\": \"cpu\",\n \"torch\": \"2.8.0+cu128\",\n \"scope\": \"one synthetic physics step; NOT full ES\",\n \"retained_probe_directory\": \"/tmp/speedprof_kernels_khoa79sx\",\n \"batch4_comparison\": {\n  \"accel_mps2\": {\n   \"bitwise\": true,\n   \"max_abs\": 0.0\n  },\n  \"next_s_m\": {\n   \"bitwise\": true,\n   \"max_abs\": 0.0\n  },\n  \"next_v_mps\": {\n   \"bitwise\": true,\n   \"max_abs\": 0.0\n  },\n  \"next_lane\": {\n   \"bitwise\": true,\n   \"max_abs\": 0.0\n  },\n  \"next_present\": {\n   \"bitwise\": true,\n   \"max_abs\": 0.0\n  }\n },\n \"four_serial_steps\": {\n  \"samples\": [\n   0.14055726826190948,\n   0.20310232043266296,\n   0.2383444979786873,\n   0.1774430900812149,\n   0.21934498399496077\n  ],\n  \"median\": 0.20310232043266296\n },\n \"one_batch4_step\": {\n  \"samples\": [\n   0.062373629212379454,\n   0.023913678526878358,\n   0.07587085217237473,\n   0.0791078895330429,\n   0.0441099002957344\n  ],\n  \"median\": 0.062373629212379454\n },\n \"fullgraph_screen\": {\n  \"error\": \"Unsupported\",\n  \"message\": \"Failed to trace builtin operator\\n  Explanation: Dynamo does not know how to trace builtin operator `bool` with argument types ['Tensor'] (has_kwargs False)\\n  Hint: Avoid calling builtin `bool` with argument types ['Tensor']. Consider using an equivalent alternative function/method to `bool`.\\n  Hint: If you are attempting to call a logging function (e.g. `print`), you can try adding it to `torch._dynamo.config.reorderable_logging_functions`.\\n  Hint: Please report an issue to PyTorch.\\n\\n  Developer debug context: builtin bool [<class 'torch._dynamo.variables.tensor.TensorVariable'>] False\\n\\n\\nfrom user code:\\n   File \\\"/root/autodl-tmp/c4/speedprof_CPU_20261030/tools/candB/speedprof_kernels.py\\\", line 31, in step\\n    return model.step(scene, lane_uniform=torch.full_like(scene['s_m'], .5))\\n  File \\\"/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/wms.py\\\", line 1773, in step\\n    out = self.forward(state, **forward_kwargs)\\n  File \\\"/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/wms.py\\\", line 1164, in forward\\n    gate = self.gate(k).to(kin.dtype)\\n  File \\\"/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/wms.py\\\", line 633, in gate\\n    return monotone_gate(self.gate_increments, k_steps, self.physics.max_gap_steps)\\n  File \\\"/root/autodl-tmp/c4/speedprof_CPU_20261030/src/wms/model/gate.py\\\", line 21, in monotone_gate\\n    if bool(positive.any()):\\n\\nSet TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS=\\\"+dynamo\\\"\\n\"\n },\n \"admitted_full_es_speedup\": false\n}\n",
+ "stderr": ""
+}

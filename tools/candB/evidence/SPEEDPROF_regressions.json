@@ -1,0 +1,22 @@
+{
+ "host": "gpuR",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_20261030",
+ "start_epoch": 1793373725.756844,
+ "seconds": 125.71183562278748,
+ "command": [
+  "-m",
+  "pytest",
+  "-q",
+  "tests/unit/test_eslong.py",
+  "tests/unit/test_gated300.py",
+  "tests/unit/test_gatemeas.py",
+  "tests/unit/test_candb_integration.py",
+  "tests/unit/test_longgrad.py",
+  "-k",
+  "not test_real_residual_wm_entrants_crn_and_dense_trunk_gradients and not test_real_wm_ctrl0_zero_identity_crn_entrants_and_cpu_update"
+ ],
+ "returncode": 1,
+ "remote_receipt": "PROBE_1793373725756767300.json",
+ "stdout": "............F........................................................... [ 86%]\n...........                                                              [100%]\n=================================== FAILURES ===================================\n______ test_actual_forward_process_pool_matches_serial_and_uses_all_tasks ______\n\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-51/test_actual_forward_process_po0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa14ee4c410>\n\n    def test_actual_forward_process_pool_matches_serial_and_uses_all_tasks(tmp_path, monkeypatch):\n        from wms.control.parallel_futures import FuturePool\n        monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))\n        t = make(tmp_path, monkeypatch)\n        t.output_dir = tmp_path / 'pool'\n        _, context = capture(t)\n        common = {**context, 'kind': 'forward', 'eslong': True,\n                  'directions': torch.ones(1, 3), 'sigma': .08}\n        tasks = [(0, sign, future) for sign in (1, -1) for future in (0, 7)]\n        before = _rng_state(t.device)\n        expected = [eslong.forward_task(t, common, task) for task in tasks]\n        monkeypatch.setenv('WMS_SPEED_FORWARD_WORKERS', '2')\n        with FuturePool(t, common) as pool:\n>           actual = list(pool.map(tasks))\n                     ^^^^^^^^^^^^^^^^^^^^^\n\ntests/unit/test_eslong.py:403: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <wms.control.parallel_futures.FuturePool object at 0x7fa14ef04ef0>\ntasks = [(0, 1, 0), (0, 1, 7), (0, -1, 0), (0, -1, 7)]\n\n    def map(self, tasks):\n        tasks = list(tasks)\n        for index, task in enumerate(tasks):\n            directory = self.root / str(index % len(self.processes))\n            (directory / f'{index}.json').write_text(json.dumps(task))\n            # Readiness is separate from file creation, including on network FS.\n            (directory / f'{index}.ready').touch()\n        for index in range(len(tasks)):\n            directory = self.root / str(index % len(self.processes))\n            ready = directory / f'{index}.done'\n            while not ready.exists():\n                for process in self.processes:\n                    if process.poll() is not None:\n                        errors = sorted(self.root.glob('[0-7]/*.error'))\n                        detail = '\\n' + errors[0].read_text() if errors else ''\n>                       raise RuntimeError(f'future worker exited ({process.returncode}); see {self.root}{detail}')\nE                       RuntimeError: future worker exited (1); see /tmp/pytest-of-root/pytest-51/test_actual_forward_process_po0/pool/future_workers/49aa32657e5b4f57b4b437647a6ad863\n\nsrc/wms/control/parallel_futures.py:208: RuntimeError\n=========================== short test summary info ============================\nFAILED tests/unit/test_eslong.py::test_actual_forward_process_pool_matches_serial_and_uses_all_tasks\n1 failed, 82 passed, 5 deselected in 123.86s (0:02:03)\n",
+ "stderr": ""
+}

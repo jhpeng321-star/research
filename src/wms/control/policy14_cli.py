@@ -122,8 +122,16 @@ def load_gate_panel(path, val):
 
 def score_gate_panel(trainer, val, panel, device):
     """Independent (critic-free) J per panel start; independent_score restores every RNG."""
-    scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device))
-              for s in panel["starts"]]
+    from .speedprof import panel_key
+    key = panel_key(trainer, val, panel, device)
+    cached = trainer.__dict__.pop('_speedprof_native_panel', None)
+    if key is not None and cached is not None and cached[0] == key:
+        # Drop the extra native-only field so the gate's stored score receipt
+        # has exactly the same shape as an independently evaluated gate panel.
+        scores = [{k: v for k, v in score.items() if k != 'native_J'} for score in cached[1]]
+    else:
+        scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device))
+                  for s in panel["starts"]]
     if scores and 'composite_gated_score' in scores[0]:
         trainer._gatemeas_panel_scores = scores
     return [score['J'] for score in scores]
@@ -133,6 +141,10 @@ def score_native_panel(trainer, val, panel, device):
     from .nativeinit import panel_gate
     scores = [independent_score(trainer, val._batch([val._load(int(s["index"]))], device),
                                 native_reference=True) for s in panel["starts"]]
+    from .speedprof import panel_key
+    key = panel_key(trainer, val, panel, device)
+    if key is not None:
+        trainer._speedprof_native_panel = (key, scores)
     result = panel_gate([s["J"] for s in scores], [s["native_J"] for s in scores],
                         update=trainer.update_count)
     if scores and 'score_horizon_s' in scores[0]:
@@ -270,6 +282,8 @@ def main(argv=None):
         summary['gpu_memory_fraction'] = float(frac) if frac else None
         from wms.core import speed_flags
         summary['diagnostic_grad_audit_every'] = speed_flags.every('grad_audit_every')
+        from .speedprof import receipt as speedprof_receipt, rescore_due, rescore_every
+        summary['speedprof'] = speedprof_receipt()
         candidate = checked_path(args.output_dir)
         candidate.mkdir(parents=True, exist_ok=False)
         output = candidate
@@ -562,6 +576,7 @@ def main(argv=None):
                 if not path or ranked.get(key) != sha256(path):
                     raise ValueError('ranking launch-input mismatch: '+key)
             summary['rankcheck_sha256'] = sha256(args.rankcheck)
+        rescore_due(trainer, switches, 0)  # Refuse unsafe cadence before any optimizer step.
         rescore_batch = val.sample(cfg.batch_size, device=args.device)
         before = independent_score(trainer, rescore_batch)
         initial_score = before
@@ -655,7 +670,8 @@ def main(argv=None):
         if args.new_phase and (trainer.config != cfg or
                               trainer.reward_weights != RewardWeights(**raw['reward'])):
             raise ValueError('new-phase effective trainer/reward differs from resolved TOML')
-        for _ in range(args.prep_dry_run_updates or args.max_updates):
+        update_limit = args.prep_dry_run_updates or args.max_updates
+        for iteration in range(update_limit):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
                 raise RuntimeError("own-run STOP requested; checkpoint saved")
@@ -697,7 +713,11 @@ def main(argv=None):
                         'update', 'cuda_peak_allocated_bytes', 'cuda_peak_reserved_bytes')}) + '\n')
             if not all(np.isfinite(metrics[k]) for k in ("actor_loss", "critic_loss", "actor_grad_norm", "critic_grad_norm")):
                 raise ValueError("nonfinite update")
-            if switches["independent_rescore"]:
+            phase_update = trainer.update_count - native_start_update
+            due = rescore_due(trainer, switches, phase_update, final=iteration+1 == update_limit)
+            if rescore_every() > 1:
+                metrics['independent_rescore_skipped'] = not (switches['independent_rescore'] and due)
+            if switches["independent_rescore"] and due:
                 after = independent_score(trainer, rescore_batch)
                 metrics["independent_J"] = after
                 metrics["independent_J_decreased"] = after["J"] < before["J"]

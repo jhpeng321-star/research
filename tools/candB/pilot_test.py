@@ -82,10 +82,14 @@ def test_config_identity_refuses_mixed_law_or_k(monkeypatch):
 
 
 @pytest.mark.parametrize('dense,stopped', [(-1., False), (0., True)])
-def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatch, dense, stopped):
+@pytest.mark.parametrize('pool', [False, True])
+def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatch, dense, stopped, pool):
     import torch
     from wms.control import policy14_cli as cli, policy14, execution
     from wms.control.dreamer import DreamerTrainer
+    from wms.control import parallel_futures
+    original_pool = parallel_futures.FuturePool
+    monkeypatch.setenv('WMS_SPEED_PILOT_FORWARD_POOL', str(int(pool)))
     monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
     path = tmp_path/'authority.json'
     path.write_text('{}')
@@ -115,6 +119,7 @@ def test_cli_adapter_stamps_rows_and_summary_and_applies_R4(tmp_path, monkeypatc
     monkeypatch.setattr(cli, 'independent_score', fake_score)
     batch = SimpleNamespace(state={'s_m': torch.zeros(1, 2)})
     def fake_cli(args):
+        assert (parallel_futures.FuturePool is original_pool) is pool
         out.mkdir()
         cli.independent_score(None, batch)
         rows = []
