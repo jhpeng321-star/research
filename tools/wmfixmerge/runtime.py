@@ -111,7 +111,11 @@ class Runtime:
         road_tick = .5 * torch.where(present, (1 - roll["speeds"] / 31.29).clamp_min(0), 0.)
         road = road_tick.sum((1, 2))
         upstream = (road_tick * (pos <= 75.44)).sum((1, 2))
-        source = .5 * torch.as_tensor(np.stack(entries.queues, 1), device=self.device).sum((1, 2))
+        # HARNESS_CONTRACT: labels sum the left boundary q_0..q_{n-1} of the
+        # post-service queue samples (tools/wmrequal/labels.py recorded); the
+        # tracked series is seeded with the pre-rollout Q0 and cut at ``steps``.
+        source = .5 * torch.as_tensor(np.stack(entries.queues, 1)[:, :steps],
+                                      device=self.device).sum((1, 2))
         # Pre-insertion samples establish fixed identity lifetimes, including reused slots.
         birth = torch.stack(entries.newborn, 1)
         crossing_pos = torch.cat((pos[:, :1], roll["positions"]), 1)
@@ -129,7 +133,10 @@ class Runtime:
 class TrackedEntries:
     def __init__(self, process):
         self.process = process
-        self.present, self.pos, self.queues, self.newborn = [], [], [], []
+        self.present, self.pos, self.newborn = [], [], []
+        # HARNESS_CONTRACT: sample the pre-rollout Q0 first so the rectangle is
+        # the label's left boundary q_0..q_{n-1}, not q_1..q_n (one-tick shift).
+        self.queues = [process.pending.copy()]
 
     def insert(self, state):
         # Same after-service rectangle convention as corrected validation scorer.

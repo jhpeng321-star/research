@@ -39,7 +39,10 @@ def bootstrap_runtime():
 class Entries:
     def __init__(self, process):
         self.process = process
-        self.present, self.pos, self.lane, self.queues = [], [], [], []
+        self.present, self.pos, self.lane = [], [], []
+        # HARNESS_CONTRACT: seed the pre-rollout Q0 sample; the source rectangle
+        # sums q_0..q_{n-1} (labels left boundary), not q_1..q_n.
+        self.queues = [process.pending.copy()]
 
     def insert(self, state):
         result = self.process.insert(state)
@@ -146,7 +149,8 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
     pos=torch.stack(entries.pos,1)
     road=.5*torch.where(present,(1-roll['speeds']/31.29).clamp_min(0),0.)
     queue=torch.as_tensor(np.stack(entries.queues,1),device=device)
-    source=.5*queue.sum(-1)
+    # HARNESS_CONTRACT: drop the final post-service sample; sum q_0..q_{n-1}.
+    source=.5*queue[:,:-1].sum(-1)
     upstream=(road*(pos<=75.44)).sum(-1)
     downstream=(road*(pos>75.44)).sum(-1)
     oldsel=inp.initial['present'].bool() & ~inp.initial['is_cav'].bool()
@@ -168,7 +172,7 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
                 continue
             n=h*2
             values[str(h)]={k:float(v[b,:n].double().sum().cpu()) for k,v in columns.items()}
-            values[str(h)].update(queue=float(queue[b,n-1].sum().cpu()),
+            values[str(h)].update(queue=float(queue[b,n].sum().cpu()),
                                   discharge=int((events<=h).sum()))
         result.append(dict(pair_key=key,draw=draw,mix=on,arm=arm,values=values,
                            mix_assigned=mix.assigned[b]))
