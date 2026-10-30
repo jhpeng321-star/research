@@ -56,3 +56,28 @@ Complete run: **65 passed**,144.29s (one-thread new model fixtures); two inherit
 After the matched-only FIT retarget: data/training tests **16 passed**,25.39s, including2 new production-filter/OFF checks.
 Exact CPU preparation/feasibility, eventual six-hour training and one-command verdict are in `tools/wmfixmerge/README.md`.
 Please return findings with file/line references and a launch decision. If eventually approving, bind REVIEW.json to passing real FEASIBILITY.json.
+
+## Addendum 2026-10-31 ~06:20 — FIX-FIRST responses (WMFIX_REVIEW.md verdict)
+1. Ordinal binding fixed: admission consumes newborn-slot ordinals recorded at `_place`
+   (CAV virgin-slot pool separate); incumbent sumo_min_speed rejection restored; multi-birth/
+   recycled-slot tests added (c11faf69).
+2. Source-clock contract measured and signed: labels q_0..q_{n-1} vs runtime q_1..q_n
+   reconciled; HARNESS_CONTRACT.json gate wired into feasibility/verdict (174f96e4).
+3. Implementation-file binding completed: tools/errsrc/inference.py, tools/wmrequal/labels.py,
+   inputs.py and all verdict/zero-head files are hashed (cfce510d, data.py IMPLEMENTATION_FILES).
+4. Zero-head candidate path is runnable next to the B pilot (zero_head_panel.py, resumable,
+   memory-fraction capped) with a threshold-free retarget rule (zero_head_compare.py);
+   verdict panel A additionally scores the entry-only arm itself (three-way, d273fdb7).
+5. Basis resolution increase is CONDITIONAL on the zero-head residual surviving; gate kept.
+6. WMFIX_DATA_NEED.md states the 24-contrast verdict and owner options.
+7/8. Anchors now use their own TRAIN absolute-RMS scales; gradients flow only through the
+   differentiable paired columns (upstream/discharge/road); paired J and source are exact
+   detached reports with per-term shares in STEP0_TERMS.json and every update row;
+   a latent raw-list active-mask bug in objective_terms was found and fixed (99fbe9ca).
+   Prepared corpora must be regenerated (anchor_scales key; old files fail closed).
+9. Panel A schema wmfix_validation/2: base vs entry vs candidate with attribution CIs.
+10. Verdict files tracked in git; B/C1 producers remain intentionally null (fail-closed)
+    with the exact generalization spec in tools/wmfixmerge/README.md; accept roots are
+    MAIN-side bindings. Astra's final REVIEW.json must still bind passing real FEASIBILITY.json
+    (now strengthened: full 12x2x{120,300}s panel, teacher ceiling, frozen-rerun noise,
+    post-step improvement beyond noise).

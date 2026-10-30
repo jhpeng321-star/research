@@ -36,7 +36,11 @@ If corrected WM2's residual disappears, retarget the design before preparing thi
 
 `FEASIBILITY.json` must be real TRAIN, with teacher upstream ceiling improvement, finite-difference
 agreement, a free-running optimizer step improving both total objective **and paired J**, and frozen parity.
-Synthetic-only receipts cannot pass `train.check_gates`.
+The strengthened gate (`panel_gate`) additionally evaluates all 12 groups x both arms at 120/300 s,
+measures frozen-rerun noise, and requires the post-step paired-J MAE to beat the pre-step panel
+beyond that noise at both horizons. The 48-rollout panel is slow on CPU; MAIN may pass `--device cuda`.
+`TRAIN_PREPARED.json` must be regenerated after the anchor-scale rebalance (old files lack
+`anchor_scales` and fail closed).
 Astra's `REVIEW.json` must identify reviewer `Astra`, status `APPROVED`, and bind
 `feasibility_sha256` to the passing file. The implementation session does not generate approvals.
 

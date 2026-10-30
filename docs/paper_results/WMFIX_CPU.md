@@ -82,3 +82,8 @@
 - WMFIX_DATA_NEED.md states the 24-contrast verdict and the owner options (reuse-first
   allowlist, ~100k sim-s 36-world collection, or focused smaller head).
 - Verdict/zero-head tests updated; full wmfix set re-run below.
+- Producer receipt corrected: speedhead/c1 panel files do NOT exist here; packages OPEN,
+  GPU-host side, with the exact wm_gpu generalization spec in tools/wmfixmerge/README.md.
+- Final complete verification (resume session): **86 passed**,17.95s over
+  wmfixmerge/data/training/admission/contract/verdict/zero_head + entryfix + v9entry
+  + v9entry_eval + wmrequal labels. Review-request addendum records items 1-10 status.
