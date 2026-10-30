@@ -1,0 +1,7 @@
+{
+ "probe": "pidfd_open syscall434 + pidfd_send_signal syscall424 with signal0 only",
+ "gpuA": {"pid": 977723, "start_ticks": "874456159", "pidfd_open": true, "signal0_probe_rc": 0},
+ "gpuR": {"pid": 442305, "start_ticks": "4198759397", "pidfd_open": true, "signal0_probe_rc": 0},
+ "recorded_ownership_and_cmdline_verified": true,
+ "lifecycle_signals_sent": false
+}

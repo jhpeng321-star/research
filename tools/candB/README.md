@@ -29,6 +29,15 @@ If an old checkpoint binds CRLF driver bytes, measurement-only
 the original checkpoint contract, then restores the staged LF execution driver.
 Both driver hashes and this normalization are retained in the measurement receipt.
 
+Deadline-only shards require `--measure-only`: `--measurement-arms ARM`,
+`--future-prefix 4` (first four ORIGINAL K8 CRN plans; reduced-K estimator), and
+optional `--stop-after END`. `--export-starts PLAN.pt` saves actual TRAIN sampler
+batches/variants/RNG plus config/WM/boundary/support bindings without scoring.
+`--input-starts PLAN.pt --start-index BEGIN` transports a disjoint range; END is
+exclusive. Source/mix/config identity is still checked; none of these receipts
+qualifies launch. `--host-controller-sensors` uses exact host sensor copies for
+the published PI/CIRCLES controllers; command equivalence is CPU/CUDA tested.
+
 From the immutable runtime root (Linux; CPU works; no SUMO):
 ```sh
 export PYTHONPATH=src:. C4_ALLOWED_ROOTS=/root/autodl-tmp/c4
@@ -105,6 +114,9 @@ RUNTIME=/root/autodl-tmp/c4/candB_SOURCE bash tools/candB/launch.sh /root/autodl
 
 These commands are **not executed by S-INTEG**. Archive creation refuses dirty
 trees; LF bytes come from committed Git blobs and every staged file is hash-bound.
+For a shared worktree, explicit `CANDB_STAGE_COMMIT=FULL_SHA bash tools/candB/stage.sh ...`
+packages only that immutable Git tree, excluding all tracked/untracked working changes.
+The default dirty-tree refusal remains; no user observations are staged or modified.
 All input artifacts (including real returns and gate panel) are verified. Launch
 refuses any running GPU compute PID, so it cannot overlap S-WMREQUAL. Two serial
 forward workers use `.24` each, one coordinator uses `.40`, future budget `.90`;

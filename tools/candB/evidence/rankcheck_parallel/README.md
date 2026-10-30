@@ -41,3 +41,11 @@
   Exact recorded incarnations only via pidfd: gpuA own cutoff971121 and gpuR442928;
   both ownership receipts retained. Completed arms survive, in-progress arms are
   explicitly incomplete; no process-name signalling or peer lifecycle control.
+- At~20:36 WMREQUAL938487 exited; a new peer975471 used~13GiB. Two disjoint
+  MAPPO tail workers (sourcef396955a, .16 each) own TRAIN-plan indices4-15;
+  original two-arm job keeps0-3 and stops on a recorded exact-incarnation handoff.
+  Tail guard monitors total GPU memory each second; >45000MiB stops only a new
+  owned tail, and it freezes both tails at21:20. Peer lifecycle is untouched.
+- Shared-tree pilot observations remain user work. Explicit CANDB_STAGE_COMMIT
+  staging packages only that immutable Git tree; default dirty-tree refusal stays.
+  All2405 archive hashes and exact pinned preset verified; untracked files excluded.
