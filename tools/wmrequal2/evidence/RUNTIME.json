@@ -1,0 +1,204 @@
+{
+ "schema": "wmrequal2_runtime_audit/1",
+ "cuda_visible": "",
+ "remote_writes": false,
+ "source_base": "cfa78e4d3cc733e0979fd4ca181e03619f9a6e44",
+ "source_sha256": "fd7a5f4de9acc17521dc8ebefde42fa0e9701738c14dae0a6d1f4f5125d91207",
+ "files": {
+  "src/wms/control/bridge.py": {
+   "sha256": "2a487ef79bebef4d7debb00e5b6ea2d6d4c6e0ba4e18b1030d7e3666da44084a",
+   "source_receipt_match": true,
+   "functions": {
+    "make_cav_controller": [
+     {
+      "line": 54,
+      "defaults": {
+       "record": "None",
+       "lane_rules": "None",
+       "act_mask": "None",
+       "native": "None",
+       "accel_max": "None",
+       "native_accel_max": "None",
+       "zone": "None",
+       "symmetric_exec_cap": "False",
+       "mask_forced_merge": "False",
+       "policy_ramp_merge": "False",
+       "native_ramp_merge": "'gap6'",
+       "native_lane_change": "False"
+      }
+     }
+    ]
+   },
+   "snippets": {
+    "54": "def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, record=None, *,",
+    "62": "policy_ramp_merge: bool = False,",
+    "96": "* ``policy_ramp_merge``: policy-acting CAVs are never auto-merged; a ramp CAV reaches",
+    "101": "CAVs; also acting ones when ``policy_ramp_merge`` is off) stays on the ramp in this callback",
+    "102": "and is handed to the WM's HDV merge law (``state[WM_MERGE_KEY]``, requires a mutable",
+    "114": "if policy_ramp_merge and lane_rules is None:",
+    "115": "raise ValueError(\"policy_ramp_merge needs lane_rules (the lane head is the only merge path)\")",
+    "122": "policy_ramp_merge = False",
+    "128": "wm_merge_key = cav_module.WM_MERGE_KEY",
+    "242": "auto = mask & ~acting if policy_ramp_merge else mask"
+   }
+  },
+  "src/wms/control/entrant.py": {
+   "sha256": "493a9a634258c6e16585117662547e0f44cb2011f9dc403f290efc9e49d582ad",
+   "source_receipt_match": true,
+   "functions": {
+    "policy_feedback": [
+     {
+      "line": 82,
+      "defaults": {
+       "device": "'cpu'",
+       "native_cav": "'head'",
+       "native_accel_max": "1.2",
+       "native_ramp_merge": "'wm_law'",
+       "native_lane_change": "True",
+       "symmetric_exec_cap": "True"
+      }
+     }
+    ],
+    "__call__": [
+     {
+      "line": 19,
+      "defaults": {}
+     },
+     {
+      "line": 55,
+      "defaults": {}
+     }
+    ]
+   },
+   "snippets": {
+    "20": "from wms.model.cav import WM_MERGE_KEY",
+    "22": "old_merge = state.get(WM_MERGE_KEY, torch.zeros_like(state[\"present\"]))",
+    "40": "new_merge = observed.get(WM_MERGE_KEY, torch.zeros_like(mask))",
+    "41": "state[WM_MERGE_KEY] = (old_merge & ~mask) | (new_merge & mask)",
+    "63": "from wms.model.cav import WM_MERGE_KEY",
+    "67": "delegated.append(st.get(WM_MERGE_KEY, torch.zeros_like(st[\"present\"])))",
+    "68": "state[WM_MERGE_KEY] = torch.cat(delegated)",
+    "100": "return make_cav_controller(",
+    "105": "mask_forced_merge=True)",
+    "196": "return make_cav_controller(actor, encoder, safe_accel, lane_rules=LaneRules(),",
+    "197": "native_ramp_merge=\"wm_law\", mask_forced_merge=True)"
+   }
+  },
+  "src/wms/train/cav_drive.py": {
+   "sha256": "7affb448e9f25ccfff8848b6a7376a82a75b958daae0bda21b539f726d7b47b1",
+   "source_receipt_match": true,
+   "functions": {
+    "__call__": [
+     {
+      "line": 220,
+      "defaults": {}
+     }
+    ]
+   },
+   "snippets": {
+    "251": "return torch.stack((position, lane.float(), speed, accel), dim=-1)"
+   }
+  },
+  "src/wms/train/inputs.py": {
+   "sha256": "e480e240ab40d2e6961fc762c337bf05fd84331bc1b2ce25affa9fe8b70f7eaf",
+   "source_receipt_match": true,
+   "functions": {},
+   "snippets": {
+    "245": "cav_controller = TimelineControllers(model, timeline)",
+    "266": "cav_controller = EntrantControllers(cav_controller, entrant_controller)"
+   }
+  },
+  "src/wms/model/wms.py": {
+   "sha256": "ef4ee7f8be7ac05af0fc37dda3ccf5956610a271f1b66c6a42623fe336acbab0",
+   "source_receipt_match": true,
+   "functions": {
+    "pivot_decision_geometry": [
+     {
+      "line": 1905,
+      "defaults": {
+       "next_s": "None",
+       "next_v": "None",
+       "fixed_next_lane": "None",
+       "route_shift": "None",
+       "delegated": "None"
+      }
+     }
+    ],
+    "_apply_merge_pivot": [
+     {
+      "line": 1936,
+      "defaults": {
+       "driver_params": "None",
+       "delegated": "None"
+      }
+     }
+    ]
+   },
+   "snippets": {
+    "1866": "delegated=out.get(cav_motion.WM_MERGE_KEY))",
+    "1872": "if (self.merge_pivot is None and cav_motion.WM_MERGE_KEY in out",
+    "1873": "and bool(out[cav_motion.WM_MERGE_KEY].any())):",
+    "1929": "decider = ~cav if delegated is None else ~cav | delegated.bool()",
+    "1953": "own = own | (present & delegated.bool())",
+    "2363": "delegated = callback_state.get(cav_motion.WM_MERGE_KEY)",
+    "2365": "out[cav_motion.WM_MERGE_KEY] = delegated.bool() & cav"
+   }
+  },
+  "tools/wmrequal/score.py": {
+   "sha256": "419267d4ab488e564f1447d857133d228db1305d83254afc0a23382304f3b48c",
+   "source_receipt_match": true,
+   "functions": {},
+   "snippets": {}
+  }
+ },
+ "controller_design": {
+  "path": "/root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json",
+  "sha256": "b658c6b53aea256fa577512b2e208f9494e64447695fade16480d561b9a4b7f4",
+  "controllers": {
+   "mappo": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/mappo.pt",
+    "sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564"
+   },
+   "ours_c1": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/ours_c1.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+   },
+   "coopoff_c1": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/coopoff_c1.pt",
+    "sha256": "e1fa4881bbc5c89d05298e979d98b23284308331ad1bbb12f9608fa67e105675"
+   },
+   "c00.a1:loop14_pairs_b0360_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/loop_c00.pt",
+    "sha256": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5"
+   },
+   "c00.a1:loop14_pairs_b0660_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/loop_c00.pt",
+    "sha256": "1b9949cc0eadb32db3f56b08684fa512fc2e70a26a0b7a360edb5599c6226ab5"
+   },
+   "c01.a1:loop14_pairs_b0360_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/ours_c1.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+   },
+   "c01.a1:loop14_pairs_b0660_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/ours_c1.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+   },
+   "c02.a1:loop14_pairs_b0360_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/loop_c02.pt",
+    "sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128"
+   },
+   "c02.a1:loop14_pairs_b0660_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/loop_c02.pt",
+    "sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128"
+   },
+   "loop14_pairs_b0360_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/ours_c1.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+   },
+   "loop14_pairs_b0660_policy": {
+    "checkpoint": "/root/autodl-tmp/c4/macroloss20261028/controllers/ours_c1.pt",
+    "sha256": "64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c"
+   }
+  }
+ }
+}
