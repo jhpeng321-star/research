@@ -45,6 +45,8 @@ def test_receipt_refuses_mix_config_runtime_and_source_drift(monkeypatch):
         runtime_contract=dict(mix=True))
     assert rank.verify_receipt(doc, raw, wm='wm', wm_config='cfg') is doc
     with pytest.raises(ValueError, match='mismatched'):
+        rank.verify_receipt({**doc, 'measure_only': True}, raw, wm='wm', wm_config='cfg')
+    with pytest.raises(ValueError, match='mismatched'):
         rank.verify_receipt(doc, dict(trainer=dict(entrant_learned_mix=False)), wm='wm', wm_config='cfg')
     monkeypatch.setattr(rank, 'runtime_contract', lambda trainer: dict(mix=False))
     with pytest.raises(ValueError, match='trained configuration'):
@@ -52,6 +54,25 @@ def test_receipt_refuses_mix_config_runtime_and_source_drift(monkeypatch):
     doc['source_manifest'][source] = 'changed'
     with pytest.raises(ValueError, match='source manifest mismatch'):
         rank.verify_receipt(doc, raw, wm='wm', wm_config='cfg')
+
+
+def test_measurement_uses_requested_loss_but_cannot_authorize_training(tmp_path, monkeypatch):
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
+    authority = tmp_path / 'old_cct2.json'
+    authority.write_text('{"policy_authorized": false}')
+    trainer = SimpleNamespace(config=SimpleNamespace(entrant_learned_mix=True,
+        future_samples=8, pessimistic_credit=True, deterministic_crn=True),
+        policy=SimpleNamespace(residual_reference='ctrl0'), world_model_ids=['wm'])
+    section = dict(enabled=True, mode='gain_only', cct2_file=str(authority),
+        ctrl0_reference=True, require_objective_match=True, estimator='antithetic')
+    receipt = rank.install_measurement(trainer, section)
+    assert receipt['H_long'] == 300 and receipt['config']['enabled'] is True
+    assert receipt['measure_only'] is True and receipt['policy_authorized'] is False
+    assert rank.gated300.uses_ctrl0(trainer)
+    assert receipt['artifact_sha256'] == rank.sha256(authority)
+    trainer.config.entrant_learned_mix = False
+    with pytest.raises(ValueError, match='identity'):
+        rank.install_measurement(trainer, section)
 
 
 @pytest.mark.parametrize('arm', rank.ARMS[:5])

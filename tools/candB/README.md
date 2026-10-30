@@ -16,6 +16,15 @@ in this preset only. Other presets/defaults retain their original settings.
 
 ## Required pre-training ranking check
 
+For WM-only diagnostic scoring with unqualified historical CCT-2, explicitly add
+`--measure-only`. This retains the exact candidate-B loss, K8/CTRL0/mix/config/source
+bindings but marks the receipt `measure_only=true`, `passed=false` and unlaunchable.
+The numerical R2 outcome is separately `ranking_passed`; no authority is generated.
+`--mappo-speed PATH` adds a hash/iteration-bound, partially trained native-lane export.
+CUDA measurements enforce `--gpu-memory-fraction .40` (maximum); no worker pool is
+started by rankcheck. `objective90_loss` is the resolved dense-prefix actor loss
+(low-share caps retained), `objective300_loss` the exact dense+gain-gated long loss.
+
 From the immutable runtime root (Linux; CPU works; no SUMO):
 ```sh
 export PYTHONPATH=src:. C4_ALLOWED_ROOTS=/root/autodl-tmp/c4

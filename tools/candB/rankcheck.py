@@ -1,7 +1,7 @@
 """Required WM-only pre-training ranking gate; never updates an optimizer or runs SUMO.
 
 Run from the repository root with PYTHONPATH=src:. See README.md. A matched
-CCT-2 authority is required: a ranking receipt cannot manufacture WM qualification.
+CCT-2 authority is required for launch: measurement-only receipts never qualify training.
 """
 from __future__ import annotations
 
@@ -67,7 +67,8 @@ def runtime_contract(trainer):
 
 
 def verify_receipt(document, raw, *, wm, wm_config, trainer=None):
-    if (document.get('schema') != SCHEMA or document.get('complete') is not True
+    if (document.get('measure_only', False)
+            or document.get('schema') != SCHEMA or document.get('complete') is not True
             or document.get('passed') is not True or document.get('n_starts', 0) < 16
             or document.get('K') != 8 or document.get('horizons_s') != [90, 300]
             or document.get('mix_connected') is not True
@@ -103,7 +104,7 @@ def comparator_factory(arm, model, teacher):
     def factory(policy, encoder, safety, record=None, **kwargs):
         acting = kwargs['act_mask']
         bridge = timeline = None
-        if arm == 'MAPPO_native_lanes':
+        if arm in ('MAPPO_native_lanes', 'MAPPO_speed_partial'):
             def deterministic(obs, signal, **kw):
                 return teacher.policy(obs, signal, deterministic=True, **kw)
             deterministic.accel_max = teacher.policy.accel_max
@@ -129,7 +130,7 @@ def comparator_factory(arm, model, teacher):
             background = torch.where(ctrl_rows, zero, native)
             lane = torch.where(state['lane'] != 2, state[WM_LANE_TARGET_KEY], state['lane'])
             state[WM_MERGE_KEY] = mask & (state['lane'] == 2)
-            if arm == 'MAPPO_native_lanes':
+            if arm in ('MAPPO_native_lanes', 'MAPPO_speed_partial'):
                 ms = {**state, EXEC_CAP_KEY: inferred_cap(state)}
                 output = bridge(ms)
                 acceleration = torch.maximum(-state['v_mps'] / .5,
@@ -155,7 +156,25 @@ def comparator_factory(arm, model, teacher):
     return factory
 
 
-def make_trainer(raw, model, policy_path, starts, *, device, cct2, horizon_gate):
+def install_measurement(trainer, section):
+    """Use the exact requested loss without manufacturing a CCT-2 PASS artifact."""
+    cfg = gated300.LongCreditConfig(**section)
+    if (not cfg.enabled or cfg.mode != 'gain_only' or not cfg.ctrl0_reference
+            or not cfg.require_objective_match or cfg.k16
+            or not trainer.config.entrant_learned_mix
+            or trainer.config.future_samples != 8 or not trainer.config.pessimistic_credit
+            or not trainer.config.deterministic_crn
+            or trainer.policy.residual_reference != 'ctrl0'):
+        raise ValueError('measurement requires exact candidate-B config/mix/K8/CTRL0 identity')
+    receipt = gated300.install(trainer, {**section, 'enabled': False}, [WM_SHA])
+    receipt.update(config=asdict(cfg), H_long=300, measure_only=True,
+                   policy_authorized=False, reason='measurement only; CCT-2 unqualified',
+                   artifact_sha256=sha256(cfg.cct2_file.format(wm_sha256=WM_SHA)))
+    return receipt
+
+
+def make_trainer(raw, model, policy_path, starts, *, device, cct2, horizon_gate,
+                 measure_only=False):
     policy, encoder, _, _ = load_policy_components(safe_path(policy_path), device=device)
     if not policy.residual_on_native:
         raise ValueError('current policy must be a native-residual checkpoint')
@@ -180,7 +199,11 @@ def make_trainer(raw, model, policy_path, starts, *, device, cct2, horizon_gate)
     # Prospective matched 90s regime; low-share starts still resolve to the exact
     # training low-share cap. Record that resolution rather than dropping starts.
     trainer.update_count = 1
-    gated300.install(trainer, {**raw['long_credit'], 'cct2_file': str(cct2)}, [WM_SHA])
+    section = {**raw['long_credit'], 'cct2_file': str(cct2)}
+    if measure_only:
+        install_measurement(trainer, section)
+    else:
+        gated300.install(trainer, section, [WM_SHA])
     if trainer.gated300['H_long'] != 300:
         raise ValueError('matching all-population/source/K8/CTRL0/mix CCT-2 is required: '
                          + trainer.gated300['reason'])
@@ -194,17 +217,21 @@ def reduce_image(trainer, image):
     # Per-future long J is recorded before gated300 truncates the trajectory.
     return dict(J90=image['rankcheck_J90'][:, 0].cpu().tolist(),
         J300=image['rankcheck_J300'][:, 0].cpu().tolist(),
-        objective_loss=float(loss), dense_credit=metrics['gated300_dense_credit'],
+        objective_loss=float(loss), objective90_loss=-metrics['gated300_dense_credit'],
+        objective300_loss=float(loss), dense_credit=metrics['gated300_dense_credit'],
         long_credit=metrics['gated300_long_credit'],
         dense_horizon_s=image['imagination_horizon_s'])
 
 
-def summarize(rows):
+def summarize(rows, arms=ARMS):
     worlds = [str(row['metadata'][0]['world']) for row in rows]
     unique, plan = cluster_plan(worlds, draws=5000, seed=20261030)
     summary = {}
-    for metric in ('J90', 'J300', 'objective_loss', 'dense_credit', 'long_credit'):
-        values = np.array([[np.mean(row['arms'][arm][metric]) for arm in ARMS] for row in rows])
+    metrics = ['J90', 'J300', 'objective_loss', 'dense_credit', 'long_credit']
+    if 'objective90_loss' in rows[0]['arms'][arms[0]]:
+        metrics += ['objective90_loss', 'objective300_loss']
+    for metric in metrics:
+        values = np.array([[np.mean(row['arms'][arm][metric]) for arm in arms] for row in rows])
         if not np.isfinite(values).all():
             raise ValueError('nonfinite ranking measurement')
         summary[metric] = dict(arms=estimate(values, worlds, unique, plan),
@@ -238,18 +265,24 @@ def main(argv=None):
                  'boundary', 'pairing-receipt', 'out'):
         p.add_argument('--'+name, required=True)
     p.add_argument('--real-evidence')
+    p.add_argument('--measure-only', action='store_true',
+                   help='score the requested objective without launch authority; receipt cannot launch')
+    p.add_argument('--mappo-speed', help='additional partially trained speed-only exported actor')
+    p.add_argument('--gpu-memory-fraction', type=float, default=.40)
     p.add_argument('--n-starts', type=int, default=16)
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
+    if not 0 < a.gpu_memory_fraction <= .40:
+        p.error('ranking GPU memory fraction must be in (0, .40]')
     paths = [safe_path(v) for k, v in vars(a).items() if isinstance(v, str)
              and k not in ('device',)]
     del paths
     if sha256(a.wm) != WM_SHA or sha256(a.mappo) != MAPPO_SHA:
         raise ValueError('registered WM2/MAPPO checkpoint hash mismatch')
     qualification = json.loads(safe_path(a.cct2).read_text())
-    if qualification.get('wm_config_sha256') != sha256(a.wm_config):
+    if not a.measure_only and qualification.get('wm_config_sha256') != sha256(a.wm_config):
         raise ValueError('WM qualification must bind the exact inference config SHA256')
     out = safe_path(a.out)
     if out.exists() or not out.parent.is_dir():
@@ -260,10 +293,20 @@ def main(argv=None):
     configure_execution('configs/execparity_cav_idm_v1.json')
     torch.set_num_threads(2)
     torch.manual_seed(965140)
+    if a.device == 'cuda':
+        torch.cuda.set_per_process_memory_fraction(a.gpu_memory_fraction)
+    sources = {name: sha256(name) for name in runtime_sources()}
+    from pathlib import Path
+    if Path('SOURCE_MANIFEST.json').is_file():
+        if sources != json.loads(safe_path('SOURCE_MANIFEST.json').read_text()):
+            raise ValueError('staged source manifest mismatch')
     raw = _read_config(safe_path(a.config))
     raw['horizon']['gate_file'] = str(safe_path(a.horizon_gate))
     from wms.control.looplong import configure, read_boundary
     prepared = read_boundary(a.boundary)
+    if (prepared['wm']['sha256'] != WM_SHA
+            or sha256(prepared['wm']['config']) != sha256(a.wm_config)):
+        raise ValueError('boundary WM/config identity mismatch')
     if prepared.get('coop_credit') is False:
         for key in ('w_individual', 'w_group', 'w_coop', 'w_team'):
             raw['counterfactual'][key] = [0.] * len(raw['counterfactual'][key])
@@ -272,7 +315,8 @@ def main(argv=None):
     model = load_members([a.wm], [a.wm_config], a.device)[0][0]
     starts, _ = load_training_starts(raw, model, 965140)
     trainer = make_trainer(raw, model, a.current_policy, starts, device=a.device,
-                           cct2=a.cct2, horizon_gate=a.horizon_gate)
+                           cct2=a.cct2, horizon_gate=a.horizon_gate,
+                           measure_only=a.measure_only)
     payload = torch.load(safe_path(a.current_policy), map_location='cpu', weights_only=False)
     trainer.update_count = int(payload['update_count'])
     trainer.coop_anchor = payload.get('coopw', {}).get('anchor', 0)
@@ -288,7 +332,12 @@ def main(argv=None):
                         and _same_groups(trainer.start_states, payload['sampler']))
     if sampler_restored:
         trainer.start_states.load_state_dict(payload['sampler'])
-    configure(trainer, prepared, raw, out.parent)
+    boundary_raw = copy.deepcopy(raw)
+    if a.measure_only:
+        boundary_raw['long_credit']['enabled'] = False
+    configure(trainer, prepared, boundary_raw, out.parent)
+    if a.measure_only:
+        install_measurement(trainer, raw['long_credit'])
     if trainer.gated300['H_long'] != 300:
         raise ValueError('boundary rebind lost objective-qualified 300s credit')
     if trainer._tilt_sampler is not None and payload.get('coopw', {}).get('tilt_sampler'):
@@ -296,16 +345,28 @@ def main(argv=None):
     trainer.start_states.configure_focus_cells(raw['data']['focus_cell_fraction'])
     first_update = trainer.update_count
     teacher = load_policy_fn(a.mappo, device=a.device)
+    speed = load_policy_fn(a.mappo_speed, device=a.device) if a.mappo_speed else None
+    speed_payload = (torch.load(safe_path(a.mappo_speed), map_location='cpu', weights_only=False)
+                     if speed is not None else None)
+    if speed is not None and (speed_payload.get('lane_control') != 'native'
+            or any(k.startswith('lane_head.') for k in speed_payload['policy'])):
+        raise ValueError('additional MAPPO checkpoint must be genuinely speed-only')
+    arms = (*ARMS, 'MAPPO_speed_partial') if speed is not None else ARMS
     signature = runtime_contract(trainer)
-    doc = dict(schema=SCHEMA, complete=False, passed=False, K=8, horizons_s=[90, 300],
+    doc = dict(schema=SCHEMA, complete=False, passed=False, measure_only=a.measure_only,
+        launch_authorized=False, gpu_memory_fraction=a.gpu_memory_fraction,
+        K=8, horizons_s=[90, 300],
         n_starts=a.n_starts, wm_sha256=WM_SHA, wm_config_sha256=sha256(a.wm_config),
         mappo_sha256=MAPPO_SHA, current_policy_sha256=sha256(a.current_policy),
         config_sha256=binding(raw), runtime_contract=signature,
         cct2_sha256=sha256(a.cct2), horizon_gate_sha256=sha256(a.horizon_gate),
         boundary_sha256=sha256(a.boundary), pairing_receipt_sha256=sha256(a.pairing_receipt),
-        source_manifest={name: sha256(name) for name in runtime_sources()},
+        source_manifest=sources,
         sampler_provenance=starts.distill_provenance, sampler_restored=sampler_restored,
-        arms=list(ARMS), rows=[])
+        arms=list(arms), rows=[])
+    if speed is not None:
+        doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
+            iteration=speed_payload.get('iteration'), partially_trained=True)
     # Preserve full-horizon per-future physical J before prefix truncation.
     original_prefix = gated300.prefix
     original_rollout = model.rollout
@@ -343,7 +404,7 @@ def main(argv=None):
             variants = build_variants(batch.state, trainer.counterfactual)
             before = _rng_state(trainer.device)
             row = dict(metadata=batch.metadata, sampler_info=trainer._last_start_info, arms={})
-            for arm in ARMS:
+            for arm in arms:
                 _restore_rng(before, trainer.device)
                 trainer.policy.residual_head.load_state_dict(saved_head)
                 if arm in ('current', 'candB_zero'):
@@ -352,13 +413,15 @@ def main(argv=None):
                         for parameter in trainer.policy.residual_head.parameters():
                             torch.nn.init.zeros_(parameter)
                 else:
-                    trainer.controller_factory = comparator_factory(arm, model, teacher)
+                    trainer.controller_factory = comparator_factory(
+                        arm, model, speed if arm == 'MAPPO_speed_partial' else teacher)
                 with torch.no_grad():
                     image = trainer.imagine(copy.deepcopy(batch), variants=variants,
                         deterministic=True, future_seed=trainer.update_count,
                         _memory_replay=True)
                     row['arms'][arm] = reduce_image(trainer, image)
                 del image
+                print('ARM', index+1, arm, flush=True)
             doc['rows'].append(row)
             out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
             print('START', index+1, batch.metadata, flush=True)
@@ -366,9 +429,10 @@ def main(argv=None):
         gated300.prefix = original_prefix
         model.rollout = original_rollout
         trainer.policy.residual_head.load_state_dict(saved_head)
-    doc['summary'], doc['n_worlds'] = summarize(doc['rows'])
+    doc['summary'], doc['n_worlds'] = summarize(doc['rows'], arms)
     real = json.loads(safe_path(a.real_evidence).read_text()) if a.real_evidence else None
-    doc['passed'], doc['gate_reason'] = ranking_gate(doc['summary'], real)
+    doc['ranking_passed'], doc['gate_reason'] = ranking_gate(doc['summary'], real)
+    doc['passed'] = doc['ranking_passed'] and not a.measure_only
     if real:
         doc['real_evidence_sha256'] = sha256(a.real_evidence)
     doc['complete'] = True
@@ -376,7 +440,7 @@ def main(argv=None):
     doc['mix_assignment_receipts'] = mix_calls
     out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
     lines = ['arm | J90 | dJ90 [95% CI] | J300 | dJ300 [95% CI] | objective loss']
-    for i, arm in enumerate(ARMS):
+    for i, arm in enumerate(arms):
         fields = [arm]
         for h in ('J90', 'J300'):
             s = doc['summary'][h]
@@ -388,7 +452,7 @@ def main(argv=None):
     text = '\n'.join(lines)+'\n'+doc['gate_reason']+'\n'
     safe_path(str(out)+'.txt').write_text(text, encoding='utf-8')
     print(text)
-    return 0 if doc['passed'] else 2
+    return 0 if doc['ranking_passed'] else 2
 
 
 def runtime_sources():
