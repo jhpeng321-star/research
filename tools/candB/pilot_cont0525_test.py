@@ -93,6 +93,22 @@ class GpuAContractTests(unittest.TestCase):
         self.assertEqual(environment['WMS_SPEED_FUTURE_MEMORY_FRACTION'], '.16')
         self.assertEqual(doc['lean_recipe']['environment'], environment)
 
+    def test_no_replay_guard_raw_factory_refuses_candidate_b(self):
+        # Documented production evidence (v2 attempt): the vjp_guard core is the
+        # switch-less raw bridge factory; candidate-B native-residual rollouts
+        # call it with native + lane_rules, which it must refuse. The trainer
+        # therefore installs NO backward_futures patch and relies on the
+        # c73498cd passthrough markers (CPU bitwise contracts, v2 update192).
+        import inspect
+        from types import SimpleNamespace
+        from tools.candB import pilot_cont0525
+        from wms.control import policy14
+        self.assertNotIn('vjp_guard', inspect.getsource(pilot_cont0525.run))
+        policy = SimpleNamespace(residual_on_native=True, residual_reference='base')
+        with self.assertRaisesRegex(ValueError, 'native residual needs'):
+            policy14.make_cav_controller(policy, None, None, None,
+                native=object(), lane_rules=object())
+
     def test_real_parent_validate_and_bindings(self):
         import torch
         from tools.candB import pilot_cont0525, pilot_wmfast

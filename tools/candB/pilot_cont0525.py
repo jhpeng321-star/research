@@ -15,7 +15,6 @@ from unittest.mock import patch
 from tools.candB import pilot_authority, pilot_wmfast
 from tools.candB import pilot_cont0525_authority as authority
 from tools.candB.pilot_continue import replace_once
-from tools.candB.pilot_replay_guard import vjp_guard
 
 PARENT = Path('/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300')
 BASELINE = '744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680'
@@ -56,7 +55,13 @@ def run(path, output, parent, *, exploratory=False):
     parent = Path(parent).resolve()
     if parent != PARENT:
         raise ValueError('CONT0525 is restricted to the RETRY0300 v2 phase')
-    with vjp_guard(), patch.object(pilot_wmfast, 'validate_parent', validate_parent), patch.object(
+    # No vjp_guard: it substitutes the switch-less raw bridge factory for the
+    # CLI's config-bound one and the raw factory refuses the candidate-B
+    # native-residual + lane_rules call (bridge.py 'native residual needs native
+    # command...'). Production evidence (RETRY0300 v2 update192, CPU bitwise
+    # contracts) shows the c73498cd passthrough markers alone keep telemetry
+    # alive across replay release in exactly this adapter chain.
+    with patch.object(pilot_wmfast, 'validate_parent', validate_parent), patch.object(
             pilot_wmfast_authority, 'ENV', authority.ENV), patch.object(
             pilot_wmfast_authority, 'recipe', authority.recipe):
         return pilot_wmfast.run(path, output, parent, exploratory=exploratory)
