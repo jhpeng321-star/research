@@ -46,11 +46,17 @@ elif {args.action!r}=='status':
         if doc['returncode']!=0:
             print(doc['stdout'][-1500:]); print(doc['stderr'][-1500:])
 else:
-    assert not root.exists(),'existing root; recover, never duplicate dispatch'
-    root.mkdir()
-    with (root/'supervisor.log').open('x') as log:
+    result=max(Path('.').glob('pilot_CONT0525_CPU_RESULT_*.json'))
+    assert json.loads(result.read_text())['returncode']==0,'latest CPU proof must pass before dispatch'
+    if root.exists():
+        assert not any((root/name).exists() for name in
+            ('OWNERSHIP.json','TRAINER_OWNERSHIP.json','EXIT.json')),'recover existing dispatch first'
+    else:
+        root.mkdir()
+    with (root/'supervisor.log').open('a' if (root/'supervisor.log').exists() else 'x') as log:
         child=subprocess.Popen([python,'-B','-u','-m','tools.candB.pilot_cont0525_supervise','--root',str(root),
-            '--python',python],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            '--python',python],env=dict(env,PILOT_CONT0525_CPU_RESULT=result.name),
+            stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
     for _ in range(15):
         if (root/'TRAINER_OWNERSHIP.json').exists() or child.poll() is not None: break
         time.sleep(1)
