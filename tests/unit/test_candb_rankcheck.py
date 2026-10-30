@@ -126,7 +126,8 @@ def test_rankcheck_refuses_small_panels_before_loading_assets():
             'boundary', 'pairing-receipt', 'out') for part in ('--'+key, 'unused')]])
 
 
-def test_comparators_flow_through_actual_k8_actor_objective(tmp_path, monkeypatch):
+@pytest.mark.parametrize('count', [8, 4])
+def test_comparators_flow_through_actual_k8_actor_objective(tmp_path, monkeypatch, count):
     from functools import partial
     from tests.unit.test_gated300 import cct2_authority, enable_gain_only
     from tests.unit.test_longmem import Starts, Critic, queue_reward
@@ -165,11 +166,34 @@ def test_comparators_flow_through_actual_k8_actor_objective(tmp_path, monkeypatc
         group_encoder=RsuGroupEncoder(hidden_dim=8, n_heads=2), lane_rules=LaneRules())
     for arm in rank.ARMS[:5]:
         trainer.controller_factory = rank.comparator_factory(arm, model, teacher)
-        with torch.no_grad():
+        with torch.no_grad(), rank.measurement_prefix(count):
             image = trainer.imagine(starts.batch, variants=build_variants(
                 starts.batch.state, trainer.counterfactual), deterministic=True, _memory_replay=True)
             loss, _ = trainer.actor_objective(image, 1., trainer.counterfactual.weights(0))
-        assert image['n_futures'] == 8 and torch.isfinite(loss)
+            image['rankcheck_J90'] = image['rankcheck_J300'] = -image['rewards'].sum(1)
+            zero = rank.ctrl0_image(image)
+            zero_loss, _ = trainer.actor_objective(zero, 1., trainer.counterfactual.weights(0))
+        assert image['n_futures'] == count and torch.isfinite(loss)
+        assert torch.isfinite(zero_loss)
         if arm == 'CTRL0':
+            assert torch.equal(image['returns'], zero['returns'])
+            assert torch.equal(loss, zero_loss)
             treatment = image['variants'].row_kind != KIND_BASE
             assert not image['gated300_long_difference'][..., treatment].any()
+
+
+def test_k4_plans_are_prefix_of_original_k8_and_context_restores(monkeypatch):
+    from wms.control import dreamer
+    from wms.control.futures import FuturesConfig, SampledFutures
+    cfg = FuturesConfig(n_samples=8, driver_noise_scale=0, accel_noise=True)
+    state = {'s_m': torch.zeros(1, 3)}
+    model = SimpleNamespace()
+    original = SampledFutures(cfg, 191).plan([model], state, {}, 10)[0]
+    factory = dreamer.SampledFutures
+    with rank.measurement_prefix(4):
+        reduced = dreamer.SampledFutures(
+            rank.replace(cfg, n_samples=4), 191).plan([model], state, {}, 10)[0]
+        assert len(reduced) == 4
+        for left, right in zip(original, reduced):
+            assert torch.equal(left['accel_noise'], right['accel_noise'])
+    assert dreamer.SampledFutures is factory

@@ -12,6 +12,8 @@ import hashlib
 import json
 import os
 import time
+from contextlib import contextmanager
+from dataclasses import replace
 
 import numpy as np
 import torch
@@ -240,6 +242,76 @@ def reduce_image(trainer, image):
         dense_horizon_s=image['imagination_horizon_s'])
 
 
+def ctrl0_image(image):
+    """Reuse actual native/CTRL0 rows, never an estimated or averaged trajectory.
+
+    Every non-base variant of a zero actor is the actual CTRL0 reference row;
+    the learned-native dense baseline stays native. Only objective inputs are
+    rewritten; no simulator/WM call or new stochastic draw is introduced.
+    """
+    from wms.control.counterfactual import KIND_BASE
+    variants = image['variants']
+    index = gated300.reference_index(variants)
+    index = torch.where(variants.row_kind == KIND_BASE,
+                        torch.arange(len(index), device=index.device), index)
+    out = dict(image)
+    for name in ('returns', 'rewards', 'gated300_long_difference',
+                 'rankcheck_J90', 'rankcheck_J300'):
+        out[name] = image[name].index_select(-1, index)
+    # Long differences are relative to CTRL0, hence exactly zero on its rows.
+    return out
+
+
+@contextmanager
+def measurement_prefix(count):
+    """Deadline diagnostic: first four of the ORIGINAL eight future plans.
+
+    K4 keeps the candidate-B algebra but is explicitly not its K8 estimator.
+    All adaptations are process-local and restored; launch checks remain K8.
+    """
+    if count == 8:
+        yield
+        return
+    from wms.control import antiexploit, dreamer
+    from wms.control.futures import SampledFutures, FuturesConfig
+    old_plan = dreamer.SampledFutures
+    old_config = dreamer.FuturesConfig
+    old_gate = gated300.gate
+    old_tail = antiexploit.tail_credit
+    class PrefixConfig:
+        @staticmethod
+        def from_trainer(cfg):
+            return replace(FuturesConfig.from_trainer(cfg), n_samples=count)
+    class PrefixPlan:
+        def __init__(self, cfg, seed):
+            self.original = SampledFutures(replace(cfg, n_samples=8), seed)
+        def plan(self, *args, **kwargs):
+            return [rows[:count] for rows in self.original.plan(*args, **kwargs)]
+    def gate(*args, **kwargs):
+        previous = gated300.K
+        try:
+            gated300.K = count
+            return old_gate(*args, **{**kwargs, 'sample_count': count})
+        finally:
+            gated300.K = previous
+    def tail(*args, **kwargs):
+        previous = antiexploit.K
+        try:
+            antiexploit.K = count
+            return old_tail(*args, **{**kwargs, 'sample_count': count})
+        finally:
+            antiexploit.K = previous
+    old_gated_tail = gated300.tail_credit
+    dreamer.FuturesConfig, dreamer.SampledFutures = PrefixConfig, PrefixPlan
+    gated300.gate, antiexploit.tail_credit, gated300.tail_credit = gate, tail, tail
+    try:
+        yield
+    finally:
+        dreamer.FuturesConfig, dreamer.SampledFutures = old_config, old_plan
+        gated300.gate, antiexploit.tail_credit = old_gate, old_tail
+        gated300.tail_credit = old_gated_tail
+
+
 def summarize(rows, arms=ARMS):
     worlds = [str(row['metadata'][0]['world']) for row in rows]
     unique, plan = cluster_plan(worlds, draws=5000, seed=20261030)
@@ -288,10 +360,15 @@ def main(argv=None):
     p.add_argument('--current-policy-driver', help='original checkpoint-bound driver; CRLF-only migration')
     p.add_argument('--gpu-memory-fraction', type=float, default=.40)
     p.add_argument('--n-starts', type=int, default=16)
+    p.add_argument('--measurement-arms', nargs='+', choices=(*ARMS, 'MAPPO_speed_partial'))
+    p.add_argument('--future-prefix', type=int, choices=(4, 8), default=8)
+    p.add_argument('--stop-after', type=int, help='retain a bounded incomplete measurement shard')
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
+    if (a.measurement_arms or a.future_prefix != 8 or a.stop_after) and not a.measure_only:
+        p.error('shards and K4 are measurement-only, never launch qualification')
     if a.current_policy_driver and not a.measure_only:
         p.error('--current-policy-driver is only available for unlaunchable measurements')
     if not 0 < a.gpu_memory_fraction <= .40:
@@ -372,12 +449,18 @@ def main(argv=None):
             or any(k.startswith('lane_head.') for k in speed_payload['policy'])):
         raise ValueError('additional MAPPO checkpoint must be genuinely speed-only')
     arms = (*ARMS, 'MAPPO_speed_partial') if speed is not None else ARMS
+    if a.measurement_arms:
+        if trainer.config.native_anchor:
+            raise ValueError('reference-row reconstruction requires native_anchor OFF')
+        arms = tuple(a.measurement_arms)
+        if 'MAPPO_speed_partial' in arms and speed is None:
+            p.error('MAPPO_speed_partial requires --mappo-speed')
     signature = runtime_contract(trainer)
     from wms.core.speed_flags import active as speed_flags
     doc = dict(schema=SCHEMA, complete=False, passed=False, measure_only=a.measure_only,
         launch_authorized=False, device=a.device, gpu_memory_fraction=a.gpu_memory_fraction,
         execution_speed_flags=speed_flags(),
-        K=8, horizons_s=[90, 300],
+        K=a.future_prefix, qualified_K=8, horizons_s=[90, 300],
         n_starts=a.n_starts, wm_sha256=WM_SHA, wm_config_sha256=sha256(a.wm_config),
         mappo_sha256=MAPPO_SHA, current_policy_sha256=sha256(a.current_policy),
         config_sha256=binding(raw), runtime_contract=signature,
@@ -385,7 +468,9 @@ def main(argv=None):
         boundary_sha256=sha256(a.boundary), pairing_receipt_sha256=sha256(a.pairing_receipt),
         source_manifest=sources,
         sampler_provenance=starts.distill_provenance, sampler_restored=sampler_restored,
-        arms=list(arms), rows=[])
+        arms=list(arms), rows=[], shard=bool(a.measurement_arms or a.stop_after),
+        estimator_note=('first 4 of original K8 CRN plans; reduced-K actor estimator'
+                        if a.future_prefix == 4 else 'original K8 estimator'))
     if speed is not None:
         doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
             iteration=speed_payload.get('iteration'), partially_trained=True)
@@ -397,6 +482,7 @@ def main(argv=None):
     original_prefix = gated300.prefix
     original_rollout = model.rollout
     mix_calls = []
+    active_arm = None
     def rollout(*args, **kwargs):
         sampler = kwargs.get('entrant_driver_sampler')
         if sampler is None:
@@ -408,6 +494,16 @@ def main(argv=None):
         return result
     model.rollout = rollout
     def prefix(owner, imagined, dense_steps):
+        if active_arm == 'candB_zero':
+            ref = int(gated300.reference_index(imagined['variants'])[0])
+            fields = ('s_m', 'v_mps', 'a_mps2', 'lane', 'present', 'is_cav')
+            for states in imagined['states']:
+                for field in fields:
+                    values = torch.stack([state[field] for state in states])
+                    if not torch.equal(values[:, 0], values[:, ref]):
+                        raise ValueError('fresh-zero/CTRL0 scientific-state mismatch: '+field)
+            doc['zero_identity'] = dict(bitwise=True, fields=list(fields),
+                complete_300s=True, K=a.future_prefix, metadata=doc['rows'][-1]['metadata'])
         cost = imagined['components']['delay'] + imagined['components']['source_wait']
         full = torch.stack([cost[..., r].contiguous().sum(1)
                             for r in range(cost.shape[-1])], -1)
@@ -418,10 +514,12 @@ def main(argv=None):
     gated300.prefix = prefix
     original_factory = trainer.controller_factory
     saved_head = copy.deepcopy(trainer.policy.residual_head.state_dict())
+    doc['current_output_head_zero'] = all(not bool(torch.count_nonzero(v))
+                                         for v in saved_head.values())
     try:
         _restore_rng(payload['rng'], trainer.device)
         trainer._training_imagination = True
-        for index in range(a.n_starts):
+        for index in range(min(a.n_starts, a.stop_after or a.n_starts)):
             # Exactly the training sampler/headroom rejection path, prospective
             # update-index seeds; no sorting, support filtering or outcome selection.
             trainer.update_count = first_update + index
@@ -434,6 +532,7 @@ def main(argv=None):
             row = dict(metadata=batch.metadata, sampler_info=trainer._last_start_info, arms={})
             doc['rows'].append(row)
             for arm in arms:
+                active_arm = arm
                 began = time.monotonic()
                 _restore_rng(before, trainer.device)
                 trainer.policy.residual_head.load_state_dict(saved_head)
@@ -445,13 +544,21 @@ def main(argv=None):
                 else:
                     trainer.controller_factory = comparator_factory(
                         arm, model, speed if arm == 'MAPPO_speed_partial' else teacher)
-                with torch.no_grad():
+                with torch.no_grad(), measurement_prefix(a.future_prefix):
                     image = trainer.imagine(copy.deepcopy(batch), variants=variants,
                         deterministic=True, future_seed=trainer.update_count,
                         _memory_replay=True)
                     row['arms'][arm] = reduce_image(trainer, image)
+                    if a.measurement_arms:
+                        row['paired_CTRL0'] = reduce_image(trainer, ctrl0_image(image))
+                        base = image['variants'].base_row[0]
+                        row['paired_native_physical'] = {
+                            key: image['rankcheck_'+key][:, base].cpu().tolist()
+                            for key in ('J90', 'J300')}
                 del image
                 row['arms'][arm]['elapsed_s'] = time.monotonic()-began
+                doc['mix_connected'] = bool(mix_calls)
+                doc['mix_assignment_receipts'] = mix_calls
                 out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
                 print('ARM', index+1, arm, 'elapsed_s', round(time.monotonic()-began, 3), flush=True)
             print('START', index+1, batch.metadata, flush=True)
@@ -459,6 +566,12 @@ def main(argv=None):
         gated300.prefix = original_prefix
         model.rollout = original_rollout
         trainer.policy.residual_head.load_state_dict(saved_head)
+    if a.measurement_arms or a.stop_after or a.future_prefix != 8:
+        doc['shard_finished'] = True
+        doc['mix_connected'] = bool(mix_calls)
+        doc['mix_assignment_receipts'] = mix_calls
+        out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
+        return 0
     doc['summary'], doc['n_worlds'] = summarize(doc['rows'], arms)
     real = json.loads(safe_path(a.real_evidence).read_text()) if a.real_evidence else None
     doc['ranking_passed'], doc['gate_reason'] = ranking_gate(doc['summary'], real)
