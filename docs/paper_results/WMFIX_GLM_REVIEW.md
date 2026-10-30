@@ -27,5 +27,11 @@ No worker edit was discarded silently: each worktree/branch is preserved with it
 Updated package status (WMFIX_GLM_WORK.md is binding):
 - g1-clock and g2-real-feasibility remain OPEN but MAIN-side: both need the remote registered TRAIN
   corpus (/root/autodl-tmp/c4/e3data) which no local session may stage here.
-- g3-speedhead producer and g4 C1 producer are TAKEN by the integrator in this session
-  (speedhead_panel.py / c1_panel.py + tests). Do not dispatch workers for them; that would duplicate.
+- g3-speedhead producer and g4 C1 producer were marked TAKEN here on the expectation that
+  this session would port `speedhead_panel.py` / `c1_panel.py`. CORRECTION (resume audit):
+  those files do NOT exist in this worktree; the packages are OPEN again. A faithful B
+  producer must generalize the SPEEDHEAD GPU quartet worker (`wm_gpu.py`) to the candidate
+  checkpoint/config (identity pins apply to the base side only; candidate side enables
+  merge_response + conserve_queue + learned_admission); that machinery lives with the
+  SPEEDHEAD GPU host, so the binding is MAIN/speedhead-owner side. Do not dispatch GLM
+  workers for them without that host access; verdict stays fail-closed BLOCKED meanwhile.

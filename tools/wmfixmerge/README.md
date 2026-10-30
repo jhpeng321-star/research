@@ -120,3 +120,17 @@ No shell command string, automatic retry, unbound artifact reuse, or placeholder
 
 The exact B/C1 producers/cohort paths are not present in this worktree. Their bindings remain null intentionally.
 Thus the one-command orchestration and metric gates are implemented, but the full verdict cannot yet execute.
+
+### B producer generalization spec (MAIN / SPEEDHEAD-owner side)
+
+The SPEEDHEAD GPU quartet worker (`tools/speedhead/wm_gpu.py` in E:/agent-work/c4-speedhead,
+deployed at /root/autodl-tmp/c4/speedhead20261030) pins the base side by SHA (WM2 b8797242,
+MAPPO export d9042cc5, seed 965140, update 190, K8, native lanes, <=8 GiB). The candidate
+side needs the same worker run with: the trained candidate checkpoint + candidate_config.json
+(merge_response=true), conserve_queue + learned_admission ON in the entry process, identity
+recorded with the candidate sha256 instead of the WM2/export pins, identical design.json
+worlds, CRN futures and 8x8 world/future grid. Reduce both sides into `wmfix_speedhead/1`
+rows (arm-minus-CTRL0 draws) and the 64-row absolute grid with road/source components,
+embed `binding` and the registered producer object, then bind it in verdict_plan.json.
+The real-side numbers and frozen CTRL0/PI/CIRCLES recipe come from SPEEDHEAD.md; no SUMO
+run is licensed by this task. Until bound, stage B blocks the verdict (fail-closed, by design).
