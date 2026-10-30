@@ -186,3 +186,14 @@
   before any continuation dispatch. `pilot_cpu_2305_nativebudget.json`: **16 PASS**,
   including execution of the REAL continuation loader on a bound synthetic receipt,
   proving phase_start190/limit150/remaining149. Intermediate evidence retained.
+- Corrected native-budget overlay07899bcf staged/hashed before dispatch, receipt
+  `pilot_continue_NATIVEBUDGET_2305.json`; scientific source unchanged, no trainer
+  had imported the intermediate overlay.
+- **23:17:00 +08 observer handoff ACK**: successor16760/creation23:13:43 owns
+  `pilot_watch_2305_OWNERSHIP.json`; predecessor43860 independently absent after
+  cooperative STOP and exact process-handle wait. First successor observation23:17:01:
+  dry0/pilot0, no continuation trainer, no exit. Monitoring through phase3 remains
+  **PENDING**, not a completed-update claim. It will continue after phase3 for MAIN.
+- Latest SPEEDPROF read still contains diagnosis only, no published exact speedup
+  diff to apply. Requested parallelism/telemetry overlay is already staged for the
+  pending boundary; no baseline discarded or recomputed.
