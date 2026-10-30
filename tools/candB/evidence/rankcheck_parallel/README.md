@@ -96,3 +96,16 @@
   same pair features/weights/attention, no-grad only, full attention tolerance2e-6.
   A new immutable runtime must pass CUDA equivalence before GPU resumption; only
   exact owned CPU incarnations may be handed off, never existing gpuA scorers.
+- Source4d56f2a8 staged via stage.sh into NEW gpuR runtime
+  `candB_rankcheck_4d56f2a8_bias_20261030`; all2452 source hashes verified;
+  CPU+CUDA full-attention row-chunk comparison **2 passed**, tolerance2e-6.
+- gpuA CIRCLES967628 independently OOM-exited after11 saved starts, before index11;
+  `CIRCLES_GPUA_OOM_SNAPSHOT.json` binds the read-only22:05 check. No signal there.
+- gpuR source82 GPU445979 finished all PI+native12-15; raw shard_finished=true.
+  Retired only own four new native CPU attempts (first futures26-30min imply
+  >23:00 for even one arm); no complete arms existed; exact pidfd receipts/logs retained.
+- At22:11, exact owned CPU446005/start4199323357 handed off with no saved arm;
+  new own GPU448004 measures PI/native/CIRCLES at the missing index11, source4d56,
+  chunk rows8,.40, total preflight8915MiB. Original gpuA MAPPO remains untouched.
+  CIRCLES12-15 is pending only after this worker exits; gpuR worst reservation+512
+  margin+current use must fit22000MiB before any next scorer is started.

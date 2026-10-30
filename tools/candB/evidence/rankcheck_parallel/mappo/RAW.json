@@ -3317,6 +3317,27 @@
      "long_credit": 0.0,
      "dense_horizon_s": 90.0,
      "elapsed_s": 699.2766052912921
+    },
+    "MAPPO_speed_partial": {
+     "J90": [
+      7927.57470703125,
+      8489.99609375,
+      8505.1484375,
+      9630.5185546875
+     ],
+     "J300": [
+      28849.02734375,
+      35059.6328125,
+      35173.15625,
+      39973.6171875
+     ],
+     "objective_loss": 871.7439575195312,
+     "objective90_loss": 871.7439575195312,
+     "objective300_loss": 871.7439575195312,
+     "dense_credit": -871.7439575195312,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 699.3409140221775
     }
    },
    "paired_CTRL0": {
@@ -3351,6 +3372,110 @@
      36006.4375,
      34062.22265625,
      41502.375
+    ]
+   }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963764m2700p20t300",
+     "arm": "generic_random",
+     "policy": "generic_random",
+     "episode": "w963764m2700p20t300__generic_random",
+     "controller_branch": null,
+     "tick": 2140,
+     "t0_s": 1070.0,
+     "pair_key": null,
+     "start_source": "genrand_plain",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": false,
+     "high_demand": true,
+     "congested": true
+    },
+    "observed_share": 0.1590909090909091,
+    "observed_main_demand_vph": 2507.9999685287476,
+    "m": 1.2360468996298861,
+    "tries": 1,
+    "importance_weight": 1.0757580493255392,
+    "ess_fraction": 0.9981747890398394,
+    "candidates": 8,
+    "target_base_rates": {
+     "multi_cav": 1.0,
+     "side_by_side": 0.875,
+     "high_share": 0.375,
+     "high_demand": 0.625,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.23604689962988612,
+    "merge_speed_deficit": 0.1511632204055786,
+    "ramp_queue_pressure": 0.10000000149011612,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "MAPPO_native_lanes": {
+     "J90": [
+      21331.34375,
+      21243.98046875,
+      21516.94921875,
+      20883.58984375
+     ],
+     "J300": [
+      81621.9375,
+      85862.59375,
+      81893.125,
+      81409.5546875
+     ],
+     "objective_loss": 152.88357543945312,
+     "objective90_loss": 152.88357543945312,
+     "objective300_loss": 152.88357543945312,
+     "dense_credit": -152.88357543945312,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 659.642628705129
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     21307.791015625,
+     21243.31640625,
+     21516.94921875,
+     20882.05078125
+    ],
+    "J300": [
+     83037.234375,
+     85432.5078125,
+     81648.953125,
+     81138.453125
+    ],
+    "objective_loss": 136.56727600097656,
+    "objective90_loss": 136.56727600097656,
+    "objective300_loss": 136.56727600097656,
+    "dense_credit": -136.56727600097656,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     21328.453125,
+     21278.828125,
+     21607.310546875,
+     20870.033203125
+    ],
+    "J300": [
+     81318.8359375,
+     85698.625,
+     82407.0546875,
+     81997.625
     ]
    }
   }
@@ -3780,6 +3905,82 @@
    190,
    191,
    190
+  ],
+  [
+   182,
+   174,
+   181,
+   181,
+   180,
+   180,
+   181,
+   181
+  ],
+  [
+   182,
+   179,
+   181,
+   181,
+   181,
+   181,
+   181,
+   182
+  ],
+  [
+   182,
+   181,
+   183,
+   183,
+   183,
+   183,
+   183,
+   183
+  ],
+  [
+   188,
+   183,
+   190,
+   190,
+   190,
+   190,
+   190,
+   190
+  ],
+  [
+   175,
+   172,
+   174,
+   174,
+   174,
+   174,
+   174
+  ],
+  [
+   175,
+   170,
+   176,
+   177,
+   177,
+   177,
+   176
+  ],
+  [
+   184,
+   178,
+   184,
+   184,
+   184,
+   184,
+   184
+  ],
+  [
+   171,
+   169,
+   171,
+   172,
+   171,
+   172,
+   171
   ]
  ]
 }

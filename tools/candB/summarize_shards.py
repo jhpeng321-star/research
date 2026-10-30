@@ -66,7 +66,7 @@ def analyze(root):
     duplicates = []
     for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail',
                       'pi_resume_gpu', 'pi_resume_cpu', 'native_cpu_0_3', 'native_cpu_3_6',
-                      'native_cpu_6_9', 'native_cpu_9_11'):
+                      'native_cpu_6_9', 'native_cpu_9_11', 'bias_large', 'circles_resume_gpu'):
         path = root/directory/'RAW.json'
         if not path.exists():
             continue
@@ -82,6 +82,7 @@ def analyze(root):
             config_sha256=doc['config_sha256'], wm_config_sha256=doc['wm_config_sha256'],
             K=doc['K'], source_manifest=doc['source_manifest'],
             device=doc['device'], shard_finished=doc.get('shard_finished', False),
+            measurement_bias_rows=doc.get('measurement_bias_rows', 0),
             mappo_speed_partial=doc.get('mappo_speed_partial'))
         for arm in doc['arms']:
             completed = []
@@ -213,7 +214,7 @@ def report(result, final_sha, stamp):
         '# S-RANKCHECK — deadline measurement (incomplete; no launch authority)',
         f'As of {stamp}; final verified code+evidence SHA `{final_sha}`.',
         'Report-delivery SHA: `git log -1 --format=%H -- docs/paper_results/RANKCHECK.md`.',
-        'Measured source SHAs: `2dcb6af5` (PI/CIRCLES), `3cd6481e` (MAPPO/zero), `f396955a` (MAPPO tails), `82dbd7bc` (PI/native resume), `05f7bfba` (retained K8).',
+        'Measured sources: `2dcb6af5` (PI/CIRCLES), `3cd6481e` (MAPPO/zero), `f396955a` (MAPPO tails), `82dbd7bc` (PI/native resume), `4d56f2a8` (bounded-MLP resume), `05f7bfba` (retained K8).',
         '## Contract and completeness',
         'WM2 `b8797242` + learned mix ON; candidate-B resolved config, CTRL0 law/reference, all vehicles + entrants + road deficit + source waiting; no training/SUMO.',
         'MAIN19:10 fallback: **K4 = first four original K8 CRN plans**, same dense-suffix/joint-q10 and gain-gated300s algebra; this is a reduced-K estimator, not K8 qualification.',
@@ -254,9 +255,10 @@ def report(result, final_sha, stamp):
         '## Execution and verification',
         'Fresh immutable staging via tools/candB/stage.sh. MAIN21:08: no new gpuA scorers; existing shards finish. Retired only exact owned obsolete21:20 cutoff supervisors. New scoring is gpuR-only,total<=22GB; peers untouched.',
         'Recovered tail guard had already failed before signalling; historical45000MiB guard was ineffective (gpuA45713MiB at21:08). Repeated prefix/tail starts are exact-array verified and counted once; all attempts retained.',
-        'gpuR PI exhausted its.40 allocator at plan index11 after11 saved starts. Fresh source82dbd7bc resumes11 on CPU and12-15 on GPU with native actor interventions; both use the same bound starts and first4 CRN plans.',
-        'gpuA.16 MAPPO tails also exited on allocator OOM after one saved start each; no retry there. Existing prefix/CIRCLES continue. CPU/CUDA resume differences are not bitwise parity claims; contrasts are always process-paired.',
-        '17 CPU tests pass (2 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
+        'PI.40 and CIRCLES.19 exhausted allocators at index11 after11 saved starts. Source82dbd7bc resumes12-15 on gpuR; slow CPU11 is handed off only after exact owned-incarnation retirement. Native CPU shards remain separately identified.',
+        'Source4d56f2a8 adds default-OFF measurement-only no-grad pair-bias MLP row chunks8 (same features/weights/objective); CPU/CUDA full-attention equivalence2/2 passes at2e-6. Every source/config/WM/start identity remains bound.',
+        'gpuA.16 MAPPO tails exited on allocator OOM after one saved start each; no retry there. Existing MAPPO prefix continues. CPU/CUDA numerical parity is not claimed; every contrast is process-paired.',
+        '18 CPU tests pass (3 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
         'Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.',
     ]
     if proxy:

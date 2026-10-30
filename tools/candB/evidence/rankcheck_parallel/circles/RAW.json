@@ -3682,6 +3682,110 @@
      18931.5234375
     ]
    }
+  },
+  {
+   "metadata": [
+    {
+     "source": "c4_episodes",
+     "world": "w963407m2700p40t300",
+     "arm": "native",
+     "policy": "native",
+     "episode": "w963407m2700p40t300__native",
+     "controller_branch": null,
+     "tick": 880,
+     "t0_s": 440.0,
+     "pair_key": null,
+     "start_source": "native_v5",
+     "group_rich": true
+    }
+   ],
+   "sampler_info": {
+    "features": {
+     "multi_cav": true,
+     "side_by_side": true,
+     "high_share": true,
+     "high_demand": true,
+     "congested": true
+    },
+    "observed_share": 0.44047619047619047,
+    "observed_main_demand_vph": 3048.0000972747803,
+    "m": 1.2462024092674255,
+    "tries": 1,
+    "importance_weight": 1.0688662723161575,
+    "ess_fraction": 0.9962458530207191,
+    "candidates": 12,
+    "target_base_rates": {
+     "multi_cav": 0.9166666666666666,
+     "side_by_side": 0.75,
+     "high_share": 0.4166666666666667,
+     "high_demand": 0.5833333333333334,
+     "congested": 1.0
+    },
+    "sampler": "observable_headroom/1",
+    "headroom": 0.24620240926742554,
+    "merge_speed_deficit": 0.24620240926742554,
+    "ramp_queue_pressure": 0.0,
+    "max_multiplier": 2.0,
+    "fallback_probability_upper": 9.5367431640625e-07,
+    "importance_weight_is_running_estimate": true
+   },
+   "arms": {
+    "CIRCLES": {
+     "J90": [
+      15374.6943359375,
+      13870.5869140625,
+      15539.40625,
+      15373.142578125
+     ],
+     "J300": [
+      68872.890625,
+      57659.8515625,
+      66992.375,
+      67021.2265625
+     ],
+     "objective_loss": -452.957275390625,
+     "objective90_loss": -452.957275390625,
+     "objective300_loss": -452.957275390625,
+     "dense_credit": 452.957275390625,
+     "long_credit": 0.0,
+     "dense_horizon_s": 90.0,
+     "elapsed_s": 738.7989846095443
+    }
+   },
+   "paired_CTRL0": {
+    "J90": [
+     15090.2919921875,
+     13367.79296875,
+     15106.71875,
+     15009.3125
+    ],
+    "J300": [
+     64344.23828125,
+     55336.78515625,
+     63994.66015625,
+     63710.12109375
+    ],
+    "objective_loss": -911.7424926757812,
+    "objective90_loss": -911.7424926757812,
+    "objective300_loss": -911.7424926757812,
+    "dense_credit": 911.7424926757812,
+    "long_credit": 0.0,
+    "dense_horizon_s": 90.0
+   },
+   "paired_native_physical": {
+    "J90": [
+     15162.62109375,
+     13492.345703125,
+     15373.1201171875,
+     15460.6728515625
+    ],
+    "J300": [
+     65445.8984375,
+     55485.66796875,
+     66165.1796875,
+     66703.5
+    ]
+   }
   }
  ],
  "shard": true,
@@ -4070,6 +4174,38 @@
    184,
    185,
    184
+  ],
+  [
+   151,
+   155,
+   165,
+   165,
+   165,
+   165
+  ],
+  [
+   159,
+   164,
+   171,
+   171,
+   171,
+   171
+  ],
+  [
+   167,
+   174,
+   182,
+   182,
+   182,
+   182
+  ],
+  [
+   160,
+   167,
+   174,
+   174,
+   174,
+   174
   ]
  ]
 }
