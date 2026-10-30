@@ -8,7 +8,7 @@ from tools.candB.pilot_lean_deploy import PYTHON
 
 PARENT = '/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN'
 OLD_RUNTIME = '/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031'
-RUNTIME = '/root/autodl-tmp/c4/candB_pilot_RETRY0300_EXPLORATORY-LEAN_20261031'
+RUNTIME = '/root/autodl-tmp/c4/candB_pilot_RETRY0300_v2_EXPLORATORY-LEAN_20261031'
 
 
 def main():
