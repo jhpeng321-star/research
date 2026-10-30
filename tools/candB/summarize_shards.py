@@ -39,7 +39,7 @@ def analyze(root):
     rows = {}
     contracts = []
     plans = set()
-    for directory in ('circles', 'pi', 'mappo'):
+    for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail'):
         path = root/directory/'RAW.json'
         if not path.exists():
             continue
@@ -58,6 +58,7 @@ def analyze(root):
         for arm in doc['arms']:
             completed = []
             for index, row in enumerate(doc['rows']):
+                index = row.get('plan_index', index+doc.get('start_index', 0))
                 if arm not in row['arms']:
                     continue
                 check_metadata(row['metadata'])
@@ -71,8 +72,11 @@ def analyze(root):
                 completed.append(dict(index=index, metadata=row['metadata'], value=value,
                     reference=reference, native=row['paired_native_physical']))
             if completed:
-                assert arm not in rows, 'duplicate completed arm inputs'
-                rows[arm] = completed
+                previous = rows.setdefault(arm, [])
+                assert not ({r['index'] for r in previous} & {r['index'] for r in completed}), (
+                    'duplicate completed TRAIN-plan arm indices')
+                previous.extend(completed)
+                previous.sort(key=lambda row: row['index'])
     assert rows, 'no completed diagnostic arms yet'
     assert len(plans) == 1 and all(c == contracts[0] for c in contracts)
     # Availability-only canonical reference; never choose by observed controller outcomes.

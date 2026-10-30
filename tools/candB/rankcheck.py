@@ -377,6 +377,8 @@ def main(argv=None):
     p.add_argument('--measurement-arms', nargs='+', choices=(*ARMS, 'MAPPO_speed_partial'))
     p.add_argument('--future-prefix', type=int, choices=(4, 8), default=8)
     p.add_argument('--stop-after', type=int, help='retain a bounded incomplete measurement shard')
+    p.add_argument('--start-index', type=int, default=0,
+                   help='first exported TRAIN-plan index; disjoint measurement shards only')
     p.add_argument('--export-starts', help='save actual TRAIN sampler batches without WM scoring')
     p.add_argument('--input-starts', help='consume hash-bound exported TRAIN batches on another host')
     p.add_argument('--host-controller-sensors', action='store_true',
@@ -386,8 +388,12 @@ def main(argv=None):
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
     if (a.measurement_arms or a.future_prefix != 8 or a.stop_after
-            or a.export_starts or a.input_starts or a.host_controller_sensors) and not a.measure_only:
+            or a.export_starts or a.input_starts or a.host_controller_sensors
+            or a.start_index) and not a.measure_only:
         p.error('shards and K4 are measurement-only, never launch qualification')
+    if (a.start_index < 0 or a.start_index >= min(a.n_starts, a.stop_after or a.n_starts)
+            or (a.start_index and not a.input_starts)):
+        p.error('start-index requires an exported plan and a nonempty bounded range')
     if a.current_policy_driver and not a.measure_only:
         p.error('--current-policy-driver is only available for unlaunchable measurements')
     if not 0 < a.gpu_memory_fraction <= .40:
@@ -532,7 +538,8 @@ def main(argv=None):
         boundary_sha256=sha256(a.boundary), pairing_receipt_sha256=sha256(a.pairing_receipt),
         source_manifest=sources,
         sampler_provenance=starts.distill_provenance, sampler_restored=sampler_restored,
-        arms=list(arms), rows=[], shard=bool(a.measurement_arms or a.stop_after),
+        arms=list(arms), rows=[], start_index=a.start_index,
+        shard=bool(a.measurement_arms or a.stop_after or a.start_index),
         estimator_note=('first 4 of original K8 CRN plans; reduced-K actor estimator'
                         if a.future_prefix == 4 else 'original K8 estimator'))
     doc['host_controller_sensors'] = a.host_controller_sensors
@@ -586,7 +593,7 @@ def main(argv=None):
     try:
         _restore_rng(payload['rng'], trainer.device)
         trainer._training_imagination = True
-        for index in range(min(a.n_starts, a.stop_after or a.n_starts)):
+        for index in range(a.start_index, min(a.n_starts, a.stop_after or a.n_starts)):
             # Exactly the training sampler/headroom rejection path, prospective
             # update-index seeds; no sorting, support filtering or outcome selection.
             trainer.update_count = first_update + index
@@ -603,7 +610,8 @@ def main(argv=None):
                 variants = build_variants(batch.state, trainer.counterfactual)
                 before = _rng_state(trainer.device)
             check_metadata(batch.metadata)
-            row = dict(metadata=batch.metadata, sampler_info=trainer._last_start_info, arms={})
+            row = dict(plan_index=index, metadata=batch.metadata,
+                       sampler_info=trainer._last_start_info, arms={})
             doc['rows'].append(row)
             for arm in arms:
                 active_arm = arm
