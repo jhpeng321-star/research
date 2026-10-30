@@ -1,0 +1,8 @@
+{
+ "action": "cpu",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_CONT0525_v1_EXPLORATORY-LEAN_20261031",
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v1_20261031",
+ "returncode": 0,
+ "stdout": "CPU_TAG 1793396081\nPARENT {\"status\": \"failed\", \"error\": \"ValueError: lean aggregate memory bound including peers exceeds safe ceiling\", \"label\": \"EXPLORATORY-LEAN\", \"rows\": 1, \"last_update\": 192, \"phase_start\": 191}\nARTIFACT policy_latest.pt 2005019 aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a\nARTIFACT frozen_scoring_baseline.json 6759 744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680\n",
+ "stderr": ""
+}
