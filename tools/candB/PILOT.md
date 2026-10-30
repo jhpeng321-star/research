@@ -416,3 +416,19 @@
   Receipts `pilot_wmfast4_{prepare_1793385923,cpu_1793385931,status_1793385944}.json`.
 
 - S-PILOTB EXPLORATORY-LEAN UPDATE1 FAILED epoch1793385850: TypeError: 'NoneType' object is not subscriptable in dense autograd backward; ZERO completed optimizer rows. Frozen baseline744b30b8 remains durable; all original outputs/startup scores retained. Trainer35928 and supervisor35923 exited naturally; old S2 waiter37982 and prepared S4 waiter60032 both refused the non-clean parent, no continuation trainer dispatched. S4 runtimeaf78fda7 authority07f5e05b and10 CPU contracts passed but S4 production not launched. Investigating a baseline-preserving recovery; NO baseline recomputation or completed-update claim. Full traceback/receipt `E:/agent-work/c4-candB/tools/candB/pilot_repaired_UPDATE1_FAILURE.json`.
+
+## Owner03:00 recovery — exact B-L replay fix / baseline-preserving retry
+- Recovery epoch1793386792: original trainer35928, supervisor35923, S2 waiter37982
+  and S4 waiter60032 are all independently absent. Neither continuation dispatched.
+- Baseline SHA256 **744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680**
+  independently rechecked; zero completed optimizer rows. Original zero191 checkpoint
+  `policy_native_best.pt` SHA256 **abae6464e2ef0fbb08174b7d4b079b4bed634bbae7207ec21560f5d3f7873c02**.
+- Disk-full tracked-file audit: `git diff --numstat` has only2 additions/1 deletion
+  in the retained pilot_wmfast4.py edit; no truncated tracked files or mass deletions.
+  Existing untracked recovery drafts are retained, including empty untracked
+  pilot_wmfast_detail.py; they are not assumed verified or deployed.
+- B-L c73498cd exact observational-wrapper passthrough repair is the recovery source;
+  its later independently-read authority/checkpoint repair2ac8ff65 is also required.
+  Owner03:00 now permits batching ON for repaired update1. New runtime/authority,
+  explicit zero-progress full-state recovery and original phase10 R4 are required.
+- Full named-receipt/process audit: `pilot_recovery_0300_1793386792.json`.
