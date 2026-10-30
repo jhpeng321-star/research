@@ -22,5 +22,5 @@ export WMS_SPEED_FORWARD_WORKERS=2 WMS_SPEED_FORWARD_MEMORY_FRACTION=.28 WMS_SPE
 PYTHON=${PYTHON:?}
 AUTHORITY=authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json
 "$PYTHON" -B -m tools.candB.pilot_lean_authority --exploratory-owner-20261030 verify "$AUTHORITY"
-"$PYTHON" -c 'import os,time; assert 0 <= time.time()-float(os.environ["PILOT_ADMISSION_EPOCH"]) < 120; assert int(os.environ["PILOT_ADMISSION_FREE_MIB"]) >= 43000'
+"$PYTHON" -c 'import os,time; assert 0 <= time.time()-float(os.environ["PILOT_ADMISSION_EPOCH"]) < 120; assert int(os.environ["PILOT_ADMISSION_FREE_MIB"]) >= 38000'
 exec "$PYTHON" -B -u -m tools.candB.pilot_lean --exploratory-owner-20261030 --authority "$AUTHORITY" "$OUT"

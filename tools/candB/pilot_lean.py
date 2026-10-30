@@ -11,6 +11,14 @@ from unittest.mock import patch
 from tools.candB import pilot_cli as base, pilot_lean_authority as authority
 
 
+def memory_bound(total, reserved, peer_bytes, workers, fraction):
+    # Peer measurement plus2GiB growth allowance; include all CUDA contexts.
+    bound = reserved + workers*fraction*total + (workers+1)*768*1024**2 + peer_bytes + 2*1024**3
+    if bound > min(.90*total,45*1024**3):
+        raise ValueError('lean aggregate memory bound including peers exceeds safe ceiling')
+    return bound
+
+
 def es_prefix_gradient(original, trainer, imagined, weights, scale):
     context = trainer._eslong_context
     if len(context['cache']['items']) != 8:
@@ -39,7 +47,7 @@ def run(path, output, *, exploratory=False):
     original_panel, dumps = cli.load_gate_panel, json.dumps
     real_pool = parallel_futures.FuturePool
     began = time.monotonic()
-    state = dict(phase=0, workers=[], capture=None, raw=None)
+    state = dict(phase=0, workers=[], capture=None, raw=None, own_worker_pids=set())
 
     def load_panel(path, val):
         panel = original_panel(path, val)  # Validate ALL original16 before taking prefix.
@@ -56,6 +64,24 @@ def run(path, output, *, exploratory=False):
         return es_prefix_gradient(original_gradient, *args, **kwargs)
 
     class RetainedPool(real_pool):
+        def __init__(self, trainer, common):
+            if trainer.device.type == 'cuda':
+                torch.cuda.empty_cache()
+                samples = Path(output).parent/'GPU.jsonl'
+                sample = json.loads(samples.read_text().splitlines()[-1])
+                peers = 0
+                for line in sample['apps'].splitlines():
+                    pid, used = (int(x.strip()) for x in line.split(','))
+                    if pid != os.getpid() and pid not in state['own_worker_pids']:
+                        peers += used*1024**2
+                kind=common['kind']
+                workers=parallel_futures.worker_count(kind)
+                fraction=float(os.environ['WMS_SPEED_FORWARD_MEMORY_FRACTION' if kind=='forward' else 'WMS_SPEED_FUTURE_MEMORY_FRACTION'])
+                memory_bound(torch.cuda.get_device_properties(trainer.device).total_memory,
+                    torch.cuda.memory_reserved(trainer.device),peers,workers,fraction)
+            super().__init__(trainer, common)
+            state['own_worker_pids'].update(p.pid for p in self.processes)
+
         def map(self, tasks):
             tasks = list(tasks)
             for index, task in enumerate(tasks):

@@ -228,3 +228,18 @@
 - `pilot_lean_CPU_recovered.json` retains actual retry proof. Independent rescoring
   every5 stays distinct from per-update PRE-optimizer training-start raw dJ telemetry;
   no stale score is represented as a newly measured independent score.
+
+### Capacity-aware lean admission (before any lean training)
+- First immutable runtime0ac91e2d:2562 LF files verified, authority687a9953.
+  Its waiting supervisor14957/start875612011 observed gpuA9364MiB peer usage,
+  free39147MiB at epoch1793375906; no trainer dispatched. Peer9000 is WMREQUAL3,
+  native-lane scorer with10000MB budget, started23:37. No peer signalled.
+- Waiting supervisor retired cooperatively after proving no trainer. Both its
+  runtime and root retained. New v2 runtime admits>=38000MiB and checks every
+  pool's measured coordinator reservation + both.28 workers + CUDA contexts +
+  sampled peer memory +2GiB peer growth reserve <=min90% device/45GiB.
+  It refuses an unsafe pool rather than overcommitting. New bound CPU test1PASS.
+- Ordered original panel prefix (index/world/tick):39780/w963552m1900p05t300/600;
+  45082/w963625m1900p10t300/2240;35565/w963495m2400p20t300/900;
+  64945/w963904m2400p40t300/1700. Original panel SHA3eaa69a1 retained; only
+  evaluation prefix reduced. Original K8/scoring/dense preserved, ES uses0..3.

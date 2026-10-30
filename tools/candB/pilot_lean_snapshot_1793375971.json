@@ -1,0 +1,22 @@
+{
+ "epoch": 1793375970.4008074,
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030",
+ "files": {
+  "GPU.jsonl": "{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793375906.083866, \"total_MiB\": 49140, \"free_MiB\": 39147, \"used_MiB\": 9364, \"apps\": \"9000, 9354\"}\n",
+  "supervisor.log": ""
+ },
+ "owners": {
+  "OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 14957,
+   "start_ticks": "875612011",
+   "runtime": "/root/autodl-tmp/c4/candB_pilot_EXPLORATORY-LEAN_20261030",
+   "epoch": 1793375905.9852748,
+   "same_incarnation": true,
+   "state": "S",
+   "cpu_ticks": 3,
+   "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean_supervise --root /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030 --python /root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python "
+  }
+ },
+ "rows": []
+}

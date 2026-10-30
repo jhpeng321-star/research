@@ -32,6 +32,9 @@ def main():
     # Last sample from the superseded own chain; preserve global query spacing.
     previous = Path('/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/GPU_ADMISSION.jsonl')
     last = json.loads(previous.read_text().splitlines()[-1])['t']
+    waiting_sample=Path('/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_20261030/GPU.jsonl')
+    if waiting_sample.is_file():
+        last=max(last,json.loads(waiting_sample.read_text().splitlines()[-1])['epoch'])
     child = None
     while True:
         if (root/'STOP').exists():
@@ -47,7 +50,7 @@ def main():
             with (root/'GPU.jsonl').open('a') as stream:
                 stream.write(json.dumps(dict(label='EXPLORATORY-LEAN',**observation))+'\n')
                 stream.flush(); os.fsync(stream.fileno())
-            if child is None and not observation['apps'] and observation['free_MiB']>=43000:
+            if child is None and observation['free_MiB']>=38000:
                 env = dict(os.environ,RUNTIME=str(Path.cwd()),PYTHON=args.python,
                     PILOT_ADMISSION_FREE_MIB=str(observation['free_MiB']),PILOT_ADMISSION_EPOCH=str(last))
                 output = root/'pilot_EXPLORATORY-LEAN'

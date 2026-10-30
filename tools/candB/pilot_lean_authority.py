@@ -22,7 +22,8 @@ def recipe(doc):
         panel_starts=panel['starts'][:4], panel_selection='first4 of original ordered16',
         es_future_indices=[0, 1, 2, 3], dense_futures=8, scoring_futures=8,
         es_selection='first4 cached ORIGINAL K8 CRN plans; no resampling',
-        environment=ENV, fresh_zero_start=True, phase_update_limit=150, R4_phase_update=10)
+        environment=ENV, fresh_zero_start=True, phase_update_limit=150, R4_phase_update=10,
+        pool_memory_rule='coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)')
 
 
 def verify(path, *, exploratory=False):

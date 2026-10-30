@@ -8,6 +8,13 @@ import torch
 from tools.candB import pilot_lean as lean, pilot_lean_authority as authority
 
 
+def test_memory_bound_accounts_for_peers_and_contexts():
+    gib=1024**3
+    assert lean.memory_bound(48*gib,2*gib,9.2*gib,2,.28)<45*gib
+    with pytest.raises(ValueError,match='including peers'):
+        lean.memory_bound(48*gib,7*gib,9.2*gib,2,.28)
+
+
 def test_default_off_and_bad_recipe(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='explicit'):
         lean.run('unused', 'unused')

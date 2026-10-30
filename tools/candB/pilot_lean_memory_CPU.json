@@ -1,0 +1,18 @@
+{
+ "host": "gpuA",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_pilotlean_memory",
+ "start_epoch": 1793376109.0347388,
+ "seconds": 2.862048387527466,
+ "command": [
+  "-m",
+  "pytest",
+  "-q",
+  "tools/candB/pilot_lean_test.py",
+  "-k",
+  "memory_bound"
+ ],
+ "returncode": 0,
+ "remote_receipt": "PROBE_1793376109034678000.json",
+ "stdout": ".                                                                        [100%]\n1 passed, 6 deselected in 1.24s\n",
+ "stderr": ""
+}
