@@ -17,6 +17,8 @@ zero_residual_output = false
 [long_credit]
 ctrl0_reference = true
 score_training_horizon = true
+# Separate cost/noise ablation: explicitly enable to double the 300 s futures.
+k16 = false
 
 [counterfactual]
 # Keep the registered label-only start_focus proposal; apply observable pressure.

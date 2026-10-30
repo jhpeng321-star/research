@@ -32,12 +32,13 @@ class LongCreditConfig:
     w_long: float = 1.0  # Fixed prospectively; never tuned on observed outcomes.
     score_training_horizon: bool = False
     ctrl0_reference: bool = False
+    k16: bool = False  # 300 s only; shared trajectory also supplies K16 dense prefixes.
 
     def __post_init__(self):
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')
-        if type(self.ctrl0_reference) is not bool:
-            raise ValueError('long_credit.ctrl0_reference must be boolean')
+        if type(self.ctrl0_reference) is not bool or type(self.k16) is not bool:
+            raise ValueError('long_credit.ctrl0_reference and k16 must be boolean')
         if self.mode not in ('cct1', 'gain_only'):
             raise ValueError('long_credit.mode must be cct1 or gain_only')
         if not isinstance(self.cct1_file, str) or not isinstance(self.cct2_file, str):
@@ -143,6 +144,9 @@ def install(trainer, section, wm_sha256s):
         else:
             receipt['reason'] = 'missing CCT-1 file'
     trainer.gated300 = receipt
+    if cfg.k16 and receipt['H_long']:
+        if receipt['H_long'] != 300 or trainer.config.native_anchor or trainer.config.exploit_ensemble_pessimism:
+            raise ValueError('K16 requires 300s single-WM credit without fitted K8 anchor/ensemble pessimism')
     return receipt
 
 
@@ -216,10 +220,11 @@ def rollout_config(trainer, cfg):
     if cfg.horizon * STEP_S > 90:
         raise ValueError('gated300 dense horizon must be <= trusted 90s')
     return replace(cfg, horizon=int(trainer.gated300['H_long'] / STEP_S),
-                   future_samples=K, uncertainty_weight=0.)
+                   future_samples=16 if trainer.gated300['config'].get('k16', False) else K,
+                   uncertainty_weight=0.)
 
 
-def gate(improvement, sigma, eligible=None, gain_only=False):
+def gate(improvement, sigma, eligible=None, gain_only=False, *, sample_count=K):
     """K x ... paired improvements = -dJ. Gate decisions never carry a gradient.
 
     Improvement needs q10>0; harm needs q90<0. A negative coefficient does not
@@ -227,8 +232,8 @@ def gate(improvement, sigma, eligible=None, gain_only=False):
     Gain-only mode (02:25 CCT-2) keeps only rows whose median itself predicts
     improvement beyond 2*sigma with q10>0: harm and below-margin rows are OFF.
     """
-    if improvement.shape[0] != K:
-        raise ValueError('confidence gate requires K=8 paired samples')
+    if sample_count not in (K, 16) or improvement.shape[0] != sample_count:
+        raise ValueError(f'confidence gate requires K={sample_count} paired samples (8 default, 16 opt-in)')
     samples = improvement.detach()
     median = torch.quantile(samples, .5, dim=0)
     q10 = torch.quantile(samples, QUANTILE, dim=0)
@@ -282,6 +287,8 @@ def prefix(trainer, imagined, dense_steps):
                imagination_horizon_s=dense_steps * STEP_S)
     if uses_ctrl0(trainer):
         out['gated300_reference'] = 'CTRL0'
+    if trainer.gated300['config'].get('k16', False):
+        out['gated300_futures'] = 16
     return out
 
 
@@ -289,9 +296,11 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
     samples = imagined['gated300_long_difference']
     eligible = coefficients != 0
     gated, on, agreement, median = gate(samples, SIGMA[imagined['gated300_horizon_s']],
-        eligible, gain_only=trainer.gated300['config'].get('mode') == 'gain_only')
+        eligible, gain_only=trainer.gated300['config'].get('mode') == 'gain_only',
+        sample_count=imagined.get('gated300_futures', K))
     # Reuse the signed JOINT q10 selector, including covariance/negative team rows.
-    selected, _ = tail_credit(imagined, gated, coefficients, enabled=True)
+    selected, _ = tail_credit(imagined, gated, coefficients, enabled=True,
+                              sample_count=imagined.get('gated300_futures', K))
     weight = trainer.gated300['config']['w_long']
     long_value = weight * (selected.mean((0, 1)) * coefficients).sum()
     dense_value = (dense_difference.mean((0, 1)) * coefficients).sum().detach()
@@ -321,6 +330,21 @@ def actor_term(trainer, imagined, coefficients, dense_difference, scale):
         vector, = torch.autograd.grad(term, samples, retain_graph=True)
         metrics['gated300_long_output_cotangent'] = vector.detach().cpu().tolist()
     return term, metrics
+
+
+def cost_estimate(n_rows, n_starts=1, *, ctrl0_reference=False, k16=False):
+    """Arithmetic planning receipt, not a measured runtime or uncertainty calibration."""
+    if n_rows < 1 or n_starts < 1:
+        raise ValueError('cost estimate needs positive row/start counts')
+    rows = n_rows + (n_starts if ctrl0_reference else 0)
+    k = 16 if k16 else K
+    factor = rows / n_rows * k / K
+    return dict(rows=rows, futures=k, horizon_s=300,
+        forward_row_sim_seconds=rows * k * 300,
+        forward_and_host_cache_factor_vs_native_K8=factor,
+        dense_prefix_futures=k, per_future_live_graph_factor=rows / n_rows,
+        full_replay_upper_factor=factor, measured=False,
+        note='zero-VJP skips can reduce replay; shared WM bias and sigma_300 remain unchanged')
 
 
 @contextmanager

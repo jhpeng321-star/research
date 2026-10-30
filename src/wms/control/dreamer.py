@@ -233,7 +233,7 @@ class DreamerConfig:
         if self.exploit_stop_on_conflict and not self.exploit_ensemble_pessimism:
             raise ValueError('exploit_stop_on_conflict requires ensemble pessimism')
         if self.pessimistic_credit or self.native_anchor:
-            if self.future_samples != 8:
+            if self.future_samples not in (8, 16):
                 raise ValueError('anti-exploit requires future_samples=8')
         if self.native_anchor and (not isinstance(self.native_anchor_calibration, str)
                                    or not self.native_anchor_calibration):

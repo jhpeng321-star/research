@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 from types import SimpleNamespace
 from dataclasses import replace
+import pytest
 
 from wms.control import gated300
 from wms.control.counterfactual import KIND_CTRL0, build_variants
@@ -165,3 +166,46 @@ def test_headroom_sampler_training_only_and_checkpointable():
     restored = HeadroomSampler()
     restored.load_state_dict(saved)
     assert restored.state_dict() == saved
+
+
+def test_k16_gate_and_joint_q10_gradient_and_cost_receipt():
+    from wms.control.antiexploit import tail_credit
+    t = fixture.trainer()
+    v = build_variants(t.start_states.batch.state, t.counterfactual)
+    samples = torch.arange(16.).reshape(16, 1, 1).expand(-1, 1, v.n_rows).clone() + 100.
+    samples.requires_grad_()
+    gated, on, _, _ = gated300.gate(samples, 43.91, gain_only=True, sample_count=16)
+    assert on.all()  # Same strict 87.82 median margin, q10 positive.
+    coefficients = torch.zeros(v.n_rows)
+    coefficients[0] = 1.
+    selected, receipt = tail_credit(dict(n_base=1, variants=v), gated, coefficients,
+                                    enabled=True, sample_count=16)
+    loss = (selected.mean((0, 1)) * coefficients).sum()
+    assert loss == torch.quantile(samples[:, 0, 0], .1)
+    loss.backward()
+    assert samples.grad[1, 0, 0] == .5 and samples.grad[2, 0, 0] == .5
+    assert samples.grad.sum() == 1 and receipt['antiexploit_futures'] == 16
+    with pytest.raises(ValueError):
+        gated300.gate(samples, 43.91)
+    cost = gated300.cost_estimate(9, ctrl0_reference=True, k16=True)
+    assert cost['forward_row_sim_seconds'] == 48000
+    assert cost['forward_and_host_cache_factor_vs_native_K8'] == pytest.approx(20 / 9)
+
+
+@pytest.mark.parametrize('memory', [False, True])
+def test_k16_full_imagination_cpu_no_critic(tmp_path, monkeypatch, memory):
+    monkeypatch.setattr(gated300, 'STEP_S', 60.)
+    t = fixture.trainer(memory=memory)
+    t.config = replace(t.config, horizon=1)
+    fixture.enable_gain_only(t, fixture.cct2_authority(tmp_path, 300), k16=True)
+    t.target_critic.forward = lambda *a: pytest.fail('K16 long credit called critic')
+    t._training_imagination = True
+    v = build_variants(t.start_states.batch.state, t.counterfactual)
+    imagined = t.imagine(t.start_states.batch, variants=v, future_seed=11)
+    assert imagined['n_futures'] == imagined['gated300_futures'] == 16
+    assert imagined['gated300_long_difference'].shape == (16, 1, v.n_rows)
+    assert imagined['rewards'].shape[:2] == (16, 1)
+    components = {}
+    loss, _ = t.actor_objective(imagined, 1., t.counterfactual.weights(0), gradient_components=components)
+    loss.backward()
+    assert all(p.grad is None or torch.isfinite(p.grad).all() for p in t.actor_parameters)

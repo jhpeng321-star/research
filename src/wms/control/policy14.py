@@ -199,7 +199,8 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                 if 'gated300_long_difference' in imagined:
                     long = imagined['gated300_long_difference'][:, 0, :n]
                     gated, on, agreement, median = gate(long, SIGMA[imagined['gated300_horizon_s']],
-                        gain_only=trainer.gated300['config'].get('mode') == 'gain_only')
+                        gain_only=trainer.gated300['config'].get('mode') == 'gain_only',
+                        sample_count=imagined.get('gated300_futures', 8))
                     gain = float(torch.quantile(gated, .1, dim=0).mean())
                     weighted = trainer.gated300['config']['w_long'] * gain
                     long_j = imagined['gated300_long_J']
@@ -211,6 +212,7 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                         long_sign_agreement=float(agreement.float().mean()),
                         score_rule='J_dense - w_long * q10(gated paired improvement at H_long)')
                     result.update(J_raw_long=result['J_long'],
+                        long_futures=imagined.get('gated300_futures', 8),
                         long_credit_reference=imagined.get('gated300_reference', 'learned_native'))
                     if refs is not None:
                         result.update(CTRL0_J_long=float(long_j[refs[:n]].mean()),
