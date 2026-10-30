@@ -1,0 +1,78 @@
+{
+ "label": "EXPLORATORY",
+ "root": "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030",
+ "epoch": 1793371966.6293786,
+ "stages": {
+  "dry": {
+   "rows": [],
+   "RUN_SUMMARY.json": {
+    "status": "initializing",
+    "label": "EXPLORATORY",
+    "deployment_authorized": false,
+    "source_commit": "da0bc3663609024930d799af059c13f9dcf174d3",
+    "input_sha256": {
+     "wm": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+     "wm_config": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+     "current_policy": "560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c",
+     "current_policy_driver": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+     "cct2": "f42cce0f8e54c0e640a94f4524c5ecad03fbd105b22079cec79b5fe80d63350c",
+     "horizon_gate": "be0297ab09a988c5ced1a007432effdea36dfb80be4e86b33ac99605824fd152",
+     "boundary": "817e3f6df0c0e9862b644151ec1963aa56b0dbdab80fbb094a2d09efd4807fac",
+     "pairing_receipt": "777e89610c1c2c02586dff5dd8f691e4a6250bb643feb4d8ece91ce73261eba5",
+     "parity": "7cb5c6a7eaf681649b94b4e2b32e4f1af070c0a01d122aacbc8658f111a3b8fe",
+     "real_returns": "1b2d184df0ca9fb1cbbeed53c52dd607130dd3c28f1fa06e46afeca72f52a395",
+     "native_returns": "269b600e9684d7c39f1cf8b5ab4111b86fef216859dd89a742632bb1d0b69ec0",
+     "gate_panel": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e"
+    }
+   },
+   "log_tail": "{\"label\": \"EXPLORATORY\", \"verified\": true, \"source_commit\": \"da0bc3663609024930d799af059c13f9dcf174d3\", \"authority_sha256\": \"187cd8d40aa3d6d1f6d9565f7b84ebd792c90a946a09ad147ee0ea56462b3179\"}\nWARNING: inactive config [horizon] curriculum_updates, entry_pad_max, gate_file, horizons_s: boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused\nWARNING: inactive config [uncertainty] curriculum_updates, future_samples, weights: uncertainty.enabled=false; trainer future_samples is a separate setting\nWARNING: inactive config [lanes] consequence_mask, enabled, secure_gap_hook: native-init uses WM native lane rules\nWARNING: inactive config [policy] init_zero_accel, lane_control: native-init constructs the native residual actor\nWARNING: inactive config [policy14] entropy_decay_on_improvement, entropy_floor, policy_ramp_merge, sampled_marginal_lane_weight: native-init forces native lanes and deterministic residuals (no lane credit/entropy)\nWARNING: inactive config [policy14] critic_value_scale, critic_warmup_updates: long credit disables critic warmup and value updates\nWARNING: inactive config [trainer] real_return_mix: critic step is disabled under long credit\nWARNING: inactive config [paircrit] enabled, warmup_updates: setup may still load artifacts, but its value critic supplies no long-credit update\nWARNING: inactive config [counterfactual] start_tilt: exact focus-cell sampling replaces rejection tilt\nWARNING: inactive config [counterfactual] validation_uniform: policy14 CLI does not call trainer.validate\nWARNING: inactive config [run] seed, updates, validation_batches: CLI --seed/--max-updates take precedence; no trainer.validate call\n[resume-config] {\"approved\": [\"trainer.entrant_learned_mix\"], \"differences\": {\"trainer.entrant_learned_mix\": {\"checkpoint\": false, \"requested\": true}}, \"new_phase\": true}\n[zero-start] {\"schema\": \"zero_residual_output/1\", \"before\": {\"weight_abs_max\": 0.0004859584732912481, \"bias\": [0.0004806678043678403]}, \"adam_state_cleared_tensors\": 0, \"after\": {\"weight_abs_max\": 0.0, \"bias\": [0.0]}}\n/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)\n  kin = torch.as_tensor(np.asarray(corpus.array(\"veh_kin\")[lo:tick + 1], np.float32))\n"
+  },
+  "pilot": {
+   "rows": []
+  }
+ },
+ "OWNERSHIP.json": {
+  "label": "EXPLORATORY",
+  "pid": 970521,
+  "start_ticks": "874204998",
+  "utc": "2026-10-30T12:12:15.855306+00:00",
+  "runtime": "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030",
+  "argv": [
+   "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030/tools/candB/pilot_supervise.py",
+   "--exploratory-owner-20261030",
+   "--root",
+   "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030"
+  ],
+  "same_incarnation_alive": true
+ },
+ "dry_OWNERSHIP.json": {
+  "label": "EXPLORATORY",
+  "pid": 985766,
+  "start_ticks": "874675005",
+  "argv": [
+   "bash",
+   "tools/candB/pilot_launch.sh",
+   "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY",
+   "dry",
+   "--exploratory-owner-20261030"
+  ],
+  "output": "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY",
+  "utc": "2026-10-30T13:22:15.895446+00:00",
+  "same_incarnation_alive": true
+ },
+ "continue_OWNERSHIP.json": {
+  "label": "EXPLORATORY",
+  "pid": 999762,
+  "start_ticks": "875186271",
+  "utc": "2026-10-30T14:47:28.588408+00:00",
+  "runtime": "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030",
+  "same_incarnation_alive": true
+ },
+ "last_gpu_admission": {
+  "t": 1793371935.893873,
+  "label": "EXPLORATORY",
+  "free_MiB": "40179",
+  "stage": "dry",
+  "own_pid": 985766
+ }
+}

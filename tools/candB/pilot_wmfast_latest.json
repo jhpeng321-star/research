@@ -1,0 +1,1423 @@
+{
+ "epoch": 1793389515.6379673,
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031",
+ "owners": {
+  "OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 35923,
+   "start_ticks": "876086871",
+   "runtime": "/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031",
+   "epoch": 1793380654.5860708,
+   "alive": false
+  },
+  "repair_TRAINER_OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 35928,
+   "start_ticks": "876086884",
+   "command": [
+    "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python",
+    "-B",
+    "-u",
+    "-m",
+    "tools.candB.pilot_wmfast_launch",
+    "repair",
+    "--parent",
+    "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN",
+    "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN"
+   ],
+   "output": "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN",
+   "epoch": 1793380654.687814,
+   "admission": {
+    "epoch": 1793380654.6868193,
+    "total_MiB": 49140,
+    "free_MiB": 42671,
+    "used_MiB": 5840,
+    "apps": "25602, 5830"
+   },
+   "alive": false
+  }
+ },
+ "outputs": {
+  "pilot_EXPLORATORY-LEAN": {
+   "rows": [],
+   "files": {
+    "RUN_SUMMARY.json": {
+     "status": "failed",
+     "inactive_config": [
+      {
+       "section": "horizon",
+       "keys": [
+        "curriculum_updates",
+        "entry_pad_max",
+        "gate_file",
+        "horizons_s"
+       ],
+       "reason": "boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused"
+      },
+      {
+       "section": "uncertainty",
+       "keys": [
+        "curriculum_updates",
+        "future_samples",
+        "weights"
+       ],
+       "reason": "uncertainty.enabled=false; trainer future_samples is a separate setting"
+      },
+      {
+       "section": "lanes",
+       "keys": [
+        "consequence_mask",
+        "enabled",
+        "secure_gap_hook"
+       ],
+       "reason": "native-init uses WM native lane rules"
+      },
+      {
+       "section": "policy",
+       "keys": [
+        "init_zero_accel",
+        "lane_control"
+       ],
+       "reason": "native-init constructs the native residual actor"
+      },
+      {
+       "section": "policy14",
+       "keys": [
+        "entropy_decay_on_improvement",
+        "entropy_floor",
+        "policy_ramp_merge",
+        "sampled_marginal_lane_weight"
+       ],
+       "reason": "native-init forces native lanes and deterministic residuals (no lane credit/entropy)"
+      },
+      {
+       "section": "policy14",
+       "keys": [
+        "critic_value_scale",
+        "critic_warmup_updates"
+       ],
+       "reason": "long credit disables critic warmup and value updates"
+      },
+      {
+       "section": "trainer",
+       "keys": [
+        "real_return_mix"
+       ],
+       "reason": "critic step is disabled under long credit"
+      },
+      {
+       "section": "paircrit",
+       "keys": [
+        "enabled",
+        "warmup_updates"
+       ],
+       "reason": "setup may still load artifacts, but its value critic supplies no long-credit update"
+      },
+      {
+       "section": "counterfactual",
+       "keys": [
+        "start_tilt"
+       ],
+       "reason": "exact focus-cell sampling replaces rejection tilt"
+      },
+      {
+       "section": "counterfactual",
+       "keys": [
+        "validation_uniform"
+       ],
+       "reason": "policy14 CLI does not call trainer.validate"
+      },
+      {
+       "section": "run",
+       "keys": [
+        "seed",
+        "updates",
+        "validation_batches"
+       ],
+       "reason": "CLI --seed/--max-updates take precedence; no trainer.validate call"
+      }
+     ],
+     "gpu_memory_fraction": 0.4,
+     "diagnostic_grad_audit_every": 25,
+     "speedprof": {
+      "rescore_every": 5,
+      "reuse_panel": true,
+      "profile": true,
+      "skip_grad_diagnostics": true,
+      "native_entropy_bookkeeping": "diagnostic-only when cadence > 1"
+     },
+     "exploration": {
+      "enabled": true,
+      "curriculum_updates": [
+       180.0,
+       330.0
+      ],
+      "rho": [
+       0.1,
+       0.5
+      ],
+      "persistence_steps": 4.0,
+      "radius_m": 100.0,
+      "long_persistence": true,
+      "persistence_curriculum_updates": [
+       0,
+       150
+      ],
+      "persistence_seconds": [
+       30.0,
+       60.0
+      ],
+      "mode": "additive_accel",
+      "additive_correlation": 0.5
+     },
+     "horizon_gate": {
+      "gate_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/gate_wm2/HORIZON_GATE_WM2_REG.json",
+      "allowed_stage": 1,
+      "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+      "rule": "horizon h PASS iff WM sign agreement of dJ(arm - B) t0-HDV delay at h >= threshold; threshold = lower 95% group-bootstrap bound of the sign agreement at the base horizon of the registering WM",
+      "verdicts": {
+       "10": "BASE",
+       "30": "PASS",
+       "60": "PASS",
+       "90": "PASS",
+       "120": "FAIL",
+       "180": "FAIL",
+       "300": "FAIL"
+      }
+     },
+     "horizon": {
+      "enabled": true,
+      "horizons_s": [
+       10.0,
+       90.0
+      ],
+      "curriculum_updates": [
+       0.0,
+       1.0
+      ],
+      "gate_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/gate_wm2/HORIZON_GATE_WM2_REG.json",
+      "entry_pad_max": [
+       32,
+       288
+      ],
+      "allowed_stage": 1
+     },
+     "resume_config": {
+      "new_phase": true,
+      "differences": {
+       "trainer.entrant_learned_mix": {
+        "checkpoint": false,
+        "requested": true
+       }
+      },
+      "approved": [
+       "trainer.entrant_learned_mix"
+      ],
+      "actor_adam_reset": {
+       "cleared_parameters": 38
+      }
+     },
+     "zero_start": {
+      "schema": "zero_residual_output/1",
+      "before": {
+       "weight_abs_max": 0.0004859584732912481,
+       "bias": [
+        0.0004806678043678403
+       ]
+      },
+      "adam_state_cleared_tensors": 0,
+      "after": {
+       "weight_abs_max": 0.0,
+       "bias": [
+        0.0
+       ]
+      }
+     },
+     "long_credit": {
+      "config": {
+       "enabled": true,
+       "mode": "gain_only",
+       "cct1_file": "",
+       "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+       "w_long": 1.0,
+       "score_training_horizon": true,
+       "estimator": "antithetic",
+       "es_directions": 2,
+       "es_sigma": 0.0,
+       "ctrl0_reference": true,
+       "k16": false,
+       "require_objective_match": true
+      },
+      "wm_sha256s": [
+       "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+      ],
+      "world_model_ids": [
+       "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+      ],
+      "H_long": 300,
+      "reason": "owner 20261030 exploratory evidence waiver",
+      "H_G": 300,
+      "label": "EXPLORATORY",
+      "policy_authorized": false,
+      "qualification_passed": false,
+      "artifact_sha256": "f42cce0f8e54c0e640a94f4524c5ecad03fbd105b22079cec79b5fe80d63350c"
+     },
+     "ramp_merge": {
+      "policy_ramp_merge": false,
+      "native_ramp_merge": "wm_law",
+      "native_lane_change": true
+     },
+     "seed": 965140,
+     "smoke": false,
+     "device": "cuda",
+     "wm_members": [
+      {
+       "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+       "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+       "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+       "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+       "courtesy_state_grad": true,
+       "courtesy_intent": "pivot",
+       "courtesy_off": false,
+       "physics": {
+        "dt_s": 0.5,
+        "open_road": true,
+        "exit_at_road_end": true,
+        "sumo_fidelity": false,
+        "sumo_idm": true,
+        "speed_factor": 1.0,
+        "speed_limit_mps": 31.29,
+        "free_road_gap_m": 250.0,
+        "max_gap_steps": 240,
+        "accel_min_mps2": -9.0,
+        "accel_max_mps2": 3.0,
+        "lane_gap_m": 5.0,
+        "lane_incentive_mps": 0.4,
+        "lane_safe_gap_m": 6.0,
+        "merge_zone_s0_m": 0.0,
+        "merge_zone_s1_m": 75.44,
+        "merge_lane": 2,
+        "merge_target_lane": 1,
+        "mobil_threshold_mps2": 0.1,
+        "b_safe_base_mps2": 4.0,
+        "b_safe_end_mps2": 6.0,
+        "merge_cal": false,
+        "t_lead_base_s": 1.0,
+        "t_lead_end_s": 0.1,
+        "b_accept_base_mps2": 4.0,
+        "b_accept_end_mps2": 6.0,
+        "gap_floor_m": 0.3,
+        "u_yield": 0.35,
+        "yield_lookahead_m": 120.0,
+        "b_yield_max_mps2": 1.75,
+        "yield_min_speed_mps": 2.5,
+        "yield_min_merger_speed_mps": 3.5,
+        "end_obstacle_range_m": 25.0,
+        "lane_rule": "mobil",
+        "lane_gap_rule": "fixed",
+        "gap_s0_lead_m": 1.0,
+        "gap_t_lead_s": 0.2,
+        "gap_b_lead_mps2": 3.0,
+        "gap_s0_follow_m": 0.5,
+        "gap_t_follow_s": 0.6,
+        "gap_b_follow_mps2": 6.0,
+        "gap_overlap_margin_m": 0.5,
+        "gap_anticipation_s": 0.5,
+        "gap_stopped_relax": false,
+        "gap_stopped_speed_mps": 1.0,
+        "gap_stopped_min_m": 0.5,
+        "stop_time_integration": false,
+        "emergency_decel_mps2": null,
+        "emergency_braking": true,
+        "secure_gap_veto": true,
+        "lane_change_secure_gap": true,
+        "emergency_onset": "driver_b",
+        "merge_end_wait": false,
+        "merge_end_wait_distance_m": 25.0,
+        "merge_end_wait_speed_mps": 2.0,
+        "mainline_merge_yield": true,
+        "mainline_merge_yield_distance_m": 60.0,
+        "mainline_merge_yield_decel_mps2": 2.0,
+        "forced_window_mode": "deterministic",
+        "forced_window_min_hazard": 0.02,
+        "mainline_merge_yield_scope": "lane_end",
+        "merge_end_wait_s0_follow_m": null,
+        "merge_end_wait_t_follow_s": null,
+        "merge_impatience": false,
+        "merge_impatience_distance_m": 25.0,
+        "merge_impatience_speed_mps": 1.0,
+        "merge_impatience_hazard_tau_s": 25.0,
+        "merge_impatience_gap_tau_s": 25.0,
+        "merge_impatience_s0_min_m": 0.5,
+        "merge_impatience_t_min_s": 0.1,
+        "lane_learnable": true,
+        "ramp_lane_end_stop": true,
+        "ramp_risk_retain": true,
+        "lane_physical_margin_m": 0.0,
+        "mainline_lane_mode": "courtesy",
+        "mainline_courtesy_zone_m": 300.0,
+        "entry_learned": false
+       }
+      }
+     ],
+     "probes": {},
+     "probe_device": "cpu",
+     "critic_warmup": {
+      "updates": 0,
+      "reason": "looplong critic OFF; direct real-pair share 1.0"
+     },
+     "resumed_from": {
+      "checkpoint": "/root/autodl-tmp/c4/candA_prod_keyerr/policy_000191.pt",
+      "update_count": 191,
+      "sha256": "560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c"
+     },
+     "native_actor_training": {
+      "group": true,
+      "trunk": true,
+      "per_module_lr": 5e-05,
+      "trainable_parameters": 91793,
+      "migration": null
+     },
+     "rankcheck_sha256": "cd0c98015ccb562ae91af5d1f898db9b1edae0eae567ec599f686db821ed0c96",
+     "updates": [],
+     "independent_score_before": {
+      "J": 4694.8330078125,
+      "road_delay": 3365.583251953125,
+      "source_wait": 1329.25,
+      "native_relative_gain": 60.1455078125,
+      "hdv_hard_brake_seconds": 2.9375,
+      "critic_tail_included": false,
+      "J_dense": 4694.8330078125,
+      "J_raw_dense": 4694.8330078125,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 4694.8330078125,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "J_long": 32728.30859375,
+      "native_J_long": 33029.0234375,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 32728.30859375,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 32728.30859375,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 4694.8330078125,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 111985.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     },
+     "native_curve": [
+      {
+       "schema": "EXPLORATORY-LEAN_native_panel/1",
+       "label": "EXPLORATORY-LEAN",
+       "deployment_authorized": false,
+       "update": 191,
+       "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+       "policy_J": [
+        127.66284942626953,
+        2046.7354736328125,
+        3840.69287109375,
+        5585.349609375
+       ],
+       "native_J": [
+        127.86273193359375,
+        2077.880859375,
+        3892.72705078125,
+        5652.0966796875
+       ],
+       "delta_per_start": [
+        -0.19988250732421875,
+        -31.1453857421875,
+        -52.0341796875,
+        -66.7470703125
+       ],
+       "mean_delta": -37.53162956237793,
+       "passed": true,
+       "critic_tail_included": false,
+       "matched_horizon_scores": [
+        {
+         "J": 127.66284942626953,
+         "road_delay": 127.66284942626953,
+         "source_wait": 0.0,
+         "native_relative_gain": 0.19988250732421875,
+         "hdv_hard_brake_seconds": 0.0,
+         "critic_tail_included": false,
+         "native_J": 127.86273193359375,
+         "J_dense": 127.66284942626953,
+         "J_raw_dense": 127.66284942626953,
+         "scoring_phase_position": 191,
+         "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+         "CTRL0_J_dense": 127.66284942626953,
+         "raw_gain_vs_CTRL0_dense": 0.0,
+         "raw_dJ_vs_CTRL0_dense": 0.0,
+         "score_horizon_s": 10.0,
+         "long_horizon_s": 300,
+         "J_long": 12027.8466796875,
+         "native_J_long": 11721.318359375,
+         "long_gated_gain": 0.0,
+         "long_rows_on_share": 0.0,
+         "long_mean_abs_dJ": 0.0,
+         "long_sign_agreement": 0.0,
+         "J_raw_long": 12027.8466796875,
+         "long_futures": 8,
+         "long_credit_reference": "CTRL0",
+         "CTRL0_J_long": 12027.8466796875,
+         "raw_gain_vs_CTRL0_long": 0.0,
+         "raw_dJ_vs_CTRL0_long": 0.0,
+         "composite_gated_score": 127.66284942626953,
+         "executed_residual": {
+          "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+          "count": 24164.0,
+          "fraction_nonzero": 0.0,
+          "mean_braking": 0.0,
+          "mean_abs_delta": 0.0,
+          "mean_delta": 0.0
+         }
+        },
+        {
+         "J": 2046.7354736328125,
+         "road_delay": 2008.2354736328125,
+         "source_wait": 38.5,
+         "native_relative_gain": 31.1453857421875,
+         "hdv_hard_brake_seconds": 3.6875,
+         "critic_tail_included": false,
+         "native_J": 2077.880859375,
+         "J_dense": 2046.7354736328125,
+         "J_raw_dense": 2046.7354736328125,
+         "scoring_phase_position": 191,
+         "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+         "CTRL0_J_dense": 2046.7354736328125,
+         "raw_gain_vs_CTRL0_dense": 0.0,
+         "raw_dJ_vs_CTRL0_dense": 0.0,
+         "score_horizon_s": 60.0,
+         "long_horizon_s": 300,
+         "J_long": 15138.4072265625,
+         "native_J_long": 14529.9892578125,
+         "long_gated_gain": 0.0,
+         "long_rows_on_share": 0.0,
+         "long_mean_abs_dJ": 0.0,
+         "long_sign_agreement": 0.0,
+         "J_raw_long": 15138.4072265625,
+         "long_futures": 8,
+         "long_credit_reference": "CTRL0",
+         "CTRL0_J_long": 15138.4072265625,
+         "raw_gain_vs_CTRL0_long": 0.0,
+         "raw_dJ_vs_CTRL0_long": 0.0,
+         "composite_gated_score": 2046.7354736328125,
+         "executed_residual": {
+          "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+          "count": 54089.0,
+          "fraction_nonzero": 0.0,
+          "mean_braking": 0.0,
+          "mean_abs_delta": 0.0,
+          "mean_delta": 0.0
+         }
+        },
+        {
+         "J": 3840.69287109375,
+         "road_delay": 1801.9427490234375,
+         "source_wait": 2038.75,
+         "native_relative_gain": 52.0341796875,
+         "hdv_hard_brake_seconds": 0.1875,
+         "critic_tail_included": false,
+         "native_J": 3892.72705078125,
+         "J_dense": 3840.69287109375,
+         "J_raw_dense": 3840.69287109375,
+         "scoring_phase_position": 191,
+         "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+         "CTRL0_J_dense": 3840.69287109375,
+         "raw_gain_vs_CTRL0_dense": 0.0,
+         "raw_dJ_vs_CTRL0_dense": 0.0,
+         "score_horizon_s": 60.0,
+         "long_horizon_s": 300,
+         "J_long": 28017.27734375,
+         "native_J_long": 28623.984375,
+         "long_gated_gain": 0.0,
+         "long_rows_on_share": 0.0,
+         "long_mean_abs_dJ": 0.0,
+         "long_sign_agreement": 0.0,
+         "J_raw_long": 28017.27734375,
+         "long_futures": 8,
+         "long_credit_reference": "CTRL0",
+         "CTRL0_J_long": 28017.27734375,
+         "raw_gain_vs_CTRL0_long": 0.0,
+         "raw_dJ_vs_CTRL0_long": 0.0,
+         "composite_gated_score": 3840.69287109375,
+         "executed_residual": {
+          "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+          "count": 101419.0,
+          "fraction_nonzero": 0.0,
+          "mean_braking": 0.0,
+          "mean_abs_delta": 0.0,
+          "mean_delta": 0.0
+         }
+        },
+        {
+         "J": 5585.349609375,
+         "road_delay": 2440.974853515625,
+         "source_wait": 3144.375,
+         "native_relative_gain": 66.7470703125,
+         "hdv_hard_brake_seconds": 1.625,
+         "critic_tail_included": false,
+         "native_J": 5652.0966796875,
+         "J_dense": 5585.349609375,
+         "J_raw_dense": 5585.349609375,
+         "scoring_phase_position": 191,
+         "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+         "CTRL0_J_dense": 5585.349609375,
+         "raw_gain_vs_CTRL0_dense": 0.0,
+         "raw_dJ_vs_CTRL0_dense": 0.0,
+         "score_horizon_s": 60.0,
+         "long_horizon_s": 300,
+         "J_long": 32008.30078125,
+         "native_J_long": 34166.46875,
+         "long_gated_gain": 0.0,
+         "long_rows_on_share": 0.0,
+         "long_mean_abs_dJ": 0.0,
+         "long_sign_agreement": 0.0,
+         "J_raw_long": 32008.30078125,
+         "long_futures": 8,
+         "long_credit_reference": "CTRL0",
+         "CTRL0_J_long": 32008.30078125,
+         "raw_gain_vs_CTRL0_long": 0.0,
+         "raw_dJ_vs_CTRL0_long": 0.0,
+         "composite_gated_score": 5585.349609375,
+         "executed_residual": {
+          "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+          "count": 196343.0,
+          "fraction_nonzero": 0.0,
+          "mean_braking": 0.0,
+          "mean_abs_delta": 0.0,
+          "mean_delta": 0.0
+         }
+        }
+       ],
+       "panel_horizons_s": [
+        10.0,
+        60.0,
+        60.0,
+        60.0
+       ],
+       "panel_horizon_s": null,
+       "panel_long_horizons_s": [
+        300,
+        300,
+        300,
+        300
+       ]
+      }
+     ],
+     "gate_panel": {
+      "file": "/root/autodl-tmp/c4/restart20261026/arm/gate_panel.json",
+      "n": 4,
+      "sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "J_before": [
+       127.66284942626953,
+       2046.7354736328125,
+       3840.69287109375,
+       5585.349609375
+      ]
+     },
+     "frozen_scoring_baseline": {
+      "schema": "gatemeas_phase_baseline/1",
+      "update": 191,
+      "scoring_phase_position": 191,
+      "world_model_ids": [
+       "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+      ],
+      "long_credit": {
+       "enabled": true,
+       "mode": "gain_only",
+       "cct1_file": "",
+       "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+       "w_long": 1.0,
+       "score_training_horizon": true,
+       "estimator": "antithetic",
+       "es_directions": 2,
+       "es_sigma": 0.0,
+       "ctrl0_reference": true,
+       "k16": false,
+       "require_objective_match": true
+      },
+      "independent": {
+       "J": 4694.8330078125,
+       "road_delay": 3365.583251953125,
+       "source_wait": 1329.25,
+       "native_relative_gain": 60.1455078125,
+       "hdv_hard_brake_seconds": 2.9375,
+       "critic_tail_included": false,
+       "J_dense": 4694.8330078125,
+       "J_raw_dense": 4694.8330078125,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 4694.8330078125,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 32728.30859375,
+       "native_J_long": 33029.0234375,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 32728.30859375,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 32728.30859375,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 4694.8330078125,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 111985.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      "panel": [
+       {
+        "J": 127.66284942626953,
+        "road_delay": 127.66284942626953,
+        "source_wait": 0.0,
+        "native_relative_gain": 0.19988250732421875,
+        "hdv_hard_brake_seconds": 0.0,
+        "critic_tail_included": false,
+        "J_dense": 127.66284942626953,
+        "J_raw_dense": 127.66284942626953,
+        "scoring_phase_position": 191,
+        "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+        "CTRL0_J_dense": 127.66284942626953,
+        "raw_gain_vs_CTRL0_dense": 0.0,
+        "raw_dJ_vs_CTRL0_dense": 0.0,
+        "score_horizon_s": 10.0,
+        "long_horizon_s": 300,
+        "J_long": 12027.8466796875,
+        "native_J_long": 11721.318359375,
+        "long_gated_gain": 0.0,
+        "long_rows_on_share": 0.0,
+        "long_mean_abs_dJ": 0.0,
+        "long_sign_agreement": 0.0,
+        "J_raw_long": 12027.8466796875,
+        "long_futures": 8,
+        "long_credit_reference": "CTRL0",
+        "CTRL0_J_long": 12027.8466796875,
+        "raw_gain_vs_CTRL0_long": 0.0,
+        "raw_dJ_vs_CTRL0_long": 0.0,
+        "composite_gated_score": 127.66284942626953,
+        "executed_residual": {
+         "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+         "count": 24164.0,
+         "fraction_nonzero": 0.0,
+         "mean_braking": 0.0,
+         "mean_abs_delta": 0.0,
+         "mean_delta": 0.0
+        }
+       },
+       {
+        "J": 2046.7354736328125,
+        "road_delay": 2008.2354736328125,
+        "source_wait": 38.5,
+        "native_relative_gain": 31.1453857421875,
+        "hdv_hard_brake_seconds": 3.6875,
+        "critic_tail_included": false,
+        "J_dense": 2046.7354736328125,
+        "J_raw_dense": 2046.7354736328125,
+        "scoring_phase_position": 191,
+        "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+        "CTRL0_J_dense": 2046.7354736328125,
+        "raw_gain_vs_CTRL0_dense": 0.0,
+        "raw_dJ_vs_CTRL0_dense": 0.0,
+        "score_horizon_s": 60.0,
+        "long_horizon_s": 300,
+        "J_long": 15138.4072265625,
+        "native_J_long": 14529.9892578125,
+        "long_gated_gain": 0.0,
+        "long_rows_on_share": 0.0,
+        "long_mean_abs_dJ": 0.0,
+        "long_sign_agreement": 0.0,
+        "J_raw_long": 15138.4072265625,
+        "long_futures": 8,
+        "long_credit_reference": "CTRL0",
+        "CTRL0_J_long": 15138.4072265625,
+        "raw_gain_vs_CTRL0_long": 0.0,
+        "raw_dJ_vs_CTRL0_long": 0.0,
+        "composite_gated_score": 2046.7354736328125,
+        "executed_residual": {
+         "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+         "count": 54089.0,
+         "fraction_nonzero": 0.0,
+         "mean_braking": 0.0,
+         "mean_abs_delta": 0.0,
+         "mean_delta": 0.0
+        }
+       },
+       {
+        "J": 3840.69287109375,
+        "road_delay": 1801.9427490234375,
+        "source_wait": 2038.75,
+        "native_relative_gain": 52.0341796875,
+        "hdv_hard_brake_seconds": 0.1875,
+        "critic_tail_included": false,
+        "J_dense": 3840.69287109375,
+        "J_raw_dense": 3840.69287109375,
+        "scoring_phase_position": 191,
+        "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+        "CTRL0_J_dense": 3840.69287109375,
+        "raw_gain_vs_CTRL0_dense": 0.0,
+        "raw_dJ_vs_CTRL0_dense": 0.0,
+        "score_horizon_s": 60.0,
+        "long_horizon_s": 300,
+        "J_long": 28017.27734375,
+        "native_J_long": 28623.984375,
+        "long_gated_gain": 0.0,
+        "long_rows_on_share": 0.0,
+        "long_mean_abs_dJ": 0.0,
+        "long_sign_agreement": 0.0,
+        "J_raw_long": 28017.27734375,
+        "long_futures": 8,
+        "long_credit_reference": "CTRL0",
+        "CTRL0_J_long": 28017.27734375,
+        "raw_gain_vs_CTRL0_long": 0.0,
+        "raw_dJ_vs_CTRL0_long": 0.0,
+        "composite_gated_score": 3840.69287109375,
+        "executed_residual": {
+         "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+         "count": 101419.0,
+         "fraction_nonzero": 0.0,
+         "mean_braking": 0.0,
+         "mean_abs_delta": 0.0,
+         "mean_delta": 0.0
+        }
+       },
+       {
+        "J": 5585.349609375,
+        "road_delay": 2440.974853515625,
+        "source_wait": 3144.375,
+        "native_relative_gain": 66.7470703125,
+        "hdv_hard_brake_seconds": 1.625,
+        "critic_tail_included": false,
+        "J_dense": 5585.349609375,
+        "J_raw_dense": 5585.349609375,
+        "scoring_phase_position": 191,
+        "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+        "CTRL0_J_dense": 5585.349609375,
+        "raw_gain_vs_CTRL0_dense": 0.0,
+        "raw_dJ_vs_CTRL0_dense": 0.0,
+        "score_horizon_s": 60.0,
+        "long_horizon_s": 300,
+        "J_long": 32008.30078125,
+        "native_J_long": 34166.46875,
+        "long_gated_gain": 0.0,
+        "long_rows_on_share": 0.0,
+        "long_mean_abs_dJ": 0.0,
+        "long_sign_agreement": 0.0,
+        "J_raw_long": 32008.30078125,
+        "long_futures": 8,
+        "long_credit_reference": "CTRL0",
+        "CTRL0_J_long": 32008.30078125,
+        "raw_gain_vs_CTRL0_long": 0.0,
+        "raw_dJ_vs_CTRL0_long": 0.0,
+        "composite_gated_score": 5585.349609375,
+        "executed_residual": {
+         "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+         "count": 196343.0,
+         "fraction_nonzero": 0.0,
+         "mean_braking": 0.0,
+         "mean_abs_delta": 0.0,
+         "mean_delta": 0.0
+        }
+       }
+      ],
+      "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "comparison": "composite J against this phase baseline; raw CTRL0 contrasts separate"
+     },
+     "looplong_initial_boundary": {
+      "short_nonregression": true,
+      "previous_horizon_s": 60,
+      "horizon_s": 90,
+      "gate_file": "/root/autodl-tmp/c4/candA_f176d7ac9a28/authority_gen/WM2_MEASURED_AUTHORITY.json",
+      "gate_sha256": "865843f07c9f71e5090b4226a889fdb7593f4c25f3db4280bb11f60ee388eeff",
+      "wm": {
+       "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+       "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+       "sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+      },
+      "schema": "looplong_boundary/1",
+      "accepted_after_cycle": 2,
+      "flags": {
+       "wm_loss": false,
+       "auto_horizon": true,
+       "long_credit": true,
+       "speed": true,
+       "hot_swap": true,
+       "exploration": true
+      },
+      "coop_credit": true,
+      "pairs": "/root/autodl-tmp/c4/restart20261026/arm/loop/data/pairs_c02.a1",
+      "pairing_receipt": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/pairing_c02.a1.json",
+      "policy_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c02.a1.npz",
+      "native_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/native_returns_c02.a1.npz",
+      "source_policy_sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128",
+      "source_policy_checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/policy_latest.pt",
+      "imagination_horizon_s": 90,
+      "threshold_sha256": "c479b2dec8716adeb1d518710f75f3352612f33f2fb7b58622f400ed462c8966",
+      "acceptance": "/root/autodl-tmp/c4/restart20261026/arm/loop/checks/c02/ACCEPT.json",
+      "acceptance_sha256": "c7a766ec35a13a27bf3b19d55afb0ed13e20379b712490c7c770febda05379ba",
+      "cct1_file": "/root/autodl-tmp/c4/candA_f176d7ac9a28/authority_gen/CCT1_WM2_pairs300.json",
+      "cct1_sha256": "1ae6b1011c23ce59e466a9bd0fe043b398ff7716c58494073e472a00b7361f00"
+     },
+     "looplong_long_credit": null,
+     "start_focus": {
+      "fraction": 0.6,
+      "cell_windows": {
+       "m2400p20": 5533,
+       "m2400p40": 5326,
+       "m2700p20": 5284,
+       "m2700p40": 4949
+      },
+      "remaining_windows": 41116,
+      "headroom_tilt": "observable_headroom/1; weight=1+headroom in [1,2]"
+     },
+     "effective_config_before_updates": {
+      "batch_size": 1,
+      "horizon": 10,
+      "gamma": 1.0,
+      "lambda_": 1.0,
+      "actor_lr": 5e-05,
+      "critic_lr": 0.0003,
+      "entropy_weight": 0.001,
+      "uncertainty_weight": 0.0,
+      "ttc_budget": 3.6,
+      "dual_lr": 0.01,
+      "lagrange_init": 0.1,
+      "grad_clip": 100.0,
+      "target_tau": 0.02,
+      "return_ema": 0.99,
+      "checkpoint_every": 1,
+      "validation_every": 100,
+      "lane_pg_weight": 1.0,
+      "lane_entropy_weight": 0.001,
+      "policy_lane_actions": true,
+      "entropy_target": null,
+      "lane_entropy_target": null,
+      "alpha_lr": 0.0003,
+      "checkpoint_imagination": true,
+      "imagination_microbatch": 1,
+      "imagination_checkpoint_segment": 2,
+      "imagination_offload_futures": true,
+      "imagination_offload_saved_tensors": true,
+      "imagination_skip_zero_vjp": true,
+      "imagination_replay_dense_prefix": true,
+      "long_grad_balance": true,
+      "long_grad_reset_actor_adam": true,
+      "imagine_entries": true,
+      "entry_pad_max": 32,
+      "future_samples": 8,
+      "future_driver_scale": 1.0,
+      "future_embedding_std": 0.05,
+      "future_accel_noise": false,
+      "future_accel_scale": 1.0,
+      "future_accel_sigma_max": 1.0,
+      "future_seed": 0,
+      "source_wait_grad": true,
+      "critic_entry_backlog": true,
+      "cav_exec_cap": "idm",
+      "entry_insert_rule": "sumo_like_v2",
+      "imagination_grad_decay": 1.0,
+      "credit_profile_every": 0,
+      "ttc_budget_mode": "native_relative",
+      "ttc_native_margin": 0.0,
+      "lagrange_scaled": true,
+      "alpha_min": 0.0,
+      "lagrange_max": 2.0,
+      "lagrange_decay": 0.0,
+      "entry_queue_state": true,
+      "entrant_control": true,
+      "entrant_learned_mix": true,
+      "deterministic_crn": true,
+      "wm_physics_overrides": {},
+      "entrance_zone_native": false,
+      "entrance_zone_main_m": 25.0,
+      "entrance_zone_ramp_m": 25.0,
+      "real_return_mix": 0.3,
+      "real_return_scale": 10000.0,
+      "actor_gradient_audit": true,
+      "native_residual_train_group": true,
+      "native_residual_train_trunk": true,
+      "low_penetration_horizon_cap": true,
+      "wm_safety_report_only": true,
+      "pessimistic_credit": true,
+      "native_anchor": false,
+      "native_anchor_calibration": "",
+      "exploit_ensemble_pessimism": false,
+      "exploit_monitor": true,
+      "exploit_stop_on_conflict": false,
+      "exploit_head_rmse_mps2": 0.0,
+      "exploit_disable_direct_credit": true,
+      "real_credit_individual_floor": true
+     },
+     "effective_reward_before_updates": {
+      "delay": 1.0,
+      "throughput": 0.0,
+      "smooth": 0.0,
+      "hard_brake": 0.0,
+      "fairness": 0.0,
+      "ttc_limit_s": 3.0,
+      "ttc_pairs": "cav_follower",
+      "merge_discharge": 0.0,
+      "free_speed": 0.0,
+      "free_speed_time_gap_s": 3.0,
+      "free_speed_range_m": 100.0
+     },
+     "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py\", line 140, in update\n    metrics = replacement(trainer, *args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_cli.py\", line 148, in update\n    metrics = original_update(trainer, *a, **kw)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/speedprof.py\", line 77, in measured\n    return function(trainer, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 2087, in update\n    extra.update(eslong.backward(self, dense_loss, es_grads) if es_grads is not None else\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/eslong.py\", line 450, in backward\n    dense = (torch.autograd.grad(dense_loss, params, allow_unused=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/__init__.py\", line 503, in grad\n    result = _engine_run_backward(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/graph.py\", line 829, in _engine_run_backward\n    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/function.py\", line 311, in apply\n    return user_fn(self, *args)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/imagination_memory.py\", line 333, in backward\n    return backward_futures(trainer, batch, cfg, kwargs, ctx.tape,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 344, in backward_futures\n    for task, result in zip(tasks, results):\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 343, in <genexpr>\n    _vjp(trainer, common, task, transport=False) for task in tasks)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 264, in _vjp\n    result = trainer.imagine(small, **{**kwargs, 'variants': variants},\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 1364, in imagine\n    roll = segmented_rollout(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/imagination_memory.py\", line 521, in segmented_rollout\n    chunk = checkpoint(call, carry, use_reentrant=False, context_fn=contexts)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/_compile.py\", line 53, in inner\n    return disable_fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py\", line 929, in _fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/utils/checkpoint.py\", line 495, in checkpoint\n    ret = function(*args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/imagination_memory.py\", line 511, in call\n    return model.rollout(state, n_steps=count, k0=offset, cav_controller=controller,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/model/wms.py\", line 2587, in rollout\n    else step_fn(current)\n         ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/model/wms.py\", line 1847, in step\n    next_s, next_v, next_lane = self._apply_cav_overrides(\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/model/wms.py\", line 2361, in _apply_cav_overrides\n    callback_teacher = cav_controller(callback_state)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 1256, in controller\n    command = external_callback(state)\n              ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_cli.py\", line 107, in measured\n    result = callback(frame)\n             ^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py\", line 193, in measured\n    capture = state['capture']\n              ~~~~~^^^^^^^^^^^\nTypeError: 'NoneType' object is not subscriptable\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/control/policy14_cli.py\", line 707, in main\n    metrics = trainer.update()\n              ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py\", line 142, in update\n    captured = state['capture']\n               ~~~~~^^^^^^^^^^^\nTypeError: 'NoneType' object is not subscriptable\n",
+     "error": "TypeError: 'NoneType' object is not subscriptable",
+     "label": "EXPLORATORY-LEAN",
+     "deployment_authorized": false,
+     "exploratory_authority_sha256": "cd0c98015ccb562ae91af5d1f898db9b1edae0eae567ec599f686db821ed0c96",
+     "lean_recipe": {
+      "label": "EXPLORATORY-LEAN",
+      "owner_amendment": "2026-10-30 23:50 MAIN",
+      "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "panel_starts": [
+       {
+        "index": 39780,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963552m1900p05t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 600,
+         "world": "w963552m1900p05t300"
+        }
+       },
+       {
+        "index": 45082,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963625m1900p10t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 2240,
+         "world": "w963625m1900p10t300"
+        }
+       },
+       {
+        "index": 35565,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963495m2400p20t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 900,
+         "world": "w963495m2400p20t300"
+        }
+       },
+       {
+        "index": 64945,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963904m2400p40t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 1700,
+         "world": "w963904m2400p40t300"
+        }
+       }
+      ],
+      "panel_selection": "first4 of original ordered16",
+      "es_future_indices": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "dense_futures": 8,
+      "scoring_futures": 8,
+      "es_selection": "first4 cached ORIGINAL K8 CRN plans; no resampling",
+      "environment": {
+       "WMS_SPEED_REUSE_PANEL": "1",
+       "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+       "WMS_SPEED_PROFILE": "1",
+       "WMS_SPEED_RESCORE_EVERY": "5",
+       "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+       "WMS_SPEED_PARALLEL_FORWARD": "1",
+       "WMS_SPEED_FORWARD_WORKERS": "2",
+       "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".28",
+       "WMS_SPEED_FUTURE_BUDGET_CAP": ".90"
+      },
+      "fresh_zero_start": true,
+      "phase_update_limit": 150,
+      "R4_phase_update": 10,
+      "pool_memory_rule": "coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)"
+     }
+    },
+    "LEAN_STARTUP.json": {
+     "label": "EXPLORATORY-LEAN",
+     "startup_s": 2949.8237614501268,
+     "phase_origin_update": 191,
+     "recipe": {
+      "label": "EXPLORATORY-LEAN",
+      "owner_amendment": "2026-10-30 23:50 MAIN",
+      "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "panel_starts": [
+       {
+        "index": 39780,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963552m1900p05t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 600,
+         "world": "w963552m1900p05t300"
+        }
+       },
+       {
+        "index": 45082,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963625m1900p10t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 2240,
+         "world": "w963625m1900p10t300"
+        }
+       },
+       {
+        "index": 35565,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963495m2400p20t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 900,
+         "world": "w963495m2400p20t300"
+        }
+       },
+       {
+        "index": 64945,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963904m2400p40t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 1700,
+         "world": "w963904m2400p40t300"
+        }
+       }
+      ],
+      "panel_selection": "first4 of original ordered16",
+      "es_future_indices": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "dense_futures": 8,
+      "scoring_futures": 8,
+      "es_selection": "first4 cached ORIGINAL K8 CRN plans; no resampling",
+      "environment": {
+       "WMS_SPEED_REUSE_PANEL": "1",
+       "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+       "WMS_SPEED_PROFILE": "1",
+       "WMS_SPEED_RESCORE_EVERY": "5",
+       "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+       "WMS_SPEED_PARALLEL_FORWARD": "1",
+       "WMS_SPEED_FORWARD_WORKERS": "2",
+       "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".28",
+       "WMS_SPEED_FUTURE_BUDGET_CAP": ".90"
+      },
+      "fresh_zero_start": true,
+      "phase_update_limit": 150,
+      "R4_phase_update": 10,
+      "pool_memory_rule": "coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)"
+     }
+    },
+    "frozen_scoring_baseline.json": {
+     "schema": "gatemeas_phase_baseline/1",
+     "update": 191,
+     "scoring_phase_position": 191,
+     "world_model_ids": [
+      "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+     ],
+     "long_credit": {
+      "enabled": true,
+      "mode": "gain_only",
+      "cct1_file": "",
+      "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+      "w_long": 1.0,
+      "score_training_horizon": true,
+      "estimator": "antithetic",
+      "es_directions": 2,
+      "es_sigma": 0.0,
+      "ctrl0_reference": true,
+      "k16": false,
+      "require_objective_match": true
+     },
+     "independent": {
+      "J": 4694.8330078125,
+      "road_delay": 3365.583251953125,
+      "source_wait": 1329.25,
+      "native_relative_gain": 60.1455078125,
+      "hdv_hard_brake_seconds": 2.9375,
+      "critic_tail_included": false,
+      "J_dense": 4694.8330078125,
+      "J_raw_dense": 4694.8330078125,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 4694.8330078125,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "J_long": 32728.30859375,
+      "native_J_long": 33029.0234375,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 32728.30859375,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 32728.30859375,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 4694.8330078125,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 111985.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     },
+     "panel": [
+      {
+       "J": 127.66284942626953,
+       "road_delay": 127.66284942626953,
+       "source_wait": 0.0,
+       "native_relative_gain": 0.19988250732421875,
+       "hdv_hard_brake_seconds": 0.0,
+       "critic_tail_included": false,
+       "J_dense": 127.66284942626953,
+       "J_raw_dense": 127.66284942626953,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 127.66284942626953,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 10.0,
+       "long_horizon_s": 300,
+       "J_long": 12027.8466796875,
+       "native_J_long": 11721.318359375,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 12027.8466796875,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 12027.8466796875,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 127.66284942626953,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 24164.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 2046.7354736328125,
+       "road_delay": 2008.2354736328125,
+       "source_wait": 38.5,
+       "native_relative_gain": 31.1453857421875,
+       "hdv_hard_brake_seconds": 3.6875,
+       "critic_tail_included": false,
+       "J_dense": 2046.7354736328125,
+       "J_raw_dense": 2046.7354736328125,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 2046.7354736328125,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 15138.4072265625,
+       "native_J_long": 14529.9892578125,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 15138.4072265625,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 15138.4072265625,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 2046.7354736328125,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 54089.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 3840.69287109375,
+       "road_delay": 1801.9427490234375,
+       "source_wait": 2038.75,
+       "native_relative_gain": 52.0341796875,
+       "hdv_hard_brake_seconds": 0.1875,
+       "critic_tail_included": false,
+       "J_dense": 3840.69287109375,
+       "J_raw_dense": 3840.69287109375,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 3840.69287109375,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 28017.27734375,
+       "native_J_long": 28623.984375,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 28017.27734375,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 28017.27734375,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 3840.69287109375,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 101419.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 5585.349609375,
+       "road_delay": 2440.974853515625,
+       "source_wait": 3144.375,
+       "native_relative_gain": 66.7470703125,
+       "hdv_hard_brake_seconds": 1.625,
+       "critic_tail_included": false,
+       "J_dense": 5585.349609375,
+       "J_raw_dense": 5585.349609375,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 5585.349609375,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 32008.30078125,
+       "native_J_long": 34166.46875,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 32008.30078125,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 32008.30078125,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 5585.349609375,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 196343.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      }
+     ],
+     "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+     "comparison": "composite J against this phase baseline; raw CTRL0 contrasts separate"
+    },
+    "pilot_STARTUP_REUSE_PROOF.json": {
+     "label": "EXPLORATORY-LEAN",
+     "startup_recovery": true,
+     "completed_baseline_recomputed": false,
+     "saved_independent_reused": true,
+     "incomplete_native_panel_scores_not_durable": true,
+     "parent_summary_sha256": "7145f1928d10f6b6dca82b8b8faa0bff5ed2affc58927756f9cad52603fd4643",
+     "identical_input_sha256": {
+      "wm": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+      "wm_config": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+      "current_policy": "560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c",
+      "current_policy_driver": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+      "cct2": "f42cce0f8e54c0e640a94f4524c5ecad03fbd105b22079cec79b5fe80d63350c",
+      "horizon_gate": "be0297ab09a988c5ced1a007432effdea36dfb80be4e86b33ac99605824fd152",
+      "boundary": "817e3f6df0c0e9862b644151ec1963aa56b0dbdab80fbb094a2d09efd4807fac",
+      "pairing_receipt": "777e89610c1c2c02586dff5dd8f691e4a6250bb643feb4d8ece91ce73261eba5",
+      "parity": "7cb5c6a7eaf681649b94b4e2b32e4f1af070c0a01d122aacbc8658f111a3b8fe",
+      "real_returns": "1b2d184df0ca9fb1cbbeed53c52dd607130dd3c28f1fa06e46afeca72f52a395",
+      "native_returns": "269b600e9684d7c39f1cf8b5ab4111b86fef216859dd89a742632bb1d0b69ec0",
+      "gate_panel": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e"
+     },
+     "seed": 965140,
+     "scientific_diff": {
+      "src/wms/control/dreamer.py": {
+       "before": "e4017b52b314e0ed72253ef549a011100580d90786a651c32c7e3494375727c2",
+       "after": "e75221bd38e9471c8a0356be39cfcc0be8b78fb4b1ae4d4d658a20270771b079"
+      },
+      "src/wms/control/eslong.py": {
+       "before": "4f521c014301316b0ab340bf170358218f019458e2f87228f136900e28b0ebf2",
+       "after": "a3adbbf13c627b81327e9ed8ee978e7bce8a080b29e5f50bf9bb5c02ed11bd93"
+      },
+      "src/wms/control/parallel_futures.py": {
+       "before": "8b6b9aff444f61584e623721891406f0bf5fbffe274cba4471a1d68446f9423b",
+       "after": "ea415fbc24b1241cf8bfd8059ff535ddefe6d6d0559041fbd0149d86ec2d71bb"
+      }
+     },
+     "wmfast_enabled": false,
+     "policy_equal": true,
+     "config_equal": true,
+     "phase_origin": 191
+    }
+   },
+   "startup_scores": [
+    "pilot_startup_score_0.json",
+    "pilot_startup_score_1.json",
+    "pilot_startup_score_2.json",
+    "pilot_startup_score_3.json",
+    "pilot_startup_score_4.json"
+   ]
+  }
+ },
+ "files": {
+  "repair_EXIT.json": "{\n \"label\": \"EXPLORATORY-LEAN\",\n \"returncode\": 1,\n \"epoch\": 1793385850.407181\n}",
+  "GPU.jsonl": "{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793380654.6868193, \"total_MiB\": 49140, \"free_MiB\": 42671, \"used_MiB\": 5840, \"apps\": \"25602, 5830\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793381254.9177356, \"total_MiB\": 49140, \"free_MiB\": 37988, \"used_MiB\": 10523, \"apps\": \"25602, 5830\\n35928, 4678\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793381855.0856693, \"total_MiB\": 49140, \"free_MiB\": 38144, \"used_MiB\": 10367, \"apps\": \"25602, 5830\\n35928, 4522\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793382455.325972, \"total_MiB\": 49140, \"free_MiB\": 36244, \"used_MiB\": 12267, \"apps\": \"25602, 5830\\n35928, 6422\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793383055.4862576, \"total_MiB\": 49140, \"free_MiB\": 34082, \"used_MiB\": 14429, \"apps\": \"25602, 5830\\n35928, 8584\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793383655.690308, \"total_MiB\": 49140, \"free_MiB\": 35577, \"used_MiB\": 12934, \"apps\": \"25602, 5830\\n35928, 526\\n49532, 3286\\n49531, 3266\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793384255.9099886, \"total_MiB\": 49140, \"free_MiB\": 26677, \"used_MiB\": 21834, \"apps\": \"25602, 5868\\n35928, 984\\n49532, 7498\\n49531, 7458\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793384856.1515963, \"total_MiB\": 49140, \"free_MiB\": 25465, \"used_MiB\": 23046, \"apps\": \"25602, 5868\\n35928, 1524\\n53220, 7814\\n53221, 7814\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793385456.3526113, \"total_MiB\": 49140, \"free_MiB\": 31339, \"used_MiB\": 17172, \"apps\": \"35928, 1524\\n53220, 7814\\n53221, 7814\"}\n",
+  "supervisor.log": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_wmfast_supervise.py\", line 73, in <module>\n    main()\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_wmfast_supervise.py\", line 43, in main\n    prior, origin = validate_parent(output)\n                    ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_wmfast.py\", line 20, in validate_parent\n    raise ValueError('WMFAST requires clean owned STOP and durable original baseline')\nValueError: WMFAST requires clean owned STOP and durable original baseline\n",
+  "repair_trainer.log": "{\n \"label\": \"EXPLORATORY-LEAN\",\n \"source_commit\": \"e113760fce3b9e10a0e604611675a3f46526c314\",\n \"authority_sha256\": \"cd0c98015ccb562ae91af5d1f898db9b1edae0eae567ec599f686db821ed0c96\",\n \"recipe\": {\n  \"label\": \"EXPLORATORY-LEAN\",\n  \"owner_amendment\": \"2026-10-30 23:50 MAIN\",\n  \"original_panel_sha256\": \"3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e\",\n  \"panel_starts\": [\n   {\n    \"index\": 39780,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963552m1900p05t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 600,\n     \"world\": \"w963552m1900p05t300\"\n    }\n   },\n   {\n    \"index\": 45082,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963625m1900p10t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 2240,\n     \"world\": \"w963625m1900p10t300\"\n    }\n   },\n   {\n    \"index\": 35565,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963495m2400p20t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 900,\n     \"world\": \"w963495m2400p20t300\"\n    }\n   },\n   {\n    \"index\": 64945,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963904m2400p40t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 1700,\n     \"world\": \"w963904m2400p40t300\"\n    }\n   }\n  ],\n  \"panel_selection\": \"first4 of original ordered16\",\n  \"es_future_indices\": [\n   0,\n   1,\n   2,\n   3\n  ],\n  \"dense_futures\": 8,\n  \"scoring_futures\": 8,\n  \"es_selection\": \"first4 cached ORIGINAL K8 CRN plans; no resampling\",\n  \"environment\": {\n   \"WMS_SPEED_REUSE_PANEL\": \"1\",\n   \"WMS_SPEED_SKIP_GRAD_DIAGNOSTICS\": \"1\",\n   \"WMS_SPEED_PROFILE\": \"1\",\n   \"WMS_SPEED_RESCORE_EVERY\": \"5\",\n   \"WMS_SPEED_PILOT_FORWARD_POOL\": \"1\",\n   \"WMS_SPEED_PARALLEL_FORWARD\": \"1\",\n   \"WMS_SPEED_FORWARD_WORKERS\": \"2\",\n   \"WMS_SPEED_FORWARD_MEMORY_FRACTION\": \".28\",\n   \"WMS_SPEED_FUTURE_BUDGET_CAP\": \".90\"\n  },\n  \"fresh_zero_start\": true,\n  \"phase_update_limit\": 150,\n  \"R4_phase_update\": 10,\n  \"pool_memory_rule\": \"coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)\"\n }\n}\nWARNING: inactive config [horizon] curriculum_updates, entry_pad_max, gate_file, horizons_s: boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused\nWARNING: inactive config [uncertainty] curriculum_updates, future_samples, weights: uncertainty.enabled=false; trainer future_samples is a separate setting\nWARNING: inactive config [lanes] consequence_mask, enabled, secure_gap_hook: native-init uses WM native lane rules\nWARNING: inactive config [policy] init_zero_accel, lane_control: native-init constructs the native residual actor\nWARNING: inactive config [policy14] entropy_decay_on_improvement, entropy_floor, policy_ramp_merge, sampled_marginal_lane_weight: native-init forces native lanes and deterministic residuals (no lane credit/entropy)\nWARNING: inactive config [policy14] critic_value_scale, critic_warmup_updates: long credit disables critic warmup and value updates\nWARNING: inactive config [trainer] real_return_mix: critic step is disabled under long credit\nWARNING: inactive config [paircrit] enabled, warmup_updates: setup may still load artifacts, but its value critic supplies no long-credit update\nWARNING: inactive config [counterfactual] start_tilt: exact focus-cell sampling replaces rejection tilt\nWARNING: inactive config [counterfactual] validation_uniform: policy14 CLI does not call trainer.validate\nWARNING: inactive config [run] seed, updates, validation_batches: CLI --seed/--max-updates take precedence; no trainer.validate call\n[resume-config] {\"approved\": [\"trainer.entrant_learned_mix\"], \"differences\": {\"trainer.entrant_learned_mix\": {\"checkpoint\": false, \"requested\": true}}, \"new_phase\": true}\n[zero-start] {\"schema\": \"zero_residual_output/1\", \"before\": {\"weight_abs_max\": 0.0004859584732912481, \"bias\": [0.0004806678043678403]}, \"adam_state_cleared_tensors\": 0, \"after\": {\"weight_abs_max\": 0.0, \"bias\": [0.0]}}\n/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)\n  kin = torch.as_tensor(np.asarray(corpus.array(\"veh_kin\")[lo:tick + 1], np.float32))\n/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py:181: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\nConsider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)\n  state['raw'] = dict(raw_dJ_vs_CTRL0_dense=float((j[:n]-j[refs]).mean()),\nException ignored in: <generator object _checkpoint_without_reentrant_generator at 0x7fdd44cee260>\nTraceback (most recent call last):\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/utils/checkpoint.py\", line 1558, in _checkpoint_without_reentrant_generator\n    with _checkpoint_hook(new_frame), forward_context:\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/graph.py\", line 319, in __exit__\n    torch._C._autograd._pop_saved_tensors_default_hooks()\nRuntimeError: is_initialized && !tls.stack.empty() INTERNAL ASSERT FAILED at \"/pytorch/aten/src/ATen/SavedTensorHooks.cpp\":69, please report a bug to PyTorch. \n{\"status\": \"failed\", \"summary_path\": \"/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN/RUN_SUMMARY.json\", \"error\": \"TypeError: 'NoneType' object is not subscriptable\", \"label\": \"EXPLORATORY-LEAN\", \"deployment_authorized\": false, \"exploratory_authority_sha256\": \"cd0c98015ccb562ae91af5d1f898db9b1edae0eae567ec599f686db821ed0c96\", \"lean_recipe\": {\"label\": \"EXPLORATORY-LEAN\", \"owner_amendment\": \"2026-10-30 23:50 MAIN\", \"original_panel_sha256\": \"3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e\", \"panel_starts\": [{\"index\": 39780, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963552m1900p05t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 600, \"world\": \"w963552m1900p05t300\"}}, {\"index\": 45082, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963625m1900p10t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 2240, \"world\": \"w963625m1900p10t300\"}}, {\"index\": 35565, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963495m2400p20t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 900, \"world\": \"w963495m2400p20t300\"}}, {\"index\": 64945, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963904m2400p40t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 1700, \"world\": \"w963904m2400p40t300\"}}], \"panel_selection\": \"first4 of original ordered16\", \"es_future_indices\": [0, 1, 2, 3], \"dense_futures\": 8, \"scoring_futures\": 8, \"es_selection\": \"first4 cached ORIGINAL K8 CRN plans; no resampling\", \"environment\": {\"WMS_SPEED_REUSE_PANEL\": \"1\", \"WMS_SPEED_SKIP_GRAD_DIAGNOSTICS\": \"1\", \"WMS_SPEED_PROFILE\": \"1\", \"WMS_SPEED_RESCORE_EVERY\": \"5\", \"WMS_SPEED_PILOT_FORWARD_POOL\": \"1\", \"WMS_SPEED_PARALLEL_FORWARD\": \"1\", \"WMS_SPEED_FORWARD_WORKERS\": \"2\", \"WMS_SPEED_FORWARD_MEMORY_FRACTION\": \".28\", \"WMS_SPEED_FUTURE_BUDGET_CAP\": \".90\"}, \"fresh_zero_start\": true, \"phase_update_limit\": 150, \"R4_phase_update\": 10, \"pool_memory_rule\": \"coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)\"}}\n"
+ }
+}
