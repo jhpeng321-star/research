@@ -9,6 +9,7 @@ import sys
 
 BASE = Path('/root/autodl-tmp/c4')
 RESUME = BASE / 'candB_rankcheck_82dbd7bc_resume_20261030'
+BIAS = BASE / 'candB_rankcheck_4d56f2a8_bias_20261030'
 
 
 def inspect(directory):
@@ -49,6 +50,8 @@ if host == 'A':
 else:
     paths = [RESUME / 'measurement_PI_native_cuda_12_16_a2',
              RESUME / 'measurement_PI_native_cpu_11_12_a2',
+             BIAS / 'measurement_PI_native_CIRCLES_11_12',
+             BIAS / 'measurement_CIRCLES_12_16',
              *[RESUME / f'measurement_native_cpu_{begin}_{end}'
                for begin, end in ((0, 3), (3, 6), (6, 9), (9, 11))]]
 result = dict(time=datetime.now().astimezone().isoformat(), host=host,

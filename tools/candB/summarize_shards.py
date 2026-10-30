@@ -255,7 +255,7 @@ def report(result, final_sha, stamp):
         '## Execution and verification',
         'Fresh immutable staging via tools/candB/stage.sh. MAIN21:08: no new gpuA scorers; existing shards finish. Retired only exact owned obsolete21:20 cutoff supervisors. New scoring is gpuR-only,total<=22GB; peers untouched.',
         'Recovered tail guard had already failed before signalling; historical45000MiB guard was ineffective (gpuA45713MiB at21:08). Repeated prefix/tail starts are exact-array verified and counted once; all attempts retained.',
-        'PI.40 and CIRCLES.19 exhausted allocators at index11 after11 saved starts. Source82dbd7bc resumes12-15 on gpuR; slow CPU11 is handed off only after exact owned-incarnation retirement. Native CPU shards remain separately identified.',
+        'PI.40/CIRCLES.19 OOM at index11 after11 saved starts. Source82dbd7bc completed PI/native12-15 on gpuR. CPU11 handed off by exact own-incarnation retirement; native CPU attempts retired at26-30min/future with no saved arm.',
         'Source4d56f2a8 adds default-OFF measurement-only no-grad pair-bias MLP row chunks8 (same features/weights/objective); CPU/CUDA full-attention equivalence2/2 passes at2e-6. Every source/config/WM/start identity remains bound.',
         'gpuA.16 MAPPO tails exited on allocator OOM after one saved start each; no retry there. Existing MAPPO prefix continues. CPU/CUDA numerical parity is not claimed; every contrast is process-paired.',
         '18 CPU tests pass (3 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
@@ -271,7 +271,7 @@ def report(result, final_sha, stamp):
     if (circles and circles['J300']['paired_delta']['mean'] > 0
             and circles['objective300_loss']['paired_delta']['mean'] < 0):
         position = lines.index('## Existing SUMO evidence and R2')
-        lines.insert(position, 'CIRCLES point estimates worsen all-CAV physical J300 while improving the group-weighted actor loss: these objectives rank it differently. R2 is evaluated on physical J, not actor-loss headroom.')
+        lines.insert(position, 'CIRCLES point estimates worsen all-vehicle physical J300 while improving the group-weighted actor loss: these objectives rank it differently. R2 is evaluated on physical J, not actor-loss headroom.')
     assert len(lines) <= 70, len(lines)
     return '\n'.join(lines)+'\n'
 
