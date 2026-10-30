@@ -106,8 +106,10 @@ def main():
     model = model.to("cuda").eval()
 
     # The frozen four CAV controllers, exactly as the base quartet built them.
-    # Loading wm_gpu re-executes the FIX path prepend (and caches FIX wms
-    # modules); the candidate tree must be re-asserted AFTER exec.
+    # wm_gpu imports wm_worker by its real name; register the already-loaded
+    # private instance so it is not executed twice. Loading wm_gpu may cache
+    # tree-side wms modules; the candidate-first order is re-asserted after.
+    sys.modules["wm_worker"] = frozen
     frozen_controllers = importlib.util.spec_from_file_location(
         "wmfix_quartet_controllers", OWN / "tools/speedhead/wm_gpu.py")
     gpu = importlib.util.module_from_spec(frozen_controllers)
