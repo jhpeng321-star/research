@@ -62,8 +62,12 @@ def bound_panel(spec, binding, *, stage, out, candidate, config, reference, devi
             if digest(file) != sha:
                 raise ValueError("external producer changed after preflight")
         path = safe(out / (stage + ".json"))
+        registration = out / (stage + "_producer.json")
+        with registration.open("x") as stream:
+            json.dump(spec["producer"], stream, indent=2, allow_nan=False)
         values = dict(candidate=str(candidate), config=str(config), reference=str(reference),
-                      out=str(path), device=device, binding=str(out / "BINDING.json"))
+                      out=str(path), device=device, binding=str(out / "BINDING.json"),
+                      producer=str(registration))
         argv = [sys.executable, "-m", "tools.wmfixmerge.producer_runner", producer["script"],
                 *[str(token).format(**values) for token in producer["args"]]]
         with (out / (stage + ".log")).open("x") as log:
