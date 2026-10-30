@@ -24,7 +24,8 @@ def main():
     parser.add_argument('--python', required=True)
     args = parser.parse_args()
     root = args.root.resolve()
-    assert json.loads(Path('pilot_RETRY_CPU_RESULT.json').read_text())['returncode'] == 0
+    result_name = os.environ.get('PILOT_RETRY_CPU_RESULT', 'pilot_RETRY_CPU_RESULT.json')
+    assert json.loads(Path(result_name).read_text())['returncode'] == 0
     for name in ('TRAINER_OWNERSHIP.json', 'OWNERSHIP.json'):
         if (OLD_ROOT/name).exists():
             absent_incarnation(OLD_ROOT, name)

@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 import subprocess
 
-from tools.candB.pilot_retry import OLD_RUNTIME, PARENT
 from tools.candB.pilot_lean_deploy import PYTHON
 
+PARENT = '/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN'
+OLD_RUNTIME = '/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031'
 RUNTIME = '/root/autodl-tmp/c4/candB_pilot_RETRY0300_EXPLORATORY-LEAN_20261031'
 
 
@@ -28,20 +29,22 @@ if {args.action!r}=='prepare':
         'build','authority_gen/PILOT_RETRY_AUTHORITY.json','--parent-authority',
         {OLD_RUNTIME!r}+'/authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json'],env=env,check=True)
 elif {args.action!r}=='cpu':
-    assert not Path('pilot_RETRY_CPU_OWNERSHIP.json').exists(),'recover existing CPU job'
+    tag=str(int(time.time()))
+    assert not Path(f'pilot_RETRY_CPU_OWNERSHIP_{{tag}}.json').exists(),'recover existing CPU job'
     command=[python,'-B','-m','tools.candB.pilot_retry_cpu']
-    with Path('pilot_RETRY_CPU.log').open('x') as log:
-        child=subprocess.Popen(command,env=env,stdin=subprocess.DEVNULL,stdout=log,
-            stderr=subprocess.STDOUT,start_new_session=True)
-    Path('pilot_RETRY_CPU_OWNERSHIP.json').write_text(json.dumps(dict(pid=child.pid,command=command,epoch=time.time())))
+    with Path(f'pilot_RETRY_CPU_{{tag}}.log').open('x') as log:
+        child=subprocess.Popen(command,env=dict(env,PILOT_RETRY_CPU_TAG=tag),
+            stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+    Path(f'pilot_RETRY_CPU_OWNERSHIP_{{tag}}.json').write_text(json.dumps(dict(pid=child.pid,command=command,epoch=time.time())))
+    print('CPU_TAG',tag)
 else:
-    for name in ('pilot_RETRY_CPU_OWNERSHIP.json','pilot_RETRY_CPU.log'):
-        if Path(name).exists(): print(name,Path(name).read_text()[:400])
-    result=Path('pilot_RETRY_CPU_RESULT.json')
-    if result.exists():
+    for name in sorted(Path('.').glob('pilot_RETRY_CPU_OWNERSHIP_*.json')):
+        print(name.name,Path(name).read_text()[:400])
+    for result in sorted(Path('.').glob('pilot_RETRY_CPU_RESULT_*.json')):
         doc=json.loads(result.read_text())
-        print('CPU',json.dumps(dict(returncode=doc['returncode'],seconds=doc['seconds'])))
-        print(doc['stdout'][-2000:]); print(doc['stderr'][-2000:])
+        print(result.name,json.dumps(dict(returncode=doc['returncode'],seconds=doc['seconds'])))
+        if doc['returncode']!=0:
+            print(doc['stdout'][-1500:]); print(doc['stderr'][-1500:])
     parent=Path({PARENT!r})
     doc=json.loads((parent/'RUN_SUMMARY.json').read_text())
     print('PARENT',json.dumps(dict(status=doc.get('status'),error=doc.get('error'),

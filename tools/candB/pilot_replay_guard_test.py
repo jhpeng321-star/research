@@ -33,7 +33,9 @@ def measured_factory():
 
 class ReplayGuardTests(unittest.TestCase):
     def test_observed_failure_reproduced_without_guard(self):
-        t = trainer(1, 2, True, horizon=3, batch=2, future_samples=2)
+        # accel-noise futures: the synthetic world model has no encode_drivers.
+        t = trainer(1, 2, True, horizon=3, batch=2, future_samples=2,
+            future_driver_scale=0., future_accel_noise=True)
         t.controller_factory, state = measured_factory()
         with patch.dict(os.environ, WMS_SPEED_FUTURE_WORKERS='1', WMS_SPEED_PARALLEL_FORWARD='0'):
             with self.assertRaises(TypeError):
@@ -41,8 +43,9 @@ class ReplayGuardTests(unittest.TestCase):
         self.assertIsNone(state())
 
     def test_two_real_updates_preserve_gradients_adam_rng_and_telemetry_lifetime(self):
-        expected = trainer(1, 2, True, horizon=3, batch=2, future_samples=2)
-        actual = trainer(1, 2, True, horizon=3, batch=2, future_samples=2)
+        options = dict(future_samples=2, future_driver_scale=0., future_accel_noise=True)
+        expected = trainer(1, 2, True, horizon=3, batch=2, **options)
+        actual = trainer(1, 2, True, horizon=3, batch=2, **options)
         expected.controller_factory = core_factory
         wrapped, state = measured_factory()
         actual.controller_factory = wrapped

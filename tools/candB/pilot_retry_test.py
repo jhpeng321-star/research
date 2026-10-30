@@ -12,6 +12,11 @@ from tools.candB import pilot_lean_authority, pilot_wmfast
 from tools.candB.pilot_retry_launch import launch_source
 
 
+def workspace_tempdir():
+    # Workspace-scoped fixtures: safe_path refuses paths outside allowed roots.
+    return tempfile.TemporaryDirectory(dir='.')
+
+
 def synthetic_parent(root, **override):
     frozen = dict(update=191, scoring_phase_position=191, panel=[1, 2, 3, 4],
         independent=dict(raw_dJ_vs_CTRL0_dense=0., raw_dJ_vs_CTRL0_long=0.))
@@ -37,7 +42,7 @@ class RetryContractTests(unittest.TestCase):
         self.assertNotIn('WMS_SPEED_FORWARD_WORKERS=2', source)
 
     def test_retry_authority_binds_owner0300_s4_recipe(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with workspace_tempdir() as directory:
             panel = Path(directory)/'panel.json'
             panel.write_text(json.dumps(dict(starts=[f'w{i}' for i in range(16)])))
             doc = dict(inputs=dict(gate_panel=str(panel)),
@@ -80,7 +85,7 @@ class RetryContractTests(unittest.TestCase):
             dict(updates=[row], independent_score_before=score))['J'], 2.5)
 
     def test_validate_parent_refusals(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with workspace_tempdir() as directory:
             root = Path(directory)
             synthetic_parent(root)
             with patch.object(pilot_retry, 'PARENT', root):
@@ -104,7 +109,7 @@ class RetryContractTests(unittest.TestCase):
                     pilot_retry.validate_parent(root)
 
     def test_validate_identity_accepts_exactly_the_b_l_repair(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with workspace_tempdir() as directory:
             home = Path(directory)
             panel = home/'panel.json'
             panel.write_text(json.dumps(dict(starts=[f'w{i}' for i in range(16)])))
@@ -183,7 +188,7 @@ class RetryContractTests(unittest.TestCase):
         from wms.control import policy14_recovery
         from wms.control.dreamer import DreamerConfig
         from wms.control.contract import RewardWeights
-        with tempfile.TemporaryDirectory() as directory:
+        with workspace_tempdir() as directory:
             root = Path(directory)
             checkpoint = root/'policy_native_best.pt'
             checkpoint.write_bytes(b'owned synthetic zero checkpoint')
@@ -237,15 +242,14 @@ class RetryContractTests(unittest.TestCase):
                 callback = core_factory(*args, **kwargs)
                 def measured(frame):
                     state['calls'] += 1
-                    if state['calls'] < 0 or frame is None:
-                        raise TypeError("'NoneType' object is not subscriptable")
                     return callback(frame)
                 measured._wms_checkpoint_passthrough = callback
                 return measured
             return factory, lambda: state
 
-        expected = trainer(1, 2, True, horizon=3, batch=2, future_samples=2)
-        actual = trainer(1, 2, True, horizon=3, batch=2, future_samples=2)
+        options = dict(future_samples=2, future_driver_scale=0., future_accel_noise=True)
+        expected = trainer(1, 2, True, horizon=3, batch=2, **options)
+        actual = trainer(1, 2, True, horizon=3, batch=2, **options)
         expected.controller_factory = core_factory
         wrapped, state = measured_factory()
         actual.controller_factory = wrapped
