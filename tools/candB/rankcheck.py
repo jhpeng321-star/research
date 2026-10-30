@@ -110,6 +110,13 @@ def comparator_factory(arm, model, teacher):
 
         def callback(state):
             nonlocal timeline
+            # Keep DreamerTrainer's decision/CRN/telemetry bookkeeping on the
+            # identical clock even though this arm supplies the executed motion.
+            # Its residual output is deliberately discarded, never blended in.
+            if callable(policy):
+                zeros = torch.zeros_like(state['s_m'])
+                obs = build_observations({**state, 'cmd_accel_mps2': zeros, 'lane_intent': zeros})
+                policy(obs, encoder(obs, state))
             mask = state['present'].bool() & state['is_cav'].bool() & (state['lane'] >= 0)
             act = mask & acting
             native = project_native(state, kwargs['native'](state))
@@ -374,6 +381,9 @@ def runtime_sources():
     return sorted(set(MANIFEST_FILES + LEADER_RULE_FILES + [
         'src/wms/control/residual.py', 'src/wms/control/entrant_mix.py',
         'src/wms/train/cav_drive.py', 'tools/errsrc/inference.py',
+        'output/controller_verification_v2/pi_saturation_v1.py',
+        'output/controller_verification_v4/pi_external_u.py',
+        'output/controller_verification_v7/pi_owner_adapter.py',
         'tools/candB/rankcheck.py', 'configs/execparity_cav_idm_v1.json']))
 
 

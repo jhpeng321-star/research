@@ -69,3 +69,52 @@ def test_rankcheck_refuses_small_panels_before_loading_assets():
         rank.main(['--n-starts', '15', *[part for key in (
             'wm', 'wm-config', 'mappo', 'current-policy', 'cct2', 'horizon-gate',
             'boundary', 'pairing-receipt', 'out') for part in ('--'+key, 'unused')]])
+
+
+def test_comparators_flow_through_actual_k8_actor_objective(tmp_path, monkeypatch):
+    from functools import partial
+    from tests.unit.test_gated300 import cct2_authority, enable_gain_only
+    from tests.unit.test_longmem import Starts, Critic, queue_reward
+    from wms.control.bridge import make_cav_controller
+    from wms.control.dreamer import DreamerConfig
+    from wms.control.policy import CavPolicy, RsuGroupEncoder
+    from wms.control.policy14 import Policy14Trainer
+    from wms.control.counterfactual import CounterfactualConfig, build_variants, KIND_BASE
+    from wms.control.train_cli import GroupSignal
+    from wms.control.lanes import LaneRules
+    from wms.model import WmSModel, ModelSpec
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
+    monkeypatch.setenv('C4_EXECUTION_PARITY', '2')
+    monkeypatch.setenv('C4_SUMO_LEADER_RULE', '1')
+    monkeypatch.setenv('C4_EXECUTION_DRIVER', 'configs/execparity_cav_idm_v1.json')
+    monkeypatch.setattr(rank.gated300, 'STEP_S', 60.)
+    torch.set_num_threads(1)
+    model = WmSModel(ModelSpec(history_hidden=8, k_hidden=8, rollout_mode='hybrid',
+        lane_model='hazard_v5', merge_decision='first_passage', lane_decision='sample',
+        merge_passage_law='hybrid'))
+    starts = Starts(1, 4)
+    policy = CavPolicy(hidden_dim=8, n_heads=2, lane_head=False,
+                       residual_on_native=True, residual_reference='ctrl0')
+    trainer = Policy14Trainer([model], policy, GroupSignal(RsuGroupEncoder(hidden_dim=8, n_heads=2)),
+        Critic(), starts, observation_builder=rank.build_observations, reward_fn=queue_reward,
+        safety=lambda st, command, **kw: command,
+        controller_factory=partial(make_cav_controller, native_lane_change=True,
+                                  native_ramp_merge='wm_law', symmetric_exec_cap=True),
+        config=DreamerConfig(horizon=1, cav_exec_cap='idm', future_samples=8,
+                            pessimistic_credit=True, deterministic_crn=True),
+        counterfactual=CounterfactualConfig(enabled=True, max_starts=1, native_cav='head'))
+    enable_gain_only(trainer, cct2_authority(tmp_path, 300), ctrl0_reference=True,
+                     estimator='antithetic')
+    trainer._training_imagination = True
+    teacher = SimpleNamespace(policy=CavPolicy(hidden_dim=8, n_heads=2),
+        group_encoder=RsuGroupEncoder(hidden_dim=8, n_heads=2), lane_rules=LaneRules())
+    for arm in rank.ARMS[:5]:
+        trainer.controller_factory = rank.comparator_factory(arm, model, teacher)
+        with torch.no_grad():
+            image = trainer.imagine(starts.batch, variants=build_variants(
+                starts.batch.state, trainer.counterfactual), deterministic=True, _memory_replay=True)
+            loss, _ = trainer.actor_objective(image, 1., trainer.counterfactual.weights(0))
+        assert image['n_futures'] == 8 and torch.isfinite(loss)
+        if arm == 'CTRL0':
+            treatment = image['variants'].row_kind != KIND_BASE
+            assert not image['gated300_long_difference'][..., treatment].any()
