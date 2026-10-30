@@ -1,4 +1,12 @@
 # WMFIX shard staging receipt — 2026-10-31 07:2x
+LAUNCHED 07:41 (condition met): gpuR PID 482999, groups 28-35, out
+validation_zero_head_shardR/, --memory-fraction 0.55, label 1303d4a2_shardR.
+Trigger: candB WMFAST2 pilot completed its 6-update schedule ~07:30 (matching
+its monitor's --follow-through-update 6) and exited with its supervisor; card
+sat at 1 MiB for 7+ min before launch. Contingency while the shard runs:
+poll every ~10 min; if any candB GPU process reappears, SIGINT the shard at
+once (own PID, batches preserved, resumable) to avoid co-residency OOM risk
+to their ~11.9 GB pilot (my cap is 13.5 GB of 24 GB).
 
 gpuR /root/autodl-tmp/c4/wmfixmerge20261031 verified ready for a conditional
 zero-head panel shard (addendum 07:20), pending the candB pilot vacating the GPU.
