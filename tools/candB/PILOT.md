@@ -47,3 +47,19 @@
   existing `stage.sh`; a narrow bundler adapter accepts only named S-RANKCHECK dirty
   paths and still archives exclusively committed LF Git blobs. Dirty pilot files refuse.
   It also includes the omitted `tools/gated300/cct1.py` CPU fixture dependency.
+
+## Active final runtime (supersedes all preparation bundles above)
+- Source **da0bc3663609024930d799af059c13f9dcf174d3**, gpuA
+  `/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030`, **2,380** committed LF files.
+- Expanded CPU verification: **112 PASS / 2 CUDA-only skipped**, 194.38s; no GPU.
+  Both CCT1/CCT2 fixture dependencies are now included. Earlier missing-fixture
+  collection failures and one SSH test timeout are retained as preparation attempts.
+- Final authority **a089c5fbe439a67cb64e8fce68de4d8ab80cd440909a1a052835ee7dcc7f641a**,
+  local `pilot_final_authority_receipt.json`; source/config/input/parity checks PASS.
+  Scientific effective config/input hashes above are unchanged.
+- Active chain target `/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030`;
+  detached bootstrap waits500s (started20:03) to respect the previous20:01:40 GPU poll.
+  Supervisor then polls every600s, admits only >=20500MiB, runs dry2 then fresh pilot150.
+- Latest capacity: gpuA20:01 free6161MiB; gpuR20:03 free8441MiB. No GPU child yet.
+- Local observer `pilot_observe.py --root REMOTE_CHAIN --ledger SHARED_REGISTRATION`
+  retains exact own PID/start ticks + update metrics and appends launch/every5 updates.
