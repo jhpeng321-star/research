@@ -1,0 +1,2021 @@
+{
+ "epoch": 1793398644.487001,
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031",
+ "owners": {
+  "OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 92346,
+   "start_ticks": "877668372",
+   "runtime": "/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031",
+   "epoch": 1793396469.595329,
+   "alive": false
+  },
+  "TRAINER_OWNERSHIP.json": {
+   "label": "EXPLORATORY-LEAN",
+   "pid": 92351,
+   "start_ticks": "877668389",
+   "command": [
+    "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python",
+    "-B",
+    "-u",
+    "-m",
+    "tools.candB.pilot_cont0525_launch",
+    "--parent",
+    "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300",
+    "/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031/pilot_EXPLORATORY-LEAN_CONT0525"
+   ],
+   "output": "/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031/pilot_EXPLORATORY-LEAN_CONT0525",
+   "epoch": 1793396469.7323127,
+   "admission": {
+    "epoch": 1793396469.731305,
+    "total_MiB": 49140,
+    "free_MiB": 36269,
+    "used_MiB": 12242,
+    "apps": "82309, 12230"
+   },
+   "alive": false
+  }
+ },
+ "files": {
+  "EXIT.json": "{\n \"label\": \"EXPLORATORY-LEAN\",\n \"returncode\": 1,\n \"epoch\": 1793398628.3488162\n}",
+  "GPU.jsonl": "{\"label\": \"EXPLORATORY-LEAN\", \"peers_mib\": 12230, \"epoch\": 1793396469.731305, \"total_MiB\": 49140, \"free_MiB\": 36269, \"used_MiB\": 12242, \"apps\": \"82309, 12230\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"peers_mib\": 18084, \"epoch\": 1793397069.920904, \"total_MiB\": 49140, \"free_MiB\": 30410, \"used_MiB\": 18101, \"apps\": \"82309, 11134\\n92351, 6950\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"peers_mib\": 21782, \"epoch\": 1793397670.1075244, \"total_MiB\": 49140, \"free_MiB\": 26707, \"used_MiB\": 21804, \"apps\": \"82309, 11502\\n92351, 2654\\n95532, 7626\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"peers_mib\": 12950, \"epoch\": 1793398270.302009, \"total_MiB\": 49140, \"free_MiB\": 35544, \"used_MiB\": 12967, \"apps\": \"92351, 2654\\n95532, 10296\"}\n",
+  "supervisor.log": "",
+  "trainer.log": "0\"\n    }\n   },\n   {\n    \"index\": 64945,\n    \"meta\": {\n     \"arm\": \"generic_random\",\n     \"episode\": \"w963904m2400p40t300__generic_random\",\n     \"source\": \"c4_episodes\",\n     \"start_source\": \"genrand_plain\",\n     \"tick\": 1700,\n     \"world\": \"w963904m2400p40t300\"\n    }\n   }\n  ],\n  \"panel_selection\": \"first4 of original ordered16\",\n  \"es_future_indices\": [\n   0,\n   1,\n   2,\n   3\n  ],\n  \"dense_futures\": 8,\n  \"scoring_futures\": 8,\n  \"es_selection\": \"first4 cached ORIGINAL K8 CRN plans; no resampling\",\n  \"environment\": {\n   \"WMS_SPEED_REUSE_PANEL\": \"1\",\n   \"WMS_SPEED_SKIP_GRAD_DIAGNOSTICS\": \"1\",\n   \"WMS_SPEED_PROFILE\": \"1\",\n   \"WMS_SPEED_RESCORE_EVERY\": \"5\",\n   \"WMS_SPEED_PILOT_FORWARD_POOL\": \"1\",\n   \"WMS_SPEED_PARALLEL_FORWARD\": \"1\",\n   \"WMS_SPEED_FORWARD_WORKERS\": \"1\",\n   \"WMS_SPEED_FORWARD_MEMORY_FRACTION\": \".28\",\n   \"WMS_SPEED_FUTURE_BUDGET_CAP\": \".90\",\n   \"WMS_SPEED_ES_STACK_SIDES\": \"2\",\n   \"WMS_SPEED_FUTURE_WORKERS\": \"2\",\n   \"WMS_SPEED_FUTURE_VJP_SLOTS\": \"2\",\n   \"WMS_SPEED_FUTURE_MEMORY_FRACTION\": \".16\"\n  },\n  \"fresh_zero_start\": true,\n  \"phase_update_limit\": 150,\n  \"R4_phase_update\": 10,\n  \"pool_memory_rule\": \"coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)\",\n  \"continuation_only\": true,\n  \"initialization\": \"ordinary full resume; original fresh-zero phase retained\",\n  \"wmfast_stack_sides\": 2,\n  \"memory_selection\": \"peer-aware admission: sampled peers<=23000MiB and free>=21000MiB; one .28 S2 forward worker; two .16 dense VJP workers; measured coordinator+worker caps+contexts+sampled peers+2GiB <=min(90% device,45GiB) checked before EVERY pool; total gpuA kept <=~44GB next to the verdict peer\"\n }\n}\nWARNING: inactive config [horizon] curriculum_updates, entry_pad_max, gate_file, horizons_s: boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused\nWARNING: inactive config [uncertainty] curriculum_updates, future_samples, weights: uncertainty.enabled=false; trainer future_samples is a separate setting\nWARNING: inactive config [lanes] consequence_mask, enabled, secure_gap_hook: native-init uses WM native lane rules\nWARNING: inactive config [policy] init_zero_accel, lane_control: native-init constructs the native residual actor\nWARNING: inactive config [policy14] entropy_decay_on_improvement, entropy_floor, policy_ramp_merge, sampled_marginal_lane_weight: native-init forces native lanes and deterministic residuals (no lane credit/entropy)\nWARNING: inactive config [policy14] critic_value_scale, critic_warmup_updates: long credit disables critic warmup and value updates\nWARNING: inactive config [trainer] real_return_mix: critic step is disabled under long credit\nWARNING: inactive config [paircrit] enabled, warmup_updates: setup may still load artifacts, but its value critic supplies no long-credit update\nWARNING: inactive config [counterfactual] start_tilt: exact focus-cell sampling replaces rejection tilt\nWARNING: inactive config [counterfactual] validation_uniform: policy14 CLI does not call trainer.validate\nWARNING: inactive config [run] seed, updates, validation_batches: CLI --seed/--max-updates take precedence; no trainer.validate call\n/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)\n  kin = torch.as_tensor(np.asarray(corpus.array(\"veh_kin\")[lo:tick + 1], np.float32))\n/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py:181: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\nConsider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)\n  state['raw'] = dict(raw_dJ_vs_CTRL0_dense=float((j[:n]-j[refs]).mean()),\n{\"status\": \"failed\", \"summary_path\": \"/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031/pilot_EXPLORATORY-LEAN_CONT0525/RUN_SUMMARY.json\", \"error\": \"RuntimeError: Traceback (most recent call last):\\n  File \\\"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\\\", line 448, in _main\\n    result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'\\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\\\", line 264, in _vjp\\n    result = trainer.imagine(small, **{**kwargs, 'variants': variants},\\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\\\", line 1237, in imagine\\n    external_callback = self.controller_factory(\\n                        ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/bridge.py\\\", line 142, in make_cav_controller\\n    raise ValueError(\\\"native residual needs native command, native lanes, no policy lane rules\\\")\\nValueError: native residual needs native command, native lanes, no policy lane rules\\n\", \"label\": \"EXPLORATORY-LEAN\", \"deployment_authorized\": false, \"exploratory_authority_sha256\": \"b81d9f953aa47d3bc97378fd4e43d53c1f55fe98d8aeda107b5deeb70473e1a7\", \"lean_recipe\": {\"label\": \"EXPLORATORY-LEAN\", \"owner_amendment\": \"2026-10-31 05:25 MAIN; peer-present gpuA S2 continuation\", \"original_panel_sha256\": \"3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e\", \"panel_starts\": [{\"index\": 39780, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963552m1900p05t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 600, \"world\": \"w963552m1900p05t300\"}}, {\"index\": 45082, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963625m1900p10t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 2240, \"world\": \"w963625m1900p10t300\"}}, {\"index\": 35565, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963495m2400p20t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 900, \"world\": \"w963495m2400p20t300\"}}, {\"index\": 64945, \"meta\": {\"arm\": \"generic_random\", \"episode\": \"w963904m2400p40t300__generic_random\", \"source\": \"c4_episodes\", \"start_source\": \"genrand_plain\", \"tick\": 1700, \"world\": \"w963904m2400p40t300\"}}], \"panel_selection\": \"first4 of original ordered16\", \"es_future_indices\": [0, 1, 2, 3], \"dense_futures\": 8, \"scoring_futures\": 8, \"es_selection\": \"first4 cached ORIGINAL K8 CRN plans; no resampling\", \"environment\": {\"WMS_SPEED_REUSE_PANEL\": \"1\", \"WMS_SPEED_SKIP_GRAD_DIAGNOSTICS\": \"1\", \"WMS_SPEED_PROFILE\": \"1\", \"WMS_SPEED_RESCORE_EVERY\": \"5\", \"WMS_SPEED_PILOT_FORWARD_POOL\": \"1\", \"WMS_SPEED_PARALLEL_FORWARD\": \"1\", \"WMS_SPEED_FORWARD_WORKERS\": \"1\", \"WMS_SPEED_FORWARD_MEMORY_FRACTION\": \".28\", \"WMS_SPEED_FUTURE_BUDGET_CAP\": \".90\", \"WMS_SPEED_ES_STACK_SIDES\": \"2\", \"WMS_SPEED_FUTURE_WORKERS\": \"2\", \"WMS_SPEED_FUTURE_VJP_SLOTS\": \"2\", \"WMS_SPEED_FUTURE_MEMORY_FRACTION\": \".16\"}, \"fresh_zero_start\": true, \"phase_update_limit\": 150, \"R4_phase_update\": 10, \"pool_memory_rule\": \"coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)\", \"continuation_only\": true, \"initialization\": \"ordinary full resume; original fresh-zero phase retained\", \"wmfast_stack_sides\": 2, \"memory_selection\": \"peer-aware admission: sampled peers<=23000MiB and free>=21000MiB; one .28 S2 forward worker; two .16 dense VJP workers; measured coordinator+worker caps+contexts+sampled peers+2GiB <=min(90% device,45GiB) checked before EVERY pool; total gpuA kept <=~44GB next to the verdict peer\"}}\n"
+ },
+ "output": {
+  "RUN_SUMMARY.json": {
+   "status": "failed",
+   "inactive_config": [
+    {
+     "section": "horizon",
+     "keys": [
+      "curriculum_updates",
+      "entry_pad_max",
+      "gate_file",
+      "horizons_s"
+     ],
+     "reason": "boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused"
+    },
+    {
+     "section": "uncertainty",
+     "keys": [
+      "curriculum_updates",
+      "future_samples",
+      "weights"
+     ],
+     "reason": "uncertainty.enabled=false; trainer future_samples is a separate setting"
+    },
+    {
+     "section": "lanes",
+     "keys": [
+      "consequence_mask",
+      "enabled",
+      "secure_gap_hook"
+     ],
+     "reason": "native-init uses WM native lane rules"
+    },
+    {
+     "section": "policy",
+     "keys": [
+      "init_zero_accel",
+      "lane_control"
+     ],
+     "reason": "native-init constructs the native residual actor"
+    },
+    {
+     "section": "policy14",
+     "keys": [
+      "entropy_decay_on_improvement",
+      "entropy_floor",
+      "policy_ramp_merge",
+      "sampled_marginal_lane_weight"
+     ],
+     "reason": "native-init forces native lanes and deterministic residuals (no lane credit/entropy)"
+    },
+    {
+     "section": "policy14",
+     "keys": [
+      "critic_value_scale",
+      "critic_warmup_updates"
+     ],
+     "reason": "long credit disables critic warmup and value updates"
+    },
+    {
+     "section": "trainer",
+     "keys": [
+      "real_return_mix"
+     ],
+     "reason": "critic step is disabled under long credit"
+    },
+    {
+     "section": "paircrit",
+     "keys": [
+      "enabled",
+      "warmup_updates"
+     ],
+     "reason": "setup may still load artifacts, but its value critic supplies no long-credit update"
+    },
+    {
+     "section": "counterfactual",
+     "keys": [
+      "start_tilt"
+     ],
+     "reason": "exact focus-cell sampling replaces rejection tilt"
+    },
+    {
+     "section": "counterfactual",
+     "keys": [
+      "validation_uniform"
+     ],
+     "reason": "policy14 CLI does not call trainer.validate"
+    },
+    {
+     "section": "run",
+     "keys": [
+      "seed",
+      "updates",
+      "validation_batches"
+     ],
+     "reason": "CLI --seed/--max-updates take precedence; no trainer.validate call"
+    }
+   ],
+   "gpu_memory_fraction": 0.4,
+   "diagnostic_grad_audit_every": 25,
+   "speedprof": {
+    "rescore_every": 5,
+    "reuse_panel": true,
+    "profile": true,
+    "skip_grad_diagnostics": true,
+    "native_entropy_bookkeeping": "diagnostic-only when cadence > 1"
+   },
+   "exploration": {
+    "enabled": true,
+    "curriculum_updates": [
+     180.0,
+     330.0
+    ],
+    "rho": [
+     0.1,
+     0.5
+    ],
+    "persistence_steps": 4.0,
+    "radius_m": 100.0,
+    "long_persistence": true,
+    "persistence_curriculum_updates": [
+     0,
+     150
+    ],
+    "persistence_seconds": [
+     30.0,
+     60.0
+    ],
+    "mode": "additive_accel",
+    "additive_correlation": 0.5
+   },
+   "horizon_gate": {
+    "gate_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/gate_wm2/HORIZON_GATE_WM2_REG.json",
+    "allowed_stage": 1,
+    "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "rule": "horizon h PASS iff WM sign agreement of dJ(arm - B) t0-HDV delay at h >= threshold; threshold = lower 95% group-bootstrap bound of the sign agreement at the base horizon of the registering WM",
+    "verdicts": {
+     "10": "BASE",
+     "30": "PASS",
+     "60": "PASS",
+     "90": "PASS",
+     "120": "FAIL",
+     "180": "FAIL",
+     "300": "FAIL"
+    }
+   },
+   "horizon": {
+    "enabled": true,
+    "horizons_s": [
+     10.0,
+     90.0
+    ],
+    "curriculum_updates": [
+     0.0,
+     1.0
+    ],
+    "gate_file": "/root/autodl-tmp/c4/restart20261026/arm/loop/longint/gate_wm2/HORIZON_GATE_WM2_REG.json",
+    "entry_pad_max": [
+     32,
+     288
+    ],
+    "allowed_stage": 1
+   },
+   "resume_config": {
+    "new_phase": false,
+    "differences": {},
+    "approved": []
+   },
+   "long_credit": {
+    "config": {
+     "enabled": true,
+     "mode": "gain_only",
+     "cct1_file": "",
+     "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+     "w_long": 1.0,
+     "score_training_horizon": true,
+     "estimator": "antithetic",
+     "es_directions": 2,
+     "es_sigma": 0.0,
+     "ctrl0_reference": true,
+     "k16": false,
+     "require_objective_match": true
+    },
+    "wm_sha256s": [
+     "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+    ],
+    "world_model_ids": [
+     "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+    ],
+    "H_long": 300,
+    "reason": "owner 20261030 exploratory evidence waiver",
+    "H_G": 300,
+    "label": "EXPLORATORY",
+    "policy_authorized": false,
+    "qualification_passed": false,
+    "artifact_sha256": "f42cce0f8e54c0e640a94f4524c5ecad03fbd105b22079cec79b5fe80d63350c"
+   },
+   "operational_recovery": {
+    "checkpoint": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/policy_latest.pt",
+    "checkpoint_sha256": "aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a",
+    "summary": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/RUN_SUMMARY.json",
+    "summary_sha256": "83dac227dcee2cbd46a667da905dc32b678ab50eb7a664158651023857fabf1e",
+    "saved_update": 192,
+    "phase_start": 191,
+    "phase_updates": 150,
+    "best_checkpoint": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/policy_native_best.pt"
+   },
+   "ramp_merge": {
+    "policy_ramp_merge": false,
+    "native_ramp_merge": "wm_law",
+    "native_lane_change": true
+   },
+   "seed": 965140,
+   "smoke": false,
+   "device": "cuda",
+   "wm_members": [
+    {
+     "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+     "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+     "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+     "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+     "courtesy_state_grad": true,
+     "courtesy_intent": "pivot",
+     "courtesy_off": false,
+     "physics": {
+      "dt_s": 0.5,
+      "open_road": true,
+      "exit_at_road_end": true,
+      "sumo_fidelity": false,
+      "sumo_idm": true,
+      "speed_factor": 1.0,
+      "speed_limit_mps": 31.29,
+      "free_road_gap_m": 250.0,
+      "max_gap_steps": 240,
+      "accel_min_mps2": -9.0,
+      "accel_max_mps2": 3.0,
+      "lane_gap_m": 5.0,
+      "lane_incentive_mps": 0.4,
+      "lane_safe_gap_m": 6.0,
+      "merge_zone_s0_m": 0.0,
+      "merge_zone_s1_m": 75.44,
+      "merge_lane": 2,
+      "merge_target_lane": 1,
+      "mobil_threshold_mps2": 0.1,
+      "b_safe_base_mps2": 4.0,
+      "b_safe_end_mps2": 6.0,
+      "merge_cal": false,
+      "t_lead_base_s": 1.0,
+      "t_lead_end_s": 0.1,
+      "b_accept_base_mps2": 4.0,
+      "b_accept_end_mps2": 6.0,
+      "gap_floor_m": 0.3,
+      "u_yield": 0.35,
+      "yield_lookahead_m": 120.0,
+      "b_yield_max_mps2": 1.75,
+      "yield_min_speed_mps": 2.5,
+      "yield_min_merger_speed_mps": 3.5,
+      "end_obstacle_range_m": 25.0,
+      "lane_rule": "mobil",
+      "lane_gap_rule": "fixed",
+      "gap_s0_lead_m": 1.0,
+      "gap_t_lead_s": 0.2,
+      "gap_b_lead_mps2": 3.0,
+      "gap_s0_follow_m": 0.5,
+      "gap_t_follow_s": 0.6,
+      "gap_b_follow_mps2": 6.0,
+      "gap_overlap_margin_m": 0.5,
+      "gap_anticipation_s": 0.5,
+      "gap_stopped_relax": false,
+      "gap_stopped_speed_mps": 1.0,
+      "gap_stopped_min_m": 0.5,
+      "stop_time_integration": false,
+      "emergency_decel_mps2": null,
+      "emergency_braking": true,
+      "secure_gap_veto": true,
+      "lane_change_secure_gap": true,
+      "emergency_onset": "driver_b",
+      "merge_end_wait": false,
+      "merge_end_wait_distance_m": 25.0,
+      "merge_end_wait_speed_mps": 2.0,
+      "mainline_merge_yield": true,
+      "mainline_merge_yield_distance_m": 60.0,
+      "mainline_merge_yield_decel_mps2": 2.0,
+      "forced_window_mode": "deterministic",
+      "forced_window_min_hazard": 0.02,
+      "mainline_merge_yield_scope": "lane_end",
+      "merge_end_wait_s0_follow_m": null,
+      "merge_end_wait_t_follow_s": null,
+      "merge_impatience": false,
+      "merge_impatience_distance_m": 25.0,
+      "merge_impatience_speed_mps": 1.0,
+      "merge_impatience_hazard_tau_s": 25.0,
+      "merge_impatience_gap_tau_s": 25.0,
+      "merge_impatience_s0_min_m": 0.5,
+      "merge_impatience_t_min_s": 0.1,
+      "lane_learnable": true,
+      "ramp_lane_end_stop": true,
+      "ramp_risk_retain": true,
+      "lane_physical_margin_m": 0.0,
+      "mainline_lane_mode": "courtesy",
+      "mainline_courtesy_zone_m": 300.0,
+      "entry_learned": false
+     }
+    }
+   ],
+   "probes": {},
+   "probe_device": "cpu",
+   "critic_warmup": {
+    "updates": 0,
+    "reason": "looplong critic OFF; direct real-pair share 1.0"
+   },
+   "resumed_from": {
+    "checkpoint": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/policy_latest.pt",
+    "update_count": 192,
+    "sha256": "aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a"
+   },
+   "native_actor_training": {
+    "group": true,
+    "trunk": true,
+    "per_module_lr": 5e-05,
+    "trainable_parameters": 91793,
+    "migration": null
+   },
+   "looplong_recovery": {
+    "checkpoint_sha256": "aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a",
+    "horizon": {
+     "enabled": true,
+     "horizons_s": [
+      10.0,
+      60.0,
+      90.0
+     ],
+     "curriculum_updates": [
+      0.0,
+      191.0,
+      192.0
+     ],
+     "gate_file": "/root/autodl-tmp/c4/candA_f176d7ac9a28/authority_gen/WM2_MEASURED_AUTHORITY.json",
+     "entry_pad_max": [
+      32,
+      192,
+      288
+     ],
+     "allowed_stage": 2
+    },
+    "exploration": {
+     "enabled": true,
+     "curriculum_updates": [
+      180.0,
+      330.0
+     ],
+     "rho": [
+      0.1,
+      0.5
+     ],
+     "persistence_steps": 4.0,
+     "radius_m": 100.0,
+     "long_persistence": true,
+     "persistence_curriculum_updates": [
+      0,
+      150
+     ],
+     "persistence_seconds": [
+      30.0,
+      60.0
+     ],
+     "mode": "additive_accel",
+     "additive_correlation": 0.5
+    },
+    "credit_refusal_sha256": null,
+    "rng_restored": true
+   },
+   "rankcheck_sha256": "b81d9f953aa47d3bc97378fd4e43d53c1f55fe98d8aeda107b5deeb70473e1a7",
+   "updates": [
+    {
+     "update": 192,
+     "returns": -5641.2822265625,
+     "imagination_horizon_s": 60.0,
+     "reward": -181.07669067382812,
+     "cf_rows": 6,
+     "cf_weights": {
+      "individual": 8.9,
+      "group": 9.9,
+      "coop": 8.9,
+      "team": 0.0,
+      "all": 1.0
+     },
+     "B": -10893.3486328125,
+     "D_all": 28.75,
+     "D_i": 37.2763671875,
+     "D_G": 37.0986328125,
+     "C_G": -74.73046875,
+     "M_i": null,
+     "I_i": null,
+     "coop_positive_fraction": 0.0,
+     "n_groups": 1,
+     "n_C_G": 1,
+     "mean_group_size": 3.0,
+     "by_group_size": {
+      "3": {
+       "n": 1,
+       "D_G": 37.0986328125,
+       "C_G": -74.73046875,
+       "coop_positive_fraction": 0.0
+      }
+     },
+     "by_penetration": {
+      "p20": {
+       "n": 1,
+       "D_G": 37.0986328125,
+       "C_G": -74.73046875,
+       "coop_positive_fraction": 0.0
+      }
+     },
+     "antiexploit_quantile": 0.1,
+     "antiexploit_futures": 8,
+     "mean_only_gain_fraction": 0.0,
+     "mean_positive_credit_fraction": 1.0,
+     "pessimistic_positive_credit_fraction": 1.0,
+     "mean_paired_credit": 726.214111328125,
+     "pessimistic_paired_credit": 430.7080383300781,
+     "pessimistic_credit": true,
+     "native_command_mse": 0.014056692831218243,
+     "native_command_abs_deviation": 0.08869150280952454,
+     "native_anchor_feature": 0.16581451892852783,
+     "native_anchor_scale": 0.0,
+     "exploit_ensemble_members": 1,
+     "exploit_epistemic_std": null,
+     "exploit_aleatoric_std": 280.4654235839844,
+     "exploit_residual_samples": 8349,
+     "exploit_residual_rms_mps2": 0.11856092512607574,
+     "exploit_residual_positive_fraction": 0.3748951852321625,
+     "exploit_native_head_calibration_rmse_mps2": null,
+     "exploit_head_calibration_rmse_over_residual_rms": null,
+     "exploit_same_state_head_error_available": false,
+     "native_anchor": false,
+     "native_anchor_penalty": 0.0,
+     "gated300_horizon_s": 300,
+     "gated300_active_rows": [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     "gated300_row_coefficients": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      18.799999237060547,
+      0.0
+     ],
+     "gated300_row_kind": [
+      0,
+      1,
+      2,
+      2,
+      2,
+      3,
+      5
+     ],
+     "gated300_row_start": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "gated300_rows_on_share": 0.0,
+     "gated300_mean_abs_dJ_long": 532.758544921875,
+     "gated300_mean_abs_median_dJ_long": 121.486328125,
+     "gated300_median_pessimistic_sign_agreement": 0.0,
+     "gated300_median_vs_q10_sign_agreement": 0.5,
+     "gated300_long_credit_share": 0.0,
+     "gated300_dense_credit": 206.91197204589844,
+     "gated300_long_credit": 0.0,
+     "gated300_w_long": 1.0,
+     "gated300_reference": "CTRL0",
+     "group_credit_terms": [
+      {
+       "start": 0,
+       "size": 3,
+       "D_G": 37.0986328125,
+       "C_G": -74.73046875,
+       "row": 5,
+       "members": [
+        11,
+        5,
+        44
+       ],
+       "reference": "native",
+       "horizon": "dense start-of-rollout accrued return",
+       "sum_D_i": 111.8291015625,
+       "D_all": 28.75
+      },
+      {
+       "start": 0,
+       "row": 5,
+       "members": [
+        11,
+        5,
+        44
+       ],
+       "reference": "CTRL0",
+       "horizon": "300s raw accrued return improvement (positive better)",
+       "D_G": 397.0810546875,
+       "sum_D_i": 395.89794921875,
+       "C_G": 1.18310546875,
+       "D_all": -60.21044921875,
+       "confident_gain": false,
+       "median": 110.173828125,
+       "q10": -45.585548400878906
+      }
+     ],
+     "confident_group_gain_rows": [],
+     "sampled_marginals": 0,
+     "marginal_advantage": null,
+     "exploit_direct_credit_disabled": true,
+     "direct_real_credit_grad_norm": 0.0,
+     "ttc_budget_mode": "native_relative",
+     "ttc_native_starts": 1,
+     "ttc_excess": 0.26187047362327576,
+     "ttc_penalty": 0.26187047362327576,
+     "ttc_native_cost": 0.020264452323317528,
+     "ttc_policy_cost_native_starts": 0.28213492035865784,
+     "wm_safety_report_only": true,
+     "ttc_penalty_report": 0.26187047362327576,
+     "action_audit": {
+      "active_actions": 8349,
+      "action_unit": "m/s^2",
+      "entropy_nats": -0.0,
+      "entropy_effective_width_mps2": 1.0,
+      "lower_bound_mps2": -3.0,
+      "upper_bound_mps2": 1.2,
+      "saturation_margin_mps2": 0.042,
+      "saturation_low_fraction": 0.0,
+      "saturation_high_fraction": 0.0,
+      "saturation_fraction": 0.0
+     },
+     "metering_like_holds_ge30s": 7,
+     "metering_like_sampled_starts": 8,
+     "metering_like_max_hold_s": 59,
+     "metering_like_definition": ">=2 t0 acting upstream CAVs slower than matched native, uninterrupted >=30s",
+     "exploration_persistence_s": 60.0,
+     "exploration_correlated_active": true,
+     "cf_coverage": {
+      "cf_starts": 1,
+      "n_groups": 1,
+      "group_sizes": [
+       3
+      ],
+      "team_groups": 1,
+      "rows_individual": 3,
+      "rows_flip": 0,
+      "rows_total": 6,
+      "acting_cavs": 18,
+      "cav_in_group_fraction": 0.16666666666666666
+     },
+     "cf_curriculum_position": 191,
+     "start_oversampling": {
+      "features": {
+       "multi_cav": true,
+       "side_by_side": true,
+       "high_share": false,
+       "high_demand": true,
+       "congested": true
+      },
+      "observed_share": 0.20454545454545456,
+      "observed_main_demand_vph": 2291.9999599456787,
+      "m": 1.3161189522741257,
+      "tries": 1,
+      "importance_weight": 1.0,
+      "ess_fraction": 1.0,
+      "candidates": 1,
+      "target_base_rates": {
+       "multi_cav": 1.0,
+       "side_by_side": 1.0,
+       "high_share": 0.0,
+       "high_demand": 1.0,
+       "congested": 1.0
+      },
+      "sampler": "observable_headroom/1",
+      "headroom": 0.31611895227412556,
+      "merge_speed_deficit": 0.2401321679353714,
+      "ramp_queue_pressure": 0.10000000149011612,
+      "max_multiplier": 2.0,
+      "fallback_probability_upper": 9.5367431640625e-07,
+      "importance_weight_is_running_estimate": true
+     },
+     "exploration_rho": 0.12933333333333336,
+     "imagination_horizon_stage": 1,
+     "eslong_sigma": 0.06955053371731244,
+     "eslong_head_parameter_rms": 0.0,
+     "eslong_sigma_relative_head_scale": 0.8140681257915292,
+     "eslong_local_command_sensitivity": 1.859559178352356,
+     "eslong_predicted_command_rms": 0.12933333333333336,
+     "eslong_exploration_std": 0.12933333333333336,
+     "eslong_directions": 2,
+     "eslong_dimension": 137,
+     "eslong_pairs": [
+      {
+       "accepted": 1,
+       "rejected": 1,
+       "on": [
+        [
+         false,
+         false,
+         false,
+         false,
+         false,
+         true,
+         false
+        ]
+       ],
+       "median": [
+        [
+         505.96875,
+         0.0,
+         0.0,
+         429.16015625,
+         -0.21484375,
+         384.203125,
+         0.0
+        ]
+       ]
+      },
+      {
+       "accepted": 1,
+       "rejected": 1,
+       "on": [
+        [
+         false,
+         false,
+         false,
+         false,
+         false,
+         true,
+         false
+        ]
+       ],
+       "median": [
+        [
+         -463.12890625,
+         0.0,
+         0.0,
+         534.58984375,
+         -0.2109375,
+         534.3515625,
+         0.0
+        ]
+       ]
+      }
+     ],
+     "eslong_accepted_pairs": 2,
+     "eslong_rejected_pairs": 2,
+     "eslong_accepted_directions": 2,
+     "eslong_t0_executed_half_difference_rms": [
+      0.049957215785980225,
+      0.081178218126297
+     ],
+     "eslong_perturbed_forwards": 16,
+     "eslong_forwards_per_update": 20,
+     "eslong_forward_workers": 1,
+     "eslong_loss_differences": [
+      -1.3837205171585083,
+      -1.566935658454895
+     ],
+     "eslong_stack_sides": 4,
+     "eslong_stacked_forward_calls": 4,
+     "lean_es_future_indices": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "lean_dense_futures": 8,
+     "grad_norm_dense": 57.13426571694892,
+     "grad_norm_long": 100.34415654427492,
+     "grad_cosine": -0.007819706226201149,
+     "grad_long_scale": 0.5693830880101077,
+     "grad_norm_long_scaled": 57.13426571694892,
+     "grad_norm_long_es": 100.34415654427492,
+     "grad_long_balance": true,
+     "grad_long_futures": [],
+     "grad_group_norms_dense": {
+      "optimizer_0": 57.13426571694892,
+      "residual_head": 57.13426571694892,
+      "own_encoder": 0.0,
+      "report_encoder": 0.0,
+      "attention": 0.0,
+      "group_encoder": 0.0
+     },
+     "grad_group_norms_long": {
+      "optimizer_0": 100.34415654427492,
+      "residual_head": 100.34415654427492,
+      "own_encoder": 0.0,
+      "report_encoder": 0.0,
+      "attention": 0.0,
+      "group_encoder": 0.0
+     },
+     "grad_group_norms_combined": {
+      "optimizer_0": 80.48351651684553,
+      "residual_head": 80.48351651684553,
+      "own_encoder": 0.0,
+      "report_encoder": 0.0,
+      "attention": 0.0,
+      "group_encoder": 0.0
+     },
+     "futures_replayed": 8,
+     "replay_horizon_s": [
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 0,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 92.24809173867106
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 1,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 92.24332539737225
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 2,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 97.26303608715534
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 3,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 97.21317998878658
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 4,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 103.65483747981489
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 5,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 102.65134706161916
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 6,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 104.77892372198403
+      },
+      {
+       "phase": "dense",
+       "start": 0,
+       "future": 7,
+       "replay_horizon_s": 61.0,
+       "full_horizon_s": 300.0,
+       "wall_time_s": 104.24029817432165
+      }
+     ],
+     "replay_seconds_saved_estimate": 3112.066171742365,
+     "memory_spill": {
+      "copied_bytes": 260953476,
+      "copies": 26906,
+      "reuses": 0
+     },
+     "actor_module_grad_norms": {
+      "residual_head": 80.48351651684553,
+      "own_encoder": 0.0,
+      "report_encoder": 0.0,
+      "attention": 0.0,
+      "group_encoder": 0.0
+     },
+     "actor_module_lr": {
+      "residual_head": [
+       5e-05
+      ],
+      "own_encoder": [
+       5e-05
+      ],
+      "report_encoder": [
+       5e-05
+      ],
+      "attention": [
+       5e-05
+      ],
+      "group_encoder": [
+       5e-05
+      ]
+     },
+     "physical_residual_mps2": {
+      "count": 8349,
+      "mean_abs": 0.08869150280952454,
+      "max_abs": 0.4343358278274536,
+      "rms": 0.11856092512607574
+     },
+     "critic_bootstrap": false,
+     "critic_baseline": false,
+     "group_rich_fraction": 1.0,
+     "actor_loss": -0.08274105191230774,
+     "critic_loss": 0.0,
+     "lagrange_multiplier": 0.1,
+     "entropy": 0.0,
+     "actor_grad_norm": 80.48351287841797,
+     "critic_grad_norm": 0.0,
+     "ensemble_disagreement": 3.734224557876587,
+     "return_scale": 2500.717258462915,
+     "action_stats": {
+      "mean": 0.08236677199602127,
+      "std": 0.48553091287612915,
+      "min": -3.9044785499572754,
+      "max": 1.191202163696289
+     },
+     "future_samples": 8,
+     "wall_time_s": 2252.4044530075043,
+     "delay": 37.19541931152344,
+     "throughput": 0.5374463796615601,
+     "smooth": 59.274391174316406,
+     "hard_brake": 0.1571567952632904,
+     "fairness": 0.990543782711029,
+     "cost_ttc": 0.2821349501609802,
+     "source_wait": 143.88125610351562,
+     "total_wait": 181.07667541503906,
+     "lagrange_capped": false,
+     "lagrange_pre_cap": 0.1,
+     "entries": true,
+     "label": "EXPLORATORY-LEAN",
+     "phase_update": 1,
+     "optimizer_update_s": 2252.48368900083,
+     "startup_s": 15.588220618665218,
+     "pilot_worker_memory": [
+      {
+       "root": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/future_workers/9e317cbff05b4d498d478e4e317fcec8",
+       "role": "perturbed_ES",
+       "workers": [
+        {
+         "pid": 78888,
+         "peak_allocated": 22759166976,
+         "peak_reserved": 23303553024,
+         "executed": {
+          "label": "EXPLORATORY-LEAN",
+          "count": 220310.0,
+          "nonzero": 113412.0,
+          "braking_sum": 13915.726296901703,
+          "fraction_nonzero": 0.5147837138577459,
+          "mean_braking": 0.06316429711271256,
+          "min_delta_mps2": -0.5560760498046875,
+          "min_braking_magnitude_mps2": 0.0,
+          "min_executed_acceleration_mps2": -7.972747325897217
+         }
+        }
+       ]
+      },
+      {
+       "root": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300/future_workers/7e50733fce46475586d07211bba6de7f",
+       "role": "dense_backward",
+       "workers": [
+        {
+         "pid": 81607,
+         "peak_allocated": 1350326272,
+         "peak_reserved": 6559891456,
+         "executed": {
+          "label": "EXPLORATORY-LEAN",
+          "count": 20470.0,
+          "nonzero": 12280.0,
+          "braking_sum": 1140.326372742653,
+          "fraction_nonzero": 0.5999022960429897,
+          "mean_braking": 0.055707199450056324,
+          "min_delta_mps2": -0.4343376159667969,
+          "min_braking_magnitude_mps2": 0.0,
+          "min_executed_acceleration_mps2": -3.204453468322754
+         }
+        },
+        {
+         "pid": 81608,
+         "peak_allocated": 1350326272,
+         "peak_reserved": 6574571520,
+         "executed": {
+          "label": "EXPLORATORY-LEAN",
+          "count": 19596.0,
+          "nonzero": 11898.0,
+          "braking_sum": 1087.6417564153671,
+          "fraction_nonzero": 0.6071647274954072,
+          "mean_braking": 0.055503253542323286,
+          "min_delta_mps2": -0.4343376159667969,
+          "min_braking_magnitude_mps2": 0.0,
+          "min_executed_acceleration_mps2": -4.476314544677734
+         }
+        }
+       ]
+      }
+     ],
+     "lean_training_raw_J": {
+      "raw_dJ_vs_CTRL0_dense": 8.6181640625,
+      "raw_dJ_vs_CTRL0_long": 60.2109375,
+      "dense_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "timing": "pre-optimizer training start, K8; NOT frozen independent post-update rescore"
+     },
+     "lean_recipe": {
+      "label": "EXPLORATORY-LEAN",
+      "owner_amendment": "2026-10-31 03:00 MAIN; repaired zero-progress retry; WMFAST ON",
+      "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+      "panel_starts": [
+       {
+        "index": 39780,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963552m1900p05t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 600,
+         "world": "w963552m1900p05t300"
+        }
+       },
+       {
+        "index": 45082,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963625m1900p10t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 2240,
+         "world": "w963625m1900p10t300"
+        }
+       },
+       {
+        "index": 35565,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963495m2400p20t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 900,
+         "world": "w963495m2400p20t300"
+        }
+       },
+       {
+        "index": 64945,
+        "meta": {
+         "arm": "generic_random",
+         "episode": "w963904m2400p40t300__generic_random",
+         "source": "c4_episodes",
+         "start_source": "genrand_plain",
+         "tick": 1700,
+         "world": "w963904m2400p40t300"
+        }
+       }
+      ],
+      "panel_selection": "first4 of original ordered16",
+      "es_future_indices": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "dense_futures": 8,
+      "scoring_futures": 8,
+      "es_selection": "first4 cached ORIGINAL K8 CRN plans; no resampling",
+      "environment": {
+       "WMS_SPEED_REUSE_PANEL": "1",
+       "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+       "WMS_SPEED_PROFILE": "1",
+       "WMS_SPEED_RESCORE_EVERY": "5",
+       "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+       "WMS_SPEED_PARALLEL_FORWARD": "1",
+       "WMS_SPEED_FORWARD_WORKERS": "1",
+       "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".75",
+       "WMS_SPEED_FUTURE_BUDGET_CAP": ".90",
+       "WMS_SPEED_ES_STACK_SIDES": "4",
+       "WMS_SPEED_FUTURE_WORKERS": "2",
+       "WMS_SPEED_FUTURE_VJP_SLOTS": "2",
+       "WMS_SPEED_FUTURE_MEMORY_FRACTION": ".24"
+      },
+      "fresh_zero_start": true,
+      "phase_update_limit": 150,
+      "R4_phase_update": 10,
+      "pool_memory_rule": "coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)",
+      "continuation_only": false,
+      "initialization": "original zero191 full checkpoint; no reinitialization or baseline forwards",
+      "wmfast_stack_sides": 4,
+      "memory_selection": "peer-free admission >=46000MiB; one .75 S4 forward worker; two .24 dense VJP workers; measured coordinator+contexts+peers+2GiB <=min(90% device,45GiB) checked before EVERY pool"
+     },
+     "executed_residual_training": {
+      "scope": "coordinator training rollouts incl replay; final acting-CAV ticks",
+      "count": 101285.0,
+      "fraction_nonzero": 0.5206891444932615,
+      "mean_braking": 0.05415689320515308,
+      "min_delta_mps2": -0.489288330078125
+     },
+     "independent_rescore_skipped": true,
+     "cuda_peak_allocated_bytes": 947825664,
+     "cuda_peak_reserved_bytes": 2654994432
+    }
+   ],
+   "independent_score_before": {
+    "J": 4694.8330078125,
+    "road_delay": 3365.583251953125,
+    "source_wait": 1329.25,
+    "native_relative_gain": 60.1455078125,
+    "hdv_hard_brake_seconds": 2.9375,
+    "critic_tail_included": false,
+    "J_dense": 4694.8330078125,
+    "J_raw_dense": 4694.8330078125,
+    "scoring_phase_position": 191,
+    "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+    "CTRL0_J_dense": 4694.8330078125,
+    "raw_gain_vs_CTRL0_dense": 0.0,
+    "raw_dJ_vs_CTRL0_dense": 0.0,
+    "score_horizon_s": 60.0,
+    "long_horizon_s": 300,
+    "J_long": 32728.30859375,
+    "native_J_long": 33029.0234375,
+    "long_gated_gain": 0.0,
+    "long_rows_on_share": 0.0,
+    "long_mean_abs_dJ": 0.0,
+    "long_sign_agreement": 0.0,
+    "J_raw_long": 32728.30859375,
+    "long_futures": 8,
+    "long_credit_reference": "CTRL0",
+    "CTRL0_J_long": 32728.30859375,
+    "raw_gain_vs_CTRL0_long": 0.0,
+    "raw_dJ_vs_CTRL0_long": 0.0,
+    "composite_gated_score": 4694.8330078125,
+    "executed_residual": {
+     "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+     "count": 111985.0,
+     "fraction_nonzero": 0.0,
+     "mean_braking": 0.0,
+     "mean_abs_delta": 0.0,
+     "mean_delta": 0.0
+    }
+   },
+   "native_curve": [
+    {
+     "schema": "EXPLORATORY-LEAN_native_panel/1",
+     "label": "EXPLORATORY-LEAN",
+     "deployment_authorized": false,
+     "update": 191,
+     "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+     "policy_J": [
+      127.66284942626953,
+      2046.7354736328125,
+      3840.69287109375,
+      5585.349609375
+     ],
+     "native_J": [
+      127.86273193359375,
+      2077.880859375,
+      3892.72705078125,
+      5652.0966796875
+     ],
+     "delta_per_start": [
+      -0.19988250732421875,
+      -31.1453857421875,
+      -52.0341796875,
+      -66.7470703125
+     ],
+     "mean_delta": -37.53162956237793,
+     "passed": true,
+     "critic_tail_included": false,
+     "matched_horizon_scores": [
+      {
+       "J": 127.66284942626953,
+       "road_delay": 127.66284942626953,
+       "source_wait": 0.0,
+       "native_relative_gain": 0.19988250732421875,
+       "hdv_hard_brake_seconds": 0.0,
+       "critic_tail_included": false,
+       "native_J": 127.86273193359375,
+       "J_dense": 127.66284942626953,
+       "J_raw_dense": 127.66284942626953,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 127.66284942626953,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 10.0,
+       "long_horizon_s": 300,
+       "J_long": 12027.8466796875,
+       "native_J_long": 11721.318359375,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 12027.8466796875,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 12027.8466796875,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 127.66284942626953,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 24164.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 2046.7354736328125,
+       "road_delay": 2008.2354736328125,
+       "source_wait": 38.5,
+       "native_relative_gain": 31.1453857421875,
+       "hdv_hard_brake_seconds": 3.6875,
+       "critic_tail_included": false,
+       "native_J": 2077.880859375,
+       "J_dense": 2046.7354736328125,
+       "J_raw_dense": 2046.7354736328125,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 2046.7354736328125,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 15138.4072265625,
+       "native_J_long": 14529.9892578125,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 15138.4072265625,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 15138.4072265625,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 2046.7354736328125,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 54089.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 3840.69287109375,
+       "road_delay": 1801.9427490234375,
+       "source_wait": 2038.75,
+       "native_relative_gain": 52.0341796875,
+       "hdv_hard_brake_seconds": 0.1875,
+       "critic_tail_included": false,
+       "native_J": 3892.72705078125,
+       "J_dense": 3840.69287109375,
+       "J_raw_dense": 3840.69287109375,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 3840.69287109375,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 28017.27734375,
+       "native_J_long": 28623.984375,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 28017.27734375,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 28017.27734375,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 3840.69287109375,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 101419.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      },
+      {
+       "J": 5585.349609375,
+       "road_delay": 2440.974853515625,
+       "source_wait": 3144.375,
+       "native_relative_gain": 66.7470703125,
+       "hdv_hard_brake_seconds": 1.625,
+       "critic_tail_included": false,
+       "native_J": 5652.0966796875,
+       "J_dense": 5585.349609375,
+       "J_raw_dense": 5585.349609375,
+       "scoring_phase_position": 191,
+       "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+       "CTRL0_J_dense": 5585.349609375,
+       "raw_gain_vs_CTRL0_dense": 0.0,
+       "raw_dJ_vs_CTRL0_dense": 0.0,
+       "score_horizon_s": 60.0,
+       "long_horizon_s": 300,
+       "J_long": 32008.30078125,
+       "native_J_long": 34166.46875,
+       "long_gated_gain": 0.0,
+       "long_rows_on_share": 0.0,
+       "long_mean_abs_dJ": 0.0,
+       "long_sign_agreement": 0.0,
+       "J_raw_long": 32008.30078125,
+       "long_futures": 8,
+       "long_credit_reference": "CTRL0",
+       "CTRL0_J_long": 32008.30078125,
+       "raw_gain_vs_CTRL0_long": 0.0,
+       "raw_dJ_vs_CTRL0_long": 0.0,
+       "composite_gated_score": 5585.349609375,
+       "executed_residual": {
+        "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+        "count": 196343.0,
+        "fraction_nonzero": 0.0,
+        "mean_braking": 0.0,
+        "mean_abs_delta": 0.0,
+        "mean_delta": 0.0
+       }
+      }
+     ],
+     "panel_horizons_s": [
+      10.0,
+      60.0,
+      60.0,
+      60.0
+     ],
+     "panel_horizon_s": null,
+     "panel_long_horizons_s": [
+      300,
+      300,
+      300,
+      300
+     ]
+    }
+   ],
+   "gate_panel": {
+    "file": "/root/autodl-tmp/c4/restart20261026/arm/gate_panel.json",
+    "n": 4,
+    "sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+    "J_before": [
+     127.66284942626953,
+     2046.7354736328125,
+     3840.69287109375,
+     5585.349609375
+    ]
+   },
+   "frozen_scoring_baseline": {
+    "schema": "gatemeas_phase_baseline/1",
+    "update": 191,
+    "scoring_phase_position": 191,
+    "world_model_ids": [
+     "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+    ],
+    "long_credit": {
+     "enabled": true,
+     "mode": "gain_only",
+     "cct1_file": "",
+     "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+     "w_long": 1.0,
+     "score_training_horizon": true,
+     "estimator": "antithetic",
+     "es_directions": 2,
+     "es_sigma": 0.0,
+     "ctrl0_reference": true,
+     "k16": false,
+     "require_objective_match": true
+    },
+    "independent": {
+     "J": 4694.8330078125,
+     "road_delay": 3365.583251953125,
+     "source_wait": 1329.25,
+     "native_relative_gain": 60.1455078125,
+     "hdv_hard_brake_seconds": 2.9375,
+     "critic_tail_included": false,
+     "J_dense": 4694.8330078125,
+     "J_raw_dense": 4694.8330078125,
+     "scoring_phase_position": 191,
+     "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+     "CTRL0_J_dense": 4694.8330078125,
+     "raw_gain_vs_CTRL0_dense": 0.0,
+     "raw_dJ_vs_CTRL0_dense": 0.0,
+     "score_horizon_s": 60.0,
+     "long_horizon_s": 300,
+     "J_long": 32728.30859375,
+     "native_J_long": 33029.0234375,
+     "long_gated_gain": 0.0,
+     "long_rows_on_share": 0.0,
+     "long_mean_abs_dJ": 0.0,
+     "long_sign_agreement": 0.0,
+     "J_raw_long": 32728.30859375,
+     "long_futures": 8,
+     "long_credit_reference": "CTRL0",
+     "CTRL0_J_long": 32728.30859375,
+     "raw_gain_vs_CTRL0_long": 0.0,
+     "raw_dJ_vs_CTRL0_long": 0.0,
+     "composite_gated_score": 4694.8330078125,
+     "executed_residual": {
+      "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+      "count": 111985.0,
+      "fraction_nonzero": 0.0,
+      "mean_braking": 0.0,
+      "mean_abs_delta": 0.0,
+      "mean_delta": 0.0
+     }
+    },
+    "panel": [
+     {
+      "J": 127.66284942626953,
+      "road_delay": 127.66284942626953,
+      "source_wait": 0.0,
+      "native_relative_gain": 0.19988250732421875,
+      "hdv_hard_brake_seconds": 0.0,
+      "critic_tail_included": false,
+      "J_dense": 127.66284942626953,
+      "J_raw_dense": 127.66284942626953,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 127.66284942626953,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 10.0,
+      "long_horizon_s": 300,
+      "J_long": 12027.8466796875,
+      "native_J_long": 11721.318359375,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 12027.8466796875,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 12027.8466796875,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 127.66284942626953,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 24164.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     },
+     {
+      "J": 2046.7354736328125,
+      "road_delay": 2008.2354736328125,
+      "source_wait": 38.5,
+      "native_relative_gain": 31.1453857421875,
+      "hdv_hard_brake_seconds": 3.6875,
+      "critic_tail_included": false,
+      "J_dense": 2046.7354736328125,
+      "J_raw_dense": 2046.7354736328125,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 2046.7354736328125,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "J_long": 15138.4072265625,
+      "native_J_long": 14529.9892578125,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 15138.4072265625,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 15138.4072265625,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 2046.7354736328125,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 54089.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     },
+     {
+      "J": 3840.69287109375,
+      "road_delay": 1801.9427490234375,
+      "source_wait": 2038.75,
+      "native_relative_gain": 52.0341796875,
+      "hdv_hard_brake_seconds": 0.1875,
+      "critic_tail_included": false,
+      "J_dense": 3840.69287109375,
+      "J_raw_dense": 3840.69287109375,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 3840.69287109375,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "J_long": 28017.27734375,
+      "native_J_long": 28623.984375,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 28017.27734375,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 28017.27734375,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 3840.69287109375,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 101419.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     },
+     {
+      "J": 5585.349609375,
+      "road_delay": 2440.974853515625,
+      "source_wait": 3144.375,
+      "native_relative_gain": 66.7470703125,
+      "hdv_hard_brake_seconds": 1.625,
+      "critic_tail_included": false,
+      "J_dense": 5585.349609375,
+      "J_raw_dense": 5585.349609375,
+      "scoring_phase_position": 191,
+      "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+      "CTRL0_J_dense": 5585.349609375,
+      "raw_gain_vs_CTRL0_dense": 0.0,
+      "raw_dJ_vs_CTRL0_dense": 0.0,
+      "score_horizon_s": 60.0,
+      "long_horizon_s": 300,
+      "J_long": 32008.30078125,
+      "native_J_long": 34166.46875,
+      "long_gated_gain": 0.0,
+      "long_rows_on_share": 0.0,
+      "long_mean_abs_dJ": 0.0,
+      "long_sign_agreement": 0.0,
+      "J_raw_long": 32008.30078125,
+      "long_futures": 8,
+      "long_credit_reference": "CTRL0",
+      "CTRL0_J_long": 32008.30078125,
+      "raw_gain_vs_CTRL0_long": 0.0,
+      "raw_dJ_vs_CTRL0_long": 0.0,
+      "composite_gated_score": 5585.349609375,
+      "executed_residual": {
+       "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+       "count": 196343.0,
+       "fraction_nonzero": 0.0,
+       "mean_braking": 0.0,
+       "mean_abs_delta": 0.0,
+       "mean_delta": 0.0
+      }
+     }
+    ],
+    "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+    "comparison": "composite J against this phase baseline; raw CTRL0 contrasts separate"
+   },
+   "looplong_initial_boundary": {
+    "short_nonregression": true,
+    "previous_horizon_s": 60,
+    "horizon_s": 90,
+    "gate_file": "/root/autodl-tmp/c4/candA_f176d7ac9a28/authority_gen/WM2_MEASURED_AUTHORITY.json",
+    "gate_sha256": "865843f07c9f71e5090b4226a889fdb7593f4c25f3db4280bb11f60ee388eeff",
+    "wm": {
+     "checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt",
+     "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+     "sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
+    },
+    "schema": "looplong_boundary/1",
+    "accepted_after_cycle": 2,
+    "flags": {
+     "wm_loss": false,
+     "auto_horizon": true,
+     "long_credit": true,
+     "speed": true,
+     "hot_swap": true,
+     "exploration": true
+    },
+    "coop_credit": true,
+    "pairs": "/root/autodl-tmp/c4/restart20261026/arm/loop/data/pairs_c02.a1",
+    "pairing_receipt": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/pairing_c02.a1.json",
+    "policy_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/returns_c02.a1.npz",
+    "native_returns": "/root/autodl-tmp/c4/restart20261026/arm/loop/returns/native_returns_c02.a1.npz",
+    "source_policy_sha256": "44f3eb66aba9a8598a1fd8727074389cb8f797d1e2d2f6cdf223d29fb0e7f128",
+    "source_policy_checkpoint": "/root/autodl-tmp/c4/restart20261026/arm/loop/policy/c02.h60b.r2/policy_latest.pt",
+    "imagination_horizon_s": 90,
+    "threshold_sha256": "c479b2dec8716adeb1d518710f75f3352612f33f2fb7b58622f400ed462c8966",
+    "acceptance": "/root/autodl-tmp/c4/restart20261026/arm/loop/checks/c02/ACCEPT.json",
+    "acceptance_sha256": "c7a766ec35a13a27bf3b19d55afb0ed13e20379b712490c7c770febda05379ba",
+    "cct1_file": "/root/autodl-tmp/c4/candA_f176d7ac9a28/authority_gen/CCT1_WM2_pairs300.json",
+    "cct1_sha256": "1ae6b1011c23ce59e466a9bd0fe043b398ff7716c58494073e472a00b7361f00"
+   },
+   "looplong_long_credit": null,
+   "start_focus": {
+    "fraction": 0.6,
+    "cell_windows": {
+     "m2400p20": 5533,
+     "m2400p40": 5326,
+     "m2700p20": 5284,
+     "m2700p40": 4949
+    },
+    "remaining_windows": 41116,
+    "headroom_tilt": "observable_headroom/1; weight=1+headroom in [1,2]"
+   },
+   "effective_config_before_updates": {
+    "batch_size": 1,
+    "horizon": 10,
+    "gamma": 1.0,
+    "lambda_": 1.0,
+    "actor_lr": 5e-05,
+    "critic_lr": 0.0003,
+    "entropy_weight": 0.001,
+    "uncertainty_weight": 0.0,
+    "ttc_budget": 3.6,
+    "dual_lr": 0.01,
+    "lagrange_init": 0.1,
+    "grad_clip": 100.0,
+    "target_tau": 0.02,
+    "return_ema": 0.99,
+    "checkpoint_every": 1,
+    "validation_every": 100,
+    "lane_pg_weight": 1.0,
+    "lane_entropy_weight": 0.001,
+    "policy_lane_actions": true,
+    "entropy_target": null,
+    "lane_entropy_target": null,
+    "alpha_lr": 0.0003,
+    "checkpoint_imagination": true,
+    "imagination_microbatch": 1,
+    "imagination_checkpoint_segment": 2,
+    "imagination_offload_futures": true,
+    "imagination_offload_saved_tensors": true,
+    "imagination_skip_zero_vjp": true,
+    "imagination_replay_dense_prefix": true,
+    "long_grad_balance": true,
+    "long_grad_reset_actor_adam": true,
+    "imagine_entries": true,
+    "entry_pad_max": 32,
+    "future_samples": 8,
+    "future_driver_scale": 1.0,
+    "future_embedding_std": 0.05,
+    "future_accel_noise": false,
+    "future_accel_scale": 1.0,
+    "future_accel_sigma_max": 1.0,
+    "future_seed": 0,
+    "source_wait_grad": true,
+    "critic_entry_backlog": true,
+    "cav_exec_cap": "idm",
+    "entry_insert_rule": "sumo_like_v2",
+    "imagination_grad_decay": 1.0,
+    "credit_profile_every": 0,
+    "ttc_budget_mode": "native_relative",
+    "ttc_native_margin": 0.0,
+    "lagrange_scaled": true,
+    "alpha_min": 0.0,
+    "lagrange_max": 2.0,
+    "lagrange_decay": 0.0,
+    "entry_queue_state": true,
+    "entrant_control": true,
+    "entrant_learned_mix": true,
+    "deterministic_crn": true,
+    "wm_physics_overrides": {},
+    "entrance_zone_native": false,
+    "entrance_zone_main_m": 25.0,
+    "entrance_zone_ramp_m": 25.0,
+    "real_return_mix": 0.3,
+    "real_return_scale": 10000.0,
+    "actor_gradient_audit": true,
+    "native_residual_train_group": true,
+    "native_residual_train_trunk": true,
+    "low_penetration_horizon_cap": true,
+    "wm_safety_report_only": true,
+    "pessimistic_credit": true,
+    "native_anchor": false,
+    "native_anchor_calibration": "",
+    "exploit_ensemble_pessimism": false,
+    "exploit_monitor": true,
+    "exploit_stop_on_conflict": false,
+    "exploit_head_rmse_mps2": 0.0,
+    "exploit_disable_direct_credit": true,
+    "real_credit_individual_floor": true
+   },
+   "effective_reward_before_updates": {
+    "delay": 1.0,
+    "throughput": 0.0,
+    "smooth": 0.0,
+    "hard_brake": 0.0,
+    "fairness": 0.0,
+    "ttc_limit_s": 3.0,
+    "ttc_pairs": "cav_follower",
+    "merge_discharge": 0.0,
+    "free_speed": 0.0,
+    "free_speed_time_gap_s": 3.0,
+    "free_speed_range_m": 100.0
+   },
+   "traceback": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/policy14_cli.py\", line 539, in main\n    summary.update(seed=args.seed, smoke=args.smoke, device=args.device,\n                  ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py\", line 140, in update\n    metrics = replacement(trainer, *args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_cli.py\", line 149, in update\n    metrics = original_update(trainer, *a, **kw)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_wmfast.py\", line 122, in update\n    return original_update(trainer, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/speedprof.py\", line 77, in measured\n    return function(trainer, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 2087, in update\n    extra.update(eslong.backward(self, dense_loss, es_grads) if es_grads is not None else\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/eslong.py\", line 450, in backward\n    dense = (torch.autograd.grad(dense_loss, params, allow_unused=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/__init__.py\", line 503, in grad\n    result = _engine_run_backward(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/graph.py\", line 829, in _engine_run_backward\n    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/function.py\", line 311, in apply\n    return user_fn(self, *args)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/imagination_memory.py\", line 333, in backward\n    return backward_futures(trainer, batch, cfg, kwargs, ctx.tape,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_replay_guard.py\", line 23, in backward\n    return original(trainer, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 344, in backward_futures\n    for task, result in zip(tasks, results):\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/tools/candB/pilot_lean.py\", line 103, in map\n    raise RuntimeError(error.read_text())\nRuntimeError: Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 448, in _main\n    result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 264, in _vjp\n    result = trainer.imagine(small, **{**kwargs, 'variants': variants},\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 1237, in imagine\n    external_callback = self.controller_factory(\n                        ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/bridge.py\", line 142, in make_cav_controller\n    raise ValueError(\"native residual needs native command, native lanes, no policy lane rules\")\nValueError: native residual needs native command, native lanes, no policy lane rules\n\n",
+   "error": "RuntimeError: Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 448, in _main\n    result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/parallel_futures.py\", line 264, in _vjp\n    result = trainer.imagine(small, **{**kwargs, 'variants': variants},\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/dreamer.py\", line 1237, in imagine\n    external_callback = self.controller_factory(\n                        ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031/src/wms/control/bridge.py\", line 142, in make_cav_controller\n    raise ValueError(\"native residual needs native command, native lanes, no policy lane rules\")\nValueError: native residual needs native command, native lanes, no policy lane rules\n",
+   "label": "EXPLORATORY-LEAN",
+   "deployment_authorized": false,
+   "exploratory_authority_sha256": "b81d9f953aa47d3bc97378fd4e43d53c1f55fe98d8aeda107b5deeb70473e1a7",
+   "lean_recipe": {
+    "label": "EXPLORATORY-LEAN",
+    "owner_amendment": "2026-10-31 05:25 MAIN; peer-present gpuA S2 continuation",
+    "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+    "panel_starts": [
+     {
+      "index": 39780,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963552m1900p05t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 600,
+       "world": "w963552m1900p05t300"
+      }
+     },
+     {
+      "index": 45082,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963625m1900p10t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 2240,
+       "world": "w963625m1900p10t300"
+      }
+     },
+     {
+      "index": 35565,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963495m2400p20t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 900,
+       "world": "w963495m2400p20t300"
+      }
+     },
+     {
+      "index": 64945,
+      "meta": {
+       "arm": "generic_random",
+       "episode": "w963904m2400p40t300__generic_random",
+       "source": "c4_episodes",
+       "start_source": "genrand_plain",
+       "tick": 1700,
+       "world": "w963904m2400p40t300"
+      }
+     }
+    ],
+    "panel_selection": "first4 of original ordered16",
+    "es_future_indices": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "dense_futures": 8,
+    "scoring_futures": 8,
+    "es_selection": "first4 cached ORIGINAL K8 CRN plans; no resampling",
+    "environment": {
+     "WMS_SPEED_REUSE_PANEL": "1",
+     "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+     "WMS_SPEED_PROFILE": "1",
+     "WMS_SPEED_RESCORE_EVERY": "5",
+     "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+     "WMS_SPEED_PARALLEL_FORWARD": "1",
+     "WMS_SPEED_FORWARD_WORKERS": "1",
+     "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".28",
+     "WMS_SPEED_FUTURE_BUDGET_CAP": ".90",
+     "WMS_SPEED_ES_STACK_SIDES": "2",
+     "WMS_SPEED_FUTURE_WORKERS": "2",
+     "WMS_SPEED_FUTURE_VJP_SLOTS": "2",
+     "WMS_SPEED_FUTURE_MEMORY_FRACTION": ".16"
+    },
+    "fresh_zero_start": true,
+    "phase_update_limit": 150,
+    "R4_phase_update": 10,
+    "pool_memory_rule": "coordinator+worker caps+contexts+sampled peers+2GiB <= min(90% device,45GiB)",
+    "continuation_only": true,
+    "initialization": "ordinary full resume; original fresh-zero phase retained",
+    "wmfast_stack_sides": 2,
+    "memory_selection": "peer-aware admission: sampled peers<=23000MiB and free>=21000MiB; one .28 S2 forward worker; two .16 dense VJP workers; measured coordinator+worker caps+contexts+sampled peers+2GiB <=min(90% device,45GiB) checked before EVERY pool; total gpuA kept <=~44GB next to the verdict peer"
+   }
+  },
+  "pilot_WMFAST_CONTINUATION_PROOF.json": {
+   "label": "EXPLORATORY-LEAN",
+   "same_phase": true,
+   "baseline_recomputed": false,
+   "phase_origin": 191,
+   "saved_update": 192,
+   "phase_updates": 150,
+   "original_R4_phase_update": 10,
+   "parent": "/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300",
+   "seed": 965140,
+   "authority_sha256": "b81d9f953aa47d3bc97378fd4e43d53c1f55fe98d8aeda107b5deeb70473e1a7",
+   "parent_sha256": {
+    "policy_latest.pt": "aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a",
+    "RUN_SUMMARY.json": "83dac227dcee2cbd46a667da905dc32b678ab50eb7a664158651023857fabf1e",
+    "frozen_scoring_baseline.json": "744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680"
+   },
+   "restored_state_checks": {
+    "policy": true,
+    "group_encoder": true,
+    "critic": true,
+    "target_critic": true,
+    "actor_optimizer": true,
+    "critic_optimizer": true,
+    "update_count": true
+   },
+   "before_seconds_per_update": [
+    2252.48368900083
+   ],
+   "environment": {
+    "WMS_SPEED_REUSE_PANEL": "1",
+    "WMS_SPEED_SKIP_GRAD_DIAGNOSTICS": "1",
+    "WMS_SPEED_PROFILE": "1",
+    "WMS_SPEED_RESCORE_EVERY": "5",
+    "WMS_SPEED_PILOT_FORWARD_POOL": "1",
+    "WMS_SPEED_PARALLEL_FORWARD": "1",
+    "WMS_SPEED_FORWARD_WORKERS": "1",
+    "WMS_SPEED_FORWARD_MEMORY_FRACTION": ".28",
+    "WMS_SPEED_FUTURE_BUDGET_CAP": ".90",
+    "WMS_SPEED_ES_STACK_SIDES": "2",
+    "WMS_SPEED_FUTURE_WORKERS": "2",
+    "WMS_SPEED_FUTURE_VJP_SLOTS": "2",
+    "WMS_SPEED_FUTURE_MEMORY_FRACTION": ".16"
+   },
+   "rng_restored_exact": true,
+   "sampler_restored_exact": true,
+   "baseline_bytes_identical": true
+  },
+  "frozen_scoring_baseline.json": {
+   "schema": "gatemeas_phase_baseline/1",
+   "update": 191,
+   "scoring_phase_position": 191,
+   "world_model_ids": [
+    "651cbae0b27ae7da35debe1d1b2835c35faca9ccd4ac01590060efdef54b84c0"
+   ],
+   "long_credit": {
+    "enabled": true,
+    "mode": "gain_only",
+    "cct1_file": "",
+    "cct2_file": "authority/CCT2_{wm_sha256}_mix.json",
+    "w_long": 1.0,
+    "score_training_horizon": true,
+    "estimator": "antithetic",
+    "es_directions": 2,
+    "es_sigma": 0.0,
+    "ctrl0_reference": true,
+    "k16": false,
+    "require_objective_match": true
+   },
+   "independent": {
+    "J": 4694.8330078125,
+    "road_delay": 3365.583251953125,
+    "source_wait": 1329.25,
+    "native_relative_gain": 60.1455078125,
+    "hdv_hard_brake_seconds": 2.9375,
+    "critic_tail_included": false,
+    "J_dense": 4694.8330078125,
+    "J_raw_dense": 4694.8330078125,
+    "scoring_phase_position": 191,
+    "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+    "CTRL0_J_dense": 4694.8330078125,
+    "raw_gain_vs_CTRL0_dense": 0.0,
+    "raw_dJ_vs_CTRL0_dense": 0.0,
+    "score_horizon_s": 60.0,
+    "long_horizon_s": 300,
+    "J_long": 32728.30859375,
+    "native_J_long": 33029.0234375,
+    "long_gated_gain": 0.0,
+    "long_rows_on_share": 0.0,
+    "long_mean_abs_dJ": 0.0,
+    "long_sign_agreement": 0.0,
+    "J_raw_long": 32728.30859375,
+    "long_futures": 8,
+    "long_credit_reference": "CTRL0",
+    "CTRL0_J_long": 32728.30859375,
+    "raw_gain_vs_CTRL0_long": 0.0,
+    "raw_dJ_vs_CTRL0_long": 0.0,
+    "composite_gated_score": 4694.8330078125,
+    "executed_residual": {
+     "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+     "count": 111985.0,
+     "fraction_nonzero": 0.0,
+     "mean_braking": 0.0,
+     "mean_abs_delta": 0.0,
+     "mean_delta": 0.0
+    }
+   },
+   "panel": [
+    {
+     "J": 127.66284942626953,
+     "road_delay": 127.66284942626953,
+     "source_wait": 0.0,
+     "native_relative_gain": 0.19988250732421875,
+     "hdv_hard_brake_seconds": 0.0,
+     "critic_tail_included": false,
+     "J_dense": 127.66284942626953,
+     "J_raw_dense": 127.66284942626953,
+     "scoring_phase_position": 191,
+     "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+     "CTRL0_J_dense": 127.66284942626953,
+     "raw_gain_vs_CTRL0_dense": 0.0,
+     "raw_dJ_vs_CTRL0_dense": 0.0,
+     "score_horizon_s": 10.0,
+     "long_horizon_s": 300,
+     "J_long": 12027.8466796875,
+     "native_J_long": 11721.318359375,
+     "long_gated_gain": 0.0,
+     "long_rows_on_share": 0.0,
+     "long_mean_abs_dJ": 0.0,
+     "long_sign_agreement": 0.0,
+     "J_raw_long": 12027.8466796875,
+     "long_futures": 8,
+     "long_credit_reference": "CTRL0",
+     "CTRL0_J_long": 12027.8466796875,
+     "raw_gain_vs_CTRL0_long": 0.0,
+     "raw_dJ_vs_CTRL0_long": 0.0,
+     "composite_gated_score": 127.66284942626953,
+     "executed_residual": {
+      "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+      "count": 24164.0,
+      "fraction_nonzero": 0.0,
+      "mean_braking": 0.0,
+      "mean_abs_delta": 0.0,
+      "mean_delta": 0.0
+     }
+    },
+    {
+     "J": 2046.7354736328125,
+     "road_delay": 2008.2354736328125,
+     "source_wait": 38.5,
+     "native_relative_gain": 31.1453857421875,
+     "hdv_hard_brake_seconds": 3.6875,
+     "critic_tail_included": false,
+     "J_dense": 2046.7354736328125,
+     "J_raw_dense": 2046.7354736328125,
+     "scoring_phase_position": 191,
+     "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+     "CTRL0_J_dense": 2046.7354736328125,
+     "raw_gain_vs_CTRL0_dense": 0.0,
+     "raw_dJ_vs_CTRL0_dense": 0.0,
+     "score_horizon_s": 60.0,
+     "long_horizon_s": 300,
+     "J_long": 15138.4072265625,
+     "native_J_long": 14529.9892578125,
+     "long_gated_gain": 0.0,
+     "long_rows_on_share": 0.0,
+     "long_mean_abs_dJ": 0.0,
+     "long_sign_agreement": 0.0,
+     "J_raw_long": 15138.4072265625,
+     "long_futures": 8,
+     "long_credit_reference": "CTRL0",
+     "CTRL0_J_long": 15138.4072265625,
+     "raw_gain_vs_CTRL0_long": 0.0,
+     "raw_dJ_vs_CTRL0_long": 0.0,
+     "composite_gated_score": 2046.7354736328125,
+     "executed_residual": {
+      "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+      "count": 54089.0,
+      "fraction_nonzero": 0.0,
+      "mean_braking": 0.0,
+      "mean_abs_delta": 0.0,
+      "mean_delta": 0.0
+     }
+    },
+    {
+     "J": 3840.69287109375,
+     "road_delay": 1801.9427490234375,
+     "source_wait": 2038.75,
+     "native_relative_gain": 52.0341796875,
+     "hdv_hard_brake_seconds": 0.1875,
+     "critic_tail_included": false,
+     "J_dense": 3840.69287109375,
+     "J_raw_dense": 3840.69287109375,
+     "scoring_phase_position": 191,
+     "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+     "CTRL0_J_dense": 3840.69287109375,
+     "raw_gain_vs_CTRL0_dense": 0.0,
+     "raw_dJ_vs_CTRL0_dense": 0.0,
+     "score_horizon_s": 60.0,
+     "long_horizon_s": 300,
+     "J_long": 28017.27734375,
+     "native_J_long": 28623.984375,
+     "long_gated_gain": 0.0,
+     "long_rows_on_share": 0.0,
+     "long_mean_abs_dJ": 0.0,
+     "long_sign_agreement": 0.0,
+     "J_raw_long": 28017.27734375,
+     "long_futures": 8,
+     "long_credit_reference": "CTRL0",
+     "CTRL0_J_long": 28017.27734375,
+     "raw_gain_vs_CTRL0_long": 0.0,
+     "raw_dJ_vs_CTRL0_long": 0.0,
+     "composite_gated_score": 3840.69287109375,
+     "executed_residual": {
+      "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+      "count": 101419.0,
+      "fraction_nonzero": 0.0,
+      "mean_braking": 0.0,
+      "mean_abs_delta": 0.0,
+      "mean_delta": 0.0
+     }
+    },
+    {
+     "J": 5585.349609375,
+     "road_delay": 2440.974853515625,
+     "source_wait": 3144.375,
+     "native_relative_gain": 66.7470703125,
+     "hdv_hard_brake_seconds": 1.625,
+     "critic_tail_included": false,
+     "J_dense": 5585.349609375,
+     "J_raw_dense": 5585.349609375,
+     "scoring_phase_position": 191,
+     "score_rule": "J_dense - w_long * q10(gated paired improvement at H_long)",
+     "CTRL0_J_dense": 5585.349609375,
+     "raw_gain_vs_CTRL0_dense": 0.0,
+     "raw_dJ_vs_CTRL0_dense": 0.0,
+     "score_horizon_s": 60.0,
+     "long_horizon_s": 300,
+     "J_long": 32008.30078125,
+     "native_J_long": 34166.46875,
+     "long_gated_gain": 0.0,
+     "long_rows_on_share": 0.0,
+     "long_mean_abs_dJ": 0.0,
+     "long_sign_agreement": 0.0,
+     "J_raw_long": 32008.30078125,
+     "long_futures": 8,
+     "long_credit_reference": "CTRL0",
+     "CTRL0_J_long": 32008.30078125,
+     "raw_gain_vs_CTRL0_long": 0.0,
+     "raw_dJ_vs_CTRL0_long": 0.0,
+     "composite_gated_score": 5585.349609375,
+     "executed_residual": {
+      "scope": "deterministic paired rescore, group rows, acting CAV physics ticks",
+      "count": 196343.0,
+      "fraction_nonzero": 0.0,
+      "mean_braking": 0.0,
+      "mean_abs_delta": 0.0,
+      "mean_delta": 0.0
+     }
+    }
+   ],
+   "panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+   "comparison": "composite J against this phase baseline; raw CTRL0 contrasts separate"
+  }
+ },
+ "updates": []
+}
