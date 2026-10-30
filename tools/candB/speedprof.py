@@ -12,7 +12,7 @@ REMOTE = r'''
 import json, os, sys, time
 from pathlib import Path
 root = Path(sys.argv[1])
-forbidden = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth')
+forbidden = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth', 'vtype')
 assert root.is_absolute() and not any(s in str(root).lower() for s in forbidden)
 out = dict(root=str(root), epoch=time.time(), stages={})
 for name in ('OWNERSHIP.json', 'dry_OWNERSHIP.json', 'pilot_OWNERSHIP.json',

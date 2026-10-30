@@ -1,0 +1,25 @@
+{
+ "production_training_launched": false,
+ "pilot_processes_modified": false,
+ "gpu_probe": {
+  "host": "gpuR",
+  "owned_pid": 450659,
+  "completed": true,
+  "result": "SPEEDPROF_GPU.json",
+  "allocator_fraction_cap": 0.06,
+  "allocator_peak_reserved_bytes": 27262976,
+  "precondition": "empty compute-process list, >8 GiB free, 24 GiB card",
+  "supervision": "initial local SSH capture timed out at 300 s; same owned process was observed to completion and its successful result copied; no second GPU probe launched",
+  "production_timing": false
+ },
+ "cpu_verification": {
+  "new_tests_and_pilot_adapter": "21 passed; SPEEDPROF_tests.json",
+  "regression_initial": "82 passed, one fixture-import failure, five heavyweight cases deselected; SPEEDPROF_regressions.json",
+  "regression_retry": "83 passed, five deselected; SPEEDPROF_regressions_retry.json",
+  "fixture_import_correction": "pytest --import-mode=importlib makes test_eslong importable by cloudpickle workers; no production worker changes",
+  "earlier_broad_attempts": "120 s and 600 s local SSH captures timed out; no final verdict retained, not counted as passes; matching owned pytest command was confirmed exited before proceeding",
+  "kernel_probe": "completed; SPEEDPROF_kernel_probe.json",
+  "isolation": "nice19, CUDA hidden, one thread per CPU worker; owned remote source root only"
+ },
+ "source_notes": "c10f73f7 contains the verified execution controls; subsequent edits add measurement/durable-capture tooling only"
+}

@@ -1,0 +1,23 @@
+{
+ "host": "gpuR",
+ "root": "/root/autodl-tmp/c4/speedprof_CPU_20261030",
+ "start_epoch": 1793373891.4923115,
+ "seconds": 130.56076335906982,
+ "command": [
+  "-m",
+  "pytest",
+  "--import-mode=importlib",
+  "-q",
+  "tests/unit/test_eslong.py",
+  "tests/unit/test_gated300.py",
+  "tests/unit/test_gatemeas.py",
+  "tests/unit/test_candb_integration.py",
+  "tests/unit/test_longgrad.py",
+  "-k",
+  "not test_real_residual_wm_entrants_crn_and_dense_trunk_gradients and not test_real_wm_ctrl0_zero_identity_crn_entrants_and_cpu_update"
+ ],
+ "returncode": 0,
+ "remote_receipt": "PROBE_1793373891492235800.json",
+ "stdout": "........................................................................ [ 86%]\n...........                                                              [100%]\n83 passed, 5 deselected in 128.60s (0:02:08)\n",
+ "stderr": ""
+}

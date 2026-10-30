@@ -12,7 +12,7 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth')
+FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth', 'vtype')
 
 
 def main():
@@ -20,8 +20,12 @@ def main():
     parser.add_argument('--host', default='gpuR')
     parser.add_argument('--root', default='/root/autodl-tmp/c4/speedprof_CPU_20261030')
     parser.add_argument('--receipt', type=Path)
+    parser.add_argument('--gpu-probe', action='store_true',
+                        help='only an idle gpuR, explicitly bounded synthetic forward probe')
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    if args.gpu_probe and args.host != 'gpuR':
+        raise ValueError('GPU probes are restricted to gpuR')
     root = args.root
     if not root.startswith('/root/autodl-tmp/c4/speedprof_CPU_') or any(s in root.lower() for s in FORBIDDEN):
         raise ValueError('probe must use its own named root')
@@ -48,14 +52,22 @@ def main():
     if command[:1] == ['--']:
         command = command[1:]
     command = command or ['-m', 'pytest', '-q', 'tests/unit/test_speedprof.py']
-    remote = (f'cd {shlex.quote(root)} && flock -n -E 75 CPU.lock env CUDA_VISIBLE_DEVICES="" OMP_NUM_THREADS=1 '
+    admission = ''
+    if args.gpu_probe:
+        admission = ('test -z "$(nvidia-smi --query-compute-apps=pid --format=csv,noheader)" && ')
+    visible = '0' if args.gpu_probe else ''
+    remote_receipt = f'PROBE_{time.time_ns()}.json'
+    remote = (f'cd {shlex.quote(root)} && {admission}flock -n -E 75 CPU.lock '
+              f'env CUDA_VISIBLE_DEVICES="{visible}" OMP_NUM_THREADS=1 '
               'MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH=deps:src:. '
-              'nice -n 19 /root/miniconda3/bin/python -B ' + shlex.join(command))
+              'nice -n 19 /root/miniconda3/bin/python -B -m tools.candB.speedprof_run '
+              f'--receipt {remote_receipt} -- ' + shlex.join(command))
     start = time.time()
     result = subprocess.run(['ssh', args.host, remote], capture_output=True, text=True)
     if args.receipt:
         args.receipt.write_text(json.dumps(dict(host=args.host, root=root, start_epoch=start,
             seconds=time.time()-start, command=command, returncode=result.returncode,
+            remote_receipt=remote_receipt,
             stdout=result.stdout, stderr=result.stderr), indent=1)+'\n', encoding='utf-8')
     print(result.stdout, end='')
     print(result.stderr, end='')
