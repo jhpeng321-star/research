@@ -388,3 +388,19 @@
 - S-PILOTB EXPLORATORY-LEAN REPAIR LAUNCH 2026-10-30T17:17:46.733750+00:00: {"label": "EXPLORATORY-LEAN", "pid": 35928, "start_ticks": "876086884", "command": ["/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python", "-B", "-u", "-m", "tools.candB.pilot_wmfast_launch", "repair", "--parent", "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN", "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN"], "output": "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN", "epoch": 1793380654.687814, "admission": {"epoch": 1793380654.6868193, "total_MiB": 49140, "free_MiB": 42671, "used_MiB": 5840, "apps": "25602, 5830"}, "alive": true, "state": "R", "cpu_ticks": 841, "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean_repaired --failed-parent /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN "}
 
 - S-PILOTB EXPLORATORY-LEAN BASELINE DURABLE epoch1793383809.894007: repaired startup 2949.823761s (49.16min), original phase191; four fixed native/gate starts, saved independent K8 score reused; zero raw dense/300s dJ vs CTRL0. Frozen baseline SHA256 744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680; all five startup scores durable. Update1 has begun under original two-worker/.28 ES-stack-OFF recipe; WMFAST waits for >=1 finite completed update and clean checkpoint/old-process exit. No baseline recomputation or extra GPU query. Full receipt `E:/agent-work/c4-candB/tools/candB/pilot_repaired_STARTUP_ACK.json`.
+
+### Peer-free gpuA / S4 boundary preparation
+- Existing supervisor sample1793385456 (02:37:36 +08) contains only owned
+  trainer35928 and workers53220/53221; peer25602 has exited independently.
+  Free31339MiB WHILE our update is running. No extra nvidia query.
+- Prepare NEW `pilot_wmfast4_*` files/runtime: same verified ordinary continuation,
+  original baseline/phase191/head/Adam/RNG/sampler/R4phase10 retained. Execution-only
+  S4 with ONE .75 forward worker; TWO .24 dense workers/VJP slots, same ordered tasks
+  and dense algebra. No live trainer/runtime edit; S4 still waits for finite phase1.
+- New waiter requires >=46000MiB free after old trainer/supervisor exit. Every pool
+  retains the measured coordinator+worker allocator caps+contexts+sampled peers+2GiB
+  <=min(90% device,45GiB) guard. At coordinator2GiB and no peers, S4 fits; a6GiB peer
+  or7GiB coordinator REFUSES. S4 production peak/timing remains unmeasured until run.
+- CPU proof and staged source/authority verification precede cooperative retirement
+  of the old S2 waiter37982 only; own STOP/old-incarnation exit/exclusive launch proof
+  required. Current repair trainer/supervisor and frozen baseline remain untouched.
