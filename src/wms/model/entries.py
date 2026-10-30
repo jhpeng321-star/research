@@ -166,6 +166,8 @@ class EntryConfig:
     #: speed / admission with the learned insertion speed and per-step acceptance hazard
     #: (``TorchEntryProcessV2`` only).
     learned_entry: object | None = None
+    # WMFIX: exact due - inserted; default preserves legacy clipping and receipts.
+    conserve_queue: bool = False
 
     def __post_init__(self) -> None:
         if self.insert_rule not in INSERT_RULES:
@@ -369,6 +371,17 @@ class _EntryProcessBase:
 
     def _carry_over(self, b: int, e: int, total: int, done: int) -> None:
         """Keep unplaced arrivals pending, dropping beyond ``max_pending``."""
+        if self.cfg.conserve_queue:
+            from .source_ledger import SourceLedger
+            if not hasattr(self, "_source_ledgers"):
+                self._source_ledgers = {}
+            key = (b, e)
+            previous = int(self.pending[b, e])
+            ledger = self._source_ledgers.setdefault(key, SourceLedger(previous))
+            if ledger.queue != previous:
+                raise RuntimeError("entrance queue mutated outside the request ledger")
+            self.pending[b, e] = ledger.advance(int(total) - previous, int(done))
+            return
         left = total - done
         if left > self.cfg.max_pending:
             self.stats[b].dropped_pending += left - self.cfg.max_pending

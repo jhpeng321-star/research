@@ -49,6 +49,8 @@ class ModelSpec:
     """
 
     black_box: bool = False
+    # WMFIX: pooled upstream discharge field; no module/RNG/arithmetic when OFF.
+    merge_response: bool = False
     rollout_mode: str = "residual"
     lane_head: str = "off"
     lane_rule: str = "mobil"
@@ -195,7 +197,7 @@ class ModelSpec:
                      "temporal_accel_off", "temporal_accel_lane_bias", "temporal_accel_state_table",
                      "residual_accel_off", "follower_courtesy_off",
                      "mainline_merge_yield_learnable", "ramp_speed_adapt_learnable",
-                     "mainline_interaction_residual"):
+                     "mainline_interaction_residual", "merge_response"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if not isinstance(self.mainline_residual_hidden, int) \

@@ -301,6 +301,19 @@ class WmSModel(nn.Module):
             self.enable_mainline_residual(int(getattr(spec, "mainline_residual_hidden", 64)))
         if self.physics.lane_rule == "learned_discretionary":
             self._zero_lane_outputs()
+        self.merge_response = None
+        if getattr(spec, "merge_response", False):
+            self.enable_merge_response()
+
+    def enable_merge_response(self) -> None:
+        """Append the opt-in zero-output head after all legacy initialization."""
+        if self.merge_response is not None:
+            raise ValueError("merge response already enabled")
+        if self.physics_step is not None:
+            raise ValueError("merge response requires the in-module emergency envelope")
+        from .merge_response import MergeResponseField
+        self.merge_response = MergeResponseField().to(next(self.parameters()))
+        self.spec = replace(self.spec, merge_response=True)
 
     def _init_bounds(self, spec: ModelSpec) -> None:
         """Residual and lane-logit bounds (plain attributes; the trainer may reset them)."""
@@ -1279,6 +1292,9 @@ class WmSModel(nn.Module):
                 raise ValueError("ramp speed adaptation requires learned driver parameters")
             accel, _, ramp_adapt_weight = self.ramp_speed_adapt(
                 kin, present, accel, self.physics, driver_params, learned=learned)
+        if self.merge_response is not None:
+            is_cav = state.get("is_cav", torch.zeros_like(present))
+            accel = accel + self.merge_response(kin, present, is_cav)
         if final_envelope:
             # Once, on the final composed acceleration; d/d(accel) in [0, 1].
             accel = torch.where(present, apply_emergency_envelope(
