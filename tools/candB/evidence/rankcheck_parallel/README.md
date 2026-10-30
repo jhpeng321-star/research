@@ -48,4 +48,19 @@
   owned tail, and it freezes both tails at21:20. Peer lifecycle is untouched.
 - Shared-tree pilot observations remain user work. Explicit CANDB_STAGE_COMMIT
   staging packages only that immutable Git tree; default dirty-tree refusal stays.
-  All2405 archive hashes and exact pinned preset verified; untracked files excluded.
+   All2405 archive hashes and exact pinned preset verified; untracked files excluded.
+
+## Fresh-session recovery / MAIN21:08 priority
+- At21:08 gpuA had four existing scoring children967628,967764,977723,977724;
+  gpuR PI442305 was live. No new gpuA rankcheck is permitted or dispatched.
+- MAIN21:08 supersedes the old21:20 cutoff: retired only our exact owned
+  deadline supervisors971121/start874226025 and442928/start4198864339 via pidfd.
+  `MAIN2108_CUTOFF_RETIRED_{A,R}.json` binds both actions; scoring children finish.
+- Tail guard977725 already exited with a duplicate `time_unix` keyword TypeError
+  before signalling a scorer. Its historical live-memory-guard claim is invalid;
+  recovery observed45713MiB on gpuA. No peer process was signalled or modified.
+- The failed guard also missed its planned prefix handoff. Prefix0-3 and tail4-15
+  are the fixed reporting partition; any later overlapping prefix completions must
+  be verified and counted only once. Existing scorers are not stopped.
+- gpuR observed17620MiB total with PI and SETUPAUDIT; any new scoring is gpuR-only
+  with total use<=22GB. Current headroom cannot fit another normal scoring worker.
