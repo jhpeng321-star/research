@@ -1,0 +1,37 @@
+# S-INTEG, owner 2026-10-30 16:30. Every override cites its source below.
+# Inherits the complete candA objective, starts, execution and memory recipe.
+extends = "c4_policy14_candA_longgrad_skip.toml"
+
+[policy]
+# CAPREL.md: zero head is exactly CTRL0; braking has local authority.
+residual_reference = "ctrl0"
+
+[long_credit]
+# ESLONG.md: head-only CRN antithetic credit; sigma follows exploration std.
+estimator = "antithetic"
+es_directions = 2
+es_sigma = 0.0
+# GATEMEAS.md: paired same-law CTRL0 and frozen matched training-window scores.
+ctrl0_reference = true
+score_training_horizon = true
+# SETUPAUDIT.md: old t0-HDV/K1 authority cannot qualify all-vehicle/source/K8.
+require_objective_match = true
+# GATEMEAS.md: retain K8, not the optional K16 experiment.
+k16 = false
+
+[counterfactual]
+# GATEMEAS.md: observable merge/ramp-pressure tilt of the TRAIN proposal.
+headroom_starts = true
+
+[trainer]
+# SETUPAUDIT.md: connect the ERRSRC observable-only mix at actual births/replay.
+entrant_learned_mix = true
+# LONGGRAD.md / longgrad_skip preset: dense-norm balance + exact zero/prefix skips.
+long_grad_balance = true
+long_grad_reset_actor_adam = true
+imagination_skip_zero_vjp = true
+imagination_replay_dense_prefix = true
+
+[policy14]
+# ZEROSTART / owner S-INTEG: fresh phase, zero only the loaded residual output.
+zero_residual_output = true

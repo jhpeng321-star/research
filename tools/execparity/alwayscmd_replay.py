@@ -32,8 +32,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT), str(Path(__file__).resolve().parent)]
 
 from replay import sha, states_from_episode, summary  # noqa: E402
-from wms.control.alwayscmd import (BACKEND_CONTRACT, executed, inferred_base,
-                                   inferred_cap)  # noqa: E402
+from wms.control.alwayscmd import (  # noqa: E402
+    BACKEND_CONTRACT, executed, inferred_base, inferred_cap)
 from wms.control.native_cav import head_native_accel  # noqa: E402
 
 torch.set_num_threads(1)
