@@ -21,10 +21,13 @@ PARENT = Path('/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_E
 BASELINE = '744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680'
 CHECKPOINT = 'aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a'
 GUARD_EXIT = 'ValueError: lean aggregate memory bound including peers exceeds safe ceiling'
+# Capture the physical WMFAST validator BEFORE run() patches the module attribute
+# with this adapter; getsource must never observe the patched-in function itself.
+_WMFAST_VALIDATE_PARENT = pilot_wmfast.validate_parent
 
 
 def validate_parent(parent):
-    source = inspect.getsource(pilot_wmfast.validate_parent)
+    source = inspect.getsource(_WMFAST_VALIDATE_PARENT)
     source = replace_once(source,
         "prior.get('error') != 'RuntimeError: own-run STOP requested; checkpoint saved'",
         'prior.get("error") != GUARD_EXIT')

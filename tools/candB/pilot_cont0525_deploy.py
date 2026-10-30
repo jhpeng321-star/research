@@ -8,8 +8,8 @@ from tools.candB.pilot_lean_deploy import PYTHON
 
 PARENT = '/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300'
 PARENT_AUTHORITY = '/root/autodl-tmp/c4/candB_pilot_RETRY0300_v5_EXPLORATORY-LEAN_20261031/authority_gen/PILOT_RETRY_AUTHORITY.json'
-RUNTIME = '/root/autodl-tmp/c4/candB_pilot_CONT0525_v1_EXPLORATORY-LEAN_20261031'
-ROOT = '/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v1_20261031'
+RUNTIME = '/root/autodl-tmp/c4/candB_pilot_CONT0525_v2_EXPLORATORY-LEAN_20261031'
+ROOT = '/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031'
 
 
 def main():

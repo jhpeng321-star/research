@@ -9,7 +9,7 @@ import time
 
 from tools.candB.pilot_lean_observe import append, commit, DIRECTORY, LEDGER
 
-ROOT = '/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v1_20261031'
+ROOT = '/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v2_20261031'
 OUTPUT = ROOT+'/pilot_EXPLORATORY-LEAN_CONT0525'
 LAUNCHED = {}
 

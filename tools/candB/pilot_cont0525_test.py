@@ -95,7 +95,7 @@ class GpuAContractTests(unittest.TestCase):
 
     def test_real_parent_validate_and_bindings(self):
         import torch
-        from tools.candB import pilot_cont0525
+        from tools.candB import pilot_cont0525, pilot_wmfast
         prior, origin = pilot_cont0525.validate_parent(PARENT)
         self.assertEqual(origin, 191)
         self.assertEqual(prior['updates'][-1]['update'], 192)
@@ -105,6 +105,11 @@ class GpuAContractTests(unittest.TestCase):
                 ('frozen_scoring_baseline.json', pilot_cont0525.BASELINE)):
             import hashlib
             self.assertEqual(hashlib.sha256((PARENT/name).read_bytes()).hexdigest(), digest)
+        # Production topology: run() patches the module attribute with this adapter
+        # BEFORE the first call; getsource must still see the physical WMFAST source.
+        with patch.object(pilot_wmfast, 'validate_parent', pilot_cont0525.validate_parent):
+            prior, origin = pilot_cont0525.validate_parent(PARENT)
+            self.assertEqual(origin, 191)
 
     def test_validate_parent_refusals(self):
         import hashlib
