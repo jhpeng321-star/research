@@ -7,6 +7,28 @@ from tools.candB.pilot_lean_observe import append, LEDGER, DIRECTORY
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--control', action='store_true')
+    args = parser.parse_args()
+    if args.control:
+        marker = DIRECTORY/'pilot_wmfast_CONTROL_REGISTERED.json'
+        assert not marker.exists(), 'already registered'
+        launch = json.loads((DIRECTORY/'pilot_wmfast_CONTROL_DISPATCH.json').read_text())
+        assert launch['returncode'] == 0
+        doc = dict(label='EXPLORATORY-LEAN', utc=datetime.now(timezone.utc).isoformat(),
+            runtime=launch['runtime'], controller=json.loads(launch['stdout']),
+            source='61bfa61236bbce4054994294cbe17350f1dfdccf', files=2625,
+            authority_sha256='cc7dfb5bcd9075f872cc74a5a1afbd39c4fb3b30ade125b4b0e12cddfefd9096',
+            CPU='14 PASS,1.56s,CUDA hidden, actual CLI specialization handles unscored update1',
+            policy='wait existing repair35928 and supervisor35923 EXIT; require clean finite phase1 '
+                'and durable baseline; no duplicate trainer; ordinary resume with last ACTUALLY '
+                'measured independent score, full Adam/head/RNG/sampler/origin191/R4phase10/150total',
+            unchanged_live_repair=True, no_extra_GPU_query=True)
+        append(LEDGER, '\n- S-PILOTB EXPLORATORY-LEAN WMFAST BOUNDARY WAITER '+json.dumps(doc)+'\n')
+        with marker.open('x') as stream:
+            json.dump(doc,stream,indent=1)
+        print(json.dumps(doc)); return
     marker = DIRECTORY/'pilot_wmfast_RECOVERY_REGISTERED.json'
     assert not marker.exists(), 'already registered; recover marker'
     doc = dict(label='EXPLORATORY-LEAN', utc=datetime.now(timezone.utc).isoformat(),

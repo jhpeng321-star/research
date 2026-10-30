@@ -355,4 +355,19 @@
   measured score as CLI `before`, with skipped rows still explicitly unscored.
   It waits for existing repair/supervisor exit; no concurrent or duplicate trainer.
 
+### Corrected boundary waiter staged and verified
+- v2 immutable source61bfa61236bbce4054994294cbe17350f1dfdccf,2625 LF files;
+  `/root/autodl-tmp/c4/candB_pilot_WMFAST_v2_EXPLORATORY-LEAN_20261031`.
+  Regenerated WMFAST authoritycc7dfb5b independently verified. **14 CPU PASS**,1.56s,
+  including actual CLI source specialization plus skipped-row last-measurement reuse.
+- Exclusive controller37982/start876126751 waits on existing trainer35928 and
+  supervisor35923. It does not poll nvidia while the existing supervisor owns it.
+  After their clean exit it requires finite phase1 and the durable original baseline,
+  then assumes >=600s resource sampling and launches one ordinary continuation.
+- The first staged supervisor's skipped-score assumption will refuse at its clean
+  update1 boundary. It cannot launch a second trainer; corrected controller waits
+  for that supervisor to exit before dispatch. All original scientific/native gates
+  remain enforced. `WMFAST_CONTROL_STOP` stops only this owned future continuation.
+- Startup/update1-3 and before/after WMFAST timing remain PENDING actual receipts.
+
 - S-PILOTB EXPLORATORY-LEAN REPAIR LAUNCH 2026-10-30T17:17:46.733750+00:00: {"label": "EXPLORATORY-LEAN", "pid": 35928, "start_ticks": "876086884", "command": ["/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python", "-B", "-u", "-m", "tools.candB.pilot_wmfast_launch", "repair", "--parent", "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN", "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN"], "output": "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN", "epoch": 1793380654.687814, "admission": {"epoch": 1793380654.6868193, "total_MiB": 49140, "free_MiB": 42671, "used_MiB": 5840, "apps": "25602, 5830"}, "alive": true, "state": "R", "cpu_ticks": 841, "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean_repaired --failed-parent /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN "}

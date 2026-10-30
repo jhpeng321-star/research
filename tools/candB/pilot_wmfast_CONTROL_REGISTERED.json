@@ -1,0 +1,20 @@
+{
+ "label": "EXPLORATORY-LEAN",
+ "utc": "2026-10-30T17:25:48.895865+00:00",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_WMFAST_v2_EXPLORATORY-LEAN_20261031",
+ "controller": {
+  "label": "EXPLORATORY-LEAN",
+  "pid": 37982,
+  "start_ticks": "876126751",
+  "runtime": "/root/autodl-tmp/c4/candB_pilot_WMFAST_v2_EXPLORATORY-LEAN_20261031",
+  "epoch": 1793381053.3920152,
+  "no_dispatch_before_clean_phase1": true
+ },
+ "source": "61bfa61236bbce4054994294cbe17350f1dfdccf",
+ "files": 2625,
+ "authority_sha256": "cc7dfb5bcd9075f872cc74a5a1afbd39c4fb3b30ade125b4b0e12cddfefd9096",
+ "CPU": "14 PASS,1.56s,CUDA hidden, actual CLI specialization handles unscored update1",
+ "policy": "wait existing repair35928 and supervisor35923 EXIT; require clean finite phase1 and durable baseline; no duplicate trainer; ordinary resume with last ACTUALLY measured independent score, full Adam/head/RNG/sampler/origin191/R4phase10/150total",
+ "unchanged_live_repair": true,
+ "no_extra_GPU_query": true
+}
