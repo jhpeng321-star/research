@@ -84,3 +84,9 @@
   absolute and paired WORLD-cluster CI directly from bound raw rows, using
   explicit world draw indexing rather than the summarizer's bootstrap weights.
   `INDEPENDENT_CI_CHECK.json` binds its passing input/output hashes.
+- At21:32, gpuR224 CPU cores/684596MiB RAM available; added four nice19 CPU-only
+  native-actor shards on disjoint native indices0-2,3-5,6-8,9-10 (not previously
+  measured atK4). Own446325/4199372038,446346/4199372745,446365/4199373498,
+  446386/4199374451. Combined with CPU11 and GPU12-15, this covers the16-start
+  native actor plan without duplicating any running native intervention.
+  Each rankcheck limits itself to2 Torch threads; CUDA is hidden for CPU shards.

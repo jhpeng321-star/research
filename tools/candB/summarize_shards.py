@@ -65,7 +65,8 @@ def analyze(root):
     plans = set()
     duplicates = []
     for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail',
-                      'pi_resume_gpu', 'pi_resume_cpu'):
+                      'pi_resume_gpu', 'pi_resume_cpu', 'native_cpu_0_3', 'native_cpu_3_6',
+                      'native_cpu_6_9', 'native_cpu_9_11'):
         path = root/directory/'RAW.json'
         if not path.exists():
             continue
@@ -259,7 +260,8 @@ def report(result, final_sha, stamp):
         'Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.',
     ]
     if proxy:
-        lines.insert(-6, 'Available proxy dJ300: '+cell(proxy['J300']['paired_delta'],
+        position = next(i for i, line in enumerate(lines) if line.startswith('Binding rule:'))
+        lines.insert(position, 'Available proxy dJ300: '+cell(proxy['J300']['paired_delta'],
             proxy['n_worlds'], True)+' veh-s; point direction '+
             ('agrees with' if proxy['J300']['paired_delta']['mean'] < 0 else 'opposes')+
             ' historical lane-on MAPPO, not matched speed-only proof. R2 needs upper95 below0.')

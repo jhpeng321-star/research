@@ -62,15 +62,17 @@ def prepare():
     print('Prepared immutable gpuR source and input copies', len(manifest))
 
 
-def launch(device, begin, end, suffix=''):
-    assert device in ('cpu', 'cuda') and 11 <= begin < end <= 16
+def launch(device, begin, end, suffix='', native_only=False):
+    assert device in ('cpu', 'cuda') and 0 <= begin < end <= 16
     assert suffix in ('', '_a2')
+    assert (native_only and device == 'cpu' and end <= 11) or (not native_only and begin >= 11)
     prepared = json.loads((ROOT / 'RESUME_PREPARED.json').read_text())
     old_owned = json.loads((OLD / 'measurement_PI/OWNERSHIP.json').read_text())
     assert ticks(old_owned['pid']) != str(old_owned['start_ticks']), 'PI is still running'
     old_doc = json.loads((OLD / 'measurement_PI/RAW.json').read_text())
     assert len(old_doc['rows']) == 11 and all('PI' in r['arms'] for r in old_doc['rows'])
-    out = ROOT / f'measurement_PI_native_{device}_{begin}_{end}{suffix}'
+    name = 'native' if native_only else 'PI_native'
+    out = ROOT / f'measurement_{name}_{device}_{begin}_{end}{suffix}'
     assert not out.exists()
     memory = subprocess.check_output(['nvidia-smi', '--query-gpu=memory.used,memory.total',
                                      '--format=csv,noheader,nounits'], text=True).strip()
@@ -87,7 +89,8 @@ def launch(device, begin, end, suffix=''):
             args[args.index(flag) + 1] = item['path']
     args[args.index('--device') + 1] = device
     args[args.index('--out') + 1] = str(out / 'RAW.json')
-    args += ['--measurement-arms', 'PI', 'native', '--future-prefix', '4',
+    args += ['--measurement-arms', *(['native'] if native_only else ['PI', 'native']),
+             '--future-prefix', '4',
              '--input-starts', prepared['inputs']['--input-starts']['path'],
              '--start-index', str(begin), '--stop-after', str(end), '--host-controller-sensors']
     env = dict(os.environ, **template['environment'])
@@ -115,5 +118,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'launch':
         launch(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]),
                sys.argv[5] if len(sys.argv) > 5 else '')
+    elif sys.argv[1] == 'native-cpu':
+        launch('cpu', int(sys.argv[2]), int(sys.argv[3]), native_only=True)
     else:
         raise ValueError(sys.argv[1])
