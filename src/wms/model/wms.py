@@ -2425,6 +2425,7 @@ class WmSModel(nn.Module):
                 lane_uniform: Optional[Tensor] = None,
                 lane_seed: Optional[int] = None,
                 lane_crn: bool = False,
+                entrant_driver_sampler: Optional[Callable] = None,
                 state_noise: Optional[Tensor] = None) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
@@ -2534,6 +2535,8 @@ class WmSModel(nn.Module):
             # these physical-state operations instead; objective/RNG unchanged.
             step_checkpoint = False
         fixed_driver_params = driver_params
+        if entrant_driver_sampler is not None and fixed_driver_params is None:
+            raise ValueError("entrant_driver_sampler requires pre-encoded inferred driver_params")
         fixed_driver_embedding = driver_embedding
         initial_driver_embedding = driver_embedding
         encoded_parameters = None
@@ -2543,8 +2546,11 @@ class WmSModel(nn.Module):
             if entries is not None:
                 current = {key: (value.clone() if torch.is_tensor(value) else value)
                            for key, value in current.items()}
-                entrant = entrant | entries.insert(current)
+                newborn = entries.insert(current)
+                entrant = entrant | newborn
                 current["entrant"] = entrant
+                if entrant_driver_sampler is not None:
+                    fixed_driver_params = entrant_driver_sampler(current, newborn, fixed_driver_params)
             elif is_cav_seq is not None:
                 current = {**current, "is_cav": is_cav_seq[:, step_i].bool()}
             log["entrant"].append(entrant)
