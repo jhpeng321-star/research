@@ -1,0 +1,40 @@
+{
+ "label": "EXPLORATORY-LEAN",
+ "observed_utc": "2026-10-30T16:27:27.576965+00:00",
+ "trainer": {
+  "label": "EXPLORATORY-LEAN",
+  "pid": 17859,
+  "start_ticks": "875679269",
+  "command": [
+   "bash",
+   "tools/candB/pilot_lean_launch.sh",
+   "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN",
+   "--exploratory-owner-20261030"
+  ],
+  "output": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN",
+  "epoch": 1793376578.5352132,
+  "admission": {
+   "epoch": 1793376578.5335195,
+   "total_MiB": 49140,
+   "free_MiB": 38277,
+   "used_MiB": 10234,
+   "apps": "16680, 10224"
+  },
+  "same_incarnation": true,
+  "state": "R",
+  "cpu_ticks": 110179,
+  "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN "
+ },
+ "first_independent_score": {
+  "phase": "independent_score",
+  "update": 191,
+  "seconds": 660.8887192904949,
+  "cpu_seconds": 696.490002734,
+  "epoch": 1793377258.1451302
+ },
+ "observed_updates": [],
+ "startup": null,
+ "frozen_baseline_durable": false,
+ "GPU_samples": "{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793376578.5335195, \"total_MiB\": 49140, \"free_MiB\": 38277, \"used_MiB\": 10234, \"apps\": \"16680, 10224\"}\n{\"label\": \"EXPLORATORY-LEAN\", \"epoch\": 1793377178.7087135, \"total_MiB\": 49140, \"free_MiB\": 34110, \"used_MiB\": 14401, \"apps\": \"16680, 8916\\n17859, 6490\"}\n",
+ "phase3": "PENDING unless actual pilot_lean_update3_ACK.json exists; sole observer42388 continues"
+}
