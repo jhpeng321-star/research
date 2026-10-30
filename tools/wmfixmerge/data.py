@@ -11,8 +11,25 @@ BAD = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
        "hetdata_truth", "vtype")
 WM2_SHA = "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
 ARRAYS = ("time_s", "vid", "veh_mask", "veh_kin", "is_cav", "counter",
-          "target_mask", "control_time_s", "controller", "issued_acceleration_mps2",
-          "issued_target_speed_mps", "entry_backlog", "request_counter", "entry_cav_counter")
+           "target_mask", "control_time_s", "controller", "issued_acceleration_mps2",
+           "issued_target_speed_mps", "entry_backlog", "request_counter", "entry_cav_counter")
+# Recorded request ledgers exist only on converter corpora (v5/pairs300 style).
+# S-E3DATA FIT tapes predate them; their Q0/due come from the exact counter/
+# deterministic-schedule reconstruction in tools/wmrequal/labels.py instead.
+LEDGER_ARRAYS = ("entry_backlog", "request_counter", "entry_cav_counter")
+CORE_ARRAYS = tuple(a for a in ARRAYS if a not in LEDGER_ARRAYS)
+
+
+def episode_arrays(root, row):
+    """Array names hash-bound for one episode; all CORE arrays are mandatory."""
+    p = safe(Path(root) / row["dir"])
+    present = sorted(name for name in ARRAYS if safe(p / (name + ".npy")).is_file())
+    missing = [name for name in CORE_ARRAYS if name not in present]
+    if missing:
+        raise ValueError("missing core production array: " + missing[0])
+    return present
+
+
 COMPONENTS = ("J", "upstream", "source", "discharge", "road")
 IMPLEMENTATION_FILES = ("src/wms/model/wms.py", "src/wms/model/entries.py",
     "src/wms/model/merge_response.py", "src/wms/model/source_ledger.py",
@@ -99,7 +116,9 @@ def verify(prepared):
     if select(doc["root"]) != doc["episodes"]:
         raise ValueError("selected source rows changed")
     expected_paths = {str(safe(Path(doc["root"]) / row["dir"] / (name + ".npy")))
-                      for row in doc["episodes"] for name in ARRAYS}
+                      for row in doc["episodes"] for name in episode_arrays(doc["root"], row)}
+    if len({tuple(episode_arrays(doc["root"], row)) for row in doc["episodes"]}) != 1:
+        raise ValueError("ledger array presence must be corpus-uniform")
     if set(doc["files"]) != expected_paths:
         raise ValueError("incomplete or extraneous input hash binding")
     for path, expected in doc["files"].items():

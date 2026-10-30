@@ -5,20 +5,25 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.wmfixmerge.data import ARRAYS, COMPONENTS, SEEDS, digest, install_guard, safe, select
+from tools.wmfixmerge.data import (COMPONENTS, LEDGER_ARRAYS, SEEDS, digest, episode_arrays,
+                                   install_guard, safe, select)
 
 
 def prepare(root, out):
     import numpy as np
-    from tools.wmrequal.labels import recorded
+    from tools.wmrequal.labels import departures, recorded
 
     root, out = safe(root), safe(out)
     entries = select(root)  # Check roles and paths BEFORE opening any tape.
+    tape_sets = {tuple(episode_arrays(root, row)) for row in entries}
+    if len(tape_sets) != 1:
+        raise ValueError("ledger array presence must be corpus-uniform")
+    ledger = set(tape_sets.pop()) >= set(LEDGER_ARRAYS)
     files, labels = {}, []
     for row in entries:
         p = safe(root / row["dir"])
-        # Hash only observable arrays used by labels / production source loader.
-        for name in ARRAYS:
+        # Hash exactly the observable arrays present (labels / production loader).
+        for name in episode_arrays(root, row):
             path = safe(p / (name + ".npy"))
             files[str(path)] = digest(path)
         label = recorded(root, row, 300)
@@ -27,26 +32,18 @@ def prepare(root, out):
         labels.append(dict(pair_key=row["pair_key"], world=row["world"], arm=row["arm"],
                            native=row.get("branch", {}).get("kind") == "B",
                            seed=int(row["seed"]), demand=row["demand_vph"],
-                            penetration=row["penetration"], **label))
+                           penetration=row["penetration"], **label))
         load = lambda name: np.load(safe(p / (name + ".npy")), mmap_mode="r", allow_pickle=False)
         times = load("time_s")
         if not np.isfinite(times).all() or not np.allclose(np.diff(times), .5, atol=1e-6, rtol=0):
             raise ValueError("nonuniform 0.5s tape clock")
         tick = int(np.searchsorted(times, 300))
-        q0 = load("entry_backlog")[tick]
-        if not np.array_equal(q0, label["queue0"]):
-            raise ValueError("recorded request ledger disagrees with independent Q0 reconstruction")
-        q = load("entry_backlog")[tick:tick + 600]
-        if not np.isfinite(q).all() or (q < 0).any() or not np.array_equal(q, np.rint(q)):
-            raise ValueError("invalid recorded entrance backlog")
-        for h in (60, 90, 120, 180, 300):
-            if float(.5 * q[:h * 2].sum()) != label["values"][str(h)]["source"]:
-                raise ValueError("request ledger/source rectangle mismatch")
-        # Observable due increments = backlog change + identity-counted insertions.
+        if len(times) < tick + 601:
+            raise ValueError("tape lacks the full 600-tick TRAIN window")
+        # Identity-counted insertions per tick, exactly as the recorded labels.
         ids, mask, kin = load("vid"), load("veh_mask").astype(bool), load("veh_kin")
         latest = int(ids[:tick + 1][mask[:tick + 1]].max())
-        increments = []
-        queue = load("entry_backlog")
+        increments, born_rows = [], []
         for t in range(tick + 1, tick + 601):
             born = np.flatnonzero(mask[t] & (ids[t] > latest))
             inserted = np.zeros(2, dtype=np.int64)
@@ -54,10 +51,47 @@ def prepare(root, out):
                 inserted[int(kin[t, j, 1:4].argmax() == 2)] += 1
             if len(born):
                 latest = int(ids[t, born].max())
-            due = queue[t] - queue[t - 1] + inserted
-            if (due < 0).any() or not np.array_equal(due, np.rint(due)):
-                raise ValueError("invalid recorded request increment")
-            increments.append(due.astype(int).tolist())
+            born_rows.append(inserted)
+        if ledger:
+            q0 = load("entry_backlog")[tick]
+            if not np.array_equal(q0, label["queue0"]):
+                raise ValueError("recorded request ledger disagrees with independent Q0 reconstruction")
+            q = load("entry_backlog")[tick:tick + 600]
+            if not np.isfinite(q).all() or (q < 0).any() or not np.array_equal(q, np.rint(q)):
+                raise ValueError("invalid recorded entrance backlog")
+            for h in (60, 90, 120, 180, 300):
+                if float(.5 * q[:h * 2].sum()) != label["values"][str(h)]["source"]:
+                    raise ValueError("request ledger/source rectangle mismatch")
+            # Observable due increments = backlog change + identity-counted insertions.
+            queue = load("entry_backlog")
+            for t, inserted in zip(range(tick + 1, tick + 601), born_rows):
+                due = queue[t] - queue[t - 1] + inserted
+                if (due < 0).any() or not np.array_equal(due, np.rint(due)):
+                    raise ValueError("invalid recorded request increment")
+                increments.append(due.astype(int).tolist())
+        else:
+            # S-E3DATA FIT tapes carry no ledger: rebuild the exact same quantities
+            # from the deterministic request schedule and the counter Q0, i.e. the
+            # identical arithmetic tools/wmrequal/labels.py recorded() supervises on.
+            counter0 = load("counter")[tick].sum(-1).astype(np.int64)
+            if int(counter0.sum()) != int(ids[:tick + 1][mask[:tick + 1]].max()) + 1:
+                raise ValueError("counter/registry disagreement at t300")
+            dep = [departures(int(row["seed"]), row["demand_vph"], "mainline"),
+                   departures(int(row["seed"]), 400, "ramp")]
+            window = np.asarray(times[tick:tick + 601])
+            due_cum = np.stack([np.searchsorted(d, window, side="right") for d in dep], -1)
+            inserted_cum = np.zeros((601, 2), np.int64)
+            inserted_cum[0] = counter0
+            inserted_cum[1:] = counter0 + np.cumsum(np.stack(born_rows), 0)
+            queue_series = due_cum - inserted_cum
+            if queue_series[0].tolist() != list(label["queue0"]):
+                raise ValueError("schedule Q0 disagrees with recorded label Q0")
+            if (queue_series < 0).any() or not np.array_equal(queue_series, np.rint(queue_series)):
+                raise ValueError("negative/non-integer reconstructed TRAIN queue")
+            for h in (60, 90, 120, 180, 300):
+                if float(.5 * queue_series[:h * 2].sum()) != label["values"][str(h)]["source"]:
+                    raise ValueError("schedule/label source rectangle mismatch")
+            increments = (due_cum[1:] - due_cum[:-1]).astype(int).tolist()
         labels[-1]["due_increments"] = increments
     for key in {row["pair_key"] for row in labels}:
         group = [r for r in labels if r["pair_key"] == key]
@@ -69,8 +103,9 @@ def prepare(root, out):
             raise ValueError("paired recorded request schedules differ")
         paired = [e for e in entries if e["pair_key"] == key]
         # Bind the complete observed prefix, not just position at a single tick.
-        for name in ("time_s", "veh_kin", "vid", "veh_mask", "is_cav", "counter",
-                     "entry_backlog", "request_counter", "entry_cav_counter"):
+        prefix_names = ("time_s", "veh_kin", "vid", "veh_mask", "is_cav", "counter") \
+            + (("entry_backlog", "request_counter", "entry_cav_counter") if ledger else ())
+        for name in prefix_names:
             prefixes = []
             for entry in paired:
                 p = safe(root / entry["dir"])
@@ -117,7 +152,8 @@ def prepare(root, out):
     doc = dict(schema="wmfix_train/1", root=str(root), seeds=list(SEEDS), episodes=entries,
                manifest_sha256=digest(root / "C4_EPISODES_MANIFEST.json"),
                split_sha256=digest(root / "SPLIT.json"), files=files, labels=labels,
-               selection="TRAIN only", source_gradient="hard service; zero off events")
+               selection="TRAIN only", source_gradient="hard service; zero off events",
+               ledger_checked=ledger)
     doc.update(components=list(COMPONENTS), scales=scales.tolist(),
                anchor_scales=anchor_scales.tolist(),
                crossing_width=float(np.median(widths)), horizon_seconds=[60, 120, 300])
