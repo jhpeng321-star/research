@@ -1,0 +1,8 @@
+{
+ "action": "dispatch",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_CONT0525_v4_EXPLORATORY-LEAN_20261031",
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v4_20261031",
+ "returncode": 0,
+ "stdout": "OWNERSHIP.json {\n \"label\": \"EXPLORATORY-LEAN\",\n \"pid\": 102295,\n \"start_ticks\": \"877965053\",\n \"runtime\": \"/root/autodl-tmp/c4/candB_pilot_CONT0525_v4_EXPLORATORY-LEAN_20261031\",\n \"epoch\": 1793399436.4057548\n}\nTRAINER_OWNERSHIP.json {\n \"label\": \"EXPLORATORY-LEAN\",\n \"pid\": 102300,\n \"start_ticks\": \"877965068\",\n \"command\": [\n  \"/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python\",\n  \"-B\",\n  \"-u\",\n  \"-m\",\n  \"tools.candB.pilot_cont0525_launch\",\n  \"--parent\",\n  \"/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031/pilot_EXPLORATORY-LEAN_RETRY0300\",\n  \"/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v4_20261031/pilot_EXPLORATORY-LEAN_CONT0525\"\n ],\n \"output\": \"/root/autodl-tmp/c4/candB_pilot_run_CONT0525_v4_20261031/pilot_EXPLORATORY-LEAN_CONT0525\",\n \"epoch\": 1793399436.5235085,\n \"admission\": {\n  \"epoch\": 1793399436.522592,\n  \"total_MiB\": 49140,\n  \"free_MiB\": 31427,\n  \"used_MiB\": 17084,\n  \"apps\": \"100400, 17074\"\n }\n}\nPARENT {\"status\": \"failed\", \"error\": \"ValueError: lean aggregate memory bound including peers exceeds safe ceiling\", \"label\": \"EXPLORATORY-LEAN\", \"rows\": 1, \"last_update\": 192, \"phase_start\": 191}\nARTIFACT policy_latest.pt 2005019 aa683d4a5c9ea057fecb20da6db6c67761b3440715baf095fc06d9918922479a\nARTIFACT frozen_scoring_baseline.json 6759 744b30b809af60fb11acc54734cbc29bf92f6163793cd306b040ee26e430d680\n",
+ "stderr": ""
+}
