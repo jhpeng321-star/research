@@ -1,0 +1,76 @@
+{
+  "epoch": 1793375066.554982,
+  "reason": "MAIN23:50 EXPLORATORY-LEAN relaunch",
+  "owners": {
+    "continue_OWNERSHIP.json": {
+      "owner": {
+        "label": "EXPLORATORY",
+        "pid": 999762,
+        "start_ticks": "875186271",
+        "utc": "2026-10-30T14:47:28.588408+00:00",
+        "runtime": "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030"
+      },
+      "exited": true
+    },
+    "dry_OWNERSHIP.json": {
+      "owner": {
+        "label": "EXPLORATORY",
+        "pid": 985766,
+        "start_ticks": "874675005",
+        "argv": [
+          "bash",
+          "tools/candB/pilot_launch.sh",
+          "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY",
+          "dry",
+          "--exploratory-owner-20261030"
+        ],
+        "output": "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY",
+        "utc": "2026-10-30T13:22:15.895446+00:00"
+      },
+      "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_cli --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030/dry_EXPLORATORY dry ",
+      "cpu_ticks": 899965,
+      "state": "R",
+      "signal": "SIGTERM via verified pidfd",
+      "exited": true
+    },
+    "OWNERSHIP.json": {
+      "owner": {
+        "label": "EXPLORATORY",
+        "pid": 970521,
+        "start_ticks": "874204998",
+        "utc": "2026-10-30T12:12:15.855306+00:00",
+        "runtime": "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030",
+        "argv": [
+          "/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030/tools/candB/pilot_supervise.py",
+          "--exploratory-owner-20261030",
+          "--root",
+          "/root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030"
+        ]
+      },
+      "argv": "/root/miniconda3/bin/python -B -u -m tools.candB.pilot_supervise --exploratory-owner-20261030 --root /root/autodl-tmp/c4/candB_pilot_final_run_EXPLORATORY_20261030 ",
+      "cpu_ticks": 278,
+      "state": "S",
+      "signal": "SIGTERM via verified pidfd",
+      "exited": true
+    }
+  },
+  "files": {
+    "dry_EXPLORATORY/updates.jsonl": {
+      "exists": false
+    },
+    "dry_EXPLORATORY/frozen_scoring_baseline.json": {
+      "exists": false
+    },
+    "dry.log": {
+      "exists": true,
+      "size": 2674,
+      "tail": "{\"label\": \"EXPLORATORY\", \"verified\": true, \"source_commit\": \"da0bc3663609024930d799af059c13f9dcf174d3\", \"authority_sha256\": \"187cd8d40aa3d6d1f6d9565f7b84ebd792c90a946a09ad147ee0ea56462b3179\"}\nWARNING: inactive config [horizon] curriculum_updates, entry_pad_max, gate_file, horizons_s: boundary auto_horizon rebuilds stages/pads/gate; TOML last-knot spacing only is reused\nWARNING: inactive config [uncertainty] curriculum_updates, future_samples, weights: uncertainty.enabled=false; trainer future_samples is a separate setting\nWARNING: inactive config [lanes] consequence_mask, enabled, secure_gap_hook: native-init uses WM native lane rules\nWARNING: inactive config [policy] init_zero_accel, lane_control: native-init constructs the native residual actor\nWARNING: inactive config [policy14] entropy_decay_on_improvement, entropy_floor, policy_ramp_merge, sampled_marginal_lane_weight: native-init forces native lanes and deterministic residuals (no lane credit/entropy)\nWARNING: inactive config [policy14] critic_value_scale, critic_warmup_updates: long credit disables critic warmup and value updates\nWARNING: inactive config [trainer] real_return_mix: critic step is disabled under long credit\nWARNING: inactive config [paircrit] enabled, warmup_updates: setup may still load artifacts, but its value critic supplies no long-credit update\nWARNING: inactive config [counterfactual] start_tilt: exact focus-cell sampling replaces rejection tilt\nWARNING: inactive config [counterfactual] validation_uniform: policy14 CLI does not call trainer.validate\nWARNING: inactive config [run] seed, updates, validation_batches: CLI --seed/--max-updates take precedence; no trainer.validate call\n[resume-config] {\"approved\": [\"trainer.entrant_learned_mix\"], \"differences\": {\"trainer.entrant_learned_mix\": {\"checkpoint\": false, \"requested\": true}}, \"new_phase\": true}\n[zero-start] {\"schema\": \"zero_residual_output/1\", \"before\": {\"weight_abs_max\": 0.0004859584732912481, \"bias\": [0.0004806678043678403]}, \"adam_state_cleared_tensors\": 0, \"after\": {\"weight_abs_max\": 0.0, \"bias\": [0.0]}}\n/root/autodl-tmp/c4/candB_pilot_final_EXPLORATORY_20261030/src/wms/data/pack_history.py:45: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)\n  kin = torch.as_tensor(np.asarray(corpus.array(\"veh_kin\")[lo:tick + 1], np.float32))\n"
+    },
+    "GPU_ADMISSION.jsonl": {
+      "exists": true,
+      "size": 2037,
+      "tail": "{\"t\": 1793362335.9327605, \"label\": \"EXPLORATORY\", \"free_MiB\": \"7571\"}\n{\"t\": 1793362935.9128008, \"label\": \"EXPLORATORY\", \"free_MiB\": \"9727\"}\n{\"t\": 1793363535.913057, \"label\": \"EXPLORATORY\", \"free_MiB\": \"9069\"}\n{\"t\": 1793364135.9321132, \"label\": \"EXPLORATORY\", \"free_MiB\": \"20365\"}\n{\"t\": 1793364735.8940117, \"label\": \"EXPLORATORY\", \"free_MiB\": \"4954\"}\n{\"t\": 1793365335.9131587, \"label\": \"EXPLORATORY\", \"free_MiB\": \"4680\"}\n{\"t\": 1793365935.8940692, \"label\": \"EXPLORATORY\", \"free_MiB\": \"17687\"}\n{\"t\": 1793366535.894035, \"label\": \"EXPLORATORY\", \"free_MiB\": \"21411\"}\n{\"t\": 1793367135.894457, \"label\": \"EXPLORATORY\", \"free_MiB\": \"5739\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793367735.8941562, \"label\": \"EXPLORATORY\", \"free_MiB\": \"5987\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793368335.9359872, \"label\": \"EXPLORATORY\", \"free_MiB\": \"5435\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793368935.8934362, \"label\": \"EXPLORATORY\", \"free_MiB\": \"12987\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793369535.9172106, \"label\": \"EXPLORATORY\", \"free_MiB\": \"4541\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793370135.9362953, \"label\": \"EXPLORATORY\", \"free_MiB\": \"4081\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793370735.8941462, \"label\": \"EXPLORATORY\", \"free_MiB\": \"41845\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793371335.897328, \"label\": \"EXPLORATORY\", \"free_MiB\": \"39253\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793371935.893873, \"label\": \"EXPLORATORY\", \"free_MiB\": \"40179\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793372535.9211001, \"label\": \"EXPLORATORY\", \"free_MiB\": \"41371\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793373135.8768933, \"label\": \"EXPLORATORY\", \"free_MiB\": \"40909\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793373735.9165342, \"label\": \"EXPLORATORY\", \"free_MiB\": \"40253\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793374335.8970258, \"label\": \"EXPLORATORY\", \"free_MiB\": \"39911\", \"stage\": \"dry\", \"own_pid\": 985766}\n{\"t\": 1793374935.9161057, \"label\": \"EXPLORATORY\", \"free_MiB\": \"34946\", \"stage\": \"dry\", \"own_pid\": 985766}\n"
+    }
+  },
+  "sunk_wall_s": 8530.659535884857
+}

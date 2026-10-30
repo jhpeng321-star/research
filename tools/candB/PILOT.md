@@ -195,5 +195,21 @@
   dry0/pilot0, no continuation trainer, no exit. Monitoring through phase3 remains
   **PENDING**, not a completed-update claim. It will continue after phase3 for MAIN.
 - Latest SPEEDPROF read still contains diagnosis only, no published exact speedup
-  diff to apply. Requested parallelism/telemetry overlay is already staged for the
-  pending boundary; no baseline discarded or recomputed.
+   diff to apply. Requested parallelism/telemetry overlay is already staged for the
+   pending boundary; no baseline discarded or recomputed.
+
+## MAIN23:50 superseding EXPLORATORY-LEAN relaunch
+- Recovered actual live receipts before action; no successor trainer had dispatched.
+- Original dry985766/start874675005 and supervisor970521/start874204998 retired
+  with verified-incarnation pidfd SIGTERM after own STOP files; controller999762
+  exited cooperatively via `continue_STOP`. All three independently confirmed exited.
+- Sunk wall **8530.66s (2.37h)**; trainer CPU899965 ticks. **Zero optimizer rows,
+  no durable frozen baseline**; retained original runtime/output/logs in place.
+- `pilot_lean_retirement_1793375070.json` contains exact retirement accounting.
+  Two initial retirement attempts found Python lacks `os.pidfd_open`; no signal
+  was issued by those attempts. Stable pidfd syscalls then succeeded.
+- Existing local observer receives its own cooperative STOP; new lean monitoring
+  will use a distinct root. Latest GPU sample epoch1793374935; no tighter polling.
+- Next: merge published SPEEDPROF into a new immutable runtime; fresh zero,
+  first4 registered panel starts, first4 CRN futures, two forward workers .28,
+  rescore every5 and exact panel reuse/diagnostic skip/profile flags; phase10 R4.
