@@ -3,29 +3,21 @@ from __future__ import annotations
 
 import torch
 
-from wms.control.alwayscmd import executed, inferred_cap
+from wms.control.alwayscmd import inferred_cap
+from wms.control.residual import executed_from_residual
 
 RADIUS = 1.2
 
 
 def caprelative_available():
-    try:
-        from wms.control.caprel import executed_from_residual
-    except ImportError:
-        return False
     return callable(executed_from_residual)
 
 
 def execute(state, residual, law="current"):
     if law == "current":
-        return executed(state, residual, -3., RADIUS)
+        return executed_from_residual(state, residual, "base")
     if law == "cap_relative":
-        # S-CAPREL integration point. No local approximation of its execution law.
-        try:
-            from wms.control.caprel import executed_from_residual
-        except ImportError as exc:
-            raise RuntimeError("S-CAPREL executed_from_residual is not integrated") from exc
-        return executed_from_residual(state, residual, -3., RADIUS)
+        return executed_from_residual(state, residual, "ctrl0")
     raise ValueError(f"unknown execution law: {law}")
 
 
@@ -48,3 +40,15 @@ def representation(state, teacher, law="current"):
     return dict(ctrl0=base, lower=low, upper=high, projected=projection,
                 deviation=deviation, expressible=expressible,
                 deviation_magnitude=magnitude, reproduced_magnitude=reproduced)
+
+
+@torch.no_grad()
+def inverse(state, teacher, law="current"):
+    """Numerical inverse for DATA-fitted initialisation, not a behavioural rule."""
+    fit = representation(state, teacher, law)
+    lower, upper = torch.full_like(teacher, -RADIUS), torch.full_like(teacher, RADIUS)
+    for _ in range(torch.finfo(teacher.dtype).bits):
+        middle = (lower + upper) / 2
+        below = execute(state, middle, law) < fit["projected"]
+        lower, upper = torch.where(below, middle, lower), torch.where(below, upper, middle)
+    return torch.where(teacher == fit["ctrl0"], torch.zeros_like(teacher), (lower + upper) / 2)

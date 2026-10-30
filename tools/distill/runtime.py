@@ -31,6 +31,14 @@ def sha256(path):
     return hashlib.sha256(safe_path(path).read_bytes()).hexdigest()
 
 
+def configure_execution(driver):
+    import os
+    from wms.control.execution import contract
+    os.environ.update(C4_EXECUTION_PARITY="2", C4_SUMO_LEADER_RULE="1",
+                      C4_EXECUTION_DRIVER=str(safe_path(driver)))
+    return contract()
+
+
 def check_seed(seed):
     seed = int(seed)
     if seed < 0 or 964000 <= seed <= 964199 or 977000 <= seed <= 977999:
@@ -64,12 +72,16 @@ def student_inputs(state):
 
 def detach_inputs(inputs, device="cpu"):
     obs, positions, field = inputs
-    return (Observation(*(v.detach().to(device).clone() for v in obs)),
+    values = (obs.own, obs.reports, obs.report_mask, obs.cav_mask) if isinstance(obs, Observation) else obs
+    # Plain tensors/tuples keep replay compatible with weights_only=True.
+    return (tuple(v.detach().to(device).clone() for v in values),
             positions.detach().to(device).clone(), field.detach().to(device).clone())
 
 
 def residual(policy, encoder, inputs):
     obs, positions, field = inputs
+    if not isinstance(obs, Observation):
+        obs = Observation(*obs)
     return policy(obs, encoder(obs, positions, field), deterministic=True)[0]
 
 
@@ -131,7 +143,8 @@ class Feedback:
                 ready=ready, teacher=teacher_accel, student=student_accel,
                 teacher_lane=teacher_lane, lane_changed=lane_changed, decision=decision,
                 entrant=state.get("entrant", torch.zeros_like(mask)).detach().clone(), tick=self.tick,
-                native_lane=state.get(WM_LANE_TARGET_KEY, public["lane"]).detach().clone()))
+                native_lane=state.get(WM_LANE_TARGET_KEY, public["lane"]).detach().clone(),
+                native_lane_available=self.drive != "teacher"))
         if self.drive == "teacher":
             accel, lane = teacher_accel, teacher_lane
         else:
@@ -166,15 +179,19 @@ def load_training_starts(raw, model, seed):
     from wms.data.registry import resolve
     # Metadata preflight precedes dataset construction/array loading.
     source = from_mapping(TrainConfig, _read_config(safe_path(raw["data"]["wm_config"])))
+    provenance = {}
     for spec in source.data.c4_sources:
         root = safe_path(resolve(spec.path))
         manifest = json.loads(safe_path(root / "C4_EPISODES_MANIFEST.json").read_text())
         check_metadata(manifest["episodes"])
+        provenance[spec.name] = {"root": str(root),
+            "manifest_sha256": sha256(root / "C4_EPISODES_MANIFEST.json")}
         for entry in manifest["episodes"]:
             safe_path(root / entry["dir"])
     train, val = _load_starts(raw["data"], [model], seed, entries=True)
     check_metadata(train.metadata.values())
     check_metadata(val.metadata.values())
+    train.distill_provenance = provenance
     return train, val
 
 

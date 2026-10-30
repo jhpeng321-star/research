@@ -8,7 +8,8 @@ import os
 import torch
 
 from .law import caprelative_available, representation
-from .runtime import Feedback, check_seed, load_assets, load_training_starts, rollout, safe_path
+from .runtime import (Feedback, check_seed, configure_execution, load_assets,
+                      load_training_starts, rollout, safe_path)
 
 
 def summarize(rows):
@@ -36,8 +37,9 @@ def summarize(rows):
         "lane_change_ticks": sum(int((r["mask"] & r["lane_changed"]).sum()) for r in rows),
         "ramp_merge_decisions": sum(int((r["mask"] & (r["state"]["lane"] == 2) &
                                           (r["teacher_lane"] == 1)).sum()) for r in rows),
-        "native_lane_target_disagreements": sum(int((r["mask"] &
-                         (r["teacher_lane"] != r["native_lane"])).sum()) for r in rows),
+        "native_lane_target_disagreements": (sum(int((r["mask"] &
+                         (r["teacher_lane"] != r["native_lane"])).sum()) for r in rows)
+                         if all(r["native_lane_available"] for r in rows) else None),
         "lane_controller": "MAPPO head vs student native WM lanes; no residual lane authority",
     }
     return result
@@ -69,6 +71,8 @@ def parser(description=__doc__):
     p.add_argument("--config", default="configs/c4_policy14_candA.toml")
     p.add_argument("--seed", type=int, default=965160)
     p.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    p.add_argument("--execution-driver", default=os.environ.get(
+        "C4_EXECUTION_DRIVER", "configs/execparity_cav_idm_v1.json"))
     return p
 
 
@@ -80,7 +84,7 @@ def main(argv=None):
     check_seed(args.seed)
     if args.rollouts < 1 or args.horizon < 1:
         p.error("positive rollouts and horizon required")
-    os.environ.update(C4_EXECUTION_PARITY="2", C4_SUMO_LEADER_RULE="1")
+    configure_execution(args.execution_driver)
     torch.set_num_threads(1)
     from wms.control.train_cli import _read_config
     model, teacher, receipts = load_assets(args.wm, args.wm_config, args.mappo, args.device)
