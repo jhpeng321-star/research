@@ -919,7 +919,8 @@ class DreamerTrainer:
             cav_count = (present & batch.state["is_cav"].bool()).sum(-1)
             if not bool((cav_count * 10 <= present.sum(-1)).any()):
                 h = self.horizon_curriculum
-                seconds = h.horizons_s[h.stage(self._curriculum_position(advance=False))]
+                from .gated300 import score_position
+                seconds = h.horizons_s[h.stage(score_position(self))]
                 steps = int(round(seconds / (STEPS_PER_CONTROL * PHYSICS_DT_S)))
                 if steps > cfg.horizon:
                     cfg = replace(cfg, horizon=steps)
@@ -976,7 +977,7 @@ class DreamerTrainer:
         cfg = _memory_config or self._imagination_config(batch)
         from . import gated300
         gated_rollout = gated300.requested_rollout(self)
-        if gated_rollout and gated300.uses_ctrl0(self):
+        if gated300.measures_ctrl0(self):
             from .execution import mode
             if mode() != 2 or not getattr(self.policy, 'residual_on_native', False):
                 raise ValueError('CTRL0 reference requires mode-2 native-residual execution')
@@ -1192,7 +1193,7 @@ class DreamerTrainer:
                 return held_out
             policy_proxy.accel_max = policy_max
             policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
-            if gated_rollout and gated300.uses_ctrl0(self):
+            if gated300.measures_ctrl0(self):
                 from .counterfactual import KIND_CTRL0
                 policy_proxy.ctrl0_rows = variants.row_kind == KIND_CTRL0
 

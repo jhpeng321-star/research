@@ -3,6 +3,8 @@ import importlib.util
 from pathlib import Path
 
 import torch
+from types import SimpleNamespace
+from dataclasses import replace
 
 from wms.control import gated300
 from wms.control.counterfactual import KIND_CTRL0, build_variants
@@ -84,3 +86,46 @@ def test_bridge_ctrl0_uses_exact_zero_residual_law(monkeypatch):
     assert len(calls) == 2 and not calls[0].any()
     assert (out[1, :, 3] == 2).all()
     assert (out[0, :, 3] == 0).all()
+
+
+def test_scoring_receipt_raw_ctrl0_separate_from_gated_composite():
+    from wms.control.policy14 import independent_score
+    t = fixture.trainer()
+    t.gated300 = dict(config=dict(score_training_horizon=True, w_long=1., mode='gain_only'))
+    batch = t.start_states.batch
+    def imagine(batch, variants, **kw):
+        variants = gated300.add_ctrl0_reference(variants)
+        count = variants.n_rows
+        dense = torch.full((8, 2, count), 100.)
+        dense[..., 0] = 110.  # Dense actor cost 220 vs CTRL0 200 (harm).
+        long_j = torch.full((count,), 1000.)
+        long_j[0] = 800.  # Long raw gain 200, gate accepts it.
+        improvement = torch.full((8, 1, count), 200.)
+        return dict(n_base=1, variants=variants, components=dict(delay=dense,
+            source_wait=torch.zeros_like(dense), hdv_hard_brake_seconds=torch.zeros_like(dense)),
+            imagination_horizon_s=90., gated300_long_difference=improvement,
+            gated300_horizon_s=300, gated300_long_J=long_j, gated300_reference='CTRL0')
+    t.imagine = imagine
+    rng = torch.get_rng_state()
+    score = independent_score(t, batch)
+    assert score['J_raw_dense'] == 220. and score['CTRL0_J_dense'] == 200.
+    assert score['raw_gain_vs_CTRL0_dense'] == -20.
+    assert score['J_raw_long'] == 800. and score['CTRL0_J_long'] == 1000.
+    assert score['raw_gain_vs_CTRL0_long'] == 200.
+    assert score['composite_gated_score'] == score['J'] == 20.
+    assert score['long_credit_reference'] == 'CTRL0' and not score['critic_tail_included']
+    assert torch.equal(rng, torch.get_rng_state())
+
+
+def test_scoring_phase_freezes_curriculum_but_training_keeps_advancing():
+    t = fixture.trainer()
+    t.horizon_curriculum = SimpleNamespace(horizons_s=[60, 90], stage=lambda p: int(p >= 10))
+    t.gated300 = dict(config=dict(score_training_horizon=True))
+    t.config = replace(t.config, horizon=5)
+    with gated300.scoring(t):
+        assert t._imagination_config(t.start_states.batch).horizon == 60
+    t.update_count = 20
+    with gated300.scoring(t):
+        assert t._imagination_config(t.start_states.batch).horizon == 60
+    t._training_imagination = True
+    assert t._imagination_config(t.start_states.batch).horizon == 90

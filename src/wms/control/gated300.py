@@ -163,6 +163,23 @@ def uses_ctrl0(trainer):
     return bool(getattr(trainer, 'gated300', {}).get('config', {}).get('ctrl0_reference', False))
 
 
+def measures_ctrl0(trainer):
+    from .execution import mode
+    return ((requested_rollout(trainer) and uses_ctrl0(trainer))
+            or (getattr(trainer, '_gated300_scoring', False)
+                and getattr(trainer.policy, 'residual_on_native', False) and mode() == 2))
+
+
+def score_position(trainer):
+    """Frozen curriculum position for one measurement phase, training stays live."""
+    live = trainer._curriculum_position(advance=False)
+    if getattr(trainer, '_gated300_scoring', False):
+        if not hasattr(trainer, '_gatemeas_score_position'):
+            trainer._gatemeas_score_position = live
+        return trainer._gatemeas_score_position
+    return live
+
+
 def add_ctrl0_reference(variants):
     """Public S-ESLONG hook: add one zero-residual CRN row per start, without RNG use.
 
@@ -187,7 +204,8 @@ def reference_index(variants):
     from .counterfactual import KIND_CTRL0
     refs = {int(variants.row_start[r]): r for r in
             torch.nonzero(variants.row_kind == KIND_CTRL0).flatten().tolist()}
-    if set(refs) != set(range(variants.n_starts)):
+    if (set(refs) != set(range(variants.n_starts))
+            or int((variants.row_kind == KIND_CTRL0).sum()) != variants.n_starts):
         raise ValueError('CTRL0 reference needs exactly one row for every start')
     return variants.row_start.new_tensor([refs[int(s)] for s in variants.row_start])
 

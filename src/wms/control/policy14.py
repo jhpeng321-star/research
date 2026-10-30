@@ -160,6 +160,7 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                                       torch.Generator().manual_seed(seed))
             imagined = trainer.imagine(batch, deterministic=True, variants=variants,
                                        future_seed=seed)
+            variants = imagined['variants']
             n = imagined["n_base"]
             components = imagined["components"]
             road = components["delay"].sum(1).mean(0)
@@ -183,6 +184,17 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                     raise ValueError("native acceptance requires a paired native row for every start")
                 result["native_J"] = float(torch.stack([j[variants.base_row[i]] for i in range(n)]).mean())
             if matched_horizon:
+                from .gated300 import reference_index, score_position
+                from .counterfactual import KIND_CTRL0
+                refs = reference_index(variants) if bool((variants.row_kind == KIND_CTRL0).any()) else None
+                result.update(J_dense=result['J'], J_raw_dense=result['J'],
+                    scoring_phase_position=score_position(trainer),
+                    score_rule='raw accrued J at the phase-frozen training horizon')
+                if refs is not None:
+                    ctrl0_j = j[refs[:n]]
+                    result.update(CTRL0_J_dense=float(ctrl0_j.mean()),
+                        raw_gain_vs_CTRL0_dense=float((ctrl0_j - j[:n]).mean()),
+                        raw_dJ_vs_CTRL0_dense=float((j[:n] - ctrl0_j).mean()))
                 result['score_horizon_s'] = imagined['imagination_horizon_s']
                 if 'gated300_long_difference' in imagined:
                     long = imagined['gated300_long_difference'][:, 0, :n]
@@ -198,9 +210,16 @@ def independent_score(trainer, batch, seed=965149, *, native_reference=False):
                         long_mean_abs_dJ=float(median.abs().mean()),
                         long_sign_agreement=float(agreement.float().mean()),
                         score_rule='J_dense - w_long * q10(gated paired improvement at H_long)')
+                    result.update(J_raw_long=result['J_long'],
+                        long_credit_reference=imagined.get('gated300_reference', 'learned_native'))
+                    if refs is not None:
+                        result.update(CTRL0_J_long=float(long_j[refs[:n]].mean()),
+                            raw_gain_vs_CTRL0_long=float((long_j[refs[:n]] - long_j[:n]).mean()),
+                            raw_dJ_vs_CTRL0_long=float((long_j[:n] - long_j[refs[:n]]).mean()))
                     result['J'] -= weighted
                     if result['native_relative_gain'] is not None:
                         result['native_relative_gain'] += weighted
+                result['composite_gated_score'] = result['J']
             return result
     finally:
         _restore_rng(rng, trainer.device)
