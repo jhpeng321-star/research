@@ -11,6 +11,7 @@ from dataclasses import asdict
 import hashlib
 import json
 import os
+import time
 
 import numpy as np
 import torch
@@ -372,8 +373,10 @@ def main(argv=None):
         raise ValueError('additional MAPPO checkpoint must be genuinely speed-only')
     arms = (*ARMS, 'MAPPO_speed_partial') if speed is not None else ARMS
     signature = runtime_contract(trainer)
+    from wms.core.speed_flags import active as speed_flags
     doc = dict(schema=SCHEMA, complete=False, passed=False, measure_only=a.measure_only,
         launch_authorized=False, gpu_memory_fraction=a.gpu_memory_fraction,
+        execution_speed_flags=speed_flags(),
         K=8, horizons_s=[90, 300],
         n_starts=a.n_starts, wm_sha256=WM_SHA, wm_config_sha256=sha256(a.wm_config),
         mappo_sha256=MAPPO_SHA, current_policy_sha256=sha256(a.current_policy),
@@ -398,8 +401,10 @@ def main(argv=None):
         sampler = kwargs.get('entrant_driver_sampler')
         if sampler is None:
             raise ValueError('learned mix is not connected to the WM rollout')
+        began = time.monotonic()
         result = original_rollout(*args, **kwargs)
         mix_calls.append(list(sampler.assigned))
+        print('FUTURE', len(mix_calls), 'rollout_s', round(time.monotonic()-began, 3), flush=True)
         return result
     model.rollout = rollout
     def prefix(owner, imagined, dense_steps):
@@ -427,7 +432,9 @@ def main(argv=None):
             variants = build_variants(batch.state, trainer.counterfactual)
             before = _rng_state(trainer.device)
             row = dict(metadata=batch.metadata, sampler_info=trainer._last_start_info, arms={})
+            doc['rows'].append(row)
             for arm in arms:
+                began = time.monotonic()
                 _restore_rng(before, trainer.device)
                 trainer.policy.residual_head.load_state_dict(saved_head)
                 if arm in ('current', 'candB_zero'):
@@ -444,9 +451,9 @@ def main(argv=None):
                         _memory_replay=True)
                     row['arms'][arm] = reduce_image(trainer, image)
                 del image
-                print('ARM', index+1, arm, flush=True)
-            doc['rows'].append(row)
-            out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
+                row['arms'][arm]['elapsed_s'] = time.monotonic()-began
+                out.write_text(json.dumps(doc, indent=1, allow_nan=False)+'\n', encoding='utf-8')
+                print('ARM', index+1, arm, 'elapsed_s', round(time.monotonic()-began, 3), flush=True)
             print('START', index+1, batch.metadata, flush=True)
     finally:
         gated300.prefix = original_prefix
