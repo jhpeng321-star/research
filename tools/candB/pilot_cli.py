@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import ExitStack
+from functools import wraps
 import json
 import math
 import os
@@ -57,7 +58,7 @@ def run(path, output, mode, *, exploratory=False):
     if 'EXPLORATORY' not in Path(output).name or Path(output).exists():
         raise ValueError('pilot output must be fresh and named EXPLORATORY')
     doc = authority.verify(path, exploratory=True)
-    from wms.control import policy14_cli as cli, gated300, execution
+    from wms.control import policy14_cli as cli, gated300, execution, policy14
     from wms.control.dreamer import DreamerTrainer
     from wms.control import parallel_futures, eslong
     from tools.candB import rankcheck
@@ -68,6 +69,7 @@ def run(path, output, mode, *, exploratory=False):
                pairing_receipt_sha256=doc['input_sha256']['pairing_receipt'])
     original_load, original_update = DreamerTrainer.load_checkpoint, DreamerTrainer.update
     original_score, original_execute, dumps = cli.independent_score, execution.executed_residual, json.dumps
+    original_controller = policy14.make_cav_controller
     state = dict(capture=None, phase_update=0, baseline=None, trainer=None, began=None)
 
     class SerialPool:
@@ -98,19 +100,29 @@ def run(path, output, mode, *, exploratory=False):
         finally:
             os.environ['C4_EXECUTION_DRIVER'] = current
 
-    def execute(frame, residual, *a, **kw):
-        result = original_execute(frame, residual, *a, **kw)
-        capture = state['capture']
-        if capture is not None and kw.get('residual_reference') == 'ctrl0':
-            with torch.no_grad():
-                n = capture['n']
-                zero = original_execute(frame, torch.zeros_like(residual), *a, **kw)
-                mask = (frame['present'] & frame['is_cav'] & (frame['lane'] >= 0))[:n]
-                delta = (result[:n] - zero[:n])[mask]
-                values = torch.stack((mask.sum(), (delta != 0).sum(),
-                    (-delta).clamp_min(0).sum(), delta.abs().sum(), delta.sum())).double()
-                capture['totals'] = values if capture['totals'] is None else capture['totals'] + values
-        return result
+    def controller(*a, **kw):
+        callback = original_controller(*a, **kw)
+        @wraps(callback)
+        def measured(frame):
+            result = callback(frame)
+            capture = state['capture']
+            if capture is not None:
+                with torch.no_grad():
+                    n = capture['n']
+                    zeros = torch.zeros_like(frame['s_m'])
+                    zero = original_execute(frame, zeros, zeros, residual_reference='ctrl0')
+                    zero = ((frame['v_mps'] + .5*zero).clamp_min(0.)-frame['v_mps'])/.5
+                    mask = (frame['present'] & frame['is_cav'] & (frame['lane'] >= 0))[:n]
+                    if kw.get('act_mask') is not None:
+                        mask = mask & kw['act_mask'][:n]
+                    # Observe the FINAL callback acceleration, after acting masks
+                    # and nonnegative-speed Euler execution, not requested actions.
+                    delta = (result[:n, :, 3] - zero[:n])[mask]
+                    values = torch.stack((mask.sum(), (delta != 0).sum(),
+                        (-delta).clamp_min(0).sum(), delta.abs().sum(), delta.sum())).double()
+                    capture['totals'] = values if capture['totals'] is None else capture['totals'] + values
+            return result
+        return measured
 
     def score(trainer, batch, *a, **kw):
         capture = dict(n=batch.state['s_m'].shape[0], totals=None)
@@ -122,7 +134,7 @@ def run(path, output, mode, *, exploratory=False):
         totals = capture['totals']
         if totals is not None:
             count, nonzero, brake, absolute, signed = totals.cpu().tolist()
-            result['executed_residual'] = dict(scope='deterministic paired rescore, group rows, CAV physics ticks',
+            result['executed_residual'] = dict(scope='deterministic paired rescore, group rows, acting CAV physics ticks',
                 count=count, fraction_nonzero=nonzero/max(count, 1), mean_braking=brake/max(count, 1),
                 mean_abs_delta=absolute/max(count, 1), mean_delta=signed/max(count, 1))
         if state['baseline'] is None:
@@ -163,7 +175,7 @@ def run(path, output, mode, *, exploratory=False):
         for target, name, replacement in ((gated300, '_install_gain_only', install_exploratory),
                 (rankcheck, 'verify_receipt', check_rank), (DreamerTrainer, 'load_checkpoint', load),
                 (DreamerTrainer, 'update', update), (cli, 'independent_score', score),
-                (execution, 'executed_residual', execute), (json, 'dumps', serialize)):
+                (policy14, 'make_cav_controller', controller), (json, 'dumps', serialize)):
             stack.enter_context(patch.object(target, name, replacement))
         stack.enter_context(patch.object(parallel_futures, 'FuturePool', SerialPool))
         return cli.main(args)

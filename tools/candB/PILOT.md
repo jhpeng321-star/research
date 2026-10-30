@@ -34,3 +34,16 @@
 - Planned owned chain root: `/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY_20261030`;
   own `OWNERSHIP.json`, `dry_OWNERSHIP.json`, `pilot_OWNERSHIP.json` retain PID/start ticks.
 - PID/timing/peak memory and observed updates: pending admission/launch.
+
+## Admission and telemetry refinement (before any GPU training)
+- Waiting supervisor968085/start874131451 launched19:51:40, observed free10901MiB;
+  no dry/pilot child launched. Own STOP requested while waiting; that root is retained.
+- gpuR19:53: free8837MiB; peers433299/442305 untouched. Neither card can admit serial yet.
+- Before dispatch, refine executed telemetry to observe FINAL callback accelerations
+  on ACTING CAV ticks (including the same Euler rounding on CTRL0), rather than
+  pre-mask proposed execution. Training/objective algebra is unchanged.
+- New supervisor polls memory every600s during training as well as admission.
+- `pilot_stage.sh --exploratory-owner-20261030 ARCHIVE gpuA RUNTIME` invokes the
+  existing `stage.sh`; a narrow bundler adapter accepts only named S-RANKCHECK dirty
+  paths and still archives exclusively committed LF Git blobs. Dirty pilot files refuse.
+  It also includes the omitted `tools/gated300/cct1.py` CPU fixture dependency.

@@ -59,7 +59,17 @@ def main():
             write(root/f'{mode}_OWNERSHIP.json', dict(pid=child.pid,
                 start_ticks=incarnation(child.pid), argv=command, output=str(output),
                 utc=datetime.now(timezone.utc).isoformat()))
-            rc = child.wait()
+            while True:
+                try:
+                    rc = child.wait(timeout=max(1., 600-(time.monotonic()-last_query)))
+                    break
+                except subprocess.TimeoutExpired:
+                    last_query = time.monotonic()
+                    memory = subprocess.check_output(['nvidia-smi', '--query-gpu=memory.free',
+                        '--format=csv,noheader,nounits'], text=True).strip()
+                    with (root/'GPU_ADMISSION.jsonl').open('a') as stream:
+                        stream.write(json.dumps(dict(t=time.time(), label='EXPLORATORY',
+                            free_MiB=memory, stage=mode, own_pid=child.pid))+'\n')
         summary = json.loads((output/'RUN_SUMMARY.json').read_text()) if (output/'RUN_SUMMARY.json').is_file() else {}
         write(root/f'{mode}_EXIT.json', dict(returncode=rc, status=summary.get('status'),
                                            error=summary.get('error')))

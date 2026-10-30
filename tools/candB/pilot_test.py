@@ -9,6 +9,13 @@ from tools.candB import pilot_authority as a, pilot_cli
 from wms.control import gated300
 
 
+def test_shared_staging_excludes_only_named_rankcheck_working_edits():
+    from tools.candB.pilot_bundle import check_shared_status
+    assert check_shared_status(b' M tools/candB/rankcheck.py\n') == ['tools/candB/rankcheck.py']
+    with pytest.raises(ValueError, match='unexpected dirty'):
+        check_shared_status(b' M tools/candB/pilot_cli.py\n')
+
+
 def test_default_off():
     with pytest.raises(ValueError, match='explicit'):
         a.build({}, 'unused')

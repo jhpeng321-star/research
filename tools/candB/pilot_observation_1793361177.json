@@ -1,0 +1,32 @@
+{
+ "label": "EXPLORATORY",
+ "root": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY_20261030",
+ "epoch": 1793361177.7734575,
+ "stages": {
+  "dry": {
+   "rows": []
+  },
+  "pilot": {
+   "rows": []
+  }
+ },
+ "OWNERSHIP.json": {
+  "label": "EXPLORATORY",
+  "pid": 968085,
+  "start_ticks": "874131451",
+  "utc": "2026-10-30T11:51:40.387528+00:00",
+  "runtime": "/root/autodl-tmp/c4/candB_pilot_ready_EXPLORATORY_20261030",
+  "argv": [
+   "/root/autodl-tmp/c4/candB_pilot_ready_EXPLORATORY_20261030/tools/candB/pilot_supervise.py",
+   "--exploratory-owner-20261030",
+   "--root",
+   "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY_20261030"
+  ],
+  "same_incarnation_alive": true
+ },
+ "last_gpu_admission": {
+  "t": 1793361100.4444516,
+  "label": "EXPLORATORY",
+  "free_MiB": "10901"
+ }
+}
