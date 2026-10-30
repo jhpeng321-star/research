@@ -62,7 +62,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         policy_ramp_merge: bool = False,
                         native_ramp_merge: str = "gap6",
                         native_lane_change: bool = False,
-                        policy_native_lanes: bool = False) -> CavController:
+                        policy_native_lanes: bool = False,
+                        policy_strategic_merge: bool = False) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -107,6 +108,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
       including its inferred-driver discretionary decisions and first-passage merge.
       The callback advertises a pure ``native_lane_mask(state)`` before WM forward;
       the WM supplies the resulting lane targets. Policy-acting lanes retain ownership.
+    * ``policy_strategic_merge`` (default OFF): match real lane mode 513's strategic
+      ramp fallback when a policy CAV stays on lane 2. Explicit policy crossings
+      and learned mainline lane decisions retain ownership. Requires the native
+      first-passage lane/merge path; it never changes longitudinal ownership.
     """
     if native_ramp_merge not in ("gap6", "wm_law"):
         raise ValueError("native_ramp_merge must be 'gap6' or 'wm_law'")
@@ -114,6 +119,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         raise ValueError("native_lane_change must be a boolean")
     if not isinstance(policy_native_lanes, bool):
         raise ValueError("policy_native_lanes must be a boolean")
+    if not isinstance(policy_strategic_merge, bool):
+        raise ValueError("policy_strategic_merge must be a boolean")
+    if policy_strategic_merge and (not native_lane_change or native_ramp_merge != "wm_law"):
+        raise ValueError("policy_strategic_merge requires native_lane_change and wm_law")
     if policy_native_lanes:
         if not native_lane_change:
             raise ValueError("policy_native_lanes requires native_lane_change")
@@ -167,7 +176,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
         if zone is not None:
             acting = acting & ~zone(state).to(mask.device).bool()
-        return mask & ~acting
+        nonacting = mask & ~acting
+        if policy_strategic_merge:
+            nonacting = nonacting | (mask & (state['lane'] == 2))
+        return nonacting
 
     def controller(state: Mapping[str, Tensor]) -> Tensor:
         nonlocal held, previous_mask, internal_index, last_command, last_intent
@@ -251,6 +263,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             lane_now = torch.where(native_lanes & (state["lane"] != 2), targets, lane_now)
         # LOOP14C: CAVs whose ramp merge is automatic (all, unless the head owns acting CAVs).
         auto = mask & ~acting if policy_ramp_merge else mask
+        if policy_strategic_merge:
+            auto = auto | (mask & (state['lane'] == 2))
         if native_ramp_merge == "wm_law" or native_lane_change:
             # Stay on the ramp here; the WM's HDV merge law decides (and may veto) the crossing.
             if not isinstance(state, MutableMapping):

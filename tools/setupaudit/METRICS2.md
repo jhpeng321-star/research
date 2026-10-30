@@ -63,3 +63,26 @@ existing road vehicles continue on the hybrid's own state. This deliberately
 breaks queue/road feedback; it is an attribution intervention, not deployable
 traffic physics. Source waiting is preserved rather than zeroed. Virgin slots
 are used once. The paired arrivals and learned entrant-mix keys remain shared.
+
+## Concrete mode-513 strategic-merge mismatch and opt-in repair
+
+The real `traffic_shepherd/c4/env.py:37-48,375-390` explicitly retains strategic
+changes in lane mode 513 and issues no TraCI request for target=current.
+`git diff 69b4524d HEAD -- traffic_shepherd/c4/env.py` confirms those lane
+sections are unchanged from the frozen E3 real path (only residual execution
+changed). Conversely, audited bridge.py uses `policy_ramp_merge=True` for MAPPO:
+`auto = mask & ~acting`, so a staying acting ramp CAV has no native first-passage
+merge path. This is an execution-ownership mismatch, independent of score signs.
+
+`policy_strategic_merge=false` by default repairs this prospectively: acting
+ramp stays delegate to WM first passage, explicit policy crossings take precedence,
+and learned mainline lanes / absolute longitudinal commands remain owned by MAPPO.
+The policy14 factory/CLI save the flag only when opted in. CPU tests cover mode
+ownership, full WM delegation, default-OFF bitwise/RNG parity and validation.
+This aligns strategic ownership, not a claim of validated SUMO lane dynamics.
+
+The primary K8 scorer retains its original ce6a32d3 bridge bytes. The repair is
+loaded from isolated strategic_bridge.py / strategic_policy14.py modules, so it
+cannot change a running primary result. A prospective serial 24-start K1 check
+uses future 0 from the same K8 plans and two rows (CTRL0, MAPPO+strategic merge).
+Its intervals and source hashes are reported separately from the K8 ablations.

@@ -339,6 +339,10 @@ def main(argv=None):
             raise ValueError("policy14.native_lane_change must be a boolean")
         if switches.get("native_lane_change", False):
             ramp_merge["native_lane_change"] = switches["native_lane_change"]
+        if not isinstance(switches.get("policy_strategic_merge", False), bool):
+            raise ValueError("policy14.policy_strategic_merge must be a boolean")
+        if switches.get("policy_strategic_merge", False):
+            ramp_merge["policy_strategic_merge"] = True
         if args.native_init:
             if not raw["counterfactual"].get("enabled"):
                 raise ValueError("native-init requires paired native counterfactuals")
