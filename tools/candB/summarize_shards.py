@@ -87,6 +87,16 @@ def analyze(root):
     old_path = root.parent/'rankcheck_saved_k8/CANDB_RANKCHECK.json'
     old = read(old_path)
     old_row = old['rows'][0]
+    if 'MAPPO_native_lanes' in rows:
+        first = rows['MAPPO_native_lanes'][0]
+        assert first['index'] == 0 and first['metadata'] == old_row['metadata']
+        for metric in ('J90', 'J300'):
+            np.testing.assert_array_equal(old_row['arms']['CTRL0'][metric][:4],
+                                          first['reference'][metric])
+            np.testing.assert_array_equal(old_row['arms']['MAPPO_native_lanes'][metric][:4],
+                                          first['value'][metric])
+            np.testing.assert_array_equal(old_row['arms']['native'][metric][:4],
+                                          first['native'][metric])
     native_actor = stats([dict(metadata=old_row['metadata'], value=old_row['arms']['native'],
                               reference=old_row['arms']['CTRL0'])])
     zero_path = root/'zero/RAW.json'
@@ -125,6 +135,7 @@ def analyze(root):
         cross_host_CTRL0_max_abs_J300=cross_host_reference_max,
         full_R2_demonstrated=False, zero_identity=zero['zero_identity'],
         current_output_head_zero=zero['current_output_head_zero'],
+        actual_WM_K4_prefix_matches_saved_K8_first4=True,
         dense_horizons_s=sorted({r['value']['dense_horizon_s'] for values in rows.values()
                                  for r in values}),
         saved_K8_sha256=sha256(old_path), zero_sha256=sha256(zero_path))
@@ -160,6 +171,8 @@ def report(result, final_sha, stamp):
         return lines
     first = next(iter(result['inputs'].values()))
     proxy = summaries.get('MAPPO_native_lanes')
+    native = summaries['native']['J300']['paired_delta']
+    ctrl0_native = dict(mean=-native['mean'], lo=-native['hi'], hi=-native['lo'])
     outcome = ('HOLDS in the reduced-K diagnostic only' if result['diagnostic_proxy_condition'] else
                'NOT DEMONSTRATED in available reduced-K data')
     lines = [
@@ -196,6 +209,7 @@ def report(result, final_sha, stamp):
         'Fresh-zero B: one full300s scientific-state array equality PASS vs CTRL0, plus exact physical/actor equality. Current u191 head is nonzero; no construction-based current-A identity is claimed.',
         '## Existing SUMO evidence and R2',
         'CTRLARM600s: CTRL0-native **-1956.53 [-4086.66,+144.50]**; lane-on MAPPO-CTRL0 **-623.95 [-2044.25,+664.51]** veh-s; both include0. Exact source: `E:/research-dense/docs/paper_results/CTRLARM.md:9-17`.',
+        f'WM CTRL0-native300s: {cell(ctrl0_native, summaries["native"]["n_worlds"], True)} veh-s; point direction {"agrees with" if ctrl0_native["mean"] < 0 else "opposes"} CTRLARM. Horizon/uncertainty differences remain.',
         'These lane-on/600s reused-world results are contextual, not matched native-lane/300s speed-only efficacy; the partial speed-only export has no matched real result here.',
         'No numeric PI/CIRCLES SUMO contrast in either named paper_results directory. `E:/research-dense/runs/active/C4-V5-20261014/REGISTRATION.md:96-99` registers damping/PI arms only; active C4-EVAL registrations are absent.',
         'SETUPAUDIT2 physical all-vehicle/source/mix scoring agrees, but its TRAIN export calls train.sample directly (tools/setupaudit/inspect_inputs.py:46-58), bypassing B headroom/tilt/exclusions; no actor loss is saved. Fixedupdate190/horizon600 slots/future-specific lane uniforms also differ. It cannot substitute for this exact B panel.',
@@ -203,12 +217,14 @@ def report(result, final_sha, stamp):
         'Binding rule: `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md:4951-4956`. Point-estimate order/overlapping intervals alone do not establish the alternative.',
         '## Execution and verification',
         'Fresh source staging via tools/candB/stage.sh; gpuA <=2x.19, gpuR .40; own-PID/incarnation controls only. Peer WMREQUAL/SETUPAUDIT jobs untouched; all failed/timing attempts retained.',
-        '16 CPU tests pass (2 local CUDA skips);4 CPU/CUDA equivalence tests pass independently on each GPU host; Ruff/diff PASS. Paired CIs independently recomputed from every retained completed start.',
+        '16 CPU tests pass (2 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
         'Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.',
     ]
     if proxy:
         lines.insert(-6, 'Available proxy dJ300: '+cell(proxy['J300']['paired_delta'],
-            proxy['n_worlds'], True)+' veh-s; speed-only R2 needs upper95 below0.')
+            proxy['n_worlds'], True)+' veh-s; point direction '+
+            ('agrees with' if proxy['J300']['paired_delta']['mean'] < 0 else 'opposes')+
+            ' historical lane-on MAPPO, not matched speed-only proof. R2 needs upper95 below0.')
     assert len(lines) <= 70, len(lines)
     return '\n'.join(lines)+'\n'
 
