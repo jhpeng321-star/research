@@ -56,3 +56,15 @@ the same population/cost/K as this objective. No population confidence claim is 
 Reproduce on the staged inputs: `bash run_measure.sh --out NEW.json --device cuda --mix`.
 Local verification/aggregation: `python tools/setupaudit/summarize.py
 tools/setupaudit/evidence/mix_exact.json --aggregate-only`.
+
+## Completed shipped-setup backfill
+`actual_exact.json`: the same first TRAIN start, actual mix-OFF semantics, all 3 actors/K8.
+Owned waiter PID 430786 checked the GPU was idle after 429791 exited, then exec'd
+the GPU scorer under the same PID and .35 cap (`after_mix.sh`, no concurrent GPU job).
+The original completed CTRL0 receipt was reused with hash/config/start checks.
+MAPPO-CTRL0 dJ90=+77.3359375, dJ300=+5324.8515625 veh-s;
+maximised dense-credit difference=-147.428861618042, all long gates OFF.
+Candidate A equals CTRL0, including another 69134 executed CAV ticks.
+90 s native-future arrays and 300 s native J are exactly equal across actors.
+Both full scoring jobs finished; nvidia-smi showed no remaining compute process.
+Logs retain the idle-card checks and owned PIDs. Ruff and bash syntax checks passed.
