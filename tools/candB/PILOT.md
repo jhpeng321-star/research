@@ -131,4 +131,18 @@
 - `python -B -m tools.candB.pilot_watch_2240 --root REMOTE_CHAIN --ledger SHARED_REGISTRATION --spawn`
   starts an exclusive durable local observer. It samples artifacts every600s,
   appends each update here and every5 to the ledger, saves full-state/baseline
-  proof, and emits `pilot_update3_ACK.json` only after phase3 is actually observed.
+   proof, and emits `pilot_update3_ACK.json` only after phase3 is actually observed.
+
+## Owner23:05 fresh-session recovery
+- 23:04:16 +08 exact-incarnation recovery: original dry985766/start874675005
+  remains runnable, CPU ticks641792; original supervisor970521 and exclusive
+  continuation controller999762 remain live. No continuation trainer dispatched.
+- Frozen baseline is still not durable, zero optimizer rows. Preserve this work;
+  no fresh launch, no repeated authority/staging suite, no extra GPU query.
+- Existing local observer43860 (creation22:56:57, exact module/root/ledger command)
+  independently verified alive. It remains the sole telemetry/registration bridge.
+- Last supervisor GPU sample23:02:15 free41371MiB. Sampling remains600s.
+- Recovery receipt `pilot_recovery_2305_1793372657.json`; read-only collector
+  `pilot_recover_2305.py` touches only named own-run receipts and owned process metadata.
+- Owner23:05 parallelism amendment is being prepared before the pending clean
+  boundary. SPEEDPROF currently publishes diagnosis only, no exact application diff.
