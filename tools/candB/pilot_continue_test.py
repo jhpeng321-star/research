@@ -25,6 +25,7 @@ class ContinuationTest(unittest.TestCase):
         from wms.control import policy14_cli as cli
         patched = pilot_continue.continued_main(cli)
         self.assertIsNot(patched, cli.main)
+        self.assertIs(patched.__globals__, cli.__dict__)
         source = inspect.getsource(cli.main)
         self.assertIn('gate_position = trainer.update_count - native_start_update', source)
         self.assertIn("baseline = recovery['prior']['frozen_scoring_baseline']", source)

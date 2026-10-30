@@ -5,7 +5,6 @@ config, objective and source manifest remain those independently verified by the
 original exploratory authority. Exact replacements refuse unexpected source.
 """
 import argparse
-import copy
 import hashlib
 import inspect
 import json
@@ -111,10 +110,10 @@ def continued_main(cli):
         ("ranked.get('current_policy_sha256') != sha256(args.resume)",
          "(recovery['checkpoint_sha256'] if recovery else ranked.get('current_policy_sha256')) != sha256(args.resume)"),
         ('before = independent_score(trainer, rescore_batch)',
-         "before = (copy.deepcopy(recovery['updates'][-1]['independent_J']) if recovery else "
+         "before = (__import__('copy').deepcopy(recovery['updates'][-1]['independent_J']) if recovery else "
          'independent_score(trainer, rescore_batch))'),
         ('initial_native = score_native_panel(trainer, val, gate_panel, args.device)',
-         "initial_native = (copy.deepcopy(recovery['curve'][-1]) if recovery else "
+         "initial_native = (__import__('copy').deepcopy(recovery['curve'][-1]) if recovery else "
          'score_native_panel(trainer, val, gate_panel, args.device))'),
         ('panel_before = score_gate_panel(trainer, val, gate_panel, args.device)',
          "panel_before = (list(recovery['prior']['gate_panel']['J_before']) if recovery else "
@@ -127,9 +126,14 @@ def continued_main(cli):
             source = source.replace(old, new, 1)
         else:
             source = replace_once(source, old, new)
-    namespace = dict(cli.__dict__, copy=copy)
-    exec(compile(source, cli.__file__, 'exec'), namespace)
-    return namespace['main']
+    # Keep live module globals: the exploratory adapter installs its independent
+    # score/telemetry wrappers *after* this specialization is constructed.
+    original_main = cli.main
+    try:
+        exec(compile(source, cli.__file__, 'exec'), cli.__dict__)
+        return cli.main
+    finally:
+        cli.main = original_main
 
 
 def run(authority, output, parent, *, exploratory=False):
