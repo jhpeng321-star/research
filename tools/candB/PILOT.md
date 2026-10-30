@@ -63,3 +63,6 @@
 - Latest capacity: gpuA20:01 free6161MiB; gpuR20:03 free8441MiB. No GPU child yet.
 - Local observer `pilot_observe.py --root REMOTE_CHAIN --ledger SHARED_REGISTRATION`
   retains exact own PID/start ticks + update metrics and appends launch/every5 updates.
+- Final supervisor **970521 / start ticks874204998**, detached and same incarnation
+  verified at20:13; start20:12:15+08. Admission sample free7571MiB, so **WAITING**,
+  no dry/pilot child. Only this supervisor will admit its own dry/pilot processes.
