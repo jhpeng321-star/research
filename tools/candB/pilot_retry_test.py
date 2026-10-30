@@ -96,7 +96,8 @@ class RetryContractTests(unittest.TestCase):
     def test_retry_launcher_source_contract(self):
         source = launch_source(Path('tools/candB/pilot_lean_launch.sh').read_text())
         for expected in ('WMS_SPEED_ES_STACK_SIDES=4', 'WMS_SPEED_FORWARD_MEMORY_FRACTION=.75',
-                'WMS_SPEED_FUTURE_VJP_SLOTS=2', 'PILOT_RETRY_AUTHORITY.json',
+                'WMS_SPEED_FUTURE_WORKERS=2', 'WMS_SPEED_FUTURE_VJP_SLOTS=2',
+                'PILOT_RETRY_AUTHORITY.json',
                 'tools.candB.pilot_retry_authority', 'tools.candB.pilot_retry ',
                 '>= 46000'):
             self.assertIn(expected, source)

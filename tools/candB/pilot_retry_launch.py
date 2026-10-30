@@ -14,7 +14,9 @@ def launch_source(source):
     source = replace_once(source,
         'export WMS_SPEED_FORWARD_WORKERS=2 WMS_SPEED_FORWARD_MEMORY_FRACTION=.28',
         'export WMS_SPEED_ES_STACK_SIDES=4\nexport WMS_SPEED_FORWARD_WORKERS=1 WMS_SPEED_FORWARD_MEMORY_FRACTION=.75')
-    source = replace_once(source, 'WMS_SPEED_FUTURE_VJP_SLOTS=1', 'WMS_SPEED_FUTURE_VJP_SLOTS=2')
+    source = replace_once(source,
+        'export WMS_SPEED_FUTURE_WORKERS=1 WMS_SPEED_FUTURE_VJP_SLOTS=1 WMS_SPEED_FUTURE_MEMORY_FRACTION=.24',
+        'export WMS_SPEED_FUTURE_WORKERS=2 WMS_SPEED_FUTURE_VJP_SLOTS=2 WMS_SPEED_FUTURE_MEMORY_FRACTION=.24')
     source = replace_once(source, '-m tools.candB.pilot_lean --exploratory-owner-20261030',
         '-m tools.candB.pilot_retry --exploratory-owner-20261030')
     source = replace_once(source, '>= 38000', '>= 46000')
