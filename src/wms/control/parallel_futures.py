@@ -127,7 +127,7 @@ def _snapshot(trainer):
             'controller_factory observation_builder reward_fn reward_weights safety '
             'exploration update_count coop_anchor uncertainty long_credit_requested '
             'long_credit_trusted_s paircrit gated300 world_model_ids horizon_curriculum '
-            '_longgrad_phase').split()
+            '_longgrad_phase _long_credit_reference').split()
     result = object.__new__(type(trainer))
     result.__dict__.update({k: getattr(trainer, k) for k in keys if hasattr(trainer, k)})
     result._longgrad_optimizer_groups = [tuple(g['params']) for g in trainer.actor_optimizer.param_groups]
@@ -242,6 +242,12 @@ def _vjp(trainer, common, task, gate=None, *, transport=True):
     n_rows = kwargs['variants'].n_rows if kwargs['variants'] is not None else total
     start, stop, future = task[:3]
     horizon = task[3] if len(task) > 3 else cfg.horizon
+    from .eslong import active as es_active
+    if es_active(trainer):
+        from .longskip import dense_replay_horizon
+        # Includes the unknown-support fallback: no ES backward can build a
+        # full long trajectory graph, even with entirely zero dense credit.
+        horizon = min(horizon, dense_replay_horizon(trainer, batch, cfg))
     small, variants, starts, rows = _subset(batch, kwargs['variants'], start, stop)
     replay = _RandomTape(common['tape'], (starts, rows, total, n_rows))
     _restore_rng(before, trainer.device)
@@ -285,7 +291,7 @@ def _vjp(trainer, common, task, gate=None, *, transport=True):
     trainer._longgrad_state_trace = None
     return {'grads': [None if g is None else g.detach().cpu() if transport else g.detach()
                       for g in grads],
-            'elapsed': time.perf_counter() - began,
+            'elapsed': time.perf_counter() - began, 'horizon': horizon,
             'longgrad': diagnostic,
             'spill': getattr(trainer, 'memory_spill_stats', None)}
 
@@ -325,7 +331,8 @@ def backward_futures(trainer, batch, cfg, kwargs, tape, before, cache, slots, gr
             trainer.memory_spill_stats = result['spill']
         if result.get('longgrad') is not None:
             trainer._longgrad_futures.append(result['longgrad'])
-        record_replay(trainer, task[0], task[2], task[3], cfg.horizon, result['elapsed'])
+        record_replay(trainer, task[0], task[2], result.get('horizon', task[3]), cfg.horizon,
+                      result['elapsed'])
         _trace_memory(trainer, 'parallel_future_collected', start=task[0], future=task[2])
 
     # Avoid creating workers for an empty long pass. Serial and pooled execution
@@ -364,11 +371,14 @@ def _forward(trainer, common, future):
     from .dreamer import _restore_rng
     from .imagination_memory import _RandomTape
     cache, tape = {'items': []}, []
+    from .eslong import active as es_active, calibration
     _restore_rng(common['before'], trainer.device)
-    with torch.no_grad(), _RandomTape(tape, offload=True):
+    with torch.no_grad(), calibration(trainer, common['batch']) as probe, _RandomTape(tape, offload=True):
         trainer.imagine(common['batch'], **common['kwargs'], _memory_replay=True,
             _memory_config=common['cfg'], _memory_full_batch=common['batch'],
             _memory_future_cache=cache, _memory_collect_future=future)
+    if es_active(trainer):
+        cache['eslong_sensitivity'] = probe.get('sensitivity', 0.)
     return cache, tape
 
 
@@ -386,6 +396,8 @@ def forward_futures(trainer, batch, cfg, kwargs, before):
             if index == 0:
                 tape.extend(draws[:prefix])
                 cache['advanced_rng'] = part['advanced_rng']
+                if 'eslong_sensitivity' in part:
+                    cache.update(eslong_sensitivity=part['eslong_sensitivity'], tape_prefix=prefix)
             tape.extend(draws[prefix:])
             item = part['items'][0]
             item['tape_end'] = len(tape)
@@ -428,8 +440,12 @@ def _main(root, index):
                 continue
             try:
                 task = json.loads(path.with_suffix('.json').read_text())
-                result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'
-                          else _forward(trainer, common, task))
+                if common.get('eslong'):
+                    from .eslong import forward_task
+                    result = forward_task(trainer, common, task)
+                else:
+                    result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'
+                              else _forward(trainer, common, task))
                 torch.save(result, path.with_suffix('.pt'))
                 del result
             except BaseException:

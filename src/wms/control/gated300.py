@@ -31,8 +31,17 @@ class LongCreditConfig:
     cct2_file: str = ''  # CCT-2 verdict authority; required by gain_only.
     w_long: float = 1.0  # Fixed prospectively; never tuned on observed outcomes.
     score_training_horizon: bool = False
+    estimator: str = 'pathwise'
+    es_directions: int = 2
+    es_sigma: float = 0.  # Auto: local command RMS matches current additive exploration std.
 
     def __post_init__(self):
+        if self.estimator not in ('pathwise', 'antithetic'):
+            raise ValueError('long_credit.estimator must be pathwise or antithetic')
+        if type(self.es_directions) is not int or self.es_directions < 1:
+            raise ValueError('long_credit.es_directions must be a positive integer')
+        if isinstance(self.es_sigma, bool) or not math.isfinite(self.es_sigma) or self.es_sigma < 0:
+            raise ValueError('long_credit.es_sigma must be finite and nonnegative')
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')
         if self.mode not in ('cct1', 'gain_only'):
@@ -206,6 +215,13 @@ def prefix(trainer, imagined, dense_steps):
     base = baseline_index(variants, rewards.shape[-1], device=rewards.device)
     totals = rewards.sum(1, keepdim=True)
     long_difference = totals - totals[..., base].detach()
+    # S-GATEMEAS seam: return reference totals with identical K/time/row geometry.
+    reference = getattr(trainer, '_long_credit_reference', None)
+    if reference is not None:
+        long_difference = totals - reference(trainer, imagined, totals, base).detach()
+    from .eslong import active as es_active
+    if es_active(trainer):
+        long_difference = long_difference.detach()
     out = dict(imagined)
     components = imagined['components']
     long_cost = components['delay'] + components.get('source_wait', 0.)
@@ -286,5 +302,7 @@ def checkpoint_restore(trainer, payload):
         if saved['world_model_ids'] != trainer.world_model_ids:
             raise ValueError('refreshed WM needs an explicit new long_credit binding')
         receipt = install(trainer, saved['config'], saved['wm_sha256s'])
-        if receipt != saved:
+        # Historical receipts predate optional estimator fields.
+        normalized = {**saved, 'config': asdict(LongCreditConfig(**saved['config']))}
+        if receipt != normalized:
             raise ValueError('CCT-1 binding changed on resume')
