@@ -162,3 +162,12 @@
   reference separately labelled), confident group-gain rows and final acting-CAV
   executed residual/braking minima. Existing raw dJ, ES acceptance, gradients and
   seconds/update stay intact. The live original dry adapter is preserved.
+- **23:08:17 +08 deployed/verified** overlay5118d220, receipt
+  `pilot_deploy_2305_receipt.json`. No continuation trainer exists; existing controller
+  will import it only after its clean-boundary handoff. Previous operational bytes
+  retained remotely. Scientific source da0bc366 independently reverified unchanged.
+- Authority file digest remains a089c5fb; verification CLI187cd8d4 is the distinct
+  canonical-document digest, not a changed authority file.
+- Follow-up CPU verification **16 PASS** (`pilot_cpu_2305_budget.json`): adds
+  acting-mask/final-acceleration minima preservation and original phase<=150 budget
+  on ordinary continuation (149 remaining after phase1), never150 additional.

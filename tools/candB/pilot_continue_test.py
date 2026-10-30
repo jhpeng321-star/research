@@ -10,6 +10,13 @@ from tools.candB import pilot_continue
 
 
 class ContinuationTest(unittest.TestCase):
+    def test_phase_budget_does_not_restart_on_continuation(self):
+        from tools.candB.pilot_continue import continuation_args
+        args = continuation_args(['--max-updates', '150'], Path('/owned'), 1)
+        self.assertEqual(args[:2], ['--max-updates', '149'])
+        with self.assertRaisesRegex(ValueError, 'budget exhausted'):
+            continuation_args(['--max-updates', '150'], Path('/owned'), 150)
+
     def test_nested_adam_head_state_comparison_detects_drift(self):
         import torch
         original = dict(state={0: dict(step=torch.tensor(1.), exp_avg=torch.tensor([.2]))})
