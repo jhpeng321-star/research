@@ -25,26 +25,35 @@ def metric(rows, which):
 def comparisons(rows):
     if not rows:
         raise ValueError("empty panel")
-    base, candidate = metric(rows, "base"), metric(rows, "candidate")
+    names = ("base", "entry", "candidate")
+    values = {n: metric(rows, n) for n in names}
     worlds = sorted({r["world"] for r in rows})
     groups = [[r for r in rows if r["world"] == w] for w in worlds]
     draws = np.random.default_rng(0).integers(0, len(groups), (2000, len(groups)))
     metrics = ("mae", "sign", "r", "confident_gain_accuracy")
-    boot = {m: [] for m in metrics}
+    pairs = (("base", "entry"), ("entry", "candidate"), ("base", "candidate"))
+    boot = {f"{b}>{c}": {m: [] for m in metrics} for b, c in pairs}
     for draw in draws:
         sampled = [r for i in draw for r in groups[i]]
-        b, c = metric(sampled, "base"), metric(sampled, "candidate")
-        for m in metrics:
-            if b[m] is not None and c[m] is not None:
-                boot[m].append(c[m] - b[m])
-    ci = {m: np.quantile(v, [.025, .975]).tolist() if v else None for m, v in boot.items()}
-    return dict(base=base, candidate=candidate, delta_ci95=ci, n_worlds=len(worlds), n_rows=len(rows))
+        m = {n: metric(sampled, n) for n in names}
+        for b, c in pairs:
+            for x in metrics:
+                if m[b][x] is not None and m[c][x] is not None:
+                    boot[f"{b}>{c}"][x].append(m[c][x] - m[b][x])
+    ci = {k: {m: np.quantile(v[m], [.025, .975]).tolist() if v[m] else None
+              for m in metrics} for k, v in boot.items()}
+    # gates compare the trained candidate against WM2 only; entry (zero-head
+    # entry path) and head-over-entry deltas are reported for attribution.
+    return dict(base=values["base"], entry=values["entry"], candidate=values["candidate"],
+                delta_ci95=ci["base>candidate"],
+                attribution_delta_ci95={k: ci[k] for k in ("base>entry", "entry>candidate")},
+                n_worlds=len(worlds), n_rows=len(rows))
 
 
 def validation(doc):
-    if doc.get("schema") != "wmfix_validation/1" or doc.get("K") != 8 \
+    if doc.get("schema") != "wmfix_validation/2" or doc.get("K") != 8 \
             or doc.get("mix") != "ON" or doc.get("native_lanes") is not True:
-        raise ValueError("not corrected native-lane K8/mix ON validation")
+        raise ValueError("not corrected native-lane K8/mix ON three-way validation")
     rows = doc["rows"]
     if {r["arm"] for r in rows} != {"ours_c1", "coopoff_c1", "mappo"}:
         raise ValueError("unexpected validation arm")
@@ -71,9 +80,9 @@ def validation(doc):
     for h in horizons:
         panel = comparisons([r for r in primary if int(r["horizon"]) == h])
         report["horizons"][str(h)] = panel
-        report["diagnostic_mappo"][str(h)] = dict(
-            base=metric([r for r in rows if r["arm"] == "mappo" and int(r["horizon"]) == h], "base"),
-            candidate=metric([r for r in rows if r["arm"] == "mappo" and int(r["horizon"]) == h], "candidate"))
+        report["diagnostic_mappo"][str(h)] = {
+            n: metric([r for r in rows if r["arm"] == "mappo" and int(r["horizon"]) == h], n)
+            for n in ("base", "entry", "candidate")}
         for m, ci in panel["delta_ci95"].items():
             if ci is None or (ci[0] > 0 if m == "mae" else ci[1] < 0):
                 report["reasons"].append(f"{h}s {m} significant regression/unavailable")

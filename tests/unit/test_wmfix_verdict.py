@@ -68,15 +68,25 @@ def test_speedhead_checks_all_world_directions_magnitudes_and_ctrl0_accounting()
 def test_validation_actual_bootstrap_gate_and_complete_grid():
     rows = [dict(world=str(w), pair_key=str(w) + "@t300", arm=a, horizon=h,
                  real=float((w - 18) * h), base_draws=[float(-(w - 18) * h)] * 8,
-                 candidate_draws=[float((w - 18) * h)] * 8)
+                 entry_draws=[0.] * 8, candidate_draws=[float((w - 18) * h)] * 8)
             for w in range(36) for a in ("ours_c1", "coopoff_c1", "mappo")
             for h in (60, 90, 120, 180, 300)]
-    doc = dict(schema="wmfix_validation/1", K=8, mix="ON", native_lanes=True, rows=rows)
+    doc = dict(schema="wmfix_validation/2", K=8, mix="ON", native_lanes=True, rows=rows)
     report = validation(doc)
     assert report["passed"] and report["pooled"]["delta_ci95"]["mae"][1] < 0
     assert report["pooled"]["candidate"]["confident_gain_accuracy"] == 1
     assert report["pooled"]["base"]["confident_gain_accuracy"] == 0
+    # three-way attribution: entry sits between base and candidate, is reported
+    assert "entry" in report["pooled"] and "base>entry" in report["pooled"]["attribution_delta_ci95"]
+    mae = {n: report["pooled"][n]["mae"] for n in ("base", "entry", "candidate")}
+    assert mae["base"] > mae["entry"] > mae["candidate"] == 0
+    assert report["pooled"]["attribution_delta_ci95"]["entry>candidate"]["mae"][1] < 0
     assert report["H_G"] is None
+    stripped = [dict(r) for r in rows]
+    for row in stripped:
+        del row["entry_draws"]
+    with pytest.raises(KeyError):
+        validation(dict(schema="wmfix_validation/2", K=8, mix="ON", native_lanes=True, rows=stripped))
     doc["rows"].pop()
     with pytest.raises(ValueError, match="incomplete"):
         validation(doc)

@@ -44,21 +44,25 @@ def validation(plan, candidate, candidate_config, out, device):
             process.cfg = replace(process.cfg, conserve_queue=True)
             super().__init__(process)
     for name, config, ckpt in (("base", plan["base_config"], plan["reference"]),
-                               ("candidate", candidate_config, candidate)):
+                                ("entry", plan["base_config"], plan["reference"]),
+                                ("candidate", candidate_config, candidate)):
         _, settings, model = e3.load_for_scoring(safe(config), safe(ckpt))
         if name == "candidate" and model.merge_response is None:
             raise ValueError("candidate head missing under verdict config")
+        if name == "entry" and model.merge_response is not None:
+            raise ValueError("entry arm must be the zero-head WM2 entry path")
         settings = replace(settings, seed=140014, entrant_control=True,
             entrant_controllers={a: specs[a] for a in ("mappo", "ours_c1", "coopoff_c1")},
             entry_queue_state=True, entry_pad_auto=True, entry_pad_max=1024, entry_insert_rule="sumo_like_v2")
         model = model.to(device).eval().requires_grad_(False)
         model.cav_exec_cap = "idm"
-        score.Entries = ConservingEntries if name == "candidate" else original_entries
+        entry_path = name in ("entry", "candidate")
+        score.Entries = ConservingEntries if entry_path else original_entries
         draws = []
         for i in range(len(source.groups)):
             rows = score.score_batch(model, settings, e3, source, [i], real, torch.device(device),
-                                     600, False, native_lanes=True, mix_modes=(True,),
-                                     learned_admission=name == "candidate")
+                                      600, False, native_lanes=True, mix_modes=(True,),
+                                      learned_admission=entry_path)
             path = out / f"A_{name}_{i:03d}.json"
             with path.open("x") as stream:
                 json.dump(dict(rows=rows), stream, allow_nan=False)
@@ -75,7 +79,7 @@ def validation(plan, candidate, candidate_config, out, device):
             for h in (60, 90, 120, 180, 300):
                 row = dict(world=observed["world"], pair_key=key, arm=arm, horizon=h,
                     real=observed["values"][str(h)]["J"] - ref["values"][str(h)]["J"], components={})
-                for name in ("base", "candidate"):
+                for name in ("base", "entry", "candidate"):
                     select = lambda a: sorted([r for r in samples[name] if r["pair_key"] == key and
                                               r["arm"] == a], key=lambda r: r["draw"])
                     aa, bb = select(arm), select("native")
@@ -88,7 +92,7 @@ def validation(plan, candidate, candidate_config, out, device):
                 row["components"]["real"] = {c: observed["values"][str(h)][c] - ref["values"][str(h)][c]
                     for c in ("source", "upstream", "downstream", "discharge")}
                 rows.append(row)
-    return dict(schema="wmfix_validation/1", K=8, mix="ON", native_lanes=True, rows=rows,
+    return dict(schema="wmfix_validation/2", K=8, mix="ON", native_lanes=True, rows=rows,
                 validation_real_sha256=digest(plan["validation_real"]),
                 scorer_sha256=digest(own / "tools/wmrequal/score.py"),
                 ownership_sha256=digest(own / "tools/wmrequal/native_lanes.py"))
