@@ -86,4 +86,15 @@
   STOP and an immediate fresh-zero pilot. The existing supervisor requires dry2;
   replace only its orchestration, retaining the running trainer and immutable runtime.
 - Existing source/authority/CPU checks above are complete and are not repeated.
-  New orchestration must avoid duplicate dispatch and preserve >=600s GPU sampling.
+   New orchestration must avoid duplicate dispatch and preserve >=600s GPU sampling.
+
+## Fresh-session recovery / owner 22:40 amendment (current)
+- 22:38:36 +08: supervisor970521 and dry985766 alive, zero optimizer rows,
+  frozen baseline still initializing. No handoff controller or fresh pilot exists.
+- The 22:40 amendment supersedes the fresh-zero dispatch in the preceding section.
+  Preserve the running phase and its expensive baseline; ordinary full checkpoint
+  continuation must retain Adam, head, original phase clock and R4 at phase10.
+- 22:40 recovery: own chain-root STOP disables the old supervisor's automatic
+  fresh-pilot dispatch; it does not interrupt its dry trainer or baseline work.
+- Existing default-off authority, scientific runtime, staging and 112-test suite
+  are complete. Only new pilot operational overlays are being prepared.
