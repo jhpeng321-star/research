@@ -197,3 +197,33 @@ def test_k4_plans_are_prefix_of_original_k8_and_context_restores(monkeypatch):
         for left, right in zip(original, reduced):
             assert torch.equal(left['accel_noise'], right['accel_noise'])
     assert dreamer.SampledFutures is factory
+
+
+@pytest.mark.parametrize('controller_id', [1, 2])
+@pytest.mark.parametrize('device', ['cpu', 'cuda'])
+def test_host_sensor_frames_preserve_published_controller_commands(controller_id, device, monkeypatch):
+    from wms.train.cav_drive import TimelineControllers
+    if device == 'cuda' and not torch.cuda.is_available():
+        pytest.skip('CUDA comparison runs on the scoring host')
+    monkeypatch.setenv('WMS_SPEED_FAST_CAV_DRIVE', '1')
+    model = SimpleNamespace(physics=SimpleNamespace(dt_s=.5, speed_limit_mps=31.29),
+        physics_accel=lambda st: torch.full_like(st['v_mps'], 1.2))
+    ids = torch.full((2, 12, 6), controller_id, dtype=torch.long)
+    timeline = dict(controller=ids, acceleration_mps2=torch.zeros_like(ids).float(),
+                    target_speed_mps=torch.zeros_like(ids).float())
+    direct = TimelineControllers(model, timeline)
+    copied = rank.host_sensor_timeline(model, timeline)
+    state = dict(s_m=torch.tensor([[0., 25., 70., 115., 150., 180.]]*2, device=device),
+        v_mps=torch.tensor([[10., 9., 12., 14., 8., 13.]]*2, device=device),
+        lane=torch.zeros(2, 6, dtype=torch.long, device=device),
+        present=torch.ones(2, 6, dtype=torch.bool, device=device),
+        is_cav=torch.ones(2, 6, dtype=torch.bool, device=device),
+        length_m=torch.full((2, 6), 5., device=device),
+        a_mps2=torch.zeros(2, 6, device=device))
+    for tick in range(12):
+        if tick == 6:
+            state['present'][:, 1] = False
+        original, optimized = direct(state), copied(state)
+        assert torch.equal(original, optimized), (controller_id, device, tick)
+        state['s_m'], state['v_mps'], state['a_mps2'] = (
+            original[..., 0], original[..., 2], original[..., 3])

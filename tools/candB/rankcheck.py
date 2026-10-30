@@ -94,7 +94,20 @@ def verify_receipt(document, raw, *, wm, wm_config, trainer=None):
     return document
 
 
-def comparator_factory(arm, model, teacher):
+def host_sensor_timeline(model, timeline):
+    """Same published controller on exact host copies; avoid per-CAV CUDA reads."""
+    from wms.train.cav_drive import TimelineControllers
+    class HostSensors(TimelineControllers):
+        def _new_command(self, action, vid, b, k, control, state):
+            if getattr(self, '_sensor_tick', None) != self.step_index:
+                self._sensor_tick = self.step_index
+                self._sensor_state = {key: state[key].detach().cpu() for key in
+                    ('s_m', 'v_mps', 'lane', 'present', 'length_m', 'a_mps2')}
+            return super()._new_command(action, vid, b, k, control, self._sensor_state)
+    return HostSensors(model, timeline)
+
+
+def comparator_factory(arm, model, teacher, *, host_sensors=False):
     """Aligned mode-2 absolute comparator; all arms retain WM-native lanes.
 
     PI/CIRCLES reuse the published verdict-panel TimelineControllers bridge,
@@ -144,7 +157,8 @@ def comparator_factory(arm, model, teacher):
                 if timeline is None:
                     ids = torch.full((mask.shape[0], 301, mask.shape[1]),
                                      1 if arm == 'CIRCLES' else 2, dtype=torch.long)
-                    timeline = TimelineControllers(model, dict(controller=ids,
+                    constructor = host_sensor_timeline if host_sensors else TimelineControllers
+                    timeline = constructor(model, dict(controller=ids,
                         acceleration_mps2=torch.zeros_like(ids, dtype=torch.float32),
                         target_speed_mps=torch.zeros_like(ids, dtype=torch.float32)))
                 acceleration = timeline(state)[..., 3]
@@ -365,12 +379,14 @@ def main(argv=None):
     p.add_argument('--stop-after', type=int, help='retain a bounded incomplete measurement shard')
     p.add_argument('--export-starts', help='save actual TRAIN sampler batches without WM scoring')
     p.add_argument('--input-starts', help='consume hash-bound exported TRAIN batches on another host')
+    p.add_argument('--host-controller-sensors', action='store_true',
+                   help='measurement-only exact host copies for published PI/CIRCLES sensor frames')
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
     if (a.measurement_arms or a.future_prefix != 8 or a.stop_after
-            or a.export_starts or a.input_starts) and not a.measure_only:
+            or a.export_starts or a.input_starts or a.host_controller_sensors) and not a.measure_only:
         p.error('shards and K4 are measurement-only, never launch qualification')
     if a.current_policy_driver and not a.measure_only:
         p.error('--current-policy-driver is only available for unlaunchable measurements')
@@ -519,6 +535,7 @@ def main(argv=None):
         arms=list(arms), rows=[], shard=bool(a.measurement_arms or a.stop_after),
         estimator_note=('first 4 of original K8 CRN plans; reduced-K actor estimator'
                         if a.future_prefix == 4 else 'original K8 estimator'))
+    doc['host_controller_sensors'] = a.host_controller_sensors
     if speed is not None:
         doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
             iteration=speed_payload.get('iteration'), partially_trained=True)
@@ -600,7 +617,8 @@ def main(argv=None):
                             torch.nn.init.zeros_(parameter)
                 else:
                     trainer.controller_factory = comparator_factory(
-                        arm, model, speed if arm == 'MAPPO_speed_partial' else teacher)
+                        arm, model, speed if arm == 'MAPPO_speed_partial' else teacher,
+                        host_sensors=a.host_controller_sensors)
                 with torch.no_grad(), measurement_prefix(a.future_prefix):
                     image = trainer.imagine(copy.deepcopy(batch), variants=variants,
                         deterministic=True, future_seed=trainer.update_count,
