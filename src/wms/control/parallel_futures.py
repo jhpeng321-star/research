@@ -441,8 +441,9 @@ def _main(root, index):
             try:
                 task = json.loads(path.with_suffix('.json').read_text())
                 if common.get('eslong'):
-                    from .eslong import forward_task
-                    result = forward_task(trainer, common, task)
+                    from .eslong import forward_task, forward_stacked_task
+                    function = forward_stacked_task if common.get('eslong_stack') else forward_task
+                    result = function(trainer, common, task)
                 else:
                     result = (_vjp(trainer, common, task, gate) if common['kind'] == 'backward'
                               else _forward(trainer, common, task))
