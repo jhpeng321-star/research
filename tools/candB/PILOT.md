@@ -404,3 +404,13 @@
 - CPU proof and staged source/authority verification precede cooperative retirement
   of the old S2 waiter37982 only; own STOP/old-incarnation exit/exclusive launch proof
   required. Current repair trainer/supervisor and frozen baseline remain untouched.
+- S4 NEW immutable runtime staged via `stage.sh`:
+  `/root/autodl-tmp/c4/candB_pilot_WMFAST_S4_v3_EXPLORATORY-LEAN_20261031`,
+  sourceaf78fda7bc1aa1a6d3b1c6745c1a1cc14c83ad7e,2644 LF files individually verified.
+  Regenerated exploratory authority07f5e05bebb054e8d1b256c083b54eddda9154f51a4291df16451bb366c42cc2
+  independently verified; original config/input/WM/mix/parity checks retained.
+- **10 CPU PASS**,1.707s wall,CUDA hidden, includes real launcher/controller source
+  specialization, S4 environment binding/restoration, high-coordinator/peer budget
+  refusals, original phase/R4 validation and saved-score no-forward proof. Existing
+  numerical S2/S4 parity and original full-resume proofs remain applicable.
+  Receipts `pilot_wmfast4_{prepare_1793385923,cpu_1793385931,status_1793385944}.json`.

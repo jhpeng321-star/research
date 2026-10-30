@@ -1,0 +1,7 @@
+{
+ "action": "status",
+ "runtime": "/root/autodl-tmp/c4/candB_pilot_WMFAST_S4_v3_EXPLORATORY-LEAN_20261031",
+ "returncode": 0,
+ "stdout": "pilot_WMFAST4_CPU_OWNERSHIP.json {\"pid\": 59738, \"command\": [\"/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python\", \"-B\", \"-u\", \"-m\", \"tools.candB.pilot_wmfast4_cpu\"], \"epoch\": 1793385930.4624135}\npilot_WMFAST4_CPU_RESULT.json {\n \"returncode\": 0,\n \"seconds\": 1.7072882652282715,\n \"command\": [\n  \"/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python\",\n  \"-B\",\n  \"-m\",\n  \"unittest\",\n  \"tools.candB.pilot_wmfast4_test\",\n  \"tools.candB.pilot_wmfast_test\",\n  \"tools.candB.pilot_lean_gate_test\"\n ],\n \"CUDA_VISIBLE_DEVICES\": \"\",\n \"stdout\": \"\",\n \"stderr\": \"..........\\n----------------------------------------------------------------------\\nRan 10 tests in 0.118s\\n\\nOK\\n\"\n}\npilot_WMFAST4_CPU.log {\"returncode\": 0, \"seconds\": 1.7072882652282715, \"command\": [\"/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python\", \"-B\", \"-m\", \"unittest\", \"tools.candB.pilot_wmfast4_test\", \"tools.candB.pilot_wmfast_test\", \"tools.candB.pilot_lean_gate_test\"], \"CUDA_VISIBLE_DEVICES\": \"\", \"stdout\": \"\", \"stderr\": \"..........\\n----------------------------------------------------------------------\\nRan 10 tests in 0.118s\\n\\nOK\\n\"}\n\n",
+ "stderr": ""
+}
