@@ -108,4 +108,23 @@
   new own GPU448004 measures PI/native/CIRCLES at the missing index11, source4d56,
   chunk rows8,.40, total preflight8915MiB. Original gpuA MAPPO remains untouched.
   CIRCLES12-15 is pending only after this worker exits; gpuR worst reservation+512
-  margin+current use must fit22000MiB before any next scorer is started.
+   margin+current use must fit22000MiB before any next scorer is started.
+
+## Final owner-approved MAIN22:30 stop
+- At22:30:56+08:00 gpuA owned967764/start874119659 was stopped via pidfd SIGTERM;
+  at22:31:27 gpuR owned448004/start4199606797 was stopped the same way. Exact
+  receipt argv/start ticks were rechecked; both exited. Other recorded scorers
+  had already exited; CIRCLES12-15 was never dispatched. No peer was signalled.
+- `MAIN2230_STOP_{A,R}.json` retains identities, actions, raw hashes, and before/
+  after nvidia-smi. `final_stop_2230.py` reads only explicit task directories;
+  no scorer, training, SUMO, or replacement checkpoint was dispatched on resume.
+- Final saved K4 coverage: PI16, physical native/CTRL016, CIRCLES11, each MAPPO7;
+  native actor5 (indices11-15). Repeated MAPPO index4 is exact-array verified and
+  counted once. Fresh-zero B retains its single full300s scientific equality.
+- Final collection corrects resume COMMAND/OWNERSHIP/logs to the actual a2
+  attempts that produced the saved RAW; original failed attempts are preserved
+  byte-for-byte as `INITIAL_COMMAND.json`, `INITIAL_OWNERSHIP.json`, `INITIAL_run.log`.
+- `SUMMARY.json` recomputed from the stopped snapshots; independent WORLD-cluster
+  bootstrap passes for every physical/actor absolute and paired CI. Partial arms
+  and unfinished futures are excluded without imputation. Measurement remains
+  incomplete/unqualified/unlaunchable; final report is closed under this stop.

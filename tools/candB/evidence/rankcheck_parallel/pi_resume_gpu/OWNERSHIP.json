@@ -1,6 +1,6 @@
 {
- "pid": 445749,
- "start_ticks": "4199302745",
+ "pid": 445979,
+ "start_ticks": "4199322511",
  "argv": [
   "/root/miniconda3/bin/python",
   "-B",
@@ -11,7 +11,7 @@
   "--wm",
   "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
   "--wm-config",
-  "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/c4_wm_loop14_r16_ft.toml",
+  "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
   "--mappo",
   "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/mappo.pt",
   "--mappo-speed",
@@ -35,7 +35,7 @@
   "--gpu-memory-fraction",
   ".40",
   "--out",
-  "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/measurement_PI_native_cuda_12_16/RAW.json",
+  "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/measurement_PI_native_cuda_12_16_a2/RAW.json",
   "--measurement-arms",
   "PI",
   "native",
@@ -49,7 +49,7 @@
   "16",
   "--host-controller-sensors"
  ],
- "time_unix": 1793366440.639811,
+ "time_unix": 1793366638.2946432,
  "nvidia_memory_before": "8915, 24564",
  "source": {
   "commit": "82dbd7bc7e32026998bf3ec5b912f9b23c5d67e6"

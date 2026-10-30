@@ -2,24 +2,24 @@
  "independent_world_bootstrap": "PASS",
  "draws": 5000,
  "seed": 20261030,
- "summary_sha256": "ac22de9a29d0254c654e15e85c9d2ae487375f697dbd3564dbb41d56ca00ef50",
+ "summary_sha256": "3e62f1ed25e18312883450696d72dbd642837ffb4feabaf11298ea7fd507a820",
  "verified_inputs": {
   "circles": "137be010094299d77ff6a4f713465dd83e68436d69dfd436e66d813382ffc3e6",
   "pi": "77bc1b1ee2340eb02fd5542e4abf4b8f8ac26bd0d75f71a146e0c9ec07988c5c",
-  "mappo": "4f2632bcdab30fa199b0af8e10b23c2712949adaf7a0b5e0f711f30b1ce297e8",
+  "mappo": "66235f0416cadb73fe2662c263f5a2bc43b60b1a50bf6bf36c6ce5a7a167ce16",
   "mappo_proxy_tail": "912864d912d87a417d181fc8008f8a4ff198b496e37c148872682db53322e6b1",
   "mappo_speed_tail": "e56dd12139a7ae978c1651b53f445588e8c901e0a5afb24626f55b32ed827b76",
   "pi_resume_gpu": "524dd22a547404755b6569d97a7b31934d69a0e00574db0bc5203a30ef8e0408",
-  "bias_large": "6669038c1d5e3e8d0f675876746695aa611325b570b8db90407d564b9430f25e"
+  "bias_large": "59f2005b34ad27c438fc7249c4cf692cdc19cbd8f46c771167e5834cfbf0cdc8"
  },
  "per_arm_starts": {
   "CIRCLES": 11,
   "PI": 16,
   "MAPPO_native_lanes": 7,
-  "MAPPO_speed_partial": 6,
+  "MAPPO_speed_partial": 7,
   "native": 16,
   "CTRL0": 16
  },
- "common_starts": 6,
+ "common_starts": 7,
  "no_rollouts": true
 }

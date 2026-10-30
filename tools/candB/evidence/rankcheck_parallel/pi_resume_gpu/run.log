@@ -1,22 +1,44 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/tools/candB/rankcheck.py", line 700, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/tools/candB/rankcheck.py", line 437, in main
-    model = load_members([a.wm], [a.wm_config], a.device)[0][0]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/policy14_cli.py", line 40, in load_members
-    else _read_config(config))
-         ^^^^^^^^^^^^^^^^^^^^
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/train_cli.py", line 36, in _read_config
-    return deep_merge(_read_config(path.parent / parent, (*seen, path)), raw) if parent else raw
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/train_cli.py", line 34, in _read_config
-    raw = load(path)
-          ^^^^^^^^^^
-  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/core/toml.py", line 44, in load
-    with open(path, "r", encoding="utf-8") as stream:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/c4_wm_v10round2.toml'
+FUTURE 1 rollout_s 98.928
+FUTURE 2 rollout_s 96.954
+FUTURE 3 rollout_s 89.882
+FUTURE 4 rollout_s 89.466
+ARM 13 PI elapsed_s 410.286
+FUTURE 5 rollout_s 88.289
+FUTURE 6 rollout_s 91.105
+FUTURE 7 rollout_s 90.257
+FUTURE 8 rollout_s 90.959
+ARM 13 native elapsed_s 398.448
+START 13 [{'source': 'c4_episodes', 'world': 'w963448m2400p40t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963448m2400p40t300__native', 'controller_branch': None, 'tick': 740, 't0_s': 370.0, 'pair_key': None, 'start_source': 'native_v5', 'group_rich': True}]
+FUTURE 9 rollout_s 99.242
+FUTURE 10 rollout_s 101.43
+FUTURE 11 rollout_s 102.887
+FUTURE 12 rollout_s 99.96
+ARM 14 PI elapsed_s 444.616
+FUTURE 13 rollout_s 84.656
+FUTURE 14 rollout_s 85.401
+FUTURE 15 rollout_s 85.637
+FUTURE 16 rollout_s 81.565
+ARM 14 native elapsed_s 377.304
+START 14 [{'source': 'c4_episodes', 'world': 'w963208m2400p40t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963208m2400p40t300__native', 'controller_branch': None, 'tick': 1040, 't0_s': 520.0, 'pair_key': None, 'start_source': 'native_v5', 'group_rich': True}]
+FUTURE 17 rollout_s 72.69
+FUTURE 18 rollout_s 72.926
+FUTURE 19 rollout_s 72.873
+FUTURE 20 rollout_s 68.917
+ARM 15 PI elapsed_s 319.977
+FUTURE 21 rollout_s 63.064
+FUTURE 22 rollout_s 62.438
+FUTURE 23 rollout_s 61.224
+FUTURE 24 rollout_s 61.121
+ARM 15 native elapsed_s 279.466
+START 15 [{'source': 'c4_episodes', 'world': 'w963170m1900p20t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963170m1900p20t300__native', 'controller_branch': None, 'tick': 860, 't0_s': 430.0, 'pair_key': None, 'start_source': 'native_v5', 'group_rich': True}]
+FUTURE 25 rollout_s 62.547
+FUTURE 26 rollout_s 61.286
+FUTURE 27 rollout_s 60.969
+FUTURE 28 rollout_s 60.749
+ARM 16 PI elapsed_s 267.758
+FUTURE 29 rollout_s 58.83
+FUTURE 30 rollout_s 59.455
+FUTURE 31 rollout_s 67.0
+FUTURE 32 rollout_s 66.389
+ARM 16 native elapsed_s 275.293
+START 16 [{'source': 'c4_episodes', 'world': 'w963925m2400p10t300', 'arm': 'generic_random', 'policy': 'generic_random', 'episode': 'w963925m2400p10t300__generic_random', 'controller_branch': None, 'tick': 2360, 't0_s': 1180.0, 'pair_key': None, 'start_source': 'genrand_plain', 'group_rich': False}]
