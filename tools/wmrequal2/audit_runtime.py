@@ -1,4 +1,5 @@
 """Read exact frozen scorer inputs over SSH; CPU only, no remote file writes."""
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -43,7 +44,8 @@ for name in names:
                'decider = ~cav', 'own = own |', 'EntrantControllers(',
                'cav_controller = TimelineControllers')
     snippets = {str(i+1): line.strip() for i,line in enumerate(lines) if any(s in line for s in needles)}
-    files[name] = dict(sha256=sha, source_receipt_match=True, functions=functions, snippets=snippets)
+    files[name] = dict(sha256=sha, normalized_lf_sha256=hashlib.sha256(raw.replace(b'\r\n',b'\n')).hexdigest(),
+                      source_receipt_match=True, functions=functions, snippets=snippets)
 p = safe(Path('/root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json'))
 raw = p.read_bytes()
 design = json.loads(raw)
@@ -56,7 +58,10 @@ print(json.dumps(dict(schema='wmrequal2_runtime_audit/1', cuda_visible='',
 
 
 if __name__ == '__main__':
-    dest = ROOT / 'tools/wmrequal2/evidence/RUNTIME.json'
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--text-hashes', action='store_true', help='retain supplementary canonical-text audit')
+    args = ap.parse_args()
+    dest = ROOT / 'tools/wmrequal2/evidence' / ('RUNTIME_TEXT.json' if args.text_hashes else 'RUNTIME.json')
     assert dest.parent.is_dir()
     result = json.loads(remote(SCRIPT))
     with dest.open('x', encoding='utf-8') as stream:
