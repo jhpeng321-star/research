@@ -1,0 +1,26 @@
+OWNED_BACKFILL_WAITER_PID=430786 waiting_for=429791
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+1 MiB, 24564 MiB, 0 %
+OWN_PID 430786 DEVICE cuda
+REUSE CTRL0 0
+BEGIN MAPPO 0 [{'source': 'c4_episodes', 'world': 'w963758m2400p20t300', 'arm': 'generic_random', 'policy': 'generic_random', 'episode': 'w963758m2400p20t300__generic_random', 'controller_branch': None, 'tick': 1560, 't0_s': 780.0, 'pair_key': None, 'start_source': 'genrand_plain'}] slots torch.Size([1, 772]) rows 6
+FUTURE 1 {'seconds': 62.76928108930588, 'mix_assigned': None}
+FUTURE 2 {'seconds': 62.73642012476921, 'mix_assigned': None}
+FUTURE 3 {'seconds': 63.0323037058115, 'mix_assigned': None}
+FUTURE 4 {'seconds': 63.04295863956213, 'mix_assigned': None}
+FUTURE 5 {'seconds': 63.3595209941268, 'mix_assigned': None}
+FUTURE 6 {'seconds': 63.56347392499447, 'mix_assigned': None}
+FUTURE 7 {'seconds': 63.46410172432661, 'mix_assigned': None}
+FUTURE 8 {'seconds': 63.82473913580179, 'mix_assigned': None}
+DONE MAPPO 0 530.5931301638484 15905.68359375 66614.6875 -173.6935577392578
+BEGIN candidateA 0 [{'source': 'c4_episodes', 'world': 'w963758m2400p20t300', 'arm': 'generic_random', 'policy': 'generic_random', 'episode': 'w963758m2400p20t300__generic_random', 'controller_branch': None, 'tick': 1560, 't0_s': 780.0, 'pair_key': None, 'start_source': 'genrand_plain'}] slots torch.Size([1, 772]) rows 6
+FUTURE 1 {'seconds': 60.62233730405569, 'mix_assigned': None}
+FUTURE 2 {'seconds': 60.74342554807663, 'mix_assigned': None}
+FUTURE 3 {'seconds': 61.020713686943054, 'mix_assigned': None}
+FUTURE 4 {'seconds': 61.152749724686146, 'mix_assigned': None}
+FUTURE 5 {'seconds': 61.17591189593077, 'mix_assigned': None}
+FUTURE 6 {'seconds': 61.42136923968792, 'mix_assigned': None}
+FUTURE 7 {'seconds': 61.43400376290083, 'mix_assigned': None}
+FUTURE 8 {'seconds': 61.08101365715265, 'mix_assigned': None}
+DONE candidateA 0 540.1443704217672 15828.34765625 61289.8359375 -26.26469612121582
+COMPLETE actual_exact.json

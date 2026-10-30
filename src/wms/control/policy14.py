@@ -13,7 +13,8 @@ def controller_factory(*args, **kwargs):
 
 
 def make_controller_factory(policy_ramp_merge: bool = False, native_ramp_merge: str = "gap6",
-                            native_lane_change: bool = False):
+                            native_lane_change: bool = False,
+                            policy_strategic_merge: bool = False):
     """LOOP14C ramp-merge switches (``[policy14]`` keys of the same names).  Both off returns the
     unchanged :func:`controller_factory` object (bit-identical legacy path)."""
     if not isinstance(policy_ramp_merge, bool):
@@ -22,18 +23,26 @@ def make_controller_factory(policy_ramp_merge: bool = False, native_ramp_merge: 
         raise ValueError("policy14.native_ramp_merge must be 'gap6' or 'wm_law'")
     if not isinstance(native_lane_change, bool):
         raise ValueError("policy14.native_lane_change must be a boolean")
-    if not policy_ramp_merge and native_ramp_merge == "gap6" and not native_lane_change:
+    if not isinstance(policy_strategic_merge, bool):
+        raise ValueError("policy14.policy_strategic_merge must be a boolean")
+    if policy_strategic_merge and (not native_lane_change or native_ramp_merge != "wm_law"):
+        raise ValueError("policy_strategic_merge requires native_lane_change and wm_law")
+    if (not policy_ramp_merge and native_ramp_merge == "gap6"
+            and not native_lane_change and not policy_strategic_merge):
         return controller_factory
 
     def factory(*args, **kwargs):
         return make_cav_controller(*args, **kwargs, symmetric_exec_cap=True,
                                    mask_forced_merge=True, policy_ramp_merge=policy_ramp_merge,
                                    native_ramp_merge=native_ramp_merge,
-                                   native_lane_change=native_lane_change)
+                                   native_lane_change=native_lane_change,
+                                   policy_strategic_merge=policy_strategic_merge)
     factory.ramp_merge = {"policy_ramp_merge": policy_ramp_merge,
                            "native_ramp_merge": native_ramp_merge}
     if native_lane_change:
         factory.ramp_merge["native_lane_change"] = True
+    if policy_strategic_merge:
+        factory.ramp_merge["policy_strategic_merge"] = True
     return factory
 
 

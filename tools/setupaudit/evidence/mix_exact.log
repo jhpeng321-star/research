@@ -1,0 +1,44 @@
+OWN_PID 429791 DEVICE cuda
+REUSE CTRL0 0
+REUSE CTRL0 1
+BEGIN MAPPO 0 [{'source': 'c4_episodes', 'world': 'w963758m2400p20t300', 'arm': 'generic_random', 'policy': 'generic_random', 'episode': 'w963758m2400p20t300__generic_random', 'controller_branch': None, 'tick': 1560, 't0_s': 780.0, 'pair_key': None, 'start_source': 'genrand_plain'}] slots torch.Size([1, 772]) rows 6
+FUTURE 1 {'seconds': 64.04539266228676, 'mix_assigned': [185, 183, 183, 183, 183, 183]}
+FUTURE 2 {'seconds': 63.71915118396282, 'mix_assigned': [186, 185, 185, 185, 184, 185]}
+FUTURE 3 {'seconds': 63.99175713211298, 'mix_assigned': [190, 189, 189, 189, 189, 189]}
+FUTURE 4 {'seconds': 63.62173452973366, 'mix_assigned': [192, 189, 192, 189, 192, 191]}
+FUTURE 5 {'seconds': 63.998812064528465, 'mix_assigned': [183, 176, 176, 176, 176, 176]}
+FUTURE 6 {'seconds': 63.95677652955055, 'mix_assigned': [183, 179, 179, 179, 179, 179]}
+FUTURE 7 {'seconds': 63.97984392940998, 'mix_assigned': [200, 200, 200, 200, 199, 199]}
+FUTURE 8 {'seconds': 64.05620276927948, 'mix_assigned': [186, 183, 183, 183, 183, 183]}
+DONE MAPPO 0 536.399281643331 16046.875 67514.1875 -109.08917999267578
+BEGIN MAPPO 1 [{'source': 'c4_episodes', 'world': 'w963111m2400p20t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963111m2400p20t300__native', 'controller_branch': None, 'tick': 1940, 't0_s': 970.0, 'pair_key': None, 'start_source': 'native_v5'}] slots torch.Size([1, 747]) rows 6
+FUTURE 1 {'seconds': 61.199239514768124, 'mix_assigned': [169, 167, 168, 167, 167, 166]}
+FUTURE 2 {'seconds': 61.55803869664669, 'mix_assigned': [175, 172, 173, 171, 172, 171]}
+FUTURE 3 {'seconds': 61.701602429151535, 'mix_assigned': [173, 171, 170, 171, 171, 170]}
+FUTURE 4 {'seconds': 62.02688596397638, 'mix_assigned': [181, 180, 180, 181, 180, 180]}
+FUTURE 5 {'seconds': 61.965986132621765, 'mix_assigned': [176, 171, 169, 171, 171, 170]}
+FUTURE 6 {'seconds': 62.25642206519842, 'mix_assigned': [166, 160, 163, 161, 160, 163]}
+FUTURE 7 {'seconds': 62.941612526774406, 'mix_assigned': [175, 170, 171, 170, 170, 173]}
+FUTURE 8 {'seconds': 61.99122740328312, 'mix_assigned': [176, 173, 173, 172, 173, 174]}
+DONE MAPPO 1 519.4503451287746 16736.208984375 66509.546875 237.4670867919922
+BEGIN candidateA 0 [{'source': 'c4_episodes', 'world': 'w963758m2400p20t300', 'arm': 'generic_random', 'policy': 'generic_random', 'episode': 'w963758m2400p20t300__generic_random', 'controller_branch': None, 'tick': 1560, 't0_s': 780.0, 'pair_key': None, 'start_source': 'genrand_plain'}] slots torch.Size([1, 772]) rows 6
+FUTURE 1 {'seconds': 60.79625679552555, 'mix_assigned': [185, 183, 183, 183, 182, 182]}
+FUTURE 2 {'seconds': 61.04295115917921, 'mix_assigned': [186, 185, 185, 185, 184, 184]}
+FUTURE 3 {'seconds': 61.30156571418047, 'mix_assigned': [189, 189, 189, 189, 190, 190]}
+FUTURE 4 {'seconds': 61.38010410219431, 'mix_assigned': [194, 189, 189, 189, 192, 192]}
+FUTURE 5 {'seconds': 60.80629763752222, 'mix_assigned': [182, 176, 176, 176, 176, 176]}
+FUTURE 6 {'seconds': 60.827653139829636, 'mix_assigned': [184, 179, 179, 179, 179, 179]}
+FUTURE 7 {'seconds': 61.84141357243061, 'mix_assigned': [202, 200, 200, 200, 199, 199]}
+FUTURE 8 {'seconds': 61.89842953532934, 'mix_assigned': [187, 183, 183, 183, 183, 183]}
+DONE candidateA 0 541.5250431522727 15973.921875 62676.921875 -37.14281463623047
+BEGIN candidateA 1 [{'source': 'c4_episodes', 'world': 'w963111m2400p20t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963111m2400p20t300__native', 'controller_branch': None, 'tick': 1940, 't0_s': 970.0, 'pair_key': None, 'start_source': 'native_v5'}] slots torch.Size([1, 747]) rows 6
+FUTURE 1 {'seconds': 59.754008792340755, 'mix_assigned': [170, 167, 168, 167, 167, 166]}
+FUTURE 2 {'seconds': 59.88830491155386, 'mix_assigned': [175, 172, 170, 172, 172, 172]}
+FUTURE 3 {'seconds': 60.15291542559862, 'mix_assigned': [173, 171, 170, 171, 171, 169]}
+FUTURE 4 {'seconds': 60.22774937003851, 'mix_assigned': [181, 180, 180, 182, 180, 181]}
+FUTURE 5 {'seconds': 60.330027014017105, 'mix_assigned': [174, 171, 169, 171, 171, 171]}
+FUTURE 6 {'seconds': 59.98094744980335, 'mix_assigned': [167, 160, 162, 161, 160, 163]}
+FUTURE 7 {'seconds': 60.08077648282051, 'mix_assigned': [174, 170, 173, 170, 170, 170]}
+FUTURE 8 {'seconds': 60.22465490549803, 'mix_assigned': [176, 173, 173, 172, 173, 174]}
+DONE candidateA 1 532.8743851035833 16792.5546875 64790.5234375 213.63377380371094
+COMPLETE mix_exact.json

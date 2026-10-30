@@ -1,0 +1,181 @@
+{
+  "pid": 430266,
+  "rows": [
+    {
+      "metadata": [
+        {
+          "source": "c4_episodes",
+          "world": "w963758m2400p20t300",
+          "arm": "generic_random",
+          "policy": "generic_random",
+          "episode": "w963758m2400p20t300__generic_random",
+          "controller_branch": null,
+          "tick": 1560,
+          "t0_s": 780.0,
+          "pair_key": null,
+          "start_source": "genrand_plain"
+        }
+      ],
+      "cavs": 14,
+      "reports": 50,
+      "present": 96,
+      "hdvs": 82,
+      "entry_queue": [
+        [
+          138.0,
+          0.0,
+          0.6433333158493042,
+          0.15000000596046448,
+          0.138364776968956,
+          0.20000000298023224
+        ]
+      ],
+      "groups": [
+        {
+          "s_m": [
+            -1063.99267578125,
+            -916.909423828125,
+            -901.928955078125
+          ],
+          "v_mps": [
+            28.714807510375977,
+            27.17230987548828,
+            21.497407913208008
+          ],
+          "lane": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "own_nonzero": {
+        "v_mps": 1.0,
+        "a_mps2": 1.0,
+        "lane_0": 0.4285714328289032,
+        "lane_1": 0.4285714328289032,
+        "lane_2": 0.1428571492433548,
+        "s_to_merge_end_m": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.5714285969734192,
+        "front_present": 0.5714285969734192,
+        "rear_gap_m": 1.0,
+        "rear_dv_mps": 0.8571428656578064,
+        "rear_present": 0.8571428656578064,
+        "in_merge_zone": 0.0
+      },
+      "report_nonzero": {
+        "ds_m": 1.0,
+        "dv_mps": 1.0,
+        "dlane": 0.6399999856948853,
+        "lane_0": 0.3400000035762787,
+        "lane_1": 0.5,
+        "lane_2": 0.1599999964237213,
+        "v_mps": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.5,
+        "front_present": 0.5,
+        "age_s": 0.0,
+        "cmd_accel_mps2": 0.0,
+        "lane_intent": 0.0
+      },
+      "rsu_nonzero_share": 0.5897436141967773,
+      "signal_abs_mean": 0.15084780752658844,
+      "base_below_cap_share": 0.0,
+      "positive_authority_max": 0.0,
+      "braking_authority_share": 1.0,
+      "base_minus_cap_min": 1.52587890625e-05,
+      "base_minus_cap_max": 0.6007194519042969,
+      "residual_min": 0.003287466475740075,
+      "residual_max": 0.00773009704425931
+    },
+    {
+      "metadata": [
+        {
+          "source": "c4_episodes",
+          "world": "w963111m2400p20t300",
+          "arm": "native",
+          "policy": "native",
+          "episode": "w963111m2400p20t300__native",
+          "controller_branch": null,
+          "tick": 1940,
+          "t0_s": 970.0,
+          "pair_key": null,
+          "start_source": "native_v5"
+        }
+      ],
+      "cavs": 18,
+      "reports": 74,
+      "present": 88,
+      "hdvs": 70,
+      "entry_queue": [
+        [
+          138.0,
+          0.0,
+          0.6366666555404663,
+          0.10000000149011612,
+          0.20370370149612427,
+          0.20000000298023224
+        ]
+      ],
+      "groups": [
+        {
+          "s_m": [
+            55.64517593383789,
+            66.24577331542969,
+            91.37413024902344
+          ],
+          "v_mps": [
+            0.8042700290679932,
+            1.8448238372802734,
+            27.87049674987793
+          ],
+          "lane": [
+            1,
+            1,
+            0
+          ]
+        }
+      ],
+      "own_nonzero": {
+        "v_mps": 1.0,
+        "a_mps2": 1.0,
+        "lane_0": 0.6111111044883728,
+        "lane_1": 0.3888888955116272,
+        "lane_2": 0.0,
+        "s_to_merge_end_m": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.8888888955116272,
+        "front_present": 0.8888888955116272,
+        "rear_gap_m": 1.0,
+        "rear_dv_mps": 0.7222222089767456,
+        "rear_present": 0.7222222089767456,
+        "in_merge_zone": 0.1111111119389534
+      },
+      "report_nonzero": {
+        "ds_m": 1.0,
+        "dv_mps": 1.0,
+        "dlane": 0.45945945382118225,
+        "lane_0": 0.662162184715271,
+        "lane_1": 0.3378378450870514,
+        "lane_2": 0.0,
+        "v_mps": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.9729729890823364,
+        "front_present": 0.9729729890823364,
+        "age_s": 0.0,
+        "cmd_accel_mps2": 0.0,
+        "lane_intent": 0.0
+      },
+      "rsu_nonzero_share": 0.5096153616905212,
+      "signal_abs_mean": 0.1426602005958557,
+      "base_below_cap_share": 0.0,
+      "positive_authority_max": 0.0,
+      "braking_authority_share": 1.0,
+      "base_minus_cap_min": 0.0,
+      "base_minus_cap_max": 0.5080201625823975,
+      "residual_min": 0.003223248990252614,
+      "residual_max": 0.007544263731688261
+    }
+  ]
+}

@@ -175,6 +175,7 @@ class DreamerConfig:
     # (converted sources with queue arrays) and imagine_entries; refuses batches without it.
     entry_queue_state: bool = False
     entrant_control: bool = False  # explicit continuity contract; ALL already controls births
+    entrant_learned_mix: bool = False  # S-SETUPAUDIT: match mix-qualified CCT-2, opt-in only
     deterministic_crn: bool = False  # pair merge streams for every actor, including MAPPO
     # V9NOYIELD (2026-10-18; default empty = bit-identical): PhysicsConfig field -> value
     # overrides applied to EVERY PhysicsConfig holder of each frozen WM member right after it is
@@ -224,6 +225,7 @@ class DreamerConfig:
 
     def __post_init__(self):
         for name in ('pessimistic_credit', 'native_anchor', 'real_credit_individual_floor',
+                     'entrant_learned_mix',
                      'exploit_ensemble_pessimism', 'exploit_monitor', 'exploit_stop_on_conflict',
                      'exploit_disable_direct_credit'):
             if not isinstance(getattr(self, name), bool):
@@ -1328,6 +1330,15 @@ class DreamerTrainer:
                                                           couple_draws=cfg.deterministic_crn,
                                                           sample_index=sample_index if cfg.deterministic_crn else 0))
                 member_kwargs = {**member_kwargs, "entries": recorder}
+            if cfg.entrant_learned_mix:
+                from .entrant_mix import make_sampler
+                mix_rows = entry_rows or list(range(initial['s_m'].shape[0]))
+                if _memory_start_index is not None:
+                    mix_rows = [int(_memory_start_index[r]) for r in mix_rows]
+                member_kwargs['entrant_driver_sampler'] = make_sampler(
+                    model, initial, member_kwargs,
+                    (self.update_count if future_seed is None else future_seed) + 1000003 * sample_index,
+                    mix_rows)
             switch = hasattr(model, "checkpoint_forward")
             previous_switch = getattr(model, "checkpoint_forward", False)
             cap_switch = hasattr(model, "cav_exec_cap")

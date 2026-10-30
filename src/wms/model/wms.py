@@ -2425,7 +2425,8 @@ class WmSModel(nn.Module):
                 lane_uniform: Optional[Tensor] = None,
                 lane_seed: Optional[int] = None,
                 lane_crn: bool = False,
-                state_noise: Optional[Tensor] = None) -> dict[str, Tensor]:
+                state_noise: Optional[Tensor] = None,
+                entrant_driver_sampler: Optional[Callable] = None) -> dict[str, Tensor]:
         """Multi-step rollout; ``k`` (steps since the last observation) is ``k0 + i``.
 
         ``cav_teacher[:, i+1]`` is the CAV state after step ``i`` and ``present_seq
@@ -2538,13 +2539,22 @@ class WmSModel(nn.Module):
         initial_driver_embedding = driver_embedding
         encoded_parameters = None
         noise_on = float(state_noise_std_m) > 0.0 or float(state_noise_std_mps) > 0.0
+        if entrant_driver_sampler is not None and fixed_driver_params is None:
+            _, fixed_driver_embedding, fixed_driver_params = self.encode_drivers(
+                current, driver_history=driver_history, driver_history_mask=driver_history_mask,
+                history=history, history_mask=history_mask, driver_defaults=driver_defaults)
+            if fixed_driver_params is None:
+                raise ValueError("entrant driver sampling requires persistent driver parameters")
 
         for step_i in range(int(n_steps)):
             if entries is not None:
                 current = {key: (value.clone() if torch.is_tensor(value) else value)
                            for key, value in current.items()}
-                entrant = entrant | entries.insert(current)
+                newborn = entries.insert(current)
+                entrant = entrant | newborn
                 current["entrant"] = entrant
+                if entrant_driver_sampler is not None:
+                    fixed_driver_params = entrant_driver_sampler(current, newborn, fixed_driver_params)
             elif is_cav_seq is not None:
                 current = {**current, "is_cav": is_cav_seq[:, step_i].bool()}
             log["entrant"].append(entrant)
@@ -2698,6 +2708,9 @@ class WmSModel(nn.Module):
         result = self._rollout_result(
             log, current, history, history_mask, entrant, pres0, kin0, projection,
             projection_totals, encoded_parameters, initial_driver_embedding, share)
+        if entrant_driver_sampler is not None:
+            result['driver_parameters'] = torch.stack(
+                [fixed_driver_params[name] for name in PARAMETER_NAMES], -1)
         if observe_mask is not None and fixed_driver_params is not None:
             result["driver_parameters_updated"] = torch.stack(
                 [fixed_driver_params[name] for name in PARAMETER_NAMES], -1)

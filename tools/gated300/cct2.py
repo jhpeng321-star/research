@@ -9,8 +9,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
-from pathlib import Path
 import re
 
 import numpy as np
@@ -116,7 +114,7 @@ def compute(pairs300, validation, *, sources=None):
     for horizon in H_G_HORIZONS:
         if horizons[str(horizon)]['verdict'] == 'PASS':
             h_g = horizon
-    return dict(schema=SCHEMA, wm_sha256=wm, panels=['pairs300', 'validation'],
+    result = dict(schema=SCHEMA, wm_sha256=wm, panels=['pairs300', 'validation'],
         policy_authorized=True, H_G=h_g, horizons=horizons,
         bootstrap=dict(unit='world', draws=DRAWS, seed=0, ci=.95),
         pass_rule=f'|G_h| >= {MIN_GAIN} and sign agreement on G_h >= {MIN_AGREEMENT}',
@@ -124,6 +122,12 @@ def compute(pairs300, validation, *, sources=None):
         zero_real_rule='exclude from sign counts only; |G_h| uses all confident-gain pairs',
         sources=sources or {}, entrant_control=pairs300.get('entrant_control'),
         deterministic_crn=pairs300.get('deterministic_crn'))
+    objective = pairs300.get('objective_contract')
+    if objective is not None or validation.get('objective_contract') is not None:
+        if not isinstance(objective, dict) or objective != validation.get('objective_contract'):
+            raise ValueError('CCT-2 panels disagree on objective contract')
+        result['objective_contract'] = objective
+    return result
 
 
 def main(argv=None):

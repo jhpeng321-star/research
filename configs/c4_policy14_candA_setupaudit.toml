@@ -1,0 +1,22 @@
+# S-SETUPAUDIT opt-in repair; no existing launch config changes.
+# Same inheritance depth as longgrad_skip (one extra extends layer exceeds the cap).
+extends = "c4_policy14_candA_long300.toml"
+
+[run]
+gpu_memory_fraction = 0.35
+
+[trainer]
+long_grad_balance = true
+long_grad_reset_actor_adam = true
+imagination_skip_zero_vjp = true
+imagination_replay_dense_prefix = true
+entrant_learned_mix = true
+
+[policy14]
+zero_residual_output = false
+
+[long_credit]
+score_training_horizon = true
+# Historical CCT-2 uses t0-HDV road delay/K1, not this team+source/K8 objective.
+# Leave long gradients OFF until a genuinely matching authority is supplied.
+require_objective_match = true

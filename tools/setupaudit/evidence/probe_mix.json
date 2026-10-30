@@ -1,0 +1,483 @@
+{
+  "schema": "setupaudit/1",
+  "pid": 427988,
+  "device": "cpu",
+  "gpu_fraction": null,
+  "wm": [
+    {
+      "checkpoint": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+      "config": "/root/autodl-tmp/c4/longmem300/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+      "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+      "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+      "courtesy_state_grad": true,
+      "courtesy_intent": "pivot",
+      "courtesy_off": false,
+      "physics": {
+        "dt_s": 0.5,
+        "open_road": true,
+        "exit_at_road_end": true,
+        "sumo_fidelity": false,
+        "sumo_idm": true,
+        "speed_factor": 1.0,
+        "speed_limit_mps": 31.29,
+        "free_road_gap_m": 250.0,
+        "max_gap_steps": 240,
+        "accel_min_mps2": -9.0,
+        "accel_max_mps2": 3.0,
+        "lane_gap_m": 5.0,
+        "lane_incentive_mps": 0.4,
+        "lane_safe_gap_m": 6.0,
+        "merge_zone_s0_m": 0.0,
+        "merge_zone_s1_m": 75.44,
+        "merge_lane": 2,
+        "merge_target_lane": 1,
+        "mobil_threshold_mps2": 0.1,
+        "b_safe_base_mps2": 4.0,
+        "b_safe_end_mps2": 6.0,
+        "merge_cal": false,
+        "t_lead_base_s": 1.0,
+        "t_lead_end_s": 0.1,
+        "b_accept_base_mps2": 4.0,
+        "b_accept_end_mps2": 6.0,
+        "gap_floor_m": 0.3,
+        "u_yield": 0.35,
+        "yield_lookahead_m": 120.0,
+        "b_yield_max_mps2": 1.75,
+        "yield_min_speed_mps": 2.5,
+        "yield_min_merger_speed_mps": 3.5,
+        "end_obstacle_range_m": 25.0,
+        "lane_rule": "mobil",
+        "lane_gap_rule": "fixed",
+        "gap_s0_lead_m": 1.0,
+        "gap_t_lead_s": 0.2,
+        "gap_b_lead_mps2": 3.0,
+        "gap_s0_follow_m": 0.5,
+        "gap_t_follow_s": 0.6,
+        "gap_b_follow_mps2": 6.0,
+        "gap_overlap_margin_m": 0.5,
+        "gap_anticipation_s": 0.5,
+        "gap_stopped_relax": false,
+        "gap_stopped_speed_mps": 1.0,
+        "gap_stopped_min_m": 0.5,
+        "stop_time_integration": false,
+        "emergency_decel_mps2": null,
+        "emergency_braking": true,
+        "secure_gap_veto": true,
+        "lane_change_secure_gap": true,
+        "emergency_onset": "driver_b",
+        "merge_end_wait": false,
+        "merge_end_wait_distance_m": 25.0,
+        "merge_end_wait_speed_mps": 2.0,
+        "mainline_merge_yield": true,
+        "mainline_merge_yield_distance_m": 60.0,
+        "mainline_merge_yield_decel_mps2": 2.0,
+        "forced_window_mode": "deterministic",
+        "forced_window_min_hazard": 0.02,
+        "mainline_merge_yield_scope": "lane_end",
+        "merge_end_wait_s0_follow_m": null,
+        "merge_end_wait_t_follow_s": null,
+        "merge_impatience": false,
+        "merge_impatience_distance_m": 25.0,
+        "merge_impatience_speed_mps": 1.0,
+        "merge_impatience_hazard_tau_s": 25.0,
+        "merge_impatience_gap_tau_s": 25.0,
+        "merge_impatience_s0_min_m": 0.5,
+        "merge_impatience_t_min_s": 0.1,
+        "lane_learnable": true,
+        "ramp_lane_end_stop": true,
+        "ramp_risk_retain": true,
+        "lane_physical_margin_m": 0.0,
+        "mainline_lane_mode": "courtesy",
+        "mainline_courtesy_zone_m": 300.0,
+        "entry_learned": false
+      }
+    }
+  ],
+  "candidate_sha256": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+  "mappo_sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564",
+  "starts_sha256": "5a71d862b3ea44d113d43ba4ee869e40bd061e50e18be8c8c469d6b14066a7d9",
+  "noisy": false,
+  "learned_mix": true,
+  "matched_native_background": true,
+  "rows": [
+    {
+      "actor": "CTRL0",
+      "start": 0,
+      "metadata": [
+        {
+          "source": "c4_episodes",
+          "world": "w963758m2400p20t300",
+          "arm": "generic_random",
+          "policy": "generic_random",
+          "episode": "w963758m2400p20t300__generic_random",
+          "controller_branch": null,
+          "tick": 1560,
+          "t0_s": 780.0,
+          "pair_key": null,
+          "start_source": "genrand_plain"
+        }
+      ],
+      "slots": 212,
+      "n_rows": 6,
+      "dense_horizon": 2,
+      "dense": {
+        "J": 329.2486267089844,
+        "road": 53.62362289428711,
+        "source": 275.625,
+        "dense_credit": 0.6807304620742798,
+        "objective_loss": -0.6807304620742798,
+        "decomposition": {
+          "B": [
+            -247.06581115722656
+          ],
+          "D_all": [
+            0.1046600341796875
+          ],
+          "D_i": [
+            -0.0001678466796875,
+            0.0042877197265625,
+            0.02874755859375
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": 0.0329132080078125,
+              "C_G": 4.57763671875e-05
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            0.0329132080078125
+          ],
+          "C_G": [
+            4.57763671875e-05
+          ]
+        },
+        "accrued_decomposition": {
+          "B": [
+            -329.3717041015625
+          ],
+          "D_all": [
+            0.12310791015625
+          ],
+          "D_i": [
+            -0.000152587890625,
+            0.0050048828125,
+            0.033782958984375
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": 0.03863525390625,
+              "C_G": 0.0
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            0.03863525390625
+          ],
+          "C_G": [
+            0.0
+          ]
+        },
+        "coefficients": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          18.799999237060547
+        ],
+        "row_kind": [
+          0,
+          1,
+          2,
+          2,
+          2,
+          3
+        ],
+        "group_members": [
+          [
+            94,
+            89,
+            44
+          ]
+        ],
+        "gain_only_on": [
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        ],
+        "gate_agreement": [
+          [
+            true,
+            false,
+            false,
+            true,
+            true,
+            true
+          ]
+        ],
+        "gate_median": [
+          [
+            0.123077392578125,
+            0.0,
+            -0.00048828125,
+            0.0052642822265625,
+            0.033721923828125,
+            0.0394439697265625
+          ]
+        ],
+        "gate_q10": [
+          0.11956481635570526,
+          0.0,
+          -0.000732421875,
+          0.0031494139693677425,
+          0.03353271633386612,
+          0.03634033352136612
+        ],
+        "long_credit": 0.0,
+        "all_J_futures": [
+          329.41400146484375,
+          332.1423034667969,
+          328.28021240234375,
+          328.77392578125,
+          329.09527587890625,
+          329.2173156738281,
+          328.646728515625,
+          328.4192199707031
+        ],
+        "native_J_futures": [
+          329.53619384765625,
+          332.26483154296875,
+          328.4038391113281,
+          328.90313720703125,
+          329.2110595703125,
+          329.3409423828125,
+          328.7679138183594,
+          328.5457763671875
+        ],
+        "actor_metrics": {
+          "cf_rows": 5,
+          "cf_weights": {
+            "individual": 8.9,
+            "group": 9.9,
+            "coop": 8.9,
+            "team": 0.0,
+            "all": 1.0
+          },
+          "B": -329.3717041015625,
+          "D_all": 0.12310791015625,
+          "D_i": 0.01287841796875,
+          "D_G": 0.03863525390625,
+          "C_G": 0.0,
+          "M_i": null,
+          "I_i": null,
+          "coop_positive_fraction": 0.0,
+          "n_groups": 1,
+          "n_C_G": 1,
+          "mean_group_size": 3.0,
+          "by_group_size": {
+            "3": {
+              "n": 1,
+              "D_G": 0.03863525390625,
+              "C_G": 0.0,
+              "coop_positive_fraction": 0.0
+            }
+          },
+          "by_penetration": {
+            "unknown": {
+              "n": 1,
+              "D_G": 0.03863525390625,
+              "C_G": 0.0,
+              "coop_positive_fraction": 0.0
+            }
+          },
+          "antiexploit_quantile": 0.1,
+          "antiexploit_futures": 8,
+          "mean_only_gain_fraction": 0.0,
+          "mean_positive_credit_fraction": 1.0,
+          "pessimistic_positive_credit_fraction": 1.0,
+          "mean_paired_credit": 0.8495032787322998,
+          "pessimistic_paired_credit": 0.8037029504776001,
+          "pessimistic_credit": true,
+          "native_command_mse": 0.0,
+          "native_command_abs_deviation": 0.0,
+          "native_anchor_feature": 0.0,
+          "native_anchor_scale": 0.0,
+          "exploit_ensemble_members": 1,
+          "exploit_epistemic_std": null,
+          "exploit_aleatoric_std": 0.03671622648835182,
+          "exploit_residual_samples": 227,
+          "exploit_residual_rms_mps2": 0.0,
+          "exploit_residual_positive_fraction": 0.0,
+          "exploit_native_head_calibration_rmse_mps2": null,
+          "exploit_head_calibration_rmse_over_residual_rms": null,
+          "exploit_same_state_head_error_available": false,
+          "native_anchor": false,
+          "native_anchor_penalty": 0.0,
+          "sampled_marginals": 0,
+          "marginal_advantage": null
+        }
+      },
+      "seconds": 12.507067546248436,
+      "future_receipts": [
+        {
+          "seconds": 1.5919788032770157,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.4707860723137856,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.4639952778816223,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.302567645907402,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.3074041232466698,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.302965946495533,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.292017474770546,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.2632995396852493,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "action_delta_vs_ctrl0": {
+        "n": 455,
+        "mean": 0.0,
+        "q": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "within_residual_envelope_share": 1.0,
+      "positive_delta_share": 0.0,
+      "requested_action": {
+        "n": 227,
+        "mean": 0.0,
+        "q": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "bridge_lane_change_share": 0.0,
+      "entrant_cav_tick_share": 0.015384615398943424,
+      "own_nonzero_share": {
+        "v_mps": 1.0,
+        "a_mps2": 0.9911894202232361,
+        "lane_0": 0.4229075014591217,
+        "lane_1": 0.43171805143356323,
+        "lane_2": 0.14537444710731506,
+        "s_to_merge_end_m": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.5770925283432007,
+        "front_present": 0.5770925283432007,
+        "rear_gap_m": 1.0,
+        "rear_dv_mps": 0.8458150029182434,
+        "rear_present": 0.8458150029182434,
+        "in_merge_zone": 0.0
+      },
+      "signal": {
+        "n": 1816,
+        "mean": -0.05134046450257301,
+        "q": [
+          -0.389171838760376,
+          -0.37365296483039856,
+          -0.26579052209854126,
+          -0.06601503491401672,
+          0.19278034567832947,
+          0.25437259674072266,
+          0.29040130972862244
+        ]
+      }
+    }
+  ]
+}

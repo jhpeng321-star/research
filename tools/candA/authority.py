@@ -44,6 +44,7 @@ MANIFEST_FILES = [
     'src/wms/control/deploy.py', 'src/wms/control/policy.py',
     'src/wms/control/dreamer.py', 'src/wms/control/policy14.py', 'src/wms/control/policy14_cli.py',
     'src/wms/control/phase_resume.py', 'src/wms/control/gated300.py',
+    'src/wms/control/entrant_mix.py', 'src/wms/control/antiexploit.py',
     'src/wms/control/exploit.py', 'src/wms/control/auditfix_authority.py',
     'src/wms/control/parallel_futures.py', 'src/wms/core/speed_flags.py',
     'src/wms/control/zerostart.py', 'src/wms/control/coopw.py', 'src/wms/control/counterfactual.py',
