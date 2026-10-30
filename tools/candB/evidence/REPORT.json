@@ -1,0 +1,32 @@
+{
+ "schema": "candB_caprel_parity/1",
+ "allocation": "S-CAPREL-PARITY",
+ "pooled_rmse": 0.12230764831008893,
+ "registered_bound": 0.1603,
+ "passed": true,
+ "zero_ctrl0_identity": true,
+ "worlds": {
+  "963111": {
+   "n": 18702,
+   "excluded": {
+    "not_stable": 104,
+    "speed_mismatch": 0,
+    "missing_id": 0
+   },
+   "rmse": 0.12230764831008893,
+   "native_head_rmse": 0.12769870693529828,
+   "episode_sha256": "ca0f55d0e789f05e41320b4367e877cc7cfd942b8c8430d1ce01568bda545bfc",
+   "ledger_sha256": "90c68ee1d9d432c327d7c123dd44fa3b1fea805e21a4f03ca9da5a13957c2461"
+  }
+ },
+ "charged_sim_s": 3600,
+ "actual_sim_s": 2700,
+ "workers": 1,
+ "nice": 19,
+ "caprel_source_sha256": {
+  "residual.py": "c16cada643f91f8a81931509e1ec3ae8bbcaf5614f8d4d862377c4842c076f56",
+  "alwayscmd.py": "1e359c9bcef9a2aba82fd946563daec66e48c35373b679acf655375d3d0b4d6a",
+  "sumo_idm.py": "c86e2d0733978293833e2c40f898e6478d7604189d607fb73f9aefab3c8962aa"
+ },
+ "registration_sha256": "954b31772f7d0238f3fca65c4661b8d1f53be8670312afd92481c49542f84f9e"
+}

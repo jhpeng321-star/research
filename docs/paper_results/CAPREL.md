@@ -56,3 +56,14 @@ C4_SUMO_LEADER_RULE=1 PYTHONPATH=src:. python tools/execparity/alwayscmd_replay.
 Canary 977000 + probes 977001/2/3; 4×900 sim-s require NEW registration. No SUMO run here.
 Criterion unchanged: bitwise zero identity AND pooled executed RMSE <= native-head RMSE.
 Old receipts/logs cannot qualify ON; fresh source hashes must match deployment and replay.
+
+## S-INTEG training-seed re-check (owner 2026-10-30 16:30)
+The historical command above uses prohibited977xxx seeds/cpuQ for this task.
+Registered replacement: `tools/candB/parity.py`, gpuR CPUs/nice19/one worker,
+paired zero963110 then fixed -0.01 probe963111, same shared execution law/native lanes.
+PASS: bitwise zero identity; pooled RMSE0.12230764831008893 <= fixed0.1603 m/s²,
+18,702 stable rows; native-head RMSE0.12769870693529828; deployment guard PASS.
+Original infrastructure failure at t=0 retained its900s charge; explicit amendment
+ran2700s. Total charged3600/3600, no remaining allocation. All files retained.
+Receipt: `tools/candB/evidence/CAPREL_PARITY.json`; source bindings are LF bytes.
+This one-world probe is execution parity only. Details: `CANDB_INTEG.md`.

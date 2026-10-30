@@ -1,0 +1,62 @@
+{
+ "bit_identical": true,
+ "array_sha256": [
+  {
+   "time_s": "2471cdbc081a8d8c6d8eb430f0e503b85c75c4912c50194891e112b071fbb0da",
+   "s_m": "ed763546a7aa17bb1aaa288ab02d08bef06ca1339fb34137c5cbf13d7cfa621b",
+   "v_mps": "ab3ae81281563c45cf737154d887f947e2a0413fc9ac14dff18b0e4797690cb1",
+   "a_mps2": "d757b3c95e12556b4654ed6882d3fc74d57379df7f848c8263517be247785934",
+   "lane": "70d16cd3a1a5a0e981b13d5572cbd280fe99a892ae38c6e7698b046eafaf3f06",
+   "lane_carry": "8f81b35944ff6851770d8b68780afcd7ba114d8a989a7368e94740241797cbaa",
+   "present": "b9a0eeae7c5a5e3dcba2099ace36a1f82fc1a301bbc11d822abd5b7bebe373c6",
+   "is_cav": "4f7c6dc1ee2bb0b302880d528edd8fc9f95ae2e3165ba81edbc3dd4c22bf3824",
+   "junction": "e6362b2dab865e4ef2325734b7f85da0ccf788fd326f4d125ec80856a5d1d15b",
+   "vid_index": "1629e4e7c7ff3a7da39a17563c8386bcd76ab626a51376fb15948902d3deb0ab",
+   "vehicle_ids": "510fd05af2594da168e5cf836c7b6e5ed4f5361cd1f2d28767d3abf60b489f59",
+   "control_time_s": "e6ffa296a2ee57b3a9cae122faaff4292fc67038664b8afd5573d626fd4a895c",
+   "controller": "b15b2b7af9c0623483cd9ad37ff5c6335f1b47fed9558c2fc5d5a45bb16cf62e",
+   "issued_acceleration_mps2": "9d2c96a6683a9eaf3fa8753255029cd856e7e3cbd52869452c32c2d70b6b44e1",
+   "issued_target_speed_mps": "63c0209c7980487bb0e52153d0e1e8fc67498efd7e07bfa18ba53a6b7a94b989"
+  },
+  {
+   "time_s": "2471cdbc081a8d8c6d8eb430f0e503b85c75c4912c50194891e112b071fbb0da",
+   "s_m": "ed763546a7aa17bb1aaa288ab02d08bef06ca1339fb34137c5cbf13d7cfa621b",
+   "v_mps": "ab3ae81281563c45cf737154d887f947e2a0413fc9ac14dff18b0e4797690cb1",
+   "a_mps2": "d757b3c95e12556b4654ed6882d3fc74d57379df7f848c8263517be247785934",
+   "lane": "70d16cd3a1a5a0e981b13d5572cbd280fe99a892ae38c6e7698b046eafaf3f06",
+   "lane_carry": "8f81b35944ff6851770d8b68780afcd7ba114d8a989a7368e94740241797cbaa",
+   "present": "b9a0eeae7c5a5e3dcba2099ace36a1f82fc1a301bbc11d822abd5b7bebe373c6",
+   "is_cav": "4f7c6dc1ee2bb0b302880d528edd8fc9f95ae2e3165ba81edbc3dd4c22bf3824",
+   "junction": "e6362b2dab865e4ef2325734b7f85da0ccf788fd326f4d125ec80856a5d1d15b",
+   "vid_index": "1629e4e7c7ff3a7da39a17563c8386bcd76ab626a51376fb15948902d3deb0ab",
+   "vehicle_ids": "510fd05af2594da168e5cf836c7b6e5ed4f5361cd1f2d28767d3abf60b489f59",
+   "control_time_s": "e6ffa296a2ee57b3a9cae122faaff4292fc67038664b8afd5573d626fd4a895c",
+   "controller": "b15b2b7af9c0623483cd9ad37ff5c6335f1b47fed9558c2fc5d5a45bb16cf62e",
+   "issued_acceleration_mps2": "9d2c96a6683a9eaf3fa8753255029cd856e7e3cbd52869452c32c2d70b6b44e1",
+   "issued_target_speed_mps": "63c0209c7980487bb0e52153d0e1e8fc67498efd7e07bfa18ba53a6b7a94b989"
+  }
+ ],
+ "compared_arrays": [
+  "time_s",
+  "s_m",
+  "v_mps",
+  "a_mps2",
+  "lane",
+  "lane_carry",
+  "present",
+  "is_cav",
+  "junction",
+  "vid_index",
+  "vehicle_ids",
+  "control_time_s",
+  "controller",
+  "issued_acceleration_mps2",
+  "issued_target_speed_mps"
+ ],
+ "residual_reference": "ctrl0",
+ "caprel_source_sha256": {
+  "residual.py": "c16cada643f91f8a81931509e1ec3ae8bbcaf5614f8d4d862377c4842c076f56",
+  "alwayscmd.py": "1e359c9bcef9a2aba82fd946563daec66e48c35373b679acf655375d3d0b4d6a",
+  "sumo_idm.py": "c86e2d0733978293833e2c40f898e6478d7604189d607fb73f9aefab3c8962aa"
+ }
+}

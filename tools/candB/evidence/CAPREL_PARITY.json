@@ -1,0 +1,31 @@
+{
+ "schema": "execparity_always_commanded_acceleration/1",
+ "backend_contract": "always_commanded_ctrl0/1",
+ "measured_real_sumo": true,
+ "zero_ctrl0_identity": true,
+ "passed": true,
+ "residual_reference": "ctrl0",
+ "caprel_source_sha256": {
+  "residual.py": "c16cada643f91f8a81931509e1ec3ae8bbcaf5614f8d4d862377c4842c076f56",
+  "alwayscmd.py": "1e359c9bcef9a2aba82fd946563daec66e48c35373b679acf655375d3d0b4d6a",
+  "sumo_idm.py": "c86e2d0733978293833e2c40f898e6478d7604189d607fb73f9aefab3c8962aa"
+ },
+ "worlds": [
+  "963111"
+ ],
+ "driver_sha256": "16bd827896ef2a5d83ad853938e0d4c20728f205a5e4ab3f1fb7b80c8f9de4b7",
+ "native_arm_head_error": {
+  "rmse": 0.12769870693529828
+ },
+ "c1_residual_execution_error": {
+  "rmse": 0.12230764831008893
+ },
+ "error": {
+  "ours": {
+   "rmse": 0.12230764831008893
+  }
+ },
+ "registered_bound": 0.1603,
+ "allocation": "S-CAPREL-PARITY",
+ "report_sha256": "cabe033ac199d74916e44ab3ca8308092745b00514e0018d1a9c462935af4a2c"
+}

@@ -1,0 +1,19 @@
+{
+ "pid": 437069,
+ "start_ticks": "4197765052",
+ "command": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-u",
+  "-m",
+  "tools.candB.parity",
+  "--registration",
+  "/root/autodl-tmp/c4/candB_caprel_20261030_r2/REGISTRATION_ACK.json",
+  "--out",
+  "/root/autodl-tmp/c4/candB_caprel_20261030_r2/parity_run"
+ ],
+ "created": 1793351063.7069466,
+ "registration": "954b31772f7d0238f3fca65c4661b8d1f53be8670312afd92481c49542f84f9e"
+}
