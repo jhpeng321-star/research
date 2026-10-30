@@ -2,10 +2,32 @@
 import json
 import os
 from pathlib import Path
+import sys
 
 
 def main():
     ledger = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
+    if sys.argv[1:] == ['--monitor']:
+        marker = 'S-PILOTB OWNER2305 OBSERVER ACK'
+        assert marker not in ledger.read_text(encoding='utf-8')
+        lease = json.loads((Path(__file__).parent / 'pilot_watch_2305_OWNERSHIP.json').read_text())
+        line = ('\n- '+marker+'23:17 +08: exclusive local observer'+str(lease['pid'])+
+            '/creation23:13:43 has taken over after exact-owned predecessor43860 cooperatively exited '
+            '(Windows process handle waited; no signals). Receipt tools/candB/pilot_watch_2305_OWNERSHIP.json. '
+            'It writes per-update PILOT/JSON metrics and commits, launch/every5 registration entries, '
+            'and pilot_update3_ACK.json only after actual phase3; monitoring continues thereafter for MAIN. '
+            'First observation23:17:01 dry0/pilot0, baseline still computing; phase3 requirement PENDING. '
+            'Remote trainer985766 and controller999762 preserved. Final operational code5118d220 + '
+            'native-budget correction07899bcf;16 CPU PASS. Ordinary native continuation owns the '
+            '150-total phase budget (149 remaining after1), exact baseline/full-Adam preservation and original R4. '
+            'SPEEDPROF still has no exact application diff published. No duplicate GPU dispatch/SUMO/push.\n')
+        with ledger.open('a', encoding='utf-8') as stream:
+            stream.write(line)
+            stream.flush()
+            os.fsync(stream.fileno())
+        print(marker)
+        return
+    assert not sys.argv[1:]
     marker = 'S-PILOTB OWNER2305 OVERLAY ACK'
     assert marker not in ledger.read_text(encoding='utf-8')
     receipt = json.loads((Path(__file__).parent / 'pilot_deploy_2305_receipt.json').read_text())
