@@ -2554,6 +2554,9 @@ class WmSModel(nn.Module):
                 entrant = entrant | newborn
                 current["entrant"] = entrant
                 if entrant_driver_sampler is not None:
+                    # Optional feedback consumers need births, not merely the
+                    # persistent ever-entered mask, to avoid reused-slot commands.
+                    current["entrant_birth"] = newborn
                     fixed_driver_params = entrant_driver_sampler(current, newborn, fixed_driver_params)
             elif is_cav_seq is not None:
                 current = {**current, "is_cav": is_cav_seq[:, step_i].bool()}

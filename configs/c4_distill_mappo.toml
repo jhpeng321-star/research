@@ -1,0 +1,16 @@
+# S-DISTILL2 owner-approved MAPPO-assisted warm start, existing TRAIN sources only.
+extends = "c4_policy14_candA.toml"
+
+[policy14]
+# A subsequent --resume --new-phase must retain the distilled head.
+zero_residual_output = false
+
+[distill]
+law = "current"
+horizon_s = 60
+pad_max = 288
+learning_rate = 0.0003
+huber_delta = 1.0
+gradient_steps = 32
+replay_frames = 240
+checkpoint_every = 50
