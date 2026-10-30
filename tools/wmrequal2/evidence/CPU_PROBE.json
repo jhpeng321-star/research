@@ -1,0 +1,1633 @@
+{
+ "schema": "wmrequal2_cpu_probe/1",
+ "cuda_visible": "",
+ "threads": 2,
+ "no_remote_writes": true,
+ "no_optimizer": true,
+ "cpu_seconds": 9.86890765465796,
+ "ownership_checks": [
+  {
+   "cohort": "original",
+   "arms": [
+    "native",
+    "mappo",
+    "ours_c1",
+    "coopoff_c1"
+   ],
+   "ramp_stay_delegated_to_first_passage": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "returned_ramp_lane": [
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ]
+  },
+  {
+   "cohort": "entrant",
+   "arms": [
+    "native",
+    "mappo",
+    "ours_c1",
+    "coopoff_c1"
+   ],
+   "ramp_stay_delegated_to_first_passage": [
+    false,
+    true,
+    true,
+    true
+   ],
+   "returned_ramp_lane": [
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ]
+  }
+ ],
+ "totals": {
+  "native": {
+   "worlds": 36,
+   "worlds_with_original_ramp_cavs": 21,
+   "original_ramp_cavs": 44,
+   "recorded_original_ramp_merged": 44,
+   "original_mainline_cavs_with_recorded_lane_change": 87
+  },
+  "mappo": {
+   "worlds": 36,
+   "worlds_with_original_ramp_cavs": 21,
+   "original_ramp_cavs": 44,
+   "recorded_original_ramp_merged": 44,
+   "original_mainline_cavs_with_recorded_lane_change": 107
+  },
+  "ours_c1": {
+   "worlds": 36,
+   "worlds_with_original_ramp_cavs": 21,
+   "original_ramp_cavs": 44,
+   "recorded_original_ramp_merged": 44,
+   "original_mainline_cavs_with_recorded_lane_change": 98
+  },
+  "coopoff_c1": {
+   "worlds": 36,
+   "worlds_with_original_ramp_cavs": 21,
+   "original_ramp_cavs": 44,
+   "recorded_original_ramp_merged": 44,
+   "original_mainline_cavs_with_recorded_lane_change": 98
+  }
+ },
+ "exposure": [
+  {
+   "pair_key": "w973010m2400p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973010m2400p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973010m2400p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973010m2400p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973017m2700p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973017m2700p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973017m2700p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973017m2700p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973024m1900p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973024m1900p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973024m1900p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973024m1900p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973028m2400p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973028m2400p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973028m2400p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973028m2400p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973030m1900p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973030m1900p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973030m1900p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973030m1900p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973031m2400p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973031m2400p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973031m2400p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973031m2400p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973043m2400p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973043m2400p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973043m2400p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973043m2400p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973044m2700p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973044m2700p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973044m2700p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973044m2700p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973061m2400p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973061m2400p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973061m2400p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973061m2400p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973062m2700p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973062m2700p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973062m2700p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973062m2700p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973065m2700p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973065m2700p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973065m2700p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973065m2700p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973068m2700p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973068m2700p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973068m2700p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973068m2700p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973071m2700p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 5,
+   "recorded_original_ramp_merged": 5,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973071m2700p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 5,
+   "recorded_original_ramp_merged": 5,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973071m2700p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 5,
+   "recorded_original_ramp_merged": 5,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973071m2700p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 5,
+   "recorded_original_ramp_merged": 5,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973078m1900p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973078m1900p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973078m1900p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973078m1900p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973081m1900p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973081m1900p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973081m1900p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 5,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973081m1900p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973095m2700p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973095m2700p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973095m2700p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973095m2700p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973100m2400p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973100m2400p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973100m2400p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973100m2400p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973109m2400p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973109m2400p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973109m2400p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973109m2400p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973112m2400p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973112m2400p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973112m2400p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973112m2400p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973154m2400p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973154m2400p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973154m2400p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973154m2400p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973165m1900p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973165m1900p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973165m1900p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973165m1900p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973166m2400p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973166m2400p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 9,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973166m2400p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 9,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973166m2400p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 9,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973168m1900p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973168m1900p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973168m1900p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973168m1900p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973170m2700p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973170m2700p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973170m2700p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973170m2700p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973174m1900p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973174m1900p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973174m1900p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973174m1900p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973187m2400p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973187m2400p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973187m2400p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973187m2400p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973191m2700p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973191m2700p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 9,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973191m2700p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 17,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973191m2700p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 4,
+   "recorded_original_ramp_merged": 4,
+   "original_mainline_cavs_with_recorded_lane_change": 9,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973195m1900p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973195m1900p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973195m1900p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973195m1900p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973201m1900p40t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973201m1900p40t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973201m1900p40t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973201m1900p40t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 7,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973204m1900p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973204m1900p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973204m1900p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973204m1900p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973207m1900p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973207m1900p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973207m1900p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973207m1900p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973212m2700p20t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973212m2700p20t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973212m2700p20t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 6,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973212m2700p20t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 3,
+   "recorded_original_ramp_merged": 3,
+   "original_mainline_cavs_with_recorded_lane_change": 4,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973217m2400p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973217m2400p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973217m2400p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973217m2400p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973218m2700p05t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973218m2700p05t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973218m2700p05t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973218m2700p05t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 0,
+   "recorded_original_ramp_merged": 0,
+   "original_mainline_cavs_with_recorded_lane_change": 0,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973219m1900p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 2,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973219m1900p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973219m1900p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973219m1900p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 1,
+   "recorded_original_ramp_merged": 1,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973221m2700p10t300@t300",
+   "arm": "native",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0
+   ]
+  },
+  {
+   "pair_key": "w973221m2700p10t300@t300",
+   "arm": "coopoff_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973221m2700p10t300@t300",
+   "arm": "mappo",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 3,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  },
+  {
+   "pair_key": "w973221m2700p10t300@t300",
+   "arm": "ours_c1",
+   "original_ramp_cavs": 2,
+   "recorded_original_ramp_merged": 2,
+   "original_mainline_cavs_with_recorded_lane_change": 1,
+   "timeline_ids": [
+    0,
+    3
+   ]
+  }
+ ],
+ "conclusion": "All original ramp CAVs lack merge delegation; native entrant CAVs also lack delegation. Policy entrants delegate stays with policy_ramp_merge=False."
+}
