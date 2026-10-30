@@ -15,5 +15,9 @@
   and candidate-B dense/300s imagination. These are distinct stochastic panels.
 - Preserve original saved arms; reuse the named panel only with those differences
   explicit. New short measurements must retain their own source/config/CRN binding.
+- Sampler-contract confirmation: tools/setupaudit/inspect_inputs.py:46-58 calls
+  train.sample directly under candidate-A config, bypassing candidate-B trainer
+  headroom/tilt `_sample_starts` and its paired-return development exclusions.
+  Therefore the24-start panel cannot replace candidate-B's exact TRAIN panel.
 - Deadline delivery may be incomplete; no missing objective or future is imputed.
 - No training/SUMO, peer signals, deletions or push. Commit after each step.

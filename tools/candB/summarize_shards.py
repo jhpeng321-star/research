@@ -125,6 +125,8 @@ def analyze(root):
         cross_host_CTRL0_max_abs_J300=cross_host_reference_max,
         full_R2_demonstrated=False, zero_identity=zero['zero_identity'],
         current_output_head_zero=zero['current_output_head_zero'],
+        dense_horizons_s=sorted({r['value']['dense_horizon_s'] for values in rows.values()
+                                 for r in values}),
         saved_K8_sha256=sha256(old_path), zero_sha256=sha256(zero_path))
 
 
@@ -183,7 +185,7 @@ def report(result, final_sha, stamp):
         f'Balanced common-start ranking,300s: {ranking("J300")}.',
         f'Cross-host CTRL0 reference max absolute future-J300 difference on common starts: {result["cross_host_CTRL0_max_abs_J300"]:.3f} veh-s; every dJ remains paired within its own process.',
         '## Actor objective (loss at scale1; lower is better)',
-        'L90 is TRAIN-resolved dense-prefix suffix/joint-q10 loss (low-share caps retained); L300 adds registered gain-gated accrued300s credit. These are not physical J.',
+        f'L90 is TRAIN-resolved dense-prefix suffix/joint-q10 loss (observed caps {result["dense_horizons_s"]}s); L300 adds registered gain-gated accrued300s credit. These are not physical J.',
         '| Controller | starts/worlds/K | L90 [95% CI] | dL90 vs CTRL0 | L300 [95% CI] | dL300 vs CTRL0 |',
         '|---|---|---:|---:|---:|---:|',
         *table(('objective90_loss', 'objective300_loss'), actor=True),
@@ -196,7 +198,7 @@ def report(result, final_sha, stamp):
         'CTRLARM600s: CTRL0-native **-1956.53 [-4086.66,+144.50]**; lane-on MAPPO-CTRL0 **-623.95 [-2044.25,+664.51]** veh-s; both include0. Exact source: `E:/research-dense/docs/paper_results/CTRLARM.md:9-17`.',
         'These lane-on/600s reused-world results are contextual, not matched native-lane/300s speed-only efficacy; the partial speed-only export has no matched real result here.',
         'No numeric PI/CIRCLES SUMO contrast in either named paper_results directory. `E:/research-dense/runs/active/C4-V5-20261014/REGISTRATION.md:96-99` registers damping/PI arms only; active C4-EVAL registrations are absent.',
-        'SETUPAUDIT2 named panel is still running: its physical all-vehicle/source/mix contract agrees, but it has no actor objective, uses fixedupdate190/horizon600 slot/CRN sizing and future-specific lane uniforms. It is not substituted for this training-objective panel.',
+        'SETUPAUDIT2 physical all-vehicle/source/mix scoring agrees, but its TRAIN export calls train.sample directly (tools/setupaudit/inspect_inputs.py:46-58), bypassing B headroom/tilt/exclusions; no actor loss is saved. Fixedupdate190/horizon600 slots/future-specific lane uniforms also differ. It cannot substitute for this exact B panel.',
         f'**R2 proxy clause: {outcome}. Full registered R2: NOT DEMONSTRATED (coverage incomplete; authorized K4 fallback disclosed); no matched real PI/CIRCLES/native-lane alternative establishes it.**',
         'Binding rule: `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md:4951-4956`. Point-estimate order/overlapping intervals alone do not establish the alternative.',
         '## Execution and verification',
