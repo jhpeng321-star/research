@@ -1,0 +1,18 @@
+{
+ "label": "EXPLORATORY",
+ "cuda_visible_devices": "",
+ "returncode": 0,
+ "sha256": {
+  "pilot_handoff": "31c1c1e1a8431910f9a425dfbb86af0c383488a615653dcddce19746d727bf22",
+  "pilot_telemetry_2305": "64745d682b31b5a1066c2a27a83e613b3f90bfca8713d09220c9a3134a9abcbf",
+  "pilot_recipe": "28ed4d518ee58e6f0f4a6f14835b0bbade196d14e64b265145be33826114b3ce",
+  "pilot_continue": "aa618d051b4b6ee7c662bf4d9e36de6630715bd0965e7f754f992e0e7f8e7585",
+  "pilot_continue_supervise": "31141be995bd3686835036b4f56b4ad6e4904045a539786e2e44fa444174c750",
+  "pilot_handoff_test": "bc5d4c28bd0377c88fe6c3f18f3f5cfd6594c3b548e2dc00391e5bb4d3b7a62a",
+  "pilot_recipe_test": "9122739d9ca602220000b8797d3d363196f848d6e22713bbbbeee3d7b5e17115",
+  "pilot_continue_test": "e6efacbf7a2777ff3c9b7085e160301b4e2bbc9b5e0f370173827cf7bddc1b1b",
+  "pilot_telemetry_2305_test": "bc2a74a3acad14e327fe7ca3e1d3994ca59858e13363fd6d90e983b370b63b0d"
+ },
+ "stdout": "",
+ "stderr": "test_default_serial_invalid_flag_refuses (tools.candB.pilot_handoff_test.HandoffTest.test_default_serial_invalid_flag_refuses) ... ok\ntest_exclusive_lease (tools.candB.pilot_handoff_test.HandoffTest.test_exclusive_lease) ... ok\ntest_finite_single_update_and_boundary_receipts (tools.candB.pilot_handoff_test.HandoffTest.test_finite_single_update_and_boundary_receipts) ... ok\ntest_partial_row_is_not_receipt (tools.candB.pilot_handoff_test.HandoffTest.test_partial_row_is_not_receipt) ... ok\ntest_zero_peers_and_capacity_required (tools.candB.pilot_handoff_test.HandoffTest.test_zero_peers_and_capacity_required) ... ok\ntest_boundary_latch_budget_and_patch_restoration (tools.candB.pilot_recipe_test.RecipeTest.test_boundary_latch_budget_and_patch_restoration) ... ok\ntest_four_workers_refused_and_three_bounded (tools.candB.pilot_recipe_test.RecipeTest.test_four_workers_refused_and_three_bounded) ... ok\ntest_bound_parent_and_adapter_source (tools.candB.pilot_continue_test.ContinuationTest.test_bound_parent_and_adapter_source) ... ok\ntest_config_allows_only_receipted_entropy_annealing (tools.candB.pilot_continue_test.ContinuationTest.test_config_allows_only_receipted_entropy_annealing) ... ok\ntest_exact_source_refusal (tools.candB.pilot_continue_test.ContinuationTest.test_exact_source_refusal) ... ok\ntest_nested_adam_head_state_comparison_detects_drift (tools.candB.pilot_continue_test.ContinuationTest.test_nested_adam_head_state_comparison_detects_drift) ... ok\ntest_ordinary_resume_not_fresh_phase (tools.candB.pilot_continue_test.ContinuationTest.test_ordinary_resume_not_fresh_phase) ... ok\ntest_real_cli_bootstrap_patch_keeps_update_and_gate (tools.candB.pilot_continue_test.ContinuationTest.test_real_cli_bootstrap_patch_keeps_update_and_gate) ... ok\ntest_group_terms_and_confident_gain_are_explicit (tools.candB.pilot_telemetry_2305_test.TelemetryTest.test_group_terms_and_confident_gain_are_explicit) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 1.250s\n\nOK\n"
+}

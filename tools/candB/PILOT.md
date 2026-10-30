@@ -146,3 +146,19 @@
   `pilot_recover_2305.py` touches only named own-run receipts and owned process metadata.
 - Owner23:05 parallelism amendment is being prepared before the pending clean
   boundary. SPEEDPROF currently publishes diagnosis only, no exact application diff.
+
+### Owner23:05 boundary overlay CPU verification
+- `pilot_cpu_2305.json`: **14 CPU PASS**, CUDA hidden,1.25s. Covers original
+  same-phase/full-Adam/baseline proofs, boundary latching, four-worker refusal,
+  three-worker memory bound and exact synthetic group-credit decomposition.
+- Request up to4 ES workers; select largest count with `.24` allocator each plus
+  768MiB per context, capped at **min(90% device,45GiB)**. Four cannot fit on48GiB;
+  three fit only when the measured coordinator reservation allows; two/serial fallback.
+- Dense pool uses3 workers and the largest1..3 VJP slots satisfying the same
+  exact bound (`.24` active, `.04` idle). No training/objective arithmetic changes.
+- Per-update worker `memory.json` allocator peaks and PIDs are preserved and
+  attached to `updates.jsonl`; total device usage remains sampled every600s.
+- Added per-group D_G/C_G/sum_D_i/D_all (dense native reference and raw300s CTRL0
+  reference separately labelled), confident group-gain rows and final acting-CAV
+  executed residual/braking minima. Existing raw dJ, ES acceptance, gradients and
+  seconds/update stay intact. The live original dry adapter is preserved.

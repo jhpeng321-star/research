@@ -12,8 +12,8 @@ def main():
     p.add_argument('--python', required=True)
     p.add_argument('--receipt', default='pilot_cpu_2230.json')
     a = p.parse_args()
-    names = ('pilot_handoff', 'pilot_recipe', 'pilot_continue', 'pilot_continue_supervise',
-             'pilot_handoff_test', 'pilot_recipe_test', 'pilot_continue_test')
+    names = ('pilot_handoff', 'pilot_telemetry_2305', 'pilot_recipe', 'pilot_continue', 'pilot_continue_supervise',
+             'pilot_handoff_test', 'pilot_recipe_test', 'pilot_continue_test', 'pilot_telemetry_2305_test')
     directory = Path(__file__).resolve().parent
     sources = {name: (directory / (name + '.py')).read_text(encoding='utf-8') for name in names}
     code = 'import sys, types, unittest\n'

@@ -46,10 +46,10 @@ class RecipeTest(unittest.TestCase):
                     with patch.object(torch.cuda, 'memory_reserved', return_value=99 * 1024**3):
                         fallback = trainer.update()
                 self.assertEqual(first['pilot_recipe']['actual'], 'serial')
-                self.assertEqual(second['pilot_recipe']['actual'], 'two-forward-workers')
+                self.assertEqual(second['pilot_recipe']['actual'], '3-forward-workers')
                 self.assertEqual(fallback['pilot_recipe']['actual'], 'serial-budget-fallback')
                 self.assertEqual([first['eslong_forward_workers'], second['eslong_forward_workers'],
-                                  fallback['eslong_forward_workers']], [1, 2, 1])
+                                  fallback['eslong_forward_workers']], [1, 3, 1])
 
             original_factory, original_update = base.patch, DreamerTrainer.update
             with patch.object(base, 'run', fake_run), patch.object(parallel_futures, 'FuturePool', FakePool), \
@@ -61,6 +61,16 @@ class RecipeTest(unittest.TestCase):
             self.assertEqual(observed, [True, False, True])
             self.assertIs(base.patch, original_factory)
             self.assertIs(DreamerTrainer.update, original_update)
+
+    def test_four_workers_refused_and_three_bounded(self):
+        from tools.candB.pilot_recipe import safe_workers
+        gib = 1024**3
+        workers, bound = safe_workers(48*gib, 5*gib)
+        self.assertEqual(workers, 3)
+        self.assertLessEqual(bound, .90*48*gib)
+        self.assertLessEqual(bound, 45*gib)
+        self.assertEqual(safe_workers(48*gib, 12*gib)[0], 2)
+        self.assertEqual(safe_workers(48*gib, 99*gib)[0], 1)
 
 
 if __name__ == '__main__':
