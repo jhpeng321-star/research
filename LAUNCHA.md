@@ -188,3 +188,9 @@ training-only, m/s^2 scale in a real `imagine`. No new `--resume-allow` key (exp
 
 ### LAUNCHED 2026-10-30 05:55 (relaunch after a device bug) — candidate A long 300 s, co-located with W8 on gpuA
 Production PID 844331 (start ticks 869045247), `LM_ENV=tools/candA/longmem300_serial_coloc.env LM_CONFIG=configs/c4_policy14_candA_long300_serial_coloc.toml ./stepZ.sh prodlong`, output `candA_prod_184542ab_zs_long`, source c4/candA-int 66dcc61c, authority `CANDA_AUTHORITY_ZS_LONG_COLOC_66dcc61c.json` (sha256 ed2a8ad9...). First attempt (PID 839498, 05:14) died at its first backward: my CPU/CUDA device bug in the additive-exploration `own` noise (fixed, 66dcc61c; failed dir kept). Update 181: 3708 s, peak 10.5/11.9 GiB (alloc/reserved), finite, rescored J unchanged (703.1053) — see REGISTRATION 07:10. Stop the run only with `touch candA_prod_184542ab_zs_long/STOP` (between updates).
+
+### RESTART 2026-10-30 08:00 — LONGGRAD + LONGSKIP (runtime `/root/autodl-tmp/c4/candA_184542ab_lgs`, SOURCE 23fd0ce8)
+PID 865427, `tools/candA/stepL.sh <policy_latest of the stopped zs run = update 182> /root/autodl-tmp/c4/candA_prod_184542ab_lgs 150`;
+authority `CANDA_AUTHORITY_LGS_23fd0ce8.json` (sha256 9a3cd30b...), config `candA_longgrad_skip.toml` (8c0c5494...). Resume diff = the 4 approved keys only.
+First update 183: 1547 s (old 3732 s), dense futures 8 x ~77 s at replay horizon 61 s, long VJPs 0, grad norm 143 (old 13,658), rescored J unchanged 703.1053.
+Stop with `touch candA_prod_184542ab_lgs/STOP`. Full numbers: REGISTRATION.md 08:05 / 08:50.
