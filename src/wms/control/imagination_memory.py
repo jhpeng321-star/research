@@ -443,6 +443,7 @@ def segmented_rollout(model, initial, n_steps, segment, controller, kwargs):
         raise ValueError("segmented imagination requires WM rollout continuation (k0/history)")
     cells = _controller_cells(controller)
     entries = kwargs.get("entries")
+    entrant_sampler = kwargs.get('entrant_driver_sampler')
     carry = dict(initial)
     continuation = dict(kwargs)
     chunks = []
@@ -457,15 +458,18 @@ def segmented_rollout(model, initial, n_steps, segment, controller, kwargs):
         if entries is not None:
             entry = {k: (copy.deepcopy(v) if k == "process" else _copy_runtime(v))
                      for k, v in entries.__dict__.items()}
-        return values, entry
+        mix = (_copy_runtime(entrant_sampler.__dict__) if entrant_sampler is not None else None)
+        return values, entry, mix
 
     def restore(state):
-        values, entry = state
+        values, entry, mix = state
         for cell, value in zip(cells, values):
             cell.cell_contents = _copy_runtime(value)
         if entry is not None:
             entries.__dict__.update({k: (copy.deepcopy(v) if k == "process" else _copy_runtime(v))
                                      for k, v in entry.items()})
+        if mix is not None:
+            entrant_sampler.__dict__.update(_copy_runtime(mix))
 
     for offset in range(0, n_steps, segment):
         count = min(segment, n_steps - offset)

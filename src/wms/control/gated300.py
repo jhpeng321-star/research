@@ -77,6 +77,9 @@ def _install_gain_only(trainer, cfg, wm_sha256s, receipt):
     if hg != largest:
         raise ValueError('CCT-2 H_G disagrees with the registered largest passing horizon')
     if hg > 90:
+        if (getattr(trainer.config, 'entrant_learned_mix', False)
+                and doc.get('learned_mix_qualified') is not True):
+            raise ValueError('learned entrant mix requires a mix-qualified CCT-2 authority')
         if (doc.get('entrant_control') is not trainer.config.entrant_control
                 or doc.get('deterministic_crn') is False
                 or not trainer.config.deterministic_crn):
