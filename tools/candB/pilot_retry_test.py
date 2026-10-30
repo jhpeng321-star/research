@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import torch
+
 from tools.candB import pilot_continue, pilot_retry, pilot_retry_authority
 from tools.candB import pilot_lean_authority, pilot_wmfast
 from tools.candB.pilot_retry_launch import launch_source
