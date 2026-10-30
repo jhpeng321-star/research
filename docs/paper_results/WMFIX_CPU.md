@@ -54,3 +54,18 @@
 - Retargeted FIT supervision to native/ours_c1/coopoff_c1 only: old MAPPO lane-head requests are unrepresented.
 - Added default-OFF production-loader arm filtering before any episode open; excluded MAPPO tapes never open for fitting.
 - After this change, data/training targeted tests: **16 passed** (25.39s), including2 new source-filter/OFF checks.
+
+## Review items 7/8 (04:00 addendum): loss rebalance and differentiable-only gradients
+- `paired_objective` gradients now flow only through the differentiable paired columns
+  (upstream, discharge surrogate, road); paired J and source are exact detached reports
+  (`objective_terms`: per-term values, paired/anchor shares, paired MAE for J and source).
+- Absolute anchors keep discharge+road levels but are normalized by their own TRAIN
+  absolute-value RMS (`anchor_scales` in `TRAIN_PREPARED.json`), not paired-contrast RMS;
+  trainer writes `STEP0_TERMS.json` and per-step term shares. Old prepared corpora lack
+  the key and fail closed; MAIN must re-run prepare.
+- Fixed latent objective_terms bug: raw-list references made the active mask a scalar
+  bool, unsqueezing the MAE mean over inactive rows (3.0 vs 6.0 in the fixture).
+- Synthetic probe declares its single differentiable column explicitly; real probe passes
+  production anchor_scales. Tests updated to the 5-component contract.
+- Combined rerun: wmfix 7-file set **51 passed** (30.25s); entryfix/v9entry/v9entry_eval
+  **31 passed** (8.85s).

@@ -43,6 +43,8 @@ class Runtime:
         if self.source.receipt["dropped_groups_t0_mismatch"] or self.source.horizon != 600:
             raise ValueError("production loader failed exact starts/300s support")
         self.scales = torch.tensor(self.doc["scales"], device=self.device, dtype=torch.float32)
+        self.anchor_scales = torch.tensor(self.doc["anchor_scales"], device=self.device,
+                                          dtype=torch.float32)
 
     def rollout(self, group_index, horizon, arm_index=0):
         import numpy as np

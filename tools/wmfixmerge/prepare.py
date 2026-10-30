@@ -100,11 +100,26 @@ def prepare(root, out):
     if not widths:
         raise ValueError("no identity-continuous positive TRAIN displacement for crossing width")
     scales = np.maximum(np.sqrt(np.mean(contrasts, axis=0)), np.finfo(np.float32).eps)
+    # WMFIX_REVIEW item 7: anchors are scaled by their own TRAIN absolute-value
+    # RMS, never by the paired-contrast RMS (which would inflate the anchor term
+    # by the contrast/level ratio and let common-mode level fits dominate).
+    levels = {3: [], 4: []}
+    for row in labels:
+        for h, cell in row["values"].items():
+            levels[3].append(float(cell["discharge"]))
+            levels[4].append(float(cell["road"]))
+    anchor_scales = np.ones_like(scales)
+    for column, values in levels.items():
+        if not values:
+            raise ValueError("TRAIN anchor column has no rows")
+        anchor_scales[column] = max(float(np.sqrt(np.mean(np.square(values)))),
+                                    np.finfo(np.float32).eps)
     doc = dict(schema="wmfix_train/1", root=str(root), seeds=list(SEEDS), episodes=entries,
                manifest_sha256=digest(root / "C4_EPISODES_MANIFEST.json"),
                split_sha256=digest(root / "SPLIT.json"), files=files, labels=labels,
                selection="TRAIN only", source_gradient="hard service; zero off events")
     doc.update(components=list(COMPONENTS), scales=scales.tolist(),
+               anchor_scales=anchor_scales.tolist(),
                crossing_width=float(np.median(widths)), horizon_seconds=[60, 120, 300])
     if not out.parent.is_dir():
         raise ValueError("output parent must already exist")

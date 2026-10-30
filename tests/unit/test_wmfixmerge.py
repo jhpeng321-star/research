@@ -12,7 +12,7 @@ from wms.model.merge_response import MergeResponseField, freeze_except_response
 from wms.model.source_ledger import SourceLedger
 from wms.model.spec import ModelSpec
 from wms.model.wms import WmSModel
-from wms.train.merge_response import paired_objective, smooth_crossings
+from wms.train.merge_response import objective_terms, paired_objective, smooth_crossings
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -168,17 +168,25 @@ def test_model_off_rng_keys_and_forward_bitwise():
 
 def test_paired_objective_moves_error_and_source_value_is_retained():
     theta = torch.nn.Parameter(torch.tensor(0.))
-    target = torch.tensor([[0., 0.], [-4., 2.]])
+    # component order J, upstream, source, discharge, road; J = road + source
+    target = torch.tensor([[0., 0., 0., 0., 0.], [-6., 0., -4., 0., -2.]])
     opt = torch.optim.SGD([theta], lr=.1)
     def value():
-        pred = torch.stack((torch.stack((theta * 0, theta * 0)),
-                            torch.stack((theta, theta * 0))))
-        return paired_objective(pred, target, [0, 0], torch.ones(2))
+        pred = torch.stack((torch.zeros(5),
+                            torch.stack((theta * 0, theta * 0, theta * 0, theta * 0, theta))))
+        return paired_objective(pred, target, [0, 0], torch.ones(5), anchor_scales=torch.ones(5))
     before = value().item()
     value().backward()
     assert torch.isfinite(theta.grad) and theta.grad > 0
     opt.step()
-    assert value().item() < before and value().item() >= 2  # uncorrected source error remains
+    assert value().item() < before
+    pred = torch.stack((torch.zeros(5),
+                        torch.stack((theta * 0, theta * 0, theta * 0, theta * 0, theta))))
+    terms = objective_terms(pred.detach(), target, [0, 0], torch.ones(5), anchor_scales=torch.ones(5))
+    # uncorrected source error stays exactly reported, never differentiated away
+    assert terms["paired_mae_col2"] == 4.0
+    assert terms["paired_mae_col0"] == 6.0
+    assert 0. < terms["paired_share"] < 1. and 0. < terms["anchor_share"] < 1.
 
 
 def test_disappearance_or_slot_reuse_is_not_discharge():

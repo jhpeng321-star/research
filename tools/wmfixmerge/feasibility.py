@@ -36,7 +36,11 @@ def synthetic():
         last.weight[0, 0] = 1.
         target = rollout()
         last.weight.zero_()
-    return probe(model, rollout, target, [0, 0], torch.ones(1), paired_objective)
+    # The synthetic stack has one differentiable column: gradient on its paired
+    # contrast only, no absolute anchors (anchors need TRAIN absolute scales).
+    return probe(model, rollout, target, [0, 0], torch.ones(1),
+                 lambda p, r, refs, s: paired_objective(p, r, refs, s,
+                                                        gradient_columns=(0,), anchor_columns=()))
 
 
 def probe(model, rollout, target, refs, scales, objective):
@@ -147,7 +151,7 @@ def main(argv=None):
             del initial
             result.update(probe(rt.model, lambda: rt.rollout(0, 60)[0], target.detach(), refs,
                                 rt.scales, lambda p, r, refs, s:
-                                    paired_objective(p, r, refs, s, anchor_columns=(3, 4))))
+                                    paired_objective(p, r, refs, s, anchor_scales=rt.anchor_scales)))
             result["receipt"] = receipt
             contract = {} if not args.harness_contract else json.loads(safe(args.harness_contract).read_text())
             matched = (contract.get("schema") == "wmfix_harness_contract/1" and

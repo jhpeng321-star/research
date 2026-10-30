@@ -86,7 +86,7 @@ def main(argv=None):
     torch.manual_seed(schedule["seed"])
     from tools.wmfixmerge.runtime import Runtime
     from wms.model.merge_response import freeze_except_response
-    from wms.train.merge_response import paired_objective
+    from wms.train.merge_response import objective_terms, paired_objective
     rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, args.device)
     names = freeze_except_response(rt.model)
     optimizer = torch.optim.Adam([p for p in rt.model.parameters() if p.requires_grad], lr=schedule["lr"])
@@ -117,7 +117,15 @@ def main(argv=None):
             optimizer.zero_grad(set_to_none=True)
             predicted, recorded, refs, roll_receipt = rt.rollout(step % len(rt.source.groups), horizon,
                 arm_index=step // len(rt.source.groups))
-            loss = paired_objective(predicted, recorded, refs, rt.scales, anchor_columns=(3, 4))
+            loss = paired_objective(predicted, recorded, refs, rt.scales,
+                                    anchor_scales=rt.anchor_scales)
+            terms = objective_terms(predicted, recorded, refs, rt.scales,
+                                    anchor_scales=rt.anchor_scales)
+            if step == 0:
+                # WMFIX_REVIEW item 7: the measured gradient-term shares at step0
+                # are part of the run receipt; the paired term must dominate.
+                with (out / "STEP0_TERMS.json").open("x") as stream:
+                    json.dump(terms, stream, indent=2, allow_nan=False)
             if not torch.isfinite(loss):
                 raise ValueError("nonfinite paired objective")
             loss.backward()
@@ -127,7 +135,8 @@ def main(argv=None):
             optimizer.step()
             step += 1
             latest = export(rt.model, original, frozen, optimizer, out, step, receipt)
-            row = dict(step=step, horizon=horizon, loss=float(loss.detach()), seconds=time.monotonic() - begin,
+            row = dict(step=step, horizon=horizon, loss=float(loss.detach()), terms=terms,
+                       seconds=time.monotonic() - begin,
                        elapsed=time.monotonic() - start, rollout=roll_receipt, checkpoint=str(latest),
                        source_contrast_error=((predicted[:, 2] - predicted[0, 2]) -
                                               (recorded[:, 2] - recorded[0, 2])).detach().cpu().tolist())
