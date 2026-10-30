@@ -77,3 +77,10 @@
   Their separate native actor interventions fill a previously missing result.
   GPU preflight8915MiB +.40 reservation9826 +512 margin <=22000MiB.
   No existing gpuA scorer is stopped/restarted; no peer is touched.
+- At21:25 the two old gpuA.16 tails had exited independently on allocator OOM
+  at plan index5 after one completed start each (index4). Saved raw rows remain;
+  logs retained beside them. Existing prefix/CIRCLES967764/967628 stay running.
+- `verify_shard_summary.py` independently rebuilds every available physical/actor
+  absolute and paired WORLD-cluster CI directly from bound raw rows, using
+  explicit world draw indexing rather than the summarizer's bootstrap weights.
+  `INDEPENDENT_CI_CHECK.json` binds its passing input/output hashes.

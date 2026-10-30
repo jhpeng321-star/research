@@ -1,0 +1,90 @@
+FUTURE 1 rollout_s 192.028
+FUTURE 2 rollout_s 195.465
+FUTURE 3 rollout_s 195.963
+FUTURE 4 rollout_s 195.157
+ARM 5 MAPPO_native_lanes elapsed_s 847.689
+START 5 [{'source': 'c4_episodes', 'world': 'w963400m2400p40t300', 'arm': 'native', 'policy': 'native', 'episode': 'w963400m2400p40t300__native', 'controller_branch': None, 'tick': 1640, 't0_s': 820.0, 'pair_key': None, 'start_source': 'native_v5', 'group_rich': True}]
+FUTURE 5 rollout_s 199.288
+FUTURE 6 rollout_s 203.807
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/tools/candB/rankcheck.py", line 700, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/tools/candB/rankcheck.py", line 631, in main
+    image = trainer.imagine(copy.deepcopy(batch), variants=variants,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/control/dreamer.py", line 1365, in imagine
+    roll = model.rollout(initial, n_steps=replay_steps * STEPS_PER_CONTROL,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/tools/candB/rankcheck.py", line 565, in rollout
+    result = original_rollout(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/wms.py", line 2587, in rollout
+    else step_fn(current)
+         ^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/wms.py", line 1773, in step
+    out = self.forward(state, **forward_kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/wms.py", line 1123, in forward
+    base = self._residual_prediction(residual_kin, present, conditioning, courtesy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/wms.py", line 937, in _residual_prediction
+    return self.residual_net(kin, present, conditioning=conditioning,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 373, in forward
+    return self._forward_dense(kin, kin_mask, cav_flag=cav_flag,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 484, in _forward_dense
+    x, a = blk(x, mask, geo, courtesy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 290, in forward
+    a, attn = self.attn(self.ln1(x), mask, geo, courtesy)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 267, in forward
+    logits = logits + self._pair_bias(geo, courtesy)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 223, in _pair_bias
+    return self._pair_bias_impl(geo, courtesy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_f396955a_tail_20261030/src/wms/model/residual_net.py", line 240, in _pair_bias_impl
+    bias = self.bias(feats)
+           ^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/container.py", line 244, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/activation.py", line 738, in forward
+    return F.gelu(input, approximate=self.approximate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 774.00 MiB. GPU 0 has a total capacity of 47.37 GiB of which 2.70 GiB is free. Process 967628 has 8.51 GiB memory in use. Process 967764 has 6.57 GiB memory in use. Process 975471 has 14.76 GiB memory in use. Including non-PyTorch memory, this process has 7.40 GiB memory in use. Process 977724 has 7.40 GiB memory in use. 7.58 GiB allowed; Of the allocated memory 5.78 GiB is allocated by PyTorch, with 4.00 MiB allocated in private pools (e.g., CUDA Graphs), and 1.19 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

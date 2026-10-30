@@ -1,0 +1,23 @@
+{
+ "independent_world_bootstrap": "PASS",
+ "draws": 5000,
+ "seed": 20261030,
+ "summary_sha256": "3709e806634be56d52282d9c9cdd94f6f89a2b5fd560b6314fef61af1d23f59b",
+ "verified_inputs": {
+  "circles": "93495176cd21dcfdc6780c9b64fdd7f43c106bf538938d7c7ebe8432b1f4cb40",
+  "pi": "77bc1b1ee2340eb02fd5542e4abf4b8f8ac26bd0d75f71a146e0c9ec07988c5c",
+  "mappo": "3690c73b2435a3ff56d27e37e6087aaebd212518adf057c9703475291f93737d",
+  "mappo_proxy_tail": "912864d912d87a417d181fc8008f8a4ff198b496e37c148872682db53322e6b1",
+  "mappo_speed_tail": "e56dd12139a7ae978c1651b53f445588e8c901e0a5afb24626f55b32ed827b76"
+ },
+ "per_arm_starts": {
+  "CIRCLES": 8,
+  "PI": 11,
+  "MAPPO_native_lanes": 5,
+  "MAPPO_speed_partial": 5,
+  "CTRL0": 11,
+  "native": 11
+ },
+ "common_starts": 5,
+ "no_rollouts": true
+}
