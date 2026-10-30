@@ -10,7 +10,7 @@ from tests.unit.test_loop14c import (ScriptedLanes, group, identity_safety, ramp
 from wms.control.bridge import make_cav_controller
 from wms.control.lanes import LaneRules, LANE_LEFT
 from wms.control.policy14 import make_controller_factory
-from wms.model.cav import WM_LANE_TARGET_KEY, WM_MERGE_KEY
+from wms.model.cav import WM_LANE_KEY, WM_LANE_TARGET_KEY, WM_MERGE_KEY
 
 
 def controller(choice=0, **extra):
@@ -23,7 +23,7 @@ def test_stay_delegates_strategic_ramp_but_keeps_absolute_longitudinal_authority
     st = ramp_scene()
     st[WM_LANE_TARGET_KEY] = st['lane'].clone()
     cb = controller(policy_strategic_merge=True)
-    assert cb.native_lane_mask(st).tolist() == [[True, False, False]]
+    assert not cb.native_lane_mask(st).any()  # request-dependent fallback is post-callback.
     out = cb(st)
     assert st[WM_MERGE_KEY].tolist() == [[True, False, False]]
     assert out[0, 0, 1] == 2 and float(out[0, 0, 3]) == pytest.approx(.3)
@@ -75,3 +75,21 @@ def test_default_false_bitwise_motion_rng_and_factory_metadata():
         controller(policy_strategic_merge=1)
     with pytest.raises(ValueError, match='requires'):
         make_controller_factory(policy_strategic_merge=True)
+
+
+def test_full_wm_explicit_crossing_is_not_overwritten_by_strategic_pivot():
+    m = pivot_model(False)
+    st = wm_scene(2., True)
+
+    def forward(state, **kw):
+        out = fixed_forward(state, **kw)
+        native = state.get(WM_LANE_KEY, torch.zeros_like(state['present']))
+        assert not native[0, 0]  # policy request must be known before any ramp delegation.
+        out['lane_decider_mask'] = state['present'] & (~state['is_cav'] | native)
+        return out
+
+    with torch.no_grad(), patch.object(m, 'forward', side_effect=forward):
+        out = m.step(st, cav_controller=controller(LANE_LEFT, policy_strategic_merge=True),
+                     lane_uniform=torch.full_like(st['s_m'], .6))
+    assert not out[WM_MERGE_KEY][0, 0]
+    assert out['next_lane'][0, 0] == 1

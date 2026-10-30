@@ -176,10 +176,10 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
         if zone is not None:
             acting = acting & ~zone(state).to(mask.device).bool()
-        nonacting = mask & ~acting
-        if policy_strategic_merge:
-            nonacting = nonacting | (mask & (state['lane'] == 2))
-        return nonacting
+        # Strategic fallback is delegated AFTER the policy request is known.
+        # Marking acting ramp CAVs native here would let the later pivot replace
+        # an explicit policy crossing as well as a stay.
+        return mask & ~acting
 
     def controller(state: Mapping[str, Tensor]) -> Tensor:
         nonlocal held, previous_mask, internal_index, last_command, last_intent

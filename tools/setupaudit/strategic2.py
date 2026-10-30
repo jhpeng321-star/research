@@ -71,7 +71,7 @@ def controller(candidate, mappo, native):
 
     def native_lanes(state):
         mask = state['present'].bool() & state['is_cav'].bool() & (state['lane'] >= 0)
-        return torch.stack((mask[0], mask[1] & (state['lane'][1] == 2)))
+        return torch.stack((mask[0], torch.zeros_like(mask[1])))
 
     callback.native_lane_mask = native_lanes
     callback.requests = []

@@ -68,8 +68,11 @@ Partial preflight values are not pooled into the primary panel.
 and uses a shared 5,000-draw WORLD-cluster plan, seed 20261030. Futures are
 averaged inside each world; they are never treated as independent worlds.
 
-Repair verification: 36 CPU cases passed together (1.50 s), including the six
+Repair verification: 37 CPU cases passed together (1.58 s), including the seven
 new strategic-merge cases and existing bridge/native/lane tests; two standalone
-bootstrap cases also passed. Real-checkpoint 2 s CPU repair probe PID 434622
-completed. K1 fix inference is prospective on all 24 starts and is diagnostic;
+bootstrap cases also passed. The full-WM request-priority regression ensures a
+fallback cannot overwrite an explicit policy crossing: delegation is decided
+after the callback, not in the pre-forward native-lane mask. Final real-checkpoint
+2 s CPU repair probe PID 434850 completed (earlier plumbing probe 434622 retained).
+K1 fix inference is prospective on all 24 starts and is diagnostic;
 it is not pooled with K8 futures. No real evaluation or training is requested.
