@@ -34,3 +34,26 @@ The opt-in require_objective_match guard disables long credit until an authority
 explicitly qualifies that population/cost/K/statistic; existing defaults are unchanged.
 The supplied sigma ratios are descriptive comparisons, not a newly validated
 confidence claim for the larger, source-inclusive objective.
+
+## Completed sign/units/observation/expressivity audit
+authoritative_reward overrides team_reward's per-vehicle mean with -(delay+source_wait).
+Its costs are vehicle-seconds, include births and waiting requests, and have no population divisor.
+Positive D means improvement; loss negates credit. C_G = D_G - sum(member D_i).
+Actual sampled coefficients are [1,0,0,0,0,18.8]; no negative row or flip credit survives.
+The reference is the learned-native head projected onto its WM cap, NOT CTRL0.
+Anchor is OFF, direct real-pair actor credit is disabled, and TTC is report-only.
+Residual entropy is identically zero; the positive common return scale changes units, not gain signs.
+All long gates are OFF (gain-only, median>87.82 AND q10>0; eligible all/group rows only).
+At t0 all 32 CAVs have zero positive authority and nonzero braking authority under +/-1.2.
+Observations are live: 14/18 CAVs, 50/74 reports, group |signal| means .151/.143.
+Report age/command/intent are deliberately zero in the residual path; b/c margins are not own features.
+Candidate A's executed delta is zero for 167727 mix-ON and 69134 mix-OFF CAV physics ticks.
+MAPPO mix-ON executed-minus-CTRL0 acceleration lies in [-4.0036,0], median/p90/p99=0;
+98.8764% is inside the residual execution envelope. Its raw absolute head saturates near +2.6.
+MAPPO also emits 786 bridge lane-change requests versus CTRL0's 33; residual A has no lane head.
+Neither neural head chooses native/damping/PI controller IDs. Real-MAPPO mechanism attribution is unproven.
+Native references match exactly across actors at 90 and 300 s after matching cap/Euler/native background.
+No matching CTRL0 SUMO tape exists in the supplied start inputs: exact-start SUMO equality is unmeasured.
+Both original mix-OFF and intended mix-ON objectives rank MAPPO worse on their measured average.
+Verdict (b): fix WM/objective/start-support visibility and matching qualification before warm-start claims.
+The new mix adapter and paired-credit selector are explicitly bound in candA authority manifests.
