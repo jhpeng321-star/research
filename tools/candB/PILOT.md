@@ -338,4 +338,21 @@
 - Previous local observer42388 independently absent after recording the original exit;
   prepare one successor for the repaired chain and its same-phase continuation.
 
+### Repaired startup launch / saved score actually reused
+- 01:17:34 +08: supervisor35923/start876086871 and repair trainer35928/start876086884,
+  exact incarnations independently live after disconnect. Admission42671MiB free;
+  peer25602 uses5830MiB, untouched. Sourcee113760f / leanauthoritycd0c9801.
+- New chain `/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031`;
+  startup reuse proof is already durable: exact policy/config/input/seed bindings,
+  original phase191, previous summary SHA7145f192, only three published WMFAST
+  scientific-module diffs and stack flag still0. Saved score reused WITHOUT forward;
+  `pilot_startup_score_0.json` durable. Native panel4 remains in progress.
+- Sole successor local observer1456 records launch/every phase, startup/update1-3
+  and every5 to registration, and phase3 ACK only on an actually observed phase3.
+- Pre-boundary audit caught the old operational continuation assuming every row
+  has `independent_J`, incompatible with approved rescore-every5. Prepare v2 NEW
+  runtime/controller while repair continues unchanged: preserve the last ACTUALLY
+  measured score as CLI `before`, with skipped rows still explicitly unscored.
+  It waits for existing repair/supervisor exit; no concurrent or duplicate trainer.
+
 - S-PILOTB EXPLORATORY-LEAN REPAIR LAUNCH 2026-10-30T17:17:46.733750+00:00: {"label": "EXPLORATORY-LEAN", "pid": 35928, "start_ticks": "876086884", "command": ["/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python", "-B", "-u", "-m", "tools.candB.pilot_wmfast_launch", "repair", "--parent", "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN", "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN"], "output": "/root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN", "epoch": 1793380654.687814, "admission": {"epoch": 1793380654.6868193, "total_MiB": 49140, "free_MiB": 42671, "used_MiB": 5840, "apps": "25602, 5830"}, "alive": true, "state": "R", "cpu_ticks": 841, "argv": "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean_repaired --failed-parent /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_WMFAST_EXPLORATORY-LEAN_20261031/pilot_EXPLORATORY-LEAN "}

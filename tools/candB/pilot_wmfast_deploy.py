@@ -6,7 +6,7 @@ import subprocess
 
 from tools.candB.pilot_lean_deploy import ROOT, RUNTIME as PARENT_RUNTIME, PYTHON
 
-RUNTIME = '/root/autodl-tmp/c4/candB_pilot_WMFAST_EXPLORATORY-LEAN_20261031'
+RUNTIME = '/root/autodl-tmp/c4/candB_pilot_WMFAST_v2_EXPLORATORY-LEAN_20261031'
 
 
 def main():

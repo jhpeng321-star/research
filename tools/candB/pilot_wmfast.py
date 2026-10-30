@@ -11,6 +11,25 @@ from tools.candB import pilot_continue as continuation
 from tools.candB import pilot_lean_gate, pilot_wmfast_authority as authority
 
 
+def last_measured_score(prior):
+    """The CLI's before variable advances only on actual independent rescoring."""
+    for row in reversed(prior['updates']):
+        if 'independent_J' in row:
+            return __import__('copy').deepcopy(row['independent_J'])
+    return __import__('copy').deepcopy(prior['independent_score_before'])
+
+
+def continued_main(cli):
+    # Specialize the existing operational adapter, retaining all original gates.
+    source = inspect.getsource(continuation.continued_main)
+    source = continuation.replace_once(source,
+        "__import__('copy').deepcopy(recovery['updates'][-1]['independent_J'])",
+        "__import__('tools.candB.pilot_wmfast', fromlist=['last_measured_score']).last_measured_score(recovery['prior'])")
+    namespace = dict(continuation.__dict__)
+    exec(compile(source, continuation.__file__, 'exec'), namespace)
+    return namespace['continued_main'](cli)
+
+
 def validate_parent(parent):
     prior = json.loads((parent/'RUN_SUMMARY.json').read_text())
     frozen = json.loads((parent/'frozen_scoring_baseline.json').read_text())
@@ -30,8 +49,12 @@ def validate_parent(parent):
     for key in ('raw_dJ_vs_CTRL0_dense', 'raw_dJ_vs_CTRL0_long'):
         if frozen['independent'][key] != 0.:
             raise ValueError('original zero phase baseline differs from CTRL0')
-        if not math.isfinite(rows[-1]['independent_J'][key]):
+        if not math.isfinite(last_measured_score(prior)[key]):
             raise ValueError('nonfinite latest clean receipt')
+    raw = rows[-1].get('lean_training_raw_J')
+    if raw is not None and any(not math.isfinite(raw[k]) for k in
+            ('raw_dJ_vs_CTRL0_dense', 'raw_dJ_vs_CTRL0_long')):
+        raise ValueError('nonfinite training-horizon raw dJ')
     return prior, origin
 
 
@@ -102,7 +125,7 @@ def run(path, output, parent, *, exploratory=False):
         return pilot_lean_gate.panel_gate(p, n, update=update, panel_sha256=panel_sha256)
 
     with patch.object(pilot_authority, 'verify_runtime', verify_runtime), patch.object(
-            cli, 'main', continuation.continued_main(cli)), patch.object(
+            cli, 'main', continued_main(cli)), patch.object(
             nativeinit, 'panel_gate', gate), patch.object(policy14_recovery,
             'restore_looplong', restore), patch.object(DreamerTrainer, 'update', update):
         return adapter.run(path, output, exploratory=True)

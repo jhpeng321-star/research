@@ -9,6 +9,19 @@ from tools.candB import pilot_continue, pilot_wmfast, pilot_wmfast_authority
 
 
 class WMFastContinuationTests(unittest.TestCase):
+    def test_skipped_rescore_preserves_last_actual_score_and_real_cli(self):
+        from wms.control import policy14_cli as cli
+        baseline = dict(raw_dJ_vs_CTRL0_dense=0., raw_dJ_vs_CTRL0_long=0.)
+        prior = dict(independent_score_before=baseline, updates=[dict(phase_update=1,
+            independent_rescore_skipped=True)])
+        self.assertEqual(pilot_wmfast.last_measured_score(prior), baseline)
+        measured = dict(raw_dJ_vs_CTRL0_dense=-1., raw_dJ_vs_CTRL0_long=-2.)
+        prior['updates'] += [dict(independent_J=measured),dict(independent_rescore_skipped=True)]
+        self.assertEqual(pilot_wmfast.last_measured_score(prior), measured)
+        patched = pilot_wmfast.continued_main(cli)
+        self.assertIs(patched.__globals__, cli.__dict__)
+        self.assertIsNot(patched, cli.main)
+
     def test_saved_initial_score_reused_without_forward(self):
         import os
         from types import SimpleNamespace
