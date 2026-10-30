@@ -1,0 +1,55 @@
+{
+ "time": 1793371319.6648192,
+ "owned_active_jobs": 0,
+ "jobs": [
+  {
+   "receipt": "LAUNCH.json",
+   "pid": 935387,
+   "start_ticks": "872850001",
+   "state": "absent"
+  },
+  {
+   "receipt": "FAST_LAUNCH.json",
+   "pid": 936895,
+   "start_ticks": "872907603",
+   "state": "absent"
+  },
+  {
+   "receipt": "COMPACT_PROBE_LAUNCH.json",
+   "pid": 937966,
+   "start_ticks": "872946664",
+   "state": "absent"
+  },
+  {
+   "receipt": "DENSE_RESUME_LAUNCH.json",
+   "pid": 938486,
+   "start_ticks": "872967100",
+   "state": "absent"
+  },
+  {
+   "receipt": "OWNED_CHILDREN.jsonl",
+   "pid": 935388,
+   "start_ticks": "872850004",
+   "state": "absent"
+  },
+  {
+   "receipt": "FAST_CHILDREN.jsonl",
+   "pid": 936896,
+   "start_ticks": "872907606",
+   "state": "absent"
+  },
+  {
+   "receipt": "DENSE_RESUME_CHILDREN.jsonl",
+   "pid": 938487,
+   "start_ticks": "872967102",
+   "state": "absent"
+  },
+  {
+   "receipt": "DENSE_RESUME_CHILDREN.jsonl",
+   "pid": 975471,
+   "start_ticks": "874380739",
+   "state": "absent"
+  }
+ ],
+ "scope": "Only task receipt PIDs checked; no peer process inspection or signals."
+}

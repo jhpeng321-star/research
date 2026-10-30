@@ -27,3 +27,23 @@ Grouped versus per-row feedback agrees exactly in the 8-row/10s canary.
 Compact residual attention FAILED the frozen .02 veh-s full-batch comparison
 (max J difference 33.19, source 63.5); its one probe is isolated, never primary.
 The finite dense chain resumes its completed groups with the same source hashes.
+
+## Owner 22:30 cutoff and resumed delivery
+- `OWNER_2230_STOP.json`: exact recorded parent/child incarnations stopped;
+  calibration's eight completed batches remain remote; PANEL120 was not launched.
+- `validation/`: all 36 dense 300 s batches, 2,304 raw rows, both mix states and
+  eight coupled draws. Aggregation verifies uniqueness, checkpoint/config/runtime
+  receipt consistency, real-label hash and completion. No completed batch rerun.
+- `PAIRS300_BLOCKER.json`: 144 registered tapes / 48 starts, initial total backlog
+  30..220, but all per-entrance Q0 values unavailable. No recorded identity-name
+  map in packaged tapes; metadata-derived original tape directories unavailable.
+  Guessing the mainline/ramp allocation would change the entry dynamics. Thus
+  pairs300 has exact recorded J labels and archived K1 predictions, but no new K8
+  model scores. This is an incomplete qualification, never a pooled K8 verdict.
+- `SUMMARY.json`: only the two registered panels considered; completed validation
+  metrics, all 12 demand/share cells at every horizon, both mix states, old K1
+  CCT-1/CCT-2 and component/discharge diagnostics. Pooled K8 result is null.
+- Equivalent real validation controls give J-difference SD=0 at every horizon;
+  this does not identify null-perturbation sensitivity for source-inclusive J.
+  Neither the old objective's sigma nor WM error SD is a replacement. All
+  conditional sigma-zero/old-scale calls are sensitivities, not policy authority.
