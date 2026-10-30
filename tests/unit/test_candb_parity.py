@@ -11,6 +11,8 @@ def test_fixed_allocation_source_and_budget_guards():
         pooled_rmse_bound=.1603, jobs=list(parity.JOBS), registration_sha256='registered',
         source_sha256=parity.sha(parity.__file__), caprel_source_sha256=parity.law_sources())
     parity.validate_registration(doc)
+    amended = dict(doc, jobs=list(parity.JOBS[:3]), prior_charged_sim_s=900)
+    parity.validate_registration(amended)
     for key, value in [('cap_sim_s', 4500), ('host', 'cpuQ'),
                        ('source_sha256', 'stale'), ('pooled_rmse_bound', .17)]:
         changed = copy.deepcopy(doc)

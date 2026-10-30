@@ -1,0 +1,40 @@
+{
+ "allocation": "S-CAPREL-PARITY",
+ "host": "gpuR",
+ "cap_sim_s": 3600,
+ "pooled_rmse_bound": 0.1603,
+ "jobs": [
+  {
+   "id": "s963110_ctrl0_base",
+   "seed": 963110,
+   "reference": "base",
+   "residual": 0.0
+  },
+  {
+   "id": "s963110_ctrl0_caprel",
+   "seed": 963110,
+   "reference": "ctrl0",
+   "residual": 0.0
+  },
+  {
+   "id": "s963111_caprel_probe",
+   "seed": 963111,
+   "reference": "ctrl0",
+   "residual": -0.01
+  },
+  {
+   "id": "s963112_caprel_probe",
+   "seed": 963112,
+   "reference": "ctrl0",
+   "residual": -0.01
+  }
+ ],
+ "registration_sha256": "3930a36377898ab9a4fb098a1e1124de52b083373ad59c39c1092bfe918a8bad",
+ "source_sha256": "4b77e020600b7bf3c3aafa5d20b2643333247ce3de05edc22c6ce4c7d6e5645d",
+ "caprel_source_sha256": {
+  "residual.py": "c16cada643f91f8a81931509e1ec3ae8bbcaf5614f8d4d862377c4842c076f56",
+  "alwayscmd.py": "1e359c9bcef9a2aba82fd946563daec66e48c35373b679acf655375d3d0b4d6a",
+  "sumo_idm.py": "c86e2d0733978293833e2c40f898e6478d7604189d607fb73f9aefab3c8962aa"
+ },
+ "registration_commit": "1728c4b9c83d0de8e248841aff0a0a4a9ffd57a5"
+}

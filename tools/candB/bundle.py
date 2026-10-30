@@ -9,6 +9,9 @@ import subprocess
 import tarfile
 
 ROOTS = ['src', 'traffic_shepherd', 'configs', 'assets', 'baselines', 'scenarios',
+         'output/controller_verification_v2/pi_saturation_v1.py',
+         'output/controller_verification_v4/pi_external_u.py',
+         'output/controller_verification_v7/pi_owner_adapter.py',
          'tools/candA', 'tools/candB', 'tools/execparity', 'tools/errsrc',
          'tools/distill', 'tools/setupaudit', 'tests/unit', 'tests/__init__.py',
          'authority', 'pyproject.toml', 'requirements.txt']

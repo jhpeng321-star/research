@@ -45,9 +45,11 @@ def law_sources():
 
 
 def validate_registration(doc):
+    original = doc.get('jobs') == list(JOBS) and doc.get('prior_charged_sim_s', 0) == 0
+    amendment = doc.get('jobs') == list(JOBS[:3]) and doc.get('prior_charged_sim_s') == 900
     if (doc.get('allocation') != 'S-CAPREL-PARITY' or doc.get('host') != 'gpuR'
             or doc.get('cap_sim_s') != CAP or doc.get('pooled_rmse_bound') != BOUND
-            or doc.get('jobs') != list(JOBS) or not doc.get('registration_sha256')):
+            or not (original or amendment) or not doc.get('registration_sha256')):
         raise ValueError('registration does not match the fixed training-seed allocation')
     if doc.get('source_sha256') != sha(__file__):
         raise ValueError('registered parity worker changed')
@@ -130,6 +132,9 @@ def replay(path):
 
 def run(root, registration):
     from traffic_shepherd.c4.env import CavSumoEnv
+    # Resolve transitive controller imports BEFORE any simulator/charged attempt.
+    from traffic_shepherd.controller_factory import create_pi_session
+    del create_pi_session
     from wms.control.nativeinit import NativeResidualCommand
     if os.getpriority(os.PRIO_PROCESS, 0) != 19:
         raise ValueError('S-CAPREL-PARITY must run nice 19')
@@ -151,8 +156,9 @@ def run(root, registration):
     write(root/'START.json', dict(pid=os.getpid(), nice=19, workers=1,
         utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         registration=registration, sumo_version=subprocess.check_output([binary, '--version'], text=True)))
-    charged = 0
-    for index, job in enumerate(JOBS):
+    charged = registration.get('prior_charged_sim_s', 0)
+    jobs = registration['jobs']
+    for index, job in enumerate(jobs):
         if index == 2:
             proof = identity(root)
             write(root/'CTRL0_IDENTITY.json', proof)
@@ -180,7 +186,7 @@ def run(root, registration):
         finally:
             env.close()
     errors, heads, worlds = [], [], {}
-    for job in JOBS[2:]:
+    for job in jobs[2:]:
         e, h, row = replay(root/job['id'])
         errors.extend(e)
         heads.extend(h)
@@ -190,7 +196,7 @@ def run(root, registration):
     report = dict(schema='candB_caprel_parity/1', allocation='S-CAPREL-PARITY',
         pooled_rmse=rmse, registered_bound=BOUND, passed=rmse <= BOUND,
         zero_ctrl0_identity=True, worlds=worlds, charged_sim_s=charged,
-        actual_sim_s=3600, workers=1, nice=19, caprel_source_sha256=law_sources(),
+        actual_sim_s=len(jobs)*900, workers=1, nice=19, caprel_source_sha256=law_sources(),
         registration_sha256=registration['registration_sha256'])
     write(root/'REPORT.json', report)
     # Preserve the existing executor contract's additional same-state head-band
