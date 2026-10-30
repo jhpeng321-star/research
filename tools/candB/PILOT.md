@@ -180,3 +180,9 @@
   telemetry/registration ownership. It saves all requested group/braking/worker peaks
   into PILOT and per-update receipts, commits each actual update, and writes phase3
   ACK only after phase3 is actually observed. It cannot dispatch a trainer.
+- Native-budget audit before dispatch: the original `load_continuation` already
+  converts phase limit150 to149 remaining after phase1. The intermediate33876924
+  adapter subtraction would double-subtract; restored original adapter argument150
+  before any continuation dispatch. `pilot_cpu_2305_nativebudget.json`: **16 PASS**,
+  including execution of the REAL continuation loader on a bound synthetic receipt,
+  proving phase_start190/limit150/remaining149. Intermediate evidence retained.

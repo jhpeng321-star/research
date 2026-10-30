@@ -19,7 +19,7 @@ def replace_once(source, old, new):
     return source.replace(old, new, 1)
 
 
-def continuation_args(original, parent, phase_update=0):
+def continuation_args(original, parent):
     result = []
     index = 0
     while index < len(original):
@@ -30,12 +30,6 @@ def continuation_args(original, parent, phase_update=0):
             index += 2
         elif key == '--resume':
             result.extend((key, str(parent / 'policy_latest.pt')))
-            index += 2
-        elif key == '--max-updates':
-            remaining = int(original[index + 1]) - phase_update
-            if remaining <= 0:
-                raise ValueError('original phase update budget exhausted')
-            result.extend((key, str(remaining)))
             index += 2
         else:
             result.append(key)
@@ -108,8 +102,7 @@ def prepare_base(parent):
     module.__dict__.update(parent=parent, prior=prior, origin=origin)
     exec(compile(source, original.__file__, 'exec'), module.__dict__)
     command = module.command
-    module.command = lambda doc, out, mode: continuation_args(
-        command(doc, out, mode), parent, payload['update_count']-origin)
+    module.command = lambda doc, out, mode: continuation_args(command(doc, out, mode), parent)
     verify = module.authority.verify_runtime
 
     def verify_runtime(doc, raw, **kwargs):
