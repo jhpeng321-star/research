@@ -363,11 +363,14 @@ def main(argv=None):
     p.add_argument('--measurement-arms', nargs='+', choices=(*ARMS, 'MAPPO_speed_partial'))
     p.add_argument('--future-prefix', type=int, choices=(4, 8), default=8)
     p.add_argument('--stop-after', type=int, help='retain a bounded incomplete measurement shard')
+    p.add_argument('--export-starts', help='save actual TRAIN sampler batches without WM scoring')
+    p.add_argument('--input-starts', help='consume hash-bound exported TRAIN batches on another host')
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
-    if (a.measurement_arms or a.future_prefix != 8 or a.stop_after) and not a.measure_only:
+    if (a.measurement_arms or a.future_prefix != 8 or a.stop_after
+            or a.export_starts or a.input_starts) and not a.measure_only:
         p.error('shards and K4 are measurement-only, never launch qualification')
     if a.current_policy_driver and not a.measure_only:
         p.error('--current-policy-driver is only available for unlaunchable measurements')
@@ -410,7 +413,18 @@ def main(argv=None):
     if sha256(raw['long_credit']['cct2_file'].format(wm_sha256=WM_SHA)) != sha256(a.cct2):
         raise ValueError('explicit CCT-2 must equal the preset training authority')
     model = load_members([a.wm], [a.wm_config], a.device)[0][0]
-    starts, _ = load_training_starts(raw, model, 965140)
+    start_plan = None
+    if a.input_starts:
+        from types import SimpleNamespace
+        start_plan = torch.load(safe_path(a.input_starts), map_location=a.device, weights_only=False)
+        if (start_plan['wm_sha256'] != WM_SHA
+                or start_plan['config_sha256'] != binding(raw)
+                or start_plan['current_policy_sha256'] != sha256(a.current_policy)):
+            raise ValueError('exported TRAIN plan identity mismatch')
+        starts = SimpleNamespace(groups=start_plan['groups'],
+            distill_provenance=start_plan['sampler_provenance'])
+    else:
+        starts, _ = load_training_starts(raw, model, 965140)
     trainer = make_trainer(raw, model, a.current_policy, starts, device=a.device,
                            cct2=a.cct2, horizon_gate=a.horizon_gate,
                            measure_only=a.measure_only, checkpoint_driver=a.current_policy_driver)
@@ -423,9 +437,9 @@ def main(argv=None):
         raise ValueError('TRAIN paired-return sampler authority required')
     excluded = {int(row['seed']) for row in pairing['pairs']
                 if int(hashlib.sha256(f"965140:{int(row['seed'])}".encode()).hexdigest(), 16) % 5 == 0}
-    trainer.start_states = exclude_development_starts(starts, excluded)
+    trainer.start_states = (starts if start_plan else exclude_development_starts(starts, excluded))
     from wms.control.dreamer import _same_groups
-    sampler_restored = (payload.get('sampler') is not None
+    sampler_restored = (not start_plan and payload.get('sampler') is not None
                         and _same_groups(trainer.start_states, payload['sampler']))
     if sampler_restored:
         trainer.start_states.load_state_dict(payload['sampler'])
@@ -439,7 +453,8 @@ def main(argv=None):
         raise ValueError('boundary rebind lost objective-qualified 300s credit')
     if trainer._tilt_sampler is not None and payload.get('coopw', {}).get('tilt_sampler'):
         trainer._tilt_sampler.load_state_dict(payload['coopw']['tilt_sampler'])
-    trainer.start_states.configure_focus_cells(raw['data']['focus_cell_fraction'])
+    if not start_plan:
+        trainer.start_states.configure_focus_cells(raw['data']['focus_cell_fraction'])
     first_update = trainer.update_count
     teacher = load_policy_fn(a.mappo, device=a.device)
     speed = load_policy_fn(a.mappo_speed, device=a.device) if a.mappo_speed else None
@@ -456,6 +471,30 @@ def main(argv=None):
         if 'MAPPO_speed_partial' in arms and speed is None:
             p.error('MAPPO_speed_partial requires --mappo-speed')
     signature = runtime_contract(trainer)
+    if start_plan and signature != start_plan['runtime_contract']:
+        raise ValueError('exported TRAIN plan runtime/objective mismatch')
+    if a.export_starts:
+        target = safe_path(a.export_starts)
+        if target.exists() or not target.parent.is_dir() or a.input_starts:
+            raise ValueError('export requires fresh path and actual sampler')
+        _restore_rng(payload['rng'], trainer.device)
+        trainer._training_imagination = True
+        plans = []
+        for index in range(a.n_starts):
+            trainer.update_count = first_update + index
+            batch = trainer._sample_starts(trainer.start_states)
+            check_metadata(batch.metadata)
+            batch = trainer._entry_slots(batch, torch.Generator().manual_seed(
+                1_000_003*(trainer.update_count+1)))
+            variants = build_variants(batch.state, trainer.counterfactual)
+            plans.append(dict(batch=batch, variants=variants, before=_rng_state(trainer.device),
+                              sampler_info=trainer._last_start_info, update=trainer.update_count))
+        torch.save(dict(wm_sha256=WM_SHA, config_sha256=binding(raw),
+            current_policy_sha256=sha256(a.current_policy), runtime_contract=signature,
+            sampler_provenance=starts.distill_provenance, groups=trainer.start_states.groups,
+            plans=plans, source_manifest=sources, actual_TRAIN_sampler=True), target)
+        print('EXPORTED_ACTUAL_TRAIN_STARTS', len(plans), target, flush=True)
+        return 0
     from wms.core.speed_flags import active as speed_flags
     doc = dict(schema=SCHEMA, complete=False, passed=False, measure_only=a.measure_only,
         launch_authorized=False, device=a.device, gpu_memory_fraction=a.gpu_memory_fraction,
@@ -474,6 +513,8 @@ def main(argv=None):
     if speed is not None:
         doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
             iteration=speed_payload.get('iteration'), partially_trained=True)
+    if start_plan:
+        doc['input_starts_sha256'] = sha256(a.input_starts)
     if a.current_policy_driver:
         doc['initialization_driver'] = dict(path=a.current_policy_driver,
             sha256=sha256(a.current_policy_driver), normalization='CRLF to LF, byte-identical otherwise',
@@ -523,12 +564,19 @@ def main(argv=None):
             # Exactly the training sampler/headroom rejection path, prospective
             # update-index seeds; no sorting, support filtering or outcome selection.
             trainer.update_count = first_update + index
-            batch = trainer._sample_starts(trainer.start_states)
+            if start_plan:
+                item = start_plan['plans'][index]
+                if trainer.update_count != item['update']:
+                    raise ValueError('exported TRAIN update mismatch')
+                batch, variants, before = item['batch'], item['variants'], item['before']
+                trainer._last_start_info = item['sampler_info']
+            else:
+                batch = trainer._sample_starts(trainer.start_states)
+                batch = trainer._entry_slots(batch, torch.Generator().manual_seed(
+                    1_000_003*(trainer.update_count+1)))
+                variants = build_variants(batch.state, trainer.counterfactual)
+                before = _rng_state(trainer.device)
             check_metadata(batch.metadata)
-            batch = trainer._entry_slots(batch, torch.Generator().manual_seed(
-                1_000_003*(trainer.update_count+1)))
-            variants = build_variants(batch.state, trainer.counterfactual)
-            before = _rng_state(trainer.device)
             row = dict(metadata=batch.metadata, sampler_info=trainer._last_start_info, arms={})
             doc['rows'].append(row)
             for arm in arms:
