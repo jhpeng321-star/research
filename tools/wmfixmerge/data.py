@@ -21,7 +21,7 @@ IMPLEMENTATION_FILES = ("src/wms/model/wms.py", "src/wms/model/entries.py",
     "tools/wmrequal/score.py", "tools/wmrequal/native_lanes.py",
     "src/wms/model/spec.py", "src/wms/config/train.py", "src/wms/config/legacy_flat.py",
     "tools/wmfixmerge/train.py", "tools/wmfixmerge/feasibility.py",
-    "tools/wmfixmerge/data.py", "tools/wmfixmerge/prepare.py")
+    "tools/wmfixmerge/data.py", "tools/wmfixmerge/prepare.py", "src/wms/data/c4_pairs.py")
 
 
 def safe(path):
@@ -56,8 +56,10 @@ def select(root):
             continue
         if split["worlds"].get(str(seed)) != "fit":
             raise ValueError(f"registered TRAIN seed {seed} is not FIT")
+        if row.get("arm") == "mappo":
+            continue  # WMREQUAL3: lane-head requests missing; diagnostic only, never FIT supervision.
         if row.get("branch", {}).get("kind") != "B" and row.get("arm") not in (
-                "ours_c1", "coopoff_c1", "mappo"):
+                "ours_c1", "coopoff_c1"):
             raise ValueError("unregistered TRAIN arm")
         path = safe(root / row["dir"]).resolve()
         if not path.is_relative_to(root.resolve()):

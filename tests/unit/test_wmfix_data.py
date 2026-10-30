@@ -10,7 +10,7 @@ from tools.wmfixmerge.runtime import RecordedDemand
 def corpus(root):
     rows = [dict(seed=seed, world=str(seed), pair_key=str(seed) + "@t300", warmup_s=300,
                  arm=arm, dir=f"{seed}_{arm}", branch=dict(kind="B" if arm == "native" else "POLICY"))
-            for seed in SEEDS for arm in ("native", "ours_c1", "coopoff_c1", "mappo")]
+            for seed in SEEDS for arm in ("native", "ours_c1", "coopoff_c1")]
     (root / "C4_EPISODES_MANIFEST.json").write_text(json.dumps(dict(episodes=rows)))
     (root / "SPLIT.json").write_text(json.dumps(dict(worlds={str(s): "fit" for s in SEEDS})))
     return rows
@@ -75,6 +75,40 @@ def test_restricted_paths_reject_before_io():
     for name in ("sealed/x", "x/heldout/a", "x/cal_split/a", "x/requests.rou.xml", "x/hetdata_truth/a"):
         with pytest.raises(ValueError):
             safe(name)
+
+
+def test_unmatched_mappo_is_excluded_at_metadata_boundary(tmp_path):
+    rows = corpus(tmp_path)
+    # No episode directory exists; its unrepresented lane-head arm must never open.
+    extra = dict(rows[0], arm="mappo", dir="never_open_mappo", branch=dict(kind="POLICY"))
+    (tmp_path / "C4_EPISODES_MANIFEST.json").write_text(json.dumps(dict(episodes=rows + [extra])))
+    assert select(tmp_path) == rows
+
+
+def test_production_loader_filters_arms_before_tape_open_and_off_is_unchanged(monkeypatch, tmp_path):
+    import numpy as np
+    import wms.data.c4_pairs as pairs
+    rows = [dict(world="w", pair_key="w@t300", warmup_s=300, split_role="train", episode=a,
+                 arm=a, dir=a, branch=dict(kind="B" if a == "native" else "POLICY"))
+            for a in ("native", "ours_c1", "mappo")]
+    monkeypatch.setattr(pairs, "read_source_manifest", lambda root: dict(episodes=rows))
+    seen = []
+    class Episode:
+        def array(self, name):
+            return {"time_s": np.array([300., 300.5, 301.]), "vid": np.zeros((3, 1), int),
+                    "veh_kin": np.zeros((3, 1, 7))}[name]
+    def open_episode(path):
+        seen.append(Path(path).name)
+        return Episode()
+    monkeypatch.setattr(pairs, "_open_episode", open_episode)
+    monkeypatch.setattr(pairs, "episode_window_ticks", lambda *args, **kw: [0])
+    on = pairs.PairedBranchSource(tmp_path, horizon_steps=2, arm_names=("native", "ours_c1"))
+    assert "mappo" not in seen and on.receipt["n_windows"] == 2
+    seen.clear()
+    default = pairs.PairedBranchSource(tmp_path, horizon_steps=2)
+    explicit_off = pairs.PairedBranchSource(tmp_path, horizon_steps=2, arm_names=None)
+    assert "mappo" in seen and default.receipt == explicit_off.receipt
+    assert default.groups == explicit_off.groups and default.receipt["n_windows"] == 3
 
 
 def test_recorded_requests_are_not_service_and_stay_arm_coupled():

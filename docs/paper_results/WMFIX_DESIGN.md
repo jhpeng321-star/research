@@ -25,7 +25,7 @@ Admission uses the incumbent physical stop-speed formula with inferred entrant s
 ## Supervision / exact source scope
 Pilot source: existing S-E3DATA FIT pairs only, seed allowlist
 973002,973053,973060,973083,973093,973123,973126,973133,973151,973160,973190,973224.
-Source root: `/root/autodl-tmp/c4/e3data`; use manifest-bound native/ours_c1/coopoff_c1/mappo tapes with role=fit only.
+Source root: `/root/autodl-tmp/c4/e3data`; use manifest-bound native/ours_c1/coopoff_c1 tapes with role=fit only; exclude old lane-head MAPPO.
 Preparation must list exact selected episode paths + SHA256 + seed/arm/start, and pair common starts/history/due schedules.
 No pairs300 (including its nominal TRAIN portion), validation/calibration/eval source, 964000–964199,962xxx,977xxx or SPEEDHEAD worlds for fitting.
 No driver truth/XML/assignment files. Inputs are observable positions/speeds/presence/IDs/CAV flags and request-counter ledgers only.
@@ -84,5 +84,5 @@ Canonical safety uses step0's exact legacy WM2 tensors under the candidate confi
 ## Retarget amendment after corrected WMREQUAL3 delivery
 Report SHA2566a692d83b4cc949c5cad1ff37ff972cde15ece91b9142189e8f57e67c497af25; evidence commit79b75b27.
 Matched J300 MAE1376.6veh-s/r−.235/sign.556; upstream MAE1497.6 and96.0% squared-error covariance; source bias−870.9.
-Residual remains after ownership correction: retain the conditional discharge/admission target; no causal capacity claim or constant source offset.
+Residual remains: retain discharge/admission target, exclude lane-mismatched MAPPO FIT supervision; no causal capacity claim or constant source offset.
 Its source-clock parity is not established by report existence; the explicit clock/data/gradient/Astra gates remain closed until measured.

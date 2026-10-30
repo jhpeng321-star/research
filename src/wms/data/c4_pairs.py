@@ -70,7 +70,7 @@ class PairedBranchSource:
                  role_of: Optional[dict] = None, role: str = "train",
                   junction_fix: str = "off", command_known: bool = False, name: str = "paired",
                    horizon_mode: str = "fixed", merge_pivot_history: bool = False,
-                   arm_kinds=None):
+                   arm_kinds=None, arm_names=None):
         if horizon_mode not in ("fixed", "stage"):
             raise ValueError("paired horizon_mode must be fixed or stage")
         self.horizon_mode = horizon_mode
@@ -81,6 +81,7 @@ class PairedBranchSource:
         roles = role_of or {}
         entries = [e for e in doc["episodes"] if e.get("pair_key")
                    and roles.get(e["world"], e.get("split_role")) == role
+                   and (arm_names is None or e.get("arm") in arm_names)
                    and (arm_kinds is None or e.get('branch', {}).get('kind') in arm_kinds)]
         if not doc.get("allow_designed", False):
             bad = [e["episode"] for e in entries
@@ -186,6 +187,8 @@ class PairedBranchSource:
             "worlds": sorted({e["world"] for e in entries_used}),
         }
         self.dataset = TrajectoryDataset([{} for _ in index], loader=loader, receipt=self.receipt)
+        if arm_names is not None:
+            self.receipt["arm_names"] = list(arm_names)
         self.dataset.positions = list(index)
         if horizon_mode == "stage":
             self.horizon = max(g["horizon_steps"] for g in self.groups)

@@ -51,3 +51,6 @@
 - Corrected matched J300 MAE1376.6/r−.235/sign.556; upstream covariance share96.0%; source bias−870.9veh-s.
 - The merge/queue target remains justified as a testable hypothesis, not a proven capacity mechanism.
 - Report availability resolves the pending-report blocker; remote TRAIN feasibility, clock comparison and independent review still block launch.
+- Retargeted FIT supervision to native/ours_c1/coopoff_c1 only: old MAPPO lane-head requests are unrepresented.
+- Added default-OFF production-loader arm filtering before any episode open; excluded MAPPO tapes never open for fitting.
+- After this change, data/training targeted tests: **16 passed** (25.39s), including2 new source-filter/OFF checks.

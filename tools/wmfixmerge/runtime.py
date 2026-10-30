@@ -20,10 +20,10 @@ class Runtime:
         self.config, settings, self.model = load_for_scoring(safe(config), safe(checkpoint))
         specs = json.loads(safe(controllers).read_text())
         specs = specs.get("controllers", specs)
-        if not all(a in specs for a in ("mappo", "ours_c1", "coopoff_c1")):
+        if not all(a in specs for a in ("ours_c1", "coopoff_c1")):
             raise ValueError("missing hash-bound entrant controller specifications")
         self.settings = replace(settings, seed=140014, entrant_control=True,
-            entrant_controllers={a: specs[a] for a in ("mappo", "ours_c1", "coopoff_c1")},
+            entrant_controllers={a: specs[a] for a in ("ours_c1", "coopoff_c1")},
             entry_queue_state=True, entry_pad_auto=True, entry_pad_max=1024,
             entry_insert_rule="sumo_like_v2")
         self.model = self.model.to(self.device).eval()
@@ -36,7 +36,8 @@ class Runtime:
             history_s=60., history_stride_s=1., entries_v2=True, junction_fix="ffill",
             command_known=True, arm_kinds=("B", "POLICY"), role="train",
             role_of={e["world"]: "train" if e["world"] in worlds else "val"
-                     for e in manifest["episodes"]}, name="wmfix_registered_fit")
+                     for e in manifest["episodes"]}, name="wmfix_registered_fit",
+            arm_names=tuple(sorted({e["arm"] for e in self.doc["episodes"]})))
         if {g["pair_key"] for g in self.source.groups} != {r["pair_key"] for r in self.doc["episodes"]}:
             raise ValueError("production loader dropped or added registered groups")
         if self.source.receipt["dropped_groups_t0_mismatch"] or self.source.horizon != 600:
