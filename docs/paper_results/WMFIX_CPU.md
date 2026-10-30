@@ -44,3 +44,10 @@
 - Targeted combined admission/verdict/entryfix/v9entry command: **38 passed** (66.70s).
 - Real feasibility now records ledger-only vs inferred-admission/zero-head outputs and separate J/crossing/source gradient norms.
 - Launch checks bind the implementation bytes to CPU evidence; all three opt-in flags are required.
+
+## Corrected-harness delivery / retarget
+- WMREQUAL3.md appeared before final handoff and was read immediately; SHA256
+  `6a692d83b4cc949c5cad1ff37ff972cde15ece91b9142189e8f57e67c497af25`, evidence commit79b75b27.
+- Corrected matched J300 MAE1376.6/r−.235/sign.556; upstream covariance share96.0%; source bias−870.9veh-s.
+- The merge/queue target remains justified as a testable hypothesis, not a proven capacity mechanism.
+- Report availability resolves the pending-report blocker; remote TRAIN feasibility, clock comparison and independent review still block launch.

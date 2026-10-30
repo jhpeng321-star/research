@@ -5,8 +5,8 @@ CPU engineering only here; MAIN owns any later GPU allocation. Budget superseded
 WMREQUAL upstream-exact diagnostic cuts J MAE49/54/60% at120/180/300s; discharge error associates with48–68% variance.
 Source-only exact correction worsens total MAE: correcting a source offset is insufficient and hides cancellation.
 ERRSRC +68/−297veh/h is counter-confounded; no capacity-drop scalar is justified.
-WMREQUAL2 identifies shared lane/native ownership mismatch. WMREQUAL3 report is absent at registration.
-Before training, read the corrected report; use matched native-lane arms only, MAPPO lane-policy arm diagnostic separately.
+WMREQUAL2 identifies shared lane/native ownership mismatch. WMREQUAL3 was absent at registration, now read before handoff.
+Only corrected matched arms test native-lane qualification (still FAIL); MAPPO lane-policy arm remains diagnostic separately.
 If corrected WM2 no longer shows the proposed residual, do not launch this correction; record a retarget amendment first.
 ## Mechanism: causal spatial discharge field plus exact entrance ledger
 New zero-initialized `merge_response` field: per-lane spatial occupancy, mean speed and CAV flux proxies over the whole upstream road,
@@ -81,3 +81,8 @@ Only geometric nominal length/lane limits remain fixed; v0/headway/decel/min-gap
 No new behavioural threshold, hazard loss, straight-through admission or extra trainable module; physical non-overlap and backlog retention remain exact.
 CPU feasibility records ledger-only vs inferred-admission/zero-head outputs separately, then tests the conditional head's own optimizer step.
 Canonical safety uses step0's exact legacy WM2 tensors under the candidate config; zero-shot/regression receipt must bind the full deployed admission path too.
+## Retarget amendment after corrected WMREQUAL3 delivery
+Report SHA2566a692d83b4cc949c5cad1ff37ff972cde15ece91b9142189e8f57e67c497af25; evidence commit79b75b27.
+Matched J300 MAE1376.6veh-s/r−.235/sign.556; upstream MAE1497.6 and96.0% squared-error covariance; source bias−870.9.
+Residual remains after ownership correction: retain the conditional discharge/admission target; no causal capacity claim or constant source offset.
+Its source-clock parity is not established by report existence; the explicit clock/data/gradient/Astra gates remain closed until measured.

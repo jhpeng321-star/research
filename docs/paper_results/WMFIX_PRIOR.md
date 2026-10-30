@@ -51,7 +51,7 @@ Each entry below gives change → judged target → result/status; grouped entri
 47. W7 expected lanes+jam ST offsets+group recipe/accumulation → same → best step0, final correlation regression; offsets/gradients≠successful response.
 48. W8 standstill hold-time supervision (entrant NLL graph zero; onset unbuilt) → same → best step0, final sign/r regress; no qualified hold-duration rescue.
 49. ERRSRC learned entrant mix/noise widths → old t0-HDV ΔJ → mix small kept option, noise no; real+68/WM−297 veh/h counters incompatible, not proven capacity mechanism.
-50. WMREQUAL training-J+source → upstream dominates paired error, source benefits fictitious; WMREQUAL2 finds shared lane/native ownership confound; corrected report pending.
+50. WMREQUAL training-J+source → upstream dominates paired error, source benefits fictitious; WMREQUAL2 finds ownership confound; later WMREQUAL3 still fails (J300 MAE1376.6/r−.235), retarget in WMFIX_DESIGN.
 ## Common failure pattern and binding exclusions
 State/one-step/count or t0-HDV road proxies ≠ paired all-vehicle training-J incl. source; absolute fits hide response/cancellation.
 Tiny/inactive terms, zero/saturated/indirect gradients, few updates, bundled recipes and global timing/scalar tweaks recur.

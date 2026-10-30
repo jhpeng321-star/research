@@ -73,4 +73,6 @@ the last completed checkpoint if a single pathological update exceeds the intern
 `WMFIX_CPU.md` records tests and `WMFIX_SYNTHETIC*.json` retain the original plumbing result,
 the strengthened gate's failure, and a conditional synthetic teacher's pass. The latter is still synthetic.
 `WMFIX_REAL_FEASIBILITY.json` is explicitly BLOCKED by the missing local prepared remote corpus.
-The corrected report and independent review are also pending. **Current status: NOT LAUNCH READY.**
+The corrected report was delivered and read before handoff (hash/retarget in WMFIX_DESIGN.md);
+it confirms that the upstream/source intervention error remains. Remote preparation, source-clock parity,
+real TRAIN gradient/optimizer feasibility and independent review are pending. **Current status: NOT LAUNCH READY.**
