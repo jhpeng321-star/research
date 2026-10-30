@@ -326,7 +326,8 @@ def main(argv=None):
         policy = CavPolicy(accel_max=settings["accel_max"],
                            lane_head=False if args.native_init else settings.get("lane_control") != "native",
                            init_zero_accel=False if args.native_init else settings.get("init_zero_accel", False),
-                           residual_on_native=args.native_init)
+                            residual_on_native=args.native_init,
+                            residual_reference=settings.get("residual_reference", "base"))
         lane_section = dict(raw["lanes"])
         enabled = lane_section.pop("enabled", True)
         lane_rules = LaneRules.from_mapping(lane_section) if enabled else None

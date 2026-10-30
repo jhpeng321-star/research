@@ -190,6 +190,15 @@ def build(args) -> dict:
         raise ValueError('long_credit gain_only authority requires long_credit.enabled = '
                          'true; pass --dense-phase1 for the registered dense-90s phase 1')
     manifest = {name: sha256(root / name) for name in MANIFEST_FILES}
+    reference = effective.get('policy', {}).get('residual_reference', 'base')
+    if reference not in ('base', 'ctrl0'):
+        raise ValueError('invalid policy.residual_reference')
+    if reference == 'ctrl0':
+        for name in ('src/wms/control/residual.py', 'src/wms/control/train_cli.py',
+                     'src/wms/control/entrant.py', 'src/wms/control/confident_gate.py',
+                     'tools/execparity/alwayscmd_adapter.py',
+                     'tools/execparity/alwayscmd_replay.py'):
+            manifest[name] = sha256(root / name)
     doc = dict(schema=SCHEMA, source_commit=commit, runtime_root=str(root), entry_config=entry,
                config_chain={name: sha256(root / name) for name in chain},
                actor_c1_sha256=actor, actor_checkpoint=str(args.actor_checkpoint or ''),
@@ -221,7 +230,9 @@ def build(args) -> dict:
                              'config_flag': 'configs/c4_policy14_candA.toml '
                                             '[execution] leader_rule = true',
                              'files': {name: manifest[name] for name in LEADER_RULE_FILES}},
-               runtime_manifest=manifest)
+                runtime_manifest=manifest)
+    if reference != 'base':
+        doc['execution_law']['residual_reference'] = reference
     if args.learned_mix and not args.mix_module:
         raise ValueError('--learned-mix requires --mix-module (errsrc inference path) '
                          'to be hash-bound')
@@ -246,7 +257,7 @@ def build(args) -> dict:
         if not os.environ.get('C4_EXECUTION_DRIVER'):
             raise ValueError('mode-2 parity receipt validation requires C4_EXECUTION_DRIVER')
         from wms.control.execution import verify_parity
-        verify_parity(args.parity_receipt)  # raises on missing/stale/failing receipt
+        verify_parity(args.parity_receipt, residual_reference=reference)
         doc['parity_receipt'] = str(Path(args.parity_receipt).resolve())
         doc['parity_receipt_sha256'] = sha256(Path(args.parity_receipt))
         doc['leader_rule']['status'] = (args.leader_rule_status
@@ -334,7 +345,8 @@ def verify(args) -> dict:
         raise ValueError('parity receipt changed')
     os.environ.setdefault('C4_EXECUTION_PARITY', '2')
     from wms.control.execution import verify_parity
-    verify_parity(str(receipt))
+    verify_parity(str(receipt), residual_reference=doc['execution_law'].get(
+        'residual_reference', 'base'))
     doc['verified'] = True
     print(json.dumps({'verified': True, 'source_commit': doc['source_commit'],
                       'wm_sha256': doc['wm_sha256'], 'H_G': hg,

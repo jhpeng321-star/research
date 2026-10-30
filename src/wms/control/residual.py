@@ -4,6 +4,19 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
+import torch
+
+
+class _ExactZero(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, centre, executed, residual):
+        return torch.where(residual == 0., centre, executed)
+
+    @staticmethod
+    def backward(ctx, gradient):
+        # Retain the physical law's derivative, including its state derivatives.
+        return None, gradient, None
+
 
 def executed_from_residual(state, r, law):
     """Return executed acceleration, differentiable for tensor inputs.
@@ -22,8 +35,6 @@ def executed_from_residual(state, r, law):
     Nonfinite residual/base/cap/speed inputs are rejected in the opt-in law;
     infinite *leader gaps* remain supported by the nanfix geometry routines.
     """
-    import torch
-
     options = dict(law) if isinstance(law, Mapping) else {"residual_reference": law}
     reference = options.get("residual_reference", "base")
     if reference not in ("base", "ctrl0"):
@@ -53,4 +64,6 @@ def executed_from_residual(state, r, law):
     upper = torch.maximum(centre, torch.full_like(centre, min(hi, accel_max)))
     issued = torch.minimum(torch.maximum(centre + r, lower), upper)
     out = torch.maximum(torch.minimum(issued, cap), -speed / dt)
+    if reference == "ctrl0":
+        out = _ExactZero.apply(centre, out, r)
     return float(out) if scalar else out

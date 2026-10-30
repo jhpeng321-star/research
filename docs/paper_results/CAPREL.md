@@ -1,5 +1,5 @@
 # S-CAPREL — owner-approved CPU build, 2026-10-30 14:00
-Shared-function SHA: recorded immediately after the first implementation commit.
+Shared-function SHA: `37bc2a57176ccb391c4c7755a284e32e6d834632` (S-DISTILL2 import ready).
 Base: `9613f956`; branch `c4/caprel`; SUMO parity re-check pending registration.
 
 API: `wms.control.residual.executed_from_residual(state, r, law)`.

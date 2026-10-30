@@ -60,6 +60,14 @@ def jobs_for(mode, host, only=None):
 
 def main():
     mode, host = sys.argv[1:3]
+    reference = os.environ.get('C4_RESIDUAL_REFERENCE', 'base')
+    assert reference in ('base', 'ctrl0')
+    if reference == 'ctrl0':
+        # Fresh, explicitly staged attempt root; historical outputs are immutable.
+        global OWN
+        OWN = Path(os.environ['C4_CAPREL_ROOT'])
+        assert OWN.is_absolute() and OWN.name != 'always0020'
+        sys.path.insert(0, str(OWN))
     only = sys.argv[3] if len(sys.argv) > 3 else None
     assert mode in ('canary', 'production') and host in ('cpuP', 'cpuQ')
     lock = (OWN / 'RUN.lock').open('a')
@@ -83,6 +91,8 @@ def main():
         stored = json.loads((base / f"s{spec['seed']}_ours/result.json").read_text())
         j = dict(stored['job'])
         j.update(id=spec['id'], arm=spec['arm'])
+        if reference != 'base':
+            j['residual_reference'] = reference
         assert j['seed'] == spec['seed'] and j['warmup'] == 300 and j['horizon'] == 600 and j['charge'] == 900
         assert not (OWN / 'jobs' / j['id']).exists(), 'existing attempt: no implicit retry'
         jobs.append(j)
@@ -157,7 +167,9 @@ def main():
                 identity = dict(metrics_current_sha256=current, metrics_stored_sha256=stored,
                                 files=comparisons, ctrl0_reference=str(ctrl0),
                                 bit_identical=current == stored and
-                                all(c['current'] == c['stored'] for c in comparisons.values()))
+                                 all(c['current'] == c['stored'] for c in comparisons.values()))
+                if reference != 'base':
+                    identity['residual_reference'] = reference
                 write(out / 'CTRL0_IDENTITY.json', identity)
                 assert identity['bit_identical'], 'ALWAYS0 != stored CTRL0: STOP, no production'
             verify_sources()

@@ -116,6 +116,11 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     residual_mode = bool(getattr(policy, "residual_on_native", False))
     from .execution import enabled as execution_parity_enabled
     execution_parity = residual_mode and execution_parity_enabled()
+    residual_reference = getattr(policy, "residual_reference", "base")
+    if residual_reference != "base":
+        from .execution import mode
+        if not execution_parity or mode() != 2:
+            raise ValueError("ctrl0 residual_reference requires execution mode 2")
     if residual_mode:
         if native is None or not native_lane_change or lane_rules is not None:
             raise ValueError("native residual needs native command, native lanes, no policy lane rules")
@@ -286,7 +291,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             from .continuous import project_native
             native_executed = project_native(state, baseline)
             executed = torch.where(acting, executed_residual(
-                state, held, native_executed, ACCEL_MIN_MPS2, policy_max), native_executed)
+                state, held, native_executed, ACCEL_MIN_MPS2, policy_max,
+                residual_reference=residual_reference), native_executed)
         # Deployment parity (PolicyExecutor): a change is executed by SUMO during the next
         # physics step (and may be refused), so the command must be safe in BOTH the lane the
         # CAV is leaving and the target lane.  Without this, imagination credited a change

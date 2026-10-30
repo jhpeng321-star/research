@@ -156,7 +156,8 @@ class CommandOwnership:
         self._time = now_s
         return records
 
-    def execute_residual(self, residuals, lo, hi, *, now_s, live_ids, dt=.5):
+    def execute_residual(self, residuals, lo, hi, *, now_s, live_ids, dt=.5,
+                         residual_reference="base"):
         """Single longitudinal writer for opt-in residual physics ticks.
 
         A failed/stale sensor decision remains native: only the accepted wall
@@ -174,6 +175,11 @@ class CommandOwnership:
                       < self._last[v].timestamp_s + self.controller.config.control_dt_s}
         mode = execution_mode()
         write_residuals = residual_writer(mode)
+        if residual_reference != "base":
+            if mode != 2:
+                raise ValueError("ctrl0 residual_reference requires execution mode 2")
+            return write_residuals(self.api, authorised, lo, hi, dt=dt,
+                                   residual_reference=residual_reference)
         return write_residuals(self.api, authorised, lo, hi, dt=dt)
 
     def record_response(self, vehicle_id: str, *, timestamp_s: float,

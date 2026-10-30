@@ -480,7 +480,8 @@ class CavSumoEnv:
                         # acceleration for every designated CAV, zero residual included.
                         from wms.control.alwayscmd import commands as always_commands
                         requested = always_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
-                                                    residual_command.accel_min, residual_command.accel_max)
+                                                    residual_command.accel_min, residual_command.accel_max,
+                                                    residual_reference=residual_command.residual_reference)
                     else:
                         from wms.control.continuous import require_same_step_backend
                         if any(a != 0. for v,a in residuals.items() if v in live_cavs):
@@ -581,7 +582,8 @@ class CavSumoEnv:
                 if residual_parity:
                     commands = self.ownership.execute_residual(
                         residuals, residual_command.accel_min, residual_command.accel_max,
-                        now_s=now+substep*.5, live_ids=live_now)
+                        now_s=now+substep*.5, live_ids=live_now,
+                        residual_reference=residual_command.residual_reference)
                     if self.recorder is not None:
                         execution_before = {v: float(api.vehicle.getSpeed(v))
                                             for v in live_now if v in residuals}

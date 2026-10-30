@@ -66,7 +66,7 @@ def policy_settings(raw) -> dict:
     from .contract import DIRECT_ACCEL_MAX_MPS2, POLICY_ACCEL_MAX_MPS2
 
     section = dict(raw.get("policy", {}))
-    unknown = set(section) - {"accel_max_mps2", "init_zero_accel", "lane_control"}
+    unknown = set(section) - {"accel_max_mps2", "init_zero_accel", "lane_control", "residual_reference"}
     if unknown:
         raise ValueError(f"unknown [policy] keys: {sorted(unknown)}")
     accel_max = float(section.get("accel_max_mps2", POLICY_ACCEL_MAX_MPS2))
@@ -84,6 +84,11 @@ def policy_settings(raw) -> dict:
         raise ValueError("[policy] lane_control must be 'learned' or 'native'")
     if lane_control == "native":
         out["lane_control"] = "native"
+    reference = section.get("residual_reference", "base")
+    if reference not in ("base", "ctrl0"):
+        raise ValueError("[policy] residual_reference must be 'base' or 'ctrl0'")
+    if reference != "base":
+        out["residual_reference"] = reference
     return out
 
 
@@ -254,6 +259,8 @@ def main(argv=None):
             raise ValueError("supply at least one local frozen WM checkpoint via --wm-ckpt")
         paths = [str(checked_path(path)) for path in paths]
         policy_kwargs = policy_settings(raw)
+        if policy_kwargs.get("residual_reference", "base") != "base":
+            raise ValueError("ctrl0 residual_reference requires policy14 --native-init")
         components = _load_components()
         if policy_kwargs.get("lane_control") == "native":
             # V7POL: actor without a lane head; no lane rules -> imagination keeps CAVs in lane

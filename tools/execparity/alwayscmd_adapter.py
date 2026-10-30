@@ -17,8 +17,11 @@ import numpy as np
 from wms.control.nativeinit import NativeResidualCommand, sumo_native_accel
 
 
-def law_commands(api, residuals, lo, hi, *, dt=0.5):
+def law_commands(api, residuals, lo, hi, *, dt=0.5, residual_reference="base"):
     """Verbatim copy of wms.control.alwayscmd.commands (do not diverge)."""
+    if residual_reference != "base":
+        return caprel_module().commands(api, residuals, lo, hi, dt=dt,
+                                        residual_reference=residual_reference)
     composed = {}
     for vid, residual in residuals.items():
         if not np.isfinite(residual):
@@ -32,6 +35,28 @@ def law_commands(api, residuals, lo, hi, *, dt=0.5):
                                           min(float(lo), baseline),
                                           max(upper, baseline)))
     return composed
+
+
+def caprel_module():
+    """Load only the three law files into a frozen evaluation runtime overlay.
+
+    Keeps its original policy loader/nativeinit and observation networks. The
+    staged files beside this tool are the very same ones imagination imports.
+    No source or installed runtime file is rewritten.
+    """
+    import importlib.util
+    from pathlib import Path
+    import sys
+    root = Path(__file__).resolve().parents[2] / "src/wms/control"
+    for name in ("residual", "sumo_idm", "alwayscmd"):
+        key = f"wms.control.{name}"
+        if key in sys.modules:
+            continue
+        spec = importlib.util.spec_from_file_location(key, root / f"{name}.py")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[key] = module
+        spec.loader.exec_module(module)
+    return sys.modules["wms.control.alwayscmd"]
 
 
 class AlwaysCommanded:
@@ -57,6 +82,7 @@ class AlwaysCommanded:
 
 
 _LOG = None
+_REFERENCE = "base"
 
 
 def open_log(path):
@@ -79,13 +105,14 @@ def close_log():
 def always_commanded_commands(api, residuals, lo, hi, *, dt=0.5):
     """Scoped composer replacing nativeinit.sumo_residual_commands for both writers."""
     import json
-    composed = law_commands(api, residuals, lo, hi, dt=dt)
+    composed = law_commands(api, residuals, lo, hi, dt=dt, residual_reference=_REFERENCE)
     if _LOG is not None:
         t = float(api.simulation.getTime())
         rows = []
         for vid, residual in residuals.items():
             leader = api.vehicle.getLeader(vid)
             rows.append({"t_s": t, "vehicle_id": vid,
+                         "residual_reference": _REFERENCE,
                          "residual_mps2": float(residual),
                          "base_law_mps2": float(sumo_native_accel(api, vid, dt)),
                          "issued_mps2": composed[vid],
@@ -99,15 +126,18 @@ def always_commanded_commands(api, residuals, lo, hi, *, dt=0.5):
 
 
 @contextmanager
-def arm_loader(arm, checkpoint):
+def arm_loader(arm, checkpoint, *, residual_reference="base"):
     """Scope the loader override to the always-commanded arms; other arms unchanged."""
     from wms.control import policy
     from wms.control import nativeinit
+    global _REFERENCE
     if arm not in ("always0", "alwaysx"):
         yield
         return
     original = policy.load_policy_fn
     original_commands = nativeinit.sumo_residual_commands
+    original_reference = _REFERENCE
+    _REFERENCE = residual_reference
 
     def load(path, **kwargs):
         if str(path) != str(checkpoint):
@@ -121,6 +151,7 @@ def arm_loader(arm, checkpoint):
     finally:
         policy.load_policy_fn = original
         nativeinit.sumo_residual_commands = original_commands
+        _REFERENCE = original_reference
 
 
 def run_e3(job, inputs, out, *, measurement, log_path=None):
@@ -130,7 +161,8 @@ def run_e3(job, inputs, out, *, measurement, log_path=None):
     if log_path is not None:
         open_log(str(log_path))
     try:
-        with arm_loader(job["arm"], inputs["policy"]):
+        with arm_loader(job["arm"], inputs["policy"],
+                        residual_reference=job.get("residual_reference", "base")):
             return original(job, inputs, out, measurement=measurement)
     finally:
         close_log()

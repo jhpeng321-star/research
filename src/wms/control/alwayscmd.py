@@ -28,7 +28,41 @@ import math
 BACKEND_CONTRACT = "always_commanded_ctrl0/1"
 
 
-def commands(api, residuals, lo, hi, *, dt=0.5, parity=None):
+def command_cap(api, vid, *, dt=0.5):
+    """Prospective mode-27 cap from live SUMO queries, never a completed-step cache.
+
+    Unlike the legacy base query, getLeader's gap is passed WITHOUT adding
+    minGap. Free-road IDM uses SUMO's 1e6 stand-in. Lane-end stopping uses
+    getStopSpeed on the same frozen lane/position geometry as imagination.
+    SUMO still applies junction/foe constraints during the actual physics step.
+    """
+    from traffic_shepherd.c4.geometry import is_junction_lane, lane_and_s
+    from .contract import MERGE_S1_M
+    from .sumo_idm import FREE_GAP_M
+    vehicle = api.vehicle
+    speed = float(vehicle.getSpeed(vid))
+    leader = vehicle.getLeader(vid)
+    lead_id, gap = ("", FREE_GAP_M) if leader is None else leader
+    lead_speed = speed if leader is None else float(vehicle.getSpeed(lead_id))
+    decel = float(vehicle.getDecel(vid if leader is None else lead_id))
+    safe = float(vehicle.getFollowSpeed(vid, speed, float(gap), lead_speed, decel, lead_id))
+    lane_id = vehicle.getLaneID(vid)
+    if not is_junction_lane(lane_id):
+        lane, s = lane_and_s(lane_id, vehicle.getLanePosition(vid))
+        if lane == 2:
+            stop_gap = max(MERGE_S1_M - s, 0.)
+            safe = min(safe, float(vehicle.getStopSpeed(vid, speed, stop_gap)), stop_gap / dt)
+    vmax = min(speed + float(vehicle.getAccel(vid)) * dt,
+               float(vehicle.getAllowedSpeed(vid)))
+    if not all(math.isfinite(x) for x in (speed, safe, vmax)):
+        raise ValueError("nonfinite always-commanded cap inputs")
+    cap = (max(0., min(safe, vmax)) - speed) / dt
+    if not math.isfinite(cap):
+        raise ValueError("nonfinite always-commanded cap")
+    return cap
+
+
+def commands(api, residuals, lo, hi, *, dt=0.5, parity=None, residual_reference="base"):
     """CTRL0-compatible always-commanded composer; single source of the base law.
 
     ``parity`` is accepted and ignored: the always-commanded law has one frozen
@@ -39,12 +73,24 @@ def commands(api, residuals, lo, hi, *, dt=0.5, parity=None):
     """
     import numpy as np
     from .nativeinit import sumo_native_accel
+    if residual_reference not in ("base", "ctrl0"):
+        raise ValueError("residual_reference must be 'base' or 'ctrl0'")
     composed = {}
     for vid, residual in residuals.items():
         if not np.isfinite(residual):
             raise ValueError("nonfinite residual for a designated CAV")
         baseline = float(sumo_native_accel(api, vid, dt))
-        if residual == 0.0:
+        if residual_reference == "ctrl0":
+            from .residual import executed_from_residual
+            value = executed_from_residual(
+                {"v_mps": float(api.vehicle.getSpeed(vid)), "base_mps2": baseline,
+                 "cap_mps2": command_cap(api, vid, dt=dt)}, float(residual),
+                dict(residual_reference="ctrl0", lo=lo, hi=hi, dt=dt,
+                     accel_max=float(api.vehicle.getAccel(vid))))
+            # Preserve the original CTRL0 *write*, hence its bitwise realised
+            # speed too (acceleration -> speed round trips need not be exact).
+            composed[vid] = baseline if residual == 0.0 else value
+        elif residual == 0.0:
             composed[vid] = baseline
         else:
             upper = min(float(hi), float(api.vehicle.getAccel(vid)))
@@ -54,7 +100,7 @@ def commands(api, residuals, lo, hi, *, dt=0.5, parity=None):
     return composed
 
 
-def write_residuals(api, residuals, lo, hi, *, dt=0.5):
+def write_residuals(api, residuals, lo, hi, *, dt=0.5, residual_reference="base"):
     """The sole longitudinal writer: setSpeed(-1) then setAcceleration, every tick.
 
     Identical TraCI call sequence to the frozen CTRL0/``execute_sumo_residual``
@@ -62,7 +108,7 @@ def write_residuals(api, residuals, lo, hi, *, dt=0.5):
     the final safety executor; no slowDown, stale cached speed or absolute
     speed target may precede or compete with this write.
     """
-    composed = commands(api, residuals, lo, hi, dt=dt)
+    composed = commands(api, residuals, lo, hi, dt=dt, residual_reference=residual_reference)
     if not all(math.isfinite(c) for c in composed.values()):
         raise ValueError("nonfinite always-commanded acceleration")
     for vid, command in composed.items():
@@ -114,7 +160,8 @@ def inferred_cap(state, *, dt=0.5):
                                    s_m=state["s_m"], dt=dt)
 
 
-def executed(state, residual, lo=-3., hi=1.2, *, dt=0.5, params=None):
+def executed(state, residual, lo=-3., hi=1.2, *, dt=0.5, params=None,
+             residual_reference="base"):
     """Imagination mirror of the always-commanded executed acceleration.
 
     ``issued = clip(base + r, min(lo, base), max(min(hi, 1.2), base))`` with
@@ -132,13 +179,14 @@ def executed(state, residual, lo=-3., hi=1.2, *, dt=0.5, params=None):
     v, gap, leader_speed, has = _wm_geometry(state)
     allowed = sumo_idm.allowed_speed(state["lane"], state["s_m"])
     return sumo_idm.executed_accel(v, leader_speed, gap, allowed, residual,
-                                   float(lo), float(hi), has_leader=has,
-                                   lane=state["lane"], s_m=state["s_m"], dt=dt)
+                                    float(lo), float(hi), has_leader=has,
+                                    lane=state["lane"], s_m=state["s_m"], dt=dt,
+                                    residual_reference=residual_reference)
 
 
 def scalar_executed(speed, leader_speed, gap, residual, params=None, lo=-3., hi=1.2, *,
-                    dt=0.5, has_leader=True, ramp_gap=None, allowed_speed=None,
-                    prev_lane=None, lane=None, s_m=None):
+                     dt=0.5, has_leader=True, ramp_gap=None, allowed_speed=None,
+                     prev_lane=None, lane=None, s_m=None, residual_reference="base"):
     """Independent scalar mirror of :func:`executed` for fixtures and offline replay.
 
     ``gap`` is the WM-frame bumper gap of the CAV's leader; ``params`` is
@@ -161,8 +209,8 @@ def scalar_executed(speed, leader_speed, gap, residual, params=None, lo=-3., hi=
         allowed = float(allowed_speed)
     return sumo_idm.executed_accel_scalar(speed, leader_speed, gap, allowed,
                                           residual, float(lo), float(hi),
-                                          has_leader=has_leader, ramp_gap=ramp_gap,
-                                          dt=dt)
+                                           has_leader=has_leader, ramp_gap=ramp_gap,
+                                           dt=dt, residual_reference=residual_reference)
 
 
 def completed_rows(api, before, residuals, issued, *, dt=0.5):

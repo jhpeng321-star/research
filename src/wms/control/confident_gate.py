@@ -228,6 +228,7 @@ class ArmImagination:
                 return policy(obs, signal, **{**kwargs, "deterministic": False, "noise": noise})
         actor.accel_max = policy_accel_bounds(policy)[1]
         actor.residual_on_native = bool(getattr(policy, "residual_on_native", False))
+        actor.residual_reference = getattr(policy, "residual_reference", "base")
         return actor
 
     def _controller(self, member: Optional[Tensor], rows: int, stream=None, ids=None):
