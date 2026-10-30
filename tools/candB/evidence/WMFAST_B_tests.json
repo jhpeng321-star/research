@@ -1,0 +1,57 @@
+{
+ "host": "gpuR",
+ "runtime": "/root/autodl-tmp/c4_wmfastB_20261031",
+ "base_commit": "43942f75",
+ "environment": {
+  "CUDA_VISIBLE_DEVICES": "",
+  "OMP_NUM_THREADS": "1",
+  "MKL_NUM_THREADS": "1",
+  "PYTHONDONTWRITEBYTECODE": "1",
+  "PYTHONPATH": "/root/autodl-tmp/c4_wmfastB_20261031/src:/root/autodl-tmp/c4_wmfastB_20261031"
+ },
+ "new_tests": {
+  "command": "/root/miniconda3/bin/python -m pytest /root/autodl-tmp/c4_wmfastB_20261031/tests/unit/test_wmfast_b.py -q --import-mode=importlib -p no:cacheprovider",
+  "result": "12 passed in 73.77s (0:01:13)",
+  "proofs": [
+   "S2/S4, one/two starts, all K8 and M2 full pre-prefix tensors bitwise on toy WM",
+   "nonzero g_ES, accepted/rejected pairs, unchanged metrics, RNG and parameter restoration",
+   "actual two-process stacked-task transport",
+   "real hybrid WM with births, learned entrant mix, sampled drivers/lanes and additive exploration",
+   "actual 300 controls / 600 physics ticks: every full tensor bitwise on toy WM, one selected K future and all four sides",
+   "checkpoint switch OFF to S4: populated Adam moments, update count, qualification and gradient preserved without an optimizer step"
+  ]
+ },
+ "regressions": {
+  "command": "/root/miniconda3/bin/python -m pytest /root/autodl-tmp/c4_wmfastB_20261031/tests/unit/test_eslong.py /root/autodl-tmp/c4_wmfastB_20261031/tests/unit/test_gated300.py /root/autodl-tmp/c4_wmfastB_20261031/tests/unit/test_longgrad.py -q --import-mode=importlib -p no:cacheprovider -k 'not preset and not opt_in_preset and not cuda'",
+  "result": "65 passed, 2 deselected in 150.11s (0:02:30)",
+  "deselected": "two config-preset tests (config-chain fixtures not staged); no failure counted as success"
+ },
+ "lint": {
+  "command": "ruff check src/wms/control/eslong.py src/wms/control/dreamer.py src/wms/control/parallel_futures.py tests/unit/test_wmfast_b.py tools/candB/wmfast_b_probe.py",
+  "result": "All checks passed!"
+ },
+ "probe_commands": [
+  "/root/miniconda3/bin/python tools/candB/wmfast_b_probe.py --device cpu --repeats 3 --output CPU_final.json",
+  "/root/miniconda3/bin/python tools/candB/wmfast_b_probe.py --device cuda --repeats 1 --allow-small-shared-probe --output GPU_final.json"
+ ],
+ "earlier_attempts": [
+  "Initial CPU fixture found 1.49e-7 command differences from enlarged row-local kernels; fixed by preserving per-side actor/group/native/safety/reward geometry.",
+  "Real-WM full-output test found shared-reference unused policy diagnostics differed by up to .364; fixed by retaining per-side policy predictions while sharing only the physical reference trajectory.",
+  "First local Python lacked torch; pip download timed out. All numerical execution used the isolated gpuR CPU/source runtime.",
+  "First remote collection lacked tools.gated300; staged named cct1/cct2 modules and reran."
+ ],
+ "gpu_admission": {
+  "gpuA_initial": "7164 MiB pilot, 83% GPU utilization: no probe dispatched",
+  "gpuR_initial": "idle; first small probe admitted idle, pilot started during probe",
+  "gpuR_final": "two peers at admission, 16.08 GiB free; .04 allocator fraction, own process 488 MiB",
+  "gpuR_post_probe": "00:44:46 +08: only peer PID 459179, 8506 MiB; own CUDA probes exited",
+  "own_probe_pids": [459029, 460016],
+  "signals_or_pilot_relaunches": false
+ },
+ "limits": [
+  "Real-WM probe is a tiny randomly initialized hybrid model, 10 physical seconds, synthetic starts/histories; not a trained production-checkpoint benchmark.",
+  "Full WM float kernels change batch geometry: explicit atol=2e-5, rtol=2e-6; discrete outputs must be bitwise.",
+  "Natural tiny-probe gains are all OFF; additionally stress confidence gates with sample_multiplier=10000 and sample_offset=1000000, producing 10 accepted pairs and a nonzero bitwise-matched ES gradient.",
+  "No measured full-production 300s memory-fit or update-throughput claim; GPU timing is one sample under changing peer load."
+ ]
+}

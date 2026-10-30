@@ -1,0 +1,133 @@
+{
+ "device": "cpu",
+ "torch": "2.8.0+cu128",
+ "threads": 1,
+ "retained_probe_directory": "/tmp/wmfastB_54cns252",
+ "production_timing": false,
+ "physical_horizon_s": 10,
+ "registered_gate_horizon_s": 300,
+ "K": 8,
+ "M": 2,
+ "fixture": "real hybrid WM; 4 synthetic initial slots + 2 birth slots; learned entrant mix",
+ "cases": {
+  "2": {
+   "full_long_outputs": {
+    "tensors": 4896,
+    "nonbitwise": 39,
+    "max_abs": 1.9073486328125e-06,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "credit_and_actions": {
+    "tensors": 96,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "accepted_masks_bitwise": true,
+   "receipts_bitwise": true,
+   "synthetic_gate_stress_g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "stacked_rows": 12,
+   "seconds": [
+    19.166585728526115,
+    20.027427963912487,
+    19.29470118135214
+   ],
+   "median_seconds": 19.29470118135214,
+   "speedup": 1.6734563375729132
+  },
+  "4": {
+   "full_long_outputs": {
+    "tensors": 4896,
+    "nonbitwise": 41,
+    "max_abs": 1.9073486328125e-06,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "credit_and_actions": {
+    "tensors": 96,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "accepted_masks_bitwise": true,
+   "receipts_bitwise": true,
+   "synthetic_gate_stress_g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "stacked_rows": 22,
+   "seconds": [
+    12.359024569392204,
+    12.38522507995367,
+    12.344655632972717
+   ],
+   "median_seconds": 12.359024569392204,
+   "speedup": 2.612571873469236
+  },
+  "0": {
+   "seconds": [
+    32.28883997350931,
+    32.595630921423435,
+    32.13130993396044
+   ],
+   "median_seconds": 32.28883997350931
+  }
+ },
+ "source_sha256": {
+  "eslong.py": "b60fea89cd7c57491b58563d4148e63542c5c074eef523977b92009cd870c723",
+  "dreamer.py": "120fab430e5a7c9c500f5179db79e15d68a29b69be9771f7272ce5a43ed9b7b7",
+  "parallel_futures.py": "f3bc4f3ff02e5615a98f9dc6ae7178c2103f897a9017e1b948120b4d8b89d9cf"
+ },
+ "rows_per_side": 7,
+ "accepted_pairs": 0,
+ "g_ES_norm": 0.0,
+ "synthetic_gate_stress": {
+  "sample_multiplier": 10000.0,
+  "sample_offset": 1000000.0,
+  "accepted_pairs": 10,
+  "g_ES_norm": 7255268.0
+ },
+ "rng_restored_bitwise": true
+}

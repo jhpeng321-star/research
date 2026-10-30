@@ -1,0 +1,131 @@
+{
+ "device": "cuda",
+ "torch": "2.8.0+cu128",
+ "threads": 1,
+ "retained_probe_directory": "/tmp/wmfastB_xr47px29",
+ "production_timing": false,
+ "physical_horizon_s": 10,
+ "registered_gate_horizon_s": 300,
+ "K": 8,
+ "M": 2,
+ "fixture": "real hybrid WM; 4 synthetic initial slots + 2 birth slots; learned entrant mix",
+ "cases": {
+  "2": {
+   "full_long_outputs": {
+    "tensors": 4896,
+    "nonbitwise": 138,
+    "max_abs": 1.52587890625e-05,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "credit_and_actions": {
+    "tensors": 96,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "accepted_masks_bitwise": true,
+   "receipts_bitwise": true,
+   "synthetic_gate_stress_g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "stacked_rows": 12,
+   "seconds": [
+    35.15528442710638
+   ],
+   "median_seconds": 35.15528442710638,
+   "peak_allocated_bytes": 15246848,
+   "peak_reserved_bytes": 29360128,
+   "speedup": 1.512446258862349
+  },
+  "4": {
+   "full_long_outputs": {
+    "tensors": 4896,
+    "nonbitwise": 174,
+    "max_abs": 1.52587890625e-05,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "credit_and_actions": {
+    "tensors": 96,
+    "nonbitwise": 1,
+    "max_abs": 1.52587890625e-05,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "accepted_masks_bitwise": true,
+   "receipts_bitwise": true,
+   "synthetic_gate_stress_g_ES": {
+    "tensors": 1,
+    "nonbitwise": 0,
+    "max_abs": 0.0,
+    "tolerance": {
+     "atol": 2e-05,
+     "rtol": 2e-06
+    }
+   },
+   "stacked_rows": 22,
+   "seconds": [
+    21.247486881911755
+   ],
+   "median_seconds": 21.247486881911755,
+   "peak_allocated_bytes": 16402432,
+   "peak_reserved_bytes": 31457280,
+   "speedup": 2.5024361095750822
+  },
+  "0": {
+   "seconds": [
+    53.17047841101885
+   ],
+   "median_seconds": 53.17047841101885,
+   "peak_allocated_bytes": 14717952,
+   "peak_reserved_bytes": 29360128
+  }
+ },
+ "peers_at_admission": "",
+ "allocator_fraction": 0.04,
+ "free_bytes_at_admission": 24850661376,
+ "rows_per_side": 7,
+ "accepted_pairs": 0,
+ "g_ES_norm": 0.0,
+ "synthetic_gate_stress": {
+  "sample_multiplier": 10000.0,
+  "accepted_pairs": 10,
+  "g_ES_norm": 0.0
+ },
+ "rng_restored_bitwise": true,
+ "process_gpu_memory": "459029, 488 MiB\n459179, 4880 MiB"
+}

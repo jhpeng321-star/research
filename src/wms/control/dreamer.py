@@ -1539,7 +1539,8 @@ class DreamerTrainer:
                                 for key in member_components[0]}}
         if _eslong_stack is not None:
             from .eslong import split_outputs
-            outputs = split_outputs(result, *_eslong_stack)
+            outputs = split_outputs(result, *_eslong_stack,
+                                    getattr(self, '_eslong_side_policy_outputs', None))
             return [gated300.prefix(self, out, dense_steps) if gated_rollout else out for out in outputs]
         return gated300.prefix(self, result, dense_steps) if gated_rollout else result
 

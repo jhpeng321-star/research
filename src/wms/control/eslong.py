@@ -207,6 +207,8 @@ def row_heads(trainer, common, sides, selections, owners):
                                       for k in vars(outputs[0])})
         return tree_map(combine, *outputs)
 
+    telemetry = [[] for _ in sides]
+
     def policy(*args, **kwargs):
         outputs = []
         for side, tensors in enumerate(values):
@@ -214,6 +216,7 @@ def row_heads(trainer, common, sides, selections, owners):
             def call(*a, **kw):
                 return torch.func.functional_call(trainer.policy, parameters, a, kw)
             outputs.append(side_call(call, args, kwargs, side))
+            telemetry[side].append(outputs[-1])
         return merge(outputs)
 
     def grouped(function):
@@ -221,7 +224,7 @@ def row_heads(trainer, common, sides, selections, owners):
 
     hooks = dict(_eslong_policy_call=policy, _eslong_group_call=grouped(trainer.group_encoder),
                  _eslong_observe_call=grouped(trainer.observation_builder),
-                 _eslong_row_local=grouped)
+                 _eslong_row_local=grouped, _eslong_side_policy_outputs=telemetry)
     saved = {key: getattr(trainer, key, None) for key in hooks}
     trainer.__dict__.update(hooks)
     try:
@@ -234,12 +237,12 @@ def row_heads(trainer, common, sides, selections, owners):
                 setattr(trainer, key, value)
 
 
-def split_outputs(result, variants, selections):
+def split_outputs(result, variants, selections, telemetry=None):
     """Restore original row layout BEFORE gated300 sums, references or quantiles."""
     from torch.utils._pytree import tree_map
     total = result['rewards'].shape[-1]
     outputs = []
-    for rows in selections:
+    for side, rows in enumerate(selections):
         def select(axis):
             return lambda x: (x.index_select(axis, rows.to(x.device))
                 if torch.is_tensor(x) and x.ndim > axis and x.shape[axis] == total else x)
@@ -258,6 +261,17 @@ def split_outputs(result, variants, selections):
                                for states in out['states']])[..., :out['n_base'], :]
             zone = out['entrance_zone'][..., :out['n_base'], :]
             out['entrance_zone_fraction'] = float((zone & cav).sum()) / max(1, int(cav.sum()))
+        if telemetry is not None:
+            # Shared physical reference rows still have SIDE-SPECIFIC unused
+            # actor predictions in diagnostics. Reconstruct those exact bytes;
+            # only the state/WM physics of an actor-free row may be shared.
+            commands = torch.stack([p[0] for p in telemetry[side]]).unsqueeze(0).detach()
+            if 'antiexploit_commands' in out:
+                out['antiexploit_commands']['deviation'] = commands
+            if 'action_audit' in out:
+                out['action_audit']['audit_action'] = commands
+                out['action_audit']['audit_log_prob'] = torch.stack([
+                    getattr(p, 'log_prob_accel', p[1]) for p in telemetry[side]]).unsqueeze(0).detach()
         outputs.append(out)
     return outputs
 
