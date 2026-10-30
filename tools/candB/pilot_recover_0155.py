@@ -14,7 +14,8 @@ from pathlib import Path
 root=Path({ROOT!r})
 doc=dict(epoch=time.time(),root=str(root),owners={{}},files={{}})
 for name in ('OWNERSHIP.json','repair_TRAINER_OWNERSHIP.json',
-             'WMFAST_CONTROL_OWNERSHIP.json','continue_TRAINER_OWNERSHIP.json'):
+             'WMFAST_CONTROL_OWNERSHIP.json','WMFAST4_CONTROL_OWNERSHIP.json',
+             'continue_TRAINER_OWNERSHIP.json'):
     p=root/name
     if not p.exists(): continue
     owner=json.loads(p.read_text()); proc=Path('/proc')/str(owner['pid'])
@@ -27,7 +28,8 @@ for name in ('OWNERSHIP.json','repair_TRAINER_OWNERSHIP.json',
     doc['owners'][name]=owner
 for name in ('WMFAST_CONTROL_FAILURE.json','WMFAST_CLEAN_BOUNDARY.json',
              'WMFAST_CONTROL_STOP','STOP','EXIT.json','repair_EXIT.json',
-             'continue_EXIT.json','GPU.jsonl','supervisor.log','WMFAST_CONTROL.log'):
+             'continue_EXIT.json','GPU.jsonl','supervisor.log','repair_trainer.log','WMFAST_CONTROL.log',
+             'WMFAST4_CONTROL_FAILURE.json','WMFAST4_CONTROL.log','WMFAST4_CONTROL_HANDOFF.json'):
     p=root/name
     if p.exists(): doc['files'][name]=p.read_text()[-12000:]
 print(json.dumps(doc))

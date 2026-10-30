@@ -414,3 +414,5 @@
   refusals, original phase/R4 validation and saved-score no-forward proof. Existing
   numerical S2/S4 parity and original full-resume proofs remain applicable.
   Receipts `pilot_wmfast4_{prepare_1793385923,cpu_1793385931,status_1793385944}.json`.
+
+- S-PILOTB EXPLORATORY-LEAN UPDATE1 FAILED epoch1793385850: TypeError: 'NoneType' object is not subscriptable in dense autograd backward; ZERO completed optimizer rows. Frozen baseline744b30b8 remains durable; all original outputs/startup scores retained. Trainer35928 and supervisor35923 exited naturally; old S2 waiter37982 and prepared S4 waiter60032 both refused the non-clean parent, no continuation trainer dispatched. S4 runtimeaf78fda7 authority07f5e05b and10 CPU contracts passed but S4 production not launched. Investigating a baseline-preserving recovery; NO baseline recomputation or completed-update claim. Full traceback/receipt `E:/agent-work/c4-candB/tools/candB/pilot_repaired_UPDATE1_FAILURE.json`.
