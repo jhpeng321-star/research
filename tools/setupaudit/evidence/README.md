@@ -43,3 +43,16 @@ That short noisy receipt is not used as evidence of 90/300 s actor headroom.
 The optional objective-contract guard refuses the historical t0-HDV-road/K1
 qualification for team+source/K8 long gradients; primary measurements retain the
 original guard-OFF semantics so the objective being audited is not changed.
+
+## Completed primary panel
+`mix_exact.json`: 2 TRAIN starts x 3 deterministic actors x K8, one 300 s continuation
+with the actual dense-90 s prefix/credit. Native references match exactly across
+actors at both horizons. Candidate A equals CTRL0 (including 167727 executed CAV ticks).
+MAPPO-CTRL0 mean dJ90=+8.3037109375, dJ300=+3278.14453125 veh-s;
+maximised dense-credit difference=-24.05652618408203, all long gates OFF.
+The sigma comparisons are descriptive: the original authority does not qualify
+the same population/cost/K as this objective. No population confidence claim is made.
+`mix_first_ctrl0.json` and `mix_progress.json` retain completed intermediate receipts.
+Reproduce on the staged inputs: `bash run_measure.sh --out NEW.json --device cuda --mix`.
+Local verification/aggregation: `python tools/setupaudit/summarize.py
+tools/setupaudit/evidence/mix_exact.json --aggregate-only`.
