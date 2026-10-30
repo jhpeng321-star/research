@@ -291,6 +291,7 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.support = {}
             ctx.before = _rng_state(trainer.device)
             ctx.futures = {'items': []} if cfg.imagination_offload_futures else None
+            from .eslong import active as es_active, calibration
             from .parallel_futures import worker_count, parallel_forward
             if worker_count('forward') > 1 and parallel_forward():
                 if ctx.futures is None:
@@ -299,9 +300,17 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
                 result, ctx.tape, ctx.futures = forward_futures(
                     trainer, batch, cfg, kwargs, ctx.before)
             else:
-                with _RandomTape(ctx.tape, offload=cfg.imagination_offload_futures):
+                with calibration(trainer, batch) as probe, _RandomTape(
+                        ctx.tape, offload=cfg.imagination_offload_futures):
                     result = trainer.imagine(batch, **kwargs, _memory_replay=True, _memory_config=cfg,
                                              _memory_full_batch=batch, _memory_future_cache=ctx.futures)
+                if es_active(trainer):
+                    ctx.futures['eslong_sensitivity'] = probe.get('sensitivity', 0.)
+                    ctx.futures['tape_prefix'] = ctx.futures.pop('eslong_tape_prefix')
+            if es_active(trainer):
+                trainer._eslong_context = dict(batch=batch, cfg=cfg, kwargs=kwargs,
+                    before=ctx.before, tape=ctx.tape, cache=ctx.futures,
+                    sensitivity=ctx.futures['eslong_sensitivity'])
             _trace_memory(trainer, 'full_forward_done', tape_draws=len(ctx.tape))
             leaves, spec = tree_flatten(result)
             ctx.spec = spec
@@ -309,7 +318,8 @@ def memory_imagine(trainer, batch, cfg, **kwargs):
             ctx.slots = slots
             structure.update(leaves=leaves, spec=spec, slots=slots)
             outputs = tuple(leaves[i] for i in slots)
-            ctx.mark_non_differentiable(*(v for v in outputs if not v.is_floating_point()))
+            ctx.mark_non_differentiable(*(v for v in outputs if not v.is_floating_point()
+                or (es_active(trainer) and v is result.get('gated300_long_difference'))))
             return outputs
 
         @staticmethod

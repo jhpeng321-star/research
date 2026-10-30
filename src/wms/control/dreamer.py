@@ -979,6 +979,9 @@ class DreamerTrainer:
         dense_steps = self._imagination_config(batch).horizon if gated_rollout else cfg.horizon
         if _memory_config is None:
             cfg = gated300.rollout_config(self, cfg)
+            if self._training_imagination:
+                from .eslong import execution_config
+                cfg = execution_config(self, cfg, batch)
         memory = (cfg.imagination_microbatch or cfg.imagination_checkpoint_segment
                   or cfg.imagination_offload_futures or cfg.imagination_offload_saved_tensors)
         if memory and torch.is_grad_enabled() and not _memory_replay:
@@ -1106,6 +1109,11 @@ class DreamerTrainer:
         if _memory_collect_future is not None:
             from .imagination_memory import _current_tape
             _memory_future_cache['tape_prefix'] = _current_tape().position
+        elif _memory_future_cache is not None and _memory_active_future is None:
+            from .eslong import active as es_active
+            if es_active(self):
+                from .imagination_memory import _current_tape
+                _memory_future_cache['eslong_tape_prefix'] = _current_tape().position
         # Common random numbers: disagreement must measure WM differences, not action noise.
         for future_index, (model_index, sample_index) in enumerate(
                 [(e, s) for e in range(len(self.world_models)) for s in range(n_futures)]):
@@ -2022,11 +2030,17 @@ class DreamerTrainer:
                     imagined, scale, weights, audit_components)
             extra["action_audit"] = self._action_audit_metrics(imagined)
         extra.update(self._coopw_metrics(imagined, batch, variants, scale))
+        from . import eslong
+        es_grads = None
+        if eslong.active(self):
+            es_grads, es_metrics = eslong.gradient(self, imagined, weights, scale)
+            extra.update(es_metrics)
         self.actor_optimizer.zero_grad(set_to_none=True)
         from .longgrad import actor_backward
         dense_loss = (components['_dense_objective'] + direct_term
                       - entropy_weight * entropy + lagrange_term)
-        extra.update(actor_backward(self, dense_loss, components.get('gated300_long'), actor_loss))
+        extra.update(eslong.backward(self, dense_loss, es_grads) if es_grads is not None else
+                     actor_backward(self, dense_loss, components.get('gated300_long'), actor_loss))
         if hasattr(self, 'memory_spill_stats'):
             extra['memory_spill'] = dict(self.memory_spill_stats)
         if getattr(self.policy, "residual_on_native", False):

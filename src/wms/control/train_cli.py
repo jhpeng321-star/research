@@ -28,8 +28,7 @@ def _read_config(path, seen=()):
     from wms.config.schema import deep_merge
 
     path = checked_path(path)
-    # CAPREL adds one experiment wrapper to the 16-level candidate-A chain.
-    # Keep cycle protection and a finite nesting limit without flattening presets.
+    # CAPREL/ESLONG extend the candidate-A chain; match wms.config.load's depth cap.
     if path in seen or len(seen) >= 32:
         raise ValueError("configuration inheritance cycle/depth exceeded")
     raw = load(path)

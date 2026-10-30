@@ -12,6 +12,13 @@ PREFIX_OUTPUTS = frozenset(('rewards', 'costs', 'returns', 'values', 'entropy', 
     'antiexploit_commands'))
 
 
+def dense_replay_horizon(trainer, batch, cfg):
+    dense = trainer._imagination_config(batch).horizon
+    quantum = math.lcm(STEPS_PER_CONTROL, cfg.imagination_checkpoint_segment or 1)
+    steps = math.ceil((dense * STEPS_PER_CONTROL + 1) / quantum) * quantum
+    return min(cfg.horizon, steps // STEPS_PER_CONTROL)
+
+
 def replay_horizon(trainer, batch, cfg, cache, slots, vectors, spec, future, rows):
     """Conservative per-microbatch plan, in control steps (zero means no VJP).
 
@@ -55,13 +62,10 @@ def replay_horizon(trainer, batch, cfg, cache, slots, vectors, spec, future, row
     from . import gated300
     if (cfg.imagination_replay_dense_prefix and not long_live and not unknown
             and gated300.requested_rollout(trainer)):
-        dense = trainer._imagination_config(batch).horizon
         # One physics step beyond the prefix preserves next-state semantics:
         # entry rewards use the NEXT callback's post-insertion input state.
         # It also avoids treating the dense boundary as a WM terminal state.
-        quantum = math.lcm(STEPS_PER_CONTROL, cfg.imagination_checkpoint_segment or 1)
-        steps = math.ceil((dense * STEPS_PER_CONTROL + 1) / quantum) * quantum
-        return min(cfg.horizon, steps // STEPS_PER_CONTROL)
+        return dense_replay_horizon(trainer, batch, cfg)
     return cfg.horizon
 
 
