@@ -496,3 +496,17 @@
   resumed191; `independent_score_before` present (4694.833); native_curve [191];
   gate_panel J_before4 passed-null; policy_native_best.pt abae6464...; frozen
   baseline 744b30b8... — all retry bindings intact.
+
+## RETRY0300 ACTIVE LAUNCH (owner03:00, S4, baseline-preserving)
+- First dispatch (root candB_pilot_run_RETRY0300_20261031, trainer74312) refused
+  in <60s at lean env identity (launcher kept FUTURE_WORKERS=1; S4 binds 2) —
+  AFTER authority/S4-stack/parent/identity/prepare_base all passed. Retained.
+- v5 runtime + corrected launcher (FUTURE_WORKERS=2/VJP_SLOTS=2); CPU PASS
+  17/17 again (`pilot_RETRY_CPU_RESULT_1793391019.json`).
+- **04:11:21 +08** supervisor **75907/start877105928**, trainer **75912**;
+  admission free48510MiB (peer-free, >=46000). Root
+  `/root/autodl-tmp/c4/candB_pilot_run_RETRY0300_v2_20261031`, output
+  `pilot_EXPLORATORY-LEAN_RETRY0300`. Trainer passed env/authority/identity and
+  is initializing (corpus load observed). Stale local observer1456 retired
+  cooperatively via own `pilot_wmfast_WATCH_STOP` (its chain died at update1).
+- Update1 timing/first receipts PENDING; R4 stop at phase update10 unchanged.
