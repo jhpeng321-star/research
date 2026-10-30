@@ -28,6 +28,8 @@ def main():
     names = [name for name in names if not BAD.search(name)
              and not name.startswith(('tools/setupaudit/evidence/',))]
     manifest = {}
+    blobs = subprocess.Popen(['git', 'cat-file', '--batch'], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
     with tarfile.open(a.out, 'x:gz') as archive:
         def add(name, data):
             info = tarfile.TarInfo(name)
@@ -35,11 +37,21 @@ def main():
             info.mode = 0o755 if name.endswith('.sh') else 0o644
             archive.addfile(info, io.BytesIO(data))
         for name in names:
-            data = subprocess.check_output(['git', 'show', f'{commit}:{name}'])
+            blobs.stdin.write(f'{commit}:{name}\n'.encode())
+            blobs.stdin.flush()
+            header = blobs.stdout.readline().split()
+            if len(header) != 3 or header[1] != b'blob':
+                raise ValueError('runtime source is not a Git blob: '+name)
+            data = blobs.stdout.read(int(header[2]))
+            if blobs.stdout.read(1) != b'\n':
+                raise ValueError('Git blob stream corrupted')
             manifest[name] = hashlib.sha256(data).hexdigest()
             add(name, data)
         add('SOURCE.json', json.dumps(dict(commit=commit)).encode())
         add('SOURCE_MANIFEST.json', json.dumps(manifest, sort_keys=True, indent=1).encode())
+    blobs.stdin.close()
+    if blobs.wait() != 0:
+        raise ValueError('Git source stream failed')
     print(json.dumps(dict(commit=commit, files=len(manifest), archive=str(a.out))))
 
 
