@@ -8,7 +8,8 @@ import time
 def remote(source, timeout=180):
     for attempt in range(3):
         result = subprocess.run(
-            ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', 'gpuA',
+            ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20',
+             '-o', 'ServerAliveInterval=30', '-o', 'ServerAliveCountMax=6', 'gpuA',
              '/root/miniconda3/bin/python -B -'], input=source, text=True,
             encoding='utf-8', capture_output=True, timeout=timeout)
         if result.returncode != 255 or attempt == 2:

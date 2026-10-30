@@ -1,0 +1,23 @@
+{
+ "time": 1793370647.2794764,
+ "owner_addendum": "2026-10-30 22:30",
+ "reason": "validation complete; stop excluded calibration/PANEL120; retain rows",
+ "stopped": [
+  {
+   "pid": 938486,
+   "start_ticks": "872967100",
+   "cmd": "/root/miniconda3/bin/python -B -c import json,os,pathlib,subprocess,sys,time\np=pathlib.Path('/root/autodl-tmp/c4/wmrequal20261030')\nfor panel in ('validation','calibration','panel120'):\n argv=[sys.executable,'-B',str(p/'tools/wmrequal/score_fast.py'),'--panel',panel]\n with (p/('resume_'+panel+'.log')).open('x') as log:\n  child=subprocess.Popen(argv,cwd=p,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)\n  r=dict(pid=child.pid,start_ticks=pathlib.Path('/proc/'+str(child.pid)+'/stat').read_text().rsplit(')',1)[1].split()[19],argv=argv,time=time.time())\n  with (p/'DENSE_RESUME_CHILDREN.jsonl').open('a') as f:f.write(json.dumps(r)+chr(10))\n  try:code=child.wait(timeout=18000)\n  except subprocess.TimeoutExpired:\n   child.terminate();child.wait(timeout=60);code=124\n if code:\n  (p/'DENSE_RESUME_ERROR.json').write_text(json.dumps(dict(panel=panel,code=code,pid=child.pid)))\n  raise SystemExit(code)\n(p/'DENSE_RESUME_DONE.json').write_text(json.dumps(dict(pid=os.getpid(),time=time.time())))\n "
+  },
+  {
+   "pid": 975471,
+   "start_ticks": "874380739",
+   "cmd": "/root/miniconda3/bin/python -B /root/autodl-tmp/c4/wmrequal20261030/tools/wmrequal/score_fast.py --panel calibration "
+  }
+ ],
+ "completed_batches": {
+  "validation": 36,
+  "pairs300": 0,
+  "calibration": 8,
+  "panel120": 0
+ }
+}

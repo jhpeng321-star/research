@@ -28,3 +28,11 @@ Scoring only: no optimizer, training, SUMO or push. gpuA only, fraction <= .90.
 Forbidden paths/seeds follow the owner prompt. Remote code is staged only in
 owned /root/autodl-tmp/c4/wmrequal20261030; record child PID/start token.
 Commits after setup, scoring, decomposition, final <=90-line WMREQUAL report.
+
+## Owner 22:30 cutoff / fresh-session recovery
+- Validation dense K8 complete (36 batches); pairs300 not launched because all
+  144 real rows lack exact per-entrance initial backlog. Total backlog is exact.
+- `OWNER_2230_STOP.json` records parent 938486 and calibration child 975471
+  stopped by matching PID/start token; eight completed calibration batches kept.
+- Calibration/PANEL120 excluded from final aggregation; gpuA released. Do not
+  relaunch the old three-panel chain or its completion watcher.
