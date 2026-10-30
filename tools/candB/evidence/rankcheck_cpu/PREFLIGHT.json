@@ -1,0 +1,11 @@
+{
+ "time_unix": 1793357436.6818652,
+ "nvidia_smi": "Fri Oct 30 18:50:36 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 4090 D      On  |   00000000:5B:00.0 Off |                  Off |\n|  0%   60C    P0            239W /  425W |   34661MiB /  49140MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A          938487      C   /root/miniconda3/bin/python           25866MiB |\n|    0   N/A  N/A          953251      C   ...b967_20261030/venv/bin/python       8780MiB |\n+-----------------------------------------------------------------------------------------+\n",
+ "source": {
+  "commit": "32bd0f90954b8e11e42f583661cabb207bd0d98c"
+ },
+ "launcher_sha256": "d447ff1a1cbcf21e7abf395469b16c3527aaa7a4c93b8dedfe8927c846223b05",
+ "mappo": "/root/autodl-tmp/c4/wmspeed20261028/assets/controllers/mappo.pt",
+ "mappo_sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564",
+ "speed_sha256": "69e414e53e7f520bbd112ff292aa207d3da6388d73c3ac91e894079dfe40a543"
+}
