@@ -71,7 +71,7 @@ def test_bridge_ctrl0_uses_exact_zero_residual_law(monkeypatch):
     from wms.control import execution
     monkeypatch.setenv('C4_EXECUTION_PARITY', '2')
     calls = []
-    def executed(state, residual, native, *args):
+    def executed(state, residual, native, *args, **kwargs):
         calls.append(residual.clone())
         return 2. + residual
     monkeypatch.setattr(execution, 'executed_residual', executed)

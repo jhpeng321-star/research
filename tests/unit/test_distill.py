@@ -16,6 +16,10 @@ from wms.model.wms import WmSModel
 def setup(monkeypatch, tmp_path):
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     monkeypatch.setenv("C4_ALLOWED_ROOTS", str(tmp_path))
+    # configure_execution is a CLI helper; restore its process-global bindings
+    # after this fixture so the union suite still tests default-OFF execution.
+    for name in ("C4_EXECUTION_PARITY", "C4_SUMO_LEADER_RULE", "C4_EXECUTION_DRIVER"):
+        monkeypatch.setenv(name, __import__('os').environ.get(name, ""))
     runtime.configure_execution("configs/execparity_cav_idm_v1.json")
     torch.set_num_threads(1)
     torch.manual_seed(701)

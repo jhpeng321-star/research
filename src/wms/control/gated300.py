@@ -60,10 +60,21 @@ class LongCreditConfig:
 
 
 def objective_contract(trainer):
-    return dict(cost='road_speed_deficit_plus_source_wait', units='veh-s',
+    contract = dict(cost='road_speed_deficit_plus_source_wait', units='veh-s',
                 population='all_present_and_future_requested',
                 reference=trainer.counterfactual.native_cav,
                 futures=trainer.config.future_samples, statistic='paired_accrued_joint_q10')
+    if uses_ctrl0(trainer):
+        contract.update(reference='CTRL0', residual_reference=getattr(
+            trainer.policy, 'residual_reference', 'base'),
+            entrant_learned_mix=trainer.config.entrant_learned_mix)
+    return contract
+
+
+def ctrl0_reference_totals(trainer, imagined, totals, base):
+    """Importable ES worker hook: paired CTRL0, with identical reduction geometry."""
+    indices = reference_index(imagined['variants'])
+    return totals[..., indices]
 
 
 def _objective_matches(trainer, cfg, document, receipt):
@@ -134,6 +145,12 @@ def install(trainer, section, wm_sha256s):
         config.pop('require_objective_match')  # old checkpoint receipts remain bit-exact
     receipt = dict(config=config, wm_sha256s=list(wm_sha256s),
                    world_model_ids=list(trainer.world_model_ids), H_long=0, reason='disabled')
+    # Bind before checking qualification so its reference is the requested law.
+    trainer.gated300 = receipt
+    if cfg.ctrl0_reference:
+        trainer._long_credit_reference = ctrl0_reference_totals
+    elif getattr(trainer, '_long_credit_reference', None) is ctrl0_reference_totals:
+        del trainer._long_credit_reference
     if cfg.enabled:
         if cfg.mode == 'gain_only':
             _install_gain_only(trainer, cfg, wm_sha256s, receipt)
@@ -429,5 +446,7 @@ def checkpoint_restore(trainer, payload):
         receipt = install(trainer, saved['config'], saved['wm_sha256s'])
         # Historical receipts predate optional estimator fields.
         normalized = {**saved, 'config': asdict(LongCreditConfig(**saved['config']))}
+        if not normalized['config']['require_objective_match']:
+            normalized['config'].pop('require_objective_match')
         if receipt != normalized:
             raise ValueError('CCT-1 binding changed on resume')

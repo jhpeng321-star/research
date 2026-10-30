@@ -92,7 +92,8 @@ def policy_feedback(checkpoint, *, device="cpu", native_cav="head",
     from .counterfactual import native_fn
     from .safety import safe_accel
     policy, encoder, rules, _ = load_policy_components(str(checkpoint), device=device)
-    policy.eval(); encoder.eval()
+    policy.eval()
+    encoder.eval()
     def deterministic(obs, signal, **kwargs):
         return policy(obs, signal, deterministic=True, **kwargs)
     deterministic.accel_max = policy.accel_max

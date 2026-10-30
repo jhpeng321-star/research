@@ -4,7 +4,6 @@ from functools import wraps
 import copy
 import json
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import torch

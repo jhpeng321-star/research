@@ -176,8 +176,9 @@ def main():
                 comparisons = {n: dict(current=sha(out / n), stored=sha(ctrl0 / n)) for n in (
                     'cumulative_120.json', 'cumulative_300.json', 'cumulative_600.json',
                     'traj_base.npz', 'deploy/episode/episode.npz')}
-                scientific_sha = lambda v: hashlib.sha256(
-                    json.dumps(v, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                def scientific_sha(v):
+                    return hashlib.sha256(
+                        json.dumps(v, sort_keys=True, allow_nan=False).encode()).hexdigest()
                 current = scientific_sha(m)
                 stored = scientific_sha(ref_result['metrics'])
                 identity = dict(metrics_current_sha256=current, metrics_stored_sha256=stored,

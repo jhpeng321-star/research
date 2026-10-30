@@ -129,6 +129,14 @@ class CavPolicy(nn.Module):
             for module in (self.own_encoder, self.report_encoder, self.attention):
                 module.requires_grad_(trunk)
 
+    def eslong_decode_slope(self, latent: Tensor) -> Tensor:
+        """Local residual-command Jacobian, before the shared physical executor.
+
+        CAPREL changes the reference, not this symmetric tanh decode. Execution
+        saturation is measured separately by ES; it must not inflate sigma.
+        """
+        return min(-self.accel_min, self.accel_max) * (1 - latent.tanh().square())
+
     def init_zero_mean_accel(self) -> None:
         """V6EXPLORE: neutral zero-mean initial acceleration (call on a FRESH actor only).
 
