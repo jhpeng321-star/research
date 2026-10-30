@@ -1,5 +1,5 @@
-# S-RANKCHECK — deadline measurement (incomplete; no launch authority)
-As of 2026-10-30 22:21 +08:00 (live shards; interim); final verified code+evidence SHA `43b6a8f5cbc6fb775b6f46a9774d5c791bfda330`.
+# S-RANKCHECK — FINAL owner-stop measurement (coverage incomplete; no launch authority)
+As of 2026-10-30 22:31 +08:00 (final stopped snapshots); final verified code+evidence SHA `6588b500c36ce52f0e85e9bfb8cde1e369881173`.
 Report-delivery SHA: `git log -1 --format=%H -- docs/paper_results/RANKCHECK.md`.
 Measured sources: `2dcb6af5` (PI/CIRCLES), `3cd6481e` (MAPPO/zero), `f396955a` (MAPPO tails), `82dbd7bc` (PI/native resume), `4d56f2a8` (bounded-MLP resume), `05f7bfba` (retained K8).
 ## Contract and completeness
@@ -18,21 +18,21 @@ Each row uses ALL its completed starts; dJ is paired to that row's actual CTRL0 
 | native | 16/16/K4 | 10863.3 [8164.5,13654.5] | +145.8 [+89.2,+205.3] | 44465.5 [34472.7,54675.8] | +1133.2 [+688.6,+1609.7] |
 | CTRL0 | 16/16/K4 | 10717.5 [8031.7,13498.9] | +0.0 [+0.0,+0.0] | 43332.3 [33443.7,53600.8] | +0.0 [+0.0,+0.0] |
 | MAPPO proxy aecd7d70 | 7/7/K4 | 11727.7 [7651.1,16067.8] | +10.8 [+3.4,+17.8] | 46478.0 [31241.4,62514.8] | -156.6 [-336.0,+18.3] |
-| speed-only MAPPO partial i25 | 6/6/K4 | 10145.0 [6591.5,13607.0] | +14.8 [+6.6,+25.9] | 40583.4 [27330.0,52957.4] | -21.2 [-434.7,+394.4] |
+| speed-only MAPPO partial i25 | 7/7/K4 | 11730.6 [7650.0,16069.3] | +13.6 [+6.3,+23.6] | 46646.4 [31069.0,62801.4] | +11.8 [-368.6,+364.9] |
 | CIRCLES damping | 11/11/K4 | 11037.0 [7863.9,14361.7] | +296.7 [+201.7,+405.6] | 46006.4 [34122.0,58370.8] | +2487.9 [+1590.7,+3429.3] |
 | PI external-U | 16/16/K4 | 10886.4 [8193.3,13656.4] | +169.0 [+117.2,+222.9] | 44365.0 [34502.2,54569.5] | +1032.7 [+600.1,+1499.4] |
 | fresh-zero B | identity: one 300s/K4 start | =CTRL0 | 0 | =CTRL0 | 0 |
-Balanced common-start ranking (6 starts),90s: CTRL0 < MAPPO proxy aecd7d70 < speed-only MAPPO partial i25 < native < PI external-U < CIRCLES damping.
-Balanced common-start ranking,300s: MAPPO proxy aecd7d70 < speed-only MAPPO partial i25 < CTRL0 < PI external-U < native < CIRCLES damping.
-Cross-host CTRL0 reference max absolute future-J300 difference on common starts: 0.293 veh-s; every dJ remains paired within its own process.
+Balanced common-start ranking (7 starts),90s: CTRL0 < MAPPO proxy aecd7d70 < speed-only MAPPO partial i25 < native < PI external-U < CIRCLES damping.
+Balanced common-start ranking,300s: MAPPO proxy aecd7d70 < CTRL0 < speed-only MAPPO partial i25 < PI external-U < native < CIRCLES damping.
+Cross-host CTRL0 reference max absolute future-J300 difference on common starts: 14.828 veh-s; every dJ remains paired within its own process.
 ## Actor objective (loss at scale1; lower is better)
 L90 is TRAIN-resolved dense-prefix suffix/joint-q10 loss (observed caps [10.0, 60.0, 90.0]s); L300 adds registered gain-gated accrued300s credit. These are not physical J.
 | Controller | starts/worlds/K | L90 [95% CI] | dL90 vs CTRL0 | L300 [95% CI] | dL300 vs CTRL0 |
 |---|---|---:|---:|---:|---:|
-| native | 4/4/K4 | -329.0 [-1684.9,1199.5] | -158.1 [-480.2,+61.0] | -329.0 [-1684.9,1199.5] | -158.1 [-480.2,+61.0] |
+| native | 5/5/K4 | -353.0 [-1500.4,959.6] | -366.6 [-848.4,+25.4] | -353.0 [-1500.4,959.6] | -366.6 [-848.4,+25.4] |
 | CTRL0 | 16/16/K4 | -488.1 [-1210.7,194.0] | +0.0 [+0.0,+0.0] | -488.1 [-1210.7,194.0] | +0.0 [+0.0,+0.0] |
 | MAPPO proxy aecd7d70 | 7/7/K4 | -734.2 [-2068.1,400.8] | +28.2 [-0.5,+71.4] | -734.2 [-2068.1,400.8] | +28.2 [-0.5,+71.4] |
-| speed-only MAPPO partial i25 | 6/6/K4 | -897.6 [-2342.3,376.8] | +14.7 [+5.5,+26.0] | -953.2 [-2398.0,321.1] | -41.0 [-156.2,+23.2] |
+| speed-only MAPPO partial i25 | 7/7/K4 | -747.8 [-2079.2,392.6] | +14.6 [+6.5,+25.2] | -795.5 [-2142.6,380.7] | -33.1 [-131.5,+22.7] |
 | CIRCLES damping | 11/11/K4 | -424.9 [-1279.9,279.2] | +292.3 [+114.9,+497.9] | -1104.4 [-2606.0,112.3] | -387.2 [-1728.9,+397.6] |
 | PI external-U | 16/16/K4 | -299.2 [-1033.2,383.1] | +188.8 [+97.8,+283.8] | -299.2 [-1033.2,383.1] | +188.8 [+97.8,+283.8] |
 | fresh-zero B | identity: one 300s/K4 start | =CTRL0 | 0 | =CTRL0 | 0 |
@@ -52,10 +52,11 @@ SETUPAUDIT2 physical all-vehicle/source/mix scoring agrees, but its TRAIN export
 Available proxy dJ300: -156.6 [-336.0,+18.3] veh-s; point direction agrees with historical lane-on MAPPO, not matched speed-only proof. R2 needs upper95 below0.
 Binding rule: `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md:4951-4956`. Point-estimate order/overlapping intervals alone do not establish the alternative.
 ## Execution and verification
-Fresh immutable staging via tools/candB/stage.sh. MAIN21:08: no new gpuA scorers; existing shards finish. Retired only exact owned obsolete21:20 cutoff supervisors. New scoring is gpuR-only,total<=22GB; peers untouched.
+Final closure/identities/raw hashes/GPU snapshots: `tools/candB/evidence/rankcheck_parallel/MAIN2230_STOP_{A,R}.json`; every completed arm retained, partial futures excluded. PI/native-physical/CTRL0 cover16/16; CIRCLES11/16; MAPPOs7/16; native-actor5/16; zero identity1/1.
+MAIN22:30 FINAL STOP executed22:30:56/22:31:27+08:00: exact-owned gpuA967764 and gpuR448004 stopped via pidfd SIGTERM after argv/start-tick checks; both exited. No new scorer, training or SUMO on resume; peers untouched.
 Recovered tail guard had already failed before signalling; historical45000MiB guard was ineffective (gpuA45713MiB at21:08). Repeated prefix/tail starts are exact-array verified and counted once; all attempts retained.
 PI.40/CIRCLES.19 OOM at index11 after11 saved starts. Source82dbd7bc completed PI/native12-15 on gpuR. CPU11 handed off by exact own-incarnation retirement; native CPU attempts retired at26-30min/future with no saved arm.
 Source4d56f2a8 adds default-OFF measurement-only no-grad pair-bias MLP row chunks8 (same features/weights/objective); CPU/CUDA full-attention equivalence2/2 passes at2e-6. Every source/config/WM/start identity remains bound.
-gpuA.16 MAPPO tails exited on allocator OOM after one saved start each; no retry there. Existing MAPPO prefix continues. CPU/CUDA numerical parity is not claimed; every contrast is process-paired.
+gpuA.16 MAPPO tails exited on allocator OOM after one saved start each; no retry there. Final prefix snapshots retain7 starts per MAPPO; native actor5/16. CIRCLES12-15 was never dispatched; CIRCLES11 was unfinished at STOP.
 18 CPU tests pass (3 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.
 Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.

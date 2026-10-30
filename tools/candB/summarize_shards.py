@@ -181,7 +181,7 @@ def cell(stat, worlds, signed=False):
             value+f' [{stat["lo"]:{sign}.1f},{stat["hi"]:{sign}.1f}]')
 
 
-def report(result, final_sha, stamp):
+def report(result, final_sha, stamp, *, final_stop=False):
     summaries = result['per_arm']
     def ranking(metric, *, actor=False):
         data = {k:v for k,v in result['common'].items() if not (actor and k == 'native')}
@@ -272,6 +272,15 @@ def report(result, final_sha, stamp):
             and circles['objective300_loss']['paired_delta']['mean'] < 0):
         position = lines.index('## Existing SUMO evidence and R2')
         lines.insert(position, 'CIRCLES point estimates worsen all-vehicle physical J300 while improving the group-weighted actor loss: these objectives rank it differently. R2 is evaluated on physical J, not actor-loss headroom.')
+    if final_stop:
+        lines[0] = '# S-RANKCHECK — FINAL owner-stop measurement (coverage incomplete; no launch authority)'
+        for i, line in enumerate(lines):
+            if line.startswith('Fresh immutable staging via'):
+                lines[i] = 'MAIN22:30 FINAL STOP executed22:30:56/22:31:27+08:00: exact-owned gpuA967764 and gpuR448004 stopped via pidfd SIGTERM after argv/start-tick checks; both exited. No new scorer, training or SUMO on resume; peers untouched.'
+            elif line.startswith('gpuA.16 MAPPO tails exited'):
+                lines[i] = 'gpuA.16 MAPPO tails exited on allocator OOM after one saved start each; no retry there. Final prefix snapshots retain7 starts per MAPPO; native actor5/16. CIRCLES12-15 was never dispatched; CIRCLES11 was unfinished at STOP.'
+        position = lines.index('## Execution and verification') + 1
+        lines.insert(position, 'Final closure/identities/raw hashes/GPU snapshots: `tools/candB/evidence/rankcheck_parallel/MAIN2230_STOP_{A,R}.json`; every completed arm retained, partial futures excluded. PI/native-physical/CTRL0 cover16/16; CIRCLES11/16; MAPPOs7/16; native-actor5/16; zero identity1/1.')
     assert len(lines) <= 70, len(lines)
     return '\n'.join(lines)+'\n'
 
@@ -283,12 +292,14 @@ def main():
     parser.add_argument('--report', type=Path)
     parser.add_argument('--final-sha')
     parser.add_argument('--stamp', default='2026-10-30 deadline snapshot')
+    parser.add_argument('--final-stop', action='store_true', help='Close the report under MAIN22:30; no scoring')
     args = parser.parse_args()
     result = analyze(safe_path(args.root))
     safe_path(args.out).write_text(json.dumps(result, indent=1)+'\n', encoding='utf-8')
     if args.report:
         assert args.final_sha
-        safe_path(args.report).write_text(report(result, args.final_sha, args.stamp), encoding='utf-8')
+        safe_path(args.report).write_text(report(result, args.final_sha, args.stamp,
+                                                final_stop=args.final_stop), encoding='utf-8')
     print({arm: (s['n_starts'], s['n_worlds'], s['J300']['paired_delta'])
            for arm, s in result['per_arm'].items()})
 
