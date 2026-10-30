@@ -121,3 +121,14 @@
 - Staged overlay hashes and ACK: `pilot_deploy_2240_verified.json`; exact retained
   run-root controller receipt `continue_OWNERSHIP.json`; stop future continuation
   using OWN root `continue_STOP` (does not signal any peer PID).
+- Pre-dispatch overlay strengthened at **2814934d**: **12 CPU PASS**; requires
+  byte-identical retained baseline and exact restored policy/group/critic/Adam
+  states, and refuses any saved config drift beyond receipted entropy annealing.
+  Narrow operational overlay revision receipts retain before/after hashes;
+  original scientific runtime/source/config remain unchanged.
+- 22:54 +08 own trainer985766 still active (CPU time1h36m47s), baseline not yet
+  durable/zero optimizer rows; no numerical training evidence claimed.
+- `python -B -m tools.candB.pilot_watch_2240 --root REMOTE_CHAIN --ledger SHARED_REGISTRATION --spawn`
+  starts an exclusive durable local observer. It samples artifacts every600s,
+  appends each update here and every5 to the ledger, saves full-state/baseline
+  proof, and emits `pilot_update3_ACK.json` only after phase3 is actually observed.
