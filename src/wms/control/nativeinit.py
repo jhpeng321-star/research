@@ -58,6 +58,7 @@ class NativeResidualCommand:
     residual: np.ndarray
     accel_min: float
     accel_max: float
+    residual_reference: str = "base"
     native_residual = True
 
     def __array__(self, *args, **kwargs):
@@ -66,7 +67,8 @@ class NativeResidualCommand:
     def subset(self, mask):
         residual = self.residual.copy()
         residual[0, ~np.asarray(mask, bool)] = 0.0
-        return NativeResidualCommand(residual, self.accel_min, self.accel_max)
+        return NativeResidualCommand(residual, self.accel_min, self.accel_max,
+                                     self.residual_reference)
 
 
 def sumo_native_accel(api, vehicle_id, dt=0.5, *, parity=False):
@@ -201,10 +203,12 @@ def verify_collection_gate(policy):
     if execution_parity_enabled():
         import os
         from .execution import verify_authority, verify_parity
+        reference = policy.get("residual_reference", "base")
         verify_authority(policy.get("execution_authority") or os.environ.get("C4_EXECUTION_AUTHORITY",
-                         str(checkpoint.with_name("execution_authority.json"))), checkpoint)
+                         str(checkpoint.with_name("execution_authority.json"))), checkpoint,
+                         residual_reference=reference)
         verify_parity(policy.get("execution_parity_receipt") or os.environ.get("C4_EXECUTION_PARITY_RECEIPT",
-                      str(checkpoint.with_name("execution_parity.json"))))
+                       str(checkpoint.with_name("execution_parity.json"))), residual_reference=reference)
     receipt = json.loads(checkpoint.with_name("native_gate_result.json").read_text())
     if (receipt.get("checkpoint_sha256") != hashlib.sha256(checkpoint.read_bytes()).hexdigest()
             or receipt.get("panel_sha256") != PANEL_SHA256 or not receipt.get("passed")):

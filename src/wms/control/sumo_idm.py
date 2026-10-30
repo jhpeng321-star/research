@@ -250,8 +250,8 @@ def safe_speed_cap_scalar(speed, leader_speed, bumper_gap, allowed_speed, *,
 
 
 def executed_accel(speed, leader_speed, bumper_gap, allowed_speed, residual,
-                   lo, hi, *, has_leader, lane=None, s_m=None, ramp_gap=None,
-                   params=None, dt=IDM_DT_S):
+                    lo, hi, *, has_leader, lane=None, s_m=None, ramp_gap=None,
+                    params=None, dt=IDM_DT_S, residual_reference="base"):
     """The composed always-commanded executed acceleration (single shared law).
 
     ``issued = clip(base + residual, min(lo, base), max(min(hi, 1.2), base))``
@@ -266,8 +266,13 @@ def executed_accel(speed, leader_speed, bumper_gap, allowed_speed, residual,
     base = base_accel(speed, leader_speed, bumper_gap, allowed_speed,
                       has_leader=has_leader, params=p, dt=dt)
     cap = safe_speed_cap(speed, leader_speed, bumper_gap, allowed_speed,
-                         has_leader=has_leader, lane=lane, s_m=s_m,
-                         ramp_gap=ramp_gap, params=p, dt=dt)
+                          has_leader=has_leader, lane=lane, s_m=s_m,
+                          ramp_gap=ramp_gap, params=p, dt=dt)
+    if residual_reference != "base":
+        from .residual import executed_from_residual
+        return executed_from_residual(
+            {"v_mps": speed, "base_mps2": base, "cap_mps2": cap}, residual,
+            dict(residual_reference=residual_reference, lo=lo, hi=hi, dt=dt))
     upper = torch.maximum(base, torch.full_like(base, min(float(hi), 1.2)))
     lower = torch.minimum(base, torch.full_like(base, float(lo)))
     issued = torch.minimum(torch.maximum(base + residual, lower), upper)
@@ -275,8 +280,8 @@ def executed_accel(speed, leader_speed, bumper_gap, allowed_speed, residual,
 
 
 def executed_accel_scalar(speed, leader_speed, bumper_gap, allowed_speed,
-                          residual, lo, hi, *, has_leader, lane=None, s_m=None,
-                          ramp_gap=None, params=None, dt=IDM_DT_S):
+                           residual, lo, hi, *, has_leader, lane=None, s_m=None,
+                           ramp_gap=None, params=None, dt=IDM_DT_S, residual_reference="base"):
     import math
     import torch
     values = [speed, leader_speed, residual, lo, hi, dt]
@@ -285,5 +290,6 @@ def executed_accel_scalar(speed, leader_speed, bumper_gap, allowed_speed,
     if ramp_gap is not None and not math.isfinite(float(ramp_gap)):
         ramp_gap = None
     return _scalar(executed_accel, speed, leader_speed, bumper_gap, allowed_speed,
-                   residual, lo, hi, has_leader=torch.as_tensor(bool(has_leader)),
-                   lane=lane, s_m=s_m, ramp_gap=ramp_gap, params=params, dt=dt)
+                    residual, lo, hi, has_leader=torch.as_tensor(bool(has_leader)),
+                    lane=lane, s_m=s_m, ramp_gap=ramp_gap, params=params, dt=dt,
+                    residual_reference=residual_reference)

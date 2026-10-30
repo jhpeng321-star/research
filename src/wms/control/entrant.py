@@ -97,6 +97,7 @@ def policy_feedback(checkpoint, *, device="cpu", native_cav="head",
         return policy(obs, signal, deterministic=True, **kwargs)
     deterministic.accel_max = policy.accel_max
     deterministic.residual_on_native = bool(getattr(policy, "residual_on_native", False))
+    deterministic.residual_reference = getattr(policy, "residual_reference", "base")
     return make_cav_controller(
         deterministic, encoder, safe_accel, lane_rules=rules,
         native=native_fn(native_cav, a_max=native_accel_max),

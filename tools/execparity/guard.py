@@ -27,13 +27,15 @@ def main():
     ap.add_argument("--episode", type=Path, action="append", required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--driver", type=Path, required=True)
+    ap.add_argument("--mode", choices=("1", "2"), default="1")
     args = ap.parse_args()
     for path in (args.policy, args.out, args.driver, *args.episode):
         if BAD.search(str(path)) or BAD.search(str(path.resolve())):
             raise ValueError("prohibited path")
-    os.environ["C4_EXECUTION_PARITY"] = "1"
+    os.environ["C4_EXECUTION_PARITY"] = args.mode
     os.environ["C4_EXECUTION_DRIVER"] = str(args.driver.resolve())
     exe, _ = executor(args.policy)
+    reference = getattr(exe.policy, "residual_reference", "base")
     if not exe.residual_on_native:
         raise ValueError("this guard is for the native-residual execution path")
     values, deltas, caps, hashes = [], [], [], {}
@@ -55,17 +57,30 @@ def main():
             st = {k: v.index_select(1, keep) for k, v in st.items()}
             with torch.no_grad():
                 r = torch.as_tensor(exe(st).residual)
-                st[EXEC_CAP_KEY] = inferred_follow_cap(st,None)
-                base = project_native(st,head_native_accel(st))
-                delta = native_relative(st,r,base)-base
-                cap = residual_cap_mask(st,r,base)
+                if args.mode == "2":
+                    from wms.control.alwayscmd import executed, inferred_base, inferred_cap
+                    b, c = inferred_base(st), inferred_cap(st)
+                    base = torch.maximum(torch.minimum(b, c), -st["v_mps"] / .5)
+                    delta = executed(st, r, exe.accel_min, exe.accel_max,
+                                     residual_reference=reference) - base
+                    centre = base if reference == "ctrl0" else b
+                    lower = torch.minimum(centre, torch.full_like(centre, exe.accel_min))
+                    upper = torch.maximum(centre, torch.full_like(centre, min(exe.accel_max, 1.2)))
+                    requested = centre + r
+                    cap = ((requested < lower) | (requested > upper) | (requested > c)
+                           | (requested < -st["v_mps"] / .5))
+                else:
+                    st[EXEC_CAP_KEY] = inferred_follow_cap(st,None)
+                    base = project_native(st,head_native_accel(st))
+                    delta = native_relative(st,r,base)-base
+                    cap = residual_cap_mask(st,r,base)
             mask = (st["is_cav"] & (st["lane"] >= 0)).numpy()
             values.extend(r[mask].tolist())
             deltas.extend(delta[mask].tolist())
             caps.extend(cap[mask].tolist())
     receipt = authority_guard(values, checkpoint_sha256=sha(args.policy),
         recordings_sha256=hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
-        executed_delta=deltas, capped=caps)
+        executed_delta=deltas, capped=caps, residual_reference=reference)
     receipt["recordings"] = hashes
     assert args.out.parent.is_dir()
     args.out.write_text(json.dumps(receipt, indent=2)+"\n")

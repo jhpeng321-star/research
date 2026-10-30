@@ -49,7 +49,7 @@ def log_rows(path):
     return rows
 
 
-def world_rows(job):
+def world_rows(job, *, residual_reference="base"):
     """Map every execution-log row to its tape column and replay the law."""
     tape_path = job / "deploy/episode/episode.npz"
     with np.load(tape_path, allow_pickle=False) as z:
@@ -58,6 +58,12 @@ def world_rows(job):
     vids = tape["vehicle_ids"]
     state_at = states_from_episode(tape)
     rows = log_rows(job / "execution_log.jsonl.gz")
+    if any(r.get("residual_reference", "base") != residual_reference for r in rows):
+        raise ValueError("execution log residual_reference differs from replay law")
+    if residual_reference == "ctrl0":
+        result = json.loads((job / "result.json").read_text(encoding="utf-8"))
+        if result.get("caprel_source_sha256") != caprel_sources():
+            raise ValueError("deployment/replay caprel source hashes differ")
     out = []
     for r in rows:
         t = float(r["t_s"])
@@ -88,7 +94,7 @@ def world_rows(job):
             head = float(head_native_accel(st)[0, local])
             base = float(inferred_base(st, None)[0, local])
             cap = float(inferred_cap(st)[0, local])
-            imag = float(executed(st, residual)[0, local])
+            imag = float(executed(st, residual, residual_reference=residual_reference)[0, local])
         mirror = max(-v0 / .5, min(float(r["issued_mps2"]), cap))
         out.append(dict(t_s=t, k=k, speed=v0, residual=float(r["residual_mps2"]),
                         sumo_base=float(r["base_law_mps2"]), issued=float(r["issued_mps2"]),
@@ -97,10 +103,16 @@ def world_rows(job):
     return out, sha(tape_path)
 
 
+def caprel_sources():
+    return {name: sha(ROOT / "src/wms/control" / name)
+            for name in ("residual.py", "alwayscmd.py", "sumo_idm.py")}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--jobs", type=Path, required=True, help="dir of fetched s*_alwaysx job outputs")
     ap.add_argument("--driver", type=Path, required=True)
+    ap.add_argument("--residual-reference", choices=("base", "ctrl0"), default="base")
     ap.add_argument("--identity", type=Path, required=True,
                     help="fetched canary CTRL0_IDENTITY.json (zero_ctrl0_identity source)")
     ap.add_argument("--out", type=Path, required=True)
@@ -116,7 +128,7 @@ def main():
                               "head_minus_realised", "inferred_minus_sumo_base",
                               "mirror_minus_realised", "residual", "realised")}
     for job in jobs:
-        rows, tape_sha = world_rows(job)
+        rows, tape_sha = world_rows(job, residual_reference=args.residual_reference)
         assert rows, f"no stable rows replayed for {job.name}"
         arr = {k: np.array([r[k] for r in rows]) for k in
                ("imagined", "issued", "realised", "head", "inferred_base",
@@ -180,6 +192,12 @@ def main():
         ],
     }
     identity = json.loads(args.identity.read_text(encoding="utf-8"))
+    if args.residual_reference == "ctrl0":
+        if identity.get("residual_reference") != "ctrl0":
+            raise ValueError("caprel requires a fresh cap-relative zero-identity canary")
+        if identity.get("caprel_source_sha256") != caprel_sources():
+            raise ValueError("caprel identity source binding differs from replay")
+        result["residual_reference"] = "ctrl0"
     result["zero_ctrl0_identity"] = bool(identity.get("bit_identical") is True)
     result["passed"] = bool(result["pass_pooled_executed_rmse_within_head_rmse"]
                             and result["zero_ctrl0_identity"])
@@ -203,6 +221,9 @@ def main():
             "decision": "00:20",
             "report": str(args.out),
         }
+        if args.residual_reference == "ctrl0":
+            receipt["residual_reference"] = "ctrl0"
+            receipt["caprel_source_sha256"] = caprel_sources()
         args.receipt.parent.mkdir(parents=True, exist_ok=True)
         args.receipt.write_text(json.dumps(receipt, indent=2, allow_nan=False) + "\n",
                                 encoding="utf-8")

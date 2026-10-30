@@ -1187,6 +1187,7 @@ class DreamerTrainer:
                 return held_out
             policy_proxy.accel_max = policy_max
             policy_proxy.residual_on_native = bool(getattr(self.policy, "residual_on_native", False))
+            policy_proxy.residual_reference = getattr(self.policy, "residual_reference", "base")
 
             def lane_record(entry):
                 records[-1]["lane_changed"] = entry["lane_changed"].detach()
@@ -2254,7 +2255,10 @@ class DreamerTrainer:
         if getattr(self.policy, "residual_on_native", False):
             payload["residual_on_native"] = True
             from .execution import contract as execution_contract
-            contract = execution_contract()
+            reference = getattr(self.policy, "residual_reference", "base")
+            if reference != "base":
+                payload["residual_reference"] = reference
+            contract = execution_contract(reference)
             if contract is not None:
                 payload["execution_contract"] = contract
         torch.save(payload, path)
@@ -2289,6 +2293,9 @@ class DreamerTrainer:
         payload = torch.load(checked_path(path), map_location=self.device, weights_only=True)
         from .execution import check_contract
         check_contract(payload)
+        if (payload.get("residual_reference", "base") !=
+                getattr(self.policy, "residual_reference", "base") and not new_phase):
+            raise ValueError("residual_reference change requires an explicit new phase")
         if bool(payload.get("residual_on_native", False)) != bool(getattr(self.policy, "residual_on_native", False)):
             raise ValueError("cannot resume across absolute/native-residual action semantics")
         if payload.get("format") not in READABLE_FORMATS:

@@ -79,8 +79,14 @@ class CavPolicy(nn.Module):
 
     def __init__(self, hidden_dim: int = 64, n_heads: int = 4, lane_head: bool = True, *,
                  accel_min: float = ACCEL_MIN_MPS2, accel_max: float = POLICY_ACCEL_MAX_MPS2,
-                 init_zero_accel: bool = False, residual_on_native: bool = False) -> None:
+                  init_zero_accel: bool = False, residual_on_native: bool = False,
+                  residual_reference: str = "base") -> None:
         super().__init__()
+        if residual_reference not in ("base", "ctrl0"):
+            raise ValueError("residual_reference must be 'base' or 'ctrl0'")
+        if residual_reference != "base" and not residual_on_native:
+            raise ValueError("ctrl0 residual_reference requires a residual actor")
+        self.residual_reference = residual_reference
         self.register_buffer("accel_bounds", torch.zeros(2, dtype=torch.float64))
         self.init_zero_accel = bool(init_zero_accel)
         self.set_accel_bounds(accel_min, accel_max)
@@ -463,6 +469,10 @@ class PolicyExecutor:
         # Data-collection exploration (Dreamer loop): extra N(0, sigma) on the commanded accel before safety.
         self.extra_accel_noise = float(extra_accel_noise)
         self.residual_on_native = bool(getattr(policy, "residual_on_native", False))
+        if getattr(policy, "residual_reference", "base") != "base":
+            from .execution import mode
+            if mode() != 2:
+                raise ValueError("ctrl0 residual_reference requires execution mode 2")
         if self.residual_on_native and self.extra_accel_noise:
             raise ValueError("external acceleration noise would break native initialization")
         self.dwell = dwell if dwell is not None else LaneDwell(self.lane_rules.dwell_s, CONTROL_DT_S)
@@ -526,7 +536,8 @@ class PolicyExecutor:
                 # CAVs on junction lanes are deliberately outside obs.cav_mask.
                 # Keep any genuinely nonfinite ACTING output for strict rejection.
                 residual[~obs.cav_mask.cpu().numpy()] = 0.0
-                command = NativeResidualCommand(residual, self.accel_min, self.accel_max)
+                command = NativeResidualCommand(residual, self.accel_min, self.accel_max,
+                    getattr(self.policy, "residual_reference", "base"))
                 # Composition belongs to the physics-tick executor, not this 1s actor.
                 return (command, None) if with_lanes else command
             if self.extra_accel_noise > 0.0 and not self.hold:
@@ -566,7 +577,8 @@ def load_policy_components(path, *, device: str = "cpu"):
     residual = bool(payload.get("residual_on_native", False))
     if any(key.startswith("residual_head.") for key in state) != residual:
         raise ValueError("native-residual checkpoint metadata/weights disagree")
-    policy, encoder = CavPolicy(lane_head=lane_head, residual_on_native=residual), RsuGroupEncoder()
+    policy, encoder = CavPolicy(lane_head=lane_head, residual_on_native=residual,
+        residual_reference=payload.get("residual_reference", "base")), RsuGroupEncoder()
     if payload.get("lane_control") == "native":
         if lane_head:
             raise ValueError("lane_control='native' checkpoint must not carry a lane head")
@@ -601,7 +613,8 @@ def load_policy_fn(path, *, deterministic: bool = True, device: str = "cpu",
     policy, encoder, rules, payload = load_policy_components(path, device=device)
     if policy.residual_on_native:
         from .nativeinit import verify_collection_gate
-        gate_policy = {"checkpoint": str(path)}
+        gate_policy = {"checkpoint": str(path),
+                       "residual_reference": policy.residual_reference}
         if execution_authority is not None:
             gate_policy["execution_authority"] = execution_authority
         if execution_parity_receipt is not None:

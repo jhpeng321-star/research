@@ -416,6 +416,10 @@ class CavSumoEnv:
         residual_parity = residual_command is not None and execution_parity_enabled()
         residuals = None
         if residual_command is not None:
+            if getattr(residual_command, "residual_reference", "base") != "base":
+                from wms.control.execution import mode as execution_mode
+                if execution_mode() != 2:
+                    raise CavEnvError("ctrl0 residual_reference requires execution mode 2")
             if self.mode != "direct" or lanes is not None or fallback != "native":
                 raise CavEnvError("native residual requires direct mode, native fallback and native lanes")
             residuals = self._accel_by_vehicle(residual_command.residual)
@@ -480,7 +484,8 @@ class CavSumoEnv:
                         # acceleration for every designated CAV, zero residual included.
                         from wms.control.alwayscmd import commands as always_commands
                         requested = always_commands(api, {v: a for v, a in residuals.items() if v in live_cavs},
-                                                    residual_command.accel_min, residual_command.accel_max)
+                                                    residual_command.accel_min, residual_command.accel_max,
+                                                    residual_reference=residual_command.residual_reference)
                     else:
                         from wms.control.continuous import require_same_step_backend
                         if any(a != 0. for v,a in residuals.items() if v in live_cavs):
@@ -581,7 +586,8 @@ class CavSumoEnv:
                 if residual_parity:
                     commands = self.ownership.execute_residual(
                         residuals, residual_command.accel_min, residual_command.accel_max,
-                        now_s=now+substep*.5, live_ids=live_now)
+                        now_s=now+substep*.5, live_ids=live_now,
+                        residual_reference=residual_command.residual_reference)
                     if self.recorder is not None:
                         execution_before = {v: float(api.vehicle.getSpeed(v))
                                             for v in live_now if v in residuals}

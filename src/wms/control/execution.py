@@ -29,10 +29,12 @@ def enabled():
     return mode() != 0
 
 
-def contract():
+def contract(residual_reference="base"):
     """Portable checkpoint binding; flag-off payloads retain their original shape."""
     import hashlib
     from pathlib import Path
+    if residual_reference != "base" and (residual_reference != "ctrl0" or mode() != 2):
+        raise ValueError("ctrl0 residual_reference requires execution mode 2")
     if not enabled():
         return None
     driver = os.environ.get("C4_EXECUTION_DRIVER")
@@ -41,19 +43,27 @@ def contract():
     load_learned_driver(driver)
     executor = ("native_relative_same_step/1" if mode() == 1
                 else "always_commanded_ctrl0/1")
-    return {"schema": "execparity_contract/2", "executor": executor,
+    result = {"schema": "execparity_contract/2", "executor": executor,
             "driver_sha256": hashlib.sha256(Path(driver).read_bytes()).hexdigest(),
             "accel_max_mps2": ACCEL_MAX, "decel_mode": "speedMode27 bit2 disabled",
-            "speed_mode": SPEED_MODE, "imagination_soft_safe_accel": False}
+             "speed_mode": SPEED_MODE, "imagination_soft_safe_accel": False}
+    if residual_reference != "base":
+        if residual_reference != "ctrl0" or mode() != 2:
+            raise ValueError("ctrl0 residual_reference requires execution mode 2")
+        result["residual_reference"] = residual_reference
+    return result
 
 
 def check_contract(payload):
     stored = payload.get("execution_contract")
-    if stored is not None and stored != contract():
+    if payload.get("residual_reference", "base") != "base" and stored is None:
+        raise ValueError("cap-relative checkpoint requires its execution contract")
+    if stored is not None and stored != contract(payload.get("residual_reference", "base")):
         raise ValueError("checkpoint execution contract differs from current flags/learned driver")
 
 
-def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX):
+def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX, *,
+                      residual_reference="base"):
     """Dispatch on the execution mode.
 
     Mode 1 (combined): native must be a feasible same-step prediction.
@@ -62,7 +72,9 @@ def executed_residual(state, residual, native, lo=-3., hi=ACCEL_MAX):
     """
     if mode() == 2:
         from .alwayscmd import executed as always_executed
-        return always_executed(state, residual, lo, hi)
+        return always_executed(state, residual, lo, hi, residual_reference=residual_reference)
+    if residual_reference != "base":
+        raise ValueError("ctrl0 residual_reference requires execution mode 2")
     from .continuous import native_relative
     return native_relative(state, residual, native, lo, hi)
 
@@ -166,7 +178,7 @@ def load_learned_driver(path):
 
 
 def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed_delta=None,
-                    capped=None):
+                     capped=None, residual_reference="base"):
     """Fail-closed pre-SUMO receipt for the registered >95% clipping rule.
 
     Combined mode counts partial AND full envelope clipping, plus zero requests;
@@ -196,14 +208,15 @@ def authority_guard(residuals, *, checkpoint_sha256, recordings_sha256, executed
                "capped_or_native_fraction": fraction, "maximum_fraction": CAP_REJECT_FRACTION,
                 "passed": fraction <= CAP_REJECT_FRACTION}
     if executed_delta is not None:
-        receipt["execution_contract"] = contract()
+        receipt["execution_contract"] = (contract() if residual_reference == "base"
+                                         else contract(residual_reference))
         receipt["cap_definition"] = "any_envelope_clipping_or_zero"
         receipt["fully_capped_fraction"] = float(((d == 0.) & (r != 0.)).mean())
         receipt["partially_capped_fraction"] = float((cap & (d != 0.)).mean())
     return receipt
 
 
-def verify_authority(path, checkpoint):
+def verify_authority(path, checkpoint, *, residual_reference="base"):
     """Validate the replay receipt before constructing any deployment environment."""
     import hashlib
     import json
@@ -211,11 +224,12 @@ def verify_authority(path, checkpoint):
     if path is None:
         raise ValueError("execution parity deployment requires --execution-authority replay receipt")
     receipt = json.loads(Path(path).read_text(encoding="utf-8"))
+    expected_contract = contract() if residual_reference == "base" else contract(residual_reference)
     fraction = receipt.get("capped_or_native_fraction", float("nan"))
     hashes = receipt.get("recordings", {})
     if (receipt.get("schema") != "execparity_authority/2" or not receipt.get("passed")
             or receipt.get("cap_definition") != "any_envelope_clipping_or_zero"
-            or receipt.get("execution_contract") != contract()
+            or receipt.get("execution_contract") != expected_contract
             or receipt.get("acting_ticks", 0) <= 0 or not 0. <= fraction <= CAP_REJECT_FRACTION
             or receipt.get("maximum_fraction") != CAP_REJECT_FRACTION
             or receipt.get("checkpoint_sha256") != hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
@@ -225,7 +239,7 @@ def verify_authority(path, checkpoint):
     return receipt
 
 
-def verify_parity(path):
+def verify_parity(path, *, residual_reference="base"):
     """The opt-in deployment cannot bypass a failed recorded-acceleration gate."""
     import hashlib
     import json
@@ -233,6 +247,14 @@ def verify_parity(path):
     if path is None:
         raise ValueError("execution parity requires --execution-parity-receipt")
     receipt = json.loads(Path(path).read_text(encoding="utf-8"))
+    if receipt.get("residual_reference", "base") != residual_reference:
+        raise ValueError("parity receipt residual_reference differs from the deployed law")
+    if residual_reference == "ctrl0":
+        # A historical base-relative receipt cannot qualify a different plant.
+        expected = {name: hashlib.sha256((Path(__file__).parent / name).read_bytes()).hexdigest()
+                    for name in ("residual.py", "alwayscmd.py", "sumo_idm.py")}
+        if receipt.get("caprel_source_sha256") != expected:
+            raise ValueError("missing/stale cap-relative parity source binding")
     driver = os.environ.get("C4_EXECUTION_DRIVER")
     native_rmse = receipt.get("native_arm_head_error", {}).get("rmse", float("nan"))
     errors = receipt.get("error", {})
