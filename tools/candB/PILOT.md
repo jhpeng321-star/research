@@ -21,4 +21,16 @@
 - 19:41 gpuA: new rankcheck jobs965450/965476, free15135MiB; launch waits for >=20500MiB.
 - Serial ES uses the identical ordered `eslong.forward_task` calls in-process,
   avoiding a second CUDA context; coordinator allocator remains preset .40.
-- Final runtime/authority, PID/hashes/timing/peak memory and observed updates: pending.
+- Final staged runtime: gpuA `/root/autodl-tmp/c4/candB_pilot_ready_EXPLORATORY_20261030`,
+  source **9ea62c59bb03e2c8f783f611b5ef7b35d52b0207**, 2,371 committed LF files verified.
+- Final CPU suite **77 PASS** (including row/summary stamping, R4 STOP/pass and patch
+  restoration); Torch2.8.0+cu128 with CUDA hidden. bash syntax/diff checks PASS.
+- Exploratory authority built + independently verified; local `pilot_authority_receipt.json`.
+  Authority SHA256 `5694ca0e4f1e091f5cdeb3ebff40cabb017b7f2548b852ad2e3c957dd65aab5c`;
+  effective config `78a3caec6813c9b8b87996162908a09d7bb3d747f8932d2484d2cd239bbcedd3`.
+- WM2 `b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436`;
+  inference config `f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4`;
+  init checkpoint `560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c`.
+- Planned owned chain root: `/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY_20261030`;
+  own `OWNERSHIP.json`, `dry_OWNERSHIP.json`, `pilot_OWNERSHIP.json` retain PID/start ticks.
+- PID/timing/peak memory and observed updates: pending admission/launch.
