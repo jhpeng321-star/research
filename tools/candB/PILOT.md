@@ -78,3 +78,12 @@
   CUDA peak, ES acceptance or efficacy number is claimed before a completed update.
 - gpuA/gpuR checks continue at >=600s spacing; snapshots `pilot_observation_*.json`.
   Local observer appended the dry launch ACK to shared REGISTRATION.md.
+
+## Fresh-session recovery / owner 22:30 amendment
+- 22:29:41 +08 observation: supervisor970521 and dry985766 are the same live
+  incarnations; no pilot dispatched and no optimizer row yet. Preserve all prior work.
+- Owner22:30 supersedes dry2: first finite, durably receipted dry update triggers own
+  STOP and an immediate fresh-zero pilot. The existing supervisor requires dry2;
+  replace only its orchestration, retaining the running trainer and immutable runtime.
+- Existing source/authority/CPU checks above are complete and are not repeated.
+  New orchestration must avoid duplicate dispatch and preserve >=600s GPU sampling.
