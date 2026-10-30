@@ -225,6 +225,11 @@ def report(result, final_sha, stamp):
             proxy['n_worlds'], True)+' veh-s; point direction '+
             ('agrees with' if proxy['J300']['paired_delta']['mean'] < 0 else 'opposes')+
             ' historical lane-on MAPPO, not matched speed-only proof. R2 needs upper95 below0.')
+    circles = summaries.get('CIRCLES')
+    if (circles and circles['J300']['paired_delta']['mean'] > 0
+            and circles['objective300_loss']['paired_delta']['mean'] < 0):
+        position = lines.index('## Existing SUMO evidence and R2')
+        lines.insert(position, 'CIRCLES point estimates worsen all-CAV physical J300 while improving the group-weighted actor loss: these objectives rank it differently. R2 is evaluated on physical J, not actor-loss headroom.')
     assert len(lines) <= 70, len(lines)
     return '\n'.join(lines)+'\n'
 
