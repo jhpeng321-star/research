@@ -24,6 +24,10 @@ The numerical R2 outcome is separately `ranking_passed`; no authority is generat
 CUDA measurements enforce `--gpu-memory-fraction .40` (maximum); no worker pool is
 started by rankcheck. `objective90_loss` is the resolved dense-prefix actor loss
 (low-share caps retained), `objective300_loss` the exact dense+gain-gated long loss.
+If an old checkpoint binds CRLF driver bytes, measurement-only
+`--current-policy-driver ORIGINAL` verifies exact CRLF-to-LF equality, loads under
+the original checkpoint contract, then restores the staged LF execution driver.
+Both driver hashes and this normalization are retained in the measurement receipt.
 
 From the immutable runtime root (Linux; CPU works; no SUMO):
 ```sh

@@ -75,6 +75,21 @@ def test_measurement_uses_requested_loss_but_cannot_authorize_training(tmp_path,
         rank.install_measurement(trainer, section)
 
 
+def test_checkpoint_driver_normalization_does_not_allow_parameter_drift(tmp_path, monkeypatch):
+    monkeypatch.setenv('C4_ALLOWED_ROOTS', str(tmp_path))
+    current, original = tmp_path/'driver.json', tmp_path/'original.json'
+    current.write_bytes(b'{\n"parameter": 1\n}\n')
+    original.write_bytes(current.read_bytes().replace(b'\n', b'\r\n'))
+    monkeypatch.setenv('C4_EXECUTION_DRIVER', str(current))
+    monkeypatch.setattr(rank, 'load_policy_components', lambda *a, **k:
+        rank.os.environ['C4_EXECUTION_DRIVER'])
+    assert rank.load_initial_components(current, 'cpu', original) == str(original)
+    assert rank.os.environ['C4_EXECUTION_DRIVER'] == str(current)
+    original.write_bytes(b'{\r\n"parameter": 2\r\n}\r\n')
+    with pytest.raises(ValueError, match='beyond CRLF'):
+        rank.load_initial_components(current, 'cpu', original)
+
+
 @pytest.mark.parametrize('arm', rank.ARMS[:5])
 def test_native_lane_comparators_use_live_bridge_and_exact_ctrl0(arm, monkeypatch):
     from wms.control.policy14 import SmokeSampler

@@ -10,6 +10,7 @@ import copy
 from dataclasses import asdict
 import hashlib
 import json
+import os
 
 import numpy as np
 import torch
@@ -173,9 +174,24 @@ def install_measurement(trainer, section):
     return receipt
 
 
+def load_initial_components(policy_path, device, checkpoint_driver=None):
+    """Verify historical CRLF bytes at load; retain the staged LF driver for execution."""
+    if checkpoint_driver is None:
+        return load_policy_components(safe_path(policy_path), device=device)
+    current = os.environ['C4_EXECUTION_DRIVER']
+    old = safe_path(checkpoint_driver)
+    if old.read_bytes().replace(b'\r\n', b'\n') != safe_path(current).read_bytes():
+        raise ValueError('checkpoint driver differs beyond CRLF normalization')
+    try:
+        os.environ['C4_EXECUTION_DRIVER'] = str(old)
+        return load_policy_components(safe_path(policy_path), device=device)
+    finally:
+        os.environ['C4_EXECUTION_DRIVER'] = current
+
+
 def make_trainer(raw, model, policy_path, starts, *, device, cct2, horizon_gate,
-                 measure_only=False):
-    policy, encoder, _, _ = load_policy_components(safe_path(policy_path), device=device)
+                 measure_only=False, checkpoint_driver=None):
+    policy, encoder, _, _ = load_initial_components(policy_path, device, checkpoint_driver)
     if not policy.residual_on_native:
         raise ValueError('current policy must be a native-residual checkpoint')
     policy.residual_reference = raw['policy']['residual_reference']
@@ -268,12 +284,15 @@ def main(argv=None):
     p.add_argument('--measure-only', action='store_true',
                    help='score the requested objective without launch authority; receipt cannot launch')
     p.add_argument('--mappo-speed', help='additional partially trained speed-only exported actor')
+    p.add_argument('--current-policy-driver', help='original checkpoint-bound driver; CRLF-only migration')
     p.add_argument('--gpu-memory-fraction', type=float, default=.40)
     p.add_argument('--n-starts', type=int, default=16)
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
+    if a.current_policy_driver and not a.measure_only:
+        p.error('--current-policy-driver is only available for unlaunchable measurements')
     if not 0 < a.gpu_memory_fraction <= .40:
         p.error('ranking GPU memory fraction must be in (0, .40]')
     paths = [safe_path(v) for k, v in vars(a).items() if isinstance(v, str)
@@ -316,7 +335,7 @@ def main(argv=None):
     starts, _ = load_training_starts(raw, model, 965140)
     trainer = make_trainer(raw, model, a.current_policy, starts, device=a.device,
                            cct2=a.cct2, horizon_gate=a.horizon_gate,
-                           measure_only=a.measure_only)
+                           measure_only=a.measure_only, checkpoint_driver=a.current_policy_driver)
     payload = torch.load(safe_path(a.current_policy), map_location='cpu', weights_only=False)
     trainer.update_count = int(payload['update_count'])
     trainer.coop_anchor = payload.get('coopw', {}).get('anchor', 0)
@@ -367,6 +386,10 @@ def main(argv=None):
     if speed is not None:
         doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
             iteration=speed_payload.get('iteration'), partially_trained=True)
+    if a.current_policy_driver:
+        doc['initialization_driver'] = dict(path=a.current_policy_driver,
+            sha256=sha256(a.current_policy_driver), normalization='CRLF to LF, byte-identical otherwise',
+            execution_sha256=sha256(os.environ['C4_EXECUTION_DRIVER']))
     # Preserve full-horizon per-future physical J before prefix truncation.
     original_prefix = gated300.prefix
     original_rollout = model.rollout
