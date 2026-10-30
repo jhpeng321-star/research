@@ -48,11 +48,38 @@ def make_trainer(monkeypatch, *, exits, memory=True):
 
 
 @pytest.mark.parametrize('memory', [False, True])
-def test_imagine_execution_cap_survives_last_cav_exit(monkeypatch, memory):
+@pytest.mark.parametrize('reenter', [False, True])
+def test_imagine_execution_cap_survives_last_cav_exit(monkeypatch, memory, reenter):
     trainer = make_trainer(monkeypatch, exits=True, memory=memory)
     model = trainer.world_models[0]
     seen = []
     original = model._apply_cav_overrides
+
+    if reenter:
+        class Entrants:
+            def __init__(self, tick):
+                self.tick = tick
+
+            def insert(self, state):
+                new = torch.zeros_like(state['present'])
+                if self.tick == 3:
+                    new[:, 0] = True
+                    state['present'][:, 0] = True
+                    state['is_cav'][:, 0] = True
+                    state['s_m'][:, 0] = 90.
+                    state['v_mps'][:, 0] = 8.
+                    state['lane'][:, 0] = 1
+                self.tick += 1
+                return new
+
+        # A fresh process is needed on each full-forward/replay rollout.
+        original_rollout = model.rollout
+
+        def rollout(*args, k0=0, history=None, **kwargs):
+            return original_rollout(*args, k0=k0, history=history,
+                                    **kwargs, entries=Entrants(k0))
+
+        monkeypatch.setattr(model, 'rollout', rollout)
 
     def observe(*args, **kwargs):
         cav = args[2]
@@ -69,6 +96,34 @@ def test_imagine_execution_cap_survives_last_cav_exit(monkeypatch, memory):
         assert any(not grad and not cav for grad, cav, _ in seen)
         assert any(grad and not cav for grad, cav, _ in seen)
     assert model.cav_exec_cap == 'off'  # trainer restores the member switch
+    assert all(p.grad is None or torch.isfinite(p.grad).all() for p in trainer.actor_parameters)
+
+
+@pytest.mark.parametrize('entrant_only', [False, True])
+def test_initial_empty_and_entrant_only_cap_is_real(monkeypatch, entrant_only):
+    from wms.model.cav import EXEC_CAP_KEY
+    trainer = make_trainer(monkeypatch, exits=False, memory=False)
+    state = trainer.start_states.batch.state
+    state['entrant'] = state['is_cav'].clone() if entrant_only else torch.zeros_like(state['is_cav'])
+    if not entrant_only:
+        state['is_cav'].zero_()
+    model = trainer.world_models[0]
+    model.cav_exec_cap = 'idm'
+    seen = []
+
+    def controller(current):
+        cap = current[EXEC_CAP_KEY]
+        params = current['inferred_driver_parameters']
+        from wms.model.driver_encoder import PARAMETER_NAMES
+        from wms.control.execution import inferred_follow_cap
+        expected = inferred_follow_cap(current, {name: params[..., i]
+                                      for i, name in enumerate(PARAMETER_NAMES)})
+        assert torch.equal(cap, expected)
+        seen.append(True)
+        return model.hold_teacher(current)
+
+    model.rollout(state, n_steps=2, cav_controller=controller)
+    assert len(seen) == 2
 
 
 def test_nonempty_cav_forward_and_actor_gradients_bitwise_legacy(monkeypatch):

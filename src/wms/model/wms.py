@@ -1824,8 +1824,12 @@ class WmSModel(nn.Module):
         direct = (torch.zeros_like(cav)
                   if action_id is None or not self.apply_direct_commands else
                   (action_id == DIRECT_ID) & cav)
+        # The callback runs on empty-CAV ticks too (lifecycle/entry bookkeeping).
+        # Its vectorized execution law still needs the real per-slot cap there;
+        # align cap availability with that callback contract, not CAV presence.
         exec_cap = (self._exec_cap(out, state, driver_params)
-                    if cav.any() and getattr(self, "cav_exec_cap", "off") != "off" else None)
+                    if (cav.any() or cav_controller is not None)
+                    and getattr(self, "cav_exec_cap", "off") != "off" else None)
         if direct.any():
             direct, next_s, next_v = self._apply_direct_commands(
                 out, direct, s, v, next_s, next_v, action_command, exec_cap=exec_cap)
