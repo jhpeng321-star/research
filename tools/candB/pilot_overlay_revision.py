@@ -11,19 +11,21 @@ def main():
     parser.add_argument('--runtime', required=True)
     parser.add_argument('--root', required=True)
     parser.add_argument('--revision', required=True)
+    parser.add_argument('--previous', default='continue_OVERLAY.json')
+    parser.add_argument('--name', default='pilot_continue.py', choices=('pilot_continue.py', 'pilot_recipe.py'))
     args = parser.parse_args()
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-    name = 'pilot_continue.py'
+    name = args.name
     source = subprocess.check_output(['git', 'show', commit+':tools/candB/'+name]).decode()
     digest = hashlib.sha256(source.encode()).hexdigest()
     code = f'''import hashlib,json,os
 from pathlib import Path
 root=Path({args.root!r}); runtime=Path({args.runtime!r})
 assert not (root/'continue_trainer_OWNERSHIP.json').exists(), 'continuation already dispatched'
-prior=json.loads((root/'continue_OVERLAY.json').read_text())
+prior=json.loads((root/{args.previous!r}).read_text())
 path=runtime/'tools/candB'/{name!r}
 old=hashlib.sha256(path.read_bytes()).hexdigest()
-assert old == prior['sha256'][{name!r}], 'not our known operational overlay'
+assert old == (prior['sha256'][{name!r}] if 'sha256' in prior else prior['after_sha256']), 'not our known operational overlay'
 receipt=dict(label='EXPLORATORY',source_commit={commit!r},name={name!r},
     before_sha256=old,after_sha256={digest!r},scientific_source_unchanged=True)
 with (root/{args.revision!r}).open('x') as stream: json.dump(receipt,stream,indent=1)

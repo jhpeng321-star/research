@@ -1,0 +1,16 @@
+{
+ "label": "EXPLORATORY",
+ "cuda_visible_devices": "",
+ "returncode": 0,
+ "sha256": {
+  "pilot_handoff": "31c1c1e1a8431910f9a425dfbb86af0c383488a615653dcddce19746d727bf22",
+  "pilot_recipe": "0685a32f55242855e82a6de9cbd2e1d6fe8c66832b72dd794bd4cc0267e4905a",
+  "pilot_continue": "aa618d051b4b6ee7c662bf4d9e36de6630715bd0965e7f754f992e0e7f8e7585",
+  "pilot_continue_supervise": "31141be995bd3686835036b4f56b4ad6e4904045a539786e2e44fa444174c750",
+  "pilot_handoff_test": "bc5d4c28bd0377c88fe6c3f18f3f5cfd6594c3b548e2dc00391e5bb4d3b7a62a",
+  "pilot_recipe_test": "6c4afab84e3b7c0f72ea2a5f09f7911a52629901f55f328a9ae06002918ba0c5",
+  "pilot_continue_test": "e6efacbf7a2777ff3c9b7085e160301b4e2bbc9b5e0f370173827cf7bddc1b1b"
+ },
+ "stdout": "",
+ "stderr": "test_default_serial_invalid_flag_refuses (tools.candB.pilot_handoff_test.HandoffTest.test_default_serial_invalid_flag_refuses) ... ok\ntest_exclusive_lease (tools.candB.pilot_handoff_test.HandoffTest.test_exclusive_lease) ... ok\ntest_finite_single_update_and_boundary_receipts (tools.candB.pilot_handoff_test.HandoffTest.test_finite_single_update_and_boundary_receipts) ... ok\ntest_partial_row_is_not_receipt (tools.candB.pilot_handoff_test.HandoffTest.test_partial_row_is_not_receipt) ... ok\ntest_zero_peers_and_capacity_required (tools.candB.pilot_handoff_test.HandoffTest.test_zero_peers_and_capacity_required) ... ok\ntest_boundary_latch_budget_and_patch_restoration (tools.candB.pilot_recipe_test.RecipeTest.test_boundary_latch_budget_and_patch_restoration) ... ok\ntest_bound_parent_and_adapter_source (tools.candB.pilot_continue_test.ContinuationTest.test_bound_parent_and_adapter_source) ... ok\ntest_config_allows_only_receipted_entropy_annealing (tools.candB.pilot_continue_test.ContinuationTest.test_config_allows_only_receipted_entropy_annealing) ... ok\ntest_exact_source_refusal (tools.candB.pilot_continue_test.ContinuationTest.test_exact_source_refusal) ... ok\ntest_nested_adam_head_state_comparison_detects_drift (tools.candB.pilot_continue_test.ContinuationTest.test_nested_adam_head_state_comparison_detects_drift) ... ok\ntest_ordinary_resume_not_fresh_phase (tools.candB.pilot_continue_test.ContinuationTest.test_ordinary_resume_not_fresh_phase) ... ok\ntest_real_cli_bootstrap_patch_keeps_update_and_gate (tools.candB.pilot_continue_test.ContinuationTest.test_real_cli_bootstrap_patch_keeps_update_and_gate) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 1.219s\n\nOK\n"
+}

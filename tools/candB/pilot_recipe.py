@@ -63,6 +63,10 @@ def run(authority, output, *, exploratory=False, base_module=None, parallel_init
                 def boundary(trainer, *args, **kwargs):
                     # Latch once, before any work/RNG consumption in this update.
                     if continuation_proof and not (output / 'CONTINUATION_PROOF.json').exists():
+                        baseline_sha = hashlib.sha256((output / 'frozen_scoring_baseline.json').read_bytes()).hexdigest()
+                        if baseline_sha != continuation_proof['parent_sha256']['frozen_scoring_baseline.json']:
+                            raise ValueError('same-phase frozen baseline bytes changed')
+                        continuation_proof['retained_baseline_sha256'] = baseline_sha
                         with (output / 'CONTINUATION_PROOF.json').open('x') as stream:
                             json.dump(continuation_proof, stream, indent=1)
                     state['parallel'] = parallel_initial or parallel_requested(output / 'TWO_FORWARD_WORKERS.json')

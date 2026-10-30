@@ -10,6 +10,25 @@ from tools.candB import pilot_continue
 
 
 class ContinuationTest(unittest.TestCase):
+    def test_nested_adam_head_state_comparison_detects_drift(self):
+        import torch
+        original = dict(state={0: dict(step=torch.tensor(1.), exp_avg=torch.tensor([.2]))})
+        restored = dict(state={0: dict(step=torch.tensor(1.), exp_avg=torch.tensor([.2]))})
+        self.assertTrue(pilot_continue.equal_state(original, restored))
+        restored['state'][0]['exp_avg'][0] = .3
+        self.assertFalse(pilot_continue.equal_state(original, restored))
+
+    def test_config_allows_only_receipted_entropy_annealing(self):
+        from dataclasses import asdict
+        from wms.control.dreamer import DreamerConfig
+        raw = dict(trainer={}, policy14=dict(independent_rescore=True,
+            entropy_floor=.0001, entropy_decay_on_improvement=.9))
+        saved = asdict(DreamerConfig())
+        pilot_continue.verify_saved_config(saved, raw, dict(updates=[]))
+        saved['future_samples'] += 1
+        with self.assertRaisesRegex(ValueError, 'bound preset'):
+            pilot_continue.verify_saved_config(saved, raw, dict(updates=[]))
+
     def test_ordinary_resume_not_fresh_phase(self):
         args = pilot_continue.continuation_args(['--resume', 'old', '--new-phase',
             '--resume-allow', 'trainer.foo', '--seed', '965140', '--max-updates', '150',

@@ -57,6 +57,31 @@ def validate_parent(parent):
     return prior, origin
 
 
+def verify_saved_config(saved, raw, prior):
+    from dataclasses import asdict
+    from wms.control.dreamer import DreamerConfig
+    expected = asdict(DreamerConfig(**raw['trainer']))
+    for row in prior['updates']:
+        if raw['policy14']['independent_rescore'] and row.get('independent_J_decreased'):
+            expected['entropy_weight'] = max(float(raw['policy14']['entropy_floor']),
+                expected['entropy_weight'] * float(raw['policy14']['entropy_decay_on_improvement']))
+    if saved != expected:
+        raise ValueError('saved config differs from bound preset plus receipted entropy annealing')
+
+
+def equal_state(left, right):
+    import torch
+    if isinstance(left, torch.Tensor):
+        return isinstance(right, torch.Tensor) and torch.equal(left.cpu(), right.cpu())
+    if isinstance(left, dict):
+        return isinstance(right, dict) and left.keys() == right.keys() and all(
+            equal_state(value, right[key]) for key, value in left.items())
+    if isinstance(left, (list, tuple)):
+        return type(left) is type(right) and len(left) == len(right) and all(
+            equal_state(a, b) for a, b in zip(left, right))
+    return left == right
+
+
 def prepare_base(parent):
     import torch
     from tools.candB import pilot_cli as original
@@ -89,6 +114,7 @@ def prepare_base(parent):
             from wms.control.gated300 import LongCreditConfig
             # Full resume must restore the exact saved config (including entropy annealing).
             saved = payload['config']
+            verify_saved_config(saved, raw, prior)
             if (asdict(trainer.config) != asdict(DreamerConfig(**saved))
                     or trainer.policy.residual_reference != 'ctrl0'
                     or trainer.gated300['H_long'] != 300
@@ -96,8 +122,15 @@ def prepare_base(parent):
                 raise ValueError('same-phase saved runtime/config/mix identity mismatch')
             from tools.distill.runtime import check_metadata
             check_metadata(trainer.start_states.metadata.values())
+            for key in ('policy', 'group_encoder', 'critic', 'target_critic',
+                        'actor_optimizer', 'critic_optimizer'):
+                if not equal_state(getattr(trainer, key).state_dict(), payload[key]):
+                    raise ValueError('full-resume state changed: ' + key)
+                verify_runtime.restored_state_checks[key] = True
+            verify_runtime.restored_state_checks['update_count'] = trainer.update_count == payload['update_count']
         return doc
 
+    verify_runtime.restored_state_checks = {}
     return module, verify_runtime, prior
 
 
@@ -149,6 +182,7 @@ def run(authority, output, parent, *, exploratory=False):
         parent_sha256={name: pilot_authority.sha256(parent / name) for name in
             ('policy_latest.pt', 'RUN_SUMMARY.json', 'frozen_scoring_baseline.json')},
         overlay_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        restored_state_checks=verify_runtime.restored_state_checks,
         retained='full actor/Adam/RNG/sampler; frozen phase position; original update10 gate')
     with patch.object(pilot_authority, 'verify_runtime', verify_runtime), patch.object(
             cli, 'main', continued_main(cli)):
