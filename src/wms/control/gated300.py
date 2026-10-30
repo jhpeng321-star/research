@@ -31,9 +31,11 @@ class LongCreditConfig:
     cct2_file: str = ''  # CCT-2 verdict authority; required by gain_only.
     w_long: float = 1.0  # Fixed prospectively; never tuned on observed outcomes.
     score_training_horizon: bool = False
+    require_objective_match: bool = False  # opt-in: refuse HDV-only/K1 qualification for team/K8 credit
 
     def __post_init__(self):
-        if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
+        if (type(self.enabled) is not bool or type(self.score_training_horizon) is not bool
+                or type(self.require_objective_match) is not bool):
             raise ValueError('long_credit switches must be boolean')
         if self.mode not in ('cct1', 'gain_only'):
             raise ValueError('long_credit.mode must be cct1 or gain_only')
@@ -41,6 +43,23 @@ class LongCreditConfig:
             raise ValueError('long_credit authority files must be path strings')
         if isinstance(self.w_long, bool) or not math.isfinite(self.w_long) or self.w_long < 0:
             raise ValueError('long_credit.w_long must be finite and nonnegative')
+
+
+def objective_contract(trainer):
+    return dict(cost='road_speed_deficit_plus_source_wait', units='veh-s',
+                population='all_present_and_future_requested',
+                reference=trainer.counterfactual.native_cav,
+                futures=trainer.config.future_samples, statistic='paired_accrued_joint_q10')
+
+
+def _objective_matches(trainer, cfg, document, receipt):
+    if not cfg.require_objective_match:
+        return True
+    expected = objective_contract(trainer)
+    if document.get('objective_contract') != expected:
+        receipt.update(reason='unqualified objective contract', expected_objective_contract=expected)
+        return False
+    return True
 
 
 def _install_gain_only(trainer, cfg, wm_sha256s, receipt):
@@ -61,6 +80,8 @@ def _install_gain_only(trainer, cfg, wm_sha256s, receipt):
             or doc.get('panels') != ['pairs300', 'validation']
             or doc.get('policy_authorized') is not True):
         raise ValueError('gain-only long credit requires this WM\'s pooled CCT-2 verdict authority')
+    if not _objective_matches(trainer, cfg, doc, receipt):
+        return
     hg = doc.get('H_G')
     if type(hg) is not int or hg not in (0, *H_G_HORIZONS):
         raise ValueError('invalid CCT-2 H_G')
@@ -94,7 +115,10 @@ def _install_gain_only(trainer, cfg, wm_sha256s, receipt):
 def install(trainer, section, wm_sha256s):
     """Bind checkpoint bytes, not a friendly WM name or inherited 90s authority."""
     cfg = LongCreditConfig(**section)
-    receipt = dict(config=asdict(cfg), wm_sha256s=list(wm_sha256s),
+    config = asdict(cfg)
+    if not cfg.require_objective_match:
+        config.pop('require_objective_match')  # old checkpoint receipts remain bit-exact
+    receipt = dict(config=config, wm_sha256s=list(wm_sha256s),
                    world_model_ids=list(trainer.world_model_ids), H_long=0, reason='disabled')
     if cfg.enabled:
         if cfg.mode == 'gain_only':
@@ -110,6 +134,9 @@ def install(trainer, section, wm_sha256s):
                         or doc.get('wm_sha256') != wm_sha256s[0]
                         or doc.get('panel') != 'pairs300' or doc.get('policy_authorized') is not True):
                     raise ValueError('long credit requires this WM\'s pairs300 CCT-1 verdict authority')
+                if not _objective_matches(trainer, cfg, doc, receipt):
+                    trainer.gated300 = receipt
+                    return receipt
                 hc = doc.get('H_C')
                 if type(hc) is not int or hc not in (0, *SIGMA):
                     raise ValueError('invalid CCT-1 H_C')

@@ -20,13 +20,26 @@ No other process was signalled. `initial_ctrl0.json` retains that completed row.
 `probe_exact_executor.json` (CPU PID 428327) also aligns the absolute MAPPO bridge
 to candidate A's exact cap and Euler integration; native reference arrays match exactly.
 Full mix-on paired run: GPU PID 428305; started on an idle card, cap .35.
+Completed CTRL0 rows were retained across owned scorer restarts: PID 428305
+stopped after start 0 to enable stepK's exact CUDA-CVaR shortcut; PID 428899
+completed start 1, then stopped to align the comparator's reported acceleration
+round-trip with bridge.py (CPU bitwise-native test added). Final scorer PID 429791
+reuses those two immutable CTRL0 rows. All of these processes were this audit's.
 The raw long-credit receipt reports gates against the learned-native row, not CTRL0.
 Dense values use the actual suffix-time/joint-q10 reduction. All physical J values are veh-s.
 
-CPU verification: 13 targeted mix/sign/credit/dead-zone cases passed (4.35 s),
-then 3 execution-cap/default-OFF bitwise-gradient regressions passed (5.07 s).
+CPU verification: 16 targeted mix/sign/credit/dead-zone/native-comparator/objective-contract
+cases passed (3.78 s), plus 3 execution-cap/default-OFF bitwise-gradient regressions
+passed (5.07 s): 19 distinct CPU cases. No real-data update/optimizer step was run.
 Commands: pytest tests/unit/test_setupaudit.py tests/unit/test_gated300.py
 tests/unit/test_zerostart.py -k 'setupaudit or sign_gate or gain_only_gate or
 executed_acceleration_at_zero or dead_zone_positive or candA_credit_has or
 candA_objective_identity'; and test_keyerr.py::test_nonempty_cav_forward_and_actor_gradients_bitwise_legacy
 plus test_keyerr.py::test_initial_empty_and_entrant_only_cap_is_real.
+
+`observations_groups.json`: exact t0 inputs, entrance queues and sampled group geometry.
+`probe_noisy_mix.json`: training-only additive exploration plumbing, 2 s/K8, CPU PID 429196.
+That short noisy receipt is not used as evidence of 90/300 s actor headroom.
+The optional objective-contract guard refuses the historical t0-HDV-road/K1
+qualification for team+source/K8 long gradients; primary measurements retain the
+original guard-OFF semantics so the objective being audited is not changed.

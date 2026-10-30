@@ -1,0 +1,862 @@
+{
+  "schema": "setupaudit/1",
+  "pid": 429196,
+  "device": "cpu",
+  "gpu_fraction": null,
+  "wm": [
+    {
+      "checkpoint": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+      "config": "/root/autodl-tmp/c4/longmem300/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+      "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+      "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+      "courtesy_state_grad": true,
+      "courtesy_intent": "pivot",
+      "courtesy_off": false,
+      "physics": {
+        "dt_s": 0.5,
+        "open_road": true,
+        "exit_at_road_end": true,
+        "sumo_fidelity": false,
+        "sumo_idm": true,
+        "speed_factor": 1.0,
+        "speed_limit_mps": 31.29,
+        "free_road_gap_m": 250.0,
+        "max_gap_steps": 240,
+        "accel_min_mps2": -9.0,
+        "accel_max_mps2": 3.0,
+        "lane_gap_m": 5.0,
+        "lane_incentive_mps": 0.4,
+        "lane_safe_gap_m": 6.0,
+        "merge_zone_s0_m": 0.0,
+        "merge_zone_s1_m": 75.44,
+        "merge_lane": 2,
+        "merge_target_lane": 1,
+        "mobil_threshold_mps2": 0.1,
+        "b_safe_base_mps2": 4.0,
+        "b_safe_end_mps2": 6.0,
+        "merge_cal": false,
+        "t_lead_base_s": 1.0,
+        "t_lead_end_s": 0.1,
+        "b_accept_base_mps2": 4.0,
+        "b_accept_end_mps2": 6.0,
+        "gap_floor_m": 0.3,
+        "u_yield": 0.35,
+        "yield_lookahead_m": 120.0,
+        "b_yield_max_mps2": 1.75,
+        "yield_min_speed_mps": 2.5,
+        "yield_min_merger_speed_mps": 3.5,
+        "end_obstacle_range_m": 25.0,
+        "lane_rule": "mobil",
+        "lane_gap_rule": "fixed",
+        "gap_s0_lead_m": 1.0,
+        "gap_t_lead_s": 0.2,
+        "gap_b_lead_mps2": 3.0,
+        "gap_s0_follow_m": 0.5,
+        "gap_t_follow_s": 0.6,
+        "gap_b_follow_mps2": 6.0,
+        "gap_overlap_margin_m": 0.5,
+        "gap_anticipation_s": 0.5,
+        "gap_stopped_relax": false,
+        "gap_stopped_speed_mps": 1.0,
+        "gap_stopped_min_m": 0.5,
+        "stop_time_integration": false,
+        "emergency_decel_mps2": null,
+        "emergency_braking": true,
+        "secure_gap_veto": true,
+        "lane_change_secure_gap": true,
+        "emergency_onset": "driver_b",
+        "merge_end_wait": false,
+        "merge_end_wait_distance_m": 25.0,
+        "merge_end_wait_speed_mps": 2.0,
+        "mainline_merge_yield": true,
+        "mainline_merge_yield_distance_m": 60.0,
+        "mainline_merge_yield_decel_mps2": 2.0,
+        "forced_window_mode": "deterministic",
+        "forced_window_min_hazard": 0.02,
+        "mainline_merge_yield_scope": "lane_end",
+        "merge_end_wait_s0_follow_m": null,
+        "merge_end_wait_t_follow_s": null,
+        "merge_impatience": false,
+        "merge_impatience_distance_m": 25.0,
+        "merge_impatience_speed_mps": 1.0,
+        "merge_impatience_hazard_tau_s": 25.0,
+        "merge_impatience_gap_tau_s": 25.0,
+        "merge_impatience_s0_min_m": 0.5,
+        "merge_impatience_t_min_s": 0.1,
+        "lane_learnable": true,
+        "ramp_lane_end_stop": true,
+        "ramp_risk_retain": true,
+        "lane_physical_margin_m": 0.0,
+        "mainline_lane_mode": "courtesy",
+        "mainline_courtesy_zone_m": 300.0,
+        "entry_learned": false
+      }
+    }
+  ],
+  "candidate_sha256": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+  "mappo_sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564",
+  "starts_sha256": "5a71d862b3ea44d113d43ba4ee869e40bd061e50e18be8c8c469d6b14066a7d9",
+  "noisy": true,
+  "learned_mix": true,
+  "matched_native_background": true,
+  "rows": [
+    {
+      "actor": "CTRL0",
+      "start": 0,
+      "metadata": [
+        {
+          "source": "c4_episodes",
+          "world": "w963758m2400p20t300",
+          "arm": "generic_random",
+          "policy": "generic_random",
+          "episode": "w963758m2400p20t300__generic_random",
+          "controller_branch": null,
+          "tick": 1560,
+          "t0_s": 780.0,
+          "pair_key": null,
+          "start_source": "genrand_plain"
+        }
+      ],
+      "slots": 212,
+      "n_rows": 6,
+      "dense_horizon": 2,
+      "dense": {
+        "J": 329.3397216796875,
+        "road": 53.714698791503906,
+        "source": 275.625,
+        "dense_credit": -0.35478150844573975,
+        "objective_loss": 0.35478150844573975,
+        "decomposition": {
+          "B": [
+            -247.06581115722656
+          ],
+          "D_all": [
+            0.0274200439453125
+          ],
+          "D_i": [
+            -0.0001678466796875,
+            -0.0265045166015625,
+            0.0133209228515625
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": -0.0133209228515625,
+              "C_G": 3.0517578125e-05
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            -0.0133209228515625
+          ],
+          "C_G": [
+            3.0517578125e-05
+          ]
+        },
+        "accrued_decomposition": {
+          "B": [
+            -329.3717041015625
+          ],
+          "D_all": [
+            0.032012939453125
+          ],
+          "D_i": [
+            -0.000152587890625,
+            -0.03076171875,
+            0.01568603515625
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": -0.01519775390625,
+              "C_G": 3.0517578125e-05
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            -0.01519775390625
+          ],
+          "C_G": [
+            3.0517578125e-05
+          ]
+        },
+        "coefficients": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          18.799999237060547
+        ],
+        "row_kind": [
+          0,
+          1,
+          2,
+          2,
+          2,
+          3
+        ],
+        "group_members": [
+          [
+            94,
+            89,
+            44
+          ]
+        ],
+        "gain_only_on": [
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        ],
+        "gate_agreement": [
+          [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        ],
+        "gate_median": [
+          [
+            0.033966064453125,
+            0.0,
+            -0.00048828125,
+            -0.027679443359375,
+            0.0157318115234375,
+            -0.0122833251953125
+          ]
+        ],
+        "gate_q10": [
+          0.0223388671875,
+          0.0,
+          -0.000732421875,
+          -0.03657226637005806,
+          0.015484618954360485,
+          -0.02174987830221653
+        ],
+        "long_credit": 0.0,
+        "all_J_futures": [
+          329.498291015625,
+          332.2319030761719,
+          328.364990234375,
+          328.8681335449219,
+          329.1904296875,
+          329.31787109375,
+          328.7325439453125,
+          328.513427734375
+        ],
+        "native_J_futures": [
+          329.53619384765625,
+          332.26483154296875,
+          328.4038391113281,
+          328.90313720703125,
+          329.2110595703125,
+          329.3409423828125,
+          328.7679138183594,
+          328.5457763671875
+        ],
+        "actor_metrics": {
+          "cf_rows": 5,
+          "cf_weights": {
+            "individual": 8.9,
+            "group": 9.9,
+            "coop": 8.9,
+            "team": 0.0,
+            "all": 1.0
+          },
+          "B": -329.3717041015625,
+          "D_all": 0.032012939453125,
+          "D_i": -0.005076090494791667,
+          "D_G": -0.01519775390625,
+          "C_G": 3.0517578125e-05,
+          "M_i": null,
+          "I_i": null,
+          "coop_positive_fraction": 1.0,
+          "n_groups": 1,
+          "n_C_G": 1,
+          "mean_group_size": 3.0,
+          "by_group_size": {
+            "3": {
+              "n": 1,
+              "D_G": -0.01519775390625,
+              "C_G": 3.0517578125e-05,
+              "coop_positive_fraction": 1.0
+            }
+          },
+          "by_penetration": {
+            "unknown": {
+              "n": 1,
+              "D_G": -0.01519775390625,
+              "C_G": 3.0517578125e-05,
+              "coop_positive_fraction": 1.0
+            }
+          },
+          "antiexploit_quantile": 0.1,
+          "antiexploit_futures": 8,
+          "mean_only_gain_fraction": 0.0,
+          "mean_positive_credit_fraction": 0.0,
+          "pessimistic_positive_credit_fraction": 0.0,
+          "mean_paired_credit": -0.25370481610298157,
+          "pessimistic_paired_credit": -0.3865588307380676,
+          "pessimistic_credit": true,
+          "native_command_mse": 0.04021664336323738,
+          "native_command_abs_deviation": 0.15318842232227325,
+          "native_anchor_feature": 0.0002511980419512838,
+          "native_anchor_scale": 0.0,
+          "exploit_ensemble_members": 1,
+          "exploit_epistemic_std": null,
+          "exploit_aleatoric_std": 0.10168549418449402,
+          "exploit_residual_samples": 227,
+          "exploit_residual_rms_mps2": 0.20054087042808533,
+          "exploit_residual_positive_fraction": 0.6475771069526672,
+          "exploit_native_head_calibration_rmse_mps2": null,
+          "exploit_head_calibration_rmse_over_residual_rms": null,
+          "exploit_same_state_head_error_available": false,
+          "native_anchor": false,
+          "native_anchor_penalty": 0.0,
+          "sampled_marginals": 0,
+          "marginal_advantage": null
+        }
+      },
+      "seconds": 11.45280285179615,
+      "future_receipts": [
+        {
+          "seconds": 1.474584847688675,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.3634481877088547,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.3053103163838387,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.2184466570615768,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.2134759426116943,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.2063570022583008,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.1818440780043602,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.1920157000422478,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "action_delta_vs_ctrl0": {
+        "n": 455,
+        "mean": -0.07751406729221344,
+        "q": [
+          -0.43132781982421875,
+          -0.43034660816192627,
+          -0.2872581481933594,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "within_residual_envelope_share": 1.0,
+      "positive_delta_share": 0.0,
+      "requested_action": {
+        "n": 227,
+        "mean": -0.023123664781451225,
+        "q": [
+          -0.4524850845336914,
+          -0.4524850845336914,
+          -0.3311295807361603,
+          0.047871172428131104,
+          0.23408553004264832,
+          0.29176315665245056,
+          0.29176315665245056
+        ]
+      },
+      "bridge_lane_change_share": 0.0,
+      "entrant_cav_tick_share": 0.015384615398943424,
+      "own_nonzero_share": {
+        "v_mps": 1.0,
+        "a_mps2": 0.9911894202232361,
+        "lane_0": 0.4229075014591217,
+        "lane_1": 0.43171805143356323,
+        "lane_2": 0.14537444710731506,
+        "s_to_merge_end_m": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.5770925283432007,
+        "front_present": 0.5770925283432007,
+        "rear_gap_m": 1.0,
+        "rear_dv_mps": 0.8458150029182434,
+        "rear_present": 0.8458150029182434,
+        "in_merge_zone": 0.0
+      },
+      "signal": {
+        "n": 1816,
+        "mean": -0.051427680999040604,
+        "q": [
+          -0.38907086849212646,
+          -0.37314510345458984,
+          -0.2657289505004883,
+          -0.0666765496134758,
+          0.19335581362247467,
+          0.2551274299621582,
+          0.2903069853782654
+        ]
+      }
+    },
+    {
+      "actor": "candidateA",
+      "start": 0,
+      "metadata": [
+        {
+          "source": "c4_episodes",
+          "world": "w963758m2400p20t300",
+          "arm": "generic_random",
+          "policy": "generic_random",
+          "episode": "w963758m2400p20t300__generic_random",
+          "controller_branch": null,
+          "tick": 1560,
+          "t0_s": 780.0,
+          "pair_key": null,
+          "start_source": "genrand_plain"
+        }
+      ],
+      "slots": 212,
+      "n_rows": 6,
+      "dense_horizon": 2,
+      "dense": {
+        "J": 329.3375549316406,
+        "road": 53.712554931640625,
+        "source": 275.625,
+        "dense_credit": -0.33749109506607056,
+        "objective_loss": 0.33749109506607056,
+        "decomposition": {
+          "B": [
+            -247.06581115722656
+          ],
+          "D_all": [
+            0.0292205810546875
+          ],
+          "D_i": [
+            -0.0001678466796875,
+            -0.0261383056640625,
+            0.013702392578125
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": -0.0125579833984375,
+              "C_G": 4.57763671875e-05
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            -0.0125579833984375
+          ],
+          "C_G": [
+            4.57763671875e-05
+          ]
+        },
+        "accrued_decomposition": {
+          "B": [
+            -329.3717041015625
+          ],
+          "D_all": [
+            0.034149169921875
+          ],
+          "D_i": [
+            -0.000152587890625,
+            -0.03033447265625,
+            0.01611328125
+          ],
+          "groups": [
+            {
+              "start": 0,
+              "size": 3,
+              "D_G": -0.01434326171875,
+              "C_G": 3.0517578125e-05
+            }
+          ],
+          "M_i": [],
+          "I_i": [],
+          "D_G": [
+            -0.01434326171875
+          ],
+          "C_G": [
+            3.0517578125e-05
+          ]
+        },
+        "coefficients": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          18.799999237060547
+        ],
+        "row_kind": [
+          0,
+          1,
+          2,
+          2,
+          2,
+          3
+        ],
+        "group_members": [
+          [
+            94,
+            89,
+            44
+          ]
+        ],
+        "gain_only_on": [
+          [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        ],
+        "gate_agreement": [
+          [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        ],
+        "gate_median": [
+          [
+            0.0361328125,
+            0.0,
+            -0.00048828125,
+            -0.02728271484375,
+            0.01617431640625,
+            -0.011474609375
+          ]
+        ],
+        "gate_q10": [
+          0.02462158165872097,
+          0.0,
+          -0.000732421875,
+          -0.036041259765625,
+          0.01591186597943306,
+          -0.02081298828125
+        ],
+        "long_credit": 0.0,
+        "all_J_futures": [
+          329.49627685546875,
+          332.2297058105469,
+          328.36297607421875,
+          328.8659973144531,
+          329.188232421875,
+          329.3155517578125,
+          328.73052978515625,
+          328.51116943359375
+        ],
+        "native_J_futures": [
+          329.53619384765625,
+          332.26483154296875,
+          328.4038391113281,
+          328.90313720703125,
+          329.2110595703125,
+          329.3409423828125,
+          328.7679138183594,
+          328.5457763671875
+        ],
+        "actor_metrics": {
+          "cf_rows": 5,
+          "cf_weights": {
+            "individual": 8.9,
+            "group": 9.9,
+            "coop": 8.9,
+            "team": 0.0,
+            "all": 1.0
+          },
+          "B": -329.3717041015625,
+          "D_all": 0.034149169921875,
+          "D_i": -0.004791259765625,
+          "D_G": -0.01434326171875,
+          "C_G": 3.0517578125e-05,
+          "M_i": null,
+          "I_i": null,
+          "coop_positive_fraction": 1.0,
+          "n_groups": 1,
+          "n_C_G": 1,
+          "mean_group_size": 3.0,
+          "by_group_size": {
+            "3": {
+              "n": 1,
+              "D_G": -0.01434326171875,
+              "C_G": 3.0517578125e-05,
+              "coop_positive_fraction": 1.0
+            }
+          },
+          "by_penetration": {
+            "unknown": {
+              "n": 1,
+              "D_G": -0.01434326171875,
+              "C_G": 3.0517578125e-05,
+              "coop_positive_fraction": 1.0
+            }
+          },
+          "antiexploit_quantile": 0.1,
+          "antiexploit_futures": 8,
+          "mean_only_gain_fraction": 0.0,
+          "mean_positive_credit_fraction": 0.0,
+          "pessimistic_positive_credit_fraction": 0.0,
+          "mean_paired_credit": -0.2352813482284546,
+          "pessimistic_paired_credit": -0.3666625916957855,
+          "pessimistic_credit": true,
+          "native_command_mse": 0.03983856737613678,
+          "native_command_abs_deviation": 0.15422333776950836,
+          "native_anchor_feature": 0.00024550690432079136,
+          "native_anchor_scale": 0.0,
+          "exploit_ensemble_members": 1,
+          "exploit_epistemic_std": null,
+          "exploit_aleatoric_std": 0.10070380568504333,
+          "exploit_residual_samples": 227,
+          "exploit_residual_rms_mps2": 0.19959600269794464,
+          "exploit_residual_positive_fraction": 0.6475771069526672,
+          "exploit_native_head_calibration_rmse_mps2": null,
+          "exploit_head_calibration_rmse_over_residual_rms": null,
+          "exploit_same_state_head_error_available": false,
+          "native_anchor": false,
+          "native_anchor_penalty": 0.0,
+          "sampled_marginals": 0,
+          "marginal_advantage": null
+        }
+      },
+      "seconds": 10.590852946043015,
+      "future_receipts": [
+        {
+          "seconds": 1.2308538407087326,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.1923930943012238,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.1895511448383331,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.1936566680669785,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.181593082845211,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.2060128599405289,
+          "mix_assigned": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "seconds": 1.4652987122535706,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "seconds": 1.2828735411167145,
+          "mix_assigned": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "action_delta_vs_ctrl0": {
+        "n": 455,
+        "mean": -0.07569650560617447,
+        "q": [
+          -0.4260063171386719,
+          -0.4250344932079315,
+          -0.28011322021484375,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "within_residual_envelope_share": 1.0,
+      "positive_delta_share": 0.0,
+      "requested_action": {
+        "n": 227,
+        "mean": -0.018004102632403374,
+        "q": [
+          -0.44719818234443665,
+          -0.44719818234443665,
+          -0.3239873945713043,
+          0.055601269006729126,
+          0.23847119510173798,
+          0.2955251634120941,
+          0.295549213886261
+        ]
+      },
+      "bridge_lane_change_share": 0.0,
+      "entrant_cav_tick_share": 0.015384615398943424,
+      "own_nonzero_share": {
+        "v_mps": 1.0,
+        "a_mps2": 0.9911894202232361,
+        "lane_0": 0.4229075014591217,
+        "lane_1": 0.43171805143356323,
+        "lane_2": 0.14537444710731506,
+        "s_to_merge_end_m": 1.0,
+        "front_gap_m": 1.0,
+        "front_dv_mps": 0.5770925283432007,
+        "front_present": 0.5770925283432007,
+        "rear_gap_m": 1.0,
+        "rear_dv_mps": 0.8458150029182434,
+        "rear_present": 0.8458150029182434,
+        "in_merge_zone": 0.0
+      },
+      "signal": {
+        "n": 1816,
+        "mean": -0.05142584815621376,
+        "q": [
+          -0.3890734612941742,
+          -0.3731575906276703,
+          -0.26571401953697205,
+          -0.0666765496134758,
+          0.19334936141967773,
+          0.2551094591617584,
+          0.29030996561050415
+        ]
+      }
+    }
+  ]
+}

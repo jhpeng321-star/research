@@ -17,3 +17,6 @@ zero_residual_output = false
 
 [long_credit]
 score_training_horizon = true
+# Historical CCT-2 uses t0-HDV road delay/K1, not this team+source/K8 objective.
+# Leave long gradients OFF until a genuinely matching authority is supplied.
+require_objective_match = true

@@ -11,7 +11,7 @@ import torch
 
 def allowed(meta):
     text = str(meta)
-    if re.search(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth", text, re.I):
+    if re.search(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype", text, re.I):
         return False
     seeds = [int(x) for x in re.findall(r"\d{6,}", text)]
     return not any(964000 <= s <= 964199 or 977000 <= s <= 977999 for s in seeds)
@@ -24,6 +24,7 @@ def main():
     p.add_argument("--export")
     a = p.parse_args()
     assert allowed(a.candidate) and allowed(a.config)
+    assert not a.export or allowed(a.export)
     payload = torch.load(a.candidate, map_location="cpu", weights_only=False)
     print("CHECKPOINT", hashlib.sha256(Path(a.candidate).read_bytes()).hexdigest())
     print("KEYS", list(payload))

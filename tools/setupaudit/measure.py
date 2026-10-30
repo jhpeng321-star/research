@@ -44,6 +44,18 @@ def stats(x):
             if x.numel() else {"n": 0})
 
 
+def parity_motion(state, lane, accel):
+    speed = (state['v_mps'] + .5 * accel).clamp_min(0.)
+    # Match bridge.py's reported acceleration too, not just its position/speed.
+    applied = (speed - state['v_mps']) / .5
+    return torch.stack((state['s_m'] + .5 * speed, lane, speed, applied), -1)
+
+
+def native_background_motion(state, lane, native):
+    from wms.control.continuous import project_native
+    return parity_motion(state, lane, project_native(state, native(state)))
+
+
 def credits(trainer, imagined, horizon):
     """Call the actual actor loss, and expose its paired decomposition and gates."""
     weights = trainer.counterfactual.weights(190)
@@ -91,12 +103,14 @@ def main():
     p.add_argument("--starts", default="starts.pt")
     p.add_argument("--out", required=True)
     p.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
-    p.add_argument("--actors", nargs="+", default=["CTRL0", "MAPPO", "candidateA"])
+    p.add_argument("--actors", nargs="+", choices=["CTRL0", "MAPPO", "candidateA"],
+                   default=["CTRL0", "MAPPO", "candidateA"])
     p.add_argument("--n-starts", type=int, default=2)
     p.add_argument("--probe", action="store_true")
     p.add_argument("--noisy", action="store_true")
     p.add_argument("--mix", action="store_true")
     p.add_argument("--legacy-native-bridge", action="store_true")
+    p.add_argument("--reuse", help="retain completed paired rows from an earlier owned scoring job")
     a = p.parse_args()
     from inspect_inputs import allowed
     assert all(allowed(x) for x in (a.wm, a.wm_config, a.mappo, a.candidate, a.starts, a.out))
@@ -119,6 +133,24 @@ def main():
                    wm=receipt, candidate_sha256=digest(a.candidate), mappo_sha256=digest(a.mappo),
                    starts_sha256=digest(a.starts), noisy=a.noisy,
                    learned_mix=a.mix, matched_native_background=not a.legacy_native_bridge, rows=[])
+    if a.reuse:
+        assert allowed(a.reuse)
+        previous = json.loads(Path(a.reuse).read_text())
+        for key in ('candidate_sha256', 'mappo_sha256', 'starts_sha256', 'noisy', 'learned_mix',
+                    'matched_native_background'):
+            # The first CTRL0-only receipt predates the MAPPO-adapter metadata.
+            value = previous.get(key)
+            if (key == 'matched_native_background' and key not in previous
+                    and all(r['actor'] == 'CTRL0' for r in previous['rows'])):
+                value = True
+            assert results[key] == value, ('incompatible reused scoring receipt', key)
+        assert previous['wm'][0]['checkpoint_sha256'] == WM
+        assert previous['wm'][0]['config_sha256'] == receipt[0]['config_sha256']
+        assert all(r['start'] < len(batches) and r['metadata'] == batches[r['start']].metadata
+                   for r in previous['rows'])
+        results['rows'] = previous['rows']
+        results['reused_receipt_sha256'] = digest(a.reuse)
+        results['prior_owned_pids'] = previous.get('prior_owned_pids', []) + [previous['pid']]
     original_rollout = models[0].rollout
     future_receipts = []
 
@@ -137,6 +169,9 @@ def main():
     print("OWN_PID", os.getpid(), "DEVICE", a.device, flush=True)
     for actor in a.actors:
         for bi, original in enumerate(batches):
+            if any(r['actor'] == actor and r['start'] == bi for r in results['rows']):
+                print('REUSE', actor, bi, flush=True)
+                continue
             begin = time.perf_counter()
             torch.manual_seed(965140)
             policy, encoder, rules, _ = load_policy_components(a.candidate, device=a.device)
@@ -150,9 +185,6 @@ def main():
                 encoder = encoder.encoder if isinstance(encoder, GroupSignal) else encoder
                 rules = None
                 policy.residual_additive_exploration = True
-            native_lane = actor == "MAPPO_native_lanes"
-            if native_lane:
-                rules = None
             trainer = Policy14Trainer(models, policy.eval(), GroupSignal(encoder).eval(),
                 ScaledTeamCritic(entry_backlog=True, value_scale=10000.), None,
                 observation_builder=build_observations, reward_fn=authoritative_reward,
@@ -195,9 +227,7 @@ def main():
                             state[WM_MERGE_KEY] = callback_state[WM_MERGE_KEY]
                         applied = torch.maximum(-state['v_mps'] / .5,
                             torch.minimum(command[..., 3], callback_state[EXEC_CAP_KEY]))
-                        applied_v = (state['v_mps'] + .5 * applied).clamp_min(0.)
-                        command = torch.stack((state['s_m'] + .5 * applied_v,
-                                                command[..., 1], applied_v, applied), -1)
+                        command = parity_motion(state, command[..., 1], applied)
                     else:
                         command = callback(state)
                     mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
@@ -206,12 +236,8 @@ def main():
                         # NATIVE background: candidate A executes its non-acting rows
                         # with project_native + Euler, without the absolute bridge's
                         # soft safety/cap. Keep MAPPO's own acting actions and lanes.
-                        from wms.control.continuous import project_native
-                        native_accel = project_native(state, kwargs['native'](state))
-                        native_v = (state['v_mps'] + .5 * native_accel).clamp_min(0.)
-                        native_s = state['s_m'] + .5 * native_v
-                        native_command = torch.stack((native_s, command[..., 1], native_v,
-                                                       native_accel), -1)
+                        native_command = native_background_motion(
+                            state, command[..., 1], kwargs['native'])
                         nonacting = mask & ~kwargs['act_mask']
                         command = torch.where(nonacting[..., None], native_command, command)
                     # Only all-CAV row: actor vs CTRL0 at IDENTICAL geometry, every .5 s.
@@ -252,11 +278,8 @@ def main():
                            slots=batch.state["s_m"].shape[-1], n_rows=variants.n_rows,
                            dense_horizon=dense_h, dense=credits(trainer, imagined, dense_h))
                 if not a.probe:
-                    # Gated300 exposes accrued 300 s rewards as paired differences;
-                    # reconstruct suffix returns only for the raw diagnostic decomposition.
+                    # Gated300 exposes accrued 300 s paired rewards (not suffix averages).
                     ld = imagined["gated300_long_difference"]
-                    c = row_coefficients(variants, trainer.counterfactual.weights(190),
-                                         variants.n_rows, 1, device=ld.device)
                     row["long"] = dict(J=float(imagined["gated300_long_J"][0]),
                         row_J=imagined["gated300_long_J"].tolist(),
                         accrued_decomposition=decompose(ld.mean((0, 1)), variants),

@@ -25,3 +25,12 @@ but no LearnedMix/entrant_driver_sampler reference exists under src/wms at this 
 Do not silently label the actual trainer's prior-entrant path as learned-mix ON.
 Only permitted TRAIN windows, observable pre-t0 histories, and command tapes may be read.
 Forbidden path tokens and seed ranges are checked before loading selected windows.
+
+Confirmed contract discrepancy: the named CCT-2 provenance uses the E3 t0-HDV-only
+road-delay scorer (tools/wmcombined/e3_score.py:139-146), K1. Candidate-A long credit
+uses all requested vehicles, source wait and K8 (gated300.prefix/actor_term).
+At the first mix-on start, J90=15973.92 includes 13165.31 veh-s source wait (82.4%).
+The opt-in require_objective_match guard disables long credit until an authority
+explicitly qualifies that population/cost/K/statistic; existing defaults are unchanged.
+The supplied sigma ratios are descriptive comparisons, not a newly validated
+confidence claim for the larger, source-inclusive objective.

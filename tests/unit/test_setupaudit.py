@@ -150,4 +150,56 @@ def test_mix_signature_is_explicit_and_preset_does_not_change_existing_launch():
     assert existing['long_credit']['score_training_horizon'] is False
     assert optin['trainer']['entrant_learned_mix'] is True
     assert optin['long_credit']['score_training_horizon'] is True
+    assert optin['long_credit']['require_objective_match'] is True
     assert optin['run']['gpu_memory_fraction'] <= .4
+
+
+def test_audit_native_background_matches_candidate_bridge_bitwise(monkeypatch):
+    from tools.setupaudit.measure import native_background_motion
+    from wms.control.bridge import make_cav_controller
+    from wms.control.policy import CavPolicy, RsuGroupEncoder
+    from wms.model.cav import WM_LANE_TARGET_KEY, EXEC_CAP_KEY
+    from tests.unit.test_zerostart import scene
+    monkeypatch.setenv('C4_EXECUTION_PARITY', '2')
+    state = scene()
+    state[WM_LANE_TARGET_KEY] = state['lane'].clone()
+    state[EXEC_CAP_KEY] = torch.full_like(state['v_mps'], .3)
+    def native(st):
+        return torch.full_like(st['v_mps'], .361234567)
+    controller = make_cav_controller(
+        CavPolicy(hidden_dim=8, n_heads=2, lane_head=False, residual_on_native=True),
+        RsuGroupEncoder(hidden_dim=8, n_heads=2), lambda st, a, **kw: a,
+        native=native, native_lane_change=True, native_ramp_merge='wm_law',
+        act_mask=torch.zeros_like(state['present']))
+    with torch.no_grad():
+        expected = controller(state)
+        result = native_background_motion(state, expected[..., 1], native)
+    mask = state['present'] & state['is_cav'] & (state['lane'] >= 0)
+    assert torch.equal(result[mask], expected[mask])
+
+
+def test_objective_guard_is_off_by_default_and_refuses_population_k_mismatch(tmp_path):
+    from tests.unit.test_gated300 import trainer, enable_gain_only, cct2_authority
+    from wms.control.gated300 import objective_contract
+    t = trainer()
+    path = cct2_authority(tmp_path)
+    legacy = enable_gain_only(t, path)
+    assert 'require_objective_match' not in legacy['config']
+    refused = enable_gain_only(t, path, require_objective_match=True)
+    assert refused['H_long'] == 0 and refused['reason'] == 'unqualified objective contract'
+    contract = objective_contract(t)
+    path = cct2_authority(tmp_path, objective_contract={**contract, 'futures': 1})
+    assert enable_gain_only(t, path, require_objective_match=True)['H_long'] == 0
+    path = cct2_authority(tmp_path, objective_contract=contract)
+    assert enable_gain_only(t, path, require_objective_match=True)['H_long'] == 120
+
+
+def test_cct2_builder_never_pools_mismatched_objective_populations():
+    from tools.gated300.cct2 import compute
+    contract = {'population': 'all_present_and_future_requested', 'futures': 8}
+    pairs = dict(role='pairs300', wm_sha256='a' * 64, rows=[], objective_contract=contract)
+    validation = dict(role='validation', wm_sha256='a' * 64, rows=[])
+    with pytest.raises(ValueError, match='objective contract'):
+        compute(pairs, validation)
+    validation['objective_contract'] = contract
+    assert compute(pairs, validation)['objective_contract'] == contract
