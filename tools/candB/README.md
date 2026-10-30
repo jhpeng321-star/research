@@ -37,6 +37,9 @@ batches/variants/RNG plus config/WM/boundary/support bindings without scoring.
 exclusive. Source/mix/config identity is still checked; none of these receipts
 qualifies launch. `--host-controller-sensors` uses exact host sensor copies for
 the published PI/CIRCLES controllers; command equivalence is CPU/CUDA tested.
+`--measurement-bias-rows 8` is a default-OFF, measurement-only no-grad pair-bias
+MLP row split for allocator-limited scoring. Same features/weights/objective;
+CPU/CUDA full-attention equivalence is checked to2e-6; the split is receipt-bound.
 
 From the immutable runtime root (Linux; CPU works; no SUMO):
 ```sh

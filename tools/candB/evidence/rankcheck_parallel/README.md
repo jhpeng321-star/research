@@ -90,3 +90,9 @@
   446386/4199374451. Combined with CPU11 and GPU12-15, this covers the16-start
   native actor plan without duplicating any running native intervention.
   Each rankcheck limits itself to2 Torch threads; CUDA is hidden for CPU shards.
+- At~22:00 the CPU large-start fallback had not finished its first future after
+  >30min, so it cannot deliver an arm by23:00. Default-OFF measurement-only
+  pair-bias row chunks bound the exact existing6->64->heads MLP temporary;
+  same pair features/weights/attention, no-grad only, full attention tolerance2e-6.
+  A new immutable runtime must pass CUDA equivalence before GPU resumption; only
+  exact owned CPU incarnations may be handed off, never existing gpuA scorers.

@@ -227,3 +227,30 @@ def test_host_sensor_frames_preserve_published_controller_commands(controller_id
         assert torch.equal(original, optimized), (controller_id, device, tick)
         state['s_m'], state['v_mps'], state['a_mps2'] = (
             original[..., 0], original[..., 2], original[..., 3])
+
+
+@pytest.mark.parametrize('device', ['cpu', 'cuda'])
+def test_measurement_pair_bias_chunking_preserves_full_attention_and_restores(device):
+    from wms.model.residual_net import HdvConfig, _KinAttention
+    if device == 'cuda' and not torch.cuda.is_available():
+        pytest.skip('CUDA comparison runs on scoring host')
+    torch.manual_seed(965140)
+    cfg = HdvConfig()
+    module = _KinAttention(cfg).to(device).eval()
+    values = torch.randn(2, 37, cfg.d_model, device=device)
+    mask = torch.ones(2, 37, dtype=torch.bool, device=device)
+    geo = dict(s=torch.randn(2, 37, device=device)*50,
+               lane=torch.randint(0, 3, (2, 37), device=device),
+               v=torch.rand(2, 37, device=device)*25)
+    original = module.bias.forward
+    with torch.no_grad():
+        dense = module(values, mask, geo)
+        with rank.measurement_bias_rows(module, 8):
+            chunked = module(values, mask, geo)
+        for expected, actual in zip(dense, chunked):
+            torch.testing.assert_close(actual, expected, rtol=2e-6, atol=2e-6)
+    assert module.bias.forward == original
+    with pytest.raises(ValueError, match='no-grad'):
+        with rank.measurement_bias_rows(module, 8):
+            module(values, mask, geo)
+    assert module.bias.forward == original

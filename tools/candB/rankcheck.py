@@ -277,6 +277,34 @@ def ctrl0_image(image):
 
 
 @contextmanager
+def measurement_bias_rows(model, rows):
+    """Bound no-grad MLP temporaries without changing weights or pair features."""
+    if not rows:
+        yield
+        return
+    from wms.model.residual_net import _KinAttention
+    changed = []
+    try:
+        for module in model.modules():
+            if not isinstance(module, _KinAttention):
+                continue
+            original = module.bias.forward
+            def chunked(features, original=original):
+                if torch.is_grad_enabled():
+                    raise ValueError('measurement pair-bias rows require no-grad scoring')
+                assert features.ndim == 4
+                return torch.cat([original(features[:, begin:begin+rows])
+                                  for begin in range(0, features.shape[1], rows)], dim=1)
+            changed.append((module.bias, original))
+            module.bias.forward = chunked
+        assert changed, 'no registered residual pair-bias modules'
+        yield
+    finally:
+        for module, original in changed:
+            module.forward = original
+
+
+@contextmanager
 def measurement_prefix(count):
     """Deadline diagnostic: first four of the ORIGINAL eight future plans.
 
@@ -383,14 +411,18 @@ def main(argv=None):
     p.add_argument('--input-starts', help='consume hash-bound exported TRAIN batches on another host')
     p.add_argument('--host-controller-sensors', action='store_true',
                    help='measurement-only exact host copies for published PI/CIRCLES sensor frames')
+    p.add_argument('--measurement-bias-rows', type=int, default=0,
+                   help='measurement-only no-grad pair-bias MLP row chunks; default OFF')
     p.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     a = p.parse_args(argv)
     if a.n_starts < 16:
         p.error('at least 16 consecutive TRAIN sampler starts are required')
     if (a.measurement_arms or a.future_prefix != 8 or a.stop_after
             or a.export_starts or a.input_starts or a.host_controller_sensors
-            or a.start_index) and not a.measure_only:
+            or a.start_index or a.measurement_bias_rows) and not a.measure_only:
         p.error('shards and K4 are measurement-only, never launch qualification')
+    if not 0 <= a.measurement_bias_rows <= 128:
+        p.error('measurement-bias-rows must be0 (OFF) or1-128')
     if (a.start_index < 0 or a.start_index >= min(a.n_starts, a.stop_after or a.n_starts)
             or (a.start_index and not a.input_starts)):
         p.error('start-index requires an exported plan and a nonempty bounded range')
@@ -543,6 +575,7 @@ def main(argv=None):
         estimator_note=('first 4 of original K8 CRN plans; reduced-K actor estimator'
                         if a.future_prefix == 4 else 'original K8 estimator'))
     doc['host_controller_sensors'] = a.host_controller_sensors
+    doc['measurement_bias_rows'] = a.measurement_bias_rows
     if speed is not None:
         doc['mappo_speed_partial'] = dict(path=a.mappo_speed, sha256=sha256(a.mappo_speed),
             iteration=speed_payload.get('iteration'), partially_trained=True)
@@ -627,7 +660,8 @@ def main(argv=None):
                     trainer.controller_factory = comparator_factory(
                         arm, model, speed if arm == 'MAPPO_speed_partial' else teacher,
                         host_sensors=a.host_controller_sensors)
-                with torch.no_grad(), measurement_prefix(a.future_prefix):
+                with torch.no_grad(), measurement_prefix(a.future_prefix), measurement_bias_rows(
+                        model, a.measurement_bias_rows):
                     image = trainer.imagine(copy.deepcopy(batch), variants=variants,
                         deterministic=True, future_seed=trainer.update_count,
                         _memory_replay=True)
