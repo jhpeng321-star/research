@@ -1,6 +1,8 @@
 """Opt-in connection from candidate-A imagination to the qualified ERRSRC mix."""
 from __future__ import annotations
 
+import torch
+
 
 def make_sampler(model, initial, kwargs, seed, row_keys):
     from tools.errsrc.inference import LearnedMix
@@ -14,4 +16,9 @@ def make_sampler(model, initial, kwargs, seed, row_keys):
         _, _, params = model.encode_drivers(initial, **{k: kwargs[k] for k in names if k in kwargs})
     if params is None:
         raise ValueError('learned entrant mix needs inferred driver parameters')
-    return LearnedMix(params, observed, seed, row_keys)
+    # WMFIX: entrant CAVs draw from the row's own observed t0 CAV inferred settings
+    # (inert in the legacy slot-order path; the learned admission consumes it).
+    cav_rows = initial['is_cav'].detach().bool() & initial['present'].detach().bool()
+    cav_pools = [torch.stack([params[n][b, cav_rows[b]] for n in params], -1).detach()
+                 for b in range(cav_rows.shape[0])]
+    return LearnedMix(params, observed, seed, row_keys, cav_pools=cav_pools)

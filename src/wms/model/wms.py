@@ -2570,7 +2570,15 @@ class WmSModel(nn.Module):
                 entrant = entrant | newborn
                 current["entrant"] = entrant
                 if entrant_driver_sampler is not None:
-                    fixed_driver_params = entrant_driver_sampler(current, newborn, fixed_driver_params)
+                    recorded = getattr(entries, "last_birth_ordinals", None)
+                    if recorded:
+                        # WMFIX identity contract: the sampler consumes the recorded
+                        # admission ordinals so slot order cannot reshuffle identities.
+                        fixed_driver_params = entrant_driver_sampler(
+                            current, newborn, fixed_driver_params, birth_ordinals=recorded)
+                    else:
+                        fixed_driver_params = entrant_driver_sampler(
+                            current, newborn, fixed_driver_params)
             elif is_cav_seq is not None:
                 current = {**current, "is_cav": is_cav_seq[:, step_i].bool()}
             log["entrant"].append(entrant)

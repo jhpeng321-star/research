@@ -306,6 +306,12 @@ class _Working:
         self.present = host("present")
         self.is_cav = state["is_cav"].detach().bool().cpu().numpy().copy()
         self.inserted: list[tuple[int, int]] = []
+        # WMFIX: (b, slot) -> identity-coupled candidate ordinal of the admission
+        # that placed the vehicle; consumed by ``LearnedMix`` so the settings the
+        # admission tested are the settings the entrant moves with.  Only the
+        # learned-admission path records ordinals (every other path stays
+        # bit-identical to the registered behaviour).
+        self.birth_ordinals: dict[tuple[int, int], int] = {}
 
 
 class _EntryProcessBase:
@@ -325,6 +331,7 @@ class _EntryProcessBase:
         self.pool = None if pool is None else np.asarray(pool, bool)
         self.virgin = None             # never-used padding slots
         self._cav_slots = None         # padding slots that ever held a spawned CAV
+        self.last_birth_ordinals: dict[tuple[int, int], int] = {}
 
     def _pool_row(self, b: int, n_slots: int) -> np.ndarray:
         if self.pool is None:
@@ -943,11 +950,13 @@ class TorchEntryProcessV2(_EntryProcessBase):
         due = [self._emit_due(b) for b in range(b_n)]
         if (not self._FORCE_MATERIALISE and not any(due)
                 and not bool(np.any(self.pending))):
+            self.last_birth_ordinals = {}
             return new_mask
         work = _Working(state)
         for b in range(b_n):
             for e in range(N_ENTRANCES):
                 self._insert_entrance(work, b, e, due[b].count(e))
+        self.last_birth_ordinals = dict(work.birth_ordinals)
         return self._commit(state, work, new_mask)
 
     def _insert_entrance(self, work: _Working, b: int, e: int, n_due: int) -> None:

@@ -123,10 +123,14 @@ def score_batch(model, settings, e3, source, indexes, real_rows, device, steps, 
     kw={k:expand(v) for k,v in plan.items()}
     mix=LearnedMix(kw['driver_params'],inp.observed_hist_mask,140014,row_keys)
     active=torch.tensor(mode_rows,device=device,dtype=torch.bool)
-    def sampler(st,newborn,params):
-        return mix(st,newborn & active[:,None],params)
+    def sampler(st,newborn,params,birth_ordinals=None):
+        return mix(st,newborn & active[:,None],params,birth_ordinals)
     if learned_admission:
         from wms.model.learned_admission import LearnedAdmission
+        # WMFIX: entrant CAVs draw from the native row's observed t0 CAV settings.
+        cav_rows=(inp.initial['is_cav'][0].bool() & inp.initial['present'][0].bool()).cpu()
+        cav_pool=torch.stack([kw['driver_params'][n][0].cpu()[cav_rows] for n in mix.names],-1)
+        mix.cav_pools=[cav_pool.clone() for _ in row_keys]
         inp.entries.cfg = replace(inp.entries.cfg, conserve_queue=True, learned_admission=LearnedAdmission(mix))
     entries=Entries(inp.entries)
     with torch.no_grad(),scoring_rng(140014,device):

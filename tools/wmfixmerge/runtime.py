@@ -93,6 +93,10 @@ class Runtime:
         mix = LearnedMix(kw["driver_params"], inp.observed_hist_mask, 140014, [key] * len(records))
         from wms.model.learned_admission import LearnedAdmission
         if self.learned_admission:
+            # WMFIX: entrant CAVs draw from the native row's observed t0 CAV settings.
+            cav_rows = (inp.initial["is_cav"][0].bool() & inp.initial["present"][0].bool()).cpu()
+            cav_pool = torch.stack([kw["driver_params"][n][0].cpu()[cav_rows] for n in mix.names], -1)
+            mix.cav_pools = [cav_pool.clone() for _ in records]
             inp.entries.cfg = replace(inp.entries.cfg, learned_admission=LearnedAdmission(mix))
         entries = TrackedEntries(inp.entries)
         with scoring_rng(140014, self.device):
