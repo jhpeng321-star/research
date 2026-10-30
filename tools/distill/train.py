@@ -96,7 +96,7 @@ def fit_initial_head(trainer, rows, law):
         targets.append(latent[mask].double().cpu())
     x, y = torch.cat(features), torch.cat(targets)
     if not len(y):
-        raise ValueError("initial teacher rollouts contain no acting CAVs")
+        return None  # retain zero identity until observable teacher CAVs arrive
     x = torch.cat((x, torch.ones(len(x), 1, dtype=x.dtype)), -1)
     fitted = torch.linalg.lstsq(x, y[:, None], driver="gelsd").solution[:, 0]
     head = trainer.policy.residual_head
@@ -109,7 +109,7 @@ def fit_initial_head(trainer, rows, law):
 @torch.no_grad()
 def fit_metrics(trainer, rows, law):
     totals = {name: [0, 0., 0.] for name in ("all", "merge", "ramp", "mainline", "entrants")}
-    brake_total = brake_reproduced = 0.
+    brake_total = brake_reproduced = absolute_total = absolute_reproduced = 0.
     for row in rows:
         _, prediction = executed_loss(trainer, row, law)
         prediction = prediction.cpu()
@@ -125,10 +125,15 @@ def fit_metrics(trainer, rows, law):
         copied = torch.minimum((ctrl0 - prediction).clamp_min(0.), braking)
         brake_total += float(braking[row["mask"]].sum())
         brake_reproduced += float(copied[row["mask"]].sum())
+        absolute = (-row["teacher"]).clamp_min(0.)
+        absolute_total += float(absolute[row["mask"]].sum())
+        absolute_reproduced += float(torch.minimum((-prediction).clamp_min(0.), absolute)[row["mask"]].sum())
     return {"zones": {name: {"cav_ticks": n, "mae": a/n if n else None,
                             "rmse": (s/n)**.5 if n else None} for name, (n, a, s) in totals.items()},
-            "teacher_braking_magnitude_sum": brake_total,
-            "fraction_teacher_braking_reproduced": brake_reproduced/brake_total if brake_total else None}
+            "teacher_relative_braking_magnitude_sum": brake_total,
+            "fraction_teacher_relative_braking_reproduced": brake_reproduced/brake_total if brake_total else None,
+            "teacher_braking_magnitude_sum": absolute_total,
+            "fraction_teacher_braking_reproduced": absolute_reproduced/absolute_total if absolute_total else None}
 
 
 def save_checkpoint(trainer, path, raw, state):
@@ -166,6 +171,9 @@ def main(argv=None):
             min(spec[k] for k in ("horizon_s", "pad_max", "learning_rate", "huber_delta",
                                   "gradient_steps", "replay_frames", "checkpoint_every")) <= 0):
         raise ValueError("invalid distillation settings")
+    if spec["law"] != "current":
+        raise ValueError("cap-relative representation is supported; training/export requires the full "
+                         "S-CAPREL policy14 runtime integration before selecting that law")
     model, teacher, receipts = load_assets(args.wm, args.wm_config, args.mappo, args.device)
     train, val = load_training_starts(raw, model, args.seed)
     trainer = make_trainer(model, train, raw, device=args.device, teacher=teacher)

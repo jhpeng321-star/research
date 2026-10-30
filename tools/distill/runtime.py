@@ -109,34 +109,45 @@ class Feedback:
 
     def native_lane_mask(self, state):
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
-        return torch.zeros_like(mask) if self.drive == "teacher" else mask
+        if self.drive != "teacher":
+            return mask
+        # MAPPO has no issued action for a birth between control decisions.
+        born = state.get("entrant_birth", torch.zeros_like(mask))
+        return (mask & (~self.previous | born) if self.tick % 2 and self.previous is not None
+                else torch.zeros_like(mask))
 
     @torch.no_grad()
     def __call__(self, state):
         from wms.model.cav import WM_LANE_TARGET_KEY, WM_MERGE_KEY
         public = observable_state(state)
-        mask = public["present"].bool() & public["is_cav"].bool() & (public["lane"] >= 0)
+        mask = public["present"].bool() & public["is_cav"].bool()
+        acting = mask & (public["lane"] >= 0)
         decision = self.tick % 2 == 0
         teacher_lane = public["lane"]
         lane_changed = torch.zeros_like(mask)
         if decision:
             action = self.teacher(public, deterministic=True)
-            self.held_teacher = torch.where(mask, action["safe"], 0.)
+            self.held_teacher = torch.where(acting, action["safe"], 0.)
             teacher_lane = torch.where(action["lanes"] >= 0, action["lanes"], teacher_lane)
             lane_changed = action["lane_changed"]
             self.inputs = detach_inputs(student_inputs(public), public["s_m"].device)
             self.held_student = (torch.zeros_like(self.held_teacher) if self.policy is None
                                  else residual(self.policy, self.encoder, self.inputs))
         else:
-            continuing = mask & self.previous
+            born = state.get("entrant_birth", torch.zeros_like(acting))
+            continuing = acting & self.previous & ~born
             self.held_teacher = torch.where(continuing, self.held_teacher, 0.)
             self.held_student = torch.where(continuing, self.held_student, 0.)
-        # A newborn between decisions has no inherited command. It uses CTRL0
-        # until the next decision, and is still counted in every physics-tick mask.
-        ready = mask if decision else mask & self.previous
+        # A newborn between decisions has no inherited command. Student uses
+        # zero residual; MAPPO abstains to its WM-native controller. Both are
+        # recorded, including their unrepresentable controller-ownership change.
+        ready = acting if decision else continuing
         teacher_accel = absolute_executed(public, self.held_teacher)
         ctrl0 = execute(public, torch.zeros_like(self.held_teacher))
-        teacher_accel = torch.where(ready, teacher_accel, ctrl0)
+        native = state.get("merge_pivot_native_accel")
+        if native is None and bool((mask & ~ready).any()):
+            raise ValueError("MAPPO abstention requires a WM-native acceleration prediction")
+        teacher_accel = torch.where(ready, teacher_accel, ctrl0 if native is None else native)
         student_accel = execute(public, self.held_student, self.law)
         if self.record is not None:
             self.record(dict(state=public, inputs=detach_inputs(self.inputs), mask=mask,
@@ -147,6 +158,10 @@ class Feedback:
                 native_lane_available=self.drive != "teacher"))
         if self.drive == "teacher":
             accel, lane = teacher_accel, teacher_lane
+            if bool((mask & ~ready).any()):
+                targets = state.get(WM_LANE_TARGET_KEY, public["lane"])
+                lane = torch.where(mask & ~ready & (public["lane"] != 2), targets, lane)
+                state[WM_MERGE_KEY] = mask & ~ready & (public["lane"] == 2)
         else:
             accel = ctrl0 if self.drive == "ctrl0" else student_accel
             if WM_LANE_TARGET_KEY not in state:
@@ -155,7 +170,7 @@ class Feedback:
             state[WM_MERGE_KEY] = mask & (public["lane"] == 2)
         speed = (public["v_mps"] + .5 * accel).clamp_min(0.)
         position = public["s_m"] + .5 * speed
-        self.previous = mask
+        self.previous = acting
         self.tick += 1
         return torch.stack((position, lane.to(speed), speed, accel), -1)
 

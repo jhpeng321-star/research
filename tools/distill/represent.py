@@ -18,7 +18,7 @@ def summarize(rows):
         if law == "cap_relative" and not caprelative_available():
             result[law] = {"status": "pending_S_CAPREL", "expressible_fraction": None}
             continue
-        count = exact = changed = switching = 0
+        count = exact = changed = expressed_changes = switching = 0
         magnitude = reproduced = 0.
         for row in rows:
             mask = row["mask"]
@@ -26,11 +26,13 @@ def summarize(rows):
             count += int(mask.sum())
             exact += int((mask & fit["expressible"]).sum())
             changed += int((mask & (fit["deviation"] != 0.)).sum())
+            expressed_changes += int((mask & (fit["deviation"] != 0.) & fit["expressible"]).sum())
             switching += int((mask & ~row["ready"]).sum())
             magnitude += float(fit["deviation_magnitude"][mask].sum())
             reproduced += float(fit["reproduced_magnitude"][mask].sum())
         result[law] = dict(status="measured", cav_ticks=count, nonzero_deviation_ticks=changed,
             expressible_fraction=exact/count if count else None,
+            nonzero_deviation_expressible_fraction=expressed_changes/changed if changed else None,
             expressible_deviation_fraction=reproduced/magnitude if magnitude else None,
             absolute_deviation_mps2_sum=magnitude, controller_switch_ticks=switching)
     result["non_residual_components"] = {
