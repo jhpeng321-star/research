@@ -270,6 +270,11 @@
   actual observations, and emits `pilot_lean_update3_ACK.json` only after phase3.
 - Dense/scoringK8 retained; only antithetic perturbed ES first4 CRNs. No shortened
   long horizon (300s), new SUMO, rankcheck edit, peer signal, deletion or push.
+- Durable local observer **42388/creation00:10:44 +08**, exact module independently
+  verified live; previous16760 absent after its own STOP. Observer cannot dispatch
+  trainers; it samples artifacts60s and leaves GPU queries to the600s supervisor.
+  Launch ACK already appended/committedb5e096c8; design/retirement/panel/observer
+  registration receipt `pilot_lean_DESIGN_REGISTERED.json` appended00:13 +08.
 
 ### EXPLORATORY-LEAN launch ACK
 - gpuA owned trainer `{'label': 'EXPLORATORY-LEAN', 'pid': 17859, 'start_ticks': '875679269', 'command': ['bash', 'tools/candB/pilot_lean_launch.sh', '/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN', '--exploratory-owner-20261030'], 'output': '/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN', 'epoch': 1793376578.5352132, 'admission': {'epoch': 1793376578.5335195, 'total_MiB': 49140, 'free_MiB': 38277, 'used_MiB': 10234, 'apps': '16680, 10224'}, 'same_incarnation': True, 'state': 'R', 'cpu_ticks': 6674, 'argv': '/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python -B -u -m tools.candB.pilot_lean --exploratory-owner-20261030 --authority authority_gen/PILOT_EXPLORATORY_LEAN_AUTHORITY.json /root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030/pilot_EXPLORATORY-LEAN '}`; original dry phase retired, sunk8530.66s.

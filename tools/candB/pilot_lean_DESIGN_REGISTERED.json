@@ -1,0 +1,60 @@
+{
+ "utc": "2026-10-30T16:13:04.080968+00:00",
+ "label": "EXPLORATORY-LEAN",
+ "source": "38c7e22f3f9da3d81026833e3ca3429b6267f330",
+ "authority_sha256": "f3fc51795a94927009dc2d865c2a89c47f0d49b982fd890a40545e96868f84ec",
+ "sunk_original_dry_wall_s": 8530.659535884857,
+ "original_dry_updates": 0,
+ "original_frozen_baseline_durable": false,
+ "retired_original_pids": [
+  985766,
+  970521,
+  999762
+ ],
+ "panel_prefix": [
+  {
+   "index": 39780,
+   "world": "w963552m1900p05t300",
+   "tick": 600
+  },
+  {
+   "index": 45082,
+   "world": "w963625m1900p10t300",
+   "tick": 2240
+  },
+  {
+   "index": 35565,
+   "world": "w963495m2400p20t300",
+   "tick": 900
+  },
+  {
+   "index": 64945,
+   "world": "w963904m2400p40t300",
+   "tick": 1700
+  }
+ ],
+ "original_panel_sha256": "3eaa69a170c17302660d12dd4d7fddb4657e43fa334eece17844dd0fa6c0411e",
+ "dense_scoring_futures": 8,
+ "antithetic_ES_future_indices": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "long_horizon_s": 300,
+ "forward_workers": 2,
+ "forward_fraction": 0.28,
+ "rescore_every": 5,
+ "reuse_panel": true,
+ "skip_extra_grad_diagnostics": true,
+ "memory_rule": "measured coordinator+worker caps+contexts+sampled peers+2GiB<=min90% device/45GiB",
+ "observer": {
+  "pid": 42388,
+  "epoch": 1793376644.4025557,
+  "root": "/root/autodl-tmp/c4/candB_pilot_run_EXPLORATORY-LEAN_v3_20261030",
+  "poll_s": 60,
+  "trainer_dispatch": false
+ },
+ "monitoring_through_phase3": "PENDING; ACK only after actual third update",
+ "R4": "original phase10 finite raw dense/300s; dense below frozen zero"
+}
