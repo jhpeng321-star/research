@@ -49,6 +49,7 @@ New head only, Adam lr3e-4; FP32, one paired group/microbatch, full600tick graph
 Start with60s CPU smoke; production60/120/300s stages, up to30/30/60 updates, global wall cap21600s incl. assembly/selection.
 Save step0, every completed update, immutable hourly checkpoints and final; stop at cap with latest completed checkpoint.
 Selection: TRAIN paired-J normalized MAE only; no calibration/validation feedback; predeclare final checkpoint as primary verdict.
+Microbatch is native + one arm, cycle worlds then arm index deterministically; no four-arm graph on24GB.
 Old parameters/buffers compare bitwise after each update and on reload; optimizer parameter names exactly merge_response.*.
 Estimate (not measured): 1group/2rows full300s checkpointed graph ~8–20GB,120–300s/update;120steps~4–10h, cap governs.
 Thus6h yields ~60–120steps; latest usable every update, hourly snapshots meet1–2h request; no promise of120steps.
@@ -67,3 +68,10 @@ no increased blowups and accept.py ACCEPT. Missing cohort/runtime/safety result 
 Bootstrap2000 world draws, seed0, common draws for candidates; no re-tuning on any verdict panel.
 One verdict driver must run A+B+C and emit incomplete/blocker status on missing inputs; no assumed pass from process exit alone.
 Independent Astra must check the mechanism, source-gradient limitation, exact input roles and actual free-running feasibility before launch.
+## CPU implementation clarifications (before any training)
+TRAIN exogenous requests are teacher-forced from recorded backlog changes + identity-counted insertions,
+validated common across arms; service/admission is never teacher-forced. Evaluation retains scorer K8 demand futures.
+Record source-clock parity explicitly: recorded labels use left-boundary rectangles, incumbent WM scorer samples after admission.
+This potential half-tick offset must be reconciled against WMREQUAL3 before the launch gate can pass; do not silently relabel it exact.
+Full TRAIN history/queue/request/counter equality is required; hash all production-loader arrays, not only state labels.
+The head checkpoint is exported as wm_s/1 with merge_response in its flat config; canonical reload and safety adapters must preserve it.

@@ -15,6 +15,14 @@ from wms.model.wms import WmSModel
 from wms.train.merge_response import paired_objective, smooth_crossings
 
 
+@pytest.fixture(scope="module", autouse=True)
+def small_cpu_probe_threads():
+    previous = torch.get_num_threads()
+    torch.set_num_threads(1)
+    yield
+    torch.set_num_threads(previous)
+
+
 def scene():
     kin = torch.zeros(1, 4, 7)
     kin[0, :, 0] = torch.tensor([-150., -100., -80., 100.])

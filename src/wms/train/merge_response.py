@@ -4,7 +4,7 @@ from __future__ import annotations
 import torch
 
 
-def paired_objective(predicted, recorded, references, scales):
+def paired_objective(predicted, recorded, references, scales, *, anchor_columns=None):
     """Each column is a measured component; returns normalized arm-minus-ref MSE.
 
     Source costs may be exact nondifferentiable tensors; never invent their gradient.
@@ -29,11 +29,16 @@ def paired_objective(predicted, recorded, references, scales):
     # Give each paired world equal mass even with differing numbers of arms.
     world = torch.stack([error[active & (references == ref)].square().mean()
                          for ref in references[active].unique()]).mean()
-    anchor = ((predicted - recorded) / scales).square().mean()
+    absolute_error = (predicted - recorded) / scales
+    if anchor_columns is not None:
+        if not anchor_columns:
+            raise ValueError("absolute anchor columns must be explicit and nonempty")
+        absolute_error = absolute_error[:, list(anchor_columns)]
+    anchor = absolute_error.square().mean()
     return world + anchor
 
 
-def smooth_crossings(positions, present, newborn, width, boundary=75.44):
+def smooth_crossings(positions, present, newborn, width, boundary=75.44, lanes=None):
     """Differentiable identity-continuous crossing surrogate for fixed slot lifetimes.
 
     Actual verdict uses the independent identity-bracketed labels.crossings counter.
@@ -42,6 +47,8 @@ def smooth_crossings(positions, present, newborn, width, boundary=75.44):
     if width <= 0:
         raise ValueError("crossing width must be measured on TRAIN and positive")
     alive = present[:, 1:] & present[:, :-1] & ~newborn[:, 1:]
+    if lanes is not None:
+        alive = alive & (lanes[:, 1:] >= 0) & (lanes[:, 1:] < 2)
     clean = torch.where(present, positions, torch.zeros_like(positions))
     cdf = torch.sigmoid((clean - boundary) / width)
     delta = (cdf[:, 1:] - cdf[:, :-1]).clamp_min(0)

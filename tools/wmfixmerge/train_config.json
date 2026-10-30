@@ -1,0 +1,15 @@
+{
+  "schema": "wmfix_schedule/1",
+  "enable_merge_response": false,
+  "conserve_queue": false,
+  "seed": 140014,
+  "lr": 0.0003,
+  "max_seconds": 21600,
+  "stages": [[60, 30], [120, 30], [300, 60]],
+  "checkpoint_every_updates": 1,
+  "snapshot_seconds": 3600,
+  "device": "cpu",
+  "optimizer_names": "merge_response.*",
+  "precision": "float32",
+  "selection": "final completed update; TRAIN normalized paired-J secondary only"
+}

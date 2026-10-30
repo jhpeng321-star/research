@@ -53,6 +53,7 @@ FLAT_TO_PATH: dict[str, str] = {
     "ramp_speed_adapt_learnable": "model.ramp_speed_adapt_learnable",
     # S-RAMPFIX LEARNED MAINLINE INTERACTION RESIDUAL
     "mainline_interaction_residual": "model.mainline_interaction_residual",
+    "merge_response": "model.merge_response",
     "mainline_residual_hidden": "model.mainline_residual_hidden",
     # S-RAMPFIX LANE_V5 LONG-RUN PARAMETER GROUP
     "lane_v5_long": "optim.lane_v5_long",
@@ -567,6 +568,7 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     "ramp_speed_adapt_learnable",
     # S-RAMPFIX (default OFF = bit-identical receipts/configs)
     "mainline_interaction_residual", "mainline_residual_hidden",
+    "merge_response",
     "lane_v5_long", "lane_v5_long_lr_scale",
 )
 

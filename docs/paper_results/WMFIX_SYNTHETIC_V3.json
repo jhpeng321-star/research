@@ -1,0 +1,34 @@
+{
+  "schema": "wmfix_feasibility/1",
+  "mode": "synthetic",
+  "device": "cpu",
+  "launch_ready": false,
+  "initial_loss": 9.148335084319115e-05,
+  "after_step_loss": 9.112023690249771e-05,
+  "initial_J_contrast_MAE": 0.008005380630493164,
+  "after_J_contrast_MAE": 0.00800323486328125,
+  "gradient_parameter": "merge_response.net.2.bias",
+  "gradient": -0.001049295999109745,
+  "finite_difference": -0.001047563273459673,
+  "finite_difference_ok": true,
+  "frozen_bitwise": true,
+  "optimizer_reduces": true,
+  "predicted": [
+    [
+      2.2103781700134277
+    ],
+    [
+      2.5916221141815186
+    ]
+  ],
+  "recorded": [
+    [
+      2.203002691268921
+    ],
+    [
+      2.592252016067505
+    ]
+  ],
+  "passed": true,
+  "status": "SYNTHETIC_ONLY"
+}

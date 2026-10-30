@@ -275,6 +275,7 @@ class ModelConfig:
     # interaction state, added to the combined learned accel_delta before the existing
     # gate / bounds / clamp; trainable as its own optimizer parameter group.
     mainline_interaction_residual: bool = False
+    merge_response: bool = False
     # Width of the mainline residual MLP.
     mainline_residual_hidden: int = 64
     checkpoint_residual: bool = False
@@ -481,6 +482,7 @@ class ModelConfig:
                 "model.ramp_speed_adapt_learnable must be a boolean")
         require(isinstance(self.mainline_interaction_residual, bool),
                 "model.mainline_interaction_residual must be a boolean")
+        require(isinstance(self.merge_response, bool), "model.merge_response must be a boolean")
         require(isinstance(self.mainline_residual_hidden, int)
                 and not isinstance(self.mainline_residual_hidden, bool)
                 and self.mainline_residual_hidden >= 1,
