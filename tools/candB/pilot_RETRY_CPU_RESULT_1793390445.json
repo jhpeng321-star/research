@@ -1,0 +1,16 @@
+{
+ "returncode": 0,
+ "seconds": 4.12285852432251,
+ "command": [
+  "/root/autodl-tmp/c4/candB_rankcheck_0264b967_20261030/venv/bin/python",
+  "-B",
+  "-m",
+  "unittest",
+  "tools.candB.pilot_retry_test",
+  "tools.candB.pilot_replay_guard_test",
+  "tools.candB.pilot_continue_test"
+ ],
+ "CUDA_VISIBLE_DEVICES": "",
+ "stdout": "",
+ "stderr": "........Exception ignored in: <generator object _checkpoint_without_reentrant_generator at 0x7f0e8f14bac0>\nTraceback (most recent call last):\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/utils/checkpoint.py\", line 1558, in _checkpoint_without_reentrant_generator\n    with _checkpoint_hook(new_frame), forward_context:\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/autograd/graph.py\", line 319, in __exit__\n    torch._C._autograd._pop_saved_tensors_default_hooks()\nRuntimeError: is_initialized && !tls.stack.empty() INTERNAL ASSERT FAILED at \"/pytorch/aten/src/ATen/SavedTensorHooks.cpp\":69, please report a bug to PyTorch. \n.........\n----------------------------------------------------------------------\nRan 17 tests in 2.311s\n\nOK\n"
+}

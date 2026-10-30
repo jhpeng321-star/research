@@ -474,3 +474,25 @@
   (bitwise losses/grads/Adam/RNG vs bare core).
 - src drift vs the e113760f baseline runtime verified EXACTLY the two repaired
   files (retry identity precondition).
+
+## Owner03:00 retry verification complete (v4 runtime)
+- Runtime `/root/autodl-tmp/c4/candB_pilot_RETRY0300_v4_EXPLORATORY-LEAN_20261031`,
+  source **71c802e4d9a1f989539fc1205016a792adbaa6bd** (2,691 committed LF files,
+  every manifest hash verified), retry authority **3af8be9e42d60f31c79068a9afdf8c0d27444142f613249109f27d4d82f55419**;
+  panel3eaa69a1 first-4 starts, S4 env, owner03:00 amendment, continuation_only
+  false. Earlier v1-v3 attempts retained (fixture/scope/test-logic repairs only;
+  no scientific difference between v1-v4 sources).
+- **CPU PASS 17/17** (`pilot_RETRY_CPU_RESULT_1793390445.json`, 4.12s, CUDA
+  hidden): retry_test(8) + replay_guard_test(2) + continue_test(7). Includes the
+  real marker-wrapper multi-update regression (bitwise losses/grads/Adam/RNG vs
+  bare core WITHOUT any guard — the exact production failure topology), real
+  zero-progress `load_continuation(initial_checkpoint=True)`, exact-two-file
+  B-L identity with manifest/tamper refusals, launcher/authority contracts.
+- **B-L's own fix tests rerun in THEIR gpuR runtime** (read-only, CUDA hidden):
+  `tests/unit/test_candbl_continue.py` + `test_candbl_lean.py` at their
+  a19ffda9 (includes c73498cd+2ac8ff65): **14 passed** in 8.25s.
+  Receipt `pilot_BLTEST_FOR_RETRY.json`.
+- Parent re-verified: RUN_SUMMARY failed/TypeError/seed965140/rows0/zero_start/
+  resumed191; `independent_score_before` present (4694.833); native_curve [191];
+  gate_panel J_before4 passed-null; policy_native_best.pt abae6464...; frozen
+  baseline 744b30b8... — all retry bindings intact.

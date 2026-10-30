@@ -1,0 +1,17 @@
+{
+    "returncode":  0,
+    "seconds":  9.196142673492432,
+    "command":  [
+                    "/root/miniconda3/bin/python",
+                    "-B",
+                    "-m",
+                    "pytest",
+                    "-q",
+                    "tests/unit/test_candbl_continue.py",
+                    "tests/unit/test_candbl_lean.py"
+                ],
+    "runtime":  "/root/autodl-tmp/c4/candBL_a19ffda9_RETRY_EXPLORATORY-LEAN_20261031",
+    "stdout":  "..............                                                           [100%]\n14 passed in 8.25s\n",
+    "stderr":  "",
+    "note":  "S-PILOTB rerun of S-CANDBL own fix tests (tests/unit/test_candbl_continue.py, test_candbl_lean.py) in their gpuR runtime candBL_a19ffda9_RETRY_EXPLORATORY-LEAN_20261031, read-only, CUDA hidden, per owner 03:00. Their a19ffda9 source includes c73498cd + 2ac8ff65."
+}
