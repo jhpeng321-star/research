@@ -64,3 +64,16 @@
   be verified and counted only once. Existing scorers are not stopped.
 - gpuR observed17620MiB total with PI and SETUPAUDIT; any new scoring is gpuR-only
   with total use<=22GB. Current headroom cannot fit another normal scoring worker.
+- PI442305 later exited without a signal: plan index11 OOM at.40 (1.53GiB
+  allocation), eleven starts retained; `pi/run.log` preserves the exact failure.
+- Staged commit82dbd7bc with stage.sh into NEW gpuR runtime
+  `candB_rankcheck_82dbd7bc_resume_20261030`, all2421 source hashes verified.
+  Same exported plan/inputs copied byte-for-byte; no new start selection.
+- First CPU/GPU resumption attempts failed before scoring because a copied
+  WM TOML extends siblings. Original attempt ownership/logs retained. A2 uses
+  the original identical-hash inference config with its existing sibling chain.
+- New gpuR-only own GPU445979/start4199322511 measures PI+native indices12-15,
+  CPU446005/start4199323357 measures the large index11, CUDA hidden, nice19.
+  Their separate native actor interventions fill a previously missing result.
+  GPU preflight8915MiB +.40 reservation9826 +512 margin <=22000MiB.
+  No existing gpuA scorer is stopped/restarted; no peer is touched.

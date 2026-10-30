@@ -64,7 +64,8 @@ def analyze(root):
     contracts = []
     plans = set()
     duplicates = []
-    for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail'):
+    for directory in ('circles', 'pi', 'mappo', 'mappo_proxy_tail', 'mappo_speed_tail',
+                      'pi_resume_gpu', 'pi_resume_cpu'):
         path = root/directory/'RAW.json'
         if not path.exists():
             continue
@@ -79,6 +80,7 @@ def analyze(root):
         inputs[directory] = dict(path=path.as_posix(), sha256=sha256(path),
             config_sha256=doc['config_sha256'], wm_config_sha256=doc['wm_config_sha256'],
             K=doc['K'], source_manifest=doc['source_manifest'],
+            device=doc['device'], shard_finished=doc.get('shard_finished', False),
             mappo_speed_partial=doc.get('mappo_speed_partial'))
         for arm in doc['arms']:
             completed = []
@@ -159,6 +161,7 @@ def analyze(root):
         completed_plan_indices={arm: [r['index'] for r in values] for arm, values in rows.items()},
         verified_duplicates_not_counted=duplicates,
         native_actor_K8=native_actor, common_start_indices=sorted(common),
+        native_actor_K4=stats(rows['native']) if rows.get('native') else None,
         common=common_stats, diagnostic_proxy_condition=diagnostic_gate,
         cross_host_CTRL0_max_abs_J300=cross_host_reference_max,
         full_R2_demonstrated=False, zero_identity=zero['zero_identity'],
@@ -188,8 +191,10 @@ def report(result, final_sha, stamp):
             if arm not in summaries:
                 lines.append(f'| {LABELS[arm]} | pending | NE | NE | NE | NE |')
                 continue
-            s = result['native_actor_K8'] if actor and arm == 'native' else summaries[arm]
-            k = 8 if actor and arm == 'native' else 4
+            native_actor = actor and arm == 'native'
+            s = ((result.get('native_actor_K4') or result['native_actor_K8'])
+                 if native_actor else summaries[arm])
+            k = 8 if native_actor and not result.get('native_actor_K4') else 4
             fields = [LABELS[arm], f'{s["n_starts"]}/{s["n_worlds"]}/K{k}']
             for metric in metrics:
                 fields += [cell(s[metric]['value'], s['n_worlds']),
@@ -213,7 +218,7 @@ def report(result, final_sha, stamp):
         'MAIN19:10 fallback: **K4 = first four original K8 CRN plans**, same dense-suffix/joint-q10 and gain-gated300s algebra; this is a reduced-K estimator, not K8 qualification.',
         f'Config SHA256 `{first["config_sha256"]}`; WM inference SHA256 `{first["wm_config_sha256"]}`.',
         f'Sixteen actual TRAIN-sampler starts exported; plan SHA256 `{result["input_starts_sha256"]}`. Completed counts appear below; no missing arm/future imputed.',
-        'Raw JSON/argv/ownership: `tools/candB/evidence/rankcheck_parallel/{circles,pi,mappo,mappo_proxy_tail,mappo_speed_tail,zero}/`; retained K8: `../rankcheck_saved_k8/CANDB_RANKCHECK.json`.',
+        'Raw JSON/argv/ownership: `tools/candB/evidence/rankcheck_parallel/` (named arm and resume subdirectories); retained K8: `../rankcheck_saved_k8/CANDB_RANKCHECK.json`.',
         'cpuQ read-only first-inspection export: `~/mappospeed/production2/policy_00025.pt`, iteration25/169, **PARTIALLY TRAINED**, frozen before outcomes; SHA256 `69e414e53e7f520bbd112ff292aa207d3da6388d73c3ac91e894079dfe40a543`.',
         'Native lanes throughout; aecd7d70 proxy ignores its learned lane head. PI/CIRCLES use the published TimelineControllers; CPU/CUDA sensor-copy parity4/4 on BOTH hosts.',
         'CIs: paired equal-WORLD percentile bootstrap,5000 draws/seed20261030; average futures/starts inside each world first. NE=not estimable from one world.',
@@ -232,7 +237,9 @@ def report(result, final_sha, stamp):
         *table(('objective90_loss', 'objective300_loss'), actor=True),
         f'Balanced common-start actor ranking,dense: {ranking("objective90_loss", actor=True)}.',
         f'Balanced common-start actor ranking,dense+300s: {ranking("objective300_loss", actor=True)}.',
-        'Native actor loss is the retained single-start K8 intervention; its larger-panel actor CI is missing. Native/CTRL0 physical rows are reused from actual reference rows, not extra rollouts.',
+        ('Native actor is a separate K4 intervention on its reported completed starts (not in the common-panel actor ranking); native/CTRL0 physical rows reuse actual reference rows.'
+         if result.get('native_actor_K4') else
+         'Native actor loss is the retained single-start K8 intervention; its larger-panel actor CI is missing. Native/CTRL0 physical rows are reused from actual reference rows, not extra rollouts.'),
         'Retained serial K8 first start: proxy dJ90+4.43,dJ300+249.59; native dJ90+91.91,dJ300+559.59 veh-s (one world,CI NE). All original saved arms remain on disk.',
         'Fresh-zero B: one full300s scientific-state array equality PASS vs CTRL0, plus exact physical/actor equality. Current u191 head is nonzero; no construction-based current-A identity is claimed.',
         '## Existing SUMO evidence and R2',
@@ -246,7 +253,8 @@ def report(result, final_sha, stamp):
         '## Execution and verification',
         'Fresh immutable staging via tools/candB/stage.sh. MAIN21:08: no new gpuA scorers; existing shards finish. Retired only exact owned obsolete21:20 cutoff supervisors. New scoring is gpuR-only,total<=22GB; peers untouched.',
         'Recovered tail guard had already failed before signalling; historical45000MiB guard was ineffective (gpuA45713MiB at21:08). Repeated prefix/tail starts are exact-array verified and counted once; all attempts retained.',
-        '16 CPU tests pass (2 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
+        'gpuR PI exhausted its.40 allocator at plan index11 after11 saved starts. Fresh source82dbd7bc resumes11 on CPU and12-15 on GPU with native actor interventions; both use the same bound starts and first4 CRN plans.',
+        '17 CPU tests pass (2 local CUDA skips);4 CPU/CUDA sensor tests pass on each GPU host. Actual WM native/CTRL0/proxy J90/J300 K4 arrays bitwise match saved K8 first4; Ruff/diff PASS. All paired CIs independently recomputed.',
         'Every receipt remains measure_only=true,complete=false,passed=false,launch_authorized=false; historical mismatched CCT-2 remains unqualified. No push/deletions.',
     ]
     if proxy:

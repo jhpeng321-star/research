@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/tools/candB/rankcheck.py", line 700, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/tools/candB/rankcheck.py", line 437, in main
+    model = load_members([a.wm], [a.wm_config], a.device)[0][0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/policy14_cli.py", line 40, in load_members
+    else _read_config(config))
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/train_cli.py", line 36, in _read_config
+    return deep_merge(_read_config(path.parent / parent, (*seen, path)), raw) if parent else raw
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/control/train_cli.py", line 34, in _read_config
+    raw = load(path)
+          ^^^^^^^^^^
+  File "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/src/wms/core/toml.py", line 44, in load
+    with open(path, "r", encoding="utf-8") as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/c4_wm_v10round2.toml'

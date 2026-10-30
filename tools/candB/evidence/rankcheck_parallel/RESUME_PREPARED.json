@@ -1,0 +1,45 @@
+{
+ "source": {
+  "commit": "82dbd7bc7e32026998bf3ec5b912f9b23c5d67e6"
+ },
+ "files_verified": 2421,
+ "inputs": {
+  "--mappo": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/mappo.pt",
+   "sha256": "aecd7d70ccce2995a10d03d9400f587040b1d3b435eebeab2561768ba57c3564"
+  },
+  "--mappo-speed": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/rankcheck_mappospeed_policy_00025.pt",
+   "sha256": "69e414e53e7f520bbd112ff292aa207d3da6388d73c3ac91e894079dfe40a543"
+  },
+  "--current-policy": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/policy_000191.pt",
+   "sha256": "560e037440f58c665b316a3008d47f77e2ca1fbb9d10173ef3e40f565b5b276c"
+  },
+  "--current-policy-driver": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/execparity_cav_idm_v1.json",
+   "sha256": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2"
+  },
+  "--horizon-gate": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/HORIZON_GATE_WM2_REG.json",
+   "sha256": "be0297ab09a988c5ced1a007432effdea36dfb80be4e86b33ac99605824fd152"
+  },
+  "--boundary": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/BOUNDARY_WM2.json",
+   "sha256": "817e3f6df0c0e9862b644151ec1963aa56b0dbdab80fbb094a2d09efd4807fac"
+  },
+  "--pairing-receipt": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/pairing_c03.a1.json",
+   "sha256": "777e89610c1c2c02586dff5dd8f691e4a6250bb643feb4d8ece91ce73261eba5"
+  },
+  "--wm-config": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/c4_wm_loop14_r16_ft.toml",
+   "sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4"
+  },
+  "--input-starts": {
+   "path": "/root/autodl-tmp/c4/candB_rankcheck_82dbd7bc_resume_20261030/inputs/TRAIN_STARTS.pt",
+   "sha256": "b522e6cb27788d6d4095f4a40f7a9b401f4b57855e9beb7e7b71d3add3a10382"
+  }
+ },
+ "time_unix": 1793366432.3255193
+}
