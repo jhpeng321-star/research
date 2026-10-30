@@ -213,3 +213,18 @@
 - Next: merge published SPEEDPROF into a new immutable runtime; fresh zero,
   first4 registered panel starts, first4 CRN futures, two forward workers .28,
   rescore every5 and exact panel reuse/diagnostic skip/profile flags; phase10 R4.
+
+### Lean implementation and CPU proof
+- Merged published `c4/speedprof`43942f75 (merge `1919c0d5`).
+- New isolated `pilot_lean*` adapter/authority binds the original full16 panel hash
+  and its first4 ordered starts, original dense/scoring K8 and first4 cached ES CRNs.
+  No resampling, dense estimator/config changes or rankcheck edits.
+- CPU real-update proof PASS: K4 ES16 perturbed forwards (M2 antithetic), unchanged
+  dense K8 gradient norm and RNG, exact sign reversal. Default refusal/recipe drift,
+  lean row/initial-summary labels and phase10 finite/improvement STOP also PASS.
+- First CPU attempt24 PASS/3 fixture-field failures; fixture corrected. Retry
+  **26 PASS/1 deliberately deselected already-passed real-update proof**,115.40s.
+  Disconnected test callers recovered named receipts without duplicate test jobs.
+- `pilot_lean_CPU_recovered.json` retains actual retry proof. Independent rescoring
+  every5 stays distinct from per-update PRE-optimizer training-start raw dJ telemetry;
+  no stale score is represented as a newly measured independent score.

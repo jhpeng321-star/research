@@ -1,0 +1,6 @@
+{
+ "stdout": "PROBE_1793375660183813500.json {\n \"pid\": 13750,\n \"start_ticks\": \"875587441\",\n \"parent_pid\": 13749,\n \"start_epoch\": 1793375660.2552972,\n \"command\": [\n  \"-m\",\n  \"pytest\",\n  \"-q\",\n  \"tools/candB/pilot_lean_test.py\",\n  \"tools/candB/pilot_test.py\",\n  \"tests/unit/test_speedprof.py\",\n  \"-k\",\n  \"not real_k4\"\n ],\n \"log\": \"PROBE_1793375660183813500.log\",\n \"status\": \"completed\",\n \"returncode\": 0,\n \"seconds\": 116.05694651603699\n}\n\n..........................                                               [100%]\n26 passed, 1 deselected in 115.40s (0:01:55)\n\nCPU_TEST_LOCK_FREE\n",
+ "stderr": "",
+ "returncode": 0,
+ "earlier_full_test": "PROBE_1793375453325102700: 24 passed/3 missing-fixture-field failures; real K4 dense/RNG proof PASS"
+}
