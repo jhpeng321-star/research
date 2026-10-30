@@ -826,6 +826,9 @@ class DreamerTrainer:
         if self.counterfactual.enabled and self.counterfactual.start_tilt is not None:
             from .coopw import TiltSampler
             self._tilt_sampler = TiltSampler(self.counterfactual.start_tilt)
+        if self.counterfactual.enabled and self.counterfactual.headroom_starts:
+            from .coopw import HeadroomSampler
+            self._tilt_sampler = HeadroomSampler()
 
     def _check_real_return_provider(self, config):
         if self.real_return_provider is not None and not callable(self.real_return_provider):
@@ -1889,7 +1892,14 @@ class DreamerTrainer:
                 state = {k: v[:1] for k, v in batch.state.items()
                          if torch.is_tensor(v) and v.ndim >= 1 and v.shape[0] == batch.state["s_m"].shape[0]}
                 queue = batch.entry_queue[0] if batch.entry_queue is not None else None
-                return start_features(state, cf, horizon_s, entry_queue=queue,
+                feature_fn = start_features
+                if cf.headroom_starts:
+                    from .coopw import headroom_features
+                    feature_fn = headroom_features
+                    resolved = self._imagination_config(batch).horizon * STEPS_PER_CONTROL * PHYSICS_DT_S
+                else:
+                    resolved = horizon_s
+                return feature_fn(state, cf, resolved, entry_queue=queue,
                                       lane_rules=self.lane_rules)
             generator = torch.Generator().manual_seed(2_000_003 * (self.update_count + 1))
             batch, self._last_start_info = self._tilt_sampler.draw(

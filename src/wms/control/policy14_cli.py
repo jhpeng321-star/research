@@ -625,7 +625,10 @@ def main(argv=None):
             summary['start_focus'] = trainer.start_states.configure_focus_cells(
                 float(raw['data']['focus_cell_fraction']))
             # MAIN's exact cell mixture supersedes the inherited rejection tilt.
-            trainer._tilt_sampler = None
+            if not trainer.counterfactual.headroom_starts:
+                trainer._tilt_sampler = None
+            else:
+                summary['start_focus']['headroom_tilt'] = 'observable_headroom/1; weight=1+headroom in [1,2]'
         summary['effective_config_before_updates'] = asdict(trainer.config)
         summary['effective_reward_before_updates'] = asdict(trainer.reward_weights)
         if args.new_phase and (trainer.config != cfg or

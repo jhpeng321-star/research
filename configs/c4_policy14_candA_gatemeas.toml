@@ -17,3 +17,7 @@ zero_residual_output = false
 [long_credit]
 ctrl0_reference = true
 score_training_horizon = true
+
+[counterfactual]
+# Keep the registered label-only start_focus proposal; apply observable pressure.
+headroom_starts = true

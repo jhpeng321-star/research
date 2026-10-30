@@ -129,3 +129,39 @@ def test_scoring_phase_freezes_curriculum_but_training_keeps_advancing():
         assert t._imagination_config(t.start_states.batch).horizon == 60
     t._training_imagination = True
     assert t._imagination_config(t.start_states.batch).horizon == 90
+
+
+def test_headroom_uses_only_observable_initial_state_and_bounded_pressure():
+    from wms.control.coopw import headroom_features, HeadroomSampler
+    from wms.control.contract import SPEED_LIMIT_MPS
+    t = fixture.trainer()
+    state = fixture.fixture.scene(1, 3)
+    state['s_m'][:] = torch.tensor([-50., -25., 0.])
+    state['v_mps'][:] = SPEED_LIMIT_MPS
+    free = headroom_features(state, t.counterfactual, 90)
+    state['v_mps'][:] = 10.
+    congested = headroom_features(state, t.counterfactual, 90)
+    ramp = headroom_features(state, t.counterfactual, 90,
+                            entry_queue=torch.tensor([0., 4., 0., 0., 0., 0.]))
+    assert free['headroom'] == 0.
+    assert 0 < congested['headroom'] < ramp['headroom'] <= 1.
+    sampler = HeadroomSampler()
+    assert 1. == sampler.multiplier(free) < sampler.multiplier(ramp) <= 2.
+    changed = dict(state, unused_future_return=torch.full((1, 3), 1e9))
+    assert headroom_features(changed, t.counterfactual, 90) == congested
+
+
+def test_headroom_sampler_training_only_and_checkpointable():
+    from wms.control.coopw import HeadroomSampler
+    t = fixture.trainer()
+    t.counterfactual = replace(t.counterfactual, headroom_starts=True, validation_uniform=True)
+    t._tilt_sampler = HeadroomSampler()
+    t._sample_starts(t.start_states)
+    assert t._last_start_info['sampler'] == 'observable_headroom/1'
+    assert 1 <= t._last_start_info['m'] <= 2
+    saved = t._tilt_sampler.state_dict()
+    t._sample_starts(t.start_states, validation=True)
+    assert t._tilt_sampler.state_dict() == saved
+    restored = HeadroomSampler()
+    restored.load_state_dict(saved)
+    assert restored.state_dict() == saved

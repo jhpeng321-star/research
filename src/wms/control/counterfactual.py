@@ -95,6 +95,7 @@ class CounterfactualConfig:
     # with probability prod(1 + w_f f) / max); None = legacy ``group_state_fraction`` path.
     # Needs group_state_fraction = 0.
     start_tilt: Optional[dict] = None
+    headroom_starts: bool = False  # Observable initial-state tilt on top of start_focus.
     # Validation starts from the target (uniform-window) distribution instead of oversampled.
     validation_uniform: bool = False
     # Per-update coverage / oversampling log, and the unit-term gradient-norm audit cadence.
@@ -150,7 +151,7 @@ class CounterfactualConfig:
             if float(self.group_state_fraction) != 0.0:
                 raise ValueError("start_tilt needs group_state_fraction = 0")
             self.start_tilt = {str(k): float(v) for k, v in dict(self.start_tilt).items()}
-        for name in ("validation_uniform", "coop_audit"):
+        for name in ("validation_uniform", "coop_audit", "headroom_starts"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         value = self.term_grad_audit_every
