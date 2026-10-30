@@ -419,9 +419,14 @@ def main(argv=None):
         start_plan = torch.load(safe_path(a.input_starts), map_location=a.device, weights_only=False)
         if (start_plan['wm_sha256'] != WM_SHA
                 or start_plan['config_sha256'] != binding(raw)
-                or start_plan['current_policy_sha256'] != sha256(a.current_policy)):
+                or start_plan['current_policy_sha256'] != sha256(a.current_policy)
+                or start_plan['wm_config_sha256'] != sha256(a.wm_config)
+                or start_plan['boundary_sha256'] != sha256(a.boundary)
+                or start_plan['pairing_receipt_sha256'] != sha256(a.pairing_receipt)):
             raise ValueError('exported TRAIN plan identity mismatch')
         starts = SimpleNamespace(groups=start_plan['groups'],
+            metadata=start_plan['sampler_metadata'],
+            source_groups=start_plan['source_groups'],
             distill_provenance=start_plan['sampler_provenance'])
     else:
         starts, _ = load_training_starts(raw, model, 965140)
@@ -491,7 +496,11 @@ def main(argv=None):
                               sampler_info=trainer._last_start_info, update=trainer.update_count))
         torch.save(dict(wm_sha256=WM_SHA, config_sha256=binding(raw),
             current_policy_sha256=sha256(a.current_policy), runtime_contract=signature,
+            wm_config_sha256=sha256(a.wm_config), boundary_sha256=sha256(a.boundary),
+            pairing_receipt_sha256=sha256(a.pairing_receipt),
             sampler_provenance=starts.distill_provenance, groups=trainer.start_states.groups,
+            sampler_metadata=trainer.start_states.metadata,
+            source_groups=trainer.start_states.source_groups,
             plans=plans, source_manifest=sources, actual_TRAIN_sampler=True), target)
         print('EXPORTED_ACTUAL_TRAIN_STARTS', len(plans), target, flush=True)
         return 0
