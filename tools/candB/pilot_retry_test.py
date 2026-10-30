@@ -30,6 +30,66 @@ def synthetic_parent(root, **override):
     return prior
 
 
+from tests.unit.test_longmem import trainer, observe, assert_tree_close  # noqa: E402
+
+
+def core_factory(policy, group, safety, lane_record=None, **kwargs):
+    def callback(state):
+        obs = observe(state)
+        action = policy(obs, group(obs, state))[0]
+        accel = safety(state, action)
+        speed = (state['v_mps'] + .5*accel).clamp_min(0.)
+        return torch.stack((state['s_m']+.5*speed, state['lane'], speed, accel), -1)
+    return callback
+
+
+def marked_measured_factory():
+    # Module-level core/globals mirror production: the wrapper carries the
+    # passthrough marker over a physical controller with factory-local cells.
+    state = dict(calls=0)
+    def factory(*args, **kwargs):
+        callback = core_factory(*args, **kwargs)
+        def measured(frame):
+            state['calls'] += 1
+            return callback(frame)
+        measured._wms_checkpoint_passthrough = callback
+        return measured
+    return factory, lambda: state
+
+
+class MarkerSurvivalTests(unittest.TestCase):
+    def test_marker_wrapper_survives_release_without_guard(self):
+        # The exact observed update1 failure mode: the persistent observational
+        # wrapper must survive the replay controller release via its passthrough
+        # marker, without any replay guard.
+        import torch
+        from unittest.mock import patch as patch_dict_target
+        import os as os_module
+        options = dict(future_samples=2, future_driver_scale=0., future_accel_noise=True)
+        expected = trainer(1, 2, True, horizon=3, batch=2, **options)
+        actual = trainer(1, 2, True, horizon=3, batch=2, **options)
+        expected.controller_factory = core_factory
+        wrapped, state = marked_measured_factory()
+        actual.controller_factory = wrapped
+        with patch_dict_target.dict(os_module.environ, WMS_SPEED_FUTURE_WORKERS='1',
+                WMS_SPEED_PARALLEL_FORWARD='0'):
+            for seed in (41, 42):
+                torch.manual_seed(seed)
+                left = expected.update()
+                rng = torch.get_rng_state()
+                torch.manual_seed(seed)
+                right = actual.update()
+                self.assertGreater(state()['calls'], 0)
+                self.assertTrue(torch.equal(rng, torch.get_rng_state()))
+                for key in ('actor_loss', 'actor_grad_norm', 'critic_loss', 'critic_grad_norm'):
+                    assert_tree_close(left[key], right[key], atol=0, rtol=0)
+                for a, b in zip(expected.actor_parameters, actual.actor_parameters):
+                    assert_tree_close(a, b, atol=0, rtol=0)
+                    assert_tree_close(a.grad, b.grad, atol=0, rtol=0)
+                assert_tree_close(expected.actor_optimizer.state_dict(),
+                    actual.actor_optimizer.state_dict(), atol=0, rtol=0)
+
+
 class RetryContractTests(unittest.TestCase):
     def test_retry_launcher_source_contract(self):
         source = launch_source(Path('tools/candB/pilot_lean_launch.sh').read_text())
@@ -87,26 +147,19 @@ class RetryContractTests(unittest.TestCase):
     def test_validate_parent_refusals(self):
         with workspace_tempdir() as directory:
             root = Path(directory)
+            # Exact schema passes every content check and reaches artifact hashing.
             synthetic_parent(root)
             with patch.object(pilot_retry, 'PARENT', root):
-                with self.assertRaisesRegex(ValueError, 'label|retry is restricted'):
-                    pilot_retry.validate_parent(root)
-                synthetic_parent(root, label='EXPLORATORY')
-                with self.assertRaisesRegex(ValueError, 'mismatch'):
-                    pilot_retry.validate_parent(root)
-                synthetic_parent(root, updates=[dict(update=191)])
-                with self.assertRaisesRegex(ValueError, 'mismatch'):
-                    pilot_retry.validate_parent(root)
-                synthetic_parent(root, seed=965141)
-                with self.assertRaisesRegex(ValueError, 'mismatch'):
-                    pilot_retry.validate_parent(root)
-                synthetic_parent(root, zero_start=False)
-                with self.assertRaisesRegex(ValueError, 'mismatch'):
-                    pilot_retry.validate_parent(root)
-                # Exact schema reaches the artifact-hash stage and refuses drift.
-                synthetic_parent(root)
                 with self.assertRaisesRegex(ValueError, 'artifact drift'):
                     pilot_retry.validate_parent(root)
+                for override in (dict(label='EXPLORATORY'), dict(updates=[dict(update=191)]),
+                        dict(seed=965141), dict(zero_start=False), dict(status='completed')):
+                    synthetic_parent(root, **override)
+                    with self.assertRaisesRegex(ValueError, 'mismatch'):
+                        pilot_retry.validate_parent(root)
+            synthetic_parent(root)
+            with self.assertRaisesRegex(ValueError, 'retry is restricted'):
+                pilot_retry.validate_parent(root)
 
     def test_validate_identity_accepts_exactly_the_b_l_repair(self):
         with workspace_tempdir() as directory:
@@ -170,10 +223,21 @@ class RetryContractTests(unittest.TestCase):
             try:
                 with patch.object(pilot_retry, 'OLD_RUNTIME', old):
                     pilot_retry.validate_identity(doc, prior)
+                    # Identity compares MANIFEST hashes: a third changed file refuses.
                     (cwd/'src/wms/control/other.py').write_text('drifted peer file')
+                    (cwd/'SOURCE_MANIFEST.json').write_text(json.dumps({
+                        'src/wms/control/imagination_memory.py': 'one.new',
+                        'src/wms/control/policy14_recovery.py': 'two.new',
+                        'src/wms/control/other.py': 'other.new',
+                        'configs/c4_policy14_candB.toml': 'cfg'}))
                     with self.assertRaisesRegex(ValueError, 'unexpected baseline scientific source drift'):
                         pilot_retry.validate_identity(doc, prior)
                     (cwd/'src/wms/control/other.py').write_text('peer file')
+                    (cwd/'SOURCE_MANIFEST.json').write_text(json.dumps({
+                        'src/wms/control/imagination_memory.py': 'one.new',
+                        'src/wms/control/policy14_recovery.py': 'two.new',
+                        'src/wms/control/other.py': 'same',
+                        'configs/c4_policy14_candB.toml': 'cfg'}))
                     (cwd/'src/wms/control/policy14_recovery.py').write_text(expected_recovery+'\n')
                     with self.assertRaisesRegex(ValueError, 'exact reviewed B-L repair'):
                         pilot_retry.validate_identity(doc, prior)
@@ -218,58 +282,6 @@ class RetryContractTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'progress/seed mismatch'):
                     policy14_recovery.load_continuation(dict(trainer={}, reward={}),
                         args, initial_checkpoint=False)
-
-    def test_marker_wrapper_survives_release_without_guard(self):
-        # The exact observed update1 failure mode: the persistent observational
-        # wrapper must survive the replay controller release via its passthrough
-        # marker, without any replay guard.
-        import torch
-        from tests.unit.test_longmem import trainer, observe, assert_tree_close
-        from tools.candB.pilot_replay_guard import vjp_guard  # noqa: F401  (NOT used here)
-
-        def core_factory(policy, group, safety, lane_record=None, **kwargs):
-            def callback(state):
-                obs = observe(state)
-                action = policy(obs, group(obs, state))[0]
-                accel = safety(state, action)
-                speed = (state['v_mps'] + .5*accel).clamp_min(0.)
-                return torch.stack((state['s_m']+.5*speed, state['lane'], speed, accel), -1)
-            return callback
-
-        def measured_factory():
-            state = dict(calls=0)
-            def factory(*args, **kwargs):
-                callback = core_factory(*args, **kwargs)
-                def measured(frame):
-                    state['calls'] += 1
-                    return callback(frame)
-                measured._wms_checkpoint_passthrough = callback
-                return measured
-            return factory, lambda: state
-
-        options = dict(future_samples=2, future_driver_scale=0., future_accel_noise=True)
-        expected = trainer(1, 2, True, horizon=3, batch=2, **options)
-        actual = trainer(1, 2, True, horizon=3, batch=2, **options)
-        expected.controller_factory = core_factory
-        wrapped, state = measured_factory()
-        actual.controller_factory = wrapped
-        import os as os_module
-        with patch.dict(os_module.environ, WMS_SPEED_FUTURE_WORKERS='1', WMS_SPEED_PARALLEL_FORWARD='0'):
-            for seed in (41, 42):
-                torch.manual_seed(seed)
-                left = expected.update()
-                rng = torch.get_rng_state()
-                torch.manual_seed(seed)
-                right = actual.update()
-                self.assertGreater(state()['calls'], 0)
-                self.assertTrue(torch.equal(rng, torch.get_rng_state()))
-                for key in ('actor_loss', 'actor_grad_norm', 'critic_loss', 'critic_grad_norm'):
-                    assert_tree_close(left[key], right[key], atol=0, rtol=0)
-                for a, b in zip(expected.actor_parameters, actual.actor_parameters):
-                    assert_tree_close(a, b, atol=0, rtol=0)
-                    assert_tree_close(a.grad, b.grad, atol=0, rtol=0)
-                assert_tree_close(expected.actor_optimizer.state_dict(),
-                    actual.actor_optimizer.state_dict(), atol=0, rtol=0)
 
 
 if __name__ == '__main__':
