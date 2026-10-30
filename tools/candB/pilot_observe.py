@@ -103,12 +103,31 @@ def main():
     p.add_argument('--root', required=True)
     p.add_argument('--ledger', type=Path)
     p.add_argument('--follow-through-update', type=int)
+    p.add_argument('--brief', action='store_true')
+    p.add_argument('--peer-gpu', default=None, help='optional second host, sampled at the same >=600s cadence')
     args = p.parse_args()
     directory = Path(__file__).resolve().parent
     while True:
         doc = observe(args.host, args.root)
+        if args.peer_gpu:
+            peer = subprocess.run(['ssh', args.peer_gpu, 'nvidia-smi',
+                '--query-gpu=memory.total,memory.used,memory.free', '--format=csv,noheader,nounits'],
+                text=True, capture_output=True, check=True)
+            doc['peer_gpu'] = dict(host=args.peer_gpu, memory_MiB=peer.stdout.strip(), epoch=time.time())
         entries = record(doc, directory, args.ledger)
-        print(json.dumps(dict(snapshot=doc, ledger_entries=entries), indent=1), flush=True)
+        if args.brief:
+            report = dict(utc=datetime.now(timezone.utc).isoformat(),
+                own_supervisor_alive=doc.get('OWNERSHIP.json', {}).get('same_incarnation_alive'),
+                last_gpu=doc.get('last_gpu_admission'), ledger_entries=entries,
+                peer_gpu=doc.get('peer_gpu'),
+                stages={mode: dict(updates=len(stage['rows']),
+                    status=stage.get('RUN_SUMMARY.json', {}).get('status'),
+                    error=stage.get('RUN_SUMMARY.json', {}).get('error'),
+                    own_pid=doc.get(mode+'_OWNERSHIP.json', {}).get('pid'))
+                    for mode, stage in doc['stages'].items()})
+        else:
+            report = dict(snapshot=doc, ledger_entries=entries)
+        print(json.dumps(report), flush=True)
         if not args.follow_through_update:
             break
         pilot_rows = doc['stages']['pilot']['rows']
