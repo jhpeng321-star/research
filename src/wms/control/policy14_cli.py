@@ -193,7 +193,9 @@ def main(argv=None):
     parser.add_argument('--looplong-boundary', default=None)
     parser.add_argument('--wm-swap-file', default=None)
     parser.add_argument('--phase-relative-signal-gate', action='store_true',
-                         help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
+                          help='S-LOOPRESUME: apply the unchanged progress gate ten updates after resume')
+    parser.add_argument('--continue-run', default=None,
+                        help='Continue this failed run in a fresh output, preserving its phase clock')
     parser.add_argument('--prep-dry-run-updates', type=int, choices=(2,), default=None,
                         help='S-C4PREP: stop after exactly two scratch updates; no adoption receipt')
     args = parser.parse_args(argv)
@@ -216,6 +218,11 @@ def main(argv=None):
                     raw['counterfactual'][name] = [0.] * len(raw['counterfactual'][name])
         from .policy14_recovery import load_recovery
         recovery = load_recovery(raw, args)
+        if args.continue_run:
+            if recovery:
+                raise ValueError('same-phase continuation cannot be combined with operational recovery')
+            from .policy14_recovery import load_continuation
+            recovery = load_continuation(raw, args)
         if args.new_phase and recovery:
             raise ValueError('new-phase migration cannot be combined with operational recovery')
         if args.native_init:
