@@ -40,7 +40,8 @@ class LongCreditConfig:
             raise ValueError('long_credit.estimator must be pathwise or antithetic')
         if type(self.es_directions) is not int or self.es_directions < 1:
             raise ValueError('long_credit.es_directions must be a positive integer')
-        if isinstance(self.es_sigma, bool) or not math.isfinite(self.es_sigma) or self.es_sigma < 0:
+        if (isinstance(self.es_sigma, bool) or not isinstance(self.es_sigma, (int, float))
+                or not math.isfinite(self.es_sigma) or self.es_sigma < 0):
             raise ValueError('long_credit.es_sigma must be finite and nonnegative')
         if type(self.enabled) is not bool or type(self.score_training_horizon) is not bool:
             raise ValueError('long_credit switches must be boolean')

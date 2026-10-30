@@ -13,7 +13,7 @@ from .schema import deep_merge, fingerprint, from_mapping, to_mapping
 from .train import TrainConfig
 
 T = TypeVar("T")
-_MAX_EXTENDS_DEPTH = 16
+_MAX_EXTENDS_DEPTH = 32  # Candidate-A estimator presets extend its existing 16-file chain.
 
 
 def load_raw(path: PathLike, _seen: tuple[Path, ...] = ()) -> dict[str, Any]:

@@ -12,9 +12,12 @@ def active(trainer):
             == 'antithetic' and qualified(trainer))
 
 
-def execution_config(trainer, cfg):
+def execution_config(trainer, cfg, batch):
     if not active(trainer):
         return cfg
+    from .longskip import dense_replay_horizon
+    if dense_replay_horizon(trainer, batch, cfg) >= cfg.horizon:
+        raise ValueError('antithetic dense replay boundary must be shorter than the long horizon')
     # Force exact cached-prefix VJPs, even if the runtime omitted LONGSKIP flags.
     return replace(cfg, imagination_offload_futures=True,
                    imagination_replay_dense_prefix=True, imagination_skip_zero_vjp=True)
@@ -152,7 +155,9 @@ def paired_loss_difference(trainer, plus, minus, imagined, coefficients, scale):
         return -(selected.mean((0, 1)) * coefficients).sum()
     delta = trainer.gated300['config']['w_long'] * (value(p) - value(m)) / scale
     return delta, dict(accepted=int(on.sum()), rejected=int(eligible.sum()) - int(on.sum()),
-                      on=on.cpu().tolist(), median=median.cpu().tolist())
+                      on=on.cpu().tolist(), median=[
+                          [float(x) if math.isfinite(float(x)) else None for x in row]
+                          for row in median.cpu()])
 
 
 def estimate(directions, differences, sigma):

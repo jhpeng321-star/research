@@ -1,0 +1,7 @@
+# S-ESLONG: head-only derivative-free long credit; dense credit stays pathwise.
+extends = "c4_policy14_candA_longgrad_skip.toml"
+
+[long_credit]
+estimator = "antithetic"
+es_directions = 2
+es_sigma = 0.0

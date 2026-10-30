@@ -28,8 +28,8 @@ def _read_config(path, seen=()):
     from wms.config.schema import deep_merge
 
     path = checked_path(path)
-    # Same depth cap as wms.config.load (16).  POLICYV5: was 8, which refused c4_wm_v5.toml (9 levels).
-    if path in seen or len(seen) >= 16:
+    # Same depth cap as wms.config.load. ESLONG extends the 16-file candidate-A chain.
+    if path in seen or len(seen) >= 32:
         raise ValueError("configuration inheritance cycle/depth exceeded")
     raw = load(path)
     parent = raw.pop("extends", None)

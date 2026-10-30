@@ -981,7 +981,7 @@ class DreamerTrainer:
             cfg = gated300.rollout_config(self, cfg)
             if self._training_imagination:
                 from .eslong import execution_config
-                cfg = execution_config(self, cfg)
+                cfg = execution_config(self, cfg, batch)
         memory = (cfg.imagination_microbatch or cfg.imagination_checkpoint_segment
                   or cfg.imagination_offload_futures or cfg.imagination_offload_saved_tensors)
         if memory and torch.is_grad_enabled() and not _memory_replay:
