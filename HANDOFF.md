@@ -12,6 +12,14 @@
 - MAIN04:27 requests roughly20-minute progress publication/commits through noon.
   Training/final169/peer-owned evaluation protocol and priorities remain as registered.
 - Snapshot: `docs/paper_results/selmappo/PROGRESS_build_9bb7869d8f590818_1793478549730251330.json`.
+- Added local `tools.selmappo.supervise` for MAIN04:27's20-minute publication/commit
+  cadence through12:00+08:00. It consumes the EXISTING five-minute observer's receipts,
+  rechecks exact remote command/UID1000/startticks48472972/nice19/source hashes,
+  cap/history/no-replay/safety gates, and refuses to commit unrelated staged work.
+  No new observer, simulation, signals or automatic training relaunch. Seven focused
+  CPU publication/accounting tests and RuffPASS; real remote identity/source gatePASS.
+  See `docs/paper_results/SELMAPPO_SUPERVISION.md` and SUPERVISE_NOON log/one-use lock
+  after launch; any failure alert requires active-agent same-cap repair.
 
 **Latest18:19:31UTC:2/169 genuine PPO updates;46new episodes complete,6open,0failures.**
 OwncpuQ645235 remains live/nice19, total90,000charged (43,200history included),
