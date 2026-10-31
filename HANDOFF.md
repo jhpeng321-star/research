@@ -103,3 +103,10 @@ t0=300/H600 are fixed. Score all four shard directories together with
   code/recipe hashes); end-to-end test PASS rejects pooling encoder/population
   receipts even when model name and all source hashes agree. WM2 live sources
   and original finalizer remain unchanged.
+- 2026-11-01 fresh-session receipt audit: clean HEAD707698f6 preserved; read
+  owner program/registration5695, synthesis/reviews, WMBREAKDOWN gate and RUNA
+  request. Existing gpuR WM2 PIDs706825–706828 and finalizer708801 live;
+  53/160 tasks (18/13/11/11), load13.63/224CPUs, GPU15658/24564MiB at100%.
+  RUNB supervisor728893 also exists; no job launched or signalled. INT already
+  publishes immutable b0f66943 runtime with the future-builder hook and A/C intake
+  links; reconcile EVAL's source API next without replacing either live runtime.
