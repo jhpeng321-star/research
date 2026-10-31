@@ -67,3 +67,13 @@ Observations after update 0 (for MAIN):
   No update4 request, WM screen, or SUMO dispatch. No rejection-based sigma halving (u9 not reached).
 - Evidence: request_u03.json, screen_u03.json, u03_state.json, MAIN1440_RUN_LOG.jsonl;
   update3 driver3056777 exited. No mechanical failure or owned processes to signal.
+
+## Final reconciliation / S-EVAL-A handoff
+- FINAL_RECONCILIATION.json verifies53unique charged jobs,53completed results,
+  14distinct SUMO worlds, actual=charged47,700<=650,000, all safety/lane counters0,
+  all repeated-world initial hashes identical; no live task Python jobs.
+- Final head is137zeros (CTRL0-equivalent), canonical headSHA
+  226f2fad46e9e695b1fc277750a1bfdf5c403f17b38984efde3a16773e5fc255.
+  Artifact FINAL_HEAD.json; fileSHA99982b566a7214e6a70e732052e4b9e70acb7523abddc24cf792e6756269502a.
+- Report docs/paper_results/SUMOES_RUN.md; no accepted updates or learned gain;
+  corrected-law nonzero SUMO path was not dispatched because all screens rejected.

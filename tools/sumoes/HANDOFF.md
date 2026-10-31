@@ -1,4 +1,21 @@
-# S-SUMOES-RUN handoff (2026-10-31 ~14:55 local; Claude -> GLM/MAIN)
+# S-SUMOES-RUN final handoff (2026-10-31; Sol fresh-session continuation)
+
+**DONE / SCIENTIFIC EARLY STOP. Do not resume updates4–15.**
+- MAIN14:40 A–C implemented and CPU-tested (32PASS), commitbeb08d64.
+- Audit correction: old SUMO helper was base-relative despite its caprel name;
+  both new adapters use the same true capped-CTRL0-relative law and C1trunk64f70af4.
+- Updates1/2/3 each rejected all8braking-side directions in WM screening; zero further
+  SUMO dispatch. Including historicalu0, four rejected opportunities trigger the stop.
+- Final theta=0 exactly; accepted_count0; update_count4. Charged=actual47,700/650,000;
+  53completed SUMO episodes, safety/lane counters0, CRN hashes identical per repeated seed.
+- No task Python processes live at final reconciliation; no signals or retries.
+- Final portable head `tools/sumoes/evidence/FINAL_HEAD.json` (cpuQsamebasename):
+  headSHA226f2fad46e9e695b1fc277750a1bfdf5c403f17b38984efde3a16773e5fc255.
+- Final report `docs/paper_results/SUMOES_RUN.md`; detailed
+  `tools/sumoes/evidence/FINAL_RECONCILIATION.json`. No learned gain demonstrated;
+  S-EVAL-A head is CTRL0-equivalent. Evaluation not launched.
+
+## Historical Claude handoff (preserved; next-step commands below are superseded)
 
 Done (branch c4/sumoes, no push): step 1 design amended to variant (b) + registered; step 2 real
 evaluator + canary; step 3 WM screen on cpuQ CPUs; step 4 update 0 run. Tests: 25 CPU (ruff clean).
