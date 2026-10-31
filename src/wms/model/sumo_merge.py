@@ -40,6 +40,7 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
     out = dict(physics_accel_mps2=accel, accel_mps2=accel,
                raw_residual_mps2=zero, accel_delta_mps2=zero,
                lane_logits=logits, gate=zero, residual_log_sigma=zero,
+               lane_probabilities=logits.softmax(-1),
                hdv_mask=learned, lane_decider_mask=lane_deciders,
                sumo_merge_safe=geometry['safe'])
     if encoded is not None:
@@ -47,6 +48,13 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
                    driver_shrinkage=encoded['shrinkage'])
     if driver_embedding is not None:
         out['driver_embedding'] = driver_embedding
+    if model.lane_model == 'lc2013':
+        from . import lc2013_adapter
+        mainline = lane_deciders & (lane != physics.merge_lane)
+        lc2013_adapter.forward_output(model, state, kin, present, mainline, driver_params, out)
+        # LC2013 owns mainline proposals/state, merge owns ramp 2->1.
+        out['lane_logits'] = torch.where(geometry['ramp'].unsqueeze(-1), ramp_logits,
+                                         out['lane_logits'])
     return out
 
 
@@ -87,6 +95,15 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
     ramp = present & (lane == model.physics.merge_lane)
     moved[..., 0] = torch.where(ramp, next_s.clamp_max(model.physics.merge_zone_s1_m), next_s)
     deciders = deciders | out.get(cav_motion.WM_MERGE_KEY, torch.zeros_like(present))
+    if model.lane_model == 'lc2013':
+        from . import lc2013_adapter
+        from wms.physics.lane_conflict import resolve_lane_conflicts
+        lc = lc2013_adapter.evaluate(model, state, moved, present, deciders & ~ramp, driver_params)
+        proposed = torch.where(deciders & ~ramp, lc['next_lane'], next_lane)
+        next_lane = resolve_lane_conflicts(moved[..., 0], kin[..., 6], lane, proposed,
+                                           present, deciders & ~ramp, 0.)
+        out.update({key: value for key, value in lc.items()
+                    if key.startswith('lc2013_')})
     next_lane = apply_merge(moved, present, next_lane, deciders, model.physics, driver_params)
     staying = ramp & (next_lane == model.physics.merge_lane)
     overrun = staying & (next_s >= model.physics.merge_zone_s1_m)
@@ -98,5 +115,6 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
     if projection is not None:
         raise ValueError('SUMO merge uses exact footprints; padded projection must be off')
     out.update(next_s_m=next_s, next_v_mps=next_v, next_lane=next_lane,
-               next_present=next_present, sumo_merge_cross=ramp & ~staying)
+               next_present=next_present, sumo_merge_cross=ramp & ~staying,
+               lane_probabilities=torch.nn.functional.one_hot(next_lane.clamp(0, 2), 3).to(kin.dtype))
     return out

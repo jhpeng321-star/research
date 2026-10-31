@@ -67,6 +67,15 @@ def test_lane_end_stop_and_no_blanket_mainline_yield():
     assert accel[0, 1] == 0 and accel[0, 2] == 0
 
 
+def test_lane_end_does_not_get_a_fictitious_leader_min_gap():
+    cfg = PhysicsConfig(merge_model='sumo')
+    model = WmSModel(ModelSpec(), physics=cfg).eval()
+    s = state([74.], [2])
+    with torch.no_grad():
+        out = model.forward(s)
+    assert out['accel_mps2'][0, 0] > 0  # IDM stopSpeed fallback permits creeping to end
+
+
 def test_sumo_forward_bypasses_every_learned_head_and_sampling(monkeypatch):
     cfg = PhysicsConfig(merge_model='sumo')
     model = WmSModel(ModelSpec(), physics=cfg).eval()
