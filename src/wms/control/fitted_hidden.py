@@ -99,6 +99,10 @@ class FittedHiddenState:
         if vid is not None and (int(vid) != vid or vid < 0):
             raise ValueError('present drivers require observable nonnegative numeric VID')
         distribution = pop if vid is None else post['drivers'].get(f'{int(world)}:{int(vid)}', pop)
+        # FIT explicitly emits summary-only records for unidentifiable/ramp-only
+        # drivers. Their missing finite weights mean POPULATION, not lognormal.
+        if 'weights' not in distribution:
+            distribution = pop
         key = (lane, None if distribution is pop else f'{int(world)}:{int(vid)}')
         if key not in self._cache:
             self._cache[key] = self._distribution(pop, distribution, order)

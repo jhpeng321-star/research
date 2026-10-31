@@ -5,16 +5,38 @@ import json
 
 from remote import PYTHON, REMOTE, ROOT, ssh, stage
 
-OUT = REMOTE + '/addendum_v1'
+OUT = REMOTE + '/addendum_v2'
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('command', choices=('inspect', 'stage', 'fit', 'fetch-fit', 'probe', 'status', 'fetch-probe'))
+    p.add_argument('command', choices=('inspect', 'stage', 'fit', 'fetch-fit', 'probe', 'status', 'fetch-probe', 'prepare-repair'))
     p.add_argument('--code')
     a = p.parse_args()
     if a.command == 'stage':
         print(stage())
+    elif a.command == 'prepare-repair':
+        text = ssh(f'''
+from pathlib import Path
+import json,hashlib
+old=Path({REMOTE!r})/'addendum_v1'
+terminal=json.loads((old/'probe_TERMINAL.json').read_text())
+assert all(r['rc']==1 for r in terminal['results'])
+assert not any((old/f'fitted_w{{s}}.json').exists() for s in range(969400,969432))
+out=Path({OUT!r});assert out.parent.is_dir();out.mkdir(exist_ok=False)
+raw=(old/'observed_arrivals.json').read_bytes()
+with (out/'observed_arrivals.json').open('xb') as f:f.write(raw)
+receipt=dict(failed_terminal=terminal,completed_worlds=0,physical_futures=0,
+ reason='summary-only FIT driver records lack weights and require population fallback',
+ retained_root=str(old),new_root=str(out),arrival_sha256=hashlib.sha256(raw).hexdigest(),
+ prior_receipts={{n:json.loads((old/n).read_text()) for n in
+ ['fit_DISPATCH.json','fit_PID.json','fit_TERMINAL.json','probe_DISPATCH.json','probe_PID.json']}})
+with (out/'REPAIR.json').open('x') as f:json.dump(receipt,f)
+print(json.dumps(receipt))
+''')
+        with (ROOT/'docs/paper_results/rbunc/addendum_repair.json').open('x', encoding='utf-8') as f:
+            f.write(text)
+        print(text)
     elif a.command == 'inspect':
         print(ssh('''
 from pathlib import Path
@@ -65,7 +87,7 @@ terminal=json.loads((root/'probe_TERMINAL.json').read_text())
 assert all(r['rc']==0 for r in terminal['results'])
 records=[json.loads((root/f'fitted_w{{s}}.json').read_text()) for s in range(969400,969432)]
 receipts={{n:json.loads((root/n).read_text()) for n in
- ['fit_DISPATCH.json','fit_PID.json','fit_TERMINAL.json','probe_DISPATCH.json','probe_PID.json','probe_TERMINAL.json']
+ ['REPAIR.json','probe_DISPATCH.json','probe_PID.json','probe_TERMINAL.json']
  +[f'probe_worker{{i}}_PID.json' for i in range(4)]}}
 print(json.dumps(dict(records=records,receipts=receipts)))
 ''')

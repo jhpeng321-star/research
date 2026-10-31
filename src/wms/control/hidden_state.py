@@ -383,7 +383,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 for name, value in draw.items():
                     kwargs['driver_params'][name][b, slot] = value
                 key = f'{int(row_keys[b])}:{int(vid)}'
-                branches['posterior' if key in fitted_state.posterior['drivers'] else 'population'] += 1
+                identified = 'weights' in fitted_state.posterior['drivers'].get(key, {})
+                branches['posterior' if identified else 'population'] += 1
         if embedding is not None:
             kwargs['driver_embedding'] = embedding.detach().clone()
         arrival_sample = sample if sample_arrivals else 0

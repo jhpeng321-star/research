@@ -101,3 +101,11 @@ def test_conditioning_identity_and_schema_fail_closed():
     fit = FittedHiddenState(fitted().population, bad)
     with pytest.raises(ValueError, match='indices/weights'):
         fit.draw(969400, 101, generator=torch.Generator())
+
+
+def test_summary_only_unidentified_driver_uses_exact_population_not_moments():
+    fit = fitted()
+    fit.posterior['drivers']['969400:999'] = dict(log_mean=[99.]*5, log_cov=[[0.]*5]*5)
+    a = fit.draw(969400, 999, generator=torch.Generator().manual_seed(13))
+    b = fit.draw(969400, None, generator=torch.Generator().manual_seed(13))
+    assert a == b == dict(zip(IDM_ORDER, [17., .7, .8, 1.1, 1.2]))
