@@ -18,8 +18,12 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   prefix, not counted as another independent world/future. Three prefix-audit
   CPU tests PASS (changed contracts/checkpoints/birth/trace rejection).
   Do not relaunch any completed version. Old v7 directory is engineering only.
-- Next integrated engineering screen `/tmp/rb-merge-fullfleet-v9latest300`
-  STAGED ONLY: INT**8e964de5** (new CF source lane-cap/link chain + LANE raw
+- Latest integrated screen `/tmp/rb-merge-fullfleet-v9latest300` **LIVE**:
+  **03:49:23 +08**, owned cpuQ PID**840607**, source6bb7ce99,
+  validator SHA `ae4d2412050de70baa0de57de38f2de6ac853e506e413ed291d9298a8baa1b14`.
+  Receipt `/tmp/rb-merge-fullfleet-v9latest300/LAUNCH.json`; oneCPU/nice19,
+  load18.03/32; distinct new-source H300 screen, do not duplicate.
+  INT**8e964de5** (new CF source lane-cap/link chain + LANE raw
   origins/position-translation API), current owned kernels/phase/native callback,
   same frozen encoder and FIT32/H300/512slots/stream190, CPU exact-fast flags.
   **58 CPU tests PASS /3.13s**, all32 strict input/encoder preflights PASS.
