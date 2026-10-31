@@ -1,21 +1,14 @@
 # S-RB-FIT handoff
 
 Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5701.
-Status: RESUMED for owner00:40 addendum; prior outputs/commits preserved.
-Pooled IDM, population/driver distributions and first LC parameters published.
-Fresh cpuQ00:43 audit: all five receipted fit/lane PIDs absent; load8.55/32.
-UNC adapter implemented: `MotionFitForUNC` read-only encoder proxy;17 CPU tests
-pass. LC refit against committed lane811cd7e8 (finite geometry/epsilon fixes)
-dispatched once: cpuQ407617,2nice19workers,load8.67/32,root
-`/home/ubuntu/rbfit20261101_addendum/lane_v2`. No completed fit repeated.
-Shrinkage calibration running: cpuQ426309,1nice19CPU,load10.81/32; same new
-root/shrinkage_v1. Exports use UNC's now-committed f8b6faea direct JSON reader.
-SUMOCORE diagnosis published: `docs/paper_results/RBFIT_SUMOCORE_DIAG.md`.
-Six FIT states:600s inferred-minus-default MAPPO/PI effect +4171/+3909veh-s,
-almost wholly road; native road improves8523 vs controlled4351/4617veh-s.
-Incumbents AND entrant donors changed, so causal coordinate remains unknown.
-No demonstrated sign repair; no action outcomes feed fitting/calibration.
-Report: `docs/paper_results/RBFIT.md`.
+Status: COMPLETE incl owner00:40 addendum; prior outputs/commits preserved.
+New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
+Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
+paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;
+generic causal117-interval motion posterior matches saved weights within5.6e-17.
+cpuQ407617(LC)/426309(shrinkage) both exited; no outstanding owned jobs.
+No action outcomes selected fits. Reports: `docs/paper_results/RBFIT.md` and
+`docs/paper_results/RBFIT_SUMOCORE_DIAG.md`. No demonstrated600s sign repair.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
@@ -39,19 +32,31 @@ Report: `docs/paper_results/RBFIT.md`.
 - Point candidate: `artifacts/rbfit/pooled_full_v5/idm_pooled.json`, schema
   `wm_phys.idm_pooled.v1`; pass its `parameters` to WM-PHYS driver settings.
   v0/tau/a/b/s0 = 29.839994/0.770429/0.795080/1.772102/1.933667, delta=4.
-- Population/posterior: `artifacts/rbfit/finite_mixture_v4`, schemas
+- Preferred posterior candidate: `artifacts/rbfit/shrinkage_v1`, schemas
   `wm_phys.idm_population.v1` / `wm_phys.idm_posteriors.v1`; order
   `[v0,time_headway,accel,decel,min_gap]`, units m/s,s,m/s²,m/s²,m.
   `support` + `weights` are joint physical profiles; per-driver sparse
   `support_indices` + `weights` select that same support, keys `world:VID`.
   `log_mean`/`log_cov` are summaries, NOT a new log-normal draw distribution.
-  Missing driver weights -> population; t0 must equal `conditioning_end_s=300`.
-- Posterior lossless `idm_posteriors.json.gz` (32.8 MB), original JSON preserved
-  locally/remote; `MotionFit(directory).idm(world, present_vids, t0_s=300,
-  sample=True, use_posterior=False, generator=g)` reads gzip or JSON. Draw ONCE,
-  cache by observed identity for the entire future; entrants use population.
-  No automatic integration switch; shared model/spec/factory untouched.
+  Unknown identity -> population; t0 must equal `conditioning_end_s=300`.
+- NEW shrinkage policy: n/(n+19.35568) posterior + remainder population,
+  strength learned prefix240..270→270..300 CRPS. All3,130 records have explicit
+  joint weights;174 zero-evidence records equal population. Policy ALREADY
+  APPLIED in the gzip JSON; do not shrink again. Original raw finite_mixture_v4
+  and Gaussian fits preserved. Population joint support unchanged.
+- UNC saved-ID path: `FittedHiddenState.from_directory('.../shrinkage_v1')`, pass
+  `fitted_state=reader,vehicle_ids=verified_tape_vids,t0_s=300,row_keys=worlds` to
+  `plan_hidden_state_futures`. It uses fitted population for entrant settings
+  too. Leave `lane_directory` unset: fitted LC still fails its baseline.
+- `MotionFit(directory).idm(world,present_vids,t0_s=300,sample=True,generator=g)`
+  reads gzip/JSON. Draw ONCE and cache by identity across future/chunks;
+  entrants use population. Shared model/spec/factory untouched; no new switch.
 - v0 IS effective desired speed; speedFactor=v0/actual lane limit. No double scale.
+- Identity: never equate evaluator packed slots with tape numeric VIDs. NEW
+  `MotionFit.condition_motion` infers from caller-supplied causal60s motion and
+  frozen support, without saved-ID lookup. See tools README; missing motion ->
+  explicit population fallback. No verified SUMO-string/tape-VID crosswalk.
+  Worlds969432..439 have no saved posterior; do not claim one from slot indices.
 - UNC: wrap the original model with `MotionFitForUNC(model, fit, worlds, ids,
   t0_s=300,n_particles=32,seed=...)` for `plan_hidden_state_futures` ONLY; use
   original model for rollout. Proxy supplies `encoded['posterior_samples']`
@@ -60,26 +65,33 @@ Report: `docs/paper_results/RBFIT.md`.
   World+VID keyed samples are slot-order invariant and common across actions.
   Explicit `MotionFit(...,shrinkage_path=...)` enables the learned JSON policy;
   policy/population SHA and conditioning time must match. Default unchanged.
-- LC: `artifacts/rbfit/lane_v1/lc2013_{population,posteriors}.json`, schemas
+- LC: `artifacts/rbfit/lane_v2/lc2013_{population,posteriors}.json`, schemas
   `wm_phys.lc2013_{population,posteriors}.v1`; joint support/weights, five physical
   keys. `draw_lane_parameters` draws one persistent vector. Emission probabilities
   are observation discrepancy, NEVER runtime event noise. LC not adopted.
 - `tools/rbfit/README.md` contains reproduction commands and format details.
-- cpuQ run root `/home/ubuntu/rbfit20261031`, four nice19 workers, one BLAS thread.
-- Tests: cpuQ `python -m pytest tests/unit/test_rbfit.py -q -p no:cacheprovider`
-  **15 passed** (including six independent shared SUMO full-step numeric vectors).
-  Artifact integrity/schema/numerics verification PASS. Local default Python
-  lacks SciPy; use cpuQ existing environment. No new environment installed.
+- Old cpuQ root `/home/ubuntu/rbfit20261031`; addendum root
+  `/home/ubuntu/rbfit20261101_addendum`,2LC+1calibration nice19/single-thread.
+- Tests:18 FIT +4 committed UNC tests PASS; independent SUMO vectors, CRPS
+  pairwise oracle, no-evidence/identity/CAV invariants, and actual exported
+  posterior algebra/schema/PSD/SHA/UNC replay PASS. Local Python lacks SciPy;
+  cpuQ existing environment used. No new environment installed.
 
 ## Resources and gaps
 - CPU only; no GPU allocation, no new environment. Initial cpuQ load0.07/32 CPUs.
-- Shared setdata not ready; independent extractor used. Shared idmspec numeric
-  vectors arrived and agree. `rb-shared/fit/REFERENCE_COMPATIBILITY.md` flags
+- Setdata arrived after original extraction; independent helper's pooled
+  v0=29.87/tau=.753 corroborates our29.84/.770 (different filtering/optimizer).
+  Shared idmspec vectors agree. `rb-shared/fit/REFERENCE_COMPATIBILITY.md` flags
   CF source-default mismatches: NUMERICAL_EPS=0.001 and emergencyDecel=9.
 - Gaussian posterior improves 10s position MAE but worsens RMSE tails.
-  Finite-profile posterior 95% physical-acceleration coverage is only 68.8%; no
-  posterior uncertainty qualification. Population coverage 95.0%, diagnostic only.
-- LC later-FIT Brier 0.00306 loses to event-rate baseline 0.00241: not adopted.
+  Raw finite posterior nominal95% coverage68.8%; shrinkage90.48%, population95.0%.
+  Shrunk/raw/population CRPS .14657/.16351/.16560; RMSE .3478/.3778/.3567m/s².
+  Internal empirical Bayes calibration; still NO conditional coverage qualification.
+- Updated LC811cd7e8 finite geometry/epsilon, pooled_full_v5: later-FIT Brier
+  posterior.002828/population.003071 vs baseline.002414; not adopted.
+- Six FIT SUMOCORE states: inferred-minus-default600s MAPPO/PI effect
+  +4171/+3909veh-s, almost wholly road. Native road improves8523 vs controlled
+  4351/4617veh-s. Initial HDVs AND entrant donors changed; cause unidentified.
 - Point candidate acceleration RMSE 0.299 vs initial0.902 m/s², 10s position
   MAE5.58 m vs constant-speed13.81 m. Conditional FIT only; INT/EVAL must score
   free-running congestion/breakdown before adoption. Mainline-only CF fit and

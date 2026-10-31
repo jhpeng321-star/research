@@ -1,0 +1,52 @@
+{
+  "schema": "wm_phys.idm_shrinkage.v1",
+  "population_only": false,
+  "prior_count": 19.355678502354067,
+  "formula": "posterior_fraction=n_observations/(n_observations+prior_count); zero evidence -> population",
+  "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+  "fit_worlds": [
+    969400,
+    969401,
+    969402,
+    969403,
+    969404,
+    969405,
+    969406,
+    969407,
+    969408,
+    969409,
+    969410,
+    969411,
+    969412,
+    969413,
+    969414,
+    969415,
+    969416,
+    969417,
+    969418,
+    969419,
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "conditioning_end_s": 300,
+  "prefix_interval_s": [
+    240,
+    270
+  ],
+  "calibration_interval_s": [
+    270,
+    300
+  ],
+  "objective": "Physical acceleration-profile CRPS; no runtime residual noise",
+  "qualification": "Internal empirical-Bayes calibration, not coverage or action-effect qualification"
+}

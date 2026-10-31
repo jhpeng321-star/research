@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "verified_artifacts": 11,
+  "sizes_bytes": {
+    "shrinkage_v1/driver_shrinkage.json": 264239,
+    "shrinkage_v1/validation.json": 8865,
+    "shrinkage_v1/idm_shrinkage.json": 1029,
+    "shrinkage_v1/idm_posteriors.json.gz": 31000876,
+    "shrinkage_v1/idm_population.json": 219514,
+    "shrinkage_v1/provenance.json": 21049,
+    "lane_v2/lane_events.json": 223370,
+    "lane_v2/validation.json": 1208,
+    "lane_v2/lc2013_posteriors.json": 6594628,
+    "lane_v2/lc2013_population.json": 18651,
+    "lane_v2/provenance.json": 21194
+  },
+  "paper_lines": 38,
+  "source_verification_sha256": "b2c7aac4c29d2cbec1b2f13d49e7a77d395c8a79df895e8bf95e6f2e05174e3e"
+}
