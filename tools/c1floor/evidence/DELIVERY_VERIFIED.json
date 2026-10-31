@@ -1,0 +1,35 @@
+{
+ "status": "PASS_BLOCKED_DELIVERY_NOT_FLOOR",
+ "actual_sim_s": 2400,
+ "charged_sim_s": 9000,
+ "attempts": 6,
+ "alternative_branches": 0,
+ "csv_rows": 98,
+ "csv_columns": [
+  "model",
+  "plant",
+  "arm",
+  "horizon_s",
+  "metric",
+  "estimate",
+  "lo",
+  "hi",
+  "n_worlds",
+  "world_stat",
+  "units",
+  "bootstrap_draws",
+  "bootstrap_seed",
+  "status"
+ ],
+ "report_lines": 36,
+ "source_bindings_match": true,
+ "existing_c1closed_export_present": false,
+ "schema_matches_pinned_c1closed": true,
+ "registration_entry_sha256": "da9a51e251042990ff98d59d4133fd57eb14c2c659bd47bbf12e53b753821e5c",
+ "outputs": {
+  "C1FLOOR.md": "cea2354ba651cada4f476ed9128e1e80ae24763f2db53af843d6732d26908165",
+  "C1FLOOR_ANALYSIS.json": "8b89a2acf83ac901eaf537c3cdd55737bcfb0439d76bff77ea2b2ded2e4d0fe2",
+  "C1FLOOR_error_horizon.csv": "8298dca0444b3e4b9311d3bac83bde3cecbe81725f4f6c89808e1ea813777004",
+  "C1FLOOR_PREREQUISITES.md": "c0a59083b982692ecd34244df10bdf54eaa66bb4600789de888a8d5288cf8947"
+ }
+}

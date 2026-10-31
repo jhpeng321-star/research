@@ -37,5 +37,5 @@ _out/brakefix_verification/main2*/command.log -whitespace
 scripts/genrand/*.sh text eol=lf
 
 # C1FLOOR byte-hash bindings and transported receipts are exact raw bytes.
-tools/c1floor/** -text
-docs/paper_results/C1FLOOR* -text
+tools/c1floor/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/paper_results/C1FLOOR* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
