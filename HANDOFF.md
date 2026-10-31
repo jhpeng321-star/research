@@ -80,6 +80,10 @@ current task registration and final-checkpoint receipt presence. Each heartbeat
 appends a short line here and commits ONLY its own explicit evidence paths;
 an already-staged index is preserved and blocks its commit. It cannot dispatch,
 restart, signal or retrain scientific jobs. CPU4/4 and Ruff PASS before launch.
+Watcher ownWindows27200 is LIVE, first04:32 heartbeat committed9da788a4/zeroalerts;
+next04:52, then20min cadence and final12:00 check. Receipts/owned-PID claim:
+`tools/c1switch2/evidence/WATCH_MAIN0427/{DISPATCH,RUN_ONCE,STATUS}.json`.
+Never duplicate this watcher; each check remains read-only with respect to science.
 Latest resume state: `tools/c1switch2/evidence/STATUS_CURRENT.json` plus task-only `operations status`.
 Mechanics-only canary PASS: owncpuQ PID467748 EXITED, root
 `/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; charged=actual4680 sim-s, GPU0. Never redispatch it.
