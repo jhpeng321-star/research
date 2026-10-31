@@ -15,7 +15,7 @@ COMMON = ["--config", BASE + "/restart20261026/runtime_longint/configs/c4_wm_loo
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("probe", "canary", "export-smoke", "drive"))
+    parser.add_argument("mode", choices=("probe", "canary", "export-smoke", "physics-smoke", "drive", "finish-watch"))
     parser.add_argument("--root", required=True)
     parser.add_argument("--prepared", required=True)
     parser.add_argument("--out-name")
@@ -24,6 +24,19 @@ def main():
     from tools.wmfixmerge.data import install_guard, safe, digest
     install_guard()
     root = safe(args.root)
+    if args.mode == "finish-watch":
+        out = root / "es_run_full"
+        if (out / "FINISH_WATCH_PID.json").exists():
+            raise ValueError("existing finish watcher; reconcile its PID first")
+        env = dict(os.environ, PYTHONPATH="src:.", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
+                   OPENBLAS_NUM_THREADS="1", CUDA_VISIBLE_DEVICES="")
+        with (root / "es_finish_watch.log").open("xb") as log:
+            proc = subprocess.Popen(["nice", "-n", "19", sys.executable, "-m",
+                "tools.wmfixmerge.es_finish", "--watch", "--root", str(out)],
+                env=env, cwd=str(Path(__file__).resolve().parents[2]), stdin=subprocess.DEVNULL,
+                stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        print(json.dumps(dict(pid=proc.pid)), flush=True)
+        return
     if args.mode == "drive":
         out = root / "es_run_full"
         if not out.is_dir() or any(out.iterdir()):
@@ -50,14 +63,28 @@ def main():
             json.dump(dict(pid=proc.pid, argv=cmd), stream)
         print(json.dumps(dict(pid=proc.pid, out=str(out))), flush=True)
         return
-    if args.mode == "export-smoke":
+    if args.mode in ("export-smoke", "physics-smoke"):
         from types import SimpleNamespace
         from tools.wmfixmerge.es import DEFAULTS, export_physical_checkpoint
-        out = root / "export_smoke"
+        out = root / (args.out_name or "export_smoke")
         if not out.is_dir():
             raise ValueError("pre-created output directory required")
         opts = SimpleNamespace(config=COMMON[1], checkpoint=COMMON[3])
         export_physical_checkpoint(opts, out, 0, dict(gen=0, params=DEFAULTS))
+        if args.mode == "physics-smoke":
+            # Serialization-only fixture: no rollout, objective or calibration.
+            changed = dict(DEFAULTS)
+            changed["mainline_courtesy_zone_m"] += 1.
+            export_physical_checkpoint(opts, out, 1, dict(gen=1, params=changed))
+            from tools.wmcombined.e3_score import load_for_scoring
+            shared = out / "generation_001_config.json"
+            _, _, candidate = load_for_scoring(shared, out / "generation_001.pt")
+            _, _, reference = load_for_scoring(shared, out / "generation_000.pt")
+            if candidate.physics.mainline_courtesy_zone_m != changed["mainline_courtesy_zone_m"]:
+                raise ValueError("candidate physics lost under shared canonical config")
+            if reference.physics.mainline_courtesy_zone_m != DEFAULTS["mainline_courtesy_zone_m"]:
+                raise ValueError("shared config erased reference physics")
+            print("shared-config candidate/reference physical difference preserved", flush=True)
         print("canonical export/reload PASS", flush=True)
         return
     out = root / (args.out_name or ("probe_k8" if args.mode == "probe" else "es_canary_v3"))

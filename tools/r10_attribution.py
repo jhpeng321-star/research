@@ -52,6 +52,7 @@ KEYS = ("physics_accel_mps2", "accel_mps2", "raw_residual_mps2", "accel_delta_mp
 def load_model(config: str, ckpt: str, overrides=()):
     path = ROOT / "configs" / config
     changes = ["runtime.device=cpu", "data.entries_v2=false", f"model.init_from={ckpt}", *overrides]
+    checkpoint_physics = False
     if path.suffix == ".json":
         # LOOP14 records the accepted run's resolved config, not its original TOML path.
         # Decode the same nested schema and apply the identical scoring-only overrides.
@@ -59,12 +60,19 @@ def load_model(config: str, ckpt: str, overrides=()):
         from wms.config.schema import from_mapping
         from wms.config.train import TrainConfig
         raw = json.loads(path.read_text(encoding="utf-8"))
+        checkpoint_physics = raw.get("checkpoint_physics", False)
         cfg = from_mapping(TrainConfig, apply_overrides(raw.get("config", raw), changes))
     else:
         cfg = load_train_config(path, changes)
-    physics = build_physics(cfg)
-    model = build_model(cfg, physics)
     payload = torch.load(ckpt, map_location="cpu", weights_only=True)
+    physics = build_physics(cfg)
+    if checkpoint_physics:
+        from wms.physics.config import PhysicsConfig
+        saved = payload.get("config", {}).get("physics")
+        if not isinstance(saved, dict):
+            raise ValueError("checkpoint_physics requires an explicit checkpoint physics config")
+        physics = PhysicsConfig(**saved)
+    model = build_model(cfg, physics)
     own = model.state_dict()
     matched = {k: v for k, v in payload["model"].items() if k in own and own[k].shape == v.shape}
     model.load_state_dict(matched, strict=False)

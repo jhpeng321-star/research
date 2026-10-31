@@ -55,3 +55,26 @@
 - Unchanged-plan preflight on canonical smoke export found missing accept panel,
   C1 cohort/runner and candidate quartet completion. Required input/GPU-slot
   requests are recorded in WMFIX_ES.md; no evaluation result is claimed.
+
+## Scoring identity / bounded receipt continuation
+- Canonical accept normally evaluates both checkpoints under one shared physical
+  config. That would erase option-(b)'s candidate/reference physical difference.
+  `r10_attribution.load_model` now accepts an explicit JSON wrapper metadata flag
+  `checkpoint_physics`, default OFF; it uses each checkpoint's serialized physics.
+  No verdict metric/threshold changed; all existing TOML/default paths unchanged.
+- Real serialization-only smoke PASS: two otherwise identical frozen checkpoints
+  with distinct physical scalars keep that distinction under the same scoring
+  config. No rollout/fitness or manual calibration value used by this fixture.
+- Initial schema-field approach collided with already-staged merge-basis config
+  additions; restored those original host fields and used wrapper metadata instead.
+  Shared S-WMFIXMERGE files/processes never edited/signalled. No ES sweep failure
+  receipt exists; running sweeps retain their already-loaded code and frozen tensors.
+- Live driver retains its pre-fix config export function. `es_finish.py` waits for
+  FINAL, preserves legacy config JSON, emits schema-correct immutable scoring config,
+  reload-verifies selected physical values and writes SCORING_READY + final preflight.
+  Immutable .pt checkpoints never modified. Finalizer is bounded to six hours.
+- `es_collect.py` only pulls completed JSON receipts, computes actual K8 CPU work
+  and N-process panel extrapolation, records every generation's J/source MAE and
+  updates <=60-line WMFIX_ES.md. Six-hour cap, exclusive PID file, no dispatches.
+  Optional commits inspect status/diff/log and stage only report/receipt files;
+  foreign edits defer commits or stop report overwrites. No push.

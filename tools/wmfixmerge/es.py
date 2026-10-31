@@ -582,7 +582,7 @@ def export_physical_checkpoint(args, out, generation, best):
             raise ValueError("ES canonical reload lost physical scalar: " + p["name"])
     resolved = asdict(config)
     resolved["model"]["merge_response"] = True
-    resolved["physics"] = asdict(model.physics)
+    resolved = dict(config=resolved, checkpoint_physics=True)
     with (out / f"generation_{generation:03d}_config.json").open("x") as stream:
         json.dump(resolved, stream, indent=2, allow_nan=False)
 
