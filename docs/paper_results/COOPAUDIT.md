@@ -33,11 +33,12 @@ D(S)=J(native)-J(S); C_G=D_GROUP-sum_i D_ONLY:i; positive is beneficial interact
 - Traces: that directory's traces/*.jsonl.gz; members and nearby ramp vehicles, t0-30 through window end+30,0.5s frames.
 - Existing main969650 traces: /root/coopaudit20261031/jobs/main_s969650/traces/*.jsonl.gz (old two-member design).
 - Schema and identity/subset mapping: tools/coopaudit/TRACE_HANDOFF.md for S-COOPBEHAV.
-- Continuation entry: python -B -m tools.coopaudit.continue_audit (exclusive lock;120s sequential polling).
-- Owned continuation39620 stopped; gpuR YIELD set and owned idle worker516243 paused;16/16 original CPU tests passed.
+- Continuation now requires reviewed hash-bound artifact release; no polling auto-dispatch. Handoff: tools/coopaudit/RESUME.md.
+- Owned continuation39620 stopped; gpuR YIELD set and owned idle worker516243 paused;21/21 updated CPU tests pass.
 - Canary +28 census +1 original five-arm world preserved: actual21180, charged21480/500000sim-s.
-- Further SUMO requires explicit S-SUMOCF ARTIFACT_CHECK.md PASS and corrected design/cap binding; file absent at recovery.
+- Further SUMO requires S-SUMOCF docs/paper_results/ARTIFACT_CHECK.md PASS and corrected design/cap binding; current verdict HOLD.
 - PI/CIRCLES/CTRL0 are optional only; existing old-design observations are historical, not corrected-panel estimates.
+- HOLD_VERIFIED.json confirms stopped owned worker and zero additional sim-s; corrected versioned-panel migration remains pending PASS.
 - Completion and blockers are recorded in tools/coopaudit/evidence/STATUS.json and CONTINUATION_FAILURE.json.
 - Seed scan disclosure: an initial broad scanner opened legacy parameter JSON; no values used; corrected guards prune these paths.
 - Full exposure disclosure: tools/coopaudit/evidence/EXPOSURE_NOTE.md.542 allowed runtime files verified;1 restricted-name file deliberately unopened.

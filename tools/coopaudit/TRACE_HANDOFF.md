@@ -2,7 +2,12 @@
 
 Own host/root: gpuR `/root/coopaudit20261031`.
 Canary: `jobs/canary_s969699_attempt2/traces/*.jsonl.gz`.
-Main (after SNR gate/cap admission): `jobs/main_sSEED/traces/*.jsonl.gz`.
+Historical main: `jobs/main_s969650/traces/*.jsonl.gz` (one completed world).
+**17:20 artifact HOLD:** all traces above are preserved. This main world used the
+superseded grid6/two-member/60s/five-arm design. It is descriptive historical
+evidence, not a corrected-design audit estimate. No new main worlds are being
+dispatched; use `evidence/HOLD_VERIFIED.json` and `RESUME.md` for current status.
+Corrected-design traces will receive a separately registered versioned namespace.
 
 One compressed JSON-lines file per controller/subset, native B included. Each
 row is one RSU-observable vehicle at a 0.5s physics frame: absolute `t`, stable

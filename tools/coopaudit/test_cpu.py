@@ -162,7 +162,16 @@ class AuditContracts(unittest.TestCase):
             artifact.write_text('Status: FAIL\n',encoding='utf-8')
             release['artifact_document_sha256']=hashlib.sha256(artifact.read_bytes()).hexdigest()
             (root/'ARTIFACT_RELEASE.json').write_text(json.dumps(release))
-            with self.assertRaisesRegex(ValueError,'explicit Status: PASS'):
+            with self.assertRaisesRegex(ValueError,'explicit PASS status'):
+                require_release(root)
+            artifact.write_text('# S-SUMOCF artifact check — PASS\n',encoding='utf-8')
+            release['artifact_document_sha256']=hashlib.sha256(artifact.read_bytes()).hexdigest()
+            (root/'ARTIFACT_RELEASE.json').write_text(json.dumps(release))
+            self.assertEqual(require_release(root),release)
+            artifact.write_text('# S-SUMOCF artifact check — HOLD\nStatus: PASS\n',encoding='utf-8')
+            release['artifact_document_sha256']=hashlib.sha256(artifact.read_bytes()).hexdigest()
+            (root/'ARTIFACT_RELEASE.json').write_text(json.dumps(release))
+            with self.assertRaisesRegex(ValueError,'without HOLD/FAIL'):
                 require_release(root)
 
     def test_continuation_cannot_start_under_hold(self):

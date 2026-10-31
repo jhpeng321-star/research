@@ -1,6 +1,10 @@
 {
  "phase": "ARTIFACT_HOLD",
  "hold_receipt": "tools/coopaudit/evidence/ARTIFACT_HOLD.json",
+ "hold_verified_receipt": "tools/coopaudit/evidence/HOLD_VERIFIED.json",
+ "cpu_tests_passed": 21,
+ "additional_sim_s_since_hold": 0,
+ "resume_handoff": "tools/coopaudit/RESUME.md",
  "actual_sim_s": 21180,
  "charged_sim_s": 21480,
  "local_continuation_stopped": 39620,

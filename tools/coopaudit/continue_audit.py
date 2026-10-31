@@ -22,6 +22,7 @@ from tools.coopaudit.release import require_release
 HERE=Path(__file__).resolve().parents[2]
 EVIDENCE=HERE/'tools/coopaudit/evidence'
 SOURCE=Path('E:/agent-work/c4-sumocf')
+ARTIFACT=SOURCE/'docs/paper_results/ARTIFACT_CHECK.md'
 REMOTE=Path('/root/coopaudit20261031')
 
 
@@ -72,7 +73,7 @@ def git_commit(message, paths):
 
 
 def phase(name):
-    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
+    require_release(EVIDENCE, artifact=ARTIFACT)
     s=status()
     if 'STOP' in s:
         raise ValueError('owned STOP prevents continuation')
@@ -85,7 +86,7 @@ def phase(name):
         deploy(name)
     while True:
         time.sleep(120)
-        require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
+        require_release(EVIDENCE, artifact=ARTIFACT)
         s=status()
         write(EVIDENCE/'STATUS.json',dict(phase=name,unix=time.time(),remote=s))
         if 'STOP' in s:
@@ -97,7 +98,7 @@ def phase(name):
 
 
 def export():
-    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
+    require_release(EVIDENCE, artifact=ARTIFACT)
     script="""
 import base64,json,sys
 from pathlib import Path
@@ -164,7 +165,7 @@ print(json.dumps(files))
 
 def main():
     # Check BEFORE taking/replacing PID receipts or considering any old selection.
-    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
+    require_release(EVIDENCE, artifact=ARTIFACT)
     lock=(EVIDENCE/'CONTINUATION.lock').open('a+b')
     if os.name=='nt':
         import msvcrt

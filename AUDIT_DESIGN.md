@@ -144,12 +144,14 @@ introduced after the canary. Pending report is clearly labelled until completion
   itself under artifact investigation. Neither selection currently authorises
   further audit SUMO. The completed first world is historical, not a completed
   corrected-design observation; its results and charges remain untouched.
-- **Release condition:** E:/agent-work/c4-sumocf/ARTIFACT_CHECK.md must explicitly
+- **Release condition:** E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md must explicitly
   report PASS, or a corrected/re-selected design with a passed artifact check.
   Bind that evidence and the current owner-rule selection, revise exact complete
   panel costs, and register/commit before dispatch. Missing/ambiguous/FAIL blocks.
   No unconditional timer release or old-worker resume is authorised. As checked
-  at recovery, ARTIFACT_CHECK.md does not yet exist.
+  at initial recovery the root-level file did not exist. Located subsequently in
+  docs/paper_results/ARTIFACT_CHECK.md: explicit HOLD, no resume authorised. Its
+  pending gates include zero-noise bitwise identity and a corrected<=100k probe.
 - If the selected group changes, regenerate only deterministic groups from the
   existing census's observable positions; keep the original census/state hashes.
   Never rerun finished prefixes to discover new groups or overwrite old jobs.
@@ -161,8 +163,9 @@ introduced after the canary. Pending report is clearly labelled until completion
 `release.py` checks the local and remote launch paths independently: an active
 ARTIFACT_HOLD, missing release, YIELD/STOP, non-PASS evidence, scope mismatch,
 missing three-arm budget reservation, changed artifact/design hashes, or absent
-registration provenance prevents launch. The artifact document must contain one
-unambiguous `Status: PASS` line; release is reviewed and registered, never inferred
+registration provenance prevents launch. The artifact document must contain an
+explicit PASS status line or artifact-check title, without a conflicting HOLD/FAIL;
+release is reviewed and registered, never inferred
 from a timer or table title. No release receipt has been issued during this HOLD.
 The old table-polling auto-bind/auto-dispatch code is removed. Selection validation
 now recomputes abs(raw DG mean)/raw DG SD and rejects a substituted CV statistic.

@@ -14,7 +14,7 @@ def deploy(action):
     if action not in ('stage', 'test'):
         from tools.coopaudit.release import require_release
         require_release(root/'tools/coopaudit/evidence',
-                        artifact='E:/agent-work/c4-sumocf/ARTIFACT_CHECK.md')
+                        artifact='E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md')
     files=sorted((root/'tools/coopaudit').glob('*.py'))
     version=hashlib.sha256(b''.join(p.name.encode()+p.read_bytes() for p in files)).hexdigest()[:16]
     buffer=io.BytesIO()
