@@ -8,11 +8,17 @@
 - gpuA ES code is isolated in `wmfixmerge20261031/es_cpu_v3`; cpuQ owns
   `/home/ubuntu/wmfix_es`. No SUMO, prohibited inputs, deletions or push.
 
-## Throughput — genuine K8 measurement in progress
-- Completed futures: cpuQ 6/8; gpuA 8/8. Eight sticky processes per host.
-- Each process: two paired arms x {120,300} s, entry path/mix ON, threads=1.
-- Prior K1 measurements: cpuQ 1766.6 s/1372 MB; gpuA 1920.0 s/1775 MB.
-  Prior K8/~33-min aggregate claims withdrawn; full K8 receipts pending.
+## Throughput — genuine K8, entry path/mix ON, threads=1
+- Each host: 8 sticky-future processes, each two paired arms x {120,300} s.
+- cpuQ: 20319.6 CPU-worker-s/K8 group; 8-way wall ~2571.9 s;
+  peak RSS 1250-1916 MB/process (measured).
+- gpuA CPUs: 17462.2 CPU-worker-s/group; wall ~2226.9 s;
+  peak RSS 1588-2510 MB/process (measured).
+- Extrapolated 12-FIT-group K8 panel: cpuQ N=30 135.5 min; gpuA N=18 194.0 min;
+  combined 79.8 min (2.80x requested GPU reference 28.5 min).
+  Linear scaling estimate, not a measured full parallel-panel run.
+- Prior probe was K1; its ~33 min/52-world estimate was invalid and withdrawn.
+  GPU pilot code is also K1; 28.5 min is not measured K8 GPU throughput.
 
 ## Full-corpus ES protocol — fixed before first combined generation
 - Verified combined registry: original FIT doc SHA 7bbd41f3 + wmdata d3ad5638;

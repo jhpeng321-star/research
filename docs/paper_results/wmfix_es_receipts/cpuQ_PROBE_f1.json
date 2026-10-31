@@ -1,0 +1,87 @@
+{
+  "schema": "wmfix_es_probe/1",
+  "host": "VM-0-3-ubuntu",
+  "pid": 3030649,
+  "threads": 1,
+  "torch": "2.12.1+cpu",
+  "device": "cpu",
+  "future_index": 1,
+  "n_futures": 8,
+  "runtime_load_seconds": 0.6,
+  "group_seconds": 2571.3,
+  "max_rss_mb": 1288.0,
+  "rows": [
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 120,
+      "seconds": 134.69,
+      "paired_J_contrast": 654.330078125,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 300,
+      "seconds": 956.34,
+      "paired_J_contrast": 1677.416015625,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 120,
+      "seconds": 164.32,
+      "paired_J_contrast": 657.3525390625,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 300,
+      "seconds": 1315.92,
+      "paired_J_contrast": 1792.033203125,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    }
+  ]
+}
