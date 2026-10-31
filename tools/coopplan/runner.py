@@ -11,7 +11,7 @@ import traceback
 
 from .predictor import ObservableState, SumoOraclePredictor, Prediction
 from .planner import Planner, TIMES, HORIZON, cooperation_credit
-from .protocol import worlds, digest
+from .protocol import worlds, digest, canonical
 from .storage import read, write, verify, stop
 from . import plant
 
@@ -44,6 +44,10 @@ def baseline(root,world,ident):
                 clocks[str(until-300)] = dict(b.totals)
         write(path/'RESULT.json',dict(world=world,clocks=clocks,actual_sim_s=b.actual,
                                       final_prefix=b.fingerprint()))
+        if world == worlds()[0]:
+            reference = read(root/'MECHANICS.json')['baseline_reference']
+            if canonical(dict(totals=b.totals,prefix=b.fingerprint())) != canonical(reference):
+                raise ValueError('complete 1200s MAPPO mechanics repeat not bitwise identical')
         return clocks
     finally:
         b.close()
@@ -106,6 +110,8 @@ def run(root,workers):
     import fcntl
     root = Path(root)
     binding = verify(root)
+    if not read(root/'MECHANICS.json')['pass_']:
+        raise ValueError('global pre-registered mechanics gate required')
     if workers > binding['workers'] or workers < 1:
         raise ValueError('host worker cap')
     lock = (root/'supervisor.lock').open('a')
