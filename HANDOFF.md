@@ -32,6 +32,15 @@ Updated 2026-11-01 02:11 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
 - Session remains alive with ten-minute sleeps/checks through11:30;04/08 interim
   status and09:30 intake freeze supersede the historical07:00 notes below.
 
+### 02:24 live in-session check
+- Watcher last poll02:21:35, both handoffs present, same A2/B2/C2 READY ordering.
+- Independent read-only audit: supervisor762343 alive/deadline11:30, tasks0,
+  no dispatch/workers/terminal receipt. GPU8454MiB/98%,load28.33: still busy.
+- `tools/rbrunb/observe.py` records independent handoff + exact supervisor +
+  nvidia-smi observations without launching work. In-session `--sleep 600`
+  supports ten-minute checks; writes operational04/08 interim receipts once.
+- Audit: `runs/rbrunb/OBSERVE_1793471033172223500.json`.
+
 ## Current — corrected B2 claimed / WAITING_RESOURCES
 - Existing watcher33076 automatically claimed **WM-PHYS-B2** at01:31:32 and
   launched ONE supervisor **gpuR755633**; original B remains withdrawn/tasks0.
