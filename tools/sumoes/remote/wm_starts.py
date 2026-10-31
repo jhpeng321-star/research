@@ -115,6 +115,8 @@ def callback(cp, ce, native):
     from wms.control.bridge import make_cav_controller
     from wms.control.safety import safe_accel
     from wms.control.train_cli import GroupSignal
+    from wms.control import execution
+    from tools.sumoes.caprel import wm_executed
 
     def deterministic(obs, signal, **kw):
         return cp(obs, signal, deterministic=True, **kw)
@@ -126,6 +128,18 @@ def callback(cp, ce, native):
                                  native_lane_change=True)
 
     def run(state):
-        return bridge(state)
+        original = execution.executed_residual
+
+        def matched(s, residual, native, lo, hi):
+            mask = s['present'].bool() & s['is_cav'].bool()
+            run.braking_mass += float((-residual.clamp_max(0.) * mask).sum())
+            return wm_executed(s, residual, native, lo, hi)
+
+        execution.executed_residual = matched
+        try:
+            return bridge(state)
+        finally:
+            execution.executed_residual = original
+    run.braking_mass = 0.
     run.native_lane_mask = bridge.native_lane_mask
     return run

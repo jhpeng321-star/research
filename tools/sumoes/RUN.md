@@ -19,3 +19,20 @@ Observations after update 0 (for MAIN):
   The ES gradient therefore points into the inert region; WM screen sign agreed with SUMO (all
   kept medians < 0 = plus worse).
 - Run PAUSED after update 0 (no mechanical failure); 602,300 sim-s remain under the cap.
+
+## MAIN14:40 amendment implementation / fresh-session resume
+
+- Read git log/status, HANDOFF, this log, and REGISTRATION14:25/14:40 first. cpuQ process
+  inventory confirms no SUMOES jobs; state update_count=1, theta=0; ledger=47,700 actual/charged.
+- A: replace Adam with sigma times the mean sign-weighted unit directions; panel unchanged.
+- B audit correction: both old runtime paths were base-relative; SUMO helper's caprel name
+  was misleading. Both now use the same capped-CTRL0-relative composition through
+  tools/sumoes/caprel.py (SUMO live cap, WM frozen inferred cap). Native zero/no-effect
+  writes are preserved. C1 SHA64f70af4 asserted; frozen runtime and wrappers unchanged.
+- C: evaluate braking-side gains vs theta with paired futures on eight TRAIN starts;
+  select braking orientation by negative-residual mass, positive median and q10 only.
+- Screen no-step counts toward the four-consecutive-rejection stop (zero SUMO charge).
+  Historical update0 counts. One registered rejection-based sigma halving after u9 only.
+- CPU checks on cpuQ existing environment: 32 passed (1 existing torch warning), no SUMO.
+  Windows default Python lacks torch; no environment was created.
+- No additional SUMO dispatched at this checkpoint; all original evidence retained.

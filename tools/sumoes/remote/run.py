@@ -40,6 +40,33 @@ def screener_for(name, config):
     raise SystemExit(f'screener {name!r} is not registered (only the WM 60 s screen via file)')
 
 
+def stop_reason(receipts):
+    """Screen no-step is a rejected opportunity, and breaks no losing streak."""
+    updates = [r for r in receipts if r.get('update', -1) >= 0]
+    if len(updates) >= 4 and all(r.get('accepted') is not True for r in updates[-4:]):
+        return 'four_consecutive_rejected_updates_including_screen_no_step'
+    return None
+
+
+def check_ready(driver, state, evaluator):
+    assert not (OWN / 'STOP').exists(), 'STOP exists; no retry'
+    reason = stop_reason(driver.receipts)
+    if reason:
+        log('scientific_stop', reason=reason, update_count=state.update_count,
+            budget=driver.ledger.to_dict())
+        raise SystemExit(0)
+    assert state.update_count < driver.config.max_updates, 'registered updates exhausted'
+    # Never resume from a stale state over an already charged/unfinished dispatch.
+    assert sum(r['sim_s'] for r in evaluator.ledger_rows()) == driver.ledger.charged_sim_s
+    if state.update_count == 10 and not state.reject_sigma_halved:
+        first_ten = [r for r in driver.receipts if 0 <= r.get('update', -1) <= 9]
+        if sum(r.get('accepted') is not True for r in first_ten) > 2 * len(first_ten) / 3:
+            state.sigma_target_residual_rms_mps2 *= .5
+            state.reject_sigma_halved = True
+            driver.save(state)
+            log('registered_sigma_halving', target=state.sigma_target_residual_rms_mps2)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', choices=('baseline', 'request', 'updates'))
@@ -47,6 +74,9 @@ def main():
     parser.add_argument('--max', type=int, default=1)
     parser.add_argument('--workers', type=int, default=24)
     args = parser.parse_args()
+    import fcntl
+    lock = (OWN / 'driver.lock').open('a')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     assert os.getpriority(os.PRIO_PROCESS, 0) == 19
     assert os.environ.get('CUDA_VISIBLE_DEVICES') == ''
     design_path = OWN / 'design.json'
@@ -72,7 +102,8 @@ def main():
     if args.mode == 'request':
         from tools.sumoes.file_screen import request_payload, write_request
         driver, state = SumoEsDriver.resume(state_path, config=config, evaluator=evaluator,
-                                            screener=None)
+                                             screener=None)
+        check_ready(driver, state, evaluator)
         update = state.update_count
         sigma = state.sigma(driver.sensitivity)
         directions = state.directions(update, config.wm_screen_directions)
@@ -86,11 +117,15 @@ def main():
     for _ in range(args.max):
         if state.update_count >= config.max_updates:
             break
+        check_ready(driver, state, evaluator)
+        begin = time.monotonic()
         log('update_start', update=state.update_count, pid=os.getpid())
         receipt = driver.run_update(state)
-        log('update_done', **{k: receipt.get(k) for k in (
+        receipt['wall_s'] = time.monotonic() - begin
+        driver.save(state)
+        log('update_done', wall_s=receipt['wall_s'], **{k: receipt.get(k) for k in (
             'update', 'sigma', 'sensitivity', 'pair_deltas', 'grad_norm', 'accepted',
-            'no_step', 'panel_mean_before', 'panel_mean_after', 'budget')})
+            'step_rule', 'step_norm', 'no_step', 'panel_mean_before', 'panel_mean_after', 'budget')})
     return 0
 
 

@@ -57,6 +57,21 @@ def estimate(directions: torch.Tensor, deltas: torch.Tensor, sigma: float) -> to
     return (deltas.to(directions)[:, None] * directions).mean(0) / (2 * sigma)
 
 
+def normalized_step(theta, directions, deltas, sigma):
+    """MAIN 14:40: sigma times the mean of sign-weighted UNIT directions.
+
+    Lower J wins: positive J_plus-J_minus gives weight -1. Zero gives no vote.
+    Do not renormalize the mean (disagreement must cancel), or use Adam moments.
+    """
+    norms = directions.norm(dim=1)
+    if (not math.isfinite(sigma) or sigma <= 0 or not len(directions)
+            or not bool(torch.isfinite(directions).all())
+            or not bool(torch.isfinite(deltas).all()) or bool((norms == 0).any())):
+        raise ValueError("normalized ES requires finite nonzero directions and positive sigma")
+    unit = directions / norms[:, None]
+    return theta + sigma * (-deltas.to(directions).sign()[:, None] * unit).mean(0)
+
+
 def panel_improved(before: list[float], after: list[float]) -> bool:
     """S-PILOTDIAG option (b) semantics: mean panel J must not worsen (no thresholds)."""
     if len(before) != len(after) or not before:
@@ -113,6 +128,7 @@ class EsState:
     accepted_count: int = 0
     update_count: int = 0
     panel_j: list[float] = field(default_factory=list)
+    reject_sigma_halved: bool = False
 
     def sigma(self, head_sensitivity_rms: float) -> float:
         base = sigma_for(self.sigma_target_residual_rms_mps2, head_sensitivity_rms)
@@ -131,7 +147,8 @@ class EsState:
                     sigma_halve_every_accepted=self.sigma_halve_every_accepted,
                     direction_seed=self.direction_seed,
                     accepted_count=self.accepted_count,
-                    update_count=self.update_count, panel_j=list(self.panel_j))
+                    update_count=self.update_count, panel_j=list(self.panel_j),
+                    reject_sigma_halved=self.reject_sigma_halved)
 
     @classmethod
     def from_dict(cls, data: dict) -> "EsState":
@@ -146,4 +163,5 @@ class EsState:
                    sigma_halve_every_accepted=data["sigma_halve_every_accepted"],
                    direction_seed=data["direction_seed"],
                    accepted_count=data["accepted_count"],
-                   update_count=data["update_count"], panel_j=list(data["panel_j"]))
+                   update_count=data["update_count"], panel_j=list(data["panel_j"]),
+                   reject_sigma_halved=data.get('reject_sigma_halved', False))

@@ -1,11 +1,10 @@
-"""S-SUMOES driver skeleton: update loop, budget ledger, receipts. Default OFF.
+"""S-SUMOES update loop, budget ledger and receipts. Default OFF.
 
 Per update: draw D directions -> WM screen keeps P -> SUMO-evaluate the P
 antithetic pairs on W fresh TRAIN worlds (CRN = identical world seed within a
-pair) -> screened ES gradient -> Adam step -> held-in panel acceptance with
-actor+Adam rollback on rejection.  The real SUMO evaluator is the registered
-cpuQ job protocol reusing the S-WMDATA/S-SPEEDHEAD runtime wrappers and is NOT
-implemented in this design task; everything here runs on the CPU stub.
+pair) -> MAIN1440 normalized sign/unit-direction step -> held-in panel acceptance
+with bitwise rollback. The real SUMO evaluator uses the registered cpuQ job
+protocol and S-WMDATA/S-SPEEDHEAD runtime wrappers. Adam state is historical only.
 """
 from __future__ import annotations
 
@@ -18,7 +17,7 @@ from typing import Protocol
 import torch
 
 from .config import SumoEsConfig
-from .es import EsState, HeadAdam, estimate, panel_improved
+from .es import EsState, HeadAdam, estimate, normalized_step, panel_improved
 
 
 class BudgetExceeded(RuntimeError):
@@ -201,7 +200,10 @@ class SumoEsDriver:
                            sigma_predicted_command_rms=sigma * self.sensitivity,
                            screen=screen_receipt, pair_deltas=[], pair_J=[], grad_norm=0.0,
                            panel_J_before=list(state.panel_j), panel_J_after=list(state.panel_j),
-                           accepted=None, no_step=True, budget=self.ledger.to_dict())
+                            accepted=None, no_step=True,
+                            panel_mean_before=sum(state.panel_j) / len(state.panel_j),
+                            panel_mean_after=sum(state.panel_j) / len(state.panel_j),
+                            budget=self.ledger.to_dict())
             state.update_count += 1
             self.receipts.append(receipt)
             self.save(state)
@@ -225,7 +227,8 @@ class SumoEsDriver:
         gradient = estimate(directions[kept], torch.tensor(deltas, dtype=torch.float64),
                             sigma)
         adam_snapshot = state.adam.snapshot()
-        theta_candidate = state.adam.step(state.theta, gradient)
+        theta_candidate = normalized_step(state.theta, directions[kept],
+                                          torch.tensor(deltas, dtype=torch.float64), sigma)
         panel_results = self.panel_results(theta_candidate, update, f"u{update:02d}_panel")
         candidate_panel = [r["J600"] for r in panel_results]
         accepted = panel_improved(state.panel_j, candidate_panel)
@@ -233,6 +236,8 @@ class SumoEsDriver:
                        sigma_predicted_command_rms=sigma * self.sensitivity,
                        screen=screen_receipt,
                        pair_deltas=deltas, pair_J=pair_j, grad_norm=float(gradient.norm()),
+                       step_rule="MAIN1440_sign_weighted_mean_unit",
+                       step_norm=float((theta_candidate - state.theta).norm()),
                        panel_J_before=list(state.panel_j), panel_J_after=candidate_panel,
                        panel_mean_before=sum(state.panel_j) / len(state.panel_j),
                        panel_mean_after=sum(candidate_panel) / len(candidate_panel),

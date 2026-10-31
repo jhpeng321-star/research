@@ -49,6 +49,9 @@ class FileScreener:
         if request != expected:
             raise ValueError(f"screen request u{update} does not match the driver state")
         result = json.loads((self.folder / f"screen_u{update:02d}.json").read_text())
+        if update >= 1 and (result.get('schema') != 'sumoes_screen/2'
+                            or result.get('amendment') != 'MAIN1440'):
+            raise ValueError('updates 1+ require the MAIN1440 cap-relative braking screen')
         if (result.get("update") != update
                 or result.get("request_sha256") != hashlib.sha256(text.encode()).hexdigest()):
             raise ValueError(f"screen result u{update} is not bound to its request")

@@ -43,6 +43,7 @@ class SumoEsConfig:
     adam_beta1: float = 0.9
     adam_beta2: float = 0.999
     adam_eps: float = 1e-8
+    step_rule: str = 'MAIN1440_sign_weighted_mean_unit'
     max_updates: int = 16
     cap_sim_s: int = 650_000
     seed_block_first: int = 969_440
@@ -50,6 +51,8 @@ class SumoEsConfig:
     direction_seed: int = 7_000_031
 
     def __post_init__(self) -> None:
+        if self.step_rule != 'MAIN1440_sign_weighted_mean_unit':
+            raise ConfigError('only the registered MAIN1440 normalized ES step is active')
         if self.episode_charge_sim_s != self.warmup_s + self.control_s:
             raise ConfigError("episode charge must equal warmup + control seconds")
         for name in ("pairs_per_update", "gradient_worlds_per_update", "panel_worlds",

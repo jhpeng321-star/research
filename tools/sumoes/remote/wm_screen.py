@@ -1,13 +1,9 @@
-"""S-SUMOES WM 60 s direction screen on cpuQ CPUs (no SUMO). Guidance only; never the fitness.
+"""MAIN1440 screen: matched cap-relative law, C1 trunk, braking-side gains only.
 
-Reads screens/request_uXX.json; for each of the 8 directions d and each of the 8 frozen
-TRAIN starts (S-WMDATA CTRL0 t300 starts, START_SEEDS) runs paired 60 s WM2+mix rollouts
-with the E3 C1 trunk and head = theta +/- sigma*d (identical future/entry/lane draws on
-both sides = CRN), gain = J60(minus) - J60(plus) (real_J, first two 30 s bins; 90 s
-descriptive). Rule: an antithetic pair +/-d is kept iff its gain sign is confident
-(median > 0 and q10 > 0, or the mirrored orientation median < 0 and q90 < 0); rank by
-|median|; keep the top 3. Writes screens/screen_uXX.json bound to the request sha256.
-Known limitation: the frozen WM runtime composes residuals base-relative (no caprel).
+Eight frozen TRAIN starts; paired theta and theta +/- sigma*d WM2+mix 60 s
+rollouts with identical futures. Orient each direction by negative-residual
+mass, then keep top three confident J60(theta)-J60(braking side) gains.
+No SUMO. Writes a request-SHA-bound screen, preserving all cost/braking rows.
 """
 from pathlib import Path
 import hashlib
@@ -42,6 +38,8 @@ def _init():
     payload = torch.load(wm_smoke.CANDIDATE, map_location='cpu', weights_only=False)
     cfg = replace(DreamerConfig(**payload['config']), horizon=STEPS // 2, entrant_learned_mix=True)
     model.cav_exec_cap = cfg.cav_exec_cap
+    assert hashlib.sha256(wm_smoke.C1.read_bytes()).hexdigest() == (
+        '64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c')
     cp, ce, _, _ = load_policy_components(wm_smoke.C1, device='cpu')
     cp.eval()
     ce = ce.encoder if isinstance(ce, GroupSignal) else ce
@@ -92,11 +90,18 @@ def _rollout(task):
         entries = Entries(process)
         kw['entries'] = entries
         kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190, [0])
-        roll = model.rollout(initial, n_steps=STEPS, cav_controller=wm_starts.callback(
-            cp, g['ce'], g['native']), **kw)
+        callback = wm_starts.callback(cp, g['ce'], g['native'])
+        roll = model.rollout(initial, n_steps=STEPS, cav_controller=callback, **kw)
         bins = costs(roll, entries, b.entry_spec['k0'])['time_bins_30s']['real_J'][0]
     j60, j90 = float(sum(bins[:2])), float(sum(bins[:3]))
-    return key, seed, j60, j90, time.monotonic() - begin
+    if not all(np_isfinite(x) for x in (j60, j90, callback.braking_mass)):
+        raise ValueError('nonfinite WM screen outcome')
+    return key, seed, j60, j90, time.monotonic() - begin, callback.braking_mass
+
+
+def np_isfinite(x):
+    import math
+    return math.isfinite(x)
 
 
 def decide(gains):
@@ -105,9 +110,11 @@ def decide(gains):
     for d, values in enumerate(gains):
         v = np.asarray(values, dtype=float)
         med, q10, q90 = float(np.median(v)), float(np.percentile(v, 10)), float(np.percentile(v, 90))
-        confident = (med > 0 and q10 > 0) or (med < 0 and q90 < 0)
+        if not np.isfinite(v).all():
+            raise ValueError('nonfinite WM gains')
+        confident = med > 0 and q10 > 0
         rows.append(dict(direction=d, median=med, q10=q10, q90=q90, confident=confident))
-    ranked = sorted([r for r in rows if r['confident']], key=lambda r: -abs(r['median']))
+    ranked = sorted([r for r in rows if r['confident']], key=lambda r: -r['median'])
     kept = sorted(r['direction'] for r in ranked[:KEEP])
     return kept, rows
 
@@ -122,8 +129,9 @@ def main():
     text = req_path.read_text()
     request = json.loads(text)
     assert request['update'] == update
+    sys.path.insert(0, str(OWN / 'pytools'))
     theta, sigma, dirs = request['theta'], request['sigma'], request['directions']
-    tasks = []
+    tasks = [(('base', 'base'), seed, theta) for seed in START_SEEDS]
     for d, direction in enumerate(dirs):
         for side, sign in (('plus', 1.0), ('minus', -1.0)):
             vec = [t + sign * sigma * e for t, e in zip(theta, direction)]
@@ -132,22 +140,30 @@ def main():
     ctx = mp.get_context('fork')
     with ctx.Pool(procs, initializer=_init) as pool:
         results = pool.map(_rollout, tasks, chunksize=1)
-    table = {(k, s): (j60, j90) for k, s, j60, j90, _ in results}
-    gains60 = [[table[((d, 'minus'), s)][0] - table[((d, 'plus'), s)][0] for s in START_SEEDS]
-               for d in range(len(dirs))]
-    gains90 = [[table[((d, 'minus'), s)][1] - table[((d, 'plus'), s)][1] for s in START_SEEDS]
-               for d in range(len(dirs))]
+    table = {(k, s): (j60, j90, mass) for k, s, j60, j90, _, mass in results}
+    # Orient by residual braking mass, never by which side has the better cost.
+    braking_sides = [max(('plus', 'minus'), key=lambda side:
+                        sum(table[((d, side), s)][2] for s in START_SEEDS))
+                     for d in range(len(dirs))]
+    gains60 = [[table[(('base', 'base'), s)][0] - table[((d, braking_sides[d]), s)][0]
+                for s in START_SEEDS] for d in range(len(dirs))]
+    gains90 = [[table[(('base', 'base'), s)][1] - table[((d, braking_sides[d]), s)][1]
+                for s in START_SEEDS] for d in range(len(dirs))]
     kept, rows = decide(gains60)
-    payload = dict(schema='sumoes_screen/1', update=update,
+    payload = dict(schema='sumoes_screen/2', amendment='MAIN1440', update=update,
                    request_sha256=hashlib.sha256(text.encode()).hexdigest(), kept=kept,
                    predicted_gain=[rows[d]['median'] for d in kept],
                    rejected=[d for d in range(len(dirs)) if d not in kept],
                    all_gains=gains60, gains90_descriptive=gains90, decision_rows=rows,
-                   rule='confident sign of J60(minus)-J60(plus) over 8 starts '
-                        '(median>0&q10>0 or median<0&q90<0), top 3 by |median|',
+                    braking_sides=braking_sides,
+                    rollout_rows=[dict(key=k, seed=s, J60=j60, J90=j90, braking_mass=mass)
+                                  for k, s, j60, j90, _, mass in results],
+                    rule='J60(theta)-J60(braking side by total negative-residual mass); '
+                         'median>0&q10>0 over 8 starts; top 3 by median',
                    start_seeds=list(START_SEEDS), steps=STEPS, rollouts=len(tasks),
                    wall_s=time.monotonic() - begin, max_rollout_s=max(r[4] for r in results),
-                   wm='WM2 b8797242 + learned mix (setupaudit fix runtime, base-relative law)',
+                    law='shared tools.sumoes.caprel: capped CTRL0 + residual, mode27 ceiling',
+                    wm='WM2 b8797242 + learned mix (setupaudit fix runtime, cap-relative adapter)',
                    trunk='E3 C1 policy_latest.pt 64f70af4')
     with out.open('x') as f:
         json.dump(payload, f, indent=1, allow_nan=False)

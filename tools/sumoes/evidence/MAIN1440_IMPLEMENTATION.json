@@ -1,0 +1,21 @@
+{
+  "schema": "sumoes_main1440_implementation/1",
+  "historical_design_sha256": "05b84910472db97619147b12df3bc2a28f82125ec2080ae333deb252d80105c7",
+  "bundle_sha256": "ca4b69610e95dfae751c828d218235cc330e79932f5a422800df83708b228c2e",
+  "charged_before": 47700,
+  "actual_before": 47700,
+  "next_update": 1,
+  "cpu_tests": "32 passed on cpuQ; no SUMO; existing newbox_env.sh",
+  "audit_correction": "update0 SUMO caprel_commands was actually base-relative; both paths corrected to capped-CTRL0-relative law",
+  "source_sha256": {
+    "tools/sumoes/caprel.py": "248a95f309fefbc9bc9925f2a976ed347d1a0aab5e9418abf318ac223c7d4775",
+    "tools/sumoes/config.py": "28a030a997fd1a3228d5995f4ef756d49c55f13af42813fbc90669a0a352f438",
+    "tools/sumoes/es.py": "05f6b2145d940195b265e0911047022f7151c0ccb33295d64d3ed745defa8617",
+    "tools/sumoes/driver.py": "985f8238937b924e3f77f611b89d66d25a27b8acbfc9b70e949738d57c8c7069",
+    "tools/sumoes/file_screen.py": "18a45043be9d8d339dcbd77ded4910958ac4a52b731941b4b1d2bca985dadd6d",
+    "tools/sumoes/remote/arm.py": "26382c5cbb7ed4497d97bea96c46410f973499a4456db8678264b94b614dc521",
+    "tools/sumoes/remote/run.py": "5c9da63cd7cf55d629b1499559fb180022f8bbb69851f942dfb99ef1045c4b07",
+    "tools/sumoes/remote/wm_screen.py": "c77d8e02b95eea8233f443c6608138ceb7f2dca7adb2f773df03f2c6967f36a8",
+    "tools/sumoes/remote/wm_starts.py": "9be8e52a16912a42ec2fff2176dded2a612b6f5ff121d0685cb5535d9f568826"
+  }
+}

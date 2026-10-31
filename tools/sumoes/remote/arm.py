@@ -8,7 +8,9 @@ checkpoint, gate verified, then sets the 137 residual-head scalars to theta) and
 Composition per designated CAV per physics tick (no zero-release branch):
     native = sumo_native_accel(api, vid, dt)                      # E3 CTRL0 command
     r == 0 -> native (bitwise the CTRL0 forced-native command)
-    else   -> clip(native + r, min(lo, native), max(min(hi, getAccel), native))
+    else   -> clip(CTRL0_executed + r, min(lo, CTRL0_executed),
+                   max(min(hi, getAccel), CTRL0_executed)), then mode-27 cap
+MAIN1440 correction: the old helper added to native base despite its caprel name.
 SUMO speedMode27 remains the final safety executor (unchanged runtime).
 """
 from contextlib import contextmanager
@@ -20,6 +22,7 @@ HEAD_IN = 136
 
 def caprel_commands(api, residuals, lo, hi, *, dt=0.5):
     from wms.control.nativeinit import sumo_native_accel
+    from tools.sumoes.caprel import scalar_executed, live_cap
 
     composed = {}
     for vid, residual in residuals.items():
@@ -30,9 +33,13 @@ def caprel_commands(api, residuals, lo, hi, *, dt=0.5):
         if residual == 0.0:
             composed[vid] = native
             continue
-        upper = min(float(hi), float(api.vehicle.getAccel(vid)))
-        composed[vid] = float(np.clip(native + residual, min(float(lo), native),
-                                      max(upper, native)))
+        cap = live_cap(api, vid, dt)
+        speed = float(api.vehicle.getSpeed(vid))
+        value = scalar_executed(native, cap, speed, residual, lo, hi, dt,
+                                float(api.vehicle.getAccel(vid)))
+        ctrl0 = max(-speed / dt, min(native, cap))
+        # Preserve the original CTRL0 write if its realised command is unchanged.
+        composed[vid] = native if value == ctrl0 else value
     return composed
 
 

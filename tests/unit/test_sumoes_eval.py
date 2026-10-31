@@ -93,6 +93,9 @@ class FakeVehicle:
     def getAccel(self, vid):
         return self.accel
 
+    def getSpeed(self, vid):
+        return 10.
+
 
 class FakeApi:
     vehicle = FakeVehicle()
@@ -102,6 +105,8 @@ def test_caprel_composition_zero_is_native_and_envelope(monkeypatch):
     from wms.control import nativeinit
     natives = {"a": -0.37, "b": 0.8, "c": -4.0}
     monkeypatch.setattr(nativeinit, "sumo_native_accel", lambda api, vid, dt: natives[vid])
+    from tools.sumoes import caprel
+    monkeypatch.setattr(caprel, 'live_cap', lambda api, vid, dt: 1.2)
     zero = arm.caprel_commands(FakeApi(), {"a": 0.0, "b": -0.0, "c": 0.0}, -3.0, 1.2)
     assert zero == natives
     out = arm.caprel_commands(FakeApi(), {"a": 5.0, "b": -9.0, "c": 0.5}, -3.0, 1.2)

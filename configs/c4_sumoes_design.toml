@@ -22,7 +22,9 @@ wm_screen_starts = 8
 # Parameterisation: the 137 residual-head scalars; sigma = target residual RMS /
 # deployed t0 head sensitivity RMS (ESLONG command-scale calibration), halving every
 # 4 accepted updates; sigma_min is a floor on the perturbed COMMAND RMS (0.02 m/s^2);
-# Adam 1e-3 on the head only.
+# MAIN14:40: sigma * mean(-sign(Jplus-Jminus) * direction/||direction||).
+# Adam fields are retained only to read update-0 snapshots; no Adam step from u1.
+step_rule = "MAIN1440_sign_weighted_mean_unit"
 sigma_target_residual_rms_mps2 = 0.10
 sigma_min_mps2 = 0.02
 sigma_halve_every_accepted = 4
