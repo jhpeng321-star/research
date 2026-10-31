@@ -44,7 +44,6 @@ def cell_interval(values):
 
 
 def summarize(root):
-    import numpy as np
     panel = worlds('main')
     binding = json.loads((root/'BINDING.json').read_text()) if (root/'BINDING.json').exists() else {}
     total = binding.get('total_sim_s',478410)
@@ -83,8 +82,21 @@ def summarize(root):
     for i in range(16):
         if len({canonical(rows[a][i]['decisions'][0]['prefix']) for a in ARMS if rows[a][i] is not None}) != 1:
             raise ValueError('paired warmup mismatch')
-    fixed = np.array([[rows[a][i]['J600']['team_delay_vs'] for a in CONTROLLERS] for i in range(16)])
-    regrets = np.zeros((16,2));contrasts = np.zeros((16,5))
+    result = analyze_rows(panel, rows)
+    result.update(charged_sim_s=total,actual_sim_s=total,
+                  retained_superseded_sim_s=retained,retained_abandoned_sim_s=abandoned)
+    write(root/'RESULTS.json',result)
+    return result
+
+
+def analyze_rows(panel, rows):
+    """Registered estimators on explicitly paired rows; admission is caller-owned."""
+    import numpy as np
+    n = len(panel)
+    if not n or any(len(rows[a]) != n for a in ARMS):
+        raise ValueError('nonempty paired world arrays required')
+    fixed = np.array([[rows[a][i]['J600']['team_delay_vs'] for a in CONTROLLERS] for i in range(n)])
+    regrets = np.zeros((n,2));contrasts = np.zeros((n,5))
     decision_rows = []
     for ai,arm in enumerate(('wm','bb')):
         for i,world in enumerate(panel):
@@ -149,12 +161,15 @@ def summarize(root):
         episode_mean={a:float(np.nanmean(v)) for a,v in values.items()},safety=safety,cells=cells,
         episode_n={a:int(np.isfinite(v).sum()) for a,v in values.items()},
         switching_mean={a:sum(r['switching_frequency'] for r in rows[a] if r is not None)/sum(r is not None for r in rows[a]) for a in ARMS},
-        measured_decisions=decision_rows,ranking_direction=accuracy,charged_sim_s=total,actual_sim_s=total,
-        retained_superseded_sim_s=retained,retained_abandoned_sim_s=abandoned,
+        measured_decisions=decision_rows,ranking_direction=accuracy,
+        regret60_mean={a:float(regrets[:,j].mean()) for j,a in enumerate(('wm','bb'))},
+        world_rows=[dict(world=w,J600={a:float(values[a][i]) if np.isfinite(values[a][i]) else None for a in ARMS},
+            regret60={a:float(regrets[i,j]) for j,a in enumerate(('wm','bb'))},
+            wm_minus_each_fixed_regret60={c:float(contrasts[i,j]) for j,c in enumerate(CONTROLLERS)})
+            for i,w in enumerate(panel)],
         caveats=['predicted current-belief fleet objective vs true fleet+source evaluation',
                  'WM/BB on-policy decision states differ; world/clock paired',
                   'two exploratory primary contrasts; no multiplicity adjustment',
                   'single-world cells have degenerate empirical bootstrap intervals, not population uncertainty bounds',
                   'native CAV plant/lane forecast approximate; entries OFF and mix dormant'])
-    write(root/'RESULTS.json',result)
     return result

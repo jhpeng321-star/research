@@ -1,0 +1,2151 @@
+{
+  "primary": {
+    "best_fixed": "mappo",
+    "worlds": 5,
+    "bootstrap": 2000,
+    "seed": 0,
+    "wm_minus_bb_regret60": {
+      "mean": 5.101694670055985,
+      "ci95": [
+        -9.388681071757794,
+        16.745942858044145
+      ]
+    },
+    "wm_minus_best_fixed_regret60": {
+      "mean": 8.231653907934863,
+      "ci95": [
+        1.6924200834519993,
+        18.476727324963818
+      ]
+    },
+    "wm_minus_each_fixed_regret60": {
+      "native": {
+        "mean": 8.36378241865253,
+        "ci95": [
+          -3.071249154333842,
+          19.7988139916389
+        ]
+      },
+      "ctrl0": {
+        "mean": 15.305960492738569,
+        "ci95": [
+          5.872171727108687,
+          22.56667371303459
+        ]
+      },
+      "mappo": {
+        "mean": 8.231653907934863,
+        "ci95": [
+          -1.1702895298635363,
+          18.86591758184216
+        ]
+      },
+      "pi": {
+        "mean": 9.202103380628312,
+        "ci95": [
+          1.7084876974198173,
+          17.841989399953338
+        ]
+      },
+      "circles": {
+        "mean": -12.845378293347613,
+        "ci95": [
+          -23.05225699062794,
+          -2.5946239977090335
+        ]
+      }
+    }
+  },
+  "secondary_episode_paired": {
+    "wm": {
+      "native": {
+        "mean": -711.8955659755184,
+        "worlds": 5,
+        "ci95": [
+          -3360.1615530466756,
+          1752.618857418875
+        ]
+      },
+      "ctrl0": {
+        "mean": -1756.328243978173,
+        "worlds": 5,
+        "ci95": [
+          -5278.066228332132,
+          673.9823409687909
+        ]
+      },
+      "mappo": {
+        "mean": 643.8697122604623,
+        "worlds": 5,
+        "ci95": [
+          -1529.9075166406228,
+          2599.147632912312
+        ]
+      },
+      "pi": {
+        "mean": 4.277595301265682,
+        "worlds": 5,
+        "ci95": [
+          -2975.4792918600024,
+          2039.8325305028052
+        ]
+      },
+      "circles": {
+        "mean": -1492.6983283710913,
+        "worlds": 5,
+        "ci95": [
+          -2546.9670021861266,
+          -438.4296545560559
+        ]
+      },
+      "best_fixed_in_hindsight": {
+        "mean": 2055.7866064758937,
+        "worlds": 5,
+        "ci95": [
+          1275.4424241130355,
+          2776.3769309501745
+        ]
+      },
+      "random": {
+        "mean": -1420.0294160776787,
+        "worlds": 5,
+        "ci95": [
+          -3692.547901185107,
+          881.7011891362495
+        ]
+      }
+    },
+    "bb": {
+      "native": {
+        "mean": -0.39934035132482676,
+        "worlds": 5,
+        "ci95": [
+          -3480.1427511706434,
+          3310.572340512362
+        ]
+      },
+      "ctrl0": {
+        "mean": -1044.8320183539795,
+        "worlds": 5,
+        "ci95": [
+          -3713.633649406564,
+          1074.1514421013294
+        ]
+      },
+      "mappo": {
+        "mean": 1355.3659378846558,
+        "worlds": 5,
+        "ci95": [
+          -859.9483201043702,
+          3971.5561140677587
+        ]
+      },
+      "pi": {
+        "mean": 715.7738209254592,
+        "worlds": 5,
+        "ci95": [
+          -3814.7134933667157,
+          4067.6302741563586
+        ]
+      },
+      "circles": {
+        "mean": -781.2021027468978,
+        "worlds": 5,
+        "ci95": [
+          -2830.265158528148,
+          799.1264689086744
+        ]
+      },
+      "best_fixed_in_hindsight": {
+        "mean": 2767.2828321000875,
+        "worlds": 5,
+        "ci95": [
+          1084.6147320489977,
+          4665.681477820615
+        ]
+      },
+      "random": {
+        "mean": -708.5331904534851,
+        "worlds": 5,
+        "ci95": [
+          -1957.1047696430119,
+          911.3619985098128
+        ]
+      }
+    },
+    "random": {
+      "native": {
+        "mean": 708.1338501021601,
+        "worlds": 5,
+        "ci95": [
+          -2569.534645183281,
+          4552.169237323136
+        ]
+      },
+      "ctrl0": {
+        "mean": -336.29882790049453,
+        "worlds": 5,
+        "ci95": [
+          -2397.555396677386,
+          1430.2882324098669
+        ]
+      },
+      "mappo": {
+        "mean": 2063.899128338141,
+        "worlds": 5,
+        "ci95": [
+          -203.91981980767596,
+          5236.397107148783
+        ]
+      },
+      "pi": {
+        "mean": 1424.3070113789443,
+        "worlds": 5,
+        "ci95": [
+          -2955.2731048633173,
+          5652.363462830612
+        ]
+      },
+      "circles": {
+        "mean": -72.66891229341272,
+        "worlds": 5,
+        "ci95": [
+          -2075.5208950929614,
+          1843.0963790045462
+        ]
+      },
+      "best_fixed_in_hindsight": {
+        "mean": 3475.816022553572,
+        "worlds": 5,
+        "ci95": [
+          846.0767499128724,
+          6105.555295194272
+        ]
+      }
+    }
+  },
+  "episode_mean": {
+    "wm": 56607.66182380364,
+    "bb": 57319.15804942783,
+    "random": 58027.69123988133,
+    "native": 57319.557389779155,
+    "ctrl0": 58363.99006778181,
+    "mappo": 55963.79211154317,
+    "pi": 56603.38422850238,
+    "circles": 58100.36015217473
+  },
+  "safety": {
+    "wm": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2123.5,
+      "hard_brake": 62.5
+    },
+    "bb": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2261.0,
+      "hard_brake": 79.0
+    },
+    "random": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2268.0,
+      "hard_brake": 69.5
+    },
+    "native": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2127.5,
+      "hard_brake": 84.5
+    },
+    "ctrl0": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2263.5,
+      "hard_brake": 57.5
+    },
+    "mappo": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2126.5,
+      "hard_brake": 62.0
+    },
+    "pi": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2128.5,
+      "hard_brake": 80.0
+    },
+    "circles": {
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 2336.5,
+      "hard_brake": 76.5
+    }
+  },
+  "cells": [
+    {
+      "penetration": 0.05,
+      "demand": 1900,
+      "n": 1,
+      "J600": {
+        "wm": 8915.438919634005,
+        "bb": 8950.36454821778,
+        "random": 9459.906203163959,
+        "native": 8057.380730859305,
+        "ctrl0": 8882.552970306544,
+        "mappo": 10177.17133791179,
+        "pi": 8317.302305571595,
+        "circles": 9339.830977285535
+      },
+      "arm_n": {
+        "wm": 1,
+        "bb": 1,
+        "random": 1,
+        "native": 1,
+        "ctrl0": 1,
+        "mappo": 1,
+        "pi": 1,
+        "circles": 1
+      },
+      "J600_ci95": {
+        "wm": [
+          8915.438919634005,
+          8915.438919634005
+        ],
+        "bb": [
+          8950.36454821778,
+          8950.36454821778
+        ],
+        "random": [
+          9459.906203163959,
+          9459.906203163959
+        ],
+        "native": [
+          8057.380730859305,
+          8057.380730859305
+        ],
+        "ctrl0": [
+          8882.552970306544,
+          8882.552970306544
+        ],
+        "mappo": [
+          10177.17133791179,
+          10177.17133791179
+        ],
+        "pi": [
+          8317.302305571595,
+          8317.302305571595
+        ],
+        "circles": [
+          9339.830977285535,
+          9339.830977285535
+        ]
+      },
+      "regret60_ci95": {
+        "wm": [
+          0.06935370012797648,
+          0.06935370012797648
+        ],
+        "bb": [
+          17.594833442075775,
+          17.594833442075775
+        ]
+      },
+      "regret60": {
+        "wm": 0.06935370012797648,
+        "bb": 17.594833442075775
+      }
+    },
+    {
+      "penetration": 0.05,
+      "demand": 2400,
+      "n": 1,
+      "J600": {
+        "wm": 80105.82527007493,
+        "bb": 83099.64421663647,
+        "random": 85143.65623666381,
+        "native": 77061.98962162028,
+        "ctrl0": 82469.41123405598,
+        "mappo": 76853.83338029843,
+        "pi": 77206.83102796966,
+        "circles": 81975.7833444581
+      },
+      "arm_n": {
+        "wm": 1,
+        "bb": 1,
+        "random": 1,
+        "native": 1,
+        "ctrl0": 1,
+        "mappo": 1,
+        "pi": 1,
+        "circles": 1
+      },
+      "J600_ci95": {
+        "wm": [
+          80105.82527007493,
+          80105.82527007493
+        ],
+        "bb": [
+          83099.64421663647,
+          83099.64421663647
+        ],
+        "random": [
+          85143.65623666381,
+          85143.65623666381
+        ],
+        "native": [
+          77061.98962162028,
+          77061.98962162028
+        ],
+        "ctrl0": [
+          82469.41123405598,
+          82469.41123405598
+        ],
+        "mappo": [
+          76853.83338029843,
+          76853.83338029843
+        ],
+        "pi": [
+          77206.83102796966,
+          77206.83102796966
+        ],
+        "circles": [
+          81975.7833444581,
+          81975.7833444581
+        ]
+      },
+      "regret60_ci95": {
+        "wm": [
+          28.561949428921555,
+          28.561949428921555
+        ],
+        "bb": [
+          9.019194839605918,
+          9.019194839605918
+        ]
+      },
+      "regret60": {
+        "wm": 28.561949428921555,
+        "bb": 9.019194839605918
+      }
+    },
+    {
+      "penetration": 0.05,
+      "demand": 2700,
+      "n": 1,
+      "J600": {
+        "wm": 112182.34578563039,
+        "bb": 110081.63231804631,
+        "random": 111473.93683798732,
+        "native": 115933.30601630978,
+        "ctrl0": 111850.72871432343,
+        "mappo": 109444.15473659172,
+        "pi": 117883.17257544972,
+        "circles": 114837.09273594413
+      },
+      "arm_n": {
+        "wm": 1,
+        "bb": 1,
+        "random": 1,
+        "native": 1,
+        "ctrl0": 1,
+        "mappo": 1,
+        "pi": 1,
+        "circles": 1
+      },
+      "J600_ci95": {
+        "wm": [
+          112182.34578563039,
+          112182.34578563039
+        ],
+        "bb": [
+          110081.63231804631,
+          110081.63231804631
+        ],
+        "random": [
+          111473.93683798732,
+          111473.93683798732
+        ],
+        "native": [
+          115933.30601630978,
+          115933.30601630978
+        ],
+        "ctrl0": [
+          111850.72871432343,
+          111850.72871432343
+        ],
+        "mappo": [
+          109444.15473659172,
+          109444.15473659172
+        ],
+        "pi": [
+          117883.17257544972,
+          117883.17257544972
+        ],
+        "circles": [
+          114837.09273594413,
+          114837.09273594413
+        ]
+      },
+      "regret60_ci95": {
+        "wm": [
+          29.253837968969798,
+          29.253837968969798
+        ],
+        "bb": [
+          10.888031682455523,
+          10.888031682455523
+        ]
+      },
+      "regret60": {
+        "wm": 29.253837968969798,
+        "bb": 10.888031682455523
+      }
+    },
+    {
+      "penetration": 0.1,
+      "demand": 1900,
+      "n": 1,
+      "J600": {
+        "wm": 14703.461536559807,
+        "bb": 15536.439271509611,
+        "random": 12872.063760670473,
+        "native": 13744.15492392414,
+        "ctrl0": 13366.56573010852,
+        "mappo": 13174.288408890745,
+        "pi": 14379.896403522367,
+        "circles": 14440.16457810683
+      },
+      "arm_n": {
+        "wm": 1,
+        "bb": 1,
+        "random": 1,
+        "native": 1,
+        "ctrl0": 1,
+        "mappo": 1,
+        "pi": 1,
+        "circles": 1
+      },
+      "J600_ci95": {
+        "wm": [
+          14703.461536559807,
+          14703.461536559807
+        ],
+        "bb": [
+          15536.439271509611,
+          15536.439271509611
+        ],
+        "random": [
+          12872.063760670473,
+          12872.063760670473
+        ],
+        "native": [
+          13744.15492392414,
+          13744.15492392414
+        ],
+        "ctrl0": [
+          13366.56573010852,
+          13366.56573010852
+        ],
+        "mappo": [
+          13174.288408890745,
+          13174.288408890745
+        ],
+        "pi": [
+          14379.896403522367,
+          14379.896403522367
+        ],
+        "circles": [
+          14440.16457810683,
+          14440.16457810683
+        ]
+      },
+      "regret60_ci95": {
+        "wm": [
+          26.69410521990585,
+          26.69410521990585
+        ],
+        "bb": [
+          17.60456437854358,
+          17.60456437854358
+        ]
+      },
+      "regret60": {
+        "wm": 26.69410521990585,
+        "bb": 17.60456437854358
+      }
+    },
+    {
+      "penetration": 0.1,
+      "demand": 2400,
+      "n": 1,
+      "J600": {
+        "wm": 67131.23760711907,
+        "bb": 68927.70989272899,
+        "random": 71188.89316092103,
+        "native": 71800.95565618228,
+        "ctrl0": 75250.69169011459,
+        "mappo": 70169.5126940232,
+        "pi": 65229.71882999853,
+        "circles": 69908.92912507906
+      },
+      "arm_n": {
+        "wm": 1,
+        "bb": 1,
+        "random": 1,
+        "native": 1,
+        "ctrl0": 1,
+        "mappo": 1,
+        "pi": 1,
+        "circles": 1
+      },
+      "J600_ci95": {
+        "wm": [
+          67131.23760711907,
+          67131.23760711907
+        ],
+        "bb": [
+          68927.70989272899,
+          68927.70989272899
+        ],
+        "random": [
+          71188.89316092103,
+          71188.89316092103
+        ],
+        "native": [
+          71800.95565618228,
+          71800.95565618228
+        ],
+        "ctrl0": [
+          75250.69169011459,
+          75250.69169011459
+        ],
+        "mappo": [
+          70169.5126940232,
+          70169.5126940232
+        ],
+        "pi": [
+          65229.71882999853,
+          65229.71882999853
+        ],
+        "circles": [
+          69908.92912507906,
+          69908.92912507906
+        ]
+      },
+      "regret60_ci95": {
+        "wm": [
+          27.283914346964288,
+          27.283914346964288
+        ],
+        "bb": [
+          31.248062971928746,
+          31.248062971928746
+        ]
+      },
+      "regret60": {
+        "wm": 27.283914346964288,
+        "bb": 31.248062971928746
+      }
+    }
+  ],
+  "episode_n": {
+    "wm": 5,
+    "bb": 5,
+    "random": 5,
+    "native": 5,
+    "ctrl0": 5,
+    "mappo": 5,
+    "pi": 5,
+    "circles": 5
+  },
+  "switching_mean": {
+    "wm": 6.6,
+    "bb": 8.2,
+    "random": 8.4,
+    "native": 0.0,
+    "ctrl0": 1.0,
+    "mappo": 1.0,
+    "pi": 1.0,
+    "circles": 1.0
+  },
+  "measured_decisions": [
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 4,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 0.20806110038392944,
+      "spearman": 0.49999999999999994,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 4,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 0.5148651275640077,
+      "spearman": 0.49999999999999994,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 7,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.8999999999999998,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 7,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.6,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 8,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.35909242322980395,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "wm",
+      "j": 8,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.35909242322980395,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 2,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 4.806977195661602,
+      "spearman": 0.7,
+      "direction_correct": 4,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 2,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 106.97303633899719,
+      "spearman": -0.3,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 3,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 2.5556148136456613,
+      "spearman": 0.7,
+      "direction_correct": 4,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 3,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 38.36041100382499,
+      "spearman": 0.49999999999999994,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 5,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 78.3232562774574,
+      "spearman": -0.09999999999999999,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "wm",
+      "j": 5,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 276.4068824822898,
+      "spearman": -0.09999999999999999,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 6,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.7,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 6,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 31.548612565529766,
+      "spearman": -0.19999999999999998,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 8,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 24.771024145011324,
+      "spearman": -0.3,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 8,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 67.54789710239857,
+      "spearman": -0.39999999999999997,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 9,
+      "clock": "60",
+      "pick": "native",
+      "regret": 62.99048976189806,
+      "spearman": -0.8999999999999998,
+      "direction_correct": 0,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "wm",
+      "j": 9,
+      "clock": "90",
+      "pick": "native",
+      "regret": 295.25144249459845,
+      "spearman": -0.7,
+      "direction_correct": 0,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 1,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.7,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 1,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.9999999999999999,
+      "direction_correct": 4,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 2,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 80.08231565971755,
+      "spearman": -0.6,
+      "direction_correct": 0,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 2,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 199.59743228873776,
+      "spearman": -0.6,
+      "direction_correct": 0,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 7,
+      "clock": "60",
+      "pick": "pi",
+      "regret": 0.0,
+      "spearman": 0.8720815992723809,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "wm",
+      "j": 7,
+      "clock": "90",
+      "pick": "pi",
+      "regret": 0.0,
+      "spearman": 0.8720815992723809,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 0,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 3.6645271718271033,
+      "spearman": 0.7999999999999999,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 0,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 31.698337976783478,
+      "spearman": 0.49999999999999994,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 1,
+      "clock": "60",
+      "pick": "pi",
+      "regret": 66.58230547297535,
+      "spearman": 0.09999999999999999,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 1,
+      "clock": "90",
+      "pick": "pi",
+      "regret": 165.34628626105405,
+      "spearman": -0.7999999999999999,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 8,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 11.604910396090418,
+      "spearman": 0.39999999999999997,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "wm",
+      "j": 8,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 150.50390719751158,
+      "spearman": 0.39999999999999997,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 4,
+      "clock": "60",
+      "pick": "circles",
+      "regret": 34.75556458040137,
+      "spearman": -0.49999999999999994,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 4,
+      "clock": "90",
+      "pick": "circles",
+      "regret": 38.3056199156772,
+      "spearman": -0.49999999999999994,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 7,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 0.3207209118654646,
+      "spearman": 0.10259783520851541,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 7,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 0.0,
+      "spearman": 0.5642880936468347,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 8,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 17.708214833960483,
+      "spearman": 0.8720815992723809,
+      "direction_correct": 3,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969112,
+      "arm": "bb",
+      "j": 8,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 60.28267019884515,
+      "spearman": 0.8720815992723809,
+      "direction_correct": 3,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 2,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 6.6824766533245565,
+      "spearman": 0.051298917604257706,
+      "direction_correct": 2,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 2,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 136.68185554618321,
+      "spearman": -0.20519567041703082,
+      "direction_correct": 2,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 3,
+      "clock": "60",
+      "pick": "native",
+      "regret": 17.50633628966534,
+      "spearman": 0.20519567041703082,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 3,
+      "clock": "90",
+      "pick": "native",
+      "regret": 101.19474615840227,
+      "spearman": 0.15389675281277312,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 5,
+      "clock": "60",
+      "pick": "pi",
+      "regret": 2.86877157582785,
+      "spearman": 0.3,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969113,
+      "arm": "bb",
+      "j": 5,
+      "clock": "90",
+      "pick": "pi",
+      "regret": 29.934464913385455,
+      "spearman": 0.3,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 6,
+      "clock": "60",
+      "pick": "pi",
+      "regret": 0.9855691614793614,
+      "spearman": 0.09999999999999999,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 6,
+      "clock": "90",
+      "pick": "pi",
+      "regret": 1.107680219647591,
+      "spearman": 0.7,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 8,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 5.719252059847349,
+      "spearman": 0.7,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 8,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 38.71550904023752,
+      "spearman": 0.39999999999999997,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 9,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 25.959273826039862,
+      "spearman": -0.3,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969114,
+      "arm": "bb",
+      "j": 9,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 17.31359237934521,
+      "spearman": -0.3,
+      "direction_correct": 1,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 1,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 10.005374666605803,
+      "spearman": 0.6,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 1,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 19.659569522573747,
+      "spearman": 0.3,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 2,
+      "clock": "60",
+      "pick": "mappo",
+      "regret": 17.45330345642924,
+      "spearman": -0.09999999999999999,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 2,
+      "clock": "90",
+      "pick": "mappo",
+      "regret": 1.9233314731045539,
+      "spearman": 0.19999999999999998,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 7,
+      "clock": "60",
+      "pick": "circles",
+      "regret": 25.355015012595686,
+      "spearman": -0.5000000000000001,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969115,
+      "arm": "bb",
+      "j": 7,
+      "clock": "90",
+      "pick": "circles",
+      "regret": 34.46319826387662,
+      "spearman": -0.5000000000000001,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 0,
+      "clock": "60",
+      "pick": "circles",
+      "regret": 24.841353390341283,
+      "spearman": -0.49999999999999994,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 0,
+      "clock": "90",
+      "pick": "circles",
+      "regret": 58.363146872552534,
+      "spearman": -0.19999999999999998,
+      "direction_correct": 2,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 1,
+      "clock": "60",
+      "pick": "ctrl0",
+      "regret": 41.20015741919997,
+      "spearman": 0.7,
+      "direction_correct": 4,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 1,
+      "clock": "90",
+      "pick": "ctrl0",
+      "regret": 215.87954329005515,
+      "spearman": -0.19999999999999998,
+      "direction_correct": 3,
+      "direction_n": 4,
+      "direction_tied": 0
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 8,
+      "clock": "60",
+      "pick": "circles",
+      "regret": 27.702678106245003,
+      "spearman": -0.46169025843831935,
+      "direction_correct": 0,
+      "direction_n": 3,
+      "direction_tied": 1
+    },
+    {
+      "seed": 969116,
+      "arm": "bb",
+      "j": 8,
+      "clock": "90",
+      "pick": "circles",
+      "regret": 0.0,
+      "spearman": 0.5642880936468347,
+      "direction_correct": 1,
+      "direction_n": 3,
+      "direction_tied": 1
+    }
+  ],
+  "ranking_direction": {
+    "wm": {
+      "60": {
+        "spearman_mean": 0.3220782681668123,
+        "spearman_n": 15,
+        "direction_accuracy": 0.6333333333333333,
+        "direction_n": 60,
+        "direction_tied": 0
+      },
+      "90": {
+        "spearman_mean": 0.10874493483347901,
+        "spearman_n": 15,
+        "direction_accuracy": 0.5166666666666667,
+        "direction_n": 60,
+        "direction_tied": 0
+      }
+    },
+    "bb": {
+      "60": {
+        "spearman_mean": 0.08463225093759101,
+        "spearman_n": 15,
+        "direction_accuracy": 0.5185185185185185,
+        "direction_n": 54,
+        "direction_tied": 6
+      },
+      "90": {
+        "spearman_mean": 0.14329059126411953,
+        "spearman_n": 15,
+        "direction_accuracy": 0.5555555555555556,
+        "direction_n": 54,
+        "direction_tied": 6
+      }
+    }
+  },
+  "regret60_mean": {
+    "wm": 22.372632132977895,
+    "bb": 17.27093746292191
+  },
+  "world_rows": [
+    {
+      "world": {
+        "seed": 969112,
+        "penetration": 0.05,
+        "demand": 1900
+      },
+      "J600": {
+        "wm": 8915.438919634005,
+        "bb": 8950.36454821778,
+        "random": 9459.906203163959,
+        "native": 8057.380730859305,
+        "ctrl0": 8882.552970306544,
+        "mappo": 10177.17133791179,
+        "pi": 8317.302305571595,
+        "circles": 9339.830977285535
+      },
+      "regret60": {
+        "wm": 0.06935370012797648,
+        "bb": 17.594833442075775
+      },
+      "wm_minus_each_fixed_regret60": {
+        "native": -1.9630557620218194,
+        "ctrl0": 0.06935370012797648,
+        "mappo": -2.6683009673012448,
+        "pi": -0.057002546540085554,
+        "circles": -16.258239626389088
+      }
+    },
+    {
+      "world": {
+        "seed": 969113,
+        "penetration": 0.05,
+        "demand": 2400
+      },
+      "J600": {
+        "wm": 80105.82527007493,
+        "bb": 83099.64421663647,
+        "random": 85143.65623666381,
+        "native": 77061.98962162028,
+        "ctrl0": 82469.41123405598,
+        "mappo": 76853.83338029843,
+        "pi": 77206.83102796966,
+        "circles": 81975.7833444581
+      },
+      "regret60": {
+        "wm": 28.561949428921555,
+        "bb": 9.019194839605918
+      },
+      "wm_minus_each_fixed_regret60": {
+        "native": 24.022052640601032,
+        "ctrl0": 26.038316500933433,
+        "mappo": 1.6023257318872008,
+        "pi": 26.033836983834284,
+        "circles": 6.514453088077669
+      }
+    },
+    {
+      "world": {
+        "seed": 969114,
+        "penetration": 0.05,
+        "demand": 2700
+      },
+      "J600": {
+        "wm": 112182.34578563039,
+        "bb": 110081.63231804631,
+        "random": 111473.93683798732,
+        "native": 115933.30601630978,
+        "ctrl0": 111850.72871432343,
+        "mappo": 109444.15473659172,
+        "pi": 117883.17257544972,
+        "circles": 114837.09273594413
+      },
+      "regret60": {
+        "wm": 29.253837968969798,
+        "bb": 10.888031682455523
+      },
+      "wm_minus_each_fixed_regret60": {
+        "native": -2.204403090528406,
+        "ctrl0": 14.59959410096053,
+        "mappo": 17.230158931328333,
+        "pi": 11.241857734406949,
+        "circles": -4.981582265051354
+      }
+    },
+    {
+      "world": {
+        "seed": 969115,
+        "penetration": 0.1,
+        "demand": 1900
+      },
+      "J600": {
+        "wm": 14703.461536559807,
+        "bb": 15536.439271509611,
+        "random": 12872.063760670473,
+        "native": 13744.15492392414,
+        "ctrl0": 13366.56573010852,
+        "mappo": 13174.288408890745,
+        "pi": 14379.896403522367,
+        "circles": 14440.16457810683
+      },
+      "regret60": {
+        "wm": 26.69410521990585,
+        "bb": 17.60456437854358
+      },
+      "wm_minus_each_fixed_regret60": {
+        "native": 26.45651021950713,
+        "ctrl0": 23.07857073117278,
+        "mappo": -1.0585857233011968,
+        "pi": 8.927205882701553,
+        "circles": -21.804272754440717
+      }
+    },
+    {
+      "world": {
+        "seed": 969116,
+        "penetration": 0.1,
+        "demand": 2400
+      },
+      "J600": {
+        "wm": 67131.23760711907,
+        "bb": 68927.70989272899,
+        "random": 71188.89316092103,
+        "native": 71800.95565618228,
+        "ctrl0": 75250.69169011459,
+        "mappo": 70169.5126940232,
+        "pi": 65229.71882999853,
+        "circles": 69908.92912507906
+      },
+      "regret60": {
+        "wm": 27.283914346964288,
+        "bb": 31.248062971928746
+      },
+      "wm_minus_each_fixed_regret60": {
+        "native": -4.49219191429529,
+        "ctrl0": 12.743967430498136,
+        "mappo": 26.052671567061225,
+        "pi": -0.13538115126114766,
+        "circles": -27.697249908934587
+      }
+    }
+  ],
+  "caveats": [
+    "PARTIAL scheduler/budget-selected low-penetration cohort; descriptive conditional intervals, not the registered 16-world E3 population or an efficacy verdict",
+    "predicted current-belief fleet objective vs true fleet+source evaluation",
+    "WM/BB on-policy decision states differ; world/clock paired",
+    "two exploratory primary contrasts; no multiplicity adjustment",
+    "single-world cells have degenerate empirical bootstrap intervals, not population uncertainty bounds",
+    "native CAV plant/lane forecast approximate; entries OFF and mix dormant"
+  ],
+  "status": "PARTIAL",
+  "authorization": "MAIN01:28",
+  "worlds": [
+    {
+      "seed": 969112,
+      "penetration": 0.05,
+      "demand": 1900
+    },
+    {
+      "seed": 969113,
+      "penetration": 0.05,
+      "demand": 2400
+    },
+    {
+      "seed": 969114,
+      "penetration": 0.05,
+      "demand": 2700
+    },
+    {
+      "seed": 969115,
+      "penetration": 0.1,
+      "demand": 1900
+    },
+    {
+      "seed": 969116,
+      "penetration": 0.1,
+      "demand": 2400
+    }
+  ],
+  "arms": [
+    "wm",
+    "bb",
+    "random",
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+  ],
+  "selection_rule": "intersection of final RESULT.json for all eight episode arms; all WM/BB branches required",
+  "availability": {
+    "969112": [
+      "wm",
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969113": [
+      "wm",
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969114": [
+      "wm",
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969115": [
+      "wm",
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969116": [
+      "wm",
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969117": [
+      "bb",
+      "random",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969118": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969119": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969120": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969121": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969122": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969123": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969124": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969125": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969126": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ],
+    "969127": [
+      "bb",
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles"
+    ]
+  },
+  "source_sha256": {
+    "jobs\\wm_s969112_episode\\RESULT.json": "a70479ff8302d5568540b517f38072f1202b540639eb5f1a83e2c070e55751bb",
+    "jobs\\wm_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969112_j4_native\\RESULT.json": "21fb7d235ff2de58b77089a0c40189300c8cc1139db4a28c32f40a7e5194948b",
+    "jobs\\wm_s969112_j4_native\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\wm_s969112_j4_ctrl0\\RESULT.json": "7a1c11cf66baab67a7077cd7a387e696447416284d5bbe2a0343bcd89420a81e",
+    "jobs\\wm_s969112_j4_ctrl0\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\wm_s969112_j4_mappo\\RESULT.json": "d7be106309850fcd76bf60a0a55854bf3ade01decda6089b0782dd986440afd5",
+    "jobs\\wm_s969112_j4_mappo\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\wm_s969112_j4_pi\\RESULT.json": "47e72449390c5b91a43dcbfc4599517a9cc9f3cfd67495c6a87dde940062f87a",
+    "jobs\\wm_s969112_j4_pi\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\wm_s969112_j4_circles\\RESULT.json": "05aa2221d481ec324887695c3e955d142ce9febd18724e66b6c07d656519f57c",
+    "jobs\\wm_s969112_j4_circles\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\wm_s969112_j7_native\\RESULT.json": "2a91653c568f3d7f5e59a210f69828069aa9b39b5fbbf43f5f233ccc3c9d15cb",
+    "jobs\\wm_s969112_j7_native\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969112_j7_ctrl0\\RESULT.json": "abe9743a3650e244fc2a9196a53d0fa0bd26629e0250ea737a32168cdcc1976d",
+    "jobs\\wm_s969112_j7_ctrl0\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969112_j7_mappo\\RESULT.json": "da8613da3714937603c3f79271b0e17fd641a5f3c30a9b48d691a1419b44fdf8",
+    "jobs\\wm_s969112_j7_mappo\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969112_j7_pi\\RESULT.json": "cbfb81e96d7fea6d4d81020d30df79b8b6f9e21b037dd5a04aeadcc6f3084ee4",
+    "jobs\\wm_s969112_j7_pi\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969112_j7_circles\\RESULT.json": "fd38a2bbf69bdad3c49a5884931c3405ded64f621292c3db660c420ce2b43ff5",
+    "jobs\\wm_s969112_j7_circles\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969112_j8_native\\RESULT.json": "045a136299080131fa32f3d6d669c4d0579dd180f06e825d652b52087778f0fc",
+    "jobs\\wm_s969112_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969112_j8_ctrl0\\RESULT.json": "b85fe6d345525cd543377c679285f74eadf70ff152d1fbd0b590d40d78f3cb37",
+    "jobs\\wm_s969112_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969112_j8_mappo\\RESULT.json": "5528c2e3206f88fd4c58f047d862adee00da904982e4cbf460f17b53b5319778",
+    "jobs\\wm_s969112_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969112_j8_pi\\RESULT.json": "6fd1c370f68e41bda438d94ea024592e954c4594577d7b50056a09a4f7a8eff3",
+    "jobs\\wm_s969112_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969112_j8_circles\\RESULT.json": "3792463afff0fcc51a7f33e1c3d6e2687d72d6b36b2660fc1577e61a79487674",
+    "jobs\\wm_s969112_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969112_episode\\RESULT.json": "a8cf032179a79f53b39358fef2535d75c9269ea69ee24db748fd5ddd1dea2d0c",
+    "jobs\\bb_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\bb_s969112_j4_native\\RESULT.json": "a90130458217a4fa28a65059b7d7db93cf81a1917526254b3beec5afd66fe3dc",
+    "jobs\\bb_s969112_j4_native\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\bb_s969112_j4_ctrl0\\RESULT.json": "b88b43e1a5ea9ce9a8e596df1410b91e1f08a80ea77afcf23650a2498c13f13e",
+    "jobs\\bb_s969112_j4_ctrl0\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\bb_s969112_j4_mappo\\RESULT.json": "5cc8d726705a1d8f62fd04ecb1f82ae6d61cbebc0af22d56faf540a0c54bd236",
+    "jobs\\bb_s969112_j4_mappo\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\bb_s969112_j4_pi\\RESULT.json": "8c4a6690270f609c3fb8fb031660023fece6fcca64e8cc00207ecee589c1e0ea",
+    "jobs\\bb_s969112_j4_pi\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\bb_s969112_j4_circles\\RESULT.json": "4c87b016b7a41083e739b500bd6b64bff2f0260cdc1c1412deacad39e1a7bc19",
+    "jobs\\bb_s969112_j4_circles\\CLOSE.json": "203ee870ce7e01ab2bb0d92d1cf7d6b1b2c4bf5f1ebcd1f8a941be64c0603d45",
+    "jobs\\bb_s969112_j7_native\\RESULT.json": "9bfde7d138186c46dfc2d8df65c72c7702930d80a37948d6dfa3a14d192331dd",
+    "jobs\\bb_s969112_j7_native\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969112_j7_ctrl0\\RESULT.json": "bc139e038bdebfbccb5244b3219acb8fd7d957c16358ee847f7755d1bf2f8f67",
+    "jobs\\bb_s969112_j7_ctrl0\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969112_j7_mappo\\RESULT.json": "2ca85707a6f22b11914d1970f13c0ed96c68b44616ba61d0fda1b1844e4c4eb0",
+    "jobs\\bb_s969112_j7_mappo\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969112_j7_pi\\RESULT.json": "94111c3d226a697200edcc3ea16944f8dbbd5ef8643f8d6ee8406c3b3a03dc5c",
+    "jobs\\bb_s969112_j7_pi\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969112_j7_circles\\RESULT.json": "e6e9d4eeee1e99db0b7604b1cb9e5a0206910807b5953aeed7c3738a280ca3e2",
+    "jobs\\bb_s969112_j7_circles\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969112_j8_native\\RESULT.json": "1d2e1b10c51a4078bca0bb4b87683f41ef997e0f890759b78d7f2e3fdd387732",
+    "jobs\\bb_s969112_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969112_j8_ctrl0\\RESULT.json": "75f6874742b60ea7fc36ca4fa3b5c5ebf5b9524687f2ef3de0989506c1aa6582",
+    "jobs\\bb_s969112_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969112_j8_mappo\\RESULT.json": "50ff5b438df546ef09f9cc583f3771bbee77905edf938ae4d4bc28cbd69a92f3",
+    "jobs\\bb_s969112_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969112_j8_pi\\RESULT.json": "49af1480b652bd63f8e83b8575680a8923403d1cc6cecf8f322756bcf8e8b45b",
+    "jobs\\bb_s969112_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969112_j8_circles\\RESULT.json": "5501f21e9d14ae9ea012ba825b96f3186878043ef119adfc5f4d688647fb2bcb",
+    "jobs\\bb_s969112_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\random_s969112_episode\\RESULT.json": "86cb510fc3ff9554a8de83e0abb909ab3ac9ecfaa237d708b0e82217688a1937",
+    "jobs\\random_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\native_s969112_episode\\RESULT.json": "18efa9becefcf8f75e090133225cd057246f481d451ba45568b69150e1312118",
+    "jobs\\native_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\ctrl0_s969112_episode\\RESULT.json": "7a382eaea486bdfa4c1ce191352f5605e495ed5a91b25345e14dadafeca4e0e4",
+    "jobs\\ctrl0_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\mappo_s969112_episode\\RESULT.json": "41ec2acc14293de2889a0a0bf3f0a41d645894cdd30ce4782757b76d30af3e70",
+    "jobs\\mappo_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\pi_s969112_episode\\RESULT.json": "750bcd87b0f0713ecac20106e0b929ca9324ed8867144bbecfdfab8802b2689f",
+    "jobs\\pi_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\circles_s969112_episode\\RESULT.json": "e35e959276bb7fe07fa9e6457d4825286f67082ba76de955150dc137ff4dc739",
+    "jobs\\circles_s969112_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969113_episode\\RESULT.json": "73d4b89a902e7e3a8d4e719ae27d064bafcf0e11d68d745cb8e5e8a1b33b4ea9",
+    "jobs\\wm_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969113_j2_native\\RESULT.json": "2b4bb7e613e7cca0463448b5a10548043f68810ee6655936bfe4a3dd43b78bad",
+    "jobs\\wm_s969113_j2_native\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969113_j2_ctrl0\\RESULT.json": "30f448cdcf197bc5c8a34ac746166e9f9d72a06580bf241d431746f1be16a6b3",
+    "jobs\\wm_s969113_j2_ctrl0\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969113_j2_mappo\\RESULT.json": "5b6680224662a67bf3419b63af608e958623be2e97b9cffda5bb6053f3bc0668",
+    "jobs\\wm_s969113_j2_mappo\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969113_j2_pi\\RESULT.json": "44c04c004862144f88632f75c01532102419404f888b9d832a007554dc134240",
+    "jobs\\wm_s969113_j2_pi\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969113_j2_circles\\RESULT.json": "e97e9a2e40fb5103bdd528fd34fbfc2c72ef9a9de49a48d7f12e4c376853a387",
+    "jobs\\wm_s969113_j2_circles\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969113_j3_native\\RESULT.json": "f31edbf59e86c66db87afee17db3ef8f3174cb569e45240d57e065fab336d580",
+    "jobs\\wm_s969113_j3_native\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\wm_s969113_j3_ctrl0\\RESULT.json": "7ecdb8cbc91cfcf89adf5e9b5b7c0c991fe49d845bf4a16612d3cfbc1be1b69c",
+    "jobs\\wm_s969113_j3_ctrl0\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\wm_s969113_j3_mappo\\RESULT.json": "5d81ebd0bec74accdf7d95ab17edeb2618f44616b5d2d0bc14f8981f8bd87452",
+    "jobs\\wm_s969113_j3_mappo\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\wm_s969113_j3_pi\\RESULT.json": "a25307f1285927a33b1944f80a7e52063e0c6c212d0abf6d40cd30aa37a7d184",
+    "jobs\\wm_s969113_j3_pi\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\wm_s969113_j3_circles\\RESULT.json": "607fb8de78d677cbb1d2256d7c36708671b1afdfc69e5c68487245fe0f85916e",
+    "jobs\\wm_s969113_j3_circles\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\wm_s969113_j5_native\\RESULT.json": "2a9dc0b90259c0a0c46d5494fdcb759cb855cde0008a67521f430a9e1cbe1900",
+    "jobs\\wm_s969113_j5_native\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\wm_s969113_j5_ctrl0\\RESULT.json": "beea37d43a83d443d18329d7fcbd939573234c7ce55da85f414cb440ee5f7503",
+    "jobs\\wm_s969113_j5_ctrl0\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\wm_s969113_j5_mappo\\RESULT.json": "93f4318233a067a51bfd98a50c85de289a6802230c461459126f515fe5fabfa8",
+    "jobs\\wm_s969113_j5_mappo\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\wm_s969113_j5_pi\\RESULT.json": "ed72d7dd789666f30e9764bb61f52e393f1360d9554b2e4c60f25af788929713",
+    "jobs\\wm_s969113_j5_pi\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\wm_s969113_j5_circles\\RESULT.json": "1223d83bb5046c29b5d77d4acdd918e0df792c6114d3587d7c3ad91f2a0e9578",
+    "jobs\\wm_s969113_j5_circles\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\bb_s969113_episode\\RESULT.json": "2b736dc0550f203b3c7f6644fe2ef8f8e64a30b679c0afdca5b48f3ab7e2e713",
+    "jobs\\bb_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\bb_s969113_j2_native\\RESULT.json": "f63161e46422ee0ad4feca7ac3d714b176d4140833da4449605635ea5dc383f6",
+    "jobs\\bb_s969113_j2_native\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969113_j2_ctrl0\\RESULT.json": "d180336eee6f4ac754385cd091c9a5ad2b24c98738e956ec6933a35da09c4391",
+    "jobs\\bb_s969113_j2_ctrl0\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969113_j2_mappo\\RESULT.json": "50e82b2281ea94e63e680197d00f62682d677ff189cf248a225353b18f95f554",
+    "jobs\\bb_s969113_j2_mappo\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969113_j2_pi\\RESULT.json": "0de1ab1235abd58adb35e5f39c944ea8e0d9d29cd6da116a843d7cdf7becc586",
+    "jobs\\bb_s969113_j2_pi\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969113_j2_circles\\RESULT.json": "ba8ecda6058c7e76469fd91c44d1184e7b1bde923b773a6b459f0c083a9599d7",
+    "jobs\\bb_s969113_j2_circles\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969113_j3_native\\RESULT.json": "aca93c2fd2eec05d7e8bc449c8c46c22893db729bac1d754d7df68bfb62b16cd",
+    "jobs\\bb_s969113_j3_native\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\bb_s969113_j3_ctrl0\\RESULT.json": "11da9274c8ea658b86ea40df415ec8f380b6c9b7c17bdfc2aca1476049f22652",
+    "jobs\\bb_s969113_j3_ctrl0\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\bb_s969113_j3_mappo\\RESULT.json": "e395a90496e91d5a0fbadf2e9d8cf9c11dcd2578add9505ac2e430bce328b9e2",
+    "jobs\\bb_s969113_j3_mappo\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\bb_s969113_j3_pi\\RESULT.json": "bb6b16278c7c1bbca3e80e2fcd99a2d30f2a85ef46a04be43bfeffcf2dd7da03",
+    "jobs\\bb_s969113_j3_pi\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\bb_s969113_j3_circles\\RESULT.json": "389377c60fca1c45dd194d27a62960254555b37a53a26300b6d7daba2768826d",
+    "jobs\\bb_s969113_j3_circles\\CLOSE.json": "ad99ee94bf07618400a7a9a369fdef9d6ab68a29f9f65d8689d867ad74fdadeb",
+    "jobs\\bb_s969113_j5_native\\RESULT.json": "c83c98b2688b8fb333fc4fb2a4c2231afa367f8ef26f1f3e2d311a56d8a6aa4a",
+    "jobs\\bb_s969113_j5_native\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\bb_s969113_j5_ctrl0\\RESULT.json": "c7cc900570ff5656c66e292d101952a164bfb4ec8b910b0e24667d8831fdb547",
+    "jobs\\bb_s969113_j5_ctrl0\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\bb_s969113_j5_mappo\\RESULT.json": "014e096627271909e6ba04add4ed72b605dedcc9ccc11e2babce11031dd1da13",
+    "jobs\\bb_s969113_j5_mappo\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\bb_s969113_j5_pi\\RESULT.json": "3461bebfcae1a3141c5e173bb4c14d01ec2e3f2851e5f3206719deaede90b87d",
+    "jobs\\bb_s969113_j5_pi\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\bb_s969113_j5_circles\\RESULT.json": "de0fffc8e4e9b347d11ea95c6af9009abd612bff01f2ec4c8643ff939298e854",
+    "jobs\\bb_s969113_j5_circles\\CLOSE.json": "d74b9c8fa7adc87c3827b22b59b2d8f57db9bec09cdf893e265adece5de5dc85",
+    "jobs\\random_s969113_episode\\RESULT.json": "18dae595313b7dd5bc1aa543c430d3b109383e6dc7d32d81694d9a7ce11c53e2",
+    "jobs\\random_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\native_s969113_episode\\RESULT.json": "1ffa826085de939cad7bff8565fe2648151a4aa0ee4afe974f1b342ae2675f26",
+    "jobs\\native_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\ctrl0_s969113_episode\\RESULT.json": "ba8bfd707ef6537382cb0e5bdf07c75b0974fb69d179b5a2050a4536f7d6781a",
+    "jobs\\ctrl0_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\mappo_s969113_episode\\RESULT.json": "8783fcdb1895740b834834275788705c60fcf7e5c3372e5f7ead7126f309860d",
+    "jobs\\mappo_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\pi_s969113_episode\\RESULT.json": "8ed17689f40eb2be30b7c940e568222f9287bab5cf10844e257c66075475f54b",
+    "jobs\\pi_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\circles_s969113_episode\\RESULT.json": "30d2442c7720edd6e94daad5849c5a7a2c5d0b1538d2f0f14aba04d007385345",
+    "jobs\\circles_s969113_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969114_episode\\RESULT.json": "4931548a98f70ae8951897ebb328ee84ece05ecccf6111a26689c3d1cf09a030",
+    "jobs\\wm_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969114_j6_native\\RESULT.json": "9c20e6701c69c748de5253a86d9cb75d5a32ab2dcab47c8d79335b38992d4836",
+    "jobs\\wm_s969114_j6_native\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\wm_s969114_j6_ctrl0\\RESULT.json": "5c034e946b18fac73e05f7b936fc341296b53b03d7022f7fecf502b4f000e5e4",
+    "jobs\\wm_s969114_j6_ctrl0\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\wm_s969114_j6_mappo\\RESULT.json": "14305cede43e6651a492a5d893fa1137bdd35398a554da94231bcb6d869c7be8",
+    "jobs\\wm_s969114_j6_mappo\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\wm_s969114_j6_pi\\RESULT.json": "1efb61ea3bde957052ff8a6eb031b8a68ae780ac0c7b43d1c9b78d182f0096ac",
+    "jobs\\wm_s969114_j6_pi\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\wm_s969114_j6_circles\\RESULT.json": "35af9ffce9be6d4f463030a3c90931af9de457ed38ef17b3790fe68901627e28",
+    "jobs\\wm_s969114_j6_circles\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\wm_s969114_j8_native\\RESULT.json": "042b3020ad0bca3fa220bb0b012c25e6a95e67faabb209be91b7d3b54295f6d2",
+    "jobs\\wm_s969114_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969114_j8_ctrl0\\RESULT.json": "b80f22215f6d36c1678ddca8f0e9d40b0d5aeb57fab6b43506ed5448cf1c76f5",
+    "jobs\\wm_s969114_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969114_j8_mappo\\RESULT.json": "83fca08f3b66f80b49d9be4e80aff82347b7335ef9a75a448d9faf17e25eb397",
+    "jobs\\wm_s969114_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969114_j8_pi\\RESULT.json": "966beede69f543d362e6f8be8a63a4790b1b28f7c584912ccd83e87684769184",
+    "jobs\\wm_s969114_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969114_j8_circles\\RESULT.json": "43a184bbbbcbb490bb58da0ce75ee59faa6a376df7aa72f0e5ef5cad8b6a48cc",
+    "jobs\\wm_s969114_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969114_j9_native\\RESULT.json": "3983cee6480b6c8d3345a1f1c66ba32352e846e35d4afd1d0f570814ab9844c1",
+    "jobs\\wm_s969114_j9_native\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\wm_s969114_j9_ctrl0\\RESULT.json": "5f70384c1fb97b60faf3e3a484af0873f74908ef78a881333698e19765275bc6",
+    "jobs\\wm_s969114_j9_ctrl0\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\wm_s969114_j9_mappo\\RESULT.json": "432de632161dd9c9de5ebd4bb8c801eeadeafdf19f0c9d768e6d509c128988dc",
+    "jobs\\wm_s969114_j9_mappo\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\wm_s969114_j9_pi\\RESULT.json": "458369602679f2624ad3336c56d70ecfa1a741372c5837cdc4df0fbc8438324f",
+    "jobs\\wm_s969114_j9_pi\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\wm_s969114_j9_circles\\RESULT.json": "8b45c2c77b68a0a90c52d1f956600219b40ea65a8e1f695fcb2d1d1bfd5f2eb7",
+    "jobs\\wm_s969114_j9_circles\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\bb_s969114_episode\\RESULT.json": "a4a2b8639899b8dbe811b80876262c5e34b30350cd5b57d24644c0cbc92a99dd",
+    "jobs\\bb_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\bb_s969114_j6_native\\RESULT.json": "dccd93f1fb452de5bd9315062849d47a393ac445f07eb320c8003fad02ac9488",
+    "jobs\\bb_s969114_j6_native\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\bb_s969114_j6_ctrl0\\RESULT.json": "456cafb723dd5c2059430ec1516301ac5eb79c4a84f60c947a41a035d27356de",
+    "jobs\\bb_s969114_j6_ctrl0\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\bb_s969114_j6_mappo\\RESULT.json": "c015939bdf71af72a86ef7c66f39b6000bc2bee497eb4cbcc5453f8998d70bf6",
+    "jobs\\bb_s969114_j6_mappo\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\bb_s969114_j6_pi\\RESULT.json": "383ab20cfcaf5e34678da444a52031d34e1e1e01576946195c2c1a1cedf9b525",
+    "jobs\\bb_s969114_j6_pi\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\bb_s969114_j6_circles\\RESULT.json": "bcace1c67930769006e797bbac08aebe19407853cc813178c69cc7bac1c0e5b7",
+    "jobs\\bb_s969114_j6_circles\\CLOSE.json": "347e818d3fefa9962d6b6abe714da9f66fd0dd5fa9668eddb2ed9690b8c63fc8",
+    "jobs\\bb_s969114_j8_native\\RESULT.json": "fddebec3af2a5af5311ed7e45f881986216bbd7d9ff735c739a4f355690ec76e",
+    "jobs\\bb_s969114_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969114_j8_ctrl0\\RESULT.json": "d3dfb80916675224b07553197f5272ceb00e0b7868b36b842ea8c28ec440bda5",
+    "jobs\\bb_s969114_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969114_j8_mappo\\RESULT.json": "7daa39ddf4fa77f23dd874ae319afbc5b85d104148b8b90afcf27e7e77ec3a9d",
+    "jobs\\bb_s969114_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969114_j8_pi\\RESULT.json": "581aa73ab2e215287641e22dd094538bbd58e71eb253beb58b5182052c131695",
+    "jobs\\bb_s969114_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969114_j8_circles\\RESULT.json": "bf2885d3a13651cc7253c609fb5f26dee63d4eb11e2d6463fc86466448a9e88a",
+    "jobs\\bb_s969114_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969114_j9_native\\RESULT.json": "4b4f90aa6fe5a9b95bd99b781bf8079831d34cd75d21fe955355de7cffe26059",
+    "jobs\\bb_s969114_j9_native\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\bb_s969114_j9_ctrl0\\RESULT.json": "565da898787eb43bfd2d6ae534c9647da15cd80dcfc99fb07f5f4ae2f15fa7ce",
+    "jobs\\bb_s969114_j9_ctrl0\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\bb_s969114_j9_mappo\\RESULT.json": "1343726e252e33f6caa5b8f7f62c990896b36a68796e108deac7f5b514e8fbcb",
+    "jobs\\bb_s969114_j9_mappo\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\bb_s969114_j9_pi\\RESULT.json": "66a423911f52cf2141410059269beafc87491b59108174ca35b9792a933723dd",
+    "jobs\\bb_s969114_j9_pi\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\bb_s969114_j9_circles\\RESULT.json": "2a1daeca482fa906a018586a8bbc9d5e8319a506dac1bfa073560dfa356b940c",
+    "jobs\\bb_s969114_j9_circles\\CLOSE.json": "ddfdba2e21f6181106dd474af0ff71b92452354b18d914b0fa3a08573e0c7adb",
+    "jobs\\random_s969114_episode\\RESULT.json": "a32551e43cf85e06226e775f7d63d4a7e8f106927e643e117e51704369e18c3f",
+    "jobs\\random_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\native_s969114_episode\\RESULT.json": "bda98b60b9ea97301f097bf6b1cf502599db089097b412295ff4e65b8ab9ba7e",
+    "jobs\\native_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\ctrl0_s969114_episode\\RESULT.json": "75bcb502b7d4cf1680b6c0f5eac0ff87046b1903a9ca596750683f11a04d2c19",
+    "jobs\\ctrl0_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\mappo_s969114_episode\\RESULT.json": "3024d5907b3d35cd06dfed94995c79ac704fd34c408a6ffc7adebaabeafc1c7e",
+    "jobs\\mappo_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\pi_s969114_episode\\RESULT.json": "75a6e03e4407b075df96e8244a2236bbcaf963ffa5c4d9df3fd4bece061c8dfd",
+    "jobs\\pi_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\circles_s969114_episode\\RESULT.json": "b28487cd25501cfefba2619d361c0a91dd7c53560c469b9cefeabe7737c79284",
+    "jobs\\circles_s969114_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969115_episode\\RESULT.json": "4202e32a110726f8c97a33afd79cd7bcb76d48aa477c408f9205bbfa3429b842",
+    "jobs\\wm_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969115_j1_native\\RESULT.json": "5c625a3a33cf03b94179e8ed9e06a3c9b4558cc199407a06f7c4f3e287c8ac34",
+    "jobs\\wm_s969115_j1_native\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969115_j1_ctrl0\\RESULT.json": "e7c36b93c3919944bf8d1bc57ae61cbbb92b69f84760237168579756aa4b4a0a",
+    "jobs\\wm_s969115_j1_ctrl0\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969115_j1_mappo\\RESULT.json": "b7402431a572299e26a75b6cce14d0aa49ca0735234ec734b7ade837c32b174f",
+    "jobs\\wm_s969115_j1_mappo\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969115_j1_pi\\RESULT.json": "8940658714398ebcbaf82155d3e001f9743d72d15360133ebab8d7c1d9a85562",
+    "jobs\\wm_s969115_j1_pi\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969115_j1_circles\\RESULT.json": "8e7b4a8d00c03bec66f825619eadb7fc33bdcb2cfb4a9cbfe12be9da83112e06",
+    "jobs\\wm_s969115_j1_circles\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969115_j2_native\\RESULT.json": "c5fac0f3619f64046525bc4f661c67a5521b295dc2ce1a1aa5ee9e688311766f",
+    "jobs\\wm_s969115_j2_native\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969115_j2_ctrl0\\RESULT.json": "a3db84c10b742d0f936dd21c094eff8a7468c10c920afc240292a2daa3aa1ca0",
+    "jobs\\wm_s969115_j2_ctrl0\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969115_j2_mappo\\RESULT.json": "193bd65c8258e5a909c11e8c5f42a3abde2400e683efaa3fa349e0bd52795f09",
+    "jobs\\wm_s969115_j2_mappo\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969115_j2_pi\\RESULT.json": "f593e60d174d62552ea9f9d5d2cd038e76cd0d1e37010ac90a6ec0530f4a8354",
+    "jobs\\wm_s969115_j2_pi\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969115_j2_circles\\RESULT.json": "474575da43a099c9a67abff65656c34b3d3c5ea64270531ff62f25c59bd3bf62",
+    "jobs\\wm_s969115_j2_circles\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\wm_s969115_j7_native\\RESULT.json": "bf12f709cd90c4f371a7eb4def93f74b2698f0effecab12d0f35f0664b37c54c",
+    "jobs\\wm_s969115_j7_native\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969115_j7_ctrl0\\RESULT.json": "4ebdb5b60b6eb0dd9c00d701aec21db9476476d4e63a0b766a9381b05803a729",
+    "jobs\\wm_s969115_j7_ctrl0\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969115_j7_mappo\\RESULT.json": "788698553fa68733000df86a48e5041e64b9a3d442b81b58b553bbeb99b4e24d",
+    "jobs\\wm_s969115_j7_mappo\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969115_j7_pi\\RESULT.json": "be37c1a2ac81d39e4b173c36ff06de877d425a5627d0b76246f61e50bfdadd80",
+    "jobs\\wm_s969115_j7_pi\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\wm_s969115_j7_circles\\RESULT.json": "7020386d92eb9a5cdd6835e07deaf1c6b9bc93e5640270bd302ad50cf1a82b3d",
+    "jobs\\wm_s969115_j7_circles\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969115_episode\\RESULT.json": "8fac3dbd6936d0647312af43ea673dba104c2c26d3cdba47f5585d549628f183",
+    "jobs\\bb_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\bb_s969115_j1_native\\RESULT.json": "f093e09f5bc269fe5d58c2114c30f2d291fed22a40586c0d5bba75111c2bccf4",
+    "jobs\\bb_s969115_j1_native\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969115_j1_ctrl0\\RESULT.json": "274a38238d4c71862fef71947be3532d40ce3f47332c1ddaa9b53a8e2e83cf98",
+    "jobs\\bb_s969115_j1_ctrl0\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969115_j1_mappo\\RESULT.json": "d1e6f762dfaa5e54b41ca397332758322a9d4a72f0acbb239d6143270ec0e11f",
+    "jobs\\bb_s969115_j1_mappo\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969115_j1_pi\\RESULT.json": "856882a9cb74def559306c16e1f365135554cfc2e58c9365ed33416b5e4eda22",
+    "jobs\\bb_s969115_j1_pi\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969115_j1_circles\\RESULT.json": "a4323766e18a8a5b650af2d5f904d4c4195bae617b18378c31ef1c7b369331b7",
+    "jobs\\bb_s969115_j1_circles\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969115_j2_native\\RESULT.json": "6f0e00ba979e3acb2b63545be561dbb1844736f175f9b9e647c60bbddfc22428",
+    "jobs\\bb_s969115_j2_native\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969115_j2_ctrl0\\RESULT.json": "28bdeec35800965c2d793e72c292c525bf8f652e8119f5cac6e270b40c8360b1",
+    "jobs\\bb_s969115_j2_ctrl0\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969115_j2_mappo\\RESULT.json": "7744bea6d345b9ff4d5d37569261bc894d0b01682081b43c60ccaa7ef8d7b0c9",
+    "jobs\\bb_s969115_j2_mappo\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969115_j2_pi\\RESULT.json": "f5f4c662b65aa7b0a8b94750105071eba751c9819d8005743546d2c332a8cac0",
+    "jobs\\bb_s969115_j2_pi\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969115_j2_circles\\RESULT.json": "ad25db1f0e127d6e1572dbb09251f73482a2f2de26ee7fed2dfb4f7e4824cfaa",
+    "jobs\\bb_s969115_j2_circles\\CLOSE.json": "531444faf4dd241090d8ee88894b67c1692690c6c6f61d9a5584a28e5924fa8e",
+    "jobs\\bb_s969115_j7_native\\RESULT.json": "46890dffb53be355a046b7935a27f3397ed889fa897e292b2452999b9d9ee1f6",
+    "jobs\\bb_s969115_j7_native\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969115_j7_ctrl0\\RESULT.json": "cc7da64d38a0d576ca03dec98478022d662555586bf65003323ecb824a6e3a48",
+    "jobs\\bb_s969115_j7_ctrl0\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969115_j7_mappo\\RESULT.json": "206fea29dac1febc20cb89aaa0cb4654c210ce0fbc41a200b4c0e78f5789ed6f",
+    "jobs\\bb_s969115_j7_mappo\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969115_j7_pi\\RESULT.json": "e4f84f1877ec90c6e4bbd2b1c9742ad0d0aef57e2e8c90b9ffd9c36ed8f30d56",
+    "jobs\\bb_s969115_j7_pi\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\bb_s969115_j7_circles\\RESULT.json": "dae1f76158cee748abd977ce767b1eb6ccdc22b3d313275e01d2565583e35e32",
+    "jobs\\bb_s969115_j7_circles\\CLOSE.json": "634ab1b24356e1c9af74480c4cef14944afd9e09643045646ee7028e27287f66",
+    "jobs\\random_s969115_episode\\RESULT.json": "cf806a9dc4144bc417ecac3a921261920462dcbca662ed9727267c76e17f348b",
+    "jobs\\random_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\native_s969115_episode\\RESULT.json": "013eed52fded147df9ef8770710f5bbeed123f86e615dca5e3dac969a0eface6",
+    "jobs\\native_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\ctrl0_s969115_episode\\RESULT.json": "ec3cf5e239132985de6920ad2509934b9a09dc5ddc9f5e96d171dbdb5798c557",
+    "jobs\\ctrl0_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\mappo_s969115_episode\\RESULT.json": "374f6b6a946ef1bf0b8ca51155ee1d96760eb4b4413c2e70c67b128d98bf6eb3",
+    "jobs\\mappo_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\pi_s969115_episode\\RESULT.json": "9a15ab0c5ccca9c3b3acad019063836966c68cf88628aa0b0e18c16f48219e9e",
+    "jobs\\pi_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\circles_s969115_episode\\RESULT.json": "b8dc39dcf728850af29f5889d6e5d286f55b2610c6e83602638973b9e614ae26",
+    "jobs\\circles_s969115_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969116_episode\\RESULT.json": "b2226f99af2d144cc568543dfa51aabd91088b051ad1eaf1624f87c80688102b",
+    "jobs\\wm_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\wm_s969116_j0_native\\RESULT.json": "645ce4acba209e3bd903d70570bfbad3be863159c216641d6c09f080ce90a594",
+    "jobs\\wm_s969116_j0_native\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\wm_s969116_j0_ctrl0\\RESULT.json": "c87b7790d6138be479a9ff745e3156c4945e259e7bb4ee6f664dcdf575fe79c4",
+    "jobs\\wm_s969116_j0_ctrl0\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\wm_s969116_j0_mappo\\RESULT.json": "bc8efec0f6b4d8d9ec66647367eaed9199315f275cb7dfdd8b74913f1bf5c2b7",
+    "jobs\\wm_s969116_j0_mappo\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\wm_s969116_j0_pi\\RESULT.json": "3fe2e231b8bd3e86951c199f8a5097ae775228a6aa32b541585bd76815c35816",
+    "jobs\\wm_s969116_j0_pi\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\wm_s969116_j0_circles\\RESULT.json": "c22d25b1e48ea9a36bfbcf0bd2f4d3716575c84e7b9f59ba83e4f401e40604da",
+    "jobs\\wm_s969116_j0_circles\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\wm_s969116_j1_native\\RESULT.json": "2eda3011a9aafe0a4961034cd6f40a0c0d773b88f1e176c8a8074805249dcb9c",
+    "jobs\\wm_s969116_j1_native\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969116_j1_ctrl0\\RESULT.json": "806cf556b7fe9d1ee4fe1304bfd0c6a352f9602fc75b6465352af36fae4e0692",
+    "jobs\\wm_s969116_j1_ctrl0\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969116_j1_mappo\\RESULT.json": "0c73d515c95105d46b7cc4efcacba99d43a476bbb3946a58c9d17e2c3a9b2b50",
+    "jobs\\wm_s969116_j1_mappo\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969116_j1_pi\\RESULT.json": "71ccc7f92f715ba6df50ecc9b6f75e1805960f05f5d023e2691dd4baeb2762c7",
+    "jobs\\wm_s969116_j1_pi\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969116_j1_circles\\RESULT.json": "522981c92414ecbeaf0733abac6750c4181a4cbe39effa178a8347429b07653e",
+    "jobs\\wm_s969116_j1_circles\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\wm_s969116_j8_native\\RESULT.json": "baea65de2955f9dc69ba10c2b59f6aa5efdfdb9113f2fc9a1df0128ae63c6d28",
+    "jobs\\wm_s969116_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969116_j8_ctrl0\\RESULT.json": "baf451becdefb96479b68ed797cab7e28d4986527261c8f0cff5c7834bdaa949",
+    "jobs\\wm_s969116_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969116_j8_mappo\\RESULT.json": "88073d1fd38f0dd97c7850f101912443ff7cb2bec6a4026c4ac879f7ae42bad4",
+    "jobs\\wm_s969116_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969116_j8_pi\\RESULT.json": "d076d29a564306a6a63b08176d18094376fb1f7afd592919ef5511789280a6bc",
+    "jobs\\wm_s969116_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\wm_s969116_j8_circles\\RESULT.json": "dbb23cc249cf35d82de916ae80a3aa0f5064e00f47a6d08d51e18963c5255fd0",
+    "jobs\\wm_s969116_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969116_episode\\RESULT.json": "3eac35c5ad1ff925b695d8399f0acba8bf542e04518ece0749a0edd57210b0c2",
+    "jobs\\bb_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\bb_s969116_j0_native\\RESULT.json": "645ce4acba209e3bd903d70570bfbad3be863159c216641d6c09f080ce90a594",
+    "jobs\\bb_s969116_j0_native\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\bb_s969116_j0_ctrl0\\RESULT.json": "c87b7790d6138be479a9ff745e3156c4945e259e7bb4ee6f664dcdf575fe79c4",
+    "jobs\\bb_s969116_j0_ctrl0\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\bb_s969116_j0_mappo\\RESULT.json": "bc8efec0f6b4d8d9ec66647367eaed9199315f275cb7dfdd8b74913f1bf5c2b7",
+    "jobs\\bb_s969116_j0_mappo\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\bb_s969116_j0_pi\\RESULT.json": "3fe2e231b8bd3e86951c199f8a5097ae775228a6aa32b541585bd76815c35816",
+    "jobs\\bb_s969116_j0_pi\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\bb_s969116_j0_circles\\RESULT.json": "c22d25b1e48ea9a36bfbcf0bd2f4d3716575c84e7b9f59ba83e4f401e40604da",
+    "jobs\\bb_s969116_j0_circles\\CLOSE.json": "220bc8db74cc217160d57d91a942f35230e64f58f7957cf30383240e8dee5091",
+    "jobs\\bb_s969116_j1_native\\RESULT.json": "45daade94c119c2f9b52f8ae56514756d22516738fb392795345361bd74b6fb2",
+    "jobs\\bb_s969116_j1_native\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969116_j1_ctrl0\\RESULT.json": "b2d816ce7129387d1dc876abf75bc4e3892755a3aec262ddb00bce5f1746b39b",
+    "jobs\\bb_s969116_j1_ctrl0\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969116_j1_mappo\\RESULT.json": "baa346e0843890aba64cd56aeb14345c0fcdb8e1fe6eb1ff1d3824f2645ed258",
+    "jobs\\bb_s969116_j1_mappo\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969116_j1_pi\\RESULT.json": "e781d85d218cd7c0eb804804b92cc4c974622787b05bbc938b022f10e651b9bd",
+    "jobs\\bb_s969116_j1_pi\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969116_j1_circles\\RESULT.json": "6ae936f2bd42365ca01c27290ce86cdacb2a13fcdf683ad93e4c3b1056a49227",
+    "jobs\\bb_s969116_j1_circles\\CLOSE.json": "1935337e352f8be85772f9ee2d93b162e581315f17df96bbfa574b253ac8dfde",
+    "jobs\\bb_s969116_j8_native\\RESULT.json": "0c0ac509c00a30613e1cfebd11abe4dee04bd0f77c1e0a44fad9fb6d9023a2f9",
+    "jobs\\bb_s969116_j8_native\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969116_j8_ctrl0\\RESULT.json": "3452818cfc9c333a1d1b1a4c68739003bd243b9902c5fa28df910b2bfb478ab7",
+    "jobs\\bb_s969116_j8_ctrl0\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969116_j8_mappo\\RESULT.json": "721aebd5159b2296809d2a5a99860f85ceb251377d0c46febe5deea743dfff1c",
+    "jobs\\bb_s969116_j8_mappo\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969116_j8_pi\\RESULT.json": "6c1acc025acf474fc571d684ef3eba2d762809c6d0406ab3a4b92e4ec14a8632",
+    "jobs\\bb_s969116_j8_pi\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\bb_s969116_j8_circles\\RESULT.json": "15f89f80ee1efcd4c4a83a09d106016df7ba1533351cacffb4743cb180d3f80b",
+    "jobs\\bb_s969116_j8_circles\\CLOSE.json": "0ba651e5f1a65e7ca613604f3cdabe036160dfe1a2716c7b2b5810aef1533bfa",
+    "jobs\\random_s969116_episode\\RESULT.json": "b9a51f2ee9e1d9bf4c1c6e9a2a4f24edfc5e4de0ab1a09e2b410dcedb8cce089",
+    "jobs\\random_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\native_s969116_episode\\RESULT.json": "fd8c26367de643adba3c4f8a69947c5778b87147610b222ee869b67e0d2f4554",
+    "jobs\\native_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\ctrl0_s969116_episode\\RESULT.json": "51c15bc23c9ebc56d5219ee634f2ad828a989a7c5343cb79d6ad63c24b0b229b",
+    "jobs\\ctrl0_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\mappo_s969116_episode\\RESULT.json": "5cbeba56b0ab614c1f6945bd2f1f4c8d7223a7f24196fbace2bc347e490eb41c",
+    "jobs\\mappo_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\pi_s969116_episode\\RESULT.json": "70dea29b00030a5640e3e2d1975cc519a5f0d731fe2c022b49534f762003bf21",
+    "jobs\\pi_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b",
+    "jobs\\circles_s969116_episode\\RESULT.json": "3509989170e59b5babeb61090fb16fa5f35c7d21fad94f4ea9819070b2cab4c7",
+    "jobs\\circles_s969116_episode\\CLOSE.json": "c1c9d5e7926822242205e247e4e6cbbcdc5aba63204b12ae7bbca0c89a4f474b"
+  },
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "charged_sim_s": 383190.0,
+  "actual_gpu_s": 14382.225540380925
+}
