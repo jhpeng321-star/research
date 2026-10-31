@@ -1,5 +1,29 @@
 # PILOT v2 handoff (Claude -> GLM executor), 2026-10-31 ~15:20 +08
 
+## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
+- MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:
+  81ddfb5d + 6a53549c; dispatch evidence e5b52ebb. See WMFIX_PILOT_V2DATA.md.
+- **ONE LIVE DISPATCHER: gpuA PID197030/start881175520**, PPID1/SID197030,
+  `tools.wmfixmerge.launch_data_pilot --execute`, root R (below). Do NOT duplicate.
+- R/v2data/DISPATCH.json is exclusive; STATUS.json + EVENTS.jsonl are authoritative.
+  Last probe 15:34: WAIT_GPU_MEMORY, 11239 MiB free <14336 required. No pilot yet.
+- Old parity PID188758 exited WITHOUT a receipt. Dispatcher will recover it into
+  NEW v2data/smoke after memory frees, demand exact 449.62744140625/302.890625
+  (original v1 group0), then create NEW v2data/pilot and launch automatically.
+- Explicit --registered-data-pilot route pins prepared84751dc7/contracte67850f3;
+  default smoothing+FD route unchanged. 16 local CPU tests /11 staged tests PASS.
+  Eight MAIN15:00 TRAIN selection seeds are excluded from fitting (44 fit/52 gate).
+- Full52 panels at0/10/20/30; unchanged pilot.decide(), SD0, finite gradients,
+  frozen-bitwise required. PASS continues v1 curriculum within21570s; FAIL stops.
+- Remaining: monitor PARITY.json, pilot/PILOT_V2.json; report decision immediately
+  to REGISTRATION.md and WMFIX_PILOT_V2DATA.md. On PASS wait FINAL.json, then run
+  the staged sharded verdict in WMFIX_LAUNCH_READY.md with train-dir **v2data/pilot**
+  and NEW verdict output; retain C1's documented missing-cohort/runner blocker as
+  a blocker, never a qualified result. These post-pilot verdict jobs are NOT
+  automatically dispatched by the current launcher.
+- No peer PIDs signalled, no SUMO, no push. Original smoothed-v2 failure below is
+  historical; do NOT invoke v2/launch_pilot_v2.sh for this authorization.
+
 ## Done (gpuA /root/autodl-tmp/c4/wmfixmerge20261031 = R; all own work)
 - Data (change 1): wmdata views rsynced cpuQ->gpuA /root/autodl-tmp/c4/wmdata20261031/views,
   2443 files 0 mismatches vs SHA256SUM.json (R/v2/WMDATA_VIEWS_VERIFY.json). merge_corpus ->
