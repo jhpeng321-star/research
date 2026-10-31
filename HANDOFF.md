@@ -8,8 +8,14 @@ UNC adapter implemented: `MotionFitForUNC` read-only encoder proxy;17 CPU tests
 pass. LC refit against committed lane811cd7e8 (finite geometry/epsilon fixes)
 dispatched once: cpuQ407617,2nice19workers,load8.67/32,root
 `/home/ubuntu/rbfit20261101_addendum/lane_v2`. No completed fit repeated.
-Remaining: run pre-t0 motion-only shrinkage calibration and publish bounded
-SUMOCORE sign-reversal diagnosis. Report: `docs/paper_results/RBFIT.md`.
+Shrinkage calibration running: cpuQ426309,1nice19CPU,load10.81/32; same new
+root/shrinkage_v1. Exports use UNC's now-committed f8b6faea direct JSON reader.
+SUMOCORE diagnosis published: `docs/paper_results/RBFIT_SUMOCORE_DIAG.md`.
+Six FIT states:600s inferred-minus-default MAPPO/PI effect +4171/+3909veh-s,
+almost wholly road; native road improves8523 vs controlled4351/4617veh-s.
+Incumbents AND entrant donors changed, so causal coordinate remains unknown.
+No demonstrated sign repair; no action outcomes feed fitting/calibration.
+Report: `docs/paper_results/RBFIT.md`.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ

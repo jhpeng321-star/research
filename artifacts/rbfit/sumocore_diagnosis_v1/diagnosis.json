@@ -1,0 +1,1499 @@
+{
+  "schema": "wm_phys.sumocore_fit_diagnosis.v1",
+  "worlds": [
+    969421,
+    969422,
+    969425,
+    969426,
+    969427,
+    969428
+  ],
+  "seeds": [
+    101,
+    202,
+    303
+  ],
+  "source_sha256": "e5af6abf01f42123a69cc8326321457e36900eae2729afb38b452fd7870c8848",
+  "n_effective_futures": 108,
+  "qualification": "Descriptive FIT-only outcome decomposition; NOT a causal parameter attribution or calibration input",
+  "cells": [
+    {
+      "world": 969421,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -19.266777320022282,
+          "team": -19.266777320022054
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 21.844055806042054,
+          "team": 21.84405580604213
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 41.110833126064335,
+        "team": 41.110833126064186
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 30.0,
+          "road": 289.1903502006334,
+          "team": 319.19035020063365
+        },
+        "mappo": {
+          "source": 30.0,
+          "road": 330.30118332669775,
+          "team": 360.3011833266978
+        }
+      }
+    },
+    {
+      "world": 969421,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -60.32850579582043,
+          "team": -60.32850579581979
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -29.30997405813643,
+          "team": -29.30997405813673
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 31.018531737684004,
+        "team": 31.018531737683055
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 30.0,
+          "road": 289.1903502006334,
+          "team": 319.19035020063365
+        },
+        "pi": {
+          "source": 30.0,
+          "road": 320.2088819383174,
+          "team": 350.20888193831667
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -73.47308219937698,
+          "team": -73.47308219937668
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 102.38651409752886,
+          "team": 102.38651409753068
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 175.85959629690583,
+        "team": 175.85959629690734
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 436.66666666666634,
+          "road": 149.1124108478563,
+          "team": 585.7790775145245
+        },
+        "mappo": {
+          "source": 436.66666666666634,
+          "road": 324.97200714476213,
+          "team": 761.6386738114319
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -186.97144778075926,
+          "team": -186.9714477807594
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -43.43721524959892,
+          "team": -43.437215249600136
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 143.53423253116034,
+        "team": 143.53423253115926
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 436.66666666666634,
+          "road": 149.1124108478563,
+          "team": 585.7790775145245
+        },
+        "pi": {
+          "source": 436.66666666666634,
+          "road": 292.64664337901667,
+          "team": 729.3133100456838
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 58.17986853214567,
+          "team": 58.179868532145825
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 164.60023817056617,
+          "team": 164.60023817057268
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 106.42036963842051,
+        "team": 106.42036963842685
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 721.9999999999994,
+          "road": -343.09505831188835,
+          "team": 378.90494168810864
+        },
+        "mappo": {
+          "source": 721.9999999999994,
+          "road": -236.67468867346784,
+          "team": 485.3253113265355
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 88.91652611507409,
+          "team": 88.9165261150744
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 0.0,
+          "team": 0.0
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -88.91652611507409,
+        "team": -88.9165261150744
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 721.9999999999994,
+          "road": -343.09505831188835,
+          "team": 378.90494168810864
+        },
+        "pi": {
+          "source": 721.9999999999994,
+          "road": -432.01158442696243,
+          "team": 289.9884155730342
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.16666666666666666,
+          "road": -65.71539275305668,
+          "team": -65.54872608638713
+        },
+        "inferred": {
+          "source": 1.6666666666666667,
+          "road": 525.7116676891654,
+          "team": 527.3783343558329
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 1.5,
+        "road": 591.4270604422221,
+        "team": 592.92706044222
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 721.0000000000013,
+          "road": 592.3650007906413,
+          "team": 1313.365000790646
+        },
+        "mappo": {
+          "source": 722.5000000000013,
+          "road": 1183.7920612328633,
+          "team": 1906.292061232866
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -152.61083541422855,
+          "team": -152.61083541422462
+        },
+        "inferred": {
+          "source": -0.16666666666666666,
+          "road": -7.2154564511643,
+          "team": -7.38212311782748
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.16666666666666666,
+        "road": 145.39537896306425,
+        "team": 145.22871229639713
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 721.0000000000013,
+          "road": 592.3650007906413,
+          "team": 1313.365000790646
+        },
+        "pi": {
+          "source": 720.8333333333345,
+          "road": 737.7603797537055,
+          "team": 1458.5937130870432
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -233.44166017940302,
+          "team": -233.44166017940316
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 90.12969153851206,
+          "team": 90.12969153851252
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 323.5713517179151,
+        "team": 323.57135171791566
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 19.0,
+          "road": 851.1789814914732,
+          "team": 870.1789814914723
+        },
+        "mappo": {
+          "source": 19.0,
+          "road": 1174.7503332093884,
+          "team": 1193.750333209388
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -0.4198801916897234,
+          "team": -0.4198801916895718
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -2.9261903594147043,
+          "team": -2.9261903594134915
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -2.506310167724981,
+        "team": -2.5063101677239197
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 19.0,
+          "road": 851.1789814914732,
+          "team": 870.1789814914723
+        },
+        "pi": {
+          "source": 19.0,
+          "road": 848.6726713237482,
+          "team": 867.6726713237484
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 120,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 0.01632674343848824,
+          "team": 0.016326743439397735
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -1.2612647065660287,
+          "team": -1.2612647065704248
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -1.277591450004517,
+        "team": -1.2775914500098224
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 710.1666666666669,
+          "road": 257.45082063131736,
+          "team": 967.6174872979864
+        },
+        "mappo": {
+          "source": 710.1666666666669,
+          "road": 256.1732291813128,
+          "team": 966.3398958479765
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 120,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 0.0,
+          "team": 0.0
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -0.026246684100442508,
+          "team": -0.026246684099533013
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -0.026246684100442508,
+        "team": -0.026246684099533013
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 710.1666666666669,
+          "road": 257.45082063131736,
+          "team": 967.6174872979864
+        },
+        "pi": {
+          "source": 710.1666666666669,
+          "road": 257.4245739472169,
+          "team": 967.5912406138868
+        }
+      }
+    },
+    {
+      "world": 969421,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 1.0,
+          "road": -369.63985066819095,
+          "team": -368.63985066819595
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 959.5511976598888,
+          "team": 959.551197659887
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -1.0,
+        "road": 1329.1910483280797,
+        "team": 1328.1910483280828
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 541.4999999999997,
+          "road": -128.95396572235163,
+          "team": 412.54603427764596
+        },
+        "mappo": {
+          "source": 540.4999999999997,
+          "road": 1200.2370826057281,
+          "team": 1740.7370826057288
+        }
+      }
+    },
+    {
+      "world": 969421,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": -0.16666666666666666,
+          "road": -1458.869873286338,
+          "team": -1459.0365399530106
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -387.06346632027635,
+          "team": -387.0634663202797
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.16666666666666666,
+        "road": 1071.8064069660616,
+        "team": 1071.9730736327308
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 541.4999999999997,
+          "road": -128.95396572235163,
+          "team": 412.54603427764596
+        },
+        "pi": {
+          "source": 541.6666666666664,
+          "road": 942.85244124371,
+          "team": 1484.5191079103768
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -935.0229867652552,
+          "team": -935.0229867652524
+        },
+        "inferred": {
+          "source": -0.16666666666666666,
+          "road": -29.67994834190692,
+          "team": -29.84661500857146
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.16666666666666666,
+        "road": 905.3430384233483,
+        "team": 905.176371756681
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 2783.3333333333335,
+          "road": -1185.1240122159722,
+          "team": 1598.2093211173603
+        },
+        "mappo": {
+          "source": 2783.1666666666665,
+          "road": -279.7809737926239,
+          "team": 2503.385692874041
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -744.9727837842726,
+          "team": -744.9727837842669
+        },
+        "inferred": {
+          "source": -0.16666666666666666,
+          "road": 94.29748138733491,
+          "team": 94.13081472066672
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.16666666666666666,
+        "road": 839.2702651716074,
+        "team": 839.1035985049336
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 2783.3333333333335,
+          "road": -1185.1240122159722,
+          "team": 1598.2093211173603
+        },
+        "pi": {
+          "source": 2783.1666666666665,
+          "road": -345.85374704436464,
+          "team": 2437.312919622294
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 1546.940440684383,
+          "team": 1546.9404406843823
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 1645.00602436771,
+          "team": 1645.0060243677253
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 98.06558368332708,
+        "team": 98.065583683343
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4666.8333333333285,
+          "road": -3513.3008023818975,
+          "team": 1153.5325309514312
+        },
+        "mappo": {
+          "source": 4666.8333333333285,
+          "road": -3415.2352186985704,
+          "team": 1251.5981146347742
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 1.2126596023639042e-12,
+          "road": 104.15663083088505,
+          "team": 104.15663083089748
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 0.0,
+          "team": 0.0
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -1.2126596023639042e-12,
+        "road": -104.15663083088505,
+        "team": -104.15663083089748
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4666.8333333333285,
+          "road": -3513.3008023818975,
+          "team": 1153.5325309514312
+        },
+        "pi": {
+          "source": 4666.833333333328,
+          "road": -3617.4574332127827,
+          "team": 1049.3759001205337
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.16666666666666666,
+          "road": -859.7299045315189,
+          "team": -859.563237864837
+        },
+        "inferred": {
+          "source": 1.6666666666666667,
+          "road": 1834.648151467436,
+          "team": 1836.3148181341287
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 1.5,
+        "road": 2694.378055998955,
+        "team": 2695.8780559989655
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4475.666666666656,
+          "road": -2911.8285613325,
+          "team": 1563.8381053341825
+        },
+        "mappo": {
+          "source": 4477.166666666656,
+          "road": -217.45050533354515,
+          "team": 4259.716161333148
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -1574.6913013811943,
+          "team": -1574.6913013811816
+        },
+        "inferred": {
+          "source": -0.16666666666666666,
+          "road": 802.2770701301191,
+          "team": 802.1104034634554
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.16666666666666666,
+        "road": 2376.9683715113133,
+        "team": 2376.8017048446372
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4475.666666666656,
+          "road": -2911.8285613325,
+          "team": 1563.8381053341825
+        },
+        "pi": {
+          "source": 4475.499999999989,
+          "road": -534.8601898211867,
+          "team": 3940.6398101788195
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -1445.5762235287955,
+          "team": -1445.5762235287925
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 743.2058851016473,
+          "team": 743.2058851016506
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 2188.782108630443,
+        "team": 2188.782108630443
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 184.16666666666666,
+          "road": 939.9582757416048,
+          "team": 1124.1249424082737
+        },
+        "mappo": {
+          "source": 184.16666666666666,
+          "road": 3128.7403843720476,
+          "team": 3312.907051038717
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -551.5468779072752,
+          "team": -551.5468779072717
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -659.8092971884898,
+          "team": -659.8092971884911
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -108.26241928121465,
+        "team": -108.26241928121942
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 184.16666666666666,
+          "road": 939.9582757416048,
+          "team": 1124.1249424082737
+        },
+        "pi": {
+          "source": 184.16666666666666,
+          "road": 831.6958564603901,
+          "team": 1015.8625231270543
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 300,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 20.172872520275632,
+          "team": 20.17287252029625
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 29.91390477830767,
+          "team": 29.91390477830646
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 9.741032258032039,
+        "team": 9.741032258010211
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4427.999999999999,
+          "road": -131.30114312467472,
+          "team": 4296.698856875332
+        },
+        "mappo": {
+          "source": 4427.999999999999,
+          "road": -121.56011086664269,
+          "team": 4306.439889133342
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 300,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 16.972739293771763,
+          "team": 16.972739293772975
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 11.832836051793493,
+          "team": 11.832836051794098
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -5.139903241978271,
+        "team": -5.139903241978876
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4427.999999999999,
+          "road": -131.30114312467472,
+          "team": 4296.698856875332
+        },
+        "pi": {
+          "source": 4427.999999999999,
+          "road": -136.441046366653,
+          "team": 4291.558953633353
+        }
+      }
+    },
+    {
+      "world": 969421,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 8.666666666666666,
+          "road": -3616.2091941823387,
+          "team": -3607.54252751567
+        },
+        "inferred": {
+          "source": -3.3333333333333335,
+          "road": 4908.675547912927,
+          "team": 4905.3422145796
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -12.0,
+        "road": 8524.884742095266,
+        "team": 8512.88474209527
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4009.16666666666,
+          "road": -5167.827628186068,
+          "team": -1158.6609615194113
+        },
+        "mappo": {
+          "source": 3997.16666666666,
+          "road": 3357.057113909197,
+          "team": 7354.223780575858
+        }
+      }
+    },
+    {
+      "world": 969421,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": -4.166666666666667,
+          "road": -7215.124134354523,
+          "team": -7219.290801021189
+        },
+        "inferred": {
+          "source": -1.8333333333333333,
+          "road": -2255.0792290096347,
+          "team": -2256.912562342965
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 2.333333333333334,
+        "road": 4960.044905344888,
+        "team": 4962.378238678224
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 4009.16666666666,
+          "road": -5167.827628186068,
+          "team": -1158.6609615194113
+        },
+        "pi": {
+          "source": 4011.4999999999936,
+          "road": -207.78272284117975,
+          "team": 3803.717277158812
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -2332.0522667854652,
+          "team": -2332.0522667854348
+        },
+        "inferred": {
+          "source": 7.166666666666667,
+          "road": -175.71813388448268,
+          "team": -168.55146721784936
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 7.166666666666667,
+        "road": 2156.3341329009827,
+        "team": 2163.5007995675855
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 11353.16666666666,
+          "road": -6722.937083872865,
+          "team": 4630.229582793839
+        },
+        "mappo": {
+          "source": 11360.333333333327,
+          "road": -4566.602950971882,
+          "team": 6793.730382361424
+        }
+      }
+    },
+    {
+      "world": 969422,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.6666666666666666,
+          "road": -1652.624721660816,
+          "team": -1651.9580549941118
+        },
+        "inferred": {
+          "source": 5.166666666666667,
+          "road": 1961.9564998983485,
+          "team": 1967.1231665649586
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 4.5,
+        "road": 3614.5812215591645,
+        "team": 3619.0812215590704
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 11353.16666666666,
+          "road": -6722.937083872865,
+          "team": 4630.229582793839
+        },
+        "pi": {
+          "source": 11357.66666666666,
+          "road": -3108.3558623137,
+          "team": 8249.310804352908
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": 11667.372556699682,
+          "team": 11667.372556699682
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 4980.147180620101,
+          "team": 4980.147180620076
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -6687.225376079581,
+        "team": -6687.225376079606
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 18903.66666666665,
+          "road": -15831.843337085947,
+          "team": 3071.8233295807636
+        },
+        "mappo": {
+          "source": 18903.66666666665,
+          "road": -22519.06871316553,
+          "team": -3615.4020464988425
+        }
+      }
+    },
+    {
+      "world": 969425,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": -4.850638409455617e-12,
+          "road": -1879.4831815531252,
+          "team": -1879.4831815531313
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 0.0,
+          "team": 0.0
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 4.850638409455617e-12,
+        "road": 1879.4831815531252,
+        "team": 1879.4831815531313
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 18903.66666666665,
+          "road": -15831.843337085947,
+          "team": 3071.8233295807636
+        },
+        "pi": {
+          "source": 18903.666666666653,
+          "road": -13952.360155532822,
+          "team": 4951.306511133895
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 6.666666666666667,
+          "road": -8469.82281225057,
+          "team": -8463.156145583838
+        },
+        "inferred": {
+          "source": 1.6666666666666667,
+          "road": 8296.408098738595,
+          "team": 8298.074765405341
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -5.0,
+        "road": 16766.230910989165,
+        "team": 16761.23091098918
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 17887.999999999985,
+          "road": -22698.61700589827,
+          "team": -4810.617005898336
+        },
+        "mappo": {
+          "source": 17882.999999999985,
+          "road": -5932.386094909106,
+          "team": 11950.613905090844
+        }
+      }
+    },
+    {
+      "world": 969426,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": -0.3333333333333333,
+          "road": -7768.95261624875,
+          "team": -7769.285949582224
+        },
+        "inferred": {
+          "source": 7.5,
+          "road": 5446.5357616276115,
+          "team": 5454.035761627679
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 7.833333333333333,
+        "road": 13215.488377876361,
+        "team": 13223.321711209903
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 17887.999999999985,
+          "road": -22698.61700589827,
+          "team": -4810.617005898336
+        },
+        "pi": {
+          "source": 17895.833333333318,
+          "road": -9483.12862802191,
+          "team": 8412.704705311568
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -2124.0600710396466,
+          "team": -2124.060071039642
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": 153.08812101239164,
+          "team": 153.08812101240497
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 2277.148192052038,
+        "team": 2277.148192052047
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 636.0000000000003,
+          "road": 2633.846448359543,
+          "team": 3269.8464483595412
+        },
+        "mappo": {
+          "source": 636.0000000000003,
+          "road": 4910.994640411581,
+          "team": 5546.994640411588
+        }
+      }
+    },
+    {
+      "world": 969427,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -737.1017781285349,
+          "team": -737.1017781285314
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -1315.1747098786143,
+          "team": -1315.1747098786054
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": -578.0729317500794,
+        "team": -578.0729317500741
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 636.0000000000003,
+          "road": 2633.846448359543,
+          "team": 3269.8464483595412
+        },
+        "pi": {
+          "source": 636.0000000000003,
+          "road": 2055.7735166094635,
+          "team": 2691.773516609467
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 600,
+      "arm": "mappo",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -2124.732849152537,
+          "team": -2124.732849152504
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -128.47001447581715,
+          "team": -128.47001447584867
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 1996.2628346767196,
+        "team": 1996.2628346766553
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 17430.666666666668,
+          "road": -3352.4786652470575,
+          "team": 14078.188001419594
+        },
+        "mappo": {
+          "source": 17430.666666666668,
+          "road": -1356.2158305703379,
+          "team": 16074.45083609625
+        }
+      }
+    },
+    {
+      "world": 969428,
+      "horizon": 600,
+      "arm": "pi",
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -506.0623779514869,
+          "team": -506.06237795150565
+        },
+        "inferred": {
+          "source": 0.0,
+          "road": -157.9855110483877,
+          "team": -157.98551104838893
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.0,
+        "road": 348.0768669030992,
+        "team": 348.07686690311675
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 17430.666666666668,
+          "road": -3352.4786652470575,
+          "team": 14078.188001419594
+        },
+        "pi": {
+          "source": 17430.666666666668,
+          "road": -3004.4017983439585,
+          "team": 14426.26486832271
+        }
+      }
+    }
+  ],
+  "summary": [
+    {
+      "horizon": 120,
+      "arm": "mappo",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": 0.027777777777777776,
+          "road": -55.6167861960458,
+          "team": -55.5890084182673
+        },
+        "inferred": {
+          "source": 0.2777777777777778,
+          "road": 150.56848376587476,
+          "team": 150.8462615436534
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.25,
+        "road": 206.18526996192057,
+        "team": 206.43526996192068
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 439.80555555555566,
+          "road": 299.36708427500554,
+          "team": 739.1726398305619
+        },
+        "mappo": {
+          "source": 440.05555555555566,
+          "road": 505.5523542369261,
+          "team": 945.6079097924826
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 239.500157329092,
+        "969422": 212.55040469492337,
+        "969425": 226.43825002661947,
+        "969426": 129.13691186586084,
+        "969427": 183.0080536107217,
+        "969428": 247.9778422443068
+      }
+    },
+    {
+      "horizon": 120,
+      "arm": "pi",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": 0.0,
+          "road": -51.90235717790398,
+          "team": -51.90235717790316
+        },
+        "inferred": {
+          "source": -0.027777777777777776,
+          "road": -13.819180467069133,
+          "team": -13.84695824484623
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.027777777777777776,
+        "road": 38.08317671083485,
+        "team": 38.055398933056935
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 439.80555555555566,
+          "road": 299.36708427500554,
+          "team": 739.1726398305619
+        },
+        "pi": {
+          "source": 439.7777777777778,
+          "road": 337.4502609858404,
+          "team": 777.2280387636189
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 39.46277237213171,
+        "969422": 16.959632213436468,
+        "969425": 63.4497839426832,
+        "969426": 16.62073626038889,
+        "969427": 46.1677407532131,
+        "969428": 45.67172805648823
+      }
+    },
+    {
+      "horizon": 300,
+      "arm": "mappo",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": 0.19444444444444445,
+          "road": -340.47594204818364,
+          "team": -340.2814976037332
+        },
+        "inferred": {
+          "source": 0.25,
+          "road": 863.7742025055138,
+          "team": 864.0242025055211
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 0.05555555555555556,
+        "road": 1204.2501445536975,
+        "team": 1204.3057001092543
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 2846.5833333333308,
+          "road": -1155.0917015059651,
+          "team": 1691.491631827371
+        },
+        "mappo": {
+          "source": 2846.638888888886,
+          "road": 49.15844304773226,
+          "team": 2895.797331936625
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 1179.5286304654885,
+        "969422": 1264.1315657797688,
+        "969425": 1425.5537233944365,
+        "969426": 905.991228931312,
+        "969427": 1007.4104184050165,
+        "969428": 1443.218633679503
+      }
+    },
+    {
+      "horizon": 300,
+      "arm": "pi",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": -0.027777777777575667,
+          "road": -701.4919110390705,
+          "team": -701.5196888168434
+        },
+        "inferred": {
+          "source": -0.05555555555555555,
+          "road": -23.077562656586444,
+          "team": -23.13311821214242
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -0.027777777777979885,
+        "road": 678.414348382484,
+        "team": 678.386570604701
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 2846.5833333333308,
+          "road": -1155.0917015059651,
+          "team": 1691.491631827371
+        },
+        "pi": {
+          "source": 2846.5555555555525,
+          "road": -476.67735312348117,
+          "team": 2369.8782024320717
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 599.669269999095,
+        "969422": 646.2431650246544,
+        "969425": 834.8952108918206,
+        "969426": 338.7035437567137,
+        "969427": 835.716368581885,
+        "969428": 815.091865374037
+      }
+    },
+    {
+      "horizon": 600,
+      "arm": "mappo",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": 2.5555555555555554,
+          "road": -1166.5841061184792,
+          "team": -1164.0285505629013
+        },
+        "inferred": {
+          "source": 0.9166666666666667,
+          "road": 3005.688466653952,
+          "team": 3006.6051333206206
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": -1.6388888888888888,
+        "road": 4172.272572772432,
+        "team": 4170.633683883522
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 11703.444444444438,
+          "road": -8523.309545321777,
+          "team": 3180.134899122665
+        },
+        "mappo": {
+          "source": 11701.805555555547,
+          "road": -4351.036972549346,
+          "team": 7350.768583006187
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 3302.1834722411722,
+        "969422": 4572.060260746709,
+        "969425": 6342.205495876147,
+        "969426": 1652.5142384623903,
+        "969427": 4549.330782249817,
+        "969428": 4605.5078537248955
+      }
+    },
+    {
+      "horizon": 600,
+      "arm": "pi",
+      "n_worlds": 6,
+      "effect_by_variant": {
+        "default": {
+          "source": -0.6388888888896974,
+          "road": -3293.2248016495396,
+          "team": -3293.8636905384487
+        },
+        "inferred": {
+          "source": 1.8055555555555556,
+          "road": 613.3754685982206,
+          "team": 615.1810241537797
+        }
+      },
+      "inferred_minus_default_effect": {
+        "source": 2.444444444445253,
+        "road": 3906.60027024776,
+        "team": 3909.0447146922284
+      },
+      "inferred_minus_default_absolute": {
+        "native": {
+          "source": 11703.444444444438,
+          "road": -8523.309545321777,
+          "team": 3180.134899122665
+        },
+        "pi": {
+          "source": 11705.888888888881,
+          "road": -4616.709275074018,
+          "team": 7089.179613814893
+        }
+      },
+      "leave_one_world_out_change": {
+        "969421": 3698.378009895029,
+        "969422": 3967.03741331886,
+        "969425": 4314.957021320048,
+        "969426": 2046.1893153886938,
+        "969427": 4806.468243980689,
+        "969428": 4621.238284250051
+      }
+    }
+  ]
+}
