@@ -1,0 +1,26 @@
+{
+  "root": "/home/ubuntu/rblane20261031_panel11_2766e0288155",
+  "process": {
+    "pid": 758018,
+    "start_ticks": "48795394",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel11_2766e0288155/results",
+      "--reuse-mobil-from",
+      "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c/results"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel11_2766e0288155",
+    "started_at": 1793473676.21598
+  },
+  "bundle_sha256": "2766e02881554000504de6f05ab3afb9bdfb755621898259e39e7df3afde66d7",
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793474971.0315108
+}

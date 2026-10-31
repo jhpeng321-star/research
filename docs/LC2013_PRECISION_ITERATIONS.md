@@ -373,3 +373,28 @@ Final endpoint gate56/56 PASS, including float32 observations promoted to
 double and rejection of the next genuine float32/float64 ULP beyond the end.
 Final JUnit CPU_ENDPOINTS_PROMOTED.xml; initial endpoint gate and all earlier
 receipts retained. No new scoring data or driver settings were fit.
+
+Endpoint measurements VERIFIED, all160 FIT episodes, old MOBIL baselines reused:
+- Default11:1235/41095 exact, precision3.0052%, recall37.9416%; vs9's1134/40246,
+  2.8177%/34.8387%. Strategic TP rises320→411, consistent with the91 observed
+  endpoint merges. Per motivation: strategic10.234%/12.627pp (411/4016),
+  cooperative9.046%/2.826pp (92/1017), speed-gain4.486%/16.621pp (541/12061),
+  keep-right0.796%/5.868pp (191/24001). Paired MOBIL241/3255 recall7.404%.
+- Encoder12:1314/54904 exact, precision2.3933%, recall40.3687%; vs10's1218/54157,
+  2.2490%/37.4194%. Per motivation: strategic20.574%/16.959pp (552/2683),
+  cooperative14.995%/4.547pp (148/987), speed-gain2.306%/10.292pp (335/14530),
+  keep-right0.760%/8.571pp (279/36704). Paired MOBIL108/3255 recall3.318%.
+- Both execute endpoint canonicalization on5881 scored HDV frames, exactly the
+  input-audit count. Both source/encoder/input/motivation and original-runtime
+  reassembly checks PASS; both workers758018/762113 exited. No completed MOBIL
+  inference was repeated. Keep-right remains the dominant precision failure.
+
+## Cross-workstream kinematic identity check (no new WM inference)
+
+Published `docs/LC2013_POSITION_HANDOFF.md` and shared
+`rb-shared/LANE_TO_CF_POSITION_20261101.md` for CF/INT.2,346,379 valid same-edge
+HDV FIT intervals show Euler displacement MAE3.49e-5m vs trapezoid0.0390m;
+public MSVehicle.cpp:4954–4967 confirms the mode. Current inspected INT source
+still used trapezoid; no CF-owned code was changed by LANE. Position audit
+receipt/script committed separately; the lane diagnostic already teacher-forces
+recorded position, so this does not explain away its poor keep-right precision.
