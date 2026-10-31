@@ -179,7 +179,7 @@ def build(snapshot):
                                               closed_jobs=s['closed_jobs'],outstanding=sum(s['outstanding'].values())) for s in snapshot}
     wall=np.array([b['wall_s'] for b in branches])
     summary['branch_cost']=dict(median_wall_s=float(np.median(wall)),max_wall_s=float(wall.max()),
-                               sim_s_per_wall_s=float(sum(b['actual_sim_s'] for b in branches)/wall.sum()),
+                               timing_scope='post_reset_excludes_native300s_warmup_and_initialization',
                                synchronous_offline=True)
     return cohorts,datasets,summary
 
@@ -273,14 +273,22 @@ def verify():
                 accounting=summary['total_charged'],cap=800000,source_and_design_bound=True,
                 all_executed_groups_have_two_solos=True,whole_world_cluster_bootstrap=True,
                 artifacts={p.name:sha(p) for p in sorted(DEST.iterdir()) if p.is_file() and p.name!='QA.json'})
-    report.save(DEST/'QA.json',result)
+    if (DEST/'QA.json').exists():
+        assert json.loads((DEST/'QA.json').read_text())==result
+    else:
+        report.save(DEST/'QA.json',result)
     return result
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--collect',action='store_true');p.add_argument('--verify',action='store_true');p.add_argument('--original-all-groups',action='store_true')
+    p=argparse.ArgumentParser();p.add_argument('--collect',action='store_true');p.add_argument('--verify',action='store_true');p.add_argument('--original-all-groups',action='store_true');p.add_argument('--examples',action='store_true')
     a=p.parse_args()
     if a.verify:print(json.dumps(verify()));return
+    if a.examples:
+        credits=json.loads((DEST/'ALL_GROUP_CREDITS.json').read_text())
+        chosen=dict(largest_positive=max(credits,key=lambda c:c['C_G']),most_negative=min(credits,key=lambda c:c['C_G']))
+        print(json.dumps({k:dict(seed=c['seed'],time_s=c['time_s'],action=c['action']['id'],
+                                C_G=c['C_G'],D_G=c['D_G'],member_alone_D=c['member_alone_D']) for k,c in chosen.items()}));return
     if a.original_all_groups:print(json.dumps(original_all_groups()));return
     snapshot=[fetch(h) for h in HOSTS]
     if not all(s['complete'] for s in snapshot):

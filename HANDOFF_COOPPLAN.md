@@ -17,7 +17,7 @@
 - A WM empirical win probability is a model forecast, not proof of calibration.
 
 ## Frozen demonstration
-- Design `docs/paper_results/COOPPLAN_DESIGN.md`: 63 lines, SHA256
+- Original design at a0934600 (local file now adds an extension pointer):63lines, SHA256
   `53b0edf4ea8e6fc72165691727e923505ed6a805af9c0294efd63f2ab3389a5f`.
 - Registered fresh development worlds983100–983111, never fitting; exact upper704760sim-s.
 - MAIN approval is present in shared REGISTRATION.md; own preregistration appended before physics.
@@ -35,7 +35,7 @@
   exact sample credits, unchanged detector evidence and figures ONLY after all12 pairs complete.
 - Never retry an existing attempt, clear STOP, change frozen source, refund charges or signal peers.
 - Post-dispatch local WM-payload/test/report additions do not mutate the frozen oracle source.
-- Current local contract suite18/18 PASS, including half-open BIC prehistory bins.
+- Original preparatory local contract suite18/18 PASS, including half-open BIC prehistory bins.
 - Future COOPFREE adapter passed a real frozen-host CPU ABI check with synthetic test weights,
   a three-CAV input pruned to the frozen nearest-two group, and process/SUMO creation blocked.
   This is an adapter test, not a learned-policy or rollout-efficacy result.
@@ -47,7 +47,7 @@
 - `C_G>0` and behaviour counts are separate from actual long-horizon performance improvement.
 - A result report must retain negative/null effects, unsampled worlds and all safety metrics.
 
-## COMPLETE — final public results
+## COMPLETE — original panel / first-action-only public results
 - All12 pairs complete; actual=charged220980sim-s; no STOP/failure/retry/incomplete attempt.
 - Paper report: `docs/paper_results/COOPPLAN.md`; immutable artifacts `docs/paper_results/coopplan/final/`.
 - J600 saving396.280veh-s/world,95%CI[0.894,1128.773]; J9001195.148,CI[-568.178,3724.114].
@@ -59,31 +59,46 @@
 - Frozen dev panel must remain never-fitting; do not select/tune candidates or WM settings from these outcomes.
 - Full final local CPU/analysis suite20/20PASS; rendered figures visually checked.
 
-## MAIN01:28 extension — RUNNING, CPU gates passed
+## MAIN01:28 extension — COMPLETE, all36 paired worlds verified
 - Preserve the complete original panel and roots above. Resume reconciliation commit97a8b34b.
 - Extension source/design/preregistration commitc2646eb1; separate immutable `*_v2` roots.
 - Exact cap579020sim-s plus original220980=800000. Fresh DEV983200–983223, never fitting.
 - Design `COOPPLAN_EXTENSION_DESIGN.md` SHA25617356a3ee726ffea189da8d1f0e10cb376e4eae1293cfdaf1014c68a8a826918.
-- All executed extension groups receive two solos; backfill13 missing original group credits
+- All executed extension groups received two solos; backfilled13 missing original group credits
   (22560sim-s) using original states/O0/joint outcomes. No original episode is rerun.
-- Every pair and solo obligation reserved before lookaheads; budget-only cyclic pruning logged.
+- Every pair and solo obligation reserved before lookaheads; zero quota-pruned decisions.
 - COOPFREE no complete learned update at shared freeze; no untrained substitute/late switch.
 - Three-host safe-name/registration audits PASS. All three immutable hosts27CPU tests/0skips
   plus real WMDECIDE parity PASS, SUMO process creation blocked; local29CPU/analysis PASS.
 - CPU/binding/freeze/audit manifests: `docs/paper_results/coopplan/extension/`.
 - Read-only: `python -B -m tools.coopplan.extension status --host <cpuQ|gpuA|gpuR>`.
 - Dispatched once: cpuQ565742, gpuA335613, gpuR756955; immutable `*_v2` roots.
-  All have DISPATCH_ONCE, no STOP; cpuQ starts new pairs, gpuA/gpuR original missing twins.
+  All COMPLETE, no STOP/incomplete attempts; pools drained and zero outstanding reservations.
   NEVER relaunch these supervisors or the original ones; dispatch receipts are committed.
-- Final result must report extension24 and pooled36 separately, all-group credits with
-  whole-world clustering, unchanged causal detectors, safety, budget pruning and full accounting.
+- Final report `docs/paper_results/COOPPLAN.md`; immutable result/CSV/figures/QA under
+  `docs/paper_results/coopplan/extension/final/`. All result bytes SHA-bound/Git-preserved.
+- Extension24: J600 saving+774.471 [199.815,1480.502], J900+1778.158 [714.789,3076.597].
+- Pooled36: J600 saving+648.407 [209.699,1173.616], J900+1583.821 [588.246,2765.414].
+- All52 executed groups have104 member-alone twins;24/52 C_G positive. Pooled mean
+  C_G+21.771 [-42.074,90.467] remains uncertain; extension+7.757 [-86.168,112.091].
+- Material cooperation case983223/t960/O4: joint D_G+568.333707, solos-302.399975/-18.034632,
+  hence C_G+888.768314; both alone harm but the joint action helps. All negative cases retained.
+- Pooled causal COOPBEHAV:7supported yield/112gap/2metering/345wave events; O2wall0executed.
+- Pooled safety MAPPO/planner: collisions0/0,teleports0/0,TTC21662/20280.5,braking765/733;
+  safety clamped1446/3557 requests. All603full-prefix checks pass.
+- Actual=charged565140sim-s total (original220980 +extension344160),234860unused under800000.
+  Extension:57600paired +22560original backfill +53520new twins +210480lookaheads.
+  Hosts actual/charged:cpuQ78480,gpuA101520,gpuR164160, zero outstanding; no retries/refunds.
 - Backfill13/13 COMPLETE: all19 original actions now have twins; event-weighted mean C_G
   +46.111598, whole-world-cluster95%CI[3.664586,109.339097],10/19positive in6/12worlds.
   New immutable receipts: `coopplan/extension/original_all_groups/`; original six-sample
   artifacts retained. The complete-action estimand differs from the first-action sample.
 - CPUQ resource notice in shared `COOPPLAN_RESOURCE_NOTICE.md` and REGISTRATION:
-  disk below immutable2GiB guard,6/8pairs complete, existing workers wait (no STOP).
-  gpuA all10original backfills complete and new pairs running; gpuR3backfills complete.
-- Collector/analysis: `python -B -m tools.coopplan.extension_report` (progress),
-  `--collect` ONLY after all24pairs, then `--verify`; local35CPU/analysis tests passed.
+  disk briefly fell below immutable2GiB guard; recovered to2621468672bytes at
+  Unix1793469380 and existing workers resumed automatically; all24 pairs now complete.
+- Reproduce: `python -B -m tools.coopplan.extension_report --verify` (idempotent/read-only
+  after QA exists), `--examples` for exact extrema; local35CPU/analysis tests passed.
   Never recollect into an existing immutable result directory; no live source was changed.
+- Final interpretation: robust dev-panel delay benefit and substantial exact cooperation
+  cases; robust positive mean superadditivity is not established on extension/pooled panels.
+  WM-PHYS transfer/calibration remains a future backend qualification, not this result.

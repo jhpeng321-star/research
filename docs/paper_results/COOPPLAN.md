@@ -1,60 +1,70 @@
-# S-COOPPLAN — positive all-group cooperation credit; 24-world extension running
-Completed 2026-11-01 on c4/coopplan; frozen design SHA256 `53b0edf4ea8e6fc72165691727e923505ed6a805af9c0294efd63f2ab3389a5f`.
+# S-COOPPLAN — exact-model planner improves delay and executes substantial cooperative actions
+Complete 2026-11-01, branch `c4/coopplan`: original12 + independently registered extension24 =36 fresh development worlds.
+
 ## Main finding
-The pluggable cooperative planner runs end-to-end, executes useful group actions, and produces release-supported gap/yield behaviour.
-It improves paired J600 on the original fixed panel, but J900 remains uncertain.
-The completed MAIN01:28 backfill now covers ALL19 original group actions: mean C_G **+46.112 [3.665,109.339] veh-s/action**, whole-world-clustered95%CI;10/19positive.
-This establishes positive mean superadditive credit on the original panel; the independently registered24-world extension and pooled36 confirmation remain pending.
-## Frozen experiment
-All12 fresh development worlds983100–983111 completed, one per .05/.10/.20/.40 ×1900/2400/2700 cell; never used for fitting.
-SUMO1.27.1/full-rerun oracle K1 vs pure frozen speed-only MAPPO169; identical world/arrivals/noise settings.
-H120, cadence60, decisions t300..960, then MAPPO-only after1020 through1200; warmup300 excluded from scores.
-O0..O4 inherited options/geometry/safety; COOPFREE had no learned checkpoint at freeze, so its reserved slot remained disabled.
-Selection: minimum expected delay among strict paired P(beats MAPPO)>=.8 AND lower-mean candidates; exact K1 means strict improvement.
-## Paired full-team delay
-Saving = MAPPO minus planner (veh-s/world); full-team J includes road deficit plus source waiting.
-J600: **+396.280**, 95% whole-world bootstrap CI **[+0.894,+1128.773]**.
-J900: **+1195.148**, CI **[-568.178,+3724.114]**.
-Registered10,000 percentile resamples, RNG20261101, world is the unit; 12 heterogeneous worlds, no episode/decision pseudoreplication.
-The plotted world contrasts show concentration of benefit; J900 includes harmful worlds despite a positive pooled point estimate.
-## Cooperation and executed decisions
-144 decisions: MAPPO125; coordinated slow O1 five; yield gap O3 four; longer gap O4 ten; cross-lane wall O2 zero.
-Nineteen executed group actions occur in six worlds; first executed group in each of those six received two exact member-alone reruns.
-All sampled group savings D_G>0 by the oracle gate, but this does not imply superadditivity.
-C_G=(J0-JG)-sum_i(J0-J_i), evaluated at H120 with fixed joint targets in the solos.
-Original first-action-only sample: mean C_G **-38.379 veh-s**, world-bootstrap CI **[-94.759,-1.022]**, conditional on the six sampled worlds.
-Positive C_G in **2/6** samples:983108/t600/O4 **+0.198734** (D_G+0.659999),983111/t300/O4 **+0.014360** (D_G+141.582352).
-These are small positive examples; the other samples are -6.743784,-172.412662,-0.000012642,-51.333025. None excluded or replaced.
-Unchanged COOPBEHAV on same-prefix sampled joint-vs-MAPPO traces: **1 paired-policy-mean-supported yield**, **18 supported gap events**,30 supported wave-damping events.
-Whole planner tapes also contain25 observational yield,1404 gap,130 cross-lane-hold and2862 wave-damping candidates.
-Those observational counts are not causal cooperation counts; no wall option was executed, and observed walls are not a wall-action success.
-## MAIN01:28 all-executed-action backfill — complete
-Added exactly26 full-prefix member-alone reruns for the13 unsampled original actions,22560sim-s; reused every original live/O0/joint result and all6 already-paid twin pairs.
-Coverage is now19/19 executed actions in6/12 worlds; no action/sign/outcome exclusions.
-Event-weighted mean C_G **+46.111598**,95% whole-world-cluster bootstrap **[+3.664586,+109.339097]**; positive10/19.
-Resample all12 worlds10000times/RNG20261101 and carry every action in each drawn world;1zero-action draw has an undefined event mean and is reported/excluded from percentile computation.
-This is a different, complete-action estimand from the original six first-action samples; those immutable results remain available above and under `coopplan/final/`.
-Unchanged causal detectors on all19 O0-reference comparisons:3supported yields,41supported gap events,1supported cross-lane-metering event,104supported wave-damping events.
-No O2 wall option was executed; detector support is distinct from C_G and long-horizon efficacy.
-New immutable evidence: `coopplan/extension/original_all_groups/{SUMMARY,CREDITS,BEHAVIOURS,BACKFILL_RECEIPTS}.json`.
-## Fresh extension — running, not yet a pooled result
-Registered24never-fit worlds983200–983223 (two per original cell); sameH120/cadence60/strict-win rule, all-executed-action twins, and unchanged safety.
-COOPFREE had no complete learned TRAIN checkpoint at the common freeze; untrained canary weights are not used.
-Atomic reservations protect every full paired episode and both solo twins before admitting candidate lookaheads; any quota-only pruning is explicitly logged.
-cpuQ is waiting at the immutable2GiB disk floor; gpuA yields when load exceeds16; gpuR continues. Existing supervisors remain live, no failure/retry/relaunch.
-No extension/pooled efficacy estimate is reported until the complete fixed24-world panel finishes.
-## Safety and mechanics
-Across the12 scored900s episodes per arm: collisions0/0 and teleports0/0 (MAPPO/planner).
-TTC<3 exposure7004.5/6623.0 veh-s; hard braking220.0/222.0 veh-s; these are descriptive totals, not a universal safety-improvement claim.
-Planner intervention safety clamped587/1278 requested member-command records; original safety layer/native lane logic unchanged.
-All247 full-prefix checks PASS (245 scientific oracle branches plus2 mechanics branches); first production baseline also matched the full1200s mechanics repeat bitwise.
-Frozen runtime CPU tests16/16 on EACH host, real S-RB-DECIDE parity; current local CPU/analysis tests20/20; extra FREE adapter CPU ABI PASS with synthetic weights/SUMO blocked.
-## Accounting, interface and artifacts
-Actual=charged **220,980 sim-s**: cpuQ51,540 +gpuA94,200 +gpuR75,240; no failed/incomplete attempts or automatic physics retries.
-Original registered upper704,760<=800,000. MAIN01:28 allocates the remaining579,020 to the extension:57,600paired episodes +22,560original backfill +498,860adaptive lookaheads/extension twins; global hard cap800,000.
-Same `Planner` accepts `SumoOraclePredictor` or `WMPhysPredictor`; WM stub requires RB-INT rollout plus paired hidden-driver/arrival future builder.
-WM callback absence is explicit. CompleteDraw supports identity-bound tensor payloads; WM calibration/live efficacy remains untested here.
-Code: `tools/coopplan/`; execution handoff: `HANDOFF_COOPPLAN.md`; original design63lines at freeze, now with extension pointer; extension: `COOPPLAN_EXTENSION_DESIGN.md` (<=70lines).
-Receipts/identity hashes/decisions/member effects: `coopplan/final/RECEIPTS.json`; paired CSV, SUMMARY/CREDITS/BEHAVIOURS JSON in the same directory.
-Figures: [paired delay](coopplan/final/paired_delay.png), [sampled cooperation credit](coopplan/final/cooperation_credit.png).
-No training, prohibited truth/assignment/path reads, new venv, deletion, push or peer PID actions; nice19 CPU-only single-thread execution on shared hosts.
+The SUMO-oracle cooperative planner reduces both paired J600 and J900 on the pooled36-world panel; the extension alone also improves both scores.
+It executes52 group actions with complete counterfactuals;24 have positive superadditive C_G, including a joint action that helps when BOTH member-alone actions harm.
+Pooled mean C_G is positive but its clustered CI includes0: **robust full-team delay benefit and concrete cooperation cases; no robust positive population-mean superadditivity claim**.
+This is the perfect-model benchmark for the pluggable WM-PHYS predictor, whose efficacy/calibration is not measured here.
+
+## Frozen experiment and panel completeness
+Original DEV983100–983111: one world per .05/.10/.20/.40 CAV share ×1900/2400/2700 demand cell; extension DEV983200–983223: two additional worlds per cell.
+All36 paired worlds complete, never fitted/tuned on; exact guards and three-host registration/range/safe-name exposure audits passed before physics.
+SUMO1.27.1 deterministic full-rerun oracle K1 vs pure frozen speed-only MAPPO169; identical arrivals/noise/native lane logic/safety.
+H120, cadence60, decisions t300..960, then MAPPO-only after1020 through1200; warmup300 excluded from J600/J900.
+Candidates: MAPPO O0, coordinated slow O1, cross-lane wall O2, yield gap O3, longer gap O4; inherited geometry/magnitudes and fixed setting rotation.
+Choose minimum predicted team delay only when strict paired P(beats MAPPO)>=.8 AND lower mean; exact K1 means strict improvement.
+COOPFREE had no complete learned TRAIN checkpoint at either panel's predispatch freeze; no untrained substitute or late checkpoint change.
+Extension reservations protected all full pairs and both solo obligations before prediction; **zero quota-pruned decisions**, so the nondefault selection rule remained identical across cohorts.
+Skipping provably O0-only lookaheads changes no executed action; cadence60/H120 retained throughout.
+
+## Paired full-team delay — saving = MAPPO minus planner, veh-s/world
+J includes on-road speed deficit plus source waiting.95% percentile CIs use10000 whole-world resamples, RNG20261101.
+- **Original12:** J600 **+396.280 [0.894,1128.773]**; J900 **+1195.148 [-568.178,3724.114]**.
+- **Extension24:** J600 **+774.471 [199.815,1480.502]**; J900 **+1778.158 [714.789,3076.597]**.
+- **Pooled36:** J600 **+648.407 [209.699,1173.616]**; J900 **+1583.821 [588.246,2765.414]**.
+World-level contrasts remain heterogeneous; positive averages do not mean every world improves. No decision/episode pseudoreplication.
+
+## Complete cooperation evidence
+C_G=(J0−JG)−sum_i(J0−Ji), exact H120; member-alone twins retain the joint targets and replay the entire executed prefix.
+All52 executed two-member group actions have BOTH solos (104total):19original actions +33extension actions; no sign/outcome exclusions.
+Original13 unsampled actions received26new twins (22560sim-s); all original O0/joint episodes and six already-paid twin pairs were reused.
+- **Original12:** event-weighted mean C_G **+46.112 [3.665,109.339]**;10/19positive,6/12worlds active.
+- **Extension24:** **+7.757 [-86.168,112.091]**;14/33positive,10/24worlds active.
+- **Pooled36:** **+21.771 [-42.074,90.467] veh-s/action**;24/52positive,16/36worlds active.
+C_G intervals resample whole worlds with ALL their actions, including no-action worlds in the sampling frame; the event mean uses the resampled action count.
+Original12 has1/10000 zero-action draw with undefined event mean, reported/excluded from percentiles; extension/pooled have none.
+The original first-action-only six-sample estimate was−38.379 [−94.759,−1.022],2/6positive; this different estimand and its immutable artifacts are retained, not replaced by a selected positive subset.
+Descriptive largest positive case: **983223/t960/O4**, joint saving D_G **+568.333707**, solo savings **−302.399975/−18.034632**, hence **C_G+888.768314 veh-s**. Cooperation changes both individually harmful actions into a beneficial joint action.
+Largest negative case is also retained:983210/t780/O1, D_G+560.957650, solo savings+560.957144/+623.253167, C_G−623.252661; beating MAPPO is not sufficient for superadditivity.
+Across432 decisions: MAPPO380; O1slow17; O3yield14; O4longer-gap21; O2wall0. The extension contributes O1=12/O3=10/O4=11.
+Unchanged COOPBEHAV on all52 same-prefix O0-reference comparisons: **7supported yields,112supported gap events,2supported cross-lane-metering events,345supported wave-damping events**.
+Whole-episode observational candidates (69yield/4594gap/448cross-lane/9110wave) are not causal counts; supported metering does not establish an executed O2wall result.
+
+## Safety, exactness and CPU verification
+Pooled36 scored900s episodes per arm, MAPPO/planner: **collisions0/0, teleports0/0**; TTC<3 exposure21662.0/20280.5veh-s; hard braking765.0/733.0veh-s.
+Extension24 alone: collisions0/0, teleports0/0; TTC14657.5/13657.5; braking545.0/511.0. These are descriptive totals, not universal safety guarantees.
+Original12 safety remains unchanged: TTC7004.5/6623.0; braking220.0/222.0. Pooled safety clamped1446/3557 requested member-command records.
+All **603full-prefix checks pass** (247original including2mechanics +356extension/backfill); original first production baseline also matched the1200s mechanics reference bitwise.
+Extension frozen host suite27/27 on EACH host/0skips plus real S-RB-DECIDE parity, SUMO process creation blocked; local CPU/analysis35/35PASS.
+Final QA verifies source/design/panel identity, all36pairs/432decisions, all52credits, paired best-action choices, CSV/summary recomputation, zero outstanding reservations, and exact accounting.
+Three final figures were rendered and visually checked. Observed branch timer median11.918s/max24.474s excludes native300s warmup/reset; this remains synchronous offline planning, not a real-time claim.
+
+## Exact accounting and operational closure
+**Actual=charged565140sim-s <=800000;234860unused**, no failure/incomplete attempt/physics retry/refund/top-up.
+Original220980 retained; extension344160 =57600paired episodes +22560original missing twins +53520new group twins +210480lookaheads.
+Extension hosts: cpuQ78480/193000cap; gpuA101520/193000; gpuR164160/193020. All three COMPLETE, zero active attempts/outstanding reservations.
+Original704760upper and MAIN01:28 remaining579020allocation preserved; atomic admission stayed below the original800000global cap.
+cpuQ briefly waited below2GiB free disk; headroom returned and existing workers resumed automatically, without source/admission/PID changes.
+nice19/CUDAhidden/single-thread/shared-resource yielding; no training, prohibited truth/assignment/path reads, new venv, deletion, push or peer PID actions.
+
+## Predictor interface, reproducibility and deliverables
+`Predictor.predict(observable_state,candidate_actions,horizon,K)` returns paired distributions of team delay, breakdown, member delay/effects and safety, with draw IDs shared across actions.
+The SAME `Planner` accepts exact `SumoOraclePredictor` or callback-bound `WMPhysPredictor`; WM uses one complete hidden-driver/arrival draw per k across all actions, including identity-bound tensor payloads.
+WM callbacks must bind RB-INT's immutable runtime and public motion/history/request-counter state; absence fails explicitly. No WM qualification or calibrated-confidence claim is implied by the toy/ABI parity checks.
+Original runtime/design:a0934600/53b0edf4ea8e6fc72165691727e923505ed6a805af9c0294efd63f2ab3389a5f; extension source:c2646eb1/designSHA17356a3ee726ffea189da8d1f0e10cb376e4eae1293cfdaf1014c68a8a826918.
+Designs: [COOPPLAN_DESIGN.md](COOPPLAN_DESIGN.md) (63lines at original freeze, now64with pointer), [extension design](COOPPLAN_EXTENSION_DESIGN.md) (<=70lines); execution/API: `HANDOFF_COOPPLAN.md`, `tools/coopplan/`.
+Final artifacts: `coopplan/extension/final/` — RECEIPTS/SUMMARY/ALL_GROUP_CREDITS/BEHAVIOURS/QA JSON plus original12/extension24/pooled36 CSVs; all result bytes are Git-preserved and SHA-bound.
+Original first-sample receipts/figures remain under `coopplan/final/`; completed original all-group milestone remains under `coopplan/extension/original_all_groups/`.
+Final plots: [cohort paired CIs](coopplan/extension/final/paired_cohorts.png), [all world contrasts](coopplan/extension/final/paired_worlds.png), [all-group cooperation](coopplan/extension/final/all_group_cooperation.png).
+Read-only reproducibility: `python -B -m tools.coopplan.extension_report --verify`; example extrema: `--examples`. Never relaunch or recollect an existing immutable attempt/result directory.

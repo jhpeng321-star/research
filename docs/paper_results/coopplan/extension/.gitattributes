@@ -1,0 +1,4 @@
+# Final machine-generated artifact bytes are bound by QA.json; preserve them on every OS.
+final/*.json -text
+final/*.csv -text
+final/*.png -text
