@@ -173,4 +173,48 @@ Primary controller loops use MAPPO/wall only. Budget admission reserves the thir
 arm's G+solos plus a second300s prefix/world for a checkpoint delivered later.
 Historic main job names/census groups cannot be reused silently by the new runner;
 an explicit versioned-panel migration after PASS is still required. The paused
-old worker must never be SIGCONTed into the outdated five-arm/two-member loop.
+  old worker must never be SIGCONTed into the outdated five-arm/two-member loop.
+
+## Corrected full-prefix design v2 (2026-11-01, before new SUMO)
+- Upstream `658b09a3` artifact PASS is now published: document SHA
+  `4ac2b3e82b61bbdb9e2fbbf788af8311a0e8f4d62b07c88b48868ca31410d6af`,
+  PASS receipt `372d33266ef6ebbd7431ead73fd7e392a338a33779323539f82c4bad34ed75ab`.
+  Saved-state/loadState is INVALIDATED, including historical audit estimates;
+  retain all old data/charges, but never pool those observations with v2.
+- Adopt corrected grid7: nearest RSU-observable **pair, 60s**, nominal probe rho.5.
+  Table SHA420a4904780844c3a49b8eb4ed8855c0ebf8f0b235d39aa69c2116c4260acfbf.
+  Selection was low-power/roundoff-driven, not evidence of raised SNR. No noise
+  is used in this deployed-controller audit. This supersedes the larger-group
+  expectation and every saved-state/prefix-cost provision above.
+- Every B, repeated B, G and ONLY branch starts a NEW SUMO process, replays the
+  exact same native300s prefix, verifies tensor-state/request/observable hashes,
+  then continues600s. Never save/load state. Same native no-command counterfactual,
+  60s intervention, handback to IDM and native lane decisions, original outcomes.
+- Primary arms run together: MAPPO, wall-v2.1 and final completed SUMOCF **u15**,
+  SHAe4b51f64fba54249792237131c2a10a6cbc5d1286c386c2c8dc9374b2d398d8a.
+  Freeze latest completed update before audit outcomes, not best DEV checkpoint.
+  Use original Torch decoder/safety/memory plus exact upstream RSU adapter,
+  hash-bind its source; no probe offsets/exploration. Mask membership identically.
+- Reuse28 completed observable censuses ONLY for frozen selection/identity.
+  Exactly21 eligible groups (20/24 high-share),7missing; only3 feasible pair walls.
+  Retain all28 worlds/coverage, missing !=zero, no replacements or extra census.
+  All-world stratified CI can be undefined with a missing stratum; report that
+  explicitly alongside available-case mean/coverage and prespecified cell results.
+- Full panel207900sim-s + corrected mechanics canary14400 (16 full900s reruns)
+  + retained21480 = **243780 charged maximum**, below500000. Each full rerun
+  precharges900 before its prefix. Canary uses the existing969699 geometric wall
+  pair, B/Brepeat, no-op through empty enabled set, three G+solos and G repeats;
+  verifies bitwise native/control identity, zero-effect equivalence and wall wiring.
+  No failed/completed branch retry, no refund, no truncation.
+- Store new data at `/root/autodl-tmp/coopaudit20261101_v2`, linked into the
+  original own jobs root as `v2_sSEED`/`v2_canary_s969699`; original ledger remains
+  authoritative. Root filesystem has <1GiB; new storage has2.2GB at inventory.
+  Gate the actual new storage at>=1GiB before EVERY full rerun; preserve all data.
+- Up to6 spare nice19 single-thread/CUDAhidden world workers; per-branch resource
+  checks yield on load>20, RAM<8GiB, disk<1GiB, or own YIELD/STOP. SUMOCF priority
+  remains binding (its trainer has stopped); no cpuQ/peer process intervention.
+  Retire only exact owned stopped516243/start4206436595 with SIGKILL (never resume
+  stale code), preserve PID/HOLD history, acquire singleton lock before new work.
+- `evidence/CORRECTED_DESIGN.json` binds each census/group/cost and upstream hashes.
+  Release only after registration/design commit and CPU tests; corrected canary
+  must complete and be committed before the full panel is dispatched.
