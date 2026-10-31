@@ -36,6 +36,12 @@ cpuQ single nice19CPU command, load18.85/32, existing SciPy;3numerical testsPASS
 /1.75s and analysisrc0, terminal retained, no live worker. Local SciPy absent;
 offline diagnostic test skips explicitly there, production suite53PASS retained.
 
+Read-only INT status02:22: existing333463/333464/333465 and335983 live,23/160
+tasks, no complete FIT world yet (reserved-first schedule). No UNC calibration
+can be inferred from those tasks. Next bounded UNC-only observer frozen in
+`docs/paper_results/RBUNC_INTERIM_DESIGN.md`; it will inspect explicit FIT task
+paths only through09:00 and leave INT's04/08/full scoring and processes alone.
+
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:
 drivers164.22/arrivals874.61/both850.71/fixed0.00, fixed8tapes hash-identical.
