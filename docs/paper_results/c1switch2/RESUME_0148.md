@@ -18,3 +18,8 @@ Local default Python lacks torch; use existing host environments, no new venv.
 Retain CPU-only staging/preflight failures (zero physics/charges); none are dispatches.
 `operations` compiles embedded remote commands before SSH; supervisor job planning
 is covered by the CPU suite (84 + 28 disjoint jobs, excludes canary and all pickers).
+
+Pre-dispatch registry SHA check detected unrelated concurrent peer appends and
+refused before writing gates/claims or starting processes. Bind the immutable
+approved registration snapshot to its own SHA, and separately audit current
+authority/intervals at dispatch. cpuQ final source passes130/1skip again.

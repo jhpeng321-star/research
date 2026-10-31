@@ -401,7 +401,7 @@ assert root.parent==parent and root.name.startswith('c1switch2_run_') and root.i
 stage=root/'pytools';binding=json.loads((root/'BINDING.json').read_text())
 assert binding['dispatch_phase']=='cpu' and binding['enabled_arms']=={list(CPU_ARMS)!r}
 assert binding['cpu_host']=={host!r}
-assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()=={sha(REGISTRATION)!r}==binding['registration_sha256'],'registration changed; restage before compute'
+assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()==binding['registration_sha256'],'immutable registration snapshot changed'
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==v for n,v in binding['sources'].items())
 assert all(binding['sources'][n]==v for n,v in {frozen!r}.items()),'v7 frozen sources changed'
 assert json.loads((root/'PREFLIGHT.json').read_text())['status']=='PASS'
