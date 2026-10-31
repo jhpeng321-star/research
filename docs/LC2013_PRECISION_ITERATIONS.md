@@ -509,3 +509,36 @@ panels14–16, therefore remain unchanged; no redundant FIT job dispatched and
 no precision improvement claimed. Keep-right remains unresolved.
 The initial equivalence receipt is retained; FINAL pins the final source bytes
 after dictionary indentation cleanup, with the same exact counts and outputs.
+
+## Consumed completed motion-only LC inference (no new fit or model scoring)
+
+S-RB-FIT's04:37 publication `lane_raw_c5602102891e` is new since the prior
+LANE morning handoff. It already has independently verified native32-world
+raw-physics expected proposal counts and correct-directed matches. New
+`consume_fit_precision.py` checks the publication→VERIFIED hash, all six
+explicit artifact hashes, causal FIT identity/time/domain metadata, and ALL32
+world-count sums before deriving precision/recall. No original tape, fitter,
+optimizer, model forward, profile selection or remote job runs.
+
+`FIT_RAW_C560_PRECISION.json`:
+- Source-default on THIS cache:262/12382 expected matches/proposals,
+  precision2.116%, recall41.853% of626recorded events.
+- Learned population:63.654/553.057, precision11.509%, recall10.168%.
+- Causal shrunk posterior:60.852/435.844, precision13.962%, recall9.721%.
+- Posterior eventBrier.002308 vs always-stay.002420 does not certify useful
+  recall. The fitted mixture sharply reduces proposals but misses~90% of
+  recorded events. These are ratios of expected counts under persistent
+  joint-profile draws, NOT mean per-rollout precision or independent step noise.
+- Fitted population has94.256% mass on legal lcKeepRight0,24.357% on
+  lcSpeedGain0. This supports investigating latent style/mismatch; it does
+  not identify true driver settings or authorize manually disabling motivation.
+- Source1bb1c761/snapshotv2/pooled-IDM differs from current LANE; current
+  panels14–16 remain authoritative. Motivation labels/counts absent in this
+  publication, so per-motivation results are explicitly unavailable here.
+  Neither this fit nor its averaged/modal settings is adopted.
+
+Extended source-equivalence proof to ALL209published five-parameter profiles,
+including legal zero faces.46080synthetic decisions/1658880prior output
+elements BIT-EXACT to aefc4bd9;4468positive steps. FIT's existing source watcher
+already lists source jobs; do not duplicate or signal them. Shared note pins
+the equivalence scope for avoiding unnecessary future duplicate recomputation.

@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+from pathlib import Path
 import subprocess
 import sys
 import types
@@ -18,6 +19,7 @@ BASELINE = 'aefc4bd9'
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--receipt', default='OPTIONAL_STYLE_DEFAULT_EQUIVALENCE.json')
+    parser.add_argument('--style-population', type=Path)
     args = parser.parse_args()
     assert args.receipt.endswith('.json') and '/' not in args.receipt and '\\' not in args.receipt
     out = RECEIPTS / args.receipt
@@ -32,6 +34,15 @@ def main():
     exec(compile(raw, old.__file__, 'exec'), old.__dict__)
     torch.manual_seed(1702)
     physics = PhysicsConfig(sumo_fidelity=True)
+    style = None
+    if args.style_population:
+        from .validate import FORBIDDEN
+        assert not any(term in str(args.style_population.resolve()).lower() for term in FORBIDDEN)
+        assert args.style_population.name == 'lc2013_population.json'
+        style = json.loads(args.style_population.read_text())
+        assert style['parameter_order'] == ['lcStrategic', 'lcCooperative', 'lcSpeedGain', 'lcKeepRight', 'lcAssertive']
+        assert style['fit_worlds'] == list(range(969400, 969432)) and style['fit_interval_s'] == [240, 300]
+        assert len(style['support']) <= 384
     elements = decisions = changes = 0
     for heterogeneous in (False, True):
         before, after = {}, {}
@@ -43,6 +54,12 @@ def main():
         params = (dict(v0=20 + torch.rand(8, 24) * 15, accel=.5 + torch.rand(8, 24) * 2,
                        decel=.5 + torch.rand(8, 24) * 4, time_headway=.5 + torch.rand(8, 24) * 2,
                        min_gap=1 + torch.rand(8, 24) * 2.5) if heterogeneous else None)
+        if style is not None:
+            params = {} if params is None else params
+            profiles = torch.tensor(style['support'], dtype=torch.float64)
+            indices = (torch.arange(192).reshape(8, 24) + (192 if heterogeneous else 0)) % len(profiles)
+            for j, name in enumerate(style['parameter_order']):
+                params[name] = profiles[indices, j]
         identity = torch.arange(192).reshape(8, 24)
         for step in range(120):
             k[..., 0] += k[..., 4] * physics.dt_s
@@ -63,6 +80,10 @@ def main():
                   scope='SUMO default LC style, population and heterogeneous physical settings; not a traffic score',
                   prior_lc_sha256=hashlib.sha256(raw).hexdigest(),
                   current_lc_sha256=hashlib.sha256((ROOT / 'src/wms/physics/lc2013.py').read_bytes()).hexdigest())
+    if style is not None:
+        result.update(scope='all five fitted LC coordinates, optional lookahead0/acceptance-1; source equivalence only',
+            style_population_sha256=hashlib.sha256(args.style_population.read_bytes()).hexdigest(),
+            style_support_profiles=len(style['support']))
     out.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result, indent=2))
 

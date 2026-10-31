@@ -1,6 +1,6 @@
 # S-RB-LANE morning handoff — 2026-11-01
 
-Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering: optional-style continuation**;
+Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering source80541278**;
 scored decision source52d2df5c, decision-equivalent message completion certified.
 All prior work retained. **Keep-right precision is NOT solved; no distributional
 qualification. No owned jobs/watchers remain.** Morning report:
@@ -43,6 +43,18 @@ qualification. No owned jobs/watchers remain.** Morning report:
   Actual motivation labels absent; contributions use all recorded events.
   Historical MOBIL1.4% has a different panel/contract.
 
+### Newly consumed FIT LC result (separate frozen source, not adopted)
+- Reused completed `lane_raw_c5602102891e` verified32native-world counts; no
+  fitter, model inference or dispatch. Posterior435.844 expected positive steps,
+  60.852 exact directed matches/626events: ratio-of-expectations precision13.962%,
+  recall9.721%. Same-cache source-default262/12382:2.116%/41.853%.
+- This is a precision/recall tradeoff, not solved lane behaviour. Its source
+  SHA1bb1c761 differs from current; pooled IDM/settings also differ from above.
+  EventBrier alone obscures the missed events. Learned population puts94.256%
+  mass atlcKeepRight0; this was inferred upstream, not hand-disabled by LANE.
+- Exact provenance/checksums/world-sum arithmetic in `FIT_RAW_C560_PRECISION.json`.
+  Motivation counts absent upstream; do not invent them or replace panels14–16.
+
 ## Engineering proofs / receipts
 - **69 targeted CPU tests PASS**, CPU_URGENCY_MESSAGES.xml. Three default-OFF
   weight/forward/step/rollout cases BIT-EXACT (DEFAULT_OFF_ENDPOINTS.json).
@@ -61,6 +73,9 @@ qualification. No owned jobs/watchers remain.** Morning report:
   `OPTIONAL_STYLE_DEFAULT_EQUIVALENCE_FINAL.json` certifies46080 synthetic decisions/
   1658880 existing output elements BIT-EXACT to aefc4bd9, including5817 positive
   steps. No new FIT/GPU/SUMO jobs; old score receipts retained.
+- `OPTIONAL_STYLE_FIT_SUPPORT_EQUIVALENCE.json`: same exact proof across ALL209
+  published five-coordinate LC profiles (incl legal zero boundaries),4468
+  positive steps. FIT watcher source jobs remain owned by FIT; no duplicate job.
 
 ## CF / INT coordination and scope
 - Actual2.346M FIT motion intervals prove **Euler s+v_next*dt**, MAE3.49e-5m vs
