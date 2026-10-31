@@ -9,6 +9,8 @@ generic causal117-interval motion posterior matches saved weights within5.6e-17.
 cpuQ407617(LC)/426309(shrinkage) both exited; no outstanding owned jobs.
 No action outcomes selected fits. Reports: `docs/paper_results/RBFIT.md` and
 `docs/paper_results/RBFIT_SUMOCORE_DIAG.md`. No demonstrated600s sign repair.
+Coordination receipt: `E:/agent-work/rb-shared/fit/ADDENDUM_0040.md` and
+`ARTIFACTS_0040.json`; artifact commit4965c665, generic APIe60634b9.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
