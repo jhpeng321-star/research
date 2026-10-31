@@ -20,6 +20,10 @@ It also fixes handover clocks and atomic terminal group cleanup. Shared modules
 are imported/staged, never copied into this branch. Runtime regression compiles
 the exact SHA-checked frozen control-tick body; fake transport means0SUMO.
 86local CPU tests pass with `C:/Users/jpeng/miniconda3/python.exe`.
+Repaired CPU-only stage `build_b299a4b31582d7bfc57b9486dbdf89287044be79a66d045fbd3bd6a0e3fe2e0d`
+also passes86/86 on cpuQ, zero skips, plus real frozen checkpoint/WALL/guards/PPO
+integration;0newSUMO, no continuation dispatch authorization. Do not mistake the
+INTEGRATION.json for acknowledgement of a new training attempt.
 
 ## Before a continuation
 

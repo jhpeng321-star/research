@@ -65,6 +65,16 @@ current handover clocks and zero-write WALL cleanup after terminal connection cl
 Shared owner terminal-clock/reward fixes are also available. No repair simulation
 has been dispatched.
 
+Repaired immutable cpuQ stage:
+`build_b299a4b31582d7bfc57b9486dbdf89287044be79a66d045fbd3bd6a0e3fe2e0d`.
+All86/86 tests pass there (zero skips,7.99s), including10 actual-frozen-control-tick
+regressions and20 collection/report checks. Real frozen checkpoint/WALL/seed-alias/
+shared-PPO integration also passes. Its receipt explicitly marks CPU-only repair,
+continuation unauthorized and0newSUMO. Source/audit/CPU/bundle receipts are retained.
+An intervening CPU-only stagecddb11be caught two stale4GiB test expectations after
+raising memory admission to8GiB for MAIN01:08 priority; corrected boundary tests
+now pass. It incurred no simulation or reservation and remains preserved.
+
 Verified closed accounting: **900 reserved /300 actual sim-s**, no refund,
 one failed smoke, zero successful smoke/production episodes, zero optimizer updates.
 Ledger SHA256:`eb53747c54b045b8a4c3447969d14ac4fc6f24e3719cdc5b18aff31d358417a9`.
