@@ -37,6 +37,15 @@ def alive(receipt):
         return False
 
 
+def available_memory(proc=Path('/proc'), cgroup=Path('/sys/fs/cgroup')):
+    physical = next(int(line.split()[1])*1024 for line in (proc/'meminfo').read_text().splitlines()
+                    if line.startswith('MemAvailable:'))
+    limit, current = cgroup/'memory.max', cgroup/'memory.current'
+    if limit.exists() and current.exists() and limit.read_text().strip() != 'max':
+        return min(physical, int(limit.read_text())-int(current.read_text()))
+    return physical
+
+
 def verify_completion(root):
     """A marker alone cannot certify a complete160-task ensemble."""
     total = 0
@@ -137,11 +146,15 @@ def main():
             used = sum(int(row.split(',')[1]) for row in raw.splitlines()
                        if row.strip() and int(row.split(',')[0]) in ids)
             peak = max(peak, used)
+            memory = available_memory() if spec.get('device') == 'cpu' else None
             save(root/f'MONITOR_STATUS_{time.time_ns()}.json', dict(unix=time.time(),
                 alive=[r['pid'] for r in running], own_gpu_mib=used, peak_own_gpu_mib=peak,
+                device=spec.get('device', 'cuda'), effective_free_memory_bytes=memory,
                 load=os.getloadavg(), tasks=[len(list((root/f'shard{i}').glob('w*_k*.json'))) for i in range(3)]))
             if used >= 18500:
                 raise RuntimeError('INT aggregate GPU guard exceeded')
+            if running and memory is not None and memory < 2**30:
+                raise RuntimeError('CPU memory headroom exhausted; stop only exact owned workers')
             complete = verify_completion(root)
             if not running and not complete:
                 raise RuntimeError('INT worker terminal before complete panel; no automatic retry')

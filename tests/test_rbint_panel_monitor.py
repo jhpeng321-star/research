@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.rbint.panel_monitor import digest, verify_completion
+from tools.rbint.panel_monitor import available_memory, digest, verify_completion
 
 
 def make_panel(root):
@@ -43,7 +43,7 @@ def test_fake_complete_marker_does_not_certify_missing_futures(tmp_path):
     assert not verify_completion(Path(str(tmp_path)+'_missing'))
 
 
-@pytest.mark.parametrize('action', ['canary', 'continue', 'monitor', 'status'])
+@pytest.mark.parametrize('action', ['canary', 'continue', 'monitor', 'status', 'stop-canary'])
 @pytest.mark.parametrize('device', ['cuda', 'cpu'])
 def test_remote_orchestration_is_valid_python_without_dispatch(monkeypatch, action, device):
     from tools.rbint import panel_ops
@@ -55,7 +55,8 @@ def test_remote_orchestration_is_valid_python_without_dispatch(monkeypatch, acti
     monkeypatch.setattr(panel_ops, 'ssh', inspect_only)
     monkeypatch.setattr('sys.argv', ['panel_ops', action, '--runtime',
         '/root/rbeval20261031/phys_code_4015b6412cdf', '--name', 'WM-PHYS-FULL-test',
-        '--device', device, '--recipe', 'wm_phys_cpu.toml' if device=='cpu' else 'wm_phys.toml'])
+        '--device', device, '--recipe', 'wm_phys_cpu.toml' if device=='cpu' else 'wm_phys.toml',
+        '--reason', 'synthetic compile-only operational stop'])
     panel_ops.main()
     assert len(seen) == 1 and seen[0][0] == 'gpuA'
 
@@ -67,3 +68,14 @@ def test_int_dispatch_cannot_claim_peer_variants(monkeypatch):
     monkeypatch.setattr(panel_ops, 'ssh', lambda *a, **k: pytest.fail('must refuse before SSH'))
     with pytest.raises(ValueError, match='INT owns FULL'):
         panel_ops.main()
+
+
+def test_cpu_headroom_respects_container_limit_not_only_host_ram(tmp_path):
+    proc, cgroup = tmp_path/'proc', tmp_path/'cgroup'
+    proc.mkdir(); cgroup.mkdir()
+    (proc/'meminfo').write_text('MemAvailable: 20971520 kB\n')  #20GiB
+    (cgroup/'memory.max').write_text(str(16*2**30))
+    (cgroup/'memory.current').write_text(str(14*2**30))
+    assert available_memory(proc, cgroup) == 2*2**30
+    (cgroup/'memory.max').write_text('max')
+    assert available_memory(proc, cgroup) == 20*2**30

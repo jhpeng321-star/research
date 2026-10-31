@@ -13,12 +13,13 @@ from tools.rbint.remote import ssh
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('canary', 'continue', 'monitor', 'status'))
+    parser.add_argument('action', choices=('canary', 'continue', 'monitor', 'status', 'stop-canary'))
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), default='gpuA')
     parser.add_argument('--runtime', required=True)
     parser.add_argument('--name', required=True)
     parser.add_argument('--device', choices=('cuda', 'cpu'), default='cuda')
     parser.add_argument('--recipe', choices=('wm_phys.toml', 'wm_phys_cpu.toml'), default='wm_phys.toml')
+    parser.add_argument('--reason', default='')
     args = parser.parse_args()
     if not re.fullmatch(r'WM-PHYS-FULL-[A-Za-z0-9_.-]+', args.name):
         raise ValueError('INT owns FULL candidates only; A/B/C belong to runners')
@@ -27,14 +28,16 @@ def main():
     root = '/root/rbeval20261031/int/'+args.name
     common = f'''
 from pathlib import Path
-import hashlib,json,os,subprocess,time
+import hashlib,json,os,signal,subprocess,time
 root=Path({root!r});runtime=Path({args.runtime!r})
 device={args.device!r};recipe={args.recipe!r};config=runtime/'configs'/recipe
 def save(path,data):
  with path.open('x') as f: json.dump(data,f,indent=2)
 def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 def alive(r):
- try: return Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id'] and Path('/proc/'+str(r['pid'])+'/stat').read_text().split()[21]==r['start_ticks']
+ try:
+  fields=Path('/proc/'+str(r['pid'])+'/stat').read_text().split()
+  return fields[2]!='Z' and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id'] and fields[21]==r['start_ticks']
  except FileNotFoundError: return False
 def incarnation(pid): return dict(pid=pid,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),start_ticks=Path('/proc/'+str(pid)+'/stat').read_text().split()[21])
 def admit(canary):
@@ -86,6 +89,27 @@ resources=admit(False)
 save(root/'PANEL_CLAIM.json',dict(time=time.time(),reuse=files[0].name,automatic_retry=False,resources=resources))
 workers=[launch(i,False) for i in range(3)]
 save(root/'PANEL_PROCESS.json',dict(workers=workers));print(json.dumps(workers))
+'''
+    elif args.action == 'stop-canary':
+        if not args.reason:
+            raise ValueError('an explicit operational stop reason is required')
+        code = '''
+spec=json.loads((root/'SPEC.json').read_text());assert spec['owner']=='S-RB-INT' and spec['runtime']==str(runtime)
+assert not (root/'PANEL_PROCESS.json').exists(), 'never stop a panel through its canary'
+r=json.loads((root/'CANARY_PROCESS.json').read_text())
+assert str(runtime/'tools/rbint/evaluate_FULL.py') in r['argv']
+assert r['argv'][r['argv'].index('--out')+1]==str(root/'shard0')
+save(root/'CANARY_STOP_ONCE.json',dict(unix=time.time(),reason='''+repr(args.reason)+''',process=r))
+marker=root/'shard0/STOP'
+if not marker.exists(): marker.touch(exist_ok=False)
+end=time.monotonic()+20
+while alive(r) and time.monotonic()<end: time.sleep(1)
+signalled=False
+if alive(r): os.kill(r['pid'],signal.SIGTERM);signalled=True
+end=time.monotonic()+5
+while alive(r) and time.monotonic()<end: time.sleep(.2)
+result=dict(unix=time.time(),process=r,signalled_owned_pid=signalled,alive=alive(r),tasks=len(list((root/'shard0').glob('w*_k*.json'))))
+save(root/'CANARY_STOPPED.json',result);print(json.dumps(result))
 '''
     elif args.action == 'monitor':
         source = Path(__file__).with_name('panel_monitor.py').read_text(encoding='utf-8')
