@@ -146,6 +146,8 @@ def read_predictions(inputs, real, partial):
                 'sources', 'switches', 'candidate_sha256', 'export_sha256', 'real_receipt_sha256', 'seed', 'update', 't0', 'horizon')}
             contract.update({k: identity[k] for k in ('external_manifest_sha256', 'adapter_sha256',
                                                      'construction_loader_sha256') if k in identity})
+            if 'construction_loader_sha256' in identity:
+                contract['construction_receipt'] = identity['wm']
             assert contract['K'] == 8 and contract['arms'] == list(ARMS)
             assert contract['real_receipt_sha256'] == digest(HERE/'real_observables.json')
             if model_contract is None:
