@@ -166,6 +166,28 @@ def check_train_seeds(sampler):
             raise ValueError("excluded traffic seed in start-state corpus")
 
 
+def snapshot_actor(trainer):
+    """S-PILOTDIAG: exact actor rollback material (parameters + Adam state)."""
+    from copy import deepcopy
+    return ([p.detach().clone() for p in trainer.actor_parameters],
+            deepcopy(trainer.actor_optimizer.state_dict()))
+
+
+def restore_actor(trainer, snapshot):
+    params, optimizer_state = snapshot
+    if len(params) != len(trainer.actor_parameters):
+        raise ValueError("actor parameter set changed since the snapshot")
+    with torch.no_grad():
+        for current, saved in zip(trainer.actor_parameters, params):
+            current.copy_(saved)
+    trainer.actor_optimizer.load_state_dict(optimizer_state)
+
+
+def panel_improved(scores_before, scores_after):
+    """Monotone acceptance: mean panel J must not increase (CTRL0 constants cancel)."""
+    return sum(scores_after) / len(scores_after) <= sum(scores_before) / len(scores_before)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/c4_policy14.toml")
@@ -671,6 +693,9 @@ def main(argv=None):
                               trainer.reward_weights != RewardWeights(**raw['reward'])):
             raise ValueError('new-phase effective trainer/reward differs from resolved TOML')
         update_limit = args.prep_dry_run_updates or args.max_updates
+        acceptance = bool(trainer.config.update_acceptance_panel)
+        if acceptance and gate_panel is None:
+            raise ValueError("update_acceptance_panel requires --gate-panel")
         for iteration in range(update_limit):
             if (output / "STOP").exists():
                 trainer.save_checkpoint(output / "policy_latest.pt")
@@ -704,7 +729,21 @@ def main(argv=None):
                         summary['frozen_scoring_baseline'] = baseline
                         with (output / 'scoring_phase_swaps.jsonl').open('a', encoding='utf-8') as stream:
                             stream.write(json.dumps(baseline, allow_nan=False) + '\n')
+            if acceptance:
+                acceptance_snapshot = snapshot_actor(trainer)
+                acceptance_before = score_gate_panel(trainer, val, gate_panel, args.device)
             metrics = trainer.update()
+            if acceptance:
+                panel_j_after = score_gate_panel(trainer, val, gate_panel, args.device)
+                accepted = panel_improved(acceptance_before, panel_j_after)
+                metrics.update(update_accepted=accepted,
+                               acceptance_panel_J_before=acceptance_before,
+                               acceptance_panel_J_after=panel_j_after,
+                               acceptance_mean_J_delta=(sum(panel_j_after) / len(panel_j_after)
+                                                        - sum(acceptance_before) / len(acceptance_before)))
+                if not accepted:
+                    restore_actor(trainer, acceptance_snapshot)
+                del acceptance_snapshot
             if recovery and recovery.get('checkpoint_every_update') and args.device.startswith('cuda'):
                 metrics['cuda_peak_allocated_bytes'] = torch.cuda.max_memory_allocated()
                 metrics['cuda_peak_reserved_bytes'] = torch.cuda.max_memory_reserved()

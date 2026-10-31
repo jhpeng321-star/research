@@ -255,7 +255,8 @@ def _vjp(trainer, common, task, gate=None, *, transport=True):
     parameters = tuple(p for p in trainer.actor_parameters if p.requires_grad)
     from .longgrad import StateTrace, future_record
     tracing = getattr(trainer, '_longgrad_phase', None) == 'long'
-    trace = StateTrace() if tracing else None
+    normalize = bool(getattr(cfg, 'imagination_step_cotangent_normalize', False))
+    trace = StateTrace(normalize=normalize) if (tracing or normalize) else None
     trainer._longgrad_state_trace = trace
     _trace_memory(trainer, 'future_start', start=start, future=future)
     _lm300_snapshot(trainer, 'start')

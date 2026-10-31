@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 from pathlib import Path
 from unittest.mock import patch
@@ -198,7 +197,6 @@ def instrumented_rollout(trainer, batch, *, horizon_s, deterministic, trace, see
     steps = int(round(horizon_s))  # STEP_S = 1 s per control step
     old_cfg, old_curriculum = trainer.config, trainer.horizon_curriculum
     old_scoring = getattr(trainer, "_gated300_scoring", False)
-    trusted = int(getattr(trainer, "long_credit_trusted_s", 60))
     cfg = dc_replace(old_cfg, horizon=steps, future_samples=futures, future_driver_scale=1.,
                      uncertainty_weight=0., imagination_microbatch=0,
                      imagination_checkpoint_segment=0, imagination_offload_futures=False,
@@ -263,6 +261,8 @@ def main():
     parser.add_argument("--score", action="store_true",
                         help="deterministic no-grad dJ vs CTRL0 at the listed horizons")
     parser.add_argument("--futures", type=int, default=8)
+    parser.add_argument("--normalize-steps", action="store_true",
+                        help="unit-normalise per-step state cotangents (option d) during backward")
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
     environment()
@@ -322,11 +322,12 @@ def main():
 
     report = {"ckpt": str(args.ckpt), "start": PANEL_STARTS[args.start],
               "deterministic": bool(args.deterministic), "futures": args.futures,
+              "normalize_steps": bool(args.normalize_steps),
               "runs": []}
     from time import perf_counter
     from wms.control.longgrad import StateTrace, norm as gnorm
     for horizon in args.horizons:
-        trace = StateTrace()
+        trace = StateTrace(normalize=args.normalize_steps)
         t0 = perf_counter()
         imagined = instrumented_rollout(trainer, batch, horizon_s=horizon,
                                         deterministic=args.deterministic, trace=trace,

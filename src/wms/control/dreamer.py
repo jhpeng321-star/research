@@ -106,6 +106,18 @@ class DreamerConfig:
     # Explicit new-phase recovery of contaminated actor Adam history; not used
     # during updates or ordinary resume. Model weights/update count are retained.
     long_grad_reset_actor_adam: bool = False
+    # S-PILOTDIAG: unit-normalise the accumulated state cotangent at every
+    # controller-input boundary (s/v/a) during future-tape replay VJPs, so the
+    # adjoint cannot compound across chaotic WM rollout steps. Optimizer
+    # preconditioning like long_grad_balance: the modified gradient is NOT the
+    # exact derivative. Default False is bit-identical.
+    imagination_step_cotangent_normalize: bool = False
+    # S-PILOTDIAG: per-update acceptance test -- independently rescore the frozen
+    # gate panel before/after the optimizer step and restore the actor parameters
+    # plus Adam state unless mean panel J improved monotonically (worsening raw dJ
+    # vs CTRL0 is a mean panel J increase; CTRL0 constants cancel). No behavioural
+    # threshold. Default False is bit-identical. Requires --gate-panel.
+    update_acceptance_panel: bool = False
     # Entry queue (SRCWAIT_NOTES.md, 2026-10-13): vehicles enter the imagined rollouts from the
     # observed pre-t0 entry history of each start window (TorchEntryProcessV2); arrivals that find
     # no safe gap at the entrance queue (uncapped backlog) and are charged as source waiting by
@@ -247,7 +259,8 @@ class DreamerConfig:
                 raise ValueError(f"{name} must be a nonnegative integer")
         for name in ("imagination_offload_futures", "imagination_offload_saved_tensors",
                      "imagination_skip_zero_vjp", "imagination_replay_dense_prefix",
-                     "long_grad_balance", "long_grad_reset_actor_adam"):
+                     "long_grad_balance", "long_grad_reset_actor_adam",
+                     "imagination_step_cotangent_normalize", "update_acceptance_panel"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name} must be a boolean")
         if (isinstance(self.real_return_mix, bool)

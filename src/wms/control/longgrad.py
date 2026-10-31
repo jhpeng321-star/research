@@ -100,14 +100,21 @@ def actor_backward(trainer, dense_loss, long_loss, total_loss):
 
 
 class StateTrace:
-    """Passive full-tensor hooks at controller inputs; never modify a cotangent.
+    """Full-tensor hooks at controller inputs.
+
+    Passive mode (default) never modifies a cotangent: OFF updates are
+    bit-identical. ``normalize=True`` (S-PILOTDIAG, default OFF) additionally
+    rescales each observed accumulated adjoint to unit L2 norm before it
+    continues through the backward, bounding per-step adjoint growth across the
+    rollout. Telemetry always records the RAW (pre-normalisation) adjoint.
 
     Shared tensor hooks observe accumulated adjoints, not independent per-step
     parameter contributions. Checkpoint recomputes can repeat a hook; retain the
     maximum per (step, field, row), rather than double count recomputation.
     """
-    def __init__(self):
+    def __init__(self, normalize=False):
         self.values = {}
+        self.normalize = bool(normalize)
 
     def watch(self, state, step):
         for key in ('s_m', 'v_mps', 'a_mps2'):
@@ -115,10 +122,16 @@ class StateTrace:
             if value is None or not value.requires_grad:
                 continue
 
-            def record(grad, index=(step, key)):
+            def record(grad, index=(step, key), normalize=self.normalize):
                 size = grad.detach().double().square().flatten(1).sum(-1)
                 prior = self.values.get(index)
                 self.values[index] = size if prior is None else torch.maximum(prior, size)
+                if not normalize:
+                    return None
+                scale = float(grad.detach().double().norm())
+                if scale > 0. and math.isfinite(scale):
+                    return grad / scale
+                return None
             value.register_hook(record)
 
     def summary(self):
