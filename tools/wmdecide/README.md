@@ -130,6 +130,25 @@ the sibling worktree), creates a clearly named **synthetic plumbing fixture** fr
 its allowed observable receipt, and exercises full validation → CSV/SVG/report.
 Scratch artifacts are preserved under `E:/Temp/opencode`, never deleted.
 
+## Read-only saved-output collection
+
+```powershell
+python -B -m tools.wmdecide.snapshot --host gpuR --root /root/rbeval20261031 --out E:/Temp/opencode/NEW_wm2_snapshot
+python -B -m tools.wmdecide.snapshot --host gpuA --root /root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu --out E:/Temp/opencode/NEW_full_v3_snapshot
+```
+
+This sends locally authored inventory code over SSH and downloads only the
+registered output task/identity/completion JSON bytes. It performs no remote
+writes, inference, dispatch, retries or process control; downloaded data are never
+executed. Supported producers are WM2/gpuR, A2/C2/gpuA, B2/gpuR and FULL-v1/v3/gpuA.
+Every transfer is checksum-checked and JSON-validated before creating a NEW local
+snapshot. `SNAPSHOT.json` binds collector source, host/root, collection time, load
+and every file hash. Empty, unexpected, aliased or prohibited paths fail closed.
+Collection is not an atomic panel transaction: independently written completed
+tasks are immutable, and the usual evaluator must still validate complete K8
+worlds and model identities. No scoring of partially written/partial-K futures.
+Verify with `python -B -m unittest tools.wmdecide.test_snapshot -v`.
+
 ## Portable report publication
 
 ```powershell

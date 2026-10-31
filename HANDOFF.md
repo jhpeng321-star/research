@@ -2,6 +2,19 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Continuation — 05:02 +08
+
+- Resume receipt: `docs/paper_results/wmdecide/RESUME_0502.md`; prior commits,
+  matched04:00 evidence and producer/finalizer ownership preserved.
+- Finished the previously uncommitted `tools/wmdecide/snapshot.py`: read-only
+  SSH collection of explicitly registered evaluator output JSON into NEW local
+  directories, with transfer/source hashes and strict producer/path admission.
+  No downloaded code execution, remote writes, inference or process control.
+- Existing18 decision/credibility tests passed;4 additional snapshot tests pass,
+  including generated inventory syntax, host binding, exact bytes, malformed
+  member/path/hash rejection before output and immutable destination admission.
+  Ruff PASS. Next publication will use newly collected complete-K8 outputs.
+
 ## Latest publication — matched 04:00 snapshot, scored ~05:00 +08
 
 - **Credibility sections now contain real complete-K8 evidence**, for WM2 and
