@@ -34,11 +34,13 @@ def effective(job,mapping):
     return j
 
 
-def manual_zero_step_retry(old,new):
+def manual_registered_retry(old,new):
     """Explicit operator action AFTER registration; never called by supervisor."""
     from worker import write
     failure=ROOT/'jobs'/old/'failure.json'
-    f=json.loads(failure.read_text());assert f['actual_sim_s']==0
+    f=json.loads(failure.read_text())
+    slot_failure="assert not self.frame.dropped" in f['traceback']
+    assert f['actual_sim_s']==0 or (slot_failure and 0<f['actual_sim_s']<600)
     start=json.loads((failure.parent/'START.json').read_text())
     assert not Path('/proc',str(start['pid'])).exists(), 'old owned worker still exists'
     assert not (ROOT/'jobs'/new).exists()
@@ -53,10 +55,12 @@ def manual_zero_step_retry(old,new):
     n=len(list(ROOT.glob('AMENDMENT_*.json')))+1
     write(ROOT/f'AMENDMENT_{n:02d}.json',dict(old=old,new=new,stops=stops,
         failure_sha256=digest(failure),extra_precharge=charge,
-        reason='registered mechanical startup repair; no scientific outcome/physics step existed'))
+        preserved_actual_sim_s=f['actual_sim_s'],
+        reason='registered representation-capacity repair; partial attempt preserved' if slot_failure
+               else 'registered mechanical startup repair; no scientific outcome/physics step existed'))
     print(json.dumps(dict(old=old,new=new,extra_precharge=charge,total_precharge=sum(r['charge'] for r in rows)+charge)))
 
 
 if __name__=='__main__':
     import sys
-    manual_zero_step_retry(*sys.argv[1:])
+    manual_registered_retry(*sys.argv[1:])

@@ -47,7 +47,7 @@ def run(job):
     try:
         bundle,config=prepare(job,out)
         with (out/'worker.log').open('x') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
-            env=ObservableEnv(k_slots=192,controller='native',physics_log=False,ttc=False,
+            env=ObservableEnv(k_slots=512,controller='native',physics_log=False,ttc=False,
                               population='textbook',use_subscriptions=False)
             env.initialize(bundle,config,seed=job['rng'],arm=job['arm'],out=out,horizon=job['horizon'])
             write(out/'initial_audit.json',env.initial_audit)

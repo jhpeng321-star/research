@@ -16,13 +16,16 @@ def main():
     assert os.getloadavg()[0]<24
     plan=json.loads((ROOT/'plan.json').read_text())
     phase=sys.argv[1] if len(sys.argv)>1 else 'full'
-    assert phase in ('full','resume1','resume2')
-    if phase in ('resume1','resume2'):
-        prior=json.loads((ROOT/('DISPATCH_full.json' if phase=='resume1' else 'DISPATCH_resume1.json')).read_text())
+    assert phase in ('full','resume1','resume2','resume3')
+    if phase in ('resume1','resume2','resume3'):
+        prior_name={'resume1':'full','resume2':'resume1','resume3':'resume2'}[phase]
+        prior=json.loads((ROOT/f'DISPATCH_{prior_name}.json').read_text())
         assert not Path('/proc',str(prior['pid'])).exists()
         audit=json.loads((ROOT/'preflight_all/receipt.json').read_text())
         assert audit['status']=='PASS'
         assert audit['prepare_sha256']==hashlib.sha256((Path(__file__).parent/'prepare_bundle.py').read_bytes()).hexdigest()
+    if phase=='resume3':
+        audit=json.loads((ROOT/'padding_audit.json').read_text());assert audit['status']=='PASS' and audit['new_slots']==512
     first=effective(plan['jobs'][0],amendments())
     out=ROOT/'jobs'/first['id']
     canary=json.loads((out/'result.json').read_text())
@@ -34,8 +37,8 @@ def main():
     assert not canary['safety'].get('starting_teleports')
     source=json.loads((out/'START.json').read_text())['code']
     for name in ('model_env.py','worker.py','prepare_bundle.py','demand.py','inference.py','supervisor.py','admission.py'):
-        if phase in ('resume1','resume2') and name=='prepare_bundle.py':continue
-        if phase=='resume2' and name in ('worker.py','supervisor.py','admission.py'):continue
+        if phase in ('resume1','resume2','resume3') and name=='prepare_bundle.py':continue
+        if phase in ('resume2','resume3') and name in ('worker.py','supervisor.py','admission.py'):continue
         assert hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()==source[name],name
     assert not (ROOT/f'DISPATCH_{phase}.json').exists()
     write(ROOT/f'DISPATCH_intent_{phase}.json',dict(unix=time.time(),canary=first['id'],phase=phase,

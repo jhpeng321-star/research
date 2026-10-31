@@ -15,7 +15,10 @@ def stage(names):
         extra={'eval_core.py':Path('E:/agent-work/c4-rb-eval/tools/rbeval/core.py'),
                'references.json':Path('E:/agent-work/c4-rb-eval/tools/rbeval/references.json'),
                'real_observables.json':Path('E:/agent-work/c4-rb-eval/tools/rbeval/real_observables.json'),
-               'wm2_forecast_draws.csv':Path('E:/agent-work/c4-wmbreakdown/docs/paper_results/wmbreakdown/forecast_draws.csv')}
+               'wm2_forecast_draws.csv':Path('E:/agent-work/c4-wmbreakdown/docs/paper_results/wmbreakdown/forecast_draws.csv'),
+               'helper_obsstate.py':Path('E:/agent-work/c4-rbh-obsstate/src/wms/eval/obsstate.py'),
+               'helper_netframe.py':Path('E:/agent-work/c4-rbh-obsstate/src/wms/eval/netframe.py'),
+               'helper_clocks.csv':Path('E:/agent-work/rb-shared/targets/clocks_world.csv')}
         assert Path(name).name == name
         data = extra.get(name,HERE/name).read_bytes()
         payload[name] = dict(data=base64.b64encode(data).decode(),
