@@ -28,7 +28,7 @@ print(json.dumps(dict(files=files,accounting=[json.loads(x) for x in (r/'account
     gpu=ssh('gpuR',f'''import json,time
 from pathlib import Path
 r=Path({GPU!r});out={{}}
-for n in ['SHARED_BUDGET.json','GPU_STARTED.json','GPU_FINISHED.json','gpu_DISPATCH.json']:
+for n in ['SHARED_BUDGET.json','GPU_STARTED.json','GPU_FINISHED.json','gpu_DISPATCH.json','rpc/wm/STOP','rpc/bb/STOP']:
  p=r/n
  if p.exists():out[n]=json.loads(p.read_text())
 pid=out.get('gpu_DISPATCH.json',{{}}).get('pid')
@@ -81,12 +81,14 @@ def report():
         raise ValueError('terminal report requires closed owned jobs')
     target=Path('docs/paper_results/C1SWITCH.md')
     gpu=summary['gpu']['GPU_FINISHED.json']['cumulative_gpu_s']
+    gpu_stop=summary['gpu'].get('rpc/wm/STOP',summary['gpu'].get('rpc/bb/STOP',{})).get('reason')
     common=[
         '# S-C1SWITCH — controller-switching experiment',
         '',
         '## Status',
         '**Complete registered panel.**' if complete else '**Incomplete panel: operational/budget stop; no full-panel efficacy verdict.**',
         ('Terminal stop receipt: '+json.loads((MIRROR/'STOP').read_text()).get('reason','unspecified')) if (MIRROR/'STOP').exists() else 'All registered jobs closed.',
+        ('GPU terminal cause: '+gpu_stop) if gpu_stop else 'GPU terminal accounting is retained in the collection receipt.',
         '',
         '## Frozen scientific contract',
         '- WM2 b8797242+mix (entries OFF), full 60 s anonymous observable history; frozen BB-traj afaaa32c. Original v7 anonymous-seed adapter/controller plant retained.',
