@@ -9,6 +9,9 @@ from .runtime import library
 
 
 def check(root):
+    from .protocol import audit_registration
+    if not audit_registration(safe_path(root)/'REGISTRATION.md')['passed']:
+        raise ValueError('current registry allocation conflicts; no physics')
     lib = library(root)
     inputs = lib.setup()
     import traci

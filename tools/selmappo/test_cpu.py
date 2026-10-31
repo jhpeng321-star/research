@@ -270,6 +270,14 @@ class DiskTests(unittest.TestCase):
         self.assertFalse(audit_registration(reg)['passed'])
         self.assertFalse(audit_registration(self.text('short.md', '- OTHER 18000000-099\n'))['passed'])
 
+    def test_exact_owned_history_disclosures_only_not_future_allocations(self):
+        from .registration_history import LINES
+        reg = self.text('history.md', '\n'.join(LINES)+'\n')
+        self.assertTrue(audit_registration(reg)['passed'])
+        for i, line in enumerate(LINES):
+            changed = self.text(f'changed_history_{i}.md', line+' NEW TRAIN18000041\n')
+            self.assertFalse(audit_registration(changed)['passed'])
+
     def test_exact_task_hash_exemption_and_shared_block(self):
         from .protocol import FLEET_DESIGN_SHA
         own = ('- S-SELMAPPO DESIGN REGISTERED SHA256 '+FLEET_DESIGN_SHA+

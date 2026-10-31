@@ -84,11 +84,14 @@ def audit_registration(registration, *, variant='fleet', design_sha=None):
     Expands shortened endpoints (e.g. 981000-099); ignores hex hashes. Own
     design-registration lines are identified explicitly, never broadly ignored.
     """
+    from .registration_history import LINES
     hits = []
     blocks = {variant: BLOCKS[variant]}
     design_sha = design_sha or (FLEET_DESIGN_SHA if variant == 'fleet' else None)
     prefix = '- S-SELMAPPO DESIGN REGISTERED ' if variant == 'fleet' else '- S-SELMAPPO2 DESIGN REGISTERED '
     for number, line in enumerate(safe_path(registration).read_text(encoding='utf-8').splitlines(), 1):
+        if variant == 'fleet' and line in LINES:
+            continue
         if (line.startswith(prefix) and design_sha and f'SHA256 {design_sha}' in line and
                 f'protocol={PROTOCOL}' in line and f'{variant}_cap={CAP}' in line):
             continue

@@ -19,3 +19,15 @@ started, with no physics/reservation while admission fails. Every episode retain
 same load/memory/disk checks before precharge; nice19, CUDAhidden, <=12single-thread
 workers, no retries, 24h total wall stop. Prior three locks/PIDs/stopped receipts checked.
 Evaluation remains owned by C1SWITCH2. No final checkpoint exists yet.
+
+Pre-dispatch registration audit caught historical *owned disclosures* as conflicts:
+the original audit exempted only the first design line. This stopped BEFORE the
+new exclusive lock, supervisor, reservation or physics. Remote inventory confirms
+only the three old locks remain. Exact full-line owned-history exemptions now retain
+conflict detection for any changed/extended line; no broad task-prefix exemption.
+The actual shared registry audit is now also part of the frozen CPU integration gate.
+
+Corrected immutable stage for dispatch: `build_3351504cece84e4b`, binding
+`3351504cece84e4b5c289689dd65350dfe784dd0dfbbb3c93fa16a681df59235`.
+CPU38/38 and real integration/registry/initial-model-RNG gates PASS; new SUMO0.
+All preceding stages remain immutable and undispatched. Budget/schedule unchanged.
