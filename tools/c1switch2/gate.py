@@ -25,7 +25,7 @@ def approval(text):
 
 REQUIRED = ('frozen_v7_sources', 'seed_guards', 'exposure_cpuQ', 'exposure_gpuR',
             'exposure_gpuA', 'registry_intervals', 'wall_sumo', 'wall_model',
-            'team_source_wm', 'team_source_bb', 'fleet_ppo', 'cav_mappo',
+            'inference_wm', 'inference_bb', 'fleet_ppo', 'cav_mappo',
             'gpuA_parity', 'gpuR_parity', 'cpu_tests', 'canary_repeat')
 
 
@@ -39,9 +39,17 @@ def admission(text, binding, evidence, *, phase='main'):
         raise ValueError('library/GPU budget binding mismatch')
     if binding.get('design_sha256') != sha(DESIGN):
         raise ValueError('design changed after binding')
-    needed = REQUIRED + (('wm_phys_qualification', 'team_source_wm_phys') if include_phys else ())
+    if binding.get('prediction_objective') == 'on_road_fleet_delay':
+        if not any('S-C1SWITCH2 DESIGN REGISTERED ' in line and
+                   binding['design_sha256'] in line and 'prediction_objective=on_road_fleet_delay' in line
+                   for line in text.splitlines()):
+            raise ValueError('road-only objective amendment not registered')
+    needed = REQUIRED + (('wm_phys_qualification', 'inference_wm_phys') if include_phys else ())
     if phase == 'canary':
-        needed = tuple(k for k in needed if k != 'canary_repeat')
+        # No model or selector is used by the already budgeted mechanical canary.
+        needed = tuple(k for k in REQUIRED if k not in
+                       ('inference_wm', 'inference_bb', 'fleet_ppo', 'cav_mappo',
+                        'gpuA_parity', 'gpuR_parity', 'canary_repeat'))
     elif phase != 'main':
         raise ValueError('unregistered admission phase')
     missing = [key for key in needed if evidence.get(key, {}).get('status') != 'PASS'

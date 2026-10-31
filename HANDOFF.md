@@ -3,7 +3,9 @@
 Authoritative design: `docs/paper_results/C1SWITCH2_DESIGN.md` and `tools/c1switch2/design.py`.
 Protocol `S-C1SWITCH2/v2`: **16 fresh main worlds 969136..969151**, canary969152,
 six controllers in order `native,ctrl0,mappo,pi,circles,wall`, decisions300..880/20s.
-The panel exports seed,penetration,demand and the common measurement index per world.
+Use `docs/paper_results/c1switch2/PANEL_v2.json` (16 worlds, unchanged identities).
+SHA256 `7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827`.
+It exports seed,penetration,demand, common measurement indices and registered design SHA.
 It replaces the unregistered preliminary12-world proposal seen by S-SELMAPPO.
 
 ## Evaluation ownership / selector peers
@@ -39,12 +41,17 @@ Fleet backends can reuse `tools.c1switch2.backend.Backend(...,wall=facade)` afte
 The per-CAV runtime must supply the validated selector bridge with the same backend methods.
 All construction happens AFTER current registration approval and integration admission.
 
-`inference.Predictor` expects an engine attestation and
-`imagine(payload,controller=...,K=8,horizon_s=60,seed=anonymous_seed,wall=facade)->8 team delays`.
+`inference.Predictor` accepts attested `imagine_all(payload,K=8,horizon_s=60)` six-row batching,
+or isolated `imagine(...)` per controller. `engine.Engine` implements real frozen WM2/BB feedback.
 The six candidates get identical anonymous CRN seeds, isolated controller memory and true feedback.
-The v7 entries-OFF adapter predicts road delay only; it CANNOT satisfy this full-team contract.
-Do not label road-only values as team delay or fill unknown source costs with zero.
-Real full-team/source-admission engine bindings and GPU parity remain unresolved dependencies.
+MAIN00:29 permits a registered COMMON ROAD-ONLY prediction objective for both WM and BB.
+Applied explicitly: entries OFF; mix configured but inactive; no source cost prediction.
+Full-team J600/J900 and full-team branch oracle remain the evaluation objectives.
+`selectors.py` bridges the fleet peer's FrozenFleetSelector and per-CAV save_checkpoint ABI;
+`runtime.py` wires the per-CAV owner's make_mixed_fleet and shared frozen executor.
+`SELECTOR_BINDINGS_PENDING.json` documents missing final169 weights: stubs raise, never pick.
+Supply final checkpoint + immutable freeze/source/config receipts, not intermediate checkpoints.
+Real-checkpoint controller feedback, grouped execution integration and both-GPU parity are still gates.
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
@@ -52,7 +59,9 @@ Build and CPU preparation only; no task SUMO/GPU/physics processes.
 The 23:48 owner approval is present; WALL integrated, final trained selectors pending.
 `tools/c1switch2/wall.py` binds the real peer lifecycle and self-ID-only memory;
 missing members remain absent and abort atomically on continuation. No simulator slots cross RPC.
-Resume CPU verification: 118 passed/1 frozen-host-only skip; real memory/remapping parity included.
+Resume CPU verification: local AND cpuQ AND gpuR 124 passed/1 host-only skip each.
+Tests include real wall memory parity, six-row synthetic WM/BB mechanics and actual peer
+feature/model interfaces with clearly synthetic final169 test weights (not trained/evaluated arms).
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.
 CPU preparation/exposure receipts are in `tools/c1switch2/evidence/`; prior versions are preserved.
 The initial local exposure regex reported timestamp/negative-evidence false positives, fixed prospectively.

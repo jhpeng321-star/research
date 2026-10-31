@@ -55,15 +55,23 @@ print(json.dumps(dict(host={host!r},safe_names_checked=count,pruned=pruned,hits=
 
 def cpu(host):
     files = sorted(Path('tools/c1switch').glob('*.py'))+sorted(Path('tools/c1switch2').glob('*.py'))
-    files += [Path('tests/test_c1switch2.py')]
-    sources = {p.as_posix(): sha(p) for p in files}
+    tests = ['tests/test_c1switch2.py', 'tests/test_c1switch2_wall.py',
+             'tests/test_c1switch2_integrations.py', 'tests/test_switchable_wall.py',
+             'tests/test_c1switch.py', 'tests/test_c1switch_feedback.py', 'tests/test_c1switch_merge_fast.py']
+    files += [Path(p) for p in tests]+[Path('traffic_shepherd/c4/switchable_wall.py'),
+                                    Path('src/wms/control/wall.py')]
+    staged = {p.as_posix(): p for p in files}
+    peer = Path('E:/agent-work/c4-selmappo/tools/selmappo')
+    for name in ('__init__.py', 'selector.py', 'protocol.py', 'observations.py', 'learning.py'):
+        staged['peer/selmappo/'+name] = peer/name
+    sources = {name: sha(p) for name, p in staged.items()}
     identity = __import__('hashlib').sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()[:12]
     parent = '/home/ubuntu' if host == 'cpuQ' else '/root'
     root = parent+'/c1switch2_cpu_'+identity
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode='w:gz') as tar:
-        for path in files:
-            tar.add(path, arcname=path.as_posix())
+        for name, path in staged.items():
+            tar.add(path, arcname=name)
     raw = base64.b64encode(buf.getvalue()).decode()
     runtime = '/home/ubuntu/e3final/runtime' if host == 'cpuQ' else '/root/autodl-tmp/c4/speedhead20261030/e3final/runtime'
     result = ssh(host, f'''import base64,contextlib,hashlib,io,json,os,sys,tarfile
@@ -75,6 +83,9 @@ sources={sources!r}
 assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==value for name,value in sources.items())
 os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 sys.path[:0]=[str(root),{runtime!r}+'/src',{runtime!r}]
+os.environ['C1SWITCH2_SELECTOR_SOURCE']=str(root/'peer/selmappo')
+from tools.c1switch.library import install_wall_extension
+install_wall_extension()
 import subprocess
 def forbidden(*a,**kw):raise AssertionError('CPU preparation attempted SUMO or subprocess')
 subprocess.Popen=forbidden
@@ -85,11 +96,11 @@ except ImportError:pass
 import pytest
 log=io.StringIO()
 with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
- code=pytest.main(['-q','-p','no:cacheprovider','-c','/dev/null',str(root/'tests/test_c1switch2.py')])
+  code=pytest.main(['-q','-p','no:cacheprovider','-c','/dev/null']+[str(root/p) for p in {tests!r}])
 out=dict(host={host!r},root=str(root),returncode=int(code),output=log.getvalue(),sources=sources,new_sim_s=0,new_gpu_s=0)
 (root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''', timeout=120)
-    write(EVIDENCE/('CPU_'+host+'.json'), result)
+    write(EVIDENCE/('CPU_'+host+'_integration_v1.json'), result)
     print(json.dumps({k: v for k, v in result.items() if k != 'sources'}, indent=2))
 
 
@@ -100,6 +111,7 @@ def export():
         raise ValueError('preserve prior design export')
     write(output/'BUDGET_PROPOSAL.json', proposal)
     write(output/'PANEL.json', dict(protocol=proposal['base']['protocol'], worlds=worlds(),
+        design_sha256=proposal['base']['design_sha256'],
         canary=canary_world(), measured=proposal['base']['measured'],
         decisions_s=list(range(300,900,20)), J600_window_s=[300,900], J900_window_s=[300,1200],
         evaluation_owner='S-C1SWITCH2'))

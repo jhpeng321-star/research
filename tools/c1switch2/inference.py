@@ -1,9 +1,6 @@
-"""Six controller-in-model futures with a strict full-team objective contract.
-
-The registered model engine supplies frozen WM/BB dynamics and observable source
-admissions. The old entries-OFF v7 adapter is deliberately NOT a valid engine.
-"""
+"""Six-way inference; full-team or explicitly registered common road-only scoring."""
 import copy
+import re
 
 from .core import means
 from .design import CONTROLLERS, HORIZON, K, PROTOCOL
@@ -12,11 +9,23 @@ from .observable import anonymous_payload, future_seed
 
 def validate_engine(attestation):
     required = dict(protocol=PROTOCOL, library=list(CONTROLLERS), history_s=60,
-                    horizon_s=HORIZON, K=K, objective='full_team_delay_fleet_plus_source',
+                    horizon_s=HORIZON, K=K,
                     controller_feedback=True, wall_start_stop=True,
-                    observable_source_admissions=True, anonymous_seed=True)
+                    anonymous_seed=True)
     if any(attestation.get(k) != v for k, v in required.items()):
         raise ValueError('six-way full-team inference attestation required; v7 entries-OFF is insufficient')
+    objective = attestation.get('objective')
+    if objective == 'full_team_delay_fleet_plus_source':
+        if attestation.get('observable_source_admissions') is not True:
+            raise ValueError('full-team inference needs observable source admissions')
+    elif objective == 'on_road_fleet_delay':
+        if (attestation.get('observable_source_admissions') is not False or
+                attestation.get('entries') is not False or
+                attestation.get('evaluation_objective') != 'full_team_delay_fleet_plus_source' or
+                not re.fullmatch('[0-9a-f]{64}', attestation.get('objective_design_sha256', ''))):
+            raise ValueError('road-only scoring needs a registered design binding and disclosure')
+    else:
+        raise ValueError('unregistered prediction objective')
 
 
 class Predictor:
@@ -26,6 +35,10 @@ class Predictor:
 
     def samples(self, raw):
         payload = anonymous_payload(raw, self.wall.validate_memory)
+        if hasattr(self.engine, 'imagine_all'):
+            samples = self.engine.imagine_all(payload, K=K, horizon_s=HORIZON)
+            means(samples)
+            return samples
         seed = future_seed(payload)
         samples = {}
         for controller in CONTROLLERS:

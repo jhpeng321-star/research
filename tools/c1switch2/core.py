@@ -12,7 +12,7 @@ def means(samples):
         raise ValueError('six-controller library required')
     if any(len(v) != K or any(not math.isfinite(x) or x < 0 for x in v)
            for v in samples.values()):
-        raise ValueError('K8 finite nonnegative full-team delay samples required')
+        raise ValueError('K8 finite nonnegative registered-objective delay samples required')
     return {c: statistics.fmean(samples[c]) for c in CONTROLLERS}
 
 

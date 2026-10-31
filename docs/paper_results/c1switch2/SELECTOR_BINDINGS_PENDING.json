@@ -1,0 +1,25 @@
+{
+  "protocol": "S-C1SWITCH2/v2",
+  "selector_specs": {
+    "fleet_ppo": {
+      "status": "PENDING",
+      "owner": "S-SELMAPPO",
+      "factory": "tools.c1switch2.selectors:fleet",
+      "checkpoint_interface": "tools.selmappo.selector:FrozenFleetSelector",
+      "required_iteration": 169,
+      "required_receipts": ["checkpoint_sha256", "source/config hashes", "final169 freeze receipt"]
+    },
+    "cav_mappo": {
+      "status": "PENDING",
+      "owner": "S-SELMAPPO2",
+      "factory": "tools.c1switch2.selectors:per_cav",
+      "checkpoint_interface": "tools.selmappo2.training:save_checkpoint",
+      "execution_interface": "tools.selmappo2.mixed:make_mixed_fleet",
+      "required_iteration": 169,
+      "required_receipts": ["checkpoint_sha256", "FROZEN_FINAL.json", "training sources/bindings", "grouped bridge CPU integration"]
+    }
+  },
+  "pending_behavior": "raise DependencyPending before opening any checkpoint; no placeholder action",
+  "evaluation_owner": "S-C1SWITCH2",
+  "peer_evaluation_sim_s": 0
+}

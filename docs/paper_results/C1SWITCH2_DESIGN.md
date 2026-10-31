@@ -1,22 +1,22 @@
 # S-C1SWITCH2 protocol v2 — prospective design
-Status: DESIGN/BUILD/CPU; zero task SUMO/GPU. Owner23:48 approval observed; integration gates remain.
+Status: DESIGN/BUILD/CPU; owner23:48 approval observed; MAIN00:29 integration amendment applied.
 Worktree E:/agent-work/c4-c1switch2, branch c4/c1switch2; inherited frozen ancestor1121117f.
 Reuse v7 full-prefix reruns, anonymous history/seeding, WM/BB RPC, ownership/PI/MAPPO hand-over.
-No saved-state continuation; original tools/c1switch files remain byte-unchanged.
+No saved-state continuation; merge S-WALLSW1b0581d0; frozen runtime/manifests remain byte-unchanged.
 Question: does WM-guided picking beat fleet PPO and the best fixed controller on paired team delay?
 Never select models, worlds, checkpoints or reporting scope using switching outcomes.
 Library order: native, CTRL0 zero.py24095a10, speed-only MAPPO169d9042cc5, PI external-U, CIRCLES, WALL.
 WALL is the S-WALLSW frozen wall-v2.1/v2.2 group law; assembly/release belongs inside the controller.
 Decisions t=300,320,...,880 (30); imagine each held candidate60s, execute20s, re-observe/re-plan.
-WM/BB scoring: arithmetic mean of K8 predicted full-team fleet+source delays; strict argmin.
+WM/BB scoring: mean of K8 predicted ON-ROAD delays; strict argmin (MAIN00:29 permitted amendment).
 Exact ties retain incumbent, otherwise library order; no dwell/hysteresis/manual switching penalties.
 Switch/reset/assembly costs must arise in imagined controller feedback and source/traffic dynamics.
 Genuine121 half-second observable frames over60s; CAV self IDs only, anonymous HDVs before RPC AND RNG.
-WM2b8797242+mix vs frozen BBafaaa32c; never retrain either black box.
+WM2b8797242 vs frozen BBafaaa32c; mix configured but INACTIVE with entries OFF; no retraining.
 Optional WM-PHYS iff complete S-RB-EVAL beats WM2: lower CRPS at120/300/600, closer breakdown rate,
 and no worse HDV position error60s; freeze qualification+checkpoint hashes before switching outcomes.
-V7 entries-OFF/on-road adapter is NOT full-team support: fail closed until observable source support
-and six-way feedback incl WALL are attested for BOTH models; no silent objective substitution.
+Registered common road-only objective for BOTH models: initial observable road fleet, entries OFF;
+no source prediction. Primary evaluation and branch oracle remain FULL TEAM; disclose this limitation.
 Fleet PPO primary and per-CAV MAPPO secondary use final frozen S-SELMAPPO/S-SELMAPPO2 checkpoints.
 Same cadence/library/observable inputs/execution/memory semantics for every picker; training accounted separately.
 Fresh TRAIN main969136..969151: all12 (.05,.10,.20,.40)x(1900,2400,2700) cells, then four high cells
@@ -54,5 +54,5 @@ Secondary: per-decision regret/signed joint gap,BB contrasts,J900,safety,switche
 Report wall conditions descriptively without behavioural cutoffs; include failures, training sim-s and WM data costs.
 Runner: tools/c1switch2/{episode,rerun,backend,core,rpc,runner,supervisor,canary,gate,analyze}.py.
 CPU tests cover30x20s/60s lookahead,36 hand-over pairs,WALL start/stop,anonymous RNG,prefix rejection and budgets.
-Runtime admission requires bound wall/model/source/RL/parity/CPU/exposure/canary receipts plus explicit approval.
+Main admission: bound WALL/six-way models/RL/parity/CPU/exposure/canary; mechanics canary needs CPU/WALL only.
 Poll REGISTRATION with tools.c1switch2.gate; approval alone never bypasses missing scientific dependencies.

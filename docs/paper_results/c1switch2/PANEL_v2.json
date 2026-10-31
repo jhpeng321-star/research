@@ -1,0 +1,194 @@
+{
+  "protocol": "S-C1SWITCH2/v2",
+  "worlds": [
+    {
+      "seed": 969136,
+      "penetration": 0.05,
+      "demand": 1900
+    },
+    {
+      "seed": 969137,
+      "penetration": 0.05,
+      "demand": 2400
+    },
+    {
+      "seed": 969138,
+      "penetration": 0.05,
+      "demand": 2700
+    },
+    {
+      "seed": 969139,
+      "penetration": 0.1,
+      "demand": 1900
+    },
+    {
+      "seed": 969140,
+      "penetration": 0.1,
+      "demand": 2400
+    },
+    {
+      "seed": 969141,
+      "penetration": 0.1,
+      "demand": 2700
+    },
+    {
+      "seed": 969142,
+      "penetration": 0.2,
+      "demand": 1900
+    },
+    {
+      "seed": 969143,
+      "penetration": 0.2,
+      "demand": 2400
+    },
+    {
+      "seed": 969144,
+      "penetration": 0.2,
+      "demand": 2700
+    },
+    {
+      "seed": 969145,
+      "penetration": 0.4,
+      "demand": 1900
+    },
+    {
+      "seed": 969146,
+      "penetration": 0.4,
+      "demand": 2400
+    },
+    {
+      "seed": 969147,
+      "penetration": 0.4,
+      "demand": 2700
+    },
+    {
+      "seed": 969148,
+      "penetration": 0.2,
+      "demand": 2400
+    },
+    {
+      "seed": 969149,
+      "penetration": 0.2,
+      "demand": 2700
+    },
+    {
+      "seed": 969150,
+      "penetration": 0.4,
+      "demand": 2400
+    },
+    {
+      "seed": 969151,
+      "penetration": 0.4,
+      "demand": 2700
+    }
+  ],
+  "canary": {
+    "seed": 969152,
+    "penetration": 0.4,
+    "demand": 2700
+  },
+  "measured": {
+    "969136": [
+      10
+    ],
+    "969137": [
+      12
+    ],
+    "969138": [
+      22
+    ],
+    "969139": [
+      1
+    ],
+    "969140": [
+      6
+    ],
+    "969141": [
+      24
+    ],
+    "969142": [
+      10
+    ],
+    "969143": [
+      13
+    ],
+    "969144": [
+      28
+    ],
+    "969145": [
+      15
+    ],
+    "969146": [
+      5
+    ],
+    "969147": [
+      8
+    ],
+    "969148": [
+      26
+    ],
+    "969149": [
+      19
+    ],
+    "969150": [
+      16
+    ],
+    "969151": [
+      2
+    ]
+  },
+  "decisions_s": [
+    300,
+    320,
+    340,
+    360,
+    380,
+    400,
+    420,
+    440,
+    460,
+    480,
+    500,
+    520,
+    540,
+    560,
+    580,
+    600,
+    620,
+    640,
+    660,
+    680,
+    700,
+    720,
+    740,
+    760,
+    780,
+    800,
+    820,
+    840,
+    860,
+    880
+  ],
+  "J600_window_s": [
+    300,
+    900
+  ],
+  "J900_window_s": [
+    300,
+    1200
+  ],
+  "evaluation_owner": "S-C1SWITCH2",
+  "design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+  "prediction_objective": "on_road_fleet_delay",
+  "evaluation_objective": "full_team_delay_fleet_plus_source",
+  "library": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles",
+    "wall"
+  ],
+  "cadence_s": 20,
+  "predecessor_panel_sha256": "58e0d0b801805dd75ee260a759a64faa7929cbf347697cd423f486343e0b33c4"
+}
