@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-10-31 23:30 +08:00; branch `c4/rb-int`, base `f0db3c82`.
+Updated 2026-10-31 23:36 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
 - Read owner authorization at active C4 registration line 5682 and all four WHY reports.
@@ -67,3 +67,17 @@ Updated 2026-10-31 23:30 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 - LANE/MERGE ownership needs explicit reconciliation: LANE handoff proposes full
   LC2013 lane model; MERGE owns ramp 2->1. Mainline proposals must survive merge
   resolution and carry LC2013 persistent state across rollout chunks.
+
+## Fresh resume 23:36
+- Preserved clean HEAD `6dc3c8a0`; prior registration already exists (no duplicate).
+- Polled all six workers plus SUMOCORE/shared helpers. LANE `1b88408e` and
+  MERGE `f2355d13` now usable; CF still base/no handoff. UNC contract `7b6f26dc`
+  and FIT contract `57f4f3ef` exist, implementations pending. Targets helper DONE:
+  observable FIT lane/merge/insertion/ramp/speed tables available in rb-shared.
+- Read-only gpuR audit: existing EVAL WM2 workers 706825..706828 running,
+  GPU 15,403/24,564 MiB, 100% utilization; canary retained, no duplicate launched.
+- Incorporate hidden-state sampling into A when ready; add fitted-physics C with
+  FIT parameter JSON. No inference/training launched by resumed INT.
+- Morning report must explicitly give paired-world CIs for delay CRPS differences
+  at 120/300/600, breakdown-rate distance-to-real difference, and 60s HDV position
+  error difference under heading `Switching-eligibility rule` (MAIN23:28).
