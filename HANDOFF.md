@@ -9,11 +9,16 @@ and prefix-calibrated informative-evidence shrinkage;5new CPU tests PASS.
 Smoke969400 PASS (9529fit/9779later intervals); no LC adoption change.
 Full32-world `lane_directional_v3` running cpuQ557463 (01:37),2nice19CPU workers,
 frozen estimator9f574a5c / LC811cd7e8; create-once receipts preserved.
+Boundary continuation:209 source-domain profiles incl SUMO zero-weight faces,
+cached matching v3 decisions reused exactly;7new tests PASS. Smoke cpuQ573779.
+`draw_lane_parameters` now accepts nonnegative behavioral weights, assertive>0.
+UNC must allow those LC-only zeros before sampling this forthcoming candidate;
+IDM remains strictly positive. No boundary fit adopted before validation.
 New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
 Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
 paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;
 generic causal117-interval motion posterior matches saved weights within5.6e-17.
-cpuQ407617(LC)/426309(shrinkage) both exited; no outstanding owned jobs.
+Prior cpuQ407617(LC)/426309(shrinkage) both exited; new jobs listed above.
 No action outcomes selected fits. Reports: `docs/paper_results/RBFIT.md` and
 `docs/paper_results/RBFIT_SUMOCORE_DIAG.md`. No demonstrated600s sign repair.
 Coordination receipt: `E:/agent-work/rb-shared/fit/ADDENDUM_0040.md` and

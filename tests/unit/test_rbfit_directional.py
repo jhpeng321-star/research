@@ -1,5 +1,6 @@
 """Meaningful categorical likelihood, causal evidence and mixture invariants."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
@@ -83,3 +84,43 @@ def test_count_record_target_and_candidate_axes(fit):
     assert counts[0,0,2,1,1] == counts[0,1,2,2,1] == 1
     assert counts[0,0,1,0,0] == counts[0,1,1,2,0] == 1
     assert not counts[1].any()
+
+
+def test_reuse_exact_profiles_and_observable_alignment(fit):
+    old = np.array([[1,1,1,1,1], [2,0,1,1,1]])
+    support = np.array([[2,0,1,1,1], [1,0,0,0,1], [1,1,1,1,1]])
+    new, prior = fit.reuse_columns(support,old)
+    np.testing.assert_array_equal(new,[1])
+    np.testing.assert_array_equal(prior,[1,-1,0])
+    base = {"vid":np.array([3,4]),"time_s":np.array([241.,241.]),
+            "source":np.array([0,1]),"actual":np.array([0,1])}
+    previous = dict(base,prediction=np.array([[0,1],[2,0]]))
+    record = dict(base,prediction=np.array([[2],[1]]))
+    result = fit.merge_predictions(record,previous,prior,new)
+    np.testing.assert_array_equal(result["prediction"],[[1,2,0],[0,1,2]])
+    with pytest.raises(ValueError,match="alignment"):
+        fit.merge_predictions(dict(record,vid=np.array([4,3])),previous,prior,new)
+
+
+def test_source_zero_behavioral_weights_are_sampleable(tmp_path):
+    torch = pytest.importorskip("torch")
+    if os.environ.get("RBFIT_MOTION_FIT"):
+        spec = importlib.util.spec_from_file_location("rbfit_motion_candidate", os.environ["RBFIT_MOTION_FIT"])
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        draw_lane_parameters = module.draw_lane_parameters
+    else:
+        from wms.physics.motion_fit import draw_lane_parameters
+    names = ["lcStrategic","lcCooperative","lcSpeedGain","lcKeepRight","lcAssertive"]
+    population = {"schema":"wm_phys.lc2013_population.v1","parameter_order":names,
+                  "support":[[0,0,0,0,1]],"weights":[1]}
+    posterior = {"schema":"wm_phys.lc2013_posteriors.v1","conditioning_end_s":300,"drivers":{}}
+    (tmp_path/"pop.json").write_text(json.dumps(population))
+    (tmp_path/"post.json").write_text(json.dumps(posterior))
+    result = draw_lane_parameters(tmp_path/"pop.json",tmp_path/"post.json",969400,1,t0_s=300,
+                                  generator=torch.Generator().manual_seed(1))
+    assert result == dict(zip(names,[0,0,0,0,1]))
+    population["support"] = [[0,0,0,0,0]]
+    (tmp_path/"pop.json").write_text(json.dumps(population))
+    with pytest.raises(ValueError,match="Invalid LC"):
+        draw_lane_parameters(tmp_path/"pop.json",tmp_path/"post.json",969400,1,t0_s=300)

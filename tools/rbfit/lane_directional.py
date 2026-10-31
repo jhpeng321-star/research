@@ -90,21 +90,49 @@ def count_records(record, keys, candidates, selected):
     return out
 
 
+def reuse_columns(support, prior_support):
+    """Exact physical vectors only; no nearest-profile substitutions."""
+    matches = (support[:,None,:] == prior_support[None,:,:]).all(-1)
+    found = matches.any(-1)
+    return np.flatnonzero(~found), np.where(found, matches.argmax(-1), -1)
+
+
+def merge_predictions(record, previous, prior_columns, new_columns):
+    for name in ("vid", "time_s", "source", "actual"):
+        if not np.array_equal(record[name], previous[name]):
+            raise ValueError("Cached observable record alignment changed")
+    combined = np.empty((len(record["vid"]),len(prior_columns)), dtype=np.uint8)
+    cached = np.flatnonzero(prior_columns >= 0)
+    combined[:,cached] = previous["prediction"][:,prior_columns[cached]]
+    combined[:,new_columns] = record["prediction"]
+    return dict(record, prediction=combined)
+
+
 def episode_job(job):
     import torch
     from wms.physics.config import PhysicsConfig
     from wms.physics.lc2013 import lane_change
 
-    root, world, support, idm, out = job
+    root, world, support, idm, out, reuse = job
     torch.set_num_threads(1)
+    candidates = len(support)
+    previous, new_columns, prior_columns = None, np.arange(candidates), None
+    if reuse is not None:
+        old_support = np.array(json.loads((Path(reuse)/"lc2013_population.json").read_text())["support"])
+        new_columns, prior_columns = reuse_columns(support, old_support)
+        if len(new_columns) == 0:
+            raise ValueError("No new physical profiles: reuse the completed fit directly")
+        with np.load(Path(reuse)/f"observations_{world}.npz", allow_pickle=False) as archive:
+            previous = {key: archive[key] for key in ("vid", "time_s", "source", "actual", "prediction")}
+    active_support = support[new_columns]
     arrays, provenance = read_episode(native_episode(Path(root), world), world)
     t, kin, mask, cav, ids = (arrays[k] for k in
                              ("time_s", "veh_kin", "veh_mask", "is_cav", "vid"))
-    candidates, slots = len(support), kin.shape[1]
+    active_candidates, slots = len(active_support), kin.shape[1]
     physics = PhysicsConfig(sumo_fidelity=True, dt_s=float(t[1]-t[0]))
-    params = {name: torch.as_tensor(support[:, j:j+1]).expand(candidates, slots)
+    params = {name: torch.as_tensor(active_support[:, j:j+1]).expand(active_candidates, slots)
               for j, name in enumerate(LC_NAMES)}
-    params.update({name: torch.full((candidates, slots), idm[name], dtype=torch.float64)
+    params.update({name: torch.full((active_candidates, slots), idm[name], dtype=torch.float64)
                    for name in NAMES})
     memory = None
     chunks = {key: [] for key in ("vid", "time_s", "source", "actual", "prediction")}
@@ -121,10 +149,10 @@ def episode_job(job):
         # future positions/speeds are a conditioning target, not an open-loop test.
         moved = np.array(kin[ti], copy=True)
         moved[:, [0, 4, 5]] = np.asarray(kin[ti+1])[:, [0, 4, 5]]
-        memory = lane_change(torch.as_tensor(moved).expand(candidates, slots, 7),
-            torch.as_tensor(present).expand(candidates, slots), physics,
-            memory=memory, identity=torch.as_tensor(np.array(ids[ti], copy=True)).expand(candidates, slots),
-            decision_mask=torch.as_tensor(eligible).expand(candidates, slots), driver_params=params)
+        memory = lane_change(torch.as_tensor(moved).expand(active_candidates, slots, 7),
+            torch.as_tensor(present).expand(active_candidates, slots), physics,
+            memory=memory, identity=torch.as_tensor(np.array(ids[ti], copy=True)).expand(active_candidates, slots),
+            decision_mask=torch.as_tensor(eligible).expand(active_candidates, slots), driver_params=params)
         selected = np.flatnonzero(eligible & (destination != 2) | (eligible & (source == destination)))
         predicted = decision_labels(source[None, selected], memory["next_lane"].numpy()[:, selected]).T
         actual = decision_labels(source[selected], destination[selected])
@@ -138,6 +166,8 @@ def episode_job(job):
                            "position_m": float(kin[ti+1,j,0]), "from_lane": int(source[j]),
                            "to_lane": int(destination[j])})
     record = {key: np.concatenate(value) for key, value in chunks.items()}
+    if previous is not None:
+        record = merge_predictions(record, previous, prior_columns, new_columns)
     keys = np.unique(record["vid"][record["time_s"] <= 300])
     # Validation entrants use population; retain them in records, not posteriors.
     all_keys = np.unique(record["vid"])
@@ -189,6 +219,8 @@ def main():
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--sobol-power", type=int, default=6)
     parser.add_argument("--worlds", type=int, nargs="+", default=list(FIT_WORLDS))
+    parser.add_argument("--support-json", type=Path, help="Explicit source-domain numerical search support")
+    parser.add_argument("--reuse", type=Path, help="Completed identical-source/IDM decision cache")
     args = parser.parse_args()
     if not args.worlds or len(set(args.worlds)) != len(args.worlds) or not set(args.worlds) <= set(FIT_WORLDS):
         raise ValueError("Unique native FIT worlds required before any data read")
@@ -201,7 +233,24 @@ def main():
         raise ValueError("Expected fitted pooled IDM parameters")
     points = qmc.Sobol(5, scramble=True, seed=20261031).random_base2(args.sobol_power)
     support = np.concatenate((np.ones((1, 5)), np.exp(4*points-2)))
-    jobs = [(str(args.root), w, support, pooled["parameters"], str(args.out)) for w in args.worlds]
+    if args.support_json is not None:
+        support = np.array(json.loads(args.support_json.read_text())["support"], dtype=float)
+        if (support.ndim != 2 or support.shape[1] != 5 or not np.isfinite(support).all()
+                or not (support[:,:4] >= 0).all() or not (support[:,4] > 0).all()
+                or not (support[:,1] <= 1).all()):
+            raise ValueError("Invalid source-domain physical LC support")
+        if len(np.unique(support,axis=0)) != len(support):
+            raise ValueError("Duplicate numerical physical profiles")
+    if args.reuse is not None:
+        prior = json.loads((args.reuse/"provenance.json").read_text())
+        for name in ("lc2013", "lc2013_geometry", "config"):
+            path = Path(__import__("wms.physics."+name, fromlist=["__file__"]).__file__)
+            if hashlib.sha256(path.read_bytes()).hexdigest() != prior["physical_source_sha256"][path.name]:
+                raise ValueError("Cached physical source mismatch")
+        if hashlib.sha256(args.idm_pooled.read_bytes()).hexdigest() != prior["idm_pooled_sha256"]:
+            raise ValueError("Cached IDM candidate mismatch")
+    jobs = [(str(args.root), w, support, pooled["parameters"], str(args.out),
+             str(args.reuse) if args.reuse is not None else None) for w in args.worlds]
     results = []
     with ProcessPoolExecutor(max_workers=args.workers) as executor:
         results.extend(executor.map(episode_job, jobs, chunksize=1))
@@ -254,6 +303,7 @@ def main():
             "decision_labels": ["stay", "target_left_0", "target_right_1"],
             "probabilities": emission.tolist(), "note": "Discrepancy likelihood only; NEVER runtime event noise"},
         "likelihood_trace": trace, "final_log_likelihood": ll,
+        "requires_boundary_aware_lc_reader": bool((support == 0).any()),
         "idm_parameters": pooled["parameters"], "known_limits": ["finite support search",
             "highway LC2013 subset", "left-censored wishes at240", "stepwise discrepancy independence",
             "teacher-forced geometry", "internal empirical Bayes, not independent calibration"]}
@@ -302,6 +352,8 @@ def main():
     write_json(args.out/"lane_events.json", {"events": [e for r in results for e in r[4]]})
     write_json(args.out/"provenance.json", {"sources": [r[5] for r in results], "physical_source_sha256": source_sha,
         "estimator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "reused_decisions": str(args.reuse) if args.reuse is not None else None,
+        "support_sha256": hashlib.sha256(args.support_json.read_bytes()).hexdigest() if args.support_json else None,
         "idm_pooled_sha256": hashlib.sha256(args.idm_pooled.read_bytes()).hexdigest()})
     print(json.dumps(report), flush=True)
 

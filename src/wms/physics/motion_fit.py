@@ -279,7 +279,8 @@ def draw_lane_parameters(population_path: str | Path, posterior_path: str | Path
     probabilities = torch.tensor(candidate.get("weights", pop["weights"]), dtype=torch.float64)
     support = torch.tensor(pop["support"], dtype=torch.float64)
     if (support.shape != (len(probabilities), len(LC_ORDER))
-            or not torch.isfinite(support).all() or not (support > 0).all()
+            or not torch.isfinite(support).all() or not (support[:, :4] >= 0).all()
+            or not (support[:, 4] > 0).all()
             or not torch.isfinite(probabilities).all() or not (probabilities >= 0).all()
             or not probabilities.sum() > 0):
         raise ValueError("Invalid LC physical-fit distribution")
