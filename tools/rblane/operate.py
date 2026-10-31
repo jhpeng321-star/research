@@ -1,6 +1,6 @@
 """Stage our code and manage one owned CPU diagnostic; never signals processes.
 
-Usage: python -m tools.rblane.operate smoke|panel|status|collect
+Usage: python -m tools.rblane.operate smoke|panel|panel2|status|collect
 Runs are new immutable directories; completed smoke/panel cannot be redispatched.
 """
 from __future__ import annotations
@@ -49,6 +49,11 @@ def launch(kind):
                 archive.write(path, path.relative_to(ROOT).as_posix())
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
+    reuse = None
+    if kind == 'panel2':
+        first = json.loads((RECEIPTS / 'PANEL_COMPLETE.json').read_text())
+        assert first['complete'] and not first['alive']
+        reuse = first['root'] + '/results'
     preflight = remote(f'''import os,pathlib,json
 p=pathlib.Path({run!r})
 assert p.parent.is_dir() and not p.exists(), 'run exists: do not duplicate'
@@ -72,6 +77,7 @@ env=dict(os.environ,PYTHONPATH=str(p/'src'),CUDA_VISIBLE_DEVICES='',
          OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 cmd=['/usr/bin/nice','-n','19',{PYTHON!r},'-B','-m','tools.rblane.validate',
      '--out',str(p/'results')]+(['--smoke'] if {kind=='smoke'!r} else [])
+if {reuse!r} is not None: cmd += ['--reuse-mobil-from',{reuse!r}]
 with (p/'run.log').open('x') as log:
     child=subprocess.Popen(cmd,cwd=p,env=env,stdin=subprocess.DEVNULL,
        stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
@@ -123,10 +129,10 @@ print(json.dumps(dict(alive=alive,complete=summary.exists(),
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('command', choices=('smoke','panel','status','collect'))
-    ap.add_argument('--kind', choices=('smoke','panel'), default='smoke')
+    ap.add_argument('command', choices=('smoke','panel','panel2','status','collect'))
+    ap.add_argument('--kind', choices=('smoke','panel','panel2'), default='smoke')
     args = ap.parse_args()
-    if args.command in ('smoke','panel'):
+    if args.command in ('smoke','panel','panel2'):
         launch(args.command)
     else:
         status(args.kind, args.command=='collect')

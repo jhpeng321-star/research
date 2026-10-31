@@ -38,3 +38,9 @@ The completed 969400/native smoke uses the original greedy window matcher;
 the full panel uses the CPU-tested maximum-cardinality scorer. Model physics
 and settings are unchanged after smoke. No tape outcomes were used to tune
 parameters. A junction-zero-onehot bug was corrected before the smoke.
+
+The first full panel is retained unchanged. A source-completeness amendment
+adds SUMO's right-overtaking prohibition and its next-step speed advice.
+`operate.py panel2` evaluates that revised LC2013 candidate and **reuses** the
+already-completed MOBIL baseline. Input SHA256s, physics, horizon and cohort
+must match exactly; no completed MOBIL inference is repeated. No tuning.

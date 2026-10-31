@@ -43,7 +43,28 @@ Only matching named inferred parameters map; all other LC parameters default.
 `lcImpatience` does not change this LC2013 safety formula.
 
 Explicit parity gaps: synchronous instead of downstream-first serial messages;
-leader overtake/fall-behind/full follower negotiation; right-overtake prohibition;
+leader overtake/fall-behind/full follower negotiation;
 arbitrary route best-lane metadata unless supplied by the caller; nonlegacy
 keep-right follower adjustment; speed-gain lookahead extension (default zero);
 nonhighway special cases. This is a testable highway subset, not full parity.
+
+## Source completeness amendment (after preserving first full panel)
+The SUMO default right-overtaking prohibition is now ported: positive left wish
+and next-step own speed advice from LC2013.cpp:1335-1356 and
+AbstractLCM.cpp:1119-1133; keep-right's cannot-pass-current-leader check from
+LC2013.cpp:1748-1752. Congestion semantics are **SUMO's** existing physics rule,
+`v < 60/3.6 OR laneSpeedLimit < 60.1/3.6` (MSVehicle.cpp:1494-1495), not an
+invented behavioural cutoff. Default global overtaking-right=false; explicit
+pure-module override available. Emergency classes and stochastic
+lcOvertakeRight>0 are outside this default-population subset.
+
+Extra public sources read only, downloaded into NEW EMPTY directories:
+- `E:/Temp/opencode/sumo-1.27.1-lane-extra/MSVehicle.h`, SHA256
+  `9e9f7b35cfb959dd9c12f01f0d651ab54dcb214f000bb9c54feb4b75ca33fee9`
+- same directory `StdDefs.h`, SHA256
+  `a44924b7205c63675e0eca79a3ca4591146941dd897b939ffa2be7100ee58243`
+- `E:/Temp/opencode/sumo-1.27.1-lane-vehicle/MSVehicle.cpp`, SHA256
+  `142eef6ef8dd16d6ece698f73ae2d34837fbb16f1ca6677629dc7e7fee5d966c`.
+No downloaded code executed. No parameter fitting/selection from tape outcomes.
+Revised-candidate panel reuses the completed MOBIL scores after exact input,
+physics, cohort and horizon checks; the original candidate results are retained.

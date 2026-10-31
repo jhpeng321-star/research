@@ -108,8 +108,10 @@ def compress_proposals(events, dt):
 
 
 @torch.no_grad()
-def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float):
+def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
+    if reuse_mobil is not None and reuse_mobil['input_sha256'] != hashes:
+        raise ValueError('MOBIL reuse requires exact observable input hashes')
     meta = json.loads((path / 'episode.json').read_text())
     if not 969400 <= int(meta['seed']) <= 969431:
         raise ValueError('not a permitted FIT world')
@@ -148,8 +150,9 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float):
         memory = lane_change(k, m, physics, memory=memory, identity=identity, decision_mask=d)
         if times[t] < t0:
             continue
-        choices = dict(lc2013=memory['next_lane'][0].numpy(),
-                       mobil=mobil_merge_logits(k, m, physics)[0].argmax(-1).numpy())
+        choices = dict(lc2013=memory['next_lane'][0].numpy())
+        if reuse_mobil is None:
+            choices['mobil'] = mobil_merge_logits(k, m, physics)[0].argmax(-1).numpy()
         source = kin[t, :, 1:4].argmax(-1)
         destination = kin[t + 1, :, 1:4].argmax(-1)
         for j in np.flatnonzero(eligible):
@@ -169,6 +172,11 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float):
                     proposals[name].append(event(choice[j]))
     scores = {}
     for name, events in proposals.items():
+        if name == 'mobil' and reuse_mobil is not None:
+            if reuse_mobil['recorded'] != len(actual) or reuse_mobil['exposure'] != dict(exposure):
+                raise ValueError('MOBIL reuse cohort mismatch')
+            scores[name] = reuse_mobil['scores']['mobil']
+            continue
         runs = compress_proposals(events, physics.dt_s)
         scores[name] = dict(proposals=len(events), positive_runs=len(runs),
             exact=match_events(actual, events, 0),
@@ -214,6 +222,7 @@ def main():
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--horizon-s', type=float, default=60)
     ap.add_argument('--smoke', action='store_true')
+    ap.add_argument('--reuse-mobil-from', type=Path)
     args = ap.parse_args()
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
@@ -223,6 +232,12 @@ def main():
         raise ValueError('output must be NEW with existing parent')
     args.out.mkdir()
     physics = PhysicsConfig(sumo_fidelity=True, open_road=True)
+    baseline = None
+    if args.reuse_mobil_from is not None:
+        baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
+        if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 160
+                or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s):
+            raise ValueError('MOBIL reuse panel/settings mismatch')
     paths = []
     # Never glob the full world range or open a global manifest/split.
     for world in range(969400, 969432):
@@ -236,7 +251,9 @@ def main():
     start = time.time()
     rows = []
     for path in paths:
-        row = episode(path, args.views, physics, args.horizon_s)
+        reuse = (json.loads((args.reuse_mobil_from / (path.name + '.json')).read_text())
+                 if baseline is not None else None)
+        row = episode(path, args.views, physics, args.horizon_s, reuse)
         rows.append(row)
         (args.out / (path.name + '.json')).write_text(json.dumps(row, indent=2) + '\n')
         print(json.dumps(dict(completed=len(rows), total=len(paths), episode=path.name,
@@ -245,6 +262,7 @@ def main():
                   horizon_s=args.horizon_s, prehistory_s=60, settings='population only',
                   snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
                   cohort='HDV, same identity, normal road in both adjacent frames',
+                  mobil_reuse=(str(args.reuse_mobil_from) if baseline is not None else None),
                   physics=asdict(physics), aggregate=aggregate(rows),
                   by_arm={arm: aggregate([r for r in rows if r['arm'] == arm]) for arm in ARMS
                           if any(r['arm'] == arm for r in rows)},

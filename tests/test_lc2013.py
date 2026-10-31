@@ -136,3 +136,17 @@ def test_connector_is_not_a_lane_zero_obstacle_or_decider():
     assert out['next_lane'][0, 0] == 1
     assert out['next_lane'][0, 1] == -1
     assert not out['lc2013_present'][0, 1]
+
+
+def test_uncongested_right_overtake_prevention_emits_advice_and_left_wish():
+    k, mask = scene([(0, 1, 30), (100, 0, 20)])
+    p = PhysicsConfig()
+    out = lane_change(k, mask, p)
+    assert out['lc2013_own_has_advice'][0, 0]
+    assert out['lc2013_own_advice_accel'][0, 0] < 0
+    assert out['lc2013_left'][0, 0] > 0
+    allowed = lane_change(k, mask, p, allow_overtaking_right=True)
+    assert not allowed['lc2013_own_has_advice'][0, 0]
+    assert allowed['lc2013_left'][0, 0] == 0
+    k[0, 0, 4] = 60 / 3.6 - .01
+    assert not lane_change(k, mask, p)['lc2013_own_has_advice'][0, 0]

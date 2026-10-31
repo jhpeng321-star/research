@@ -46,6 +46,14 @@ def forward_output(model, state, kin, present, deciders, params, result):
         # Zero advice means no message, not a request to suppress acceleration.
         result["accel_mps2"] = torch.where(valid & (advice < 0), accel,
                                              result["accel_mps2"])
+        if "lc2013_own_has_advice" in state:
+            own = state["lc2013_own_advice_accel"].to(advice)
+            a = (torch.full_like(advice, model.physics.idm()[0]) if params is None
+                 else params["accel"].to(advice))
+            valid = (same & result["hdv_mask"] & state["lc2013_own_has_advice"].bool()
+                     & torch.isfinite(own) & (own >= -b) & (own <= a))
+            result["accel_mps2"] = torch.where(valid,
+                torch.minimum(result["accel_mps2"], own), result["accel_mps2"])
         result["accel_delta_mps2"] = result["accel_mps2"] - result["physics_accel_mps2"]
 
 

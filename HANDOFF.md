@@ -1,6 +1,6 @@
 # S-RB-LANE handoff
 
-Branch `c4/rb-lane`, base `f0db3c82`. Owner authorization: REGISTRATION.md:5682,
+Branch `c4/rb-lane`, base `f0db3c82`. Owner authorization: REGISTRATION.md:5683,
 WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
 
 ## Exists
@@ -13,7 +13,7 @@ WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
   `max(0, v*tau + v*(v-v_leader)/(2*sqrt(a*b)))` (IDM.cpp:218-220).
 - cpuQ observable views reachable; only FIT worlds 969400–969431 permitted.
   Read only `episode.json`, `time_s.npy`, `veh_kin.npy`, `veh_mask.npy`,
-  `is_cav.npy`, `vid.npy`. Local CPU busy (91%); use cpuQ, one thread per worker.
+  `is_cav.npy`, `vid.npy`. cpuQ nice19/single-thread, CUDA hidden.
 
 ## Integration contract
 - Pure tensor `lane_change` in `src/wms/physics/lc2013.py`, no learned weights.
@@ -38,26 +38,27 @@ WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
 
 ## Tests/results/gaps
 56 CPU tests passed locally (one CPU thread, 22.64s), including 15 new tests
-plus existing lane_rule/wmlane/native_lane suites. Tape validation pending.
+plus existing lane_rule/wmlane/native_lane suites.
 Numeric secure-gap, discrete braking inverse,
 strategic ramp, overlap/two-sided safety, assertive, persistent speed-gain,
 5s keep-right, cooperative clearing, identity/absence reset, invalid settings,
 default-off/spec checks, lane-logit ownership, fixed CAV lanes and exact chunk parity.
 `tools/rblane/` validator/owned-dispatch tools added: 160 FIT episodes, 60s
 causal wish warmup then 60s teacher-forced scoring, paired MOBIL. Smoke finished
-on cpuQ (own PID180907 exited): LC exact7/30 vs MOBIL3/30; full panel pending.
-19 current LC/model/scorer tests pass; empty-onehot connectors are excluded.
+on cpuQ (own PID180907 exited): LC exact7/30 vs MOBIL3/30.
+20 current LC/model/scorer tests pass; empty-onehot connectors are excluded.
 First full FIT panel completed/exited (own cpuQ187712, 187.56s): LC exact931/3255
 (28.60%) vs paired MOBIL244/3255 (7.50%); positive-run ±2s matches711/3255
 (21.84%), precision15.12%, timingMAE0.401s/positionMAE5.531m. Positive-step
 precision only2.32%; this is NOT distributional qualification. Receipts:
 `tools/rblane/receipts/panel_results/`. Historical1.4% is a different panel.
-Next source-only completeness step closes right-overtaking prevention from
+Source-only completeness step closes right-overtaking prevention from
 MSVehicle.cpp:1494-1495 + AbstractLCM.cpp:1119-1133 + LC2013.cpp:1335-1356.
 Public extra source read only in two NEW empty temp directories; never executed.
+Revised panel (panel2) pending, completed MOBIL baseline reused after hash checks.
 Source scope: highway, sublane OFF. **Known parity gaps:** synchronous messages
 instead of SUMO downstream-first serial changes; full leader-overtake/fall-behind
-negotiation and right-overtaking prevention not ported; no roundabouts,
+negotiation not ported; no roundabouts,
 pedestrians, opposite-direction driving or TraCI wishes. Optional route
 distances/offset/queued occupation accepted; defaults use scenario ramp end and
-continuing mainline. No SUMO or training launched, no tape result yet.
+continuing mainline. No SUMO or training launched.

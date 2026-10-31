@@ -65,3 +65,18 @@ def test_teacher_cav_lane_is_preserved():
     teacher = torch.tensor([[[42.5, 2., 5., 0.]]])
     out = m.step(s, cav_teacher=teacher)
     assert out['next_lane'].item() == 2
+
+
+@torch.no_grad()
+def test_right_overtake_advice_is_carried_into_next_longitudinal_update():
+    m = model()
+    s = dict(s_m=torch.tensor([[0., 100.]]), v_mps=torch.tensor([[30., 20.]]),
+             a_mps2=torch.zeros(1, 2), lane=torch.tensor([[1, 0]]),
+             length_m=torch.full((1, 2), 5.), present=torch.ones(1, 2).bool(),
+             is_cav=torch.zeros(1, 2).bool(), vehicle_id=torch.tensor([[11, 12]]))
+    first = m(s)
+    assert first['lc2013_own_has_advice'][0, 0]
+    from wms.physics.lc2013 import STATE_KEYS
+    carried = {**s, **{key: first[key] for key in STATE_KEYS if key in first}}
+    second = m(carried)
+    assert second['accel_mps2'][0, 0] <= first['lc2013_own_advice_accel'][0, 0] + 1e-6
