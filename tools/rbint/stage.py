@@ -11,6 +11,7 @@ from tools.rbint.remote import ssh
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('host', choices=('gpuA', 'gpuR', 'cpuQ'))
+    p.add_argument('--endpoint-only', action='store_true', help='analysis helpers only; reuse original WM2 model/runtime')
     args = p.parse_args()
     root = Path(__file__).resolve().parents[2]
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
@@ -25,6 +26,8 @@ def main():
               'tools/rbfit', 'tests/unit/test_rbfit.py', 'tests/unit/test_rbfit_directional.py',
               'tests/test_rbint_merge_fast.py', 'tests/test_rbint_lane_fast.py',
               'tests/test_rbint_motion_posterior.py', 'tests/test_rbint_endpoints.py']
+    if args.endpoint_only:
+        paths = ['tools/rbint', 'tools/rbeval']
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)
     archive_sha = hashlib.sha256(archive).hexdigest()
     parent = '/home/ubuntu/rbint20261101' if args.host == 'cpuQ' else '/root/rbeval20261031'
@@ -57,7 +60,7 @@ with tarfile.open(fileobj=io.BytesIO(data)) as tar:
  for m in tar.getmembers():
   assert not m.issym() and not m.islnk() and '..' not in Path(m.name).parts and not Path(m.name).is_absolute()
  tar.extractall(dest,filter='data')
-receipt=dict(host={args.host!r},commit={sha!r},archive_sha256={archive_sha!r},runtime=str(dest))
+receipt=dict(host={args.host!r},commit={sha!r},archive_sha256={archive_sha!r},runtime=str(dest),endpoint_only={args.endpoint_only!r})
 with (dest/'INT_STAGE.json').open('x') as f: json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))'''
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', args.host,
