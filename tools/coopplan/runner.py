@@ -21,12 +21,13 @@ def learned_proposer(binding):
         return None
     import torch
     from tools.coopfree.policy import SetPointPolicy, encode, decode
+    from tools.coopbandit.protocol import group
     model = SetPointPolicy()
     payload = torch.load(binding['free_checkpoint'],map_location='cpu',weights_only=True)
     model.load_state_dict(payload['policy'])
     model.eval()
     def propose(state):
-        context = encode(state.rows,state.commands)
+        context = encode(state.rows,state.commands,members=group(state.rows))
         if len(context['members']) != 2:
             return None
         sample = model.sample(context,None,deterministic=True)

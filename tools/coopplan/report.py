@@ -8,14 +8,15 @@ import numpy as np
 
 from tools.coopbandit.ops import remote
 from .ops import HOSTS, LOCAL
-from .protocol import worlds, digest, budget
+from .protocol import worlds, digest, budget, sha
 
 OUT = LOCAL/'docs/paper_results/coopplan'
 
 
 def fetch(host):
     root = HOSTS[host]['root']
-    return json.loads(remote(host,f'''import pathlib,sys,json,gzip,hashlib
+    return json.loads(remote(host,f'''import pathlib,sys,json,gzip,hashlib,os
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 root=pathlib.Path({root!r});sys.path.insert(0,str(root/'pytools'))
 import numpy as np
 from tools.coopbehav.io import Tape,Vehicle
@@ -32,20 +33,26 @@ def tape(path,seed):
     row[v['vid']]=Vehicle(v['s_m'],v['v_mps'],v['length_m'],v['lane'],v['is_cav'],issued,
        'native' if control=='native_sumo' else control,issued if control=='policy_mean' else None)
    rows.append(row)
- return Tape(np.array(times),rows,dict(seed=seed),coverage=dict(trace_scope='full_observable_fleet'))
+ return Tape(np.array(times),rows,dict(seed=seed),hashes=dict(trace_sha256=hashlib.sha256(path.read_bytes()).hexdigest()),coverage=dict(trace_scope='full_observable_fleet'))
 records=[];hashes={{}};complete=(root/'COMPLETE.json').exists();stopped=(root/'STOP.json').exists()
 for world in read(root/'ALLOCATION.json')['worlds']:
  seed=world['seed'];base=root/'jobs'/f's{{seed}}_mappo'/'RESULT.json';live=root/'jobs'/f's{{seed}}_planner'/'RESULT.json'
  if not base.exists() or not live.exists():continue
  b,p=read(base),read(live)
+ assert b['world']==p['world']==world
  for path in (base,live):hashes[str(path.relative_to(root))]=hashlib.sha256(path.read_bytes()).hexdigest()
  evidence=[]
  for credit in p['credits']:
   key=f's{{seed}}_t{{credit["time_s"]}}';action=credit['action']['id']
   actual=tape(root/'jobs'/(key+'_'+action)/'observable.jsonl.gz',seed)
   reference=tape(root/'jobs'/(key+'_O0')/'observable.jsonl.gz',seed)
-  events=detect(actual,reference,credit['members'],reference_kind='policy_mean_intervention')
-  evidence.append(dict(time_s=credit['time_s'],events=events))
+  detected=detect(actual,reference,credit['members'],reference_kind='policy_mean_intervention')
+  evidence.append(dict(time_s=credit['time_s'],events=detected['events'],coverage=detected['coverage'],actual_hashes=actual.hashes,reference_hashes=reference.hashes))
+  j0=read(root/'jobs'/(key+'_O0')/'RESULT.json')['outcome']['team_delay']
+  jg=read(root/'jobs'/(key+'_'+action)/'RESULT.json')['outcome']['team_delay']
+  individual=[j0-read(root/'jobs'/(key+'_'+action+f'_solo{{i}}')/'RESULT.json')['outcome']['team_delay'] for i in range(2)]
+  credit['D_G']=j0-jg;credit['member_alone_D']=individual
+  assert credit['C_G']==credit['D_G']-sum(individual)
  observational=detect(tape(live.parent/'observable.jsonl.gz',seed))
  records.append(dict(world=world,baseline=b['clocks'],planner=p['clocks'],history=p['history'],
                      credits=p['credits'],causal_behaviours=evidence,observational_behaviours=observational))
@@ -90,6 +97,8 @@ def build(snapshot):
     complete = all(h['complete'] and not h['stopped'] and not h['incomplete'] for h in snapshot)
     if not complete or [r['world'] for r in records] != worlds():
         raise ValueError('full fixed paired panel required; no success report from an incomplete panel')
+    assert {h['design_sha256'] for h in snapshot} == {'53b0edf4ea8e6fc72165691727e923505ed6a805af9c0294efd63f2ab3389a5f'}
+    assert len({digest(h['source_sha256s']) for h in snapshot}) == 1
     assert all(b['prefix_pass'] for h in snapshot for b in h['branches'])
     charged,actual = sum(h['charged'] for h in snapshot),sum(h['actual'] for h in snapshot)
     assert actual == charged and charged <= sum(budget().values())
@@ -117,7 +126,7 @@ def build(snapshot):
             a = e['executed_action']['id'];action_counts[a]=action_counts.get(a,0)+1
     behaviour_counts,causal = {},{}
     for r in records:
-        for event in r['observational_behaviours']:
+        for event in r['observational_behaviours']['events']:
             b=event['behaviour'];behaviour_counts[b]=behaviour_counts.get(b,0)+1
         for group in r['causal_behaviours']:
             for event in group['events']:
@@ -128,7 +137,7 @@ def build(snapshot):
     summary = dict(complete=True,worlds=12,savings=savings,credit=ci([r['C_G'] for r in credits]),
                    credit_positive=sum(r['C_G']>0 for r in credits),credit_sampled=len(credits),
                    executed_actions=action_counts,observational_behaviours=behaviour_counts,
-                   release_supported_behaviours=causal,safety=safety,charged=charged,actual=actual,
+                   sampled_behaviour_evidence=causal,safety=safety,charged=charged,actual=actual,
                    budget_upper=704760,cap=800000,bootstrap=dict(seed=20261101,resamples=10000,unit='whole_world'),
                    exact_prefix_passes=sum(len(h['branches']) for h in snapshot))
     return records,rows,credits,summary
@@ -162,7 +171,39 @@ def figures(rows,credits,summary,dest):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--collect',action='store_true')
+    p.add_argument('--details',action='store_true')
+    p.add_argument('--verify',action='store_true')
     a=p.parse_args()
+    if a.verify:
+        dest=OUT/'final'
+        snapshot=json.loads((dest/'RECEIPTS.json').read_text(encoding='utf-8'))
+        records,rows,credits,summary=build(snapshot)
+        assert summary == json.loads((dest/'SUMMARY.json').read_text(encoding='utf-8'))
+        assert credits == json.loads((dest/'CREDITS.json').read_text(encoding='utf-8'))
+        with (dest/'paired_worlds.csv').open(newline='',encoding='utf-8') as f:
+            csv_rows=list(csv.DictReader(f))
+        assert len(csv_rows)==len(rows)
+        for recorded,derived in zip(csv_rows,rows):
+            assert set(recorded)==set(derived)
+            assert all(float(recorded[k])==v for k,v in derived.items())
+        for r in records:
+            for e in r['history']:
+                d=e['decision'];expected=min(d['eligible'],key=lambda a:(d['expected_delay'][a],a)) if d['eligible'] else 'O0'
+                assert d['selected']==e['executed_action']['id']==expected
+        names=('SUMMARY.json','RECEIPTS.json','CREDITS.json','BEHAVIOURS.json','paired_worlds.csv',
+               'paired_delay.png','cooperation_credit.png')
+        result=dict(pass_=True,worlds=12,decisions=144,exact_prefix_passes=summary['exact_prefix_passes'],
+                    actual_equals_charged=True,source_design_panel_csv_credit_summary_best_action_checks=True,
+                    artifact_sha256={name:sha(dest/name) for name in names})
+        save(dest/'QA.json',result)
+        print(json.dumps(result))
+        return
+    if a.details:
+        credits=json.loads((OUT/'final/CREDITS.json').read_text(encoding='utf-8'))
+        print(json.dumps([dict(seed=c['seed'],time_s=c['time_s'],action=c['action']['id'],
+                               D_G=c['D_G'],C_G=c['C_G'],member_alone_D=c['member_alone_D'])
+                          for c in credits],indent=2))
+        return
     snapshot=[fetch(host) for host in HOSTS]
     if not all(h['complete'] for h in snapshot):
         print(json.dumps([dict(host=h['host'],complete=h['complete'],stopped=h['stopped'],

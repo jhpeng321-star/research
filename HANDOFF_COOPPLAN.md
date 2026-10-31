@@ -35,6 +35,10 @@
   exact sample credits, unchanged detector evidence and figures ONLY after all12 pairs complete.
 - Never retry an existing attempt, clear STOP, change frozen source, refund charges or signal peers.
 - Post-dispatch local WM-payload/test/report additions do not mutate the frozen oracle source.
+- Current local contract suite18/18 PASS, including half-open BIC prehistory bins.
+- Future COOPFREE adapter passed a real frozen-host CPU ABI check with synthetic test weights,
+  a three-CAV input pruned to the frozen nearest-two group, and process/SUMO creation blocked.
+  This is an adapter test, not a learned-policy or rollout-efficacy result.
 
 ## Result interpretation
 - Short horizon is120s, decisions60s at300..960; MAPPO-only tail1020..1200.
@@ -42,3 +46,15 @@
 - Sample first executed group per world, H120: positive `C_G` is superadditive delay saving.
 - `C_G>0` and behaviour counts are separate from actual long-horizon performance improvement.
 - A result report must retain negative/null effects, unsampled worlds and all safety metrics.
+
+## COMPLETE — final public results
+- All12 pairs complete; actual=charged220980sim-s; no STOP/failure/retry/incomplete attempt.
+- Paper report: `docs/paper_results/COOPPLAN.md`; immutable artifacts `docs/paper_results/coopplan/final/`.
+- J600 saving396.280veh-s/world,95%CI[0.894,1128.773]; J9001195.148,CI[-568.178,3724.114].
+- 19 executed group actions,6 first-executed samples; C_G positive2/6 but mean-38.379,CI[-94.759,-1.022].
+- Positive examples are small:983108/t600 +.198734 and983111/t300 +.014360veh-s.
+- One paired-policy-mean-supported yield +18 gap events; no executed O2 wall option.
+- Collisions/teleports0 both arms; braking220→222veh-s, TTC exposure7004.5→6623veh-s.
+- Verdict: functioning predictor/planner + positive short-score result; robust superadditive cooperation NOT established.
+- Frozen dev panel must remain never-fitting; do not select/tune candidates or WM settings from these outcomes.
+- Full final local CPU/analysis suite20/20PASS; rendered figures visually checked.

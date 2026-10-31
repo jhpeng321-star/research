@@ -212,9 +212,36 @@ print(json.dumps(dict(host={host!r},status=results,charged=sum(s['sim_s'] for s 
 ''')
 
 
+def free_cpu(host):
+    """CPU ABI test for the future FREE adapter; no checkpoint fitting or SUMO."""
+    import inspect as introspection
+    from .runner import learned_proposer
+    source = introspection.getsource(learned_proposer)
+    c = HOSTS[host]
+    return remote(host,f'''import sys,os,pathlib,json
+from unittest.mock import patch
+root=pathlib.Path({c['root']!r});os.nice(19)
+os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+sys.path[:0]=[str(root/'pytools')]+{c['deps']!r}
+import torch
+torch.set_num_threads(1)
+from tools.coopfree.policy import SetPointPolicy
+from tools.coopplan.predictor import ObservableState
+from tools.coopplan.test_cpu import ROWS
+namespace={{}};exec({source!r},namespace)
+rows=tuple(ROWS)+(dict(vid='far',s_m=-90.,v_mps=20.,lane=0,is_cav=True),)
+state=ObservableState(300,rows,'CPU-only',commands={{'a':0.,'b':0.,'far':0.}})
+with patch('subprocess.Popen',side_effect=AssertionError('SUMO disabled')),patch('torch.load',return_value=dict(policy=SetPointPolicy().state_dict())):
+ proposal=namespace['learned_proposer'](dict(free_checkpoint='CPU-only-synthetic-weights'))(state)
+assert proposal['id']=='FREE' and set(proposal['members'])=={{'a','b'}}
+assert set(proposal['targets'])=={{'a','b'}} and proposal['window'] in (10,20,30)
+print(json.dumps(dict(host={host!r},free_adapter_abi=True,nearest_two_pruning=True,sim_s=0,synthetic_weights_only=True)))
+''')
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode',choices=('manifest','inspect','audit','stage','prepare','cpu','mechanics','admit','launch','status'))
+    p.add_argument('mode',choices=('manifest','inspect','audit','stage','prepare','cpu','free_cpu','mechanics','admit','launch','status'))
     p.add_argument('--host',choices=tuple(HOSTS),default='cpuQ')
     a = p.parse_args()
     if a.mode == 'mechanics':print(launch(a.host,True))
