@@ -11,6 +11,22 @@ from .storage import write
 MIRROR=EVIDENCE/'shared_v10_panel'
 
 
+def actual_gpu_accounting(current_finish):
+    """Sum terminal allocation walls, retaining ceil/guard admission separately."""
+    prior=json.loads((EVIDENCE/'FINAL_RECONCILIATION.json').read_text())
+    v7=json.loads((EVIDENCE/'V7_INTERRUPTION_AUDIT.json').read_text())
+    gpu_a=json.loads((EVIDENCE/'V9_STAGE.json').read_text())['gpuA_finish']
+    v9=json.loads((EVIDENCE/'V9_FINAL_AUDIT.json').read_text())['gpuR']
+    segments=dict(pre_v7=prior['gpu_allocated_wall_s_including_loading_validation_idle']['total'])
+    for arm in ('wm','bb'):
+        segments['v7_'+arm]=v7['gpuR']['arms'][arm]['GPU_FINISHED.json']['elapsed_s']
+        segments['gpuA_'+arm]=gpu_a[arm]['elapsed_s']
+        segments['v9_'+arm]=v9[arm]['elapsed_s']
+    segments['shared_v10']=current_finish['elapsed_s']
+    return dict(segments_s=segments,total_s=sum(segments.values()),
+                conservative_total_s=current_finish['cumulative_gpu_s'])
+
+
 def collect():
     data=ssh('cpuQ',f'''import json,time
 from pathlib import Path
@@ -69,6 +85,9 @@ print(json.dumps(out))
         registered_total_sim_s=binding['total_sim_s'],gpu=gpu,unix=data['unix'])
     if summary['all_cpu_owned_absent'] and charged!=actual:raise ValueError('terminal actual/charged mismatch')
     if 'GPU_FINISHED.json' in gpu and gpu['GPU_FINISHED.json']['cumulative_gpu_s']>14400:raise ValueError('owner GPU cap exceeded')
+    if 'GPU_FINISHED.json' in gpu:
+        summary['actual_gpu_accounting']=actual_gpu_accounting(gpu['GPU_FINISHED.json'])
+        write(EVIDENCE/'GPU_ACTUAL_SEGMENTS.json',summary['actual_gpu_accounting'])
     write(EVIDENCE/'V10_COLLECTION.json',summary)
     print(json.dumps(summary,indent=2))
     return summary
@@ -81,6 +100,7 @@ def report():
         raise ValueError('terminal report requires closed owned jobs')
     target=Path('docs/paper_results/C1SWITCH.md')
     gpu=summary['gpu']['GPU_FINISHED.json']['cumulative_gpu_s']
+    actual_gpu=summary.get('actual_gpu_accounting',{}).get('total_s',gpu)
     gpu_stop=summary['gpu'].get('rpc/wm/STOP',summary['gpu'].get('rpc/bb/STOP',{})).get('reason')
     common=[
         '# S-C1SWITCH — controller-switching experiment',
@@ -102,7 +122,7 @@ def report():
         f'- Final charged = closed actual: {summary["charged_sim_s"]:,.0f} sim-s. Registered complete-recovery projection499680; owner cap500000.',
         f'- Retained {summary["complete_episodes"]} fully evaluated episodes, {summary["complete_physics"]} complete episode-physics runs, {summary["complete_branches"]} completed full-rerun branches. Complete physics without branches is retained and never rerun.',
         '- All47010 Step0 sim-s,12450 superseded original WM canary sim-s and17820 abandoned prior-prefix sim-s remain charged. Any terminal incomplete shared-v10 physics also remains charged.',
-        f'- Cumulative conservative GPU allocation wall: {gpu:,.6f}s ({gpu/3600:.6f}h), including loading, parity validation, idle and interrupted allocations; owner cap14400s.',
+        f'- Actual cumulative GPU allocation wall: {actual_gpu:,.6f}s ({actual_gpu/3600:.6f}h), including loading, parity validation, idle and interrupted allocations. Conservative admission debit: {gpu:,.6f}s ({gpu/3600:.6f}h); owner cap14400s. Exact phase totals: tools/c1switch/evidence/GPU_ACTUAL_SEGMENTS.json.',
         '- Every original v4–v7 source, STOP, schedule and ledger remains preserved. Initial 10 completed episodes +231 branches were imported once; subsequent complete physics/forecasts reused exactly.',
         '',
         '## Engineering gates and interruption history',
@@ -132,7 +152,7 @@ def report():
             '', '## Receipts',
             'tools/c1switch/evidence/V10_COLLECTION.json, V10_PROGRESS.json, V10_PLAN.json, V10_STAGE.json, V10_CPU.json and shared_v10_panel/ contain the terminal accounting and retained scientific receipts. Historical V7_INTERRUPTION_AUDIT.json/V9_FINAL_AUDIT.json preserve preceding interruptions.']
     target.write_text('\n'.join(common)+'\n',encoding='utf-8')
-    print(json.dumps(dict(report=str(target),complete=complete,charged_sim_s=summary['charged_sim_s'],gpu_s=gpu),indent=2))
+    print(json.dumps(dict(report=str(target),complete=complete,charged_sim_s=summary['charged_sim_s'],actual_gpu_s=actual_gpu,conservative_gpu_s=gpu),indent=2))
 
 
 if __name__=='__main__':

@@ -51,3 +51,10 @@ def test_gpu_stop_closes_cpu_waiters_without_overwriting_first_cause(tmp_path,mo
     transport.markers()
     assert json.loads((cpu.parent/'STOP').read_text())['reason']=='first causal receipt'
     assert all(json.loads((cpu/a/'STOP').read_text())['reason']=='combined cap' for a in ('wm','bb'))
+
+
+def test_actual_gpu_segments_keep_every_phase_without_ceil_refund():
+    totals=finish.actual_gpu_accounting(dict(elapsed_s=0,cumulative_gpu_s=10279.222073864192))
+    assert totals['total_s']==pytest.approx(10265.216253813356,abs=1e-8)
+    assert totals['conservative_total_s']-totals['total_s']==pytest.approx(14.005820050836,abs=1e-8)
+    assert len(totals['segments_s'])==8
