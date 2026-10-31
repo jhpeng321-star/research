@@ -1,14 +1,14 @@
 {
-  "unix": 1793479948.1644733,
+  "unix": 1793481148.1652765,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793479948.4560058,
+      "unix": 1793481148.295677,
       "host": "cpuQ",
       "load": [
-        17.56689453125,
-        17.1904296875,
-        17.02099609375
+        18.59423828125,
+        17.60888671875,
+        17.2607421875
       ],
       "cpu": {
         "cpu": {
@@ -37,24 +37,24 @@
           },
           "complete": false,
           "stop": null,
-          "episodes": 2,
-          "decisions": 106,
-          "closed_jobs": 2,
-          "closed_actual_sim_s": 2400.0,
-          "charged_sim_s": 3920,
-          "ledger_sha256": "31f6ffae160b29baebc03cc5f35eec82a7923efb41fe89bf6b06263e1086cbd6",
+          "episodes": 3,
+          "decisions": 118,
+          "closed_jobs": 3,
+          "closed_actual_sim_s": 3600.0,
+          "charged_sim_s": 4760,
+          "ledger_sha256": "190dc4f252e790a7c054b7d32de4b9728b204f2e91eef459b4b49ff62f9220ca",
           "no_progress_ticks": 0
         }
       },
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793479949.3718762,
+      "unix": 1793481149.1935425,
       "host": "gpuR",
       "load": [
-        44.98974609375,
-        33.666015625,
-        26.04052734375
+        15.23095703125,
+        17.5595703125,
+        20.4091796875
       ],
       "cpu": {
         "cpu": {
@@ -84,11 +84,11 @@
           "complete": false,
           "stop": null,
           "episodes": 1,
-          "decisions": 51,
+          "decisions": 57,
           "closed_jobs": 1,
           "closed_actual_sim_s": 1200.0,
-          "charged_sim_s": 1920,
-          "ledger_sha256": "7062a12dcff7cb2a622d49fd96a249adfe9e0e159e17143b6686647c76b3aea9",
+          "charged_sim_s": 2040,
+          "ledger_sha256": "a6feb5eed03023c484a5c1c24e8d0cca77db6627552ddee151b116d06505b7ca",
           "no_progress_ticks": 0
         }
       },
@@ -110,9 +110,9 @@
           "finished": null,
           "stop": null,
           "ready": true,
-          "requests": 84,
-          "results": 83,
-          "elapsed_wall_s": 9770.12371134758
+          "requests": 96,
+          "results": 94,
+          "elapsed_wall_s": 10969.945694208145
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -121,12 +121,12 @@
       }
     },
     "gpuA": {
-      "unix": 1793479950.1597922,
+      "unix": 1793481150.0408623,
       "host": "gpuA",
       "load": [
-        16.5,
-        16.52978515625,
-        16.423828125
+        14.4091796875,
+        14.6318359375,
+        14.95166015625
       ],
       "cpu": {},
       "gpu": {
@@ -147,9 +147,9 @@
           "finished": null,
           "stop": null,
           "ready": true,
-          "requests": 80,
-          "results": 78,
-          "elapsed_wall_s": 9775.892483234406
+          "requests": 86,
+          "results": 85,
+          "elapsed_wall_s": 10975.773581027985
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -160,11 +160,11 @@
   },
   "alerts": [],
   "relay": {
-    "unix": 1793479936.1586227,
+    "unix": 1793481150.3133247,
     "cpus": {
       "cpuQ": {
         "stop": null,
-        "episodes": 2,
+        "episodes": 3,
         "expected": 12,
         "complete": false
       },
@@ -188,15 +188,15 @@
     "transferred": 0
   },
   "bb_wait": {
-    "unix": 1793479946.5472267,
+    "unix": 1793480254.8111982,
     "states": {
       "gpuA": {
         "wm_finished": false,
-        "free_mib": 40183
+        "free_mib": 41015
       },
       "gpuR": {
         "wm_finished": false,
-        "free_mib": 16726
+        "free_mib": 11570
       }
     }
   },
@@ -210,8 +210,8 @@
     },
     "43404": {
       "pid": 43404,
-      "state": "LIVE",
-      "exit_code": 259
+      "state": "EXITED",
+      "error": 87
     }
   },
   "latest_task_registration": [
