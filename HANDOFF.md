@@ -22,8 +22,8 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
   newer FULL-v3 removes that dependence. Never redispatch either source.
 - A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.
 - C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes
-  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. Canary842915 live06:40,
-  0tasks; do not redispatch. Design `docs/rbint/C2_HANDOVER_DESIGN.md`;36CPU PASS.
+  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;
+  LIVE843902/843903/843904+monitor843928; no redispatch. `docs/rbint/C2_LIVE_0645.md`.
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
