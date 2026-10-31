@@ -1,0 +1,94 @@
+{
+ "ckpt": "E:/Temp/opencode/pilotdiag/gpuA_cont/policy_000193.pt",
+ "start": [
+  "w963625m1900p10t300__generic_random",
+  2240
+ ],
+ "deterministic": false,
+ "futures": 8,
+ "normalize_steps": true,
+ "runs": [
+  {
+   "horizon_s": 3,
+   "rollout_s": 18.0,
+   "backward_s": 29.5,
+   "dense_credit_veh_s": -3.7612807750701904,
+   "dense_loss": -0.00148576230276376,
+   "grad_norm_total": 1.4583967906390167,
+   "row_credit_veh_s": [
+    -0.08393510431051254,
+    0.0,
+    -0.0,
+    -0.0,
+    -3.6773457527160645,
+    -0.0
+   ],
+   "row_coefficients": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    18.799999237060547,
+    0.0
+   ],
+   "row_kind": [
+    0,
+    1,
+    2,
+    2,
+    3,
+    5
+   ],
+   "row_start": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "state_cotangent": {
+    "finite": true,
+    "max_norm": 1.9879745152476112,
+    "peak_step": 4,
+    "top_steps": [
+     {
+      "step": 4,
+      "norm": 1.9879745152476112
+     },
+     {
+      "step": 2,
+      "norm": 1.6670065338164344
+     },
+     {
+      "step": 1,
+      "norm": 1.6588933261511574
+     },
+     {
+      "step": 3,
+      "norm": 1.4441338338465959
+     },
+     {
+      "step": 5,
+      "norm": 0.0009466799357735259
+     }
+    ],
+    "row_max_norms": [
+     0.10603838398230826,
+     0.0,
+     0.0,
+     0.0,
+     1.9851444618456349,
+     0.0
+    ]
+   },
+   "residual_stats": {
+    "count": 240,
+    "mean": -0.1041160523891449,
+    "std": 0.08659645169973373,
+    "min": -0.23528526723384857,
+    "frac_negative": 0.9333333373069763
+   }
+  }
+ ]
+}
