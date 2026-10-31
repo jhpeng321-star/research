@@ -1,0 +1,87 @@
+{
+  "schema": "wmfix_es_probe/1",
+  "host": "autodl-container-cb08468270-873598d1",
+  "pid": 193236,
+  "threads": 1,
+  "torch": "2.8.0+cu128",
+  "device": "cpu",
+  "future_index": 1,
+  "n_futures": 8,
+  "runtime_load_seconds": 0.9,
+  "group_seconds": 2171.1,
+  "max_rss_mb": 1587.5,
+  "rows": [
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 120,
+      "seconds": 157.53,
+      "paired_J_contrast": 654.330078125,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 300,
+      "seconds": 978.39,
+      "paired_J_contrast": 1677.416015625,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 120,
+      "seconds": 190.25,
+      "paired_J_contrast": 657.3525390625,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 300,
+      "seconds": 844.96,
+      "paired_J_contrast": 1792.033203125,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 1,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    }
+  ]
+}

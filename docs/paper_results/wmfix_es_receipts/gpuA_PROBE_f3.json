@@ -1,0 +1,87 @@
+{
+  "schema": "wmfix_es_probe/1",
+  "host": "autodl-container-cb08468270-873598d1",
+  "pid": 193238,
+  "threads": 1,
+  "torch": "2.8.0+cu128",
+  "device": "cpu",
+  "future_index": 3,
+  "n_futures": 8,
+  "runtime_load_seconds": 0.9,
+  "group_seconds": 2186.9,
+  "max_rss_mb": 1630.9,
+  "rows": [
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 120,
+      "seconds": 163.52,
+      "paired_J_contrast": 362.3154296875,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 3,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 0,
+      "horizon": 300,
+      "seconds": 1001.27,
+      "paired_J_contrast": -828.466796875,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "coopoff_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 3,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 120,
+      "seconds": 188.81,
+      "paired_J_contrast": 360.1552734375,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 3,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    },
+    {
+      "group": 0,
+      "arm": 1,
+      "horizon": 300,
+      "seconds": 833.34,
+      "paired_J_contrast": 269.849609375,
+      "rollout": {
+        "pair_key": "w973002m2700p05t300@t300",
+        "arms": [
+          "native",
+          "ours_c1"
+        ],
+        "queue_conservation": true,
+        "future_index": 3,
+        "n_futures": 8,
+        "source_gradient": "zero off hard service events"
+      }
+    }
+  ]
+}
