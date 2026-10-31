@@ -29,6 +29,14 @@
 - Durable remote receipt: R/v2data/recovery_1705/MAIN2132_STOP.json, alongside
   MAIN2132_STOP_INTENT.json. Main stopped21:33, so finalizer correctly records
   trainer_sigint_sent=false for its later idempotent ownership check.
+- Tracked byte-for-byte stop receipt: `WMFIX_V2DATA_STEP10_STOP.json` (all10
+  panel/shard hashes and exact signalled worker identities). Authoritative
+  STATUS.json is FINISHED/exit_code=-2, decision=null, final=null; existing
+  GATE_ONLY_RESULT.json says TRAINER_EXITED_BEFORE_GATE/sigint_sent=false.
+  These are expected after the amended early stop, not infrastructure failures.
+- Final CPU verification: **9 PASS**, including duplicate-cell, wrong-checkpoint
+  and altered-publication rejection plus valid full-panel reassembly; focused
+  Ruff check PASS. Stop implementation/initial receipt committed as74fa039a.
 - Interpretation: expanded TRAIN data with the v1 hard-event objective did not
   satisfy the amended step10 screen. Tiny120s improvement accompanies300s harm;
   this does not measure the unscored20/30 checkpoints or qualify a corrected WM.
