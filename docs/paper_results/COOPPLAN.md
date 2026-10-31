@@ -1,5 +1,5 @@
 # S-COOPPLAN — exact-model planner improves delay and executes substantial cooperative actions
-Complete 2026-11-01, branch `c4/coopplan`: original12 + independently registered extension24 =36 fresh development worlds.
+H120 complete 2026-11-01, branch `c4/coopplan`: original12 + independently registered extension24 =36 fresh development worlds. Separate MAIN02:21 H300 confirmation18/wall6 continuation is running (below).
 
 ## Main finding
 The SUMO-oracle cooperative planner reduces both paired J600 and J900 on the pooled36-world panel; the extension alone also improves both scores.
@@ -50,8 +50,8 @@ Extension frozen host suite27/27 on EACH host/0skips plus real S-RB-DECIDE parit
 Final QA verifies source/design/panel identity, all36pairs/432decisions, all52credits, paired best-action choices, CSV/summary recomputation, zero outstanding reservations, and exact accounting.
 Three final figures were rendered and visually checked. Observed branch timer median11.918s/max24.474s excludes native300s warmup/reset; this remains synchronous offline planning, not a real-time claim.
 
-## Exact accounting and operational closure
-**Actual=charged565140sim-s <=800000;234860unused**, no failure/incomplete attempt/physics retry/refund/top-up.
+## H120 exact accounting and operational closure
+**H120 actual=charged565140sim-s <=800000;234860remaining before H300 dispatch**, no failure/incomplete attempt/physics retry/refund/top-up.
 Original220980 retained; extension344160 =57600paired episodes +22560original missing twins +53520new group twins +210480lookaheads.
 Extension hosts: cpuQ78480/193000cap; gpuA101520/193000; gpuR164160/193020. All three COMPLETE, zero active attempts/outstanding reservations.
 Original704760upper and MAIN01:28 remaining579020allocation preserved; atomic admission stayed below the original800000global cap.
@@ -63,8 +63,19 @@ nice19/CUDAhidden/single-thread/shared-resource yielding; no training, prohibite
 The SAME `Planner` accepts exact `SumoOraclePredictor` or callback-bound `WMPhysPredictor`; WM uses one complete hidden-driver/arrival draw per k across all actions, including identity-bound tensor payloads.
 WM callbacks must bind RB-INT's immutable runtime and public motion/history/request-counter state; absence fails explicitly. No WM qualification or calibrated-confidence claim is implied by the toy/ABI parity checks.
 Original runtime/design:a0934600/53b0edf4ea8e6fc72165691727e923505ed6a805af9c0294efd63f2ab3389a5f; extension source:c2646eb1/designSHA17356a3ee726ffea189da8d1f0e10cb376e4eae1293cfdaf1014c68a8a826918.
-Designs: [COOPPLAN_DESIGN.md](COOPPLAN_DESIGN.md) (63lines at original freeze, now64with pointer), [extension design](COOPPLAN_EXTENSION_DESIGN.md) (<=70lines); execution/API: `HANDOFF_COOPPLAN.md`, `tools/coopplan/`.
+Designs: [COOPPLAN_DESIGN.md](COOPPLAN_DESIGN.md) (63lines at original freeze, now65with pointers), [extension design](COOPPLAN_EXTENSION_DESIGN.md), [H300 design](COOPPLAN_H300_DESIGN.md) (each<=70lines); execution/API: `HANDOFF_COOPPLAN.md`, `tools/coopplan/`.
 Final artifacts: `coopplan/extension/final/` — RECEIPTS/SUMMARY/ALL_GROUP_CREDITS/BEHAVIOURS/QA JSON plus original12/extension24/pooled36 CSVs; all result bytes are Git-preserved and SHA-bound.
 Original first-sample receipts/figures remain under `coopplan/final/`; completed original all-group milestone remains under `coopplan/extension/original_all_groups/`.
 Final plots: [cohort paired CIs](coopplan/extension/final/paired_cohorts.png), [all world contrasts](coopplan/extension/final/paired_worlds.png), [all-group cooperation](coopplan/extension/final/all_group_cooperation.png).
 Read-only reproducibility: `python -B -m tools.coopplan.extension_report --verify`; example extrema: `--examples`. Never relaunch or recollect an existing immutable attempt/result directory.
+
+## MAIN02:21 H300 continuation — running, no efficacy estimate yet
+Prospective design/source03256981; all three frozen hosts30CPU/0skips plus actual WMDECIDE H300 parity PASS before one-shot dispatch.
+Fresh never-fit confirmation18DEV983300–983317: TWO worlds per .4/.2/.1 x2700/2400/1900 cell, high-share first; separate wall6DEV983318–983323: .2/.4 x2400/2700, extra repeats in .4cells.
+ALL new predictions and ALL-executed-group twins useH300; cadence60/same inherited grid/safety/noise/strict0.8 gate. Completed H120 panels above are preserved.
+Prospective234720continuation=57600paired +177120adaptive lookaheads/complete solos;9780/world,78240per host, global upper799860/800000,140unallocated.
+Fixed per-world quotas protect every full pair and both solos before prediction; cyclic pruning/MAPPO fallback expected. Availability of O2 is logged before budget admission at every decision.
+Corrected HOLD COOPFREE learned checkpoint absent at shared freeze (legacy weights excluded); no outcome-dependent late switch.
+New immutable `_v3` supervisors cpuQ693091/gpuA348726/gpuR768580; no replay/relaunch/refund. Separate confirmation and wall estimates require complete panels.
+Analysis `tools.coopplan.h300_report`: separate paired J600/J900, world-cluster C_G, O2 available/evaluated/budget-skipped/chosen and D_G/C_G, safety and unchanged causal detectors.
+H120-versus-H300 summaries compare different fresh panels and different budget availability, not a paired causal horizon effect. Full-rerun predictions remain synchronous offline.

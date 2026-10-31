@@ -1,5 +1,6 @@
 """Separate H300 confirmation/wall analysis; immutable physics receipts only."""
 import argparse
+from copy import deepcopy
 import csv
 import json
 from unittest.mock import patch
@@ -60,6 +61,27 @@ def wall_counts(records):
     return result
 
 
+def describe_wall(counts):
+    effects=counts['effects']
+    return dict(counts,evaluated_helpful=sum(e['D_O2']>0 for e in effects),
+                helpful_but_not_chosen=sum(e['D_O2']>0 and not e['chosen'] for e in effects),
+                evaluated_D_O2=dict(mean=float(np.mean([e['D_O2'] for e in effects])),
+                    minimum=min(e['D_O2'] for e in effects),maximum=max(e['D_O2'] for e in effects)) if effects else None)
+
+
+def prior_wall():
+    original=extension_report.first_snapshot()
+    extension=json.loads((EVIDENCE.parent/'extension/final/RECEIPTS.json').read_text())
+    records=deepcopy([r for s in original+extension for r in s['records']])
+    assert len(records)==36
+    for r in records:
+        for e in r['history']:
+            assert e.get('admission',{}).get('reason')!='budget_pruned'
+            # Original H120 had zero quota pruning; candidates are the availability roster.
+            e['available_candidates']=e['candidates']
+    return describe_wall(wall_counts(records))
+
+
 def build(snapshot):
     expected=json.loads((EVIDENCE/'MANIFEST.json').read_text())
     frozen_free=json.loads((EVIDENCE/'FREE_FREEZE.json').read_text())
@@ -102,7 +124,7 @@ def build(snapshot):
     safety={int(k):v for s in snapshot for k,v in s['per_world_safety'].items()}
     for name,rs in cohorts.items():
         rows,credits,summary=extension_report.analyze(rs)
-        summary['wall']=wall_counts(rs)
+        summary['wall']=describe_wall(wall_counts(rs))
         summary['wall']['executed_credits']=[c for c in credits if c['action']['id']=='O2']
         summary['safety']['planner'].update({key:sum(safety[r['world']['seed']][key] for r in rs) for key in ('requests','overrides')})
         datasets[name]=(rows,credits);summaries[name]=summary
@@ -115,7 +137,7 @@ def build(snapshot):
         remaining=800000-565140-charged,approved_cap=800000,registered_upper=799860,
         continuation_costs=dict(paired_episodes=57600,all_group_twins=solos,lookahead=sum(b['actual_sim_s'] for b in branches)-solos),
         host_accounting={s['host']:dict(actual=s['actual'],charged=s['charged'],cap=s['allocation']['cap'],closed_jobs=s['closed_jobs']) for s in snapshot},
-        prefix_passes=len(branches),free=frozen_free,design_sha256=expected['design_sha256'],panel_sha256=digest(h300_worlds()),
+        prefix_passes=len(branches),free=frozen_free,h120_wall=prior_wall(),design_sha256=expected['design_sha256'],panel_sha256=digest(h300_worlds()),
         branch_cost=dict(median_wall_s=float(np.median(wall)),max_wall_s=float(wall.max()),scope='post_reset_excludes_warmup_initialization'))
     assert sum(summary['continuation_costs'].values())==charged<=234720
     return cohorts,datasets,summary

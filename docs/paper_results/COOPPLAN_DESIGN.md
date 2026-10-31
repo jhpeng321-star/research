@@ -62,3 +62,4 @@ cpuQ/gpuA/gpuR CPUs, nice19, CUDA hidden, one thread; <=4 world workers/host, or
 Admit only with >=8GiB free RAM/>=2GiB free disk; yield to load/resource limits and shared jobs.
 No prohibited paths/truth/assignments/seeds, new venv, training, deletion, push or peer process actions.
 Extension: MAIN01:28; see COOPPLAN_EXTENSION_DESIGN.md (separate immutable binding, original unchanged).
+H300 continuation: MAIN02:18/02:21; see COOPPLAN_H300_DESIGN.md (18confirmation +6wall, new binding).
