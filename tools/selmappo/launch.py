@@ -120,14 +120,36 @@ for name in ('training.log','training/ledger.jsonl','training/training.jsonl','t
 ''')
 
 
+def reconcile(build):
+    result = run('cpuQ', f'''
+import hashlib,json
+from pathlib import Path
+root=Path.home()/'selmappo20261031'/{build!r};assert root.is_dir()
+dispatch=json.loads((root/'DISPATCH.json').read_text())
+assert not (Path('/proc')/str(dispatch['pid'])).exists(),'own trainer still alive: no reconciliation'
+ledger=root/'training/ledger.jsonl';rows=[json.loads(s) for s in ledger.read_text().splitlines()]
+assert len(rows)==2 and rows[0]['event']=='START' and rows[1]['event']=='END'
+assert rows[0]['id']==rows[1]['id']=='fleet:18007998'
+assert rows[0]['reserved_sim_s']==900 and rows[1]['actual_sim_s']==0
+record=dict(status='STOPPED_BEFORE_PHYSICS',own_pid=dispatch['pid'],own_pid_exited=True,charged_sim_s=900,actual_sim_s=0,ledger_sha256=hashlib.sha256(ledger.read_bytes()).hexdigest(),error='frozen env.check_case captured alias rejected fresh TRAIN seed',training_episodes=0,checkpoints=0,retry_authorized=False,root=str(root))
+if not (root/'STOP.json').exists():
+ with (root/'STOP.json').open('x') as f:json.dump(record,f,indent=2)
+else:assert json.loads((root/'STOP.json').read_text())==record
+print('STOP_RECEIPT',json.dumps(record))
+''')
+    save_tag(result.stdout, 'STOP_RECEIPT', f'STOP_{build}.json')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'dispatch', 'status'))
+    parser.add_argument('action', choices=('stage', 'dispatch', 'status', 'reconcile'))
     parser.add_argument('--build')
     args = parser.parse_args()
     if args.action == 'stage':
         stage()
     elif args.action == 'dispatch':
         dispatch(args.build)
+    elif args.action == 'reconcile':
+        reconcile(args.build)
     else:
         status(args.build)

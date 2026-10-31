@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from .protocol import BLOCKS, FORBIDDEN, audit_registration, safe_path
 
 
-def inventory(roots):
+def inventory(roots, *, variant='fleet'):
     count, hits, errors = 0, [], []
     for root in roots:
         root = safe_path(root)
@@ -26,7 +26,8 @@ def inventory(roots):
                     continue
                 count += 1
                 numbers = (int(m[0]) for m in re.finditer(r'(?<!\d)\d{6,10}(?!\d)', name))
-                if any(lo <= n <= hi for n in numbers for lo, hi in BLOCKS.values()):
+                lo, hi = BLOCKS[variant]
+                if any(lo <= n <= hi for n in numbers):
                     hits.append(str(parent)+'/'+name)
     return dict(roots=[str(r) for r in roots], safe_filenames=count, conflicts=hits,
                 traversal_errors=errors, passed=not hits and not errors)
@@ -36,10 +37,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--registration')
     parser.add_argument('--root', action='append', default=[])
+    parser.add_argument('--variant', choices=BLOCKS, default='fleet')
+    parser.add_argument('--design-sha')
     args = parser.parse_args()
-    result = dict(timestamp=datetime.now(timezone.utc).isoformat(), inventory=inventory(args.root))
+    result = dict(timestamp=datetime.now(timezone.utc).isoformat(), inventory=inventory(args.root, variant=args.variant))
     if args.registration:
-        result['registration'] = audit_registration(args.registration)
+        result['registration'] = audit_registration(args.registration, variant=args.variant, design_sha=args.design_sha)
     print(json.dumps(result, indent=2))
     if not all(r.get('passed', True) for r in result.values() if isinstance(r, dict)):
         raise SystemExit(1)

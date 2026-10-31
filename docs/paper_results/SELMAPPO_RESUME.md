@@ -1,5 +1,10 @@
 # Resume reconciliation and CPU build
 
+**Latest:** first authorised dispatch stopped before physics (900reserved/0actual,
+ownPID284174 exited). Captured frozen seed-alias repair is CPU-tested29/29 and staged;
+no retry authorised/running. See `../../SELMAPPO_STOP.md` from the repository root
+(`E:/agent-work/c4-selmappo/SELMAPPO_STOP.md`) for continuation accounting.
+
 - Original committed design `b3ce0489` and all uncommitted selector modules preserved.
 - New fleet-only design `7e4def77` is39lines; protocol20s/six controllers/WALL.
 - cpuQ `/home/ubuntu/selmappo` and `/home/ubuntu/selmappo20261031` absent;

@@ -13,7 +13,8 @@ from types import SimpleNamespace
 
 from .environment import PerCavHandover
 from .integration import load as load_integration
-from .protocol import approval_line, guard_seed, guard_world, safe_path
+from .protocol import approval_line, guard_world, safe_path
+from .guards import episode_guards
 
 
 def library(root):
@@ -104,15 +105,16 @@ class MixedFleet:
 
 class Backend:
     def __init__(self, *, world, variant, registration, c1_root, episode_root, budget,
-                 integration, design_sha, evaluation=False, smoke=False, panel=()):
+                 integration, design_sha, evaluation=False, smoke=False, panel=(), mixed_factory=None):
         # Must run before setup(), controller loading, scenario creation or SUMO.
         if not approval_line(registration):
             raise PermissionError('MAIN approval missing; SUMO forbidden')
         guard_world(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)
-        receipt = load_integration(integration, registration, c1_root, design_sha)
+        receipt = load_integration(integration, registration, c1_root, design_sha, variant=variant)
         self.lib = library(c1_root)
         self.inputs = self.lib.setup()  # Frozen source/controller hashes + nice19/CUDA guard.
         wall_library = importlib.import_module(receipt['wall_module'])
+        self.wall_library = wall_library
         import numpy as np
         import random
         import torch
@@ -124,28 +126,15 @@ class Backend:
         torch.manual_seed(world['seed'])
         from tools.c1switch.core import Belief
         from traffic_shepherd.c4.env import CavSumoEnv
-        from traffic_shepherd.c4 import seeds as guarded
-        from traffic_shepherd import seeds as source_guard
         self.belief, self.digest, self.digest_time = Belief(), hashlib.sha256(), None
         self.timing = dict(controller_wall_s=0., environment_wall_s=0., observable_wall_s=0.)
         self.variant, self.actual, self.budget = variant, 0., budget
         self.env, self.mixed = None, None
         self.handover = wall_library.make_handover(self.inputs)
         budget.reserve(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)
-        # Exact episode-only guard adapters, never a broad seed block bypass.
-        original_guard, original_source = guarded.check_case, source_guard.require_development_case
-        def task_guard(seed, demand):
-            if seed == world['seed'] and demand == world['demand']:
-                guard_seed(seed, variant, evaluation=evaluation, smoke=smoke, panel=panel)
-                return
-            return original_guard(seed, demand)
-        def task_source(seed, loading, split):
-            if seed == world['seed'] and loading == world['demand'] and split == 'exposed':
-                return
-            return original_source(seed, loading, split)
-        self.restore_guards = lambda: (setattr(guarded, 'check_case', original_guard),
-                                       setattr(source_guard, 'require_development_case', original_source))
-        guarded.check_case, source_guard.require_development_case = task_guard, task_source
+        # Both definitions AND pre-imported env/scenario aliases must be scoped.
+        self.guard_scope = episode_guards(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)
+        self.guard_scope.__enter__()
         import traci
         self.traci, self.original_step = traci, traci.simulationStep
         self.allowance = 900.
@@ -164,7 +153,7 @@ class Backend:
                            penetration=world['penetration'], warmup_s=300, horizon_s=600,
                            controller='direct', warmup_hook=lambda env: self.lib.Backend.observe(self, env))
             if variant == 'per_cav':
-                self.mixed = MixedFleet(self)
+                self.mixed = (mixed_factory or MixedFleet)(self)
                 self.env.fleet = self.mixed
                 self.mixed.handover.sync(self.self_ids())
                 self.original_convert = self.env._accel_by_vehicle
@@ -252,5 +241,5 @@ class Backend:
                 self.env.close()
         finally:
             self.traci.simulationStep = self.original_step
-            self.restore_guards()
+            self.guard_scope.__exit__(None, None, None)
             self.budget.finish(self.actual)

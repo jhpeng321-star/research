@@ -221,6 +221,20 @@ class DiskTests(unittest.TestCase):
         self.assertFalse(audit_registration(reg)['passed'])
         self.assertFalse(audit_registration(self.text('short.md', '- OTHER 18000000-099\n'))['passed'])
 
+    def test_exact_task_hash_exemption_and_shared_block(self):
+        from .protocol import FLEET_DESIGN_SHA
+        own = ('- S-SELMAPPO DESIGN REGISTERED SHA256 '+FLEET_DESIGN_SHA+
+               ' protocol=S-C1SWITCH2/v2 fleet_cap=7012800 TRAIN18000000..18007999\n')
+        self.assertTrue(audit_registration(self.text('own.md', own))['passed'])
+        competing = own.replace(FLEET_DESIGN_SHA, 'b'*64)
+        self.assertFalse(audit_registration(self.text('competing.md', own+competing))['passed'])
+        peer = ('- S-SELMAPPO2 DESIGN REGISTERED SHA256 '+('c'*64)+
+                ' protocol=S-C1SWITCH2/v2 per_cav_cap=7012800 TRAIN18100000..18107999\n')
+        reg = self.text('peer.md', own+peer)
+        self.assertTrue(audit_registration(reg)['passed'])
+        self.assertTrue(audit_registration(reg, variant='per_cav', design_sha='c'*64)['passed'])
+        self.assertEqual(training_world(18100000, 'per_cav')['seed'], 18100000)
+
     def test_no_unregistered_integration(self):
         reg = self.text('reg.md', '- 23:42 S-SELMAPPO BUDGET APPROVED IN ADVANCE by the owner\n')
         with self.assertRaises(PermissionError):

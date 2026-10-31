@@ -6,19 +6,20 @@ from .protocol import (BLOCKS, CADENCE, CAP, LIBRARY, PROTOCOL, audit_registrati
                        digest, safe_path)
 
 
-def registered(registration, design_sha):
+def registered(registration, design_sha, *, variant='fleet'):
     if not re.fullmatch('[0-9a-f]{64}', design_sha):
         raise ValueError('invalid design SHA')
     lines = safe_path(registration).read_text(encoding='utf-8').splitlines()
-    if not any(line.startswith('- S-SELMAPPO DESIGN REGISTERED ') and
-               f'SHA256 {design_sha}' in line and f'fleet_cap={CAP}' in line and
+    prefix = '- S-SELMAPPO DESIGN REGISTERED ' if variant == 'fleet' else '- S-SELMAPPO2 DESIGN REGISTERED '
+    if not any(line.startswith(prefix) and
+               f'SHA256 {design_sha}' in line and f'{variant}_cap={CAP}' in line and
                f'protocol={PROTOCOL}' in line for line in lines):
         raise PermissionError('exact v2 fleet design/budget not registered')
 
 
-def load(path, registration, c1_root, design_sha):
-    registered(registration, design_sha)
-    if not audit_registration(registration)['passed']:
+def load(path, registration, c1_root, design_sha, *, variant='fleet'):
+    registered(registration, design_sha, variant=variant)
+    if not audit_registration(registration, variant=variant, design_sha=design_sha)['passed']:
         raise ValueError('seed allocation conflict')
     record = json.loads(safe_path(path).read_text(encoding='utf-8'))
     if (record.get('schema') != 'selmappo.integration/2' or

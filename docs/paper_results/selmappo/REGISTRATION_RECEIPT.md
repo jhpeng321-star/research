@@ -20,3 +20,11 @@ real CPU integration PASS at immutable stage `build_bc4c3aae72073204`, source bi
 Full staged CPU receipt is `STAGE_bc4c3aae72073204.json` alongside this receipt.
 Training launch reuses the same approved cap; final evaluation must still use the
 registered16world S-C1SWITCH2 panel and must not duplicate fleet episodes across tasks.
+
+## First attempt and stop reconciliation
+Own dispatch PID284174 exited before physics due to a captured frozen guard alias.
+The shared ledger now also contains `S-SELMAPPO FIRST DISPATCH MECHANICAL STOP / CPU REPAIR READY`:
+900reserved/0actual retained,29CPU tests +actual frozen-alias integration PASS,
+repair stage914fecba3ffdf4cc staged only, same-cap continuation proposal awaiting MAIN.
+Post-stop exact design-registration and zero-conflict interval checks PASS;
+registry snapshot SHA256 `ccd1d0814eb524add9df665fc53d4dcae75db4293582c9ac791fbb2ee71da8d5`.

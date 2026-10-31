@@ -16,6 +16,23 @@ def check(root):
     from tools.c1switch.library import make_handover
     with patch.object(traci, 'start', side_effect=AssertionError('CPU gate cannot start SUMO')), \
             patch.object(traci, 'simulationStep', side_effect=AssertionError('CPU gate cannot step SUMO')):
+        from .guards import episode_guards
+        from .protocol import training_world
+        from traffic_shepherd.c4 import env as env_module
+        from traffic_shepherd import scenarios
+        original_case, original_source = env_module.check_case, scenarios.require_development_case
+        world = training_world(18000000)
+        with episode_guards(world, 'fleet'):
+            env_module.check_case(world['seed'], world['demand'])
+            scenarios.require_development_case(world['seed'], world['demand'], 'exposed')
+            try:
+                env_module.check_case(world['seed']+1, world['demand'])
+            except ValueError:
+                pass
+            else:
+                raise ValueError('captured alias admitted a different episode')
+        if env_module.check_case is not original_case or scenarios.require_development_case is not original_source:
+            raise ValueError('frozen seed aliases were not restored')
         h = make_handover(inputs)
         if h.controllers != LIBRARY:
             raise ValueError('wrong published library order')
@@ -48,7 +65,8 @@ def check(root):
             raise ValueError('handover releases not exactly once per change')
     return dict(status='CPU_INTEGRATION_PASS', library=list(LIBRARY),
                 real_checkpoint_constructors=True, real_wall_formed=True,
-                wall_incumbent_preserved=True, wall_stop_reset=True, new_sumo_seconds=0)
+                wall_incumbent_preserved=True, wall_stop_reset=True,
+                frozen_env_scenario_seed_aliases=True, new_sumo_seconds=0)
 
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ def episode(model, world, args, budget, *, evaluation=False, smoke=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--variant', required=True, choices=BLOCKS)
+    parser.add_argument('--variant', required=True, choices=('fleet',))
     parser.add_argument('--registration', required=True)
     parser.add_argument('--c1-root', required=True)
     parser.add_argument('--out', required=True)

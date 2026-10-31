@@ -1,5 +1,9 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+**CURRENT: mechanically STOPPED before physics; no trainer alive.** First launch retained
+900reserved/0actual sim-s. Frozen seed-alias repair is CPU-tested29/29 plus real integration,
+but NOT dispatched; MAIN continuation acknowledgement required. See `SELMAPPO_STOP.md`.
+
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,
 library `native, ctrl0, mappo, pi, circles, wall`. Per-CAV belongs to S-SELMAPPO2.
 Design: `docs/paper_results/SELMAPPO_DESIGN.md`, commit `7e4def77`, SHA256
@@ -8,9 +12,9 @@ Exact fleet allocation **7,012,800sim-s**, owner advance approval applies after 
 
 ## Shared code for S-SELMAPPO2
 - Import/copy from `E:/agent-work/c4-selmappo/tools/selmappo/` at the committed build revision.
-- `protocol.py`:6-way order,20s cadence,30 decisions; fleet TRAIN18000000..18007999 ONLY.
-  The per-CAV task must register and guard its own block; the old prospective18100000
-  block is not an allocation made by this fleet task.
+- `protocol.py`:6-way order,20s cadence,30 decisions; fleet TRAIN18000000..18007999.
+  Shared per-CAV constant18100000..18107999 is retained for S-SELMAPPO2, which separately
+  registers/authorizes its allocation. Fleet CLI accepts fleet only. See `SELMAPPO2_RESPONSE.md`.
 - `observations.py`:pure `build(payload, variant='fleet'|'per_cav', incumbents=...)`.
   `Observation(keys, actors, shared)`;46shared features,60actor features
   (46summary+6incumbent+8ego). IDs route per-CAV actions only; no numeric ID features.
@@ -51,10 +55,10 @@ Final real-integration stage (not yet a dispatch at this checkpoint):
 `/home/ubuntu/selmappo20261031/build_bc4c3aae72073204`, source binding
 `bc4c3aae72073204cf046d800766d4fcc5fd9610a29ea099c3c40cfc195dce14`.
 28/28CPU tests and real frozen-controller/WALL integration PASS; SUMO0 at staging.
-Launch ONCE with `python -m tools.selmappo.launch dispatch --build build_bc4c3aae72073204`;
-inspect with the same command's `status` action; never repeat dispatch or reset the lock.
-The single trainer runs the two registered mechanics episodes then admitted<=12worker training;
-no separate mechanics dispatch/repeat. Final evaluation awaits the peer16world manifest.
+Its first dispatch ownPID284174 exited on the frozen seed-alias refusal; never redispatch it
+or reset the lock. Inspect using `python -m tools.selmappo.launch status --build build_bc4c3aae72073204`.
+Repair stage `build_914fecba3ffdf4cc` is CPU-only, not an authorised retry.
+Final evaluation awaits the peer16world manifest.
 The CPU-only stages are immutable receipts, not running jobs:
 `/home/ubuntu/selmappo_cpucheck_9f8afc61e72189e6/CPU_RESULT.json` records28/28PASS,
 including real CPU PyTorch optimizer, full600s return and RNG-isolation checks.

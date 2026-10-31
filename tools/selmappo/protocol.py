@@ -8,7 +8,8 @@ PROTOCOL = 'S-C1SWITCH2/v2'
 LIBRARY = ('native', 'ctrl0', 'mappo', 'pi', 'circles', 'wall')
 CADENCE = 20
 TIMES = tuple(range(300, 900, CADENCE))
-BLOCKS = {'fleet': (18000000, 18007999)}
+BLOCKS = {'fleet': (18000000, 18007999), 'per_cav': (18100000, 18107999)}
+FLEET_DESIGN_SHA = '992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0'
 # Evaluation is supplied by the registered S-C1SWITCH2 manifest, never guessed.
 PANEL = ()
 CELLS = tuple((p, d) for p in (.05, .1, .2, .4) for d in (1900, 2400, 2700))
@@ -77,15 +78,19 @@ def approval_line(registration):
                      or re.match(r'^-\s*23:42\s+S-SELMAPPO BUDGET APPROVED IN ADVANCE by the owner\b', line))), None)
 
 
-def audit_registration(registration):
+def audit_registration(registration, *, variant='fleet', design_sha=None):
     """Conservative token/range audit of the entire shared file, including umbrellas.
 
     Expands shortened endpoints (e.g. 981000-099); ignores hex hashes. Own
     design-registration lines are identified explicitly, never broadly ignored.
     """
     hits = []
+    blocks = {variant: BLOCKS[variant]}
+    design_sha = design_sha or (FLEET_DESIGN_SHA if variant == 'fleet' else None)
+    prefix = '- S-SELMAPPO DESIGN REGISTERED ' if variant == 'fleet' else '- S-SELMAPPO2 DESIGN REGISTERED '
     for number, line in enumerate(safe_path(registration).read_text(encoding='utf-8').splitlines(), 1):
-        if line.startswith('- S-SELMAPPO DESIGN REGISTERED '):
+        if (line.startswith(prefix) and design_sha and f'SHA256 {design_sha}' in line and
+                f'protocol={PROTOCOL}' in line and f'{variant}_cap={CAP}' in line):
             continue
         for match in re.finditer(r'(?<![\da-fA-F])(\d{6,10})(?![\da-fA-F])', line):
             start = int(match[1])
@@ -95,7 +100,7 @@ def audit_registration(registration):
             if interval:
                 token = interval[1]
                 end = int(str(start)[:-len(token)] + token) if len(token) < len(str(start)) else int(token)
-            if any(start <= hi and end >= lo for lo, hi in BLOCKS.values()):
+            if any(start <= hi and end >= lo for lo, hi in blocks.values()):
                 hits.append(dict(line=number, start=start, end=end))
-    return dict(registration_sha256=digest(registration), blocks=BLOCKS,
+    return dict(registration_sha256=digest(registration), blocks=blocks,
                  conflicts=hits, passed=not hits)
