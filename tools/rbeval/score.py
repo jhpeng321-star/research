@@ -57,8 +57,10 @@ class WorldBootstrap:
         self.B = B
         rng = np.random.default_rng(20261031)
         self.weights = np.zeros((B, len(self.seeds)))
+        self.strata = []
         for _, ids in groups([dict(seed=s, cell=meta[s]) for s in self.seeds], ['cell']).items():
             ix = [self.index[x['seed']] for x in ids]
+            self.strata.append(ix)
             draws = rng.multinomial(len(ix), np.full(len(ix), 1/len(ix)), size=B)
             self.weights[:, ix] = draws
         # One resampled future-index vector per world, shared across arms and
@@ -80,6 +82,11 @@ class WorldBootstrap:
                 matrix[self.index[seed], j] = np.mean(vals)
         present = np.isfinite(matrix)
         n = present.sum(0)
+        # Two worlds in different singleton strata are not two resampleable
+        # worlds. Finite-K noise alone cannot supply missing world uncertainty.
+        estimable = np.zeros(len(features), bool)
+        for ix in self.strata:
+            estimable |= present[ix].sum(0) >= 2
         estimate = np.divide(np.nansum(matrix, axis=0), n, out=np.full(len(features), np.nan), where=n > 0)
         # Bound working memory independently of the onset-CDF family's width;
         # every chunk still contributes to ONE joint maximum on the same draws.
@@ -111,7 +118,11 @@ class WorldBootstrap:
                 draws += np.divide(delta*self.weights[:, i:i+1], denom,
                                    out=np.zeros_like(draws), where=denom > 0)
             sd[start:stop] = np.nanstd(draws, axis=0, ddof=1)
-            good = (n[start:stop] >= 2) & (sd[start:stop] > 1e-14) & np.isfinite(draws).all(0)
+            # np.std of many identical large values can be nonzero solely from
+            # reduction roundoff. Require variation beyond floating-point noise.
+            scale = np.maximum(1., np.nanmax(np.abs(draws), axis=0))
+            varying = np.ptp(draws, axis=0) > 8*np.finfo(float).eps*scale
+            good = estimable[start:stop] & varying & (sd[start:stop] > 0) & np.isfinite(draws).all(0)
             valid[start:stop] = good
             if good.any():
                 chunk_max = np.max(np.abs((draws[:, good]-estimate[start:stop][good])/sd[start:stop][good]), axis=1)
@@ -247,6 +258,7 @@ def main():
     bootstrap = scored_bootstrap(real, audit['complete_worlds'], args.bootstrap)
     audit['bootstrap_worlds'] = bootstrap.seeds
     audit['bootstrap_scope'] = 'scored-world-only fixed demand/penetration/split strata'
+    audit['bootstrap_revision'] = 'scored-only-singleton-roundoff-v2'
     save_new(out/'audit.json', audit)
     lookup = {(e['seed'], e['arm']): e for e in real}
     targets = [e for e in real if (e['seed'], e['arm']) in pred]
@@ -530,6 +542,7 @@ def main():
         pilot_only=True, reasons=failures, complete_worlds=len(audit['complete_worlds']),
         bootstrap=10000, bootstrap_seed=20261031,
         bootstrap_method='demand/penetration/split-stratified whole-world centered standardized max-stat',
+        bootstrap_revision='scored-only-singleton-roundoff-v2',
         rate_family_primary=180, rate_family_diagnostic=360,
         scope='Fixed overnight diagnostic, not a powered qualification panel',
         caveat='One factual continuation per world cannot identify same-state irreducible randomness')

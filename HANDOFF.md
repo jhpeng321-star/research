@@ -27,6 +27,17 @@
   source was replaced. All10 scorer tests PASS/10.98s, including regression and
   import→gate. Live candidate-status verified A2=67, B2=45, FULL-v1=73,
   FULL-v3=62, FULL-v4=19 tasks; no new claim/dispatch.
+- **Statistical correction:** original full-report bootstrap CIs are retracted:
+  `np.std` reduction roundoff made constant draws appear variable. Revision
+  `scored-only-singleton-roundoff-v2` requires a genuinely resampleable world
+  stratum and variation above numerical noise. Singleton-only strata, including
+  development12, cannot get CIs from K-only noise. All11 scorer tests PASS/17.51s.
+  Point estimates/Wilson/detector are unchanged; original sources/results retained.
+  See `docs/paper_results/RBEVAL_UNCERTAINTY_CORRECTION.md`; corrected CPU score is
+  pending in a NEW directory. No peer frozen scorer/runtime was replaced.
+- Full original result independently verified locally: all160 completion hashes,
+  all15 report hashes, exact scored input set and7,200 BIC decisions. Receipt:
+  `docs/paper_results/RBEVAL_WM2_COMPLETE_VERIFIED.json` (integrity, not CI validity).
 
 ## Exact candidate CLI (RUNA/RUNB/INT)
 

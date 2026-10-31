@@ -52,8 +52,9 @@ class ScientificInvariants(unittest.TestCase):
 
     def test_finite_K_uncertainty_is_included(self):
         boot = WorldBootstrap(self.real, B=1000)
+        a, b = next([boot.seeds[i] for i in ix] for ix in boot.strata if len(ix) == 2)
         # Real outcomes agree across worlds, but finite-K event probability varies.
-        band = boot.bands([[(969420, .5, [0., 1.]*4), (969426, .5, [0., 1.]*4)]])[0]
+        band = boot.bands([[(a, .5, [0., 1.]*4), (b, .5, [0., 1.]*4)]])[0]
         self.assertIsNotNone(band['low'])
         self.assertLess(band['low'], .5)
         self.assertGreater(band['high'], .5)
@@ -72,9 +73,23 @@ class ScientificInvariants(unittest.TestCase):
         full = scored_bootstrap(self.real, range(969420, 969440), B=1000)
         np.testing.assert_array_equal(full.weights, WorldBootstrap(self.real, B=1000).weights)
 
+    def test_fixed_singleton_strata_cannot_get_roundoff_or_K_only_CIs(self):
+        worlds = list(range(969420, 969432))
+        boot = scored_bootstrap(self.real, worlds, B=10000)
+        np.testing.assert_array_equal(boot.weights, np.ones((10000, 12)))
+        for samples in (False, True):
+            features = [[(seed, (j+1)*7312.123456789, [(j+1)*7312.123456789-10,
+                         (j+1)*7312.123456789+10]*4) if samples else
+                         (seed, (j+1)*7312.123456789) for j, seed in enumerate(worlds)]]
+            band = boot.bands(features)[0]
+            self.assertIsNone(band['low'])
+            self.assertIsNone(band['high'])
+            self.assertFalse(band['uncertainty_available'])
+
     def test_chunking_preserves_joint_family_maxstat(self):
         boot = WorldBootstrap(self.real, B=1000)
-        features = [[(969420, v, [v-1, v+1]*4), (969426, 2*v, [2*v-2, 2*v+2]*4)]
+        a, b = next([boot.seeds[i] for i in ix] for ix in boot.strata if len(ix) == 2)
+        features = [[(a, v, [v-1, v+1]*4), (b, 2*v, [2*v-2, 2*v+2]*4)]
                     for v in (1., 2., 3.)]
         whole = boot.bands(features, chunk_size=10)
         chunks = boot.bands(features, chunk_size=1)

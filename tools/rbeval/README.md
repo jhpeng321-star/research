@@ -75,6 +75,9 @@ are paired across arms for the rate difference. Partial-report bootstrap strata
 contain only complete scored worlds; unscored peers supply climatology but cannot
 create sampling variation. Full20-world bootstrap draws remain unchanged.
 Earlier partial-progress CIs from the unfiltered scorer are superseded.
+Revision `scored-only-singleton-roundoff-v2` also rejects roundoff-only variation
+and K-only uncertainty in singleton-only world strata. Original frozen WM2
+bootstrap CIs are retracted; see `docs/paper_results/RBEVAL_UNCERTAINTY_CORRECTION.md`.
 Chunked calculations retain
 one joint maximum across the full family and bound working memory.
 
@@ -163,6 +166,16 @@ source trajectories must not be included in model inputs. Import manifest and
 adapter hashes become part of the immutable identity.
 
 ## Verification
+
+Verify a fetched original WM2 completion without repeating inference or scoring:
+
+```powershell
+python -B -m tools.rbeval.verify_wm2 --evidence tools/rbeval/evidence --out docs/paper_results/NEW_WM2_VERIFICATION.json
+```
+
+This checks all160 task hashes, all15 report hashes, the exact scored input set,
+model/start/prehistory/support/delay contracts and7,200 BIC decisions. It is an
+integrity check; the separate bootstrap uncertainty correction still applies.
 
 ```powershell
 python -B -m unittest tools.rbeval.test_core tools.rbeval.test_score tools.rbeval.test_finalize -v
