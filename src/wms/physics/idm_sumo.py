@@ -1,0 +1,377 @@
+"""S-RB-CF: faithful SUMO 1.27.1 ``MSCFModel_IDM`` car-following parity.
+
+Every formula below is a line-by-line tensor transcription of SUMO 1.27.1
+``src/microsim/cfmodels/MSCFModel_IDM.cpp`` / ``MSCFModel_IDM.h`` and of the
+generic step composition in ``MSCFModel.cpp::finalizeSpeed`` /
+``MSVehicle.cpp::planMoveInternal``+``accelerate`` (read-only source copies at
+``E:/Temp/opencode/sumo_src`` and ``E:/Temp/opencode/sumo-1.27.1-rb-lane``;
+no downloaded code is executed).  Sources and line anchors:
+
+* ``MSCFModel_IDM.cpp:44``    ``myIterations = MAX2(1, int(TS / idmStepping + .5))``
+  with the vType default ``cfParameter(cf.idmStepping) = 0.25`` s
+  (``TS = 0.5`` s here -> 2 internal iterations; ``TS = 1.0`` -> 4).
+* ``MSCFModel_IDM.cpp:45``    ``myTwoSqrtAccelDecel = 2*sqrt(myAccel*myDecel)``.
+* ``MSCFModel_IDM.cpp:225-269`` ``_v``: the iterated IDM safe speed.  The SUMO
+  caller passes the leader gap WITH ``minGap`` already subtracted
+  (``MSVehicle.cpp:3209-3211``) and ``respectMinGap=true`` adds it back, so the
+  interaction term is evaluated on the BUMPER gap while ``s*`` keeps ``+s0``
+  (``stopSpeed`` calls ``_v`` with ``respectMinGap=false``: no ``s0`` at all).
+  Per iteration: ``acc = a(1 - (v/desSpeed)^delta - (s/gap)^2)``,
+  ``newSpeed = max(0, newSpeed + acc*TS/iterations)``, then the gap is advanced
+  with the NEW speed difference ``gap -= max(0, (newSpeed-predSpeed)*TS/it)``.
+* ``MSCFModel_IDM.cpp:80-89``  ``minNextSpeed`` (Euler): floor at
+  ``max(0, v - max(myDecel, min(myEmergencyDecel, 1.5))*TS)``.
+* ``MSCFModel.cpp:341-348``   ``minNextSpeedEmergency``: ``max(0, v - emergencyDecel*TS)``.
+* ``MSCFModel.cpp:199-232``   ``finalizeSpeed`` composite with no stops/dawdling/
+  startup delay: ``vMin = min(minNextSpeed, max(vPos, vMinEmergency))``,
+  ``vMax = min(max(laneMaxSpeed, vPos), maxNextSpeed, vStop)`` -> the effective
+  next speed is ``clamp(vSafe, vMin, min(vSafe, v + a*TS, vTypeMax))`` (with the
+  default ``actionStepLength == TS`` the aMax term degenerates to
+  ``max(laneMaxSpeed, vSafe)``).
+* ``MSCFModel.cpp:324-326``   ``maxNextSpeed = min(v + a*TS, vTypeMaxSpeed)``.
+* ``MSCFModel_IDM.cpp:179-200`` ``stopSpeed``: ``gap < 0.01 -> 0``; standing
+  vehicles (``speed < NUMERICAL_EPS`` and result ~0) fall back to
+  ``maximumSafeStopSpeed``; the result never exceeds ``gap/TS``.
+* ``MSCFModel.cpp:860-884``   ``maximumSafeStopSpeedEuler`` (exact translation).
+* ``MSCFModel_IDM.cpp:138-162`` ``insertionFollowSpeed`` (equilibrium insertion).
+* ``MSCFModel_IDM.cpp:105-127`` ``freeSpeed`` (speed-limit step ahead).
+
+Conventions/limits (documented gaps, no silent deviation):
+
+* Semi-implicit Euler update (``--step-method.ballistic`` off, the SUMO default).
+  The WM integrator (``WmSModel.step``: ``v' = max(0, v + a dt)``,
+  ``s' = s + (v + v')/2 dt``) reproduces the SUMO ballistic position rule and
+  the Euler speed rule from the acceleration returned here.
+* ``actionStepLength == stepLength`` (the SUMO default): the model is
+  re-evaluated every 0.5 s step.  A larger action step would hold the last
+  acceleration between action steps (``MSVehicle.cpp:4654-4663``); the
+  ``action_step_*`` helpers implement that hold, but the WM rollout does not
+  carry their state yet (S-RB-INT wiring; not needed for parity with default
+  SUMO runs).
+* Driver perception errors (``applyHeadwayAndSpeedDifferencePerceptionErrors``),
+  IDMM adaptation, ``patchSpeedBeforeLC`` dawdling, startup delay, stops and
+  junction link speeds are not part of car-following parity (IDM defaults are
+  no-ops for them; junctions/insertion policy belong to S-RB-MERGE).
+* ``emergencyDecel`` defaults to ``decel`` (SUMO vType default), which pins the
+  IDM's hard-braking floor to the comfortable deceleration exactly like SUMO.
+
+Pure tensor functions; differentiable in the inputs where natural; no RNG.
+"""
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+from typing import Mapping, Optional
+
+import torch
+from torch import Tensor
+
+#: SUMO ``NUMERICAL_EPS`` (utils/common/StdDefs.h).
+NUMERICAL_EPS = 0.01
+#: SUMO vType ``carFollowModel`` parameter ``cf.idmStepping`` default (s).
+DEFAULT_CF_STEPPING_S = 0.25
+#: IDM ``delta`` exponent default (``SUMO_ATTR_CF_IDM_DELTA``).
+DEFAULT_IDM_DELTA = 4.0
+#: Cap of the comfortable-deceleration relaxations in ``minNextSpeed``
+#: (``MIN2(myEmergencyDecel, 1.5)`` of MSCFModel_IDM.cpp:82).
+MIN_NEXT_SPEED_EMERGENCY_SLACK = 1.5
+
+
+def idm_iterations(dt_s: float, stepping_s: float = DEFAULT_CF_STEPPING_S) -> int:
+    """``MAX2(1, int(TS / idmStepping + .5))`` (MSCFModel_IDM.cpp:44)."""
+    dt_s, stepping_s = float(dt_s), float(stepping_s)
+    if not (math.isfinite(dt_s) and dt_s > 0.0):
+        raise ValueError("dt_s must be finite and > 0")
+    if not (math.isfinite(stepping_s) and stepping_s > 0.0):
+        raise ValueError("stepping_s must be finite and > 0")
+    return max(1, int(dt_s / stepping_s + 0.5))
+
+
+@dataclass(frozen=True)
+class SumoIDMParams:
+    """Per-driver SUMO IDM parameters (the vType car-following set).
+
+    ``des_speed`` is ``min(lane speed limit * speedFactor, vType maxSpeed)``;
+    the WM's driver ``v0`` (encoder-inferred or the population default) is that
+    value.  ``vtype_max_speed`` caps acceleration like SUMO's ``maxNextSpeed``
+    (``None`` = unbounded, i.e. the desired speed dominates as on this road).
+    ``emergency_decel`` ``None`` means "use decel" (the SUMO default).
+    """
+
+    accel: float | Tensor
+    decel: float | Tensor
+    headway_time: float | Tensor
+    min_gap: float | Tensor
+    des_speed: float | Tensor
+    delta: float | Tensor = DEFAULT_IDM_DELTA
+    emergency_decel: Optional[float | Tensor] = None
+    vtype_max_speed: Optional[float | Tensor] = None
+
+    @classmethod
+    def from_driver_params(cls, params: Mapping[str, Tensor],
+                           *, des_speed: Optional[float | Tensor] = None) -> "SumoIDMParams":
+        """SUMO parameters from the encoder's per-driver settings.
+
+        ``params`` is the driver-encoder mapping (``v0``, ``time_headway``,
+        ``min_gap``, ``accel``, ``decel``); ``v0`` IS the desired speed
+        (speedFactor semantics), so ``des_speed`` defaults to it.
+        """
+        return cls(accel=params["accel"].clamp_min(1.0e-3),
+                   decel=params["decel"].clamp_min(1.0e-3),
+                   headway_time=params["time_headway"].clamp_min(0.0),
+                   min_gap=params["min_gap"].clamp_min(0.0),
+                   des_speed=params["v0"].clamp_min(1.0e-3) if des_speed is None
+                   else des_speed)
+
+    def effective_emergency_decel(self):
+        """``emergency_decel`` resolved (None -> decel, the SUMO default)."""
+        return self.decel if self.emergency_decel is None else self.emergency_decel
+
+
+def _pair(x: float | Tensor, like: Tensor) -> Tensor:
+    return x if isinstance(x, Tensor) else torch_full(float(x), like)
+
+
+def torch_full(value: float, like: Tensor) -> Tensor:
+    return torch.full_like(like, value)
+
+
+def sumo_idm_v(v: Tensor, gap_bumper: Tensor, leader_v: Tensor, des_speed: Tensor,
+               p: SumoIDMParams, *, dt_s: float, iterations: int,
+               respect_min_gap: bool = True) -> Tensor:
+    """``MSCFModel_IDM::_v`` (MSCFModel_IDM.cpp:225-269): the iterated safe speed.
+
+    ``gap_bumper`` is the front-to-rear gap of the configuration the caller
+    judged (SUMO passes net gap + minGap back together = bumper gap when
+    ``respect_min_gap``); with ``respect_min_gap=False`` (SUMO ``stopSpeed``)
+    it is the raw obstacle distance and ``s0`` is never added.
+    Returns the next speed (m/s), ``>= 0``.
+    """
+    like = v
+    accel = _pair(p.accel, like)
+    decel = _pair(p.decel, like)
+    two_sqrt_ad = (2.0 * (accel * decel).clamp_min(1.0e-12).sqrt()).clamp_min(1.0e-12)
+    delta = _pair(p.delta, like)
+    s0 = _pair(p.min_gap, like)
+    headway = _pair(p.headway_time, like)
+    new_speed = v.clone()
+    gap = gap_bumper.clone()
+    for _ in range(int(iterations)):
+        delta_v = new_speed - leader_v
+        s = (new_speed * headway
+             + new_speed * delta_v / two_sqrt_ad).clamp_min(0.0)
+        if respect_min_gap:
+            s = s + s0
+        gap = gap.clamp_min(NUMERICAL_EPS)
+        free = (new_speed / des_speed.clamp_min(NUMERICAL_EPS)).clamp_min(0.0)
+        acc = accel * (1.0 - free.pow(delta)
+                       - (s * s) / (gap * gap))
+        new_speed = (new_speed + acc * float(dt_s) / float(iterations)).clamp_min(0.0)
+        gap = gap - ((new_speed - leader_v) * float(dt_s) / float(iterations)).clamp_min(0.0)
+    return new_speed.clamp_min(0.0)
+
+
+def follow_speed(v: Tensor, gap_bumper: Tensor, leader_v: Tensor, des_speed: Tensor,
+                 p: SumoIDMParams, *, dt_s: float, iterations: int) -> Tensor:
+    """``MSCFModel_IDM::followSpeed`` == ``_v(respectMinGap=true)`` (no perception error)."""
+    return sumo_idm_v(v, gap_bumper, leader_v, des_speed, p, dt_s=dt_s,
+                      iterations=iterations, respect_min_gap=True)
+
+
+def min_next_speed(v: Tensor, p: SumoIDMParams, *, dt_s: float) -> Tensor:
+    """IDM ``minNextSpeed`` (Euler): ``max(0, v - max(decel, min(emerg, 1.5))*dt)``."""
+    like = v
+    decel = _pair(p.decel, like)
+    emerg = _pair(p.effective_emergency_decel(), like)
+    decel_eff = torch_maximum(decel, torch_minimum(
+        emerg, torch_full(MIN_NEXT_SPEED_EMERGENCY_SLACK, like)))
+    return (v - decel_eff * float(dt_s)).clamp_min(0.0)
+
+
+def min_next_speed_emergency(v: Tensor, p: SumoIDMParams, *, dt_s: float) -> Tensor:
+    """Base ``minNextSpeedEmergency`` (Euler): ``max(0, v - emergencyDecel*dt)``."""
+    return (v - _pair(p.effective_emergency_decel(), v) * float(dt_s)).clamp_min(0.0)
+
+
+def max_next_speed(v: Tensor, p: SumoIDMParams, *, dt_s: float) -> Tensor:
+    """``MSCFModel::maxNextSpeed``: ``min(v + accel*dt, vTypeMaxSpeed)``."""
+    cap = (v + _pair(p.accel, v) * float(dt_s))
+    if p.vtype_max_speed is not None:
+        cap = torch_minimum(cap, _pair(p.vtype_max_speed, v))
+    return cap
+
+
+def torch_maximum(a: Tensor, b: Tensor) -> Tensor:
+    return a.maximum(b) if a.dtype == b.dtype else a.maximum(b.to(a.dtype))
+
+
+def torch_minimum(a: Tensor, b: Tensor) -> Tensor:
+    return a.minimum(b) if a.dtype == b.dtype else a.minimum(b.to(a.dtype))
+
+
+def sumo_idm_step(v: Tensor, gap_bumper: Tensor, leader_v: Tensor, lane_max: Tensor,
+                  p: SumoIDMParams, *, dt_s: float, iterations: int) -> tuple[Tensor, Tensor]:
+    """One full SUMO Euler step of the IDM composition.
+
+    ``lane_max`` is ``veh->getLane()->getVehicleMaxSpeed(veh)`` (the desired
+    speed ``des_speed`` of ``_v`` is exactly this; it is passed separately so a
+    caller can hold the desired speed while probing a different limit).  The
+    returned ``(v_next, accel)`` follows ``planMoveInternal`` -> ``adaptToLeader``
+    -> ``finalizeSpeed`` with default ``actionStepLength == TS`` and no stops:
+    ``vNext = clamp(vSafe, vMin, min(vSafe, v + a*TS, vTypeMax))`` with
+    ``vMin = min(minNextSpeed, max(vSafe, vMinEmergency))``.  ``accel`` is
+    ``(v_next - v) / dt``; the WM integrator reproduces the SUMO speed/position
+    update from it.
+    """
+    v_safe = follow_speed(v, gap_bumper, leader_v, lane_max, p, dt_s=dt_s,
+                          iterations=iterations)
+    v_max = torch_minimum(torch_minimum(v_safe, max_next_speed(v, p, dt_s=dt_s)),
+                          _lane_cap(lane_max, v_safe))
+    v_min = torch_minimum(min_next_speed(v, p, dt_s=dt_s),
+                          torch_maximum(v_safe, min_next_speed_emergency(v, p, dt_s=dt_s)))
+    # finalizeSpeed: vMax = MAX2(vMin, vMax); vNext = vMax (patchSpeedBeforeLC
+    # base) - the braking-capability floor can override the safe speed.
+    v_next = torch_maximum(v_min, v_max).clamp_min(0.0)
+    return v_next, (v_next - v) / float(dt_s)
+
+
+def _lane_cap(lane_max: Tensor, v_safe: Tensor) -> Tensor:
+    """``MIN3(MAX2(laneMaxSpeed, vPos), ...)`` degenerate term of ``finalizeSpeed``."""
+    return torch_maximum(lane_max, v_safe)
+
+
+def maximum_safe_stop_speed_euler(gap: Tensor, decel: Tensor, headway_time: Tensor,
+                                  *, dt_s: float) -> Tensor:
+    """``MSCFModel::maximumSafeStopSpeedEuler`` (MSCFModel.cpp:860-884), exact."""
+    g = gap - NUMERICAL_EPS
+    b = decel * float(dt_s)
+    t = headway_time
+    s = float(dt_s)
+    g = g.clamp_min(0.0)
+    b = b.clamp_min(1.0e-12)
+    root = (s * s + 4.0 * (s * (2.0 * g / b - t) + t * t)).clamp_min(0.0).sqrt()
+    n = (0.5 - ((t + root * -0.5) / s)).floor().clamp_min(0.0)
+    h = 0.5 * n * (n - 1.0) * b * s + n * b * t
+    r = (g - h) / (n * s + t).clamp_min(1.0e-12)
+    x = n * b + r
+    return torch.where((gap - NUMERICAL_EPS) < 0.0,
+                       torch.zeros_like(x), x.clamp_min(0.0))
+
+
+def stop_speed(v: Tensor, gap: Tensor, p: SumoIDMParams, *, dt_s: float,
+               iterations: int, action_step_s: Optional[float] = None) -> Tensor:
+    """``MSCFModel_IDM::stopSpeed`` (MSCFModel_IDM.cpp:179-200).
+
+    ``gap`` is the raw distance to the standing obstacle (no ``minGap``).
+    ``gap < 0.01`` stops immediately; standing vehicles that the IDM cannot
+    resolve fall back to ``maximumSafeStopSpeed`` (Euler) with the vehicle's
+    ACTION-STEP length as the headway argument (the SUMO call passes
+    ``actionStepLengthSecs``, i.e. ``dt_s`` at the default), and the result
+    never exceeds ``gap/TS``.
+    """
+    like = v
+    des = _p_lane_max(p, like)
+    result = torch.where(gap < 0.01, torch.zeros_like(v),
+                         sumo_idm_v(v, gap, torch.zeros_like(v), des, p, dt_s=dt_s,
+                                    iterations=iterations, respect_min_gap=False))
+    standing = (v < NUMERICAL_EPS) & (result < NUMERICAL_EPS) & (gap > 0.0)
+    if bool(standing.any()):
+        decel = _pair(p.decel, like)
+        headway = like.new_full((), float(dt_s if action_step_s is None
+                                          else float(action_step_s))).expand_as(like)
+        fallback = maximum_safe_stop_speed_euler(gap, decel, headway, dt_s=dt_s)
+        result = torch.where(standing, fallback, result)
+    return torch_minimum(result, gap / float(dt_s)).clamp_min(0.0)
+
+
+def _p_lane_max(p: SumoIDMParams, like: Tensor) -> Tensor:
+    """Desired speed of an IDM evaluation: the model's own ``des_speed``."""
+    return _pair(p.des_speed, like)
+
+
+def free_speed(v: Tensor, seen: Tensor, max_speed: Tensor, p: SumoIDMParams, *,
+               dt_s: float, iterations: int) -> Tensor:
+    """``MSCFModel_IDM::freeSpeed`` (MSCFModel_IDM.cpp:105-127).
+
+    ``seen`` is the distance to the speed-limit change, ``max_speed`` the new
+    limit.  Accelerating uses the free ``_v`` (gap 1e6); braking for a lower
+    limit relaxes the gap to ``max(seen, secureGap)`` against a standing
+    transition point; close to the change the result is capped at the new limit.
+    """
+    like = v
+    lane_max = _p_lane_max(p, like)
+    decel = _pair(p.decel, like)
+    headway = _pair(p.headway_time, like)
+    two_sqrt = (2.0 * (_pair(p.accel, like) * decel).clamp_min(1.0e-12).sqrt())
+    two_sqrt = two_sqrt.clamp_min(1.0e-12)
+    # getSecureGap(veh, nullptr, maxSpeed, 0, myDecel): the secure gap of driving
+    # at the NEW limit against the standing transition point.
+    sec_gap = (max_speed * headway + max_speed * max_speed / two_sqrt).clamp_min(0.0)
+    huge = like.new_full((), 1.0e6).expand_as(v)
+    v_acc = sumo_idm_v(v, huge, max_speed, lane_max, p, dt_s=dt_s,
+                       iterations=iterations, respect_min_gap=False)
+    v_dec = sumo_idm_v(v, torch_maximum(seen, sec_gap), torch.zeros_like(v), lane_max,
+                       p, dt_s=dt_s, iterations=iterations, respect_min_gap=False)
+    v_safe = torch.where(v <= max_speed, v_acc, v_dec)
+    # if (seen < secGap) vSafe = MIN2(vSafe, maxSpeed)  (overshoot guard)
+    return torch.where(seen < sec_gap, torch_minimum(v_safe, max_speed), v_safe)
+
+
+def insertion_follow_speed(v: float, gap_bumper: float, leader_v: float,
+                           p: SumoIDMParams, *, dt_s: float, iterations: int,
+                           max_rounds: int = 10) -> float:
+    """``MSCFModel_IDM::insertionFollowSpeed`` (scalar, recursive in SUMO).
+
+    Equilibrium insertion speed: when the gap covers the moving equilibrium
+    ``s = max(0, v*T + v*(v-vL)/(2*sqrt(a*b)))`` the desired speed is kept;
+    otherwise ``followSpeed`` is applied to the CANDIDATE speed until the
+    iteration settles (``speed2 - speed3 < accel*dt``), at most ``max_rounds``
+    recursions (SUMO recurses unboundedly; 10 is its own style of bound
+    elsewhere).  Reference implementation for S-RB-MERGE.
+    """
+    like = scalar_tensor(v)
+    two_sqrt = math.sqrt(float(_pair(p.accel, like)) * float(_pair(p.decel, like))) * 2.0
+    s = max(0.0, v * float(_pair(p.headway_time, like))
+            + v * (v - leader_v) / max(two_sqrt, 1.0e-12))
+    if gap_bumper >= s:
+        return v
+    speed = v
+    for _ in range(int(max_rounds)):
+        speed2 = float(follow_speed(scalar_tensor(speed), scalar_tensor(gap_bumper),
+                                    scalar_tensor(leader_v), _pair(p.des_speed, like),
+                                    p, dt_s=dt_s, iterations=iterations))
+        speed3 = float(follow_speed(scalar_tensor(speed2), scalar_tensor(gap_bumper),
+                                    scalar_tensor(leader_v), _pair(p.des_speed, like),
+                                    p, dt_s=dt_s, iterations=iterations))
+        if speed2 - speed3 < 1.0 * float(dt_s):
+            return speed2
+        speed = speed2
+    return speed
+
+
+def scalar_tensor(value: float) -> Tensor:
+    return torch.tensor(float(value), dtype=torch.float64)
+
+
+def action_step_enabled(action_step_s: Optional[float], dt_s: float) -> bool:
+    """Whether ``actionStepLength > TS`` holds accelerations between action steps."""
+    if action_step_s is None:
+        return False
+    if not (math.isfinite(float(action_step_s)) and float(action_step_s) >= float(dt_s)):
+        raise ValueError("action_step_s must be >= dt_s (SUMO multiples of the step)")
+    return float(action_step_s) > float(dt_s) + 1.0e-12
+
+
+def action_step_update(v: Tensor, held_accel: Optional[Tensor], p: SumoIDMParams, *,
+                       dt_s: float) -> Tensor:
+    """Non-action-step continuation (``MSVehicle.cpp:4654-4657``):
+    ``vSafe = v + accel_last * TS`` capped by the speed bounds, no re-planning.
+
+    The caller carries ``held_accel`` (the last action-step acceleration) per
+    vehicle; the WM rollout does not persist it yet (documented gap).
+    """
+    accel = torch.zeros_like(v) if held_accel is None else held_accel
+    v_next = (v + accel * float(dt_s)).clamp_min(0.0)
+    v_next = torch_minimum(v_next, max_next_speed(v, p, dt_s=dt_s))
+    v_min = min_next_speed(v, p, dt_s=dt_s)
+    return torch_maximum(v_next, torch_minimum(v_min, v_next))
