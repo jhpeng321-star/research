@@ -200,6 +200,9 @@ an explicit versioned-panel migration after PASS is still required. The paused
   Retain all28 worlds/coverage, missing !=zero, no replacements or extra census.
   All-world stratified CI can be undefined with a missing stratum; report that
   explicitly alongside available-case mean/coverage and prespecified cell results.
+  Secondary conditional eligible-world CIs resample eligible worlds within their
+  represented cells, weighted by eligible-cell counts; report this estimand and
+  its21-world (20high-share) denominator separately from the undefined full panel.
 - Full panel207900sim-s + corrected mechanics canary14400 (16 full900s reruns)
   + retained21480 = **243780 charged maximum**, below500000. Each full rerun
   precharges900 before its prefix. Canary uses the existing969699 geometric wall

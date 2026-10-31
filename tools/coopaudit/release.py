@@ -34,8 +34,10 @@ def require_release(root, selection=None, artifact=None):
         raise ValueError('upstream artifact-check evidence missing')
     status_lines = re.findall(r'^\s*Status:\s*(PASS|FAIL|HOLD)\s*$',
                               doc.read_text(encoding='utf-8'), re.MULTILINE)
-    status_lines += re.findall(r'^\s*#{1,6}\s+.*artifact check\s*[—–:-]\s*(PASS|FAIL|HOLD)\s*$',
-                               doc.read_text(encoding='utf-8'), re.MULTILINE | re.IGNORECASE)
+    titles = re.findall(r'^\s*#{1,6}\s+.*artifact check\s*[—–:-]\s*(.*)$',
+                        doc.read_text(encoding='utf-8'), re.MULTILINE | re.IGNORECASE)
+    for title in titles:
+        status_lines += re.findall(r'\b(PASS|FAIL|HOLD)\b',title,re.IGNORECASE)
     if not status_lines or any(s.upper() != 'PASS' for s in status_lines):
         raise ValueError('artifact evidence requires an explicit PASS status without HOLD/FAIL')
     if hashlib.sha256(doc.read_bytes()).hexdigest() != release.get('artifact_document_sha256'):

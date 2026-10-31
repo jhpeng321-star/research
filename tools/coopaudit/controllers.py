@@ -116,7 +116,9 @@ class Controller:
             return None, dict(fallback='pi' if self.name=='pi' else 'damping', fallback_ids=members), {}
         if self.bound:
             a,kw = self.bound.command(env,members)
-            return a,kw,{}
+            commands = {env.builder.vehicle_ids[int(env.frame.vid_index[i])]:float(a[0,i])
+                        for i in np.flatnonzero(np.isfinite(a[0]))}
+            return a,kw,commands
         if self.zero:
             from wms.control.nativeinit import NativeResidualCommand
             command = self.zero(env.state())
