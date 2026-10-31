@@ -1,0 +1,12 @@
+{
+  "schema": "rbunc_interim_watch_cpu/1",
+  "date_local": "2026-11-01",
+  "command": "py -3.13 -B -m pytest -q -p no:cacheprovider tests/unit/test_unc_interim_watch.py",
+  "passed": 11,
+  "elapsed_s": 2.47,
+  "checks": ["independent CRPS and spread arithmetic", "K8 completeness", "candidate identity consistency", "paired demand-rate consistency", "native target/start identity", "source conservation", "future identity", "native source/road ledger", "process-noise rejection", "explicit FIT paths only", "duplicate rejection", "whole-world bootstrap clustering"],
+  "runtime_dependencies": "Python standard library only",
+  "peer_process_actions": 0,
+  "new_inference_dispatches": 0,
+  "physical_sampling_scale_changed": false
+}

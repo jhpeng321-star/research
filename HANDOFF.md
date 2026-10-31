@@ -41,6 +41,11 @@ tasks, no complete FIT world yet (reserved-first schedule). No UNC calibration
 can be inferred from those tasks. Next bounded UNC-only observer frozen in
 `docs/paper_results/RBUNC_INTERIM_DESIGN.md`; it will inspect explicit FIT task
 paths only through09:00 and leave INT's04/08/full scoring and processes alone.
+Observer implementation `tools/rbunc/interim_watch.py` / `interim_ops.py`:
+11CPUtestsPASS/2.47s, independent CRPS/SD/range, missingK8, changed candidate,
+start/future/ledger/noise/CRN/duplicate/explicit-FIT rejection. Pending exclusive
+dispatch; no new inference or full EVAL scoring. Missing causal-counter hashes
+in the immutable old runtime will be recorded unavailable, never invented.
 
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:

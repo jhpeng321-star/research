@@ -177,3 +177,10 @@ futures = plan_hidden_state_futures(
   same-mean Poisson; CRPS change remains unresolved. This does not tune a physical
   spread or independently qualify traffic predictions. Three numerical tests
   passed on cpuQ; local tests skip this optional offline dependency when absent.
+- Bounded integration observer: `interim_ops.py dispatch` claims one CPU-only
+  observer through2026-11-01 09:00+08; `status` is read-only; `fetch --out NEW.json`
+  preserves an immutable local snapshot. It opens explicit FIT969420–969431 task
+  paths only and requires K8/source/CRN/native-start consistency before emitting
+  native120s spread/CRPS/coverage diagnostics against existing targets. No physical
+  sampling change, inference, peer process action or full EVAL scoring. INT still
+  owns its04/08/full reports. See `RBUNC_INTERIM_DESIGN.md`;11CPUtestsPASS.
