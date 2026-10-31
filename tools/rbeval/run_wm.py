@@ -267,6 +267,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                 roll = model.rollout(initial, n_steps=1200, cav_controller=cb, **kw)
                 assert torch.isfinite(roll['speeds']).all()
                 score = frozen.costs(roll, entries, b.entry_spec['k0'])
+                if future_builder is not None:
+                    future_receipt['population_audit'] = entries.audit_population(initial, roll)
             arrays = {k: roll[k].detach().cpu().numpy() for k in ('positions', 'speeds', 'lanes', 'masks')}
             episodes = []
             for i, arm in enumerate(ARMS):

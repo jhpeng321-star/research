@@ -9,6 +9,26 @@ import torch
 from tools.rbint.rebuild import rebuild_with_motion_encoder
 
 
+def native_controller():
+    """Same native CAV command/plant used by the registered five-arm evaluator."""
+    from wms.control.counterfactual import native_fn
+    from wms.control.continuous import project_native
+    from wms.model.cav import WM_MERGE_KEY, WM_LANE_TARGET_KEY
+    native = native_fn('head', a_max=1.2)
+
+    def callback(state):
+        mask = state['present'].bool() & state['is_cav'].bool()
+        state[WM_MERGE_KEY] = mask & (state['lane'] == 2)
+        lane = torch.where(state['lane'] != 2,
+                           state.get(WM_LANE_TARGET_KEY, state['lane']), state['lane'])
+        speed = (state['v_mps'] + .5 * project_native(state, native(state))).clamp_min(0.)
+        return torch.stack((state['s_m'] + .5 * speed, lane, speed,
+                            (speed - state['v_mps']) / .5), -1)
+
+    callback.native_lane_mask = lambda s: s['present'].bool() & s['is_cav'].bool()
+    return callback
+
+
 def load_candidate(checkpoints, configs, device):
     from wms.control.policy14_cli import load_members
     recipe = tomllib.loads(Path(configs[0]).read_text(encoding='utf-8'))
@@ -56,6 +76,35 @@ class InstrumentedEntries:
 
     def insert(self, state):
         return self.observer.insert(state)
+
+    def audit_population(self, initial, rollout):
+        import numpy as np
+        masks = rollout['masks'].bool()
+        births = torch.stack(self.new_masks, 1).bool()
+        before = torch.stack([s['present'] for s in self.states], 1).bool()
+        previous = torch.cat((initial['present'][:, None].bool(), masks[:, :-1]), 1)
+        if not torch.equal(before, previous | births) or (previous & births).any():
+            raise AssertionError('admission/current cohort mismatch')
+        exits = before & ~masks
+        if (masks & ~before).any():
+            raise AssertionError('unrecorded vehicle creation')
+        boundary = initial['exit_s_m'][:, None]
+        if (exits & ~(rollout['positions'] > boundary)).any():
+            raise AssertionError('vehicle vanished before road exit')
+        for name in ('positions', 'speeds', 'accel', 'lanes'):
+            if not torch.isfinite(rollout[name]).all():
+                raise AssertionError('nonfinite '+name)
+        if rollout['raw_residual_mps2'].count_nonzero():
+            raise AssertionError('learned correction emitted')
+        lanes = torch.stack([s['lane'] for s in self.states], 1)
+        admitted = np.stack([(((lanes == 2) == bool(e)) & births).sum((1, 2)).cpu().numpy()
+                             for e in (0, 1)], -1)
+        if not np.array_equal(self.process.due_total + self.initial_backlog,
+                              self.process.pending + admitted):
+            raise AssertionError('request/admission/source ledger not conserved')
+        return dict(finite=True, conserved=True, due=self.process.due_total.tolist(),
+            initial_backlog=self.initial_backlog.tolist(), admitted=admitted.tolist(),
+            final_pending=self.process.pending.tolist(), exits=exits.sum((1, 2)).tolist())
 
 
 def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):

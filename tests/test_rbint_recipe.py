@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 
-from tools.rbint.recipe import InstrumentedEntries, candidate_future
+from tools.rbint.recipe import InstrumentedEntries, candidate_future, native_controller
 from tools.rbeval.core import reference
 from wms.control.hidden_state import BirthMix, Population, PoissonEntries
 from wms.model.driver_encoder import PARAMETER_NAMES
@@ -51,6 +51,7 @@ def test_candidate_B_is_fixed_population_for_present_and_newborns():
     model = build_model(ModelSpec(rollout_mode='driver_params', lane_model='lc2013'),
                         PhysicsConfig(merge_model='sumo'))
     model._wmphys_variant = 'B'
+    model.cav_exec_cap = 'idm'
     state = dict(s_m=torch.tensor([[-900., -800., 0., 0.]]),
         v_mps=torch.full((1, 4), 20.), a_mps2=torch.zeros(1, 4),
         lane=torch.zeros(1, 4, dtype=torch.long), length_m=torch.full((1, 4), 5.),
@@ -69,3 +70,8 @@ def test_candidate_B_is_fixed_population_for_present_and_newborns():
     birth = kw['entrant_driver_sampler'].candidate(0, 0, 4)
     assert all(float(expected[0, 0, i]) == birth[n] for i, n in enumerate(PARAMETER_NAMES))
     assert entries.process.cfg.conserve_queue
+    state['exit_s_m'] = torch.full_like(state['s_m'], 553.33)
+    with torch.no_grad():
+        rollout = model.rollout(state, n_steps=30, cav_controller=native_controller(), **kw)
+    audit = entries.audit_population(state, rollout)
+    assert audit['conserved'] and sum(audit['due'][0]) > 0

@@ -17,7 +17,7 @@ import numpy as np
 import torch
 
 from tools.rbint.audit import audit_closed_cohort, forbid_learned_corrections
-from tools.rbint.recipe import load_candidate
+from tools.rbint.recipe import load_candidate, native_controller
 from tools.rbeval.core import digest, load, reference, save_new
 from wms.control.hidden_state import plan_hidden_state_futures
 from wms.model.driver_encoder import PARAMETER_NAMES
@@ -41,6 +41,10 @@ def main():
         models, receipt = load_candidate(
             ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [str(ROOT/'configs/wm_phys.toml')], 'cpu')
         model = models[0]
+        policy = torch.load('/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt',
+                            map_location='cpu', weights_only=False)
+        model.cav_exec_cap = policy['config']['cav_exec_cap']
+        assert model.cav_exec_cap != 'off'
         namespace = dict(torch=torch)
         reference('worker', namespace)
         for seed in (969420, 969421):
@@ -71,9 +75,10 @@ def main():
                     kwargs.update(driver_embedding=embedding,
                         driver_params={n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)})
                 state['exit_s_m'] = torch.full_like(state['s_m'], road_end_exit_bound(model.physics))
-                roll = model.rollout(copy.deepcopy(state), n_steps=120, **kwargs)
+                roll = model.rollout(copy.deepcopy(state), n_steps=120,
+                                     cav_controller=native_controller(), **kwargs)
                 gate = audit_closed_cohort(state['present'], roll, exit_s_m=state['exit_s_m'])
-                assert not roll['raw_residuals'].count_nonzero()
+                assert not roll['raw_residual_mps2'].count_nonzero()
             results.append(dict(variant=variant, seed=seed, t0=300, horizon_s=60,
                 source_sha256=start['initial_state_sha256'], encoder_calls=len(calls),
                 encoder_exact=receipt['encoder_exact'], guard_pass=True, **gate))

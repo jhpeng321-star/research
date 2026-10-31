@@ -72,7 +72,11 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
     accel = out['accel_mps2']
     next_v = (v + accel * dt).clamp_min(0)
     next_s = kin[..., 0] + .5 * (v + next_v) * dt
-    if model.physics.stop_time_integration:
+    if getattr(model.physics, 'cf_model', 'legacy') == 'sumo_idm':
+        # SUMO default --step-method.ballistic=false: advance with end-step speed.
+        # CAV commands below retain the registered executor's own position rule.
+        next_s = kin[..., 0] + next_v * dt
+    elif model.physics.stop_time_integration:
         distance = v.square() / (2 * (-accel).clamp_min(1e-9))
         next_s = torch.where(v + accel * dt < 0, kin[..., 0] + distance, next_s)
     lane = kin[..., 1:4].argmax(-1)

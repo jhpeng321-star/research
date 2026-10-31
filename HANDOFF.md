@@ -54,6 +54,11 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- Added full-population exact admission/exit/source ledger audit to candidate
+  tasks, and thin A/B entrypoints using the existing runner CLI. Meaningful
+  integration test now runs actual births/queue and native CAV execution; 12
+  recipe+audit tests PASS /41.99s. This caught missing CAV callback/cap and an
+  incorrect residual-log key before any recorded rollout.
 - LANE follow-up merged (right-overtake prevention and completed FIT receipts):
   45 touched-module CPU tests PASS /15.61s. Original incorrect test filename
   produced no tests; corrected command includes test_lc2013_validation.py.

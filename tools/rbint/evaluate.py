@@ -11,11 +11,16 @@ from tools.rbint.recipe import load_candidate, candidate_future
 from tools.rbeval import run_wm
 
 
+def main(variant):
+    os.environ['WMPHYS_VARIANT'] = variant
+    run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
+                identity_sources=[ROOT/'tools/rbint/rebuild.py', Path(__file__),
+                                  Path(sys.argv[0]).resolve()])
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--variant', required=True, choices=('A', 'B'))
     args, rest = parser.parse_known_args()
-    os.environ['WMPHYS_VARIANT'] = args.variant
     sys.argv = [sys.argv[0], *rest]
-    run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
-                identity_sources=[ROOT/'tools/rbint/rebuild.py', Path(__file__)])
+    main(args.variant)
