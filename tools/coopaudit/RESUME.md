@@ -9,6 +9,15 @@ events, wall C_G600+1658.239758, MAPPO/SUMOCF C_G0; no panel inference yet.
 Full fixed panel207900sim-s is admitted under the243780combined charged maximum.
 Do not dispatch a second canary or main: inspect `v2-canary_PID.json`,
 `v2-main_PID.json`, the one-shot launch markers and `v2_status.py` first.
+`finalize_v2.py --start` is the one-shot LOCAL completion observer, not a SUMO
+dispatcher. Once its V2_FINISHER_ONCE/PID receipts exist, never start another.
+It waits for the existing main, verifies process exit/lock/budget, exports exact
+receipts/traces, commits step4, computes conditional/world CIs, independently
+checks algebra/bootstrap/coverage, publishes <=60line report+registry and commits
+step5. It refuses changed HEAD, other work or pre-staged files. Inspect
+V2_FINISHER_PROGRESS.json / V2_FINISHER_FAILURE.json before manual intervention.
+No simulator job is retried, migrated or launched by this observer. It can wait
+up to24h on the unchanged spare-core gate; networking retries are read-only.
 Raw namespace `/root/autodl-tmp/coopaudit20261101_v2` with links under old jobs;
 ledger remains `/root/coopaudit20261031/accounting.jsonl`. Original data preserved.
 
