@@ -18,7 +18,7 @@ launch. Design/compatibility/owner aggregate addendum and CPU checks are committ
 - GPU canary passed at 1160 MiB sampled owned memory; gpuR had insufficient room.
 - One gpuA dispatcher: PID211623 / start881579797; two bounded GPU lanes and
   two nice19 CPU lanes waiting for spare cores. No duplicate dispatch.
-- First full 300 s task completed in 348 s; at least five tasks now complete.
+- First full 300 s task completed in 348 s; 7/480 complete at17:07 +08.
   This is a many-hour panel; a partial panel is not exported as the headline.
 - All 200 recorded world/arm label sets recovered; t300 observed start supplies
   the first left integration boundary of the tape beginning t300.5.
@@ -27,7 +27,8 @@ launch. Design/compatibility/owner aggregate addendum and CPU checks are committ
 
 ## Remaining delivery
 - Final complete-panel CSV/PNG and world-bootstrap estimates are pending inference.
-- The collector/finalizer is implemented to sync, validate all480 tasks, generate
+- One local collector/finalizer PID39680 is live (creation-time receipt saved)
+  to sync, validate all480 tasks, generate
   <=60-line results/three CSVs/PNG, verify arithmetic/provenance, then commit them.
 - Wall: 120 genuine-history starts survive, but causal executor restoration is
   unresolved and cached futures stop120s. See `C1CLOSED_WALL_INPUTS.md`.

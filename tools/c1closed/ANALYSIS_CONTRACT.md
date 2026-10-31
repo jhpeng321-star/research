@@ -9,6 +9,11 @@ and **all** model draws in that comparison. Paired curves/differences additional
 intersect WM and BB cohorts. Median AE within each draw, then median K8, then
 median world; export surviving counts including zeros. No-ID errors are missing,
 never zero. BB-id's PI curve uses its own paired cohort/ID contract; MAPPO absent.
+All models' initial features derive from the same genuine observed history;
+the legacy checkpoints retain their native short-context encoder, while WM2
+uses its learned long-history path. This is not a matched-history-capacity or
+matched-training-data architecture attribution. Original-ID entry exclusion is
+enforced by `_entry_process`'s padding-only pool (slots >= initial k0).
 
 Aggregate fields/queues/crossings use pointwise K8 medians. Throughput error is
 also exported as cumulative-crossing error / horizon x3600 veh/h. J is the float64
