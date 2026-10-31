@@ -1,0 +1,78 @@
+{
+ "local_time": "2026-11-01T05:49:03+08:00",
+ "label": "interim",
+ "source_head": "5c26222fafcb2aee165ba3bc1912748254ea3d9e",
+ "code_hashes": {
+  "tools\\rbint\\continue_noon.py": "755dc59720e709ab95dd6696124682f57d415a0b4549ff895164967e67572d8f",
+  "tools\\rbint\\noon_report.py": "2947348987f0389c2ee408ddb77841b0ab024387ba69b8f84c73e8e66d69bde7",
+  "tools\\rbint\\compare.py": "3bc2fc0a3a25729d8c933926b2c56df38babd162934f30fc597df9d82f4a8904",
+  "tools\\rbint\\score_endpoints.py": "cb2a8d80316168337d64b6e0788fceebc378825cd4d6d8735dd53ed8cc346845",
+  "tools\\rbeval\\score.py": "e6687c7c3534b667b2e337eab5d4692599ee0bf8f9c3788d91f5603a7b073786"
+ },
+ "variants": {
+  "A2": {
+   "tasks": 64,
+   "complete": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437
+   ],
+   "sha256": "e0b20c90255d4d0de4dcdf0f466bdd50d700be3969702cb4978c43d7d31d666f",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T054903+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\A2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\A2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\A2\\credibility",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "B2": {
+   "tasks": 33,
+   "complete": [
+    969432,
+    969433,
+    969434
+   ],
+   "sha256": "188bb64d9d61da2f3382b429f56456f8399ff1e9ae36eb1aa9108af3233a688c",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_B2_20261101T054903+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\B2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\B2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\B2\\credibility",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "C2": {
+   "status": "NO_SAVED_SHARDS",
+   "tasks": 0
+  },
+  "FULL-v3": {
+   "tasks": 54,
+   "complete": [
+    969432,
+    969433,
+    969434,
+    969436,
+    969437
+   ],
+   "sha256": "e5ffbfa3d96e39b5877fcdbb5106d965bb816a9b60dd4035e58fbdd2a3ec2d47",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v3_20261101T054903+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\FULL-v3\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\FULL-v3\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\FULL-v3\\credibility",
+   "endpoints": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\FULL-v3\\endpoints\\HDV60_COMPARISON.json",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "FULL-v4": {
+   "tasks": 11,
+   "complete": [],
+   "sha256": "32cc934f1c79e61dc740ebf0375aa88442ea92e4e817bed2f47a4400bb6f4cb3",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T054903+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T054124+0800\\FULL-v4\\paired\\COMPARISON.json",
+   "reused_identical_complete_ensemble_scores": true
+  }
+ },
+ "read_only_remote": true,
+ "receipt_directory": "docs/rbint/noon/20261101T054903+0800",
+ "freeze": "PENDING",
+ "interim08": "PENDING"
+}

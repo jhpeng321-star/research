@@ -1,4 +1,4 @@
-# WM-PHYS morning report — interim, 2026-11-01T05:41:24+08:00
+# WM-PHYS morning report — interim, 2026-11-01T05:49:03+08:00
 Physics candidates improve several point scores; adoption and calibrated action confidence remain unestablished.
 Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v3.
 
@@ -19,7 +19,7 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - B2:n=3, ΔCRPS120/300/600=-1488/-2161/-11731veh-s; Δ300s rate-distance=-6.67pp.
 - C2:PENDING complete K8 evidence; 0 saved tasks; no efficacy inferred.
 - FULL-v3:n=5, ΔCRPS120/300/600=-431/-3230/-11808veh-s; Δ300s rate-distance=-0.50pp.
-- FULL-v4:PENDING complete K8 evidence; 8 saved tasks; no efficacy inferred.
+- FULL-v4:PENDING complete K8 evidence; 11 saved tasks; no efficacy inferred.
 - FULL-v3 native600s upstream speed CRPS=3.03 vs cell=1.92m/s; clearing not qualified.
 - Same native onset-distribution IBS600=0.266 vs cell=0.250; onset-CDF gate retained.
 - Expected600s mappo−native delay=-221 vs recorded=-1426veh-s (same available worlds).
@@ -31,9 +31,9 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
   Inferred600s MAPPO/PI effects+3450/+825 vs real−2064/−3858veh-s; not a clean information ceiling.
 
 ## Switching-eligibility rule
-- FULL-v3−WM2 delay CRPS differences (veh-s),120/300/600:−431/−3230/−11808;95%world CIs NA.
-- 300s breakdown-distance difference (pp):−0.50;95%world CI NA.
-- HDV60 mean-world-median error difference (m):−20.51;95%world CI NA; common HDV/arm endpoints=842.
+- FULL-v3−WM2 delay CRPS differences (veh-s),120/300/600:-431;95%CI NA / -3230;95%CI NA / -11808;95%CI NA.
+- 300s breakdown-distance difference (pp): -0.50;95%CI NA.
+- HDV60 mean-world-median error difference (m): -20.51;95%CI NA; common HDV/arm endpoints=842.
 - Registered CIs resample only scored worlds within demand×penetration×split; singleton strata yield NA, never PASS.
 - Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.
 - ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.
@@ -41,9 +41,9 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 ## Credibility / schedule
 - Strict paired P(beats incumbent)>=0.8 plus lower expected delay is only a decision rule; calibration must also hold.
 - Same-source selected-switch reliability and50/80/90%/range coverage: E:\agent-work\c4-rb-int\docs\rbint\noon\20261101T054124+0800\FULL-v3\credibility/CREDIBILITY.md.
-- Prior FULL-v3 matched4:0.8calls won6/11,6/10,9/11 vs94.3/92.5/97.7%forecast; range coverage20/40/25%.
+- Same-source selected0.8calls observed win%=54.5/60.0/69.2 vs forecast%=94.3/92.5/97.1; range coverage%=20.0/52.0/40.0.
 - ~04:00 interim retained:FULL-v1 n4 ΔCRPS−785/−3512/−11041; rate-distance+1.25pp; historical CIs retracted.
 - ~08:00 interim: PENDING; final engineering freeze09:30: PENDING.
 - Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
 - Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
-- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T054124+0800.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T054903+0800.
