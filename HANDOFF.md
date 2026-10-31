@@ -17,6 +17,20 @@
 <!-- wmdecide-refresh:end -->
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Current integration routing — fresh-session reconciliation ~05:55 +08
+
+- Own collector PID4984 positively matched to its persistent claim/start time;
+  remains live,1200s refresh,09:00+08 deadline. No replacement needed.
+- Latest evidence is always the marked block above; historical snapshots below
+  retain their original counts. Receipt: `docs/paper_results/wmdecide/RESUME_0555.md`.
+- INT already has picker/credibility `e8302db3`. FULL-v4/source22cc32f6 belongs
+  to INT's existing noon collector; use its local immutable shards/publication.
+  DECIDE's live collector covers WM2/FULL-v1/FULL-v3/A2/B2/C2 only.
+- For FULL-v4, the generic credibility CLI needs no change: score local shards
+  once and match WM2 with identical explicit `--worlds`; reuse completed reports.
+- Prior18 picker/credibility +4 snapshot +7 refresh CPU tests remain applicable;
+  this resume changes documentation only. No simulation/source changes.
+
 ## Collector recovery — 05:21 +08
 
 - First own collector38724 exited after producing a valid05:18 publication;
