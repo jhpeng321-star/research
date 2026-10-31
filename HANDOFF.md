@@ -1,108 +1,64 @@
-# S-RB-LANE — precision continuation active (~03:08)
+# S-RB-LANE morning handoff — 2026-11-01
 
-Branch `c4/rb-lane`, base `f0db3c82`; latest engineering source `52d2df5c`.
-Coordinate lineage `0a1e7e93`, signed-cap source `92a3cd69`.
-All prior work retained. Owner authority:
-WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
-**current FIT precision remains poor, no distributional qualification claim**.
+Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering source aefc4bd9**;
+scored decision source52d2df5c, decision-equivalent message completion certified.
+All prior work retained. **Keep-right precision is NOT solved; no distributional
+qualification. No owned jobs/watchers remain.** Morning report:
+`docs/paper_results/RB_LANE_20261101.md`; full iteration/receipts diary preserved.
 
-**CF/INT evidence:** actual FIT displacement is Euler(s+v_next*dt), MAE3.49e-5m
-vs trapezoid0.0390m over2.346M valid intervals. Current INT source still shows
-trapezoid. Read `docs/LC2013_POSITION_HANDOFF.md`; shared note published. This
-does not alter the recorded-position lane diagnostic or legacy integrator.
+## Integration contract
+- `ModelSpec(lane_model="lc2013",lane_head="off",merge_decision="hazard")`.
+  Build a clean spec; disable learned acceleration/merge corrections. Default
+  legacy/checkpoint behavior stays unchanged; no new weights or factory changes.
+- `lc2013.py` + `lc2013_geometry.py`: strategic/cooperative/speed-gain/keep-right,
+  source fixed-point wishes/lookahead, IDM secure gaps/assertiveness, finite
+  route LENGTHS, raw lane origins/internal-link gaps, right-overtake prevention,
+  cooperative early returns, urgency and source speed-message semantics.
+- **step_output returns(next_lane,next_s,next_v)**. Merge its guarded wms tuple
+  update and duplicate-arbitration exclusion. Post-motion clamp is retained even
+  after merging; fixed CAV/controller positions AND destination lanes constrain
+  HDVs. Rejected moves restore their coordinate origin before joint recheck.
+- Direct step callers carry **all `physics.lc2013.STATE_KEYS`**, now including
+  `lc2013_has_advice`/`lc2013_advice_weight`. Explicit zero/positive messages and
+  foreign wanted-speed blending are preserved; old-state negative-only fallback.
+  Numeric IDs:vehicle_id orvid. Reset absence/identity/lane change/newborn.
+- LC style uses SUMO defaults; only directly comparable motion-inferred fields
+  map. MOBIL politeness/threshold are not treated as LC2013 style parameters.
 
-## Switch / integration
-- `ModelSpec(lane_model="lc2013", lane_head="off", merge_decision="hazard")`.
-  Default unchanged; build a clean spec, disable learned acceleration/merge
-  corrections. No new checkpoint weights; WM lanes left0/right1/ramp2.
-- `lc2013.py`: strategic/cooperative/speed-gain/keep-right, fixed-point wishes,
-  lookahead, IDM secure gaps, follower help, right-overtake prohibition.
-  LC style uses SUMO defaults; only comparable motion-inferred settings map.
-- `lc2013_geometry.py`: actual finite best-lane LENGTHS3197.55/553.33/477.89,
-  edge-local position, both-best-zero route offset resolution, raw neighboring
-  gaps, collapsed3/2.93/8m junction links and source consecutive-leader visibility.
-- Candidate9 coordinate increment: upstream model s translates±1.45m on lane
-  change to preserve SUMO raw lane position. Latest `step_output` returns
-  **(next_lane,next_s,next_v)**; guarded wms edits consume motion and skip a
-  duplicate legacy arbitration. Fixed CAV teacher positions are not shifted.
-  Rejected moves restore their origin before a monotone joint-feasibility recheck.
-- Step recomputes after longitudinal/CAV motion; ramp cannot pass its lane end.
-  Carry `physics.lc2013.STATE_KEYS`; IDs `vehicle_id` or`vid`, reset absence/
-  identity/observed change/newborn. Messages consumed next step. Optional route
-  distances/offset/occupation plus raw-position and target-offset overrides.
+## Verified conditional FIT result (not autonomous qualification)
+32 FIT worlds969400–969431;240..300 history,300..360 teacher forcing, snapshotv2.
+- Population/160episodes:1235/3255 recall**37.942%**, precision**3.006%**,
+  41083 positive steps. Matched MOBIL241/3255 recall7.404%.
+- Frozen encoder/160episodes:1318/3255 recall**40.492%**, precision**2.400%**,
+  54910 positive steps. Matched MOBIL108/3255 recall3.318%.
+- Published causal physical points/native32:236/626 recall37.700%, precision
+  3.093%; matched MOBIL31/626. Explicit sensitivity, not substituted into A/B/C.
+- Dominant non-urgent keep-right FP:23810(population),36425(encoder); precision
+  0.796%/0.760%. Per-motivation precision/recall contributions, timing/position,
+  transitions and run-window metrics in **tools/rblane/receipts/FINAL_DIAGNOSTICS.json**.
+  Actual motivation labels absent; contributions use all recorded events.
+  Historical MOBIL1.4% has a different panel/contract.
 
-## Verified precision iterations (160 FIT episodes,3255 events, v1 diagnostic)
-- Original2: precision2.562%, recall34.900%,1136/44333 proposals; paired MOBIL
-  recall7.496%. Historical1.4% is another panel/contract.
-- Source gate4: 2.577%/34.900%,1136/44078 (255FP removed, noTP lost).
-- Finite lengths5: 2.860%/34.347%,1118/39090.
-- Correct NUMERICAL_EPS=.001 in6: 2.848%/34.163%,1112/39045.
-- Published pooled CF point7: 2.015%/38.802%,1263/62689 (worse over-proposal).
-- Existing frozen WM2 encoder8: 2.145%/38.372%,1249/58225. Strategic precision
-  improves24.22%, but keep-right315/40970 is still0.769%. New-setting paired
-  MOBIL recall3.318%. No LC fitting/threshold adjustment/black-box training.
-- Per-predicted-motivation precision/recall contributions and TP/FP location/
-  timing diagnostics: `docs/LC2013_PRECISION_ITERATIONS.md`, immutable panels3–8.
-  Actual motivation labels unavailable; contributions use all3255 events.
+## Engineering proofs / receipts
+- **69 targeted CPU tests PASS**, CPU_URGENCY_MESSAGES.xml. Three default-OFF
+  weight/forward/step/rollout cases BIT-EXACT (DEFAULT_OFF_ENDPOINTS.json).
+- Exact float32 ramp endpoint was outside the double bound:5881 scored HDV
+  frames/91 recorded merges affected. Only that representation is normalized;
+  genuine nextULP stays illegal. Strategic matches rose91(default)/87(encoder).
+- Final message completion:9600 heterogeneous synthetic decisions,288000
+  non-message elements BIT-EXACT to scored52d2df5c,536 urgent stress frames.
+  Autonomous advice feedback changes and still needs INT/EVAL smoke.
+- Panels14–16 source/input/encoder/artifact/motivation/original-runtime exact
+  reassembly PASS; completed matched MOBIL reused. Last owned910505/910966/
+  911369 exited; all earlier workers exited. No SUMO/GPU/training/signals/push.
+  Final identity audit:17 recorded workers,0 matching owned workers alive,
+  0 signals (tools/rblane/receipts/OWNED_JOBS_FINAL.json).
 
-## Candidate9 gate / scorer correction
-- 46 lane/encoder/scorer CPU tests PASS. Three shared-WM default-OFF cases
-  weights/forward/step/rollout BIT-EXACT to b192e0c8 (DEFAULT_OFF_COORDINATES.json).
-  Real b8797242… encoder:171 source keys strict, all9 outputs bit-exact; inference
-  uses only240..300 history, persistent VID settings, centre fallback for entrants.
-- v2 validator undoes recorded upstream lane-origin shifts before decisions,
-  then reports each proposal in its destination frame. Old v1 results retained.
-  **Fresh matched MOBIL required once per setting**; auto-reuse thereafter needs
-  exact input/physics/setting SHA/snapshot/MOBIL dependency bytes. Candidate9v2
-  VERIFIED: precision2.818%, recall34.839%,1134/40246; paired MOBIL7.404% recall.
-  Run±2s precision18.109%/recall25.653%. Still poor positive-step precision.
-  Original-runtime exact reassembly PASS; local6e-12m float-sum roundoff retained.
-- All owned workers through9 exited. Only six allowlisted observable tape files,
-  published motion-fit artifact/frozen model weights, and road/source code read.
-  No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
-
-## Candidate10 VERIFIED (source92a3cd69)
-Source1749's current-leader denominator now preserves its SIGN; the old clamp
-incorrectly removed negative keep-right feedback under inferred settings.
-Faster target leaders no longer overwrite the later cap's gap. 52CPU PASS;
-9600 default-population synthetic decisions remain bit-exact to9. Paired
-encoder-v2 ablation: precision2.148%→2.249%, recall38.710%→37.419%; removes4473
-FP at cost42 exact matches. Keep-right precision remains0.760%; NOT resolved.
-Source branch fires25160 frames. Non-return transition controls are exactly
-unchanged. All source/input/encoder/aggregate checks PASS, worker644043 exited;
-no owned jobs remain. No setting/threshold fit. All original results preserved.
-
-## Gaps
-Synchronous proposals/messages vs SUMO serial processing; full leader
-overtake/fall-behind/counterchange and follower branches, nonlegacy keep-right,
-nonzero speed lookahead, nonhighway/emergency cases remain. See source notes
-and `docs/paper_results/RB_LANE.md`; integrated CF+merge+LC gate is EVAL's.
-
-## Endpoint repair VERIFIED (source82894fab)
-Exact float32 ramp end75.44000244 was incorrectly outside double75.44.
-FIT audit:5881 scored HDV frames/91 recorded merges affected (plus warmup).
-Only the exact represented endpoint is canonicalized; nextULP stays illegal.
-Runtime merges retain clamped stop position/speed instead of releasing free
-overshoot; applied acceleration is consistent, fixed CAV poses/lanes preserved.
-**Adapter API now(next_lane,next_s,next_v)**; merge its one guarded wms tuple
-update. Final56CPU PASS (including promoted float32 input); default-OFF weights/forward/step/rollout bit-exact
-in three cases (DEFAULT_OFF_ENDPOINTS.json). Default11: precision3.005%,
-recall37.942% (1235/41095); encoder12:2.393%/40.369% (1314/54904). Both report
-5881 corrected HDV frames, source/aggregate/input checks PASS, matching MOBIL
-baselines reused. Both workers758018/762113 exited; no owned jobs remain.
-
-Native-only physical-point sensitivity13 is verified: consumes the
-already-published S-RB-FIT3130 causal driver points, exact32 native observation
-SHA bindings; no fitting or LC-style change. Separate sensitivity, not an A/B
-replacement. Native236/626 matches, precision3.094%, recall37.700%; default11
-native has the same total matches but8193 vs7627 proposals. Matched-mode
-MOBIL31/626. All checks PASS;870050 exited.
-
-Next source fix: cooperative early returns now freeze wish accumulation as
-SUMO1643–1669 requires, using pre-update inconvenience. An extra positive-
-cooperation gate absent from source is removed. 60CPU PASS; default/encoder
-and native-point measurements follow, with matching completed MOBIL reused.
-Owned distinct-setting final passes:14/default910505,15/encoder910966,
-16/native-point911369 oncpuQ; immutable PANEL14/15/16_DISPATCH receipts.
-All reuse completed matched MOBIL; three admitted nice19/single-thread jobs,
-loads16.8–18.2 on32CPUs. Preserve these dispatches; do not duplicate.
+## CF / INT coordination and scope
+- Actual2.346M FIT motion intervals prove **Euler s+v_next*dt**, MAE3.49e-5m vs
+  trapezoid0.0390m. Inspected INT still used trapezoid. Source/data note:
+  `docs/LC2013_POSITION_HANDOFF.md`, mirrored inrb-shared. LANE did not change
+  CF-owned integration; align SUMO-mode and executable CAV/entry plants.
+- Remaining gaps: synchronous vs serial SUMO, full leader overtake/fall-behind/
+  counterchange and every follower branch, nonlegacy keep-right/nonhighway cases.
+  Distributional CF+merge+LC/controller qualification belongs to INT/EVAL.
