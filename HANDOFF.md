@@ -27,6 +27,10 @@ policy; this adapter reads no recording. Contrary to earlier shorthand,
 `MotionFitForUNC` itself only wraps saved-ID/population particle generation.
 Combined42CPUtestsPASS/12.88s including causal snapshot hash/order, exact support,
 saved-ID clearing, unknown-driver prior, no inherited LC and time guards.
+Implementation `0d04093b`. Actual FIT generic API + actual preferred population/
+policy synthetic bridge smoke PASS: `rbunc/causal_motion_bridge_smoke.json`.
+It verifies exact finite support/weights, zero-evidence population, saved-ID
+clearing and global RNG; no new physical traffic/coverage claim.
 
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
 Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +

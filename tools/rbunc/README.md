@@ -150,3 +150,8 @@ futures = plan_hidden_state_futures(
 - New fitted-input physical verification and retained failure lineage:
   `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`, `rbunc/fitted_source_probe.json`.
   Complete-panel summaries: `python tools/rbunc/analyze_addendum.py`.
+- Actual FIT API/artifact compatibility smoke (synthetic motion, no recording):
+  `PYTHONPATH=src python -B tools/rbunc/motion_bridge_smoke.py --fit-source
+  ../c4-rb-fit/src/wms/physics/motion_fit.py --directory
+  ../c4-rb-fit/artifacts/rbfit/shrinkage_v1 --policy
+  ../c4-rb-fit/artifacts/rbfit/shrinkage_v1/idm_shrinkage.json --out NEW_RECEIPT.json`.
