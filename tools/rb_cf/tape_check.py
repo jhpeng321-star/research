@@ -206,7 +206,8 @@ def hdv_metrics(out: dict, horizon_s: float, dt: float = DT_S) -> dict:
                        wm_msk[:n_steps + 1], np.full_like(wm_pos, 5.0))
     rec_gap = lane_gaps(rec_pos[:n_steps + 1], rec_lane[:n_steps + 1],
                         rec_msk[:n_steps + 1], np.full_like(rec_pos, 5.0))
-    for h in (10, 30, 60):
+    horizons = tuple(h for h in (10, 30, 60, 120) if h <= n_steps * dt)
+    for h in horizons:
         t = min(int(h / dt), n_steps)
         m = wm_msk[t] & rec_msk[t] & hdv
         res[f"{h}s"] = {
@@ -259,6 +260,10 @@ def load_arm(ckpt: Path, variant: str, run_physics: dict | None = None):
         physics.update(PURE_SUMO_PHYSICS)
     if variant == "sumo_pop":
         flags = RolloutFlags(pure_physics=True, diag_encoder_population=True)
+    if variant == "legacy_pure":
+        # attribution arm: WM2's own physics core, every learned acceleration
+        # correction OFF (isolates the CF model from the correction removal).
+        flags = RolloutFlags(pure_physics=True)
     p = WmsPredictor.from_checkpoint(str(ckpt), flags, physics=physics)
     cap = {"last": None}
     orig = p.model.rollout
@@ -345,11 +350,13 @@ def main() -> None:
                 "n": len(vals)} if vals else None
 
     summary = {}
+    keys = [k for k in results["worlds"][0][a.variants.split(",")[0].strip()]
+            if k.endswith("s")]
     for variant in [v.strip() for v in a.variants.split(",")]:
         summary[variant] = {
             key: {field: agg(variant, key, field)
                   for field in ("v_mae", "s_mae")}
-            for key in ("10s", "30s", "60s")}
+            for key in keys}
         summary[variant]["gap_mae"] = agg(variant, "gap_mae", "mean")
     results["summary"] = summary
     a.out.parent.mkdir(parents=True, exist_ok=True)

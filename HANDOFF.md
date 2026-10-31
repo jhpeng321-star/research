@@ -35,22 +35,26 @@ Task S-RB-CF: SUMO 1.27.1 IDM car-following parity + a pure-physics preset.
   `wms.physics.idm_sumo.PURE_SUMO_PHYSICS` and `RolloutFlags.pure_physics`
   (`wms.eval.predictor`).
 - `c39ce13f` **Teacher-forced tape check** `tools/rb_cf/tape_check.py` +
-  results: 32 WMDATA dev worlds 969400-969431, native arm, t0=300 s, 60 s
-  teacher-forced rollouts, entries OFF, CAVs from the recording:
+  results (`tape_check_results.json` 60 s; `tape_check_120s.json` incl. the
+  attribution arm): 32 WMDATA dev worlds 969400-969431, native arm, t0=300 s,
+  teacher-forced CAVs, entries OFF.  HDV speed/position MAE vs the recording:
 
-  | arm | v MAE 10 s | 30 s | 60 s | s MAE 60 s | gap MAE |
-  |---|---|---|---|---|---|
-  | WM2 as-is | 1.00 | 2.43 | 3.61 | 68.5 | 48.6 |
-  | pure SUMO IDM, encoder settings | 1.09 | 2.35 | **3.09** | 70.9 | 49.7 |
-  | pure SUMO IDM, population defaults | 1.38 | 2.96 | 3.60 | 86.3 | 52.8 |
+  | arm | v MAE 10 s | 30 s | 60 s | gap MAE |
+  |---|---|---|---|---|
+  | WM2 as-is | **1.00** | 2.43 | 3.61 | 58.7 |
+  | WM2 physics core, learned corrections OFF (`legacy_pure`) | 1.04 | **2.35** | **3.00** | 57.1 |
+  | pure SUMO IDM, encoder settings (`sumo_enc`) | 1.09 | 2.33 | 3.04 | 57.7 |
+  | pure SUMO IDM, population defaults | 1.38 | 2.96 | 3.60 | — |
 
-  Paired vs WM2: the pure SUMO arm is equal at 10 s (+0.09), better at 30 s
-  (−0.08, 22/32 worlds) and 60 s (−0.53 m/s, 20/32) on HDV SPEED; position MAE
-  is slightly worse (the lane/merge stack is unchanged WM2 code in all arms).
-  Encoder-inferred driver settings are worth 0.3-0.6 m/s over population
-  defaults for the pure arm.  Reading: the learned acceleration corrections
-  HURT long-horizon HDV speed accuracy; faithful CF physics alone already
-  beats the full WM2 stack beyond 30 s.
+  Attribution (paired vs WM2): the 30-60 s speed gain comes from turning the
+  learned acceleration corrections OFF (`legacy_pure` -0.62 m/s at 60 s, better
+  in 23/32; `sumo_enc` -0.57, 18/32) — the SUMO CF core and the legacy core are
+  equal within noise on this metric, so the SUMO arm's value is DISTRIBUTIONAL
+  parity, not this error score.  WM2's learned stack only helps <=10 s
+  (+0.04..0.09).  At 120 s only ~5 t0-roster HDVs remain per world (weak cell;
+  pure arms slightly worse there, position divergence through unchanged
+  lane/merge code).  Encoder-inferred driver settings are worth 0.3-0.6 m/s
+  over population defaults for the pure arm.
 
 ## Tests
 
