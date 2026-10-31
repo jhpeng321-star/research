@@ -6,17 +6,22 @@ from .protocol import canonical,sha,worlds
 ROOT='/root/autodl-tmp/coopbandit20261031_metricgate_v4'
 
 
-def stage():
+def stage(host='gpuA', root=ROOT, load_max=None):
     source=(EVIDENCE.parent/'metric_compat.py').read_text(encoding='utf-8')
     source_sha=sha(EVIDENCE.parent/'metric_compat.py')
-    old=HOSTS['gpuA']['root']
-    remote('gpuA',f'''import pathlib,shutil,json
-r=pathlib.Path({ROOT!r});assert r.parent.is_dir();r.mkdir(exist_ok=True)
+    old=HOSTS[host]['root']
+    remote(host,f'''import pathlib,shutil,json
+r=pathlib.Path({root!r});assert r.parent.is_dir();r.mkdir(exist_ok=True)
 old=pathlib.Path({old!r})
-for n in ('COOPBANDIT_DESIGN.md','BINDING.json','APPROVAL.json'):
+for n in ('COOPBANDIT_DESIGN.md','APPROVAL.json'):
  p=r/n
  if p.exists(): assert p.read_bytes()==(old/n).read_bytes()
  else: shutil.copyfile(old/n,p)
+binding=json.loads((old/'BINDING.json').read_text())
+if {load_max!r} is not None: binding['resources']['load_max']={load_max!r}
+p=r/'BINDING.json'
+if p.exists(): assert json.loads(p.read_text())==binding
+else: p.write_text(json.dumps(binding))
 if not (r/'pytools').exists(): (r/'pytools').symlink_to(old/'pytools',target_is_directory=True)
 p=r/'metric_compat.py'
 if p.exists(): assert p.read_text()=={source!r}
@@ -24,19 +29,19 @@ else: p.write_text({source!r})
 print('metric compatibility staged without editing frozen runtime or prior roots')
 ''')
     expected=fetch('cpuQ',SCREEN,['jobs/s981006_screen/RESULT.json'])['jobs/s981006_screen/RESULT.json']
-    send('gpuA',ROOT,{'REFERENCE.json':expected,'ALLOCATION.json':canonical(dict(attempts={'s981006_screen':dict(sim_s=1140,phase='data')}))+'\n',
+    send(host,root,{'REFERENCE.json':expected,'ALLOCATION.json':canonical(dict(attempts={'s981006_screen':dict(sim_s=1140,phase='data')}))+'\n',
                      'COMPAT_BINDING.json':canonical(dict(source_sha256=source_sha,scope='metric and observable summary only; original policy/safety unchanged'))+'\n'})
-    print(json.dumps(dict(root=ROOT,compat_sha256=source_sha,extra_reserved_sim_s=1140)))
+    print(json.dumps(dict(host=host,root=root,compat_sha256=source_sha,extra_reserved_sim_s=1140)))
 
 
-def launch():
-    config=HOSTS['gpuA'];world=next(w for w in worlds() if w['seed']==981006)
+def launch(host='gpuA', root=ROOT):
+    config=HOSTS[host];world=next(w for w in worlds() if w['seed']==981006)
     code=f'''import pathlib,os,json,time,traceback,hashlib
 from tools.coopbandit import runner
 from tools.coopbandit.storage import read,write,stop
 from tools.coopbandit.protocol import canonical,sha
 import metric_compat
-r=pathlib.Path({ROOT!r});(r/'jobs').mkdir(exist_ok=True)
+r=pathlib.Path({root!r});(r/'jobs').mkdir(exist_ok=True)
 assert sha(r/'metric_compat.py')==read(r/'COMPAT_BINDING.json')['source_sha256']
 write(r/'OWNED_METRIC_GATE.json',dict(pid=os.getpid(),unix=time.time()))
 try:
@@ -51,17 +56,17 @@ try:
 except BaseException:
  stop(r,traceback.format_exc());raise
 '''
-    result=json.loads(remote('gpuA',f'''import pathlib,subprocess,sys,os,json
-r=pathlib.Path({ROOT!r});sys.path[:0]={config['deps']!r}
+    result=json.loads(remote(host,f'''import pathlib,subprocess,sys,os,json
+r=pathlib.Path({root!r});sys.path[:0]={config['deps']!r}
 import sumo
 home=str(pathlib.Path(sumo.__file__).parent)
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  PYTHONPATH=':'.join([str(r),str(r/'pytools')]+{config['deps']!r}),SUMO_HOME=home,PATH=home+'/bin:'+str(pathlib.Path(sys.executable).parent)+':'+os.environ.get('PATH',''))
 log=(r/'SUPERVISOR_metric_gate.log').open('x')
 p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-c',{code!r}],cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True)
-print(json.dumps(dict(host='gpuA',root=str(r),pid=p.pid,phase='full1140-metric-gate')))
+print(json.dumps(dict(host={host!r},root=str(r),pid=p.pid,phase='full1140-metric-gate')))
 '''))
-    once(EVIDENCE/'DISPATCH_METRIC_GATE_V4.json',result)
+    once(EVIDENCE/f'DISPATCH_METRIC_GATE_{host}_{root.rsplit("/",1)[-1]}.json',result)
     print(json.dumps(result))
 
 

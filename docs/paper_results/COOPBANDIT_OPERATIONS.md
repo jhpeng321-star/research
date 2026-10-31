@@ -77,3 +77,15 @@ MAPPO memory, features and observable-only summaries. Fresh gpuA labels_v4 uses
 the hash-bound scalar reducer and retains the stopped v3 roots. Both allocated
 t300/t540 canaries execute before its eight-worker pool. cpuQ/gpuR completed work
 and live jobs are reused; their existing allocations remain unchanged.
+
+gpuR's t540 no-op exposed the same ~3.6e-12 road-component drift at its later600s
+endpoint. Its pool had charged only the two gate jobs (2040); queued admission-only
+work was stopped cooperatively, without signals. Both metric labels are excluded.
+Reserve one further full1140s compatibility gate before fresh gpuR admission.
+Resource sampling found1.136 CPUs used of25 quota, no new throttling, CPU PSI0.30%;
+host-global load26 spans224 CPUs. The old global-load20 gate was falsely blocking
+spare container CPUs. New resource binding permits8 nice19 workers/load<=112
+(half the host CPUs), same disk/memory gates; safety and behavior remain unchanged.
+Final conservative accounting: successful data1489200 + all abandoned6360 + two
+diagnostics2280 =1497840<=1.5M; live99360 =>1597200<=1.6M. Keep both diagnostic
+and all failed/invalidated receipts; data reserve2160/global reserve2800.

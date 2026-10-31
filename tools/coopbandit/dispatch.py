@@ -18,6 +18,8 @@ AGGREGATE = '/home/ubuntu/coopbandit20261031_aggregate_v3'
 
 
 def active_plan():
+    latest=EVIDENCE/'RECOVERY_PLAN_V5.json'
+    if latest.exists(): return read(latest)
     p=EVIDENCE/'RECOVERY_PLAN.json'
     return read(p if p.exists() else EVIDENCE/'SHARDS.json')
 
