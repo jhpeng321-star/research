@@ -29,7 +29,7 @@ def scp(source, target):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs', 'references', 'capacity-rearm', 'bundle', 'extract'))
+    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs', 'references', 'capacity-rearm', 'bundle', 'extract', 'setup', 'diagnose', 'stop-report', 'pin-metrics'))
     parser.add_argument('--phase', default='tests')
     a = parser.parse_args()
     if a.action == 'inspect':
@@ -61,6 +61,67 @@ assert not (r/'jobs/s969400_native_attempt2').exists()
 os.kill(508011,signal.SIGTERM)
 time.sleep(1)
 print('own queued coordinator terminated before precharge; no SUMO children dispatched')
+'''))
+    elif a.action == 'pin-metrics':
+        source=Path('E:/agent-work/c4-c1closed/tools/c1closed/analyze.py')
+        assert (HERE/'evidence').is_dir()
+        print(scp(source,f'gpuR:{REMOTE}/C1CLOSED_analyze_source.py'))
+        print(scp(f'gpuR:{REMOTE}/C1CLOSED_analyze_source.py',HERE/'evidence/C1CLOSED_analyze_source.py'))
+    elif a.action == 'stop-report':
+        print(ssh(f'''from pathlib import Path
+import os,json,hashlib
+r=Path({REMOTE!r})
+stop=r/'STOP'
+if not stop.exists():
+ with stop.open('x') as f:f.write('BLOCKED: same-seed saved-state canary drift; no alternative-seed or panel dispatch.\\n');f.flush();os.fsync(f.fileno())
+rows=[json.loads(s) for s in (r/'accounting.jsonl').read_text().splitlines()]
+failures=[json.loads(p.read_text()) for p in (r/'jobs').glob('*/failure.json')]
+actual=sum(x['actual_sim_s'] for x in failures)
+assert len(rows)==6 and sum(x['sim_s'] for x in rows)==9000 and actual==2400
+assert not list((r/'jobs').glob('*/alt*.npz'))
+owners=[json.loads(s) for s in (r/'PIDS.jsonl').read_text().splitlines()]
+states=[]
+for owner in owners:
+ for k in ('worker_pid','coordinator_pid'):
+  p=Path('/proc')/str(owner[k]);state=p.joinpath('stat').read_text().split()[2] if p.exists() else 'exited'
+  assert state in ('exited','Z'),(owner[k],state)
+  states.append(dict(pid=owner[k],state=state))
+last=r/'jobs/s969400_native_attempt6'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+receipt=dict(status='BLOCKED_SAVED_STATE_CANARY',actual_sim_s=actual,charged_sim_s=9000,
+ cap_actual_sim_s=30000,alternative_branches_run=0,panel_worlds_run=0,first_drift_time_s=300.5,
+ first_drift_hdv_ids=[101,104],recorded_rows=45631,restored_rows=45227,
+ original_reproduction=json.loads((last/'REPRODUCTION.json').read_text()),
+ original_tape_sha256=sha(last/'traj_base.npz'),restored_tape_sha256=sha(last/'same_seed.npz'),
+ saved_state_sha256=sha(last/'start.xml'),processes=states)
+with (r/'BLOCKED.json').open('x') as f:json.dump(receipt,f,indent=1);f.flush();os.fsync(f.fileno())
+(r/'STATUS.json').write_text(json.dumps(receipt,indent=1))
+print(json.dumps(receipt,indent=1))
+'''))
+    elif a.action == 'diagnose':
+        print(ssh(f'''from pathlib import Path
+import numpy as np,json
+r=Path({REMOTE!r})/'jobs/s969400_native_attempt6'
+with np.load(r/'traj_base.npz',allow_pickle=False) as a,np.load(r/'same_seed.npz',allow_pickle=False) as b:
+ meta=json.loads(str(a['meta']));cavs=set(meta['cavs'])
+ ia=np.flatnonzero(a['t']<=600);ib=np.flatnonzero(b['t']<=600)
+ ia=ia[np.lexsort((a['vid'][ia],a['t'][ia]))];ib=ib[np.lexsort((b['vid'][ib],b['t'][ib]))]
+ print('rows',len(ia),len(ib))
+ for t in sorted(set(a['t'])|set(b['t'])):
+  aa={{int(a['vid'][j]):j for j in np.flatnonzero(a['t']==t)}}
+  bb={{int(b['vid'][j]):j for j in np.flatnonzero(b['t']==t)}}
+  missing=set(aa)^set(bb)
+  bad=[v for v in aa.keys()&bb.keys() if any(a[k][aa[v]]!=b[k][bb[v]] for k in ('s','v','a','lane'))]
+  if missing or bad:
+   print('FIRST_DIVERGENCE',float(t),'missing',sorted(missing),'changed',len(bad))
+   for v in sorted(bad)[:3]:print('observable',v,'is_cav',meta['vids'][v] in cavs,{{k:[float(a[k][aa[v]]),float(b[k][bb[v]])] for k in ('s','v','a','lane')}})
+   break
+ if len(ia)==len(ib):
+  for k in ('t','vid','s','v','a','lane'):
+   x,y=a[k][ia],b[k][ib];bad=np.flatnonzero(x!=y)
+   print(k,'dtype',str(x.dtype),str(y.dtype),'unequal',len(bad),'max',float(np.max(np.abs(x.astype(float)-y))))
+   if len(bad):
+    j=int(bad[0]);print('first',float(a['t'][ia[j]]),int(a['vid'][ia[j]]),float(x[j]),float(y[j]))
 '''))
     elif a.action == 'inputs':
         print(ssh('''from pathlib import Path
@@ -97,10 +158,11 @@ for s in range(969400,969424):
                    f'gpuR:{REMOTE}/reference/s{seed}_native/{n}'],capture_output=True,text=True,timeout=180)
                 if p.returncode:raise RuntimeError(p.stdout+p.stderr)
             print('reference',seed,flush=True)
-    elif a.action == 'extract':
-        print(scp(HERE/'extract.py',f'gpuR:{REMOTE}/extract.py'))
+    elif a.action in ('extract','setup'):
+        script=a.action+'.py'
+        print(scp(HERE/script,f'gpuR:{REMOTE}/{script}'))
         print(ssh(f'''import subprocess,os
-p=subprocess.run(['nice','-n','19','/root/miniconda3/bin/python','-B',{REMOTE!r}+'/extract.py'],text=True,capture_output=True,env={{**os.environ,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+p=subprocess.run(['nice','-n','19','/root/miniconda3/bin/python','-B',{REMOTE!r}+'/'+{script!r}],text=True,capture_output=True,env={{**os.environ,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','PATH':'/root/miniconda3/bin:'+os.environ['PATH']}})
 print(p.stdout);print(p.stderr);raise SystemExit(p.returncode)
 ''',timeout=240))
     elif a.action == 'bundle':
@@ -145,13 +207,14 @@ else:
 ''', timeout=240))
     elif a.action == 'status':
         print(ssh(f'''from pathlib import Path
-import os
+import os,json
 r=Path({REMOTE!r}); print('load',os.getloadavg())
 for n in ('STATUS.json','COMPLETE.json','CANARY.json'):
  p=r/n; print(n,p.read_text() if p.exists() else 'PENDING')
 print('results',len(list((r/'jobs').glob('*/result.json'))))
 for p in (r/'jobs').glob('*/failure.json'):
- if p.parent.name!='s969400_native': print(str(p),p.read_text())
+ if (r/'STATUS.json').exists() and p.parent.name==json.loads((r/'STATUS.json').read_text())['job']:
+  print(str(p),p.read_text())
 for phase in ('canary','full'):
  logs=list((r/'logs').glob(phase+'_*.log'))
  if logs:

@@ -124,6 +124,7 @@ def run(job):
         for name,seed,state in branches:
             wait()
             env.__dict__.pop('_after_physics',None)
+            env.api=m.snap['api']  # inherited deep-copy memo must retain TraCI module
             B.restore_env(env,m.snap)  # run_e3.close cleared its own API handle
             env.seed=seed  # affects ONLY the fresh SUMO launch; restore reinstates world seed
             restore=B.load_state(env,state,m.snap)
@@ -144,12 +145,12 @@ def run(job):
             safety=dict(collisions=0,teleports=0,dropped=0)
             for elapsed in range(300):
                 _,info=env.step(None)
-                rec.add(env,env.now)
+                rec.add(env,float(info['time_s']))  # final native tick closes its API
                 interval=info['interval']
                 safety['collisions']+=interval.get('collision_involvements',0)
                 safety['teleports']+=interval.get('starting_teleports',0)
                 safety['dropped']+=interval.get('dropped_vehicle_steps',0)
-                assert env.now==301+elapsed
+                assert float(info['time_s'])==301+elapsed
             rec.save(out/f'{name}.npz',env)
             same=compare_tapes(out/'traj_base.npz',out/f'{name}.npz')
             if name=='same_seed':

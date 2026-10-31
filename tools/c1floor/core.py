@@ -24,8 +24,9 @@ def audit(event, args):
         # consumes the scenario. No Python assignment-file read is admitted.
         mode=args[1]
         write_only=isinstance(mode,str) and any(c in mode for c in 'wxa') and '+' not in mode
-        if ('vtype' in text and text.startswith('/root/c1floor20261031/jobs/') and
-                write_only and not any(x in text for x in DENIED if x!='vtype')):
+        generated= ('vtype','hetdata_truth')
+        if (any(x in text for x in generated) and text.startswith('/root/c1floor20261031/jobs/') and
+                write_only and not any(x in text for x in DENIED if x not in generated)):
             return
         allowed(path)
 

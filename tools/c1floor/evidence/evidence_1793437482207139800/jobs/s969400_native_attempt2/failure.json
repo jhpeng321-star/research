@@ -1,0 +1,16 @@
+{
+ "job": {
+  "demand": 1900,
+  "penetration": 0.05,
+  "seed": 969400,
+  "id": "s969400_native_attempt2",
+  "canary": true,
+  "charge": 1500,
+  "rng_seeds": [
+   969050,
+   969051
+  ]
+ },
+ "actual_sim_s": 0.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/worker.py\", line 105, in run\n    result=run_e3(dict(job,arm='native',warmup=300,horizon=300),\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 75, in run_e3\n    return original(job, inputs, out, measurement=measurement)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/c4/evalprep.py\", line 197, in run_e3\n    raise RuntimeError(result[\"notes\"])\nRuntimeError: ['Traceback (most recent call last):\\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/src/wms/control/deploy.py\", line 455, in run\\n    state = env.reset(seed=args.seed, demand_vph=args.demand, penetration=args.penetration,\\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/c4/env.py\", line 190, in reset\\n    scene, requests, scenario_manifest = build_scenario(\\n                                         ^^^^^^^^^^^^^^^\\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/scenarios.py\", line 168, in build_scenario\\n    path.write_text(value, encoding=\"utf-8\")\\n  File \"/root/miniconda3/lib/python3.12/pathlib.py\", line 1047, in write_text\\n    with self.open(mode=\\'w\\', encoding=encoding, errors=errors, newline=newline) as f:\\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \"/root/miniconda3/lib/python3.12/pathlib.py\", line 1013, in open\\n    return io.open(self, mode, buffering, encoding, errors, newline)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \"/root/c1floor20261031/core.py\", line 21, in audit\\n    allowed(os.fsdecode(args[0]))\\n  File \"/root/c1floor20261031/core.py\", line 15, in allowed\\n    raise PermissionError(\\'excluded path\\')\\nPermissionError: excluded path\\n']\n"
+}

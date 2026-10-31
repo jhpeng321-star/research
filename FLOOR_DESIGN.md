@@ -121,3 +121,49 @@ uses `_attempt3`; final fixed first-22-world panel 969400–969421, same origina
 index RNG mapping (969050–969093). Plan 26,700 actual + 3,000 retained failed
 precharges = 29,700 conservatively charged; 300 unallocated. No outcome exists
 at this amendment. No assignment file was opened by the refused write.
+
+Third retained actual-0 setup failure was the same write-only guard, specifically
+the builder's generated truth OUTPUT (source `scenarios.py` lines161–168 confirms
+the write path). Permit creation of that own output too, NEVER its read. An
+end-to-end native setup probe intercepts the launch function before any SUMO
+process/step to verify the complete setup before the next charged attempt.
+Final amendment, before any scientific outcome: first21 worlds969400–969420,
+RNG initializers969050–969091; repaired canary `_attempt4`; planned actual25,500
+and conservative charges30,000 including all three retained1,500 zero-step
+reservations. No charged headroom; no further automatic attempt authorized.
+
+Fourth manual mechanics repair: attempt4 used600actual sim-s; its original
+continuation PASSED bitwise t/ID/s/v/a/lane reproduction, then the inherited
+snapshot deep-copy refused a module because run_e3.close had cleared env.api.
+Reattach the snapshot's original API module before calling inherited restore,
+so its existing shared-object memo works. No simulation dynamics change.
+Retain that attempt's1,500charge/600actual. Revised fixed first19worlds
+969400–969418/RNG969050–969087, canary `_attempt5`: successful plan23,100actual
++600retained=23,700actual; precharge23,100+6,000retained=29,100. No RNG-divergence
+outcome has been observed or used for this index-only mechanical budget cut.
+The published C1CLOSED analyzer is now available: import its forecast, endpoint,
+errors and CSV functions verbatim; copy its bootstrap with ONLY panel dimension
+40→19. Its endpoint intersection is over truth and BOTH alternative draws;
+per-draw survivors also exported. Aggregate draw medians use its exact common
+J-order component weights. This resolves the earlier unpublished-CSV dependency.
+
+Fifth manual mechanics repair: attempt5 reached900actual (600original+300saved
+continuation) but recording its last frame queried env.now after the native
+episode closed its API. Use the unchanged step receipt's time_s to record that
+already-observed frame; no extra physics or horizon extension. Retain1,500charge/
+900actual. Fixed first18worlds969400–969417, RNG969050–969085, canary `_attempt6`:
+21,900successful actual +1,500retained=23,400actual;21,900+7,500=29,400charged.
+Bootstrap dimension is correspondingly40→18. No RNG-divergence outcome observed;
+index-only panel cuts remain mechanics/budget driven, never error based.
+
+## Terminal gate result — no floor inferred
+
+Attempt6 reproduced the original recorded continuation bitwise, but the
+original-seed, complete-RNG saved-state continuation FAILED bitwise identity:
+at300.5s two HDVs already have different position/speed/acceleration. This is
+a mechanics/determinism failure, not evidence of an RNG-only divergence floor.
+STOP is durable; no alternative-seed branch or production world was run.
+Final budget:6retained reservations×1,500=9,000charged; actual0+0+0+600+900+900
+=2,400sim-s, including all prefixes and partial canaries. All task PIDs exited.
+Any future run needs a genuinely bitwise-compatible restoration/reseeding
+mechanism, a new prospective binding and fresh precharges; no retry is armed.

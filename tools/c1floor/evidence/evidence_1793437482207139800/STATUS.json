@@ -1,0 +1,100 @@
+{
+ "status": "BLOCKED_SAVED_STATE_CANARY",
+ "actual_sim_s": 2400.0,
+ "charged_sim_s": 9000,
+ "cap_actual_sim_s": 30000,
+ "alternative_branches_run": 0,
+ "panel_worlds_run": 0,
+ "first_drift_time_s": 300.5,
+ "first_drift_hdv_ids": [
+  101,
+  104
+ ],
+ "recorded_rows": 45631,
+ "restored_rows": 45227,
+ "original_reproduction": {
+  "t": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  },
+  "vid": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  },
+  "s": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  },
+  "v": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  },
+  "a": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  },
+  "lane": {
+   "identical": true,
+   "rows_first": 45631,
+   "rows_second": 45631
+  }
+ },
+ "original_tape_sha256": "e3b8af5d6855bbd7e46ee88f6113ad9f6fdc5cc603a34b4af05ce11547de7a20",
+ "restored_tape_sha256": "d333b194e47c3be47f2ae2729c394ae1f842b41ec57622e97abdbeea289ad161",
+ "saved_state_sha256": "3dc47736db549b8f4d9f8d5a20c8cc5fc26b0ca12f096ea539a59f2cb87999a0",
+ "processes": [
+  {
+   "pid": 506445,
+   "state": "exited"
+  },
+  {
+   "pid": 506211,
+   "state": "exited"
+  },
+  {
+   "pid": 510043,
+   "state": "exited"
+  },
+  {
+   "pid": 510020,
+   "state": "exited"
+  },
+  {
+   "pid": 510995,
+   "state": "exited"
+  },
+  {
+   "pid": 510984,
+   "state": "exited"
+  },
+  {
+   "pid": 512263,
+   "state": "exited"
+  },
+  {
+   "pid": 512262,
+   "state": "exited"
+  },
+  {
+   "pid": 512916,
+   "state": "exited"
+  },
+  {
+   "pid": 512915,
+   "state": "exited"
+  },
+  {
+   "pid": 513545,
+   "state": "exited"
+  },
+  {
+   "pid": 513544,
+   "state": "exited"
+  }
+ ]
+}

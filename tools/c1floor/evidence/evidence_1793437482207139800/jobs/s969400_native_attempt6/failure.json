@@ -1,0 +1,16 @@
+{
+ "job": {
+  "demand": 1900,
+  "penetration": 0.05,
+  "seed": 969400,
+  "id": "s969400_native_attempt6",
+  "canary": true,
+  "charge": 1500,
+  "rng_seeds": [
+   969050,
+   969051
+  ]
+ },
+ "actual_sim_s": 900.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/worker.py\", line 157, in run\n    assert all(r['identical'] for r in same.values()),'saved RNG canary not bitwise'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: saved RNG canary not bitwise\n"
+}

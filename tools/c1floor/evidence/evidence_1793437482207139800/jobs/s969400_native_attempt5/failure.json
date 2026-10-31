@@ -1,0 +1,16 @@
+{
+ "job": {
+  "demand": 1900,
+  "penetration": 0.05,
+  "seed": 969400,
+  "id": "s969400_native_attempt5",
+  "canary": true,
+  "charge": 1500,
+  "rng_seeds": [
+   969050,
+   969051
+  ]
+ },
+ "actual_sim_s": 900.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/worker.py\", line 148, in run\n    rec.add(env,env.now)\n                ^^^^^^^\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/c4/env.py\", line 308, in now\n    return float(self.api.simulation.getTime())\n                 ^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'simulation'\n"
+}

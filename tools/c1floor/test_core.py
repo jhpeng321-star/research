@@ -66,10 +66,11 @@ class Mechanics(unittest.TestCase):
         self.assertTrue(check['t']['identical'])
 
     def test_generated_definition_write_only_not_read(self):
-        p='/root/c1floor20261031/jobs/test/scenarios/vtypes.add.xml'
-        audit('open',(p,'w',0))
-        for mode in ('r','r+','a+'):
-            with self.assertRaises(PermissionError):audit('open',(p,mode,0))
+        for name in ('vtypes.add.xml','hetdata_truth.csv'):
+            p='/root/c1floor20261031/jobs/test/scenarios/'+name
+            audit('open',(p,'w',0))
+            for mode in ('r','r+','a+'):
+                with self.assertRaises(PermissionError):audit('open',(p,mode,0))
         with self.assertRaises(PermissionError):
             audit('open',('/other/vtypes.add.xml','w',0))
 

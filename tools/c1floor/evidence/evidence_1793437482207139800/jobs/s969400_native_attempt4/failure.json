@@ -1,0 +1,16 @@
+{
+ "job": {
+  "demand": 1900,
+  "penetration": 0.05,
+  "seed": 969400,
+  "id": "s969400_native_attempt4",
+  "canary": true,
+  "charge": 1500,
+  "rng_seeds": [
+   969050,
+   969051
+  ]
+ },
+ "actual_sim_s": 600.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/worker.py\", line 127, in run\n    B.restore_env(env,m.snap)  # run_e3.close cleared its own API handle\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/c4/branching.py\", line 525, in restore_env\n    env.__dict__.update(copy.deepcopy(snap, _shared(env)))\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 221, in _deepcopy_dict\n    y[deepcopy(key, memo)] = deepcopy(value, memo)\n                             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 151, in deepcopy\n    rv = reductor(4)\n         ^^^^^^^^^^^\nTypeError: cannot pickle 'module' object\n"
+}

@@ -1,0 +1,75 @@
+{
+ "guards_passed": 66,
+ "source_manifest_sha256": "b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193",
+ "permitted_files": 543,
+ "excluded_unopened": 0,
+ "observer_sha256": "b22af4623b5fe7fbb9a8920b8e8417c3591efae66a52bae7b72f4d899b4a7874",
+ "references": {
+  "s969400_native_attempt3": "07f83e3018fd73a00572ab43550953f190742d97ebde6a567bfa292171db17a8",
+  "s969401_native": "34334abe3fce1489e071b56a45dc866ba16543265a686f79f1dc6060182298ee",
+  "s969402_native": "a00f3760c678eade8675f0baad6a38103766292a79acc8f2ea76fd866f275f92",
+  "s969403_native": "8c5aae7420cf6d14c425db7c9ff5572d8240699bdebe4378684546b9ca0f5a96",
+  "s969404_native": "55991f9883e995834e8374345db5d06fc27dce06e300ea40dfd30c4cb2ce954a",
+  "s969405_native": "35977ddbe8c2f789031d7c2564f168aac0a3cf070e74d2fedb6cb56846189129",
+  "s969406_native": "e37ae631fefb7070c2ffaf8d67fd1fa7a70653bb47957b5d9fa050eaf034d077",
+  "s969407_native": "4e6774825d85d1c61aac6982d69f15f1f1f3320a08dc8bc1bcaa9abf1923a4a9",
+  "s969408_native": "6534f2ded170d3eb17449dcfe44a4ae0bd747b8f0cb1ce36c2ac82b44e8d2f5b",
+  "s969409_native": "1649dc96bc60e75f7488941eb765553f1a2eba13db2f0de07fa243e2dba5b355",
+  "s969410_native": "5aa4bb11936605318e4e921ce2e6298e2dde6f2dd7185cb98bec6b4f79a9e41b",
+  "s969411_native": "e72cc26c960926babe84318da756b8341c4732861ec155bddf452ab719f20ba1",
+  "s969412_native": "113e076641116b7544a909212e56a1f3667169392bbcac372d24898e6fa7a57a",
+  "s969413_native": "7b4b7bee70dba7e57940996265ec1660aad96be042ef163c86e6bd3a47a0ac9d",
+  "s969414_native": "5135cf2f6cac881246437a2a7e9869fe9e2bde991299b5f458a7efbe50b3494d",
+  "s969415_native": "c842f05105734972d234c44abfff049bd4c8d2d5783eed5f62ecd2e87469d07e",
+  "s969416_native": "39a3bd8ce142743072d31b384624fb364c509b44a0f7ec9120bb51cc3c85b770",
+  "s969417_native": "0b943110de2ac0203a7a20ad11e4ab2f38a9291019dd2c0e1e27c819df8b798f",
+  "s969418_native": "b607f65d43070f89759bcaa4d273f8ea8485e1f577971294c04a1a43b1595b2f",
+  "s969419_native": "962d213fd1e9ef7ddc70420ddd0cedde1874e46c2acd211b1b116bc972e04ccb",
+  "s969420_native": "63936efb05294cebdc8a6bf77b8cd206799a9b03dfeb0c01529be3ba85890b88",
+  "s969421_native": "07fc9f5e2dc205d5bac1c64062b707c848472677ac3b6550352db4900386e81e"
+ },
+ "exact_alternative_exposure": [],
+ "overlapping_allowlist_ranges": [
+  {
+   "line": 711,
+   "first": 966000,
+   "last": 969999,
+   "declared_unused": false
+  },
+  {
+   "line": 719,
+   "first": 966000,
+   "last": 969999,
+   "declared_unused": false
+  },
+  {
+   "line": 796,
+   "first": 966000,
+   "last": 969699,
+   "declared_unused": true
+  },
+  {
+   "line": 1600,
+   "first": 966000,
+   "last": 969999,
+   "declared_unused": false
+  },
+  {
+   "line": 5497,
+   "first": 966000,
+   "last": 969699,
+   "declared_unused": true
+  }
+ ],
+ "filename_scanned": 12640,
+ "filename_exposure": [],
+ "registration_sha256": "eddd4dfbf87c3a70677ad3de07047c7d41c8ae734c2b369b5f511657aaaa8150",
+ "source_hashes": {
+  "worker.py": "f338e2d200ed05e4669c8bdc1f7713fc52a29654e8c7037fbe0663f5ceed1738",
+  "core.py": "41b3678ab26554136587a50677c0453d14eecf268b6e511aeadf7804a23a42b3",
+  "run.py": "d9a5b01cadc05f27d25588bcce51c3d11e24428dd6c11bee9e04ff7fc60140ec",
+  "design.json": "19048a7b6ccd18f7b10948ab56f856d74b7d1187e3ed67428beb2d4ef488e032",
+  "labels.py": "ea5a479346b01fa6afe2394af687fd4e528297250edd20438b05e03c46472d2a",
+  "aggregates.py": "dd2d0ed3966b4e00d39df5f4e8f0acc40f9477d1b7b1919dd2c5b1568bb7f379"
+ }
+}

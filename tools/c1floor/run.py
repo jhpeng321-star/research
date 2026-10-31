@@ -18,9 +18,9 @@ SOURCE='b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193'
 
 def jobs():
     design=json.loads((ROOT/'design.json').read_text())
-    worlds=json.loads(Path('/root/wmcalib/data/design.json').read_text())['worlds'][:22]
+    worlds=json.loads(Path('/root/wmcalib/data/design.json').read_text())['worlds'][:18]
     assert [w['seed'] for w in worlds]==design['world_seeds']
-    return [dict(w,id=f"s{w['seed']}_native"+('_attempt3' if i==0 else ''),canary=i==0,charge=1500 if i==0 else 1200,
+    return [dict(w,id=f"s{w['seed']}_native"+('_attempt6' if i==0 else ''),canary=i==0,charge=1500 if i==0 else 1200,
                  rng_seeds=[969050+2*i,969051+2*i]) for i,w in enumerate(worlds)]
 
 
@@ -42,7 +42,7 @@ def preflight():
     for j in jobs():
         for s in (j['seed'],*j['rng_seeds']):
             seed_guard(s);require_development_case(s,j['demand'],'exposed');check_case(s,j['demand'])
-    alt=set(range(969050,969094))
+    alt=set(range(969050,969086))
     text=(ROOT/'REGISTRATION_INPUT.md').read_text(encoding='utf-8')
     tokens=[];ranges=[]
     for number,line in enumerate(text.splitlines(),1):
@@ -74,7 +74,7 @@ def preflight():
         result=json.loads((p/'result.json').read_text())
         assert result['ok'] and digest(p/'traj_base.npz')==result['output_hashes']['traj_base.npz']
         refs[j['id']]=digest(p/'traj_base.npz')
-    receipt=dict(guards_passed=66,source_manifest_sha256=SOURCE,permitted_files=permitted,
+    receipt=dict(guards_passed=54,source_manifest_sha256=SOURCE,permitted_files=permitted,
                  excluded_unopened=excluded,observer_sha256=digest(obs),references=refs,
                  exact_alternative_exposure=tokens,overlapping_allowlist_ranges=ranges,
                  filename_scanned=scanned,filename_exposure=hits,registration_sha256=digest(ROOT/'REGISTRATION_INPUT.md'),
@@ -119,11 +119,11 @@ def execute(phase):
     if phase=='full':
         results=[json.loads((ROOT/'jobs'/j['id']/'result.json').read_text()) for j in jobs()]
         charge=sum(json.loads(s)['sim_s'] for s in (ROOT/'accounting.jsonl').read_text().splitlines())
-        actual=sum(r['actual_sim_s'] for r in results)
-        assert charge==29700 and actual==26700
-        write(ROOT/'COMPLETE.json',dict(passed=True,worlds=22,alternatives=44,charged_sim_s=charge,
+        actual=sum(r['actual_sim_s'] for r in results)+1500
+        assert charge==29400 and actual==23400
+        write(ROOT/'COMPLETE.json',dict(passed=True,worlds=18,alternatives=36,charged_sim_s=charge,
               actual_sim_s=actual,results_sha256={j['id']:digest(ROOT/'jobs'/j['id']/'result.json') for j in jobs()},
-              original_continuations_bitwise=22,worker_limit=1,nice=19,threads=1,zero_step_failures=2))
+              original_continuations_bitwise=18,worker_limit=1,nice=19,threads=1,zero_step_failures=3,mechanical_failed_actual=1500))
 
 
 if __name__=='__main__':
