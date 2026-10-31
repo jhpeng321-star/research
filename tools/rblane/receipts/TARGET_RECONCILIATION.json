@@ -1,0 +1,14 @@
+{
+  "status": "PASS_RECONCILED",
+  "retained_original_sha256": "32623a2991b88f87e3894047f0cb290fd22cbe574748f0f35b64d34df7fe26eb",
+  "matched_nonboundary": 3220,
+  "expected_first_frame_boundary_missing": 35,
+  "unexpected_missing": 0,
+  "helper_earliest_detected_event_s": 301.0,
+  "helper_raw_tape_start_s": 300.5,
+  "view_start_s": 240,
+  "scoring_events": 3255,
+  "position_abs_max_m": 0.005000000000109139,
+  "note": "Original MISMATCH receipt retained. All 35 absent targets are genuine view events at the helper first tape row; all 3220 later events agree.",
+  "new_inference": 0
+}
