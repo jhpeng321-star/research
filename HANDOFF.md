@@ -65,6 +65,10 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.
   Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.
   WM2 full panel160/160tasks fetched read-only. No inference repeated.
+- A2 snapshot6complete reserved worlds:ΔCRPS−501/−2591/−9243veh-s,300srate-
+  distance−3.75pp. B2 snapshot1world969433:−2492/−8183/−19790,rate-distance−2.5pp.
+  All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.
+  Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.
 - Next: complete source phase integration + CPU suite +8x60s recorded smoke,
   publish new immutable config/source, collect complete K8 matched worlds,
   endpoint CIs and DECIDE credibility, update ≤60line WMPHYS_MORNING.md.

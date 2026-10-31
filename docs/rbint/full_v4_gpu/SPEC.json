@@ -1,0 +1,29 @@
+{
+  "owner": "S-RB-INT",
+  "host": "gpuA",
+  "runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+  "model_runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+  "stage": {
+    "host": "gpuA",
+    "commit": "22cc32f65a80af482a1a277c5f22377fa727d0a3",
+    "archive_sha256": "ea6f39b6fdcd5e79da6543e64b533cf30bf92f79b4427123e64bc724867213a8",
+    "runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+    "endpoint_only": false
+  },
+  "smoke_sha256": "df49d7e6effa259c9bd516f448eb116afcfdd492eba4e0bc8925a18b5e203a6f",
+  "variant": "FULL",
+  "tasks": 160,
+  "world_order": "reserved-first",
+  "training": false,
+  "device": "cuda",
+  "recipe": "wm_phys.toml",
+  "resources": {
+    "load": [
+      13.12109375,
+      14.22265625,
+      14.77685546875
+    ],
+    "device": "cuda",
+    "gpu_free_mib": 40703
+  }
+}

@@ -5,8 +5,9 @@ Its300s breakdown rate is farther from real on this subset. Full-panel evidence 
 ## Candidate and engineering evidence
 - Interim FULL-v1 source4015b641: SUMO IDM, LC2013 highway subset, merge/insertion;
   all learned motion/lane/merge/courtesy/admission/noise corrections OFF.
-- A: motion encoder + hidden settings/Poisson arrivals; B: population defaults;
-  C: motion-fitted pooled point; FULL: fitted joint IDM posterior + learned arrivals.
+- A2(encoder+UNC,source4015):6worlds;ΔCRPS120/300/600−501/−2591/−9243;Δrate-distance300−3.75pp.
+- B2(defaults,source4015):1world;ΔCRPS−2492/−8183/−19790;Δrate-distance300−2.50pp; not comparable to A's set.
+- C2(fitted population point) pending. A/B HDV60 unavailable; their95%world CIs NA; no adoption claim.
 - FULL uses shrinkage_v1 (learned strength19.35568) and observable
   entrance-counter Poisson family, with Gamma rate uncertainty and action-paired draws.
 - FULL-v1's saved-ID crosswalk remains unverified. NEW FULL-v3 sourcef378ac60 conditions
