@@ -30,6 +30,9 @@
 - UPDATE18:30:36: all30 updates complete, step30aa8df951; all finite/frozen.
   Pilot waits for panel queue; no continuation/decision yet. Aggregate paired
   loss share .9370, anchor .0630. Full step10 remains pending.
+- UPDATE19:11:46: same four baseline shards active, oldest108m20s; GPU99%,
+ 32881MiB free. No completed shard; pilot sleeps in drain. External deadline
+ 23:02:20+08 remains unchanged. Scoring timing, not fitting, is the bottleneck.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:

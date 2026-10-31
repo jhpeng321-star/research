@@ -178,3 +178,13 @@ decision. GPU parity/launch/decision remain pending.
 - Four same-gpuA baseline shards remain live; step10/20/30 shards queued.
   Pilot now waits in panel drain. No full panel/decision/continuation yet;
   FULL_PANEL_STEP10.json remains the monitored milestone. Budget cap unchanged.
+
+## Scoring timing probe, 2026-10-31 19:11:46 +08
+- Dispatcher222535 and pilot223222 alive; pilot sleeps in panel drain. Four
+  baseline shards224101/224982/226871/233889 are CPU-active (93-100% each),
+  oldest elapsed108m20s; gpuA utilization99%, free32881MiB. No completed shard.
+- No additional optimizer update is underway; all30 checkpoints already exist.
+  The registered full52 panel, not optimizer throughput, is the current bottleneck.
+- Existing external deadline remains23:02:20+08 (20528s from17:20:12), about
+ 3h50m remaining at this probe. No timeout/gate/concurrency amendment made.
+  Record actual panel durations for MAIN's budget review; continue step10 watch.
