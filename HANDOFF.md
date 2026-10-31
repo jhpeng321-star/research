@@ -14,7 +14,19 @@ Next separately frozen diagnostic: `docs/paper_results/RBUNC_PREFERRED_DESIGN.md
 Same FIT32/K8/H120 reference, ONLY existing-driver posterior changes to preferred
 shrinkage; exact rates/requests/newcomer population retained. Old panels untouched.
 cpuQ admission checked load9.67/32, no GPU, all old workers rc0; NEW preferred_v1
-root absent. Dispatch/result status will be published here with owned receipts.
+root absent. Preferred panel dispatched ONCE, supervisor553091, immutable source
+`cpuQ:/home/ubuntu/rbunc20261031/code/65f3ddae756c`, output `preferred_v1`.
+Four disjoint workers have started; use preferred_ops.py status, never redispatch.
+
+NEW integration option: `fit.with_motion_posteriors({(world,vid): dist}, t0_s=t0)`
+binds FIT `condition_motion` outputs in the SAME frozen support order. Clears all
+saved-ID records/LC, samples exact finite weights, keeps fitted entrant population,
+and hashes the causal posterior snapshot. Missing IDs -> population. The caller
+must supply faithful stable-mainline causal motion predictions and the learned
+policy; this adapter reads no recording. Contrary to earlier shorthand,
+`MotionFitForUNC` itself only wraps saved-ID/population particle generation.
+Combined42CPUtestsPASS/12.88s including causal snapshot hash/order, exact support,
+saved-ID clearing, unknown-driver prior, no inherited LC and time guards.
 
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
 Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +
@@ -58,9 +70,10 @@ verification `rbunc/{fitted_source_probe,fitted_summary}.json`.
   and motion. LC block independent of IDM block (FIT supplied no joint coupling).
 - Five fitted-posterior CPU tests PASS; full current suite34PASS.
 - Saved-ID posterior lookup is FIT969400..969431/t300 only. Unknown IDs -> prior.
-  New-world causal-motion inference is FIT's `MotionFitForUNC` supplied-posterior
-  path; pass fitted `population=` for entrants, not a simultaneous saved-ID
-  `fitted_state=` override. Never substitute packed slots for observed VIDs.
+   New-world inference uses FIT `condition_motion`, then the NEW exact
+   `with_motion_posteriors` snapshot above. Supplied-particle alternatives require
+   fitted `population=` for entrants, not simultaneous `fitted_state=`.
+   Never substitute packed slots for observed VIDs.
 
 ## Owner00:40 learned arrivals (READY)
 - `LearnedArrivalFit.from_file('docs/paper_results/rbunc/observed_arrivals.json')`

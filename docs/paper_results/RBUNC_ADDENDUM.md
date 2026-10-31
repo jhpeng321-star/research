@@ -101,6 +101,8 @@ but still has no conditional coverage qualification. This adapter samples either
 selected artifact exactly, without silent inflation. Across-world real variation also contains observed
 state/demand heterogeneity, so it is not a conditional ensemble-width target.
 Integrated WM-PHYS120/300/600s distribution/action qualification stays INT/EVAL.
-Saved-ID posteriors are only FIT969400..969431/t300. FIT's generic causal-motion
-interface is needed for new worlds; unknown numeric IDs alone fall back to the
-population. Never interpret evaluator packed slots as recorder numeric VIDs.
+Saved-ID posteriors are only FIT969400..969431/t300. FIT's generic
+`condition_motion` interface is needed for new worlds; its finite weights can now
+bind via `FittedHiddenState.with_motion_posteriors` without inheriting saved IDs.
+`MotionFitForUNC` itself supplies saved-ID/population particles. Unknown numeric
+IDs alone fall back to population. Never interpret packed slots as numeric VIDs.

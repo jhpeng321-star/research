@@ -107,11 +107,20 @@ futures = plan_hidden_state_futures(
   n/(n+19.35568); do not apply it again. Raw `finite_mixture_v4` remains supported
   and is the frozen input of this workstream's new H120 physical diagnostic.
 - Saved-ID posteriors exist only for FIT969400..969431 at300s. For other worlds
-  use FIT's causal `MotionFit.condition_motion`/`MotionFitForUNC` interface and
-  the existing supplied-posterior path, with the fitted `Population` passed via
-  `population=` for newcomers. Do not simultaneously override those supplied
-  samples with `fitted_state=` (the direct saved-ID source). Never fake an ID
-  from a packed slot or from a route-string ordinal.
+  use FIT's causal `MotionFit.condition_motion` on the caller's stable-mainline
+  motion intervals, with faithful next-speed predictions in the frozen support
+  order and the learned shrinkage policy. Bind its returned distributions with
+  `fit.with_motion_posteriors({(world, vid): distribution, ...}, t0_s=t0)` and
+  pass the returned reader as `fitted_state=`. This samples the exact finite
+  weights and the fitted entrant population without a finite-particle surrogate.
+  Rebinding clears ALL saved-ID records and optional LC; missing IDs use population.
+  The caller is responsible for support/likelihood compatibility and causal input
+  intervals. No new recording is read by this adapter.
+- `MotionFitForUNC` is an alternative supplied-particle proxy for saved-ID
+  posteriors (or population-only draws), not a causal-motion inference wrapper.
+  Use the supplied-posterior path plus fitted `Population` via `population=` for
+  newcomers. Do not combine it with `fitted_state=`. Never fake a numeric VID
+  from packed slots or route-string ordinals.
 - New HDVs: fitted population. Current/new CAV plant settings remain the existing
   observed inference, outside the HDV physical fit. Optional named LC settings
   persist for current/new HDVs; no fitted joint IDM/LC dependence is claimed.
@@ -137,7 +146,7 @@ futures = plan_hidden_state_futures(
   as `driver_draw_key='packed_slot'`. Supplying both `fitted_state=` and encoded
   `posterior_samples` is rejected rather than silently overriding either source.
 - CPU suites: `test_fitted_hidden.py`, `test_arrival_fit.py`,
-  `test_hidden_state_futures.py`, `test_c4_futures.py` (40 tests).
+  `test_hidden_state_futures.py`, `test_c4_futures.py` (42 tests).
 - New fitted-input physical verification and retained failure lineage:
   `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`, `rbunc/fitted_source_probe.json`.
   Complete-panel summaries: `python tools/rbunc/analyze_addendum.py`.

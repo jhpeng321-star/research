@@ -119,3 +119,41 @@ def test_saved_id_and_supplied_motion_posteriors_cannot_silently_override():
     with pytest.raises(ValueError, match='not both'):
         plan(model, state, h, fitted_state=fitted(), t0_s=300,
              row_keys=[969400], vehicle_ids=torch.tensor([[101, 102, 103, 104, -1]]))
+
+
+def test_causal_motion_rebinding_clears_saved_ids_and_samples_exact_joint_weights():
+    source = fitted(lane=True)
+    source.provenance = dict(idm_population_sha256='population', idm_posterior_sha256='saved',
+                             lc_population_sha256='not-causal')
+    record = dict(support_indices=[0], weights=[1.], conditioning_end_s=315)
+    adapted = source.with_motion_posteriors({(969400, 102): record}, t0_s=315)
+    record['weights'][0] = 0.  # the bound snapshot owns its immutable input copy
+    assert adapted.lane_population is None
+    assert adapted.provenance['posterior_source'] == 'caller_causal_motion'
+    assert adapted.provenance['idm_posterior_sha256'] != 'saved'
+    assert source.posterior['conditioning_end_s'] == 300
+    model, state, h, _ = fixture()
+    futures = plan(model, state, h, fitted_state=adapted, t0_s=315,
+                   row_keys=[969400], vehicle_ids=torch.tensor([[101, 102, 103, 104, -1]]))
+    for f in futures:
+        p = f.kwargs['driver_params']
+        # Old saved101 is removed; causal102 now uses exactly support0.
+        assert [p[n][0, 0].item() for n in IDM_ORDER] == pytest.approx([17., .7, .8, 1.1, 1.2])
+        assert [p[n][0, 1].item() for n in IDM_ORDER] == [43., 2., 3., 4., 5.]
+    adapted.check_time(315)
+    with pytest.raises(ValueError, match='conditioning'):
+        adapted.check_time(300)
+    with pytest.raises(ValueError, match='conditioning'):
+        source.with_motion_posteriors({(969400, 102): dict(record, conditioning_end_s=316)}, t0_s=315)
+
+
+def test_empty_causal_rebinding_is_population_only_and_hash_is_order_invariant():
+    source = fitted()
+    a = dict(support_indices=[0], weights=[1.], conditioning_end_s=315)
+    b = dict(support_indices=[1], weights=[1.], conditioning_end_s=315)
+    first = source.with_motion_posteriors({(969400, 101):a, (969400, 102):b}, t0_s=315)
+    second = source.with_motion_posteriors({(969400, 102):b, (969400, 101):a}, t0_s=315)
+    assert first.provenance == second.provenance
+    empty = source.with_motion_posteriors({}, t0_s=315)
+    assert empty.posterior['drivers'] == {}
+    assert empty.draw(969400, 101, generator=torch.Generator()) == dict(zip(IDM_ORDER, [17., .7, .8, 1.1, 1.2]))
