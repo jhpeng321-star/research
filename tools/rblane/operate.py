@@ -50,7 +50,7 @@ def launch(kind):
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
     reuse = None
-    if kind == 'panel2':
+    if kind != 'smoke' and kind != 'panel':
         first = json.loads((RECEIPTS / 'PANEL_COMPLETE.json').read_text())
         assert first['complete'] and not first['alive']
         reuse = first['root'] + '/results'
@@ -109,7 +109,9 @@ print(json.dumps(dict(alive=alive,complete=summary.exists(),
     if report['summary']:
         brief.update(episodes=report['summary']['episodes'],
                      elapsed_s=report['summary']['elapsed_s'],
-                     aggregate=report['summary']['aggregate'])
+                     aggregate={model: {key: value for key, value in scores.items()
+                          if key in ('exact', 'by_motivation', 'positive_runs')}
+                          for model, scores in report['summary']['aggregate'].items()})
     else:
         brief['progress'] = report['progress']
     print(json.dumps(brief, indent=2))
@@ -129,13 +131,18 @@ print(json.dumps(dict(alive=alive,complete=summary.exists(),
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('command', choices=('smoke','panel','panel2','status','collect'))
-    ap.add_argument('--kind', choices=('smoke','panel','panel2'), default='smoke')
+    ap.add_argument('command')
+    ap.add_argument('--kind', default='smoke')
     args = ap.parse_args()
-    if args.command in ('smoke','panel','panel2'):
+    import re
+    if not re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.kind):
+        ap.error('invalid run kind')
+    if re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.command):
         launch(args.command)
-    else:
+    elif args.command in ('status', 'collect'):
         status(args.kind, args.command=='collect')
+    else:
+        ap.error('unknown command')
 
 
 if __name__ == '__main__':

@@ -14,7 +14,10 @@ def model():
 
 
 def state():
-    return dict(s_m=torch.tensor([[1000., 74., 73.]]),
+    # Mainline ego is on the real upstream corridor, with ample continuation.
+    # The old +1000m fixture was beyond the 553.33m road exit and relied on
+    # the former infinite-route approximation to accumulate keep-right wishes.
+    return dict(s_m=torch.tensor([[-1000., 74., 73.]]),
                 v_mps=torch.tensor([[25., 0., 0.]]),
                 a_mps2=torch.zeros(1, 3), lane=torch.tensor([[0, 2, 2]]),
                 length_m=torch.full((1, 3), 5.),
@@ -28,9 +31,10 @@ def test_mainline_lc2013_and_ramp_reservations_both_execute():
     m = model()
     with forbid_learned_corrections(m):
         first = m.step(state())
-        full = m.rollout(state(), n_steps=24)
+        full = m.rollout(state(), n_steps=120)
     assert first['next_lane'].tolist() == [[0, 1, 2]]
-    # Empty mainline right lane invokes persistent SUMO keep-right desire.
+    # Finite continuation reduces the source keep-right accumulator increment;
+    # allow a full minute rather than asserting the old infinite-road timing.
     assert (full['lanes'][0, :, 0] == 1).any()
     assert 'lc2013_keep_right' in full['state']
     assert torch.isfinite(full['positions']).all()

@@ -3,7 +3,7 @@ import torch
 
 from wms.physics.config import PhysicsConfig
 from wms.physics.lc2013 import (COOPERATIVE, KEEP_RIGHT, SPEED_GAIN, STRATEGIC,
-                                brake_gap, lane_change, maximum_safe_stop, secure_gap)
+                                NUMERICAL_EPS, brake_gap, lane_change, maximum_safe_stop, secure_gap)
 
 
 def scene(rows):
@@ -28,7 +28,7 @@ def test_euler_stop_inverts_discrete_braking():
     v = torch.tensor([0., 1., 10., 25.], dtype=torch.float64)
     b, tau = torch.full_like(v, 4.5), torch.full_like(v, 1.)
     gap = brake_gap(v, b, .5, headway=tau)
-    torch.testing.assert_close(maximum_safe_stop(gap + 1e-6, b, tau, .5), v)
+    torch.testing.assert_close(maximum_safe_stop(gap + NUMERICAL_EPS, b, tau, .5), v)
 
 
 def test_required_ramp_strategic_and_geometry():
@@ -80,14 +80,49 @@ def test_keep_right_source_five_second_accumulator_and_reset():
     p = PhysicsConfig()
     mem = None
     for _ in range(10):
-        mem = lane_change(k, mask, p, memory=mem)
+        mem = lane_change(k, mask, p, memory=mem,
+                          target_remaining_distance=torch.full((1, 1), 1e6))
         assert mem['next_lane'].item() == 0
-    mem = lane_change(k, mask, p, memory=mem)
+    mem = lane_change(k, mask, p, memory=mem,
+                      target_remaining_distance=torch.full((1, 1), 1e6))
     assert mem['next_lane'].item() == 1
     assert mem['lc2013_reason'].item() == KEEP_RIGHT
     k[..., 1], k[..., 2] = 0, 1
     mem = lane_change(k, mask, p, memory=mem)
     assert mem['lc2013_keep_right'].item() == 0
+
+
+def test_mature_keep_right_waits_when_target_lane_becomes_slower():
+    k, mask = scene([(0, 0, 5), (100, 1, 5)])
+    p = PhysicsConfig()
+    mem = lane_change(k, mask, p)
+    mem['lc2013_keep_right'][0, 0] = -40_000_000
+    out = lane_change(k, mask, p, memory=mem)
+    assert out['lc2013_safe'][0, 0]  # safety alone must not permit the wish
+    assert out['lc2013_this_speed'][0, 0] - 5 / 3.6 > out['lc2013_target_speed'][0, 0]
+    assert out['lc2013_keep_right'][0, 0] == -40_000_000  # retained, not erased
+    assert not out['lc2013_wish'][0, 0]
+    assert out['next_lane'][0, 0] == 0
+    mask[0, 1] = False
+    resumed = lane_change(k, mask, p, memory=out)
+    assert resumed['lc2013_reason'][0, 0] == KEEP_RIGHT
+    assert resumed['next_lane'][0, 0] == 1
+
+
+def test_mature_speed_gain_requires_sumo_numerical_epsilon_not_machine_epsilon():
+    # The target's30m/s vs current anticipated29.99m/s yields gain~0.00033:
+    # positive but smaller than SUMO's documented NUMERICAL_EPS0.001.
+    k, mask = scene([(0, 1, 5), (37.426, 1, 30)])
+    p = PhysicsConfig(speed_limit_mps=30)
+    params = {'time_headway': torch.ones((1, 2))}
+    mem = lane_change(k, mask, p, driver_params=params)
+    mem['lc2013_left'][0, 0] = 3_000_000
+    out = lane_change(k, mask, p, memory=mem, driver_params=params)
+    gain = (out['lc2013_target_speed'] - out['lc2013_this_speed']) / out['lc2013_target_speed']
+    assert 1e-6 < gain[0, 0] < NUMERICAL_EPS
+    assert out['lc2013_safe'][0, 0]
+    assert out['lc2013_left'][0, 0] > 2_000_000
+    assert out['next_lane'][0, 0] == 1
 
 
 def test_blocked_wishes_persist_and_identity_or_absence_reset():

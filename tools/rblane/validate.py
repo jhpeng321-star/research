@@ -29,6 +29,7 @@ FORBIDDEN = ('hold' + 'out', 'held' + 'out', 'cal' + '_split', 'chunk' + '5',
              'vehicle' + '_params', 'driver' + '_params', 'assignment')
 FILES = ('episode.json', 'time_s.npy', 'veh_kin.npy', 'veh_mask.npy', 'is_cav.npy', 'vid.npy')
 ARMS = ('native', 'ctrl0', 'mappo', 'pi', 'circles')
+MOTIVATIONS = {1: 'strategic', 2: 'cooperative', 3: 'speed_gain', 4: 'keep_right'}
 
 
 def safe_path(path: Path, root: Path) -> Path:
@@ -107,6 +108,25 @@ def compress_proposals(events, dt):
     return runs
 
 
+def event_proximity(recorded, predicted):
+    """Describe bounded-window timing mismatch without a behavioural cutoff."""
+    groups = {}
+    for event in recorded:
+        groups.setdefault(tuple(event[:3]), []).append(event[3])
+    offsets = []
+    missing = 0
+    for event in predicted:
+        times = groups.get(tuple(event[:3]), ())
+        if times:
+            offsets.append(min((event[3] - t for t in times), key=abs))
+        else:
+            missing += 1
+    return dict(no_recorded_transition_in_window=missing,
+                has_recorded_transition_in_window=len(offsets),
+                nearest_timing_signed_sum_s=sum(offsets),
+                nearest_timing_abs_sum_s=sum(abs(t) for t in offsets))
+
+
 @torch.no_grad()
 def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
@@ -130,8 +150,10 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         raise ValueError('unexpected time discretization')
     memory = None
     actual, proposals = [], {'lc2013': [], 'mobil': []}
+    motivated = {name: [] for name in MOTIVATIONS.values()}
     exposure = Counter()
     wishes, blocked = Counter(), Counter()
+    diagnostics, misses = {}, Counter()
     for t in range(len(times) - 1):
         if times[t] < t0 - 60 or times[t] >= t0 + horizon:
             continue
@@ -167,9 +189,32 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
                         float(times[t + 1]), float(kin[t + 1, j, 0])]
             if destination[j] != source[j]:
                 actual.append(event(destination[j]))
+                if choices['lc2013'][j] == destination[j]:
+                    failure = 'match'
+                elif not memory['lc2013_wish'][0, j]:
+                    failure = 'no_wish'
+                elif memory['lc2013_blocked_leader'][0, j]:
+                    failure = 'blocked_leader'
+                elif memory['lc2013_blocked_follower'][0, j]:
+                    failure = 'blocked_follower'
+                else:
+                    failure = 'other_safety'
+                misses[direction + '/' + failure] += 1
             for name, choice in choices.items():
                 if choice[j] != source[j]:
                     proposals[name].append(event(choice[j]))
+                    if name == 'lc2013':
+                        reason = MOTIVATIONS[int(memory['lc2013_reason'][0, j])]
+                        motivated[reason].append(event(choice[j]))
+                        outcome = 'tp' if choice[j] == destination[j] else 'fp'
+                        position = float(moved[j, 0])
+                        region = ('upstream' if position < physics.merge_zone_s0_m else
+                                  'downstream' if position > physics.merge_zone_s1_m else 'merge')
+                        cell = diagnostics.setdefault(reason + '/' + outcome + '/' + region, Counter())
+                        cell['count'] += 1
+                        cell['speed_sum_mps'] += float(moved[j, 4])
+                        cell['this_speed_sum_mps'] += float(memory['lc2013_this_speed'][0, j])
+                        cell['target_speed_sum_mps'] += float(memory['lc2013_target_speed'][0, j])
     scores = {}
     for name, events in proposals.items():
         if name == 'mobil' and reuse_mobil is not None:
@@ -185,9 +230,16 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             by_transition={key: match_events([e for e in actual if e[1] == lane],
                 [e for e in events if e[1] == lane], 0)
                 for lane, key in ((0, 'return'), (1, 'overtake'), (2, 'merge'))})
+        if name == 'lc2013':
+            scores[name]['by_motivation'] = {
+                reason: dict(exact=match_events(actual, ev, 0),
+                             run_window_2s=match_events(actual, compress_proposals(ev, physics.dt_s), 2),
+                             proximity=event_proximity(actual, ev))
+                for reason, ev in motivated.items()}
     return dict(episode=meta['episode'], seed=int(meta['seed']), arm=meta['arm'],
                 input_sha256=hashes, recorded=len(actual), exposure=dict(exposure),
-                wishes=dict(wishes), blocked=dict(blocked), scores=scores)
+                wishes=dict(wishes), blocked=dict(blocked), scores=scores,
+                proposal_diagnostics=diagnostics, recorded_outcomes=dict(misses))
 
 
 def aggregate(rows):
@@ -213,6 +265,32 @@ def aggregate(rows):
             sums['recall'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
             sums['precision'] = sums['matched'] / sums['predicted'] if sums['predicted'] else None
             result[model]['by_transition'][transition] = sums
+        if model == 'lc2013' and all('by_motivation' in r['scores'][model] for r in rows):
+            result[model]['by_motivation'] = {}
+            for motivation in MOTIVATIONS.values():
+                result[model]['by_motivation'][motivation] = {}
+                for metric in ('exact', 'run_window_2s'):
+                    cells = [r['scores'][model]['by_motivation'][motivation][metric] for r in rows]
+                    sums = {key: sum(c[key] for c in cells) for key in ('matched', 'recorded', 'predicted')}
+                    sums['precision'] = sums['matched'] / sums['predicted'] if sums['predicted'] else None
+                    # Recorded tapes have no motivation labels. This is the
+                    # contribution to ALL-event recall, not class-conditional recall.
+                    sums['recall_contribution'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
+                    result[model]['by_motivation'][motivation][metric] = sums
+                if all('proximity' in r['scores'][model]['by_motivation'][motivation] for r in rows):
+                    cells = [r['scores'][model]['by_motivation'][motivation]['proximity'] for r in rows]
+                    result[model]['by_motivation'][motivation]['proximity'] = {
+                        key: sum(c[key] for c in cells) for key in cells[0]}
+            if all('proposal_diagnostics' in r for r in rows):
+                profile = {}
+                for r in rows:
+                    for key, cell in r['proposal_diagnostics'].items():
+                        profile.setdefault(key, Counter()).update(cell)
+                result[model]['proposal_diagnostics'] = profile
+                misses = Counter()
+                for r in rows:
+                    misses.update(r['recorded_outcomes'])
+                result[model]['recorded_outcomes'] = dict(misses)
     return result
 
 
@@ -262,13 +340,16 @@ def main():
                   horizon_s=args.horizon_s, prehistory_s=60, settings='population only',
                   snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
                   cohort='HDV, same identity, normal road in both adjacent frames',
+                  motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
                   mobil_reuse=(str(args.reuse_mobil_from) if baseline is not None else None),
                   physics=asdict(physics), aggregate=aggregate(rows),
                   by_arm={arm: aggregate([r for r in rows if r['arm'] == arm]) for arm in ARMS
                           if any(r['arm'] == arm for r in rows)},
                   elapsed_s=time.time()-start,
-                  source_sha256={str(p): sha(p) for p in (Path(__file__),
-                    Path(__file__).parents[2] / 'src/wms/physics/lc2013.py')})
+                  source_sha256={str(p): sha(p) for p in (Path(__file__), *(
+                    Path(__file__).parents[2] / ('src/wms/physics/' + name)
+                    for name in ('lc2013.py', 'lc2013_geometry.py', 'config.py',
+                                 'mobil.py', 'neighbours.py', 'batched.py')))})
     (args.out / 'SUMMARY.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['aggregate']), flush=True)
 

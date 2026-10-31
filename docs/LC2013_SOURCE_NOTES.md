@@ -68,3 +68,20 @@ Extra public sources read only, downloaded into NEW EMPTY directories:
 No downloaded code executed. No parameter fitting/selection from tape outcomes.
 Revised-candidate panel reuses the completed MOBIL scores after exact input,
 physics, cohort and horizon checks; the original candidate results are retained.
+
+## Precision continuation amendments
+
+- LC2013.cpp:1785 keep-right request must remain inside1716's non-slower-target
+  branch. Corrected in568d0314; 255FIT false-positive steps removed, no TP lost.
+- `lc2013_geometry.py` reconstructs edge-local position and finite LaneQ.length
+  from the fixed corridor net and completed obsstate helper. LENGTH, not remaining
+  distance, enters1547/1740/1809/1855; strategic1294/1303 subtracts position.
+  MSVehicle.cpp:6163,6295 sum edge lengths; MSEdge.cpp:126 chooses first lane.
+  Both-zero route offsets resolve toward the target at1144–1155, while1330/1874
+  retain equality with the original offset for route-required strategic requests.
+- Public `src/config.h.cmake:236/239` defines NUMERICAL_EPS=.001 and
+  POSITION_EPS=.1. Earlier1e-6 in this lane subset was wrong. Candidate6 uses
+  .001 for secure-stop numerical margin, IDM near-zero gap and speed-gain's
+  positive-gain veto. This matches INT's independently discovered source values.
+  Downloaded READ ONLY to NEW EMPTY `E:/Temp/opencode/sumo-1.27.1-lane-precision`,
+  config.h.cmake SHA2565e48e2b4acfdde7860e6eed0ba3d0ffca529046693151cc65f82b2ad7bc214c3.

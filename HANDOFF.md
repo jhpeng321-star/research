@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-11-01 ~00:43 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733.
+Updated 2026-11-01 ~00:49 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733/5736.
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
@@ -22,6 +22,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- LANE811cd7e8 merged: finite continuation geometry, stale keep-right gate,
+  SUMO numerical epsilon; prior immutable A/B/C runtime remains source-bound.
 - CF742922b6, LANE (including right-overtake prevention), MERGE follow-ups,
   UNC1f918969 and FIT11d36f75 integrated. EVAL scorer/finalizer merged.
 - A: existing motion encoder EXACT, hidden-driver joint draws + Poisson arrivals.
@@ -37,6 +39,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Resumed LANE merge gate: **116 CPU tests PASS /33.30s** (all touched
+  LC/CF/merge/insertion/hidden-future/INT modules). Combined fixture repaired:
+  prior mainline position1000m was beyond553.33m road; now upstream -1000m,
+  with60s window for source finite-length keep-right accumulation. No physics
+  threshold changed. Broader equivalence attempt timed out; not counted as PASS.
 - Full touched-module CPU suite **159 PASS /33.34s**; independent source anchors,
   CF, LC2013, insertion, hidden futures, native lanes, INT correction/encoder guards.
 - Additional recipe reconstruction suite **5 PASS /8.29s** (inherited mode resets).
@@ -54,8 +61,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - RUNB already owns B, supervisor gpuR728893 WAITING_RESOURCES; do not redispatch.
 - RUNA watcher44796 owns intake of published A/C; no A claim at00:42 poll.
 - New ready source increments: LANE811cd7e8, MERGE0090c168, UNC46c33fbe.
-- Owner00:40 schedule: integrate continuously, freeze FULL around05:00, retain
-  immutable A/B/C, evaluate through07:15 and report with DECIDE credibility07:30.
+- Owner00:44 schedule supersedes05:00 freeze: interim04:00/08:00, freeze FULL
+  around09:30, full evaluation09:30–11:30, final report with credibility11:45.
 - DECIDE handoff not present at00:42; FIT finite-profile posterior is available,
   learned arrival upgrade pending UNC. Existing C remains pooled-point fit.
 - No INT scientific dispatch yet. RUNB owns B after exclusive shared claim.
