@@ -1,0 +1,2711 @@
+{
+ "schema": "wmphys-paired-comparison/1",
+ "real_receipt_sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+ "source_sha256": "3bc2fc0a3a25729d8c933926b2c56df38babd162934f30fc597df9d82f4a8904",
+ "candidate_audit": {
+  "model": {
+   "model": "WM-PHYS-A2",
+   "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "config_sha256": "e9e2df4fa0bffb494a105c805dff4ff718af656605da2a767ce0db63ca7c7b53",
+   "K": 8,
+   "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+   ],
+   "mix": true,
+   "native_lanes": true,
+   "sources": {
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbeval/run_wm.py": "9612ab6ae2d2ededf0ce497632ce4773bfb8d752e3dc97dacf8200c5dedabb43",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbeval/core.py": "acd9d476e7ab5e628bd047bcb20ed916e76a945787f894b862eb0d58636ebe97",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbeval/references.json": "5b1551d7a4e10f2135b358c3a2ae64cc507b83c44bed481e0336aba3ba00cb06",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/configs/execparity_cav_idm_v1.json": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate.py": "b03cd25f4c43b1db7ec0c0ec1cf08f8f0c5bd84dbda5a2db52db020523ed841a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/recipe.py": "1b48fa5508549ceda3c74972ce3f887516964e9e4a14eba24023ea0e0558ee65",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/rebuild.py": "fc94c0453657a867bd643e962078d5a7b59b5c359b6e41f367fb4bec0a634cae",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/configs/native_cav_head_v5.json": "4c351a4281abc5e0eb08b59612e175ab60bd75715f5e94241b3a440691fcda00",
+    "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml": "e9e2df4fa0bffb494a105c805dff4ff718af656605da2a767ce0db63ca7c7b53",
+    "/root/rbeval20261031/SMOKE_4015b6412cdf.json": "8cfb30c91e6d81c9cb4ef2e1d04b7eb6621c36cfa381388533874828037a90eb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/__init__.py": "a00cf4d54aa9ee0587fd59e4c3074e161f4245f2aa9c9d0941736dfff07cc5c4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/__main__.py": "56397e0ea9f1cc32f2b4e5b286db34dd46ed6ba42e4b30139b800deab7c5775b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/__init__.py": "a38919786da9011f5ca3dbf52fd5cbfbde4a6dba8d97410f96dbe92b5e297ddb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/__main__.py": "f1fb6d387c213003c6c91b211ca273fd43c2a20c247aad00347d0e104afc4966",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/assemble.py": "f73cfa479567c7f7e7d5cc4c1c89cba1762a36b431dfca7f87b2a2b58c86c523",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/eval.py": "eae33420a59bcba3cba84f65550b38d749e07d1fa6df0164a11f15413ad6abe2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/fetch.py": "960f2c5857663b8ee14a5bd04c3bbffdc734c1bc947245f3e88cee06f48453ac",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/score.py": "2ea8953c07b957da9574888371457d8586a4eea8b1b70b15b12aef90d91d4cd3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/cli/train.py": "a405be242cfa32b96ac34d7d9cb5b58ebf04945779783319a93a44ca67eadc0d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/__init__.py": "cf672ec7d421a1feeb2d6e789483fcf42ef06e41f46077cda04a8427b58bc29a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/data.py": "50a303caadd498d5e571be5602090e347efdd938663db2c057c7a4e4335c01ee",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/eval.py": "bf924fc1ca31a8f6b8beb32c99113b2537606a2634fc92c6f54cc72be2fce2a3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/legacy_flags.py": "4afd2b0bba69921319ca0d5b519a1a32ff7acfba2d6f4f69465eb4c634d43a38",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/legacy_flat.py": "94ace01ba3f203ee68a66f4a63cc970eb96726f6dc451ac8790e431fed74fb91",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/load.py": "8b3023264a534727a644f1609f948283345a21c511f7fb943a79a9b7f5e273f5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/presets.py": "4803d02eccfb0ad5f1eed77a8889a3f1003d7179ddcbdaa981aa6ae07730c6fc",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/schema.py": "0ebaf8f4fbfa04050d1d924ddbca880112476e09eb56e2e07d527154df139431",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/config/train.py": "90e2a9f034771335568356be0734af693e288edf4e8bcdce105d80783b9a1974",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/__init__.py": "02da53a887b399fc69f0d3ec686afe0535add2db06e80900d3b3c1a12787210b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/alwayscmd.py": "03e143a0f37d53a269aa0a2bf8015189a69dab904cfc6a5f23a8e07b36ab1e12",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/antiexploit.py": "b7e938b6d63f61abcdd80bdc02c3346358541b1688d5abfc78cd7f7a464bd30a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/arrival_fit.py": "df27a71689986ce9a4a28e8bb37a3731f5d2845547f17637300065a339832be7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/auditfix_authority.py": "c2249446f02f7ec4b19662d9cb51e6d55cf5384aaf513d7faa284b1752ff1da2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/auditfix_diagnostics.py": "fc9e4a132862f6475cd2ad4204e01824361537e348abc2f21a9db265188daaee",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/belief.py": "56dd3fa32d8677abb46e80fc57191edc996d375596332ccc0d08796b4a93cf99",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/breakdown.py": "9ce1c0ba5a1a9afc33f7a20e90d28010f3c82ce459c98cd64d8434b48cbad15a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/bridge.py": "053bb01eaca21107a62b96b3d8c0e8a93f92395200e9676da50961c79f213a6c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/c4_starts.py": "bf4c65cb710397591805a55da0d6fecfa1f5f60f4376ece01c8d4e42dab9a367",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/c4launch_authority.py": "ce268217b45638af3ad15246f33f4438ca7689b9baac81cd2f4eda5f6738ca94",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/confident_gate.py": "269fe736591b4e6a5396141146820d26bad23e870591642a6beaf8048b553c1a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/continuous.py": "208972ee658ee727316f3ca0771a5bbd99ded4dc19d35ca0136012197d90fbb8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/contract.py": "6351dcccf268a53ece988026ed56c778faffebd225494abeb3b21575a8662749",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/coop_imagine.py": "ad87f84b691a6a1e2da39e28651f38d5e7ec2b339716a112ca390951ffd17af4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/coopw.py": "580b86c5ef0d7407aa4da4eae361c6ee9236d40e547b656c12913c0deb7ecf9c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/counterfactual.py": "0e73989598b032ebe40bf6c51c8a389570367a656579cd0966562c2918330564",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/deploy.py": "92ddc4900a08c03bc1ef10bafc1a064600a627b9aad4f18778ed145104e768f4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/dreamer.py": "9421de5f5a8d49e600c5a8d632e8df94a9b99b01f9371055bc8744acc53d6302",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/entrance.py": "3de5b4e86c7ea8d08367595e9b7a95d89a0f531da64fffa9dacaaa8ef7ca6481",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/entrant.py": "98aa020334d4bdc11e3b512d9a4b0e187b7c26b9c1fc53d548f96f0d87f073dc",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/entrant_mix.py": "6565bb538a79ee24ee48b8baf21434ae1ca3f247dfbd6e46c930722490f1b0f7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/execution.py": "2d989901c2eefd5384400660c73161a8e252556162c12ff76d650743412d72e9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/exploit.py": "edfde0b28886d121f37b43dfb2b1f136bc2fd9408da5d47feed9f756aa5124d5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/fitted_hidden.py": "549e5d6b885761451c37b9089896cb0afb2746625b4e3dd4ac16cc6e132986b1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/futures.py": "5ff11ac6e6f5a77f78bfa0872aad4e7dab59508de353ab6d38f574871607ae6f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/gated300.py": "5beb9901ce18f6bfbd852d98c60bd417a7d648ab738df082127de5d609f422a5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/hidden_state.py": "98983c9b68fe378cd435e0bd7b5ebec677397d425951aae33a115be4df3ab205",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/imagination_memory.py": "5bd4ff0ffbd9cb6c7af818126b2ec578a7e623eb4455e17daa8b1451b6b76bf9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/lanes.py": "f3e16476e58341f649b08f071530b88c66db3fb5283a4cca511d685a3400a230",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/long_credit.py": "c449ce553ed6e97be0f97b763c7ea432c8abf878f79a3289d83c988aa97971db",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/longcritic.py": "5125859963c60e233899abfabffde53aa667fd19d3619ffd0e89179a2a895088",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/longgrad.py": "d6cc551db100c7e462ea346ea3bc23795f4d31cd64a9cf76ac3eb81903461c8d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/longskip.py": "372b47d095de1730aee541ecab4b292e748ca06234377d3d9be22e4babf31632",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/loop14_returns.py": "9e423acf2ad8ad1418571e5e9bf03e53413d292e7b8a3271513066bf2632e6f4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/looplong.py": "81f5884513a18ea7aa4eff4f6065c0ea91e6346d928621a3deccfdc07bb8b707",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/looplong_real.py": "2dfe45d270799b5782c46e139c185672bf460e2ff26f55c5baacdb4fa8b8bc52",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/__init__.py": "0f7d62827b0a5bb369ab2640daf911d3cec856213a8a8241105823779f74ec43",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/agent.py": "417a69a35c1d05b3da0732dfe020e51ec149ea750114ee34a7370bc09f49460f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/buffer.py": "c59fdcd882741f73e2a10a8e062898dd2bcf86b86f9e4e05473d602b4f59044c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/config_helpers.py": "9590084fd7596db7557a8d96d8e38b3aee7da421cc7fc4a2854aa26ec956ce66",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/eval_bridge.py": "33f5124c3ed7ecec68adf6f766c1d43062af1b453bb523a32c6d53d5cb6d6b45",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/fakeenv.py": "0f1c0859200ad8c8d2f4760c50b4c9d056413b0e7cfd3793c88561b2e9a41c66",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/ppo.py": "c3e3f149ca9184ea0a7504e03b37494ad55878122e570de942a8d2a8f1c18c37",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/rollout.py": "9a08590c9ba8a6a44ebed07d2836a1049766e15897722614891323fa4859ac9b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/train.py": "d522317054eafbcf4d3fe8b935060989ab5e6c49026bada868003c37217f1b00",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/mappo/trainer.py": "f3c8fef209bda9bed1014eefeb21f6d9342ef0425219caf796c0e429da991b98",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/native_cav.py": "e0ff30d6c08ac12e3460712b7d7e389ef0a45203716bbcf3ff5eb438af7663ec",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/nativeinit.py": "193b79fd09fcf4c23fbfd4cfbc062ac9b2ac469a732379c79980833521ac34c4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/objective14.py": "648cdc87b6cbb6679c1c3421e5e37a3b4c459786f11110b0070b65a67fef6778",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/obs.py": "ed929bdffceda967f18391023f6cb8cb01c9ef0de8f087a08c8aea900dbddd10",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/paircrit.py": "add2fc89d5ea67bd9d2f5692e2270fc9e0e4bef83a8c441e892dc2d034c7b887",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/paircrit_export.py": "583ae9db54d085a7bf4a269c702dba207b72c52cc7353e7bd3badcd5bfa862c1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/parallel_futures.py": "cdbe767b13f1b2be93d4f0d760cde707c7c64d8e160c0718fb2cc3565c14ea35",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/phase_resume.py": "220fc87c916449e3557524a53b61d10d4b5d4916b4eb20b5fee34d5083957ad6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy.py": "7cf6eca87e994f79ac2a7b1ca09129514aeadb2da1e5316e16848bf851437f40",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy14.py": "3fa1bc9334bd589632746cff742911a73fdf8f9c8b5f45aa567f56fa24de71e6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy14_cli.py": "633b31c0fd3c61e9adfdcd9750a73496503cd2f5578d23c91f6f98006c95a050",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy14_probes.py": "d83b8b0491c738536301885dff839d81fbe51c840d573c71e5fb94dfa708b937",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy14_real_export.py": "29dd468c4cf0235a7ae20b49e2b5f43d5d8a9f6ebe868773392a2cc019b0ca9d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/policy14_recovery.py": "cc3ab3b89411e0576028919a78f2aababf6e97f4ab705873fcecd1283c3cd267",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/real_credit14.py": "c679c07ef900f9dbabbff75310f17e8a04d39c789107503408a6047f1e202494",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/real_returns14.py": "7a7cc7d0373a0a21871ecf8fd2c535ce64f576eae54af9336e43fb7a68a81465",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/real_share.py": "d361702daeffc036ecefdc6d10775c6a281fefbc0912dd7caeedd6ca34119bbb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/reward.py": "c4fbe4208094a2f8fb3d48795b33081f8459e7dd6aca1ef6f35ebca5564f407b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/rsu_check.py": "2f90ca938ae1c85f6dbd31635710f644135a075d240464c894c0a54086a7bb9d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/rsu_field.py": "ec968513e6020730754ad3f01f8a1ad4b47da0615cd6e8999c152b3e3b39701b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/safety.py": "528f687477d7a3ab41625dfe6d678160f1d46a5983cf4f5695d3f114087715df",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/srcgrad.py": "e876e8902db46b4f17c639c3aa72053df6ad1c281fcf870172dc6a24bb71e25f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/start_states.py": "d23bb90f0c73a04e880bb1ef6ef6397772fad65ec5ebacde28d9db937b69377d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/sumo_idm.py": "e2481594b93c95237a9501d413833fe5bd11f17576beaeae348af9ad7c8f22b3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/sumo_leader.py": "45a9ca9f9d680483b18e60ea021bfb499dbac90530c8fa3303046a2cd520c27f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/train_cli.py": "be9b5af714b38583d73d7ae58a5b24836185b399eee559e90f2f11fcc78886c9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/control/zerostart.py": "0a936dbe0dd3728d922e3a004a2cf5ae16f55ce8c46986e8301c5c107bcce54d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/__init__.py": "535b454655cdcb5cfc6d920f9ffa260a059ab34a8e72717770ed07c169484509",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/constants.py": "48a79eddd4b5396934f958bdf3f0f9bef2c41bc3988e679c8593734e30b6cecd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/errors.py": "52f3db38a81761ac129c5a80488a029ef45082958f4af51468d7a4e4bdb239d2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/fastpath.py": "957125fc3059471098cbc423060a461b197b44ecf69582fb7ff1b1f7e9cb0370",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/guard.py": "b68f3d06e1573d767be3ced3ceca5fbd3be0ba27df3565e3ef127e34ea2001e9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/io.py": "df0f8cdfe06c9ae95ed0967b8ea6ed1cb276f0cc432ced8a98a904f3f9199a35",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/seeds.py": "04ba5adeec4f29ce94021a64a36de3af0b2046e7f558835ab5d37f42d7c3ce02",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/speed_flags.py": "e2030671864bce68dd7ad99c521eb8b4261737005d133a879079a3cb80c234d4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/toml.py": "76d9dff043e53f186784435c28622565abef5d5bc467312acccdbb536b272586",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/core/toml_subset.py": "c2b9f1c3282a08d343cffd810461e8799381dd76c61404493a46a259ce0754a1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/__init__.py": "0fa75f890ad3081a692b7daf8ee06a0c5e78f917f527d9e2e66d4ad7b608f170",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/action_timeline.py": "3509002969e14b965a65114ef7bf6492e4a7296a22715acf5d40c917f00164fb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/c4_episodes.py": "c303b959630ae391d442dc3ec7c0a45e6a75413f95808dcb4f558f056791b73f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/c4_pairs.py": "5fc9876b6cb526bdedab29f036d7dd0da08c1b28ba92e1b67ea015b88146a636",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/collate.py": "50db0850eff3bde9c834c332697910b2ceb98b7021c64518b76edaf1ecafc16a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/controller_hygiene.py": "bd1220d9834c015ea42ba4557cb7861df4c575db5b29b1211a0836ba5f416e8b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/corpus.py": "7c4e949c780a32e1862597ddfb5c850cf56fbc3f6dce3a656afebb689eaa6c95",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/counters.py": "db05640fbce67198e203800a51c7216292a3411618407c539381c4096dc21b63",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/dataset.py": "2497247be9ab9bec7204ae46c0b6661ad3b3044ea46a50fd3730c1fa39d28191",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/driver_truth.py": "ff40cf5654f0bd6178fab2b93b3a104be6bf0abf0ff1b0b5410413ecc9693ed2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/geometry.py": "5e49b0c5eff3a727743cb0f3d69703786f38dfbcca9c666666ff20cd037b32cd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/history.py": "f56728cb3b166040f0bb286de6e630eefb903a3655fc1632478451defbbb44fd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/jam.py": "6f50a47cddef834d85e5fd4d1d7c485f9412a0578be6277229751c9d4d380ed2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/junction_fix.py": "9e7515553316bdc0d59937c84cdc0c6b921d3ecd5eff82818fffaccbcee60c7d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/live_state.py": "add39ad5365c69319d0249715bcfb5f79023fe364f400a2c50e21911607167ad",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/lpwo.py": "9e31115ca59e3664a3224d0a379f24b4e4c97fbc681962672c23fcd495e96d86",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/mixdata.py": "ccf042466ddeed375438e0b34067e215d0295dc623acb4f698616d8f37b51298",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/pack_history.py": "7b7141e21cb4f3d23177c03b5a7aed3470db3170d8210bb261c9e860f8373f64",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/presence.py": "7ce88d4bd41eda038962cfac910907bfd9f0d341bbecfaf9bf2682594945ffa7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/recorded_prefix.py": "b2fdfce39c015abf1cab7fbf161ee4ec15505d9ca8e9dcf49e45b6fa7dcced7e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/registry.py": "23839f5dae6c22e363d0a0a3667549eae7fa396aac79bacf24b703fa8ca42a77",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/replay_flags.py": "b7cac330f2c5c0d60645815fded0b188fb65c873b1c6b83523cd4af5c559fd80",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/route_frame.py": "a1eb3b182a1afd56ee7a8a66e9e166918fefc260c120a05492c288b0b83bd9ca",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/sidecars.py": "b8748818d7b28a6741f38a874cfc2790044b81ef973c2d287f49a96d9c10c0aa",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/sources.py": "e2a46f887c86b959ace33719265b1b9a9ed6d6b4ecae6052a9fc8a4f763e5a40",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/val_split.py": "7f78d1b52d97f74c9f25858432e409aed22115d9908751fe397edafa308ad43a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/window_cache.py": "dfe5b85da9ce273e59a3a1952a2a687b6025ae18cc40f0bc0e2c1c2bf2bc4b2a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/window_lists.py": "edaa113d864694a29d10d1535bb821a8f318b3acd0ec7e1b1113a4425c4f9078",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/data/windows.py": "1e733a0d18fdc236ecabb7bafae330843b7a1a7da84ac2ab94b47f93b07ebd3c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/__init__.py": "baea1b5772191e23325c009d9058aa0df7bfcfc3e9876925379c6cdf57270735",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/backend.py": "9e0bdcc1efc686ab77373c899cf9471109aeabf05a97c62fd8802d34815c3d3f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/compare.py": "fe98ccae9cb1a80e92a9fb827e3d33677e46af2c7acdc21f134d1e860dbb9723",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/decide.py": "bfe4ecef0119f7c21305ab568a0531722c29a4fd218111e57d3cb6ab6b65db38",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/driver_recovery.py": "2a4c96fd006ab679647a1ae6841baf02ce1b7511d5192c775f3e0f725f564687",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/entries_input.py": "eece6096703527aab6cdb66c1810b2ef18eed8d7bb3ddd932fb203d87f9a51c1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/entry_queue.py": "bafbb62279879b20f955707781a32b038bc7b044038a92c6a7a315471d0bcc44",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/errors.py": "76f93a3e10f00ba9ad25f474fe901b6cafda872ff5556687d225ebb791a882e9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/fingerprints.py": "e36aef122c5eac46572247a3b87c3b239cc4b16a59871fb620557141f41a5b04",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/history_inputs.py": "57a742af104610c3f9f608f4ca834d3ca16d4fca1c13edd3e8a80cca581438a8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/metrics.py": "5e5e8ff6c59192451c089c519ddb436dbbb80d8ba43684c3bcae45d961cb9233",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/models.py": "d6cbb4dfc215ff4c143982544de0b289b5331754c9a0e14177447e8c0202958a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/normalize.py": "bde383a13067247eda81cb120a9e17b05bce4a7ad3c41f521a61543cf90a9702",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/predictor.py": "6e054c6e5b933a3f3c421a37a98a61f857c6017f09ec669c888f06d654e709be",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/ranking.py": "5a0b0b419a11ef7852e1a0dedfcb31932eefe8895430c094e275d43205929b56",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/report.py": "6200544a83753106f301f9053d9c44717408eb78c13a204ac12287b54a757bf4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/rollout_inputs.py": "457670812ffdcbde03f367afdf6e1e7648abbd216369ff43e03c4da6ea08eccb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/run.py": "5b74f50b5c3f52bb813bb4bfd40f41aa494d8111c44e3f41fbbf8c726bc2d17a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/score.py": "0c0f443fa1c973dd7adc03c3061186d0b2dbb1960c9a9c01633fd209d1ae945a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/sets/__init__.py": "38b5d36d9fd7f400e4b94f9b8e569aa1929eb06ade1979bb4e9b28976d8c543b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/sets/indexed_switch.py": "f18df8b2dc00ee82e0879fceef1a325a7efb047ff4bfd9705c15e077d67ed90f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/sets/seen.py": "af8762c077555a27f8577d4f916ddd598bee1a48aa9dbceec2f4fa4d6355e6e1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/sets/shifted.py": "5d2e5b01a455373223728aeb635ea31ec08bf3853d7d1f943188f6bf966377f8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/sets/unseen.py": "408a1c0c7d9a5c04a7b056a1af08845121cea51176508098b379312c88798bfd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/states.py": "ea497527e5d8735a6fb288083151804769016f0898e57c5189c09c5823c5aaf3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/stats.py": "e940d10859661e583eab1846d16005805a7bb5c02cb017dd31ac4abe2d62966f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/subsets.py": "a4fb21372f48a4e31b76e5f0226a995a3972a63c6f806e34a3bfbc445efa384c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/trace.py": "713bb727f37ffde5eac5590e336d618743d6dbe78c250e32442e70f35ead8a3b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/verdict.py": "eac5026ce07e950fa1be141ea7c2ace09044c130333fa2364aabbbfee1739788",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/eval/walls.py": "3b08935ca7db7fe0c064b821dd0067e3bccba10c32a703683e3079b4441f3be5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/__init__.py": "0f2d847e6f753ce99139285308479ff8e789d55a1dcd2d8d6c1c54a72957c3b2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/a11_model.py": "6661066f7dc1a03d5627851102ffb005ea12d265f3134adc85e0c82ce48e6cd1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/blackbox/__init__.py": "fd7a85c747614e0ef763ab74ad74a20619c12ef023106e94e09d77a460b00135",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/blackbox/eval_adapter.py": "13ad3fbc128d92992fe7942ff3d89d56dd8dc947a54174a516468735e70cc342",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/blackbox/id.py": "ffa12943a09eef99fae191b471f3e5f4bd2d677d6ce772909c395557a9fe2085",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/blackbox/traj.py": "c34d19c03de635a3e14e1167c93140d2fbe0c5f9bbe446e10b9ffd34d481ef24",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/__init__.py": "091a2e48498685ab75814930746e285bface79312ffe70796a5bf30e0e24ad12",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/corr/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/corr/summary.py": "d5a81e729a532fc91d753bee15e00e7c5fd38a12f55da78977a5b419208c45d5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/dspeed/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/dspeed/common.py": "d8562fae8bd3c28c29135cb142ea31d14ff5216902c225e4ad09769fa1512d8c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/dspeed/composite.py": "e4decedc370569381d737002298af2b08bec0d2ca05a3c39ab43b4dd5a8be328",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/dspeed/identity.py": "a12db0f9df3b2a23b1d9d99147bee922526f175f912d7b447ce8370aef3280f8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/dspeed/overlay.py": "0fa5e864243456c2719d2787611f8dc1168d9892a11a3d911144f9ba98103a66",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/features/__init__.py": "3cf4617306ec646d4661d2cc000a04ffe26e1311ef224d0ac796819d00b33880",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/features/outcomes.py": "e2fd76cf0ffcb543efcc2f4dd8c16d7a9ba07e266d2ceb02404df7abbf72ef2b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/model/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/model/constants.py": "0a9d6602eac00d1ac50df41177f293263db51ef986df82cbe59f8efa0d7a0d7c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/train/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/train/dataset.py": "c916b7664a477567181adee6c2537485142664274c13172cd1b9ea7df1e17180",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/train/idea_a_corpus.py": "6fdcf06769c9e2c4b8e75fb292c234a9ba5c54289fcdfb1805c0e94428e2bd21",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/train/identity_sidecar.py": "c3e71a6449d25c75e91352b6dddebf1d6a94cccfc0fec7d7271017f3bed7c8f7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/legacy/vendor/train/label_isolation.py": "b52e4479d22135efedf89332c1c7c8f279267fd33157b1317ef062295e96ce3a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/__init__.py": "fecf28e69f824e8d01ac9cbdb36bda11d501b284946b9888a17d252d8cabff28",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/cav.py": "f249b481a2f4af3766ddc2a06a8f25bc261796f9abc36fc908806a6e08ac0e71",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/checkpoint.py": "405fe07e2bdcbf3b388680da54a73b1ac19e600443efc24fbb877f49afaab415",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/controllers.py": "26bc718726e67753e8794b4c85a027f47dbdf29f8992b847e1c1acb15e5c3a28",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/driver_encoder.py": "48ec8b6fcbee1c1bb3fc31ad6de0224148b57f29cab9f9dac4b38ec6d03953bd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/driver_update.py": "625b95195cd783f8c45d6cc6588c777d5bc6296f5181a418ca2522858b834143",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/entries.py": "2042e2e92048545f4512e330d4a168ea5d5523c8707c8970052ea1199f0fbe4a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/entry_learned.py": "817370bd455a437b1c66254bfbf26df76b98eefcb3507a0fb2cc94a338ad6c60",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/factory.py": "895a2efa86de895286b6f0a3777bc21ddacb06857e05ba633ad41c8f41302e3b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/follower_courtesy.py": "a499e1359d9863223c1a0f7bb15088fc89fd17603240eeac7ab690809d2f9b8c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/gate.py": "4b9765999385cb4ebecf34617cbcc3f66170181181691e62cb626f3f18c6cae5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/history.py": "853f4dd5c4ddec2987016b87a7b7a04d4c94df46102c45bf7951d9d31f11eb31",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/lane_hazard.py": "4ac164afe17b5a37bcef5be6145d1a5a48b735784af64c19c70956e816c0ef7a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/lane_head.py": "4c9ec46497b4dc585b37ea5de3e72556804d800d0ac8791c0e798f8821adc6bc",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/lane_v5.py": "ce257d1413c824352b82b0452fb98c2066f0dcb87c004c795d28a9156930ed91",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/lc2013_adapter.py": "6dea845d8cd34534d8941c384df3a98d95e40e2e69139000f82fa0cac90b4ec6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/leader_change.py": "7b9f86c20df19c831278edeb437e306d61d0397b8cf4632d5646b7f0a80240c9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/learned_admission.py": "38140af6545a1535ef974664d3daf2b3558e2d256dd4a0a848c33258bd6c955a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/mainline_residual.py": "3c831e920f1ab79d7567044f27f0aa2048bbd71f04530a65befd2f9b25c09c2d",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_context.py": "bc7118ce7e25fa078ce959296116179ad0108b3470c294cfca334cc2ea0cce4e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_core.py": "7a10a2f17e144e22fe91e74f958aec6257792eb33a083487146fda8fc2291043",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_frailty.py": "ca33136b5eb9c15af0218063d82c646873855c605e8fdabaa3589a3c8df0db1b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_negotiation.py": "7905cb69863189415a31bf85e649e4f106a78fb3992d597e8bbf38f35251755a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_pivot.py": "eb89a54c7f7fae489103f2ee3f8a3c95e3e759adcea335a2ad273c9fd0b7a6fd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_response.py": "d410a32d7cc9283c00a5a02ca6462992c79c5b0bfefcd05d736bc5b54f70671e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_threshold.py": "672a036ef26da5cfacaefb0822148f27c3194f2251922135c5fb53909534d166",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_wait.py": "d13d77d83b9134e2e2bde23e718f2f7f5b98003269c6893efc59df9c2dcdbd56",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/merge_yield.py": "994ec5c7669d5f546e0c99f2f70d9203dcbaf228d613a7eec0fa07184af8f8ec",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/ramp_speed_adapt.py": "db8293c6ba04f04e9714a6ca898f8bf9afa85013c3e413f19a9d9727c784fe8c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/residual_bound.py": "18ae3e9bc90ef4d950ab0fce201c3c078c5acb896e715a005b071af9e0fe7c84",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/residual_net.py": "cfb007d11c3f239718612fd71ed8e4337df26884f304555f667ece0ade57bbb5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/source_ledger.py": "4ee5c5db26c4ddea5af7355cfa983063ee2109090ac526b7c11a0ba9cd597730",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/spec.py": "192f5afc04272e9a53495284ffe1cef7e95ee78fd112e096f43e23c7f49ee975",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/stability.py": "db1b79e6823c48a9015502b0882da09b5359131451937d386479048e2f1f6f7e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/sumo_insertion.py": "8fe03c8e94a29e768e4826182a36583153857a6e0d11a939571d322dd1977dd1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/sumo_merge.py": "1a84dbb61e16d41886dedead7b66f8d77b3b78ab963b4a5c671796b9520915a3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/temporal_slow.py": "580e409bad42f45eff6f56009513d563b38c003b2671d5d42260cda9076e7eca",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/temporal_state_table.py": "71436255fc2b22278dea82f5128fb9fc02709d3fc4f125ade639b2e6053f6112",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/model/wms.py": "219161d6936648fcaec6779c71630b64c8f836fa437bc4cd21699ccd01a03f15",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/__init__.py": "b2292c256713f0d11f8a1105c64d9956a000ec6840758f916a97691de75691c6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/accel.py": "6b770a2928be57065bab0affae694cd4f6b9f410f8ed4dd70d346c3e891a87cf",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/config.py": "3bb7dfe3e337fa6b3960329b0265cfbb610557aa2e2b4b51e122107ca3297eda",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/emergency.py": "888a8c9f6589876f2c25ce5ec49ef3349e9fa6ca49afb4dc7e6e9cd8fe86ee6f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/idm.py": "49e936b5735ba21630ce7fa1691035fd1072da2e692b0beac80fb0d472665ad8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/idm_sumo.py": "7a4c8cab8a7eefd01aefa0a6f063ecc003b82d175c84fdb4c62e40bf3521a9c4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/junction_merge.py": "74210aed1f9105932b9a241c004ff0ffcf7a16a3ee40be62c0899ee8669b57d2",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/lane_chain.py": "19307ab359621761fbc9be5df39f7cd0519322f4342d8fbb6b262bed13311477",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/lane_conflict.py": "2d36b3d48bbd94e6fddca67765355c69d7009f0cf7c3f9cd372a51d2eacaf45a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/lc2013.py": "1bdded8e9f213372db946079b20c0cbac677120eeb228baf91d468644ac37206",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/lc2013_geometry.py": "337322917bdef62daddd7d6c5bc86b4b3a1b71607041c63b1af2b7c1f6d655db",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/merge_cal.py": "5b422b0c1752e6806d4c3c5c444ea9d6a4c12a361bb9c66085c1c546dbf1bec7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/merge_v6.py": "a572d40b7f891472e7ee7cce7e6dfdcb23f98b9d262831c35201b67ce595a21a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/motion_fit.py": "07819b4e6843fd41389b8327a8857df622d347661cc3f1cbdd44251b8fa4fd22",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/neighbours.py": "19abfb0d34b74e50adf4d56e1349e50573b8a29e5847edcb4d50f9ad53c09a5f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/projection.py": "51c534b10f117bb888798c23b9531dbc8adeafef4c7bab8e092b6bd62af1af85",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/state.py": "d82b6f72e83996fd85ee82052c3bf46c12ed6825f64c9f78eb4a4105cf3dd5de",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/physics/wall_exec.py": "dcb5bc26ae9cfa2304f8df679bd992b1b680ada000cb3b0a8aec9150bd5eff4e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/sim_bridge.py": "77cce052468cf81be9e550cfd0f5a379d48cdd2087e71f91f5fb071fc92b308c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/__init__.py": "984dbfd96ef4d526dd1bb8401bd1ed868e2cff62a3ebc27185a66a5a69ecb1c3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/cav_drive.py": "7affb448e9f25ccfff8848b6a7376a82a75b958daae0bda21b539f726d7b47b1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/courtesy.py": "42b07f286cdcad3789adaf8f0296fd26922c3b7988c7490a2fd38fdc080eabb4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/curriculum.py": "f95e4760123a4c0cb0f9118f975f32d687cab36e5c9043c5687133be09b441e1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/diagnostics.py": "d5054325268e86a7671059873a5c1dca9d5251771cfcce19e25c2ea31d60c394",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/gates.py": "34a94c1ecdda9438fa9c93241a154360b844db232d3cddea401d17a1c1981fc1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/inputs.py": "e480e240ab40d2e6961fc762c337bf05fd84331bc1b2ce25affa9fe8b70f7eaf",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/logging.py": "4cfeb1ea0c20575e3b49321cca4242bc7790c764eda6ba2351b9966f50175438",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/longwm.py": "fd44ffbf440b543f2c7f58c57c4d80d6e1c2e99b9f45d4274ba10e3f7700f441",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/__init__.py": "f61f98a9cf883d1175681a0be0241a6bf51d013843c7408d0be479b0c0c74f01",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/accel_tail.py": "508e64fa032bee0824493d22710c0be852f0bc34c79124adb70d139c7ebe1620",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/agg_horizon.py": "b2a503044036ea545eeb3cb136e6cebb65a60263bf20d3a4446675556e07885b",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/aggregate.py": "c605198c6dd204ba6bafbd417f86b1ab1336f15204aaa8d1df734391617a4625",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/base.py": "2197655e43c9d57af3ac25bd5c99689cb2e81e62c375983a21d3d433a87ffc20",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/brake_persist.py": "28acf3e8b6c08b4e8d04a89e005ebd9047c8a60ebc13a1edd279544b0821cc83",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/brake_wave.py": "0408734413621626c9f5f2dffad86ba90d78811eba46e8c92943ef7a1ae65abb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/braking.py": "8a525dac9bb000cb756a461371c22bb4c554b95a4b9c7fa91dc9d58eb3a2a935",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/compose.py": "c42853eebd267d4a31ce01cc0fa9c10d016a501549d87a905653d2b40f421a2f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/cutin_reaction.py": "a30feda10918c395280c07116c594a6f132249d7333c92bd71f5a720abb14455",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/driver_prior.py": "bd2cd70a5b4ec74ec31bf0c4284a388b20c7f7224d1e176653d88954e139da00",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/flip_rate.py": "255c2c64a9cbe090d0075859a613a792754b9d08dd70537a062fc26c074ee37e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/follower_courtesy.py": "9b12c88db47aec245132605ce81f1bcbcd3cb084c23d779519eaf851347f6d6f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/lane.py": "f773bd9536570ea6578848caa1afe34f3de283218b8503f6352b1cdd39b3f9fc",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/lane_event.py": "e718f638483ef2a2e878df230864142528f8964f3a62167d3a33c19f69cbf444",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/lane_flow.py": "cd7bc17e04f95596623a22b7862e48121526bc8951bd790a71106d2ab658c908",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/lane_rate.py": "929f91b373f131e2973d58efcf0758005454da20340e999478bec87b8744b33f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge.py": "c1fdf86c2c71878076a06325d01cdb92e13492ebc113168e22648d7c34bad939",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_core.py": "7028547d32ac7399818cf3e72637a6bfc94265807b22acdf28d60349ebab7542",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_core_seqtf.py": "f6bedf10f2c12d70472e60e1334bf7ef94d652c545543622515e39a62f27a6d6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_first_passage.py": "b7ea9f734bd206575d0642a2c98680ca2269df40373578eed5ec8a3345f2d2a6",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_frailty.py": "08500876c5e4144523c28c81915327657de4a8af0900b928d8643df57711bff4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_negotiation.py": "842356f41af8fd88fca26cf42373ef3441cbc64daa0993f5579185b7c237fb31",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_pivot.py": "f4ac94de0a339b88e5fee3c535af4b3ca89f9d8f2a6b9745b4563a5b65f253fc",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_pivot_support.py": "08a80ede831df70e36adc9d841bbe9529bdec8f3553f26bccc90b92ca6137edb",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/merge_timing.py": "2b214835773c34b9dba556e257081729f3f1f89d6eec6e4c0391622b91f5efad",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/onset_stats.py": "30c19724076e2cbde86e9396c1bf782fd569aa8fa7b09bd3204fd521a063900a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/paired_diff.py": "68aeb4e4586462500217c57a651693a0c65d6d58c8028456e274cdcbb6e6c370",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/post_merge.py": "c77c27ed4e19ef8b363267c8d9f1628ade6a94a630a2e93e3938fdfcaa15479c",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/residual.py": "e2ac172cbba407749eff6c0531795f9d4208813bf57091ea9a9a5a199881b294",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/stability.py": "91474f8ecc3f70c91da89ea216e1dd2a434abeabb42de42645542e35b9434d51",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/traffic.py": "b649ef214278e9f462162b950467bae1e481074ed223a31ede9e7a92cd829fd4",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/losses/trajectory.py": "a6d85d9b9fc313d0ead9b266bd64f0ae62a06d92c27552e8d8dd4e04f249dbd0",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/merge_response.py": "656c9ba10207c3f172ba51e4cf9f8f28f325c8b8e748a4875f4b714e89513e42",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/paired_random.py": "0fd89cf7345ba2259518eb006eb4bedf2089bd5f70da6053318bc91943e3e9c8",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/preflight.py": "08d8b89f6b5625c68fd68bfb3905d69072b7a555e234ae02a031a4f9ecc0b80a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/receipt.py": "89a6643652a4458f92020623037987c243ddd1d6d0f6d6072f30ad983b027f22",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/replay.py": "91c131b601c186ceaa49394287292df5a67cafc76b7b7253205ef92d3db91e13",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round10_gate.py": "26e249427dee204d33b09f202b61b0688d8f6f9927b5b04db127e1bec097a6c7",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round10b_gate.py": "822f8fe092ecf06be05705de2e5ff7f57ef62352c22ce76ee7a4e26580d96bee",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round11_gate.py": "63db18e747a43483cbe5c16d4c0fb9af6e5236ed49829e4acc3bd0627b52e6d9",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round12_gate.py": "f5a2b69b978f4a2dc95810f97f1b324464fd80b856951b16d7035f09b099ae7a",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round12c_gate.py": "fc9bb7c7a5fb7724a5ca86f81131ba18d341ec031d41252266c2eb5662c022a3",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round13c_gate.py": "602919a6addacf18417b69ef4c8cfff324f611da24859902768179525faef32e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round13e_gate.py": "a99c7c1aacf8fa4b0bf8e2908e2cc92e39a8362c572bc361f6b324524771cef1",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round13f_gate.py": "3bd252a5dd45ba6f36afda340d4200c764bf6147cb92efba510473cd46184724",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round14_gate.py": "dab2eb055e2321b2c64abaea4f75b3b2512b5d9f682be846a750fa5230da3ad5",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round16_gate.py": "f379e65d22fc8609c3d7822ec2ae012f6f85ab06d7adf934a58b91975475af43",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/round9_gate.py": "d1598aa643da0c3cf3f7875e459f75744c8f9eef74a8b8b3355e759e625d4c6f",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/scoring_random.py": "7a85654aae5c6d943800dce7374a1e29b0eb8253b897588ddf48485fca3b7552",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/selection.py": "c4ab0b8786a4f174597fc3461762bb98c66464f7bc12d4b3bf900ee948c99733",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/settings.py": "b9dc74e4586c3e04fe4598df9ea3170615f415f1080a4090bdf08a0e29fcae6e",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/trainer.py": "a62dcb7cc10256bccb3fc3dad05516d82bd832eaae0127a5b14a90b7f7367802",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/src/wms/train/unroll.py": "e340d8481eecea85fa47371f119be1030788bdcc2962b1fa0283c413c72d788c",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/damping.py": "e069eee31694d103bba8102f4edfa8d692b1ad888d78aa05744c73832d89f288",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v4/pi_external_u.py": "16ff7c6decda5090f70918a19e202cab13b1cc4a4f538ec604b1e368c5cb16d0",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v2/pi_saturation_v1.py": "059cf4f82d6e875dfb55c663782b778771ff7b2bb114ab9824673afe8a6f13ce"
+   },
+   "switches": {},
+   "candidate_sha256": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+   "export_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+   "real_receipt_sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+   "seed": 965140,
+   "update": 190,
+   "t0": 300,
+   "horizon": 600,
+   "construction_loader_sha256": "1b48fa5508549ceda3c74972ce3f887516964e9e4a14eba24023ea0e0558ee65",
+   "construction_receipt": {
+    "encoder_exact": true,
+    "encoder_tensors": 17,
+    "copied_tensors": 108,
+    "unused_source_tensors": [
+     "driver_updater.embed_proj.bias",
+     "driver_updater.embed_proj.weight",
+     "driver_updater.rate_logits",
+     "follower_courtesy.net.0.bias",
+     "follower_courtesy.net.0.weight",
+     "follower_courtesy.net.2.bias",
+     "follower_courtesy.net.2.weight",
+     "follower_courtesy.net.4.bias",
+     "follower_courtesy.net.4.weight",
+     "lane_v5.feature_mu",
+     "lane_v5.feature_sd",
+     "lane_v5.head_ap",
+     "lane_v5.heads.bias",
+     "lane_v5.heads.weight",
+     "lane_v5.trunk.0.bias",
+     "lane_v5.trunk.0.weight",
+     "lane_v5.trunk.2.bias",
+     "lane_v5.trunk.2.weight",
+     "merge_core.alpha_bias",
+     "merge_core.alpha_log_sigma_raw",
+     "merge_core.alpha_net.0.bias",
+     "merge_core.alpha_net.0.weight",
+     "merge_core.alpha_net.2.bias",
+     "merge_core.alpha_net.2.weight",
+     "merge_core.b_raw",
+     "merge_core.init_s0",
+     "merge_core.residual_head.0.bias",
+     "merge_core.residual_head.0.weight",
+     "merge_core.residual_head.2.bias",
+     "merge_core.residual_head.2.weight",
+     "merge_core.residual_scale_raw",
+     "merge_core.s0_raw",
+     "merge_core.t_raw",
+     "merge_core.tau_raw",
+     "merge_core.temperature_raw",
+     "merge_core.yield_head.0.bias",
+     "merge_core.yield_head.0.weight",
+     "merge_core.yield_head.2.bias",
+     "merge_core.yield_head.2.weight",
+     "merge_core.yield_scale_raw",
+     "merge_pivot.T_f_raw",
+     "merge_pivot.T_l_raw",
+     "merge_pivot.b_f_raw",
+     "merge_pivot.b_l_raw",
+     "merge_pivot.s_f_raw",
+     "merge_pivot.s_l_raw",
+     "merge_pivot.tau_raw",
+     "merge_pivot.w_raw",
+     "merge_yield.log_decel",
+     "merge_yield.log_distance",
+     "ramp_speed_adapt.log_headway_scale",
+     "ramp_speed_adapt.log_lookahead",
+     "ramp_speed_adapt.strength_logit",
+     "residual_net.blocks.0.attn.courtesy_bias.bias",
+     "residual_net.blocks.0.attn.courtesy_bias.weight",
+     "residual_net.blocks.1.attn.courtesy_bias.bias",
+     "residual_net.blocks.1.attn.courtesy_bias.weight",
+     "residual_net.blocks.2.attn.courtesy_bias.bias",
+     "residual_net.blocks.2.attn.courtesy_bias.weight",
+     "residual_net.courtesy_proj.0.bias",
+     "residual_net.courtesy_proj.0.weight",
+     "residual_net.courtesy_proj.2.bias",
+     "residual_net.courtesy_proj.2.weight"
+    ],
+    "initialized_inactive_tensors": [],
+    "source": [
+     {
+      "checkpoint": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+      "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+      "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+      "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+      "courtesy_state_grad": true,
+      "courtesy_intent": "pivot",
+      "courtesy_off": false,
+      "physics": {
+       "dt_s": 0.5,
+       "open_road": true,
+       "exit_at_road_end": true,
+       "sumo_fidelity": false,
+       "sumo_idm": true,
+       "speed_factor": 1.0,
+       "speed_limit_mps": 31.29,
+       "free_road_gap_m": 250.0,
+       "max_gap_steps": 240,
+       "accel_min_mps2": -9.0,
+       "accel_max_mps2": 3.0,
+       "lane_gap_m": 5.0,
+       "lane_incentive_mps": 0.4,
+       "lane_safe_gap_m": 6.0,
+       "merge_zone_s0_m": 0.0,
+       "merge_zone_s1_m": 75.44,
+       "merge_lane": 2,
+       "merge_target_lane": 1,
+       "merge_model": "legacy",
+       "mobil_threshold_mps2": 0.1,
+       "b_safe_base_mps2": 4.0,
+       "b_safe_end_mps2": 6.0,
+       "merge_cal": false,
+       "t_lead_base_s": 1.0,
+       "t_lead_end_s": 0.1,
+       "b_accept_base_mps2": 4.0,
+       "b_accept_end_mps2": 6.0,
+       "gap_floor_m": 0.3,
+       "u_yield": 0.35,
+       "yield_lookahead_m": 120.0,
+       "b_yield_max_mps2": 1.75,
+       "yield_min_speed_mps": 2.5,
+       "yield_min_merger_speed_mps": 3.5,
+       "end_obstacle_range_m": 25.0,
+       "lane_rule": "mobil",
+       "lane_gap_rule": "fixed",
+       "gap_s0_lead_m": 1.0,
+       "gap_t_lead_s": 0.2,
+       "gap_b_lead_mps2": 3.0,
+       "gap_s0_follow_m": 0.5,
+       "gap_t_follow_s": 0.6,
+       "gap_b_follow_mps2": 6.0,
+       "gap_overlap_margin_m": 0.5,
+       "gap_anticipation_s": 0.5,
+       "gap_stopped_relax": false,
+       "gap_stopped_speed_mps": 1.0,
+       "gap_stopped_min_m": 0.5,
+       "stop_time_integration": false,
+       "emergency_decel_mps2": null,
+       "emergency_braking": true,
+       "secure_gap_veto": true,
+       "lane_change_secure_gap": true,
+       "emergency_onset": "driver_b",
+       "merge_end_wait": false,
+       "merge_end_wait_distance_m": 25.0,
+       "merge_end_wait_speed_mps": 2.0,
+       "mainline_merge_yield": true,
+       "mainline_merge_yield_distance_m": 60.0,
+       "mainline_merge_yield_decel_mps2": 2.0,
+       "forced_window_mode": "deterministic",
+       "forced_window_min_hazard": 0.02,
+       "mainline_merge_yield_scope": "lane_end",
+       "merge_end_wait_s0_follow_m": null,
+       "merge_end_wait_t_follow_s": null,
+       "merge_impatience": false,
+       "merge_impatience_distance_m": 25.0,
+       "merge_impatience_speed_mps": 1.0,
+       "merge_impatience_hazard_tau_s": 25.0,
+       "merge_impatience_gap_tau_s": 25.0,
+       "merge_impatience_s0_min_m": 0.5,
+       "merge_impatience_t_min_s": 0.1,
+       "lane_learnable": true,
+       "ramp_lane_end_stop": true,
+       "ramp_risk_retain": true,
+       "lane_physical_margin_m": 0.0,
+       "mainline_lane_mode": "courtesy",
+       "mainline_courtesy_zone_m": 300.0,
+       "entry_learned": false,
+       "cf_model": "legacy",
+       "sumo_cf_stepping_s": 0.25,
+       "sumo_cf_emergency_decel_mps2": null,
+       "sumo_cf_vtype_max_mps": null,
+       "sumo_cf_action_step_s": null
+      }
+     }
+    ],
+    "variant": "A",
+    "recipe": {
+     "schema": "wm_phys/1",
+     "source": {
+      "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml"
+     },
+     "physics": {
+      "cf_model": "sumo_idm",
+      "sumo_cf_emergency_decel_mps2": 9.0,
+      "merge_model": "sumo",
+      "lane_learnable": false,
+      "merge_cal": false,
+      "merge_end_wait": false,
+      "mainline_merge_yield": false,
+      "merge_impatience": false,
+      "gap_stopped_relax": false,
+      "secure_gap_veto": false,
+      "emergency_braking": false,
+      "emergency_onset": "plant",
+      "emergency_decel_mps2": "off",
+      "lane_change_secure_gap": false,
+      "entry_learned": false
+     },
+     "model": {
+      "rollout_mode": "driver_params",
+      "lane_model": "lc2013",
+      "lane_head": "off",
+      "lane_decision": "argmax",
+      "lane_logit_offsets": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "lane_hazard_features": "v1",
+      "merge_hazard_zone": "forced_late",
+      "lane_v5_gates": [
+       0.25,
+       0.1,
+       0.5
+      ],
+      "lane_v5_head_ap": [
+       -1.0,
+       -1.0,
+       -1.0
+      ],
+      "lane_v5_mainline": "default",
+      "lane_v5_extra_features": false,
+      "courtesy_inputs": false,
+      "merge_decision": "hazard",
+      "merge_response": false,
+      "merge_negotiation": false,
+      "follower_courtesy": false,
+      "follower_courtesy_version": 1,
+      "follower_courtesy_intent": "none",
+      "follower_courtesy_off": true,
+      "mainline_merge_yield_learnable": false,
+      "ramp_speed_adapt_learnable": false,
+      "mainline_interaction_residual": false,
+      "residual_accel_off": true,
+      "temporal_accel_off": true,
+      "temporal_accel_lane_bias": false,
+      "temporal_accel_state_table": false,
+      "driver_update": "off"
+     },
+     "variants": {
+      "A": {
+       "driver_settings": "encoder_inferred",
+       "future_sampling": "hidden_state"
+      },
+      "B": {
+       "driver_settings": "population_default",
+       "future_sampling": "poisson_arrivals_fixed_population"
+      },
+      "C": {
+       "driver_settings": "fitted_physics_population_point",
+       "future_sampling": "poisson_arrivals_fixed_population",
+       "parameter_json": "artifacts/rbfit/pooled_full_v5/idm_pooled.json"
+      },
+      "FULL": {
+       "driver_settings": "motion_fitted_joint_posterior",
+       "future_sampling": "fitted_hidden_state_and_learned_arrivals",
+       "parameter_directory": "artifacts/rbfit/shrinkage_v1",
+       "arrival_json": "docs/paper_results/rbunc/observed_arrivals.json",
+       "fitted_lc": false
+      }
+     },
+     "inference": {
+      "training": false,
+      "learned_acceleration_noise": false,
+      "learned_admission": false,
+      "learned_lane_corrections": false,
+      "learned_merge_corrections": false,
+      "conserve_queue": true,
+      "future_observation_inputs": false
+     },
+     "smoke": {
+      "worlds": [
+       969420,
+       969421
+      ],
+      "arm": "native",
+      "t0_s": 300,
+      "duration_s": 60,
+      "variants": [
+       "A",
+       "B",
+       "C",
+       "FULL"
+      ],
+      "arrivals": false
+     }
+    },
+    "settings_B": "inherited physics population defaults, not encoder centre",
+    "sampling": "hidden_state"
+   }
+  },
+  "tasks": 72,
+  "complete_worlds": [
+   969422,
+   969432,
+   969433,
+   969434,
+   969435,
+   969436,
+   969437,
+   969438
+  ],
+  "missing_tasks": [
+   [
+    969420,
+    0
+   ],
+   [
+    969420,
+    1
+   ],
+   [
+    969420,
+    2
+   ],
+   [
+    969420,
+    3
+   ],
+   [
+    969420,
+    4
+   ],
+   [
+    969420,
+    5
+   ],
+   [
+    969420,
+    6
+   ],
+   [
+    969420,
+    7
+   ],
+   [
+    969421,
+    0
+   ],
+   [
+    969421,
+    1
+   ],
+   [
+    969421,
+    2
+   ],
+   [
+    969421,
+    3
+   ],
+   [
+    969421,
+    4
+   ],
+   [
+    969421,
+    5
+   ],
+   [
+    969421,
+    6
+   ],
+   [
+    969421,
+    7
+   ],
+   [
+    969423,
+    0
+   ],
+   [
+    969423,
+    1
+   ],
+   [
+    969423,
+    2
+   ],
+   [
+    969423,
+    3
+   ],
+   [
+    969423,
+    4
+   ],
+   [
+    969423,
+    5
+   ],
+   [
+    969423,
+    6
+   ],
+   [
+    969423,
+    7
+   ],
+   [
+    969424,
+    0
+   ],
+   [
+    969424,
+    1
+   ],
+   [
+    969424,
+    2
+   ],
+   [
+    969424,
+    3
+   ],
+   [
+    969424,
+    4
+   ],
+   [
+    969424,
+    5
+   ],
+   [
+    969424,
+    6
+   ],
+   [
+    969424,
+    7
+   ],
+   [
+    969425,
+    1
+   ],
+   [
+    969425,
+    2
+   ],
+   [
+    969425,
+    3
+   ],
+   [
+    969425,
+    4
+   ],
+   [
+    969425,
+    5
+   ],
+   [
+    969425,
+    6
+   ],
+   [
+    969425,
+    7
+   ],
+   [
+    969426,
+    0
+   ],
+   [
+    969426,
+    1
+   ],
+   [
+    969426,
+    2
+   ],
+   [
+    969426,
+    3
+   ],
+   [
+    969426,
+    4
+   ],
+   [
+    969426,
+    5
+   ],
+   [
+    969426,
+    6
+   ],
+   [
+    969426,
+    7
+   ],
+   [
+    969427,
+    0
+   ],
+   [
+    969427,
+    1
+   ],
+   [
+    969427,
+    2
+   ],
+   [
+    969427,
+    3
+   ],
+   [
+    969427,
+    4
+   ],
+   [
+    969427,
+    5
+   ],
+   [
+    969427,
+    6
+   ],
+   [
+    969427,
+    7
+   ],
+   [
+    969428,
+    0
+   ],
+   [
+    969428,
+    1
+   ],
+   [
+    969428,
+    2
+   ],
+   [
+    969428,
+    3
+   ],
+   [
+    969428,
+    4
+   ],
+   [
+    969428,
+    5
+   ],
+   [
+    969428,
+    6
+   ],
+   [
+    969428,
+    7
+   ],
+   [
+    969429,
+    0
+   ],
+   [
+    969429,
+    1
+   ],
+   [
+    969429,
+    2
+   ],
+   [
+    969429,
+    3
+   ],
+   [
+    969429,
+    4
+   ],
+   [
+    969429,
+    5
+   ],
+   [
+    969429,
+    6
+   ],
+   [
+    969429,
+    7
+   ],
+   [
+    969430,
+    0
+   ],
+   [
+    969430,
+    1
+   ],
+   [
+    969430,
+    2
+   ],
+   [
+    969430,
+    3
+   ],
+   [
+    969430,
+    4
+   ],
+   [
+    969430,
+    5
+   ],
+   [
+    969430,
+    6
+   ],
+   [
+    969430,
+    7
+   ],
+   [
+    969431,
+    0
+   ],
+   [
+    969431,
+    1
+   ],
+   [
+    969431,
+    2
+   ],
+   [
+    969431,
+    3
+   ],
+   [
+    969431,
+    4
+   ],
+   [
+    969431,
+    5
+   ],
+   [
+    969431,
+    6
+   ],
+   [
+    969431,
+    7
+   ],
+   [
+    969439,
+    7
+   ]
+  ],
+  "inputs": [
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k0.json",
+    "sha256": "8242426593290e5816256bf86f8fca3cb0cb90ad68c65727c4be0a0c7ef27fe6",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k1.json",
+    "sha256": "4e6afc626a99f8dea6893d8231ec0620889d20f410a468b257b38153bb28fe14",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k2.json",
+    "sha256": "bc94ba5d376baba3556873429ac053e68116cbc638678893529e7d1deb9bd5d8",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k3.json",
+    "sha256": "4d092caf2c2370e3f3da9cbd7115b869b40ff073bf7b832456147abd4152fda0",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k4.json",
+    "sha256": "49cb13834d69a9dc524c9a02bfa02fb39c723d9c4879feed75934c8f1a288315",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k5.json",
+    "sha256": "948d2d330c5a2e3169293dd01ee13951d7f7c4f15164e42167bfc9eb88a594c7",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k6.json",
+    "sha256": "941da1d5233287152807c03b493a512be200fbdd5e6419b24e8dc644e916ae91",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969432_k7.json",
+    "sha256": "a174c9e2a67e299cfdccba57e63c7847730b6ba8b58cdd17c2c19bd5b21aa7e5",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k0.json",
+    "sha256": "374e95049c7a72662df6e29ccfc2e88182565b3a05bde4a0f2932bd5e4371269",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k1.json",
+    "sha256": "12d9f43ea7773223c2515ba535efeadaa4bd439b29ed32a0188ad27d2e57fe46",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k2.json",
+    "sha256": "e80a54511766ff4934b1ad1ff9d3cc99faa4992c4410e4a4e515b0bb8154f152",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k3.json",
+    "sha256": "7755688116ab5ddaf5d3496b7ab4a8da63276c85af0b992a0c5865b4b0f88731",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k4.json",
+    "sha256": "c1750c5ff5358a2f0d241d891d6305afcd70475f735ca6ea7130967564f9f573",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k5.json",
+    "sha256": "6d48b24f4a427008cfe2651458b2795c6a2ec35c1f659ec171dd6ac261a39ecb",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k6.json",
+    "sha256": "a0b81b674144b5ce7f3505cfb9b44e40336d8e239c3e1275aee683b319aded4e",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969435_k7.json",
+    "sha256": "865e098cf29d240d4dc71544ab9c188dbf4948625c3a3fb4116cb3c691c53ad1",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k0.json",
+    "sha256": "45ccae7bc46d6a4060caa66e63202b14b2490d729b6c7f4f3fa1993727040c4a",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k1.json",
+    "sha256": "4300ffe66ef2e9ae29785f4c07b4999990dfe4ade7673fa7048c000e646527d2",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k2.json",
+    "sha256": "a33ba0986152a28aa222fb2dc0ca53ea417dc90afbdd65450b949e7f6dcbeec8",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k3.json",
+    "sha256": "0c3b8428c5c75aac67d8dcaf517fed065b8f58f4160515601f15b9d9257c0066",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k4.json",
+    "sha256": "4bc45dfda48a0640ca5466478d20abb661b7281e801fe068cfa4cac04bd22cf9",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k5.json",
+    "sha256": "79518550167918d2362a0af290017dc961d1eeb51030587bacace0b4c1ec1d64",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k6.json",
+    "sha256": "e099770331e059e2087f8d73a497accc92d6873b8b6f475f69bfc7aeef38e404",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard0\\w969438_k7.json",
+    "sha256": "d33591c6704424c73272fbcede82266ce657cfba397332d0b8f47c0b44951410",
+    "identity_sha256": "1dae791b92b8dd57b3a46565e6cf17c5252083c71c4786916d7e74070fbd0de3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k0.json",
+    "sha256": "30b74f63abaa7d8e811f9a857692461f434917c930d6d13ab64fcca913f4718b",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k1.json",
+    "sha256": "78c50f8e307752b8f92f9e31ed2d5365c6b1994e3b40b8261f816a75c03c59e3",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k2.json",
+    "sha256": "7d4f97a84978320095e7e5f9957d285702e291da0b748d3eb8d0f71042396639",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k3.json",
+    "sha256": "1e566b44576f78e40be3a5381ad19e08cbc661a4282cc100cdd18c7ad327c95c",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k4.json",
+    "sha256": "9d5df5bd67952c81dbdcb9626d3800d54f81ea1799ca70051ac5aa1a39b72c59",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k5.json",
+    "sha256": "70355786d397dcf6568c5f351300fe90a793ad29a522787378d6420cfdf245f9",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k6.json",
+    "sha256": "eed83b48ad2e3ebab369112e171da6f98fa24c014503f571adfa5dcaa61c0a81",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969433_k7.json",
+    "sha256": "f422000c9069f3b53c7baf8ceb693e98d87772ea28c02d2fbc9d8c2c294d1bfa",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k0.json",
+    "sha256": "d4e2634385226cb21b17b11915749f45a8a059f90c3ad15dcd5143a4be3418ce",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k1.json",
+    "sha256": "03749a047c7b109f00610dd25e131d73eafa589953ae032e8a4240f95c04df0c",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k2.json",
+    "sha256": "446cdfa8dae779f4c73f844f71ef1c4a8b9f4a0392680cb5825872cd1427b6f1",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k3.json",
+    "sha256": "abcdc838fb8465051712bc5104289ba2b09611630ab6874fea82cf47fd8fc215",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k4.json",
+    "sha256": "74d32101d30c52b3ea9464a967a88f0536f8ad5ca8a2c0820c829564140f1bcc",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k5.json",
+    "sha256": "4cd1cebd8ececdf1a4cc31384e204c6d173e58bb142ce0fa5f4dc347e0fb64eb",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k6.json",
+    "sha256": "cfb8de5c447412ab9b9c0092cdfb31de638c5ce638335b969a21a2f9c1b21ee5",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969436_k7.json",
+    "sha256": "1dd6c4f327d31dbc185b3b1c801884302822e46ae2a6827eabd240ca6acbfff6",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k0.json",
+    "sha256": "4540f8cf57b20d109540dd12cb673a51b3bb68c3d4decc9bcbc01bf09c4b5595",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k1.json",
+    "sha256": "4fbb2edb6d24e921aa02850846df16dce33f426c85514625c0f155c4a1b988e0",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k2.json",
+    "sha256": "59eb40585a3226cd9afef1d4fb2b70ae09172eec250901b0f32faf0dbaa3b873",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k3.json",
+    "sha256": "4fbb43a01bb700c9252f4be89c75cda0f66990b732ecd12e447e750704283297",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k4.json",
+    "sha256": "edd3d8985b001ca2062f5e074295f90d439eb316e4832c4b72b72c0faaad3b5b",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k5.json",
+    "sha256": "4a466c7af87d0e61ccb768c9451eb1247d7ab3d27737c08309383a818fa4109e",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard1\\w969439_k6.json",
+    "sha256": "53f391247a90f2979a4b4ee7a885f44f61560a0c93b3d864db7b3854af7ce20c",
+    "identity_sha256": "f2e78ece9c19f42048c31177f8d5884109394db7a5f373128cbea1aa6d31658c"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k0.json",
+    "sha256": "107ea1bf25b1dfa11d640e09f4b4c04b3630b07e4f0bf88191d56e44631684aa",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k1.json",
+    "sha256": "920aa587bb19fbf68c93c07f661a4f5c1e464dc06f336412f4d8e8ff12542bfb",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k2.json",
+    "sha256": "8bdb031e8b5b2ec3d3cc3cc99e2b1004cf3085d293a844f1e96866597f88b2da",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k3.json",
+    "sha256": "22cae65bb76b29838b98ae893b77195160efac520c4d77164f1afa78119a6b3f",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k4.json",
+    "sha256": "2b287b3e34ffdc217c62f530658a7bb8cb90e425e28315bcdba26ed5e6f1bca5",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k5.json",
+    "sha256": "6cccc3605defa387ff39f54572d53674d47ad4a5d355171754d67c4b1e01e010",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k6.json",
+    "sha256": "3c085b001ea95461ae3308627d0e55c885073d92384ccecb1a6c4ce5a2aafa77",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969422_k7.json",
+    "sha256": "cb6ae31b05a523df1db20e4b84134b9618972eba3f1665cd51f3a8f059fe770f",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969425_k0.json",
+    "sha256": "0c0564fb8e980d1aa601db32facb1dfc0a6285609b33e94fd71f19c93f78cc74",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k0.json",
+    "sha256": "7a14e8c3f5512362c51097222bf8922c943caf56a1025e68a1fb3f0a542d9f9f",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k1.json",
+    "sha256": "21b75dcb396fa3a95c05a25501230305ea1623540bef536f482a0ae0c3de3503",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k2.json",
+    "sha256": "b1a268ab5c1fa4dc1a233ffb6c66a78ea7f789047b904386ae2f11133dea2e5a",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k3.json",
+    "sha256": "ba6ee90015163329190374419e9f32ea054ff223651cdcb90c51ba05d53a21df",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k4.json",
+    "sha256": "18c940faf2079f304d9f8acae338770ae1208fd43276852aa3056fc8764fb820",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k5.json",
+    "sha256": "2701f31c0ec9196777b5e995849d85b95b5d6ecad69a197f889d46b4e8abd1fc",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k6.json",
+    "sha256": "809d189a609c9c7e755f7c469730e4fc0edfce6374449a2d7ff7ad0040c0044f",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969434_k7.json",
+    "sha256": "1a262dc391d85ea2d7e860e8d3f6c40d1895f80d65750d72e80da07314ad3deb",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k0.json",
+    "sha256": "2276cd67a401916deb8869afd6732a21ba0c65bbc25aa71952664f8ba50b0805",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k1.json",
+    "sha256": "4275a3818f3a22103510fcc1cb18c41df2292ec81f9bec4ada47f0ea4125100b",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k2.json",
+    "sha256": "b47a4f153c760710d6e48585efbf925d7db03f6b936c10ba561368c395c86085",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k3.json",
+    "sha256": "d2061efd7ebd5324438f2a8c560cd6b3d6de4fcf2bab68f2b0b76d932c8a0088",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k4.json",
+    "sha256": "ee30140e9d9987a7348f25bfe50ceb22cd33d6f39c7612229424eeb68c6f3991",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k5.json",
+    "sha256": "eb05a988879e55350607f0b6687b0aa5bf44a004e1b030eb0e17104018a2f61e",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k6.json",
+    "sha256": "09747bfd3719d20ca7c4845fff9900a89c3fce7c854e3ce3fc5090d3e5a245d7",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T064224+0800\\shard2\\w969437_k7.json",
+    "sha256": "ee43adffb618d5769a3c1ad6367577c2194eaff01d7f13a09e74f873720b910e",
+    "identity_sha256": "2b26b4b2dcc7a4627263be05b376e357974c4dd5c3dff44b41dd881bea4aae56"
+   }
+  ]
+ },
+ "baseline_audit": {
+  "model": {
+   "model": "wm2",
+   "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+   "K": 8,
+   "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+   ],
+   "mix": true,
+   "native_lanes": true,
+   "sources": {
+    "/root/rbeval20261031/code/run_wm.py": "3719ca9226014dcf9f0052fdaa22aff8dcf0ae64b2c37f539eb2820557cb4099",
+    "/root/rbeval20261031/code/core.py": "f57b8e2e42f9af1719055672056d4a395b1bbd40f66d75d039d9f7631b5d5a5c",
+    "/root/rbeval20261031/code/references.json": "5b1551d7a4e10f2135b358c3a2ae64cc507b83c44bed481e0336aba3ba00cb06",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/configs/execparity_cav_idm_v1.json": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/__init__.py": "a00cf4d54aa9ee0587fd59e4c3074e161f4245f2aa9c9d0941736dfff07cc5c4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/__main__.py": "56397e0ea9f1cc32f2b4e5b286db34dd46ed6ba42e4b30139b800deab7c5775b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/__init__.py": "a38919786da9011f5ca3dbf52fd5cbfbde4a6dba8d97410f96dbe92b5e297ddb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/__main__.py": "f1fb6d387c213003c6c91b211ca273fd43c2a20c247aad00347d0e104afc4966",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/assemble.py": "f73cfa479567c7f7e7d5cc4c1c89cba1762a36b431dfca7f87b2a2b58c86c523",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/eval.py": "eae33420a59bcba3cba84f65550b38d749e07d1fa6df0164a11f15413ad6abe2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/fetch.py": "960f2c5857663b8ee14a5bd04c3bbffdc734c1bc947245f3e88cee06f48453ac",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/score.py": "2ea8953c07b957da9574888371457d8586a4eea8b1b70b15b12aef90d91d4cd3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/cli/train.py": "a405be242cfa32b96ac34d7d9cb5b58ebf04945779783319a93a44ca67eadc0d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/__init__.py": "cf672ec7d421a1feeb2d6e789483fcf42ef06e41f46077cda04a8427b58bc29a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/data.py": "50a303caadd498d5e571be5602090e347efdd938663db2c057c7a4e4335c01ee",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/eval.py": "bf924fc1ca31a8f6b8beb32c99113b2537606a2634fc92c6f54cc72be2fce2a3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/legacy_flags.py": "4afd2b0bba69921319ca0d5b519a1a32ff7acfba2d6f4f69465eb4c634d43a38",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/legacy_flat.py": "6abe2cca11aee7135036c7d804687589f426aea7ace865655b126e81de109ca0",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/load.py": "8b3023264a534727a644f1609f948283345a21c511f7fb943a79a9b7f5e273f5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/presets.py": "4803d02eccfb0ad5f1eed77a8889a3f1003d7179ddcbdaa981aa6ae07730c6fc",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/schema.py": "0ebaf8f4fbfa04050d1d924ddbca880112476e09eb56e2e07d527154df139431",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/config/train.py": "2bd3f6746a6000139d6d86b36251fca8dc54a4bdc65edac65a3e186208985a16",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/__init__.py": "02da53a887b399fc69f0d3ec686afe0535add2db06e80900d3b3c1a12787210b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/alwayscmd.py": "03e143a0f37d53a269aa0a2bf8015189a69dab904cfc6a5f23a8e07b36ab1e12",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/antiexploit.py": "1ea7fd723beea9bc75e5d392b8c391a76f863f7f8323ab9c6f7aacc4f69fea6b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/auditfix_authority.py": "c2249446f02f7ec4b19662d9cb51e6d55cf5384aaf513d7faa284b1752ff1da2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/auditfix_diagnostics.py": "fc9e4a132862f6475cd2ad4204e01824361537e348abc2f21a9db265188daaee",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/belief.py": "56dd3fa32d8677abb46e80fc57191edc996d375596332ccc0d08796b4a93cf99",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/breakdown.py": "9ce1c0ba5a1a9afc33f7a20e90d28010f3c82ce459c98cd64d8434b48cbad15a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/bridge.py": "74fb899f5c671328461a0c6c8ad72ada287c41c9a4f8289f5e99896bd52fa678",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/c4_starts.py": "bf4c65cb710397591805a55da0d6fecfa1f5f60f4376ece01c8d4e42dab9a367",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/c4launch_authority.py": "ce268217b45638af3ad15246f33f4438ca7689b9baac81cd2f4eda5f6738ca94",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/confident_gate.py": "269fe736591b4e6a5396141146820d26bad23e870591642a6beaf8048b553c1a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/continuous.py": "208972ee658ee727316f3ca0771a5bbd99ded4dc19d35ca0136012197d90fbb8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/contract.py": "6351dcccf268a53ece988026ed56c778faffebd225494abeb3b21575a8662749",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/coop_imagine.py": "ad87f84b691a6a1e2da39e28651f38d5e7ec2b339716a112ca390951ffd17af4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/coopw.py": "580b86c5ef0d7407aa4da4eae361c6ee9236d40e547b656c12913c0deb7ecf9c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/counterfactual.py": "0e73989598b032ebe40bf6c51c8a389570367a656579cd0966562c2918330564",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/deploy.py": "92ddc4900a08c03bc1ef10bafc1a064600a627b9aad4f18778ed145104e768f4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/dreamer.py": "6ea3498935f4bd42de38d6845a037c14575ec4524f0f90f27eda3e446003b1ed",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/entrance.py": "3de5b4e86c7ea8d08367595e9b7a95d89a0f531da64fffa9dacaaa8ef7ca6481",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/entrant.py": "493a9a634258c6e16585117662547e0f44cb2011f9dc403f290efc9e49d582ad",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/entrant_mix.py": "b00b74428823c7c9d7990bf9ff21ce096e3a091462128b6d4de2690d2869f569",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/execution.py": "2d989901c2eefd5384400660c73161a8e252556162c12ff76d650743412d72e9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/exploit.py": "edfde0b28886d121f37b43dfb2b1f136bc2fd9408da5d47feed9f756aa5124d5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/futures.py": "5ff11ac6e6f5a77f78bfa0872aad4e7dab59508de353ab6d38f574871607ae6f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/gated300.py": "d04516941c31ab58e6c1409f24bda05a49ef7915306e957688a0d42dc58655a0",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/imagination_memory.py": "c46595eb83bb2d7207f7a82a8e678b3c2e42c27f38b423ba38be7dfd052ba25c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/lanes.py": "f3e16476e58341f649b08f071530b88c66db3fb5283a4cca511d685a3400a230",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/long_credit.py": "c449ce553ed6e97be0f97b763c7ea432c8abf878f79a3289d83c988aa97971db",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/longcritic.py": "5125859963c60e233899abfabffde53aa667fd19d3619ffd0e89179a2a895088",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/longgrad.py": "d6cc551db100c7e462ea346ea3bc23795f4d31cd64a9cf76ac3eb81903461c8d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/longskip.py": "372b47d095de1730aee541ecab4b292e748ca06234377d3d9be22e4babf31632",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/loop14_returns.py": "9e423acf2ad8ad1418571e5e9bf03e53413d292e7b8a3271513066bf2632e6f4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/looplong.py": "81f5884513a18ea7aa4eff4f6065c0ea91e6346d928621a3deccfdc07bb8b707",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/looplong_real.py": "2dfe45d270799b5782c46e139c185672bf460e2ff26f55c5baacdb4fa8b8bc52",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/__init__.py": "0f7d62827b0a5bb369ab2640daf911d3cec856213a8a8241105823779f74ec43",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/agent.py": "417a69a35c1d05b3da0732dfe020e51ec149ea750114ee34a7370bc09f49460f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/buffer.py": "c59fdcd882741f73e2a10a8e062898dd2bcf86b86f9e4e05473d602b4f59044c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/config_helpers.py": "9590084fd7596db7557a8d96d8e38b3aee7da421cc7fc4a2854aa26ec956ce66",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/eval_bridge.py": "33f5124c3ed7ecec68adf6f766c1d43062af1b453bb523a32c6d53d5cb6d6b45",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/fakeenv.py": "0f1c0859200ad8c8d2f4760c50b4c9d056413b0e7cfd3793c88561b2e9a41c66",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/ppo.py": "c3e3f149ca9184ea0a7504e03b37494ad55878122e570de942a8d2a8f1c18c37",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/rollout.py": "9a08590c9ba8a6a44ebed07d2836a1049766e15897722614891323fa4859ac9b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/train.py": "d522317054eafbcf4d3fe8b935060989ab5e6c49026bada868003c37217f1b00",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/mappo/trainer.py": "f3c8fef209bda9bed1014eefeb21f6d9342ef0425219caf796c0e429da991b98",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/native_cav.py": "e0ff30d6c08ac12e3460712b7d7e389ef0a45203716bbcf3ff5eb438af7663ec",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/nativeinit.py": "193b79fd09fcf4c23fbfd4cfbc062ac9b2ac469a732379c79980833521ac34c4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/objective14.py": "648cdc87b6cbb6679c1c3421e5e37a3b4c459786f11110b0070b65a67fef6778",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/obs.py": "ed929bdffceda967f18391023f6cb8cb01c9ef0de8f087a08c8aea900dbddd10",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/paircrit.py": "add2fc89d5ea67bd9d2f5692e2270fc9e0e4bef83a8c441e892dc2d034c7b887",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/paircrit_export.py": "583ae9db54d085a7bf4a269c702dba207b72c52cc7353e7bd3badcd5bfa862c1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/parallel_futures.py": "cdbe767b13f1b2be93d4f0d760cde707c7c64d8e160c0718fb2cc3565c14ea35",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/phase_resume.py": "220fc87c916449e3557524a53b61d10d4b5d4916b4eb20b5fee34d5083957ad6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy.py": "7cf6eca87e994f79ac2a7b1ca09129514aeadb2da1e5316e16848bf851437f40",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy14.py": "3fa1bc9334bd589632746cff742911a73fdf8f9c8b5f45aa567f56fa24de71e6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy14_cli.py": "633b31c0fd3c61e9adfdcd9750a73496503cd2f5578d23c91f6f98006c95a050",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy14_probes.py": "d83b8b0491c738536301885dff839d81fbe51c840d573c71e5fb94dfa708b937",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy14_real_export.py": "29dd468c4cf0235a7ae20b49e2b5f43d5d8a9f6ebe868773392a2cc019b0ca9d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/policy14_recovery.py": "cc3ab3b89411e0576028919a78f2aababf6e97f4ab705873fcecd1283c3cd267",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/real_credit14.py": "c679c07ef900f9dbabbff75310f17e8a04d39c789107503408a6047f1e202494",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/real_returns14.py": "7a7cc7d0373a0a21871ecf8fd2c535ce64f576eae54af9336e43fb7a68a81465",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/real_share.py": "d361702daeffc036ecefdc6d10775c6a281fefbc0912dd7caeedd6ca34119bbb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/reward.py": "c4fbe4208094a2f8fb3d48795b33081f8459e7dd6aca1ef6f35ebca5564f407b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/rsu_check.py": "2f90ca938ae1c85f6dbd31635710f644135a075d240464c894c0a54086a7bb9d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/rsu_field.py": "ec968513e6020730754ad3f01f8a1ad4b47da0615cd6e8999c152b3e3b39701b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/safety.py": "528f687477d7a3ab41625dfe6d678160f1d46a5983cf4f5695d3f114087715df",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/srcgrad.py": "e876e8902db46b4f17c639c3aa72053df6ad1c281fcf870172dc6a24bb71e25f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/start_states.py": "d23bb90f0c73a04e880bb1ef6ef6397772fad65ec5ebacde28d9db937b69377d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/sumo_idm.py": "e2481594b93c95237a9501d413833fe5bd11f17576beaeae348af9ad7c8f22b3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/sumo_leader.py": "45a9ca9f9d680483b18e60ea021bfb499dbac90530c8fa3303046a2cd520c27f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/train_cli.py": "be9b5af714b38583d73d7ae58a5b24836185b399eee559e90f2f11fcc78886c9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/control/zerostart.py": "0a936dbe0dd3728d922e3a004a2cf5ae16f55ce8c46986e8301c5c107bcce54d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/__init__.py": "535b454655cdcb5cfc6d920f9ffa260a059ab34a8e72717770ed07c169484509",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/constants.py": "48a79eddd4b5396934f958bdf3f0f9bef2c41bc3988e679c8593734e30b6cecd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/errors.py": "52f3db38a81761ac129c5a80488a029ef45082958f4af51468d7a4e4bdb239d2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/fastpath.py": "957125fc3059471098cbc423060a461b197b44ecf69582fb7ff1b1f7e9cb0370",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/guard.py": "b68f3d06e1573d767be3ced3ceca5fbd3be0ba27df3565e3ef127e34ea2001e9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/io.py": "df0f8cdfe06c9ae95ed0967b8ea6ed1cb276f0cc432ced8a98a904f3f9199a35",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/seeds.py": "04ba5adeec4f29ce94021a64a36de3af0b2046e7f558835ab5d37f42d7c3ce02",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/speed_flags.py": "e2030671864bce68dd7ad99c521eb8b4261737005d133a879079a3cb80c234d4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/toml.py": "76d9dff043e53f186784435c28622565abef5d5bc467312acccdbb536b272586",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/core/toml_subset.py": "c2b9f1c3282a08d343cffd810461e8799381dd76c61404493a46a259ce0754a1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/__init__.py": "0fa75f890ad3081a692b7daf8ee06a0c5e78f917f527d9e2e66d4ad7b608f170",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/action_timeline.py": "3509002969e14b965a65114ef7bf6492e4a7296a22715acf5d40c917f00164fb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/c4_episodes.py": "c303b959630ae391d442dc3ec7c0a45e6a75413f95808dcb4f558f056791b73f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/c4_pairs.py": "42955c49a4143685a7b80dc1386cc4c95a645e0eeb14540901afd630af036d4a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/collate.py": "50db0850eff3bde9c834c332697910b2ceb98b7021c64518b76edaf1ecafc16a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/controller_hygiene.py": "bd1220d9834c015ea42ba4557cb7861df4c575db5b29b1211a0836ba5f416e8b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/corpus.py": "7c4e949c780a32e1862597ddfb5c850cf56fbc3f6dce3a656afebb689eaa6c95",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/counters.py": "db05640fbce67198e203800a51c7216292a3411618407c539381c4096dc21b63",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/dataset.py": "2497247be9ab9bec7204ae46c0b6661ad3b3044ea46a50fd3730c1fa39d28191",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/driver_truth.py": "ff40cf5654f0bd6178fab2b93b3a104be6bf0abf0ff1b0b5410413ecc9693ed2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/geometry.py": "5e49b0c5eff3a727743cb0f3d69703786f38dfbcca9c666666ff20cd037b32cd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/history.py": "f56728cb3b166040f0bb286de6e630eefb903a3655fc1632478451defbbb44fd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/jam.py": "6f50a47cddef834d85e5fd4d1d7c485f9412a0578be6277229751c9d4d380ed2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/junction_fix.py": "9e7515553316bdc0d59937c84cdc0c6b921d3ecd5eff82818fffaccbcee60c7d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/live_state.py": "add39ad5365c69319d0249715bcfb5f79023fe364f400a2c50e21911607167ad",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/lpwo.py": "9e31115ca59e3664a3224d0a379f24b4e4c97fbc681962672c23fcd495e96d86",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/mixdata.py": "ccf042466ddeed375438e0b34067e215d0295dc623acb4f698616d8f37b51298",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/pack_history.py": "7b7141e21cb4f3d23177c03b5a7aed3470db3170d8210bb261c9e860f8373f64",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/presence.py": "7ce88d4bd41eda038962cfac910907bfd9f0d341bbecfaf9bf2682594945ffa7",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/recorded_prefix.py": "b2fdfce39c015abf1cab7fbf161ee4ec15505d9ca8e9dcf49e45b6fa7dcced7e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/registry.py": "23839f5dae6c22e363d0a0a3667549eae7fa396aac79bacf24b703fa8ca42a77",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/replay_flags.py": "b7cac330f2c5c0d60645815fded0b188fb65c873b1c6b83523cd4af5c559fd80",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/route_frame.py": "a1eb3b182a1afd56ee7a8a66e9e166918fefc260c120a05492c288b0b83bd9ca",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/sidecars.py": "b8748818d7b28a6741f38a874cfc2790044b81ef973c2d287f49a96d9c10c0aa",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/sources.py": "e2a46f887c86b959ace33719265b1b9a9ed6d6b4ecae6052a9fc8a4f763e5a40",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/val_split.py": "7f78d1b52d97f74c9f25858432e409aed22115d9908751fe397edafa308ad43a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/window_cache.py": "dfe5b85da9ce273e59a3a1952a2a687b6025ae18cc40f0bc0e2c1c2bf2bc4b2a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/window_lists.py": "edaa113d864694a29d10d1535bb821a8f318b3acd0ec7e1b1113a4425c4f9078",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/data/windows.py": "1e733a0d18fdc236ecabb7bafae330843b7a1a7da84ac2ab94b47f93b07ebd3c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/__init__.py": "baea1b5772191e23325c009d9058aa0df7bfcfc3e9876925379c6cdf57270735",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/backend.py": "9e0bdcc1efc686ab77373c899cf9471109aeabf05a97c62fd8802d34815c3d3f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/compare.py": "fe98ccae9cb1a80e92a9fb827e3d33677e46af2c7acdc21f134d1e860dbb9723",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/decide.py": "bfe4ecef0119f7c21305ab568a0531722c29a4fd218111e57d3cb6ab6b65db38",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/driver_recovery.py": "2a4c96fd006ab679647a1ae6841baf02ce1b7511d5192c775f3e0f725f564687",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/entries_input.py": "eece6096703527aab6cdb66c1810b2ef18eed8d7bb3ddd932fb203d87f9a51c1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/entry_queue.py": "bafbb62279879b20f955707781a32b038bc7b044038a92c6a7a315471d0bcc44",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/errors.py": "76f93a3e10f00ba9ad25f474fe901b6cafda872ff5556687d225ebb791a882e9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/fingerprints.py": "e36aef122c5eac46572247a3b87c3b239cc4b16a59871fb620557141f41a5b04",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/history_inputs.py": "57a742af104610c3f9f608f4ca834d3ca16d4fca1c13edd3e8a80cca581438a8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/metrics.py": "5e5e8ff6c59192451c089c519ddb436dbbb80d8ba43684c3bcae45d961cb9233",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/models.py": "d6cbb4dfc215ff4c143982544de0b289b5331754c9a0e14177447e8c0202958a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/normalize.py": "bde383a13067247eda81cb120a9e17b05bce4a7ad3c41f521a61543cf90a9702",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/predictor.py": "6e054c6e5b933a3f3c421a37a98a61f857c6017f09ec669c888f06d654e709be",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/ranking.py": "5a0b0b419a11ef7852e1a0dedfcb31932eefe8895430c094e275d43205929b56",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/report.py": "6200544a83753106f301f9053d9c44717408eb78c13a204ac12287b54a757bf4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/rollout_inputs.py": "457670812ffdcbde03f367afdf6e1e7648abbd216369ff43e03c4da6ea08eccb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/run.py": "5b74f50b5c3f52bb813bb4bfd40f41aa494d8111c44e3f41fbbf8c726bc2d17a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/score.py": "0c0f443fa1c973dd7adc03c3061186d0b2dbb1960c9a9c01633fd209d1ae945a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/sets/__init__.py": "38b5d36d9fd7f400e4b94f9b8e569aa1929eb06ade1979bb4e9b28976d8c543b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/sets/indexed_switch.py": "f18df8b2dc00ee82e0879fceef1a325a7efb047ff4bfd9705c15e077d67ed90f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/sets/seen.py": "af8762c077555a27f8577d4f916ddd598bee1a48aa9dbceec2f4fa4d6355e6e1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/sets/shifted.py": "5d2e5b01a455373223728aeb635ea31ec08bf3853d7d1f943188f6bf966377f8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/sets/unseen.py": "408a1c0c7d9a5c04a7b056a1af08845121cea51176508098b379312c88798bfd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/states.py": "ea497527e5d8735a6fb288083151804769016f0898e57c5189c09c5823c5aaf3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/stats.py": "e940d10859661e583eab1846d16005805a7bb5c02cb017dd31ac4abe2d62966f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/subsets.py": "a4fb21372f48a4e31b76e5f0226a995a3972a63c6f806e34a3bfbc445efa384c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/trace.py": "713bb727f37ffde5eac5590e336d618743d6dbe78c250e32442e70f35ead8a3b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/verdict.py": "eac5026ce07e950fa1be141ea7c2ace09044c130333fa2364aabbbfee1739788",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/walls.py": "3b08935ca7db7fe0c064b821dd0067e3bccba10c32a703683e3079b4441f3be5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/__init__.py": "0f2d847e6f753ce99139285308479ff8e789d55a1dcd2d8d6c1c54a72957c3b2",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/a11_model.py": "6661066f7dc1a03d5627851102ffb005ea12d265f3134adc85e0c82ce48e6cd1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/blackbox/__init__.py": "fd7a85c747614e0ef763ab74ad74a20619c12ef023106e94e09d77a460b00135",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/blackbox/eval_adapter.py": "13ad3fbc128d92992fe7942ff3d89d56dd8dc947a54174a516468735e70cc342",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/blackbox/id.py": "ffa12943a09eef99fae191b471f3e5f4bd2d677d6ce772909c395557a9fe2085",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/blackbox/traj.py": "c34d19c03de635a3e14e1167c93140d2fbe0c5f9bbe446e10b9ffd34d481ef24",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/__init__.py": "091a2e48498685ab75814930746e285bface79312ffe70796a5bf30e0e24ad12",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/corr/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/corr/summary.py": "d5a81e729a532fc91d753bee15e00e7c5fd38a12f55da78977a5b419208c45d5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/dspeed/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/dspeed/common.py": "d8562fae8bd3c28c29135cb142ea31d14ff5216902c225e4ad09769fa1512d8c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/dspeed/composite.py": "e4decedc370569381d737002298af2b08bec0d2ca05a3c39ab43b4dd5a8be328",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/dspeed/identity.py": "a12db0f9df3b2a23b1d9d99147bee922526f175f912d7b447ce8370aef3280f8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/dspeed/overlay.py": "0fa5e864243456c2719d2787611f8dc1168d9892a11a3d911144f9ba98103a66",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/features/__init__.py": "3cf4617306ec646d4661d2cc000a04ffe26e1311ef224d0ac796819d00b33880",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/features/outcomes.py": "e2fd76cf0ffcb543efcc2f4dd8c16d7a9ba07e266d2ceb02404df7abbf72ef2b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/model/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/model/constants.py": "0a9d6602eac00d1ac50df41177f293263db51ef986df82cbe59f8efa0d7a0d7c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/train/__init__.py": "2a7c39c4a63ae4ec2613a8f4ed5b08c79fcd1177ad6bc91919bc5479a127b616",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/train/dataset.py": "c916b7664a477567181adee6c2537485142664274c13172cd1b9ea7df1e17180",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/train/idea_a_corpus.py": "6fdcf06769c9e2c4b8e75fb292c234a9ba5c54289fcdfb1805c0e94428e2bd21",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/train/identity_sidecar.py": "c3e71a6449d25c75e91352b6dddebf1d6a94cccfc0fec7d7271017f3bed7c8f7",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/legacy/vendor/train/label_isolation.py": "b52e4479d22135efedf89332c1c7c8f279267fd33157b1317ef062295e96ce3a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/__init__.py": "fecf28e69f824e8d01ac9cbdb36bda11d501b284946b9888a17d252d8cabff28",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/cav.py": "f249b481a2f4af3766ddc2a06a8f25bc261796f9abc36fc908806a6e08ac0e71",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/checkpoint.py": "405fe07e2bdcbf3b388680da54a73b1ac19e600443efc24fbb877f49afaab415",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/controllers.py": "26bc718726e67753e8794b4c85a027f47dbdf29f8992b847e1c1acb15e5c3a28",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/driver_encoder.py": "48ec8b6fcbee1c1bb3fc31ad6de0224148b57f29cab9f9dac4b38ec6d03953bd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/driver_update.py": "625b95195cd783f8c45d6cc6588c777d5bc6296f5181a418ca2522858b834143",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/entries.py": "e2b223d369a6995b10515799aaf02cf7a4aeb7e28670ee6f67a5ca18ece455cd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/entry_learned.py": "817370bd455a437b1c66254bfbf26df76b98eefcb3507a0fb2cc94a338ad6c60",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/factory.py": "895a2efa86de895286b6f0a3777bc21ddacb06857e05ba633ad41c8f41302e3b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/follower_courtesy.py": "a499e1359d9863223c1a0f7bb15088fc89fd17603240eeac7ab690809d2f9b8c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/gate.py": "4b9765999385cb4ebecf34617cbcc3f66170181181691e62cb626f3f18c6cae5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/history.py": "853f4dd5c4ddec2987016b87a7b7a04d4c94df46102c45bf7951d9d31f11eb31",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/lane_hazard.py": "4ac164afe17b5a37bcef5be6145d1a5a48b735784af64c19c70956e816c0ef7a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/lane_head.py": "4c9ec46497b4dc585b37ea5de3e72556804d800d0ac8791c0e798f8821adc6bc",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/lane_v5.py": "ce257d1413c824352b82b0452fb98c2066f0dcb87c004c795d28a9156930ed91",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/leader_change.py": "7b9f86c20df19c831278edeb437e306d61d0397b8cf4632d5646b7f0a80240c9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/mainline_residual.py": "3c831e920f1ab79d7567044f27f0aa2048bbd71f04530a65befd2f9b25c09c2d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_context.py": "bc7118ce7e25fa078ce959296116179ad0108b3470c294cfca334cc2ea0cce4e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_core.py": "7a10a2f17e144e22fe91e74f958aec6257792eb33a083487146fda8fc2291043",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_frailty.py": "ca33136b5eb9c15af0218063d82c646873855c605e8fdabaa3589a3c8df0db1b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_negotiation.py": "7905cb69863189415a31bf85e649e4f106a78fb3992d597e8bbf38f35251755a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_pivot.py": "eb89a54c7f7fae489103f2ee3f8a3c95e3e759adcea335a2ad273c9fd0b7a6fd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_threshold.py": "672a036ef26da5cfacaefb0822148f27c3194f2251922135c5fb53909534d166",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_wait.py": "d13d77d83b9134e2e2bde23e718f2f7f5b98003269c6893efc59df9c2dcdbd56",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/merge_yield.py": "994ec5c7669d5f546e0c99f2f70d9203dcbaf228d613a7eec0fa07184af8f8ec",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/ramp_speed_adapt.py": "db8293c6ba04f04e9714a6ca898f8bf9afa85013c3e413f19a9d9727c784fe8c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/residual_bound.py": "18ae3e9bc90ef4d950ab0fce201c3c078c5acb896e715a005b071af9e0fe7c84",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/residual_net.py": "cfb007d11c3f239718612fd71ed8e4337df26884f304555f667ece0ade57bbb5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/spec.py": "4ce7db6787ca0d3ff49f1ce306da382873ba02750ed65e656d7f837b19446b6c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/stability.py": "db1b79e6823c48a9015502b0882da09b5359131451937d386479048e2f1f6f7e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/temporal_slow.py": "580e409bad42f45eff6f56009513d563b38c003b2671d5d42260cda9076e7eca",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/temporal_state_table.py": "71436255fc2b22278dea82f5128fb9fc02709d3fc4f125ade639b2e6053f6112",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py": "2161418a2c96d4537949c7a7737e1fb8841b28555d92e866c4d9282ef7c13ab6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/__init__.py": "b2292c256713f0d11f8a1105c64d9956a000ec6840758f916a97691de75691c6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/accel.py": "90a19c6e0e0ee4bf24eee1d0b6392c2baa95392db1c98110a5e632fab2cb3585",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/emergency.py": "888a8c9f6589876f2c25ce5ec49ef3349e9fa6ca49afb4dc7e6e9cd8fe86ee6f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/idm.py": "49e936b5735ba21630ce7fa1691035fd1072da2e692b0beac80fb0d472665ad8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/lane_chain.py": "19307ab359621761fbc9be5df39f7cd0519322f4342d8fbb6b262bed13311477",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/lane_conflict.py": "2d36b3d48bbd94e6fddca67765355c69d7009f0cf7c3f9cd372a51d2eacaf45a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/merge_cal.py": "5b422b0c1752e6806d4c3c5c444ea9d6a4c12a361bb9c66085c1c546dbf1bec7",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/merge_v6.py": "a572d40b7f891472e7ee7cce7e6dfdcb23f98b9d262831c35201b67ce595a21a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/projection.py": "51c534b10f117bb888798c23b9531dbc8adeafef4c7bab8e092b6bd62af1af85",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/state.py": "d82b6f72e83996fd85ee82052c3bf46c12ed6825f64c9f78eb4a4105cf3dd5de",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/wall_exec.py": "dcb5bc26ae9cfa2304f8df679bd992b1b680ada000cb3b0a8aec9150bd5eff4e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/sim_bridge.py": "77cce052468cf81be9e550cfd0f5a379d48cdd2087e71f91f5fb071fc92b308c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/__init__.py": "984dbfd96ef4d526dd1bb8401bd1ed868e2cff62a3ebc27185a66a5a69ecb1c3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/cav_drive.py": "7affb448e9f25ccfff8848b6a7376a82a75b958daae0bda21b539f726d7b47b1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/courtesy.py": "42b07f286cdcad3789adaf8f0296fd26922c3b7988c7490a2fd38fdc080eabb4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/curriculum.py": "f95e4760123a4c0cb0f9118f975f32d687cab36e5c9043c5687133be09b441e1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/diagnostics.py": "d5054325268e86a7671059873a5c1dca9d5251771cfcce19e25c2ea31d60c394",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/gates.py": "34a94c1ecdda9438fa9c93241a154360b844db232d3cddea401d17a1c1981fc1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/inputs.py": "e480e240ab40d2e6961fc762c337bf05fd84331bc1b2ce25affa9fe8b70f7eaf",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/logging.py": "4cfeb1ea0c20575e3b49321cca4242bc7790c764eda6ba2351b9966f50175438",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/longwm.py": "fd44ffbf440b543f2c7f58c57c4d80d6e1c2e99b9f45d4274ba10e3f7700f441",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/__init__.py": "f61f98a9cf883d1175681a0be0241a6bf51d013843c7408d0be479b0c0c74f01",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/accel_tail.py": "508e64fa032bee0824493d22710c0be852f0bc34c79124adb70d139c7ebe1620",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/agg_horizon.py": "b2a503044036ea545eeb3cb136e6cebb65a60263bf20d3a4446675556e07885b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/aggregate.py": "c605198c6dd204ba6bafbd417f86b1ab1336f15204aaa8d1df734391617a4625",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/base.py": "2197655e43c9d57af3ac25bd5c99689cb2e81e62c375983a21d3d433a87ffc20",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/brake_persist.py": "28acf3e8b6c08b4e8d04a89e005ebd9047c8a60ebc13a1edd279544b0821cc83",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/brake_wave.py": "0408734413621626c9f5f2dffad86ba90d78811eba46e8c92943ef7a1ae65abb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/braking.py": "8a525dac9bb000cb756a461371c22bb4c554b95a4b9c7fa91dc9d58eb3a2a935",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/compose.py": "c42853eebd267d4a31ce01cc0fa9c10d016a501549d87a905653d2b40f421a2f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/cutin_reaction.py": "a30feda10918c395280c07116c594a6f132249d7333c92bd71f5a720abb14455",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/driver_prior.py": "bd2cd70a5b4ec74ec31bf0c4284a388b20c7f7224d1e176653d88954e139da00",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/flip_rate.py": "255c2c64a9cbe090d0075859a613a792754b9d08dd70537a062fc26c074ee37e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/follower_courtesy.py": "9b12c88db47aec245132605ce81f1bcbcd3cb084c23d779519eaf851347f6d6f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/lane.py": "f773bd9536570ea6578848caa1afe34f3de283218b8503f6352b1cdd39b3f9fc",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/lane_event.py": "e718f638483ef2a2e878df230864142528f8964f3a62167d3a33c19f69cbf444",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/lane_flow.py": "cd7bc17e04f95596623a22b7862e48121526bc8951bd790a71106d2ab658c908",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/lane_rate.py": "929f91b373f131e2973d58efcf0758005454da20340e999478bec87b8744b33f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge.py": "c1fdf86c2c71878076a06325d01cdb92e13492ebc113168e22648d7c34bad939",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_core.py": "7028547d32ac7399818cf3e72637a6bfc94265807b22acdf28d60349ebab7542",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_core_seqtf.py": "f6bedf10f2c12d70472e60e1334bf7ef94d652c545543622515e39a62f27a6d6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_first_passage.py": "b7ea9f734bd206575d0642a2c98680ca2269df40373578eed5ec8a3345f2d2a6",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_frailty.py": "08500876c5e4144523c28c81915327657de4a8af0900b928d8643df57711bff4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_negotiation.py": "842356f41af8fd88fca26cf42373ef3441cbc64daa0993f5579185b7c237fb31",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_pivot.py": "f4ac94de0a339b88e5fee3c535af4b3ca89f9d8f2a6b9745b4563a5b65f253fc",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_pivot_support.py": "08a80ede831df70e36adc9d841bbe9529bdec8f3553f26bccc90b92ca6137edb",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/merge_timing.py": "2b214835773c34b9dba556e257081729f3f1f89d6eec6e4c0391622b91f5efad",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/onset_stats.py": "30c19724076e2cbde86e9396c1bf782fd569aa8fa7b09bd3204fd521a063900a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/paired_diff.py": "68aeb4e4586462500217c57a651693a0c65d6d58c8028456e274cdcbb6e6c370",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/post_merge.py": "c77c27ed4e19ef8b363267c8d9f1628ade6a94a630a2e93e3938fdfcaa15479c",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/residual.py": "e2ac172cbba407749eff6c0531795f9d4208813bf57091ea9a9a5a199881b294",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/stability.py": "91474f8ecc3f70c91da89ea216e1dd2a434abeabb42de42645542e35b9434d51",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/traffic.py": "b649ef214278e9f462162b950467bae1e481074ed223a31ede9e7a92cd829fd4",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/losses/trajectory.py": "a6d85d9b9fc313d0ead9b266bd64f0ae62a06d92c27552e8d8dd4e04f249dbd0",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/paired_random.py": "0fd89cf7345ba2259518eb006eb4bedf2089bd5f70da6053318bc91943e3e9c8",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/preflight.py": "08d8b89f6b5625c68fd68bfb3905d69072b7a555e234ae02a031a4f9ecc0b80a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/receipt.py": "89a6643652a4458f92020623037987c243ddd1d6d0f6d6072f30ad983b027f22",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/replay.py": "91c131b601c186ceaa49394287292df5a67cafc76b7b7253205ef92d3db91e13",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round10_gate.py": "26e249427dee204d33b09f202b61b0688d8f6f9927b5b04db127e1bec097a6c7",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round10b_gate.py": "822f8fe092ecf06be05705de2e5ff7f57ef62352c22ce76ee7a4e26580d96bee",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round11_gate.py": "63db18e747a43483cbe5c16d4c0fb9af6e5236ed49829e4acc3bd0627b52e6d9",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round12_gate.py": "f5a2b69b978f4a2dc95810f97f1b324464fd80b856951b16d7035f09b099ae7a",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round12c_gate.py": "fc9bb7c7a5fb7724a5ca86f81131ba18d341ec031d41252266c2eb5662c022a3",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round13c_gate.py": "602919a6addacf18417b69ef4c8cfff324f611da24859902768179525faef32e",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round13e_gate.py": "a99c7c1aacf8fa4b0bf8e2908e2cc92e39a8362c572bc361f6b324524771cef1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round13f_gate.py": "3bd252a5dd45ba6f36afda340d4200c764bf6147cb92efba510473cd46184724",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round14_gate.py": "dab2eb055e2321b2c64abaea4f75b3b2512b5d9f682be846a750fa5230da3ad5",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round16_gate.py": "f379e65d22fc8609c3d7822ec2ae012f6f85ab06d7adf934a58b91975475af43",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/round9_gate.py": "d1598aa643da0c3cf3f7875e459f75744c8f9eef74a8b8b3355e759e625d4c6f",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/scoring_random.py": "7a85654aae5c6d943800dce7374a1e29b0eb8253b897588ddf48485fca3b7552",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/selection.py": "c4ab0b8786a4f174597fc3461762bb98c66464f7bc12d4b3bf900ee948c99733",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/settings.py": "b944a908d8a552509492de8bc02bf865ed68c9c0d6c216630e99c883ccf77d29",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/trainer.py": "a62dcb7cc10256bccb3fc3dad05516d82bd832eaae0127a5b14a90b7f7367802",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/unroll.py": "e340d8481eecea85fa47371f119be1030788bdcc2962b1fa0283c413c72d788c",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/damping.py": "e069eee31694d103bba8102f4edfa8d692b1ad888d78aa05744c73832d89f288",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v4/pi_external_u.py": "16ff7c6decda5090f70918a19e202cab13b1cc4a4f538ec604b1e368c5cb16d0",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v2/pi_saturation_v1.py": "059cf4f82d6e875dfb55c663782b778771ff7b2bb114ab9824673afe8a6f13ce"
+   },
+   "switches": {},
+   "candidate_sha256": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+   "export_sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+   "real_receipt_sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+   "seed": 965140,
+   "update": 190,
+   "t0": 300,
+   "horizon": 600
+  },
+  "tasks": 160,
+  "complete_worlds": [
+   969420,
+   969421,
+   969422,
+   969423,
+   969424,
+   969425,
+   969426,
+   969427,
+   969428,
+   969429,
+   969430,
+   969431,
+   969432,
+   969433,
+   969434,
+   969435,
+   969436,
+   969437,
+   969438,
+   969439
+  ],
+  "missing_tasks": [],
+  "inputs": [
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k0.json",
+    "sha256": "35fa2020ce2df461a413b8e3a0bb593ec1501cef0b759cd9fb4f83c0f7f8fdc2",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k1.json",
+    "sha256": "c4256813e083b017a64913520f63f39e5d0295e42d79789882d3e14322d979ac",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k2.json",
+    "sha256": "ef3c626600c4b6ab83413f4a46219835d86a22be1cff3e7a724dd0f8b4a32206",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k3.json",
+    "sha256": "87b6c465dd887ac514533fadb4e1f6ab07ce12f6caf64296c9ca0ff3507807bf",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k4.json",
+    "sha256": "fb41ae5b38cfd7780f3e0e2140d3d44966db289c5b2ebcd5c752eba25b9146d5",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k5.json",
+    "sha256": "ab1c08126845177c628a96c2c0ce08c265b4e7517219dd7ff54a1d678fdbc7cb",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k6.json",
+    "sha256": "59f208fb27bd13388b8df7cffcbf22a0fa18884017ad2e08c766985eecc8ea99",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969420_k7.json",
+    "sha256": "d3b7d82c28bc5d5cb0c457bc59612a2b1a6147e94fa16964b855b9b14f62a282",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k0.json",
+    "sha256": "d2454f96e14893df23fb2c3856c783a58ddccf9aff8d79925c1e524269faa4a2",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k1.json",
+    "sha256": "9fed48f995f858fc60e27dc3060080bf0916bc6a96059b9c1149a0c4317d52b6",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k2.json",
+    "sha256": "95b4eb51d978c4543bb5bacf04a4ccdf3ea022aae4e027b0dc0cfe6ac4c18d6f",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k3.json",
+    "sha256": "c7f1ecb126036015552240db125a32a22919c29488e49f72a366a614756f0683",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k4.json",
+    "sha256": "5ca40f02a1a339c70fec934d73985bb62e0d67534dffd66801b94c93e7a7c982",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k5.json",
+    "sha256": "816e3257f57f34ff469af6bcafb716984cfef9414d4e0ac3aa1281fd3f5a93c6",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k6.json",
+    "sha256": "7c148586599d9e22d6225ce4079ab1395b54bc5ec95d4408bc029b6c96f805d8",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969424_k7.json",
+    "sha256": "6f49694a9c5c9e1c67d61df33556bc722ea6eb0c85a20a1905f022a1ebfc2d60",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k0.json",
+    "sha256": "4d66c8d80057e9f5d210a446d4f8705b581bf177570f24734fe3a8d1616487d1",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k1.json",
+    "sha256": "c95284f6610721719a43105ce180ab288b8057dbb8862dd0e985bd265fcc7237",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k2.json",
+    "sha256": "7c05485f588ae3bf02cadc00825ffe7e1cafed7e0baded7f9b5e13a2c1177375",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k3.json",
+    "sha256": "cc109960c42e725f75a5b478eafd04b71fb986ee300610765575374b0fc74730",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k4.json",
+    "sha256": "dc30d2d83f39773ef6ebb076d8e7d2e5434f3d51df53484cd3f2be84bfc2a166",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k5.json",
+    "sha256": "a85160987dd38b18108ca4b667073590af47c97feea974036b7497a53644fb4f",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k6.json",
+    "sha256": "a556945af1542331a31aae09c2cdee30002bbff7b7aa1981e9d1b805fd1274c0",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969428_k7.json",
+    "sha256": "510524398eb5f0ae6c55b22dcda81bc4c4cdea8ef7590e9b010a59db1542125d",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k0.json",
+    "sha256": "b45b2501bbf99100966d7540a6ba9b92cd376c0a8e54d90736d8365524b6f81d",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k1.json",
+    "sha256": "80363403aaebb377c39a8e019042f38f4268ba39556d3e79a9b1d548bdbf3ff2",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k2.json",
+    "sha256": "e85766b1fe341e2afd2a3d5a66429993953549f65298aec92d3a600451515700",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k3.json",
+    "sha256": "a9098f94a50ef560bea2c3b68c92f0761f90a58c5c2672bd4ab003b99565c5b4",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k4.json",
+    "sha256": "db94422fe5b2a7b9f98065ec19deadc8295f4bc7af0195472787da71fd48020d",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k5.json",
+    "sha256": "e9c47b494b0ad728d7d04d45cfc053a678c97ca1e7ba5fe9d0836979e719eecb",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k6.json",
+    "sha256": "59cddf4b4d6a2553a3ae4026df4e70c01fd5335c33df899e6edde560b8730952",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969432_k7.json",
+    "sha256": "44b448539586e960fc27cc34518f92787df6d3a80fe072decba778bcadf0bcb7",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k0.json",
+    "sha256": "643117d22650d5095359d02b39bf89a5f2660ee84ea6971f5f1b9efc3794a00f",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k1.json",
+    "sha256": "e903e37c50271c1fc5653d1b8c426a471d798ac3abc11760fbe17ada8ea915ec",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k2.json",
+    "sha256": "695b2ae1aff6bb1cc8d0554c2ed1eb4fc864072ad576786d91c2c28d3d69f74e",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k3.json",
+    "sha256": "0fd8413eb1639e4e005c65969aa1ff0a330727dc40a20b8da49be6bbe027e269",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k4.json",
+    "sha256": "bf1f20c54c3936759ed783d8cdf8f10494ab05174b91b933b2ed04e91d19e609",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k5.json",
+    "sha256": "ec817a984d1a6d2c2f74f20a1925c45119862d9a088d524f17a31c94b0b7a2a2",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k6.json",
+    "sha256": "efca6ed482967cd71d972c984d3ef56b8d8fa0ee1969319f9b44f41fafe87e2f",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard0\\w969436_k7.json",
+    "sha256": "7191ab5f0ffd890a20197f915db9d2abb33559aba858b13a39d09ae05936acec",
+    "identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k0.json",
+    "sha256": "77c7a7e315527d13f55aeb4a073b1cff5688eaf731b2b72bcbcef4a037449c84",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k1.json",
+    "sha256": "91e2e4d7d2b5fb2a5373aed9dc87a52ec1811a2b8361c5f2be3b447a5c922452",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k2.json",
+    "sha256": "c88eea707888396b0f0e858d69b94ad740fec8cad1ecab9e95db27c07e3e50c7",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k3.json",
+    "sha256": "8995270891dc9f43c4fc1223a0503a828c76b56782ac5ddb111d87c9b8f37bdf",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k4.json",
+    "sha256": "4a5ab822c92f49482bfa56f9f9b84b5c8035669656d52794bd0c2e9c179d6b02",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k5.json",
+    "sha256": "d8622e0bcb2dbd9806a712f91cafe3eeb383b3768ed0dda131af18ba3a353e95",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k6.json",
+    "sha256": "842208b151690bfd2bbeb54d68d2f824f50977d2a250561bed3b50ed70f8e90a",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969421_k7.json",
+    "sha256": "092120281a41faefb8352d1d2a665db57ecbe7f86a222a5e0098cde22c9653fe",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k0.json",
+    "sha256": "98ebd73849c4d4221f30a3ed8529dbb5421a3fc34907dfbba43ea3aea91692f6",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k1.json",
+    "sha256": "651cbb3a5b1f4a0f18238b9b317b42b004d76ac6693f20fd987e50049739b8b0",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k2.json",
+    "sha256": "e7ac4fd90f2a687b5459e3cdf3ab1613def25581010231f76b63adeda375b027",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k3.json",
+    "sha256": "0848821b05ec39e47957cf3a67f5d935aef8018075e42acdf6ae7b9a077a3249",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k4.json",
+    "sha256": "51a2d580b2ba77596412b73304bc293e2199d93687bd299478f47345bd15ba3e",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k5.json",
+    "sha256": "be27b3636714f0092a217ebb6ecb121233568c098c612bf83a95fbe7e248dfa6",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k6.json",
+    "sha256": "aa44f02c61a205cf4973fcadc7c564edb196fbd953fa17583263b9692a2f4dcc",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969425_k7.json",
+    "sha256": "62824221f68079d14341f89d52b812d5235ec3fc4b598f29867488c54d16d868",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k0.json",
+    "sha256": "0d91a98f5cab4ea5242b633a3d7e0c8ffdf8bf1d7d87b1887ec93e860832ad0e",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k1.json",
+    "sha256": "0740e98669fba1563524175ebd1c924ed7f4f46e8a936f266ba201582a1f2622",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k2.json",
+    "sha256": "deb4a41af0be026c87b5814e2558d4a2d3f991129e6d9b1c507a984da86d4f06",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k3.json",
+    "sha256": "5a39d81de3b834f00a107ca8f135e4a9192cac3da720f256d0c6a9746ad23004",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k4.json",
+    "sha256": "cc777b9c9bf2bfc1c165f4bc45c422ad601c5da6b6e91008f79d382e48d74e4d",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k5.json",
+    "sha256": "e47d11237f1328d389e80e403508d80857fb71f1e91bfc52cbdacc9967091198",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k6.json",
+    "sha256": "f94c9c7f33a2dd9abf12531bef9b4702dd050f8a6a06ce67438de542c411fa81",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969429_k7.json",
+    "sha256": "41c4b814c67a70554fefaf536f35f98e317a04027954d047e1b57bbfe24d093e",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k0.json",
+    "sha256": "baaf18a82e6003e274d2a6c2e379a7d9d565c369c3241cb93a041bd5d5e38baf",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k1.json",
+    "sha256": "ccb48ac9e79e26bf86997a84a6f11f57f767cad3c5c4990e2b7c94d7c13c3213",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k2.json",
+    "sha256": "aa59be1ef413a8fe2f7223a2b997e3220c5c4a61b029316b326313107981fc31",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k3.json",
+    "sha256": "fbdd92b949c49d46b79cdc0b12343f3206cf221e36acd63450cf77f96ea9adef",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k4.json",
+    "sha256": "731d8054b3cf764f742226cb5ebd7487eb1321c3f7d080270e072cbd3ad4f222",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k5.json",
+    "sha256": "5f004a8e032f6b369414c19fddd9b3bbd83bdcfd38bdfeeef128ad5469061607",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k6.json",
+    "sha256": "0c53ddc58b2579638c84291c60d143139df80e6732cd8d14d465a15aff8e3097",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969433_k7.json",
+    "sha256": "3ad9a8104a2f2a696bec91effa0d7c96849252844aa768329b2f804dd01f0a11",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k0.json",
+    "sha256": "452f16bfb1e17daeac6816e4719ce164bf8d1cb3dd6d7e21c60492d8c1f48039",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k1.json",
+    "sha256": "50341e39ee93a72fd6373d029b459147f75ec69c01a3e3b4f8085199107452ea",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k2.json",
+    "sha256": "d5a70f11766fb54d7d413a69884c8fe2640df1beac18c1dba680e91863514f63",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k3.json",
+    "sha256": "24cde31bdaf9c5b459c5cc0adbdef4b258ca3aa947405770460a5f4b406bb428",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k4.json",
+    "sha256": "11d6ee7c37ff9583a2f8019fd88e34135119465659ccb7a9b8112ea2611eb0b6",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k5.json",
+    "sha256": "f3560a4d488ebf8824601ccae9d34716a858ad326591dbf98ff4c6a162fc729c",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k6.json",
+    "sha256": "614989fdeda0b5332e14c9f1065e4a3b39956279402218d5138817cbfab6a22b",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard1\\w969437_k7.json",
+    "sha256": "26b55da258fbc0c0acb7e1cafc8a5f3956731d6efe1d6cbcd0ecb41285eab487",
+    "identity_sha256": "e46b21a8cf083371a9da59a1a6f43232b6916d7b02b3e7e4aa6c83b455b99080"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k0.json",
+    "sha256": "b0e2cec7319f97f3ccca7ad631048ab43cb6da2e6e9c45fc51d623c165ccc6d0",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k1.json",
+    "sha256": "4b3675db64b8d4f808f93aaff538fa30066b479c373c68d133c8118b1e303ca1",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k2.json",
+    "sha256": "98610ce987cdd1d33ae8c13efb2447ac3599f7032a34a5aadf9d4095bdc77f78",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k3.json",
+    "sha256": "ca12df4c1bc9c19e423f8533ac2e1b9e8cd3524136e63941621b02b1c15d1e74",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k4.json",
+    "sha256": "e59c80642e7e444cf1ad65758a45f46143062fdee896368ce5f3cfe29a05d61c",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k5.json",
+    "sha256": "02dddd3a7c217c853e0b41bb16531c6337076e7660dfb74070d62c8e6ec9f860",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k6.json",
+    "sha256": "e500e863888b9094a3847e571f338ee8140cdea2d16a90218e728c54a4f03b58",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969422_k7.json",
+    "sha256": "48e29377eb1acfb3cd3e4350635ed9f3e3731a3bcbf5753d8e8c7c86c2de8641",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k0.json",
+    "sha256": "8177caa749485d2066312e3b333b56d7202e9337ab60b80c6b4ebedc3244610e",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k1.json",
+    "sha256": "f754f9eed972e3770fb4304fb34386ea9848b434585e7299ef9938bc54c1cb95",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k2.json",
+    "sha256": "544b3ec36feedd5ba473247e61a3fc1f39a45fff9277d1fa7f1c94507b8c0e30",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k3.json",
+    "sha256": "fa306396d20c62dfefe6bc1282b03e83ef8452f429287010d2fd005561c5753c",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k4.json",
+    "sha256": "1ee5e900b8ec444cb693e97ecc2e3b293be190b837c37112f8bfd6592afdfe30",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k5.json",
+    "sha256": "9d05776f8cea2f8a2866a4053186d7b9d790bf0ef5b3b8a3e085f7c5ac0c51f9",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k6.json",
+    "sha256": "1c81d68484055a48d54ac6f5481e1dc69ccb3893b0dff5d05d948ac210b507d3",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969426_k7.json",
+    "sha256": "de25f9d8683e7bf4515a91d18ecc2c5db93a2cf819519f601dc627bdfe16750c",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k0.json",
+    "sha256": "b667f9cb02206f100216bb0207ea63efc2dd4fc14314644f0ba8056193513227",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k1.json",
+    "sha256": "67c30061abfda7e257827a0696a0bde2b29da360f28fffeea1954617ed0d5a95",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k2.json",
+    "sha256": "b613eaeba53129cd5f197961623771be7925bce803be27c95b8a7bfa6f8321db",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k3.json",
+    "sha256": "12304d06f237885b61b5e25517ef059b3c2436d78a0acbf00ee0561c8f7f7909",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k4.json",
+    "sha256": "dfb8c88aa95b16f86c8ab159c9232d83b60a87cee13771b5e794176547f855e3",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k5.json",
+    "sha256": "88561a6dc5b1ecf8bf9067404b646eae16481705fc14c154848c36f3fc2697c8",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k6.json",
+    "sha256": "45bc9222e76c4a22949e62fdba8762043c4a530f6d8030c1b1641b87967032ab",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969430_k7.json",
+    "sha256": "f39603d1fbec56fe80dfb131dd53015bd9811c7360335987462d29609187a148",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k0.json",
+    "sha256": "e56c7137c79acbf1850ad8486a5fd2d7bb3e58e1294b42bc5a8dfa7c5f5287ce",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k1.json",
+    "sha256": "58ed985ec418546e811ad9a88e4388cadf0ef279812c875cd6943a562d180789",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k2.json",
+    "sha256": "d780f4922e534ca00bb8572bc0ca7b51860bb97e53631b9fc36fa79b2eaef55c",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k3.json",
+    "sha256": "af3bb106ddc4905a833e2fa724ee8177f4ff2fc7c7152d6f3eda2be3acd503ec",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k4.json",
+    "sha256": "8fb38a2be9577abbd9ae72e23f82d3629a5f0669e649a02d3c016af29526aa9c",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k5.json",
+    "sha256": "a06b9af9f3da18d3796021b4c727c50262f0b8deb16f4295de0eb0115edb8be9",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k6.json",
+    "sha256": "c27db0b2ace9dd7f78ff2a80f42986d852d529125cff5f61a615cc198c757216",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969434_k7.json",
+    "sha256": "4fadfa8a1dd8f83ded0b10e6fee0539645b9bb98b51eb7bbda880951af77ea5a",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k0.json",
+    "sha256": "117632b76cf681ff36db0371904b4837afacf7e6c1d74c44c2199074518fbcc1",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k1.json",
+    "sha256": "1532842143887fb7595737b282e7c0209443e16c9120dc2a40f96a906903d564",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k2.json",
+    "sha256": "dfcca71a6c27ea6b8bcd0f31fff8f529d9ead403c960de085dc55ef7a724c15d",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k3.json",
+    "sha256": "ff9190e77a8f6fb09fa319a57b0514f504be26f86a479c1c3cb9fc95961360cd",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k4.json",
+    "sha256": "2eb1f9e6c8c22440ccbec561b1a13159a3e12a3e222f65faf16026dfe988b161",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k5.json",
+    "sha256": "d5326c52329449ddc0ed7db89340282133a48bddce77d89396f757984346762d",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k6.json",
+    "sha256": "c18ea17a14d176fab8078414279324dd31bf1ca4bf5749ed597f9a6000c48d1e",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard2\\w969438_k7.json",
+    "sha256": "c30fc00f4215d82bce214aa8d6ca18655cd0b0778abc0dade1b4bf30a3a4c15b",
+    "identity_sha256": "7afe137638e32108150600c023d6d2f00104e846f6d027886e52bd07b517743e"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k0.json",
+    "sha256": "09cd5af2ce0df53965ab637711f823d1d8034a7e1ebfb0d9529ebdb3d7188c52",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k1.json",
+    "sha256": "44540e0b05e9ccd6440f1fe5cfd321084fe9d750f23a9499d3fe5a4ac60f8511",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k2.json",
+    "sha256": "31fccda7373f3074d1f30bd4368038737130af0e1a88c9428912cb547b2fa847",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k3.json",
+    "sha256": "e7887458a3716b3785e51528ac321acf1c96d34f3f36751e49a8803cf08f0f8b",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k4.json",
+    "sha256": "8bd8529b6e6430178f9d5cd10cedcdc66558d37b399eb6eacd06a86658bb15d0",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k5.json",
+    "sha256": "19bcdae8e8acc9d489dcfda40f057782f6a498ef34cf9854a51a18ac1efb335b",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k6.json",
+    "sha256": "4e6138fdeb62861c40f8c05596acf32be29a1e48a4b59b971b12ddee91435b02",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969423_k7.json",
+    "sha256": "e9e9ddfeed0ccdd6b4637f06ae57c74f674035018def5fff2012eb6d1d976d72",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k0.json",
+    "sha256": "aab412354ac9edb9c35cd69a95b275c3c71d7766909354c4011c32b576853fd1",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k1.json",
+    "sha256": "e0a0115e5d17482d89c7b754b9a17720afb2f7d40cb6b6f061c5d0944c115481",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k2.json",
+    "sha256": "022371bf8d5b6af9335d3c4ebb0757fd93d3131767aef08c961c05290cdd2db7",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k3.json",
+    "sha256": "c3a559fc3de11045f831ffc736e03fa57ced57f939693e4d6c6576937933c73c",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k4.json",
+    "sha256": "3a44a294fbb0db8d717b982c42c51d77b7f3a850f2c9f19d7cba6c77cd220d61",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k5.json",
+    "sha256": "d8822a0ce4c4360e424dad34559f098c9a2be364b8c8f9629bb0ab08a8a270b5",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k6.json",
+    "sha256": "a5fdc71aec8c9eaf1778611eeef4c8ed81bc63b7075a8ba844da8a6a28144767",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969427_k7.json",
+    "sha256": "fba0707d35fa8fb51b07e84554ef601e48258175b39609f9788d8203ec8dd078",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k0.json",
+    "sha256": "8c228d710981d37be349ac075b832e7b24b95d29022c382381285d78c5f348c0",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k1.json",
+    "sha256": "5a9658911f2330c7c1985b0bf8619e4d506b652d9e70d51c25ce2085e7a3f7fe",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k2.json",
+    "sha256": "59f37625ece2939dee7d51a25cbedfdf8572e98001852bba5f7970a5e55c09b2",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k3.json",
+    "sha256": "d9b4ea4bacd5d03b2f543c14e30b12a553b97c71f82d93f054441f94afda61a5",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k4.json",
+    "sha256": "b6007622264ac81e622bbb06231396c2f9cc6e84271eec2b1307639be65b97ce",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k5.json",
+    "sha256": "07945e70e3739ea9592bef77d10704cf2fc1ece2c892918ee60eea2541687e10",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k6.json",
+    "sha256": "f04f9a8faaa3d69b9a1985682425136028ba9bc769aec864cca36c07d961c125",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969431_k7.json",
+    "sha256": "5d549e8284b229c5ab697fcfec88d309753ca812d9d1961dd919954cabf4decc",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k0.json",
+    "sha256": "312e0bd1ca795dcea29d47a6304dc9e8eea686722278a9190384febc2654326b",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k1.json",
+    "sha256": "85dad21f79e36c377d56ec05098b1ca2048d2c56c7f7e12ab6fdba66278b4f70",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k2.json",
+    "sha256": "a5ade3df46278760c3c90f64049f63355732432961cd32d503532c6958960ce5",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k3.json",
+    "sha256": "73a8e29f6e6b995867124469cef18189234eca142a8000736e4b2f852009ac01",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k4.json",
+    "sha256": "5d863d24fb1175529ad72cc7790da66da1e6b498b0575e70f944516b27df7b21",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k5.json",
+    "sha256": "8e799156bb41a41602864016d4ba9b76f103d3bb807599a71399bc70604c52c9",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k6.json",
+    "sha256": "36f9551d7be8209e91f45e8dd52053761b1a8fb87706ba6eeadcafecbb8129d1",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969435_k7.json",
+    "sha256": "964e26a52cb9ccfea642f61677a41b3fff5e7b7343bb7621578be2ba534c6b33",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k0.json",
+    "sha256": "23c01fe8e9e7cdddbf5f1d1579d8bd2581452f98059991e90b276770c830e101",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k1.json",
+    "sha256": "249d99702201258fc4f15fb17594a91f761052363bffe3abf1f3586b4ddaf771",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k2.json",
+    "sha256": "1b7ec8a9455565eaa963328c54ab1e2dfd1888c2836dbe345fccf5ed104c742e",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k3.json",
+    "sha256": "2d436b666926df61cf447f23d9666081c432d5b8ba8b8ee0fefed37f9036dc2a",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k4.json",
+    "sha256": "69e2c67d18c5c5d38095d34175762be08ac81e4e4eace946eb983adf7230ad74",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k5.json",
+    "sha256": "c7160cf6b1d6b963e5fb5893ebe04a64c67aec8b5d6ccab51b0eec3d942dce91",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k6.json",
+    "sha256": "447171689a10fc8a4acc9c1776c96f7243c512926ab8b51db4bb65761bf32450",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   },
+   {
+    "task": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800\\shard3\\w969439_k7.json",
+    "sha256": "c23d04b255b9b780faced0488263496ec8648e5c7e2a5b71c9f887d81dd13130",
+    "identity_sha256": "d3df0d0f37f1f7b3b99b2face48a25f45863441f4cce8644852b1317a3b142f8"
+   }
+  ]
+ },
+ "summaries": {
+  "development12": {
+   "worlds": [
+    969422
+   ],
+   "status": "DIAGNOSTIC_ONLY",
+   "comparisons": [
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 120,
+     "mean": 137.91755651047612,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 300,
+     "mean": 1237.8832508026394,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 600,
+     "mean": 5630.545019922509,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 120,
+     "mean": -0.24999999999999997,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "probability_fraction",
+     "candidate_rate": 0.15,
+     "baseline_rate": 0.5,
+     "real_rate": 0.2
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 300,
+     "mean": -0.35,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "probability_fraction",
+     "candidate_rate": 0.525,
+     "baseline_rate": 0.875,
+     "real_rate": 0.0
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 600,
+     "mean": 0.17500000000000004,
+     "low": null,
+     "high": null,
+     "uncertainty_available": false,
+     "units": "probability_fraction",
+     "candidate_rate": 0.525,
+     "baseline_rate": 0.9,
+     "real_rate": 0.8
+    }
+   ],
+   "simultaneous_family_size": 6,
+   "bootstrap_maxstat_critical": null,
+   "all_three_crps_point_improvements": false,
+   "upstream_rate300_point_closer": true,
+   "hdv60_position_error": {
+    "status": "MISSING_ENDPOINT_EVIDENCE",
+    "mean": null,
+    "low": null,
+    "high": null
+   },
+   "switching_eligibility": "NOT_ESTABLISHED"
+  },
+  "reserved8": {
+   "worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438
+   ],
+   "status": "DIAGNOSTIC_ONLY",
+   "comparisons": [
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 120,
+     "mean": -525.9655396128201,
+     "low": -680.7161106312162,
+     "high": -371.21496859442385,
+     "uncertainty_available": true,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 300,
+     "mean": -2760.630626009382,
+     "low": -3597.5082212801663,
+     "high": -1923.7530307385978,
+     "uncertainty_available": true,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "delay_crps_difference",
+     "horizon_s": 600,
+     "mean": -10079.22556769002,
+     "low": -11569.390753397747,
+     "high": -8589.060381982294,
+     "uncertainty_available": true,
+     "units": "veh-s",
+     "candidate_rate": null,
+     "baseline_rate": null,
+     "real_rate": null
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 120,
+     "mean": -0.017857142857142794,
+     "low": -0.025000000000000522,
+     "high": -0.010714285714285067,
+     "uncertainty_available": true,
+     "units": "probability_fraction",
+     "candidate_rate": 0.6571428571428571,
+     "baseline_rate": 0.6749999999999999,
+     "real_rate": 0.45714285714285713
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 300,
+     "mean": -0.03928571428571437,
+     "low": -0.06071428571428623,
+     "high": -0.01785714285714251,
+     "uncertainty_available": true,
+     "units": "probability_fraction",
+     "candidate_rate": 0.8892857142857142,
+     "baseline_rate": 0.8499999999999999,
+     "real_rate": 0.9142857142857143
+    },
+    {
+     "metric": "upstream_rate_distance_difference",
+     "horizon_s": 600,
+     "mean": 0.028571428571428692,
+     "low": 0.010714285714284351,
+     "high": 0.04642857142857303,
+     "uncertainty_available": true,
+     "units": "probability_fraction",
+     "candidate_rate": 0.8892857142857141,
+     "baseline_rate": 0.9178571428571428,
+     "real_rate": 0.9428571428571428
+    }
+   ],
+   "simultaneous_family_size": 6,
+   "bootstrap_maxstat_critical": 1.4106309277670608,
+   "all_three_crps_point_improvements": true,
+   "upstream_rate300_point_closer": true,
+   "hdv60_position_error": {
+    "status": "MISSING_ENDPOINT_EVIDENCE",
+    "mean": null,
+    "low": null,
+    "high": null
+   },
+   "switching_eligibility": "NOT_ESTABLISHED"
+  }
+ },
+ "bootstrap": 10000,
+ "seed": 20261031,
+ "stratified": "demand x penetration x split",
+ "uncertainty": "scored-world-only fixed-stratum bootstrap; singleton strata cannot give CIs; conditional on saved K8",
+ "qualification": "diagnostic; missing endpoints and sparse cells cannot establish switching eligibility"
+}

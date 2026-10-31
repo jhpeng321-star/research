@@ -1,4 +1,4 @@
-# WM-PHYS morning report — interim, 2026-11-01T06:32:33+08:00
+# WM-PHYS morning report — interim, 2026-11-01T06:42:24+08:00
 Physics candidates improve several point scores; adoption and calibrated action confidence remain unestablished.
 Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v4.
 
@@ -15,7 +15,7 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 ## Distributional evidence (per-variant available cases; not a cross-variant ranking)
 - WM2 baseline full20worlds/fivearms/K8; all candidates share registered969420..969439, H120/300/600.
 - Development12/reserved8 remain separate; incomplete ensembles never count as K8. Contrasts below reserved only.
-- A2:n=6, ΔCRPS120/300/600=-501/-2591/-9243veh-s; Δ300s rate-distance=-3.75pp.
+- A2:n=7, ΔCRPS120/300/600=-526/-2761/-10079veh-s; Δ300s rate-distance=-3.93pp.
 - B2:n=6, ΔCRPS120/300/600=-217/649/-1083veh-s; Δ300s rate-distance=-5.00pp.
 - C2:PENDING complete K8 evidence; 0 saved tasks; no efficacy inferred.
 - FULL-v3:n=7, ΔCRPS120/300/600=-353/-3063/-11838veh-s; Δ300s rate-distance=6.07pp.
@@ -49,4 +49,4 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - ~08:00 interim: PENDING; final engineering freeze09:30: PENDING.
 - Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
 - Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
-- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T063233+0800.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T064224+0800.
