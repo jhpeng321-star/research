@@ -172,4 +172,4 @@ def test_source_base_position_and_default_first_depart_lane():
     process._emit_due = lambda b: [0]
     process.insert(s)
     assert s['lane'][0, 0] == 1
-    assert s['s_m'][0, 0] == pytest.approx(process.entry_s[1] + 5. + .01, abs=.0002)
+    assert s['s_m'][0, 0] == pytest.approx(process.entry_s[1] + 5. + .1, abs=.0002)

@@ -52,8 +52,8 @@ Conventions/limits (documented gaps, no silent deviation):
   IDMM adaptation, ``patchSpeedBeforeLC`` dawdling, startup delay, stops and
   junction link speeds are not part of car-following parity (IDM defaults are
   no-ops for them; junctions/insertion policy belong to S-RB-MERGE).
-* ``emergencyDecel`` defaults to ``decel`` (SUMO vType default), which pins the
-  IDM's hard-braking floor to the comfortable deceleration exactly like SUMO.
+* Passenger ``emergencyDecel`` defaults to max(decel, 9 m/s²), independently
+  of apparentDecel (which defaults to decel). BASE.cpp:59-61.
 
 Pure tensor functions; differentiable in the inputs where natural; no RNG.
 """
@@ -66,8 +66,8 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor
 
-#: SUMO ``NUMERICAL_EPS`` (utils/common/StdDefs.h).
-NUMERICAL_EPS = 0.01
+#: SUMO ``NUMERICAL_EPS`` (config.h.cmake:236); SPEED_EPS is separately 0.01.
+NUMERICAL_EPS = 0.001
 #: SUMO vType ``carFollowModel`` parameter ``cf.idmStepping`` default (s).
 DEFAULT_CF_STEPPING_S = 0.25
 #: IDM ``delta`` exponent default (``SUMO_ATTR_CF_IDM_DELTA``).
@@ -95,7 +95,7 @@ class SumoIDMParams:
     the WM's driver ``v0`` (encoder-inferred or the population default) is that
     value.  ``vtype_max_speed`` caps acceleration like SUMO's ``maxNextSpeed``
     (``None`` = unbounded, i.e. the desired speed dominates as on this road).
-    ``emergency_decel`` ``None`` means "use decel" (the SUMO default).
+    ``emergency_decel`` None means passenger default max(decel, 9).
     """
 
     accel: float | Tensor
@@ -124,8 +124,11 @@ class SumoIDMParams:
                    else des_speed)
 
     def effective_emergency_decel(self):
-        """``emergency_decel`` resolved (None -> decel, the SUMO default)."""
-        return self.decel if self.emergency_decel is None else self.emergency_decel
+        """Passenger default, not apparentDecel's separate default of decel."""
+        if self.emergency_decel is not None:
+            return self.emergency_decel
+        return (self.decel.clamp_min(9.) if isinstance(self.decel, Tensor)
+                else max(9., float(self.decel)))
 
 
 def _pair(x: float | Tensor, like: Tensor) -> Tensor:
@@ -274,7 +277,7 @@ def stop_speed(v: Tensor, gap: Tensor, p: SumoIDMParams, *, dt_s: float,
     result = torch.where(gap < 0.01, torch.zeros_like(v),
                          sumo_idm_v(v, gap, torch.zeros_like(v), des, p, dt_s=dt_s,
                                     iterations=iterations, respect_min_gap=False))
-    standing = (v < NUMERICAL_EPS) & (result < NUMERICAL_EPS) & (gap > 0.0)
+    standing = (v < NUMERICAL_EPS) & (result < NUMERICAL_EPS) & (gap >= 0.01)
     if bool(standing.any()):
         decel = _pair(p.decel, like)
         headway = like.new_full((), float(dt_s if action_step_s is None
@@ -449,6 +452,9 @@ def sumo_idm_baseline_accel(kin: Tensor, present: Tensor, physics,
         lane_gap, _ = lane_neighbour(kin, present, lane, physics, ahead=True)
         end_gap = (float(physics.merge_zone_s1_m) - kin[..., 0]).clamp_min(MIN_GAP_M)
     obstacle = (lane == int(physics.merge_lane)) & (end_gap < lane_gap)
+    if getattr(physics, 'merge_model', 'legacy') == 'sumo':
+        # Merge owns stopSpeed. Do not add the dead-lane obstacle twice.
+        obstacle = torch.zeros_like(obstacle)
     if bool(getattr(physics, "merge_cal", False)):
         obstacle = obstacle & (end_gap <= float(physics.end_obstacle_range_m))
     if bool(obstacle.any()):

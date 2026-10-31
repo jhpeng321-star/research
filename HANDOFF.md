@@ -3,6 +3,14 @@
 Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
+- CF742922b6 integrated. Source reconciliations are explicit: public
+  config.h.cmake:236/239 gives NUMERICAL_EPS=.001/POSITION_EPS=.1; passenger
+  emergencyDecel is max(decel,9), recipe explicitly9. Missing leaders use SUMO's
+  1e6 free gap; SUMO merge alone owns ramp stopSpeed (no duplicate CF obstacle).
+- Full touched-module CPU gate: **159 PASS /33.34s**, including independent
+  source anchors T14-17/T19-20, near-stop T08, Euler position, lane/merge/entries,
+  hidden futures, legacy native/lane suites, encoder/no-correction audits.
+  Default-OFF two-model weights/forward/rollout remain bit-exact after CF merge.
 - FIT11d36f75 merged; completed artifacts preserved. C will use the frozen
   pooled_full_v5/idm_pooled.json motion-only point fit + Poisson arrivals, with
   source LC defaults. Fitted LC lost to its event-rate baseline and is NOT adopted.

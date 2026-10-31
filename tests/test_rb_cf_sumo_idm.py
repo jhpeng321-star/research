@@ -55,7 +55,7 @@ def _scalar_v(v0, gap_bumper, lead, des, a, b, t, s0, delta, ts, iters,
 
 
 def _scalar_step(v, gap_bumper, lead, lane_max, p, ts, iters):
-    emerg = float(p.decel) if p.emergency_decel is None else float(p.emergency_decel)
+    emerg = max(9., float(p.decel)) if p.emergency_decel is None else float(p.emergency_decel)
     v_safe = _scalar_v(v, gap_bumper, lead, lane_max, float(p.accel), float(p.decel),
                        float(p.headway_time), float(p.min_gap), float(p.delta),
                        ts, iters, True)
@@ -135,11 +135,11 @@ def test_sumo_idm_step_composition_anchors():
     assert v_next.item() == pytest.approx(18.9530131733, abs=5e-7)
     assert accel.item() == pytest.approx(-2.0939736533, abs=5e-7)
     # case 2: closing at 20 m/s on a stopped leader 10 m ahead with the SUMO
-    # default emergencyDecel == decel: the IDM demands 0.609375 but the
+    # explicit emergencyDecel == decel: the IDM demands 0.609375 but the
     # comfortable-decel floor binds (17.75 = 20 - 4.5*0.5): SUMO keeps 4.5 m/s^2
     # braking this step ("IDM may violate minGap on occasion").
     v_next, accel = sumo_idm_step(tensor([20.0], dtype=torch.float64), tensor([10.0], dtype=torch.float64), tensor([0.0], dtype=torch.float64),
-                                  tensor([DES], dtype=torch.float64), params(), dt_s=TS, iterations=2)
+                                  tensor([DES], dtype=torch.float64), params(emergency_decel=B), dt_s=TS, iterations=2)
     assert v_next.item() == pytest.approx(17.75, abs=1e-9)
     assert accel.item() == pytest.approx(-4.5, abs=1e-9)
     # case 3: emergencyDecel 9 allows braking down to v - 9*ts = 15.5 -> -9 m/s^2.
@@ -199,8 +199,7 @@ def torch_dtype():
 
 # --------------------------------------------------------------------- bounds
 def test_min_next_speed_emergency_slack_cap():
-    # decel_eff = max(decel, min(emergency, 1.5)): emergencyDecel defaults to
-    # decel, so a low decel only rises to 1.5 when emergencyDecel >= 1.5.
+    # decel_eff = max(decel, min(emergency, 1.5)): passenger default emergency=9.
     v = tensor([20.0], dtype=torch.float64)
     assert min_next_speed(v, params(), dt_s=TS).item() == pytest.approx(17.75)
     assert min_next_speed(v, params(decel=1.0, emergency_decel=9.0),
@@ -208,9 +207,9 @@ def test_min_next_speed_emergency_slack_cap():
     assert min_next_speed(v, params(decel=1.0, emergency_decel=1.2),
                           dt_s=TS).item() == pytest.approx(20.0 - 1.2 * TS)
     assert min_next_speed(v, params(decel=1.0), dt_s=TS).item() \
-        == pytest.approx(20.0 - 1.0 * TS)
+        == pytest.approx(20.0 - 1.5 * TS)
     assert min_next_speed_emergency(v, params(), dt_s=TS).item() \
-        == pytest.approx(17.75)
+        == pytest.approx(15.5)
     assert min_next_speed_emergency(v, params(emergency_decel=9.0),
                                     dt_s=TS).item() == pytest.approx(15.5)
 
@@ -225,12 +224,12 @@ def test_max_next_speed_caps_accel_and_vtype_max():
 # ------------------------------------------------------------------ stop speed
 def test_maximum_safe_stop_speed_euler_hand_derived():
     # gap 2.0, decel 4.5, headway 0.5 (= actionStepLength), TS 0.5:
-    # n = 1, h = 1.125, r = 0.865 -> x = 3.115 (exact stop at the obstacle).
+    # n = 1, h = 1.125, r = 0.874 -> x = 3.124 (NUMERICAL_EPS=.001).
     out = maximum_safe_stop_speed_euler(tensor([2.0], dtype=torch.float64), tensor([4.5], dtype=torch.float64), tensor([0.5], dtype=torch.float64),
                                         dt_s=TS)
-    assert out.item() == pytest.approx(3.115, abs=1e-9)
+    assert out.item() == pytest.approx(3.124, abs=1e-9)
     # gap below NUMERICAL_EPS is unreachable -> 0.
-    out = maximum_safe_stop_speed_euler(tensor([0.005], dtype=torch.float64), tensor([4.5], dtype=torch.float64), tensor([0.5], dtype=torch.float64),
+    out = maximum_safe_stop_speed_euler(tensor([0.0005], dtype=torch.float64), tensor([4.5], dtype=torch.float64), tensor([0.5], dtype=torch.float64),
                                         dt_s=TS)
     assert out.item() == 0.0
 
@@ -241,7 +240,7 @@ def test_stop_speed_anchors():
     out = stop_speed(tensor([0.0], dtype=torch.float64), tensor([8.0]), params(), dt_s=TS, iterations=2)
     assert out.item() == pytest.approx(1.2936153127, abs=5e-7)
     out = stop_speed(tensor([0.0], dtype=torch.float64), tensor([0.5], dtype=torch.float64), params(), dt_s=TS, iterations=2)
-    assert out.item() == pytest.approx(0.98, abs=1e-9)
+    assert out.item() == pytest.approx(0.998, abs=1e-9)
     out = stop_speed(tensor([0.0], dtype=torch.float64), tensor([0.005], dtype=torch.float64), params(), dt_s=TS, iterations=2)
     assert out.item() == 0.0
     # moving vehicle: plain _v without minGap, capped at gap/TS.

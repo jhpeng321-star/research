@@ -7,6 +7,7 @@ config = "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop
 
 [physics]
 cf_model = "sumo_idm"
+sumo_cf_emergency_decel_mps2 = 9.0
 merge_model = "sumo"
 lane_learnable = false
 merge_cal = false

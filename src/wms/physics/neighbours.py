@@ -45,6 +45,8 @@ def lane_neighbour(kin: Tensor, present: Tensor, query_lane: Tensor,
     Missing neighbours yield the free-road gap and the vehicle's own speed.
     """
     from .lane_chain import leader_rule_enabled
+    sumo_cf = getattr(physics, 'cf_model', 'legacy') == 'sumo_idm'
+    minimum_gap = 0.001 if sumo_cf else MIN_GAP_M  # SUMO NUMERICAL_EPS
     if not leader_rule_enabled():
         s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
         lane = lane_of(kin)
@@ -59,8 +61,9 @@ def lane_neighbour(kin: Tensor, present: Tensor, query_lane: Tensor,
         gap, index = gaps.min(dim=-1)
         has = torch.isfinite(gap)
         other_v = torch.gather(v, -1, index)
-        free = physics.free_road_gap_m if physics.open_road else _CLOSED_ROAD_FREE_GAP_M
-        return (torch.where(has, gap.clamp_min(MIN_GAP_M), torch.full_like(gap, free)),
+        free = (1.0e6 if sumo_cf else
+                physics.free_road_gap_m if physics.open_road else _CLOSED_ROAD_FREE_GAP_M)
+        return (torch.where(has, gap.clamp_min(minimum_gap), torch.full_like(gap, free)),
                 torch.where(has, other_v, v))
     # SUMO lane/link rule: chain coordinate, junction slots on neither side.
     lane, chain, junction_row = _sumo_link_geometry(kin)
@@ -77,8 +80,9 @@ def lane_neighbour(kin: Tensor, present: Tensor, query_lane: Tensor,
     gap, index = gaps.min(dim=-1)
     has = torch.isfinite(gap) & ~junction_row           # a junction ego has no lane
     other_v = torch.gather(v, -1, index)
-    free = physics.free_road_gap_m if physics.open_road else _CLOSED_ROAD_FREE_GAP_M
-    return (torch.where(has, gap.clamp_min(MIN_GAP_M), torch.full_like(gap, free)),
+    free = (1.0e6 if sumo_cf else
+            physics.free_road_gap_m if physics.open_road else _CLOSED_ROAD_FREE_GAP_M)
+    return (torch.where(has, gap.clamp_min(minimum_gap), torch.full_like(gap, free)),
             torch.where(has, other_v, v))
 
 

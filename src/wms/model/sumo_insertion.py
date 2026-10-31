@@ -6,8 +6,8 @@ import math
 
 from .entries import NOMINAL_LENGTH_M
 
-# SUMO stddefs POSITION_EPS; legacy entries.py's 0.1 is not source parity.
-POSITION_EPS = .01
+# SUMO config.h.cmake:239, distinct from SPEED_EPS=.01 and NUMERICAL_EPS=.001.
+POSITION_EPS = .1
 
 
 def follow_speed(speed, bumper_gap, leader_speed, params, dt):
