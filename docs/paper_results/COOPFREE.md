@@ -176,12 +176,24 @@ New HOLD physics: 455/455 complete tasks; 156 baselines; exact solo diagnostics 
 - HOLD-minus-MAPPO structural gap at120s: mean -8.235 vehicle-s (TRAIN windows, not learned gain).
 - HOLD-minus-MAPPO structural gap at300s: mean -24.527 vehicle-s (TRAIN windows, not learned gain).
 - HOLD-minus-MAPPO structural gap at600s: mean 480.085 vehicle-s (TRAIN windows, not learned gain).
+### Corrected learned policy
+### Paired dev u101 (24 worlds)
+Learned minus comparator; total team delay in vehicle-seconds (negative is better).
+95% CIs resample paired worlds; the fixed dev panel is not a final evaluation panel.
+- bandit J600: -330.547 [-1644.045, 936.339], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -5.312 [-49.355, 36.940]; hard_brake 2.500 [0.583, 4.354].
+- bandit J900: -447.972 [-2779.091, 1858.397], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -3.583 [-55.876, 48.439]; hard_brake 4.062 [0.875, 7.146].
+- mappo J600: -330.547 [-1644.045, 936.339], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -5.312 [-49.355, 36.940]; hard_brake 2.500 [0.583, 4.354].
+- mappo J900: -447.972 [-2779.091, 1858.397], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -3.583 [-55.876, 48.439]; hard_brake 4.062 [0.875, 7.146].
 ### OWNER02:21 learning self-check
 - Completed corrected fresh updates: [1]; next scheduled check u3.
 - Status: insufficient fresh updates for six-update trend.
 - TRAIN remaining: 240 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
 - **Updates3/6/9 are budget-blocked. Prospective owner phase/budget amendment required; no replay or automatic dispatch.**
 - DEV learned-minus-HOLD J600/J900: pending both complete paired panels; no marginal-CI subtraction.
-Budget: 1777200 precharged / 1773600 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+Budget: 1863600 precharged / 1778400 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->

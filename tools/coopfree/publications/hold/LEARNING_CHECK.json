@@ -10,7 +10,78 @@
   "status": "insufficient fresh updates for six-update trend",
   "trend": null,
   "recommended_phase_changes": [],
-  "dev_vs_mappo": null,
+  "dev_vs_mappo": {
+    "600_collisions": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0
+    },
+    "600_hard_brake": {
+      "ci95": [
+        0.5828125000000002,
+        4.354166666666667
+      ],
+      "mean": 2.5
+    },
+    "600_team_delay_vs": {
+      "ci95": [
+        -1644.0448965695257,
+        936.3390887877943
+      ],
+      "mean": -330.54728395152193
+    },
+    "600_teleports": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0
+    },
+    "600_ttc_below_3_vs": {
+      "ci95": [
+        -49.35520833333333,
+        36.94010416666668
+      ],
+      "mean": -5.3125
+    },
+    "900_collisions": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0
+    },
+    "900_hard_brake": {
+      "ci95": [
+        0.875,
+        7.145833333333333
+      ],
+      "mean": 4.0625
+    },
+    "900_team_delay_vs": {
+      "ci95": [
+        -2779.0905495780503,
+        1858.3966069017706
+      ],
+      "mean": -447.971834903904
+    },
+    "900_teleports": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0
+    },
+    "900_ttc_below_3_vs": {
+      "ci95": [
+        -55.87552083333333,
+        48.43854166666667
+      ],
+      "mean": -3.5833333333333335
+    }
+  },
   "dev_vs_hold": null,
   "interpretation": "TRAIN exploration effects are not DEV learned-policy improvements; slopes descriptive only",
   "latest": {
