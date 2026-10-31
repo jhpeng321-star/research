@@ -631,15 +631,15 @@ def test_failed_first_canary_never_expands_or_dispatches_second(tmp_path, ledger
 
 
 @pytest.mark.parametrize("cpus,load,pending,disk,memory,admitted", [
-    (64, 23., 0, 2, 4, True),   # projected load exactly 24
-    (64, 23.1, 0, 2, 4, False),
-    (8, 5., 0, 2, 4, True),    # projected load exactly cpus - 2
-    (8, 5., 1, 2, 4, False),   # an outstanding reservation consumes capacity
-    (64, 0., 0, 1.99, 4, False),
-    (64, 0., 0, 2, 3.99, False),
-    (2, 0., 0, 2, 4, False),
-    (None, 0., 0, 2, 4, False),
-    (64, float("nan"), 0, 2, 4, False),
+    (64, 23., 0, 2, 8, True),   # projected load exactly 24
+    (64, 23.1, 0, 2, 8, False),
+    (8, 5., 0, 2, 8, True),    # projected load exactly cpus - 2
+    (8, 5., 1, 2, 8, False),   # an outstanding reservation consumes capacity
+    (64, 0., 0, 1.99, 8, False),
+    (64, 0., 0, 2, 7.99, False),
+    (2, 0., 0, 2, 8, False),
+    (None, 0., 0, 2, 8, False),
+    (64, float("nan"), 0, 2, 8, False),
 ])
 def test_resource_admission_boundaries(cpus, load, pending, disk, memory, admitted, tmp_path,
                                       shared, monkeypatch):
