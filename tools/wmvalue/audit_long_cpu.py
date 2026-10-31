@@ -12,6 +12,7 @@ from .restart import prefix
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--out', required=True)
+    p.add_argument('--check-prefix', action='store_true')
     a = p.parse_args()
     from . import runtime as r
     begun = time.monotonic()
@@ -45,10 +46,16 @@ def main():
         assert np.all(np.asarray(w['J']) <= np.asarray(result['J'])+1e-9)
     assert result['windows']['90']['J'] == result['J']
     np.testing.assert_allclose(result['J'], np.array(result['road'])+np.array(result['source']), atol=1e-9)
+    if a.check_prefix:
+        for fi in (0, 3):
+            short = r.rollout(rt, batches, events, 300, fi, 'cpu', seconds=90)
+            longer = r.rollout(rt, batches, events, 300, fi, 'cpu', seconds=120)
+            assert short['windows'] == longer['windows'], 'truncation changed a bootstrap checkpoint'
     doc = dict(schema='wmvalue_full90_cpu_audit/1', verdict='PASS', synthetic_only=True,
         real_outcomes_opened=False, frozen_WM=True, device='cpu', steps=180,
         terminal_windows=[60, 90], all_five_arms=True, features_per_terminal=111,
         exact_90_endpoint=True, seconds=time.monotonic()-begun,
+        exact_prefix_parity_futures=[0, 3] if a.check_prefix else [],
         runtime_sha256=digest(safe(__file__).parent/'runtime.py'), results=result)
     with safe(a.out).open('x') as stream:
         json.dump(doc, stream, indent=1, allow_nan=False)

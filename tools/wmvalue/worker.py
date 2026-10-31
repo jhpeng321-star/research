@@ -23,7 +23,10 @@ def main():
     p.add_argument('--device', choices=('cpu', 'cuda'), required=True)
     p.add_argument('--out', required=True)
     p.add_argument('--seconds', type=int)  # FIT-only canary, never a reserved partial A
+    p.add_argument('--short', action='store_true')  # MAIN21:12; B/C only, never A
     a = p.parse_args()
+    if a.short and a.seconds is not None:
+        raise ValueError('short reserved execution and FIT canary are distinct')
     if a.seconds is not None:
         allowed_seed(a.seed, 'fit')
     else:
@@ -55,7 +58,8 @@ def main():
         batches.append(b)
         events.append(ev)
     rollout_start = time.monotonic()
-    result = r.rollout(rt, batches, events, a.t0, a.future, a.device, prefixes, columns, seconds=a.seconds)
+    seconds = 90 if a.short else a.seconds
+    result = r.rollout(rt, batches, events, a.t0, a.future, a.device, prefixes, columns, seconds=seconds)
     # Hash every imported model/adapter/controller source, never training data.
     sources = {}
     for name, module in sorted(sys.modules.copy().items()):
@@ -75,7 +79,7 @@ def main():
     sources['worker'] = digest(safe(__file__))
     sources['circles_model'] = digest(safe(rt['dependencies'][0].model_path))
     result = dict(schema='wmvalue_rollout/1', seed=a.seed, t0=a.t0, future=a.future,
-        start_time=a.t0, end_time=a.t0+(a.seconds if a.seconds is not None else 900-a.t0),
+        start_time=a.t0, end_time=a.t0+(seconds if seconds is not None else 900-a.t0),
         arms=list(ARMS), K=8, mix=True, device=a.device, pid=os.getpid(),
         total_seconds=time.monotonic()-begun, rollout_seconds=time.monotonic()-rollout_start,
         prefixes_sha256=digest(a.prefixes), gate_sha256=digest(a.gate),

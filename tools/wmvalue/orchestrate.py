@@ -79,9 +79,9 @@ def fetch(host, remote, local):
                     host+':'+remote, str(local)], check=True, timeout=120)
 
 
-def run_task(root, tag, task, host, device, gate, reservation_pid=None):
+def run_task(root, tag, task, host, device, gate, reservation_pid=None, short=False):
     key = task_key(task)
-    remote = '/root/wmvalue20261031/cells_v1/'+key+'.json'
+    remote = '/root/wmvalue20261031/'+('short_cells_v1' if short else 'cells_v1')+'/'+key+'.json'
     claim_path = root/'claims'/(key+'.json')
     with LOCK:
         if (root/'tasks'/(key+'.json')).exists():
@@ -103,7 +103,9 @@ def run_task(root, tag, task, host, device, gate, reservation_pid=None):
     args = [module, '--prefixes', '/root/wmvalue20261031/reserved_prefix_v1.zip',
             '--gate', '/root/wmvalue20261031/cpu_audit_v3.json',
             '--seed', str(task[0]), '--t0', str(task[1]), '--future', str(task[2]),
-            '--device', device, '--out', remote]
+             '--device', device, '--out', remote]
+    if short:
+        args.append('--short')
     code = ("import sys,runpy; sys.path[:0]=["+repr('/root/wmvalue20261031/'+tag)+','+
             repr('/root/autodl-tmp/c4/speedhead20261030/pythondeps')+
             ']; sys.argv='+repr(args)+"; runpy.run_module('tools.wmvalue.worker',run_name='__main__')")
@@ -143,7 +145,8 @@ def run_task(root, tag, task, host, device, gate, reservation_pid=None):
     target = root/'tasks'/(key+'.json')
     fetch(host, remote, target)
     d = json.loads(target.read_text())
-    assert (d['seed'], d['t0'], d['future']) == task and d['end_time'] == 900
+    assert (d['seed'], d['t0'], d['future']) == task
+    assert d['end_time'] == (task[1]+90 if short else 900)
     assert d['gate_sha256'] == gate and set(d['results']['windows']) == {'60', '90'}
     save_new(root/'claims'/(key+'.complete.json'), dict(sha256=digest(target),
         host=host, seconds=time.monotonic()-begun, device=device))

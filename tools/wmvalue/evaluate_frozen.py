@@ -13,7 +13,7 @@ FROZEN_SHA = 'ef3e7bced5737c921a65596c566c865152990874be1d9901b8bbb6fb53735d8b'
 WM_SHA = 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
 
 
-def predictions(tasks, data, models):
+def predictions(tasks, data, models, short_only=False, allowed_workers=None):
     expected = {(s, t, f) for s in range(969432, 969440) for t in TIMES for f in range(8)}
     if set(tasks) != expected:
         raise ValueError('require all 320 immutable K8 five-arm tasks')
@@ -29,16 +29,21 @@ def predictions(tasks, data, models):
     order = sorted(tasks)
     for key in order:
         d = tasks[key]
+        endpoints = (key[1]+90, 900) if short_only else (900,)
         if ((d['seed'], d['t0'], d['future']) != key or d['start_time'] != key[1]
-                or d['end_time'] != 900 or d['arms'] != list(ARMS) or d['K'] != 8 or not d['mix']
+                or d['end_time'] not in endpoints or d['arms'] != list(ARMS) or d['K'] != 8 or not d['mix']
                 or d['real_outcomes_opened'] or d['wm'][0]['checkpoint_sha256'] != WM_SHA):
             raise ValueError('task identity/binding/clock mismatch')
+        sources = dict(d['source_sha256'])
+        if allowed_workers is not None:
+            if sources.pop('worker', None) not in allowed_workers:
+                raise ValueError('unregistered worker source')
         if source_ref is None:
-            source_ref = d['source_sha256']
-        elif d['source_sha256'] != source_ref:
+            source_ref = sources
+        elif sources != source_ref:
             raise ValueError('runtime sources differ across tasks/backends')
         r = d['results']
-        if r['steps'] != 2*(900-key[1]) or set(r['windows']) != {'60', '90'}:
+        if r['steps'] != 2*(d['end_time']-key[1]) or set(r['windows']) != {'60', '90'}:
             raise ValueError('missing long or bootstrap clocks')
         long_j.append(finite(r['J'], (5,)))
         for h in (60, 90):
@@ -61,9 +66,12 @@ def predictions(tasks, data, models):
             indices = [indexes[s, t, f] for f in range(8)]
             for ai, arm in enumerate(ARMS):
                 i = joined[s, t, arm]
-                rows.append(dict(seed=s, t0=t, arm=arm, real=float(data['y'][i]),
-                    A=float(long[indices, ai].mean()), B=float(short[indices, 0, ai].mean()),
-                    C=float(short[indices, 1, ai].mean()), D=float(direct[i]), E=models['E'][arm, t]))
+                row = dict(seed=s, t0=t, arm=arm, real=float(data['y'][i]),
+                    B=float(short[indices, 0, ai].mean()), C=float(short[indices, 1, ai].mean()),
+                    D=float(direct[i]), E=models['E'][arm, t])
+                if not short_only:
+                    row['A'] = float(long[indices, ai].mean())
+                rows.append(row)
     return rows
 
 

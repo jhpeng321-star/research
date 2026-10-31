@@ -74,3 +74,13 @@ Run `python -B -m unittest tools.wmvalue.test_fit_causal` for export split guard
 `python -B -m tools.wmvalue.verify_receipts` checks the existing model's hash and
 serialization roundtrip, frozen sources, both complete exports, and report length
 without fitting or scoring reserved worlds. `amended_status.json` is current.
+# MAIN21:12 recovery
+
+The active replacement execution is `short_dispatch` (launched through
+`launch --short --original ... --prefix-gate ...`). It first harvests the
+original long dispatch without repeating live tasks, then executes only missing
+90s prefixes using unchanged full-long stochastic plans. `finalize_short`
+evaluates the complete B/C/D/E necessary condition once; a failed necessary
+condition is the registered overall FAIL, otherwise A must be completed.
+See `evidence/resume_2112.md` and `evidence/short_execution.md` for ownership,
+CPU parity tests and the immutable snapshot. Preserve both dispatch roots.

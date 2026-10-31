@@ -10,6 +10,7 @@ def main():
     p.add_argument('host', choices=('gpuR', 'gpuA', 'cpuQ'))
     p.add_argument('archive')
     p.add_argument('tag')
+    p.add_argument('--short-cells', action='store_true')
     a = p.parse_args()
     archive = safe(a.archive)
     if not a.tag.replace('_', '').isalnum():
@@ -30,6 +31,9 @@ archive=Path({target!r})
 assert hashlib.sha256(archive.read_bytes()).hexdigest()=={digest(archive)!r}
 root=Path({root!r})
 root.mkdir(exist_ok=True)
+if {a.short_cells!r}:
+    assert root.is_dir()
+    (root/'short_cells_v1').mkdir(exist_ok=True)
 dest=root/{a.tag!r}
 assert not dest.exists(), 'existing snapshot: inspect, never overwrite'
 dest.mkdir()
