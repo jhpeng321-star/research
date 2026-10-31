@@ -16,7 +16,8 @@ SHARED = Path('E:/agent-work/rb-shared/evalclaims')
 EVAL = Path('E:/agent-work/c4-rb-eval/tools/rbeval')
 HANDOFFS = [Path(f'E:/agent-work/c4-rb-{name}/HANDOFF.md') for name in ('int', 'eval')]
 STATE = WORK/'runs/rbruna'
-DEADLINE = datetime.fromisoformat('2026-11-01T07:00:00+08:00').timestamp()
+DEADLINE = datetime.fromisoformat('2026-11-01T11:30:00+08:00').timestamp()
+FREEZE = datetime.fromisoformat('2026-11-01T09:30:00+08:00').timestamp()
 SSH = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
        '-o', 'ControlMaster=no', '-o', 'ControlPath=none', 'gpuA']
 FILES = ('run_wm.py', 'core.py', 'score.py', 'references.json', 'real_observables.json')
@@ -178,7 +179,7 @@ def tick():
     stamp = datetime.now().astimezone().isoformat()
     save_new(STATE/f'POLL_{time.time_ns()}.json', dict(time=stamp, handoffs=texts))
     collect()
-    if time.time() >= DEADLINE:
+    if time.time() >= FREEZE:
         return
     candidates = list(dict.fromkeys(p for text in texts.values() for p in discover(text)))
     print(stamp, 'READY specs:', candidates, flush=True)
@@ -203,6 +204,7 @@ def tick():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--once', action='store_true')
+    parser.add_argument('--continuation-of', type=int)
     args = parser.parse_args()
     assert STATE.parent.is_dir() and SHARED.is_dir()
     STATE.mkdir(exist_ok=True)
@@ -214,7 +216,9 @@ def main():
     lock.seek(0)
     msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
     save_new(STATE/f'WATCH_{os.getpid()}.json', dict(pid=os.getpid(),
-        started=datetime.now().astimezone().isoformat(), deadline=DEADLINE, poll_seconds=600))
+        started=datetime.now().astimezone().isoformat(), deadline=DEADLINE,
+        freeze=FREEZE, poll_seconds=600, continuation_of=args.continuation_of,
+        authority='owner02:08 / INT_NOON_SCHEDULE_REQUEST.md / registration5736'))
     while True:
         begin = time.monotonic()
         try:

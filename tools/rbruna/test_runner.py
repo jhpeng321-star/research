@@ -10,10 +10,82 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch, Mock
 
-from tools.rbruna import remote, watch
+from tools.rbruna import remote, watch, continue_noon
 
 
 class RunnerTests(unittest.TestCase):
+    def test_freeze_collects_existing_results_but_never_claims_or_dispatches(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch.object(watch, 'STATE', Path(tmp)), \
+                patch.object(watch, 'HANDOFFS', []), \
+                patch.object(watch.time, 'time', return_value=watch.FREEZE), \
+                patch.object(watch, 'collect') as collect, \
+                patch.object(watch, 'dispatch') as dispatch:
+            watch.tick()
+            collect.assert_called_once()
+            dispatch.assert_not_called()
+        self.assertEqual(watch.DEADLINE, remote.DEADLINE)
+        self.assertEqual(watch.FREEZE, remote.FREEZE)
+        self.assertLess(remote.FREEZE, remote.DEADLINE)
+
+    def test_noon_transfer_rejects_dead_or_reused_supervisor_without_signals(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            expected = dict(pid=123, boot_id='original', start_ticks='1')
+            (root/'DISPATCH.json').write_text(json.dumps(expected))
+            with patch.object(continue_noon, 'living', return_value=False), \
+                    patch.object(continue_noon.os, 'kill', create=True) as kill:
+                with self.assertRaisesRegex(AssertionError, 'no failed-job replay'):
+                    continue_noon.transfer(root, expected)
+                kill.assert_not_called()
+
+    def test_noon_transfer_rejects_foreign_worker_before_any_signal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            expected = dict(pid=123, boot_id='original', start_ticks='1')
+            (root/'DISPATCH.json').write_text(json.dumps(expected))
+            (root/'WORKERS.json').write_text(json.dumps(dict(workers=[
+                dict(pid=i, argv=['/peer/shard']) for i in (1, 2, 3)])))
+            with patch.object(continue_noon, 'living', return_value=True), \
+                    patch.object(continue_noon.os, 'kill', create=True) as kill:
+                with self.assertRaises(AssertionError):
+                    continue_noon.transfer(root, expected)
+                kill.assert_not_called()
+
+    def test_noon_gpu_guard_excludes_peer_and_reused_pid(self):
+        workers = [dict(pid=1), dict(pid=2), dict(pid=3)]
+        with patch.object(continue_noon, 'living', side_effect=lambda r: r['pid'] != 3), \
+                patch.object(continue_noon.subprocess, 'check_output', return_value='1, 900\n2, 800\n3, 5000\n999, 14000\n'):
+            self.assertEqual(continue_noon.own_usage(workers), 1700)
+
+    def test_noon_transfer_changes_only_exact_parent_preserving_workers_and_receipts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            expected = dict(pid=123, boot_id='original', start_ticks='1')
+            workers = [dict(pid=i, argv=[str(root/f'shard{j}')])
+                       for j, i in enumerate((1, 2, 3))]
+            original = json.dumps(expected)
+            (root/'DISPATCH.json').write_text(original)
+            (root/'WORKERS.json').write_text(json.dumps(dict(workers=workers)))
+            stopped = set()
+            fake_lock = SimpleNamespace(LOCK_EX=2, LOCK_NB=4, flock=Mock())
+            with patch.object(continue_noon, 'living', side_effect=lambda r: r['pid'] not in stopped), \
+                    patch.object(continue_noon.os, 'kill', create=True,
+                                 side_effect=lambda pid, sig: stopped.add(pid)) as kill, \
+                    patch.object(Path, 'read_bytes', return_value=(str(root/'code/remote.py')+'\0supervise\0').encode()), \
+                    patch.object(continue_noon, 'snapshot', return_value={'saved': 'hash'}), \
+                    patch.object(continue_noon, 'verify_snapshot') as verify, \
+                    patch.object(remote, 'incarnation', return_value=dict(pid=987)), \
+                    patch.dict(sys.modules, fcntl=fake_lock):
+                lock, preserved, hashes = continue_noon.transfer(root, expected)
+                lock.close()
+                kill.assert_called_once_with(123, continue_noon.signal.SIGTERM)
+                self.assertEqual(preserved, workers)
+                self.assertEqual(hashes, {'saved': 'hash'})
+                verify.assert_called_once_with(hashes)
+                self.assertEqual((root/'DISPATCH.json').read_text(), original)
+                self.assertTrue((root/'NOON_HANDOVER_ACCEPTED.json').exists())
+
     def test_candidate_preserves_int_variant_and_registered_future_builder(self):
         calls = []
         def builder():

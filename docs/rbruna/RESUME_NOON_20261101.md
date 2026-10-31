@@ -35,3 +35,18 @@ markers. New variants use the noon supervision deadline. Interim scores use
 only complete K8 ensembles and the existing scorer, with sparse evidence caveats.
 
 Execution/verification receipts will be appended after implementation.
+
+## Implementation verification
+
+- `continue_noon.py`: original-dispatch/worker incarnation checks, parent-only
+  transfer, exclusive lock, preserved-artifact hashes,18500MiB own guard,
+  complete-K8-only04/08 frozen scorer,160-task full scorer and11:30 hard stop.
+  It contains no inference launch path. `deploy_noon.py` stages immutable helper
+  copies and refuses a second dispatch or a terminal original candidate.
+- New watcher admits before09:30 and polls/collects through11:30. New candidate
+  remote supervisors retain the same3x5GiB budget with the11:30 deadline.
+- `py -3.13 -B -m unittest tools.rbruna.test_runner -v`: **11 PASS /0.233s**.
+  Added checks cover exact-parent-only transfer, unchanged dispatch/workers,
+  dead/reused/foreign-PID refusal, peer exclusion from GPU accounting and
+  post-freeze result collection without admission. Existing claim/concurrency,
+  READY ordering,160-task hashes, builder binding and reused-PID tests pass.

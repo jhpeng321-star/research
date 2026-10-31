@@ -10,7 +10,8 @@ import subprocess
 import sys
 import time
 
-DEADLINE = 1793487600  # 2026-11-01 07:00 +08:00
+DEADLINE = 1793503800  # 2026-11-01 11:30 +08:00, owner02:08 continuation
+FREEZE = 1793496600  # 2026-11-01 09:30 +08:00
 BASE = Path('/root/rbeval20261031/runa')
 BAD = ('holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1',
        'sealed', 'hetdata_truth', 'vehicle_params', 'driver_params', 'assignment')
@@ -50,7 +51,7 @@ def gpu(field):
 
 
 def preflight(spec):
-    assert time.time() < DEADLINE, 'admission closed at07:00'
+    assert time.time() < FREEZE, 'candidate admission frozen at09:30'
     assert spec['host'] == 'gpuA'
     if spec['variant'].upper().startswith('WM-PHYS'):
         assert spec.get('recipe_variant') in ('A', 'B', 'C'), 'publish the INT recipe variant'
@@ -170,7 +171,7 @@ def supervise(spec, root):
                        if row.strip() and int(row.split(',')[0]) in owned)
             peak = max(peak, used)
             assert used < 18500, f'own GPU guard: {used}MiB'
-            assert time.time() < DEADLINE, '07:00 deadline'
+            assert time.time() < DEADLINE, '11:30 evaluation deadline'
             if all(p.poll() is not None for p, _ in children):
                 assert all(p.returncode == 0 for p, _ in children), 'worker failed; no retry'
                 assert completed(root), 'incomplete panel'
