@@ -2,6 +2,23 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Latest publication — 05:05 +08 saved-output refresh
+
+- Start at `docs/paper_results/wmdecide/INTERIM_0505.md`. Portable sections:
+  `available_0505/INDEX.md` (WM2 full20; FULL-v1/A2 six worlds; FULL-v3 three)
+  and `matched3_0505/INDEX.md` (all four EXACT969432/433/434).
+- Physics variants improve absolute-delay CRPS vs WM2 at120/300/600s on the
+  common3-world pilot, but all worsen300s all-pair preference Brier. Absolute
+  interval coverage remains low; confidence is not qualified by improved means.
+- FULL-v3 selected forecast93.1/93.1/98.8% vs observed strict wins5/9,5/9,9/10.
+  Cohorts vary by model; these are original-state diagnostic calls, not policy wins.
+- B2:16 saved tasks,0 complete K8 worlds; explicit blocked report retained.
+  C2: no saved output JSON yet. No inference/dispatch/retry/process action.
+- Hash-bound snapshots and raw reports preserved under `E:/Temp/opencode/`;
+  exact paths, portable source manifests and analysis limits are in the interim.
+  Owner00:44 extension remains in force; newer complete outputs can be published
+  to NEW directories with the snapshot→credibility→publish commands.
+
 ## Continuation — 05:02 +08
 
 - Resume receipt: `docs/paper_results/wmdecide/RESUME_0502.md`; prior commits,
