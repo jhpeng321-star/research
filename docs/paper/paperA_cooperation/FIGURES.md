@@ -45,7 +45,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 - **Source:** `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`; `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`; `E:/agent-work/c4-papera/baselines/circles/provenance.json`.
 - **Generating command:** no inference/reanalysis. The CSV was transcribed from the cited designs with `apply_patch`; typeset its selected fields in IEEEtran. [[PENDING: final table-rendering command with manuscript source / owner]].
 - **Columns:** controller/version; allowed observations; action and lane ownership; disabled-member action; group/context semantics; parity/coverage status. Keep outcome magnitudes in F2, not T1.
-- **Remaining:** [[PENDING: WM-trained arm and corrected oracle arm hashes, live observation binding, refusal/abort counts and source freeze / MAIN WM policy producer, S-COOPMEASURE, S-SUMOCF]]. Current primary audit producer scope is MAPPO/wall plus delivered oracle policy; PI/CIRCLES/CTRL0 are optional/history.
+- **Remaining:** corrected backup checkpoint hashes are delivered in SUMOCF_RUN.md, but its audit migration is not. [[PENDING: WM-trained arm, audit observation binding and refusal/abort counts / MAIN WM policy producer, S-COOPMEASURE]]. Current producer scope is MAPPO/wall plus reserved oracle policy; PI/CIRCLES/CTRL0 are optional/history. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:81-88. -->
 
 ## F2 — primary speed-only existing-controller audit
 
@@ -68,8 +68,8 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F3V — decisive offline WM+value test (primary prerequisite)
 
 - **Purpose:** test whether a real-trained tail improves paired long-outcome prediction beyond full WM and no-WM alternatives.
-- **Status: BLOCKED — delivered WMVALUE INCOMPLETE before fitting.** All method/horizon metrics and CIs are NA. Record the source/label telemetry blocker; no performance plot can be generated. [[PENDING: permitted data recovery/amendment and decisive predictions/export / S-WMVALUE, MAIN]]. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md. -->
-- **Delivered source:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md` (INCOMPLETE; no numerical performance export); design in `WMVALUE_DESIGN.md` in the same directory. A future admissible test needs its own hash-bound CSV/receipt.
+- **Status: RUNNING — causal reconstruction, real fit and adapter gates complete.** All predictive metrics/CIs remain NA pending the complete once-only test; no performance bars are eligible. [[PENDING: complete A–E predictions/export and frozen verdict / S-WMVALUE existing finalizer]]. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md. -->
+- **Delivered source:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md` (RUNNING); amended `WMVALUE_DESIGN.md` in the same directory. Frozen values and reserved label checks are execution receipts, not numerical prediction results. Use the eventual hash-bound complete CSV/receipt.
 - **Layout:** full WM, WM60+V, WM90+V, command-aware no-WM V and FIT-only arm/time means; aligned sign agreement, MAE and ranking, plus paired sign-improvement/MAE-reduction CIs and each gate result. Both short horizons retained. These horizon labels are from the frozen design. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md:40-71. -->
 - **Generating command:** [[PENDING: producer's actual schema-bound analysis/export command and package renderer / S-WMVALUE, S-PAPERA]]. This task will not train V or run model rollouts.
 - **Caption requirements:** reserved TRAIN worlds, world-cluster uncertainty, same pair/time rows, real fleet+source cost endpoint, sensor/queue admissibility, recorded arm-specific continuation rather than a same-state policy intervention. Report every baseline; offline PASS does not establish C_G or learned gain.
@@ -78,11 +78,20 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F3 — WM-primary policy interaction and traffic efficacy; oracle backup/reference
 
 - **Purpose:** separate “C_G rises” from “beats MAPPO,” with development selection visibly labeled.
-- **Status: PENDING.** [[PENDING: registered WM-policy checkpoint/history, exact paired C_G and efficacy; corrected oracle backup / MAIN WM policy producer, S-SUMOCF, S-COOPMEASURE, S-COOPEVAL]]. No completed learner outcome for either route.
+- **Status: PENDING for WM-policy and full native-release audit; backup completed unsuccessfully (F3B).** [[PENDING: registered WM-policy checkpoint/history, exact paired C_G and efficacy / MAIN WM policy producer, S-COOPMEASURE, S-COOPEVAL]]. Backup DEV outcomes cannot fill WM-policy rows. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:3-46. -->
 - **Sources expected:** WMVALUE verdict, separate WM policy receipts, corrected S-SUMOCF receipts and S-COOPEVAL/audit exports. Distinguish WM-imagined group credit, real oracle sampled-window credit, deployed-mean dev pair diagnostics, and native-release audit C_G.
-- **Layout:** WM-trained versus MAPPO (primary); oracle-trained versus MAPPO (backup/reference) on matching worlds/contracts; absolute D_G/ΣD_i with C_G and paired uncertainty; traffic cost/safety and complete candidate history against real/charged budget. Add a gain-retention ratio only with an established positive, resolved oracle denominator. A finite trained oracle is not a theoretical upper bound. Do not use adaptive training means as a matched-panel improvement curve.
+- **Layout:** WM-trained versus MAPPO (primary); backup versus MAPPO on matching contracts; group/solo/interaction and paired uncertainty; cost/safety and full candidate history. Gain-retention ratio is **NOT ESTIMABLE** at this cut because no beneficial backup denominator is established. Do not draw a ratio panel or use adaptive training means as a deployed improvement curve. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:3-40. -->
 - **Generating command:** [[PENDING: schema-bound producer invocation and package renderer after actual receipts / S-COOPEVAL, S-PAPERA]]. The existing `tools/coopeval/cli.py` is a producer entry point, not a completed export receipt.
 - **Contract gate:** distinguish WMVALUE fixed-end remaining costs from oracle sampled-start credit and control-start dev horizons. The earlier evaluation loader/budget still needs reconciliation, and the WM arm has no evaluation binding yet. [[PENDING: WM/oracle harness and clock reconciliation / S-COOPEVAL, MAIN]].
+
+## F3B — completed SUMO backup: no primary-horizon win
+
+- **Purpose:** preserve every declared evaluated checkpoint and the horizon-ranking reversal, rather than leave the stopped backup as pending.
+- **Status: DATA READY; renderer/export verification is the next package step.** Frozen final report in `source_refresh.json`, key `sumocf_run`; full source `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md`, final DEV table and cooperation section.
+- **Generating command:** `python -B docs/paper/paperA_cooperation/build_night_figures.py`; validate with the same command plus `--check`. This renderer transcribes published summary cells into a source-located CSV; it computes no new CIs or scientific predictions.
+- **Layout:** paired learned-minus-MAPPO J600 and J900, checkpoint categories, zero reference and copied source CIs; a separate small C_G panel with its much smaller scale and eligible/missing counts. No interpolation between checks; no clipping away adverse costs or pooling credit definitions.
+- **Caption claim:** “Fixed **24-world** development panel, **u3/u7/u12 J600 +508.3/+857.9/+548.5 veh-s**, versus **J900 −633.4/−465.0/−584.5**. Source **95% world-bootstrap CIs**, **2000 draws/seed 0**: middle J600 adverse, all other displayed cost intervals include zero. Sparse deployed-mean pair C_G **−0.002589/+0.001270/0 veh-s**, **2/2/3** eligible worlds and **1/1/0** missing groups, does not show useful cooperation. This diagnostic uses MAPPO-mean background/learned continuation, not native-release audit. Owner stopped training; later checkpoints are preserved but untested on DEV.” <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:3-46. -->
+- **Placement:** V-B compact negative-result panel; full backing data in artifact. It is not an oracle upper-bound success.
 
 ## F3H — historical imagined-policy failure versus MAPPO
 
@@ -103,19 +112,33 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 - **Important:** this scores arm-minus-native effects, not full B/G/ONLY C_G surrogate accuracy or deployment latency. Native-lane replay and synthetic entrant-feedback qualifications remain in main text.
 - **Placement:** V-C; combine into a compact full-width figure after checking rendered label sizes.
 
+## F4N — night falsifiers: calibration and queue/service model
+
+- **Purpose:** make the failed long-tail remedies visible without combining different panels into one horizon qualification.
+- **Status: DATA READY; renderer/export verification is the next package step.** Sources in `source_refresh.json`, `wmcalib_report` and `wmqueue_report`; original `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md` and `E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md`.
+- **Generating command:** `python -B docs/paper/paperA_cooperation/build_night_figures.py`; validate with `--check`. Source-table cell export only, no new statistics.
+- **Layout:** separate categorical MAE panels: raw WM2/arm-mean/selected calibrator in grouped CV; queue/state-only/arm-mean on the complete reserved-world panel. No invented MAE whiskers. Include failed qualification labels, not a success badge for the best CV point.
+- **Caption claim:** “Grouped-CV raw WM2 versus no-WM arm-mean MAE at **120/300/600 s** is **263/1719/6013** versus **185/999/3298 veh-s**. Selected calibrators fail the frozen SPEEDHEAD gate at every horizon: NOT USABLE. Separate queue prototype on **eight reserved TRAIN worlds/48 contrasts per horizon** has MAE **276/1362/5296** versus state-only **239/932/3642 veh-s**: KILL. These point estimates have different panels and are not a common model curve or C_G-fidelity test.” <!-- Sources: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:14-50; E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md:12-32. -->
+- **Scope:** raw WM is not worse on every transfer panel; queue comparison to raw WM has fewer complete worlds and is omitted here rather than mixed. Tiny-pulse floor remains a scoped discussion result, not a blanket irreducible-noise curve.
+
 ## F5 — observable cooperative behavior examples
 
 - **Purpose:** connect measured interaction with an interpretable gap/yield/cross-lane-hold process.
-- **Status: DESCRIPTIVE COUNTS DELIVERED; valid paired positive-cooperation exemplar PENDING.** [[PENDING: artifact-valid paired release/mean-reference trace examples, coverage and censoring / S-COOPBEHAV, corrected trace producer]]. Original probe positive-credit discovery is not eligible because its branch costs are invalidated.
+- **Status: CORRECTED PAIRED REPORTS DELIVERED; beneficial deployed exemplar NOT ESTABLISHED.** Corrected u3 DEV and u15 sampled TRAIN reports now exist. [[PENDING: independently replicated beneficial deployed WM-policy example / MAIN WM policy producer, S-COOPBEHAV]]. Original probe positive-credit discovery remains invalidated. <!-- Source: E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md:165-236. -->
 - **Source expected:** S-COOPBEHAV exports from declared SUMOCF/audit traces; plan in `E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md`.
 - **Generating command:** [[PENDING: producer's final exact trace-to-figure command / S-COOPBEHAV]].
-- **Caption requirements:** label outcome-selected exploratory exemplars; fixed group/clock; issued commands versus realized acceleration; observed nearby ramp vehicle; no hidden labels. Whole-controller WMDATA/WMDATA2 rates have reported exposure and are descriptive, without member-level causal isolation. Original probe clusters cannot establish beneficial C_G after the artifact verdict. <!-- Sources: E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md:113-198; E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md:41-53. -->
+- **Caption requirements:** outcome-selected TRAIN exemplars are exploratory, not deployed-policy discoveries. Keep fixed group/clock, issued-versus-realized actions, exposure/censoring and native/mean-reference semantics. u3 has no paired-supported mechanism; u15 contains supported events but even its largest positive-C_G record has negative D_G. Original-probe clusters stay withdrawn. Whole-controller rates do not isolate members. <!-- Sources: E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md:119-236; E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md:41-53. -->
 - **Placement:** one compact exemplar inset only if a valid paired trace is delivered; otherwise artifact pending, never a fabricated time-space plot.
 
 ## T2 — physical outcomes and actual budget
 
 - **Purpose:** expose safety/fairness/throughput and cost of WM/value acquisition/training, oracle reference and exact verification.
-- **Status: PENDING for new policies; baseline-only receipt delivered.** [[PENDING: full paired WM/oracle physical vector and actual/charged lineage including real value labels, warm start, prefixes, canaries and failed branches / S-COOPEVAL, S-WMVALUE, MAIN WM policy producer, S-SUMOCF, S-COOPMEASURE]]. Completed DEV baseline does not fill learned-arm rows. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md, Completed fixed DEV baseline. -->
+- **Status: BACKUP SAFETY/BUDGET DELIVERED; WM-policy and full fairness/service vector PENDING.** Backup TRAIN **3,194,716 actual / 3,205,151 charged sim-s**, DEV **184,049 actual=charged**; no DEV collisions/teleports, paired TTC intervals include zero. Keep invalidated work, prefixes and final drain in totals. [[PENDING: WM-policy physical outcomes, full service/fairness vector and total warm-start/value/data lineage / S-COOPEVAL, S-WMVALUE, MAIN WM policy producer, owner integrator]]. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:48-88. -->
 - **Source expected:** complete producer reports plus durable accounting summaries. Allocation is not consumption; screen-only no-step costs are not new SUMO panel measurements.
 - **Generating command:** [[PENDING: schema-bound export and final IEEEtran table source / S-COOPEVAL, owner]].
 - **Main-text minimum:** collisions/teleports/dropped steps, TTC/braking and worst-group/service effects alongside efficiency; incident zeros are not safety equivalence. Full components/cells remain in the artifact.
+
+## Paper B figure routing
+
+- Existing winner-by-condition PNG/PDF and CSVs: `E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_winner_by_condition.{png,pdf}`, `recorded_world_winners.csv`, `recorded_cell_winshares.csv`; command `python -m tools.c1switch.winners` in its worktree. Completed recorded/fresh headroom is descriptive, not switching efficacy; keep this figure in Paper B. <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:15-19,31-42. -->
+- Recovered C1GAP wall CIs and genuine-history PI results belong to the scoped Paper B prediction panels; they do not fill F3V or F3. C1CLOSED has no complete-panel figure/verdict yet: [[PENDING: complete feedback CSV/PNG / S-C1CLOSED existing finalizer]]. No partial performance plot is imported. <!-- Sources: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md; E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md; E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md. -->
