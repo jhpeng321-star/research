@@ -167,3 +167,39 @@ Final budget:6retained reservations×1,500=9,000charged; actual0+0+0+600+900+900
 =2,400sim-s, including all prefixes and partial canaries. All task PIDs exited.
 Any future run needs a genuinely bitwise-compatible restoration/reseeding
 mechanism, a new prospective binding and fresh precharges; no retry is armed.
+
+## Owner 17:25 fallback binding — fresh-session recovery
+
+The 17:25 MAIN registration explicitly authorizes (a), then (b) if (a) cannot
+work within 30 minutes. Prior six attempts, STOP and receipts remain immutable:
+2,400 actual / 9,000 charged. New fallback records live under `fallback/` with
+their own exclusive lock; their ledger is combined with the old ledger for
+admission. No prior failed reservation is refunded. One nice19 CPU worker.
+
+(a) Copy COOPMEASURE's exact direct-env reset/save/snapshot/live/load path,
+including horizon301 (API remains live), prepare_branch_mode and fresh-process
+load. Its independent CANARY_VERIFIED.json proves live/load identity for969699,
+not for our world. Reserve900 for world969400:300 prefix+300live+300same-seed
+load; compare six observable arrays to recorded continuation AND each other.
+Only after identity passes, remove RNG XML and change SUMO launch seed only.
+Production first16worlds969400–969415, two seeds969050–969081,1200each;
+planned cumulative actual2400+900+19200=22500, charges9000+900+19200=29100.
+No production dispatch unless reseeding actually changes RNG state and canary
+is bitwise; abandon (a) on scientific failure, without additional retries.
+
+(b) If (a) fails: fixed first11worlds969400–969410, original native seed, full
+300s trunk rerun for EVERY continuation; no loadState. For each world first
+run600s unperturbed and require bitwise recorded-continuation equality. Then
+two600s reruns, identical t300 observable/request signatures before intervention.
+At t300 choose the two lowest-s HDVs with s<=-300m (tie stable ID); each draw
+perturbs one of these by +0.01m/s for precisely one .5s physics tick via TraCI
+setSpeed, then releases setSpeed(-1). Native safety modes remain unchanged.
+No replacement if fewer than two eligible HDVs. Exclude BOTH target IDs from
+paired endpoint scoring in all draws; aggregate metrics retain all traffic,
+explicitly including direct perturbation. Label this a tiny-perturbation chaos
+reference, never RNG-only or an irreducible stochastic lower bound.
+Budget11x(600+600+600)=19800, plus900 fallback(a), plus2400prior=23100actual;
+conservative9000+900+19800=29700charged,300unallocated. Prefixes all included.
+Original seed guards/exposure apply; no new world/RNG ranges. Shared metric and
+CSV contracts remain unchanged; bootstrap dimension becomes actual fixed panel.
+This prospective binding precedes new simulation; all failures remain charged.
