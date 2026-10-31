@@ -1,0 +1,26 @@
+{
+  "population": {
+    "expected_acceleration_error_mps2": {
+      "n": 232648,
+      "rmse": 0.3566557358682317,
+      "mae": 0.2512803006163645,
+      "bias": -0.06800149732584841
+    },
+    "physical_profile_acceleration_crps": 0.1655967780156775,
+    "physical_profile_95pct_coverage": 0.9503842715174856,
+    "mean_interval_width_mps2": 1.4628808610236124
+  },
+  "posterior": {
+    "expected_acceleration_error_mps2": {
+      "n": 232648,
+      "rmse": 0.3777952402910512,
+      "mae": 0.19691211403834447,
+      "bias": -0.06664171794780853
+    },
+    "physical_profile_acceleration_crps": 0.16351415755632842,
+    "physical_profile_95pct_coverage": 0.687592414291118,
+    "mean_interval_width_mps2": 0.6091901339960134
+  },
+  "contract": "Native FIT [300,360), prior/posterior fit only [240,300]; no residual acceleration noise",
+  "qualification": "Diagnostic; not outcome-uncertainty calibration or free-run traffic qualification"
+}

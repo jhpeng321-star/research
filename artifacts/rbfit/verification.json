@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "artifact": "gaussian_v1",
+      "drivers": 3130,
+      "fitted_drivers": 2956,
+      "observations": 229839
+    },
+    {
+      "artifact": "finite_mixture_v4",
+      "drivers": 3130,
+      "fitted_drivers": 2956,
+      "observations": 229839
+    }
+  ],
+  "lc_drivers": 3130,
+  "lc_fit_events": 658,
+  "source_worlds": 32,
+  "native_only": true,
+  "causal_window_s": [
+    240,
+    300
+  ],
+  "future_validation_s": [
+    300,
+    360
+  ],
+  "pooled_full_fit_verified": true,
+  "paper_report_lines": 34,
+  "qualification": "Integrity/schema/numerics only; validation limitations remain"
+}

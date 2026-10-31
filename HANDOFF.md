@@ -3,6 +3,13 @@
 Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
+- FIT11d36f75 merged; completed artifacts preserved. C will use the frozen
+  pooled_full_v5/idm_pooled.json motion-only point fit + Poisson arrivals, with
+  source LC defaults. Fitted LC lost to its event-rate baseline and is NOT adopted.
+  Posterior populations are preserved for later qualified uncertainty, not silently
+  substituted into A. FIT reports 15 CPU tests PASS on cpuQ, no live fit job remains.
+- CF request published at rb-shared/INT_CF_REQUEST.md (00:14): commit existing
+  wiring promptly; reconcile shared source EPS0.001/emergencyDecel9 before parity.
 - INT candidate adapter exists at tools/rbint/{recipe,evaluate,smoke,stage}.py.
   A uses hidden driver+Poisson futures; B fixes BOTH present/entrant settings to
   inherited physics population defaults (not learned encoder centre), with Poisson
