@@ -19,8 +19,15 @@ https://github.com/eclipse-sumo/sumo/tree/v1_27_1/src/microsim
   source excerpt `MSBaseVehicle.cpp:1415-1416` (base front = length + POSITION_EPS).
   Corrected urgency (remaining time divided by 2, floored at one step),
   follower gap units, fall-behind branch, last/desired speed refusal and single
-  chosen depart lane. `POSITION_EPS=.01`, unlike the legacy entry adapter's .1.
+  chosen depart lane. The helper's `POSITION_EPS=.01` statement was subsequently
+  corrected by INT's source reconciliation `f2d9a3ff`: SUMO v1_27_1
+  `src/config.h.cmake:236/239` has NUMERICAL_EPS=.001 and POSITION_EPS=.1.
+  SPEED_EPS=.01 is a distinct constant. The earlier helper-based result is retained.
   Unit vector T3 (IDM insertion at net gap 2m) independently compared.
+- Later leader-advice audit: `MSCFModel.cpp:87-108` gives discrete Euler brakeGap
+  with headway; `MSLCM_LC2013.cpp:547-557` requires time as well as space to
+  overtake; `:637-655` adds follow-speed advice even when the neighbor is not
+  currently blocking. Lookahead/urgency reuse the lane stream's persistent state.
 
 ## Geometry and right of way
 
@@ -36,8 +43,8 @@ acceptance. Do not invent a junction yield deceleration on the mainline.
 This implements a source-backed highway subset, not full SUMO state parity.
 No roundabouts, pedestrians, signals, opposite driving, continuous lateral
 motion, counter-lane blocker reservation, route divergence, or internal SUMO
-waiting flags. Strategic lookahead currently uses instantaneous speed rather
-than SUMO's persistent decaying maximum. Follower advice uses the Euler branch;
+waiting flags. Strategic lookahead reuses persistent LC2013 memory when supplied;
+standalone callers use current speed as a cold-start fallback. Follower advice uses the Euler branch;
 WM longitudinal integration remains its configured trapezoid/stop-time rule.
 Lane stream supplies mainline LC2013 decisions; absent that, MOBIL physics is
 the default mainline proposal. These limitations must accompany efficacy claims.

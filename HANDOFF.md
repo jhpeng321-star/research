@@ -22,6 +22,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- MERGE75a24397 integrated (kernel0090c168): Euler brakeGap with tau, overtake
+  time+space checks, unblocked-leader cap, persistent lookahead; ONLY two adapter
+  keyword hooks, retaining INT's entrant identity and mainline ownership fixes.
 - LANE811cd7e8 merged: finite continuation geometry, stale keep-right gate,
   SUMO numerical epsilon; prior immutable A/B/C runtime remains source-bound.
 - CF742922b6, LANE (including right-overtake prevention), MERGE follow-ups,
@@ -39,6 +42,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- MERGE integration: **51 CPU tests PASS /16.99s**, including new full-fleet
+  diagnostics and combined INT ramp/mainline/correction/source gates.
 - Resumed LANE merge gate: **116 CPU tests PASS /33.30s** (all touched
   LC/CF/merge/insertion/hidden-future/INT modules). Combined fixture repaired:
   prior mainline position1000m was beyond553.33m road; now upstream -1000m,
@@ -67,7 +72,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   learned arrival upgrade pending UNC. Existing C remains pooled-point fit.
 - No INT scientific dispatch yet. RUNB owns B after exclusive shared claim.
 - EVAL WM2 gpuR workers706825..706828 and finalizer708801 already live; preserve.
-- SUMOCORE production cpuQ203500 already launched; do NOT duplicate.
+- SUMOCORE144/144 complete; all supervisors exited; compact results available.
+  Physical validity FAIL (18/144 initial-movement collision flags retained).
 - FIT all jobs completed; LANE/MERGE diagnostic outputs integrated, no redispatch.
 - Shared helper artifacts consumed; raw truth/assignment/prohibited paths untouched.
 - Poll workers about every20min. No peer process action, push, deletion or training.

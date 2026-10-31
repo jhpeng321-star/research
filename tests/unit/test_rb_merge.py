@@ -9,7 +9,7 @@ from wms.model.spec import ModelSpec
 from wms.model.sumo_insertion import POSITION_EPS, SumoInsertion, insertion_speed
 from wms.model.wms import WmSModel
 from wms.physics.config import PhysicsConfig
-from wms.physics.junction_merge import apply_merge, merge_geometry, merge_speed_advice, secure_gap
+from wms.physics.junction_merge import apply_merge, brake_gap_euler, merge_geometry, merge_speed_advice, secure_gap
 from wms.physics.state import state_kin
 
 
@@ -173,3 +173,37 @@ def test_source_base_position_and_default_first_depart_lane():
     process.insert(s)
     assert s['lane'][0, 0] == 1
     assert s['s_m'][0, 0] == pytest.approx(process.entry_s[1] + 5. + .1, abs=.0002)
+
+
+def test_source_euler_brake_gap_includes_driver_headway():
+    # v=10,b=4,TS=.5: five braking substeps cover10m; tau=1.2 adds12m.
+    gap = brake_gap_euler(torch.tensor(10.), torch.tensor(4.), torch.tensor(1.2), .5)
+    assert gap == pytest.approx(22.)
+
+
+def test_urgent_leader_overtake_needs_time_not_only_distance():
+    cfg = PhysicsConfig(merge_model='sumo')
+    s = state([0., 20.], [2, 1], [10., 8.])
+    # Room for the manoeuvre exists but dv=2 cannot pass within75.44/10/2s.
+    acceleration, geometry = merge_speed_advice(state_kin(s), s['present'], torch.zeros(1, 2), cfg)
+    assert geometry['blocked_l'][0, 0]
+    assert acceleration[0, 0] < 0
+    assert acceleration[0, 1] == 0  # source advice is not blanket mainline yield
+
+
+def test_unblocked_target_leader_still_caps_acceleration():
+    cfg = PhysicsConfig(merge_model='sumo')
+    s = state([50., 65.], [2, 1], [5., 4.])
+    acceleration, geometry = merge_speed_advice(state_kin(s), s['present'], torch.full((1, 2), 3.), cfg)
+    assert not geometry['blocked_l'][0, 0]
+    assert acceleration[0, 0] < 3.
+
+
+def test_strategic_merge_uses_existing_lc_lookahead_memory():
+    cfg = PhysicsConfig(merge_model='sumo')
+    s = state([10.], [2])
+    kin = state_kin(s)
+    cold = apply_merge(kin, s['present'], s['lane'], s['present'], cfg)
+    warm = apply_merge(kin, s['present'], s['lane'], s['present'], cfg,
+                       lookahead_speed=torch.tensor([[10.]]))
+    assert cold.item() == 2 and warm.item() == 1

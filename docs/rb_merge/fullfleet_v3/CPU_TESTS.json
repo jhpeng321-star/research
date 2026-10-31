@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/ubuntu/miniconda3/bin/python",
+    "-m",
+    "pytest",
+    "/tmp/rb-merge-fullfleet-v3/test_full_fleet.py",
+    "-q"
+  ],
+  "returncode": 0,
+  "stdout": "......                                                                   [100%]\n6 passed in 1.29s\n",
+  "stderr": "",
+  "load": [
+    11.46875,
+    12.69580078125,
+    12.75244140625
+  ],
+  "cpus": 32
+}

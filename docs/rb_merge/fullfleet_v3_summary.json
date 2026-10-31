@@ -1,0 +1,506 @@
+{
+  "worlds": 32,
+  "horizons_s": [
+    300
+  ],
+  "arms": [
+    "native"
+  ],
+  "source_versions": {
+    "cf": [
+      "legacy"
+    ],
+    "lc_memory": [
+      "cold_t0_then_persistent"
+    ]
+  },
+  "ramp_origin_full_fleet_delay_veh_s": {
+    "recorded": {
+      "n": 32,
+      "mean": 2272.7760628855704,
+      "q10": 1641.3651730822412,
+      "q50": 1965.813606814783,
+      "q90": 3422.4632048935073
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 2366.573751878942,
+      "q10": 535.9973405905228,
+      "q50": 1091.4208212127774,
+      "q90": 5911.905521320808
+    },
+    "mean_bias": 93.79768899337144,
+    "marginal_wasserstein1": 1336.9097851191402,
+    "secondary_paired_mae": 1859.513473959378,
+    "predicted_source": {
+      "n": 32,
+      "mean": 9.68565311098324,
+      "q10": 6.955605177712235,
+      "q50": 8.922410461041464,
+      "q90": 13.242476809015084
+    }
+  },
+  "t0_merge_events": {
+    "recorded": 200,
+    "predicted": 171,
+    "matched": 169,
+    "missed": 31,
+    "extra": 2,
+    "time_error_s": {
+      "n": 169,
+      "mean": -17.08284023668639,
+      "q10": -66.0,
+      "q50": -9.0,
+      "q90": 26.10000000000001
+    },
+    "position_error_m": {
+      "n": 169,
+      "mean": 6.70853710343852,
+      "q10": -12.938465728759763,
+      "q50": 2.509938354492185,
+      "q90": 37.500114013671876
+    },
+    "timing_mae_s": 35.86390532544379,
+    "position_mae_m": 16.61308008103681
+  },
+  "full_fleet_merge_counts": {
+    "recorded": {
+      "n": 32,
+      "mean": 33.0625,
+      "q10": 26.0,
+      "q50": 33.0,
+      "q90": 41.0
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 25.59375,
+      "q10": 6.2,
+      "q50": 28.0,
+      "q90": 43.7
+    }
+  },
+  "insertions": {
+    "per_world": [
+      {
+        "seed": 969400,
+        "recorded": [
+          142,
+          28
+        ],
+        "predicted": [
+          151,
+          41
+        ]
+      },
+      {
+        "seed": 969401,
+        "recorded": [
+          163,
+          39
+        ],
+        "predicted": [
+          203,
+          28
+        ]
+      },
+      {
+        "seed": 969402,
+        "recorded": [
+          163,
+          42
+        ],
+        "predicted": [
+          203,
+          33
+        ]
+      },
+      {
+        "seed": 969403,
+        "recorded": [
+          147,
+          31
+        ],
+        "predicted": [
+          150,
+          27
+        ]
+      },
+      {
+        "seed": 969404,
+        "recorded": [
+          161,
+          33
+        ],
+        "predicted": [
+          200,
+          37
+        ]
+      },
+      {
+        "seed": 969405,
+        "recorded": [
+          166,
+          43
+        ],
+        "predicted": [
+          196,
+          29
+        ]
+      },
+      {
+        "seed": 969406,
+        "recorded": [
+          165,
+          32
+        ],
+        "predicted": [
+          159,
+          43
+        ]
+      },
+      {
+        "seed": 969407,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          189,
+          27
+        ]
+      },
+      {
+        "seed": 969408,
+        "recorded": [
+          163,
+          33
+        ],
+        "predicted": [
+          189,
+          29
+        ]
+      },
+      {
+        "seed": 969409,
+        "recorded": [
+          132,
+          35
+        ],
+        "predicted": [
+          139,
+          31
+        ]
+      },
+      {
+        "seed": 969410,
+        "recorded": [
+          160,
+          35
+        ],
+        "predicted": [
+          176,
+          29
+        ]
+      },
+      {
+        "seed": 969411,
+        "recorded": [
+          162,
+          34
+        ],
+        "predicted": [
+          175,
+          35
+        ]
+      },
+      {
+        "seed": 969412,
+        "recorded": [
+          170,
+          36
+        ],
+        "predicted": [
+          164,
+          33
+        ]
+      },
+      {
+        "seed": 969413,
+        "recorded": [
+          162,
+          29
+        ],
+        "predicted": [
+          201,
+          34
+        ]
+      },
+      {
+        "seed": 969414,
+        "recorded": [
+          159,
+          46
+        ],
+        "predicted": [
+          201,
+          25
+        ]
+      },
+      {
+        "seed": 969415,
+        "recorded": [
+          146,
+          24
+        ],
+        "predicted": [
+          146,
+          39
+        ]
+      },
+      {
+        "seed": 969416,
+        "recorded": [
+          162,
+          36
+        ],
+        "predicted": [
+          184,
+          39
+        ]
+      },
+      {
+        "seed": 969417,
+        "recorded": [
+          164,
+          26
+        ],
+        "predicted": [
+          196,
+          39
+        ]
+      },
+      {
+        "seed": 969418,
+        "recorded": [
+          149,
+          28
+        ],
+        "predicted": [
+          138,
+          40
+        ]
+      },
+      {
+        "seed": 969419,
+        "recorded": [
+          160,
+          38
+        ],
+        "predicted": [
+          190,
+          40
+        ]
+      },
+      {
+        "seed": 969420,
+        "recorded": [
+          159,
+          38
+        ],
+        "predicted": [
+          192,
+          38
+        ]
+      },
+      {
+        "seed": 969421,
+        "recorded": [
+          143,
+          32
+        ],
+        "predicted": [
+          154,
+          41
+        ]
+      },
+      {
+        "seed": 969422,
+        "recorded": [
+          162,
+          37
+        ],
+        "predicted": [
+          180,
+          27
+        ]
+      },
+      {
+        "seed": 969423,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          177,
+          23
+        ]
+      },
+      {
+        "seed": 969424,
+        "recorded": [
+          160,
+          37
+        ],
+        "predicted": [
+          151,
+          27
+        ]
+      },
+      {
+        "seed": 969425,
+        "recorded": [
+          162,
+          27
+        ],
+        "predicted": [
+          204,
+          27
+        ]
+      },
+      {
+        "seed": 969426,
+        "recorded": [
+          165,
+          34
+        ],
+        "predicted": [
+          205,
+          34
+        ]
+      },
+      {
+        "seed": 969427,
+        "recorded": [
+          164,
+          28
+        ],
+        "predicted": [
+          146,
+          34
+        ]
+      },
+      {
+        "seed": 969428,
+        "recorded": [
+          164,
+          34
+        ],
+        "predicted": [
+          198,
+          30
+        ]
+      },
+      {
+        "seed": 969429,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          197,
+          21
+        ]
+      },
+      {
+        "seed": 969430,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          182,
+          36
+        ]
+      },
+      {
+        "seed": 969431,
+        "recorded": [
+          163,
+          38
+        ],
+        "predicted": [
+          191,
+          35
+        ]
+      }
+    ],
+    "recorded_total": [
+      5086,
+      1069
+    ],
+    "predicted_total": [
+      5727,
+      1051
+    ]
+  },
+  "geometric_overlap": {
+    "available": false,
+    "pair_samples": 0,
+    "worlds_with_overlap": []
+  },
+  "merge_geometry_violations": [
+    {
+      "seed": 969414,
+      "identity": -38,
+      "time_s": 370.0,
+      "position_m": 75.52937316894531
+    },
+    {
+      "seed": 969414,
+      "identity": -138,
+      "time_s": 503.5,
+      "position_m": 75.46905517578125
+    },
+    {
+      "seed": 969424,
+      "identity": -16,
+      "time_s": 354.0,
+      "position_m": 75.58502197265625
+    },
+    {
+      "seed": 969425,
+      "identity": -12,
+      "time_s": 336.0,
+      "position_m": 75.58502197265625
+    },
+    {
+      "seed": 969427,
+      "identity": -39,
+      "time_s": 392.5,
+      "position_m": 75.52960205078125
+    },
+    {
+      "seed": 969429,
+      "identity": -169,
+      "time_s": 559.0,
+      "position_m": 75.5315170288086
+    }
+  ],
+  "source_conservation": {
+    "worlds_passed": 32,
+    "dropped": 0,
+    "no_slot": 0
+  },
+  "not_qualified": true,
+  "limitations": [
+    "One future per world; marginal distributions do not identify same-state variability.",
+    "Full-fleet insertion counts use autonomous stochastic arrivals, not replayed future demand.",
+    "Historical 562.4 veh-s is a different panel/contract; compare recorded per-world values.",
+    "No breakdown, controller-shift, or distributional qualification gate is claimed."
+  ],
+  "inputs_sha256": {
+    "ramp_merges.csv": "205fb2c16435759e9c6e78a50a133290adbf5f6fd2733a6938c23f08ae815cfc",
+    "insertions_10s.csv": "4fd744926fc8c8f6a6d4ff77088f4a40cc0a017979bfb0f268e8f0c339403b26"
+  },
+  "collection_sha256": "88d1652dff09838a9dbee01a02515cea2f36c7f9668aefbd2eed01b3c52f652b"
+}
