@@ -46,3 +46,12 @@
   B10000 scoring is memory-bounded; sparse cells explicitly NOT_QUALIFIED.
 - gpuA checked separately: load7.29, GPU1/49140MiB, utilization0%. Existing WM2
   panel remains on gpuR to preserve live tasks; gpuA is available for S-RB-INT.
+- CPU-only auto-finalizer deployed separately under
+  /root/rbeval20261031/analysis_scoring; PID708801, own boot/start-tick receipt
+  FINALIZER_708801.json and ANALYSIS_DISPATCH_1793461451536912414.json. Poll120s,
+  deadline~07:44 host time; hashes all160 completed tasks then scores once when
+  CPUload<24. FINALIZED.json binds report hashes; stopped workers yield BLOCKED,
+  never replacement inference. `ops fetch-reports` retrieves it. Completion safety
+  test PASS (all160 hashes verified; changed task rejected; dead worker blocks).
+  Latest check:6/160 tasks, all4 workers live, GPU15241MiB; no complete K8 world
+  yet, so no factual distribution score claimed. The inference runtime is intact.

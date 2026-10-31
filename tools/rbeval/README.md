@@ -15,6 +15,17 @@ cannot qualify a world model under the powered S-WMBREAKDOWN gate.
   ignored `tools/rbeval/evidence/`. Neither command launches inference.
 - Never dispatch another copy of the panel while those workers are alive.
 
+CPU-only finalizer is now armed (PID708801, `FINALIZER_708801.json`): every120s
+it checks only the owned panel/worker receipts, verifies all160 completion hashes,
+then runs the frozen scorer once on a free CPU. It launches no replacement
+inference. The durable result is `/root/rbeval20261031/FINALIZED.json`, with the
+report path and every report hash. `ops fetch-reports` retrieves finalizer
+receipts/logs and reports. Its eight-hour deadline ends around07:44 host time;
+an incomplete/stopped worker leaves a blocked receipt rather than a false result.
+`stage-scoring` and `finalize` are explicit deployment commands; do not repeat
+`finalize` while its owned receipt is live. Score sources are isolated from and
+do not modify the identity-bound inference runtime.
+
 ## Score a completed panel (Windows or Linux)
 
 ```powershell
@@ -105,7 +116,7 @@ adapter hashes become part of the immutable identity.
 ## Verification
 
 ```powershell
-python -B -m unittest tools.rbeval.test_core tools.rbeval.test_score -v
+python -B -m unittest tools.rbeval.test_core tools.rbeval.test_score tools.rbeval.test_finalize -v
 ```
 
 Tests independently verify the registered 1,800 real BIC decisions, CRPS by CDF

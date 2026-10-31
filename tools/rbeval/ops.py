@@ -20,7 +20,8 @@ def ssh(code):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=('audit', 'stage', 'canary', 'launch', 'status', 'fetch'))
+    p.add_argument('action', choices=('audit', 'stage', 'canary', 'launch', 'status', 'fetch',
+                                    'stage-scoring', 'finalize', 'fetch-reports'))
     args = p.parse_args()
     if args.action in ('audit', 'status'):
         print(ssh(f'''
@@ -30,6 +31,9 @@ p=Path({ROOT!r})
 print('load',os.getloadavg(),'cpus',os.cpu_count())
 print(subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.used,memory.total,utilization.gpu','--format=csv'],text=True))
 if p.exists():
+ for f in sorted(p.glob('FINAL*.json')): print(f.name,f.read_text())
+ log=p/'finalize.log'
+ if log.exists(): print('FINALIZER',log.read_text()[-2000:])
  for d in sorted(p.glob('wm2_shard*')):
   if not d.is_dir(): continue
   print(d.name,'tasks',len(list(d.glob('w*_k*.json'))),'complete',(d/'COMPLETE.json').exists())
@@ -93,6 +97,49 @@ print(json.dumps(dict(receipt=str(receipt),launched=launched)))
         target.mkdir(exist_ok=True)
         subprocess.run(['scp','-r','-o','BatchMode=yes',f'gpuR:{ROOT}/wm2_shard*',str(target)], check=True, timeout=600)
         subprocess.run(['scp','-o','BatchMode=yes',f'gpuR:{ROOT}/DISPATCH_*.json',str(target)], check=True, timeout=60)
+    elif args.action == 'stage-scoring':
+        files = [HERE/n for n in ('finalize.py', 'score.py', 'core.py', 'references.json', 'real_observables.json')]
+        manifest = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+        print(ssh(f'''
+from pathlib import Path
+import hashlib
+p=Path({ROOT!r}); assert p.is_dir()
+c=p/'analysis_scoring'; c.mkdir(exist_ok=True)
+for name,sha in {manifest!r}.items():
+ f=c/name
+ if f.exists(): assert hashlib.sha256(f.read_bytes()).hexdigest()==sha, 'preserve scoring source'
+print('Own-root CPU scoring staging admitted')
+'''))
+        subprocess.run(['scp', '-o', 'BatchMode=yes', *map(str, files), f'gpuR:{ROOT}/analysis_scoring/'], check=True, timeout=180)
+    elif args.action == 'finalize':
+        print(ssh(f'''
+from pathlib import Path
+import fcntl,json,os,subprocess,time
+root=Path({ROOT!r}); assert (root/'analysis_scoring/finalize.py').is_file()
+lock=(root/'FINALIZE_DISPATCH.lock').open('a'); fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+assert not (root/'FINALIZED.json').exists(), 'already scored'
+boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+for p in root.glob('FINALIZER_*.json'):
+ old=json.loads(p.read_text()); proc=Path('/proc')/str(old['pid']) if 'pid' in old else None
+ if proc is not None and proc.exists():
+  assert old['boot_id']!=boot or (proc/'stat').read_text().split()[21]!=old['start_ticks'], 'existing finalizer alive'
+assert os.getloadavg()[0]<24, 'host CPU busy'
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(root/'analysis_scoring/finalize.py'),'--run-root',str(root)]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (root/'finalize.log').open('a') as log:
+ child=subprocess.Popen(argv,stdout=log,stderr=subprocess.STDOUT,env=env,start_new_session=True,cwd=root)
+receipt=dict(pid=child.pid,argv=argv,unix=time.time())
+with (root/('ANALYSIS_DISPATCH_'+str(time.time_ns())+'.json')).open('x') as f: json.dump(receipt,f,indent=1)
+print(json.dumps(receipt))
+'''))
+    elif args.action == 'fetch-reports':
+        target = HERE/'evidence'
+        target.mkdir(exist_ok=True)
+        subprocess.run(['scp','-o','BatchMode=yes',f'gpuR:{ROOT}/FINAL*.json',f'gpuR:{ROOT}/ANALYSIS_DISPATCH_*.json',
+                        f'gpuR:{ROOT}/finalize.log',str(target)], check=True, timeout=60)
+        available = ssh(f"from pathlib import Path; print(int((Path({ROOT!r})/'reports').is_dir()))").strip()
+        if available == '1':
+            subprocess.run(['scp','-r','-o','BatchMode=yes',f'gpuR:{ROOT}/reports',str(target)], check=True, timeout=600)
 
 
 if __name__ == '__main__':
