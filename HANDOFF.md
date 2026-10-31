@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-11-01 01:33 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733/5736.
+Updated 2026-11-01 05:05 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733/5736.
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
@@ -166,7 +166,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Evaluation-only endpoint target reader implemented: six converted observable
   files, exact unique t0 state matching then persistent VID; causal carried-lane
   recovery handles parallel junction rows without saved-ID assumptions. Future
-  junction/absent positions censored.7CPU tests PASS; actual100episode extraction next.
+  junction/absent positions censored. Actual100episode extraction RECOVERED at
+  docs/rbint/hdv60/FACTUAL_065e9853.json; no repeat extraction. Endpoint target/
+  protocol/export suite9CPU PASS on existing Miniconda environment at05:05.
 - WM2-HDV60 now LIVE on ORIGINAL gpuR runtime: own812962/812963/812964,
   root `/root/rbeval20261031/int/WM2-HDV60`. Canary22.59s; verified original
  600s task's all5arms/3regions/6prefix bins before continuation. No baseline
@@ -191,3 +193,13 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   certify full distributional qualification.
 - Morning report must explicitly show CRPS120/300/600, breakdown-distance and
   HDV60s differences WITH paired-world CIs under `Switching-eligibility rule`.
+
+## Fresh-session reconciliation 05:05
+- Preserved HEAD065e9853 and recovered untracked HDV60 receipts/100episode targets.
+- Read-only audit: WM2-HDV60 workers812962/812963/812964 +monitor814672 LIVE,
+  45tasks; FULL-v3 workers370037/370038/370039 +monitor370088 LIVE,34tasks.
+  No STOP, duplicate launch or process signal. Both GPUs busy; preserve jobs.
+- Existing local20minute handoff observer retained; latest04:45 receipt inspected.
+  LANE final aefc4bd9 now ready (three-value step_output and advice feedback);
+  MERGE post-movement source phase ready. Both need next-candidate integration
+  and fresh smoke. CF unchanged. Noon schedule/final09:30 freeze retained.

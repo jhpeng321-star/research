@@ -1,0 +1,29 @@
+{
+  "owner": "S-RB-INT",
+  "host": "gpuR",
+  "runtime": "/root/rbeval20261031/phys_code_f825a3c28ddd",
+  "model_runtime": "/root/autodl-tmp/c4/setupaudit20261030/fix",
+  "stage": {
+    "host": "gpuR",
+    "commit": "f825a3c28ddd409f532ebf1708c08a053751f33a",
+    "archive_sha256": "7857b2d2d018dcfda57671e0d9a894f7ab768860cabc39c6041113fd85ffacd1",
+    "runtime": "/root/rbeval20261031/phys_code_f825a3c28ddd",
+    "endpoint_only": true
+  },
+  "smoke_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3",
+  "variant": "WM2_HDV60",
+  "tasks": 160,
+  "world_order": "reserved-first",
+  "training": false,
+  "device": "cuda",
+  "recipe": "wm2_original",
+  "resources": {
+    "load": [
+      15.00732421875,
+      15.32373046875,
+      16.32568359375
+    ],
+    "device": "cuda",
+    "gpu_free_mib": 20854
+  }
+}
