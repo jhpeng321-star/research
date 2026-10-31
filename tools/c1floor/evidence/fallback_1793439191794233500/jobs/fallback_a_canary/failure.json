@@ -1,0 +1,4 @@
+{
+ "actual_sim_s": 900.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/fallback.py\", line 109, in execute\n    assert all(v['identical'] for v in same.values()),'COOPMEASURE path fails on registered world'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: COOPMEASURE path fails on registered world\n"
+}
