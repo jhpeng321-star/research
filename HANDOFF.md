@@ -1,6 +1,13 @@
 # S-SELMAPPO fleet-picker integration handoff
 
-**CURRENT: production-only continuation dispatched once on cpuQ, own trainer503239.**
+**CURRENT: STOPPED on production tensor-IPC failure; own503239 exited, no descendants.**
+Production began under MAIN01:08, but first wave exhausted PyTorch storage-FD transport
+near32x30logp tensors against cpuQ softFDlimit1024 (`received0items of ancdata`).
+41production worlds reserved,33complete result/actual receipts,0PPOupdates; initial000only.
+Charged38,700sim-s; actual bounds30,600..37,800 (8killed workers lack terminal receipts).
+Ledger retains9open reservations; original ledger/logs/results/locks remain immutable.
+No final169 weights, no evaluation, no new retry authorization/automatic launch.
+Byte transport/durable trajectory repair is being CPU-tested ONLY; see`SELMAPPO_STOP.md`.
 MAIN00:29 continuation was used once (commit `c082b233`); second seed reached900actual,
 then the wrapper queried the frozen environment's already-closed clock. Total1,800charged /
 900actual, production0/checkpoints0. Terminal repair commit `d219f5ca` is CPU31/31 plus
@@ -18,7 +25,7 @@ Both historical mechanics charges inherited unchanged; NO more mechanics run.
 First production wave starts18000000; first status has10reservations and resource pause
 atload15.265+pending10 on32cores (ceiling25.6). No successful update reported yet.
 Status: `python -m tools.selmappo.launch status --build build_b3d13ccfae77de71`.
-Do not launch another build or reuse any old dispatch command while this trainer lives.
+Do not launch another build or reuse old commands; MAIN must acknowledge this new stop.
 
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,
 library `native, ctrl0, mappo, pi, circles, wall`. Per-CAV belongs to S-SELMAPPO2.

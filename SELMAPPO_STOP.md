@@ -92,7 +92,7 @@ Dispatch revalidates ALL source hashes, both old locks/exitedPIDs and exact stop
 ledger/log, then acquires exclusiveFLEET_PRODUCTION_ONCE; no automatic retries.
 No new SUMO at this CPU-only checkpoint. Receipt`STAGE_b3d13ccfae77de71.json`.
 
-## Production-only dispatch (current)
+## Production-only dispatch (preserved)
 After implementation92969232 and registration-receiptae38d65e, one explicit production
 launch claimed`FLEET_PRODUCTION_ONCE.json`; cpuQ own trainer503239 is live.
 Dispatch receipt`DISPATCH_build_b3d13ccfae77de71.json`; source remains immutable.
@@ -101,3 +101,27 @@ at18000000; first poll records10production reservations and a resource-priority 
 No mechanics rerun, completed training update, final checkpoint or evaluation claim.
 Original STOPs/locks/ledgers remain historical receipts; do not interpret them as
 permission for another retry. Any new failure still stops with all charges retained.
+
+## Production transport STOP (current; 2026-11-01 ~01:18+08:00)
+Own503239 exited, no task descendants remain. First wave reserved41worlds18000000..18000040
+before PyTorch tensor IPC failed (`received0items of ancdata`/BrokenProcessPool).
+Each trajectory returned30separateold_logp tensors;32complete returns retain~960storageFDs
+against cpuQ's softFDlimit1024. This is a transport failure, not a measured policy outcome.
+33worlds have complete900sresult/actual receipts (32supervisor-closed +18000032);
+8killed workers have no terminal actual:18000028,18000034..18000040.
+**38,700charged retained =1,800historical +41x900; actual30,600..37,800, exact unknown.**
+Ledger9open reservations is unchanged; one has independently proven900actual, eight do not.
+LedgerSHA`497e0c292a1acb757f4bd733fa4a60b9ad7e2853e6b16d16e8fe50c6c570ec88`;
+STOP_build_b3d13ccfae77de71.json binds all33result/actual receipts, log/failure/source hashes.
+No completed PPO update, only initial000SHAbdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc;
+no final169/evaluation/learning-success claim. All locks and immutable sources remain.
+No worker trajectories were persisted by the stopped implementation: even successful
+physics cannot be silently replayed or treated as recoverable PPO training records.
+CPU-only repair: inline serialized bytes in BOTH directions (no tensor storageFDs on
+process queues), retain each full trajectory before its return; stress46x30CPU transport
+and real optimizer before proposing another immutable stage. No new physics authorized.
+MAIN acknowledgement/protocol amendment needed: same-cap proposal is skip ALL41consumed
+worlds (including successful ones), first update ONLY5unused worlds18000041..18000045,
+then original168x46updates18000046..18007773; final169only. Retain38,700historical
++7733x900future +14,400unstarted evaluation =7,012,800; no refund/replacements/mechanics.
+This reduces gradient-bearing episodes by41 and must be disclosed/approved explicitly.
