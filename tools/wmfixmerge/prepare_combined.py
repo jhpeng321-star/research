@@ -19,6 +19,7 @@ import json
 from tools.wmfixmerge.data import SEEDS, digest, install_guard, safe, verify
 
 WMDATA_ARMS = ("circles", "ctrl0", "mappo", "pi")
+FIT_ARMS = ("coopoff_c1", "ours_c1")
 
 
 def group_order(doc):
@@ -33,8 +34,9 @@ def group_order(doc):
 
 def fitness_subset(fit_groups, wm_groups, seeds_of):
     fitness_groups = [dict(corpus="fit", group=i, pair_key=k, seed=seeds_of[("fit", k)],
-                           arm=0, arm_name="registered_single")
-                      for i, k in enumerate(fit_groups)]
+                           arm=arm, arm_name=name)
+                      for i, k in enumerate(fit_groups)
+                      for arm, name in enumerate(FIT_ARMS)]
     fitness_groups += [dict(corpus="wm", group=i, pair_key=k, seed=seeds_of[("wm", k)],
                             arm=arm, arm_name=name)
                        for i, k in enumerate(wm_groups)
@@ -51,6 +53,12 @@ def build(fit_prepared, wmdata_prepared, out):
     wm_groups = group_order(wm)
     if len(fit_groups) != 12 or len(wm_groups) != 40:
         raise ValueError(f"unexpected group counts {len(fit_groups)}/{len(wm_groups)}")
+    for part, prepared, expected in (("fit", fit, FIT_ARMS), ("wm", wm, WMDATA_ARMS)):
+        for key in group_order(prepared):
+            actual = sorted(r["arm"] for r in prepared["labels"]
+                            if r["pair_key"] == key and not r["native"])
+            if actual != list(expected):
+                raise ValueError(f"{part} group {key} arm set differs: {actual}")
     seeds_of = {}
     for part, doc in (("fit", fit), ("wm", wm)):
         for row in doc["labels"]:

@@ -20,7 +20,7 @@
   MAPPO binds d9042cc5. PI/CIRCLES use published TimelineControllers, including
   explicit algorithm continuity for entrants. Opt-in designed-arm loading is
   restricted in Runtime to verified wmdata_fit episodes; default loader unchanged.
-- Registry now covers 52 worlds / 172 contrasts; fitness averages arms within
+- Registry now covers 52 worlds / 184 contrasts (both FIT arms too); fitness averages arms within
   world before averaging worlds. Original FIT objective scales remain fixed.
 - cpuQ tests: 18 passed (ES + wmdata role); Windows has no torch (17 passed,
   the live-dataclass test requires torch; no Windows environment installed).
@@ -32,3 +32,21 @@
 - PI/CIRCLES first attempt lacked frozen controller sources; retained failures.
   Sources staged byte-for-byte from WMDATA frozen e3final runtime; new owned
   PIDs 3035044/3035045, `es_canary_deps_v3`; no other processes signalled.
+
+## Full-corpus calibration dispatch step
+- Missing adapter/model assets caused the second PI/CIRCLES attempt to fail;
+  only adapter.json and model.onnx were copied from frozen e3final. Third
+  attempt `es_canary_assets_v3` PASS: CIRCLES 31.9 s, PI 31.2 s, frozen checks.
+- Both original FIT arms are bound, not just arm 0: 24 + 160 = 184 contrasts.
+  Verified registry `TRAIN_PREPARED_COMBINED_FULL.json` copied cpuQ -> gpuA.
+- Canonical physical export/reload smoke PASS on gpuA, under private code tree.
+- Expanded ES/objective/role tests: 20 passed on cpuQ, including exact parity
+  against the registered torch objective and equal-world aggregation.
+- Protocol amendment before any combined fitness: full 52-world/184-contrast
+  corpus at existing 120 s training horizon, population 2, sigma .10, lr .01,
+  seed 140014, <=8 generations / 12600 s, stale patience 3. Six physics scalars;
+  entry scalar frozen because canonical verdict entry config cannot carry it.
+- Immutable generation exports bind physical config; all old WM2 tensors are
+  bitwise checked on export and canonical reload. Failure receipts stop driver.
+- Driver reserves live K8 probe slots before each generation (cpuQ total <=30,
+  gpuA <=18 CPU workers), low-priority sweeps; no GPU code path.

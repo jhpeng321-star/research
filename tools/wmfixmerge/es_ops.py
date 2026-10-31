@@ -15,7 +15,7 @@ COMMON = ["--config", BASE + "/restart20261026/runtime_longint/configs/c4_wm_loo
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("probe", "canary"))
+    parser.add_argument("mode", choices=("probe", "canary", "export-smoke", "drive"))
     parser.add_argument("--root", required=True)
     parser.add_argument("--prepared", required=True)
     parser.add_argument("--out-name")
@@ -24,6 +24,42 @@ def main():
     from tools.wmfixmerge.data import install_guard, safe, digest
     install_guard()
     root = safe(args.root)
+    if args.mode == "drive":
+        out = root / "es_run_full"
+        if not out.is_dir() or any(out.iterdir()):
+            raise ValueError("fresh pre-created ES output required")
+        cmd = [sys.executable, "-m", "tools.wmfixmerge.es", "--mode", "drive", *COMMON,
+            "--prepared", args.prepared, "--prepared-wmdata", "/home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json",
+            "--cpuq-prepared-wmdata", "/home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json",
+            "--registry", str(root / "TRAIN_PREPARED_COMBINED_FULL.json"),
+            "--wmdata-controllers", "tools/wmfixmerge/es_wmdata_controllers.json",
+            "--resolved-config", BASE + "/wmfixmerge20261031/train/candidate_config.json",
+            "--out", str(out), "--cpuq-out", "/home/ubuntu/wmfix_es/es_run_full",
+            "--gens", "8", "--popsize", "2", "--sigma", ".10", "--lr", ".01",
+            "--fitness-horizon", "120", "--max-seconds", "12600", "--stop-patience", "3",
+            "--gpuA-fit-groups", "0-11", "--cpuq-fit-groups", "none",
+            "--gpuA-workers", "18", "--cpuq-workers", "30", "--account-for-probes"]
+        with (root / "ES_FULL_DISPATCH.json").open("x") as stream:
+            json.dump(dict(launcher=os.getpid(), argv=cmd), stream)
+        env = dict(os.environ, PYTHONPATH="src:.", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
+                   OPENBLAS_NUM_THREADS="1", CUDA_VISIBLE_DEVICES="")
+        with (root / "es_full_drive.log").open("xb") as log:
+            proc = subprocess.Popen(["nice", "-n", "19", *cmd], cwd=str(Path(__file__).resolve().parents[2]),
+                env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        with (root / "ES_FULL_PID.json").open("x") as stream:
+            json.dump(dict(pid=proc.pid, argv=cmd), stream)
+        print(json.dumps(dict(pid=proc.pid, out=str(out))), flush=True)
+        return
+    if args.mode == "export-smoke":
+        from types import SimpleNamespace
+        from tools.wmfixmerge.es import DEFAULTS, export_physical_checkpoint
+        out = root / "export_smoke"
+        if not out.is_dir():
+            raise ValueError("pre-created output directory required")
+        opts = SimpleNamespace(config=COMMON[1], checkpoint=COMMON[3])
+        export_physical_checkpoint(opts, out, 0, dict(gen=0, params=DEFAULTS))
+        print("canonical export/reload PASS", flush=True)
+        return
     out = root / (args.out_name or ("probe_k8" if args.mode == "probe" else "es_canary_v3"))
     if not out.is_dir():
         raise ValueError("pre-created output directory required")

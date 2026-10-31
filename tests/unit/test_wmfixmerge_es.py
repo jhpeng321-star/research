@@ -35,6 +35,24 @@ def test_es_update_moves_toward_better_candidate():
     assert (x5 >= 0).all() and (x5 <= 1).all()
 
 
+def test_es_ties_do_not_invent_a_search_direction():
+    x = np.full(len(PARAMS), .5)
+    eps = np.arange(len(PARAMS), dtype=float)[None]
+    assert np.array_equal(es_update(x, eps, [1., 1.], .1, .1), x)
+
+
+def test_es_fitness_matches_registered_torch_objective():
+    torch = pytest.importorskip("torch")
+    from wms.train.merge_response import paired_objective
+    pred = torch.tensor([[10., 20., 30., 40., 50.], [15., 12., 33., 45., 70.]])
+    real = torch.tensor([[11., 21., 29., 39., 55.], [14., 13., 31., 43., 60.]])
+    scales, anchors = [2.] * 5, [3.] * 5
+    actual, _ = fitness_from_cells([dict(group=0, horizon=120, predicted=pred.tolist(),
+                                        recorded=real.tolist())], scales, anchors)
+    expected = paired_objective(pred, real, [0, 0], scales, anchor_scales=anchors)
+    assert actual == pytest.approx(float(expected), rel=1e-6)
+
+
 def test_fitness_from_cells_matches_hand_computation():
     scales = [10., 20., 30., 40., 50.]
     anchors = [11., 12., 13., 14., 15.]
@@ -92,13 +110,15 @@ def test_fitness_subset_all_wmdata_worlds_and_arms():
     seeds_of = {(p, k): 969400 + i for p, ks in (("fit", fit), ("wm", wm))
                 for i, k in enumerate(ks)}
     subset = fitness_subset(fit, wm, seeds_of)
-    assert [g["corpus"] for g in subset[:12]] == ["fit"] * 12
-    assert len(subset) == 172
-    assert {g["group"] for g in subset[12:]} == set(range(40))
+    assert [g["corpus"] for g in subset[:24]] == ["fit"] * 24
+    assert len(subset) == 184
+    assert {g["group"] for g in subset[24:]} == set(range(40))
     for i in range(40):
-        assert [(g["arm"], g["arm_name"]) for g in subset[12:] if g["group"] == i] == [
+        assert [(g["arm"], g["arm_name"]) for g in subset[24:] if g["group"] == i] == [
             (0, "circles"), (1, "ctrl0"), (2, "mappo"), (3, "pi")]
-    assert all(g["arm"] == 0 for g in subset[:12])
+    for i in range(12):
+        assert [(g["arm"], g["arm_name"]) for g in subset[:24] if g["group"] == i] == [
+            (0, "coopoff_c1"), (1, "ours_c1")]
 
 
 def test_fitness_equal_world_weighting_with_unequal_arm_counts():

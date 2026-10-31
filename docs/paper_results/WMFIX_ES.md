@@ -1,53 +1,53 @@
-# S-WMFIX-ES — derivative-free (ES) calibration receipt — 2026-10-31
+# S-WMFIX-ES — CPU calibration receipt — 2026-10-31
 
-Owner 12:50: CPU route to a working world model before the deadline; gradient
-path unreliable (dense hard-event breakpoints, FD/analytic 30-350x) while the
-teacher ceiling is large (300 s paired MAE 2185->526). Hosts: cpuQ <= 8 cores
-(shared; S-WMDATA owns up to 24) + gpuA host CPUs (20-CPU quota, GPU jobs
-untouched). No SUMO; sealed/holdout paths never opened.
+## Resume / resources
+- Clean start at 89d7e29b; frozen-session artifacts retained; no ES jobs running.
+- Combined smoke had failed on missing CTRL0 feedback; no generation completed.
+- MAIN 13:38 supersedes sharing limits: cpuQ <=30 workers; gpuA <=18 low-priority
+  CPU workers (20-CPU quota). GPU processes and S-WMDATA processes untouched.
+- gpuA ES code is isolated in `wmfixmerge20261031/es_cpu_v3`; cpuQ owns
+  `/home/ubuntu/wmfix_es`. No SUMO, prohibited inputs, deletions or push.
 
-## Status (updated as steps land)
-- [done] task 1 CPU throughput probe (one TRAIN group, K8 = 2 arms x {120,300} s,
-  entry path, mix ON, torch threads=1); see numbers below.
-- [running] task 2: first ES run (gpuA PID 175512, out `es_run`, 12-FIT-only
-  corpus, groups 0-5) launched 13:32 by the frozen session. SUPERSEDED by MAIN
-  13:38 (combined corpus required): to be stopped and relaunched as
-  `es_run_combined` (12 FIT + wmdata_fit); artifacts kept.
-- [pending] task 3 verdict A/B/C1 for the best ES-WM candidate.
+## Throughput — correction and genuine K8 measurement
+- Earlier `es/PROBE_*_group0.json` claims of K8 were wrong: Runtime used K1.
+- Valid K1 measurements: gpuA 1920.0 s/group, max RSS 1775 MB; cpuQ 1766.6 s,
+  max RSS 1372 MB; two paired arms x {120,300} s, entry path/mix ON, threads=1.
+- Genuine K8 now dispatched: 8 distinct sticky-future processes per host,
+  each running that same four-cell workload from one common eight-future plan.
+- cpuQ PIDs 3030648-3030655; gpuA 193235-193242. `probe_k8/DISPATCH.json`,
+  per-future PID/log/PROBE receipts. Completion/timings still pending.
+- Prior ~33 min combined 52-world panel estimate omitted K8 and heterogeneous
+  arm counts; withdrawn. K8 CPU extrapolation is ~8x K1 CPU work, not free.
+- Requested GPU comparison reference: ~28.5 min/panel; its pilot code is K1,
+  so it is not evidence of measured K8 GPU throughput.
 
-## Task 1: CPU throughput (TRAIN group, K8, threads=1 per process)
-- gpuA host CPU (quota 20): group 1920.0 s = 32.0 min; h300 cell 812-825 s;
-  h120 cell 141-142 s; max RSS 1775 MB/probe (PROBE_gpuA_group0.json).
-- cpuQ (32-core VM): group 1766.6 s = 29.4 min; h300 cell 752-757 s; h120 cell
-  128.7-128.8 s; max RSS 1372 MB (PROBE_cpuQ_group0.json). Live sweep cell
-  (g000 grp4 arm0 h300) 474.7 s under the running load.
-- Aggregate: cpuQ N=30 -> ~30 groups / 29.4 min; gpuA N=18 -> 18 groups /
-  32.0 min; combined 48 procs ~= one 52-group panel in ~52/48*30.6 ~ 33 min,
-  i.e. the same order as one GPU panel (28.5 min/panel), so ES generations
-  (8 cands x 20 groups = 160 h300 cells) cost ~160/46*650s ~ 38-55 min/gen.
+## Full-corpus ES protocol — fixed before first combined generation
+- Verified combined registry: original FIT doc SHA 7bbd41f3 + wmdata d3ad5638;
+  all 12 FIT worlds x 2 arms and all 40 wmdata_fit worlds x 4 arms = 184 contrasts.
+- Both corpora use original FIT scales/anchor scales/crossing width. Fitness is
+  SAME normalized paired upstream/road/crossing MSE + absolute road/crossing
+  anchors; average arms within each world, then worlds equally. J/source reported.
+- Frozen policies: CTRL0 64f70af4 with residual zeroed; speed-only MAPPO d9042cc5;
+  PI/CIRCLES published controller code. Exact pre-t0 pairing and request forcing.
+- Budget amendment: calibrate at 120 s (existing training-stage horizon), K1 CRN,
+  full corpus every candidate/generation; no world/arm subset. 300 s and K8 remain
+  independent diagnostics/verdict, never tuning feedback.
+- Option (b): six EXISTING PhysicsConfig scalars (accel_min/max_mps2,
+  lane_physical_margin_m, mainline_courtesy_zone_m, free_road_gap_m,
+  speed_limit_mps), identified in es.py; incumbent WM2 values, optimised, no
+  hand-set behavioural replacement. Entry scalar and all WM2 tensors frozen.
+- Antithetic ES: population 2, sigma .10, lr .01, seed 140014, <=8 generations,
+  <=12600 s; stop after 3 stale generations. Selection: minimum TRAIN objective.
+- Host pinning: FIT on gpuA; wmdata on cpuQ. Reserve cores for live K8 probes;
+  every rollout checks frozen WM2 tensors; immutable population/GEN/checkpoint
+  per generation, canonical reload; no validation feedback.
 
-## Combined corpus (MAIN addendum 13:38; pre-registered before relaunch)
-- Cherry-pick S-WMDATA 9b6f8054 (role wmdata_fit, seeds 969400-969439, arms
-  ctrl0/mappo/pi/circles); prepare.py over cpuQ views -> TRAIN_PREPARED_WMDATA.
-- Registry doc (prepare_combined.py) binds FIT 7bbd41f3 + the wmdata doc
-  digests; fitness scales/anchor_scales/crossing_width stay the FIT doc's
-  (the SAME pre-registered objective normalisation extended to more groups).
-- Fitness groups: FIT 0-11 + wmdata groups {0,5,10,15,20,25,30,35} of the
-  doc's sorted pair order (every 5th of 40; budget-capped, seeds recorded in
-  RUN.json). Contrast arm: ctrl0 (arm_index 1, sorted-arm order; FIT groups
-  use their single registered arm, arm_index 0, deduped to one cell/group).
-- Host pinning (whole run): gpuA 18 workers <- FIT groups 0-7; cpuQ 28 workers
-  <- FIT 8-11 + all wmdata fitness groups (gpuA needs no wmdata files).
-- ES: option (b) 7 physical scalars, popsize 8, sigma 0.10, lr 0.25,
-  seed 140014, horizon 300 s, max 12600 s, stop after 3 stale generations.
-
-## Pre-registered ES protocol (before any run)
-- Fitness: deterministic (CRN r1==r0 exact), so elitism needs no resampling.
-- Parameterisation: (a) merge_response head (1,473, zero init) via antithetic
-  ES, or (b) <= 20 existing physical merge/admission/discharge scalars
-  (identified in code; values optimised, never hand-set) via CMA-ES; choose by
-  measured CPU budget, prefer (b) only if (a) exceeds it.
-- Rollout cells pinned to one host each for the whole run (numeric identity).
-- Immutable per-generation checkpoints + GEN receipts; paired train J MAE per
-  generation recorded (ES curve); stop after 3 consecutive non-improving
-  generations; no validation feedback at any point.
+## ES curve / verdict / recommendation
+- ES curve: no complete combined generation yet; earlier partial FIT cells are
+  excluded. All four wmdata arms smoke PASS (31.2-31.9 s); 20 unit tests PASS.
+- Verdict: INCOMPLETE, not adoptable. A vs WM2 AND entry, B SPEEDHEAD eight
+  worlds, C1 and canonical accept.py remain the unchanged mandatory gates.
+- MAIN GPU-slot request: reserve A/B evaluation after selected ES-WM checkpoint;
+  corrected K8 CPU cost cannot support the prior optimistic deadline estimate.
+- Recommendation: finish full-corpus CPU ES, report measured curve and long-
+  horizon transfer honestly; adopt only if the registered A/B/C1/accept verdict passes.

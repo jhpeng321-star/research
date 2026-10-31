@@ -82,6 +82,9 @@ def es_update(x, eps, losses, lr, sigma):
     order = losses.argsort()
     ranks = np.empty(n)
     ranks[order] = 0.5 - np.arange(n) / max(n - 1, 1)  # best (lowest) loss -> +0.5
+    for value in np.unique(losses):
+        tied = losses == value
+        ranks[tied] = ranks[tied].mean()
     grad = np.zeros_like(x, dtype=float)
     for k, draw in enumerate(eps):
         for sign, u in ((+1., ranks[2 * k]), (-1., ranks[2 * k + 1])):
@@ -168,6 +171,11 @@ def sweep(argv=None):
                     raise ValueError(f"live {corpus} physics incumbent differs for {name}: "
                                      f"{value} vs {manifest['incumbents'][name]}")
             bases[corpus] = state_hash(rt.model)
+            expected = manifest.get("prepared_sha256", {}).get(corpus)
+            if expected and digest(prepared) != expected:
+                raise ValueError("worker prepared doc differs from registered corpus")
+            if "crossing_width" in manifest:
+                rt.doc["crossing_width"] = manifest["crossing_width"]
             if len(set(bases.values())) != 1:
                 raise ValueError("frozen WM2 tensors differ across corpora")
             runtimes[corpus] = rt
@@ -246,7 +254,7 @@ def pull(cells_dir_remote, cells_dir_local, host):
                              text=True, check=True).stdout.split()
     brought = 0
     for name in listing:
-        if not (name.startswith("CELL_") or name.startswith("ENV_")
+        if not (name.startswith("CELL_") or name.startswith("ENV_") or name.startswith("SWEEP_FAILED_")
                 or name.startswith("SWEEP_DONE_")):
             continue
         local = safe(cells_dir_local / name)
@@ -280,6 +288,9 @@ def drive(argv=None):
         parser.add_argument("--" + name, required=True)
     for name in ("prepared-wmdata", "cpuq-prepared-wmdata", "registry"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--wmdata-controllers", required=True)
+    parser.add_argument("--cpuq-out", default="/home/ubuntu/wmfix_es/es_run_combined")
+    parser.add_argument("--account-for-probes", action="store_true")
     parser.add_argument("--gens", type=int, default=8)
     parser.add_argument("--popsize", type=int, default=8)
     parser.add_argument("--sigma", type=float, default=0.10)
@@ -297,12 +308,16 @@ def drive(argv=None):
     parser.add_argument("--poll", type=float, default=30.)
     parser.add_argument("--gen-timeout", type=float, default=5400.)
     args = parser.parse_args(argv)
+    if args.popsize < 2 or args.popsize % 2 or not 1 <= args.cpuq_workers <= 30 or not 1 <= args.gpuA_workers <= 18:
+        raise ValueError("invalid antithetic population or CPU worker cap")
     install_guard()
     out = safe(args.out)
     if not out.is_dir() or any(out.iterdir()):
         raise ValueError("out must be an existing empty directory")
 
     def range_spec(spec):
+        if spec == "none":
+            return set()
         a, b = (int(v) for v in spec.split("-"))
         return set(range(a, b + 1))
 
@@ -325,9 +340,17 @@ def drive(argv=None):
         return "gpuA" if fg["group"] in gpuA_fit else "cpuQ"
 
     incumbent_values = incumbents_from_resolved(args.resolved_config)
+    # The verdict's deployed entry path does not accept an entry-scalar config
+    # override. Optimise the six PhysicsConfig scalars, freeze the entry scalar.
+    active_dims = [i for i, p in enumerate(PARAMS) if p["where"] == "physics"]
     x = to_unit(incumbent_values)
     began = time.monotonic()
     with (out / "RUN.json").open("x") as stream:
+        from tools.wmfixmerge.data import implementation_hashes
+        hashes = implementation_hashes()
+        for name in ("tools/wmfixmerge/es.py", "tools/wmfixmerge/wmdata_feedback.py",
+                     "tools/wmfixmerge/prepare_combined.py", "src/wms/control/entrant.py"):
+            hashes[name] = digest(safe(Path_root()) / name)
         json.dump(dict(pid=os.getpid(), started=time.time(), host=socket.gethostname(),
                         schema="wmfix_es_run/2", popsize=args.popsize, sigma=args.sigma,
                         lr=args.lr, seed=args.seed,
@@ -338,15 +361,16 @@ def drive(argv=None):
                         registry_sha256=digest(args.registry),
                         wmdata_prepared_sha256=registry["parts"]["wm"]["sha256"],
                         resolved_config_sha256=digest(args.resolved_config),
-                        base_sha256=WM2_SHA, implementation_params=[p["name"] for p in PARAMS],
-                        incumbents=params_doc(incumbent_values)), stream, indent=2)
+                         base_sha256=WM2_SHA, implementation_params=[PARAMS[i]["name"] for i in active_dims],
+                         incumbents=params_doc(incumbent_values), implementation_hashes=hashes), stream, indent=2)
     best = None
     stale = 0
     gen = 0
     eps = None
+    reserve = 0.
     try:
         for gen in range(args.gens + 1):
-            if time.monotonic() - began > args.max_seconds:
+            if gen and time.monotonic() - began + reserve >= args.max_seconds:
                 break
             gen_began = time.monotonic()
             if gen == 0:
@@ -354,6 +378,7 @@ def drive(argv=None):
             else:
                 rng = np.random.default_rng(args.seed + gen)
                 eps = rng.standard_normal((args.popsize // 2, len(PARAMS)))
+                eps[:, [i for i in range(len(PARAMS)) if i not in active_dims]] = 0.
                 cand_params = {}
                 for k, draw in enumerate(eps):
                     for sign, cand in ((+1, 2 * k), (-1, 2 * k + 1)):
@@ -365,6 +390,17 @@ def drive(argv=None):
                           indent=2, allow_nan=False)
             jobs = []
             for host, workers in (("gpuA", args.gpuA_workers), ("cpuQ", args.cpuq_workers)):
+                if args.account_for_probes:
+                    if host == "gpuA":
+                        done = len(list((safe(Path_root()) / "probe_k8").glob("PROBE_f*.json")))
+                    else:
+                        result = subprocess.run(["ssh", "cpuQ",
+                            f"ls {args.cpuq_root}/probe_k8/PROBE_f*.json 2>/dev/null | wc -l"],
+                            text=True, capture_output=True, check=True)
+                        done = int(result.stdout.strip())
+                    workers -= max(0, 8 - done)
+                    if workers < 1:
+                        raise ValueError("no worker slots after reserving live probe CPUs")
                 todo = [(c, fg) for c in cand_params for fg in groups
                         if host_of(fg) == host
                         and not (out / cell_name(gen, c, fg["corpus"], fg["group"],
@@ -383,8 +419,11 @@ def drive(argv=None):
                                       json.dumps(cand_params[c]).encode()).hexdigest())
                              for c, fg in chunk]
                     manifest = dict(gen=gen, sweep_id=sweep_id, cells=cells,
-                                    incumbents={p["name"]: incumbent_values[i]
-                                                for i, p in enumerate(PARAMS)})
+                                     incumbents={p["name"]: incumbent_values[i]
+                                                 for i, p in enumerate(PARAMS)},
+                                     prepared_sha256=dict(fit=digest(args.prepared),
+                                         wm=registry["parts"]["wm"]["sha256"]),
+                                     crossing_width=doc["crossing_width"])
                     with (out / f"MANIFEST_{sweep_id}.json").open("x") as stream:
                         json.dump(manifest, stream, allow_nan=False)
                     jobs.append((host, sweep_id))
@@ -392,7 +431,7 @@ def drive(argv=None):
             children = []
             for host, sweep_id in jobs:
                 if host == "gpuA":
-                    cmd = ["/root/miniconda3/bin/python", "-m", "tools.wmfixmerge.es",
+                    cmd = ["nice", "-n", "19", "/root/miniconda3/bin/python", "-m", "tools.wmfixmerge.es",
                            "--mode", "sweep", "--prepared", args.prepared, "--config", args.config,
                            "--checkpoint", args.checkpoint, "--controllers", args.controllers,
                            "--manifest", str(out / f"MANIFEST_{sweep_id}.json"),
@@ -405,18 +444,19 @@ def drive(argv=None):
                         env=env, cwd=str(safe(Path_root())))))
                 else:
                     remote = (f"cd {args.cpuq_root}/wt && "
-                              f"nohup sudo env PYTHONPATH=src:. OMP_NUM_THREADS=1 "
+                               f"nohup sudo nice -n 19 env PYTHONPATH=src:. OMP_NUM_THREADS=1 "
                               f"MKL_NUM_THREADS=1 /home/ubuntu/miniconda3/bin/python "
                               f"-m tools.wmfixmerge.es --mode sweep "
                               f"--prepared {args.cpuq_prepared} "
-                              f"--prepared-wmdata {args.cpuq_prepared_wmdata} "
+                               f"--prepared-wmdata {args.cpuq_prepared_wmdata} "
+                               f"--wmdata-controllers {args.wmdata_controllers} "
                               f"--config {args.config} --checkpoint {args.checkpoint} "
                               f"--controllers {args.controllers} "
-                              f"--manifest {args.cpuq_root}/es_run_combined/MANIFEST_{sweep_id}.json "
-                              f"--out {args.cpuq_root}/es_run_combined > {args.cpuq_root}/es_run_combined/"
+                               f"--manifest {args.cpuq_out}/MANIFEST_{sweep_id}.json "
+                               f"--out {args.cpuq_out} > {args.cpuq_out}/"
                               f"SWEEP_{sweep_id}.log 2>&1 < /dev/null & echo launched")
                     subprocess.run(["scp", "-q", str(out / f"MANIFEST_{sweep_id}.json"),
-                                    f"cpuQ:{args.cpuq_root}/es_run_combined/MANIFEST_{sweep_id}.json"],
+                                     f"cpuQ:{args.cpuq_out}/MANIFEST_{sweep_id}.json"],
                                    check=True)
                     # The remote worker may hold the ssh session open after
                     # launch; the poll loop (ENV/CELL files) is the liveness
@@ -431,7 +471,11 @@ def drive(argv=None):
                     children.append((sweep_id, None))
             while True:
                 time.sleep(args.poll)
-                pull(f"{args.cpuq_root}/es_run_combined", out, "cpuQ")
+                pull(args.cpuq_out, out, "cpuQ")
+                for host, sweep_id in jobs:
+                    failed = out / f"SWEEP_FAILED_{sweep_id}.json"
+                    if failed.is_file():
+                        raise RuntimeError(f"{host} sweep failed: " + failed.read_text())
                 present = sum((out / cell_name(gen, c, fg["corpus"], fg["group"],
                                                fg["arm"], args.fitness_horizon)).is_file()
                               for c, fg in expected)
@@ -448,7 +492,10 @@ def drive(argv=None):
             for cand, params in cand_params.items():
                 cells = [json.loads((out / cell_name(gen, cand, fg["corpus"], fg["group"],
                                                      fg["arm"], args.fitness_horizon)).read_text())
-                         for fg in groups]
+                          for fg in groups]
+                expected_sha = hashlib.sha256(json.dumps(params).encode()).hexdigest()
+                if any(cell.get("params_sha256") != expected_sha for cell in cells):
+                    raise ValueError("candidate parameter hash differs in rollout cells")
                 fitness, reports = fitness_from_cells(cells, scales, anchor_scales)
                 results[cand] = dict(fitness=fitness, params=params_doc(params), **reports)
             receipt = dict(gen=gen, seconds=round(time.monotonic() - gen_began, 1),
@@ -464,6 +511,8 @@ def drive(argv=None):
             receipt.update(best_overall=best, improved=bool(improved), stale_generations=stale)
             with (out / f"GEN_{gen:03d}.json").open("x") as stream:
                 json.dump(receipt, stream, indent=2, allow_nan=False)
+            export_physical_checkpoint(args, out, gen, best)
+            reserve = receipt["seconds"] * (args.popsize if gen == 0 else 1.2)
             print(json.dumps(dict(gen=gen, best_fitness=gen_best[1]["fitness"],
                                   improved=improved, stale=stale,
                                   seconds=receipt["seconds"])), flush=True)
@@ -484,8 +533,58 @@ def drive(argv=None):
         json.dump(dict(best=best, stopped_after_gen=gen,
                        elapsed_s=round(time.monotonic() - began, 1),
                        incumbents=params_doc(incumbent_values)), stream, indent=2,
-                  allow_nan=False)
+                   allow_nan=False)
+    selected = out / f"generation_{best['gen']:03d}.pt"
+    with (out / "FINAL.json").open("x") as stream:
+        json.dump(dict(status="COMPLETE", step=best["gen"] + 1,
+                       checkpoint=str(selected), sha256=digest(selected),
+                       selection="minimum equal-world TRAIN paired road/crossing objective",
+                       best=best), stream, indent=2, allow_nan=False)
+    # Final config must match the selected immutable physical checkpoint.
+    from shutil import copyfile
+    copyfile(out / f"generation_{best['gen']:03d}_config.json", out / "candidate_config.json")
     return 0
+
+
+def export_physical_checkpoint(args, out, generation, best):
+    """Canonical wm_s/1 export: original WM2 tensors + unchanged zero head."""
+    import torch
+    from dataclasses import asdict
+    from tools.wmcombined.e3_score import load_for_scoring
+    from wms.model.checkpoint import load_checkpoint
+    torch.set_num_threads(1)
+    torch.manual_seed(140014)
+    config, _, model = load_for_scoring(args.config, args.checkpoint)
+    model.enable_merge_response()
+    original = torch.load(safe(args.checkpoint), map_location="cpu", weights_only=True)
+    frozen = original["model"]
+    for name, value in frozen.items():
+        if not torch.equal(value, model.state_dict()[name]):
+            raise ValueError("export changed frozen tensor: " + name)
+    for p in PARAMS:
+        if p["where"] == "physics":
+            setattr(model.physics, p["name"], best["params"][p["name"]])
+    payload = dict(original, model=model.state_dict(),
+                   config=dict(original["config"], merge_response=True, physics=asdict(model.physics)),
+                   wmfix=dict(base_sha256=WM2_SHA, step=generation + 1, candidate="ES-WM",
+                              selected=best, frozen_bitwise=True,
+                              flags=dict(merge_response=True, conserve_queue=True, learned_admission=True)))
+    path = out / f"generation_{generation:03d}.pt"
+    with path.open("xb") as stream:
+        torch.save(payload, stream)
+        stream.flush()
+        os.fsync(stream.fileno())
+    loaded = load_checkpoint(path).model
+    if any(not torch.equal(value, loaded.state_dict()[name]) for name, value in payload["model"].items()):
+        raise ValueError("ES canonical reload changed tensors")
+    for p in PARAMS:
+        if p["where"] == "physics" and getattr(loaded.physics, p["name"]) != best["params"][p["name"]]:
+            raise ValueError("ES canonical reload lost physical scalar: " + p["name"])
+    resolved = asdict(config)
+    resolved["model"]["merge_response"] = True
+    resolved["physics"] = asdict(model.physics)
+    with (out / f"generation_{generation:03d}_config.json").open("x") as stream:
+        json.dump(resolved, stream, indent=2, allow_nan=False)
 
 
 def Path_root():
@@ -498,7 +597,16 @@ def main(argv=None):
     parser.add_argument("--mode", choices=("sweep", "drive"), required=True)
     args, rest = parser.parse_known_args(argv)
     if args.mode == "sweep":
-        return sweep(rest)
+        try:
+            return sweep(rest)
+        except Exception as exc:
+            import traceback
+            out = safe(rest[rest.index("--out") + 1])
+            manifest = safe(rest[rest.index("--manifest") + 1])
+            sid = json.loads(manifest.read_text())["sweep_id"]
+            with (out / f"SWEEP_FAILED_{sid}.json").open("x") as stream:
+                json.dump(dict(pid=os.getpid(), blocker=str(exc), traceback=traceback.format_exc()), stream)
+            raise
     return drive(rest)
 
 
