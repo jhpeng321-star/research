@@ -63,6 +63,7 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
     delegated = out.get(WM_MERGE_KEY)
     if delegated is not None:
         deciders = deciders | delegated.bool()
+    deciders = deciders & (kin[..., 1:4].sum(-1) > 0)
     lc = evaluate(model, state, moved, present, deciders, params)
     proposed = torch.where(deciders, lc["next_lane"], next_lane)
     resolved = resolve_lane_conflicts(next_s, kin[..., 6], state["lane"].long(),

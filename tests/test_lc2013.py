@@ -127,3 +127,12 @@ def test_invalid_follower_parameters_fail_closed():
     out = lane_change(k, mask, PhysicsConfig(), driver_params={
         'accel': torch.tensor([[2.6, float('nan')]])})
     assert not out['lc2013_safe'][0, 0]
+
+
+def test_connector_is_not_a_lane_zero_obstacle_or_decider():
+    k, mask = scene([(40, 2, 0), (40, 0, 0)])
+    k[0, 1, 1:4] = 0
+    out = lane_change(k, mask, PhysicsConfig())
+    assert out['next_lane'][0, 0] == 1
+    assert out['next_lane'][0, 1] == -1
+    assert not out['lc2013_present'][0, 1]

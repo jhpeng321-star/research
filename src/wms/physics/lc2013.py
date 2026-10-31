@@ -152,8 +152,10 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     sequential. Speed advice is emitted for the NEXT longitudinal update.
     """
     kin = kin.detach().double()
-    present = present.bool()
-    lane = lane_of(kin)
+    # Empty one-hot is a junction connector in WM observables, not lane 0.
+    normal_lane = kin[..., 1:4].sum(-1) > 0
+    present = present.bool() & normal_lane
+    lane = torch.where(normal_lane, lane_of(kin), -1)
     v, s, length = kin[..., 4], kin[..., 0], kin[..., 6]
     dt = float(physics.dt_s)
     p = _settings(v, physics, driver_params)

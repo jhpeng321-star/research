@@ -43,6 +43,10 @@ Numeric secure-gap, discrete braking inverse,
 strategic ramp, overlap/two-sided safety, assertive, persistent speed-gain,
 5s keep-right, cooperative clearing, identity/absence reset, invalid settings,
 default-off/spec checks, lane-logit ownership, fixed CAV lanes and exact chunk parity.
+`tools/rblane/` validator/owned-dispatch tools added: 160 FIT episodes, 60s
+causal wish warmup then 60s teacher-forced scoring, paired MOBIL. Smoke finished
+on cpuQ (own PID180907 exited): LC exact7/30 vs MOBIL3/30; full panel pending.
+19 current LC/model/scorer tests pass; empty-onehot connectors are excluded.
 Source scope: highway, sublane OFF. **Known parity gaps:** synchronous messages
 instead of SUMO downstream-first serial changes; full leader-overtake/fall-behind
 negotiation and right-overtaking prevention not ported; no roundabouts,
