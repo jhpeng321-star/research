@@ -4,9 +4,9 @@ Updated 2026-11-01 ~00:49 +08; branch `c4/rb-int`. Owner registration5683/5697/5
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
-- **WM-PHYS-A / RUNA gpuA**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-A.runa.json`.
+- **WM-PHYS-A / RUNA gpuA**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A.runa.json`.
 - **WM-PHYS-B / RUNB gpuR**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-B.runb.json`.
-- **WM-PHYS-C / RUNA gpuA next**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-C.runa.json`.
+- **WM-PHYS-C / RUNA gpuA next**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C.runa.json`.
 - Exact candidate source commit **b0f66943ec300594fc220d3779fb482c26534b1c**.
 - Immutable runtime on BOTH hosts: `/root/rbeval20261031/phys_code_b0f66943ec30`.
 - Config: that runtime's `configs/wm_phys.toml`; entrypoint B:
@@ -62,6 +62,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   one missing frozen controller asset fixed before any completed rollout/task.
 
 ## Jobs / coordination
+- RUNA intake-path repair: its discover() ONLY matches rb-shared/evalclaims
+  paths, not INT docs paths. Published semantically identical A/C launch JSONs
+  there; existing watcher44796 will claim them. No duplicate watcher/dispatch.
 - Fresh-session audit: clean HEAD61e4e036 retained; all prior receipts/stages preserved.
 - RUNB already owns B, supervisor gpuR728893 WAITING_RESOURCES; do not redispatch.
 - RUNA watcher44796 owns intake of published A/C; no A claim at00:42 poll.
