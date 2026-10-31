@@ -1,0 +1,26 @@
+{
+ "schema": "rbeval-gate/1",
+ "verdict": "NOT_QUALIFIED",
+ "pilot_only": true,
+ "reasons": [
+  "incomplete K8 panel",
+  "missing registered demand/penetration cells",
+  "simultaneous upstream rate precision insufficient",
+  "upstream point rate outside simultaneous real intervals",
+  "cell-level delay/speed CRPS superiority unproven or failed",
+  "speed support/missingness prevents complete field scoring",
+  "timing IBS superiority unproven or failed",
+  "onset CDF simultaneous real bands insufficient or violated",
+  "paired upstream WM-real rate compatibility unproven or failed (includes K8 MC)",
+  "expected-shift arm-order evidence insufficient or failed",
+  "expected shifts unproven or outside paired real intervals"
+ ],
+ "complete_worlds": 6,
+ "bootstrap": 10000,
+ "bootstrap_seed": 20261031,
+ "bootstrap_method": "demand/penetration/split-stratified whole-world centered standardized max-stat",
+ "rate_family_primary": 180,
+ "rate_family_diagnostic": 360,
+ "scope": "Fixed overnight diagnostic, not a powered qualification panel",
+ "caveat": "One factual continuation per world cannot identify same-state irreducible randomness"
+}
