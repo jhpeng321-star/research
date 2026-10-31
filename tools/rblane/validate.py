@@ -160,7 +160,7 @@ def load_motion_point(path):
 
 @torch.no_grad()
 def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None,
-            motion_parameters=None):
+            motion_parameters=None, encoder=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
     if reuse_mobil is not None and reuse_mobil['input_sha256'] != hashes:
         raise ValueError('MOBIL reuse requires exact observable input hashes')
@@ -180,6 +180,7 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         raise ValueError('missing registered prehistory or diagnostic horizon')
     if not np.allclose(np.diff(times), physics.dt_s, rtol=0, atol=1e-8):
         raise ValueError('unexpected time discretization')
+    encoded = encoder.prepare(kin, mask, ids, times, t0) if encoder is not None else None
     memory = None
     actual, proposals = [], {'lc2013': [], 'mobil': []}
     motivated = {name: [] for name in MOTIVATIONS.values()}
@@ -201,8 +202,9 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         m = torch.from_numpy(present).unsqueeze(0)
         identity = torch.from_numpy(np.array(ids[t], copy=True)).unsqueeze(0)
         d = torch.from_numpy(eligible).unsqueeze(0)
-        params = motion_settings(physics, torch.from_numpy(np.array(cav[t], copy=True)).bool().unsqueeze(0),
-                                 motion_parameters)
+        is_cav = torch.from_numpy(np.array(cav[t], copy=True)).bool().unsqueeze(0)
+        params = (encoded.settings(identity, is_cav) if encoded is not None else
+                  motion_settings(physics, is_cav, motion_parameters))
         memory = lane_change(k, m, physics, memory=memory, identity=identity,
                              decision_mask=d, driver_params=params)
         if times[t] < t0:
@@ -337,7 +339,10 @@ def main():
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--reuse-mobil-from', type=Path)
     ap.add_argument('--idm-parameters', type=Path)
+    ap.add_argument('--encoder-checkpoint', type=Path)
     args = ap.parse_args()
+    if args.idm_parameters is not None and args.encoder_checkpoint is not None:
+        ap.error('choose one frozen parameter source')
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
     if os.getloadavg()[0] > 20:
@@ -348,6 +353,13 @@ def main():
     physics = PhysicsConfig(sumo_fidelity=True, open_road=True)
     motion_parameters = load_motion_point(args.idm_parameters) if args.idm_parameters is not None else None
     parameter_sha = sha(args.idm_parameters) if args.idm_parameters is not None else None
+    encoder = None
+    if args.encoder_checkpoint is not None:
+        if any(term in str(args.encoder_checkpoint.resolve()).lower() for term in FORBIDDEN):
+            raise ValueError('prohibited checkpoint path')
+        from .encoder import FrozenMotionEncoder, REGISTERED_WM2_SHA
+        encoder = FrozenMotionEncoder(args.encoder_checkpoint, physics, required_sha=REGISTERED_WM2_SHA)
+        parameter_sha = encoder.sha256
     baseline = None
     if args.reuse_mobil_from is not None:
         baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
@@ -370,16 +382,19 @@ def main():
     for path in paths:
         reuse = (json.loads((args.reuse_mobil_from / (path.name + '.json')).read_text())
                  if baseline is not None else None)
-        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters)
+        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters, encoder)
         rows.append(row)
         (args.out / (path.name + '.json')).write_text(json.dumps(row, indent=2) + '\n')
         print(json.dumps(dict(completed=len(rows), total=len(paths), episode=path.name,
                               elapsed_s=time.time()-start)), flush=True)
     report = dict(status='COMPLETE', episodes=len(rows), worlds=len({r['seed'] for r in rows}),
                   horizon_s=args.horizon_s, prehistory_s=60,
-                  settings=('inherited population defaults' if motion_parameters is None else
+                  settings=('frozen WM2 pre-t0 motion encoder; persistent VID settings; CAV/LC defaults'
+                            if encoder is not None else 'inherited population defaults'
+                            if motion_parameters is None else
                             'published motion-only pooled IDM point for HDVs; CAV and LC style defaults'),
                   motion_parameters=motion_parameters, motion_parameter_sha256=parameter_sha,
+                  encoder_checkpoint_sha256=encoder.sha256 if encoder is not None else None,
                   snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
                   cohort='HDV, same identity, normal road in both adjacent frames',
                   motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
@@ -388,7 +403,8 @@ def main():
                   by_arm={arm: aggregate([r for r in rows if r['arm'] == arm]) for arm in ARMS
                           if any(r['arm'] == arm for r in rows)},
                   elapsed_s=time.time()-start,
-                  source_sha256={str(p): sha(p) for p in (Path(__file__), *(
+                  source_sha256={str(p): sha(p) for p in (Path(__file__),
+                    Path(__file__).with_name('encoder.py'), *(
                     Path(__file__).parents[2] / ('src/wms/physics/' + name)
                     for name in ('lc2013.py', 'lc2013_geometry.py', 'config.py',
                                  'mobil.py', 'neighbours.py', 'batched.py')))})

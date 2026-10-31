@@ -28,6 +28,16 @@ disable source1749's slow-current-leader keep-right cap. Next: distinguish
 source defects from this missing heterogeneity using already-inferred physical
 settings; no LC fitting/threshold tuning. All iterations/reasons retained.
 
+**Parameter sensitivity7 (verified):** INT's already-fitted pooled CF point
+gives LC precision2.015%/recall38.802%,1263/62689; keep-right alone49701
+proposals. Strategic precision improves20.63%, but overall over-proposal
+worsens. Paired new-setting MOBIL187/3255 recall5.745%; old baseline not rerun.
+**Encoder8 ready/pending:** exact registered WM2 b8797242… motion encoder,
+strict weights and authentic240..300 history; static VID settings at300,
+zero-history encoder-centre entrants, CAV/LC defaults. Three independent
+extractor tests PASS (all9 outputs bit-exact to full-model encode_drivers,
+no future dependence, missing-weight rejection); scorer7tests PASS. No training.
+
 Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
 Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
 

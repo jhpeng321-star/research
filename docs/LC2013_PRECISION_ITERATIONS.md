@@ -163,3 +163,46 @@ once (old MOBIL scores cannot be reused across changed settings). This is a
 new paired sensitivity, not retraining or a source-threshold sweep. Settings
 artifact bytes are bound inside the immutable bundle and verified. Seven
 validator CPU tests PASS, including rejecting post-start/out-of-FIT metadata.
+
+Candidate7 sensitivity completed/verified (worker423311 exited,203.08s):
+LC1263/62689 exact = precision2.0147%, recall38.8018%; newly matched-setting
+MOBIL187/3752 = precision4.9840%, recall5.7450%. This pooled CF point improves
+strategic precision but **worsens total over-proposal**. Per predicted reason:
+strategic20.625%/15.607pp (508/2463); cooperative13.312%/3.902pp (127/954);
+speed-gain2.967%/8.725pp (284/9571); keep-right0.692%/10.568pp (344/49701).
+No fitted CF setting is substituted into the LC default implementation as a
+result. This matters to INT'sC interpretation; the full integrated gate owns
+adoption. LC style remained source defaults throughout.
+
+## Candidate8: existing motion encoder, no new fitted setting
+
+Fetched the registered WM2 checkpoint from its explicit gpuA model-asset path;
+SHA b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436,
+3,756,566bytes, receipt ENCODER_SOURCE.json. Copied into NEW EMPTY approved
+temporary directory. CPU source inspection only; GPU0/no model rollout.
+The checkpoint has physical-mode,60s/1s long-history encoder weights.
+
+New `tools/rblane/encoder.py` strictly loads ONLY all `driver_encoder.*`
+tensors into the exact existing DriverEncoder. Shared trainer history features
+and source model interaction function, no learned motion/LC correction runs.
+One inference at300 using only240..300 data; parameters cached by observed VID
+for all scored frames. LC warmup replays pre-t0 observations with these static
+inferred settings. Drivers absent at300 use the frozen encoder's zero-history
+population centre (including future entrants); CAVs retain original defaults.
+No post300 motion contributes to driver inference. Noncomparable inferred
+MOBIL lane parameters never map into LC2013 style.
+
+CPU extractor tests independently compare all9 outputs bit-exact to the
+original full model's encode_drivers, mutate all post300 data (outputs stay
+identical), check source-centre fallback/CAV defaults, and fail closed on a
+missing weight or wrong checkpoint SHA. Combined encoder/scorer10tests PASS.
+Candidate8 will score BOTH algorithms under this new frozen parameter setting
+once; old baseline results are retained, not reused across different settings.
+
+Real frozen-weight parity also PASS (`ENCODER_PARITY.json`): all171 source
+model keys strictly loaded, all9 inferred outputs bit-exact against the full
+source model. First constructor-only attempt stopped because its original
+learned-yield architecture requires lane_learnable=true; setting that original
+construction flag permits strict load, with no acceleration/LC forward run.
+The extracted encoder retains the diagnostic's original physics defaults;
+its parameters still match the source model exactly. No gate was relaxed.

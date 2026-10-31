@@ -1,0 +1,79 @@
+{
+  "source": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+  "source_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+  "bytes": 3756566,
+  "load": [
+    10.96240234375,
+    10.89208984375,
+    9.43408203125
+  ],
+  "config": {
+    "history_s": 60.0,
+    "history_stride_s": 1.0,
+    "history_features": 6,
+    "driver_param_mode": "physical",
+    "rollout_mode": "hybrid"
+  },
+  "encoder_shapes": {
+    "driver_encoder.query": [
+      48
+    ],
+    "driver_encoder.centre_logits": [
+      5
+    ],
+    "driver_encoder.bounds": [
+      9
+    ],
+    "driver_encoder.physical_lower": [
+      5
+    ],
+    "driver_encoder.physical_upper": [
+      5
+    ],
+    "driver_encoder.history_proj.0.weight": [
+      48,
+      6
+    ],
+    "driver_encoder.history_proj.0.bias": [
+      48
+    ],
+    "driver_encoder.interaction_proj.0.weight": [
+      48,
+      4
+    ],
+    "driver_encoder.interaction_proj.0.bias": [
+      48
+    ],
+    "driver_encoder.head.0.weight": [
+      48,
+      102
+    ],
+    "driver_encoder.head.0.bias": [
+      48
+    ],
+    "driver_encoder.head.2.weight": [
+      18,
+      48
+    ],
+    "driver_encoder.head.2.bias": [
+      18
+    ],
+    "driver_encoder.history_gru.weight_ih": [
+      144,
+      9
+    ],
+    "driver_encoder.history_gru.weight_hh": [
+      144,
+      48
+    ],
+    "driver_encoder.history_gru.bias_ih": [
+      144
+    ],
+    "driver_encoder.history_gru.bias_hh": [
+      144
+    ]
+  },
+  "local_path": "E:\\Temp\\opencode\\rblane-wm2-encoder\\wm_s.pt",
+  "copied_at": 1793465690.962477,
+  "purpose": "frozen motion encoder inference; no WM rollout or training"
+}

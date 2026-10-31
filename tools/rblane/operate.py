@@ -28,7 +28,7 @@ def remote(code):
     return result.stdout
 
 
-def launch(kind, idm_parameters=None):
+def launch(kind, idm_parameters=None, encoder_checkpoint=None):
     from .validate import FORBIDDEN
     RECEIPTS.mkdir(exist_ok=True)
     receipt = RECEIPTS / (kind.upper() + '_DISPATCH.json')
@@ -51,10 +51,15 @@ def launch(kind, idm_parameters=None):
             from .validate import load_motion_point
             load_motion_point(idm_parameters)
             archive.write(idm_parameters, 'inputs/idm_pooled.json')
+        if encoder_checkpoint is not None:
+            from .encoder import REGISTERED_WM2_SHA
+            assert not any(term in str(encoder_checkpoint.resolve()).lower() for term in FORBIDDEN)
+            assert hashlib.sha256(encoder_checkpoint.read_bytes()).hexdigest() == REGISTERED_WM2_SHA
+            archive.write(encoder_checkpoint, 'inputs/wm_s.pt')
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
     reuse = None
-    if kind != 'smoke' and kind != 'panel' and idm_parameters is None:
+    if kind != 'smoke' and kind != 'panel' and idm_parameters is None and encoder_checkpoint is None:
         first = json.loads((RECEIPTS / 'PANEL_COMPLETE.json').read_text())
         assert first['complete'] and not first['alive']
         reuse = first['root'] + '/results'
@@ -83,6 +88,7 @@ cmd=['/usr/bin/nice','-n','19',{PYTHON!r},'-B','-m','tools.rblane.validate',
      '--out',str(p/'results')]+(['--smoke'] if {kind=='smoke'!r} else [])
 if {reuse!r} is not None: cmd += ['--reuse-mobil-from',{reuse!r}]
 if {idm_parameters is not None!r}: cmd += ['--idm-parameters',str(p/'inputs/idm_pooled.json')]
+if {encoder_checkpoint is not None!r}: cmd += ['--encoder-checkpoint',str(p/'inputs/wm_s.pt')]
 with (p/'run.log').open('x') as log:
     child=subprocess.Popen(cmd,cwd=p,env=env,stdin=subprocess.DEVNULL,
        stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
@@ -139,12 +145,15 @@ def main():
     ap.add_argument('command')
     ap.add_argument('--kind', default='smoke')
     ap.add_argument('--idm-parameters', type=Path)
+    ap.add_argument('--encoder-checkpoint', type=Path)
     args = ap.parse_args()
+    if args.idm_parameters is not None and args.encoder_checkpoint is not None:
+        ap.error('choose one frozen parameter source')
     import re
     if not re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.kind):
         ap.error('invalid run kind')
     if re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.command):
-        launch(args.command, args.idm_parameters)
+        launch(args.command, args.idm_parameters, args.encoder_checkpoint)
     elif args.command in ('status', 'collect'):
         status(args.kind, args.command=='collect')
     else:

@@ -42,7 +42,10 @@ with zipfile.ZipFile(p/'code.zip') as z:
         rel=pathlib.Path(name).relative_to(p).as_posix()
         assert hashlib.sha256(z.read(rel)).hexdigest()==digest
         assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
-    if summary.get('motion_parameter_sha256') is not None:
+    if summary.get('encoder_checkpoint_sha256') is not None:
+        assert hashlib.sha256(z.read('inputs/wm_s.pt')).hexdigest()==summary['encoder_checkpoint_sha256']
+        assert summary['motion_parameter_sha256']==summary['encoder_checkpoint_sha256']
+    elif summary.get('motion_parameter_sha256') is not None:
         data=z.read('inputs/idm_pooled.json')
         assert hashlib.sha256(data).hexdigest()==summary['motion_parameter_sha256']
         assert json.loads(data)['parameters']==summary['motion_parameters']
@@ -58,6 +61,8 @@ print(json.dumps(dict(source_bundle_sha256={dispatch['bundle_sha256']!r},
                   aggregate_reassembly='exact', dispatched_model_and_scorer_hashes='exact',
                   same_cohort_and_all_input_hashes='exact',
                   mobil_score_reuse=('exact' if summary.get('motion_parameter_sha256') is None
+                                     else 'new paired scoring under frozen motion encoder'
+                                     if summary.get('encoder_checkpoint_sha256') is not None
                                      else 'new paired scoring under new motion-only physical point'),
                   target_events_reconciled=targets['scoring_events'],
                   **binding)
