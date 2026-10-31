@@ -216,6 +216,49 @@ def test_unc_bridge_preserves_cavs_auxiliary_coordinates_and_identity(tmp_path):
         MotionFit(tmp_path, shrinkage_path=tmp_path/'bad_policy.json')
 
 
+def test_generic_motion_posterior_needs_no_vid_and_rejects_noncausal_motion(tmp_path):
+    import hashlib
+    import torch
+    from wms.physics.motion_fit import MotionFit
+
+    support = np.stack([fit.INITIAL, fit.INITIAL*1.2])
+    pop = dict(schema='wm_phys.idm_population.v1', parameter_order=list(fit.NAMES),
+        distribution='finite_support_mixture', support=support.tolist(), weights=[.5, .5],
+        **idm_mixture.moments(support, np.array([.5, .5])), delta=4, sigma_accel_mps2=.2)
+    post = dict(schema='wm_phys.idm_posteriors.v1', parameter_order=list(fit.NAMES),
+                conditioning_end_s=300, drivers={})
+    fit.write_json(tmp_path/'idm_population.json', pop)
+    fit.write_json(tmp_path/'idm_posteriors.json', post)
+    policy = dict(schema='wm_phys.idm_shrinkage.v1', conditioning_end_s=300,
+        idm_population_sha256=hashlib.sha256((tmp_path/'idm_population.json').read_bytes()).hexdigest(),
+        population_only=False, prior_count=19.355678502354067)
+    fit.write_json(tmp_path/'policy.json', policy)
+    reader = MotionFit(tmp_path)
+    before = np.array([7., 12., 17., 23.])
+    prediction = fit.next_speed(before[:, None], np.array([30., 45., 60., 80.])[:, None],
+                                before[:, None], support, .5)
+    tensors = [torch.tensor(v) for v in (prediction, before, prediction[:, 1],
+                                         np.full(4, .5), np.arange(298.5, 300.5, .5))]
+    result = reader.condition_motion(*tensors, t0_s=300, policy_path=tmp_path/'policy.json')
+    ll = -(((prediction-prediction[:, 1, None])/.5)**2).sum(0)/(2*.2**2)
+    weights = np.exp(ll-ll.max()); weights /= weights.sum()
+    r = 4/(4+policy['prior_count'])
+    np.testing.assert_allclose(result['weights'], r*weights+(1-r)*.5, atol=1e-13)
+    assert result['conditioning_end_s'] == 300 and result['n_observations'] == 4
+    empty = [t[:0] for t in tensors]
+    prior = reader.condition_motion(*empty, t0_s=301, policy_path=tmp_path/'policy.json')
+    np.testing.assert_allclose(prior['weights'], [.5, .5])
+    future = list(tensors); future[-1] = future[-1]+.5
+    with pytest.raises(ValueError, match='causal last60s'):
+        reader.condition_motion(*future, t0_s=300)
+    old = list(tensors); old[-1] = old[-1]-60
+    with pytest.raises(ValueError, match='causal last60s'):
+        reader.condition_motion(*old, t0_s=300)
+    overlap = list(tensors); overlap[-1] = torch.tensor([298.5, 298.75, 299.5, 300.])
+    with pytest.raises(ValueError, match='nonoverlapping'):
+        reader.condition_motion(*overlap, t0_s=300)
+
+
 @pytest.mark.parametrize("v,gap,vl,p,dt,expected",[
     (10,22.5,10,[50/3.6,1,2.6,4.5,2.5],0.5,10.505369042766489),
     (0,32.5,50/3.6,[50/3.6,1,2.6,4.5,2.5],0.5,1.292304647309232),
