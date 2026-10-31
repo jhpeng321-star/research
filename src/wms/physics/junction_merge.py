@@ -212,8 +212,13 @@ def apply_merge(kin, present, proposed_lane, deciders, physics, driver_params=No
                  look * 20 + 2 * (kin[..., 6] + p['min_gap']))
     for rank in range(count):
         idx = order[:, rank:rank + 1]
-        g = merge_geometry(occupied, present, physics, driver_params)
-        allowed = (g['safe'] & ramp & strategic).gather(-1, idx)
+        if getattr(physics, 'sumo_merge_query_fast', False):
+            from .junction_query import merge_geometry_at
+            g = merge_geometry_at(occupied, present, idx, physics, driver_params)
+            allowed = g['safe'] & ramp.gather(-1, idx) & strategic.gather(-1, idx)
+        else:
+            g = merge_geometry(occupied, present, physics, driver_params)
+            allowed = (g['safe'] & ramp & strategic).gather(-1, idx)
         result.scatter_(-1, idx, torch.where(allowed,
             torch.full_like(idx, physics.merge_target_lane), result.gather(-1, idx)))
         selected = torch.zeros_like(present).scatter(-1, idx, allowed)

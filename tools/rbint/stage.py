@@ -21,7 +21,8 @@ def main():
               'artifacts/rbfit/shrinkage_v1/idm_population.json',
               'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
               'docs/paper_results/rbunc/observed_arrivals.json',
-              'tools/rbfit', 'tests/unit/test_rbfit.py']
+              'tools/rbfit', 'tests/unit/test_rbfit.py',
+              'tests/test_rbint_merge_fast.py']
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)
     archive_sha = hashlib.sha256(archive).hexdigest()
     parent = '/home/ubuntu/rbint20261101' if args.host == 'cpuQ' else '/root/rbeval20261031'
