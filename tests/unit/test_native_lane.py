@@ -62,6 +62,21 @@ def test_native_lane_moves_policy_lane_stays_and_native_acceleration_is_retained
     assert out[..., 3].tolist() == [[0., .3, 0.]]
 
 
+def test_frozen_mappo_native_lane_flag_delegates_lanes_not_acceleration():
+    state = wm_scene(2., True)
+    state['lane'][:] = 1
+    state['is_cav'][:] = True
+    state[WM_LANE_TARGET_KEY] = torch.zeros_like(state['lane'])
+    c = controller(torch.ones_like(state['present']), policy_native_lanes=True)
+    assert torch.equal(c.native_lane_mask(state), state['present'])
+    out = c(state)
+    assert out[..., 1].long().tolist() == [[0, 0, 0]]
+    assert out[..., 3].tolist() == [[.3, .3, .3]]
+    with pytest.raises(ValueError, match='requires native_lane_change'):
+        make_cav_controller(ScriptedLanes(), group, identity_safety,
+                            policy_native_lanes=True)
+
+
 def test_native_head_and_safety_run_before_the_native_lane_substep():
     state = wm_scene(2., True)
     state["lane"][:] = 1

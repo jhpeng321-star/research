@@ -4,9 +4,10 @@ Updated 2026-11-01 ~00:49 +08; branch `c4/rb-int`. Owner registration5683/5697/5
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
-- **WM-PHYS-A / RUNA gpuA**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A.runa.json`.
+- WM-PHYS-A: RUNA claimed; constructor FAILED before any rollout; see Jobs.
 - **WM-PHYS-B / RUNB gpuR**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-B.runb.json`.
-- **WM-PHYS-C / RUNA gpuA next**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C.runa.json`.
+- WM-PHYS-C: NOT READY (same controller-interface prerequisite as A); original
+  manifest retained at `docs/paper_results/WM-PHYS-C.runa.json`.
 - Exact candidate source commit **b0f66943ec300594fc220d3779fb482c26534b1c**.
 - Immutable runtime on BOTH hosts: `/root/rbeval20261031/phys_code_b0f66943ec30`.
 - Config: that runtime's `configs/wm_phys.toml`; entrypoint B:
@@ -22,6 +23,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- Ported ONLY existing frozen MAPPO `policy_native_lanes` ownership option
+  from c4/speedhead bridge (default OFF). Needed by the unchanged registered
+  callback; policy acceleration preserved, WM native lanes delegated.
 - FULL recipe/entrypoint now wired (NOT READY until staged smoke): fitted
   shrinkage_v1 joint draws + learned entrance-counter/Gamma-rate/Poisson clocks.
   Reads ONLY hash-bound existing start/history exports; numeric vid_index follows
@@ -53,6 +57,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Controller ownership + recipe **18 PASS**; a broader TimelineControllers
+  test needs local onnxruntime (absent). Real five-arm staged smoke still required.
 - FULL recipe integration **26 CPU tests PASS /24.61s**. Checks packed-vs-recorded
   IDs, prior/posterior distinction, untouched CAV settings, action-paired replay,
   learned source conditioning, changed-start/permutation rejection. Smoke next.
@@ -81,6 +87,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   one missing frozen controller asset fixed before any completed rollout/task.
 
 ## Jobs / coordination
+- A claimed/attempted once by RUNA at01:08; all3 workers failed before rollout:
+  frozen MAPPO callback uses policy_native_lanes unsupported by base bridge.
+  Original remote FAILED.json/logs preserved, no completed task to repeat.
+  New recovery source/variant names only after five-arm interface verification.
 - RUNA intake-path repair: its discover() ONLY matches rb-shared/evalclaims
   paths, not INT docs paths. Published semantically identical A/C launch JSONs
   there; existing watcher44796 will claim them. No duplicate watcher/dispatch.

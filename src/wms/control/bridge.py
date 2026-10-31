@@ -61,7 +61,8 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                         mask_forced_merge: bool = False,
                         policy_ramp_merge: bool = False,
                         native_ramp_merge: str = "gap6",
-                        native_lane_change: bool = False) -> CavController:
+                        native_lane_change: bool = False,
+                        policy_native_lanes: bool = False) -> CavController:
     """Create an episode-local stateful callback producing [B,K,4] motion.
 
     Rebuild the controller for independent episodes; step zero also resets its
@@ -106,11 +107,19 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
       including its inferred-driver discretionary decisions and first-passage merge.
       The callback advertises a pure ``native_lane_mask(state)`` before WM forward;
       the WM supplies the resulting lane targets. Policy-acting lanes retain ownership.
+    * ``policy_native_lanes`` (default OFF): frozen native-lane MAPPO contract;
+      every CAV delegates lanes to the WM while policy acceleration stays owned.
     """
     if native_ramp_merge not in ("gap6", "wm_law"):
         raise ValueError("native_ramp_merge must be 'gap6' or 'wm_law'")
     if not isinstance(native_lane_change, bool):
         raise ValueError("native_lane_change must be a boolean")
+    if not isinstance(policy_native_lanes, bool):
+        raise ValueError("policy_native_lanes must be a boolean")
+    if policy_native_lanes:
+        if not native_lane_change:
+            raise ValueError("policy_native_lanes requires native_lane_change")
+        policy_ramp_merge = False
     if policy_ramp_merge and lane_rules is None:
         raise ValueError("policy_ramp_merge needs lane_rules (the lane head is the only merge path)")
     residual_mode = bool(getattr(policy, "residual_on_native", False))
@@ -155,7 +164,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
 
     def native_lane_mask(state):
         mask = state["present"].bool() & state["is_cav"].bool() & (state["lane"] >= 0)
-        if residual_mode:
+        if residual_mode or policy_native_lanes:
             return mask
         acting = mask if act_mask is None else mask & act_mask.to(mask.device).bool()
         if zone is not None:
@@ -213,9 +222,13 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
                 held, log_probs = out.accel, out.log_prob_accel
                 lane_now, changed = apply_lane_choices(state, out.lane_choice, lane_mask,
                                                        lane_rules, acting)
+                if policy_native_lanes:
+                    lane_now, changed = state['lane'], torch.zeros_like(acting)
                 from .lanes import LANE_DELTA
                 intent = torch.where(acting, torch.tensor(LANE_DELTA, device=lane_now.device)[
                     out.lane_choice].to(held.dtype), torch.zeros_like(held))
+                if policy_native_lanes:
+                    intent = torch.zeros_like(intent)
                 log_entry = {"lane_choice": out.lane_choice, "lane_mask": lane_mask,
                              "lane_changed": changed, "acting": acting}
             else:
@@ -231,7 +244,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             held = torch.where(mask & previous_mask, held, torch.zeros_like(held))
         held = torch.where(mask, held, torch.zeros_like(held))
         previous_mask = mask
-        native_lanes = mask if residual_mode else mask & ~acting
+        native_lanes = mask if residual_mode or policy_native_lanes else mask & ~acting
         if native_lane_change:
             targets = state.get(cav_module.WM_LANE_TARGET_KEY)
             if targets is None:
@@ -244,7 +257,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
             # Stay on the ramp here; the WM's HDV merge law decides (and may veto) the crossing.
             if not isinstance(state, MutableMapping):
                 raise TypeError("native_ramp_merge='wm_law' needs a mutable callback state")
-            delegated = auto if native_ramp_merge == "wm_law" else native_lanes
+            delegated = (mask if policy_native_lanes else auto) if native_ramp_merge == "wm_law" else native_lanes
             state[wm_merge_key] = delegated & (lane_now == 2)
             lane = (lane_now if native_ramp_merge == "wm_law" else
                     _merge_lane({**state, "lane": lane_now}, auto & ~native_lanes))
