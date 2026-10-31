@@ -377,6 +377,26 @@ def action_step_update(v: Tensor, held_accel: Optional[Tensor], p: SumoIDMParams
     return torch_maximum(v_next, torch_minimum(v_min, v_next))
 
 
+#: S-RB-CF pure-physics preset (physics-side overrides for ``load_backend`` /
+#: :class:`~wms.physics.config.PhysicsConfig`): the SUMO IDM core with every
+#: learned/hand ACCELERATION correction off.  The model-side learned families
+#: (residual, temporal/slow, courtesy, negotiation, ramp adapt, mainline
+#: residual, merge response, learned yield) are neutralised by the runtime
+#: switch ``WmSModel.learned_accel_off`` (``RolloutFlags.pure_physics``), not by
+#: these physics keys.  Lane/merge model switches are NOT touched (S-RB-LANE /
+#: S-RB-MERGE own them); ``entry_learned`` (a learned insertion rule) is off.
+PURE_SUMO_PHYSICS = {
+    "cf_model": "sumo_idm",
+    "emergency_braking": False,
+    "emergency_decel_mps2": None,
+    "merge_cal": False,
+    "mainline_merge_yield": False,
+    "merge_end_wait": False,
+    "merge_impatience": False,
+    "entry_learned": False,
+}
+
+
 # ------------------------------------------------------- WM baseline dispatch
 def sumo_idm_baseline_accel(kin: Tensor, present: Tensor, physics,
                             driver_params: Optional[Mapping[str, Tensor]] = None

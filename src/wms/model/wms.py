@@ -227,6 +227,11 @@ class WmSModel(nn.Module):
         # Inference-time diagnostic switches (round 5, default OFF; set by the scorer,
         # never part of a checkpoint): population-default driver settings.
         self.diag_encoder_population = False
+        # S-RB-CF (2026-10-31, inference runtime switch, never part of a checkpoint;
+        # default OFF = bit-identical): drop EVERY learned acceleration correction
+        # and the plant clamp - the HDV acceleration is exactly the physics core
+        # (with cf_model='sumo_idm': the faithful SUMO IDM step).
+        self.learned_accel_off = False
         # Runtime memory switch (C4 imagination, never part of a checkpoint): with gradients
         # enabled, recompute the pure per-step ``forward`` (encoders, physics, residual net)
         # during backward instead of storing its activations.  Unlike ``checkpoint_step`` this
@@ -1308,11 +1313,22 @@ class WmSModel(nn.Module):
         if self.merge_response is not None:
             is_cav = state.get("is_cav", torch.zeros_like(present))
             accel = accel + self.merge_response(kin, present, is_cav)
+        if self.learned_accel_off:
+            # S-RB-CF pure physics (runtime switch, never part of a checkpoint): the
+            # final HDV acceleration IS the physics core (baseline_accel, i.e. the
+            # legacy IDM or the SUMO IDM of cf_model='sumo_idm'); every learned
+            # acceleration family above (residual attention, temporal/slow emission,
+            # mainline residual, negotiation yield/ramp delta, merge-core yield,
+            # follower courtesy, learned mainline yield, ramp speed adaptation,
+            # merge response) and the plant clamp below are dropped.  With
+            # cf_model='sumo_idm' the composition is exactly the SUMO step; the
+            # optional final emergency envelope below still applies as configured.
+            accel = physics
         if final_envelope:
             # Once, on the final composed acceleration; d/d(accel) in [0, 1].
             accel = torch.where(present, apply_emergency_envelope(
                 kin, present, accel, self.physics, driver_params), accel)
-        if self.rollout_mode != "driver_params":
+        if self.rollout_mode != "driver_params" and not self.learned_accel_off:
             accel = accel.clamp(self.physics.accel_min_mps2, self.physics.accel_max_mps2)
 
         if v5_precomputed is not None:
