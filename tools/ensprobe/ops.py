@@ -131,19 +131,22 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as 
 sources={sources!r}
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
 binding=dict(sources=sources,exposure={exposure!r},budget_sim_s=49800,cap_sim_s=50000,workers=1)
-if root.name=='recovery_v2':
- original=root.parent
+if root.name in ('recovery_v2','recovery_v3'):
+ original=root.parent if root.name=='recovery_v2' else root.parent/'recovery_v2'
  assert (original/'STOP').exists()
- failure=json.loads((original/'FAILURE.json').read_text());assert failure['actual_sim_s']==0 and failure['id']=='w969040_native_r969086'
+ failure=json.loads((original/'FAILURE.json').read_text());assert failure['actual_sim_s']==0
  rows=[json.loads(s) for s in (original/'accounting.jsonl').read_text().splitlines()]
- assert sum(r['sim_s'] for r in rows)==900 and len(rows)==2
- binding['recovery']=dict(original_root=str(original),prior_actual_sim_s=300,unspent_branch_id=failure['id'])
+ assert sum(r['sim_s'] for r in rows)==(900 if root.name=='recovery_v2' else 1800)
+ binding['recovery']=dict(original_root=str(original),prior_actual_sim_s=300 if root.name=='recovery_v2' else 1200,unspent_branch_id=failure['id'])
+ if root.name=='recovery_v3':
+  assert failure['id']=='w969040_native_r969087'
+  binding['recovery'].update(reconstruct_first=True,previous_root=str(original),retained_result_sha256=hashlib.sha256((original/'w969040/w969040_native_r969086_RESULT.json').read_bytes()).hexdigest())
  with (root/'accounting.jsonl').open('x') as f:
   for row in rows:f.write(json.dumps(row)+'\\n')
 (root/'BINDING.json').write_text(json.dumps(binding,indent=2))
 print(json.dumps(dict(root=str(root),sources=sources,new_sim_s=0)))
 ''')
-    write('v2_stage.json' if REMOTE.endswith('recovery_v2') else 'stage.json',out);print(json.dumps(out,indent=2))
+    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'stage.json',out);print(json.dumps(out,indent=2))
 
 
 def cpu():
@@ -165,7 +168,7 @@ receipt.update(returncode=rc,tests=log.getvalue(),controller_class=type(exe).__n
 with (root/'CPU.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''',timeout=120)
-    write('v2_cpu.json' if REMOTE.endswith('recovery_v2') else 'cpu.json',out);print(json.dumps(out,indent=2))
+    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'cpu.json',out);print(json.dumps(out,indent=2))
 
 
 def launch():
@@ -184,7 +187,7 @@ with (root/'worker.log').open('x') as log:
  with (root/'LAUNCH.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''')
-    write('v2_launch.json' if REMOTE.endswith('recovery_v2') else 'launch.json',out);print(json.dumps(out,indent=2))
+    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'launch.json',out);print(json.dumps(out,indent=2))
 
 
 def progress():
@@ -202,7 +205,7 @@ out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in p.read_text().splitline
 out['log_tail']=(root/'worker.log').read_text()[-6000:] if (root/'worker.log').exists() else ''
 print(json.dumps(out))
 ''')
-    write('v2_progress.json' if REMOTE.endswith('recovery_v2') else 'progress.json',out);print(json.dumps(out,indent=2))
+    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'progress.json',out);print(json.dumps(out,indent=2))
 
 
 def diagnose():
@@ -262,8 +265,27 @@ finally:traci.close()
     write('waiting_diagnosis.json',out);print(json.dumps(out,indent=2))
 
 
+def collect():
+    out=ssh(f'''import json,hashlib
+from pathlib import Path
+root=Path({REMOTE!r});assert (root/'COMPLETE.json').exists(),'complete panel only'
+out=dict(results=[],gates=[],trunks=[],receipts={{}},hashes={{}})
+for p in sorted(root.glob('w*/*_RESULT.json')):out['results'].append(json.loads(p.read_text()));out['hashes'][str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
+for p in sorted(root.glob('w*/*_GATE.json')):out['gates'].append(dict(path=str(p.relative_to(root)),**json.loads(p.read_text())));out['hashes'][str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
+for p in sorted(root.glob('w*/TRUNK.json')):out['trunks'].append(json.loads(p.read_text()));out['hashes'][str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
+for name in ['BINDING.json','LAUNCH.json','CPU.json','PREFLIGHT.json','COMPLETE.json','UNSPENT_RESERVATION_RESUMED.json']:
+ p=root/name
+ if p.exists():out['receipts'][name]=json.loads(p.read_text());out['hashes'][name]=hashlib.sha256(p.read_bytes()).hexdigest()
+out['accounting']=[json.loads(s) for s in (root/'accounting.jsonl').read_text().splitlines()]
+out['hashes']['accounting.jsonl']=hashlib.sha256((root/'accounting.jsonl').read_bytes()).hexdigest()
+print(json.dumps(out))
+''')
+    write('collection.json',out)
+    print(json.dumps(dict(branches=len(out['results']),trunks=len(out['trunks']),terminal=out['receipts']['COMPLETE.json']),indent=2))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting','v2_stage','v2_cpu','v2_launch','v2_progress']);a=p.parse_args()
-    if a.action.startswith('v2_'):
-        REMOTE+='/recovery_v2';ENV['ENSPROBE_ROOT']=REMOTE;a.action=a.action[3:]
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting','v2_stage','v2_cpu','v2_launch','v2_progress','v2_collect','v3_stage','v3_cpu','v3_launch','v3_progress','v3_collect']);a=p.parse_args()
+    if a.action.startswith(('v2_','v3_')):
+        REMOTE+='/recovery_'+a.action[:2];ENV['ENSPROBE_ROOT']=REMOTE;a.action=a.action[3:]
     globals()[a.action]()

@@ -50,3 +50,11 @@ def test_prefix_bins_copied_without_future_or_mutation():
     assert b.result()['speed_bins']['upstream'][6] is None
     b.counts['upstream'][0]=1
     assert p.counts['upstream'][0]==3
+
+
+def test_each_deepcopy_has_a_fresh_memo():
+    snapshot={'ledger':{'inserted':{'old'}}};shared={}
+    first=copy.deepcopy(snapshot,dict(shared));first['ledger']['inserted'].add('future')
+    second=copy.deepcopy(snapshot,dict(shared))
+    assert second['ledger']['inserted']=={'old'}
+    assert first is not second and not shared

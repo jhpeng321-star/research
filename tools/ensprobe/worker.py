@@ -111,10 +111,12 @@ class Measurement:
     def __init__(self, prefix=None):
         self.sums={k:[0.]*66 for k in ('upstream','merge','ramp','downstream')}
         self.counts={k:[0]*66 for k in self.sums}
+        self.exact_prefix_bins=None
         if prefix:
             for k in self.sums:
                 self.sums[k][:6]=prefix.sums[k][:6]
                 self.counts[k][:6]=prefix.counts[k][:6]
+            self.exact_prefix_bins=copy.deepcopy(prefix.exact_prefix_bins)
         self.road=self.source=0.;self.clocks={};self.safety={}
         self.tape=hashlib.sha256()
 
@@ -144,9 +146,42 @@ class Measurement:
             self.clocks[str(elapsed)]=dict(road=self.road,source=self.source,J=self.road+self.source)
 
     def result(self):
+        bins={k:[s/n if n else None for s,n in zip(self.sums[k],self.counts[k])] for k in self.sums}
+        if self.exact_prefix_bins:
+            for k in bins:bins[k][:6]=self.exact_prefix_bins[k]
         return dict(clocks=self.clocks,safety=self.safety,tape_sha256=self.tape.hexdigest(),
-                    speed_bins={k:[s/n if n else None for s,n in zip(self.sums[k],self.counts[k])] for k in self.sums},
+                    speed_bins=bins,
                     bin_counts=self.counts)
+
+
+def reconstruct_first(env, previous):
+    """No physics: public t0 kinematics + due-waiting identities, current-frame policy API."""
+    import traci
+    from collections import Counter
+    old=Path(previous)/'w969040'
+    reference=json.loads((old/'TRUNK.json').read_text())
+    retained=json.loads((old/'w969040_native_r969086_RESULT.json').read_text())
+    assert retained['actual_sim_s']==600 and retained['gate']['pass']
+    env.reset(seed=969040,demand_vph=2400,penetration=.05,warmup_s=0,horizon_s=901,controller='direct')
+    traci.simulation.loadState(str(old/'physical_state.xml'))
+    env.warmup_s=300.;env.horizon_s=601.;env.end_s=901.
+    due={v for v,r in env.ledger.requests.items() if r.depart_s<=300}
+    env.ledger.inserted=due-set(reference['physical']['waiting'])
+    live=set(traci.vehicle.getIDList())
+    env.ledger.arrived=env.ledger.inserted-live
+    env.ledger.time=300.
+    env.reader._subscribed=set();env._table=env.reader.read()
+    env.frame=env.builder.build(300.,env._table);env.history.clear();env.history.append(env.frame)
+    env._previous_row={'vehicles':env._table};env._previous_live_sub=set(live)
+    env._previous_live=set(live);env.window_totals=Counter()
+    env._window_ledger0=(0.,0.,len(env.ledger.arrived))
+    for v in sorted(live & env.cav_ids):traci.vehicle.setSpeedMode(v,env.ownership.cav_speed_mode)
+    env.ownership._mode_configured=live & env.cav_ids
+    assert compare(reference['physical'],physical(env))['pass']
+    prefix=Measurement()
+    prefix.exact_prefix_bins={k:values[:6] for k,values in retained['speed_bins'].items()}
+    for k in prefix.counts:prefix.counts[k][:6]=retained['bin_counts'][k][:6]
+    return reference,retained,prefix
 
 
 def setup():
@@ -207,33 +242,45 @@ def main():
             priority_wait();out=ROOT/f'w{seed}';out.mkdir(exist_ok=False)
             random.seed(seed);np.random.seed(seed);torch.manual_seed(seed)
             recovery=json.loads((ROOT/'BINDING.json').read_text()).get('recovery',{})
-            ledger.charge(f'w{seed}_trunk_repeat' if recovery and seed==969040 else f'w{seed}_trunk',300)
             MEASURE=Measurement()
             env=CavSumoEnv(k_slots=192,controller='direct',scenario_root=out/'scenarios',
                            extra_sumo_cli=['--save-state.precision','17','--save-state.rng','false'],
                            physics_log=False,population='textbook')
-            env.reset(seed=seed,demand_vph=demand,penetration=penetration,warmup_s=300,horizon_s=601,
-                      controller='direct',warmup_hook=lambda e:priority_wait())
-            assert ledger.actual==300
-            trunk=physical(env);prefix=MEASURE
-            if recovery and seed==969040:
+            reconstruct=recovery.get('reconstruct_first',False) and seed==969040
+            if reconstruct:
+                reference,retained,prefix=reconstruct_first(env,recovery['previous_root'])
+                trunk=reference['physical']
+                write(out/'TRUNK.json',reference)
+                write(out/'w969040_native_r969086_RESULT.json',retained)
+                write(out/'w969040_native_r969086_GATE.json',retained['gate'])
+                write(out/'ZERO_TICK_RECONSTRUCTION.json',dict(new_actual_sim_s=0,physical_gate=compare(trunk,physical(env)),
+                       current_frame_only_policy_api=True,retained_prefix_and_first_result=recovery['previous_root']))
+            else:
+                ledger.charge(f'w{seed}_trunk_repeat' if recovery and seed==969040 else f'w{seed}_trunk',300)
+                env.reset(seed=seed,demand_vph=demand,penetration=penetration,warmup_s=300,horizon_s=601,
+                          controller='direct',warmup_hook=lambda e:priority_wait())
+                assert ledger.actual==300
+                trunk=physical(env);prefix=MEASURE
+                write(out/'TRUNK.json',dict(world=seed,penetration=penetration,demand=demand,physical=trunk,**ledger.receipt()))
+            if recovery and seed==969040 and not reconstruct:
                 original=json.loads((Path(recovery['original_root'])/'w969040/TRUNK.json').read_text())['physical']
                 assert all(original[k]==trunk[k] for k in original),'repeat warmup changed original physical state'
                 write(out/'REPEAT_TRUNK_GATE.json',dict(pass_gate=True,max_physical_error=0.,new_actual_sim_s=300))
-            write(out/'TRUNK.json',dict(world=seed,penetration=penetration,demand=demand,physical=trunk,**ledger.receipt()))
             statefile=out/'physical_state.xml'
-            traci.simulation.saveState(str(statefile))  # no Python read/parse/hash of assignment-bearing XML
+            if reconstruct:statefile=Path(recovery['previous_root'])/'w969040/physical_state.xml'
+            else:traci.simulation.saveState(str(statefile))  # no Python read/parse/hash of assignment-bearing XML
             shared={id(env.api):env.api,id(env._circles):env._circles}
-            snap=copy.deepcopy(env.__dict__,shared)
+            snap=copy.deepcopy(env.__dict__,dict(shared))
             for arm in ('native','mappo'):
                 for rng in RNG:
+                    if reconstruct and arm=='native' and rng==969086:continue  # immutable successful result reused
                     priority_wait();ident=f'w{seed}_{arm}_r{rng}'
                     ledger.charge(ident,600)
                     env.close()
                     start_sumo(env.binary,env.scene,seed=rng,config=env.config,api=traci,
                                extra_cli=env.extra_sumo_cli)
                     traci.simulation.loadState(str(statefile))
-                    env.__dict__.update(copy.deepcopy(snap,shared))
+                    env.__dict__.update(copy.deepcopy(snap,dict(shared)))
                     env.reader._subscribed=set()
                     live=set(traci.vehicle.getIDList())
                     for vid in sorted(env.ownership._mode_configured & live):
