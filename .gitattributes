@@ -38,3 +38,4 @@ scripts/genrand/*.sh text eol=lf
 
 # Exact EXAM manifests bind original bytes, including CSV CRLF and JSON LF.
 docs/paper_results/coopbandit/** -text
+docs/paper_results/coopbandit/**/*.csv whitespace=cr-at-eol
