@@ -149,6 +149,29 @@ tasks are immutable, and the usual evaluator must still validate complete K8
 worlds and model identities. No scoring of partially written/partial-K futures.
 Verify with `python -B -m unittest tools.wmdecide.test_snapshot -v`.
 
+### Bounded morning refresh
+
+`python -B -m tools.wmdecide.refresh --help` exposes the local CPU-only saved-output
+refresh. It collects the six explicitly registered producers every20minutes until
+an absolute timezone-bearing deadline, scores only validated complete K8 worlds,
+publishes available evidence plus **separate per-candidate matched-WM2 sections**,
+updates one marked block in `HANDOFF.md`, and commits that new publication/handoff.
+It uses the existing `psutil` installation; no new environment is needed.
+
+The job takes a persistent exclusive claim with its own PID/create-time/code hash.
+Never launch another collector while that claim exists without first reconciling
+the owner's receipt. No inference jobs, retries, remote writes or peer process
+signals. A local CPU-busy check defers analysis when >90% of CPU capacity is busy;
+BLAS/OMP remain single-threaded. Reports/inputs/claims are preserved, not removed.
+Unexpected worktree/staged/branch changes stop automatic commits. Invalid/missing
+models remain explicit in the index; if no valid report exists, the prior handoff
+is preserved. A STOP receipt is terminal; no automatic relaunch or cap extension.
+Raw snapshots/rows go in a NEW scratch root, compact versioned publications in
+`docs/paper_results/wmdecide/`. Deadline completion has an immutable receipt.
+
+Verify with `python -B -m unittest tools.wmdecide.test_refresh -v`; integration
+uses clearly labelled synthetic copied-outcome fixtures, never scientific scores.
+
 ## Portable report publication
 
 ```powershell

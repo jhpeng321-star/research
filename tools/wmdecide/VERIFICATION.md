@@ -3,6 +3,22 @@
 Source base `f0db3c82`; implementation `df4fa61e` and `16dff9ad` plus final
 verification/handoff commit. All work is CPU-only, with NumPy and existing Python.
 
+## Resume improvement — 2026-11-01 05:14 +08
+
+The18 existing picker/credibility checks and4 snapshot checks pass. Six new
+refresh tests pass (18.565s final targeted run) with the actual EVAL validator,
+synthetic copied-outcome forecasts, two-world baseline/one-world matched candidate,
+partial-K blocked model, full output checksums, cached immutable-score reuse,
+identity/completed-task cache invalidation, handoff-history preservation, exclusive
+claim admission, deadline termination and foreign-staged/branch/worktree guards.
+No network or scientific inference in tests. Scratch fixtures remain preserved.
+
+Real saved outputs collected05:04–05:05 validate WM2 complete20, FULL-v1/A2 each6,
+FULL-v3-gpu3 and B2 zero complete K8 worlds. Both available and exact-three-world
+portable publications pass source/output checksum validation. C2 had no JSON.
+See `docs/paper_results/wmdecide/INTERIM_0505.md`; this supersedes the historical
+11-task progress status below without removing its receipt.
+
 ## Resume improvement — 2026-11-01 04:50 +08
 
 **18 CPU tests PASS, 0 skips, 5.889 s**, retaining all previous checks. New tests

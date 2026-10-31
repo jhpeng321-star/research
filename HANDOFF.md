@@ -2,6 +2,20 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Bounded continuation prepared — 05:14 +08
+
+- `tools/wmdecide/refresh.py` collects/scored saved output JSON only, every20min
+  through an explicit09:00 deadline. Per-candidate matched-WM2 sections avoid
+  shrinking all comparisons to the smallest variant's panel. Identical complete
+  ensembles reuse hash-verified scores; incomplete/new futures are never inferred.
+- Persistent exclusive claim, ownPID/create-time receipt, single-thread CPU/load
+  guard, terminal STOP/no automatic restart; no inference, process signalling or
+  producer/finalizer interaction. Updates one handoff block, commits exact new
+  publication and handoff only; stops for foreign worktree/staged/branch changes.
+-6 refresh CPU tests PASS, including actual evaluator→matched publication/cache,
+  partial-K blocking, exclusive ownership, deadline and preservation guards.
+  Launch/first-cycle receipt will identify the single local collector owner.
+
 ## Latest publication — 05:05 +08 saved-output refresh
 
 - Start at `docs/paper_results/wmdecide/INTERIM_0505.md`. Portable sections:
