@@ -1,0 +1,42 @@
+{
+  "schema": "wmvalue_amended_status/1",
+  "verdict": "INCOMPLETE",
+  "reason": "Missing conditional full-horizon A predictions; new long inference needs authorization; WM restart adapter unfinished",
+  "supersedes": "The observation gate and no-real-fit status in status.json; historical receipt preserved",
+  "amendment": "MAIN 2026-10-31 18:12 causal reconstruction with boundary flow, no source queue feature",
+  "observation_gate": "PASS",
+  "real_label_clock_gate": "PASS",
+  "fit_worlds": 82,
+  "fit_episodes": 460,
+  "fit_states": 9660,
+  "observable_features": 111,
+  "real_data_fit": true,
+  "fitted_methods": ["V", "D", "E"],
+  "fit_receipt": "frozen_fit.json",
+  "model_sha256": "ef3e7bced5737c921a65596c566c865152990874be1d9901b8bbb6fb53735d8b",
+  "max_real_clock_discrepancy_veh_s": 0.000007869271939853206,
+  "max_real_source_discrepancy_veh_s": 0.0,
+  "local_A_coverage": {
+    "future_keys": 240,
+    "required_future_keys": 1600,
+    "complete_arm_start_cells": 28,
+    "required_arm_start_cells": 200,
+    "maximum_cells_from_existing_job_design": 32,
+    "structurally_missing_cells": 168,
+    "receipt": "a_coverage_final.json",
+    "model_clock_controller_CRN_parity_certified": false
+  },
+  "real_data_evaluation": false,
+  "reserved_worlds_opened": false,
+  "wm_inference": false,
+  "sumo_seconds": 0,
+  "pending_wmvalue_dispatch": false,
+  "policy_training_authorized": false,
+  "methods": {
+    "A": {"sign_accuracy": null, "spearman": null, "mae": null, "ci95": null},
+    "B": {"sign_accuracy": null, "spearman": null, "mae": null, "ci95": null},
+    "C": {"sign_accuracy": null, "spearman": null, "mae": null, "ci95": null},
+    "D": {"sign_accuracy": null, "spearman": null, "mae": null, "ci95": null},
+    "E": {"sign_accuracy": null, "spearman": null, "mae": null, "ci95": null}
+  }
+}

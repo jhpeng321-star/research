@@ -1,0 +1,970 @@
+{
+ "schema": "wmvalue_A_coverage/1",
+ "root": "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40",
+ "sources": {
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k0.json": "b4501bc129c2039407c9fef4bd5f50d1580946ae2a277cd697e8cfc1ca6b1c70",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k1.json": "fd3ac65dcd4bab0f6e583a59c78e776496a173d03afe835a75f93efea39c8713",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k2.json": "8fcf878319e9102a1c94d93d08559384f8c41cd252949c0e972f0345689d709f",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k3.json": "5f3a647b512af3bb25a7600407d05ad8eea0e7baf350ceee4f0551673617b095",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k4.json": "7808550403822269bce036b2c926e27ea0166b3964f8eb2f43111f9a5764fafc",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k5.json": "6fe4b65774e86642fc4369dae8c7d73a1ca503af756819a8611511b2e31ef4c8",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k6.json": "200349590536687e0694bf708b3602da67fa7c6f490173f10cc8df395c64fae4",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w32_k7.json": "a97f708dc01f5bb438c305fecf5124e9aa14641c84c14dbb25571b6b1a173654",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k0.json": "1716e8fdd60fc8130855bdd1678f237939a5e6380ba20f84055621651a0f472c",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k1.json": "58eabcbbe7e74d3bc76d2bcb6e4c8d689b1c74b5143c577ede151ebb06f8efe9",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k2.json": "6b82569f189df71673afa8a1f5d52902fda2425950efff05c4334f886324cec5",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k3.json": "545dc1a0264187d8263563c3d6905069c4b3000551c7c0eed5711fc4faf10176",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k4.json": "dfb85b8fde40c5c51fcedbb4a887a04ab7389b9b372b2e94a7dc6ec988548b27",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k5.json": "6c67653755d18661e29bf415e8df9c1fed2c3a96cf31b73937813bd1bb1c5162",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k6.json": "3362a863d821d93e20dd1e0bd1e75651cf2c5d3f046aa22415f8357659fcc9cd",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w33_k7.json": "d07cfd86dbe1c1d732ebcb492cb29cb459858ca129c0f543dc96d77d9c9c8e75",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k0.json": "7ebde8ac4dd6086a832d6c131983c705e31ce996589a4df84f0f579a038c3398",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k1.json": "9ade2f27bdb9ebd343a9160048ffd5df3fa5eeb8cad63196110e8c7963bedb99",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k2.json": "d4923f0f7e347a602010507821f2c22681a75f08bbf54999f12f6b96a92ca045",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k3.json": "e9263719ca766fa65dfc5c0a2e3bc9690246e45b2d1604e387eeb4ab7b026f8d",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k4.json": "86f55bf86f4f4e0d9c7f775f846a9ec8ee4dbba7a3ee5ecb75a939f8b55f47e8",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k5.json": "1947cfcbdf374e11462c93b40771ef7c2f28947c5137ff0f0abc3ac590175f12",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k6.json": "4eeb87f86acb72800406b65a79efea7fbca8d5731f5efe9bbba08135b154ed37",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w34_k7.json": "e53506b3a2b6d23a2a5de51b22977d4c076861b85e21865f0d7b2cb08e044d72",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k0.json": "e6ea015020ed298d3625444c1271abab80e4b12864b5872b20dcf7c8cf83f7b8",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k1.json": "58276eb2d16cf9faa0d0439ab1db9d83183e49bfc1cd4db48193dd5253f03eb8",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k2.json": "c33933f3fc9b87d3ecd4ab31b9823c48c944c31185f7afbbfb1b187e86064d1b",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k3.json": "28db207991962332279440a49aea497539b7ec20b149605f57553e67e66cd3ac",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k4.json": "032ab294772a272bab6e7c37aff844b0331697b3216ff9c42a935a08a325fcbc",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k5.json": "65e25c421e6c0dd6faa689e2afa403f278cf0660c24cc9745fa191d3800a41a6",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k6.json": "ac85487c3a6be856c0f02ce40c2a969db455805e02b616cdca05eed7def37948",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w35_k7.json": "49de26182c480ba3847978064ac1303bc97f54020392df4d0fdfedc2f5acdaaa",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k0.json": "8359810e6d8b5fc0ffc064649890172f594279dffb0e833f23e19913058829c7",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k1.json": "f24af0044c4ddb633bdf3770e9dc2870f9b06f7ec95f9e87084c637e6dce25d1",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k2.json": "3513d92faed5d09b7ddc2d0033b927936430a45ac2ccc0b5e0555c4573134aeb",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k3.json": "711e852e63bec5f14b4294e42b937e24702f724fc586a6cf3a0138b4de3d8148",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k4.json": "31a7f32058193a4ad091028f742cd054a286eac090434aac84a10adb95b967ae",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k5.json": "cdf7ee87f3fe2f3c634b13a9e1c5f24111f9a69e7852d058f58c8d3d62000c75",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k6.json": "4dce9563cb350a9b19dec20281500101798d6be72fa7a2c7d843c02a5e4d7812",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w36_k7.json": "7c30a2cdd4b379093e3ff63a417a13133e05d9d8a20c42585ed1bbd62ba0226e",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k0.json": "237c0220319c041725eed9c48e8127d23064cdbb48d1df58c301a6378079fc76",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k1.json": "5e4179f3427db2ab7e07d413bffd4b9f596f351fd2a014a6f8530c953bf739be",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k2.json": "5ec43464338c62416ec9c55dc1faf0ea08936c1cf9cc36ceb74cba93bcf09aeb",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k3.json": "4064b4e8caeaedf2f8cd5e79227e5e22500caf1cfc911bf8a78e1b080d43ba99",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k4.json": "b9f5007a89e942671674d6eb23b762280fa2a28f3ff7233ed3ea9eba04b8e79f",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k5.json": "26cef1ba35ea683060c2e958915cbfd1c55ae2158c063d5c217a2d13020f4a5d",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k6.json": "7de7780343c1622f7c8ac55d26fa590d9656d2692e712a81b2befce86c660c63",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w37_k7.json": "8a2e34a883ba0427dc7fdbf01b31a23a11088e3cde62505f238878f5512df50d",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k0.json": "a87db88880808f55ad970c8245078b6f94ac3102466fd3739380ae66460241e9",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k1.json": "4230ed186e3ed33c4b185cc0e3675d3d7bbb1dfd81ad8328797c67d8e5f43776",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k2.json": "a0b8406528baf1da2e5c8d53908eb61ec7700c9cf4769111c0f5640665ff4044",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k3.json": "e5a8de9c4ca4b5d026c15e9f961c342bb36b44ab630425be08f533ce7816f096",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k4.json": "fb4ccb58464325dbc0ae29694d7997be40f2948e93e3e6ed6b708ec0a84e0cdf",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k5.json": "00a975381c3c3243477b9bc1116bc7ad73366779d2deaf15d89bbbd200845c18",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k6.json": "5255f96d5aae2957b2dc39479778d4a2f00fa46abc8e68341f3b70aa75dd8bb4",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w38_k7.json": "36b50953b202ed2fc55e7c47764c9f507f05c723d5741926739eefb0f31efbf9",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w39_k0.json": "8c3dbd0a2c0c37319c42b61f00557c58dba9d83f1b18bbe940a172ed75cca48a",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w39_k1.json": "dbfe6c65bfffa623e1aedade185ae5a796f8be96cb57a7a8cebc6688674c6820",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w39_k2.json": "f96d245b736b9c318f47cd37880b690b59ee45927169b30605c52134db3d5895",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shard3\\w39_k3.json": "868ece8bab5918d0152a7207c873eb0fa083c148c2a3f546596529ee29b61eec",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_35\\w35_k0.json": "db11bd79e50ffcbe85b3833873264d54fe869bd2d994fa65806adad0fa2769c8",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_35\\w35_k1.json": "6651603c4df22d25f00875215793e3cd8841443d95c8221665a09082f73e8bd5",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_35\\w35_k2.json": "f76e130babab440bdc55fcb35092dc0738d656aaec02e768f2e40bfe99cf0cd2",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_35\\w35_k3.json": "7754c985d77d355103d2c098c9251372433839d504428526c8784f3bb9487e19",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k0.json": "8359810e6d8b5fc0ffc064649890172f594279dffb0e833f23e19913058829c7",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k1.json": "f24af0044c4ddb633bdf3770e9dc2870f9b06f7ec95f9e87084c637e6dce25d1",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k2.json": "3513d92faed5d09b7ddc2d0033b927936430a45ac2ccc0b5e0555c4573134aeb",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k3.json": "a6042d9d6036f097bffc81e22465662693cff0e9990fb6e2239748b04dfd69ec",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k4.json": "a72837464216b1f4ca4d4d3a7f0db23d6b2e0c54565bda19256f5e2c104ed589",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k5.json": "64381fa93b249dca3898253d892c3714899e849874b121ffd75e096248f9ca5f",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k6.json": "2aaefaca0327b56812d301174fdd22c82e75b82a0a292b5a1e68cffcc8e3397e",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_36\\w36_k7.json": "6509cdc7d04a31dc0f193d8179a72cb8c7e339088f6f6008cc3e0ca25f65a37d",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k0.json": "237c0220319c041725eed9c48e8127d23064cdbb48d1df58c301a6378079fc76",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k1.json": "5e4179f3427db2ab7e07d413bffd4b9f596f351fd2a014a6f8530c953bf739be",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k2.json": "5ec43464338c62416ec9c55dc1faf0ea08936c1cf9cc36ceb74cba93bcf09aeb",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k3.json": "4064b4e8caeaedf2f8cd5e79227e5e22500caf1cfc911bf8a78e1b080d43ba99",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k4.json": "b9f5007a89e942671674d6eb23b762280fa2a28f3ff7233ed3ea9eba04b8e79f",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k5.json": "6620a89be4f39fd43b53bce3802abb9821553efd0d5923c9a94c57cc61b038d3",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k6.json": "d57a09c5370d7d50e7225063844ec684a3b4bd0a57f7594e660b747d2ccc07a3",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_37\\w37_k7.json": "8e3dda8b7b640e1cb6f5d8815e5787ea0acaceb02c28a8dcb61a0ab84fc38cb1",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_38\\w38_k0.json": "a87db88880808f55ad970c8245078b6f94ac3102466fd3739380ae66460241e9",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_38\\w38_k1.json": "377e90da9bfd686763c4fa1ffa6d602f42c395b1e33abba89aa3be1cd323c765",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_38\\w38_k2.json": "895a620754ca21339549cb6492b199994e790819dc3a96ec0b7e140019bf92bc",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_38\\w38_k3.json": "201f86004fbb0670e2b128c30d464fca4611576264db0d9e0bcde6853f795f5f",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_39\\w39_k0.json": "8c3dbd0a2c0c37319c42b61f00557c58dba9d83f1b18bbe940a172ed75cca48a",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_39\\w39_k1.json": "97f8bff2545589f11e70ecdd4cdb3af8a86bf3a6bf7ddb021da0b5ed23f34e64",
+  "E:\\agent-work\\c4-wmcalib\\tools\\wmcalib\\data\\wm40\\wm_gpu_shardA_39\\w39_k2.json": "6213d6b56d40c4b72f577dbe45a25c923f73fb9d0afc2caac68836088bfc7f67"
+ },
+ "expected_futures": 1600,
+ "matched_futures": 240,
+ "expected_arm_cells": 200,
+ "complete_arm_cells": 28,
+ "missing_cells": [
+  {
+   "seed": 969432,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969432,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969432,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969432,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969432,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969432,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969432,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969432,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969432,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969432,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969432,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969432,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969432,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969432,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969432,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969432,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969432,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969432,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969432,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969432,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969432,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969433,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969433,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969433,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969433,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969433,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969433,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969433,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969433,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969433,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969433,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969433,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969433,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969433,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969433,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969433,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969433,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969433,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969433,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969433,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969433,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969433,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969434,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969434,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969434,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969434,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969434,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969434,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969434,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969434,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969434,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969434,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969434,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969434,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969434,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969434,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969434,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969434,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969434,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969434,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969434,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969434,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969434,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969435,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969435,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969435,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969435,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969435,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969435,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969435,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969435,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969435,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969435,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969435,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969435,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969435,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969435,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969435,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969435,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969435,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969435,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969435,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969435,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969435,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969436,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969436,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969436,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969436,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969436,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969436,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969436,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969436,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969436,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969436,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969436,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969436,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969436,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969436,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969436,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969436,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969436,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969436,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969436,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969436,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969436,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969437,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969437,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969437,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969437,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969437,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969437,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969437,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969437,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969437,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969437,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969437,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969437,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969437,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969437,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969437,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969437,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969437,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969437,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969437,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969437,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969437,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969438,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969438,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969438,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969438,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969438,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969438,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969438,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969438,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969438,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969438,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969438,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969438,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969438,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969438,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969438,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969438,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969438,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969438,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969438,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969438,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969438,
+   "t0": 540,
+   "arm": "circles"
+  },
+  {
+   "seed": 969439,
+   "t0": 300,
+   "arm": "native"
+  },
+  {
+   "seed": 969439,
+   "t0": 300,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969439,
+   "t0": 300,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969439,
+   "t0": 300,
+   "arm": "pi"
+  },
+  {
+   "seed": 969439,
+   "t0": 300,
+   "arm": "circles"
+  },
+  {
+   "seed": 969439,
+   "t0": 360,
+   "arm": "native"
+  },
+  {
+   "seed": 969439,
+   "t0": 360,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969439,
+   "t0": 360,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969439,
+   "t0": 360,
+   "arm": "pi"
+  },
+  {
+   "seed": 969439,
+   "t0": 360,
+   "arm": "circles"
+  },
+  {
+   "seed": 969439,
+   "t0": 420,
+   "arm": "native"
+  },
+  {
+   "seed": 969439,
+   "t0": 420,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969439,
+   "t0": 420,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969439,
+   "t0": 420,
+   "arm": "pi"
+  },
+  {
+   "seed": 969439,
+   "t0": 420,
+   "arm": "circles"
+  },
+  {
+   "seed": 969439,
+   "t0": 480,
+   "arm": "native"
+  },
+  {
+   "seed": 969439,
+   "t0": 480,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969439,
+   "t0": 480,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969439,
+   "t0": 480,
+   "arm": "pi"
+  },
+  {
+   "seed": 969439,
+   "t0": 480,
+   "arm": "circles"
+  },
+  {
+   "seed": 969439,
+   "t0": 540,
+   "arm": "native"
+  },
+  {
+   "seed": 969439,
+   "t0": 540,
+   "arm": "ctrl0"
+  },
+  {
+   "seed": 969439,
+   "t0": 540,
+   "arm": "mappo"
+  },
+  {
+   "seed": 969439,
+   "t0": 540,
+   "arm": "pi"
+  },
+  {
+   "seed": 969439,
+   "t0": 540,
+   "arm": "circles"
+  }
+ ],
+ "observed_start_times": [
+  300
+ ],
+ "observed_arms": [
+  "circles",
+  "ctrl0",
+  "mappo",
+  "pi"
+ ],
+ "verdict": "INCOMPLETE",
+ "note": "Coverage only; model/CRN/cost parity must also pass before reuse."
+}

@@ -16,7 +16,7 @@ def audit_predictions(root):
         if not 969432 <= seed <= 969439:
             continue
         future = int(d["future"])
-        if not 0 <= future < 8 or "600" not in d["costs"]:
+        if t0 not in TIMES or not 0 <= future < 8 or str(900-t0) not in d["costs"]:
             continue
         sources[str(path)] = digest(path)
         for arm in d["arms"]:

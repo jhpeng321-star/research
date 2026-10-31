@@ -1,4 +1,6 @@
 import copy
+import io
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -7,7 +9,7 @@ from unittest.mock import patch
 import numpy as np
 
 from .core import features
-from .reconstruct import (OBS_KEYS, ZONES, boundary_events, label_clock, observe_prefix,
+from .reconstruct import (OBS_KEYS, ZONES, boundary_events, command_summaries, label_clock, observe_prefix,
                           observations, project)
 
 
@@ -96,6 +98,19 @@ class CausalTests(unittest.TestCase):
         f = features(out)
         self.assertEqual(f[-2], 1.)
         self.assertEqual(sum(f[1:105:7]), 0.)
+
+    def test_direct_baseline_uses_issued_zero_not_null_or_future_motion(self):
+        rows = [dict(timestamp_s=300, vehicle_id="cav", issued_command=0.,
+                     issued_target_speed_mps=None, measured_speed_mps=999.),
+                dict(timestamp_s=300, vehicle_id="unidentified", issued_command=500.,
+                     issued_target_speed_mps=500.),
+                dict(timestamp_s=301, vehicle_id="cav", issued_command=999.,
+                     issued_target_speed_mps=999.)]
+        stream = io.StringIO("\n".join(json.dumps(r) for r in rows))
+        with patch("tools.wmvalue.reconstruct.gzip.open", return_value=stream):
+            summary = command_summaries("recorded_actions.gz", [300, 900], {300: {"cav"}})
+        np.testing.assert_array_equal(summary[300], [1, 0, 0, 0, 0, 0])
+        np.testing.assert_array_equal(summary[900], np.zeros(6))
 
 
 class ClockTests(unittest.TestCase):

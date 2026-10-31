@@ -71,3 +71,6 @@ hashes and terminal constraints before learning. Produces `Value` wrappers V/D
 and the FIT-only E dictionary. Parameters/weights are frozen; no reserved scoring.
 See `evidence/frozen_fit.json` for the model location/hash and exact inputs.
 Run `python -B -m unittest tools.wmvalue.test_fit_causal` for export split guards.
+`python -B -m tools.wmvalue.verify_receipts` checks the existing model's hash and
+serialization roundtrip, frozen sources, both complete exports, and report length
+without fitting or scoring reserved worlds. `amended_status.json` is current.
