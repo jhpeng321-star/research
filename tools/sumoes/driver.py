@@ -81,14 +81,13 @@ class AcceptAllScreener:
         return dict(kept=kept, predicted_gain=[None] * len(kept), rejected=[])
 
 
-class SumoRuntimeEvaluator:
-    """Refuses: the real arms need the registered cpuQ runtime + interactive ACK."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        raise NotImplementedError(
-            "S-SUMOES-DESIGN ships the skeleton only: real SUMO episodes require the "
-            "registered cpuQ E3 runtime (b3c031ad) with the byte-identical S-WMDATA/"
-            "S-SPEEDHEAD wrappers and an interactive registration ACK; NO SUMO in this task")
+def _sensitivity_from(results: list[dict]) -> float | None:
+    rows = [r["head_stats"] for r in results
+            if r.get("head_stats") and r["head_stats"].get("rows")]
+    if not rows:
+        return None
+    total = sum(h["rows"] for h in rows)
+    return (sum(h["rows"] * h["sensitivity_rms"] ** 2 for h in rows) / total) ** 0.5
 
 
 @dataclass
@@ -99,6 +98,9 @@ class SumoEsDriver:
     sensitivity: float = 20.0
     receipts: list[dict] = field(default_factory=list)
     ledger: BudgetLedger | None = None
+    world_hash: dict = field(default_factory=dict)
+    state_path: Path | None = None
+    canary_arm_check: bool = False
 
     def initial_state(self, dimension: int = 137) -> EsState:
         return EsState(theta=torch.zeros(dimension, dtype=torch.float64),
@@ -109,30 +111,79 @@ class SumoEsDriver:
                        sigma_halve_every_accepted=self.config.sigma_halve_every_accepted,
                        direction_seed=self.config.direction_seed)
 
-    def _episode(self, state: EsState, theta: torch.Tensor, seed: int, update: int,
-                 tag: str) -> dict:
+    def _batch(self, requests: list[dict]) -> list[dict]:
+        """Charge every request BEFORE dispatch, run them (in parallel when the evaluator
+        supports it), enforce the safety gate and CRN world identity per seed."""
         if self.ledger is None:
             self.ledger = BudgetLedger(self.config.cap_sim_s, self.config.episode_charge_sim_s)
-        charged = self.ledger.authorize(f"s{seed}_{tag}")
-        result = self.evaluator.evaluate(theta, seed, update, tag)
-        self.ledger.record_actual(result["job"], result.get("actual_sim_s", charged))
-        if not result.get("safety_clean", False):
-            raise MechanicalFailure(
-                f"{result['job']}: safety gate failed; stop dispatch, no retry authority")
-        return result
+        need = len(requests) * self.config.episode_charge_sim_s
+        if self.ledger.remaining_sim_s() < need:
+            raise BudgetExceeded(f"batch of {len(requests)} needs {need} > remaining "
+                                 f"{self.ledger.remaining_sim_s()}; cap {self.config.cap_sim_s}")
+        for request in requests:
+            self.ledger.authorize(request["tag"])
+        if hasattr(self.evaluator, "evaluate_many"):
+            results = self.evaluator.evaluate_many(requests)
+        else:
+            results = [self.evaluator.evaluate(r["theta"], r["seed"], r["update"], r["tag"])
+                       for r in requests]
+        for request, result in zip(requests, results):
+            self.ledger.record_actual(result["job"], result.get(
+                "actual_sim_s", self.config.episode_charge_sim_s))
+            if not result.get("safety_clean", False):
+                raise MechanicalFailure(
+                    f"{result['job']}: safety gate failed; stop dispatch, no retry authority")
+            digest = result.get("initial_state_sha256")
+            known = self.world_hash.setdefault(request["seed"], digest)
+            if digest is None or known != digest:
+                raise MechanicalFailure(f"{result['job']}: initial_state_sha256 {digest} != "
+                                        f"{known} for world {request['seed']} (CRN broken)")
+        return results
+
+    def _episode(self, state: EsState, theta: torch.Tensor, seed: int, update: int,
+                 tag: str) -> dict:
+        return self._batch([dict(theta=theta, seed=seed, update=update, tag=tag)])[0]
+
+    def panel_results(self, theta: torch.Tensor, update: int, tag: str) -> list[dict]:
+        return self._batch([dict(theta=theta, seed=seed, update=update, tag=f"{tag}_s{seed}")
+                            for seed in self.config.panel_seeds()])
 
     def panel_scores(self, state: EsState, theta: torch.Tensor, update: int,
                      tag: str) -> list[float]:
-        return [self._episode(state, theta, seed, update, f"{tag}_s{seed}")["J600"]
-                for seed in self.config.panel_seeds()]
+        return [r["J600"] for r in self.panel_results(theta, update, tag)]
+
+    def _calibrate(self, results: list[dict]) -> None:
+        measured = _sensitivity_from(results)
+        if measured is not None:
+            self.sensitivity = measured
 
     def baseline(self, state: EsState) -> dict:
-        scores = self.panel_scores(state, state.theta, 0, "panel_ctrl0")
+        seeds = self.config.panel_seeds()
+        canary = None
+        if self.canary_arm_check:
+            # Registered canary: the ours path at theta=0 must reproduce the byte-identical
+            # CTRL0 adapter on the first panel world (same J600, same world hash) first.
+            pair = self._batch([dict(theta=state.theta, seed=seeds[0], update=-1, arm="ctrl0",
+                                     tag=f"base_s{seeds[0]}_ctrl0"),
+                                dict(theta=state.theta, seed=seeds[0], update=-1,
+                                     tag=f"base_s{seeds[0]}_ours0")])
+            if pair[0]["J600"] != pair[1]["J600"]:
+                raise MechanicalFailure(f"canary: ours@0 J600 {pair[1]['J600']} != CTRL0 "
+                                        f"{pair[0]['J600']} (zero identity broken)")
+            canary = dict(ctrl0=pair[0], ours0=pair[1], identical=True)
+            self.save(state, receipts=self.receipts + [dict(update=-1, kind="canary",
+                                                            canary=canary)])
+            rest = self._batch([dict(theta=state.theta, seed=s, update=-1,
+                                     tag=f"base_s{s}_ours0") for s in seeds[1:]])
+            results = [pair[1]] + rest
+        else:
+            results = self.panel_results(state.theta, -1, "base")
+        self._calibrate(results)
+        scores = [r["J600"] for r in results]
         state.panel_j = list(scores)
-        canary = f"s{self.config.panel_seeds()[0]}_panel_ctrl0"
-        return dict(update=-1, kind="ctrl0_panel_baseline", canary=canary
-                    + " (canary; reused as baseline[0])",
-                    panel_seeds=list(self.config.panel_seeds()), panel_J=scores,
+        return dict(update=-1, kind="ctrl0_panel_baseline", canary=canary,
+                    panel_seeds=list(seeds), panel_J=scores,
+                    panel_mean=sum(scores) / len(scores), sensitivity=self.sensitivity,
                     budget=self.ledger.to_dict())
 
     def run_update(self, state: EsState) -> dict:
@@ -146,21 +197,28 @@ class SumoEsDriver:
                               predicted_gain=screen["predicted_gain"])
         if not kept:
             receipt = dict(update=update, seeds=seeds, sigma=sigma,
+                           sensitivity=self.sensitivity,
                            sigma_predicted_command_rms=sigma * self.sensitivity,
                            screen=screen_receipt, pair_deltas=[], pair_J=[], grad_norm=0.0,
                            panel_J_before=list(state.panel_j), panel_J_after=list(state.panel_j),
                            accepted=None, no_step=True, budget=self.ledger.to_dict())
             state.update_count += 1
             self.receipts.append(receipt)
+            self.save(state)
             return receipt
-        deltas, pair_j = [], []
+        requests = []
         for index in kept:
-            per_side = {}
             for sign, label in ((1, "plus"), (-1, "minus")):
                 theta_side = state.theta + sign * sigma * directions[index]
-                per_side[label] = [self._episode(state, theta_side, seed, update,
-                                                 f"u{update}_d{index}_{label}_s{seed}")["J600"]
-                                   for seed in seeds]
+                requests += [dict(theta=theta_side, seed=seed, update=update,
+                                  tag=f"u{update:02d}_d{index}_{label}_s{seed}",
+                                  index=index, side=label) for seed in seeds]
+        results = self._batch(requests)
+        deltas, pair_j = [], []
+        for index in kept:
+            per_side = {label: [res["J600"] for req, res in zip(requests, results)
+                                if req["index"] == index and req["side"] == label]
+                        for label in ("plus", "minus")}
             deltas.append(sum(p - m for p, m in zip(per_side["plus"], per_side["minus"]))
                           / len(seeds))
             pair_j.append(dict(plus=per_side["plus"], minus=per_side["minus"]))
@@ -168,23 +226,61 @@ class SumoEsDriver:
                             sigma)
         adam_snapshot = state.adam.snapshot()
         theta_candidate = state.adam.step(state.theta, gradient)
-        candidate_panel = self.panel_scores(state, theta_candidate, update, "panel_after")
+        panel_results = self.panel_results(theta_candidate, update, f"u{update:02d}_panel")
+        candidate_panel = [r["J600"] for r in panel_results]
         accepted = panel_improved(state.panel_j, candidate_panel)
-        receipt = dict(update=update, seeds=seeds, sigma=sigma,
+        receipt = dict(update=update, seeds=seeds, sigma=sigma, sensitivity=self.sensitivity,
                        sigma_predicted_command_rms=sigma * self.sensitivity,
                        screen=screen_receipt,
                        pair_deltas=deltas, pair_J=pair_j, grad_norm=float(gradient.norm()),
                        panel_J_before=list(state.panel_j), panel_J_after=candidate_panel,
+                       panel_mean_before=sum(state.panel_j) / len(state.panel_j),
+                       panel_mean_after=sum(candidate_panel) / len(candidate_panel),
                        accepted=accepted, budget=self.ledger.to_dict())
         if accepted:
             state.theta = theta_candidate
             state.panel_j = list(candidate_panel)
             state.accepted_count += 1
+            self._calibrate(panel_results)
         else:
             state.adam.restore(adam_snapshot)
         state.update_count += 1
         self.receipts.append(receipt)
+        self.save(state)
         return receipt
+
+    def save(self, state: EsState, receipts: list[dict] | None = None) -> None:
+        """Durable resumable snapshot (atomic replace) + the accepted head per update."""
+        if self.state_path is None:
+            return
+        import hashlib
+        import os
+        path = Path(self.state_path)
+        payload = dict(state=state.to_dict(), receipts=self.receipts if receipts is None
+                       else receipts, budget=None if self.ledger is None else self.ledger.to_dict(),
+                       sensitivity=self.sensitivity,
+                       world_hash={str(k): v for k, v in self.world_hash.items()})
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, indent=1, allow_nan=False) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+        values = [float(v) for v in state.theta.tolist()]
+        (path.parent / f"theta_after_u{state.update_count:02d}.json").write_text(
+            json.dumps(dict(updates_done=state.update_count, theta=values,
+                            sha256=hashlib.sha256(json.dumps(values).encode()).hexdigest()))
+            + "\n", encoding="utf-8")
+
+    @classmethod
+    def resume(cls, path: Path, **kwargs) -> tuple["SumoEsDriver", EsState]:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        driver = cls(state_path=Path(path), **kwargs)
+        driver.receipts = list(payload["receipts"])
+        budget = payload["budget"]
+        driver.ledger = BudgetLedger(budget["cap_sim_s"], driver.config.episode_charge_sim_s,
+                                     budget["charged_sim_s"], budget["actual_sim_s"],
+                                     budget["jobs"])
+        driver.sensitivity = payload["sensitivity"]
+        driver.world_hash = {int(k): v for k, v in payload["world_hash"].items()}
+        return driver, EsState.from_dict(payload["state"])
 
     def run(self, state: EsState | None = None, updates: int | None = None) -> dict:
         if not self.config.enabled:
@@ -196,6 +292,7 @@ class SumoEsDriver:
         if state is None:
             state = self.initial_state()
             self.receipts.append(self.baseline(state))
+            self.save(state)
         for _ in range(self.config.max_updates if updates is None else updates):
             if state.update_count >= self.config.max_updates:
                 break
@@ -213,7 +310,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     config = SumoEsConfig.load(args.config)
     if args.evaluator == "sumo":
-        SumoRuntimeEvaluator()
+        raise SystemExit("real SUMO runs only via tools/sumoes/remote/run.py on cpuQ "
+                         "(registered S-SUMOES-RUN, design 05b84910)")
     from .stub import StubSimulator
     evaluator = StubSimulator()
     screener = AcceptAllScreener(config.pairs_per_update)

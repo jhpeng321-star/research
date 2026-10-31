@@ -7,7 +7,8 @@ import torch
 
 from tools.sumoes.config import CELL_CYCLE, PANEL_CELLS, ConfigError, SumoEsConfig
 from tools.sumoes.driver import (AcceptAllScreener, BudgetExceeded, BudgetLedger,
-                                 MechanicalFailure, SumoEsDriver, SumoRuntimeEvaluator)
+                                 MechanicalFailure, SumoEsDriver)
+from tools.sumoes.sumo_eval import SumoRuntimeEvaluator
 from tools.sumoes.es import (EsState, HeadAdam, estimate, head_dimension, head_vector,
                              panel_improved, sigma_for, state_dict_with_head)
 from tools.sumoes.stub import RankingScreener, StubSimulator
@@ -176,7 +177,7 @@ def test_rejected_update_rolls_back_bitwise_and_still_charges():
             if world_seed in config.panel_seeds():
                 j = j + 1e6 * float(theta @ theta)
             return dict(job=f"s{world_seed}_{tag}", J600=j, actual_sim_s=900,
-                        safety_clean=True)
+                        safety_clean=True, initial_state_sha256=f"h{world_seed}")
 
     evaluator = PanelAdversarial()
     driver = SumoEsDriver(config=config, evaluator=evaluator,
@@ -275,7 +276,7 @@ def test_screening_selects_top_directions_and_zero_screen_is_noop():
 def test_default_off_and_sumo_evaluator_refuse(tmp_path):
     with pytest.raises(PermissionError):
         driver_for(SumoEsConfig.load("configs/c4_sumoes_design.toml"))[0].run()
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         SumoRuntimeEvaluator()
     enabled = tmp_path / "enabled.toml"
     enabled.write_text("[sumoes]\nenabled = true\nmax_updates = 2\n"
