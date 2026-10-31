@@ -12,14 +12,17 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
   gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.
   Own398268/398269/398270, monitor398303; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.
   Canary370.48s reused. Final LANE +move→LC→emit source phase; do not redispatch.
-- FULL-v3-gpu LIVE, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:
+- FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:
   gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.
   Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.
   Canary223.28s reused; causal motion posterior, learned arrivals, physics-native
   CAVs and fast lane arbitration. Original observed-ID60s endpoints retained.
-- FULL-v1 LIVE source4015b641; own333463/333464/333465, monitor335983,
+- FULL-v1 OPERATIONALLY RETIRED07:03 source4015b641; prior333463/333464/333465, monitor335983,
   gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;
   newer FULL-v3 removes that dependence. Never redispatch either source.
+- All8reserved K8 worlds retained for EACH retired source;81/87total completed
+  tasks preserved. Exact-own pidfd stop receipts `docs/rbint/SUPERSEDED_STOPPED_0703.md`.
+  Six old GPU workers released for latest FULL-v4 throughput; no efficacy-selected stop.
 - A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.
 - C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes
   verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;
