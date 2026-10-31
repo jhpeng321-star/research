@@ -163,6 +163,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Poll workers about every20min. No peer process action, push, deletion or training.
 
 ## Remaining / known gaps
+- WM2-HDV60 now LIVE on ORIGINAL gpuR runtime: own812962/812963/812964,
+  root `/root/rbeval20261031/int/WM2-HDV60`. Canary22.59s; verified original
+ 600s task's all5arms/3regions/6prefix bins before continuation. No baseline
+  source/model mutation or600s rerun. Endpoint monitor19CPU tests PASS; short
+  schema explicitly excluded from full-distribution scorer. Factual targets next.
 - HDV60_DESIGN.md frozen before endpoint inference/scoring. New short baseline
   wrapper imports ORIGINAL WM2 runtime on gpuR, retains600s padding/1200-step
   RNG plans, executes120steps only. Canary must match original first6speed/

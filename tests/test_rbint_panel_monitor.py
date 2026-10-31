@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.rbint.panel_monitor import available_memory, digest, verify_completion
+from tools.rbint.panel_monitor import available_memory, checkpoint_labels, digest, verify_completion
 
 
 def make_panel(root):
@@ -99,3 +99,9 @@ def test_endpoint_protocol_has_exact_own_namespace_and_original_model_runtime(mo
         '--baseline-endpoint', '--host', 'gpuR'])
     panel_ops.main()
     assert len(seen) == 1
+
+
+def test_endpoint_monitor_never_sends_short_schema_to_distribution_scorer():
+    from tools.rbint.panel_monitor import DEADLINE
+    assert checkpoint_labels('WM2_HDV60', DEADLINE) == []
+    assert checkpoint_labels('FULL', DEADLINE) == ['04', '08']

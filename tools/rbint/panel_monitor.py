@@ -46,6 +46,14 @@ def available_memory(proc=Path('/proc'), cgroup=Path('/sys/fs/cgroup')):
     return physical
 
 
+def checkpoint_labels(variant, now):
+    # Endpoint tasks intentionally have no600s bins/clocks and cannot enter
+    # the full distribution scorer, even after a K8 world becomes complete.
+    if variant == 'WM2_HDV60':
+        return []
+    return [label for label, clock in CHECKPOINTS.items() if now >= clock]
+
+
 def verify_completion(root):
     """A marker alone cannot certify a complete160-task ensemble."""
     total = 0
@@ -165,9 +173,8 @@ def main():
                     complete_hashes={str(p.relative_to(root)):digest(p) for i in range(3)
                         for p in (root/f'shard{i}').glob('w*_k*.json')}))
                 break
-            for label, clock in CHECKPOINTS.items():
-                if time.time() >= clock:
-                    score_once(root, runtime, 'interim'+label, partial=not complete)
+            for label in checkpoint_labels(spec['variant'], time.time()):
+                score_once(root, runtime, 'interim'+label, partial=not complete)
             if complete:
                 score_once(root, runtime, 'full', partial=False)
                 if (root/'ANALYSIS_full.json').exists():
