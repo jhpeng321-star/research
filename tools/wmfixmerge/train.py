@@ -35,7 +35,17 @@ def export(model, original, frozen, optimizer, out, step, receipt):
             raise ValueError("frozen WM2 tensor changed: " + name)
     payload = dict(original)
     payload["model"] = {n: v.detach().cpu().clone() for n, v in model.state_dict().items()}
-    payload["config"] = dict(original["config"], merge_response=True, physics=asdict(model.physics))
+    refine = {}
+    spec = getattr(model, "spec", None)
+    counts = (int(getattr(spec, "merge_response_merge_bases", 0) or 0),
+              int(getattr(spec, "merge_response_ramp_bases", 0) or 0))
+    if any(counts):
+        # S-WMFIX-C fallback 2: the canonical reload must rebuild the refined
+        # basis (exact tensor parity check below would fail on a shape mismatch).
+        refine = dict(merge_response_merge_bases=counts[0],
+                      merge_response_ramp_bases=counts[1])
+    payload["config"] = dict(original["config"], merge_response=True, physics=asdict(model.physics),
+                             **refine)
     payload["wmfix"] = dict(receipt, step=step, base_sha256=WM2_SHA)
     # Immutable completed-update checkpoints; interrupted writes never masquerade as completed.
     path = out / f"step_{step:06d}.pt"
@@ -69,6 +79,11 @@ def main(argv=None):
     parser.add_argument("--smooth-events", action="store_true")
     parser.add_argument("--admission-width", type=float, default=None,
                         help="numerical sigmoid width (m) of the admission surrogate")
+    # S-WMFIX-C fallback 2 (default 0 = the registered 4-basis grid).
+    parser.add_argument("--merge-bases", type=int, default=0,
+                        help="extra geometry-concentrated centres over the merge section")
+    parser.add_argument("--ramp-bases", type=int, default=0,
+                        help="extra geometry-concentrated centres over the ramp acceleration lane")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args(argv)
     install_guard()
@@ -95,7 +110,8 @@ def main(argv=None):
                                           SMOOTH_GRADIENT_COLUMNS, objective_terms,
                                           paired_objective)
     rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, args.device,
-                 smooth_events=args.smooth_events, admission_width_m=args.admission_width)
+                 smooth_events=args.smooth_events, admission_width_m=args.admission_width,
+                 merge_refine=(args.merge_bases, args.ramp_bases))
     gradient_columns = SMOOTH_GRADIENT_COLUMNS if args.smooth_events else GRADIENT_COLUMNS
     names = freeze_except_response(rt.model)
     optimizer = torch.optim.Adam([p for p in rt.model.parameters() if p.requires_grad], lr=schedule["lr"])
@@ -109,6 +125,8 @@ def main(argv=None):
                               learned_admission=True, smooth_events=bool(args.smooth_events),
                               admission_width_m=(ADMISSION_WIDTH_M if args.admission_width is None
                                                  else float(args.admission_width)),
+                              merge_bases=int(args.merge_bases),
+                              ramp_bases=int(args.ramp_bases),
                               gradient_columns=list(gradient_columns)))
     # A matching nested config is supplied to legacy scorers/accept.py; unknown tensors must reject.
     resolved = asdict(rt.config)

@@ -8,16 +8,56 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
-from .entries import ENTRY_S_M, SECTION_MERGE_END_M
+from .entries import ENTRY_S_M, SECTION_MERGE_END_M, SECTION_MERGE_START_M
+
+
+def refined_spatial_layout(basis: int, merge_bases: int, ramp_bases: int, *,
+                           device=None, dtype=None):
+    """Centres and per-centre widths of the geometry-concentrated spatial basis.
+
+    S-WMFIX-C fallback 2 (WMFIX_REVIEW claim 1: 4 uniform bases with sigma
+    ~907 m cannot resolve the 75 m merge).  The coarse backbone (``basis``
+    uniform centres over the observed full upstream span) is kept unchanged;
+    ``merge_bases`` extra centres concentrate over the observed merge section
+    [0, 75.44] m and ``ramp_bases`` over the observed ramp acceleration lane
+    (ramp entrance -378.66 m to the merge nose).  Geometry only -- entrance
+    positions and section boundaries of the observed network -- never a
+    speed/jam/hold behavioural threshold.  Each width is the nearest-centre
+    distance, which reproduces the uniform grid's sigma exactly and scales
+    every centre to its local resolution; identical endpoints across groups
+    (e.g. the merge end shared with the backbone) are deduplicated.
+    """
+    start, end = min(ENTRY_S_M), SECTION_MERGE_END_M
+    groups = [torch.linspace(start, end, basis, device=device, dtype=dtype)]
+    if merge_bases:
+        groups.append(torch.linspace(SECTION_MERGE_START_M, SECTION_MERGE_END_M,
+                                     merge_bases, device=device, dtype=dtype))
+    if ramp_bases:
+        groups.append(torch.linspace(ENTRY_S_M[2], SECTION_MERGE_START_M,
+                                     ramp_bases, device=device, dtype=dtype))
+    centres = torch.unique(torch.cat(groups))
+    distances = (centres[:, None] - centres[None, :]).abs().fill_diagonal_(float("inf"))
+    return centres, distances.min(-1).values
 
 
 class MergeResponseField(nn.Module):
-    def __init__(self, hidden: int = 32, basis: int = 4) -> None:
+    def __init__(self, hidden: int = 32, basis: int = 4,
+                 merge_bases: int = 0, ramp_bases: int = 0) -> None:
         super().__init__()
         if hidden < 1 or basis < 2:
             raise ValueError("positive hidden width and at least two spatial bases required")
+        for name, count in (("merge_bases", merge_bases), ("ramp_bases", ramp_bases)):
+            if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+                raise ValueError(f"{name} must be a nonnegative integer")
+            if count == 1:
+                raise ValueError(f"{name} must be 0 (off) or >= 2 (a resolvable region)")
         self.basis = basis
-        self.net = nn.Sequential(nn.Linear(8 + basis * 9, hidden), nn.SiLU(),
+        self.merge_bases, self.ramp_bases = int(merge_bases), int(ramp_bases)
+        self.refined = bool(self.merge_bases or self.ramp_bases)
+        self.centres = (len(refined_spatial_layout(basis, self.merge_bases,
+                                                   self.ramp_bases)[0])
+                        if self.refined else basis)
+        self.net = nn.Sequential(nn.Linear(8 + self.centres * 9, hidden), nn.SiLU(),
                                  nn.Linear(hidden, 1))
         nn.init.zeros_(self.net[-1].weight)
         nn.init.zeros_(self.net[-1].bias)
@@ -30,8 +70,14 @@ class MergeResponseField(nn.Module):
         length = kin[..., 6]
         start, end = min(ENTRY_S_M), SECTION_MERGE_END_M
         span = end - start
-        centers = torch.linspace(start, end, self.basis, device=kin.device, dtype=kin.dtype)
-        weight = torch.exp(-0.5 * ((s[..., None] - centers) / (span / (self.basis - 1))) ** 2)
+        if self.refined:
+            centres, widths = refined_spatial_layout(self.basis, self.merge_bases,
+                                                     self.ramp_bases, device=kin.device,
+                                                     dtype=kin.dtype)
+            weight = torch.exp(-0.5 * ((s[..., None] - centres) / widths) ** 2)
+        else:
+            centres = torch.linspace(start, end, self.basis, device=kin.device, dtype=kin.dtype)
+            weight = torch.exp(-0.5 * ((s[..., None] - centres) / (span / (self.basis - 1))) ** 2)
         weight = weight[..., None] * lane[..., None, :] * present[..., None, None]
         count = weight.sum(1)
         # log-count and speed moments do not divide by the padding-slot count.

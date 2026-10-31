@@ -303,17 +303,30 @@ class WmSModel(nn.Module):
             self._zero_lane_outputs()
         self.merge_response = None
         if getattr(spec, "merge_response", False):
-            self.enable_merge_response()
+            self.enable_merge_response(
+                int(getattr(spec, "merge_response_merge_bases", 0) or 0),
+                int(getattr(spec, "merge_response_ramp_bases", 0) or 0))
 
-    def enable_merge_response(self) -> None:
-        """Append the opt-in zero-output head after all legacy initialization."""
+    def enable_merge_response(self, merge_bases: int = 0, ramp_bases: int = 0) -> None:
+        """Append the opt-in zero-output head after all legacy initialization.
+
+        ``merge_bases``/``ramp_bases`` (S-WMFIX-C fallback 2, default 0 = the
+        registered uniform 4-basis grid, bit-identical) add geometry-
+        concentrated centres over the merge section and ramp acceleration lane.
+        """
         if self.merge_response is not None:
             raise ValueError("merge response already enabled")
         if self.physics_step is not None:
             raise ValueError("merge response requires the in-module emergency envelope")
         from .merge_response import MergeResponseField
-        self.merge_response = MergeResponseField().to(next(self.parameters()))
-        self.spec = replace(self.spec, merge_response=True)
+        self.merge_response = MergeResponseField(
+            merge_bases=int(merge_bases), ramp_bases=int(ramp_bases)
+        ).to(next(self.parameters()))
+        spec = replace(self.spec, merge_response=True)
+        if merge_bases or ramp_bases:
+            spec = replace(spec, merge_response_merge_bases=int(merge_bases),
+                           merge_response_ramp_bases=int(ramp_bases))
+        self.spec = spec
 
     def _init_bounds(self, spec: ModelSpec) -> None:
         """Residual and lane-logit bounds (plain attributes; the trainer may reset them)."""

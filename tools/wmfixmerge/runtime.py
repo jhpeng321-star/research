@@ -19,7 +19,7 @@ if str(_WMREQUAL) not in sys.path:
 
 class Runtime:
     def __init__(self, prepared, config, checkpoint, controllers, device="cpu", *,
-                 smooth_events=False, admission_width_m=None):
+                 smooth_events=False, admission_width_m=None, merge_refine=(0, 0)):
         import torch
         from tools.wmcombined.e3_score import load_for_scoring
         from wms.data.c4_pairs import PairedBranchSource
@@ -35,6 +35,9 @@ class Runtime:
         self.smooth_events = bool(smooth_events)
         self.admission_width_m = (ADMISSION_WIDTH_M if admission_width_m is None
                                   else float(admission_width_m))
+        # S-WMFIX-C fallback 2 (default (0, 0) = the registered 4-basis grid):
+        # geometry-concentrated merge/ramp centres of the merge-response field.
+        self.merge_refine = (int(merge_refine[0]), int(merge_refine[1]))
         self.config, settings, self.model = load_for_scoring(safe(config), safe(checkpoint))
         specs = json.loads(safe(controllers).read_text())
         specs = specs.get("controllers", specs)
@@ -46,7 +49,8 @@ class Runtime:
             entry_insert_rule="sumo_like_v2")
         self.model = self.model.to(self.device).eval()
         self.model.cav_exec_cap = "idm"
-        self.model.enable_merge_response()
+        self.model.enable_merge_response(merge_bases=self.merge_refine[0],
+                                         ramp_bases=self.merge_refine[1])
         self.model.checkpoint_forward = True
         manifest = json.loads(safe(safe(self.doc["root"]) / "C4_EPISODES_MANIFEST.json").read_text())
         worlds = {row["world"] for row in self.doc["episodes"]}
