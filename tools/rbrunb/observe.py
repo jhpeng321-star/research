@@ -57,7 +57,9 @@ print(json.dumps(dict(gpu=gpu,load=os.getloadavg()[0],supervisors=live,workers=w
         note = watch.SHARED/f'RUNB_INTERIM_{hour:02d}00.json'
         if now.hour >= hour and not note.exists():
             watch.save_new(note, event)
-    print(json.dumps(dict(receipt=str(target), **event)))
+    print(json.dumps(dict(receipt=str(target), time=event['time'],
+                          watcher_time=status['time'], ready=status.get('ready'),
+                          watcher_error=status.get('error'), remote=remote)))
 
 
 if __name__ == '__main__':

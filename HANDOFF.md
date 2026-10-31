@@ -40,6 +40,9 @@ Updated 2026-11-01 02:11 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
   nvidia-smi observations without launching work. In-session `--sleep 600`
   supports ten-minute checks; writes operational04/08 interim receipts once.
 - Audit: `runs/rbrunb/OBSERVE_1793471033172223500.json`.
+- 02:34 check: same READY order, watcher02:31:35 healthy, B2 tasks0/no dispatch;
+  GPU15772MiB/100%,load32.72. New INT recipe explicitly NOT READY pending smoke.
+  Continued in-session sleeping; no additional dispatch or replay.
 
 ## Current — corrected B2 claimed / WAITING_RESOURCES
 - Existing watcher33076 automatically claimed **WM-PHYS-B2** at01:31:32 and
