@@ -77,3 +77,13 @@ Additional CPU model-pickle/clustering QA PASS, SUMO0, binding SHA unchanged
 Pipeline: screens/repeats -> zero-update canary -> whole-batch updates -> u1/final dev -> discovery.
 Checkpoints `policy_uNNN.pt`; updates `UPDATE_NNN.json`; ledger `CHARGES.jsonl`;
 terminal failure `STOP.json` (never cleared automatically), budget exit `BUDGET_STOP.json`.
+
+<!-- COOPFREE PUBLICATIONS BEGIN -->
+## Automatically published proposal checkpoints
+Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
+Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
+Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
+No learned checkpoint yet; the full156-window/all-member-solo first update is running.
+Latest milestone: 60 complete jobs; 1216740 charged/66660.0 closed-actual sim-s.
+Training-window credits describe exploration; they are not paired dev-policy performance.
+<!-- COOPFREE PUBLICATIONS END -->

@@ -1,0 +1,94 @@
+{
+  "actual_closed": 66660.0,
+  "charged": 1216740,
+  "complete_jobs": 60,
+  "dispatch": {
+    "host": "cpuQ",
+    "phase": "pipeline",
+    "pid": 339173,
+    "root": "/home/ubuntu/coopfree20261101_build5",
+    "start_ticks": "47835664",
+    "sumo_version": "Eclipse SUMO sumo 1.27.1",
+    "workers": 1
+  },
+  "owned_alive": true,
+  "plan": {
+    "max_members": 17,
+    "multi_member_windows": 140,
+    "selection": {
+      "dense_available": 19,
+      "dense_selected": 91,
+      "ordinary_available": 80,
+      "prior_sha256": null,
+      "worlds": 24
+    },
+    "windows": 156,
+    "worlds": 24
+  },
+  "repeats": [
+    {
+      "bitwise": true,
+      "id": "s982000_repeat",
+      "sha256": "a5419ebb2219b3cc765a020e6515c4e38bebcc5aba800b876375fb9d4e328030"
+    },
+    {
+      "bitwise": true,
+      "id": "s982001_repeat",
+      "sha256": "cebede0168f867fd243679d1a40f14726a38436dcf938689be2478d8f8d42b4d"
+    },
+    {
+      "bitwise": true,
+      "id": "s982002_repeat",
+      "sha256": "3682dcf7940febe2c74d9d0e42c196ff5a19b024b921c1761174dc6ef5313f1b"
+    },
+    {
+      "bitwise": true,
+      "id": "s982003_repeat",
+      "sha256": "4577c5f6b85bb13ce00b250416812c586f3ac6149f8a12200d08c69b3acfd95f"
+    },
+    {
+      "bitwise": true,
+      "id": "s982004_repeat",
+      "sha256": "2bc9b922cd858b0a77a4340a8ffea301c3ad61afeb49284e235c81dee2f36046"
+    },
+    {
+      "bitwise": true,
+      "id": "s982005_repeat",
+      "sha256": "8f9ec32d445c9a18305196828212ef0d3418e2d6d0b946bbbd21e79d37ea471e"
+    },
+    {
+      "bitwise": true,
+      "id": "s982006_repeat",
+      "sha256": "812971a47359da745a856157f9596a6dc4615f511e58f3911146678c263a29bd"
+    },
+    {
+      "bitwise": true,
+      "id": "s982007_repeat",
+      "sha256": "f39591ebd7ec72b508b64afc35cca4f1ee690d55e6a81bae569648b29f5baa1b"
+    },
+    {
+      "bitwise": true,
+      "id": "s982011_repeat",
+      "sha256": "5d83d98c9a201d223c78bbaa5f5b4974c7ef2763afd48c52d1899a5905afea16"
+    },
+    {
+      "bitwise": true,
+      "id": "s982015_repeat",
+      "sha256": "34c06c0344f99f8c33a2cb4ab8daafb23c962c8ef6263ce483eee7745d1d2e02"
+    },
+    {
+      "bitwise": true,
+      "id": "s982016_repeat",
+      "sha256": "d50814e0d4396a547a6c4667eff499578a2470a66aa990bad6ec7d22d81bf3aa"
+    },
+    {
+      "bitwise": true,
+      "id": "s982020_repeat",
+      "sha256": "2876e1d6dcc4046baf2ec3c98f65dc8f0bc10269e19bf16897a8a92ce1c94ee5"
+    }
+  ],
+  "reserved_jobs": 1162,
+  "started_jobs": 61,
+  "unix": 1793465405.119953,
+  "updates": []
+}

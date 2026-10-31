@@ -38,3 +38,13 @@ Publish each completed `policy_uNNN.pt` with its `UPDATE_NNN.json` and SHA256 fo
 S-COOPPLAN (`E:/agent-work/c4-coopplan`). The live root currently has no learned
 checkpoint: u1 requires all156 windows/all member solos before its optimizer step.
 Never present the zero-initialized proposal distribution as a learned checkpoint.
+
+<!-- COOPFREE PUBLICATIONS BEGIN -->
+## Automatically published proposal checkpoints
+Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
+Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
+Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
+No learned checkpoint yet; the full156-window/all-member-solo first update is running.
+Latest milestone: 60 complete jobs; 1216740 charged/66660.0 closed-actual sim-s.
+Training-window credits describe exploration; they are not paired dev-policy performance.
+<!-- COOPFREE PUBLICATIONS END -->
