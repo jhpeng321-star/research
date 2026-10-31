@@ -50,6 +50,10 @@ def load_candidate(checkpoints, configs, device):
     candidate, receipt = rebuild_with_motion_encoder(old, spec, physics)
     candidate.requires_grad_(False)
     candidate._wmphys_variant = variant
+    candidate._wmphys_departure_phase = recipe.get('rollout', {}).get('departure_phase', 'before_movement')
+    if candidate._wmphys_departure_phase not in ('before_movement', 'after_movement_and_lanes'):
+        raise ValueError('unsupported departure phase')
+    receipt['departure_phase'] = candidate._wmphys_departure_phase
     if variant == 'FULL':
         from wms.control.fitted_hidden import FittedHiddenState
         from wms.control.arrival_fit import LearnedArrivalFit
@@ -225,6 +229,7 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     else:
         plan.receipt['variant'] = settings
     plan.receipt.update(observation_receipt)
+    plan.receipt['departure_phase'] = getattr(model, '_wmphys_departure_phase', 'before_movement')
     process = plan.kwargs.pop('entries')
     entries = InstrumentedEntries(process, frozen.Entries)
     kwargs.update(plan.kwargs, entries=entries)

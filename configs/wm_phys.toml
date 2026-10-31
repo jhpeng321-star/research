@@ -5,6 +5,9 @@ schema = "wm_phys/1"
 [source]
 config = "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml"
 
+[rollout]
+departure_phase = "after_movement_and_lanes"
+
 [physics]
 cf_model = "sumo_idm"
 sumo_cf_emergency_decel_mps2 = 9.0

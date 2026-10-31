@@ -28,7 +28,14 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   encoder2.400%; recall37.942%/40.492%, conditional FIT32/fivearms).
 - MERGE3ce7aa6a intake: post-movement source phase available; retain INT's
   default-OFF exact merge query switch. Merge/phase/receipt/combined/query suite
-  59CPU PASS/1CUDA skip. Multi-step evaluation wiring still pending.
+  59CPU PASS/1CUDA skip. Multi-step evaluation wiring now explicit below.
+- NEW explicit recipe rollout.departure_phase='after_movement_and_lanes' now
+  selects inference-only multi-step adapter (shared model default unchanged).
+  Carries settings/history/absolute controller clock; repairs cost observer's
+  old-road cohort, preserving exit speed/no birth charge and source ordinals.
+  Phase/recipe/source suite27CPU PASS; fresh smoke/canary still required.
+- Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,
+  optional SciPy prefix diagnostic, unfetched historical GPU canary). Smoke next.
 - CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen
   FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.
   Learned strength19.35568 already applied. Fitted LC remains OFF.

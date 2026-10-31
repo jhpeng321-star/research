@@ -15,7 +15,7 @@ def main(variant):
     os.environ['WMPHYS_VARIANT'] = variant
     sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve(),
                ROOT/'configs/native_cav_head_v5.json', ROOT/'tools/rbint/endpoints.py',
-               ROOT/'tools/rbint/observations.py']
+               ROOT/'tools/rbint/observations.py', ROOT/'tools/rbint/departure.py']
     if variant == 'C':
         sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     if variant == 'FULL':

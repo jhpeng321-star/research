@@ -282,7 +282,11 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                 kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(ARMS))
             cb = controllers(initial['s_m'].shape[1])
             with torch.no_grad():
-                roll = model.rollout(initial, n_steps=rollout_steps, cav_controller=cb, **kw)
+                if getattr(model, '_wmphys_departure_phase', 'before_movement') == 'after_movement_and_lanes':
+                    from tools.rbint.departure import rollout_after_movement
+                    roll = rollout_after_movement(model, initial, n_steps=rollout_steps, cav_controller=cb, **kw)
+                else:
+                    roll = model.rollout(initial, n_steps=rollout_steps, cav_controller=cb, **kw)
                 assert torch.isfinite(roll['speeds']).all()
                 score = None if args.endpoint_only else frozen.costs(roll, entries, b.entry_spec['k0'])
                 if future_builder is not None:
