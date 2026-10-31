@@ -1,0 +1,16 @@
+{
+ "schema": "wmvalue_full90_cpu_audit/1",
+ "verdict": "PASS",
+ "synthetic_only": true,
+ "real_outcomes_opened": false,
+ "frozen_WM": true,
+ "device": "cpu",
+ "steps": 180,
+ "terminal_windows": [60, 90],
+ "all_five_arms": true,
+ "features_per_terminal": 111,
+ "exact_90_endpoint": true,
+ "seconds": 8.4350795596838,
+ "runtime_sha256": "20f7f23d442978d60d4ea92aebfc47c50b28aa586c3c444f216c4dbea0b46568",
+ "full_receipt": "gpuR:/root/wmvalue20261031/cpu_audit_long90_v1.json"
+}

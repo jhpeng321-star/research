@@ -28,6 +28,14 @@
   tests PASS (36total local tests); no repeated claims/SSH or peer GPU admission.
   If this partition finishes last, exclusive COMPLETE-file creation assigns the
   same finalizer exactly once. Frozen worker snapshot/source bindings unchanged.
+- CPU assist admitted: local27688; eightgpuR workers588281/588282/588285/
+  588311/588322/588341/588342/588354, all alive at20:07/~100% oneCPU each.
+  44claims total (40reserved assist +4original),12active workers,0errors then.
+  assist_dispatch.json binds actual launch/ACK; the original four are preserved.
+- Additional actual frozen-WM CPU90s run on a small synthetic prefix PASS8.44s:
+  180steps,all five arms,both60/90 terminal features,exact90endpoint/road+source
+  cost composition. Runtime hash identical to the original CPU gate. No real
+  outcome/seed loaded by that audit; cpu_long90.json links the full remote receipt.
 - The efficacy test has NOT run. WMVALUE.md is an explicit running/NA receipt;
   no efficacy PASS/FAIL is asserted. No SUMO, policy training, refit, peer signals,
   prohibited paths or push. Monitor: tools.wmvalue.monitor (read-only).

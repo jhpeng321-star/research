@@ -42,13 +42,15 @@ keys-only coverage, not cost/CRN certification; aggregate-only exit-clock mismat
 cannot be repaired. Preserve it; new matched A/B/C share trajectories and CRNs.
 Native121frame60s history, PI/CIRCLES prefix-memory replay, entrant controls,
 real/imagined sensing, boundary-flow splice, exit/source clocks CPU audited.
-32 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
+36 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
+Actual WM90s CPU synthetic run: both60/90 terminal paths and all five arms PASS.
 All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
 No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
 
 **Recommendation:** finish the immutable320task test before any policy coupling.
 Durable local dispatcher PID28924; _out/wmvalue_inference_v1/LAUNCH.json.
 gpuA host CPU<=4 nice19/single-thread lanes; gpuR GPU<=3 only absent peer compute.
+MAIN19:52 CPU release: disjoint969439/40tasks, gpuR CPU<=8, assistPID27688.
 Complete tasks automatically trigger frozen400pair test, report/verdict and commit.
 Keep V/D/E frozen. No efficacy PASS/FAIL or policy-training authorization yet.
 Evidence: tools/wmvalue/evidence/{cpu_runtime_audit,cross_host_cpu}.json.

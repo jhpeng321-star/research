@@ -1,0 +1,22 @@
+{
+ "schema": "wmvalue_actual_cpu_assist/1",
+ "source_commit": "aba9ed4a",
+ "pid": 27688,
+ "host": "gpuR",
+ "device": "cpu",
+ "lanes": 8,
+ "reserved_world": 969439,
+ "exclusive_tasks": 40,
+ "worker_snapshot": "inference_v2",
+ "primary_dispatcher_pid": 28924,
+ "original_workers_preserved": true,
+ "launch_sha256": "0c7b1b4d1b5a8a3c9f5786d6ce0ab682a3ca05aa30c5580672cf7ec19497116b",
+ "ack_sha256": "eed16579e0eb1d31e7e258e76f1a33d7ff9284327d7f6e9215192a77da5dc10d",
+ "authorization": "MAIN19:52 CPU release to C1/WM",
+ "initial_admission": "10cores +40GiB spare",
+ "evaluator_changed": false,
+ "value_refit": false,
+ "sumo_seconds": 0,
+ "peer_signals": 0,
+ "progress_receipt": "inference_cpu_assist_progress.json"
+}
