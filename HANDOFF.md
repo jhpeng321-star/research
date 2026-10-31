@@ -1,6 +1,10 @@
 # S-RB-MERGE — full-fleet validation continuation
 
-## v4 prepared (SUMO CF + causal LC history)
+## v4 RUNNING (SUMO CF + causal LC history)
+- **00:46:48 +08 dispatched ONCE**, owned cpuQ PID**405098**, source
+  **75a24397**, validator SHA
+  `439ec5d4ea89508ff12ce36e9d873ce64d5cdb35c035c69c2885f08b882166d8`.
+  Receipt `/tmp/rb-merge-fullfleet-v4/LAUNCH.json`; do not duplicate this job.
 - Immutable `/tmp/rb-merge-fullfleet-v4` combines INT **b0f66943** with MERGE's
   **0090c168** kernel and just the two lookahead keyword hooks. INT's weighted
   entrant-identity and post-motion mainline arbitration remain intact.
@@ -12,7 +16,7 @@
 - Staged CPU gate **28 PASS /1.81s**, including both CF modes' native-CAV exact
   chunk parity, prehistory identity recycling and lane-local overlap detection;
   all32 source preflights PASS. Load8.76/32. v3 PID338844 exited before staging.
-- No v4 prediction launched yet. New version changes multiple source/initial
+- New version changes multiple source/initial
   memory details together; no single-mechanism causal attribution will be made.
 
 ## New source-backed mechanics increment **0090c168**
