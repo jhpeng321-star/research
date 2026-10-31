@@ -138,33 +138,54 @@ def sweep(argv=None):
     parser = argparse.ArgumentParser(description="worker sweep over cells")
     for name in ("prepared", "config", "checkpoint", "controllers", "manifest", "out"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--prepared-wmdata", default=None,
+                        help="prepared doc for corpus 'wm' cells (required if any present)")
     args = parser.parse_args(argv)
     install_guard()
     import torch
     torch.set_num_threads(1)
     import tools.wmfixmerge.runtime as runtime_mod
     from tools.wmfixmerge.runtime import Runtime
-    rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, "cpu")
-    expected = json.loads(safe(args.manifest).read_text())["incumbents"]
-    live = {p["name"]: float(getattr(rt.model.physics, p["name"]))
-            for p in PARAMS if p["where"] == "physics"}
-    for name, value in live.items():
-        if abs(value - expected[name]) > 1e-9:
-            raise ValueError(f"live physics incumbent differs for {name}: {value} vs {expected[name]}")
-    base = state_hash(rt.model)
     manifest = json.loads(safe(args.manifest).read_text())
+    corpora = {cell["corpus"] for cell in manifest["cells"]}
+    if "wm" in corpora and not args.prepared_wmdata:
+        raise ValueError("wm cells need --prepared-wmdata")
+    runtimes, bases = {}, {}
+
+    def runtime_for(corpus):
+        if corpus not in runtimes:
+            prepared = args.prepared if corpus == "fit" else args.prepared_wmdata
+            rt = Runtime(prepared, args.config, args.checkpoint, args.controllers, "cpu")
+            live = {p["name"]: float(getattr(rt.model.physics, p["name"]))
+                    for p in PARAMS if p["where"] == "physics"}
+            for name, value in live.items():
+                if abs(value - manifest["incumbents"][name]) > 1e-9:
+                    raise ValueError(f"live {corpus} physics incumbent differs for {name}: "
+                                     f"{value} vs {manifest['incumbents'][name]}")
+            bases[corpus] = state_hash(rt.model)
+            if len(set(bases.values())) != 1:
+                raise ValueError("frozen WM2 tensors differ across corpora")
+            runtimes[corpus] = rt
+        return runtimes[corpus]
+
+    rt0 = runtime_for(manifest["cells"][0]["corpus"])
+    base = bases[manifest["cells"][0]["corpus"]]
+    live = {p["name"]: float(getattr(rt0.model.physics, p["name"]))
+            for p in PARAMS if p["where"] == "physics"}
     out = safe(args.out)
     env_path = out / f"ENV_{manifest['sweep_id']}.json"
     if not env_path.is_file():  # idempotent across driver relaunches
         with env_path.open("x") as stream:
             json.dump(dict(host=socket.gethostname(), pid=os.getpid(), torch=torch.__version__,
-                           base_state_sha256=base, physics_incumbents=live), stream)
+                           corpora=sorted(corpora), base_state_sha256=base,
+                           physics_incumbents=live), stream)
     original_replace = runtime_mod.replace
     for cell in manifest["cells"]:
-        path = out / cell_name(manifest["gen"], cell["cand"], cell["group"],
-                               cell["arm"], cell["horizon"])
+        path = out / cell_name(manifest["gen"], cell["cand"], cell["corpus"],
+                               cell["group"], cell["arm"], cell["horizon"])
         if path.is_file():
             continue
+        rt = runtime_for(cell["corpus"])
         values = cell["params"]
         entry = {p["name"]: values[i] for i, p in enumerate(PARAMS) if p["where"] == "entry"}
         for i, p in enumerate(PARAMS):
@@ -188,12 +209,20 @@ def sweep(argv=None):
                     cell["group"], cell["horizon"], arm_index=cell["arm"])
         finally:
             runtime_mod.replace = original_replace
-        if state_hash(rt.model) != base:
+        if receipt["pair_key"] != cell["pair_key"]:
+            raise ValueError(f"{cell['corpus']} group order shifted: {receipt['pair_key']}"
+                             f" != {cell['pair_key']}")
+        if len(receipt["arms"]) != 2 or receipt["arms"][0] != "native":
+            raise ValueError("unexpected microbatch rows: " + repr(receipt["arms"]))
+        if cell.get("arm_name") and receipt["arms"][1] != cell["arm_name"]:
+            raise ValueError(f"arm order differs: {receipt['arms'][1]} != {cell['arm_name']}")
+        if state_hash(rt.model) != bases[cell["corpus"]]:
             raise ValueError("frozen WM2 tensors changed under candidate " + str(cell["cand"]))
         if seen_incumbents and abs(seen_incumbents["sumo_min_speed_mps"]
-                                   - expected["sumo_min_speed_mps"]) > 1e-9:
+                                   - manifest["incumbents"]["sumo_min_speed_mps"]) > 1e-9:
             raise ValueError("live entry incumbent differs: " + repr(seen_incumbents))
-        row = dict(gen=manifest["gen"], cand=cell["cand"], group=cell["group"], arm=cell["arm"],
+        row = dict(gen=manifest["gen"], cand=cell["cand"], corpus=cell["corpus"],
+                   group=cell.get("group_label", str(cell["group"])), arm=cell["arm"],
                    horizon=cell["horizon"], seconds=round(time.monotonic() - began, 1),
                    host=socket.gethostname(), params_sha256=cell.get("params_sha256"),
                    predicted=predicted.detach().cpu().tolist(),
@@ -236,57 +265,76 @@ def incumbents_from_resolved(resolved_path):
     return values
 
 
-def cell_name(gen, cand, group, arm, horizon):
-    return f"CELL_g{gen:03d}_c{cand:03d}_grp{group}_arm{arm}_h{horizon}.json"
+def cell_name(gen, cand, corpus, group, arm, horizon):
+    return f"CELL_g{gen:03d}_c{cand:03d}_{corpus}_grp{group}_arm{arm}_h{horizon}.json"
 
 
 def drive(argv=None):
     parser = argparse.ArgumentParser(description="antithetic-ES generation driver")
     for name in ("prepared", "config", "checkpoint", "controllers", "resolved-config", "out"):
         parser.add_argument("--" + name, required=True)
+    for name in ("prepared-wmdata", "cpuq-prepared-wmdata", "registry"):
+        parser.add_argument("--" + name, required=True)
     parser.add_argument("--gens", type=int, default=8)
     parser.add_argument("--popsize", type=int, default=8)
     parser.add_argument("--sigma", type=float, default=0.10)
     parser.add_argument("--lr", type=float, default=0.25)
     parser.add_argument("--seed", type=int, default=140014)
-    parser.add_argument("--fitness-groups", default="0-5")
     parser.add_argument("--fitness-horizon", type=int, default=300)
-    parser.add_argument("--gpuA-workers", type=int, default=13)
-    parser.add_argument("--cpuq-workers", type=int, default=8)
-    parser.add_argument("--gpuA-groups", default="0-3")
-    parser.add_argument("--cpuq-groups", default="4-5")
+    parser.add_argument("--gpuA-workers", type=int, default=18)
+    parser.add_argument("--cpuq-workers", type=int, default=28)
+    parser.add_argument("--gpuA-fit-groups", default="0-7")
+    parser.add_argument("--cpuq-fit-groups", default="8-11")
     parser.add_argument("--cpuq-root", default="/home/ubuntu/wmfix_es")
     parser.add_argument("--cpuq-prepared", default="/home/ubuntu/wmfix_es/TRAIN_PREPARED.json")
     parser.add_argument("--max-seconds", type=float, default=12600.)
     parser.add_argument("--stop-patience", type=int, default=3)
     parser.add_argument("--poll", type=float, default=30.)
-    parser.add_argument("--gen-timeout", type=float, default=12600.)
+    parser.add_argument("--gen-timeout", type=float, default=5400.)
     args = parser.parse_args(argv)
     install_guard()
     out = safe(args.out)
     if not out.is_dir() or any(out.iterdir()):
         raise ValueError("out must be an existing empty directory")
-    lo, hi = (int(v) for v in args.fitness_groups.split("-"))
-    groups = list(range(lo, hi + 1))
 
-    def host_groups(spec):
+    def range_spec(spec):
         a, b = (int(v) for v in spec.split("-"))
-        return list(range(a, b + 1))
+        return set(range(a, b + 1))
 
+    gpuA_fit = range_spec(args.gpuA_fit_groups)
+    cpuq_fit = range_spec(args.cpuq_fit_groups)
+    if gpuA_fit & cpuq_fit or gpuA_fit | cpuq_fit != set(range(12)):
+        raise ValueError("FIT group host pinning must partition 0-11")
+
+    from tools.wmfixmerge.prepare_combined import check_registry
+    registry = check_registry(args.registry, args.prepared)
     doc = json.loads(safe(args.prepared).read_text())
     scales, anchor_scales = doc["scales"], doc["anchor_scales"]
+    groups = registry["fitness_groups"]
+    if {fg["group"] for fg in groups if fg["corpus"] == "fit"} != set(range(12)):
+        raise ValueError("registry must cover all 12 FIT groups")
+
+    def host_of(fg):
+        if fg["corpus"] == "wm":
+            return "cpuQ"
+        return "gpuA" if fg["group"] in gpuA_fit else "cpuQ"
+
     incumbent_values = incumbents_from_resolved(args.resolved_config)
     x = to_unit(incumbent_values)
     began = time.monotonic()
     with (out / "RUN.json").open("x") as stream:
         json.dump(dict(pid=os.getpid(), started=time.time(), host=socket.gethostname(),
-                       schema="wmfix_es_run/1", popsize=args.popsize, sigma=args.sigma,
-                       lr=args.lr, seed=args.seed, fitness_groups=groups,
-                       fitness_horizon=args.fitness_horizon, max_seconds=args.max_seconds,
-                       stop_patience=args.stop_patience, prepared_sha256=digest(args.prepared),
-                       resolved_config_sha256=digest(args.resolved_config),
-                       base_sha256=WM2_SHA, implementation_params=[p["name"] for p in PARAMS],
-                       incumbents=params_doc(incumbent_values)), stream, indent=2)
+                        schema="wmfix_es_run/2", popsize=args.popsize, sigma=args.sigma,
+                        lr=args.lr, seed=args.seed,
+                        fitness_groups=[dict(g, host=host_of(g)) for g in groups],
+                        fitness_horizon=args.fitness_horizon, max_seconds=args.max_seconds,
+                        stop_patience=args.stop_patience,
+                        prepared_sha256=digest(args.prepared),
+                        registry_sha256=digest(args.registry),
+                        wmdata_prepared_sha256=registry["parts"]["wm"]["sha256"],
+                        resolved_config_sha256=digest(args.resolved_config),
+                        base_sha256=WM2_SHA, implementation_params=[p["name"] for p in PARAMS],
+                        incumbents=params_doc(incumbent_values)), stream, indent=2)
     best = None
     stale = 0
     gen = 0
@@ -311,29 +359,31 @@ def drive(argv=None):
                 json.dump({str(c): params_doc(v) for c, v in cand_params.items()}, stream,
                           indent=2, allow_nan=False)
             jobs = []
-            for host, workers, groups_spec in (("gpuA", args.gpuA_workers, args.gpuA_groups),
-                                               ("cpuQ", args.cpuq_workers, args.cpuq_groups)):
-                hgroups = host_groups(groups_spec)
-                todo = [(c, g, a) for c in cand_params for g in groups for a in (0, 1)
-                        if g in hgroups
-                        and not (out / cell_name(gen, c, g, a, args.fitness_horizon)).is_file()]
+            for host, workers in (("gpuA", args.gpuA_workers), ("cpuQ", args.cpuq_workers)):
+                todo = [(c, fg) for c in cand_params for fg in groups
+                        if host_of(fg) == host
+                        and not (out / cell_name(gen, c, fg["corpus"], fg["group"],
+                                                fg["arm"], args.fitness_horizon)).is_file()]
                 chunks = [todo[i::workers] for i in range(workers)]
                 for w, chunk in enumerate(chunks):
                     if not chunk:
                         continue
                     sweep_id = f"g{gen:03d}_{host}_w{w}"
-                    cells = [dict(cand=c, group=g, arm=a, horizon=args.fitness_horizon,
+                    cells = [dict(cand=c, corpus=fg["corpus"], group=fg["group"],
+                                  group_label=f"{fg['corpus']}:{fg['group']}",
+                                  arm=fg["arm"], arm_name=fg.get("arm_name"),
+                                  horizon=args.fitness_horizon, pair_key=fg["pair_key"],
                                   params=cand_params[c],
                                   params_sha256=hashlib.sha256(
                                       json.dumps(cand_params[c]).encode()).hexdigest())
-                             for c, g, a in chunk]
+                             for c, fg in chunk]
                     manifest = dict(gen=gen, sweep_id=sweep_id, cells=cells,
                                     incumbents={p["name"]: incumbent_values[i]
                                                 for i, p in enumerate(PARAMS)})
                     with (out / f"MANIFEST_{sweep_id}.json").open("x") as stream:
                         json.dump(manifest, stream, allow_nan=False)
                     jobs.append((host, sweep_id))
-            expected = [(c, g, a) for c in cand_params for g in groups for a in (0, 1)]
+            expected = [(c, fg) for c in cand_params for fg in groups]
             children = []
             for host, sweep_id in jobs:
                 if host == "gpuA":
@@ -353,14 +403,15 @@ def drive(argv=None):
                               f"nohup sudo env PYTHONPATH=src:. OMP_NUM_THREADS=1 "
                               f"MKL_NUM_THREADS=1 /home/ubuntu/miniconda3/bin/python "
                               f"-m tools.wmfixmerge.es --mode sweep "
-                              f"--prepared {args.cpuq_prepared} --config {args.config} "
-                              f"--checkpoint {args.checkpoint} "
+                              f"--prepared {args.cpuq_prepared} "
+                              f"--prepared-wmdata {args.cpuq_prepared_wmdata} "
+                              f"--config {args.config} --checkpoint {args.checkpoint} "
                               f"--controllers {args.controllers} "
-                              f"--manifest {args.cpuq_root}/es_run/MANIFEST_{sweep_id}.json "
-                              f"--out {args.cpuq_root}/es_run > {args.cpuq_root}/es_run/"
+                              f"--manifest {args.cpuq_root}/es_run_combined/MANIFEST_{sweep_id}.json "
+                              f"--out {args.cpuq_root}/es_run_combined > {args.cpuq_root}/es_run_combined/"
                               f"SWEEP_{sweep_id}.log 2>&1 < /dev/null & echo launched")
                     subprocess.run(["scp", "-q", str(out / f"MANIFEST_{sweep_id}.json"),
-                                    f"cpuQ:{args.cpuq_root}/es_run/MANIFEST_{sweep_id}.json"],
+                                    f"cpuQ:{args.cpuq_root}/es_run_combined/MANIFEST_{sweep_id}.json"],
                                    check=True)
                     # The remote worker may hold the ssh session open after
                     # launch; the poll loop (ENV/CELL files) is the liveness
@@ -375,9 +426,10 @@ def drive(argv=None):
                     children.append((sweep_id, None))
             while True:
                 time.sleep(args.poll)
-                pull(f"{args.cpuq_root}/es_run", out, "cpuQ")
-                present = sum((out / cell_name(gen, c, g, a, args.fitness_horizon)).is_file()
-                              for c, g, a in expected)
+                pull(f"{args.cpuq_root}/es_run_combined", out, "cpuQ")
+                present = sum((out / cell_name(gen, c, fg["corpus"], fg["group"],
+                                               fg["arm"], args.fitness_horizon)).is_file()
+                              for c, fg in expected)
                 if present == len(expected):
                     break
                 if time.monotonic() - gen_began > args.gen_timeout:
@@ -389,9 +441,9 @@ def drive(argv=None):
                                       elapsed=round(time.monotonic() - gen_began, 1))), flush=True)
             results = {}
             for cand, params in cand_params.items():
-                cells = [json.loads((out / cell_name(gen, cand, g, a,
-                                                     args.fitness_horizon)).read_text())
-                         for g in groups for a in (0, 1)]
+                cells = [json.loads((out / cell_name(gen, cand, fg["corpus"], fg["group"],
+                                                     fg["arm"], args.fitness_horizon)).read_text())
+                         for fg in groups]
                 fitness, reports = fitness_from_cells(cells, scales, anchor_scales)
                 results[cand] = dict(fitness=fitness, params=params_doc(params), **reports)
             receipt = dict(gen=gen, seconds=round(time.monotonic() - gen_began, 1),

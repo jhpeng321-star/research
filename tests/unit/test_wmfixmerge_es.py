@@ -77,3 +77,52 @@ def test_defaults_match_live_dataclasses():
     assert DEFAULTS["free_road_gap_m"] == live.free_road_gap_m
     assert DEFAULTS["speed_limit_mps"] == live.speed_limit_mps
     assert DEFAULTS["sumo_min_speed_mps"] == EntryConfig().sumo_min_speed_mps
+
+
+def test_cell_name_carries_corpus_tag():
+    from tools.wmfixmerge.es import cell_name
+    assert cell_name(3, 7, "wm", 35, 1, 300) == "CELL_g003_c007_wm_grp35_arm1_h300.json"
+    assert cell_name(0, 0, "fit", 4, 0, 300) == "CELL_g000_c000_fit_grp4_arm0_h300.json"
+
+
+def test_fitness_subset_every_fifth_wmdata_group():
+    from tools.wmfixmerge.prepare_combined import fitness_subset
+    fit = [f"fitpair{i}" for i in range(12)]
+    wm = [f"wmpair{i}" for i in range(40)]
+    seeds_of = {(p, k): 969400 + i for p, ks in (("fit", fit), ("wm", wm))
+                for i, k in enumerate(ks)}
+    subset = fitness_subset(fit, wm, seeds_of)
+    assert [g["corpus"] for g in subset[:12]] == ["fit"] * 12
+    assert [g["group"] for g in subset[12:]] == [0, 5, 10, 15, 20, 25, 30, 35]
+    assert all(g["arm"] == 1 and g["arm_name"] == "ctrl0" for g in subset[12:])
+    assert all(g["arm"] == 0 for g in subset[:12])
+
+
+def test_check_registry_binds_objective_and_digests(tmp_path):
+    import hashlib
+    from tools.wmfixmerge.prepare_combined import check_registry
+    fit = dict(scales=[1., 2., 3., 4., 5.], anchor_scales=[1., 2., 3., 4., 5.],
+               crossing_width=4.25)
+    fit_path = tmp_path / "fit.json"
+    fit_path.write_text(json.dumps(fit))
+    registry = dict(schema="wmfix_train_comb/1",
+                    parts=dict(fit=dict(sha256=hashlib.sha256(fit_path.read_bytes()).hexdigest()),
+                               wm=dict(sha256="0" * 64,
+                                       groups=[f"w{i}" for i in range(40)])),
+                    fitness_groups=[], scales=fit["scales"],
+                    anchor_scales=fit["anchor_scales"], crossing_width=fit["crossing_width"])
+    good = tmp_path / "reg.json"
+    good.write_text(json.dumps(registry))
+    doc = check_registry(good, fit_path)
+    assert doc["schema"] == "wmfix_train_comb/1"
+    registry["scales"] = [9., 9., 9., 9., 9.]
+    bad = tmp_path / "reg2.json"
+    bad.write_text(json.dumps(registry))
+    with pytest.raises(ValueError, match="scales"):
+        check_registry(bad, fit_path)
+    registry["scales"] = fit["scales"]
+    registry["parts"]["wm"]["groups"] = ["w0"]
+    worse = tmp_path / "reg3.json"
+    worse.write_text(json.dumps(registry))
+    with pytest.raises(ValueError, match="40"):
+        check_registry(worse, fit_path)
