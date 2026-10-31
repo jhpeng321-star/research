@@ -90,3 +90,8 @@ in three cases (DEFAULT_OFF_ENDPOINTS.json). Default11: precision3.005%,
 recall37.942% (1235/41095); encoder12:2.393%/40.369% (1314/54904). Both report
 5881 corrected HDV frames, source/aggregate/input checks PASS, matching MOBIL
 baselines reused. Both workers758018/762113 exited; no owned jobs remain.
+
+Native-only physical-point sensitivity13 is frozen for scoring: consumes the
+already-published S-RB-FIT3130 causal driver points, exact32 native observation
+SHA bindings; no fitting or LC-style change. Separate sensitivity, not an A/B
+replacement. Current combined CPU gate58PASS (CPU_MOTION_POINTS.xml).

@@ -82,3 +82,12 @@ snapshot, with independent persistent wish state. The prior OWN project source
 is SHA-pinned before execution; downloaded SUMO code is never executed. Current
 and prior motivation scores are separate. Persistent states must remain finite.
 Encoder source/featurizer fingerprints join checkpoint SHA in the MOBIL-reuse gate.
+
+`--motion-points <MOTION_POINT_TABLE.json> --native-only` is a separate
+sensitivity consuming S-RB-FIT's already published MotionFit point reader.
+It performs no fitting. The export checks the exact32 native input SHA bindings
+against completed lane receipts, retains the reader's deterministic point rule,
+and uses its population point for unseen IDs. CAV and LC defaults stay unchanged.
+Native-only avoids assuming numeric-ID alignment between counterfactual arms;
+these32 episodes must be compared with native-only A/B results. Compatible
+MOBIL cache reuse accepts a selected-arm subset of an already completed panel.

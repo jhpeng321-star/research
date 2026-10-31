@@ -161,7 +161,7 @@ def load_motion_point(path):
 
 @torch.no_grad()
 def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None,
-            motion_parameters=None, encoder=None, prior_kernel=None):
+            motion_parameters=None, encoder=None, prior_kernel=None, motion_points=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
     if reuse_mobil is not None and reuse_mobil['input_sha256'] != hashes:
         raise ValueError('MOBIL reuse requires exact observable input hashes')
@@ -182,6 +182,8 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
     if not np.allclose(np.diff(times), physics.dt_s, rtol=0, atol=1e-8):
         raise ValueError('unexpected time discretization')
     encoded = encoder.prepare(kin, mask, ids, times, t0) if encoder is not None else None
+    if motion_points is not None:
+        encoded = motion_points.prepare(int(meta['seed']),meta['arm'],t0,hashes,meta['episode'])
     memory = None
     actual, proposals = [], {'lc2013': [], 'mobil': []}
     motivated = {name: [] for name in MOTIVATIONS.values()}
@@ -368,8 +370,10 @@ def main():
     ap.add_argument('--idm-parameters', type=Path)
     ap.add_argument('--encoder-checkpoint', type=Path)
     ap.add_argument('--pre-signed-kernel', type=Path)
+    ap.add_argument('--motion-points',type=Path)
+    ap.add_argument('--native-only',action='store_true')
     args = ap.parse_args()
-    if args.idm_parameters is not None and args.encoder_checkpoint is not None:
+    if sum(x is not None for x in (args.idm_parameters,args.encoder_checkpoint,args.motion_points))>1:
         ap.error('choose one frozen parameter source')
     prior_kernel = None
     if args.pre_signed_kernel is not None:
@@ -385,8 +389,19 @@ def main():
         raise ValueError('output must be NEW with existing parent')
     args.out.mkdir()
     physics = PhysicsConfig(sumo_fidelity=True, open_road=True)
+    selected_arms = ('native',) if args.native_only else ARMS
+    points = None
+    point_reader = None
+    if args.motion_points is not None:
+        if not args.native_only or any(term in str(args.motion_points.resolve()).lower() for term in FORBIDDEN):
+            raise ValueError('motion point sensitivity requires native-only allowed artifact')
+        from .motion_points import MotionPoints,reader_identity
+        points = MotionPoints(args.motion_points,physics)
+        point_reader = reader_identity()
     motion_parameters = load_motion_point(args.idm_parameters) if args.idm_parameters is not None else None
     parameter_sha = sha(args.idm_parameters) if args.idm_parameters is not None else None
+    if points is not None:
+        parameter_sha = sha(args.motion_points)
     encoder = None
     if args.encoder_checkpoint is not None:
         if any(term in str(args.encoder_checkpoint.resolve()).lower() for term in FORBIDDEN):
@@ -397,9 +412,11 @@ def main():
     baseline = None
     if args.reuse_mobil_from is not None:
         baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
-        if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 160
+        previous_arms = baseline.get('diagnostic_arms',list(ARMS))
+        if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 32*len(previous_arms)
                 or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s
                 or baseline['snapshot'] != SNAPSHOT_CONTRACT
+                or not set(selected_arms).issubset(previous_arms)
                 or baseline.get('motion_parameter_sha256') != parameter_sha):
             raise ValueError('MOBIL reuse panel/settings mismatch')
     paths = []
@@ -410,6 +427,7 @@ def main():
                 paths.append(safe_path(path, args.views))
     if len(paths) != 160:
         raise ValueError(f'expected 160 FIT episodes, found {len(paths)}')
+    paths = [p for p in paths if p.name.rsplit('__',1)[1] in selected_arms]
     if args.smoke:
         paths = [p for p in paths if p.name.endswith('__native')][:1]
     start = time.time()
@@ -417,14 +435,16 @@ def main():
     for path in paths:
         reuse = (json.loads((args.reuse_mobil_from / (path.name + '.json')).read_text())
                  if baseline is not None else None)
-        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters, encoder, prior_kernel)
+        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters, encoder, prior_kernel, points)
         rows.append(row)
         (args.out / (path.name + '.json')).write_text(json.dumps(row, indent=2) + '\n')
         print(json.dumps(dict(completed=len(rows), total=len(paths), episode=path.name,
                               elapsed_s=time.time()-start)), flush=True)
     report = dict(status='COMPLETE', episodes=len(rows), worlds=len({r['seed'] for r in rows}),
                   horizon_s=args.horizon_s, prehistory_s=60,
-                  settings=('frozen WM2 pre-t0 motion encoder; persistent VID settings; CAV/LC defaults'
+                  diagnostic_arms=list(selected_arms),
+                  settings=('published causal native per-driver MotionFit points; persistent settings; CAV/LC defaults'
+                            if points is not None else 'frozen WM2 pre-t0 motion encoder; persistent VID settings; CAV/LC defaults'
                             if encoder is not None else 'inherited population defaults'
                             if motion_parameters is None else
                             'published motion-only pooled IDM point for HDVs; CAV and LC style defaults'),
@@ -432,6 +452,8 @@ def main():
                   encoder_checkpoint_sha256=encoder.sha256 if encoder is not None else None,
                   encoder_source_sha256=encoder.source_sha256 if encoder is not None else None,
                   pre_signed_source_sha256=sha(args.pre_signed_kernel) if prior_kernel is not None else None,
+                  motion_points_sha256=sha(args.motion_points) if points is not None else None,
+                  motion_points_reader_sha256=point_reader,
                   snapshot=SNAPSHOT_CONTRACT,
                   cohort='HDV, same identity, normal road in both adjacent frames',
                   motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
@@ -447,6 +469,9 @@ def main():
                                  'mobil.py', 'neighbours.py', 'batched.py', 'idm.py')))})
     if prior_kernel is not None:
         report['source_sha256'][str(args.pre_signed_kernel)] = sha(args.pre_signed_kernel)
+    if points is not None:
+        report['source_sha256'][str(args.motion_points)] = sha(args.motion_points)
+        report['source_sha256'][str(Path(__file__).with_name('motion_points.py'))] = sha(Path(__file__).with_name('motion_points.py'))
     (args.out / 'SUMMARY.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['aggregate']), flush=True)
 

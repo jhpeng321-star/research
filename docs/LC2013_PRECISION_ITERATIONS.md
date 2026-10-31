@@ -398,3 +398,23 @@ public MSVehicle.cpp:4954–4967 confirms the mode. Current inspected INT source
 still used trapezoid; no CF-owned code was changed by LANE. Position audit
 receipt/script committed separately; the lane diagnostic already teacher-forces
 recorded position, so this does not explain away its poor keep-right precision.
+
+## Published physical-inference sensitivity13 (frozen before scoring)
+
+The source-correct keep-right cap depends on latent desired-speed differences;
+existing encoder and homogeneous points leave many false proposals. Consume
+the ALREADY-FINISHED S-RB-FIT finite_mixture_v4 point reader (owner physical-fit
+amendment5700), not another fit. Exported3130 native driver points across32 FIT
+worlds with MotionFit.idm(sample=False), plus its population fallback; source
+reader SHA2c50c732… and artifact/provenance hashes retained in
+MOTION_POINT_TABLE.json. All32 native input hashes match completed PANEL9
+observations exactly. No new training, LC fit, optimizer or label-based tuning.
+
+Freeze native-only32 episodes,240..300 warmup/300..360 score, source82894fab,
+SUMO LC style defaults and original CAV defaults. Native-only avoids assuming
+cross-arm numeric VID alignment. Missing/entrant IDs use the published population
+point. This point is explicitly a sensitivity, NOT substituted into A/B/C or
+claimed as calibrated uncertainty. New-setting matched MOBIL runs once; source,
+arm subset, input SHA and table-reader identity protect future cache reuse.
+Point-table tests cover identity/fallback/CAV defaults and reject foreign-arm,
+out-of-FIT, nonpositive or mismatched-observation inputs.
