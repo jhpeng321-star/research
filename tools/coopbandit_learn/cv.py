@@ -37,6 +37,12 @@ def conformal_quantile(values, level=CONF_LEVEL):
     return s[k - 1]
 
 
+def radius_from(per_world_residuals, level=CONF_LEVEL):
+    """Documented confidence radius: signed per-world max overprediction
+    quantile, clamped at 0 (matching executor learn.py, conservative)."""
+    return max(0.0, conformal_quantile(per_world_residuals, level))
+
+
 @dataclass
 class CVResult:
     kind: str
@@ -113,7 +119,7 @@ def _fit_radius(dataset, train_states, horizon, kind, fold_tag):
     if not residuals:
         raise ValueError("no inner residuals; dataset too small for calibration")
     per_world = pd.DataFrame(residuals).groupby("world").residual.max()
-    return conformal_quantile(per_world.values), inner_groups
+    return radius_from(per_world.values), inner_groups
 
 
 def run(dataset: Dataset, horizon=POLICY_HORIZON, kind="gbt", folds=FOLDS):
@@ -135,7 +141,7 @@ def run(dataset: Dataset, horizon=POLICY_HORIZON, kind="gbt", folds=FOLDS):
         oof_rows += _residual_rows(dataset, te_states, horizon, predict_option_models(models, Xte), f, "outer")
     oof = pd.DataFrame(oof_rows)
     per_world = oof.groupby("world").residual.max()
-    radius_full = conformal_quantile(per_world.values)
+    radius_full = radius_from(per_world.values)
     X, targets, availability = _design(dataset, state_ids, horizon)
     models_full = fit_option_models(kind, X, targets, availability)
     result = CVResult(kind=kind, horizon=horizon, oof=oof, fold_of=fold_of, fold_radius=fold_radius,
