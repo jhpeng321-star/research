@@ -356,11 +356,12 @@ def drive(argv=None):
                               f"--controllers {args.controllers} "
                               f"--manifest {args.cpuq_root}/es_run/MANIFEST_{sweep_id}.json "
                               f"--out {args.cpuq_root}/es_run > {args.cpuq_root}/es_run/"
-                              f"SWEEP_{sweep_id}.log 2>&1 & echo launched")
+                              f"SWEEP_{sweep_id}.log 2>&1 < /dev/null & echo launched")
                     subprocess.run(["scp", "-q", str(out / f"MANIFEST_{sweep_id}.json"),
                                     f"cpuQ:{args.cpuq_root}/es_run/MANIFEST_{sweep_id}.json"],
                                    check=True)
-                    subprocess.run(["ssh", "cpuQ", remote], check=True, capture_output=True)
+                    subprocess.run(["ssh", "-n", "cpuQ", remote], check=True,
+                                   capture_output=True, timeout=120)
                     children.append((sweep_id, None))
             while True:
                 time.sleep(args.poll)
