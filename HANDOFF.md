@@ -1,8 +1,12 @@
 # S-SELMAPPO fleet-picker integration handoff
 
-**CURRENT: mechanically STOPPED before physics; no trainer alive.** First launch retained
-900reserved/0actual sim-s. Frozen seed-alias repair is CPU-tested29/29 plus real integration,
-but NOT dispatched; MAIN continuation acknowledgement required. See `SELMAPPO_STOP.md`.
+**CURRENT: STOPPED at the second mechanics episode's terminal bookkeeping; no trainer alive.**
+MAIN00:29 continuation was used once (commit `c082b233`); second seed reached900actual,
+then the wrapper queried the frozen environment's already-closed clock. Total1,800charged /
+900actual, production0/checkpoints0. Terminal repair commit `d219f5ca` is CPU31/31 plus
+real frozen-controller/WALL/alias-gate PASS, staged ONLY at `build_68394a9568862929`.
+MAIN acknowledgement is needed for production-only continuation; both smoke slots are spent.
+No further continuation is implemented or armed. See `SELMAPPO_STOP.md`.
 
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,
 library `native, ctrl0, mappo, pi, circles, wall`. Per-CAV belongs to S-SELMAPPO2.
@@ -40,25 +44,30 @@ Bind the peer module, additive extensions and `WALLSW_HANDOFF.md` with controlle
 An approval string alone cannot start an incomplete five-controller runtime.
 
 ## S-C1SWITCH2 panel/checkpoint interface
-Evaluation reserves16x900=14,400sim-s here; train first, evaluate only final169 checkpoint.
-Charge/evaluate these fleet episodes ONCE and let S-C1SWITCH2 reuse the same receipts;
-its per-decision replay branches are separate peer-budget work, not extra fleet episodes here.
-Peer panel must be the registered hash-bound16world seed/cell manifest (not the old60s panel).
-At the first read, prospective `tools/c1switch2/design.py` generated12worlds;
-resolve its panel with MAIN before evaluation. This task does not allocate peer panel seeds.
-Frozen selector bridge will expose `select(payload)->controller_name` for fleet_ppo;
-same builder, incumbent memory, deterministic argmax, no scaler/gradient update.
+Peer registered16worlds969136..969151 and explicitly owns ALL evaluation physics,
+including fleetPPO and its300s held-last-action tail to t1200 for secondary J900.
+Leave this task's prospective14,400sim-s reservation UNSTARTED and reuse peer receipts;
+no duplicate main episodes or branches here. Await its exact hash-bound manifest/binding.
+Supply ONLY final169 checkpoint/config/source SHA256 to the peer; no weights exist yet.
+`selector.FrozenFleetSelector(checkpoint, expected_sha)` provides `reset()` per world,
+then exactly30 `select(payload)->controller_name` calls at300..880. It verifies final169,
+protocol/library/hash, uses the same builder/incumbent memory, frozen deterministic argmax,
+and performs no scaler/gradient update. No selector calls during the peer's last-action tail.
 
-## Resume safety
-No selector training root or selector PID found on cpuQ/gpuR at resume.
-Final real-integration stage (not yet a dispatch at this checkpoint):
+## Preserved first dispatch
+Original real-integration stage:
 `/home/ubuntu/selmappo20261031/build_bc4c3aae72073204`, source binding
 `bc4c3aae72073204cf046d800766d4fcc5fd9610a29ea099c3c40cfc195dce14`.
 28/28CPU tests and real frozen-controller/WALL integration PASS; SUMO0 at staging.
 Its first dispatch ownPID284174 exited on the frozen seed-alias refusal; never redispatch it
 or reset the lock. Inspect using `python -m tools.selmappo.launch status --build build_bc4c3aae72073204`.
-Repair stage `build_914fecba3ffdf4cc` is CPU-only, not an authorised retry.
-Final evaluation awaits the peer16world manifest.
+Repair stage `build_914fecba3ffdf4cc` remains CPU-only, never dispatched.
+MAIN-authorized continuation used `build_999584a8cfacaf81`, ownPID357398 now exited.
+Both original and continuation locks are retained; do not relaunch either build.
+Current ledger hash `be3bcd873b401cce95b14a9659f33bcc8de38823eb8a6ca5a830119ca13347ce`;
+terminal STOP receipt records1,800charged/900actual and incomplete mechanics result.
+CPU-only terminal repair source binding
+`68394a95688629292c307a20861c409d264a3c88104851b719caa5917d44e7a1` is NOT a launch.
 The CPU-only stages are immutable receipts, not running jobs:
 `/home/ubuntu/selmappo_cpucheck_9f8afc61e72189e6/CPU_RESULT.json` records28/28PASS,
 including real CPU PyTorch optimizer, full600s return and RNG-isolation checks.

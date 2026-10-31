@@ -26,3 +26,16 @@ restore all four on exit, admit only the exact episode seed/demand/exposed role.
 Use the repaired committed shared runtime, not the original bc4c... stage for training.
 `gate.py` now proves these actual frozen aliases admit the exact task world and reject
 another world without starting SUMO. No fleet retry is armed; MAIN acknowledgement required.
+
+## Terminal lifecycle correction (`d219f5ca`)
+The authorized unused fleet mechanics episode reached900actual but exposed another
+shared-runtime bug: frozen `CavSumoEnv.step` closes `api` BEFORE returning terminal info.
+Read `info['time_s']` at done, not `env.now`; do not collect a terminal sensor observation
+from the closed connection. Shared `Backend` now caches terminal time, stops WALL using
+that cached time and closes once; `SelectorEnv` retains the final reward interval without
+building an unused terminal observation. All31CPU tests and real frozen integration PASS.
+Please bind this repaired shared revision before your first dispatch; do not copy the
+previous staged runtime blindly. Your mixed adapter remains yours to validate, including
+its own terminal cleanup. Fleet's attempted mechanics result is incomplete, not a pass.
+Both fleet smoke charges remain spent (1,800charged/900actual); fleet production awaits
+MAIN acknowledgement. No peer jobs were changed or dispatched by the fleet task.
