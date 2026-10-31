@@ -25,6 +25,16 @@ also passes86/86 on cpuQ, zero skips, plus real frozen checkpoint/WALL/guards/PP
 integration;0newSUMO, no continuation dispatch authorization. Do not mistake the
 INTEGRATION.json for acknowledgement of a new training attempt.
 
+## Resume verification after MAIN01:48
+
+MAIN's registry line `01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS` and the fresh
+session addendum explicitly acknowledge unused second smoke only, then production.
+Read-only collection `COLLECTION_b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c_1793468957194697000_9e2e08b6f97e49469002bdb211625332.json`
+again verifies original428649 exited,900reserved/300actual,0updates. Parent metadata
+contains only the original dispatch lock and four known stages, no continuation
+lock/build/job. cpuQ has32cores/load2.105 at inspection. One-use continuation
+implementation is the next step; the old lock remains intact.
+
 ## Before a continuation
 
 Read MAIN's response in shared registration. Original no-retry protocol requires
