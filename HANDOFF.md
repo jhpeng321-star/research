@@ -1,5 +1,16 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Connectivity alert — 2026-11-01 05:34 +08:00
+- cpuQ SSH closes connections (`Connection closed by 1.15.42.207 port 22`),
+  independently reproduced with a read-only `ssh ... cpuQ true` probe.
+- Latest verified progress is05:15:32+08:00:37/169updates,1,687production complete,
+  6outstanding,0newfailures,1,566,900charged including43,200history.
+- Do not infer trainer death or relaunch: own645235 status is currently UNKNOWN.
+  Both existing local observer3668 and noon publisher44716 retain their locks;
+  publisher committed the stale-receipt/SSH alert at05:33 (`69b21694`).
+- No training processes signalled, no dispatch/physics/budget change. Read-only
+  connectivity monitoring continues; MAIN infrastructure assistance may be needed.
+
 ## Fresh-session supervision — 2026-11-01 04:29 +08:00
 - Existing cpuQ supervisor645235 verified live/nice19 at20:29:09UTC;23/169 genuine
   updates,1,031 new production episodes complete/8open,0new failures.
