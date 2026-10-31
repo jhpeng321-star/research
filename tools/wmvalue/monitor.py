@@ -13,7 +13,8 @@ def main():
     p.add_argument('--out')
     a = p.parse_args()
     root = safe(a.root)
-    launch_path = root/('RESUME.json' if (root/'RESUME.json').exists() else 'LAUNCH.json')
+    resumes = [p for p in root.glob('RESUME*.json') if p.stem == 'RESUME' or p.stem[6:].isdigit()]
+    launch_path = max(resumes, key=lambda p: int(p.stem[6:] or '1')) if resumes else root/'LAUNCH.json'
     launch = json.loads(launch_path.read_text())
     claims = [p for p in (root/'claims').glob('*.json') if p.name.count('.') == 1]
     workers = {}

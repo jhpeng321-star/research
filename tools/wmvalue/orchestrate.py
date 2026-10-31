@@ -79,6 +79,17 @@ def fetch(host, remote, local):
                     host+':'+remote, str(local)], check=True, timeout=120)
 
 
+def task_path(root, key):
+    receipt = root/'recovered_tasks'/(key+'.receipt.json')
+    if receipt.exists():
+        d = json.loads(receipt.read_text())
+        path = root/d['path']
+        assert path.parent.resolve() == (root/'recovered_tasks').resolve()
+        assert digest(path) == d['sha256'], 'recovered transfer changed'
+        return path
+    return root/'tasks'/(key+'.json')
+
+
 def run_task(root, tag, task, host, device, gate, reservation_pid=None, short=False):
     key = task_key(task)
     remote = '/root/wmvalue20261031/'+('short_cells_v1' if short else 'cells_v1')+'/'+key+'.json'
@@ -113,6 +124,7 @@ def run_task(root, tag, task, host, device, gate, reservation_pid=None, short=Fa
                '/root/miniconda3/bin/python -B -u -')
     begun = time.monotonic()
     remote_pid = None
+    done_sha256 = None
     with (root/'logs'/(key+'.log')).open('x', encoding='utf-8') as log:
         proc = subprocess.Popen(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
                                  '-o', 'ServerAliveInterval=30', host, command],
@@ -134,6 +146,8 @@ def run_task(root, tag, task, host, device, gate, reservation_pid=None, short=Fa
                 if device == 'cuda':
                     with LOCK:
                         OWN_GPU_PIDS.add(remote_pid)
+            if d.get('status') == 'DONE':
+                done_sha256 = d['sha256']
         code = proc.wait()
     if device == 'cuda' and remote_pid is not None:
         with LOCK:
@@ -143,7 +157,15 @@ def run_task(root, tag, task, host, device, gate, reservation_pid=None, short=Fa
                   seconds=time.monotonic()-begun, log=str(root/'logs'/(key+'.log'))))
         raise RuntimeError(f'{key} failed rc={code}; inspect preserved log, no automatic retry')
     target = root/'tasks'/(key+'.json')
-    fetch(host, remote, target)
+    try:
+        fetch(host, remote, target)
+    except subprocess.CalledProcessError:
+        # SCP can return nonzero after all bytes arrived. A worker-DONE hash
+        # proves complete collection; never repeat inference for this case.
+        if not target.is_file() or done_sha256 is None or digest(target) != done_sha256:
+            from .recover_completed import recover
+            target = recover(root, key)
+    assert done_sha256 is not None and digest(target) == done_sha256, 'worker DONE/output hash mismatch'
     d = json.loads(target.read_text())
     assert (d['seed'], d['t0'], d['future']) == task
     assert d['end_time'] == (task[1]+90 if short else 900)

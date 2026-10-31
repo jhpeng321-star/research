@@ -11,7 +11,7 @@ from .audit import digest, safe
 from .core import TIMES
 from .evaluate_frozen import FROZEN_SHA, predictions
 from .evaluate_short import evaluate_short
-from .orchestrate import save_new, task_key
+from .orchestrate import save_new, task_key, task_path
 
 OLD_WORKER = '13517d8dbb632cd7ff3b378e4243a9cefafd097805629d9382e33202b207c02a'
 
@@ -82,7 +82,7 @@ def main():
         for t in TIMES:
             for f in range(8):
                 key = task_key((s, t, f))
-                old, new = original/'tasks'/(key+'.json'), short/'tasks'/(key+'.json')
+                old, new = task_path(original, key), task_path(short, key)
                 assert not (old.exists() and new.exists()), 'duplicate inference needs ownership audit'
                 path = old if old.exists() else new
                 d = json.loads(path.read_text())

@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 import tempfile
@@ -60,6 +61,29 @@ class DispatchOwnershipTests(unittest.TestCase):
             self.assertFalse(o.cpu_free('gpuR', reserve_cores=10))
             self.assertTrue(o.cpu_free('gpuR', reserve_cores=2))
             self.assertFalse(o.cpu_free('gpuR', reserve_cores=2, reserve_gib=40))
+
+    def test_partial_transfer_preserved_and_hash_bound_without_inference(self):
+        from .recover_completed import recover
+        root = self.root()
+        task, key = self.claim(root, os.getpid())
+        payload = json.dumps(dict(seed=task[0], t0=task[1], future=task[2],
+                                  end_time=630, results=dict(steps=180))).encode()
+        partial = root/'tasks'/(key+'.json')
+        partial.write_bytes(b'{"incomplete":')
+        (root/'logs'/(key+'.log')).write_text(json.dumps(dict(status='DONE',
+            sha256=hashlib.sha256(payload).hexdigest()))+'\n')
+        def transfer(host, remote, target):
+            self.assertFalse(target.exists())
+            target.write_bytes(payload)
+        with patch('tools.wmvalue.recover_completed.fetch', side_effect=transfer) as copy:
+            output = recover(root, key)
+            self.assertEqual(copy.call_count, 1)
+        self.assertEqual(partial.read_bytes(), b'{"incomplete":')
+        self.assertEqual(o.task_path(root, key), output)
+        with output.open('ab') as stream:
+            stream.write(b' ')
+        with self.assertRaisesRegex(AssertionError, 'changed'):
+            o.task_path(root, key)
 
 
 if __name__ == '__main__':

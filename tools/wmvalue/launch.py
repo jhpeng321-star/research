@@ -21,6 +21,7 @@ def main():
     p.add_argument('--original')
     p.add_argument('--prefix-gate')
     p.add_argument('--resume', action='store_true')
+    p.add_argument('--resume-number', type=int, default=1)
     a = p.parse_args()
     root = safe(a.root)
     assert root.parent.is_dir() and digest(safe(a.model)) == FROZEN_SHA
@@ -34,8 +35,12 @@ def main():
     if (root/'LAUNCH.json').exists() and not a.resume:
         raise ValueError('existing dispatch receipt: inspect PID and task claims, never duplicate')
     if a.resume:
-        assert a.short and (root/'LAUNCH.json').exists() and not (root/'RESUME.json').exists()
-        old = json.loads((root/'LAUNCH.json').read_text())
+        assert a.short and a.resume_number >= 1
+        suffix = '' if a.resume_number == 1 else str(a.resume_number)
+        previous = ('LAUNCH' if a.resume_number == 1 else
+                    'RESUME'+('' if a.resume_number == 2 else str(a.resume_number-1)))
+        assert not (root/('RESUME'+suffix+'.json')).exists()
+        old = json.loads((root/(previous+'.json')).read_text())
         import ctypes
         from ctypes import wintypes
         ctypes.windll.kernel32.OpenProcess.restype = wintypes.HANDLE
@@ -57,7 +62,7 @@ def main():
             '--real', str(safe(a.real)), '--model', str(safe(a.model))]
     if a.short:
         cmd.extend(['--original', str(safe(a.original))])
-    with (root/('RESUME.log' if a.resume else 'DISPATCH.log')).open('x', encoding='utf-8') as log:
+    with (root/('RESUME'+suffix+'.log' if a.resume else 'DISPATCH.log')).open('x', encoding='utf-8') as log:
         proc = subprocess.Popen(cmd, cwd=Path(__file__).resolve().parents[2],
             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
@@ -75,7 +80,7 @@ def main():
             finalization='complete320prefixes -> frozen400pairs B/C/D/E -> FAIL or complete A',
             short_code_sha256={n: digest(Path(__file__).parent/n) for n in
                 ('short_dispatch.py', 'evaluate_short.py', 'finalize_short.py')})
-    with (root/('RESUME.json' if a.resume else 'LAUNCH.json')).open('x') as stream:
+    with (root/('RESUME'+suffix+'.json' if a.resume else 'LAUNCH.json')).open('x') as stream:
         json.dump(doc, stream, indent=1, allow_nan=False)
     print(json.dumps(doc), flush=True)
 

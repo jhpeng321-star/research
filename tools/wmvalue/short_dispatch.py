@@ -14,7 +14,7 @@ from .core import TIMES
 from .orchestrate import cpu_free, fetch, run_task, save_new, task_key
 
 
-def inventory(original):
+def inventory(original, bucket='cells_v1', exclude=()):
     """Only explicit owned outputs and receipt PIDs; never signal processes."""
     claims = {}
     for path in (original/'claims').glob('*.json'):
@@ -22,6 +22,8 @@ def inventory(original):
             continue
         d = json.loads(path.read_text())
         key = path.stem
+        if key in exclude:
+            continue
         if (original/'tasks'/(key+'.json')).exists():
             continue
         rp = path.with_name(key+'.remote.json')
@@ -33,7 +35,7 @@ def inventory(original):
         selected = {k: d for k, d in claims.items() if d['host'] == host}
         code = ('from pathlib import Path; import json,os; claims='+repr(selected)+'\n'+
                 "out={}\nfor k,d in claims.items():\n"
-                " p=Path(d['remote']); assert str(p).startswith('/root/wmvalue20261031/cells_v1/')\n"
+                " p=Path(d['remote']); assert str(p).startswith("+repr('/root/wmvalue20261031/'+bucket+'/')+")\n"
                 " pid=d['pid']; live=bool(pid and Path('/proc/'+str(pid)).exists())\n"
                 " out[k]=dict(output=p.is_file(),live=live,pid=pid)\n"
                 "print(json.dumps(out))\n")
@@ -103,16 +105,15 @@ def main():
     pool = ThreadPoolExecutor(max_workers=18)
     try:
         while True:
-            states = inventory(original)
-            # Recover outputs from this dispatch's existing claims; never repeat.
-            for path in (root/'claims').glob('*.json'):
-                if path.name.count('.') != 1 or (root/'tasks'/path.name).exists() or path.stem in running:
-                    continue
-                claim = json.loads(path.read_text())
-                try:
-                    fetch(claim['host'], claim['remote'], root/'tasks'/path.name)
-                except subprocess.CalledProcessError:
-                    pass
+            try:
+                states = inventory(original)
+                inherited = inventory(root, bucket='short_cells_v1', exclude=running)
+            except (subprocess.SubprocessError, OSError) as exc:
+                print('COLLECTION/OBSERVATION WAIT (no inference retry):', repr(exc), flush=True)
+                time.sleep(30)
+                continue
+            # inventory(root) collects inherited claims without touching the
+            # actively managed futures or attempting to repeat their inference.
             for key, (future, host, device) in list(running.items()):
                 if future.done():
                     try:
@@ -136,9 +137,8 @@ def main():
             for host, device, limit in [('gpuA', 'cpu', 4), ('gpuR', 'cpu', 8),
                                         ('gpuA', 'cuda', 3), ('gpuR', 'cuda', 3)]:
                 used = sum(h == host and d == device for _, h, d in running.values())
-                if device == 'cpu':
-                    used += sum(s['host'] == host and s['device'] == 'cpu' and s['live'] and not s['output']
-                                for s in states.values())
+                used += sum(s['host'] == host and s['device'] == device and s['live'] and not s['output']
+                            for s in [*states.values(), *inherited.values()])
                 if used >= limit:
                     continue
                 admitted = gpu_free(host, root) if device == 'cuda' else cpu_free(host, reserve_cores=2)

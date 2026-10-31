@@ -7,7 +7,7 @@ import numpy as np
 from .audit import ARMS, digest, safe
 from .evaluate_frozen import WM_SHA
 from .finalize_short import OLD_WORKER
-from .orchestrate import save_new
+from .orchestrate import save_new, task_path
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     ref = json.loads(reference.read_text())
     sources = dict(ref['source_sha256'])
     assert sources.pop('worker') == OLD_WORKER
-    paths = sorted((root/'tasks').glob('*.json'))
+    paths = [task_path(root, p.stem) for p in sorted((root/'tasks').glob('*.json'))]
     assert paths, 'no completed short task yet'
     for path in paths:
         d = json.loads(path.read_text())
@@ -48,7 +48,7 @@ def main():
         identical_runtime_source_count=len(sources), only_registered_worker_driver_changed=True,
         reference_sha256=digest(reference), task_sha256={p.name: digest(p) for p in paths})
     save_new(safe(a.out), result)
-    print(json.dumps(result), flush=True)
+    print(json.dumps({k: v for k, v in result.items() if k != 'task_sha256'}), flush=True)
 
 
 if __name__ == '__main__':

@@ -42,7 +42,7 @@ keys-only coverage, not cost/CRN certification; aggregate-only exit-clock mismat
 cannot be repaired. Preserve it; new matched A/B/C share trajectories and CRNs.
 Native121frame60s history, PI/CIRCLES prefix-memory replay, entrant controls,
 real/imagined sensing, boundary-flow splice, exit/source clocks CPU audited.
-39 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
+40 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
 Actual WM90s CPU synthetic run: both60/90 terminal paths and all five arms PASS.
 All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
 No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
