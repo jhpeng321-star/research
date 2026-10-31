@@ -13,6 +13,12 @@ Updated 2026-10-31 23:30 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   CF and EVAL handoffs absent. SUMOCORE says no dispatch yet. Shared README read.
 - One central REGISTRATION line added at 23:30; committed local receipt:
   `docs/paper_results/WMPHYS_REGISTRATION_RECEIPT.md`.
+- EVAL usable tooling merged from `579a0861`; root handoff conflict resolved by
+  retaining this INT handoff and preserving EVAL snapshot at
+  `docs/paper_results/WMPHYS_EVAL_HANDOFF_579a0861.md`.
+- Merged EVAL CPU suite: `py -3.13 -B -m unittest tools.rbeval.test_core -v`,
+  4 passed / 5.03 s, including all 1,800 recorded BIC decisions. EVAL owns its
+  existing WM2 baseline dispatch/canary; INT will not duplicate those tasks.
 
 ## Integration contract for workers
 - Please commit usable increments and state exact commit, switch names, test command, and known gaps here in your own handoff.
