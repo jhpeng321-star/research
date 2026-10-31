@@ -147,3 +147,24 @@ COMPLETE receipt exists. The uncommitted dispatcher is incomplete and has not
 been launched. S-C1GAP C1_GAPS.md now supports PI/wall/MAPPO algorithm absence
 in audited WM2 corpora, with pre-R16 initialization exclusion still incomplete;
 eligibility is provisional, not an unbroken-lineage zero-shot certificate.
+
+## Recovery receipts after launch (primary unchanged)
+
+One gpuA dispatcher PID 211623 / start ticks 881579797 owns the fixed 480 tasks.
+Observed full-300 s task runtime is approximately 348 s, not the tiny-case
+throughput extrapolation. Two GPU lanes remain bounded; CPU lanes yield until
+load <18. No shortened K or selected-world substitute is authorized.
+Independent recorded-label extraction verifies all 200 world/arm starts. Tapes
+start at t300.5, so the observed t300 history/state supplies the first left
+integration boundary. This indexing correction changes neither estimands nor
+model inputs. See tools/c1closed/labels.py and its exported SHA256.
+Checkpoint-linked S-C1GAP metadata explicitly gives 940 audited training worlds
+and zero seed overlap with 969400–969439, while retaining the pre-R16 lineage
+gap. This is not a sealed/unseen-world certification.
+
+Wall recovery located 120 genuine 60 s-history starts, not zero; all have empty
+controller maps and no persistent executor snapshot, and cached futures only
+through 120 s. Membership/request summaries also contain post-t0 release/abort
+outcomes, which are forbidden as forecast inputs. Causal executor restoration
+has not been established. docs/paper_results/C1CLOSED_WALL_INPUTS.md records this
+specific remaining blocker. No wall forecasts or wall panel selection occurred.

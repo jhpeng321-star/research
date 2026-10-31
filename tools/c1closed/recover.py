@@ -10,7 +10,7 @@ for q in Path('/proc').iterdir():
  if not q.name.isdigit(): continue
  try:
   argv=(q/'cmdline').read_bytes().replace(b'\\0',b' ').decode(errors='replace')
-  if str(p) in argv and 'python -B -' not in argv:
+  if str(p) in argv:
    owned.append(dict(pid=int(q.name),command=argv,start_ticks=(q/'stat').read_text().split(') ',1)[1].split()[19]))
  except (FileNotFoundError,PermissionError,ProcessLookupError): pass
 print('OWNED_PATH_PROCESSES',json.dumps(owned))

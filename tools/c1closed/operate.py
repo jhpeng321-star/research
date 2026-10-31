@@ -94,17 +94,21 @@ print('verified',q,'load',os.getloadavg())
 ''',python='python3'))
         for name in ('labels.py','aggregates.py'):
             print(scp(HERE/name,f'cpuQ:/home/ubuntu/wmdata20261031/c1closed/{name}'))
-        value = ssh('cpuQ', '''import os,subprocess
+        print(ssh('cpuQ', '''import os,subprocess,json,fcntl
+from pathlib import Path
 assert os.getloadavg()[0] < 48
+root=Path('/home/ubuntu/wmdata20261031/c1closed')
+lock=(root/'LABELS.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+target=root/'labels.json'
 env={**os.environ,'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':''}
-p=subprocess.run(['nice','-n','19','python3','-B','/home/ubuntu/wmdata20261031/c1closed/labels.py'],
- env=env,text=True,capture_output=True)
-if p.returncode: raise RuntimeError(p.stderr)
-print(p.stdout)
-''',python='python3')
-        target=dest/'labels.json'
-        with target.open('x',encoding='utf-8') as f: f.write(value)
-        print('label rows',len(json.loads(value)['rows']))
+if not target.exists():
+ with target.open('x') as out, (root/'LABELS.stderr').open('x') as err:
+  p=subprocess.run(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B',str(root/'labels.py')],env=env,stdout=out,stderr=err)
+ assert p.returncode == 0, 'preserved label failure, inspect stderr before retry'
+x=json.loads(target.read_text());assert len(x['rows']) == 200
+print('label rows',len(x['rows']))
+''',python='python3'))
+        print(scp('cpuQ:/home/ubuntu/wmdata20261031/c1closed/labels.json',dest/'labels.json'))
     elif args.action == 'canary':
         print(ssh('gpuA', f'''import subprocess,os,json,time
 from pathlib import Path

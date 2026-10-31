@@ -1,0 +1,188 @@
+{
+ "cache": "E:\\research-dense\\data_cache\\wallc1_states_v2\\wall_same.json",
+ "sha256": "b269964e44c28d7531cb190b9d708c1d67c544c16c6451e69ad4b7e366409669",
+ "states": 67,
+ "safe_world_seeds": [
+  8660,
+  8663,
+  8664,
+  8665,
+  8668,
+  8676,
+  8677,
+  8678,
+  8679,
+  8680,
+  8681,
+  8682,
+  8684,
+  8685,
+  8687,
+  8693,
+  8694,
+  8695,
+  8696,
+  8697,
+  8698,
+  8699,
+  8700,
+  8701,
+  8702,
+  8703,
+  8704,
+  8705,
+  8706
+ ],
+ "first_state_schema": {
+  "key": "str",
+  "pack": "str",
+  "world": "str",
+  "run": "str",
+  "chunk": "str",
+  "batch": "str",
+  "arm": "str",
+  "policy": "str",
+  "split": "str",
+  "t0_s": "float",
+  "t0_shift_steps": "int",
+  "t0_shift_s": "float",
+  "horizon_s": "float",
+  "dt_s": "float",
+  "seed": "int",
+  "v0_mps": "float",
+  "cav_controllers": {},
+  "world_meta": {
+   "world": "str",
+   "world_id": "int",
+   "demand": "int",
+   "penetration_pct": "int",
+   "t0_s": "float"
+  },
+  "counter": {
+   "shape": [
+    2,
+    30
+   ],
+   "leaf": "float"
+  },
+  "arms": {
+   "shape": [
+    1
+   ],
+   "leaf": "str"
+  },
+  "paired": "bool",
+  "initial_state": {
+   "time_s": "float",
+   "vehicles": {
+    "shape": [
+     95
+    ],
+    "leaf": "dict"
+   }
+  },
+  "history": {
+   "ids": {
+    "shape": [
+     95
+    ],
+    "leaf": "str"
+   },
+   "history_steps": "int",
+   "kin": {
+    "shape": [
+     10,
+     95,
+     7
+    ],
+    "leaf": "float"
+   },
+   "mask": {
+    "shape": [
+     10,
+     95
+    ],
+    "leaf": "bool"
+   },
+   "target_mask": {
+    "shape": [
+     9,
+     95
+    ],
+    "leaf": "bool"
+   }
+  },
+  "recorded": {
+   "wall": {
+    "shape": [
+     241
+    ],
+    "leaf": "dict"
+   }
+  },
+  "recorded_horizon_steps": {
+   "wall": "int"
+  },
+  "source_set": "str",
+  "world_seen_in_training": "bool",
+  "controller_seen_in_training": "bool",
+  "unseen_controller": "bool",
+  "native_pair_status": "str",
+  "wall_members": {
+   "shape": [
+    2
+   ],
+   "leaf": "str"
+  },
+  "wall_timeline": {
+   "abort_reason": "str",
+   "aborted_at_s": "float",
+   "aborted_rel_s": "float",
+   "achieved_hold_s": "NoneType",
+   "arm": "str",
+   "assembled_at_s": "NoneType",
+   "assembled_rel_s": "NoneType",
+   "engaged": "bool",
+   "handback_s": "float",
+   "handback_to": "str",
+   "members": {
+    "shape": [
+     2
+    ],
+    "leaf": "str"
+   },
+   "n_events": "int",
+   "outcome": "str",
+   "owned": "bool",
+   "owner_end_rel_s": "float",
+   "owner_end_s": "float",
+   "reason": "NoneType",
+   "released_at_s": "NoneType",
+   "released_rel_s": "NoneType",
+   "request_rel_s": "float",
+   "request_s": "float",
+   "requested_hold_s": "float",
+   "run": "str",
+   "status": "str",
+   "t0_s": "float",
+   "timing": "str",
+   "wall_id": "str",
+   "wall_speed_mps": "float",
+   "world": "str"
+  },
+  "wall_engaged": "bool",
+  "wall_owned": "bool",
+  "source_arm": "str",
+  "wall_exposure_status": "str",
+  "wall_phase_at_t0": "str"
+ },
+ "top_keys": [
+  "schema",
+  "set",
+  "horizon_s",
+  "windows",
+  "n_states"
+ ],
+ "h60_named_cache_exists": true,
+ "note": "schema-only eligibility audit; raw episode paths and future arrays are never supplied to a controller"
+}

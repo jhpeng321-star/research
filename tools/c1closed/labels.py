@@ -48,10 +48,21 @@ def one(world, arm):
     assert digest(tape) == result['output_hashes']['traj_base.npz']
     with np.load(tape, allow_pickle=False) as x:
         t, vid, s, v, lane = (x[k] for k in ('t','vid','s','v','lane'))
+    assert float(t.min()) == 300.5
+    # The post-step tape begins at t0+.5; the genuine observed start supplies
+    # the first left integration boundary, never a fabricated future state.
+    t = np.r_[np.full(len(original_ids),300.),t]
+    vid = np.r_[original_ids,vid]
+    s = np.r_[initial_kin[:,0],s]
+    v = np.r_[initial_kin[:,4],v]
+    lane = np.r_[initial_kin[:,1:4].argmax(-1),lane]
     times = 300.+np.arange(601)*.5
     rows = [np.flatnonzero(np.isclose(t, at, atol=1e-7, rtol=0)) for at in times]
     initial = rows[0]
-    assert set(vid[initial]) == set(original_ids)
+    assert set(vid[initial]) == set(original_ids), dict(seed=seed,arm=arm,
+        first_times=np.unique(t)[:5].tolist(),n_t300=len(initial),n_start=len(original_ids),
+        missing=sorted(set(original_ids)-set(vid[initial]))[:10],
+        extra=sorted(set(vid[initial])-set(original_ids))[:10])
     for identity, kin in zip(original_ids, initial_kin):
         j = initial[vid[initial] == identity]
         assert len(j) == 1

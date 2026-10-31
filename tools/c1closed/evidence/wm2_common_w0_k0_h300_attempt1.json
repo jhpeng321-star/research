@@ -1,0 +1,31 @@
+{
+ "task": "wm2_common_w0_k0_h300",
+ "command": [
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+  "--model",
+  "wm2",
+  "--world",
+  "0",
+  "--future",
+  "0",
+  "--plant",
+  "common",
+  "--seconds",
+  "300",
+  "--out",
+  "panel",
+  "--device",
+  "cuda"
+ ],
+ "pid": 211632,
+ "start_ticks": "881579807",
+ "device": "cuda",
+ "started": 1793435583.9217565,
+ "returncode": 0,
+ "finished": 1793435931.9729812,
+ "log": "/root/autodl-tmp/c4/c1closed20261031/evidence/wm2_common_w0_k0_h300_attempt1.log",
+ "output": "/root/autodl-tmp/c4/c1closed20261031/panel/wm2_common_w0_k0_h300.json"
+}

@@ -1,0 +1,21 @@
+{
+ "task": "S-C1CLOSED",
+ "state": "RUNNING_NOT_A_RESULT",
+ "dispatch": {
+  "pid": 211623,
+  "start_ticks": "881579797",
+  "task_count": 480,
+  "cpu_workers": 2,
+  "gpu_workers": 2,
+  "worker_sha256": "ab822be2f136d96722ea3422a0841093ce61d55166a252d7f0ecdb1d4d61c687",
+  "K": 8,
+  "started": 1793435583.8554823,
+  "reason": "registered complete 40-world panel"
+ },
+ "labels_sha256": "f5e06bda95db02b0180f7c119454439dac0f99226462e907da143352fa057c77",
+ "label_rows": 200,
+ "label_source_sha256": "ea5a479346b01fa6afe2394af687fd4e528297250edd20438b05e03c46472d2a",
+ "label_design_sha256": "09394b100f82a8e8bde7dbff131fc222f71807250086b15b34f9e19506047ba5",
+ "label_boundary": "observed genuine t300 state + recorded post-step tape starting t300.5",
+ "source_commit": "e2fdd71a06752c85d0f1de1d7de60711bca6612a"
+}

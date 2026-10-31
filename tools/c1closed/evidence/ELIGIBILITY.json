@@ -1,0 +1,330 @@
+{
+ "task": "S-C1CLOSED",
+ "source": "S-C1GAP hash-linked metadata export; no raw training arrays opened",
+ "source_sha256": "7494c5014938e3051c06006acc4b59dd8ce6b6c9cce2c7a4e682ad28b7d3488f",
+ "gap_report_sha256": "f713bd7bacf89392596c7a496e5043f0f60bb6592cda614cc3de2d19c65a19c8",
+ "audited_training_worlds": 940,
+ "eval_seeds": [
+  969400,
+  969401,
+  969402,
+  969403,
+  969404,
+  969405,
+  969406,
+  969407,
+  969408,
+  969409,
+  969410,
+  969411,
+  969412,
+  969413,
+  969414,
+  969415,
+  969416,
+  969417,
+  969418,
+  969419,
+  969420,
+  969421,
+  969422,
+  969423,
+  969424,
+  969425,
+  969426,
+  969427,
+  969428,
+  969429,
+  969430,
+  969431,
+  969432,
+  969433,
+  969434,
+  969435,
+  969436,
+  969437,
+  969438,
+  969439
+ ],
+ "audited_training_seed_overlap": [],
+ "sources": [
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "genrand_branch",
+   "manifest_sha256": "5c341b7c18ffbeee23296f2e38df2f0e08810cd88276602b9bafa46ea823105f",
+   "positive_worlds": 28,
+   "arms": {
+    "generic_random": 28
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "genrand_plain",
+   "manifest_sha256": "addb8ac6d5350b03cad0c935b6c769dbc5fd73157e3a5e1d2fe847335ced5cb2",
+   "positive_worlds": 384,
+   "arms": {
+    "generic_random": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "loop14_pairs",
+   "manifest_sha256": "08e02b73d424178d3a925d4c7f7557dcc3c23b68f7708181d748a362d846ae47",
+   "positive_worlds": 13,
+   "arms": {
+    "loop14_pairs_b0360_native": 13,
+    "loop14_pairs_b0360_policy": 13,
+    "loop14_pairs_b0660_native": 13,
+    "loop14_pairs_b0660_policy": 13
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "lowpen_genrand_branch",
+   "manifest_sha256": "fdd037b37de33d9b3e88f20d79475f41bd010a67b6de40d9c50e4f7ca0915cf9",
+   "positive_worlds": 6,
+   "arms": {
+    "generic_random": 6
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "lowpen_genrand_plain",
+   "manifest_sha256": "d33d9e5471f4e08f35c15993379fbc6464bfcda243b049a0d6549c90e8358249",
+   "positive_worlds": 19,
+   "arms": {
+    "generic_random": 19
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "lowpen_native",
+   "manifest_sha256": "cb9b32aaa4b5cb37e4d873ed63d49d1ff666035cfc982acc421a0a4ed764fb01",
+   "positive_worlds": 25,
+   "arms": {
+    "native": 25
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "native_v5",
+   "manifest_sha256": "31ead693ba76373fe15112d1d8dc8fb365e4cfae80e7237e8e0f0ede7081484f",
+   "positive_worlds": 384,
+   "arms": {
+    "native": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+   "source_name": "pairs300",
+   "manifest_sha256": "d64fc0f2088531dc09da8dfed09ea75f4dab412024ba8c4942bc01949ebea19a",
+   "positive_worlds": 64,
+   "arms": {
+    "generic_random": 64,
+    "generic_random_b0420_native": 64,
+    "generic_random_b0420_seed0": 64,
+    "generic_random_b0420_seed1": 64,
+    "generic_random_b0540_native": 64,
+    "generic_random_b0540_seed0": 64,
+    "generic_random_b0540_seed1": 64,
+    "generic_random_b0660_native": 64,
+    "generic_random_b0660_seed0": 64,
+    "generic_random_b0660_seed1": 64,
+    "generic_random_b0780_native": 64,
+    "generic_random_b0780_seed0": 64,
+    "generic_random_b0780_seed1": 64,
+    "generic_random_b0900_native": 64,
+    "generic_random_b0900_seed0": 64,
+    "generic_random_b0900_seed1": 64
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "genrand_branch",
+   "manifest_sha256": "5c341b7c18ffbeee23296f2e38df2f0e08810cd88276602b9bafa46ea823105f",
+   "positive_worlds": 28,
+   "arms": {
+    "generic_random": 28
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "genrand_plain",
+   "manifest_sha256": "addb8ac6d5350b03cad0c935b6c769dbc5fd73157e3a5e1d2fe847335ced5cb2",
+   "positive_worlds": 384,
+   "arms": {
+    "generic_random": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "loop14_pairs",
+   "manifest_sha256": "def3ab3ff9a7cbc006da21b8b61b6f7a89f4fbf4c5fc85835dec7cd5a2a37e5a",
+   "positive_worlds": 13,
+   "arms": {
+    "loop14_pairs_b0360_native": 13,
+    "loop14_pairs_b0360_policy": 13,
+    "loop14_pairs_b0660_native": 13,
+    "loop14_pairs_b0660_policy": 13
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "lowpen_genrand_branch",
+   "manifest_sha256": "fdd037b37de33d9b3e88f20d79475f41bd010a67b6de40d9c50e4f7ca0915cf9",
+   "positive_worlds": 6,
+   "arms": {
+    "generic_random": 6
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "lowpen_genrand_plain",
+   "manifest_sha256": "d33d9e5471f4e08f35c15993379fbc6464bfcda243b049a0d6549c90e8358249",
+   "positive_worlds": 19,
+   "arms": {
+    "generic_random": 19
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "lowpen_native",
+   "manifest_sha256": "cb9b32aaa4b5cb37e4d873ed63d49d1ff666035cfc982acc421a0a4ed764fb01",
+   "positive_worlds": 25,
+   "arms": {
+    "native": 25
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "native_v5",
+   "manifest_sha256": "31ead693ba76373fe15112d1d8dc8fb365e4cfae80e7237e8e0f0ede7081484f",
+   "positive_worlds": 384,
+   "arms": {
+    "native": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "5257a64c7cbb6a8cb828cb26230e97c686d7715cc33825bd3e1ca95f7bf51d8e",
+   "source_name": "pairs300",
+   "manifest_sha256": "d64fc0f2088531dc09da8dfed09ea75f4dab412024ba8c4942bc01949ebea19a",
+   "positive_worlds": 64,
+   "arms": {
+    "generic_random": 64,
+    "generic_random_b0420_native": 64,
+    "generic_random_b0420_seed0": 64,
+    "generic_random_b0420_seed1": 64,
+    "generic_random_b0540_native": 64,
+    "generic_random_b0540_seed0": 64,
+    "generic_random_b0540_seed1": 64,
+    "generic_random_b0660_native": 64,
+    "generic_random_b0660_seed0": 64,
+    "generic_random_b0660_seed1": 64,
+    "generic_random_b0780_native": 64,
+    "generic_random_b0780_seed0": 64,
+    "generic_random_b0780_seed1": 64,
+    "generic_random_b0900_native": 64,
+    "generic_random_b0900_seed0": 64,
+    "generic_random_b0900_seed1": 64
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "genrand_branch",
+   "manifest_sha256": "5c341b7c18ffbeee23296f2e38df2f0e08810cd88276602b9bafa46ea823105f",
+   "positive_worlds": 28,
+   "arms": {
+    "generic_random": 28
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "genrand_plain",
+   "manifest_sha256": "addb8ac6d5350b03cad0c935b6c769dbc5fd73157e3a5e1d2fe847335ced5cb2",
+   "positive_worlds": 384,
+   "arms": {
+    "generic_random": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "loop14_pairs",
+   "manifest_sha256": "5f78910c3f989c1d985b986c5cecc010834285c8a6bc3a979c0cd750c5529c58",
+   "positive_worlds": 4,
+   "arms": {
+    "loop14_pairs_b0360_native": 4,
+    "loop14_pairs_b0360_policy": 4,
+    "loop14_pairs_b0660_native": 4,
+    "loop14_pairs_b0660_policy": 4
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "lowpen_genrand_branch",
+   "manifest_sha256": "fdd037b37de33d9b3e88f20d79475f41bd010a67b6de40d9c50e4f7ca0915cf9",
+   "positive_worlds": 6,
+   "arms": {
+    "generic_random": 6
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "lowpen_genrand_plain",
+   "manifest_sha256": "d33d9e5471f4e08f35c15993379fbc6464bfcda243b049a0d6549c90e8358249",
+   "positive_worlds": 19,
+   "arms": {
+    "generic_random": 19
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "lowpen_native",
+   "manifest_sha256": "cb9b32aaa4b5cb37e4d873ed63d49d1ff666035cfc982acc421a0a4ed764fb01",
+   "positive_worlds": 25,
+   "arms": {
+    "native": 25
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "native_v5",
+   "manifest_sha256": "31ead693ba76373fe15112d1d8dc8fb365e4cfae80e7237e8e0f0ede7081484f",
+   "positive_worlds": 384,
+   "arms": {
+    "native": 384
+   }
+  },
+  {
+   "checkpoint_sha256": "0044eddb1d982a5e1d6416173f9ec1cb00bc16c3bea27989f662810c794154ba",
+   "source_name": "pairs300",
+   "manifest_sha256": "d64fc0f2088531dc09da8dfed09ea75f4dab412024ba8c4942bc01949ebea19a",
+   "positive_worlds": 64,
+   "arms": {
+    "generic_random": 64,
+    "generic_random_b0420_native": 64,
+    "generic_random_b0420_seed0": 64,
+    "generic_random_b0420_seed1": 64,
+    "generic_random_b0540_native": 64,
+    "generic_random_b0540_seed0": 64,
+    "generic_random_b0540_seed1": 64,
+    "generic_random_b0660_native": 64,
+    "generic_random_b0660_seed0": 64,
+    "generic_random_b0660_seed1": 64,
+    "generic_random_b0780_native": 64,
+    "generic_random_b0780_seed0": 64,
+    "generic_random_b0780_seed1": 64,
+    "generic_random_b0900_native": 64,
+    "generic_random_b0900_seed0": 64,
+    "generic_random_b0900_seed1": 64
+   }
+  }
+ ],
+ "primary_controller_novelty": "PI/MAPPO absent in audited algorithm corpora; unresolved pre-R16 initialization exclusion",
+ "caveat": "provisional algorithm novelty, not an unbroken initialization-lineage certificate; CTRL0 exposed, CIRCLES diagnostic",
+ "wmfix_secondary_status": "no independent passing verdict supplied in read v2-DATA / ES reports",
+ "dependencies": {
+  "E:\\agent-work\\c4-wmfixmerge\\docs\\paper_results\\WMFIX_PILOT_V2DATA.md": "caf06a07b3c62bf42c3645022f7a17d1d686e57793cca0c1de0c720019dd7474",
+  "E:\\agent-work\\c4-wmfixes\\docs\\paper_results\\WMFIX_ES.md": "520d511216bc369b90eed0da2e5860e92d71130990e52e124ccdbf457f29c6f3",
+  "E:\\agent-work\\c4-c1floor\\docs\\paper_results\\C1FLOOR_PREREQUISITES.md": "c0a59083b982692ecd34244df10bdf54eaa66bb4600789de888a8d5288cf8947"
+ }
+}
