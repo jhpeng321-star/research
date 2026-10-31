@@ -4,7 +4,19 @@ Branch `c4/rb-merge`; base `f0db3c82`. Owner registration5683 / MAIN00:10.
 Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
 
 ## Integration-ready source
-- Follow-up source constants: eventual follower help now uses POSITION_EPS=.1,
+- **Native-CAV blocker reproduced on CPU**: the frozen native head's no-leader
+  dv feature gathers slot0 speed (`control/native_cav.py:65,80`), even when that
+  car is on an unrelated mainline lane. At the observed ramp-head state, this
+  produces a false standstill. A singleton fixture does NOT reproduce it.
+- NEW `model/sumo_native.py::native_physics_controller(dt_s=.5)` explicitly
+  delegates the native arm to the existing physics execution ceiling and lane/
+  merge streams, retaining the registered project_native executor bounds.
+  Opt-in callback only; no shared model/factory change or retraining. INT should
+  consider this for physics-native background rather than the learned head.
+  Regression: old native head stays before s=0; physics-native crosses/merges
+  into an empty mainline within10s despite the unrelated packed mainline car.
+  **40 combined local CPU tests PASS /14.74s**. Fleet efficacy not yet measured.
+- **5870b556** follow-up source constants: eventual follower help uses POSITION_EPS=.1,
   not SPEED_EPS=.01; remaining-seconds denominator uses NUMERICAL_EPS=.001.
   Shared constants live in merge_network.py. **37 CPU tests PASS /9.95s**,
   including an independent near-boundary follower-help/fall-behind scenario.

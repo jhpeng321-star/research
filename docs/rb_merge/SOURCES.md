@@ -48,6 +48,20 @@ lane limit times that factor. Never clip every driver to the unscaled posted
 limit; equally, never accelerate along the22.22 approach toward31.29 by default.
 These are source/network corrections, not estimates selected against FIT errors.
 
+## Native-CAV background contract
+
+SUMO native motion is its CF/LC pipeline when no external speed command is
+issued. The inherited WM native-CAV head is a frozen approximation, not that
+pipeline. CPU reproduction from the FIT969400 observed ramp-head trace shows a
+packing-dependent false standstill: `control/native_cav.py:65` returns unmasked
+dv from an argmin fallback index0 when has_leader=false, and head_features:80
+still passes dv to the head. An unrelated slot0 mainline speed can therefore
+change an unled ramp CAV's acceleration. No head was trained or modified here.
+The new opt-in sumo_native callback consumes the model's existing inferred/
+population-physics execution ceiling using the same project_native bounds,
+and delegates lanes/merges. This is a native-arm source-mechanics diagnostic;
+old frozen evaluation/controller bindings must remain distinguishable.
+
 ## Scope and explicit parity gaps
 
 This implements a source-backed highway subset, not full SUMO state parity.
