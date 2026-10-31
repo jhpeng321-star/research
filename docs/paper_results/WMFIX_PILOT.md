@@ -60,5 +60,9 @@ c4_wm_loop14_r16_ft.toml, checkpoint wm_s.pt b8797242, W5_COMBINED DESIGN.json).
   PID 165896/165897 from 12:41:58, step10 PID 166449 from 12:44:09, direct into
   train/ with the identical panel_eval path; gpuR step10 kept as cross-check only.
   Decision expected ~13:12 (sequential watcher would have been ~14:05).
-- [pending] gpuA-native panels 10/20/30 -> PILOT.json decision (decide() unchanged,
-  baseline r0/r1, SD 0) -> PASS: curriculum continues in place; FAIL: option (c).
+- [13:37] DECISION: **FAIL** (PILOT.json 61a9059a..., pre-registered decide()). Panels
+  (gpuA-native): step10 300.46/1954.14, step20 286.21/2012.75, step30 312.14/2501.05 vs
+  baseline 283.29/2185.24. 120 s never improves (best +2.92 worse); 300 s improves at
+  10/20 then diverges at 30; grads finite, frozen-bitwise kept. Curriculum NOT started
+  (exit 2, no FINAL.json). Full numbers + diagnosis: WMFIX_PILOT_FAIL.md. Next: option
+  (c) design coordinated with S-WMFIX-C / S-WMFIX-ES fallback tracks.
