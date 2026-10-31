@@ -1,0 +1,210 @@
+{
+  "contract": {
+    "worlds": 36,
+    "K": 8,
+    "mix": "ON",
+    "matched_arms": [
+      "ours_c1",
+      "coopoff_c1"
+    ],
+    "matched_contrasts": 72,
+    "policy_lane_diagnostic_arms": [
+      "mappo"
+    ],
+    "policy_lane_diagnostic_contrasts": 36,
+    "objective": "all-present road speed-deficit (originals and entrants) + source waiting, veh-s",
+    "error": "predicted minus recorded arm-native accrued J",
+    "aggregation": "paired K8 median; additive components use total-J middle-order-statistic weights",
+    "perturbation_sigma": null,
+    "training_H_G": null,
+    "operational_H_G": 0,
+    "lane_policy_diagnostic_limitation": "packed timeline lacks original policy lane requests; MAPPO is not a matched lane intervention"
+  },
+  "matched": {
+    "60": {
+      "J_median": {
+        "n": 72,
+        "sign": 0.5714285714285714,
+        "mae": 52.35806074420854,
+        "bias": 11.664323530909384,
+        "correlation": -0.0008829478977273703,
+        "error_sd": 80.1254177888142,
+        "mean_predicted": 1.6087423066298168,
+        "mean_real": -10.055581224279567,
+        "sign_n": 70,
+        "sign_ci95": [
+          0.4166666666666667,
+          0.7272727272727273
+        ]
+      },
+      "decomposition": {
+        "source": {
+          "bias": -38.52430555555556,
+          "mae": 38.52430555555556,
+          "mse_covariance_share": -0.07663637699684657,
+          "J_mae_after_perfect_component_correction": 62.91319785523227
+        },
+        "upstream": {
+          "bias": 63.30825347663041,
+          "mae": 78.27041806620164,
+          "mse_covariance_share": 1.3974599261082308,
+          "J_mae_after_perfect_component_correction": 60.213681601997955
+        },
+        "downstream": {
+          "bias": -13.119628256188967,
+          "mae": 28.7255545282682,
+          "mse_covariance_share": -0.32082354124411594,
+          "J_mae_after_perfect_component_correction": 64.17362578329836
+        }
+      }
+    },
+    "90": {
+      "J_median": {
+        "n": 72,
+        "sign": 0.4444444444444444,
+        "mae": 148.77696782867974,
+        "bias": 41.89477423895202,
+        "correlation": -0.2618755089061008,
+        "error_sd": 241.27555389981163,
+        "mean_predicted": 15.171322915289137,
+        "mean_real": -26.72345132366288,
+        "sign_n": 72,
+        "sign_ci95": [
+          0.2777777777777778,
+          0.6111111111111112
+        ]
+      },
+      "decomposition": {
+        "source": {
+          "bias": -89.48263888888889,
+          "mae": 89.48263888888889,
+          "mse_covariance_share": -0.08263322866168732,
+          "J_mae_after_perfect_component_correction": 169.79366557970783
+        },
+        "upstream": {
+          "bias": 141.58178207772488,
+          "mae": 191.49685734985576,
+          "mse_covariance_share": 1.196717027751844,
+          "J_mae_after_perfect_component_correction": 112.19561136689418
+        },
+        "downstream": {
+          "bias": -10.204370062917965,
+          "mae": 45.89837479814468,
+          "mse_covariance_share": -0.11408381303673171,
+          "J_mae_after_perfect_component_correction": 168.0197507931567
+        }
+      }
+    },
+    "120": {
+      "J_median": {
+        "n": 72,
+        "sign": 0.5555555555555556,
+        "mae": 280.04722129399795,
+        "bias": 79.02458289466344,
+        "correlation": -0.3569600424021691,
+        "error_sd": 455.2126830396502,
+        "mean_predicted": 32.083362026347054,
+        "mean_real": -46.94122086831638,
+        "sign_n": 72,
+        "sign_ci95": [
+          0.3888888888888889,
+          0.7222222222222222
+        ]
+      },
+      "decomposition": {
+        "source": {
+          "bias": -145.50347222222223,
+          "mae": 148.14236111111111,
+          "mse_covariance_share": -0.08198730276661728,
+          "J_mae_after_perfect_component_correction": 303.41939894148396
+        },
+        "upstream": {
+          "bias": 238.09410532331444,
+          "mae": 322.2431893561176,
+          "mse_covariance_share": 1.1142762728134543,
+          "J_mae_after_perfect_component_correction": 166.1771630805788
+        },
+        "downstream": {
+          "bias": -13.566050940724914,
+          "mae": 63.61606392776984,
+          "mse_covariance_share": -0.03228897737446157,
+          "J_mae_after_perfect_component_correction": 286.1823768337465
+        }
+      }
+    },
+    "180": {
+      "J_median": {
+        "n": 72,
+        "sign": 0.5,
+        "mae": 596.1719555217439,
+        "bias": 164.53124613722375,
+        "correlation": -0.20872194405740777,
+        "error_sd": 919.1822981855182,
+        "mean_predicted": 57.47308722800679,
+        "mean_real": -107.05815890921696,
+        "sign_n": 72,
+        "sign_ci95": [
+          0.3333333333333333,
+          0.6666666666666666
+        ]
+      },
+      "decomposition": {
+        "source": {
+          "bias": -314.00694444444446,
+          "mae": 318.0208333333333,
+          "mse_covariance_share": -0.09935396675679391,
+          "J_mae_after_perfect_component_correction": 677.9808811296576
+        },
+        "upstream": {
+          "bias": 394.352976850691,
+          "mae": 638.3213300920645,
+          "mse_covariance_share": 1.0393148765429172,
+          "J_mae_after_perfect_component_correction": 286.4208736332371
+        },
+        "downstream": {
+          "bias": 84.18520382315361,
+          "mae": 148.77985296565177,
+          "mse_covariance_share": 0.06003907982134345,
+          "J_mae_after_perfect_component_correction": 602.5694947505142
+        }
+      }
+    },
+    "300": {
+      "J_median": {
+        "n": 72,
+        "sign": 0.5555555555555556,
+        "mae": 1376.5779408590843,
+        "bias": 317.6678417822221,
+        "correlation": -0.2347798251636896,
+        "error_sd": 2102.138601674514,
+        "mean_predicted": -95.53052327036858,
+        "mean_real": -413.1983650525907,
+        "sign_n": 72,
+        "sign_ci95": [
+          0.4027777777777778,
+          0.7083333333333334
+        ]
+      },
+      "decomposition": {
+        "source": {
+          "bias": -870.8611111111111,
+          "mae": 871.2708333333334,
+          "mse_covariance_share": -0.07069061355939166,
+          "J_mae_after_perfect_component_correction": 1673.8027210085736
+        },
+        "upstream": {
+          "bias": 1031.0870858154613,
+          "mae": 1497.6267976728461,
+          "mse_covariance_share": 0.9600609497095505,
+          "J_mae_after_perfect_component_correction": 820.35933814804
+        },
+        "downstream": {
+          "bias": 157.4418703552998,
+          "mae": 317.00422236205276,
+          "mse_covariance_share": 0.11062966397707871,
+          "J_mae_after_perfect_component_correction": 1269.253890195287
+        }
+      }
+    }
+  }
+}

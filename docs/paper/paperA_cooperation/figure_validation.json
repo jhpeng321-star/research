@@ -1,0 +1,103 @@
+{
+  "status": "PASS",
+  "scope": "presentation-only; no new statistical estimates or model inference",
+  "figures": {
+    "F1": {
+      "symbolic_nodes": 4,
+      "csv": "figures/F1_exact_replay_protocol.csv"
+    },
+    "F2H": {
+      "source_values_verified": 11,
+      "csv": "figures/F2H_historical_cooperation.csv"
+    },
+    "F4": {
+      "source_values_verified": 37,
+      "csv": "figures/F4_surrogate_reliability.csv"
+    },
+    "F3H": {
+      "source_values_verified": 9,
+      "csv": "figures/F3H_historical_policy_failure.csv"
+    }
+  },
+  "sources": {
+    "cooperation": {
+      "path": "E:/research-dense/docs/paper_results/COOPMEAS2.csv",
+      "sha256": "a5769049a4ce0025fe9a831f2bc35b3ab3adaf71ba3113a5386c134ea30dab44",
+      "bytes": 23699,
+      "snapshot": "inputs/COOPMEAS2.csv",
+      "snapshot_sha256": "a5769049a4ce0025fe9a831f2bc35b3ab3adaf71ba3113a5386c134ea30dab44"
+    },
+    "historical_direction": {
+      "path": "E:/research-dense/docs/paper_results/E2_direction_horizon.csv",
+      "sha256": "96586c7822e4a496790e05455462758020c335d08852f2b84cfd8ab960c22718",
+      "bytes": 797,
+      "snapshot": "inputs/E2_direction_horizon.csv",
+      "snapshot_sha256": "96586c7822e4a496790e05455462758020c335d08852f2b84cfd8ab960c22718"
+    },
+    "historical_efficacy": {
+      "path": "E:/research-dense/docs/paper_results/E3FINAL_A.csv",
+      "sha256": "4891fa9c1b43278b2769c44486d60a71aee50d3fd45ec4e55787633a99b8c08b",
+      "bytes": 820984,
+      "snapshot": "inputs/E3FINAL_A.csv",
+      "snapshot_sha256": "4891fa9c1b43278b2769c44486d60a71aee50d3fd45ec4e55787633a99b8c08b"
+    },
+    "corrected_wm": {
+      "path": "E:/agent-work/c4-wmrequal3/tools/wmrequal3/evidence/ANALYSIS.json",
+      "sha256": "a0ed04c6a46bcbada471c30699b028343efd018e8634f9555915e524af17e380",
+      "bytes": 1539729,
+      "snapshot": "inputs/WMREQUAL3_projection.json",
+      "snapshot_sha256": "8571e7a0a2c37776871cdfa344e352511b9f2750f3c251048a190c1b7876e0a1"
+    }
+  },
+  "artifacts": {
+    "figures/F1_exact_replay_protocol.png": {
+      "sha256": "0b6e76976471132c949d1240584ffec540493cf53718d66c61df2d38d18269fd",
+      "bytes": 159785
+    },
+    "figures/F1_exact_replay_protocol.pdf": {
+      "sha256": "c1c9f540cf968e26325a29769a2ca0d9dff635aa18bad3cd2470a85d7f917bd8",
+      "bytes": 29103
+    },
+    "figures/F1_exact_replay_protocol.csv": {
+      "sha256": "1a22e8b05ce78d4302647e71c76ea56c167fd1e8fdbdba39f104d8c3c66f8227",
+      "bytes": 800
+    },
+    "figures/F2H_historical_cooperation.png": {
+      "sha256": "0237a5bc2df2af0939088f6438b522d00c0e66d895acce640fbc17ef80a6b418",
+      "bytes": 158615
+    },
+    "figures/F2H_historical_cooperation.pdf": {
+      "sha256": "3c5032f597821a16fa15ac3bc0bf744981250379f59ba4c79d8469ba32e5b0b9",
+      "bytes": 25575
+    },
+    "figures/F2H_historical_cooperation.csv": {
+      "sha256": "72eba30e9c814381a8e77c20ea734a3800dcd70156971c530292271f82708324",
+      "bytes": 3529
+    },
+    "figures/F4_surrogate_reliability.png": {
+      "sha256": "747cd8085ea6a05a5fc5b9c6139d55c5d36f45779a5bb1c1ad5d2830b2d4da7d",
+      "bytes": 250164
+    },
+    "figures/F4_surrogate_reliability.pdf": {
+      "sha256": "6732cdf405f3a7c116786839c96bd1c00238a4e53b01defd79f788c012fc805d",
+      "bytes": 26005
+    },
+    "figures/F4_surrogate_reliability.csv": {
+      "sha256": "f39a22af4c4561d08ed557a8a702ce0ef3bedb2b36fe0a0e95babf2d84776886",
+      "bytes": 12349
+    },
+    "figures/F3H_historical_policy_failure.png": {
+      "sha256": "31e8b282e0661371ac1c3ee5fafec9dacafe07a20cbe200156d85be14f5733f3",
+      "bytes": 119099
+    },
+    "figures/F3H_historical_policy_failure.pdf": {
+      "sha256": "398676ce80d5d24b3c869a8e6de1c55c5024f6273dc32bb068059ba3a8e123cc",
+      "bytes": 21450
+    },
+    "figures/F3H_historical_policy_failure.csv": {
+      "sha256": "02c755beef478ff67bc3c795832df825210733789503c36aa04ab6acea4612cb",
+      "bytes": 3391
+    }
+  },
+  "source_check": "frozen CSV bytes / explicit JSON summary projection; no live-source requirement"
+}
