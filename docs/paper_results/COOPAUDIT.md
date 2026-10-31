@@ -1,6 +1,6 @@
 # COOPAUDIT — measured cooperation in real SUMO
 
-S-COOPMEASURE; owner2026-10-31 15:45/17:20. Status: corrected v2 canary PASS; panel pending.
+S-COOPMEASURE; owner2026-10-31 15:45/17:20. Status: corrected v2 panel RUNNING, owned gpuR811908.
 No complete-panel controller cooperation estimates or95% CIs exist yet.
 D(S)=J(native)-J(S); C_G=D_GROUP-sum_i D_ONLY:i; positive is beneficial interaction.
 

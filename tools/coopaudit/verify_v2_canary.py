@@ -2,6 +2,8 @@
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
 from tools.coopaudit.accounting import write
 from tools.coopaudit.design import interaction, sha
 
@@ -45,7 +47,26 @@ def main():
                  wall_issued_commands=wall['wall_issued_commands'],wall_events=wall['wall_events'],
                  contrasts=contrasts,scientific_files=scientific_files,
                  result_sha256=sha(directory/'result.json'),collection_sha256=sha(root/'COLLECTION.json'))
-    write(evidence/'V2_CANARY_VERIFIED.json',receipt)
+    # Stable LF bytes for the already-committed verification proof on Windows.
+    (evidence/'V2_CANARY_VERIFIED.json').write_bytes(
+        (json.dumps(receipt,sort_keys=True,indent=1,allow_nan=False)+'\n').encode())
+    if '--publish' in sys.argv:
+        from tools.coopaudit.remote import run
+        receipt['commit']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+        result=run('gpuR',f'''
+import hashlib,json
+from pathlib import Path
+root=Path('/root/coopaudit20261031')
+receipt={receipt!r}
+assert not (root/'V2_CANARY_VERIFIED.json').exists()
+assert hashlib.sha256((root/'jobs/v2_canary_s969699/result.json').read_bytes()).hexdigest()==receipt['result_sha256']
+(root/'V2_CANARY_VERIFIED.json').write_text(json.dumps(receipt,sort_keys=True,indent=1))
+print(json.dumps(dict(ok=True,commit=receipt['commit'])))
+''',timeout=30)
+        if result.returncode:
+            print(result.stderr)
+            raise SystemExit(result.returncode)
+        write(evidence/'V2_CANARY_COMMITTED.json',receipt)
     print(json.dumps(receipt,indent=1))
 
 
