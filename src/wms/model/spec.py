@@ -14,7 +14,7 @@ LANE_HEADS = ("off", "history")
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 #: Lane-decision model (WMLANE A): the gated residual lane delta (default) or the
 #: dedicated per-HDV lane-change hazard model (``wms.model.lane_hazard``).
-LANE_MODELS = ("residual", "hazard", "hazard_v5")
+LANE_MODELS = ("residual", "hazard", "hazard_v5", "lc2013")
 #: In-rollout driver-setting update from observed motion (WMLANE C).
 DRIVER_UPDATES = ("off", "ema")
 #: LANEFIX (hazard mode only): rollout lane decision, hazard feature set, merge ownership.
@@ -183,6 +183,8 @@ class ModelSpec:
     mainline_residual_hidden: int = 64
 
     def __post_init__(self) -> None:
+        if self.lane_model == "lc2013" and (self.black_box or self.lane_head != "off"):
+            raise ValueError("lane_model='lc2013' needs structured WM-S and lane_head='off'")
         if (not isinstance(self.follower_courtesy_version, int)
                 or isinstance(self.follower_courtesy_version, bool)
                 or self.follower_courtesy_version not in (1, 2)):

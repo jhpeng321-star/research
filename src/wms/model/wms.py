@@ -1428,6 +1428,9 @@ class WmSModel(nn.Module):
             result["lane_feasible"] = hazard_feasible(lane_base, kin)
             if v5_sample is not None:
                 result["lane_sample"] = v5_sample
+        if self.lane_model == "lc2013":
+            from .lc2013_adapter import forward_output
+            forward_output(self, state, kin, present, lane_learned, driver_params, result)
         return result
 
     def _residual_lane_logits(self, lane_base: Tensor, base: dict, temporal: Tensor,
@@ -1770,9 +1773,10 @@ class WmSModel(nn.Module):
         """
         native_lane_mask = getattr(cav_controller, "native_lane_mask", None)
         if native_lane_mask is not None:
-            if self.black_box or self.merge_pivot is None:
+            if self.black_box or (self.merge_pivot is None and self.lane_model != "lc2013"):
                 raise ValueError("native_lane_change requires a structured first-passage WM")
-            if self.rollout_mode not in ("driver_params", "hybrid") and not self.long_history:
+            if (self.rollout_mode not in ("driver_params", "hybrid") and not self.long_history
+                    and self.lane_model != "lc2013"):
                 raise ValueError("native_lane_change requires observation-inferred driver settings")
             state = {**state, cav_motion.WM_LANE_KEY: native_lane_mask(
                 {**state, "physics_step_index": k_steps})}
@@ -1898,12 +1902,16 @@ class WmSModel(nn.Module):
                 next_s = torch.where(release, free_s, next_s)
                 next_v = torch.where(release, free_v, next_v)
 
-        if (self.merge_pivot is None and cav_motion.WM_MERGE_KEY in out
+        if self.lane_model == "lc2013":
+            from .lc2013_adapter import step_output
+            next_lane = step_output(self, state, state_kin(state), present, out,
+                                     next_s, next_v, next_lane, driver_params)
+        if (self.merge_pivot is None and self.lane_model != "lc2013" and cav_motion.WM_MERGE_KEY in out
                 and bool(out[cav_motion.WM_MERGE_KEY].any())):
             raise ValueError("a CAV callback delegated ramp merges to the WM merge law, which "
                              "needs merge_decision='first_passage'")
         if self.merge_pivot is None and (self.physics.merge_end_wait or lv5.forced_window_hazard(self.physics)
-                or getattr(self.physics, "lane_learnable", False)):
+                or getattr(self.physics, "lane_learnable", False) or self.lane_model == "lc2013"):
             # V6MERGE: a vehicle staying on the accel lane never passes its end; it stops there
             # (V8WM2 hazard window: a feasible car may now wait in the window, so it must not
             # creep past the end, where no merge is ever allowed).  V10UNBLOCK lane_learnable:
@@ -2580,6 +2588,9 @@ class WmSModel(nn.Module):
                 current = {key: (value.clone() if torch.is_tensor(value) else value)
                            for key, value in current.items()}
                 newborn = entries.insert(current)
+                if self.lane_model == "lc2013":
+                    from .lc2013_adapter import reset_newborn
+                    reset_newborn(current, newborn)
                 entrant = entrant | newborn
                 current["entrant"] = entrant
                 if entrant_driver_sampler is not None:
@@ -2672,6 +2683,9 @@ class WmSModel(nn.Module):
             current = {**current, "s_m": nxt_s, "v_mps": nxt_v,
                        "a_mps2": nxt_a, "lane": nxt_lane,
                        "present": nxt_present}
+            if self.lane_model == "lc2013":
+                from .lc2013_adapter import carry_state
+                carry_state(current, out, nxt_present)
             if self._tracks_lane_age:
                 current["lane_age"] = lane_age
             if self._tracks_lane_blocked:
